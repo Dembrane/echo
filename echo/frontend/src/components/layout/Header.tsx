@@ -114,7 +114,7 @@ export const Header = () => {
       >
         <Group gap="md">
           <I18nLink to="/projects">
-            <Logo />
+            <Logo hideTitle={true} />
           </I18nLink>
         </Group>
 

@@ -18,6 +18,7 @@ import { Breadcrumbs } from "../common/Breadcrumbs";
 import { ProjectQRCode } from "./ProjectQRCode";
 import { I18nLink } from "../common/i18nLink";
 import { ReportModalNavigationButton } from "../report/ReportModalNavigationButton";
+import { LogoDembrane } from "../common/Logo";
 
 export const ProjectSidebar = () => {
   const { projectId, conversationId } = useParams();
@@ -119,6 +120,23 @@ export const ProjectSidebar = () => {
       </Box>
 
       <ProjectAccordion projectId={projectId} />
+
+      <Stack className="text-center">
+        <Group
+          component="a"
+          // @ts-ignore
+          href="https://dembrane.com"
+          target="_blank"
+          align="center"
+          justify="center"
+          gap="md"
+        >
+          <div className="text-sm">
+            <Trans>Powered by</Trans>
+          </div>
+          <LogoDembrane otherText="Dembrane&nbsp;ECHO" />
+        </Group>
+      </Stack>
     </Stack>
   );
 };
