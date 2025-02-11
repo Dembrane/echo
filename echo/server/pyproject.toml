@@ -51,6 +51,11 @@ dependencies = [
     "types-python-jose>=3.3.4.20240106",
     "litellm>=1.59.9",
     # "trankit @ git+https://github.com/nlp-uoregon/trankit",
+    #Anonimization
+    "flair>=0.15.1",
+    #Diarization
+    "whisperx>=3.1.1"
+    "pyannote-audio>=3.3.1"
 ]
 
 [tool.setuptools]
