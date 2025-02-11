@@ -8,6 +8,7 @@ from dembrane.api.chat import ChatRouter
 from dembrane.api.static import StaticRouter
 from dembrane.api.project import ProjectRouter
 from dembrane.api.resource import ResourceRouter
+from dembrane.api.stateless import StatelessRouter
 from dembrane.api.participant import ParticipantRouter
 from dembrane.api.conversation import ConversationRouter
 
@@ -27,3 +28,4 @@ api.include_router(ProjectRouter, prefix="/projects")
 api.include_router(ResourceRouter, prefix="/resources")
 api.include_router(ParticipantRouter, prefix="/participant")
 api.include_router(ConversationRouter, prefix="/conversations")
+api.include_router(StatelessRouter, prefix="/stateless")
