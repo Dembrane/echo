@@ -12,11 +12,45 @@ class TranscriptionError(Exception):
     pass
 
 
-def transcribe_audio_litellm(
+def transcribe_audio(
     audio_file_path: str, language: Optional[str], whisper_prompt: Optional[str]
 ) -> str:
-    return ""
+    return transcribe_audio_openai(audio_file_path, language, whisper_prompt)
 
+
+def transcribe_audio_aiconl(
+    audio_file_path: str, language: Optional[str], whisper_prompt: Optional[str]
+) -> str:
+    import requests
+
+    API_BASE_URL = "https://whisper.ai-hackathon.haven.vng.cloud"
+    API_KEY = "JOUW_VEILIGE_API_SLEUTEL"
+
+    try:
+        with open(audio_file_path, "rb") as f:
+            headers = {"accept": "application/json", "access_token": API_KEY}
+            files = {"file": f}
+
+            response = requests.post(f"{API_BASE_URL}/transcribe", headers=headers, files=files)
+            response.raise_for_status()
+
+            result = response.json()
+            transcription = result.get("text", "")
+
+            if not transcription:
+                logger.info("Transcription is empty!")
+
+            return transcription
+
+    except FileNotFoundError as exc:
+        logger.error(f"File not found: {audio_file_path}")
+        raise FileNotFoundError from exc
+    except requests.RequestException as exc:
+        logger.error(f"Failed to transcribe audio: {exc}")
+        raise TranscriptionError(f"Failed to transcribe audio: {exc}") from exc
+    except Exception as exc:
+        logger.error(f"Unexpected error: {exc}")
+        raise TranscriptionError(f"Unexpected error: {exc}") from exc
 
 
 def transcribe_audio_openai(
@@ -92,14 +126,6 @@ def transcribe_audio_openai(
 #         raise TranscriptionError(f"Unexpected error: {exc}") from exc
 
 
-def transcribe_audio(
-    audio_file_path: str, language: Optional[str], whisper_prompt: Optional[str]
-) -> str:
-    # You can choose which transcription service to use here
-    return transcribe_audio_openai(audio_file_path, language, whisper_prompt)
-    # return transcribe_audio_azure_whisper(audio_file_path, language, whisper_prompt)
-
-
 DEFAULT_WHISPER_PROMPTS = {
     "en": "Hi, lets get started. First we'll have a round of introductions and then we can get into the topic for today.",
     "nl": "Hallo, laten we beginnen. Eerst even een introductieronde en dan kunnen we aan de slag met de thema van vandaag.",
@@ -126,7 +152,11 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> None:
                 raise FileNotFoundError(f"File not found: {chunk.path}")
 
             # fetch conversation details
-            conversation = db.query(ConversationModel).filter(ConversationModel.id == chunk.conversation_id).first()
+            conversation = (
+                db.query(ConversationModel)
+                .filter(ConversationModel.id == chunk.conversation_id)
+                .first()
+            )
             if conversation is None:
                 raise ValueError("Conversation not found")
 
@@ -143,7 +173,9 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> None:
                 )
             )
 
-            transcription = transcribe_audio(chunk.path, language=language, whisper_prompt=whisper_prompt)
+            transcription = transcribe_audio(
+                chunk.path, language=language, whisper_prompt=whisper_prompt
+            )
 
             chunk.transcript = transcription
             db.commit()

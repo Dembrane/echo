@@ -68,7 +68,7 @@ def generate_summary(transcript: str, system_prompt: str | None, language: str |
                 "role": "user",
             }
         ],
-        api_base="http://host.docker.internal:8080",
+        api_base="https://llm-demo.ai-hackathon.haven.vng.cloud",
     )
 
     response_content = response["choices"][0]["message"]["content"]

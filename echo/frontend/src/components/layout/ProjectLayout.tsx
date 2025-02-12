@@ -26,7 +26,7 @@ export const ProjectLayout = () => {
       ) : (
         <Resizable
           size={{ width: sidebarWidth }}
-          minWidth={321}
+          minWidth={325}
           maxWidth="45%"
           maxHeight={"100%"}
           onResizeStop={(_e, _direction, _ref, d) => {
