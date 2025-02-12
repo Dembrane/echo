@@ -62,3 +62,11 @@ If you discover security vulnerabilities, please report them following our [secu
 - For legal inquiries: bram@dembrane.com
 - For mission/vision and press: jorim@dembrane.com
 - For all other inquiries including hosting and support: jules@dembrane.com
+
+
+## Contributors
+Thanks to everyone in the community that has contributed to this project!
+
+<a href="https://github.com/dembrane/echo/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=dembrane/echo" />
+</a>
