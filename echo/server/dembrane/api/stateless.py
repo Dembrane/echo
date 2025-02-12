@@ -3,6 +3,9 @@ from logging import getLogger
 from fastapi import APIRouter
 from litellm import completion
 from pydantic import BaseModel
+from flair.data import Sentence
+from langdetect import detect
+from flair.models import SequenceTagger
 from langchain.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
 from fastapi.exceptions import HTTPException
 
@@ -13,6 +16,13 @@ logger = getLogger("api.stateless")
 
 StatelessRouter = APIRouter(tags=["stateless"])
 
+language_models = [
+    {"lang": "nl", "model": SequenceTagger.load("flair/ner-dutch-large"), "person_tag": "PER", "replacement": "[Persoon]"},
+    {"lang": "en", "model": SequenceTagger.load("xlm-roberta-large"), "person_tag": "PER", "replacement": "[Person]"}
+]
+
+class AudioFileRequest(BaseModel):
+    audio_file_path: str
 
 class TranscriptRequest(BaseModel):
     system_prompt: str | None = None
@@ -37,6 +47,20 @@ async def summarize_conversation_transcript(
 
     # Return the full transcript as a single string
     return TranscriptResponse(summary=summary)
+
+@StatelessRouter.post("/anonymize")
+async def anonymize_conversation_transcript(
+    # auth: DependencyDirectusSession,
+    body: TranscriptRequest,
+) -> TranscriptResponse:
+    # Use the provided transcript (if any) for processing
+    transcript = body.transcript
+
+    # Generate a summary from the transcript (placeholder logic)
+    anonymized_text = await anonymize_text(transcript)
+
+    # Return the full transcript as a single string
+    return TranscriptResponse(summary=anonymized_text)
 
 
 def raise_if_conversation_not_found_or_not_authorized(
@@ -95,3 +119,30 @@ async def generate_summary(transcript: str, system_prompt: str | None) -> str:
     response_content = response["choices"][0]["message"]["content"]
 
     return response_content
+
+async def anonymize_text(text):
+    try:
+        detected_lang = detect(text)
+    except Exception:
+        detected_lang = "unknown"
+
+    # Zoek het juiste model op basis van de taal
+    tagger_info = next((lm for lm in language_models if lm["lang"] == detected_lang), None)
+
+    if not tagger_info:
+        return text  # Geen geschikt model gevonden
+
+    tagger = tagger_info["model"]
+    person_tag = tagger_info["person_tag"]
+    replacement = tagger_info["replacement"]
+
+    # Maak een Flair-zin en pas NER toe
+    sentence = Sentence(text)
+    tagger.predict(sentence)
+
+    # Vervang persoonsnamen
+    for entity in sentence.get_spans("ner"):
+        if entity.tag == person_tag:
+            text = text.replace(entity.text, replacement)
+
+    return text
