@@ -27,6 +27,7 @@ type ConversationEditFormValues = {
 
 export const ConversationEdit = ({
   conversation,
+  // @ts-ignore
   projectTags,
 }: {
   conversation: Conversation;

@@ -6,7 +6,6 @@ from datetime import datetime
 from fastapi import Form, APIRouter, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import joinedload
-from fastapi.exceptions import HTTPException
 
 from dembrane.tasks import task_finish_conversation_hook, task_process_conversation_chunk
 from dembrane.utils import generate_uuid
@@ -23,7 +22,6 @@ from dembrane.database import (
     DependencyInjectDatabase,
 )
 from dembrane.directus import directus
-from dembrane.api.stateless import generate_summary
 from dembrane.api.exceptions import (
     ProjectNotFoundException,
     ConversationNotFoundException,

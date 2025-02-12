@@ -19,7 +19,9 @@ def transcribe_audio(
 
 
 def transcribe_audio_aiconl(
-    audio_file_path: str, language: Optional[str], whisper_prompt: Optional[str]
+    audio_file_path: str,
+    language: Optional[str],  # noqa
+    whisper_prompt: Optional[str],  # noqa
 ) -> str:
     import requests
 

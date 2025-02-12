@@ -162,7 +162,7 @@ def generate_reply_for_conversation(conversation_id: str, language: str) -> dict
         },
     )
 
-    adjacent_conversation_transcripts: list[Conversation] = []
+    adjacent_conversation_transcripts: list[Conversation] = []  # noqa
     total_tokens = 0
     token_limit = 40000
     target_tokens_per_conv = 2000  # Target size for each conversation

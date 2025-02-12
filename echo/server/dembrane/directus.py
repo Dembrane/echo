@@ -6,5 +6,9 @@ from dembrane.config import DIRECTUS_TOKEN, DIRECTUS_BASE_URL
 
 logger = getLogger(__name__)
 
-logger.error("PLEASE CHANGE THIS IT IS HARDCODED for the hackathon")
-directus = DirectusClient(url=DIRECTUS_BASE_URL, token="Xdk9sYZaed8yER0sZE2AYW_OqGBuTw12")
+directus_token = "admin"
+
+if DIRECTUS_TOKEN:
+    directus_token = DIRECTUS_TOKEN
+
+directus = DirectusClient(url=DIRECTUS_BASE_URL, token=DIRECTUS_TOKEN)

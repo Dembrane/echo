@@ -4,10 +4,6 @@ from fastapi import APIRouter
 from litellm import completion
 from pydantic import BaseModel
 from langchain.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
-from fastapi.exceptions import HTTPException
-
-from dembrane.directus import directus
-from dembrane.api.dependency_auth import DependencyDirectusSession
 
 logger = getLogger("api.stateless")
 
