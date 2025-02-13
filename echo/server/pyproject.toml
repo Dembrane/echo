@@ -50,6 +50,8 @@ dependencies = [
     "types-requests>=2.32.0.20240602",
     "types-python-jose>=3.3.4.20240106",
     "litellm>=1.59.9",
+    "flair>=0.15.1",
+    "langdetect>=1.0.9",
     # "trankit @ git+https://github.com/nlp-uoregon/trankit",
 ]
 
