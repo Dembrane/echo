@@ -1,6 +1,12 @@
 name: GitHub Actions Demo
 run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
-on: [push]
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
