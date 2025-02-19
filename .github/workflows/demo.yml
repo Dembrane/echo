@@ -1,25 +1,24 @@
-name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+name: CLA Assistant
 
-on: [push, pull_request]
+on: [pull_request]
 
 permissions:
   contents: read
   pull-requests: write
 
 jobs:
-  Explore-GitHub-Actions:
+  check:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
-        run: |
-          ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
       - uses: dembrane/cla-bot@v0.0.1
+      - if: failure() && steps.check.outputs.missing
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          message: |
+            Hi ${{steps.check.outputs.missing}}!
+            Thank you for contributing to Dembrane ECHO! Before we consider your Pull Request, we ask that you sign [our Contributor License Agreement (CLA)](https://github.com/dembrane/echo/blob/main/CLA.md). This is only required for your first Pull Request.
+            Please [review the CLA](https://github.com/dembrane/echo/blob/main/CLA.md), and sign it by adding your GitHub username to [the contributors.yml file](https://github.com/${{github.event.pull_request.head.repo.full_name}}/blob/${{github.head_ref}}/contributors.yml). Thanks!
+      - if: success()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          delete: true
