@@ -1,0 +1,24 @@
+name: Greetings
+
+on: [pull_request_target, issues]
+
+jobs:
+  greeting:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+    - uses: actions/first-interaction@v1
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        issue-message: "Welcome to Dembrane! 👋 Thank you for creating your first issue. We appreciate your contribution to making our project better. Our team will review your issue as soon as possible. In the meantime, please make sure you've included all relevant details to help us understand and address your concern."
+        pr-message: |
+          Welcome to Dembrane! 🎉 Thank you for submitting your first pull request. We truly value your contribution to our project. Please ensure you've:
+
+          - Read our [Contributing Guidelines](../CONTRIBUTING.md)
+          - Signed our [Contributor License Agreement (CLA)](../CLA.md)
+          - Added tests if applicable
+          - Updated documentation if needed
+          
+          Our team will review your changes soon. We may suggest some changes or improvements or alternatives. Thank you for your patience!
