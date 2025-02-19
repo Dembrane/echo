@@ -1,10 +1,7 @@
 name: CLA Assistant
-
 on:
   pull_request_target:
-    types:
-      - opened
-      - synchronize
+    types: [opened, synchronize, reopened, labeled, unlabeled]
 
 permissions:
   pull-requests: write
@@ -15,18 +12,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: check
-        uses: dembrane/cla-bot
-
+        uses: dembrane/cla-bot@8747a57
       - if: failure() && steps.check.outputs.missing
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           message: |
             Hi ${{steps.check.outputs.missing}}!
-
             Thank you for contributing to Dembrane ECHO! Before we consider your Pull Request, we ask that you sign [our Contributor License Agreement (CLA)](https://github.com/dembrane/echo/blob/main/CLA.md). This is only required for your first Pull Request.
-
             Please [review the CLA](https://github.com/dembrane/echo/blob/main/CLA.md), and sign it by adding your GitHub username to [the contributors.yml file](https://github.com/${{github.event.pull_request.head.repo.full_name}}/blob/${{github.head_ref}}/contributors.yml). Thanks!
-
       - if: success()
         uses: marocchino/sticky-pull-request-comment@v2
         with:
