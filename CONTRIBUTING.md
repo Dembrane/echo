@@ -1,6 +1,20 @@
-# Contributing to Dembrane
+# Contributing Guidelines
 
-Thank you for your interest in contributing to Dembrane! This document outlines our contribution process and guidelines.
+Thank you for your interest in contributing to Dembrane ECHO! This document outlines our contribution process and guidelines.
+
+#### **Did you find a security vulnerability?**
+
+* **Do not open a GitHub issue if you find a security vulnerability**. Instead, please email sameer@dembrane.com directly.
+
+#### **Did you find a bug?**
+
+* **Ensure the bug was not already reported** by searching on GitHub under Issues.
+
+* If you're unable to find an open issue addressing the problem, open a new one. Be sure to include:
+  - A clear title and description
+  - As much relevant information as possible
+  - A code sample or test case demonstrating the expected behavior
+  - Steps to reproduce the problem
 
 We're particularly interested in these contributions:
 
@@ -13,25 +27,7 @@ We're particularly interested in these contributions:
 
 ## TODO's 
 
-[ ] Setup repository for contributions
-[ ] Populate known issues and roadmap
-
-## Contribution Process
-
-1. **Fork the Repository**
-   - Create your own fork of the code
-   - Make your changes in a new branch
-
-2. **Make Your Changes**
-   - Write clear, concise commit messages
-   - Keep changes focused and atomic
-   - Add tests if applicable
-   - Update documentation as needed
-
-3. **Submit a Pull Request**
-   - Provide a clear description of the changes
-   - Link to any relevant issues
-   - Ensure CI checks pass
+- [ ] Populate known issues and roadmap
 
 ## Types of Contributions
 
@@ -49,7 +45,7 @@ We categorize contributions into three main types:
 - Will be reviewed based on impact and alignment with project goals
 
 ### 3. New Features
-- Must align with project roadmap
+- Must align with project roadmap (coming soon)
 - Will be reviewed by both technical team and advisory board
 - Should include documentation and tests
 
@@ -87,9 +83,14 @@ We categorize contributions into three main types:
 ## Getting Help
 
 - Create an issue for bugs
+- Email sameer@dembrane.com for security issues or general guidance
 - Discuss major changes in issues before coding
 - Reach out to maintainers if stuck
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the [AGPL v3](LICENSE).
+By contributing, you agree that your contributions will be licensed under our [license](LICENSE).
+
+Thanks! ❤️
+
+Dembrane Team
