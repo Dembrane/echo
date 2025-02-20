@@ -2,6 +2,34 @@
 
 Dembrane ECHO is a transcription, analysis(sense-making) and reporting platform specifically designed for in-person multilingual conversations. It's a complete solution for real-world stakeholder-engagement scenarios where reliability and ease of use matter. ECHO was initially developed under a "move fast and break things" philosophy while serving pilot customers. Now, to better serve the public, we are transitioning to a privacy-first and security-first mentality.
 
+<table>
+  <tr>
+    <td align="center">
+      <img src="https://github.com/user-attachments/assets/e46e1c50-ded2-4cce-b00e-f9705241f654" width="400">
+      <br>
+      <em>Scan and Record</em>
+    </td>
+    <td align="center">
+      <img src="https://github.com/user-attachments/assets/be2ac9ff-ae89-458f-b781-c7f168aaa3b9" width="400">
+      <br>
+      <em>Transcribe and Store</em>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="https://github.com/user-attachments/assets/08e039a8-6462-430d-904a-af929b85bba4" width="400">
+      <br>
+      <em>Insights at Scale</em>
+    </td>
+    <td align="center">
+      <img src="https://github.com/user-attachments/assets/09cd95fd-26ea-4703-992c-b7ee185a4b53" width="400">
+      <br>
+      <em>Chat with your Data</em>
+    </td>
+  </tr>
+</table>
+
+
 ### What Makes ECHO Different
 
 While there are many transcription tools available, ECHO specifically excels at:
