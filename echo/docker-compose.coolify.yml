@@ -1,6 +1,6 @@
 services:
   redis:
-    image: "bitnami/redis:6.2.14"
+    image: 'bitnami/redis:6.2.14'
     restart: unless-stopped
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
@@ -97,11 +97,22 @@ services:
     restart: unless-stopped
     command: /bin/sh /code/server/prod.sh
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/api/health']
       interval: 1m
       timeout: 10s
       retries: 3
     environment:
+      # Core Feature Flags
+      - ENABLE_REPLY=${ENABLE_REPLY:-1}
+      - ENABLE_REPORT_GENERATION=${ENABLE_REPORT_GENERATION:-1}
+      - ENABLE_CHAT_TEMPLATES=${ENABLE_CHAT_TEMPLATES:-1}
+      # Library Feature Flags
+      - ENABLE_LIBRARY_VIEWS=${ENABLE_LIBRARY_VIEWS:-1}
+      - ENABLE_LIBRARY_INSIGHTS=${ENABLE_LIBRARY_INSIGHTS:-1}
+      - ENABLE_IMAGE_GENERATION=${ENABLE_IMAGE_GENERATION:-1}
+      # UI/UX Feature Flags
+      - ENABLE_CONVERSATION_SUMMARY=${ENABLE_CONVERSATION_SUMMARY:-1}
+      # Existing environment variables
       - DIRECTUS_PUBLIC_URL=${DIRECTUS_PUBLIC_URL}
       - DIRECTUS_TOKEN=${DIRECTUS_ADMIN_TOKEN}
       - DIRECTUS_SECRET=${DIRECTUS_SECRET}
@@ -133,6 +144,17 @@ services:
       dockerfile: Dockerfile
     command: /bin/sh /code/server/prod-worker.sh
     environment:
+      # Core Feature Flags
+      - ENABLE_REPLY=${ENABLE_REPLY:-1}
+      - ENABLE_REPORT_GENERATION=${ENABLE_REPORT_GENERATION:-1}
+      - ENABLE_CHAT_TEMPLATES=${ENABLE_CHAT_TEMPLATES:-1}
+      # Library Feature Flags
+      - ENABLE_LIBRARY_VIEWS=${ENABLE_LIBRARY_VIEWS:-1}
+      - ENABLE_LIBRARY_INSIGHTS=${ENABLE_LIBRARY_INSIGHTS:-1}
+      - ENABLE_IMAGE_GENERATION=${ENABLE_IMAGE_GENERATION:-1}
+      # UI/UX Feature Flags
+      - ENABLE_CONVERSATION_SUMMARY=${ENABLE_CONVERSATION_SUMMARY:-1}
+      # Existing environment variables
       - DIRECTUS_PUBLIC_URL=${DIRECTUS_PUBLIC_URL}
       - DIRECTUS_SECRET=${DIRECTUS_SECRET}
       - DIRECTUS_TOKEN=${DIRECTUS_ADMIN_TOKEN}
@@ -163,6 +185,17 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
+        # Core Feature Flags
+        - VITE_ENABLE_REPLY=${ENABLE_REPLY:-1}
+        - VITE_ENABLE_REPORT_GENERATION=${ENABLE_REPORT_GENERATION:-1}
+        - VITE_ENABLE_CHAT_TEMPLATES=${ENABLE_CHAT_TEMPLATES:-1}
+        # Library Feature Flags
+        - VITE_ENABLE_LIBRARY_VIEWS=${ENABLE_LIBRARY_VIEWS:-1}
+        - VITE_ENABLE_LIBRARY_INSIGHTS=${ENABLE_LIBRARY_INSIGHTS:-1}
+        - VITE_ENABLE_IMAGE_GENERATION=${ENABLE_IMAGE_GENERATION:-1}
+        # UI/UX Feature Flags
+        - VITE_ENABLE_CONVERSATION_SUMMARY=${ENABLE_CONVERSATION_SUMMARY:-1}
+        # Existing build arguments
         - VITE_API_BASE_URL=${API_BASE_URL}/api
         - VITE_ADMIN_BASE_URL=${ADMIN_BASE_URL}
         - VITE_PARTICIPANT_BASE_URL=${PARTICIPANT_BASE_URL}
@@ -178,6 +211,17 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
+        # Core Feature Flags
+        - VITE_ENABLE_REPLY=${ENABLE_REPLY:-1}
+        - VITE_ENABLE_REPORT_GENERATION=${ENABLE_REPORT_GENERATION:-1}
+        - VITE_ENABLE_CHAT_TEMPLATES=${ENABLE_CHAT_TEMPLATES:-1}
+        # Library Feature Flags
+        - VITE_ENABLE_LIBRARY_VIEWS=${ENABLE_LIBRARY_VIEWS:-1}
+        - VITE_ENABLE_LIBRARY_INSIGHTS=${ENABLE_LIBRARY_INSIGHTS:-1}
+        - VITE_ENABLE_IMAGE_GENERATION=${ENABLE_IMAGE_GENERATION:-1}
+        # UI/UX Feature Flags
+        - VITE_ENABLE_CONVERSATION_SUMMARY=${ENABLE_CONVERSATION_SUMMARY:-1}
+        # Existing build arguments
         - VITE_API_BASE_URL=${API_BASE_URL}/api
         - VITE_PARTICIPANT_BASE_URL=${PARTICIPANT_BASE_URL}
         - VITE_BUILD_VERSION=${BUILD_VERSION}

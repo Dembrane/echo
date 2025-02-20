@@ -1,33 +1,38 @@
 FROM node:18-alpine AS builder
 
-RUN npm install -g --force pnpm
+WORKDIR /app
 
-WORKDIR /code
+# Install pnpm
+RUN npm install -g pnpm
 
+# Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-RUN echo "fetch-timeout=60000" >> .npmrc
-# https://github.com/pnpm/pnpm/issues/5803#issuecomment-1974820613
-RUN pnpm config set store-dir /home/node/.local/share/pnpm/store
+# Install dependencies
 RUN pnpm install --frozen-lockfile
 
+# Copy source code
 COPY . .
 
-ARG VITE_BUILD_VERSION
+# Add build arguments for feature flags
+ARG VITE_ENABLE_REPLY=1
+ARG VITE_ENABLE_REPORT_GENERATION=1
+ARG VITE_ENABLE_CHAT_TEMPLATES=1
+ARG VITE_ENABLE_LIBRARY_VIEWS=1
+ARG VITE_ENABLE_LIBRARY_INSIGHTS=1
+ARG VITE_ENABLE_IMAGE_GENERATION=1
+ARG VITE_ENABLE_CONVERSATION_SUMMARY=1
+
+# Add existing build arguments
 ARG VITE_API_BASE_URL
 ARG VITE_ADMIN_BASE_URL
 ARG VITE_PARTICIPANT_BASE_URL
-ARG VITE_USE_PARTICIPANT_ROUTER=0
+ARG VITE_BUILD_VERSION
+ARG VITE_USE_PARTICIPANT_ROUTER
 ARG VITE_DIRECTUS_PUBLIC_URL
 
-ENV VITE_BUILD_VERSION=$VITE_BUILD_VERSION
-ENV VITE_API_URL=$VITE_API_BASE_URL
-ENV VITE_ADMIN_BASE_URL=$VITE_ADMIN_BASE_URL
-ENV VITE_PARTICIPANT_BASE_URL=$VITE_PARTICIPANT_BASE_URL
-ENV VITE_DIRECTUS_PUBLIC_URL=$VITE_DIRECTUS_PUBLIC_URL
-ENV VITE_USE_PARTICIPANT_ROUTER=$VITE_USE_PARTICIPANT_ROUTER
-
-RUN pnpm run build
+# Build the application
+RUN pnpm build
 
 FROM node:18-alpine
 
@@ -35,6 +40,6 @@ WORKDIR /app
 
 RUN npm install -g --force serve
 
-COPY --from=builder /code/dist /app
+COPY --from=builder /app/dist /app
 
 CMD ["serve", "-p", "5173", "--single"]
