@@ -114,7 +114,7 @@ You now have a VS Code environment running inside Ubuntu on WSL.
 3. **Clone your repository**  
    - Log in to GitHub from your WSL environment or clone using HTTPS/SSH:
      ```bash
-     git clone https://github.com/<YourUser>/dembrane.git
+     git clone https://github.com/Dembrane/echo.git
      ```
    - Adjust the URL to your repository as needed.
 4. **Navigate to the nested echo folder**:
