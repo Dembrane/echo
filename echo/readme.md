@@ -188,7 +188,7 @@ If the Directus container does not start:
 2. **Restart** the Directus container.
 3. **Go to** [http://localhost:8055/admin/settings/data-model](http://localhost:8055/admin/settings/data-model).
 4. **Delete** the “aspect/quote” data model entries (if they are causing issues).
-5. **Run** the sync command in the dev container terminal or a WSL terminal:
+5. **Run** the sync command in the dev container terminal or a WSL terminal inside "echo > directus" directory:
    ```bash
    npx directus-sync -u http://directus:8055 -e admin@dembrane.com -p admin push -d -f
    ```
