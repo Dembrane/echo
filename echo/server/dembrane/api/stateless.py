@@ -57,14 +57,15 @@ def generate_summary(transcript: str, system_prompt: str | None, language: str |
     )
     # Call the model over the provided API endpoint
     response = completion(
-        model="ollama/llama3.1:8b",
+        # model="ollama/llama3.1:8b",
+        # api_base="https://llm-demo.ai-hackathon.haven.vng.cloud",
+        model="anthropic/claude-3-5-sonnet-20240620",
         messages=[
             {
                 "content": prompt_template.format_prompt(transcript=transcript).to_messages(),
                 "role": "user",
             }
         ],
-        api_base="https://llm-demo.ai-hackathon.haven.vng.cloud",
     )
 
     response_content = response["choices"][0]["message"]["content"]
