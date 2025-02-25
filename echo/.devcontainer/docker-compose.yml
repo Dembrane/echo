@@ -58,7 +58,14 @@ services:
       - USER_INVITE_URL_ALLOW_LIST=http://localhost:5173/invite
       - USER_REGISTER_URL_ALLOW_LIST=http://localhost:5173/verify-email
       - PASSWORD_RESET_URL_ALLOW_LIST=http://localhost:5173/password-reset
-
+      - EMAIL_TRANSPORT="smtp"
+      - EMAIL_FROM=""
+      - EMAIL_SMTP_HOST=""
+      - EMAIL_SMTP_PORT=587
+      - EMAIL_SMTP_USER=""
+      - EMAIL_SMTP_PASSWORD=""
+      - EMAIL_SMTP_SECURE=false
+      - EMAIL_SMTP_IGNORE_TLS=false
 
     depends_on:
       - postgres
