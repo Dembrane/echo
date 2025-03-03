@@ -50,7 +50,7 @@ class LightragETLPipeline:
                 with open(file_path, "r", encoding="utf-8") as file:
                     data = json.load(file)
                     transcripts = [dict['CONTEXTUAL_TRANSCRIPT'] 
-                                 for k, dict in data.items()]
+                                 for _, dict in data.items()]
                     
                     # Insert each transcript using the API
                     for transcript in transcripts:

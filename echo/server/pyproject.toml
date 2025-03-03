@@ -51,7 +51,7 @@ dependencies = [
     "types-python-jose>=3.3.4.20240106",
     "litellm>=1.59.9",
     # Additional Dependencies
-    "lightrag-hku==1.1.7",
+    "lightrag-hku==1.2.3",
     "nest-asyncio==1.6.0",
     "pydantic==2.10.6",
     "pydub==0.25.1",
@@ -70,7 +70,9 @@ dependencies = [
     # LLM Tools
     "tiktoken",
     "asyncpg",
-    "neo4j"
+    "neo4j",
+    "ipykernel",
+
     # "trankit @ git+https://github.com/nlp-uoregon/trankit",
 ]
 
