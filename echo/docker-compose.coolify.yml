@@ -1,6 +1,6 @@
 services:
   redis:
-    image: "bitnami/redis:6.2.14"
+    image: 'bitnami/redis:6.2.14'
     restart: unless-stopped
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
@@ -18,17 +18,6 @@ services:
       - default
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-  rabbitmq:
-    image: rabbitmq:3.13
-    restart: unless-stopped
-    environment:
-      - RABBITMQ_DEFAULT_USER=dembrane
-      - RABBITMQ_DEFAULT_PASS=dembrane
-    networks:
-      - default
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
 
   directus:
     restart: unless-stopped
@@ -97,7 +86,7 @@ services:
     restart: unless-stopped
     command: /bin/sh /code/server/prod.sh
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/api/health']
       interval: 1m
       timeout: 10s
       retries: 3
@@ -111,7 +100,6 @@ services:
       - BUILD_VERSION=${BUILD_VERSION}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - RABBITMQ_URL=amqp://dembrane:dembrane@rabbitmq:5672
       - REDIS_URL=redis://redis:6379
       - DISABLE_REDACTION=1
       - DATABASE_URL=${DATABSE_URL:-postgresql+psycopg://dembrane:dembrane@postgres:5432/dembrane}
@@ -142,7 +130,6 @@ services:
       - BUILD_VERSION=${BUILD_VERSION}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - RABBITMQ_URL=amqp://dembrane:dembrane@rabbitmq:5672
       - REDIS_URL=redis://redis:6379
       - DISABLE_REDACTION=1
       - DATABASE_URL=${DATABSE_URL:-postgresql+psycopg://dembrane:dembrane@postgres:5432/dembrane}
@@ -191,7 +178,6 @@ services:
 
 volumes:
   postgres_data:
-  rabbitmq_data:
   redis_data:
 
 networks:
