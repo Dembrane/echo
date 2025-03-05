@@ -85,6 +85,13 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 assert DATABASE_URL, "DATABASE_URL environment variable is not set"
 logger.debug("DATABASE_URL: set")
 
+if not DATABASE_URL.startswith("postgresql+psycopg://"):
+    logger.warning("DATABASE_URL is not a postgresql+psycopg:// URL, attempting to fix it...")
+    if DATABASE_URL.startswith("postgresql://"):
+        DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://")
+    else:
+        raise ValueError("DATABASE_URL is not valid (we need a postgresql+psycopg URL)")
+
 RABBITMQ_URL = os.environ.get("RABBITMQ_URL")
 assert RABBITMQ_URL, "RABBITMQ_URL environment variable is not set"
 logger.debug("RABBITMQ_URL: set")
