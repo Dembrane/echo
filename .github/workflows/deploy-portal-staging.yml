@@ -1,14 +1,14 @@
-name: GitHub Actions Vercel Staging Deployment
+name: Deploy Portal Staging
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_PORTAL }}
 on:
   pull_request:
     branches:
       - main
 
 jobs:
-  deploy-frontends-staging:
+  deploy-portal-staging:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
