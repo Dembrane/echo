@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  ci:
+  ci-servers:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -20,18 +20,14 @@ jobs:
             dockerfile: Dockerfile
             tag: dbr-echo-directus
             build_args: ""
+
           # Shared image for server and worker
           - name: dbr-echo-server
             context: ./echo/server
             dockerfile: Dockerfile
             tag: dbr-echo-server
             build_args: ""
-          # Shared image for admin dashboard and portal
-          - name: dbr-echo-client-web
-            context: ./echo/frontend
-            dockerfile: Dockerfile
-            tag: dbr-echo-client-web
-            build_args: ""
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
