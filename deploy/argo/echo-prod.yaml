@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: echo-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/dembrane/echo.git'
+    targetRevision: main
+    path: deploy/helm/echo
+    helm:
+      valueFiles:
+        - values-prod.yaml
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: echo-prod
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

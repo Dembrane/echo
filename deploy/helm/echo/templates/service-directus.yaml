@@ -1,0 +1,18 @@
+# deploy/helm/echo/templates/service-directus.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: echo-directus
+  labels:
+    app: echo
+    component: directus
+spec:
+  type: ClusterIP
+  ports:
+    - port: { { .Values.directus.service.port } }
+      targetPort: { { .Values.directus.service.port } }
+      protocol: TCP
+      name: http
+  selector:
+    app: echo
+    component: directus

@@ -1,0 +1,193 @@
+# deploy/helm/echo/templates/deployment-directus.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echo-directus
+  labels:
+    app: echo
+    component: directus
+spec:
+  replicas: { { .Values.directus.replicaCount } }
+  selector:
+    matchLabels:
+      app: echo
+      component: directus
+  template:
+    metadata:
+      labels:
+        app: echo
+        component: directus
+    spec:
+      containers:
+        - name: directus
+          image: '{{ .Values.directus.image.repository }}:{{ .Values.directus.image.tag }}'
+          imagePullPolicy: Always
+          ports:
+            - containerPort: { { .Values.directus.service.port } }
+          env:
+            - name: PUBLIC_URL
+              value: '{{ .Values.directus.env.PUBLIC_URL }}'
+
+            - name: PORT
+              value: '8055'
+
+            - name: SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: echo-backend-secrets
+                  key: DIRECTUS_SECRET
+
+            - name: ADMIN_EMAIL
+              value: 'admin@dembrane.com'
+
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: echo-backend-secrets
+                  key: DIRECTUS_ADMIN_PASSWORD
+
+            - name: ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: echo-backend-secrets
+                  key: DIRECTUS_ADMIN_TOKEN
+
+            - name: WEBSOCKETS_ENABLED
+              value: 'true'
+
+            - name: DB_CLIENT
+              value: 'pg'
+
+            - name: DB_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: echo-backend-secrets
+                  key: DATABASE_URL
+
+            - name: TELEMETRY
+              value: 'false'
+
+            - name: REDIS_ENABLED
+              value: 'true'
+
+            - name: REDIS
+              valueFrom:
+                secretKeyRef:
+                  name: echo-backend-secrets
+                  key: REDIS_URL
+
+            - name: CORS_ENABLED
+              value: 'true'
+
+            - name: CORS_ORIGINS
+              value: '{{ .Values.directus.env.CORS_ORIGINS }}'
+
+            - name: CORS_CREDENTIALS
+              value: 'true'
+
+            - name: SESSION_COOKIE_NAME
+              value: '{{ .Values.directus.env.SESSION_COOKIE_NAME }}'
+
+            - name: SESSION_COOKIE_DOMAIN
+              value: '{{ .Values.directus.env.SESSION_COOKIE_DOMAIN }}'
+
+            - name: SESSION_COOKIE_SAME_SITE
+              value: 'lax'
+
+            - name: SESSION_COOKIE_SECURE
+              value: 'lax'
+
+            - name: EMAIL_TRANSPORT
+              value: 'smtp'
+
+            - name: EMAIL_FROM
+              valueFrom:
+                secretKeyRef:
+                  name: echo-backend-secrets
+                  key: DIRECTUS_EMAIL_FROM
+
+            - name: EMAIL_SMTP_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: echo-backend-secrets
+                  key: DIRECTUS_EMAIL_SMTP_HOST
+
+            - name: EMAIL_SMTP_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: echo-backend-secrets
+                  key: DIRECTUS_EMAIL_SMTP_PORT
+
+            - name: EMAIL_SMTP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: echo-backend-secrets
+                  key: DIRECTUS_EMAIL_SMTP_USER
+
+            - name: EMAIL_SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: echo-backend-secrets
+                  key: DIRECTUS_EMAIL_SMTP_PASSWORD
+
+            - name: USER_REGISTER_URL_ALLOW_LIST
+              value: '{{ .Values.directus.env.USER_REGISTER_URL_ALLOW_LIST }}'
+
+            - name: PASSWORD_RESET_URL_ALLOW_LIST
+              value: '{{ .Values.directus.env.PASSWORD_RESET_URL_ALLOW_LIST }}'
+
+            - name: USER_INVITE_URL_ALLOW_LIST
+              value: '{{ .Values.directus.env.USER_INVITE_URL_ALLOW_LIST }}'
+
+            - name: AUTH_PROVIDERS
+              value: 'google'
+
+            - name: AUTH_GOOGLE_DRIVER
+              value: 'openid'
+
+            - name: AUTH_GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: echo-backend-secrets
+                  key: AUTH_GOOGLE_CLIENT_ID
+
+            - name: AUTH_GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: echo-backend-secrets
+                  key: AUTH_GOOGLE_CLIENT_SECRET
+
+            - name: AUTH_GOOGLE_ISSUER_URL
+              value: 'https://accounts.google.com'
+
+            - name: AUTH_GOOGLE_IDENTIFIER_KEY
+              value: 'email'
+
+            - name: AUTH_GOOGLE_FIRST_NAME_KEY
+              value: 'given_name'
+
+            - name: AUTH_GOOGLE_LAST_NAME_KEY
+              value: 'family_name'
+
+            - name: AUTH_GOOGLE_ICON
+              value: 'google'
+
+            - name: AUTH_GOOGLE_LABEL
+              value: 'Google'
+
+            - name: AUTH_GOOGLE_ALLOW_PUBLIC_REGISTRATION
+              value: '{{ .Values.directus.env.AUTH_GOOGLE_ALLOW_PUBLIC_REGISTRATION }}'
+
+            - name: AUTH_GOOGLE_DEFAULT_ROLE_ID
+              value: '{{ .Values.directus.env.AUTH_GOOGLE_DEFAULT_ROLE_ID }}'
+
+            - name: AUTH_GOOGLE_REDIRECT_ALLOW_LIST
+              value: '{{ .Values.directus.env.AUTH_GOOGLE_REDIRECT_ALLOW_LIST }}'
+
+          resources:
+            requests:
+              cpu: '250m'
+              memory: '256Mi'
+            limits:
+              cpu: '500m'
+              memory: '512Mi'
