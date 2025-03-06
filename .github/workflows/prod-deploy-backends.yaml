@@ -1,0 +1,33 @@
+# name: Update Production Helm Values
+# on:
+#   push:
+#     tags: [ "v*.*.*" ]  # Triggers on tags like v1.2.3
+# jobs:
+#   build-release:
+#     runs-on: ubuntu-latest
+#     outputs:
+#       release_tag: ${{ steps.get_tag.outputs.tag }}
+#     steps:
+#       - name: Get release tag
+#         id: get_tag
+#         run: echo "::set-output name=tag::${GITHUB_REF##*/}"
+#       - name: Checkout monorepo
+#         uses: actions/checkout@v3
+#         with:
+#           token: ${{ secrets.GITHUB_TOKEN }}
+#           ref: main
+#       - name: Update global.imageTag in values-prod.yaml
+#         run: |
+#           NEW_TAG=${{ steps.get_tag.outputs.tag }}
+#           echo "Updating global.imageTag in deploy/helm/echo/values-prod.yaml to $NEW_TAG"
+#           sed -i "s/^  imageTag:.*/  imageTag: \"$NEW_TAG\"/" deploy/helm/echo/values-prod.yaml
+#       - name: Commit and push changes (prod)
+#         run: |
+#           git config user.name "github-actions"
+#           git config user.email "actions@github.com"
+#           git add deploy/helm/echo/values-prod.yaml
+#           git commit -m "Update production image tag to ${{ steps.get_tag.outputs.tag }}"
+#           git push origin main
+#     environment:
+#       name: production
+#       # Configure required reviewers in GitHub Environments if desired.
