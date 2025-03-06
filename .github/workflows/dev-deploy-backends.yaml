@@ -1,34 +1,35 @@
-# name: Update Dev Helm Values with Commit SHA
+name: Update Helm Values with Commit SHA for Staging Env
 
-# on:
-#   push:
-#     branches:
-#       - main
+on:
+  push:
+    branches:
+      - main
 
-# jobs:
-#   update-values:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout GitOps Repository
-#         uses: actions/checkout@v3
-#         with:
-#           token: ${{ secrets.GITOPS_REPO_TOKEN }}
-#           ref: main
+jobs:
+  update-values:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GitOps Repository
+        uses: actions/checkout@v3
+        with:
+          repository: dembrane/echo-gitops
+          token: ${{ secrets.GITOPS_REPO_TOKEN }}
+          ref: main
 
-#       - name: Update global.imageTag in values.yaml
-#         id: update_values
-#         run: |
-#           NEW_TAG="${GITHUB_SHA}"
-#           echo "Updating global.imageTag to ${NEW_TAG}"
-#           # Use a regex to update the line that starts with "imageTag:" regardless of its current value.
-#           sed -E -i "s/^( *imageTag: *).*/\1\"${NEW_TAG}\"/" deploy/helm/echo/values.yaml
-#           echo "Updated values.yaml content:"
-#           cat deploy/helm/echo/values.yaml
+      - name: Update global.imageTag in values.yaml
+        id: update_values
+        run: |
+          NEW_TAG="${GITHUB_SHA}"
+          echo "Updating global.imageTag to ${NEW_TAG}"
+          # Use a regex to update the line that starts with "imageTag:" regardless of its current value.
+          sed -E -i "s/^( *imageTag: *).*/\1\"${NEW_TAG}\"/" helm/echo/values.yaml
+          echo "Updated values.yaml content:"
+          cat helm/echo/values.yaml
 
-#       - name: Commit and push changes
-#         run: |
-#           git config user.name "github-actions[bot]"
-#           git config user.email "github-actions@github.com"
-#           git add deploy/helm/echo/values.yaml
-#           git commit -m "Update dev image tag to ${GITHUB_SHA}"
-#           git push origin main
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions@github.com"
+          git add helm/echo/values.yaml
+          git commit -m "Update dev image tag to ${GITHUB_SHA}"
+          git push origin main
