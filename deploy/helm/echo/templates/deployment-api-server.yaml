@@ -6,7 +6,7 @@ metadata:
     app: echo
     component: api
 spec:
-  replicas: { { .Values.apiServer.replicaCount } }
+  replicas: {{ .Values.apiServer.replicaCount }}
   selector:
     matchLabels:
       app: echo
@@ -25,7 +25,7 @@ spec:
             - '/bin/sh'
             - '/code/server/prod.sh'
           ports:
-            - containerPort: { { .Values.apiServer.service.port } }
+            - containerPort: {{ .Values.apiServer.service.port }}
           env:
             - name: DIRECTUS_PUBLIC_URL
               value: '{{ .Values.apiServer.env.DIRECTUS_PUBLIC_URL }}'

@@ -9,8 +9,8 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    - port: { { .Values.apiServer.service.port } }
-      targetPort: { { .Values.apiServer.service.port } }
+    - port: {{ .Values.apiServer.service.port }}
+      targetPort: {{ .Values.apiServer.service.port }}
       protocol: TCP
       name: http
   selector:
