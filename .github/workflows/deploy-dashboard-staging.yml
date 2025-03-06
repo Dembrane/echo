@@ -19,15 +19,16 @@ jobs:
           node-version: 18
       - uses: pnpm/action-setup@v2
         name: Install pnpm
-        id: pnpm-install
         with:
-          version: 7
+          version: 10
           run_install: false
+      - name: Change directory
+        run: cd echo/frontend
       - name: Install Vercel CLI
         run: pnpm add --global vercel@latest
       - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=staging --token=${{ secrets.VERCEL_TOKEN }} --cwd=echo/frontend
+        run: vercel pull --yes --environment=staging --token=${{ secrets.VERCEL_TOKEN }}
       - name: Build Project Artifacts
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }} --cwd=echo/frontend
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
       - name: Deploy Project Artifacts to Vercel
-        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} --cwd=echo/frontend
+        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
