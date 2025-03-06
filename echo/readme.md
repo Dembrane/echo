@@ -114,7 +114,7 @@ You now have a VS Code environment running inside Ubuntu on WSL.
 3. **Clone your repository**  
    - Log in to GitHub from your WSL environment or clone using HTTPS/SSH:
      ```bash
-     git clone https://github.com/<YourUser>/dembrane.git
+     git clone https://github.com/Dembrane/echo.git
      ```
    - Adjust the URL to your repository as needed.
 4. **Navigate to the nested echo folder**:
@@ -188,7 +188,8 @@ If the Directus container does not start:
 2. **Restart** the Directus container.
 3. **Go to** [http://localhost:8055/admin/settings/data-model](http://localhost:8055/admin/settings/data-model).
 4. **Delete** the “aspect/quote” data model entries (if they are causing issues).
-5. **Run** the sync command in the dev container terminal or a WSL terminal:
+5. CD into directus folder (../echo/directus)
+6. **Run** the sync command in the dev container terminal or a WSL terminal inside "echo > directus" directory:
    ```bash
    npx directus-sync -u http://directus:8055 -e admin@dembrane.com -p admin push -d -f
    ```

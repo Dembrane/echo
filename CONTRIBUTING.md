@@ -1,20 +1,16 @@
-# Contributing Guidelines
+# Contributing Guide
 
-Thank you for your interest in contributing to Dembrane ECHO! This document outlines our contribution process and guidelines.
+Thank you for your interest in contributing. ECHO is an open source project. If you are interested in making it better, there are many ways you can contribute. For example, you can:
 
-#### **Did you find a security vulnerability?**
-
-* **Do not open a GitHub issue if you find a security vulnerability**. Instead, please email sameer@dembrane.com directly.
-
-#### **Did you find a bug?**
-
-* **Ensure the bug was not already reported** by searching on GitHub under Issues.
-
-* If you're unable to find an open issue addressing the problem, open a new one. Be sure to include:
-  - A clear title and description
-  - As much relevant information as possible
-  - A code sample or test case demonstrating the expected behavior
-  - Steps to reproduce the problem
+- Submit a bug report
+- Suggest a new feature
+- Provide feedback by commenting on feature requests/proposals
+- Propose a patch by submitting a pull request
+- Suggest or submit documentation improvements
+- Review outstanding pull requests
+- Answer questions from other users
+- Share the software with other users who are interested
+- Teach others to use the software
 
 We're particularly interested in these contributions:
 
@@ -24,10 +20,6 @@ We're particularly interested in these contributions:
 - Public sector application experience
 - Backend development
 - Frontend development
-
-## TODO's 
-
-- [ ] Populate known issues and roadmap
 
 ## Types of Contributions
 
