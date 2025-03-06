@@ -1,10 +1,12 @@
-name: Build and Push Images
+name: PR - Build images | Merge - Publish images
 
 on:
-  push:
+  # Run on PRs (to check if the images can be built)
+  pull_request:
     branches:
       - main
-  pull_request:
+  # Run on pushes to main (to publish the images)
+  push:
     branches:
       - main
 

@@ -1,0 +1,43 @@
+# deploy/helm/echo/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: echo-ingress
+  labels:
+    app: echo
+  annotations:
+    kubernetes.io/ingress.class: "{{ .Values.ingress.className }}"
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: "{{ .Values.ingress.className }}"
+  tls:
+    {{- range .Values.ingress.tls }}
+    - secretName: {{ .secretName }}
+      hosts:
+        {{- range .hosts }}
+        - {{ . }}
+        {{- end }}
+    {{- end }}
+  rules:
+    - host: {{ .Values.ingress.hosts.directus }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: echo-directus
+                port:
+                  number: {{ .Values.directus.service.port }}
+    - host: {{ .Values.ingress.hosts.api }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: echo-api
+                port:
+                  number: {{ .Values.apiServer.service.port }}

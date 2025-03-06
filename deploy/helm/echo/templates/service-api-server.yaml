@@ -1,0 +1,18 @@
+# deploy/helm/echo/templates/service-api-server.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: echo-api
+  labels:
+    app: echo
+    component: api
+spec:
+  type: ClusterIP
+  ports:
+    - port: { { .Values.apiServer.service.port } }
+      targetPort: { { .Values.apiServer.service.port } }
+      protocol: TCP
+      name: http
+  selector:
+    app: echo
+    component: api

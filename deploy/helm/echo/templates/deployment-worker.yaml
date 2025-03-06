@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echo-worker
+  labels:
+    app: echo
+    component: worker
+spec:
+  replicas: { { .Values.worker.replicaCount } }
+  selector:
+    matchLabels:
+      app: echo
+      component: worker
+  template:
+    metadata:
+      labels:
+        app: echo
+        component: worker
+    spec:
+      containers:
+        - name: worker
+          image: '{{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}'
+          imagePullPolicy: Always
+          command:
+            - '/bin/sh'
+            - '/code/server/prod-worker.sh'
+          ports:
+            - containerPort: { { .Values.apiServer.service.port } }
+          env:
+            - name: DIRECTUS_PUBLIC_URL
+              value: '{{ .Values.apiServer.env.DIRECTUS_PUBLIC_URL }}'
+
+            - name: DIRECTUS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: echo-backend-secrets
+                  key: DIRECTUS_ADMIN_TOKEN
+
+            - name: DIRECTUS_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: echo-backend-secrets
+                  key: DIRECTUS_SECRET
+
+            - name: DIRECTUS_SESSION_COOKIE_NAME
+              value: '{{ .Values.directus.env.SESSION_COOKIE_NAME }}'
+
+            - name: ADMIN_BASE_URL
+              value: '{{ .Values.apiServer.env.ADMIN_BASE_URL }}'
+
+            - name: PARTICIPANT_BASE_URL
+              value: '{{ .Values.apiServer.env.PARTICIPANT_BASE_URL }}'
+
+            - name: BUILD_VERSION
+              value: '{{ .Values.apiServer.env.BUILD_VERSION }}'
+
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: echo-backend-secrets
+                  key: OPENAI_API_KEY
+
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: echo-backend-secrets
+                  key: ANTHROPIC_API_KEY
+
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: echo-backend-secrets
+                  key: REDIS_URL
+
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: echo-backend-secrets
+                  key: DATABASE_URL
+
+            - name: DISABLE_REDACTION
+              value: '{{ .Values.apiServer.env.DISABLE_REDACTION }}'
+
+            - name: DISABLE_SENTRY
+              value: '{{ .Values.apiServer.env.DISABLE_SENTRY }}'
+
+            - name: SERVE_API_DOCS
+              value: '{{ .Values.apiServer.env.SERVE_API_DOCS }}'
+
+          resources:
+            requests:
+              cpu: '250m'
+              memory: '256Mi'
+            limits:
+              cpu: '500m'
+              memory: '512Mi'

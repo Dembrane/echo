@@ -1,0 +1,78 @@
+global:
+  imageTag: "<DEV_COMMIT_SHA>"
+  registry: "registry.digitalocean.com/dbr-cr"
+
+directus:
+  replicaCount: 1
+  image:
+    repository: "{{ .Values.global.registry }}/dbr-echo-directus"
+    tag: "{{ .Values.global.imageTag }}"
+  service:
+    port: 8055
+  env:
+    PUBLIC_URL: "https://directus.echo-next.dembrane.eu"
+    # ADMIN_PASSWORD: 
+    # ADMIN_TOKEN:
+    # DB_CONNECTION_STRING:
+    # REDIS:
+    CORS_ORIGINS: "https://dashboard.echo-next.dembrane.eu,https://portal.echo-next.dembrane.eu"
+    SESSION_COOKIE_NAME: "dembrane_session_token_dev"
+    SESSION_COOKIE_DOMAIN: "echo-next.dembrane.eu"
+    # EMAIL_FROM
+    # EMAIL_SMTP_HOST
+    # EMAIL_SMTP_PORT
+    # EMAIL_SMTP_USER
+    # EMAIL_SMTP_PASSWORD
+    USER_REGISTER_URL_ALLOW_LIST: "https://dashboard.echo-next.dembrane.eu/verify-email"
+    PASSWORD_RESET_URL_ALLOW_LIST: "https://dashboard.echo-next.dembrane.eu/password-reset"
+    USER_INVITE_URL_ALLOW_LIST: "https://dashboard.echo-next.dembrane.eu/invite"
+    # AUTH_GOOGLE_CLIENT_ID
+    # AUTH_GOOGLE_CLIENT_SECRET
+    AUTH_GOOGLE_ALLOW_PUBLIC_REGISTRATION: "true"
+    AUTH_GOOGLE_DEFAULT_ROLE_ID: 2446660a-ab6c-4801-ad69-5711030cba83
+    AUTH_GOOGLE_REDIRECT_ALLOW_LIST: "https://dashboard.echo-next.dembrane.eu/en-US/projects,https://dashboard.echo-next.dembrane.eu/nl-NL/projects,https://dashboard.echo-next.dembrane.eu/es-ES/projects,https://dashboard.echo-next.dembrane.eu/fr-FR/projects,https://dashboard.echo-next.dembrane.eu/de-DE/projects"
+
+apiServer:
+  replicaCount: 1
+  image:
+    repository: "{{ .Values.global.registry }}/dbr-echo-server"
+    tag: "{{ .Values.global.imageTag }}"
+  service:
+    port: 8000
+  env:
+    DIRECTUS_PUBLIC_URL: "https://directus.echo-next.dembrane.eu"
+    # DIRECTUS_TOKEN:
+    # DIRECTUS_SECRET:
+    ADMIN_BASE_URL: "https://dashboard.echo-next.dembrane.eu"
+    PARTICIPANT_BASE_URL: "https://portal.echo-next.dembrane.eu"
+    BUILD_VERSION: "{{ .Values.global.imageTag }}"
+    REDIS_URL: "{{ .Values.global.redisUrl }}"
+    # OPENAI_API_KEY:
+    # ANTHROPIC_API_KEY:
+    # REDIS_URL:
+    # DATABASE_URL:
+    DISABLE_REDACTION: "1"
+    DISABLE_SENTRY: "0"
+    SERVE_API_DOCS: "1"
+
+worker:
+  replicaCount: 1
+  image:
+    repository: "{{ .Values.global.registry }}/dbr-echo-server"
+    tag: "{{ .Values.global.imageTag }}"
+  # the deployment uses the same tags as the api server
+  # only the command is different
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-staging"
+  hosts:
+    directus: "directus.echo-next.dembrane.eu"
+    api: "api.echo-next.dembrane.eu"
+  tls:
+    - secretName: "echo-next-tls"
+      hosts:
+        - "directus.echo-next.dembrane.eu"
+        - "api.echo-next.dembrane.eu"
