@@ -94,3 +94,7 @@ Thanks to everyone in the community that has contributed to this project!
 <a href="https://github.com/dembrane/echo/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=dembrane/echo" />
 </a>
+
+---
+
+## GitOps Repository: [dembrane/echo-gitops](https://github.com/dembrane/echo-gitops)
