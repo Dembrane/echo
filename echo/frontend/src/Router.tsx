@@ -39,6 +39,7 @@ import { ParticipantStartRoute } from "./routes/participant/ParticipantStart";
 import { ProjectReportRoute } from "./routes/project/report/ProjectReportRoute";
 import { ErrorPage } from "./components/error/ErrorPage";
 import { ParticipantReport } from "./routes/participant/ParticipantReport";
+import { ProjectUnsubscribe } from "./routes/project/unsubscribe/ProjectUnsubscribe";
 
 export const mainRouter = createBrowserRouter([
   {
@@ -205,6 +206,10 @@ export const mainRouter = createBrowserRouter([
             ],
           },
         ],
+      },
+      {
+        path: "unsubscribe",
+        element: <ProjectUnsubscribe/>,
       },
       {
         path: "*",

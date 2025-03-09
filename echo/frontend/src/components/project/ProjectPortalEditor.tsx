@@ -15,6 +15,7 @@ import {
   Text,
   Paper,
   InputDescription,
+  Switch,
 } from "@mantine/core";
 import { ProjectTagsInput } from "./ProjectTagsInput";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
@@ -36,6 +37,7 @@ const FormSchema = z.object({
   default_conversation_title: z.string(),
   default_conversation_description: z.string(),
   default_conversation_finish_text: z.string(),
+  is_project_notification_subscription_allowed: z.boolean(),
   default_conversation_transcript_prompt: z.string(),
 });
 
@@ -139,6 +141,8 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
           project.default_conversation_description ?? "",
         default_conversation_finish_text:
           project.default_conversation_finish_text ?? "",
+        is_project_notification_subscription_allowed:
+          project.is_project_notification_subscription_allowed ?? false,
         language:
           (project.language as "en" | "nl" | "de" | "fr" | "es") ?? "en",
         default_conversation_transcript_prompt:
@@ -431,6 +435,39 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
                             markdown={field.value}
                             onChange={field.onChange}
                           />
+                        )}
+                      />
+                    </Stack>
+                    <Stack gap="xs">
+                      <Controller
+                        name="is_project_notification_subscription_allowed"
+                        control={control}
+                        render={({ field }) => (
+                          <Stack gap="xs">
+                            <FormLabel
+                              label={t`Allow Participants to Subscribe to Report Notifications`}
+                              isDirty={
+                                formState.dirtyFields
+                                  .is_project_notification_subscription_allowed
+                              }
+                              error={
+                                formState.errors
+                                  .is_project_notification_subscription_allowed
+                                  ?.message
+                              }
+                            />
+                            <Switch
+                              description={
+                                <Trans>
+                                  Participants can enter their email to receive notifications when a report is published or updated.
+                                </Trans>
+                              }
+                              checked={field.value}
+                              onChange={(e) =>
+                                field.onChange(e.currentTarget.checked)
+                              }
+                            />
+                          </Stack>
                         )}
                       />
                     </Stack>
