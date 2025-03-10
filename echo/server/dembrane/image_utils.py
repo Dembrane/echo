@@ -1,11 +1,10 @@
 import json
 import logging
 
-from dembrane.utils import download_image_and_get_public_url
+from dembrane.s3 import save_to_s3_from_url
 from dembrane.openai import client
 
 logger = logging.getLogger("image_utils")
-
 
 
 def generate_cliches_to_avoid(text: str) -> str:
@@ -116,7 +115,7 @@ def generate_image(prompt: str) -> str:
             image_url = response.data[0].url
             if image_url:
                 logger.debug("saving the image and getting the public url")
-                image_url = download_image_and_get_public_url(image_url)
+                image_url = save_to_s3_from_url(image_url)
         else:
             image_url = None
     except Exception as e:
@@ -134,7 +133,7 @@ def brilliant_image_generator_3000(text: str) -> str:
 
 
 if __name__ == "__main__":
-    ### To test 
+    ### To test
     text = """Departmental Autonomy
 Departments struggle with balancing autonomy and standardization.
 Decentralized services offer flexibility but can be costly and inconsistent.

@@ -4,13 +4,8 @@ import random
 import asyncio
 import logging
 import threading
-from os import path
 from typing import Any, Dict, Tuple, Optional, Generator
 from datetime import datetime, timezone
-
-import requests
-
-from dembrane.config import IMAGES_DIR, API_BASE_URL
 
 random.seed(time.time())
 
@@ -30,21 +25,6 @@ def generate_6_digit_pin() -> str:
 def iter_file_content(file_path: str) -> Generator[bytes, None, None]:
     with open(file_path, mode="rb") as file_like:
         yield from file_like
-
-
-def download_image_and_get_public_url(image_url: str) -> str:
-    response = requests.get(image_url)
-    response.raise_for_status()
-
-    extension = image_url.split("?")[0].split(".")[-1]
-    image_name = f"{generate_uuid()}.{extension}"
-
-    to_save_path = path.join(IMAGES_DIR, image_name)
-
-    with open(to_save_path, "wb") as file:
-        file.write(response.content)
-
-    return API_BASE_URL + "/api/static/image/" + image_name
 
 
 def run_with_timeout(func, args=(), kwargs=None, timeout_sec: int = 1000):  # type: ignore
@@ -117,11 +97,3 @@ class CacheWithExpiration:
         async with self.lock:
             self.cache.clear()
             logger.debug("Cleared entire cache")
-
-
-if __name__ == "__main__":
-    print(
-        download_image_and_get_public_url(
-            "https://oaidalleapiprodscus.blob.core.windows.net/private/org-Hlxgir8XyuK0fxq0h5KE1Xb4/user-vs2eMr6Wg0KwioZgd1VupzGS/img-j8vo82eATvEqdZjSxd4iPpTU.png?st=2024-06-21T05%3A56%3A44Z&se=2024-06-21T07%3A56%3A44Z&sp=r&sv=2023-11-03&sr=b&rscd=inline&rsct=image/png&skoid=6aaadede-4fb3-4698-a8f6-684d7786b067&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2024-06-20T23%3A40%3A21Z&ske=2024-06-21T23%3A40%3A21Z&sks=b&skv=2023-11-03&sig=S/AtHlhTA9dVE18h9pKexQhN/1UKrGqqHwsM6hpE8/M%3D"
-        )
-    )

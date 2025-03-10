@@ -28,7 +28,6 @@ services:
       - 8055:8055
     depends_on:
       - postgres
-      - rabbitmq
     environment:
       SESSION_COOKIE_NAME: ${DIRECTUS_SESSION_COOKIE_NAME:-directus_session_token}
       PUBLIC_URL: ${DIRECTUS_PUBLIC_URL}

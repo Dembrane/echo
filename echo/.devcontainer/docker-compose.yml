@@ -18,15 +18,6 @@ services:
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
 
-  rabbitmq:
-    image: rabbitmq:3.13
-    restart: unless-stopped
-    environment:
-      - RABBITMQ_DEFAULT_USER=dembrane
-      - RABBITMQ_DEFAULT_PASS=dembrane
-    volumes:
-      - ./rabbitmq_data:/var/lib/rabbitmq
-
   directus:
     build:
       context: ../directus
@@ -35,6 +26,8 @@ services:
       - 8055:8055
     volumes:
       - ../directus/uploads:/directus/uploads
+    env_file:
+      - ../directus/.env
     environment:
       - PUBLIC_URL=http://localhost:8055
       - PORT=8055
@@ -58,8 +51,6 @@ services:
       - USER_INVITE_URL_ALLOW_LIST=http://localhost:5173/invite
       - USER_REGISTER_URL_ALLOW_LIST=http://localhost:5173/verify-email
       - PASSWORD_RESET_URL_ALLOW_LIST=http://localhost:5173/password-reset
-
-
     depends_on:
       - postgres
       - redis
@@ -73,7 +64,6 @@ services:
       - DIRECTUS_SECRET=secret
       - DIRECTUS_TOKEN=admin
       - DATABASE_URL=postgresql+psycopg://dembrane:dembrane@postgres:5432/dembrane
-      - RABBITMQ_URL=amqp://dembrane:dembrane@rabbitmq:5672
       - REDIS_URL=redis://redis:6379
       - API_BASE_URL=http://localhost:8000
       - ADMIN_BASE_URL=http://localhost:5173
@@ -88,6 +78,5 @@ services:
     network_mode: service:postgres
     command: sleep infinity
     depends_on:
-      - rabbitmq
       - postgres
       - redis

@@ -7,7 +7,7 @@ from celery.utils.log import get_task_logger  # type: ignore
 
 import dembrane.tasks_config
 from dembrane.utils import generate_uuid, get_utc_timestamp
-from dembrane.config import REDIS_URL, RABBITMQ_URL
+from dembrane.config import REDIS_URL
 from dembrane.sentry import init_sentry
 from dembrane.database import (
     ViewModel,
@@ -128,8 +128,7 @@ def task_split_audio_chunk(self, chunk_id: str) -> List[str]:
     """
     with DatabaseSession() as db:
         try:
-            chunks = split_audio_chunk(db, chunk_id)
-            return [chunk.id for chunk in chunks]
+            return split_audio_chunk(chunk_id)
         except Exception as exc:
             logger.error(f"Error: {exc}")
             db.rollback()

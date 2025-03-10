@@ -148,7 +148,7 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
               )}
             />
 
-            {/* <Divider />
+            <Divider />
 
             <Stack gap="md">
               <Group>
@@ -213,7 +213,7 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
                   />
                 )}
               />
-            </Stack> */}
+            </Stack>
           </Stack>
         </form>
       </Stack>

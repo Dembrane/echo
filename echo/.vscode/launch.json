@@ -9,6 +9,13 @@
       "cwd": "${workspaceFolder}/server"
     },
     {
+      "name": "Python Debugger: s3",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "dembrane.transcribe",
+      "cwd": "${workspaceFolder}/server"
+    },
+    {
       "name": "Attach to Python Functions",
       "type": "debugpy",
       "request": "attach",

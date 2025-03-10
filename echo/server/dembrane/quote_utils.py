@@ -14,8 +14,9 @@ from sklearn.cluster import KMeans  # type: ignore
 from langchain_openai import OpenAIEmbeddings
 from langchain_experimental.text_splitter import SemanticChunker
 
+from dembrane.s3 import save_to_s3_from_url
 from dembrane.ner import anonymize_sentence
-from dembrane.utils import generate_uuid, get_utc_timestamp, download_image_and_get_public_url
+from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.openai import client
 from dembrane.prompts import render_prompt
 from dembrane.database import (
@@ -804,7 +805,7 @@ def generate_aspect_image(db: Session, aspect_id: str) -> AspectModel:
                 image_url = response.data[0].url
                 if image_url:
                     logger.debug("saving the image and getting the public url")
-                    image_url = download_image_and_get_public_url(image_url)
+                    image_url = save_to_s3_from_url(image_url)
             else:
                 image_url = None
         except Exception as e:

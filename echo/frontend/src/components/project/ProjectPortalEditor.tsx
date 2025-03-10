@@ -211,7 +211,7 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
               isError={isError}
             />
           </Group>
-          {/* <Button
+          <Button
             variant="subtle"
             onClick={() => setShowPreview(!showPreview)}
             leftSection={
@@ -219,7 +219,7 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
             }
           >
             <Trans>{showPreview ? "Hide Preview" : "Show Preview"}</Trans>
-          </Button> */}
+          </Button>
         </Group>
 
         <div className="relative flex h-auto flex-col gap-8 lg:flex-row lg:justify-start">
@@ -263,7 +263,7 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
                         />
                       )}
                     />
-                    {/* <Controller
+                    <Controller
                       name="default_conversation_ask_for_participant_name"
                       control={control}
                       render={({ field }) => (
@@ -294,7 +294,7 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
                           }
                         />
                       )}
-                    /> */}
+                    />
                     <Controller
                       name="default_conversation_tutorial_slug"
                       control={control}
@@ -337,11 +337,11 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
                         />
                       )}
                     />
-                    {/* <ProjectTagsInput project={project} /> */}
+                    <ProjectTagsInput project={project} />
                   </Stack>
                 </Stack>
 
-                {/* <Divider />
+                <Divider />
 
                 <Stack gap="1.5rem">
                   <Title order={3}>
@@ -435,7 +435,7 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
                       />
                     </Stack>
                   </Stack>
-                </Stack> */}
+                </Stack>
 
                 <Divider />
 

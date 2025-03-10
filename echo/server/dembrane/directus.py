@@ -6,9 +6,8 @@ from dembrane.config import DIRECTUS_TOKEN, DIRECTUS_BASE_URL
 
 logger = getLogger(__name__)
 
-directus_token = "admin"
-
 if DIRECTUS_TOKEN:
     directus_token = DIRECTUS_TOKEN
+    logger.debug(f"DIRECTUS_TOKEN: {directus_token}")
 
-directus = DirectusClient(url=DIRECTUS_BASE_URL, token=DIRECTUS_TOKEN)
+directus = DirectusClient(url=DIRECTUS_BASE_URL, token=directus_token)
