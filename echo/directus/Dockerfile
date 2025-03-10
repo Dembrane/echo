@@ -21,7 +21,6 @@ COPY ./directus-sync.config.js ./directus-sync.config.js
 
 COPY --from=third-party-ext /extensions/directus ./extensions
 COPY ./templates ./templates/
-COPY ./migrations/ ./migrations/
 
 # https://github.com/directus/directus/blob/main/Dockerfile
 CMD : \
