@@ -10,6 +10,7 @@ from sqlalchemy.orm import joinedload
 from dembrane.tasks import task_finish_conversation_hook, task_process_conversation_chunk
 from dembrane.utils import generate_uuid
 from dembrane.config import AUDIO_CHUNKS_DIR
+from dembrane.s3 import save_to_s3_from_file_like
 from dembrane.schemas import (
     ProjectTagSchema,
     ConversationChunkSchema,
@@ -291,13 +292,18 @@ async def upload_conversation_chunk(
     conversation_id: str,
     chunk: UploadFile,
     timestamp: Annotated[datetime, Form()],
+    type: Annotated[str, Form()] = "audio_chunk",
 ) -> List[dict]:
     conversation = directus.get_items(
         "conversation",
         {
-            "query": {"filter": {"id": {"_eq": conversation_id}}, "fields": ["id"]},
+            "query": {
+                "filter": {"id": {"_eq": conversation_id}},
+                "fields": ["id"],
+            },
         },
     )
+    logger.debug(f"Conversation: {conversation}")
 
     if not conversation or len(conversation) == 0:
         raise ConversationNotFoundException
@@ -306,30 +312,20 @@ async def upload_conversation_chunk(
 
     chunk_id = generate_uuid()
 
-    file_path = os.path.join(
-        AUDIO_CHUNKS_DIR, conversation["id"], f"{conversation['id']}-{chunk_id}-{chunk.filename}"
-    )
+    file_name = f"temporary-audio-chunks/{conversation['id']}-{chunk_id}-{chunk.filename}"
 
-    # ensure the directory exists
-    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    uploaded_file_url = save_to_s3_from_file_like(file_obj=chunk, file_name=file_name, public=False)
 
-    # remove unnecessary information from the file_path
-    file_path = file_path.split(";")[0]
-
-    with open(file_path, "wb") as f:
-        logger.info(f"Saving the file to {file_path}")
-        f.write(chunk.file.read())
-
-        chunk_created = directus.create_item(
-            "conversation_chunk",
-            item_data={
-                "conversation_id": conversation["id"],
-                "timestamp": str(timestamp.utcnow()),
-                "path": file_path,
-                "type": "audio_chunk",
-                "id": chunk_id,
-            },
-        )["data"]
+    chunk_created = directus.create_item(
+        "conversation_chunk",
+        item_data={
+            "conversation_id": conversation["id"],
+            "timestamp": str(timestamp.utcnow()),
+            "path": uploaded_file_url,
+            "type": type,
+            "id": chunk_id,
+        },
+    )["data"]
 
     logger.info(f"Add to processing queue: ConversationChunk@{chunk_created['id']}")
     task_process_conversation_chunk.delay(chunk_created["id"])

@@ -13,7 +13,7 @@ RUN mkdir -p ./directus
 RUN cd node_modules && find . -maxdepth 1 -type d -name "directus-extension-*" -exec mv {} ../directus \;
 
 
-FROM directus/directus:11.3.5
+FROM directus/directus:11.5.1
 
 # for extensions installed via npm
 
@@ -25,9 +25,6 @@ COPY ./migrations/ ./migrations/
 
 # https://github.com/directus/directus/blob/main/Dockerfile
 CMD : \
-    # this step also runs the migrations (before the snapshot is applied!)
     && node cli.js bootstrap \
-    # Run this manually when you want to pull the latest changes from the database
-    # && npx directus-sync push \
     && pm2-runtime start ecosystem.config.cjs \
     ;

@@ -48,7 +48,7 @@ const LogoAiCoNL = ({ hideLogo, hideTitle, ...props }: LogoProps) => (
   </Group>
 );
 
-export const CURRENT_BRAND: "dembrane" | "aiconl" = "aiconl";
+export const CURRENT_BRAND: "dembrane" | "aiconl" = "dembrane";
 
 export const Logo = (props: LogoProps) => {
   // @ts-ignore

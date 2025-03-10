@@ -35,6 +35,10 @@ attrs==23.2.0
 backoff==2.2.1
 billiard==4.2.0
     # via celery
+boto3==1.37.9
+botocore==1.37.9
+    # via boto3
+    # via s3transfer
 celery==5.4.0
     # via flower
     # via sentry-sdk
@@ -114,6 +118,9 @@ jinja2==3.1.4
 jiter==0.5.0
     # via anthropic
     # via openai
+jmespath==1.0.1
+    # via boto3
+    # via botocore
 joblib==1.4.2
     # via scikit-learn
 jsonpatch==1.33
@@ -205,6 +212,7 @@ pydantic-core==2.18.2
     # via pydantic
 pypdf==4.0.2
 python-dateutil==2.9.0.post0
+    # via botocore
     # via celery
     # via pandas
 python-dotenv==1.0.1
@@ -241,6 +249,8 @@ rpds-py==0.22.3
 rsa==4.9
     # via python-jose
 ruff==0.4.4
+s3transfer==0.11.4
+    # via boto3
 scikit-learn==1.4.2
 scipy==1.13.0
     # via scikit-learn
@@ -306,6 +316,7 @@ tzdata==2024.1
     # via celery
     # via pandas
 urllib3==2.2.1
+    # via botocore
     # via directus-sdk-py
     # via requests
     # via sentry-sdk

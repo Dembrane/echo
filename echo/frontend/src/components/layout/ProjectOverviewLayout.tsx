@@ -22,7 +22,7 @@ export const ProjectOverviewLayout = () => {
           <ProjectQRCode project={projectQuery.data} />
         </Box>
         <Stack gap="sm" className="col-span-12 h-full lg:col-span-6">
-          {/* <OpenForParticipationSummaryCard projectId={projectId ?? ""} /> */}
+          <OpenForParticipationSummaryCard projectId={projectId ?? ""} />
           <OngoingConversationsSummaryCard projectId={projectId ?? ""} />
         </Stack>
       </div>

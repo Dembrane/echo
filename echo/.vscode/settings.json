@@ -52,5 +52,8 @@
     }
   ],
   "files.eol": "\n",
-  "debug.internalConsoleOptions": "neverOpen"
+  "debug.internalConsoleOptions": "neverOpen",
+  "python.linting.pylintEnabled": false,
+  "python.linting.mypyEnabled": true,
+  "python.linting.enabled": true
 }
