@@ -18,7 +18,7 @@
     "column": "conversation_id",
     "foreign_key_table": "conversation",
     "foreign_key_column": "id",
-    "constraint_name": "conversation_chunk_conversation_id_fkey",
+    "constraint_name": "conversation_chunk_conversation_id_foreign",
     "on_update": "NO ACTION",
     "on_delete": "CASCADE"
   }

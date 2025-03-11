@@ -312,7 +312,7 @@ async def upload_conversation_chunk(
 
     chunk_id = generate_uuid()
 
-    file_name = f"temporary-audio-chunks/{conversation['id']}-{chunk_id}-{chunk.filename}"
+    file_name = f"audio-chunks/{conversation['id']}-{chunk_id}-{chunk.filename}"
 
     uploaded_file_url = save_to_s3_from_file_like(file_obj=chunk, file_name=file_name, public=False)
 

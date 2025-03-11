@@ -18,7 +18,7 @@
     "column": "view_id",
     "foreign_key_table": "view",
     "foreign_key_column": "id",
-    "constraint_name": "aspect_view_id_fkey",
+    "constraint_name": "aspect_view_id_foreign",
     "on_update": "NO ACTION",
     "on_delete": "SET NULL"
   }

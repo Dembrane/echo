@@ -225,6 +225,158 @@ def process_and_save_to_s3(
         raise
 
 
+def merge_multiple_audio_files_and_save_to_s3(
+    input_file_names: List[str],
+    output_file_name: str,
+    public: bool = False,
+    max_size_mb: int = 2000,
+) -> str:
+    """Merge multiple audio files and save the result back to S3.
+
+    Args:
+        input_file_names: List of input file names in S3
+        output_file_name: Destination file name in S3
+        public: Whether the output file should be public
+        max_size_mb: Maximum file size in MB to process
+
+    Returns:
+        str: Public URL of the processed file
+
+    Raises:
+        FFmpegError: For FFmpeg-specific errors
+        ValueError: For input validation errors
+        Exception: For other processing errors
+    """
+    try:
+        if not input_file_names:
+            raise ValueError("No input files provided")
+
+        # Log start of processing
+        logger.info(f"Starting audio merge for {len(input_file_names)} files")
+        start_time = time.time()
+
+        # Check total size of all input files and load data
+        total_size_mb = 0
+        file_data = []
+
+        for file_name in input_file_names:
+            response = s3_client.head_object(
+                Bucket=STORAGE_S3_BUCKET, Key=get_sanitized_s3_key(file_name)
+            )
+            file_size_mb = response["ContentLength"] / (1024 * 1024)
+            total_size_mb += file_size_mb
+
+            # Get stream from S3 and read into memory
+            input_stream = get_stream_from_s3(file_name)
+            file_data.append(input_stream.read())
+
+        # AWS recommendation: 2x file size + 140MB overhead
+        estimated_memory_mb = (total_size_mb * 2) + 140
+
+        if total_size_mb > max_size_mb:
+            logger.warning(
+                f"Total file size {total_size_mb:.1f}MB exceeds limit of {max_size_mb}MB. "
+                f"Estimated memory required: {estimated_memory_mb:.1f}MB"
+            )
+
+        # Process each file - probe format and convert if needed
+        processed_data = []
+        for i, data in enumerate(file_data):
+            # Probe file to determine format
+            try:
+                probe_result = probe_from_bytes(data)
+
+                # Check if format is OGG
+                is_ogg = False
+                if "format" in probe_result:
+                    format_name = probe_result["format"].get("format_name", "").lower()
+                    if "ogg" in format_name:
+                        is_ogg = True
+                        logger.info(f"File {input_file_names[i]} is already in OGG format")
+
+                if not is_ogg:
+                    logger.warning(f"File {input_file_names[i]} is not in OGG format, converting")
+                    # Convert to OGG
+                    process = (
+                        ffmpeg.input("pipe:0")
+                        .output("pipe:1", **presets["to_ogg_voice"])
+                        .overwrite_output()
+                        .run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True)
+                    )
+                    stdout, stderr = process.communicate(input=data)
+
+                    if process.returncode != 0:
+                        error_message = stderr.decode() if stderr else "Unknown FFmpeg error"
+                        raise FFmpegError(f"FFmpeg conversion failed: {error_message}")
+
+                    processed_data.append(stdout)
+                else:
+                    # Already OGG, use as-is
+                    processed_data.append(data)
+
+            except Exception as e:
+                logger.warning(
+                    f"Error probing file {input_file_names[i]}: {str(e)}. Falling back to conversion."
+                )
+                # Fall back to conversion if probe fails
+                process = (
+                    ffmpeg.input("pipe:0")
+                    .output("pipe:1", **presets["to_ogg_voice"])
+                    .overwrite_output()
+                    .run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True)
+                )
+                stdout, stderr = process.communicate(input=data)
+
+                if process.returncode != 0:
+                    error_message = stderr.decode() if stderr else "Unknown FFmpeg error"
+                    raise FFmpegError(f"FFmpeg conversion failed: {error_message}") from e
+
+                processed_data.append(stdout)
+
+        # Combine all processed files
+        merged_data = bytearray()
+        for data in processed_data:
+            merged_data.extend(data)
+
+        # Final processing to ensure consistent output
+        process = (
+            ffmpeg.input("pipe:0", format="ogg")
+            .output("pipe:1", **presets["to_ogg_voice"])
+            .overwrite_output()
+            .run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True)
+        )
+
+        output, err = process.communicate(input=bytes(merged_data))
+
+        if process.returncode != 0:
+            error_message = err.decode() if err else "Unknown FFmpeg error"
+            raise FFmpegError(f"FFmpeg final processing failed: {error_message}")
+
+        if not output_file_name.endswith(".ogg"):
+            output_file_name = f"{output_file_name}.ogg"
+
+        # Save to S3
+        s3_client.put_object(
+            Bucket=STORAGE_S3_BUCKET,
+            Key=get_sanitized_s3_key(output_file_name),
+            Body=output,
+            ACL="public-read" if public else "private",
+        )
+
+        duration = time.time() - start_time
+        logger.info(
+            f"Completed merging {len(input_file_names)} files in {duration:.2f}s. "
+            f"Total input size: {total_size_mb:.1f}MB"
+        )
+
+        public_url = f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/{output_file_name}"
+        return public_url
+
+    except Exception as e:
+        logger.error(f"Audio merge failed: {str(e)}")
+        raise
+
+
 MAX_CHUNK_SIZE = 20 * 1024 * 1024  # 20MB
 
 

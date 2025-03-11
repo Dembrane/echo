@@ -1,10 +1,10 @@
 import logging
-from typing import BinaryIO
 from urllib.parse import urlparse
 
 import boto3  # type: ignore
 import requests
 from fastapi import UploadFile
+from botocore.response import StreamingBody  # type: ignore
 
 from dembrane.utils import generate_uuid
 from dembrane.config import (
@@ -88,7 +88,7 @@ def save_to_s3_from_file_like(
 def get_signed_url(file_name: str, expires_in_seconds: int = 3600) -> str:
     return s3_client.generate_presigned_url(
         "get_object",
-        Params={"Bucket": STORAGE_S3_BUCKET, "Key": file_name},
+        Params={"Bucket": STORAGE_S3_BUCKET, "Key": get_sanitized_s3_key(file_name)},
         ExpiresIn=expires_in_seconds,
     )
 
@@ -99,7 +99,7 @@ def get_sanitized_s3_key(file_name: str) -> str:
     return file_name
 
 
-def get_stream_from_s3(file_name: str) -> BinaryIO:
+def get_stream_from_s3(file_name: str) -> StreamingBody:
     file_name = get_sanitized_s3_key(file_name)
 
     f = s3_client.get_object(Bucket=STORAGE_S3_BUCKET, Key=file_name)
