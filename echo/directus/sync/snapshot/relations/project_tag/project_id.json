@@ -18,7 +18,7 @@
     "column": "project_id",
     "foreign_key_table": "project",
     "foreign_key_column": "id",
-    "constraint_name": "project_tag_project_id_fkey",
+    "constraint_name": "project_tag_project_id_foreign",
     "on_update": "NO ACTION",
     "on_delete": "CASCADE"
   }

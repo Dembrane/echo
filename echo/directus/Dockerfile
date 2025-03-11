@@ -1,4 +1,4 @@
-FROM node:20-alpine AS third-party-ext
+FROM node:22-alpine AS third-party-ext
 
 RUN apk add python3 g++ make
 
