@@ -39,7 +39,17 @@ logger = get_task_logger("celery_tasks")
 
 assert REDIS_URL, "REDIS_URL environment variable is not set"
 
-celery_app = Celery("tasks", broker=REDIS_URL + "/0", result_backend=REDIS_URL + "/0")
+# TODO: remove this once we have a proper SSL certificate
+# for the time atleast isolate using vpc
+ssl_params = ""
+if REDIS_URL.startswith("rediss://") and "?ssl_cert_reqs=" not in REDIS_URL:
+    ssl_params = "?ssl_cert_reqs=CERT_NONE"
+
+celery_app = Celery(
+    "tasks",
+    broker=REDIS_URL + "/1" + ssl_params,
+    result_backend=REDIS_URL + "/1" + ssl_params,
+)
 
 celery_app.config_from_object(dembrane.tasks_config)
 

@@ -16,7 +16,7 @@ dotenv_path = os.path.join(BASE_DIR, ".env")
 
 if os.path.exists(dotenv_path):
     logger.info(f"loading environment variables from {dotenv_path}")
-    dotenv.load_dotenv(dotenv_path, verbose=True)
+    dotenv.load_dotenv(dotenv_path, verbose=True, override=True)
 
 DEBUG_MODE = os.environ.get("DEBUG_MODE", "false").lower() in ["true", "1"]
 logger.info(f"DEBUG_MODE: {DEBUG_MODE}")
