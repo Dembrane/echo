@@ -19,14 +19,22 @@ logger = logging.getLogger("s3")
 
 session = boto3.session.Session()
 
-s3_client = session.client(
-    "s3",
-    region_name=STORAGE_S3_REGION,
-    endpoint_url=STORAGE_S3_ENDPOINT,
-    aws_access_key_id=STORAGE_S3_KEY,
-    aws_secret_access_key=STORAGE_S3_SECRET,
-)
-
+if STORAGE_S3_REGION is None:
+    logger.warning("STORAGE_S3_REGION is not set, using 'None'")
+    s3_client = session.client(
+        "s3",
+        endpoint_url=STORAGE_S3_ENDPOINT,
+        aws_access_key_id=STORAGE_S3_KEY,
+        aws_secret_access_key=STORAGE_S3_SECRET,
+    )
+else:
+    s3_client = session.client(
+        "s3",
+        region_name=STORAGE_S3_REGION,
+        endpoint_url=STORAGE_S3_ENDPOINT,
+        aws_access_key_id=STORAGE_S3_KEY,
+        aws_secret_access_key=STORAGE_S3_SECRET,
+    )
 
 def save_to_s3_from_url(
     input_url: str, output_file_name: str | None = None, public: bool = True

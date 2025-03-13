@@ -177,14 +177,14 @@ async def get_conversation_content(
     if (
         not force_merge
         and conversation["merged_audio_path"]
-        and conversation["merged_audio_path"].startswith("https")
+        and conversation["merged_audio_path"].startswith("http")
     ):
         logger.debug(f"Using merged audio path: {conversation['merged_audio_path']}")
         return RedirectResponse(get_signed_url(conversation["merged_audio_path"]))
 
     file_paths = [chunk["path"] for chunk in chunks if chunk["path"]]
 
-    is_s3_impl = all(path.startswith("https") for path in file_paths)
+    is_s3_impl = all(path.startswith("http") for path in file_paths)
 
     if is_s3_impl:
         logger.info(f"Merging {len(file_paths)} audio files for conversation {conversation_id}")
@@ -261,11 +261,11 @@ async def get_conversation_chunk_content(
     logger.info(f"Chunk path: {chunk['path']}")
 
     # If the chunk is a s3 URL, stream the audio from the URL
-    if chunk["path"].startswith("https"):
+    if chunk["path"].startswith("http"):
         logger.info("Streaming audio from S3")
         return RedirectResponse(get_signed_url(chunk["path"]))
 
-    file_paths = [chunk.path]
+    file_paths = [chunk["path"]]
     mime_type = get_mime_type_from_file_path(file_paths[0])
 
     range_header = request.headers.get("Range")
