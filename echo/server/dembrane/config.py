@@ -131,9 +131,10 @@ STORAGE_S3_BUCKET = os.environ.get("STORAGE_S3_BUCKET")
 assert STORAGE_S3_BUCKET, "STORAGE_S3_BUCKET environment variable is not set"
 logger.debug("STORAGE_S3_BUCKET: set")
 
-STORAGE_S3_REGION = os.environ.get("STORAGE_S3_REGION")
-assert STORAGE_S3_REGION, "STORAGE_S3_REGION environment variable is not set"
-logger.debug("STORAGE_S3_REGION: set")
+STORAGE_S3_REGION = os.environ.get("STORAGE_S3_REGION", None)
+logger.debug(f"STORAGE_S3_REGION: {STORAGE_S3_REGION}")
+if STORAGE_S3_REGION is None:
+    logger.warning("STORAGE_S3_REGION is not set, using 'None'")
 
 STORAGE_S3_ENDPOINT = os.environ.get("STORAGE_S3_ENDPOINT")
 assert STORAGE_S3_ENDPOINT, "STORAGE_S3_ENDPOINT environment variable is not set"

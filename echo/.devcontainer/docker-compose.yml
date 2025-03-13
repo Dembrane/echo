@@ -1,6 +1,26 @@
 services:
+  minio:
+    image: minio/minio:latest
+    ports:
+      - 9000:9000
+      - 9001:9001
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+      /usr/bin/mc mb --ignore-existing myminio/dembrane;
+      /usr/bin/mc policy set download myminio/dembrane;
+      minio server /mnt/data --console-address ":9001"
+      "
+    environment:
+      - MINIO_ROOT_USER=dembrane
+      - MINIO_ROOT_PASSWORD=dembrane
+      - MINIO_VOLUMES=/mnt/data
+    volumes:
+      - ./minio_data:/mnt/data
+    restart: unless-stopped
+
   redis:
-    image: "bitnami/redis:6.2.14"
+    image: 'bitnami/redis:6.2.14'
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
     volumes:
@@ -26,8 +46,6 @@ services:
       - 8055:8055
     volumes:
       - ../directus/uploads:/directus/uploads
-    env_file:
-      - ../directus/.env
     environment:
       - PUBLIC_URL=http://localhost:8055
       - PORT=8055
@@ -51,6 +69,12 @@ services:
       - USER_INVITE_URL_ALLOW_LIST=http://localhost:5173/invite
       - USER_REGISTER_URL_ALLOW_LIST=http://localhost:5173/verify-email
       - PASSWORD_RESET_URL_ALLOW_LIST=http://localhost:5173/password-reset
+      - STORAGE_LOCATIONS=local,s3
+      - STORAGE_S3_KEY=dembrane
+      - STORAGE_S3_SECRET=dembrane
+      - STORAGE_S3_BUCKET=dembrane
+      - STORAGE_S3_ENDPOINT=http://localhost:9000
+
     depends_on:
       - postgres
       - redis
@@ -73,6 +97,10 @@ services:
       - DISABLE_SENTRY=1
       - SERVE_API_DOCS=1
       - DISABLE_REDACTION=1
+      - STORAGE_S3_KEY=dembrane
+      - STORAGE_S3_SECRET=dembrane
+      - STORAGE_S3_BUCKET=dembrane
+      - STORAGE_S3_ENDPOINT=http://localhost:9000
     volumes:
       - ../..:/workspaces:cached
     network_mode: service:postgres

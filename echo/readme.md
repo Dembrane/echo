@@ -48,37 +48,36 @@ Links are relative to the root of the repository with .cursor/rules
 - [docs/server_configuration.md](/.cursor/rules/server_configuration.md): Guide for configuring server environment variables.
 - [docs/server_readme.md](/.cursor/rules/server_readme.md): General information and setup instructions for the server component.
 
-
-
-
-
-
 Below is a step-by-step guide for installing and running Dembrane Echo on Windows using WSL, Docker Desktop, and VS Code (or Cursor). These instructions consolidate all the steps you shared into a single, detailed tutorial.
 
 ---
 
 ## 1. Install WSL with Ubuntu 22.04
 
-1. **Open Command Prompt (cmd)**  
+1. **Open Command Prompt (cmd)**
+
    - Press <kbd>Win</kbd>+<kbd>R</kbd>, type `cmd`, and hit **Enter**.
 
-2. **Run the WSL install command**  
+2. **Run the WSL install command**
+
    ```bash
    wsl.exe --install Ubuntu-22.04
    ```
+
    - When prompted, create a **username** and **password** for your new Ubuntu environment.
 
-3. **Restart if required**  
+3. **Restart if required**
    - If Windows requires a restart, do so to finalize the WSL installation.
 
 ---
 
 ## 2. Install Docker Desktop for Windows
 
-1. **Download & Install**  
+1. **Download & Install**
+
    - Go to [Docker’s Windows Install Docs](https://docs.docker.com/desktop/setup/install/windows-install/) and follow the on-screen instructions to install Docker Desktop.
 
-2. **Enable WSL Integration in Docker Desktop**  
+2. **Enable WSL Integration in Docker Desktop**
    - Open Docker Desktop.
    - Click the cog/settings icon, then go to **Resources** → **WSL Integration**.
    - Toggle on the distribution (e.g., “Ubuntu-22.04”) that you want Docker to use.
@@ -88,12 +87,13 @@ Below is a step-by-step guide for installing and running Dembrane Echo on Window
 ## 3. Install the WSL Extension in VS Code (or Cursor)
 
 1. **Open VS Code (or Cursor)**.
-2. **Install “WSL” extension**  
-   - In VS Code:  
-     - Open the Extensions panel (left sidebar or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd>).  
+2. **Install “WSL” extension**
+
+   - In VS Code:
+     - Open the Extensions panel (left sidebar or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd>).
      - Search for **“Remote - WSL”** and click **Install**.
 
-3. **Connect to WSL**  
+3. **Connect to WSL**
    - Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> to open the command palette.
    - Type **“WSL”** and select **“Remote-WSL: New Window”** (or **“Connect to WSL”**).
 
@@ -109,7 +109,7 @@ You now have a VS Code environment running inside Ubuntu on WSL.
    sudo apt update
    sudo apt install git -y
    ```
-3. **Clone your repository**  
+3. **Clone your repository**
    - Log in to GitHub from your WSL environment or clone using HTTPS/SSH:
      ```bash
      git clone https://github.com/Dembrane/echo.git
@@ -124,20 +124,22 @@ You now have a VS Code environment running inside Ubuntu on WSL.
 
 ## 5. Set Up Dev Containers in VS Code
 
-1. **Install “Dev Containers” extension**  
+1. **Install “Dev Containers” extension**
+
    - In VS Code, open the Extensions panel again.
    - Search for **“Dev Containers”** (or in older versions it may be “Remote - Containers”).
    - Click **Install**.
 
-2. **Open the folder in a Dev Container**  
+2. **Open the folder in a Dev Container**
+
    - With VS Code open on the `dembrane/echo/echo` folder:
      - Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> to open the command palette.
      - Type **“Dev Containers: Open Folder in Container”** (or “Reopen in Container”).
      - Choose the `echo` folder you have open.
 
-3. **Install recommended extensions**  
-   - After the container finishes building, you may see a prompt in the VS Code Terminal or the log output that says something like:  
-     > Press any key except space/enter/escape to auto-install extensions.  
+3. **Install recommended extensions**
+   - After the container finishes building, you may see a prompt in the VS Code Terminal or the log output that says something like:
+     > Press any key except space/enter/escape to auto-install extensions.
    - Press a suitable key to let the dev container install any additional recommended extensions.
 
 ---
@@ -145,7 +147,7 @@ You now have a VS Code environment running inside Ubuntu on WSL.
 ## 6. Run the Setup Script
 
 1. **Open a new terminal in VS Code** (inside the dev container).
-2. **Run the setup script**  
+2. **Run the setup script**
    ```bash
    ./setup.sh
    ```
@@ -182,6 +184,7 @@ If your Redis container fails to start and you see a “Permission denied” err
 ### 8.2 Directus Container Not Starting
 
 If the Directus container does not start:
+
 1. **Open Docker Desktop** → **Containers**.
 2. **Restart** the Directus container.
 3. **Go to** [http://localhost:8055/admin/settings/data-model](http://localhost:8055/admin/settings/data-model).
@@ -197,14 +200,16 @@ If the Directus container does not start:
 
 ## 9. Final Setup Steps
 
-1. **Create a `.env` file in the server**  
-   - Inside your dev container or WSL environment, create `.env` at the appropriate location (e.g., the server folder).  
+1. **Create a `.env` file in the server**
+
+   - Inside your dev container or WSL environment, create `.env` at the appropriate location (e.g., the server folder).
    - Add any environment variables required by your application.
 
-2. **(Optional) Restore Terminals**  
+2. **(Optional) Restore Terminals**
+
    - If you installed the **“Restore Terminals”** extension, you can press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> and select **“Restore Terminals”** at any time.
 
-3. **Obtain a Directus Token**  
+3. **Obtain a Directus Token**
    - Go to [http://localhost:8055/admin/users](http://localhost:8055/admin/users) in your browser.
    - Create a new token (under **Admin** → **Tokens**).
    - Update your `.env` file with the newly created token if your application requires it.
@@ -213,15 +218,17 @@ If the Directus container does not start:
 
 ## 10. Usage
 
-- **Starting Containers**:  
-  - Open Docker Desktop and ensure all containers (Redis, Directus, etc.) are running.  
+- **Starting Containers**:
+
+  - Open Docker Desktop and ensure all containers (Redis, Directus, etc.) are running.
   - Or, in the dev container, use `docker compose up -d` (if that is how your project is set up).
 
-- **Accessing Directus**:  
+- **Accessing Directus**:
+
   - Go to [http://localhost:8055/](http://localhost:8055/) to view the Directus interface.
   - Log in with the admin user (e.g., **admin@dembrane.com**, password: `admin` in the example).
 
-- **Developing within VS Code**:  
+- **Developing within VS Code**:
   - Make changes to your code in the dev container environment.
   - Your app/services should automatically reload or can be restarted as configured in `docker-compose.yml` or within the dev container.
 
@@ -229,18 +236,27 @@ If the Directus container does not start:
 
 ## Additional Tips & Troubleshooting
 
-1. **Check Docker Resources**  
+1. **Check Docker Resources**
+
    - Make sure Docker has enough memory/CPU allocated under **Docker Desktop** → **Settings** → **Resources**.
 
-2. **Handling Port Conflicts**  
+2. **Handling Port Conflicts**
+
    - If ports like `8055` are in use, either stop the conflicting service or update the Directus port in your Docker Compose file.
 
-3. **Persistence**  
+3. **Persistence**
+
    - Docker volumes or the `.devcontainer/redis_data` folder store data. If you remove them, you may lose data. Make backups if necessary.
 
-4. **Running Commands Outside vs. Inside Dev Container**  
-   - Typically, build/test/development commands run inside the dev container.  
+4. **Running Commands Outside vs. Inside Dev Container**
+   - Typically, build/test/development commands run inside the dev container.
    - Docker-level commands (like `docker compose` or `sudo chown` for folder permissions) sometimes must be run in your **local WSL terminal**, depending on how your dev container is configured.
+
+## [todo] Local development S3 Guidelines:
+
+- go to minio-ui at http://localhost:9001/
+- login with credentails from .devcontainer/docker-compose.yml
+- create a bucket called "dembrane"
 
 ---
 
@@ -248,14 +264,14 @@ If the Directus container does not start:
 
 By following these steps:
 
-1. **Install WSL & Docker**  
-2. **Enable WSL integration**  
-3. **Install WSL + Dev Containers extensions in VS Code**  
-4. **Clone your repository & open in dev container**  
-5. **Run `./setup.sh`**  
-6. **Resolve any Redis/Directus issues** using the commands provided  
-7. **Create/Update your `.env` and tokens** as needed  
+1. **Install WSL & Docker**
+2. **Enable WSL integration**
+3. **Install WSL + Dev Containers extensions in VS Code**
+4. **Clone your repository & open in dev container**
+5. **Run `./setup.sh`**
+6. **Resolve any Redis/Directus issues** using the commands provided
+7. **Create/Update your `.env` and tokens** as needed
 
-…you should have a fully functioning Dembrane Echo setup on Windows using WSL and Docker. Once everything is running, you can develop and manage your application via the dev container in VS Code, with Directus accessible at [http://localhost:8055/](http://localhost:8055/). 
+…you should have a fully functioning Dembrane Echo setup on Windows using WSL and Docker. Once everything is running, you can develop and manage your application via the dev container in VS Code, with Directus accessible at [http://localhost:8055/](http://localhost:8055/).
 
 Enjoy building with Dembrane Echo!
