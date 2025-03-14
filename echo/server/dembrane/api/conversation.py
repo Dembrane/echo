@@ -5,17 +5,21 @@ from logging import getLogger
 from fastapi import Request, APIRouter
 from pydantic import BaseModel
 from sqlalchemy.orm import noload, selectinload
-from fastapi.responses import StreamingResponse
+from fastapi.responses import RedirectResponse, StreamingResponse
 from fastapi.exceptions import HTTPException
 
-from dembrane.utils import CacheWithExpiration
+from dembrane.s3 import get_signed_url
+from dembrane.utils import CacheWithExpiration, get_utc_timestamp
 from dembrane.database import (
     ConversationModel,
     ConversationChunkModel,
     DependencyInjectDatabase,
 )
 from dembrane.directus import directus
-from dembrane.audio_utils import get_mime_type_from_file_path
+from dembrane.audio_utils import (
+    get_mime_type_from_file_path,
+    merge_multiple_audio_files_and_save_to_s3,
+)
 from dembrane.quote_utils import count_tokens
 from dembrane.reply_utils import generate_reply_for_conversation
 from dembrane.api.exceptions import (
@@ -130,18 +134,82 @@ def raise_if_conversation_not_found_or_not_authorized(
         )
 
 
-@ConversationRouter.get("/{conversation_id}/content")
+@ConversationRouter.get("/{conversation_id}/content", response_model=None)
 async def get_conversation_content(
     request: Request,
     conversation_id: str,
-    db: DependencyInjectDatabase,
     auth: DependencyDirectusSession,
-) -> StreamingResponse:
+    force_merge: bool = False,
+) -> StreamingResponse | RedirectResponse:
     raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
     # ordered by timestamp
-    chunks = await get_conversation_chunks(conversation_id, db)
-    file_paths = [chunk.path for chunk in chunks if chunk.path]
+    chunks = directus.get_items(
+        "conversation_chunk",
+        {
+            "query": {
+                "filter": {"conversation_id": {"_eq": conversation_id}},
+                "sort": "-timestamp",
+                "fields": ["path"],
+            },
+        },
+    )
+
+    if not chunks or len(chunks) == 0:
+        raise ConversationNotFoundException
+
+    conversations = directus.get_items(
+        "conversation",
+        {
+            "query": {
+                "filter": {"id": {"_eq": conversation_id}},
+                "fields": ["merged_audio_path"],
+            },
+        },
+    )
+
+    if not conversations or len(conversations) == 0:
+        raise ConversationNotFoundException
+
+    conversation = conversations[0]
+
+    # if we already have a merged audio path, use that
+    if (
+        not force_merge
+        and conversation["merged_audio_path"]
+        and conversation["merged_audio_path"].startswith("http")
+    ):
+        logger.debug(f"Using merged audio path: {conversation['merged_audio_path']}")
+
+        revised_url = get_signed_url(conversation["merged_audio_path"])
+
+        if revised_url.startswith("http://minio:9000"):
+            logger.warning("Merged audio path is using minio:9000, trying to replace with localhost:9000")
+            revised_url = revised_url.replace("http://minio:9000", "http://localhost:9000")
+
+        return RedirectResponse(revised_url)
+
+    file_paths = [chunk["path"] for chunk in chunks if chunk["path"]]
+
+    is_s3_impl = all(path.startswith("http") for path in file_paths)
+
+    if is_s3_impl:
+        logger.info(f"Merging {len(file_paths)} audio files for conversation {conversation_id}")
+
+        merged_path = merge_multiple_audio_files_and_save_to_s3(
+            file_paths, f"audio-conversations/{conversation_id}-{get_utc_timestamp()}.ogg"
+        )
+
+        logger.debug(f"Merged audio path: {merged_path}")
+        directus.update_item(
+            "conversation",
+            conversation_id,
+            {
+                "merged_audio_path": merged_path,
+            },
+        )
+
+        return RedirectResponse(get_signed_url(merged_path))
 
     # how does this work when there are multiple files with different types?
     mime_type = get_mime_type_from_file_path(file_paths[0])
@@ -170,34 +238,47 @@ async def get_conversation_content(
     return StreamingResponse(stream_audio(file_paths), media_type=mime_type)
 
 
-@ConversationRouter.get("/{conversation_id}/chunks/{chunk_id}/content")
+@ConversationRouter.get("/{conversation_id}/chunks/{chunk_id}/content", response_model=None)
 async def get_conversation_chunk_content(
     request: Request,
     conversation_id: str,
     chunk_id: str,
-    db: DependencyInjectDatabase,
     auth: DependencyDirectusSession,
-) -> StreamingResponse:
+) -> StreamingResponse | RedirectResponse:
     raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
-    conversation = await get_conversation(conversation_id, db, load_chunks=False)
-
-    chunk = (
-        db.query(ConversationChunkModel)
-        .filter(
-            ConversationChunkModel.conversation_id == conversation.id,
-            ConversationChunkModel.id == chunk_id,
-        )
-        .first()
+    chunks = directus.get_items(
+        "conversation_chunk",
+        {
+            "query": {
+                "filter": {"id": {"_eq": chunk_id}, "conversation_id": {"_eq": conversation_id}},
+                "fields": ["path"],
+            }
+        },
     )
 
-    if not chunk:
+    if not chunks or len(chunks) == 0:
         raise ConversationNotFoundException
 
-    if not chunk.path:
+    chunk = chunks[0]
+
+    if not chunk["path"]:
         raise NoContentFoundException
 
-    file_paths = [chunk.path]
+    logger.info(f"Chunk path: {chunk['path']}")
+
+    # If the chunk is a s3 URL, stream the audio from the URL
+    if chunk["path"].startswith("http"):
+        revised_url = get_signed_url(chunk["path"])
+
+        if revised_url.startswith("http://minio:9000"):
+            logger.warning("Chunk path is using minio:9000, trying to replace with localhost:9000")
+            revised_url = revised_url.replace("http://minio:9000", "http://localhost:9000")
+
+        logger.info("Streaming audio from S3")
+        return RedirectResponse(revised_url)
+
+    file_paths = [chunk["path"]]
     mime_type = get_mime_type_from_file_path(file_paths[0])
 
     range_header = request.headers.get("Range")

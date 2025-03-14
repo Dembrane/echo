@@ -8,7 +8,7 @@ frontend_setup () {
     export PATH="$FNM_PATH:$PATH"
     eval "`fnm env`"
   fi  
-  fnm install 18
+  fnm install 22
   npm i -g pnpm
   pnpm config set store-dir /home/node/.local/share/pnpm/store
 

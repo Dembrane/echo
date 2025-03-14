@@ -18,7 +18,7 @@
     "column": "project_analysis_run_id",
     "foreign_key_table": "project_analysis_run",
     "foreign_key_column": "id",
-    "constraint_name": "view_project_analysis_run_id_fkey",
+    "constraint_name": "view_project_analysis_run_id_foreign",
     "on_update": "NO ACTION",
     "on_delete": "SET NULL"
   }

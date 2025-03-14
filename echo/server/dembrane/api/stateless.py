@@ -3,7 +3,6 @@ from logging import getLogger
 from fastapi import APIRouter
 from litellm import completion
 from pydantic import BaseModel
-from langchain.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
 
 logger = getLogger("api.stateless")
 
@@ -48,13 +47,12 @@ def generate_summary(transcript: str, system_prompt: str | None, language: str |
         str: The generated summary.
     """
     # Prepare the prompt template
-    base_prompt = f"You are a helpful assistant. Please provide a summary of the following transcript. Only return the summary itself, do not include any other text. Focus on the most important points of the text. The language of the summary must be in {language}."
+    base_prompt = f"You are a helpful assistant. Please provide a summary of the following transcript. Only return the summary itself, do not include any other text. Focus on the most interesting/surprise invoking points of the text. Ignore any personal information. The language of the summary must be in {language}."
     if system_prompt:
         base_prompt += f"\nContext (ignore if None): {system_prompt}"
 
-    prompt_template = ChatPromptTemplate.from_messages(
-        [HumanMessagePromptTemplate.from_template(f"{base_prompt}\n\n{{transcript}}")]
-    )
+    final_prompt = f"{base_prompt}\n\n{transcript}"
+
     # Call the model over the provided API endpoint
     response = completion(
         # model="ollama/llama3.1:8b",
@@ -62,7 +60,7 @@ def generate_summary(transcript: str, system_prompt: str | None, language: str |
         model="anthropic/claude-3-5-sonnet-20240620",
         messages=[
             {
-                "content": prompt_template.format_prompt(transcript=transcript).to_messages(),
+                "content": final_prompt,
                 "role": "user",
             }
         ],

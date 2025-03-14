@@ -16,7 +16,7 @@ dotenv_path = os.path.join(BASE_DIR, ".env")
 
 if os.path.exists(dotenv_path):
     logger.info(f"loading environment variables from {dotenv_path}")
-    dotenv.load_dotenv(dotenv_path, verbose=True)
+    dotenv.load_dotenv(dotenv_path, verbose=True, override=True)
 
 DEBUG_MODE = os.environ.get("DEBUG_MODE", "false").lower() in ["true", "1"]
 logger.info(f"DEBUG_MODE: {DEBUG_MODE}")
@@ -131,9 +131,10 @@ STORAGE_S3_BUCKET = os.environ.get("STORAGE_S3_BUCKET")
 assert STORAGE_S3_BUCKET, "STORAGE_S3_BUCKET environment variable is not set"
 logger.debug("STORAGE_S3_BUCKET: set")
 
-STORAGE_S3_REGION = os.environ.get("STORAGE_S3_REGION")
-assert STORAGE_S3_REGION, "STORAGE_S3_REGION environment variable is not set"
-logger.debug("STORAGE_S3_REGION: set")
+STORAGE_S3_REGION = os.environ.get("STORAGE_S3_REGION", None)
+logger.debug(f"STORAGE_S3_REGION: {STORAGE_S3_REGION}")
+if STORAGE_S3_REGION is None:
+    logger.warning("STORAGE_S3_REGION is not set, using 'None'")
 
 STORAGE_S3_ENDPOINT = os.environ.get("STORAGE_S3_ENDPOINT")
 assert STORAGE_S3_ENDPOINT, "STORAGE_S3_ENDPOINT environment variable is not set"
@@ -146,6 +147,7 @@ logger.debug("STORAGE_S3_KEY: set")
 STORAGE_S3_SECRET = os.environ.get("STORAGE_S3_SECRET")
 assert STORAGE_S3_SECRET, "STORAGE_S3_SECRET environment variable is not set"
 logger.debug("STORAGE_S3_SECRET: set")
+
 
 for hide_logger in [
     "boto3",

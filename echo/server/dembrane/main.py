@@ -93,7 +93,7 @@ def custom_openapi() -> Any:
     if app.openapi_schema:
         return app.openapi_schema
     openapi_schema = get_openapi(
-        title="dembrane/pilot API",
+        title="dembrane/echo API",
         version="0.2.0",
         routes=app.routes,
     )
