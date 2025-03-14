@@ -148,6 +148,7 @@ STORAGE_S3_SECRET = os.environ.get("STORAGE_S3_SECRET")
 assert STORAGE_S3_SECRET, "STORAGE_S3_SECRET environment variable is not set"
 logger.debug("STORAGE_S3_SECRET: set")
 
+
 for hide_logger in [
     "boto3",
     "botocore",

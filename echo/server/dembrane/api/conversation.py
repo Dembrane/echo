@@ -180,7 +180,14 @@ async def get_conversation_content(
         and conversation["merged_audio_path"].startswith("http")
     ):
         logger.debug(f"Using merged audio path: {conversation['merged_audio_path']}")
-        return RedirectResponse(get_signed_url(conversation["merged_audio_path"]))
+
+        revised_url = get_signed_url(conversation["merged_audio_path"])
+
+        if revised_url.startswith("http://minio:9000"):
+            logger.warning("Merged audio path is using minio:9000, trying to replace with localhost:9000")
+            revised_url = revised_url.replace("http://minio:9000", "http://localhost:9000")
+
+        return RedirectResponse(revised_url)
 
     file_paths = [chunk["path"] for chunk in chunks if chunk["path"]]
 
@@ -262,8 +269,14 @@ async def get_conversation_chunk_content(
 
     # If the chunk is a s3 URL, stream the audio from the URL
     if chunk["path"].startswith("http"):
+        revised_url = get_signed_url(chunk["path"])
+
+        if revised_url.startswith("http://minio:9000"):
+            logger.warning("Chunk path is using minio:9000, trying to replace with localhost:9000")
+            revised_url = revised_url.replace("http://minio:9000", "http://localhost:9000")
+
         logger.info("Streaming audio from S3")
-        return RedirectResponse(get_signed_url(chunk["path"]))
+        return RedirectResponse(revised_url)
 
     file_paths = [chunk["path"]]
     mime_type = get_mime_type_from_file_path(file_paths[0])

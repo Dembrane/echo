@@ -73,7 +73,7 @@ services:
       - STORAGE_S3_KEY=dembrane
       - STORAGE_S3_SECRET=dembrane
       - STORAGE_S3_BUCKET=dembrane
-      - STORAGE_S3_ENDPOINT=http://localhost:9000
+      - STORAGE_S3_ENDPOINT=http://minio:9000
 
     depends_on:
       - postgres
@@ -100,7 +100,7 @@ services:
       - STORAGE_S3_KEY=dembrane
       - STORAGE_S3_SECRET=dembrane
       - STORAGE_S3_BUCKET=dembrane
-      - STORAGE_S3_ENDPOINT=http://localhost:9000
+      - STORAGE_S3_ENDPOINT=http://minio:9000
     volumes:
       - ../..:/workspaces:cached
     network_mode: service:postgres

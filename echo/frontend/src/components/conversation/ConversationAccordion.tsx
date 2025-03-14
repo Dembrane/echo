@@ -457,7 +457,7 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
                 className="flex-grow"
               />
               <Menu withArrow position="right" shadow="md">
-                {/* <Menu.Target>
+                <Menu.Target>
                   <ActionIcon
                     variant="outline"
                     color={filterApplied ? "primary" : "gray"}
@@ -465,7 +465,7 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
                   >
                     <IconFilter size={24} />
                   </ActionIcon>
-                </Menu.Target> */}
+                </Menu.Target>
                 <Menu.Dropdown>
                   <Stack py="md" px="lg" gap="md">
                     <Stack gap="xs">
