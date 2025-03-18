@@ -64,7 +64,7 @@ We offer several ways to get started:
 ## Documentation
 
 - [User Guide / Documentation](https://docs.dembrane.com) (built from `echo-user-docs` folder)
-- [Developer Documentation](echo/README.md) 
+- [Developer Documentation](echo/readme.md) 
 
 ## For Those Considering a Fork
 
