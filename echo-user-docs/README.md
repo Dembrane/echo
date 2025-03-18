@@ -1,6 +1,6 @@
-# Dembrane Docs 
+# Dembrane ECHO: User Documentation 
 
-This is the documentation for Dembrane.ai. It is intended to be used by the product team to document the product and its features. Contains user guide, tutorials, API reference and more.
+This is the documentation for Dembrane ECHO. It is intended to be used by the product team to document the product and its features. Contains user guide, tutorials, API reference and more.
 
 [**Live version**](https://docs.dembrane.com)
 

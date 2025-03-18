@@ -1,3 +1,45 @@
+"""S3 Storage Interface Module
+
+This module provides a simplified interface for interacting with S3-compatible storage services
+(like AWS S3 or MinIO). It handles file uploads, downloads, and management operations.
+
+Examples:
+    Upload a file from a URL:
+        >>> url = "https://example.com/image.jpg"
+        >>> s3_url = save_to_s3_from_url(url)
+        >>> print(s3_url)
+        'http://localhost:9000/dembrane/abc123.jpg'
+
+    Upload a file with custom name:
+        >>> url = "https://example.com/image.jpg"
+        >>> s3_url = save_to_s3_from_url(url, output_file_name="profile.jpg")
+        >>> print(s3_url)
+        'http://localhost:9000/dembrane/profile.jpg'
+
+    Upload from FastAPI UploadFile:
+        >>> file = UploadFile(...)
+        >>> s3_url = save_to_s3_from_file_like(file, "document.pdf", public=True)
+        >>> print(s3_url)
+        'http://localhost:9000/dembrane/document.pdf'
+
+    Generate temporary signed URL for private files:
+        >>> signed_url = get_signed_url("private_doc.pdf", expires_in_seconds=3600)
+        >>> print(signed_url)
+        'http://localhost:9000/dembrane/private_doc.pdf?X-Amz-Algorithm=...'
+
+    Stream file from S3:
+        >>> stream = get_stream_from_s3("document.pdf")
+        >>> content = stream.read()
+
+    Delete a file:
+        >>> delete_from_s3("document.pdf")
+
+Note:
+    - Files can be stored as public (accessible via direct URL) or private (requires signed URL)
+    - File uploads from FastAPI have a default size limit of 100MB
+    - The module automatically sanitizes file names and handles S3 key formatting
+"""
+
 import logging
 from urllib.parse import urlparse
 

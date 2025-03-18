@@ -61,6 +61,11 @@ We offer several ways to get started:
 - Support contracts
 - Commercial licenses
 
+## Documentation
+
+- [User Guide / Documentation](https://docs.dembrane.com) (built from `echo-user-docs` folder)
+- [Developer Documentation](echo/README.md) 
+
 ## For Those Considering a Fork
 
 We believe in open source and community collaboration. Before forking, consider:
@@ -87,14 +92,10 @@ Dembrane is currently independent but working towards becoming steward-owned. We
 
 ## For Potential Contributors
 
-We welcome contributions! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines (We're currently in the process of refining this guide).
+We welcome contributions! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 Thanks to everyone in the community that has contributed to this project!
 
 <a href="https://github.com/dembrane/echo/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=dembrane/echo" />
 </a>
-
----
-
-## GitOps Repository: [dembrane/echo-gitops](https://github.com/dembrane/echo-gitops)
