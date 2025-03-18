@@ -1,4 +1,4 @@
-name: Update Helm Values with Commit SHA for Staging Env
+name: dev-deploy-gitops-backends
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  update-values:
+  dev-deploy-gitops-backends:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout GitOps Repository
