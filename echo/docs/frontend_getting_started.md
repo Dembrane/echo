@@ -30,6 +30,6 @@ For the .env settings, you may use the "development" environment variables.
 
 ## Important Links
 
-### [FAQ](./getting_started.md#faq)
+### [FAQ](../readme.md#faq)
 ### [Configuration](./frontend_configuration.md)
 ### [Translations](./frontend_translations.md)
