@@ -615,21 +615,31 @@ def task_create_project_library(_self, project_id: str, language: str):
                 processing_started_at=get_utc_timestamp(),
             )
 
-            project = directus.get_items(
-                "projects",
-                {
-                    "query": {
-                        "fields": ["is_library_insights_enabled"],
-                        "filter": {"id": project_id},
+            is_insights_enabled = False
+
+            try:
+                project = directus.get_items(
+                    "project",
+                    {
+                        "query": {
+                            "fields": ["is_library_insights_enabled"],
+                            "filter": {"id": {"_eq": project_id}},
+                        },
                     },
-                },
-            )
+                )
 
-            if len(project) == 0:
-                logger.error(f"Project not found: {project_id}")
-                return
+                if len(project) == 0:
+                    logger.error(f"Project not found: {project_id}")
+                    return
 
-            project = project[0]
+                project = project[0]
+
+                logger.info(
+                    f"for project {project_id} is_insights_enabled: {project['is_library_insights_enabled']}"
+                )
+                is_insights_enabled = project["is_library_insights_enabled"]
+            except Exception as e:
+                logger.error(f"Error: {e}")
 
             db.add(project_analysis_run)
             db.commit()
@@ -679,7 +689,7 @@ def task_create_project_library(_self, project_id: str, language: str):
                 project_analysis_run.id, theme_view_query, theme_view_description, language
             )
 
-            if project["is_library_insights_enabled"]:
+            if is_insights_enabled:
                 callback = chord(
                     group(
                         sentiment_view,
@@ -735,17 +745,23 @@ def task_finish_conversation_hook(self, conversation_id: str):
         transcript_str = ""
 
         for chunk in conversation_data["chunks"]:
-            transcript_str += chunk["transcript"]
+            if chunk["transcript"] is not None:
+                transcript_str += chunk["transcript"]
 
-        summary = generate_summary(transcript_str, None, language if language else "nl")
+        if transcript_str == "":
+            logger.info(
+                f"transcript is empty for conversation: {conversation_id}. so not generating summary"
+            )
+        else:
+            summary = generate_summary(transcript_str, None, language if language else "nl")
 
-        directus.update_item(
-            collection_name="conversation",
-            item_id=conversation_id,
-            item_data={
-                "summary": summary,
-            },
-        )
+            directus.update_item(
+                collection_name="conversation",
+                item_id=conversation_id,
+                item_data={
+                    "summary": summary,
+                },
+            )
 
     except Exception as e:
         logger.error(f"Error: {e}")
