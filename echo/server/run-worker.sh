@@ -31,10 +31,10 @@ WORKER_PIDS=()
 launch_worker "worker.normal" "normal"
 
 # Launch Flower
-echo "Launching Flower"
-export FLOWER_UNAUTHENTICATED_API=True
-celery -A dembrane.tasks flower &
-FLOWER_PID=$!
+# echo "Launching Flower"
+# export FLOWER_UNAUTHENTICATED_API=True
+# celery -A dembrane.tasks flower &
+# FLOWER_PID=$!
 
 # Wait for all background jobs to finish
 wait
