@@ -30,8 +30,8 @@ export const ConversationChunkAudioTranscript = ({
             <audio
               src={src}
               className="h-6 w-full p-0"
-              crossOrigin="anonymous"
-              preload="metadata"
+              preload=""
+              crossOrigin="use-credentials"
               controls
             />
           </>
