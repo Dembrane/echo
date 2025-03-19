@@ -38,9 +38,10 @@ msgstr "Server error"
 msgid "Something went wrong"
 msgstr "Something went wrong"
 
+#. placeholder {0}: showPreview ? "Hide Preview" : "Show Preview"
 #: src/components/project/ProjectPortalEditor.tsx:221
-#~ msgid "{0}"
-#~ msgstr "{0}"
+msgid "{0}"
+msgstr "{0}"
 
 #: src/components/project/ProjectCard.tsx:35
 #: src/components/project/ProjectListItem.tsx:34
@@ -178,7 +179,7 @@ msgstr ""
 #~ msgid "Anonymous Participant"
 #~ msgstr "Anonymous Participant"
 
-#: src/components/conversation/ConversationDangerZone.tsx:22
+#: src/components/conversation/ConversationDangerZone.tsx:24
 msgid "Are you sure you want to delete this conversation? This action cannot be undone."
 msgstr "Are you sure you want to delete this conversation? This action cannot be undone."
 
@@ -216,12 +217,12 @@ msgid "Ask"
 msgstr "Ask"
 
 #: src/components/project/ProjectPortalEditor.tsx:273
-#~ msgid "Ask for Name?"
-#~ msgstr "Ask for Name?"
+msgid "Ask for Name?"
+msgstr "Ask for Name?"
 
 #: src/components/project/ProjectPortalEditor.tsx:286
-#~ msgid "Ask participants to provide their name when they start a conversation"
-#~ msgstr "Ask participants to provide their name when they start a conversation"
+msgid "Ask participants to provide their name when they start a conversation"
+msgstr "Ask participants to provide their name when they start a conversation"
 
 #: src/routes/project/library/ProjectLibraryAspect.tsx:71
 msgid "Aspect"
@@ -389,7 +390,6 @@ msgid "Custom Filename"
 msgstr "Custom Filename"
 
 #: src/components/project/ProjectDangerZone.tsx:28
-#: src/components/conversation/ConversationDangerZone.tsx:34
 msgid "Danger Zone"
 msgstr "Danger Zone"
 
@@ -397,13 +397,17 @@ msgstr "Danger Zone"
 msgid "Delete"
 msgstr "Delete"
 
-#: src/components/conversation/ConversationDangerZone.tsx:47
+#: src/components/conversation/ConversationDangerZone.tsx:66
 msgid "Delete Conversation"
 msgstr "Delete Conversation"
 
 #: src/components/project/ProjectDangerZone.tsx:37
 msgid "Delete Project"
 msgstr "Delete Project"
+
+#: src/components/project/ProjectBasicEdit.tsx:156
+msgid "Dembrane Reply"
+msgstr "Dembrane Reply"
 
 #: src/components/project/ProjectBasicEdit.tsx:82
 #~ msgid "Description"
@@ -413,7 +417,7 @@ msgstr "Delete Project"
 msgid "Do you want to contribute to this project?"
 msgstr "Do you want to contribute to this project?"
 
-#: src/components/layout/Header.tsx:145
+#: src/components/layout/Header.tsx:148
 msgid "Documentation"
 msgstr "Documentation"
 
@@ -428,6 +432,10 @@ msgstr "Download All Transcripts"
 #: src/routes/project/conversation/ProjectConversationOverview.tsx:117
 #~ msgid "Download audio"
 #~ msgstr "Download audio"
+
+#: src/components/conversation/ConversationDangerZone.tsx:50
+msgid "Download Audio"
+msgstr "Download Audio"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:130
 msgid "Download transcript"
@@ -475,6 +483,14 @@ msgstr "Email Verification | Dembrane"
 msgid "Email verified successfully. You will be redirected to the login page in 5 seconds. If you are not redirected, please click <0>here</0>."
 msgstr "Email verified successfully. You will be redirected to the login page in 5 seconds. If you are not redirected, please click <0>here</0>."
 
+#: src/components/project/ProjectBasicEdit.tsx:181
+msgid "Enable Dembrane Reply"
+msgstr "Enable Dembrane Reply"
+
+#: src/components/project/ProjectBasicEdit.tsx:165
+msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Get Reply\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
+msgstr "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Get Reply\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
+
 #: src/components/project/ProjectPortalEditor.tsx:256
 msgid "English"
 msgstr "English"
@@ -521,7 +537,9 @@ msgstr "Error updating report"
 #~ msgstr "Example: This conversation is about [topic]. Key terms include [term1], [term2]. Please pay special attention to [specific aspect]."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:64
+#: src/components/project/ProjectBasicEdit.tsx:160
 #: src/components/conversation/MoveConversationButton.tsx:129
+#: src/components/conversation/ConversationDangerZone.tsx:52
 msgid "Experimental"
 msgstr "Experimental"
 
@@ -575,7 +593,7 @@ msgid "Grid view"
 msgstr "Grid view"
 
 #. placeholder {0}: user.first_name
-#: src/components/layout/Header.tsx:132
+#: src/components/layout/Header.tsx:135
 msgid "Hi, {0}"
 msgstr "Hi, {0}"
 
@@ -674,6 +692,7 @@ msgstr "Last saved {0}"
 #: src/routes/project/library/ProjectLibraryView.tsx:32
 #: src/routes/project/library/ProjectLibraryAspect.tsx:63
 #: src/routes/project/library/ProjectLibrary.tsx:150
+#: src/components/project/ProjectSidebar.tsx:113
 msgid "Library"
 msgstr "Library"
 
@@ -713,7 +732,7 @@ msgstr "Login | Dembrane"
 msgid "Login as an existing user"
 msgstr "Login as an existing user"
 
-#: src/components/layout/Header.tsx:152
+#: src/components/layout/Header.tsx:155
 msgid "Logout"
 msgstr "Logout"
 
@@ -896,16 +915,16 @@ msgstr "Overview"
 #~ msgstr "Page"
 
 #: src/components/project/ProjectPortalEditor.tsx:381
-#~ msgid "Page Content"
-#~ msgstr "Page Content"
+msgid "Page Content"
+msgstr "Page Content"
 
 #: src/routes/404.tsx:14
 msgid "Page not found"
 msgstr "Page not found"
 
 #: src/components/project/ProjectPortalEditor.tsx:358
-#~ msgid "Page Title"
-#~ msgstr "Page Title"
+msgid "Page Title"
+msgstr "Page Title"
 
 #: src/components/participant/ParticipantInitiateForm.tsx:45
 msgid "Participant"
@@ -988,8 +1007,8 @@ msgid "Please wait while we verify your email address."
 msgstr "Please wait while we verify your email address."
 
 #: src/components/project/ProjectPortalEditor.tsx:348
-#~ msgid "Portal Content"
-#~ msgstr "Portal Content"
+msgid "Portal Content"
+msgstr "Portal Content"
 
 #: src/components/project/ProjectPortalEditor.tsx:204
 #: src/components/layout/ProjectOverviewLayout.tsx:33
@@ -1114,6 +1133,10 @@ msgstr "Remove from this chat"
 #: src/components/chat/ChatAccordion.tsx:60
 msgid "Rename"
 msgstr "Rename"
+
+#: src/components/project/ProjectBasicEdit.tsx:199
+msgid "Reply Prompt"
+msgstr "Reply Prompt"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:61
 #: src/components/report/ReportRenderer.tsx:72
@@ -1342,8 +1365,8 @@ msgstr "Thank you for participating!"
 #~ msgstr "Thank You Page"
 
 #: src/components/project/ProjectPortalEditor.tsx:411
-#~ msgid "Thank You Page Content"
-#~ msgstr "Thank You Page Content"
+msgid "Thank You Page Content"
+msgstr "Thank You Page Content"
 
 #: src/components/project/ProjectPortalEditor.tsx:191
 #~ msgid "The Portal is the website that loads when participants scan the QR code."
@@ -1407,12 +1430,12 @@ msgstr "This language will be used for the Participant's Portal and transcriptio
 #~ msgstr "This language will be used for the Participant's Portal, transcription and analysis. To change the language of this application, please use the language picker in the header user menu instead."
 
 #: src/components/project/ProjectPortalEditor.tsx:421
-#~ msgid "This page is shown after the participant has completed the conversation."
-#~ msgstr "This page is shown after the participant has completed the conversation."
+msgid "This page is shown after the participant has completed the conversation."
+msgstr "This page is shown after the participant has completed the conversation."
 
 #: src/components/project/ProjectPortalEditor.tsx:391
-#~ msgid "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
-#~ msgstr "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
+msgid "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
+msgstr "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
 
 #: src/components/project/ProjectAnalysisRunStatus.tsx:73
 msgid "This project library was generated on"
@@ -1421,6 +1444,10 @@ msgstr "This project library was generated on"
 #: src/components/project/ProjectAnalysisRunStatus.tsx:106
 #~ msgid "This project library was generated on {0}."
 #~ msgstr "This project library was generated on {0}."
+
+#: src/components/project/ProjectBasicEdit.tsx:205
+msgid "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
+msgstr "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
 
 #: src/routes/participant/ParticipantReport.tsx:55
 msgid "This report is not yet available. "
@@ -1436,8 +1463,8 @@ msgstr "This report was opened by {0} people"
 #~ msgstr "This summary is AI-generated and brief, for thorough analysis, use the Chat or Library."
 
 #: src/components/project/ProjectPortalEditor.tsx:369
-#~ msgid "This title is shown to participants when they start a conversation"
-#~ msgstr "This title is shown to participants when they start a conversation"
+msgid "This title is shown to participants when they start a conversation"
+msgstr "This title is shown to participants when they start a conversation"
 
 #: src/components/chat/ChatTemplatesMenu.tsx:87
 msgid "This will clear your current input. Are you sure?"
