@@ -38,9 +38,10 @@ msgstr "Error del servidor"
 msgid "Something went wrong"
 msgstr "Algo salió mal"
 
+#. placeholder {0}: showPreview ? "Hide Preview" : "Show Preview"
 #: src/components/project/ProjectPortalEditor.tsx:221
-#~ msgid "{0}"
-#~ msgstr "{0}"
+msgid "{0}"
+msgstr "{0}"
 
 #. placeholder {0}: project.conversations?.length ?? 0
 #. placeholder {1}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
@@ -52,7 +53,7 @@ msgstr "{0} Conversaciones • Editado {1}"
 
 #: src/routes/participant/ParticipantConversation.tsx:852
 msgid "{minutes} minutes and {seconds} seconds"
-msgstr ""
+msgstr "{minutes} minutos y {seconds} segundos"
 
 #: src/components/report/ReportRenderer.tsx:78
 msgid "{readingNow} reading now"
@@ -60,7 +61,7 @@ msgstr "{readingNow} leyendo ahora"
 
 #: src/routes/participant/ParticipantConversation.tsx:853
 msgid "{seconds} seconds"
-msgstr ""
+msgstr "{seconds} segundos"
 
 #: src/routes/participant/ParticipantConversation.tsx:496
 msgid "*Transcription in progress.*"
@@ -156,9 +157,19 @@ msgid ""
 "Draw insights that challenge conventional wisdom\n"
 "\n"
 "Note: If the similarities/differences are too superficial, let me know we need more complex material to analyze."
-msgstr ""
+msgstr "Analiza estos elementos con profundidad y matiz. Por favor:\n"
+"\n"
+"Enfoque en las conexiones inesperadas y contrastes\n"
+"Pasa más allá de las comparaciones superficiales\n"
+"Identifica patrones ocultos que la mayoría de las analíticas pasan por alto\n"
+"Mantén el rigor analítico mientras sigues siendo atractivo\n"
+"Usa ejemplos que iluminan principios más profundos\n"
+"Estructura el análisis para construir una comprensión\n"
+"Dibuja insights que contradicen ideas convencionales\n"
+"\n"
+"Nota: Si las similitudes/diferencias son demasiado superficiales, por favor házmelo saber, necesitamos material más complejo para analizar."
 
-#: src/components/conversation/ConversationDangerZone.tsx:22
+#: src/components/conversation/ConversationDangerZone.tsx:24
 msgid "Are you sure you want to delete this conversation? This action cannot be undone."
 msgstr "¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer."
 
@@ -192,12 +203,12 @@ msgid "Ask"
 msgstr "Preguntar"
 
 #: src/components/project/ProjectPortalEditor.tsx:273
-#~ msgid "Ask for Name?"
-#~ msgstr "¿Preguntar por el nombre?"
+msgid "Ask for Name?"
+msgstr "¿Preguntar por el nombre?"
 
 #: src/components/project/ProjectPortalEditor.tsx:286
-#~ msgid "Ask participants to provide their name when they start a conversation"
-#~ msgstr "Pedir a los participantes que proporcionen su nombre cuando inicien una conversación"
+msgid "Ask participants to provide their name when they start a conversation"
+msgstr "Pedir a los participantes que proporcionen su nombre cuando inicien una conversación"
 
 #: src/routes/project/library/ProjectLibraryAspect.tsx:71
 msgid "Aspect"
@@ -361,7 +372,6 @@ msgid "Custom Filename"
 msgstr "Nombre de archivo personalizado"
 
 #: src/components/project/ProjectDangerZone.tsx:28
-#: src/components/conversation/ConversationDangerZone.tsx:34
 msgid "Danger Zone"
 msgstr "Zona de Peligro"
 
@@ -369,7 +379,7 @@ msgstr "Zona de Peligro"
 msgid "Delete"
 msgstr "Eliminar"
 
-#: src/components/conversation/ConversationDangerZone.tsx:47
+#: src/components/conversation/ConversationDangerZone.tsx:66
 msgid "Delete Conversation"
 msgstr "Eliminar Conversación"
 
@@ -377,11 +387,15 @@ msgstr "Eliminar Conversación"
 msgid "Delete Project"
 msgstr "Eliminar Proyecto"
 
+#: src/components/project/ProjectBasicEdit.tsx:156
+msgid "Dembrane Reply"
+msgstr "Dembrane Respuesta"
+
 #: src/components/report/ReportRenderer.tsx:21
 msgid "Do you want to contribute to this project?"
 msgstr "¿Quieres contribuir a este proyecto?"
 
-#: src/components/layout/Header.tsx:145
+#: src/components/layout/Header.tsx:148
 msgid "Documentation"
 msgstr "Documentación"
 
@@ -392,6 +406,10 @@ msgstr "Descargar"
 #: src/routes/project/ProjectRoutes.tsx:54
 msgid "Download All Transcripts"
 msgstr "Descargar Todas las Transcripciones"
+
+#: src/components/conversation/ConversationDangerZone.tsx:50
+msgid "Download Audio"
+msgstr "Descargar Audio"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:130
 msgid "Download transcript"
@@ -408,7 +426,7 @@ msgstr "Holandés"
 #: src/routes/participant/ParticipantConversation.tsx:549
 #: src/routes/participant/ParticipantConversation.tsx:975
 msgid "ECHO!"
-msgstr ""
+msgstr "¡ECHO!"
 
 #: src/components/conversation/ConversationEdit.tsx:93
 msgid "Edit Conversation"
@@ -438,6 +456,14 @@ msgstr "Verificación de Correo Electrónico | Dembrane"
 #: src/routes/auth/VerifyEmail.tsx:50
 msgid "Email verified successfully. You will be redirected to the login page in 5 seconds. If you are not redirected, please click <0>here</0>."
 msgstr "Correo electrónico verificado con éxito. Serás redirigido a la página de inicio de sesión en 5 segundos. Si no eres redirigido, por favor haz clic <0>aquí</0>."
+
+#: src/components/project/ProjectBasicEdit.tsx:181
+msgid "Enable Dembrane Reply"
+msgstr "Habilitar Dembrane Respuesta"
+
+#: src/components/project/ProjectBasicEdit.tsx:165
+msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Get Reply\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
+msgstr "Habilite esta función para permitir a los participantes solicitar respuestas AI durante su conversación. Los participantes pueden hacer clic en \"Get Reply\" después de grabar sus pensamientos para recibir retroalimentación contextual, alentando una reflexión más profunda y una participación más intensa. Un período de enfriamiento aplica entre solicitudes."
 
 #: src/components/project/ProjectPortalEditor.tsx:256
 msgid "English"
@@ -477,7 +503,9 @@ msgid "Error updating report"
 msgstr "Error al actualizar el informe"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:64
+#: src/components/project/ProjectBasicEdit.tsx:160
 #: src/components/conversation/MoveConversationButton.tsx:129
+#: src/components/conversation/ConversationDangerZone.tsx:52
 msgid "Experimental"
 msgstr "Experimental"
 
@@ -512,7 +540,7 @@ msgstr "Francés"
 
 #: src/routes/project/conversation/ProjectConversationOverview.tsx:63
 msgid "Generate Summary"
-msgstr ""
+msgstr "Generar Resumen"
 
 #: src/components/project/ProjectPortalEditor.tsx:258
 msgid "German"
@@ -531,7 +559,7 @@ msgid "Grid view"
 msgstr "Vista de cuadrícula"
 
 #. placeholder {0}: user.first_name
-#: src/components/layout/Header.tsx:132
+#: src/components/layout/Header.tsx:135
 msgid "Hi, {0}"
 msgstr "Hola, {0}"
 
@@ -630,6 +658,7 @@ msgstr "Última vez guardado el {0}"
 #: src/routes/project/library/ProjectLibraryView.tsx:32
 #: src/routes/project/library/ProjectLibraryAspect.tsx:63
 #: src/routes/project/library/ProjectLibrary.tsx:150
+#: src/components/project/ProjectSidebar.tsx:113
 msgid "Library"
 msgstr "Biblioteca"
 
@@ -643,7 +672,7 @@ msgstr "La biblioteca está siendo procesada"
 
 #: src/components/chat/ChatTemplatesMenu.tsx:68
 msgid "LinkedIn Post (Experimental)"
-msgstr ""
+msgstr "Publicación LinkedIn (Experimental)"
 
 #: src/components/project/ProjectPortalEditor.tsx:515
 msgid "Live Preview"
@@ -669,7 +698,7 @@ msgstr "Iniciar sesión | Dembrane"
 msgid "Login as an existing user"
 msgstr "Iniciar sesión como usuario existente"
 
-#: src/components/layout/Header.tsx:152
+#: src/components/layout/Header.tsx:155
 msgid "Logout"
 msgstr "Cerrar sesión"
 
@@ -848,16 +877,16 @@ msgid "Overview"
 msgstr "Vista General"
 
 #: src/components/project/ProjectPortalEditor.tsx:381
-#~ msgid "Page Content"
-#~ msgstr "Contenido de la Página"
+msgid "Page Content"
+msgstr "Contenido de la Página"
 
 #: src/routes/404.tsx:14
 msgid "Page not found"
 msgstr "Página no encontrada"
 
 #: src/components/project/ProjectPortalEditor.tsx:358
-#~ msgid "Page Title"
-#~ msgstr "Título de la Página"
+msgid "Page Title"
+msgstr "Título de la Página"
 
 #: src/components/participant/ParticipantInitiateForm.tsx:45
 msgid "Participant"
@@ -925,7 +954,7 @@ msgstr "Por favor, selecciona un idioma para tu informe actualizado"
 
 #: src/routes/participant/ParticipantConversation.tsx:855
 msgid "Please wait {timeStr} before requesting another reply."
-msgstr ""
+msgstr "Por favor, espera {timeStr} antes de solicitar otra respuesta."
 
 #: src/components/report/CreateReportForm.tsx:34
 msgid "Please wait while we generate your report. You will automatically be redirected to the report page."
@@ -940,8 +969,8 @@ msgid "Please wait while we verify your email address."
 msgstr "Por favor, espera mientras verificamos tu dirección de correo electrónico."
 
 #: src/components/project/ProjectPortalEditor.tsx:348
-#~ msgid "Portal Content"
-#~ msgstr "Contenido del Portal"
+msgid "Portal Content"
+msgstr "Contenido del Portal"
 
 #: src/components/project/ProjectPortalEditor.tsx:204
 #: src/components/layout/ProjectOverviewLayout.tsx:33
@@ -950,7 +979,7 @@ msgstr "Editor del Portal"
 
 #: src/components/project/ProjectSidebar.tsx:135
 msgid "Powered by"
-msgstr ""
+msgstr "Propulsado por"
 
 #: src/components/common/DembraneLoadingSpinner/index.tsx:24
 msgid "Preparing your experience"
@@ -1033,7 +1062,7 @@ msgstr "Regenerar Biblioteca"
 
 #: src/routes/project/conversation/ProjectConversationOverview.tsx:62
 msgid "Regenerate Summary"
-msgstr ""
+msgstr "Regenerar Resumen"
 
 #: src/routes/auth/Register.tsx:22
 msgid "Register | Dembrane"
@@ -1054,6 +1083,10 @@ msgstr "Eliminar de este chat"
 #: src/components/chat/ChatAccordion.tsx:60
 msgid "Rename"
 msgstr "Renombrar"
+
+#: src/components/project/ProjectBasicEdit.tsx:199
+msgid "Reply Prompt"
+msgstr "Prompt de Respuesta"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:61
 #: src/components/report/ReportRenderer.tsx:72
@@ -1257,7 +1290,7 @@ msgstr "Resumen"
 
 #: src/routes/project/conversation/ProjectConversationOverview.tsx:78
 msgid "Summary not available yet"
-msgstr ""
+msgstr "Resumen no disponible todavía"
 
 #: src/components/project/ProjectTagsInput.tsx:219
 #: src/components/participant/ParticipantInitiateForm.tsx:100
@@ -1274,8 +1307,8 @@ msgid "Thank you for participating!"
 msgstr "¡Gracias por participar!"
 
 #: src/components/project/ProjectPortalEditor.tsx:411
-#~ msgid "Thank You Page Content"
-#~ msgstr "Contenido de la Página de Gracias"
+msgid "Thank You Page Content"
+msgstr "Contenido de la Página de Gracias"
 
 #: src/components/project/ProjectPortalEditor.tsx:191
 #~ msgid "The Portal is the website that loads when participants scan the QR code."
@@ -1331,16 +1364,20 @@ msgstr "Este idioma se usará para el Portal del Participante y transcripción."
 #~ msgstr "Este idioma se usará para el Portal del Participante y transcripción. Para cambiar el idioma de esta aplicación, por favor use el selector de idioma en las configuraciones de la cabecera."
 
 #: src/components/project/ProjectPortalEditor.tsx:421
-#~ msgid "This page is shown after the participant has completed the conversation."
-#~ msgstr "Esta página se muestra después de que el participante haya completado la conversación."
+msgid "This page is shown after the participant has completed the conversation."
+msgstr "Esta página se muestra después de que el participante haya completado la conversación."
 
 #: src/components/project/ProjectPortalEditor.tsx:391
-#~ msgid "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
-#~ msgstr "Esta página se muestra a los participantes cuando inician una conversación después de completar correctamente el tutorial."
+msgid "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
+msgstr "Esta página se muestra a los participantes cuando inician una conversación después de completar correctamente el tutorial."
 
 #: src/components/project/ProjectAnalysisRunStatus.tsx:73
 msgid "This project library was generated on"
 msgstr "Esta biblioteca del proyecto se generó el"
+
+#: src/components/project/ProjectBasicEdit.tsx:205
+msgid "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
+msgstr "Esta prompt guía cómo la IA responde a los participantes. Personaliza la prompt para formar el tipo de retroalimentación o participación que quieres fomentar."
 
 #: src/routes/participant/ParticipantReport.tsx:55
 msgid "This report is not yet available. "
@@ -1356,8 +1393,8 @@ msgstr "Este informe fue abierto por {0} personas"
 #~ msgstr "Este resumen es generado por IA y es breve, para un análisis detallado, usa el Chat o la Biblioteca."
 
 #: src/components/project/ProjectPortalEditor.tsx:369
-#~ msgid "This title is shown to participants when they start a conversation"
-#~ msgstr "Este título se muestra a los participantes cuando inician una conversación"
+msgid "This title is shown to participants when they start a conversation"
+msgstr "Este título se muestra a los participantes cuando inician una conversación"
 
 #: src/components/chat/ChatTemplatesMenu.tsx:87
 msgid "This will clear your current input. Are you sure?"
@@ -1398,7 +1435,14 @@ msgid ""
 "Strike a tone that suggests both deep expertise and real-world experience\n"
 "\n"
 "Note: If the content doesn't contain any substantive insights, please let me know we need stronger source material. I'm looking to contribute real value to the conversation, not add to the noise."
-msgstr ""
+msgstr "Transforma estas transcripciones en una publicación de LinkedIn que corta el ruido. Por favor:\n"
+"\n"
+"Extrae los insights más convincentes - salta todo lo que suena como consejos comerciales estándar\n"
+"Escribe como un líder experimentado que desafía ideas convencionales, no un poster motivador\n"
+"Encuentra una observación realmente inesperada que haría que incluso profesionales experimentados se detuvieran\n"
+"Mantén el rigor analítico mientras sigues siendo atractivo\n"
+"\n"
+"Nota: Si el contenido no contiene insights sustanciales, por favor házmelo saber, necesitamos material de fuente más fuerte."
 
 #: src/components/chat/ChatTemplatesMenu.tsx:25
 msgid ""
@@ -1413,7 +1457,17 @@ msgid ""
 "Balance depth with accessibility\n"
 "\n"
 "Note: If the similarities/differences are too superficial, let me know we need more complex material to analyze."
-msgstr ""
+msgstr "Transforma este contenido en insights que realmente importan. Por favor:\n"
+"\n"
+"Extrae ideas clave que desafían el pensamiento estándar\n"
+"Escribe como alguien que entiende los matices, no un manual\n"
+"Enfoque en las implicaciones no obvias\n"
+"Manténlo claro y sustancial\n"
+"Solo destaca patrones realmente significativos\n"
+"Organiza para claridad y impacto\n"
+"Equilibra profundidad con accesibilidad\n"
+"\n"
+"Nota: Si las similitudes/diferencias son demasiado superficiales, por favor házmelo saber, necesitamos material más complejo para analizar."
 
 #: src/components/chat/ChatTemplatesMenu.tsx:55
 msgid ""
@@ -1428,7 +1482,17 @@ msgid ""
 "Balance tactical details with strategic vision\n"
 "\n"
 "Note: If the discussion lacks substantial decision points or insights, flag it for deeper exploration next time."
-msgstr ""
+msgstr "Transforma esta discusión en inteligencia accionable. Por favor:\n"
+"\n"
+"Captura las implicaciones estratégicas, no solo puntos de vista\n"
+"Estructura como un análisis de un líder, no minutos\n"
+"Enfatiza puntos de decisión que desafían el pensamiento estándar\n"
+"Mantén la proporción señal-ruido alta\n"
+"Enfoque en insights que conducen a cambios reales\n"
+"Organiza para claridad y referencia futura\n"
+"Equilibra detalles tácticos con visión estratégica\n"
+"\n"
+"Nota: Si la discusión carece de puntos de decisión sustanciales o insights, marca para una exploración más profunda la próxima vez."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:354
 msgid "Type a message..."
@@ -1485,7 +1549,7 @@ msgstr "Ver tus respuestas"
 #. placeholder {1}: (remainingCooldown % 60).toString().padStart(2, "0")
 #: src/routes/participant/ParticipantConversation.tsx:969
 msgid "Wait {0}:{1}"
-msgstr ""
+msgstr "Espera {0}:{1}"
 
 #: src/routes/auth/CheckYourEmail.tsx:14
 msgid "We have sent you an email with next steps. If you don't see it, check your spam folder."
