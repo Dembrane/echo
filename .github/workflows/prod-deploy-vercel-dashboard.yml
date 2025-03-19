@@ -1,14 +1,15 @@
-name: dev-deploy-vercel-dashboard
+name: prod-deploy-vercel-dashboard
+
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_DASHBOARD }}
+
 on:
   push:
-    branches:
-      - main
+    tags: [ "v*.*.*" ]
 
 jobs:
-  dev-deploy-vercel-dashboard:
+  prod-deploy-vercel-dashboard:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -17,7 +18,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 22
 
       - uses: pnpm/action-setup@v2
         name: Install pnpm
@@ -31,13 +32,13 @@ jobs:
         working-directory: echo/frontend
 
       - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=staging --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
         working-directory: echo/frontend
 
       - name: Build Project Artifacts
-        run: vercel build --target=staging --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel build --target=production --token=${{ secrets.VERCEL_TOKEN }}
         working-directory: echo/frontend
 
       - name: Deploy Project Artifacts to Vercel
-        run: vercel deploy --prebuilt --target=staging --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel deploy --prebuilt --target=production --token=${{ secrets.VERCEL_TOKEN }}
         working-directory: echo/frontend
