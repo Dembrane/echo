@@ -422,8 +422,9 @@ export const getConversationContentLink = (conversationId: string) =>
 export const getConversationChunkContentLink = (
   conversationId: string,
   chunkId: string,
+  returnUrl: boolean = false,
 ) =>
-  `${apiCommonConfig.baseURL}/conversations/${conversationId}/chunks/${chunkId}/content`;
+  `${apiCommonConfig.baseURL}/conversations/${conversationId}/chunks/${chunkId}/content${returnUrl ? "?return_url=true" : ""}`;
 
 export const generateProjectLibrary = async (payload: {
   projectId: string;
