@@ -12,12 +12,14 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
   addChatContext,
   api,
+  apiNoAuth,
   createProjectReport,
   deleteChatContext,
   deleteResourceById,
   generateProjectLibrary as generateProjectLibrary,
   generateProjectView,
   getChatHistory,
+  getConversationChunkContentLink,
   getConversationTranscriptString,
   getLatestProjectAnalysisRunByProjectId,
   getProjectChatContext,
@@ -1739,5 +1741,26 @@ export const useProjectReportTimelineData = (projectReportId: string) => {
         projectReportMetrics,
       };
     },
+  });
+};
+
+export const useConversationChunkContentUrl = (
+  conversationId: string,
+  chunkId: string,
+  enabled: boolean = true,
+) => {
+  return useQuery({
+    queryKey: ["conversation", conversationId, "chunk", chunkId, "audio-url"],
+    queryFn: async () => {
+      const url = getConversationChunkContentLink(
+        conversationId,
+        chunkId,
+        true,
+      );
+      return apiNoAuth.get<unknown, string>(url);
+    },
+    enabled,
+    staleTime: 1000 * 60 * 30, // 30 minutes
+    gcTime: 1000 * 60 * 60, // 1 hour
   });
 };
