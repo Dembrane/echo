@@ -23,8 +23,11 @@ jobs:
         name: Install pnpm
         with:
           version: 10
-          run_install: true
-          cwd: echo/frontend
+          run_install: false
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: echo/frontend
 
       - name: Install Vercel CLI
         run: pnpm add --global vercel@latest
