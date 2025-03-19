@@ -1,17 +1,23 @@
-name: ci-servers
+name: ci-build-servers
 
 on:
-  # Run on PRs (to check if the images can be built)
-  pull_request:
+  # For PRs, we'll use a workflow_run trigger
+  workflow_run:
+    workflows: ["ci-check"]
+    types:
+      - completed
     branches:
       - main
-  # Run on pushes to main (to publish the images)
+  # Keep the push trigger for direct pushes to main
   push:
     branches:
       - main
 
 jobs:
-  ci-servers:
+  ci-build-servers:
+    # For workflow_run events, only run if the check succeeded
+    # For push events (to main), always run
+    if: ${{ github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
