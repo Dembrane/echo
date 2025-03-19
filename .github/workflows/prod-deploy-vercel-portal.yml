@@ -1,14 +1,14 @@
-name: dev-deploy-vercel-dashboard
+name: dev-deploy-vercel-portal
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_DASHBOARD }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_PORTAL }}
 on:
   push:
     branches:
       - main
 
 jobs:
-  dev-deploy-vercel-dashboard:
+  dev-deploy-vercel-portal:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
