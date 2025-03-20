@@ -1475,7 +1475,7 @@ msgstr "Sorteer"
 msgid "Spanish"
 msgstr "Spaans"
 
-#: src/components/conversation/ConversationChunkAudioTranscript.tsx:20
+#: src/components/conversation/ConversationChunkAudioTranscript.tsx:23
 msgid "Speaker"
 msgstr "Spreker"
 
@@ -1817,8 +1817,12 @@ msgid "Wait {0}:{1}"
 msgstr "Wacht {0}:{1}"
 
 #: src/routes/auth/CheckYourEmail.tsx:14
-msgid "We have sent you an email with next steps. If you don't see it, check your spam folder."
-msgstr "We hebben u een e-mail gestuurd met de volgende stappen. Als u het niet ziet, checkt u uw spammap."
+#~ msgid "We have sent you an email with next steps. If you don't see it, check your spam folder."
+#~ msgstr "We hebben u een e-mail gestuurd met de volgende stappen. Als u het niet ziet, checkt u uw spammap."
+
+#: src/routes/auth/CheckYourEmail.tsx:14
+msgid "We have sent you an email with next steps. If you don't see it, check your spam folder. If you still don't see it, please contact jules@dembrane.com"
+msgstr ""
 
 #: src/routes/participant/ParticipantConversation.tsx:655
 msgid "Welcome"
