@@ -52,7 +52,7 @@ export const ProjectsHomeRoute = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSearch = searchParams.get("search") || "";
   const [search, setSearch] = useState(initialSearch);
-  
+
   const [debouncedSearchValue] = useDebouncedValue(search, 200);
 
   const { ref: loadMoreRef, inView } = useInView();
@@ -109,7 +109,7 @@ export const ProjectsHomeRoute = () => {
       payload: {
         default_conversation_ask_for_participant_name: true,
         default_conversation_tutorial_slug: "none",
-        image_generation_model: "PLACEHOLDER",
+        image_generation_model: "MODEST",
         default_conversation_transcript_prompt: "Dembrane",
       },
     });

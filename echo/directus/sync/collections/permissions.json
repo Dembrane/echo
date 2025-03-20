@@ -1,5 +1,32 @@
 [
   {
+    "collection": "conversation",
+    "action": "read",
+    "permissions": {
+      "_and": [
+        {
+          "id": {
+            "_nnull": true
+          }
+        }
+      ]
+    },
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "id",
+      "created_at",
+      "updated_at",
+      "project_id",
+      "participant_name",
+      "participant_email",
+      "tags",
+      "participant_user_agent"
+    ],
+    "policy": "_sync_default_public_policy",
+    "_syncId": "4dcac1e9-9209-4e5f-9f26-62a7b4d806b1"
+  },
+  {
     "collection": "project_report_metric",
     "action": "create",
     "permissions": null,
