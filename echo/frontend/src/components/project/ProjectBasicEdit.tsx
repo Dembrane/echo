@@ -24,8 +24,8 @@ import { Logo } from "../common/Logo";
 const FormSchema = z.object({
   name: z.string().min(4, t`Project name must be at least 4 characters long`),
   context: z.string().optional(),
-  is_get_reply_enabled: z.boolean(),
-  get_reply_prompt: z.string(),
+  // is_get_reply_enabled: z.boolean(),
+  // get_reply_prompt: z.string(),
 });
 
 type TFormSchema = z.infer<typeof FormSchema>;
@@ -42,8 +42,8 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
       defaultValues: {
         name: project.name ?? "",
         context: project.context ?? "",
-        is_get_reply_enabled: project.is_get_reply_enabled ?? false,
-        get_reply_prompt: project.get_reply_prompt ?? "",
+        // is_get_reply_enabled: project.is_get_reply_enabled ?? false,
+        // get_reply_prompt: project.get_reply_prompt ?? "",
       },
       resolver: zodResolver(FormSchema),
       mode: "onChange",
@@ -148,7 +148,7 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
               )}
             />
 
-            <Divider />
+            {/* <Divider />
 
             <Stack gap="md">
               <Group>
@@ -159,9 +159,9 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
                 <Badge>
                   <Trans>Experimental</Trans>
                 </Badge>
-              </Group>
+              </Group> */}
 
-              <Text size="sm" c="dimmed">
+            {/* <Text size="sm" c="dimmed">
                 <Trans>
                   Enable this feature to allow participants to request
                   AI-powered responses during their conversation. Participants
@@ -169,9 +169,9 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
                   receive contextual feedback, encouraging deeper reflection and
                   engagement. A cooldown period applies between requests.
                 </Trans>
-              </Text>
+              </Text> */}
 
-              <Controller
+            {/* <Controller
                 name="is_get_reply_enabled"
                 control={control}
                 render={({ field }) => (
@@ -187,8 +187,8 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
                     onChange={(e) => field.onChange(e.currentTarget.checked)}
                   />
                 )}
-              />
-
+              /> */}
+            {/* 
               <Controller
                 name="get_reply_prompt"
                 control={control}
@@ -212,8 +212,8 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
                     {...field}
                   />
                 )}
-              />
-            </Stack>
+              /> */}
+            {/* </Stack> */}
           </Stack>
         </form>
       </Stack>
