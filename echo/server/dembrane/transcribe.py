@@ -203,17 +203,21 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str:
 
     default_prompt = DEFAULT_WHISPER_PROMPTS.get(language, "")
 
-    whisper_prompt = (
-        default_prompt
-        + " "
-        + (
+    # Build whisper prompt more robustly
+    prompt_parts = []
+
+    if default_prompt:
+        prompt_parts.append(default_prompt)
+
+    if conversation["project_id"]["default_conversation_transcript_prompt"]:
+        prompt_parts.append(
             conversation["project_id"]["default_conversation_transcript_prompt"] + "."
-            if conversation["project_id"]["default_conversation_transcript_prompt"]
-            else ""
         )
-        + " "
-        + previous_chunk_transcript
-    )
+
+    if previous_chunk_transcript:
+        prompt_parts.append(previous_chunk_transcript)
+
+    whisper_prompt = " ".join(prompt_parts)
 
     logger.debug(f"whisper_prompt: {whisper_prompt}")
 

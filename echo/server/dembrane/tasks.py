@@ -84,7 +84,7 @@ class BaseTask(celery_app.Task):  # type: ignore
 )
 def log_error(_self, exc: Exception):
     logger.error(f"Error: {exc}")
-    raise exc
+    raise exc from exc
 
 
 @celery_app.task(
