@@ -7,8 +7,21 @@ services:
     volumes:
       - redis_data:/bitnami/redis/data
 
+  # postgres:
+  #   image: pgvector/pgvector:0.6.2-pg16
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: dembrane
+  #     POSTGRES_USER: dembrane
+  #     POSTGRES_PASSWORD: dembrane
+  #   networks:
+  #     - default
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
   postgres:
-    image: pgvector/pgvector:0.6.2-pg16
+    build:
+      context: server/dembrane
+      dockerfile: Dockerfile
     restart: unless-stopped
     environment:
       POSTGRES_DB: dembrane

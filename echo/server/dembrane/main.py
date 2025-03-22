@@ -1,18 +1,23 @@
+import os
 import time
 from typing import Any, AsyncGenerator
 from logging import getLogger
 from contextlib import asynccontextmanager
 
+import nest_asyncio
 from fastapi import (
     FastAPI,
     Request,
     HTTPException,
 )
+from lightrag import LightRAG
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware import Middleware
 from fastapi.openapi.utils import get_openapi
+from lightrag.kg.postgres_impl import PostgreSQLDB
 from starlette.middleware.cors import CORSMiddleware
+from lightrag.kg.shared_storage import initialize_pipeline_status
 
 from dembrane.config import (
     DISABLE_CORS,
@@ -23,15 +28,54 @@ from dembrane.config import (
 from dembrane.sentry import init_sentry
 from dembrane.api.api import api
 
-logger = getLogger("server")
+# from lightrag.llm.azure_openai import azure_openai_complete
+from dembrane.audio_lightrag.utils.litellm_utils import llm_model_func
+from dembrane.audio_lightrag.utils.lightrag_utils import embedding_func, check_audio_lightrag_tables
 
+nest_asyncio.apply()
+
+logger = getLogger("server")
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     # startup
     logger.info("starting server")
     init_sentry()
-    # seed_process_resource_queue()
+    
+    # Initialize PostgreSQL and LightRAG
+    postgres_config = {
+        "host": os.environ["POSTGRES_HOST"],
+        "port": os.environ["POSTGRES_PORT"],
+        "user": os.environ["POSTGRES_USER"],
+        "password": os.environ["POSTGRES_PASSWORD"],
+        "database": os.environ["POSTGRES_DATABASE"],
+    }
+
+    postgres_db = PostgreSQLDB(config=postgres_config)
+    await postgres_db.initdb()
+    await postgres_db.check_tables()
+    await check_audio_lightrag_tables(postgres_db)
+
+    working_dir = os.environ["POSTGRES_WORK_DIR"]
+    if not os.path.exists(working_dir):
+        os.makedirs(working_dir)
+
+    _app.state.rag = LightRAG(
+        working_dir=working_dir,
+        llm_model_func=llm_model_func,
+        embedding_func=embedding_func,
+        kv_storage="PGKVStorage",
+        doc_status_storage="PGDocStatusStorage",
+        graph_storage="Neo4JStorage",
+        vector_storage="PGVectorStorage",
+        vector_db_storage_cls_kwargs={
+            "cosine_better_than_threshold": 0.4
+        }
+    )
+
+    await _app.state.rag.initialize_storages()
+    await initialize_pipeline_status()
+    logger.info("RAG object has been initialized")
 
     yield
     # shutdown

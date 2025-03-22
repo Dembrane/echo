@@ -53,6 +53,11 @@
   ],
   "files.eol": "\n",
   "debug.internalConsoleOptions": "neverOpen",
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": [
+    "server"
+  ]
   "python.linting.pylintEnabled": false,
   "python.linting.mypyEnabled": true,
   "python.linting.enabled": true

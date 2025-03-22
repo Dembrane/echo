@@ -27,30 +27,27 @@ def init_sentry() -> None:
 
     if not DISABLE_SENTRY:
         logger.info("initializing sentry")
-        sentry_sdk.init(
-            dsn="https://0037fa05e4f0e472dffaecbb7d25be3a@o4507107162652672.ingest.de.sentry.io/4507107472703568",
-            environment=ENVIRONMENT,
-            release=BUILD_VERSION,
-            traces_sample_rate=0.5,
-            profiles_sample_rate=0.5,
-            enable_tracing=True,
-            integrations=[
+        integrations = [
+            StarletteIntegration(
+                transaction_style="endpoint",
+                failed_request_status_codes={*range(400, 499), *range(500, 599)},
+            ),
+            FastApiIntegration(
+                transaction_style="endpoint",
+                failed_request_status_codes={*range(400, 499), *range(500, 599)},
+            ),
+        ]
+        
+        # Conditionally add OpenAI integration
+        try:
+            integrations.append(
                 StarletteIntegration(
-                    transaction_style="endpoint",
-                    failed_request_status_codes={*range(400, 499), *range(500, 599)},
-                ),
-                FastApiIntegration(
-                    transaction_style="endpoint",
-                    failed_request_status_codes={*range(400, 499), *range(500, 599)},
-                ),
-                # TODO: finish the impl https://docs.sentry.io/platforms/python/integrations/openai/
-                # https://docs.sentry.io/platforms/python/integrations/anthropic/
-                OpenAIIntegration(
                     include_prompts=False,  # LLM/tokenizer inputs/outputs will be not sent to Sentry, despite send_default_pii=True
                     tiktoken_encoding_name="cl100k_base",
-                ),
-            ],
-        )
+                )
+            )
+        except Exception as e:
+            logger.error(f"Error initializing sentry: {e}") 
     else:
         logger.info("sentry is disabled by DISABLE_SENTRY")
 

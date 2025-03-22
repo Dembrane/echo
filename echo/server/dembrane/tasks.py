@@ -7,7 +7,7 @@ from celery.utils.log import get_task_logger  # type: ignore
 
 import dembrane.tasks_config
 from dembrane.utils import generate_uuid, get_utc_timestamp
-from dembrane.config import REDIS_URL
+from dembrane.config import REDIS_URL, ENABLE_AUDIO_LIGHTRAG_INPUT
 from dembrane.sentry import init_sentry
 from dembrane.database import (
     ViewModel,
@@ -34,6 +34,7 @@ from dembrane.quote_utils import (
     cluster_quotes_using_aspect_centroids,
 )
 from dembrane.api.stateless import generate_summary
+from dembrane.audio_lightrag.main.run_etl import run_etl_pipeline
 
 logger = get_task_logger("celery_tasks")
 
@@ -762,7 +763,8 @@ def task_finish_conversation_hook(self, conversation_id: str):
                     "summary": summary,
                 },
             )
-
+        if ENABLE_AUDIO_LIGHTRAG_INPUT == 1:
+            run_etl_pipeline([conversation_id])
     except Exception as e:
         logger.error(f"Error: {e}")
         raise self.retry(exc=e) from e

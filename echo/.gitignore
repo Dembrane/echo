@@ -4,6 +4,7 @@
 caddy_data
 caddy_config
 postgres_data
+
 pgadmin_data
 appsmith_data
 minio_data
@@ -14,5 +15,11 @@ directus/.env
 node_modules
 .next
 
+server/dembrane/audio_lightrag/data/*
+server/server/dembrane/audio_lightrag/data/*
+
+
 __blobstorage__
 __queuestorage__echo/server/dembrane/workspace_script.py
+
+.devcontainer/rabbitmq_data/*

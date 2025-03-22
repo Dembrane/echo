@@ -553,6 +553,8 @@ type conversation_chunk {
   updated_at_func: datetime_functions
   quotes(filter: quote_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_conversation_chunk]
   quotes_func: count_functions
+  conversation_segments(filter: conversation_segment_conversation_chunk_1_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_segment_conversation_chunk_1]
+  conversation_segments_func: count_functions
 }
 
 type conversation_chunk_aggregated {
@@ -572,6 +574,7 @@ type conversation_chunk_aggregated_count {
   transcript: Int
   updated_at: Int
   quotes: Int
+  conversation_segments: Int
 }
 
 type conversation_chunk_mutated {
@@ -619,6 +622,125 @@ type conversation_project_tag_mutated {
   key: ID!
   event: EventEnum
   data: conversation_project_tag
+}
+
+type conversation_segment {
+  id: ID!
+  config_id: String
+  counter: Float
+  transcript: String
+  contextual_transcript: String
+  path: String
+  lightrag_flag: Boolean
+  chunks(filter: conversation_segment_conversation_chunk_1_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_segment_conversation_chunk_1]
+  chunks_func: count_functions
+}
+
+type conversation_segment_aggregated {
+  group: JSON
+  countAll: Int
+  count: conversation_segment_aggregated_count
+  countDistinct: conversation_segment_aggregated_count
+  avg: conversation_segment_aggregated_fields
+  sum: conversation_segment_aggregated_fields
+  avgDistinct: conversation_segment_aggregated_fields
+  sumDistinct: conversation_segment_aggregated_fields
+  min: conversation_segment_aggregated_fields
+  max: conversation_segment_aggregated_fields
+}
+
+type conversation_segment_aggregated_count {
+  id: Int
+  config_id: Int
+  counter: Int
+  transcript: Int
+  contextual_transcript: Int
+  path: Int
+  lightrag_flag: Int
+  chunks: Int
+}
+
+type conversation_segment_aggregated_fields {
+  id: Float
+  counter: Float
+}
+
+type conversation_segment_conversation_chunk {
+  id: ID!
+  conversation_segment_id(filter: conversation_segment_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation_segment
+  conversation_chunk_id(filter: conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation_chunk
+}
+
+type conversation_segment_conversation_chunk_1 {
+  id: ID!
+  conversation_segment_id(filter: conversation_segment_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation_segment
+  conversation_chunk_id(filter: conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation_chunk
+}
+
+type conversation_segment_conversation_chunk_1_aggregated {
+  group: JSON
+  countAll: Int
+  count: conversation_segment_conversation_chunk_1_aggregated_count
+  countDistinct: conversation_segment_conversation_chunk_1_aggregated_count
+  avg: conversation_segment_conversation_chunk_1_aggregated_fields
+  sum: conversation_segment_conversation_chunk_1_aggregated_fields
+  avgDistinct: conversation_segment_conversation_chunk_1_aggregated_fields
+  sumDistinct: conversation_segment_conversation_chunk_1_aggregated_fields
+  min: conversation_segment_conversation_chunk_1_aggregated_fields
+  max: conversation_segment_conversation_chunk_1_aggregated_fields
+}
+
+type conversation_segment_conversation_chunk_1_aggregated_count {
+  id: Int
+  conversation_segment_id: Int
+  conversation_chunk_id: Int
+}
+
+type conversation_segment_conversation_chunk_1_aggregated_fields {
+  id: Float
+  conversation_segment_id: Float
+}
+
+type conversation_segment_conversation_chunk_1_mutated {
+  key: ID!
+  event: EventEnum
+  data: conversation_segment_conversation_chunk_1
+}
+
+type conversation_segment_conversation_chunk_aggregated {
+  group: JSON
+  countAll: Int
+  count: conversation_segment_conversation_chunk_aggregated_count
+  countDistinct: conversation_segment_conversation_chunk_aggregated_count
+  avg: conversation_segment_conversation_chunk_aggregated_fields
+  sum: conversation_segment_conversation_chunk_aggregated_fields
+  avgDistinct: conversation_segment_conversation_chunk_aggregated_fields
+  sumDistinct: conversation_segment_conversation_chunk_aggregated_fields
+  min: conversation_segment_conversation_chunk_aggregated_fields
+  max: conversation_segment_conversation_chunk_aggregated_fields
+}
+
+type conversation_segment_conversation_chunk_aggregated_count {
+  id: Int
+  conversation_segment_id: Int
+  conversation_chunk_id: Int
+}
+
+type conversation_segment_conversation_chunk_aggregated_fields {
+  id: Float
+  conversation_segment_id: Float
+}
+
+type conversation_segment_conversation_chunk_mutated {
+  key: ID!
+  event: EventEnum
+  data: conversation_segment_conversation_chunk
+}
+
+type conversation_segment_mutated {
+  key: ID!
+  event: EventEnum
+  data: conversation_segment
 }
 
 type count_functions {
@@ -1283,6 +1405,39 @@ type insight_mutated {
   key: ID!
   event: EventEnum
   data: insight
+}
+
+type lightrag_vdb_transcript {
+  id: ID!
+  document_id: String
+  content: String
+  content_vector: String
+  create_time: Date
+  create_time_func: datetime_functions
+  update_time: Date
+  update_time_func: datetime_functions
+}
+
+type lightrag_vdb_transcript_aggregated {
+  group: JSON
+  countAll: Int
+  count: lightrag_vdb_transcript_aggregated_count
+  countDistinct: lightrag_vdb_transcript_aggregated_count
+}
+
+type lightrag_vdb_transcript_aggregated_count {
+  id: Int
+  document_id: Int
+  content: Int
+  content_vector: Int
+  create_time: Int
+  update_time: Int
+}
+
+type lightrag_vdb_transcript_mutated {
+  key: ID!
+  event: EventEnum
+  data: lightrag_vdb_transcript
 }
 
 type project {
@@ -1964,6 +2119,7 @@ type version_conversation_chunk {
   transcript: String
   updated_at: Date
   quotes: JSON
+  conversation_segments: JSON
 }
 
 """"""
@@ -1971,6 +2127,32 @@ type version_conversation_project_tag {
   conversation_id: JSON
   id: ID
   project_tag_id: JSON
+}
+
+""""""
+type version_conversation_segment {
+  id: ID
+  config_id: String
+  counter: Float
+  transcript: String
+  contextual_transcript: String
+  path: String
+  lightrag_flag: Boolean
+  chunks: JSON
+}
+
+""""""
+type version_conversation_segment_conversation_chunk {
+  id: ID
+  conversation_segment_id: JSON
+  conversation_chunk_id: JSON
+}
+
+""""""
+type version_conversation_segment_conversation_chunk_1 {
+  id: ID
+  conversation_segment_id: JSON
+  conversation_chunk_id: JSON
 }
 
 """"""
@@ -2007,6 +2189,16 @@ type version_insight {
   title: String
   updated_at: Date
   quotes: JSON
+}
+
+""""""
+type version_lightrag_vdb_transcript {
+  id: ID
+  document_id: String
+  content: String
+  content_vector: String
+  create_time: Date
+  update_time: Date
 }
 
 """"""
@@ -2316,6 +2508,8 @@ input conversation_chunk_filter {
   updated_at_func: datetime_function_filter_operators
   quotes: quote_conversation_chunk_filter
   quotes_func: count_function_filter_operators
+  conversation_segments: conversation_segment_conversation_chunk_1_filter
+  conversation_segments_func: count_function_filter_operators
   _and: [conversation_chunk_filter]
   _or: [conversation_chunk_filter]
 }
@@ -2362,6 +2556,36 @@ input conversation_project_tag_filter {
   _or: [conversation_project_tag_filter]
 }
 
+input conversation_segment_conversation_chunk_1_filter {
+  id: number_filter_operators
+  conversation_segment_id: conversation_segment_filter
+  conversation_chunk_id: conversation_chunk_filter
+  _and: [conversation_segment_conversation_chunk_1_filter]
+  _or: [conversation_segment_conversation_chunk_1_filter]
+}
+
+input conversation_segment_conversation_chunk_filter {
+  id: number_filter_operators
+  conversation_segment_id: conversation_segment_filter
+  conversation_chunk_id: conversation_chunk_filter
+  _and: [conversation_segment_conversation_chunk_filter]
+  _or: [conversation_segment_conversation_chunk_filter]
+}
+
+input conversation_segment_filter {
+  id: number_filter_operators
+  config_id: string_filter_operators
+  counter: number_filter_operators
+  transcript: string_filter_operators
+  contextual_transcript: string_filter_operators
+  path: string_filter_operators
+  lightrag_flag: boolean_filter_operators
+  chunks: conversation_segment_conversation_chunk_1_filter
+  chunks_func: count_function_filter_operators
+  _and: [conversation_segment_filter]
+  _or: [conversation_segment_filter]
+}
+
 input count_function_filter_operators {
   count: number_filter_operators
 }
@@ -2405,6 +2629,7 @@ input create_conversation_chunk_input {
   transcript: String
   updated_at: Date
   quotes: [create_quote_conversation_chunk_input]
+  conversation_segments: [create_conversation_segment_conversation_chunk_1_input]
 }
 
 input create_conversation_input {
@@ -2435,6 +2660,29 @@ input create_conversation_project_tag_input {
   conversation_id: create_conversation_input
   id: ID
   project_tag_id: create_project_tag_input
+}
+
+input create_conversation_segment_conversation_chunk_1_input {
+  id: ID
+  conversation_segment_id: create_conversation_segment_input
+  conversation_chunk_id: create_conversation_chunk_input
+}
+
+input create_conversation_segment_conversation_chunk_input {
+  id: ID
+  conversation_segment_id: create_conversation_segment_input
+  conversation_chunk_id: create_conversation_chunk_input
+}
+
+input create_conversation_segment_input {
+  id: ID
+  config_id: String
+  counter: Float
+  transcript: String
+  contextual_transcript: String
+  path: String
+  lightrag_flag: Boolean
+  chunks: [create_conversation_segment_conversation_chunk_1_input]
 }
 
 input create_directus_access_input {
@@ -2581,6 +2829,15 @@ input create_insight_input {
   title: String
   updated_at: Date
   quotes: [create_quote_input]
+}
+
+input create_lightrag_vdb_transcript_input {
+  id: ID!
+  document_id: String
+  content: String
+  content_vector: String
+  create_time: Date
+  update_time: Date
 }
 
 input create_project_analysis_run_input {
@@ -3103,6 +3360,19 @@ input insight_filter {
   _or: [insight_filter]
 }
 
+input lightrag_vdb_transcript_filter {
+  id: string_filter_operators
+  document_id: string_filter_operators
+  content: string_filter_operators
+  content_vector: string_filter_operators
+  create_time: date_filter_operators
+  create_time_func: datetime_function_filter_operators
+  update_time: date_filter_operators
+  update_time_func: datetime_function_filter_operators
+  _and: [lightrag_vdb_transcript_filter]
+  _or: [lightrag_vdb_transcript_filter]
+}
+
 input number_filter_operators {
   _eq: GraphQLStringOrFloat
   _neq: GraphQLStringOrFloat
@@ -3389,6 +3659,7 @@ input update_conversation_chunk_input {
   transcript: String
   updated_at: Date
   quotes: [update_quote_conversation_chunk_input]
+  conversation_segments: [update_conversation_segment_conversation_chunk_1_input]
 }
 
 input update_conversation_input {
@@ -3419,6 +3690,29 @@ input update_conversation_project_tag_input {
   conversation_id: update_conversation_input
   id: ID
   project_tag_id: update_project_tag_input
+}
+
+input update_conversation_segment_conversation_chunk_1_input {
+  id: ID
+  conversation_segment_id: update_conversation_segment_input
+  conversation_chunk_id: update_conversation_chunk_input
+}
+
+input update_conversation_segment_conversation_chunk_input {
+  id: ID
+  conversation_segment_id: update_conversation_segment_input
+  conversation_chunk_id: update_conversation_chunk_input
+}
+
+input update_conversation_segment_input {
+  id: ID
+  config_id: String
+  counter: Float
+  transcript: String
+  contextual_transcript: String
+  path: String
+  lightrag_flag: Boolean
+  chunks: [update_conversation_segment_conversation_chunk_1_input]
 }
 
 input update_directus_access_input {
@@ -3565,6 +3859,15 @@ input update_insight_input {
   title: String
   updated_at: Date
   quotes: [update_quote_input]
+}
+
+input update_lightrag_vdb_transcript_input {
+  id: ID
+  document_id: String
+  content: String
+  content_vector: String
+  create_time: Date
+  update_time: Date
 }
 
 input update_project_analysis_run_input {
