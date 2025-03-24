@@ -136,13 +136,13 @@ SQL_TEMPLATES = {
     """
 }
 
-if __name__ == "__main__":
-    # # test the embedding function
-    import os
-    import asyncio
-    texts = ["Hello, world!", "This is a test."]
-    embeddings = asyncio.run(embedding_func(texts))
-    print(embeddings)
+# if __name__ == "__main__":
+#     # # test the embedding function
+#     import os
+#     import asyncio
+#     texts = ["Hello, world!", "This is a test."]
+#     embeddings = asyncio.run(embedding_func(texts))
+#     print(embeddings)
 
 
 
