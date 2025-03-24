@@ -19,17 +19,33 @@ from dembrane.config import (
 
 logger = logging.getLogger('audio_lightrag_utils')
 
-async def embedding_func(texts: list[str]) -> np.ndarray:
-    response = embedding(
-        model=f"azure/{AZURE_EMBEDDING_DEPLOYMENT}",
-        input=texts,
-        api_key=str(AZURE_EMBEDDING_API_KEY),
-        api_base=str(AZURE_EMBEDDING_ENDPOINT),
-        api_version=str(AZURE_OPENAI_API_VERSION),
-    )
+# async def embedding_func(texts: list[str]) -> np.ndarray:
+#     response = embedding(
+#         model=f"azure/{AZURE_EMBEDDING_DEPLOYMENT}",
+#         input=texts,
+#         api_key=str(AZURE_EMBEDDING_API_KEY),
+#         api_base=str(AZURE_EMBEDDING_ENDPOINT),
+#         api_version=str(AZURE_OPENAI_API_VERSION),
+#     )
     
-    embeddings = [item['embedding'] for item in response.data]
-    return np.array(embeddings)
+#     embeddings = [item['embedding'] for item in response.data]
+#     return np.array(embeddings)
+
+
+async def embedding_func(texts: list[str]) -> np.ndarray:
+    # Bug in litellm forcing us to do this: https://github.com/BerriAI/litellm/issues/6967
+    nd_arr_response = []
+    for text in texts:
+        temp = embedding(
+            model=f"azure/{AZURE_EMBEDDING_DEPLOYMENT}",
+            input=text,
+            api_key=str(AZURE_EMBEDDING_API_KEY),
+            api_base=str(AZURE_EMBEDDING_ENDPOINT),
+            api_version=str(AZURE_OPENAI_API_VERSION),
+        )
+        nd_arr_response.append(temp['data'][0]['embedding'])
+    # embeddings = [item['embedding'] for item in response.data]
+    return np.array(nd_arr_response)
 
 async def check_audio_lightrag_tables(db: PostgreSQLDB) -> None:
     for _, table_definition in TABLES.items():
@@ -124,23 +140,23 @@ if __name__ == "__main__":
     # # test the embedding function
     import os
     import asyncio
-    # texts = ["Hello, world!", "This is a test."]
-    # embeddings = asyncio.run(embedding_func(texts))
-    # print(embeddings)
+    texts = ["Hello, world!", "This is a test."]
+    embeddings = asyncio.run(embedding_func(texts))
+    print(embeddings)
 
 
 
-    postgres_config = {
-        "host": os.environ["POSTGRES_HOST"],
-        "port": os.environ["POSTGRES_PORT"],
-        "user": os.environ["POSTGRES_USER"],
-        "password": os.environ["POSTGRES_PASSWORD"],
-        "database": os.environ["POSTGRES_DATABASE"],
-    }
+    # postgres_config = {
+    #     "host": os.environ["POSTGRES_HOST"],
+    #     "port": os.environ["POSTGRES_PORT"],
+    #     "user": os.environ["POSTGRES_USER"],
+    #     "password": os.environ["POSTGRES_PASSWORD"],
+    #     "database": os.environ["POSTGRES_DATABASE"],
+    # }
 
-    # test the upsert transcript function
-    db = PostgreSQLDB(config=postgres_config)
+    # # test the upsert transcript function
+    # db = PostgreSQLDB(config=postgres_config)
     
-    asyncio.run(fetch_query_transcript(db, "Hello, world!", ids=["test-document-129", 
-                                                                 "test-document-129", 
-                                                                 "test-document-123"]))
+    # asyncio.run(fetch_query_transcript(db, "Hello, world!", ids=["test-document-129", 
+    #                                                              "test-document-129", 
+    #                                                              "test-document-123"]))
