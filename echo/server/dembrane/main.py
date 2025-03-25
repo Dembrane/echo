@@ -56,12 +56,12 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     await postgres_db.check_tables()
     await check_audio_lightrag_tables(postgres_db)
 
-    working_dir = os.environ["POSTGRES_WORK_DIR"]
-    if not os.path.exists(working_dir):
-        os.makedirs(working_dir)
+    # working_dir = os.environ["POSTGRES_WORK_DIR"]
+    # if not os.path.exists(working_dir):
+    #     os.makedirs(working_dir)
 
     _app.state.rag = LightRAG(
-        working_dir=working_dir,
+        working_dir=None,
         llm_model_func=llm_model_func,
         embedding_func=embedding_func,
         kv_storage="PGKVStorage",
