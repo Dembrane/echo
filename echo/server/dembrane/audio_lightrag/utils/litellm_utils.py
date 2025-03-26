@@ -1,7 +1,8 @@
 import json
 from typing import Any, Optional
 
-from litellm import completion
+import numpy as np
+from litellm import embedding, completion
 from pydantic import BaseModel
 
 from dembrane.config import (
@@ -11,9 +12,14 @@ from dembrane.config import (
     LITELLM_LIGHTRAG_PROVIDER,
     LITELLM_LIGHTRAG_API_VERSION,
     LITELLM_LIGHTRAG_AUDIOMODEL_NAME,
+    LITELLM_LIGHTRAG_EMBEDDING_API_KEY,
     LITELLM_LIGHTRAG_AUDIOMODEL_API_KEY,
+    LITELLM_LIGHTRAG_EMBEDDING_ENDPOINT,
+    LITELLM_LIGHTRAG_EMBEDDING_PROVIDER,
     LITELLM_LIGHTRAG_AUDIOMODEL_ENDPOINT,
     LITELLM_LIGHTRAG_AUDIOMODEL_PROVIDER,
+    LITELLM_LIGHTRAG_EMBEDDING_DEPLOYMENT,
+    LITELLM_LIGHTRAG_EMBEDDING_API_VERSION,
     LITELLM_LIGHTRAG_AUDIOMODEL_API_VERSION,
     LITELLM_LIGHTRAG_TEXTSTRUCTUREMODEL_NAME,
     LITELLM_LIGHTRAG_TEXTSTRUCTUREMODEL_API_KEY,
@@ -118,3 +124,17 @@ async def llm_model_func(
         api_base=LITELLM_LIGHTRAG_ENDPOINT
     )
     return chat_completion.choices[0].message.content
+
+async def embedding_func(texts: list[str]) -> np.ndarray:
+    # Bug in litellm forcing us to do this: https://github.com/BerriAI/litellm/issues/6967
+    nd_arr_response = []
+    for text in texts:
+        temp = embedding(
+            model=f"{LITELLM_LIGHTRAG_EMBEDDING_PROVIDER}/{LITELLM_LIGHTRAG_EMBEDDING_DEPLOYMENT}",
+            input=text,
+            api_key=str(LITELLM_LIGHTRAG_EMBEDDING_API_KEY),
+            api_base=str(LITELLM_LIGHTRAG_EMBEDDING_ENDPOINT),
+            api_version=str(LITELLM_LIGHTRAG_EMBEDDING_API_VERSION),
+        )
+        nd_arr_response.append(temp['data'][0]['embedding'])
+    return np.array(nd_arr_response)

@@ -6,37 +6,15 @@ import hashlib
 import logging
 from typing import Any, TypeVar, Callable, Optional
 
-import numpy as np
 import redis
-from litellm import embedding
 from lightrag.kg.postgres_impl import PostgreSQLDB
 
-from dembrane.config import (
-    LITELLM_LIGHTRAG_EMBEDDING_API_KEY,
-    LITELLM_LIGHTRAG_EMBEDDING_ENDPOINT,
-    LITELLM_LIGHTRAG_EMBEDDING_PROVIDER,
-    LITELLM_LIGHTRAG_EMBEDDING_DEPLOYMENT,
-    LITELLM_LIGHTRAG_EMBEDDING_API_VERSION,
-)
-
-# from dembrane.audio_lightrag.utils.azure_utils import setup_azure_client
+from dembrane.audio_lightrag.utils.litellm_utils import embedding_func
 
 logger = logging.getLogger('audio_lightrag_utils')
 
 
-async def embedding_func(texts: list[str]) -> np.ndarray:
-    # Bug in litellm forcing us to do this: https://github.com/BerriAI/litellm/issues/6967
-    nd_arr_response = []
-    for text in texts:
-        temp = embedding(
-            model=f"{LITELLM_LIGHTRAG_EMBEDDING_PROVIDER}/{LITELLM_LIGHTRAG_EMBEDDING_DEPLOYMENT}",
-            input=text,
-            api_key=str(LITELLM_LIGHTRAG_EMBEDDING_API_KEY),
-            api_base=str(LITELLM_LIGHTRAG_EMBEDDING_ENDPOINT),
-            api_version=str(LITELLM_LIGHTRAG_EMBEDDING_API_VERSION),
-        )
-        nd_arr_response.append(temp['data'][0]['embedding'])
-    return np.array(nd_arr_response)
+
 
 # Redis lock configuration
 REDIS_LOCK_KEY = "DEMBRANE_INIT_LOCK"

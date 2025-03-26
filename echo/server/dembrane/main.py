@@ -30,9 +30,8 @@ from dembrane.sentry import init_sentry
 from dembrane.api.api import api
 
 # from lightrag.llm.azure_openai import azure_openai_complete
-from dembrane.audio_lightrag.utils.litellm_utils import llm_model_func
+from dembrane.audio_lightrag.utils.litellm_utils import embedding_func, llm_model_func
 from dembrane.audio_lightrag.utils.lightrag_utils import (
-    embedding_func,
     with_distributed_lock,
     check_audio_lightrag_tables,
 )

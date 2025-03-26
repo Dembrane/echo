@@ -143,8 +143,7 @@ async def query_item(request: Request, payload: QueryRequest) -> QueryResponse:
             transcripts = await fetch_query_transcript(postgres_db, 
                                             str(result), 
                                             ids = payload.echo_segment_ids if payload.echo_segment_ids else None)
-            transcript_contents = [t['content'] for t in transcripts] if isinstance(transcripts, list) \
-                else [transcripts['content']] # type: ignore
+            transcript_contents = [t['content'] for t in transcripts] if isinstance(transcripts, list)  else [transcripts['content']] # type: ignore
         else:
             transcript_contents = []
         return QueryResponse(status="success", result=result, transcripts=transcript_contents)
