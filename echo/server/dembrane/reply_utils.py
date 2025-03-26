@@ -115,7 +115,7 @@ async def generate_reply_for_conversation(
     conversation = conversation[0]
 
     if conversation["project_id"]["is_get_reply_enabled"] is False:
-        raise ValueError(f"Get reply is not enabled for project {conversation['project_id']['id']}")
+        raise ValueError(f"Echo is not enabled for project {conversation['project_id']['id']}")
 
     current_conversation = Conversation(
         id=conversation["id"],

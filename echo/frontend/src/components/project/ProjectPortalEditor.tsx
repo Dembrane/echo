@@ -354,7 +354,7 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
                 <Stack gap="md">
                   <Group>
                     <Title order={4}>
-                      <Trans>Dembrane Reply</Trans>
+                      <Trans>Dembrane Echo</Trans>
                     </Title>
                     <Logo hideTitle />
                     <Badge>
@@ -366,7 +366,7 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
                     <Trans>
                       Enable this feature to allow participants to request
                       AI-powered responses during their conversation.
-                      Participants can click "Get Reply" after recording their
+                      Participants can click "Echo" after recording their
                       thoughts to receive contextual feedback, encouraging
                       deeper reflection and engagement. A cooldown period
                       applies between requests.
@@ -380,7 +380,7 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
                       <Switch
                         label={
                           <FormLabel
-                            label={t`Enable Dembrane Reply`}
+                            label={t`Enable Dembrane Echo`}
                             isDirty={formState.dirtyFields.is_get_reply_enabled}
                             error={
                               formState.errors.is_get_reply_enabled?.message
