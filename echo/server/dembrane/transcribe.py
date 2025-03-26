@@ -4,6 +4,7 @@ from typing import Optional
 from dembrane.s3 import get_stream_from_s3, get_sanitized_s3_key
 from dembrane.openai import client
 from dembrane.directus import directus
+from dembrane.api.conversation import get_conversation_content
 
 logger = logging.getLogger("transcribe")
 
@@ -18,43 +19,6 @@ def transcribe_audio(
     return transcribe_audio_openai(audio_file_path, language, whisper_prompt)
 
 
-# def transcribe_audio_aiconl(
-#     audio_file_path: str,
-#     language: Optional[str],  # noqa
-#     whisper_prompt: Optional[str],  # noqa
-# ) -> str:
-#     import requests
-
-#     API_BASE_URL = "https://whisper.ai-hackathon.haven.vng.cloud"
-#     API_KEY = "JOUW_VEILIGE_API_SLEUTEL"
-
-#     try:
-#         with open(audio_file_path, "rb") as f:
-#             headers = {"accept": "application/json", "access_token": API_KEY}
-#             files = {"file": f}
-
-#             response = requests.post(f"{API_BASE_URL}/transcribe", headers=headers, files=files)
-#             response.raise_for_status()
-
-#             result = response.json()
-#             transcription = result.get("text", "")
-
-#             if not transcription:
-#                 logger.info("Transcription is empty!")
-
-#             return transcription
-
-#     except FileNotFoundError as exc:
-#         logger.error(f"File not found: {audio_file_path}")
-#         raise FileNotFoundError from exc
-#     except requests.RequestException as exc:
-#         logger.error(f"Failed to transcribe audio: {exc}")
-#         raise TranscriptionError(f"Failed to transcribe audio: {exc}") from exc
-#     except Exception as exc:
-#         logger.error(f"Unexpected error: {exc}")
-#         raise TranscriptionError(f"Unexpected error: {exc}") from exc
-
-
 def transcribe_audio_openai(
     audio_file_uri: str, language: Optional[str], whisper_prompt: Optional[str]
 ) -> str:
@@ -67,6 +31,36 @@ def transcribe_audio_openai(
     with audio_stream as f:
         options = {
             "model": "whisper-1",
+            "file": (get_sanitized_s3_key(audio_file_uri), f.read()),
+            "response_format": "text",
+            "language": language if language not in [None, "multi", ""] else None,
+            "prompt": whisper_prompt if whisper_prompt else None,
+        }
+
+        try:
+            transcription = client.audio.transcriptions.create(**options)  # type: ignore
+        except Exception as exc:
+            logger.error(f"Failed to transcribe audio: {exc}")
+            raise TranscriptionError(f"Failed to transcribe audio: {exc}") from exc
+
+        if transcription is None or transcription == "":
+            logger.info("Transcription is empty!")
+
+    return str(transcription)
+
+
+def transcribe_audio_openai_with_timestamps(
+    audio_file_uri: str, language: Optional[str], whisper_prompt: Optional[str]
+) -> str:
+    try:
+        audio_stream = get_stream_from_s3(audio_file_uri)
+    except Exception as exc:
+        logger.error(f"Failed to get audio stream from S3 for {audio_file_uri}: {exc}")
+        raise TranscriptionError(f"Failed to get audio stream from S3: {exc}") from exc
+
+    with audio_stream as f:
+        options = {
+            "model": "gpt-4o-mini-transcribe",
             "file": (get_sanitized_s3_key(audio_file_uri), f.read()),
             "response_format": "text",
             "language": language if language not in [None, "multi", ""] else None,
@@ -131,6 +125,15 @@ DEFAULT_WHISPER_PROMPTS = {
     "fr": "Bonjour, commençons. D'abord un tour de table et ensuite nous pourrons aborder le sujet du jour.",
     "es": "Hola, comencemos. Primero, un round de introducción y luego podremos empezar con el tema de hoy.",
 }
+
+
+def transcribe_conversation(conversation_id: str) -> str:
+    """Process conversation for transcription"""
+    logger = logging.getLogger("transcribe.transcribe_conversation")
+
+    content = get_conversation_content(conversation_id)
+
+    return ""
 
 
 def transcribe_conversation_chunk(conversation_chunk_id: str) -> str:

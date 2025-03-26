@@ -115,8 +115,7 @@ export const Header = () => {
         <Group gap="md">
           <I18nLink to="/projects">
             <Group align="center">
-              <Logo hideTitle={false} />
-              <Text className="text-md">ECHO</Text>
+              <Logo hideTitle={false} otherText="ECHO" />
             </Group>
           </I18nLink>
         </Group>

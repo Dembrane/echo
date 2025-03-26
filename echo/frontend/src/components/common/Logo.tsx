@@ -15,18 +15,40 @@ export const LogoDembrane = ({
   otherText,
   ...props
 }: LogoProps) => (
-  <Group gap="sm" h="30px" {...props}>
+  <Group
+    gap="sm"
+    align="center"
+    justify="flex-start"
+    h="30px"
+    style={{ display: "flex", alignItems: "center" }}
+    {...props}
+  >
     {!hideLogo && (
-      <img
-        src={dembranelogo}
-        alt="Dembrane Logo"
-        className="h-full object-contain"
-      />
+      <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
+        <img
+          src={dembranelogo}
+          alt="Dembrane Logo"
+          className="h-full object-contain"
+        />
+      </div>
     )}
     {!hideTitle && (
-      <Title order={1} className="text-xl">
-        {otherText ? <div className="">{otherText}</div> : "Dembrane"}
-      </Title>
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <Title
+          p="0"
+          m="0"
+          order={1}
+          className="text-xl"
+          style={{ lineHeight: 1 }}
+        >
+          Dembrane
+        </Title>
+        {otherText && (
+          <div className="ml-2 text-xl" style={{ lineHeight: 1 }}>
+            {otherText}
+          </div>
+        )}
+      </div>
     )}
   </Group>
 );

@@ -468,7 +468,7 @@ def split_audio_chunk(original_chunk_id: str) -> List[str]:
         raise e
 
     # If the file is too small, do not attempt splitting.
-    if file_size < 5 * 1024:
+    if file_size < MAX_CHUNK_SIZE:
         logger.info("File size too small to split. Returning single chunk.")
         return [original_chunk["id"]]
 
@@ -567,3 +567,59 @@ def split_audio_chunk(original_chunk_id: str) -> List[str]:
 
     logger.info(f"Successfully split file into {number_chunks} chunks.")
     return new_chunk_ids
+
+def split_audio(original_audio_uri: str) -> List[str]:
+    """Split an audio file into chunks and save them to S3.
+
+    Args:
+        original_audio_uri: The URI of the original audio file.
+
+    Returns:
+        A list of the new audio file URIs.
+    """
+    # Get the file size from S3.
+    original_s3_key = get_sanitized_s3_key(original_audio_uri)
+    response = s3_client.head_object(Bucket=STORAGE_S3_BUCKET, Key=original_s3_key)
+    file_size = response["ContentLength"]
+
+    # If the file is too small, do not attempt splitting.
+    if file_size < MAX_CHUNK_SIZE:
+        logger.info("File size too small to split. Returning single chunk.")
+        return [original_audio_uri]
+    
+    # Calculate number of chunks based on MAX_CHUNK_SIZE (default 20 MB).
+    number_chunks = math.ceil(file_size / MAX_CHUNK_SIZE)
+    logger.info(f"Number of chunks to split into: {number_chunks}")
+
+    if number_chunks == 1:
+        logger.info("Single chunk file. No splitting necessary.")
+        return [original_audio_uri]
+    
+    # Download the original file fully into memory.
+    try:
+        logger.info("Downloading original file from S3 into memory for splitting.")
+        stream = get_stream_from_s3(original_audio_uri)
+        file_bytes = stream.read()
+    except Exception as e:
+        logger.error(f"Error downloading file from S3: {e}")
+        raise e
+
+    # Use ffmpeg-python helper to probe the file (in OGG format).
+    try:
+        probe_data = probe_from_bytes(file_bytes, input_format="ogg")
+        if "format" in probe_data and "duration" in probe_data["format"]:
+            duration = float(probe_data["format"]["duration"])
+            chunk_duration = duration / number_chunks
+            logger.info(f"Total duration: {duration}s, Each chunk duration: {chunk_duration}s")
+        else:
+            raise ValueError("Duration not found in ffprobe output")
+    except Exception as e:
+        logger.error(f"Error during ffprobe processing: {e}")
+        raise e
+    
+    # Split the file into chunks (all in OGG format) without writing to disk.
+    split_chunk_uris = []
+    for i in range(number_chunks):
+        start_time = i * chunk_duration
+        s3_chunk_path = (
+            

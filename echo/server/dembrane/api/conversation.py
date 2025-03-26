@@ -136,7 +136,6 @@ def raise_if_conversation_not_found_or_not_authorized(
 
 @ConversationRouter.get("/{conversation_id}/content", response_model=None)
 async def get_conversation_content(
-    request: Request,
     conversation_id: str,
     auth: DependencyDirectusSession,
     force_merge: bool = False,
@@ -216,33 +215,38 @@ async def get_conversation_content(
             },
         )
 
+        if return_url:
+            return get_signed_url(merged_path)
+
         return RedirectResponse(get_signed_url(merged_path))
 
-    # how does this work when there are multiple files with different types?
-    mime_type = get_mime_type_from_file_path(file_paths[0])
+    return "Invalid Source [Not Implemented with Local Audio Source]"
 
-    range_header = request.headers.get("Range")
-    if range_header:
-        start_str, end_str = range_header.replace("bytes=", "").split("-")
-        start = int(start_str)
-        end = int(end_str) if end_str else None
+    # # how does this work when there are multiple files with different types?
+    # mime_type = get_mime_type_from_file_path(file_paths[0])
 
-        file_size = sum(os.path.getsize(path) for path in file_paths)
-        if end is None:
-            end = file_size - 1
+    # range_header = request.headers.get("Range")
+    # if range_header:
+    #     start_str, end_str = range_header.replace("bytes=", "").split("-")
+    #     start = int(start_str)
+    #     end = int(end_str) if end_str else None
 
-        return StreamingResponse(
-            stream_audio(file_paths, start, end),
-            media_type=mime_type,
-            headers={
-                "Content-Range": f"bytes {start}-{end}/{file_size}",
-                "Accept-Ranges": "bytes",
-                "Content-Length": str(end - start + 1),
-            },
-            status_code=206,
-        )
+    #     file_size = sum(os.path.getsize(path) for path in file_paths)
+    #     if end is None:
+    #         end = file_size - 1
 
-    return StreamingResponse(stream_audio(file_paths), media_type=mime_type)
+    #     return StreamingResponse(
+    #         stream_audio(file_paths, start, end),
+    #         media_type=mime_type,
+    #         headers={
+    #             "Content-Range": f"bytes {start}-{end}/{file_size}",
+    #             "Accept-Ranges": "bytes",
+    #             "Content-Length": str(end - start + 1),
+    #         },
+    #         status_code=206,
+    #     )
+
+    # return StreamingResponse(stream_audio(file_paths), media_type=mime_type)
 
 
 @ConversationRouter.get("/{conversation_id}/chunks/{chunk_id}/content", response_model=None)
