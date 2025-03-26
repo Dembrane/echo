@@ -5,18 +5,21 @@ from litellm import completion
 from pydantic import BaseModel
 
 from dembrane.config import (
-    AZURE_OPENAI_AUDIOMODEL_NAME,
-    AZURE_OPENAI_LIGHTRAGLLM_NAME,
-    AZURE_OPENAI_AUDIOMODEL_API_KEY,
-    AZURE_OPENAI_AUDIOMODEL_ENDPOINT,
-    AZURE_OPENAI_LIGHTRAGLLM_API_KEY,
-    AZURE_OPENAI_LIGHTRAGLLM_ENDPOINT,
-    AZURE_OPENAI_AUDIOMODEL_API_VERSION,
-    AZURE_OPENAI_LIGHTRAGLLM_API_VERSION,
-    AZURE_OPENAI_TEXTSTRUCTUREMODEL_NAME,
-    AZURE_OPENAI_TEXTSTRUCTUREMODEL_API_KEY,
-    AZURE_OPENAI_TEXTSTRUCTUREMODEL_ENDPOINT,
-    AZURE_OPENAI_TEXTSTRUCTUREMODEL_API_VERSION,
+    LITELLM_LIGHTRAG_NAME,
+    LITELLM_LIGHTRAG_APIKEY,
+    LITELLM_LIGHTRAG_ENDPOINT,
+    LITELLM_LIGHTRAG_PROVIDER,
+    LITELLM_LIGHTRAG_API_VERSION,
+    LITELLM_LIGHTRAG_AUDIOMODEL_NAME,
+    LITELLM_LIGHTRAG_AUDIOMODEL_API_KEY,
+    LITELLM_LIGHTRAG_AUDIOMODEL_ENDPOINT,
+    LITELLM_LIGHTRAG_AUDIOMODEL_PROVIDER,
+    LITELLM_LIGHTRAG_AUDIOMODEL_API_VERSION,
+    LITELLM_LIGHTRAG_TEXTSTRUCTUREMODEL_NAME,
+    LITELLM_LIGHTRAG_TEXTSTRUCTUREMODEL_API_KEY,
+    LITELLM_LIGHTRAG_TEXTSTRUCTUREMODEL_ENDPOINT,
+    LITELLM_LIGHTRAG_TEXTSTRUCTUREMODEL_PROVIDER,
+    LITELLM_LIGHTRAG_TEXTSTRUCTUREMODEL_API_VERSION,
 )
 from dembrane.audio_lightrag.utils.prompts import Prompts
 
@@ -53,11 +56,11 @@ def get_json_dict_from_audio(wav_encoding: str,
         ]
 
     audio_model_generation = completion(
-        model=f"azure/{AZURE_OPENAI_AUDIOMODEL_NAME}",
+        model=f"{LITELLM_LIGHTRAG_AUDIOMODEL_PROVIDER}/{LITELLM_LIGHTRAG_AUDIOMODEL_NAME}",
         messages=audio_model_messages,
-        api_base=AZURE_OPENAI_AUDIOMODEL_ENDPOINT,
-        api_version=AZURE_OPENAI_AUDIOMODEL_API_VERSION,
-        api_key=AZURE_OPENAI_AUDIOMODEL_API_KEY
+        api_base=LITELLM_LIGHTRAG_AUDIOMODEL_ENDPOINT,
+        api_version=LITELLM_LIGHTRAG_AUDIOMODEL_API_VERSION,
+        api_key=LITELLM_LIGHTRAG_AUDIOMODEL_API_KEY
     )
     
     audio_model_generation_content = audio_model_generation.choices[0].message.content
@@ -84,11 +87,11 @@ def get_json_dict_from_audio(wav_encoding: str,
             ]
 
     text_structuring_model_generation = completion(
-        model=f"azure/{AZURE_OPENAI_TEXTSTRUCTUREMODEL_NAME}",
+        model=f"{LITELLM_LIGHTRAG_TEXTSTRUCTUREMODEL_PROVIDER}/{LITELLM_LIGHTRAG_TEXTSTRUCTUREMODEL_NAME}",
         messages=text_structuring_model_messages,
-        api_base=AZURE_OPENAI_TEXTSTRUCTUREMODEL_ENDPOINT,
-        api_version=AZURE_OPENAI_TEXTSTRUCTUREMODEL_API_VERSION,
-        api_key=AZURE_OPENAI_TEXTSTRUCTUREMODEL_API_KEY,
+        api_base=LITELLM_LIGHTRAG_TEXTSTRUCTUREMODEL_ENDPOINT,
+        api_version=LITELLM_LIGHTRAG_TEXTSTRUCTUREMODEL_API_VERSION,
+        api_key=LITELLM_LIGHTRAG_TEXTSTRUCTUREMODEL_API_KEY,
         response_format=Transctiptions)
     return json.loads(text_structuring_model_generation.choices[0].message.content) # type: ignore
 
@@ -107,11 +110,11 @@ async def llm_model_func(
     messages.append({"role": "user", "content": prompt})
 
     chat_completion = completion(
-        model=f"azure/{AZURE_OPENAI_LIGHTRAGLLM_NAME}",  # litellm format for Azure models
+        model=f"{LITELLM_LIGHTRAG_PROVIDER}/{LITELLM_LIGHTRAG_NAME}",  # litellm format for Azure models
         messages=messages,
         temperature=kwargs.get("temperature", 0.2),
-        api_key=AZURE_OPENAI_LIGHTRAGLLM_API_KEY,
-        api_version=AZURE_OPENAI_LIGHTRAGLLM_API_VERSION,
-        api_base=AZURE_OPENAI_LIGHTRAGLLM_ENDPOINT
+        api_key=LITELLM_LIGHTRAG_APIKEY,
+        api_version=LITELLM_LIGHTRAG_API_VERSION,
+        api_base=LITELLM_LIGHTRAG_ENDPOINT
     )
     return chat_completion.choices[0].message.content

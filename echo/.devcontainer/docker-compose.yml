@@ -44,7 +44,7 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   neo4j:
-    image: neo4j:latest    
+    image: neo4j:5.26.4
     volumes:
       - ./neo4j_data/logs:/logs
       - ./neo4j_data/config:/config

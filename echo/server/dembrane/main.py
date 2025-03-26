@@ -20,6 +20,7 @@ from starlette.middleware.cors import CORSMiddleware
 from lightrag.kg.shared_storage import initialize_pipeline_status
 
 from dembrane.config import (
+    REDIS_URL,
     DISABLE_CORS,
     ADMIN_BASE_URL,
     SERVE_API_DOCS,
@@ -30,7 +31,11 @@ from dembrane.api.api import api
 
 # from lightrag.llm.azure_openai import azure_openai_complete
 from dembrane.audio_lightrag.utils.litellm_utils import llm_model_func
-from dembrane.audio_lightrag.utils.lightrag_utils import embedding_func, check_audio_lightrag_tables
+from dembrane.audio_lightrag.utils.lightrag_utils import (
+    embedding_func,
+    with_distributed_lock,
+    check_audio_lightrag_tables,
+)
 
 nest_asyncio.apply()
 
@@ -52,14 +57,22 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     }
 
     postgres_db = PostgreSQLDB(config=postgres_config)
-    await postgres_db.initdb()
-    await postgres_db.check_tables()
-    await check_audio_lightrag_tables(postgres_db)
-
-    # working_dir = os.environ["POSTGRES_WORK_DIR"]
-    # if not os.path.exists(working_dir):
-    #     os.makedirs(working_dir)
-
+    
+    # Define the critical initialization operation
+    async def initialize_database() -> bool:
+        await postgres_db.initdb()
+        await postgres_db.check_tables()
+        await check_audio_lightrag_tables(postgres_db)
+        return True
+    
+    # Use distributed lock for initialization
+    _, _ = await with_distributed_lock(
+        redis_url=str(REDIS_URL),
+        lock_key="DEMBRANE_INIT_LOCK",
+        critical_operation=initialize_database
+    )
+    
+    # This part is always needed, regardless of whether we performed initialization
     _app.state.rag = LightRAG(
         working_dir=None,
         llm_model_func=llm_model_func,
@@ -74,7 +87,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     )
 
     await _app.state.rag.initialize_storages()
-    await initialize_pipeline_status()
+    await initialize_pipeline_status() #This function is called during FASTAPI lifespan for each worker.
     logger.info("RAG object has been initialized")
 
     yield

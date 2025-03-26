@@ -1,6 +1,3 @@
-import os
-import shutil
-
 import pandas as pd
 
 
@@ -35,11 +32,6 @@ class ProcessTracker:
     def get_project_df(self) -> pd.DataFrame: 
         return self.project_df
     
-    def delete_temps(self) -> None:
-        for temp_dir in self.temp_dir_lis:
-            shutil.rmtree(temp_dir)
-            os.makedirs(temp_dir)
-
     def get_unprocesssed_process_tracker_df(self, column_name: str) -> pd.DataFrame:
         return self.df[self.df[column_name].isna()]
     

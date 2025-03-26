@@ -93,10 +93,10 @@ class DirectusETLPipeline:
             chunk_id = chunk['id']
             segment_ids = [segment['conversation_segment_id'] for segment in chunk.get('conversation_segments', None)]
             chunk_to_segments[chunk_id] = [segment_id for segment_id in segment_ids if isinstance(segment_id, int)]
-        chunk_to_segments = {k:','.join([str(x) for x in sorted(v)]) for k,v in chunk_to_segments.items() if len(v)!=0}
+        chunk_to_segments = {k:','.join([str(x) for x in sorted(v)]) for k,v in chunk_to_segments.items() if len(v)!=0} # type: ignore
         conversation_df['segment'] = conversation_df.chunk_id.map(chunk_to_segments)
         if run_timestamp is not None:
-            run_timestamp = pd.to_datetime(run_timestamp)
+            run_timestamp = pd.to_datetime(run_timestamp) # type: ignore
             # Check diff in timestamp and remove less than 1 min
             conversation_df['timestamp'] = pd.to_datetime(conversation_df['timestamp'])
             # take diff between current_timestamp and timestamp

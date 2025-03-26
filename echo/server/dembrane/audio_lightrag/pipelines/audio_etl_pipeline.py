@@ -2,8 +2,6 @@
 import logging
 
 from dembrane.config import (
-    AUDIO_LIGHTRAG_SEGMENT_DIR,
-    AUDIO_LIGHTRAG_DOWNLOAD_DIR,
     AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB,
 )
 from dembrane.directus import directus
@@ -38,9 +36,6 @@ class AudioETLPipeline:
         """
         self.process_tracker = process_tracker
         self.process_tracker_df = process_tracker()
-        # self.config = self.load_config(config_path)
-        self.download_root_dir = AUDIO_LIGHTRAG_DOWNLOAD_DIR
-        self.segment_root_dir = AUDIO_LIGHTRAG_SEGMENT_DIR
         self.max_size_mb = AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB
         self.configid = f'{float(self.max_size_mb):.4f}mb'
 

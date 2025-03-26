@@ -1,35 +1,27 @@
 # import os
 
+import os
+import time
 import hashlib
 import logging
+from typing import Any, TypeVar, Callable, Optional
 
 import numpy as np
+import redis
 from litellm import embedding
 from lightrag.kg.postgres_impl import PostgreSQLDB
 
-# from lightrag.kg.postgres_impl import PostgreSQLDB
 from dembrane.config import (
-    AZURE_EMBEDDING_API_KEY,
-    AZURE_EMBEDDING_ENDPOINT,
-    AZURE_OPENAI_API_VERSION,
-    AZURE_EMBEDDING_DEPLOYMENT,
+    LITELLM_LIGHTRAG_EMBEDDING_API_KEY,
+    LITELLM_LIGHTRAG_EMBEDDING_ENDPOINT,
+    LITELLM_LIGHTRAG_EMBEDDING_PROVIDER,
+    LITELLM_LIGHTRAG_EMBEDDING_DEPLOYMENT,
+    LITELLM_LIGHTRAG_EMBEDDING_API_VERSION,
 )
 
 # from dembrane.audio_lightrag.utils.azure_utils import setup_azure_client
 
 logger = logging.getLogger('audio_lightrag_utils')
-
-# async def embedding_func(texts: list[str]) -> np.ndarray:
-#     response = embedding(
-#         model=f"azure/{AZURE_EMBEDDING_DEPLOYMENT}",
-#         input=texts,
-#         api_key=str(AZURE_EMBEDDING_API_KEY),
-#         api_base=str(AZURE_EMBEDDING_ENDPOINT),
-#         api_version=str(AZURE_OPENAI_API_VERSION),
-#     )
-    
-#     embeddings = [item['embedding'] for item in response.data]
-#     return np.array(embeddings)
 
 
 async def embedding_func(texts: list[str]) -> np.ndarray:
@@ -37,15 +29,91 @@ async def embedding_func(texts: list[str]) -> np.ndarray:
     nd_arr_response = []
     for text in texts:
         temp = embedding(
-            model=f"azure/{AZURE_EMBEDDING_DEPLOYMENT}",
+            model=f"{LITELLM_LIGHTRAG_EMBEDDING_PROVIDER}/{LITELLM_LIGHTRAG_EMBEDDING_DEPLOYMENT}",
             input=text,
-            api_key=str(AZURE_EMBEDDING_API_KEY),
-            api_base=str(AZURE_EMBEDDING_ENDPOINT),
-            api_version=str(AZURE_OPENAI_API_VERSION),
+            api_key=str(LITELLM_LIGHTRAG_EMBEDDING_API_KEY),
+            api_base=str(LITELLM_LIGHTRAG_EMBEDDING_ENDPOINT),
+            api_version=str(LITELLM_LIGHTRAG_EMBEDDING_API_VERSION),
         )
         nd_arr_response.append(temp['data'][0]['embedding'])
-    # embeddings = [item['embedding'] for item in response.data]
     return np.array(nd_arr_response)
+
+# Redis lock configuration
+REDIS_LOCK_KEY = "DEMBRANE_INIT_LOCK"
+REDIS_LOCK_TIMEOUT = 600  # 10 minutes in seconds
+REDIS_LOCK_RETRY_INTERVAL = 2  # seconds
+REDIS_LOCK_MAX_RETRIES = 60  # 2 minutes of retries
+
+T = TypeVar('T')
+
+async def with_distributed_lock(
+    redis_url: str,
+    lock_key: str = REDIS_LOCK_KEY,
+    timeout: int = REDIS_LOCK_TIMEOUT,
+    retry_interval: int = REDIS_LOCK_RETRY_INTERVAL,
+    max_retries: int = REDIS_LOCK_MAX_RETRIES,
+    critical_operation: Optional[Callable[[], Any]] = None
+) -> tuple[bool, Any]:
+    """
+    Execute critical operations with a distributed lock using Redis.
+    
+    Args:
+        redis_url: Redis connection URL
+        lock_key: Key to use for the lock
+        timeout: Lock expiration time in seconds
+        retry_interval: Time to wait between lock acquisition attempts
+        max_retries: Maximum number of lock acquisition attempts
+        critical_operation: Optional async function to execute under lock
+        
+    Returns:
+        Tuple of (lock_acquired: bool, result: Any)
+    """
+    logger.info(f"Attempting to acquire distributed lock: {lock_key}")
+    
+    # Connect to Redis
+    redis_client = redis.from_url(redis_url)
+    
+    # Try to acquire lock
+    lock_acquired = False
+    retries = 0
+    result = None
+    
+    while not lock_acquired and retries < max_retries:
+        # Try to set the key only if it doesn't exist with an expiry
+        lock_acquired = redis_client.set(
+            lock_key, 
+            os.environ.get("HOSTNAME", "unknown"),  # Store pod hostname for debugging
+            nx=True,  # Only set if key doesn't exist
+            ex=timeout  # Expire after timeout
+        )
+        
+        if lock_acquired:
+            logger.info(f"Acquired distributed lock: {lock_key}")
+            try:
+                # Execute critical operation if provided
+                if critical_operation:
+                    result = await critical_operation()
+                    logger.info(f"Critical operation completed successfully under lock: {lock_key}")
+            except Exception as e:
+                logger.error(f"Error during critical operation under lock {lock_key}: {str(e)}")
+                # Release lock in case of error to allow another process to try
+                redis_client.delete(lock_key)
+                raise
+            finally:
+                # Release the lock if we acquired it
+                redis_client.delete(lock_key)
+                logger.info(f"Released distributed lock: {lock_key}")
+            break
+        else:
+            # Wait for lock to be released or become available
+            logger.info(f"Waiting for distributed lock (attempt {retries+1}/{max_retries}): {lock_key}")
+            retries += 1
+            time.sleep(retry_interval)
+    
+    if not lock_acquired:
+        logger.info(f"Could not acquire distributed lock after {max_retries} attempts: {lock_key}")
+    
+    return lock_acquired, result
 
 async def check_audio_lightrag_tables(db: PostgreSQLDB) -> None:
     for _, table_definition in TABLES.items():
@@ -135,28 +203,3 @@ SQL_TEMPLATES = {
             LIMIT {limit}
     """
 }
-
-# if __name__ == "__main__":
-#     # # test the embedding function
-#     import os
-#     import asyncio
-#     texts = ["Hello, world!", "This is a test."]
-#     embeddings = asyncio.run(embedding_func(texts))
-#     print(embeddings)
-
-
-
-    # postgres_config = {
-    #     "host": os.environ["POSTGRES_HOST"],
-    #     "port": os.environ["POSTGRES_PORT"],
-    #     "user": os.environ["POSTGRES_USER"],
-    #     "password": os.environ["POSTGRES_PASSWORD"],
-    #     "database": os.environ["POSTGRES_DATABASE"],
-    # }
-
-    # # test the upsert transcript function
-    # db = PostgreSQLDB(config=postgres_config)
-    
-    # asyncio.run(fetch_query_transcript(db, "Hello, world!", ids=["test-document-129", 
-    #                                                              "test-document-129", 
-    #                                                              "test-document-123"]))
