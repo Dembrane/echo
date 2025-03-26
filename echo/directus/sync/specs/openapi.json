@@ -7898,6 +7898,393 @@
         ]
       }
     },
+    "/items/project": {
+      "post": {
+        "summary": "Create an Item",
+        "description": "Create a new project item.",
+        "tags": [
+          "Items",
+          "ItemsProject"
+        ],
+        "operationId": "createItemsProject",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Meta"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ItemsProject"
+                    }
+                  },
+                  {
+                    "$ref": "#/components/schemas/ItemsProject"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "items": {
+                        "$ref": "#/components/schemas/ItemsProject"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "get": {
+        "summary": "List Items",
+        "description": "List the project items.",
+        "tags": [
+          "Items",
+          "ItemsProject"
+        ],
+        "operationId": "readItemsProject",
+        "security": [
+          {
+            "Auth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Fields"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Meta"
+          },
+          {
+            "$ref": "#/components/parameters/Offset"
+          },
+          {
+            "$ref": "#/components/parameters/Sort"
+          },
+          {
+            "$ref": "#/components/parameters/Filter"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "$ref": "#/components/schemas/ItemsProject"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/x-metadata"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update Multiple Items",
+        "description": "Update multiple project items at the same time.",
+        "tags": [
+          "Items",
+          "ItemsProject"
+        ],
+        "operationId": "updateItemsProject",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Fields"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Meta"
+          },
+          {
+            "$ref": "#/components/parameters/Offset"
+          },
+          {
+            "$ref": "#/components/parameters/Sort"
+          },
+          {
+            "$ref": "#/components/parameters/Filter"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ItemsProject"
+                    }
+                  },
+                  {
+                    "$ref": "#/components/schemas/ItemsProject"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "items": {
+                        "$ref": "#/components/schemas/ItemsProject"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Multiple Items",
+        "description": "Delete multiple existing project items.",
+        "tags": [
+          "Items",
+          "ItemsProject"
+        ],
+        "operationId": "deleteItemsProject",
+        "responses": {
+          "200": {
+            "description": "Successful request"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        },
+        "parameters": []
+      }
+    },
+    "/items/project/{id}": {
+      "get": {
+        "summary": "Retrieve an Item",
+        "description": "Retrieve a single project item by unique identifier.",
+        "tags": [
+          "Items",
+          "ItemsProject"
+        ],
+        "operationId": "readSingleItemsProject",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Fields"
+          },
+          {
+            "$ref": "#/components/parameters/Meta"
+          },
+          {
+            "$ref": "#/components/parameters/Version"
+          },
+          {
+            "name": "id",
+            "description": "Index of the item.",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "description": "Incremental index of the item.",
+                  "example": 1
+                },
+                {
+                  "type": "string",
+                  "description": "Unique identifier of the item.",
+                  "example": "8cbb43fe-4cdf-4991-8352-c461779cec02"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "$ref": "#/components/schemas/ItemsProject"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update an Item",
+        "description": "Update an existing project item.",
+        "tags": [
+          "Items",
+          "ItemsProject"
+        ],
+        "operationId": "updateSingleItemsProject",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Fields"
+          },
+          {
+            "$ref": "#/components/parameters/Meta"
+          },
+          {
+            "name": "id",
+            "description": "Index of the item.",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "description": "Incremental index of the item.",
+                  "example": 1
+                },
+                {
+                  "type": "string",
+                  "description": "Unique identifier of the item.",
+                  "example": "8cbb43fe-4cdf-4991-8352-c461779cec02"
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "$ref": "#/components/schemas/ItemsProject"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "$ref": "#/components/schemas/ItemsProject"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an Item",
+        "description": "Delete an existing project item.",
+        "tags": [
+          "Items",
+          "ItemsProject"
+        ],
+        "operationId": "deleteSingleItemsProject",
+        "responses": {
+          "200": {
+            "description": "Successful request"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "Index of the item.",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "description": "Incremental index of the item.",
+                  "example": 1
+                },
+                {
+                  "type": "string",
+                  "description": "Unique identifier of the item.",
+                  "example": "8cbb43fe-4cdf-4991-8352-c461779cec02"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
     "/items/account": {
       "post": {
         "summary": "Create an Item",
@@ -9446,15 +9833,15 @@
         ]
       }
     },
-    "/items/project": {
+    "/items/conversation": {
       "post": {
         "summary": "Create an Item",
-        "description": "Create a new project item.",
+        "description": "Create a new conversation item.",
         "tags": [
           "Items",
-          "ItemsProject"
+          "ItemsConversation"
         ],
-        "operationId": "createItemsProject",
+        "operationId": "createItemsConversation",
         "parameters": [
           {
             "$ref": "#/components/parameters/Meta"
@@ -9468,11 +9855,11 @@
                   {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/ItemsProject"
+                      "$ref": "#/components/schemas/ItemsConversation"
                     }
                   },
                   {
-                    "$ref": "#/components/schemas/ItemsProject"
+                    "$ref": "#/components/schemas/ItemsConversation"
                   }
                 ]
               }
@@ -9489,7 +9876,7 @@
                   "properties": {
                     "data": {
                       "items": {
-                        "$ref": "#/components/schemas/ItemsProject"
+                        "$ref": "#/components/schemas/ItemsConversation"
                       }
                     }
                   }
@@ -9504,12 +9891,12 @@
       },
       "get": {
         "summary": "List Items",
-        "description": "List the project items.",
+        "description": "List the conversation items.",
         "tags": [
           "Items",
-          "ItemsProject"
+          "ItemsConversation"
         ],
-        "operationId": "readItemsProject",
+        "operationId": "readItemsConversation",
         "security": [
           {
             "Auth": []
@@ -9550,7 +9937,7 @@
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "$ref": "#/components/schemas/ItemsProject"
+                        "$ref": "#/components/schemas/ItemsConversation"
                       }
                     },
                     "meta": {
@@ -9568,12 +9955,12 @@
       },
       "patch": {
         "summary": "Update Multiple Items",
-        "description": "Update multiple project items at the same time.",
+        "description": "Update multiple conversation items at the same time.",
         "tags": [
           "Items",
-          "ItemsProject"
+          "ItemsConversation"
         ],
-        "operationId": "updateItemsProject",
+        "operationId": "updateItemsConversation",
         "parameters": [
           {
             "$ref": "#/components/parameters/Fields"
@@ -9605,11 +9992,11 @@
                   {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/ItemsProject"
+                      "$ref": "#/components/schemas/ItemsConversation"
                     }
                   },
                   {
-                    "$ref": "#/components/schemas/ItemsProject"
+                    "$ref": "#/components/schemas/ItemsConversation"
                   }
                 ]
               }
@@ -9625,7 +10012,7 @@
                   "properties": {
                     "data": {
                       "items": {
-                        "$ref": "#/components/schemas/ItemsProject"
+                        "$ref": "#/components/schemas/ItemsConversation"
                       }
                     }
                   }
@@ -9637,12 +10024,12 @@
       },
       "delete": {
         "summary": "Delete Multiple Items",
-        "description": "Delete multiple existing project items.",
+        "description": "Delete multiple existing conversation items.",
         "tags": [
           "Items",
-          "ItemsProject"
+          "ItemsConversation"
         ],
-        "operationId": "deleteItemsProject",
+        "operationId": "deleteItemsConversation",
         "responses": {
           "200": {
             "description": "Successful request"
@@ -9654,15 +10041,15 @@
         "parameters": []
       }
     },
-    "/items/project/{id}": {
+    "/items/conversation/{id}": {
       "get": {
         "summary": "Retrieve an Item",
-        "description": "Retrieve a single project item by unique identifier.",
+        "description": "Retrieve a single conversation item by unique identifier.",
         "tags": [
           "Items",
-          "ItemsProject"
+          "ItemsConversation"
         ],
-        "operationId": "readSingleItemsProject",
+        "operationId": "readSingleItemsConversation",
         "parameters": [
           {
             "$ref": "#/components/parameters/Fields"
@@ -9704,7 +10091,7 @@
                   "properties": {
                     "data": {
                       "type": "object",
-                      "$ref": "#/components/schemas/ItemsProject"
+                      "$ref": "#/components/schemas/ItemsConversation"
                     }
                   }
                 }
@@ -9721,12 +10108,12 @@
       },
       "patch": {
         "summary": "Update an Item",
-        "description": "Update an existing project item.",
+        "description": "Update an existing conversation item.",
         "tags": [
           "Items",
-          "ItemsProject"
+          "ItemsConversation"
         ],
-        "operationId": "updateSingleItemsProject",
+        "operationId": "updateSingleItemsConversation",
         "parameters": [
           {
             "$ref": "#/components/parameters/Fields"
@@ -9760,7 +10147,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "$ref": "#/components/schemas/ItemsProject"
+                "$ref": "#/components/schemas/ItemsConversation"
               }
             }
           }
@@ -9775,7 +10162,7 @@
                   "properties": {
                     "data": {
                       "type": "object",
-                      "$ref": "#/components/schemas/ItemsProject"
+                      "$ref": "#/components/schemas/ItemsConversation"
                     }
                   }
                 }
@@ -9792,12 +10179,12 @@
       },
       "delete": {
         "summary": "Delete an Item",
-        "description": "Delete an existing project item.",
+        "description": "Delete an existing conversation item.",
         "tags": [
           "Items",
-          "ItemsProject"
+          "ItemsConversation"
         ],
-        "operationId": "deleteSingleItemsProject",
+        "operationId": "deleteSingleItemsConversation",
         "responses": {
           "200": {
             "description": "Successful request"
@@ -14864,393 +15251,6 @@
         ]
       }
     },
-    "/items/quote": {
-      "post": {
-        "summary": "Create an Item",
-        "description": "Create a new quote item.",
-        "tags": [
-          "Items",
-          "ItemsQuote"
-        ],
-        "operationId": "createItemsQuote",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/Meta"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "oneOf": [
-                  {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/ItemsQuote"
-                    }
-                  },
-                  {
-                    "$ref": "#/components/schemas/ItemsQuote"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "items": {
-                        "$ref": "#/components/schemas/ItemsQuote"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/UnauthorizedError"
-          }
-        }
-      },
-      "get": {
-        "summary": "List Items",
-        "description": "List the quote items.",
-        "tags": [
-          "Items",
-          "ItemsQuote"
-        ],
-        "operationId": "readItemsQuote",
-        "security": [
-          {
-            "Auth": []
-          }
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/Fields"
-          },
-          {
-            "$ref": "#/components/parameters/Limit"
-          },
-          {
-            "$ref": "#/components/parameters/Meta"
-          },
-          {
-            "$ref": "#/components/parameters/Offset"
-          },
-          {
-            "$ref": "#/components/parameters/Sort"
-          },
-          {
-            "$ref": "#/components/parameters/Filter"
-          },
-          {
-            "$ref": "#/components/parameters/Search"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "$ref": "#/components/schemas/ItemsQuote"
-                      }
-                    },
-                    "meta": {
-                      "$ref": "#/components/schemas/x-metadata"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/UnauthorizedError"
-          }
-        }
-      },
-      "patch": {
-        "summary": "Update Multiple Items",
-        "description": "Update multiple quote items at the same time.",
-        "tags": [
-          "Items",
-          "ItemsQuote"
-        ],
-        "operationId": "updateItemsQuote",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/Fields"
-          },
-          {
-            "$ref": "#/components/parameters/Limit"
-          },
-          {
-            "$ref": "#/components/parameters/Meta"
-          },
-          {
-            "$ref": "#/components/parameters/Offset"
-          },
-          {
-            "$ref": "#/components/parameters/Sort"
-          },
-          {
-            "$ref": "#/components/parameters/Filter"
-          },
-          {
-            "$ref": "#/components/parameters/Search"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "oneOf": [
-                  {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/ItemsQuote"
-                    }
-                  },
-                  {
-                    "$ref": "#/components/schemas/ItemsQuote"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "data": {
-                      "items": {
-                        "$ref": "#/components/schemas/ItemsQuote"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete Multiple Items",
-        "description": "Delete multiple existing quote items.",
-        "tags": [
-          "Items",
-          "ItemsQuote"
-        ],
-        "operationId": "deleteItemsQuote",
-        "responses": {
-          "200": {
-            "description": "Successful request"
-          },
-          "401": {
-            "$ref": "#/components/responses/UnauthorizedError"
-          }
-        },
-        "parameters": []
-      }
-    },
-    "/items/quote/{id}": {
-      "get": {
-        "summary": "Retrieve an Item",
-        "description": "Retrieve a single quote item by unique identifier.",
-        "tags": [
-          "Items",
-          "ItemsQuote"
-        ],
-        "operationId": "readSingleItemsQuote",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/Fields"
-          },
-          {
-            "$ref": "#/components/parameters/Meta"
-          },
-          {
-            "$ref": "#/components/parameters/Version"
-          },
-          {
-            "name": "id",
-            "description": "Index of the item.",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "oneOf": [
-                {
-                  "type": "integer",
-                  "description": "Incremental index of the item.",
-                  "example": 1
-                },
-                {
-                  "type": "string",
-                  "description": "Unique identifier of the item.",
-                  "example": "8cbb43fe-4cdf-4991-8352-c461779cec02"
-                }
-              ]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "$ref": "#/components/schemas/ItemsQuote"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/UnauthorizedError"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFoundError"
-          }
-        }
-      },
-      "patch": {
-        "summary": "Update an Item",
-        "description": "Update an existing quote item.",
-        "tags": [
-          "Items",
-          "ItemsQuote"
-        ],
-        "operationId": "updateSingleItemsQuote",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/Fields"
-          },
-          {
-            "$ref": "#/components/parameters/Meta"
-          },
-          {
-            "name": "id",
-            "description": "Index of the item.",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "oneOf": [
-                {
-                  "type": "integer",
-                  "description": "Incremental index of the item.",
-                  "example": 1
-                },
-                {
-                  "type": "string",
-                  "description": "Unique identifier of the item.",
-                  "example": "8cbb43fe-4cdf-4991-8352-c461779cec02"
-                }
-              ]
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "$ref": "#/components/schemas/ItemsQuote"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "$ref": "#/components/schemas/ItemsQuote"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/UnauthorizedError"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFoundError"
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete an Item",
-        "description": "Delete an existing quote item.",
-        "tags": [
-          "Items",
-          "ItemsQuote"
-        ],
-        "operationId": "deleteSingleItemsQuote",
-        "responses": {
-          "200": {
-            "description": "Successful request"
-          },
-          "401": {
-            "$ref": "#/components/responses/UnauthorizedError"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFoundError"
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "description": "Index of the item.",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "oneOf": [
-                {
-                  "type": "integer",
-                  "description": "Incremental index of the item.",
-                  "example": 1
-                },
-                {
-                  "type": "string",
-                  "description": "Unique identifier of the item.",
-                  "example": "8cbb43fe-4cdf-4991-8352-c461779cec02"
-                }
-              ]
-            }
-          }
-        ]
-      }
-    },
     "/items/quote_aspect": {
       "post": {
         "summary": "Create an Item",
@@ -16412,15 +16412,15 @@
         ]
       }
     },
-    "/items/conversation": {
+    "/items/quote": {
       "post": {
         "summary": "Create an Item",
-        "description": "Create a new conversation item.",
+        "description": "Create a new quote item.",
         "tags": [
           "Items",
-          "ItemsConversation"
+          "ItemsQuote"
         ],
-        "operationId": "createItemsConversation",
+        "operationId": "createItemsQuote",
         "parameters": [
           {
             "$ref": "#/components/parameters/Meta"
@@ -16434,11 +16434,11 @@
                   {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/ItemsConversation"
+                      "$ref": "#/components/schemas/ItemsQuote"
                     }
                   },
                   {
-                    "$ref": "#/components/schemas/ItemsConversation"
+                    "$ref": "#/components/schemas/ItemsQuote"
                   }
                 ]
               }
@@ -16455,7 +16455,7 @@
                   "properties": {
                     "data": {
                       "items": {
-                        "$ref": "#/components/schemas/ItemsConversation"
+                        "$ref": "#/components/schemas/ItemsQuote"
                       }
                     }
                   }
@@ -16470,12 +16470,12 @@
       },
       "get": {
         "summary": "List Items",
-        "description": "List the conversation items.",
+        "description": "List the quote items.",
         "tags": [
           "Items",
-          "ItemsConversation"
+          "ItemsQuote"
         ],
-        "operationId": "readItemsConversation",
+        "operationId": "readItemsQuote",
         "security": [
           {
             "Auth": []
@@ -16516,7 +16516,7 @@
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "$ref": "#/components/schemas/ItemsConversation"
+                        "$ref": "#/components/schemas/ItemsQuote"
                       }
                     },
                     "meta": {
@@ -16534,12 +16534,12 @@
       },
       "patch": {
         "summary": "Update Multiple Items",
-        "description": "Update multiple conversation items at the same time.",
+        "description": "Update multiple quote items at the same time.",
         "tags": [
           "Items",
-          "ItemsConversation"
+          "ItemsQuote"
         ],
-        "operationId": "updateItemsConversation",
+        "operationId": "updateItemsQuote",
         "parameters": [
           {
             "$ref": "#/components/parameters/Fields"
@@ -16571,11 +16571,11 @@
                   {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/ItemsConversation"
+                      "$ref": "#/components/schemas/ItemsQuote"
                     }
                   },
                   {
-                    "$ref": "#/components/schemas/ItemsConversation"
+                    "$ref": "#/components/schemas/ItemsQuote"
                   }
                 ]
               }
@@ -16591,7 +16591,7 @@
                   "properties": {
                     "data": {
                       "items": {
-                        "$ref": "#/components/schemas/ItemsConversation"
+                        "$ref": "#/components/schemas/ItemsQuote"
                       }
                     }
                   }
@@ -16603,12 +16603,12 @@
       },
       "delete": {
         "summary": "Delete Multiple Items",
-        "description": "Delete multiple existing conversation items.",
+        "description": "Delete multiple existing quote items.",
         "tags": [
           "Items",
-          "ItemsConversation"
+          "ItemsQuote"
         ],
-        "operationId": "deleteItemsConversation",
+        "operationId": "deleteItemsQuote",
         "responses": {
           "200": {
             "description": "Successful request"
@@ -16620,15 +16620,15 @@
         "parameters": []
       }
     },
-    "/items/conversation/{id}": {
+    "/items/quote/{id}": {
       "get": {
         "summary": "Retrieve an Item",
-        "description": "Retrieve a single conversation item by unique identifier.",
+        "description": "Retrieve a single quote item by unique identifier.",
         "tags": [
           "Items",
-          "ItemsConversation"
+          "ItemsQuote"
         ],
-        "operationId": "readSingleItemsConversation",
+        "operationId": "readSingleItemsQuote",
         "parameters": [
           {
             "$ref": "#/components/parameters/Fields"
@@ -16670,7 +16670,7 @@
                   "properties": {
                     "data": {
                       "type": "object",
-                      "$ref": "#/components/schemas/ItemsConversation"
+                      "$ref": "#/components/schemas/ItemsQuote"
                     }
                   }
                 }
@@ -16687,12 +16687,12 @@
       },
       "patch": {
         "summary": "Update an Item",
-        "description": "Update an existing conversation item.",
+        "description": "Update an existing quote item.",
         "tags": [
           "Items",
-          "ItemsConversation"
+          "ItemsQuote"
         ],
-        "operationId": "updateSingleItemsConversation",
+        "operationId": "updateSingleItemsQuote",
         "parameters": [
           {
             "$ref": "#/components/parameters/Fields"
@@ -16726,7 +16726,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "$ref": "#/components/schemas/ItemsConversation"
+                "$ref": "#/components/schemas/ItemsQuote"
               }
             }
           }
@@ -16741,7 +16741,7 @@
                   "properties": {
                     "data": {
                       "type": "object",
-                      "$ref": "#/components/schemas/ItemsConversation"
+                      "$ref": "#/components/schemas/ItemsQuote"
                     }
                   }
                 }
@@ -16758,12 +16758,399 @@
       },
       "delete": {
         "summary": "Delete an Item",
-        "description": "Delete an existing conversation item.",
+        "description": "Delete an existing quote item.",
         "tags": [
           "Items",
-          "ItemsConversation"
+          "ItemsQuote"
         ],
-        "operationId": "deleteSingleItemsConversation",
+        "operationId": "deleteSingleItemsQuote",
+        "responses": {
+          "200": {
+            "description": "Successful request"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "Index of the item.",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "description": "Incremental index of the item.",
+                  "example": 1
+                },
+                {
+                  "type": "string",
+                  "description": "Unique identifier of the item.",
+                  "example": "8cbb43fe-4cdf-4991-8352-c461779cec02"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "/items/conversation_reply": {
+      "post": {
+        "summary": "Create an Item",
+        "description": "Create a new conversation_reply item.",
+        "tags": [
+          "Items",
+          "ItemsConversationReply"
+        ],
+        "operationId": "createItemsConversationReply",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Meta"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ItemsConversationReply"
+                    }
+                  },
+                  {
+                    "$ref": "#/components/schemas/ItemsConversationReply"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "items": {
+                        "$ref": "#/components/schemas/ItemsConversationReply"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "get": {
+        "summary": "List Items",
+        "description": "List the conversation_reply items.",
+        "tags": [
+          "Items",
+          "ItemsConversationReply"
+        ],
+        "operationId": "readItemsConversationReply",
+        "security": [
+          {
+            "Auth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Fields"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Meta"
+          },
+          {
+            "$ref": "#/components/parameters/Offset"
+          },
+          {
+            "$ref": "#/components/parameters/Sort"
+          },
+          {
+            "$ref": "#/components/parameters/Filter"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "$ref": "#/components/schemas/ItemsConversationReply"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/x-metadata"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update Multiple Items",
+        "description": "Update multiple conversation_reply items at the same time.",
+        "tags": [
+          "Items",
+          "ItemsConversationReply"
+        ],
+        "operationId": "updateItemsConversationReply",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Fields"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Meta"
+          },
+          {
+            "$ref": "#/components/parameters/Offset"
+          },
+          {
+            "$ref": "#/components/parameters/Sort"
+          },
+          {
+            "$ref": "#/components/parameters/Filter"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ItemsConversationReply"
+                    }
+                  },
+                  {
+                    "$ref": "#/components/schemas/ItemsConversationReply"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "items": {
+                        "$ref": "#/components/schemas/ItemsConversationReply"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Multiple Items",
+        "description": "Delete multiple existing conversation_reply items.",
+        "tags": [
+          "Items",
+          "ItemsConversationReply"
+        ],
+        "operationId": "deleteItemsConversationReply",
+        "responses": {
+          "200": {
+            "description": "Successful request"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        },
+        "parameters": []
+      }
+    },
+    "/items/conversation_reply/{id}": {
+      "get": {
+        "summary": "Retrieve an Item",
+        "description": "Retrieve a single conversation_reply item by unique identifier.",
+        "tags": [
+          "Items",
+          "ItemsConversationReply"
+        ],
+        "operationId": "readSingleItemsConversationReply",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Fields"
+          },
+          {
+            "$ref": "#/components/parameters/Meta"
+          },
+          {
+            "$ref": "#/components/parameters/Version"
+          },
+          {
+            "name": "id",
+            "description": "Index of the item.",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "description": "Incremental index of the item.",
+                  "example": 1
+                },
+                {
+                  "type": "string",
+                  "description": "Unique identifier of the item.",
+                  "example": "8cbb43fe-4cdf-4991-8352-c461779cec02"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "$ref": "#/components/schemas/ItemsConversationReply"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update an Item",
+        "description": "Update an existing conversation_reply item.",
+        "tags": [
+          "Items",
+          "ItemsConversationReply"
+        ],
+        "operationId": "updateSingleItemsConversationReply",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Fields"
+          },
+          {
+            "$ref": "#/components/parameters/Meta"
+          },
+          {
+            "name": "id",
+            "description": "Index of the item.",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "description": "Incremental index of the item.",
+                  "example": 1
+                },
+                {
+                  "type": "string",
+                  "description": "Unique identifier of the item.",
+                  "example": "8cbb43fe-4cdf-4991-8352-c461779cec02"
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "$ref": "#/components/schemas/ItemsConversationReply"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "$ref": "#/components/schemas/ItemsConversationReply"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an Item",
+        "description": "Delete an existing conversation_reply item.",
+        "tags": [
+          "Items",
+          "ItemsConversationReply"
+        ],
+        "operationId": "deleteSingleItemsConversationReply",
         "responses": {
           "200": {
             "description": "Successful request"
@@ -16928,6 +17315,10 @@
       "x-collection": "directus_sync_id_map"
     },
     {
+      "name": "ItemsProject",
+      "x-collection": "project"
+    },
+    {
       "name": "ItemsAccount",
       "x-collection": "account"
     },
@@ -16944,8 +17335,8 @@
       "x-collection": "aspect"
     },
     {
-      "name": "ItemsProject",
-      "x-collection": "project"
+      "name": "ItemsConversation",
+      "x-collection": "conversation"
     },
     {
       "name": "ItemsConversationChunk",
@@ -17000,10 +17391,6 @@
       "x-collection": "project_report_metric"
     },
     {
-      "name": "ItemsQuote",
-      "x-collection": "quote"
-    },
-    {
       "name": "ItemsQuoteAspect",
       "x-collection": "quote_aspect"
     },
@@ -17016,8 +17403,12 @@
       "x-collection": "quote_conversation_chunk"
     },
     {
-      "name": "ItemsConversation",
-      "x-collection": "conversation"
+      "name": "ItemsQuote",
+      "x-collection": "quote"
+    },
+    {
+      "name": "ItemsConversationReply",
+      "x-collection": "conversation_reply"
     }
   ],
   "components": {
@@ -18966,6 +19357,179 @@
           "local_id"
         ]
       },
+      "ItemsProject": {
+        "type": "object",
+        "properties": {
+          "context": {
+            "nullable": true,
+            "type": "string"
+          },
+          "conversation_ask_for_participant_name_label": {
+            "nullable": true,
+            "type": "string"
+          },
+          "created_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "timestamp"
+          },
+          "default_conversation_ask_for_participant_name": {
+            "nullable": true,
+            "type": "boolean"
+          },
+          "default_conversation_description": {
+            "nullable": true,
+            "type": "string"
+          },
+          "default_conversation_finish_text": {
+            "nullable": true,
+            "type": "string"
+          },
+          "default_conversation_title": {
+            "nullable": true,
+            "type": "string"
+          },
+          "default_conversation_transcript_prompt": {
+            "nullable": true,
+            "type": "string"
+          },
+          "default_conversation_tutorial_slug": {
+            "nullable": true,
+            "description": "Manually syncronize this with https://admin-dembrane.azurewebsites.net/admin/content/echo__portal_tutorial",
+            "type": "string"
+          },
+          "directus_user_id": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "$ref": "#/components/schemas/Users"
+              }
+            ]
+          },
+          "id": {
+            "nullable": false,
+            "type": "string",
+            "format": "uuid"
+          },
+          "image_generation_model": {
+            "nullable": true,
+            "type": "string"
+          },
+          "is_conversation_allowed": {
+            "nullable": false,
+            "type": "boolean"
+          },
+          "language": {
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "pin": {
+            "nullable": true,
+            "type": "string"
+          },
+          "updated_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "timestamp"
+          },
+          "is_get_reply_enabled": {
+            "nullable": true,
+            "type": "boolean"
+          },
+          "get_reply_prompt": {
+            "nullable": true,
+            "type": "string"
+          },
+          "conversations": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "$ref": "#/components/schemas/ItemsConversation"
+                }
+              ]
+            }
+          },
+          "project_analysis_runs": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "$ref": "#/components/schemas/ItemsProjectAnalysisRun"
+                }
+              ]
+            }
+          },
+          "project_chats": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "$ref": "#/components/schemas/ItemsProjectChat"
+                }
+              ]
+            }
+          },
+          "project_reports": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                {
+                  "$ref": "#/components/schemas/ItemsProjectReport"
+                }
+              ]
+            }
+          },
+          "tags": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "$ref": "#/components/schemas/ItemsProjectTag"
+                }
+              ]
+            }
+          }
+        },
+        "x-collection": "project",
+        "required": [
+          "id",
+          "is_conversation_allowed"
+        ]
+      },
       "ItemsAccount": {
         "type": "object",
         "properties": {
@@ -19207,14 +19771,10 @@
           "id"
         ]
       },
-      "ItemsProject": {
+      "ItemsConversation": {
         "type": "object",
         "properties": {
           "context": {
-            "nullable": true,
-            "type": "string"
-          },
-          "conversation_ask_for_participant_name_label": {
             "nullable": true,
             "type": "string"
           },
@@ -19223,65 +19783,70 @@
             "type": "string",
             "format": "timestamp"
           },
-          "default_conversation_ask_for_participant_name": {
-            "nullable": true,
-            "type": "boolean"
-          },
-          "default_conversation_description": {
+          "description": {
             "nullable": true,
             "type": "string"
-          },
-          "default_conversation_finish_text": {
-            "nullable": true,
-            "type": "string"
-          },
-          "default_conversation_title": {
-            "nullable": true,
-            "type": "string"
-          },
-          "default_conversation_transcript_prompt": {
-            "nullable": true,
-            "type": "string"
-          },
-          "default_conversation_tutorial_slug": {
-            "nullable": true,
-            "description": "Manually syncronize this with https://admin-dembrane.azurewebsites.net/admin/content/echo__portal_tutorial",
-            "type": "string"
-          },
-          "directus_user_id": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "$ref": "#/components/schemas/Users"
-              }
-            ]
           },
           "id": {
             "nullable": false,
             "type": "string",
             "format": "uuid"
           },
-          "image_generation_model": {
+          "merged_audio_path": {
             "nullable": true,
             "type": "string"
           },
-          "is_conversation_allowed": {
+          "merged_transcript": {
+            "nullable": true,
+            "type": "string"
+          },
+          "participant_email": {
+            "nullable": true,
+            "type": "string"
+          },
+          "participant_name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "participant_user_agent": {
+            "nullable": true,
+            "type": "string"
+          },
+          "processing_completed_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "timestamp"
+          },
+          "processing_error": {
+            "nullable": true,
+            "type": "string"
+          },
+          "processing_started_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "timestamp"
+          },
+          "processing_status": {
+            "nullable": true,
+            "type": "string"
+          },
+          "project_id": {
             "nullable": false,
-            "type": "boolean"
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "$ref": "#/components/schemas/ItemsProject"
+              }
+            ]
           },
-          "language": {
+          "summary": {
             "nullable": true,
             "type": "string"
           },
-          "name": {
-            "nullable": true,
-            "type": "string"
-          },
-          "pin": {
+          "title": {
             "nullable": true,
             "type": "string"
           },
@@ -19290,7 +19855,7 @@
             "type": "string",
             "format": "timestamp"
           },
-          "conversations": {
+          "chunks": {
             "nullable": true,
             "type": "array",
             "items": {
@@ -19300,22 +19865,7 @@
                   "format": "uuid"
                 },
                 {
-                  "$ref": "#/components/schemas/ItemsConversation"
-                }
-              ]
-            }
-          },
-          "project_analysis_runs": {
-            "nullable": true,
-            "type": "array",
-            "items": {
-              "oneOf": [
-                {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                {
-                  "$ref": "#/components/schemas/ItemsProjectAnalysisRun"
+                  "$ref": "#/components/schemas/ItemsConversationChunk"
                 }
               ]
             }
@@ -19326,26 +19876,24 @@
             "items": {
               "oneOf": [
                 {
-                  "type": "string",
-                  "format": "uuid"
+                  "type": "integer"
                 },
                 {
-                  "$ref": "#/components/schemas/ItemsProjectChat"
+                  "$ref": "#/components/schemas/ItemsProjectChatConversation"
                 }
               ]
             }
           },
-          "project_reports": {
+          "project_chat_messages": {
             "nullable": true,
             "type": "array",
             "items": {
               "oneOf": [
                 {
-                  "type": "integer",
-                  "format": "int64"
+                  "type": "integer"
                 },
                 {
-                  "$ref": "#/components/schemas/ItemsProjectReport"
+                  "$ref": "#/components/schemas/ItemsProjectChatMessageConversation"
                 }
               ]
             }
@@ -19356,20 +19904,34 @@
             "items": {
               "oneOf": [
                 {
+                  "type": "integer"
+                },
+                {
+                  "$ref": "#/components/schemas/ItemsConversationProjectTag"
+                }
+              ]
+            }
+          },
+          "replies": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
                   "type": "string",
                   "format": "uuid"
                 },
                 {
-                  "$ref": "#/components/schemas/ItemsProjectTag"
+                  "$ref": "#/components/schemas/ItemsConversationReply"
                 }
               ]
             }
           }
         },
-        "x-collection": "project",
+        "x-collection": "conversation",
         "required": [
           "id",
-          "is_conversation_allowed"
+          "project_id"
         ]
       },
       "ItemsConversationChunk": {
@@ -20132,123 +20694,6 @@
         },
         "x-collection": "project_report_metric"
       },
-      "ItemsQuote": {
-        "type": "object",
-        "properties": {
-          "conversation_id": {
-            "nullable": false,
-            "oneOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "$ref": "#/components/schemas/ItemsConversation"
-              }
-            ]
-          },
-          "created_at": {
-            "nullable": true,
-            "type": "string",
-            "format": "timestamp"
-          },
-          "id": {
-            "nullable": false,
-            "type": "string",
-            "format": "uuid"
-          },
-          "insight_id": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "$ref": "#/components/schemas/ItemsInsight"
-              }
-            ]
-          },
-          "order": {
-            "nullable": true,
-            "type": "integer"
-          },
-          "project_analysis_run_id": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "$ref": "#/components/schemas/ItemsProjectAnalysisRun"
-              }
-            ]
-          },
-          "text": {
-            "nullable": false,
-            "type": "string"
-          },
-          "timestamp": {
-            "nullable": true,
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_at": {
-            "nullable": true,
-            "type": "string",
-            "format": "timestamp"
-          },
-          "aspects": {
-            "nullable": true,
-            "type": "array",
-            "items": {
-              "oneOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "$ref": "#/components/schemas/ItemsQuoteAspect"
-                }
-              ]
-            }
-          },
-          "conversation_chunks": {
-            "nullable": true,
-            "type": "array",
-            "items": {
-              "oneOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "$ref": "#/components/schemas/ItemsQuoteConversationChunk"
-                }
-              ]
-            }
-          },
-          "representative_aspects": {
-            "nullable": true,
-            "type": "array",
-            "items": {
-              "oneOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "$ref": "#/components/schemas/ItemsQuoteAspect1"
-                }
-              ]
-            }
-          }
-        },
-        "x-collection": "quote",
-        "required": [
-          "conversation_id",
-          "id",
-          "text"
-        ]
-      },
       "ItemsQuoteAspect": {
         "type": "object",
         "properties": {
@@ -20351,58 +20796,10 @@
         },
         "x-collection": "quote_conversation_chunk"
       },
-      "ItemsConversation": {
+      "ItemsQuote": {
         "type": "object",
         "properties": {
-          "context": {
-            "nullable": true,
-            "type": "string"
-          },
-          "created_at": {
-            "nullable": true,
-            "type": "string",
-            "format": "timestamp"
-          },
-          "description": {
-            "nullable": true,
-            "type": "string"
-          },
-          "id": {
-            "nullable": false,
-            "type": "string",
-            "format": "uuid"
-          },
-          "participant_email": {
-            "nullable": true,
-            "type": "string"
-          },
-          "participant_name": {
-            "nullable": true,
-            "type": "string"
-          },
-          "participant_user_agent": {
-            "nullable": true,
-            "type": "string"
-          },
-          "processing_completed_at": {
-            "nullable": true,
-            "type": "string",
-            "format": "timestamp"
-          },
-          "processing_error": {
-            "nullable": true,
-            "type": "string"
-          },
-          "processing_started_at": {
-            "nullable": true,
-            "type": "string",
-            "format": "timestamp"
-          },
-          "processing_status": {
-            "nullable": true,
-            "type": "string"
-          },
-          "project_id": {
+          "conversation_id": {
             "nullable": false,
             "oneOf": [
               {
@@ -20410,47 +20807,67 @@
                 "format": "uuid"
               },
               {
-                "$ref": "#/components/schemas/ItemsProject"
+                "$ref": "#/components/schemas/ItemsConversation"
               }
             ]
           },
-          "summary": {
+          "created_at": {
             "nullable": true,
+            "type": "string",
+            "format": "timestamp"
+          },
+          "id": {
+            "nullable": false,
+            "type": "string",
+            "format": "uuid"
+          },
+          "insight_id": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "$ref": "#/components/schemas/ItemsInsight"
+              }
+            ]
+          },
+          "order": {
+            "nullable": true,
+            "type": "integer"
+          },
+          "project_analysis_run_id": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "$ref": "#/components/schemas/ItemsProjectAnalysisRun"
+              }
+            ]
+          },
+          "text": {
+            "nullable": false,
             "type": "string"
           },
-          "title": {
+          "timestamp": {
             "nullable": true,
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "updated_at": {
             "nullable": true,
             "type": "string",
             "format": "timestamp"
           },
-          "merged_transcript": {
+          "embedding": {
             "nullable": true,
             "type": "string"
           },
-          "merged_audio_path": {
-            "nullable": true,
-            "type": "string"
-          },
-          "chunks": {
-            "nullable": true,
-            "type": "array",
-            "items": {
-              "oneOf": [
-                {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                {
-                  "$ref": "#/components/schemas/ItemsConversationChunk"
-                }
-              ]
-            }
-          },
-          "project_chat_messages": {
+          "aspects": {
             "nullable": true,
             "type": "array",
             "items": {
@@ -20459,12 +20876,12 @@
                   "type": "integer"
                 },
                 {
-                  "$ref": "#/components/schemas/ItemsProjectChatMessageConversation"
+                  "$ref": "#/components/schemas/ItemsQuoteAspect"
                 }
               ]
             }
           },
-          "project_chats": {
+          "conversation_chunks": {
             "nullable": true,
             "type": "array",
             "items": {
@@ -20473,12 +20890,12 @@
                   "type": "integer"
                 },
                 {
-                  "$ref": "#/components/schemas/ItemsProjectChatConversation"
+                  "$ref": "#/components/schemas/ItemsQuoteConversationChunk"
                 }
               ]
             }
           },
-          "tags": {
+          "representative_aspects": {
             "nullable": true,
             "type": "array",
             "items": {
@@ -20487,16 +20904,64 @@
                   "type": "integer"
                 },
                 {
-                  "$ref": "#/components/schemas/ItemsConversationProjectTag"
+                  "$ref": "#/components/schemas/ItemsQuoteAspect1"
                 }
               ]
             }
           }
         },
-        "x-collection": "conversation",
+        "x-collection": "quote",
         "required": [
+          "conversation_id",
           "id",
-          "project_id"
+          "text"
+        ]
+      },
+      "ItemsConversationReply": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "nullable": false,
+            "type": "string",
+            "format": "uuid"
+          },
+          "sort": {
+            "nullable": true,
+            "type": "integer"
+          },
+          "content_text": {
+            "nullable": true,
+            "type": "string"
+          },
+          "type": {
+            "nullable": true,
+            "type": "string"
+          },
+          "conversation_id": {
+            "nullable": true,
+            "type": "string"
+          },
+          "reply": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "$ref": "#/components/schemas/ItemsConversation"
+              }
+            ]
+          },
+          "date_created": {
+            "nullable": true,
+            "type": "string",
+            "format": "timestamp"
+          }
+        },
+        "x-collection": "conversation_reply",
+        "required": [
+          "id"
         ]
       }
     },

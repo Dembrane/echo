@@ -24,8 +24,6 @@ import { Logo } from "../common/Logo";
 const FormSchema = z.object({
   name: z.string().min(4, t`Project name must be at least 4 characters long`),
   context: z.string().optional(),
-  is_get_reply_enabled: z.boolean(),
-  get_reply_prompt: z.string(),
 });
 
 type TFormSchema = z.infer<typeof FormSchema>;
@@ -42,8 +40,6 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
       defaultValues: {
         name: project.name ?? "",
         context: project.context ?? "",
-        is_get_reply_enabled: project.is_get_reply_enabled ?? false,
-        get_reply_prompt: project.get_reply_prompt ?? "",
       },
       resolver: zodResolver(FormSchema),
       mode: "onChange",
@@ -147,73 +143,6 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
                 />
               )}
             />
-
-            <Divider />
-
-            <Stack gap="md">
-              <Group>
-                <Title order={4}>
-                  <Trans>Dembrane Reply</Trans>
-                </Title>
-                <Logo hideTitle />
-                <Badge>
-                  <Trans>Experimental</Trans>
-                </Badge>
-              </Group>
-
-              <Text size="sm" c="dimmed">
-                <Trans>
-                  Enable this feature to allow participants to request
-                  AI-powered responses during their conversation. Participants
-                  can click "Get Reply" after recording their thoughts to
-                  receive contextual feedback, encouraging deeper reflection and
-                  engagement. A cooldown period applies between requests.
-                </Trans>
-              </Text>
-
-              <Controller
-                name="is_get_reply_enabled"
-                control={control}
-                render={({ field }) => (
-                  <Switch
-                    label={
-                      <FormLabel
-                        label={t`Enable Dembrane Reply`}
-                        isDirty={formState.dirtyFields.is_get_reply_enabled}
-                        error={formState.errors.is_get_reply_enabled?.message}
-                      />
-                    }
-                    checked={field.value}
-                    onChange={(e) => field.onChange(e.currentTarget.checked)}
-                  />
-                )}
-              />
-
-              <Controller
-                name="get_reply_prompt"
-                control={control}
-                render={({ field }) => (
-                  <Textarea
-                    label={
-                      <FormLabel
-                        label={t`Reply Prompt`}
-                        isDirty={formState.dirtyFields.get_reply_prompt}
-                        error={formState.errors.get_reply_prompt?.message}
-                      />
-                    }
-                    description={
-                      <Trans>
-                        This prompt guides how the AI responds to participants.
-                        Customize it to shape the type of feedback or engagement
-                        you want to encourage.
-                      </Trans>
-                    }
-                    minRows={5}
-                    {...field}
-                  />
-                )}
-              />
-            </Stack>
           </Stack>
         </form>
       </Stack>

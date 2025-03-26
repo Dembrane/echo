@@ -1,23 +1,23 @@
 {
   "collection": "conversation",
-  "field": "project_chat_messages",
+  "field": "replies",
   "type": "alias",
   "meta": {
     "collection": "conversation",
     "conditions": null,
     "display": null,
     "display_options": null,
-    "field": "project_chat_messages",
+    "field": "replies",
     "group": null,
     "hidden": false,
-    "interface": "list-m2m",
+    "interface": "list-o2m",
     "note": null,
     "options": null,
     "readonly": false,
     "required": false,
-    "sort": 20,
+    "sort": 13,
     "special": [
-      "m2m"
+      "o2m"
     ],
     "translations": null,
     "validation": null,

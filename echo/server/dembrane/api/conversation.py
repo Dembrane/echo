@@ -185,7 +185,9 @@ async def get_conversation_content(
         revised_url = get_signed_url(conversation["merged_audio_path"])
 
         if revised_url.startswith("http://minio:9000"):
-            logger.warning("Merged audio path is using minio:9000, trying to replace with localhost:9000")
+            logger.warning(
+                "Merged audio path is using minio:9000, trying to replace with localhost:9000"
+            )
             revised_url = revised_url.replace("http://minio:9000", "http://localhost:9000")
 
         return RedirectResponse(revised_url)
@@ -362,8 +364,9 @@ async def get_reply_for_conversation(
     body: GetReplyBodySchema,
 ) -> StreamingResponse:
     async def generate() -> AsyncGenerator[str, None]:
+        # Stream content chunks
         async for chunk in generate_reply_for_conversation(conversation_id, body.language):
-            yield f"data: {json.dumps({'content': chunk})}\n\n"
+            yield "0:" + json.dumps(chunk) + "\n"
 
     return StreamingResponse(
         generate(),
@@ -371,5 +374,5 @@ async def get_reply_for_conversation(
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-        }
+        },
     )
