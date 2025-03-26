@@ -4,5 +4,32 @@
 			"source": "/(.*)",
 			"destination": "/"
 		}
+	],
+	"headers": [
+		{
+			"source": "/(.*)",
+			"headers": [
+				{
+					"key": "Content-Security-Policy",
+					"value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.sentry-cdn.com https://*.ingest.de.sentry.io https://*.sentry.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.dembrane.com https://*.echo-next.dembrane.com https://admin-dembrane.azurewebsites.net https://dembrane.directus.app; connect-src 'self' https://*.dembrane.com wss://*.dembrane.com https://*.echo-next.dembrane.com wss://*.echo-next.dembrane.com https://admin-dembrane.azurewebsites.net https://dembrane.directus.app https://*.sentry.io https://*.sentry-cdn.com https://*.ingest.de.sentry.io https://*.tally.so https://ams3.digitaloceanspaces.com http://localhost:9000; font-src 'self' data:; media-src 'self' blob: mediastream: https://ams3.digitaloceanspaces.com http://localhost:9000; frame-src 'self' https://*.tally.so; frame-ancestors 'self'; worker-src 'self' blob:; manifest-src 'self'; form-action 'self' https://*.tally.so; base-uri 'self'; upgrade-insecure-requests; block-all-mixed-content"
+				},
+				{
+					"key": "X-Frame-Options",
+					"value": "SAMEORIGIN"
+				},
+				{
+					"key": "X-Content-Type-Options",
+					"value": "nosniff"
+				},
+				{
+					"key": "Referrer-Policy",
+					"value": "strict-origin-when-cross-origin"
+				},
+				{
+					"key": "Permissions-Policy",
+					"value": "camera=(), microphone=(self), geolocation=(), interest-cohort=()"
+				}
+			]
+		}
 	]
 }
