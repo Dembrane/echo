@@ -78,18 +78,25 @@ const UserChunkMessage = ({
   };
 
   return (
-    <div className="items-baseline flex justify-end gap-2">
+    <div className="flex items-baseline justify-end">
       <div>
-        <ActionIcon
-          size={30}
-          variant="default"
-          c="red"
-          disabled={deleteChunkMutation.isPending}
-          className="rounded-full border-0"
-          onClick={handleDelete}
-        >
-          <IconTrash style={{ width: "70%", height: "70%" }}/>
-        </ActionIcon>
+        <Menu shadow="md" width={200}>
+          <Menu.Target>
+            <ActionIcon variant="transparent" c="gray" className="h-full">
+              <IconDotsVertical />
+            </ActionIcon>
+          </Menu.Target>
+
+          <Menu.Dropdown>
+            <Menu.Item
+              onClick={handleDelete}
+              disabled={deleteChunkMutation.isPending}
+              leftSection={<IconTrash />}
+            >
+              Delete
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
       </div>
       <Paper className="my-2 rounded-t-xl rounded-bl-xl border-0 bg-gray-100 p-4">
         <Text className="prose text-sm">

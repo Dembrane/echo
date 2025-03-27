@@ -181,7 +181,7 @@ export const ParticipantConversationAudioRoute = () => {
           ? t`${minutes} minutes and ${seconds} seconds`
           : t`${seconds} seconds`;
 
-      toast.info(t`Please wait ${timeStr} before requesting another echo.`);
+      toast.info(t`Please wait ${timeStr} before requesting another Echo.`);
       return;
     }
 
@@ -291,7 +291,7 @@ export const ParticipantConversationAudioRoute = () => {
                     date_created: new Date().toISOString(),
                   }}
                   loading={index === echoMessages.length - 1 && isLoading}
-                  className={`min-h-[253px] md:min-h-[169px] ${index !== echoMessages.length - 1 ? "border-b" : ""}`}
+                  className={`min-h-[180px] md:min-h-[169px] ${index !== echoMessages.length - 1 ? "border-b" : ""}`}
                 />
               ))}
               {status !== "streaming" && status !== "ready" && (
@@ -304,7 +304,7 @@ export const ParticipantConversationAudioRoute = () => {
                     date_created: new Date().toISOString(),
                   }}
                   loading={true}
-                  className="min-h-[253px] md:min-h-[169px]"
+                  className="min-h-[180px] md:min-h-[169px]"
                 />
               )}
             </>

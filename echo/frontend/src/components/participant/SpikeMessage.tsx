@@ -23,7 +23,7 @@ const SpikeMessage = ({
             </div>
           </Group>
         }
-        className={clsx("border-0", className)}
+        className={clsx("border-0 !rounded-br-none py-5 px-0 md:py-7", className)}
       />
     );
   }

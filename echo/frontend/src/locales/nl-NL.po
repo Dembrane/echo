@@ -71,7 +71,7 @@ msgstr "{seconds} seconden"
 #~ msgid "*Oh, we don't have a cookie statement because we don't use cookies! We eat them.*"
 #~ msgstr "*Oh, we hebben geen cookievermelding want we gebruiken geen cookies! We eten ze op.*"
 
-#: src/components/participant/UserChunkMessage.tsx:97
+#: src/components/participant/UserChunkMessage.tsx:104
 msgid "*Transcription in progress.*"
 msgstr "*Een moment a.u.b.*"
 
@@ -85,7 +85,7 @@ msgstr "*Een moment a.u.b.*"
 #: src/routes/participant/ParticipantConversation.tsx:389
 #: src/routes/participant/ParticipantConversation.tsx:473
 msgid "<0>Wait </0>{0}:{1}"
-msgstr ""
+msgstr "<0>Wacht </0>{0}:{1}"
 
 #: src/components/view/DummyViews.tsx:21
 #: src/components/view/DummyViews.tsx:31
@@ -1163,8 +1163,12 @@ msgstr "Log in om door te gaan."
 #~ msgstr "Geef een korte samenvatting van het volgende dat in de context is verstrekt."
 
 #: src/components/participant/ParticipantBody.tsx:122
-msgid "Please record your response by clicking the \"Start Recording\" button below. You may also choose to respond in text by clicking the text icon."
-msgstr "Neem uw antwoord op door op de knop \"Opname starten\" hieronder te klikken. U kunt er ook voor kiezen om in tekst te reageren door op het teksticoon te klikken."
+msgid "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon."
+msgstr "Neem uw antwoord op door op de knop \"Opnemen\" hieronder te klikken. U kunt er ook voor kiezen om in tekst te reageren door op het teksticoon te klikken."
+
+#: src/components/participant/ParticipantBody.tsx:122
+#~ msgid "Please record your response by clicking the \"Start Recording\" button below. You may also choose to respond in text by clicking the text icon."
+#~ msgstr "Neem uw antwoord op door op de knop \"Opname starten\" hieronder te klikken. U kunt er ook voor kiezen om in tekst te reageren door op het teksticoon te klikken."
 
 #: src/components/report/CreateReportForm.tsx:64
 msgid "Please select a language for your report"
@@ -1175,8 +1179,12 @@ msgid "Please select a language for your updated report"
 msgstr "Kies een taal voor je bijgewerkte rapport"
 
 #: src/routes/participant/ParticipantConversation.tsx:184
-msgid "Please wait {timeStr} before requesting another echo."
-msgstr "Wacht {timeStr} voordat u een ander echo aanvraagt."
+#~ msgid "Please wait {timeStr} before requesting another echo."
+#~ msgstr "Wacht {timeStr} voordat u een ander echo aanvraagt."
+
+#: src/routes/participant/ParticipantConversation.tsx:184
+msgid "Please wait {timeStr} before requesting another Echo."
+msgstr "Wacht {timeStr} voordat u een andere Echo aanvraagt."
 
 #: src/routes/participant/ParticipantConversation.tsx:855
 #~ msgid "Please wait {timeStr} before requesting another reply."
@@ -1856,7 +1864,7 @@ msgstr "Gebruik Shift + Enter om een nieuwe regel toe te voegen"
 msgid "View"
 msgstr "View"
 
-#: src/components/participant/ParticipantBody.tsx:165
+#: src/components/participant/ParticipantBody.tsx:166
 msgid "View your responses"
 msgstr "Bekijk je reacties"
 
@@ -1936,7 +1944,7 @@ msgstr "Je bibliotheek is leeg. Maak een bibliotheek om je eerste inzichten te b
 msgid "Your response has been recorded. You may now close this tab."
 msgstr "Je reactie is opgenomen. Je kunt dit tabblad nu sluiten."
 
-#: src/components/participant/ParticipantBody.tsx:175
+#: src/components/participant/ParticipantBody.tsx:176
 msgid "Your responses"
 msgstr "Je reacties"
 

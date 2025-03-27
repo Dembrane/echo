@@ -68,7 +68,7 @@ msgstr "{readingNow} reading now"
 msgid "{seconds} seconds"
 msgstr "{seconds} seconds"
 
-#: src/components/participant/UserChunkMessage.tsx:97
+#: src/components/participant/UserChunkMessage.tsx:104
 msgid "*Transcription in progress.*"
 msgstr "*Transcription in progress.*"
 
@@ -1013,8 +1013,12 @@ msgstr "Please login to continue."
 #~ msgstr "Please provide a concise summary of the following provided in the context."
 
 #: src/components/participant/ParticipantBody.tsx:122
-msgid "Please record your response by clicking the \"Start Recording\" button below. You may also choose to respond in text by clicking the text icon."
-msgstr "Please record your response by clicking the \"Start Recording\" button below. You may also choose to respond in text by clicking the text icon."
+msgid "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon."
+msgstr "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon."
+
+#: src/components/participant/ParticipantBody.tsx:122
+#~ msgid "Please record your response by clicking the \"Start Recording\" button below. You may also choose to respond in text by clicking the text icon."
+#~ msgstr "Please record your response by clicking the \"Start Recording\" button below. You may also choose to respond in text by clicking the text icon."
 
 #: src/components/report/CreateReportForm.tsx:64
 msgid "Please select a language for your report"
@@ -1025,8 +1029,12 @@ msgid "Please select a language for your updated report"
 msgstr "Please select a language for your updated report"
 
 #: src/routes/participant/ParticipantConversation.tsx:184
-msgid "Please wait {timeStr} before requesting another echo."
-msgstr "Please wait {timeStr} before requesting another echo."
+#~ msgid "Please wait {timeStr} before requesting another echo."
+#~ msgstr "Please wait {timeStr} before requesting another echo."
+
+#: src/routes/participant/ParticipantConversation.tsx:184
+msgid "Please wait {timeStr} before requesting another Echo."
+msgstr "Please wait {timeStr} before requesting another Echo."
 
 #: src/routes/participant/ParticipantConversation.tsx:855
 #~ msgid "Please wait {timeStr} before requesting another reply."
@@ -1671,7 +1679,7 @@ msgstr "Use Shift + Enter to add a new line"
 msgid "View"
 msgstr "View"
 
-#: src/components/participant/ParticipantBody.tsx:165
+#: src/components/participant/ParticipantBody.tsx:166
 msgid "View your responses"
 msgstr "View your responses"
 
@@ -1739,7 +1747,7 @@ msgstr "Your library is empty. Create a library to see your first insights."
 msgid "Your response has been recorded. You may now close this tab."
 msgstr "Your response has been recorded. You may now close this tab."
 
-#: src/components/participant/ParticipantBody.tsx:175
+#: src/components/participant/ParticipantBody.tsx:176
 msgid "Your responses"
 msgstr "Your responses"
 

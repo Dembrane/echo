@@ -119,7 +119,8 @@ export const ParticipantBody = ({
           )}
 
           <SystemMessage
-            markdown={t`Please record your response by clicking the "Start Recording" button below. You may also choose to respond in text by clicking the text icon.`}
+            markdown={t`Please record your response by clicking the "Record" button below. You may also choose to respond in text by clicking the text icon.`}
+            className="mb-4"
           />
 
           {children}
@@ -193,7 +194,7 @@ export const ParticipantBody = ({
             </>
           )}
 
-          <div ref={bottomRef}></div>
+          <div ref={bottomRef} className={viewResponses ? "" : "hidden"}></div>
         </Stack>
       )}
     </Stack>

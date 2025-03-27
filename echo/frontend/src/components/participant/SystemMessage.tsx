@@ -17,12 +17,12 @@ const SystemMessage = ({
       <Paper
         bg="transparent"
         className={clsx(
-          "w-full rounded-t-xl border border-slate-200 px-4 py-7 md:px-0",
+          "w-full rounded-t-xl rounded-br-xl border border-slate-200 p-4",
           className,
         )}
       >
-        <div className="flex items-start gap-4">
-          <div className="flex-shrink-0">{!!title && title}</div>
+        <div className="flex flex-col items-start gap-4 md:flex-row">
+          {title && <div className="flex-shrink-0">{title}</div>}
           <Text className="prose text-sm">
             <Markdown content={markdown ?? ""} />
           </Text>

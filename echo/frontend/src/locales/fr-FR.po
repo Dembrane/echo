@@ -63,7 +63,7 @@ msgstr "{readingNow} lit actuellement"
 msgid "{seconds} seconds"
 msgstr "{seconds} secondes"
 
-#: src/components/participant/UserChunkMessage.tsx:97
+#: src/components/participant/UserChunkMessage.tsx:104
 msgid "*Transcription in progress.*"
 msgstr "*Transcription en cours.*"
 
@@ -73,7 +73,7 @@ msgstr "*Transcription en cours.*"
 #: src/routes/participant/ParticipantConversation.tsx:389
 #: src/routes/participant/ParticipantConversation.tsx:473
 msgid "<0>Wait </0>{0}:{1}"
-msgstr ""
+msgstr "<0>Attendre </0>{0}:{1}"
 
 #: src/components/view/DummyViews.tsx:21
 #: src/components/view/DummyViews.tsx:31
@@ -398,11 +398,11 @@ msgstr "Supprimer le projet"
 
 #: src/components/participant/UserChunkMessage.tsx:56
 msgid "Deleted successfully"
-msgstr ""
+msgstr "Supprimé avec succès"
 
 #: src/components/project/ProjectPortalEditor.tsx:357
 msgid "Dembrane Echo"
-msgstr ""
+msgstr "Echo Dembrane"
 
 #: src/components/project/ProjectBasicEdit.tsx:156
 #~ msgid "Dembrane Reply"
@@ -443,7 +443,7 @@ msgstr "Néerlandais"
 #: src/routes/participant/ParticipantConversation.tsx:398
 #: src/routes/participant/ParticipantConversation.tsx:482
 msgid "ECHO"
-msgstr ""
+msgstr "ÉCHO"
 
 #: src/routes/participant/ParticipantConversation.tsx:549
 #: src/routes/participant/ParticipantConversation.tsx:975
@@ -481,7 +481,7 @@ msgstr "E-mail vérifié avec succès. Vous serez redirigé vers la page de conn
 
 #: src/components/project/ProjectPortalEditor.tsx:383
 msgid "Enable Dembrane Echo"
-msgstr ""
+msgstr "Activer Dembrane Echo"
 
 #: src/components/project/ProjectBasicEdit.tsx:181
 #~ msgid "Enable Dembrane Reply"
@@ -489,7 +489,7 @@ msgstr ""
 
 #: src/components/project/ProjectPortalEditor.tsx:366
 msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Echo\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
-msgstr ""
+msgstr "Activez cette fonctionnalité pour permettre aux participants de demander des réponses alimentées par l'IA pendant leur conversation. Les participants peuvent cliquer sur \"Echo\" après avoir enregistré leurs pensées pour recevoir un retour contextuel, encourageant une réflexion plus profonde et un engagement accru. Une période de récupération s'applique entre les demandes."
 
 #: src/components/project/ProjectBasicEdit.tsx:165
 #~ msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Get Reply\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
@@ -545,7 +545,7 @@ msgstr "Exporter"
 
 #: src/components/participant/UserChunkMessage.tsx:65
 msgid "Failed to delete response"
-msgstr ""
+msgstr "Échec de la suppression de la réponse"
 
 #: src/components/conversation/ConversationAccordion.tsx:473
 msgid "Filter"
@@ -976,8 +976,12 @@ msgstr "Veuillez vous connecter pour continuer."
 #~ msgstr "Veuillez fournir un résumé succinct des éléments suivants fournis dans le contexte."
 
 #: src/components/participant/ParticipantBody.tsx:122
-msgid "Please record your response by clicking the \"Start Recording\" button below. You may also choose to respond in text by clicking the text icon."
-msgstr "Veuillez enregistrer votre réponse en cliquant sur le bouton \"Démarrer l'enregistrement\" ci-dessous. Vous pouvez également répondre en texte en cliquant sur l'icône texte."
+msgid "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon."
+msgstr "Veuillez enregistrer votre réponse en cliquant sur le bouton \"Enregistrer\" ci-dessous. Vous pouvez également choisir de répondre par texte en cliquant sur l'icône texte."
+
+#: src/components/participant/ParticipantBody.tsx:122
+#~ msgid "Please record your response by clicking the \"Start Recording\" button below. You may also choose to respond in text by clicking the text icon."
+#~ msgstr "Veuillez enregistrer votre réponse en cliquant sur le bouton \"Démarrer l'enregistrement\" ci-dessous. Vous pouvez également répondre en texte en cliquant sur l'icône texte."
 
 #: src/components/report/CreateReportForm.tsx:64
 msgid "Please select a language for your report"
@@ -988,12 +992,16 @@ msgid "Please select a language for your updated report"
 msgstr "Veuillez sélectionner une langue pour votre rapport mis à jour"
 
 #: src/routes/participant/ParticipantConversation.tsx:184
-msgid "Please wait {timeStr} before requesting another echo."
-msgstr ""
+#~ msgid "Please wait {timeStr} before requesting another echo."
+#~ msgstr "Veuillez attendre {timeStr} avant de demander un autre écho."
+
+#: src/routes/participant/ParticipantConversation.tsx:184
+msgid "Please wait {timeStr} before requesting another Echo."
+msgstr "Veuillez attendre {timeStr} avant de demander un autre Echo."
 
 #: src/routes/participant/ParticipantConversation.tsx:855
 #~ msgid "Please wait {timeStr} before requesting another reply."
-#~ msgstr ""
+#~ msgstr "Veuillez attendre {timeStr} avant de demander une autre réponse."
 
 #: src/components/report/CreateReportForm.tsx:34
 msgid "Please wait while we generate your report. You will automatically be redirected to the report page."
@@ -1089,7 +1097,7 @@ msgstr "Citations"
 
 #: src/routes/participant/ParticipantConversation.tsx:369
 msgid "Record"
-msgstr ""
+msgstr "Enregistrer"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:57
 msgid "Record another conversation"
@@ -1198,7 +1206,7 @@ msgstr "Enregistrement..."
 
 #: src/components/common/ScrollToBottom.tsx:25
 msgid "Scroll to bottom"
-msgstr ""
+msgstr "Défiler vers le bas"
 
 #: src/components/conversation/MoveConversationButton.tsx:139
 msgid "Search"
@@ -1395,7 +1403,7 @@ msgstr "Voici vos modèles de vue par défaut. Une fois que vous avez créé vot
 
 #: src/routes/participant/ParticipantConversation.tsx:302
 msgid "Thinking..."
-msgstr ""
+msgstr "Réflexion en cours..."
 
 #: src/components/project/ProjectPortalEditor.tsx:607
 msgid "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
@@ -1595,7 +1603,7 @@ msgstr "Utilisez Shift + Entrée pour ajouter une nouvelle ligne"
 msgid "View"
 msgstr "Vue"
 
-#: src/components/participant/ParticipantBody.tsx:165
+#: src/components/participant/ParticipantBody.tsx:166
 msgid "View your responses"
 msgstr "Voir vos réponses"
 
@@ -1609,7 +1617,7 @@ msgstr "Voir vos réponses"
 
 #: src/routes/auth/CheckYourEmail.tsx:14
 msgid "We have sent you an email with next steps. If you don't see it, check your spam folder. If you still don't see it, please contact jules@dembrane.com"
-msgstr ""
+msgstr "Nous vous avons envoyé un e-mail avec les étapes suivantes. Si vous ne le voyez pas, vérifiez votre dossier de spam. Si vous ne le voyez toujours pas, veuillez contacter jules@dembrane.com"
 
 #: src/components/participant/ParticipantBody.tsx:101
 msgid "Welcome"
@@ -1655,7 +1663,7 @@ msgstr "Votre bibliothèque est vide. Créez une bibliothèque pour voir vos pre
 msgid "Your response has been recorded. You may now close this tab."
 msgstr "Votre réponse a été enregistrée. Vous pouvez maintenant fermer cette page."
 
-#: src/components/participant/ParticipantBody.tsx:175
+#: src/components/participant/ParticipantBody.tsx:176
 msgid "Your responses"
 msgstr "Vos réponses"
 
