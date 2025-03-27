@@ -1,4 +1,3 @@
-import os
 from typing import List, Optional, Annotated
 from logging import getLogger
 from datetime import datetime
@@ -7,10 +6,9 @@ from fastapi import Form, APIRouter, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import joinedload
 
+from dembrane.s3 import save_to_s3_from_file_like
 from dembrane.tasks import task_finish_conversation_hook, task_process_conversation_chunk
 from dembrane.utils import generate_uuid
-from dembrane.config import AUDIO_CHUNKS_DIR
-from dembrane.s3 import save_to_s3_from_file_like
 from dembrane.schemas import (
     ProjectTagSchema,
     ConversationChunkSchema,

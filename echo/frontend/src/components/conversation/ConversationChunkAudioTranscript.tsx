@@ -1,8 +1,8 @@
 import { t } from "@lingui/core/macro";
-import { Text, Divider } from "@mantine/core";
+import { Text, Divider, Skeleton } from "@mantine/core";
 
 import { BaseMessage } from "../chat/BaseMessage";
-import { getConversationChunkContentLink } from "@/lib/api";
+import { useConversationChunkContentUrl } from "@/lib/query";
 
 export const ConversationChunkAudioTranscript = ({
   chunk,
@@ -11,10 +11,13 @@ export const ConversationChunkAudioTranscript = ({
   chunk: ConversationChunk;
   showAudioPlayer?: boolean;
 }) => {
-  const src = getConversationChunkContentLink(
+  // Fetch the direct audio URL instead of using a redirect
+  const audioUrlQuery = useConversationChunkContentUrl(
     chunk.conversation_id as string,
     chunk.id,
+    showAudioPlayer, // Only fetch if we need to show the player
   );
+
   return (
     <BaseMessage
       title={t`Speaker`}
@@ -27,13 +30,20 @@ export const ConversationChunkAudioTranscript = ({
         showAudioPlayer ? (
           <>
             <Divider />
-            <audio
-              src={src}
-              className="h-6 w-full p-0"
-              crossOrigin="anonymous"
-              preload="metadata"
-              controls
-            />
+            {audioUrlQuery.isLoading ? (
+              <Skeleton height={36} width="100%" />
+            ) : audioUrlQuery.isError ? (
+              <Text size="xs" color="red">
+                Failed to load audio
+              </Text>
+            ) : (
+              <audio
+                src={audioUrlQuery.data}
+                className="h-6 w-full p-0"
+                preload="none"
+                controls
+              />
+            )}
           </>
         ) : (
           <> </>

@@ -13,7 +13,8 @@ export const CheckYourEmailRoute = () => {
         <Text>
           <Trans>
             We have sent you an email with next steps. If you don't see it,
-            check your spam folder.
+            check your spam folder. If you still don't see it, please contact
+            jules@dembrane.com
           </Trans>
         </Text>
       </Stack>

@@ -19,7 +19,15 @@
   {
     "collection": "conversation",
     "action": "read",
-    "permissions": null,
+    "permissions": {
+      "_and": [
+        {
+          "id": {
+            "_nnull": true
+          }
+        }
+      ]
+    },
     "validation": null,
     "presets": null,
     "fields": [
@@ -28,8 +36,13 @@
       "chunks",
       "replies",
       "participant_name",
+      "participant_email",
+      "tags",
+      "participant_user_agent",
       "title",
       "context",
+      "created_at",
+      "updated_at",
       "description"
     ],
     "policy": "_sync_default_public_policy",

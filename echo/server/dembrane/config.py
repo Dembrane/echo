@@ -148,7 +148,10 @@ STORAGE_S3_SECRET = os.environ.get("STORAGE_S3_SECRET")
 assert STORAGE_S3_SECRET, "STORAGE_S3_SECRET environment variable is not set"
 logger.debug("STORAGE_S3_SECRET: set")
 
+DISABLE_CORS = os.environ.get("DISABLE_CORS", "false").lower() in ["true", "1"]
+logger.debug(f"DISABLE_CORS: {DISABLE_CORS}")
 
+# hide some noisy loggers
 for hide_logger in [
     "boto3",
     "botocore",

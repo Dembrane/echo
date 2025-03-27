@@ -483,11 +483,15 @@ msgstr "Verwijder project"
 
 #: src/components/participant/UserChunkMessage.tsx:56
 msgid "Deleted successfully"
-msgstr ""
+msgstr "Verwijderd succesvol"
 
 #: src/components/project/ProjectPortalEditor.tsx:357
 msgid "Dembrane Echo"
-msgstr ""
+msgstr "Dembrane Echo"
+
+#: src/components/project/ProjectBasicEdit.tsx:156
+#~ msgid "Dembrane Reply"
+#~ msgstr "Dembrane Reactie"
 
 #: src/components/project/ProjectBasicEdit.tsx:82
 #~ msgid "Description"
@@ -531,7 +535,7 @@ msgstr "Download alle transcripten"
 
 #: src/components/conversation/ConversationDangerZone.tsx:50
 msgid "Download Audio"
-msgstr ""
+msgstr "Audio downloaden"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:130
 msgid "Download transcript"
@@ -552,7 +556,7 @@ msgstr "Nederlands"
 #: src/routes/participant/ParticipantConversation.tsx:398
 #: src/routes/participant/ParticipantConversation.tsx:482
 msgid "ECHO"
-msgstr ""
+msgstr "ECHO"
 
 #: src/routes/participant/ParticipantConversation.tsx:549
 #: src/routes/participant/ParticipantConversation.tsx:975
@@ -590,11 +594,19 @@ msgstr "Email is succesvol geverifieerd. Je wordt doorgestuurd naar de inlogpagi
 
 #: src/components/project/ProjectPortalEditor.tsx:383
 msgid "Enable Dembrane Echo"
-msgstr ""
+msgstr "Dembrane Echo inschakelen"
+
+#: src/components/project/ProjectBasicEdit.tsx:181
+#~ msgid "Enable Dembrane Reply"
+#~ msgstr "Dembrane Reactie inschakelen"
 
 #: src/components/project/ProjectPortalEditor.tsx:366
 msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Echo\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
-msgstr ""
+msgstr "Schakel deze functie in om deelnemers toe te staan om AI-geïnspireerde reacties aan te vragen tijdens hun gesprek. Deelnemers kunnen na het opnemen van hun gedachten op \"Dembrane Echo\" klikken om contextuele feedback te ontvangen, waardoor dieper reflectie en betrokkenheid wordt bevorderd. Een cooldownperiode wordt toegepast tussen aanvragen."
+
+#: src/components/project/ProjectBasicEdit.tsx:165
+#~ msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Get Reply\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
+#~ msgstr "Schakel deze functie in om deelnemers toe te staan om AI-geïnspireerde reacties aan te vragen tijdens hun gesprek. Deelnemers kunnen na het opnemen van hun gedachten op \"Dembrane Reactie\" klikken om contextuele feedback te ontvangen, waardoor dieper reflectie en betrokkenheid wordt bevorderd. Een cooldownperiode wordt toegepast tussen aanvragen."
 
 #: src/components/project/ProjectPortalEditor.tsx:264
 msgid "English"
@@ -654,7 +666,7 @@ msgstr "Exporteer"
 
 #: src/components/participant/UserChunkMessage.tsx:65
 msgid "Failed to delete response"
-msgstr ""
+msgstr "Fout bij het verwijderen van de reactie"
 
 #: src/components/conversation/ConversationAccordion.tsx:473
 msgid "Filter"
@@ -1164,7 +1176,7 @@ msgstr "Kies een taal voor je bijgewerkte rapport"
 
 #: src/routes/participant/ParticipantConversation.tsx:184
 msgid "Please wait {timeStr} before requesting another echo."
-msgstr ""
+msgstr "Wacht {timeStr} voordat u een ander echo aanvraagt."
 
 #: src/routes/participant/ParticipantConversation.tsx:855
 #~ msgid "Please wait {timeStr} before requesting another reply."
@@ -1280,7 +1292,7 @@ msgstr "Quotes"
 
 #: src/routes/participant/ParticipantConversation.tsx:369
 msgid "Record"
-msgstr ""
+msgstr "Opname starten"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:57
 msgid "Record another conversation"
@@ -1320,7 +1332,7 @@ msgstr "Naam wijzigen"
 
 #: src/components/project/ProjectPortalEditor.tsx:405
 msgid "Reply Prompt"
-msgstr ""
+msgstr "Reactie prompt"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:61
 #: src/components/report/ReportRenderer.tsx:72
@@ -1389,7 +1401,7 @@ msgstr "Opslaan..."
 
 #: src/components/common/ScrollToBottom.tsx:25
 msgid "Scroll to bottom"
-msgstr ""
+msgstr "Scroll naar beneden"
 
 #: src/components/conversation/MoveConversationButton.tsx:139
 msgid "Search"
@@ -1509,7 +1521,7 @@ msgstr "Sorteer"
 msgid "Spanish"
 msgstr "Spaans"
 
-#: src/components/conversation/ConversationChunkAudioTranscript.tsx:20
+#: src/components/conversation/ConversationChunkAudioTranscript.tsx:23
 msgid "Speaker"
 msgstr "Spreker"
 
@@ -1607,7 +1619,7 @@ msgstr "Dit zijn uw standaard weergave sjablonen. Zodra u uw bibliotheek hebt ge
 
 #: src/routes/participant/ParticipantConversation.tsx:302
 msgid "Thinking..."
-msgstr ""
+msgstr "Denken..."
 
 #: src/components/project/ProjectPortalEditor.tsx:607
 msgid "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
@@ -1656,7 +1668,7 @@ msgstr "Deze projectbibliotheek is op"
 
 #: src/components/project/ProjectPortalEditor.tsx:411
 msgid "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
-msgstr ""
+msgstr "Deze prompt bepaalt hoe de AI reageert op deelnemers. Aanpassen om de soort feedback of betrokkenheid te bepalen die u wilt stimuleren."
 
 #: src/routes/participant/ParticipantReport.tsx:55
 msgid "This report is not yet available. "
@@ -1853,8 +1865,12 @@ msgstr "Bekijk je reacties"
 #~ msgstr "Wacht {0}:{1}"
 
 #: src/routes/auth/CheckYourEmail.tsx:14
-msgid "We have sent you an email with next steps. If you don't see it, check your spam folder."
-msgstr "We hebben u een e-mail gestuurd met de volgende stappen. Als u het niet ziet, checkt u uw spammap."
+#~ msgid "We have sent you an email with next steps. If you don't see it, check your spam folder."
+#~ msgstr "We hebben u een e-mail gestuurd met de volgende stappen. Als u het niet ziet, checkt u uw spammap."
+
+#: src/routes/auth/CheckYourEmail.tsx:14
+msgid "We have sent you an email with next steps. If you don't see it, check your spam folder. If you still don't see it, please contact jules@dembrane.com"
+msgstr "We hebben u een e-mail gestuurd met de volgende stappen. Als u het niet ziet, checkt u uw spammap. Als u het nog steeds niet ziet, neem dan contact op met jules@dembrane.com"
 
 #: src/components/participant/ParticipantBody.tsx:101
 msgid "Welcome"

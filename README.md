@@ -61,6 +61,11 @@ We offer several ways to get started:
 - Support contracts
 - Commercial licenses
 
+## Documentation
+
+- [User Guide / Documentation](https://docs.dembrane.com) (built from `echo-user-docs` folder)
+- [Developer Documentation](echo/readme.md) 
+
 ## For Those Considering a Fork
 
 We believe in open source and community collaboration. Before forking, consider:
@@ -87,7 +92,7 @@ Dembrane is currently independent but working towards becoming steward-owned. We
 
 ## For Potential Contributors
 
-We welcome contributions! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines (We're currently in the process of refining this guide).
+We welcome contributions! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 Thanks to everyone in the community that has contributed to this project!
 
@@ -95,6 +100,4 @@ Thanks to everyone in the community that has contributed to this project!
   <img src="https://contrib.rocks/image?repo=dembrane/echo" />
 </a>
 
----
-
-## GitOps Repository: [dembrane/echo-gitops](https://github.com/dembrane/echo-gitops)
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/Dembrane/echo?utm_source=oss&utm_medium=github&utm_campaign=Dembrane%2Fecho&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)

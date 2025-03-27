@@ -2,6 +2,8 @@
 
 We use `rye` to manage our dependencies. It uses `uv` under the hood.
 
+> [How will rye and uv coexist in the future?](https://github.com/astral-sh/rye/discussions/1164)
+
 From [Basics of rye](https://rye.astral.sh/guide/basics/):
 
 Example
@@ -20,3 +22,4 @@ Added flask @ git+https://github.com/pallets/flask as regular dependency
 Add a local dependency:
 $ rye add packagename --path path/to/packagename
 Added packagename @ file:///path/to/packagename as regular dependency
+

@@ -1,0 +1,50 @@
+name: prod-deploy-gitops-backends
+
+on:
+  push:
+    tags: [ "v*.*.*" ]  # Triggers on tags like v1.2.3
+
+jobs:
+  prod-deploy-gitops-backends:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository with Tag
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetches all history and tags
+          # GitHub Actions automatically checks out the tag that triggered the workflow
+
+      - name: Extract Tag Information
+        id: tag_info
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_OUTPUT
+          echo "COMMIT_HASH=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          echo "Triggered by tag: ${TAG_NAME}"
+          echo "Tag commit hash: $(git rev-parse HEAD)"
+
+      - name: Checkout GitOps Repository
+        uses: actions/checkout@v3
+        with:
+          repository: dembrane/echo-gitops
+          token: ${{ secrets.GITOPS_REPO_TOKEN }}
+          ref: main
+          path: gitops  # Checkout to a subdirectory to avoid conflicts
+
+      - name: Update global.imageTag in values-prod.yaml
+        id: update_values
+        run: |
+          NEW_TAG="${{ steps.tag_info.outputs.COMMIT_HASH }}"
+          echo "Updating global.imageTag to ${NEW_TAG}"
+          sed -E -i "s/^( *imageTag: *).*/\1\"${NEW_TAG}\"/" gitops/helm/echo/values-prod.yaml
+          echo "Updated values-prod.yaml content:"
+          cat gitops/helm/echo/values-prod.yaml
+
+      - name: Commit and push changes
+        working-directory: gitops
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions@github.com"
+          git add helm/echo/values-prod.yaml
+          git commit -m "Update prod image tag to ${{ steps.tag_info.outputs.TAG_NAME }} (${{ steps.tag_info.outputs.COMMIT_HASH }})"
+          git push origin main

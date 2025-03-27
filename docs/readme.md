@@ -1,1 +1,0 @@
-For Docs, see [the docs folder under .cursor/rules](../.cursor/rules/readme.md)

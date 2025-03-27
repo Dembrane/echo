@@ -1,14 +1,14 @@
-name: Deploy Portal Staging
+name: dev-deploy-vercel-dashboard
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_PORTAL }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_DASHBOARD }}
 on:
   push:
     branches:
       - main
 
 jobs:
-  deploy-portal-staging:
+  dev-deploy-vercel-dashboard:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -17,14 +17,17 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 22
 
       - uses: pnpm/action-setup@v2
         name: Install pnpm
         with:
           version: 10
-          run_install: true
-          cwd: echo/frontend
+          run_install: false
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: echo/frontend
 
       - name: Install Vercel CLI
         run: pnpm add --global vercel@latest

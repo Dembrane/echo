@@ -1,18 +1,21 @@
-# Why is a lot of code in this project redundant?
+# Doc about the docs (design decisions and more)
 
-The idea here is: I prefer duplication over the wrong abstraction.
+## Why is a lot of code in this project redundant?
+
+The idea here is: prefer duplication over the wrong abstraction.
 
 You might have noticed that a lot of code is redundant and repetitive.
-It is an artifact of using the style guides with Cursor chat. It helps me write code faster.
-I also think this is a "tailwind-y" way of writing code.
 
-However, it is definitely not the most principled way (not DRY), but I feel it reduces the barrier to entry and saves effort.
+It is an artifact of using the style guides with Cursor chat. It helps write code faster.
+This is a "tailwind-y" way of writing code.
 
 ## So, how do I use the docs to write code with Cursor chat?
 
-- Add the @developer-docs folder to your cursor context to ask questions
-- When doing something specific like adding spacing, find and then use the doc related to it (@frontend_spacing.md)
+- Add the `@docs` folder to your cursor context to ask questions
+- When doing something specific like adding spacing, find and then use the doc related to it (`@frontend_spacing.md`)
 - If you want to refactor, update the style guide doc and then ask Cursor to do a codebase wide refactor.
+
+- Opinion alert: Why this and not `.cursor/rules` you ask? This way more explicit and you can be intentional and sure that the rules are applied.
 
 ## When should I add something?
 
@@ -27,7 +30,6 @@ You must add a doc to this folder if you believe
 - I solve a problem in code in a specific way by doing it by hand or through cursor chat
 - I ask cursor to look at the diff and write a style guide doc about it using the following prompt:
 
----
 
 ```
 # Style Guide: [Pattern Name]
@@ -89,4 +91,3 @@ git grep -n "pattern"
 - Performance metrics (if applicable)
 ```
 
----

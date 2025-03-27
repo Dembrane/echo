@@ -141,7 +141,8 @@ async def get_conversation_content(
     conversation_id: str,
     auth: DependencyDirectusSession,
     force_merge: bool = False,
-) -> StreamingResponse | RedirectResponse:
+    return_url: bool = False,
+) -> StreamingResponse | RedirectResponse | str:
     raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
     # ordered by timestamp
@@ -189,6 +190,10 @@ async def get_conversation_content(
                 "Merged audio path is using minio:9000, trying to replace with localhost:9000"
             )
             revised_url = revised_url.replace("http://minio:9000", "http://localhost:9000")
+
+        # If return_url is True, return the signed URL directly
+        if return_url:
+            return revised_url
 
         return RedirectResponse(revised_url)
 
@@ -247,7 +252,8 @@ async def get_conversation_chunk_content(
     conversation_id: str,
     chunk_id: str,
     auth: DependencyDirectusSession,
-) -> StreamingResponse | RedirectResponse:
+    return_url: bool = False,
+) -> StreamingResponse | RedirectResponse | str:
     raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
     chunks = directus.get_items(
@@ -279,6 +285,12 @@ async def get_conversation_chunk_content(
             revised_url = revised_url.replace("http://minio:9000", "http://localhost:9000")
 
         logger.info("Streaming audio from S3")
+
+        # If return_url is True, return the signed URL directly
+        if return_url:
+            return revised_url
+
+        # Otherwise redirect as before
         return RedirectResponse(revised_url)
 
     file_paths = [chunk["path"]]
