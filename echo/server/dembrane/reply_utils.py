@@ -1,3 +1,4 @@
+from typing import AsyncGenerator
 from logging import getLogger
 
 import litellm
@@ -70,8 +71,9 @@ def build_conversation_transcript(conversation: dict) -> str:
     return transcript
 
 
-def generate_reply_for_conversation(conversation_id: str, language: str) -> dict:
-    # might need to just use audio directly here
+async def generate_reply_for_conversation(
+    conversation_id: str, language: str
+) -> AsyncGenerator[str, None]:
     conversation = directus.get_items(
         "conversation",
         {
@@ -113,7 +115,7 @@ def generate_reply_for_conversation(conversation_id: str, language: str) -> dict
     conversation = conversation[0]
 
     if conversation["project_id"]["is_get_reply_enabled"] is False:
-        raise ValueError(f"Get reply is not enabled for project {conversation['project_id']['id']}")
+        raise ValueError(f"Echo is not enabled for project {conversation['project_id']['id']}")
 
     current_conversation = Conversation(
         id=conversation["id"],
@@ -230,35 +232,107 @@ def generate_reply_for_conversation(conversation_id: str, language: str) -> dict
         },
     )
 
-    response = litellm.completion(
+    # Store the complete response
+    accumulated_response = ""
+
+    # Buffer to detect <response> tag which may be split across chunks
+    tag_buffer = ""
+    found_response_tag = False
+    # Also track closing tag to properly handle content
+    in_response_section = False
+
+    # Stream the response
+    response = await litellm.acompletion(
         model="anthropic/claude-3-5-sonnet-20240620",
-        # api_key=ANTHROPIC_API_KEY,
         messages=[
             {"role": "user", "content": prompt},
-            # prefill with a placeholder response
-            {"role": "assistant", "content": "<detailed_analysis>"},
+            {"role": "assistant", "content": ""},
         ],
+        stream=True,
     )
 
-    response = response.choices[0].message.content
+    # List of possible partial closing tags
+    partial_closing_patterns = [
+        "</r",
+        "</re",
+        "</res",
+        "</resp",
+        "</respo",
+        "</respon",
+        "</respons",
+        "</response",
+        "</response>",
+    ]
 
-    logger.debug(f"The Full Response: {response}")
+    async for chunk in response:
+        if chunk.choices[0].delta.content:
+            content = chunk.choices[0].delta.content
+            accumulated_response += content
 
-    # delete everything between <detailed_analysis> tags / general clean up
-    response = response.split("</detailed_analysis>")[1]
-    response = str(response).replace("<response>", "").replace("</response>", "").strip()
+            if in_response_section:
+                # While inside the response section, check for closing tag
+                if any(partial in (tag_buffer + content) for partial in partial_closing_patterns):
+                    combined = tag_buffer + content
 
-    # create a reply
-    created_reply_object = directus.create_item(
-        "conversation_reply",
-        item_data={
-            "conversation_id": current_conversation.id,
-            "content_text": response,
-            "type": "assistant_reply",
-        },
-    )["data"]
+                    for partial in partial_closing_patterns:
+                        partial_index = combined.find(partial)
+                        if partial_index != -1:
+                            to_yield = combined[:partial_index]
+                            if to_yield.strip():
+                                yield to_yield
+                            break  # Stop checking further once the first match is found
 
-    return created_reply_object
+                    # Stop streaming
+                    in_response_section = False
+                    tag_buffer = ""
+                else:
+                    # No closing tag found, continue yielding content
+                    if (tag_buffer + content).strip():
+                        yield tag_buffer + content
+                    tag_buffer = ""
+            else:
+                if not found_response_tag:
+                    # Append to buffer to handle split tags
+                    tag_buffer += content
+
+                    # Check if buffer contains <response>
+                    if "<response>" in tag_buffer:
+                        found_response_tag = True
+                        in_response_section = True
+
+                        # Extract content after the opening tag
+                        start_idx = tag_buffer.find("<response>") + len("<response>")
+                        content_after_tag = tag_buffer[start_idx:]
+
+                        # Reset buffer and yield content if any
+                        tag_buffer = ""
+                        if content_after_tag.strip():
+                            yield content_after_tag
+
+                    # If buffer gets too large without finding tag, trim it, keep only the last 20 characters
+                    if len(tag_buffer) > 100:
+                        tag_buffer = tag_buffer[-20:]
+
+    try:
+        response_content = ""
+        if "<response>" in accumulated_response and "</response>" in accumulated_response:
+            start_idx = accumulated_response.find("<response>") + len("<response>")
+            end_idx = accumulated_response.find("</response>")
+            if start_idx < end_idx:
+                response_content = accumulated_response[start_idx:end_idx].strip()
+        else:
+            response_content = accumulated_response.strip()
+
+        directus.create_item(
+            "conversation_reply",
+            item_data={
+                "conversation_id": current_conversation.id,
+                "content_text": response_content,
+                "type": "assistant_reply",
+            },
+        )
+    except Exception as e:
+        logger.error(f"Failed to store reply in Directus: {e}")
 
 
 if __name__ == "__main__":

@@ -1,21 +1,21 @@
 {
-  "collection": "quote",
-  "field": "embedding",
-  "type": "unknown",
+  "collection": "conversation_reply",
+  "field": "reply",
+  "type": "uuid",
   "meta": {
-    "collection": "quote",
+    "collection": "conversation_reply",
     "conditions": null,
-    "display": "raw",
+    "display": null,
     "display_options": null,
-    "field": "embedding",
+    "field": "reply",
     "group": null,
     "hidden": true,
-    "interface": null,
+    "interface": "select-dropdown-m2o",
     "note": null,
     "options": null,
     "readonly": false,
     "required": false,
-    "sort": 8,
+    "sort": 7,
     "special": null,
     "translations": null,
     "validation": null,
@@ -23,9 +23,9 @@
     "width": "full"
   },
   "schema": {
-    "name": "embedding",
-    "table": "quote",
-    "data_type": "vector",
+    "name": "reply",
+    "table": "conversation_reply",
+    "data_type": "uuid",
     "default_value": null,
     "max_length": null,
     "numeric_precision": null,
@@ -37,7 +37,7 @@
     "is_generated": false,
     "generation_expression": null,
     "has_auto_increment": false,
-    "foreign_key_table": null,
-    "foreign_key_column": null
+    "foreign_key_table": "conversation",
+    "foreign_key_column": "id"
   }
 }

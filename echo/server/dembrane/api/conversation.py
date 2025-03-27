@@ -1,4 +1,5 @@
 import os
+import json
 from typing import List, Optional, AsyncGenerator
 from logging import getLogger
 
@@ -373,6 +374,17 @@ class GetReplyBodySchema(BaseModel):
 async def get_reply_for_conversation(
     conversation_id: str,
     body: GetReplyBodySchema,
-) -> dict:
-    reply = generate_reply_for_conversation(conversation_id, body.language)
-    return reply
+) -> StreamingResponse:
+    async def generate() -> AsyncGenerator[str, None]:
+        # Stream content chunks
+        async for chunk in generate_reply_for_conversation(conversation_id, body.language):
+            yield "0:" + json.dumps(chunk) + "\n"
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        },
+    )

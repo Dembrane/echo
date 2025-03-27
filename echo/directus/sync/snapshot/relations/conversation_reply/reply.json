@@ -1,0 +1,25 @@
+{
+  "collection": "conversation_reply",
+  "field": "reply",
+  "related_collection": "conversation",
+  "meta": {
+    "junction_field": null,
+    "many_collection": "conversation_reply",
+    "many_field": "reply",
+    "one_allowed_collections": null,
+    "one_collection": "conversation",
+    "one_collection_field": null,
+    "one_deselect_action": "nullify",
+    "one_field": "replies",
+    "sort_field": null
+  },
+  "schema": {
+    "table": "conversation_reply",
+    "column": "reply",
+    "foreign_key_table": "conversation",
+    "foreign_key_column": "id",
+    "constraint_name": "conversation_reply_reply_foreign",
+    "on_update": "NO ACTION",
+    "on_delete": "SET NULL"
+  }
+}
