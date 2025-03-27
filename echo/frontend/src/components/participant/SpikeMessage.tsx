@@ -12,7 +12,7 @@ const SpikeMessage = ({
   loading?: boolean;
   className?: string;
 }) => {
-  if (message.type === "assistant_reply") {
+  if (message?.type === "assistant_reply") {
     return (
       <SystemMessage
         markdown={message.content_text ?? ""}
