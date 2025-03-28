@@ -40,6 +40,7 @@ const FormSchema = z.object({
   default_conversation_title: z.string(),
   default_conversation_description: z.string(),
   default_conversation_finish_text: z.string(),
+  is_project_notification_subscription_allowed: z.boolean(),
   default_conversation_transcript_prompt: z.string(),
   is_get_reply_enabled: z.boolean(),
   get_reply_prompt: z.string(),
@@ -145,6 +146,8 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
           project.default_conversation_description ?? "",
         default_conversation_finish_text:
           project.default_conversation_finish_text ?? "",
+        is_project_notification_subscription_allowed:
+          project.is_project_notification_subscription_allowed ?? false,
         language:
           (project.language as "en" | "nl" | "de" | "fr" | "es") ?? "en",
         default_conversation_transcript_prompt:
@@ -511,6 +514,50 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
                             markdown={field.value}
                             onChange={field.onChange}
                           />
+                        )}
+                      />
+                    </Stack>
+                    <Divider />
+                    <Stack gap="md">
+                      <Group>
+                        <Title order={4}>
+                          <Trans>Report Notifications</Trans>
+                        </Title>
+                        <Text size="sm" c="dimmed">
+                          <Trans>
+                            Enable this feature to allow participants to receive
+                            notifications when a report is published or updated.
+                            Participants can enter their email to subscribe for
+                            updates and stay informed.
+                          </Trans>
+                        </Text>
+                      </Group>
+                      <Controller
+                        name="is_project_notification_subscription_allowed"
+                        control={control}
+                        render={({ field }) => (
+                          <Stack>
+                            <Switch
+                              label={
+                                <FormLabel
+                                  label={t`Enable Report Notifications`}
+                                  isDirty={
+                                    formState.dirtyFields
+                                      .is_project_notification_subscription_allowed
+                                  }
+                                  error={
+                                    formState.errors
+                                      .is_project_notification_subscription_allowed
+                                      ?.message
+                                  }
+                                />
+                              }
+                              checked={field.value}
+                              onChange={(e) =>
+                                field.onChange(e.currentTarget.checked)
+                              }
+                            />
+                          </Stack>
                         )}
                       />
                     </Stack>
