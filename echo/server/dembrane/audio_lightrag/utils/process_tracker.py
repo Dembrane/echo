@@ -18,10 +18,6 @@ class ProcessTracker:
         # Ensure the columns are present
         if 'segment' not in conversation_df.columns:
             self.df['segment'] = None
-        if 'transcription_status' not in conversation_df.columns:
-            self.df['transcription_status'] = None
-        if 'ligtrag_status' not in conversation_df.columns:
-            self.df['ligtrag_status'] = None
         self.project_df = project_df
 
 
