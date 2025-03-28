@@ -78,7 +78,7 @@ class ContextualChunkETLPipeline:
                         response = requests.post(
                             f"{self.api_base_url}/api/stateless/rag/insert",
                             json={"content": responses[segment_id]['CONTEXTUAL_TRANSCRIPT'],
-                                    "id": str(segment_id),
+                                    "echo_segment_id": str(segment_id),
                                     "transcripts": responses[segment_id]['TRANSCRIPTS']}
                         )
                         # lightrag_flag is a boolean field in the conversation_segment table
