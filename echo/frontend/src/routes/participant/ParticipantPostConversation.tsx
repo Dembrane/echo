@@ -285,7 +285,7 @@ export const ParticipantPostConversation = () => {
                   </Stack>
                 </>
               ) : (
-                <Box p="md" bg="green.0">
+                <Box p="md">
                   <Text
                     c="green"
                     size="md"

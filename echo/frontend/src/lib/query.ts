@@ -1490,8 +1490,11 @@ export const useUpdateProjectReportMutation = () => {
       payload: Partial<ProjectReport>;
     }) => directus.request(updateItem("project_report", reportId, payload)),
     onSuccess: (_, vars) => {
+      const projectId = vars.payload.project_id;
+      const projectIdValue = typeof projectId === 'object' && projectId !== null ? projectId.id : projectId;
+      
       queryClient.invalidateQueries({
-        queryKey: ["projects", vars.payload.project_id, "report"],
+        queryKey: ["projects", projectIdValue, "report"],
       });
       queryClient.invalidateQueries({
         queryKey: ["reports"],

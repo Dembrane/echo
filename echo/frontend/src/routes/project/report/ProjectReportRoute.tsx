@@ -116,7 +116,7 @@ export const ProjectReportRoute = () => {
       reportId: data.id,
       payload: {
         status: publishStatus ? "published" : "archived",
-        project_id: data.project_id,
+        project_id: { id: data.project_id } as Project,
       },
     });
     close();
@@ -244,7 +244,7 @@ export const ProjectReportRoute = () => {
                     reportId: data.id,
                     payload: {
                       status: "published",
-                      project_id: data.project_id,
+                      project_id: { id: data.project_id } as Project,
                     },
                   });
                 }
@@ -253,7 +253,7 @@ export const ProjectReportRoute = () => {
                   reportId: data.id,
                   payload: {
                     status: "archived",
-                    project_id: data.project_id,
+                    project_id: { id: data.project_id } as Project,
                   },
                 });
               }
@@ -278,7 +278,7 @@ export const ProjectReportRoute = () => {
                   reportId: data.id,
                   payload: {
                     show_portal_link: e.target.checked ? true : false,
-                    project_id: data.project_id,
+                    project_id: { id: data.project_id } as Project,
                   },
                 });
               }}
