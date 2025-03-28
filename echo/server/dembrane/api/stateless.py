@@ -87,17 +87,6 @@ def generate_summary(transcript: str, system_prompt: str | None, language: str |
 
     return response_content
 
-
-
-class InsertRequest(BaseModel):
-    content: str | list[str]
-    transcripts: list[str]
-    echo_segment_ids: str | list[str] | None = None
-
-class InsertResponse(BaseModel):
-    status: str
-    result: dict
-
 def validate_segment_id(echo_segment_ids: list[str] | None) -> bool:
     if echo_segment_ids is None:
         return True 
@@ -106,6 +95,16 @@ def validate_segment_id(echo_segment_ids: list[str] | None) -> bool:
         return True
     except Exception as e:
         raise HTTPException(status_code=400, detail="Invalid segment ID") from e
+
+class InsertRequest(BaseModel):
+    content: str | list[str]
+    transcripts: list[str]
+    echo_segment_id: str | None = None
+
+class InsertResponse(BaseModel):
+    status: str
+    result: dict
+
 
 @StatelessRouter.post("/rag/insert")
 async def insert_item(request: Request, 
@@ -116,19 +115,18 @@ async def insert_item(request: Request,
     if rag is None:
         raise HTTPException(status_code=500, detail="RAG object not initialized")
     try:
-        if isinstance(payload.echo_segment_ids, str):
-            echo_segment_ids = [payload.echo_segment_ids]
-        elif isinstance(payload.echo_segment_ids, list):
-            echo_segment_ids = payload.echo_segment_ids
+        if isinstance(payload.echo_segment_id, str):
+            echo_segment_ids = [payload.echo_segment_id]
         else:
             echo_segment_ids = None
+
         if validate_segment_id(echo_segment_ids):
             rag.insert(payload.content, 
                     ids=echo_segment_ids)
             await postgres_db.initdb()
             for transcript in payload.transcripts:
                 await upsert_transcript(postgres_db, 
-                                    document_id = str(payload.echo_segment_ids), 
+                                    document_id = str(payload.echo_segment_id), 
                                     content = transcript)
             result = {"status": "inserted", "content": payload.content}
             return InsertResponse(status="success", result=result)
@@ -141,7 +139,7 @@ async def insert_item(request: Request,
 
 class QueryRequest(BaseModel):
     query: str
-    echo_segment_ids: str | list[str] | None = None
+    echo_segment_ids: list[str] | None = None
     get_transcripts: bool = False
 
 class QueryResponse(BaseModel):
@@ -158,17 +156,19 @@ async def query_item(request: Request,
     if rag is None:
         raise HTTPException(status_code=500, detail="RAG object not initialized")
     try:
-        if isinstance(payload.echo_segment_ids, str):
-            payload.echo_segment_ids = [payload.echo_segment_ids]
+        if isinstance(payload.echo_segment_ids, list):
+            echo_segment_ids = payload.echo_segment_ids 
+        else:
+            echo_segment_ids = None
         
-        if validate_segment_id(payload.echo_segment_ids):
+        if validate_segment_id(echo_segment_ids):
             result = rag.query(payload.query, param=QueryParam(mode="mix", 
-                                                            ids=payload.echo_segment_ids if payload.echo_segment_ids else None))
+                                                            ids=echo_segment_ids if echo_segment_ids else None))
             if payload.get_transcripts:
                 await postgres_db.initdb()
                 transcripts = await fetch_query_transcript(postgres_db, 
                                                 str(result), 
-                                                ids = payload.echo_segment_ids if payload.echo_segment_ids else None)
+                                                ids = echo_segment_ids if echo_segment_ids else None)
                 transcript_contents = [t['content'] for t in transcripts] if isinstance(transcripts, list)  else [transcripts['content']] # type: ignore
             else:
                 transcript_contents = []
