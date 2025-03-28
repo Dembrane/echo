@@ -1,7 +1,6 @@
 # import os
-
 import os
-import time
+import asyncio
 import hashlib
 import logging
 from typing import Any, TypeVar, Callable, Optional
@@ -86,7 +85,7 @@ async def with_distributed_lock(
             # Wait for lock to be released or become available
             logger.info(f"Waiting for distributed lock (attempt {retries+1}/{max_retries}): {lock_key}")
             retries += 1
-            time.sleep(retry_interval)
+            await asyncio.sleep(retry_interval)  
     
     if not lock_acquired:
         logger.info(f"Could not acquire distributed lock after {max_retries} attempts: {lock_key}")
