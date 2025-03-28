@@ -1,5 +1,3 @@
-import WelcomeImage from "@/assets/participant-welcome-pattern.png";
-import { Markdown } from "@/components/common/Markdown";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { I18nLink } from "@/components/common/i18nLink";
 import {
@@ -13,756 +11,58 @@ import {
   Divider,
   Group,
   LoadingOverlay,
-  Menu,
   Modal,
-  Paper,
   Stack,
   Text,
-  Title,
 } from "@mantine/core";
 import {
   IconCheck,
-  IconDotsVertical,
   IconMicrophone,
   IconPlayerPause,
   IconPlayerPlay,
-  IconPlayerStop,
+  IconPlayerStopFilled,
   IconQuestionMark,
   IconReload,
   IconTextCaption,
-  IconTrash,
   IconUpload,
 } from "@tabler/icons-react";
-import {
-  PropsWithChildren,
-  ReactHTMLElement,
-  ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWakeLock } from "@/hooks/useWakeLock";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
 import clsx from "clsx";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { finishConversation } from "@/lib/api";
 import {
-  api,
-  deleteParticipantConversationChunk,
-  finishConversation,
-  getParticipantConversationChunks,
-} from "@/lib/api";
-import { useParticipantProjectById } from "@/lib/participantQuery";
-import { useDisclosure } from "@mantine/hooks";
+  useConversationChunksQuery,
+  useConversationQuery,
+  useConversationRepliesQuery,
+  useParticipantProjectById,
+} from "@/lib/participantQuery";
+
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { directus } from "@/lib/directus";
-import { readItem, readItems } from "@directus/sdk";
-import { Logo } from "@/components/common/Logo";
 
-const preferredMimeTypes = ["audio/webm", "audio/wav", "video/mp4"];
-
-const getSupportedMimeType = () => {
-  for (const mimeType of preferredMimeTypes) {
-    if (MediaRecorder.isTypeSupported(mimeType)) {
-      return mimeType;
-    }
-  }
-  return "audio/webm";
-};
-
-const defaultMimeType = getSupportedMimeType();
-
-const checkPermissionError = async () => {
-  try {
-    // @ts-expect-error microphone is not available?
-    const result = await navigator.permissions.query({ name: "microphone" });
-    if (result.state === "denied") {
-      return "denied" as const;
-    } else if (result.state === "prompt") {
-      return "prompt" as const;
-    } else if (result.state === "granted") {
-      return "granted" as const;
-    } else {
-      return "error" as const;
-    }
-  } catch (error) {
-    console.error("Error checking microphone permissions", error);
-    return "error" as const;
-  }
-};
-
-interface UseAudioRecorderOptions {
-  onChunk: (chunk: Blob) => void;
-  mimeType?: string;
-  timeslice?: number;
-  debug?: boolean;
-}
-
-interface UseAudioRecorderResult {
-  startRecording: () => void;
-  stopRecording: () => void;
-  pauseRecording: () => void;
-  resumeRecording: () => void;
-  isRecording: boolean;
-  isPaused: boolean;
-  recordingTime: number;
-  errored:
-    | boolean
-    | {
-        message: string;
-      };
-  loading: boolean;
-  permissionError: string | null;
-}
-
-const useChunkedAudioRecorder = ({
-  onChunk,
-  mimeType = defaultMimeType,
-  timeslice = 30000, // 30 sec
-  // timeslice = 300000, // 5 min
-  debug = false,
-}: UseAudioRecorderOptions): UseAudioRecorderResult => {
-  const [isRecording, setIsRecording] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [userPaused, setUserPaused] = useState(false);
-
-  const isRecordingRef = useRef(isRecording);
-  const isPausedRef = useRef(isPaused);
-  const userPausedRef = useRef(userPaused);
-
-  const [recordingTime, setRecordingTime] = useState(0);
-  const streamRef = useRef<MediaStream | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const startRecordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const audioProcessorRef = useRef<AudioWorkletNode | null>(null);
-
-  const [permissionError, setPermissionError] = useState<string | null>(null);
-
-  const log = (...args: any[]) => {
-    if (debug) {
-      console.log(...args);
-    }
-  };
-
-  useEffect(() => {
-    // for syncing
-    isRecordingRef.current = isRecording;
-    isPausedRef.current = isPaused;
-    userPausedRef.current = userPaused;
-  }, [isRecording, isPaused, userPaused]);
-
-  useEffect(() => {
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
-    };
-  }, []);
-
-  const updateRecordingTime = useCallback(() => {
-    setRecordingTime((prev) => prev + 1);
-  }, []);
-
-  const chunkBufferRef = useRef<Blob[]>([]);
-
-  const startRecordingChunk = useCallback(() => {
-    log("startRecordingChunk", {
-      isRecording,
-      mediaRecorderRefState: mediaRecorderRef.current?.state,
-    });
-    if (!streamRef.current) {
-      log("startRecordingChunk: no stream found");
-      return;
-    }
-
-    // Ensure that any previous MediaRecorder instance is stopped before creating a new one
-    if (mediaRecorderRef.current) {
-      log("startRecordingChunk: stopping previous MediaRecorder instance");
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current = null;
-    }
-
-    log("startRecordingChunk: creating new MediaRecorder instance");
-    const recorder = new MediaRecorder(streamRef.current, {
-      mimeType: MediaRecorder.isTypeSupported(mimeType)
-        ? mimeType
-        : "audio/webm",
-    });
-    mediaRecorderRef.current = recorder;
-
-    recorder.ondataavailable = (event) => {
-      log("ondataavailable", event.data.size, "bytes");
-      if (event.data.size > 0) {
-        chunkBufferRef.current.push(event.data);
-      }
-    };
-
-    recorder.onstop = () => {
-      log("MediaRecorder stopped");
-      onChunk(new Blob(chunkBufferRef.current, { type: mimeType }));
-
-      startRecordingChunk();
-
-      // flush the buffer
-      chunkBufferRef.current = [];
-    };
-
-    // allow for some room to restart so all is just one chunk as per mediarec
-    recorder.start(timeslice * 2);
-  }, [isRecording]);
-
-  const startRecording = async () => {
-    try {
-      log("Requesting access to the microphone...");
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-      log("Access to microphone granted.", { stream });
-
-      log("Creating MediaRecorder instance");
-
-      setIsRecording(true);
-      setIsPaused(false);
-      setUserPaused(false);
-      startRecordingChunk();
-
-      // allow to restart recording chunk
-      startRecordingIntervalRef.current = setInterval(() => {
-        log("Checking if MediaRecorder should be stopped");
-        if (mediaRecorderRef.current?.state === "recording") {
-          log("attempting to Stop recording chunk");
-          mediaRecorderRef.current.stop();
-
-          log("attempt to Restart recording chunk", {
-            isRecording,
-            mediaRecorderRefState: mediaRecorderRef.current?.state,
-          });
-
-          if (isRecording) {
-            log("Restarting recording chunk");
-            startRecordingChunk();
-          }
-        }
-      }, timeslice);
-
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-      intervalRef.current = setInterval(updateRecordingTime, 1000);
-    } catch (error) {
-      console.error("Error accessing audio stream", error);
-      setPermissionError("Error accessing audio stream");
-      setIsRecording(false);
-    }
-  };
-
-  const stopRecording = () => {
-    if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state === "recording"
-    ) {
-      mediaRecorderRef.current.stop();
-    }
-    setIsRecording(false);
-    setIsPaused(false);
-    setUserPaused(false);
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-    setRecordingTime(0);
-    if (startRecordingIntervalRef.current)
-      clearInterval(startRecordingIntervalRef.current);
-    // remove the worker
-    audioProcessorRef.current?.disconnect();
-    audioProcessorRef.current = null;
-    // close the audio context
-    audioContextRef.current?.close();
-    audioContextRef.current = null;
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
-  };
-
-  const pauseRecording = () => {
-    if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state === "recording"
-    ) {
-      mediaRecorderRef.current.pause();
-      setIsPaused(true);
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    }
-  };
-
-  const userPauseRecording = () => {
-    pauseRecording();
-    setUserPaused(true);
-  };
-
-  const resumeRecording = () => {
-    if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state === "paused"
-    ) {
-      mediaRecorderRef.current.resume();
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-      intervalRef.current = setInterval(updateRecordingTime, 1000);
-      setIsPaused(false);
-      setUserPaused(false);
-    }
-  };
-
-  const userResumeRecording = () => {
-    resumeRecording();
-    setUserPaused(false);
-  };
-
-  return {
-    startRecording,
-    stopRecording,
-    pauseRecording: userPauseRecording,
-    resumeRecording: userResumeRecording,
-    isRecording,
-    isPaused,
-    recordingTime,
-    loading: false,
-    errored: false,
-    permissionError,
-  };
-};
-
-const useConversationQuery = (
-  projectId: string | undefined,
-  conversationId: string | undefined,
-) => {
-  return useQuery({
-    queryKey: ["participant", "conversation", projectId, conversationId],
-    queryFn: () =>
-      directus.request(readItem("conversation", conversationId ?? "")),
-    enabled: !!conversationId,
-    refetchInterval: 30000,
-  });
-};
-
-const useConversationChunksQuery = (
-  projectId: string | undefined,
-  conversationId: string | undefined,
-) => {
-  return useQuery({
-    queryKey: ["participant", "conversation_chunks", conversationId],
-    queryFn: () =>
-      getParticipantConversationChunks(projectId ?? "", conversationId ?? ""),
-    enabled: !!conversationId,
-    refetchInterval: 15000,
-  });
-};
-
-const useConversationRepliesQuery = (conversationId: string | undefined) => {
-  return useQuery({
-    queryKey: ["participant", "conversation_replies", conversationId],
-    queryFn: () =>
-      directus.request(
-        readItems("conversation_reply", {
-          filter: { conversation_id: { _eq: conversationId } },
-          fields: ["id", "content_text", "date_created", "type"],
-        }),
-      ),
-    enabled: !!conversationId,
-    refetchInterval: 15000,
-  });
-};
-
-const useConversationReplyMutation = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (payload: {
-      conversationId: string;
-      language: string;
-    }) => {
-      const reply = await api.post(
-        `/conversations/${payload.conversationId}/get-reply`,
-        {
-          language: payload.language,
-        },
-      );
-
-      return reply;
-    },
-    onSuccess: (_r, v) => {
-      queryClient.invalidateQueries({
-        queryKey: ["participant", "conversation_replies", v.conversationId],
-      });
-    },
-  });
-};
-
-const UserChunkMessage = ({
-  chunk,
-  hide,
-}: {
-  chunk?: TConversationChunk;
-  hide?: boolean;
-}) => {
-  const { projectId, conversationId } = useParams();
-  const queryClient = useQueryClient();
-
-  const deleteChunkMutation = useMutation({
-    mutationFn: ({
-      projectId,
-      conversationId,
-      chunkId,
-    }: {
-      projectId: string;
-      conversationId: string;
-      chunkId: string;
-    }) =>
-      deleteParticipantConversationChunk(
-        projectId ?? "",
-        conversationId ?? "",
-        chunkId ?? "",
-      ),
-    onMutate: (vars) => {
-      queryClient.cancelQueries({
-        queryKey: ["participant", "conversation_chunks", conversationId ?? ""],
-      });
-      const previousValue = queryClient.getQueryData([
-        "participant",
-        "conversation_chunks",
-        conversationId ?? "",
-      ]);
-      queryClient.setQueryData(
-        ["participant", "conversation_chunks", conversationId ?? ""],
-
-        (old: TConversationChunk[] | undefined) =>
-          old?.filter((c) => c.id !== vars.chunkId),
-      );
-      return previousValue;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["participant", "conversation_chunks", conversationId ?? ""],
-      });
-    },
-  });
-
-  if (!chunk) return <></>;
-  if (hide) return <></>;
-
-  const handleDelete = () => {
-    deleteChunkMutation.mutate({
-      projectId: projectId ?? "",
-      conversationId: conversationId ?? "",
-      chunkId: chunk.id,
-    });
-  };
-
-  return (
-    <div className="align-center flex justify-end">
-      <div>
-        <Menu shadow="md" width={200}>
-          <Menu.Target>
-            <ActionIcon variant="transparent" c="gray" className="h-full">
-              <IconDotsVertical />
-            </ActionIcon>
-          </Menu.Target>
-
-          <Menu.Dropdown>
-            <Menu.Item
-              onClick={handleDelete}
-              disabled={deleteChunkMutation.isPending}
-              leftSection={<IconTrash />}
-            >
-              Delete
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
-      </div>
-      <Paper className="rounded-t-xl rounded-bl-xl p-4 shadow-sm">
-        <Text className="prose text-sm">
-          {chunk.transcript == null && (
-            <Markdown content={t`*Transcription in progress.*`} />
-          )}
-          <Markdown content={chunk.transcript ?? ""} />
-        </Text>
-      </Paper>
-    </div>
-  );
-};
-
-const UserMessage = ({ markdown }: { markdown?: string }) => {
-  return (
-    <div className="flex justify-end">
-      <Paper className="rounded-t-xl rounded-bl-xl p-4 shadow-sm">
-        <Text className="prose text-sm">
-          <Markdown content={markdown ?? ""} />
-        </Text>
-      </Paper>
-    </div>
-  );
-};
-
-const SystemMessage = ({
-  markdown,
-  title,
-}: {
-  markdown?: string;
-  title?: ReactNode;
-}) => {
-  return (
-    <div className="flex justify-start">
-      <Paper
-        bg="transparent"
-        className="rounded-t-xl rounded-br-xl border border-slate-200 p-4 shadow-sm"
-      >
-        <Stack>
-          {!!title && title}
-          <Text className="prose text-sm">
-            <Markdown content={markdown ?? ""} />
-          </Text>
-        </Stack>
-      </Paper>
-    </div>
-  );
-};
-
-const SpikeMessage = ({ message }: { message: ConversationReply }) => {
-  if (message.type === "assistant_reply") {
-    return (
-      <SystemMessage
-        markdown={message.content_text ?? ""}
-        title={
-          <Group>
-            <Text className="font-semibold">
-              <Trans>ECHO!</Trans>
-            </Text>
-            <Logo hideTitle h="20px" />
-          </Group>
-        }
-      />
-    );
-  }
-  // if (message.type === "object") {
-  //   return <SpikeObjectMessage message={message} />;
-  // }
-  // if (message.type === "user_audio") {
-  //   return null;
-  // }
-  // return <></>;
-
-  return null;
-};
-
-const combineUserChunks = (
-  chunks: { type: "user_chunk"; timestamp: Date; data: TConversationChunk }[],
-) => {
-  return {
-    type: "user_chunk" as const,
-    timestamp: chunks[0].timestamp,
-    data: {
-      ...chunks[0].data,
-      transcript: chunks.map((c) => c.data.transcript).join("..."),
-    },
-  };
-};
-
-const ParticipantBody = ({
-  projectId,
-  conversationId,
-  viewResponses = false,
-  children,
-  interleaveMessages = true,
-}: PropsWithChildren<{
-  projectId: string;
-  conversationId: string;
-  viewResponses?: boolean;
-  interleaveMessages?: boolean;
-}>) => {
-  const [ref] = useAutoAnimate();
-  const [chatRef] = useAutoAnimate();
-  const bottomRef = useRef<HTMLDivElement>(null);
-
-  const projectQuery = useParticipantProjectById(projectId);
-  const chunksQuery = useConversationChunksQuery(projectId, conversationId);
-  const repliesQuery = useConversationRepliesQuery(conversationId);
-
-  const combinedMessages = useMemo(() => {
-    const userChunks = (chunksQuery.data ?? []).map((chunk) => ({
-      type: "user_chunk" as const,
-      timestamp: new Date(chunk.timestamp),
-      data: chunk,
-    }));
-
-    const replies = (repliesQuery.data ?? [])
-      .filter((m) => ["assistant_reply"].includes(m.type ?? ""))
-      .map((m) => ({
-        type: "assistant_chunk" as const,
-        timestamp: new Date(m.date_created ?? ""),
-        data: m,
-      }));
-
-    const allMessages = [...userChunks, ...replies].sort(
-      (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
-    );
-
-    const combinedResult = [];
-    let currentUserChunks = [];
-
-    for (let i = 0; i < allMessages.length; i++) {
-      const message = allMessages[i];
-      if (message.type === "user_chunk") {
-        currentUserChunks.push(message);
-      } else {
-        if (currentUserChunks.length > 0) {
-          if (currentUserChunks.length > 1) {
-            combinedResult.push(combineUserChunks(currentUserChunks));
-          } else {
-            combinedResult.push(currentUserChunks[0]);
-          }
-          currentUserChunks = [];
-        }
-        combinedResult.push(message);
-      }
-    }
-    if (currentUserChunks.length > 0) {
-      if (currentUserChunks.length > 1) {
-        combinedResult.push(combineUserChunks(currentUserChunks));
-      } else {
-        combinedResult.push(currentUserChunks[0]);
-      }
-    }
-
-    return combinedResult;
-  }, [chunksQuery.data, repliesQuery.data, interleaveMessages]);
-
-  const [opened, { open, close }] = useDisclosure(false);
-
-  return (
-    <Stack ref={ref} className="max-h-full">
-      <h2 className="text-center text-3xl">
-        <Trans>Welcome</Trans>
-      </h2>
-      <img
-        className="w-full animate-pulse object-contain duration-1000"
-        src={WelcomeImage}
-      />
-      {projectQuery.data && (
-        <Stack ref={chatRef} py="md">
-          <Title order={3}>
-            {projectQuery.data.default_conversation_title}
-          </Title>
-
-          {projectQuery.data.default_conversation_description && (
-            <SystemMessage
-              markdown={
-                projectQuery.data.default_conversation_description ?? ""
-              }
-            />
-          )}
-
-          <SystemMessage
-            markdown={t`Please record your response by clicking the "Start Recording" button below. You may also choose to respond in text by clicking the text icon.`}
-          />
-
-          {children}
-
-          {interleaveMessages ? (
-            <Stack gap="sm">
-              {combinedMessages.map((message, index) => (
-                <div key={index}>
-                  {message.type === "user_chunk" ? (
-                    <UserChunkMessage chunk={message.data} />
-                  ) : (
-                    <SpikeMessage message={message.data} />
-                  )}
-                </div>
-              ))}
-            </Stack>
-          ) : (
-            <>
-              {viewResponses ? (
-                <div className="flex justify-end">
-                  <Stack gap="sm">
-                    {chunksQuery.data
-                      ?.sort(
-                        (a, b) =>
-                          new Date(a.timestamp).getTime() -
-                          new Date(b.timestamp).getTime(),
-                      )
-                      .map((chunk) => (
-                        <UserChunkMessage key={chunk.id} chunk={chunk} />
-                      ))}
-                  </Stack>
-                </div>
-              ) : (
-                <>
-                  {chunksQuery.data && chunksQuery.data.length > 0 && (
-                    <div className="flex justify-end">
-                      <Button variant="transparent" onClick={open}>
-                        <Trans>View your responses</Trans>
-                      </Button>
-                    </div>
-                  )}
-                  <Modal
-                    opened={opened}
-                    onClose={close}
-                    size="lg"
-                    title={t`Your responses`}
-                  >
-                    <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
-                      <Stack gap="sm">
-                        {chunksQuery.data
-                          ?.sort(
-                            (a, b) =>
-                              new Date(a.timestamp).getTime() -
-                              new Date(b.timestamp).getTime(),
-                          )
-                          .map((chunk) => (
-                            <UserChunkMessage key={chunk.id} chunk={chunk} />
-                          ))}
-                      </Stack>
-                    </div>
-                  </Modal>
-                </>
-              )}
-              <Stack gap="sm">
-                {repliesQuery.data?.map((msg) => (
-                  <SpikeMessage key={msg.id} message={msg} />
-                ))}
-              </Stack>
-            </>
-          )}
-
-          <div
-            role="presentation"
-            ref={bottomRef}
-            style={{ float: "left", clear: "both" }}
-          ></div>
-        </Stack>
-      )}
-    </Stack>
-  );
-};
+import { useChat } from "@ai-sdk/react";
+import { toast, Toaster } from "@/components/common/Toaster";
+import SpikeMessage from "../../components/participant/SpikeMessage";
+import { ParticipantBody } from "../../components/participant/ParticipantBody";
+import { checkPermissionError, scrollToBottom } from "@/lib/utils";
+import { useElementOnScreen } from "@/hooks/useElementOnScreen";
+import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
+import { API_BASE_URL } from "@/config";
+import useChunkedAudioRecorder from "@/hooks/useChunkedAudioRecorder";
 
 const DEFAULT_REPLY_COOLDOWN = 120; // 2 minutes in seconds
 
 export const ParticipantConversationAudioRoute = () => {
   const { projectId, conversationId } = useParams();
+
   const projectQuery = useParticipantProjectById(projectId ?? "");
   const conversationQuery = useConversationQuery(projectId, conversationId);
   const chunks = useConversationChunksQuery(projectId, conversationId);
+  const repliesQuery = useConversationRepliesQuery(conversationId);
   const uploadChunkMutation = useUploadConversationChunk();
 
   const onChunk = (chunk: Blob) => {
@@ -773,32 +73,21 @@ export const ParticipantConversationAudioRoute = () => {
     });
   };
 
-  const audioRecorder = useChunkedAudioRecorder({ onChunk });
-
-  useWakeLock({ obtainWakeLockOnMount: true });
-
-  const {
-    startRecording,
-    stopRecording,
-    isRecording,
-    isPaused,
-    pauseRecording,
-    resumeRecording,
-    recordingTime,
-    errored,
-    loading,
-    permissionError,
-  } = audioRecorder;
+  const [scrollTargetRef, isVisible] = useElementOnScreen({
+    root: null,
+    rootMargin: "-83px",
+    threshold: 0.1,
+  });
 
   const [troubleShootingGuideOpened, setTroubleShootingGuideOpened] =
     useState(false);
-
-  const navigate = useI18nNavigate();
-
-  const { iso639_1 } = useLanguage();
-  const getReplyMutation = useConversationReplyMutation();
-
   const [lastReplyTime, setLastReplyTime] = useState<Date | null>(null);
+  const [remainingCooldown, setRemainingCooldown] = useState(0);
+  const [showCooldownMessage, setShowCooldownMessage] = useState(false);
+
+  // Navigation and language
+  const navigate = useI18nNavigate();
+  const { iso639_1 } = useLanguage();
 
   // Calculate remaining cooldown time
   const getRemainingCooldown = useCallback(() => {
@@ -809,8 +98,6 @@ export const ParticipantConversationAudioRoute = () => {
     );
     return Math.max(0, cooldownSeconds - elapsedSeconds);
   }, [lastReplyTime]);
-
-  const [remainingCooldown, setRemainingCooldown] = useState(0);
 
   // Update cooldown timer
   useEffect(() => {
@@ -828,6 +115,50 @@ export const ParticipantConversationAudioRoute = () => {
     return () => clearInterval(interval);
   }, [lastReplyTime, getRemainingCooldown]);
 
+  const audioRecorder = useChunkedAudioRecorder({ onChunk });
+  useWakeLock({ obtainWakeLockOnMount: true });
+
+  const {
+    startRecording,
+    stopRecording,
+    isRecording,
+    isPaused,
+    pauseRecording,
+    resumeRecording,
+    recordingTime,
+    errored,
+    loading,
+    permissionError,
+  } = audioRecorder;
+
+  const {
+    messages: echoMessages,
+    isLoading,
+    status,
+    input,
+    handleInputChange,
+    handleSubmit,
+  } = useChat({
+    api: `${API_BASE_URL}/conversations/${conversationId}/get-reply`,
+    initialMessages:
+      repliesQuery.data?.map((msg) => ({
+        id: String(msg.id),
+        content: msg.content_text ?? "",
+        role: msg.type === "assistant_reply" ? "assistant" : "user",
+      })) ?? [],
+    body: { language: iso639_1 },
+    experimental_prepareRequestBody({ messages }) {
+      const lastMessage = messages[messages.length - 1];
+      return {
+        language: iso639_1,
+      };
+    },
+    onError: (error) => {
+      console.error("onError", error);
+    },
+  });
+
+  // Handlers
   const handleCheckMicrophoneAccess = async () => {
     const permissionError = await checkPermissionError();
     if (["granted", "prompt"].includes(permissionError ?? "")) {
@@ -839,9 +170,7 @@ export const ParticipantConversationAudioRoute = () => {
     }
   };
 
-  const [showCooldownMessage, setShowCooldownMessage] = useState(false);
-
-  const handleReply = async () => {
+  const handleReply = async (e: React.MouseEvent<HTMLButtonElement>) => {
     const remaining = getRemainingCooldown();
     if (remaining > 0) {
       setShowCooldownMessage(true);
@@ -852,7 +181,7 @@ export const ParticipantConversationAudioRoute = () => {
           ? t`${minutes} minutes and ${seconds} seconds`
           : t`${seconds} seconds`;
 
-      alert(t`Please wait ${timeStr} before requesting another reply.`);
+      toast.info(t`Please wait ${timeStr} before requesting another Echo.`);
       return;
     }
 
@@ -862,14 +191,26 @@ export const ParticipantConversationAudioRoute = () => {
       while (uploadChunkMutation.isPending) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
-      await getReplyMutation.mutateAsync({
-        conversationId: conversationId ?? "",
-        language: iso639_1,
-      });
+
+      // scroll to bottom of the page
+      setTimeout(() => {
+        if (scrollTargetRef.current) {
+          scrollTargetRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 0);
+
+      handleSubmit(e, { allowEmptySubmit: true });
       setLastReplyTime(new Date());
       setRemainingCooldown(DEFAULT_REPLY_COOLDOWN);
     } catch (error) {
-      console.error("Error during reply:", error);
+      console.error("Error during echo:", error);
+    }
+  };
+
+  const handleFinish = async () => {
+    if (window.confirm(t`Are you sure you want to finish?`)) {
+      await finishConversation(conversationId ?? "");
+      navigate(finishUrl);
     }
   };
 
@@ -880,15 +221,8 @@ export const ParticipantConversationAudioRoute = () => {
   const textModeUrl = `/${projectId}/conversation/${conversationId}/text`;
   const finishUrl = `/${projectId}/conversation/${conversationId}/finish`;
 
-  const handleFinish = async () => {
-    if (window.confirm(t`Are you sure you want to finish?`)) {
-      await finishConversation(conversationId ?? "");
-      navigate(finishUrl);
-    }
-  };
-
   return (
-    <div className="container mx-auto flex h-full max-w-2xl grow flex-col">
+    <div className="container mx-auto flex h-full max-w-2xl flex-col">
       {/* modal for permissions error */}
       <Modal
         opened={!!permissionError}
@@ -934,7 +268,7 @@ export const ParticipantConversationAudioRoute = () => {
         </div>
       </Modal>
 
-      <Box className={clsx("relative flex-grow px-4 py-4 transition-all")}>
+      <Box className={clsx("relative flex-grow p-4 pb-12 transition-all")}>
         {projectQuery.data && conversationQuery.data && (
           <ParticipantBody
             interleaveMessages={false}
@@ -942,41 +276,57 @@ export const ParticipantConversationAudioRoute = () => {
             conversationId={conversationId ?? ""}
           />
         )}
+
+        <Stack gap="sm">
+          {echoMessages && echoMessages.length > 0 && (
+            <>
+              {echoMessages.map((message, index) => (
+                <SpikeMessage
+                  key={message.id}
+                  message={{
+                    id: parseInt(message.id) || 0,
+                    content_text: message.content,
+                    type:
+                      message.role === "assistant" ? "assistant_reply" : "user",
+                    date_created: new Date().toISOString(),
+                  }}
+                  loading={index === echoMessages.length - 1 && isLoading}
+                  className={`min-h-[180px] md:min-h-[169px] ${index !== echoMessages.length - 1 ? "border-b" : ""}`}
+                />
+              ))}
+              {status !== "streaming" && status !== "ready" && (
+                <SpikeMessage
+                  key="thinking"
+                  message={{
+                    id: 0,
+                    content_text: t`Thinking...`,
+                    type: "assistant_reply",
+                    date_created: new Date().toISOString(),
+                  }}
+                  loading={true}
+                  className="min-h-[180px] md:min-h-[169px]"
+                />
+              )}
+            </>
+          )}
+        </Stack>
+        <div ref={scrollTargetRef} />
       </Box>
 
       {!errored && (
         <Stack
           gap="lg"
-          className="sticky bottom-0 z-10 w-full border-t border-slate-300 bg-white p-4 shadow-sm"
+          className="sticky bottom-0 z-10 w-full border-t border-slate-300 bg-white p-4"
         >
-          {chunks?.data &&
-            chunks.data.length > 0 &&
-            !!projectQuery.data?.is_get_reply_enabled && (
-              <Group>
-                <Button
-                  fullWidth
-                  variant="transparent"
-                  size="xl"
-                  rightSection={
-                    <div className="pl-2">
-                      <Logo hideTitle />
-                    </div>
-                  }
-                  onClick={handleReply}
-                >
-                  {showCooldownMessage && remainingCooldown > 0 ? (
-                    <Text>
-                      <Trans>
-                        Wait {Math.floor(remainingCooldown / 60)}:
-                        {(remainingCooldown % 60).toString().padStart(2, "0")}
-                      </Trans>
-                    </Text>
-                  ) : (
-                    <Trans>ECHO!</Trans>
-                  )}
-                </Button>
-              </Group>
-            )}
+          <Group
+            justify="center"
+            className={`absolute bottom-[125%] left-1/2 z-50 translate-x-[-50%]`}
+          >
+            <ScrollToBottomButton
+              elementRef={scrollTargetRef}
+              isVisible={isVisible}
+            />
+          </Group>
 
           {/* Recording time indicator */}
           {isRecording && (
@@ -987,7 +337,7 @@ export const ParticipantConversationAudioRoute = () => {
                 ) : (
                   <div className="h-4 w-4 animate-pulse rounded-full bg-red-500"></div>
                 )}
-                <Text className="text-4xl">
+                <Text className="text-3xl">
                   {Math.floor(recordingTime / 3600) > 0 && (
                     <>
                       {Math.floor(recordingTime / 3600)
@@ -1010,29 +360,69 @@ export const ParticipantConversationAudioRoute = () => {
               <>
                 <Group className="w-full">
                   <Button
-                    size="xl"
+                    size="lg"
+                    radius="md"
                     rightSection={<IconMicrophone />}
                     onClick={startRecording}
                     className="flex-grow"
                   >
-                    <Trans>Start Recording</Trans>
+                    <Trans>Record</Trans>
                   </Button>
 
+                  {chunks?.data &&
+                    chunks.data.length > 0 &&
+                    !!projectQuery.data?.is_get_reply_enabled && (
+                      <Group>
+                        <Button
+                          fullWidth
+                          variant="default"
+                          size="lg"
+                          radius="md"
+                          onClick={(e) => {
+                            handleReply(e);
+                          }}
+                          loading={isLoading}
+                          loaderProps={{ type: "dots" }}
+                        >
+                          {showCooldownMessage && remainingCooldown > 0 ? (
+                            <Text>
+                              <Trans>
+                                <span className="hidden md:inline">Wait </span>
+                                {Math.floor(remainingCooldown / 60)}:
+                                {(remainingCooldown % 60)
+                                  .toString()
+                                  .padStart(2, "0")}
+                              </Trans>
+                            </Text>
+                          ) : (
+                            <Trans>ECHO</Trans>
+                          )}
+                        </Button>
+                      </Group>
+                    )}
+
                   <I18nLink to={textModeUrl}>
-                    <ActionIcon component="a" size="60" variant="outline">
+                    <ActionIcon
+                      component="a"
+                      size="50"
+                      variant="default"
+                      radius="md"
+                    >
                       <IconTextCaption />
                     </ActionIcon>
                   </I18nLink>
 
                   {!isRecording && chunks?.data && chunks.data.length > 0 && (
                     <Button
-                      size="xl"
+                      size="lg"
+                      radius="md"
                       onClick={handleFinish}
                       component="a"
                       variant="light"
                       rightSection={<IconCheck />}
+                      className="w-full md:w-auto"
                     >
-                      Finish
+                      <Trans>Finish</Trans>
                     </Button>
                   )}
                 </Group>
@@ -1044,7 +434,8 @@ export const ParticipantConversationAudioRoute = () => {
                 {isPaused ? (
                   <Button
                     className="flex-1"
-                    size="xl"
+                    size="lg"
+                    radius="md"
                     rightSection={<IconPlayerPlay size={16} />}
                     onClick={resumeRecording}
                   >
@@ -1053,22 +444,59 @@ export const ParticipantConversationAudioRoute = () => {
                 ) : (
                   <Button
                     className="flex-1"
-                    size="xl"
+                    size="lg"
+                    radius="md"
                     rightSection={<IconPlayerPause size={16} />}
                     onClick={pauseRecording}
                   >
                     <Trans>Pause</Trans>
                   </Button>
                 )}
+
+                {chunks?.data &&
+                  chunks.data.length > 0 &&
+                  !!projectQuery.data?.is_get_reply_enabled && (
+                    <Group>
+                      <Button
+                        fullWidth
+                        variant="default"
+                        size="lg"
+                        radius="md"
+                        onClick={(e) => {
+                          handleReply(e);
+                        }}
+                        loading={isLoading}
+                        loaderProps={{ type: "dots" }}
+                      >
+                        {showCooldownMessage && remainingCooldown > 0 ? (
+                          <Text>
+                            <Trans>
+                              <span className="hidden md:inline">Wait </span>
+                              {Math.floor(remainingCooldown / 60)}:
+                              {(remainingCooldown % 60)
+                                .toString()
+                                .padStart(2, "0")}
+                            </Trans>
+                          </Text>
+                        ) : (
+                          <Trans>ECHO</Trans>
+                        )}
+                      </Button>
+                    </Group>
+                  )}
                 <Button
                   variant="outline"
-                  size="xl"
-                  rightSection={<IconPlayerStop size={16} />}
+                  size="lg"
+                  radius="md"
+                  color="red"
                   onClick={() => {
                     stopRecording();
                   }}
                 >
-                  <Trans>Stop</Trans>
+                  <span className="hidden md:block">
+                    <Trans>Stop</Trans>
+                  </span>
+                  <IconPlayerStopFilled size={20} className="ml-0 md:ml-1" />
                 </Button>
               </>
             )}
@@ -1088,10 +516,22 @@ export const ParticipantConversationTextRoute = () => {
 
   const [text, setText] = useState("");
 
+  const [scrollTargetRef, isVisible] = useElementOnScreen({
+    root: null,
+    rootMargin: "-158px",
+    threshold: 0.1,
+  });
+
   const onChunk = () => {
     if (!text || text.trim() === "") {
       return;
     }
+
+    setTimeout(() => {
+      if (scrollTargetRef.current) {
+        scrollTargetRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 0);
 
     uploadChunkMutation.mutate({
       conversationId: conversationId ?? "",
@@ -1119,7 +559,7 @@ export const ParticipantConversationTextRoute = () => {
 
   return (
     <div className="container mx-auto flex h-full max-w-2xl flex-col">
-      <Box className={clsx("relative flex-grow px-4 py-4 transition-all")}>
+      <Box className={clsx("relative flex-grow px-4 py-12 transition-all")}>
         {projectQuery.data && conversationQuery.data && (
           <ParticipantBody
             viewResponses
@@ -1127,9 +567,20 @@ export const ParticipantConversationTextRoute = () => {
             conversationId={conversationId ?? ""}
           />
         )}
+
+        <div ref={scrollTargetRef} className="h-0" />
       </Box>
 
-      <Stack className="sticky bottom-0 z-10 w-full border-t border-slate-300 bg-white p-4 shadow-sm">
+      <Stack className="sticky bottom-0 z-10 w-full border-slate-300 bg-white p-4">
+        <Group
+          justify="center"
+          className={`absolute bottom-[110%] left-1/2 z-50 translate-x-[-50%]`}
+        >
+          {/* <ScrollToBottomButton
+            elementRef={scrollTargetRef}
+            isVisible={isVisible}
+          /> */}
+        </Group>
         <textarea
           className="h-32 w-full rounded-md border border-slate-300 p-4"
           placeholder={t`Type your response here`}
@@ -1138,7 +589,8 @@ export const ParticipantConversationTextRoute = () => {
         />
         <Group className="w-full">
           <Button
-            size="xl"
+            size="lg"
+            radius="md"
             rightSection={<IconUpload />}
             onClick={onChunk}
             loading={uploadChunkMutation.isPending}
@@ -1148,13 +600,14 @@ export const ParticipantConversationTextRoute = () => {
           </Button>
 
           <I18nLink to={audioModeUrl}>
-            <ActionIcon component="a" variant="outline" size="60">
+            <ActionIcon component="a" variant="default" size="50" radius="md">
               <IconMicrophone />
             </ActionIcon>
           </I18nLink>
           {text.trim() == "" && chunks.data && chunks.data.length > 0 && (
             <Button
-              size="xl"
+              size="lg"
+              radius="md"
               onClick={handleFinish}
               component="a"
               variant="light"

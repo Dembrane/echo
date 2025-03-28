@@ -15,6 +15,9 @@ import {
   Text,
   Paper,
   InputDescription,
+  Badge,
+  Switch,
+  Textarea,
 } from "@mantine/core";
 import { ProjectTagsInput } from "./ProjectTagsInput";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
@@ -28,6 +31,7 @@ import { useAutoSave } from "@/hooks/useAutoSave";
 import { SaveStatus } from "../form/SaveStatus";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Logo } from "../common/Logo";
 
 const FormSchema = z.object({
   language: z.enum(["en", "nl", "de", "fr", "es"]),
@@ -37,6 +41,8 @@ const FormSchema = z.object({
   default_conversation_description: z.string(),
   default_conversation_finish_text: z.string(),
   default_conversation_transcript_prompt: z.string(),
+  is_get_reply_enabled: z.boolean(),
+  get_reply_prompt: z.string(),
 });
 
 type ProjectPortalFormValues = z.infer<typeof FormSchema>;
@@ -143,6 +149,8 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
           (project.language as "en" | "nl" | "de" | "fr" | "es") ?? "en",
         default_conversation_transcript_prompt:
           project.default_conversation_transcript_prompt ?? "",
+        is_get_reply_enabled: project.is_get_reply_enabled ?? false,
+        get_reply_prompt: project.get_reply_prompt ?? "",
       },
       // for validation
       resolver: zodResolver(FormSchema),
@@ -339,6 +347,78 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
                     />
                     <ProjectTagsInput project={project} />
                   </Stack>
+                </Stack>
+
+                <Divider />
+
+                <Stack gap="md">
+                  <Group>
+                    <Title order={4}>
+                      <Trans>Dembrane Echo</Trans>
+                    </Title>
+                    <Logo hideTitle />
+                    <Badge>
+                      <Trans>Experimental</Trans>
+                    </Badge>
+                  </Group>
+
+                  <Text size="sm" c="dimmed">
+                    <Trans>
+                      Enable this feature to allow participants to request
+                      AI-powered responses during their conversation.
+                      Participants can click "Echo" after recording their
+                      thoughts to receive contextual feedback, encouraging
+                      deeper reflection and engagement. A cooldown period
+                      applies between requests.
+                    </Trans>
+                  </Text>
+
+                  <Controller
+                    name="is_get_reply_enabled"
+                    control={control}
+                    render={({ field }) => (
+                      <Switch
+                        label={
+                          <FormLabel
+                            label={t`Enable Dembrane Echo`}
+                            isDirty={formState.dirtyFields.is_get_reply_enabled}
+                            error={
+                              formState.errors.is_get_reply_enabled?.message
+                            }
+                          />
+                        }
+                        checked={field.value}
+                        onChange={(e) =>
+                          field.onChange(e.currentTarget.checked)
+                        }
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    name="get_reply_prompt"
+                    control={control}
+                    render={({ field }) => (
+                      <Textarea
+                        label={
+                          <FormLabel
+                            label={t`Reply Prompt`}
+                            isDirty={formState.dirtyFields.get_reply_prompt}
+                            error={formState.errors.get_reply_prompt?.message}
+                          />
+                        }
+                        description={
+                          <Trans>
+                            This prompt guides how the AI responds to
+                            participants. Customize it to shape the type of
+                            feedback or engagement you want to encourage.
+                          </Trans>
+                        }
+                        minRows={5}
+                        {...field}
+                      />
+                    )}
+                  />
                 </Stack>
 
                 <Divider />

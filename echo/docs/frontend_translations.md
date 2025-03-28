@@ -122,6 +122,9 @@ After adding the translations, you can verify them by running your React applica
 - `cd frontend && pnpm i`
 - Extract messages: `pnpm messages:extract`
 - Update translations by going to the frontend/src/locales/ folder and editing the .po files
+
+- You can go to all the .po files and search for `msgstr ""` to find all the empty translations.
+
 - Compile messages: `pnpm messages:compile`
 
 By following these steps, you can ensure that your application is properly localized and supports multiple languages.
