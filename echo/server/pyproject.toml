@@ -12,7 +12,7 @@ dependencies = [
     # Langchain
     "langchain==0.1.*",
     "langchain-community==0.0.*",
-    "langchain-experimental>=0.0.57",
+    "langchain-experimental==0.0.*",
     "langchain-openai==0.0.*",
     "pypdf==4.0.*",
     # SDKs for Models
@@ -45,14 +45,14 @@ dependencies = [
     "pandas-stubs>=2.2.2.240514",
     "types-requests>=2.32.0.20240602",
     "types-python-jose>=3.3.4.20240106",
-    "litellm>=1.59.9",
+    "litellm==1.59.*",
     # Additional Dependencies
     "lightrag-dembrane==1.2.7.1",
     # "lightrag-hku @ file:///workspaces/echo/LightRAG",
     "nest-asyncio==1.6.0",
     "pydantic==2.10.6",
     "pydub==0.25.1",
-    "pytest>=8.3.4",
+    "pytest==8.3.4",
     "PyYAML==6.0.2",
     # Network and HTTP
     "aiohttp==3.11.14",
@@ -66,13 +66,13 @@ dependencies = [
     "tiktoken==0.9.0",
     "asyncpg==0.30.0",
     "neo4j==5.28.1",
-    "boto3>=1.37.9",
+    "boto3==1.37.*",
     # Uncategorized
-    "mypy",
-    "ruff",
-    "isort",
-    "tenacity",
-    "networkx",
+    "mypy==1.10.*",
+    "ruff==0.4.*",
+    "isort==5.13.*",
+    "tenacity==8.3.*",
+    "networkx==3.4.*",
 ]
 
 [tool.setuptools]
