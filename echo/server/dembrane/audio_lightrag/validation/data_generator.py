@@ -1,34 +1,27 @@
-from huggingface_hub import login
-from datasets import Dataset, DatasetDict
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai.chat_models import AzureChatOpenAI
-from langchain_openai.embeddings import AzureOpenAIEmbeddings
-from langchain.schema import Document
 import os
 import logging
+
 from tqdm import tqdm
-import numpy as np 
-import pandas as pd
-import os
-from litellm import completion
-from datasets import load_dataset
 from dotenv import load_dotenv
-import soundfile as sf
+from datasets import Dataset, DatasetDict, load_dataset
 from ragas.testset import TestsetGenerator
-from ragas.testset import Testset, TestsetSample
+from huggingface_hub import login
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_openai.embeddings import AzureOpenAIEmbeddings
+from langchain_openai.chat_models import AzureChatOpenAI
 
 load_dotenv()
 # read from env filter
 
-LITELLM_LIGHTRAG_NAME = os.getenv('LITELLM_LIGHTRAG_NAME')
-LITELLM_LIGHTRAG_ENDPOINT = os.getenv('LITELLM_LIGHTRAG_ENDPOINT')
-LITELLM_LIGHTRAG_APIKEY = os.getenv('LITELLM_LIGHTRAG_APIKEY')
-LITELLM_LIGHTRAG_API_VERSION = os.getenv('LITELLM_LIGHTRAG_API_VERSION')
+LLM_MODEL_NAME = os.getenv('LITELLM_LIGHTRAG_NAME')
+LLM_MODEL_ENDPOINT = os.getenv('LITELLM_LIGHTRAG_ENDPOINT')
+LLM_MODEL_APIKEY = os.getenv('LITELLM_LIGHTRAG_APIKEY')
+LLM_MODEL_API_VERSION = os.getenv('LITELLM_LIGHTRAG_API_VERSION')
 
-LITELLM_LIGHTRAG_EMBEDDING_ENDPOINT = os.getenv('LITELLM_LIGHTRAG_EMBEDDING_ENDPOINT')
-LITELLM_LIGHTRAG_EMBEDDING_API_KEY = os.getenv('LITELLM_LIGHTRAG_EMBEDDING_API_KEY')
-LITELLM_LIGHTRAG_EMBEDDING_API_VERSION = os.getenv('LITELLM_LIGHTRAG_EMBEDDING_API_VERSION')
-LITELLM_LIGHTRAG_EMBEDDING_DEPLOYMENT = os.getenv('LITELLM_LIGHTRAG_EMBEDDING_DEPLOYMENT')
+EMBEDDING_ENDPOINT = os.getenv('LITELLM_LIGHTRAG_EMBEDDING_ENDPOINT')
+EMBEDDING_API_KEY = os.getenv('LITELLM_LIGHTRAG_EMBEDDING_API_KEY')
+EMBEDDING_API_VERSION = os.getenv('LITELLM_LIGHTRAG_EMBEDDING_API_VERSION')
+EMBEDDING_DEPLOYMENT = os.getenv('LITELLM_LIGHTRAG_EMBEDDING_DEPLOYMENT')
 
 HF_TOKEN = os.getenv('HF_TOKEN')
 
@@ -119,18 +112,18 @@ for i, text in enumerate(texts):
     documents.extend(chunks)
 
 
-critic_llm  = generator_llm = AzureChatOpenAI(
-    deployment_name=LITELLM_LIGHTRAG_NAME,
-    api_version=LITELLM_LIGHTRAG_API_VERSION,
-    api_key=LITELLM_LIGHTRAG_APIKEY,
-    azure_endpoint=LITELLM_LIGHTRAG_ENDPOINT,
+generator_llm = AzureChatOpenAI(
+    deployment_name=LLM_MODEL_NAME,
+    api_version=LLM_MODEL_API_VERSION,
+    api_key=LLM_MODEL_APIKEY,
+    azure_endpoint=LLM_MODEL_ENDPOINT,
     temperature=0.0
 )
 embeddings = AzureOpenAIEmbeddings(
-    model=LITELLM_LIGHTRAG_EMBEDDING_DEPLOYMENT,
-    api_version=LITELLM_LIGHTRAG_EMBEDDING_API_VERSION,
-    api_key=LITELLM_LIGHTRAG_EMBEDDING_API_KEY,
-    azure_endpoint=LITELLM_LIGHTRAG_EMBEDDING_ENDPOINT,
+    model=EMBEDDING_DEPLOYMENT,
+    api_version=EMBEDDING_API_VERSION,
+    api_key=EMBEDDING_API_KEY,
+    azure_endpoint=EMBEDDING_ENDPOINT,
 )
 
 
