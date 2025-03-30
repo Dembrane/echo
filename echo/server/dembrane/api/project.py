@@ -405,7 +405,7 @@ async def create_report(
             "content": report_content_response,
             "project_id": project_id,
             "language": language,
-            "status": "published",
+            "status": "archived",
         },
     )["data"]
 

@@ -522,6 +522,7 @@ type Project = {
   default_conversation_ask_for_participant_name?: boolean | null;
   default_conversation_description?: string | null;
   default_conversation_finish_text?: string | null;
+  is_project_notification_subscription_allowed?: boolean | null;
   default_conversation_title?: string | null;
   default_conversation_transcript_prompt?: string | null;
   default_conversation_tutorial_slug?: string | null;
@@ -609,6 +610,14 @@ type ProjectReport = {
   project_id?: string | Project | null;
   show_portal_link?: boolean | null;
   status: string;
+};
+
+type ProjectReportNotificationParticipants = {
+  id: number;
+  email?: string | null;
+  project_id?: string | number | null;
+  email_opt_in?: boolean;
+  email_opt_out_token?: string | null;
 };
 
 type ProjectReportMetric = {
@@ -726,6 +735,7 @@ type CustomDirectusTypes = {
   project_chat_message_conversation_1: ProjectChatMessageConversation1[];
   project_report: ProjectReport[];
   project_report_metric: ProjectReportMetric[];
+  project_report_notification_participants: ProjectReportNotificationParticipants[];
   project_tag: ProjectTag[];
   quote: Quote[];
   quote_aspect: QuoteAspect[];

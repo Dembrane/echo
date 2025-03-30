@@ -51,6 +51,7 @@ import {
   registerUser,
   registerUserVerify,
   updateItem,
+  updateItems,
 } from "@directus/sdk";
 import { ADMIN_BASE_URL } from "@/config";
 import { AxiosError } from "axios";
@@ -1489,8 +1490,11 @@ export const useUpdateProjectReportMutation = () => {
       payload: Partial<ProjectReport>;
     }) => directus.request(updateItem("project_report", reportId, payload)),
     onSuccess: (_, vars) => {
+      const projectId = vars.payload.project_id;
+      const projectIdValue = typeof projectId === 'object' && projectId !== null ? projectId.id : projectId;
+
       queryClient.invalidateQueries({
-        queryKey: ["projects", vars.payload.project_id, "report"],
+        queryKey: ["projects", projectIdValue, "report"],
       });
       queryClient.invalidateQueries({
         queryKey: ["reports"],
@@ -1762,5 +1766,194 @@ export const useConversationChunkContentUrl = (
     enabled,
     staleTime: 1000 * 60 * 30, // 30 minutes
     gcTime: 1000 * 60 * 60, // 1 hour
+  });
+};
+
+export const useCheckUnsubscribeStatus = (
+  token: string,
+  project_id: string,
+) => {
+  return useQuery({
+    queryKey: ["checkUnsubscribe", token, project_id],
+    queryFn: async () => {
+      if (!token || !project_id) {
+        throw new Error("Invalid or missing unsubscribe link.");
+      }
+
+      const submissions = await directus.request(
+        readItems("project_report_notification_participants", {
+          filter: {
+            _and: [
+              { project_id: { _eq: project_id } },
+              { email_opt_out_token: { _eq: token } },
+            ],
+          },
+          fields: ["id", "email_opt_in"],
+        }),
+      );
+
+      if (
+        !submissions ||
+        submissions.length === 0 ||
+        !submissions[0].email_opt_in
+      ) {
+        throw new Error("No matching subscription found.");
+      }
+
+      return true; // Eligible to unsubscribe
+    },
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useUpdateProjectContacts = () => {
+  return useMutation({
+    mutationFn: async ({
+      token,
+      project_id,
+      unsubscribe,
+    }: {
+      token: string;
+      project_id: string;
+      unsubscribe: boolean;
+    }) => {
+      // Fetch all relevant IDs first
+      const submissions = await directus.request(
+        readItems("project_report_notification_participants", {
+          filter: {
+            _and: [
+              { project_id: { _eq: project_id } },
+              { email_opt_out_token: { _eq: token } },
+            ],
+          },
+          fields: ["id"],
+        }),
+      );
+
+      const ids = submissions.map((item: { id: number }) => item.id);
+
+      if (ids.length === 0) {
+        throw new Error("No data found.");
+      }
+
+      // update these IDs
+      return directus.request(
+        updateItems("project_report_notification_participants", ids, {
+          email_opt_in: unsubscribe,
+        }),
+      );
+    },
+  });
+};
+
+export const useGetProjectParticipants = (project_id: string) => {
+  return useQuery({
+    queryKey: ["projectParticipants", project_id],
+    queryFn: async () => {
+      if (!project_id) return 0;
+
+      const submissions = await directus.request(
+        readItems("project_report_notification_participants", {
+          filter: {
+            _and: [
+              { project_id: { _eq: project_id } },
+              { email_opt_in: { _eq: true } },
+            ],
+          },
+          fields: ["id"],
+        }),
+      );
+
+      return submissions.length;
+    },
+    enabled: !!project_id, // Only run query if project_id exists
+  });
+};
+
+export const useCheckProjectNotificationParticipants = () => {
+  return useMutation({
+    mutationFn: async ({
+      email,
+      projectId,
+    }: {
+      email: string;
+      projectId: string;
+    }) => {
+      const existingEntries = await directus.request(
+        readItems("project_report_notification_participants", {
+          filter: {
+            email: { _eq: email },
+            project_id: { _eq: projectId },
+          },
+          limit: 1,
+        }),
+      );
+
+      if (existingEntries.length > 0) {
+        const existingEntry = existingEntries[0];
+        if (existingEntry.email_opt_in === false) {
+          return { status: "opted_out" };
+        }
+        return { status: "subscribed" };
+      }
+      return { status: "new" };
+    },
+  });
+};
+
+export const useSubmitNotification = () => {
+  return useMutation({
+    mutationFn: async ({
+      emails,
+      projectId,
+    }: {
+      emails: string[];
+      projectId: string;
+    }) => {
+      await Promise.all(
+        emails.map(async (email) => {
+          try {
+            // Check if the user already exists
+            const existingEntries = await directus.request(
+              readItems("project_report_notification_participants", {
+                filter: {
+                  email: { _eq: email },
+                  project_id: { _eq: projectId },
+                },
+                limit: 1,
+              }),
+            );
+            if (existingEntries?.length > 0) {
+              const existingEntry = existingEntries[0];
+              if (!existingEntry.email_opt_in) {
+                // Delete the old entry to regenerate the email_opt_out_token
+                await directus.request(
+                  deleteItem(
+                    "project_report_notification_participants",
+                    existingEntry.id,
+                  ),
+                );
+              }
+            }
+            // Create a new entry (this generates a new email_opt_out_token)
+            await directus.request(
+              createItem("project_report_notification_participants", {
+                email: email,
+                project_id: projectId,
+                email_opt_in: true,
+              }),
+            );
+          } catch (error) {
+            console.error(`Failed to process email: ${email}`, error);
+            throw error;
+          }
+        }),
+      );
+    },
+    retry: 2,
+    onError: (error) => {
+      console.error('Notification submission failed:', error);
+    },
   });
 };
