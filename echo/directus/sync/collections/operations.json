@@ -192,7 +192,7 @@
       ],
       "type": "wysiwyg",
       "subject": "Er is een rapport klaar met uw inbreng",
-      "body": "<h1>Dembrane</h1>\n<p>&nbsp;</p>\n<h2>Er is een rapport gemaakt waaraan u heeft bijgedragen.</h2>\n<p>&nbsp;</p>\n<p>Kijk hier eens : <strong><a href=\"http://localhost:5174/nl-NL/{{$trigger.project_id}}/report\" target=\"_blank\" rel=\"noopener\">Bekijk Rapport</a></strong></p>\n<p>&nbsp;</p>\n<p>Wij geloven in jou!</p>\n<p>Het Dembrane-team</p>\n<p>&nbsp;</p>\n<p>Als u deze meldingen niet langer wenst te ontvangen, klikt u op <strong><a href=\"http://localhost:5173/nl-NL/unsubscribe?token={{$trigger.token}}&amp;project_id={{$trigger.project_id}}\" target=\"_blank\" rel=\"noopener\">Afmelden</a></strong></p>"
+      "body": "<h1>Dembrane</h1>\n<p>&nbsp;</p>\n<h2>Er is een rapport gemaakt waaraan u heeft bijgedragen.</h2>\n<p>&nbsp;</p>\n<p>Kijk hier eens : <strong><a href=\"{{$trigger.PARTICIPANT_BASE_URL}}/nl-NL/{{$trigger.project_id}}/report\" target=\"_blank\" rel=\"noopener\">Bekijk Rapport</a></strong></p>\n<p>&nbsp;</p>\n<p>Wij geloven in jou!</p>\n<p>Het Dembrane-team</p>\n<p>&nbsp;</p>\n<p>Als u deze meldingen niet langer wenst te ontvangen, klikt u op <strong><a href=\"{{$trigger.ADMIN_BASE_URL}}/nl-NL/unsubscribe?token={{$trigger.token}}&amp;project_id={{$trigger.project_id}}\" target=\"_blank\" rel=\"noopener\">Afmelden</a></strong></p>"
     },
     "resolve": null,
     "reject": "84c38ea6-5d15-429f-8c24-9485d54ba7be",
