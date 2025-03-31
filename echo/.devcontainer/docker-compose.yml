@@ -74,6 +74,14 @@ services:
       - STORAGE_S3_SECRET=dembrane
       - STORAGE_S3_BUCKET=dembrane
       - STORAGE_S3_ENDPOINT=http://minio:9000
+      - EMAIL_TRANSPORT="smtp"
+      - EMAIL_FROM=""
+      - EMAIL_SMTP_HOST=""
+      - EMAIL_SMTP_PORT=587
+      - EMAIL_SMTP_USER=""
+      - EMAIL_SMTP_PASSWORD=""
+      - EMAIL_SMTP_SECURE=false
+      - EMAIL_SMTP_IGNORE_TLS=false
 
     depends_on:
       - postgres

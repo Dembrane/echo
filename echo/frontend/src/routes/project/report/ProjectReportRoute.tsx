@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import {
   useDoesProjectReportNeedUpdate,
+  useGetProjectParticipants,
   useLatestProjectReport,
   useProjectReportViews,
   useUpdateProjectReportMutation,
@@ -18,6 +19,7 @@ import {
   Text,
   Title,
   Tooltip,
+  Modal,
 } from "@mantine/core";
 import { AnimatePresence } from "motion/react";
 import { CreateReportForm } from "@/components/report/CreateReportForm";
@@ -35,6 +37,7 @@ import { ReportTimeline } from "@/components/report/ReportTimeline";
 import { useDisclosure } from "@mantine/hooks";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { UpdateReportModalButton } from "@/components/report/UpdateReportModalButton";
+import { useState } from "react";
 
 export const ReportLayout = ({
   children,
@@ -104,6 +107,20 @@ export const ProjectReportRoute = () => {
   const { data: views } = useProjectReportViews(data?.id ?? -1);
   const { mutate: updateProjectReport, isPending: isUpdatingReport } =
     useUpdateProjectReportMutation();
+  const [modalOpened, { open, close }] = useDisclosure(false);
+  const [publishStatus, setPublishStatus] = useState(false);
+  const { data: participantCount } = useGetProjectParticipants(projectId ?? "");
+  const handleConfirmPublish = () => {
+    if (!data?.id) return;
+    updateProjectReport({
+      reportId: data.id,
+      payload: {
+        status: publishStatus ? "published" : "archived",
+        project_id: { id: data.project_id } as Project,
+      },
+    });
+    close();
+  };
 
   const contributionLink = `${PARTICIPANT_BASE_URL}/${language}/${projectId}/start`;
   const getSharingLink = (data: ProjectReport) =>
@@ -213,14 +230,33 @@ export const ProjectReportRoute = () => {
           <Switch
             label={data.status === "published" ? t`Published` : t`Publish`}
             checked={data.status === "published"}
+            size={data.status === "published" ? "md" : "sm"}
             onChange={(e) => {
-              updateProjectReport({
-                reportId: data.id,
-                payload: {
-                  status: e.target.checked ? "published" : "archived",
-                  project_id: data.project_id,
-                },
-              });
+              const isPublishing = e.target.checked;
+              const participantsToNotify = participantCount ?? 0;
+
+              if (isPublishing) {
+                if (participantsToNotify > 0) {
+                  setPublishStatus(true);
+                  open();
+                } else {
+                  updateProjectReport({
+                    reportId: data.id,
+                    payload: {
+                      status: "published",
+                      project_id: { id: data.project_id } as Project,
+                    },
+                  });
+                }
+              } else {
+                updateProjectReport({
+                  reportId: data.id,
+                  payload: {
+                    status: "archived",
+                    project_id: { id: data.project_id } as Project,
+                  },
+                });
+              }
             }}
             disabled={isUpdatingReport}
           />
@@ -242,7 +278,7 @@ export const ProjectReportRoute = () => {
                   reportId: data.id,
                   payload: {
                     show_portal_link: e.target.checked ? true : false,
-                    project_id: data.project_id,
+                    project_id: { id: data.project_id } as Project,
                   },
                 });
               }}
@@ -272,6 +308,30 @@ export const ProjectReportRoute = () => {
             readingNow: views?.recent ?? 0,
           }}
         />
+        <Modal
+          opened={modalOpened}
+          onClose={close}
+          title={t`Confirm Publishing`}
+        >
+          <Text size="sm">
+            <Trans>
+              An email Notification will be sent to{" "}
+              {participantCount !== undefined
+                ? participantCount
+                : t`loading...`}{" "}
+              participant{participantCount == 1 ? "" : "s"}. Do you want to
+              proceed?
+            </Trans>
+          </Text>
+          <Group mt="md" justify="end">
+            <Button onClick={close} variant="outline">
+              <Trans>Cancel</Trans>
+            </Button>
+            <Button onClick={handleConfirmPublish} color="blue">
+              <Trans>Proceed</Trans>
+            </Button>
+          </Group>
+        </Modal>
       </Stack>
     </ReportLayout>
   );

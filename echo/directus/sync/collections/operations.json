@@ -1,1 +1,237 @@
-[]
+[
+  {
+    "name": "check IF project report is published",
+    "key": "check_if_project_report_is_published",
+    "type": "condition",
+    "position_x": 19,
+    "position_y": 1,
+    "options": {
+      "filter": {
+        "$trigger": {
+          "payload": {
+            "status": {
+              "_eq": "published"
+            }
+          }
+        }
+      }
+    },
+    "resolve": "107ebc18-7d2d-4299-9d98-b7d1e7322b7c",
+    "reject": "84852456-3f3a-4906-be94-8b750159883b",
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "239c6fea-242d-4b7d-b854-c99d2fe43cf3"
+  },
+  {
+    "name": "Check Language",
+    "key": "check_language",
+    "type": "condition",
+    "position_x": 20,
+    "position_y": 1,
+    "options": {
+      "filter": {
+        "$trigger": {
+          "language": {
+            "_eq": "en"
+          }
+        }
+      }
+    },
+    "resolve": "3dbf2ea1-17f8-4bde-aa89-43278fe9a00f",
+    "reject": "eaeb2c39-32e0-428d-ad03-ff0e6052adcc",
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "5bea9e07-e6f0-41c6-821d-b426dec3427c"
+  },
+  {
+    "name": "Check Report Language",
+    "key": "check_report_language",
+    "type": "item-read",
+    "position_x": 55,
+    "position_y": 1,
+    "options": {
+      "query": {
+        "filter": {
+          "project_id": {
+            "id": {
+              "_eq": "{{$trigger.payload.project_id.id}}"
+            }
+          }
+        },
+        "fields": [
+          "language"
+        ]
+      },
+      "collection": "project_report"
+    },
+    "resolve": "efb3982e-5703-4c07-8982-a6e1b5218e4a",
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "d154ee34-0931-43f3-aaca-9168f88fa04b"
+  },
+  {
+    "name": "Dutch",
+    "key": "dutch",
+    "type": "condition",
+    "position_x": 20,
+    "position_y": 20,
+    "options": {
+      "filter": {
+        "$trigger": {
+          "language": {
+            "_eq": "nl"
+          }
+        }
+      }
+    },
+    "resolve": "34fb6ee5-2813-484a-a1cc-f97de097509b",
+    "reject": "8d8d787a-dbc4-44f9-9ab4-28e3f3d5f31c",
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "eaeb2c39-32e0-428d-ad03-ff0e6052adcc"
+  },
+  {
+    "name": "Email Send Operation Failed",
+    "key": "email_send_operation_failed",
+    "type": "log",
+    "position_x": 58,
+    "position_y": 1,
+    "options": {
+      "message": "An email could not be sent due to some error: {{$last}}"
+    },
+    "resolve": null,
+    "reject": null,
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "920bd181-b2a2-4f0d-94dc-3b1a08c3f4ef"
+  },
+  {
+    "name": "Email Send Operation Failed Dutch",
+    "key": "email_send_operation_failed_dutch",
+    "type": "log",
+    "position_x": 58,
+    "position_y": 20,
+    "options": {
+      "message": "An email could not be sent due to some error: {{$last}}"
+    },
+    "resolve": null,
+    "reject": null,
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "84c38ea6-5d15-429f-8c24-9485d54ba7be"
+  },
+  {
+    "name": "failed",
+    "key": "failed",
+    "type": "log",
+    "position_x": 20,
+    "position_y": 39,
+    "options": {
+      "message": "language detection failed"
+    },
+    "resolve": null,
+    "reject": null,
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "8d8d787a-dbc4-44f9-9ab4-28e3f3d5f31c"
+  },
+  {
+    "name": "Filter Emails",
+    "key": "filter_emails",
+    "type": "exec",
+    "position_x": 73,
+    "position_y": 1,
+    "options": {
+      "code": "module.exports = async function(data) {\n\n    const submissions = data.get_all_participants;\n    \n    // Filter submissions to only include those where email_opt_in is true\n    const filteredSubmissions = submissions.filter(sub => sub.email_opt_in === true);\n\n    // Create an array with email, project_id and an email_opt_out token for each submission\n    const result = filteredSubmissions.map(sub => ({\n        email: sub.email,\n        project_id: sub.project_id || '',\n        token: sub.email_opt_out_token,\n        language: data.check_report_language[0].language || 'empty',\n        ADMIN_BASE_URL: {{$env.ADMIN_BASE_URL}} || \"http://localhost:5173\",\n        PARTICIPANT_BASE_URL: {{$env.PARTICIPANT_BASE_URL}} || \"http://localhost:5174\",        \n    }));\n    \n    return result;\n};"
+    },
+    "resolve": "e101f00d-2fb8-4f40-9e0e-4d24da5bb1e9",
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "efb3982e-5703-4c07-8982-a6e1b5218e4a"
+  },
+  {
+    "name": "Get All Participants",
+    "key": "get_all_participants",
+    "type": "item-read",
+    "position_x": 37,
+    "position_y": 1,
+    "options": {
+      "query": {
+        "filter": {
+          "project_id": {
+            "id": {
+              "_eq": "{{$trigger.payload.project_id}}"
+            }
+          }
+        }
+      },
+      "collection": "project_report_notification_participants"
+    },
+    "resolve": "d154ee34-0931-43f3-aaca-9168f88fa04b",
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "107ebc18-7d2d-4299-9d98-b7d1e7322b7c"
+  },
+  {
+    "name": "Report Not Published",
+    "key": "report_not_published",
+    "type": "log",
+    "position_x": 19,
+    "position_y": 19,
+    "options": {
+      "message": "The report is not yet published"
+    },
+    "resolve": null,
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "84852456-3f3a-4906-be94-8b750159883b"
+  },
+  {
+    "name": "Send Email Dutch",
+    "key": "send_email_dutch",
+    "type": "mail",
+    "position_x": 39,
+    "position_y": 20,
+    "options": {
+      "to": [
+        "{{$trigger.email}}"
+      ],
+      "type": "wysiwyg",
+      "subject": "Er is een rapport klaar met uw inbreng",
+      "body": "<h1>Dembrane</h1>\n<p>&nbsp;</p>\n<h2>Er is een rapport gemaakt waaraan u heeft bijgedragen.</h2>\n<p>&nbsp;</p>\n<p>Kijk hier eens : <strong><a href=\"{{$trigger.PARTICIPANT_BASE_URL}}/nl-NL/{{$trigger.project_id}}/report\" target=\"_blank\" rel=\"noopener\">Bekijk Rapport</a></strong></p>\n<p>&nbsp;</p>\n<p>Wij geloven in jou!</p>\n<p>Het Dembrane-team</p>\n<p>&nbsp;</p>\n<p>Als u deze meldingen niet langer wenst te ontvangen, klikt u op <strong><a href=\"{{$trigger.ADMIN_BASE_URL}}/nl-NL/unsubscribe?token={{$trigger.token}}&amp;project_id={{$trigger.project_id}}\" target=\"_blank\" rel=\"noopener\">Afmelden</a></strong></p>"
+    },
+    "resolve": null,
+    "reject": "84c38ea6-5d15-429f-8c24-9485d54ba7be",
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "34fb6ee5-2813-484a-a1cc-f97de097509b"
+  },
+  {
+    "name": "Send Email English",
+    "key": "send_email_english",
+    "type": "mail",
+    "position_x": 39,
+    "position_y": 1,
+    "options": {
+      "to": [
+        "{{$trigger.email}}"
+      ],
+      "subject": "A Report Featuring Your Input is Ready",
+      "type": "wysiwyg",
+      "body": "<h1>Dembrane</h1>\n<p>&nbsp;</p>\n<h3>A report has been created that you have contributed to.</h3>\n<p>&nbsp;</p>\n<p>Take a look here: <strong><a href=\"{{$trigger.PARTICIPANT_BASE_URL}}/en-US/{{$trigger.project_id}}/report\" target=\"_blank\" rel=\"noopener\">View Report</a></strong></p>\n<p>&nbsp;</p>\n<p>We believe in you!</p>\n<p>The Dembrane Team</p>\n<p>&nbsp;</p>\n<p>If you no longer wish to receive these notifications please click on <strong><a href=\"{{$trigger.ADMIN_BASE_URL}}/en-US/unsubscribe?token={{$trigger.token}}&amp;project_id={{$trigger.project_id}}\" target=\"_blank\" rel=\"noopener\">Unsubscribe&nbsp;</a></strong></p>"
+    },
+    "resolve": null,
+    "reject": "920bd181-b2a2-4f0d-94dc-3b1a08c3f4ef",
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "3dbf2ea1-17f8-4bde-aa89-43278fe9a00f"
+  },
+  {
+    "name": "Trigger Email Flow",
+    "key": "trigger_email_flow",
+    "type": "trigger",
+    "position_x": 91,
+    "position_y": 1,
+    "options": {
+      "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+      "iterationMode": "serial",
+      "payload": "{{filter_emails}}"
+    },
+    "resolve": null,
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "e101f00d-2fb8-4f40-9e0e-4d24da5bb1e9"
+  }
+]

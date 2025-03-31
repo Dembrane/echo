@@ -19,15 +19,7 @@
   {
     "collection": "conversation",
     "action": "read",
-    "permissions": {
-      "_and": [
-        {
-          "id": {
-            "_nnull": true
-          }
-        }
-      ]
-    },
+    "permissions": null,
     "validation": null,
     "presets": null,
     "fields": [
@@ -36,13 +28,8 @@
       "chunks",
       "replies",
       "participant_name",
-      "participant_email",
-      "tags",
-      "participant_user_agent",
       "title",
       "context",
-      "created_at",
-      "updated_at",
       "description"
     ],
     "policy": "_sync_default_public_policy",
@@ -171,7 +158,8 @@
       "tags",
       "conversation_ask_for_participant_name_label",
       "is_get_reply_enabled",
-      "get_reply_prompt"
+      "get_reply_prompt",
+      "is_project_notification_subscription_allowed"
     ],
     "policy": "_sync_default_public_policy",
     "_syncId": "04c17a5d-a8d8-4b2f-8efb-a0744f6c27c4"
@@ -3107,6 +3095,160 @@
     ],
     "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
     "_syncId": "a9c27e30-9182-4dd3-94aa-1906b5dde852"
+  },
+  {
+    "collection": "project_report_notification_participants",
+    "action": "create",
+    "permissions": null,
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "date_submitted",
+      "id",
+      "date_updated",
+      "email",
+      "project_id",
+      "email_opt_out_token",
+      "email_opt_in"
+    ],
+    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
+    "_syncId": "d3f06dfe-c6d8-41a5-81ce-6a49ccc52bbf"
+  },
+  {
+    "collection": "project_report_notification_participants",
+    "action": "read",
+    "permissions": null,
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "id",
+      "date_submitted",
+      "email",
+      "project_id",
+      "email_opt_in",
+      "email_opt_out_token",
+      "date_updated"
+    ],
+    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
+    "_syncId": "569961b6-9d48-4952-adf2-26fc406fff43"
+  },
+  {
+    "collection": "project_report_notification_participants",
+    "action": "update",
+    "permissions": {
+      "_and": [
+        {
+          "project_id": {
+            "directus_user_id": {
+              "_eq": "$CURRENT_USER"
+            }
+          }
+        }
+      ]
+    },
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "id",
+      "date_submitted",
+      "email",
+      "project_id",
+      "email_opt_in",
+      "email_opt_out_token",
+      "date_updated"
+    ],
+    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
+    "_syncId": "a34f12f8-9444-4f66-a2ab-7dfe80305555"
+  },
+  {
+    "collection": "project_report",
+    "action": "create",
+    "permissions": null,
+    "validation": {
+      "_and": [
+        {
+          "project_id": {
+            "directus_user_id": {
+              "_eq": "$CURRENT_USER"
+            }
+          }
+        }
+      ]
+    },
+    "presets": null,
+    "fields": [
+      "date_created",
+      "id",
+      "date_updated",
+      "show_portal_link",
+      "status",
+      "error_code",
+      "project_id",
+      "content",
+      "language"
+    ],
+    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
+    "_syncId": "e358425c-f878-4469-abf9-d7ebd3e00f79"
+  },
+  {
+    "collection": "project_report",
+    "action": "read",
+    "permissions": {
+      "_and": [
+        {
+          "project_id": {
+            "directus_user_id": {
+              "_eq": "$CURRENT_USER"
+            }
+          }
+        }
+      ]
+    },
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "date_created",
+      "id",
+      "date_updated",
+      "show_portal_link",
+      "status",
+      "error_code",
+      "project_id",
+      "content",
+      "language"
+    ],
+    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
+    "_syncId": "94f20b2a-d401-444a-8afd-d42331671e53"
+  },
+  {
+    "collection": "project_report",
+    "action": "update",
+    "permissions": {
+      "_and": [
+        {
+          "project_id": {
+            "directus_user_id": {
+              "_eq": "$CURRENT_USER"
+            }
+          }
+        }
+      ]
+    },
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "date_created",
+      "date_updated",
+      "id",
+      "status",
+      "error_code",
+      "project_id",
+      "show_portal_link",
+      "content",
+      "language"
+    ],
+    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
+    "_syncId": "3c25ff65-247a-472f-999c-d1d486268d44"
   },
   {
     "collection": "project_tag",
