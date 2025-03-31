@@ -757,7 +757,7 @@ def task_finish_conversation_hook(self, conversation_id: str):
                 f"transcript is empty for conversation: {conversation_id}. so not generating summary"
             )
         else:
-            summary = generate_summary(transcript_str, None, language if language else "nl")
+            summary = generate_summary(transcript_str, language if language else "nl")
 
             directus.update_item(
                 collection_name="conversation",
