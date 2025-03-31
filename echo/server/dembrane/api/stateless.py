@@ -24,7 +24,7 @@ def generate_summary(transcript: str, language: str | None) -> str:
     # Prepare the prompt template
     prompt = render_prompt(
         "generate_conversation_summary",
-        language,
+        language if language else "en",
         {"quote_text_joined": transcript},
     )
 
