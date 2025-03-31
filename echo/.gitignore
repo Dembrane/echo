@@ -13,6 +13,8 @@ directus/.env
 *.sql
 node_modules
 .next
+server/wandb*
+
 
 __blobstorage__
 __queuestorage__echo/server/dembrane/workspace_script.py
