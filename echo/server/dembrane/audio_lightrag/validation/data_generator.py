@@ -1,29 +1,24 @@
-import os
 import logging
 
 from tqdm import tqdm
-from dotenv import load_dotenv
 from datasets import Dataset, DatasetDict, load_dataset
 from ragas.testset import TestsetGenerator
 from huggingface_hub import login
+from validation_config import (
+    HF_TOKEN,
+    VALIDATION_DATASET_REPO,
+    DATA_GENERATOR_LLM_MODEL_NAME,
+    DATA_GENERATOR_LLM_MODEL_APIKEY,
+    DATA_GENERATOR_EMBEDDING_API_KEY,
+    DATA_GENERATOR_EMBEDDING_ENDPOINT,
+    DATA_GENERATOR_LLM_MODEL_ENDPOINT,
+    DATA_GENERATOR_EMBEDDING_DEPLOYMENT,
+    DATA_GENERATOR_EMBEDDING_API_VERSION,
+    DATA_GENERATOR_LLM_MODEL_API_VERSION,
+)
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai.embeddings import AzureOpenAIEmbeddings
 from langchain_openai.chat_models import AzureChatOpenAI
-
-load_dotenv()
-# read from env filter
-
-LLM_MODEL_NAME = os.getenv('LITELLM_LIGHTRAG_NAME')
-LLM_MODEL_ENDPOINT = os.getenv('LITELLM_LIGHTRAG_ENDPOINT')
-LLM_MODEL_APIKEY = os.getenv('LITELLM_LIGHTRAG_APIKEY')
-LLM_MODEL_API_VERSION = os.getenv('LITELLM_LIGHTRAG_API_VERSION')
-
-EMBEDDING_ENDPOINT = os.getenv('LITELLM_LIGHTRAG_EMBEDDING_ENDPOINT')
-EMBEDDING_API_KEY = os.getenv('LITELLM_LIGHTRAG_EMBEDDING_API_KEY')
-EMBEDDING_API_VERSION = os.getenv('LITELLM_LIGHTRAG_EMBEDDING_API_VERSION')
-EMBEDDING_DEPLOYMENT = os.getenv('LITELLM_LIGHTRAG_EMBEDDING_DEPLOYMENT')
-
-HF_TOKEN = os.getenv('HF_TOKEN')
 
 ds = load_dataset("espnet/floras",'monolingual', streaming=True)
 train_dataset = ds['train']
@@ -43,7 +38,7 @@ train_dataset = ds['dev']
 
 for example in tqdm(train_dataset): 
     try:
-        logger.info(f"***Processing file {example['id']}")
+        logger.info(f"Processing file {example['id']}")
         if float(example['score']) <= 1:
             # Get array shape or length before loading into memory
             array_length = len(example['audio']['array'])     
@@ -113,17 +108,17 @@ for i, text in enumerate(texts):
 
 
 generator_llm = AzureChatOpenAI(
-    deployment_name=LLM_MODEL_NAME,
-    api_version=LLM_MODEL_API_VERSION,
-    api_key=LLM_MODEL_APIKEY,
-    azure_endpoint=LLM_MODEL_ENDPOINT,
+    name=DATA_GENERATOR_LLM_MODEL_NAME,
+    api_version=str(DATA_GENERATOR_LLM_MODEL_API_VERSION),
+    api_key=str(DATA_GENERATOR_LLM_MODEL_APIKEY), # type: ignore
+    azure_endpoint=str(DATA_GENERATOR_LLM_MODEL_ENDPOINT),
     temperature=0.0
 )
 embeddings = AzureOpenAIEmbeddings(
-    model=EMBEDDING_DEPLOYMENT,
-    api_version=EMBEDDING_API_VERSION,
-    api_key=EMBEDDING_API_KEY,
-    azure_endpoint=EMBEDDING_ENDPOINT,
+    model=str(DATA_GENERATOR_EMBEDDING_DEPLOYMENT),
+    api_version=str(DATA_GENERATOR_EMBEDDING_API_VERSION),
+    api_key=str(DATA_GENERATOR_EMBEDDING_API_KEY), # type: ignore
+    azure_endpoint=str(DATA_GENERATOR_EMBEDDING_ENDPOINT),
 )
 
 
@@ -145,4 +140,4 @@ dataset_dict = DatasetDict({
 })
 
 login(token=HF_TOKEN)
-dataset_dict.push_to_hub("Roy2358/echo_val_dataset")
+dataset_dict.push_to_hub(VALIDATION_DATASET_REPO)
