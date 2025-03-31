@@ -17,7 +17,7 @@ export const scrollToBottom = (
 
 export const checkPermissionError = async () => {
   try {
-    // @ts-expect-error microphone is not available?
+    // @ts-ignore
     const result = await navigator.permissions.query({ name: "microphone" });
     if (result.state === "denied") {
       return "denied" as const;

@@ -11,14 +11,11 @@ export const DIRECTUS_PUBLIC_URL =
 
 export const DIRECTUS_CONTENT_PUBLIC_URL =
   import.meta.env.VITE_DIRECTUS_CONTENT_PUBLIC_URL ??
-  "https://admin-dembrane.azurewebsites.net";
+  "https://dembrane.directus.app";
 
 export const DISABLE_SENTRY = import.meta.env.VITE_DISABLE_SENTRY === "1";
 
 export const BUILD_VERSION = import.meta.env.VITE_BUILD_VERSION ?? "dev";
-
-export const ENABLE_AUDIO_DOWNLOAD =
-  import.meta.env.VITE_ENABLE_AUDIO_DOWNLOAD === "1";
 
 export const SUPPORTED_LANGUAGES = [
   "en-US",
