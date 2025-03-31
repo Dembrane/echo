@@ -1,31 +1,35 @@
 {
-  "collection": "quote",
-  "field": "embedding",
-  "type": "text",
+  "collection": "project_report_notification_participants",
+  "field": "date_submitted",
+  "type": "timestamp",
   "meta": {
-    "collection": "quote",
+    "collection": "project_report_notification_participants",
     "conditions": null,
-    "display": null,
-    "display_options": null,
-    "field": "embedding",
+    "display": "datetime",
+    "display_options": {
+      "relative": true
+    },
+    "field": "date_submitted",
     "group": null,
-    "hidden": false,
-    "interface": "input-multiline",
+    "hidden": true,
+    "interface": "datetime",
     "note": null,
     "options": null,
-    "readonly": false,
+    "readonly": true,
     "required": false,
-    "sort": 14,
-    "special": null,
+    "sort": 3,
+    "special": [
+      "date-created"
+    ],
     "translations": null,
     "validation": null,
     "validation_message": null,
-    "width": "full"
+    "width": "half"
   },
   "schema": {
-    "name": "embedding",
-    "table": "quote",
-    "data_type": "text",
+    "name": "date_submitted",
+    "table": "project_report_notification_participants",
+    "data_type": "timestamp with time zone",
     "default_value": null,
     "max_length": null,
     "numeric_precision": null,
