@@ -117,7 +117,9 @@ export const Header = () => {
             <Group align="center">
               <Logo
                 hideTitle={false}
-                textAfterLogo={<span className="text-xl font-light">ECHO</span>}
+                textAfterLogo={
+                  <span className="text-xl font-normal">ECHO</span>
+                }
               />
             </Group>
           </I18nLink>
