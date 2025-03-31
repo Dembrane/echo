@@ -648,24 +648,32 @@ export const useUpdateConversationTagsMutation = () => {
       conversationId: string;
       projectTagIdList: string[];
     }) => {
-      const validTags = await directus.request<ProjectTag[]>(
-        readItems("project_tag", {
-          filter: {
-            id: {
-              _in: projectTagIdList,
+      let validTagsIds: string[] = [];
+      try {
+        const validTags = await directus.request<ProjectTag[]>(
+          readItems("project_tag", {
+            filter: {
+              id: {
+                _in: projectTagIdList,
+              },
+              project_id: {
+                _eq: projectId,
+              },
             },
-            project_id: {
-              _eq: projectId,
-            },
-          },
-          fields: ["*"],
-        }),
-      );
+            fields: ["*"],
+          }),
+        );
+
+        validTagsIds = validTags.map((tag) => tag.id);
+      } catch (error) {
+        validTagsIds = [];
+        console.error(error);
+      }
 
       return directus.request<Conversation>(
         updateItem("conversation", conversationId, {
-          tags: validTags.map((tag) => ({
-            project_tag_id: tag.id,
+          tags: validTagsIds.map((tagId) => ({
+            project_tag_id: tagId,
             conversation_id: conversationId,
           })),
         }),

@@ -124,10 +124,10 @@ export const MoveConversationButton = ({
         rightSection={<IconArrowsExchange size={16} />}
       >
         <Group>
-          <Trans>Move to Another Project</Trans>
           <Badge>
             <Trans>Experimental</Trans>
           </Badge>
+          <Trans>Move to Another Project</Trans>
         </Group>
       </Button>
 
