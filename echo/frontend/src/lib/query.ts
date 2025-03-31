@@ -1807,54 +1807,6 @@ export const useCheckUnsubscribeStatus = (
   });
 };
 
-export const useUpdateProjectContacts = () => {
-  return useMutation({
-    mutationFn: async ({
-      token,
-      project_id,
-      unsubscribe,
-    }: {
-      token: string;
-      project_id: string;
-      unsubscribe: boolean;
-    }) => {
-      try {
-        // Fetch all relevant IDs first
-        const submissions = await directus.request(
-          readItems("project_report_notification_participants", {
-            filter: {
-              _and: [
-                { project_id: { _eq: project_id } },
-                { email_opt_out_token: { _eq: token } },
-              ],
-            },
-            fields: ["id"],
-          }),
-        );
-
-        const ids = submissions.map((item: { id: number }) => item.id);
-
-        if (ids.length === 0) {
-          throw new Error("No data found.");
-        }
-
-        // update these IDs
-        await directus.request(
-          updateItems("project_report_notification_participants", ids, {
-            email_opt_in: unsubscribe,
-          }),
-        );
-      } catch (error) {
-        console.error("Unsubscribe failed", error);
-        throw new Error("Failed to update subscription status.");
-      }
-    },
-    onError: () => {
-      console.error("Mutation error: Unsubscribe failed.");
-    },
-  });
-};
-
 export const useGetProjectParticipants = (project_id: string) => {
   return useQuery({
     queryKey: ["projectParticipants", project_id],

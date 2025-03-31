@@ -1,14 +1,13 @@
 import { useSearchParams } from "react-router-dom";
-import {
-  useUpdateProjectContacts,
-  useCheckUnsubscribeStatus,
-} from "@/lib/query";
+import { useCheckUnsubscribeStatus } from "@/lib/query";
 import { Button, Stack, Title, Text, Loader, Group } from "@mantine/core";
 import { useState } from "react";
 import { Logo } from "@/components/common/Logo";
 import { IconCheck } from "@tabler/icons-react";
 import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
+import { useMutation } from "@tanstack/react-query";
+import { unsubscribeParticipant } from "@/lib/api";
 
 export const ProjectUnsubscribe = () => {
   const [searchParams] = useSearchParams();
@@ -20,12 +19,25 @@ export const ProjectUnsubscribe = () => {
     isLoading,
     error,
   } = useCheckUnsubscribeStatus(token, project_id);
-  const { mutate, isPending } = useUpdateProjectContacts();
+
   const [success, setSuccess] = useState(false);
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: ({
+      project_id,
+      token,
+      email_opt_in,
+    }: {
+      project_id: string;
+      token: string;
+      email_opt_in: boolean;
+    }) => unsubscribeParticipant(project_id, token, email_opt_in),
+    onSuccess: () => setSuccess(true),
+  });
 
   const handleUnsubscribe = () => {
     mutate(
-      { token, project_id, unsubscribe: false },
+      { token, project_id, email_opt_in: false },
       {
         onSuccess: () => setSuccess(true),
       },
