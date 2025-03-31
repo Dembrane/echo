@@ -79,8 +79,12 @@ export const ProjectUnsubscribe = () => {
           )}
 
           {!isLoading && !error && !success && canUnsubscribe && (
-            <Button onClick={handleUnsubscribe} disabled={isPending}>
-              {isPending ? <Loader size="sm" /> : t`Unsubscribe`}
+            <Button
+              onClick={handleUnsubscribe}
+              disabled={isPending}
+              loading={isPending}
+            >
+              <Trans>Unsubscribe</Trans>
             </Button>
           )}
         </Stack>
