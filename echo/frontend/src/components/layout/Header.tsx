@@ -136,8 +136,8 @@ export const Header = () => {
               <Stack gap="md" className="px-2">
                 <User
                   // image={typeof user.avatar === "string" ? user.avatar : ""}
-                  name={t`Hi, ${user.first_name}`}
-                  email={user.email || ""}
+                  name={t`Hi, ${user.first_name ?? "User"}`}
+                  email={user.email ?? ""}
                 />
 
                 <Menu.Divider />
