@@ -17,7 +17,7 @@ export const scrollToBottom = (
 
 export const checkPermissionError = async () => {
   try {
-    // @ts-expect-error microphone is not available?
+    // @ts-ignore
     const result = await navigator.permissions.query({ name: "microphone" });
     if (result.state === "denied") {
       return "denied" as const;
@@ -32,4 +32,12 @@ export const checkPermissionError = async () => {
     console.error("Error checking microphone permissions", error);
     return "error" as const;
   }
+};
+
+export const sanitizeImageUrl = (url: string) => {
+  // interim solution to fix image urls for local development
+  if (url.startsWith("http://minio:9000")) {
+    return url.replace("http://minio:9000", "http://localhost:9000");
+  }
+  return url;
 };

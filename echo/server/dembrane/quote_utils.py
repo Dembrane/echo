@@ -803,9 +803,17 @@ def generate_aspect_image(db: Session, aspect_id: str) -> AspectModel:
         try:
             if response:
                 image_url = response.data[0].url
+                try:
+                    image_extension = str(image_url).split(".")[-1].split("?")[0]
+                except Exception as e:
+                    logger.error(f"Error getting image extension: {e}")
+                    image_extension = "png"
+
                 if image_url:
                     logger.debug("saving the image and getting the public url")
-                    image_url = save_to_s3_from_url(image_url)
+                    image_url = save_to_s3_from_url(
+                        image_url, "images/" + generate_uuid() + "." + image_extension, public=True
+                    )
             else:
                 image_url = None
         except Exception as e:

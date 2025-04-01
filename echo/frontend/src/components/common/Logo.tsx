@@ -2,20 +2,21 @@ import { Group, GroupProps, Title } from "@mantine/core";
 import dembranelogo from "@/assets/dembrane-logo-hq.png";
 import aiconlLogo from "@/assets/aiconl-logo.png";
 import aiconlLogoHQ from "@/assets/aiconl-logo-hq.png";
+import { cn } from "@/lib/utils";
 
 type LogoProps = {
   hideLogo?: boolean;
   hideTitle?: boolean;
-  otherText?: string;
+  textAfterLogo?: string | React.ReactNode;
 } & GroupProps;
 
 export const LogoDembrane = ({
   hideLogo,
   hideTitle,
-  otherText,
+  textAfterLogo,
   ...props
 }: LogoProps) => (
-  <Group gap="sm" h="30px" {...props}>
+  <Group gap="sm" h="30px" align="center" {...props}>
     {!hideLogo && (
       <img
         src={dembranelogo}
@@ -25,7 +26,10 @@ export const LogoDembrane = ({
     )}
     {!hideTitle && (
       <Title order={1} className="text-xl">
-        {otherText ? <div className="">{otherText}</div> : "Dembrane"}
+        <span className={cn("font-medium", textAfterLogo && "mr-1")}>
+          Dembrane
+        </span>
+        {textAfterLogo && <span>{textAfterLogo}</span>}
       </Title>
     )}
   </Group>

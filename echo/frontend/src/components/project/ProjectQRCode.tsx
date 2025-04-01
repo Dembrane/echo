@@ -92,7 +92,7 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
                 variant="outline"
                 onClick={async () => {
                   await navigator.share({
-                    title: t`Join ${project?.default_conversation_title} on Dembrane`,
+                    title: t`Join ${project?.default_conversation_title ?? "the conversation"} on Dembrane`,
                     url: link,
                   });
                 }}

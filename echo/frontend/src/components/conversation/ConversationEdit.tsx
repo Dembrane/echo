@@ -129,7 +129,7 @@ export const ConversationEdit = ({
             }
             {...register("participant_name")}
           />
-          {/* 
+
           {projectTags && projectTags.length > 0 ? (
             <Controller
               name="tagIdList"
@@ -137,13 +137,11 @@ export const ConversationEdit = ({
               render={({ field }) => (
                 <MultiSelect
                   {...field}
+                  placeholder={t`Select tags`}
                   label={
                     <FormLabel
                       label={t`Tags`}
-                      isDirty={
-                        formState.dirtyFields.tagIdList &&
-                        formState.dirtyFields.tagIdList.length > 0
-                      }
+                      isDirty={!!formState.dirtyFields.tagIdList}
                     />
                   }
                   data={projectTags
@@ -173,7 +171,7 @@ export const ConversationEdit = ({
                 <Trans>No tags found</Trans>
               </Text>
             </>
-          )} */}
+          )}
         </Stack>
       </form>
     </Stack>

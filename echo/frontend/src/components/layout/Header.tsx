@@ -115,8 +115,12 @@ export const Header = () => {
         <Group gap="md">
           <I18nLink to="/projects">
             <Group align="center">
-              <Logo hideTitle={false} />
-              <Text className="text-md">ECHO</Text>
+              <Logo
+                hideTitle={false}
+                textAfterLogo={
+                  <span className="text-xl font-normal">ECHO</span>
+                }
+              />
             </Group>
           </I18nLink>
         </Group>
@@ -132,8 +136,8 @@ export const Header = () => {
               <Stack gap="md" className="px-2">
                 <User
                   // image={typeof user.avatar === "string" ? user.avatar : ""}
-                  name={t`Hi, ${user.first_name}`}
-                  email={user.email || ""}
+                  name={t`Hi, ${user.first_name ?? "User"}`}
+                  email={user.email ?? ""}
                 />
 
                 <Menu.Divider />

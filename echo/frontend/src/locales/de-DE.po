@@ -178,7 +178,7 @@ msgstr ""
 "\n"
 "Hinweis: Wenn die Ähnlichkeiten/Unterschiede zu oberflächlich sind, lassen Sie es mich wissen, wir brauchen komplexeres Material zu analysieren."
 
-#: src/components/conversation/ConversationDangerZone.tsx:24
+#: src/components/conversation/ConversationDangerZone.tsx:23
 msgid "Are you sure you want to delete this conversation? This action cannot be undone."
 msgstr "Sind Sie sicher, dass Sie dieses Gespräch löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
 
@@ -202,6 +202,10 @@ msgstr "Sind Sie sicher, dass Sie fertig sind?"
 #: src/routes/project/library/ProjectLibrary.tsx:132
 msgid "Are you sure you want to generate the library? This will take a while and overwrite your current views and insights."
 msgstr "Sind Sie sicher, dass Sie die Bibliothek generieren möchten? Dies wird eine Weile dauern und Ihre aktuellen Ansichten und Erkenntnisse überschreiben."
+
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:81
+msgid "Are you sure you want to regenerate the summary? You will lose the current summary."
+msgstr "Sind Sie sicher, dass Sie das Zusammenfassung erneut generieren möchten? Sie werden die aktuelle Zusammenfassung verlieren."
 
 #: src/components/project/ProjectSidebar.tsx:104
 msgid "Ask"
@@ -343,6 +347,10 @@ msgstr "Link kopieren"
 msgid "Copy link to share this report"
 msgstr "Link zum Teilen dieses Berichts kopieren"
 
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:72
+msgid "Copy Summary"
+msgstr "Zusammenfassung kopieren"
+
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:142
 msgid "Copy transcript"
 msgstr "Transkript kopieren"
@@ -384,7 +392,7 @@ msgstr "Gefahrenbereich"
 msgid "Delete"
 msgstr "Löschen"
 
-#: src/components/conversation/ConversationDangerZone.tsx:66
+#: src/components/conversation/ConversationDangerZone.tsx:56
 msgid "Delete Conversation"
 msgstr "Gespräch löschen"
 
@@ -408,7 +416,7 @@ msgstr "Dembrane Echo"
 msgid "Do you want to contribute to this project?"
 msgstr "Möchten Sie zu diesem Projekt beitragen?"
 
-#: src/components/layout/Header.tsx:148
+#: src/components/layout/Header.tsx:152
 msgid "Documentation"
 msgstr "Dokumentation"
 
@@ -420,7 +428,7 @@ msgstr "Herunterladen"
 msgid "Download All Transcripts"
 msgstr "Alle Transkripte herunterladen"
 
-#: src/components/conversation/ConversationDangerZone.tsx:50
+#: src/components/conversation/ConversationDangerZone.tsx:46
 msgid "Download Audio"
 msgstr "Audio herunterladen"
 
@@ -530,8 +538,7 @@ msgstr "Fehler beim Aktualisieren des Berichts"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:64
 #: src/components/project/ProjectPortalEditor.tsx:361
-#: src/components/conversation/MoveConversationButton.tsx:129
-#: src/components/conversation/ConversationDangerZone.tsx:52
+#: src/components/conversation/MoveConversationButton.tsx:128
 msgid "Experimental"
 msgstr "Experimentell"
 
@@ -569,7 +576,7 @@ msgstr "Französisch"
 #~ msgid "Generate structured meeting notes based on the following discussion points provided in the context."
 #~ msgstr "Generieren Sie strukturierte Besprechungsnotizen basierend auf den im Kontext bereitgestellten Diskussionspunkten."
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:63
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:104
 msgid "Generate Summary"
 msgstr "Zusammenfassung generieren"
 
@@ -589,8 +596,8 @@ msgstr "Zur Startseite"
 msgid "Grid view"
 msgstr "Rasteransicht"
 
-#. placeholder {0}: user.first_name
-#: src/components/layout/Header.tsx:135
+#. placeholder {0}: user.first_name ?? "User"
+#: src/components/layout/Header.tsx:139
 msgid "Hi, {0}"
 msgstr "Hallo, {0}"
 
@@ -661,7 +668,7 @@ msgstr "Ungültige Anmeldedaten."
 msgid "Invalid token. Please try again."
 msgstr "Ungültiges Token. Bitte versuchen Sie es erneut."
 
-#. placeholder {0}: project?.default_conversation_title
+#. placeholder {0}: project?.default_conversation_title ?? "the conversation"
 #: src/components/project/ProjectQRCode.tsx:95
 msgid "Join {0} on Dembrane"
 msgstr "Treten Sie {0} auf Dembrane bei"
@@ -729,7 +736,7 @@ msgstr "Anmelden | Dembrane"
 msgid "Login as an existing user"
 msgstr "Als bestehender Benutzer anmelden"
 
-#: src/components/layout/Header.tsx:155
+#: src/components/layout/Header.tsx:159
 msgid "Logout"
 msgstr "Abmelden"
 
@@ -757,7 +764,7 @@ msgstr "Verschieben"
 msgid "Move Conversation"
 msgstr "Gespräch verschieben"
 
-#: src/components/conversation/MoveConversationButton.tsx:127
+#: src/components/conversation/MoveConversationButton.tsx:130
 msgid "Move to Another Project"
 msgstr "Gespräch zu einem anderen Projekt verschieben"
 
@@ -849,9 +856,9 @@ msgstr "Kein Bericht gefunden"
 msgid "No resources found."
 msgstr "Keine Ressourcen gefunden."
 
-#: src/components/conversation/ConversationEdit.tsx:172
-#~ msgid "No tags found"
-#~ msgstr "Keine Tags gefunden"
+#: src/components/conversation/ConversationEdit.tsx:171
+msgid "No tags found"
+msgstr "Keine Tags gefunden"
 
 #: src/components/project/ProjectTagsInput.tsx:245
 msgid "No tags have been added to this project yet. Add a tag using the text input above to get started."
@@ -1107,7 +1114,7 @@ msgstr "Aktualisieren"
 msgid "Regenerate Library"
 msgstr "Bibliothek neu generieren"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:62
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:76
 msgid "Regenerate Summary"
 msgstr "Zusammenfassung neu generieren"
 
@@ -1229,6 +1236,10 @@ msgstr "Projekte suchen..."
 msgid "Select Project"
 msgstr "Projekt auswählen"
 
+#: src/components/conversation/ConversationEdit.tsx:140
+msgid "Select tags"
+msgstr "Tags auswählen"
+
 #: src/components/project/ProjectPortalEditor.tsx:325
 msgid "Select the instructions that will be shown to participants when they start a conversation"
 msgstr "Wählen Sie die Anweisungen aus, die den Teilnehmern beim Starten eines Gesprächs angezeigt werden"
@@ -1335,16 +1346,17 @@ msgstr "Absenden"
 msgid "Summarize"
 msgstr "Zusammenfassen"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:47
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:62
 msgid "Summary"
 msgstr "Zusammenfassung"
 
 #: src/routes/project/conversation/ProjectConversationOverview.tsx:78
-msgid "Summary not available yet"
-msgstr "Zusammenfassung noch nicht verfügbar"
+#~ msgid "Summary not available yet"
+#~ msgstr "Zusammenfassung noch nicht verfügbar"
 
 #: src/components/project/ProjectTagsInput.tsx:219
 #: src/components/participant/ParticipantInitiateForm.tsx:100
+#: src/components/conversation/ConversationEdit.tsx:143
 msgid "Tags"
 msgstr "Tags"
 
@@ -1368,6 +1380,10 @@ msgstr "Danke-Seite Inhalt"
 #: src/routes/project/conversation/ProjectConversationAnalysis.tsx:131
 msgid "the project library."
 msgstr "die Projektbibliothek."
+
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:43
+msgid "The summary is being regenerated. Please wait upto 2 minutes for the new summary to be available."
+msgstr "Die Zusammenfassung wird neu generiert. Bitte warten Sie bis zu 2 Minuten, bis die neue Zusammenfassung verfügbar ist."
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:214
 msgid "The transcript for this conversation is being processed. Please check back later."
@@ -1463,9 +1479,9 @@ msgstr "Dies wird Ihre aktuelle Eingabe löschen. Sind Sie sicher?"
 msgid "Time Created"
 msgstr "Erstellungszeit"
 
-#: src/components/conversation/ConversationEdit.tsx:165
-#~ msgid "To assign a new tag, please create it first in the project overview."
-#~ msgstr "Um ein neues Tag zuzuweisen, erstellen Sie es bitte zuerst in der Projektübersicht."
+#: src/components/conversation/ConversationEdit.tsx:164
+msgid "To assign a new tag, please create it first in the project overview."
+msgstr "Um ein neues Tag zuzuweisen, erstellen Sie es bitte zuerst in der Projektübersicht."
 
 #: src/components/view/DummyViews.tsx:17
 #: src/components/view/CreateViewForm.tsx:100

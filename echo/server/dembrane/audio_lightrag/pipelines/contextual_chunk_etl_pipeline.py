@@ -1,7 +1,7 @@
+import asyncio
 from io import BytesIO
 from logging import getLogger
 
-import requests
 from pydub import AudioSegment
 
 from dembrane.s3 import get_stream_from_s3
@@ -10,6 +10,11 @@ from dembrane.config import (
     AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM,
 )
 from dembrane.directus import directus
+from dembrane.api.stateless import (
+    InsertRequest,
+    insert_item,
+)
+from dembrane.api.dependency_auth import DirectusSession
 from dembrane.audio_lightrag.utils.prompts import Prompts
 from dembrane.audio_lightrag.utils.audio_utils import wav_to_str
 from dembrane.audio_lightrag.utils.litellm_utils import get_json_dict_from_audio
@@ -24,10 +29,10 @@ class ContextualChunkETLPipeline:
         self.conversation_history_num = AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM
         self.process_tracker = process_tracker
         self.api_base_url = API_BASE_URL
+
     def extract(self) -> None:pass 
     def transform(self) -> None:pass
-    def load(self) -> None:
-
+    async def load(self) -> None:
         for conversation_id in self.process_tracker().conversation_id.unique():
             segment_li = ','.join(self.process_tracker().sort_values('timestamp')[self.process_tracker()['conversation_id']  == 
                                                          conversation_id].sort_values('timestamp'
@@ -75,17 +80,19 @@ class ContextualChunkETLPipeline:
                                              'TRANSCRIPTS': response['transcript'].split('\n\n')}
                 if response['lightrag_flag'] is False:
                     try:
-                        response = requests.post(
-                            f"{self.api_base_url}/api/stateless/rag/insert",
-                            json={"content": responses[segment_id]['CONTEXTUAL_TRANSCRIPT'],
-                                    "echo_segment_id": str(segment_id),
-                                    "transcripts": responses[segment_id]['TRANSCRIPTS']}
+                        payload = InsertRequest(
+                            content=responses[segment_id]['CONTEXTUAL_TRANSCRIPT'],
+                            echo_segment_id=str(segment_id),
+                            transcripts=responses[segment_id]['TRANSCRIPTS']
                         )
-                        # lightrag_flag is a boolean field in the conversation_segment table
-                        if response.status_code == 200:
+                        #fake session
+                        session = DirectusSession(user_id="none", is_admin=True)
+                        response = await insert_item(payload, session)
+
+                        if response.status == 'success':
                             directus.update_item('conversation_segment', int(segment_id), 
                                                 {'lightrag_flag': True})
-                        if response.status_code != 200:
+                        else:
                             logger.info(f"Error in inserting transcript into LightRAG for segment {segment_id}. Check API health : {response.status_code}")
                             
                     except Exception as e:
@@ -95,5 +102,5 @@ class ContextualChunkETLPipeline:
     def run(self) -> None:
         self.extract()
         self.transform()
-        self.load()
+        asyncio.run(self.load())
             
