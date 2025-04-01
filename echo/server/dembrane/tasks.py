@@ -4,7 +4,7 @@ from pathlib import Path
 
 from celery import Celery, chain, chord, group, signals, bootsteps  # type: ignore
 from sentry_sdk import capture_exception
-from celery.signals import worker_ready, worker_shutdown
+from celery.signals import worker_ready, worker_shutdown  # type: ignore
 from celery.utils.log import get_task_logger  # type: ignore
 
 import dembrane.tasks_config
@@ -60,10 +60,10 @@ class LivenessProbe(bootsteps.StartStopStep):
             priority=10,
         )
 
-    def stop(self, worker):
+    def stop(self, _worker):
         HEARTBEAT_FILE.unlink(missing_ok=True)
 
-    def update_heartbeat_file(self, worker):
+    def update_heartbeat_file(self, _worker):
         HEARTBEAT_FILE.touch()
 
 
@@ -88,12 +88,12 @@ celery_app.config_from_object(dembrane.tasks_config)
 celery_app.steps["worker"].add(LivenessProbe)
 
 
-@worker_ready.connect
+@worker_ready.connect  # type: ignore
 def worker_ready(**_):
     READINESS_FILE.touch()
 
 
-@worker_shutdown.connect
+@worker_shutdown.connect  # type: ignore
 def worker_shutdown(**_):
     READINESS_FILE.unlink(missing_ok=True)
 
