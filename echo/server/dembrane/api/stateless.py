@@ -4,13 +4,13 @@ from logging import getLogger
 import nest_asyncio
 from fastapi import APIRouter, HTTPException
 from litellm import completion
-
-from dembrane.prompts import render_prompt
+from pydantic import BaseModel
 from lightrag.lightrag import QueryParam
 from lightrag.kg.postgres_impl import PostgreSQLDB
 from lightrag.kg.shared_storage import initialize_pipeline_status
 
 from dembrane.rag import RAGManager, get_rag
+from dembrane.prompts import render_prompt
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.audio_lightrag.utils.lightrag_utils import (
     upsert_transcript,

@@ -1,5 +1,4 @@
 import pytest
-from directus_sdk_py import DirectusClient
 
 from dembrane.directus import directus
 
