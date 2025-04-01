@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { cn } from "@/lib/utils";
+import { cn, sanitizeImageUrl } from "@/lib/utils";
 import { Box, Button, LoadingOverlay, Paper, Stack, Text } from "@mantine/core";
 import { IconArrowsDiagonal } from "@tabler/icons-react";
 import { useParams } from "react-router-dom";
@@ -47,7 +47,7 @@ export const AspectCard = ({
             </Box>
             {project.data?.image_generation_model !== "PLACEHOLDER" && (
               <img
-                src={data.image_url ?? "/placeholder.png"}
+                src={sanitizeImageUrl(data.image_url ?? "/placeholder.png")}
                 alt={data.name ?? ""}
                 className="h-[200px] w-full object-cover"
               />
