@@ -106,7 +106,7 @@ async def insert_item(payload: InsertRequest,
         if validate_segment_id(echo_segment_ids):
             rag.insert(payload.content, 
                     ids=echo_segment_ids)
-            await postgres_db.initdb()
+            await postgres_db.initdb() #Has to happen since lifespan initiation cannot be used 
             for transcript in payload.transcripts:
                 await upsert_transcript(postgres_db, 
                                     document_id = str(payload.echo_segment_id), 
@@ -151,7 +151,7 @@ async def query_item(payload: QueryRequest,
             result = rag.query(payload.query, param=QueryParam(mode="mix", 
                                                             ids=echo_segment_ids if echo_segment_ids else None))
             if payload.get_transcripts:
-                await postgres_db.initdb()
+                await postgres_db.initdb() #Has to happen since lifespan initiation cannot be used 
                 transcripts = await fetch_query_transcript(postgres_db, 
                                                 str(result), 
                                                 ids = echo_segment_ids if echo_segment_ids else None)

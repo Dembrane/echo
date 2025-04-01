@@ -11,7 +11,7 @@ from dembrane.config import (
 )
 from dembrane.directus import directus
 from dembrane.api.stateless import (
-    InsertRequest,  # Add this import at the top
+    InsertRequest,
     insert_item,
 )
 from dembrane.api.dependency_auth import DirectusSession
@@ -33,8 +33,6 @@ class ContextualChunkETLPipeline:
     def extract(self) -> None:pass 
     def transform(self) -> None:pass
     async def load(self) -> None:
-        # if not RAGManager.is_initialized():
-        #     await RAGManager.initialize()
         for conversation_id in self.process_tracker().conversation_id.unique():
             segment_li = ','.join(self.process_tracker().sort_values('timestamp')[self.process_tracker()['conversation_id']  == 
                                                          conversation_id].sort_values('timestamp'
