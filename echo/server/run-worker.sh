@@ -29,6 +29,7 @@ WORKER_PIDS=()
 
 # Launch the workers
 launch_worker "worker.normal" "normal"
+launch_worker "worker.cpu" "cpu"
 
 # Launch Flower
 # echo "Launching Flower"
