@@ -1,3 +1,4 @@
+import os
 import time
 from typing import Any, AsyncGenerator
 from logging import getLogger
@@ -18,7 +19,6 @@ from lightrag.kg.postgres_impl import PostgreSQLDB
 from starlette.middleware.cors import CORSMiddleware
 from lightrag.kg.shared_storage import initialize_pipeline_status
 
-from dembrane.rag import initialize_rag_at_startup
 from dembrane.config import (
     REDIS_URL,
     DISABLE_CORS,
@@ -28,7 +28,6 @@ from dembrane.config import (
 )
 from dembrane.sentry import init_sentry
 from dembrane.api.api import api
-from dembrane.api.stateless import PostgresDBManager, initialize_postgres_at_startup
 
 # from lightrag.llm.azure_openai import azure_openai_complete
 from dembrane.audio_lightrag.utils.litellm_utils import embedding_func, llm_model_func
@@ -47,28 +46,31 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("starting server")
     init_sentry()
     
-    # Initialize PostgreSQL using our function
-    await initialize_postgres_at_startup()
+    # Initialize PostgreSQL and LightRAG
+    postgres_config = {
+        "host": os.environ["POSTGRES_HOST"],
+        "port": os.environ["POSTGRES_PORT"],
+        "user": os.environ["POSTGRES_USER"],
+        "password": os.environ["POSTGRES_PASSWORD"],
+        "database": os.environ["POSTGRES_DATABASE"],
+    }
+
+    postgres_db = PostgreSQLDB(config=postgres_config)
     
-    # Get the initialized PostgreSQL instance
-    postgres_db = PostgresDBManager.get_instance()
-    
-    # Additional table checks that should happen once at startup
+    # Define the critical initialization operation
     async def initialize_database() -> bool:
+        await postgres_db.initdb()
         await postgres_db.check_tables()
         await check_audio_lightrag_tables(postgres_db)
         return True
     
-    # Use distributed lock for additional initialization
+    # Use distributed lock for initialization
     _, _ = await with_distributed_lock(
         redis_url=str(REDIS_URL),
         lock_key="DEMBRANE_INIT_LOCK",
         critical_operation=initialize_database
     )
     
-    # Initialize RAG at startup
-    await initialize_rag_at_startup()
-
     # This part is always needed, regardless of whether we performed initialization
     _app.state.rag = LightRAG(
         working_dir=None,
