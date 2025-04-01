@@ -16,6 +16,7 @@ import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { useMemo } from "react";
 import { useCopyAspect } from "@/hooks/useCopyAspect";
 import { CopyIconButton } from "@/components/common/CopyIconButton";
+import { sanitizeImageUrl } from "@/lib/utils";
 
 const dedupeQuotes = (quotes: QuoteAspect[]): QuoteAspect[] => {
   const seen = new Set();
@@ -78,7 +79,7 @@ export const ProjectLibraryAspect = () => {
         <LoadingOverlay visible={isLoading} />
         {project.data?.image_generation_model !== "PLACEHOLDER" && (
           <img
-            src={aspect?.image_url ?? "/placeholder.png"}
+            src={sanitizeImageUrl(aspect?.image_url ?? "/placeholder.png")}
             alt={aspect?.name ?? ""}
             className="h-[400px] w-full object-cover"
           />

@@ -1,20 +1,34 @@
-Please always respond in English, regardless of the language of previous messages.
-
-You will be given a series of quotes from a conversation in chronological order.
-Your task is to generate a concise summary of the conversation.
+You are given a series of quotes from a conversation transcript in chronological order.
 
 <quotes>
 {{ quote_text_joined }}
 </quotes>
 
-Generate a summary that:
-1. Captures the key points and flow of the conversation
-2. Highlights important decisions or conclusions reached
-3. Maintains the chronological progression of ideas
+Create a summary that adapts to the content's complexity while capturing both substance and nuance.
 
-Keep your response within 3-4 short, easy-to-read sentences.
-Avoid filler words like "Overall" or "In conclusion".
-Make the text easy to skim through.
-Focus on substance over style.
+## Core Guidelines
 
-Summary: 
+1. **Proportional Response**: The summary length should never exceed the original content length. For very simple inputs, provide an even shorter summary.
+
+2. **Content-Driven Structure**: 
+   - For simple exchanges (explanations, jokes, clarifications): Use 1-2 concise paragraphs without formal sections
+   - For complex discussions: Use appropriate headers and structure
+
+3. **Essence Over Analysis**: Capture what was actually said without adding speculative context, background, or implications unless explicitly mentioned.
+
+4. **Human Elements**: Preserve humor, wordplay, or emotional context when central to the conversation's meaning.
+
+5. **Adaptable Depth**:
+   - Simple content receives simple summaries
+   - Complex content receives appropriately structured analysis
+   - Never inflate basic content with unnecessary academic or strategic framing
+
+## Format Requirements
+
+- For very simple inputs (under 100 words), limit summary to 1-3 sentences
+- For moderate inputs, use 1-2 concise paragraphs
+- Only use section headers for genuinely complex, multi-topic conversations
+- Bold genuinely significant points, not routine observations
+- Present as a finished, accessible summary that stands on its own
+
+Remember that effective summarization often means significant reduction in length while preserving core meaning.

@@ -15,7 +15,7 @@ export const ConversationChunkAudioTranscript = ({
   const audioUrlQuery = useConversationChunkContentUrl(
     chunk.conversation_id as string,
     chunk.id,
-    showAudioPlayer, // Only fetch if we need to show the player
+    showAudioPlayer && !!chunk.path, // Only fetch if we need to show the player
   );
 
   return (
@@ -30,11 +30,15 @@ export const ConversationChunkAudioTranscript = ({
         showAudioPlayer ? (
           <>
             <Divider />
-            {audioUrlQuery.isLoading ? (
+            {!chunk.path ? (
+              <Text size="xs" className="px-2" color="gray">
+                Submitted via text input
+              </Text>
+            ) : audioUrlQuery.isLoading ? (
               <Skeleton height={36} width="100%" />
             ) : audioUrlQuery.isError ? (
-              <Text size="xs" color="red">
-                Failed to load audio
+              <Text size="xs" color="gray">
+                Failed to load audio or the audio is not available
               </Text>
             ) : (
               <audio
