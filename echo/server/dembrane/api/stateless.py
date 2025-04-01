@@ -189,7 +189,7 @@ async def query_item(payload: QueryRequest,
     try:
         postgres_db = await PostgresDBManager.get_initialized_db()
     except Exception as e:
-        logger.exception("Failed to get initialized PostgreSQLDB for insert")
+        logger.exception("Failed to get initialized PostgreSQLDB for query")
         raise HTTPException(status_code=500, detail="Database connection failed") from e
     try:
         if isinstance(payload.echo_segment_ids, list):
