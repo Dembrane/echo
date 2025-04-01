@@ -73,7 +73,8 @@ def validate_segment_id(echo_segment_ids: list[str] | None) -> bool:
         [int(id) for id in echo_segment_ids]
         return True
     except Exception as e:
-        raise HTTPException(status_code=400, detail="Invalid segment ID") from e
+        logger.exception(f"Invalid segment ID: {e}")
+        return False
 
 class InsertRequest(BaseModel):
     content: str | list[str]
