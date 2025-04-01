@@ -1,17 +1,22 @@
 import os
 from logging import getLogger
 
-from fastapi import Request, APIRouter, HTTPException
+import nest_asyncio
+from fastapi import APIRouter, HTTPException
 from litellm import completion
 from pydantic import BaseModel
 from lightrag.lightrag import QueryParam
 from lightrag.kg.postgres_impl import PostgreSQLDB
+from lightrag.kg.shared_storage import initialize_pipeline_status
 
-# from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.rag import RAGManager, get_rag
+from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.audio_lightrag.utils.lightrag_utils import (
     upsert_transcript,
     fetch_query_transcript,
 )
+
+nest_asyncio.apply()
 
 logger = getLogger("api.stateless")
 
@@ -107,14 +112,17 @@ class InsertResponse(BaseModel):
 
 
 @StatelessRouter.post("/rag/insert")
-async def insert_item(request: Request, 
-                      payload: InsertRequest,
-                    #   session: DependencyDirectusSession
+async def insert_item(payload: InsertRequest,
+                      session: DependencyDirectusSession #Needed for fake auth
                       ) -> InsertResponse:
-    rag = request.app.state.rag
+    if not RAGManager.is_initialized():
+        await RAGManager.initialize()
+    rag = get_rag()
+    await initialize_pipeline_status()
     if rag is None:
         raise HTTPException(status_code=500, detail="RAG object not initialized")
     try:
+        
         if isinstance(payload.echo_segment_id, str):
             echo_segment_ids = [payload.echo_segment_id]
         else:
@@ -148,11 +156,13 @@ class QueryResponse(BaseModel):
     transcripts: list[str]
 
 @StatelessRouter.post("/rag/query")
-async def query_item(request: Request, 
-                     payload: QueryRequest,
-                    #  session: DependencyDirectusSession
+async def query_item(payload: QueryRequest,
+                     session: DependencyDirectusSession  #Needed for fake auth
                      ) -> QueryResponse:
-    rag = request.app.state.rag
+    if not RAGManager.is_initialized():
+        await RAGManager.initialize()
+    rag = get_rag()
+    await initialize_pipeline_status()
     if rag is None:
         raise HTTPException(status_code=500, detail="RAG object not initialized")
     try:

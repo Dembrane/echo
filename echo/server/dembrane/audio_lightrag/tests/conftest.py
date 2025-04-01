@@ -1,7 +1,7 @@
 import pytest
 from directus_sdk_py import DirectusClient
 
-from dembrane.config import DIRECTUS_TOKEN, DIRECTUS_BASE_URL
+from dembrane.directus import directus
 
 # @pytest.fixture
 # def conversation_df() -> pd.DataFrame:
@@ -26,6 +26,5 @@ def test_audio_uuid() -> str:
                                                     }
                                                 }
                                     }
-    directus_client = DirectusClient(DIRECTUS_BASE_URL, DIRECTUS_TOKEN)
-    conversation = directus_client.get_items("conversation", conversation_request)
+    conversation = directus.get_items("conversation", conversation_request)
     return conversation[0]['id']
