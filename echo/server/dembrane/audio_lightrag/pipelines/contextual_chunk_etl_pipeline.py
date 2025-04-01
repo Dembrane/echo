@@ -5,7 +5,6 @@ from logging import getLogger
 from pydub import AudioSegment
 
 from dembrane.s3 import get_stream_from_s3
-from dembrane.rag import RAGManager
 from dembrane.config import (
     API_BASE_URL,
     AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM,
