@@ -89,6 +89,7 @@ class InsertResponse(BaseModel):
 async def insert_item(payload: InsertRequest,
                       session: DependencyDirectusSession #Needed for fake auth
                       ) -> InsertResponse:
+    session = session
     if not RAGManager.is_initialized():
         await RAGManager.initialize()
     rag = get_rag()
@@ -133,6 +134,7 @@ class QueryResponse(BaseModel):
 async def query_item(payload: QueryRequest,
                      session: DependencyDirectusSession  #Needed for fake auth
                      ) -> QueryResponse:
+    session = session
     if not RAGManager.is_initialized():
         await RAGManager.initialize()
     rag = get_rag()
