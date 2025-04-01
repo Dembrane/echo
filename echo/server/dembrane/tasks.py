@@ -763,7 +763,8 @@ def task_finish_conversation_hook(self, conversation_id: str):
                     "summary": summary,
                 },
             )
-        if ENABLE_AUDIO_LIGHTRAG_INPUT == 1:
+
+        if ENABLE_AUDIO_LIGHTRAG_INPUT:
             run_etl_pipeline([conversation_id])
     except Exception as e:
         logger.error(f"Error: {e}")
