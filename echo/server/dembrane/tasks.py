@@ -1,8 +1,10 @@
 # mypy: disable-error-code="no-untyped-def"
 from typing import List
+from pathlib import Path
 
-from celery import Celery, chain, chord, group, signals  # type: ignore
+from celery import Celery, chain, chord, group, signals, bootsteps  # type: ignore
 from sentry_sdk import capture_exception
+from celery.signals import worker_ready, worker_shutdown  # type: ignore
 from celery.utils.log import get_task_logger  # type: ignore
 
 import dembrane.tasks_config
@@ -35,6 +37,36 @@ from dembrane.quote_utils import (
 )
 from dembrane.api.stateless import generate_summary
 
+# File for validating worker readiness
+READINESS_FILE = Path("/tmp/celery_ready")
+
+# File for validating worker liveness
+HEARTBEAT_FILE = Path("/tmp/celery_worker_heartbeat")
+
+
+class LivenessProbe(bootsteps.StartStopStep):
+    requires = {"celery.worker.components:Timer"}
+
+    def __init__(self, parent, **kwargs):
+        super().__init__(parent, **kwargs)
+        self.requests = []
+        self.tref = None
+
+    def start(self, worker):
+        self.tref = worker.timer.call_repeatedly(
+            1.0,
+            self.update_heartbeat_file,
+            (worker,),
+            priority=10,
+        )
+
+    def stop(self, _worker):
+        HEARTBEAT_FILE.unlink(missing_ok=True)
+
+    def update_heartbeat_file(self, _worker):
+        HEARTBEAT_FILE.touch()
+
+
 logger = get_task_logger("celery_tasks")
 
 assert REDIS_URL, "REDIS_URL environment variable is not set"
@@ -52,6 +84,18 @@ celery_app = Celery(
 )
 
 celery_app.config_from_object(dembrane.tasks_config)
+
+celery_app.steps["worker"].add(LivenessProbe)
+
+
+@worker_ready.connect  # type: ignore
+def worker_ready(**_):
+    READINESS_FILE.touch()
+
+
+@worker_shutdown.connect  # type: ignore
+def worker_shutdown(**_):
+    READINESS_FILE.unlink(missing_ok=True)
 
 
 @signals.celeryd_init.connect
@@ -84,7 +128,11 @@ class BaseTask(celery_app.Task):  # type: ignore
 )
 def log_error(_self, exc: Exception):
     logger.error(f"Error: {exc}")
-    raise exc from exc
+    try:
+        raise exc from exc
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        raise exc from BaseException()
 
 
 @celery_app.task(
@@ -102,12 +150,7 @@ def task_transcribe_conversation_chunk(self, conversation_chunk_id: str):
         raise self.retry(exc=e) from e
 
 
-@celery_app.task(
-    bind=True,
-    retry_backoff=True,
-    ignore_result=True,
-    base=BaseTask,
-)
+@celery_app.task(bind=True, retry_backoff=True, ignore_result=True, base=BaseTask)
 def task_transcribe_conversation_chunks(self, conversation_chunk_id: List[str]):
     try:
         task_signatures = [
@@ -131,6 +174,7 @@ def task_transcribe_conversation_chunks(self, conversation_chunk_id: List[str]):
     retry_backoff=True,
     ignore_result=False,
     base=BaseTask,
+    queue="cpu",
 )
 def task_split_audio_chunk(self, chunk_id: str) -> List[str]:
     """
@@ -342,6 +386,7 @@ def task_generate_insight_extras_multiple(self, insight_ids: List[str], language
     retry_kwargs={"max_retries": 3},
     ignore_result=False,
     base=BaseTask,
+    queue="cpu",
 )
 def task_initialize_insights(self, project_analysis_run_id: str) -> List[str]:
     with DatabaseSession() as db:
@@ -446,6 +491,7 @@ def task_generate_view_extras(self, view_id: str, language: str):
     retry_kwargs={"max_retries": 3},
     ignore_result=False,
     base=BaseTask,
+    queue="cpu",
 )
 def task_assign_aspect_centroid(self, aspect_id: str, language: str = "en"):
     with DatabaseSession() as db:
@@ -463,6 +509,7 @@ def task_assign_aspect_centroid(self, aspect_id: str, language: str = "en"):
     retry_kwargs={"max_retries": 3},
     ignore_result=False,
     base=BaseTask,
+    queue="cpu",
 )
 def task_cluster_quotes_using_aspect_centroids(self, view_id: str):
     with DatabaseSession() as db:
@@ -753,7 +800,7 @@ def task_finish_conversation_hook(self, conversation_id: str):
                 f"transcript is empty for conversation: {conversation_id}. so not generating summary"
             )
         else:
-            summary = generate_summary(transcript_str, None, language if language else "nl")
+            summary = generate_summary(transcript_str, language if language else "nl")
 
             directus.update_item(
                 collection_name="conversation",
