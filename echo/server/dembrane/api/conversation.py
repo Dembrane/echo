@@ -10,7 +10,8 @@ from fastapi.responses import RedirectResponse, StreamingResponse
 from fastapi.exceptions import HTTPException
 
 from dembrane.s3 import get_signed_url
-from dembrane.utils import CacheWithExpiration, get_utc_timestamp
+from dembrane.tasks import task_process_conversation_chunk
+from dembrane.utils import CacheWithExpiration, generate_uuid, get_utc_timestamp
 from dembrane.database import (
     ConversationModel,
     ConversationChunkModel,
@@ -126,7 +127,7 @@ def raise_if_conversation_not_found_or_not_authorized(
         },
     )
 
-    if conversation is None:
+    if conversation is None or len(conversation) == 0:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
     if not auth.is_admin and conversation[0]["project_id"]["directus_user_id"] != auth.user_id:
@@ -137,28 +138,37 @@ def raise_if_conversation_not_found_or_not_authorized(
 
 @ConversationRouter.get("/{conversation_id}/content", response_model=None)
 async def get_conversation_content(
-    request: Request,
     conversation_id: str,
     auth: DependencyDirectusSession,
     force_merge: bool = False,
     return_url: bool = False,
+    signed: bool = True,
 ) -> StreamingResponse | RedirectResponse | str:
     raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
-    # ordered by timestamp
+    # Log more details about the request
+    logger.info(
+        f"Getting content for conversation {conversation_id}, force_merge={force_merge}, return_url={return_url}"
+    )
+
+    # First, get all conversation chunks with more information for debugging
     chunks = directus.get_items(
         "conversation_chunk",
         {
             "query": {
                 "filter": {"conversation_id": {"_eq": conversation_id}},
-                "sort": "-timestamp",
-                "fields": ["path"],
+                "sort": "timestamp",
+                "fields": ["id", "path", "timestamp"],
+                "limit": 1000,
             },
         },
     )
 
-    if not chunks or len(chunks) == 0:
+    if not chunks:
+        logger.error(f"No chunks found for conversation {conversation_id}")
         raise ConversationNotFoundException
+
+    logger.info(f"Found {len(chunks)} total chunks for conversation {conversation_id}")
 
     conversations = directus.get_items(
         "conversation",
@@ -181,10 +191,10 @@ async def get_conversation_content(
         and conversation["merged_audio_path"]
         and conversation["merged_audio_path"].startswith("http")
     ):
-        logger.debug(f"Using merged audio path: {conversation['merged_audio_path']}")
+        logger.info(f"Using existing merged audio path: {conversation['merged_audio_path']}")
 
+        # fix for localhost
         revised_url = get_signed_url(conversation["merged_audio_path"])
-
         if revised_url.startswith("http://minio:9000"):
             logger.warning(
                 "Merged audio path is using minio:9000, trying to replace with localhost:9000"
@@ -193,22 +203,54 @@ async def get_conversation_content(
 
         # If return_url is True, return the signed URL directly
         if return_url:
+            if not signed:
+                logger.info(f"Returning URL without signing: {conversation['merged_audio_path']}")
+                return conversation["merged_audio_path"]
+
+            logger.info(f"Returning revised and signed URL: {revised_url}")
             return revised_url
 
         return RedirectResponse(revised_url)
 
-    file_paths = [chunk["path"] for chunk in chunks if chunk["path"]]
+    # Get all valid file paths and ensure they're proper strings
+    file_paths = []
+    for chunk in chunks:
+        if (
+            "path" in chunk
+            and chunk["path"]
+            and isinstance(chunk["path"], str)
+            and chunk["path"].startswith("http")
+        ):
+            logger.info(f"adding valid path: {chunk['path']}")
+            file_paths.append(chunk["path"])
+        else:
+            logger.info(f"skipping chunk with invalid path: {chunk['path']}")
 
-    is_s3_impl = all(path.startswith("http") for path in file_paths)
+    # Check if we have any valid file paths to merge
+    if len(file_paths) == 0:
+        logger.error(
+            f"No valid file paths found for conversation {conversation_id} after filtering {len(chunks)} chunks"
+        )
+        raise NoContentFoundException
 
-    if is_s3_impl:
-        logger.info(f"Merging {len(file_paths)} audio files for conversation {conversation_id}")
+    logger.info(
+        f"Found {len(file_paths)} valid audio paths to merge for conversation {conversation_id}"
+    )
 
+    logger.info(f"Merging {len(file_paths)} audio files for conversation {conversation_id}")
+
+    try:
+        uuid = generate_uuid()
+        logger.info(
+            f"Merging audio files for conversation {conversation_id} and saving to /audio-conversations/{conversation_id}-{uuid}.ogg"
+        )
         merged_path = merge_multiple_audio_files_and_save_to_s3(
-            file_paths, f"audio-conversations/{conversation_id}-{get_utc_timestamp()}.ogg"
+            file_paths, f"audio-conversations/{conversation_id}-{uuid}.ogg"
         )
 
-        logger.debug(f"Merged audio path: {merged_path}")
+        logger.info(f"Successfully merged audio to: {merged_path}")
+
+        # Update the conversation with the merged audio path
         directus.update_item(
             "conversation",
             conversation_id,
@@ -217,33 +259,33 @@ async def get_conversation_content(
             },
         )
 
+        # If return_url is True, return the signed URL directly
+        if return_url:
+            if not signed:
+                logger.info(f"Returning URL without signing: {merged_path}")
+                return merged_path
+
+            revised_url = get_signed_url(merged_path)
+
+            if revised_url.startswith("http://minio:9000"):
+                logger.warning(
+                    "Merged audio path is using minio:9000, trying to replace with localhost:9000"
+                )
+                revised_url = revised_url.replace("http://minio:9000", "http://localhost:9000")
+
+            logger.info(f"Returning revised and signed URL: {revised_url}")
+            return revised_url
+
         return RedirectResponse(get_signed_url(merged_path))
 
-    # how does this work when there are multiple files with different types?
-    mime_type = get_mime_type_from_file_path(file_paths[0])
+    except Exception as e:
+        logger.error(f"Error merging audio files: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to merge audio files: {str(e)}") from e
 
-    range_header = request.headers.get("Range")
-    if range_header:
-        start_str, end_str = range_header.replace("bytes=", "").split("-")
-        start = int(start_str)
-        end = int(end_str) if end_str else None
-
-        file_size = sum(os.path.getsize(path) for path in file_paths)
-        if end is None:
-            end = file_size - 1
-
-        return StreamingResponse(
-            stream_audio(file_paths, start, end),
-            media_type=mime_type,
-            headers={
-                "Content-Range": f"bytes {start}-{end}/{file_size}",
-                "Accept-Ranges": "bytes",
-                "Content-Length": str(end - start + 1),
-            },
-            status_code=206,
-        )
-
-    return StreamingResponse(stream_audio(file_paths), media_type=mime_type)
+    raise HTTPException(
+        status_code=500,
+        detail="Error merging audio files because no valid paths were found",
+    )
 
 
 @ConversationRouter.get("/{conversation_id}/chunks/{chunk_id}/content", response_model=None)
@@ -388,3 +430,137 @@ async def get_reply_for_conversation(
             "Connection": "keep-alive",
         },
     )
+
+
+class RetranscribeConversationBodySchema(BaseModel):
+    new_conversation_name: str
+
+
+@ConversationRouter.post("/{conversation_id}/retranscribe")
+async def retranscribe_conversation(
+    conversation_id: str,
+    body: RetranscribeConversationBodySchema,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """
+    Retranscribe an existing conversation.
+
+    This function:
+    1. Creates a new conversation based on the original one
+    2. Creates a conversation chunk referencing the original audio
+    3. Queues the transcription task
+
+    Args:
+        conversation_id: ID of the original conversation to retranscribe
+        body: Contains new_conversation_name
+        auth: Authentication session to verify ownership
+
+    Returns:
+        Dictionary with status info and the new conversation ID
+    """
+    try:
+        # Check if the user owns the conversation
+        raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
+
+        # Get the original conversation details
+        conversation = directus.get_items(
+            "conversation",
+            {
+                "query": {
+                    "filter": {"id": {"_eq": conversation_id}},
+                    "fields": [
+                        "id",
+                        "project_id",
+                        "participant_name",
+                        "participant_email",
+                        "participant_user_agent",
+                        "merged_audio_path",
+                    ],
+                }
+            },
+        )
+
+        if not conversation or len(conversation) == 0:
+            raise ConversationNotFoundException
+
+        original_conversation = conversation[0]
+        project_id = original_conversation["project_id"]
+
+        merged_audio_path = await get_conversation_content(
+            conversation_id=conversation_id,
+            auth=auth,
+            force_merge=True,
+            return_url=True,
+            signed=False,
+        )
+
+        # Create a new conversation
+        new_conversation_id = generate_uuid()
+        directus.create_item(
+            "conversation",
+            item_data={
+                "id": new_conversation_id,
+                "project_id": project_id,
+                "participant_name": (
+                    body.new_conversation_name
+                    if body.new_conversation_name
+                    else original_conversation["participant_name"] + " (retranscribed)"
+                ),
+                "participant_email": original_conversation["participant_email"]
+                if original_conversation["participant_email"]
+                else None,
+                "participant_user_agent": original_conversation["participant_user_agent"]
+                if original_conversation["participant_user_agent"]
+                else None,
+                "merged_audio_path": merged_audio_path,
+            },
+        )["data"]
+
+        try:
+            # Create a new conversation chunk
+            chunk_id = generate_uuid()
+            timestamp = get_utc_timestamp().isoformat()
+
+            directus.create_item(
+                "conversation_chunk",
+                item_data={
+                    "id": chunk_id,
+                    "conversation_id": new_conversation_id,
+                    "timestamp": timestamp,
+                    "path": merged_audio_path,
+                },
+            )["data"]
+
+            # Queue the transcription task
+            logger.info(f"Queuing transcription for chunk {chunk_id}")
+            task_process_conversation_chunk.delay(chunk_id)
+
+            return {
+                "status": "success",
+                "message": "Retranscription in progress",
+                "new_conversation_id": new_conversation_id,
+            }
+        except Exception as e:
+            # Clean up the partially created conversation
+            directus.delete_item("conversation", new_conversation_id)
+            logger.error(f"Error during retranscription: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to process audio: {str(e)}") from e
+
+    except HTTPException as e:
+        # Handle HTTP exceptions
+        status_code = getattr(e, "status_code", 500)
+        detail = getattr(e, "detail", str(e))
+
+        logger.error(f"HTTP error during retranscription: {status_code} - {detail}")
+        return {
+            "status": "error",
+            "message": "Operation failed",
+            "error_detail": detail,
+        }
+    except Exception as e:
+        logger.exception(f"Unexpected error during retranscription: {e}")
+        return {
+            "status": "error",
+            "message": "Failed to retranscribe conversation",
+            "error_detail": str(e),
+        }
