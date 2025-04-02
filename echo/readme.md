@@ -138,6 +138,12 @@ If your Redis container fails to start and you see a “Permission denied” err
    - Click the cog/settings icon, then go to **Resources** → **WSL Integration**.
    - Toggle on the distribution (e.g., “Ubuntu-22.04”) that you want Docker to use.
 
+### Docker Desktop Container Crashing
+
+In case docker desktop crashes/ runs out of memory/ IDE freezes, try these steps: 
+- Increase allocates RAM to WSL[https://fizzylogic.nl/2023/01/05/how-to-configure-memory-limits-in-wsl2]
+- Reduce mypy load by excluding files[https://github.com/python/mypy/issues/17105]
+- Uninstall mypy
 
 ## Additional Tips
 

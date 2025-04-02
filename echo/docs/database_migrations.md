@@ -12,6 +12,8 @@ These are handled through the [directus-sync](https://github.com/tractr/directus
 
 and follow the instructions.
 
-## TODO
+3. Run the SQL script on the machine
 
-- [ ] Add script to run "pgvector" columns
+CREATE EXTENSION IF NOT EXISTS vector;
+ALTER TABLE quote ADD COLUMN IF NOT EXISTS embedding vector;
+ALTER TABLE aspect ADD COLUMN IF NOT EXISTS centroid_embedding vector;
