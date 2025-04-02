@@ -189,7 +189,10 @@ for i, batch in enumerate(batches):
                             for k,cummulative_value_list in cummulative_dict.items()}
     else:
         cummulative_dict = batch_report._scores_dict
-
+    
+    def replace_nan_with_zero(list_of_values):
+        return [0 if np.isnan(value) else value for value in list_of_values]
+    cummulative_dict = {k: replace_nan_with_zero(v) for k,v in cummulative_dict.items()}
 
     wandb.log({k:np.mean(v) for k,v in cummulative_dict.items()})
     
@@ -198,5 +201,6 @@ for i, batch in enumerate(batches):
         "latest_metrics": batch_report
     }
     wandb.save(f"checkpoint_{i}.json")
+    print(f"cummulative_dict: {cummulative_dict}")
 
 wandb.finish()
