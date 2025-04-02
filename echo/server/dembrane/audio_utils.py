@@ -356,12 +356,25 @@ def merge_multiple_audio_files_and_save_to_s3(
             output_file_name = f"{output_file_name}.ogg"
 
         # Save to S3
+        logger.info(
+            f"Saving merged audio to S3 as {output_file_name}, acl: {'public-read' if public else 'private'}"
+        )
         s3_client.put_object(
             Bucket=STORAGE_S3_BUCKET,
             Key=get_sanitized_s3_key(output_file_name),
             Body=output,
             ACL="public-read" if public else "private",
         )
+
+        try:
+            # get head object from S3 to test if it was saved correctly
+            info = s3_client.head_object(
+                Bucket=STORAGE_S3_BUCKET, Key=get_sanitized_s3_key(output_file_name)
+            )
+            logger.info(f"Head object from S3: {info}")
+        except Exception as e:
+            logger.error(f"Error getting head object from S3: {e}")
+            raise e
 
         duration = time.time() - start_time
         logger.info(
@@ -445,7 +458,7 @@ def split_audio_chunk(original_chunk_id: str) -> List[str]:
             updated_chunk_path,
             "to_ogg_voice",
             public=False,
-            delete_original=True,
+            delete_original=False,
         )
         logger.info("Updating Directus with new file path")
         directus.update_item(
@@ -460,6 +473,9 @@ def split_audio_chunk(original_chunk_id: str) -> List[str]:
     # Get file size from S3 with the updated file.
     try:
         s3_key = get_sanitized_s3_key(updated_chunk_path)
+        logger.info(f"S3 key: {s3_key}")
+        logger.info(f"Storage S3 Bucket: {STORAGE_S3_BUCKET}")
+        logger.info("attempting to get file size from S3 for")
         response = s3_client.head_object(Bucket=STORAGE_S3_BUCKET, Key=s3_key)
         file_size = response["ContentLength"]
         logger.info(f"Converted file size from S3: {file_size} bytes")
