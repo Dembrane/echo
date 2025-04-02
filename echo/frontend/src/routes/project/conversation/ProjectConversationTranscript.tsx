@@ -5,6 +5,7 @@ import {
   useConversationById,
   useConversationTranscriptString,
   useInfiniteConversationChunks,
+  useRetranscribeConversationMutation,
 } from "@/lib/query";
 import {
   ActionIcon,
@@ -19,6 +20,8 @@ import {
   CopyButton,
   Switch,
   Alert,
+  Text,
+  Badge,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -26,6 +29,7 @@ import {
   IconCopy,
   IconDownload,
   IconAlertCircle,
+  IconRefresh,
 } from "@tabler/icons-react";
 
 import { useState, useEffect } from "react";
@@ -33,6 +37,8 @@ import { useParams } from "react-router-dom";
 import useSessionStorageState from "use-session-storage-state";
 import { useInView } from "react-intersection-observer";
 import { ConversationChunkAudioTranscript } from "@/components/conversation/ConversationChunkAudioTranscript";
+import { ExponentialProgress } from "@/components/common/ExponentialProgress";
+import { CloseableAlert } from "@/components/common/ClosableAlert";
 
 export const ProjectConversationTranscript = () => {
   const { conversationId } = useParams();
@@ -59,8 +65,25 @@ export const ProjectConversationTranscript = () => {
     }
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const [opened, { open, close }] = useDisclosure(false);
+  // Download modal
+  const [downloadOpened, { open: openDownload, close: closeDownload }] =
+    useDisclosure(false);
   const [filename, setFilename] = useState("");
+
+  // Retranscribe modal
+  const [
+    retranscribeOpened,
+    { open: openRetranscribe, close: closeRetranscribe },
+  ] = useDisclosure(false);
+  const [newConversationName, setNewConversationName] = useState("");
+  const retranscribeMutation = useRetranscribeConversationMutation();
+
+  // Set the default new conversation name when the conversation data is loaded
+  useEffect(() => {
+    if (conversationQuery.data?.participant_name) {
+      setNewConversationName(conversationQuery.data.participant_name);
+    }
+  }, [conversationQuery.data]);
 
   const [showAudioPlayer, setShowAudioPlayer] = useSessionStorageState<boolean>(
     "conversation-transcript-show-audio-player",
@@ -109,6 +132,17 @@ export const ProjectConversationTranscript = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  const handleRetranscribe = async () => {
+    if (!conversationId || !newConversationName.trim()) return;
+
+    const result = await retranscribeMutation.mutateAsync({
+      conversationId,
+      newConversationName: newConversationName.trim(),
+    });
+
+    closeRetranscribe();
+  };
+
   // Add function to check if conversation is older than 30 days
   const isAudioExpired = () => {
     if (!conversationQuery.data?.created_at) return false;
@@ -129,7 +163,7 @@ export const ProjectConversationTranscript = () => {
             {/* open the download modal */}
             <Tooltip label={t`Download transcript`}>
               <ActionIcon
-                onClick={open}
+                onClick={openDownload}
                 size="md"
                 variant="subtle"
                 color="gray"
@@ -152,6 +186,18 @@ export const ProjectConversationTranscript = () => {
                 </Tooltip>
               )}
             </CopyButton>
+            {/* Retranscribe button */}
+            <Tooltip label={t`Retranscribe conversation`}>
+              <ActionIcon
+                onClick={openRetranscribe}
+                size="md"
+                variant="subtle"
+                color="gray"
+                disabled={isAudioExpired()}
+              >
+                <IconRefresh size={48} />
+              </ActionIcon>
+            </Tooltip>
           </Group>
 
           <Group>
@@ -169,9 +215,10 @@ export const ProjectConversationTranscript = () => {
           </Group>
         </Group>
 
+        {/* Download Modal */}
         <Modal
-          opened={opened}
-          onClose={close}
+          opened={downloadOpened}
+          onClose={closeDownload}
           title={t`Download Transcript Options`}
         >
           <Stack>
@@ -184,13 +231,65 @@ export const ProjectConversationTranscript = () => {
             <Button
               onClick={() => {
                 handleDownloadTranscript(filename);
-                close();
+                closeDownload();
               }}
               rightSection={<IconDownload />}
             >
               <Trans>Download</Trans>
             </Button>
           </Stack>
+        </Modal>
+
+        {/* Retranscribe Modal */}
+        <Modal
+          opened={retranscribeOpened}
+          onClose={closeRetranscribe}
+          title={
+            <Group gap="xs">
+              <Text>{t`Retranscribe Conversation`}</Text>
+              <Badge color="blue" size="sm">
+                <Trans>Experimental</Trans>
+              </Badge>
+            </Group>
+          }
+        >
+          {retranscribeMutation.isPending ? (
+            <Stack>
+              <Alert title={t`Processing your retranscription request...`}>
+                <Trans>
+                  Please wait while we process your retranscription request. You
+                  will be redirected to the new conversation when ready.
+                </Trans>
+              </Alert>
+              <ExponentialProgress expectedDuration={30} isLoading={true} />
+            </Stack>
+          ) : (
+            <Stack>
+              <Alert>
+                <Trans>
+                  This will create a new conversation with the same audio but a
+                  fresh transcription. The original conversation will remain
+                  unchanged.
+                </Trans>
+              </Alert>
+              <TextInput
+                label={t`New Conversation Name`}
+                placeholder={t`Enter a name for the new conversation`}
+                value={newConversationName}
+                onChange={(event) =>
+                  setNewConversationName(event.currentTarget.value)
+                }
+                required
+              />
+              <Button
+                onClick={handleRetranscribe}
+                rightSection={<IconRefresh size="1rem" />}
+                disabled={!newConversationName.trim()}
+              >
+                <Trans>Retranscribe</Trans>
+              </Button>
+            </Stack>
+          )}
         </Modal>
 
         <Stack>

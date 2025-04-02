@@ -456,6 +456,18 @@ export const getConversationTranscriptString = async (
   );
 };
 
+export const retranscribeConversation = async (
+  conversationId: string,
+  newConversationName: string,
+) => {
+  return api.post<
+    unknown,
+    { status: string; message: string; new_conversation_id: string }
+  >(`/conversations/${conversationId}/retranscribe`, {
+    new_conversation_name: newConversationName,
+  });
+};
+
 export const getProjectChatContext = async (chatId: string) => {
   return api.get<unknown, TProjectChatContext>(`/chats/${chatId}/context`);
 };

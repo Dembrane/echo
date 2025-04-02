@@ -31,6 +31,7 @@ import {
   initiateAndUploadConversationChunk,
   initiateConversation,
   lockConversations,
+  retranscribeConversation,
   updateResourceById,
   uploadConversationChunk,
   uploadConversationText,
@@ -54,6 +55,7 @@ import {
 } from "@directus/sdk";
 import { ADMIN_BASE_URL } from "@/config";
 import { AxiosError } from "axios";
+import { t } from "@lingui/core/macro";
 
 // always throws a error with a message
 function throwWithMessage(e: unknown): never {
@@ -1770,5 +1772,34 @@ export const useConversationChunkContentUrl = (
     enabled,
     staleTime: 1000 * 60 * 30, // 30 minutes
     gcTime: 1000 * 60 * 60, // 1 hour
+  });
+};
+
+export const useRetranscribeConversationMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      conversationId,
+      newConversationName,
+    }: {
+      conversationId: string;
+      newConversationName: string;
+    }) => retranscribeConversation(conversationId, newConversationName),
+    onSuccess: (_data) => {
+      // Invalidate all conversation related queries
+      queryClient.invalidateQueries({
+        queryKey: ["conversations"],
+      });
+
+      // Toast success message
+      toast.success(
+        t`Retranscription started. New conversation will be available soon.`,
+      );
+    },
+    onError: (error) => {
+      toast.error(t`Failed to retranscribe conversation. Please try again.`);
+      console.error("Retranscribe error:", error);
+    },
   });
 };

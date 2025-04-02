@@ -236,7 +236,7 @@ msgstr "Ask for Name?"
 msgid "Ask participants to provide their name when they start a conversation"
 msgstr "Ask participants to provide their name when they start a conversation"
 
-#: src/routes/project/library/ProjectLibraryAspect.tsx:71
+#: src/routes/project/library/ProjectLibraryAspect.tsx:72
 msgid "Aspect"
 msgstr "Aspect"
 
@@ -254,7 +254,7 @@ msgstr "Assistant is typing..."
 #~ msgid "Audio Recording"
 #~ msgstr "Audio Recording"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:167
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:213
 msgid "Audio recordings are scheduled to be deleted after 30 days from the recording date"
 msgstr "Audio recordings are scheduled to be deleted after 30 days from the recording date"
 
@@ -372,7 +372,7 @@ msgstr "Copy link to share this report"
 msgid "Copy Summary"
 msgstr "Copy Summary"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:142
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:176
 msgid "Copy transcript"
 msgstr "Copy transcript"
 
@@ -401,7 +401,7 @@ msgstr "Create View"
 msgid "Created on"
 msgstr "Created on"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:179
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:226
 msgid "Custom Filename"
 msgstr "Custom Filename"
 
@@ -445,7 +445,7 @@ msgstr "Do you want to contribute to this project?"
 msgid "Documentation"
 msgstr "Documentation"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:191
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:238
 msgid "Download"
 msgstr "Download"
 
@@ -461,11 +461,11 @@ msgstr "Download All Transcripts"
 msgid "Download Audio"
 msgstr "Download Audio"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:130
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:164
 msgid "Download transcript"
 msgstr "Download transcript"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:175
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:222
 msgid "Download Transcript Options"
 msgstr "Download Transcript Options"
 
@@ -536,6 +536,10 @@ msgstr "English"
 msgid "Enter a key term or proper noun"
 msgstr "Enter a key term or proper noun"
 
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:277
+msgid "Enter a name for the new conversation"
+msgstr "Enter a name for the new conversation"
+
 #: src/components/chat/ChatAccordion.tsx:48
 msgid "Enter new name for the chat:"
 msgstr "Enter new name for the chat:"
@@ -574,6 +578,7 @@ msgstr "Error updating report"
 #~ msgstr "Example: This conversation is about [topic]. Key terms include [term1], [term2]. Please pay special attention to [specific aspect]."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:64
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:251
 #: src/components/project/ProjectPortalEditor.tsx:361
 #: src/components/conversation/MoveConversationButton.tsx:128
 msgid "Experimental"
@@ -586,6 +591,10 @@ msgstr "Export"
 #: src/components/participant/UserChunkMessage.tsx:65
 msgid "Failed to delete response"
 msgstr "Failed to delete response"
+
+#: src/lib/query.ts:1801
+msgid "Failed to retranscribe conversation. Please try again."
+msgstr "Failed to retranscribe conversation. Please try again."
 
 #: src/components/conversation/ConversationAccordion.tsx:473
 msgid "Filter"
@@ -731,7 +740,7 @@ msgid "Last saved {0}"
 msgstr "Last saved {0}"
 
 #: src/routes/project/library/ProjectLibraryView.tsx:32
-#: src/routes/project/library/ProjectLibraryAspect.tsx:63
+#: src/routes/project/library/ProjectLibraryAspect.tsx:64
 #: src/routes/project/library/ProjectLibrary.tsx:150
 #: src/components/project/ProjectSidebar.tsx:113
 msgid "Library"
@@ -822,6 +831,10 @@ msgstr "Name A-Z"
 msgid "Name Z-A"
 msgstr "Name Z-A"
 
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:276
+msgid "New Conversation Name"
+msgstr "New Conversation Name"
+
 #: src/components/project/ProjectAnalysisRunStatus.tsx:64
 msgid "New conversations have been added since the library was generated. Regenerate the library to process them."
 msgstr "New conversations have been added since the library was generated. Regenerate the library to process them."
@@ -901,7 +914,7 @@ msgstr "No tags found"
 msgid "No tags have been added to this project yet. Add a tag using the text input above to get started."
 msgstr "No tags have been added to this project yet. Add a tag using the text input above to get started."
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:200
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:299
 msgid "No Transcript Available"
 msgstr "No Transcript Available"
 
@@ -909,7 +922,7 @@ msgstr "No Transcript Available"
 #~ msgid "No transcript available for this conversation."
 #~ msgstr "No transcript available for this conversation."
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:203
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:302
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "No transcript exists for this conversation yet. Please check back later."
 
@@ -1051,6 +1064,10 @@ msgstr "Please wait {timeStr} before requesting another Echo."
 msgid "Please wait while we generate your report. You will automatically be redirected to the report page."
 msgstr "Please wait while we generate your report. You will automatically be redirected to the report page."
 
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:259
+msgid "Please wait while we process your retranscription request. You will be redirected to the new conversation when ready."
+msgstr "Please wait while we process your retranscription request. You will be redirected to the new conversation when ready."
+
 #: src/components/report/UpdateReportModalButton.tsx:73
 msgid "Please wait while we update your report. You will automatically be redirected to the report page."
 msgstr "Please wait while we update your report. You will automatically be redirected to the report page."
@@ -1084,7 +1101,7 @@ msgstr "Print this report"
 msgid "Privacy Statements"
 msgstr "Privacy Statements"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:211
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:310
 msgid "Processing Transcript"
 msgstr "Processing Transcript"
 
@@ -1092,6 +1109,10 @@ msgstr "Processing Transcript"
 #: src/components/report/CreateReportForm.tsx:33
 msgid "Processing your report..."
 msgstr "Processing your report..."
+
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:258
+msgid "Processing your retranscription request..."
+msgstr "Processing your retranscription request..."
 
 #: src/components/report/ReportTimeline.tsx:296
 msgid "Project Created"
@@ -1146,7 +1167,7 @@ msgid "Published"
 msgstr "Published"
 
 #: src/routes/project/library/ProjectLibraryInsight.tsx:96
-#: src/routes/project/library/ProjectLibraryAspect.tsx:104
+#: src/routes/project/library/ProjectLibraryAspect.tsx:105
 #: src/routes/project/conversation/ProjectConversationAnalysis.tsx:105
 msgid "Quotes"
 msgstr "Quotes"
@@ -1243,6 +1264,22 @@ msgstr "Resources"
 #: src/routes/participant/ParticipantConversation.tsx:442
 msgid "Resume"
 msgstr "Resume"
+
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:289
+msgid "Retranscribe"
+msgstr "Retranscribe"
+
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:190
+msgid "Retranscribe conversation"
+msgstr "Retranscribe conversation"
+
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:249
+msgid "Retranscribe Conversation"
+msgstr "Retranscribe Conversation"
+
+#: src/lib/query.ts:1797
+msgid "Retranscription started. New conversation will be available soon."
+msgstr "Retranscription started. New conversation will be available soon."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:317
 msgid "Retry"
@@ -1341,7 +1378,7 @@ msgstr "Share your voice by scanning the QR code below."
 msgid "Show all"
 msgstr "Show all"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:163
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:209
 msgid "Show audio player"
 msgstr "Show audio player"
 
@@ -1446,7 +1483,7 @@ msgstr "the project library."
 msgid "The summary is being regenerated. Please wait upto 2 minutes for the new summary to be available."
 msgstr "The summary is being regenerated. Please wait upto 2 minutes for the new summary to be available."
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:214
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:313
 msgid "The transcript for this conversation is being processed. Please check back later."
 msgstr "The transcript for this conversation is being processed. Please check back later."
 
@@ -1544,6 +1581,10 @@ msgstr "This title is shown to participants when they start a conversation"
 msgid "This will clear your current input. Are you sure?"
 msgstr "This will clear your current input. Are you sure?"
 
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:269
+msgid "This will create a new conversation with the same audio but a fresh transcription. The original conversation will remain unchanged."
+msgstr "This will create a new conversation with the same audio but a fresh transcription. The original conversation will remain unchanged."
+
 #: src/routes/project/library/ProjectLibrary.tsx:298
 msgid "Time Created"
 msgstr "Time Created"
@@ -1561,7 +1602,7 @@ msgstr "To assign a new tag, please create it first in the project overview."
 msgid "Topics"
 msgstr "Topics"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:127
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:161
 #: src/components/layout/ProjectConversationLayout.tsx:26
 msgid "Transcript"
 msgstr "Transcript"
@@ -1690,7 +1731,7 @@ msgid "Use Shift + Enter to add a new line"
 msgstr "Use Shift + Enter to add a new line"
 
 #: src/routes/project/library/ProjectLibraryView.tsx:36
-#: src/routes/project/library/ProjectLibraryAspect.tsx:67
+#: src/routes/project/library/ProjectLibraryAspect.tsx:68
 #: src/components/view/View.tsx:52
 msgid "View"
 msgstr "View"

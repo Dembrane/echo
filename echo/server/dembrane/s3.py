@@ -148,8 +148,14 @@ def get_signed_url(file_name: str, expires_in_seconds: int = 3600) -> str:
 
 
 def get_sanitized_s3_key(file_name: str) -> str:
+    file_name = file_name.strip().split("?")[0]
+    # Check if it's a full URL and extract the path
     if file_name.startswith(f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/"):
         return file_name.split(f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/")[1]
+    # Also handle cases with forward slashes at the beginning
+    elif file_name.startswith("/"):
+        # Remove any leading slashes
+        return file_name.lstrip("/")
     return file_name
 
 

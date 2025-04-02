@@ -288,7 +288,7 @@ msgstr "Vraag deelnemers om hun naam te geven wanneer ze een gesprek starten"
 #~ msgid "Ask Question"
 #~ msgstr "Stel Vraag"
 
-#: src/routes/project/library/ProjectLibraryAspect.tsx:71
+#: src/routes/project/library/ProjectLibraryAspect.tsx:72
 msgid "Aspect"
 msgstr "Aspect"
 
@@ -310,7 +310,7 @@ msgstr "Assistent is aan het typen..."
 #~ msgid "Audio Recording"
 #~ msgstr "Audio opname"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:167
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:213
 msgid "Audio recordings are scheduled to be deleted after 30 days from the recording date"
 msgstr "Audio opnames worden 30 dagen na de opname verwijderd"
 
@@ -428,7 +428,7 @@ msgstr "Kopieer link om dit rapport te delen"
 msgid "Copy Summary"
 msgstr "Kopieer samenvatting"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:142
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:176
 msgid "Copy transcript"
 msgstr "Kopieer transcript"
 
@@ -465,7 +465,7 @@ msgstr "Maak view aan"
 msgid "Created on"
 msgstr "Gemaakt op"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:179
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:226
 msgid "Custom Filename"
 msgstr "Aangepaste bestandsnaam"
 
@@ -529,7 +529,7 @@ msgstr "Documentatie"
 #~ msgid "Documents"
 #~ msgstr "Documenten"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:191
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:238
 msgid "Download"
 msgstr "Downloaden"
 
@@ -545,11 +545,11 @@ msgstr "Download alle transcripten"
 msgid "Download Audio"
 msgstr "Audio downloaden"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:130
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:164
 msgid "Download transcript"
 msgstr "Download transcript"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:175
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:222
 msgid "Download Transcript Options"
 msgstr "Download transcript opties"
 
@@ -624,6 +624,10 @@ msgstr "Engels"
 msgid "Enter a key term or proper noun"
 msgstr "Voer een sleutelterm of eigennamen in"
 
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:277
+msgid "Enter a name for the new conversation"
+msgstr "Voer een naam in voor het nieuwe gesprek"
+
 #: src/components/chat/ChatAccordion.tsx:48
 msgid "Enter new name for the chat:"
 msgstr "Voer een nieuwe naam in voor de chat:"
@@ -662,6 +666,7 @@ msgstr "Fout bij het bijwerken van het rapport"
 #~ msgstr "Voorbeeld: Dit gesprek gaat over [onderwerp]. Belangrijke termen zijn [term1], [term2]. Let speciaal op [specifieke aspect]."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:64
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:251
 #: src/components/project/ProjectPortalEditor.tsx:361
 #: src/components/conversation/MoveConversationButton.tsx:128
 msgid "Experimental"
@@ -674,6 +679,10 @@ msgstr "Exporteer"
 #: src/components/participant/UserChunkMessage.tsx:65
 msgid "Failed to delete response"
 msgstr "Fout bij het verwijderen van de reactie"
+
+#: src/lib/query.ts:1801
+msgid "Failed to retranscribe conversation. Please try again."
+msgstr "Fout bij het hertranscriptie van het gesprek. Probeer het opnieuw."
 
 #: src/components/conversation/ConversationAccordion.tsx:473
 msgid "Filter"
@@ -856,7 +865,7 @@ msgid "Last saved {0}"
 msgstr "Laatst opgeslagen {0}"
 
 #: src/routes/project/library/ProjectLibraryView.tsx:32
-#: src/routes/project/library/ProjectLibraryAspect.tsx:63
+#: src/routes/project/library/ProjectLibraryAspect.tsx:64
 #: src/routes/project/library/ProjectLibrary.tsx:150
 #: src/components/project/ProjectSidebar.tsx:113
 msgid "Library"
@@ -947,6 +956,10 @@ msgstr "Naam A-Z"
 msgid "Name Z-A"
 msgstr "Naam Z-A"
 
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:276
+msgid "New Conversation Name"
+msgstr "Nieuwe Gesprek Naam"
+
 #: src/components/project/ProjectAnalysisRunStatus.tsx:64
 msgid "New conversations have been added since the library was generated. Regenerate the library to process them."
 msgstr "Er zijn nieuwe gesprekken toegevoegd sinds de bibliotheek is gegenereerd. Genereer de bibliotheek opnieuw om ze te verwerken."
@@ -1034,7 +1047,7 @@ msgstr "Geen trefwoorden gevonden"
 msgid "No tags have been added to this project yet. Add a tag using the text input above to get started."
 msgstr "Er zijn nog geen trefwoorden toegevoegd aan dit project. Voeg een trefwoord toe met behulp van de tekstinvoer boven aan om te beginnen."
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:200
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:299
 msgid "No Transcript Available"
 msgstr "Geen transcript beschikbaar"
 
@@ -1042,7 +1055,7 @@ msgstr "Geen transcript beschikbaar"
 #~ msgid "No transcript available for this conversation."
 #~ msgstr "Er is geen transcript beschikbaar voor dit gesprek."
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:203
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:302
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "Er is nog geen transcript beschikbaar voor dit gesprek. Controleer later opnieuw."
 
@@ -1201,6 +1214,10 @@ msgstr "Wacht {timeStr} voordat u een andere Echo aanvraagt."
 msgid "Please wait while we generate your report. You will automatically be redirected to the report page."
 msgstr "Wacht aub terwijl we je rapport genereren. Je wordt automatisch doorgestuurd naar de rapportpagina."
 
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:259
+msgid "Please wait while we process your retranscription request. You will be redirected to the new conversation when ready."
+msgstr "Wacht aub terwijl we uw hertranscriptieaanvraag verwerken. U wordt automatisch doorgestuurd naar het nieuwe gesprek wanneer klaar."
+
 #: src/components/report/UpdateReportModalButton.tsx:73
 msgid "Please wait while we update your report. You will automatically be redirected to the report page."
 msgstr "Wacht aub terwijl we je rapport bijwerken. Je wordt automatisch doorgestuurd naar de rapportpagina."
@@ -1234,7 +1251,7 @@ msgstr "Dit rapport afdrukken"
 msgid "Privacy Statements"
 msgstr "Privacy verklaring"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:211
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:310
 msgid "Processing Transcript"
 msgstr "Transcript wordt verwerkt"
 
@@ -1242,6 +1259,10 @@ msgstr "Transcript wordt verwerkt"
 #: src/components/report/CreateReportForm.tsx:33
 msgid "Processing your report..."
 msgstr "Rapport wordt verwerkt..."
+
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:258
+msgid "Processing your retranscription request..."
+msgstr "Hertranscriptieaanvraag wordt verwerkt..."
 
 #: src/components/report/ReportTimeline.tsx:296
 msgid "Project Created"
@@ -1296,7 +1317,7 @@ msgid "Published"
 msgstr "Gepubliceerd"
 
 #: src/routes/project/library/ProjectLibraryInsight.tsx:96
-#: src/routes/project/library/ProjectLibraryAspect.tsx:104
+#: src/routes/project/library/ProjectLibraryAspect.tsx:105
 #: src/routes/project/conversation/ProjectConversationAnalysis.tsx:105
 msgid "Quotes"
 msgstr "Quotes"
@@ -1397,6 +1418,22 @@ msgstr "Bronnen"
 #: src/routes/participant/ParticipantConversation.tsx:442
 msgid "Resume"
 msgstr "Hervatten"
+
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:289
+msgid "Retranscribe"
+msgstr "Hertranscriptie"
+
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:190
+msgid "Retranscribe conversation"
+msgstr "Hertranscriptie gesprek"
+
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:249
+msgid "Retranscribe Conversation"
+msgstr "Hertranscriptie gesprek"
+
+#: src/lib/query.ts:1797
+msgid "Retranscription started. New conversation will be available soon."
+msgstr "Hertranscriptie gestart. Nieuw gesprek wordt binnenkort beschikbaar."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:317
 msgid "Retry"
@@ -1504,7 +1541,7 @@ msgstr "Deel je stem door het QR-code hieronder te scannen."
 msgid "Show all"
 msgstr "Toon alles"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:163
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:209
 msgid "Show audio player"
 msgstr "Toon audiospeler"
 
@@ -1613,7 +1650,7 @@ msgstr "de projectbibliotheek."
 msgid "The summary is being regenerated. Please wait upto 2 minutes for the new summary to be available."
 msgstr "De samenvatting wordt hergeneratie. Wacht tot 2 minuten voor de nieuwe samenvatting beschikbaar is."
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:214
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:313
 msgid "The transcript for this conversation is being processed. Please check back later."
 msgstr "Het transcript voor dit gesprek wordt verwerkt. Controleer later opnieuw."
 
@@ -1715,6 +1752,10 @@ msgstr "Deze titel wordt getoond aan deelnemers wanneer ze een gesprek starten"
 msgid "This will clear your current input. Are you sure?"
 msgstr "Dit zal uw huidige invoer wissen. Weet u het zeker?"
 
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:269
+msgid "This will create a new conversation with the same audio but a fresh transcription. The original conversation will remain unchanged."
+msgstr "Dit zal een nieuw gesprek maken met dezelfde audio maar een nieuwe transcriptie. Het originele gesprek blijft ongewijzigd."
+
 #: src/routes/project/library/ProjectLibrary.tsx:298
 msgid "Time Created"
 msgstr "Tijd gemaakt"
@@ -1732,7 +1773,7 @@ msgstr "Om een nieuw trefwoord toe te wijzen, maak het eerst in het projectoverz
 msgid "Topics"
 msgstr "Onderwerpen"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:127
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:161
 #: src/components/layout/ProjectConversationLayout.tsx:26
 msgid "Transcript"
 msgstr "Transcript"
@@ -1875,7 +1916,7 @@ msgid "Use Shift + Enter to add a new line"
 msgstr "Gebruik Shift + Enter om een nieuwe regel toe te voegen"
 
 #: src/routes/project/library/ProjectLibraryView.tsx:36
-#: src/routes/project/library/ProjectLibraryAspect.tsx:67
+#: src/routes/project/library/ProjectLibraryAspect.tsx:68
 #: src/components/view/View.tsx:52
 msgid "View"
 msgstr "View"
