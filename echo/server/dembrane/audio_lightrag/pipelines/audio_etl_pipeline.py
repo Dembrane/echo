@@ -18,12 +18,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class AudioETLPipeline:
-    def __init__(
-        self,
-        process_tracker: ProcessTracker,
-        # config_path: str = "server/dembrane/audio_lightrag/configs/audio_etl_pipeline_config.yaml",
-        # config_path: str = os.path.join(BASE_DIR, "dembrane/audio_lightrag/configs/audio_etl_pipeline_config.yaml"),
-    ) -> None:
+    def __init__(self, process_tracker: ProcessTracker) -> None:
         """
         Initialize the AudioETLPipeline.
 
@@ -39,24 +34,24 @@ class AudioETLPipeline:
         self.max_size_mb = AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB
         self.configid = f'{float(self.max_size_mb):.4f}mb'
 
-    def extract(self) -> None: pass
+    def extract(self) -> None: 
+        self.segments2process_process_tracker_df = self.process_tracker.get_unprocesssed_process_tracker_df(
+            'segment')
 
     def transform(self) -> None:
-        transform_process_tracker_df = self.process_tracker.get_unprocesssed_process_tracker_df(
-            'segment')
         zip_unique = list(
             set(
                 zip(
-                    transform_process_tracker_df.project_id,
-                    transform_process_tracker_df.conversation_id,
+                    self.segments2process_process_tracker_df.project_id,
+                    self.segments2process_process_tracker_df.conversation_id,
                     strict=True
                 )
             )
         )
         for project_id, conversation_id in zip_unique:
-            unprocessed_chunk_file_uri_li = transform_process_tracker_df.loc[
-                (transform_process_tracker_df.project_id == project_id)
-                & (transform_process_tracker_df.conversation_id == conversation_id)
+            unprocessed_chunk_file_uri_li = self.segments2process_process_tracker_df.loc[
+                (self.segments2process_process_tracker_df.project_id == project_id)
+                & (self.segments2process_process_tracker_df.conversation_id == conversation_id)
             ].path.to_list()
             counter = 0
             # Create a new segment by counter every loop
@@ -94,7 +89,6 @@ class AudioETLPipeline:
                     continue
 
             chunk_id_2_segment_dict: dict[str, list[int]] = {}
-            # Please make a dictionary of chunk_id to list of segment_id
             for chunk_id, segment_id in chunk_id_2_segment:
                 if chunk_id not in chunk_id_2_segment_dict.keys():
                     chunk_id_2_segment_dict[chunk_id] = [int(segment_id)]
@@ -107,9 +101,7 @@ class AudioETLPipeline:
                     value=','.join([str(segment_id) for segment_id in segment_id_li])
                 )
 
-
-    def load(self) -> None:
-        pass
+    def load(self) -> None: pass
 
     def run(self) -> None:
         self.extract()
