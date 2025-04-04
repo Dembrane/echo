@@ -6,6 +6,7 @@ import logging
 from typing import Any, TypeVar, Callable, Optional
 
 import redis
+import pandas as pd
 from lightrag.kg.postgres_impl import PostgreSQLDB
 
 from dembrane.audio_lightrag.utils.litellm_utils import embedding_func
@@ -22,6 +23,20 @@ REDIS_LOCK_RETRY_INTERVAL = 2  # seconds
 REDIS_LOCK_MAX_RETRIES = 60  # 2 minutes of retries
 
 T = TypeVar('T')
+
+def merge_consecutive_speakers(df: pd.DataFrame) -> pd.DataFrame:
+    merged_df = df.copy()
+    i = 0
+    while i < len(merged_df) - 1:
+        current_speaker = merged_df.iloc[i]['speaker']
+        next_speaker = merged_df.iloc[i+1]['speaker']
+        if current_speaker == next_speaker:
+            merged_df.at[i, 'end'] = merged_df.iloc[i+1]['end']
+            merged_df = merged_df.drop(merged_df.index[i+1])
+            merged_df = merged_df.reset_index(drop=True)
+        else:
+            i += 1
+    return merged_df
 
 async def with_distributed_lock(
     redis_url: str,
@@ -96,7 +111,6 @@ async def check_audio_lightrag_tables(db: PostgreSQLDB) -> None:
     for _, table_definition in TABLES.items():
         await db.execute(table_definition)
 
-
 async def upsert_transcript(db: PostgreSQLDB, 
                             document_id: str, 
                             content: str,
@@ -118,6 +132,16 @@ async def upsert_transcript(db: PostgreSQLDB,
     }
     await db.execute(sql = sql, data=data)
 
+async def upsert_speaker(db: PostgreSQLDB, 
+                         speaker_id: str, 
+                         embedding_vector: str) -> None:
+    sql = SQL_TEMPLATES["UPSERT_SPEAKER"]
+    data = {
+        "speaker_id": speaker_id,
+        "embedding_vector": '[' + embedding_vector + ']'
+    }
+    await db.execute(sql = sql, data=data)
+
 async def fetch_query_transcript(db: PostgreSQLDB, 
                            query: str,
                            ids: list[str] | str | None = None,
@@ -128,8 +152,7 @@ async def fetch_query_transcript(db: PostgreSQLDB,
     else:
         ids = ','.join(["'" + str(id) + "'" for id in ids])
         filter = '1'
-    
-    
+
     # await db.initdb() # Need to test if this is needed
     query_embedding = await embedding_func([query])
     query_embedding = ','.join([str(x) for x in query_embedding[0]]) # type: ignore
@@ -137,6 +160,17 @@ async def fetch_query_transcript(db: PostgreSQLDB,
         embedding_string=query_embedding, limit=limit, doc_ids=ids, filter=filter)
     result = await db.query(sql, multirows=True)
     return result
+
+async def fetch_best_match_speaker(db: PostgreSQLDB, 
+                                   embedding_vector: str, 
+                                   threshold: float = 0.5, 
+                                   limit: int = 1) -> str:
+    sql = SQL_TEMPLATES["QUERY_DIRZ_VDB"].format(
+        embedding_string=embedding_vector, threshold=threshold, limit=limit)
+    result = await db.query(sql, multirows=True)
+    if len(result) == 0:
+        return None
+    return result[0]['speaker_id']
 
 TABLES = {
     "LIGHTRAG_VDB_TRANSCRIPT": """
@@ -148,6 +182,13 @@ TABLES = {
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     update_time TIMESTAMP,
     CONSTRAINT LIGHTRAG_VDB_TRANSCRIPT_PK PRIMARY KEY (id)
+    )
+    """,
+    "SEGMENT_DIRZ_VDB":"""
+    CREATE TABLE IF NOT EXISTS SEGMENT_DIRZ_VDB (
+    speaker_id VARCHAR(255),
+    embedding_vector VECTOR,
+    CONSTRAINT SEGMENT_DIRZ_VDB_PK PRIMARY KEY (speaker_id)
     )
     """
 }
@@ -178,5 +219,19 @@ SQL_TEMPLATES = {
             )
             ORDER BY distance DESC
             LIMIT {limit}
+    """,
+    "UPSERT_SPEAKER":
     """
+        INSERT INTO SEGMENT_DIRZ_VDB (speaker_id, embedding_vector)
+        VALUES ($1, $2)
+        ON CONFLICT (speaker_id) DO UPDATE SET
+        embedding_vector = $2
+    """,
+    "QUERY_DIRZ_VDB":
+    """
+        SELECT speaker_id
+        FROM SEGMENT_DIRZ_VDB
+        WHERE 1 - (embedding_vector <=> '[{embedding_string}]'::vector) > {threshold}
+        LIMIT {limit}
+    """,
 }

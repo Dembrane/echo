@@ -1,7 +1,9 @@
 import os
 import asyncio
+import hashlib
 from logging import getLogger
 
+import requests
 import nest_asyncio
 from fastapi import APIRouter, HTTPException
 from litellm import completion
@@ -11,11 +13,14 @@ from lightrag.kg.postgres_impl import PostgreSQLDB
 from lightrag.kg.shared_storage import initialize_pipeline_status
 
 from dembrane.rag import RAGManager, get_rag
+from dembrane.config import RUNPOD_API_KEY, RUNPOD_API_BASE_URL
 from dembrane.prompts import render_prompt
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.audio_lightrag.utils.lightrag_utils import (
+    upsert_speaker,
     upsert_transcript,
     fetch_query_transcript,
+    fetch_best_match_speaker,
 )
 
 nest_asyncio.apply()
@@ -213,5 +218,77 @@ async def query_item(payload: QueryRequest,
     except Exception as e:
         logger.exception("Query operation failed")
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+class DiarizationRequest(BaseModel):
+    audio_data: str 
+    file_type: str
+
+class DiarizationResponse(BaseModel):
+    status: str
+    speaker_ids_mapping: dict
+    diarization_dict_li: list[dict]
+
+@StatelessRouter.post("/rag/diarization")
+async def diarization(payload: DiarizationRequest,
+                      session: DependencyDirectusSession  #Needed for fake auth
+                      ) -> DiarizationResponse:
+    session = session
     
+    try:
+        postgres_db = await PostgresDBManager.get_initialized_db()
+    except Exception as e:
+        logger.exception("Failed to get initialized PostgreSQLDB for diarization")
+        raise HTTPException(status_code=500, detail="Database connection failed") from e
     
+    headers = {
+    'Content-Type': 'application/json',
+    'Authorization': f'Bearer {RUNPOD_API_KEY}'}
+    json_input = {
+        "input": {
+            "audio_data": payload.audio_data,
+            "file_type": payload.file_type
+        }
+    }
+    response = requests.post(RUNPOD_API_BASE_URL, 
+                            headers=headers, 
+                            json=json_input)
+    if response.status_code != 200:
+        raise HTTPException(status_code=500, detail="Diarization failed")
+    else:
+        diarization_dict_li = response.json()['output']['diarization']
+        speaker_ids_mapping = {}
+        for speaker_id, embedding_vector in response.json()['output']['embeddings_dict'].items():
+            new_speaker_id = 'speaker_' + hashlib.shake_256(
+                (
+                payload.audio_data + speaker_id
+                ).encode()).hexdigest(3)
+            embedding_string = ','.join([str(x) for x in embedding_vector])
+            map_id = await _get_or_create_speaker_id(postgres_db, 
+                                                     new_speaker_id, 
+                                                     embedding_string)
+            speaker_ids_mapping[speaker_id] = map_id
+        diarization_dict_li = [
+            {
+                k: speaker_ids_mapping[v] if k == 'speaker' else v 
+                for k, v in dirz_dict.items()
+            } 
+            for dirz_dict in diarization_dict_li
+        ]
+        return DiarizationResponse(status="success", 
+                                   speaker_ids_mapping= speaker_ids_mapping,
+                                   diarization_dict_li=diarization_dict_li
+                                   )
+
+async def _get_or_create_speaker_id(postgres_db: PostgreSQLDB, 
+                                    new_speaker_id: str, 
+                                    embedding_string: str) -> str:
+    best_match_speaker_id = await fetch_best_match_speaker(postgres_db,
+                                                            embedding_string)
+    found_speaker_id = None
+    if best_match_speaker_id is None:
+        await upsert_speaker(postgres_db, 
+                            new_speaker_id, 
+                            embedding_string)
+    else:
+        found_speaker_id = best_match_speaker_id
+    return found_speaker_id or new_speaker_id
