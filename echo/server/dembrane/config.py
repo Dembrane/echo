@@ -168,7 +168,13 @@ logger.debug("STORAGE_S3_SECRET: set")
 DISABLE_CORS = os.environ.get("DISABLE_CORS", "false").lower() in ["true", "1"]
 logger.debug(f"DISABLE_CORS: {DISABLE_CORS}")
 
+RUNPOD_API_KEY = os.environ.get("RUNPOD_API_KEY")
+assert RUNPOD_API_KEY, "RUNPOD_API_KEY environment variable is not set"
+logger.debug("RUNPOD_API_KEY: set")
 
+RUNPOD_API_BASE_URL = os.environ.get("RUNPOD_API_BASE_URL")
+assert RUNPOD_API_BASE_URL, "RUNPOD_API_BASE_URL environment variable is not set"
+logger.debug("RUNPOD_API_BASE_URL: set")
 
 # *****************LIGHTRAG CONFIGURATIONS*****************
 
