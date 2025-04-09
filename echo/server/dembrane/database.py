@@ -304,6 +304,8 @@ class ProjectChatModel(Base):
         back_populates="project_chats",
     )
 
+    auto_select_bool: Mapped[bool] = mapped_column('auto_select', Boolean, default=False)
+
 
 class ResourceTypeEnum(Enum):
     PDF = "PDF"

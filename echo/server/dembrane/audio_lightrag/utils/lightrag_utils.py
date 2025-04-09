@@ -45,7 +45,7 @@ async def get_segment_from_conversation_chunk_ids(db: PostgreSQLDB,
             raise ValueError(f"Invalid UUID: {conversation_chunk_id}")
         
     conversation_chunk_ids = ','.join(["UUID('" + conversation_id + "')" 
-                                for conversation_id in conversation_chunk_ids])
+                                for conversation_id in conversation_chunk_ids]) #type: ignore
     sql = SQL_TEMPLATES["get_segment_from_conversation_chunk_ids"
                         ].format(conversation_ids=conversation_chunk_ids)
     result = await db.query(sql, multirows=True)
@@ -76,8 +76,8 @@ def get_segment_from_project_ids(db: PostgreSQLDB,
     project_request["query"]["filter"] = {"id": {"_in": project_ids}}
     project_request_result = directus.get_items("project", project_request)
     conversation_ids = [[x['id'] for x in project_request_result_dict['conversations']] for project_request_result_dict in project_request_result]
-    conversation_ids = [item for sublist in conversation_ids for item in sublist]
-    return get_segment_from_conversation_ids(db, conversation_ids)
+    flat_conversation_ids: list[str] = [item for sublist in conversation_ids for item in sublist]
+    return get_segment_from_conversation_ids(db, flat_conversation_ids)
 
 def get_all_segments(db: PostgreSQLDB,
                      conversation_ids: list[str]) -> list[int]:
