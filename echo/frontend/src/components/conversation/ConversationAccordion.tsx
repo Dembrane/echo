@@ -472,19 +472,21 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
         return prev.filter((f) => f !== filterValue);
       }
 
-      // Case 1.5: if no filters are active, toggle all filters
+      // Case 2: If the filter is inactive, toggle it on
+      if (!isActive) {
+        return [...prev, filterValue];
+      }
+
+      // Case 3: If the filter is active but it's the only active filter
+      // don't allow removing the last filter (prevent zero filters)
       if (prev.length === 1) {
-        return allFilterValues;
+        // Keep at least one filter active
+        return prev;
       }
 
-      // Case 2: If the filter is already active, toggle it off
-      if (isActive) {
-        // Remove it from active filters
-        return prev.filter((f) => f !== filterValue);
-      }
-
-      // Case 3: If the filter is inactive, toggle it on
-      return [...prev, filterValue];
+      // Case 4: If the filter is active and there are other active filters,
+      // toggle it off
+      return prev.filter((f) => f !== filterValue);
     });
   };
 
