@@ -18,7 +18,7 @@ import {
 } from "@/lib/query";
 import { ConversationEdit } from "@/components/conversation/ConversationEdit";
 import { ConversationDangerZone } from "@/components/conversation/ConversationDangerZone";
-import { finishConversation } from "@/lib/api";
+import { finishConversation, getConversationSummary } from "@/lib/api";
 import { IconRefresh } from "@tabler/icons-react";
 import { t } from "@lingui/core/macro";
 import { Markdown } from "@/components/common/Markdown";
@@ -38,13 +38,17 @@ export const ProjectConversationOverviewRoute = () => {
 
   const useHandleGenerateSummaryManually = useMutation({
     mutationFn: async () => {
-      await finishConversation(conversationId ?? "");
+      const response = await getConversationSummary(conversationId ?? "");
       toast.info(
-        t`The summary is being regenerated. Please wait upto 2 minutes for the new summary to be available.`,
+        t`The summary is being regenerated. Please wait for the new summary to be available.`,
       );
+      return response;
     },
     onSuccess: () => {
       conversationQuery.refetch();
+    },
+    onError: () => {
+      toast.error(t`Failed to regenerate the summary. Please try again later.`);
     },
   });
 
@@ -59,7 +63,11 @@ export const ProjectConversationOverviewRoute = () => {
             <>
               <Group>
                 <Title order={2}>
-                  <Trans>Summary</Trans>
+                  {(conversationQuery.data?.summary ||
+                    (conversationQuery.data?.source &&
+                      !conversationQuery.data.source
+                        .toLowerCase()
+                        .includes("upload"))) && <Trans>Summary</Trans>}
                 </Title>
                 <Group gap="sm">
                   {conversationQuery.data?.summary && (
@@ -89,23 +97,36 @@ export const ProjectConversationOverviewRoute = () => {
                 </Group>
               </Group>
 
-              <Markdown content={conversationQuery.data?.summary ?? ""} />
+              <Markdown
+                content={
+                  conversationQuery.data?.summary ??
+                  (useHandleGenerateSummaryManually.data &&
+                  "summary" in useHandleGenerateSummaryManually.data
+                    ? useHandleGenerateSummaryManually.data.summary
+                    : "")
+                }
+              />
 
-              {!conversationQuery.data?.summary && (
-                <Button
-                  variant="outline"
-                  onClick={() => useHandleGenerateSummaryManually.mutate()}
-                  className="-mt-[2rem]"
-                  loading={
-                    useHandleGenerateSummaryManually.isPending ||
-                    conversationQuery.isFetching
-                  }
-                >
-                  {t`Generate Summary`}
-                </Button>
-              )}
+              {!conversationQuery.data?.summary &&
+                conversationQuery.data?.summary &&
+                conversationQuery.data?.source &&
+                !conversationQuery.data.source
+                  .toLowerCase()
+                  .includes("upload") && (
+                  <Button
+                    variant="outline"
+                    onClick={() => useHandleGenerateSummaryManually.mutate()}
+                    className="-mt-[2rem]"
+                    loading={
+                      useHandleGenerateSummaryManually.isPending ||
+                      conversationQuery.isFetching
+                    }
+                  >
+                    {t`Generate Summary`}
+                  </Button>
+                )}
 
-              <Divider />
+              {conversationQuery.data?.summary && <Divider />}
             </>
           </Stack>
         )}

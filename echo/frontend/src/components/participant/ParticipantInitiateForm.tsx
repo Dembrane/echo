@@ -45,6 +45,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
       name: data.name ?? t`Participant`,
       pin: project.pin ?? "",
       tagIdList: data.tagIdList,
+      source: "PORTAL_AUDIO",
     });
   };
 

@@ -33,13 +33,13 @@ type Conversation = {
   created_at?: string | null;
   description?: string | null;
   id: string;
+  source?: string | null;
+  duration?: number | null;
   participant_email?: string | null;
   participant_name?: string | null;
   participant_user_agent?: string | null;
-  processing_completed_at?: string | null;
-  processing_error?: string | null;
-  processing_started_at?: string | null;
   processing_status?: string | null;
+  processing_message?: string | null;
   project_chat_messages: any[] | ProjectChatMessageConversation[];
   project_chats: any[] | ProjectChatConversation[];
   project_id: string | Project;
@@ -56,7 +56,6 @@ type ConversationChunk = {
   id: string;
   path?: string | null;
   quotes: any[] | QuoteConversationChunk[];
-  task_id?: string | null;
   timestamp: string;
   transcript?: string | null;
   updated_at?: string | null;

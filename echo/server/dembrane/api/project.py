@@ -5,7 +5,7 @@ from http import HTTPStatus
 from typing import List, Optional, Generator
 from logging import getLogger
 
-from fastapi import APIRouter, UploadFile, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from fastapi.responses import StreamingResponse
@@ -16,14 +16,12 @@ from dembrane.utils import (
     get_safe_filename,
     generate_4_digit_pin,
 )
-from dembrane.config import AUDIO_CHUNKS_DIR, RESOURCE_UPLOADS_DIR
+from dembrane.config import BASE_DIR
 from dembrane.schemas import (
     ProjectSchema,
-    ResourceSchema,
 )
 from dembrane.database import (
     ProjectModel,
-    ResourceModel,
     ConversationModel,
     ProcessingStatusEnum,
     ProjectAnalysisRunModel,
@@ -32,8 +30,6 @@ from dembrane.database import (
 from dembrane.directus import directus
 from dembrane.report_utils import ContextTooLongException, get_report_content_for_project
 from dembrane.api.exceptions import (
-    ResourceFailedToSaveFileException,
-    ResourceInvalidFileFormatException,
     ProjectLanguageNotSupportedException,
 )
 from dembrane.api.conversation import get_conversation, get_conversation_chunks
@@ -124,7 +120,7 @@ async def generate_transcript_file(conversation_id: str, db: Session) -> Optiona
     # Add conversation ID to ensure uniqueness
     name_for_file += f"_{conversation_id[:8]}"
 
-    conversation_dir = os.path.join(AUDIO_CHUNKS_DIR, conversation_id)
+    conversation_dir = os.path.join(BASE_DIR, "transcripts", conversation_id)
     os.makedirs(conversation_dir, exist_ok=True)
 
     file_path = os.path.join(conversation_dir, f"{name_for_file}-transcript.md")
@@ -211,78 +207,78 @@ async def get_project_transcripts(
     return response
 
 
-@ProjectRouter.get(
-    "/{project_id}/resources", response_model=List[ResourceSchema], tags=["resource"]
-)
-async def get_all_resources_for_project(
-    project_id: str, db: DependencyInjectDatabase
-) -> List[ResourceModel]:
-    return db.query(ResourceModel).filter(ResourceModel.project_id == project_id).all()
+# @ProjectRouter.get(
+#     "/{project_id}/resources", response_model=List[ResourceSchema], tags=["resource"]
+# )
+# async def get_all_resources_for_project(
+#     project_id: str, db: DependencyInjectDatabase
+# ) -> List[ResourceModel]:
+#     return db.query(ResourceModel).filter(ResourceModel.project_id == project_id).all()
 
 
-@ProjectRouter.post(
-    "/{project_id}/resources/upload",
-    response_model=List[ResourceSchema],
-    tags=["resource"],
-)
-async def upload_resources(
-    files: List[UploadFile],
-    project_id: str,
-    db: DependencyInjectDatabase,
-) -> List[ResourceModel]:
-    resources = []
+# @ProjectRouter.post(
+#     "/{project_id}/resources/upload",
+#     response_model=List[ResourceSchema],
+#     tags=["resource"],
+# )
+# async def upload_resources(
+#     files: List[UploadFile],
+#     project_id: str,
+#     db: DependencyInjectDatabase,
+# ) -> List[ResourceModel]:
+#     resources = []
 
-    for file in files:
-        if not file.filename:
-            original_filename = file.filename
+#     for file in files:
+#         if not file.filename:
+#             original_filename = file.filename
 
-            if not file.filename:
-                raise ResourceInvalidFileFormatException
+#             if not file.filename:
+#                 raise ResourceInvalidFileFormatException
 
-            if not file.filename.endswith(".pdf"):
-                raise ResourceInvalidFileFormatException
+#             if not file.filename.endswith(".pdf"):
+#                 raise ResourceInvalidFileFormatException
 
-            file_name = file.filename.replace(" ", "_")
-            type = "PDF"
-            file_path = os.path.join(RESOURCE_UPLOADS_DIR, file_name)
-            uuid = generate_uuid()
+#             file_name = file.filename.replace(" ", "_")
+#             type = "PDF"
+#             file_path = os.path.join(RESOURCE_UPLOADS_DIR, file_name)
+#             uuid = generate_uuid()
 
-            if os.path.exists(file_path):
-                logger.info(f"{file_path} already exists. Generating a unique filename")
-                unique_filename = uuid + "_" + file_name
-                file_path = os.path.join(RESOURCE_UPLOADS_DIR, unique_filename)
+#             if os.path.exists(file_path):
+#                 logger.info(f"{file_path} already exists. Generating a unique filename")
+#                 unique_filename = uuid + "_" + file_name
+#                 file_path = os.path.join(RESOURCE_UPLOADS_DIR, unique_filename)
 
-            file_content = await file.read()
+#             file_content = await file.read()
 
-            try:
-                with open(file_path, "wb") as f:
-                    logger.info(f"Saving the file to {file_path}")
-                    f.write(file_content)
+#             try:
+#                 with open(file_path, "wb") as f:
+#                     logger.info(f"Saving the file to {file_path}")
+#                     f.write(file_content)
 
-                resource = ResourceModel(
-                    id=uuid,
-                    project_id=project_id,
-                    # initialize title with original filename
-                    # doc will be summarized and title would be updated later
-                    original_filename=original_filename,
-                    type=type,
-                    path=file_path,
-                    title=original_filename,
-                )
-                db.add(resource)
-                db.commit()
-                resources.append(resource)
+#                 resource = ResourceModel(
+#                     id=uuid,
+#                     project_id=project_id,
+#                     # initialize title with original filename
+#                     # doc will be summarized and title would be updated later
+#                     original_filename=original_filename,
+#                     type=type,
+#                     path=file_path,
+#                     title=original_filename,
+#                 )
+#                 db.add(resource)
+#                 db.commit()
+#                 resources.append(resource)
 
-                # process_resource_queue.add_task(
-                #     ProcessResourceTaskQueueItem(resource=resource)
-                # )
+#                 # process_resource_queue.add_task(
+#                 #     ProcessResourceTaskQueueItem(resource=resource)
+#                 # )
 
-            except Exception as e:
-                logger.error(f"Failed to save the file: {e}")
-                raise ResourceFailedToSaveFileException from e
+#             except Exception as e:
+#                 logger.error(f"Failed to save the file: {e}")
+#                 raise ResourceFailedToSaveFileException from e
 
-    db.commit()
-    return resources
+#     db.commit()
+#     return resources
 
 
 def get_latest_project_analysis_run(

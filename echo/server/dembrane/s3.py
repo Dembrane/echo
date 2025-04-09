@@ -147,14 +147,27 @@ def get_signed_url(file_name: str, expires_in_seconds: int = 3600) -> str:
 
 
 def get_sanitized_s3_key(file_name: str) -> str:
+    if not file_name:
+        raise ValueError("Empty file name provided to get_sanitized_s3_key")
+
     file_name = file_name.strip().split("?")[0]
+
     # Check if it's a full URL and extract the path
     if file_name.startswith(f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/"):
-        return file_name.split(f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/")[1]
+        key = file_name.split(f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/")[1]
+        return key
+    # Handle URLs with any endpoint but correct format (http://endpoint/bucket/key)
+    elif file_name.startswith("http://") or file_name.startswith("https://"):
+        parts = file_name.split("/")
+        if len(parts) >= 5:  # http:// + domain + bucket + rest of path
+            # Skip http(s):// + domain + bucket
+            key = "/".join(parts[4:])
+            return key
     # Also handle cases with forward slashes at the beginning
     elif file_name.startswith("/"):
         # Remove any leading slashes
         return file_name.lstrip("/")
+
     return file_name
 
 

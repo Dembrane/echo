@@ -3,7 +3,7 @@
 #
 # last locked with the following flags:
 #   pre: false
-#   features: []
+#   features: ["dev"]
 #   all-features: false
 #   with-sources: false
 #   generate-hashes: false
@@ -64,6 +64,8 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
+coverage==7.8.0
+    # via pytest-cov
 cryptography==42.0.8
     # via python-jose
 dataclasses-json==0.6.6
@@ -75,6 +77,8 @@ distro==1.9.0
     # via openai
 ecdsa==0.19.0
     # via python-jose
+execnet==2.1.1
+    # via pytest-xdist
 fastapi==0.109.2
     # via sentry-sdk
 ffmpeg-python==0.2.0
@@ -112,6 +116,8 @@ idna==3.7
     # via yarl
 importlib-metadata==8.6.1
     # via litellm
+iniconfig==2.1.0
+    # via pytest
 isort==5.13.2
 jinja2==3.1.4
     # via litellm
@@ -183,9 +189,12 @@ packaging==23.2
     # via huggingface-hub
     # via langchain-core
     # via marshmallow
+    # via pytest
 pandas==2.2.2
 pandas-stubs==2.2.2.240514
 pgvector==0.2.5
+pluggy==1.5.0
+    # via pytest
 prometheus-client==0.20.0
     # via flower
 prompt-toolkit==3.0.43
@@ -211,6 +220,15 @@ pydantic==2.7.1
 pydantic-core==2.18.2
     # via pydantic
 pypdf==4.0.2
+pytest==8.3.5
+    # via pytest-asyncio
+    # via pytest-cov
+    # via pytest-mock
+    # via pytest-xdist
+pytest-asyncio==0.26.0
+pytest-cov==6.1.1
+pytest-mock==3.14.0
+pytest-xdist==3.6.1
 python-dateutil==2.9.0.post0
     # via botocore
     # via celery

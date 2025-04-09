@@ -1,0 +1,62 @@
+{
+  "collection": "conversation_chunk",
+  "field": "source",
+  "type": "string",
+  "meta": {
+    "collection": "conversation_chunk",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "source",
+    "group": null,
+    "hidden": false,
+    "interface": "select-dropdown",
+    "note": "This is set if not through PORTAL",
+    "options": {
+      "choices": [
+        {
+          "text": "DASHBOARD_UPLOAD",
+          "value": "DASHBOARD_UPLOAD"
+        },
+        {
+          "text": "PORTAL_AUDIO",
+          "value": "PORTAL_AUDIO"
+        },
+        {
+          "text": "PORTAL_TEXT",
+          "value": "PORTAL_TEXT"
+        },
+        {
+          "text": "SPLIT",
+          "value": "SPLIT"
+        }
+      ]
+    },
+    "readonly": false,
+    "required": false,
+    "sort": 5,
+    "special": null,
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  },
+  "schema": {
+    "name": "source",
+    "table": "conversation_chunk",
+    "data_type": "character varying",
+    "default_value": null,
+    "max_length": 255,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": true,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}

@@ -3,7 +3,6 @@ from kombu import Queue, Exchange  # type: ignore
 enable_utc = True
 
 worker_hijack_root_logger = False
-worker_prefetch_multiplier = 1
 
 task_queues = (
     Queue("normal", Exchange("normal"), routing_key="normal"),
