@@ -358,7 +358,7 @@ const ConversationAccordionItem = ({
             </Text>
 
             {conversation.source?.toLocaleLowerCase().includes("upload") && (
-              <Badge size="xs" color="violet" variant="light">
+              <Badge size="xs" color="blue" variant="light">
                 {t`Uploaded`}
               </Badge>
             )}
@@ -377,7 +377,7 @@ const ConversationAccordionItem = ({
                     },
                   )}
                 >
-                  <Badge size="xs" color="blue" variant="light">
+                  <Badge size="xs" color="violet" variant="light">
                     {(() => {
                       const duration = intervalToDuration({
                         start: 0,
