@@ -51,8 +51,6 @@ dependencies = [
     "types-python-jose>=3.3.4.20240106",
     "litellm>=1.59.9",
     "boto3>=1.37.9",
-    "sox>=1.5.0",
-    "soundfile>=0.13.1",
     # "trankit @ git+https://github.com/nlp-uoregon/trankit",
     # tests
     "pytest",
