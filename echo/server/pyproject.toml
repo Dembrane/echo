@@ -68,7 +68,7 @@ dependencies = [
     "neo4j==5.28.1",
     "boto3==1.37.*",
     # Uncategorized
-    "mypy==1.10.*",
+    # "mypy==1.10.*",
     "ruff==0.4.*",
     "isort==5.13.*",
     "tenacity==8.3.*",
@@ -76,6 +76,7 @@ dependencies = [
     "datasets==3.4.1",
     "ragas==0.2.14",
     "wandb==0.19.8",
+    # "pyannote.audio==3.3.*"
 ]
 
 [tool.setuptools]

@@ -36,6 +36,42 @@
       },
       "console": "integratedTerminal",
       "justMyCode": "false"
+    },
+    {
+      "name": "Python: LightRAG Validation Debug",
+      "type": "python",
+      "request": "launch",
+      "program": "dembrane/audio_lightrag/validation/lightrag_ragas_validation.py",
+      "cwd": "${workspaceFolder}/server",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/server"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": "false"
+    },
+    {
+      "name": "Python: test_context_recall",
+      "type": "python",
+      "request": "launch",
+      "program": "dembrane/audio_lightrag/validation/test.py",
+      "cwd": "${workspaceFolder}/server",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/server"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": "false"
+    },
+    {
+      "name": "Python: Diarization Debug",
+      "type": "python",
+      "request": "launch",
+      "program": "dirz_test.py",
+      "cwd": "${workspaceFolder}/server",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/server"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": "false"
     }
   ]
 }

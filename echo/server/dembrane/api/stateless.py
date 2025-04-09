@@ -125,7 +125,7 @@ def validate_segment_id(echo_segment_ids: list[str] | None) -> bool:
 
 class InsertRequest(BaseModel):
     content: str | list[str]
-    transcripts: list[str]
+    transcripts: list[tuple[str, str]]
     echo_segment_id: str
 
 class InsertResponse(BaseModel):
@@ -158,10 +158,11 @@ async def insert_item(payload: InsertRequest,
         if validate_segment_id(echo_segment_ids):
             rag.insert(payload.content, 
                     ids=echo_segment_ids)
-            for transcript in payload.transcripts:
+            for transcript, speaker_id in payload.transcripts:
                 await upsert_transcript(postgres_db, 
                                     document_id = str(payload.echo_segment_id), 
-                                    content = transcript)
+                                    content = transcript,
+                                    speaker_id = speaker_id)
             result = {"status": "inserted", "content": payload.content}
             return InsertResponse(status="success", result=result)
         else:

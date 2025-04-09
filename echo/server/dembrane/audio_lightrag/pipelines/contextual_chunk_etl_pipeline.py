@@ -70,9 +70,10 @@ class ContextualChunkETLPipeline:
                 audio_stream = get_stream_from_s3(response['path'])
                 if response['contextual_transcript'] is None:
                     try:
+                        audio_stream_read = audio_stream.read()
+                        wav_encoding = audio_base64 = base64.b64encode(audio_stream_read).decode('utf-8')
                         # Run diarization
                         session = DirectusSession(user_id="none", is_admin=True)#fake session
-                        audio_base64 = base64.b64encode(audio_stream.read()).decode('utf-8')
                         diarization_response = await diarization(DiarizationRequest(
                             audio_data=audio_base64,
                             file_type="wav"
@@ -84,16 +85,12 @@ class ContextualChunkETLPipeline:
                                                 previous_conversation_text = previous_conversation_text,
                                                 speaker_diarization_report = speaker_diarization_report)
                         # Run audio model
-                        wav_encoding = wav_to_str(
-                            AudioSegment.from_file(BytesIO(audio_stream.read()), 
-                                                format="wav")
-                                                )
                         responses[segment_id] = get_json_dict_from_audio(wav_encoding = wav_encoding,
                                                                          audio_model_prompt=audio_model_prompt,
                                                                         )
                         # Update conversation segment
                         directus.update_item('conversation_segment', int(segment_id), 
-                                            {'transcript': '\n\n'.join(responses[segment_id]['TRANSCRIPTS']),
+                                            {'transcript': '\n\n'.join([' : '.join(list(d.values())) for d in responses[segment_id]['TRANSCRIPTS']]),
                                              'contextual_transcript': responses[segment_id]['CONTEXTUAL_TRANSCRIPT']})
                     except Exception as e:
                         logger.exception(f"Error in getting contextual transcript : {e}. Check LiteLLM API configs")

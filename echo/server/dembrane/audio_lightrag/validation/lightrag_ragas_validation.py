@@ -189,9 +189,12 @@ for i, batch in enumerate(batches):
                             for k,cummulative_value_list in cummulative_dict.items()}
     else:
         cummulative_dict = batch_report._scores_dict
-
-
-    wandb.log({k:np.mean(v) for k,v in cummulative_dict.items()})
+    
+    # func to replace np.nan with 0 for a list
+    def replace_nan_with_zero(li):
+        return [0 if isinstance(i, float) and np.isnan(i) else i for i in li]
+    cummulative_dict = {k: replace_nan_with_zero(v) for k,v in cummulative_dict.items()}
+    wandb.log({k:np.median(v) for k,v in cummulative_dict.items()})
     
     checkpoint = {
         "batch_idx": i,

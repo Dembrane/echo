@@ -114,6 +114,7 @@ async def check_audio_lightrag_tables(db: PostgreSQLDB) -> None:
 async def upsert_transcript(db: PostgreSQLDB, 
                             document_id: str, 
                             content: str,
+                            speaker_id: str,
                             id: str | None = None,) -> None:
     if id is None:
         # generate random id
@@ -128,7 +129,8 @@ async def upsert_transcript(db: PostgreSQLDB,
         "id": id,
         "document_id": document_id,
         "content": content,
-        "content_vector": content_embedding
+        "content_vector": content_embedding,
+        "speaker_id": speaker_id
     }
     await db.execute(sql = sql, data=data)
 
@@ -173,18 +175,21 @@ async def fetch_best_match_speaker(db: PostgreSQLDB,
     return result[0]['speaker_id']
 
 TABLES = {
-    "LIGHTRAG_VDB_TRANSCRIPT": """
+    "LIGHTRAG_VDB_TRANSCRIPT": 
+    """
     CREATE TABLE IF NOT EXISTS LIGHTRAG_VDB_TRANSCRIPT (
     id VARCHAR(255),
     document_id VARCHAR(255),
     content TEXT,
     content_vector VECTOR,
+    speaker_id VARCHAR(255),
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     update_time TIMESTAMP,
     CONSTRAINT LIGHTRAG_VDB_TRANSCRIPT_PK PRIMARY KEY (id)
     )
     """,
-    "SEGMENT_DIRZ_VDB":"""
+    "SEGMENT_DIRZ_VDB":
+    """
     CREATE TABLE IF NOT EXISTS SEGMENT_DIRZ_VDB (
     speaker_id VARCHAR(255),
     embedding_vector VECTOR,
@@ -196,12 +201,13 @@ TABLES = {
 SQL_TEMPLATES = {
     "UPSERT_TRANSCRIPT": 
     """
-        INSERT INTO LIGHTRAG_VDB_TRANSCRIPT (id, document_id, content, content_vector)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO LIGHTRAG_VDB_TRANSCRIPT (id, document_id, content, content_vector, speaker_id)
+        VALUES ($1, $2, $3, $4, $5)
         ON CONFLICT (id) DO UPDATE SET
         document_id = $2,
         content = $3,
-        content_vector = $4
+        content_vector = $4,
+        speaker_id = $5
     """, 
     "QUERY_TRANSCRIPT": 
     """

@@ -26,8 +26,11 @@ from dembrane.config import (
 from dembrane.audio_lightrag.utils.prompts import Prompts
 
 
-class Transctiptions(BaseModel):
-    TRANSCRIPTS: list[str]
+class Transcripts(BaseModel):
+    speaker_id: str
+    transcript: str
+class Transcriptions(BaseModel):
+    TRANSCRIPTS: list[Transcripts]
     CONTEXTUAL_TRANSCRIPT: str
 
 def get_json_dict_from_audio(wav_encoding: str,
@@ -94,7 +97,7 @@ def get_json_dict_from_audio(wav_encoding: str,
         api_base=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE,
         api_version=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION,
         api_key=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY,
-        response_format=Transctiptions)
+        response_format=Transcriptions)
     return json.loads(text_structuring_model_generation.choices[0].message.content) # type: ignore
 
 
