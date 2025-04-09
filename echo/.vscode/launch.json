@@ -43,6 +43,18 @@
       },
       "console": "integratedTerminal",
       "justMyCode": "false"
+    },
+    {
+      "name": "Python: LightRAG Test",
+      "type": "python",
+      "request": "launch",
+      "program": "test.py",
+      "cwd": "${workspaceFolder}/server",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/server"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": "false"
     }
   ]
 }

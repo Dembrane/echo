@@ -1,5 +1,6 @@
 # import os
 import os
+import uuid
 import asyncio
 import hashlib
 import logging
@@ -8,10 +9,10 @@ from typing import Any, TypeVar, Callable, Optional
 import redis
 from lightrag.kg.postgres_impl import PostgreSQLDB
 
+from dembrane.directus import directus
 from dembrane.audio_lightrag.utils.litellm_utils import embedding_func
 
 logger = logging.getLogger('audio_lightrag_utils')
-
 
 
 
@@ -22,6 +23,66 @@ REDIS_LOCK_RETRY_INTERVAL = 2  # seconds
 REDIS_LOCK_MAX_RETRIES = 60  # 2 minutes of retries
 
 T = TypeVar('T')
+
+def is_valid_uuid(uuid_str: str) -> bool:
+    try:
+        uuid.UUID(uuid_str)
+        return True
+    except ValueError:
+        return False
+
+# Hierachy:
+# Chunk is the lowest level
+# Conversation is a collection of chunks
+# Project is a collection of conversations
+# Segment is a many to many of chunks
+
+async def get_segment_from_conversation_chunk_ids(db: PostgreSQLDB,
+                                                  conversation_chunk_ids: list[str]) -> list[int]:
+    # Validate each item is a UUID in conversation_chunk_ids
+    for conversation_chunk_id in conversation_chunk_ids:
+        if not is_valid_uuid(conversation_chunk_id):
+            raise ValueError(f"Invalid UUID: {conversation_chunk_id}")
+        
+    conversation_chunk_ids = ','.join(["UUID('" + conversation_id + "')" 
+                                for conversation_id in conversation_chunk_ids])
+    sql = SQL_TEMPLATES["get_segment_from_conversation_chunk_ids"
+                        ].format(conversation_ids=conversation_chunk_ids)
+    result = await db.query(sql, multirows=True)
+    return [int(x['conversation_segment_id']) for x in result]
+
+def get_segment_from_conversation_ids(db: PostgreSQLDB,
+                                      conversation_ids: list[str]) -> list[int]:
+    conversation_request = {"query": 
+                                     {"fields": ["chunks.id"], 
+                                           "limit": 100000,
+                                           "deep": {"chunks": 
+                                                    {"_limit": 100000, "_sort": "timestamp"}
+                                                    },
+                                        # "filter": {"id": {"_in": ['0c6b0061-f6ec-490d-b279-0715ca9a7994']}}
+                                                }
+                            }
+    conversation_request["query"]["filter"] = {"id": {"_in": conversation_ids}}
+    conversation_request_result = directus.get_items("conversation", conversation_request)
+    conversation_chunk_ids = [[x['id'] for x in conversation_request_result_dict['chunks']] for conversation_request_result_dict in conversation_request_result]
+    conversation_chunk_ids = [item for sublist in conversation_chunk_ids for item in sublist]
+    return get_segment_from_conversation_chunk_ids(db, conversation_chunk_ids)
+
+def get_segment_from_project_ids(db: PostgreSQLDB,
+                                 project_ids: list[str]) -> list[int]:
+    project_request = {"query": {"fields": ["conversations.id"], 
+                                           "limit": 100000,
+                                           }}
+    project_request["query"]["filter"] = {"id": {"_in": project_ids}}
+    project_request_result = directus.get_items("project", project_request)
+    conversation_ids = [[x['id'] for x in project_request_result_dict['conversations']] for project_request_result_dict in project_request_result]
+    conversation_ids = [item for sublist in conversation_ids for item in sublist]
+    return get_segment_from_conversation_ids(db, conversation_ids)
+
+def get_all_segments(db: PostgreSQLDB,
+                     conversation_ids: list[str]) -> list[int]:
+    # Logic to be provided by Usama
+    return []
 
 async def with_distributed_lock(
     redis_url: str,
@@ -95,7 +156,6 @@ async def with_distributed_lock(
 async def check_audio_lightrag_tables(db: PostgreSQLDB) -> None:
     for _, table_definition in TABLES.items():
         await db.execute(table_definition)
-
 
 async def upsert_transcript(db: PostgreSQLDB, 
                             document_id: str, 
@@ -178,5 +238,10 @@ SQL_TEMPLATES = {
             )
             ORDER BY distance DESC
             LIMIT {limit}
+    """,
+    "get_segment_from_conversation_chunk_ids": # conversation_chunk_id UUID
+    """
+    SELECT conversation_segment_id FROM conversation_segment_conversation_chunk_1
+    WHERE conversation_chunk_id = ANY(ARRAY[{conversation_ids}])
     """
 }

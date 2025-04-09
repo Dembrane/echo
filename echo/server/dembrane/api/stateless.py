@@ -1,4 +1,5 @@
 import os
+import json
 import asyncio
 from logging import getLogger
 
@@ -6,16 +7,20 @@ import nest_asyncio
 from fastapi import APIRouter, HTTPException
 from litellm import completion
 from pydantic import BaseModel
+from fastapi.responses import StreamingResponse
 from lightrag.lightrag import QueryParam
 from lightrag.kg.postgres_impl import PostgreSQLDB
 from lightrag.kg.shared_storage import initialize_pipeline_status
 
 from dembrane.rag import RAGManager, get_rag
 from dembrane.prompts import render_prompt
-from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
 from dembrane.audio_lightrag.utils.lightrag_utils import (
+    get_all_segments,
     upsert_transcript,
     fetch_query_transcript,
+    get_segment_from_project_ids,
+    get_segment_from_conversation_chunk_ids,
 )
 
 nest_asyncio.apply()
@@ -144,7 +149,6 @@ async def insert_item(payload: InsertRequest,
         logger.exception("Failed to get initialized PostgreSQLDB for insert")
         raise HTTPException(status_code=500, detail="Database connection failed") from e
     try:
-        
         if isinstance(payload.echo_segment_id, str):
             echo_segment_ids = [payload.echo_segment_id]
         else:
@@ -165,20 +169,20 @@ async def insert_item(payload: InsertRequest,
         logger.exception("Insert operation failed")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
-class QueryRequest(BaseModel):
+class SimpleQueryRequest(BaseModel):
     query: str
     echo_segment_ids: list[str] | None = None
     get_transcripts: bool = False
 
-class QueryResponse(BaseModel):
+class SimpleQueryResponse(BaseModel):
     status: str
     result: str
     transcripts: list[str]
 
-@StatelessRouter.post("/rag/query")
-async def query_item(payload: QueryRequest,
+@StatelessRouter.post("/rag/simple_query")
+async def query_item(payload: SimpleQueryRequest,
                      session: DependencyDirectusSession  #Needed for fake auth
-                     ) -> QueryResponse:
+                     ) -> SimpleQueryResponse:
     session = session
     if not RAGManager.is_initialized():
         await RAGManager.initialize()
@@ -207,11 +211,108 @@ async def query_item(payload: QueryRequest,
                 transcript_contents = [t['content'] for t in transcripts] if isinstance(transcripts, list)  else [transcripts['content']] # type: ignore
             else:
                 transcript_contents = []
-            return QueryResponse(status="success", result=result, transcripts=transcript_contents)
+            return SimpleQueryResponse(status="success", result=result, transcripts=transcript_contents)
         else:
             raise HTTPException(status_code=400, detail="Invalid segment ID")
     except Exception as e:
         logger.exception("Query operation failed")
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+class StreamQueryRequest(BaseModel):
+    query: str 
+    conversation_history: list[dict[str, str]] | None = None
+    echo_segment_ids: list[str] | None = None
+    echo_conversation_ids: list[str] | None = None
+    echo_project_ids: list[str] | None = None
+    auto_select_bool: bool = False
+    get_transcripts: bool = False
+    stream_response: bool = False
+
+@StatelessRouter.post("/rag/query/stream")
+async def query_stream(payload: StreamQueryRequest,
+                       session: DependencyDirectusSession  #Needed for fake auth
+                       ) -> StreamingResponse:
+    session = session
+    # Validate payload
+    if not payload.auto_select_bool:
+        if payload.echo_segment_ids is None and payload.echo_conversation_ids is None and payload.echo_project_ids is None:
+            raise HTTPException(status_code=400, 
+                                detail="At least one of echo_segment_ids, echo_conversation_ids, or echo_project_ids must be provided")
+    # Initialize database
+    try:
+        postgres_db = await PostgresDBManager.get_initialized_db()
+    except Exception as e:
+        logger.exception("Failed to get initialized PostgreSQLDB for query")
+        raise HTTPException(status_code=500, detail="Database connection failed") from e
     
+    # Get echo segment ids
+    echo_segment_ids = []
+    if payload.echo_segment_ids:
+        echo_segment_ids += payload.echo_segment_ids
+    if payload.echo_conversation_ids:
+        conversation_segments = await get_segment_from_conversation_chunk_ids(postgres_db, payload.echo_conversation_ids)
+        echo_segment_ids += conversation_segments
+    if payload.echo_project_ids:
+        project_segments = await get_segment_from_project_ids(postgres_db, payload.echo_project_ids)
+        echo_segment_ids += project_segments
+    if payload.auto_select_bool:
+        all_segments = await get_all_segments(postgres_db, payload.echo_conversation_ids)
+        echo_segment_ids += all_segments
+    
+    # Initialize RAG
+    if not RAGManager.is_initialized():
+        await RAGManager.initialize()
+    rag = get_rag()
+    await initialize_pipeline_status()
+    if rag is None:
+        raise HTTPException(status_code=500, detail="RAG object not initialized")
+
+    # Process segment ids  
+    try:        
+        if validate_segment_id(echo_segment_ids):
+            if payload.query is not None:
+                param = QueryParam(mode="mix", 
+                               stream=True,
+                               ids= [str(id) for id in echo_segment_ids] if echo_segment_ids else None)
+            else:
+                param = QueryParam(mode="mix",
+                                   stream=True,
+                                   conversation_history=payload.conversation_history,
+                                   history_turns=10)
+            if payload.stream_response:
+                # # Get async iterator without awaiting the full response
+                # response = rag.aquery(payload.query, param=param)
+                # Raise not implemented error: aquery is not returning iterable
+                raise HTTPException(status_code=501, detail="Streaming response not implemented")
+            else:
+                response = await rag.aquery(payload.query, param=param)
+                
+            async def stream_generator():
+                if isinstance(response, str):
+                    # If it's a string, send it all at once
+                    yield f"{json.dumps({'response': response})}\n"
+                else:
+                    # If it's an async generator, send chunks one by one
+                    try:
+                        async for chunk in response:
+                            if chunk:  # Only send non-empty content
+                                yield f"{json.dumps({'response': chunk})}\n"
+                    except Exception as e:
+                        yield f"{json.dumps({'error': str(e)})}\n"
+            
+            return StreamingResponse(
+                stream_generator(),
+                media_type="application/x-ndjson",
+                headers={
+                    "Cache-Control": "no-cache",
+                    "Connection": "keep-alive",
+                    "Content-Type": "application/x-ndjson",
+                    "X-Accel-Buffering": "no",  # Ensure proper handling of streaming response when proxied by Nginx
+                },
+            )
+        else:
+            raise HTTPException(status_code=400, detail="Invalid segment ID")
+    except Exception as e:
+        logger.exception("Query streaming operation failed")
+        raise HTTPException(status_code=500, detail=str(e)) from e
     
