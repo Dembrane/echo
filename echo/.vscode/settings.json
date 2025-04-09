@@ -60,5 +60,9 @@
   ]
   "python.linting.pylintEnabled": false,
   "python.linting.mypyEnabled": true,
-  "python.linting.enabled": true
+  "python.linting.enabled": true,
+  "python.testing.pytestArgs": ["server"],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "python.testing.autoTestDiscoverOnSaveEnabled": true
 }

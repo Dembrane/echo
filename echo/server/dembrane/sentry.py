@@ -1,4 +1,3 @@
-
 from logging import getLogger
 
 import sentry_sdk
@@ -15,6 +14,7 @@ from dembrane.config import (
 logger = getLogger("sentry")
 
 ATTEMPTED_SENTRY_INIT = False
+
 
 def init_sentry() -> None:
     global ATTEMPTED_SENTRY_INIT
@@ -53,4 +53,3 @@ def init_sentry() -> None:
         )
     else:
         logger.info("sentry is disabled by DISABLE_SENTRY")
-

@@ -1,3 +1,4 @@
+# https://hub.docker.com/_/python
 FROM python:3.11 AS base
 
 # Prevents Python from writing pyc files.
@@ -6,18 +7,18 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # the application crashes without emitting any logs due to buffering.
 ENV PYTHONUNBUFFERED=1
 
-# The virtual environment is created in the working directory where rye is run
-# so the development and production environments must be in the same directory respectively.
-WORKDIR /code/server
+# Copy the static FFmpeg binaries from the official image
+COPY --from=mwader/static-ffmpeg:7.1.1 /ffmpeg /usr/local/bin/ffmpeg
+COPY --from=mwader/static-ffmpeg:7.1.1 /ffprobe /usr/local/bin/ffprobe
 
 RUN \
     --mount=type=cache,target=/var/lib/apt/lists \
     --mount=type=cache,target=/var/cache/apt/archives \
-    apt-get update \
-    && apt-get install -y --no-install-recommends build-essential \
-    ffmpeg \
-    curl \
-    zip
+    apt-get update && \
+    apt-get install -y --no-install-recommends git curl ca-certificates pkg-config zip build-essential && \
+    chmod +x /usr/local/bin/ffmpeg /usr/local/bin/ffprobe
+
+WORKDIR /code/server
 
 COPY requirements.lock /code/server/requirements.lock
 RUN pip install --no-cache-dir -r requirements.lock

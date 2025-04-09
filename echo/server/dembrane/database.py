@@ -354,15 +354,10 @@ class ConversationModel(Base):
     context: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    source: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     processing_status: Mapped[ProcessingStatusEnum] = mapped_column(String, default="PENDING")
-    processing_error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    processing_started_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    processing_completed_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    processing_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     chunks: Mapped[List["ConversationChunkModel"]] = relationship(
         "ConversationChunkModel",

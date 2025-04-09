@@ -6,7 +6,11 @@ launch_worker() {
   local queue_name=$2
 
   echo "Launching Celery worker: $worker_name on queue: $queue_name"
-  celery -A dembrane.tasks worker -E -l INFO -n $worker_name -Q $queue_name &
+  if [ "$queue_name" == "cpu" ]; then
+    celery -A dembrane.tasks worker -E -l INFO -n $worker_name -Q $queue_name &
+  else
+    celery -A dembrane.tasks worker -E -l INFO -n $worker_name -Q $queue_name &
+  fi
   # Store the PID of the worker
   WORKER_PIDS+=($!)
 }
@@ -32,10 +36,10 @@ launch_worker "worker.normal" "normal"
 launch_worker "worker.cpu" "cpu"
 
 # Launch Flower
-# echo "Launching Flower"
-# export FLOWER_UNAUTHENTICATED_API=True
-# celery -A dembrane.tasks flower &
-# FLOWER_PID=$!
+echo "Launching Flower"
+export FLOWER_UNAUTHENTICATED_API=True
+celery -A dembrane.tasks flower &
+FLOWER_PID=$!
 
 # Wait for all background jobs to finish
 wait

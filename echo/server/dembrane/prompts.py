@@ -24,13 +24,12 @@ from dembrane.config import PROMPT_TEMPLATES_DIR
 
 logger = logging.getLogger("prompts")
 
-env = Environment(
-    loader=FileSystemLoader(PROMPT_TEMPLATES_DIR),
-    autoescape=select_autoescape()
-)
+env = Environment(loader=FileSystemLoader(PROMPT_TEMPLATES_DIR), autoescape=select_autoescape())
 
 # Load all the files from PROMPT_TEMPLATES_DIR that end with .jinja
-PROMPT_TEMPLATE_LIST = [f.name for f in os.scandir(PROMPT_TEMPLATES_DIR) if f.is_file() and f.name.endswith(".jinja")]
+PROMPT_TEMPLATE_LIST = [
+    f.name for f in os.scandir(PROMPT_TEMPLATES_DIR) if f.is_file() and f.name.endswith(".jinja")
+]
 
 # Create a dictionary to map template names to their supported languages
 template_support = defaultdict(set)

@@ -1,21 +1,40 @@
 {
-  "collection": "conversation_chunk",
-  "field": "task_id",
+  "collection": "conversation",
+  "field": "source",
   "type": "string",
   "meta": {
-    "collection": "conversation_chunk",
+    "collection": "conversation",
     "conditions": null,
     "display": null,
     "display_options": null,
-    "field": "task_id",
+    "field": "source",
     "group": null,
     "hidden": false,
-    "interface": null,
-    "note": null,
-    "options": null,
+    "interface": "select-dropdown",
+    "note": "This is set if not through PORTAL",
+    "options": {
+      "choices": [
+        {
+          "text": "DASHBOARD_UPLOAD",
+          "value": "DASHBOARD_UPLOAD"
+        },
+        {
+          "text": "PORTAL_AUDIO",
+          "value": "PORTAL_AUDIO"
+        },
+        {
+          "text": "PORTAL_TEXT",
+          "value": "PORTAL_TEXT"
+        },
+        {
+          "text": "SPLIT",
+          "value": "SPLIT"
+        }
+      ]
+    },
     "readonly": false,
     "required": false,
-    "sort": null,
+    "sort": 22,
     "special": null,
     "translations": null,
     "validation": null,
@@ -23,8 +42,8 @@
     "width": "full"
   },
   "schema": {
-    "name": "task_id",
-    "table": "conversation_chunk",
+    "name": "source",
+    "table": "conversation",
     "data_type": "character varying",
     "default_value": null,
     "max_length": 255,

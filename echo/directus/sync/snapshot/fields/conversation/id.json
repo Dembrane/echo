@@ -16,7 +16,9 @@
     "readonly": false,
     "required": false,
     "sort": 1,
-    "special": null,
+    "special": [
+      "uuid"
+    ],
     "translations": null,
     "validation": null,
     "validation_message": null,

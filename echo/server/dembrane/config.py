@@ -41,28 +41,8 @@ logger.debug(f"DIRECTUS_BASE_URL: {DIRECTUS_BASE_URL}")
 DISABLE_REDACTION = os.environ.get("DISABLE_REDACTION", "false").lower() in ["true", "1"]
 logger.debug(f"DISABLE_REDACTION: {DISABLE_REDACTION}")
 
-UPLOADS_DIR = os.path.join(BASE_DIR, "uploads")
-if not os.path.exists(UPLOADS_DIR):
-    os.makedirs(UPLOADS_DIR)
-logger.debug(f"UPLOADS_DIR: {UPLOADS_DIR}")
-
 PROMPT_TEMPLATES_DIR = os.path.join(BASE_DIR, "prompt_templates")
 logger.debug(f"PROMPT_TEMPLATES_DIR: {PROMPT_TEMPLATES_DIR}")
-
-RESOURCE_UPLOADS_DIR = os.path.join(UPLOADS_DIR, "resources")
-if not os.path.exists(RESOURCE_UPLOADS_DIR):
-    os.makedirs(RESOURCE_UPLOADS_DIR)
-logger.debug(f"RESOURCE_UPLOADS_DIR: {RESOURCE_UPLOADS_DIR}")
-
-AUDIO_CHUNKS_DIR = os.path.join(UPLOADS_DIR, "audio_chunks")
-if not os.path.exists(AUDIO_CHUNKS_DIR):
-    os.makedirs(AUDIO_CHUNKS_DIR)
-logger.debug(f"AUDIO_CHUNKS_DIR: {AUDIO_CHUNKS_DIR}")
-
-IMAGES_DIR = os.path.join(UPLOADS_DIR, "images")
-if not os.path.exists(IMAGES_DIR):
-    os.makedirs(IMAGES_DIR)
-logger.debug(f"IMAGES_DIR: {IMAGES_DIR}")
 
 EMBEDDINGS_CACHE_DIR = os.path.join(BASE_DIR, "embeddings_cache")
 logger.debug(f"EMBEDDINGS_CACHE_DIR: {EMBEDDINGS_CACHE_DIR}")
@@ -280,5 +260,6 @@ for hide_logger in [
     "psycopg",
     "s3transfer",
     "urllib3",
+    "multipart",
 ]:
     logging.getLogger(hide_logger).setLevel(logging.WARNING)
