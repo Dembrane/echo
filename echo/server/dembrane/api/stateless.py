@@ -246,17 +246,17 @@ async def query_stream(payload: StreamQueryRequest,
         raise HTTPException(status_code=500, detail="Database connection failed") from e
     
     # Get echo segment ids
-    echo_segment_ids = []
+    echo_segment_ids: list[int] = []
     if payload.echo_segment_ids:
-        echo_segment_ids += payload.echo_segment_ids
+        echo_segment_ids += [int(id) for id in payload.echo_segment_ids]
     if payload.echo_conversation_ids:
         conversation_segments = await get_segment_from_conversation_chunk_ids(postgres_db, payload.echo_conversation_ids)
         echo_segment_ids += conversation_segments
     if payload.echo_project_ids:
-        project_segments = await get_segment_from_project_ids(postgres_db, payload.echo_project_ids)
+        project_segments = get_segment_from_project_ids(postgres_db, payload.echo_project_ids)
         echo_segment_ids += project_segments
     if payload.auto_select_bool:
-        all_segments = await get_all_segments(postgres_db, payload.echo_conversation_ids)
+        all_segments = get_all_segments(postgres_db, payload.echo_conversation_ids) # type: ignore
         echo_segment_ids += all_segments
     
     # Initialize RAG

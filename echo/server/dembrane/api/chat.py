@@ -46,6 +46,7 @@ class ChatContextSchema(BaseModel):
     messages: List[ChatContextMessageSchema]
     conversation_id_list: List[str]
     locked_conversation_id_list: List[str]
+    auto_select_bool: bool
 
 
 def raise_if_chat_not_found_or_not_authorized(chat_id: str, auth_session: DirectusSession) -> None:
@@ -129,6 +130,7 @@ async def get_chat_context(
                 token_usage=assistant_message_token_count / MAX_CHAT_CONTEXT_LENGTH,
             ),
         ],
+        auto_select_bool=chat.auto_select_bool,
     )
 
     for conversation in used_conversations:
@@ -153,6 +155,7 @@ async def get_chat_context(
 
 class ChatAddContextSchema(BaseModel):
     conversation_id: Optional[str] = None
+    auto_select_bool: Optional[bool] = None
 
 
 @ChatRouter.post("/{chat_id}/add-context")
@@ -164,52 +167,60 @@ async def add_chat_context(
 ) -> None:
     raise_if_chat_not_found_or_not_authorized(chat_id, auth)
 
-    if body.conversation_id is None:
-        raise HTTPException(status_code=400, detail="conversation_id is required")
+    if body.conversation_id is None and body.auto_select_bool is None:
+        raise HTTPException(status_code=400, detail="conversation_id or auto_select_bool is required")
+
+    if body.conversation_id is not None and body.auto_select_bool is not None:
+        raise HTTPException(status_code=400, detail="conversation_id and auto_select_bool cannot both be provided")
+
+    if body.auto_select_bool is False:
+        raise HTTPException(status_code=400, detail="auto_select_bool cannot be False")
 
     chat = db.get(ProjectChatModel, chat_id)
 
-    if chat is None or body.conversation_id is None:
+    if chat is None:
         raise HTTPException(status_code=404, detail="Chat not found")
+    
+    if body.conversation_id is not None:
 
-    conversation = db.get(ConversationModel, body.conversation_id)
+        conversation = db.get(ConversationModel, body.conversation_id)
 
-    if conversation is None:
-        raise HTTPException(status_code=404, detail="Conversation not found")
+        if conversation is None:
+            raise HTTPException(status_code=404, detail="Conversation not found")
 
-    # check if the conversation is already in the chat
-    for i_conversation in chat.used_conversations:
-        if i_conversation.id == conversation.id:
-            raise HTTPException(status_code=400, detail="Conversation already in the chat")
+        # check if the conversation is already in the chat
+        for i_conversation in chat.used_conversations:
+            if i_conversation.id == conversation.id:
+                raise HTTPException(status_code=400, detail="Conversation already in the chat")
 
-    # check if the conversation is too long
-    if await get_conversation_token_count(conversation.id, db, auth) > MAX_CHAT_CONTEXT_LENGTH:
-        raise HTTPException(status_code=400, detail="Conversation is too long")
+        # check if the conversation is too long
+        if await get_conversation_token_count(conversation.id, db, auth) > MAX_CHAT_CONTEXT_LENGTH:
+            raise HTTPException(status_code=400, detail="Conversation is too long")
 
-    # sum of all other conversations
-    chat_context = await get_chat_context(chat_id, db, auth)
-    chat_context_token_usage = sum(
-        conversation.token_usage for conversation in chat_context.conversations
-    )
-
-    conversation_to_add_token_usage = (
-        await get_conversation_token_count(conversation.id, db, auth) / MAX_CHAT_CONTEXT_LENGTH
-    )
-
-    if chat_context_token_usage + conversation_to_add_token_usage > 1:
-        raise HTTPException(
-            status_code=400,
-            detail="Chat context is too long. Remove other conversations to proceed.",
+        # sum of all other conversations
+        chat_context = await get_chat_context(chat_id, db, auth)
+        chat_context_token_usage = sum(
+            conversation.token_usage for conversation in chat_context.conversations
         )
 
-    chat.used_conversations.append(conversation)
-    db.commit()
+        conversation_to_add_token_usage = (
+            await get_conversation_token_count(conversation.id, db, auth) / MAX_CHAT_CONTEXT_LENGTH
+        )
+        if chat_context_token_usage + conversation_to_add_token_usage > 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Chat context is too long. Remove other conversations to proceed.",
+            )
+        chat.used_conversations.append(conversation)
+        db.commit()
 
-    return
-
+    if body.auto_select_bool is not None:
+        chat.auto_select_bool = body.auto_select_bool
+        db.commit()
 
 class ChatDeleteContextSchema(BaseModel):
-    conversation_id: str
+    conversation_id: Optional[str] = None
+    auto_select_bool: Optional[bool] = None
 
 
 @ChatRouter.post("/{chat_id}/delete-context")
@@ -220,30 +231,44 @@ async def delete_chat_context(
     auth: DependencyDirectusSession,
 ) -> None:
     raise_if_chat_not_found_or_not_authorized(chat_id, auth)
+    if body.conversation_id is None and body.auto_select_bool is None:
+        raise HTTPException(status_code=400, detail="conversation_id or auto_select_bool is required")
+    
+    if body.conversation_id is not None and body.auto_select_bool is not None:
+        raise HTTPException(status_code=400, detail="conversation_id and auto_select_bool cannot both be provided")
 
+    if body.auto_select_bool is True:
+        raise HTTPException(status_code=400, detail="auto_select_bool cannot be True")
+    
     chat = db.get(ProjectChatModel, chat_id)
 
     if chat is None:
         raise HTTPException(status_code=404, detail="Chat not found")
 
-    conversation = db.get(ConversationModel, body.conversation_id)
+    if body.conversation_id is not None:
 
-    if conversation is None:
-        raise HTTPException(status_code=404, detail="Conversation not found")
+        conversation = db.get(ConversationModel, body.conversation_id)
 
-    chat_context = await get_chat_context(chat_id, db, auth)
+        if conversation is None:
+            raise HTTPException(status_code=404, detail="Conversation not found")
 
-    # check if conversation exists in chat_context
-    for project_chat_conversation in chat_context.conversations:
-        if project_chat_conversation.conversation_id == conversation.id:
-            if project_chat_conversation.locked:
-                raise HTTPException(status_code=400, detail="Conversation is locked")
-            else:
-                chat.used_conversations.remove(conversation)
-                db.commit()
-                return
+        chat_context = await get_chat_context(chat_id, db, auth)
 
-    raise HTTPException(status_code=404, detail="Conversation not found in the chat")
+        # check if conversation exists in chat_context
+        for project_chat_conversation in chat_context.conversations:
+            if project_chat_conversation.conversation_id == conversation.id:
+                if project_chat_conversation.locked:
+                    raise HTTPException(status_code=400, detail="Conversation is locked")
+                else:
+                    chat.used_conversations.remove(conversation)
+                    db.commit()
+                    return
+
+        raise HTTPException(status_code=404, detail="Conversation not found in the chat")
+    
+    if body.auto_select_bool is not None:
+        chat.auto_select_bool = body.auto_select_bool
+        db.commit()
 
 
 @ChatRouter.post("/{chat_id}/lock-conversations", response_model=None)
@@ -320,7 +345,7 @@ async def post_chat(
     auth: DependencyDirectusSession,
     protocol: str = Query("data"),
     language: str = Query("en"),
-) -> StreamingResponse:
+) -> StreamingResponse: #ignore: type
     raise_if_chat_not_found_or_not_authorized(chat_id, auth)
 
     chat = db.get(ProjectChatModel, chat_id)
@@ -350,56 +375,64 @@ async def post_chat(
         logger.debug("initializing chat")
 
     chat_context = await get_chat_context(chat_id, db, auth)
-    locked_conversation_id_list = chat_context.locked_conversation_id_list
 
-    system_messages = await create_system_messages_for_chat(
-        locked_conversation_id_list, db, language
-    )
+    if chat_context.auto_select_bool:
+        # raise not implemented error
+        print(chat_context.conversation_id_list)
+        raise HTTPException(status_code=501, detail="Auto select is not implemented")
 
-    def stream_response() -> Generator[str, None, None]:
-        with DatabaseSession() as db:
-            filtered_messages: List[Dict[str, Any]] = []
+    else:
 
-            for message in messages:
-                if message["role"] in ["user", "assistant"]:
-                    filtered_messages.append(message)
+        locked_conversation_id_list = chat_context.locked_conversation_id_list
 
-            # if the last 2 message are user messages, and have the same content, remove the last one
-            # from filtered_messages
-            # when ui does reload
-            if (
-                len(filtered_messages) >= 2
-                and filtered_messages[-2]["role"] == "user"
-                and filtered_messages[-1]["role"] == "user"
-                and filtered_messages[-2]["content"] == filtered_messages[-1]["content"]
-            ):
-                filtered_messages = filtered_messages[:-1]
+        system_messages = await create_system_messages_for_chat(
+            locked_conversation_id_list, db, language
+        )
 
-            try:
-                for chunk in stream_anthropic_chat_response(
-                    system=system_messages,
-                    messages=filtered_messages,
-                    protocol=protocol,
+        def stream_response() -> Generator[str, None, None]:
+            with DatabaseSession() as db:
+                filtered_messages: List[Dict[str, Any]] = []
+
+                for message in messages:
+                    if message["role"] in ["user", "assistant"]:
+                        filtered_messages.append(message)
+
+                # if the last 2 message are user messages, and have the same content, remove the last one
+                # from filtered_messages
+                # when ui does reload
+                if (
+                    len(filtered_messages) >= 2
+                    and filtered_messages[-2]["role"] == "user"
+                    and filtered_messages[-1]["role"] == "user"
+                    and filtered_messages[-2]["content"] == filtered_messages[-1]["content"]
                 ):
-                    yield chunk
-            except Exception as e:
-                logger.error(f"Error in stream_anthropic_chat_response: {str(e)}")
+                    filtered_messages = filtered_messages[:-1]
 
-                # delete user message
-                db.delete(user_message)
-                db.commit()
+                try:
+                    for chunk in stream_anthropic_chat_response(
+                        system=system_messages,
+                        messages=filtered_messages,
+                        protocol=protocol,
+                    ):
+                        yield chunk
+                except Exception as e:
+                    logger.error(f"Error in stream_anthropic_chat_response: {str(e)}")
 
-                if protocol == "data":
-                    yield '3:"An error occurred while processing the chat response."\n'
-                else:
-                    yield "Error: An error occurred while processing the chat response."
+                    # delete user message
+                    db.delete(user_message)
+                    db.commit()
 
-        return
+                    if protocol == "data":
+                        yield '3:"An error occurred while processing the chat response."\n'
+                    else:
+                        yield "Error: An error occurred while processing the chat response."
 
-    headers = {"Content-Type": "text/event-stream"}
-    if protocol == "data":
-        headers["x-vercel-ai-data-stream"] = "v1"
+            return
 
-    response = StreamingResponse(stream_response(), headers=headers)
+        headers = {"Content-Type": "text/event-stream"}
+        if protocol == "data":
+            headers["x-vercel-ai-data-stream"] = "v1"
 
-    return response
+        response = StreamingResponse(stream_response(), headers=headers)
+
+        return response
