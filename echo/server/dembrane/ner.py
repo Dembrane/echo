@@ -38,7 +38,11 @@ def anonymize_sentence(sentence: str) -> str:
             start, end = token["span"]
             # TODO: ignore if whitelisted
             redacted_replacement = f"[REDACTED ({token['ner']})]"
-            redacted_text = redacted_text[: start + offset] + redacted_replacement + redacted_text[end + offset :]
+            redacted_text = (
+                redacted_text[: start + offset]
+                + redacted_replacement
+                + redacted_text[end + offset :]
+            )
             offset += len(redacted_replacement) - (end - start)
 
     return redacted_text

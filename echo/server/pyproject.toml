@@ -51,7 +51,15 @@ dependencies = [
     "types-python-jose>=3.3.4.20240106",
     "litellm>=1.59.9",
     "boto3>=1.37.9",
+    "sox>=1.5.0",
+    "soundfile>=0.13.1",
     # "trankit @ git+https://github.com/nlp-uoregon/trankit",
+    # tests
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-xdist>=3.6.1",
+    "pytest-asyncio",
 ]
 
 [tool.setuptools]
@@ -70,10 +78,12 @@ managed = true
 "fix:ruff" = "ruff --fix ."
 typecheck = { chain = ["typecheck:mypy"] }
 "typecheck:mypy" = "mypy ."
+"test" = "pytest"
+"test:cov" = "pytest --cov=dembrane --cov-report=term --cov-report=html"
 
 [tool.mypy]
 plugins = 'pydantic.mypy'
-exclude = ['server/alembic', 'alembic', 'scripts']
+exclude = ['server/alembic', 'alembic', 'scripts', 'tests']
 warn_redundant_casts = true
 warn_unused_ignores = true
 check_untyped_defs = true
@@ -89,6 +99,31 @@ init_forbid_extra = true
 init_typed = true
 warn_required_dynamic_aliases = true
 warn_untyped_fields = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "dembrane"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+markers = [
+    "slow: mark a test as slow",
+]
+addopts = "--strict-markers"
+
+[tool.coverage.run]
+source = ["dembrane"]
+omit = ["tests/*", "**/__init__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "pass",
+    "raise ImportError",
+]
 
 [tool.ruff]
 line-length = 100

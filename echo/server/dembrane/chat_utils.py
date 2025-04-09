@@ -82,9 +82,8 @@ async def create_system_messages_for_chat(
             {
                 "name": conversation.participant_name,
                 "tags": ", ".join([tag.text for tag in conversation.tags]),
-                "transcript": await get_conversation_transcript(
+                "transcript": get_conversation_transcript(
                     conversation.id,
-                    db,
                     # fake auth to get this fn call
                     DirectusSession(user_id="none", is_admin=True),
                 ),

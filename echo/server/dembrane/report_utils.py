@@ -29,9 +29,8 @@ async def get_report_content_for_project(project_id: str, db: Session, language:
     conversation_data_list = []
 
     for conversation in conversations:
-        transcript = await get_conversation_transcript(
+        transcript = get_conversation_transcript(
             conversation.id,
-            db,
             # fake auth to get this fn call
             DirectusSession(user_id="none", is_admin=True),
         )
