@@ -460,6 +460,16 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
     "DASHBOARD_UPLOAD",
   ]);
 
+  // Get total conversations count without filters
+  const totalConversationsQuery = useConversationsByProjectId(
+    projectId,
+    false,
+    false,
+    {
+      limit: 1,
+    },
+  );
+
   // Generalized toggle with improved UX
   const toggleFilter = (filterValue: string) => {
     setActiveFilters((prev) => {
@@ -603,100 +613,100 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
             conversationsQuery.data.length === 0 &&
             debouncedConversationSearchValue === ""
           ) && (
-            <>
-              <Group justify="space-between" align="center" gap="xs">
-                <TextInput
-                  leftSection={<IconSearch />}
-                  rightSection={
-                    !!conversationSearch && (
-                      <ActionIcon
-                        disabled={conversationsQuery.isLoading}
-                        variant="transparent"
-                        onClick={() => {
-                          setConversationSearch("");
-                        }}
-                      >
-                        <IconX />
-                      </ActionIcon>
-                    )
-                  }
-                  placeholder={t`Search conversations`}
-                  value={conversationSearch}
-                  size="sm"
-                  onChange={(e) => setConversationSearch(e.currentTarget.value)}
-                  className="flex-grow"
-                />
-                <Menu withArrow position="right" shadow="md">
-                  <Menu.Target>
-                    <Tooltip label={t`Options`}>
-                      <ActionIcon
-                        variant="outline"
-                        color={filterApplied ? "primary" : "gray"}
-                        c={filterApplied ? "primary" : "gray"}
-                      >
-                        <IconDotsVertical size={16} />
-                      </ActionIcon>
-                    </Tooltip>
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    <Stack py="md" px="lg" gap="md">
-                      <Stack gap="xs">
-                        <Text size="lg">
-                          <Trans>Options</Trans>
-                        </Text>
-                        <Checkbox
-                          label={t`Show duration`}
-                          checked={showDuration}
-                          onChange={(e) =>
-                            setShowDuration(e.currentTarget.checked)
-                          }
-                        />
-                      </Stack>
-                      <Stack gap="xs">
-                        <Text size="lg">
-                          <Trans>Sort</Trans>
-                        </Text>
-                        <Stack gap="xs">
-                          <Radio.Group
-                            value={sortBy}
-                            onChange={(value) =>
-                              setSortBy(value as SortOption["value"])
-                            }
-                            name="sortOptions"
-                          >
-                            <Stack gap="xs">
-                              {SORT_OPTIONS.map((option) => (
-                                <Radio
-                                  key={option.value}
-                                  value={option.value}
-                                  label={option.label}
-                                  size="sm"
-                                />
-                              ))}
-                            </Stack>
-                          </Radio.Group>
-                        </Stack>
-                      </Stack>
-                      <Button variant="subtle" onClick={resetEverything}>
-                        <Trans>Reset All Options</Trans>
-                      </Button>
+            <Group justify="space-between" align="center" gap="xs">
+              <TextInput
+                leftSection={<IconSearch />}
+                rightSection={
+                  !!conversationSearch && (
+                    <ActionIcon
+                      disabled={conversationsQuery.isLoading}
+                      variant="transparent"
+                      onClick={() => {
+                        setConversationSearch("");
+                      }}
+                    >
+                      <IconX />
+                    </ActionIcon>
+                  )
+                }
+                placeholder={t`Search conversations`}
+                value={conversationSearch}
+                size="sm"
+                onChange={(e) => setConversationSearch(e.currentTarget.value)}
+                className="flex-grow"
+              />
+              <Menu withArrow position="right" shadow="md">
+                <Menu.Target>
+                  <Tooltip label={t`Options`}>
+                    <ActionIcon
+                      variant="outline"
+                      color={filterApplied ? "primary" : "gray"}
+                      c={filterApplied ? "primary" : "gray"}
+                    >
+                      <IconDotsVertical size={16} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Stack py="md" px="lg" gap="md">
+                    <Stack gap="xs">
+                      <Text size="lg">
+                        <Trans>Options</Trans>
+                      </Text>
+                      <Checkbox
+                        label={t`Show duration`}
+                        checked={showDuration}
+                        onChange={(e) =>
+                          setShowDuration(e.currentTarget.checked)
+                        }
+                      />
                     </Stack>
-                  </Menu.Dropdown>
-                </Menu>
-              </Group>
-
-              {/* Filter icons that always appear under the search bar */}
-              <Group gap="xs" mt="xs" ml="xs">
-                <Text size="sm">
-                  <Trans>Sources:</Trans>
-                </Text>
-                {FILTER_OPTIONS.map((option) => (
-                  <FilterPin key={option.value} option={option} />
-                ))}
-              </Group>
-            </>
+                    <Stack gap="xs">
+                      <Text size="lg">
+                        <Trans>Sort</Trans>
+                      </Text>
+                      <Stack gap="xs">
+                        <Radio.Group
+                          value={sortBy}
+                          onChange={(value) =>
+                            setSortBy(value as SortOption["value"])
+                          }
+                          name="sortOptions"
+                        >
+                          <Stack gap="xs">
+                            {SORT_OPTIONS.map((option) => (
+                              <Radio
+                                key={option.value}
+                                value={option.value}
+                                label={option.label}
+                                size="sm"
+                              />
+                            ))}
+                          </Stack>
+                        </Radio.Group>
+                      </Stack>
+                    </Stack>
+                    <Button variant="subtle" onClick={resetEverything}>
+                      <Trans>Reset All Options</Trans>
+                    </Button>
+                  </Stack>
+                </Menu.Dropdown>
+              </Menu>
+            </Group>
           )}
 
+          {/* Filter icons that always appear under the search bar */}
+          {totalConversationsQuery.data?.length !== 0 && (
+            <Group gap="xs" mt="xs" ml="xs">
+              <Text size="sm">
+                <Trans>Sources:</Trans>
+              </Text>
+              {FILTER_OPTIONS.map((option) => (
+                <FilterPin key={option.value} option={option} />
+              ))}
+            </Group>
+          )}
+          
           {conversationsQuery.data?.length === 0 && (
             <Text size="sm">
               <Trans>
