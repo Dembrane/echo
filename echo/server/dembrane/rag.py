@@ -38,7 +38,7 @@ class RAGManager:
                 graph_storage="Neo4JStorage",
                 vector_storage="PGVectorStorage",
                 vector_db_storage_cls_kwargs={
-                    "cosine_better_than_threshold": 0.4
+                    "cosine_better_than_threshold": 0.2
                 }
             )
             await cls._instance.initialize_storages()

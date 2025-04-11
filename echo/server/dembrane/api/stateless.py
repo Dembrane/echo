@@ -159,7 +159,8 @@ async def insert_item(payload: InsertRequest,
 
         if validate_segment_id(echo_segment_ids):
             rag.insert(payload.content, 
-                    ids=echo_segment_ids)
+                    ids=echo_segment_ids,
+                    file_paths=echo_segment_ids)
             for transcript in payload.transcripts:
                 await upsert_transcript(postgres_db, 
                                     document_id = str(payload.echo_segment_id), 
@@ -279,7 +280,7 @@ async def get_lightrag_prompt(payload: GetLightragQueryRequest,
                                only_need_prompt=True,
                                ids= [str(id) for id in echo_segment_ids],
                                top_k = payload.top_k)
-            response = rag.aquery(payload.query, param=param)
+            response = await rag.aquery(payload.query, param=param)
             return response
             
         else:

@@ -6,7 +6,7 @@ from dembrane.config import (
 )
 from dembrane.directus import directus
 from dembrane.audio_lightrag.utils.audio_utils import (
-    process_ogg_files,
+    process_audio_files,
 )
 from dembrane.audio_lightrag.utils.process_tracker import ProcessTracker
 
@@ -64,9 +64,9 @@ class AudioETLPipeline:
             while len(unprocessed_chunk_file_uri_li) != 0:
                 #add logging and error handling
                 try:
-                    logger.info(f"Processing {len(unprocessed_chunk_file_uri_li)} ogg files for project_id={project_id}, conversation_id={conversation_id}")
+                    logger.info(f"Processing {len(unprocessed_chunk_file_uri_li)} files for project_id={project_id}, conversation_id={conversation_id}")
                     logger.debug(f"Counter value: {counter}, Max size: {self.max_size_mb}MB, Config ID: {self.configid}")
-                    unprocessed_chunk_file_uri_li, chunk_id_2_segment_temp, counter = process_ogg_files(
+                    unprocessed_chunk_file_uri_li, chunk_id_2_segment_temp, counter = process_audio_files(
                         unprocessed_chunk_file_uri_li,
                         configid=self.configid,
                         max_size_mb=float(self.max_size_mb),
@@ -88,7 +88,7 @@ class AudioETLPipeline:
                         # Break out of the while loop if we encounter a critical error
                         break
                     error_uri = unprocessed_chunk_file_uri_li[0]
-                    logger.error(f"Error processing ogg files for project_id={project_id}, conversation_id={conversation_id}, error_uri={error_uri}: {str(e)}")
+                    logger.error(f"Error processing files for project_id={project_id}, conversation_id={conversation_id}, error_uri={error_uri}: {str(e)}")
                     logger.exception("Stack trace:")
                     unprocessed_chunk_file_uri_li = unprocessed_chunk_file_uri_li[1:]
                     continue

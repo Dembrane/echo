@@ -12,7 +12,8 @@ class Prompts:
 #   where every item is a different speaker's speech (speaker turn sperated list)
 
 # Task 2: CONTEXTUAL ANALYSIS
-# - Analyze the conversation
+# - Analyze the conversation in excessive detail, point out all the details and nuances of the conversation
+# - Break down in detail the different user opinions throuout the conversation.
 # - Analyze in relation to:
 #   • Previous conversation history
 #   • Event context

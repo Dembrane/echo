@@ -19,9 +19,10 @@ def wav_to_str(wav_input: AudioSegment) -> str:
     return base64.b64encode(buffer.getvalue()).decode("utf-8")
 
 
-def process_ogg_files(
+def process_audio_files(
     unprocessed_chunk_file_uri_li: list[str],
     max_size_mb: float, configid: str, counter: int, 
+    format: str = "mp3"
 ) -> tuple[list[str], list[tuple[str, str]], int]:
     """
     Creates segments from chunks in ogg format. 
@@ -36,18 +37,18 @@ def process_ogg_files(
         counter: int:
             Counter for the next segment id
     """
-    chunk_size_dict = {uri.split('/')[-1][37:73]:get_file_size_from_s3_mb(uri) 
+    chunk_id_2_size = {uri.split('/')[-1][37:73]:get_file_size_from_s3_mb(uri) 
      for uri in unprocessed_chunk_file_uri_li}
     chunk_id_2_uri = {uri.split('/')[-1][37:73]:uri 
                       for uri in unprocessed_chunk_file_uri_li}
-    chunk_id = list(chunk_size_dict.keys())[0]
+    chunk_id = list(chunk_id_2_size.keys())[0]
     chunk_id_2_segment = []
     segment_2_path = {}
     # One chunk to many segments
-    if chunk_size_dict[chunk_id] > max_size_mb:
-        n_sub_chunks = int((chunk_size_dict[chunk_id] // max_size_mb) + 1)
+    if chunk_id_2_size[chunk_id] > max_size_mb:
+        n_sub_chunks = int((chunk_id_2_size[chunk_id] // max_size_mb) + 1)
         audio_stream = get_stream_from_s3(chunk_id_2_uri[chunk_id])
-        audio = AudioSegment.from_file(BytesIO(audio_stream.read()), format="ogg")
+        audio = AudioSegment.from_file(BytesIO(audio_stream.read()), format=format)
         chunk_length = len(audio) // n_sub_chunks
         for i in range(n_sub_chunks):
             segment_id = create_directus_segment(configid, counter)
@@ -70,12 +71,12 @@ def process_ogg_files(
         combined_size = 0
         combined_audio = AudioSegment.empty()
         segment_id = create_directus_segment(configid, counter)
-        for chunk_id,size in chunk_size_dict.items():
+        for chunk_id,size in chunk_id_2_size.items():
             combined_size = combined_size + size # type: ignore
             if combined_size<= max_size_mb:
                 chunk_id_2_segment.append((chunk_id, segment_id))
                 audio_stream = get_stream_from_s3(chunk_id_2_uri[chunk_id])
-                audio = AudioSegment.from_file(BytesIO(audio_stream.read()), format="ogg")
+                audio = AudioSegment.from_file(BytesIO(audio_stream.read()), format=format)
                 processed_chunk_li.append(chunk_id)
                 combined_audio += audio
         segment_uri = save_audio_to_s3(combined_audio, str(segment_id) + ".wav", public=False)
