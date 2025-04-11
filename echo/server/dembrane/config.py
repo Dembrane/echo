@@ -223,6 +223,26 @@ logger.debug("LIGHTRAG_LITELLM_EMBEDDING_API_KEY: set")
 LIGHTRAG_LITELLM_EMBEDDING_API_VERSION = os.environ.get("LIGHTRAG_LITELLM_EMBEDDING_API_VERSION")
 assert LIGHTRAG_LITELLM_EMBEDDING_API_VERSION, "LIGHTRAG_LITELLM_EMBEDDING_API_VERSION environment variable is not set"
 logger.debug("LIGHTRAG_LITELLM_EMBEDDING_API_VERSION: set")
+
+POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "postgres")
+assert POSTGRES_HOST, "POSTGRES_HOST environment variable is not set"
+logger.debug("POSTGRES_HOST: set")
+
+POSTGRES_PORT = os.environ.get("POSTGRES_PORT", 5432)
+assert POSTGRES_PORT, "POSTGRES_PORT environment variable is not set"
+logger.debug("POSTGRES_PORT: set")
+
+POSTGRES_USER = os.environ.get("POSTGRES_USER", "dembrane")
+assert POSTGRES_USER, "POSTGRES_USER environment variable is not set"
+logger.debug("POSTGRES_USER: set")
+
+POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "dembrane")
+assert POSTGRES_PASSWORD, "POSTGRES_PASSWORD environment variable is not set"
+logger.debug("POSTGRES_PASSWORD: set")
+
+POSTGRES_DATABASE = os.environ.get("POSTGRES_DATABASE", "dembrane")
+assert POSTGRES_DATABASE, "POSTGRES_DATABASE environment variable is not set"
+logger.debug("POSTGRES_DATABASE: set")
 #---------------/Secrets---------------
 
 

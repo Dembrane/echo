@@ -1,5 +1,4 @@
 import os
-import json
 import asyncio
 from logging import getLogger
 
@@ -7,16 +6,14 @@ import nest_asyncio
 from fastapi import APIRouter, HTTPException
 from litellm import completion
 from pydantic import BaseModel
-from fastapi.responses import StreamingResponse
 from lightrag.lightrag import QueryParam
 from lightrag.kg.postgres_impl import PostgreSQLDB
 from lightrag.kg.shared_storage import initialize_pipeline_status
 
 from dembrane.rag import RAGManager, get_rag
 from dembrane.prompts import render_prompt
-from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
+from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.audio_lightrag.utils.lightrag_utils import (
-    get_all_segments,
     upsert_transcript,
     fetch_query_transcript,
     get_segment_from_project_ids,
@@ -160,7 +157,7 @@ async def insert_item(payload: InsertRequest,
         if validate_segment_id(echo_segment_ids):
             rag.insert(payload.content, 
                     ids=echo_segment_ids,
-                    file_paths=echo_segment_ids)
+                    file_paths=['SEGMENT_ID_' + x for x in echo_segment_ids])
             for transcript in payload.transcripts:
                 await upsert_transcript(postgres_db, 
                                     document_id = str(payload.echo_segment_id), 
@@ -259,9 +256,9 @@ async def get_lightrag_prompt(payload: GetLightragQueryRequest,
     if payload.echo_project_ids:
         project_segments = await get_segment_from_project_ids(postgres_db, payload.echo_project_ids)
         echo_segment_ids += project_segments
-    if payload.auto_select_bool:
-        all_segments = await get_all_segments(postgres_db, payload.echo_conversation_ids) # type: ignore
-        echo_segment_ids += all_segments
+    # if payload.auto_select_bool:
+    #     all_segments = await get_all_segments(postgres_db, payload.echo_conversation_ids) # type: ignore
+    #     echo_segment_ids += all_segments
     
     # Initialize RAG
     if not RAGManager.is_initialized():

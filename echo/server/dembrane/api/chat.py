@@ -28,6 +28,7 @@ from dembrane.quote_utils import count_tokens
 from dembrane.api.stateless import GetLightragQueryRequest, get_lightrag_prompt
 from dembrane.api.conversation import get_conversation_token_count
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
+from dembrane.audio_lightrag.utils.lightrag_utils import count_segment_ids
 
 ChatRouter = APIRouter(tags=["chat"])
 
@@ -384,7 +385,7 @@ async def post_chat(
     chat_context = await get_chat_context(chat_id, db, auth)
 
     if chat_context.auto_select_bool:
-        GetLightragQueryRequest(
+        payload = GetLightragQueryRequest(
             query=body.messages[-1].content,
             conversation_history=messages,
             echo_conversation_ids=chat_context.conversation_id_list,
@@ -393,8 +394,10 @@ async def post_chat(
             get_transcripts=True,
             top_k=60
         )
-        rag_prompt = get_lightrag_prompt()
-        conversation_id_list = chat_context.conversation_id_list
+        session = DirectusSession(user_id="none", is_admin=True)#fake session
+        rag_prompt = get_lightrag_prompt(payload, session)
+        segment_ids = count_segment_ids(str(rag_prompt))
+        print(segment_ids)
         # raise not implemented error
         print(chat_context.conversation_id_list)
         raise HTTPException(status_code=501, detail="Auto select is not implemented")

@@ -1,4 +1,3 @@
-import os
 import time
 from typing import Any, AsyncGenerator
 from logging import getLogger
@@ -22,8 +21,13 @@ from lightrag.kg.shared_storage import initialize_pipeline_status
 from dembrane.config import (
     REDIS_URL,
     DISABLE_CORS,
+    POSTGRES_HOST,
+    POSTGRES_PORT,
+    POSTGRES_USER,
     ADMIN_BASE_URL,
     SERVE_API_DOCS,
+    POSTGRES_DATABASE,
+    POSTGRES_PASSWORD,
     PARTICIPANT_BASE_URL,
 )
 from dembrane.sentry import init_sentry
@@ -48,11 +52,11 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     
     # Initialize PostgreSQL and LightRAG
     postgres_config = {
-        "host": os.environ["POSTGRES_HOST"],
-        "port": os.environ["POSTGRES_PORT"],
-        "user": os.environ["POSTGRES_USER"],
-        "password": os.environ["POSTGRES_PASSWORD"],
-        "database": os.environ["POSTGRES_DATABASE"],
+        "host": POSTGRES_HOST,
+        "port": POSTGRES_PORT,
+        "user": POSTGRES_USER,
+        "password": POSTGRES_PASSWORD,
+        "database": POSTGRES_DATABASE,
     }
 
     postgres_db = PostgreSQLDB(config=postgres_config)

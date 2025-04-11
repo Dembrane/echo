@@ -1,5 +1,6 @@
 # import os
 import os
+import re
 import uuid
 import asyncio
 import hashlib
@@ -79,10 +80,10 @@ async def get_segment_from_project_ids(db: PostgreSQLDB,
     flat_conversation_ids: list[str] = [item for sublist in conversation_ids for item in sublist]
     return await get_segment_from_conversation_ids(db, flat_conversation_ids)
 
-def get_all_segments(db: PostgreSQLDB,
-                     conversation_ids: list[str]) -> list[int]:
-    # Logic to be provided by Usama
-    return []
+# def get_all_segments(db: PostgreSQLDB,
+#                      conversation_ids: list[str]) -> list[int]:
+#     # Logic to be provided by Usama
+#     return []
 
 async def with_distributed_lock(
     redis_url: str,
@@ -197,6 +198,18 @@ async def fetch_query_transcript(db: PostgreSQLDB,
         embedding_string=query_embedding, limit=limit, doc_ids=ids, filter=filter)
     result = await db.query(sql, multirows=True)
     return result
+
+def count_segment_ids(response_text: str) -> dict[int, int]:
+    
+    # Find all occurrences of SEGMENT_ID_ followed by numbers
+    segment_ids = re.findall(r'SEGMENT_ID_\d+', response_text)
+    
+    # Create a dictionary to store the count of each segment ID
+    segment_count: dict[str, int] = {}
+    for segment_id in segment_ids:
+        segment_count[segment_id] = segment_count.get(segment_id, 0) + 1
+    
+    return {int(segment_id.split('_')[-1]): count for segment_id, count in segment_count.items()}
 
 TABLES = {
     "LIGHTRAG_VDB_TRANSCRIPT": """
