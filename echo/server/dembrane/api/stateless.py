@@ -30,17 +30,20 @@ logger = getLogger("api.stateless")
 StatelessRouter = APIRouter(tags=["stateless"])
 
 class PostgresDBManager:
-    _instance = None
+    """
+    Singleton class to manage the PostgreSQLDB instance.
+    """
+    _instance: "PostgresDBManager | None" = None
     _db: PostgreSQLDB | None = None
     _lock = asyncio.Lock() 
 
-    def __new__(cls):
+    def __new__(cls) -> "PostgresDBManager":
         if cls._instance is None:
             cls._instance = super(PostgresDBManager, cls).__new__(cls)
             cls._db = None
         return cls._instance
 
-    async def _initialize_db(self):
+    async def _initialize_db(self) -> None:
         """Internal method to perform the actual DB initialization."""
         logger.info("Initializing PostgreSQLDB...")
         postgres_config = {
@@ -59,7 +62,7 @@ class PostgresDBManager:
             self._db = None 
             raise e 
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initializes the database connection if not already initialized. Uses a lock for async safety."""
         if self._db is None:
             async with self._lock: 
@@ -218,7 +221,7 @@ async def query_item(payload: SimpleQueryRequest,
         logger.exception("Query operation failed")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
-class StreamQueryRequest(BaseModel):
+class GetLightragQueryRequest(BaseModel):
     query: str 
     conversation_history: list[dict[str, str]] | None = None
     echo_segment_ids: list[str] | None = None
@@ -226,18 +229,18 @@ class StreamQueryRequest(BaseModel):
     echo_project_ids: list[str] | None = None
     auto_select_bool: bool = False
     get_transcripts: bool = False
-    stream_response: bool = False
+    top_k: int = 60
 
-@StatelessRouter.post("/rag/query/stream")
-async def query_stream(payload: StreamQueryRequest,
+@StatelessRouter.post("/rag/get_lightrag_prompt")
+async def get_lightrag_prompt(payload: GetLightragQueryRequest,
                        session: DependencyDirectusSession  #Needed for fake auth
-                       ) -> StreamingResponse:
+                       ) -> str:
     session = session
     # Validate payload
     if not payload.auto_select_bool:
         if payload.echo_segment_ids is None and payload.echo_conversation_ids is None and payload.echo_project_ids is None:
             raise HTTPException(status_code=400, 
-                                detail="At least one of echo_segment_ids, echo_conversation_ids, or echo_project_ids must be provided")
+                                detail="At least one of echo_segment_ids, echo_conversation_ids, or echo_project_ids must be provided if auto_select_bool is False")
     # Initialize database
     try:
         postgres_db = await PostgresDBManager.get_initialized_db()
@@ -253,10 +256,10 @@ async def query_stream(payload: StreamQueryRequest,
         conversation_segments = await get_segment_from_conversation_chunk_ids(postgres_db, payload.echo_conversation_ids)
         echo_segment_ids += conversation_segments
     if payload.echo_project_ids:
-        project_segments = get_segment_from_project_ids(postgres_db, payload.echo_project_ids)
+        project_segments = await get_segment_from_project_ids(postgres_db, payload.echo_project_ids)
         echo_segment_ids += project_segments
     if payload.auto_select_bool:
-        all_segments = get_all_segments(postgres_db, payload.echo_conversation_ids) # type: ignore
+        all_segments = await get_all_segments(postgres_db, payload.echo_conversation_ids) # type: ignore
         echo_segment_ids += all_segments
     
     # Initialize RAG
@@ -269,47 +272,16 @@ async def query_stream(payload: StreamQueryRequest,
 
     # Process segment ids  
     try:        
-        if validate_segment_id(echo_segment_ids):
-            if payload.query is not None:
-                param = QueryParam(mode="mix", 
-                               stream=True,
-                               ids= [str(id) for id in echo_segment_ids] if echo_segment_ids else None)
-            else:
-                param = QueryParam(mode="mix",
-                                   stream=True,
-                                   conversation_history=payload.conversation_history,
-                                   history_turns=10)
-            if payload.stream_response:
-                # # Get async iterator without awaiting the full response
-                # response = rag.aquery(payload.query, param=param)
-                # Raise not implemented error: aquery is not returning iterable
-                raise HTTPException(status_code=501, detail="Streaming response not implemented")
-            else:
-                response = await rag.aquery(payload.query, param=param)
-                
-            async def stream_generator():
-                if isinstance(response, str):
-                    # If it's a string, send it all at once
-                    yield f"{json.dumps({'response': response})}\n"
-                else:
-                    # If it's an async generator, send chunks one by one
-                    try:
-                        async for chunk in response:
-                            if chunk:  # Only send non-empty content
-                                yield f"{json.dumps({'response': chunk})}\n"
-                    except Exception as e:
-                        yield f"{json.dumps({'error': str(e)})}\n"
+        if validate_segment_id([str(id) for id in echo_segment_ids]):
+            param = QueryParam(mode="mix",
+                               conversation_history=payload.conversation_history,
+                               history_turns=10,
+                               only_need_prompt=True,
+                               ids= [str(id) for id in echo_segment_ids],
+                               top_k = payload.top_k)
+            response = rag.aquery(payload.query, param=param)
+            return response
             
-            return StreamingResponse(
-                stream_generator(),
-                media_type="application/x-ndjson",
-                headers={
-                    "Cache-Control": "no-cache",
-                    "Connection": "keep-alive",
-                    "Content-Type": "application/x-ndjson",
-                    "X-Accel-Buffering": "no",  # Ensure proper handling of streaming response when proxied by Nginx
-                },
-            )
         else:
             raise HTTPException(status_code=400, detail="Invalid segment ID")
     except Exception as e:

@@ -1,3 +1,7 @@
+# TODO:
+# - Change db calls to directus calls
+# - Change anthropic api to litellm
+
 import logging
 from typing import Any, Dict, List, Literal, Optional, Generator
 
@@ -21,6 +25,7 @@ from dembrane.chat_utils import (
     create_system_messages_for_chat,
 )
 from dembrane.quote_utils import count_tokens
+from dembrane.api.stateless import GetLightragQueryRequest, get_lightrag_prompt
 from dembrane.api.conversation import get_conversation_token_count
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
 
@@ -369,6 +374,8 @@ async def post_chat(
     db.add(user_message)
     db.commit()
 
+    project_id = chat.id # Write directus call here
+
     messages = get_project_chat_history(chat_id, db)
 
     if len(messages) == 0:
@@ -377,6 +384,17 @@ async def post_chat(
     chat_context = await get_chat_context(chat_id, db, auth)
 
     if chat_context.auto_select_bool:
+        GetLightragQueryRequest(
+            query=body.messages[-1].content,
+            conversation_history=messages,
+            echo_conversation_ids=chat_context.conversation_id_list,
+            echo_project_ids=[project_id],
+            auto_select_bool=chat_context.auto_select_bool,
+            get_transcripts=True,
+            top_k=60
+        )
+        rag_prompt = get_lightrag_prompt()
+        conversation_id_list = chat_context.conversation_id_list
         # raise not implemented error
         print(chat_context.conversation_id_list)
         raise HTTPException(status_code=501, detail="Auto select is not implemented")

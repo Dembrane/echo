@@ -51,7 +51,7 @@ async def get_segment_from_conversation_chunk_ids(db: PostgreSQLDB,
     result = await db.query(sql, multirows=True)
     return [int(x['conversation_segment_id']) for x in result]
 
-def get_segment_from_conversation_ids(db: PostgreSQLDB,
+async def get_segment_from_conversation_ids(db: PostgreSQLDB,
                                       conversation_ids: list[str]) -> list[int]:
     conversation_request = {"query": 
                                      {"fields": ["chunks.id"], 
@@ -65,10 +65,10 @@ def get_segment_from_conversation_ids(db: PostgreSQLDB,
     conversation_request["query"]["filter"] = {"id": {"_in": conversation_ids}}
     conversation_request_result = directus.get_items("conversation", conversation_request)
     conversation_chunk_ids = [[x['id'] for x in conversation_request_result_dict['chunks']] for conversation_request_result_dict in conversation_request_result]
-    conversation_chunk_ids = [item for sublist in conversation_chunk_ids for item in sublist]
-    return get_segment_from_conversation_chunk_ids(db, conversation_chunk_ids)
+    flat_conversation_chunk_ids: list[str] = [item for sublist in conversation_chunk_ids for item in sublist]
+    return await get_segment_from_conversation_chunk_ids(db, flat_conversation_chunk_ids)
 
-def get_segment_from_project_ids(db: PostgreSQLDB,
+async def get_segment_from_project_ids(db: PostgreSQLDB,
                                  project_ids: list[str]) -> list[int]:
     project_request = {"query": {"fields": ["conversations.id"], 
                                            "limit": 100000,
@@ -77,7 +77,7 @@ def get_segment_from_project_ids(db: PostgreSQLDB,
     project_request_result = directus.get_items("project", project_request)
     conversation_ids = [[x['id'] for x in project_request_result_dict['conversations']] for project_request_result_dict in project_request_result]
     flat_conversation_ids: list[str] = [item for sublist in conversation_ids for item in sublist]
-    return get_segment_from_conversation_ids(db, flat_conversation_ids)
+    return await get_segment_from_conversation_ids(db, flat_conversation_ids)
 
 def get_all_segments(db: PostgreSQLDB,
                      conversation_ids: list[str]) -> list[int]:
