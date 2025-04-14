@@ -6,7 +6,7 @@ import { readItems } from "@directus/sdk";
 import { ActionIcon, Group, Stack, Text } from "@mantine/core";
 import { SummaryCard } from "../common/SummaryCard";
 
-const TIME_INTERVAL = 5 * 60 * 1000; // 5 min
+const TIME_INTERVAL_SECONDS = 40;
 
 export const OngoingConversationsSummaryCard = ({
   projectId,
@@ -24,7 +24,9 @@ export const OngoingConversationsSummaryCard = ({
             },
             timestamp: {
               // @ts-expect-error gt is not typed
-              _gt: new Date(Date.now() - TIME_INTERVAL).toISOString(),
+              _gt: new Date(
+                Date.now() - TIME_INTERVAL_SECONDS * 1000,
+              ).toISOString(),
             },
           },
           fields: ["conversation_id"],

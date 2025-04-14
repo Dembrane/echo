@@ -16,6 +16,13 @@
       "cwd": "${workspaceFolder}/server"
     },
     {
+      "name": "Python Debugger: transcribe",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "dembrane.transcribe",
+      "cwd": "${workspaceFolder}/server"
+    },
+    {
       "name": "Attach to Python Functions",
       "type": "debugpy",
       "request": "attach",

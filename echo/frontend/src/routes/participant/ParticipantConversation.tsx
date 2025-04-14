@@ -70,6 +70,8 @@ export const ParticipantConversationAudioRoute = () => {
       conversationId: conversationId ?? "",
       chunk,
       timestamp: new Date(),
+      source: "PORTAL_AUDIO",
+      runFinishHook: false,
     });
   };
 
@@ -127,7 +129,6 @@ export const ParticipantConversationAudioRoute = () => {
     resumeRecording,
     recordingTime,
     errored,
-    loading,
     permissionError,
   } = audioRecorder;
 
@@ -214,7 +215,7 @@ export const ParticipantConversationAudioRoute = () => {
     }
   };
 
-  if (conversationQuery.isLoading || loading || projectQuery.isLoading) {
+  if (conversationQuery.isLoading || projectQuery.isLoading) {
     return <LoadingOverlay visible />;
   }
 
@@ -537,6 +538,7 @@ export const ParticipantConversationTextRoute = () => {
       conversationId: conversationId ?? "",
       timestamp: new Date(),
       content: text.trim(),
+      source: "PORTAL_TEXT",
     });
 
     setText("");

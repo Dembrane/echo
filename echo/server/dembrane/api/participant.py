@@ -7,7 +7,6 @@ from pydantic import BaseModel
 from sqlalchemy.orm import joinedload
 
 from dembrane.s3 import save_to_s3_from_file_like
-from dembrane.tasks import task_finish_conversation_hook, task_process_conversation_chunk
 from dembrane.utils import generate_uuid
 from dembrane.schemas import (
     ProjectTagSchema,
@@ -27,6 +26,7 @@ from dembrane.api.exceptions import (
     ConversationInvalidPinException,
     ConversationNotOpenForParticipationException,
 )
+from dembrane.processing_status_utils import ProcessingStatus
 
 logger = getLogger("api.participant")
 
@@ -74,6 +74,7 @@ class InitiateConversationRequestBodySchema(BaseModel):
     email: Optional[str] = None
     user_agent: Optional[str] = None
     tag_id_list: Optional[List[str]] = []
+    source: Optional[str] = "PORTAL_AUDIO"
 
 
 @ParticipantRouter.post(
@@ -113,6 +114,8 @@ async def initiate_conversation(
                 conversation.participant_user_agent = body.user_agent
             if body.email:
                 conversation.participant_email = body.email
+            if body.source:
+                conversation.source = body.source
 
             if body.tag_id_list is not None and len(body.tag_id_list) > 0:
                 tags = (
@@ -130,6 +133,7 @@ async def initiate_conversation(
         participant_name=body.name,
         participant_email=body.email if body.email else None,
         participant_user_agent=body.user_agent if body.user_agent else None,
+        source=body.source,
     )
 
     if body.tag_id_list is not None and len(body.tag_id_list) > 0:
@@ -244,6 +248,7 @@ async def delete_conversation_chunk(
 class UploadConversationBodySchema(BaseModel):
     timestamp: datetime
     content: str
+    source: Optional[str] = "PORTAL_TEXT"
 
 
 @ParticipantRouter.post(
@@ -268,14 +273,16 @@ async def upload_conversation_text(
 
     conversation = conversation[0]
 
+    source = body.source or "PORTAL_TEXT"
+
     chunk = directus.create_item(
         "conversation_chunk",
         item_data={
             "conversation_id": conversation["id"],
             "timestamp": str(body.timestamp.utcnow()),
             "transcript": body.content,
+            "source": source,
             "path": None,
-            "type": "text",
         },
     )["data"]
 
@@ -284,14 +291,14 @@ async def upload_conversation_text(
 
 @ParticipantRouter.post(
     "/conversations/{conversation_id}/upload-chunk",
-    response_model=List[PublicConversationChunkSchema],
 )
 async def upload_conversation_chunk(
     conversation_id: str,
     chunk: UploadFile,
     timestamp: Annotated[datetime, Form()],
-    type: Annotated[str, Form()] = "audio_chunk",
-) -> List[dict]:
+    source: Annotated[str, Form()] = "PORTAL_AUDIO",
+    run_finish_hook: Annotated[bool, Form()] = False,
+) -> list[str]:
     conversation = directus.get_items(
         "conversation",
         {
@@ -318,17 +325,24 @@ async def upload_conversation_chunk(
         "conversation_chunk",
         item_data={
             "conversation_id": conversation["id"],
-            "timestamp": str(timestamp.utcnow()),
+            "timestamp": timestamp.isoformat(),
             "path": uploaded_file_url,
-            "type": type,
             "id": chunk_id,
+            "source": source,
+            "processing_status": ProcessingStatus.PENDING.value,
+            "processing_message": "Waiting to be transcribed",
         },
     )["data"]
 
-    logger.info(f"Add to processing queue: ConversationChunk@{chunk_created['id']}")
-    task_process_conversation_chunk.delay(chunk_created["id"])
+    # Import locally to avoid circular imports
+    from dembrane.tasks import task_process_conversation_chunk
 
-    return [chunk_created]
+    logger.info(
+        f"adding task to process conversation chunk {chunk_id}, run_finish_hook: {run_finish_hook}"
+    )
+    task_process_conversation_chunk.delay(chunk_id, run_finish_hook)
+
+    return [chunk_created["id"]]
 
 
 @ParticipantRouter.post(
@@ -337,5 +351,8 @@ async def upload_conversation_chunk(
 async def run_when_conversation_is_finished(
     conversation_id: str,
 ) -> str:
+    # Import locally to avoid circular imports
+    from dembrane.tasks import task_finish_conversation_hook
+
     task_finish_conversation_hook.delay(conversation_id)
     return "OK"

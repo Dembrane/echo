@@ -11,11 +11,10 @@ export const ConversationChunkAudioTranscript = ({
   chunk: ConversationChunk;
   showAudioPlayer?: boolean;
 }) => {
-  // Fetch the direct audio URL instead of using a redirect
   const audioUrlQuery = useConversationChunkContentUrl(
     chunk.conversation_id as string,
     chunk.id,
-    showAudioPlayer && !!chunk.path, // Only fetch if we need to show the player
+    showAudioPlayer && !!chunk.path,
   );
 
   return (
@@ -54,13 +53,11 @@ export const ConversationChunkAudioTranscript = ({
         )
       }
     >
-      {/* {chunk.processing_error ? (
-        <p className="text-red-500">Transcription error</p>
-      ) : chunk.processing_status === "PROCESSING" ? (
-        <LoadingOverlay visible />
-      ) : ( */}
-      <Text>{chunk.transcript ?? ""}</Text>
-      {/* )} */}
+      <Text>
+        {chunk.transcript ?? (
+          <span className="italic text-gray-500">{t`Not available`}</span>
+        )}
+      </Text>
     </BaseMessage>
   );
 };

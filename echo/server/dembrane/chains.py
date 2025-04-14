@@ -8,14 +8,10 @@ from langchain_core.output_parsers import StrOutputParser
 
 logger = getLogger("chains")
 
-chat_llm_small = ChatOpenAI(
-    temperature=0.5, model_name="gpt-3.5-turbo-1106", max_retries=6
-)  # type: ignore
+chat_llm_small = ChatOpenAI(temperature=0.5, model_name="gpt-3.5-turbo-1106", max_retries=6)  # type: ignore
 
 # For global question answering
-chat_llm_large = ChatOpenAI(
-    temperature=0.2, model_name="gpt-4-0125-preview", max_retries=6
-)  # type: ignore
+chat_llm_large = ChatOpenAI(temperature=0.2, model_name="gpt-4-0125-preview", max_retries=6)  # type: ignore
 
 
 def load_title_chain(language: str) -> Runnable:

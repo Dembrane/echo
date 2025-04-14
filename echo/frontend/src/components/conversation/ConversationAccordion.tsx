@@ -31,8 +31,16 @@ import {
   Button,
   ScrollArea,
   Center,
+  Badge,
 } from "@mantine/core";
-import { useState, useRef, useEffect } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useReducer,
+  useMemo,
+  useCallback,
+} from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { UploadConversationDropzone } from "../dropzone/UploadConversationDropzone";
 import { useDebouncedValue } from "@mantine/hooks";
@@ -41,8 +49,15 @@ import {
   IconSearch,
   IconX,
   IconArrowsExchange,
+  IconPinnedFilled,
+  IconPinned,
+  IconQrcode,
+  IconFileUpload,
+  IconSort09,
+  IconArrowsUpDown,
+  IconDotsVertical,
 } from "@tabler/icons-react";
-import { formatRelative } from "date-fns";
+import { formatDuration, formatRelative, intervalToDuration } from "date-fns";
 import { NavigationButton } from "../common/NavigationButton";
 import { cn } from "@/lib/utils";
 import { I18nLink } from "@/components/common/i18nLink";
@@ -59,7 +74,9 @@ type SortOption = {
     | "-created_at"
     | "created_at"
     | "-participant_name"
-    | "participant_name";
+    | "participant_name"
+    | "-duration"
+    | "duration";
 };
 
 const ConversationAccordionLabelChatSelection = ({
@@ -298,9 +315,11 @@ export const MoveConversationButton = ({
 const ConversationAccordionItem = ({
   conversation,
   highlight = false,
+  showDuration = false,
 }: {
   conversation: Conversation;
   highlight?: boolean;
+  showDuration?: boolean;
 }) => {
   const location = useLocation();
   const inChatMode = location.pathname.includes("/chats/");
@@ -333,9 +352,52 @@ const ConversationAccordionItem = ({
     >
       <Stack gap="4" className="pb-[3px]">
         <div>
-          <Text className="pl-[4px] text-sm font-normal">
-            {conversation.participant_email ?? conversation.participant_name}
-          </Text>
+          <Group gap="sm">
+            <Text className="pl-[4px] text-sm font-normal">
+              {conversation.participant_email ?? conversation.participant_name}
+            </Text>
+
+            {conversation.source?.toLocaleLowerCase().includes("upload") && (
+              <Badge size="xs" color="blue" variant="light">
+                {t`Uploaded`}
+              </Badge>
+            )}
+            {conversation.duration &&
+              conversation.duration > 0 &&
+              showDuration && (
+                <Tooltip
+                  label={formatDuration(
+                    intervalToDuration({
+                      start: 0,
+                      end: conversation.duration * 1000,
+                    }),
+                    {
+                      format: ["hours", "minutes", "seconds"],
+                      zero: false,
+                    },
+                  )}
+                >
+                  <Badge size="xs" color="violet" variant="light">
+                    {(() => {
+                      const duration = intervalToDuration({
+                        start: 0,
+                        end: conversation.duration * 1000,
+                      });
+
+                      const hours = duration.hours || 0;
+                      const minutes = duration.minutes || 0;
+                      const seconds = duration.seconds || 0;
+
+                      if (hours > 0) {
+                        return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+                      } else {
+                        return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+                      }
+                    })()}
+                  </Badge>
+                </Tooltip>
+              )}
+          </Group>
         </div>
         <div>
           <Text size="xs" c="gray.6" className="pl-[4px]">
@@ -371,13 +433,15 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
     { label: t`Oldest First`, value: "created_at" },
     { label: t`Name A-Z`, value: "participant_name" },
     { label: t`Name Z-A`, value: "-participant_name" },
+    { label: t`Longest First`, value: "-duration" },
+    { label: t`Shortest First`, value: "duration" },
   ];
 
-  const [hideConversationsWithoutContent, setHideConversationsWithoutContent] =
-    useSessionStorage({
-      key: "hide-empty-conversations",
-      defaultValue: true,
-    });
+  // Temporarily disabled source filters
+  // const FILTER_OPTIONS = [
+  //   { label: t`Conversations from QR Code`, value: "PORTAL_AUDIO" },
+  //   { label: t`Conversations from Upload`, value: "DASHBOARD_UPLOAD" },
+  // ];
 
   const [sortBy, setSortBy] = useSessionStorage<SortOption["value"]>({
     key: "conversations-sort",
@@ -391,20 +455,144 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
     200,
   );
 
+  // Track active filters (filters to include)
+  // Temporarily disabled source filters
+  // const [activeFilters, setActiveFilters] = useState<string[]>([
+  //   "PORTAL_AUDIO",
+  //   "DASHBOARD_UPLOAD",
+  // ]);
+
+  // Get total conversations count without filters
+  const totalConversationsQuery = useConversationsByProjectId(
+    projectId,
+    false,
+    false,
+    {
+      limit: 1,
+    },
+  );
+
+  // Generalized toggle with improved UX
+  // Temporarily disabled source filters
+  // const toggleFilter = (filterValue: string) => {
+  //   setActiveFilters((prev) => {
+  //     const allFilterValues = FILTER_OPTIONS.map((opt) => opt.value);
+  //     const isActive = prev.includes(filterValue);
+
+  //     // Case 1: If all filters are active and user clicks one
+  //     if (prev.length === allFilterValues.length) {
+  //       // Exclude only the clicked filter (keep all others active)
+  //       return prev.filter((f) => f !== filterValue);
+  //     }
+
+  //     // Case 2: If the filter is inactive, toggle it on
+  //     if (!isActive) {
+  //       return [...prev, filterValue];
+  //     }
+
+  //     // Case 3: If the filter is active but it's the only active filter
+  //     // don't allow removing the last filter (prevent zero filters)
+  //     if (prev.length === 1) {
+  //       // Keep at least one filter active
+  //       return prev;
+  //     }
+
+  //     // Case 4: If the filter is active and there are other active filters,
+  //     // toggle it off
+  //     return prev.filter((f) => f !== filterValue);
+  //   });
+  // };
+
+  // Use memoized active filters for the query
+  // const filterBySource = useMemo(() => activeFilters, [activeFilters]);
+
+  const [showDuration, setShowDuration] = useSessionStorage<boolean>({
+    key: "conversations-show-duration",
+    defaultValue: true,
+  });
+
   const conversationsQuery = useConversationsByProjectId(
     projectId,
     false,
-    hideConversationsWithoutContent,
+    false,
     {
       search: debouncedConversationSearchValue,
       sort: sortBy,
     },
+    // Temporarily disabled source filters
+    // filterBySource,
   );
 
   const [parent2] = useAutoAnimate();
 
-  const filterApplied =
-    hideConversationsWithoutContent || debouncedConversationSearchValue !== "";
+  const filterApplied = useMemo(
+    () =>
+      debouncedConversationSearchValue !== "" ||
+      sortBy !== "-created_at",
+      // Temporarily disabled source filters
+      //   sortBy !== "-created_at" ||
+      //   activeFilters.length !== FILTER_OPTIONS.length,
+      // [debouncedConversationSearchValue, sortBy, activeFilters],
+      [debouncedConversationSearchValue, sortBy],
+  );
+
+  const resetEverything = useCallback(() => {
+    setConversationSearch("");
+    setSortBy("-created_at");
+    // Temporarily disabled source filters
+    // setActiveFilters(["PORTAL_AUDIO", "DASHBOARD_UPLOAD"]);
+    setShowDuration(true);
+  }, []);
+
+  // Temporarily disabled source filters
+  // const FilterPin = ({
+  //   option,
+  // }: {
+  //   option: { label: string; value: string };
+  // }) => {
+  //   const isActive = activeFilters.includes(option.value);
+
+  //   // Determine which icon to use based on the filter type
+  //   const getIcon = () => {
+  //     if (option.value === "PORTAL_AUDIO") {
+  //       return isActive ? (
+  //         <IconQrcode size={18} stroke={1.5} />
+  //       ) : (
+  //         <IconQrcode size={18} stroke={1} opacity={0.6} />
+  //       );
+  //     } else {
+  //       return isActive ? (
+  //         <IconFileUpload size={18} stroke={1.5} />
+  //       ) : (
+  //         <IconFileUpload size={18} stroke={1} opacity={0.6} />
+  //       );
+  //     }
+  //   };
+
+  //   return (
+  //     <Tooltip
+  //       label={option.label}
+  //       aria-label={
+  //         isActive ? t`Hide ${option.label}` : t`Show ${option.label}`
+  //       }
+  //       position="bottom"
+  //       withArrow
+  //       arrowSize={6}
+  //     >
+  //       <ActionIcon
+  //         variant={isActive ? "light" : "subtle"}
+  //         color={isActive ? "blue" : "gray"}
+  //         onClick={() => toggleFilter(option.value)}
+  //         className="transition-all"
+  //         radius="xl"
+  //         size="md"
+  //         aria-label={option.label}
+  //       >
+  //         {getIcon()}
+  //       </ActionIcon>
+  //     </Tooltip>
+  //   );
+  // };
 
   return (
     <Accordion.Item value="conversations">
@@ -458,29 +646,27 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
               />
               <Menu withArrow position="right" shadow="md">
                 <Menu.Target>
-                  <ActionIcon
-                    variant="outline"
-                    color={filterApplied ? "primary" : "gray"}
-                    c={filterApplied ? "primary" : "gray"}
-                  >
-                    <IconFilter size={24} />
-                  </ActionIcon>
+                  <Tooltip label={t`Options`}>
+                    <ActionIcon
+                      variant="outline"
+                      color={filterApplied ? "primary" : "gray"}
+                      c={filterApplied ? "primary" : "gray"}
+                    >
+                      <IconDotsVertical size={16} />
+                    </ActionIcon>
+                  </Tooltip>
                 </Menu.Target>
                 <Menu.Dropdown>
                   <Stack py="md" px="lg" gap="md">
                     <Stack gap="xs">
                       <Text size="lg">
-                        <Trans>Filter</Trans>
+                        <Trans>Options</Trans>
                       </Text>
                       <Checkbox
-                        size="sm"
-                        disabled={conversationsQuery.isLoading}
-                        label={t`Hide Conversations Without Content`}
-                        checked={hideConversationsWithoutContent}
-                        onChange={(event) =>
-                          setHideConversationsWithoutContent(
-                            event.currentTarget.checked,
-                          )
+                        label={t`Show duration`}
+                        checked={showDuration}
+                        onChange={(e) =>
+                          setShowDuration(e.currentTarget.checked)
                         }
                       />
                     </Stack>
@@ -509,12 +695,28 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
                         </Radio.Group>
                       </Stack>
                     </Stack>
+                    <Button variant="subtle" onClick={resetEverything}>
+                      <Trans>Reset All Options</Trans>
+                    </Button>
                   </Stack>
                 </Menu.Dropdown>
               </Menu>
             </Group>
           )}
 
+          {/* Filter icons that always appear under the search bar */}
+          {/* Temporarily disabled source filters */}
+          {/* {totalConversationsQuery.data?.length !== 0 && (
+            <Group gap="xs" mt="xs" ml="xs">
+              <Text size="sm">
+                <Trans>Sources:</Trans>
+              </Text>
+              {FILTER_OPTIONS.map((option) => (
+                <FilterPin key={option.value} option={option} />
+              ))}
+            </Group>
+          )} */}
+          
           {conversationsQuery.data?.length === 0 && (
             <Text size="sm">
               <Trans>
@@ -534,8 +736,16 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
                 key={item.id}
                 highlight={item.id === activeConversationId}
                 conversation={item as Conversation}
+                showDuration={showDuration}
               />
             ))}
+            {/* Temporarily disabled source filters */}
+            {/* {conversationsQuery.data?.length === 0 &&
+              filterBySource.length === 0 && (
+                <Text size="sm">
+                  <Trans>Please select at least one source</Trans>
+                </Text>
+              )} */}
           </Stack>
         </Stack>
       </Accordion.Panel>

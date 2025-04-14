@@ -58,6 +58,8 @@ def transcribe_audio(
 def transcribe_audio_openai(
     audio_file_uri: str, language: Optional[str], whisper_prompt: Optional[str]
 ) -> str:
+    logger = logging.getLogger("transcribe.transcribe_audio_openai")
+
     try:
         audio_stream = get_stream_from_s3(audio_file_uri)
     except Exception as exc:
@@ -65,6 +67,8 @@ def transcribe_audio_openai(
         raise TranscriptionError(f"Failed to get audio stream from S3: {exc}") from exc
 
     with audio_stream as f:
+        logger.info(f"Transcribing audio from {audio_file_uri}")
+
         options = {
             "model": "whisper-1",
             "file": (get_sanitized_s3_key(audio_file_uri), f.read()),
@@ -236,7 +240,3 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str:
 
     logger.info(f"Processed chunk for transcription: {conversation_chunk_id}")
     return conversation_chunk_id
-
-
-if __name__ == "__main__":
-    transcribe_conversation_chunk("12e47a43-7c2d-4264-b58f-bff87516fb03")
