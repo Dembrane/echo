@@ -718,11 +718,13 @@ export const getProjectChatContext = async (chatId: string) => {
 export const addChatContext = async (
   chatId: string,
   conversationId?: string,
+  auto_select_bool?: boolean,
 ) => {
   return api.post<unknown, TProjectChatContext>(
     `/chats/${chatId}/add-context`,
     {
       conversation_id: conversationId,
+      auto_select_bool: auto_select_bool,
     },
   );
 };
@@ -730,11 +732,13 @@ export const addChatContext = async (
 export const deleteChatContext = async (
   chatId: string,
   conversationId?: string,
+  auto_select_bool?: boolean,
 ) => {
   return api.post<unknown, TProjectChatContext>(
     `/chats/${chatId}/delete-context`,
     {
       conversation_id: conversationId,
+      auto_select_bool: auto_select_bool,
     },
   );
 };
