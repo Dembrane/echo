@@ -165,6 +165,7 @@ type TProjectChatContext = {
     role: "user" | "assistant";
     token_usage: number; // between 0 and 1
   }>;
+  auto_select_bool: boolean;
 };
 
 type ChatHistoryMessage = {

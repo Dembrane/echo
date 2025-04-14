@@ -1326,8 +1326,8 @@ export const useProjectChatContext = (chatId: string) => {
 export const useAddChatContextMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { chatId: string; conversationId: string }) =>
-      addChatContext(payload.chatId, payload.conversationId),
+    mutationFn: (payload: { chatId: string; conversationId?: string; auto_select_bool?: boolean }) =>
+      addChatContext(payload.chatId, payload.conversationId, payload.auto_select_bool),
     onError: (error) => {
       if (error instanceof AxiosError) {
         alert(
@@ -1349,8 +1349,8 @@ export const useAddChatContextMutation = () => {
 export const useDeleteChatContextMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { chatId: string; conversationId: string }) =>
-      deleteChatContext(payload.chatId, payload.conversationId),
+    mutationFn: (payload: { chatId: string; conversationId?: string; auto_select_bool?: boolean }) =>
+      deleteChatContext(payload.chatId, payload.conversationId, payload.auto_select_bool),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({
         queryKey: ["chats", "context", vars.chatId],
