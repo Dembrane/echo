@@ -22,13 +22,13 @@ from dembrane.anthropic import stream_anthropic_chat_response
 from dembrane.chat_utils import (
     MAX_CHAT_CONTEXT_LENGTH,
     get_project_chat_history,
+    get_lightrag_prompt_by_params,
     create_system_messages_for_chat,
 )
 from dembrane.quote_utils import count_tokens
-from dembrane.api.stateless import GetLightragQueryRequest, get_lightrag_prompt
 from dembrane.api.conversation import get_conversation_token_count
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
-from dembrane.audio_lightrag.utils.lightrag_utils import count_segment_ids
+from dembrane.audio_lightrag.utils.lightrag_utils import get_project_id
 
 ChatRouter = APIRouter(tags=["chat"])
 
@@ -375,7 +375,7 @@ async def post_chat(
     db.add(user_message)
     db.commit()
 
-    project_id = chat.id # Write directus call here
+    project_id = get_project_id(chat.id) # TODO: Write directus call here
 
     messages = get_project_chat_history(chat_id, db)
 
@@ -384,27 +384,35 @@ async def post_chat(
 
     chat_context = await get_chat_context(chat_id, db, auth)
 
-    if chat_context.auto_select_bool:
-        payload = GetLightragQueryRequest(
-            query=body.messages[-1].content,
-            conversation_history=messages,
-            echo_conversation_ids=chat_context.conversation_id_list,
-            echo_project_ids=[project_id],
-            auto_select_bool=chat_context.auto_select_bool,
-            get_transcripts=True,
-            top_k=60
-        )
-        session = DirectusSession(user_id="none", is_admin=True)#fake session
-        rag_prompt = get_lightrag_prompt(payload, session)
-        segment_ids = count_segment_ids(str(rag_prompt))
-        print(segment_ids)
-        # raise not implemented error
-        print(chat_context.conversation_id_list)
+    if chat_context.auto_select_bool: # Auto select is enabled
+        # get_rag_prompt
+        prompt_len = float("inf")
+        top_k = 100 #TODO: Needs to be an env variable
+        while MAX_CHAT_CONTEXT_LENGTH < prompt_len:
+            top_k = max(5, top_k - 10)
+            rag_prompt = await get_lightrag_prompt_by_params(
+                query=body.messages[-1].content,
+                conversation_history=messages,
+                echo_conversation_ids=chat_context.conversation_id_list,
+                echo_project_ids=[project_id],
+                auto_select_bool=chat_context.auto_select_bool,
+                get_transcripts=True,
+                top_k=top_k
+            )
+            prompt_len = count_tokens(rag_prompt)
+            if top_k <= 5:
+                # raise autoselect not possible error
+                raise HTTPException(status_code=400, detail="Auto select is not possible with the current context length")
+        
+        # Make litellm call with rag_prompt similar to the streaming response
+        def stream_response() -> Generator[str, None, None]:
+            pass
+
         raise HTTPException(status_code=501, detail="Auto select is not implemented")
 
     else:
 
-        locked_conversation_id_list = chat_context.locked_conversation_id_list
+        locked_conversation_id_list = chat_context.locked_conversation_id_list #Verify with directus
 
         system_messages = await create_system_messages_for_chat(
             locked_conversation_id_list, db, language
@@ -457,3 +465,103 @@ async def post_chat(
         response = StreamingResponse(stream_response(), headers=headers)
 
         return response
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if chat_context.auto_select_bool: # Auto select is enabled
+        # get_rag_prompt
+        prompt_len = float("inf")
+        top_k = 100 #TODO: Needs to be an env variable
+        rag_prompt = "" # Initialize rag_prompt
+        while MAX_CHAT_CONTEXT_LENGTH < prompt_len:
+            top_k = max(5, top_k - 10)
+            # Assuming get_lightrag_prompt_by_params returns a single string prompt
+            rag_prompt = await get_lightrag_prompt_by_params(
+                query=body.messages[-1].content,
+                conversation_history=messages,
+                echo_conversation_ids=chat_context.conversation_id_list,
+                echo_project_ids=[project_id],
+                auto_select_bool=chat_context.auto_select_bool,
+                get_transcripts=True,
+                top_k=top_k
+            )
+            prompt_len = count_tokens(rag_prompt) # Assuming count_tokens works for the generated prompt
+            if top_k <= 5:
+                # raise autoselect not possible error
+                # Rollback user message commit before raising
+                db.delete(user_message)
+                db.commit()
+                raise HTTPException(status_code=400, detail="Auto select is not possible with the current context length or RAG setup.")
+
+        # Make litellm call with rag_prompt similar to the streaming response
+        async def stream_response() -> Generator[str, None, None]:
+            accumulated_response = ""
+            try:
+                # Using model consistent with reply_utils.py
+                # Putting the whole rag_prompt into the user message
+                response = await litellm.acompletion(
+                    model="anthropic/claude-3-5-sonnet-20240620",
+                    messages=[
+                        {"role": "user", "content": rag_prompt}
+                        # TODO: Consider splitting rag_prompt into system/user messages if needed by model/litellm
+                    ],
+                    stream=True,
+                )
+
+                async for chunk in response:
+                    if chunk.choices[0].delta.content:
+                        content = chunk.choices[0].delta.content
+                        accumulated_response += content
+                        if protocol == "text":
+                            yield content
+                        elif protocol == "data":
+                            # Mimicking Anthropic's format '0:"<content>"\n'
+                            yield f"0:{json.dumps(content)}\n"
+
+            except Exception as e:
+                logger.error(f"Error in litellm stream response: {str(e)}")
+                # delete user message if stream fails
+                with DatabaseSession() as error_db:
+                    error_db.delete(user_message)
+                    error_db.commit()
+
+                if protocol == "data":
+                    yield '3:"An error occurred while processing the chat response."\n'
+                else:
+                    yield "Error: An error occurred while processing the chat response."
+                return # Stop generation on error
+
+            # TODO: After successful streaming, add the assistant message to the DB
+            # This needs the full accumulated_response and potentially token counts
+            # For now, just logging it
+            logger.debug(f"Full litellm response: {accumulated_response}")
+            # Example DB add (needs refinement)
+            # with DatabaseSession() as success_db:
+            #     assistant_message = ProjectChatMessageModel(...)
+            #     success_db.add(assistant_message)
+            #     success_db.commit()
+
+            return
+
+        headers = {"Content-Type": "text/event-stream"}
+        if protocol == "data":
+            headers["x-vercel-ai-data-stream"] = "v1"
+
+        response = StreamingResponse(stream_response(), headers=headers)
+
+        return response
+

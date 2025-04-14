@@ -5,12 +5,13 @@ import uuid
 import asyncio
 import hashlib
 import logging
-from typing import Any, TypeVar, Callable, Optional
+from typing import Any, Dict, Literal, TypeVar, Callable, Optional
 
 import redis
 from lightrag.kg.postgres_impl import PostgreSQLDB
 
 from dembrane.directus import directus
+from dembrane.postgresdbmanager import PostgresDBManager
 from dembrane.audio_lightrag.utils.litellm_utils import embedding_func
 
 logger = logging.getLogger('audio_lightrag_utils')
@@ -38,6 +39,23 @@ def is_valid_uuid(uuid_str: str) -> bool:
 # Project is a collection of conversations
 # Segment is a many to many of chunks
 
+db_manager = PostgresDBManager()
+
+async def run_segment_ids_to_conversation_chunk_ids(segment_ids: list[int]) -> dict[int, str]:
+    db = await db_manager.get_initialized_db()
+    return await get_conversation_chunk_ids_from_segment_ids(db, segment_ids)
+
+async def get_conversation_chunk_ids_from_segment_ids(db: PostgreSQLDB,
+                                                      segment_ids: list[int]) -> dict[int, str]:
+    # Validate each item is an integer in segment_ids
+    for segment_id in segment_ids:
+        if not isinstance(segment_id, int):
+            raise ValueError(f"Invalid segment ID: {segment_id}")
+    segment_ids = ','.join([str(segment_id) for segment_id in segment_ids]) #type: ignore
+    sql = SQL_TEMPLATES["GET_CONVERSATION_CHUNK_IDS_FROM_SEGMENT_IDS"].format(segment_ids=segment_ids)
+    result = await db.query(sql, multirows=True)
+    return {int(x['conversation_segment_id']): str(x['conversation_chunk_id']) for x in result}
+
 async def get_segment_from_conversation_chunk_ids(db: PostgreSQLDB,
                                                   conversation_chunk_ids: list[str]) -> list[int]:
     # Validate each item is a UUID in conversation_chunk_ids
@@ -47,7 +65,7 @@ async def get_segment_from_conversation_chunk_ids(db: PostgreSQLDB,
         
     conversation_chunk_ids = ','.join(["UUID('" + conversation_id + "')" 
                                 for conversation_id in conversation_chunk_ids]) #type: ignore
-    sql = SQL_TEMPLATES["get_segment_from_conversation_chunk_ids"
+    sql = SQL_TEMPLATES["GET_SEGMENT_IDS_FROM_CONVERSATION_CHUNK_IDS"
                         ].format(conversation_ids=conversation_chunk_ids)
     result = await db.query(sql, multirows=True)
     return [int(x['conversation_segment_id']) for x in result]
@@ -79,11 +97,6 @@ async def get_segment_from_project_ids(db: PostgreSQLDB,
     conversation_ids = [[x['id'] for x in project_request_result_dict['conversations']] for project_request_result_dict in project_request_result]
     flat_conversation_ids: list[str] = [item for sublist in conversation_ids for item in sublist]
     return await get_segment_from_conversation_ids(db, flat_conversation_ids)
-
-# def get_all_segments(db: PostgreSQLDB,
-#                      conversation_ids: list[str]) -> list[int]:
-#     # Logic to be provided by Usama
-#     return []
 
 async def with_distributed_lock(
     redis_url: str,
@@ -199,17 +212,49 @@ async def fetch_query_transcript(db: PostgreSQLDB,
     result = await db.query(sql, multirows=True)
     return result
 
-def count_segment_ids(response_text: str) -> dict[int, int]:
+def fetch_segment_ratios(response_text: str) -> dict[int, float]:
     
     # Find all occurrences of SEGMENT_ID_ followed by numbers
     segment_ids = re.findall(r'SEGMENT_ID_\d+', response_text)
     
+    if len(segment_ids) == 0:
+        return {}
     # Create a dictionary to store the count of each segment ID
     segment_count: dict[str, int] = {}
     for segment_id in segment_ids:
         segment_count[segment_id] = segment_count.get(segment_id, 0) + 1
     
-    return {int(segment_id.split('_')[-1]): count for segment_id, count in segment_count.items()}
+    segment2count = {int(segment_id.split('_')[-1]): count for segment_id, count in segment_count.items()}
+    total_count = sum(segment2count.values())
+    return {k:v/total_count for k,v in segment2count.items()}
+
+async def get_ratio_abs(rag_prompt: str, 
+                        return_type: Literal["segment", "chunk", "conversation"]) -> Dict[str, float]:
+        segment_ratios_abs = fetch_segment_ratios(str(rag_prompt))
+        if return_type == "segment":
+            return {str(k):v for k,v in segment_ratios_abs.items()}
+        segment2chunk = await run_segment_ids_to_conversation_chunk_ids(list(segment_ratios_abs.keys()))
+        chunk_ratios_abs: Dict[str, float] = {}
+        for segment,ratio in segment_ratios_abs.items():
+            if segment2chunk[segment] not in chunk_ratios_abs.keys():
+                chunk_ratios_abs[segment2chunk[segment]] = ratio
+            else:
+                chunk_ratios_abs[segment2chunk[segment]] += ratio
+        if return_type == "chunk":
+            return chunk_ratios_abs
+        conversation_ratios_abs: Dict[str, float] = {}
+        for chunk_id,ratio in chunk_ratios_abs.items():
+            query = {'query': {'filter': {'id': {'_eq': chunk_id}},'fields': ['conversation_id']}}
+            conversaion = directus.get_items("conversation_chunk", query)[0]['conversation_id'][0]
+            if conversaion not in conversation_ratios_abs.keys():
+                conversation_ratios_abs[conversaion] = ratio
+            else:
+                conversation_ratios_abs[conversaion] += ratio
+        return conversation_ratios_abs
+
+def get_project_id(proj_chat_id: str) -> str:
+    query = {'query': {'filter': {'id': {'_eq': proj_chat_id}},'fields': ['project_id']}}
+    return directus.get_items("project_chat", query)[0]['project_id']
 
 TABLES = {
     "LIGHTRAG_VDB_TRANSCRIPT": """
@@ -252,9 +297,14 @@ SQL_TEMPLATES = {
             ORDER BY distance DESC
             LIMIT {limit}
     """,
-    "get_segment_from_conversation_chunk_ids": # conversation_chunk_id UUID
+    "GET_SEGMENT_IDS_FROM_CONVERSATION_CHUNK_IDS":
     """
     SELECT conversation_segment_id FROM conversation_segment_conversation_chunk_1
     WHERE conversation_chunk_id = ANY(ARRAY[{conversation_ids}])
+    """,
+    "GET_CONVERSATION_CHUNK_IDS_FROM_SEGMENT_IDS":
+    """
+    SELECT conversation_chunk_id, conversation_segment_id FROM conversation_segment_conversation_chunk_1
+    WHERE conversation_segment_id = ANY(ARRAY[{segment_ids}])
     """
 }

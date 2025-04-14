@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from dembrane.prompts import render_prompt
 from dembrane.database import ConversationModel, ProjectChatMessageModel
+from dembrane.api.stateless import GetLightragQueryRequest, get_lightrag_prompt
 from dembrane.api.conversation import get_conversation_transcript
 from dembrane.api.dependency_auth import DirectusSession
 
@@ -105,3 +106,24 @@ async def create_system_messages_for_chat(
     }
 
     return [prompt_message, context_message]
+
+
+async def get_lightrag_prompt_by_params(top_k: int,
+                                        query: str,
+                                        conversation_history: list[dict[str, str]],
+                                        echo_conversation_ids: list[str],
+                                        echo_project_ids: list[str],
+                                        auto_select_bool: bool,
+                                        get_transcripts: bool) -> str:
+    payload = GetLightragQueryRequest(
+        query=query,
+        conversation_history=conversation_history,
+        echo_conversation_ids=echo_conversation_ids,
+        echo_project_ids=echo_project_ids,
+        auto_select_bool=auto_select_bool,
+        get_transcripts=get_transcripts,
+        top_k=top_k
+    )
+    session = DirectusSession(user_id="none", is_admin=True)#fake session
+    rag_prompt = await get_lightrag_prompt(payload, session)
+    return rag_prompt
