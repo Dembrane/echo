@@ -71,3 +71,11 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
     except Exception as e:
         logger.error(f"ETL pipeline failed with error: {str(e)}")
         return False
+
+
+if __name__ == "__main__":
+    # Steps for manual run
+    # cd server 
+    # python -m dembrane.audio_lightrag.main.run_etl
+    conv_id_list: list[str] = ['6baa3628-843c-4409-8190-cf54517bd604'] # Upload UUIDs
+    run_etl_pipeline(conv_id_list)
