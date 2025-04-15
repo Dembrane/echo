@@ -390,17 +390,33 @@ async def post_chat(
 
     if chat_context.auto_select_bool: # Auto select is enabled
         # get_rag_prompt
+        filtered_messages: List[Dict[str, Any]] = []
+        for message in messages:
+            if message["role"] in ["user", "assistant"]:
+                filtered_messages.append(message)
+        # Remove duplicate consecutive user messages but preserve conversation flow
+        if (
+                len(filtered_messages) >= 2
+                and filtered_messages[-2]["role"] == "user"
+                and filtered_messages[-1]["role"] == "user"
+                and filtered_messages[-2]["content"] == filtered_messages[-1]["content"]
+            ):
+                    filtered_messages = filtered_messages[:-1]
+
         prompt_len = float("inf")
         
         top_k = 100 #TODO: Needs to be an env variable
         while MAX_CHAT_CONTEXT_LENGTH < prompt_len:
-            logger.debug(f"**************Prompt length: {prompt_len}")
-            logger.debug(f"**************last message: {body.messages[-1].content}")
-            logger.debug(f"**************conversation_history: {messages}")
             top_k = max(5, top_k - 10)
+            # Always use the most recent user message as the query
+            query = filtered_messages[-1]["content"]
+            # Use the full conversation history to maintain context
+            conversation_history = filtered_messages
+            logger.debug(f"**************query: {query}")
+            logger.debug(f"**************conversation_history: {filtered_messages}")
             rag_prompt = await get_lightrag_prompt_by_params(
-                query=body.messages[-1].content,
-                conversation_history=messages,
+                query=query,
+                conversation_history=conversation_history,
                 echo_conversation_ids=chat_context.conversation_id_list,
                 echo_project_ids=[project_id],
                 auto_select_bool=chat_context.auto_select_bool,
@@ -409,18 +425,19 @@ async def post_chat(
             )
             prompt_len = count_tokens(rag_prompt)
             if top_k <= 5:
-                # raise autoselect not possible error
                 raise HTTPException(status_code=400, detail="Auto select is not possible with the current context length")
-        
-
+        logger.debug(f"**************rag_prompt: {rag_prompt}")
         async def stream_response_async() -> AsyncGenerator[str, None]:
             accumulated_response = ""
             try:
+                # Format proper conversation history instead of just the RAG prompt
+                formatted_messages = []               
+                formatted_messages.append({"role": "system", "content": rag_prompt})
+                formatted_messages.append({"role": "user", "content": filtered_messages[-1]["content"]})
+                logger.debug(f"**************formatted_messages: {formatted_messages}")
                 response = await litellm.acompletion(
                     model="anthropic/claude-3-5-sonnet-20240620",
-                    messages=[
-                        {"role": "user", "content": rag_prompt}
-                    ],
+                    messages=formatted_messages,
                     stream=True,
                 )
 
@@ -463,9 +480,7 @@ async def post_chat(
                     if message["role"] in ["user", "assistant"]:
                         filtered_messages.append(message)
 
-                # if the last 2 message are user messages, and have the same content, remove the last one
-                # from filtered_messages
-                # when ui does reload
+                # Remove duplicate consecutive user messages but preserve conversation flow
                 if (
                     len(filtered_messages) >= 2
                     and filtered_messages[-2]["role"] == "user"
