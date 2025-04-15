@@ -20,6 +20,7 @@ import {
   Text,
   Textarea,
   Title,
+  Progress,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import {
@@ -27,11 +28,12 @@ import {
   IconRefresh,
   IconSend,
   IconSquare,
+  IconCheck,
 } from "@tabler/icons-react";
 import { useParams } from "react-router-dom";
 import { useChat } from "ai/react";
 import { API_BASE_URL } from "@/config";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
 import { ConversationLinks } from "@/components/conversation/ConversationLinks";
@@ -42,6 +44,10 @@ import { formatMessage } from "@/components/chat/chatUtils";
 const useDembraneChat = ({ chatId }: { chatId: string }) => {
   const chatHistoryQuery = useChatHistory(chatId);
   const chatContextQuery = useProjectChatContext(chatId);
+
+  const [showProgress, setShowProgress] = useState(false);
+  const [progressValue, setProgressValue] = useState(0);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const addChatMessageMutation = useAddChatMessageMutation();
   const lockConversationsMutation = useLockConversationsMutation();
@@ -57,6 +63,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
       conversations: chatContextQuery.data.conversations.filter(
         (c) => !c.locked,
       ),
+      auto_select_bool: chatContextQuery.data.auto_select_bool ?? false,
     };
   }, [chatContextQuery.data, chatHistoryQuery.data]);
 
@@ -126,6 +133,21 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
     lastInput.current = input;
 
     try {
+      if (contextToBeAdded?.auto_select_bool) {
+        setShowProgress(true);
+        setProgressValue(0);
+        setShowSuccessMessage(false);
+        const interval = setInterval(() => {
+          setProgressValue((prev: any) => {
+            if (prev >= 100) {
+              clearInterval(interval);
+              return 100;
+            }
+            return prev + 10;
+          });
+        }, 200);
+      }
+
       // Lock conversations first
       await lockConversationsMutation.mutateAsync({ chatId });
 
@@ -137,8 +159,19 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 
       // Submit the chat
       handleSubmit();
+
+      if (contextToBeAdded?.auto_select_bool) {
+        setTimeout(() => {
+          setShowProgress(false);
+          setProgressValue(0);
+          setShowSuccessMessage(true);
+        }, 1000);
+      }
     } catch (error) {
       console.error("Error in customHandleSubmit:", error);
+      setShowProgress(false);
+      setProgressValue(0);
+      setShowSuccessMessage(false);
     }
   };
 
@@ -177,6 +210,9 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
     handleInputChange,
     handleSubmit: customHandleSubmit,
     stop: customHandleStop,
+    showProgress,
+    progressValue,
+    showSuccessMessage,
   };
 };
 
@@ -199,6 +235,9 @@ export const ProjectChatRoute = () => {
     handleSubmit,
     stop,
     reload,
+    showProgress,
+    progressValue,
+    showSuccessMessage,
   } = useDembraneChat({ chatId: chatId ?? "" });
 
   const computedChatForCopy = useMemo(() => {
@@ -271,6 +310,48 @@ export const ProjectChatRoute = () => {
                 />
               </div>
             )}
+
+          {showProgress && (
+            <Box className="rounded-bl-0 w-fit rounded-br-[0.75rem] rounded-tl-[0.75rem] rounded-tr-[0.75rem] border border-green-500 px-4 py-3">
+              <Text size="sm" className="mb-2 text-center">
+                <Trans>Searching through the most relevant sources</Trans>
+              </Text>
+              <Progress value={progressValue} color="green" size="sm" />
+            </Box>
+          )}
+          {showSuccessMessage && (
+            <>
+              <Box className="rounded-bl-0 w-fit rounded-br-[0.75rem] rounded-tl-[0.75rem] rounded-tr-[0.75rem] border border-green-500 px-4 py-3">
+                <Group>
+                  <Box className="rounded-full bg-green-500 p-1">
+                    <IconCheck size={16} color="white" />
+                  </Box>
+                  <Text size="sm">
+                    <Trans>Searched through the most relevant sources</Trans>
+                  </Text>
+                </Group>
+              </Box>
+              <Box className="mt-2">
+                <Text size="sm" fw={500}>
+                  Citing the following sources
+                </Text>
+                <Group gap="xs" mt="sm">
+                  <Box className="mr-2 rounded bg-gray-100 p-2">
+                    <Text size="xs">Source 1</Text>
+                  </Box>
+                  <Box className="mr-2 rounded bg-gray-100 p-2">
+                    <Text size="xs">Source 2</Text>
+                  </Box>
+                  <Box className="mr-2 rounded bg-gray-100 p-2">
+                    <Text size="xs">Source 3</Text>
+                  </Box>
+                  <Box className="rounded bg-gray-100 p-2">
+                    <Text size="xs">+5 more</Text>
+                  </Box>
+                </Group>
+              </Box>
+            </>
+          )}
 
           {isLoading && (
             <Group>
