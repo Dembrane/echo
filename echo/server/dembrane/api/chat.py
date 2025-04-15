@@ -8,10 +8,17 @@ from typing import Any, Dict, List, Literal, Optional, Generator, AsyncGenerator
 
 import litellm
 from fastapi import Query, APIRouter, HTTPException
+from litellm import token_counter  # type: ignore
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 
 from dembrane.utils import generate_uuid, get_utc_timestamp
+from dembrane.config import (
+    ANTHROPIC_API_KEY,
+    AUDIO_LIGHTRAG_TOP_K_PROMPT,
+    LIGHTRAG_LITELLM_INFERENCE_MODEL,
+    LIGHTRAG_LITELLM_INFERENCE_API_KEY,
+)
 from dembrane.database import (
     DatabaseSession,
     ProjectChatModel,
@@ -389,8 +396,6 @@ async def post_chat(
     locked_conversation_id_list = chat_context.locked_conversation_id_list #Verify with directus
 
     if chat_context.auto_select_bool: 
-        litellm_model = "anthropic/claude-3-5-sonnet-20240620"
-
         filtered_messages: List[Dict[str, Any]] = []
         for message in messages:
             if message["role"] in ["user", "assistant"]:
@@ -402,9 +407,7 @@ async def post_chat(
                 and filtered_messages[-2]["content"] == filtered_messages[-1]["content"]
             ):
                     filtered_messages = filtered_messages[:-1]
-
-        
-        top_k = 100 #TODO: Needs to be an env variable
+        top_k = AUDIO_LIGHTRAG_TOP_K_PROMPT 
         formatted_messages = []               
 
         prompt_len = float("inf")
@@ -426,7 +429,7 @@ async def post_chat(
             )
             formatted_messages.append({"role": "system", "content": rag_prompt})
             formatted_messages.append({"role": "user", "content": filtered_messages[-1]["content"]})
-            prompt_len = litellm.token_counter(model=litellm_model, 
+            prompt_len = token_counter(model=LIGHTRAG_LITELLM_INFERENCE_MODEL, 
                                                messages=formatted_messages)
             logger.debug(f"**************prompt_len: {prompt_len}")
             if top_k <= 5:
@@ -435,14 +438,12 @@ async def post_chat(
         async def stream_response_async() -> AsyncGenerator[str, None]:
             accumulated_response = ""
             try:
-                # Format proper conversation history instead of just the RAG prompt
-
                 response = await litellm.acompletion(
-                    model=litellm_model,
+                    model=LIGHTRAG_LITELLM_INFERENCE_MODEL,
                     messages=formatted_messages,
                     stream=True,
+                    api_key=LIGHTRAG_LITELLM_INFERENCE_API_KEY
                 )
-
                 async for chunk in response:
                     if chunk.choices[0].delta.content:
                         content = chunk.choices[0].delta.content
