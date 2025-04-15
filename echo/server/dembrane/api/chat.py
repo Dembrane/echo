@@ -14,7 +14,6 @@ from fastapi.responses import StreamingResponse
 
 from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.config import (
-    ANTHROPIC_API_KEY,
     AUDIO_LIGHTRAG_TOP_K_PROMPT,
     LIGHTRAG_LITELLM_INFERENCE_MODEL,
     LIGHTRAG_LITELLM_INFERENCE_API_KEY,
