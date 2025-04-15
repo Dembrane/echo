@@ -12,16 +12,18 @@ class Prompts:
 #   where every item is a different speaker's speech (speaker turn sperated list)
 
 # Task 2: CONTEXTUAL ANALYSIS
-# - Analyze the conversation in excessive detail, point out all the details and nuances of the conversation
-# - Break down in detail the different user opinions throuout the conversation.
+# - Analyze the conversation in excessive detail 
+# - Point out all the details and nuances of the conversation
+# - Break down in detail the different user's opinions throughout the conversation.
 # - Analyze in relation to:
 #   • Previous conversation history
 #   • Event context
 #   • Speaker dynamics
 # - Focus on:
+#   • In depth analysis of the different user's opinions throughout the conversation
 #   • Tone and sentiment analysis per masked speaker
 #   • Named entity identification and explanation
-#   • Acoustic details (background sounds, voice qualities)
+#   • Acoustic details (background sounds, voice qualities, speaker's emotions)
 #   • Conversational dynamics between masked speakers
 # - Always provide the analysis in English (translate if source is non-English)
 

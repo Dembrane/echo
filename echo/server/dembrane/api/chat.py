@@ -388,13 +388,13 @@ async def post_chat(
 
     locked_conversation_id_list = chat_context.locked_conversation_id_list #Verify with directus
 
-    if chat_context.auto_select_bool: # Auto select is enabled
-        # get_rag_prompt
+    if chat_context.auto_select_bool: 
+        litellm_model = "anthropic/claude-3-5-sonnet-20240620"
+
         filtered_messages: List[Dict[str, Any]] = []
         for message in messages:
             if message["role"] in ["user", "assistant"]:
                 filtered_messages.append(message)
-        # Remove duplicate consecutive user messages but preserve conversation flow
         if (
                 len(filtered_messages) >= 2
                 and filtered_messages[-2]["role"] == "user"
@@ -403,17 +403,18 @@ async def post_chat(
             ):
                     filtered_messages = filtered_messages[:-1]
 
-        prompt_len = float("inf")
         
         top_k = 100 #TODO: Needs to be an env variable
+        formatted_messages = []               
+
+        prompt_len = float("inf")
         while MAX_CHAT_CONTEXT_LENGTH < prompt_len:
+            
             top_k = max(5, top_k - 10)
             # Always use the most recent user message as the query
             query = filtered_messages[-1]["content"]
             # Use the full conversation history to maintain context
             conversation_history = filtered_messages
-            logger.debug(f"**************query: {query}")
-            logger.debug(f"**************conversation_history: {filtered_messages}")
             rag_prompt = await get_lightrag_prompt_by_params(
                 query=query,
                 conversation_history=conversation_history,
@@ -423,7 +424,11 @@ async def post_chat(
                 get_transcripts=True,
                 top_k=top_k
             )
-            prompt_len = count_tokens(rag_prompt)
+            formatted_messages.append({"role": "system", "content": rag_prompt})
+            formatted_messages.append({"role": "user", "content": filtered_messages[-1]["content"]})
+            prompt_len = litellm.token_counter(model=litellm_model, 
+                                               messages=formatted_messages)
+            logger.debug(f"**************prompt_len: {prompt_len}")
             if top_k <= 5:
                 raise HTTPException(status_code=400, detail="Auto select is not possible with the current context length")
         logger.debug(f"**************rag_prompt: {rag_prompt}")
@@ -431,12 +436,9 @@ async def post_chat(
             accumulated_response = ""
             try:
                 # Format proper conversation history instead of just the RAG prompt
-                formatted_messages = []               
-                formatted_messages.append({"role": "system", "content": rag_prompt})
-                formatted_messages.append({"role": "user", "content": filtered_messages[-1]["content"]})
-                logger.debug(f"**************formatted_messages: {formatted_messages}")
+
                 response = await litellm.acompletion(
-                    model="anthropic/claude-3-5-sonnet-20240620",
+                    model=litellm_model,
                     messages=formatted_messages,
                     stream=True,
                 )
