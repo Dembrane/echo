@@ -2,9 +2,11 @@
 # - Change db calls to directus calls
 # - Change anthropic api to litellm
 
+import json
 import logging
-from typing import Any, Dict, List, Literal, Optional, Generator
+from typing import Any, Dict, List, Literal, Optional, Generator, AsyncGenerator
 
+import litellm
 from fastapi import Query, APIRouter, HTTPException
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
@@ -384,11 +386,17 @@ async def post_chat(
 
     chat_context = await get_chat_context(chat_id, db, auth)
 
+    locked_conversation_id_list = chat_context.locked_conversation_id_list #Verify with directus
+
     if chat_context.auto_select_bool: # Auto select is enabled
         # get_rag_prompt
         prompt_len = float("inf")
+        
         top_k = 100 #TODO: Needs to be an env variable
         while MAX_CHAT_CONTEXT_LENGTH < prompt_len:
+            logger.debug(f"**************Prompt length: {prompt_len}")
+            logger.debug(f"**************last message: {body.messages[-1].content}")
+            logger.debug(f"**************conversation_history: {messages}")
             top_k = max(5, top_k - 10)
             rag_prompt = await get_lightrag_prompt_by_params(
                 query=body.messages[-1].content,
@@ -404,16 +412,45 @@ async def post_chat(
                 # raise autoselect not possible error
                 raise HTTPException(status_code=400, detail="Auto select is not possible with the current context length")
         
-        # Make litellm call with rag_prompt similar to the streaming response
-        def stream_response() -> Generator[str, None, None]:
-            pass
 
-        raise HTTPException(status_code=501, detail="Auto select is not implemented")
+        async def stream_response_async() -> AsyncGenerator[str, None]:
+            accumulated_response = ""
+            try:
+                response = await litellm.acompletion(
+                    model="anthropic/claude-3-5-sonnet-20240620",
+                    messages=[
+                        {"role": "user", "content": rag_prompt}
+                    ],
+                    stream=True,
+                )
 
+                async for chunk in response:
+                    if chunk.choices[0].delta.content:
+                        content = chunk.choices[0].delta.content
+                        accumulated_response += content
+                        if protocol == "text":
+                            yield content
+                        elif protocol == "data":
+                            yield f"0:{json.dumps(content)}\n"
+
+            except Exception as e:
+                logger.error(f"Error in litellm stream response: {str(e)}")
+                # delete user message if stream fails
+                with DatabaseSession() as error_db:
+                    error_db.delete(user_message)
+                    error_db.commit()
+
+                if protocol == "data":
+                    yield '3:"An error occurred while processing the chat response."\n'
+                else:
+                    yield "Error: An error occurred while processing the chat response."
+                return # Stop generation on error
+        headers = {"Content-Type": "text/event-stream"}
+        if protocol == "data":
+            headers["x-vercel-ai-data-stream"] = "v1"
+        response = StreamingResponse(stream_response_async(), headers=headers)
+        return response
     else:
-
-        locked_conversation_id_list = chat_context.locked_conversation_id_list #Verify with directus
-
         system_messages = await create_system_messages_for_chat(
             locked_conversation_id_list, db, language
         )
