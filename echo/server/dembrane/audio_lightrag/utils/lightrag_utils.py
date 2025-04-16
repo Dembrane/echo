@@ -41,6 +41,18 @@ def is_valid_uuid(uuid_str: str) -> bool:
 
 db_manager = PostgresDBManager()
 
+def get_conversation_name_from_id(conversation_id: str) -> str:
+    query = {'query': {'filter': {'id': {'_eq': conversation_id}},'fields': ['participant_name']}}
+    print(query)
+    return directus.get_items("conversation", query)[0]['participant_name']
+
+async def run_segment_id_to_conversation_id(segment_id: int) -> str:
+    conversation_chunk_dict = await run_segment_ids_to_conversation_chunk_ids([segment_id])
+    conversation_chunk_ids = list(conversation_chunk_dict.values())
+    query = {'query': {'filter': {'id': {'_in': conversation_chunk_ids}},'fields': ['conversation_id']}}
+    return directus.get_items("conversation_chunk", query)[0]['conversation_id']
+
+
 async def run_segment_ids_to_conversation_chunk_ids(segment_ids: list[int]) -> dict[int, str]:
     db = await db_manager.get_initialized_db()
     return await get_conversation_chunk_ids_from_segment_ids(db, segment_ids)
@@ -245,7 +257,7 @@ async def get_ratio_abs(rag_prompt: str,
         conversation_ratios_abs: Dict[str, float] = {}
         for chunk_id,ratio in chunk_ratios_abs.items():
             query = {'query': {'filter': {'id': {'_eq': chunk_id}},'fields': ['conversation_id']}}
-            conversaion = directus.get_items("conversation_chunk", query)[0]['conversation_id'][0]
+            conversaion = directus.get_items("conversation_chunk", query)[0]['conversation_id']
             if conversaion not in conversation_ratios_abs.keys():
                 conversation_ratios_abs[conversaion] = ratio
             else:
@@ -255,6 +267,15 @@ async def get_ratio_abs(rag_prompt: str,
 def get_project_id(proj_chat_id: str) -> str:
     query = {'query': {'filter': {'id': {'_eq': proj_chat_id}},'fields': ['project_id']}}
     return directus.get_items("project_chat", query)[0]['project_id']
+
+async def get_conversation_details_for_rag_query(rag_prompt: str) -> dict[str, dict[str, Any]]:
+    ratio_abs = await get_ratio_abs(rag_prompt, "conversation")
+    conversation_details_dict = {}
+    for conversation_id,ratio in ratio_abs.items():
+        query = {'query': {'filter': {'id': {'_eq': conversation_id}},'fields': ['participant_name']}}
+        conversation_title = directus.get_items("conversation", query)[0]['participant_name']
+        conversation_details_dict[conversation_id] = {'ratio': ratio, 'conversation_title': conversation_title}
+    return conversation_details_dict
 
 TABLES = {
     "LIGHTRAG_VDB_TRANSCRIPT": """

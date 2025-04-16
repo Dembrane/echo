@@ -8,7 +8,10 @@ from typing import Any, Dict, List, Literal, Optional, Generator, AsyncGenerator
 
 import litellm
 from fastapi import Query, APIRouter, HTTPException
-from litellm import token_counter  # type: ignore
+from litellm import (  # type: ignore
+    completion,
+    token_counter,
+)
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 
@@ -17,6 +20,10 @@ from dembrane.config import (
     AUDIO_LIGHTRAG_TOP_K_PROMPT,
     LIGHTRAG_LITELLM_INFERENCE_MODEL,
     LIGHTRAG_LITELLM_INFERENCE_API_KEY,
+    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL,
+    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY,
+    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE,
+    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION,
 )
 from dembrane.database import (
     DatabaseSession,
@@ -36,7 +43,12 @@ from dembrane.chat_utils import (
 from dembrane.quote_utils import count_tokens
 from dembrane.api.conversation import get_conversation_token_count
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
-from dembrane.audio_lightrag.utils.lightrag_utils import get_project_id
+from dembrane.audio_lightrag.utils.lightrag_utils import (
+    get_project_id,
+    get_conversation_name_from_id,
+    run_segment_id_to_conversation_id,
+    get_conversation_details_for_rag_query,
+)
 
 ChatRouter = APIRouter(tags=["chat"])
 
@@ -110,7 +122,7 @@ async def get_chat_context(
     locked_conversations = set()
     for message in messages:
         for conversation in message.used_conversations:
-            locked_conversations.add(conversation.id)
+            locked_conversations.add(conversation.id) # Add directus call here
 
     user_message_token_count = 0
     assistant_message_token_count = 0
@@ -350,6 +362,12 @@ class ChatBodyMessageSchema(BaseModel):
 class ChatBodySchema(BaseModel):
     messages: List[ChatBodyMessageSchema]
 
+class CitationSingleSchema(BaseModel):
+    segment_id: int
+    verbatim_reference_text_chunk: str
+
+class CitationsSchema(BaseModel):
+    citations: List[CitationSingleSchema]
 
 @ChatRouter.post("/{chat_id}")
 async def post_chat(
@@ -380,6 +398,7 @@ async def post_chat(
         text=body.messages[-1].content,
         project_chat_id=chat.id,
     )
+
     db.add(user_message)
     db.commit()
 
@@ -407,15 +426,11 @@ async def post_chat(
             ):
                     filtered_messages = filtered_messages[:-1]
         top_k = AUDIO_LIGHTRAG_TOP_K_PROMPT 
-        formatted_messages = []               
-
+        formatted_messages = []
         prompt_len = float("inf")
         while MAX_CHAT_CONTEXT_LENGTH < prompt_len:
-            
             top_k = max(5, top_k - 10)
-            # Always use the most recent user message as the query
             query = filtered_messages[-1]["content"]
-            # Use the full conversation history to maintain context
             conversation_history = filtered_messages
             rag_prompt = await get_lightrag_prompt_by_params(
                 query=query,
@@ -430,10 +445,34 @@ async def post_chat(
             formatted_messages.append({"role": "user", "content": filtered_messages[-1]["content"]})
             prompt_len = token_counter(model=LIGHTRAG_LITELLM_INFERENCE_MODEL, 
                                                messages=formatted_messages)
-            logger.debug(f"**************prompt_len: {prompt_len}")
             if top_k <= 5:
                 raise HTTPException(status_code=400, detail="Auto select is not possible with the current context length")
-        logger.debug(f"**************rag_prompt: {rag_prompt}")
+        dembrane_dummy_message = ProjectChatMessageModel(
+            id=generate_uuid(),
+            date_created=get_utc_timestamp(),
+            message_from="dembrane",
+            text="searched",
+            project_chat_id=chat_id,
+        )
+        db.add(dembrane_dummy_message)
+        db.commit()
+
+        try:
+            conversation_details_dict = await get_conversation_details_for_rag_query(rag_prompt)
+        except Exception as e:
+            logger.info(f"No references found. Error: {str(e)}")
+            conversation_details_dict = {}
+        
+        dembrane_prompt_conversations_message = ProjectChatMessageModel(
+            id=generate_uuid(),
+            date_created=get_utc_timestamp(),
+            message_from="dembrane",
+            text="prompt_conversations created",
+            prompt_conversations=conversation_details_dict,
+            project_chat_id=chat_id,
+        )
+        db.add(dembrane_prompt_conversations_message)
+        db.commit()
         async def stream_response_async() -> AsyncGenerator[str, None]:
             accumulated_response = ""
             try:
@@ -451,7 +490,6 @@ async def post_chat(
                             yield content
                         elif protocol == "data":
                             yield f"0:{json.dumps(content)}\n"
-
             except Exception as e:
                 logger.error(f"Error in litellm stream response: {str(e)}")
                 # delete user message if stream fails
@@ -464,6 +502,50 @@ async def post_chat(
                 else:
                     yield "Error: An error occurred while processing the chat response."
                 return # Stop generation on error
+            
+            # Move all this to utils 
+            text_structuring_model_message = f'''
+            You are a helpful assistant that maps the correct references to the generated response.
+            Your task is to map the references segment_id to the correct reference text.
+            For every reference segment_id, you need to provide the most relevant reference text verbatim.
+            Segment ID is always of the format: SEGMENT_ID_<number>.
+            Here is the generated response:
+            {accumulated_response}
+            Here are the rag prompt:
+            {rag_prompt}
+            '''
+            text_structuring_model_messages = [
+                {"role": "system", "content": text_structuring_model_message},
+            ]
+            # Generate citations
+            
+            text_structuring_model_generation = completion(
+                                                model=f"{LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL}",
+                                                messages=text_structuring_model_messages,
+                                                api_base=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE,
+                                                api_version=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION,
+                                                api_key=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY,
+                                                response_format=CitationsSchema)
+
+            citations_dict = json.loads(text_structuring_model_generation.choices[0].message.content)
+            citations_list = citations_dict["citations"]# List[Dict[str, str]]
+            for idx, citation in enumerate(citations_list):
+                conversation_id = await run_segment_id_to_conversation_id(citation['segment_id'])
+                citations_list[idx]['conversation_id'] = conversation_id
+                conversation_name = get_conversation_name_from_id(conversation_id)
+                citations_list[idx]['conversation_name'] = conversation_name
+            citations_count = len(citations_list)
+            citations_list = json.dumps(citations_list)
+            dembrane_message = ProjectChatMessageModel(
+                id=generate_uuid(),
+                date_created=get_utc_timestamp(),
+                message_from="dembrane",
+                text=f"{citations_count} citations found.",
+                project_chat_id=chat_id,
+                citations=citations_list,
+            )
+            db.add(dembrane_message)
+            db.commit()
         headers = {"Content-Type": "text/event-stream"}
         if protocol == "data":
             headers["x-vercel-ai-data-stream"] = "v1"
