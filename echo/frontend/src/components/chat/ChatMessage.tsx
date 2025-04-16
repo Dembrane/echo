@@ -13,7 +13,7 @@ export const ChatMessage = ({ children, section, role }: Props) => {
     <div
       className={cn(
         "flex",
-        ["user"].includes(role) ? "justify-end" : "justify-start",
+        ["user", "dembrane"].includes(role) ? "justify-end" : "justify-start",
       )}
     >
       {role === "dembrane" && (
