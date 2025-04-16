@@ -40,6 +40,9 @@ import { ConversationLinks } from "@/components/conversation/ConversationLinks";
 import { ChatHistoryMessage } from "@/components/chat/ChatHistoryMessage";
 import { ChatTemplatesMenu } from "@/components/chat/ChatTemplatesMenu";
 import { formatMessage } from "@/components/chat/chatUtils";
+import SourcesSearch from "@/components/chat/SourcesSearch";
+import Citations from "@/components/chat/Citations";
+import SourcesSearched from "@/components/chat/SourcesSearched";
 
 const useDembraneChat = ({ chatId }: { chatId: string }) => {
   const chatHistoryQuery = useChatHistory(chatId);
@@ -311,45 +314,14 @@ export const ProjectChatRoute = () => {
               </div>
             )}
 
-          {showProgress && (
-            <Box className="rounded-bl-0 w-fit rounded-br-[0.75rem] rounded-tl-[0.75rem] rounded-tr-[0.75rem] border border-green-500 px-4 py-3">
-              <Text size="sm" className="mb-2 text-center">
-                <Trans>Searching through the most relevant sources</Trans>
-              </Text>
-              <Progress value={progressValue} color="green" size="sm" />
-            </Box>
+          {AUTO_SELECT_ENABLED && showProgress && (
+            <SourcesSearch progressValue={progressValue} />
           )}
-          {showSuccessMessage && (
+
+          {AUTO_SELECT_ENABLED && showSuccessMessage && (
             <>
-              <Box className="rounded-bl-0 w-fit rounded-br-[0.75rem] rounded-tl-[0.75rem] rounded-tr-[0.75rem] border border-green-500 px-4 py-3">
-                <Group>
-                  <Box className="rounded-full bg-green-500 p-1">
-                    <IconCheck size={16} color="white" />
-                  </Box>
-                  <Text size="sm">
-                    <Trans>Searched through the most relevant sources</Trans>
-                  </Text>
-                </Group>
-              </Box>
-              <Box className="mt-2">
-                <Text size="sm" fw={500}>
-                  Citing the following sources
-                </Text>
-                <Group gap="xs" mt="sm">
-                  <Box className="mr-2 rounded bg-gray-100 p-2">
-                    <Text size="xs">Source 1</Text>
-                  </Box>
-                  <Box className="mr-2 rounded bg-gray-100 p-2">
-                    <Text size="xs">Source 2</Text>
-                  </Box>
-                  <Box className="mr-2 rounded bg-gray-100 p-2">
-                    <Text size="xs">Source 3</Text>
-                  </Box>
-                  <Box className="rounded bg-gray-100 p-2">
-                    <Text size="xs">+5 more</Text>
-                  </Box>
-                </Group>
-              </Box>
+              <SourcesSearched />
+              <Citations sources={["Source 1", "Source 2", "Source 3"]} />
             </>
           )}
 
@@ -416,7 +388,11 @@ export const ProjectChatRoute = () => {
                     id: c.conversation_id,
                     participant_name: c.conversation_participant_name,
                   }))}
-                  color={AUTO_SELECT_ENABLED && contextToBeAdded.auto_select_bool ? "green" : undefined}
+                  color={
+                    AUTO_SELECT_ENABLED && contextToBeAdded.auto_select_bool
+                      ? "green"
+                      : undefined
+                  }
                 />
               </Group>
             </ChatMessage>
