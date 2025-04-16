@@ -136,7 +136,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
     lastInput.current = input;
 
     try {
-      if (contextToBeAdded?.auto_select_bool) {
+      if (AUTO_SELECT_ENABLED && contextToBeAdded?.auto_select_bool) {
         setShowProgress(true);
         setProgressValue(0);
         setShowSuccessMessage(false);
@@ -163,7 +163,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
       // Submit the chat
       handleSubmit();
 
-      if (contextToBeAdded?.auto_select_bool) {
+      if (AUTO_SELECT_ENABLED && contextToBeAdded?.auto_select_bool) {
         setTimeout(() => {
           setShowProgress(false);
           setProgressValue(0);
@@ -172,9 +172,11 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
       }
     } catch (error) {
       console.error("Error in customHandleSubmit:", error);
-      setShowProgress(false);
-      setProgressValue(0);
-      setShowSuccessMessage(false);
+      if (AUTO_SELECT_ENABLED && contextToBeAdded?.auto_select_bool) {
+        setShowProgress(false);
+        setProgressValue(0);
+        setShowSuccessMessage(false);
+      }
     }
   };
 
