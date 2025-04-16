@@ -414,6 +414,10 @@ async def post_chat(
     locked_conversation_id_list = chat_context.locked_conversation_id_list #Verify with directus
 
     if chat_context.auto_select_bool: 
+        # Split into three apis 
+        # 1. Get  dembrane_prompt_conversations_message
+        # 2. Get the citations dembrane_message
+        # 3. Get the response dembrane_message
         filtered_messages: List[Dict[str, Any]] = []
         for message in messages:
             if message["role"] in ["user", "assistant"]:
@@ -447,6 +451,7 @@ async def post_chat(
                                                messages=formatted_messages)
             if top_k <= 5:
                 raise HTTPException(status_code=400, detail="Auto select is not possible with the current context length")
+        
         dembrane_dummy_message = ProjectChatMessageModel(
             id=generate_uuid(),
             date_created=get_utc_timestamp(),
@@ -458,17 +463,18 @@ async def post_chat(
         db.commit()
 
         try:
-            conversation_details_dict = await get_conversation_details_for_rag_query(rag_prompt)
+            conversation_references = await get_conversation_details_for_rag_query(rag_prompt)
+            conversation_references = {'conversation_references': conversation_references}
         except Exception as e:
             logger.info(f"No references found. Error: {str(e)}")
-            conversation_details_dict = {}
+            conversation_references = {'conversation_references':{}}
         
         dembrane_prompt_conversations_message = ProjectChatMessageModel(
             id=generate_uuid(),
             date_created=get_utc_timestamp(),
             message_from="dembrane",
             text="prompt_conversations created",
-            prompt_conversations=conversation_details_dict,
+            prompt_conversations=conversation_references,
             project_chat_id=chat_id,
         )
         db.add(dembrane_prompt_conversations_message)
@@ -526,17 +532,20 @@ async def post_chat(
                                                 api_version=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION,
                                                 api_key=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY,
                                                 response_format=CitationsSchema)
-
-            citations_dict = json.loads(text_structuring_model_generation.choices[0].message.content)
-            citations_list = citations_dict["citations"]# List[Dict[str, str]]
-            for idx, citation in enumerate(citations_list):
-                conversation_id = await run_segment_id_to_conversation_id(citation['segment_id'])
-                citations_list[idx]['conversation_id'] = conversation_id
-                conversation_name = get_conversation_name_from_id(conversation_id)
-                citations_list[idx]['conversation_name'] = conversation_name
-            citations_count = len(citations_list)
-            citations_list = json.dumps(citations_list)
-            dembrane_message = ProjectChatMessageModel(
+            try: 
+                citations_dict = json.loads(text_structuring_model_generation.choices[0].message.content)
+                citations_list = citations_dict["citations"]# List[Dict[str, str]]
+                for idx, citation in enumerate(citations_list):
+                    conversation_id = await run_segment_id_to_conversation_id(citation['segment_id'])
+                    citations_list[idx]['conversation_id'] = conversation_id
+                    conversation_name = get_conversation_name_from_id(conversation_id)
+                    citations_list[idx]['conversation_name'] = conversation_name
+                citations_count = len(citations_list)
+                citations_list = json.dumps(citations_list)
+            except Exception as e:
+                logger.error(f"Error in text_structuring_model_generation: {str(e)}")
+                citations_list = []
+            dembrane_citations_message = ProjectChatMessageModel(
                 id=generate_uuid(),
                 date_created=get_utc_timestamp(),
                 message_from="dembrane",
@@ -544,7 +553,7 @@ async def post_chat(
                 project_chat_id=chat_id,
                 citations=citations_list,
             )
-            db.add(dembrane_message)
+            db.add(dembrane_citations_message)
             db.commit()
         headers = {"Content-Type": "text/event-stream"}
         if protocol == "data":
