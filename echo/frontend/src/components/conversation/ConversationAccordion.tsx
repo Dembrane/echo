@@ -32,7 +32,6 @@ import {
   ScrollArea,
   Center,
   Badge,
-  Box,
 } from "@mantine/core";
 import {
   useState,
@@ -68,6 +67,8 @@ import { useDisclosure } from "@mantine/hooks";
 import { useIntersection } from "@mantine/hooks";
 import { useForm, Controller } from "react-hook-form";
 import { FormLabel } from "@/components/form/FormLabel";
+import { AutoSelectConversations } from "./AutoSelectConversations";
+import { AUTO_SELECT_ENABLED } from "@/config";
 
 type SortOption = {
   label: string;
@@ -109,6 +110,8 @@ const ConversationAccordionLabelChatSelection = ({
     (c) => c.conversation_id === conversation.id && c.locked,
   );
 
+  const isAutoSelectEnabled = projectChatContextQuery.data?.auto_select_bool ?? false;
+
   const handleSelectChat = () => {
     if (!isSelected) {
       addChatContextMutation.mutate({
@@ -136,6 +139,7 @@ const ConversationAccordionLabelChatSelection = ({
         checked={isSelected}
         disabled={isLocked}
         onChange={handleSelectChat}
+        color={AUTO_SELECT_ENABLED && isAutoSelectEnabled ? "green" : undefined}
       />
     </Tooltip>
   );
@@ -336,10 +340,13 @@ const ConversationAccordionItem = ({
     (c) => c.conversation_id === conversation.id && c.locked,
   );
 
+  const isAutoSelectEnabled = chatContextQuery.data?.auto_select_bool ?? false;
+
   return (
     <NavigationButton
       to={`/projects/${conversation.project_id}/conversation/${conversation.id}/overview`}
       active={highlight}
+      borderColor={AUTO_SELECT_ENABLED && isAutoSelectEnabled ? "green" : undefined}
       className={cn("w-full", {
         "!bg-primary-50": isLocked,
       })}
@@ -424,53 +431,6 @@ const ConversationAccordionItem = ({
         </Group>
       </Stack>
     </NavigationButton>
-  );
-};
-
-
-// Auto-select conversation item
-export const AutoSelectConversationItem = ({ projectId }: { projectId: string }) => {
-  const { chatId } = useParams();
-  const projectChatContextQuery = useProjectChatContext(chatId ?? "");
-  const addChatContextMutation = useAddChatContextMutation();
-  const deleteChatContextMutation = useDeleteChatContextMutation();
-  // Get the auto_select_bool value from the chat context
-  const autoSelect = projectChatContextQuery.data?.auto_select_bool ?? false;
-  const handleCheckboxChange = (checked: boolean) => {
-    if (checked) {
-      addChatContextMutation.mutate({
-        chatId: chatId ?? "",
-        auto_select_bool: true
-      });
-    } else {
-      deleteChatContextMutation.mutate({
-        chatId: chatId ?? "",
-        auto_select_bool: false
-      });
-    }
-  };
-  return (
-    <Box
-      className="cursor-pointer border border-gray-200 hover:bg-gray-50"
-    >
-      <Group justify="space-between" p="md" wrap="nowrap">
-        <Stack gap="xs">
-          <Text className="font-medium">
-            <Trans>Auto-select</Trans>
-          </Text>
-          <Text size="xs" c="gray.6">
-            <Trans>Auto-select sources to add to the chat</Trans>
-          </Text>
-        </Stack>
-        <Checkbox
-          size="md"
-          checked={autoSelect}
-          color="green"
-          onClick={(e) => e.stopPropagation()}
-          onChange={(e) => handleCheckboxChange(e.currentTarget.checked)}
-        />
-      </Group>
-    </Box>
   );
 };
 
@@ -665,12 +625,13 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
 
       <Accordion.Panel>
         <Stack ref={parent2} className="relative">
-        {conversationsQuery.data?.length !== 0 && (
+          {AUTO_SELECT_ENABLED && conversationsQuery.data?.length !== 0 && (
             <Stack gap="xs" className="relative">
               <LoadingOverlay visible={conversationsQuery.isLoading} />
-              <AutoSelectConversationItem projectId={projectId} />
+              <AutoSelectConversations projectId={projectId} />
             </Stack>
           )}
+          
           {!(
             conversationsQuery.data &&
             conversationsQuery.data.length === 0 &&

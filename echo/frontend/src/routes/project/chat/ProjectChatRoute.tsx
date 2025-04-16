@@ -32,7 +32,7 @@ import {
 } from "@tabler/icons-react";
 import { useParams } from "react-router-dom";
 import { useChat } from "ai/react";
-import { API_BASE_URL } from "@/config";
+import { API_BASE_URL, AUTO_SELECT_ENABLED } from "@/config";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
@@ -416,6 +416,7 @@ export const ProjectChatRoute = () => {
                     id: c.conversation_id,
                     participant_name: c.conversation_participant_name,
                   }))}
+                  color={AUTO_SELECT_ENABLED && contextToBeAdded.auto_select_bool ? "green" : undefined}
                 />
               </Group>
             </ChatMessage>
