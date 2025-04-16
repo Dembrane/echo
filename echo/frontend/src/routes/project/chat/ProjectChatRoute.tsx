@@ -323,7 +323,7 @@ export const ProjectChatRoute = () => {
           {AUTO_SELECT_ENABLED && showSuccessMessage && (
             <>
               <SourcesSearched />
-              <Citations sources={["Source 1", "Source 2", "Source 3"]} />
+              {/* <Citations sources={["Source 1", "Source 2", "Source 3"]} /> */}
             </>
           )}
 
