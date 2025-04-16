@@ -68,6 +68,8 @@ import { useDisclosure } from "@mantine/hooks";
 import { useIntersection } from "@mantine/hooks";
 import { useForm, Controller } from "react-hook-form";
 import { FormLabel } from "@/components/form/FormLabel";
+import { AutoSelectConversations } from "./AutoSelectConversations";
+import { AUTO_SELECT_ENABLED } from "@/config";
 
 type SortOption = {
   label: string;
@@ -109,6 +111,8 @@ const ConversationAccordionLabelChatSelection = ({
     (c) => c.conversation_id === conversation.id && c.locked,
   );
 
+  const isAutoSelectEnabled = projectChatContextQuery.data?.auto_select_bool ?? false;
+
   const handleSelectChat = () => {
     if (!isSelected) {
       addChatContextMutation.mutate({
@@ -136,6 +140,7 @@ const ConversationAccordionLabelChatSelection = ({
         checked={isSelected}
         disabled={isLocked}
         onChange={handleSelectChat}
+        color={AUTO_SELECT_ENABLED && isAutoSelectEnabled ? "green" : undefined}
       />
     </Tooltip>
   );
@@ -336,10 +341,13 @@ const ConversationAccordionItem = ({
     (c) => c.conversation_id === conversation.id && c.locked,
   );
 
+  const isAutoSelectEnabled = chatContextQuery.data?.auto_select_bool ?? false;
+
   return (
     <NavigationButton
       to={`/projects/${conversation.project_id}/conversation/${conversation.id}/overview`}
       active={highlight}
+      borderColor={AUTO_SELECT_ENABLED && isAutoSelectEnabled ? "green" : undefined}
       className={cn("w-full", {
         "!bg-primary-50": isLocked,
       })}
@@ -665,12 +673,13 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
 
       <Accordion.Panel>
         <Stack ref={parent2} className="relative">
-        {conversationsQuery.data?.length !== 0 && (
+          {AUTO_SELECT_ENABLED && conversationsQuery.data?.length !== 0 && (
             <Stack gap="xs" className="relative">
               <LoadingOverlay visible={conversationsQuery.isLoading} />
-              <AutoSelectConversationItem projectId={projectId} />
+              <AutoSelectConversations projectId={projectId} />
             </Stack>
           )}
+          
           {!(
             conversationsQuery.data &&
             conversationsQuery.data.length === 0 &&

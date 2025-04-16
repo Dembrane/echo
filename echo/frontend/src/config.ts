@@ -27,3 +27,5 @@ export const SUPPORTED_LANGUAGES = [
 
 export const PRIVACY_POLICY_URL =
   "https://dembrane.notion.site/Privacy-statements-all-languages-fa97a183f9d841f7a1089079e77ffb52" as const;
+
+export const AUTO_SELECT_ENABLED = import.meta.env.VITE_AUTO_SELECT_ENABLED === "1";

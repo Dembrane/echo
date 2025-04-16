@@ -8,5 +8,15 @@ module.exports = withNextra({
     locales: ["en-US", "nl-NL"],
     defaultLocale: "en-US",
   },
+  webpack: (config, { isServer }) => {
+    
+    config.module.rules.push({
+      test: /\.mmd$/,
+      type: 'asset/source',
+    })
+    
+    return config
+  },
+
 })
 
