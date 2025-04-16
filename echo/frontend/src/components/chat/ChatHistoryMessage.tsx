@@ -7,6 +7,7 @@ import { formatDate } from "date-fns";
 import { cn } from "@/lib/utils";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
 import { ConversationLinks } from "@/components/conversation/ConversationLinks";
+import SourcesSearched from "./SourcesSearched";
 
 export const ChatHistoryMessage = ({
   message,
@@ -41,6 +42,16 @@ export const ChatHistoryMessage = ({
         <Markdown className="prose-sm" content={message.content} />
       </ChatMessage>
     );
+  }
+
+  if (message.role === "dembrane") {
+    if (message.content === "searched") {
+      return (
+        <ChatMessage key={message.id} role="dembrane" section={section}>
+          <SourcesSearched />
+        </ChatMessage>
+      );
+    }
   }
 
   if (message._original.added_conversations?.length > 0) {
