@@ -30,18 +30,25 @@ import {
 } from "@tabler/icons-react";
 import { useParams } from "react-router-dom";
 import { useChat } from "ai/react";
-import { API_BASE_URL } from "@/config";
-import { useEffect, useMemo, useRef } from "react";
+import { API_BASE_URL, AUTO_SELECT_ENABLED } from "@/config";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
 import { ConversationLinks } from "@/components/conversation/ConversationLinks";
 import { ChatHistoryMessage } from "@/components/chat/ChatHistoryMessage";
 import { ChatTemplatesMenu } from "@/components/chat/ChatTemplatesMenu";
 import { formatMessage } from "@/components/chat/chatUtils";
+import SourcesSearch from "@/components/chat/SourcesSearch";
+import Citations from "@/components/chat/Citations";
+import SourcesSearched from "@/components/chat/SourcesSearched";
 
 const useDembraneChat = ({ chatId }: { chatId: string }) => {
   const chatHistoryQuery = useChatHistory(chatId);
   const chatContextQuery = useProjectChatContext(chatId);
+
+  const [showProgress, setShowProgress] = useState(false);
+  const [progressValue, setProgressValue] = useState(0);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const addChatMessageMutation = useAddChatMessageMutation();
   const lockConversationsMutation = useLockConversationsMutation();
@@ -57,6 +64,10 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
       conversations: chatContextQuery.data.conversations.filter(
         (c) => !c.locked,
       ),
+      locked_conversations: chatContextQuery.data.conversations.filter(
+        (c) => c.locked,
+      ),
+      auto_select_bool: chatContextQuery.data.auto_select_bool ?? false,
     };
   }, [chatContextQuery.data, chatHistoryQuery.data]);
 
@@ -85,18 +96,41 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
       }
       console.log("onError", error);
     },
+    onResponse: async (_response) => {
+      setShowProgress(false);
+      setProgressValue(0);
+      setShowSuccessMessage(true);
+    },
     onFinish: async (message) => {
       // this uses the response stream from the backend and makes a chat message IN THE FRONTEND
       // do this for now because - i dont want to do the stream text processing again in the backend
       // if someone navigates away before onFinish is completed, the message will be lost
-      addChatMessageMutation.mutate({
-        project_chat_id: {
-          id: chatId,
-        } as ProjectChat,
-        text: message.content,
-        message_from: "assistant",
-        date_created: new Date().toISOString(),
-      });
+      if (AUTO_SELECT_ENABLED && contextToBeAdded?.auto_select_bool) {
+        await addChatMessageMutation.mutateAsync({
+          project_chat_id: {
+            id: chatId,
+          } as ProjectChat,
+          text: message.content,
+          message_from: "assistant",
+          date_created: new Date().toISOString(),
+        });
+      } else {
+        addChatMessageMutation.mutate({
+          project_chat_id: {
+            id: chatId,
+          } as ProjectChat,
+          text: message.content,
+          message_from: "assistant",
+          date_created: new Date().toISOString(),
+        });
+      }
+
+      if(AUTO_SELECT_ENABLED && contextToBeAdded?.auto_select_bool){
+        await chatHistoryQuery.refetch().then(() => {
+          setShowSuccessMessage(false);
+        });
+      }
+      
       // scroll to the last message
       lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
     },
@@ -137,8 +171,29 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 
       // Submit the chat
       handleSubmit();
+
+      if(AUTO_SELECT_ENABLED && contextToBeAdded?.auto_select_bool){
+        setShowProgress(true);
+        setProgressValue(0);
+        // Start progress animation
+        const interval = setInterval(() => {
+          setProgressValue((prev) => {
+            if (prev >= 95) {
+              clearInterval(interval);
+              return 95; // Cap at 95% to show it's still loading
+            }
+            return prev + 5;
+          });
+        }, 500);
+      }
+
     } catch (error) {
       console.error("Error in customHandleSubmit:", error);
+      if (AUTO_SELECT_ENABLED && contextToBeAdded?.auto_select_bool) {
+        setShowProgress(false);
+        setProgressValue(0);
+        setShowSuccessMessage(false);
+      }
     }
   };
 
@@ -177,6 +232,9 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
     handleInputChange,
     handleSubmit: customHandleSubmit,
     stop: customHandleStop,
+    showProgress,
+    progressValue,
+    showSuccessMessage,
   };
 };
 
@@ -199,7 +257,12 @@ export const ProjectChatRoute = () => {
     handleSubmit,
     stop,
     reload,
+    showProgress,
+    progressValue,
+    showSuccessMessage,
   } = useDembraneChat({ chatId: chatId ?? "" });
+
+  const noConversationsSelected = contextToBeAdded?.conversations?.length === 0 && contextToBeAdded?.locked_conversations?.length === 0;
 
   const computedChatForCopy = useMemo(() => {
     const messagesList = messages.map((message) =>
@@ -272,6 +335,14 @@ export const ProjectChatRoute = () => {
               </div>
             )}
 
+          {AUTO_SELECT_ENABLED && showProgress && (
+            <SourcesSearch progressValue={progressValue} />
+          )}
+
+          {AUTO_SELECT_ENABLED && showSuccessMessage && (
+            <SourcesSearched />
+          )}
+
           {isLoading && (
             <Group>
               <Text size="sm" className="italic">
@@ -323,6 +394,21 @@ export const ProjectChatRoute = () => {
       {/* Footer */}
       <Box className="bottom-0 w-full border-t bg-white py-4 lg:sticky">
         <Stack>
+          {(
+            !AUTO_SELECT_ENABLED
+              ? noConversationsSelected
+              : (noConversationsSelected) &&
+                !contextToBeAdded?.auto_select_bool
+          ) && (
+            <Alert
+              icon={<IconAlertCircle size="1rem" />}
+              title={t`No transcripts are selected for this chat`}
+              color="orange"
+              variant="light"
+            >
+            </Alert>
+          )}
+
           {contextToBeAdded && contextToBeAdded.conversations.length > 0 && (
             <ChatMessage role="dembrane">
               <Group gap="xs" align="baseline">
@@ -335,6 +421,11 @@ export const ProjectChatRoute = () => {
                     id: c.conversation_id,
                     participant_name: c.conversation_participant_name,
                   }))}
+                  color={
+                    AUTO_SELECT_ENABLED && contextToBeAdded.auto_select_bool
+                      ? "green"
+                      : undefined
+                  }
                 />
               </Group>
             </ChatMessage>
