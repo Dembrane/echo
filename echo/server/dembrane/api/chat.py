@@ -20,6 +20,7 @@ from dembrane.config import (
     AUDIO_LIGHTRAG_TOP_K_PROMPT,
     LIGHTRAG_LITELLM_INFERENCE_MODEL,
     LIGHTRAG_LITELLM_INFERENCE_API_KEY,
+    AUTO_SELECT_ENABLED,
     # LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL,
     # LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY,
     # LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE,
@@ -413,7 +414,7 @@ async def post_chat(
 
     locked_conversation_id_list = chat_context.locked_conversation_id_list #Verify with directus
 
-    if chat_context.auto_select_bool: 
+    if AUTO_SELECT_ENABLED and chat_context.auto_select_bool: 
         filtered_messages: List[Dict[str, Any]] = []
         for message in messages:
             if message["role"] in ["user", "assistant"]:

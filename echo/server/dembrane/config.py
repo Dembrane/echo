@@ -275,6 +275,10 @@ AUDIO_LIGHTRAG_TOP_K_PROMPT = int(os.environ.get("AUDIO_LIGHTRAG_TOP_K_PROMPT", 
 assert AUDIO_LIGHTRAG_TOP_K_PROMPT, "AUDIO_LIGHTRAG_TOP_K_PROMPT environment variable is not set"
 logger.debug("AUDIO_LIGHTRAG_TOP_K_PROMPT: set")
 
+AUTO_SELECT_ENABLED = os.environ.get("AUTO_SELECT_ENABLED", "false").lower() in ["true", "1"]
+assert AUTO_SELECT_ENABLED is not None, "AUTO_SELECT_ENABLED environment variable is not set"
+logger.debug(f"AUTO_SELECT_ENABLED: {AUTO_SELECT_ENABLED}")
+
 #---------------/Configurations---------------
 
 # *****************/LIGHTRAG CONFIGURATIONS*****************
