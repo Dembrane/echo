@@ -477,8 +477,9 @@ async def post_chat(
             prompt_conversations=conversation_references,
             project_chat_id=chat_id,
         )
-        db.add(dembrane_prompt_conversations_message)
-        db.commit()
+        ## TODO: Enable when frontend can handle
+        # db.add(dembrane_prompt_conversations_message)
+        # db.commit()
         async def stream_response_async() -> AsyncGenerator[str, None]:
             accumulated_response = ""
             try:
@@ -553,8 +554,9 @@ async def post_chat(
                 project_chat_id=chat_id,
                 citations=citations_list,
             )
-            db.add(dembrane_citations_message)
-            db.commit()
+            ## TODO: Enable when frontend can handle
+            # db.add(dembrane_citations_message)
+            # db.commit()
         headers = {"Content-Type": "text/event-stream"}
         if protocol == "data":
             headers["x-vercel-ai-data-stream"] = "v1"
