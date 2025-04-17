@@ -445,6 +445,8 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
     { label: t`Shortest First`, value: "duration" },
   ];
 
+  const location = useLocation();
+  const inChatMode = location.pathname.includes("/chats/");
   // Temporarily disabled source filters
   // const FILTER_OPTIONS = [
   //   { label: t`Conversations from QR Code`, value: "PORTAL_AUDIO" },
@@ -625,7 +627,7 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
 
       <Accordion.Panel>
         <Stack ref={parent2} className="relative">
-          {AUTO_SELECT_ENABLED && conversationsQuery.data?.length !== 0 && (
+          {inChatMode && AUTO_SELECT_ENABLED && conversationsQuery.data?.length !== 0 && (
             <Stack gap="xs" className="relative">
               <LoadingOverlay visible={conversationsQuery.isLoading} />
               <AutoSelectConversations projectId={projectId} />
