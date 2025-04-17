@@ -24,7 +24,6 @@ export const ProjectSidebar = () => {
   const { projectId, conversationId } = useParams();
 
   const projectQuery = useProjectById({ projectId: projectId ?? "" });
-  console.log("projectQuery", projectQuery.data);
   const { pathname } = useLocation();
 
   // const { isCollapsed, toggleSidebar } = useSidebarCollapsed();
