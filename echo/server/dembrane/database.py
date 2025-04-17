@@ -280,8 +280,9 @@ class ProjectChatMessageModel(Base):
         secondary=project_chat_message_conversation_association_1_table,
     )
     tokens_count: Mapped[int] = mapped_column(Integer)
-    prompt_conversations: Mapped[List[Dict[str, str]]] = mapped_column(JSONB, default=[]) 
-    citations: Mapped[List[Dict[str, str]]] = mapped_column(JSONB, default=[]) 
+    # # Enable when frontend can handle
+    # prompt_conversations: Mapped[List[Dict[str, str]]] = mapped_column(JSONB, default=[]) 
+    # citations: Mapped[List[Dict[str, str]]] = mapped_column(JSONB, default=[]) 
 
 
 class ProjectChatModel(Base):
