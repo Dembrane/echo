@@ -95,18 +95,41 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
       }
       console.log("onError", error);
     },
+    onResponse: async (_response) => {
+      setShowProgress(false);
+      setProgressValue(0);
+      setShowSuccessMessage(true);
+    },
     onFinish: async (message) => {
       // this uses the response stream from the backend and makes a chat message IN THE FRONTEND
       // do this for now because - i dont want to do the stream text processing again in the backend
       // if someone navigates away before onFinish is completed, the message will be lost
-      addChatMessageMutation.mutate({
-        project_chat_id: {
-          id: chatId,
-        } as ProjectChat,
-        text: message.content,
-        message_from: "assistant",
-        date_created: new Date().toISOString(),
-      });
+      if (AUTO_SELECT_ENABLED && contextToBeAdded?.auto_select_bool) {
+        await addChatMessageMutation.mutateAsync({
+          project_chat_id: {
+            id: chatId,
+          } as ProjectChat,
+          text: message.content,
+          message_from: "assistant",
+          date_created: new Date().toISOString(),
+        });
+      } else {
+        addChatMessageMutation.mutate({
+          project_chat_id: {
+            id: chatId,
+          } as ProjectChat,
+          text: message.content,
+          message_from: "assistant",
+          date_created: new Date().toISOString(),
+        });
+      }
+
+      if(AUTO_SELECT_ENABLED && contextToBeAdded?.auto_select_bool){
+        await chatHistoryQuery.refetch().then(() => {
+          setShowSuccessMessage(false);
+        });
+      }
+      
       // scroll to the last message
       lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
     },
@@ -136,21 +159,6 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
     lastInput.current = input;
 
     try {
-      if (AUTO_SELECT_ENABLED && contextToBeAdded?.auto_select_bool) {
-        setShowProgress(true);
-        setProgressValue(0);
-        setShowSuccessMessage(false);
-        const interval = setInterval(() => {
-          setProgressValue((prev: any) => {
-            if (prev >= 100) {
-              clearInterval(interval);
-              return 100;
-            }
-            return prev + 10;
-          });
-        }, 200);
-      }
-
       // Lock conversations first
       await lockConversationsMutation.mutateAsync({ chatId });
 
@@ -163,13 +171,21 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
       // Submit the chat
       handleSubmit();
 
-      if (AUTO_SELECT_ENABLED && contextToBeAdded?.auto_select_bool) {
-        setTimeout(() => {
-          setShowProgress(false);
-          setProgressValue(0);
-          setShowSuccessMessage(true);
-        }, 1000);
+      if(AUTO_SELECT_ENABLED && contextToBeAdded?.auto_select_bool){
+        setShowProgress(true);
+        setProgressValue(0);
+        // Start progress animation
+        const interval = setInterval(() => {
+          setProgressValue((prev) => {
+            if (prev >= 95) {
+              clearInterval(interval);
+              return 95; // Cap at 95% to show it's still loading
+            }
+            return prev + 5;
+          });
+        }, 500);
       }
+
     } catch (error) {
       console.error("Error in customHandleSubmit:", error);
       if (AUTO_SELECT_ENABLED && contextToBeAdded?.auto_select_bool) {
@@ -321,10 +337,7 @@ export const ProjectChatRoute = () => {
           )}
 
           {AUTO_SELECT_ENABLED && showSuccessMessage && (
-            <>
-              <SourcesSearched />
-              {/* <Citations sources={["Source 1", "Source 2", "Source 3"]} /> */}
-            </>
+            <SourcesSearched />
           )}
 
           {isLoading && (
