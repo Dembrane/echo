@@ -437,10 +437,11 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
     { label: t`Shortest First`, value: "duration" },
   ];
 
-  const FILTER_OPTIONS = [
-    { label: t`Conversations from QR Code`, value: "PORTAL_AUDIO" },
-    { label: t`Conversations from Upload`, value: "DASHBOARD_UPLOAD" },
-  ];
+  // Temporarily disabled source filters
+  // const FILTER_OPTIONS = [
+  //   { label: t`Conversations from QR Code`, value: "PORTAL_AUDIO" },
+  //   { label: t`Conversations from Upload`, value: "DASHBOARD_UPLOAD" },
+  // ];
 
   const [sortBy, setSortBy] = useSessionStorage<SortOption["value"]>({
     key: "conversations-sort",
@@ -455,43 +456,55 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
   );
 
   // Track active filters (filters to include)
-  const [activeFilters, setActiveFilters] = useState<string[]>([
-    "PORTAL_AUDIO",
-    "DASHBOARD_UPLOAD",
-  ]);
+  // Temporarily disabled source filters
+  // const [activeFilters, setActiveFilters] = useState<string[]>([
+  //   "PORTAL_AUDIO",
+  //   "DASHBOARD_UPLOAD",
+  // ]);
+
+  // Get total conversations count without filters
+  const totalConversationsQuery = useConversationsByProjectId(
+    projectId,
+    false,
+    false,
+    {
+      limit: 1,
+    },
+  );
 
   // Generalized toggle with improved UX
-  const toggleFilter = (filterValue: string) => {
-    setActiveFilters((prev) => {
-      const allFilterValues = FILTER_OPTIONS.map((opt) => opt.value);
-      const isActive = prev.includes(filterValue);
+  // Temporarily disabled source filters
+  // const toggleFilter = (filterValue: string) => {
+  //   setActiveFilters((prev) => {
+  //     const allFilterValues = FILTER_OPTIONS.map((opt) => opt.value);
+  //     const isActive = prev.includes(filterValue);
 
-      // Case 1: If all filters are active and user clicks one
-      if (prev.length === allFilterValues.length) {
-        // Exclude only the clicked filter (keep all others active)
-        return prev.filter((f) => f !== filterValue);
-      }
+  //     // Case 1: If all filters are active and user clicks one
+  //     if (prev.length === allFilterValues.length) {
+  //       // Exclude only the clicked filter (keep all others active)
+  //       return prev.filter((f) => f !== filterValue);
+  //     }
 
-      // Case 2: If the filter is inactive, toggle it on
-      if (!isActive) {
-        return [...prev, filterValue];
-      }
+  //     // Case 2: If the filter is inactive, toggle it on
+  //     if (!isActive) {
+  //       return [...prev, filterValue];
+  //     }
 
-      // Case 3: If the filter is active but it's the only active filter
-      // don't allow removing the last filter (prevent zero filters)
-      if (prev.length === 1) {
-        // Keep at least one filter active
-        return prev;
-      }
+  //     // Case 3: If the filter is active but it's the only active filter
+  //     // don't allow removing the last filter (prevent zero filters)
+  //     if (prev.length === 1) {
+  //       // Keep at least one filter active
+  //       return prev;
+  //     }
 
-      // Case 4: If the filter is active and there are other active filters,
-      // toggle it off
-      return prev.filter((f) => f !== filterValue);
-    });
-  };
+  //     // Case 4: If the filter is active and there are other active filters,
+  //     // toggle it off
+  //     return prev.filter((f) => f !== filterValue);
+  //   });
+  // };
 
   // Use memoized active filters for the query
-  const filterBySource = useMemo(() => activeFilters, [activeFilters]);
+  // const filterBySource = useMemo(() => activeFilters, [activeFilters]);
 
   const [showDuration, setShowDuration] = useSessionStorage<boolean>({
     key: "conversations-show-duration",
@@ -506,7 +519,8 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
       search: debouncedConversationSearchValue,
       sort: sortBy,
     },
-    filterBySource,
+    // Temporarily disabled source filters
+    // filterBySource,
   );
 
   const [parent2] = useAutoAnimate();
@@ -514,66 +528,71 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
   const filterApplied = useMemo(
     () =>
       debouncedConversationSearchValue !== "" ||
-      sortBy !== "-created_at" ||
-      activeFilters.length !== FILTER_OPTIONS.length,
-    [debouncedConversationSearchValue, sortBy, activeFilters],
+      sortBy !== "-created_at",
+      // Temporarily disabled source filters
+      //   sortBy !== "-created_at" ||
+      //   activeFilters.length !== FILTER_OPTIONS.length,
+      // [debouncedConversationSearchValue, sortBy, activeFilters],
+      [debouncedConversationSearchValue, sortBy],
   );
 
   const resetEverything = useCallback(() => {
     setConversationSearch("");
     setSortBy("-created_at");
-    setActiveFilters(["PORTAL_AUDIO", "DASHBOARD_UPLOAD"]);
+    // Temporarily disabled source filters
+    // setActiveFilters(["PORTAL_AUDIO", "DASHBOARD_UPLOAD"]);
     setShowDuration(true);
   }, []);
 
-  const FilterPin = ({
-    option,
-  }: {
-    option: { label: string; value: string };
-  }) => {
-    const isActive = activeFilters.includes(option.value);
+  // Temporarily disabled source filters
+  // const FilterPin = ({
+  //   option,
+  // }: {
+  //   option: { label: string; value: string };
+  // }) => {
+  //   const isActive = activeFilters.includes(option.value);
 
-    // Determine which icon to use based on the filter type
-    const getIcon = () => {
-      if (option.value === "PORTAL_AUDIO") {
-        return isActive ? (
-          <IconQrcode size={18} stroke={1.5} />
-        ) : (
-          <IconQrcode size={18} stroke={1} opacity={0.6} />
-        );
-      } else {
-        return isActive ? (
-          <IconFileUpload size={18} stroke={1.5} />
-        ) : (
-          <IconFileUpload size={18} stroke={1} opacity={0.6} />
-        );
-      }
-    };
+  //   // Determine which icon to use based on the filter type
+  //   const getIcon = () => {
+  //     if (option.value === "PORTAL_AUDIO") {
+  //       return isActive ? (
+  //         <IconQrcode size={18} stroke={1.5} />
+  //       ) : (
+  //         <IconQrcode size={18} stroke={1} opacity={0.6} />
+  //       );
+  //     } else {
+  //       return isActive ? (
+  //         <IconFileUpload size={18} stroke={1.5} />
+  //       ) : (
+  //         <IconFileUpload size={18} stroke={1} opacity={0.6} />
+  //       );
+  //     }
+  //   };
 
-    return (
-      <Tooltip
-        label={option.label}
-        aria-label={
-          isActive ? t`Hide ${option.label}` : t`Show ${option.label}`
-        }
-        position="bottom"
-        withArrow
-        arrowSize={6}
-      >
-        <ActionIcon
-          variant={isActive ? "light" : "subtle"}
-          color={isActive ? "blue" : "gray"}
-          onClick={() => toggleFilter(option.value)}
-          className="transition-all"
-          radius="xl"
-          size="md"
-          aria-label={option.label}
-        >
-          {getIcon()}
-        </ActionIcon>
-      </Tooltip>
-    );
-  };
+  //   return (
+  //     <Tooltip
+  //       label={option.label}
+  //       aria-label={
+  //         isActive ? t`Hide ${option.label}` : t`Show ${option.label}`
+  //       }
+  //       position="bottom"
+  //       withArrow
+  //       arrowSize={6}
+  //     >
+  //       <ActionIcon
+  //         variant={isActive ? "light" : "subtle"}
+  //         color={isActive ? "blue" : "gray"}
+  //         onClick={() => toggleFilter(option.value)}
+  //         className="transition-all"
+  //         radius="xl"
+  //         size="md"
+  //         aria-label={option.label}
+  //       >
+  //         {getIcon()}
+  //       </ActionIcon>
+  //     </Tooltip>
+  //   );
+  // };
 
   return (
     <Accordion.Item value="conversations">
@@ -603,100 +622,101 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
             conversationsQuery.data.length === 0 &&
             debouncedConversationSearchValue === ""
           ) && (
-            <>
-              <Group justify="space-between" align="center" gap="xs">
-                <TextInput
-                  leftSection={<IconSearch />}
-                  rightSection={
-                    !!conversationSearch && (
-                      <ActionIcon
-                        disabled={conversationsQuery.isLoading}
-                        variant="transparent"
-                        onClick={() => {
-                          setConversationSearch("");
-                        }}
-                      >
-                        <IconX />
-                      </ActionIcon>
-                    )
-                  }
-                  placeholder={t`Search conversations`}
-                  value={conversationSearch}
-                  size="sm"
-                  onChange={(e) => setConversationSearch(e.currentTarget.value)}
-                  className="flex-grow"
-                />
-                <Menu withArrow position="right" shadow="md">
-                  <Menu.Target>
-                    <Tooltip label={t`Options`}>
-                      <ActionIcon
-                        variant="outline"
-                        color={filterApplied ? "primary" : "gray"}
-                        c={filterApplied ? "primary" : "gray"}
-                      >
-                        <IconDotsVertical size={16} />
-                      </ActionIcon>
-                    </Tooltip>
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    <Stack py="md" px="lg" gap="md">
-                      <Stack gap="xs">
-                        <Text size="lg">
-                          <Trans>Options</Trans>
-                        </Text>
-                        <Checkbox
-                          label={t`Show duration`}
-                          checked={showDuration}
-                          onChange={(e) =>
-                            setShowDuration(e.currentTarget.checked)
-                          }
-                        />
-                      </Stack>
-                      <Stack gap="xs">
-                        <Text size="lg">
-                          <Trans>Sort</Trans>
-                        </Text>
-                        <Stack gap="xs">
-                          <Radio.Group
-                            value={sortBy}
-                            onChange={(value) =>
-                              setSortBy(value as SortOption["value"])
-                            }
-                            name="sortOptions"
-                          >
-                            <Stack gap="xs">
-                              {SORT_OPTIONS.map((option) => (
-                                <Radio
-                                  key={option.value}
-                                  value={option.value}
-                                  label={option.label}
-                                  size="sm"
-                                />
-                              ))}
-                            </Stack>
-                          </Radio.Group>
-                        </Stack>
-                      </Stack>
-                      <Button variant="subtle" onClick={resetEverything}>
-                        <Trans>Reset All Options</Trans>
-                      </Button>
+            <Group justify="space-between" align="center" gap="xs">
+              <TextInput
+                leftSection={<IconSearch />}
+                rightSection={
+                  !!conversationSearch && (
+                    <ActionIcon
+                      disabled={conversationsQuery.isLoading}
+                      variant="transparent"
+                      onClick={() => {
+                        setConversationSearch("");
+                      }}
+                    >
+                      <IconX />
+                    </ActionIcon>
+                  )
+                }
+                placeholder={t`Search conversations`}
+                value={conversationSearch}
+                size="sm"
+                onChange={(e) => setConversationSearch(e.currentTarget.value)}
+                className="flex-grow"
+              />
+              <Menu withArrow position="right" shadow="md">
+                <Menu.Target>
+                  <Tooltip label={t`Options`}>
+                    <ActionIcon
+                      variant="outline"
+                      color={filterApplied ? "primary" : "gray"}
+                      c={filterApplied ? "primary" : "gray"}
+                    >
+                      <IconDotsVertical size={16} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Stack py="md" px="lg" gap="md">
+                    <Stack gap="xs">
+                      <Text size="lg">
+                        <Trans>Options</Trans>
+                      </Text>
+                      <Checkbox
+                        label={t`Show duration`}
+                        checked={showDuration}
+                        onChange={(e) =>
+                          setShowDuration(e.currentTarget.checked)
+                        }
+                      />
                     </Stack>
-                  </Menu.Dropdown>
-                </Menu>
-              </Group>
-
-              {/* Filter icons that always appear under the search bar */}
-              <Group gap="xs" mt="xs" ml="xs">
-                <Text size="sm">
-                  <Trans>Sources:</Trans>
-                </Text>
-                {FILTER_OPTIONS.map((option) => (
-                  <FilterPin key={option.value} option={option} />
-                ))}
-              </Group>
-            </>
+                    <Stack gap="xs">
+                      <Text size="lg">
+                        <Trans>Sort</Trans>
+                      </Text>
+                      <Stack gap="xs">
+                        <Radio.Group
+                          value={sortBy}
+                          onChange={(value) =>
+                            setSortBy(value as SortOption["value"])
+                          }
+                          name="sortOptions"
+                        >
+                          <Stack gap="xs">
+                            {SORT_OPTIONS.map((option) => (
+                              <Radio
+                                key={option.value}
+                                value={option.value}
+                                label={option.label}
+                                size="sm"
+                              />
+                            ))}
+                          </Stack>
+                        </Radio.Group>
+                      </Stack>
+                    </Stack>
+                    <Button variant="subtle" onClick={resetEverything}>
+                      <Trans>Reset All Options</Trans>
+                    </Button>
+                  </Stack>
+                </Menu.Dropdown>
+              </Menu>
+            </Group>
           )}
 
+          {/* Filter icons that always appear under the search bar */}
+          {/* Temporarily disabled source filters */}
+          {/* {totalConversationsQuery.data?.length !== 0 && (
+            <Group gap="xs" mt="xs" ml="xs">
+              <Text size="sm">
+                <Trans>Sources:</Trans>
+              </Text>
+              {FILTER_OPTIONS.map((option) => (
+                <FilterPin key={option.value} option={option} />
+              ))}
+            </Group>
+          )} */}
+          
           {conversationsQuery.data?.length === 0 && (
             <Text size="sm">
               <Trans>
@@ -719,12 +739,13 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
                 showDuration={showDuration}
               />
             ))}
-            {conversationsQuery.data?.length === 0 &&
+            {/* Temporarily disabled source filters */}
+            {/* {conversationsQuery.data?.length === 0 &&
               filterBySource.length === 0 && (
                 <Text size="sm">
                   <Trans>Please select at least one source</Trans>
                 </Text>
-              )}
+              )} */}
           </Stack>
         </Stack>
       </Accordion.Panel>

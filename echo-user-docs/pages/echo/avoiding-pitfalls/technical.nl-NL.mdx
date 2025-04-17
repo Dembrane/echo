@@ -7,7 +7,7 @@ ECHO gebruikt toonaangevende transcriptietechnologie om je gesprekken om te zett
 - **Audiokwaliteit**: Achtergrondgeluid, stiltes of gemengde geluiden kunnen het model verwarren, wat leidt tot onnauwkeurigheden.
 - **Taaldetectie**: Onjuiste taalinstellingen kunnen ervoor zorgen dat het model in de verkeerde taal transcribeert, wat resulteert in fouten.
 
-### Vermindering
+### Mitigatie strategie
 - **Taalspecificatie**: Stel expliciet de juiste taal in bij de transcriptie-instellingen om verkeerde interpretatie te voorkomen.
 - **Audiokwaliteit**: Probeer op te nemen in een rustige omgeving en zorg ervoor dat het opnameapparaat niet te ver van de spreker staat. In het algemeen geldt: hoe dichterbij, hoe beter.
 - **Prompting**: Voeg de eigennamen en slang- of jargontermen die je verwacht te zien in het gesprek toe onder Portal Editor > Geavanceerde Instellingen om extra context aan het model te geven.
@@ -22,5 +22,5 @@ Als je een vraag stelt en het antwoord staat niet in de dataset, kan ECHO prober
 
 Het stellen van sturende vragen zoals "Maak een lijst van de ideeën die ze bespraken" kan leiden tot hallucinaties als deelnemers geen ideeën hebben besproken. Het vragen om citaten kan helpen, maar bij sterk sturende vragen en slechte audiokwaliteit die leidt tot slechte transcripties, kan ECHO de citaten hallucineren.
 
-### Vermindering
+### Mitigatie strategie
 In het algemeen helpt het stellen van meer open vragen zoals "Wat hebben de deelnemers besproken?" om hallucinaties te voorkomen, omdat je de LLM meer ruimte geeft om een antwoord te geven dat past bij de **data**, in plaats van een antwoord dat past bij de **vraag**. 
