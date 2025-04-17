@@ -630,7 +630,7 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
           {inChatMode && AUTO_SELECT_ENABLED && conversationsQuery.data?.length !== 0 && (
             <Stack gap="xs" className="relative">
               <LoadingOverlay visible={conversationsQuery.isLoading} />
-              <AutoSelectConversations projectId={projectId} />
+              <AutoSelectConversations />
             </Stack>
           )}
           

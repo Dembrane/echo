@@ -3,7 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import { Box, Checkbox, Group, Stack, Text } from "@mantine/core";
 import { useParams } from "react-router-dom";
 
-export const AutoSelectConversations = ({ projectId }: { projectId: string }) => {
+export const AutoSelectConversations = () => {
     const { chatId } = useParams();
     const projectChatContextQuery = useProjectChatContext(chatId ?? "");
     const addChatContextMutation = useAddChatContextMutation();

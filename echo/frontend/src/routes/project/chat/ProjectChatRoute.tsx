@@ -20,7 +20,6 @@ import {
   Text,
   Textarea,
   Title,
-  Progress,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import {
@@ -28,7 +27,6 @@ import {
   IconRefresh,
   IconSend,
   IconSquare,
-  IconCheck,
 } from "@tabler/icons-react";
 import { useParams } from "react-router-dom";
 import { useChat } from "ai/react";
