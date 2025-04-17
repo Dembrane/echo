@@ -55,6 +55,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 
   const lastInput = useRef("");
   const lastMessageRef = useRef<HTMLDivElement>(null);
+  const progressTimer = useRef<NodeJS.Timeout | null>(null);
 
   const contextToBeAdded = useMemo(() => {
     if (!chatContextQuery.data) {
@@ -176,10 +177,12 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
         setShowProgress(true);
         setProgressValue(0);
         // Start progress animation
-        const interval = setInterval(() => {
+        progressTimer.current = setInterval(() => {
           setProgressValue((prev) => {
             if (prev >= 95) {
-              clearInterval(interval);
+              if (progressTimer.current) {
+                clearInterval(progressTimer.current);
+              }
               return 95; // Cap at 95% to show it's still loading
             }
             return prev + 5;
@@ -190,6 +193,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
     } catch (error) {
       console.error("Error in customHandleSubmit:", error);
       if (AUTO_SELECT_ENABLED && contextToBeAdded?.auto_select_bool) {
+        if (progressTimer.current) clearInterval(progressTimer.current);
         setShowProgress(false);
         setProgressValue(0);
         setShowSuccessMessage(false);
@@ -197,6 +201,13 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
     }
   };
 
+  // Add cleanup effect
+  useEffect(() => {
+    return () => {
+      if (progressTimer.current) clearInterval(progressTimer.current);
+    };
+  }, []);
+  
   // reconcile for "dembrane" messages
   useEffect(() => {
     if (isLoading || chatHistoryQuery.isLoading || !chatHistoryQuery.data) {
