@@ -540,11 +540,11 @@ async def post_chat(
                     citations_list[idx]['conversation_id'] = conversation_id
                     conversation_name = get_conversation_name_from_id(conversation_id)
                     citations_list[idx]['conversation_name'] = conversation_name
-                citations_count = len(citations_list)
                 citations_list = json.dumps(citations_list)
             except Exception as e:
                 logger.error(f"Error in text_structuring_model_generation: {str(e)}")
                 citations_list = []
+            citations_count = len(citations_list)
             dembrane_citations_message = ProjectChatMessageModel(
                 id=generate_uuid(),
                 date_created=get_utc_timestamp(),
