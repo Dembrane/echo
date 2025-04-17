@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Literal, Optional, Generator, AsyncGenerator
 import litellm
 from fastapi import Query, APIRouter, HTTPException
 from litellm import (  # type: ignore
-    completion,
+    # completion,
     token_counter,
 )
 from pydantic import BaseModel
@@ -20,10 +20,10 @@ from dembrane.config import (
     AUDIO_LIGHTRAG_TOP_K_PROMPT,
     LIGHTRAG_LITELLM_INFERENCE_MODEL,
     LIGHTRAG_LITELLM_INFERENCE_API_KEY,
-    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL,
-    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY,
-    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE,
-    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION,
+    # LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL,
+    # LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY,
+    # LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE,
+    # LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION,
 )
 from dembrane.database import (
     DatabaseSession,
@@ -45,8 +45,8 @@ from dembrane.api.conversation import get_conversation_token_count
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
 from dembrane.audio_lightrag.utils.lightrag_utils import (
     get_project_id,
-    get_conversation_name_from_id,
-    run_segment_id_to_conversation_id,
+    # get_conversation_name_from_id,
+    # run_segment_id_to_conversation_id,
     get_conversation_details_for_rag_query,
 )
 
@@ -414,10 +414,6 @@ async def post_chat(
     locked_conversation_id_list = chat_context.locked_conversation_id_list #Verify with directus
 
     if chat_context.auto_select_bool: 
-        # Split into three apis 
-        # 1. Get  dembrane_prompt_conversations_message
-        # 2. Get the citations dembrane_message
-        # 3. Get the response dembrane_message
         filtered_messages: List[Dict[str, Any]] = []
         for message in messages:
             if message["role"] in ["user", "assistant"]:
@@ -510,43 +506,46 @@ async def post_chat(
                     yield "Error: An error occurred while processing the chat response."
                 return # Stop generation on error
             
-            # Move all this to utils 
-            text_structuring_model_message = f'''
-            You are a helpful assistant that maps the correct references to the generated response.
-            Your task is to map the references segment_id to the correct reference text.
-            For every reference segment_id, you need to provide the most relevant reference text verbatim.
-            Segment ID is always of the format: SEGMENT_ID_<number>.
-            Here is the generated response:
-            {accumulated_response}
-            Here are the rag prompt:
-            {rag_prompt}
-            '''
-            text_structuring_model_messages = [
-                {"role": "system", "content": text_structuring_model_message},
-            ]
-            # Generate citations
-            
-            text_structuring_model_generation = completion(
-                                                model=f"{LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL}",
-                                                messages=text_structuring_model_messages,
-                                                api_base=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE,
-                                                api_version=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION,
-                                                api_key=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY,
-                                                response_format=CitationsSchema)
-            try: 
-                citations_dict = json.loads(text_structuring_model_generation.choices[0].message.content)
-                citations_list = citations_dict["citations"]# List[Dict[str, str]]
-                for idx, citation in enumerate(citations_list):
-                    conversation_id = await run_segment_id_to_conversation_id(citation['segment_id'])
-                    citations_list[idx]['conversation_id'] = conversation_id
-                    conversation_name = get_conversation_name_from_id(conversation_id)
-                    citations_list[idx]['conversation_name'] = conversation_name
-                citations_list = json.dumps(citations_list)
-            except Exception as e:
-                logger.error(f"Error in text_structuring_model_generation: {str(e)}")
-                citations_list = []
-            citations_count = len(citations_list)
             ## TODO: Enable when frontend can handle
+            # # Move all this to utils 
+            # text_structuring_model_message = f'''
+            # You are a helpful assistant that maps the correct references to the generated response.
+            # Your task is to map the references segment_id to the correct reference text.
+            # For every reference segment_id, you need to provide the most relevant reference text verbatim.
+            # Segment ID is always of the format: SEGMENT_ID_<number>.
+            # Here is the generated response:
+            # {accumulated_response}
+            # Here are the rag prompt:
+            # {rag_prompt}
+            # '''
+            # text_structuring_model_messages = [
+            #     {"role": "system", "content": text_structuring_model_message},
+            # ]
+            # # Generate citations
+            
+            # text_structuring_model_generation = completion(
+            #                                     model=f"{LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL}",
+            #                                     messages=text_structuring_model_messages,
+            #                                     api_base=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE,
+            #                                     api_version=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION,
+            #                                     api_key=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY,
+            #                                     response_format=CitationsSchema)
+            # try: 
+            #     citations_dict = json.loads(text_structuring_model_generation.choices[0].message.content)
+            #     citations_list = citations_dict["citations"]# List[Dict[str, str]]
+            #     if len(citations_list) > 0:
+            #         for idx, citation in enumerate(citations_list):
+            #             conversation_id = await run_segment_id_to_conversation_id(citation['segment_id'])
+            #             citations_list[idx]['conversation_id'] = conversation_id
+            #         conversation_name = get_conversation_name_from_id(conversation_id)
+            #         citations_list[idx]['conversation_name'] = conversation_name
+            #     else:
+            #         logger.warning("WARNING: No citations found")
+            #     citations_list = json.dumps(citations_list)
+            # except Exception as e:
+            #     logger.warning(f"WARNING: Error in citation extraction. Skipping citations: {str(e)}")
+            #     citations_list = []
+            # citations_count = len(citations_list)
             # dembrane_citations_message = ProjectChatMessageModel(
             #     id=generate_uuid(),
             #     date_created=get_utc_timestamp(),
