@@ -469,15 +469,15 @@ async def post_chat(
             logger.info(f"No references found. Error: {str(e)}")
             conversation_references = {'conversation_references':{}}
         
-        dembrane_prompt_conversations_message = ProjectChatMessageModel(
-            id=generate_uuid(),
-            date_created=get_utc_timestamp(),
-            message_from="dembrane",
-            text="prompt_conversations created",
-            prompt_conversations=conversation_references,
-            project_chat_id=chat_id,
-        )
         ## TODO: Enable when frontend can handle
+        # dembrane_prompt_conversations_message = ProjectChatMessageModel(
+        #     id=generate_uuid(),
+        #     date_created=get_utc_timestamp(),
+        #     message_from="dembrane",
+        #     text="prompt_conversations created",
+        #     prompt_conversations=conversation_references,
+        #     project_chat_id=chat_id,
+        # )
         # db.add(dembrane_prompt_conversations_message)
         # db.commit()
         async def stream_response_async() -> AsyncGenerator[str, None]:
@@ -546,15 +546,15 @@ async def post_chat(
                 logger.error(f"Error in text_structuring_model_generation: {str(e)}")
                 citations_list = []
             citations_count = len(citations_list)
-            dembrane_citations_message = ProjectChatMessageModel(
-                id=generate_uuid(),
-                date_created=get_utc_timestamp(),
-                message_from="dembrane",
-                text=f"{citations_count} citations found.",
-                project_chat_id=chat_id,
-                citations=citations_list,
-            )
             ## TODO: Enable when frontend can handle
+            # dembrane_citations_message = ProjectChatMessageModel(
+            #     id=generate_uuid(),
+            #     date_created=get_utc_timestamp(),
+            #     message_from="dembrane",
+            #     text=f"{citations_count} citations found.",
+            #     project_chat_id=chat_id,
+            #     citations=citations_list,
+            # )
             # db.add(dembrane_citations_message)
             # db.commit()
         headers = {"Content-Type": "text/event-stream"}
