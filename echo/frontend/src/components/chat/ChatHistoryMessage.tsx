@@ -1,12 +1,13 @@
 import { Trans } from "@lingui/react/macro";
 import { ChatMessage } from "@/components/chat/ChatMessage";
-import { Group, Text } from "@mantine/core";
+import { Box, Group, Text } from "@mantine/core";
 import { Markdown } from "@/components/common/Markdown";
 import React from "react";
 import { formatDate } from "date-fns";
 import { cn } from "@/lib/utils";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
 import { ConversationLinks } from "@/components/conversation/ConversationLinks";
+import SourcesSearched from "./SourcesSearched";
 
 export const ChatHistoryMessage = ({
   message,
@@ -41,6 +42,16 @@ export const ChatHistoryMessage = ({
         <Markdown className="prose-sm" content={message.content} />
       </ChatMessage>
     );
+  }
+
+  if (message.role === "dembrane") {
+    if (message.content === "searched") {
+      return (
+        <Box className="flex justify-start">
+          <SourcesSearched />
+        </Box>
+      );
+    }
   }
 
   if (message._original.added_conversations?.length > 0) {

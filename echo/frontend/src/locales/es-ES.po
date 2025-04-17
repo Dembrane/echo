@@ -104,11 +104,11 @@ msgstr "Añadir Etiqueta"
 msgid "Add Tags"
 msgstr "Añadir Etiquetas"
 
-#: src/components/conversation/ConversationAccordion.tsx:129
+#: src/components/conversation/ConversationAccordion.tsx:133
 msgid "Add to this chat"
 msgstr "Añadir a este chat"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:330
+#: src/routes/project/chat/ProjectChatRoute.tsx:418
 msgid "Adding Context:"
 msgstr "Añadiendo Contexto:"
 
@@ -122,7 +122,7 @@ msgstr "Configuración Avanzada"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:832
 msgid "All files were uploaded successfully."
-msgstr ""
+msgstr "Todas las archivos se han subido correctamente."
 
 #: src/routes/project/library/ProjectLibrary.tsx:266
 msgid "All Insights"
@@ -136,7 +136,7 @@ msgstr "Permitir a los participantes usar el enlace para iniciar nuevas conversa
 msgid "Almost there"
 msgstr "Casi listo"
 
-#: src/components/conversation/ConversationAccordion.tsx:126
+#: src/components/conversation/ConversationAccordion.tsx:130
 msgid "Already added to this chat"
 msgstr "Ya añadido a este chat"
 
@@ -144,7 +144,7 @@ msgstr "Ya añadido a este chat"
 msgid "An error occurred while loading the Portal. Please contact the support team."
 msgstr "Ocurrió un error al cargar el Portal. Por favor, contacta al equipo de soporte."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:309
+#: src/routes/project/chat/ProjectChatRoute.tsx:382
 msgid "An error occurred."
 msgstr "Ocurrió un error."
 
@@ -215,7 +215,7 @@ msgstr "¿Estás seguro de que quieres generar la biblioteca? Esto tomará un ti
 msgid "Are you sure you want to regenerate the summary? You will lose the current summary."
 msgstr "¿Estás seguro de que quieres regenerar el resumen? Perderás el resumen actual."
 
-#: src/components/project/ProjectSidebar.tsx:104
+#: src/components/project/ProjectSidebar.tsx:103
 msgid "Ask"
 msgstr "Preguntar"
 
@@ -237,7 +237,7 @@ msgstr "Aspecto"
 msgid "Aspects"
 msgstr "Aspectos"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:278
+#: src/routes/project/chat/ProjectChatRoute.tsx:351
 msgid "Assistant is typing..."
 msgstr "El asistente está escribiendo..."
 
@@ -245,13 +245,21 @@ msgstr "El asistente está escribiendo..."
 msgid "Audio recordings are scheduled to be deleted after 30 days from the recording date"
 msgstr "Las grabaciones de audio están programadas para eliminarse después de 30 días desde la fecha de grabación"
 
+#: src/components/conversation/AutoSelectConversations.tsx:33
+msgid "Auto-select"
+msgstr "Seleccionar automáticamente"
+
+#: src/components/conversation/AutoSelectConversations.tsx:36
+msgid "Auto-select sources to add to the chat"
+msgstr "Seleccionar fuentes para añadir al chat"
+
 #: src/components/participant/ParticipantOnboardingCards.tsx:258
 msgid "Back"
 msgstr "Atrás"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:852
 msgid "Back to Selection"
-msgstr ""
+msgstr "Volver a la selección"
 
 #: src/components/project/ProjectPortalEditor.tsx:336
 msgid "Basic (Essential tutorial slides)"
@@ -273,7 +281,7 @@ msgstr "Al eliminar este proyecto, eliminarás todos los datos asociados con él
 #: src/components/dropzone/UploadConversationDropzone.tsx:727
 #: src/components/dropzone/UploadConversationDropzone.tsx:843
 #: src/components/conversation/MoveConversationButton.tsx:201
-#: src/components/conversation/ConversationAccordion.tsx:295
+#: src/components/conversation/ConversationAccordion.tsx:300
 msgid "Cancel"
 msgstr "Cancelar"
 
@@ -289,12 +297,12 @@ msgstr "Los cambios se guardarán automáticamente"
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Cambiar el idioma durante una conversación activa puede provocar resultados inesperados. Se recomienda iniciar una nueva conversación después de cambiar el idioma. ¿Estás seguro de que quieres continuar?"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:226
-#: src/routes/project/chat/ProjectChatRoute.tsx:230
+#: src/routes/project/chat/ProjectChatRoute.tsx:291
+#: src/routes/project/chat/ProjectChatRoute.tsx:295
 msgid "Chat"
 msgstr "Chat"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:184
+#: src/routes/project/chat/ProjectChatRoute.tsx:244
 msgid "Chat | Dembrane"
 msgstr "Chat | Dembrane"
 
@@ -310,13 +318,17 @@ msgstr "Verificar acceso al micrófono"
 msgid "Check your email"
 msgstr "Revisa tu correo electrónico"
 
+#: src/components/chat/Citations.tsx:29
+msgid "Citing the following sources"
+msgstr "Citar las siguientes fuentes"
+
 #: src/components/dropzone/UploadConversationDropzone.tsx:706
 msgid "Click \"Upload Files\" when you're ready to start the upload process."
-msgstr ""
+msgstr "Haz clic en \"Subir archivos\" cuando estés listo para iniciar el proceso de subida."
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:843
 msgid "Close"
-msgstr ""
+msgstr "Cerrar"
 
 #: src/components/chat/ChatTemplatesMenu.tsx:38
 msgid "Compare & Contrast"
@@ -328,7 +340,7 @@ msgstr "Comparar y Contrastar"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:786
 msgid "Complete"
-msgstr ""
+msgstr "Completar"
 
 #: src/routes/auth/PasswordReset.tsx:64
 #: src/routes/auth/PasswordReset.tsx:67
@@ -348,21 +360,21 @@ msgstr "Conectando a los servicios de informes..."
 msgid "Context"
 msgstr "Contexto"
 
-#: src/components/chat/ChatHistoryMessage.tsx:51
+#: src/components/chat/ChatHistoryMessage.tsx:62
 msgid "Context added:"
 msgstr "Contexto añadido:"
 
-#: src/components/conversation/ConversationAccordion.tsx:584
+#: src/components/conversation/ConversationAccordion.tsx:615
 msgid "Conversations"
 msgstr "Conversaciones"
 
 #: src/components/conversation/ConversationAccordion.tsx:441
-msgid "Conversations from QR Code"
-msgstr ""
+#~ msgid "Conversations from QR Code"
+#~ msgstr "Conversaciones desde código QR"
 
 #: src/components/conversation/ConversationAccordion.tsx:442
-msgid "Conversations from Upload"
-msgstr ""
+#~ msgid "Conversations from Upload"
+#~ msgstr "Conversaciones desde subida"
 
 #: src/components/project/ProjectQRCode.tsx:117
 #: src/components/common/CopyIconButton.tsx:17
@@ -476,7 +488,7 @@ msgstr "Opciones de Descarga de Transcripción"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:601
 msgid "Drag audio files here or click to select files"
-msgstr ""
+msgstr "Arrastra archivos de audio aquí o haz clic para seleccionar archivos"
 
 #: src/components/project/ProjectPortalEditor.tsx:265
 msgid "Dutch"
@@ -498,7 +510,7 @@ msgstr "Editar Conversación"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:671
 msgid "Edit file name"
-msgstr ""
+msgstr "Editar nombre de archivo"
 
 #: src/components/project/ProjectBasicEdit.tsx:90
 msgid "Edit Project"
@@ -555,7 +567,7 @@ msgstr "Ingresa un nombre para el nuevo conversation"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:640
 msgid "Enter filename (without extension)"
-msgstr ""
+msgstr "Ingresa el nombre del archivo (sin extensión)"
 
 #: src/components/chat/ChatAccordion.tsx:48
 msgid "Enter new name for the chat:"
@@ -569,7 +581,7 @@ msgstr "Ingresa tu consulta"
 #: src/components/dropzone/UploadConversationDropzone.tsx:715
 #: src/components/dropzone/UploadConversationDropzone.tsx:814
 msgid "Error"
-msgstr ""
+msgstr "Error"
 
 #: src/components/report/CreateReportForm.tsx:46
 msgid "Error creating report"
@@ -596,7 +608,7 @@ msgstr "Error al actualizar el informe"
 #. placeholder {1}: error.message
 #: src/components/dropzone/UploadConversationDropzone.tsx:588
 msgid "Error uploading \"{0}\": {1}"
-msgstr ""
+msgstr "Error al subir \"{0}\": {1}"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:64
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:251
@@ -611,7 +623,7 @@ msgstr "Exportar"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:788
 msgid "Failed"
-msgstr ""
+msgstr "Error"
 
 #: src/components/participant/UserChunkMessage.tsx:65
 msgid "Failed to delete response"
@@ -619,7 +631,7 @@ msgstr "Error al eliminar la respuesta"
 
 #: src/routes/project/conversation/ProjectConversationOverview.tsx:51
 msgid "Failed to regenerate the summary. Please try again later."
-msgstr ""
+msgstr "Error al regenerar el resumen. Por favor, inténtalo de nuevo más tarde."
 
 #: src/lib/query.ts:1833
 msgid "Failed to retranscribe conversation. Please try again."
@@ -629,30 +641,30 @@ msgstr "Error al retranscribir la conversación. Por favor, inténtalo de nuevo.
 #. placeholder {1}: formatFileSize(MAX_FILE_SIZE)
 #: src/components/dropzone/UploadConversationDropzone.tsx:578
 msgid "File \"{0}\" exceeds the maximum size of {1}."
-msgstr ""
+msgstr "El archivo \"{0}\" excede el tamaño máximo de {1}."
 
 #. placeholder {0}: errorFile.file.name
 #: src/components/dropzone/UploadConversationDropzone.tsx:583
 msgid "File \"{0}\" has an unsupported format. Only audio files are allowed."
-msgstr ""
+msgstr "El archivo \"{0}\" tiene un formato no soportado. Solo se permiten archivos de audio."
 
 #. placeholder {0}: file.name
 #: src/components/dropzone/UploadConversationDropzone.tsx:360
 msgid "File \"{0}\" is not a supported audio format. Only audio files are allowed."
-msgstr ""
+msgstr "El archivo \"{0}\" no es un formato de audio soportado. Solo se permiten archivos de audio."
 
 #. placeholder {0}: file.name
 #. placeholder {1}: formatFileSize(file.size)
 #. placeholder {2}: formatFileSize(MIN_FILE_SIZE)
 #: src/components/dropzone/UploadConversationDropzone.tsx:393
 msgid "File \"{0}\" is too small ({1}). Minimum size is {2}."
-msgstr ""
+msgstr "El archivo \"{0}\" es demasiado pequeño ({1}). El tamaño mínimo es {2}."
 
 #. placeholder {0}: formatFileSize(MIN_FILE_SIZE)
 #. placeholder {1}: formatFileSize(MAX_FILE_SIZE)
 #: src/components/dropzone/UploadConversationDropzone.tsx:606
 msgid "File size: Min {0}, Max {1}, up to {MAX_FILES} files"
-msgstr ""
+msgstr "Tamaño del archivo: Mínimo {0}, Máximo {1}, hasta {MAX_FILES} archivos"
 
 #: src/components/conversation/ConversationAccordion.tsx:473
 #~ msgid "Filter"
@@ -705,10 +717,9 @@ msgstr "Vista de cuadrícula"
 msgid "Hi, {0}"
 msgstr "Hola, {0}"
 
-#. placeholder {0}: option.label
 #: src/components/conversation/ConversationAccordion.tsx:555
-msgid "Hide {0}"
-msgstr ""
+#~ msgid "Hide {0}"
+#~ msgstr "Ocultar {0}"
 
 #: src/routes/project/conversation/ProjectConversationAnalysis.tsx:50
 msgid "Hide all"
@@ -750,7 +761,7 @@ msgstr "Incluir enlace al portal en el informe"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:541
 msgid "Info"
-msgstr ""
+msgstr "Información"
 
 #: src/routes/project/library/ProjectLibraryInsight.tsx:38
 msgid "Insight Library"
@@ -809,7 +820,7 @@ msgstr "Última vez guardado el {0}"
 #: src/routes/project/library/ProjectLibraryView.tsx:32
 #: src/routes/project/library/ProjectLibraryAspect.tsx:64
 #: src/routes/project/library/ProjectLibrary.tsx:150
-#: src/components/project/ProjectSidebar.tsx:113
+#: src/components/project/ProjectSidebar.tsx:112
 msgid "Library"
 msgstr "Biblioteca"
 
@@ -833,7 +844,7 @@ msgstr "Vista Previa en Vivo"
 msgid "Loading"
 msgstr "Cargando"
 
-#: src/components/conversation/ConversationAccordion.tsx:98
+#: src/components/conversation/ConversationAccordion.tsx:100
 msgid "Loading..."
 msgstr "Cargando..."
 
@@ -853,9 +864,9 @@ msgstr "Iniciar sesión como usuario existente"
 msgid "Logout"
 msgstr "Cerrar sesión"
 
-#: src/components/conversation/ConversationAccordion.tsx:436
+#: src/components/conversation/ConversationAccordion.tsx:444
 msgid "Longest First"
-msgstr ""
+msgstr "Más largo primero"
 
 #: src/components/chat/ChatTemplatesMenu.tsx:53
 msgid "Meeting Notes"
@@ -863,7 +874,7 @@ msgstr "Notas de Reunión"
 
 #. placeholder {0}: capitalize(m.role)
 #. placeholder {1}: Math.ceil(m.token_usage * 100)
-#: src/components/chat/ChatContextProgress.tsx:64
+#: src/components/chat/ChatContextProgress.tsx:77
 msgid "Messages from {0} - {1}%"
 msgstr "Mensajes de {0} - {1}%"
 
@@ -872,12 +883,12 @@ msgid "Microphone access is still denied. Please check your settings and try aga
 msgstr "El acceso al micrófono sigue denegado. Por favor verifica tu configuración e intenta de nuevo."
 
 #: src/components/conversation/MoveConversationButton.tsx:211
-#: src/components/conversation/ConversationAccordion.tsx:305
+#: src/components/conversation/ConversationAccordion.tsx:310
 msgid "Move"
 msgstr "Mover"
 
 #: src/components/conversation/MoveConversationButton.tsx:134
-#: src/components/conversation/ConversationAccordion.tsx:226
+#: src/components/conversation/ConversationAccordion.tsx:231
 msgid "Move Conversation"
 msgstr "Mover Conversación"
 
@@ -885,7 +896,7 @@ msgstr "Mover Conversación"
 msgid "Move to Another Project"
 msgstr "Mover a otro Proyecto"
 
-#: src/components/conversation/ConversationAccordion.tsx:223
+#: src/components/conversation/ConversationAccordion.tsx:228
 msgid "Move to Project"
 msgstr "Mover a Proyecto"
 
@@ -894,17 +905,17 @@ msgstr "Mover a Proyecto"
 msgid "Name"
 msgstr "Nombre"
 
-#: src/components/conversation/ConversationAccordion.tsx:434
+#: src/components/conversation/ConversationAccordion.tsx:442
 msgid "Name A-Z"
 msgstr "Nombre A-Z"
 
-#: src/components/conversation/ConversationAccordion.tsx:435
+#: src/components/conversation/ConversationAccordion.tsx:443
 msgid "Name Z-A"
 msgstr "Nombre Z-A"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:276
 msgid "New Conversation Name"
-msgstr ""
+msgstr "Nuevo nombre de conversación"
 
 #: src/components/project/ProjectAnalysisRunStatus.tsx:64
 msgid "New conversations have been added since the library was generated. Regenerate the library to process them."
@@ -920,7 +931,7 @@ msgstr "Nueva Contraseña"
 msgid "New Project"
 msgstr "Nuevo Proyecto"
 
-#: src/components/conversation/ConversationAccordion.tsx:432
+#: src/components/conversation/ConversationAccordion.tsx:440
 msgid "Newest First"
 msgstr "Más nuevos primero"
 
@@ -940,7 +951,7 @@ msgstr "No hay conversaciones disponibles para crear la biblioteca"
 msgid "No conversations available to create library. Please add some conversations to get started."
 msgstr "No hay conversaciones disponibles para crear la biblioteca. Por favor añade algunas conversaciones para comenzar."
 
-#: src/components/conversation/ConversationAccordion.tsx:700
+#: src/components/conversation/ConversationAccordion.tsx:739
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "No se encontraron conversaciones. Inicia una conversación usando el enlace de invitación de participación desde la <0><1>vista general del proyecto.</1></0>"
 
@@ -997,19 +1008,23 @@ msgstr "No hay transcripción disponible"
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "Aún no existe transcripción para esta conversación. Por favor, revisa más tarde."
 
+#: src/routes/project/chat/ProjectChatRoute.tsx:407
+msgid "No transcripts are selected for this chat"
+msgstr "No hay transcripciones seleccionadas para este chat"
+
 #: src/components/project/ProjectPortalEditor.tsx:332
 msgid "No tutorial (only Privacy statements)"
 msgstr "Sin tutorial (solo declaraciones de privacidad)"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:370
 msgid "No valid audio files were selected. Please select audio files only (MP3, WAV, OGG, etc)."
-msgstr ""
+msgstr "No se seleccionaron archivos de audio válidos. Por favor, selecciona solo archivos de audio (MP3, WAV, OGG, etc)."
 
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:58
 msgid "Not available"
-msgstr ""
+msgstr "No disponible"
 
-#: src/components/conversation/ConversationAccordion.tsx:433
+#: src/components/conversation/ConversationAccordion.tsx:441
 msgid "Oldest First"
 msgstr "Más antiguos primero"
 
@@ -1038,10 +1053,10 @@ msgstr "¿Abierto para Participación?"
 msgid "Open troubleshooting guide"
 msgstr "Abrir guía de solución de problemas"
 
-#: src/components/conversation/ConversationAccordion.tsx:629
-#: src/components/conversation/ConversationAccordion.tsx:643
+#: src/components/conversation/ConversationAccordion.tsx:666
+#: src/components/conversation/ConversationAccordion.tsx:680
 msgid "Options"
-msgstr ""
+msgstr "Opciones"
 
 #: src/components/layout/ProjectResourceLayout.tsx:45
 #: src/components/layout/ProjectConversationLayout.tsx:25
@@ -1129,8 +1144,8 @@ msgid "Please select a language for your updated report"
 msgstr "Por favor, selecciona un idioma para tu informe actualizado"
 
 #: src/components/conversation/ConversationAccordion.tsx:723
-msgid "Please select at least one source"
-msgstr ""
+#~ msgid "Please select at least one source"
+#~ msgstr "Por favor, selecciona al menos una fuente"
 
 #: src/routes/participant/ParticipantConversation.tsx:184
 #~ msgid "Please wait {timeStr} before requesting another echo."
@@ -1150,7 +1165,7 @@ msgstr "Por favor, espera mientras generamos tu informe. Serás redirigido autom
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:259
 msgid "Please wait while we process your retranscription request. You will be redirected to the new conversation when ready."
-msgstr ""
+msgstr "Por favor, espera mientras procesamos tu solicitud de retranscripción. Serás redirigido a la nueva conversación cuando esté lista."
 
 #: src/components/report/UpdateReportModalButton.tsx:73
 msgid "Please wait while we update your report. You will automatically be redirected to the report page."
@@ -1169,7 +1184,7 @@ msgstr "Contenido del Portal"
 msgid "Portal Editor"
 msgstr "Editor del Portal"
 
-#: src/components/project/ProjectSidebar.tsx:135
+#: src/components/project/ProjectSidebar.tsx:134
 msgid "Powered by"
 msgstr "Propulsado por"
 
@@ -1196,7 +1211,7 @@ msgstr "Procesando tu informe..."
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:258
 msgid "Processing your retranscription request..."
-msgstr ""
+msgstr "Procesando tu solicitud de retranscripción..."
 
 #: src/components/report/ReportTimeline.tsx:296
 msgid "Project Created"
@@ -1226,7 +1241,7 @@ msgstr "Proyectos"
 msgid "Projects | Dembrane"
 msgstr "Proyectos | Dembrane"
 
-#: src/components/project/ProjectSidebar.tsx:54
+#: src/components/project/ProjectSidebar.tsx:53
 msgid "Projects Home"
 msgstr "Inicio de Proyectos"
 
@@ -1278,9 +1293,9 @@ msgstr "Relevancia"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:684
 msgid "Remove file"
-msgstr ""
+msgstr "Eliminar archivo"
 
-#: src/components/conversation/ConversationAccordion.tsx:128
+#: src/components/conversation/ConversationAccordion.tsx:132
 msgid "Remove from this chat"
 msgstr "Eliminar de este chat"
 
@@ -1324,9 +1339,9 @@ msgstr "Solicitar Restablecimiento de Contraseña"
 msgid "Request Password Reset | Dembrane"
 msgstr "Solicitar Restablecimiento de Contraseña | Dembrane"
 
-#: src/components/conversation/ConversationAccordion.tsx:679
+#: src/components/conversation/ConversationAccordion.tsx:716
 msgid "Reset All Options"
-msgstr ""
+msgstr "Restablecer todas las opciones"
 
 #: src/routes/auth/PasswordReset.tsx:50
 #: src/routes/auth/PasswordReset.tsx:75
@@ -1347,31 +1362,31 @@ msgstr "Reanudar"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:289
 msgid "Retranscribe"
-msgstr ""
+msgstr "Retranscribir"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:190
 msgid "Retranscribe conversation"
-msgstr ""
+msgstr "Retranscribir conversación"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:249
 msgid "Retranscribe Conversation"
-msgstr ""
+msgstr "Retranscribir conversación"
 
 #: src/lib/query.ts:1829
 msgid "Retranscription started. New conversation will be available soon."
-msgstr ""
+msgstr "La retranscripción ha comenzado. La nueva conversación estará disponible pronto."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:317
+#: src/routes/project/chat/ProjectChatRoute.tsx:390
 msgid "Retry"
 msgstr "Reintentar"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:857
 msgid "Retry Upload"
-msgstr ""
+msgstr "Reintentar subida"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:622
 msgid "Review files before uploading"
-msgstr ""
+msgstr "Revisar archivos antes de subir"
 
 #: src/routes/project/resource/ProjectResourceOverview.tsx:144
 msgid "Save"
@@ -1393,7 +1408,7 @@ msgstr "Desplazarse al final"
 msgid "Search"
 msgstr "Buscar"
 
-#: src/components/conversation/ConversationAccordion.tsx:621
+#: src/components/conversation/ConversationAccordion.tsx:658
 msgid "Search conversations"
 msgstr "Buscar conversaciones"
 
@@ -1401,20 +1416,29 @@ msgstr "Buscar conversaciones"
 msgid "Search projects"
 msgstr "Buscar proyectos"
 
-#: src/components/conversation/ConversationAccordion.tsx:236
+#: src/components/conversation/ConversationAccordion.tsx:241
 msgid "Search Projects"
 msgstr "Buscar Proyectos"
 
 #: src/components/conversation/MoveConversationButton.tsx:140
-#: src/components/conversation/ConversationAccordion.tsx:240
+#: src/components/conversation/ConversationAccordion.tsx:245
 msgid "Search projects..."
 msgstr "Buscar proyectos..."
 
+#: src/components/chat/SourcesSearched.tsx:13
+#: src/components/chat/Citations.tsx:22
+msgid "Searched through the most relevant sources"
+msgstr "Buscó en las fuentes más relevantes"
+
+#: src/components/chat/SourcesSearch.tsx:13
+msgid "Searching through the most relevant sources"
+msgstr "Buscando en las fuentes más relevantes"
+
 #: src/components/dropzone/UploadConversationDropzone.tsx:526
 msgid "Select Audio Files to Upload"
-msgstr ""
+msgstr "Seleccionar archivos de audio para subir"
 
-#: src/components/conversation/ConversationAccordion.tsx:260
+#: src/components/conversation/ConversationAccordion.tsx:265
 msgid "Select Project"
 msgstr "Seleccionar Proyecto"
 
@@ -1433,9 +1457,9 @@ msgstr "Seleccionar tutorial"
 #. placeholder {0}: selectedFiles.length
 #: src/components/dropzone/UploadConversationDropzone.tsx:617
 msgid "Selected Files ({0}/{MAX_FILES})"
-msgstr ""
+msgstr "Archivos seleccionados ({0}/{MAX_FILES})"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:385
+#: src/routes/project/chat/ProjectChatRoute.tsx:478
 msgid "Send"
 msgstr "Enviar"
 
@@ -1467,14 +1491,13 @@ msgstr "Compartir tu voz"
 msgid "Share your voice by scanning the QR code below."
 msgstr "Comparte tu voz escaneando el código QR de abajo."
 
-#: src/components/conversation/ConversationAccordion.tsx:437
+#: src/components/conversation/ConversationAccordion.tsx:445
 msgid "Shortest First"
-msgstr ""
+msgstr "Más corto primero"
 
-#. placeholder {0}: option.label
 #: src/components/conversation/ConversationAccordion.tsx:555
-msgid "Show {0}"
-msgstr ""
+#~ msgid "Show {0}"
+#~ msgstr "Mostrar {0}"
 
 #: src/routes/project/conversation/ProjectConversationAnalysis.tsx:50
 msgid "Show all"
@@ -1484,9 +1507,9 @@ msgstr "Mostrar todo"
 msgid "Show audio player"
 msgstr "Mostrar reproductor de audio"
 
-#: src/components/conversation/ConversationAccordion.tsx:646
+#: src/components/conversation/ConversationAccordion.tsx:683
 msgid "Show duration"
-msgstr ""
+msgstr "Mostrar duración"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:252
 msgid "Show timeline in report (request feature)"
@@ -1498,7 +1521,7 @@ msgstr "Iniciar sesión con Google"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:412
 msgid "Some files were already selected and won't be added twice."
-msgstr ""
+msgstr "Algunos archivos ya estaban seleccionados y no se agregarán dos veces."
 
 #: src/routes/auth/Login.tsx:114
 #: src/components/participant/ParticipantInitiateForm.tsx:78
@@ -1515,13 +1538,13 @@ msgstr "Algo salió mal al subir el archivo: {0}"
 #~ msgid "Something went wrong. Please try again."
 #~ msgstr "Algo salió mal. Por favor, inténtalo de nuevo."
 
-#: src/components/conversation/ConversationAccordion.tsx:655
+#: src/components/conversation/ConversationAccordion.tsx:692
 msgid "Sort"
 msgstr "Ordenar"
 
 #: src/components/conversation/ConversationAccordion.tsx:689
-msgid "Sources:"
-msgstr ""
+#~ msgid "Sources:"
+#~ msgstr "Fuentes:"
 
 #: src/components/project/ProjectPortalEditor.tsx:267
 msgid "Spanish"
@@ -1539,7 +1562,7 @@ msgstr "Contexto Específico"
 #~ msgid "Start Recording"
 #~ msgstr "Iniciar Grabación"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:287
+#: src/routes/project/chat/ProjectChatRoute.tsx:360
 #: src/routes/participant/ParticipantConversation.tsx:498
 msgid "Stop"
 msgstr "Detener"
@@ -1551,7 +1574,7 @@ msgstr "Enviar"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:828
 msgid "Success"
-msgstr ""
+msgstr "Éxito"
 
 #: src/components/chat/ChatTemplatesMenu.tsx:23
 msgid "Summarize"
@@ -1567,7 +1590,7 @@ msgstr "Resumen"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:603
 msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
-msgstr ""
+msgstr "Formatos soportados: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 
 #: src/components/project/ProjectTagsInput.tsx:219
 #: src/components/participant/ParticipantInitiateForm.tsx:101
@@ -1598,7 +1621,7 @@ msgstr "la biblioteca del proyecto."
 
 #: src/routes/project/conversation/ProjectConversationOverview.tsx:43
 msgid "The summary is being regenerated. Please wait for the new summary to be available."
-msgstr ""
+msgstr "El resumen está siendo regenerado. Por favor, espera hasta que el nuevo resumen esté disponible."
 
 #: src/routes/project/conversation/ProjectConversationOverview.tsx:43
 #~ msgid "The summary is being regenerated. Please wait upto 2 minutes for the new summary to be available."
@@ -1692,7 +1715,7 @@ msgstr "Esto borrará tu entrada actual. ¿Estás seguro?"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:269
 msgid "This will create a new conversation with the same audio but a fresh transcription. The original conversation will remain unchanged."
-msgstr ""
+msgstr "Esto creará una nueva conversación con el mismo audio pero una transcripción fresca. La conversación original permanecerá sin cambios."
 
 #: src/routes/project/library/ProjectLibrary.tsx:298
 msgid "Time Created"
@@ -1791,7 +1814,7 @@ msgstr ""
 "\n"
 "Nota: Si la discusión carece de puntos de decisión sustanciales o insights, marca para una exploración más profunda la próxima vez."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:354
+#: src/routes/project/chat/ProjectChatRoute.tsx:447
 msgid "Type a message..."
 msgstr "Escribe un mensaje..."
 
@@ -1822,19 +1845,19 @@ msgstr "Actualiza tu informe para incluir los cambios más recientes en tu proye
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:513
 msgid "Upload Audio"
-msgstr ""
+msgstr "Subir Audio"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:524
 msgid "Upload Complete"
-msgstr ""
+msgstr "Subida Completa"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:337
 msgid "Upload failed. Please try again."
-msgstr ""
+msgstr "Subida fallida. Por favor, inténtalo de nuevo."
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:735
 msgid "Upload Files"
-msgstr ""
+msgstr "Subir Archivos"
 
 #: src/routes/participant/ParticipantConversation.tsx:774
 #~ msgid "Upload in progress"
@@ -1844,15 +1867,15 @@ msgstr ""
 msgid "Upload resources"
 msgstr "Cargar recursos"
 
-#: src/components/conversation/ConversationAccordion.tsx:362
+#: src/components/conversation/ConversationAccordion.tsx:370
 msgid "Uploaded"
-msgstr ""
+msgstr "Subido"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:525
 msgid "Uploading Audio Files..."
-msgstr ""
+msgstr "Subiendo archivos de audio..."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:394
+#: src/routes/project/chat/ProjectChatRoute.tsx:487
 msgid "Use Shift + Enter to add a new line"
 msgstr "Usa Shift + Enter para agregar una nueva línea"
 
@@ -1872,7 +1895,7 @@ msgstr "Ver tus respuestas"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:540
 msgid "Warning"
-msgstr ""
+msgstr "Advertencia"
 
 #: src/routes/auth/CheckYourEmail.tsx:14
 #~ msgid "We have sent you an email with next steps. If you don't see it, check your spam folder."
@@ -1886,7 +1909,7 @@ msgstr "Te hemos enviado un correo electrónico con los pasos siguientes. Si no 
 msgid "Welcome"
 msgstr "Bienvenido"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:245
+#: src/routes/project/chat/ProjectChatRoute.tsx:310
 msgid "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
 msgstr "¡Bienvenido a Dembrane Chat! Usa la barra lateral para seleccionar recursos y conversaciones que quieras analizar. Luego, puedes hacer preguntas sobre los recursos y conversaciones seleccionados."
 
@@ -1909,7 +1932,7 @@ msgstr "Tú"
 #. placeholder {0}: MAX_FILES - selectedFiles.length
 #: src/components/dropzone/UploadConversationDropzone.tsx:379
 msgid "You can only upload up to {MAX_FILES} files at a time. Only the first {0} files will be added."
-msgstr ""
+msgstr "Solo puedes subir hasta {MAX_FILES} archivos a la vez. Solo los primeros {0} archivos se agregarán."
 
 #: src/routes/participant/ParticipantPostConversation.tsx:51
 msgid "You may also choose to record another conversation."
