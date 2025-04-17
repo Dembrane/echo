@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { ChatMessage } from "@/components/chat/ChatMessage";
-import { Group, Text } from "@mantine/core";
+import { Box, Group, Text } from "@mantine/core";
 import { Markdown } from "@/components/common/Markdown";
 import React from "react";
 import { formatDate } from "date-fns";
@@ -47,9 +47,9 @@ export const ChatHistoryMessage = ({
   if (message.role === "dembrane") {
     if (message.content === "searched") {
       return (
-        <ChatMessage key={message.id} role="dembrane" section={section}>
+        <Box className="flex justify-start">
           <SourcesSearched />
-        </ChatMessage>
+        </Box>
       );
     }
   }
