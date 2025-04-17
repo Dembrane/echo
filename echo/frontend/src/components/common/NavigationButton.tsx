@@ -53,7 +53,7 @@ export const NavigationButton = ({
     <Paper
       className={cn(
         "w-full border border-gray-200 bg-white transition-colors",
-        active ? (borderColor ? `${borderColor}` : "border-primary-500") : "",
+        active ? "border-primary-500" : "",
         disabled || loading
           ? "opacity-60 hover:border-gray-300"
           : borderColor ? `hover:${borderColor}` : "hover:border-primary-500",

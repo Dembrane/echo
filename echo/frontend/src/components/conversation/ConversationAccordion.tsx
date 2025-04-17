@@ -346,7 +346,7 @@ const ConversationAccordionItem = ({
     <NavigationButton
       to={`/projects/${conversation.project_id}/conversation/${conversation.id}/overview`}
       active={highlight}
-      borderColor={AUTO_SELECT_ENABLED && isAutoSelectEnabled ? "green" : undefined}
+      borderColor={AUTO_SELECT_ENABLED && isAutoSelectEnabled ? "border-green-500" : undefined}
       className={cn("w-full", {
         "!bg-primary-50": isLocked,
       })}

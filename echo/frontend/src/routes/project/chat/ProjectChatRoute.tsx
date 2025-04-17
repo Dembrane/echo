@@ -66,6 +66,9 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
       conversations: chatContextQuery.data.conversations.filter(
         (c) => !c.locked,
       ),
+      locked_conversations: chatContextQuery.data.conversations.filter(
+        (c) => c.locked,
+      ),
       auto_select_bool: chatContextQuery.data.auto_select_bool ?? false,
     };
   }, [chatContextQuery.data, chatHistoryQuery.data]);
@@ -261,6 +264,8 @@ export const ProjectChatRoute = () => {
     showSuccessMessage,
   } = useDembraneChat({ chatId: chatId ?? "" });
 
+  const noConversationsSelected = contextToBeAdded?.conversations?.length === 0 && contextToBeAdded?.locked_conversations?.length === 0;
+
   const computedChatForCopy = useMemo(() => {
     const messagesList = messages.map((message) =>
       // @ts-expect-error chatHistoryQuery.data is not typed
@@ -391,6 +396,21 @@ export const ProjectChatRoute = () => {
       {/* Footer */}
       <Box className="bottom-0 w-full border-t bg-white py-4 lg:sticky">
         <Stack>
+          {(
+            !AUTO_SELECT_ENABLED
+              ? noConversationsSelected
+              : (noConversationsSelected) &&
+                !contextToBeAdded?.auto_select_bool
+          ) && (
+            <Alert
+              icon={<IconAlertCircle size="1rem" />}
+              title={t`No transcripts are selected for this chat`}
+              color="orange"
+              variant="light"
+            >
+            </Alert>
+          )}
+
           {contextToBeAdded && contextToBeAdded.conversations.length > 0 && (
             <ChatMessage role="dembrane">
               <Group gap="xs" align="baseline">
