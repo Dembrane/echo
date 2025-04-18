@@ -7,7 +7,6 @@ from dembrane.audio_lightrag.utils.litellm_utils import embedding_func, llm_mode
 
 logger = getLogger(__name__)
 
-#Singleton class to manage the RAG instance. Need to look at beter design? 
 class RAGManager:
     _instance: Optional[LightRAG] = None
     _initialized: bool = False

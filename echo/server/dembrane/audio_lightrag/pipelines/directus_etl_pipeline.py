@@ -91,7 +91,7 @@ class DirectusETLPipeline:
         chunk_to_segments = {}
         for chunk in segment:
             chunk_id = chunk['id']
-            segment_ids = [segment['conversation_segment_id'] for segment in chunk.get('conversation_segments', None)]
+            segment_ids = [segment['conversation_segment_id'] for segment in chunk.get('conversation_segments')]
             chunk_to_segments[chunk_id] = [segment_id for segment_id in segment_ids if isinstance(segment_id, int)]
         chunk_to_segments = {k:','.join([str(x) for x in sorted(v)]) for k,v in chunk_to_segments.items() if len(v)!=0} # type: ignore
         conversation_df['segment'] = conversation_df.chunk_id.map(chunk_to_segments)

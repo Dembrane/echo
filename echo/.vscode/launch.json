@@ -20,13 +20,17 @@
       "program": "dembrane/audio_lightrag/tests/unit_tests/contextual_chunk_etl_pipeline_test.py",
       "cwd": "${workspaceFolder}/server",
       "env": {
+        "PYTHONPATH": "${workspaceFolder}/server"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": "false"
+    },
     {
       "name": "Python Debugger: transcribe",
       "type": "debugpy",
       "request": "launch",
       "module": "dembrane.transcribe",
       "cwd": "${workspaceFolder}/server"
-    },
         "PYTHONPATH": "${workspaceFolder}/server"
       },
       "console": "integratedTerminal",

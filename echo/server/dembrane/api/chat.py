@@ -143,6 +143,9 @@ async def get_chat_context(
 
     used_conversations = chat.used_conversations
 
+    if chat.auto_select_bool != True and chat.auto_select_bool != False:
+        raise HTTPException(status_code=400, detail="Auto select is not boolean")
+
     # initialize response
     context = ChatContextSchema(
         conversations=[],
@@ -201,8 +204,6 @@ async def add_chat_context(
     if body.conversation_id is not None and body.auto_select_bool is not None:
         raise HTTPException(status_code=400, detail="conversation_id and auto_select_bool cannot both be provided")
 
-    if body.auto_select_bool is False:
-        raise HTTPException(status_code=400, detail="auto_select_bool cannot be False")
 
     chat = db.get(ProjectChatModel, chat_id)
 
@@ -415,6 +416,8 @@ async def post_chat(
 
     locked_conversation_id_list = chat_context.locked_conversation_id_list #Verify with directus
 
+    logger.debug(f"AUTO_SELECT_ENABLED: {AUTO_SELECT_ENABLED}")
+    logger.debug(f"chat_context.auto_select_bool: {chat_context.auto_select_bool}")
     if AUTO_SELECT_ENABLED and chat_context.auto_select_bool: 
         filtered_messages: List[Dict[str, Any]] = []
         for message in messages:
@@ -428,9 +431,9 @@ async def post_chat(
             ):
                     filtered_messages = filtered_messages[:-1]
         top_k = AUDIO_LIGHTRAG_TOP_K_PROMPT 
-        formatted_messages = []
         prompt_len = float("inf")
         while MAX_CHAT_CONTEXT_LENGTH < prompt_len:
+            formatted_messages = []
             top_k = max(5, top_k - 10)
             query = filtered_messages[-1]["content"]
             conversation_history = filtered_messages
