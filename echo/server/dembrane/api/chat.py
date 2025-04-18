@@ -143,7 +143,7 @@ async def get_chat_context(
 
     used_conversations = chat.used_conversations
 
-    if chat.auto_select_bool != True and chat.auto_select_bool != False:
+    if chat.auto_select_bool is None:
         raise HTTPException(status_code=400, detail="Auto select is not boolean")
 
     # initialize response
