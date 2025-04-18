@@ -12,7 +12,7 @@ dependencies = [
     # Langchain
     "langchain==0.1.*",
     "langchain-community==0.0.*",
-    "langchain-experimental==0.0.57",
+    "langchain-experimental==0.0.*",
     "langchain-openai==0.0.*",
     "pypdf==4.0.*",
     # SDKs for Models
@@ -42,16 +42,37 @@ dependencies = [
     # Types
     "types-aiofiles==23.2.*",
     "types-tqdm > 4",
-    # Uncategorized
-    "mypy",
-    "ruff",
-    "isort",
     "pandas-stubs>=2.2.2.240514",
     "types-requests>=2.32.0.20240602",
     "types-python-jose>=3.3.4.20240106",
-    "litellm>=1.59.9",
-    "boto3>=1.37.9",
-    # "trankit @ git+https://github.com/nlp-uoregon/trankit",
+    "litellm==1.59.*",
+    # Additional Dependencies
+    "lightrag-dembrane==1.2.7.1",
+    # "lightrag-hku @ file:///workspaces/echo/LightRAG",
+    "nest-asyncio==1.6.0",
+    "pydantic==2.10.6",
+    "pydub==0.25.1",
+    "pytest==8.3.4",
+    "PyYAML==6.0.2",
+    # Network and HTTP
+    "aiohttp==3.11.14",
+    # Configuration
+    "configparser==7.2.0",
+    # Data and Analysis
+    "pipmaster==0.5.1",
+    # Utils
+    "setuptools==75.8.0",
+    # LLM Tools
+    "tiktoken==0.9.0",
+    "asyncpg==0.30.0",
+    "neo4j==5.28.1",
+    "boto3==1.37.*",
+    # Uncategorized
+    "mypy==1.10.*",
+    "ruff==0.4.*",
+    "isort==5.13.*",
+    "tenacity==8.3.*",
+    "networkx==3.4.*",
     # tests
     "pytest",
     "pytest-cov",
@@ -87,6 +108,7 @@ warn_unused_ignores = true
 check_untyped_defs = true
 no_implicit_reexport = true
 disallow_untyped_defs = true
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 follow_imports = "skip"

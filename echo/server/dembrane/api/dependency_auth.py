@@ -22,25 +22,47 @@ class DirectusSession:
         return str(self)
 
 
+# async def require_directus_session(request: Request) -> DirectusSession:
+#     """
+#     Returns user id if user is authenticated, otherwise raises an exception
+#     """
+#     directus_cookie = request.cookies.get(DIRECTUS_SESSION_COOKIE_NAME)
+
+#     if not directus_cookie:
+#         auth_header = request.headers.get("Authorization")
+#         if auth_header and auth_header.startswith("Bearer "):
+#             # Extract the token
+#             token = auth_header[7:]  # Skip "Bearer "
+#             try:
+#                 assert DIRECTUS_SECRET, "DIRECTUS_SECRET is not set"
+#                 decoded = jwt.decode(token, DIRECTUS_SECRET)
+#             except Exception as exc:
+#                 logger.error(exc)
+#                 raise SessionInvalidException from exc
+
+#             user_id = decoded.get("id")
+#             is_admin = decoded.get("admin_access")
+
+#             return DirectusSession(str(user_id), bool(is_admin))
+#         else:
+#             raise SessionInvalidException
+
+
 async def require_directus_session(request: Request) -> DirectusSession:
     """
     Returns user id if user is authenticated, otherwise raises an exception
     """
     directus_cookie = request.cookies.get(DIRECTUS_SESSION_COOKIE_NAME)
-
     if not directus_cookie:
         raise SessionInvalidException
-
     try:
         assert DIRECTUS_SECRET, "DIRECTUS_SECRET is not set"
         decoded = jwt.decode(directus_cookie, DIRECTUS_SECRET)
     except Exception as exc:
         logger.error(exc)
         raise SessionInvalidException from exc
-
     user_id = decoded.get("id")
     is_admin = decoded.get("admin_access")
-
     return DirectusSession(str(user_id), bool(is_admin))
 
 

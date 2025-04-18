@@ -9,7 +9,7 @@ from celery.utils.log import get_task_logger  # type: ignore
 
 import dembrane.tasks_config
 from dembrane.utils import generate_uuid, get_utc_timestamp
-from dembrane.config import REDIS_URL
+from dembrane.config import REDIS_URL, ENABLE_AUDIO_LIGHTRAG_INPUT
 from dembrane.sentry import init_sentry
 from dembrane.database import (
     ViewModel,
@@ -37,6 +37,7 @@ from dembrane.quote_utils import (
 )
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.processing_status_utils import ProcessingStatus
+from dembrane.audio_lightrag.main.run_etl import run_etl_pipeline
 
 # File for validating worker readiness
 READINESS_FILE = Path("/tmp/celery_ready")
@@ -862,6 +863,8 @@ def task_finish_conversation_hook(self, conversation_id: str):
 
         logger.info(f"Processing conversation {conversation_id} started")
 
+        if ENABLE_AUDIO_LIGHTRAG_INPUT:
+            run_etl_pipeline([conversation_id])
     except Exception as e:
         logger.error(f"Error: {e}")
         raise self.retry(exc=e) from e
