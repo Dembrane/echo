@@ -78,10 +78,15 @@ async def create_system_messages_for_chat(
         .filter(ConversationModel.id.in_(locked_conversation_id_list))
         .all()
     )
-    project_query = {'query': {'fields': ['name', 'language', 'context', 'default_conversation_title', 'default_conversation_description'], 
-    'limit': 1, 'filter': {'id': {'_in': [project_id]}}}}
-    project = directus.get_items("project", project_query)[0]
-    project_context = '\n'.join([str(k) + ' : ' + str(v) for k, v in project.items()])
+    try:
+        project_query = {'query': {'fields': ['name', 'language', 'context', 'default_conversation_title', 'default_conversation_description'], 
+        'limit': 1, 'filter': {'id': {'_in': [project_id]}}}}
+        project = directus.get_items("project", project_query)[0]
+        project_context = '\n'.join([str(k) + ' : ' + str(v) for k, v in project.items()])
+    except KeyError as e:
+        raise ValueError(f"Invalid project id: {project_id}")
+    except Exception as e:
+        raise e
 
     project_message = {"type": "text", "text": render_prompt("context_project", language, {"project_context": project_context})}
 
