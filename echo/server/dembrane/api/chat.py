@@ -568,7 +568,7 @@ async def post_chat(
         return response
     else:
         system_messages = await create_system_messages_for_chat(
-            locked_conversation_id_list, db, language
+            locked_conversation_id_list, db, language, project_id
         )
 
         def stream_response() -> Generator[str, None, None]:
