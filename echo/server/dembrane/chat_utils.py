@@ -5,12 +5,11 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from dembrane.prompts import render_prompt
-from dembrane.database import ConversationModel, ProjectChatMessageModel, ProjectModel
+from dembrane.database import ConversationModel, ProjectChatMessageModel
+from dembrane.directus import directus
 from dembrane.api.stateless import GetLightragQueryRequest, get_lightrag_prompt
 from dembrane.api.conversation import get_conversation_transcript
 from dembrane.api.dependency_auth import DirectusSession
-from dembrane.directus import directus
-
 
 MAX_CHAT_CONTEXT_LENGTH = 100000
 
@@ -84,9 +83,9 @@ async def create_system_messages_for_chat(
         project = directus.get_items("project", project_query)[0]
         project_context = '\n'.join([str(k) + ' : ' + str(v) for k, v in project.items()])
     except KeyError as e:
-        raise ValueError(f"Invalid project id: {project_id}")
-    except Exception as e:
-        raise e
+        raise ValueError(f"Invalid project id: {project_id}") from e
+    except Exception:
+        raise
 
     project_message = {"type": "text", "text": render_prompt("context_project", language, {"project_context": project_context})}
 
