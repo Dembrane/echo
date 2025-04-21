@@ -79,7 +79,7 @@ async def create_system_messages_for_chat(
         .all()
     )
     project_query = {'query': {'fields': ['name', 'language', 'context', 'default_conversation_title', 'default_conversation_description'], 
-    'limit': 100000, 'filter': {'id': {'_in': [project_id]}}}}
+    'limit': 1, 'filter': {'id': {'_in': [project_id]}}}}
     project = directus.get_items("project", project_query)[0]
     project_context = '\n'.join([str(k) + ' : ' + str(v) for k, v in project.items()])
 
