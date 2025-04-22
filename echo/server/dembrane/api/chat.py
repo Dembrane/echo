@@ -156,7 +156,7 @@ async def get_chat_context(
     )
 
     for conversation in used_conversations:
-        is_conversation_locked = conversation.id in locked_conversations
+        is_conversation_locked = conversation.id in locked_conversations # Verify with directus
         chat_context_resource = ChatContextConversationSchema(
             conversation_id=conversation.id,
             conversation_participant_name=conversation.participant_name,
@@ -326,7 +326,7 @@ async def lock_conversations(
             .all()
         )
 
-        dembrane_message = ProjectChatMessageModel(
+        dembrane_search_complete_message = ProjectChatMessageModel(
             id=generate_uuid(),
             date_created=get_utc_timestamp(),
             message_from="dembrane",
@@ -335,7 +335,7 @@ async def lock_conversations(
             used_conversations=added_conversations,
             added_conversations=added_conversations,
         )
-        db.add(dembrane_message)
+        db.add(dembrane_search_complete_message)
         db.commit()
 
     # Fetch ConversationModel objects for used_conversations
@@ -450,16 +450,6 @@ async def post_chat(
 
         conversation_references = await get_conversation_references(rag_prompt)
         
-        dembrane_conversation_reference_message = ProjectChatMessageModel(
-            id=generate_uuid(),
-            date_created=get_utc_timestamp(),
-            message_from="dembrane",
-            text="conversation references created",
-            project_chat_id=chat_id,
-            conversation_references=conversation_references,
-        )
-        db.add(dembrane_conversation_reference_message)
-        db.commit()
         async def stream_response_async() -> AsyncGenerator[str, None]:
             conversation_references_yeild = f"2:{json.dumps(conversation_references)}\n"
             yield conversation_references_yeild
@@ -494,19 +484,8 @@ async def post_chat(
                 return # Stop generation on error
             
             citations_list = await get_conversation_citations(rag_prompt, accumulated_response)
-            citations_count = len(citations_list)
-            citations_yeild = f"2:{json.dumps([{'citations': citations_list}])}\n"
+            citations_yeild = f"2:{json.dumps(citations_list)}\n"
             yield citations_yeild
-            dembrane_citations_message = ProjectChatMessageModel(
-                id=generate_uuid(),
-                date_created=get_utc_timestamp(),
-                message_from="dembrane",
-                text=f"{citations_count} citations found.",
-                project_chat_id=chat_id,
-                citations=citations_list,
-            )
-            db.add(dembrane_citations_message)
-            db.commit()
         headers = {"Content-Type": "text/event-stream"}
         if protocol == "data":
             headers["x-vercel-ai-data-stream"] = "v1"

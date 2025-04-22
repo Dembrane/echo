@@ -160,7 +160,7 @@ async def get_conversation_references(rag_prompt: str) -> List[Dict[str, Any]]:
         conversation_references = await get_conversation_details_for_rag_query(rag_prompt)
         conversation_references = {'references': conversation_references}
     except Exception as e:
-        logger.info(f"No references found. Error: {str(e)}")
+        logger.warning(f"No references found. Error: {str(e)}")
         conversation_references = {'references':{}}
     return [conversation_references]
 
@@ -171,7 +171,7 @@ class CitationSingleSchema(BaseModel):
 class CitationsSchema(BaseModel):
     citations: List[CitationSingleSchema]
 
-async def get_conversation_citations(rag_prompt: str, accumulated_response: str, language: str = "en") -> List[Dict[int, Any]]:
+async def get_conversation_citations(rag_prompt: str, accumulated_response: str, language: str = "en") -> List[Dict[str, Any]]:
     text_structuring_model_message = render_prompt("text_structuring_model_message", language, 
         {
         'accumulated_response': accumulated_response, 
@@ -189,18 +189,16 @@ async def get_conversation_citations(rag_prompt: str, accumulated_response: str,
         api_key=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY,
         response_format=CitationsSchema)
     try: 
-        citations_dict = json.loads(text_structuring_model_generation.choices[0].message.content)#type: ignore
-        citations_list = citations_dict["citations"]
+        citations_by_segment_dict = json.loads(text_structuring_model_generation.choices[0].message.content) #type: ignore
+        citations_list = citations_by_segment_dict["citations"]
+        citations_by_conversation_dict: Dict[str, List[Dict[str, Any]]] = {"citations": []}
         if len(citations_list) > 0:
-            for idx, citation in enumerate(citations_list):
+            for _, citation in enumerate(citations_list):
                 conversation_id = await run_segment_id_to_conversation_id(citation['segment_id'])
-                citations_list[idx]['conversation_id'] = conversation_id
-            conversation_name = get_conversation_name_from_id(conversation_id)
-            citations_list[idx]['conversation_name'] = conversation_name
+                current_citation_dict = {"conversation_id": conversation_id, "reference_text": citation['verbatim_reference_text_chunk']}
+                citations_by_conversation_dict["citations"].append(current_citation_dict)
         else:
             logger.warning("WARNING: No citations found")
-        citations_list = json.dumps(citations_list)
     except Exception as e:
         logger.warning(f"WARNING: Error in citation extraction. Skipping citations: {str(e)}")
-        citations_list = []
-    return citations_list
+    return [citations_by_conversation_dict]
