@@ -1,6 +1,6 @@
 # this is not upto date. switched to directus for a better life
 from enum import Enum
-from typing import Any, List, Optional, Annotated, Generator  #, Dict 
+from typing import Any, Dict, List, Optional, Annotated, Generator
 from logging import getLogger
 from datetime import datetime, timezone
 
@@ -28,7 +28,7 @@ from sqlalchemy.orm import (
     declarative_base,
 )
 from pgvector.sqlalchemy import Vector  # type: ignore
-from sqlalchemy.dialects.postgresql import UUID  #, JSONB
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 from dembrane.config import DATABASE_URL
 from dembrane.embedding import EMBEDDING_DIM
@@ -280,9 +280,8 @@ class ProjectChatMessageModel(Base):
         secondary=project_chat_message_conversation_association_1_table,
     )
     tokens_count: Mapped[int] = mapped_column(Integer)
-    # # Enable when frontend can handle
-    # prompt_conversations: Mapped[List[Dict[str, str]]] = mapped_column(JSONB, default=[]) 
-    # citations: Mapped[List[Dict[str, str]]] = mapped_column(JSONB, default=[]) 
+    conversation_references: Mapped[List[Dict[str, str]]] = mapped_column(JSONB, default=[]) 
+    citations: Mapped[List[Dict[str, str]]] = mapped_column(JSONB, default=[]) 
 
 
 class ProjectChatModel(Base):

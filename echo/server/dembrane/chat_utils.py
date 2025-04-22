@@ -1,15 +1,28 @@
+import json
 import logging
 from typing import Any, Dict, List, Optional
 
+from litellm import completion
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from dembrane.config import (
+    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL,
+    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY,
+    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE,
+    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION,
+)
 from dembrane.prompts import render_prompt
 from dembrane.database import ConversationModel, ProjectChatMessageModel
 from dembrane.directus import directus
 from dembrane.api.stateless import GetLightragQueryRequest, get_lightrag_prompt
 from dembrane.api.conversation import get_conversation_transcript
 from dembrane.api.dependency_auth import DirectusSession
+from dembrane.audio_lightrag.utils.lightrag_utils import (
+    get_conversation_name_from_id,
+    run_segment_id_to_conversation_id,
+    get_conversation_details_for_rag_query,
+)
 
 MAX_CHAT_CONTEXT_LENGTH = 100000
 
@@ -140,3 +153,54 @@ async def get_lightrag_prompt_by_params(top_k: int,
     session = DirectusSession(user_id="none", is_admin=True)#fake session
     rag_prompt = await get_lightrag_prompt(payload, session)
     return rag_prompt
+
+
+async def get_conversation_references(rag_prompt: str) -> List[Dict[str, Any]]:
+    try:
+        conversation_references = await get_conversation_details_for_rag_query(rag_prompt)
+        conversation_references = {'references': conversation_references}
+    except Exception as e:
+        logger.info(f"No references found. Error: {str(e)}")
+        conversation_references = {'references':{}}
+    return [conversation_references]
+
+class CitationSingleSchema(BaseModel):
+    segment_id: int
+    verbatim_reference_text_chunk: str
+
+class CitationsSchema(BaseModel):
+    citations: List[CitationSingleSchema]
+
+async def get_conversation_citations(rag_prompt: str, accumulated_response: str, language: str = "en") -> List[Dict[int, Any]]:
+    text_structuring_model_message = render_prompt("text_structuring_model_message", language, 
+        {
+        'accumulated_response': accumulated_response, 
+        'rag_prompt':rag_prompt
+        }
+        )
+    text_structuring_model_messages = [
+        {"role": "system", "content": text_structuring_model_message},
+    ]
+    text_structuring_model_generation = completion(
+        model=f"{LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL}",
+        messages=text_structuring_model_messages,
+        api_base=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE,
+        api_version=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION,
+        api_key=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY,
+        response_format=CitationsSchema)
+    try: 
+        citations_dict = json.loads(text_structuring_model_generation.choices[0].message.content)#type: ignore
+        citations_list = citations_dict["citations"]
+        if len(citations_list) > 0:
+            for idx, citation in enumerate(citations_list):
+                conversation_id = await run_segment_id_to_conversation_id(citation['segment_id'])
+                citations_list[idx]['conversation_id'] = conversation_id
+            conversation_name = get_conversation_name_from_id(conversation_id)
+            citations_list[idx]['conversation_name'] = conversation_name
+        else:
+            logger.warning("WARNING: No citations found")
+        citations_list = json.dumps(citations_list)
+    except Exception as e:
+        logger.warning(f"WARNING: Error in citation extraction. Skipping citations: {str(e)}")
+        citations_list = []
+    return citations_list

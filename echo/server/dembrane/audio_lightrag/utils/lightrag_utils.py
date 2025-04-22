@@ -43,7 +43,6 @@ db_manager = PostgresDBManager()
 
 def get_conversation_name_from_id(conversation_id: str) -> str:
     query = {'query': {'filter': {'id': {'_eq': conversation_id}},'fields': ['participant_name']}}
-    print(query)
     return directus.get_items("conversation", query)[0]['participant_name']
 
 async def run_segment_id_to_conversation_id(segment_id: int) -> str:
