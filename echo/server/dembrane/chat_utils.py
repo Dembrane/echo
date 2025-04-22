@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from dembrane.prompts import render_prompt
 from dembrane.database import ConversationModel, ProjectChatMessageModel
+from dembrane.directus import directus
 from dembrane.api.stateless import GetLightragQueryRequest, get_lightrag_prompt
 from dembrane.api.conversation import get_conversation_transcript
 from dembrane.api.dependency_auth import DirectusSession
@@ -69,13 +70,24 @@ def get_project_chat_history(chat_id: str, db: Session) -> List[Dict[str, Any]]:
 
 
 async def create_system_messages_for_chat(
-    locked_conversation_id_list: List[str], db: Session, language: str
+    locked_conversation_id_list: List[str], db: Session, language: str, project_id: str
 ) -> List[Dict[str, Any]]:
     conversations = (
         db.query(ConversationModel)
         .filter(ConversationModel.id.in_(locked_conversation_id_list))
         .all()
     )
+    try:
+        project_query = {'query': {'fields': ['name', 'language', 'context', 'default_conversation_title', 'default_conversation_description'], 
+        'limit': 1, 'filter': {'id': {'_in': [project_id]}}}}
+        project = directus.get_items("project", project_query)[0]
+        project_context = '\n'.join([str(k) + ' : ' + str(v) for k, v in project.items()])
+    except KeyError as e:
+        raise ValueError(f"Invalid project id: {project_id}") from e
+    except Exception:
+        raise
+
+    project_message = {"type": "text", "text": render_prompt("context_project", language, {"project_context": project_context})}
 
     conversation_data_list = []
     for conversation in conversations:
@@ -93,6 +105,7 @@ async def create_system_messages_for_chat(
 
     prompt_message = {"type": "text", "text": render_prompt("system_chat", language, {})}
 
+
     logger.info(f"using system prompt in language: {language}")
     logger.info(f"prompt: {prompt_message['text'][:20]}...{prompt_message['text'][-20:]}")
 
@@ -105,7 +118,7 @@ async def create_system_messages_for_chat(
         "cache_control": {"type": "ephemeral"},
     }
 
-    return [prompt_message, context_message]
+    return [prompt_message, project_message, context_message]
 
 
 async def get_lightrag_prompt_by_params(top_k: int,
