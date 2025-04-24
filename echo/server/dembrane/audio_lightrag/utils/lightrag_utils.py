@@ -79,7 +79,7 @@ async def get_segment_from_conversation_chunk_ids(db: PostgreSQLDB,
     sql = SQL_TEMPLATES["GET_SEGMENT_IDS_FROM_CONVERSATION_CHUNK_IDS"
                         ].format(conversation_ids=conversation_chunk_ids)
     result = await db.query(sql, multirows=True)
-    return [int(x['conversation_segment_id']) for x in result]
+    return [int(x['conversation_segment_id']) for x in result if x['conversation_segment_id'] is not None]
 
 async def get_segment_from_conversation_ids(db: PostgreSQLDB,
                                       conversation_ids: list[str]) -> list[int]:
@@ -95,7 +95,7 @@ async def get_segment_from_conversation_ids(db: PostgreSQLDB,
     conversation_request["query"]["filter"] = {"id": {"_in": conversation_ids}}
     conversation_request_result = directus.get_items("conversation", conversation_request)
     conversation_chunk_ids = [[x['id'] for x in conversation_request_result_dict['chunks']] for conversation_request_result_dict in conversation_request_result]
-    flat_conversation_chunk_ids: list[str] = [item for sublist in conversation_chunk_ids for item in sublist]
+    flat_conversation_chunk_ids: list[str] = [item for sublist in conversation_chunk_ids for item in sublist if item is not None]
     return await get_segment_from_conversation_chunk_ids(db, flat_conversation_chunk_ids)
 
 async def get_segment_from_project_ids(db: PostgreSQLDB,
@@ -106,7 +106,7 @@ async def get_segment_from_project_ids(db: PostgreSQLDB,
     project_request["query"]["filter"] = {"id": {"_in": project_ids}}
     project_request_result = directus.get_items("project", project_request)
     conversation_ids = [[x['id'] for x in project_request_result_dict['conversations']] for project_request_result_dict in project_request_result]
-    flat_conversation_ids: list[str] = [item for sublist in conversation_ids for item in sublist]
+    flat_conversation_ids: list[str] = [item for sublist in conversation_ids for item in sublist if item is not None]
     return await get_segment_from_conversation_ids(db, flat_conversation_ids)
 
 async def with_distributed_lock(
@@ -247,10 +247,16 @@ async def get_ratio_abs(rag_prompt: str,
         segment2chunk = await run_segment_ids_to_conversation_chunk_ids(list(segment_ratios_abs.keys()))
         chunk_ratios_abs: Dict[str, float] = {}
         for segment,ratio in segment_ratios_abs.items():
-            if segment2chunk[segment] not in chunk_ratios_abs.keys():
-                chunk_ratios_abs[segment2chunk[segment]] = ratio
-            else:
-                chunk_ratios_abs[segment2chunk[segment]] += ratio
+            if segment in segment2chunk.keys():
+                if segment2chunk[segment] not in chunk_ratios_abs.keys():
+                    chunk_ratios_abs[segment2chunk[segment]] = ratio
+                else:
+                    chunk_ratios_abs[segment2chunk[segment]] += ratio
+
+        #normalize chunk_ratios_abs
+        total_ratio = sum(chunk_ratios_abs.values())
+        chunk_ratios_abs = {k:v/total_ratio for k,v in chunk_ratios_abs.items()}
+
         if return_type == "chunk":
             return chunk_ratios_abs
         conversation_ratios_abs: Dict[str, float] = {}
