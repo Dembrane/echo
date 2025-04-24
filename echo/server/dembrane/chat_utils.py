@@ -19,7 +19,6 @@ from dembrane.api.stateless import GetLightragQueryRequest, get_lightrag_prompt
 from dembrane.api.conversation import get_conversation_transcript
 from dembrane.api.dependency_auth import DirectusSession
 from dembrane.audio_lightrag.utils.lightrag_utils import (
-    get_conversation_name_from_id,
     run_segment_id_to_conversation_id,
     get_conversation_details_for_rag_query,
 )
@@ -190,11 +189,17 @@ async def get_conversation_citations(rag_prompt: str, accumulated_response: str,
         response_format=CitationsSchema)
     try: 
         citations_by_segment_dict = json.loads(text_structuring_model_generation.choices[0].message.content) #type: ignore
+        logger.debug(f"Citations by segment dict: {citations_by_segment_dict}")
         citations_list = citations_by_segment_dict["citations"]
+        logger.debug(f"Citations list: {citations_list}")
         citations_by_conversation_dict: Dict[str, List[Dict[str, Any]]] = {"citations": []}
         if len(citations_list) > 0:
             for _, citation in enumerate(citations_list):
-                conversation_id = await run_segment_id_to_conversation_id(citation['segment_id'])
+                try: 
+                    conversation_id = await run_segment_id_to_conversation_id(citation['segment_id'])
+                except Exception as e:
+                    logger.warning(f"WARNING: Error in citation extraction for segment {citation['segment_id']}. Skipping citations: {str(e)}")
+                    continue
                 current_citation_dict = {"conversation_id": conversation_id, "reference_text": citation['verbatim_reference_text_chunk']}
                 citations_by_conversation_dict["citations"].append(current_citation_dict)
         else:
