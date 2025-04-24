@@ -242,6 +242,8 @@ def fetch_segment_ratios(response_text: str) -> dict[int, float]:
 async def get_ratio_abs(rag_prompt: str, 
                         return_type: Literal["segment", "chunk", "conversation"]) -> Dict[str, float]:
         segment_ratios_abs = fetch_segment_ratios(str(rag_prompt))
+        if segment_ratios_abs == {}:
+            return {}
         if return_type == "segment":
             return {str(k):v for k,v in segment_ratios_abs.items()}
         segment2chunk = await run_segment_ids_to_conversation_chunk_ids(list(segment_ratios_abs.keys()))
@@ -275,11 +277,13 @@ def get_project_id(proj_chat_id: str) -> str:
 
 async def get_conversation_details_for_rag_query(rag_prompt: str) -> dict[str, dict[str, Any]]:
     ratio_abs = await get_ratio_abs(rag_prompt, "conversation")
+    logger.debug(f'*** ratio_abs: {ratio_abs}')
     conversation_details_dict = {}
     for conversation_id,ratio in ratio_abs.items():
         query = {'query': {'filter': {'id': {'_eq': conversation_id}},'fields': ['participant_name']}}
         conversation_title = directus.get_items("conversation", query)[0]['participant_name']
         conversation_details_dict[conversation_id] = {'ratio': ratio, 'conversation_title': conversation_title}
+    logger.debug(f'*** conversation_details_dict: {conversation_details_dict}')
     return conversation_details_dict
 
 TABLES = {

@@ -157,6 +157,7 @@ async def get_lightrag_prompt_by_params(top_k: int,
 async def get_conversation_references(rag_prompt: str) -> List[Dict[str, Any]]:
     try:
         conversation_references = await get_conversation_details_for_rag_query(rag_prompt)
+        print('***', conversation_references)
         conversation_references = {'references': conversation_references}
     except Exception as e:
         logger.warning(f"No references found. Error: {str(e)}")
