@@ -446,6 +446,7 @@ async def post_chat(
                 get_transcripts=True,
                 top_k=top_k
             )
+            logger.info(f"***rag_prompt: {rag_prompt}")
             formatted_messages.append({"role": "system", "content": rag_prompt})
             formatted_messages.append({"role": "user", "content": filtered_messages[-1]["content"]})
             prompt_len = token_counter(model=LIGHTRAG_LITELLM_INFERENCE_MODEL, 

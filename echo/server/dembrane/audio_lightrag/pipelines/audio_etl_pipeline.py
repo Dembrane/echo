@@ -79,19 +79,21 @@ class AudioETLPipeline:
                             "conversation_segment_id": segment_id,
                             "conversation_chunk_id": chunk_id
                         }
-                        directus.create_item("conversation_segment_conversation_chunk_1", mapping_data)
+                        directus.create_item("conversation_segment_conversation_chunk", mapping_data)
 
                     chunk_id_2_segment.extend(chunk_id_2_segment_temp)
                 except Exception as e:
-                    if not unprocessed_chunk_file_uri_li:
-                        logging.warning("No more files to process after error. Exiting loop.")
-                        # Break out of the while loop if we encounter a critical error
-                        break
-                    error_uri = unprocessed_chunk_file_uri_li[0]
-                    logger.error(f"Error processing files for project_id={project_id}, conversation_id={conversation_id}, error_uri={error_uri}: {str(e)}")
-                    logger.exception("Stack trace:")
-                    unprocessed_chunk_file_uri_li = unprocessed_chunk_file_uri_li[1:]
-                    continue
+                    logger.error(f"Error processing files for project_id={project_id}, conversation_id={conversation_id}: {str(e)}")
+                    raise e
+                    # if not unprocessed_chunk_file_uri_li:
+                    #     logging.warning("No more files to process after error. Exiting loop.")
+                    #     # Break out of the while loop if we encounter a critical error
+                    #     break
+                    # error_uri = unprocessed_chunk_file_uri_li[0]
+                    # logger.error(f"Error processing files for project_id={project_id}, conversation_id={conversation_id}, error_uri={error_uri}: {str(e)}")
+                    # logger.exception("Stack trace:")
+                    # unprocessed_chunk_file_uri_li = unprocessed_chunk_file_uri_li[1:]
+                    # continue
 
             chunk_id_2_segment_dict: dict[str, list[int]] = {}
             # Please make a dictionary of chunk_id to list of segment_id

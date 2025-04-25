@@ -320,12 +320,12 @@ SQL_TEMPLATES = {
     """,
     "GET_SEGMENT_IDS_FROM_CONVERSATION_CHUNK_IDS":
     """
-    SELECT conversation_segment_id FROM conversation_segment_conversation_chunk_1
+    SELECT conversation_segment_id FROM conversation_segment_conversation_chunk
     WHERE conversation_chunk_id = ANY(ARRAY[{conversation_ids}])
     """,
     "GET_CONVERSATION_CHUNK_IDS_FROM_SEGMENT_IDS":
     """
-    SELECT conversation_chunk_id, conversation_segment_id FROM conversation_segment_conversation_chunk_1
+    SELECT conversation_chunk_id, conversation_segment_id FROM conversation_segment_conversation_chunk
     WHERE conversation_segment_id = ANY(ARRAY[{segment_ids}])
     """
 }
