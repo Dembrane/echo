@@ -41,6 +41,10 @@ def is_valid_uuid(uuid_str: str) -> bool:
 
 db_manager = PostgresDBManager()
 
+def get_project_id_from_conversation_id(conversation_id: str) -> str:
+    query = {'query': {'filter': {'id': {'_eq': conversation_id}},'fields': ['project_id']}}
+    return directus.get_items("conversation", query)[0]['project_id']
+
 def get_conversation_name_from_id(conversation_id: str) -> str:
     query = {'query': {'filter': {'id': {'_eq': conversation_id}},'fields': ['participant_name']}}
     return directus.get_items("conversation", query)[0]['participant_name']
@@ -50,7 +54,6 @@ async def run_segment_id_to_conversation_id(segment_id: int) -> str:
     conversation_chunk_ids = list(conversation_chunk_dict.values())
     query = {'query': {'filter': {'id': {'_in': conversation_chunk_ids}},'fields': ['conversation_id']}}
     return directus.get_items("conversation_chunk", query)[0]['conversation_id']
-
 
 async def run_segment_ids_to_conversation_chunk_ids(segment_ids: list[int]) -> dict[int, str]:
     db = await db_manager.get_initialized_db()
@@ -275,21 +278,21 @@ def get_project_id(proj_chat_id: str) -> str:
     query = {'query': {'filter': {'id': {'_eq': proj_chat_id}},'fields': ['project_id']}}
     return directus.get_items("project_chat", query)[0]['project_id']
 
-async def get_conversation_details_for_rag_query(rag_prompt: str) -> list[dict[str, Any]]:
+async def get_conversation_details_for_rag_query(rag_prompt: str, project_ids: list[str]) -> list[dict[str, Any]]:
     ratio_abs = await get_ratio_abs(rag_prompt, "conversation")
-    # Take the first conversation since we want to flatten it
     conversation_details = []
     if ratio_abs:
-        # conversation_id = next(iter(ratio_abs))
         for conversation_id, ratio in ratio_abs.items():
-            # ratio = ratio_abs[conversation_id]
-            query = {'query': {'filter': {'id': {'_eq': conversation_id}},'fields': ['participant_name']}}
-            conversation_title = directus.get_items("conversation", query)[0]['participant_name']
-            conversation_details.append({
-                'conversation': conversation_id,
-                'conversation_title': conversation_title,
-                'ratio': ratio
-            })
+            query = {'query': {'filter': {'id': {'_eq': conversation_id}},'fields': ['participant_name', 'project_id']}}
+            response = directus.get_items("conversation", query)[0]
+            conversation_title = response['participant_name']
+            response_project_id = response['project_id']
+            if response_project_id in project_ids:
+                conversation_details.append({
+                    'conversation': conversation_id,
+                    'conversation_title': conversation_title,
+                    'ratio': ratio
+                })
     return conversation_details
 
 TABLES = {
@@ -335,12 +338,12 @@ SQL_TEMPLATES = {
     """,
     "GET_SEGMENT_IDS_FROM_CONVERSATION_CHUNK_IDS":
     """
-    SELECT conversation_segment_id FROM conversation_segment_conversation_chunk_1
+    SELECT conversation_segment_id FROM conversation_segment_conversation_chunk
     WHERE conversation_chunk_id = ANY(ARRAY[{conversation_ids}])
     """,
     "GET_CONVERSATION_CHUNK_IDS_FROM_SEGMENT_IDS":
     """
-    SELECT conversation_chunk_id, conversation_segment_id FROM conversation_segment_conversation_chunk_1
+    SELECT conversation_chunk_id, conversation_segment_id FROM conversation_segment_conversation_chunk
     WHERE conversation_segment_id = ANY(ARRAY[{segment_ids}])
     """
 }

@@ -20,6 +20,7 @@ from dembrane.api.conversation import get_conversation_transcript
 from dembrane.api.dependency_auth import DirectusSession
 from dembrane.audio_lightrag.utils.lightrag_utils import (
     run_segment_id_to_conversation_id,
+    get_project_id_from_conversation_id,
     get_conversation_details_for_rag_query,
 )
 
@@ -154,11 +155,10 @@ async def get_lightrag_prompt_by_params(top_k: int,
     return rag_prompt
 
 
-async def get_conversation_references(rag_prompt: str) -> List[Dict[str, Any]]:
+async def get_conversation_references(rag_prompt: str, project_ids: List[str]) -> List[Dict[str, Any]]:
     try:
-        conversation_references = await get_conversation_details_for_rag_query(rag_prompt)
-        print('***', conversation_references)
-        conversation_references = {'references': conversation_references}
+        references = await get_conversation_details_for_rag_query(rag_prompt, project_ids)
+        conversation_references = {'references': references}
     except Exception as e:
         logger.warning(f"No references found. Error: {str(e)}")
         conversation_references = {'references':[]}
@@ -171,7 +171,7 @@ class CitationSingleSchema(BaseModel):
 class CitationsSchema(BaseModel):
     citations: List[CitationSingleSchema]
 
-async def get_conversation_citations(rag_prompt: str, accumulated_response: str, language: str = "en") -> List[Dict[str, Any]]:
+async def get_conversation_citations(rag_prompt: str, accumulated_response: str, project_ids: List[str],language: str = "en", ) -> List[Dict[str, Any]]:
     text_structuring_model_message = render_prompt("text_structuring_model_message", language, 
         {
         'accumulated_response': accumulated_response, 
@@ -198,11 +198,13 @@ async def get_conversation_citations(rag_prompt: str, accumulated_response: str,
             for _, citation in enumerate(citations_list):
                 try: 
                     conversation_id = await run_segment_id_to_conversation_id(citation['segment_id'])
+                    citation_project_id = get_project_id_from_conversation_id(conversation_id)
                 except Exception as e:
                     logger.warning(f"WARNING: Error in citation extraction for segment {citation['segment_id']}. Skipping citations: {str(e)}")
                     continue
-                current_citation_dict = {"conversation": conversation_id, "reference_text": citation['verbatim_reference_text_chunk']}
-                citations_by_conversation_dict["citations"].append(current_citation_dict)
+                if citation_project_id in project_ids:
+                    current_citation_dict = {"conversation": conversation_id, "reference_text": citation['verbatim_reference_text_chunk']}
+                    citations_by_conversation_dict["citations"].append(current_citation_dict)
         else:
             logger.warning("WARNING: No citations found")
     except Exception as e:

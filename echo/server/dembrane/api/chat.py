@@ -448,7 +448,7 @@ async def post_chat(
         db.add(dembrane_dummy_message)
         db.commit()
 
-        conversation_references = await get_conversation_references(rag_prompt)
+        conversation_references = await get_conversation_references(rag_prompt, [project_id])
         async def stream_response_async() -> AsyncGenerator[str, None]:
             conversation_references_yeild = f"h:{json.dumps(conversation_references)}\n"
             yield conversation_references_yeild
@@ -483,7 +483,7 @@ async def post_chat(
                     yield "Error: An error occurred while processing the chat response."
                 return # Stop generation on error
             
-            citations_list = await get_conversation_citations(rag_prompt, accumulated_response)
+            citations_list = await get_conversation_citations(rag_prompt, accumulated_response, [project_id])
             citations_yeild = f"h:{json.dumps(citations_list)}\n"
             yield citations_yeild
         headers = {"Content-Type": "text/event-stream"}
