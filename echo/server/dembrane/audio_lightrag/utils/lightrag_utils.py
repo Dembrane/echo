@@ -275,16 +275,22 @@ def get_project_id(proj_chat_id: str) -> str:
     query = {'query': {'filter': {'id': {'_eq': proj_chat_id}},'fields': ['project_id']}}
     return directus.get_items("project_chat", query)[0]['project_id']
 
-async def get_conversation_details_for_rag_query(rag_prompt: str) -> dict[str, dict[str, Any]]:
+async def get_conversation_details_for_rag_query(rag_prompt: str) -> list[dict[str, Any]]:
     ratio_abs = await get_ratio_abs(rag_prompt, "conversation")
-    logger.debug(f'*** ratio_abs: {ratio_abs}')
-    conversation_details_dict = {}
-    for conversation_id,ratio in ratio_abs.items():
-        query = {'query': {'filter': {'id': {'_eq': conversation_id}},'fields': ['participant_name']}}
-        conversation_title = directus.get_items("conversation", query)[0]['participant_name']
-        conversation_details_dict[conversation_id] = {'ratio': ratio, 'conversation_title': conversation_title}
-    logger.debug(f'*** conversation_details_dict: {conversation_details_dict}')
-    return conversation_details_dict
+    # Take the first conversation since we want to flatten it
+    conversation_details = []
+    if ratio_abs:
+        # conversation_id = next(iter(ratio_abs))
+        for conversation_id, ratio in ratio_abs.items():
+            # ratio = ratio_abs[conversation_id]
+            query = {'query': {'filter': {'id': {'_eq': conversation_id}},'fields': ['participant_name']}}
+            conversation_title = directus.get_items("conversation", query)[0]['participant_name']
+            conversation_details.append({
+                'conversation': conversation_id,
+                'conversation_title': conversation_title,
+                'ratio': ratio
+            })
+    return conversation_details
 
 TABLES = {
     "LIGHTRAG_VDB_TRANSCRIPT": """

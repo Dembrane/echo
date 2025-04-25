@@ -449,9 +449,8 @@ async def post_chat(
         db.commit()
 
         conversation_references = await get_conversation_references(rag_prompt)
-        
         async def stream_response_async() -> AsyncGenerator[str, None]:
-            conversation_references_yeild = f"2:{json.dumps(conversation_references)}\n"
+            conversation_references_yeild = f"h:{json.dumps(conversation_references)}\n"
             yield conversation_references_yeild
             
             accumulated_response = ""
@@ -460,7 +459,8 @@ async def post_chat(
                     model=LIGHTRAG_LITELLM_INFERENCE_MODEL,
                     messages=formatted_messages,
                     stream=True,
-                    api_key=LIGHTRAG_LITELLM_INFERENCE_API_KEY
+                    api_key=LIGHTRAG_LITELLM_INFERENCE_API_KEY,
+                    # mock_response="It's simple to use and easy to get started",
                 )
                 async for chunk in response: #type: ignore
                     if chunk.choices[0].delta.content:
@@ -484,7 +484,7 @@ async def post_chat(
                 return # Stop generation on error
             
             citations_list = await get_conversation_citations(rag_prompt, accumulated_response)
-            citations_yeild = f"2:{json.dumps(citations_list)}\n"
+            citations_yeild = f"h:{json.dumps(citations_list)}\n"
             yield citations_yeild
         headers = {"Content-Type": "text/event-stream"}
         if protocol == "data":

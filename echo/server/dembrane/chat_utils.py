@@ -161,7 +161,7 @@ async def get_conversation_references(rag_prompt: str) -> List[Dict[str, Any]]:
         conversation_references = {'references': conversation_references}
     except Exception as e:
         logger.warning(f"No references found. Error: {str(e)}")
-        conversation_references = {'references':{}}
+        conversation_references = {'references':[]}
     return [conversation_references]
 
 class CitationSingleSchema(BaseModel):
@@ -201,7 +201,7 @@ async def get_conversation_citations(rag_prompt: str, accumulated_response: str,
                 except Exception as e:
                     logger.warning(f"WARNING: Error in citation extraction for segment {citation['segment_id']}. Skipping citations: {str(e)}")
                     continue
-                current_citation_dict = {"conversation_id": conversation_id, "reference_text": citation['verbatim_reference_text_chunk']}
+                current_citation_dict = {"conversation": conversation_id, "reference_text": citation['verbatim_reference_text_chunk']}
                 citations_by_conversation_dict["citations"].append(current_citation_dict)
         else:
             logger.warning("WARNING: No citations found")
