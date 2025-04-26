@@ -79,7 +79,7 @@ class AudioETLPipeline:
                             "conversation_segment_id": segment_id,
                             "conversation_chunk_id": chunk_id
                         }
-                        directus.create_item("conversation_segment_conversation_chunk_1", mapping_data)
+                        directus.create_item("conversation_segment_conversation_chunk", mapping_data)
 
                     chunk_id_2_segment.extend(chunk_id_2_segment_temp)
                 except Exception as e:
