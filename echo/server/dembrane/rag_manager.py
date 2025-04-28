@@ -3,8 +3,11 @@ from logging import getLogger
 
 from lightrag import LightRAG
 
+from dembrane.config import DATABASE_URL
 from dembrane.audio_lightrag.utils.litellm_utils import embedding_func, llm_model_func
+from dembrane.audio_lightrag.utils.lightrag_utils import _load_postgres_env_vars
 
+_load_postgres_env_vars(str(DATABASE_URL))
 logger = getLogger(__name__)
 
 class RAGManager:

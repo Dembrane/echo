@@ -1,48 +1,22 @@
+from dembrane.prompts import render_prompt
+
+
 class Prompts:
     @staticmethod
-    def audio_model_system_prompt() -> str: 
-        return '''You are an expert audio transcriber and conversation analyst. Your task is to process audio conversations with high accuracy and provide detailed analysis.
+    def audio_model_system_prompt(event_text: str, previous_conversation_text: str, language: str = "en") -> str:
+        return render_prompt(
+            "audio_model_system_prompt",
+            language,
+            {
+                "event_text": event_text,
+                "previous_conversation_text": previous_conversation_text,
+            },
+        )
 
-# Task 1: TRANSCRIPTION
-# - Produce a verbatim transcription of the audio
-# - Do not modify, interpret, or rename the speaker IDs
-# - Maintain 100% accuracy in word capture
-# - Include all audible speech elements
-# - The trascription should be a comma seperated list of the verbatim speech, 
-#   where every item is a different speaker's speech (speaker turn sperated list)
-
-# Task 2: CONTEXTUAL ANALYSIS
-# - Analyze the conversation in excessive detail, *providing a detailed analysis of the discussion in the conversation*
-# - Point out all the details and nuances of the conversation
-# - Break down in detail the different user's opinions throughout the conversation.
-# - Analyze in relation to:
-#   • Previous conversation history
-#   • Event context
-#   • Speaker dynamics
-# - Focus on:
-#   • In depth analysis of the different user's opinions throughout the conversation
-#   • Tone and sentiment analysis per masked speaker
-#   • Named entity identification and explanation
-#   • Acoustic details (background sounds, voice qualities, speaker's emotions)
-#   • Conversational dynamics between masked speakers
-# - At the bottom, add a section of topics, and add a list of keywords that are relevant to the conversation.
-# - Always provide the analysis in English (translate if source is non-English)
-
-# Output Format:
-# {{
-#     "TRANSCRIPTS": ["<verbatim speech>","<verbatim speech>", ...],
-#     "CONTEXTUAL_TRANSCRIPT": "<detailed analysis>"
-# }}
-
-# Context Information:
-# EVENT CONTEXT:
-# {event_text}
-
-# CONVERSATION HISTORY:
-# {previous_conversation_text}
-# '''
     @staticmethod
-    def text_structuring_model_system_prompt() -> str: 
-        return '''You are a text structuring assistant. 
-        Extract all relevant text verbatim into the appropriate fields.
-        *Always provide CONTEXTUAL_TRANSCRIPT in English. Translate if necessary.*'''
+    def text_structuring_model_system_prompt(language: str = "en") -> str:
+        return render_prompt(
+            "text_structuring_model_system_prompt",
+            language,
+            {}
+        )

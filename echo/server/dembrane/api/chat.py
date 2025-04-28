@@ -437,16 +437,6 @@ async def post_chat(
                                                messages=formatted_messages)
             if top_k <= 5:
                 raise HTTPException(status_code=400, detail="Auto select is not possible with the current context length")
-        
-        dembrane_dummy_message = ProjectChatMessageModel(
-            id=generate_uuid(),
-            date_created=get_utc_timestamp(),
-            message_from="dembrane",
-            text="searched",
-            project_chat_id=chat_id,
-        )
-        db.add(dembrane_dummy_message)
-        db.commit()
 
         conversation_references = await get_conversation_references(rag_prompt, [project_id])
         async def stream_response_async() -> AsyncGenerator[str, None]:

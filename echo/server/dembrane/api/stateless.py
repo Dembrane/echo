@@ -7,9 +7,9 @@ from pydantic import BaseModel
 from lightrag.lightrag import QueryParam
 from lightrag.kg.shared_storage import initialize_pipeline_status
 
-from dembrane.rag import RAGManager, get_rag
 from dembrane.prompts import render_prompt
-from dembrane.postgresdbmanager import PostgresDBManager
+from dembrane.rag_manager import RAGManager, get_rag
+from dembrane.postgresdb_manager import PostgresDBManager
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.audio_lightrag.utils.lightrag_utils import (
     upsert_transcript,

@@ -51,9 +51,7 @@ class ContextualChunkETLPipeline:
                         logger.exception(f"Error in getting contextual transcript : {e}")
                         continue
                 previous_contextual_transcript = '\n\n'.join(previous_contextual_transcript_li)
-                audio_model_prompt = Prompts.audio_model_system_prompt()
-                audio_model_prompt = audio_model_prompt.format(event_text = event_text, 
-                                        previous_conversation_text = previous_contextual_transcript)
+                audio_model_prompt = Prompts.audio_model_system_prompt(event_text, previous_contextual_transcript)
                 try: 
                     response = directus.get_item('conversation_segment', int(segment_id))
                 except Exception as e:

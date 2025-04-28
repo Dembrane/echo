@@ -1,4 +1,8 @@
-# import os
+# Hierachy:
+# Chunk is the lowest level
+# Conversation is a collection of chunks
+# Project is a collection of conversations
+# Segment is a many to many of chunks
 import os
 import re
 import uuid
@@ -6,12 +10,13 @@ import asyncio
 import hashlib
 import logging
 from typing import Any, Dict, Literal, TypeVar, Callable, Optional
+from urllib.parse import urlparse
 
 import redis
 from lightrag.kg.postgres_impl import PostgreSQLDB
 
 from dembrane.directus import directus
-from dembrane.postgresdbmanager import PostgresDBManager
+from dembrane.postgresdb_manager import PostgresDBManager
 from dembrane.audio_lightrag.utils.litellm_utils import embedding_func
 
 logger = logging.getLogger('audio_lightrag_utils')
@@ -33,13 +38,28 @@ def is_valid_uuid(uuid_str: str) -> bool:
     except ValueError:
         return False
 
-# Hierachy:
-# Chunk is the lowest level
-# Conversation is a collection of chunks
-# Project is a collection of conversations
-# Segment is a many to many of chunks
+
 
 db_manager = PostgresDBManager()
+
+def _load_postgres_env_vars(database_url: str) -> bool:
+    """Parse a database URL into connection parameters."""
+    result = urlparse(database_url)
+    path = result.path
+    if path.startswith("/"):
+        path = path[1:]
+    userinfo = result.netloc.split("@")[0] if "@" in result.netloc else ""
+    username = userinfo.split(":")[0] if ":" in userinfo else userinfo
+    password = userinfo.split(":")[1] if ":" in userinfo else ""
+    host_part = result.netloc.split("@")[-1]
+    host = host_part.split(":")[0] if ":" in host_part else host_part
+    port = host_part.split(":")[1] if ":" in host_part else "5432"
+    os.environ["POSTGRES_HOST"] = host
+    os.environ["POSTGRES_PORT"] = port
+    os.environ["POSTGRES_USER"] = username
+    os.environ["POSTGRES_PASSWORD"] = password
+    os.environ["POSTGRES_DATABASE"] = path
+    return True
 
 def get_project_id_from_conversation_id(conversation_id: str) -> str:
     query = {'query': {'filter': {'id': {'_eq': conversation_id}},'fields': ['project_id']}}
