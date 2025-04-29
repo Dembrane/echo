@@ -14,7 +14,7 @@ from fastapi.responses import StreamingResponse
 
 from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.config import (
-    AUTO_SELECT_ENABLED,
+    ENABLE_CHAT_AUTO_SELECT,
     AUDIO_LIGHTRAG_TOP_K_PROMPT,
     LIGHTRAG_LITELLM_INFERENCE_MODEL,
     LIGHTRAG_LITELLM_INFERENCE_API_KEY,
@@ -115,7 +115,7 @@ async def get_chat_context(
     locked_conversations = set()
     for message in messages:
         for conversation in message.used_conversations:
-            locked_conversations.add(conversation.id) # Add directus call here
+            locked_conversations.add(conversation.id)  # Add directus call here
 
     user_message_token_count = 0
     assistant_message_token_count = 0
@@ -156,7 +156,7 @@ async def get_chat_context(
     )
 
     for conversation in used_conversations:
-        is_conversation_locked = conversation.id in locked_conversations # Verify with directus
+        is_conversation_locked = conversation.id in locked_conversations  # Verify with directus
         chat_context_resource = ChatContextConversationSchema(
             conversation_id=conversation.id,
             conversation_participant_name=conversation.participant_name,
@@ -190,19 +190,21 @@ async def add_chat_context(
     raise_if_chat_not_found_or_not_authorized(chat_id, auth)
 
     if body.conversation_id is None and body.auto_select_bool is None:
-        raise HTTPException(status_code=400, detail="conversation_id or auto_select_bool is required")
+        raise HTTPException(
+            status_code=400, detail="conversation_id or auto_select_bool is required"
+        )
 
     if body.conversation_id is not None and body.auto_select_bool is not None:
-        raise HTTPException(status_code=400, detail="conversation_id and auto_select_bool cannot both be provided")
-
+        raise HTTPException(
+            status_code=400, detail="conversation_id and auto_select_bool cannot both be provided"
+        )
 
     chat = db.get(ProjectChatModel, chat_id)
 
     if chat is None:
         raise HTTPException(status_code=404, detail="Chat not found")
-    
-    if body.conversation_id is not None:
 
+    if body.conversation_id is not None:
         conversation = db.get(ConversationModel, body.conversation_id)
 
         if conversation is None:
@@ -238,6 +240,7 @@ async def add_chat_context(
         chat.auto_select_bool = body.auto_select_bool
         db.commit()
 
+
 class ChatDeleteContextSchema(BaseModel):
     conversation_id: Optional[str] = None
     auto_select_bool: Optional[bool] = None
@@ -252,21 +255,24 @@ async def delete_chat_context(
 ) -> None:
     raise_if_chat_not_found_or_not_authorized(chat_id, auth)
     if body.conversation_id is None and body.auto_select_bool is None:
-        raise HTTPException(status_code=400, detail="conversation_id or auto_select_bool is required")
-    
+        raise HTTPException(
+            status_code=400, detail="conversation_id or auto_select_bool is required"
+        )
+
     if body.conversation_id is not None and body.auto_select_bool is not None:
-        raise HTTPException(status_code=400, detail="conversation_id and auto_select_bool cannot both be provided")
+        raise HTTPException(
+            status_code=400, detail="conversation_id and auto_select_bool cannot both be provided"
+        )
 
     if body.auto_select_bool is True:
         raise HTTPException(status_code=400, detail="auto_select_bool cannot be True")
-    
+
     chat = db.get(ProjectChatModel, chat_id)
 
     if chat is None:
         raise HTTPException(status_code=404, detail="Chat not found")
 
     if body.conversation_id is not None:
-
         conversation = db.get(ConversationModel, body.conversation_id)
 
         if conversation is None:
@@ -285,7 +291,7 @@ async def delete_chat_context(
                     return
 
         raise HTTPException(status_code=404, detail="Conversation not found in the chat")
-    
+
     if body.auto_select_bool is not None:
         chat.auto_select_bool = body.auto_select_bool
         db.commit()
@@ -365,7 +371,7 @@ async def post_chat(
     auth: DependencyDirectusSession,
     protocol: str = Query("data"),
     language: str = Query("en"),
-) -> StreamingResponse: #ignore: type
+) -> StreamingResponse:  # ignore: type
     raise_if_chat_not_found_or_not_authorized(chat_id, auth)
 
     chat = db.get(ProjectChatModel, chat_id)
@@ -390,7 +396,7 @@ async def post_chat(
     db.add(user_message)
     db.commit()
 
-    project_id = get_project_id(chat.id) # TODO: Write directus call here
+    project_id = get_project_id(chat.id)  # TODO: Write directus call here
 
     messages = get_project_chat_history(chat_id, db)
 
@@ -399,23 +405,23 @@ async def post_chat(
 
     chat_context = await get_chat_context(chat_id, db, auth)
 
-    locked_conversation_id_list = chat_context.locked_conversation_id_list #Verify with directus
+    locked_conversation_id_list = chat_context.locked_conversation_id_list  # Verify with directus
 
-    logger.debug(f"AUTO_SELECT_ENABLED: {AUTO_SELECT_ENABLED}")
+    logger.debug(f"ENABLE_CHAT_AUTO_SELECT: {ENABLE_CHAT_AUTO_SELECT}")
     logger.debug(f"chat_context.auto_select_bool: {chat_context.auto_select_bool}")
-    if AUTO_SELECT_ENABLED and chat_context.auto_select_bool: 
+    if ENABLE_CHAT_AUTO_SELECT and chat_context.auto_select_bool:
         filtered_messages: List[Dict[str, Any]] = []
         for message in messages:
             if message["role"] in ["user", "assistant"]:
                 filtered_messages.append(message)
         if (
-                len(filtered_messages) >= 2
-                and filtered_messages[-2]["role"] == "user"
-                and filtered_messages[-1]["role"] == "user"
-                and filtered_messages[-2]["content"] == filtered_messages[-1]["content"]
-            ):
-                    filtered_messages = filtered_messages[:-1]
-        top_k = AUDIO_LIGHTRAG_TOP_K_PROMPT 
+            len(filtered_messages) >= 2
+            and filtered_messages[-2]["role"] == "user"
+            and filtered_messages[-1]["role"] == "user"
+            and filtered_messages[-2]["content"] == filtered_messages[-1]["content"]
+        ):
+            filtered_messages = filtered_messages[:-1]
+        top_k = AUDIO_LIGHTRAG_TOP_K_PROMPT
         prompt_len = float("inf")
         while MAX_CHAT_CONTEXT_LENGTH < prompt_len:
             formatted_messages = []
@@ -429,20 +435,25 @@ async def post_chat(
                 echo_project_ids=[project_id],
                 auto_select_bool=chat_context.auto_select_bool,
                 get_transcripts=True,
-                top_k=top_k
+                top_k=top_k,
             )
             formatted_messages.append({"role": "system", "content": rag_prompt})
             formatted_messages.append({"role": "user", "content": filtered_messages[-1]["content"]})
-            prompt_len = token_counter(model=LIGHTRAG_LITELLM_INFERENCE_MODEL, 
-                                               messages=formatted_messages)
+            prompt_len = token_counter(
+                model=LIGHTRAG_LITELLM_INFERENCE_MODEL, messages=formatted_messages
+            )
             if top_k <= 5:
-                raise HTTPException(status_code=400, detail="Auto select is not possible with the current context length")
+                raise HTTPException(
+                    status_code=400,
+                    detail="Auto select is not possible with the current context length",
+                )
 
         conversation_references = await get_conversation_references(rag_prompt, [project_id])
+
         async def stream_response_async() -> AsyncGenerator[str, None]:
             conversation_references_yeild = f"h:{json.dumps(conversation_references)}\n"
             yield conversation_references_yeild
-            
+
             accumulated_response = ""
             try:
                 response = await litellm.acompletion(
@@ -452,7 +463,7 @@ async def post_chat(
                     api_key=LIGHTRAG_LITELLM_INFERENCE_API_KEY,
                     # mock_response="It's simple to use and easy to get started",
                 )
-                async for chunk in response: #type: ignore
+                async for chunk in response:  # type: ignore
                     if chunk.choices[0].delta.content:
                         content = chunk.choices[0].delta.content
                         accumulated_response += content
@@ -471,11 +482,14 @@ async def post_chat(
                     yield '3:"An error occurred while processing the chat response."\n'
                 else:
                     yield "Error: An error occurred while processing the chat response."
-                return # Stop generation on error
-            
-            citations_list = await get_conversation_citations(rag_prompt, accumulated_response, [project_id])
+                return  # Stop generation on error
+
+            citations_list = await get_conversation_citations(
+                rag_prompt, accumulated_response, [project_id]
+            )
             citations_yeild = f"h:{json.dumps(citations_list)}\n"
             yield citations_yeild
+
         headers = {"Content-Type": "text/event-stream"}
         if protocol == "data":
             headers["x-vercel-ai-data-stream"] = "v1"
@@ -531,5 +545,3 @@ async def post_chat(
         response = StreamingResponse(stream_response(), headers=headers)
 
         return response
-
-

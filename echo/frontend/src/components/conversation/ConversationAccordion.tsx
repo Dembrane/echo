@@ -68,7 +68,7 @@ import { useIntersection } from "@mantine/hooks";
 import { useForm, Controller } from "react-hook-form";
 import { FormLabel } from "@/components/form/FormLabel";
 import { AutoSelectConversations } from "./AutoSelectConversations";
-import { AUTO_SELECT_ENABLED } from "@/config";
+import { ENABLE_CHAT_AUTO_SELECT } from "@/config";
 
 type SortOption = {
   label: string;
@@ -110,7 +110,8 @@ const ConversationAccordionLabelChatSelection = ({
     (c) => c.conversation_id === conversation.id && c.locked,
   );
 
-  const isAutoSelectEnabled = projectChatContextQuery.data?.auto_select_bool ?? false;
+  const isAutoSelectEnabled =
+    projectChatContextQuery.data?.auto_select_bool ?? false;
 
   const handleSelectChat = () => {
     if (!isSelected) {
@@ -139,7 +140,9 @@ const ConversationAccordionLabelChatSelection = ({
         checked={isSelected}
         disabled={isLocked}
         onChange={handleSelectChat}
-        color={AUTO_SELECT_ENABLED && isAutoSelectEnabled ? "green" : undefined}
+        color={
+          ENABLE_CHAT_AUTO_SELECT && isAutoSelectEnabled ? "green" : undefined
+        }
       />
     </Tooltip>
   );
@@ -346,7 +349,11 @@ const ConversationAccordionItem = ({
     <NavigationButton
       to={`/projects/${conversation.project_id}/conversation/${conversation.id}/overview`}
       active={highlight}
-      borderColor={AUTO_SELECT_ENABLED && isAutoSelectEnabled ? "border-green-500" : undefined}
+      borderColor={
+        ENABLE_CHAT_AUTO_SELECT && isAutoSelectEnabled
+          ? "border-green-500"
+          : undefined
+      }
       className={cn("w-full", {
         "!bg-primary-50": isLocked,
       })}
@@ -536,14 +543,12 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
   const [parent2] = useAutoAnimate();
 
   const filterApplied = useMemo(
-    () =>
-      debouncedConversationSearchValue !== "" ||
-      sortBy !== "-created_at",
-      // Temporarily disabled source filters
-      //   sortBy !== "-created_at" ||
-      //   activeFilters.length !== FILTER_OPTIONS.length,
-      // [debouncedConversationSearchValue, sortBy, activeFilters],
-      [debouncedConversationSearchValue, sortBy],
+    () => debouncedConversationSearchValue !== "" || sortBy !== "-created_at",
+    // Temporarily disabled source filters
+    //   sortBy !== "-created_at" ||
+    //   activeFilters.length !== FILTER_OPTIONS.length,
+    // [debouncedConversationSearchValue, sortBy, activeFilters],
+    [debouncedConversationSearchValue, sortBy],
   );
 
   const resetEverything = useCallback(() => {
@@ -627,13 +632,15 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
 
       <Accordion.Panel>
         <Stack ref={parent2} className="relative">
-          {inChatMode && AUTO_SELECT_ENABLED && conversationsQuery.data?.length !== 0 && (
-            <Stack gap="xs" className="relative">
-              <LoadingOverlay visible={conversationsQuery.isLoading} />
-              <AutoSelectConversations />
-            </Stack>
-          )}
-          
+          {inChatMode &&
+            ENABLE_CHAT_AUTO_SELECT &&
+            conversationsQuery.data?.length !== 0 && (
+              <Stack gap="xs" className="relative">
+                <LoadingOverlay visible={conversationsQuery.isLoading} />
+                <AutoSelectConversations />
+              </Stack>
+            )}
+
           {!(
             conversationsQuery.data &&
             conversationsQuery.data.length === 0 &&
@@ -733,7 +740,7 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
               ))}
             </Group>
           )} */}
-          
+
           {conversationsQuery.data?.length === 0 && (
             <Text size="sm">
               <Trans>
