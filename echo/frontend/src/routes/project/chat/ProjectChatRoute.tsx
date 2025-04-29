@@ -30,7 +30,7 @@ import {
 } from "@tabler/icons-react";
 import { useParams } from "react-router-dom";
 import { useChat } from "ai/react";
-import { API_BASE_URL, AUTO_SELECT_ENABLED } from "@/config";
+import { API_BASE_URL, ENABLE_CHAT_AUTO_SELECT } from "@/config";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
@@ -105,7 +105,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
       // this uses the response stream from the backend and makes a chat message IN THE FRONTEND
       // do this for now because - i dont want to do the stream text processing again in the backend
       // if someone navigates away before onFinish is completed, the message will be lost
-      if (AUTO_SELECT_ENABLED && contextToBeAdded?.auto_select_bool) {
+      if (ENABLE_CHAT_AUTO_SELECT && contextToBeAdded?.auto_select_bool) {
         await addChatMessageMutation.mutateAsync({
           project_chat_id: {
             id: chatId,
@@ -125,12 +125,12 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
         });
       }
 
-      if(AUTO_SELECT_ENABLED && contextToBeAdded?.auto_select_bool){
+      if (ENABLE_CHAT_AUTO_SELECT && contextToBeAdded?.auto_select_bool) {
         await chatHistoryQuery.refetch().then(() => {
           setShowSuccessMessage(false);
         });
       }
-      
+
       // scroll to the last message
       lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
     },
@@ -172,7 +172,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
       // Submit the chat
       handleSubmit();
 
-      if(AUTO_SELECT_ENABLED && contextToBeAdded?.auto_select_bool){
+      if (ENABLE_CHAT_AUTO_SELECT && contextToBeAdded?.auto_select_bool) {
         setShowProgress(true);
         setProgressValue(0);
         // Start progress animation
@@ -186,10 +186,9 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
           });
         }, 500);
       }
-
     } catch (error) {
       console.error("Error in customHandleSubmit:", error);
-      if (AUTO_SELECT_ENABLED && contextToBeAdded?.auto_select_bool) {
+      if (ENABLE_CHAT_AUTO_SELECT && contextToBeAdded?.auto_select_bool) {
         setShowProgress(false);
         setProgressValue(0);
         setShowSuccessMessage(false);
@@ -262,7 +261,9 @@ export const ProjectChatRoute = () => {
     showSuccessMessage,
   } = useDembraneChat({ chatId: chatId ?? "" });
 
-  const noConversationsSelected = contextToBeAdded?.conversations?.length === 0 && contextToBeAdded?.locked_conversations?.length === 0;
+  const noConversationsSelected =
+    contextToBeAdded?.conversations?.length === 0 &&
+    contextToBeAdded?.locked_conversations?.length === 0;
 
   const computedChatForCopy = useMemo(() => {
     const messagesList = messages.map((message) =>
@@ -335,13 +336,11 @@ export const ProjectChatRoute = () => {
               </div>
             )}
 
-          {AUTO_SELECT_ENABLED && showProgress && (
+          {ENABLE_CHAT_AUTO_SELECT && showProgress && (
             <SourcesSearch progressValue={progressValue} />
           )}
 
-          {AUTO_SELECT_ENABLED && showSuccessMessage && (
-            <SourcesSearched />
-          )}
+          {ENABLE_CHAT_AUTO_SELECT && showSuccessMessage && <SourcesSearched />}
 
           {isLoading && (
             <Group>
@@ -394,19 +393,16 @@ export const ProjectChatRoute = () => {
       {/* Footer */}
       <Box className="bottom-0 w-full border-t bg-white py-4 lg:sticky">
         <Stack>
-          {(
-            !AUTO_SELECT_ENABLED
-              ? noConversationsSelected
-              : (noConversationsSelected) &&
-                !contextToBeAdded?.auto_select_bool
-          ) && (
+          {(!ENABLE_CHAT_AUTO_SELECT
+            ? noConversationsSelected
+            : noConversationsSelected &&
+              !contextToBeAdded?.auto_select_bool) && (
             <Alert
               icon={<IconAlertCircle size="1rem" />}
               title={t`No transcripts are selected for this chat`}
               color="orange"
               variant="light"
-            >
-            </Alert>
+            ></Alert>
           )}
 
           {contextToBeAdded && contextToBeAdded.conversations.length > 0 && (
@@ -422,7 +418,7 @@ export const ProjectChatRoute = () => {
                     participant_name: c.conversation_participant_name,
                   }))}
                   color={
-                    AUTO_SELECT_ENABLED && contextToBeAdded.auto_select_bool
+                    ENABLE_CHAT_AUTO_SELECT && contextToBeAdded.auto_select_bool
                       ? "green"
                       : undefined
                   }

@@ -2,7 +2,7 @@ import { t } from "@lingui/core/macro";
 import { useProjectChatContext } from "@/lib/query";
 import { capitalize } from "@/lib/utils";
 import { Box, Progress, Skeleton, Tooltip } from "@mantine/core";
-import { AUTO_SELECT_ENABLED } from "@/config";
+import { ENABLE_CHAT_AUTO_SELECT } from "@/config";
 
 export const ChatContextProgress = ({ chatId }: { chatId: string }) => {
   const chatContextQuery = useProjectChatContext(chatId);
@@ -18,7 +18,11 @@ export const ChatContextProgress = ({ chatId }: { chatId: string }) => {
     );
   }
 
-  if (AUTO_SELECT_ENABLED && chatContextQuery.data?.auto_select_bool && chatContextQuery.data?.conversations.length === 0) {
+  if (
+    ENABLE_CHAT_AUTO_SELECT &&
+    chatContextQuery.data?.auto_select_bool &&
+    chatContextQuery.data?.conversations.length === 0
+  ) {
     return null;
   }
 
@@ -31,10 +35,10 @@ export const ChatContextProgress = ({ chatId }: { chatId: string }) => {
     .sort((a, b) => b.token_usage - a.token_usage);
 
   const getColor = (baseColor: string) => {
-    if(AUTO_SELECT_ENABLED && chatContextQuery.data?.auto_select_bool){
+    if (ENABLE_CHAT_AUTO_SELECT && chatContextQuery.data?.auto_select_bool) {
       return "green.6";
     }
-    
+
     return baseColor;
   };
 
