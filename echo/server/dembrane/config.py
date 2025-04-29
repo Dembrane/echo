@@ -117,13 +117,6 @@ logger.debug(f"NEO4J_USERNAME: {NEO4J_USERNAME}")
 NEO4J_PASSWORD = os.environ.get("NEO4J_PASSWORD", "admin@dembrane")
 logger.debug("NEO4J_PASSWORD: set")
 
-AZURE_OPENAI_API_KEY = os.environ.get("AZURE_OPENAI_API_KEY")
-assert AZURE_OPENAI_API_KEY, "AZURE_OPENAI_API_KEY environment variable is not set"
-logger.debug("AZURE_OPENAI_API_KEY: set")
-AZURE_OPENAI_API_VERSION = os.environ.get("AZURE_OPENAI_API_VERSION")
-assert AZURE_OPENAI_API_VERSION, "AZURE_OPENAI_API_VERSION environment variable is not set"
-logger.debug("AZURE_OPENAI_API_VERSION: set")
-
 STORAGE_S3_BUCKET = os.environ.get("STORAGE_S3_BUCKET")
 assert STORAGE_S3_BUCKET, "STORAGE_S3_BUCKET environment variable is not set"
 logger.debug("STORAGE_S3_BUCKET: set")
@@ -149,17 +142,16 @@ DISABLE_CORS = os.environ.get("DISABLE_CORS", "false").lower() in ["true", "1"]
 logger.debug(f"DISABLE_CORS: {DISABLE_CORS}")
 
 
-
 # *****************LIGHTRAG CONFIGURATIONS*****************
 
-#---------------Secrets---------------
+# ---------------Secrets---------------
 
-# Lightrag LLM model: Makes nodes and answers queries 
-LIGHTRAG_LITELLM_MODEL = os.environ.get("LIGHTRAG_LITELLM_MODEL") # azure/gpt-4o-mini
+# Lightrag LLM model: Makes nodes and answers queries
+LIGHTRAG_LITELLM_MODEL = os.environ.get("LIGHTRAG_LITELLM_MODEL")  # azure/gpt-4o-mini
 assert LIGHTRAG_LITELLM_MODEL, "LIGHTRAG_LITELLM_MODEL environment variable is not set"
 logger.debug("LIGHTRAG_LITELLM_MODEL: set")
 
-LIGHTRAG_LITELLM_API_KEY = os.environ.get("LIGHTRAG_LITELLM_API_KEY")   
+LIGHTRAG_LITELLM_API_KEY = os.environ.get("LIGHTRAG_LITELLM_API_KEY")
 assert LIGHTRAG_LITELLM_API_KEY, "LIGHTRAG_LITELLM_API_KEY environment variable is not set"
 logger.debug("LIGHTRAG_LITELLM_API_KEY: set")
 
@@ -173,113 +165,157 @@ logger.debug("LIGHTRAG_LITELLM_API_BASE: set")
 
 
 # Lightrag Audio model: Transcribes audio and gets contextual transcript
-LIGHTRAG_LITELLM_AUDIOMODEL_MODEL = os.environ.get("LIGHTRAG_LITELLM_AUDIOMODEL_MODEL") # azure/whisper-large-v3
-assert LIGHTRAG_LITELLM_AUDIOMODEL_MODEL, "LIGHTRAG_LITELLM_AUDIOMODEL_MODEL environment variable is not set"
+LIGHTRAG_LITELLM_AUDIOMODEL_MODEL = os.environ.get(
+    "LIGHTRAG_LITELLM_AUDIOMODEL_MODEL"
+)  # azure/whisper-large-v3
+assert (
+    LIGHTRAG_LITELLM_AUDIOMODEL_MODEL
+), "LIGHTRAG_LITELLM_AUDIOMODEL_MODEL environment variable is not set"
 logger.debug("LIGHTRAG_LITELLM_AUDIOMODEL_MODEL: set")
 
 LIGHTRAG_LITELLM_AUDIOMODEL_API_BASE = os.environ.get("LIGHTRAG_LITELLM_AUDIOMODEL_API_BASE")
-assert LIGHTRAG_LITELLM_AUDIOMODEL_API_BASE, "LIGHTRAG_LITELLM_AUDIOMODEL_API_BASE environment variable is not set"
+assert (
+    LIGHTRAG_LITELLM_AUDIOMODEL_API_BASE
+), "LIGHTRAG_LITELLM_AUDIOMODEL_API_BASE environment variable is not set"
 logger.debug("LIGHTRAG_LITELLM_AUDIOMODEL_API_BASE: set")
 
 LIGHTRAG_LITELLM_AUDIOMODEL_API_KEY = os.environ.get("LIGHTRAG_LITELLM_AUDIOMODEL_API_KEY")
-assert LIGHTRAG_LITELLM_AUDIOMODEL_API_KEY, "LIGHTRAG_LITELLM_AUDIOMODEL_API_KEY environment variable is not set"
+assert (
+    LIGHTRAG_LITELLM_AUDIOMODEL_API_KEY
+), "LIGHTRAG_LITELLM_AUDIOMODEL_API_KEY environment variable is not set"
 logger.debug("LIGHTRAG_LITELLM_AUDIOMODEL_API_KEY: set")
 
 LIGHTRAG_LITELLM_AUDIOMODEL_API_VERSION = os.environ.get("LIGHTRAG_LITELLM_AUDIOMODEL_API_VERSION")
-assert LIGHTRAG_LITELLM_AUDIOMODEL_API_VERSION, "LIGHTRAG_LITELLM_AUDIOMODEL_API_VERSION environment variable is not set"
+assert (
+    LIGHTRAG_LITELLM_AUDIOMODEL_API_VERSION
+), "LIGHTRAG_LITELLM_AUDIOMODEL_API_VERSION environment variable is not set"
 logger.debug("LIGHTRAG_LITELLM_AUDIOMODEL_API_VERSION: set")
 
 
 # Lightrag Text Structure model: Structures output from audio model
-LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL = os.environ.get("LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL") # azure/gpt-4o-mini
-assert LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL, "LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL environment variable is not set"
+LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL = os.environ.get(
+    "LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL"
+)  # azure/gpt-4o-mini
+assert (
+    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL
+), "LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL environment variable is not set"
 logger.debug("LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL: set")
 
-LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE = os.environ.get("LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE")
-assert LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE, "LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE environment variable is not set"
+LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE = os.environ.get(
+    "LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE"
+)
+assert (
+    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE
+), "LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE environment variable is not set"
 logger.debug("LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE: set")
 
-LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY = os.environ.get("LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY")
-assert LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY, "LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY environment variable is not set"
+LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY = os.environ.get(
+    "LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY"
+)
+assert (
+    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY
+), "LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY environment variable is not set"
 logger.debug("LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY: set")
 
-LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION = os.environ.get("LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION")
-assert LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION, "LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION environment variable is not set"
+LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION = os.environ.get(
+    "LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION"
+)
+assert (
+    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION
+), "LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION environment variable is not set"
 logger.debug("LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION: set")
 
 # Lightrag Embedding model: Embeds text
-LIGHTRAG_LITELLM_EMBEDDING_MODEL = os.environ.get("LIGHTRAG_LITELLM_EMBEDDING_MODEL") # azure/text-embedding-ada-002
-assert LIGHTRAG_LITELLM_EMBEDDING_MODEL, "LIGHTRAG_LITELLM_EMBEDDING_MODEL environment variable is not set"
+LIGHTRAG_LITELLM_EMBEDDING_MODEL = os.environ.get(
+    "LIGHTRAG_LITELLM_EMBEDDING_MODEL"
+)  # azure/text-embedding-ada-002
+assert (
+    LIGHTRAG_LITELLM_EMBEDDING_MODEL
+), "LIGHTRAG_LITELLM_EMBEDDING_MODEL environment variable is not set"
 logger.debug("LIGHTRAG_LITELLM_EMBEDDING_MODEL: set")
 
 LIGHTRAG_LITELLM_EMBEDDING_API_BASE = os.environ.get("LIGHTRAG_LITELLM_EMBEDDING_API_BASE")
-assert LIGHTRAG_LITELLM_EMBEDDING_API_BASE, "LIGHTRAG_LITELLM_EMBEDDING_API_BASE environment variable is not set"
+assert (
+    LIGHTRAG_LITELLM_EMBEDDING_API_BASE
+), "LIGHTRAG_LITELLM_EMBEDDING_API_BASE environment variable is not set"
 logger.debug("LIGHTRAG_LITELLM_EMBEDDING_API_BASE: set")
 
 LIGHTRAG_LITELLM_EMBEDDING_API_KEY = os.environ.get("LIGHTRAG_LITELLM_EMBEDDING_API_KEY")
-assert LIGHTRAG_LITELLM_EMBEDDING_API_KEY, "LIGHTRAG_LITELLM_EMBEDDING_API_KEY environment variable is not set"
+assert (
+    LIGHTRAG_LITELLM_EMBEDDING_API_KEY
+), "LIGHTRAG_LITELLM_EMBEDDING_API_KEY environment variable is not set"
 logger.debug("LIGHTRAG_LITELLM_EMBEDDING_API_KEY: set")
 
 LIGHTRAG_LITELLM_EMBEDDING_API_VERSION = os.environ.get("LIGHTRAG_LITELLM_EMBEDDING_API_VERSION")
-assert LIGHTRAG_LITELLM_EMBEDDING_API_VERSION, "LIGHTRAG_LITELLM_EMBEDDING_API_VERSION environment variable is not set"
+assert (
+    LIGHTRAG_LITELLM_EMBEDDING_API_VERSION
+), "LIGHTRAG_LITELLM_EMBEDDING_API_VERSION environment variable is not set"
 logger.debug("LIGHTRAG_LITELLM_EMBEDDING_API_VERSION: set")
 
-LIGHTRAG_LITELLM_INFERENCE_MODEL = os.environ.get("LIGHTRAG_LITELLM_INFERENCE_MODEL", "anthropic/claude-3-5-sonnet-20240620")
-assert LIGHTRAG_LITELLM_INFERENCE_MODEL, "LIGHTRAG_LITELLM_INFERENCE_MODEL environment variable is not set"
+LIGHTRAG_LITELLM_INFERENCE_MODEL = os.environ.get(
+    "LIGHTRAG_LITELLM_INFERENCE_MODEL", "anthropic/claude-3-5-sonnet-20240620"
+)
+assert (
+    LIGHTRAG_LITELLM_INFERENCE_MODEL
+), "LIGHTRAG_LITELLM_INFERENCE_MODEL environment variable is not set"
 logger.debug("LIGHTRAG_LITELLM_INFERENCE_MODEL: set")
 
 LIGHTRAG_LITELLM_INFERENCE_API_KEY = os.environ.get("LIGHTRAG_LITELLM_INFERENCE_API_KEY")
-assert LIGHTRAG_LITELLM_INFERENCE_API_KEY, "LIGHTRAG_LITELLM_INFERENCE_API_KEY environment variable is not set"
+assert (
+    LIGHTRAG_LITELLM_INFERENCE_API_KEY
+), "LIGHTRAG_LITELLM_INFERENCE_API_KEY environment variable is not set"
 logger.debug("LIGHTRAG_LITELLM_INFERENCE_API_KEY: set")
-
-POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "postgres")
-assert POSTGRES_HOST, "POSTGRES_HOST environment variable is not set"
-logger.debug("POSTGRES_HOST: set")
-
-POSTGRES_PORT = os.environ.get("POSTGRES_PORT", 5432)
-assert POSTGRES_PORT, "POSTGRES_PORT environment variable is not set"
-logger.debug("POSTGRES_PORT: set")
-
-POSTGRES_USER = os.environ.get("POSTGRES_USER", "dembrane")
-assert POSTGRES_USER, "POSTGRES_USER environment variable is not set"
-logger.debug("POSTGRES_USER: set")
-
-POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "dembrane")
-assert POSTGRES_PASSWORD, "POSTGRES_PASSWORD environment variable is not set"
-logger.debug("POSTGRES_PASSWORD: set")
-
-POSTGRES_DATABASE = os.environ.get("POSTGRES_DATABASE", "dembrane")
-assert POSTGRES_DATABASE, "POSTGRES_DATABASE environment variable is not set"
-logger.debug("POSTGRES_DATABASE: set")
-#---------------/Secrets---------------
+# ---------------/Secrets---------------
 
 
-#---------------Configurations---------------
-AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM = int(os.environ.get("AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM", 10))
-assert AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM, "AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM environment variable is not set"
+# ---------------Configurations---------------
+AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM = int(
+    os.environ.get("AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM", 10)
+)
+assert (
+    AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM
+), "AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM environment variable is not set"
 logger.debug("AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM: set")
 
-AUDIO_LIGHTRAG_TIME_THRESHOLD_SECONDS = int(os.environ.get("AUDIO_LIGHTRAG_TIME_THRESHOLD_SECONDS", 60))
-assert AUDIO_LIGHTRAG_TIME_THRESHOLD_SECONDS, "AUDIO_LIGHTRAG_TIME_THRESHOLD_SECONDS environment variable is not set"
+AUDIO_LIGHTRAG_TIME_THRESHOLD_SECONDS = int(
+    os.environ.get("AUDIO_LIGHTRAG_TIME_THRESHOLD_SECONDS", 60)
+)
+assert (
+    AUDIO_LIGHTRAG_TIME_THRESHOLD_SECONDS
+), "AUDIO_LIGHTRAG_TIME_THRESHOLD_SECONDS environment variable is not set"
 logger.debug("AUDIO_LIGHTRAG_TIME_THRESHOLD_SECONDS: set")
 
-ENABLE_AUDIO_LIGHTRAG_INPUT = os.environ.get("ENABLE_AUDIO_LIGHTRAG_INPUT", "false").lower() in ["true", "1"]
-assert ENABLE_AUDIO_LIGHTRAG_INPUT is not None, "ENABLE_AUDIO_LIGHTRAG_INPUT environment variable is not set"
+ENABLE_AUDIO_LIGHTRAG_INPUT = os.environ.get("ENABLE_AUDIO_LIGHTRAG_INPUT", "false").lower() in [
+    "true",
+    "1",
+]
+assert (
+    ENABLE_AUDIO_LIGHTRAG_INPUT is not None
+), "ENABLE_AUDIO_LIGHTRAG_INPUT environment variable is not set"
 logger.debug(f"ENABLE_AUDIO_LIGHTRAG_INPUT: {ENABLE_AUDIO_LIGHTRAG_INPUT}")
 
-AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB = int(os.environ.get("AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB", 15))
-assert AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB, "AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB environment variable is not set"
+AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB = int(
+    os.environ.get("AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB", 15)
+)
+assert (
+    AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB
+), "AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB environment variable is not set"
 logger.debug("AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB: set")
 
 AUDIO_LIGHTRAG_TOP_K_PROMPT = int(os.environ.get("AUDIO_LIGHTRAG_TOP_K_PROMPT", 100))
 assert AUDIO_LIGHTRAG_TOP_K_PROMPT, "AUDIO_LIGHTRAG_TOP_K_PROMPT environment variable is not set"
 logger.debug("AUDIO_LIGHTRAG_TOP_K_PROMPT: set")
 
-AUTO_SELECT_ENABLED = os.environ.get("AUTO_SELECT_ENABLED", "false").lower() in ["true", "1"]
-assert AUTO_SELECT_ENABLED is not None, "AUTO_SELECT_ENABLED environment variable is not set"
-logger.debug(f"AUTO_SELECT_ENABLED: {AUTO_SELECT_ENABLED}")
+ENABLE_CHAT_AUTO_SELECT = os.environ.get("ENABLE_CHAT_AUTO_SELECT", "false").lower() in [
+    "true",
+    "1",
+]
+assert (
+    ENABLE_CHAT_AUTO_SELECT is not None
+), "ENABLE_CHAT_AUTO_SELECT environment variable is not set"
+logger.debug(f"ENABLE_CHAT_AUTO_SELECT: {ENABLE_CHAT_AUTO_SELECT}")
 
-#---------------/Configurations---------------
+# ---------------/Configurations---------------
 
 # *****************/LIGHTRAG CONFIGURATIONS*****************
 
