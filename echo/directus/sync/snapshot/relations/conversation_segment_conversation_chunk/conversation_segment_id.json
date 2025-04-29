@@ -9,7 +9,7 @@
     "one_allowed_collections": null,
     "one_collection": "conversation_segment",
     "one_collection_field": null,
-    "one_deselect_action": "nullify",
+    "one_deselect_action": "delete",
     "one_field": "chunks",
     "sort_field": null
   },
@@ -20,6 +20,6 @@
     "foreign_key_column": "id",
     "constraint_name": "conversation_segment_conversation_chunk_co__4f4b4f4e_foreign",
     "on_update": "NO ACTION",
-    "on_delete": "SET NULL"
+    "on_delete": "CASCADE"
   }
 }

@@ -1,0 +1,27 @@
+{
+  "collection": "conversation_chunk",
+  "field": "conversation_segments",
+  "type": "alias",
+  "meta": {
+    "collection": "conversation_chunk",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "conversation_segments",
+    "group": null,
+    "hidden": false,
+    "interface": "list-m2m",
+    "note": null,
+    "options": null,
+    "readonly": false,
+    "required": false,
+    "sort": 14,
+    "special": [
+      "m2m"
+    ],
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  }
+}

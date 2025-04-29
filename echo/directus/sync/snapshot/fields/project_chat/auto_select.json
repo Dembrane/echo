@@ -1,0 +1,45 @@
+{
+  "collection": "project_chat",
+  "field": "auto_select",
+  "type": "boolean",
+  "meta": {
+    "collection": "project_chat",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "auto_select",
+    "group": null,
+    "hidden": false,
+    "interface": "boolean",
+    "note": null,
+    "options": null,
+    "readonly": false,
+    "required": false,
+    "sort": 10,
+    "special": [
+      "cast-boolean"
+    ],
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  },
+  "schema": {
+    "name": "auto_select",
+    "table": "project_chat",
+    "data_type": "boolean",
+    "default_value": true,
+    "max_length": null,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": false,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}
