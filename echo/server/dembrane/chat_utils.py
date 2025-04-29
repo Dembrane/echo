@@ -1,15 +1,28 @@
+import json
 import logging
 from typing import Any, Dict, List, Optional
 
+from litellm import completion
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from dembrane.config import (
+    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL,
+    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY,
+    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE,
+    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION,
+)
 from dembrane.prompts import render_prompt
 from dembrane.database import ConversationModel, ProjectChatMessageModel
 from dembrane.directus import directus
 from dembrane.api.stateless import GetLightragQueryRequest, get_lightrag_prompt
 from dembrane.api.conversation import get_conversation_transcript
 from dembrane.api.dependency_auth import DirectusSession
+from dembrane.audio_lightrag.utils.lightrag_utils import (
+    run_segment_id_to_conversation_id,
+    get_project_id_from_conversation_id,
+    get_conversation_details_for_rag_query,
+)
 
 MAX_CHAT_CONTEXT_LENGTH = 100000
 
@@ -140,3 +153,60 @@ async def get_lightrag_prompt_by_params(top_k: int,
     session = DirectusSession(user_id="none", is_admin=True)#fake session
     rag_prompt = await get_lightrag_prompt(payload, session)
     return rag_prompt
+
+
+async def get_conversation_references(rag_prompt: str, project_ids: List[str]) -> List[Dict[str, Any]]:
+    try:
+        references = await get_conversation_details_for_rag_query(rag_prompt, project_ids)
+        conversation_references = {'references': references}
+    except Exception as e:
+        logger.warning(f"No references found. Error: {str(e)}")
+        conversation_references = {'references':[]}
+    return [conversation_references]
+
+class CitationSingleSchema(BaseModel):
+    segment_id: int
+    verbatim_reference_text_chunk: str
+
+class CitationsSchema(BaseModel):
+    citations: List[CitationSingleSchema]
+
+async def get_conversation_citations(rag_prompt: str, accumulated_response: str, project_ids: List[str],language: str = "en", ) -> List[Dict[str, Any]]:
+    text_structuring_model_message = render_prompt("text_structuring_model_message", language, 
+        {
+        'accumulated_response': accumulated_response, 
+        'rag_prompt':rag_prompt
+        }
+        )
+    text_structuring_model_messages = [
+        {"role": "system", "content": text_structuring_model_message},
+    ]
+    text_structuring_model_generation = completion(
+        model=f"{LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL}",
+        messages=text_structuring_model_messages,
+        api_base=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE,
+        api_version=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION,
+        api_key=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY,
+        response_format=CitationsSchema)
+    try: 
+        citations_by_segment_dict = json.loads(text_structuring_model_generation.choices[0].message.content) #type: ignore
+        logger.debug(f"Citations by segment dict: {citations_by_segment_dict}")
+        citations_list = citations_by_segment_dict["citations"]
+        logger.debug(f"Citations list: {citations_list}")
+        citations_by_conversation_dict: Dict[str, List[Dict[str, Any]]] = {"citations": []}
+        if len(citations_list) > 0:
+            for _, citation in enumerate(citations_list):
+                try: 
+                    conversation_id = await run_segment_id_to_conversation_id(citation['segment_id'])
+                    citation_project_id = get_project_id_from_conversation_id(conversation_id)
+                except Exception as e:
+                    logger.warning(f"WARNING: Error in citation extraction for segment {citation['segment_id']}. Skipping citations: {str(e)}")
+                    continue
+                if citation_project_id in project_ids:
+                    current_citation_dict = {"conversation": conversation_id, "reference_text": citation['verbatim_reference_text_chunk']}
+                    citations_by_conversation_dict["citations"].append(current_citation_dict)
+        else:
+            logger.warning("WARNING: No citations found")
+    except Exception as e:
+        logger.warning(f"WARNING: Error in citation extraction. Skipping citations: {str(e)}")
+    return [citations_by_conversation_dict]

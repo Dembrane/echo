@@ -77,5 +77,11 @@ if __name__ == "__main__":
     # Steps for manual run
     # cd server 
     # python -m dembrane.audio_lightrag.main.run_etl
-    conv_id_list: list[str] = ['8f224582-5d1b-4d96-a450-a0bdb891dd28'] # Upload UUIDs
+    import os
+
+    from dotenv import load_dotenv
+    load_dotenv()
+
+    TEST_CONV_UUID = str(os.getenv("TEST_CONV_UUID"))
+    conv_id_list: list[str] = [TEST_CONV_UUID]
     run_etl_pipeline(conv_id_list)

@@ -14,29 +14,26 @@ from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware import Middleware
 from fastapi.openapi.utils import get_openapi
-from lightrag.kg.postgres_impl import PostgreSQLDB
 from starlette.middleware.cors import CORSMiddleware
 from lightrag.kg.shared_storage import initialize_pipeline_status
 
 from dembrane.config import (
     REDIS_URL,
+    DATABASE_URL,
     DISABLE_CORS,
-    POSTGRES_HOST,
-    POSTGRES_PORT,
-    POSTGRES_USER,
     ADMIN_BASE_URL,
     SERVE_API_DOCS,
-    POSTGRES_DATABASE,
-    POSTGRES_PASSWORD,
     PARTICIPANT_BASE_URL,
 )
 from dembrane.sentry import init_sentry
 from dembrane.api.api import api
+from dembrane.postgresdb_manager import PostgresDBManager
 
 # from lightrag.llm.azure_openai import azure_openai_complete
 from dembrane.audio_lightrag.utils.litellm_utils import embedding_func, llm_model_func
 from dembrane.audio_lightrag.utils.lightrag_utils import (
     with_distributed_lock,
+    _load_postgres_env_vars,
     check_audio_lightrag_tables,
 )
 
@@ -48,18 +45,11 @@ logger = getLogger("server")
 async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     # startup
     logger.info("starting server")
-    init_sentry()
+    init_sentry() 
     
     # Initialize PostgreSQL and LightRAG
-    postgres_config = {
-        "host": POSTGRES_HOST,
-        "port": POSTGRES_PORT,
-        "user": POSTGRES_USER,
-        "password": POSTGRES_PASSWORD,
-        "database": POSTGRES_DATABASE,
-    }
-
-    postgres_db = PostgreSQLDB(config=postgres_config)
+    _load_postgres_env_vars(str(DATABASE_URL))
+    postgres_db = await PostgresDBManager.get_initialized_db()
     
     # Define the critical initialization operation
     async def initialize_database() -> bool:

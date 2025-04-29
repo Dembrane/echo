@@ -32,6 +32,7 @@ class Transcriptions(BaseModel):
 
 def get_json_dict_from_audio(wav_encoding: str,
                         audio_model_prompt: str, 
+                        language: str = "en"
                         ) -> dict: # type: ignore
     audio_model_messages=[
             {
@@ -72,7 +73,7 @@ def get_json_dict_from_audio(wav_encoding: str,
                     "content": [
                         {
                             "type": "text",
-                            "text": Prompts.text_structuring_model_system_prompt(),
+                            "text": Prompts.text_structuring_model_system_prompt(language),
                         }
                     ]
                 },

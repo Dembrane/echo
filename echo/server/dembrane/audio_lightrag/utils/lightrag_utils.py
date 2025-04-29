@@ -1,4 +1,8 @@
-# import os
+# Hierachy:
+# Chunk is the lowest level
+# Conversation is a collection of chunks
+# Project is a collection of conversations
+# Segment is a many to many of chunks
 import os
 import re
 import uuid
@@ -6,12 +10,13 @@ import asyncio
 import hashlib
 import logging
 from typing import Any, Dict, Literal, TypeVar, Callable, Optional
+from urllib.parse import urlparse
 
 import redis
 from lightrag.kg.postgres_impl import PostgreSQLDB
 
 from dembrane.directus import directus
-from dembrane.postgresdbmanager import PostgresDBManager
+from dembrane.postgresdb_manager import PostgresDBManager
 from dembrane.audio_lightrag.utils.litellm_utils import embedding_func
 
 logger = logging.getLogger('audio_lightrag_utils')
@@ -33,17 +38,34 @@ def is_valid_uuid(uuid_str: str) -> bool:
     except ValueError:
         return False
 
-# Hierachy:
-# Chunk is the lowest level
-# Conversation is a collection of chunks
-# Project is a collection of conversations
-# Segment is a many to many of chunks
+
 
 db_manager = PostgresDBManager()
 
+def _load_postgres_env_vars(database_url: str) -> None:
+    """Parse a database URL into connection parameters."""
+    result = urlparse(database_url)
+    path = result.path
+    if path.startswith("/"):
+        path = path[1:]
+    userinfo = result.netloc.split("@")[0] if "@" in result.netloc else ""
+    username = userinfo.split(":")[0] if ":" in userinfo else userinfo
+    password = userinfo.split(":")[1] if ":" in userinfo else ""
+    host_part = result.netloc.split("@")[-1]
+    host = host_part.split(":")[0] if ":" in host_part else host_part
+    port = host_part.split(":")[1] if ":" in host_part else "5432"
+    os.environ["POSTGRES_HOST"] = host
+    os.environ["POSTGRES_PORT"] = port
+    os.environ["POSTGRES_USER"] = username
+    os.environ["POSTGRES_PASSWORD"] = password
+    os.environ["POSTGRES_DATABASE"] = path
+
+def get_project_id_from_conversation_id(conversation_id: str) -> str:
+    query = {'query': {'filter': {'id': {'_eq': conversation_id}},'fields': ['project_id']}}
+    return directus.get_items("conversation", query)[0]['project_id']
+
 def get_conversation_name_from_id(conversation_id: str) -> str:
     query = {'query': {'filter': {'id': {'_eq': conversation_id}},'fields': ['participant_name']}}
-    print(query)
     return directus.get_items("conversation", query)[0]['participant_name']
 
 async def run_segment_id_to_conversation_id(segment_id: int) -> str:
@@ -51,7 +73,6 @@ async def run_segment_id_to_conversation_id(segment_id: int) -> str:
     conversation_chunk_ids = list(conversation_chunk_dict.values())
     query = {'query': {'filter': {'id': {'_in': conversation_chunk_ids}},'fields': ['conversation_id']}}
     return directus.get_items("conversation_chunk", query)[0]['conversation_id']
-
 
 async def run_segment_ids_to_conversation_chunk_ids(segment_ids: list[int]) -> dict[int, str]:
     db = await db_manager.get_initialized_db()
@@ -80,7 +101,7 @@ async def get_segment_from_conversation_chunk_ids(db: PostgreSQLDB,
     sql = SQL_TEMPLATES["GET_SEGMENT_IDS_FROM_CONVERSATION_CHUNK_IDS"
                         ].format(conversation_ids=conversation_chunk_ids)
     result = await db.query(sql, multirows=True)
-    return [int(x['conversation_segment_id']) for x in result]
+    return [int(x['conversation_segment_id']) for x in result if x['conversation_segment_id'] is not None]
 
 async def get_segment_from_conversation_ids(db: PostgreSQLDB,
                                       conversation_ids: list[str]) -> list[int]:
@@ -96,7 +117,7 @@ async def get_segment_from_conversation_ids(db: PostgreSQLDB,
     conversation_request["query"]["filter"] = {"id": {"_in": conversation_ids}}
     conversation_request_result = directus.get_items("conversation", conversation_request)
     conversation_chunk_ids = [[x['id'] for x in conversation_request_result_dict['chunks']] for conversation_request_result_dict in conversation_request_result]
-    flat_conversation_chunk_ids: list[str] = [item for sublist in conversation_chunk_ids for item in sublist]
+    flat_conversation_chunk_ids: list[str] = [item for sublist in conversation_chunk_ids for item in sublist if item is not None]
     return await get_segment_from_conversation_chunk_ids(db, flat_conversation_chunk_ids)
 
 async def get_segment_from_project_ids(db: PostgreSQLDB,
@@ -107,7 +128,7 @@ async def get_segment_from_project_ids(db: PostgreSQLDB,
     project_request["query"]["filter"] = {"id": {"_in": project_ids}}
     project_request_result = directus.get_items("project", project_request)
     conversation_ids = [[x['id'] for x in project_request_result_dict['conversations']] for project_request_result_dict in project_request_result]
-    flat_conversation_ids: list[str] = [item for sublist in conversation_ids for item in sublist]
+    flat_conversation_ids: list[str] = [item for sublist in conversation_ids for item in sublist if item is not None]
     return await get_segment_from_conversation_ids(db, flat_conversation_ids)
 
 async def with_distributed_lock(
@@ -243,15 +264,26 @@ def fetch_segment_ratios(response_text: str) -> dict[int, float]:
 async def get_ratio_abs(rag_prompt: str, 
                         return_type: Literal["segment", "chunk", "conversation"]) -> Dict[str, float]:
         segment_ratios_abs = fetch_segment_ratios(str(rag_prompt))
+        if segment_ratios_abs == {}:
+            return {}
         if return_type == "segment":
             return {str(k):v for k,v in segment_ratios_abs.items()}
         segment2chunk = await run_segment_ids_to_conversation_chunk_ids(list(segment_ratios_abs.keys()))
         chunk_ratios_abs: Dict[str, float] = {}
         for segment,ratio in segment_ratios_abs.items():
-            if segment2chunk[segment] not in chunk_ratios_abs.keys():
-                chunk_ratios_abs[segment2chunk[segment]] = ratio
-            else:
-                chunk_ratios_abs[segment2chunk[segment]] += ratio
+            if segment in segment2chunk.keys():
+                if segment2chunk[segment] not in chunk_ratios_abs.keys():
+                    chunk_ratios_abs[segment2chunk[segment]] = ratio
+                else:
+                    chunk_ratios_abs[segment2chunk[segment]] += ratio
+
+        #normalize chunk_ratios_abs
+        total_ratio = sum(chunk_ratios_abs.values())
+        if total_ratio == 0:
+            # 0 ratio means no relevant chunks were found
+            return {}
+        chunk_ratios_abs = {k:v/total_ratio for k,v in chunk_ratios_abs.items()}
+
         if return_type == "chunk":
             return chunk_ratios_abs
         conversation_ratios_abs: Dict[str, float] = {}
@@ -268,14 +300,26 @@ def get_project_id(proj_chat_id: str) -> str:
     query = {'query': {'filter': {'id': {'_eq': proj_chat_id}},'fields': ['project_id']}}
     return directus.get_items("project_chat", query)[0]['project_id']
 
-async def get_conversation_details_for_rag_query(rag_prompt: str) -> dict[str, dict[str, Any]]:
+async def get_conversation_details_for_rag_query(rag_prompt: str, project_ids: list[str]) -> list[dict[str, Any]]:
     ratio_abs = await get_ratio_abs(rag_prompt, "conversation")
-    conversation_details_dict = {}
-    for conversation_id,ratio in ratio_abs.items():
-        query = {'query': {'filter': {'id': {'_eq': conversation_id}},'fields': ['participant_name']}}
-        conversation_title = directus.get_items("conversation", query)[0]['participant_name']
-        conversation_details_dict[conversation_id] = {'ratio': ratio, 'conversation_title': conversation_title}
-    return conversation_details_dict
+    conversation_details = []
+    if ratio_abs:
+        # Bulk fetch conversation metadata
+        conv_meta = {c["id"]: c for c in directus.get_items(
+            "conversation",
+            {"query": {"filter": {"id": {"_in": list(ratio_abs.keys())}},
+                       "fields": ["id", "participant_name", "project_id"]}}
+        )}
+        for conversation_id, ratio in ratio_abs.items():
+            meta = conv_meta.get(conversation_id)
+            if not meta or meta["project_id"] not in project_ids:
+                continue
+            conversation_details.append({
+                "conversation": conversation_id,
+                "conversation_title": meta["participant_name"],
+                "ratio": ratio
+            })
+    return conversation_details
 
 TABLES = {
     "LIGHTRAG_VDB_TRANSCRIPT": """
@@ -320,12 +364,12 @@ SQL_TEMPLATES = {
     """,
     "GET_SEGMENT_IDS_FROM_CONVERSATION_CHUNK_IDS":
     """
-    SELECT conversation_segment_id FROM conversation_segment_conversation_chunk_1
+    SELECT conversation_segment_id FROM conversation_segment_conversation_chunk
     WHERE conversation_chunk_id = ANY(ARRAY[{conversation_ids}])
     """,
     "GET_CONVERSATION_CHUNK_IDS_FROM_SEGMENT_IDS":
     """
-    SELECT conversation_chunk_id, conversation_segment_id FROM conversation_segment_conversation_chunk_1
+    SELECT conversation_chunk_id, conversation_segment_id FROM conversation_segment_conversation_chunk
     WHERE conversation_segment_id = ANY(ARRAY[{segment_ids}])
     """
 }
