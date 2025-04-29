@@ -1,6 +1,6 @@
 # this is not upto date. switched to directus for a better life
 from enum import Enum
-from typing import Any, Dict, List, Optional, Annotated, Generator
+from typing import Any, List, Optional, Annotated, Generator
 from logging import getLogger
 from datetime import datetime, timezone
 
@@ -28,7 +28,7 @@ from sqlalchemy.orm import (
     declarative_base,
 )
 from pgvector.sqlalchemy import Vector  # type: ignore
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID
 
 from dembrane.config import DATABASE_URL
 from dembrane.embedding import EMBEDDING_DIM
