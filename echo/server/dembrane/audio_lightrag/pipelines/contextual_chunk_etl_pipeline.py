@@ -76,7 +76,7 @@ class ContextualChunkETLPipeline:
                 else:
                     responses[segment_id] = {'CONTEXTUAL_TRANSCRIPT': response['contextual_transcript'],
                                              'TRANSCRIPTS': response['transcript'].split('\n\n')}
-                if response['lightrag_flag'] is False:
+                if response['lightrag_flag'] is not True:
                     try:
                         payload = InsertRequest(
                             content=responses[segment_id]['CONTEXTUAL_TRANSCRIPT'],
