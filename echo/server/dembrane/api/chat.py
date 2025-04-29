@@ -18,6 +18,8 @@ from dembrane.config import (
     AUDIO_LIGHTRAG_TOP_K_PROMPT,
     LIGHTRAG_LITELLM_INFERENCE_MODEL,
     LIGHTRAG_LITELLM_INFERENCE_API_KEY,
+    LIGHTRAG_LITELLM_INFERENCE_API_BASE,
+    LIGHTRAG_LITELLM_INFERENCE_API_VERSION,
 )
 from dembrane.database import (
     DatabaseSession,
@@ -459,9 +461,11 @@ async def post_chat(
             try:
                 response = await litellm.acompletion(
                     model=LIGHTRAG_LITELLM_INFERENCE_MODEL,
+                    api_key=LIGHTRAG_LITELLM_INFERENCE_API_KEY,
+                    api_version=LIGHTRAG_LITELLM_INFERENCE_API_VERSION,
+                    api_base=LIGHTRAG_LITELLM_INFERENCE_API_BASE,
                     messages=formatted_messages,
                     stream=True,
-                    api_key=LIGHTRAG_LITELLM_INFERENCE_API_KEY,
                     # mock_response="It's simple to use and easy to get started",
                 )
                 async for chunk in response:  # type: ignore
@@ -546,3 +550,4 @@ async def post_chat(
         response = StreamingResponse(stream_response(), headers=headers)
 
         return response
+
