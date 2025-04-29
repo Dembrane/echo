@@ -42,7 +42,7 @@ def is_valid_uuid(uuid_str: str) -> bool:
 
 db_manager = PostgresDBManager()
 
-def _load_postgres_env_vars(database_url: str) -> bool:
+def _load_postgres_env_vars(database_url: str) -> None:
     """Parse a database URL into connection parameters."""
     result = urlparse(database_url)
     path = result.path
@@ -59,7 +59,6 @@ def _load_postgres_env_vars(database_url: str) -> bool:
     os.environ["POSTGRES_USER"] = username
     os.environ["POSTGRES_PASSWORD"] = password
     os.environ["POSTGRES_DATABASE"] = path
-    return True
 
 def get_project_id_from_conversation_id(conversation_id: str) -> str:
     query = {'query': {'filter': {'id': {'_eq': conversation_id}},'fields': ['project_id']}}
@@ -280,6 +279,9 @@ async def get_ratio_abs(rag_prompt: str,
 
         #normalize chunk_ratios_abs
         total_ratio = sum(chunk_ratios_abs.values())
+        if total_ratio == 0:
+            # 0 ratio means no relevant chunks were found
+            return {}
         chunk_ratios_abs = {k:v/total_ratio for k,v in chunk_ratios_abs.items()}
 
         if return_type == "chunk":
@@ -302,17 +304,21 @@ async def get_conversation_details_for_rag_query(rag_prompt: str, project_ids: l
     ratio_abs = await get_ratio_abs(rag_prompt, "conversation")
     conversation_details = []
     if ratio_abs:
+        # Bulk fetch conversation metadata
+        conv_meta = {c["id"]: c for c in directus.get_items(
+            "conversation",
+            {"query": {"filter": {"id": {"_in": list(ratio_abs.keys())}},
+                       "fields": ["id", "participant_name", "project_id"]}}
+        )}
         for conversation_id, ratio in ratio_abs.items():
-            query = {'query': {'filter': {'id': {'_eq': conversation_id}},'fields': ['participant_name', 'project_id']}}
-            response = directus.get_items("conversation", query)[0]
-            conversation_title = response['participant_name']
-            response_project_id = response['project_id']
-            if response_project_id in project_ids:
-                conversation_details.append({
-                    'conversation': conversation_id,
-                    'conversation_title': conversation_title,
-                    'ratio': ratio
-                })
+            meta = conv_meta.get(conversation_id)
+            if not meta or meta["project_id"] not in project_ids:
+                continue
+            conversation_details.append({
+                "conversation": conversation_id,
+                "conversation_title": meta["participant_name"],
+                "ratio": ratio
+            })
     return conversation_details
 
 TABLES = {
