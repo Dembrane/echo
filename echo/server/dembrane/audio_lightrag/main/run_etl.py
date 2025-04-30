@@ -42,7 +42,7 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
         try:
             directus_pl = DirectusETLPipeline()
             process_tracker = directus_pl.run(conv_id_list)
-            logger.info("Directus ETL pipeline completed successfully")
+            logger.info("1/3...Directus ETL pipeline completed successfully")
         except Exception as e:
             logger.error(f"Directus ETL pipeline failed: {str(e)}")
             raise
@@ -51,7 +51,7 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
         try:
             audio_pl = AudioETLPipeline(process_tracker)
             audio_pl.run()
-            logger.info("Audio ETL pipeline completed successfully")
+            logger.info("2/3...Audio ETL pipeline completed successfully")
         except Exception as e:
             logger.error(f"Audio ETL pipeline failed: {str(e)}")
             raise
@@ -60,7 +60,7 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
         try:
             contextual_chunk_pl = ContextualChunkETLPipeline(process_tracker)
             contextual_chunk_pl.run()
-            logger.info("Contextual Chunk ETL pipeline completed successfully")
+            logger.info("3/3...Contextual Chunk ETL pipeline completed successfully")
         except Exception as e:
             logger.error(f"Contextual Chunk ETL pipeline failed: {str(e)}")
             raise

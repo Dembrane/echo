@@ -33,11 +33,12 @@ class ContextualChunkETLPipeline:
     def extract(self) -> None:pass 
     def transform(self) -> None:pass
     async def load(self) -> None:
+        # Trancribe and contextualize audio chunks
         for conversation_id in self.process_tracker().conversation_id.unique():
-            segment_li = ','.join(self.process_tracker().sort_values('timestamp')[self.process_tracker()['conversation_id']  == 
-                                                         conversation_id].sort_values('timestamp'
-                                                                                      ).segment).split(',')
-            segment_li = [int(x) for x in list(dict.fromkeys(segment_li))]  # type: ignore
+            load_tracker = self.process_tracker()[self.process_tracker()['conversation_id']  == conversation_id]
+            audio_load_tracker = load_tracker[load_tracker.path != 'NO_AUDIO_FOUND']
+            segment_li = ','.join(audio_load_tracker.sort_values('timestamp').segment).split(',')
+            segment_li = [int(x) for x in list(dict.fromkeys(segment_li)) if x!='']  # type: ignore
             project_id = self.process_tracker()[self.process_tracker()['conversation_id'] == conversation_id].project_id.unique()[0]
             event_text = '\n\n'.join([f"{k} : {v}" for k,v in self.process_tracker.get_project_df().loc[project_id].to_dict().items()])
             responses = {}
@@ -53,12 +54,12 @@ class ContextualChunkETLPipeline:
                 previous_contextual_transcript = '\n\n'.join(previous_contextual_transcript_li)
                 audio_model_prompt = Prompts.audio_model_system_prompt(event_text, previous_contextual_transcript)
                 try: 
-                    response = directus.get_item('conversation_segment', int(segment_id))
+                    audio_segment_response = directus.get_item('conversation_segment', int(segment_id))
                 except Exception as e:
                     logger.exception(f"Error in getting conversation segment : {e}")
                     continue
-                audio_stream = get_stream_from_s3(response['path'])
-                if response['contextual_transcript'] is None:
+                audio_stream = get_stream_from_s3(audio_segment_response['path'])
+                if audio_segment_response['contextual_transcript'] is None:
                     try:  
                         wav_encoding = wav_to_str(
                             AudioSegment.from_file(BytesIO(audio_stream.read()), 
@@ -74,9 +75,9 @@ class ContextualChunkETLPipeline:
                         logger.exception(f"Error in getting contextual transcript : {e}. Check LiteLLM API configs")
                         continue
                 else:
-                    responses[segment_id] = {'CONTEXTUAL_TRANSCRIPT': response['contextual_transcript'],
-                                             'TRANSCRIPTS': response['transcript'].split('\n\n')}
-                if response['lightrag_flag'] is not True:
+                    responses[segment_id] = {'CONTEXTUAL_TRANSCRIPT': audio_segment_response['contextual_transcript'],
+                                             'TRANSCRIPTS': audio_segment_response['transcript'].split('\n\n')}
+                if audio_segment_response['lightrag_flag'] is not True:
                     try:
                         payload = InsertRequest(
                             content=responses[segment_id]['CONTEXTUAL_TRANSCRIPT'],
@@ -85,17 +86,39 @@ class ContextualChunkETLPipeline:
                         )
                         #fake session
                         session = DirectusSession(user_id="none", is_admin=True)
-                        response = await insert_item(payload, session)
+                        audio_segment_response = await insert_item(payload, session)
 
-                        if response.status == 'success':
+                        if audio_segment_response.status == 'success':
                             directus.update_item('conversation_segment', int(segment_id), 
                                                 {'lightrag_flag': True})
                         else:
-                            logger.info(f"Error in inserting transcript into LightRAG for segment {segment_id}. Check API health : {response.status_code}")
+                            logger.info(f"Error in inserting transcript into LightRAG for segment {segment_id}. Check API health : {audio_segment_response.status_code}")
                             
                     except Exception as e:
                         logger.exception(f"Error in inserting transcript into LightRAG : {e}")
+                
+            non_audio_load_tracker = load_tracker[load_tracker.path == 'NO_AUDIO_FOUND']
+            for segment_id in non_audio_load_tracker.segment:
+                non_audio_segment_response = directus.get_item('conversation_segment', int(segment_id))
+                if non_audio_segment_response['lightrag_flag'] is not True:
+                    try:
+                        payload = InsertRequest(
+                            content=non_audio_segment_response['contextual_transcript'],
+                            echo_segment_id=str(segment_id),
+                            transcripts=[non_audio_segment_response['transcript']]
+                        )
+                        #fake session
+                        session = DirectusSession(user_id="none", is_admin=True)
+                        non_audio_segment_response = await insert_item(payload, session)
 
+                        if non_audio_segment_response.status == 'success':
+                            directus.update_item('conversation_segment', int(segment_id), 
+                                                {'lightrag_flag': True})
+                        else:
+                            logger.info(f"Error in inserting transcript into LightRAG for segment {segment_id}. Check API health : {non_audio_segment_response.status_code}")
+                    except Exception as e:
+                        logger.exception(f"Error in inserting transcript into LightRAG : {e}")
+                        
 
     def run(self) -> None:
         self.extract()

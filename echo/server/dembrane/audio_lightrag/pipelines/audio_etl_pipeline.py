@@ -1,4 +1,3 @@
-
 import logging
 
 from dembrane.config import (
@@ -7,6 +6,7 @@ from dembrane.config import (
 from dembrane.directus import directus
 from dembrane.audio_lightrag.utils.audio_utils import (
     process_audio_files,
+    create_directus_segment,
 )
 from dembrane.audio_lightrag.utils.process_tracker import ProcessTracker
 
@@ -44,25 +44,37 @@ class AudioETLPipeline:
     def transform(self) -> None:
         transform_process_tracker_df = self.process_tracker.get_unprocesssed_process_tracker_df(
             'segment')
-        zip_unique = list(
+        transform_audio_process_tracker_df = transform_process_tracker_df[transform_process_tracker_df.path != 'NO_AUDIO_FOUND']
+        transform_non_audio_process_tracker_df = transform_process_tracker_df[transform_process_tracker_df.path == 'NO_AUDIO_FOUND']
+        
+        zip_unique_audio = list(
             set(
                 zip(
-                    transform_process_tracker_df.project_id,
-                    transform_process_tracker_df.conversation_id,
+                    transform_audio_process_tracker_df.project_id,
+                    transform_audio_process_tracker_df.conversation_id,
                     strict=True
                 )
             )
         )
-        for project_id, conversation_id in zip_unique:
-            unprocessed_chunk_file_uri_li = transform_process_tracker_df.loc[
-                (transform_process_tracker_df.project_id == project_id)
-                & (transform_process_tracker_df.conversation_id == conversation_id)
+        zip_unique_non_audio = list(
+            set(
+                zip(
+                    transform_non_audio_process_tracker_df.project_id,
+                    transform_non_audio_process_tracker_df.conversation_id,
+                    strict=True
+                )
+            )
+        )
+
+        # Process audio files
+        for project_id, conversation_id in zip_unique_audio:
+            unprocessed_chunk_file_uri_li = transform_audio_process_tracker_df.loc[
+                (transform_audio_process_tracker_df.project_id == project_id)
+                & (transform_audio_process_tracker_df.conversation_id == conversation_id)
             ].path.to_list()
             counter = 0
-            # Create a new segment by counter every loop
             chunk_id_2_segment = []
             while len(unprocessed_chunk_file_uri_li) != 0:
-                #add logging and error handling
                 try:
                     logger.info(f"Processing {len(unprocessed_chunk_file_uri_li)} files for project_id={project_id}, conversation_id={conversation_id}")
                     logger.debug(f"Counter value: {counter}, Max size: {self.max_size_mb}MB, Config ID: {self.configid}")
@@ -73,7 +85,6 @@ class AudioETLPipeline:
                         counter=counter,
                     )
                     
-                    # Update the conversation_segment with the chunk_id in directus
                     for chunk_id, segment_id in chunk_id_2_segment_temp:
                         mapping_data = {
                             "conversation_segment_id": segment_id,
@@ -85,18 +96,8 @@ class AudioETLPipeline:
                 except Exception as e:
                     logger.error(f"Error processing files for project_id={project_id}, conversation_id={conversation_id}: {str(e)}")
                     raise e
-                    # if not unprocessed_chunk_file_uri_li:
-                    #     logging.warning("No more files to process after error. Exiting loop.")
-                    #     # Break out of the while loop if we encounter a critical error
-                    #     break
-                    # error_uri = unprocessed_chunk_file_uri_li[0]
-                    # logger.error(f"Error processing files for project_id={project_id}, conversation_id={conversation_id}, error_uri={error_uri}: {str(e)}")
-                    # logger.exception("Stack trace:")
-                    # unprocessed_chunk_file_uri_li = unprocessed_chunk_file_uri_li[1:]
-                    # continue
 
             chunk_id_2_segment_dict: dict[str, list[int]] = {}
-            # Please make a dictionary of chunk_id to list of segment_id
             for chunk_id, segment_id in chunk_id_2_segment:
                 if chunk_id not in chunk_id_2_segment_dict.keys():
                     chunk_id_2_segment_dict[chunk_id] = [int(segment_id)]
@@ -108,6 +109,25 @@ class AudioETLPipeline:
                     column_name='segment',
                     value=','.join([str(segment_id) for segment_id in segment_id_li])
                 )
+        # Process non-audio files
+        if transform_non_audio_process_tracker_df.empty is not True:
+            full_transcript = ''
+            segment_id = create_directus_segment(self.configid, -1)
+            
+            for chunk_id in transform_non_audio_process_tracker_df.chunk_id:
+                transcript = directus.get_item('conversation_chunk', chunk_id)['transcript']
+                full_transcript += transcript + '\n\n'
+                self.process_tracker.update_value_for_chunk_id(
+                    chunk_id=chunk_id,
+                    column_name='segment',
+                    value=segment_id
+                )
+                mapping_data = {"conversation_segment_id": segment_id, "conversation_chunk_id": chunk_id}
+                directus.create_item("conversation_segment_conversation_chunk", mapping_data)
+            
+            directus.update_item('conversation_segment', segment_id, {'transcript': full_transcript,
+                                                                    'contextual_transcript': full_transcript})
+            
 
 
     def load(self) -> None:
