@@ -68,11 +68,13 @@ def get_conversation_name_from_id(conversation_id: str) -> str:
     query = {'query': {'filter': {'id': {'_eq': conversation_id}},'fields': ['participant_name']}}
     return directus.get_items("conversation", query)[0]['participant_name']
 
-async def run_segment_id_to_conversation_id(segment_id: int) -> str:
+async def run_segment_id_to_conversation_id(segment_id: int) -> tuple[str, str]:
     conversation_chunk_dict = await run_segment_ids_to_conversation_chunk_ids([segment_id])
     conversation_chunk_ids = list(conversation_chunk_dict.values())
     query = {'query': {'filter': {'id': {'_in': conversation_chunk_ids}},'fields': ['conversation_id']}}
-    return directus.get_items("conversation_chunk", query)[0]['conversation_id']
+    conversation_id = directus.get_items("conversation_chunk", query)[0]['conversation_id']
+    conversation_name = get_conversation_name_from_id(conversation_id)
+    return (conversation_id, conversation_name)
 
 async def run_segment_ids_to_conversation_chunk_ids(segment_ids: list[int]) -> dict[int, str]:
     db = await db_manager.get_initialized_db()
