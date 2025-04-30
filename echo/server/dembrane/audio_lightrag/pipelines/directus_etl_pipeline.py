@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Tuple, Optional
 import pandas as pd
 from dotenv import load_dotenv
 
-from dembrane.config import AUDIO_LIGHTRAG_TIME_THRESHOLD_SECONDS
+from dembrane.config import AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS
 from dembrane.directus import directus
 from dembrane.audio_lightrag.utils.process_tracker import ProcessTracker
 
@@ -102,7 +102,7 @@ class DirectusETLPipeline:
             conversation_df['timestamp'] = pd.to_datetime(conversation_df['timestamp'])
             # take diff between current_timestamp and timestamp
             timestamp_diff = conversation_df['timestamp'].apply(lambda x: (run_timestamp - x).total_seconds())
-            conversation_df = conversation_df[timestamp_diff > int(AUDIO_LIGHTRAG_TIME_THRESHOLD_SECONDS)]
+            conversation_df = conversation_df[timestamp_diff > int(AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS)]
 
         if conversation_df.empty:
             logger.warning("No conversation data found")

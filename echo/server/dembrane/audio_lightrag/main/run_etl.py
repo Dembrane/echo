@@ -1,12 +1,12 @@
 import logging
 from typing import Optional
 
+import redis
 from dotenv import load_dotenv
 
+from dembrane.config import REDIS_URL, REDIS_LOCK_EXPIRY, REDIS_LOCK_PREFIX
 from dembrane.audio_lightrag.pipelines.audio_etl_pipeline import AudioETLPipeline
 from dembrane.audio_lightrag.pipelines.directus_etl_pipeline import DirectusETLPipeline
-
-# from dembrane.audio_lightrag.pipelines.lightrag_etl_pipeline import LightragETLPipeline
 from dembrane.audio_lightrag.pipelines.contextual_chunk_etl_pipeline import (
     ContextualChunkETLPipeline,
 )
@@ -20,9 +20,12 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
+
+
 def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
     """
     Runs the complete ETL pipeline including Directus, Audio, and Contextual Chunk processes.
+    Uses Redis locks to prevent the same conversation ID from being processed within 1 hour.
     
     Args:
         conv_id_list: List of conversation IDs to process
@@ -36,12 +39,34 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
             logger.error("Empty conversation ID list provided")
             return None
 
-        logger.info(f"Starting ETL pipeline for {len(conv_id_list)} conversations")
+        # Filter conversation IDs that are already being processed (via Redis locks)
+        redis_client = redis.from_url(REDIS_URL)
+        filtered_conv_ids = []
+        
+        for conv_id in conv_id_list:
+            lock_key = f"{REDIS_LOCK_PREFIX}{conv_id}"
+            # Check if lock exists
+            if redis_client.exists(lock_key):
+                ttl = redis_client.ttl(lock_key)
+                minutes_remaining = round(ttl / 60)
+                logger.info(f"Skipping conversation ID {conv_id}: already processed or being processed. Lock expires in ~{minutes_remaining} minutes.")
+                continue
+            
+            # Acquire lock for this conversation ID with 1-hour expiry
+            redis_client.set(lock_key, "1", ex=REDIS_LOCK_EXPIRY)
+            filtered_conv_ids.append(conv_id)
+        
+        if not filtered_conv_ids:
+            logger.info("All conversation IDs are already being processed or were processed recently. Nothing to do.")
+            return True
+            
+        logger.info(f"Starting ETL pipeline for {len(filtered_conv_ids)} conversations (after filtering)")
         
         # Directus Pipeline
         try:
             directus_pl = DirectusETLPipeline()
-            process_tracker = directus_pl.run(conv_id_list)
+            process_tracker = directus_pl.run(filtered_conv_ids, 
+                                                run_timestamp=None) # pass timestamp to avoid processing files uploaded earlier than cooloff
             logger.info("1/3...Directus ETL pipeline completed successfully")
         except Exception as e:
             logger.error(f"Directus ETL pipeline failed: {str(e)}")
@@ -70,6 +95,14 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
 
     except Exception as e:
         logger.error(f"ETL pipeline failed with error: {str(e)}")
+        # Release locks for all IDs in case of failure to allow retries
+        try:
+            redis_client = redis.from_url(REDIS_URL)
+            for conv_id in filtered_conv_ids:
+                redis_client.delete(f"{REDIS_LOCK_PREFIX}{conv_id}")
+            logger.info("Released Redis locks due to failure")
+        except Exception as release_err:
+            logger.error(f"Failed to release Redis locks: {str(release_err)}")
         return False
 
 

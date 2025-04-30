@@ -98,7 +98,7 @@ class ContextualChunkETLPipeline:
                         logger.exception(f"Error in inserting transcript into LightRAG : {e}")
                 
             non_audio_load_tracker = load_tracker[load_tracker.path == 'NO_AUDIO_FOUND']
-            for segment_id in non_audio_load_tracker.segment:
+            for segment_id in set(non_audio_load_tracker.segment):
                 non_audio_segment_response = directus.get_item('conversation_segment', int(segment_id))
                 if non_audio_segment_response['lightrag_flag'] is not True:
                     try:

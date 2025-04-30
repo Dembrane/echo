@@ -56,15 +56,6 @@ class AudioETLPipeline:
                 )
             )
         )
-        zip_unique_non_audio = list(
-            set(
-                zip(
-                    transform_non_audio_process_tracker_df.project_id,
-                    transform_non_audio_process_tracker_df.conversation_id,
-                    strict=True
-                )
-            )
-        )
 
         # Process audio files
         for project_id, conversation_id in zip_unique_audio:
