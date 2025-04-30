@@ -323,6 +323,14 @@ async def get_conversation_details_for_rag_query(rag_prompt: str, project_ids: l
             })
     return conversation_details
 
+async def delete_transcript_by_doc_id(db: PostgreSQLDB, doc_id: str) -> None:
+    sql = SQL_TEMPLATES["DELETE_TRANSCRIPT_BY_DOC_ID"].format(doc_id=doc_id)
+    await db.execute(sql)
+
+
+def delete_segment_from_directus(segment_id: str) -> None:
+    directus.delete_item("conversation_segment", segment_id)
+
 TABLES = {
     "LIGHTRAG_VDB_TRANSCRIPT": """
     CREATE TABLE IF NOT EXISTS LIGHTRAG_VDB_TRANSCRIPT (
@@ -373,5 +381,10 @@ SQL_TEMPLATES = {
     """
     SELECT conversation_chunk_id, conversation_segment_id FROM conversation_segment_conversation_chunk
     WHERE conversation_segment_id = ANY(ARRAY[{segment_ids}])
+    """,
+    "DELETE_TRANSCRIPT_BY_DOC_ID":
+    """
+    DELETE FROM LIGHTRAG_VDB_TRANSCRIPT
+    WHERE document_id = '{doc_id}'
     """
 }
