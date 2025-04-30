@@ -45,15 +45,18 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
         
         for conv_id in conv_id_list:
             lock_key = f"{REDIS_LOCK_PREFIX}{conv_id}"
-            # Check if lock exists
-            if redis_client.exists(lock_key):
+            # Atomically acquire the lock - fail fast if someone already owns it
+            acquired = redis_client.set(lock_key, "1", ex=REDIS_LOCK_EXPIRY, nx=True)
+            if not acquired:
+                # Check TTL for informative logging
                 ttl = redis_client.ttl(lock_key)
-                minutes_remaining = round(ttl / 60)
-                logger.info(f"Skipping conversation ID {conv_id}: already processed or being processed. Lock expires in ~{minutes_remaining} minutes.")
+                if ttl > 0:
+                    minutes_remaining = round(ttl / 60)
+                    logger.info(f"Skipping conversation ID {conv_id}: already processed or being processed. Lock expires in ~{minutes_remaining} minutes.")
+                else:
+                    logger.info(f"Race-lost lock for {conv_id}, skipping.")
                 continue
             
-            # Acquire lock for this conversation ID with 1-hour expiry
-            redis_client.set(lock_key, "1", ex=REDIS_LOCK_EXPIRY)
             filtered_conv_ids.append(conv_id)
         
         if not filtered_conv_ids:

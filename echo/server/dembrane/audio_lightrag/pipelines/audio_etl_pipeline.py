@@ -103,21 +103,45 @@ class AudioETLPipeline:
         # Process non-audio files
         if transform_non_audio_process_tracker_df.empty is not True:
             full_transcript = ''
-            segment_id = create_directus_segment(self.configid, -1)
+            segment_id = int(create_directus_segment(self.configid, -1)) # type: ignore
             
-            for chunk_id in transform_non_audio_process_tracker_df.chunk_id:
-                transcript = directus.get_item('conversation_chunk', chunk_id)['transcript']
+            chunk_ids = transform_non_audio_process_tracker_df.chunk_id.to_list()
+            chunk_records = directus.get_items(
+                'conversation_chunk',
+                {
+                    'query': {
+                        'filter': {'id': {'_in': chunk_ids}},
+                        'fields': ['id', 'transcript'],
+                        'limit': len(chunk_ids)
+                    }
+                }
+            )
+            id2transcript = {rec['id']: rec.get('transcript', '') for rec in chunk_records}
+            for chunk_id in chunk_ids:
+                transcript = id2transcript.get(chunk_id, '')
                 full_transcript += transcript + '\n\n'
                 self.process_tracker.update_value_for_chunk_id(
                     chunk_id=chunk_id,
                     column_name='segment',
                     value=segment_id
                 )
-                mapping_data = {"conversation_segment_id": segment_id, "conversation_chunk_id": chunk_id}
-                directus.create_item("conversation_segment_conversation_chunk", mapping_data)
+                mapping_data = {
+                    "conversation_segment_id": segment_id,
+                    "conversation_chunk_id": chunk_id
+                }
+                directus.create_item(
+                    "conversation_segment_conversation_chunk",
+                    mapping_data
+                )
             
-            directus.update_item('conversation_segment', segment_id, {'transcript': full_transcript,
-                                                                    'contextual_transcript': full_transcript})
+            directus.update_item(
+                'conversation_segment',
+                segment_id,
+                {
+                    'transcript': full_transcript,
+                    'contextual_transcript': full_transcript
+                }
+            )
             
 
 

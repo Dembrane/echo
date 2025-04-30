@@ -86,9 +86,9 @@ class ContextualChunkETLPipeline:
                         )
                         #fake session
                         session = DirectusSession(user_id="none", is_admin=True)
-                        audio_segment_response = await insert_item(payload, session)
+                        audio_segment_insert_response = await insert_item(payload, session)
 
-                        if audio_segment_response.status == 'success':
+                        if audio_segment_insert_response.status == 'success':
                             directus.update_item('conversation_segment', int(segment_id), 
                                                 {'lightrag_flag': True})
                         else:
@@ -109,9 +109,9 @@ class ContextualChunkETLPipeline:
                         )
                         #fake session
                         session = DirectusSession(user_id="none", is_admin=True)
-                        non_audio_segment_response = await insert_item(payload, session)
+                        non_audio_segment_insert_response = await insert_item(payload, session)
 
-                        if non_audio_segment_response.status == 'success':
+                        if non_audio_segment_insert_response.status == 'success':
                             directus.update_item('conversation_segment', int(segment_id), 
                                                 {'lightrag_flag': True})
                         else:

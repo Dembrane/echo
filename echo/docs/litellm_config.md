@@ -50,7 +50,7 @@ This document outlines all LiteLLM-related configurations and their explanations
 
 ### Feature Flags
 - `ENABLE_AUDIO_LIGHTRAG_INPUT`: Enable/disable audio input processing (default: false)
-- `AUTO_SELECT_ENABLED`: Enable/disable auto-select feature (default: false) 
+- `ENABLE_CHAT_AUTO_SELECT`: Enable/disable auto-select feature (default: false) 
 
 ### Redis Lock Configuration
 - `REDIS_LOCK_PREFIX`: Prefix for Redis lock keys (default: "etl_lock_conv_"). Used to create unique lock keys for each conversation ID in the ETL pipeline.
