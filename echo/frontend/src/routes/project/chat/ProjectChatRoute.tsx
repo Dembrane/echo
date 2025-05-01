@@ -168,6 +168,11 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
       // Submit the chat
       handleSubmit();
 
+      // Scroll to bottom when user submits a message
+      setTimeout(() => {
+        lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 0);
+      
       if (ENABLE_CHAT_AUTO_SELECT && contextToBeAdded?.auto_select_bool) {
         setShowProgress(true);
         setProgressValue(0);
