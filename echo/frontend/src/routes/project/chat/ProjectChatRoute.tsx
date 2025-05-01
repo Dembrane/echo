@@ -236,7 +236,8 @@ export const ProjectChatRoute = () => {
 
   const { chatId } = useParams();
   const chatQuery = useProjectChat(chatId ?? "");
-
+  const [referenceIds, setReferenceIds] = useState<string[]>([]);
+  
   const {
     isInitializing,
     isLoading,
@@ -309,6 +310,8 @@ export const ProjectChatRoute = () => {
               role: "assistant",
               content: t`Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations.`,
             }}
+            referenceIds={referenceIds}
+            setReferenceIds={setReferenceIds}
           />
 
           {/* get everything except the last message */}
@@ -317,7 +320,7 @@ export const ProjectChatRoute = () => {
             messages.slice(0, -1).map((message, idx) => (
               <div key={message.id + idx}>
                 {/* @ts-expect-error chatHistoryQuery.data is not typed */}
-                <ChatHistoryMessage message={message} />
+                <ChatHistoryMessage message={message} referenceIds={referenceIds} setReferenceIds={setReferenceIds} />
               </div>
             ))}
 
@@ -333,6 +336,8 @@ export const ProjectChatRoute = () => {
                       <Button onClick={handleSubmit}>Regenerate</Button>
                     )
                   }
+                  referenceIds={referenceIds}
+                  setReferenceIds={setReferenceIds}
                 />
               </div>
             )}
@@ -368,7 +373,7 @@ export const ProjectChatRoute = () => {
             messages[messages.length - 1].role === "assistant" && (
               <div ref={lastMessageRef}>
                 {/* @ts-expect-error chatHistoryQuery.data is not typed */}
-                <ChatHistoryMessage message={messages[messages.length - 1]} />
+                <ChatHistoryMessage message={messages[messages.length - 1]} referenceIds={referenceIds} setReferenceIds={setReferenceIds} />
               </div>
             )}
 

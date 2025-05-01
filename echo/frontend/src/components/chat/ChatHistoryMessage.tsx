@@ -30,18 +30,23 @@ import { extractMessageMetadata } from "./chatUtils";
 export const ChatHistoryMessage = ({
   message,
   section,
+  referenceIds,
+  setReferenceIds,
 }: {
   message: ChatHistory[number];
   section?: React.ReactNode;
+  referenceIds?: string[];
+  setReferenceIds?: (ids: string[]) => void;
 }) => {
   const [metadata, setMetadata] = useState<any[]>([]);
   const { projectId } = useParams();
-  const [showCitations, setShowCitations] = useState(false);
 
   useEffect(() => {
     const flattenedItems = extractMessageMetadata(message);
     setMetadata(flattenedItems);
   }, [message]);
+
+  const isSelected = referenceIds?.includes(message.id) ?? false;
 
   if (message.role === "system") {
     return null;
@@ -86,8 +91,18 @@ export const ChatHistoryMessage = ({
                     metadata?.length > 0 &&
                     metadata?.some((item) => item.type === "citation") && (
                       <ReferencesIconButton
-                        showCitations={showCitations}
-                        setShowCitations={setShowCitations}
+                        showCitations={isSelected}
+                        setShowCitations={(show) => {
+                          if (setReferenceIds) {
+                            setReferenceIds(
+                              show
+                                ? [...(referenceIds || []), message.id]
+                                : (referenceIds || []).filter(
+                                    (id) => id !== message.id,
+                                  ),
+                            );
+                          }
+                        }}
                       />
                     )}
                   {message?.metadata?.length > 0 &&
@@ -95,8 +110,18 @@ export const ChatHistoryMessage = ({
                       (item) => item.type === "citation",
                     ) && (
                       <ReferencesIconButton
-                        showCitations={showCitations}
-                        setShowCitations={setShowCitations}
+                        showCitations={isSelected}
+                        setShowCitations={(show) => {
+                          if (setReferenceIds) {
+                            setReferenceIds(
+                              show
+                                ? [...(referenceIds || []), message.id]
+                                : (referenceIds || []).filter(
+                                    (id) => id !== message.id,
+                                  ),
+                            );
+                          }
+                        }}
                       />
                     )}
                 </Group>
@@ -106,7 +131,7 @@ export const ChatHistoryMessage = ({
             <Markdown className="prose-sm" content={message.content} />
 
             {/* Show citations inside the chat bubble when toggled */}
-            <Collapse in={showCitations} transitionDuration={200}>
+            <Collapse in={isSelected} transitionDuration={200}>
               <Divider className="my-7" />
               <div className="my-3">
                 {ENABLE_CHAT_AUTO_SELECT &&
