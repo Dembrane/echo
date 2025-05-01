@@ -197,13 +197,15 @@ async def get_conversation_citations(rag_prompt: str, accumulated_response: str,
         if len(citations_list) > 0:
             for _, citation in enumerate(citations_list):
                 try: 
-                    conversation_id = await run_segment_id_to_conversation_id(citation['segment_id'])
+                    (conversation_id, conversation_name) = await run_segment_id_to_conversation_id(citation['segment_id'])
                     citation_project_id = get_project_id_from_conversation_id(conversation_id)
                 except Exception as e:
                     logger.warning(f"WARNING: Error in citation extraction for segment {citation['segment_id']}. Skipping citations: {str(e)}")
                     continue
                 if citation_project_id in project_ids:
-                    current_citation_dict = {"conversation": conversation_id, "reference_text": citation['verbatim_reference_text_chunk']}
+                    current_citation_dict = {"conversation": conversation_id, 
+                    "reference_text": citation['verbatim_reference_text_chunk'],
+                    "conversation_title": conversation_name}
                     citations_by_conversation_dict["citations"].append(current_citation_dict)
         else:
             logger.warning("WARNING: No citations found")
