@@ -316,9 +316,9 @@ assert (
 logger.debug(f"ENABLE_CHAT_AUTO_SELECT: {ENABLE_CHAT_AUTO_SELECT}")
 
 # Redis lock configuration
-REDIS_LOCK_PREFIX = os.environ.get("REDIS_LOCK_PREFIX", "etl_lock_conv_")
-assert REDIS_LOCK_PREFIX, "REDIS_LOCK_PREFIX environment variable is not set"
-logger.debug("REDIS_LOCK_PREFIX: set")
+AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX = os.environ.get("AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX", "etl_lock_conv_")
+assert AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX, "AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX environment variable is not set"
+logger.debug("AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX: set")
 
 REDIS_LOCK_EXPIRY = int(os.environ.get("REDIS_LOCK_EXPIRY", 3600))
 assert REDIS_LOCK_EXPIRY, "REDIS_LOCK_EXPIRY environment variable is not set"
