@@ -351,14 +351,14 @@ const ConversationAccordionItem = ({
       active={highlight}
       borderColor={
         ENABLE_CHAT_AUTO_SELECT && isAutoSelectEnabled
-          ? "border-green-500"
+          ? "green"
           : undefined
       }
       className={cn("w-full", {
         "!bg-primary-50": isLocked,
       })}
       rightSection={
-        inChatMode && (
+        (!ENABLE_CHAT_AUTO_SELECT || !isAutoSelectEnabled) && inChatMode && (
           <ConversationAccordionLabelChatSelection
             conversation={conversation}
           />

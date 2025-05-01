@@ -29,7 +29,7 @@ import {
   IconSquare,
 } from "@tabler/icons-react";
 import { useParams } from "react-router-dom";
-import { useChat } from "ai/react";
+import { useChat } from "@ai-sdk/react";
 import { API_BASE_URL, ENABLE_CHAT_AUTO_SELECT } from "@/config";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -37,10 +37,10 @@ import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButt
 import { ConversationLinks } from "@/components/conversation/ConversationLinks";
 import { ChatHistoryMessage } from "@/components/chat/ChatHistoryMessage";
 import { ChatTemplatesMenu } from "@/components/chat/ChatTemplatesMenu";
-import { formatMessage } from "@/components/chat/chatUtils";
+import { extractMessageMetadata, formatMessage } from "@/components/chat/chatUtils";
 import SourcesSearch from "@/components/chat/SourcesSearch";
-import Citations from "@/components/chat/Citations";
-import SourcesSearched from "@/components/chat/SourcesSearched";
+import SpikeMessage from "@/components/participant/SpikeMessage";
+import { Logo } from "@/components/common/Logo";
 
 const useDembraneChat = ({ chatId }: { chatId: string }) => {
   const chatHistoryQuery = useChatHistory(chatId);
@@ -48,7 +48,6 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 
   const [showProgress, setShowProgress] = useState(false);
   const [progressValue, setProgressValue] = useState(0);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const addChatMessageMutation = useAddChatMessageMutation();
   const lockConversationsMutation = useLockConversationsMutation();
@@ -81,6 +80,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
     handleInputChange,
     handleSubmit,
     isLoading,
+    status,
     error,
     stop,
     reload,
@@ -99,13 +99,14 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
     onResponse: async (_response) => {
       setShowProgress(false);
       setProgressValue(0);
-      setShowSuccessMessage(true);
     },
     onFinish: async (message) => {
       // this uses the response stream from the backend and makes a chat message IN THE FRONTEND
       // do this for now because - i dont want to do the stream text processing again in the backend
       // if someone navigates away before onFinish is completed, the message will be lost
       if (ENABLE_CHAT_AUTO_SELECT && contextToBeAdded?.auto_select_bool) {
+        const flattenedItems = extractMessageMetadata(message);
+
         await addChatMessageMutation.mutateAsync({
           project_chat_id: {
             id: chatId,
@@ -113,6 +114,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
           text: message.content,
           message_from: "assistant",
           date_created: new Date().toISOString(),
+          chat_message_metadata: flattenedItems ?? [],
         });
       } else {
         addChatMessageMutation.mutate({
@@ -122,12 +124,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
           text: message.content,
           message_from: "assistant",
           date_created: new Date().toISOString(),
-        });
-      }
-
-      if (ENABLE_CHAT_AUTO_SELECT && contextToBeAdded?.auto_select_bool) {
-        await chatHistoryQuery.refetch().then(() => {
-          setShowSuccessMessage(false);
+          chat_message_metadata: [],
         });
       }
 
@@ -172,6 +169,11 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
       // Submit the chat
       handleSubmit();
 
+      // Scroll to bottom when user submits a message
+      setTimeout(() => {
+        lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 0);
+      
       if (ENABLE_CHAT_AUTO_SELECT && contextToBeAdded?.auto_select_bool) {
         setShowProgress(true);
         setProgressValue(0);
@@ -191,7 +193,6 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
       if (ENABLE_CHAT_AUTO_SELECT && contextToBeAdded?.auto_select_bool) {
         setShowProgress(false);
         setProgressValue(0);
-        setShowSuccessMessage(false);
       }
     }
   };
@@ -220,6 +221,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
   return {
     isInitializing: chatHistoryQuery.isLoading,
     isLoading,
+    status,
     messages,
     contextToBeAdded,
     input,
@@ -233,7 +235,6 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
     stop: customHandleStop,
     showProgress,
     progressValue,
-    showSuccessMessage,
   };
 };
 
@@ -242,10 +243,12 @@ export const ProjectChatRoute = () => {
 
   const { chatId } = useParams();
   const chatQuery = useProjectChat(chatId ?? "");
-
+  const [referenceIds, setReferenceIds] = useState<string[]>([]);
+  
   const {
     isInitializing,
     isLoading,
+    status,
     messages,
     input,
     error,
@@ -258,8 +261,15 @@ export const ProjectChatRoute = () => {
     reload,
     showProgress,
     progressValue,
-    showSuccessMessage,
   } = useDembraneChat({ chatId: chatId ?? "" });
+
+  // check if assistant is typing by determining if the last message is an assistant message and has a text part
+  const isAssistantTyping =
+    showProgress === false &&
+    messages &&
+    messages.length > 0 &&
+    messages[messages.length - 1].role === "assistant" &&
+    messages[messages.length - 1].parts?.some((part) => part.type === "text");
 
   const noConversationsSelected =
     contextToBeAdded?.conversations?.length === 0 &&
@@ -270,7 +280,6 @@ export const ProjectChatRoute = () => {
       // @ts-expect-error chatHistoryQuery.data is not typed
       formatMessage(message, "User", "Dembrane"),
     );
-
     return messagesList.join("\n\n\n\n");
   }, [messages]);
 
@@ -308,6 +317,8 @@ export const ProjectChatRoute = () => {
               role: "assistant",
               content: t`Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations.`,
             }}
+            referenceIds={referenceIds}
+            setReferenceIds={setReferenceIds}
           />
 
           {/* get everything except the last message */}
@@ -316,7 +327,7 @@ export const ProjectChatRoute = () => {
             messages.slice(0, -1).map((message, idx) => (
               <div key={message.id + idx}>
                 {/* @ts-expect-error chatHistoryQuery.data is not typed */}
-                <ChatHistoryMessage message={message} />
+                <ChatHistoryMessage message={message} referenceIds={referenceIds} setReferenceIds={setReferenceIds} />
               </div>
             ))}
 
@@ -332,6 +343,8 @@ export const ProjectChatRoute = () => {
                       <Button onClick={handleSubmit}>Regenerate</Button>
                     )
                   }
+                  referenceIds={referenceIds}
+                  setReferenceIds={setReferenceIds}
                 />
               </div>
             )}
@@ -340,12 +353,15 @@ export const ProjectChatRoute = () => {
             <SourcesSearch progressValue={progressValue} />
           )}
 
-          {ENABLE_CHAT_AUTO_SELECT && showSuccessMessage && <SourcesSearched />}
-
-          {isLoading && (
+          {isLoading && !showProgress && (
             <Group>
+              <Box className="animate-spin">
+                <Logo hideTitle h="20px" my={4} />
+              </Box>
               <Text size="sm" className="italic">
-                <Trans>Assistant is typing...</Trans>
+                <Trans>
+                  {isAssistantTyping ? "Assistant is typing..." : "Thinking..."}
+                </Trans>
               </Text>
               <Button
                 onClick={() => stop()}
@@ -364,7 +380,7 @@ export const ProjectChatRoute = () => {
             messages[messages.length - 1].role === "assistant" && (
               <div ref={lastMessageRef}>
                 {/* @ts-expect-error chatHistoryQuery.data is not typed */}
-                <ChatHistoryMessage message={messages[messages.length - 1]} />
+                <ChatHistoryMessage message={messages[messages.length - 1]} referenceIds={referenceIds} setReferenceIds={setReferenceIds} />
               </div>
             )}
 
