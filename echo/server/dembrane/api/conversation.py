@@ -563,16 +563,34 @@ async def retranscribe_conversation(
         }
 
 
-@ConversationRouter.delete("/{conversation_id} ")
+@ConversationRouter.delete("/{conversation_id}")
 async def delete_conversation(
     conversation_id: str,
     auth: DependencyDirectusSession,
 ) -> dict:
+    """
+    Delete a conversation and its associated documents from RAG, Postgres, and Directus.
+
+    Args:
+        conversation_id: ID of the conversation to delete
+        auth: Authentication session to verify ownership
+
+    Returns:
+        Dictionary with status info from Directus deletion
+    """
     raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
-    # run rag deletion
-    await delete_conversation_from_lightrag(DeleteConversationRequest(
-        conversation_ids=[conversation_id]),
-        session=auth,
-    )
-    # run directus deletion
-    return(directus.delete_item("conversation", conversation_id))
+    try:
+        # Run RAG deletion (documents, transcripts, segments)
+        await delete_conversation_from_lightrag(
+            DeleteConversationRequest(conversation_ids=[conversation_id]),
+            session=auth,
+        )
+        # Run Directus deletion
+        result = directus.delete_item("conversation", conversation_id)
+        return result
+    except Exception as e:
+        logger.exception(f"Error deleting conversation {conversation_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to delete conversation: {str(e)}"
+        ) from e
