@@ -265,7 +265,20 @@ assert (
     LIGHTRAG_LITELLM_INFERENCE_API_KEY
 ), "LIGHTRAG_LITELLM_INFERENCE_API_KEY environment variable is not set"
 logger.debug("LIGHTRAG_LITELLM_INFERENCE_API_KEY: set")
-# ---------------/Secrets---------------
+
+LIGHTRAG_LITELLM_INFERENCE_API_VERSION = os.environ.get("LIGHTRAG_LITELLM_INFERENCE_API_VERSION")
+if LIGHTRAG_LITELLM_INFERENCE_API_VERSION:
+    logger.debug("LIGHTRAG_LITELLM_INFERENCE_API_VERSION: set")
+else:
+    logger.debug("LIGHTRAG_LITELLM_INFERENCE_API_VERSION: not set")
+
+LIGHTRAG_LITELLM_INFERENCE_API_BASE = os.environ.get("LIGHTRAG_LITELLM_INFERENCE_API_BASE")
+if LIGHTRAG_LITELLM_INFERENCE_API_BASE:
+    logger.debug("LIGHTRAG_LITELLM_INFERENCE_API_BASE: set")
+else:
+    logger.debug("LIGHTRAG_LITELLM_INFERENCE_API_BASE: not set")
+
+#---------------/Secrets---------------
 
 
 # ---------------Configurations---------------
