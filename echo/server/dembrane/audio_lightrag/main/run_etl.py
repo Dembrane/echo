@@ -4,7 +4,11 @@ from typing import Optional
 import redis
 from dotenv import load_dotenv
 
-from dembrane.config import REDIS_URL, REDIS_LOCK_EXPIRY, AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX
+from dembrane.config import (
+    REDIS_URL,
+    AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY,
+    AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX,
+)
 from dembrane.audio_lightrag.pipelines.audio_etl_pipeline import AudioETLPipeline
 from dembrane.audio_lightrag.pipelines.directus_etl_pipeline import DirectusETLPipeline
 from dembrane.audio_lightrag.pipelines.contextual_chunk_etl_pipeline import (
@@ -46,7 +50,7 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
         for conv_id in conv_id_list:
             lock_key = f"{AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX}{conv_id}"
             # Atomically acquire the lock - fail fast if someone already owns it
-            acquired = redis_client.set(lock_key, "1", ex=REDIS_LOCK_EXPIRY, nx=True)
+            acquired = redis_client.set(lock_key, "1", ex=AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY, nx=True)
             if not acquired:
                 # Check TTL for informative logging
                 ttl = redis_client.ttl(lock_key)

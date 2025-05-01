@@ -333,9 +333,9 @@ AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX = os.environ.get("AUDIO_LIGHTRAG_REDIS_LOCK_PRE
 assert AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX, "AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX environment variable is not set"
 logger.debug("AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX: set")
 
-REDIS_LOCK_EXPIRY = int(os.environ.get("REDIS_LOCK_EXPIRY", 3600))
-assert REDIS_LOCK_EXPIRY, "REDIS_LOCK_EXPIRY environment variable is not set"
-logger.debug("REDIS_LOCK_EXPIRY: set")
+AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY = int(os.environ.get("AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY", 3600))
+assert AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY, "AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY environment variable is not set"
+logger.debug("AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY: set")
 
 # ---------------/Configurations---------------
 

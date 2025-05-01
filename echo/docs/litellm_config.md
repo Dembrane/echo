@@ -54,4 +54,4 @@ This document outlines all LiteLLM-related configurations and their explanations
 
 ### Redis Lock Configuration
 - `AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX`: Prefix for Redis lock keys (default: "etl_lock_conv_"). Used to create unique lock keys for each conversation ID in the ETL pipeline.
-- `REDIS_LOCK_EXPIRY`: Time in seconds before a Redis lock expires (default: 3600, which is 1 hour). This prevents the same conversation ID from being processed within this time period.
+- `AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY`: Time in seconds before a Redis lock expires (default: 3600, which is 1 hour). This prevents the same conversation ID from being processed within this time period.
