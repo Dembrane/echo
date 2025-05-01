@@ -22,7 +22,11 @@ from dembrane.audio_utils import (
 )
 from dembrane.quote_utils import count_tokens
 from dembrane.reply_utils import generate_reply_for_conversation
-from dembrane.api.stateless import generate_summary
+from dembrane.api.stateless import (
+    DeleteConversationRequest,
+    generate_summary,
+    delete_conversation as delete_conversation_from_lightrag,
+)
 from dembrane.api.exceptions import (
     NoContentFoundException,
     ConversationNotFoundException,
@@ -557,3 +561,18 @@ async def retranscribe_conversation(
             "message": "Failed to retranscribe conversation",
             "error_detail": str(e),
         }
+
+
+@ConversationRouter.delete("/{conversation_id} ")
+async def delete_conversation(
+    conversation_id: str,
+    auth: DependencyDirectusSession,
+) -> dict:
+    raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
+    # run rag deletion
+    await delete_conversation_from_lightrag(DeleteConversationRequest(
+        conversation_ids=[conversation_id]),
+        session=auth,
+    )
+    # run directus deletion
+    return(directus.delete_item("conversation", conversation_id))

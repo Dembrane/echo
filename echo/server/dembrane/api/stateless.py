@@ -236,7 +236,7 @@ async def get_lightrag_prompt(payload: GetLightragQueryRequest,
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 class DeleteConversationRequest(BaseModel):
-    conversation_id: list[str]
+    conversation_ids: list[str]
 
 @StatelessRouter.post("/rag/delete_conversation")
 async def delete_conversation(payload: DeleteConversationRequest,
@@ -244,7 +244,7 @@ async def delete_conversation(payload: DeleteConversationRequest,
                               ) -> None:
     session = session
 
-    conversation_ids = payload.conversation_id
+    conversation_ids = payload.conversation_ids
     for id in conversation_ids:
         if not is_valid_uuid(id):
             raise HTTPException(status_code=400, detail="Invalid conversation ID")
