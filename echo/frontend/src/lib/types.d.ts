@@ -173,6 +173,7 @@ type ChatHistoryMessage = {
   role: "user" | "assistant" | "system" | "dembrane";
   content: string;
   _original: ProjectChatMessage;
+  metadata: ProjectChatMessageMetadata[];
 };
 
 type ChatHistory = Array<ChatHistoryMessage>;

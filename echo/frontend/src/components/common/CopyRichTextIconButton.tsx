@@ -6,14 +6,19 @@ export const CopyRichTextIconButton = ({ markdown }: { markdown: string }) => {
   const { copy, copied } = useCopyToRichText();
 
   return (
-    <Tooltip label={copied ? "Copied" : "Copy"} position="bottom">
+    <Tooltip
+      transitionProps={{ duration: 200 }}
+      label={copied ? "Copied" : "Copy"}
+      px={5}
+    >
       <ActionIcon
-        size="xs"
+        size="md"
+        radius="xl"
         color={copied ? "teal" : "gray"}
         variant="subtle"
         onClick={() => copy(markdown)}
       >
-        {copied ? <IconCheck /> : <IconCopy />}
+        {copied ? <IconCheck size={18} /> : <IconCopy size={18} />}
       </ActionIcon>
     </Tooltip>
   );
