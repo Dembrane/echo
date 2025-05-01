@@ -87,6 +87,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
   } = useChat({
     api: `${API_BASE_URL}/chats/${chatId}?language=${iso639_1 ?? "en"}`,
     credentials: "include",
+    // @ts-expect-error chatHistoryQuery.data is not typed
     initialMessages: chatHistoryQuery.data ?? [],
     streamProtocol: "data",
     onError: (error) => {
@@ -206,6 +207,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
       chatHistoryQuery.data &&
       chatHistoryQuery.data.length > (messages?.length ?? 0)
     ) {
+      // @ts-expect-error chatHistoryQuery.data is not typed
       setMessages(chatHistoryQuery.data ?? messages);
     }
   }, [
