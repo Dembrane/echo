@@ -41,30 +41,31 @@ nest_asyncio.apply()
 
 logger = getLogger("server")
 
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     # startup
     logger.info("starting server")
-    init_sentry() 
-    
+    init_sentry()
+
     # Initialize PostgreSQL and LightRAG
     _load_postgres_env_vars(str(DATABASE_URL))
     postgres_db = await PostgresDBManager.get_initialized_db()
-    
+
     # Define the critical initialization operation
     async def initialize_database() -> bool:
         await postgres_db.initdb()
         await postgres_db.check_tables()
         await check_audio_lightrag_tables(postgres_db)
         return True
-    
+
     # Use distributed lock for initialization
     _, _ = await with_distributed_lock(
         redis_url=str(REDIS_URL),
         lock_key="DEMBRANE_INIT_LOCK",
-        critical_operation=initialize_database
+        critical_operation=initialize_database,
     )
-    
+
     # This part is always needed, regardless of whether we performed initialization
     _app.state.rag = LightRAG(
         working_dir=None,
@@ -74,13 +75,13 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
         doc_status_storage="PGDocStatusStorage",
         graph_storage="Neo4JStorage",
         vector_storage="PGVectorStorage",
-        vector_db_storage_cls_kwargs={
-            "cosine_better_than_threshold": 0.4
-        }
+        vector_db_storage_cls_kwargs={"cosine_better_than_threshold": 0.4},
     )
 
     await _app.state.rag.initialize_storages()
-    await initialize_pipeline_status() #This function is called during FASTAPI lifespan for each worker.
+    await (
+        initialize_pipeline_status()
+    )  # This function is called during FASTAPI lifespan for each worker.
     logger.info("RAG object has been initialized")
 
     yield
@@ -142,7 +143,7 @@ def custom_openapi() -> Any:
         return app.openapi_schema
     openapi_schema = get_openapi(
         title="dembrane/echo API",
-        version="0.2.0",
+        version="1.0.0",
         routes=app.routes,
     )
     openapi_schema["info"]["x-logo"] = {"url": "/dembrane-logo.png"}

@@ -5,6 +5,7 @@ from pathlib import Path
 from celery import Celery, chain, chord, group, signals, bootsteps  # type: ignore
 from sentry_sdk import capture_exception
 from celery.signals import worker_ready, worker_shutdown  # type: ignore
+from celery.schedules import crontab
 from celery.utils.log import get_task_logger  # type: ignore
 
 import dembrane.tasks_config
@@ -104,6 +105,14 @@ def worker_shutdown(**_):
 def init_sentry_celery(**_kwargs):
     logger.info("initializing sentry for celery")
     init_sentry()
+
+
+@celery_app.on_after_configure.connect
+def setup_periodic_tasks(sender: Celery, **_kwargs):
+    sender.add_periodic_task(
+        crontab(hour=7, minute=30, day_of_week=1),
+        test_collect_unfinished_conversations.s(),
+    )
 
 
 class BaseTask(celery_app.Task):  # type: ignore
@@ -849,6 +858,7 @@ def task_finish_conversation_hook(self, conversation_id: str):
             "conversation",
             conversation_id,
             item_data={
+                "is_finished": True,
                 "processing_status": ProcessingStatus.COMPLETED.value,
                 "processing_message": "Conversation marked as finished",
             },
