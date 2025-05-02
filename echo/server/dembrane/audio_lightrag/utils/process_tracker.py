@@ -31,11 +31,6 @@ class ProcessTracker:
     def get_unprocesssed_process_tracker_df(self, column_name: str) -> pd.DataFrame:
         return self.df[self.df[column_name].isna()]
     
-    def update_status(self, conversation_id: int, chunk_id: int, 
-                      column_name: str, status: str) -> None:
-        self.df.loc[(self.df.conversation_id == conversation_id) 
-                    & (self.df.chunk_id == chunk_id), column_name] = status
-    
     def update_value_for_chunk_id(self, chunk_id: str, column_name: str, value: str) -> None:
         self.df.loc[(self.df.chunk_id == chunk_id), column_name] = value
 

@@ -44,10 +44,14 @@ This document outlines all LiteLLM-related configurations and their explanations
 
 ### Audio Processing Settings
 - `AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM`: Number of conversation history items to maintain (default: 10)
-- `AUDIO_LIGHTRAG_TIME_THRESHOLD_SECONDS`: Time threshold for audio processing in seconds (default: 60)
+- `AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS`: Time threshold for audio processing in seconds (default: 60). Files will not be processed if uploaded earlier than cooloff. Currently disabled, pass the current current tz stamp of directus in run_etl to enable
 - `AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB`: Maximum allowed audio file size in MB (default: 15)
 - `AUDIO_LIGHTRAG_TOP_K_PROMPT`: Top K value for prompt processing (default: 100)
 
 ### Feature Flags
 - `ENABLE_AUDIO_LIGHTRAG_INPUT`: Enable/disable audio input processing (default: false)
-- `AUTO_SELECT_ENABLED`: Enable/disable auto-select feature (default: false) 
+- `ENABLE_CHAT_AUTO_SELECT`: Enable/disable auto-select feature (default: false) 
+
+### Redis Lock Configuration
+- `AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX`: Prefix for Redis lock keys (default: "etl_lock_conv_"). Used to create unique lock keys for each conversation ID in the ETL pipeline.
+- `AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY`: Time in seconds before a Redis lock expires (default: 3600, which is 1 hour). This prevents the same conversation ID from being processed within this time period.

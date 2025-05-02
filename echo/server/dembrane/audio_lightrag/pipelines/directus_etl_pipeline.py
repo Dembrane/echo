@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Tuple, Optional
 import pandas as pd
 from dotenv import load_dotenv
 
-from dembrane.config import AUDIO_LIGHTRAG_TIME_THRESHOLD_SECONDS
+from dembrane.config import AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS
 from dembrane.directus import directus
 from dembrane.audio_lightrag.utils.process_tracker import ProcessTracker
 
@@ -78,9 +78,10 @@ class DirectusETLPipeline:
             conversation_df['chunks_id_path_ts'].tolist(), index=conversation_df.index
         )
         conversation_df = conversation_df.reset_index(drop=True)
-        conversation_df = conversation_df[['id', 'project_id', 'chunk_id', 'path', 'timestamp']].dropna()
+        conversation_df = conversation_df[['id', 'project_id', 'chunk_id', 'path', 'timestamp']]
+        conversation_df.path = conversation_df.path.fillna('NO_AUDIO_FOUND')
         conversation_df['format'] = conversation_df.path.apply(lambda x: x.split('.')[-1])
-        conversation_df = conversation_df[conversation_df.format.isin(self.accepted_formats)]
+        conversation_df = conversation_df[conversation_df.format.isin(self.accepted_formats + ['NO_AUDIO_FOUND'])]
         conversation_df.rename(columns = {"id": "conversation_id"}, inplace=True)
         conversation_df = conversation_df.sort_values(['project_id', 'conversation_id', 'timestamp'])
         project_df = pd.DataFrame(project)
@@ -101,7 +102,7 @@ class DirectusETLPipeline:
             conversation_df['timestamp'] = pd.to_datetime(conversation_df['timestamp'])
             # take diff between current_timestamp and timestamp
             timestamp_diff = conversation_df['timestamp'].apply(lambda x: (run_timestamp - x).total_seconds())
-            conversation_df = conversation_df[timestamp_diff > int(AUDIO_LIGHTRAG_TIME_THRESHOLD_SECONDS)]
+            conversation_df = conversation_df[timestamp_diff > int(AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS)]
 
         if conversation_df.empty:
             logger.warning("No conversation data found")
