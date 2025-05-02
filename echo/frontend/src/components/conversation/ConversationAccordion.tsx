@@ -111,7 +111,7 @@ const ConversationAccordionLabelChatSelection = ({
   );
 
   const isAutoSelectEnabled =
-  projectChatContextQuery.data?.auto_select_bool ?? false;
+    projectChatContextQuery.data?.auto_select_bool ?? false;
 
   // Check if conversation has any content
   const hasContent = conversation.chunks?.some(
