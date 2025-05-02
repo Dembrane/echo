@@ -38,6 +38,16 @@ msgstr "Serverfout"
 msgid "Something went wrong"
 msgstr "Er is iets fout gegaan"
 
+#: src/routes/participant/ParticipantPostConversation.tsx:278
+msgid " Submit"
+msgstr " Verzenden"
+
+#: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:67
+msgid " Unsubscribe from Notifications"
+msgstr " Afmelden voor meldingen"
+
+#. placeholder {0}: showPreview ? "Hide Preview" : "Show Preview"
+#: src/components/project/ProjectPortalEditor.tsx:232
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: showPreview ? "Hide Preview" : "Show Preview"
 #. placeholder {0}: citation.reference_text
@@ -96,9 +106,9 @@ msgstr "<0>Wacht </0>{0}:{1}"
 msgid "0 Aspects"
 msgstr "0 Aspecten"
 
-#: src/components/project/ProjectTranscriptSettings.tsx:126
-#~ msgid "Add"
-#~ msgstr "Toevoegen"
+#: src/routes/participant/ParticipantPostConversation.tsx:226
+msgid "Add"
+msgstr "Toevoegen"
 
 #: src/components/view/CreateViewForm.tsx:105
 msgid "Add additional context (Optional)"
@@ -112,7 +122,7 @@ msgstr "Vink aan wat van toepassing is"
 #~ msgid "Add context to document"
 #~ msgstr "Voeg context toe aan document"
 
-#: src/components/project/ProjectPortalEditor.tsx:99
+#: src/components/project/ProjectPortalEditor.tsx:100
 msgid "Add key terms or proper nouns to improve transcript quality and accuracy."
 msgstr "Voeg belangrijke woorden of namen toe om de kwaliteit en nauwkeurigheid van het transcript te verbeteren."
 
@@ -132,15 +142,20 @@ msgstr "Voeg toe aan dit gesprek"
 #~ msgid "Added context"
 #~ msgstr "Context toegevoegd"
 
+#: src/routes/participant/ParticipantPostConversation.tsx:234
+msgid "Added emails"
+msgstr "Toegevoegde e-mails"
+
+#: src/routes/project/chat/ProjectChatRoute.tsx:330
 #: src/routes/project/chat/ProjectChatRoute.tsx:426
 msgid "Adding Context:"
 msgstr "Context toevoegen:"
 
-#: src/components/project/ProjectPortalEditor.tsx:340
+#: src/components/project/ProjectPortalEditor.tsx:343
 msgid "Advanced (Tips and tricks)"
 msgstr "Geavanceerd (Tips en trucs)"
 
-#: src/components/project/ProjectPortalEditor.tsx:524
+#: src/components/project/ProjectPortalEditor.tsx:571
 msgid "Advanced Settings"
 msgstr "Geavanceerde instellingen"
 
@@ -171,6 +186,12 @@ msgstr "Bijna klaar"
 #: src/components/conversation/ConversationAccordion.tsx:131
 msgid "Already added to this chat"
 msgstr "Al toegevoegd aan dit gesprek"
+
+#. placeholder {0}: participantCount !== undefined ? participantCount : t`loading...`
+#. placeholder {1}: participantCount == 1 ? "" : "s"
+#: src/routes/project/report/ProjectReportRoute.tsx:317
+msgid "An email Notification will be sent to {0} participant{1}. Do you want to proceed?"
+msgstr "Een e-mail melding wordt naar {0} deelnemer{1} verstuurd. Wilt u doorgaan?"
 
 #: src/routes/participant/ParticipantStart.tsx:141
 msgid "An error occurred while loading the Portal. Please contact the support team."
@@ -284,11 +305,11 @@ msgstr "Stel vraag"
 #~ msgid "Ask AI"
 #~ msgstr "Vraag AI"
 
-#: src/components/project/ProjectPortalEditor.tsx:281
+#: src/components/project/ProjectPortalEditor.tsx:284
 msgid "Ask for Name?"
 msgstr "Vraag om naam?"
 
-#: src/components/project/ProjectPortalEditor.tsx:294
+#: src/components/project/ProjectPortalEditor.tsx:297
 msgid "Ask participants to provide their name when they start a conversation"
 msgstr "Vraag deelnemers om hun naam te geven wanneer ze een gesprek starten"
 
@@ -334,6 +355,7 @@ msgstr "Automatisch selecteren bronnen om toe te voegen aan het gesprek"
 msgid "Back"
 msgstr "Terug"
 
+#: src/components/project/ProjectPortalEditor.tsx:339
 #: src/components/dropzone/UploadConversationDropzone.tsx:852
 msgid "Back to Selection"
 msgstr "Terug naar selectie"
@@ -342,7 +364,7 @@ msgstr "Terug naar selectie"
 msgid "Basic (Essential tutorial slides)"
 msgstr "Basis (Essentieel tutorial slides)"
 
-#: src/components/project/ProjectPortalEditor.tsx:247
+#: src/components/project/ProjectPortalEditor.tsx:250
 msgid "Basic Settings"
 msgstr "Basis instellingen"
 
@@ -355,6 +377,7 @@ msgid "By deleting this project, you will delete all the data associated with it
 msgstr "Door dit project te verwijderen, verwijder je alle gegevens die eraan gerelateerd zijn. Dit kan niet ongedaan worden gemaakt. Weet je zeker dat je dit project wilt verwijderen?"
 
 #: src/routes/project/resource/ProjectResourceOverview.tsx:152
+#: src/routes/project/report/ProjectReportRoute.tsx:328
 #: src/components/dropzone/UploadConversationDropzone.tsx:727
 #: src/components/dropzone/UploadConversationDropzone.tsx:843
 #: src/components/conversation/MoveConversationButton.tsx:201
@@ -395,6 +418,9 @@ msgstr "Controleer microfoontoegang"
 msgid "Check your email"
 msgstr "Controleer je email"
 
+#: src/routes/participant/ParticipantPostConversation.tsx:226
+msgid "Checking..."
+msgstr "Controleren..."
 #: src/components/chat/Sources.tsx:21
 msgid "Citing the following sources"
 msgstr "Citeert de volgende bronnen"
@@ -428,6 +454,10 @@ msgstr "Bevestig nieuw wachtwoord"
 #: src/routes/auth/Register.tsx:107
 msgid "Confirm Password"
 msgstr "Bevestig wachtwoord"
+
+#: src/routes/project/report/ProjectReportRoute.tsx:314
+msgid "Confirm Publishing"
+msgstr "Publiceren bevestigen"
 
 #: src/components/report/ReportModalNavigationButton.tsx:48
 msgid "Connecting to report services..."
@@ -466,7 +496,7 @@ msgstr "Kopieer"
 msgid "Copy link"
 msgstr "Kopieer link"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:186
+#: src/routes/project/report/ProjectReportRoute.tsx:203
 msgid "Copy link to share this report"
 msgstr "Kopieer link om dit rapport te delen"
 
@@ -539,7 +569,7 @@ msgstr "Verwijder project"
 msgid "Deleted successfully"
 msgstr "Verwijderd succesvol"
 
-#: src/components/project/ProjectPortalEditor.tsx:357
+#: src/components/project/ProjectPortalEditor.tsx:360
 msgid "Dembrane Echo"
 msgstr "Dembrane Echo"
 
@@ -554,6 +584,10 @@ msgstr "Dembrane Echo"
 #: src/components/report/ReportRenderer.tsx:21
 msgid "Do you want to contribute to this project?"
 msgstr "Wil je bijdragen aan dit project?"
+
+#: src/routes/participant/ParticipantPostConversation.tsx:189
+msgid "Do you want to stay in the loop?"
+msgstr "Wil je blijven in de gaten?"
 
 #: src/components/Message.tsx:82
 #~ msgid "Document AI Assistant"
@@ -607,7 +641,7 @@ msgstr "Sleep audio bestanden hierheen of klik om bestanden te selecteren"
 #~ msgid "Drag documents here or select files"
 #~ msgstr "Sleep documenten hierheen of selecteer bestanden"
 
-#: src/components/project/ProjectPortalEditor.tsx:265
+#: src/components/project/ProjectPortalEditor.tsx:268
 msgid "Dutch"
 msgstr "Nederlands"
 
@@ -654,7 +688,11 @@ msgstr "Email verificatie | Dembrane"
 msgid "Email verified successfully. You will be redirected to the login page in 5 seconds. If you are not redirected, please click <0>here</0>."
 msgstr "Email is succesvol geverifieerd. Je wordt doorgestuurd naar de inlogpagina in 5 seconden. Als je niet doorgestuurd wordt, klik dan <0>hier</0>."
 
-#: src/components/project/ProjectPortalEditor.tsx:383
+#: src/routes/participant/ParticipantPostConversation.tsx:198
+msgid "email@work.com"
+msgstr "email@werk.com"
+
+#: src/components/project/ProjectPortalEditor.tsx:386
 msgid "Enable Dembrane Echo"
 msgstr "Dembrane Echo inschakelen"
 
@@ -662,7 +700,15 @@ msgstr "Dembrane Echo inschakelen"
 #~ msgid "Enable Dembrane Reply"
 #~ msgstr "Dembrane Reactie inschakelen"
 
-#: src/components/project/ProjectPortalEditor.tsx:366
+#: src/components/project/ProjectPortalEditor.tsx:543
+msgid "Enable Report Notifications"
+msgstr "Berichtsbenachrichtigingen inschakelen"
+
+#: src/components/project/ProjectPortalEditor.tsx:527
+msgid "Enable this feature to allow participants to receive notifications when a report is published or updated. Participants can enter their email to subscribe for updates and stay informed."
+msgstr "Schakel deze functie in om deelnemers toe te staan om meldingen te ontvangen wanneer een rapport wordt gepubliceerd of bijgewerkt. Deelnemers kunnen hun e-mailadres invoeren om updates te abonneren en op de hoogte te blijven."
+
+#: src/components/project/ProjectPortalEditor.tsx:369
 msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Echo\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 msgstr "Schakel deze functie in om deelnemers toe te staan om AI-geïnspireerde reacties aan te vragen tijdens hun gesprek. Deelnemers kunnen na het opnemen van hun gedachten op \"Dembrane Echo\" klikken om contextuele feedback te ontvangen, waardoor dieper reflectie en betrokkenheid wordt bevorderd. Een cooldownperiode wordt toegepast tussen aanvragen."
 
@@ -670,11 +716,11 @@ msgstr "Schakel deze functie in om deelnemers toe te staan om AI-geïnspireerde 
 #~ msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Get Reply\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 #~ msgstr "Schakel deze functie in om deelnemers toe te staan om AI-geïnspireerde reacties aan te vragen tijdens hun gesprek. Deelnemers kunnen na het opnemen van hun gedachten op \"Dembrane Reactie\" klikken om contextuele feedback te ontvangen, waardoor dieper reflectie en betrokkenheid wordt bevorderd. Een cooldownperiode wordt toegepast tussen aanvragen."
 
-#: src/components/project/ProjectPortalEditor.tsx:264
+#: src/components/project/ProjectPortalEditor.tsx:267
 msgid "English"
 msgstr "Engels"
 
-#: src/components/project/ProjectPortalEditor.tsx:106
+#: src/components/project/ProjectPortalEditor.tsx:107
 msgid "Enter a key term or proper noun"
 msgstr "Voer een sleutelterm of eigennamen in"
 
@@ -735,6 +781,10 @@ msgstr "Fout bij het uploaden van \"{0}\": {1}"
 #~ msgid "Example: This conversation is about [topic]. Key terms include [term1], [term2]. Please pay special attention to [specific aspect]."
 #~ msgstr "Voorbeeld: Dit gesprek gaat over [onderwerp]. Belangrijke termen zijn [term1], [term2]. Let speciaal op [specifieke aspect]."
 
+#: src/routes/project/report/ProjectReportRoute.tsx:67
+#: src/components/project/ProjectPortalEditor.tsx:364
+#: src/components/conversation/MoveConversationButton.tsx:129
+#: src/components/conversation/ConversationDangerZone.tsx:52
 #: src/routes/project/report/ProjectReportRoute.tsx:64
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:251
 #: src/components/project/ProjectPortalEditor.tsx:361
@@ -754,6 +804,14 @@ msgstr "Mislukt"
 msgid "Failed to delete response"
 msgstr "Fout bij het verwijderen van de reactie"
 
+#: src/routes/participant/ParticipantPostConversation.tsx:134
+#: src/routes/participant/ParticipantPostConversation.tsx:139
+msgid "Failed to verify email status. Please try again."
+msgstr "Fout bij het verifiëren van de e-mailstatus. Probeer het opnieuw."
+
+#: src/components/conversation/ConversationAccordion.tsx:473
+msgid "Filter"
+msgstr "Filteren"
 #: src/routes/project/conversation/ProjectConversationOverview.tsx:51
 msgid "Failed to regenerate the summary. Please try again later."
 msgstr "Fout bij het hergenereren van de samenvatting. Probeer het opnieuw later."
@@ -813,7 +871,7 @@ msgstr "Voornaam"
 msgid "Forgot your password?"
 msgstr "Wachtwoord vergeten?"
 
-#: src/components/project/ProjectPortalEditor.tsx:268
+#: src/components/project/ProjectPortalEditor.tsx:271
 msgid "French"
 msgstr "Frans"
 
@@ -825,7 +883,7 @@ msgstr "Frans"
 msgid "Generate Summary"
 msgstr "Samenvatting genereren"
 
-#: src/components/project/ProjectPortalEditor.tsx:266
+#: src/components/project/ProjectPortalEditor.tsx:269
 msgid "German"
 msgstr "Duits"
 
@@ -901,7 +959,7 @@ msgstr "Om beter door de quotes te navigeren, maak aanvullende views aan. De quo
 #~ msgid "Inactive"
 #~ msgstr "Inactief"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:238
+#: src/routes/project/report/ProjectReportRoute.tsx:274
 msgid "Include portal link in report"
 msgstr "Link naar portal in rapport opnemen"
 
@@ -963,7 +1021,7 @@ msgstr "Aansluiten {0} op Dembrane"
 msgid "Just a moment"
 msgstr "Gewoon een momentje"
 
-#: src/components/project/ProjectPortalEditor.tsx:257
+#: src/components/project/ProjectPortalEditor.tsx:260
 msgid "Language"
 msgstr "Taal"
 
@@ -998,7 +1056,7 @@ msgstr "Bibliotheek wordt momenteel verwerkt"
 msgid "LinkedIn Post (Experimental)"
 msgstr "LinkedIn Post (Experimenteel)"
 
-#: src/components/project/ProjectPortalEditor.tsx:595
+#: src/components/project/ProjectPortalEditor.tsx:642
 msgid "Live Preview"
 msgstr "Live Voorbeeld"
 
@@ -1006,6 +1064,11 @@ msgstr "Live Voorbeeld"
 msgid "Loading"
 msgstr "Bezig met laden"
 
+#: src/routes/project/report/ProjectReportRoute.tsx:321
+msgid "loading..."
+msgstr "bezig met laden..."
+
+#: src/components/conversation/ConversationAccordion.tsx:81
 #: src/components/conversation/ConversationAccordion.tsx:100
 msgid "Loading..."
 msgstr "Bezig met laden..."
@@ -1178,6 +1241,7 @@ msgstr "Geen transcript beschikbaar"
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "Er is nog geen transcript beschikbaar voor dit gesprek. Controleer later opnieuw."
 
+#: src/components/project/ProjectPortalEditor.tsx:335
 #: src/routes/project/chat/ProjectChatRoute.tsx:416
 msgid "No transcripts are selected for this chat"
 msgstr "Er zijn geen transcripten geselecteerd voor dit gesprek"
@@ -1245,7 +1309,7 @@ msgstr "Overzicht"
 #~ msgid "Page"
 #~ msgstr "Pagina"
 
-#: src/components/project/ProjectPortalEditor.tsx:461
+#: src/components/project/ProjectPortalEditor.tsx:464
 msgid "Page Content"
 msgstr "Pagina inhoud"
 
@@ -1253,7 +1317,7 @@ msgstr "Pagina inhoud"
 msgid "Page not found"
 msgstr "Pagina niet gevonden"
 
-#: src/components/project/ProjectPortalEditor.tsx:438
+#: src/components/project/ProjectPortalEditor.tsx:441
 msgid "Page Title"
 msgstr "Pagina titel"
 
@@ -1277,7 +1341,7 @@ msgstr "Deelnemers kunnen trefwoorden selecteren wanneer ze een gesprek starten"
 msgid "Password"
 msgstr "Wachtwoord"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:257
+#: src/routes/project/report/ProjectReportRoute.tsx:293
 msgid "Password protect portal (request feature)"
 msgstr "Portal met wachtwoord beveiligen (aanvraag functie)"
 
@@ -1309,6 +1373,11 @@ msgstr "Schakel deelneming in om delen mogelijk te maken"
 #: src/components/Message.tsx:449
 #~ msgid "Please enter a message"
 #~ msgstr "Voer een bericht in"
+
+#: src/routes/participant/ParticipantPostConversation.tsx:92
+#: src/routes/participant/ParticipantPostConversation.tsx:110
+msgid "Please enter a valid email."
+msgstr "Voer een geldig e-mailadres in."
 
 #: src/routes/auth/Login.tsx:142
 msgid "Please login to continue."
@@ -1366,11 +1435,11 @@ msgstr "Wacht aub terwijl we je rapport bijwerken. Je wordt automatisch doorgest
 msgid "Please wait while we verify your email address."
 msgstr "Wacht aub terwijl we uw e-mailadres verifiëren."
 
-#: src/components/project/ProjectPortalEditor.tsx:428
+#: src/components/project/ProjectPortalEditor.tsx:431
 msgid "Portal Content"
 msgstr "Portal inhoud"
 
-#: src/components/project/ProjectPortalEditor.tsx:212
+#: src/components/project/ProjectPortalEditor.tsx:215
 #: src/components/layout/ProjectOverviewLayout.tsx:33
 msgid "Portal Editor"
 msgstr "Portal Editor"
@@ -1383,7 +1452,7 @@ msgstr "Gemaakt met ❤️ door"
 msgid "Preparing your experience"
 msgstr "Uw ervaring voorbereiden"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:193
+#: src/routes/project/report/ProjectReportRoute.tsx:210
 msgid "Print this report"
 msgstr "Dit rapport afdrukken"
 
@@ -1391,6 +1460,11 @@ msgstr "Dit rapport afdrukken"
 msgid "Privacy Statements"
 msgstr "Privacy verklaring"
 
+#: src/routes/project/report/ProjectReportRoute.tsx:331
+msgid "Proceed"
+msgstr "Doorgaan"
+
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:211
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:310
 msgid "Processing Transcript"
 msgstr "Transcript wordt verwerkt"
@@ -1448,11 +1522,11 @@ msgstr "Projecten Home"
 #~ msgid "Provide specific context to improve transcript quality and accuracy. This may include key terms, specific instructions, or other relevant information."
 #~ msgstr "Geef specifieke context om de kwaliteit en nauwkeurigheid van de transcriptie te verbeteren. Dit kan bestaan uit belangrijke termen, specifieke instructies of andere relevante informatie."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:214
+#: src/routes/project/report/ProjectReportRoute.tsx:231
 msgid "Publish"
 msgstr "Publiceren"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:214
+#: src/routes/project/report/ProjectReportRoute.tsx:231
 msgid "Published"
 msgstr "Gepubliceerd"
 
@@ -1470,10 +1544,11 @@ msgstr "Quotes"
 msgid "Record"
 msgstr "Opname starten"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:57
+#: src/routes/participant/ParticipantPostConversation.tsx:180
 msgid "Record another conversation"
 msgstr "Neem nog een gesprek op"
 
+#: src/components/project/ProjectPortalEditor.tsx:650
 #: src/components/chat/References.tsx:19
 msgid "References"
 msgstr "Referenties"
@@ -1502,6 +1577,11 @@ msgstr "Registreer als nieuwe gebruiker"
 msgid "Relevance"
 msgstr "Relevantie"
 
+#: src/routes/participant/ParticipantPostConversation.tsx:240
+msgid "Remove Email"
+msgstr "E-mail verwijderen"
+
+#: src/components/conversation/ConversationAccordion.tsx:111
 #: src/components/dropzone/UploadConversationDropzone.tsx:684
 msgid "Remove file"
 msgstr "Bestand verwijderen"
@@ -1514,11 +1594,11 @@ msgstr "Verwijder van dit gesprek"
 msgid "Rename"
 msgstr "Naam wijzigen"
 
-#: src/components/project/ProjectPortalEditor.tsx:405
+#: src/components/project/ProjectPortalEditor.tsx:408
 msgid "Reply Prompt"
 msgstr "Reactie prompt"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:61
+#: src/routes/project/report/ProjectReportRoute.tsx:64
 #: src/components/report/ReportRenderer.tsx:72
 #: src/components/report/ReportModalNavigationButton.tsx:53
 msgid "Report"
@@ -1533,9 +1613,13 @@ msgstr "Rapporteer een probleem"
 msgid "Report Created - {0}"
 msgstr "Rapport aangemaakt - {0}"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:138
+#: src/routes/project/report/ProjectReportRoute.tsx:155
 msgid "Report generation is currently in beta and limited to projects with fewer than 10 hours of recording."
 msgstr "Rapport generatie is momenteel in beta en beperkt tot projecten met minder dan 10 uur opname."
+
+#: src/components/project/ProjectPortalEditor.tsx:524
+msgid "Report Notifications"
+msgstr "Rapportmeldingen"
 
 #. placeholder {0}: formatDateForAxis(new Date(r.createdAt!).getTime())
 #: src/components/report/ReportTimeline.tsx:319
@@ -1657,6 +1741,7 @@ msgstr "Selecteer Project"
 #~ msgid "Select Session"
 #~ msgstr "Selecteer Sessie"
 
+#: src/components/project/ProjectPortalEditor.tsx:328
 #: src/components/conversation/ConversationEdit.tsx:140
 msgid "Select tags"
 msgstr "Selecteer tags"
@@ -1665,7 +1750,7 @@ msgstr "Selecteer tags"
 msgid "Select the instructions that will be shown to participants when they start a conversation"
 msgstr "Selecteer de instructies die worden getoond aan deelnemers wanneer ze een gesprek starten"
 
-#: src/components/project/ProjectPortalEditor.tsx:313
+#: src/components/project/ProjectPortalEditor.tsx:316
 msgid "Select tutorial"
 msgstr "Selecteer tutorial"
 
@@ -1702,9 +1787,13 @@ msgstr "Installeer je eerste project"
 msgid "Share"
 msgstr "Delen"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:164
+#: src/routes/project/report/ProjectReportRoute.tsx:181
 msgid "Share this report"
 msgstr "Dit rapport delen"
+
+#: src/routes/participant/ParticipantPostConversation.tsx:192
+msgid "Share your details here"
+msgstr "Deel je gegevens hier"
 
 #: src/components/report/ReportRenderer.tsx:29
 msgid "Share your voice"
@@ -1730,6 +1819,7 @@ msgstr "Toon alles"
 msgid "Show audio player"
 msgstr "Toon audiospeler"
 
+#: src/routes/project/report/ProjectReportRoute.tsx:288
 #: src/components/conversation/ConversationAccordion.tsx:690
 msgid "Show duration"
 msgstr "Toon duur"
@@ -1770,6 +1860,7 @@ msgstr "Er ging iets mis tijdens het uploaden van het bestand: {0}"
 msgid "Sort"
 msgstr "Sorteer"
 
+#: src/components/project/ProjectPortalEditor.tsx:270
 #. placeholder {0}: index + 1
 #: src/components/chat/Sources.tsx:33
 msgid "Source {0}"
@@ -1787,7 +1878,7 @@ msgstr "Spaans"
 msgid "Speaker"
 msgstr "Spreker"
 
-#: src/components/project/ProjectPortalEditor.tsx:97
+#: src/components/project/ProjectPortalEditor.tsx:98
 msgid "Specific Context"
 msgstr "Specifieke context"
 
@@ -1836,7 +1927,7 @@ msgstr "Trefwoorden"
 msgid "Templates"
 msgstr "Sjablonen"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:44
+#: src/routes/participant/ParticipantPostConversation.tsx:167
 msgid "Thank you for participating!"
 msgstr "Dank je wel voor je deelname!"
 
@@ -1844,13 +1935,17 @@ msgstr "Dank je wel voor je deelname!"
 #~ msgid "Thank You Page"
 #~ msgstr "Bedankt Pagina"
 
-#: src/components/project/ProjectPortalEditor.tsx:491
+#: src/components/project/ProjectPortalEditor.tsx:494
 msgid "Thank You Page Content"
 msgstr "Bedankt pagina inhoud"
 
 #: src/components/Message.tsx:242
 #~ msgid "Thank you! In the meantime, click individual documents to add context to each file that I will take into account for further analysis."
 #~ msgstr "Bedankt! Klik ondertussen op individuele documenten om context toe te voegen aan elk bestand dat ik zal meenemen voor verdere analyse."
+
+#: src/routes/participant/ParticipantPostConversation.tsx:295
+msgid "Thank you! We'll notify you when the report is ready."
+msgstr "Bedankt! We zullen u waarschuwen wanneer het rapport klaar is."
 
 #: src/components/project/ProjectPortalEditor.tsx:191
 #~ msgid "The Portal is the website that loads when participants scan the QR code."
@@ -1876,7 +1971,7 @@ msgstr "Het transcript voor dit gesprek wordt verwerkt. Controleer later opnieuw
 msgid "There was an error creating your report. Please try again or contact support."
 msgstr "Er is een fout opgetreden bij het maken van uw rapport. Probeer het alstublieft opnieuw of neem contact op met de ondersteuning."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:145
+#: src/routes/project/report/ProjectReportRoute.tsx:162
 msgid "There was an error generating your report. In the meantime, you can analyze all your data using the library or select specific conversations to chat with."
 msgstr "Er is een fout opgetreden bij het genereren van uw rapport. In de tijd, kunt u alle uw gegevens analyseren met de bibliotheek of selecteer specifieke gesprekken om te praten."
 
@@ -1900,7 +1995,15 @@ msgstr "Dit zijn uw standaard weergave sjablonen. Zodra u uw bibliotheek hebt ge
 msgid "Thinking..."
 msgstr "Denken..."
 
-#: src/components/project/ProjectPortalEditor.tsx:607
+#: src/routes/participant/ParticipantPostConversation.tsx:106
+msgid "This email is already in the list."
+msgstr "Deze e-mail is al in de lijst."
+
+#: src/routes/participant/ParticipantPostConversation.tsx:124
+msgid "This email is already subscribed to notifications."
+msgstr "Deze e-mail is al geabonneerd op meldingen."
+
+#: src/components/project/ProjectPortalEditor.tsx:654
 msgid "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
 msgstr "Dit is een live voorbeeld van het portaal van de deelnemer. U moet de pagina vernieuwen om de meest recente wijzigingen te bekijken."
 
@@ -1917,7 +2020,7 @@ msgstr "Dit is een live voorbeeld van het portaal van de deelnemer. U moet de pa
 msgid "This is your project library. Currently,{0} conversations are waiting to be processed."
 msgstr "Dit is uw projectbibliotheek. Momenteel zijn {0} gesprekken in behandeling om te worden verwerkt."
 
-#: src/components/project/ProjectPortalEditor.tsx:262
+#: src/components/project/ProjectPortalEditor.tsx:265
 msgid "This language will be used for the Participant's Portal and transcription."
 msgstr "Deze taal wordt gebruikt voor de Portal van de deelnemer en transcriptie."
 
@@ -1929,11 +2032,11 @@ msgstr "Deze taal wordt gebruikt voor de Portal van de deelnemer en transcriptie
 #~ msgid "This language will be used for the Participant's Portal, transcription and analysis. To change the language of this application, please use the language picker in the header user menu instead."
 #~ msgstr "Deze taal wordt gebruikt voor de Portal van de deelnemer, transcriptie en analyse. Om de taal van deze toepassing te wijzigen, gebruikt u de taalkiezer in het gebruikersmenu in de header."
 
-#: src/components/project/ProjectPortalEditor.tsx:501
+#: src/components/project/ProjectPortalEditor.tsx:504
 msgid "This page is shown after the participant has completed the conversation."
 msgstr "Deze pagina wordt getoond na het voltooien van het gesprek door de deelnemer."
 
-#: src/components/project/ProjectPortalEditor.tsx:471
+#: src/components/project/ProjectPortalEditor.tsx:474
 msgid "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
 msgstr "Deze pagina wordt getoond aan deelnemers wanneer ze een gesprek starten na het voltooien van de tutorial."
 
@@ -1945,7 +2048,7 @@ msgstr "Deze projectbibliotheek is op"
 #~ msgid "This project library was generated on {0}."
 #~ msgstr "Deze projectbibliotheek is op {0} gemaakt."
 
-#: src/components/project/ProjectPortalEditor.tsx:411
+#: src/components/project/ProjectPortalEditor.tsx:414
 msgid "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
 msgstr "Deze prompt bepaalt hoe de AI reageert op deelnemers. Aanpassen om de soort feedback of betrokkenheid te bepalen die u wilt stimuleren."
 
@@ -1954,7 +2057,7 @@ msgid "This report is not yet available. "
 msgstr "Dit rapport is nog niet beschikbaar. "
 
 #. placeholder {0}: views?.total ?? 0
-#: src/routes/project/report/ProjectReportRoute.tsx:93
+#: src/routes/project/report/ProjectReportRoute.tsx:96
 msgid "This report was opened by {0} people"
 msgstr "Dit rapport werd geopend door {0} mensen"
 
@@ -1962,7 +2065,7 @@ msgstr "Dit rapport werd geopend door {0} mensen"
 #~ msgid "This summary is AI-generated and brief, for thorough analysis, use the Chat or Library."
 #~ msgstr "Deze samenvatting is AI-gegenereerd en kort, voor een uitgebreide analyse, gebruik de Chat of Bibliotheek."
 
-#: src/components/project/ProjectPortalEditor.tsx:449
+#: src/components/project/ProjectPortalEditor.tsx:452
 msgid "This title is shown to participants when they start a conversation"
 msgstr "Deze titel wordt getoond aan deelnemers wanneer ze een gesprek starten"
 
@@ -2100,6 +2203,9 @@ msgstr "Typ hier uw reactie"
 msgid "Unsaved changes"
 msgstr "Niet-opgeslagen wijzigingen"
 
+#: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:87
+msgid "Unsubscribe"
+msgstr "Afmelden"
 #: src/components/chat/References.tsx:44
 msgid "Untitled Conversation"
 msgstr "Gesprek zonder titel"
@@ -2187,6 +2293,10 @@ msgstr "Waarschuwing"
 msgid "We have sent you an email with next steps. If you don't see it, check your spam folder. If you still don't see it, please contact jules@dembrane.com"
 msgstr "We hebben u een e-mail gestuurd met de volgende stappen. Als u het niet ziet, checkt u uw spammap. Als u het nog steeds niet ziet, neem dan contact op met jules@dembrane.com"
 
+#: src/routes/participant/ParticipantPostConversation.tsx:302
+msgid "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
+msgstr "We sturen u alleen een bericht als uw gastgever een rapport genereert, we delen uw gegevens niet met iemand. U kunt op elk moment afmelden."
+
 #: src/components/participant/ParticipantBody.tsx:101
 msgid "Welcome"
 msgstr "Welkom"
@@ -2232,7 +2342,11 @@ msgstr "U kunt maximaal {MAX_FILES} bestanden tegelijk uploaden. Alleen de eerst
 #~ msgid "You have some conversations that have not been processed yet. Regenerate the library to process them."
 #~ msgstr "Je hebt enkele gesprekken die nog niet zijn verwerkt. Regenerate de bibliotheek om ze te verwerken."
 
-#: src/routes/participant/ParticipantPostConversation.tsx:51
+#: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:77
+msgid "You have successfully unsubscribed."
+msgstr "U hebt succesvol afgemeld."
+
+#: src/routes/participant/ParticipantPostConversation.tsx:174
 msgid "You may also choose to record another conversation."
 msgstr "Je kunt er ook voor kiezen om een ander gesprek op te nemen."
 
@@ -2252,7 +2366,7 @@ msgstr "Uw invoer wordt automatisch opgeslagen."
 msgid "Your library is empty. Create a library to see your first insights."
 msgstr "Je bibliotheek is leeg. Maak een bibliotheek om je eerste inzichten te bekijken."
 
-#: src/routes/participant/ParticipantPostConversation.tsx:48
+#: src/routes/participant/ParticipantPostConversation.tsx:171
 msgid "Your response has been recorded. You may now close this tab."
 msgstr "Je reactie is opgenomen. Je kunt dit tabblad nu sluiten."
 
