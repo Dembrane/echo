@@ -113,8 +113,17 @@ const ConversationAccordionLabelChatSelection = ({
   const isAutoSelectEnabled =
     projectChatContextQuery.data?.auto_select_bool ?? false;
 
+  // Check if conversation has any content
+  const hasContent = conversation.chunks?.some(
+    (chunk) => chunk.transcript && chunk.transcript.trim().length > 0
+  );
+
   const handleSelectChat = () => {
     if (!isSelected) {
+      // Don't allow adding empty conversations to chat context
+      if (!hasContent) {
+        return;
+      }
       addChatContextMutation.mutate({
         chatId: chatId ?? "",
         conversationId: conversation.id,
@@ -129,16 +138,18 @@ const ConversationAccordionLabelChatSelection = ({
 
   const tooltipLabel = isLocked
     ? t`Already added to this chat`
-    : isSelected
-      ? t`Remove from this chat`
-      : t`Add to this chat`;
+    : !hasContent
+      ? t`Cannot add empty conversation`
+      : isSelected
+        ? t`Remove from this chat`
+        : t`Add to this chat`;
 
   return (
     <Tooltip label={tooltipLabel}>
       <Checkbox
         size="md"
         checked={isSelected}
-        disabled={isLocked}
+        disabled={isLocked || !hasContent}
         onChange={handleSelectChat}
         color={
           ENABLE_CHAT_AUTO_SELECT && isAutoSelectEnabled ? "green" : undefined
@@ -345,20 +356,25 @@ const ConversationAccordionItem = ({
 
   const isAutoSelectEnabled = chatContextQuery.data?.auto_select_bool ?? false;
 
+  // Check if conversation has any content
+  const hasContent = conversation.chunks?.some(
+    (chunk) => chunk.transcript && chunk.transcript.trim().length > 0
+  );
+
   return (
     <NavigationButton
       to={`/projects/${conversation.project_id}/conversation/${conversation.id}/overview`}
       active={highlight}
       borderColor={
         ENABLE_CHAT_AUTO_SELECT && isAutoSelectEnabled
-          ? "border-green-500"
+          ? "green"
           : undefined
       }
       className={cn("w-full", {
         "!bg-primary-50": isLocked,
       })}
       rightSection={
-        inChatMode && (
+        (!ENABLE_CHAT_AUTO_SELECT || !isAutoSelectEnabled) && inChatMode && (
           <ConversationAccordionLabelChatSelection
             conversation={conversation}
           />
@@ -375,6 +391,11 @@ const ConversationAccordionItem = ({
             {conversation.source?.toLocaleLowerCase().includes("upload") && (
               <Badge size="xs" color="blue" variant="light">
                 {t`Uploaded`}
+              </Badge>
+            )}
+            {!hasContent && (
+              <Badge size="xs" color="red" variant="light">
+                {t`Empty`}
               </Badge>
             )}
             {conversation.duration &&

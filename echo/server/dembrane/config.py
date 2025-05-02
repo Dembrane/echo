@@ -290,13 +290,13 @@ assert (
 ), "AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM environment variable is not set"
 logger.debug("AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM: set")
 
-AUDIO_LIGHTRAG_TIME_THRESHOLD_SECONDS = int(
-    os.environ.get("AUDIO_LIGHTRAG_TIME_THRESHOLD_SECONDS", 60)
+AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS = int(
+    os.environ.get("AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS", 60)
 )
 assert (
-    AUDIO_LIGHTRAG_TIME_THRESHOLD_SECONDS
-), "AUDIO_LIGHTRAG_TIME_THRESHOLD_SECONDS environment variable is not set"
-logger.debug("AUDIO_LIGHTRAG_TIME_THRESHOLD_SECONDS: set")
+    AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS
+), "AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS environment variable is not set"
+logger.debug("AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS: set")
 
 ENABLE_AUDIO_LIGHTRAG_INPUT = os.environ.get("ENABLE_AUDIO_LIGHTRAG_INPUT", "false").lower() in [
     "true",
@@ -327,6 +327,15 @@ assert (
     ENABLE_CHAT_AUTO_SELECT is not None
 ), "ENABLE_CHAT_AUTO_SELECT environment variable is not set"
 logger.debug(f"ENABLE_CHAT_AUTO_SELECT: {ENABLE_CHAT_AUTO_SELECT}")
+
+# Redis lock configuration
+AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX = os.environ.get("AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX", "etl_lock_conv_")
+assert AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX, "AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX environment variable is not set"
+logger.debug("AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX: set")
+
+AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY = int(os.environ.get("AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY", 3600))
+assert AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY, "AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY environment variable is not set"
+logger.debug("AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY: set")
 
 # ---------------/Configurations---------------
 

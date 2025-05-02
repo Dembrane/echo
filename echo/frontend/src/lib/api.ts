@@ -766,6 +766,17 @@ export const getChatHistory = async (chatId: string): Promise<ChatHistory> => {
             },
           ],
         },
+        {
+          chat_message_metadata: [
+            "type",
+            "conversation",
+            "ratio",
+            "reference_text",
+            {
+              conversation: ["id", "participant_name"],
+            }
+          ],
+        },
       ],
     }),
   );
@@ -776,6 +787,7 @@ export const getChatHistory = async (chatId: string): Promise<ChatHistory> => {
     role: message.message_from as "user" | "assistant",
     content: message.text ?? "",
     _original: message,
+    metadata: message.chat_message_metadata ?? [],
   }));
 };
 
@@ -813,4 +825,15 @@ export const getConversationSummary = async (conversationId: string) => {
     unknown,
     { status: string; summary: string } | { status: string; message: string }
   >(`/conversations/${conversationId}/summarize`);
+};
+
+export const unsubscribeParticipant = async (
+  projectId: string,
+  token: string,
+  email_opt_in: boolean
+) => {
+  return apiNoAuth.patch(`/participant/projects/${projectId}/contacts/unsubscribe`, {
+    token,
+    email_opt_in,
+  });
 };
