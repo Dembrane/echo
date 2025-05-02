@@ -2,7 +2,7 @@ from typing import List, Optional, Annotated
 from logging import getLogger
 from datetime import datetime
 
-from fastapi import Form, APIRouter, UploadFile
+from fastapi import Form, APIRouter, UploadFile, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import joinedload
 
@@ -76,6 +76,9 @@ class InitiateConversationRequestBodySchema(BaseModel):
     tag_id_list: Optional[List[str]] = []
     source: Optional[str] = "PORTAL_AUDIO"
 
+class UnsubscribeParticipantRequest(BaseModel):
+    token: str
+    email_opt_in: bool
 
 @ParticipantRouter.post(
     "/projects/{project_id}/conversations/initiate",
@@ -356,3 +359,47 @@ async def run_when_conversation_is_finished(
 
     task_finish_conversation_hook.delay(conversation_id)
     return "OK"
+
+@ParticipantRouter.patch("/projects/{project_id}/contacts/unsubscribe")
+async def unsubscribe_participant(
+    project_id: str,
+    payload: UnsubscribeParticipantRequest,
+) -> dict:
+    """
+    Update email_opt_in for project contacts in Directus securely.
+    """
+    try:
+        # Fetch relevant IDs
+        submissions = directus.get_items(
+            "project_report_notification_participants",
+            {
+                "query": {
+                    "filter": {
+                        "_and": [
+                            {"project_id": {"_eq": project_id}},
+                            {"email_opt_out_token": {"_eq": payload.token}},
+                        ]
+                    },
+                    "fields": ["id"],
+                },
+            },
+        )
+        
+        if not submissions or len(submissions) == 0:
+            raise HTTPException(status_code=404, detail="No data found")
+
+        ids = [item["id"] for item in submissions]
+
+        # Update email_opt_in status for fetched IDs
+        for item_id in ids:
+            directus.update_item(
+                "project_report_notification_participants", 
+                item_id, 
+                {"email_opt_in": payload.email_opt_in}
+            )
+        
+        return {"success": True, "message": "Subscription status updated"}
+    
+    except Exception as e:
+        logger.error(f"Error updating project contacts: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")  # noqa: B904

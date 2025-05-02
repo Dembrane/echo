@@ -826,3 +826,14 @@ export const getConversationSummary = async (conversationId: string) => {
     { status: string; summary: string } | { status: string; message: string }
   >(`/conversations/${conversationId}/summarize`);
 };
+
+export const unsubscribeParticipant = async (
+  projectId: string,
+  token: string,
+  email_opt_in: boolean
+) => {
+  return apiNoAuth.patch(`/participant/projects/${projectId}/contacts/unsubscribe`, {
+    token,
+    email_opt_in,
+  });
+};
