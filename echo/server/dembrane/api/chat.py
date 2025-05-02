@@ -1,11 +1,26 @@
-import logging
-from typing import Any, Dict, List, Literal, Optional, Generator
+# TODO:
+# - Change db calls to directus calls
+# - Change anthropic api to litellm
 
+import json
+import logging
+from typing import Any, Dict, List, Literal, Optional, Generator, AsyncGenerator
+
+import litellm
 from fastapi import Query, APIRouter, HTTPException
+from litellm import token_counter  # type: ignore
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 
 from dembrane.utils import generate_uuid, get_utc_timestamp
+from dembrane.config import (
+    ENABLE_CHAT_AUTO_SELECT,
+    AUDIO_LIGHTRAG_TOP_K_PROMPT,
+    LIGHTRAG_LITELLM_INFERENCE_MODEL,
+    LIGHTRAG_LITELLM_INFERENCE_API_KEY,
+    LIGHTRAG_LITELLM_INFERENCE_API_BASE,
+    LIGHTRAG_LITELLM_INFERENCE_API_VERSION,
+)
 from dembrane.database import (
     DatabaseSession,
     ProjectChatModel,
@@ -18,11 +33,17 @@ from dembrane.anthropic import stream_anthropic_chat_response
 from dembrane.chat_utils import (
     MAX_CHAT_CONTEXT_LENGTH,
     get_project_chat_history,
+    get_conversation_citations,
+    get_conversation_references,
+    get_lightrag_prompt_by_params,
     create_system_messages_for_chat,
 )
 from dembrane.quote_utils import count_tokens
 from dembrane.api.conversation import get_conversation_token_count
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
+from dembrane.audio_lightrag.utils.lightrag_utils import (
+    get_project_id,
+)
 
 ChatRouter = APIRouter(tags=["chat"])
 
@@ -46,6 +67,7 @@ class ChatContextSchema(BaseModel):
     messages: List[ChatContextMessageSchema]
     conversation_id_list: List[str]
     locked_conversation_id_list: List[str]
+    auto_select_bool: bool
 
 
 def raise_if_chat_not_found_or_not_authorized(chat_id: str, auth_session: DirectusSession) -> None:
@@ -95,7 +117,7 @@ async def get_chat_context(
     locked_conversations = set()
     for message in messages:
         for conversation in message.used_conversations:
-            locked_conversations.add(conversation.id)
+            locked_conversations.add(conversation.id)  # Add directus call here
 
     user_message_token_count = 0
     assistant_message_token_count = 0
@@ -114,6 +136,9 @@ async def get_chat_context(
 
     used_conversations = chat.used_conversations
 
+    if chat.auto_select_bool is None:
+        raise HTTPException(status_code=400, detail="Auto select is not boolean")
+
     # initialize response
     context = ChatContextSchema(
         conversations=[],
@@ -129,10 +154,11 @@ async def get_chat_context(
                 token_usage=assistant_message_token_count / MAX_CHAT_CONTEXT_LENGTH,
             ),
         ],
+        auto_select_bool=chat.auto_select_bool,
     )
 
     for conversation in used_conversations:
-        is_conversation_locked = conversation.id in locked_conversations
+        is_conversation_locked = conversation.id in locked_conversations  # Verify with directus
         chat_context_resource = ChatContextConversationSchema(
             conversation_id=conversation.id,
             conversation_participant_name=conversation.participant_name,
@@ -153,6 +179,7 @@ async def get_chat_context(
 
 class ChatAddContextSchema(BaseModel):
     conversation_id: Optional[str] = None
+    auto_select_bool: Optional[bool] = None
 
 
 @ChatRouter.post("/{chat_id}/add-context")
@@ -164,52 +191,61 @@ async def add_chat_context(
 ) -> None:
     raise_if_chat_not_found_or_not_authorized(chat_id, auth)
 
-    if body.conversation_id is None:
-        raise HTTPException(status_code=400, detail="conversation_id is required")
+    if body.conversation_id is None and body.auto_select_bool is None:
+        raise HTTPException(
+            status_code=400, detail="conversation_id or auto_select_bool is required"
+        )
+
+    if body.conversation_id is not None and body.auto_select_bool is not None:
+        raise HTTPException(
+            status_code=400, detail="conversation_id and auto_select_bool cannot both be provided"
+        )
 
     chat = db.get(ProjectChatModel, chat_id)
 
-    if chat is None or body.conversation_id is None:
+    if chat is None:
         raise HTTPException(status_code=404, detail="Chat not found")
 
-    conversation = db.get(ConversationModel, body.conversation_id)
+    if body.conversation_id is not None:
+        conversation = db.get(ConversationModel, body.conversation_id)
 
-    if conversation is None:
-        raise HTTPException(status_code=404, detail="Conversation not found")
+        if conversation is None:
+            raise HTTPException(status_code=404, detail="Conversation not found")
 
-    # check if the conversation is already in the chat
-    for i_conversation in chat.used_conversations:
-        if i_conversation.id == conversation.id:
-            raise HTTPException(status_code=400, detail="Conversation already in the chat")
+        # check if the conversation is already in the chat
+        for i_conversation in chat.used_conversations:
+            if i_conversation.id == conversation.id:
+                raise HTTPException(status_code=400, detail="Conversation already in the chat")
 
-    # check if the conversation is too long
-    if await get_conversation_token_count(conversation.id, db, auth) > MAX_CHAT_CONTEXT_LENGTH:
-        raise HTTPException(status_code=400, detail="Conversation is too long")
+        # check if the conversation is too long
+        if await get_conversation_token_count(conversation.id, db, auth) > MAX_CHAT_CONTEXT_LENGTH:
+            raise HTTPException(status_code=400, detail="Conversation is too long")
 
-    # sum of all other conversations
-    chat_context = await get_chat_context(chat_id, db, auth)
-    chat_context_token_usage = sum(
-        conversation.token_usage for conversation in chat_context.conversations
-    )
-
-    conversation_to_add_token_usage = (
-        await get_conversation_token_count(conversation.id, db, auth) / MAX_CHAT_CONTEXT_LENGTH
-    )
-
-    if chat_context_token_usage + conversation_to_add_token_usage > 1:
-        raise HTTPException(
-            status_code=400,
-            detail="Chat context is too long. Remove other conversations to proceed.",
+        # sum of all other conversations
+        chat_context = await get_chat_context(chat_id, db, auth)
+        chat_context_token_usage = sum(
+            conversation.token_usage for conversation in chat_context.conversations
         )
 
-    chat.used_conversations.append(conversation)
-    db.commit()
+        conversation_to_add_token_usage = (
+            await get_conversation_token_count(conversation.id, db, auth) / MAX_CHAT_CONTEXT_LENGTH
+        )
+        if chat_context_token_usage + conversation_to_add_token_usage > 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Chat context is too long. Remove other conversations to proceed.",
+            )
+        chat.used_conversations.append(conversation)
+        db.commit()
 
-    return
+    if body.auto_select_bool is not None:
+        chat.auto_select_bool = body.auto_select_bool
+        db.commit()
 
 
 class ChatDeleteContextSchema(BaseModel):
-    conversation_id: str
+    conversation_id: Optional[str] = None
+    auto_select_bool: Optional[bool] = None
 
 
 @ChatRouter.post("/{chat_id}/delete-context")
@@ -220,30 +256,47 @@ async def delete_chat_context(
     auth: DependencyDirectusSession,
 ) -> None:
     raise_if_chat_not_found_or_not_authorized(chat_id, auth)
+    if body.conversation_id is None and body.auto_select_bool is None:
+        raise HTTPException(
+            status_code=400, detail="conversation_id or auto_select_bool is required"
+        )
+
+    if body.conversation_id is not None and body.auto_select_bool is not None:
+        raise HTTPException(
+            status_code=400, detail="conversation_id and auto_select_bool cannot both be provided"
+        )
+
+    if body.auto_select_bool is True:
+        raise HTTPException(status_code=400, detail="auto_select_bool cannot be True")
 
     chat = db.get(ProjectChatModel, chat_id)
 
     if chat is None:
         raise HTTPException(status_code=404, detail="Chat not found")
 
-    conversation = db.get(ConversationModel, body.conversation_id)
+    if body.conversation_id is not None:
+        conversation = db.get(ConversationModel, body.conversation_id)
 
-    if conversation is None:
-        raise HTTPException(status_code=404, detail="Conversation not found")
+        if conversation is None:
+            raise HTTPException(status_code=404, detail="Conversation not found")
 
-    chat_context = await get_chat_context(chat_id, db, auth)
+        chat_context = await get_chat_context(chat_id, db, auth)
 
-    # check if conversation exists in chat_context
-    for project_chat_conversation in chat_context.conversations:
-        if project_chat_conversation.conversation_id == conversation.id:
-            if project_chat_conversation.locked:
-                raise HTTPException(status_code=400, detail="Conversation is locked")
-            else:
-                chat.used_conversations.remove(conversation)
-                db.commit()
-                return
+        # check if conversation exists in chat_context
+        for project_chat_conversation in chat_context.conversations:
+            if project_chat_conversation.conversation_id == conversation.id:
+                if project_chat_conversation.locked:
+                    raise HTTPException(status_code=400, detail="Conversation is locked")
+                else:
+                    chat.used_conversations.remove(conversation)
+                    db.commit()
+                    return
 
-    raise HTTPException(status_code=404, detail="Conversation not found in the chat")
+        raise HTTPException(status_code=404, detail="Conversation not found in the chat")
+
+    if body.auto_select_bool is not None:
+        chat.auto_select_bool = body.auto_select_bool
+        db.commit()
 
 
 @ChatRouter.post("/{chat_id}/lock-conversations", response_model=None)
@@ -281,7 +334,7 @@ async def lock_conversations(
             .all()
         )
 
-        dembrane_message = ProjectChatMessageModel(
+        dembrane_search_complete_message = ProjectChatMessageModel(
             id=generate_uuid(),
             date_created=get_utc_timestamp(),
             message_from="dembrane",
@@ -290,7 +343,7 @@ async def lock_conversations(
             used_conversations=added_conversations,
             added_conversations=added_conversations,
         )
-        db.add(dembrane_message)
+        db.add(dembrane_search_complete_message)
         db.commit()
 
     # Fetch ConversationModel objects for used_conversations
@@ -320,7 +373,7 @@ async def post_chat(
     auth: DependencyDirectusSession,
     protocol: str = Query("data"),
     language: str = Query("en"),
-) -> StreamingResponse:
+) -> StreamingResponse:  # ignore: type
     raise_if_chat_not_found_or_not_authorized(chat_id, auth)
 
     chat = db.get(ProjectChatModel, chat_id)
@@ -341,8 +394,11 @@ async def post_chat(
         text=body.messages[-1].content,
         project_chat_id=chat.id,
     )
+
     db.add(user_message)
     db.commit()
+
+    project_id = get_project_id(chat.id)  # TODO: Write directus call here
 
     messages = get_project_chat_history(chat_id, db)
 
@@ -350,56 +406,148 @@ async def post_chat(
         logger.debug("initializing chat")
 
     chat_context = await get_chat_context(chat_id, db, auth)
-    locked_conversation_id_list = chat_context.locked_conversation_id_list
 
-    system_messages = await create_system_messages_for_chat(
-        locked_conversation_id_list, db, language
-    )
+    locked_conversation_id_list = chat_context.locked_conversation_id_list  # Verify with directus
 
-    def stream_response() -> Generator[str, None, None]:
-        with DatabaseSession() as db:
-            filtered_messages: List[Dict[str, Any]] = []
+    logger.debug(f"ENABLE_CHAT_AUTO_SELECT: {ENABLE_CHAT_AUTO_SELECT}")
+    logger.debug(f"chat_context.auto_select_bool: {chat_context.auto_select_bool}")
+    if ENABLE_CHAT_AUTO_SELECT and chat_context.auto_select_bool:
+        filtered_messages: List[Dict[str, Any]] = []
+        for message in messages:
+            if message["role"] in ["user", "assistant"]:
+                filtered_messages.append(message)
+        if (
+            len(filtered_messages) >= 2
+            and filtered_messages[-2]["role"] == "user"
+            and filtered_messages[-1]["role"] == "user"
+            and filtered_messages[-2]["content"] == filtered_messages[-1]["content"]
+        ):
+            filtered_messages = filtered_messages[:-1]
+        top_k = AUDIO_LIGHTRAG_TOP_K_PROMPT
+        prompt_len = float("inf")
+        while MAX_CHAT_CONTEXT_LENGTH < prompt_len:
+            formatted_messages = []
+            top_k = max(5, top_k - 10)
+            query = filtered_messages[-1]["content"]
+            conversation_history = filtered_messages
+            rag_prompt = await get_lightrag_prompt_by_params(
+                query=query,
+                conversation_history=conversation_history,
+                echo_conversation_ids=chat_context.conversation_id_list,
+                echo_project_ids=[project_id],
+                auto_select_bool=chat_context.auto_select_bool,
+                get_transcripts=True,
+                top_k=top_k,
+            )
+            logger.info(f"***rag_prompt: {rag_prompt}")
+            formatted_messages.append({"role": "system", "content": rag_prompt})
+            formatted_messages.append({"role": "user", "content": filtered_messages[-1]["content"]})
+            prompt_len = token_counter(
+                model=LIGHTRAG_LITELLM_INFERENCE_MODEL, messages=formatted_messages
+            )
+            if top_k <= 5:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Auto select is not possible with the current context length",
+                )
 
-            for message in messages:
-                if message["role"] in ["user", "assistant"]:
-                    filtered_messages.append(message)
+        conversation_references = await get_conversation_references(rag_prompt, [project_id])
 
-            # if the last 2 message are user messages, and have the same content, remove the last one
-            # from filtered_messages
-            # when ui does reload
-            if (
-                len(filtered_messages) >= 2
-                and filtered_messages[-2]["role"] == "user"
-                and filtered_messages[-1]["role"] == "user"
-                and filtered_messages[-2]["content"] == filtered_messages[-1]["content"]
-            ):
-                filtered_messages = filtered_messages[:-1]
+        async def stream_response_async() -> AsyncGenerator[str, None]:
+            conversation_references_yeild = f"h:{json.dumps(conversation_references)}\n"
+            yield conversation_references_yeild
 
+            accumulated_response = ""
             try:
-                for chunk in stream_anthropic_chat_response(
-                    system=system_messages,
-                    messages=filtered_messages,
-                    protocol=protocol,
-                ):
-                    yield chunk
+                response = await litellm.acompletion(
+                    model=LIGHTRAG_LITELLM_INFERENCE_MODEL,
+                    api_key=LIGHTRAG_LITELLM_INFERENCE_API_KEY,
+                    api_version=LIGHTRAG_LITELLM_INFERENCE_API_VERSION,
+                    api_base=LIGHTRAG_LITELLM_INFERENCE_API_BASE,
+                    messages=formatted_messages,
+                    stream=True,
+                    # mock_response="It's simple to use and easy to get started",
+                )
+                async for chunk in response:  # type: ignore
+                    if chunk.choices[0].delta.content:
+                        content = chunk.choices[0].delta.content
+                        accumulated_response += content
+                        if protocol == "text":
+                            yield content
+                        elif protocol == "data":
+                            yield f"0:{json.dumps(content)}\n"
             except Exception as e:
-                logger.error(f"Error in stream_anthropic_chat_response: {str(e)}")
-
-                # delete user message
-                db.delete(user_message)
-                db.commit()
+                logger.error(f"Error in litellm stream response: {str(e)}")
+                # delete user message if stream fails
+                with DatabaseSession() as error_db:
+                    error_db.delete(user_message)
+                    error_db.commit()
 
                 if protocol == "data":
                     yield '3:"An error occurred while processing the chat response."\n'
                 else:
                     yield "Error: An error occurred while processing the chat response."
+                return  # Stop generation on error
 
-        return
+            citations_list = await get_conversation_citations(
+                rag_prompt, accumulated_response, [project_id]
+            )
+            citations_yeild = f"h:{json.dumps(citations_list)}\n"
+            yield citations_yeild
 
-    headers = {"Content-Type": "text/event-stream"}
-    if protocol == "data":
-        headers["x-vercel-ai-data-stream"] = "v1"
+        headers = {"Content-Type": "text/event-stream"}
+        if protocol == "data":
+            headers["x-vercel-ai-data-stream"] = "v1"
+        response = StreamingResponse(stream_response_async(), headers=headers)
+        return response
+    else:
+        system_messages = await create_system_messages_for_chat(
+            locked_conversation_id_list, db, language, project_id
+        )
 
-    response = StreamingResponse(stream_response(), headers=headers)
+        def stream_response() -> Generator[str, None, None]:
+            with DatabaseSession() as db:
+                filtered_messages: List[Dict[str, Any]] = []
 
-    return response
+                for message in messages:
+                    if message["role"] in ["user", "assistant"]:
+                        filtered_messages.append(message)
+
+                # Remove duplicate consecutive user messages but preserve conversation flow
+                if (
+                    len(filtered_messages) >= 2
+                    and filtered_messages[-2]["role"] == "user"
+                    and filtered_messages[-1]["role"] == "user"
+                    and filtered_messages[-2]["content"] == filtered_messages[-1]["content"]
+                ):
+                    filtered_messages = filtered_messages[:-1]
+
+                try:
+                    for chunk in stream_anthropic_chat_response(
+                        system=system_messages,
+                        messages=filtered_messages,
+                        protocol=protocol,
+                    ):
+                        yield chunk
+                except Exception as e:
+                    logger.error(f"Error in stream_anthropic_chat_response: {str(e)}")
+
+                    # delete user message
+                    db.delete(user_message)
+                    db.commit()
+
+                    if protocol == "data":
+                        yield '3:"An error occurred while processing the chat response."\n'
+                    else:
+                        yield "Error: An error occurred while processing the chat response."
+
+            return
+
+        headers = {"Content-Type": "text/event-stream"}
+        if protocol == "data":
+            headers["x-vercel-ai-data-stream"] = "v1"
+
+        response = StreamingResponse(stream_response(), headers=headers)
+
+        return response
+

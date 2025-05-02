@@ -15,7 +15,9 @@ logger.setLevel(logging.DEBUG)
 def embed_text(text: str) -> List[float]:
     text = text.replace("\n", " ").strip()
     try:
-        return client.embeddings.create(input=[text], model="text-embedding-3-small").data[0].embedding
+        return (
+            client.embeddings.create(input=[text], model="text-embedding-3-small").data[0].embedding
+        )
     except Exception as exc:
         logger.debug("error:" + str(exc))
         logger.debug("input text:" + text)

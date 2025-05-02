@@ -24,7 +24,6 @@ export const ProjectSidebar = () => {
   const { projectId, conversationId } = useParams();
 
   const projectQuery = useProjectById({ projectId: projectId ?? "" });
-
   const { pathname } = useLocation();
 
   // const { isCollapsed, toggleSidebar } = useSidebarCollapsed();
@@ -134,7 +133,7 @@ export const ProjectSidebar = () => {
           <div className="text-xs">
             <Trans>Powered by</Trans>
           </div>
-          <LogoDembrane otherText="Dembrane" />
+          <LogoDembrane />
         </Group>
       </Stack>
     </Stack>

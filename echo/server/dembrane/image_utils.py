@@ -2,6 +2,7 @@ import json
 import logging
 
 from dembrane.s3 import save_to_s3_from_url
+from dembrane.utils import generate_uuid
 from dembrane.openai import client
 
 logger = logging.getLogger("image_utils")
@@ -115,7 +116,7 @@ def generate_image(prompt: str) -> str:
             image_url = response.data[0].url
             if image_url:
                 logger.debug("saving the image and getting the public url")
-                image_url = save_to_s3_from_url(image_url)
+                image_url = save_to_s3_from_url(image_url, "images/" + generate_uuid(), public=True)
         else:
             image_url = None
     except Exception as e:

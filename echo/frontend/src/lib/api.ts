@@ -295,6 +295,7 @@ export const initiateConversation = async (payload: {
   email?: string;
   name: string;
   pin: string;
+  source: string;
   tagIdList: string[];
 }) => {
   return apiNoAuth.post<unknown, TConversation>(
@@ -305,54 +306,227 @@ export const initiateConversation = async (payload: {
       pin: payload.pin,
       tag_id_list: payload.tagIdList,
       user_agent: navigator.userAgent ?? undefined,
+      source: payload.source,
     },
   );
 };
 
+// Utility function to normalize audio MIME types and extensions
+const normalizeAudioFile = async (
+  input: Blob | File,
+): Promise<{
+  normalizedBlob: Blob;
+  extension: string;
+  mimeType: string;
+  fileName: string;
+}> => {
+  let mimeType = input.type;
+  let extension = "";
+  let fileName = "";
+  let needsConversion = false;
+  let isFile = input instanceof File;
+
+  // If it's a File, try to extract extension from filename first
+  if (isFile) {
+    const file = input as File;
+    fileName = file.name;
+
+    // Extract extension from filename
+    const fileNameParts = file.name.split(".");
+    if (fileNameParts.length > 1) {
+      const fileExtension = fileNameParts.pop()?.toLowerCase() || "";
+      // Only use file extension if it's a known audio extension
+      if (
+        [
+          "mp3",
+          "wav",
+          "ogg",
+          "webm",
+          "m4a",
+          "mp4",
+          "aac",
+          "flac",
+          "opus",
+        ].includes(fileExtension)
+      ) {
+        extension = fileExtension;
+
+        // Update MIME type based on extension if needed
+        if (
+          fileExtension === "mp3" &&
+          (mimeType === "audio/mpeg" || !mimeType)
+        ) {
+          mimeType = "audio/mp3";
+          needsConversion = mimeType !== input.type;
+        }
+      }
+    }
+  }
+
+  // If extension not determined from filename, get it from MIME type
+  if (!extension) {
+    // Handle MP3 files correctly
+    if (mimeType === "audio/mpeg" || mimeType === "audio/mp3") {
+      mimeType = "audio/mp3";
+      extension = "mp3";
+      needsConversion = mimeType !== input.type;
+    } else if (mimeType === "audio/x-m4a") {
+      mimeType = "audio/m4a";
+      extension = "m4a";
+      needsConversion = true;
+    } else {
+      // For other types, extract extension from mime type
+      extension = input.type.split("/")[1]?.split(";")[0] || "";
+
+      // Fix common audio extension issues
+      if (extension === "mpeg") {
+        extension = "mp3";
+        mimeType = "audio/mp3";
+        needsConversion = true;
+      } else if (extension === "x-m4a") {
+        extension = "m4a";
+        mimeType = "audio/m4a";
+        needsConversion = true;
+      } else if (extension === "wav") extension = "wav";
+      else if (extension === "ogg") extension = "ogg";
+      else if (extension === "webm") extension = "webm";
+      else if (extension === "aac") extension = "aac";
+      else if (extension === "flac") extension = "flac";
+      else if (extension === "opus") extension = "opus";
+      else if (extension === "mp4") extension = "mp4";
+    }
+  }
+
+  // Create default filename if one doesn't exist
+  if (!fileName) {
+    fileName = `chunk.${extension}`;
+  }
+
+  // Create a new blob with the correct MIME type if needed
+  let normalizedBlob = input;
+  if (needsConversion) {
+    console.log(`Normalizing ${input.type} to ${mimeType}`);
+    normalizedBlob = new Blob([await input.arrayBuffer()], { type: mimeType });
+  }
+
+  return { normalizedBlob, extension, mimeType, fileName };
+};
+
 export const uploadConversationChunk = async (payload: {
   conversationId: string;
-  chunk?: Blob;
+  chunk?: Blob | File;
   timestamp: Date;
+  source: string;
+  onProgress?: (progress: number) => void;
+  runFinishHook: boolean;
 }) => {
-  const formData = new FormData();
-
   if (!payload.chunk) {
     throw new Error("No chunk provided");
   }
 
-  const fileExtension = payload.chunk.type.split("/")[1].split(";")[0];
-  const file = new File([payload.chunk], `chunk.${fileExtension}`, {
-    type: payload.chunk.type,
-  });
-  formData.append("chunk", file);
-  formData.append("timestamp", payload.timestamp.toISOString());
-
-  return apiNoAuth.post<unknown, TConversationChunk[]>(
-    `/participant/conversations/${payload.conversationId}/upload-chunk`,
-    formData,
-    {
-      // 10 min
-      timeout: 600000,
-      // 25 mB
-      maxBodyLength: 25 * 1024 * 1024,
-      maxContentLength: 25 * 1024 * 1024,
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    },
+  // Normalize the audio file
+  const { normalizedBlob, mimeType, fileName } = await normalizeAudioFile(
+    payload.chunk,
   );
+
+  // Create a file with the correct extension and MIME type
+  // If the original was a File, preserve its name but update its type
+  const file = new File([normalizedBlob], fileName, {
+    type: mimeType,
+  });
+
+  // If no progress callback provided, use standard Axios request
+  if (!payload.onProgress) {
+    const formData = new FormData();
+    formData.append("chunk", file);
+    formData.append("timestamp", payload.timestamp.toISOString());
+    formData.append("source", payload.source);
+    formData.append("run_finish_hook", payload.runFinishHook.toString());
+
+    return apiNoAuth.post<unknown, TConversationChunk[]>(
+      `/participant/conversations/${payload.conversationId}/upload-chunk`,
+      formData,
+      {
+        timeout: 600000,
+        maxBodyLength: 25 * 1024 * 1024,
+        maxContentLength: 25 * 1024 * 1024,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+  }
+
+  // Use XMLHttpRequest for progress tracking
+  return new Promise<TConversationChunk[]>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const formData = new FormData();
+
+    formData.append("chunk", file);
+    formData.append("timestamp", payload.timestamp.toISOString());
+    formData.append("source", payload.source);
+    formData.append("run_finish_hook", payload.runFinishHook.toString());
+
+    // Track upload progress
+    xhr.upload.addEventListener("progress", (event) => {
+      if (event.lengthComputable && payload.onProgress) {
+        // Throttle progress updates to prevent excessive UI updates
+        // Report 0, 10, 20...90, 100 percent to reduce state updates
+        const percentComplete = Math.round((event.loaded / event.total) * 100);
+        const roundedPercent = Math.floor(percentComplete / 5) * 5;
+        payload.onProgress(roundedPercent);
+      }
+    });
+
+    xhr.addEventListener("load", () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const response = JSON.parse(xhr.responseText);
+          // Always report 100% when done, regardless of throttling
+          if (payload.onProgress) {
+            payload.onProgress(100);
+          }
+          resolve(response);
+        } catch (e) {
+          reject(new Error("Invalid response format"));
+        }
+      } else {
+        reject(new Error(`Upload failed with status ${xhr.status}`));
+      }
+    });
+
+    xhr.addEventListener("error", () => {
+      reject(new Error("Network error occurred during upload"));
+    });
+
+    xhr.addEventListener("abort", () => {
+      reject(new Error("Upload was aborted"));
+    });
+
+    xhr.open(
+      "POST",
+      `${apiCommonConfig.baseURL}/participant/conversations/${payload.conversationId}/upload-chunk`,
+    );
+
+    // Include credentials if needed
+    xhr.withCredentials = true;
+
+    xhr.send(formData);
+  });
 };
 
 export const uploadConversationText = async (payload: {
   conversationId: string;
   content: string;
   timestamp: Date;
+  source: string;
 }) => {
   return apiNoAuth.post<unknown, TConversationChunk>(
     `/participant/conversations/${payload.conversationId}/upload-text`,
     {
       content: payload.content,
       timestamp: payload.timestamp.toISOString(),
+      source: payload.source,
     },
   );
 };
@@ -362,58 +536,127 @@ export const initiateAndUploadConversationChunk = async (payload: {
   pin: string;
   namePrefix: string;
   tagIdList: string[];
-  chunks: Blob[];
+  chunks: (Blob | File)[];
   timestamps: Date[];
   email?: string;
+  onProgress?: (fileName: string, progress: number) => void;
+  source?: string;
 }) => {
-  const promises = [];
-  for (let i = 0; i < payload.chunks.length; i++) {
-    try {
-      toast(
-        `Uploading conversation '${(payload.chunks[i] as unknown as any).name}'`,
-      );
-    } catch (e) {
-      console.error(e);
-    }
+  // Show a single toast for the overall upload process
+  toast(`Starting upload of ${payload.chunks.length} file(s)`);
 
-    let blob: Blob = payload.chunks[i];
+  // Limit concurrent uploads to avoid overwhelming the server
+  const MAX_CONCURRENT = 3;
+  const results: (TConversationChunk[] | { error: Error; name: string })[] = [];
+  const fileQueue = [...Array(payload.chunks.length).keys()]; // Create array of indices [0,1,2...]
+  const inProgress = new Set<number>();
+
+  // Process uploads with concurrency control
+  const processNext = async () => {
+    // Keep processing until queue is empty and nothing in progress
+    while (fileQueue.length > 0 || inProgress.size > 0) {
+      // If we can start more uploads and there are files waiting
+      while (inProgress.size < MAX_CONCURRENT && fileQueue.length > 0) {
+        const index = fileQueue.shift()!;
+        inProgress.add(index);
+
+        // Start this upload (don't await here)
+        processFile(index).finally(() => {
+          inProgress.delete(index);
+          // Try to process more files when this one finishes
+          processNext();
+        });
+      }
+
+      // If we've reached max concurrent uploads, wait for some to finish
+      if (inProgress.size >= MAX_CONCURRENT || fileQueue.length === 0) {
+        break;
+      }
+    }
+  };
+
+  // Process a single file
+  const processFile = async (i: number) => {
+    const chunk = payload.chunks[i];
     let name = "";
 
+    // Get proper name based on chunk type
     if (payload.namePrefix) {
-      name = `${payload.namePrefix}`;
+      name = payload.namePrefix;
     }
 
-    if (blob instanceof File) {
-      name += blob.name;
+    // Determine if this is likely from MediaRecorder or file upload
+    const isFile = chunk instanceof File;
+    // Default source based on type if not explicitly provided
+    const source =
+      payload.source || (isFile ? "DASHBOARD_UPLOAD" : "PORTAL_AUDIO");
 
-      const isxm4a = blob.type === "audio/x-m4a";
-      if (isxm4a) {
-        console.log("Converting xm4a to audio/m4a");
-        blob = new Blob([await blob.arrayBuffer()], { type: "audio/m4a" });
-      }
+    if (isFile) {
+      name += chunk.name;
     } else {
-      console.log("Blob is not a File");
-      name += `chunk-${i}`;
+      name += `chunk-${i}.mp3`; // Default name for blobs
     }
 
-    const conversation = await initiateConversation({
-      projectId: payload.projectId,
-      email: payload.email,
-      name: `${name}`,
-      pin: payload.pin,
-      tagIdList: payload.tagIdList,
-    });
+    // Normalize the file/blob regardless of its type
+    const normalized = await normalizeAudioFile(chunk);
+    const normalizedChunk = normalized.normalizedBlob;
 
-    promises.push(
-      uploadConversationChunk({
+    try {
+      // Create the conversation first
+      const conversation = await initiateConversation({
+        projectId: payload.projectId,
+        email: payload.email,
+        name: `${name}`,
+        pin: payload.pin,
+        source: source,
+        tagIdList: payload.tagIdList,
+      });
+
+      // Then upload the chunk with progress tracking
+      let progressHandler = undefined;
+      if (payload.onProgress) {
+        const callback = payload.onProgress; // Store in local variable
+        progressHandler = (progress: number) => callback(name, progress);
+      }
+
+      const result = await uploadConversationChunk({
         conversationId: conversation.id,
-        chunk: blob,
-        timestamp: payload.timestamps.at(i) ?? new Date(),
-      }),
-    );
+        chunk: normalizedChunk,
+        timestamp: payload.timestamps[i] ?? new Date(),
+        source: source,
+        onProgress: progressHandler,
+        // we want to finish the conversation after the chunk is uploaded
+        runFinishHook: true,
+      });
+
+      results[i] = result;
+      return result;
+    } catch (error) {
+      console.error(`Error uploading file ${name}:`, error);
+      // Store the error to potentially handle it
+      results[i] = { error: error as Error, name };
+      throw error; // Re-throw so the finally clause knows it failed
+    }
+  };
+
+  // Start the processing
+  await processNext();
+
+  // Wait for all uploads to complete
+  while (inProgress.size > 0) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
-  return Promise.all(promises);
+  // Check if any uploads failed
+  const failures = results.filter((r) => {
+    return r && "error" in r && r.error !== undefined;
+  });
+
+  if (failures.length > 0) {
+    console.error(`${failures.length} file(s) failed to upload`);
+  }
+
+  return results;
 };
 
 export const getConversationContentLink = (conversationId: string) =>
@@ -456,6 +699,18 @@ export const getConversationTranscriptString = async (
   );
 };
 
+export const retranscribeConversation = async (
+  conversationId: string,
+  newConversationName: string,
+) => {
+  return api.post<
+    unknown,
+    { status: string; message: string; new_conversation_id: string }
+  >(`/conversations/${conversationId}/retranscribe`, {
+    new_conversation_name: newConversationName,
+  });
+};
+
 export const getProjectChatContext = async (chatId: string) => {
   return api.get<unknown, TProjectChatContext>(`/chats/${chatId}/context`);
 };
@@ -463,11 +718,13 @@ export const getProjectChatContext = async (chatId: string) => {
 export const addChatContext = async (
   chatId: string,
   conversationId?: string,
+  auto_select_bool?: boolean,
 ) => {
   return api.post<unknown, TProjectChatContext>(
     `/chats/${chatId}/add-context`,
     {
       conversation_id: conversationId,
+      auto_select_bool: auto_select_bool,
     },
   );
 };
@@ -475,11 +732,13 @@ export const addChatContext = async (
 export const deleteChatContext = async (
   chatId: string,
   conversationId?: string,
+  auto_select_bool?: boolean,
 ) => {
   return api.post<unknown, TProjectChatContext>(
     `/chats/${chatId}/delete-context`,
     {
       conversation_id: conversationId,
+      auto_select_bool: auto_select_bool,
     },
   );
 };
@@ -507,6 +766,17 @@ export const getChatHistory = async (chatId: string): Promise<ChatHistory> => {
             },
           ],
         },
+        {
+          chat_message_metadata: [
+            "type",
+            "conversation",
+            "ratio",
+            "reference_text",
+            {
+              conversation: ["id", "participant_name"],
+            }
+          ],
+        },
       ],
     }),
   );
@@ -517,6 +787,7 @@ export const getChatHistory = async (chatId: string): Promise<ChatHistory> => {
     role: message.message_from as "user" | "assistant",
     content: message.text ?? "",
     _original: message,
+    metadata: message.chat_message_metadata ?? [],
   }));
 };
 
@@ -547,6 +818,13 @@ export const finishConversation = async (conversationId: string) => {
   return apiNoAuth.post<unknown>(
     `/participant/conversations/${conversationId}/finish`,
   );
+};
+
+export const getConversationSummary = async (conversationId: string) => {
+  return apiNoAuth.get<
+    unknown,
+    { status: string; summary: string } | { status: string; message: string }
+  >(`/conversations/${conversationId}/summarize`);
 };
 
 export const unsubscribeParticipant = async (

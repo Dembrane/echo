@@ -11,14 +11,11 @@ export const DIRECTUS_PUBLIC_URL =
 
 export const DIRECTUS_CONTENT_PUBLIC_URL =
   import.meta.env.VITE_DIRECTUS_CONTENT_PUBLIC_URL ??
-  "https://admin-dembrane.azurewebsites.net";
+  "https://dembrane.directus.app";
 
 export const DISABLE_SENTRY = import.meta.env.VITE_DISABLE_SENTRY === "1";
 
 export const BUILD_VERSION = import.meta.env.VITE_BUILD_VERSION ?? "dev";
-
-export const ENABLE_AUDIO_DOWNLOAD =
-  import.meta.env.VITE_ENABLE_AUDIO_DOWNLOAD === "1";
 
 export const SUPPORTED_LANGUAGES = [
   "en-US",
@@ -30,3 +27,6 @@ export const SUPPORTED_LANGUAGES = [
 
 export const PRIVACY_POLICY_URL =
   "https://dembrane.notion.site/Privacy-statements-all-languages-fa97a183f9d841f7a1089079e77ffb52" as const;
+
+export const ENABLE_CHAT_AUTO_SELECT =
+  import.meta.env.VITE_ENABLE_CHAT_AUTO_SELECT === "1";

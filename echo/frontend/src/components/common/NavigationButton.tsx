@@ -16,6 +16,7 @@ import { LoadingSpinner } from "./LoadingSpinner";
 
 type Props = {
   to?: string;
+  borderColor?: string;
   rightIcon?: React.ReactNode;
   rightSection?: React.ReactNode;
   active?: boolean;
@@ -28,6 +29,7 @@ type Props = {
 export const NavigationButton = ({
   children,
   to,
+  borderColor,
   rightSection,
   rightIcon,
   active,
@@ -54,7 +56,7 @@ export const NavigationButton = ({
         active ? "border-primary-500" : "",
         disabled || loading
           ? "opacity-60 hover:border-gray-300"
-          : "hover:border-primary-500",
+          : borderColor === "green" ? `hover:border-green-500` : "hover:border-primary-500",
         props.className,
       )}
     >

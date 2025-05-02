@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { useProjectChatContext } from "@/lib/query";
 import { capitalize } from "@/lib/utils";
 import { Box, Progress, Skeleton, Tooltip } from "@mantine/core";
+import { ENABLE_CHAT_AUTO_SELECT } from "@/config";
 
 export const ChatContextProgress = ({ chatId }: { chatId: string }) => {
   const chatContextQuery = useProjectChatContext(chatId);
@@ -17,6 +18,14 @@ export const ChatContextProgress = ({ chatId }: { chatId: string }) => {
     );
   }
 
+  if (
+    ENABLE_CHAT_AUTO_SELECT &&
+    chatContextQuery.data?.auto_select_bool &&
+    chatContextQuery.data?.conversations.length === 0
+  ) {
+    return null;
+  }
+
   const conversationsAlreadyAdded = chatContextQuery.data?.conversations
     .filter((c) => c.locked)
     .sort((a, b) => b.token_usage - a.token_usage);
@@ -24,6 +33,14 @@ export const ChatContextProgress = ({ chatId }: { chatId: string }) => {
   const conversationsToBeAdded = chatContextQuery.data?.conversations
     .filter((c) => !c.locked)
     .sort((a, b) => b.token_usage - a.token_usage);
+
+  const getColor = (baseColor: string) => {
+    if (ENABLE_CHAT_AUTO_SELECT && chatContextQuery.data?.auto_select_bool) {
+      return "green.6";
+    }
+
+    return baseColor;
+  };
 
   return (
     <Box>
@@ -37,7 +54,7 @@ export const ChatContextProgress = ({ chatId }: { chatId: string }) => {
           >
             <Progress.Section
               value={m.token_usage * 100}
-              color="blue.6"
+              color={getColor("blue.6")}
               mr="1px"
             />
           </Tooltip>
@@ -52,7 +69,7 @@ export const ChatContextProgress = ({ chatId }: { chatId: string }) => {
           >
             <Progress.Section
               value={m.token_usage * 100}
-              color="blue.3"
+              color={getColor("blue.3")}
               mr="1px"
             />
           </Tooltip>

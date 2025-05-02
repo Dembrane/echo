@@ -11,3 +11,5 @@ if DIRECTUS_TOKEN:
     logger.debug(f"DIRECTUS_TOKEN: {directus_token}")
 
 directus = DirectusClient(url=DIRECTUS_BASE_URL, token=directus_token)
+
+

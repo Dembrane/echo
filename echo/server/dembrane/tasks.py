@@ -1,13 +1,15 @@
 # mypy: disable-error-code="no-untyped-def"
 from typing import List
+from pathlib import Path
 
-from celery import Celery, chain, chord, group, signals  # type: ignore
+from celery import Celery, chain, chord, group, signals, bootsteps  # type: ignore
 from sentry_sdk import capture_exception
+from celery.signals import worker_ready, worker_shutdown  # type: ignore
 from celery.utils.log import get_task_logger  # type: ignore
 
 import dembrane.tasks_config
 from dembrane.utils import generate_uuid, get_utc_timestamp
-from dembrane.config import REDIS_URL
+from dembrane.config import REDIS_URL, ENABLE_AUDIO_LIGHTRAG_INPUT
 from dembrane.sentry import init_sentry
 from dembrane.database import (
     ViewModel,
@@ -33,7 +35,39 @@ from dembrane.quote_utils import (
     generate_conversation_summary,
     cluster_quotes_using_aspect_centroids,
 )
-from dembrane.api.stateless import generate_summary
+from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.processing_status_utils import ProcessingStatus
+from dembrane.audio_lightrag.main.run_etl import run_etl_pipeline
+
+# File for validating worker readiness
+READINESS_FILE = Path("/tmp/celery_ready")
+
+# File for validating worker liveness
+HEARTBEAT_FILE = Path("/tmp/celery_worker_heartbeat")
+
+
+class LivenessProbe(bootsteps.StartStopStep):
+    requires = {"celery.worker.components:Timer"}
+
+    def __init__(self, parent, **kwargs):
+        super().__init__(parent, **kwargs)
+        self.requests = []
+        self.tref = None
+
+    def start(self, worker):
+        self.tref = worker.timer.call_repeatedly(
+            1.0,
+            self.update_heartbeat_file,
+            (worker,),
+            priority=10,
+        )
+
+    def stop(self, _worker):
+        HEARTBEAT_FILE.unlink(missing_ok=True)
+
+    def update_heartbeat_file(self, _worker):
+        HEARTBEAT_FILE.touch()
+
 
 logger = get_task_logger("celery_tasks")
 
@@ -52,6 +86,18 @@ celery_app = Celery(
 )
 
 celery_app.config_from_object(dembrane.tasks_config)
+
+celery_app.steps["worker"].add(LivenessProbe)
+
+
+@worker_ready.connect  # type: ignore
+def worker_ready(**_):
+    READINESS_FILE.touch()
+
+
+@worker_shutdown.connect  # type: ignore
+def worker_shutdown(**_):
+    READINESS_FILE.unlink(missing_ok=True)
 
 
 @signals.celeryd_init.connect
@@ -84,7 +130,11 @@ class BaseTask(celery_app.Task):  # type: ignore
 )
 def log_error(_self, exc: Exception):
     logger.error(f"Error: {exc}")
-    raise exc from exc
+    try:
+        raise exc from exc
+    except Exception:
+        logger.error(f"Error: {str(exc)}")
+        raise
 
 
 @celery_app.task(
@@ -102,12 +152,7 @@ def task_transcribe_conversation_chunk(self, conversation_chunk_id: str):
         raise self.retry(exc=e) from e
 
 
-@celery_app.task(
-    bind=True,
-    retry_backoff=True,
-    ignore_result=True,
-    base=BaseTask,
-)
+@celery_app.task(bind=True, retry_backoff=True, ignore_result=True, base=BaseTask)
 def task_transcribe_conversation_chunks(self, conversation_chunk_id: List[str]):
     try:
         task_signatures = [
@@ -131,6 +176,7 @@ def task_transcribe_conversation_chunks(self, conversation_chunk_id: List[str]):
     retry_backoff=True,
     ignore_result=False,
     base=BaseTask,
+    queue="cpu",
 )
 def task_split_audio_chunk(self, chunk_id: str) -> List[str]:
     """
@@ -138,7 +184,7 @@ def task_split_audio_chunk(self, chunk_id: str) -> List[str]:
     """
     with DatabaseSession() as db:
         try:
-            return split_audio_chunk(chunk_id)
+            return split_audio_chunk(chunk_id, "mp3")
         except Exception as exc:
             logger.error(f"Error: {exc}")
             db.rollback()
@@ -148,33 +194,71 @@ def task_split_audio_chunk(self, chunk_id: str) -> List[str]:
 @celery_app.task(
     bind=True,
     retry_backoff=True,
+    ignore_result=False,  # Result needs to be stored for chord to work
+    base=BaseTask,
+)
+def task_create_transcription_chord(_self, chunk_ids: List[str], conversation_id: str):
+    """
+    Create a chord of transcription tasks for each chunk ID,
+    with the finish conversation hook as the callback.
+
+    This separates the chord creation into its own task to avoid
+    serialization issues with inline functions.
+    """
+    # Create a task for each chunk ID
+    header = [
+        task_transcribe_conversation_chunk.si(chunk_id).on_error(log_error.s())
+        for chunk_id in chunk_ids
+    ]
+
+    # Create the chord with the finish hook as callback
+    chord_workflow = chord(header, task_finish_conversation_hook.si(conversation_id))
+
+    # Execute the chord
+    return chord_workflow.apply_async()
+
+
+@celery_app.task(
+    bind=True,
+    retry_backoff=True,
     ignore_result=True,
     base=BaseTask,
 )
-def task_process_conversation_chunk(self, chunk_id: str):
-    with DatabaseSession() as db:
-        try:
-            chunk = db.get(ConversationChunkModel, chunk_id)
+def task_process_conversation_chunk(self, chunk_id: str, run_finish_hook: bool = False):
+    try:
+        chunk = directus.get_item("conversation_chunk", chunk_id)
 
-            if chunk is None:
-                logger.info(f"Chunk not found: {chunk_id}")
-                return None
+        if chunk is None:
+            raise ValueError(f"Chunk not found: {chunk_id}")
 
-            chunk.task_id = self.request.id
-            db.commit()
+        directus.update_item(
+            "conversation_chunk",
+            chunk_id,
+            {
+                "processing_status": ProcessingStatus.PROCESSING.value,
+                "processing_message": "Processing chunk",
+            },
+        )
 
-            c = chain(
+        if run_finish_hook:
+            # First split the audio to get list of chunk IDs
+            # Then process each chunk with a chord to ensure the finish hook
+            # runs only after ALL transcription tasks complete
+            workflow = chain(
                 task_split_audio_chunk.s(chunk_id),
-                task_transcribe_conversation_chunks.s(),
+                task_create_transcription_chord.s(chunk["conversation_id"]),
+            )
+        else:
+            # Without finish hook, just split and transcribe
+            workflow = chain(
+                task_split_audio_chunk.s(chunk_id), task_transcribe_conversation_chunks.s()
             )
 
-            result = c.apply_async()
-
-            return result
-        except Exception as exc:
-            logger.error(f"Error: {exc}")
-            db.rollback()
-            raise self.retry(exc=exc) from exc
+        result = workflow.apply_async()
+        return result
+    except Exception as exc:
+        logger.error(f"Error: {exc}")
+        raise self.retry(exc=exc) from exc
 
 
 @celery_app.task(
@@ -342,6 +426,7 @@ def task_generate_insight_extras_multiple(self, insight_ids: List[str], language
     retry_kwargs={"max_retries": 3},
     ignore_result=False,
     base=BaseTask,
+    queue="cpu",
 )
 def task_initialize_insights(self, project_analysis_run_id: str) -> List[str]:
     with DatabaseSession() as db:
@@ -446,6 +531,7 @@ def task_generate_view_extras(self, view_id: str, language: str):
     retry_kwargs={"max_retries": 3},
     ignore_result=False,
     base=BaseTask,
+    queue="cpu",
 )
 def task_assign_aspect_centroid(self, aspect_id: str, language: str = "en"):
     with DatabaseSession() as db:
@@ -463,6 +549,7 @@ def task_assign_aspect_centroid(self, aspect_id: str, language: str = "en"):
     retry_kwargs={"max_retries": 3},
     ignore_result=False,
     base=BaseTask,
+    queue="cpu",
 )
 def task_cluster_quotes_using_aspect_centroids(self, view_id: str):
     with DatabaseSession() as db:
@@ -718,51 +805,66 @@ def task_create_project_library(_self, project_id: str, language: str):
 
 
 @celery_app.task(bind=True, retry_backoff=True, ignore_result=False, base=BaseTask)
+def task_summarize_conversation(self, conversation_id: str):
+    try:
+        from dembrane.api.conversation import summarize_conversation
+
+        summarize_conversation(
+            conversation_id, auth=DependencyDirectusSession(user_id="none", is_admin=True)
+        )
+
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        raise self.retry(exc=e) from e
+
+
+@celery_app.task(
+    bind=True,
+    retry_backoff=True,
+    ignore_result=False,
+    base=BaseTask,
+    queue="cpu",
+)
+def task_merge_conversation_chunks(self, conversation_id: str):
+    try:
+        # Import locally to avoid circular imports
+        from dembrane.api.conversation import get_conversation_content
+
+        get_conversation_content(
+            conversation_id,
+            auth=DependencyDirectusSession(user_id="none", is_admin=True),
+            force_merge=True,
+            return_url=True,
+        )
+
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        raise self.retry(exc=e) from e
+
+
+@celery_app.task(bind=True, retry_backoff=True, ignore_result=False, base=BaseTask)
 def task_finish_conversation_hook(self, conversation_id: str):
     try:
-        conversation_data = directus.get_items(
+        directus.update_item(
             "conversation",
-            {
-                "query": {
-                    "filter": {
-                        "id": {"_eq": conversation_id},
-                    },
-                    "fields": ["id", "chunks.transcript", "project_id.language"],
-                    "deep": {
-                        "chunks": {"_sort": ["timestamp"], "_limit": "120"},
-                    },
-                },
+            conversation_id,
+            item_data={
+                "processing_status": ProcessingStatus.COMPLETED.value,
+                "processing_message": "Conversation marked as finished",
             },
         )
 
-        if not conversation_data or len(conversation_data) == 0:
-            raise Exception("Conversation not found")
+        signatures = group(
+            task_summarize_conversation.si(conversation_id),
+            task_merge_conversation_chunks.si(conversation_id),
+        )
 
-        conversation_data = conversation_data[0]
+        signatures.apply_async()
 
-        language = conversation_data["project_id"]["language"]
+        logger.info(f"Processing conversation {conversation_id} started")
 
-        transcript_str = ""
-
-        for chunk in conversation_data["chunks"]:
-            if chunk["transcript"] is not None:
-                transcript_str += chunk["transcript"]
-
-        if transcript_str == "":
-            logger.info(
-                f"transcript is empty for conversation: {conversation_id}. so not generating summary"
-            )
-        else:
-            summary = generate_summary(transcript_str, None, language if language else "nl")
-
-            directus.update_item(
-                collection_name="conversation",
-                item_id=conversation_id,
-                item_data={
-                    "summary": summary,
-                },
-            )
-
+        if ENABLE_AUDIO_LIGHTRAG_INPUT:
+            run_etl_pipeline([conversation_id])
     except Exception as e:
         logger.error(f"Error: {e}")
         raise self.retry(exc=e) from e

@@ -165,6 +165,7 @@ type TProjectChatContext = {
     role: "user" | "assistant";
     token_usage: number; // between 0 and 1
   }>;
+  auto_select_bool: boolean;
 };
 
 type ChatHistoryMessage = {
@@ -172,6 +173,7 @@ type ChatHistoryMessage = {
   role: "user" | "assistant" | "system" | "dembrane";
   content: string;
   _original: ProjectChatMessage;
+  metadata: ProjectChatMessageMetadata[];
 };
 
 type ChatHistory = Array<ChatHistoryMessage>;

@@ -280,6 +280,8 @@ class ProjectChatMessageModel(Base):
         secondary=project_chat_message_conversation_association_1_table,
     )
     tokens_count: Mapped[int] = mapped_column(Integer)
+    # conversation_references: Mapped[List[Dict[str, str]]] = mapped_column(JSONB, default=[]) 
+    # citations: Mapped[List[Dict[str, str]]] = mapped_column(JSONB, default=[]) 
 
 
 class ProjectChatModel(Base):
@@ -303,6 +305,8 @@ class ProjectChatModel(Base):
         secondary=project_chat_conversation_association_table,
         back_populates="project_chats",
     )
+
+    auto_select_bool: Mapped[bool] = mapped_column('auto_select', Boolean, default=False)
 
 
 class ResourceTypeEnum(Enum):
@@ -354,15 +358,10 @@ class ConversationModel(Base):
     context: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    source: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     processing_status: Mapped[ProcessingStatusEnum] = mapped_column(String, default="PENDING")
-    processing_error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    processing_started_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    processing_completed_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    processing_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     chunks: Mapped[List["ConversationChunkModel"]] = relationship(
         "ConversationChunkModel",

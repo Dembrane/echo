@@ -13,11 +13,12 @@
     "interface": "select-dropdown-m2o",
     "note": null,
     "options": {
+      "enableLink": true,
       "template": "{{participant_name}}"
     },
     "readonly": false,
     "required": false,
-    "sort": null,
+    "sort": 4,
     "special": [
       "uuid"
     ],

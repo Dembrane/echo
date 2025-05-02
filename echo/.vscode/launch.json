@@ -2,28 +2,63 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python Debugger: Server",
-      "type": "debugpy",
+      "name": "Python: ProcessTracker Debug",
+      "type": "python",
       "request": "launch",
-      "module": "dembrane.main",
-      "cwd": "${workspaceFolder}/server"
+      "program": "dembrane/audio_lightrag/tests/unit_tests/directus_etl_pipeline_test.py",
+      "cwd": "${workspaceFolder}/server",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/server"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": "false"
     },
     {
-      "name": "Python Debugger: s3",
+      "name": "Python: Contextual Chunk ETL Pipeline Debug",
+      "type": "python",
+      "request": "launch",
+      "program": "dembrane/audio_lightrag/tests/unit_tests/contextual_chunk_etl_pipeline_test.py",
+      "cwd": "${workspaceFolder}/server",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/server"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": "false"
+    },
+    {
+      "name": "Python Debugger: transcribe",
       "type": "debugpy",
       "request": "launch",
       "module": "dembrane.transcribe",
       "cwd": "${workspaceFolder}/server"
+        "PYTHONPATH": "${workspaceFolder}/server"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": "false"
     },
     {
-      "name": "Attach to Python Functions",
-      "type": "debugpy",
-      "request": "attach",
-      "connect": {
-        "host": "localhost",
-        "port": 9091
+      "name": "Python: LightRAG Embedding Debug",
+      "type": "python",
+      "request": "launch",
+      "program": "dembrane/audio_lightrag/utils/lightrag_utils.py",
+      "cwd": "${workspaceFolder}/server",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/server"
       },
-      "preLaunchTask": "func: host start"
+      "console": "integratedTerminal",
+      "justMyCode": "false"
+    },
+    {
+      "name": "Python: LightRAG Test",
+      "type": "python",
+      "request": "launch",
+      "program": "test.py",
+      "cwd": "${workspaceFolder}/server",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/server"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": "false"
     }
   ]
 }

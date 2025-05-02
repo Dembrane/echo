@@ -16,24 +16,43 @@ import {
   useConversationChunks,
   useProjectById,
 } from "@/lib/query";
-import { InformationTooltip } from "@/components/common/InformationTooltip";
 import { ConversationEdit } from "@/components/conversation/ConversationEdit";
 import { ConversationDangerZone } from "@/components/conversation/ConversationDangerZone";
-import { finishConversation } from "@/lib/api";
+import { finishConversation, getConversationSummary } from "@/lib/api";
 import { IconRefresh } from "@tabler/icons-react";
 import { t } from "@lingui/core/macro";
+import { Markdown } from "@/components/common/Markdown";
+import { useMutation } from "@tanstack/react-query";
+import { CopyIconButton } from "@/components/common/CopyIconButton";
+import { useClipboard } from "@mantine/hooks";
+import { toast } from "@/components/common/Toaster";
 
 export const ProjectConversationOverviewRoute = () => {
   const { conversationId, projectId } = useParams();
+
   const conversationQuery = useConversationById({
     conversationId: conversationId ?? "",
   });
   const conversationChunksQuery = useConversationChunks(conversationId ?? "");
   const projectQuery = useProjectById({ projectId: projectId ?? "" });
 
-  const handleGenerateSummaryManually = async () => {
-    await finishConversation(conversationId ?? "");
-  };
+  const useHandleGenerateSummaryManually = useMutation({
+    mutationFn: async () => {
+      const response = await getConversationSummary(conversationId ?? "");
+      toast.info(
+        t`The summary is being regenerated. Please wait for the new summary to be available.`,
+      );
+      return response;
+    },
+    onSuccess: () => {
+      conversationQuery.refetch();
+    },
+    onError: () => {
+      toast.error(t`Failed to regenerate the summary. Please try again later.`);
+    },
+  });
+
+  const clipboard = useClipboard();
 
   return (
     <Stack gap="3rem" className="relative" px="2rem" pt="2rem" pb="2rem">
@@ -44,41 +63,70 @@ export const ProjectConversationOverviewRoute = () => {
             <>
               <Group>
                 <Title order={2}>
-                  <Trans>Summary</Trans>
+                  {(conversationQuery.data?.summary ||
+                    (conversationQuery.data?.source &&
+                      !conversationQuery.data.source
+                        .toLowerCase()
+                        .includes("upload"))) && <Trans>Summary</Trans>}
                 </Title>
-                {/* <InformationTooltip
-                  label={
-                    <Text>
-                      <Trans>
-                        This summary is AI-generated and brief, for thorough
-                        analysis, use the Chat or Library.
-                      </Trans>
-                    </Text>
-                  }
-                /> */}
-                <Tooltip
-                  label={
-                    conversationQuery.data?.summary
-                      ? t`Regenerate Summary`
-                      : t`Generate Summary`
-                  }
-                >
-                  <ActionIcon
-                    variant="transparent"
-                    color="black"
-                    onClick={handleGenerateSummaryManually}
-                  >
-                    <IconRefresh size={16} />
-                  </ActionIcon>
-                </Tooltip>
+                <Group gap="sm">
+                  {conversationQuery.data?.summary && (
+                    <CopyIconButton
+                      size={22}
+                      onCopy={() => {
+                        clipboard.copy(conversationQuery.data?.summary ?? "");
+                      }}
+                      copied={clipboard.copied}
+                      copyTooltip={t`Copy Summary`}
+                    />
+                  )}
+                  {conversationQuery.data?.summary && (
+                    <Tooltip label={t`Regenerate Summary`}>
+                      <ActionIcon
+                        variant="transparent"
+                        onClick={() =>
+                          window.confirm(
+                            t`Are you sure you want to regenerate the summary? You will lose the current summary.`,
+                          ) && useHandleGenerateSummaryManually.mutate()
+                        }
+                      >
+                        <IconRefresh size={22} color="gray" />
+                      </ActionIcon>
+                    </Tooltip>
+                  )}
+                </Group>
               </Group>
 
-              <Text>
-                {conversationQuery.data?.summary ??
-                  t`Summary not available yet`}
-              </Text>
+              <Markdown
+                content={
+                  conversationQuery.data?.summary ??
+                  (useHandleGenerateSummaryManually.data &&
+                  "summary" in useHandleGenerateSummaryManually.data
+                    ? useHandleGenerateSummaryManually.data.summary
+                    : "")
+                }
+              />
 
-              <Divider />
+              {!conversationQuery.data?.summary &&
+                conversationQuery.data?.summary &&
+                conversationQuery.data?.source &&
+                !conversationQuery.data.source
+                  .toLowerCase()
+                  .includes("upload") && (
+                  <Button
+                    variant="outline"
+                    onClick={() => useHandleGenerateSummaryManually.mutate()}
+                    className="-mt-[2rem]"
+                    loading={
+                      useHandleGenerateSummaryManually.isPending ||
+                      conversationQuery.isFetching
+                    }
+                  >
+                    {t`Generate Summary`}
+                  </Button>
+                )}
+
+              {conversationQuery.data?.summary && <Divider />}
             </>
           </Stack>
         )}

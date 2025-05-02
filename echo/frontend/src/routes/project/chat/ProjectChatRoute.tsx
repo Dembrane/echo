@@ -29,19 +29,25 @@ import {
   IconSquare,
 } from "@tabler/icons-react";
 import { useParams } from "react-router-dom";
-import { useChat } from "ai/react";
-import { API_BASE_URL } from "@/config";
-import { useEffect, useMemo, useRef } from "react";
+import { useChat } from "@ai-sdk/react";
+import { API_BASE_URL, ENABLE_CHAT_AUTO_SELECT } from "@/config";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
 import { ConversationLinks } from "@/components/conversation/ConversationLinks";
 import { ChatHistoryMessage } from "@/components/chat/ChatHistoryMessage";
 import { ChatTemplatesMenu } from "@/components/chat/ChatTemplatesMenu";
-import { formatMessage } from "@/components/chat/chatUtils";
+import { extractMessageMetadata, formatMessage } from "@/components/chat/chatUtils";
+import SourcesSearch from "@/components/chat/SourcesSearch";
+import SpikeMessage from "@/components/participant/SpikeMessage";
+import { Logo } from "@/components/common/Logo";
 
 const useDembraneChat = ({ chatId }: { chatId: string }) => {
   const chatHistoryQuery = useChatHistory(chatId);
   const chatContextQuery = useProjectChatContext(chatId);
+
+  const [showProgress, setShowProgress] = useState(false);
+  const [progressValue, setProgressValue] = useState(0);
 
   const addChatMessageMutation = useAddChatMessageMutation();
   const lockConversationsMutation = useLockConversationsMutation();
@@ -57,6 +63,10 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
       conversations: chatContextQuery.data.conversations.filter(
         (c) => !c.locked,
       ),
+      locked_conversations: chatContextQuery.data.conversations.filter(
+        (c) => c.locked,
+      ),
+      auto_select_bool: chatContextQuery.data.auto_select_bool ?? false,
     };
   }, [chatContextQuery.data, chatHistoryQuery.data]);
 
@@ -70,6 +80,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
     handleInputChange,
     handleSubmit,
     isLoading,
+    status,
     error,
     stop,
     reload,
@@ -85,18 +96,38 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
       }
       console.log("onError", error);
     },
+    onResponse: async (_response) => {
+      setShowProgress(false);
+      setProgressValue(0);
+    },
     onFinish: async (message) => {
       // this uses the response stream from the backend and makes a chat message IN THE FRONTEND
       // do this for now because - i dont want to do the stream text processing again in the backend
       // if someone navigates away before onFinish is completed, the message will be lost
-      addChatMessageMutation.mutate({
-        project_chat_id: {
-          id: chatId,
-        } as ProjectChat,
-        text: message.content,
-        message_from: "assistant",
-        date_created: new Date().toISOString(),
-      });
+      if (ENABLE_CHAT_AUTO_SELECT && contextToBeAdded?.auto_select_bool) {
+        const flattenedItems = extractMessageMetadata(message);
+
+        await addChatMessageMutation.mutateAsync({
+          project_chat_id: {
+            id: chatId,
+          } as ProjectChat,
+          text: message.content,
+          message_from: "assistant",
+          date_created: new Date().toISOString(),
+          chat_message_metadata: flattenedItems ?? [],
+        });
+      } else {
+        addChatMessageMutation.mutate({
+          project_chat_id: {
+            id: chatId,
+          } as ProjectChat,
+          text: message.content,
+          message_from: "assistant",
+          date_created: new Date().toISOString(),
+          chat_message_metadata: [],
+        });
+      }
+
       // scroll to the last message
       lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
     },
@@ -137,8 +168,32 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 
       // Submit the chat
       handleSubmit();
+
+      // Scroll to bottom when user submits a message
+      setTimeout(() => {
+        lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 0);
+      
+      if (ENABLE_CHAT_AUTO_SELECT && contextToBeAdded?.auto_select_bool) {
+        setShowProgress(true);
+        setProgressValue(0);
+        // Start progress animation
+        const interval = setInterval(() => {
+          setProgressValue((prev) => {
+            if (prev >= 95) {
+              clearInterval(interval);
+              return 95; // Cap at 95% to show it's still loading
+            }
+            return prev + 5;
+          });
+        }, 500);
+      }
     } catch (error) {
       console.error("Error in customHandleSubmit:", error);
+      if (ENABLE_CHAT_AUTO_SELECT && contextToBeAdded?.auto_select_bool) {
+        setShowProgress(false);
+        setProgressValue(0);
+      }
     }
   };
 
@@ -166,6 +221,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
   return {
     isInitializing: chatHistoryQuery.isLoading,
     isLoading,
+    status,
     messages,
     contextToBeAdded,
     input,
@@ -177,6 +233,8 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
     handleInputChange,
     handleSubmit: customHandleSubmit,
     stop: customHandleStop,
+    showProgress,
+    progressValue,
   };
 };
 
@@ -185,10 +243,12 @@ export const ProjectChatRoute = () => {
 
   const { chatId } = useParams();
   const chatQuery = useProjectChat(chatId ?? "");
-
+  const [referenceIds, setReferenceIds] = useState<string[]>([]);
+  
   const {
     isInitializing,
     isLoading,
+    status,
     messages,
     input,
     error,
@@ -199,14 +259,27 @@ export const ProjectChatRoute = () => {
     handleSubmit,
     stop,
     reload,
+    showProgress,
+    progressValue,
   } = useDembraneChat({ chatId: chatId ?? "" });
+
+  // check if assistant is typing by determining if the last message is an assistant message and has a text part
+  const isAssistantTyping =
+    showProgress === false &&
+    messages &&
+    messages.length > 0 &&
+    messages[messages.length - 1].role === "assistant" &&
+    messages[messages.length - 1].parts?.some((part) => part.type === "text");
+
+  const noConversationsSelected =
+    contextToBeAdded?.conversations?.length === 0 &&
+    contextToBeAdded?.locked_conversations?.length === 0;
 
   const computedChatForCopy = useMemo(() => {
     const messagesList = messages.map((message) =>
       // @ts-expect-error chatHistoryQuery.data is not typed
       formatMessage(message, "User", "Dembrane"),
     );
-
     return messagesList.join("\n\n\n\n");
   }, [messages]);
 
@@ -244,6 +317,8 @@ export const ProjectChatRoute = () => {
               role: "assistant",
               content: t`Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations.`,
             }}
+            referenceIds={referenceIds}
+            setReferenceIds={setReferenceIds}
           />
 
           {/* get everything except the last message */}
@@ -252,7 +327,7 @@ export const ProjectChatRoute = () => {
             messages.slice(0, -1).map((message, idx) => (
               <div key={message.id + idx}>
                 {/* @ts-expect-error chatHistoryQuery.data is not typed */}
-                <ChatHistoryMessage message={message} />
+                <ChatHistoryMessage message={message} referenceIds={referenceIds} setReferenceIds={setReferenceIds} />
               </div>
             ))}
 
@@ -268,14 +343,25 @@ export const ProjectChatRoute = () => {
                       <Button onClick={handleSubmit}>Regenerate</Button>
                     )
                   }
+                  referenceIds={referenceIds}
+                  setReferenceIds={setReferenceIds}
                 />
               </div>
             )}
 
-          {isLoading && (
+          {ENABLE_CHAT_AUTO_SELECT && showProgress && (
+            <SourcesSearch progressValue={progressValue} />
+          )}
+
+          {isLoading && !showProgress && (
             <Group>
+              <Box className="animate-spin">
+                <Logo hideTitle h="20px" my={4} />
+              </Box>
               <Text size="sm" className="italic">
-                <Trans>Assistant is typing...</Trans>
+                <Trans>
+                  {isAssistantTyping ? "Assistant is typing..." : "Thinking..."}
+                </Trans>
               </Text>
               <Button
                 onClick={() => stop()}
@@ -294,7 +380,7 @@ export const ProjectChatRoute = () => {
             messages[messages.length - 1].role === "assistant" && (
               <div ref={lastMessageRef}>
                 {/* @ts-expect-error chatHistoryQuery.data is not typed */}
-                <ChatHistoryMessage message={messages[messages.length - 1]} />
+                <ChatHistoryMessage message={messages[messages.length - 1]} referenceIds={referenceIds} setReferenceIds={setReferenceIds} />
               </div>
             )}
 
@@ -323,6 +409,18 @@ export const ProjectChatRoute = () => {
       {/* Footer */}
       <Box className="bottom-0 w-full border-t bg-white py-4 lg:sticky">
         <Stack>
+          {(!ENABLE_CHAT_AUTO_SELECT
+            ? noConversationsSelected
+            : noConversationsSelected &&
+              !contextToBeAdded?.auto_select_bool) && (
+            <Alert
+              icon={<IconAlertCircle size="1rem" />}
+              title={t`No transcripts are selected for this chat`}
+              color="orange"
+              variant="light"
+            ></Alert>
+          )}
+
           {contextToBeAdded && contextToBeAdded.conversations.length > 0 && (
             <ChatMessage role="dembrane">
               <Group gap="xs" align="baseline">
@@ -335,6 +433,11 @@ export const ProjectChatRoute = () => {
                     id: c.conversation_id,
                     participant_name: c.conversation_participant_name,
                   }))}
+                  color={
+                    ENABLE_CHAT_AUTO_SELECT && contextToBeAdded.auto_select_bool
+                      ? "green"
+                      : undefined
+                  }
                 />
               </Group>
             </ChatMessage>

@@ -3,14 +3,16 @@
 #
 # last locked with the following flags:
 #   pre: false
-#   features: []
+#   features: ["dev"]
 #   all-features: false
 #   with-sources: false
 #   generate-hashes: false
 #   universal: false
 
 aiofiles==23.2.1
-aiohttp==3.9.5
+aiohappyeyeballs==2.6.1
+    # via aiohttp
+aiohttp==3.11.14
     # via langchain
     # via langchain-community
     # via litellm
@@ -28,6 +30,9 @@ anyio==4.3.0
     # via openai
     # via starlette
     # via watchfiles
+ascii-colors==0.5.2
+    # via pipmaster
+asyncpg==0.30.0
 attrs==23.2.0
     # via aiohttp
     # via jsonschema
@@ -64,6 +69,9 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
+configparser==7.2.0
+coverage==7.8.0
+    # via pytest-cov
 cryptography==42.0.8
     # via python-jose
 dataclasses-json==0.6.6
@@ -75,6 +83,8 @@ distro==1.9.0
     # via openai
 ecdsa==0.19.0
     # via python-jose
+execnet==2.1.1
+    # via pytest-xdist
 fastapi==0.109.2
     # via sentry-sdk
 ffmpeg-python==0.2.0
@@ -112,6 +122,8 @@ idna==3.7
     # via yarl
 importlib-metadata==8.6.1
     # via litellm
+iniconfig==2.1.0
+    # via pytest
 isort==5.13.2
 jinja2==3.1.4
     # via litellm
@@ -151,6 +163,7 @@ langsmith==0.1.59
     # via langchain
     # via langchain-community
     # via langchain-core
+lightrag-dembrane==1.2.7.6
 litellm==1.59.9
 mako==1.3.5
     # via alembic
@@ -166,6 +179,9 @@ mypy==1.10.0
 mypy-extensions==1.0.0
     # via mypy
     # via typing-inspect
+neo4j==5.28.1
+nest-asyncio==1.6.0
+networkx==3.4.2
 numpy==1.26.4
     # via langchain
     # via langchain-community
@@ -183,13 +199,20 @@ packaging==23.2
     # via huggingface-hub
     # via langchain-core
     # via marshmallow
+    # via pytest
 pandas==2.2.2
 pandas-stubs==2.2.2.240514
 pgvector==0.2.5
+pipmaster==0.5.1
+pluggy==1.5.0
+    # via pytest
 prometheus-client==0.20.0
     # via flower
 prompt-toolkit==3.0.43
     # via click-repl
+propcache==0.3.0
+    # via aiohttp
+    # via yarl
 psycopg==3.1.19
 psycopg-binary==3.1.19
     # via psycopg
@@ -200,7 +223,7 @@ pyasn1==0.6.0
     # via rsa
 pycparser==2.22
     # via cffi
-pydantic==2.7.1
+pydantic==2.10.6
     # via anthropic
     # via fastapi
     # via langchain
@@ -208,9 +231,19 @@ pydantic==2.7.1
     # via langsmith
     # via litellm
     # via openai
-pydantic-core==2.18.2
+pydantic-core==2.27.2
     # via pydantic
+pydub==0.25.1
 pypdf==4.0.2
+pytest==8.3.4
+    # via pytest-asyncio
+    # via pytest-cov
+    # via pytest-mock
+    # via pytest-xdist
+pytest-asyncio==0.26.0
+pytest-cov==6.1.1
+pytest-mock==3.14.0
+pytest-xdist==3.6.1
 python-dateutil==2.9.0.post0
     # via botocore
     # via celery
@@ -222,8 +255,9 @@ python-jose==3.3.0
 python-multipart==0.0.9
 pytz==2024.1
     # via flower
+    # via neo4j
     # via pandas
-pyyaml==6.0.1
+pyyaml==6.0.2
     # via huggingface-hub
     # via langchain
     # via langchain-community
@@ -255,6 +289,8 @@ scikit-learn==1.4.2
 scipy==1.13.0
     # via scikit-learn
 sentry-sdk==2.19.2
+setuptools==75.8.0
+    # via pipmaster
 six==1.16.0
     # via ecdsa
     # via python-dateutil
@@ -278,7 +314,7 @@ tenacity==8.3.0
     # via langchain-core
 threadpoolctl==3.5.0
     # via scikit-learn
-tiktoken==0.7.0
+tiktoken==0.9.0
     # via langchain-openai
     # via litellm
 tokenizers==0.21.0
@@ -296,7 +332,7 @@ types-pytz==2024.1.0.20240417
     # via pandas-stubs
 types-requests==2.32.0.20240602
 types-tqdm==4.66.0.20240417
-typing-extensions==4.11.0
+typing-extensions==4.12.2
     # via alembic
     # via anthropic
     # via fastapi
@@ -334,7 +370,7 @@ wcwidth==0.2.13
     # via prompt-toolkit
 websockets==12.0
     # via uvicorn
-yarl==1.9.4
+yarl==1.18.3
     # via aiohttp
 zipp==3.21.0
     # via importlib-metadata

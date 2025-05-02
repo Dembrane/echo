@@ -39,12 +39,13 @@ Note:
     - File uploads from FastAPI have a default size limit of 100MB
     - The module automatically sanitizes file names and handles S3 key formatting
 """
-
+import io
 import logging
 from urllib.parse import urlparse
 
 import boto3  # type: ignore
 import requests
+from pydub import AudioSegment
 from fastapi import UploadFile
 from botocore.response import StreamingBody  # type: ignore
 
@@ -147,8 +148,27 @@ def get_signed_url(file_name: str, expires_in_seconds: int = 3600) -> str:
 
 
 def get_sanitized_s3_key(file_name: str) -> str:
+    if not file_name:
+        raise ValueError("Empty file name provided to get_sanitized_s3_key")
+
+    file_name = file_name.strip().split("?")[0]
+
+    # Check if it's a full URL and extract the path
     if file_name.startswith(f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/"):
-        return file_name.split(f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/")[1]
+        key = file_name.split(f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/")[1]
+        return key
+    # Handle URLs with any endpoint but correct format (http://endpoint/bucket/key)
+    elif file_name.startswith("http://") or file_name.startswith("https://"):
+        parts = file_name.split("/")
+        if len(parts) >= 5:  # http:// + domain + bucket + rest of path
+            # Skip http(s):// + domain + bucket
+            key = "/".join(parts[4:])
+            return key
+    # Also handle cases with forward slashes at the beginning
+    elif file_name.startswith("/"):
+        # Remove any leading slashes
+        return file_name.lstrip("/")
+
     return file_name
 
 
@@ -162,3 +182,32 @@ def get_stream_from_s3(file_name: str) -> StreamingBody:
 def delete_from_s3(file_name: str) -> None:
     file_name = get_sanitized_s3_key(file_name)
     s3_client.delete_object(Bucket=STORAGE_S3_BUCKET, Key=file_name)
+
+
+def get_file_size_from_s3_mb(file_name: str) -> float:
+    file_name = get_sanitized_s3_key(file_name)
+    
+    # Use head_object to get metadata about the object
+    response = s3_client.head_object(Bucket=STORAGE_S3_BUCKET, Key=file_name)
+    
+    # Return the size of the object in bytes
+    return response['ContentLength']/(1024*1024)
+
+def save_audio_to_s3(audio: AudioSegment, file_name: str, public: bool = False) -> str:
+    """
+    Save an AudioSegment object directly to S3.
+
+    Args:
+        audio (AudioSegment): The audio segment to save.
+        file_name (str): The name of the file to save in S3.
+        public (bool): Whether the file should be publicly accessible.
+
+    Returns:
+        str: The URL of the saved file in S3.
+    """
+    audio_buffer = io.BytesIO()
+    audio.export(audio_buffer, format="wav")
+    audio_buffer.seek(0)
+    file_like = UploadFile(filename=file_name, file=audio_buffer)
+    s3_url = save_to_s3_from_file_like(file_like, file_name, public)
+    return s3_url
