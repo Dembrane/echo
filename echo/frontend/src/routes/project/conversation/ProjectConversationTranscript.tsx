@@ -106,6 +106,7 @@ export const ProjectConversationTranscript = () => {
   const hasValidTranscripts = allChunks.some(
     (chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
   );
+  const isEmptyConversation = allChunks.length === 0 || !hasValidTranscripts;
 
   const handleDownloadTranscript = (filename: string) => {
     const text = transcriptQuery.data ?? "";
@@ -160,6 +161,11 @@ export const ProjectConversationTranscript = () => {
             <Title order={2}>
               <Trans>Transcript</Trans>
             </Title>
+            {isEmptyConversation && (
+              <Badge color="red" variant="light">
+                <Trans>Empty</Trans>
+              </Badge>
+            )}
             {/* open the download modal */}
             <Tooltip label={t`Download transcript`}>
               <ActionIcon
