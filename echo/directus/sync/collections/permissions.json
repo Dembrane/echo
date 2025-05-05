@@ -92,6 +92,48 @@
     "_syncId": "609129f4-4e57-4d75-b1f0-f70957ef2613"
   },
   {
+    "collection": "project_report_notification_participants",
+    "action": "create",
+    "permissions": null,
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "email_opt_in",
+      "email",
+      "project_id"
+    ],
+    "policy": "_sync_default_public_policy",
+    "_syncId": "5de31e30-8c63-4ea6-ae24-ae2f1f3f9d6c"
+  },
+  {
+    "collection": "project_report_notification_participants",
+    "action": "delete",
+    "permissions": null,
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "_sync_default_public_policy",
+    "_syncId": "83e5f31c-0db7-4db7-8e78-2779f17dec78"
+  },
+  {
+    "collection": "project_report_notification_participants",
+    "action": "read",
+    "permissions": null,
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "email",
+      "email_opt_out_token",
+      "project_id",
+      "email_opt_in",
+      "id"
+    ],
+    "policy": "_sync_default_public_policy",
+    "_syncId": "9cd0f96b-2055-49a5-9429-812c117392b1"
+  },
+  {
     "collection": "project_report",
     "action": "read",
     "permissions": {
