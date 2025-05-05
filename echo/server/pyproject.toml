@@ -78,6 +78,10 @@ dependencies = [
     "pytest-mock",
     "pytest-xdist>=3.6.1",
     "pytest-asyncio",
+    "networkx==3.4.*",
+    "datasets==3.4.1",
+    "ragas==0.2.14",
+    "wandb==0.19.8",
 ]
 
 [tool.setuptools]
