@@ -1,8 +1,20 @@
+import io
+import os
 import logging
+import mimetypes
 from typing import Optional
 
-from dembrane.s3 import get_stream_from_s3, get_sanitized_s3_key
-from dembrane.openai import client
+from litellm import transcription
+
+from dembrane.s3 import get_stream_from_s3
+from dembrane.config import (
+    LITELLM_WHISPER_URL,
+    LITELLM_WHISPER_MODEL,
+    LITELLM_WHISPER_API_KEY,
+    LITELLM_WHISPER_API_VERSION,
+)
+
+# from dembrane.openai import client
 from dembrane.directus import directus
 
 logger = logging.getLogger("transcribe")
@@ -12,121 +24,38 @@ class TranscriptionError(Exception):
     pass
 
 
-def transcribe_audio(
-    audio_file_path: str, language: Optional[str], whisper_prompt: Optional[str]
-) -> str:
-    return transcribe_audio_openai(audio_file_path, language, whisper_prompt)
 
-
-# def transcribe_audio_aiconl(
-#     audio_file_path: str,
-#     language: Optional[str],  # noqa
-#     whisper_prompt: Optional[str],  # noqa
-# ) -> str:
-#     import requests
-
-#     API_BASE_URL = "https://whisper.ai-hackathon.haven.vng.cloud"
-#     API_KEY = "JOUW_VEILIGE_API_SLEUTEL"
-
-#     try:
-#         with open(audio_file_path, "rb") as f:
-#             headers = {"accept": "application/json", "access_token": API_KEY}
-#             files = {"file": f}
-
-#             response = requests.post(f"{API_BASE_URL}/transcribe", headers=headers, files=files)
-#             response.raise_for_status()
-
-#             result = response.json()
-#             transcription = result.get("text", "")
-
-#             if not transcription:
-#                 logger.info("Transcription is empty!")
-
-#             return transcription
-
-#     except FileNotFoundError as exc:
-#         logger.error(f"File not found: {audio_file_path}")
-#         raise FileNotFoundError from exc
-#     except requests.RequestException as exc:
-#         logger.error(f"Failed to transcribe audio: {exc}")
-#         raise TranscriptionError(f"Failed to transcribe audio: {exc}") from exc
-#     except Exception as exc:
-#         logger.error(f"Unexpected error: {exc}")
-#         raise TranscriptionError(f"Unexpected error: {exc}") from exc
-
-
-def transcribe_audio_openai(
+def transcribe_audio_litellm(
     audio_file_uri: str, language: Optional[str], whisper_prompt: Optional[str]
 ) -> str:
-    logger = logging.getLogger("transcribe.transcribe_audio_openai")
+    """Transcribe audio using Azure ML Whisper"""
+    logger = logging.getLogger("transcribe.transcribe_audio_azure_ml")
 
     try:
         audio_stream = get_stream_from_s3(audio_file_uri)
+        audio_bytes = audio_stream.read()
+        filename = os.path.basename(audio_file_uri)
+        mime_type, _ = mimetypes.guess_type(filename)
+        file_upload = (filename, io.BytesIO(audio_bytes), mime_type)
     except Exception as exc:
         logger.error(f"Failed to get audio stream from S3 for {audio_file_uri}: {exc}")
         raise TranscriptionError(f"Failed to get audio stream from S3: {exc}") from exc
-
-    with audio_stream as f:
-        logger.info(f"Transcribing audio from {audio_file_uri}")
-
-        options = {
-            "model": "whisper-1",
-            "file": (get_sanitized_s3_key(audio_file_uri), f.read()),
-            "response_format": "text",
-            "language": language if language not in [None, "multi", ""] else None,
-            "prompt": whisper_prompt if whisper_prompt else None,
-        }
-
-        try:
-            transcription = client.audio.transcriptions.create(**options)  # type: ignore
-        except Exception as exc:
-            logger.error(f"Failed to transcribe audio: {exc}")
-            raise TranscriptionError(f"Failed to transcribe audio: {exc}") from exc
-
-        if transcription is None or transcription == "":
-            logger.info("Transcription is empty!")
-
-    return str(transcription)
-
-
-# def transcribe_audio_azure_whisper(
-#     audio_file_path: str, language: Optional[str], whisper_prompt: Optional[str]
-# ) -> str:
-#     base_url = "https://whisper-asr-service.westeurope.azurecontainer.io/v1"
-#     endpoint = f"{base_url}/asr"
-
-#     try:
-#         with open(audio_file_path, "rb") as audio_file:
-#             files = {"audio_file": audio_file}
-#             params = {
-#                 "output": "json",
-#                 "task": "transcribe",
-#                 "language": language if language not in [None, "multi", ""] else None,
-#                 "word_timestamps": "false",
-#                 "encode": "true",
-#             }
-
-#             response = requests.post(endpoint, files=files, data=params)
-#             response.raise_for_status()
-
-#             result = response.json()
-#             transcription = result.get("text", "")
-
-#             if not transcription:
-#                 logger.info("Transcription is empty!")
-
-#             return transcription
-
-#     except FileNotFoundError as exc:
-#         logger.error(f"File not found: {audio_file_path}")
-#         raise FileNotFoundError from exc
-#     except requests.RequestException as exc:
-#         logger.error(f"Failed to transcribe audio: {exc}")
-#         raise TranscriptionError(f"Failed to transcribe audio: {exc}") from exc
-#     except Exception as exc:
-#         logger.error(f"Unexpected error: {exc}")
-#         raise TranscriptionError(f"Unexpected error: {exc}") from exc
-
+    
+    try:
+        response = transcription(
+                    model=LITELLM_WHISPER_MODEL,
+                    file=file_upload,
+                    api_key=LITELLM_WHISPER_API_KEY,
+                    api_base=LITELLM_WHISPER_URL,
+                    api_version=LITELLM_WHISPER_API_VERSION,
+                    language=language,
+                    prompt=whisper_prompt
+        )
+        return response["text"]
+    except Exception as e:
+        logger.error(f"Failed to read audio stream: {e}")
+        raise TranscriptionError(f"Failed to read audio stream: {e}") from e
+        
 
 DEFAULT_WHISPER_PROMPTS = {
     "en": "Hi, lets get started. First we'll have a round of introductions and then we can get into the topic for today.",
@@ -240,3 +169,47 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str:
 
     logger.info(f"Processed chunk for transcription: {conversation_chunk_id}")
     return conversation_chunk_id
+
+
+def transcribe_audio(
+    audio_file_path: str, language: Optional[str], whisper_prompt: Optional[str]
+) -> str:
+    return transcribe_audio_litellm(audio_file_path, language, whisper_prompt)
+
+
+
+# def transcribe_audio_aiconl(
+#     audio_file_path: str,
+#     language: Optional[str],  # noqa
+#     whisper_prompt: Optional[str],  # noqa
+# ) -> str:
+#     import requests
+
+#     API_BASE_URL = "https://whisper.ai-hackathon.haven.vng.cloud"
+#     API_KEY = "JOUW_VEILIGE_API_SLEUTEL"
+
+#     try:
+#         with open(audio_file_path, "rb") as f:
+#             headers = {"accept": "application/json", "access_token": API_KEY}
+#             files = {"file": f}
+
+#             response = requests.post(f"{API_BASE_URL}/transcribe", headers=headers, files=files)
+#             response.raise_for_status()
+
+#             result = response.json()
+#             transcription = result.get("text", "")
+
+#             if not transcription:
+#                 logger.info("Transcription is empty!")
+
+#             return transcription
+
+#     except FileNotFoundError as exc:
+#         logger.error(f"File not found: {audio_file_path}")
+#         raise FileNotFoundError from exc
+#     except requests.RequestException as exc:
+#         logger.error(f"Failed to transcribe audio: {exc}")
+#         raise TranscriptionError(f"Failed to transcribe audio: {exc}") from exc
+#     except Exception as exc:
+#         logger.error(f"Unexpected error: {exc}")
+#         raise TranscriptionError(f"Unexpected error: {exc}") from exc

@@ -142,6 +142,20 @@ DISABLE_CORS = os.environ.get("DISABLE_CORS", "false").lower() in ["true", "1"]
 logger.debug(f"DISABLE_CORS: {DISABLE_CORS}")
 
 
+LITELLM_WHISPER_URL = os.environ.get("LITELLM_WHISPER_URL")
+LITELLM_WHISPER_API_KEY = os.environ.get("LITELLM_WHISPER_API_KEY", OPENAI_API_KEY)
+LITELLM_WHISPER_API_VERSION = os.environ.get("LITELLM_WHISPER_API_VERSION", "2024-06-01")
+LITELLM_WHISPER_MODEL = os.environ.get("LITELLM_WHISPER_MODEL", "whisper-1")
+assert LITELLM_WHISPER_API_KEY, "LITELLM_WHISPER_API_KEY environment variable is not set"
+logger.debug("LITELLM_WHISPER_API_KEY: set")
+assert LITELLM_WHISPER_API_VERSION, "LITELLM_WHISPER_API_VERSION environment variable is not set"
+logger.debug("LITELLM_WHISPER_API_VERSION: set")
+assert LITELLM_WHISPER_MODEL, "LITELLM_WHISPER_MODEL environment variable is not set"
+logger.debug("LITELLM_WHISPER_MODEL: set")
+if LITELLM_WHISPER_MODEL != "whisper-1":
+    assert LITELLM_WHISPER_URL, "LITELLM_WHISPER_URL environment variable is not set"
+    logger.debug("LITELLM_WHISPER_URL: set")
+
 # *****************LIGHTRAG CONFIGURATIONS*****************
 
 # ---------------Secrets---------------
