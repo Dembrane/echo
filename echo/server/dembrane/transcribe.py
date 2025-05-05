@@ -29,7 +29,7 @@ def transcribe_audio_litellm(
     audio_file_uri: str, language: Optional[str], whisper_prompt: Optional[str]
 ) -> str:
     """Transcribe audio using Azure ML Whisper"""
-    logger = logging.getLogger("transcribe.transcribe_audio_azure_ml")
+    logger = logging.getLogger("transcribe.transcribe_audio_litellm")
 
     try:
         audio_stream = get_stream_from_s3(audio_file_uri)
@@ -53,8 +53,8 @@ def transcribe_audio_litellm(
         )
         return response["text"]
     except Exception as e:
-        logger.error(f"Failed to read audio stream: {e}")
-        raise TranscriptionError(f"Failed to read audio stream: {e}") from e
+        logger.error(f"LiteLLM transcription failed: {e}")
+        raise TranscriptionError(f"LiteLLM transcription failed: {e}") from e
         
 
 DEFAULT_WHISPER_PROMPTS = {
