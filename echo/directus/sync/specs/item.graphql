@@ -7,10 +7,6 @@ type Query {
   aspect_by_id(id: ID!, version: String): aspect
   aspect_aggregated(groupBy: [String], filter: aspect_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [aspect_aggregated!]!
   aspect_by_version(version: String!, id: ID!): version_aspect
-  project(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project!]!
-  project_by_id(id: ID!, version: String): project
-  project_aggregated(groupBy: [String], filter: project_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [project_aggregated!]!
-  project_by_version(version: String!, id: ID!): version_project
   account(filter: account_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [account!]!
   account_by_id(id: ID!, version: String): account
   account_aggregated(groupBy: [String], filter: account_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [account_aggregated!]!
@@ -23,6 +19,10 @@ type Query {
   view_by_id(id: ID!, version: String): view
   view_aggregated(groupBy: [String], filter: view_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [view_aggregated!]!
   view_by_version(version: String!, id: ID!): version_view
+  project(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project!]!
+  project_by_id(id: ID!, version: String): project
+  project_aggregated(groupBy: [String], filter: project_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [project_aggregated!]!
+  project_by_version(version: String!, id: ID!): version_project
   conversation_project_tag(filter: conversation_project_tag_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_project_tag!]!
   conversation_project_tag_by_id(id: ID!, version: String): conversation_project_tag
   conversation_project_tag_aggregated(groupBy: [String], filter: conversation_project_tag_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [conversation_project_tag_aggregated!]!
@@ -107,14 +107,14 @@ type Query {
   project_chat_message_metadata_by_id(id: ID!, version: String): project_chat_message_metadata
   project_chat_message_metadata_aggregated(groupBy: [String], filter: project_chat_message_metadata_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [project_chat_message_metadata_aggregated!]!
   project_chat_message_metadata_by_version(version: String!, id: ID!): version_project_chat_message_metadata
-  lightrag_vdb_transcript(filter: lightrag_vdb_transcript_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [lightrag_vdb_transcript!]!
-  lightrag_vdb_transcript_by_id(id: ID!, version: String): lightrag_vdb_transcript
-  lightrag_vdb_transcript_aggregated(groupBy: [String], filter: lightrag_vdb_transcript_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [lightrag_vdb_transcript_aggregated!]!
-  lightrag_vdb_transcript_by_version(version: String!, id: ID!): version_lightrag_vdb_transcript
   conversation(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation!]!
   conversation_by_id(id: ID!, version: String): conversation
   conversation_aggregated(groupBy: [String], filter: conversation_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [conversation_aggregated!]!
   conversation_by_version(version: String!, id: ID!): version_conversation
+  project_report_notification_participants(filter: project_report_notification_participants_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_report_notification_participants!]!
+  project_report_notification_participants_by_id(id: ID!, version: String): project_report_notification_participants
+  project_report_notification_participants_aggregated(groupBy: [String], filter: project_report_notification_participants_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [project_report_notification_participants_aggregated!]!
+  project_report_notification_participants_by_version(version: String!, id: ID!): version_project_report_notification_participants
 }
 
 type Mutation {
@@ -122,14 +122,14 @@ type Mutation {
   create_directus_sync_id_map_item(data: create_directus_sync_id_map_input!): directus_sync_id_map
   create_aspect_items(filter: aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_aspect_input!]): [aspect!]!
   create_aspect_item(data: create_aspect_input!): aspect
-  create_project_items(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_project_input!]): [project!]!
-  create_project_item(data: create_project_input!): project
   create_account_items(filter: account_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_account_input!]): [account!]!
   create_account_item(data: create_account_input!): account
   create_account_directus_users_items(filter: account_directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_account_directus_users_input!]): [account_directus_users!]!
   create_account_directus_users_item(data: create_account_directus_users_input!): account_directus_users
   create_view_items(filter: view_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_view_input!]): [view!]!
   create_view_item(data: create_view_input!): view
+  create_project_items(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_project_input!]): [project!]!
+  create_project_item(data: create_project_input!): project
   create_conversation_project_tag_items(filter: conversation_project_tag_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_conversation_project_tag_input!]): [conversation_project_tag!]!
   create_conversation_project_tag_item(data: create_conversation_project_tag_input!): conversation_project_tag
   create_project_tag_items(filter: project_tag_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_project_tag_input!]): [project_tag!]!
@@ -172,19 +172,16 @@ type Mutation {
   create_conversation_segment_item(data: create_conversation_segment_input!): conversation_segment
   create_project_chat_message_metadata_items(filter: project_chat_message_metadata_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_project_chat_message_metadata_input!]): [project_chat_message_metadata!]!
   create_project_chat_message_metadata_item(data: create_project_chat_message_metadata_input!): project_chat_message_metadata
-  create_lightrag_vdb_transcript_items(filter: lightrag_vdb_transcript_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_lightrag_vdb_transcript_input!]): [lightrag_vdb_transcript!]!
-  create_lightrag_vdb_transcript_item(data: create_lightrag_vdb_transcript_input!): lightrag_vdb_transcript
   create_conversation_items(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_conversation_input!]): [conversation!]!
   create_conversation_item(data: create_conversation_input!): conversation
+  create_project_report_notification_participants_items(filter: project_report_notification_participants_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_project_report_notification_participants_input!]): [project_report_notification_participants!]!
+  create_project_report_notification_participants_item(data: create_project_report_notification_participants_input!): project_report_notification_participants
   update_directus_sync_id_map_items(filter: directus_sync_id_map_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_sync_id_map_input!): [directus_sync_id_map!]!
   update_directus_sync_id_map_batch(filter: directus_sync_id_map_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_sync_id_map_input!]): [directus_sync_id_map!]!
   update_directus_sync_id_map_item(id: ID!, data: update_directus_sync_id_map_input!): directus_sync_id_map
   update_aspect_items(filter: aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_aspect_input!): [aspect!]!
   update_aspect_batch(filter: aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_aspect_input!]): [aspect!]!
   update_aspect_item(id: ID!, data: update_aspect_input!): aspect
-  update_project_items(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_project_input!): [project!]!
-  update_project_batch(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_project_input!]): [project!]!
-  update_project_item(id: ID!, data: update_project_input!): project
   update_account_items(filter: account_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_account_input!): [account!]!
   update_account_batch(filter: account_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_account_input!]): [account!]!
   update_account_item(id: ID!, data: update_account_input!): account
@@ -194,6 +191,9 @@ type Mutation {
   update_view_items(filter: view_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_view_input!): [view!]!
   update_view_batch(filter: view_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_view_input!]): [view!]!
   update_view_item(id: ID!, data: update_view_input!): view
+  update_project_items(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_project_input!): [project!]!
+  update_project_batch(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_project_input!]): [project!]!
+  update_project_item(id: ID!, data: update_project_input!): project
   update_conversation_project_tag_items(filter: conversation_project_tag_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_conversation_project_tag_input!): [conversation_project_tag!]!
   update_conversation_project_tag_batch(filter: conversation_project_tag_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_conversation_project_tag_input!]): [conversation_project_tag!]!
   update_conversation_project_tag_item(id: ID!, data: update_conversation_project_tag_input!): conversation_project_tag
@@ -257,24 +257,24 @@ type Mutation {
   update_project_chat_message_metadata_items(filter: project_chat_message_metadata_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_project_chat_message_metadata_input!): [project_chat_message_metadata!]!
   update_project_chat_message_metadata_batch(filter: project_chat_message_metadata_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_project_chat_message_metadata_input!]): [project_chat_message_metadata!]!
   update_project_chat_message_metadata_item(id: ID!, data: update_project_chat_message_metadata_input!): project_chat_message_metadata
-  update_lightrag_vdb_transcript_items(filter: lightrag_vdb_transcript_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_lightrag_vdb_transcript_input!): [lightrag_vdb_transcript!]!
-  update_lightrag_vdb_transcript_batch(filter: lightrag_vdb_transcript_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_lightrag_vdb_transcript_input!]): [lightrag_vdb_transcript!]!
-  update_lightrag_vdb_transcript_item(id: ID!, data: update_lightrag_vdb_transcript_input!): lightrag_vdb_transcript
   update_conversation_items(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_conversation_input!): [conversation!]!
   update_conversation_batch(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_conversation_input!]): [conversation!]!
   update_conversation_item(id: ID!, data: update_conversation_input!): conversation
+  update_project_report_notification_participants_items(filter: project_report_notification_participants_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_project_report_notification_participants_input!): [project_report_notification_participants!]!
+  update_project_report_notification_participants_batch(filter: project_report_notification_participants_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_project_report_notification_participants_input!]): [project_report_notification_participants!]!
+  update_project_report_notification_participants_item(id: ID!, data: update_project_report_notification_participants_input!): project_report_notification_participants
   delete_directus_sync_id_map_items(ids: [ID]!): delete_many
   delete_directus_sync_id_map_item(id: ID!): delete_one
   delete_aspect_items(ids: [ID]!): delete_many
   delete_aspect_item(id: ID!): delete_one
-  delete_project_items(ids: [ID]!): delete_many
-  delete_project_item(id: ID!): delete_one
   delete_account_items(ids: [ID]!): delete_many
   delete_account_item(id: ID!): delete_one
   delete_account_directus_users_items(ids: [ID]!): delete_many
   delete_account_directus_users_item(id: ID!): delete_one
   delete_view_items(ids: [ID]!): delete_many
   delete_view_item(id: ID!): delete_one
+  delete_project_items(ids: [ID]!): delete_many
+  delete_project_item(id: ID!): delete_one
   delete_conversation_project_tag_items(ids: [ID]!): delete_many
   delete_conversation_project_tag_item(id: ID!): delete_one
   delete_project_tag_items(ids: [ID]!): delete_many
@@ -317,10 +317,10 @@ type Mutation {
   delete_conversation_segment_item(id: ID!): delete_one
   delete_project_chat_message_metadata_items(ids: [ID]!): delete_many
   delete_project_chat_message_metadata_item(id: ID!): delete_one
-  delete_lightrag_vdb_transcript_items(ids: [ID]!): delete_many
-  delete_lightrag_vdb_transcript_item(id: ID!): delete_one
   delete_conversation_items(ids: [ID]!): delete_many
   delete_conversation_item(id: ID!): delete_one
+  delete_project_report_notification_participants_items(ids: [ID]!): delete_many
+  delete_project_report_notification_participants_item(id: ID!): delete_one
 }
 
 type Subscription {
@@ -347,10 +347,10 @@ type Subscription {
   directus_comments_mutated(event: EventEnum): directus_comments_mutated
   directus_sync_id_map_mutated(event: EventEnum): directus_sync_id_map_mutated
   aspect_mutated(event: EventEnum): aspect_mutated
-  project_mutated(event: EventEnum): project_mutated
   account_mutated(event: EventEnum): account_mutated
   account_directus_users_mutated(event: EventEnum): account_directus_users_mutated
   view_mutated(event: EventEnum): view_mutated
+  project_mutated(event: EventEnum): project_mutated
   conversation_project_tag_mutated(event: EventEnum): conversation_project_tag_mutated
   project_tag_mutated(event: EventEnum): project_tag_mutated
   document_mutated(event: EventEnum): document_mutated
@@ -372,8 +372,8 @@ type Subscription {
   conversation_reply_mutated(event: EventEnum): conversation_reply_mutated
   conversation_segment_mutated(event: EventEnum): conversation_segment_mutated
   project_chat_message_metadata_mutated(event: EventEnum): project_chat_message_metadata_mutated
-  lightrag_vdb_transcript_mutated(event: EventEnum): lightrag_vdb_transcript_mutated
   conversation_mutated(event: EventEnum): conversation_mutated
+  project_report_notification_participants_mutated(event: EventEnum): project_report_notification_participants_mutated
 }
 
 """The `Boolean` scalar type represents `true` or `false`."""
@@ -501,7 +501,6 @@ type aspect {
   updated_at: Date
   updated_at_func: datetime_functions
   view_id(filter: view_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): view
-  centroid_embedding: String
   quotes(filter: quote_aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_aspect]
   quotes_func: count_functions
   representative_quotes(filter: quote_aspect_1_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_aspect_1]
@@ -525,7 +524,6 @@ type aspect_aggregated_count {
   short_summary: Int
   updated_at: Int
   view_id: Int
-  centroid_embedding: Int
   quotes: Int
   representative_quotes: Int
 }
@@ -1500,39 +1498,6 @@ type insight_mutated {
   data: insight
 }
 
-type lightrag_vdb_transcript {
-  id: ID!
-  document_id: String
-  content: String
-  content_vector: String
-  create_time: Date
-  create_time_func: datetime_functions
-  update_time: Date
-  update_time_func: datetime_functions
-}
-
-type lightrag_vdb_transcript_aggregated {
-  group: JSON
-  countAll: Int
-  count: lightrag_vdb_transcript_aggregated_count
-  countDistinct: lightrag_vdb_transcript_aggregated_count
-}
-
-type lightrag_vdb_transcript_aggregated_count {
-  id: Int
-  document_id: Int
-  content: Int
-  content_vector: Int
-  create_time: Int
-  update_time: Int
-}
-
-type lightrag_vdb_transcript_mutated {
-  key: ID!
-  event: EventEnum
-  data: lightrag_vdb_transcript
-}
-
 type project {
   context: String
   conversation_ask_for_participant_name_label: String
@@ -1560,6 +1525,7 @@ type project {
   get_reply_prompt: String
   is_get_reply_enabled: Boolean
   is_enhanced_audio_processing_enabled: Boolean
+  is_project_notification_subscription_allowed: Boolean
   conversations(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation]
   conversations_func: count_functions
   project_analysis_runs(filter: project_analysis_run_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_analysis_run]
@@ -1604,6 +1570,7 @@ type project_aggregated_count {
   get_reply_prompt: Int
   is_get_reply_enabled: Int
   is_enhanced_audio_processing_enabled: Int
+  is_project_notification_subscription_allowed: Int
   conversations: Int
   project_analysis_runs: Int
   project_chats: Int
@@ -1987,6 +1954,53 @@ type project_report_mutated {
   data: project_report
 }
 
+type project_report_notification_participants {
+  date_submitted: Date
+  date_submitted_func: datetime_functions
+  date_updated: Date
+  date_updated_func: datetime_functions
+  email: String
+  email_opt_in: Boolean
+  email_opt_out_token: String
+  id: ID!
+  project_id: String
+  sort: Int
+}
+
+type project_report_notification_participants_aggregated {
+  group: JSON
+  countAll: Int
+  count: project_report_notification_participants_aggregated_count
+  countDistinct: project_report_notification_participants_aggregated_count
+  avg: project_report_notification_participants_aggregated_fields
+  sum: project_report_notification_participants_aggregated_fields
+  avgDistinct: project_report_notification_participants_aggregated_fields
+  sumDistinct: project_report_notification_participants_aggregated_fields
+  min: project_report_notification_participants_aggregated_fields
+  max: project_report_notification_participants_aggregated_fields
+}
+
+type project_report_notification_participants_aggregated_count {
+  date_submitted: Int
+  date_updated: Int
+  email: Int
+  email_opt_in: Int
+  email_opt_out_token: Int
+  id: Int
+  project_id: Int
+  sort: Int
+}
+
+type project_report_notification_participants_aggregated_fields {
+  sort: Float
+}
+
+type project_report_notification_participants_mutated {
+  key: ID!
+  event: EventEnum
+  data: project_report_notification_participants
+}
+
 type project_tag {
   created_at: Date
   created_at_func: datetime_functions
@@ -2226,7 +2240,6 @@ type version_aspect {
   short_summary: String
   updated_at: Date
   view_id: JSON
-  centroid_embedding: String
   quotes: JSON
   representative_quotes: JSON
 }
@@ -2352,16 +2365,6 @@ type version_insight {
 }
 
 """"""
-type version_lightrag_vdb_transcript {
-  id: ID
-  document_id: String
-  content: String
-  content_vector: String
-  create_time: Date
-  update_time: Date
-}
-
-""""""
 type version_project {
   context: String
   conversation_ask_for_participant_name_label: String
@@ -2387,6 +2390,7 @@ type version_project {
   get_reply_prompt: String
   is_get_reply_enabled: Boolean
   is_enhanced_audio_processing_enabled: Boolean
+  is_project_notification_subscription_allowed: Boolean
   conversations: JSON
   project_analysis_runs: JSON
   project_chats: JSON
@@ -2491,6 +2495,18 @@ type version_project_report_metric {
   ip: String
   project_report_id: JSON
   type: String
+}
+
+""""""
+type version_project_report_notification_participants {
+  date_submitted: Date
+  date_updated: Date
+  email: String
+  email_opt_in: Boolean
+  email_opt_out_token: String
+  id: ID
+  project_id: String
+  sort: Int
 }
 
 """"""
@@ -2639,7 +2655,6 @@ input aspect_filter {
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
   view_id: view_filter
-  centroid_embedding: string_filter_operators
   quotes: quote_aspect_filter
   quotes_func: count_function_filter_operators
   representative_quotes: quote_aspect_1_filter
@@ -2798,7 +2813,6 @@ input create_aspect_input {
   short_summary: String
   updated_at: Date
   view_id: create_view_input
-  centroid_embedding: String
   quotes: [create_quote_aspect_input]
   representative_quotes: [create_quote_aspect_1_input]
 }
@@ -3027,15 +3041,6 @@ input create_insight_input {
   quotes: [create_quote_input]
 }
 
-input create_lightrag_vdb_transcript_input {
-  id: ID!
-  document_id: String
-  content: String
-  content_vector: String
-  create_time: Date
-  update_time: Date
-}
-
 input create_project_analysis_run_input {
   created_at: Date
   id: ID
@@ -3130,6 +3135,7 @@ input create_project_input {
   get_reply_prompt: String
   is_get_reply_enabled: Boolean
   is_enhanced_audio_processing_enabled: Boolean
+  is_project_notification_subscription_allowed: Boolean
   conversations: [create_conversation_input]
   project_analysis_runs: [create_project_analysis_run_input]
   project_chats: [create_project_chat_input]
@@ -3156,6 +3162,17 @@ input create_project_report_metric_input {
   ip: String
   project_report_id: create_project_report_input
   type: String
+}
+
+input create_project_report_notification_participants_input {
+  date_submitted: Date
+  date_updated: Date
+  email: String
+  email_opt_in: Boolean
+  email_opt_out_token: String
+  id: ID
+  project_id: String
+  sort: Int
 }
 
 input create_project_tag_input {
@@ -3571,19 +3588,6 @@ input insight_filter {
   _or: [insight_filter]
 }
 
-input lightrag_vdb_transcript_filter {
-  id: string_filter_operators
-  document_id: string_filter_operators
-  content: string_filter_operators
-  content_vector: string_filter_operators
-  create_time: date_filter_operators
-  create_time_func: datetime_function_filter_operators
-  update_time: date_filter_operators
-  update_time_func: datetime_function_filter_operators
-  _and: [lightrag_vdb_transcript_filter]
-  _or: [lightrag_vdb_transcript_filter]
-}
-
 input number_filter_operators {
   _eq: GraphQLStringOrFloat
   _neq: GraphQLStringOrFloat
@@ -3722,6 +3726,7 @@ input project_filter {
   get_reply_prompt: string_filter_operators
   is_get_reply_enabled: boolean_filter_operators
   is_enhanced_audio_processing_enabled: boolean_filter_operators
+  is_project_notification_subscription_allowed: boolean_filter_operators
   conversations: conversation_filter
   conversations_func: count_function_filter_operators
   project_analysis_runs: project_analysis_run_filter
@@ -3763,6 +3768,21 @@ input project_report_metric_filter {
   type: string_filter_operators
   _and: [project_report_metric_filter]
   _or: [project_report_metric_filter]
+}
+
+input project_report_notification_participants_filter {
+  date_submitted: date_filter_operators
+  date_submitted_func: datetime_function_filter_operators
+  date_updated: date_filter_operators
+  date_updated_func: datetime_function_filter_operators
+  email: string_filter_operators
+  email_opt_in: boolean_filter_operators
+  email_opt_out_token: string_filter_operators
+  id: string_filter_operators
+  project_id: string_filter_operators
+  sort: number_filter_operators
+  _and: [project_report_notification_participants_filter]
+  _or: [project_report_notification_participants_filter]
 }
 
 input project_tag_filter {
@@ -3874,7 +3894,6 @@ input update_aspect_input {
   short_summary: String
   updated_at: Date
   view_id: update_view_input
-  centroid_embedding: String
   quotes: [update_quote_aspect_input]
   representative_quotes: [update_quote_aspect_1_input]
 }
@@ -4103,15 +4122,6 @@ input update_insight_input {
   quotes: [update_quote_input]
 }
 
-input update_lightrag_vdb_transcript_input {
-  id: ID
-  document_id: String
-  content: String
-  content_vector: String
-  create_time: Date
-  update_time: Date
-}
-
 input update_project_analysis_run_input {
   created_at: Date
   id: ID
@@ -4206,6 +4216,7 @@ input update_project_input {
   get_reply_prompt: String
   is_get_reply_enabled: Boolean
   is_enhanced_audio_processing_enabled: Boolean
+  is_project_notification_subscription_allowed: Boolean
   conversations: [update_conversation_input]
   project_analysis_runs: [update_project_analysis_run_input]
   project_chats: [update_project_chat_input]
@@ -4232,6 +4243,17 @@ input update_project_report_metric_input {
   ip: String
   project_report_id: update_project_report_input
   type: String
+}
+
+input update_project_report_notification_participants_input {
+  date_submitted: Date
+  date_updated: Date
+  email: String
+  email_opt_in: Boolean
+  email_opt_out_token: String
+  id: ID
+  project_id: String
+  sort: Int
 }
 
 input update_project_tag_input {
