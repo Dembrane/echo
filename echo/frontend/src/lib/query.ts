@@ -13,6 +13,8 @@ import {
   addChatContext,
   api,
   apiNoAuth,
+  checkProjectNotificationParticipant,
+  checkUnsubscribeStatus,
   createProjectReport,
   deleteChatContext,
   deleteResourceById,
@@ -32,6 +34,7 @@ import {
   initiateConversation,
   lockConversations,
   retranscribeConversation,
+  submitNotificationParticipant,
   updateResourceById,
   uploadConversationChunk,
   uploadConversationText,
@@ -1999,41 +2002,22 @@ export const useConversationUploader = () => {
 
 export const useCheckUnsubscribeStatus = (
   token: string,
-  project_id: string,
+  projectId: string,
 ) => {
-  return useQuery({
-    queryKey: ["checkUnsubscribe", token, project_id],
+  return useQuery<{ eligible: boolean }>({
+    queryKey: ['checkUnsubscribe', token, projectId],
     queryFn: async () => {
-      if (!token || !project_id) {
-        throw new Error("Invalid or missing unsubscribe link.");
+      if (!token || !projectId) {
+        throw new Error('Invalid or missing unsubscribe link.');
       }
-
-      const submissions = await directus.request(
-        readItems("project_report_notification_participants", {
-          filter: {
-            _and: [
-              { project_id: { _eq: project_id } },
-              { email_opt_out_token: { _eq: token } },
-            ],
-          },
-          fields: ["id", "email_opt_in"],
-        }),
-      );
-
-      if (
-        !submissions ||
-        submissions.length === 0 ||
-        !submissions[0].email_opt_in
-      ) {
-        throw new Error("No matching subscription found.");
-      }
-
-      return true; // Eligible to unsubscribe
+      const response = await checkUnsubscribeStatus(token, projectId);
+      return response.data;
     },
     retry: false,
     refetchOnWindowFocus: false,
   });
 };
+
 
 export const useGetProjectParticipants = (project_id: string) => {
   return useQuery({
@@ -2068,29 +2052,16 @@ export const useCheckProjectNotificationParticipants = () => {
       email: string;
       projectId: string;
     }) => {
-      const existingEntries = await directus.request(
-        readItems("project_report_notification_participants", {
-          filter: {
-            email: { _eq: email },
-            project_id: { _eq: projectId },
-          },
-          limit: 1,
-        }),
-      );
-
-      if (existingEntries.length > 0) {
-        const existingEntry = existingEntries[0];
-        if (existingEntry.email_opt_in === false) {
-          return { status: "opted_out" };
-        }
-        return { status: "subscribed" };
+      try {
+        return await checkProjectNotificationParticipant(email, projectId);
+      } catch (error) {
+        throw new Error("Failed to verify email status");
       }
-      return { status: "new" };
     },
   });
 };
 
-export const useSubmitNotification = () => {
+export const useSubmitNotificationParticipant = () => {
   return useMutation({
     mutationFn: async ({
       emails,
@@ -2099,49 +2070,11 @@ export const useSubmitNotification = () => {
       emails: string[];
       projectId: string;
     }) => {
-      await Promise.all(
-        emails.map(async (email) => {
-          try {
-            // Check if the user already exists
-            const existingEntries = await directus.request(
-              readItems("project_report_notification_participants", {
-                filter: {
-                  email: { _eq: email },
-                  project_id: { _eq: projectId },
-                },
-                limit: 1,
-              }),
-            );
-            if (existingEntries?.length > 0) {
-              const existingEntry = existingEntries[0];
-              if (!existingEntry.email_opt_in) {
-                // Delete the old entry to regenerate the email_opt_out_token
-                await directus.request(
-                  deleteItem(
-                    "project_report_notification_participants",
-                    existingEntry.id,
-                  ),
-                );
-              }
-            }
-            // Create a new entry (this generates a new email_opt_out_token)
-            await directus.request(
-              createItem("project_report_notification_participants", {
-                email: email,
-                project_id: projectId,
-                email_opt_in: true,
-              }),
-            );
-          } catch (error) {
-            console.error(`Failed to process email: ${email}`, error);
-            throw error;
-          }
-        }),
-      );
+      return await submitNotificationParticipant(emails, projectId);
     },
     retry: 2,
     onError: (error) => {
-      console.error('Notification submission failed:', error);
+      console.error("Notification submission failed:", error);
     },
   });
 };

@@ -31,7 +31,7 @@ import { directus } from "@/lib/directus";
 import { readItems, createItems } from "@directus/sdk";
 import {
   useCheckProjectNotificationParticipants,
-  useSubmitNotification,
+  useSubmitNotificationParticipant,
 } from "@/lib/query";
 
 export const ParticipantPostConversation = () => {
@@ -46,7 +46,7 @@ export const ParticipantPostConversation = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { mutate: checkEmail, isPending: isCheckingParticipantEmail } =
     useCheckProjectNotificationParticipants();
-  const { mutate, isPending } = useSubmitNotification();
+  const { mutate, isPending } = useSubmitNotificationParticipant();
 
   const initiateLink = `/${projectId}/start`;
 
@@ -98,7 +98,7 @@ export const ParticipantPostConversation = () => {
     setDebounceTimeout(newTimeout);
   };
 
-  const addEmail = async (inputElement?: HTMLInputElement | null) => {
+  const addEmail = (inputElement?: HTMLInputElement | null) => {
     const trimmedEmail = email.trim();
     if (!trimmedEmail) return;
 
@@ -111,36 +111,11 @@ export const ParticipantPostConversation = () => {
       return;
     }
 
-    setIsCheckingEmail(true);
-    setError("");
-
-    try {
-      checkEmail(
-        { email: trimmedEmail, projectId: projectId ?? "" },
-        {
-          onSuccess: (data) => {
-            switch (data.status) {
-              case "subscribed":
-                setError(t`This email is already subscribed to notifications.`);
-                break;
-              case "opted_out":
-              case "new":
-                setEmails([...emails, trimmedEmail]);
-                setEmail("");
-                break;
-            }
-          },
-          onError: (_error) => {
-            setError(t`Failed to verify email status. Please try again.`);
-          },
-        },
-      );
-    } catch (error) {
-      setError(t`Failed to verify email status. Please try again.`);
-    } finally {
-      setIsCheckingEmail(false);
+      setEmails([...emails, trimmedEmail]);
+      setEmail("");
+      setError("");
       setTimeout(() => inputElement?.focus(), 100);
-    }
+    
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {

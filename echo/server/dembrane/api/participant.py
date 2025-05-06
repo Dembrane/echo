@@ -80,6 +80,14 @@ class UnsubscribeParticipantRequest(BaseModel):
     token: str
     email_opt_in: bool
 
+class CheckParticipantRequest(BaseModel):
+    email: str
+    project_id: str
+
+class NotificationSubscriptionRequest(BaseModel):
+    emails: List[str]
+    project_id: str
+
 @ParticipantRouter.post(
     "/projects/{project_id}/conversations/initiate",
     response_model=PublicConversationSchema,
@@ -360,7 +368,7 @@ async def run_when_conversation_is_finished(
     task_finish_conversation_hook.delay(conversation_id)
     return "OK"
 
-@ParticipantRouter.patch("/projects/{project_id}/contacts/unsubscribe")
+@ParticipantRouter.patch("/{project_id}/unsubscribe-participant")
 async def unsubscribe_participant(
     project_id: str,
     payload: UnsubscribeParticipantRequest,
@@ -398,8 +406,136 @@ async def unsubscribe_participant(
                 {"email_opt_in": payload.email_opt_in}
             )
         
-        return {"success": True, "message": "Subscription status updated"}
+        return {"success": True}
     
     except Exception as e:
         logger.error(f"Error updating project contacts: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal Server Error")  # noqa: B904
+
+@ParticipantRouter.post("/check-subscription")
+async def check_participant_subscription(payload: CheckParticipantRequest) -> dict:
+    """
+    Securely check if a participant is subscribed to project notifications.
+    """
+    logger.debug(f"Checking subscription for {payload.email} in project {payload.project_id}")
+    try:
+        submissions = directus.get_items(
+            "project_report_notification_participants",
+            {
+                "query": {
+                    "filter": {
+                        "_and": [
+                            {"project_id": {"_eq": payload.project_id}},
+                            {"email": {"_eq": payload.email}},
+                        ]
+                    },
+                    "fields": ["email_opt_in"],
+                    "limit": 1,
+                }
+            },
+        )
+
+        # participant is new
+        if not submissions or len(submissions) == 0:
+            return {"eligible": True}
+
+        # participant is opted out
+        entry = submissions[0]
+        if entry.get("email_opt_in") is False:
+            return {"eligible": True}
+
+        # participant is subscribed
+        return {"eligible": False}
+
+    except Exception as e:
+        logger.error(f"Error checking subscription: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")  # noqa: B904
+
+
+@ParticipantRouter.post("/subscribe-report")
+async def subscribe_notifications(data: NotificationSubscriptionRequest) -> dict:
+    """
+    Subscribe multiple users to project notifications.
+    - Skips existing entries that were previously opted-in.
+    - Creates a fresh record with email_opt_in = true.
+    """
+    failed_emails = []
+
+    for email in data.emails:
+        try:
+            # Check if user already exists
+            existing = directus.get_items(
+                "project_report_notification_participants",
+                {
+                    "query": {
+                        "filter": {
+                            "_and": [
+                                {"email": {"_eq": email}},
+                                {"project_id": {"_eq": data.project_id}},
+                            ]
+                        },
+                        "limit": 1,
+                    }
+                },
+            )
+
+            if existing:
+                participant = existing[0]
+                if participant.get("email_opt_in") is True:
+                    continue  # Already opted in — skip
+                else:
+                    # Delete old entry
+                    directus.delete_item(
+                        "project_report_notification_participants", participant["id"]
+                    )
+
+            # Create new entry with opt-in
+            directus.create_item(
+                "project_report_notification_participants",
+                {"email": email, "project_id": data.project_id, "email_opt_in": True},
+            )
+
+        except Exception as e:
+            logger.error(f"Error processing {email}: {e}")
+            failed_emails.append(email)
+
+    if failed_emails:
+        raise HTTPException(
+            status_code=400,
+            detail={"message": "Some emails failed to process", "failed": failed_emails},
+        )
+
+    return {"status": "success"}
+
+
+@ParticipantRouter.get("/check-unsubscribe-eligibility")
+async def check_unsubscribe_eligibility(
+    token: str,
+    project_id: str,
+) -> dict:
+    """
+    Validates whether the given token is eligible to unsubscribe.
+    """
+    if not token or not project_id:
+        raise HTTPException(status_code=400, detail="Invalid or missing unsubscribe link.")
+
+    submissions = directus.get_items(
+        "project_report_notification_participants",
+        {
+            "query": {
+                "filter": {
+                    "_and": [
+                        {"project_id": {"_eq": project_id}},
+                        {"email_opt_out_token": {"_eq": token}},
+                    ]
+                },
+                "fields": ["id", "email_opt_in"],
+                "limit": 1,
+            }
+        },
+    )
+
+    if not submissions or len(submissions) == 0 or not submissions[0].get("email_opt_in"):
+        return {"data": {"eligible": False}}
+
+    return {"data": {"eligible": True}}
