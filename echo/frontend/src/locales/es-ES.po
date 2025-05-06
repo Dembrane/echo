@@ -38,7 +38,7 @@ msgstr "Error del servidor"
 msgid "Something went wrong"
 msgstr "Algo salió mal"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:278
+#: src/routes/participant/ParticipantPostConversation.tsx:253
 msgid " Submit"
 msgstr "Enviar"
 
@@ -46,13 +46,11 @@ msgstr "Enviar"
 msgid " Unsubscribe from Notifications"
 msgstr "Desuscribirse de Notificaciones"
 
-#. placeholder {0}: showPreview ? "Hide Preview" : "Show Preview"
-#: src/components/project/ProjectPortalEditor.tsx:232
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: showPreview ? "Hide Preview" : "Show Preview"
 #. placeholder {0}: citation.reference_text
 #: src/routes/project/chat/ProjectChatRoute.tsx:362
-#: src/components/project/ProjectPortalEditor.tsx:229
+#: src/components/project/ProjectPortalEditor.tsx:232
 #: src/components/chat/References.tsx:27
 msgid "{0}"
 msgstr "{0}"
@@ -94,7 +92,7 @@ msgstr "<0>Espera </0>{0}:{1}"
 msgid "0 Aspects"
 msgstr "0 Aspectos"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:226
+#: src/routes/participant/ParticipantPostConversation.tsx:201
 msgid "Add"
 msgstr "Añadir"
 
@@ -122,15 +120,11 @@ msgstr "Añadir Etiquetas"
 msgid "Add to this chat"
 msgstr "Añadir a este chat"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:428
-
-#: src/routes/participant/ParticipantPostConversation.tsx:234
+#: src/routes/participant/ParticipantPostConversation.tsx:209
 msgid "Added emails"
 msgstr "E-mails añadidos"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:330
-#: src/routes/project/chat/ProjectChatRoute.tsx:426
-
+#: src/routes/project/chat/ProjectChatRoute.tsx:428
 msgid "Adding Context:"
 msgstr "Añadiendo Contexto:"
 
@@ -285,12 +279,11 @@ msgstr "Seleccionar fuentes para añadir al chat"
 msgid "Back"
 msgstr "Atrás"
 
-#: src/components/project/ProjectPortalEditor.tsx:339
 #: src/components/dropzone/UploadConversationDropzone.tsx:852
 msgid "Back to Selection"
 msgstr "Volver a la selección"
 
-#: src/components/project/ProjectPortalEditor.tsx:336
+#: src/components/project/ProjectPortalEditor.tsx:339
 msgid "Basic (Essential tutorial slides)"
 msgstr "Básico (Diapositivas esenciales del tutorial)"
 
@@ -352,9 +345,10 @@ msgstr "Verificar acceso al micrófono"
 msgid "Check your email"
 msgstr "Revisa tu correo electrónico"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:226
+#: src/routes/participant/ParticipantPostConversation.tsx:201
 msgid "Checking..."
 msgstr "Comprobando..."
+
 #: src/components/chat/Sources.tsx:21
 msgid "Citing the following sources"
 msgstr "Citar las siguientes fuentes"
@@ -503,11 +497,10 @@ msgstr "Dembrane Echo"
 msgid "Do you want to contribute to this project?"
 msgstr "¿Quieres contribuir a este proyecto?"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:189
+#: src/routes/participant/ParticipantPostConversation.tsx:164
 msgid "Do you want to stay in the loop?"
 msgstr "¿Quieres estar en el bucle?"
 
-#: src/components/layout/Header.tsx:148
 #: src/components/layout/Header.tsx:152
 msgid "Documentation"
 msgstr "Documentación"
@@ -532,12 +525,11 @@ msgstr "Descargar transcripción"
 msgid "Download Transcript Options"
 msgstr "Opciones de Descarga de Transcripción"
 
-#: src/components/project/ProjectPortalEditor.tsx:268
 #: src/components/dropzone/UploadConversationDropzone.tsx:601
 msgid "Drag audio files here or click to select files"
 msgstr "Arrastra archivos de audio aquí o haz clic para seleccionar archivos"
 
-#: src/components/project/ProjectPortalEditor.tsx:265
+#: src/components/project/ProjectPortalEditor.tsx:268
 msgid "Dutch"
 msgstr "Holandés"
 
@@ -584,19 +576,16 @@ msgstr "Verificación de Correo Electrónico | Dembrane"
 msgid "Email verified successfully. You will be redirected to the login page in 5 seconds. If you are not redirected, please click <0>here</0>."
 msgstr "Correo electrónico verificado con éxito. Serás redirigido a la página de inicio de sesión en 5 segundos. Si no eres redirigido, por favor haz clic <0>aquí</0>."
 
+#: src/routes/participant/ParticipantPostConversation.tsx:173
+msgid "email@work.com"
+msgstr "email@trabajo.com"
+
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:166
 #: src/components/conversation/ConversationAccordion.tsx:398
 msgid "Empty"
 msgstr "Vacío"
 
-#: src/components/project/ProjectPortalEditor.tsx:383
-
-#: src/routes/participant/ParticipantPostConversation.tsx:198
-msgid "email@work.com"
-msgstr "email@trabajo.com"
-
 #: src/components/project/ProjectPortalEditor.tsx:386
-
 msgid "Enable Dembrane Echo"
 msgstr "Habilitar Dembrane Echo"
 
@@ -671,19 +660,15 @@ msgstr "Error al cargar las citas"
 msgid "Error updating report"
 msgstr "Error al actualizar el informe"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:67
-#: src/components/project/ProjectPortalEditor.tsx:364
-#: src/components/conversation/MoveConversationButton.tsx:129
-#: src/components/conversation/ConversationDangerZone.tsx:52
 #. placeholder {0}: errorFile.file.name
 #. placeholder {1}: error.message
 #: src/components/dropzone/UploadConversationDropzone.tsx:588
 msgid "Error uploading \"{0}\": {1}"
 msgstr "Error al subir \"{0}\": {1}"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:64
+#: src/routes/project/report/ProjectReportRoute.tsx:67
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:257
-#: src/components/project/ProjectPortalEditor.tsx:361
+#: src/components/project/ProjectPortalEditor.tsx:364
 #: src/components/conversation/MoveConversationButton.tsx:128
 msgid "Experimental"
 msgstr "Experimental"
@@ -700,21 +685,18 @@ msgstr "Error"
 msgid "Failed to delete response"
 msgstr "Error al eliminar la respuesta"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:134
-#: src/routes/participant/ParticipantPostConversation.tsx:139
-msgid "Failed to verify email status. Please try again."
-msgstr "Error al verificar el estado del correo electrónico. Por favor, inténtalo de nuevo."
-
-#: src/components/conversation/ConversationAccordion.tsx:473
-msgid "Filter"
-msgstr "Filtrar"
 #: src/routes/project/conversation/ProjectConversationOverview.tsx:51
 msgid "Failed to regenerate the summary. Please try again later."
 msgstr "Error al regenerar el resumen. Por favor, inténtalo de nuevo más tarde."
 
-#: src/lib/query.ts:1833
+#: src/lib/query.ts:1840
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Error al retranscribir la conversación. Por favor, inténtalo de nuevo."
+
+#: src/routes/participant/ParticipantPostConversation.tsx:134
+#: src/routes/participant/ParticipantPostConversation.tsx:139
+#~ msgid "Failed to verify email status. Please try again."
+#~ msgstr "Error al verificar el estado del correo electrónico. Por favor, inténtalo de nuevo."
 
 #. placeholder {0}: errorFile.file.name
 #. placeholder {1}: formatFileSize(MAX_FILE_SIZE)
@@ -927,7 +909,6 @@ msgstr "Cargando"
 msgid "loading..."
 msgstr "cargando..."
 
-#: src/components/conversation/ConversationAccordion.tsx:81
 #: src/components/conversation/ConversationAccordion.tsx:100
 msgid "Loading..."
 msgstr "Cargando..."
@@ -1093,14 +1074,10 @@ msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "Aún no existe transcripción para esta conversación. Por favor, revisa más tarde."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:418
-
-#: src/components/project/ProjectPortalEditor.tsx:335
-#: src/routes/project/chat/ProjectChatRoute.tsx:416
-
 msgid "No transcripts are selected for this chat"
 msgstr "No hay transcripciones seleccionadas para este chat"
 
-#: src/components/project/ProjectPortalEditor.tsx:332
+#: src/components/project/ProjectPortalEditor.tsx:335
 msgid "No tutorial (only Privacy statements)"
 msgstr "Sin tutorial (solo declaraciones de privacidad)"
 
@@ -1293,15 +1270,11 @@ msgstr "Imprimir este informe"
 msgid "Privacy Statements"
 msgstr "Declaraciones de Privacidad"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:316
-
 #: src/routes/project/report/ProjectReportRoute.tsx:331
 msgid "Proceed"
 msgstr "Continuar"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:211
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:310
-
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:316
 msgid "Processing Transcript"
 msgstr "Procesando Transcripción"
 
@@ -1364,16 +1337,15 @@ msgstr "Citas"
 msgid "Record"
 msgstr "Grabar"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:180
+#: src/routes/participant/ParticipantPostConversation.tsx:155
 msgid "Record another conversation"
 msgstr "Registrar otra conversación"
 
-#: src/components/project/ProjectPortalEditor.tsx:650
 #: src/components/chat/References.tsx:19
 msgid "References"
 msgstr "Referencias"
 
-#: src/components/project/ProjectPortalEditor.tsx:603
+#: src/components/project/ProjectPortalEditor.tsx:650
 msgid "Refresh"
 msgstr "Actualizar"
 
@@ -1397,11 +1369,10 @@ msgstr "Registrar como nuevo usuario"
 msgid "Relevance"
 msgstr "Relevancia"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:240
+#: src/routes/participant/ParticipantPostConversation.tsx:215
 msgid "Remove Email"
 msgstr "Eliminar Correo Electrónico"
 
-#: src/components/conversation/ConversationAccordion.tsx:111
 #: src/components/dropzone/UploadConversationDropzone.tsx:684
 msgid "Remove file"
 msgstr "Eliminar archivo"
@@ -1487,7 +1458,7 @@ msgstr "Retranscribir conversación"
 msgid "Retranscribe Conversation"
 msgstr "Retranscribir conversación"
 
-#: src/lib/query.ts:1829
+#: src/lib/query.ts:1836
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "La retranscripción ha comenzado. La nueva conversación estará disponible pronto."
 
@@ -1556,12 +1527,11 @@ msgstr "Seleccionar archivos de audio para subir"
 msgid "Select Project"
 msgstr "Seleccionar Proyecto"
 
-#: src/components/project/ProjectPortalEditor.tsx:328
 #: src/components/conversation/ConversationEdit.tsx:140
 msgid "Select tags"
 msgstr "Seleccionar etiquetas"
 
-#: src/components/project/ProjectPortalEditor.tsx:325
+#: src/components/project/ProjectPortalEditor.tsx:328
 msgid "Select the instructions that will be shown to participants when they start a conversation"
 msgstr "Selecciona las instrucciones que se mostrarán a los participantes cuando inicien una conversación"
 
@@ -1598,7 +1568,7 @@ msgstr "Compartir"
 msgid "Share this report"
 msgstr "Compartir este informe"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:192
+#: src/routes/participant/ParticipantPostConversation.tsx:167
 msgid "Share your details here"
 msgstr "Comparte tus detalles aquí"
 
@@ -1627,10 +1597,6 @@ msgid "Show audio player"
 msgstr "Mostrar reproductor de audio"
 
 #: src/components/conversation/ConversationAccordion.tsx:711
-
-#: src/routes/project/report/ProjectReportRoute.tsx:288
-#: src/components/conversation/ConversationAccordion.tsx:690
-
 msgid "Show duration"
 msgstr "Mostrar duración"
 
@@ -1639,7 +1605,7 @@ msgstr "Mostrar duración"
 msgid "Show references"
 msgstr "Mostrar referencias"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:252
+#: src/routes/project/report/ProjectReportRoute.tsx:288
 msgid "Show timeline in report (request feature)"
 msgstr "Mostrar línea de tiempo en el informe (solicitar función)"
 
@@ -1670,7 +1636,6 @@ msgstr "Algo salió mal al subir el archivo: {0}"
 msgid "Sort"
 msgstr "Ordenar"
 
-#: src/components/project/ProjectPortalEditor.tsx:270
 #. placeholder {0}: index + 1
 #: src/components/chat/Sources.tsx:33
 msgid "Source {0}"
@@ -1680,7 +1645,7 @@ msgstr "Fuente {0}"
 #~ msgid "Sources:"
 #~ msgstr "Fuentes:"
 
-#: src/components/project/ProjectPortalEditor.tsx:267
+#: src/components/project/ProjectPortalEditor.tsx:270
 msgid "Spanish"
 msgstr "Español"
 
@@ -1737,7 +1702,7 @@ msgstr "Etiquetas"
 msgid "Templates"
 msgstr "Plantillas"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:167
+#: src/routes/participant/ParticipantPostConversation.tsx:142
 msgid "Thank you for participating!"
 msgstr "¡Gracias por participar!"
 
@@ -1745,7 +1710,7 @@ msgstr "¡Gracias por participar!"
 msgid "Thank You Page Content"
 msgstr "Contenido de la Página de Gracias"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:295
+#: src/routes/participant/ParticipantPostConversation.tsx:270
 msgid "Thank you! We'll notify you when the report is ready."
 msgstr "¡Gracias! Te notificaremos cuando el informe esté listo."
 
@@ -1802,8 +1767,8 @@ msgid "This email is already in the list."
 msgstr "Este correo electrónico ya está en la lista."
 
 #: src/routes/participant/ParticipantPostConversation.tsx:124
-msgid "This email is already subscribed to notifications."
-msgstr "Este correo electrónico ya está suscrito a notificaciones."
+#~ msgid "This email is already subscribed to notifications."
+#~ msgstr "Este correo electrónico ya está suscrito a notificaciones."
 
 #: src/components/project/ProjectPortalEditor.tsx:654
 msgid "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
@@ -1972,9 +1937,10 @@ msgstr "Escribe tu respuesta aquí"
 msgid "Unsaved changes"
 msgstr "Cambios sin guardar"
 
-#: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:87
+#: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:89
 msgid "Unsubscribe"
 msgstr "Desuscribirse"
+
 #: src/components/chat/References.tsx:44
 msgid "Untitled Conversation"
 msgstr "Conversación sin título"
@@ -2058,7 +2024,7 @@ msgstr "Advertencia"
 msgid "We have sent you an email with next steps. If you don't see it, check your spam folder. If you still don't see it, please contact jules@dembrane.com"
 msgstr "Te hemos enviado un correo electrónico con los pasos siguientes. Si no lo ves, revisa tu carpeta de correo no deseado. Si aún no lo ves, por favor contacta a jules@dembrane.com"
 
-#: src/routes/participant/ParticipantPostConversation.tsx:302
+#: src/routes/participant/ParticipantPostConversation.tsx:277
 msgid "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 msgstr "Solo te enviaremos un mensaje si tu host genera un informe, nunca compartimos tus detalles con nadie. Puedes optar por no recibir más mensajes en cualquier momento."
 
@@ -2086,17 +2052,20 @@ msgstr "¡Bienvenido!"
 msgid "You"
 msgstr "Tú"
 
-#: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:77
-msgid "You have successfully unsubscribed."
-msgstr "Has desuscribido con éxito."
+#: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:93
+msgid "You are already unsubscribed or your link is invalid."
+msgstr "Ya estás desuscribido o tu enlace es inválido."
 
-#: src/routes/participant/ParticipantPostConversation.tsx:174
 #. placeholder {0}: MAX_FILES - selectedFiles.length
 #: src/components/dropzone/UploadConversationDropzone.tsx:379
 msgid "You can only upload up to {MAX_FILES} files at a time. Only the first {0} files will be added."
 msgstr "Solo puedes subir hasta {MAX_FILES} archivos a la vez. Solo los primeros {0} archivos se agregarán."
 
-#: src/routes/participant/ParticipantPostConversation.tsx:51
+#: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:77
+msgid "You have successfully unsubscribed."
+msgstr "Has desuscribido con éxito."
+
+#: src/routes/participant/ParticipantPostConversation.tsx:149
 msgid "You may also choose to record another conversation."
 msgstr "También puedes elegir registrar otra conversación."
 
@@ -2112,7 +2081,7 @@ msgstr "Tus entradas se guardarán automáticamente."
 msgid "Your library is empty. Create a library to see your first insights."
 msgstr "Tu biblioteca está vacía. Crea una biblioteca para ver tus primeros insights."
 
-#: src/routes/participant/ParticipantPostConversation.tsx:171
+#: src/routes/participant/ParticipantPostConversation.tsx:146
 msgid "Your response has been recorded. You may now close this tab."
 msgstr "Tu respuesta ha sido registrada. Puedes cerrar esta pestaña ahora."
 
