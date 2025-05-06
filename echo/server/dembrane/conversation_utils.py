@@ -13,6 +13,12 @@ def collect_unfinished_conversations() -> List[str]:
     # 1. All unfinished conversations from enhanced audio projects by default, EXCEPT
     # 2. Those that have at least one chunk in the last 15 minutes
 
+    """
+    Retrieves IDs of unfinished conversations from enhanced audio projects without recent activity.
+    
+    Returns:
+        List of conversation IDs that are unfinished, belong to projects with enhanced audio processing enabled, and have no associated chunks with timestamps in the last 15 minutes.
+    """
     response = directus.get_items(
         "conversation",
         {

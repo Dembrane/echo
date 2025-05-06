@@ -2,11 +2,11 @@
 from typing import List
 from pathlib import Path
 
-from celery import Celery, chain, chord, group, signals, bootsteps
+from celery import Celery, chain, chord, group, signals, bootsteps  # type: ignore
 from sentry_sdk import capture_exception
-from celery.signals import worker_ready, worker_shutdown
+from celery.signals import worker_ready, worker_shutdown  # type: ignore
 from celery.schedules import crontab
-from celery.utils.log import get_task_logger
+from celery.utils.log import get_task_logger  # type: ignore
 
 import dembrane.tasks_config
 from dembrane.utils import generate_uuid, get_utc_timestamp
@@ -36,7 +36,6 @@ from dembrane.quote_utils import (
     generate_conversation_summary,
     cluster_quotes_using_aspect_centroids,
 )
-from dembrane.conversation_utils import collect_unfinished_conversations
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.processing_status_utils import ProcessingStatus
 from dembrane.audio_lightrag.main.run_etl import run_etl_pipeline
@@ -104,16 +103,25 @@ def worker_shutdown(**_):
 
 @signals.celeryd_init.connect
 def init_sentry_celery(**_kwargs):
+    """
+    Initializes Sentry error tracking for Celery workers.
+    
+    This function sets up Sentry integration to capture and report errors occurring within Celery tasks.
+    """
     logger.info("initializing sentry for celery")
     init_sentry()
 
 
 @celery_app.on_after_configure.connect
 def setup_periodic_tasks(sender: Celery, **_kwargs):
+    """
+    Registers a periodic Celery task to collect unfinished conversations weekly.
+    
+    Schedules the `test_collect_unfinished_conversations` task to run every Monday at 7:30 AM.
+    """
     sender.add_periodic_task(
-        # crontab(minute="*/10"),
-        crontab(minute="*/1"),
-        task_collect_and_finish_unfinished_conversations.s(),
+        crontab(hour=7, minute=30, day_of_week=1),
+        test_collect_unfinished_conversations.s(),
     )
 
 
@@ -838,7 +846,7 @@ def task_summarize_conversation(self, conversation_id: str):
 )
 def task_merge_conversation_chunks(self, conversation_id: str):
     try:
-        # local import to avoid circular imports
+        # Import locally to avoid circular imports
         from dembrane.api.conversation import get_conversation_content
 
         get_conversation_content(
@@ -855,6 +863,11 @@ def task_merge_conversation_chunks(self, conversation_id: str):
 
 @celery_app.task(bind=True, retry_backoff=True, ignore_result=False, base=BaseTask)
 def task_finish_conversation_hook(self, conversation_id: str):
+    """
+    Marks a conversation as finished and triggers post-processing tasks.
+    
+    Updates the conversation's status and completion flag in Directus, then asynchronously launches tasks to summarize the conversation and merge its chunks. If audio LightRag input is enabled, also runs the ETL pipeline for the conversation. Retries on exceptions.
+    """
     try:
         directus.update_item(
             "conversation",
@@ -877,44 +890,6 @@ def task_finish_conversation_hook(self, conversation_id: str):
 
         if ENABLE_AUDIO_LIGHTRAG_INPUT:
             run_etl_pipeline([conversation_id])
-    except Exception as e:
-        logger.error(f"Error: {e}")
-        raise self.retry(exc=e) from e
-
-
-@celery_app.task(bind=True, retry_backoff=True, ignore_result=False, base=BaseTask)
-def task_collect_and_finish_unfinished_conversations(self):
-    try:
-        logger.info(
-            "running task_collect_and_finish_unfinished_conversations @ %s", get_utc_timestamp()
-        )
-        signatures = chain(
-            task_collect_unfinished_conversations.s(),
-            task_run_multiple_finish_conversation_hooks.s(),
-        )
-
-        signatures.apply_async()
-    except Exception as e:
-        logger.error(f"Error: {e}")
-        raise self.retry(exc=e) from e
-
-
-@celery_app.task(bind=True, retry_backoff=True, ignore_result=False, base=BaseTask)
-def task_collect_unfinished_conversations(self):
-    try:
-        return collect_unfinished_conversations()
-    except Exception as e:
-        logger.error(f"Error: {e}")
-        raise self.retry(exc=e) from e
-
-
-@celery_app.task(bind=True, retry_backoff=True, ignore_result=False, base=BaseTask)
-def task_run_multiple_finish_conversation_hooks(self, conversation_ids: List[str]):
-    try:
-        logger.info("running task_run_multiple_finish_conversation_hooks @ %s", get_utc_timestamp())
-        logger.info(f"conversation_ids: {conversation_ids}")
-        for conversation_id in conversation_ids:
-            task_finish_conversation_hook.delay(conversation_id)
     except Exception as e:
         logger.error(f"Error: {e}")
         raise self.retry(exc=e) from e

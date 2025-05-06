@@ -45,6 +45,11 @@ logger = getLogger("server")
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     # startup
+    """
+    Manages application startup and shutdown tasks, including database and RAG initialization.
+    
+    On startup, initializes Sentry, loads PostgreSQL environment variables, ensures database schema and audio tables are set up under a distributed lock, and creates and initializes the LightRAG instance and pipeline status. On shutdown, logs server termination.
+    """
     logger.info("starting server")
     init_sentry()
 
@@ -54,6 +59,12 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
 
     # Define the critical initialization operation
     async def initialize_database() -> bool:
+        """
+        Initializes the PostgreSQL database and verifies required tables for audio processing.
+        
+        Returns:
+            True when initialization and table checks complete successfully.
+        """
         await postgres_db.initdb()
         await postgres_db.check_tables()
         await check_audio_lightrag_tables(postgres_db)
@@ -139,6 +150,11 @@ class SPAStaticFiles(StaticFiles):
 
 
 def custom_openapi() -> Any:
+    """
+    Generates and caches a custom OpenAPI schema for the FastAPI application.
+    
+    Adds a custom title, version, and logo URL to the OpenAPI metadata. Returns the schema, using a cached version if available.
+    """
     if app.openapi_schema:
         return app.openapi_schema
     openapi_schema = get_openapi(

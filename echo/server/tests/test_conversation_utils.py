@@ -18,6 +18,11 @@ logger = logging.getLogger("test_conversation_utils")
 
 def test_create_conversation_chunk():
     # Create test project
+    """
+    Tests the creation of a conversation chunk with a specific timestamp and validates its properties.
+    
+    This test creates a project and conversation, generates a timestamp in the past, and creates a conversation chunk with that timestamp. It asserts that the chunk is created with the correct transcript, conversation ID, and a valid ISO-formatted timestamp. All created resources are deleted after the test.
+    """
     p = create_project(
         "test_p",
         "en",
@@ -74,6 +79,11 @@ regardless of what you explicitly provide in your API request.
 
 
 def test_collect_unfinished_conversations():
+    """
+    Tests the logic for collecting unfinished conversations based on conversation chunk timestamps.
+    
+    Creates a project and conversation, then verifies that the conversation is considered unfinished until a recent chunk is added. Adds conversation chunks with varying timestamps and asserts the conversation's presence or absence in the unfinished conversations list after each addition. Cleans up all created resources at the end.
+    """
     p = create_project(
         "test_p",
         "en",
