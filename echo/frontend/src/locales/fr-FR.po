@@ -159,8 +159,12 @@ msgstr "Déjà ajouté à cette conversation"
 #. placeholder {0}: participantCount !== undefined ? participantCount : t`loading...`
 #. placeholder {1}: participantCount == 1 ? "" : "s"
 #: src/routes/project/report/ProjectReportRoute.tsx:317
-msgid "An email Notification will be sent to {0} participant{1}. Do you want to proceed?"
+msgid "An email notification will be sent to {0} participant{1}. Do you want to proceed?"
 msgstr "Une notification par e-mail sera envoyée à {0} participant{1}. Voulez-vous continuer ?"
+
+#: src/routes/project/report/ProjectReportRoute.tsx:317
+#~ msgid "An email Notification will be sent to {0} participant{1}. Do you want to proceed?"
+#~ msgstr "Une notification par e-mail sera envoyée à {0} participant{1}. Voulez-vous continuer ?"
 
 #: src/routes/participant/ParticipantStart.tsx:141
 msgid "An error occurred while loading the Portal. Please contact the support team."
