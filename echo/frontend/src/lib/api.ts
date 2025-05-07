@@ -857,12 +857,14 @@ export const checkProjectNotificationParticipant = async (
 // subscribe to notifications
 export const submitNotificationParticipant = async (
   emails: string[],
-  projectId: string
+  projectId: string,
+  conversationId: string
 ) => {
   try {
     const response = await apiNoAuth.post('/participant/report/subscribe', {
       emails,
-      project_id: projectId
+      project_id: projectId,
+      conversation_id: conversationId
     })
     return response;
   } catch (error) {

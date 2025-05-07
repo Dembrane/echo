@@ -66,7 +66,7 @@ export const ParticipantPostConversation = () => {
     if (!projectId) return;
 
     mutate(
-      { emails, projectId },
+      { emails, projectId, conversationId: conversationId ?? "" },
       {
         onSuccess: () => setIsSubmitted(true),
       },

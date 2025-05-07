@@ -87,6 +87,7 @@ class CheckParticipantRequest(BaseModel):
 class NotificationSubscriptionRequest(BaseModel):
     emails: List[str]
     project_id: str
+    conversation_id: str
 
 @ParticipantRouter.post(
     "/projects/{project_id}/conversations/initiate",
@@ -492,7 +493,7 @@ async def subscribe_notifications(data: NotificationSubscriptionRequest) -> dict
             # Create new entry with opt-in
             directus.create_item(
                 "project_report_notification_participants",
-                {"email": email, "project_id": data.project_id, "email_opt_in": True},
+                {"email": email, "project_id": data.project_id, "email_opt_in": True, "conversation_id": data.conversation_id},
             )
 
         except Exception as e:

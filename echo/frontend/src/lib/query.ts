@@ -2066,11 +2066,13 @@ export const useSubmitNotificationParticipant = () => {
     mutationFn: async ({
       emails,
       projectId,
+      conversationId,
     }: {
       emails: string[];
       projectId: string;
+      conversationId: string;
     }) => {
-      return await submitNotificationParticipant(emails, projectId);
+      return await submitNotificationParticipant(emails, projectId, conversationId);
     },
     retry: 2,
     onError: (error) => {
