@@ -832,7 +832,7 @@ export const unsubscribeParticipant = async (
   token: string,
   email_opt_in: boolean
 ) => {
-  return apiNoAuth.patch(`/participant/${projectId}/unsubscribe-participant`, {
+  return apiNoAuth.post(`/participant/${projectId}/report/unsubscribe`, {
     token,
     email_opt_in,
   });
@@ -844,7 +844,7 @@ export const checkProjectNotificationParticipant = async (
   projectId: string
 ) => {
   try {
-    const response = await apiNoAuth.post('/participant/check-subscription', {
+    const response = await apiNoAuth.post('/participant/report/subscribe/eligibility', {
       email,
       project_id: projectId
     })
@@ -860,7 +860,7 @@ export const submitNotificationParticipant = async (
   projectId: string
 ) => {
   try {
-    const response = await apiNoAuth.post('/participant/subscribe-report', {
+    const response = await apiNoAuth.post('/participant/report/subscribe', {
       emails,
       project_id: projectId
     })
@@ -876,7 +876,7 @@ export const checkUnsubscribeStatus = async (
   projectId: string
 ) => {
   try {
-    const response = await apiNoAuth.get('/participant/check-unsubscribe-eligibility', {
+    const response = await apiNoAuth.get('/participant/report/unsubscribe/eligibility', {
       params: { token, project_id: projectId },
     });
 

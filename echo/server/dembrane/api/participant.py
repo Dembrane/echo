@@ -368,7 +368,7 @@ async def run_when_conversation_is_finished(
     task_finish_conversation_hook.delay(conversation_id)
     return "OK"
 
-@ParticipantRouter.patch("/{project_id}/unsubscribe-participant")
+@ParticipantRouter.post("/{project_id}/report/unsubscribe")
 async def unsubscribe_participant(
     project_id: str,
     payload: UnsubscribeParticipantRequest,
@@ -412,7 +412,7 @@ async def unsubscribe_participant(
         logger.error(f"Error updating project contacts: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal Server Error")  # noqa: B904
 
-@ParticipantRouter.post("/check-subscription")
+@ParticipantRouter.post("/report/subscribe/eligibility")
 async def check_participant_subscription(payload: CheckParticipantRequest) -> dict:
     """
     Securely check if a participant is subscribed to project notifications.
@@ -452,7 +452,7 @@ async def check_participant_subscription(payload: CheckParticipantRequest) -> di
         raise HTTPException(status_code=500, detail="Internal Server Error")  # noqa: B904
 
 
-@ParticipantRouter.post("/subscribe-report")
+@ParticipantRouter.post("/report/subscribe")
 async def subscribe_notifications(data: NotificationSubscriptionRequest) -> dict:
     """
     Subscribe multiple users to project notifications.
@@ -508,7 +508,7 @@ async def subscribe_notifications(data: NotificationSubscriptionRequest) -> dict
     return {"status": "success"}
 
 
-@ParticipantRouter.get("/check-unsubscribe-eligibility")
+@ParticipantRouter.get("/report/unsubscribe/eligibility")
 async def check_unsubscribe_eligibility(
     token: str,
     project_id: str,
