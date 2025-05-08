@@ -380,6 +380,9 @@ async def subscribe_notifications(data: NotificationSubscriptionRequest) -> dict
 
     for email in data.emails:
         try:
+            # normalize email
+            email = email.lower()
+
             # Check if user already exists
             existing = directus.get_items(
                 "project_report_notification_participants",

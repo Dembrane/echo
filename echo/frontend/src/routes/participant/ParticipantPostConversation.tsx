@@ -96,7 +96,7 @@ export const ParticipantPostConversation = () => {
   };
 
   const addEmail = (inputElement?: HTMLInputElement | null) => {
-    const trimmedEmail = email.trim();
+    const trimmedEmail = email.trim().toLowerCase();
     if (!trimmedEmail) return;
 
     if (emails.includes(trimmedEmail)) {
