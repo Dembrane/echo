@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dembrane Report Notification</title>
+  </head>
+  <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; color: #333;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td align="center" style="padding: 20px 0;">
+          <table width="600" cellpadding="0" cellspacing="0" border="0" style="border-radius: 8px; padding: 20px; border: 1px solid lightgray;">
+            <tr>
+              <td>
+                <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-top: 15px;">
+                  <tr>
+                    <td style="vertical-align: middle;">
+                      <img src="https://dembrane.blob.core.windows.net/pilot/dembrane-logo-hq.png" alt="Dembrane Logo" width="40" height="40" style="display: block; margin-right: 10px;" />
+                    </td>
+                    <td style="vertical-align: middle;">
+                      <h1 style="margin: 0; font-size: 24px; font-family: Arial, sans-serif;">Dembrane</h1>
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="margin-top: 30px;"></p>
+
+                <h3 style="font-size: 18px; font-weight: 500;">
+                  {% if conversation_name and conversation_name != "" %}
+                    A report has been created for the conversation <strong>"{{ conversation_name }}"</strong> that you have contributed to.
+                  {% else %}
+                    A report has been created that you have contributed to.
+                  {% endif %}
+                </h3>
+
+                <p style="font-size: 16px;">
+                  Take a look here: <strong><a href="{{PARTICIPANT_BASE_URL}}/en-US/{{project_id}}/report" target="_blank" rel="noopener" style="color: #007bff;">View Report</a></strong>
+                </p>
+
+                <p style="font-size: 16px; margin-top: 100px; margin-bottom: 0;">We believe in you!</p>
+                <p style="font-size: 16px; margin-top: 0;">The Dembrane Team</p>
+
+                <hr style="margin: 30px 0;" />
+
+                <p style="font-size: 12px; color: #999;">
+                  If you no longer wish to receive these notifications, please click on 
+                  <strong><a href="{{PARTICIPANT_BASE_URL}}/en-US/unsubscribe?token={{token}}&amp;project_id={{project_id}}" target="_blank" rel="noopener" style="color: #999;">Unsubscribe</a></strong>
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
