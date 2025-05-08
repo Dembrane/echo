@@ -13,7 +13,6 @@ import {
   addChatContext,
   api,
   apiNoAuth,
-  checkProjectNotificationParticipant,
   checkUnsubscribeStatus,
   createProjectReport,
   deleteChatContext,
@@ -2018,7 +2017,6 @@ export const useCheckUnsubscribeStatus = (
   });
 };
 
-
 export const useGetProjectParticipants = (project_id: string) => {
   return useQuery({
     queryKey: ["projectParticipants", project_id],
@@ -2040,24 +2038,6 @@ export const useGetProjectParticipants = (project_id: string) => {
       return submissions.length;
     },
     enabled: !!project_id, // Only run query if project_id exists
-  });
-};
-
-export const useCheckProjectNotificationParticipants = () => {
-  return useMutation({
-    mutationFn: async ({
-      email,
-      projectId,
-    }: {
-      email: string;
-      projectId: string;
-    }) => {
-      try {
-        return await checkProjectNotificationParticipant(email, projectId);
-      } catch (error) {
-        throw new Error("Failed to verify email status");
-      }
-    },
   });
 };
 

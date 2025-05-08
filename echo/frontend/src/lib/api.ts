@@ -838,22 +838,6 @@ export const unsubscribeParticipant = async (
   });
 };
 
-// check if the participant is subscribed to notifications
-export const checkProjectNotificationParticipant = async (
-  email: string,
-  projectId: string
-) => {
-  try {
-    const response = await apiNoAuth.post('/participant/report/subscribe/eligibility', {
-      email,
-      project_id: projectId
-    })
-    return response;
-  } catch (error) {
-    throw new Error("Failed to verify email status");
-  }
-};
-
 // subscribe to notifications
 export const submitNotificationParticipant = async (
   emails: string[],

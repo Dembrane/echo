@@ -424,45 +424,6 @@ async def subscribe_notifications(data: NotificationSubscriptionRequest) -> dict
 
     return {"status": "success"}
 
-@ParticipantRouter.post("/report/subscribe/eligibility")
-async def check_participant_subscription(payload: CheckParticipantRequest) -> dict:
-    """
-    Securely check if a participant is subscribed to project notifications.
-    """
-    logger.debug(f"Checking subscription for {payload.email} in project {payload.project_id}")
-    try:
-        submissions = directus.get_items(
-            "project_report_notification_participants",
-            {
-                "query": {
-                    "filter": {
-                        "_and": [
-                            {"project_id": {"_eq": payload.project_id}},
-                            {"email": {"_eq": payload.email}},
-                        ]
-                    },
-                    "fields": ["email_opt_in"],
-                    "limit": 1,
-                }
-            },
-        )
-
-        # participant is new
-        if not submissions or len(submissions) == 0:
-            return {"eligible": True}
-
-        # participant is opted out
-        entry = submissions[0]
-        if entry.get("email_opt_in") is False:
-            return {"eligible": True}
-
-        # participant is subscribed
-        return {"eligible": False}
-
-    except Exception as e:
-        logger.error(f"Error checking subscription: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")  # noqa: B904
-
 @ParticipantRouter.post("/{project_id}/report/unsubscribe")
 async def unsubscribe_participant(
     project_id: str,

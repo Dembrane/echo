@@ -30,7 +30,6 @@ import { useMutation } from "@tanstack/react-query";
 import { directus } from "@/lib/directus";
 import { readItems, createItems } from "@directus/sdk";
 import {
-  useCheckProjectNotificationParticipants,
   useSubmitNotificationParticipant,
 } from "@/lib/query";
 
@@ -44,8 +43,6 @@ export const ParticipantPostConversation = () => {
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [debounceTimeout, setDebounceTimeout] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { mutate: checkEmail, isPending: isCheckingParticipantEmail } =
-    useCheckProjectNotificationParticipants();
   const { mutate, isPending } = useSubmitNotificationParticipant();
 
   const initiateLink = `/${projectId}/start`;
@@ -178,9 +175,7 @@ export const ParticipantPostConversation = () => {
                       onKeyDown={handleKeyDown}
                       error={error}
                       disabled={
-                        isCheckingEmail ||
-                        isPending ||
-                        isCheckingParticipantEmail
+                        isCheckingEmail || isPending
                       }
                       rightSection={
                         <Button
@@ -190,12 +185,11 @@ export const ParticipantPostConversation = () => {
                           disabled={
                             !email.trim() ||
                             isCheckingEmail ||
-                            isPending ||
-                            isCheckingParticipantEmail
+                            isPending
                           }
                           className="me-[2px] hover:bg-blue-50"
                           loading={
-                            isCheckingEmail || isCheckingParticipantEmail
+                            isCheckingEmail
                           }
                         >
                           {isCheckingEmail ? t`Checking...` : t`Add`}
@@ -221,7 +215,7 @@ export const ParticipantPostConversation = () => {
                             >
                               <Chip
                                 disabled={
-                                  isPending || isCheckingParticipantEmail
+                                  isPending
                                 }
                                 value={email}
                                 variant="outline"
@@ -243,7 +237,6 @@ export const ParticipantPostConversation = () => {
                         fullWidth
                         onClick={handleSubscribe}
                         loading={isPending}
-                        disabled={isCheckingParticipantEmail}
                         className="mt-4"
                       >
                         {isPending ? (
