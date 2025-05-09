@@ -1,33 +1,35 @@
 {
   "collection": "project_report_notification_participants",
-  "field": "email",
-  "type": "string",
+  "field": "conversation_id",
+  "type": "uuid",
   "meta": {
     "collection": "project_report_notification_participants",
     "conditions": null,
     "display": null,
     "display_options": null,
-    "field": "email",
+    "field": "conversation_id",
     "group": null,
     "hidden": false,
-    "interface": "input",
+    "interface": "select-dropdown-m2o",
     "note": null,
     "options": null,
     "readonly": false,
     "required": false,
-    "sort": 7,
-    "special": null,
+    "sort": 6,
+    "special": [
+      "m2o"
+    ],
     "translations": null,
     "validation": null,
     "validation_message": null,
     "width": "half"
   },
   "schema": {
-    "name": "email",
+    "name": "conversation_id",
     "table": "project_report_notification_participants",
-    "data_type": "character varying",
+    "data_type": "uuid",
     "default_value": null,
-    "max_length": 255,
+    "max_length": null,
     "numeric_precision": null,
     "numeric_scale": null,
     "is_nullable": true,
@@ -37,7 +39,7 @@
     "is_generated": false,
     "generation_expression": null,
     "has_auto_increment": false,
-    "foreign_key_table": null,
-    "foreign_key_column": null
+    "foreign_key_table": "conversation",
+    "foreign_key_column": "id"
   }
 }

@@ -262,7 +262,13 @@ type Subscription {
   directus_versions_mutated(event: EventEnum): directus_versions_mutated
   directus_access_mutated(event: EventEnum): directus_access_mutated
   directus_comments_mutated(event: EventEnum): directus_comments_mutated
+<<<<<<< HEAD
   directus_sync_id_map_mutated(event: EventEnum): directus_sync_id_map_mutated
+=======
+  directus_versions_mutated(event: EventEnum): directus_versions_mutated
+  project_report_notification_participants_mutated(event: EventEnum): project_report_notification_participants_mutated
+  aspect_mutated(event: EventEnum): aspect_mutated
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
   account_mutated(event: EventEnum): account_mutated
   account_directus_users_mutated(event: EventEnum): account_directus_users_mutated
   view_mutated(event: EventEnum): view_mutated
@@ -1888,6 +1894,11 @@ type project {
   id: ID!
   image_generation_model: String
   is_conversation_allowed: Boolean!
+<<<<<<< HEAD
+=======
+  is_get_reply_enabled: Boolean
+  is_project_notification_subscription_allowed: Boolean
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
   language: String
   name: String
   pin: String
@@ -2091,6 +2102,10 @@ type project_report_notification_participants {
   id: ID!
   project_id: String
   sort: Int
+<<<<<<< HEAD
+=======
+  conversation_id(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
 }
 
 type project_report_notification_participants_mutated {
@@ -2122,6 +2137,7 @@ type quote {
   conversation_id(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation
   created_at: Date
   created_at_func: datetime_functions
+  embedding: String
   id: ID!
   insight_id(filter: insight_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): insight
   order: Int
@@ -2929,6 +2945,11 @@ input create_project_input {
   id: ID
   image_generation_model: String
   is_conversation_allowed: Boolean!
+<<<<<<< HEAD
+=======
+  is_get_reply_enabled: Boolean
+  is_project_notification_subscription_allowed: Boolean
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
   language: String
   name: String
   pin: String
@@ -2987,6 +3008,7 @@ input create_quote_conversation_chunk_input {
 input create_quote_input {
   conversation_id: create_conversation_input
   created_at: Date
+  embedding: String
   id: ID!
   insight_id: create_insight_input
   order: Int
@@ -3659,6 +3681,11 @@ input project_filter {
   id: string_filter_operators
   image_generation_model: string_filter_operators
   is_conversation_allowed: boolean_filter_operators
+<<<<<<< HEAD
+=======
+  is_get_reply_enabled: boolean_filter_operators
+  is_project_notification_subscription_allowed: boolean_filter_operators
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
   language: string_filter_operators
   name: string_filter_operators
   pin: string_filter_operators
@@ -3741,6 +3768,7 @@ input quote_filter {
   conversation_id: conversation_filter
   created_at: date_filter_operators
   created_at_func: datetime_function_filter_operators
+  embedding: string_filter_operators
   id: string_filter_operators
   insight_id: insight_filter
   order: number_filter_operators
@@ -4329,6 +4357,11 @@ input update_project_input {
   id: ID
   image_generation_model: String
   is_conversation_allowed: Boolean
+<<<<<<< HEAD
+=======
+  is_get_reply_enabled: Boolean
+  is_project_notification_subscription_allowed: Boolean
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
   language: String
   name: String
   pin: String
@@ -4387,6 +4420,7 @@ input update_quote_conversation_chunk_input {
 input update_quote_input {
   conversation_id: update_conversation_input
   created_at: Date
+  embedding: String
   id: ID
   insight_id: update_insight_input
   order: Int

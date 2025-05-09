@@ -7138,6 +7138,7 @@
         ]
       }
     },
+<<<<<<< HEAD
     "/comments": {
       "get": {
         "tags": [
@@ -7520,6 +7521,17 @@
           "ItemsDirectusSyncIDMap"
         ],
         "operationId": "createItemsDirectusSyncIDMap",
+=======
+    "/items/project_report_notification_participants": {
+      "post": {
+        "summary": "Create an Item",
+        "description": "Create a new project_report_notification_participants item.",
+        "tags": [
+          "Items",
+          "ItemsProjectReportNotificationParticipants"
+        ],
+        "operationId": "createItemsProjectReportNotificationParticipants",
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
         "parameters": [
           {
             "$ref": "#/components/parameters/Meta"
@@ -7533,11 +7545,19 @@
                   {
                     "type": "array",
                     "items": {
+<<<<<<< HEAD
                       "$ref": "#/components/schemas/ItemsDirectusSyncIDMap"
                     }
                   },
                   {
                     "$ref": "#/components/schemas/ItemsDirectusSyncIDMap"
+=======
+                      "$ref": "#/components/schemas/ItemsProjectReportNotificationParticipants"
+                    }
+                  },
+                  {
+                    "$ref": "#/components/schemas/ItemsProjectReportNotificationParticipants"
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
                   }
                 ]
               }
@@ -7554,7 +7574,11 @@
                   "properties": {
                     "data": {
                       "items": {
+<<<<<<< HEAD
                         "$ref": "#/components/schemas/ItemsDirectusSyncIDMap"
+=======
+                        "$ref": "#/components/schemas/ItemsProjectReportNotificationParticipants"
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
                       }
                     }
                   }
@@ -7569,12 +7593,21 @@
       },
       "get": {
         "summary": "List Items",
+<<<<<<< HEAD
         "description": "List the directus_sync_id_map items.",
         "tags": [
           "Items",
           "ItemsDirectusSyncIDMap"
         ],
         "operationId": "readItemsDirectusSyncIDMap",
+=======
+        "description": "List the project_report_notification_participants items.",
+        "tags": [
+          "Items",
+          "ItemsProjectReportNotificationParticipants"
+        ],
+        "operationId": "readItemsProjectReportNotificationParticipants",
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
         "security": [
           {
             "Auth": []
@@ -7615,7 +7648,11 @@
                       "type": "array",
                       "items": {
                         "type": "object",
+<<<<<<< HEAD
                         "$ref": "#/components/schemas/ItemsDirectusSyncIDMap"
+=======
+                        "$ref": "#/components/schemas/ItemsProjectReportNotificationParticipants"
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
                       }
                     },
                     "meta": {
@@ -7633,12 +7670,21 @@
       },
       "patch": {
         "summary": "Update Multiple Items",
+<<<<<<< HEAD
         "description": "Update multiple directus_sync_id_map items at the same time.",
         "tags": [
           "Items",
           "ItemsDirectusSyncIDMap"
         ],
         "operationId": "updateItemsDirectusSyncIDMap",
+=======
+        "description": "Update multiple project_report_notification_participants items at the same time.",
+        "tags": [
+          "Items",
+          "ItemsProjectReportNotificationParticipants"
+        ],
+        "operationId": "updateItemsProjectReportNotificationParticipants",
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
         "parameters": [
           {
             "$ref": "#/components/parameters/Fields"
@@ -7670,11 +7716,19 @@
                   {
                     "type": "array",
                     "items": {
+<<<<<<< HEAD
                       "$ref": "#/components/schemas/ItemsDirectusSyncIDMap"
                     }
                   },
                   {
                     "$ref": "#/components/schemas/ItemsDirectusSyncIDMap"
+=======
+                      "$ref": "#/components/schemas/ItemsProjectReportNotificationParticipants"
+                    }
+                  },
+                  {
+                    "$ref": "#/components/schemas/ItemsProjectReportNotificationParticipants"
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
                   }
                 ]
               }
@@ -7690,7 +7744,11 @@
                   "properties": {
                     "data": {
                       "items": {
+<<<<<<< HEAD
                         "$ref": "#/components/schemas/ItemsDirectusSyncIDMap"
+=======
+                        "$ref": "#/components/schemas/ItemsProjectReportNotificationParticipants"
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
                       }
                     }
                   }
@@ -7702,12 +7760,21 @@
       },
       "delete": {
         "summary": "Delete Multiple Items",
+<<<<<<< HEAD
         "description": "Delete multiple existing directus_sync_id_map items.",
         "tags": [
           "Items",
           "ItemsDirectusSyncIDMap"
         ],
         "operationId": "deleteItemsDirectusSyncIDMap",
+=======
+        "description": "Delete multiple existing project_report_notification_participants items.",
+        "tags": [
+          "Items",
+          "ItemsProjectReportNotificationParticipants"
+        ],
+        "operationId": "deleteItemsProjectReportNotificationParticipants",
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
         "responses": {
           "200": {
             "description": "Successful request"
@@ -7719,6 +7786,7 @@
         "parameters": []
       }
     },
+<<<<<<< HEAD
     "/items/directus_sync_id_map/{id}": {
       "get": {
         "summary": "Retrieve an Item",
@@ -7728,6 +7796,17 @@
           "ItemsDirectusSyncIDMap"
         ],
         "operationId": "readSingleItemsDirectusSyncIDMap",
+=======
+    "/items/project_report_notification_participants/{id}": {
+      "get": {
+        "summary": "Retrieve an Item",
+        "description": "Retrieve a single project_report_notification_participants item by unique identifier.",
+        "tags": [
+          "Items",
+          "ItemsProjectReportNotificationParticipants"
+        ],
+        "operationId": "readSingleItemsProjectReportNotificationParticipants",
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
         "parameters": [
           {
             "$ref": "#/components/parameters/Fields"
@@ -7769,7 +7848,11 @@
                   "properties": {
                     "data": {
                       "type": "object",
+<<<<<<< HEAD
                       "$ref": "#/components/schemas/ItemsDirectusSyncIDMap"
+=======
+                      "$ref": "#/components/schemas/ItemsProjectReportNotificationParticipants"
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
                     }
                   }
                 }
@@ -7786,12 +7869,21 @@
       },
       "patch": {
         "summary": "Update an Item",
+<<<<<<< HEAD
         "description": "Update an existing directus_sync_id_map item.",
         "tags": [
           "Items",
           "ItemsDirectusSyncIDMap"
         ],
         "operationId": "updateSingleItemsDirectusSyncIDMap",
+=======
+        "description": "Update an existing project_report_notification_participants item.",
+        "tags": [
+          "Items",
+          "ItemsProjectReportNotificationParticipants"
+        ],
+        "operationId": "updateSingleItemsProjectReportNotificationParticipants",
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
         "parameters": [
           {
             "$ref": "#/components/parameters/Fields"
@@ -7825,7 +7917,11 @@
             "application/json": {
               "schema": {
                 "type": "object",
+<<<<<<< HEAD
                 "$ref": "#/components/schemas/ItemsDirectusSyncIDMap"
+=======
+                "$ref": "#/components/schemas/ItemsProjectReportNotificationParticipants"
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
               }
             }
           }
@@ -7840,7 +7936,11 @@
                   "properties": {
                     "data": {
                       "type": "object",
+<<<<<<< HEAD
                       "$ref": "#/components/schemas/ItemsDirectusSyncIDMap"
+=======
+                      "$ref": "#/components/schemas/ItemsProjectReportNotificationParticipants"
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
                     }
                   }
                 }
@@ -7857,12 +7957,408 @@
       },
       "delete": {
         "summary": "Delete an Item",
+<<<<<<< HEAD
         "description": "Delete an existing directus_sync_id_map item.",
         "tags": [
           "Items",
           "ItemsDirectusSyncIDMap"
         ],
         "operationId": "deleteSingleItemsDirectusSyncIDMap",
+=======
+        "description": "Delete an existing project_report_notification_participants item.",
+        "tags": [
+          "Items",
+          "ItemsProjectReportNotificationParticipants"
+        ],
+        "operationId": "deleteSingleItemsProjectReportNotificationParticipants",
+        "responses": {
+          "200": {
+            "description": "Successful request"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "Index of the item.",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "description": "Incremental index of the item.",
+                  "example": 1
+                },
+                {
+                  "type": "string",
+                  "description": "Unique identifier of the item.",
+                  "example": "8cbb43fe-4cdf-4991-8352-c461779cec02"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "/items/aspect": {
+      "post": {
+        "summary": "Create an Item",
+        "description": "Create a new aspect item.",
+        "tags": [
+          "Items",
+          "ItemsAspect"
+        ],
+        "operationId": "createItemsAspect",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Meta"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ItemsAspect"
+                    }
+                  },
+                  {
+                    "$ref": "#/components/schemas/ItemsAspect"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "items": {
+                        "$ref": "#/components/schemas/ItemsAspect"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "get": {
+        "summary": "List Items",
+        "description": "List the aspect items.",
+        "tags": [
+          "Items",
+          "ItemsAspect"
+        ],
+        "operationId": "readItemsAspect",
+        "security": [
+          {
+            "Auth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Fields"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Meta"
+          },
+          {
+            "$ref": "#/components/parameters/Offset"
+          },
+          {
+            "$ref": "#/components/parameters/Sort"
+          },
+          {
+            "$ref": "#/components/parameters/Filter"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "$ref": "#/components/schemas/ItemsAspect"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/x-metadata"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update Multiple Items",
+        "description": "Update multiple aspect items at the same time.",
+        "tags": [
+          "Items",
+          "ItemsAspect"
+        ],
+        "operationId": "updateItemsAspect",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Fields"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Meta"
+          },
+          {
+            "$ref": "#/components/parameters/Offset"
+          },
+          {
+            "$ref": "#/components/parameters/Sort"
+          },
+          {
+            "$ref": "#/components/parameters/Filter"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ItemsAspect"
+                    }
+                  },
+                  {
+                    "$ref": "#/components/schemas/ItemsAspect"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "items": {
+                        "$ref": "#/components/schemas/ItemsAspect"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Multiple Items",
+        "description": "Delete multiple existing aspect items.",
+        "tags": [
+          "Items",
+          "ItemsAspect"
+        ],
+        "operationId": "deleteItemsAspect",
+        "responses": {
+          "200": {
+            "description": "Successful request"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        },
+        "parameters": []
+      }
+    },
+    "/items/aspect/{id}": {
+      "get": {
+        "summary": "Retrieve an Item",
+        "description": "Retrieve a single aspect item by unique identifier.",
+        "tags": [
+          "Items",
+          "ItemsAspect"
+        ],
+        "operationId": "readSingleItemsAspect",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Fields"
+          },
+          {
+            "$ref": "#/components/parameters/Meta"
+          },
+          {
+            "$ref": "#/components/parameters/Version"
+          },
+          {
+            "name": "id",
+            "description": "Index of the item.",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "description": "Incremental index of the item.",
+                  "example": 1
+                },
+                {
+                  "type": "string",
+                  "description": "Unique identifier of the item.",
+                  "example": "8cbb43fe-4cdf-4991-8352-c461779cec02"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "$ref": "#/components/schemas/ItemsAspect"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update an Item",
+        "description": "Update an existing aspect item.",
+        "tags": [
+          "Items",
+          "ItemsAspect"
+        ],
+        "operationId": "updateSingleItemsAspect",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Fields"
+          },
+          {
+            "$ref": "#/components/parameters/Meta"
+          },
+          {
+            "name": "id",
+            "description": "Index of the item.",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "description": "Incremental index of the item.",
+                  "example": 1
+                },
+                {
+                  "type": "string",
+                  "description": "Unique identifier of the item.",
+                  "example": "8cbb43fe-4cdf-4991-8352-c461779cec02"
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "$ref": "#/components/schemas/ItemsAspect"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "$ref": "#/components/schemas/ItemsAspect"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an Item",
+        "description": "Delete an existing aspect item.",
+        "tags": [
+          "Items",
+          "ItemsAspect"
+        ],
+        "operationId": "deleteSingleItemsAspect",
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
         "responses": {
           "200": {
             "description": "Successful request"
@@ -18863,6 +19359,14 @@
       "x-collection": "directus_sync_id_map"
     },
     {
+      "name": "ItemsProjectReportNotificationParticipants",
+      "x-collection": "project_report_notification_participants"
+    },
+    {
+      "name": "ItemsAspect",
+      "x-collection": "aspect"
+    },
+    {
       "name": "ItemsAccount",
       "x-collection": "account"
     },
@@ -20818,6 +21322,7 @@
         },
         "x-collection": "directus_versions"
       },
+<<<<<<< HEAD
       "Comments": {
         "type": "object",
         "properties": {
@@ -20883,10 +21388,61 @@
               },
               {
                 "$ref": "#/components/schemas/Users"
+=======
+      "ItemsProjectReportNotificationParticipants": {
+        "type": "object",
+        "properties": {
+          "date_submitted": {
+            "nullable": true,
+            "type": "string",
+            "format": "timestamp"
+          },
+          "date_updated": {
+            "nullable": true,
+            "type": "string",
+            "format": "timestamp"
+          },
+          "email": {
+            "nullable": true,
+            "type": "string"
+          },
+          "email_opt_in": {
+            "nullable": true,
+            "type": "boolean"
+          },
+          "email_opt_out_token": {
+            "nullable": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          "id": {
+            "nullable": false,
+            "type": "string",
+            "format": "uuid"
+          },
+          "project_id": {
+            "nullable": true,
+            "type": "string"
+          },
+          "sort": {
+            "nullable": true,
+            "type": "integer"
+          },
+          "conversation_id": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "$ref": "#/components/schemas/ItemsConversation"
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
               }
             ]
           }
         },
+<<<<<<< HEAD
         "x-collection": "directus_comments"
       },
       "ItemsDirectusSyncIDMap": {
@@ -20908,10 +21464,21 @@
             "nullable": false,
             "type": "string"
           },
+=======
+        "x-collection": "project_report_notification_participants",
+        "required": [
+          "id"
+        ]
+      },
+      "ItemsAspect": {
+        "type": "object",
+        "properties": {
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
           "created_at": {
             "nullable": true,
             "type": "string",
             "format": "timestamp"
+<<<<<<< HEAD
           }
         },
         "x-collection": "directus_sync_id_map",
@@ -20919,6 +21486,83 @@
           "table",
           "sync_id",
           "local_id"
+=======
+          },
+          "description": {
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "nullable": false,
+            "type": "string",
+            "format": "uuid"
+          },
+          "image_url": {
+            "nullable": true,
+            "type": "string"
+          },
+          "long_summary": {
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "short_summary": {
+            "nullable": true,
+            "type": "string"
+          },
+          "updated_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "timestamp"
+          },
+          "view_id": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "$ref": "#/components/schemas/ItemsView"
+              }
+            ]
+          },
+          "quotes": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "$ref": "#/components/schemas/ItemsQuoteAspect"
+                }
+              ]
+            }
+          },
+          "representative_quotes": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "$ref": "#/components/schemas/ItemsQuoteAspect1"
+                }
+              ]
+            }
+          }
+        },
+        "x-collection": "aspect",
+        "required": [
+          "id"
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
         ]
       },
       "ItemsAccount": {
@@ -21144,6 +21788,17 @@
             "nullable": false,
             "type": "boolean"
           },
+<<<<<<< HEAD
+=======
+          "is_get_reply_enabled": {
+            "nullable": true,
+            "type": "boolean"
+          },
+          "is_project_notification_subscription_allowed": {
+            "nullable": true,
+            "type": "boolean"
+          },
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
           "language": {
             "nullable": true,
             "type": "string"
@@ -21959,6 +22614,130 @@
         },
         "x-collection": "project_report_metric"
       },
+<<<<<<< HEAD
+=======
+      "ItemsQuote": {
+        "type": "object",
+        "properties": {
+          "conversation_id": {
+            "nullable": false,
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "$ref": "#/components/schemas/ItemsConversation"
+              }
+            ]
+          },
+          "created_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "timestamp"
+          },
+          "embedding": {
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "nullable": false,
+            "type": "string",
+            "format": "uuid"
+          },
+          "insight_id": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "$ref": "#/components/schemas/ItemsInsight"
+              }
+            ]
+          },
+          "order": {
+            "nullable": true,
+            "type": "integer"
+          },
+          "project_analysis_run_id": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "$ref": "#/components/schemas/ItemsProjectAnalysisRun"
+              }
+            ]
+          },
+          "text": {
+            "nullable": false,
+            "type": "string"
+          },
+          "timestamp": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "timestamp"
+          },
+          "aspects": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "$ref": "#/components/schemas/ItemsQuoteAspect"
+                }
+              ]
+            }
+          },
+          "conversation_chunks": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "$ref": "#/components/schemas/ItemsQuoteConversationChunk"
+                }
+              ]
+            }
+          },
+          "representative_aspects": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "$ref": "#/components/schemas/ItemsQuoteAspect1"
+                }
+              ]
+            }
+          }
+        },
+        "x-collection": "quote",
+        "required": [
+          "conversation_id",
+          "id",
+          "text"
+        ]
+      },
+>>>>>>> b4642b6a5ff98553317ebfd17aa1ba53831af1b4
       "ItemsQuoteAspect": {
         "type": "object",
         "properties": {
