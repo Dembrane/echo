@@ -27,7 +27,7 @@ from sqlalchemy.orm import (
     scoped_session,
     declarative_base,
 )
-from pgvector.sqlalchemy import Vector  # type: ignore
+from pgvector.sqlalchemy import Vector
 from sqlalchemy.dialects.postgresql import UUID
 
 from dembrane.config import DATABASE_URL
@@ -280,8 +280,8 @@ class ProjectChatMessageModel(Base):
         secondary=project_chat_message_conversation_association_1_table,
     )
     tokens_count: Mapped[int] = mapped_column(Integer)
-    # conversation_references: Mapped[List[Dict[str, str]]] = mapped_column(JSONB, default=[]) 
-    # citations: Mapped[List[Dict[str, str]]] = mapped_column(JSONB, default=[]) 
+    # conversation_references: Mapped[List[Dict[str, str]]] = mapped_column(JSONB, default=[])
+    # citations: Mapped[List[Dict[str, str]]] = mapped_column(JSONB, default=[])
 
 
 class ProjectChatModel(Base):
@@ -306,7 +306,7 @@ class ProjectChatModel(Base):
         back_populates="project_chats",
     )
 
-    auto_select_bool: Mapped[bool] = mapped_column('auto_select', Boolean, default=False)
+    auto_select_bool: Mapped[bool] = mapped_column("auto_select", Boolean, default=False)
 
 
 class ResourceTypeEnum(Enum):

@@ -76,18 +76,22 @@ class InitiateConversationRequestBodySchema(BaseModel):
     tag_id_list: Optional[List[str]] = []
     source: Optional[str] = "PORTAL_AUDIO"
 
+
 class UnsubscribeParticipantRequest(BaseModel):
     token: str
     email_opt_in: bool
+
 
 class CheckParticipantRequest(BaseModel):
     email: str
     project_id: str
 
+
 class NotificationSubscriptionRequest(BaseModel):
     emails: List[str]
     project_id: str
     conversation_id: str
+
 
 @ParticipantRouter.post(
     "/projects/{project_id}/conversations/initiate",
@@ -309,7 +313,7 @@ async def upload_conversation_chunk(
     chunk: UploadFile,
     timestamp: Annotated[datetime, Form()],
     source: Annotated[str, Form()] = "PORTAL_AUDIO",
-    run_finish_hook: Annotated[bool, Form()] = False,
+    run_finish_hook: Annotated[bool, Form()] = True,
 ) -> list[str]:
     conversation = directus.get_items(
         "conversation",
@@ -352,7 +356,7 @@ async def upload_conversation_chunk(
     logger.info(
         f"adding task to process conversation chunk {chunk_id}, run_finish_hook: {run_finish_hook}"
     )
-    task_process_conversation_chunk.delay(chunk_id, run_finish_hook)
+    task_process_conversation_chunk.send(chunk_id, run_finish_hook)
 
     return [chunk_created["id"]]
 
@@ -366,8 +370,9 @@ async def run_when_conversation_is_finished(
     # Import locally to avoid circular imports
     from dembrane.tasks import task_finish_conversation_hook
 
-    task_finish_conversation_hook.delay(conversation_id)
+    task_finish_conversation_hook.send(conversation_id)
     return "OK"
+
 
 @ParticipantRouter.post("/report/subscribe")
 async def subscribe_notifications(data: NotificationSubscriptionRequest) -> dict:
@@ -412,7 +417,12 @@ async def subscribe_notifications(data: NotificationSubscriptionRequest) -> dict
             # Create new entry with opt-in
             directus.create_item(
                 "project_report_notification_participants",
-                {"email": email, "project_id": data.project_id, "email_opt_in": True, "conversation_id": data.conversation_id},
+                {
+                    "email": email,
+                    "project_id": data.project_id,
+                    "email_opt_in": True,
+                    "conversation_id": data.conversation_id,
+                },
             )
 
         except Exception as e:
@@ -426,6 +436,7 @@ async def subscribe_notifications(data: NotificationSubscriptionRequest) -> dict
         )
 
     return {"status": "success"}
+
 
 @ParticipantRouter.post("/{project_id}/report/unsubscribe")
 async def unsubscribe_participant(
@@ -451,7 +462,7 @@ async def unsubscribe_participant(
                 },
             },
         )
-        
+
         if not submissions or len(submissions) == 0:
             raise HTTPException(status_code=404, detail="No data found")
 
@@ -460,16 +471,17 @@ async def unsubscribe_participant(
         # Update email_opt_in status for fetched IDs
         for item_id in ids:
             directus.update_item(
-                "project_report_notification_participants", 
-                item_id, 
-                {"email_opt_in": payload.email_opt_in}
+                "project_report_notification_participants",
+                item_id,
+                {"email_opt_in": payload.email_opt_in},
             )
-        
+
         return {"success": True}
-    
+
     except Exception as e:
         logger.error(f"Error updating project contacts: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal Server Error")  # noqa: B904
+
 
 @ParticipantRouter.get("/report/unsubscribe/eligibility")
 async def check_unsubscribe_eligibility(

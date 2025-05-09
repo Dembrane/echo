@@ -1,13 +1,13 @@
 {
-  "collection": "project_chat",
-  "field": "auto_select",
+  "collection": "conversation",
+  "field": "is_finished",
   "type": "boolean",
   "meta": {
-    "collection": "project_chat",
+    "collection": "conversation",
     "conditions": null,
     "display": null,
     "display_options": null,
-    "field": "auto_select",
+    "field": "is_finished",
     "group": null,
     "hidden": false,
     "interface": "boolean",
@@ -15,7 +15,7 @@
     "options": null,
     "readonly": false,
     "required": false,
-    "sort": 10,
+    "sort": 24,
     "special": [
       "cast-boolean"
     ],
@@ -25,10 +25,10 @@
     "width": "full"
   },
   "schema": {
-    "name": "auto_select",
-    "table": "project_chat",
+    "name": "is_finished",
+    "table": "conversation",
     "data_type": "boolean",
-    "default_value": true,
+    "default_value": false,
     "max_length": null,
     "numeric_precision": null,
     "numeric_scale": null,

@@ -1,5 +1,2 @@
-#!/bin/sh
-echo "Starting worker"
-
-POD_HOSTNAME=$(hostname)
-celery -A dembrane.tasks worker -l INFO -n worker.${POD_HOSTNAME} -Q cpu
+#!/bin/bash
+dramatiq --queues cpu --processes 2 --threads 4 dembrane.tasks

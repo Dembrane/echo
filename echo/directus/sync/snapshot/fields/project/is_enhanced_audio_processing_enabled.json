@@ -1,13 +1,13 @@
 {
-  "collection": "project_chat",
-  "field": "auto_select",
+  "collection": "project",
+  "field": "is_enhanced_audio_processing_enabled",
   "type": "boolean",
   "meta": {
-    "collection": "project_chat",
+    "collection": "project",
     "conditions": null,
     "display": null,
     "display_options": null,
-    "field": "auto_select",
+    "field": "is_enhanced_audio_processing_enabled",
     "group": null,
     "hidden": false,
     "interface": "boolean",
@@ -15,7 +15,7 @@
     "options": null,
     "readonly": false,
     "required": false,
-    "sort": 10,
+    "sort": 25,
     "special": [
       "cast-boolean"
     ],
@@ -25,8 +25,8 @@
     "width": "full"
   },
   "schema": {
-    "name": "auto_select",
-    "table": "project_chat",
+    "name": "is_enhanced_audio_processing_enabled",
+    "table": "project",
     "data_type": "boolean",
     "default_value": true,
     "max_length": null,

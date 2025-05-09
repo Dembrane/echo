@@ -9,7 +9,7 @@ import subprocess
 from typing import List
 from datetime import timedelta
 
-import ffmpeg  # type: ignore
+import ffmpeg
 
 from dembrane.s3 import s3_client, delete_from_s3, get_stream_from_s3, get_sanitized_s3_key
 from dembrane.utils import generate_uuid
