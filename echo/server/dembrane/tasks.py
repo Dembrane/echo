@@ -66,7 +66,7 @@ assert REDIS_URL, "REDIS_URL environment variable is not set"
 # FIXME: remove this once we have a proper SSL certificate, for the time we atleast isolate using vpc
 ssl_params = ""
 if REDIS_URL.startswith("rediss://") and "?ssl_cert_reqs=" not in REDIS_URL:
-    ssl_params = "?ssl_cert_reqs=CERT_NONE"
+    ssl_params = "?ssl_cert_reqs=none"
 
 redis_connection_string = REDIS_URL + "/1" + ssl_params
 
@@ -134,6 +134,7 @@ def task_summarize_conversation(conversation_id: str) -> None:
     except Exception as e:
         logger.error(f"Error: {e}")
         raise e from e
+
 
 @dramatiq.actor(store_results=True, queue_name="cpu")
 def task_merge_conversation_chunks(conversation_id: str) -> None:
