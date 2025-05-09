@@ -208,10 +208,6 @@ export const mainRouter = createBrowserRouter([
         ],
       },
       {
-        path: "unsubscribe",
-        element: <ProjectUnsubscribe/>,
-      },
-      {
         path: "*",
         element: <ErrorPage />,
       },
@@ -252,6 +248,10 @@ export const participantRouter = createBrowserRouter([
       {
         path: "report",
         element: <ParticipantReport />,
+      },
+      {
+        path: "unsubscribe",
+        element: <ProjectUnsubscribe />,
       },
       {
         path: "*",
