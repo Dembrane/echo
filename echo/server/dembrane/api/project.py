@@ -325,10 +325,10 @@ async def post_create_project_library(
             detail="Analysis is already in progress",
         )
 
-    result = task_create_project_library.si(project_id, body.language).apply_async()
+    task_create_project_library.send(project_id, body.language or "en")
 
     logger.info(
-        f"Generate Project Library task {result.id} created for project {project.id}. Language: {body.language}"
+        f"Generate Project Library task created for project {project_id}. Language: {body.language}"
     )
 
     return None
@@ -360,11 +360,11 @@ async def post_create_view(
     if not auth.is_admin and project.directus_user_id != auth.user_id:
         raise HTTPException(status_code=403, detail="User does not have access to this project")
 
-    result = task_create_view.si(
-        project_analysis_run.id, body.query, body.additional_context, body.language
-    ).apply_async()
+    task_create_view.send(
+        project_analysis_run.id, body.query, body.additional_context or "", body.language or "en"
+    )
 
-    logger.info(f"Task {result.id} created for project {project_id}")
+    logger.info(f"Create View task created for project {project_id}. Language: {body.language}")
 
     return None
 

@@ -1,10 +1,10 @@
 from logging import getLogger
 
-from directus_sdk_py import DirectusClient  # type: ignore
+from directus_sdk_py import DirectusClient
 
 from dembrane.config import DIRECTUS_TOKEN, DIRECTUS_BASE_URL
 
-logger = getLogger(__name__)
+logger = getLogger("directus")
 
 if DIRECTUS_TOKEN:
     directus_token = DIRECTUS_TOKEN

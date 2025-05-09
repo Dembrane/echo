@@ -526,7 +526,7 @@ async def retranscribe_conversation(
             # Import task locally to avoid circular imports
             from dembrane.tasks import task_process_conversation_chunk
 
-            task_process_conversation_chunk.delay(chunk_id, run_finish_hook=False)
+            task_process_conversation_chunk.send(chunk_id, run_finish_hook=False)
 
             return {
                 "status": "success",

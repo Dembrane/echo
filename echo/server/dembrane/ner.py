@@ -6,7 +6,7 @@ logger = logging.getLogger("ner")
 
 if not DISABLE_REDACTION:
     logger.info("Loading NER model")
-    from trankit import Pipeline  # type:ignore
+    from trankit import Pipeline
 
     p = Pipeline(
         "english",

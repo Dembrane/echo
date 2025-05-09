@@ -1,0 +1,24 @@
+{
+  "collection": "aspect",
+  "field": "centroid_embedding",
+  "type": "unknown",
+  "meta": null,
+  "schema": {
+    "name": "centroid_embedding",
+    "table": "aspect",
+    "data_type": "vector",
+    "default_value": null,
+    "max_length": null,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": true,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}

@@ -28,6 +28,7 @@ type Aspect = {
 };
 
 type Conversation = {
+  is_finished: boolean;
   chunks: any[] | ConversationChunk[];
   context?: string | null;
   created_at?: string | null;

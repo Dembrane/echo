@@ -1,0 +1,1 @@
+dramatiq --queues cpu --processes 2 --threads 8 dembrane.tasks

@@ -2,6 +2,17 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Python Debugger: Module",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "dembrane.tasks",
+      "cwd": "${workspaceFolder}/server",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/server"
+      },
+      "console": "integratedTerminal"
+    },
+    {
       "name": "Python: Conversation Utils Debug",
       "type": "debugpy",
       "request": "launch",

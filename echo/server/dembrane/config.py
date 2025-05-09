@@ -3,13 +3,45 @@
 # required environment variables and provides sensible defaults for optional ones.
 
 import os
+import sys
 import logging
+
+try:
+    import colorlog
+
+    has_colorlog = True
+except ImportError:
+    has_colorlog = False
 
 import dotenv
 
-logging.basicConfig(level=logging.INFO, force=True)
+# Configure colorful logs if colorlog is available
+if has_colorlog:
+    handler = colorlog.StreamHandler(sys.stdout)
+    handler.setFormatter(
+        colorlog.ColoredFormatter(
+            "%(log_color)s%(levelname)s:%(name)s:%(message)s",
+            log_colors={
+                "DEBUG": "cyan",
+                "INFO": "green",
+                "WARNING": "yellow",
+                "ERROR": "red",
+                "CRITICAL": "red,bg_white",
+            },
+        )
+    )
+    logger = colorlog.getLogger("config")
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
 
-logger = logging.getLogger("config")
+    # Set up the root logger too
+    root_logger = colorlog.getLogger()
+    root_logger.addHandler(handler)
+    root_logger.setLevel(logging.INFO)
+else:
+    # Fall back to basic configuration if colorlog is not available
+    logging.basicConfig(level=logging.INFO, force=True)
+    logger = logging.getLogger("config")
 
 BASE_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 dotenv_path = os.path.join(BASE_DIR, ".env")
@@ -278,7 +310,7 @@ if LIGHTRAG_LITELLM_INFERENCE_API_BASE:
 else:
     logger.debug("LIGHTRAG_LITELLM_INFERENCE_API_BASE: not set")
 
-#---------------/Secrets---------------
+# ---------------/Secrets---------------
 
 
 # ---------------Configurations---------------
@@ -329,12 +361,18 @@ assert (
 logger.debug(f"ENABLE_CHAT_AUTO_SELECT: {ENABLE_CHAT_AUTO_SELECT}")
 
 # Redis lock configuration
-AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX = os.environ.get("AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX", "etl_lock_conv_")
-assert AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX, "AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX environment variable is not set"
+AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX = os.environ.get(
+    "AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX", "etl_lock_conv_"
+)
+assert (
+    AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX
+), "AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX environment variable is not set"
 logger.debug("AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX: set")
 
 AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY = int(os.environ.get("AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY", 3600))
-assert AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY, "AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY environment variable is not set"
+assert (
+    AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY
+), "AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY environment variable is not set"
 logger.debug("AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY: set")
 
 # ---------------/Configurations---------------

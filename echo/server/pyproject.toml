@@ -1,14 +1,13 @@
 [project]
 name = "Dembrane"
-version = "1.1.0"
+version = "0.0.1"
 description = "Python project for the Dembrane API"
-requires-python = ">= 3.11"
+requires-python = "== 3.11"
 dependencies = [
     # API server
     "fastapi==0.109.*",
     "uvicorn[standard]==0.27.*",
     "python-multipart==0.0.*",
-    "celery[redis]>=5.4.0",
     # Langchain
     "langchain==0.1.*",
     "langchain-community==0.0.*",
@@ -37,8 +36,10 @@ dependencies = [
     # Other
     "backoff==2.2.*",
     "aiofiles==23.2.*",
-    "sentry-sdk[sqlalchemy,fastapi,celery]",
+    "sentry-sdk[sqlalchemy,fastapi]",
     "python-jose[cryptography]>=3.3.0",
+    # Logging
+    "colorlog>=6.9.0",
     # Types
     "types-aiofiles==23.2.*",
     "types-tqdm > 4",
@@ -78,6 +79,13 @@ dependencies = [
     "pytest-mock",
     "pytest-xdist>=3.6.1",
     "pytest-asyncio",
+    # Dramatiq
+    "dramatiq[redis,watch]==1.17.*",
+    "sentry-dramatiq==0.3.*",
+    "apscheduler==3.11.*",
+    "dramatiq-workflow==0.2.*",
+    "lz4==4.4.*",
+    "gevent>=25.4.2",
 ]
 
 [tool.setuptools]

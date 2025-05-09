@@ -39,15 +39,16 @@ Note:
     - File uploads from FastAPI have a default size limit of 100MB
     - The module automatically sanitizes file names and handles S3 key formatting
 """
+
 import io
 import logging
 from urllib.parse import urlparse
 
-import boto3  # type: ignore
+import boto3
 import requests
 from pydub import AudioSegment
 from fastapi import UploadFile
-from botocore.response import StreamingBody  # type: ignore
+from botocore.response import StreamingBody
 
 from dembrane.utils import generate_uuid
 from dembrane.config import (
@@ -186,12 +187,13 @@ def delete_from_s3(file_name: str) -> None:
 
 def get_file_size_from_s3_mb(file_name: str) -> float:
     file_name = get_sanitized_s3_key(file_name)
-    
+
     # Use head_object to get metadata about the object
     response = s3_client.head_object(Bucket=STORAGE_S3_BUCKET, Key=file_name)
-    
+
     # Return the size of the object in bytes
-    return response['ContentLength']/(1024*1024)
+    return response["ContentLength"] / (1024 * 1024)
+
 
 def save_audio_to_s3(audio: AudioSegment, file_name: str, public: bool = False) -> str:
     """

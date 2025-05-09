@@ -74,6 +74,32 @@ regardless of what you explicitly provide in your API request.
 
 
 def test_collect_unfinished_conversations():
+    fail_p = create_project(
+        "fail_p",
+        "en",
+        additional_data={"is_enhanced_audio_processing_enabled": False},
+    )
+
+    fail_c = create_conversation(fail_p["id"], "fail_c")
+
+    fail_timestamp = (get_utc_timestamp() - timedelta(minutes=16)).isoformat()
+    fail_cc = directus.create_item(
+        "conversation_chunk",
+        {
+            "transcript": "fail_cc",
+            "conversation_id": fail_c["id"],
+            "timestamp": fail_timestamp,
+        },
+    )["data"]
+
+    res = collect_unfinished_conversations()
+
+    assert fail_c["id"] not in res
+
+    delete_conversation_chunk(fail_cc["id"])
+    delete_conversation(fail_c["id"])
+    delete_project(fail_p["id"])
+
     p = create_project(
         "test_p",
         "en",
@@ -84,7 +110,7 @@ def test_collect_unfinished_conversations():
 
     res = collect_unfinished_conversations()
 
-    assert c["id"] in res
+    assert c["id"] in res, "Conversation with no chunks"
 
     delete_conversation(c["id"])
 
@@ -100,7 +126,7 @@ def test_collect_unfinished_conversations():
     )["data"]
     res = collect_unfinished_conversations()
 
-    assert c["id"] in res
+    assert c["id"] in res, "Conversation with one chunk (>1hr old)"
 
     cc_timestamp = (get_utc_timestamp() - timedelta(minutes=16)).isoformat()
     cc2 = directus.create_item(
@@ -114,7 +140,7 @@ def test_collect_unfinished_conversations():
 
     res = collect_unfinished_conversations()
 
-    assert c["id"] in res
+    assert c["id"] in res, "TEST 15min: Conversation with two chunks (1hr old, 16min old)"
 
     logger.info("current time = %s", get_utc_timestamp())
     cc_timestamp = (get_utc_timestamp() - timedelta(minutes=10)).isoformat()
@@ -129,7 +155,9 @@ def test_collect_unfinished_conversations():
     )["data"]
     res = collect_unfinished_conversations()
 
-    assert c["id"] not in res
+    assert (
+        c["id"] not in res
+    ), "TEST 10min: Conversation with two chunks (1hr old, 16min old, 10min old)"
 
     delete_conversation_chunk(cc["id"])
     delete_conversation_chunk(cc2["id"])
