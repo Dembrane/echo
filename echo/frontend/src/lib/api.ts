@@ -832,8 +832,42 @@ export const unsubscribeParticipant = async (
   token: string,
   email_opt_in: boolean
 ) => {
-  return apiNoAuth.patch(`/participant/projects/${projectId}/contacts/unsubscribe`, {
+  return apiNoAuth.post(`/participant/${projectId}/report/unsubscribe`, {
     token,
     email_opt_in,
   });
+};
+
+// subscribe to notifications
+export const submitNotificationParticipant = async (
+  emails: string[],
+  projectId: string,
+  conversationId: string
+) => {
+  try {
+    const response = await apiNoAuth.post('/participant/report/subscribe', {
+      emails,
+      project_id: projectId,
+      conversation_id: conversationId
+    })
+    return response;
+  } catch (error) {
+    throw new Error("Failed to subscribe to notifications");
+  }
+};
+
+// check if the participant is eligible to unsubscribe
+export const checkUnsubscribeStatus = async (
+  token: string,
+  projectId: string
+) => {
+  try {
+    const response = await apiNoAuth.get('/participant/report/unsubscribe/eligibility', {
+      params: { token, project_id: projectId },
+    });
+
+    return response;
+  } catch (error) {
+    throw new Error('No matching subscription found.');
+  }
 };
