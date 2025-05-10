@@ -12,9 +12,13 @@ from dembrane.rag_manager import RAGManager, get_rag
 from dembrane.postgresdb_manager import PostgresDBManager
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.audio_lightrag.utils.lightrag_utils import (
+    is_valid_uuid,
     upsert_transcript,
     fetch_query_transcript,
+    delete_transcript_by_doc_id,
+    delete_segment_from_directus,
     get_segment_from_project_ids,
+    get_segment_from_conversation_ids,
     get_segment_from_conversation_chunk_ids,
 )
 
@@ -230,4 +234,34 @@ async def get_lightrag_prompt(payload: GetLightragQueryRequest,
     except Exception as e:
         logger.exception("Query streaming operation failed")
         raise HTTPException(status_code=500, detail=str(e)) from e
-    
+
+class DeleteConversationRequest(BaseModel):
+    conversation_ids: list[str]
+
+@StatelessRouter.post("/rag/delete_conversation")
+async def delete_conversation(payload: DeleteConversationRequest,
+                              session: DependencyDirectusSession  #Needed for fake auth
+                              ) -> None:
+    session = session
+
+    conversation_ids = payload.conversation_ids
+    for id in conversation_ids:
+        if not is_valid_uuid(id):
+            raise HTTPException(status_code=400, detail="Invalid conversation ID")
+    # Initialize RAG
+    if not RAGManager.is_initialized():
+        await RAGManager.initialize()
+    rag = get_rag()
+    await initialize_pipeline_status()
+    postgres_db = await PostgresDBManager.get_initialized_db()
+    try:
+        lightrag_doc_ids = await get_segment_from_conversation_ids(postgres_db, conversation_ids)
+    except Exception as e:
+        logger.exception("Failed to get segment from conversation ids. Check PGSQ")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+    for doc_id in lightrag_doc_ids:
+        await rag.adelete_by_doc_id(str(doc_id))
+        await delete_transcript_by_doc_id(postgres_db, str(doc_id))
+        delete_segment_from_directus(str(doc_id))
+    logger.info(f"Deleted {len(lightrag_doc_ids)} document(s) from RAG")
