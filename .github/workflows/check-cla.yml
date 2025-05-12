@@ -2,6 +2,8 @@ name: check-cla
 
 on:
   pull_request:
+    branches:
+      - main
   merge_group:
     branches:
       - main
@@ -14,11 +16,12 @@ jobs:
   check-cla:
     runs-on: ubuntu-latest
     steps:
-      - uses: dembrane/cla-bot@v0.0.2
+      - uses: dembrane/cla-bot@v0.0.3
         id: check
         continue-on-error: true
 
-      - if: steps.check.outcome == 'failure' || steps.check.outputs.missing
+      - name: Post CLA comment on PR
+        if: ${{ github.event_name == 'pull_request' && (steps.check.outcome == 'failure' || steps.check.outputs.missing) }}
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           message: |
@@ -28,7 +31,8 @@ jobs:
 
             Please [review the CLA](https://github.com/dembrane/echo/blob/main/CLA.md), and sign it by adding your GitHub username to [the contributors.yml file](https://github.com/${{github.event.pull_request.head.repo.full_name}}/blob/${{github.head_ref}}/contributors.yml). Thanks!
 
-      - if: steps.check.outcome == 'success' && !steps.check.outputs.missing
+      - name: Remove CLA comment on PR
+        if: ${{ github.event_name == 'pull_request' && steps.check.outcome == 'success' && !steps.check.outputs.missing }}
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           delete: true

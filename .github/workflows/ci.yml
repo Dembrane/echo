@@ -2,13 +2,15 @@ name: ci
 
 on:
   workflow_dispatch:
+  # on pull request, we will run only the ci checks
   pull_request:
     branches:
       - main
-  push:
+  merge_group:
     branches:
       - main
-  merge_group:
+  # on push, we will run ci then also push built images
+  push:
     branches:
       - main
 
