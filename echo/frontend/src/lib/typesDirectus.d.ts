@@ -459,6 +459,7 @@ type DirectusUsers = {
   theme_light_overrides?: unknown | null;
   title?: string | null;
   token?: string | null;
+  disable_create_project?: boolean | null;
 };
 
 type DirectusVersions = {
