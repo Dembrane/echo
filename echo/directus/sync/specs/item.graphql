@@ -1361,6 +1361,11 @@ type directus_users {
   theme_light_overrides_func: count_functions
   theme_dark_overrides: JSON
   theme_dark_overrides_func: count_functions
+
+  """
+  If this is set, user won't be able to create projects using the Dashboard. Limitation: Internally / using the API they still can
+  """
+  disable_create_project: Boolean
   accounts(filter: account_directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [account_directus_users]
   accounts_func: count_functions
   projects(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project]
@@ -3019,6 +3024,11 @@ input create_directus_users_input {
   theme_light: String
   theme_light_overrides: JSON
   theme_dark_overrides: JSON
+
+  """
+  If this is set, user won't be able to create projects using the Dashboard. Limitation: Internally / using the API they still can
+  """
+  disable_create_project: Boolean
   accounts: [create_account_directus_users_input]
   projects: [create_project_input]
   policies: [create_directus_access_input]
@@ -3527,6 +3537,7 @@ input directus_users_filter {
   theme_light_overrides_func: count_function_filter_operators
   theme_dark_overrides: string_filter_operators
   theme_dark_overrides_func: count_function_filter_operators
+  disable_create_project: boolean_filter_operators
   accounts: account_directus_users_filter
   accounts_func: count_function_filter_operators
   projects: project_filter
@@ -4103,6 +4114,11 @@ input update_directus_users_input {
   theme_light: String
   theme_light_overrides: JSON
   theme_dark_overrides: JSON
+
+  """
+  If this is set, user won't be able to create projects using the Dashboard. Limitation: Internally / using the API they still can
+  """
+  disable_create_project: Boolean
   accounts: [update_account_directus_users_input]
   projects: [update_project_input]
   policies: [update_directus_access_input]

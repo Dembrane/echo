@@ -19503,6 +19503,11 @@
           "theme_dark_overrides": {
             "nullable": true
           },
+          "disable_create_project": {
+            "nullable": true,
+            "description": "If this is set, user won't be able to create projects using the Dashboard. Limitation: Internally / using the API they still can",
+            "type": "boolean"
+          },
           "accounts": {
             "nullable": true,
             "type": "array",
