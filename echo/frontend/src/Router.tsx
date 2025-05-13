@@ -41,6 +41,7 @@ import { ErrorPage } from "./components/error/ErrorPage";
 import { ParticipantReport } from "./routes/participant/ParticipantReport";
 import { ProjectUnsubscribe } from "./routes/project/unsubscribe/ProjectUnsubscribe";
 import DebugPage from "./routes/Debug";
+import { DEBUG_MODE } from "./config";
 
 export const mainRouter = createBrowserRouter([
   {
@@ -202,10 +203,14 @@ export const mainRouter = createBrowserRouter([
                     path: "report",
                     element: <ProjectReportRoute />,
                   },
-                  {
-                    path: "debug",
-                    element: <DebugPage />,
-                  },
+                  ...(DEBUG_MODE
+                    ? [
+                        {
+                          path: "debug",
+                          element: <DebugPage />,
+                        },
+                      ]
+                    : []),
                 ],
               },
             ],

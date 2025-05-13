@@ -2,8 +2,17 @@ import { Button, Stack, Title } from "@mantine/core";
 import { toast } from "@/components/common/Toaster";
 import { useRef } from "react";
 import { useParams } from "react-router-dom";
-import { useProjectById, useProjectChats } from "@/lib/query";
-import { ENABLE_CHAT_AUTO_SELECT } from "@/config";
+import { useCurrentUser, useProjectById, useProjectChats } from "@/lib/query";
+import {
+  ENABLE_CHAT_AUTO_SELECT,
+  API_BASE_URL,
+  DIRECTUS_PUBLIC_URL,
+  ADMIN_BASE_URL,
+  PARTICIPANT_BASE_URL,
+  BUILD_VERSION,
+  DIRECTUS_CONTENT_PUBLIC_URL,
+  SUPPORTED_LANGUAGES,
+} from "@/config";
 
 export default function DebugPage() {
   const ref = useRef<number>(0);
@@ -27,9 +36,11 @@ export default function DebugPage() {
 
   const { projectId } = useParams();
 
+  const { data: user } = useCurrentUser();
+
   const { data: project } = useProjectById({ projectId: projectId! });
 
-  const chatsQuery = useProjectChats(projectId!, {
+  const { data: chats } = useProjectChats(projectId!, {
     filter: {
       project_id: {
         _eq: projectId,
@@ -42,7 +53,19 @@ export default function DebugPage() {
   });
 
   const variables = {
-    ENABLE_CHAT_AUTO_SELECT,
+    DEBUG_MODE: true,
+    BUILD_VERSION,
+    ff: {
+      ENABLE_CHAT_AUTO_SELECT,
+      SUPPORTED_LANGUAGES,
+    },
+    urls: {
+      API_BASE_URL,
+      DIRECTUS_PUBLIC_URL,
+      DIRECTUS_CONTENT_PUBLIC_URL,
+      ADMIN_BASE_URL,
+      PARTICIPANT_BASE_URL,
+    },
   };
 
   return (
@@ -50,7 +73,6 @@ export default function DebugPage() {
       <Stack>
         <Title order={1}>Debug</Title>
         <Stack>
-          <Title order={1}>Variables</Title>
           <pre>{JSON.stringify(variables, null, 2)}</pre>
         </Stack>
         <div>
@@ -58,12 +80,16 @@ export default function DebugPage() {
         </div>
       </Stack>
       <Stack>
+        <Title order={1}>User</Title>
+        <pre>{JSON.stringify(user, null, 2)}</pre>
+      </Stack>
+      <Stack>
         <Title order={1}>Project</Title>
         <pre>{JSON.stringify(project, null, 2)}</pre>
       </Stack>
       <Stack>
         <Title order={1}>Chats (NE)</Title>
-        <pre>{JSON.stringify(chatsQuery.data, null, 2)}</pre>
+        <pre>{JSON.stringify(chats, null, 2)}</pre>
       </Stack>
     </Stack>
   );
