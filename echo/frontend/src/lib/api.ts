@@ -856,6 +856,17 @@ export const submitNotificationParticipant = async (
   }
 };
 
+export const deleteConversationById = async (conversationId: string) => {
+  try {
+    const response = await api.delete(`/conversations/${conversationId}`);
+    return response;
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.detail || 'Failed to delete conversation';
+    throw new Error(message);
+  }
+};
+
 // check if the participant is eligible to unsubscribe
 export const checkUnsubscribeStatus = async (
   token: string,
