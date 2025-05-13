@@ -48,6 +48,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 
   const [showProgress, setShowProgress] = useState(false);
   const [progressValue, setProgressValue] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const addChatMessageMutation = useAddChatMessageMutation();
   const lockConversationsMutation = useLockConversationsMutation();
@@ -155,16 +156,11 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 
   const customHandleSubmit = async () => {
     lastInput.current = input;
+    setIsSubmitting(true);
 
     try {
       // Lock conversations first
       await lockConversationsMutation.mutateAsync({ chatId });
-
-      // Wait for queries to settle
-      await Promise.all([
-        chatHistoryQuery.refetch(),
-        chatContextQuery.refetch(),
-      ]);
 
       // Submit the chat
       handleSubmit();
@@ -194,6 +190,8 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
         setShowProgress(false);
         setProgressValue(0);
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -221,6 +219,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
   return {
     isInitializing: chatHistoryQuery.isLoading,
     isLoading,
+    isSubmitting,
     status,
     messages,
     contextToBeAdded,
@@ -248,6 +247,7 @@ export const ProjectChatRoute = () => {
   const {
     isInitializing,
     isLoading,
+    isSubmitting,
     status,
     messages,
     input,
@@ -407,7 +407,7 @@ export const ProjectChatRoute = () => {
         </Stack>
       </Box>
       {/* Footer */}
-      <Box className="bottom-0 w-full border-t bg-white py-4 lg:sticky">
+      <Box className="bottom-0 w-full border-t bg-white py-4 md:sticky">
         <Stack>
           {(!ENABLE_CHAT_AUTO_SELECT
             ? noConversationsSelected
@@ -460,7 +460,7 @@ export const ProjectChatRoute = () => {
                   autosize
                   value={input}
                   onChange={handleInputChange}
-                  disabled={isLoading}
+                  disabled={isLoading || isSubmitting}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
@@ -483,7 +483,7 @@ export const ProjectChatRoute = () => {
                       handleSubmit();
                     }}
                     rightSection={<IconSend size={24} />}
-                    disabled={input.trim() === "" || isLoading}
+                    disabled={input.trim() === "" || isLoading || isSubmitting}
                   >
                     <Trans>Send</Trans>
                   </Button>
