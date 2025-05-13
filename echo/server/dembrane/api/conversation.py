@@ -586,8 +586,8 @@ async def delete_conversation(
             session=auth,
         )
         # Run Directus deletion
-        result = directus.delete_item("conversation", conversation_id)
-        return result
+        directus.delete_item("conversation", conversation_id)
+        return {"status": "success", "message": "Conversation deleted successfully"}
     except Exception as e:
         logger.exception(f"Error deleting conversation {conversation_id}: {e}")
         raise HTTPException(
