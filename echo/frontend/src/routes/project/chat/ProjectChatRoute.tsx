@@ -407,7 +407,7 @@ export const ProjectChatRoute = () => {
         </Stack>
       </Box>
       {/* Footer */}
-      <Box className="bottom-0 w-full border-t bg-white py-4 lg:sticky">
+      <Box className="bottom-0 w-full border-t bg-white py-4 md:sticky">
         <Stack>
           {(!ENABLE_CHAT_AUTO_SELECT
             ? noConversationsSelected
