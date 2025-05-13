@@ -41,7 +41,7 @@ def _read_mp3_from_s3_and_get_wav_file_size(uri: str, format: str = "mp3") -> fl
         return wav_size_mb
 
     except Exception as e:
-        raise e
+        raise Exception(f"Error calculating WAV size for {uri}: {str(e)}") from e
 
 def get_audio_file_size(path: str) -> float:
     size_mb = os.path.getsize(path) / (1024 * 1024)  # Convert bytes to MB
