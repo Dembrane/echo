@@ -188,10 +188,8 @@ def delete_from_s3(file_name: str) -> None:
 def get_file_size_from_s3_mb(file_name: str) -> float:
     file_name = get_sanitized_s3_key(file_name)
 
-    # Use head_object to get metadata about the object
     response = s3_client.head_object(Bucket=STORAGE_S3_BUCKET, Key=file_name)
 
-    # Return the size of the object in bytes
     return response["ContentLength"] / (1024 * 1024)
 
 
@@ -213,3 +211,36 @@ def save_audio_to_s3(audio: AudioSegment, file_name: str, public: bool = False) 
     file_like = UploadFile(filename=file_name, file=audio_buffer)
     s3_url = save_to_s3_from_file_like(file_like, file_name, public)
     return s3_url
+
+def get_uncompressed_audio_file_size_from_s3_mb(uri: str, format: str = "mp3") -> float:
+    """
+    Calculate the size of an audio file stored in S3 when converted to MP3 format.
+    This is useful for estimating the memory usage when loading audio files for processing.
+    
+    Args:
+        uri (str): The URI of the audio file in S3
+        format (str): The format of the stored audio file (default: "mp3")
+        
+    Returns:
+        float: The size of the audio in MP3 format in MB
+    """
+    audio_stream = get_stream_from_s3(uri)
+    
+    try:
+        # Load the audio file from S3 into an AudioSegment
+        audio = AudioSegment.from_file(io.BytesIO(audio_stream.read()), format=format)
+        
+        # Export to WAV to calculate uncompressed size
+        wav_buffer = io.BytesIO()
+        audio.export(wav_buffer, format="wav")
+
+        # Calculate size in MB
+        wav_size_mb = len(wav_buffer.getvalue()) / (1024 * 1024)
+
+        return wav_size_mb
+
+    except Exception as e:
+        logger.warning(f"Error calculating MP3 audio size for {uri}: {str(e)}")
+        # Fallback to the compressed size with a small multiplier as estimation
+        return get_file_size_from_s3_mb(uri) * 1.5
+

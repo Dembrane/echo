@@ -2,9 +2,14 @@ import os
 import base64
 from io import BytesIO
 
+import pandas as pd
 from pydub import AudioSegment
 
-from dembrane.s3 import save_audio_to_s3, get_stream_from_s3, get_file_size_from_s3_mb
+from dembrane.s3 import (
+    save_audio_to_s3,
+    get_stream_from_s3,
+    get_uncompressed_audio_file_size_from_s3_mb,
+)
 from dembrane.directus import directus
 
 
@@ -22,13 +27,14 @@ def wav_to_str(wav_input: AudioSegment) -> str:
 def process_audio_files(
     unprocessed_chunk_file_uri_li: list[str],
     max_size_mb: float, configid: str, counter: int, 
+    process_tracker_df: pd.DataFrame,
     format: str = "mp3"
 ) -> tuple[list[str], list[tuple[str, str]], int]:
     """
     Creates segments from chunks in ogg format. 
     A segment is maximum mb permitted in the model being used.
     Ensures all files are segmented close to max_size_mb.
-    **** File might be a little larger than max limit
+    **** File might be a little larger than max_size_mb
     Returns:
         unprocessed_chunk_file_uri_li: list[str]:
             List of unprocessed chunk file uris
@@ -37,10 +43,10 @@ def process_audio_files(
         counter: int:
             Counter for the next segment id
     """
-    chunk_id_2_size = {uri.split('/')[-1][37:73]:get_file_size_from_s3_mb(uri) 
-     for uri in unprocessed_chunk_file_uri_li}
-    chunk_id_2_uri = {uri.split('/')[-1][37:73]:uri 
-                      for uri in unprocessed_chunk_file_uri_li}
+    process_tracker_df = process_tracker_df[process_tracker_df['path'].isin(unprocessed_chunk_file_uri_li)]
+    process_tracker_df = process_tracker_df.sort_values(by='timestamp')
+    chunk_id_2_uri = dict(process_tracker_df[['chunk_id', 'path']].values)
+    chunk_id_2_size = {chunk_id: get_uncompressed_audio_file_size_from_s3_mb(uri) for chunk_id, uri in chunk_id_2_uri.items()}
     chunk_id = list(chunk_id_2_size.keys())[0]
     chunk_id_2_segment = []
     segment_2_path = {}

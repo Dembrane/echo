@@ -20,10 +20,8 @@ logger = logging.getLogger(__name__)
 class AudioETLPipeline:
     def __init__(
         self,
-        process_tracker: ProcessTracker,
-        # config_path: str = "server/dembrane/audio_lightrag/configs/audio_etl_pipeline_config.yaml",
-        # config_path: str = os.path.join(BASE_DIR, "dembrane/audio_lightrag/configs/audio_etl_pipeline_config.yaml"),
-    ) -> None:
+        process_tracker: ProcessTracker
+        ) -> None:
         """
         Initialize the AudioETLPipeline.
 
@@ -74,6 +72,7 @@ class AudioETLPipeline:
                         configid=self.configid,
                         max_size_mb=float(self.max_size_mb),
                         counter=counter,
+                        process_tracker_df=transform_audio_process_tracker_df
                     )
                     
                     for chunk_id, segment_id in chunk_id_2_segment_temp:
