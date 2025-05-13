@@ -27,7 +27,6 @@ class AudioETLPipeline:
 
         Args:
         - process_tracker (ProcessTracker): Instance to track the process.
-        - config_path (str): Path to the configuration file.
 
         Returns:
         - None
