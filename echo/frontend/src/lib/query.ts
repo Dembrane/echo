@@ -55,8 +55,7 @@ import {
   registerUser,
   registerUserVerify,
   updateItem,
-  updateItems,
-  deleteItems
+  deleteItems,
 } from "@directus/sdk";
 import { ADMIN_BASE_URL } from "@/config";
 import { AxiosError } from "axios";
@@ -714,23 +713,27 @@ export const useUpdateConversationTagsMutation = () => {
 
       // slightly esoteric, but basically we only want to delete if there are any tags to delete
       // otherwise, directus doesn't accept an empty array
-      const deletePromise = needToDelete.length > 0 ? directus.request(
-        deleteItems("conversation_project_tag",
-          needToDelete.map((tag) => tag.id),
-        ),
-        )
-      : Promise.resolve();
+      const deletePromise =
+        needToDelete.length > 0
+          ? directus.request(
+              deleteItems(
+                "conversation_project_tag",
+                needToDelete.map((tag) => tag.id),
+              ),
+            )
+          : Promise.resolve();
 
       // same deal for creating
       const createPromise =
         needToCreate.length > 0
           ? directus.request(
-              createItems("conversation_project_tag",
+              createItems(
+                "conversation_project_tag",
                 needToCreate.map((tagId) => ({
-            conversation_id: {
-              id: conversationId,
-            } as Conversation,
-            project_tag_id: {
+                  conversation_id: {
+                    id: conversationId,
+                  } as Conversation,
+                  project_tag_id: {
                     id: tagId,
                   } as ProjectTag,
                 })),
