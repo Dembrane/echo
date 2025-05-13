@@ -45,6 +45,7 @@ import {
   Query,
   aggregate,
   createItem,
+  createItems,
   deleteItem,
   passwordRequest,
   passwordReset,
@@ -55,6 +56,7 @@ import {
   registerUserVerify,
   updateItem,
   updateItems,
+  deleteItems
 } from "@directus/sdk";
 import { ADMIN_BASE_URL } from "@/config";
 import { AxiosError } from "axios";
@@ -676,12 +678,72 @@ export const useUpdateConversationTagsMutation = () => {
         console.error(error);
       }
 
+      const tagsRequest = await directus.request(
+        readItems("conversation_project_tag", {
+          fields: [
+            "id",
+            {
+              project_tag_id: ["id"],
+            },
+            {
+              conversation_id: ["id"],
+            },
+          ],
+          filter: {
+            conversation_id: { _eq: conversationId },
+          },
+        }),
+      );
+
+      const needToDelete = tagsRequest.filter(
+        (conversationProjectTag) =>
+          conversationProjectTag.project_tag_id &&
+          !validTagsIds.includes(
+            (conversationProjectTag.project_tag_id as ProjectTag).id,
+          ),
+      );
+
+      const needToCreate = validTagsIds.filter(
+        (tagId) =>
+          !tagsRequest.some(
+            (conversationProjectTag) =>
+              (conversationProjectTag.project_tag_id as ProjectTag).id ===
+              tagId,
+          ),
+      );
+
+      // slightly esoteric, but basically we only want to delete if there are any tags to delete
+      // otherwise, directus doesn't accept an empty array
+      const deletePromise = needToDelete.length > 0 ? directus.request(
+        deleteItems("conversation_project_tag",
+          needToDelete.map((tag) => tag.id),
+        ),
+        )
+      : Promise.resolve();
+
+      // same deal for creating
+      const createPromise =
+        needToCreate.length > 0
+          ? directus.request(
+              createItems("conversation_project_tag",
+                needToCreate.map((tagId) => ({
+            conversation_id: {
+              id: conversationId,
+            } as Conversation,
+            project_tag_id: {
+                    id: tagId,
+                  } as ProjectTag,
+                })),
+              ),
+            )
+          : Promise.resolve();
+
+      // await both promises
+      await Promise.all([deletePromise, createPromise]);
+
       return directus.request<Conversation>(
-        updateItem("conversation", conversationId, {
-          tags: validTagsIds.map((tagId) => ({
-            project_tag_id: tagId,
-            conversation_id: conversationId,
-          })),
+        readItem("conversation", conversationId, {
+          fields: ["*"],
         }),
       );
     },
@@ -1329,8 +1391,16 @@ export const useProjectChatContext = (chatId: string) => {
 export const useAddChatContextMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { chatId: string; conversationId?: string; auto_select_bool?: boolean }) =>
-      addChatContext(payload.chatId, payload.conversationId, payload.auto_select_bool),
+    mutationFn: (payload: {
+      chatId: string;
+      conversationId?: string;
+      auto_select_bool?: boolean;
+    }) =>
+      addChatContext(
+        payload.chatId,
+        payload.conversationId,
+        payload.auto_select_bool,
+      ),
     onError: (error) => {
       if (error instanceof AxiosError) {
         alert(
@@ -1352,8 +1422,16 @@ export const useAddChatContextMutation = () => {
 export const useDeleteChatContextMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { chatId: string; conversationId?: string; auto_select_bool?: boolean }) =>
-      deleteChatContext(payload.chatId, payload.conversationId, payload.auto_select_bool),
+    mutationFn: (payload: {
+      chatId: string;
+      conversationId?: string;
+      auto_select_bool?: boolean;
+    }) =>
+      deleteChatContext(
+        payload.chatId,
+        payload.conversationId,
+        payload.auto_select_bool,
+      ),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({
         queryKey: ["chats", "context", vars.chatId],
@@ -1535,7 +1613,10 @@ export const useUpdateProjectReportMutation = () => {
     }) => directus.request(updateItem("project_report", reportId, payload)),
     onSuccess: (_, vars) => {
       const projectId = vars.payload.project_id;
-      const projectIdValue = typeof projectId === 'object' && projectId !== null ? projectId.id : projectId;
+      const projectIdValue =
+        typeof projectId === "object" && projectId !== null
+          ? projectId.id
+          : projectId;
 
       queryClient.invalidateQueries({
         queryKey: ["projects", projectIdValue, "report"],
@@ -1999,15 +2080,12 @@ export const useConversationUploader = () => {
   };
 };
 
-export const useCheckUnsubscribeStatus = (
-  token: string,
-  projectId: string,
-) => {
+export const useCheckUnsubscribeStatus = (token: string, projectId: string) => {
   return useQuery<{ eligible: boolean }>({
-    queryKey: ['checkUnsubscribe', token, projectId],
+    queryKey: ["checkUnsubscribe", token, projectId],
     queryFn: async () => {
       if (!token || !projectId) {
-        throw new Error('Invalid or missing unsubscribe link.');
+        throw new Error("Invalid or missing unsubscribe link.");
       }
       const response = await checkUnsubscribeStatus(token, projectId);
       return response.data;
@@ -2052,7 +2130,11 @@ export const useSubmitNotificationParticipant = () => {
       projectId: string;
       conversationId: string;
     }) => {
-      return await submitNotificationParticipant(emails, projectId, conversationId);
+      return await submitNotificationParticipant(
+        emails,
+        projectId,
+        conversationId,
+      );
     },
     retry: 2,
     onError: (error) => {
