@@ -16,6 +16,7 @@ import {
   checkUnsubscribeStatus,
   createProjectReport,
   deleteChatContext,
+  deleteConversationById,
   deleteResourceById,
   generateProjectLibrary as generateProjectLibrary,
   generateProjectView,
@@ -763,8 +764,7 @@ export const useUpdateConversationTagsMutation = () => {
 export const useDeleteConversationByIdMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (conversationId: string) =>
-      directus.request(deleteItem("conversation", conversationId)),
+    mutationFn: deleteConversationById,
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["projects"],
@@ -773,6 +773,9 @@ export const useDeleteConversationByIdMutation = () => {
         queryKey: ["conversations"],
       });
       toast.success("Conversation deleted successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
     },
   });
 };

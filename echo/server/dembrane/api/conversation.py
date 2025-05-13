@@ -22,7 +22,11 @@ from dembrane.audio_utils import (
 )
 from dembrane.quote_utils import count_tokens
 from dembrane.reply_utils import generate_reply_for_conversation
-from dembrane.api.stateless import generate_summary
+from dembrane.api.stateless import (
+    DeleteConversationRequest,
+    generate_summary,
+    delete_conversation as delete_conversation_from_lightrag,
+)
 from dembrane.api.exceptions import (
     NoContentFoundException,
     ConversationNotFoundException,
@@ -557,3 +561,36 @@ async def retranscribe_conversation(
             "message": "Failed to retranscribe conversation",
             "error_detail": str(e),
         }
+
+
+@ConversationRouter.delete("/{conversation_id}")
+async def delete_conversation(
+    conversation_id: str,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """
+    Delete a conversation and its associated documents from RAG, Postgres, and Directus.
+
+    Args:
+        conversation_id: ID of the conversation to delete
+        auth: Authentication session to verify ownership
+
+    Returns:
+        Dictionary with status info from Directus deletion
+    """
+    raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
+    try:
+        # Run RAG deletion (documents, transcripts, segments)
+        await delete_conversation_from_lightrag(
+            DeleteConversationRequest(conversation_ids=[conversation_id]),
+            session=auth,
+        )
+        # Run Directus deletion
+        directus.delete_item("conversation", conversation_id)
+        return {"status": "success", "message": "Conversation deleted successfully"}
+    except Exception as e:
+        logger.exception(f"Error deleting conversation {conversation_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to delete conversation: {str(e)}"
+        ) from e
