@@ -674,7 +674,6 @@ export const useUpdateConversationTagsMutation = () => {
         validTagsIds = validTags.map((tag) => tag.id);
       } catch (error) {
         validTagsIds = [];
-        console.error(error);
       }
 
       const tagsRequest = await directus.request(
