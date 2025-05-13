@@ -188,10 +188,8 @@ def delete_from_s3(file_name: str) -> None:
 def get_file_size_from_s3_mb(file_name: str) -> float:
     file_name = get_sanitized_s3_key(file_name)
 
-    # Use head_object to get metadata about the object
     response = s3_client.head_object(Bucket=STORAGE_S3_BUCKET, Key=file_name)
 
-    # Return the size of the object in bytes
     return response["ContentLength"] / (1024 * 1024)
 
 
@@ -213,3 +211,4 @@ def save_audio_to_s3(audio: AudioSegment, file_name: str, public: bool = False) 
     file_like = UploadFile(filename=file_name, file=audio_buffer)
     s3_url = save_to_s3_from_file_like(file_like, file_name, public)
     return s3_url
+
