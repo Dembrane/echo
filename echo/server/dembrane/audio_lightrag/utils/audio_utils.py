@@ -1,12 +1,47 @@
+import io
 import os
 import base64
 from io import BytesIO
 
+import pandas as pd
 from pydub import AudioSegment
 
-from dembrane.s3 import save_audio_to_s3, get_stream_from_s3, get_file_size_from_s3_mb
+from dembrane.s3 import (
+    save_audio_to_s3,
+    get_stream_from_s3,
+)
 from dembrane.directus import directus
 
+
+def _read_mp3_from_s3_and_get_wav_file_size(uri: str, format: str = "mp3") -> float:
+    """
+    Calculate the size of an audio file stored in S3 when converted to WAV format.
+    This is useful for estimating the memory usage when loading audio files for processing.
+    
+    Args:
+        uri (str): The URI of the audio file in S3
+        format (str): The format of the stored audio file (default: "mp3")
+        
+    Returns:
+        float: The size of the audio in WAV format in MB
+    """
+    audio_stream = get_stream_from_s3(uri)
+    
+    try:
+        # Load the audio file from S3 into an AudioSegment
+        audio = AudioSegment.from_file(io.BytesIO(audio_stream.read()), format=format)
+        
+        # Export to WAV to calculate uncompressed size
+        wav_buffer = io.BytesIO()
+        audio.export(wav_buffer, format="wav")
+
+        # Calculate size in MB
+        wav_size_mb = len(wav_buffer.getvalue()) / (1024 * 1024)
+
+        return wav_size_mb
+
+    except Exception as e:
+        raise Exception(f"Error calculating WAV size for {uri}: {str(e)}") from e
 
 def get_audio_file_size(path: str) -> float:
     size_mb = os.path.getsize(path) / (1024 * 1024)  # Convert bytes to MB
@@ -22,13 +57,27 @@ def wav_to_str(wav_input: AudioSegment) -> str:
 def process_audio_files(
     unprocessed_chunk_file_uri_li: list[str],
     max_size_mb: float, configid: str, counter: int, 
+    process_tracker_df: pd.DataFrame,
     format: str = "mp3"
 ) -> tuple[list[str], list[tuple[str, str]], int]:
     """
     Creates segments from chunks in ogg format. 
     A segment is maximum mb permitted in the model being used.
     Ensures all files are segmented close to max_size_mb.
-    **** File might be a little larger than max limit
+    **** File might be a little larger than max_size_mb
+    Args:
+        unprocessed_chunk_file_uri_li (list[str]):
+            List of unprocessed chunk file uris in order of processing
+        max_size_mb (float):
+            Maximum size of a segment in MB
+        configid (str):
+            The config id of the segment
+        counter (int):
+            The counter for the next segment id
+        process_tracker_df (pd.DataFrame):
+            The process tracker dataframe
+        format (str):
+            The format of the audio file
     Returns:
         unprocessed_chunk_file_uri_li: list[str]:
             List of unprocessed chunk file uris
@@ -36,11 +85,12 @@ def process_audio_files(
             List of chunk ids and segment ids
         counter: int:
             Counter for the next segment id
+
     """
-    chunk_id_2_size = {uri.split('/')[-1][37:73]:get_file_size_from_s3_mb(uri) 
-     for uri in unprocessed_chunk_file_uri_li}
-    chunk_id_2_uri = {uri.split('/')[-1][37:73]:uri 
-                      for uri in unprocessed_chunk_file_uri_li}
+    process_tracker_df = process_tracker_df[process_tracker_df['path'].isin(unprocessed_chunk_file_uri_li)]
+    process_tracker_df = process_tracker_df.sort_values(by='timestamp')
+    chunk_id_2_uri = dict(process_tracker_df[['chunk_id', 'path']].values)
+    chunk_id_2_size = {chunk_id: _read_mp3_from_s3_and_get_wav_file_size(uri) for chunk_id, uri in chunk_id_2_uri.items()}
     chunk_id = list(chunk_id_2_size.keys())[0]
     chunk_id_2_segment = []
     segment_2_path = {}
