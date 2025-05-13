@@ -35,6 +35,26 @@
             "source .venv/bin/activate",
             "./run-worker.sh"
           ]
+        },
+        {
+          "name": "workers-cpu",
+          "commands": [
+            "cd server",
+            "source .venv/bin/activate",
+            "./run-worker-cpu.sh"
+          ]
+        }
+      ]
+    },
+    {
+      "splitTerminals": [
+        {
+          "name": "scheduler",
+          "commands": [
+            "cd server",
+            "source .venv/bin/activate",
+            "./run-scheduler.sh"
+          ]
         }
       ]
     },

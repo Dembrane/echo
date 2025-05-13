@@ -7,6 +7,7 @@ import { getDirectusErrorString } from "@/lib/directus";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import {
   useCreateProjectMutation,
+  useCurrentUser,
   useInfiniteProjects,
   useUpdateProjectByIdMutation,
 } from "@/lib/query";
@@ -95,6 +96,7 @@ export const ProjectsHomeRoute = () => {
   const navigate = useI18nNavigate();
   const createProjectMutation = useCreateProjectMutation();
   const updateProjectMutation = useUpdateProjectByIdMutation();
+  const user = useCurrentUser();
 
   const { language } = useLanguage();
 
@@ -104,6 +106,7 @@ export const ProjectsHomeRoute = () => {
       language:
         language === "en-US" ? "en" : language === "nl-NL" ? "nl" : "en",
     });
+
     await updateProjectMutation.mutateAsync({
       id: project.id,
       payload: {
@@ -139,14 +142,16 @@ export const ProjectsHomeRoute = () => {
               ]}
             />
           </Group>
-          <Button
-            size="md"
-            rightSection={<Icons.Plus stroke="white" fill="white" />}
-            loading={createProjectMutation.isPending}
-            onClick={handleCreateProject}
-          >
-            <Trans>Create</Trans>
-          </Button>
+          {!user.data?.disable_create_project && (
+            <Button
+              size="md"
+              rightSection={<Icons.Plus stroke="white" fill="white" />}
+              loading={createProjectMutation.isPending}
+              onClick={handleCreateProject}
+            >
+              <Trans>Create</Trans>
+            </Button>
+          )}
         </Group>
         <Divider />
         <Group justify="space-between" className="relative">

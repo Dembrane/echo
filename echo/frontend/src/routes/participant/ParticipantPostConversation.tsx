@@ -30,8 +30,7 @@ import { useMutation } from "@tanstack/react-query";
 import { directus } from "@/lib/directus";
 import { readItems, createItems } from "@directus/sdk";
 import {
-  useCheckProjectNotificationParticipants,
-  useSubmitNotification,
+  useSubmitNotificationParticipant,
 } from "@/lib/query";
 
 export const ParticipantPostConversation = () => {
@@ -44,9 +43,7 @@ export const ParticipantPostConversation = () => {
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [debounceTimeout, setDebounceTimeout] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { mutate: checkEmail, isPending: isCheckingParticipantEmail } =
-    useCheckProjectNotificationParticipants();
-  const { mutate, isPending } = useSubmitNotification();
+  const { mutate, isPending } = useSubmitNotificationParticipant();
 
   const initiateLink = `/${projectId}/start`;
 
@@ -66,7 +63,7 @@ export const ParticipantPostConversation = () => {
     if (!projectId) return;
 
     mutate(
-      { emails, projectId },
+      { emails, projectId, conversationId: conversationId ?? "" },
       {
         onSuccess: () => setIsSubmitted(true),
       },
@@ -98,8 +95,8 @@ export const ParticipantPostConversation = () => {
     setDebounceTimeout(newTimeout);
   };
 
-  const addEmail = async (inputElement?: HTMLInputElement | null) => {
-    const trimmedEmail = email.trim();
+  const addEmail = (inputElement?: HTMLInputElement | null) => {
+    const trimmedEmail = email.trim().toLowerCase();
     if (!trimmedEmail) return;
 
     if (emails.includes(trimmedEmail)) {
@@ -111,36 +108,11 @@ export const ParticipantPostConversation = () => {
       return;
     }
 
-    setIsCheckingEmail(true);
-    setError("");
-
-    try {
-      checkEmail(
-        { email: trimmedEmail, projectId: projectId ?? "" },
-        {
-          onSuccess: (data) => {
-            switch (data.status) {
-              case "subscribed":
-                setError(t`This email is already subscribed to notifications.`);
-                break;
-              case "opted_out":
-              case "new":
-                setEmails([...emails, trimmedEmail]);
-                setEmail("");
-                break;
-            }
-          },
-          onError: (_error) => {
-            setError(t`Failed to verify email status. Please try again.`);
-          },
-        },
-      );
-    } catch (error) {
-      setError(t`Failed to verify email status. Please try again.`);
-    } finally {
-      setIsCheckingEmail(false);
+      setEmails([...emails, trimmedEmail]);
+      setEmail("");
+      setError("");
       setTimeout(() => inputElement?.focus(), 100);
-    }
+    
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -203,9 +175,7 @@ export const ParticipantPostConversation = () => {
                       onKeyDown={handleKeyDown}
                       error={error}
                       disabled={
-                        isCheckingEmail ||
-                        isPending ||
-                        isCheckingParticipantEmail
+                        isCheckingEmail || isPending
                       }
                       rightSection={
                         <Button
@@ -215,12 +185,11 @@ export const ParticipantPostConversation = () => {
                           disabled={
                             !email.trim() ||
                             isCheckingEmail ||
-                            isPending ||
-                            isCheckingParticipantEmail
+                            isPending
                           }
                           className="me-[2px] hover:bg-blue-50"
                           loading={
-                            isCheckingEmail || isCheckingParticipantEmail
+                            isCheckingEmail
                           }
                         >
                           {isCheckingEmail ? t`Checking...` : t`Add`}
@@ -246,7 +215,7 @@ export const ParticipantPostConversation = () => {
                             >
                               <Chip
                                 disabled={
-                                  isPending || isCheckingParticipantEmail
+                                  isPending
                                 }
                                 value={email}
                                 variant="outline"
@@ -268,7 +237,6 @@ export const ParticipantPostConversation = () => {
                         fullWidth
                         onClick={handleSubscribe}
                         loading={isPending}
-                        disabled={isCheckingParticipantEmail}
                         className="mt-4"
                       >
                         {isPending ? (

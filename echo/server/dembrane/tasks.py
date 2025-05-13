@@ -1,22 +1,23 @@
-# mypy: disable-error-code="no-untyped-def"
-from typing import List
-from pathlib import Path
+from logging import getLogger
 
-from celery import Celery, chain, chord, group, signals, bootsteps  # type: ignore
-from sentry_sdk import capture_exception
-from celery.signals import worker_ready, worker_shutdown  # type: ignore
-from celery.utils.log import get_task_logger  # type: ignore
+import dramatiq
+import lz4.frame
+from dramatiq import group
+from dramatiq.encoder import JSONEncoder, MessageData
+from dramatiq.results import Results
+from dramatiq_workflow import Chain, Group, Workflow, WithDelay, WorkflowMiddleware
+from dramatiq.middleware import GroupCallbacks
+from dramatiq.brokers.redis import RedisBroker
+from dramatiq.rate_limits.backends import RedisBackend as RateLimitRedisBackend
+from dramatiq.results.backends.redis import RedisBackend as ResultsRedisBackend
 
-import dembrane.tasks_config
 from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.config import REDIS_URL, ENABLE_AUDIO_LIGHTRAG_INPUT
 from dembrane.sentry import init_sentry
 from dembrane.database import (
     ViewModel,
     QuoteModel,
-    AspectModel,
     DatabaseSession,
-    ConversationModel,
     ProcessingStatusEnum,
     ConversationChunkModel,
     ProjectAnalysisRunModel,
@@ -27,286 +28,361 @@ from dembrane.audio_utils import split_audio_chunk
 from dembrane.quote_utils import (
     generate_quotes,
     initialize_view,
-    initialize_insights,
     generate_view_extras,
     assign_aspect_centroid,
     generate_aspect_extras,
-    generate_insight_extras,
-    generate_conversation_summary,
     cluster_quotes_using_aspect_centroids,
 )
+from dembrane.conversation_utils import collect_unfinished_conversations
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.processing_status_utils import ProcessingStatus
 from dembrane.audio_lightrag.main.run_etl import run_etl_pipeline
 
-# File for validating worker readiness
-READINESS_FILE = Path("/tmp/celery_ready")
+init_sentry()
 
-# File for validating worker liveness
-HEARTBEAT_FILE = Path("/tmp/celery_worker_heartbeat")
+logger = getLogger("dembrane.tasks")
 
-
-class LivenessProbe(bootsteps.StartStopStep):
-    requires = {"celery.worker.components:Timer"}
-
-    def __init__(self, parent, **kwargs):
-        super().__init__(parent, **kwargs)
-        self.requests = []
-        self.tref = None
-
-    def start(self, worker):
-        self.tref = worker.timer.call_repeatedly(
-            1.0,
-            self.update_heartbeat_file,
-            (worker,),
-            priority=10,
-        )
-
-    def stop(self, _worker):
-        HEARTBEAT_FILE.unlink(missing_ok=True)
-
-    def update_heartbeat_file(self, _worker):
-        HEARTBEAT_FILE.touch()
+# Add compression to JSON data using lz4
 
 
-logger = get_task_logger("celery_tasks")
+class DramatiqLz4JSONEncoder(JSONEncoder):
+    def encode(self, data: MessageData) -> bytes:
+        return lz4.frame.compress(super().encode(data))
 
+    def decode(self, data: bytes) -> MessageData:
+        try:
+            decompressed = lz4.frame.decompress(data)
+        except RuntimeError:
+            # Uncompressed data from before the switch to lz4
+            decompressed = data
+        return super().decode(decompressed)
+
+
+dramatiq.set_encoder(DramatiqLz4JSONEncoder())
+
+# Setup Broker and Results Backend
 assert REDIS_URL, "REDIS_URL environment variable is not set"
 
-# TODO: remove this once we have a proper SSL certificate
-# for the time atleast isolate using vpc
+# FIXME: remove this once we have a proper SSL certificate, for the time we atleast isolate using vpc
 ssl_params = ""
 if REDIS_URL.startswith("rediss://") and "?ssl_cert_reqs=" not in REDIS_URL:
-    ssl_params = "?ssl_cert_reqs=CERT_NONE"
+    ssl_params = "?ssl_cert_reqs=none"
 
-celery_app = Celery(
-    "tasks",
-    broker=REDIS_URL + "/1" + ssl_params,
-    result_backend=REDIS_URL + "/1" + ssl_params,
+redis_connection_string = REDIS_URL + "/1" + ssl_params
+
+
+broker = RedisBroker(
+    url=redis_connection_string,
+    # this is to disable Prometheus (https://groups.io/g/dramatiq-users/topic/disabling_prometheus/80745532)
+    # middleware=[
+    #     AgeLimit,
+    #     TimeLimit,
+    #     ShutdownNotifications,
+    #     Callbacks,
+    #     Pipelines,
+    #     Retries,
+    # ],
 )
 
-celery_app.config_from_object(dembrane.tasks_config)
+# results backend
+results_backend = ResultsRedisBackend(url=redis_connection_string)
+broker.add_middleware(Results(backend=results_backend, result_ttl=60 * 60 * 1000))  # 1 hour
 
-celery_app.steps["worker"].add(LivenessProbe)
+# workflow backend
+workflow_backend = RateLimitRedisBackend(url=redis_connection_string)
+broker.add_middleware(GroupCallbacks(workflow_backend))
+broker.add_middleware(WorkflowMiddleware(workflow_backend))
 
-
-@worker_ready.connect  # type: ignore
-def worker_ready(**_):
-    READINESS_FILE.touch()
-
-
-@worker_shutdown.connect  # type: ignore
-def worker_shutdown(**_):
-    READINESS_FILE.unlink(missing_ok=True)
+dramatiq.set_broker(broker)
 
 
-@signals.celeryd_init.connect
-def init_sentry_celery(**_kwargs):
-    logger.info("initializing sentry for celery")
-    init_sentry()
-
-
-class BaseTask(celery_app.Task):  # type: ignore
-    """Abstract base class for all tasks in my app."""
-
-    abstract = True
-
-    def on_retry(self, exc, task_id, args, kwargs, einfo):
-        """Log the exceptions to sentry at retry."""
-        capture_exception(exc)
-        super(BaseTask, self).on_retry(exc, task_id, args, kwargs, einfo)
-
-    def on_failure(self, exc, task_id, args, kwargs, einfo):
-        """Log the exceptions to sentry."""
-        capture_exception(exc)
-        super(BaseTask, self).on_failure(exc, task_id, args, kwargs, einfo)
-
-
-@celery_app.task(
-    bind=True,
-    retry_backoff=True,
-    ignore_result=True,
-    base=BaseTask,
-)
-def log_error(_self, exc: Exception):
-    logger.error(f"Error: {exc}")
+# Transcription Task
+@dramatiq.actor(queue_name="network", priority=0)
+def task_transcribe_chunk(conversation_chunk_id: str) -> None:
+    """
+    Transcribe a conversation chunk. The results are not returned.
+    """
+    logger = getLogger("dembrane.tasks.task_transcribe_chunk")
     try:
-        raise exc from exc
-    except Exception:
-        logger.error(f"Error: {str(exc)}")
-        raise
+        logger.info(f"Transcribing conversation chunk: {conversation_chunk_id}")
 
-
-@celery_app.task(
-    bind=True,
-    retry_backoff=True,
-    ignore_result=True,
-    base=BaseTask,
-)
-def task_transcribe_conversation_chunk(self, conversation_chunk_id: str):
-    try:
         transcribe_conversation_chunk(conversation_chunk_id)
-    except (ValueError, FileNotFoundError) as e:
-        raise e
+
+        return
     except Exception as e:
-        raise self.retry(exc=e) from e
+        logger.error(f"Error: {e}")
+        raise e from e
 
 
-@celery_app.task(bind=True, retry_backoff=True, ignore_result=True, base=BaseTask)
-def task_transcribe_conversation_chunks(self, conversation_chunk_id: List[str]):
+@dramatiq.actor(queue_name="network")
+def task_summarize_conversation(conversation_id: str) -> None:
+    """
+    Summarize a conversation. The results are not returned. You can find it in
+    conversation["summary"] after the task is finished.
+    """
+    logger = getLogger("dembrane.tasks.task_summarize_conversation")
+
     try:
-        task_signatures = [
-            task_transcribe_conversation_chunk.si(chunk_id).on_error(log_error.s())
-            for chunk_id in conversation_chunk_id
-        ]
+        from dembrane.api.conversation import summarize_conversation
 
-        g = group(*task_signatures)
+        logger.info(f"Summarizing conversation: {conversation_id}")
+        summarize_conversation(
+            conversation_id, auth=DependencyDirectusSession(user_id="none", is_admin=True)
+        )
 
-        result = g.apply_async()
-
-        return result
-    except (ValueError, FileNotFoundError) as e:
-        raise e
+        return
     except Exception as e:
-        raise self.retry(exc=e) from e
+        logger.error(f"Error: {e}")
+        raise e from e
 
 
-@celery_app.task(
-    bind=True,
-    retry_backoff=True,
-    ignore_result=False,
-    base=BaseTask,
-    queue="cpu",
-)
-def task_split_audio_chunk(self, chunk_id: str) -> List[str]:
+@dramatiq.actor(store_results=True, queue_name="cpu")
+def task_merge_conversation_chunks(conversation_id: str) -> None:
     """
-    Split audio chunk into smaller chunks. Returns the list of split chunks.
+    Merge conversation chunks.
     """
-    with DatabaseSession() as db:
-        try:
-            return split_audio_chunk(chunk_id, "mp3")
-        except Exception as exc:
-            logger.error(f"Error: {exc}")
-            db.rollback()
-            raise self.retry(exc=exc) from exc
+    logger = getLogger("dembrane.tasks.task_merge_conversation_chunks")
 
-
-@celery_app.task(
-    bind=True,
-    retry_backoff=True,
-    ignore_result=False,  # Result needs to be stored for chord to work
-    base=BaseTask,
-)
-def task_create_transcription_chord(_self, chunk_ids: List[str], conversation_id: str):
-    """
-    Create a chord of transcription tasks for each chunk ID,
-    with the finish conversation hook as the callback.
-
-    This separates the chord creation into its own task to avoid
-    serialization issues with inline functions.
-    """
-    # Create a task for each chunk ID
-    header = [
-        task_transcribe_conversation_chunk.si(chunk_id).on_error(log_error.s())
-        for chunk_id in chunk_ids
-    ]
-
-    # Create the chord with the finish hook as callback
-    chord_workflow = chord(header, task_finish_conversation_hook.si(conversation_id))
-
-    # Execute the chord
-    return chord_workflow.apply_async()
-
-
-@celery_app.task(
-    bind=True,
-    retry_backoff=True,
-    ignore_result=True,
-    base=BaseTask,
-)
-def task_process_conversation_chunk(self, chunk_id: str, run_finish_hook: bool = False):
     try:
-        chunk = directus.get_item("conversation_chunk", chunk_id)
+        # local import to avoid circular imports
+        from dembrane.api.conversation import get_conversation_content
 
-        if chunk is None:
-            raise ValueError(f"Chunk not found: {chunk_id}")
+        logger.info(f"Merging conversation chunks: {conversation_id}")
+        get_conversation_content(
+            conversation_id,
+            auth=DependencyDirectusSession(user_id="none", is_admin=True),
+            force_merge=True,
+            return_url=True,
+        )
+
+        return
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        raise e from e
+
+
+@dramatiq.actor(queue_name="cpu")
+def task_run_etl_pipeline(conversation_id: str) -> None:
+    """
+    Run the AudioLightrag ETL pipeline.
+    """
+    logger = getLogger("dembrane.tasks.task_run_etl_pipeline")
+
+    try:
+        logger.info(f"Invoking ETL pipeline for conversation: {conversation_id}")
+        run_etl_pipeline([conversation_id])
+
+        return
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        raise e from e
+
+
+@dramatiq.actor(queue_name="network")
+def task_finish_conversation_hook(conversation_id: str) -> None:
+    """
+    Finalize processing of a conversation and invoke follow-up tasks.
+    1. Set status
+    2. Summarize
+    3. Merge chunks into merged_audio_path
+    4. Run ETL pipeline (if enabled)
+    """
+    logger = getLogger("dembrane.tasks.task_finish_conversation_hook")
+
+    try:
+        logger.info(f"Finishing conversation: {conversation_id}")
 
         directus.update_item(
-            "conversation_chunk",
-            chunk_id,
+            "conversation",
+            conversation_id,
+            item_data={
+                "is_finished": True,
+                "processing_status": ProcessingStatus.COMPLETED.value,
+                "processing_message": "Conversation marked as finished.",
+            },
+        )
+
+        # Create a group of follow-up tasks
+        follow_up_tasks = [
+            task_summarize_conversation.message(conversation_id),
+            task_merge_conversation_chunks.message(conversation_id),
+        ]
+
+        # Conditionally add ETL pipeline task
+        if ENABLE_AUDIO_LIGHTRAG_INPUT:
+            logger.info(
+                f"Audio Processing enabled, requesting etl pipeline run for conversation {conversation_id}"
+            )
+            follow_up_tasks.append(task_run_etl_pipeline.message(conversation_id))
+
+        return group(follow_up_tasks).run()
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        raise e from e
+
+
+# cpu because it is also bottlenecked by the cpu queue due to the split_audio_chunk task
+@dramatiq.actor(queue_name="cpu", priority=0)
+def task_process_conversation_chunk(chunk_id: str, run_finish_hook: bool = False) -> None:
+    """
+    Process a conversation chunk.
+    """
+    logger = getLogger("dembrane.tasks.task_process_conversation_chunk")
+    try:
+        try:
+            chunk = directus.get_item("conversation_chunk", chunk_id)
+
+            # attempt to access
+            logger.info(f"Chunk {chunk_id} found in conversation: {chunk['conversation_id']}")
+
+        except Exception as e:
+            logger.error(f"Error: {e}")
+            return
+
+        logger.info(f"Chunk found: {chunk_id}")
+
+        directus.update_item(
+            "conversation",
+            chunk["conversation_id"],
             {
                 "processing_status": ProcessingStatus.PROCESSING.value,
-                "processing_message": "Processing chunk",
+                "processing_message": "Processing audio",
+            },
+        )
+
+        # critical section
+        split_chunk_ids = split_audio_chunk(chunk_id, "mp3")
+
+        if split_chunk_ids is None:
+            logger.error(f"Split audio chunk result is None for chunk: {chunk_id}")
+            raise ValueError(f"Split audio chunk result is None for chunk: {chunk_id}")
+
+        logger.info(f"Split audio chunk result: {split_chunk_ids}")
+
+        directus.update_item(
+            "conversation",
+            chunk["conversation_id"],
+            {
+                "processing_status": ProcessingStatus.PROCESSING.value,
+                "processing_message": "Transcribing audio",
             },
         )
 
         if run_finish_hook:
-            # First split the audio to get list of chunk IDs
-            # Then process each chunk with a chord to ensure the finish hook
-            # runs only after ALL transcription tasks complete
-            workflow = chain(
-                task_split_audio_chunk.s(chunk_id),
-                task_create_transcription_chord.s(chunk["conversation_id"]),
+            wf = Workflow(
+                Chain(
+                    Group(
+                        *[
+                            task_transcribe_chunk.message(chunk_id)
+                            for chunk_id in split_chunk_ids
+                            if chunk_id is not None
+                        ],
+                    ),
+                    task_finish_conversation_hook.message(chunk["conversation_id"]),
+                )
             )
+
+            return wf.run()
         else:
-            # Without finish hook, just split and transcribe
-            workflow = chain(
-                task_split_audio_chunk.s(chunk_id), task_transcribe_conversation_chunks.s()
-            )
+            return group(
+                [
+                    task_transcribe_chunk.message(chunk_id)
+                    for chunk_id in split_chunk_ids
+                    if chunk_id is not None
+                ]
+            ).run()
 
-        result = workflow.apply_async()
-        return result
-    except Exception as exc:
-        logger.error(f"Error: {exc}")
-        raise self.retry(exc=exc) from exc
+    except Exception as e:
+        logger.error(f"Error processing conversation chunk@[{chunk_id}]: {e}")
+        raise e from e
 
 
-@celery_app.task(
-    bind=True,
-    retry_backoff=True,
-    retry_kwargs={"max_retries": 2},
-    ignore_result=False,
-    base=BaseTask,
-)
-def task_generate_quotes(
-    self,
-    project_analysis_run_id: str,
-    conversation_id: str,
-):
+@dramatiq.actor(queue_name="network")
+def task_collect_and_finish_unfinished_conversations() -> None:
+    logger = getLogger("dembrane.tasks.task_collect_and_finish_unfinished_conversations")
+
+    try:
+        logger.info(
+            "running task_collect_and_finish_unfinished_conversations @ %s", get_utc_timestamp()
+        )
+
+        unfinished_conversation_ids = collect_unfinished_conversations()
+
+        if len(unfinished_conversation_ids) == 0:
+            logger.info("No unfinished conversations found")
+            return
+
+        logger.info(f"found {len(unfinished_conversation_ids)} unfinished conversations")
+
+        g = group(
+            [
+                task_finish_conversation_hook.message(conversation_id)
+                for conversation_id in unfinished_conversation_ids
+                if conversation_id is not None
+            ]
+        )
+
+        g.run()
+
+        return
+    except Exception as e:
+        logger.error(f"Error collecting and finishing unfinished conversations: {e}")
+        raise e from e
+
+
+# FIXME: move to quote_utils.py / remove
+@dramatiq.actor(queue_name="cpu", priority=70)
+def task_generate_quotes(project_analysis_run_id: str, conversation_id: str) -> None:
+    logger = getLogger("dembrane.tasks.task_generate_quotes")
+
     with DatabaseSession() as db:
         try:
+            logger.info(f"Generating quotes for project analysis run: {project_analysis_run_id}")
+
             # check if no new conversation chunks have been added since the last quote generation
             # if the latest conversation chunk was created after the previous project analysis run was created
             # then we need to create a new project analysis run,
             # otherwise reuse the quotes from the previous project analysis run
 
             # first we obtain the project ID
-            current_project_analysis_run = db.get(ProjectAnalysisRunModel, project_analysis_run_id)
+            current_project_analysis_run = directus.get_item(
+                "project_analysis_run", project_analysis_run_id
+            )
+
             if current_project_analysis_run is None:
                 logger.error(f"Project analysis run not found: {project_analysis_run_id}")
                 return
-            project_id = current_project_analysis_run.project_id
+
+            project_id = current_project_analysis_run["project_id"]
 
             # then we obtain the previous project analysis runs
-            previous_project_analysis_runs = (
-                db.query(ProjectAnalysisRunModel)
-                .filter(ProjectAnalysisRunModel.project_id == project_id)
-                .order_by(ProjectAnalysisRunModel.created_at.desc())
-                # we need only 2
-                .limit(2)
-                .all()
+            previous_project_analysis_runs = directus.get_items(
+                "project_analysis_run",
+                {
+                    "query": {
+                        "filter": {"project_id": project_id},
+                        "sort": "-created_at",
+                        "limit": 2,
+                    }
+                },
             )
+
+            if previous_project_analysis_runs is None:
+                raise Exception(
+                    "No previous project analysis runs found. Something is clearly wrong."
+                )
 
             # at this point we should have at least 1 project analysis run
             # if there is no history then we go ahead and generate quotes
             if len(previous_project_analysis_runs) == 1:
-                logger.info(
-                    "Generating quotes for project analysis run because there is no history"
-                )
+                logger.info("1 previous project analysis run")
                 generate_quotes(db, project_analysis_run_id, conversation_id)
+
             elif len(previous_project_analysis_runs) == 2:
-                # if there is a history we need to check if the latest conversation chunk was created after the latest project analysis run
-                logger.info("Checking if we need to generate quotes for project analysis run")
+                # if there is a history we need to check if the latest conversation
+                # chunk was created after the latest project analysis run
+                logger.info("2 previous project analysis runs")
+
                 comparison_project_analysis_run = previous_project_analysis_runs[1]
 
                 latest_conversation_chunk = (
@@ -356,157 +432,38 @@ def task_generate_quotes(
 
                     logger.info(f"Updated {quotes_updated} quotes")
 
-        except Exception as exc:
-            logger.error(f"Error: {exc}")
+                    return
+
+        except Exception as e:
+            logger.error(f"Error: {e}")
             db.rollback()
-            raise self.retry(exc=exc) from exc
+            raise e from e
 
 
-@celery_app.task(
-    bind=True,
-    retry_backoff=True,
-    retry_kwargs={"max_retries": 2},
-    ignore_result=False,
-    base=BaseTask,
-)
-def task_generate_conversation_summary(self, conversation_id: str, language: str):
+@dramatiq.actor(queue_name="network")
+def task_generate_aspect_extras(aspect_id: str, language: str = "en") -> None:
+    logger = getLogger("dembrane.tasks.task_generate_aspect_extras")
     with DatabaseSession() as db:
         try:
-            generate_conversation_summary(db, conversation_id, language)
-        except Exception as exc:
-            logger.error(f"Error: {exc}")
-            db.rollback()
-            raise self.retry(exc=exc) from exc
+            logger.info(f"Generating aspect extras for aspect: {aspect_id}")
 
-
-@celery_app.task(
-    bind=True,
-    retry_backoff=True,
-    retry_kwargs={"max_retries": 3},
-    ignore_result=False,
-    base=BaseTask,
-)
-def task_generate_insight_extras(self, insight_id: str, language: str):
-    with DatabaseSession() as db:
-        try:
-            generate_insight_extras(db, insight_id, language)
-        except Exception as exc:
-            logger.error(f"Error: {exc}")
-            db.rollback()
-            raise self.retry(exc=exc) from exc
-
-
-@celery_app.task(
-    bind=True,
-    retry_backoff=True,
-    retry_kwargs={"max_retries": 3},
-    ignore_result=True,
-    base=BaseTask,
-)
-def task_generate_insight_extras_multiple(self, insight_ids: List[str], language: str):
-    with DatabaseSession() as db:
-        try:
-            task_signatures = [
-                task_generate_insight_extras.si(insight_id, language).on_error(log_error.s())
-                for insight_id in insight_ids
-            ]
-
-            result = group(*task_signatures).apply_async()
-
-            return result
-        except Exception as exc:
-            logger.error(f"Error: {exc}")
-            db.rollback()
-            raise self.retry(exc=exc) from exc
-
-
-@celery_app.task(
-    bind=True,
-    retry_backoff=True,
-    retry_kwargs={"max_retries": 3},
-    ignore_result=False,
-    base=BaseTask,
-    queue="cpu",
-)
-def task_initialize_insights(self, project_analysis_run_id: str) -> List[str]:
-    with DatabaseSession() as db:
-        try:
-            return initialize_insights(db, project_analysis_run_id)
-        except Exception as exc:
-            logger.error(f"Error: {exc}")
-            db.rollback()
-            raise self.retry(exc=exc) from exc
-
-
-@celery_app.task(
-    bind=True,
-    retry_backoff=True,
-    retry_kwargs={"max_retries": 3},
-    ignore_result=False,
-    base=BaseTask,
-)
-def task_generate_insights(self, project_analysis_run_id: str, language: str):
-    with DatabaseSession() as db:
-        try:
-            job = chain(
-                task_initialize_insights.si(project_analysis_run_id),
-                task_generate_insight_extras_multiple.s(language=language),
-            )
-
-            result = job.apply_async()
-
-            return result
-
-        except Exception as exc:
-            logger.error(f"Error: {exc}")
-            db.rollback()
-            raise self.retry(exc=exc) from exc
-
-
-# @celery_app.task(
-#     bind=True,
-#     retry_backoff=True,
-#     retry_kwargs={"max_retries": 2},
-#     ignore_result=False,
-#     base=BaseTask,
-# )
-# def task_assign_aspect_centroids_and_cluster_quotes(self, project_analysis_run_id: str, view_id: str):
-#     with DatabaseSession() as db:
-#         try:
-#             assign_aspect_centroids_and_cluster_quotes(db, project_analysis_run_id, view_id)
-#         except Exception as exc:
-#             logger.error(f"Error: {exc}")
-#             db.rollback()
-#             raise self.retry(exc=exc) from exc
-
-
-@celery_app.task(
-    bind=True,
-    retry_backoff=True,
-    retry_kwargs={"max_retries": 3},
-    ignore_result=False,
-    base=BaseTask,
-)
-def task_generate_aspect_extras(self, aspect_id: str, language: str = "en"):
-    with DatabaseSession() as db:
-        try:
             generate_aspect_extras(db, aspect_id, language)
-        except Exception as exc:
-            logger.error(f"Error: {exc}")
+
+            return
+
+        except Exception as e:
+            logger.error(f"Error: {e}")
             db.rollback()
-            raise self.retry(exc=exc) from exc
+            raise e from e
 
 
-@celery_app.task(
-    bind=True,
-    retry_backoff=True,
-    retry_kwargs={"max_retries": 3},
-    ignore_result=False,
-    base=BaseTask,
-)
-def task_generate_view_extras(self, view_id: str, language: str):
+@dramatiq.actor(queue_name="network")
+def task_generate_view_extras(view_id: str, language: str) -> None:
+    logger = getLogger("dembrane.tasks.task_generate_view_extras")
     with DatabaseSession() as db:
         try:
+            logger.info(f"Generating view extras for view: {view_id}")
+
             view = db.get(ViewModel, view_id)
 
             if view is None:
@@ -519,112 +476,113 @@ def task_generate_view_extras(self, view_id: str, language: str):
             view.processing_status = ProcessingStatusEnum.DONE
             view.processing_completed_at = get_utc_timestamp()
             db.commit()
-        except Exception as exc:
-            logger.error(f"Error: {exc}")
+
+            return
+        except Exception as e:
+            logger.error(f"Error: {e}")
             db.rollback()
-            raise self.retry(exc=exc) from exc
+            raise e from e
 
 
-@celery_app.task(
-    bind=True,
-    retry_backoff=True,
-    retry_kwargs={"max_retries": 3},
-    ignore_result=False,
-    base=BaseTask,
-    queue="cpu",
-)
-def task_assign_aspect_centroid(self, aspect_id: str, language: str = "en"):
+@dramatiq.actor(queue_name="cpu", priority=70)
+def task_assign_aspect_centroid(aspect_id: str, language: str = "en") -> None:
+    logger = getLogger("dembrane.tasks.task_assign_aspect_centroid")
     with DatabaseSession() as db:
         try:
+            logger.info(f"Assigning aspect centroid for aspect: {aspect_id}")
+
             assign_aspect_centroid(db, aspect_id, language)
-        except Exception as exc:
-            logger.error(f"Error: {exc}")
+
+            return
+
+        except Exception as e:
+            logger.error(f"Error: {e}")
             db.rollback()
-            raise self.retry(exc=exc) from exc
+            raise e from e
 
 
-@celery_app.task(
-    bind=True,
-    retry_backoff=True,
-    retry_kwargs={"max_retries": 3},
-    ignore_result=False,
-    base=BaseTask,
-    queue="cpu",
-)
-def task_cluster_quotes_using_aspect_centroids(self, view_id: str):
+@dramatiq.actor(queue_name="cpu", priority=70)
+def task_cluster_quotes_using_aspect_centroids(view_id: str) -> None:
+    logger = getLogger("dembrane.tasks.task_cluster_quotes_using_aspect_centroids")
     with DatabaseSession() as db:
         try:
+            logger.info(f"Clustering quotes using aspect centroids for view: {view_id}")
+
             cluster_quotes_using_aspect_centroids(db, view_id)
-        except Exception as exc:
-            logger.error(f"Error: {exc}")
+
+            return
+
+        except Exception as e:
+            logger.error(f"Error: {e}")
             db.rollback()
-            raise self.retry(exc=exc) from exc
+            raise e from e
 
 
-@celery_app.task(
-    bind=True,
-    retry_backoff=True,
-    retry_kwargs={"max_retries": 3},
-    ignore_result=False,
-    base=BaseTask,
-)
+@dramatiq.actor(queue_name="network", priority=70)
 def task_create_view(
-    _self,
     project_analysis_run_id: str,
     user_query: str,
     user_query_context: str,
     language: str,
-):
+) -> None:
+    logger = getLogger("dembrane.tasks.task_create_view")
     with DatabaseSession() as db:
         try:
+            logger.info(f"Creating view for project analysis run: {project_analysis_run_id}")
+
             project_analysis_run = db.get(ProjectAnalysisRunModel, project_analysis_run_id)
 
             if project_analysis_run is None:
                 logger.info(f"Project analysis run not found: {project_analysis_run_id}")
                 return None
 
-            # FIXME: update_progress(self, 1, 4, message="Creating view")
-            # TODO: convert to task
+            # Create the view
             view = initialize_view(
                 db, project_analysis_run_id, user_query, user_query_context, language
             )
             view.processing_message = "Clustering aspects"
             db.commit()
 
-            # update_progress(self, 2, 4, message="Clustering quotes")
+            logger.info(f"View created: {view.id}")
 
+            # Get all aspects associated with the view
             aspect_ids = [aspect.id for aspect in view.aspects]
-            aspect_jobs = [
-                task_assign_aspect_centroid.si(aspect_id, language) for aspect_id in aspect_ids
-            ]
 
-            # update_progress(self, 3, 4, message="Clustering quotes")
+            wf = Workflow(
+                Chain(
+                    Group(
+                        *[
+                            task_assign_aspect_centroid.message(aspect_id, language)
+                            for aspect_id in aspect_ids
+                        ],
+                    ),
+                    task_cluster_quotes_using_aspect_centroids.message(view.id),
+                    Group(
+                        *[
+                            task_generate_aspect_extras.message(aspect_id, language)
+                            for aspect_id in aspect_ids
+                        ],
+                    ),
+                    task_generate_view_extras.message(view.id, language),
+                )
+            )
 
-            aspects = db.query(AspectModel).filter(AspectModel.view_id == view.id).all()
-            aspect_extra_jobs = [
-                task_generate_aspect_extras.si(aspect.id, language) for aspect in aspects
-            ]
+            wf.run()
 
-            result = chord(
-                chord(group(*aspect_jobs), task_cluster_quotes_using_aspect_centroids.si(view.id)),
-                chord(group(*aspect_extra_jobs), task_generate_view_extras.si(view.id, language)),
-            ).apply_async()
-
-            logger.debug(result)
-
-            # update_progress(self, 4, 4, message="Analysing results")
-
-            return result
+            return
 
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.error(f"Error creating view: {e}")
             db.rollback()
-            raise
+            raise e from e
 
 
-@celery_app.task(bind=True, retry_backoff=True, ignore_result=False, base=BaseTask)
-def task_finalize_project_library(_self, project_analysis_run_id: str):
+@dramatiq.actor(queue_name="network", priority=70)
+def task_finalize_project_library(project_analysis_run_id: str) -> None:
+    logger = getLogger("dembrane.tasks.task_finalize_project_library")
     with DatabaseSession() as db:
+        logger.info(f"Finalizing project library: {project_analysis_run_id}")
+
         project_analysis_run = db.get(ProjectAnalysisRunModel, project_analysis_run_id)
 
         if project_analysis_run is None:
@@ -687,8 +645,12 @@ intial_views_lang_dict = {
 }
 
 
-@celery_app.task(bind=True, retry_backoff=True, ignore_result=False, base=BaseTask)
-def task_create_project_library(_self, project_id: str, language: str):
+@dramatiq.actor(queue_name="network", priority=70)
+def task_create_project_library(project_id: str, language: str) -> None:
+    logger = getLogger("dembrane.tasks.task_create_project_library")
+
+    logger.info(f"Creating project library for project: {project_id}")
+
     if language not in intial_views_lang_dict["sentiment"]:
         raise ValueError(f"Language {language} not supported")
 
@@ -702,169 +664,75 @@ def task_create_project_library(_self, project_id: str, language: str):
                 processing_started_at=get_utc_timestamp(),
             )
 
-            is_insights_enabled = False
-
-            try:
-                project = directus.get_items(
-                    "project",
-                    {
-                        "query": {
-                            "fields": ["is_library_insights_enabled"],
-                            "filter": {"id": {"_eq": project_id}},
-                        },
-                    },
-                )
-
-                if len(project) == 0:
-                    logger.error(f"Project not found: {project_id}")
-                    return
-
-                project = project[0]
-
-                logger.info(
-                    f"for project {project_id} is_insights_enabled: {project['is_library_insights_enabled']}"
-                )
-                is_insights_enabled = project["is_library_insights_enabled"]
-            except Exception as e:
-                logger.error(f"Error: {e}")
-
             db.add(project_analysis_run)
             db.commit()
 
-            conversations = (
-                db.query(ConversationModel).filter(ConversationModel.project_id == project_id).all()
+            conversations = directus.get_items(
+                "conversation",
+                {
+                    "query": {
+                        "filter": {
+                            "project_id": {"_eq": project_id},
+                            "is_finished": {"_eq": True},
+                        }
+                    },
+                },
             )
+
+            if len(conversations) == 0:
+                logger.info(f"No conversations to process for project: {project_id}")
+                return
+
+            conversation_ids = [conversation["id"] for conversation in conversations]
 
             project_analysis_run.processing_message = (
                 f"Gathering quotes from {len(conversations)} conversations"
             )
             db.commit()
 
-            quote_s_list = []
-
-            for conversation in conversations:
-                quote_s_list.append(
-                    chord(
-                        task_generate_quotes.si(project_analysis_run.id, conversation.id),
-                        task_generate_conversation_summary.si(conversation.id, language),
-                    )
-                )
-
-            g = group(*quote_s_list)
-
-            if not quote_s_list:
-                logger.info(f"No conversations to process for project: {project_id}")
-                return
-
-            insight_task = task_generate_insights.si(project_analysis_run.id, language)
-
-            sentiment_view_query = intial_views_lang_dict["sentiment"][language]["title"]
-            sentiment_view_description = intial_views_lang_dict["sentiment"][language][
-                "description"
-            ]
-
-            sentiment_view = task_create_view.si(
-                project_analysis_run.id, sentiment_view_query, sentiment_view_description, language
+            # Create sentiment view message
+            create_sentiment_view_message = task_create_view.message(
+                project_analysis_run.id,
+                intial_views_lang_dict["sentiment"][language]["title"],
+                intial_views_lang_dict["sentiment"][language]["description"],
+                language,
             )
 
-            theme_view_query = intial_views_lang_dict["recurring_themes"][language]["title"]
-            theme_view_description = intial_views_lang_dict["recurring_themes"][language][
-                "description"
-            ]
-
-            theme_view = task_create_view.si(
-                project_analysis_run.id, theme_view_query, theme_view_description, language
+            # Create theme view message
+            create_theme_view_message = task_create_view.message(
+                project_analysis_run.id,
+                intial_views_lang_dict["recurring_themes"][language]["title"],
+                intial_views_lang_dict["recurring_themes"][language]["description"],
+                language,
             )
 
-            if is_insights_enabled:
-                callback = chord(
-                    group(
-                        sentiment_view,
-                        theme_view,
-                        insight_task,
+            wf = Workflow(
+                Chain(
+                    Group(
+                        *[
+                            task_generate_quotes.message(
+                                project_analysis_run.id,
+                                conversation_id,
+                            )
+                            for conversation_id in conversation_ids
+                        ],
                     ),
-                    task_finalize_project_library.si(project_analysis_run.id),
-                )
-            else:
-                callback = chord(
-                    group(
-                        sentiment_view,
-                        theme_view,
+                    Group(
+                        *[
+                            create_sentiment_view_message,
+                            create_theme_view_message,
+                        ],
                     ),
-                    task_finalize_project_library.si(project_analysis_run.id),
-                )
+                    WithDelay(
+                        task_finalize_project_library.message(project_analysis_run.id),
+                        delay=3 * 60 * 1000,  # 3 minutes delay
+                    ),
+                ),
+            )
 
-            result = chord(g)(callback.on_error(log_error.s()))
-
-            return result
+            wf.run()
 
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.error(f"Error creating project library: {e}")
             db.rollback()
-            raise
-
-
-@celery_app.task(bind=True, retry_backoff=True, ignore_result=False, base=BaseTask)
-def task_summarize_conversation(self, conversation_id: str):
-    try:
-        from dembrane.api.conversation import summarize_conversation
-
-        summarize_conversation(
-            conversation_id, auth=DependencyDirectusSession(user_id="none", is_admin=True)
-        )
-
-    except Exception as e:
-        logger.error(f"Error: {e}")
-        raise self.retry(exc=e) from e
-
-
-@celery_app.task(
-    bind=True,
-    retry_backoff=True,
-    ignore_result=False,
-    base=BaseTask,
-    queue="cpu",
-)
-def task_merge_conversation_chunks(self, conversation_id: str):
-    try:
-        # Import locally to avoid circular imports
-        from dembrane.api.conversation import get_conversation_content
-
-        get_conversation_content(
-            conversation_id,
-            auth=DependencyDirectusSession(user_id="none", is_admin=True),
-            force_merge=True,
-            return_url=True,
-        )
-
-    except Exception as e:
-        logger.error(f"Error: {e}")
-        raise self.retry(exc=e) from e
-
-
-@celery_app.task(bind=True, retry_backoff=True, ignore_result=False, base=BaseTask)
-def task_finish_conversation_hook(self, conversation_id: str):
-    try:
-        directus.update_item(
-            "conversation",
-            conversation_id,
-            item_data={
-                "processing_status": ProcessingStatus.COMPLETED.value,
-                "processing_message": "Conversation marked as finished",
-            },
-        )
-
-        signatures = group(
-            task_summarize_conversation.si(conversation_id),
-            task_merge_conversation_chunks.si(conversation_id),
-        )
-
-        signatures.apply_async()
-
-        logger.info(f"Processing conversation {conversation_id} started")
-
-        if ENABLE_AUDIO_LIGHTRAG_INPUT:
-            run_etl_pipeline([conversation_id])
-    except Exception as e:
-        logger.error(f"Error: {e}")
-        raise self.retry(exc=e) from e
+            raise e from e

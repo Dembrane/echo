@@ -115,7 +115,7 @@ const ConversationAccordionLabelChatSelection = ({
 
   // Check if conversation has any content
   const hasContent = conversation.chunks?.some(
-    (chunk) => chunk.transcript && chunk.transcript.trim().length > 0
+    (chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
   );
 
   const handleSelectChat = () => {
@@ -358,7 +358,7 @@ const ConversationAccordionItem = ({
 
   // Check if conversation has any content
   const hasContent = conversation.chunks?.some(
-    (chunk) => chunk.transcript && chunk.transcript.trim().length > 0
+    (chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
   );
 
   return (
@@ -366,15 +366,14 @@ const ConversationAccordionItem = ({
       to={`/projects/${conversation.project_id}/conversation/${conversation.id}/overview`}
       active={highlight}
       borderColor={
-        ENABLE_CHAT_AUTO_SELECT && isAutoSelectEnabled
-          ? "green"
-          : undefined
+        ENABLE_CHAT_AUTO_SELECT && isAutoSelectEnabled ? "green" : undefined
       }
       className={cn("w-full", {
         "!bg-primary-50": isLocked,
       })}
       rightSection={
-        (!ENABLE_CHAT_AUTO_SELECT || !isAutoSelectEnabled) && inChatMode && (
+        (!ENABLE_CHAT_AUTO_SELECT || !isAutoSelectEnabled) &&
+        inChatMode && (
           <ConversationAccordionLabelChatSelection
             conversation={conversation}
           />
@@ -393,7 +392,21 @@ const ConversationAccordionItem = ({
                 {t`Uploaded`}
               </Badge>
             )}
-            {!hasContent && (
+            {
+              // if from portal and not finished
+              !conversation.source?.toLocaleLowerCase().includes("upload") &&
+                ["PENDING"].includes(conversation.processing_status ?? "") && (
+                  // red pulsing dot
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
+                )
+            }
+            {conversation.processing_status === "PROCESSING" &&
+              !conversation.source?.toLocaleLowerCase().includes("upload") && (
+                <Badge size="xs" color="blue" variant="light">
+                  {t`Processing`}
+                </Badge>
+              )}
+            {!hasContent && conversation.is_finished === true && (
               <Badge size="xs" color="red" variant="light">
                 {t`Empty`}
               </Badge>

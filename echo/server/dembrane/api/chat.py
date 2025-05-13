@@ -468,7 +468,7 @@ async def post_chat(
                     stream=True,
                     # mock_response="It's simple to use and easy to get started",
                 )
-                async for chunk in response:  # type: ignore
+                async for chunk in response:
                     if chunk.choices[0].delta.content:
                         content = chunk.choices[0].delta.content
                         accumulated_response += content
@@ -550,4 +550,3 @@ async def post_chat(
         response = StreamingResponse(stream_response(), headers=headers)
 
         return response
-

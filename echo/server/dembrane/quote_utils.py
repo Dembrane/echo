@@ -8,10 +8,11 @@ import numpy as np
 import pandas as pd
 import tiktoken
 from pydantic import BaseModel
-from sqlalchemy import func, select
+from sqlalchemy import func, select, literal
 from sqlalchemy.orm import Session
-from sklearn.cluster import KMeans  # type: ignore
+from sklearn.cluster import KMeans
 from langchain_openai import OpenAIEmbeddings
+from pgvector.sqlalchemy import Vector
 from langchain_experimental.text_splitter import SemanticChunker
 
 from dembrane.s3 import save_to_s3_from_url
@@ -337,12 +338,43 @@ def get_random_sample_quotes(
     random_vectors = np.random.randn(num_random_vectors, EMBEDDING_DIM)
 
     for vector in random_vectors:
-        closest_quote = db.scalars(
-            select(QuoteModel)
-            .filter(QuoteModel.project_analysis_run_id == project_analysis_run_id)
-            .order_by(QuoteModel.embedding.l2_distance(vector))
-            .limit(1)
-        ).first()
+        # Convert the numpy array to a Python list for pgvector compatibility
+        vector_as_list = vector.tolist()
+        # Cast the list to a true pgvector type for proper operator binding
+        vector_param = literal(vector_as_list, type_=Vector(EMBEDDING_DIM))
+
+        # Skip the vector similarity search if no quotes are available
+        if not all_quotes:
+            continue
+
+        try:
+            # First try using the native pgvector operator
+            closest_quote = db.scalars(
+                select(QuoteModel)
+                .filter(QuoteModel.project_analysis_run_id == project_analysis_run_id)
+                .order_by(QuoteModel.embedding.l2_distance(vector_param))
+                .limit(1)
+            ).first()
+        except Exception as e:
+            logger.warning(f"Native pgvector operation failed: {e}")
+            db.rollback()
+            try:
+                # Try using SQL function approach
+                closest_quote = db.scalars(
+                    select(QuoteModel)
+                    .filter(QuoteModel.project_analysis_run_id == project_analysis_run_id)
+                    .order_by(func.vector_l2_distance(QuoteModel.embedding, vector_param))
+                    .limit(1)
+                ).first()
+            except Exception as e2:
+                logger.warning(f"SQL function approach failed too: {e2}")
+                db.rollback()
+                # Fall back to random selection from the batch
+                if all_quotes:
+                    closest_quote = random.choice(all_quotes)
+                else:
+                    closest_quote = None
+
         if closest_quote and closest_quote not in selected_quotes:
             additional_length = count_tokens(closest_quote.text)
             if current_context_length + additional_length <= context_limit:
@@ -979,6 +1011,7 @@ def generate_conversation_summary(db: Session, conversation_id: str, language: s
 
     messages = [{"role": "user", "content": prompt}]
 
+    # FIXME: use litellm
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=messages,  # type: ignore

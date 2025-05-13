@@ -1,6 +1,7 @@
 from logging import getLogger
 
 import sentry_sdk
+from sentry_dramatiq import DramatiqIntegration
 from sentry_sdk.integrations.openai import OpenAIIntegration
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
@@ -49,6 +50,7 @@ def init_sentry() -> None:
                     include_prompts=False,  # LLM/tokenizer inputs/outputs will be not sent to Sentry, despite send_default_pii=True
                     tiktoken_encoding_name="cl100k_base",
                 ),
+                DramatiqIntegration(),
             ],
         )
     else:

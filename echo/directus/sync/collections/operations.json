@@ -1,27 +1,5 @@
 [
   {
-    "name": "check IF project report is published",
-    "key": "check_if_project_report_is_published",
-    "type": "condition",
-    "position_x": 19,
-    "position_y": 1,
-    "options": {
-      "filter": {
-        "$trigger": {
-          "payload": {
-            "status": {
-              "_eq": "published"
-            }
-          }
-        }
-      }
-    },
-    "resolve": "107ebc18-7d2d-4299-9d98-b7d1e7322b7c",
-    "reject": "84852456-3f3a-4906-be94-8b750159883b",
-    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
-    "_syncId": "239c6fea-242d-4b7d-b854-c99d2fe43cf3"
-  },
-  {
     "name": "Check Language",
     "key": "check_language",
     "type": "condition",
@@ -45,7 +23,7 @@
     "name": "Check Report Language",
     "key": "check_report_language",
     "type": "item-read",
-    "position_x": 55,
+    "position_x": 73,
     "position_y": 1,
     "options": {
       "query": {
@@ -133,10 +111,10 @@
     "name": "Filter Emails",
     "key": "filter_emails",
     "type": "exec",
-    "position_x": 73,
+    "position_x": 91,
     "position_y": 1,
     "options": {
-      "code": "module.exports = async function(data) {\n\n    const submissions = data.get_all_participants;\n    \n    // Filter submissions to only include those where email_opt_in is true\n    const filteredSubmissions = submissions.filter(sub => sub.email_opt_in === true);\n\n    // Create an array with email, project_id and an email_opt_out token for each submission\n    const result = filteredSubmissions.map(sub => ({\n        email: sub.email,\n        project_id: sub.project_id || '',\n        token: sub.email_opt_out_token,\n        language: data.check_report_language[0].language || 'empty',\n        ADMIN_BASE_URL: {{$env.ADMIN_BASE_URL}} || \"http://localhost:5173\",\n        PARTICIPANT_BASE_URL: {{$env.PARTICIPANT_BASE_URL}} || \"http://localhost:5174\",        \n    }));\n    \n    return result;\n};"
+      "code": "module.exports = async function(data) {\n\n    const submissions = data.get_all_participants;\n    \n    // Filter submissions to only include those where email_opt_in is true\n    const filteredSubmissions = submissions.filter(sub => sub.email_opt_in === true);\n\n    // Create an array with email, project_id and an email_opt_out token for each submission\n    const result = filteredSubmissions.map(sub => ({\n        project_name: data.project_data[0].name || '',\n\t\tdefault_conversation_title: data.project_data[0].default_conversation_title || '',\n\t\tconversation_name: sub.conversation_id.participant_name || '',\n        email: sub.email,\n        project_id: sub.project_id || '',\n        token: sub.email_opt_out_token,\n        language: data.check_report_language[0].language || 'empty',\n        ADMIN_BASE_URL: {{$env.ADMIN_BASE_URL}} || \"http://localhost:5173\",\n        PARTICIPANT_BASE_URL: {{$env.PARTICIPANT_BASE_URL}} || \"http://localhost:5174\",        \n    }));\n    \n    return result;\n};"
     },
     "resolve": "e101f00d-2fb8-4f40-9e0e-4d24da5bb1e9",
     "reject": null,
@@ -147,7 +125,7 @@
     "name": "Get All Participants",
     "key": "get_all_participants",
     "type": "item-read",
-    "position_x": 37,
+    "position_x": 55,
     "position_y": 1,
     "options": {
       "query": {
@@ -157,7 +135,11 @@
               "_eq": "{{$trigger.payload.project_id}}"
             }
           }
-        }
+        },
+        "fields": [
+          "*",
+          "conversation_id.participant_name"
+        ]
       },
       "collection": "project_report_notification_participants"
     },
@@ -165,6 +147,51 @@
     "reject": null,
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
     "_syncId": "107ebc18-7d2d-4299-9d98-b7d1e7322b7c"
+  },
+  {
+    "name": "PROCEED_ONLY_IF \"published\" in payload",
+    "key": "proceed_only_if_published_in_payload",
+    "type": "condition",
+    "position_x": 19,
+    "position_y": 1,
+    "options": {
+      "filter": {
+        "$trigger": {
+          "payload": {
+            "status": {
+              "_eq": "published"
+            }
+          }
+        }
+      }
+    },
+    "resolve": "ea051ae4-776f-490b-8b02-eaf4099243ef",
+    "reject": "84852456-3f3a-4906-be94-8b750159883b",
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "239c6fea-242d-4b7d-b854-c99d2fe43cf3"
+  },
+  {
+    "name": "Project Data",
+    "key": "project_data",
+    "type": "item-read",
+    "position_x": 37,
+    "position_y": 1,
+    "options": {
+      "collection": "project",
+      "query": {
+        "filter": {
+          "id": {
+            "id": {
+              "_eq": "{{$trigger.payload.project_id}}"
+            }
+          }
+        }
+      }
+    },
+    "resolve": "107ebc18-7d2d-4299-9d98-b7d1e7322b7c",
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "ea051ae4-776f-490b-8b02-eaf4099243ef"
   },
   {
     "name": "Report Not Published",
@@ -190,9 +217,18 @@
       "to": [
         "{{$trigger.email}}"
       ],
-      "type": "wysiwyg",
+      "type": "template",
       "subject": "Er is een rapport klaar met uw inbreng",
-      "body": "<h1>Dembrane</h1>\n<p>&nbsp;</p>\n<h2>Er is een rapport gemaakt waaraan u heeft bijgedragen.</h2>\n<p>&nbsp;</p>\n<p>Kijk hier eens : <strong><a href=\"{{$trigger.PARTICIPANT_BASE_URL}}/nl-NL/{{$trigger.project_id}}/report\" target=\"_blank\" rel=\"noopener\">Bekijk Rapport</a></strong></p>\n<p>&nbsp;</p>\n<p>Wij geloven in jou!</p>\n<p>Het Dembrane-team</p>\n<p>&nbsp;</p>\n<p>Als u deze meldingen niet langer wenst te ontvangen, klikt u op <strong><a href=\"{{$trigger.ADMIN_BASE_URL}}/nl-NL/unsubscribe?token={{$trigger.token}}&amp;project_id={{$trigger.project_id}}\" target=\"_blank\" rel=\"noopener\">Afmelden</a></strong></p>"
+      "body": null,
+      "data": {
+        "PARTICIPANT_BASE_URL": "{{$trigger.PARTICIPANT_BASE_URL}}",
+        "project_id": "{{$trigger.project_id}}",
+        "project_name": "{{$trigger.project_name}}",
+        "default_conversation_title": "{{$trigger.default_conversation_title}}",
+        "conversation_name": "{{$trigger.conversation_name}}",
+        "token": "{{$trigger.token}}"
+      },
+      "template": "report-notification-nl"
     },
     "resolve": null,
     "reject": "84c38ea6-5d15-429f-8c24-9485d54ba7be",
@@ -210,8 +246,17 @@
         "{{$trigger.email}}"
       ],
       "subject": "A Report Featuring Your Input is Ready",
-      "type": "wysiwyg",
-      "body": "<h1>Dembrane</h1>\n<p>&nbsp;</p>\n<h3>A report has been created that you have contributed to.</h3>\n<p>&nbsp;</p>\n<p>Take a look here: <strong><a href=\"{{$trigger.PARTICIPANT_BASE_URL}}/en-US/{{$trigger.project_id}}/report\" target=\"_blank\" rel=\"noopener\">View Report</a></strong></p>\n<p>&nbsp;</p>\n<p>We believe in you!</p>\n<p>The Dembrane Team</p>\n<p>&nbsp;</p>\n<p>If you no longer wish to receive these notifications please click on <strong><a href=\"{{$trigger.ADMIN_BASE_URL}}/en-US/unsubscribe?token={{$trigger.token}}&amp;project_id={{$trigger.project_id}}\" target=\"_blank\" rel=\"noopener\">Unsubscribe&nbsp;</a></strong></p>"
+      "body": null,
+      "type": "template",
+      "template": "report-notification-en",
+      "data": {
+        "PARTICIPANT_BASE_URL": "{{$trigger.PARTICIPANT_BASE_URL}}",
+        "project_id": "{{$trigger.project_id}}",
+        "project_name": "{{$trigger.project_name}}",
+        "default_conversation_title": "{{$trigger.default_conversation_title}}",
+        "conversation_name": "{{$trigger.conversation_name}}",
+        "token": "{{$trigger.token}}"
+      }
     },
     "resolve": null,
     "reject": "920bd181-b2a2-4f0d-94dc-3b1a08c3f4ef",
@@ -222,7 +267,7 @@
     "name": "Trigger Email Flow",
     "key": "trigger_email_flow",
     "type": "trigger",
-    "position_x": 91,
+    "position_x": 109,
     "position_y": 1,
     "options": {
       "flow": "17703446-fef0-49e9-bdc4-385db1311137",
