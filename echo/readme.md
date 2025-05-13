@@ -131,6 +131,14 @@ If your Redis container fails to start and you see a “Permission denied” err
 - https://github.com/vitejs/vite/discussions/17738
 - fix is to disable cache in the network tab in the browser
 
+### Fix for mypy extension hung up (devcontainer hang/lag)
+
+```bash
+ps -aux | grep "mypy"
+# grab all the process ids
+kill -9 <process ids seperated by spaces>
+```
+
 ### (Windows Specific) Issues with the default WSL distribution that comes with Docker Desktop
 
 **Enable WSL Integration in Docker Desktop**
