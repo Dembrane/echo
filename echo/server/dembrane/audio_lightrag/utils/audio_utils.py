@@ -106,7 +106,8 @@ def process_audio_files(
             start_time = i * chunk_length
             end_time = (i + 1) * chunk_length if i != n_sub_chunks - 1 else len(audio)
             chunk = audio[start_time:end_time]
-            segment_uri = save_audio_to_s3(chunk, str(segment_id) + ".wav", public=False)
+            conversation_id = process_tracker_df[process_tracker_df['chunk_id'] == chunk_id].iloc[0]['conversation_id']
+            segment_uri = save_audio_to_s3(chunk, f"conversation_id/{conversation_id}/chunk_id/{chunk_id}/segment_id/{str(segment_id)}.wav", public=False)
             directus.update_item(
                 "conversation_segment",
                 item_id=segment_id,
@@ -129,7 +130,8 @@ def process_audio_files(
                 audio = AudioSegment.from_file(BytesIO(audio_stream.read()), format=format)
                 processed_chunk_li.append(chunk_id)
                 combined_audio += audio
-        segment_uri = save_audio_to_s3(combined_audio, str(segment_id) + ".wav", public=False)
+        conversation_id = process_tracker_df[process_tracker_df['chunk_id'] == chunk_id].iloc[0]['conversation_id']
+        segment_uri = save_audio_to_s3(combined_audio, f"conversation_id/{conversation_id}/chunk_id/{chunk_id}/segment_id/{str(segment_id)}.wav", public=False)
         segment_2_path[segment_id] = segment_uri
         directus.update_item(
             "conversation_segment",
