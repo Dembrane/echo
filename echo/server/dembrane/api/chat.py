@@ -534,25 +534,6 @@ async def post_chat(
                     else:
                         messages_to_send = [{"role": "system", "content": system_messages}] + filtered_messages
                     
-                    token_count = token_counter(model=LIGHTRAG_LITELLM_INFERENCE_MODEL, messages=messages_to_send)
-                    
-                    # If token count is too low, pad the system message with whitespace or additional context
-                    if token_count < 2048:
-                        logger.info(f"Token count too low ({token_count}), adding padding to reach minimum")
-                        # Add padding to the system message to reach minimum token count
-                        padding = " " * ((2048 - token_count) * 4)  # Roughly 4 chars per token
-                        
-                        if isinstance(system_messages, list) and len(system_messages) > 0:
-                            messages_to_send[0]["content"] += "\n\n" + padding
-                        else:
-                            # Handle the case where system_messages is a string
-                            if isinstance(system_messages, str):
-                                padded_system = system_messages + "\n\n" + padding
-                                messages_to_send = [{"role": "system", "content": padded_system}] + filtered_messages
-                            else:
-                                # This should never happen, but just in case
-                                logger.warning("system_messages is neither a list nor a string")
-                    
                     logger.debug(f"messages_to_send: {messages_to_send}")
                     response = await litellm.acompletion(
                         model=LIGHTRAG_LITELLM_INFERENCE_MODEL,
