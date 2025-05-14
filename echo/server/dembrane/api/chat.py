@@ -453,7 +453,7 @@ async def post_chat(
 
         conversation_references = await get_conversation_references(rag_prompt, [project_id])
 
-        async def stream_response_async() -> AsyncGenerator[str, None]:
+        async def stream_response_async_autoselect() -> AsyncGenerator[str, None]:
             conversation_references_yeild = f"h:{json.dumps(conversation_references)}\n"
             yield conversation_references_yeild
 
@@ -498,14 +498,14 @@ async def post_chat(
         headers = {"Content-Type": "text/event-stream"}
         if protocol == "data":
             headers["x-vercel-ai-data-stream"] = "v1"
-        response = StreamingResponse(stream_response_async(), headers=headers)
+        response = StreamingResponse(stream_response_async_autoselect(), headers=headers)
         return response
     else:
         system_messages = await create_system_messages_for_chat(
             locked_conversation_id_list, db, language, project_id
         )
 
-        def stream_response() -> Generator[str, None, None]:
+        async def stream_response_async_manualselect() -> AsyncGenerator[str, None]:
             with DatabaseSession() as db:
                 filtered_messages: List[Dict[str, Any]] = []
 
@@ -523,14 +523,56 @@ async def post_chat(
                     filtered_messages = filtered_messages[:-1]
 
                 try:
-                    for chunk in stream_anthropic_chat_response(
-                        system=system_messages,
-                        messages=filtered_messages,
-                        protocol=protocol,
-                    ):
-                        yield chunk
+                    accumulated_response = ""
+                    
+                    # Check message token count and add padding if needed
+                    # Handle system_messages whether it's a list or string
+                    if isinstance(system_messages, list):
+                        messages_to_send = []
+                        for msg in system_messages:
+                            messages_to_send.append({"role": "system", "content": msg["text"]})
+                        messages_to_send.extend(filtered_messages)
+                    else:
+                        messages_to_send = [{"role": "system", "content": system_messages}] + filtered_messages
+                    
+                    token_count = token_counter(model=LIGHTRAG_LITELLM_INFERENCE_MODEL, messages=messages_to_send)
+                    
+                    # If token count is too low, pad the system message with whitespace or additional context
+                    if token_count < 2048:
+                        logger.info(f"Token count too low ({token_count}), adding padding to reach minimum")
+                        # Add padding to the system message to reach minimum token count
+                        padding = " " * ((2048 - token_count) * 4)  # Roughly 4 chars per token
+                        
+                        if isinstance(system_messages, list) and len(system_messages) > 0:
+                            messages_to_send[0]["content"] += "\n\n" + padding
+                        else:
+                            # Handle the case where system_messages is a string
+                            if isinstance(system_messages, str):
+                                padded_system = system_messages + "\n\n" + padding
+                                messages_to_send = [{"role": "system", "content": padded_system}] + filtered_messages
+                            else:
+                                # This should never happen, but just in case
+                                logger.warning("system_messages is neither a list nor a string")
+                    
+                    logger.debug(f"messages_to_send: {messages_to_send}")
+                    response = await litellm.acompletion(
+                        model=LIGHTRAG_LITELLM_INFERENCE_MODEL,
+                        api_key=LIGHTRAG_LITELLM_INFERENCE_API_KEY,
+                        api_version=LIGHTRAG_LITELLM_INFERENCE_API_VERSION,
+                        api_base=LIGHTRAG_LITELLM_INFERENCE_API_BASE,
+                        messages=messages_to_send,
+                        stream=True,
+                    )
+                    async for chunk in response:
+                        if chunk.choices[0].delta.content:
+                            content = chunk.choices[0].delta.content
+                            accumulated_response += content
+                            if protocol == "text":
+                                yield content
+                            elif protocol == "data":
+                                yield f"0:{json.dumps(content)}\n"
                 except Exception as e:
-                    logger.error(f"Error in stream_anthropic_chat_response: {str(e)}")
+                    logger.error(f"Error in litellm stream response: {str(e)}")
 
                     # delete user message
                     db.delete(user_message)
@@ -547,6 +589,6 @@ async def post_chat(
         if protocol == "data":
             headers["x-vercel-ai-data-stream"] = "v1"
 
-        response = StreamingResponse(stream_response(), headers=headers)
+        response = StreamingResponse(stream_response_async_manualselect(), headers=headers)
 
         return response
