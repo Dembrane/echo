@@ -1,15 +1,23 @@
-import { useAddChatContextMutation, useDeleteChatContextMutation, useProjectChatContext } from "@/lib/query";
+import {
+  useAddChatContextMutation,
+  useConversationsByProjectId,
+  useDeleteChatContextMutation,
+  useProjectChatContext,
+} from "@/lib/query";
 import { Trans } from "@lingui/react/macro";
 import { Box, Checkbox, Group, Stack, Text } from "@mantine/core";
 import { useParams } from "react-router-dom";
 
 export const AutoSelectConversations = () => {
-  const { chatId } = useParams();
+  const { chatId, projectId } = useParams();
+
   const projectChatContextQuery = useProjectChatContext(chatId ?? "");
   const addChatContextMutation = useAddChatContextMutation();
   const deleteChatContextMutation = useDeleteChatContextMutation();
+
   // Get the auto_select_bool value from the chat context
   const autoSelect = projectChatContextQuery.data?.auto_select_bool ?? false;
+
   const handleCheckboxChange = (checked: boolean) => {
     if (checked) {
       addChatContextMutation.mutate({
@@ -23,6 +31,7 @@ export const AutoSelectConversations = () => {
       });
     }
   };
+
   return (
     <Box className="cursor-pointer border border-gray-200 hover:bg-gray-50">
       <Group justify="space-between" p="md" wrap="nowrap">

@@ -2,7 +2,6 @@ import logging
 from typing import Optional
 
 import redis
-from dotenv import load_dotenv
 
 from dembrane.config import (
     REDIS_URL,
@@ -21,8 +20,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-load_dotenv()
 
 
 
@@ -64,7 +61,9 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
             filtered_conv_ids.append(conv_id)
         
         if not filtered_conv_ids:
-            logger.info("All conversation IDs are already being processed or were processed recently. Nothing to do.")
+            logger.info(
+                "All conversation IDs are already being processed or locked. Nothing to do."
+            )
             return True
             
         logger.info(f"Starting ETL pipeline for {len(filtered_conv_ids)} conversations (after filtering)")
@@ -72,8 +71,10 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
         # Directus Pipeline
         try:
             directus_pl = DirectusETLPipeline()
-            process_tracker = directus_pl.run(filtered_conv_ids, 
-                                                run_timestamp=None) # pass timestamp to avoid processing files uploaded earlier than cooloff
+            process_tracker = directus_pl.run(
+                filtered_conv_ids,
+                run_timestamp=None,  # pass timestamp to avoid processing files uploaded earlier than cooloff
+            )
             logger.info("1/3...Directus ETL pipeline completed successfully")
         except Exception as e:
             logger.error(f"Directus ETL pipeline failed: {str(e)}")

@@ -27,6 +27,17 @@ type Aspect = {
   view_id?: string | View | null;
 };
 
+type ProcessingStatus = {
+  id: int;
+  collection: string;
+  item_id: string;
+  timestamp: string;
+  event?: string | null;
+  message?: string | null;
+  json?: any | null;
+  duration_ms?: number | null;
+};
+
 type Conversation = {
   is_finished: boolean;
   chunks: any[] | ConversationChunk[];
@@ -39,7 +50,7 @@ type Conversation = {
   participant_email?: string | null;
   participant_name?: string | null;
   participant_user_agent?: string | null;
-  processing_status?: string | null;
+  processing_status?: ProcessingStatus | null;
   processing_message?: string | null;
   project_chat_messages: any[] | ProjectChatMessageConversation[];
   project_chats: any[] | ProjectChatConversation[];
@@ -754,4 +765,5 @@ type CustomDirectusTypes = {
   quote_aspect_1: QuoteAspect1[];
   quote_conversation_chunk: QuoteConversationChunk[];
   view: View[];
+  processing_status: ProcessingStatus[];
 };

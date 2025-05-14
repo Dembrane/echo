@@ -1,3 +1,4 @@
+from json import JSONDecodeError
 from logging import getLogger
 
 import dramatiq
@@ -33,9 +34,12 @@ from dembrane.quote_utils import (
     generate_aspect_extras,
     cluster_quotes_using_aspect_centroids,
 )
-from dembrane.conversation_utils import collect_unfinished_conversations
+from dembrane.conversation_utils import (
+    collect_unfinished_conversations,
+    collect_unfinished_audio_processing_conversations,
+)
 from dembrane.api.dependency_auth import DependencyDirectusSession
-from dembrane.processing_status_utils import ProcessingStatus
+from dembrane.processing_status_utils import ProcessingStatus, ProcessingStatusContext
 from dembrane.audio_lightrag.main.run_etl import run_etl_pipeline
 
 init_sentry()
@@ -98,15 +102,19 @@ dramatiq.set_broker(broker)
 
 # Transcription Task
 @dramatiq.actor(queue_name="network", priority=0)
-def task_transcribe_chunk(conversation_chunk_id: str) -> None:
+def task_transcribe_chunk(conversation_chunk_id: str, conversation_id: str) -> None:
     """
     Transcribe a conversation chunk. The results are not returned.
     """
     logger = getLogger("dembrane.tasks.task_transcribe_chunk")
     try:
-        logger.info(f"Transcribing conversation chunk: {conversation_chunk_id}")
-
-        transcribe_conversation_chunk(conversation_chunk_id)
+        with ProcessingStatusContext(
+            "conversation",
+            conversation_id,
+            "task_transcribe_chunk",
+            json={"conversation_chunk_id": conversation_chunk_id},
+        ):
+            transcribe_conversation_chunk(conversation_chunk_id)
 
         return
     except Exception as e:
@@ -125,10 +133,12 @@ def task_summarize_conversation(conversation_id: str) -> None:
     try:
         from dembrane.api.conversation import summarize_conversation
 
-        logger.info(f"Summarizing conversation: {conversation_id}")
-        summarize_conversation(
-            conversation_id, auth=DependencyDirectusSession(user_id="none", is_admin=True)
-        )
+        with ProcessingStatusContext(
+            "conversation", conversation_id, "task_summarize_conversation"
+        ):
+            summarize_conversation(
+                conversation_id, auth=DependencyDirectusSession(user_id="none", is_admin=True)
+            )
 
         return
     except Exception as e:
@@ -147,15 +157,19 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
         # local import to avoid circular imports
         from dembrane.api.conversation import get_conversation_content
 
-        logger.info(f"Merging conversation chunks: {conversation_id}")
-        get_conversation_content(
-            conversation_id,
-            auth=DependencyDirectusSession(user_id="none", is_admin=True),
-            force_merge=True,
-            return_url=True,
-        )
+        with ProcessingStatusContext(
+            "conversation", conversation_id, "task_merge_conversation_chunks"
+        ):
+            # todo: except if NoValidParts
+            get_conversation_content(
+                conversation_id,
+                auth=DependencyDirectusSession(user_id="none", is_admin=True),
+                force_merge=True,
+                return_url=True,
+            )
 
         return
+
     except Exception as e:
         logger.error(f"Error: {e}")
         raise e from e
@@ -169,9 +183,43 @@ def task_run_etl_pipeline(conversation_id: str) -> None:
     logger = getLogger("dembrane.tasks.task_run_etl_pipeline")
 
     try:
-        logger.info(f"Invoking ETL pipeline for conversation: {conversation_id}")
-        run_etl_pipeline([conversation_id])
+        directus.update_item(
+            "conversation",
+            conversation_id,
+            {
+                "is_audio_processing_finished": False,
+            },
+        )
 
+        try:
+            with ProcessingStatusContext("conversation", conversation_id, "task_run_etl_pipeline"):
+                run_etl_pipeline([conversation_id])
+
+            directus.update_item(
+                "conversation",
+                conversation_id,
+                {
+                    "is_audio_processing_finished": True,
+                },
+            )
+
+        except Exception as e:
+            logger.error(f"Error: {e}")
+
+            directus.update_item(
+                "conversation",
+                conversation_id,
+                {
+                    "is_audio_processing_finished": False,
+                    "processing_status": ProcessingStatus.FAILED.value,
+                    "processing_message": "Audio analysis failed",
+                },
+            )
+            raise e from e
+
+        return
+    except JSONDecodeError as e:
+        logger.error(f"Error: {e}")
         return
     except Exception as e:
         logger.error(f"Error: {e}")
@@ -197,8 +245,6 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
             conversation_id,
             item_data={
                 "is_finished": True,
-                "processing_status": ProcessingStatus.COMPLETED.value,
-                "processing_message": "Conversation marked as finished.",
             },
         )
 
@@ -246,12 +292,18 @@ def task_process_conversation_chunk(chunk_id: str, run_finish_hook: bool = False
             chunk["conversation_id"],
             {
                 "processing_status": ProcessingStatus.PROCESSING.value,
-                "processing_message": "Processing audio",
+                "processing_message": "Processing audio chunk",
             },
         )
 
         # critical section
-        split_chunk_ids = split_audio_chunk(chunk_id, "mp3")
+        with ProcessingStatusContext(
+            "conversation",
+            chunk["conversation_id"],
+            "task_process_conversation_chunk.split_audio_chunk",
+            json={"chunk_id": chunk_id},
+        ):
+            split_chunk_ids = split_audio_chunk(chunk_id, "mp3")
 
         if split_chunk_ids is None:
             logger.error(f"Split audio chunk result is None for chunk: {chunk_id}")
@@ -259,21 +311,12 @@ def task_process_conversation_chunk(chunk_id: str, run_finish_hook: bool = False
 
         logger.info(f"Split audio chunk result: {split_chunk_ids}")
 
-        directus.update_item(
-            "conversation",
-            chunk["conversation_id"],
-            {
-                "processing_status": ProcessingStatus.PROCESSING.value,
-                "processing_message": "Transcribing audio",
-            },
-        )
-
         if run_finish_hook:
             wf = Workflow(
                 Chain(
                     Group(
                         *[
-                            task_transcribe_chunk.message(chunk_id)
+                            task_transcribe_chunk.message(chunk_id, chunk["conversation_id"])
                             for chunk_id in split_chunk_ids
                             if chunk_id is not None
                         ],
@@ -286,7 +329,7 @@ def task_process_conversation_chunk(chunk_id: str, run_finish_hook: bool = False
         else:
             return group(
                 [
-                    task_transcribe_chunk.message(chunk_id)
+                    task_transcribe_chunk.message(chunk_id, chunk["conversation_id"])
                     for chunk_id in split_chunk_ids
                     if chunk_id is not None
                 ]
@@ -308,16 +351,17 @@ def task_collect_and_finish_unfinished_conversations() -> None:
 
         unfinished_conversation_ids = collect_unfinished_conversations()
 
-        if len(unfinished_conversation_ids) == 0:
-            logger.info("No unfinished conversations found")
-            return
-
-        logger.info(f"found {len(unfinished_conversation_ids)} unfinished conversations")
+        unfinished_ap_conversation_ids = collect_unfinished_audio_processing_conversations()
 
         g = group(
             [
                 task_finish_conversation_hook.message(conversation_id)
                 for conversation_id in unfinished_conversation_ids
+                if conversation_id is not None
+            ]
+            + [
+                task_run_etl_pipeline.message(conversation_id)
+                for conversation_id in unfinished_ap_conversation_ids
                 if conversation_id is not None
             ]
         )

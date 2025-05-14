@@ -1,27 +1,27 @@
 {
   "collection": "project",
-  "field": "tags",
+  "field": "divider-n6xep9",
   "type": "alias",
   "meta": {
     "collection": "project",
     "conditions": null,
     "display": null,
     "display_options": null,
-    "field": "tags",
+    "field": "divider-n6xep9",
     "group": null,
     "hidden": false,
-    "interface": "list-o2m",
+    "interface": "presentation-divider",
     "note": null,
     "options": {
-      "enableLink": true,
-      "enableSelect": false,
-      "template": "{{text}}"
+      "inlineTitle": true,
+      "title": "Flags"
     },
     "readonly": false,
     "required": false,
-    "sort": 16,
+    "sort": 22,
     "special": [
-      "o2m"
+      "alias",
+      "no-data"
     ],
     "translations": null,
     "validation": null,

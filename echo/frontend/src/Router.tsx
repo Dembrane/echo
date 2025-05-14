@@ -144,6 +144,10 @@ export const mainRouter = createBrowserRouter([
                     element: <ProjectChatRoute />,
                   },
                   {
+                    path: "chats/:chatId/debug",
+                    element: <DebugPage />,
+                  },
+                  {
                     path: "resources/:resourceId",
                     element: <ProjectResourceLayout />,
                     children: [
@@ -174,6 +178,10 @@ export const mainRouter = createBrowserRouter([
                         path: "analysis",
                         element: <ProjectConversationAnalysis />,
                       },
+                      {
+                        path: "debug",
+                        element: <DebugPage />,
+                      },
                     ],
                   },
 
@@ -203,14 +211,10 @@ export const mainRouter = createBrowserRouter([
                     path: "report",
                     element: <ProjectReportRoute />,
                   },
-                  ...(DEBUG_MODE
-                    ? [
-                        {
-                          path: "debug",
-                          element: <DebugPage />,
-                        },
-                      ]
-                    : []),
+                  {
+                    path: "debug",
+                    element: <DebugPage />,
+                  },
                 ],
               },
             ],

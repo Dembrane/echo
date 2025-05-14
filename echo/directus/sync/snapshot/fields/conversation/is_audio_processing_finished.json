@@ -1,13 +1,13 @@
 {
-  "collection": "project",
-  "field": "default_conversation_ask_for_participant_name",
+  "collection": "conversation",
+  "field": "is_audio_processing_finished",
   "type": "boolean",
   "meta": {
-    "collection": "project",
+    "collection": "conversation",
     "conditions": null,
     "display": null,
     "display_options": null,
-    "field": "default_conversation_ask_for_participant_name",
+    "field": "is_audio_processing_finished",
     "group": null,
     "hidden": false,
     "interface": "boolean",
@@ -15,20 +15,20 @@
     "options": null,
     "readonly": false,
     "required": false,
-    "sort": 10,
+    "sort": 23,
     "special": [
       "cast-boolean"
     ],
     "translations": null,
     "validation": null,
     "validation_message": null,
-    "width": "half"
+    "width": "full"
   },
   "schema": {
-    "name": "default_conversation_ask_for_participant_name",
-    "table": "project",
+    "name": "is_audio_processing_finished",
+    "table": "conversation",
     "data_type": "boolean",
-    "default_value": true,
+    "default_value": false,
     "max_length": null,
     "numeric_precision": null,
     "numeric_scale": null,

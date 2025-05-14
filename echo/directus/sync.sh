@@ -40,6 +40,7 @@ if [[ ! "$action" =~ ^(push|pull|diff)$ ]]; then
     if [ -z "$action" ]; then
         # Prompt for action if not provided
 				echo "definitions: push (from source to directus), pull (from directus to source), diff (from source to directus)"
+                echo "LHS: server, RHS: source"
         echo "Select action:"
         select action in "push" "pull" "diff"; do
             if [ -n "$action" ]; then
