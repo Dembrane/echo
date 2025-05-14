@@ -117,9 +117,6 @@ def process_audio_files(
             start_time = i * chunk_length
             end_time = (i + 1) * chunk_length if i != n_sub_chunks - 1 else len(audio)
             chunk = audio[start_time:end_time]
-            conversation_id = process_tracker_df[process_tracker_df["chunk_id"] == chunk_id].iloc[
-                0
-            ]["conversation_id"]
             segment_uri = save_audio_to_s3(
                 chunk,
                 f"conversation_id/{conversation_id}/segment_id/{str(segment_id)}.wav",
@@ -171,6 +168,17 @@ def ogg_to_str(ogg_file_path: str) -> str:
 
 
 def create_directus_segment(configid: str, counter: float, conversation_id: str) -> int:
+    """
+    Create a new segment in Directus.
+    
+    Args:
+        configid (str): The config id to associate with the segment
+        counter (float): The counter value for the segment
+        conversation_id (str): The conversation id to associate with the segment
+        
+    Returns:
+        int: The id of the created segment
+    """
     response = directus.create_item(
         "conversation_segment",
         item_data={
@@ -181,7 +189,6 @@ def create_directus_segment(configid: str, counter: float, conversation_id: str)
     )
     directus_id = response["data"]["id"]
     return int(directus_id)
-
 
 def delete_directus_segment(segment_id: str) -> None:
     directus.delete_item("conversation_segment", segment_id)

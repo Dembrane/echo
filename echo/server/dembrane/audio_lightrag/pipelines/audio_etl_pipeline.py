@@ -111,6 +111,7 @@ class AudioETLPipeline:
                 )
         # Process non-audio files
         if transform_non_audio_process_tracker_df.empty is not True:
+            conversation_id = transform_non_audio_process_tracker_df.conversation_id.iloc[0]
             full_transcript = ""
             segment_id = str(create_directus_segment(self.configid, -1, conversation_id))
 
