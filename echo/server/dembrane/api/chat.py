@@ -4,7 +4,7 @@
 
 import json
 import logging
-from typing import Any, Dict, List, Literal, Optional, Generator, AsyncGenerator
+from typing import Any, Dict, List, Literal, Optional, AsyncGenerator
 
 import litellm
 from fastapi import Query, APIRouter, HTTPException
@@ -29,7 +29,6 @@ from dembrane.database import (
     DependencyInjectDatabase,
 )
 from dembrane.directus import directus
-from dembrane.anthropic import stream_anthropic_chat_response
 from dembrane.chat_utils import (
     MAX_CHAT_CONTEXT_LENGTH,
     get_project_chat_history,
