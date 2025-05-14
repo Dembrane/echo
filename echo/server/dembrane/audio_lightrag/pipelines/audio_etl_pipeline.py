@@ -1,8 +1,6 @@
 import logging
 
-from dembrane.config import (
-    AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB,
-)
+from dembrane.config import LIGHTRAG_CONFIG_ID, AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB
 from dembrane.directus import directus
 from dembrane.audio_lightrag.utils.audio_utils import (
     process_audio_files,
@@ -34,7 +32,7 @@ class AudioETLPipeline:
         self.process_tracker = process_tracker
         self.process_tracker_df = process_tracker()
         self.max_size_mb = AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB
-        self.configid = f'{float(self.max_size_mb):.4f}mb'
+        self.configid = LIGHTRAG_CONFIG_ID
 
     def extract(self) -> None: pass
 
@@ -68,7 +66,7 @@ class AudioETLPipeline:
                     logger.debug(f"Counter value: {counter}, Max size: {self.max_size_mb}MB, Config ID: {self.configid}")
                     unprocessed_chunk_file_uri_li, chunk_id_2_segment_temp, counter = process_audio_files(
                         unprocessed_chunk_file_uri_li,
-                        configid=self.configid,
+                        configid=str(self.configid),
                         max_size_mb=float(self.max_size_mb),
                         counter=counter,
                         process_tracker_df=transform_audio_process_tracker_df
@@ -101,7 +99,7 @@ class AudioETLPipeline:
         # Process non-audio files
         if transform_non_audio_process_tracker_df.empty is not True:
             full_transcript = ''
-            segment_id = int(create_directus_segment(self.configid, -1)) # type: ignore
+            segment_id = str(create_directus_segment(self.configid, -1, conversation_id))
             
             chunk_ids = transform_non_audio_process_tracker_df.chunk_id.to_list()
             chunk_records = directus.get_items(

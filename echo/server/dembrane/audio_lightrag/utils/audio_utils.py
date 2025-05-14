@@ -92,17 +92,18 @@ def process_audio_files(
     chunk_id_2_uri = dict(process_tracker_df[['chunk_id', 'path']].values)
     chunk_id_2_size = {chunk_id: _read_mp3_from_s3_and_get_wav_file_size(uri) for chunk_id, uri in chunk_id_2_uri.items()}
     chunk_id = list(chunk_id_2_size.keys())[0]
-    chunk_id_2_segment = []
-    segment_2_path = {}
+    chunk_id_2_segment: list[tuple[str, str]] = []
+    segment_2_path: dict[str, str] = {}
     # One chunk to many segments
     if chunk_id_2_size[chunk_id] > max_size_mb:
+        conversation_id = process_tracker_df[process_tracker_df['chunk_id'] == chunk_id].iloc[0]['conversation_id']
         n_sub_chunks = int((chunk_id_2_size[chunk_id] // max_size_mb) + 1)
         audio_stream = get_stream_from_s3(chunk_id_2_uri[chunk_id])
         audio = AudioSegment.from_file(BytesIO(audio_stream.read()), format=format)
         chunk_length = len(audio) // n_sub_chunks
         for i in range(n_sub_chunks):
-            segment_id = create_directus_segment(configid, counter)
-            chunk_id_2_segment.append((chunk_id, segment_id))
+            segment_id = create_directus_segment(configid, counter, conversation_id)
+            chunk_id_2_segment.append((chunk_id, str(segment_id)))
             start_time = i * chunk_length
             end_time = (i + 1) * chunk_length if i != n_sub_chunks - 1 else len(audio)
             chunk = audio[start_time:end_time]
@@ -113,7 +114,7 @@ def process_audio_files(
                 item_id=segment_id,
                 item_data={"path": segment_uri},
             )
-            segment_2_path[segment_id] = segment_uri
+            segment_2_path[str(segment_id)] = segment_uri
             counter += 1
         return unprocessed_chunk_file_uri_li[1:], chunk_id_2_segment, counter
     #Many chunks to one segment
@@ -121,41 +122,42 @@ def process_audio_files(
         processed_chunk_li = []
         combined_size = 0
         combined_audio = AudioSegment.empty()
-        segment_id = create_directus_segment(configid, counter)
+        conversation_id = process_tracker_df[process_tracker_df['chunk_id'] == chunk_id].iloc[0]['conversation_id']
+        segment_id = create_directus_segment(configid, counter, conversation_id)
         for chunk_id,size in chunk_id_2_size.items():
             combined_size = combined_size + size # type: ignore
             if combined_size<= max_size_mb:
-                chunk_id_2_segment.append((chunk_id, segment_id))
+                chunk_id_2_segment.append((chunk_id, str(segment_id)))
                 audio_stream = get_stream_from_s3(chunk_id_2_uri[chunk_id])
                 audio = AudioSegment.from_file(BytesIO(audio_stream.read()), format=format)
                 processed_chunk_li.append(chunk_id)
                 combined_audio += audio
-        conversation_id = process_tracker_df[process_tracker_df['chunk_id'] == chunk_id].iloc[0]['conversation_id']
         segment_uri = save_audio_to_s3(combined_audio, f"conversation_id/{conversation_id}/segment_id/{str(segment_id)}.wav", public=False)
-        segment_2_path[segment_id] = segment_uri
+        segment_2_path[str(segment_id)] = segment_uri
         directus.update_item(
             "conversation_segment",
             item_id=segment_id,
             item_data={"path": segment_uri},
         )
         counter += 1
-        return  unprocessed_chunk_file_uri_li[len(processed_chunk_li):], chunk_id_2_segment, counter
+        return unprocessed_chunk_file_uri_li[len(processed_chunk_li):], chunk_id_2_segment, counter
     
 def ogg_to_str(ogg_file_path: str) -> str:
     with open(ogg_file_path, "rb") as file:
         return base64.b64encode(file.read()).decode("utf-8")
     
 
-def create_directus_segment(configid: str, counter: float) -> str:
+def create_directus_segment(configid: str, counter: float, conversation_id: str) -> int:
     response = directus.create_item(
             "conversation_segment",
             item_data={
                 "config_id": configid,
                 "counter": counter,
+                "conversation_id": conversation_id,
             },
         )
     directus_id = response['data']['id']
-    return directus_id
+    return int(directus_id)
 
 def delete_directus_segment(segment_id: str) -> None:
     directus.delete_item("conversation_segment", segment_id)
