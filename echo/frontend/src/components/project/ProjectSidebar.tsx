@@ -33,7 +33,6 @@ export const ProjectSidebar = () => {
   const handleAsk = () => {
     createChatMutation.mutate({
       project_id: { id: projectId ?? "" },
-      conversationId: conversationId ?? "",
       navigateToNewChat: true,
     });
   };
