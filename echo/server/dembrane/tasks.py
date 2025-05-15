@@ -1,5 +1,6 @@
 from json import JSONDecodeError
 from logging import getLogger
+from datetime import datetime
 
 import dramatiq
 import lz4.frame
@@ -490,6 +491,32 @@ def task_generate_quotes(project_analysis_run_id: str, conversation_id: str) -> 
 
 				comparison_project_analysis_run = previous_project_analysis_runs[1]
 
+				# ------------------------------------------------------------------
+				# comparison_project_analysis_run["created_at"] can be either a
+				# Python datetime (when coming from the SQLAlchemy ORM) *or* a string
+				# in ISO-8601 format (when coming from the Directus REST response).
+				# We normalise it to a datetime object so that we can safely perform
+				# comparisons with `latest_conversation_chunk.timestamp`.
+				# ------------------------------------------------------------------
+				comparison_created_at = comparison_project_analysis_run["created_at"]
+
+				if isinstance(comparison_created_at, str):
+					# Handle a trailing "Z" (Zulu / UTC) which `fromisoformat` does not accept.
+					iso_string = comparison_created_at.replace("Z", "+00:00")
+					try:
+						comparison_created_at = datetime.fromisoformat(iso_string)
+					except Exception as parse_exc:  # noqa: BLE001
+						logger.warning(
+							"Unable to parse created_at '%s' to datetime (%s). "
+							"Falling back to string comparison which may be incorrect.",
+							comparison_project_analysis_run["created_at"],
+							parse_exc,
+						)
+
+				# At this point `comparison_created_at` is *usually* a datetime. If
+				# parsing failed it will be the original string, so we handle that
+				# gracefully in the comparison below.
+
 				latest_conversation_chunk = (
 					db.query(ConversationChunkModel)
 					.filter(ConversationChunkModel.conversation_id == conversation_id)
@@ -504,12 +531,23 @@ def task_generate_quotes(project_analysis_run_id: str, conversation_id: str) -> 
 					return
 
 				# conversation was updated since the last project analysis run so we need to generate new quotes
-				if (
-					latest_conversation_chunk.timestamp
-					> comparison_project_analysis_run["created_at"]
-				):
+				should_generate = False
+				try:
+					should_generate = latest_conversation_chunk.timestamp > comparison_created_at
+				except TypeError:
+					# This happens when `comparison_created_at` is still a string. In that
+					# scenario we conservatively choose to regenerate quotes to avoid
+					# missing new data.
+					should_generate = True
+
+				if should_generate:
 					logger.info(
-						f"Have to generate quotes for project analysis run ({latest_conversation_chunk.id[:6]} ({latest_conversation_chunk.timestamp.strftime('%Y-%m-%d %H:%M:%S')}) > {comparison_project_analysis_run['id'][:6]} ({comparison_project_analysis_run['created_at'].strftime('%Y-%m-%d %H:%M:%S')}))"
+						"Have to generate quotes for project analysis run ("
+						"%s (%s) > %s (%s))",
+						latest_conversation_chunk.id[:6],
+						latest_conversation_chunk.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+						comparison_project_analysis_run["id"][:6],
+						comparison_created_at if isinstance(comparison_created_at, str) else comparison_created_at.strftime("%Y-%m-%d %H:%M:%S"),
 					)
 					generate_quotes(db, project_analysis_run_id, conversation_id)
 				else:
@@ -517,7 +555,9 @@ def task_generate_quotes(project_analysis_run_id: str, conversation_id: str) -> 
 					# for all quotes (comparision run, conversation id) update with the latest project run id
 					# we need to update the quote with the latest conversation chunk
 					logger.info(
-						f"Reusing quotes for project analysis run from {comparison_project_analysis_run['id'][:6]} ({comparison_project_analysis_run['created_at'].strftime('%Y-%m-%d %H:%M:%S')})"
+						"Reusing quotes for project analysis run from %s (%s)",
+						comparison_project_analysis_run["id"][:6],
+						comparison_created_at if isinstance(comparison_created_at, str) else comparison_created_at.strftime("%Y-%m-%d %H:%M:%S"),
 					)
 					latest_project_analysis_run = previous_project_analysis_runs[0]
 
