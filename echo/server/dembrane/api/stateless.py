@@ -103,9 +103,11 @@ async def insert_item(payload: InsertRequest,
             raise HTTPException(status_code=400, detail="Invalid segment ID")
 
         if validate_segment_id(echo_segment_ids):
-            rag.insert(payload.content, 
-                    ids=echo_segment_ids,
-                    file_paths=['SEGMENT_ID_' + x for x in echo_segment_ids])
+            await rag.ainsert(
+                payload.content,
+                ids=echo_segment_ids,
+                file_paths=["SEGMENT_ID_" + x for x in echo_segment_ids],
+            )
             for transcript in payload.transcripts:
                 await upsert_transcript(postgres_db, 
                                     document_id = str(payload.echo_segment_id), 
