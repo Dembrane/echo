@@ -7,17 +7,25 @@ from typing import List, Optional
 import numpy as np
 import pandas as pd
 import tiktoken
+from litellm import completion
 from pydantic import BaseModel
 from sqlalchemy import func, select, literal
 from sqlalchemy.orm import Session
 from sklearn.cluster import KMeans
-from langchain_openai import OpenAIEmbeddings
-from pgvector.sqlalchemy import Vector
-from langchain_experimental.text_splitter import SemanticChunker
 
+# from langchain_openai import OpenAIEmbeddings
+from pgvector.sqlalchemy import Vector
+
+# from langchain_experimental.text_splitter import SemanticChunker
 from dembrane.s3 import save_to_s3_from_url
 from dembrane.ner import anonymize_sentence
 from dembrane.utils import generate_uuid, get_utc_timestamp
+from dembrane.config import (
+    QUOTEUTIL_LITELLM_MODEL,
+    QUOTEUTIL_LITELLM_API_KEY,
+    QUOTEUTIL_LITELLM_API_BASE,
+    QUOTEUTIL_LITELLM_API_VERSION,
+)
 from dembrane.openai import client
 from dembrane.prompts import render_prompt
 from dembrane.database import (
@@ -38,8 +46,8 @@ logger = logging.getLogger("quote_utils")
 np.random.seed(0)
 
 
-lc_embedder = OpenAIEmbeddings(model="text-embedding-3-small")
-semantic_chunker = SemanticChunker(lc_embedder)
+# lc_embedder = OpenAIEmbeddings(model="text-embedding-3-small")
+# semantic_chunker = SemanticChunker(lc_embedder)
 
 SENTENCE_ENDING_PUNCTUATION = {".", "!", "?"}
 SENTENCE_ENDING_PUNTUATION_REGEX = r"(?<=[.!?]) +"
@@ -88,9 +96,12 @@ def llm_split_text(text: str) -> List[str]:
         }
     ]
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=messages,  # type: ignore
+    response = completion(
+        model=QUOTEUTIL_LITELLM_MODEL,
+        messages=messages,
+        api_key=QUOTEUTIL_LITELLM_API_KEY,
+        api_version=QUOTEUTIL_LITELLM_API_VERSION,
+        api_base=QUOTEUTIL_LITELLM_API_BASE,
     )
     logger.debug(response)
 
@@ -453,9 +464,12 @@ def initialize_view(
     class JSONOutputSchema(BaseModel):
         aspect_list: list[AspectOutput]
 
-    response = client.beta.chat.completions.parse(
-        model="gpt-4o",
-        messages=messages,  # type: ignore
+    response = completion(
+        model=QUOTEUTIL_LITELLM_MODEL,
+        messages=messages,
+        api_key=QUOTEUTIL_LITELLM_API_KEY,
+        api_version=QUOTEUTIL_LITELLM_API_VERSION,
+        api_base=QUOTEUTIL_LITELLM_API_BASE,
         response_format=JSONOutputSchema,
     )
 
@@ -589,9 +603,12 @@ def assign_aspect_centroid(db: Session, aspect_id: str, language: str) -> None:
 
     messages = [{"role": "user", "content": prompt}]
 
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=messages,  # type: ignore
+    response = completion(
+        model=QUOTEUTIL_LITELLM_MODEL,
+        messages=messages,
+        api_key=QUOTEUTIL_LITELLM_API_KEY,
+        api_version=QUOTEUTIL_LITELLM_API_VERSION,
+        api_base=QUOTEUTIL_LITELLM_API_BASE,
     )
 
     sample_quotes_json_string = response.choices[0].message.content
@@ -731,9 +748,12 @@ def generate_aspect_summary(db: Session, aspect_id: str, language: str) -> None:
     )
 
     messages = [{"role": "user", "content": prompt}]
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=messages,  # type: ignore
+    response = completion(
+        model=QUOTEUTIL_LITELLM_MODEL,
+        messages=messages,
+        api_key=QUOTEUTIL_LITELLM_API_KEY,
+        api_version=QUOTEUTIL_LITELLM_API_VERSION,
+        api_base=QUOTEUTIL_LITELLM_API_BASE,
     )
 
     short_summary = response.choices[0].message.content
@@ -754,9 +774,12 @@ def generate_aspect_summary(db: Session, aspect_id: str, language: str) -> None:
     )
 
     messages = [{"role": "user", "content": prompt}]
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=messages,  # type: ignore
+    response = completion(
+        model=QUOTEUTIL_LITELLM_MODEL,
+        messages=messages,
+        api_key=QUOTEUTIL_LITELLM_API_KEY,
+        api_version=QUOTEUTIL_LITELLM_API_VERSION,
+        api_base=QUOTEUTIL_LITELLM_API_BASE,
     )
 
     long_summary = response.choices[0].message.content
@@ -910,9 +933,12 @@ Summary: {aspect.long_summary}
 
     messages = [{"role": "user", "content": prompt}]
 
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=messages,  # type: ignore
+    response = completion(
+        model=QUOTEUTIL_LITELLM_MODEL,
+        messages=messages,
+        api_key=QUOTEUTIL_LITELLM_API_KEY,
+        api_version=QUOTEUTIL_LITELLM_API_VERSION,
+        api_base=QUOTEUTIL_LITELLM_API_BASE,
     )
 
     view.summary = response.choices[0].message.content
@@ -943,9 +969,12 @@ def generate_insight_extras(db: Session, insight_id: str, language: str) -> None
 
     title_messages = [{"role": "user", "content": title_prompt}]
 
-    title_response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=title_messages,  # type: ignore
+    title_response = completion(
+        model=QUOTEUTIL_LITELLM_MODEL,
+        messages=title_messages,
+        api_key=QUOTEUTIL_LITELLM_API_KEY,
+        api_version=QUOTEUTIL_LITELLM_API_VERSION,
+        api_base=QUOTEUTIL_LITELLM_API_BASE,
     )
 
     if not title_response.choices:
@@ -966,9 +995,12 @@ def generate_insight_extras(db: Session, insight_id: str, language: str) -> None
 
     summary_messages = [{"role": "user", "content": summary_prompt}]
 
-    summary_response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=summary_messages,  # type: ignore
+    summary_response = completion(
+        model=QUOTEUTIL_LITELLM_MODEL,
+        messages=summary_messages,
+        api_key=QUOTEUTIL_LITELLM_API_KEY,
+        api_version=QUOTEUTIL_LITELLM_API_VERSION,
+        api_base=QUOTEUTIL_LITELLM_API_BASE,
     )
 
     summary = summary_response.choices[0].message.content
@@ -1012,9 +1044,12 @@ def generate_conversation_summary(db: Session, conversation_id: str, language: s
     messages = [{"role": "user", "content": prompt}]
 
     # FIXME: use litellm
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=messages,  # type: ignore
+    response = completion(
+        model=QUOTEUTIL_LITELLM_MODEL,
+        messages=messages,
+        api_key=QUOTEUTIL_LITELLM_API_KEY,
+        api_version=QUOTEUTIL_LITELLM_API_VERSION,
+        api_base=QUOTEUTIL_LITELLM_API_BASE,
     )
 
     conversation.summary = response.choices[0].message.content
