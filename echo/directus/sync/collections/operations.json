@@ -114,7 +114,7 @@
     "position_x": 91,
     "position_y": 1,
     "options": {
-      "code": "module.exports = async function(data) {\n\n    const submissions = data.get_all_participants;\n    \n    // Filter submissions to only include those where email_opt_in is true\n    const filteredSubmissions = submissions.filter(sub => sub.email_opt_in === true);\n\n    // Create an array with email, project_id and an email_opt_out token for each submission\n    const result = filteredSubmissions.map(sub => ({\n        project_name: data.project_data[0].name || '',\n\t\tdefault_conversation_title: data.project_data[0].default_conversation_title || '',\n\t\tconversation_name: sub.conversation_id.participant_name || '',\n        email: sub.email,\n        project_id: sub.project_id || '',\n        token: sub.email_opt_out_token,\n        language: data.check_report_language[0].language || 'empty',\n        ADMIN_BASE_URL: {{$env.ADMIN_BASE_URL}} || \"http://localhost:5173\",\n        PARTICIPANT_BASE_URL: {{$env.PARTICIPANT_BASE_URL}} || \"http://localhost:5174\",        \n    }));\n    \n    return result;\n};"
+      "code": "module.exports = async function(data) {\n\n    const submissions = data.get_all_participants;\n    \n    // Filter submissions to only include those where email_opt_in is true\n    const filteredSubmissions = submissions.filter(sub => sub.email_opt_in === true);\n\n    // Create an array with email, project_id and an email_opt_out token for each submission\n    const result = filteredSubmissions.map(sub => ({\n        project_name: data.project_data[0].name || '',\n\t\tdefault_conversation_title: data.project_data[0].default_conversation_title || '',\n\t\tconversation_name: sub.conversation_id.participant_name || '',\n        email: sub.email,\n        project_id: sub.project_id || '',\n        token: sub.email_opt_out_token,\n        language: data.check_report_language[0].language || 'empty',\n        ADMIN_BASE_URL: \"{{ $env.ADMIN_BASE_URL }}\" || \"http://localhost:5173\",\n        PARTICIPANT_BASE_URL: \"{{ $env.PARTICIPANT_BASE_URL }}\" || \"http://localhost:5174\",        \n    }));\n    \n    return result;\n};"
     },
     "resolve": "e101f00d-2fb8-4f40-9e0e-4d24da5bb1e9",
     "reject": null,
@@ -147,6 +147,20 @@
     "reject": null,
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
     "_syncId": "107ebc18-7d2d-4299-9d98-b7d1e7322b7c"
+  },
+  {
+    "name": "log environment vars",
+    "key": "log_environment_vars",
+    "type": "log",
+    "position_x": 127,
+    "position_y": 1,
+    "options": {
+      "message": "{{data['$env']}}  {{data.$env}} {{process.env}} {{$env}} {{$env.PARTICIPANT_BASE_URL}}"
+    },
+    "resolve": null,
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "da5f4cce-eff0-426d-a207-d61366899d1f"
   },
   {
     "name": "PROCEED_ONLY_IF \"published\" in payload",
