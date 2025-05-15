@@ -116,6 +116,7 @@ class ContextualChunkETLPipeline:
                     }
                 if audio_segment_response["lightrag_flag"] is not True:
                     try:
+                        session = DirectusSession(user_id="none", is_admin=True)
                         if (
                             not responses[segment_id]["TRANSCRIPTS"]
                             or len(responses[segment_id]["TRANSCRIPTS"]) == 0
@@ -125,6 +126,9 @@ class ContextualChunkETLPipeline:
                             logger.info(
                                 f"No transcript found for segment {segment_id}. Skipping..."
                             )
+                            directus.update_item(
+                                "conversation_segment", int(segment_id), {"lightrag_flag": True}
+                            )
                             continue
 
                         payload = InsertRequest(
@@ -133,7 +137,6 @@ class ContextualChunkETLPipeline:
                             transcripts=responses[segment_id]["TRANSCRIPTS"],
                         )
                         # fake session
-                        session = DirectusSession(user_id="none", is_admin=True)
                         audio_segment_insert_response = await insert_item(payload, session)
 
                         if audio_segment_insert_response.status == "success":
@@ -155,6 +158,7 @@ class ContextualChunkETLPipeline:
                 )
                 if non_audio_segment_response["lightrag_flag"] is not True:
                     try:
+                        session = DirectusSession(user_id="none", is_admin=True)
                         if (
                             not non_audio_segment_response["transcript"]
                             or len(non_audio_segment_response["transcript"]) == 0
@@ -164,6 +168,9 @@ class ContextualChunkETLPipeline:
                             logger.info(
                                 f"No transcript found for segment {segment_id}. Skipping..."
                             )
+                            directus.update_item(
+                                "conversation_segment", int(segment_id), {"lightrag_flag": True}
+                            )
                             continue
 
                         payload = InsertRequest(
@@ -172,7 +179,6 @@ class ContextualChunkETLPipeline:
                             transcripts=[non_audio_segment_response["transcript"]],
                         )
                         # fake session
-                        session = DirectusSession(user_id="none", is_admin=True)
                         non_audio_segment_insert_response = await insert_item(payload, session)
 
                         if non_audio_segment_insert_response.status == "success":
@@ -183,6 +189,7 @@ class ContextualChunkETLPipeline:
                             logger.info(
                                 f"Error in inserting transcript into LightRAG for segment {segment_id}. Check API health : {non_audio_segment_response.status_code}"
                             )
+
                     except Exception as e:
                         logger.exception(f"Error in inserting transcript into LightRAG : {e}")
 

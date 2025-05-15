@@ -40,6 +40,7 @@ type ProcessingStatus = {
 
 type Conversation = {
   is_finished: boolean;
+  is_audio_processing_finished: boolean;
   chunks: any[] | ConversationChunk[];
   context?: string | null;
   created_at?: string | null;
@@ -50,7 +51,7 @@ type Conversation = {
   participant_email?: string | null;
   participant_name?: string | null;
   participant_user_agent?: string | null;
-  processing_status?: ProcessingStatus | null;
+  processing_status?: string | null;
   processing_message?: string | null;
   project_chat_messages: any[] | ProjectChatMessageConversation[];
   project_chats: any[] | ProjectChatConversation[];
@@ -527,6 +528,7 @@ type Insight = {
 };
 
 type Project = {
+  is_enhanced_audio_processing_enabled?: boolean | null;
   context?: string | null;
   conversation_ask_for_participant_name_label?: string | null;
   conversations: any[] | Conversation[];

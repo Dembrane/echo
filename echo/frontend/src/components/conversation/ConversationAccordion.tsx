@@ -386,21 +386,26 @@ export const ConversationStatusIndicators = ({
 
       {
         // if processing still
-        conversation.processing_status === "PROCESSING" && (
-          <Tooltip
-            label={
-              conversation.processing_message ??
-              t`This conversation is still being processed. It will be available for analysis and chat shortly.`
-            }
-          >
-            <Badge size="xs" color="violet" variant="light">
-              <Group gap="xs">
-                <Trans>Processing</Trans>
-                <IconInfoCircle size={12} />
-              </Group>
-            </Badge>
-          </Tooltip>
-        )
+        // don't show this if both is_finished and is_audio_processing_finished are true
+        conversation.processing_status === "PROCESSING" &&
+          !(
+            conversation.is_finished &&
+            conversation.is_audio_processing_finished
+          ) && (
+            <Tooltip
+              label={
+                conversation.processing_message ??
+                t`This conversation is still being processed. It will be available for analysis and chat shortly.`
+              }
+            >
+              <Badge size="xs" color="violet" variant="light">
+                <Group gap="xs">
+                  <Trans>Processing</Trans>
+                  <IconInfoCircle size={12} />
+                </Group>
+              </Badge>
+            </Tooltip>
+          )
       }
 
       {conversation.duration && conversation.duration > 0 && showDuration && (
