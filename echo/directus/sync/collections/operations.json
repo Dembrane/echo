@@ -228,7 +228,10 @@
         "conversation_name": "{{$trigger.conversation_name}}",
         "token": "{{$trigger.token}}"
       },
-      "template": "report-notification-nl"
+      "template": "report-notification-nl",
+      "replyTo": [
+        "info@dembrane.com"
+      ]
     },
     "resolve": null,
     "reject": "84c38ea6-5d15-429f-8c24-9485d54ba7be",
@@ -256,7 +259,10 @@
         "default_conversation_title": "{{$trigger.default_conversation_title}}",
         "conversation_name": "{{$trigger.conversation_name}}",
         "token": "{{$trigger.token}}"
-      }
+      },
+      "replyTo": [
+        "info@dembrane.com"
+      ]
     },
     "resolve": null,
     "reject": "920bd181-b2a2-4f0d-94dc-3b1a08c3f4ef",
