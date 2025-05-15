@@ -291,6 +291,7 @@ type Subscription {
   conversation_segment_mutated(event: EventEnum): conversation_segment_mutated
   project_report_notification_participants_mutated(event: EventEnum): project_report_notification_participants_mutated
   conversation_mutated(event: EventEnum): conversation_mutated
+  processing_status_mutated(event: EventEnum): processing_status_mutated
 }
 
 """The `Boolean` scalar type represents `true` or `false`."""
@@ -1881,6 +1882,24 @@ type policy_me_globals_type {
   enforce_tfa: Boolean
   app_access: Boolean
   admin_access: Boolean
+}
+
+type processing_status {
+  id: ID!
+  collection_name: String
+  message: String
+  json: String
+  event: String
+  timestamp: Date
+  timestamp_func: datetime_functions
+  item_id: String
+  duration_ms: Int
+}
+
+type processing_status_mutated {
+  key: ID!
+  event: EventEnum
+  data: processing_status
 }
 
 type project {

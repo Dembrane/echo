@@ -1,23 +1,25 @@
 {
-  "collection": "project",
-  "field": "is_enhanced_audio_processing_enabled",
-  "type": "boolean",
+  "collection": "processing_status",
+  "field": "timestamp",
+  "type": "timestamp",
   "meta": {
-    "collection": "project",
+    "collection": "processing_status",
     "conditions": null,
-    "display": null,
-    "display_options": null,
-    "field": "is_enhanced_audio_processing_enabled",
+    "display": "datetime",
+    "display_options": {
+      "relative": true
+    },
+    "field": "timestamp",
     "group": null,
-    "hidden": false,
-    "interface": "boolean",
+    "hidden": true,
+    "interface": "datetime",
     "note": null,
     "options": null,
-    "readonly": false,
+    "readonly": true,
     "required": false,
-    "sort": 26,
+    "sort": 2,
     "special": [
-      "cast-boolean"
+      "date-created"
     ],
     "translations": null,
     "validation": null,
@@ -25,10 +27,10 @@
     "width": "full"
   },
   "schema": {
-    "name": "is_enhanced_audio_processing_enabled",
-    "table": "project",
-    "data_type": "boolean",
-    "default_value": false,
+    "name": "timestamp",
+    "table": "processing_status",
+    "data_type": "timestamp with time zone",
+    "default_value": null,
     "max_length": null,
     "numeric_precision": null,
     "numeric_scale": null,

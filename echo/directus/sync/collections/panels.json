@@ -130,6 +130,28 @@
     "_syncId": "58981e36-a7b3-49c9-aa59-ae0e59f0e3d0"
   },
   {
+    "dashboard": "21057c54-97fe-407c-9286-ec4b980e9fdd",
+    "name": null,
+    "icon": null,
+    "color": null,
+    "show_header": false,
+    "note": null,
+    "type": "time-series",
+    "position_x": 1,
+    "position_y": 1,
+    "width": 46,
+    "height": 34,
+    "options": {
+      "collection": "project_chat_message",
+      "function": "countDistinct",
+      "precision": "day",
+      "range": "auto",
+      "dateField": "date_created",
+      "valueField": "template_key"
+    },
+    "_syncId": "6e080069-4121-4bac-ae58-32a2997971a5"
+  },
+  {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
     "name": null,
     "icon": null,

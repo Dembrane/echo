@@ -115,6 +115,10 @@ type Query {
   conversation_by_id(id: ID!, version: String): conversation
   conversation_aggregated(groupBy: [String], filter: conversation_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [conversation_aggregated!]!
   conversation_by_version(version: String!, id: ID!): version_conversation
+  processing_status(filter: processing_status_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [processing_status!]!
+  processing_status_by_id(id: ID!, version: String): processing_status
+  processing_status_aggregated(groupBy: [String], filter: processing_status_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [processing_status_aggregated!]!
+  processing_status_by_version(version: String!, id: ID!): version_processing_status
 }
 
 type Mutation {
@@ -176,6 +180,8 @@ type Mutation {
   create_project_report_notification_participants_item(data: create_project_report_notification_participants_input!): project_report_notification_participants
   create_conversation_items(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_conversation_input!]): [conversation!]!
   create_conversation_item(data: create_conversation_input!): conversation
+  create_processing_status_items(filter: processing_status_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_processing_status_input!]): [processing_status!]!
+  create_processing_status_item(data: create_processing_status_input!): processing_status
   update_directus_sync_id_map_items(filter: directus_sync_id_map_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_sync_id_map_input!): [directus_sync_id_map!]!
   update_directus_sync_id_map_batch(filter: directus_sync_id_map_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_sync_id_map_input!]): [directus_sync_id_map!]!
   update_directus_sync_id_map_item(id: ID!, data: update_directus_sync_id_map_input!): directus_sync_id_map
@@ -263,6 +269,9 @@ type Mutation {
   update_conversation_items(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_conversation_input!): [conversation!]!
   update_conversation_batch(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_conversation_input!]): [conversation!]!
   update_conversation_item(id: ID!, data: update_conversation_input!): conversation
+  update_processing_status_items(filter: processing_status_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_processing_status_input!): [processing_status!]!
+  update_processing_status_batch(filter: processing_status_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_processing_status_input!]): [processing_status!]!
+  update_processing_status_item(id: ID!, data: update_processing_status_input!): processing_status
   delete_directus_sync_id_map_items(ids: [ID]!): delete_many
   delete_directus_sync_id_map_item(id: ID!): delete_one
   delete_account_items(ids: [ID]!): delete_many
@@ -321,6 +330,8 @@ type Mutation {
   delete_project_report_notification_participants_item(id: ID!): delete_one
   delete_conversation_items(ids: [ID]!): delete_many
   delete_conversation_item(id: ID!): delete_one
+  delete_processing_status_items(ids: [ID]!): delete_many
+  delete_processing_status_item(id: ID!): delete_one
 }
 
 type Subscription {
@@ -374,6 +385,7 @@ type Subscription {
   conversation_segment_mutated(event: EventEnum): conversation_segment_mutated
   project_report_notification_participants_mutated(event: EventEnum): project_report_notification_participants_mutated
   conversation_mutated(event: EventEnum): conversation_mutated
+  processing_status_mutated(event: EventEnum): processing_status_mutated
 }
 
 """The `Boolean` scalar type represents `true` or `false`."""
@@ -1512,6 +1524,53 @@ type insight_mutated {
   data: insight
 }
 
+type processing_status {
+  id: ID!
+  collection_name: String
+  message: String
+  json: String
+  event: String
+  timestamp: Date
+  timestamp_func: datetime_functions
+  item_id: String
+  duration_ms: Int
+}
+
+type processing_status_aggregated {
+  group: JSON
+  countAll: Int
+  count: processing_status_aggregated_count
+  countDistinct: processing_status_aggregated_count
+  avg: processing_status_aggregated_fields
+  sum: processing_status_aggregated_fields
+  avgDistinct: processing_status_aggregated_fields
+  sumDistinct: processing_status_aggregated_fields
+  min: processing_status_aggregated_fields
+  max: processing_status_aggregated_fields
+}
+
+type processing_status_aggregated_count {
+  id: Int
+  collection_name: Int
+  message: Int
+  json: Int
+  event: Int
+  timestamp: Int
+  item_id: Int
+  duration_ms: Int
+}
+
+type processing_status_aggregated_fields {
+  id: Float
+  duration_ms: Float
+}
+
+type processing_status_mutated {
+  key: ID!
+  event: EventEnum
+  data: processing_status
+}
+
 type project {
   context: String
   conversation_ask_for_participant_name_label: String
@@ -2387,6 +2446,18 @@ type version_insight {
 }
 
 """"""
+type version_processing_status {
+  id: ID
+  collection_name: String
+  message: String
+  json: String
+  event: String
+  timestamp: Date
+  item_id: String
+  duration_ms: Int
+}
+
+""""""
 type version_project {
   context: String
   conversation_ask_for_participant_name_label: String
@@ -3079,6 +3150,17 @@ input create_insight_input {
   quotes: [create_quote_input]
 }
 
+input create_processing_status_input {
+  id: ID
+  collection_name: String
+  message: String
+  json: String
+  event: String
+  timestamp: Date
+  item_id: String
+  duration_ms: Int
+}
+
 input create_project_analysis_run_input {
   created_at: Date
   id: ID
@@ -3644,6 +3726,20 @@ input number_filter_operators {
   _nbetween: [GraphQLStringOrFloat]
 }
 
+input processing_status_filter {
+  id: big_int_filter_operators
+  collection_name: string_filter_operators
+  message: string_filter_operators
+  json: string_filter_operators
+  event: string_filter_operators
+  timestamp: date_filter_operators
+  timestamp_func: datetime_function_filter_operators
+  item_id: string_filter_operators
+  duration_ms: number_filter_operators
+  _and: [processing_status_filter]
+  _or: [processing_status_filter]
+}
+
 input project_analysis_run_filter {
   created_at: date_filter_operators
   created_at_func: datetime_function_filter_operators
@@ -4172,6 +4268,17 @@ input update_insight_input {
   title: String
   updated_at: Date
   quotes: [update_quote_input]
+}
+
+input update_processing_status_input {
+  id: ID
+  collection_name: String
+  message: String
+  json: String
+  event: String
+  timestamp: Date
+  item_id: String
+  duration_ms: Int
 }
 
 input update_project_analysis_run_input {
