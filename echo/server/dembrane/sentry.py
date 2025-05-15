@@ -2,10 +2,10 @@ from logging import getLogger
 
 import sentry_sdk
 from sentry_dramatiq import DramatiqIntegration
-from sentry_sdk.integrations.openai import OpenAIIntegration
-from sentry_sdk.integrations.fastapi import FastApiIntegration
-from sentry_sdk.integrations.starlette import StarletteIntegration
 
+# from sentry_sdk.integrations.openai import OpenAIIntegration
+# from sentry_sdk.integrations.fastapi import FastApiIntegration
+# from sentry_sdk.integrations.starlette import StarletteIntegration
 from dembrane.config import (
     ENVIRONMENT,
     BUILD_VERSION,
@@ -36,20 +36,22 @@ def init_sentry() -> None:
             profiles_sample_rate=0.5,
             enable_tracing=True,
             integrations=[
-                StarletteIntegration(
-                    transaction_style="endpoint",
-                    failed_request_status_codes={*range(400, 499), *range(500, 599)},
-                ),
-                FastApiIntegration(
-                    transaction_style="endpoint",
-                    failed_request_status_codes={*range(400, 499), *range(500, 599)},
-                ),
+                # StarletteIntegration(
+                #     transaction_style="endpoint",
+                #     failed_request_status_codes={*range(400, 499), *range(500, 599)},
+                # ),
+                # FastApiIntegration(
+                #     transaction_style="endpoint",
+                #     failed_request_status_codes={*range(400, 499), *range(500, 599)},
+                # ),
                 # TODO: finish the impl https://docs.sentry.io/platforms/python/integrations/openai/
                 # https://docs.sentry.io/platforms/python/integrations/anthropic/
-                OpenAIIntegration(
-                    include_prompts=False,  # LLM/tokenizer inputs/outputs will be not sent to Sentry, despite send_default_pii=True
-                    tiktoken_encoding_name="cl100k_base",
-                ),
+                # THIS. The failure is produced by Sentry’s OpenAI integration that is automatically wrapped around every call to openai / litellm.
+                # AzureException APIError - argument 'text': 'list' object cannot be converted to 'PyString'
+                #OpenAIIntegration(
+                    #include_prompts=False,  # LLM/tokenizer inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+                    #tiktoken_encoding_name="cl100k_base",
+                #),
                 DramatiqIntegration(),
             ],
         )

@@ -36,7 +36,7 @@ dependencies = [
     # Other
     "backoff==2.2.*",
     "aiofiles==23.2.*",
-    "sentry-sdk[sqlalchemy,fastapi]",
+    "sentry-sdk==2.2.1",
     "python-jose[cryptography]>=3.3.0",
     # Logging
     "colorlog>=6.9.0",
