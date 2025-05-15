@@ -114,7 +114,7 @@ def task_transcribe_chunk(conversation_chunk_id: str) -> None:
         raise e from e
 
 
-@dramatiq.actor(queue_name="network")
+@dramatiq.actor(queue_name="network", priority=30)
 def task_summarize_conversation(conversation_id: str) -> None:
     """
     Summarize a conversation. The results are not returned. You can find it in
@@ -136,7 +136,7 @@ def task_summarize_conversation(conversation_id: str) -> None:
         raise e from e
 
 
-@dramatiq.actor(store_results=True, queue_name="cpu")
+@dramatiq.actor(store_results=True, queue_name="cpu", priority=30)
 def task_merge_conversation_chunks(conversation_id: str) -> None:
     """
     Merge conversation chunks.
@@ -161,7 +161,7 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
         raise e from e
 
 
-@dramatiq.actor(queue_name="cpu")
+@dramatiq.actor(queue_name="cpu", priority=30)
 def task_run_etl_pipeline(conversation_id: str) -> None:
     """
     Run the AudioLightrag ETL pipeline.
@@ -178,7 +178,7 @@ def task_run_etl_pipeline(conversation_id: str) -> None:
         raise e from e
 
 
-@dramatiq.actor(queue_name="network")
+@dramatiq.actor(queue_name="network", priority=30)
 def task_finish_conversation_hook(conversation_id: str) -> None:
     """
     Finalize processing of a conversation and invoke follow-up tasks.
@@ -331,7 +331,7 @@ def task_collect_and_finish_unfinished_conversations() -> None:
 
 
 # FIXME: move to quote_utils.py / remove
-@dramatiq.actor(queue_name="cpu", priority=70)
+@dramatiq.actor(queue_name="cpu", priority=50)
 def task_generate_quotes(project_analysis_run_id: str, conversation_id: str) -> None:
     logger = getLogger("dembrane.tasks.task_generate_quotes")
 
@@ -399,9 +399,12 @@ def task_generate_quotes(project_analysis_run_id: str, conversation_id: str) -> 
                     return
 
                 # conversation was updated since the last project analysis run so we need to generate new quotes
-                if latest_conversation_chunk.timestamp > comparison_project_analysis_run.created_at:
+                if (
+                    latest_conversation_chunk.timestamp
+                    > comparison_project_analysis_run["created_at"]
+                ):
                     logger.info(
-                        f"Have to generate quotes for project analysis run ({latest_conversation_chunk.id[:6]} ({latest_conversation_chunk.timestamp.strftime('%Y-%m-%d %H:%M:%S')}) > {comparison_project_analysis_run.id[:6]} ({comparison_project_analysis_run.created_at.strftime('%Y-%m-%d %H:%M:%S')}))"
+                        f"Have to generate quotes for project analysis run ({latest_conversation_chunk.id[:6]} ({latest_conversation_chunk.timestamp.strftime('%Y-%m-%d %H:%M:%S')}) > {comparison_project_analysis_run['id'][:6]} ({comparison_project_analysis_run['created_at'].strftime('%Y-%m-%d %H:%M:%S')}))"
                     )
                     generate_quotes(db, project_analysis_run_id, conversation_id)
                 else:
@@ -409,7 +412,7 @@ def task_generate_quotes(project_analysis_run_id: str, conversation_id: str) -> 
                     # for all quotes (comparision run, conversation id) update with the latest project run id
                     # we need to update the quote with the latest conversation chunk
                     logger.info(
-                        f"Reusing quotes for project analysis run from {comparison_project_analysis_run.id[:6]} ({comparison_project_analysis_run.created_at.strftime('%Y-%m-%d %H:%M:%S')})"
+                        f"Reusing quotes for project analysis run from {comparison_project_analysis_run['id'][:6]} ({comparison_project_analysis_run['created_at'].strftime('%Y-%m-%d %H:%M:%S')})"
                     )
                     latest_project_analysis_run = previous_project_analysis_runs[0]
 
@@ -417,7 +420,7 @@ def task_generate_quotes(project_analysis_run_id: str, conversation_id: str) -> 
                         db.query(QuoteModel)
                         .filter(
                             QuoteModel.project_analysis_run_id
-                            == comparison_project_analysis_run.id,
+                            == comparison_project_analysis_run["id"],
                             QuoteModel.conversation_id == conversation_id,
                         )
                         .update(
@@ -440,7 +443,7 @@ def task_generate_quotes(project_analysis_run_id: str, conversation_id: str) -> 
             raise e from e
 
 
-@dramatiq.actor(queue_name="network")
+@dramatiq.actor(queue_name="network", priority=50)
 def task_generate_aspect_extras(aspect_id: str, language: str = "en") -> None:
     logger = getLogger("dembrane.tasks.task_generate_aspect_extras")
     with DatabaseSession() as db:
@@ -457,7 +460,7 @@ def task_generate_aspect_extras(aspect_id: str, language: str = "en") -> None:
             raise e from e
 
 
-@dramatiq.actor(queue_name="network")
+@dramatiq.actor(queue_name="network", priority=50)
 def task_generate_view_extras(view_id: str, language: str) -> None:
     logger = getLogger("dembrane.tasks.task_generate_view_extras")
     with DatabaseSession() as db:
@@ -484,7 +487,7 @@ def task_generate_view_extras(view_id: str, language: str) -> None:
             raise e from e
 
 
-@dramatiq.actor(queue_name="cpu", priority=70)
+@dramatiq.actor(queue_name="cpu", priority=50)
 def task_assign_aspect_centroid(aspect_id: str, language: str = "en") -> None:
     logger = getLogger("dembrane.tasks.task_assign_aspect_centroid")
     with DatabaseSession() as db:
@@ -501,7 +504,7 @@ def task_assign_aspect_centroid(aspect_id: str, language: str = "en") -> None:
             raise e from e
 
 
-@dramatiq.actor(queue_name="cpu", priority=70)
+@dramatiq.actor(queue_name="cpu", priority=50)
 def task_cluster_quotes_using_aspect_centroids(view_id: str) -> None:
     logger = getLogger("dembrane.tasks.task_cluster_quotes_using_aspect_centroids")
     with DatabaseSession() as db:
@@ -518,7 +521,7 @@ def task_cluster_quotes_using_aspect_centroids(view_id: str) -> None:
             raise e from e
 
 
-@dramatiq.actor(queue_name="network", priority=70)
+@dramatiq.actor(queue_name="network", priority=50)
 def task_create_view(
     project_analysis_run_id: str,
     user_query: str,
@@ -577,7 +580,7 @@ def task_create_view(
             raise e from e
 
 
-@dramatiq.actor(queue_name="network", priority=70)
+@dramatiq.actor(queue_name="network", priority=50)
 def task_finalize_project_library(project_analysis_run_id: str) -> None:
     logger = getLogger("dembrane.tasks.task_finalize_project_library")
     with DatabaseSession() as db:
@@ -645,7 +648,7 @@ intial_views_lang_dict = {
 }
 
 
-@dramatiq.actor(queue_name="network", priority=70)
+@dramatiq.actor(queue_name="cpu", priority=50)
 def task_create_project_library(project_id: str, language: str) -> None:
     logger = getLogger("dembrane.tasks.task_create_project_library")
 

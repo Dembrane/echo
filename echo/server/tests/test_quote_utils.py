@@ -7,12 +7,14 @@ from typing import List
 import numpy as np
 from sqlalchemy.orm import Session
 
+from dembrane.utils import generate_uuid
 from dembrane.database import (
     QuoteModel,
     ProcessingStatusEnum,
     ProjectAnalysisRunModel,
     get_db,
 )
+from dembrane.embedding import EMBEDDING_DIM
 from dembrane.quote_utils import get_random_sample_quotes
 
 from .common import (
