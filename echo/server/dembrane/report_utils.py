@@ -2,7 +2,6 @@ import re
 import logging
 
 from litellm import completion, token_counter
-from sqlalchemy.orm import Session
 
 from dembrane.config import (
     MEDIUM_LITELLM_MODEL,
