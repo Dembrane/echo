@@ -175,7 +175,12 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
         raise e from e
 
 
-@dramatiq.actor(queue_name="cpu", priority=30)
+@dramatiq.actor(
+    queue_name="cpu",
+    priority=30,
+    # 45 minutes
+    time_limit=45 * 60 * 1000,
+)
 def task_run_etl_pipeline(conversation_id: str) -> None:
     """
     Run the AudioLightrag ETL pipeline.

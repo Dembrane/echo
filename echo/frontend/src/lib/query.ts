@@ -1298,8 +1298,15 @@ export const useCreateChatMutation = () => {
         id: string;
       };
     }) => {
+      const project = await directus.request(
+        readItem("project", payload.project_id.id),
+      );
+
       const chat = await directus.request(
-        createItem("project_chat", payload as any),
+        createItem("project_chat", {
+          ...(payload as any),
+          auto_select: !!project.is_enhanced_audio_processing_enabled,
+        }),
       );
 
       try {

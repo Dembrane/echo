@@ -1,7 +1,8 @@
 import time
 from enum import Enum
-from typing import Optional
+from typing import Any, Type, Optional
 from logging import getLogger
+from typing_extensions import Literal
 
 from dembrane.directus import directus
 
@@ -53,14 +54,14 @@ class ProcessingStatusContext:
         self.event_prefix = event_prefix
         self.message = message
         self.json = json
-        self.start_time = None
+        self.start_time: float = 0.0
         self.logger = getLogger(f"status.{self.event_prefix}")
 
-        self.processing_status_start_id = None
-        self.processing_status_failed_id = None
-        self.processing_status_completed_id = None
+        self.processing_status_start_id: Optional[int] = None
+        self.processing_status_failed_id: Optional[int] = None
+        self.processing_status_completed_id: Optional[int] = None
 
-    def __enter__(self):
+    def __enter__(self) -> "ProcessingStatusContext":
         # Log start event without duration
         self.start_time = time.time()
         self.processing_status_start_id = add_processing_status(
@@ -73,7 +74,12 @@ class ProcessingStatusContext:
         self.logger.info(f"{self.processing_status_start_id} {self.message}")
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        traceback: Any,
+    ) -> Literal[False]:
         # Compute duration in milliseconds
         duration_ms = int((time.time() - self.start_time) * 1000)
         if exc_type:

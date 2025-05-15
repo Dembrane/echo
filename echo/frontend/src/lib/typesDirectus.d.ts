@@ -573,6 +573,7 @@ type ProjectAnalysisRun = {
 };
 
 type ProjectChat = {
+  auto_select?: boolean | null;
   date_created?: string | null;
   date_updated?: string | null;
   id: string;

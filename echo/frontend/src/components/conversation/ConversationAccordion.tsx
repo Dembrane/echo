@@ -8,6 +8,7 @@ import {
   useProjectChatContext,
   useMoveConversationMutation,
   useInfiniteProjects,
+  useProjectById,
 } from "@/lib/query";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import {
@@ -340,6 +341,15 @@ export const ConversationStatusIndicators = ({
   conversation: Conversation;
   showDuration?: boolean;
 }) => {
+  const { projectId } = useParams();
+
+  const { data: project } = useProjectById({
+    projectId: projectId ?? "",
+    query: {
+      fields: ["is_enhanced_audio_processing_enabled"],
+    },
+  });
+
   const hasContent = useMemo(
     () =>
       conversation.chunks?.some(
@@ -366,7 +376,7 @@ export const ConversationStatusIndicators = ({
   }, []);
 
   const isUpload =
-    conversation.source?.toLocaleLowerCase().includes("upload") ?? false;
+    conversation.source?.toLowerCase().includes("upload") ?? false;
 
   return (
     <Group gap="sm">
@@ -384,29 +394,41 @@ export const ConversationStatusIndicators = ({
         )
       }
 
-      {
+      {!!project?.is_enhanced_audio_processing_enabled &&
         // if processing still
         // don't show this if both is_finished and is_audio_processing_finished are true
-        conversation.processing_status === "PROCESSING" &&
-          !(
-            conversation.is_finished &&
-            conversation.is_audio_processing_finished
-          ) && (
-            <Tooltip
-              label={
-                conversation.processing_message ??
-                t`This conversation is still being processed. It will be available for analysis and chat shortly.`
-              }
-            >
-              <Badge size="xs" color="violet" variant="light">
-                <Group gap="xs">
-                  <Trans>Processing</Trans>
-                  <IconInfoCircle size={12} />
-                </Group>
-              </Badge>
-            </Tooltip>
-          )
-      }
+        // but if project.is_enhanced_audio_processing_enabled is true, just see the is_finished
+        !(
+          conversation.is_finished && conversation.is_audio_processing_finished
+        ) && (
+          <Tooltip
+            label={t`This conversation is still being processed. It will be available for analysis and chat shortly.`}
+          >
+            <Badge size="xs" color="violet" variant="light">
+              <Group gap="xs">
+                <Trans>Processing</Trans>
+                <IconInfoCircle size={12} />
+              </Group>
+            </Badge>
+          </Tooltip>
+        )}
+
+      {!project?.is_enhanced_audio_processing_enabled &&
+        !conversation.is_finished && (
+          <Tooltip
+            label={
+              conversation.processing_message ??
+              t`This conversation is still being processed. It will be available for analysis and chat shortly.`
+            }
+          >
+            <Badge size="xs" color="violet" variant="light">
+              <Group gap="xs">
+                <Trans>Processing</Trans>
+                <IconInfoCircle size={12} />
+              </Group>
+            </Badge>
+          </Tooltip>
+        )}
 
       {conversation.duration && conversation.duration > 0 && showDuration && (
         <Badge size="xs" color="violet" variant="light">

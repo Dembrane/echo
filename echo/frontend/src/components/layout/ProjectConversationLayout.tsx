@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { useConversationById } from "@/lib/query";
-import { Group, Stack, Title } from "@mantine/core";
+import { Stack, Title } from "@mantine/core";
 import { useParams } from "react-router-dom";
 import { TabsWithRouter } from "./TabsWithRouter";
 import { ConversationStatusIndicators } from "../conversation/ConversationAccordion";
@@ -11,8 +11,9 @@ export const ProjectConversationLayout = () => {
   const conversationQuery = useConversationById({
     conversationId: conversationId ?? "",
     query: {
-      fields: ["*", "chunks.transcript"],
+      fields: ["*", { chunks: ["transcript"] }],
       deep: {
+        // @ts-expect-error chunks is not typed
         chunks: {
           _limit: 1,
         },
