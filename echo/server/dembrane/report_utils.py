@@ -62,10 +62,20 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
 
         token_count += token_counter(model=MEDIUM_LITELLM_MODEL, text=conversation["summary"])
 
+        # Guard against missing or null tags coming back from the API
+        try:
+            tags = conversation["tags"] or []
+        except KeyError:
+            tags = []
+
         tags_text = ""
-        for tag in conversation["tags"]:
-            tag_text = tag["project_tag_id"]["text"]
-            tags_text += tag_text + ", "
+        for tag in tags:
+            # In some older DB dumps we have seen empty tag objects – guard against that too
+            try:
+                tag_text = tag["project_tag_id"]["text"]
+                tags_text += tag_text + ", "
+            except (KeyError, TypeError):
+                continue
 
         if token_count < MAX_REPORT_CONTEXT_LENGTH:
             conversation_data_dict[conversation["id"]] = {
@@ -80,20 +90,32 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
             break
 
     for conversation in conversations:
+        # Only attempt to append a transcript if the conversation was added during the
+        # first pass (i.e.
+        # it had a non-empty summary). This prevents KeyError when the summary was null.
+        if conversation["id"] not in conversation_data_dict:
+            continue
+
         transcript = get_conversation_transcript(
             conversation["id"],
             DirectusSession(user_id="none", is_admin=True),
         )
 
-        token_count += token_counter(model=MEDIUM_LITELLM_MODEL, text=transcript)
+        # Gracefully handle a null / empty transcript
+        transcript = transcript or ""
+        if transcript == "":
+            logger.info(f"Conversation {conversation['id']} has empty transcript – skipping")
+            continue
 
-        if token_count < MAX_REPORT_CONTEXT_LENGTH:
-            conversation_data_dict[conversation["id"]]["transcript"] = (
-                conversation_data_dict[conversation["id"]]["transcript"] + transcript
-            )
+        prospective_token_count = token_count + token_counter(model=MEDIUM_LITELLM_MODEL, text=transcript)
+
+        if prospective_token_count < MAX_REPORT_CONTEXT_LENGTH:
+            # Append with a newline to keep paragraphs separated
+            conversation_data_dict[conversation["id"]]["transcript"] += "\n" + transcript
+            token_count = prospective_token_count
         else:
             logger.info(
-                f"Context too long for report for project {project_id}, token count: {token_count}"
+                f"Context too long for report for project {project_id}, token count: {prospective_token_count}"
             )
             break
 

@@ -329,8 +329,12 @@ def task_process_conversation_chunk(chunk_id: str, run_finish_hook: bool = False
 	try:
 		try:
 			chunk = directus.get_item("conversation_chunk", chunk_id)
+			
+			# Handle missing chunk gracefully (backward-compatibility with old data)
+			if chunk is None:
+				logger.error(f"Conversation chunk not found: {chunk_id}")
+				return
 
-			# attempt to access
 			logger.info(f"Chunk {chunk_id} found in conversation: {chunk['conversation_id']}")
 
 		except Exception as e:
