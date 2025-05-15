@@ -8,6 +8,7 @@ import {
   useProjectChatContext,
   useMoveConversationMutation,
   useInfiniteProjects,
+  useProjectById,
 } from "@/lib/query";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import {
@@ -56,6 +57,7 @@ import {
   IconSort09,
   IconArrowsUpDown,
   IconDotsVertical,
+  IconInfoCircle,
 } from "@tabler/icons-react";
 import { formatDuration, formatRelative, intervalToDuration } from "date-fns";
 import { NavigationButton } from "../common/NavigationButton";
@@ -69,6 +71,7 @@ import { useForm, Controller } from "react-hook-form";
 import { FormLabel } from "@/components/form/FormLabel";
 import { AutoSelectConversations } from "./AutoSelectConversations";
 import { ENABLE_CHAT_AUTO_SELECT } from "@/config";
+import { InformationTooltip } from "../common/InformationTooltip";
 
 type SortOption = {
   label: string;
@@ -331,6 +334,132 @@ export const MoveConversationButton = ({
   );
 };
 
+export const ConversationStatusIndicators = ({
+  conversation,
+  showDuration = false,
+}: {
+  conversation: Conversation;
+  showDuration?: boolean;
+}) => {
+  const { projectId } = useParams();
+
+  const { data: project } = useProjectById({
+    projectId: projectId ?? "",
+    query: {
+      fields: ["is_enhanced_audio_processing_enabled"],
+    },
+  });
+
+  const hasContent = useMemo(
+    () =>
+      conversation.chunks?.some(
+        (chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
+      ),
+    [conversation.chunks],
+  );
+
+  const fDuration = useCallback((duration: number) => {
+    const d = intervalToDuration({
+      start: 0,
+      end: duration * 1000,
+    });
+
+    const hours = d.hours || 0;
+    const minutes = d.minutes || 0;
+    const seconds = d.seconds || 0;
+
+    if (hours > 0) {
+      return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    } else {
+      return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    }
+  }, []);
+
+  const isUpload =
+    conversation.source?.toLowerCase().includes("upload") ?? false;
+
+  return (
+    <Group gap="sm">
+      {isUpload && (
+        <Badge size="xs" color="blue" variant="light">
+          {t`Upload`}
+        </Badge>
+      )}
+
+      {
+        // if from portal and not finished
+        !isUpload && conversation.processing_status === "PENDING" && (
+          // red pulsing dot
+          <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
+        )
+      }
+
+      {!!project?.is_enhanced_audio_processing_enabled &&
+        // if processing still
+        // don't show this if both is_finished and is_audio_processing_finished are true
+        // but if project.is_enhanced_audio_processing_enabled is true, just see the is_finished
+        !(
+          conversation.is_finished && conversation.is_audio_processing_finished
+        ) && (
+          <Tooltip
+            label={t`This conversation is still being processed. It will be available for analysis and chat shortly.`}
+          >
+            <Badge size="xs" color="violet" variant="light">
+              <Group gap="xs">
+                <Trans>Processing</Trans>
+                <IconInfoCircle size={12} />
+              </Group>
+            </Badge>
+          </Tooltip>
+        )}
+
+      {!project?.is_enhanced_audio_processing_enabled &&
+        !conversation.is_finished && (
+          <Tooltip
+            label={
+              conversation.processing_message ??
+              t`This conversation is still being processed. It will be available for analysis and chat shortly.`
+            }
+          >
+            <Badge size="xs" color="violet" variant="light">
+              <Group gap="xs">
+                <Trans>Processing</Trans>
+                <IconInfoCircle size={12} />
+              </Group>
+            </Badge>
+          </Tooltip>
+        )}
+
+      {conversation.duration && conversation.duration > 0 && showDuration && (
+        <Badge size="xs" color="violet" variant="light">
+          {fDuration(conversation.duration)}
+        </Badge>
+      )}
+
+      {!hasContent &&
+        conversation.is_finished === true &&
+        conversation.processing_status !== "FAILED" && (
+          <Badge size="xs" color="red" variant="light">
+            {t`Empty`}
+          </Badge>
+        )}
+
+      {conversation.processing_status === "FAILED" && (
+        <Tooltip
+          label={t`Processing failed for this conversation. This conversation will not be available for analysis and chat. Last Known Status: ${conversation.processing_status ?? "Unknown"}`}
+        >
+          <Badge size="xs" color="red" variant="light">
+            <Group gap="xs">
+              {t`Error`}
+              <IconInfoCircle size={12} />
+            </Group>
+          </Badge>
+        </Tooltip>
+      )}
+    </Group>
+  );
+};
+
 const ConversationAccordionItem = ({
   conversation,
   highlight = false,
@@ -357,9 +486,6 @@ const ConversationAccordionItem = ({
   const isAutoSelectEnabled = chatContextQuery.data?.auto_select_bool ?? false;
 
   // Check if conversation has any content
-  const hasContent = conversation.chunks?.some(
-    (chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
-  );
 
   return (
     <NavigationButton
@@ -381,73 +507,17 @@ const ConversationAccordionItem = ({
       }
     >
       <Stack gap="4" className="pb-[3px]">
-        <div>
+        <Stack gap="xs">
           <Group gap="sm">
             <Text className="pl-[4px] text-sm font-normal">
               {conversation.participant_email ?? conversation.participant_name}
             </Text>
-
-            {conversation.source?.toLocaleLowerCase().includes("upload") && (
-              <Badge size="xs" color="blue" variant="light">
-                {t`Uploaded`}
-              </Badge>
-            )}
-            {
-              // if from portal and not finished
-              !conversation.source?.toLocaleLowerCase().includes("upload") &&
-                ["PENDING"].includes(conversation.processing_status ?? "") && (
-                  // red pulsing dot
-                  <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-                )
-            }
-            {conversation.processing_status === "PROCESSING" &&
-              !conversation.source?.toLocaleLowerCase().includes("upload") && (
-                <Badge size="xs" color="blue" variant="light">
-                  {t`Processing`}
-                </Badge>
-              )}
-            {!hasContent && conversation.is_finished === true && (
-              <Badge size="xs" color="red" variant="light">
-                {t`Empty`}
-              </Badge>
-            )}
-            {conversation.duration &&
-              conversation.duration > 0 &&
-              showDuration && (
-                <Tooltip
-                  label={formatDuration(
-                    intervalToDuration({
-                      start: 0,
-                      end: conversation.duration * 1000,
-                    }),
-                    {
-                      format: ["hours", "minutes", "seconds"],
-                      zero: false,
-                    },
-                  )}
-                >
-                  <Badge size="xs" color="violet" variant="light">
-                    {(() => {
-                      const duration = intervalToDuration({
-                        start: 0,
-                        end: conversation.duration * 1000,
-                      });
-
-                      const hours = duration.hours || 0;
-                      const minutes = duration.minutes || 0;
-                      const seconds = duration.seconds || 0;
-
-                      if (hours > 0) {
-                        return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-                      } else {
-                        return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-                      }
-                    })()}
-                  </Badge>
-                </Tooltip>
-              )}
           </Group>
-        </div>
+          <ConversationStatusIndicators
+            conversation={conversation}
+            showDuration={showDuration}
+          />
+        </Stack>
         <div>
           <Text size="xs" c="gray.6" className="pl-[4px]">
             {formatRelative(

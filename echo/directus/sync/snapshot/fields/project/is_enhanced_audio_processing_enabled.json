@@ -15,7 +15,7 @@
     "options": null,
     "readonly": false,
     "required": false,
-    "sort": 25,
+    "sort": 26,
     "special": [
       "cast-boolean"
     ],
@@ -28,7 +28,7 @@
     "name": "is_enhanced_audio_processing_enabled",
     "table": "project",
     "data_type": "boolean",
-    "default_value": true,
+    "default_value": false,
     "max_length": null,
     "numeric_precision": null,
     "numeric_scale": null,

@@ -15,7 +15,6 @@ except ImportError:
 
 import dotenv
 
-# Configure colorful logs if colorlog is available
 if has_colorlog:
     handler = colorlog.StreamHandler(sys.stdout)
     handler.setFormatter(
@@ -76,12 +75,6 @@ logger.debug(f"DISABLE_REDACTION: {DISABLE_REDACTION}")
 PROMPT_TEMPLATES_DIR = os.path.join(BASE_DIR, "prompt_templates")
 logger.debug(f"PROMPT_TEMPLATES_DIR: {PROMPT_TEMPLATES_DIR}")
 
-EMBEDDINGS_CACHE_DIR = os.path.join(BASE_DIR, "embeddings_cache")
-logger.debug(f"EMBEDDINGS_CACHE_DIR: {EMBEDDINGS_CACHE_DIR}")
-
-TRANKIT_CACHE_DIR = os.path.join(BASE_DIR, "trankit_cache")
-logger.debug(f"TRANKIT_CACHE_DIR: {TRANKIT_CACHE_DIR}")
-
 DIRECTUS_SECRET = os.environ.get("DIRECTUS_SECRET")
 assert DIRECTUS_SECRET, "DIRECTUS_SECRET environment variable is not set"
 logger.debug("DIRECTUS_SECRET: set")
@@ -120,10 +113,6 @@ logger.debug("OPENAI_API_KEY: set")
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 assert ANTHROPIC_API_KEY, "ANTHROPIC_API_KEY environment variable is not set"
 logger.debug("ANTHROPIC_API_KEY: set")
-
-# GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-# assert GEMINI_API_KEY, "GEMINI_API_KEY environment variable is not set"
-# logger.debug(f"GEMINI_API_KEY: {'set' if GEMINI_API_KEY else 'not set'}")
 
 SERVE_API_DOCS = os.environ.get("SERVE_API_DOCS", "false").lower() in ["true", "1"]
 logger.debug(f"SERVE_API_DOCS: {SERVE_API_DOCS}")
@@ -238,8 +227,6 @@ if LITELLM_WHISPER_MODEL != "whisper-1":
 
 # *****************LIGHTRAG CONFIGURATIONS*****************
 
-# ---------------Secrets---------------
-
 # Lightrag LLM model: Makes nodes and answers queries
 LIGHTRAG_LITELLM_MODEL = os.environ.get("LIGHTRAG_LITELLM_MODEL")  # azure/gpt-4o-mini
 assert LIGHTRAG_LITELLM_MODEL, "LIGHTRAG_LITELLM_MODEL environment variable is not set"
@@ -257,11 +244,10 @@ LIGHTRAG_LITELLM_API_BASE = os.environ.get("LIGHTRAG_LITELLM_API_BASE")
 assert LIGHTRAG_LITELLM_API_BASE, "LIGHTRAG_LITELLM_API_BASE environment variable is not set"
 logger.debug(f"LIGHTRAG_LITELLM_API_BASE: {LIGHTRAG_LITELLM_API_BASE}")
 
-
 # Lightrag Audio model: Transcribes audio and gets contextual transcript
 LIGHTRAG_LITELLM_AUDIOMODEL_MODEL = os.environ.get(
     "LIGHTRAG_LITELLM_AUDIOMODEL_MODEL"
-)  # azure/whisper-large-v3
+)
 assert (
     LIGHTRAG_LITELLM_AUDIOMODEL_MODEL
 ), "LIGHTRAG_LITELLM_AUDIOMODEL_MODEL environment variable is not set"

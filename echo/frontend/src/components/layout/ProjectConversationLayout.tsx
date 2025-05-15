@@ -3,6 +3,7 @@ import { useConversationById } from "@/lib/query";
 import { Stack, Title } from "@mantine/core";
 import { useParams } from "react-router-dom";
 import { TabsWithRouter } from "./TabsWithRouter";
+import { ConversationStatusIndicators } from "../conversation/ConversationAccordion";
 
 export const ProjectConversationLayout = () => {
   const { conversationId } = useParams();
@@ -10,7 +11,13 @@ export const ProjectConversationLayout = () => {
   const conversationQuery = useConversationById({
     conversationId: conversationId ?? "",
     query: {
-      fields: ["participant_name"],
+      fields: ["*", { chunks: ["transcript"] }],
+      deep: {
+        // @ts-expect-error chunks is not typed
+        chunks: {
+          _limit: 1,
+        },
+      },
     },
   });
 
@@ -19,6 +26,12 @@ export const ProjectConversationLayout = () => {
       <Title order={1}>
         {conversationQuery.data?.participant_name ?? "Conversation"}
       </Title>
+      {conversationQuery.data && (
+        <ConversationStatusIndicators
+          conversation={conversationQuery.data}
+          showDuration={true}
+        />
+      )}
       <TabsWithRouter
         basePath="/projects/:projectId/conversation/:conversationId"
         tabs={[

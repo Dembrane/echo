@@ -2729,6 +2729,26 @@
     "_syncId": "4b14bff4-9aad-491c-af6f-3627d2ec3472"
   },
   {
+    "collection": "processing_status",
+    "action": "read",
+    "permissions": {
+      "_and": [
+        {
+          "item_id": {
+            "_nempty": true
+          }
+        }
+      ]
+    },
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
+    "_syncId": "c4cbf1d1-a570-454b-b3ab-7a2726ab2900"
+  },
+  {
     "collection": "project_analysis_run",
     "action": "create",
     "permissions": null,

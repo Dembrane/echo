@@ -17,67 +17,67 @@ type Query {
   permissions_me: permissions_me_type
   roles_me: [directus_roles]
   policies_me_globals: policy_me_globals_type
-  roles(filter: directus_roles_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_roles!]!
-  roles_by_id(id: ID!, version: String): directus_roles
-  roles_aggregated(groupBy: [String], filter: directus_roles_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_roles_aggregated!]!
-  revisions(filter: directus_revisions_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_revisions!]!
-  revisions_by_id(id: ID!, version: String): directus_revisions
-  revisions_aggregated(groupBy: [String], filter: directus_revisions_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_revisions_aggregated!]!
-  folders(filter: directus_folders_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_folders!]!
-  folders_by_id(id: ID!, version: String): directus_folders
-  folders_aggregated(groupBy: [String], filter: directus_folders_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_folders_aggregated!]!
   activity(filter: directus_activity_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_activity!]!
   activity_by_id(id: ID!, version: String): directus_activity
   activity_aggregated(groupBy: [String], filter: directus_activity_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_activity_aggregated!]!
-  files(filter: directus_files_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_files!]!
-  files_by_id(id: ID!, version: String): directus_files
-  files_aggregated(groupBy: [String], filter: directus_files_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_files_aggregated!]!
-  presets(filter: directus_presets_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_presets!]!
-  presets_by_id(id: ID!, version: String): directus_presets
-  presets_aggregated(groupBy: [String], filter: directus_presets_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_presets_aggregated!]!
   permissions(filter: directus_permissions_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_permissions!]!
   permissions_by_id(id: ID!, version: String): directus_permissions
   permissions_aggregated(groupBy: [String], filter: directus_permissions_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_permissions_aggregated!]!
-  settings(version: String): directus_settings
+  files(filter: directus_files_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_files!]!
+  files_by_id(id: ID!, version: String): directus_files
+  files_aggregated(groupBy: [String], filter: directus_files_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_files_aggregated!]!
+  folders(filter: directus_folders_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_folders!]!
+  folders_by_id(id: ID!, version: String): directus_folders
+  folders_aggregated(groupBy: [String], filter: directus_folders_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_folders_aggregated!]!
+  users(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_users!]!
+  users_by_id(id: ID!, version: String): directus_users
+  users_aggregated(groupBy: [String], filter: directus_users_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_users_aggregated!]!
+  roles(filter: directus_roles_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_roles!]!
+  roles_by_id(id: ID!, version: String): directus_roles
+  roles_aggregated(groupBy: [String], filter: directus_roles_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_roles_aggregated!]!
+  presets(filter: directus_presets_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_presets!]!
+  presets_by_id(id: ID!, version: String): directus_presets
+  presets_aggregated(groupBy: [String], filter: directus_presets_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_presets_aggregated!]!
+  revisions(filter: directus_revisions_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_revisions!]!
+  revisions_by_id(id: ID!, version: String): directus_revisions
+  revisions_aggregated(groupBy: [String], filter: directus_revisions_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_revisions_aggregated!]!
   panels(filter: directus_panels_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_panels!]!
   panels_by_id(id: ID!, version: String): directus_panels
   panels_aggregated(groupBy: [String], filter: directus_panels_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_panels_aggregated!]!
   notifications(filter: directus_notifications_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_notifications!]!
   notifications_by_id(id: ID!, version: String): directus_notifications
   notifications_aggregated(groupBy: [String], filter: directus_notifications_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_notifications_aggregated!]!
-  flows(filter: directus_flows_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_flows!]!
-  flows_by_id(id: ID!, version: String): directus_flows
-  flows_aggregated(groupBy: [String], filter: directus_flows_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_flows_aggregated!]!
   shares(filter: directus_shares_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_shares!]!
   shares_by_id(id: ID!, version: String): directus_shares
   shares_aggregated(groupBy: [String], filter: directus_shares_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_shares_aggregated!]!
-  operations(filter: directus_operations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_operations!]!
-  operations_by_id(id: ID!, version: String): directus_operations
-  operations_aggregated(groupBy: [String], filter: directus_operations_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_operations_aggregated!]!
   dashboards(filter: directus_dashboards_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_dashboards!]!
   dashboards_by_id(id: ID!, version: String): directus_dashboards
   dashboards_aggregated(groupBy: [String], filter: directus_dashboards_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_dashboards_aggregated!]!
+  flows(filter: directus_flows_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_flows!]!
+  flows_by_id(id: ID!, version: String): directus_flows
+  flows_aggregated(groupBy: [String], filter: directus_flows_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_flows_aggregated!]!
+  operations(filter: directus_operations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_operations!]!
+  operations_by_id(id: ID!, version: String): directus_operations
+  operations_aggregated(groupBy: [String], filter: directus_operations_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_operations_aggregated!]!
   translations(filter: directus_translations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_translations!]!
   translations_by_id(id: ID!, version: String): directus_translations
   translations_aggregated(groupBy: [String], filter: directus_translations_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_translations_aggregated!]!
   webhooks(filter: directus_webhooks_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_webhooks!]!
   webhooks_by_id(id: ID!, version: String): directus_webhooks
   webhooks_aggregated(groupBy: [String], filter: directus_webhooks_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_webhooks_aggregated!]!
+  settings(version: String): directus_settings
   policies(filter: directus_policies_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_policies!]!
   policies_by_id(id: ID!, version: String): directus_policies
   policies_aggregated(groupBy: [String], filter: directus_policies_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_policies_aggregated!]!
+  versions(filter: directus_versions_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_versions!]!
+  versions_by_id(id: ID!, version: String): directus_versions
+  versions_aggregated(groupBy: [String], filter: directus_versions_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_versions_aggregated!]!
   access(filter: directus_access_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_access!]!
   access_by_id(id: ID!, version: String): directus_access
   access_aggregated(groupBy: [String], filter: directus_access_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_access_aggregated!]!
   comments(filter: directus_comments_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_comments!]!
   comments_by_id(id: ID!, version: String): directus_comments
   comments_aggregated(groupBy: [String], filter: directus_comments_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_comments_aggregated!]!
-  versions(filter: directus_versions_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_versions!]!
-  versions_by_id(id: ID!, version: String): directus_versions
-  versions_aggregated(groupBy: [String], filter: directus_versions_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_versions_aggregated!]!
-  users(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_users!]!
-  users_by_id(id: ID!, version: String): directus_users
-  users_aggregated(groupBy: [String], filter: directus_users_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_users_aggregated!]!
 }
 
 type Mutation {
@@ -111,178 +111,182 @@ type Mutation {
   update_users_me(data: update_directus_users_input): directus_users
   import_file(url: String!, data: create_directus_files_input): directus_files
   users_invite(email: String!, role: String!, invite_url: String): Boolean
-  create_roles_items(filter: directus_roles_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_roles_input!]): [directus_roles!]!
-  create_roles_item(data: create_directus_roles_input!): directus_roles
-  create_folders_items(filter: directus_folders_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_folders_input!]): [directus_folders!]!
-  create_folders_item(data: create_directus_folders_input!): directus_folders
-  create_files_items(filter: directus_files_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_files_input!]): [directus_files!]!
-  create_files_item(data: create_directus_files_input!): directus_files
-  create_presets_items(filter: directus_presets_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_presets_input!]): [directus_presets!]!
-  create_presets_item(data: create_directus_presets_input!): directus_presets
   create_permissions_items(filter: directus_permissions_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_permissions_input!]): [directus_permissions!]!
   create_permissions_item(data: create_directus_permissions_input!): directus_permissions
+  create_files_items(filter: directus_files_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_files_input!]): [directus_files!]!
+  create_files_item(data: create_directus_files_input!): directus_files
+  create_folders_items(filter: directus_folders_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_folders_input!]): [directus_folders!]!
+  create_folders_item(data: create_directus_folders_input!): directus_folders
+  create_users_items(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_users_input!]): [directus_users!]!
+  create_users_item(data: create_directus_users_input!): directus_users
+  create_roles_items(filter: directus_roles_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_roles_input!]): [directus_roles!]!
+  create_roles_item(data: create_directus_roles_input!): directus_roles
+  create_presets_items(filter: directus_presets_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_presets_input!]): [directus_presets!]!
+  create_presets_item(data: create_directus_presets_input!): directus_presets
   create_panels_items(filter: directus_panels_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_panels_input!]): [directus_panels!]!
   create_panels_item(data: create_directus_panels_input!): directus_panels
   create_notifications_items(filter: directus_notifications_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_notifications_input!]): [directus_notifications!]!
   create_notifications_item(data: create_directus_notifications_input!): directus_notifications
-  create_flows_items(filter: directus_flows_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_flows_input!]): [directus_flows!]!
-  create_flows_item(data: create_directus_flows_input!): directus_flows
   create_shares_items(filter: directus_shares_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_shares_input!]): [directus_shares!]!
   create_shares_item(data: create_directus_shares_input!): directus_shares
-  create_operations_items(filter: directus_operations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_operations_input!]): [directus_operations!]!
-  create_operations_item(data: create_directus_operations_input!): directus_operations
   create_dashboards_items(filter: directus_dashboards_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_dashboards_input!]): [directus_dashboards!]!
   create_dashboards_item(data: create_directus_dashboards_input!): directus_dashboards
+  create_flows_items(filter: directus_flows_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_flows_input!]): [directus_flows!]!
+  create_flows_item(data: create_directus_flows_input!): directus_flows
+  create_operations_items(filter: directus_operations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_operations_input!]): [directus_operations!]!
+  create_operations_item(data: create_directus_operations_input!): directus_operations
   create_translations_items(filter: directus_translations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_translations_input!]): [directus_translations!]!
   create_translations_item(data: create_directus_translations_input!): directus_translations
   create_webhooks_items(filter: directus_webhooks_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_webhooks_input!]): [directus_webhooks!]!
   create_webhooks_item(data: create_directus_webhooks_input!): directus_webhooks
   create_policies_items(filter: directus_policies_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_policies_input!]): [directus_policies!]!
   create_policies_item(data: create_directus_policies_input!): directus_policies
+  create_versions_items(filter: directus_versions_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_versions_input!]): [directus_versions!]!
+  create_versions_item(data: create_directus_versions_input!): directus_versions
   create_access_items(filter: directus_access_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_access_input!]): [directus_access!]!
   create_access_item(data: create_directus_access_input!): directus_access
   create_comments_items(filter: directus_comments_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_comments_input!]): [directus_comments!]!
   create_comments_item(data: create_directus_comments_input!): directus_comments
-  create_versions_items(filter: directus_versions_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_versions_input!]): [directus_versions!]!
-  create_versions_item(data: create_directus_versions_input!): directus_versions
-  create_users_items(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_users_input!]): [directus_users!]!
-  create_users_item(data: create_directus_users_input!): directus_users
-  update_roles_items(filter: directus_roles_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_roles_input!): [directus_roles!]!
-  update_roles_batch(filter: directus_roles_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_roles_input!]): [directus_roles!]!
-  update_roles_item(id: ID!, data: update_directus_roles_input!): directus_roles
-  update_folders_items(filter: directus_folders_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_folders_input!): [directus_folders!]!
-  update_folders_batch(filter: directus_folders_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_folders_input!]): [directus_folders!]!
-  update_folders_item(id: ID!, data: update_directus_folders_input!): directus_folders
-  update_files_items(filter: directus_files_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_files_input!): [directus_files!]!
-  update_files_batch(filter: directus_files_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_files_input!]): [directus_files!]!
-  update_files_item(id: ID!, data: update_directus_files_input!): directus_files
-  update_presets_items(filter: directus_presets_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_presets_input!): [directus_presets!]!
-  update_presets_batch(filter: directus_presets_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_presets_input!]): [directus_presets!]!
-  update_presets_item(id: ID!, data: update_directus_presets_input!): directus_presets
   update_permissions_items(filter: directus_permissions_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_permissions_input!): [directus_permissions!]!
   update_permissions_batch(filter: directus_permissions_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_permissions_input!]): [directus_permissions!]!
   update_permissions_item(id: ID!, data: update_directus_permissions_input!): directus_permissions
-  update_settings(data: update_directus_settings_input!): directus_settings
+  update_files_items(filter: directus_files_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_files_input!): [directus_files!]!
+  update_files_batch(filter: directus_files_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_files_input!]): [directus_files!]!
+  update_files_item(id: ID!, data: update_directus_files_input!): directus_files
+  update_folders_items(filter: directus_folders_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_folders_input!): [directus_folders!]!
+  update_folders_batch(filter: directus_folders_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_folders_input!]): [directus_folders!]!
+  update_folders_item(id: ID!, data: update_directus_folders_input!): directus_folders
+  update_users_items(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_users_input!): [directus_users!]!
+  update_users_batch(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_users_input!]): [directus_users!]!
+  update_users_item(id: ID!, data: update_directus_users_input!): directus_users
+  update_roles_items(filter: directus_roles_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_roles_input!): [directus_roles!]!
+  update_roles_batch(filter: directus_roles_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_roles_input!]): [directus_roles!]!
+  update_roles_item(id: ID!, data: update_directus_roles_input!): directus_roles
+  update_presets_items(filter: directus_presets_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_presets_input!): [directus_presets!]!
+  update_presets_batch(filter: directus_presets_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_presets_input!]): [directus_presets!]!
+  update_presets_item(id: ID!, data: update_directus_presets_input!): directus_presets
   update_panels_items(filter: directus_panels_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_panels_input!): [directus_panels!]!
   update_panels_batch(filter: directus_panels_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_panels_input!]): [directus_panels!]!
   update_panels_item(id: ID!, data: update_directus_panels_input!): directus_panels
   update_notifications_items(filter: directus_notifications_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_notifications_input!): [directus_notifications!]!
   update_notifications_batch(filter: directus_notifications_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_notifications_input!]): [directus_notifications!]!
   update_notifications_item(id: ID!, data: update_directus_notifications_input!): directus_notifications
-  update_flows_items(filter: directus_flows_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_flows_input!): [directus_flows!]!
-  update_flows_batch(filter: directus_flows_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_flows_input!]): [directus_flows!]!
-  update_flows_item(id: ID!, data: update_directus_flows_input!): directus_flows
   update_shares_items(filter: directus_shares_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_shares_input!): [directus_shares!]!
   update_shares_batch(filter: directus_shares_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_shares_input!]): [directus_shares!]!
   update_shares_item(id: ID!, data: update_directus_shares_input!): directus_shares
-  update_operations_items(filter: directus_operations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_operations_input!): [directus_operations!]!
-  update_operations_batch(filter: directus_operations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_operations_input!]): [directus_operations!]!
-  update_operations_item(id: ID!, data: update_directus_operations_input!): directus_operations
   update_dashboards_items(filter: directus_dashboards_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_dashboards_input!): [directus_dashboards!]!
   update_dashboards_batch(filter: directus_dashboards_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_dashboards_input!]): [directus_dashboards!]!
   update_dashboards_item(id: ID!, data: update_directus_dashboards_input!): directus_dashboards
+  update_flows_items(filter: directus_flows_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_flows_input!): [directus_flows!]!
+  update_flows_batch(filter: directus_flows_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_flows_input!]): [directus_flows!]!
+  update_flows_item(id: ID!, data: update_directus_flows_input!): directus_flows
+  update_operations_items(filter: directus_operations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_operations_input!): [directus_operations!]!
+  update_operations_batch(filter: directus_operations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_operations_input!]): [directus_operations!]!
+  update_operations_item(id: ID!, data: update_directus_operations_input!): directus_operations
   update_translations_items(filter: directus_translations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_translations_input!): [directus_translations!]!
   update_translations_batch(filter: directus_translations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_translations_input!]): [directus_translations!]!
   update_translations_item(id: ID!, data: update_directus_translations_input!): directus_translations
   update_webhooks_items(filter: directus_webhooks_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_webhooks_input!): [directus_webhooks!]!
   update_webhooks_batch(filter: directus_webhooks_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_webhooks_input!]): [directus_webhooks!]!
   update_webhooks_item(id: ID!, data: update_directus_webhooks_input!): directus_webhooks
+  update_settings(data: update_directus_settings_input!): directus_settings
   update_policies_items(filter: directus_policies_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_policies_input!): [directus_policies!]!
   update_policies_batch(filter: directus_policies_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_policies_input!]): [directus_policies!]!
   update_policies_item(id: ID!, data: update_directus_policies_input!): directus_policies
+  update_versions_items(filter: directus_versions_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_versions_input!): [directus_versions!]!
+  update_versions_batch(filter: directus_versions_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_versions_input!]): [directus_versions!]!
+  update_versions_item(id: ID!, data: update_directus_versions_input!): directus_versions
   update_access_items(filter: directus_access_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_access_input!): [directus_access!]!
   update_access_batch(filter: directus_access_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_access_input!]): [directus_access!]!
   update_access_item(id: ID!, data: update_directus_access_input!): directus_access
   update_comments_items(filter: directus_comments_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_comments_input!): [directus_comments!]!
   update_comments_batch(filter: directus_comments_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_comments_input!]): [directus_comments!]!
   update_comments_item(id: ID!, data: update_directus_comments_input!): directus_comments
-  update_versions_items(filter: directus_versions_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_versions_input!): [directus_versions!]!
-  update_versions_batch(filter: directus_versions_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_versions_input!]): [directus_versions!]!
-  update_versions_item(id: ID!, data: update_directus_versions_input!): directus_versions
-  update_users_items(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_users_input!): [directus_users!]!
-  update_users_batch(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_users_input!]): [directus_users!]!
-  update_users_item(id: ID!, data: update_directus_users_input!): directus_users
-  delete_roles_items(ids: [ID]!): delete_many
-  delete_roles_item(id: ID!): delete_one
-  delete_folders_items(ids: [ID]!): delete_many
-  delete_folders_item(id: ID!): delete_one
-  delete_files_items(ids: [ID]!): delete_many
-  delete_files_item(id: ID!): delete_one
-  delete_presets_items(ids: [ID]!): delete_many
-  delete_presets_item(id: ID!): delete_one
   delete_permissions_items(ids: [ID]!): delete_many
   delete_permissions_item(id: ID!): delete_one
+  delete_files_items(ids: [ID]!): delete_many
+  delete_files_item(id: ID!): delete_one
+  delete_folders_items(ids: [ID]!): delete_many
+  delete_folders_item(id: ID!): delete_one
+  delete_users_items(ids: [ID]!): delete_many
+  delete_users_item(id: ID!): delete_one
+  delete_roles_items(ids: [ID]!): delete_many
+  delete_roles_item(id: ID!): delete_one
+  delete_presets_items(ids: [ID]!): delete_many
+  delete_presets_item(id: ID!): delete_one
   delete_panels_items(ids: [ID]!): delete_many
   delete_panels_item(id: ID!): delete_one
   delete_notifications_items(ids: [ID]!): delete_many
   delete_notifications_item(id: ID!): delete_one
-  delete_flows_items(ids: [ID]!): delete_many
-  delete_flows_item(id: ID!): delete_one
   delete_shares_items(ids: [ID]!): delete_many
   delete_shares_item(id: ID!): delete_one
-  delete_operations_items(ids: [ID]!): delete_many
-  delete_operations_item(id: ID!): delete_one
   delete_dashboards_items(ids: [ID]!): delete_many
   delete_dashboards_item(id: ID!): delete_one
+  delete_flows_items(ids: [ID]!): delete_many
+  delete_flows_item(id: ID!): delete_one
+  delete_operations_items(ids: [ID]!): delete_many
+  delete_operations_item(id: ID!): delete_one
   delete_translations_items(ids: [ID]!): delete_many
   delete_translations_item(id: ID!): delete_one
   delete_webhooks_items(ids: [ID]!): delete_many
   delete_webhooks_item(id: ID!): delete_one
   delete_policies_items(ids: [ID]!): delete_many
   delete_policies_item(id: ID!): delete_one
+  delete_versions_items(ids: [ID]!): delete_many
+  delete_versions_item(id: ID!): delete_one
   delete_access_items(ids: [ID]!): delete_many
   delete_access_item(id: ID!): delete_one
   delete_comments_items(ids: [ID]!): delete_many
   delete_comments_item(id: ID!): delete_one
-  delete_versions_items(ids: [ID]!): delete_many
-  delete_versions_item(id: ID!): delete_one
-  delete_users_items(ids: [ID]!): delete_many
-  delete_users_item(id: ID!): delete_one
 }
 
 type Subscription {
-  directus_roles_mutated(event: EventEnum): directus_roles_mutated
-  directus_revisions_mutated(event: EventEnum): directus_revisions_mutated
-  directus_folders_mutated(event: EventEnum): directus_folders_mutated
   directus_activity_mutated(event: EventEnum): directus_activity_mutated
-  directus_files_mutated(event: EventEnum): directus_files_mutated
-  directus_presets_mutated(event: EventEnum): directus_presets_mutated
   directus_permissions_mutated(event: EventEnum): directus_permissions_mutated
-  directus_settings_mutated(event: EventEnum): directus_settings_mutated
+  directus_files_mutated(event: EventEnum): directus_files_mutated
+  directus_folders_mutated(event: EventEnum): directus_folders_mutated
+  directus_users_mutated(event: EventEnum): directus_users_mutated
+  directus_roles_mutated(event: EventEnum): directus_roles_mutated
+  directus_presets_mutated(event: EventEnum): directus_presets_mutated
+  directus_revisions_mutated(event: EventEnum): directus_revisions_mutated
   directus_panels_mutated(event: EventEnum): directus_panels_mutated
   directus_notifications_mutated(event: EventEnum): directus_notifications_mutated
-  directus_flows_mutated(event: EventEnum): directus_flows_mutated
   directus_shares_mutated(event: EventEnum): directus_shares_mutated
-  directus_operations_mutated(event: EventEnum): directus_operations_mutated
   directus_dashboards_mutated(event: EventEnum): directus_dashboards_mutated
+  directus_flows_mutated(event: EventEnum): directus_flows_mutated
+  directus_operations_mutated(event: EventEnum): directus_operations_mutated
   directus_translations_mutated(event: EventEnum): directus_translations_mutated
-  directus_sync_id_map_mutated(event: EventEnum): directus_sync_id_map_mutated
   directus_webhooks_mutated(event: EventEnum): directus_webhooks_mutated
+  directus_settings_mutated(event: EventEnum): directus_settings_mutated
   directus_policies_mutated(event: EventEnum): directus_policies_mutated
+  directus_versions_mutated(event: EventEnum): directus_versions_mutated
   directus_access_mutated(event: EventEnum): directus_access_mutated
   directus_comments_mutated(event: EventEnum): directus_comments_mutated
+<<<<<<< HEAD
+  directus_sync_id_map_mutated(event: EventEnum): directus_sync_id_map_mutated
+=======
   directus_versions_mutated(event: EventEnum): directus_versions_mutated
   aspect_mutated(event: EventEnum): aspect_mutated
   directus_users_mutated(event: EventEnum): directus_users_mutated
+>>>>>>> a94ae1e84aa61fd2d7997133910322a0554040a5
   account_mutated(event: EventEnum): account_mutated
   account_directus_users_mutated(event: EventEnum): account_directus_users_mutated
   view_mutated(event: EventEnum): view_mutated
   project_mutated(event: EventEnum): project_mutated
+<<<<<<< HEAD
+  aspect_mutated(event: EventEnum): aspect_mutated
+=======
   conversation_mutated(event: EventEnum): conversation_mutated
   conversation_chunk_mutated(event: EventEnum): conversation_chunk_mutated
+>>>>>>> a94ae1e84aa61fd2d7997133910322a0554040a5
   conversation_project_tag_mutated(event: EventEnum): conversation_project_tag_mutated
   project_tag_mutated(event: EventEnum): project_tag_mutated
-  conversation_reply_mutated(event: EventEnum): conversation_reply_mutated
-  conversation_segment_conversation_chunk_mutated(event: EventEnum): conversation_segment_conversation_chunk_mutated
   document_mutated(event: EventEnum): document_mutated
   project_analysis_run_mutated(event: EventEnum): project_analysis_run_mutated
   insight_mutated(event: EventEnum): insight_mutated
-  project_chat_mutated(event: EventEnum): project_chat_mutated
   project_chat_conversation_mutated(event: EventEnum): project_chat_conversation_mutated
-  project_chat_message_mutated(event: EventEnum): project_chat_message_mutated
   project_chat_message_conversation_mutated(event: EventEnum): project_chat_message_conversation_mutated
   project_chat_message_conversation_1_mutated(event: EventEnum): project_chat_message_conversation_1_mutated
-  project_chat_message_metadata_mutated(event: EventEnum): project_chat_message_metadata_mutated
   project_report_mutated(event: EventEnum): project_report_mutated
   project_report_metric_mutated(event: EventEnum): project_report_metric_mutated
   project_report_notification_participants_mutated(event: EventEnum): project_report_notification_participants_mutated
@@ -291,6 +295,20 @@ type Subscription {
   conversation_segment_mutated(event: EventEnum): conversation_segment_mutated
   quote_aspect_1_mutated(event: EventEnum): quote_aspect_1_mutated
   quote_conversation_chunk_mutated(event: EventEnum): quote_conversation_chunk_mutated
+<<<<<<< HEAD
+  conversation_chunk_mutated(event: EventEnum): conversation_chunk_mutated
+  project_chat_mutated(event: EventEnum): project_chat_mutated
+  conversation_segment_conversation_chunk_mutated(event: EventEnum): conversation_segment_conversation_chunk_mutated
+  quote_mutated(event: EventEnum): quote_mutated
+  conversation_reply_mutated(event: EventEnum): conversation_reply_mutated
+  project_chat_message_metadata_mutated(event: EventEnum): project_chat_message_metadata_mutated
+  project_chat_message_mutated(event: EventEnum): project_chat_message_mutated
+  conversation_segment_mutated(event: EventEnum): conversation_segment_mutated
+  project_report_notification_participants_mutated(event: EventEnum): project_report_notification_participants_mutated
+  conversation_mutated(event: EventEnum): conversation_mutated
+  processing_status_mutated(event: EventEnum): processing_status_mutated
+=======
+>>>>>>> a94ae1e84aa61fd2d7997133910322a0554040a5
 }
 
 """The `Boolean` scalar type represents `true` or `false`."""
@@ -432,7 +450,6 @@ type conversation {
   created_at: Date
   created_at_func: datetime_functions
   description: String
-  duration: Float
   id: ID!
   is_finished: Boolean
   merged_audio_path: String
@@ -440,28 +457,34 @@ type conversation {
   participant_email: String
   participant_name: String
   participant_user_agent: String
-  processing_message: String
   processing_status: String
   project_id(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): project
-
-  """This is set if not through PORTAL"""
-  source: String
   summary: String
   title: String
   updated_at: Date
   updated_at_func: datetime_functions
+<<<<<<< HEAD
+  processing_message: String
+
+  """This is set if not through PORTAL"""
+  source: String
+  duration: Float
+  is_finished: Boolean
+  is_audio_processing_finished: Boolean
+  tags(filter: conversation_project_tag_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_project_tag]
+  tags_func: count_functions
+=======
+>>>>>>> a94ae1e84aa61fd2d7997133910322a0554040a5
   chunks(filter: conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_chunk]
   chunks_func: count_functions
   project_chat_messages(filter: project_chat_message_conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_message_conversation]
   project_chat_messages_func: count_functions
   project_chats(filter: project_chat_conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_conversation]
   project_chats_func: count_functions
-  replies(filter: conversation_reply_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_reply]
-  replies_func: count_functions
-  tags(filter: conversation_project_tag_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_project_tag]
-  tags_func: count_functions
   conversation_segments(filter: conversation_segment_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_segment]
   conversation_segments_func: count_functions
+  replies(filter: conversation_reply_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_reply]
+  replies_func: count_functions
 }
 
 type conversation_chunk {
@@ -470,20 +493,20 @@ type conversation_chunk {
   created_at_func: datetime_functions
   id: ID!
   path: String
-  processing_message: String
-  processing_status: String
-
-  """This is set if not through PORTAL"""
-  source: String
   timestamp: Date!
   timestamp_func: datetime_functions
   transcript: String
   updated_at: Date
   updated_at_func: datetime_functions
-  conversation_segments(filter: conversation_segment_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_segment_conversation_chunk]
-  conversation_segments_func: count_functions
+
+  """This is set if not through PORTAL"""
+  source: String
+  processing_status: String
+  processing_message: String
   quotes(filter: quote_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_conversation_chunk]
   quotes_func: count_functions
+  conversation_segments(filter: conversation_segment_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_segment_conversation_chunk]
+  conversation_segments_func: count_functions
 }
 
 type conversation_chunk_mutated {
@@ -1882,6 +1905,24 @@ type policy_me_globals_type {
   admin_access: Boolean
 }
 
+type processing_status {
+  id: ID!
+  collection_name: String
+  message: String
+  json: String
+  event: String
+  timestamp: Date
+  timestamp_func: datetime_functions
+  item_id: String
+  duration_ms: Int
+}
+
+type processing_status_mutated {
+  key: ID!
+  event: EventEnum
+  data: processing_status
+}
+
 type project {
   context: String
   conversation_ask_for_participant_name_label: String
@@ -1898,28 +1939,37 @@ type project {
   """
   default_conversation_tutorial_slug: String
   directus_user_id(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
-  get_reply_prompt: String
   id: ID!
   image_generation_model: String
   is_conversation_allowed: Boolean!
+<<<<<<< HEAD
+=======
   is_enhanced_audio_processing_enabled: Boolean
   is_get_reply_enabled: Boolean
   is_project_notification_subscription_allowed: Boolean
+>>>>>>> a94ae1e84aa61fd2d7997133910322a0554040a5
   language: String
   name: String
   pin: String
   updated_at: Date
   updated_at_func: datetime_functions
+<<<<<<< HEAD
+  get_reply_prompt: String
+  is_get_reply_enabled: Boolean
+  is_enhanced_audio_processing_enabled: Boolean
+  is_project_notification_subscription_allowed: Boolean
+=======
+>>>>>>> a94ae1e84aa61fd2d7997133910322a0554040a5
   conversations(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation]
   conversations_func: count_functions
+  tags(filter: project_tag_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_tag]
+  tags_func: count_functions
   project_analysis_runs(filter: project_analysis_run_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_analysis_run]
   project_analysis_runs_func: count_functions
   project_chats(filter: project_chat_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat]
   project_chats_func: count_functions
   project_reports(filter: project_report_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_report]
   project_reports_func: count_functions
-  tags(filter: project_tag_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_tag]
-  tags_func: count_functions
 }
 
 type project_analysis_run {
@@ -1951,7 +2001,6 @@ type project_analysis_run_mutated {
 }
 
 type project_chat {
-  auto_select: Boolean
   date_created: Date
   date_created_func: datetime_functions
   date_updated: Date
@@ -1961,6 +2010,7 @@ type project_chat {
   project_id(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): project
   user_created(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
   user_updated(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
+  auto_select: Boolean
   project_chat_messages(filter: project_chat_message_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_message]
   project_chat_messages_func: count_functions
   used_conversations(filter: project_chat_conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_conversation]
@@ -1989,12 +2039,13 @@ type project_chat_message {
   project_chat_id(filter: project_chat_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): project_chat
   text: String
   tokens_count: Int
+  template_key: String
   added_conversations(filter: project_chat_message_conversation_1_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_message_conversation_1]
   added_conversations_func: count_functions
-  chat_message_metadata(filter: project_chat_message_metadata_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_message_metadata]
-  chat_message_metadata_func: count_functions
   used_conversations(filter: project_chat_message_conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_message_conversation]
   used_conversations_func: count_functions
+  chat_message_metadata(filter: project_chat_message_metadata_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_message_metadata]
+  chat_message_metadata_func: count_functions
 }
 
 type project_chat_message_conversation {
@@ -2094,7 +2145,6 @@ type project_report_mutated {
 }
 
 type project_report_notification_participants {
-  conversation_id(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation
   date_submitted: Date
   date_submitted_func: datetime_functions
   date_updated: Date
@@ -2105,6 +2155,7 @@ type project_report_notification_participants {
   id: ID!
   project_id: String
   sort: Int
+  conversation_id(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation
 }
 
 type project_report_notification_participants_mutated {
@@ -2340,18 +2391,18 @@ input conversation_chunk_filter {
   created_at_func: datetime_function_filter_operators
   id: string_filter_operators
   path: string_filter_operators
-  processing_message: string_filter_operators
-  processing_status: string_filter_operators
-  source: string_filter_operators
   timestamp: date_filter_operators
   timestamp_func: datetime_function_filter_operators
   transcript: string_filter_operators
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
-  conversation_segments: conversation_segment_conversation_chunk_filter
-  conversation_segments_func: count_function_filter_operators
+  source: string_filter_operators
+  processing_status: string_filter_operators
+  processing_message: string_filter_operators
   quotes: quote_conversation_chunk_filter
   quotes_func: count_function_filter_operators
+  conversation_segments: conversation_segment_conversation_chunk_filter
+  conversation_segments_func: count_function_filter_operators
   _and: [conversation_chunk_filter]
   _or: [conversation_chunk_filter]
 }
@@ -2361,7 +2412,6 @@ input conversation_filter {
   created_at: date_filter_operators
   created_at_func: datetime_function_filter_operators
   description: string_filter_operators
-  duration: number_filter_operators
   id: string_filter_operators
   is_finished: boolean_filter_operators
   merged_audio_path: string_filter_operators
@@ -2369,26 +2419,32 @@ input conversation_filter {
   participant_email: string_filter_operators
   participant_name: string_filter_operators
   participant_user_agent: string_filter_operators
-  processing_message: string_filter_operators
   processing_status: string_filter_operators
   project_id: project_filter
-  source: string_filter_operators
   summary: string_filter_operators
   title: string_filter_operators
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
+<<<<<<< HEAD
+  processing_message: string_filter_operators
+  source: string_filter_operators
+  duration: number_filter_operators
+  is_finished: boolean_filter_operators
+  is_audio_processing_finished: boolean_filter_operators
+  tags: conversation_project_tag_filter
+  tags_func: count_function_filter_operators
+=======
+>>>>>>> a94ae1e84aa61fd2d7997133910322a0554040a5
   chunks: conversation_chunk_filter
   chunks_func: count_function_filter_operators
   project_chat_messages: project_chat_message_conversation_filter
   project_chat_messages_func: count_function_filter_operators
   project_chats: project_chat_conversation_filter
   project_chats_func: count_function_filter_operators
-  replies: conversation_reply_filter
-  replies_func: count_function_filter_operators
-  tags: conversation_project_tag_filter
-  tags_func: count_function_filter_operators
   conversation_segments: conversation_segment_filter
   conversation_segments_func: count_function_filter_operators
+  replies: conversation_reply_filter
+  replies_func: count_function_filter_operators
   _and: [conversation_filter]
   _or: [conversation_filter]
 }
@@ -2475,23 +2531,22 @@ input create_conversation_chunk_input {
   created_at: Date
   id: ID
   path: String
-  processing_message: String
-  processing_status: String
-
-  """This is set if not through PORTAL"""
-  source: String
   timestamp: Date!
   transcript: String
   updated_at: Date
-  conversation_segments: [create_conversation_segment_conversation_chunk_input]
+
+  """This is set if not through PORTAL"""
+  source: String
+  processing_status: String
+  processing_message: String
   quotes: [create_quote_conversation_chunk_input]
+  conversation_segments: [create_conversation_segment_conversation_chunk_input]
 }
 
 input create_conversation_input {
   context: String
   created_at: Date
   description: String
-  duration: Float
   id: ID
   is_finished: Boolean
   merged_audio_path: String
@@ -2499,21 +2554,27 @@ input create_conversation_input {
   participant_email: String
   participant_name: String
   participant_user_agent: String
-  processing_message: String
   processing_status: String
   project_id: create_project_input
-
-  """This is set if not through PORTAL"""
-  source: String
   summary: String
   title: String
   updated_at: Date
+<<<<<<< HEAD
+  processing_message: String
+
+  """This is set if not through PORTAL"""
+  source: String
+  duration: Float
+  is_finished: Boolean
+  is_audio_processing_finished: Boolean
+  tags: [create_conversation_project_tag_input]
+=======
+>>>>>>> a94ae1e84aa61fd2d7997133910322a0554040a5
   chunks: [create_conversation_chunk_input]
   project_chat_messages: [create_project_chat_message_conversation_input]
   project_chats: [create_project_chat_conversation_input]
-  replies: [create_conversation_reply_input]
-  tags: [create_conversation_project_tag_input]
   conversation_segments: [create_conversation_segment_input]
+  replies: [create_conversation_reply_input]
 }
 
 input create_conversation_project_tag_input {
@@ -2888,7 +2949,6 @@ input create_project_chat_conversation_input {
 }
 
 input create_project_chat_input {
-  auto_select: Boolean
   date_created: Date
   date_updated: Date
   id: ID
@@ -2896,6 +2956,7 @@ input create_project_chat_input {
   project_id: create_project_input
   user_created: create_directus_users_input
   user_updated: create_directus_users_input
+  auto_select: Boolean
   project_chat_messages: [create_project_chat_message_input]
   used_conversations: [create_project_chat_conversation_input]
 }
@@ -2920,9 +2981,10 @@ input create_project_chat_message_input {
   project_chat_id: create_project_chat_input
   text: String
   tokens_count: Int
+  template_key: String
   added_conversations: [create_project_chat_message_conversation_1_input]
-  chat_message_metadata: [create_project_chat_message_metadata_input]
   used_conversations: [create_project_chat_message_conversation_input]
+  chat_message_metadata: [create_project_chat_message_metadata_input]
 }
 
 input create_project_chat_message_metadata_input {
@@ -2950,22 +3012,31 @@ input create_project_input {
   """
   default_conversation_tutorial_slug: String
   directus_user_id: create_directus_users_input
-  get_reply_prompt: String
   id: ID
   image_generation_model: String
   is_conversation_allowed: Boolean!
+<<<<<<< HEAD
+=======
   is_enhanced_audio_processing_enabled: Boolean
   is_get_reply_enabled: Boolean
   is_project_notification_subscription_allowed: Boolean
+>>>>>>> a94ae1e84aa61fd2d7997133910322a0554040a5
   language: String
   name: String
   pin: String
   updated_at: Date
+<<<<<<< HEAD
+  get_reply_prompt: String
+  is_get_reply_enabled: Boolean
+  is_enhanced_audio_processing_enabled: Boolean
+  is_project_notification_subscription_allowed: Boolean
+=======
+>>>>>>> a94ae1e84aa61fd2d7997133910322a0554040a5
   conversations: [create_conversation_input]
+  tags: [create_project_tag_input]
   project_analysis_runs: [create_project_analysis_run_input]
   project_chats: [create_project_chat_input]
   project_reports: [create_project_report_input]
-  tags: [create_project_tag_input]
 }
 
 input create_project_report_input {
@@ -3602,7 +3673,6 @@ input project_chat_conversation_filter {
 }
 
 input project_chat_filter {
-  auto_select: boolean_filter_operators
   date_created: date_filter_operators
   date_created_func: datetime_function_filter_operators
   date_updated: date_filter_operators
@@ -3612,6 +3682,7 @@ input project_chat_filter {
   project_id: project_filter
   user_created: directus_users_filter
   user_updated: directus_users_filter
+  auto_select: boolean_filter_operators
   project_chat_messages: project_chat_message_filter
   project_chat_messages_func: count_function_filter_operators
   used_conversations: project_chat_conversation_filter
@@ -3646,12 +3717,13 @@ input project_chat_message_filter {
   project_chat_id: project_chat_filter
   text: string_filter_operators
   tokens_count: number_filter_operators
+  template_key: string_filter_operators
   added_conversations: project_chat_message_conversation_1_filter
   added_conversations_func: count_function_filter_operators
-  chat_message_metadata: project_chat_message_metadata_filter
-  chat_message_metadata_func: count_function_filter_operators
   used_conversations: project_chat_message_conversation_filter
   used_conversations_func: count_function_filter_operators
+  chat_message_metadata: project_chat_message_metadata_filter
+  chat_message_metadata_func: count_function_filter_operators
   _and: [project_chat_message_filter]
   _or: [project_chat_message_filter]
 }
@@ -3681,28 +3753,37 @@ input project_filter {
   default_conversation_transcript_prompt: string_filter_operators
   default_conversation_tutorial_slug: string_filter_operators
   directus_user_id: directus_users_filter
-  get_reply_prompt: string_filter_operators
   id: string_filter_operators
   image_generation_model: string_filter_operators
   is_conversation_allowed: boolean_filter_operators
+<<<<<<< HEAD
+=======
   is_enhanced_audio_processing_enabled: boolean_filter_operators
   is_get_reply_enabled: boolean_filter_operators
   is_project_notification_subscription_allowed: boolean_filter_operators
+>>>>>>> a94ae1e84aa61fd2d7997133910322a0554040a5
   language: string_filter_operators
   name: string_filter_operators
   pin: string_filter_operators
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
+<<<<<<< HEAD
+  get_reply_prompt: string_filter_operators
+  is_get_reply_enabled: boolean_filter_operators
+  is_enhanced_audio_processing_enabled: boolean_filter_operators
+  is_project_notification_subscription_allowed: boolean_filter_operators
+=======
+>>>>>>> a94ae1e84aa61fd2d7997133910322a0554040a5
   conversations: conversation_filter
   conversations_func: count_function_filter_operators
+  tags: project_tag_filter
+  tags_func: count_function_filter_operators
   project_analysis_runs: project_analysis_run_filter
   project_analysis_runs_func: count_function_filter_operators
   project_chats: project_chat_filter
   project_chats_func: count_function_filter_operators
   project_reports: project_report_filter
   project_reports_func: count_function_filter_operators
-  tags: project_tag_filter
-  tags_func: count_function_filter_operators
   _and: [project_filter]
   _or: [project_filter]
 }
@@ -3842,23 +3923,22 @@ input update_conversation_chunk_input {
   created_at: Date
   id: ID
   path: String
-  processing_message: String
-  processing_status: String
-
-  """This is set if not through PORTAL"""
-  source: String
   timestamp: Date
   transcript: String
   updated_at: Date
-  conversation_segments: [update_conversation_segment_conversation_chunk_input]
+
+  """This is set if not through PORTAL"""
+  source: String
+  processing_status: String
+  processing_message: String
   quotes: [update_quote_conversation_chunk_input]
+  conversation_segments: [update_conversation_segment_conversation_chunk_input]
 }
 
 input update_conversation_input {
   context: String
   created_at: Date
   description: String
-  duration: Float
   id: ID
   is_finished: Boolean
   merged_audio_path: String
@@ -3866,21 +3946,27 @@ input update_conversation_input {
   participant_email: String
   participant_name: String
   participant_user_agent: String
-  processing_message: String
   processing_status: String
   project_id: update_project_input
-
-  """This is set if not through PORTAL"""
-  source: String
   summary: String
   title: String
   updated_at: Date
+<<<<<<< HEAD
+  processing_message: String
+
+  """This is set if not through PORTAL"""
+  source: String
+  duration: Float
+  is_finished: Boolean
+  is_audio_processing_finished: Boolean
+  tags: [update_conversation_project_tag_input]
+=======
+>>>>>>> a94ae1e84aa61fd2d7997133910322a0554040a5
   chunks: [update_conversation_chunk_input]
   project_chat_messages: [update_project_chat_message_conversation_input]
   project_chats: [update_project_chat_conversation_input]
-  replies: [update_conversation_reply_input]
-  tags: [update_conversation_project_tag_input]
   conversation_segments: [update_conversation_segment_input]
+  replies: [update_conversation_reply_input]
 }
 
 input update_conversation_project_tag_input {
@@ -4296,7 +4382,6 @@ input update_project_chat_conversation_input {
 }
 
 input update_project_chat_input {
-  auto_select: Boolean
   date_created: Date
   date_updated: Date
   id: ID
@@ -4304,6 +4389,7 @@ input update_project_chat_input {
   project_id: update_project_input
   user_created: update_directus_users_input
   user_updated: update_directus_users_input
+  auto_select: Boolean
   project_chat_messages: [update_project_chat_message_input]
   used_conversations: [update_project_chat_conversation_input]
 }
@@ -4328,9 +4414,10 @@ input update_project_chat_message_input {
   project_chat_id: update_project_chat_input
   text: String
   tokens_count: Int
+  template_key: String
   added_conversations: [update_project_chat_message_conversation_1_input]
-  chat_message_metadata: [update_project_chat_message_metadata_input]
   used_conversations: [update_project_chat_message_conversation_input]
+  chat_message_metadata: [update_project_chat_message_metadata_input]
 }
 
 input update_project_chat_message_metadata_input {
@@ -4358,22 +4445,31 @@ input update_project_input {
   """
   default_conversation_tutorial_slug: String
   directus_user_id: update_directus_users_input
-  get_reply_prompt: String
   id: ID
   image_generation_model: String
   is_conversation_allowed: Boolean
+<<<<<<< HEAD
+=======
   is_enhanced_audio_processing_enabled: Boolean
   is_get_reply_enabled: Boolean
   is_project_notification_subscription_allowed: Boolean
+>>>>>>> a94ae1e84aa61fd2d7997133910322a0554040a5
   language: String
   name: String
   pin: String
   updated_at: Date
+<<<<<<< HEAD
+  get_reply_prompt: String
+  is_get_reply_enabled: Boolean
+  is_enhanced_audio_processing_enabled: Boolean
+  is_project_notification_subscription_allowed: Boolean
+=======
+>>>>>>> a94ae1e84aa61fd2d7997133910322a0554040a5
   conversations: [update_conversation_input]
+  tags: [update_project_tag_input]
   project_analysis_runs: [update_project_analysis_run_input]
   project_chats: [update_project_chat_input]
   project_reports: [update_project_report_input]
-  tags: [update_project_tag_input]
 }
 
 input update_project_report_input {

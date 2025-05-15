@@ -40,6 +40,8 @@ import { ProjectReportRoute } from "./routes/project/report/ProjectReportRoute";
 import { ErrorPage } from "./components/error/ErrorPage";
 import { ParticipantReport } from "./routes/participant/ParticipantReport";
 import { ProjectUnsubscribe } from "./routes/project/unsubscribe/ProjectUnsubscribe";
+import DebugPage from "./routes/Debug";
+import { DEBUG_MODE } from "./config";
 
 export const mainRouter = createBrowserRouter([
   {
@@ -142,6 +144,10 @@ export const mainRouter = createBrowserRouter([
                     element: <ProjectChatRoute />,
                   },
                   {
+                    path: "chats/:chatId/debug",
+                    element: <DebugPage />,
+                  },
+                  {
                     path: "resources/:resourceId",
                     element: <ProjectResourceLayout />,
                     children: [
@@ -172,6 +178,10 @@ export const mainRouter = createBrowserRouter([
                         path: "analysis",
                         element: <ProjectConversationAnalysis />,
                       },
+                      {
+                        path: "debug",
+                        element: <DebugPage />,
+                      },
                     ],
                   },
 
@@ -200,6 +210,10 @@ export const mainRouter = createBrowserRouter([
                   {
                     path: "report",
                     element: <ProjectReportRoute />,
+                  },
+                  {
+                    path: "debug",
+                    element: <DebugPage />,
                   },
                 ],
               },

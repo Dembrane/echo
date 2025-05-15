@@ -1,6 +1,7 @@
 import { Box, Button, Text, Title } from "@mantine/core";
 import { useRouteError, isRouteErrorResponse } from "react-router-dom";
 import { BaseLayout } from "../layout/BaseLayout";
+import { DEBUG_MODE } from "@/config";
 
 export const ErrorPage = () => {
   const error = useRouteError();
@@ -18,6 +19,11 @@ export const ErrorPage = () => {
             ? error.data?.message || "Page not found"
             : "Sorry, an unexpected error has occurred."}
         </Text>
+        {DEBUG_MODE && (
+          <div className="rounded-md border border-red-500 bg-gray-100 p-4">
+            <pre>{JSON.stringify(error, null, 2)}</pre>
+          </div>
+        )}
         <Button onClick={() => (window.location.href = "/")}>
           Return to Home
         </Button>

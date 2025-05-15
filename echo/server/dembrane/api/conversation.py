@@ -295,6 +295,7 @@ def get_conversation_transcript(
     raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
     if include_project_data:
+        # TODO: implement this
         logger.warning("Not implemented yet")
 
     conversation_chunks = directus.get_items(

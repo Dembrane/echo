@@ -57,3 +57,23 @@ def create_conversation_chunk(
 
 def delete_conversation_chunk(conversation_chunk_id: str):
     directus.delete_item("conversation_chunk", conversation_chunk_id)
+
+
+def create_conversation_segment(
+    conversation_id: str, lightrag_flag: bool, additional_data: Dict[str, Any] = None
+):
+    logger.debug(
+        f"Creating conversation segment with data: {additional_data}, conversation_id: {conversation_id}, lightrag_flag: {lightrag_flag}"
+    )
+    return directus.create_item(
+        "conversation_segment",
+        {
+            "conversation_id": conversation_id,
+            "lightrag_flag": lightrag_flag,
+            **(additional_data or {}),
+        },
+    )["data"]
+
+
+def delete_conversation_segment(conversation_segment_id: str):
+    directus.delete_item("conversation_segment", conversation_segment_id)

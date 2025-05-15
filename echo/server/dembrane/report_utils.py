@@ -1,7 +1,8 @@
 import re
 import logging
 
-from litellm import completion, token_counter
+from litellm import completion
+from litellm.utils import token_counter
 
 from dembrane.config import (
     MEDIUM_LITELLM_MODEL,
@@ -16,7 +17,7 @@ from dembrane.api.dependency_auth import DirectusSession
 
 logger = logging.getLogger("report_utils")
 
-if "4.1" in MEDIUM_LITELLM_MODEL:
+if "4.1" in str(MEDIUM_LITELLM_MODEL):
     logger.info("using 700k context length for report")
     MAX_REPORT_CONTEXT_LENGTH = 700000
 else:

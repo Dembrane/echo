@@ -27,8 +27,20 @@ type Aspect = {
   view_id?: string | View | null;
 };
 
+type ProcessingStatus = {
+  id: int;
+  collection: string;
+  item_id: string;
+  timestamp: string;
+  event?: string | null;
+  message?: string | null;
+  json?: any | null;
+  duration_ms?: number | null;
+};
+
 type Conversation = {
   is_finished: boolean;
+  is_audio_processing_finished: boolean;
   chunks: any[] | ConversationChunk[];
   context?: string | null;
   created_at?: string | null;
@@ -516,6 +528,7 @@ type Insight = {
 };
 
 type Project = {
+  is_enhanced_audio_processing_enabled?: boolean | null;
   context?: string | null;
   conversation_ask_for_participant_name_label?: string | null;
   conversations: any[] | Conversation[];
@@ -560,6 +573,7 @@ type ProjectAnalysisRun = {
 };
 
 type ProjectChat = {
+  auto_select?: boolean | null;
   date_created?: string | null;
   date_updated?: string | null;
   id: string;
@@ -754,4 +768,5 @@ type CustomDirectusTypes = {
   quote_aspect_1: QuoteAspect1[];
   quote_conversation_chunk: QuoteConversationChunk[];
   view: View[];
+  processing_status: ProcessingStatus[];
 };

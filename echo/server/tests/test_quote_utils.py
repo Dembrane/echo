@@ -27,7 +27,7 @@ from .common import (
 logger = logging.getLogger("test_quote_utils")
 
 
-def create_test_quotes(
+def test_create_test_quotes(
     db: Session, project_analysis_run_id: str, conversation_id: str, count: int = 10
 ) -> List[QuoteModel]:
     """

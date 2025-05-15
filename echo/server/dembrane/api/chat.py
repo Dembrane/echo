@@ -362,6 +362,7 @@ class ChatBodyMessageSchema(BaseModel):
 
 class ChatBodySchema(BaseModel):
     messages: List[ChatBodyMessageSchema]
+    template_key: Optional[str] = None
 
 
 @ChatRouter.post("/{chat_id}")
@@ -396,6 +397,16 @@ async def post_chat(
 
     db.add(user_message)
     db.commit()
+
+    try:
+        logger.debug("checking if user submitted template key")
+        if body.template_key is not None:
+            logger.debug(f"updating template key to: {body.template_key}")
+            directus.update_item(
+                "project_chat_message", user_message.id, {"template_key": body.template_key}
+            )
+    except Exception as e:
+        logger.error(f"Error updating template key: {str(e)}")
 
     project_id = get_project_id(chat.id)  # TODO: Write directus call here
 

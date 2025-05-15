@@ -24,9 +24,9 @@ import { useQuery } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router-dom";
-import { toast } from "sonner";
 import { I18nLink } from "@/components/common/i18nLink";
 import { useLanguage } from "@/hooks/useLanguage";
+import { toast } from "@/components/common/Toaster";
 
 const LoginWithProvider = ({
   provider,
