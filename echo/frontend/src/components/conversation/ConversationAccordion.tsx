@@ -414,7 +414,10 @@ export const ConversationStatusIndicators = ({
         )}
 
       {!project?.is_enhanced_audio_processing_enabled &&
-        !conversation.is_finished && (
+        !conversation.is_finished &&
+        !(conversation.processing_status ?? "")
+          .toLowerCase()
+          .includes("complete") && (
           <Tooltip
             label={
               conversation.processing_message ??

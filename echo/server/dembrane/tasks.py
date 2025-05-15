@@ -282,12 +282,35 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
 
 		# Create a group of follow-up tasks
 		follow_up_tasks = [
-			task_summarize_conversation.message(conversation_id),
-			task_merge_conversation_chunks.message(conversation_id),
-			task_run_etl_pipeline.message(conversation_id),
+			# task_summarize_conversation.message(conversation_id),
+			# task_merge_conversation_chunks.message(conversation_id),
+			# task_run_etl_pipeline.message(conversation_id),
 		]
 
-		return group(follow_up_tasks).run()
+		try:
+			conversation = directus.get_item("conversation", conversation_id)
+		except Exception:
+			logger.error(f"Conversation not found: {conversation_id}")
+			return
+
+		try:
+			if conversation["processing_status"] == ProcessingStatus.COMPLETED.value:
+				logger.info(f"Conversation {conversation_id} has finished processing, running only ETL pipeline")
+				follow_up_tasks.append(task_run_etl_pipeline.message(conversation_id))
+			else:
+				logger.info(f"Conversation {conversation_id} has not finished processing, running all follow-up tasks")
+				follow_up_tasks.append(task_summarize_conversation.message(conversation_id))
+				follow_up_tasks.append(task_merge_conversation_chunks.message(conversation_id))
+				follow_up_tasks.append(task_run_etl_pipeline.message(conversation_id))
+		except Exception as e:
+			follow_up_tasks = []
+			follow_up_tasks.append(task_run_etl_pipeline.message(conversation_id))
+			logger.error(f"Error: {e}")
+		finally:
+			group(follow_up_tasks).run()
+		
+		return
+
 	except JSONDecodeError as e:
 		logger.error(f"Error: {e}")
 		return
