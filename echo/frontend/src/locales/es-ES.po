@@ -423,7 +423,7 @@ msgstr "Contexto"
 msgid "Context added:"
 msgstr "Contexto añadido:"
 
-#: src/components/conversation/ConversationAccordion.tsx:728
+#: src/components/conversation/ConversationAccordion.tsx:724
 msgid "Conversations"
 msgstr "Conversaciones"
 
@@ -605,7 +605,7 @@ msgid "email@work.com"
 msgstr "email@trabajo.com"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:166
-#: src/components/conversation/ConversationAccordion.tsx:447
+#: src/components/conversation/ConversationAccordion.tsx:443
 msgid "Empty"
 msgstr "Vacío"
 
@@ -664,7 +664,7 @@ msgstr "Ingresa tu consulta"
 #: src/components/dropzone/UploadConversationDropzone.tsx:538
 #: src/components/dropzone/UploadConversationDropzone.tsx:715
 #: src/components/dropzone/UploadConversationDropzone.tsx:814
-#: src/components/conversation/ConversationAccordion.tsx:457
+#: src/components/conversation/ConversationAccordion.tsx:453
 msgid "Error"
 msgstr "Error"
 
@@ -958,7 +958,7 @@ msgstr "Iniciar sesión como usuario existente"
 msgid "Logout"
 msgstr "Cerrar sesión"
 
-#: src/components/conversation/ConversationAccordion.tsx:559
+#: src/components/conversation/ConversationAccordion.tsx:555
 msgid "Longest First"
 msgstr "Más largo primero"
 
@@ -999,11 +999,11 @@ msgstr "Mover a Proyecto"
 msgid "Name"
 msgstr "Nombre"
 
-#: src/components/conversation/ConversationAccordion.tsx:557
+#: src/components/conversation/ConversationAccordion.tsx:553
 msgid "Name A-Z"
 msgstr "Nombre A-Z"
 
-#: src/components/conversation/ConversationAccordion.tsx:558
+#: src/components/conversation/ConversationAccordion.tsx:554
 msgid "Name Z-A"
 msgstr "Nombre Z-A"
 
@@ -1029,7 +1029,7 @@ msgstr "Nueva Contraseña"
 msgid "New Project"
 msgstr "Nuevo Proyecto"
 
-#: src/components/conversation/ConversationAccordion.tsx:555
+#: src/components/conversation/ConversationAccordion.tsx:551
 msgid "Newest First"
 msgstr "Más nuevos primero"
 
@@ -1049,7 +1049,7 @@ msgstr "No hay conversaciones disponibles para crear la biblioteca"
 msgid "No conversations available to create library. Please add some conversations to get started."
 msgstr "No hay conversaciones disponibles para crear la biblioteca. Por favor añade algunas conversaciones para comenzar."
 
-#: src/components/conversation/ConversationAccordion.tsx:854
+#: src/components/conversation/ConversationAccordion.tsx:850
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "No se encontraron conversaciones. Inicia una conversación usando el enlace de invitación de participación desde la <0><1>vista general del proyecto.</1></0>"
 
@@ -1122,7 +1122,7 @@ msgstr "No se seleccionaron archivos de audio válidos. Por favor, selecciona so
 msgid "Not available"
 msgstr "No disponible"
 
-#: src/components/conversation/ConversationAccordion.tsx:556
+#: src/components/conversation/ConversationAccordion.tsx:552
 msgid "Oldest First"
 msgstr "Más antiguos primero"
 
@@ -1151,8 +1151,8 @@ msgstr "¿Abierto para Participación?"
 msgid "Open troubleshooting guide"
 msgstr "Abrir guía de solución de problemas"
 
-#: src/components/conversation/ConversationAccordion.tsx:781
-#: src/components/conversation/ConversationAccordion.tsx:795
+#: src/components/conversation/ConversationAccordion.tsx:777
+#: src/components/conversation/ConversationAccordion.tsx:791
 msgid "Options"
 msgstr "Opciones"
 
@@ -1307,13 +1307,13 @@ msgstr "Declaraciones de Privacidad"
 msgid "Proceed"
 msgstr "Continuar"
 
-#: src/components/conversation/ConversationAccordion.tsx:413
-#: src/components/conversation/ConversationAccordion.tsx:430
+#: src/components/conversation/ConversationAccordion.tsx:409
+#: src/components/conversation/ConversationAccordion.tsx:426
 msgid "Processing"
 msgstr ""
 
 #. placeholder {0}: conversation.processing_status ?? "Unknown"
-#: src/components/conversation/ConversationAccordion.tsx:453
+#: src/components/conversation/ConversationAccordion.tsx:449
 msgid "Processing failed for this conversation. This conversation will not be available for analysis and chat. Last Known Status: {0}"
 msgstr ""
 
@@ -1468,7 +1468,7 @@ msgstr "Solicitar Restablecimiento de Contraseña"
 msgid "Request Password Reset | Dembrane"
 msgstr "Solicitar Restablecimiento de Contraseña | Dembrane"
 
-#: src/components/conversation/ConversationAccordion.tsx:831
+#: src/components/conversation/ConversationAccordion.tsx:827
 msgid "Reset All Options"
 msgstr "Restablecer todas las opciones"
 
@@ -1537,7 +1537,7 @@ msgstr "Desplazarse al final"
 msgid "Search"
 msgstr "Buscar"
 
-#: src/components/conversation/ConversationAccordion.tsx:773
+#: src/components/conversation/ConversationAccordion.tsx:769
 msgid "Search conversations"
 msgstr "Buscar conversaciones"
 
@@ -1623,7 +1623,7 @@ msgstr "Compartir tu voz"
 msgid "Share your voice by scanning the QR code below."
 msgstr "Comparte tu voz escaneando el código QR de abajo."
 
-#: src/components/conversation/ConversationAccordion.tsx:560
+#: src/components/conversation/ConversationAccordion.tsx:556
 msgid "Shortest First"
 msgstr "Más corto primero"
 
@@ -1639,7 +1639,7 @@ msgstr "Mostrar todo"
 msgid "Show audio player"
 msgstr "Mostrar reproductor de audio"
 
-#: src/components/conversation/ConversationAccordion.tsx:798
+#: src/components/conversation/ConversationAccordion.tsx:794
 msgid "Show duration"
 msgstr "Mostrar duración"
 
@@ -1679,7 +1679,7 @@ msgstr "Algo salió mal al subir el archivo: {0}"
 #~ msgid "Something went wrong. Please try again."
 #~ msgstr "Algo salió mal. Por favor, inténtalo de nuevo."
 
-#: src/components/conversation/ConversationAccordion.tsx:807
+#: src/components/conversation/ConversationAccordion.tsx:803
 msgid "Sort"
 msgstr "Ordenar"
 
@@ -1813,8 +1813,8 @@ msgstr "Estas son tus plantillas de vista predeterminadas. Una vez que crees tu 
 msgid "Thinking..."
 msgstr "Pensando..."
 
-#: src/components/conversation/ConversationAccordion.tsx:408
-#: src/components/conversation/ConversationAccordion.tsx:425
+#: src/components/conversation/ConversationAccordion.tsx:405
+#: src/components/conversation/ConversationAccordion.tsx:421
 msgid "This conversation is still being processed. It will be available for analysis and chat shortly."
 msgstr ""
 

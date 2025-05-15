@@ -496,7 +496,7 @@ msgstr "Context"
 msgid "Context added:"
 msgstr "Context toegevoegd:"
 
-#: src/components/conversation/ConversationAccordion.tsx:728
+#: src/components/conversation/ConversationAccordion.tsx:724
 msgid "Conversations"
 msgstr "Gesprekken"
 
@@ -718,7 +718,7 @@ msgid "email@work.com"
 msgstr "email@werk.com"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:166
-#: src/components/conversation/ConversationAccordion.tsx:447
+#: src/components/conversation/ConversationAccordion.tsx:443
 msgid "Empty"
 msgstr "Leeg"
 
@@ -781,7 +781,7 @@ msgstr "Voer uw query in"
 #: src/components/dropzone/UploadConversationDropzone.tsx:538
 #: src/components/dropzone/UploadConversationDropzone.tsx:715
 #: src/components/dropzone/UploadConversationDropzone.tsx:814
-#: src/components/conversation/ConversationAccordion.tsx:457
+#: src/components/conversation/ConversationAccordion.tsx:453
 msgid "Error"
 msgstr "Error"
 
@@ -1116,7 +1116,7 @@ msgstr "Inloggen als bestaande gebruiker"
 msgid "Logout"
 msgstr "Uitloggen"
 
-#: src/components/conversation/ConversationAccordion.tsx:559
+#: src/components/conversation/ConversationAccordion.tsx:555
 msgid "Longest First"
 msgstr "Langste eerst"
 
@@ -1157,11 +1157,11 @@ msgstr "Verplaats naar project"
 msgid "Name"
 msgstr "Naam"
 
-#: src/components/conversation/ConversationAccordion.tsx:557
+#: src/components/conversation/ConversationAccordion.tsx:553
 msgid "Name A-Z"
 msgstr "Naam A-Z"
 
-#: src/components/conversation/ConversationAccordion.tsx:558
+#: src/components/conversation/ConversationAccordion.tsx:554
 msgid "Name Z-A"
 msgstr "Naam Z-A"
 
@@ -1187,7 +1187,7 @@ msgstr "Nieuw wachtwoord"
 msgid "New Project"
 msgstr "Nieuw project"
 
-#: src/components/conversation/ConversationAccordion.tsx:555
+#: src/components/conversation/ConversationAccordion.tsx:551
 msgid "Newest First"
 msgstr "Nieuwste eerst"
 
@@ -1207,7 +1207,7 @@ msgstr "Geen gesprekken beschikbaar om bibliotheek te maken"
 msgid "No conversations available to create library. Please add some conversations to get started."
 msgstr "Geen gesprekken beschikbaar om bibliotheek te maken. Voeg enkele gesprekken toe om te beginnen."
 
-#: src/components/conversation/ConversationAccordion.tsx:854
+#: src/components/conversation/ConversationAccordion.tsx:850
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "Geen gesprekken gevonden. Start een gesprek met behulp van de deelname-uitnodigingslink uit het <0><1>projectoverzicht.</1></0>"
 
@@ -1288,7 +1288,7 @@ msgstr "Er zijn geen geldige audiobestanden geselecteerd. Selecteer alleen audio
 msgid "Not available"
 msgstr "Niet beschikbaar"
 
-#: src/components/conversation/ConversationAccordion.tsx:556
+#: src/components/conversation/ConversationAccordion.tsx:552
 msgid "Oldest First"
 msgstr "Oudste eerst"
 
@@ -1321,8 +1321,8 @@ msgstr "Open voor deelneming?"
 msgid "Open troubleshooting guide"
 msgstr "Open de probleemoplossingsgids"
 
-#: src/components/conversation/ConversationAccordion.tsx:781
-#: src/components/conversation/ConversationAccordion.tsx:795
+#: src/components/conversation/ConversationAccordion.tsx:777
+#: src/components/conversation/ConversationAccordion.tsx:791
 msgid "Options"
 msgstr "Opties"
 
@@ -1494,13 +1494,13 @@ msgstr "Privacy verklaring"
 msgid "Proceed"
 msgstr "Doorgaan"
 
-#: src/components/conversation/ConversationAccordion.tsx:413
-#: src/components/conversation/ConversationAccordion.tsx:430
+#: src/components/conversation/ConversationAccordion.tsx:409
+#: src/components/conversation/ConversationAccordion.tsx:426
 msgid "Processing"
 msgstr "Bezig met verwerken"
 
 #. placeholder {0}: conversation.processing_status ?? "Unknown"
-#: src/components/conversation/ConversationAccordion.tsx:453
+#: src/components/conversation/ConversationAccordion.tsx:449
 msgid "Processing failed for this conversation. This conversation will not be available for analysis and chat. Last Known Status: {0}"
 msgstr "Verwerking van dit gesprek is mislukt. Dit gesprek zal niet beschikbaar zijn voor analyse en chat. Laatste bekende status: {0}"
 
@@ -1671,7 +1671,7 @@ msgstr "Wachtwoord reset aanvragen"
 msgid "Request Password Reset | Dembrane"
 msgstr "Wachtwoord reset aanvragen | Dembrane"
 
-#: src/components/conversation/ConversationAccordion.tsx:831
+#: src/components/conversation/ConversationAccordion.tsx:827
 msgid "Reset All Options"
 msgstr "Alle opties resetten"
 
@@ -1740,7 +1740,7 @@ msgstr "Scroll naar beneden"
 msgid "Search"
 msgstr "Zoeken"
 
-#: src/components/conversation/ConversationAccordion.tsx:773
+#: src/components/conversation/ConversationAccordion.tsx:769
 msgid "Search conversations"
 msgstr "Zoek gesprekken"
 
@@ -1839,7 +1839,7 @@ msgstr "Deel je stem"
 msgid "Share your voice by scanning the QR code below."
 msgstr "Deel je stem door het QR-code hieronder te scannen."
 
-#: src/components/conversation/ConversationAccordion.tsx:560
+#: src/components/conversation/ConversationAccordion.tsx:556
 msgid "Shortest First"
 msgstr "Kortste eerst"
 
@@ -1855,7 +1855,7 @@ msgstr "Toon alles"
 msgid "Show audio player"
 msgstr "Toon audiospeler"
 
-#: src/components/conversation/ConversationAccordion.tsx:798
+#: src/components/conversation/ConversationAccordion.tsx:794
 msgid "Show duration"
 msgstr "Toon duur"
 
@@ -1895,7 +1895,7 @@ msgstr "Er ging iets mis tijdens het uploaden van het bestand: {0}"
 #~ msgid "Something went wrong. Please try again."
 #~ msgstr "Er is iets misgegaan. Probeer het alstublieft opnieuw."
 
-#: src/components/conversation/ConversationAccordion.tsx:807
+#: src/components/conversation/ConversationAccordion.tsx:803
 msgid "Sort"
 msgstr "Sorteer"
 
@@ -2037,8 +2037,8 @@ msgstr "Dit zijn uw standaard weergave sjablonen. Zodra u uw bibliotheek hebt ge
 msgid "Thinking..."
 msgstr "Denken..."
 
-#: src/components/conversation/ConversationAccordion.tsx:408
-#: src/components/conversation/ConversationAccordion.tsx:425
+#: src/components/conversation/ConversationAccordion.tsx:405
+#: src/components/conversation/ConversationAccordion.tsx:421
 msgid "This conversation is still being processed. It will be available for analysis and chat shortly."
 msgstr "Dit gesprek wordt nog verwerkt. Het zal beschikbaar zijn voor analyse en chat binnenkort."
 
