@@ -482,7 +482,7 @@ msgstr "Verbinding maken met rapportservices..."
 
 #: src/components/conversation/AutoSelectConversations.tsx:209
 msgid "Contact sales"
-msgstr "Contact verkoper"
+msgstr "Neem contact op met sales"
 
 #: src/components/conversation/AutoSelectConversations.tsx:97
 msgid "Contact your sales representative to activate this feature today!"
@@ -1497,12 +1497,12 @@ msgstr "Doorgaan"
 #: src/components/conversation/ConversationAccordion.tsx:413
 #: src/components/conversation/ConversationAccordion.tsx:430
 msgid "Processing"
-msgstr "Verwerking"
+msgstr "Bezig met verwerken"
 
 #. placeholder {0}: conversation.processing_status ?? "Unknown"
 #: src/components/conversation/ConversationAccordion.tsx:453
 msgid "Processing failed for this conversation. This conversation will not be available for analysis and chat. Last Known Status: {0}"
-msgstr "Verwerking mislukt voor dit gesprek. Dit gesprek zal niet beschikbaar zijn voor analyse en chat. Laatste bekende status: {0}"
+msgstr "Verwerking van dit gesprek is mislukt. Dit gesprek zal niet beschikbaar zijn voor analyse en chat. Laatste bekende status: {0}"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:316
 msgid "Processing Transcript"
