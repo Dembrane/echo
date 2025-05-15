@@ -374,12 +374,10 @@ class CreateReportRequestBodySchema(BaseModel):
 
 
 @ProjectRouter.post("/{project_id}/create-report")
-async def create_report(
-    project_id: str, db: DependencyInjectDatabase, body: CreateReportRequestBodySchema
-) -> None:
+async def create_report(project_id: str, body: CreateReportRequestBodySchema) -> None:
     language = body.language or "en"
     try:
-        report_content_response = await get_report_content_for_project(project_id, db, language)
+        report_content_response = await get_report_content_for_project(project_id, language)
     except ContextTooLongException:
         report = directus.create_item(
             "project_report",
