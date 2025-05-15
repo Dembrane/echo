@@ -196,4 +196,34 @@ class ContextualChunkETLPipeline:
     def run(self) -> None:
         self.extract()
         self.transform()
-        asyncio.run(self.load())
+        # Re-use a long-lived event loop instead of creating and closing a new
+        # one for every pipeline run. Creating a fresh event loop each time
+        # (as ``asyncio.run`` does) breaks objects such as the asyncpg
+        # connection pool that are bound to the loop they were first created
+        # on (inside ``LightRAG``).  The pool is then reused from a different
+        # loop the next time the ETL pipeline is executed which results in
+        # errors like "Task got Future attached to a different loop" or
+        # "cannot perform operation: another operation is in progress".
+        #
+        # We therefore obtain (or create) the global event loop once and keep
+        # it alive for the lifetime of the worker process.
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            # No current event loop – create one and set it as the default
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+        if loop.is_closed():
+            # Should never happen but guard against it – recreate the loop
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+        if loop.is_running():
+            # If we're somehow already inside an event loop (unlikely in the
+            # dramatiq worker context) we schedule the coroutine and wait for
+            # it to finish.
+            fut = asyncio.run_coroutine_threadsafe(self.load(), loop)
+            fut.result()
+        else:
+            loop.run_until_complete(self.load())
