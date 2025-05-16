@@ -64,14 +64,14 @@ def transcribe_audio_litellm(
                 str(language),
                 {"transcript": response["text"], "detected_language": detected_language, "desired_language": language}
             )
-            response = completion(
+            llm_translation_response = completion(
                 model=SMALL_LITELLM_MODEL,
                 messages=[{"role": "user", "content": translation_prompt}],
                 api_key=SMALL_LITELLM_API_KEY,
                 api_base=SMALL_LITELLM_API_BASE,
                 api_version=SMALL_LITELLM_API_VERSION,
             )
-            return response['choices'][0]['message']['content']
+            return llm_translation_response['choices'][0]['message']['content']
         else: 
             return response["text"]
     except Exception as e:
