@@ -712,6 +712,18 @@ def task_create_view(
 			if project_analysis_run is None:
 				logger.info(f"Project analysis run not found: {project_analysis_run_id}")
 				return None
+			
+			try:
+				existing_view = directus.get_item("view", {"query": {"filter": {"project_analysis_run_id": project_analysis_run_id, "name": user_query}}})
+
+				if existing_view is not None:
+					logger.info(f"View already exists: {existing_view['id']}")
+					return
+
+			except Exception as e:
+				logger.error(f"Error: {e}")
+				existing_view = None
+				return
 
 			# Create the view
 			view = initialize_view(
