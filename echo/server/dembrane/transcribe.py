@@ -4,17 +4,23 @@ import logging
 import mimetypes
 from typing import Optional
 
-from litellm import transcription
+from litellm import completion, transcription
+from langdetect import detect
 
 from dembrane.s3 import get_stream_from_s3
 from dembrane.config import (
     LITELLM_WHISPER_URL,
+    SMALL_LITELLM_MODEL,
     LITELLM_WHISPER_MODEL,
+    SMALL_LITELLM_API_KEY,
+    SMALL_LITELLM_API_BASE,
     LITELLM_WHISPER_API_KEY,
+    SMALL_LITELLM_API_VERSION,
     LITELLM_WHISPER_API_VERSION,
 )
 
 # from dembrane.openai import client
+from dembrane.prompts import render_prompt
 from dembrane.directus import directus
 
 logger = logging.getLogger("transcribe")
@@ -51,18 +57,34 @@ def transcribe_audio_litellm(
                     language=language,
                     prompt=whisper_prompt
         )
-        return response["text"]
+        detected_language = detect(response["text"])
+        if detected_language != language and language != "multi":
+            translation_prompt = render_prompt(
+                "translate_transcription",
+                str(language),
+                {"transcript": response["text"], "detected_language": detected_language, "desired_language": language}
+            )
+            response = completion(
+                model=SMALL_LITELLM_MODEL,
+                messages=[{"role": "user", "content": translation_prompt}],
+                api_key=SMALL_LITELLM_API_KEY,
+                api_base=SMALL_LITELLM_API_BASE,
+                api_version=SMALL_LITELLM_API_VERSION,
+            )
+            return response['choices'][0]['message']['content']
+        else: 
+            return response["text"]
     except Exception as e:
         logger.error(f"LiteLLM transcription failed: {e}")
         raise TranscriptionError(f"LiteLLM transcription failed: {e}") from e
         
 
 DEFAULT_WHISPER_PROMPTS = {
-    "en": "Hi, lets get started. First we'll have a round of introductions and then we can get into the topic for today.",
-    "nl": "Hallo, laten we beginnen. Eerst even een introductieronde en dan kunnen we aan de slag met de thema van vandaag.",
-    "de": "Hallo, lasst uns beginnen. Zuerst ein paar Einführungen und dann können wir mit dem Thema des Tages beginnen.",
-    "fr": "Bonjour, commençons. D'abord un tour de table et ensuite nous pourrons aborder le sujet du jour.",
-    "es": "Hola, comencemos. Primero, un round de introducción y luego podremos empezar con el tema de hoy.",
+    "en": '''System: You are a helpful transcriptionist. Please transcribe the following audio *IN ENGLISH*.''',
+    "nl": '''System: U bent een behulpzame transcribent. Transcribeer het volgende audiofragment *IN HET NEDERLANDS*.''',
+    "de": '''System: Du bist eine hilfreiche Transkribent. Bitte transkribiere das folgende Audio *IN DEUTSCH*.''',
+    "fr": '''System: Vous êtes un transcripteur utile. Veuillez transcrire le fragment audio suivant *EN FRANÇAIS*.''',
+    "es": '''System: Eres un transcriptor útil. Por favor, transcribe el siguiente fragmento de audio *EN ESPAÑOL*.''',
 }
 
 
@@ -91,24 +113,24 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str:
         raise ValueError(f"chunk {conversation_chunk_id} has no path")
 
     # get the exact previous chunk transcript if available
-    previous_chunk = directus.get_items(
-        "conversation_chunk",
-        {
-            "query": {
-                "filter": {
-                    "conversation_id": {"_eq": chunk["conversation_id"]},
-                    "timestamp": {"_lt": chunk["timestamp"]},
-                },
-                "fields": ["transcript"],
-                "limit": 1,
-            },
-        },
-    )
+    # previous_chunk = directus.get_items(
+    #     "conversation_chunk",
+    #     {
+    #         "query": {
+    #             "filter": {
+    #                 "conversation_id": {"_eq": chunk["conversation_id"]},
+    #                 "timestamp": {"_lt": chunk["timestamp"]},
+    #             },
+    #             "fields": ["transcript"],
+    #             "limit": 1,
+    #         },
+    #     },
+    # )
 
-    previous_chunk_transcript = ""
+    # previous_chunk_transcript = ""
 
-    if previous_chunk and len(previous_chunk) > 0:
-        previous_chunk_transcript = previous_chunk[0]["transcript"]
+    # if previous_chunk and len(previous_chunk) > 0:
+    #     previous_chunk_transcript = previous_chunk[0]["transcript"]
 
     # fetch conversation details
     conversation = directus.get_items(
@@ -144,11 +166,11 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str:
 
     if conversation["project_id"]["default_conversation_transcript_prompt"]:
         prompt_parts.append(
-            conversation["project_id"]["default_conversation_transcript_prompt"] + "."
+            "\n\nuser: Project prompt: \n\n" + conversation["project_id"]["default_conversation_transcript_prompt"] + "."
         )
 
-    if previous_chunk_transcript:
-        prompt_parts.append(previous_chunk_transcript)
+    # if previous_chunk_transcript:
+    #     prompt_parts.append("\n\nuser: Previous transcript: \n\n" + previous_chunk_transcript)
 
     whisper_prompt = " ".join(prompt_parts)
 
