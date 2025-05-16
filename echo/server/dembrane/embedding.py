@@ -26,7 +26,7 @@ def embed_text(text: str) -> List[float]:
             api_base=str(LIGHTRAG_LITELLM_EMBEDDING_API_BASE),
             api_version=str(LIGHTRAG_LITELLM_EMBEDDING_API_VERSION),
             model="azure/text-embedding-3-large",
-            input=[text],
+            input=text,
         )
         return response["data"][0]["embedding"]
     except Exception as exc:
