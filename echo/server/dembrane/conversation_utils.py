@@ -76,8 +76,9 @@ def collect_unfinished_audio_processing_conversations() -> List[str]:
                 continue  # and move to next conversation
         except Exception as e:
             logger.error(f"Error collecting conversation {conversation['id']}: {e}")
+            continue
 
-        # if claimed "finished" but not actually finished
+        # if claimed "is_audio_processing_finished" but not actually finished
         try:
             response = directus.get_items(
                 "conversation_segment",
@@ -90,9 +91,27 @@ def collect_unfinished_audio_processing_conversations() -> List[str]:
                 },
             )
 
+
         # Only add if there is at least one unprocessed segment
             if response and len(response) > 0:
                 unfinished_conversations.append(conversation["id"])
+        except Exception as e:
+            logger.error(f"Error collecting conversation {conversation['id']}: {e}")
+        
+        try:
+            total_segments = directus.get_items(
+                "conversation_segment",
+                {"query": {"filter": {"conversation_id": conversation["id"]}, "limit": 1}},
+            )
+
+            if len(total_segments) == 0:
+                unfinished_conversations.append(conversation["id"])
+
+                directus.update_item(
+                    "conversation",
+                    conversation["id"],
+                    {"is_audio_processing_finished": False},
+                )
         except Exception as e:
             logger.error(f"Error collecting conversation {conversation['id']}: {e}")
 
