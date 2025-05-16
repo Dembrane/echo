@@ -39,7 +39,14 @@ def collect_unfinished_conversations() -> List[str]:
         },
     )
 
-    conversation_ids = [conversation["id"] for conversation in response]
+    conversation_ids = []
+
+    for conversation in response:
+        try:
+            conversation_ids.append(conversation["id"])
+        except Exception as e:
+            logger.error(f"Error collecting conversation {conversation['id']}: {e}")
+
     logger.info(f"Found {len(conversation_ids)} unfinished conversations")
 
     return conversation_ids
@@ -63,25 +70,31 @@ def collect_unfinished_audio_processing_conversations() -> List[str]:
     )
 
     for conversation in response:
-        if not conversation["is_audio_processing_finished"]:
-            unfinished_conversations.append(conversation["id"])
-            continue  # and move to next conversation
+        try:
+            if not conversation["is_audio_processing_finished"]:
+                unfinished_conversations.append(conversation["id"])
+                continue  # and move to next conversation
+        except Exception as e:
+            logger.error(f"Error collecting conversation {conversation['id']}: {e}")
 
         # if claimed "finished" but not actually finished
-        response = directus.get_items(
-            "conversation_segment",
-            {
-                "query": {
-                    "filter": {"conversation_id": conversation["id"], "lightrag_flag": False},
-                    "fields": ["id"],
-                    "limit": 1,
+        try:
+            response = directus.get_items(
+                "conversation_segment",
+                {
+                    "query": {
+                        "filter": {"conversation_id": conversation["id"], "lightrag_flag": False},
+                        "fields": ["id"],
+                        "limit": 1,
+                    },
                 },
-            },
-        )
+            )
 
         # Only add if there is at least one unprocessed segment
-        if response and len(response) > 0:
-            unfinished_conversations.append(conversation["id"])
+            if response and len(response) > 0:
+                unfinished_conversations.append(conversation["id"])
+        except Exception as e:
+            logger.error(f"Error collecting conversation {conversation['id']}: {e}")
 
     return list(set(unfinished_conversations))
 

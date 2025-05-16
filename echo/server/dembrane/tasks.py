@@ -132,6 +132,20 @@ def task_summarize_conversation(conversation_id: str) -> None:
 	logger = getLogger("dembrane.tasks.task_summarize_conversation")
 
 	try:
+		try:
+			conversation = directus.get_item("conversation", conversation_id)
+
+			if conversation is None:
+				logger.error(f"Conversation not found: {conversation_id}")
+				return
+			
+			if conversation["is_finished"] and conversation["summary"] is not None:
+				logger.info(f"Conversation {conversation_id} already summarized, skipping")
+				return
+		except Exception as e:
+			logger.error(f"Error: {e}")
+			return
+
 		from dembrane.api.conversation import summarize_conversation
 
 		with ProcessingStatusContext(
@@ -155,6 +169,21 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
 	logger = getLogger("dembrane.tasks.task_merge_conversation_chunks")
 
 	try:
+		try:
+			conversation = directus.get_item("conversation", conversation_id)
+			
+			if conversation is None:
+				logger.error(f"Conversation not found: {conversation_id}")
+				return
+			
+			if conversation["is_finished"] and conversation["merged_audio_path"] is not None:
+				logger.info(f"Conversation {conversation_id} already merged, skipping")
+				return
+
+		except Exception:
+			logger.error(f"Conversation not found: {conversation_id}")
+			return
+		
 		# local import to avoid circular imports
 		from dembrane.api.conversation import get_conversation_content
 
