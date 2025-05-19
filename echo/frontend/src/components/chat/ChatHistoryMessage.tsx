@@ -167,20 +167,22 @@ export const ChatHistoryMessage = ({
   }
 
   if (message?._original?.added_conversations?.length > 0) {
-    return (
+    const conversations = message?._original?.added_conversations
+      .map((ac) => ac.conversation_id)
+      .filter((conv) => conv != null);
+
+    return conversations.length > 0 ? (
       <ChatMessage key={message.id} role="dembrane" section={section}>
         <Group gap="xs" align="baseline">
           <Text size="xs">
             <Trans>Context added:</Trans>
           </Text>
           <ConversationLinks
-            conversations={message?._original?.added_conversations.map(
-              (ac) => ac.conversation_id,
-            )}
+            conversations={conversations}
           />
         </Group>
       </ChatMessage>
-    );
+    ) : null;
   }
 
   return null;

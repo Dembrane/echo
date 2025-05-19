@@ -10,7 +10,8 @@ export const ConversationLinks = ({
   color?: string;
 }) => {
   const { projectId } = useParams();
-
+  
+  // an error could occur if the conversation is deleted and not filtered in ChatHistoryMessage.tsx 
   return (
     <Group gap="xs" align="center">
       {conversations?.map((conversation) => (

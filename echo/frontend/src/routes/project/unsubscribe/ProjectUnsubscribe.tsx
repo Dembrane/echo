@@ -15,7 +15,7 @@ export const ProjectUnsubscribe = () => {
   const project_id = searchParams.get("project_id") ?? "";
 
   const {
-    data: canUnsubscribe,
+    data,
     isLoading,
     error,
   } = useCheckUnsubscribeStatus(token, project_id);
@@ -78,14 +78,24 @@ export const ProjectUnsubscribe = () => {
             </Text>
           )}
 
-          {!isLoading && !error && !success && canUnsubscribe && (
-            <Button
-              onClick={handleUnsubscribe}
-              disabled={isPending}
-              loading={isPending}
-            >
-              <Trans>Unsubscribe</Trans>
-            </Button>
+          {!isLoading && !error && !success && (
+            <>
+              {data?.eligible ? (
+                <Button
+                  onClick={handleUnsubscribe}
+                  disabled={isPending}
+                  loading={isPending}
+                >
+                  <Trans>Unsubscribe</Trans>
+                </Button>
+              ) : (
+                <Text c="dimmed" size="md" ta="center">
+                  <Trans>
+                    You are already unsubscribed or your link is invalid.
+                  </Trans>
+                </Text>
+              )}
+            </>
           )}
         </Stack>
       </main>

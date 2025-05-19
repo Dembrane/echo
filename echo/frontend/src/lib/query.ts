@@ -13,8 +13,10 @@ import {
   addChatContext,
   api,
   apiNoAuth,
+  checkUnsubscribeStatus,
   createProjectReport,
   deleteChatContext,
+  deleteConversationById,
   deleteResourceById,
   generateProjectLibrary as generateProjectLibrary,
   generateProjectView,
@@ -32,6 +34,7 @@ import {
   initiateConversation,
   lockConversations,
   retranscribeConversation,
+  submitNotificationParticipant,
   updateResourceById,
   uploadConversationChunk,
   uploadConversationText,
@@ -43,6 +46,7 @@ import {
   Query,
   aggregate,
   createItem,
+  createItems,
   deleteItem,
   passwordRequest,
   passwordReset,
@@ -52,7 +56,7 @@ import {
   registerUser,
   registerUserVerify,
   updateItem,
-  updateItems,
+  deleteItems,
 } from "@directus/sdk";
 import { ADMIN_BASE_URL } from "@/config";
 import { AxiosError } from "axios";
@@ -316,6 +320,33 @@ export const useLogoutMutation = () => {
         );
       }
     },
+  });
+};
+
+export const useProcessingStatus = ({
+  collectionName,
+  itemId,
+}: {
+  collectionName: string;
+  itemId: string;
+}) => {
+  return useQuery({
+    queryKey: ["processing_status", collectionName, itemId],
+    queryFn: () =>
+      directus.request(
+        readItems("processing_status", {
+          filter: {
+            collection_name: {
+              _eq: collectionName,
+            },
+            item_id: {
+              _eq: itemId,
+            },
+          },
+          sort: ["-timestamp"],
+          fields: ["*"],
+        }),
+      ),
   });
 };
 
@@ -671,15 +702,78 @@ export const useUpdateConversationTagsMutation = () => {
         validTagsIds = validTags.map((tag) => tag.id);
       } catch (error) {
         validTagsIds = [];
-        console.error(error);
       }
 
+      const tagsRequest = await directus.request(
+        readItems("conversation_project_tag", {
+          fields: [
+            "id",
+            {
+              project_tag_id: ["id"],
+            },
+            {
+              conversation_id: ["id"],
+            },
+          ],
+          filter: {
+            conversation_id: { _eq: conversationId },
+          },
+        }),
+      );
+
+      const needToDelete = tagsRequest.filter(
+        (conversationProjectTag) =>
+          conversationProjectTag.project_tag_id &&
+          !validTagsIds.includes(
+            (conversationProjectTag.project_tag_id as ProjectTag).id,
+          ),
+      );
+
+      const needToCreate = validTagsIds.filter(
+        (tagId) =>
+          !tagsRequest.some(
+            (conversationProjectTag) =>
+              (conversationProjectTag.project_tag_id as ProjectTag).id ===
+              tagId,
+          ),
+      );
+
+      // slightly esoteric, but basically we only want to delete if there are any tags to delete
+      // otherwise, directus doesn't accept an empty array
+      const deletePromise =
+        needToDelete.length > 0
+          ? directus.request(
+              deleteItems(
+                "conversation_project_tag",
+                needToDelete.map((tag) => tag.id),
+              ),
+            )
+          : Promise.resolve();
+
+      // same deal for creating
+      const createPromise =
+        needToCreate.length > 0
+          ? directus.request(
+              createItems(
+                "conversation_project_tag",
+                needToCreate.map((tagId) => ({
+                  conversation_id: {
+                    id: conversationId,
+                  } as Conversation,
+                  project_tag_id: {
+                    id: tagId,
+                  } as ProjectTag,
+                })),
+              ),
+            )
+          : Promise.resolve();
+
+      // await both promises
+      await Promise.all([deletePromise, createPromise]);
+
       return directus.request<Conversation>(
-        updateItem("conversation", conversationId, {
-          tags: validTagsIds.map((tagId) => ({
-            project_tag_id: tagId,
-            conversation_id: conversationId,
-          })),
+        readItem("conversation", conversationId, {
+          fields: ["*"],
         }),
       );
     },
@@ -697,8 +791,7 @@ export const useUpdateConversationTagsMutation = () => {
 export const useDeleteConversationByIdMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (conversationId: string) =>
-      directus.request(deleteItem("conversation", conversationId)),
+    mutationFn: deleteConversationById,
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["projects"],
@@ -707,6 +800,9 @@ export const useDeleteConversationByIdMutation = () => {
         queryKey: ["conversations"],
       });
       toast.success("Conversation deleted successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
     },
   });
 };
@@ -1202,8 +1298,15 @@ export const useCreateChatMutation = () => {
         id: string;
       };
     }) => {
+      const project = await directus.request(
+        readItem("project", payload.project_id.id),
+      );
+
       const chat = await directus.request(
-        createItem("project_chat", payload as any),
+        createItem("project_chat", {
+          ...(payload as any),
+          auto_select: !!project.is_enhanced_audio_processing_enabled,
+        }),
       );
 
       try {
@@ -1327,8 +1430,16 @@ export const useProjectChatContext = (chatId: string) => {
 export const useAddChatContextMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { chatId: string; conversationId?: string; auto_select_bool?: boolean }) =>
-      addChatContext(payload.chatId, payload.conversationId, payload.auto_select_bool),
+    mutationFn: (payload: {
+      chatId: string;
+      conversationId?: string;
+      auto_select_bool?: boolean;
+    }) =>
+      addChatContext(
+        payload.chatId,
+        payload.conversationId,
+        payload.auto_select_bool,
+      ),
     onError: (error) => {
       if (error instanceof AxiosError) {
         alert(
@@ -1350,8 +1461,16 @@ export const useAddChatContextMutation = () => {
 export const useDeleteChatContextMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { chatId: string; conversationId?: string; auto_select_bool?: boolean }) =>
-      deleteChatContext(payload.chatId, payload.conversationId, payload.auto_select_bool),
+    mutationFn: (payload: {
+      chatId: string;
+      conversationId?: string;
+      auto_select_bool?: boolean;
+    }) =>
+      deleteChatContext(
+        payload.chatId,
+        payload.conversationId,
+        payload.auto_select_bool,
+      ),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({
         queryKey: ["chats", "context", vars.chatId],
@@ -1533,7 +1652,10 @@ export const useUpdateProjectReportMutation = () => {
     }) => directus.request(updateItem("project_report", reportId, payload)),
     onSuccess: (_, vars) => {
       const projectId = vars.payload.project_id;
-      const projectIdValue = typeof projectId === 'object' && projectId !== null ? projectId.id : projectId;
+      const projectIdValue =
+        typeof projectId === "object" && projectId !== null
+          ? projectId.id
+          : projectId;
 
       queryClient.invalidateQueries({
         queryKey: ["projects", projectIdValue, "report"],
@@ -1997,38 +2119,15 @@ export const useConversationUploader = () => {
   };
 };
 
-export const useCheckUnsubscribeStatus = (
-  token: string,
-  project_id: string,
-) => {
-  return useQuery({
-    queryKey: ["checkUnsubscribe", token, project_id],
+export const useCheckUnsubscribeStatus = (token: string, projectId: string) => {
+  return useQuery<{ eligible: boolean }>({
+    queryKey: ["checkUnsubscribe", token, projectId],
     queryFn: async () => {
-      if (!token || !project_id) {
+      if (!token || !projectId) {
         throw new Error("Invalid or missing unsubscribe link.");
       }
-
-      const submissions = await directus.request(
-        readItems("project_report_notification_participants", {
-          filter: {
-            _and: [
-              { project_id: { _eq: project_id } },
-              { email_opt_out_token: { _eq: token } },
-            ],
-          },
-          fields: ["id", "email_opt_in"],
-        }),
-      );
-
-      if (
-        !submissions ||
-        submissions.length === 0 ||
-        !submissions[0].email_opt_in
-      ) {
-        throw new Error("No matching subscription found.");
-      }
-
-      return true; // Eligible to unsubscribe
+      const response = await checkUnsubscribeStatus(token, projectId);
+      return response.data;
     },
     retry: false,
     refetchOnWindowFocus: false,
@@ -2059,89 +2158,26 @@ export const useGetProjectParticipants = (project_id: string) => {
   });
 };
 
-export const useCheckProjectNotificationParticipants = () => {
-  return useMutation({
-    mutationFn: async ({
-      email,
-      projectId,
-    }: {
-      email: string;
-      projectId: string;
-    }) => {
-      const existingEntries = await directus.request(
-        readItems("project_report_notification_participants", {
-          filter: {
-            email: { _eq: email },
-            project_id: { _eq: projectId },
-          },
-          limit: 1,
-        }),
-      );
-
-      if (existingEntries.length > 0) {
-        const existingEntry = existingEntries[0];
-        if (existingEntry.email_opt_in === false) {
-          return { status: "opted_out" };
-        }
-        return { status: "subscribed" };
-      }
-      return { status: "new" };
-    },
-  });
-};
-
-export const useSubmitNotification = () => {
+export const useSubmitNotificationParticipant = () => {
   return useMutation({
     mutationFn: async ({
       emails,
       projectId,
+      conversationId,
     }: {
       emails: string[];
       projectId: string;
+      conversationId: string;
     }) => {
-      await Promise.all(
-        emails.map(async (email) => {
-          try {
-            // Check if the user already exists
-            const existingEntries = await directus.request(
-              readItems("project_report_notification_participants", {
-                filter: {
-                  email: { _eq: email },
-                  project_id: { _eq: projectId },
-                },
-                limit: 1,
-              }),
-            );
-            if (existingEntries?.length > 0) {
-              const existingEntry = existingEntries[0];
-              if (!existingEntry.email_opt_in) {
-                // Delete the old entry to regenerate the email_opt_out_token
-                await directus.request(
-                  deleteItem(
-                    "project_report_notification_participants",
-                    existingEntry.id,
-                  ),
-                );
-              }
-            }
-            // Create a new entry (this generates a new email_opt_out_token)
-            await directus.request(
-              createItem("project_report_notification_participants", {
-                email: email,
-                project_id: projectId,
-                email_opt_in: true,
-              }),
-            );
-          } catch (error) {
-            console.error(`Failed to process email: ${email}`, error);
-            throw error;
-          }
-        }),
+      return await submitNotificationParticipant(
+        emails,
+        projectId,
+        conversationId,
       );
     },
     retry: 2,
     onError: (error) => {
-      console.error('Notification submission failed:', error);
+      console.error("Notification submission failed:", error);
     },
   });
 };

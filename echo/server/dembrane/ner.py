@@ -1,17 +1,19 @@
 import logging
 
-from dembrane.config import DISABLE_REDACTION, TRANKIT_CACHE_DIR
+from dembrane.config import DISABLE_REDACTION
+
+#  ,TRANKIT_CACHE_DIR
 
 logger = logging.getLogger("ner")
 
 if not DISABLE_REDACTION:
     logger.info("Loading NER model")
-    from trankit import Pipeline  # type:ignore
+    from trankit import Pipeline
 
     p = Pipeline(
         "english",
         #  embedding="xlm-roberta-large",
-        cache_dir=TRANKIT_CACHE_DIR,
+        # cache_dir=TRANKIT_CACHE_DIR,
         gpu=False,
     )
     p.add("dutch")

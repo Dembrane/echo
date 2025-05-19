@@ -7,16 +7,26 @@ from typing import List, Optional
 import numpy as np
 import pandas as pd
 import tiktoken
+from litellm import completion
 from pydantic import BaseModel
-from sqlalchemy import func, select
+from sqlalchemy import func, select, literal
 from sqlalchemy.orm import Session
-from sklearn.cluster import KMeans  # type: ignore
-from langchain_openai import OpenAIEmbeddings
-from langchain_experimental.text_splitter import SemanticChunker
+from sklearn.cluster import KMeans
+from pgvector.sqlalchemy import Vector
 
 from dembrane.s3 import save_to_s3_from_url
 from dembrane.ner import anonymize_sentence
 from dembrane.utils import generate_uuid, get_utc_timestamp
+from dembrane.config import (
+    LARGE_LITELLM_MODEL,  # o4-mini
+    SMALL_LITELLM_MODEL,  # 4o-mini
+    LARGE_LITELLM_API_KEY,
+    SMALL_LITELLM_API_KEY,
+    LARGE_LITELLM_API_BASE,
+    SMALL_LITELLM_API_BASE,
+    LARGE_LITELLM_API_VERSION,
+    SMALL_LITELLM_API_VERSION,
+)
 from dembrane.openai import client
 from dembrane.prompts import render_prompt
 from dembrane.database import (
@@ -36,9 +46,6 @@ logger = logging.getLogger("quote_utils")
 
 np.random.seed(0)
 
-
-lc_embedder = OpenAIEmbeddings(model="text-embedding-3-small")
-semantic_chunker = SemanticChunker(lc_embedder)
 
 SENTENCE_ENDING_PUNCTUATION = {".", "!", "?"}
 SENTENCE_ENDING_PUNTUATION_REGEX = r"(?<=[.!?]) +"
@@ -72,9 +79,6 @@ def join_transcript_chunks(string_list: List[str]) -> str:
     return joined_string
 
 
-# def generate_contextual_quote_and_embedding(db: Session, conversation_id: str, text: str) -> Tuple[QuoteModel, List[float]]:
-
-
 def llm_split_text(text: str) -> List[str]:
     logger = logging.getLogger("llm_split_text")
     logger.debug(f"splitting text: {text}")
@@ -87,9 +91,12 @@ def llm_split_text(text: str) -> List[str]:
         }
     ]
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=messages,  # type: ignore
+    response = completion(
+        model=SMALL_LITELLM_MODEL,
+        messages=messages,
+        api_key=SMALL_LITELLM_API_KEY,
+        api_version=SMALL_LITELLM_API_VERSION,
+        api_base=SMALL_LITELLM_API_BASE,
     )
     logger.debug(response)
 
@@ -337,12 +344,43 @@ def get_random_sample_quotes(
     random_vectors = np.random.randn(num_random_vectors, EMBEDDING_DIM)
 
     for vector in random_vectors:
-        closest_quote = db.scalars(
-            select(QuoteModel)
-            .filter(QuoteModel.project_analysis_run_id == project_analysis_run_id)
-            .order_by(QuoteModel.embedding.l2_distance(vector))
-            .limit(1)
-        ).first()
+        # Convert the numpy array to a Python list for pgvector compatibility
+        vector_as_list = vector.tolist()
+        # Cast the list to a true pgvector type for proper operator binding
+        vector_param = literal(vector_as_list, type_=Vector(EMBEDDING_DIM))
+
+        # Skip the vector similarity search if no quotes are available
+        if not all_quotes:
+            continue
+
+        try:
+            # First try using the native pgvector operator
+            closest_quote = db.scalars(
+                select(QuoteModel)
+                .filter(QuoteModel.project_analysis_run_id == project_analysis_run_id)
+                .order_by(QuoteModel.embedding.l2_distance(vector_param))
+                .limit(1)
+            ).first()
+        except Exception as e:
+            logger.warning(f"Native pgvector operation failed: {e}")
+            db.rollback()
+            try:
+                # Try using SQL function approach
+                closest_quote = db.scalars(
+                    select(QuoteModel)
+                    .filter(QuoteModel.project_analysis_run_id == project_analysis_run_id)
+                    .order_by(func.vector_l2_distance(QuoteModel.embedding, vector_param))
+                    .limit(1)
+                ).first()
+            except Exception as e2:
+                logger.warning(f"SQL function approach failed too: {e2}")
+                db.rollback()
+                # Fall back to random selection from the batch
+                if all_quotes:
+                    closest_quote = random.choice(all_quotes)
+                else:
+                    closest_quote = None
+
         if closest_quote and closest_quote not in selected_quotes:
             additional_length = count_tokens(closest_quote.text)
             if current_context_length + additional_length <= context_limit:
@@ -421,32 +459,38 @@ def initialize_view(
     class JSONOutputSchema(BaseModel):
         aspect_list: list[AspectOutput]
 
-    response = client.beta.chat.completions.parse(
-        model="gpt-4o",
-        messages=messages,  # type: ignore
+    response = completion(
+        model=LARGE_LITELLM_MODEL,
+        api_key=LARGE_LITELLM_API_KEY,
+        api_version=LARGE_LITELLM_API_VERSION,
+        api_base=LARGE_LITELLM_API_BASE,
+        messages=messages,
         response_format=JSONOutputSchema,
     )
 
     response_message = response.choices[0].message
 
+    logger.debug(f"Response message: {response_message}")
     try:
         if response_message.refusal is not None:
             raise ValueError(response_message.refusal)
 
         # Access the parsed response content
-        parsed_response = response.choices[0].message.parsed
+        parsed_response = json.loads(response_message.content)
+        logger.debug(f"Parsed response: {parsed_response}")
+
         logger.debug(f"Draft aspects: {parsed_response}")
 
         if parsed_response is None:
-            raise ValueError("No response from GPT-4o")
+            raise ValueError("No response from model.")
 
-        aspects_list = parsed_response.aspect_list
+        aspects_list = parsed_response["aspect_list"]
     except Exception as e:
         logger.error(f"Error generating draft aspects: {e}")
         raise e from e
 
     for aspect in aspects_list:
-        if aspect.name is None or aspect.description is None:
+        if aspect["name"] is None or aspect["description"] is None:
             logger.warning(f"Aspect missing name or description: {aspect}")
             continue
 
@@ -454,8 +498,8 @@ def initialize_view(
             aspect = AspectModel(
                 id=generate_uuid(),
                 view_id=view.id,
-                name=aspect.name,
-                description=aspect.description,
+                name=aspect["name"],
+                description=aspect["description"],
             )
             db.add(aspect)
             db.commit()
@@ -557,9 +601,12 @@ def assign_aspect_centroid(db: Session, aspect_id: str, language: str) -> None:
 
     messages = [{"role": "user", "content": prompt}]
 
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=messages,  # type: ignore
+    response = completion(
+        model=LARGE_LITELLM_MODEL,
+        messages=messages,
+        api_key=LARGE_LITELLM_API_KEY,
+        api_version=LARGE_LITELLM_API_VERSION,
+        api_base=LARGE_LITELLM_API_BASE,
     )
 
     sample_quotes_json_string = response.choices[0].message.content
@@ -699,9 +746,12 @@ def generate_aspect_summary(db: Session, aspect_id: str, language: str) -> None:
     )
 
     messages = [{"role": "user", "content": prompt}]
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=messages,  # type: ignore
+    response = completion(
+        model=SMALL_LITELLM_MODEL,
+        messages=messages,
+        api_key=SMALL_LITELLM_API_KEY,
+        api_version=SMALL_LITELLM_API_VERSION,
+        api_base=SMALL_LITELLM_API_BASE,
     )
 
     short_summary = response.choices[0].message.content
@@ -722,9 +772,12 @@ def generate_aspect_summary(db: Session, aspect_id: str, language: str) -> None:
     )
 
     messages = [{"role": "user", "content": prompt}]
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=messages,  # type: ignore
+    response = completion(
+        model=SMALL_LITELLM_MODEL,
+        messages=messages,
+        api_key=SMALL_LITELLM_API_KEY,
+        api_version=SMALL_LITELLM_API_VERSION,
+        api_base=SMALL_LITELLM_API_BASE,
     )
 
     long_summary = response.choices[0].message.content
@@ -878,9 +931,12 @@ Summary: {aspect.long_summary}
 
     messages = [{"role": "user", "content": prompt}]
 
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=messages,  # type: ignore
+    response = completion(
+        model=SMALL_LITELLM_MODEL,
+        messages=messages,
+        api_key=SMALL_LITELLM_API_KEY,
+        api_version=SMALL_LITELLM_API_VERSION,
+        api_base=SMALL_LITELLM_API_BASE,
     )
 
     view.summary = response.choices[0].message.content
@@ -911,9 +967,12 @@ def generate_insight_extras(db: Session, insight_id: str, language: str) -> None
 
     title_messages = [{"role": "user", "content": title_prompt}]
 
-    title_response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=title_messages,  # type: ignore
+    title_response = completion(
+        model=SMALL_LITELLM_MODEL,
+        messages=title_messages,
+        api_key=SMALL_LITELLM_API_KEY,
+        api_version=SMALL_LITELLM_API_VERSION,
+        api_base=SMALL_LITELLM_API_BASE,
     )
 
     if not title_response.choices:
@@ -934,9 +993,12 @@ def generate_insight_extras(db: Session, insight_id: str, language: str) -> None
 
     summary_messages = [{"role": "user", "content": summary_prompt}]
 
-    summary_response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=summary_messages,  # type: ignore
+    summary_response = completion(
+        model=SMALL_LITELLM_MODEL,
+        messages=summary_messages,
+        api_key=SMALL_LITELLM_API_KEY,
+        api_version=SMALL_LITELLM_API_VERSION,
+        api_base=SMALL_LITELLM_API_BASE,
     )
 
     summary = summary_response.choices[0].message.content
@@ -979,9 +1041,12 @@ def generate_conversation_summary(db: Session, conversation_id: str, language: s
 
     messages = [{"role": "user", "content": prompt}]
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=messages,  # type: ignore
+    response = completion(
+        model=SMALL_LITELLM_MODEL,
+        messages=messages,
+        api_key=SMALL_LITELLM_API_KEY,
+        api_version=SMALL_LITELLM_API_VERSION,
+        api_base=SMALL_LITELLM_API_BASE,
     )
 
     conversation.summary = response.choices[0].message.content

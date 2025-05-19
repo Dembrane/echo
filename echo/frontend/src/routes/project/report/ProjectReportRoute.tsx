@@ -315,7 +315,7 @@ export const ProjectReportRoute = () => {
         >
           <Text size="sm">
             <Trans>
-              An email Notification will be sent to{" "}
+              An email notification will be sent to{" "}
               {participantCount !== undefined
                 ? participantCount
                 : t`loading...`}{" "}

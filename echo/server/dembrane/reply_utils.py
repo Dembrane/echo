@@ -242,6 +242,7 @@ async def generate_reply_for_conversation(
     in_response_section = False
 
     # Stream the response
+    # FIXME: reply
     response = await litellm.acompletion(
         model="anthropic/claude-3-5-sonnet-20240620",
         messages=[

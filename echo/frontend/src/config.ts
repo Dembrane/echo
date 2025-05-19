@@ -30,3 +30,5 @@ export const PRIVACY_POLICY_URL =
 
 export const ENABLE_CHAT_AUTO_SELECT =
   import.meta.env.VITE_ENABLE_CHAT_AUTO_SELECT === "1";
+
+export const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === "1";

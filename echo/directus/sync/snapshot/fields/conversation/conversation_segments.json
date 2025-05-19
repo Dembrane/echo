@@ -1,0 +1,27 @@
+{
+  "collection": "conversation",
+  "field": "conversation_segments",
+  "type": "alias",
+  "meta": {
+    "collection": "conversation",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "conversation_segments",
+    "group": null,
+    "hidden": false,
+    "interface": "list-o2m",
+    "note": null,
+    "options": null,
+    "readonly": false,
+    "required": false,
+    "sort": 25,
+    "special": [
+      "o2m"
+    ],
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  }
+}

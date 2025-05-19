@@ -63,6 +63,7 @@ services:
       - 8055:8055
     volumes:
       - ../directus/uploads:/directus/uploads
+      - ../directus/templates:/directus/templates
     environment:
       - PUBLIC_URL=http://localhost:8055
       - PORT=8055

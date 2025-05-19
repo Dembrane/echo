@@ -91,16 +91,30 @@ async def create_system_messages_for_chat(
         .all()
     )
     try:
-        project_query = {'query': {'fields': ['name', 'language', 'context', 'default_conversation_title', 'default_conversation_description'], 
-        'limit': 1, 'filter': {'id': {'_in': [project_id]}}}}
+        project_query = {
+            "query": {
+                "fields": [
+                    "name",
+                    "language",
+                    "context",
+                    "default_conversation_title",
+                    "default_conversation_description",
+                ],
+                "limit": 1,
+                "filter": {"id": {"_in": [project_id]}},
+            }
+        }
         project = directus.get_items("project", project_query)[0]
-        project_context = '\n'.join([str(k) + ' : ' + str(v) for k, v in project.items()])
+        project_context = "\n".join([str(k) + " : " + str(v) for k, v in project.items()])
     except KeyError as e:
         raise ValueError(f"Invalid project id: {project_id}") from e
     except Exception:
         raise
 
-    project_message = {"type": "text", "text": render_prompt("context_project", language, {"project_context": project_context})}
+    project_message = {
+        "type": "text",
+        "text": render_prompt("context_project", language, {"project_context": project_context}),
+    }
 
     conversation_data_list = []
     for conversation in conversations:
@@ -118,7 +132,6 @@ async def create_system_messages_for_chat(
 
     prompt_message = {"type": "text", "text": render_prompt("system_chat", language, {})}
 
-
     logger.info(f"using system prompt in language: {language}")
     logger.info(f"prompt: {prompt_message['text'][:20]}...{prompt_message['text'][-20:]}")
 
@@ -134,13 +147,15 @@ async def create_system_messages_for_chat(
     return [prompt_message, project_message, context_message]
 
 
-async def get_lightrag_prompt_by_params(top_k: int,
-                                        query: str,
-                                        conversation_history: list[dict[str, str]],
-                                        echo_conversation_ids: list[str],
-                                        echo_project_ids: list[str],
-                                        auto_select_bool: bool,
-                                        get_transcripts: bool) -> str:
+async def get_lightrag_prompt_by_params(
+    top_k: int,
+    query: str,
+    conversation_history: list[dict[str, str]],
+    echo_conversation_ids: list[str],
+    echo_project_ids: list[str],
+    auto_select_bool: bool,
+    get_transcripts: bool,
+) -> str:
     payload = GetLightragQueryRequest(
         query=query,
         conversation_history=conversation_history,
@@ -148,36 +163,45 @@ async def get_lightrag_prompt_by_params(top_k: int,
         echo_project_ids=echo_project_ids,
         auto_select_bool=auto_select_bool,
         get_transcripts=get_transcripts,
-        top_k=top_k
+        top_k=top_k,
     )
-    session = DirectusSession(user_id="none", is_admin=True)#fake session
+    session = DirectusSession(user_id="none", is_admin=True)  # fake session
     rag_prompt = await get_lightrag_prompt(payload, session)
     return rag_prompt
 
 
-async def get_conversation_references(rag_prompt: str, project_ids: List[str]) -> List[Dict[str, Any]]:
+async def get_conversation_references(
+    rag_prompt: str, project_ids: List[str]
+) -> List[Dict[str, Any]]:
     try:
         references = await get_conversation_details_for_rag_query(rag_prompt, project_ids)
-        conversation_references = {'references': references}
+        conversation_references = {"references": references}
     except Exception as e:
         logger.warning(f"No references found. Error: {str(e)}")
-        conversation_references = {'references':[]}
+        conversation_references = {"references": []}
     return [conversation_references]
+
 
 class CitationSingleSchema(BaseModel):
     segment_id: int
     verbatim_reference_text_chunk: str
 
+
 class CitationsSchema(BaseModel):
     citations: List[CitationSingleSchema]
 
-async def get_conversation_citations(rag_prompt: str, accumulated_response: str, project_ids: List[str],language: str = "en", ) -> List[Dict[str, Any]]:
-    text_structuring_model_message = render_prompt("text_structuring_model_message", language, 
-        {
-        'accumulated_response': accumulated_response, 
-        'rag_prompt':rag_prompt
-        }
-        )
+
+async def get_conversation_citations(
+    rag_prompt: str,
+    accumulated_response: str,
+    project_ids: List[str],
+    language: str = "en",
+) -> List[Dict[str, Any]]:
+    text_structuring_model_message = render_prompt(
+        "text_structuring_model_message",
+        language,
+        {"accumulated_response": accumulated_response, "rag_prompt": rag_prompt},
+    )
     text_structuring_model_messages = [
         {"role": "system", "content": text_structuring_model_message},
     ]
@@ -187,25 +211,34 @@ async def get_conversation_citations(rag_prompt: str, accumulated_response: str,
         api_base=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE,
         api_version=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION,
         api_key=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY,
-        response_format=CitationsSchema)
-    try: 
-        citations_by_segment_dict = json.loads(text_structuring_model_generation.choices[0].message.content) #type: ignore
+        response_format=CitationsSchema,
+    )
+    try:
+        citations_by_segment_dict = json.loads(
+            text_structuring_model_generation.choices[0].message.content
+        )
         logger.debug(f"Citations by segment dict: {citations_by_segment_dict}")
         citations_list = citations_by_segment_dict["citations"]
         logger.debug(f"Citations list: {citations_list}")
         citations_by_conversation_dict: Dict[str, List[Dict[str, Any]]] = {"citations": []}
         if len(citations_list) > 0:
             for _, citation in enumerate(citations_list):
-                try: 
-                    (conversation_id, conversation_name) = await run_segment_id_to_conversation_id(citation['segment_id'])
+                try:
+                    (conversation_id, conversation_name) = await run_segment_id_to_conversation_id(
+                        citation["segment_id"]
+                    )
                     citation_project_id = get_project_id_from_conversation_id(conversation_id)
                 except Exception as e:
-                    logger.warning(f"WARNING: Error in citation extraction for segment {citation['segment_id']}. Skipping citations: {str(e)}")
+                    logger.warning(
+                        f"WARNING: Error in citation extraction for segment {citation['segment_id']}. Skipping citations: {str(e)}"
+                    )
                     continue
                 if citation_project_id in project_ids:
-                    current_citation_dict = {"conversation": conversation_id, 
-                    "reference_text": citation['verbatim_reference_text_chunk'],
-                    "conversation_title": conversation_name}
+                    current_citation_dict = {
+                        "conversation": conversation_id,
+                        "reference_text": citation["verbatim_reference_text_chunk"],
+                        "conversation_title": conversation_name,
+                    }
                     citations_by_conversation_dict["citations"].append(current_citation_dict)
         else:
             logger.warning("WARNING: No citations found")

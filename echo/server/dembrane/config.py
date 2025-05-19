@@ -3,13 +3,44 @@
 # required environment variables and provides sensible defaults for optional ones.
 
 import os
+import sys
 import logging
+
+try:
+    import colorlog
+
+    has_colorlog = True
+except ImportError:
+    has_colorlog = False
 
 import dotenv
 
-logging.basicConfig(level=logging.INFO, force=True)
+if has_colorlog:
+    handler = colorlog.StreamHandler(sys.stdout)
+    handler.setFormatter(
+        colorlog.ColoredFormatter(
+            "%(log_color)s%(levelname)s:%(name)s:%(message)s",
+            log_colors={
+                "DEBUG": "cyan",
+                "INFO": "green",
+                "WARNING": "yellow",
+                "ERROR": "red",
+                "CRITICAL": "red,bg_white",
+            },
+        )
+    )
+    logger = colorlog.getLogger("config")
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
 
-logger = logging.getLogger("config")
+    # Set up the root logger too
+    root_logger = colorlog.getLogger()
+    root_logger.addHandler(handler)
+    root_logger.setLevel(logging.INFO)
+else:
+    # Fall back to basic configuration if colorlog is not available
+    logging.basicConfig(level=logging.INFO, force=True)
+    logger = logging.getLogger("config")
 
 BASE_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 dotenv_path = os.path.join(BASE_DIR, ".env")
@@ -43,12 +74,6 @@ logger.debug(f"DISABLE_REDACTION: {DISABLE_REDACTION}")
 
 PROMPT_TEMPLATES_DIR = os.path.join(BASE_DIR, "prompt_templates")
 logger.debug(f"PROMPT_TEMPLATES_DIR: {PROMPT_TEMPLATES_DIR}")
-
-EMBEDDINGS_CACHE_DIR = os.path.join(BASE_DIR, "embeddings_cache")
-logger.debug(f"EMBEDDINGS_CACHE_DIR: {EMBEDDINGS_CACHE_DIR}")
-
-TRANKIT_CACHE_DIR = os.path.join(BASE_DIR, "trankit_cache")
-logger.debug(f"TRANKIT_CACHE_DIR: {TRANKIT_CACHE_DIR}")
 
 DIRECTUS_SECRET = os.environ.get("DIRECTUS_SECRET")
 assert DIRECTUS_SECRET, "DIRECTUS_SECRET environment variable is not set"
@@ -88,10 +113,6 @@ logger.debug("OPENAI_API_KEY: set")
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 assert ANTHROPIC_API_KEY, "ANTHROPIC_API_KEY environment variable is not set"
 logger.debug("ANTHROPIC_API_KEY: set")
-
-# GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-# assert GEMINI_API_KEY, "GEMINI_API_KEY environment variable is not set"
-# logger.debug(f"GEMINI_API_KEY: {'set' if GEMINI_API_KEY else 'not set'}")
 
 SERVE_API_DOCS = os.environ.get("SERVE_API_DOCS", "false").lower() in ["true", "1"]
 logger.debug(f"SERVE_API_DOCS: {SERVE_API_DOCS}")
@@ -141,15 +162,75 @@ logger.debug("STORAGE_S3_SECRET: set")
 DISABLE_CORS = os.environ.get("DISABLE_CORS", "false").lower() in ["true", "1"]
 logger.debug(f"DISABLE_CORS: {DISABLE_CORS}")
 
+SMALL_LITELLM_MODEL = os.environ.get("SMALL_LITELLM_MODEL")  # 4o-mini
+assert SMALL_LITELLM_MODEL, "SMALL_LITELLM_MODEL environment variable is not set"
+logger.debug(f"SMALL_LITELLM_MODEL: {SMALL_LITELLM_MODEL}")
+
+SMALL_LITELLM_API_KEY = os.environ.get("SMALL_LITELLM_API_KEY")
+assert SMALL_LITELLM_API_KEY, "SMALL_LITELLM_API_KEY environment variable is not set"
+logger.debug("SMALL_LITELLM_API_KEY: set")
+
+SMALL_LITELLM_API_VERSION = os.environ.get("SMALL_LITELLM_API_VERSION")
+assert SMALL_LITELLM_API_VERSION, "SMALL_LITELLM_API_VERSION environment variable is not set"
+logger.debug(f"SMALL_LITELLM_API_VERSION: {SMALL_LITELLM_API_VERSION}")
+
+SMALL_LITELLM_API_BASE = os.environ.get("SMALL_LITELLM_API_BASE")
+assert SMALL_LITELLM_API_BASE, "SMALL_LITELLM_API_BASE environment variable is not set"
+logger.debug(f"SMALL_LITELLM_API_BASE: {SMALL_LITELLM_API_BASE}")
+
+MEDIUM_LITELLM_MODEL = os.environ.get("MEDIUM_LITELLM_MODEL")  # 4.1
+assert MEDIUM_LITELLM_MODEL, "MEDIUM_LITELLM_MODEL environment variable is not set"
+logger.debug(f"MEDIUM_LITELLM_MODEL: {MEDIUM_LITELLM_MODEL}")
+
+MEDIUM_LITELLM_API_KEY = os.environ.get("MEDIUM_LITELLM_API_KEY")
+assert MEDIUM_LITELLM_API_KEY, "MEDIUM_LITELLM_API_KEY environment variable is not set"
+logger.debug("MEDIUM_LITELLM_API_KEY: set")
+
+MEDIUM_LITELLM_API_VERSION = os.environ.get("MEDIUM_LITELLM_API_VERSION")
+assert MEDIUM_LITELLM_API_VERSION, "MEDIUM_LITELLM_API_VERSION environment variable is not set"
+logger.debug(f"MEDIUM_LITELLM_API_VERSION: {MEDIUM_LITELLM_API_VERSION}")
+
+MEDIUM_LITELLM_API_BASE = os.environ.get("MEDIUM_LITELLM_API_BASE")
+assert MEDIUM_LITELLM_API_BASE, "MEDIUM_LITELLM_API_BASE environment variable is not set"
+logger.debug(f"MEDIUM_LITELLM_API_BASE: {MEDIUM_LITELLM_API_BASE}")
+
+LARGE_LITELLM_MODEL = os.environ.get("LARGE_LITELLM_MODEL")  # o4-mini
+assert LARGE_LITELLM_MODEL, "LARGE_LITELLM_MODEL environment variable is not set"
+logger.debug(f"LARGE_LITELLM_MODEL: {LARGE_LITELLM_MODEL}")
+
+LARGE_LITELLM_API_KEY = os.environ.get("LARGE_LITELLM_API_KEY")
+assert LARGE_LITELLM_API_KEY, "LARGE_LITELLM_API_KEY environment variable is not set"
+logger.debug("LARGE_LITELLM_API_KEY: set")
+
+LARGE_LITELLM_API_VERSION = os.environ.get("LARGE_LITELLM_API_VERSION")
+assert LARGE_LITELLM_API_VERSION, "LARGE_LITELLM_API_VERSION environment variable is not set"
+logger.debug(f"LARGE_LITELLM_API_VERSION: {LARGE_LITELLM_API_VERSION}")
+
+LARGE_LITELLM_API_BASE = os.environ.get("LARGE_LITELLM_API_BASE")
+assert LARGE_LITELLM_API_BASE, "LARGE_LITELLM_API_BASE environment variable is not set"
+logger.debug(f"LARGE_LITELLM_API_BASE: {LARGE_LITELLM_API_BASE}")
+
+
+LITELLM_WHISPER_URL = os.environ.get("LITELLM_WHISPER_URL")
+LITELLM_WHISPER_API_KEY = os.environ.get("LITELLM_WHISPER_API_KEY")
+LITELLM_WHISPER_API_VERSION = os.environ.get("LITELLM_WHISPER_API_VERSION", "2024-06-01")
+LITELLM_WHISPER_MODEL = os.environ.get("LITELLM_WHISPER_MODEL")
+assert LITELLM_WHISPER_API_KEY, "LITELLM_WHISPER_API_KEY environment variable is not set"
+logger.debug("LITELLM_WHISPER_API_KEY: set")
+assert LITELLM_WHISPER_API_VERSION, "LITELLM_WHISPER_API_VERSION environment variable is not set"
+logger.debug("LITELLM_WHISPER_API_VERSION: set")
+assert LITELLM_WHISPER_MODEL, "LITELLM_WHISPER_MODEL environment variable is not set"
+logger.debug("LITELLM_WHISPER_MODEL: set")
+if LITELLM_WHISPER_MODEL != "whisper-1":
+    assert LITELLM_WHISPER_URL, "LITELLM_WHISPER_URL environment variable is not set"
+    logger.debug("LITELLM_WHISPER_URL: set")
 
 # *****************LIGHTRAG CONFIGURATIONS*****************
-
-# ---------------Secrets---------------
 
 # Lightrag LLM model: Makes nodes and answers queries
 LIGHTRAG_LITELLM_MODEL = os.environ.get("LIGHTRAG_LITELLM_MODEL")  # azure/gpt-4o-mini
 assert LIGHTRAG_LITELLM_MODEL, "LIGHTRAG_LITELLM_MODEL environment variable is not set"
-logger.debug("LIGHTRAG_LITELLM_MODEL: set")
+logger.debug(f"LIGHTRAG_LITELLM_MODEL: {LIGHTRAG_LITELLM_MODEL}")
 
 LIGHTRAG_LITELLM_API_KEY = os.environ.get("LIGHTRAG_LITELLM_API_KEY")
 assert LIGHTRAG_LITELLM_API_KEY, "LIGHTRAG_LITELLM_API_KEY environment variable is not set"
@@ -157,27 +238,26 @@ logger.debug("LIGHTRAG_LITELLM_API_KEY: set")
 
 LIGHTRAG_LITELLM_API_VERSION = os.environ.get("LIGHTRAG_LITELLM_API_VERSION")
 assert LIGHTRAG_LITELLM_API_VERSION, "LIGHTRAG_LITELLM_API_VERSION environment variable is not set"
-logger.debug("LIGHTRAG_LITELLM_API_VERSION: set")
+logger.debug(f"LIGHTRAG_LITELLM_API_VERSION: {LIGHTRAG_LITELLM_API_VERSION}")
 
 LIGHTRAG_LITELLM_API_BASE = os.environ.get("LIGHTRAG_LITELLM_API_BASE")
 assert LIGHTRAG_LITELLM_API_BASE, "LIGHTRAG_LITELLM_API_BASE environment variable is not set"
-logger.debug("LIGHTRAG_LITELLM_API_BASE: set")
-
+logger.debug(f"LIGHTRAG_LITELLM_API_BASE: {LIGHTRAG_LITELLM_API_BASE}")
 
 # Lightrag Audio model: Transcribes audio and gets contextual transcript
 LIGHTRAG_LITELLM_AUDIOMODEL_MODEL = os.environ.get(
     "LIGHTRAG_LITELLM_AUDIOMODEL_MODEL"
-)  # azure/whisper-large-v3
+)
 assert (
     LIGHTRAG_LITELLM_AUDIOMODEL_MODEL
 ), "LIGHTRAG_LITELLM_AUDIOMODEL_MODEL environment variable is not set"
-logger.debug("LIGHTRAG_LITELLM_AUDIOMODEL_MODEL: set")
+logger.debug(f"LIGHTRAG_LITELLM_AUDIOMODEL_MODEL: {LIGHTRAG_LITELLM_AUDIOMODEL_MODEL}")
 
 LIGHTRAG_LITELLM_AUDIOMODEL_API_BASE = os.environ.get("LIGHTRAG_LITELLM_AUDIOMODEL_API_BASE")
 assert (
     LIGHTRAG_LITELLM_AUDIOMODEL_API_BASE
 ), "LIGHTRAG_LITELLM_AUDIOMODEL_API_BASE environment variable is not set"
-logger.debug("LIGHTRAG_LITELLM_AUDIOMODEL_API_BASE: set")
+logger.debug(f"LIGHTRAG_LITELLM_AUDIOMODEL_API_BASE: {LIGHTRAG_LITELLM_AUDIOMODEL_API_BASE}")
 
 LIGHTRAG_LITELLM_AUDIOMODEL_API_KEY = os.environ.get("LIGHTRAG_LITELLM_AUDIOMODEL_API_KEY")
 assert (
@@ -189,7 +269,7 @@ LIGHTRAG_LITELLM_AUDIOMODEL_API_VERSION = os.environ.get("LIGHTRAG_LITELLM_AUDIO
 assert (
     LIGHTRAG_LITELLM_AUDIOMODEL_API_VERSION
 ), "LIGHTRAG_LITELLM_AUDIOMODEL_API_VERSION environment variable is not set"
-logger.debug("LIGHTRAG_LITELLM_AUDIOMODEL_API_VERSION: set")
+logger.debug(f"LIGHTRAG_LITELLM_AUDIOMODEL_API_VERSION: {LIGHTRAG_LITELLM_AUDIOMODEL_API_VERSION}")
 
 
 # Lightrag Text Structure model: Structures output from audio model
@@ -199,7 +279,9 @@ LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL = os.environ.get(
 assert (
     LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL
 ), "LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL environment variable is not set"
-logger.debug("LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL: set")
+logger.debug(
+    f"LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL: {LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL}"
+)
 
 LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE = os.environ.get(
     "LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE"
@@ -207,7 +289,9 @@ LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE = os.environ.get(
 assert (
     LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE
 ), "LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE environment variable is not set"
-logger.debug("LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE: set")
+logger.debug(
+    f"LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE: {LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE}"
+)
 
 LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY = os.environ.get(
     "LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY"
@@ -223,7 +307,9 @@ LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION = os.environ.get(
 assert (
     LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION
 ), "LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION environment variable is not set"
-logger.debug("LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION: set")
+logger.debug(
+    f"LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION: {LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION}"
+)
 
 # Lightrag Embedding model: Embeds text
 LIGHTRAG_LITELLM_EMBEDDING_MODEL = os.environ.get(
@@ -232,13 +318,13 @@ LIGHTRAG_LITELLM_EMBEDDING_MODEL = os.environ.get(
 assert (
     LIGHTRAG_LITELLM_EMBEDDING_MODEL
 ), "LIGHTRAG_LITELLM_EMBEDDING_MODEL environment variable is not set"
-logger.debug("LIGHTRAG_LITELLM_EMBEDDING_MODEL: set")
+logger.debug(f"LIGHTRAG_LITELLM_EMBEDDING_MODEL: {LIGHTRAG_LITELLM_EMBEDDING_MODEL}")
 
 LIGHTRAG_LITELLM_EMBEDDING_API_BASE = os.environ.get("LIGHTRAG_LITELLM_EMBEDDING_API_BASE")
 assert (
     LIGHTRAG_LITELLM_EMBEDDING_API_BASE
 ), "LIGHTRAG_LITELLM_EMBEDDING_API_BASE environment variable is not set"
-logger.debug("LIGHTRAG_LITELLM_EMBEDDING_API_BASE: set")
+logger.debug(f"LIGHTRAG_LITELLM_EMBEDDING_API_BASE: {LIGHTRAG_LITELLM_EMBEDDING_API_BASE}")
 
 LIGHTRAG_LITELLM_EMBEDDING_API_KEY = os.environ.get("LIGHTRAG_LITELLM_EMBEDDING_API_KEY")
 assert (
@@ -250,7 +336,7 @@ LIGHTRAG_LITELLM_EMBEDDING_API_VERSION = os.environ.get("LIGHTRAG_LITELLM_EMBEDD
 assert (
     LIGHTRAG_LITELLM_EMBEDDING_API_VERSION
 ), "LIGHTRAG_LITELLM_EMBEDDING_API_VERSION environment variable is not set"
-logger.debug("LIGHTRAG_LITELLM_EMBEDDING_API_VERSION: set")
+logger.debug(f"LIGHTRAG_LITELLM_EMBEDDING_API_VERSION: {LIGHTRAG_LITELLM_EMBEDDING_API_VERSION}")
 
 LIGHTRAG_LITELLM_INFERENCE_MODEL = os.environ.get(
     "LIGHTRAG_LITELLM_INFERENCE_MODEL", "anthropic/claude-3-5-sonnet-20240620"
@@ -258,7 +344,7 @@ LIGHTRAG_LITELLM_INFERENCE_MODEL = os.environ.get(
 assert (
     LIGHTRAG_LITELLM_INFERENCE_MODEL
 ), "LIGHTRAG_LITELLM_INFERENCE_MODEL environment variable is not set"
-logger.debug("LIGHTRAG_LITELLM_INFERENCE_MODEL: set")
+logger.debug(f"LIGHTRAG_LITELLM_INFERENCE_MODEL: {LIGHTRAG_LITELLM_INFERENCE_MODEL}")
 
 LIGHTRAG_LITELLM_INFERENCE_API_KEY = os.environ.get("LIGHTRAG_LITELLM_INFERENCE_API_KEY")
 assert (
@@ -268,17 +354,19 @@ logger.debug("LIGHTRAG_LITELLM_INFERENCE_API_KEY: set")
 
 LIGHTRAG_LITELLM_INFERENCE_API_VERSION = os.environ.get("LIGHTRAG_LITELLM_INFERENCE_API_VERSION")
 if LIGHTRAG_LITELLM_INFERENCE_API_VERSION:
-    logger.debug("LIGHTRAG_LITELLM_INFERENCE_API_VERSION: set")
+    logger.debug(
+        f"LIGHTRAG_LITELLM_INFERENCE_API_VERSION: {LIGHTRAG_LITELLM_INFERENCE_API_VERSION}"
+    )
 else:
     logger.debug("LIGHTRAG_LITELLM_INFERENCE_API_VERSION: not set")
 
 LIGHTRAG_LITELLM_INFERENCE_API_BASE = os.environ.get("LIGHTRAG_LITELLM_INFERENCE_API_BASE")
 if LIGHTRAG_LITELLM_INFERENCE_API_BASE:
-    logger.debug("LIGHTRAG_LITELLM_INFERENCE_API_BASE: set")
+    logger.debug(f"LIGHTRAG_LITELLM_INFERENCE_API_BASE: {LIGHTRAG_LITELLM_INFERENCE_API_BASE}")
 else:
     logger.debug("LIGHTRAG_LITELLM_INFERENCE_API_BASE: not set")
 
-#---------------/Secrets---------------
+# ---------------/Secrets---------------
 
 
 # ---------------Configurations---------------
@@ -288,7 +376,7 @@ AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM = int(
 assert (
     AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM
 ), "AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM environment variable is not set"
-logger.debug("AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM: set")
+logger.debug(f"AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM: {AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM}")
 
 AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS = int(
     os.environ.get("AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS", 60)
@@ -296,7 +384,7 @@ AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS = int(
 assert (
     AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS
 ), "AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS environment variable is not set"
-logger.debug("AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS: set")
+logger.debug(f"AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS: {AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS}")
 
 ENABLE_AUDIO_LIGHTRAG_INPUT = os.environ.get("ENABLE_AUDIO_LIGHTRAG_INPUT", "false").lower() in [
     "true",
@@ -313,11 +401,11 @@ AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB = int(
 assert (
     AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB
 ), "AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB environment variable is not set"
-logger.debug("AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB: set")
+logger.debug(f"AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB: {AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB}")
 
 AUDIO_LIGHTRAG_TOP_K_PROMPT = int(os.environ.get("AUDIO_LIGHTRAG_TOP_K_PROMPT", 100))
 assert AUDIO_LIGHTRAG_TOP_K_PROMPT, "AUDIO_LIGHTRAG_TOP_K_PROMPT environment variable is not set"
-logger.debug("AUDIO_LIGHTRAG_TOP_K_PROMPT: set")
+logger.debug(f"AUDIO_LIGHTRAG_TOP_K_PROMPT: {AUDIO_LIGHTRAG_TOP_K_PROMPT}")
 
 ENABLE_CHAT_AUTO_SELECT = os.environ.get("ENABLE_CHAT_AUTO_SELECT", "false").lower() in [
     "true",
@@ -329,14 +417,23 @@ assert (
 logger.debug(f"ENABLE_CHAT_AUTO_SELECT: {ENABLE_CHAT_AUTO_SELECT}")
 
 # Redis lock configuration
-AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX = os.environ.get("AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX", "etl_lock_conv_")
-assert AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX, "AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX environment variable is not set"
-logger.debug("AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX: set")
+AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX = os.environ.get(
+    "AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX", "etl_lock_conv_"
+)
+assert (
+    AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX
+), "AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX environment variable is not set"
+logger.debug(f"AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX: {AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX}")
 
 AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY = int(os.environ.get("AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY", 3600))
-assert AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY, "AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY environment variable is not set"
-logger.debug("AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY: set")
+assert (
+    AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY
+), "AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY environment variable is not set"
+logger.debug(f"AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY: {AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY}")
 
+LIGHTRAG_CONFIG_ID = os.environ.get("LIGHTRAG_CONFIG_ID", "default_lightrag_config_id")
+assert LIGHTRAG_CONFIG_ID, "LIGHTRAG_CONFIG_ID environment variable is not set"
+logger.debug(f"LIGHTRAG_CONFIG_ID: {LIGHTRAG_CONFIG_ID}")
 # ---------------/Configurations---------------
 
 # *****************/LIGHTRAG CONFIGURATIONS*****************

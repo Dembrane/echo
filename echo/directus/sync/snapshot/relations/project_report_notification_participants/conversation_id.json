@@ -1,0 +1,25 @@
+{
+  "collection": "project_report_notification_participants",
+  "field": "conversation_id",
+  "related_collection": "conversation",
+  "meta": {
+    "junction_field": null,
+    "many_collection": "project_report_notification_participants",
+    "many_field": "conversation_id",
+    "one_allowed_collections": null,
+    "one_collection": "conversation",
+    "one_collection_field": null,
+    "one_deselect_action": "nullify",
+    "one_field": null,
+    "sort_field": null
+  },
+  "schema": {
+    "table": "project_report_notification_participants",
+    "column": "conversation_id",
+    "foreign_key_table": "conversation",
+    "foreign_key_column": "id",
+    "constraint_name": "project_report_notification_participants_c__5f83ce3c_foreign",
+    "on_update": "NO ACTION",
+    "on_delete": "SET NULL"
+  }
+}

@@ -2,7 +2,6 @@ import logging
 from typing import Any, Dict, List, Tuple, Optional
 
 import pandas as pd
-from dotenv import load_dotenv
 
 from dembrane.config import AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS
 from dembrane.directus import directus
@@ -17,7 +16,6 @@ class DirectusETLPipeline:
     """
     def __init__(self) -> None:
         # Load environment variables from the .env file
-        load_dotenv()
         self.directus = directus
         self.accepted_formats = ['wav', 'mp3', 'm4a', 'ogg']
         self.project_request = {"query": {"fields": 

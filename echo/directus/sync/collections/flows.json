@@ -12,6 +12,27 @@
     "_syncId": "17703446-fef0-49e9-bdc4-385db1311137"
   },
   {
+    "name": "[DRAFT] Validate create project (directus_user_id.is_locked_single_project)",
+    "icon": "safety_check",
+    "color": null,
+    "description": null,
+    "status": "inactive",
+    "trigger": "event",
+    "accountability": "all",
+    "options": {
+      "type": "filter",
+      "scope": [
+        "items.create"
+      ],
+      "collections": [
+        "project"
+      ],
+      "return": ""
+    },
+    "operation": null,
+    "_syncId": "392f4954-059e-4bf1-bdc6-11cc1b66971c"
+  },
+  {
     "name": "Send Report Emails",
     "icon": "mail",
     "color": "#FFA439",

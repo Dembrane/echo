@@ -46,8 +46,10 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
   const chatHistoryQuery = useChatHistory(chatId);
   const chatContextQuery = useProjectChatContext(chatId);
 
+  const [templateKey, setTemplateKey] = useState<string | null>(null);
   const [showProgress, setShowProgress] = useState(false);
   const [progressValue, setProgressValue] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const addChatMessageMutation = useAddChatMessageMutation();
   const lockConversationsMutation = useLockConversationsMutation();
@@ -73,8 +75,8 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
   const { iso639_1 } = useLanguage();
 
   const {
-    setMessages,
     messages,
+    setMessages,
     input,
     setInput,
     handleInputChange,
@@ -85,6 +87,12 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
     stop,
     reload,
   } = useChat({
+    experimental_prepareRequestBody: (options) => {
+      return {
+        ...options,
+        template_key: templateKey,
+      };
+    },
     api: `${API_BASE_URL}/chats/${chatId}?language=${iso639_1 ?? "en"}`,
     credentials: "include",
     // @ts-expect-error chatHistoryQuery.data is not typed
@@ -155,16 +163,11 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 
   const customHandleSubmit = async () => {
     lastInput.current = input;
+    setIsSubmitting(true);
 
     try {
       // Lock conversations first
       await lockConversationsMutation.mutateAsync({ chatId });
-
-      // Wait for queries to settle
-      await Promise.all([
-        chatHistoryQuery.refetch(),
-        chatContextQuery.refetch(),
-      ]);
 
       // Submit the chat
       handleSubmit();
@@ -173,7 +176,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
       setTimeout(() => {
         lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 0);
-      
+
       if (ENABLE_CHAT_AUTO_SELECT && contextToBeAdded?.auto_select_bool) {
         setShowProgress(true);
         setProgressValue(0);
@@ -194,6 +197,8 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
         setShowProgress(false);
         setProgressValue(0);
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -221,6 +226,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
   return {
     isInitializing: chatHistoryQuery.isLoading,
     isLoading,
+    isSubmitting,
     status,
     messages,
     contextToBeAdded,
@@ -235,6 +241,8 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
     stop: customHandleStop,
     showProgress,
     progressValue,
+    templateKey,
+    setTemplateKey,
   };
 };
 
@@ -244,10 +252,11 @@ export const ProjectChatRoute = () => {
   const { chatId } = useParams();
   const chatQuery = useProjectChat(chatId ?? "");
   const [referenceIds, setReferenceIds] = useState<string[]>([]);
-  
+
   const {
     isInitializing,
     isLoading,
+    isSubmitting,
     status,
     messages,
     input,
@@ -261,6 +270,8 @@ export const ProjectChatRoute = () => {
     reload,
     showProgress,
     progressValue,
+    templateKey,
+    setTemplateKey,
   } = useDembraneChat({ chatId: chatId ?? "" });
 
   // check if assistant is typing by determining if the last message is an assistant message and has a text part
@@ -282,6 +293,24 @@ export const ProjectChatRoute = () => {
     );
     return messagesList.join("\n\n\n\n");
   }, [messages]);
+
+  const handleTemplateSelect = ({
+    content,
+    key,
+  }: {
+    content: string;
+    key: string;
+  }) => {
+    if (
+      input.trim() !== "" &&
+      !window.confirm(t`This will clear your current input. Are you sure?`)
+    ) {
+      return;
+    }
+
+    setInput(content);
+    setTemplateKey(key);
+  };
 
   if (isInitializing || chatQuery.isLoading) {
     return (
@@ -326,8 +355,12 @@ export const ProjectChatRoute = () => {
             messages.length > 0 &&
             messages.slice(0, -1).map((message, idx) => (
               <div key={message.id + idx}>
-                {/* @ts-expect-error chatHistoryQuery.data is not typed */}
-                <ChatHistoryMessage message={message} referenceIds={referenceIds} setReferenceIds={setReferenceIds} />
+                <ChatHistoryMessage
+                  // @ts-expect-error chatHistoryQuery.data is not typed
+                  message={message}
+                  referenceIds={referenceIds}
+                  setReferenceIds={setReferenceIds}
+                />
               </div>
             ))}
 
@@ -379,8 +412,12 @@ export const ProjectChatRoute = () => {
             messages.length > 0 &&
             messages[messages.length - 1].role === "assistant" && (
               <div ref={lastMessageRef}>
-                {/* @ts-expect-error chatHistoryQuery.data is not typed */}
-                <ChatHistoryMessage message={messages[messages.length - 1]} referenceIds={referenceIds} setReferenceIds={setReferenceIds} />
+                <ChatHistoryMessage
+                  // @ts-expect-error chatHistoryQuery.data is not typed
+                  message={messages[messages.length - 1]}
+                  referenceIds={referenceIds}
+                  setReferenceIds={setReferenceIds}
+                />
               </div>
             )}
 
@@ -407,8 +444,13 @@ export const ProjectChatRoute = () => {
         </Stack>
       </Box>
       {/* Footer */}
-      <Box className="bottom-0 w-full border-t bg-white py-4 lg:sticky">
-        <Stack>
+      <Box className="bottom-0 w-full bg-white pb-2 pt-4 md:sticky">
+        <Stack className="py-2">
+          {messages.length === 0 && !contextToBeAdded?.auto_select_bool && (
+            <ChatTemplatesMenu onTemplateSelect={handleTemplateSelect} />
+          )}
+
+          <Divider />
           {(!ENABLE_CHAT_AUTO_SELECT
             ? noConversationsSelected
             : noConversationsSelected &&
@@ -442,6 +484,7 @@ export const ProjectChatRoute = () => {
               </Group>
             </ChatMessage>
           )}
+
           <Box className="flex-grow">
             <ChatContextProgress chatId={chatId ?? ""} />
           </Box>
@@ -460,7 +503,7 @@ export const ProjectChatRoute = () => {
                   autosize
                   value={input}
                   onChange={handleInputChange}
-                  disabled={isLoading}
+                  disabled={isLoading || isSubmitting}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
@@ -483,13 +526,11 @@ export const ProjectChatRoute = () => {
                       handleSubmit();
                     }}
                     rightSection={<IconSend size={24} />}
-                    disabled={input.trim() === "" || isLoading}
+                    disabled={input.trim() === "" || isLoading || isSubmitting}
                   >
                     <Trans>Send</Trans>
                   </Button>
                 </Box>
-
-                <ChatTemplatesMenu input={input} setInput={setInput} />
               </Stack>
             </Group>
 

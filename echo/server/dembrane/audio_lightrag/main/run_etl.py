@@ -2,13 +2,14 @@ import logging
 from typing import Optional
 
 import redis
-from dotenv import load_dotenv
 
 from dembrane.config import (
     REDIS_URL,
     AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY,
     AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX,
 )
+from dembrane.directus import directus
+from dembrane.processing_status_utils import ProcessingStatus
 from dembrane.audio_lightrag.pipelines.audio_etl_pipeline import AudioETLPipeline
 from dembrane.audio_lightrag.pipelines.directus_etl_pipeline import DirectusETLPipeline
 from dembrane.audio_lightrag.pipelines.contextual_chunk_etl_pipeline import (
@@ -21,8 +22,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-load_dotenv()
 
 
 
@@ -64,16 +63,20 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
             filtered_conv_ids.append(conv_id)
         
         if not filtered_conv_ids:
-            logger.info("All conversation IDs are already being processed or were processed recently. Nothing to do.")
-            return True
+            logger.info(
+                "All conversation IDs are already being processed or locked. Nothing to do."
+            )
+            return False
             
         logger.info(f"Starting ETL pipeline for {len(filtered_conv_ids)} conversations (after filtering)")
         
         # Directus Pipeline
         try:
             directus_pl = DirectusETLPipeline()
-            process_tracker = directus_pl.run(filtered_conv_ids, 
-                                                run_timestamp=None) # pass timestamp to avoid processing files uploaded earlier than cooloff
+            process_tracker = directus_pl.run(
+                filtered_conv_ids,
+                run_timestamp=None,  # pass timestamp to avoid processing files uploaded earlier than cooloff
+            )
             logger.info("1/3...Directus ETL pipeline completed successfully")
         except Exception as e:
             logger.error(f"Directus ETL pipeline failed: {str(e)}")
@@ -98,6 +101,18 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
             raise
 
         logger.info("All ETL pipelines completed successfully")
+        
+        for conv_id in filtered_conv_ids:
+            directus.update_item(
+                "conversation",
+                conv_id,
+                {
+                    "is_audio_processing_finished": True,
+                    "processing_status": ProcessingStatus.COMPLETED.value,
+                    "processing_message": "Audio analysis finished",
+                },
+		    )
+
         return True
 
     except Exception as e:
