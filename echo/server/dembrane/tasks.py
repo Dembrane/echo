@@ -255,15 +255,6 @@ def task_run_etl_pipeline(conversation_id: str) -> None:
 			with ProcessingStatusContext("conversation", conversation_id, "task_run_etl_pipeline"):
 				run_etl_pipeline([conversation_id])
 
-			directus.update_item(
-				"conversation",
-				conversation_id,
-				{
-					"is_audio_processing_finished": True,
-					"processing_status": ProcessingStatus.COMPLETED.value,
-					"processing_message": "Audio analysis finished",
-				},
-			)
 
 		except Exception as e:
 			logger.error(f"Error: {e}")
@@ -599,7 +590,7 @@ def task_generate_quotes(project_analysis_run_id: str, conversation_id: str) -> 
 						)
 						.update(
 							{
-								"project_analysis_run_id": latest_project_analysis_run.id,
+								"project_analysis_run_id": latest_project_analysis_run["id"],
 							},
 							synchronize_session=False,
 						)

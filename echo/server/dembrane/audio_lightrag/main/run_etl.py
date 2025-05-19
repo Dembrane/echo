@@ -8,6 +8,8 @@ from dembrane.config import (
     AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY,
     AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX,
 )
+from dembrane.directus import directus
+from dembrane.processing_status_utils import ProcessingStatus
 from dembrane.audio_lightrag.pipelines.audio_etl_pipeline import AudioETLPipeline
 from dembrane.audio_lightrag.pipelines.directus_etl_pipeline import DirectusETLPipeline
 from dembrane.audio_lightrag.pipelines.contextual_chunk_etl_pipeline import (
@@ -64,7 +66,7 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
             logger.info(
                 "All conversation IDs are already being processed or locked. Nothing to do."
             )
-            return True
+            return False
             
         logger.info(f"Starting ETL pipeline for {len(filtered_conv_ids)} conversations (after filtering)")
         
@@ -99,6 +101,18 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
             raise
 
         logger.info("All ETL pipelines completed successfully")
+        
+        for conv_id in filtered_conv_ids:
+            directus.update_item(
+                "conversation",
+                conv_id,
+                {
+                    "is_audio_processing_finished": True,
+                    "processing_status": ProcessingStatus.COMPLETED.value,
+                    "processing_message": "Audio analysis finished",
+                },
+		    )
+
         return True
 
     except Exception as e:
