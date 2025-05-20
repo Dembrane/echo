@@ -35,10 +35,11 @@ logger = logging.getLogger("transcribe")
 class TranscriptionError(Exception):
     pass
 
+
 def get_signed_url(audio_file_uri: str) -> str:
     """Get a signed url for the audio file"""
     audio_file_uri = audio_file_uri
-    return 'https://ams3.digitaloceanspaces.com/dbr-echo-dev-uploads/audio-chunks/aebf4f2b-ef78-4eaa-8422-109bea9bce13-0378f979-a017-4187-9374-49a55dba623b-AwZDgADPRug.mp3?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=DO00KZG7DP4VR6VAKQKE%2F20250520%2Fams3%2Fs3%2Faws4_request&X-Amz-Date=20250520T132833Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&X-Amz-Signature=edc3835491256ff6ef612120ba80fdc342f993c7cf03f455f5767c0fb3a71b67'
+    return "https://ams3.digitaloceanspaces.com/dbr-echo-dev-uploads/audio-chunks/aebf4f2b-ef78-4eaa-8422-109bea9bce13-0378f979-a017-4187-9374-49a55dba623b-AwZDgADPRug.mp3?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=DO00KZG7DP4VR6VAKQKE%2F20250520%2Fams3%2Fs3%2Faws4_request&X-Amz-Date=20250520T132833Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&X-Amz-Signature=edc3835491256ff6ef612120ba80fdc342f993c7cf03f455f5767c0fb3a71b67"
 
 
 def queue_transcribe_audio_runpod(
@@ -50,31 +51,29 @@ def queue_transcribe_audio_runpod(
     try:
         signed_url = get_signed_url(audio_file_uri)
         headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {RUNPOD_WHISPER_API_KEY}'
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {RUNPOD_WHISPER_API_KEY}",
         }
 
         data = {
-            'input': {
-                'audio': signed_url,
-                'model': RUNPOD_WHISPER_MODEL,
-                'initial_prompt': whisper_prompt,
-                'language': language
+            "input": {
+                "audio": signed_url,
+                "model": RUNPOD_WHISPER_MODEL,
+                "initial_prompt": whisper_prompt,
+                "language": language,
             }
         }
-        
+
         try:
             response = requests.post(
-                str(RUNPOD_WHISPER_BASE_URL) + '/run',
-                headers=headers,
-                json=data
+                str(RUNPOD_WHISPER_BASE_URL) + "/run", headers=headers, json=data
             )
-            job_id = response.json()['id']
+            job_id = response.json()["id"]
             return job_id
         except Exception as e:
             logger.error(f"Failed to queue transcription job for RunPod: {e}")
             raise TranscriptionError(f"Failed to queue transcription job for RunPod: {e}") from e
-        
+
     except Exception as e:
         logger.error(f"Failed to get signed url for {audio_file_uri}: {e}")
         raise TranscriptionError(f"Failed to get signed url for {audio_file_uri}: {e}") from e
@@ -95,23 +94,27 @@ def transcribe_audio_litellm(
     except Exception as exc:
         logger.error(f"Failed to get audio stream from S3 for {audio_file_uri}: {exc}")
         raise TranscriptionError(f"Failed to get audio stream from S3: {exc}") from exc
-    
+
     try:
         response = transcription(
-                    model=LITELLM_WHISPER_MODEL,
-                    file=file_upload,
-                    api_key=LITELLM_WHISPER_API_KEY,
-                    api_base=LITELLM_WHISPER_URL,
-                    api_version=LITELLM_WHISPER_API_VERSION,
-                    language=language,
-                    prompt=whisper_prompt
+            model=LITELLM_WHISPER_MODEL,
+            file=file_upload,
+            api_key=LITELLM_WHISPER_API_KEY,
+            api_base=LITELLM_WHISPER_URL,
+            api_version=LITELLM_WHISPER_API_VERSION,
+            language=language,
+            prompt=whisper_prompt,
         )
         detected_language = detect(response["text"])
         if detected_language != language and language != "multi":
             translation_prompt = render_prompt(
                 "translate_transcription",
                 str(language),
-                {"transcript": response["text"], "detected_language": detected_language, "desired_language": language}
+                {
+                    "transcript": response["text"],
+                    "detected_language": detected_language,
+                    "desired_language": language,
+                },
             )
             llm_translation_response = completion(
                 model=SMALL_LITELLM_MODEL,
@@ -120,13 +123,13 @@ def transcribe_audio_litellm(
                 api_base=SMALL_LITELLM_API_BASE,
                 api_version=SMALL_LITELLM_API_VERSION,
             )
-            return llm_translation_response['choices'][0]['message']['content']
-        else: 
+            return llm_translation_response["choices"][0]["message"]["content"]
+        else:
             return response["text"]
     except Exception as e:
         logger.error(f"LiteLLM transcription failed: {e}")
         raise TranscriptionError(f"LiteLLM transcription failed: {e}") from e
-        
+
 
 def transcribe_conversation_chunk(conversation_chunk_id: str) -> str | None:
     """Process conversation chunk for transcription"""
@@ -206,7 +209,9 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str | None:
 
     if conversation["project_id"]["default_conversation_transcript_prompt"]:
         prompt_parts.append(
-            "\n\nuser: Project prompt: \n\n" + conversation["project_id"]["default_conversation_transcript_prompt"] + "."
+            "\n\nuser: Project prompt: \n\n"
+            + conversation["project_id"]["default_conversation_transcript_prompt"]
+            + "."
         )
 
     # if previous_chunk_transcript:
@@ -246,7 +251,7 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str | None:
 
         logger.info(f"Processed chunk for transcription: {conversation_chunk_id}")
         return conversation_chunk_id
-    
+
     else:
         raise TranscriptionError("No valid transcription configuration found")
 
