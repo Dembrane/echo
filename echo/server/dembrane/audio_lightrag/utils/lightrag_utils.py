@@ -118,6 +118,8 @@ async def get_segment_from_conversation_ids(db: PostgreSQLDB,
                             }
     conversation_request["query"]["filter"] = {"id": {"_in": conversation_ids}}
     conversation_request_result = directus.get_items("conversation", conversation_request)
+    if conversation_request_result =={'error': "No data found for this request : 'data'"}:
+        return []
     conversation_chunk_ids = [[x['id'] for x in conversation_request_result_dict['chunks']] for conversation_request_result_dict in conversation_request_result]
     flat_conversation_chunk_ids: list[str] = [item for sublist in conversation_chunk_ids for item in sublist if item is not None]
     return await get_segment_from_conversation_chunk_ids(db, flat_conversation_chunk_ids)
