@@ -593,6 +593,12 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
     false,
     {
       limit: 1,
+      deep: {
+        // @ts-expect-error chunks is not typed
+        chunks: {
+          _limit: 25,
+        },
+      },
     },
   );
 
@@ -642,6 +648,12 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
     {
       search: debouncedConversationSearchValue,
       sort: sortBy,
+      deep: {
+        // @ts-expect-error chunks is not typed
+        chunks: {
+          _limit: 25,
+        },
+      },
     },
     // Temporarily disabled source filters
     // filterBySource,

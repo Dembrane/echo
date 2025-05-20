@@ -15,7 +15,7 @@ export const ProjectConversationLayout = () => {
       deep: {
         // @ts-expect-error chunks is not typed
         chunks: {
-          _limit: 1,
+          _limit: 25,
         },
       },
     },
