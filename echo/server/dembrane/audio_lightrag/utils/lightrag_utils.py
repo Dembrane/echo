@@ -86,9 +86,13 @@ async def get_conversation_chunk_ids_from_segment_ids(db: PostgreSQLDB,
     for segment_id in segment_ids:
         if not isinstance(segment_id, int):
             raise ValueError(f"Invalid segment ID: {segment_id}")
+    if segment_ids==[]:
+        return {}
     segment_ids = ','.join([str(segment_id) for segment_id in segment_ids]) #type: ignore
     sql = SQL_TEMPLATES["GET_CONVERSATION_CHUNK_IDS_FROM_SEGMENT_IDS"].format(segment_ids=segment_ids)
     result = await db.query(sql, multirows=True)
+    if result is None:
+        return {}
     return {int(x['conversation_segment_id']): str(x['conversation_chunk_id']) for x in result}
 
 async def get_segment_from_conversation_chunk_ids(db: PostgreSQLDB,
@@ -97,12 +101,15 @@ async def get_segment_from_conversation_chunk_ids(db: PostgreSQLDB,
     for conversation_chunk_id in conversation_chunk_ids:
         if not is_valid_uuid(conversation_chunk_id):
             raise ValueError(f"Invalid UUID: {conversation_chunk_id}")
-        
+    if conversation_chunk_ids==[]:
+        return []
     conversation_chunk_ids = ','.join(["UUID('" + conversation_id + "')" 
                                 for conversation_id in conversation_chunk_ids]) #type: ignore
     sql = SQL_TEMPLATES["GET_SEGMENT_IDS_FROM_CONVERSATION_CHUNK_IDS"
                         ].format(conversation_ids=conversation_chunk_ids)
     result = await db.query(sql, multirows=True)
+    if result is None:
+        return []
     return [int(x['conversation_segment_id']) for x in result if x['conversation_segment_id'] is not None]
 
 async def get_segment_from_conversation_ids(db: PostgreSQLDB,
@@ -245,6 +252,8 @@ async def fetch_query_transcript(db: PostgreSQLDB,
     sql = SQL_TEMPLATES["QUERY_TRANSCRIPT"].format(
         embedding_string=query_embedding, limit=limit, doc_ids=ids, filter=filter)
     result = await db.query(sql, multirows=True)
+    if result is None:
+        return []
     return result
 
 def fetch_segment_ratios(response_text: str) -> dict[int, float]:
