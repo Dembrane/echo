@@ -8,7 +8,7 @@ import requests
 from litellm import completion, transcription
 from langdetect import detect
 
-from dembrane.s3 import get_stream_from_s3
+from dembrane.s3 import get_signed_url, get_stream_from_s3
 from dembrane.config import (
     LITELLM_WHISPER_URL,
     SMALL_LITELLM_MODEL,
@@ -21,8 +21,10 @@ from dembrane.config import (
     RUNPOD_WHISPER_BASE_URL,
     SMALL_LITELLM_API_VERSION,
     LITELLM_WHISPER_API_VERSION,
+    RUNPOD_WHISPER_PRIORITY_BASE_URL,
     ENABLE_RUNPOD_WHISPER_TRANSCRIPTION,
     ENABLE_LITELLM_WHISPER_TRANSCRIPTION,
+    RUNPOD_WHISPER_MAX_REQUEST_THRESHOLD,
 )
 
 # from dembrane.openai import client
@@ -36,14 +38,8 @@ class TranscriptionError(Exception):
     pass
 
 
-def get_signed_url(audio_file_uri: str) -> str:
-    """Get a signed url for the audio file"""
-    audio_file_uri = audio_file_uri
-    return "https://ams3.digitaloceanspaces.com/dbr-echo-dev-uploads/audio-chunks/aebf4f2b-ef78-4eaa-8422-109bea9bce13-0378f979-a017-4187-9374-49a55dba623b-AwZDgADPRug.mp3?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=DO00KZG7DP4VR6VAKQKE%2F20250520%2Fams3%2Fs3%2Faws4_request&X-Amz-Date=20250520T132833Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&X-Amz-Signature=edc3835491256ff6ef612120ba80fdc342f993c7cf03f455f5767c0fb3a71b67"
-
-
 def queue_transcribe_audio_runpod(
-    audio_file_uri: str, language: Optional[str], whisper_prompt: Optional[str]
+    audio_file_uri: str, language: Optional[str], whisper_prompt: Optional[str], is_priority: bool = False
 ) -> str:
     """Transcribe audio using RunPod"""
     logger = logging.getLogger("transcribe.transcribe_audio_runpod")
@@ -55,25 +51,30 @@ def queue_transcribe_audio_runpod(
             "Authorization": f"Bearer {RUNPOD_WHISPER_API_KEY}",
         }
 
-        data = {
-            "input": {
-                "audio": signed_url,
-                "model": RUNPOD_WHISPER_MODEL,
-                "initial_prompt": whisper_prompt,
-                "language": language,
-            }
+        input_payload = {
+            "audio": signed_url,
+            "model": RUNPOD_WHISPER_MODEL,
+            "initial_prompt": whisper_prompt,
         }
+        if language:
+            input_payload["language"] = language
+
+        data = {"input": input_payload}
 
         try:
-            response = requests.post(
-                str(RUNPOD_WHISPER_BASE_URL) + "/run", headers=headers, json=data
-            )
+            if is_priority:
+                url = f"{str(RUNPOD_WHISPER_PRIORITY_BASE_URL).rstrip('/')}/run"
+            else:
+                url = f"{str(RUNPOD_WHISPER_BASE_URL).rstrip('/')}/run"
+            response = requests.post(url, headers=headers, json=data, timeout=600)
+            response.raise_for_status()
             job_id = response.json()["id"]
             return job_id
         except Exception as e:
             logger.error(f"Failed to queue transcription job for RunPod: {e}")
-            raise TranscriptionError(f"Failed to queue transcription job for RunPod: {e}") from e
-
+            raise TranscriptionError(
+                f"Failed to queue transcription job for RunPod: {e}"
+            ) from e
     except Exception as e:
         logger.error(f"Failed to get signed url for {audio_file_uri}: {e}")
         raise TranscriptionError(f"Failed to get signed url for {audio_file_uri}: {e}") from e
@@ -222,30 +223,54 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str | None:
     logger.debug(f"whisper_prompt: {whisper_prompt}")
 
     if ENABLE_RUNPOD_WHISPER_TRANSCRIPTION:
-        job_id = queue_transcribe_audio_runpod(
-            chunk["path"], language=language, whisper_prompt=whisper_prompt
-        )
-        # Update job_id on directus
-        directus.update_item(
-            collection_name="conversation_chunk",
-            item_id=conversation_chunk_id,
-            item_data={
-                "runpod_job_id": job_id,
+        directus_response = directus.get_items(
+            "conversation_chunk",
+            {
+                "query": {"filter": {"id": {"_eq": conversation_chunk_id}}, 
+                "fields": ["source","runpod_request_count"]},
             },
         )
+        runpod_request_count = (directus_response[0]["runpod_request_count"])
+        source = (directus_response[0]["source"])
+        if runpod_request_count < RUNPOD_WHISPER_MAX_REQUEST_THRESHOLD:
+            if source == "PORTAL_AUDIO":
+                is_priority = True
+            else:
+                is_priority = False
+            job_id = queue_transcribe_audio_runpod(
+                chunk["path"], language=language, whisper_prompt=whisper_prompt, is_priority=is_priority
+            )
+            # Update job_id on directus
+            directus.update_item(
+                collection_name="conversation_chunk",
+                item_id=conversation_chunk_id,
+                item_data={
+                    "runpod_job_status_link": str(RUNPOD_WHISPER_BASE_URL) + "/status/" + job_id,
+                    "runpod_request_count": runpod_request_count + 1,
+                },
+            )
+        else:
+            logger.info(f"RunPod request count threshold reached for chunk {conversation_chunk_id}")
+            directus.update_item(
+                collection_name="conversation_chunk",
+                item_id=conversation_chunk_id,
+                item_data={
+                    "runpod_job_status_link": None,
+                },
+            )
         return None
 
     elif ENABLE_LITELLM_WHISPER_TRANSCRIPTION:
-        transcription = transcribe_audio_litellm(
+        transcript = transcribe_audio_litellm(
             chunk["path"], language=language, whisper_prompt=whisper_prompt
         )
-        logger.debug(f"transcription: {transcription}")
+        logger.debug(f"transcript: {transcript}")
 
         directus.update_item(
             "conversation_chunk",
             conversation_chunk_id,
             {
-                "transcript": transcription,
+                "transcript": transcript,
             },
         )
 

@@ -24,6 +24,14 @@ scheduler.add_job(
     replace_existing=True,
 )
 
+scheduler.add_job(
+    func="dembrane.tasks:task_update_runpod_transcription_response.send",
+    trigger=CronTrigger(minute="*/1"),
+    id="task_update_runpod_transcription_response",
+    name="Update RunPod transcription responses",
+    replace_existing=True,
+)
+
 # Start the scheduler when this module is run directly
 if __name__ == "__main__":
     scheduler.start()
