@@ -5,21 +5,16 @@ import mimetypes
 from typing import Optional
 
 import requests
-from litellm import completion, transcription
-from langdetect import detect
+from litellm import transcription
 
 from dembrane.s3 import get_signed_url, get_stream_from_s3
 from dembrane.config import (
     LITELLM_WHISPER_URL,
-    SMALL_LITELLM_MODEL,
     RUNPOD_WHISPER_MODEL,
     LITELLM_WHISPER_MODEL,
-    SMALL_LITELLM_API_KEY,
     RUNPOD_WHISPER_API_KEY,
-    SMALL_LITELLM_API_BASE,
     LITELLM_WHISPER_API_KEY,
     RUNPOD_WHISPER_BASE_URL,
-    SMALL_LITELLM_API_VERSION,
     LITELLM_WHISPER_API_VERSION,
     RUNPOD_WHISPER_PRIORITY_BASE_URL,
     ENABLE_RUNPOD_WHISPER_TRANSCRIPTION,
@@ -106,27 +101,7 @@ def transcribe_audio_litellm(
             language=language,
             prompt=whisper_prompt,
         )
-        detected_language = detect(response["text"])
-        if detected_language != language and language != "multi":
-            translation_prompt = render_prompt(
-                "translate_transcription",
-                str(language),
-                {
-                    "transcript": response["text"],
-                    "detected_language": detected_language,
-                    "desired_language": language,
-                },
-            )
-            llm_translation_response = completion(
-                model=SMALL_LITELLM_MODEL,
-                messages=[{"role": "user", "content": translation_prompt}],
-                api_key=SMALL_LITELLM_API_KEY,
-                api_base=SMALL_LITELLM_API_BASE,
-                api_version=SMALL_LITELLM_API_VERSION,
-            )
-            return llm_translation_response["choices"][0]["message"]["content"]
-        else:
-            return response["text"]
+        return response["text"]
     except Exception as e:
         logger.error(f"LiteLLM transcription failed: {e}")
         raise TranscriptionError(f"LiteLLM transcription failed: {e}") from e
