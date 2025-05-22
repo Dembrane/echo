@@ -23117,7 +23117,11 @@
             "type": "string",
             "format": "timestamp"
           },
-          "runpod_job_id": {
+          "runpod_request_count": {
+            "nullable": true,
+            "type": "integer"
+          },
+          "runpod_job_status_link": {
             "nullable": true,
             "type": "string"
           },

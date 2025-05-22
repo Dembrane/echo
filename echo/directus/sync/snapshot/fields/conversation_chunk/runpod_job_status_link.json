@@ -1,13 +1,13 @@
 {
   "collection": "conversation_chunk",
-  "field": "runpod_job_id",
+  "field": "runpod_job_status_link",
   "type": "text",
   "meta": {
     "collection": "conversation_chunk",
     "conditions": null,
     "display": null,
     "display_options": null,
-    "field": "runpod_job_id",
+    "field": "runpod_job_status_link",
     "group": null,
     "hidden": false,
     "interface": "input-multiline",
@@ -15,7 +15,7 @@
     "options": null,
     "readonly": false,
     "required": false,
-    "sort": 15,
+    "sort": 17,
     "special": null,
     "translations": null,
     "validation": null,
@@ -23,7 +23,7 @@
     "width": "full"
   },
   "schema": {
-    "name": "runpod_job_id",
+    "name": "runpod_job_status_link",
     "table": "conversation_chunk",
     "data_type": "text",
     "default_value": null,
