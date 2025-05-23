@@ -21,6 +21,29 @@
     "_syncId": "10d105b0-55c3-4011-9e20-773f6a21ba80"
   },
   {
+    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
+    "name": "report views weekly",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": null,
+    "type": "time-series",
+    "position_x": 1,
+    "position_y": 43,
+    "width": 21,
+    "height": 13,
+    "options": {
+      "collection": "project_report_metric",
+      "function": "count",
+      "dateField": "date_created",
+      "precision": "week",
+      "valueField": "type",
+      "range": "auto",
+      "missingData": "ignore"
+    },
+    "_syncId": "1701ce40-76a0-48c6-aaea-189cccff7d2b"
+  },
+  {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
     "name": "Total Chats",
     "icon": null,
@@ -76,6 +99,49 @@
     "_syncId": "26a37f7f-a58c-489d-a2c1-c53121db7d3a"
   },
   {
+    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
+    "name": "signups - all time",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": null,
+    "type": "list",
+    "position_x": 58,
+    "position_y": 28,
+    "width": 27,
+    "height": 14,
+    "options": {
+      "collection": "directus_activity",
+      "dateField": "timestamp",
+      "valueField": "item",
+      "function": "countDistinct",
+      "range": "auto",
+      "missingData": "ignore",
+      "precision": "week",
+      "min": 0,
+      "filter": {
+        "_and": [
+          {
+            "_and": [
+              {
+                "action": {
+                  "_eq": "create"
+                }
+              },
+              {
+                "collection": {
+                  "_eq": "directus_users"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "limit": 10
+    },
+    "_syncId": "3529888c-b8b9-4316-a9f4-757072efc67d"
+  },
+  {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
     "name": "Insight generation over the past 3 months",
     "icon": null,
@@ -97,6 +163,30 @@
       "precision": "day"
     },
     "_syncId": "3f2471aa-5ddf-40a7-9b4f-15694d7043c1"
+  },
+  {
+    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
+    "name": "chat messages / week",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": null,
+    "type": "time-series",
+    "position_x": 10,
+    "position_y": 1,
+    "width": 21,
+    "height": 12,
+    "options": {
+      "collection": "project_chat_message",
+      "function": "countDistinct",
+      "precision": "day",
+      "dateField": "date_created",
+      "valueField": "id",
+      "range": "auto",
+      "filter": null,
+      "missingData": "ignore"
+    },
+    "_syncId": "462c4a2a-96c0-43f5-8337-7cc13f086e41"
   },
   {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
@@ -152,6 +242,48 @@
     "_syncId": "6e080069-4121-4bac-ae58-32a2997971a5"
   },
   {
+    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
+    "name": "signups - all time",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": null,
+    "type": "time-series",
+    "position_x": 30,
+    "position_y": 28,
+    "width": 27,
+    "height": 14,
+    "options": {
+      "collection": "directus_activity",
+      "dateField": "timestamp",
+      "valueField": "item",
+      "function": "countDistinct",
+      "range": "auto",
+      "missingData": "ignore",
+      "precision": "week",
+      "min": 0,
+      "filter": {
+        "_and": [
+          {
+            "_and": [
+              {
+                "action": {
+                  "_eq": "create"
+                }
+              },
+              {
+                "collection": {
+                  "_eq": "directus_users"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "_syncId": "7f5fe38b-d292-429f-9e06-b4fcfb36a483"
+  },
+  {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
     "name": null,
     "icon": null,
@@ -188,6 +320,62 @@
     "_syncId": "85da5c87-97f7-47ba-b9a5-15c982996889"
   },
   {
+    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
+    "name": "chunk / day ",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": null,
+    "type": "time-series",
+    "position_x": 31,
+    "position_y": 1,
+    "width": 25,
+    "height": 11,
+    "options": {
+      "collection": "conversation_chunk",
+      "function": "countDistinct",
+      "dateField": "timestamp",
+      "valueField": "id",
+      "range": "auto",
+      "precision": "day",
+      "missingData": "ignore"
+    },
+    "_syncId": "94c75160-5581-4e79-9894-b1e8a5a762a2"
+  },
+  {
+    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
+    "name": "MAU",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": null,
+    "type": "time-series",
+    "position_x": 1,
+    "position_y": 27,
+    "width": 27,
+    "height": 15,
+    "options": {
+      "collection": "directus_activity",
+      "dateField": "timestamp",
+      "valueField": "item",
+      "function": "countDistinct",
+      "range": "12 months",
+      "missingData": "ignore",
+      "precision": "month",
+      "min": 0,
+      "filter": {
+        "_and": [
+          {
+            "action": {
+              "_contains": "login"
+            }
+          }
+        ]
+      }
+    },
+    "_syncId": "979525e7-be5c-477a-a833-b42df6bbb4be"
+  },
+  {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
     "name": "Number of insights",
     "icon": null,
@@ -210,6 +398,29 @@
       "sortField": "id"
     },
     "_syncId": "97cd07c5-27be-419c-8e4e-701deec03ac8"
+  },
+  {
+    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
+    "name": "new projects / week",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": null,
+    "type": "time-series",
+    "position_x": 3,
+    "position_y": 57,
+    "width": 39,
+    "height": 17,
+    "options": {
+      "collection": "project",
+      "function": "countDistinct",
+      "precision": "week",
+      "dateField": "created_at",
+      "range": "auto",
+      "valueField": "id",
+      "missingData": "ignore"
+    },
+    "_syncId": "9bbba5d7-e95d-4de2-ade2-113e356fa267"
   },
   {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
@@ -241,6 +452,29 @@
       }
     },
     "_syncId": "a3492153-f6b8-45ee-9796-c21a3019bfcc"
+  },
+  {
+    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
+    "name": "reports / day",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": null,
+    "type": "time-series",
+    "position_x": 32,
+    "position_y": 13,
+    "width": 23,
+    "height": 13,
+    "options": {
+      "collection": "project_report",
+      "function": "count",
+      "dateField": "date_created",
+      "precision": "day",
+      "range": "auto",
+      "valueField": "id",
+      "missingData": "ignore"
+    },
+    "_syncId": "ae0cc128-5076-4ade-bc55-d0089b4a8c7d"
   },
   {
     "dashboard": "2a617714-a47e-4ae1-a4ea-8a3fb75c0491",
@@ -289,6 +523,26 @@
     "_syncId": "bb95bf10-c43b-401b-adb3-97ea6898f160"
   },
   {
+    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
+    "name": "proj - audio",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": null,
+    "type": "metric",
+    "position_x": 1,
+    "position_y": 1,
+    "width": 8,
+    "height": 10,
+    "options": {
+      "collection": "project",
+      "function": "countDistinct",
+      "dateField": "created_at",
+      "field": "is_enhanced_audio_processing_enabled"
+    },
+    "_syncId": "c435658c-eb6f-48f5-ba62-796d3e7a8f01"
+  },
+  {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
     "name": "Number of insights",
     "icon": null,
@@ -322,6 +576,26 @@
       "sortField": "id"
     },
     "_syncId": "c5a01857-a208-4034-b430-a9c7893d79ae"
+  },
+  {
+    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
+    "name": "imagen",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": null,
+    "type": "pie-chart",
+    "position_x": 24,
+    "position_y": 43,
+    "width": 10,
+    "height": 10,
+    "options": {
+      "collection": "project",
+      "column": "image_generation_model",
+      "showLabels": true,
+      "legend": "right"
+    },
+    "_syncId": "cbb0000e-b535-4aef-bc74-4815faee9ae1"
   },
   {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
@@ -358,6 +632,29 @@
       "text": "Measures Total"
     },
     "_syncId": "eaf1ce6b-879c-4fd6-8e37-5b8ed1bc1f6a"
+  },
+  {
+    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
+    "name": "view gen / day ",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": null,
+    "type": "time-series",
+    "position_x": 1,
+    "position_y": 14,
+    "width": 31,
+    "height": 13,
+    "options": {
+      "collection": "view",
+      "function": "countDistinct",
+      "precision": "day",
+      "dateField": "created_at",
+      "valueField": "id",
+      "range": "auto",
+      "missingData": "ignore"
+    },
+    "_syncId": "f3ddd4b0-fa81-4867-bee0-bcfa1eea2053"
   },
   {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
