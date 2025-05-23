@@ -202,11 +202,26 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str | None:
             "conversation_chunk",
             {
                 "query": {"filter": {"id": {"_eq": conversation_chunk_id}}, 
-                "fields": ["source","runpod_request_count"]},
+                "fields": ["source","runpod_job_status_link","runpod_request_count"]},
             },
         )
         runpod_request_count = (directus_response[0]["runpod_request_count"])
         source = (directus_response[0]["source"])
+        runpod_job_status_link = (directus_response[0]["runpod_job_status_link"])
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {RUNPOD_WHISPER_API_KEY}",
+        }
+
+        if runpod_job_status_link:
+            response = requests.get(runpod_job_status_link, headers=headers)
+            job_status = response.json()['status']
+            logger.debug(f"job_status: {job_status}")
+            if job_status == "IN_PROGRESS":
+                logger.info(f"RunPod job {runpod_job_status_link} is in progress")
+                return None
+
         if runpod_request_count < RUNPOD_WHISPER_MAX_REQUEST_THRESHOLD:
             if source == "PORTAL_AUDIO":
                 is_priority = True
