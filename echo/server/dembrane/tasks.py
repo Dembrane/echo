@@ -3,6 +3,7 @@ from logging import getLogger
 from datetime import datetime
 
 import dramatiq
+import requests
 import lz4.frame
 from dramatiq import group
 from dramatiq.encoder import JSONEncoder, MessageData
@@ -14,7 +15,7 @@ from dramatiq.rate_limits.backends import RedisBackend as RateLimitRedisBackend
 from dramatiq.results.backends.redis import RedisBackend as ResultsRedisBackend
 
 from dembrane.utils import generate_uuid, get_utc_timestamp
-from dembrane.config import REDIS_URL, ENABLE_AUDIO_LIGHTRAG_INPUT
+from dembrane.config import REDIS_URL, RUNPOD_WHISPER_API_KEY, ENABLE_AUDIO_LIGHTRAG_INPUT
 from dembrane.sentry import init_sentry
 from dembrane.database import (
 	ViewModel,
@@ -916,3 +917,69 @@ def task_create_project_library(project_id: str, language: str) -> None:
 			logger.error(f"Error creating project library: {e}")
 			db.rollback()
 			raise e from e
+
+@dramatiq.actor(queue_name="network", priority=50)
+def task_process_runpod_chunk_response(chunk_id: str, status_link: str) -> None:
+    logger = getLogger("dembrane.tasks.task_process_runpod_chunk_response")
+    try:
+        headers = {
+            "Authorization": f"Bearer {RUNPOD_WHISPER_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        response = requests.get(status_link, headers=headers, timeout=30)
+    except Exception as e:
+        logger.error(f"Failed to fetch status for chunk {chunk_id}: {e}")
+        return
+
+    if response.status_code == 200:
+        try:
+            data = response.json()
+            transcript = data['output']['transcription']
+            if transcript:
+                directus.update_item(
+                    "conversation_chunk",
+                    chunk_id,
+                    {
+                        "transcript": transcript,
+                        "runpod_job_status_link": None,
+                    },
+                )
+                logger.info(f"Transcript updated for chunk {chunk_id}")
+            else:
+                logger.warning(f"No transcript in response for chunk {chunk_id}")
+        except Exception as e:
+            logger.error(f"Error parsing response for chunk {chunk_id}: {e}")
+    else:
+        logger.info(f"Non-200 response for chunk {chunk_id}, retrying transcription.")
+        try:
+            transcribe_conversation_chunk(chunk_id)
+        except Exception as e:
+            logger.error(f"Failed to re-trigger transcription for chunk {chunk_id}: {e}")
+
+
+@dramatiq.actor(queue_name="network", priority=50)
+def task_update_runpod_transcription_response() -> None:
+    logger = getLogger("dembrane.tasks.task_update_runpod_transcription_response")
+    try:
+        chunks = directus.get_items(
+            "conversation_chunk",
+            {
+                "query": {
+                    "filter": {"runpod_job_status_link": {"_nnull": True}},
+                    "fields": ["id", "runpod_job_status_link"],
+                }
+            },
+        )
+        if not chunks:
+            logger.info("No chunks with runpod_job_status_link found.")
+            return
+
+        # Dispatch a group of sub-tasks for parallel processing
+        group([
+            task_process_runpod_chunk_response.message(chunk["id"], chunk["runpod_job_status_link"])
+            for chunk in chunks
+        ]).run()
+
+    except Exception as e:
+        logger.error(f"Error in task_update_runpod_transcription_response: {e}")
+

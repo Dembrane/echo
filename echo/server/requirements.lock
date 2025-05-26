@@ -91,7 +91,6 @@ ecdsa==0.19.0
 execnet==2.1.1
     # via pytest-xdist
 fastapi==0.109.2
-    # via sentry-sdk
 ffmpeg-python==0.2.0
 filelock==3.17.0
     # via huggingface-hub
@@ -299,7 +298,7 @@ scikit-learn==1.4.2
 scipy==1.13.0
     # via scikit-learn
 sentry-dramatiq==0.3.3
-sentry-sdk==2.19.2
+sentry-sdk==2.2.1
     # via sentry-dramatiq
 setuptools==75.8.0
     # via pipmaster
@@ -317,7 +316,6 @@ sqlalchemy==2.0.30
     # via alembic
     # via langchain
     # via langchain-community
-    # via sentry-sdk
 sqlparse==0.5.3
     # via directus-sdk-py
 starlette==0.36.3
