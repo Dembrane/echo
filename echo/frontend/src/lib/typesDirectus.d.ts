@@ -528,6 +528,7 @@ type Insight = {
 };
 
 type Project = {
+  conversations_count?: number | null;
   is_enhanced_audio_processing_enabled?: boolean | null;
   context?: string | null;
   conversation_ask_for_participant_name_label?: string | null;
