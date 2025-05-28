@@ -60,6 +60,7 @@ msgstr "{0}"
 #~ msgid "{0} Conversation{1} • Edited {2}"
 #~ msgstr "{0} Conversation{1} • Edited {2}"
 
+#. placeholder {0}: project?.conversations_count ?? project?.conversations?.length ?? 0
 #. placeholder {0}: project.conversations?.length ?? 0
 #. placeholder {1}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
 #. placeholder {1}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
@@ -440,7 +441,7 @@ msgstr "Context"
 msgid "Context added:"
 msgstr "Context added:"
 
-#: src/components/conversation/ConversationAccordion.tsx:724
+#: src/components/conversation/ConversationAccordion.tsx:739
 msgid "Conversations"
 msgstr "Conversations"
 
@@ -630,7 +631,7 @@ msgid "email@work.com"
 msgstr "email@work.com"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:166
-#: src/components/conversation/ConversationAccordion.tsx:443
+#: src/components/conversation/ConversationAccordion.tsx:446
 msgid "Empty"
 msgstr "Empty"
 
@@ -693,7 +694,7 @@ msgstr "Enter your query"
 #: src/components/dropzone/UploadConversationDropzone.tsx:538
 #: src/components/dropzone/UploadConversationDropzone.tsx:715
 #: src/components/dropzone/UploadConversationDropzone.tsx:814
-#: src/components/conversation/ConversationAccordion.tsx:453
+#: src/components/conversation/ConversationAccordion.tsx:456
 msgid "Error"
 msgstr "Error"
 
@@ -991,7 +992,7 @@ msgstr "Login as an existing user"
 msgid "Logout"
 msgstr "Logout"
 
-#: src/components/conversation/ConversationAccordion.tsx:555
+#: src/components/conversation/ConversationAccordion.tsx:558
 msgid "Longest First"
 msgstr "Longest First"
 
@@ -1032,11 +1033,11 @@ msgstr "Move to Project"
 msgid "Name"
 msgstr "Name"
 
-#: src/components/conversation/ConversationAccordion.tsx:553
+#: src/components/conversation/ConversationAccordion.tsx:556
 msgid "Name A-Z"
 msgstr "Name A-Z"
 
-#: src/components/conversation/ConversationAccordion.tsx:554
+#: src/components/conversation/ConversationAccordion.tsx:557
 msgid "Name Z-A"
 msgstr "Name Z-A"
 
@@ -1062,7 +1063,7 @@ msgstr "New Password"
 msgid "New Project"
 msgstr "New Project"
 
-#: src/components/conversation/ConversationAccordion.tsx:551
+#: src/components/conversation/ConversationAccordion.tsx:554
 msgid "Newest First"
 msgstr "Newest First"
 
@@ -1082,7 +1083,7 @@ msgstr "No conversations available to create library"
 msgid "No conversations available to create library. Please add some conversations to get started."
 msgstr "No conversations available to create library. Please add some conversations to get started."
 
-#: src/components/conversation/ConversationAccordion.tsx:850
+#: src/components/conversation/ConversationAccordion.tsx:865
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 
@@ -1155,7 +1156,7 @@ msgstr "No valid audio files were selected. Please select audio files only (MP3,
 msgid "Not available"
 msgstr "Not available"
 
-#: src/components/conversation/ConversationAccordion.tsx:552
+#: src/components/conversation/ConversationAccordion.tsx:555
 msgid "Oldest First"
 msgstr "Oldest First"
 
@@ -1184,8 +1185,8 @@ msgstr "Open for Participation?"
 msgid "Open troubleshooting guide"
 msgstr "Open troubleshooting guide"
 
-#: src/components/conversation/ConversationAccordion.tsx:777
-#: src/components/conversation/ConversationAccordion.tsx:791
+#: src/components/conversation/ConversationAccordion.tsx:792
+#: src/components/conversation/ConversationAccordion.tsx:806
 msgid "Options"
 msgstr "Options"
 
@@ -1345,12 +1346,12 @@ msgid "Proceed"
 msgstr "Proceed"
 
 #: src/components/conversation/ConversationAccordion.tsx:409
-#: src/components/conversation/ConversationAccordion.tsx:426
+#: src/components/conversation/ConversationAccordion.tsx:429
 msgid "Processing"
 msgstr "Processing"
 
 #. placeholder {0}: conversation.processing_status ?? "Unknown"
-#: src/components/conversation/ConversationAccordion.tsx:449
+#: src/components/conversation/ConversationAccordion.tsx:452
 msgid "Processing failed for this conversation. This conversation will not be available for analysis and chat. Last Known Status: {0}"
 msgstr "Processing failed for this conversation. This conversation will not be available for analysis and chat. Last Known Status: {0}"
 
@@ -1517,7 +1518,7 @@ msgstr "Request Password Reset"
 msgid "Request Password Reset | Dembrane"
 msgstr "Request Password Reset | Dembrane"
 
-#: src/components/conversation/ConversationAccordion.tsx:827
+#: src/components/conversation/ConversationAccordion.tsx:842
 msgid "Reset All Options"
 msgstr "Reset All Options"
 
@@ -1586,7 +1587,7 @@ msgstr "Scroll to bottom"
 msgid "Search"
 msgstr "Search"
 
-#: src/components/conversation/ConversationAccordion.tsx:769
+#: src/components/conversation/ConversationAccordion.tsx:784
 msgid "Search conversations"
 msgstr "Search conversations"
 
@@ -1676,7 +1677,7 @@ msgstr "Share your voice"
 msgid "Share your voice by scanning the QR code below."
 msgstr "Share your voice by scanning the QR code below."
 
-#: src/components/conversation/ConversationAccordion.tsx:556
+#: src/components/conversation/ConversationAccordion.tsx:559
 msgid "Shortest First"
 msgstr "Shortest First"
 
@@ -1692,7 +1693,7 @@ msgstr "Show all"
 msgid "Show audio player"
 msgstr "Show audio player"
 
-#: src/components/conversation/ConversationAccordion.tsx:794
+#: src/components/conversation/ConversationAccordion.tsx:809
 msgid "Show duration"
 msgstr "Show duration"
 
@@ -1732,7 +1733,7 @@ msgstr "Something went wrong while uploading the file: {0}"
 #~ msgid "Something went wrong. Please try again."
 #~ msgstr "Something went wrong. Please try again."
 
-#: src/components/conversation/ConversationAccordion.tsx:803
+#: src/components/conversation/ConversationAccordion.tsx:818
 msgid "Sort"
 msgstr "Sort"
 
@@ -1871,7 +1872,7 @@ msgid "Thinking..."
 msgstr "Thinking..."
 
 #: src/components/conversation/ConversationAccordion.tsx:405
-#: src/components/conversation/ConversationAccordion.tsx:421
+#: src/components/conversation/ConversationAccordion.tsx:424
 msgid "This conversation is still being processed. It will be available for analysis and chat shortly."
 msgstr "This conversation is still being processed. It will be available for analysis and chat shortly."
 
@@ -1897,8 +1898,8 @@ msgid "This is your project library. Currently,{0} conversations are waiting to 
 msgstr "This is your project library. Currently,{0} conversations are waiting to be processed."
 
 #: src/components/project/ProjectPortalEditor.tsx:265
-msgid "This language will be used for the Participant's Portal and transcription."
-msgstr "This language will be used for the Participant's Portal and transcription."
+#~ msgid "This language will be used for the Participant's Portal and transcription."
+#~ msgstr "This language will be used for the Participant's Portal and transcription."
 
 #: src/components/project/ProjectPortalEditor.tsx:208
 #~ msgid "This language will be used for the Participant's Portal and transcription. To change the language of this application, please use the language picker through the settings in the header."
@@ -1907,6 +1908,10 @@ msgstr "This language will be used for the Participant's Portal and transcriptio
 #: src/components/project/ProjectBasicEdit.tsx:93
 #~ msgid "This language will be used for the Participant's Portal, transcription and analysis. To change the language of this application, please use the language picker in the header user menu instead."
 #~ msgstr "This language will be used for the Participant's Portal, transcription and analysis. To change the language of this application, please use the language picker in the header user menu instead."
+
+#: src/components/project/ProjectPortalEditor.tsx:265
+msgid "This language will be used for the Participant's Portal."
+msgstr "This language will be used for the Participant's Portal."
 
 #: src/components/project/ProjectPortalEditor.tsx:504
 msgid "This page is shown after the participant has completed the conversation."

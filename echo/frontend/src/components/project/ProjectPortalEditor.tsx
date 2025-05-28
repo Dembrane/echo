@@ -262,7 +262,7 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
                               error={formState.errors.language?.message}
                             />
                           }
-                          description={t`This language will be used for the Participant's Portal and transcription.`}
+                          description={t`This language will be used for the Participant's Portal.`}
                           data={[
                             { label: t`English`, value: "en" },
                             { label: t`Dutch`, value: "nl" },

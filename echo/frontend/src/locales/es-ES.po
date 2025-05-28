@@ -55,6 +55,7 @@ msgstr "Desuscribirse de Notificaciones"
 msgid "{0}"
 msgstr "{0}"
 
+#. placeholder {0}: project?.conversations_count ?? project?.conversations?.length ?? 0
 #. placeholder {0}: project.conversations?.length ?? 0
 #. placeholder {1}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
 #. placeholder {1}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
@@ -269,7 +270,7 @@ msgstr "Aspectos"
 
 #: src/components/conversation/AutoSelectConversations.tsx:182
 msgid "Audio Processing In Progress"
-msgstr ""
+msgstr "Procesamiento de audio en progreso"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:219
 msgid "Audio recordings are scheduled to be deleted after 30 days from the recording date"
@@ -285,11 +286,11 @@ msgstr "Seleccionar automáticamente"
 
 #: src/components/conversation/AutoSelectConversations.tsx:162
 msgid "Automatically includes relevant conversations for analysis without manual selection"
-msgstr ""
+msgstr "Incluye automáticamente conversaciones relevantes para el análisis sin selección manual"
 
 #: src/components/conversation/AutoSelectConversations.tsx:121
 msgid "Available"
-msgstr ""
+msgstr "Disponible"
 
 #: src/components/participant/ParticipantOnboardingCards.tsx:258
 msgid "Back"
@@ -409,11 +410,11 @@ msgstr "Conectando a los servicios de informes..."
 
 #: src/components/conversation/AutoSelectConversations.tsx:209
 msgid "Contact sales"
-msgstr ""
+msgstr "Contactar a ventas"
 
 #: src/components/conversation/AutoSelectConversations.tsx:97
 msgid "Contact your sales representative to activate this feature today!"
-msgstr ""
+msgstr "Contacta a tu representante de ventas para activar esta función hoy!"
 
 #: src/components/project/ProjectBasicEdit.tsx:133
 msgid "Context"
@@ -423,7 +424,7 @@ msgstr "Contexto"
 msgid "Context added:"
 msgstr "Contexto añadido:"
 
-#: src/components/conversation/ConversationAccordion.tsx:724
+#: src/components/conversation/ConversationAccordion.tsx:739
 msgid "Conversations"
 msgstr "Conversaciones"
 
@@ -605,7 +606,7 @@ msgid "email@work.com"
 msgstr "email@trabajo.com"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:166
-#: src/components/conversation/ConversationAccordion.tsx:443
+#: src/components/conversation/ConversationAccordion.tsx:446
 msgid "Empty"
 msgstr "Vacío"
 
@@ -635,7 +636,7 @@ msgstr "Habilita esta función para permitir a los participantes solicitar respu
 
 #: src/components/conversation/AutoSelectConversations.tsx:111
 msgid "Enabled"
-msgstr ""
+msgstr "Habilitado"
 
 #: src/components/project/ProjectPortalEditor.tsx:267
 msgid "English"
@@ -664,7 +665,7 @@ msgstr "Ingresa tu consulta"
 #: src/components/dropzone/UploadConversationDropzone.tsx:538
 #: src/components/dropzone/UploadConversationDropzone.tsx:715
 #: src/components/dropzone/UploadConversationDropzone.tsx:814
-#: src/components/conversation/ConversationAccordion.tsx:453
+#: src/components/conversation/ConversationAccordion.tsx:456
 msgid "Error"
 msgstr "Error"
 
@@ -958,7 +959,7 @@ msgstr "Iniciar sesión como usuario existente"
 msgid "Logout"
 msgstr "Cerrar sesión"
 
-#: src/components/conversation/ConversationAccordion.tsx:555
+#: src/components/conversation/ConversationAccordion.tsx:558
 msgid "Longest First"
 msgstr "Más largo primero"
 
@@ -999,17 +1000,17 @@ msgstr "Mover a Proyecto"
 msgid "Name"
 msgstr "Nombre"
 
-#: src/components/conversation/ConversationAccordion.tsx:553
+#: src/components/conversation/ConversationAccordion.tsx:556
 msgid "Name A-Z"
 msgstr "Nombre A-Z"
 
-#: src/components/conversation/ConversationAccordion.tsx:554
+#: src/components/conversation/ConversationAccordion.tsx:557
 msgid "Name Z-A"
 msgstr "Nombre Z-A"
 
 #: src/components/conversation/AutoSelectConversations.tsx:144
 msgid "New"
-msgstr ""
+msgstr "Nuevo"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:282
 msgid "New Conversation Name"
@@ -1029,7 +1030,7 @@ msgstr "Nueva Contraseña"
 msgid "New Project"
 msgstr "Nuevo Proyecto"
 
-#: src/components/conversation/ConversationAccordion.tsx:551
+#: src/components/conversation/ConversationAccordion.tsx:554
 msgid "Newest First"
 msgstr "Más nuevos primero"
 
@@ -1049,7 +1050,7 @@ msgstr "No hay conversaciones disponibles para crear la biblioteca"
 msgid "No conversations available to create library. Please add some conversations to get started."
 msgstr "No hay conversaciones disponibles para crear la biblioteca. Por favor añade algunas conversaciones para comenzar."
 
-#: src/components/conversation/ConversationAccordion.tsx:850
+#: src/components/conversation/ConversationAccordion.tsx:865
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "No se encontraron conversaciones. Inicia una conversación usando el enlace de invitación de participación desde la <0><1>vista general del proyecto.</1></0>"
 
@@ -1122,7 +1123,7 @@ msgstr "No se seleccionaron archivos de audio válidos. Por favor, selecciona so
 msgid "Not available"
 msgstr "No disponible"
 
-#: src/components/conversation/ConversationAccordion.tsx:552
+#: src/components/conversation/ConversationAccordion.tsx:555
 msgid "Oldest First"
 msgstr "Más antiguos primero"
 
@@ -1151,8 +1152,8 @@ msgstr "¿Abierto para Participación?"
 msgid "Open troubleshooting guide"
 msgstr "Abrir guía de solución de problemas"
 
-#: src/components/conversation/ConversationAccordion.tsx:777
-#: src/components/conversation/ConversationAccordion.tsx:791
+#: src/components/conversation/ConversationAccordion.tsx:792
+#: src/components/conversation/ConversationAccordion.tsx:806
 msgid "Options"
 msgstr "Opciones"
 
@@ -1308,14 +1309,14 @@ msgid "Proceed"
 msgstr "Continuar"
 
 #: src/components/conversation/ConversationAccordion.tsx:409
-#: src/components/conversation/ConversationAccordion.tsx:426
+#: src/components/conversation/ConversationAccordion.tsx:429
 msgid "Processing"
-msgstr ""
+msgstr "Procesando"
 
 #. placeholder {0}: conversation.processing_status ?? "Unknown"
-#: src/components/conversation/ConversationAccordion.tsx:449
+#: src/components/conversation/ConversationAccordion.tsx:452
 msgid "Processing failed for this conversation. This conversation will not be available for analysis and chat. Last Known Status: {0}"
-msgstr ""
+msgstr "El procesamiento de esta conversación ha fallado. Esta conversación no estará disponible para análisis y chat. Último estado conocido: {0}"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:316
 msgid "Processing Transcript"
@@ -1468,7 +1469,7 @@ msgstr "Solicitar Restablecimiento de Contraseña"
 msgid "Request Password Reset | Dembrane"
 msgstr "Solicitar Restablecimiento de Contraseña | Dembrane"
 
-#: src/components/conversation/ConversationAccordion.tsx:827
+#: src/components/conversation/ConversationAccordion.tsx:842
 msgid "Reset All Options"
 msgstr "Restablecer todas las opciones"
 
@@ -1537,7 +1538,7 @@ msgstr "Desplazarse al final"
 msgid "Search"
 msgstr "Buscar"
 
-#: src/components/conversation/ConversationAccordion.tsx:769
+#: src/components/conversation/ConversationAccordion.tsx:784
 msgid "Search conversations"
 msgstr "Buscar conversaciones"
 
@@ -1623,7 +1624,7 @@ msgstr "Compartir tu voz"
 msgid "Share your voice by scanning the QR code below."
 msgstr "Comparte tu voz escaneando el código QR de abajo."
 
-#: src/components/conversation/ConversationAccordion.tsx:556
+#: src/components/conversation/ConversationAccordion.tsx:559
 msgid "Shortest First"
 msgstr "Más corto primero"
 
@@ -1639,7 +1640,7 @@ msgstr "Mostrar todo"
 msgid "Show audio player"
 msgstr "Mostrar reproductor de audio"
 
-#: src/components/conversation/ConversationAccordion.tsx:794
+#: src/components/conversation/ConversationAccordion.tsx:809
 msgid "Show duration"
 msgstr "Mostrar duración"
 
@@ -1658,7 +1659,7 @@ msgstr "Iniciar sesión con Google"
 
 #: src/components/conversation/AutoSelectConversations.tsx:186
 msgid "Some conversations are still being processed. Auto-select will work optimally once audio processing is complete."
-msgstr ""
+msgstr "Algunas conversaciones aún están siendo procesadas. La selección automática funcionará de manera óptima una vez que se complete el procesamiento de audio."
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:412
 msgid "Some files were already selected and won't be added twice."
@@ -1679,7 +1680,7 @@ msgstr "Algo salió mal al subir el archivo: {0}"
 #~ msgid "Something went wrong. Please try again."
 #~ msgstr "Algo salió mal. Por favor, inténtalo de nuevo."
 
-#: src/components/conversation/ConversationAccordion.tsx:803
+#: src/components/conversation/ConversationAccordion.tsx:818
 msgid "Sort"
 msgstr "Ordenar"
 
@@ -1724,7 +1725,7 @@ msgstr "Éxito"
 
 #: src/components/chat/ChatTemplatesMenu.tsx:101
 msgid "Suggested:"
-msgstr ""
+msgstr "Sugerido:"
 
 #: src/components/chat/ChatTemplatesMenu.tsx:36
 msgid "Summarize"
@@ -1814,9 +1815,9 @@ msgid "Thinking..."
 msgstr "Pensando..."
 
 #: src/components/conversation/ConversationAccordion.tsx:405
-#: src/components/conversation/ConversationAccordion.tsx:421
+#: src/components/conversation/ConversationAccordion.tsx:424
 msgid "This conversation is still being processed. It will be available for analysis and chat shortly."
-msgstr ""
+msgstr "Esta conversación aún está siendo procesada. Estará disponible para análisis y chat pronto."
 
 #: src/routes/participant/ParticipantPostConversation.tsx:103
 msgid "This email is already in the list."
@@ -1836,12 +1837,16 @@ msgid "This is your project library. Currently,{0} conversations are waiting to 
 msgstr "Esta es tu biblioteca del proyecto. Actualmente,{0} conversaciones están esperando ser procesadas."
 
 #: src/components/project/ProjectPortalEditor.tsx:265
-msgid "This language will be used for the Participant's Portal and transcription."
-msgstr "Este idioma se usará para el Portal del Participante y transcripción."
+#~ msgid "This language will be used for the Participant's Portal and transcription."
+#~ msgstr "Este idioma se usará para el Portal del Participante y transcripción."
 
 #: src/components/project/ProjectPortalEditor.tsx:208
 #~ msgid "This language will be used for the Participant's Portal and transcription. To change the language of this application, please use the language picker through the settings in the header."
 #~ msgstr "Este idioma se usará para el Portal del Participante y transcripción. Para cambiar el idioma de esta aplicación, por favor use el selector de idioma en las configuraciones de la cabecera."
+
+#: src/components/project/ProjectPortalEditor.tsx:265
+msgid "This language will be used for the Participant's Portal."
+msgstr "Este idioma se usará para el Portal del Participante."
 
 #: src/components/project/ProjectPortalEditor.tsx:504
 msgid "This page is shown after the participant has completed the conversation."
@@ -2020,15 +2025,15 @@ msgstr "Actualiza tu informe para incluir los cambios más recientes en tu proye
 
 #: src/components/conversation/AutoSelectConversations.tsx:131
 msgid "Upgrade"
-msgstr ""
+msgstr "Actualizar"
 
 #: src/components/conversation/AutoSelectConversations.tsx:198
 msgid "Upgrade to unlock Auto-select and analyze 10x more conversations in half the time—no more manual selection, just deeper insights instantly."
-msgstr ""
+msgstr "Actualiza para desbloquear la selección automática y analizar 10 veces más conversaciones en la mitad del tiempo—sin selección manual, solo insights más profundos instantáneamente."
 
 #: src/components/conversation/ConversationAccordion.tsx:385
 msgid "Upload"
-msgstr ""
+msgstr "Subir"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:513
 msgid "Upload Audio"
