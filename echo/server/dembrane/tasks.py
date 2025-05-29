@@ -934,7 +934,7 @@ def task_process_runpod_chunk_response(chunk_id: str, status_link: str) -> None:
     if response.status_code == 200:
         try:
             data = response.json()
-            transcript = data['output']['transcription']
+            transcript = data['output']['joined_text']
             if transcript:
                 directus.update_item(
                     "conversation_chunk",

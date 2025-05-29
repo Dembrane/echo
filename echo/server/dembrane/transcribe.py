@@ -10,7 +10,6 @@ from litellm import transcription
 from dembrane.s3 import get_signed_url, get_stream_from_s3
 from dembrane.config import (
     LITELLM_WHISPER_URL,
-    RUNPOD_WHISPER_MODEL,
     LITELLM_WHISPER_MODEL,
     RUNPOD_WHISPER_API_KEY,
     LITELLM_WHISPER_API_KEY,
@@ -48,14 +47,13 @@ def queue_transcribe_audio_runpod(
 
         input_payload = {
             "audio": signed_url,
-            "model": RUNPOD_WHISPER_MODEL,
             "initial_prompt": whisper_prompt,
         }
         if language:
             input_payload["language"] = language
 
         data = {"input": input_payload}
-
+        logger.debug(f"***data: {data}")
         try:
             if is_priority:
                 url = f"{str(RUNPOD_WHISPER_PRIORITY_BASE_URL).rstrip('/')}/run"
@@ -110,16 +108,19 @@ def transcribe_audio_litellm(
 def transcribe_conversation_chunk(conversation_chunk_id: str) -> str | None:
     """Process conversation chunk for transcription"""
     logger = logging.getLogger("transcribe.transcribe_conversation_chunk")
-
-    chunks = directus.get_items(
-        "conversation_chunk",
-        {
-            "query": {
-                "filter": {"id": {"_eq": conversation_chunk_id}},
-                "fields": ["id", "path", "conversation_id", "timestamp"],
+    try:
+        chunks = directus.get_items(
+            "conversation_chunk",
+            {
+                "query": {
+                    "filter": {"id": {"_eq": conversation_chunk_id}},
+                    "fields": ["id", "path", "conversation_id", "timestamp"],
+                },
             },
-        },
-    )
+        )
+    except Exception as e:
+        logger.error(f"Failed to get chunks for {conversation_chunk_id}: {e}")
+        raise ValueError(f"Failed to get chunks for {conversation_chunk_id}: {e}") from e
 
     if not chunks:
         logger.info(f"Chunk {conversation_chunk_id} not found")
@@ -152,20 +153,24 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str | None:
     #     previous_chunk_transcript = previous_chunk[0]["transcript"]
 
     # fetch conversation details
-    conversation = directus.get_items(
-        "conversation",
-        {
-            "query": {
-                "filter": {"id": {"_eq": chunk["conversation_id"]}},
-                "fields": [
-                    "id",
-                    "project_id",
-                    "project_id.language",
-                    "project_id.default_conversation_transcript_prompt",
-                ],
+    try:
+        conversation = directus.get_items(
+            "conversation",
+            {
+                "query": {
+                    "filter": {"id": {"_eq": chunk["conversation_id"]}},
+                    "fields": [
+                        "id",
+                        "project_id",
+                        "project_id.language",
+                        "project_id.default_conversation_transcript_prompt",
+                    ],
+                },
             },
-        },
-    )
+        )
+    except Exception as e:
+        logger.error(f"Failed to get conversation for {conversation_chunk_id}: {e}")
+        raise ValueError(f"Failed to get conversation for {conversation_chunk_id}: {e}") from e
 
     if not conversation or len(conversation) == 0:
         raise ValueError("Conversation not found")
@@ -185,8 +190,7 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str | None:
 
     if conversation["project_id"]["default_conversation_transcript_prompt"]:
         prompt_parts.append(
-            "\n\nuser: Project prompt: \n\n"
-            + conversation["project_id"]["default_conversation_transcript_prompt"]
+            ' ' + conversation["project_id"]["default_conversation_transcript_prompt"]
             + "."
         )
 
@@ -198,13 +202,18 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str | None:
     logger.debug(f"whisper_prompt: {whisper_prompt}")
 
     if ENABLE_RUNPOD_WHISPER_TRANSCRIPTION:
-        directus_response = directus.get_items(
-            "conversation_chunk",
-            {
-                "query": {"filter": {"id": {"_eq": conversation_chunk_id}}, 
-                "fields": ["source","runpod_job_status_link","runpod_request_count"]},
-            },
-        )
+        try:
+            directus_response = directus.get_items(
+                "conversation_chunk",
+                {
+                    "query": {"filter": {"id": {"_eq": conversation_chunk_id}}, 
+                    "fields": ["source","runpod_job_status_link","runpod_request_count"]},
+                },
+            )
+        except Exception as e:
+            logger.error(f"Failed to get conversation chunk for {conversation_chunk_id}: {e}")
+            raise ValueError(f"Failed to get conversation chunk for {conversation_chunk_id}: {e}") from e
+
         runpod_request_count = (directus_response[0]["runpod_request_count"])
         source = (directus_response[0]["source"])
         runpod_job_status_link = (directus_response[0]["runpod_job_status_link"])

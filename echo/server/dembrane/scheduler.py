@@ -26,7 +26,7 @@ scheduler.add_job(
 
 scheduler.add_job(
     func="dembrane.tasks:task_update_runpod_transcription_response.send",
-    trigger=CronTrigger(minute="*/1"),
+    trigger=CronTrigger(second="*/30"),
     id="task_update_runpod_transcription_response",
     name="Update RunPod transcription responses",
     replace_existing=True,
