@@ -145,7 +145,7 @@ async def generate_reply_for_conversation(
 
     # Check if we should use summaries for adjacent conversations
     get_reply_mode = current_project.get("get_reply_mode")
-    use_summaries = get_reply_mode in ["summary", "brainstorm", "custom"]
+    use_summaries = get_reply_mode in ["summarize", "brainstorm", "custom"]
     
     # Determine fields to fetch based on mode
     adjacent_fields = [
@@ -189,9 +189,9 @@ async def generate_reply_for_conversation(
     token_limit = 40000
     target_tokens_per_conv = 2000  # Target size for each conversation
 
+    candidate_conversations = []
     if use_summaries:
-        # Use summaries for adjacent conversations (similar to report_utils.py)
-        candidate_conversations = []
+        # Use summaries for adjacent conversations
         for conversation in adjacent_conversations:
             if conversation["summary"] is None:
                 logger.info(f"Conversation {conversation['id']} has no summary, skipping")
@@ -218,7 +218,6 @@ async def generate_reply_for_conversation(
             candidate_conversations.append((formatted_conv, tokens))
     else:
         # Use full transcripts for adjacent conversations (original logic)
-        candidate_conversations = []
         for conversation in adjacent_conversations:
             # Create conversation with tags
             c = Conversation(
