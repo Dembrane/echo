@@ -166,7 +166,6 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
   const watchedReplyMode = useWatch({
     control,
     name: "get_reply_mode",
-    defaultValue: "summarize",
   });
 
   const updateProjectMutation = useUpdateProjectByIdMutation();

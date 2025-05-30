@@ -92,6 +92,9 @@ async def generate_reply_for_conversation(
                     "project_id.get_reply_prompt",
                     "project_id.get_reply_mode",
                     "project_id.context",
+                    "project_id.default_conversation_title",
+                    "project_id.default_conversation_description",
+                    "project_id.default_conversation_transcript_prompt",
                     "tags.project_tag_id.text",
                     "participant_name",
                     "replies.id",
@@ -135,6 +138,9 @@ async def generate_reply_for_conversation(
         "description": conversation["project_id"]["context"],
         "get_reply_prompt": conversation["project_id"]["get_reply_prompt"],
         "get_reply_mode": conversation["project_id"]["get_reply_mode"],
+        "default_conversation_title": conversation["project_id"]["default_conversation_title"],
+        "default_conversation_description": conversation["project_id"]["default_conversation_description"],
+        "default_conversation_transcript_prompt": conversation["project_id"]["default_conversation_transcript_prompt"],
     }
 
     # Check if we should use summaries for adjacent conversations
@@ -172,8 +178,8 @@ async def generate_reply_for_conversation(
                 "fields": adjacent_fields,
                 "deep": {
                     # reverse chronological order
-                    "chunks": {"_sort": ["-timestamp"]},
-                    "replies": {"_sort": ["-date_created"]},
+                    "chunks": {"_sort": ["-timestamp"], "_limit": 1000},
+                    "replies": {"_sort": ["-date_created"], "_limit": 1000},
                 } if not use_summaries else {},
             }
         },
@@ -260,28 +266,41 @@ async def generate_reply_for_conversation(
 
     formatted_current_conversation = format_conversation(current_conversation)
 
-    # Define custom prompts for different modes
-    custom_prompts = {
-        "summarize": """Focus on creating a concise, conversational summary of the main user's transcript. In your detailed analysis, identify the key themes and important points discussed. Your response should capture the essence of what was discussed in 1-3 sentences that feel natural and invite further conversation.""",
-        
-        "brainstorm": """Generate creative ideas and explore new possibilities based on the main user's transcript, while drawing insights from other conversations when relevant. In your detailed analysis, think about innovative connections and fresh perspectives. Your response should offer 1-3 sentences that spark new thinking or suggest interesting directions for exploration."""
-    }
-
     # Determine which prompt to use based on mode
-    if get_reply_mode in custom_prompts:
-        global_prompt = custom_prompts[get_reply_mode]
-        logger.debug(f"Using custom prompt for mode: {get_reply_mode}")
+    if get_reply_mode == "summarize":
+        # Load global prompt from summary template
+        global_prompt = render_prompt("summary", language, {})
+        logger.debug(f"Using summary template for global prompt: {get_reply_mode}")
+    elif get_reply_mode == "brainstorm":
+        # Load global prompt from brainstorm template  
+        global_prompt = render_prompt("brainstorm", language, {})
+        logger.debug(f"Using brainstorm template for global prompt: {get_reply_mode}")
     else:
         global_prompt = current_project["get_reply_prompt"] if current_project["get_reply_prompt"] is not None else ""
         logger.debug(f"Using project global prompt for mode: {get_reply_mode}")
+
+    # Build PROJECT_DESCRIPTION by combining context and additional project fields
+    project_description_parts = []
+    
+    if current_project["description"] is not None:
+        project_description_parts.append(current_project["description"])
+    
+    if current_project["default_conversation_title"] is not None:
+        project_description_parts.append(f"Default Conversation Title: {current_project['default_conversation_title']}")
+    
+    if current_project["default_conversation_description"] is not None:
+        project_description_parts.append(f"Default Conversation Description: {current_project['default_conversation_description']}")
+    
+    if current_project["default_conversation_transcript_prompt"] is not None:
+        project_description_parts.append(f"Default Conversation Transcript Prompt: {current_project['default_conversation_transcript_prompt']}")
+    
+    project_description = "\n\n".join(project_description_parts)
 
     prompt = render_prompt(
         "get_reply",
         language,
         {
-            "PROJECT_DESCRIPTION": current_project["description"]
-            if current_project["description"] is not None
-            else "",
+            "PROJECT_DESCRIPTION": project_description,
             "GLOBAL_PROMPT": global_prompt,
             "OTHER_TRANSCRIPTS": formatted_adjacent_conversation,
             "MAIN_USER_TRANSCRIPT": formatted_current_conversation,
