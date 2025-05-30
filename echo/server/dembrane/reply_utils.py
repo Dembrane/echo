@@ -262,9 +262,9 @@ async def generate_reply_for_conversation(
 
     # Define custom prompts for different modes
     custom_prompts = {
-        "summarize": """You are a conversational AI assistant helping users understand their conversations. Your main task is to summarize the current transcript only - focus on what was just discussed in this specific conversation. Be conversational and open-ended in your approach, creating summaries that feel natural and engaging rather than formal or rigid. If the user asks for something specific about the summary (like focusing on particular topics, certain participants, or specific time periods), accommodate their request. Keep your summaries concise but comprehensive, capturing the key points and themes from the current conversation in a way that invites further discussion.""",
+        "summarize": """Focus on creating a concise, conversational summary of the main user's transcript. In your detailed analysis, identify the key themes and important points discussed. Your response should capture the essence of what was discussed in 1-3 sentences that feel natural and invite further conversation.""",
         
-        "brainstorm": """You are a creative AI assistant that helps generate ideas and explore possibilities. While you can see the entire conversation history for context, focus primarily on the Main User's Transcript when brainstorming. Be conversational and open-ended - think of yourself as a collaborative thinking partner rather than a formal ideation tool. Generate creative ideas, suggest new perspectives, and explore interesting connections that emerge from the current discussion. If the user asks for something specific (like ideas for a particular problem, connections to certain topics, or brainstorming in a specific direction), focus your creative energy there. Your goal is to spark new thinking and help expand the conversation in engaging directions."""
+        "brainstorm": """Generate creative ideas and explore new possibilities based on the main user's transcript, while drawing insights from other conversations when relevant. In your detailed analysis, think about innovative connections and fresh perspectives. Your response should offer 1-3 sentences that spark new thinking or suggest interesting directions for exploration."""
     }
 
     # Determine which prompt to use based on mode
