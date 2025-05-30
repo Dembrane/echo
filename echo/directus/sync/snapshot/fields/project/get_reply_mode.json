@@ -1,0 +1,85 @@
+{
+  "collection": "project",
+  "field": "get_reply_mode",
+  "type": "string",
+  "meta": {
+    "collection": "project",
+    "conditions": null,
+    "display": "labels",
+    "display_options": {
+      "choices": [
+        {
+          "color": "#2ECDA7",
+          "icon": "summarize",
+          "text": "Summarize",
+          "value": "summarize"
+        },
+        {
+          "color": "#3399FF",
+          "icon": "mindfulness",
+          "text": "Brainstorm Ideas",
+          "value": "brainstorm"
+        },
+        {
+          "color": "#FFA439",
+          "icon": "edit",
+          "text": "Custom",
+          "value": "custom"
+        }
+      ]
+    },
+    "field": "get_reply_mode",
+    "group": null,
+    "hidden": false,
+    "interface": "select-dropdown",
+    "note": null,
+    "options": {
+      "choices": [
+        {
+          "color": "#2ECDA7",
+          "icon": "summarize",
+          "text": "Summarize",
+          "value": "summarize"
+        },
+        {
+          "color": "#3399FF",
+          "icon": "mindfulness",
+          "text": "Brainstorm Ideas",
+          "value": "brainstorm"
+        },
+        {
+          "color": "#FFA439",
+          "icon": "edit",
+          "text": "Custom",
+          "value": "custom"
+        }
+      ]
+    },
+    "readonly": false,
+    "required": false,
+    "sort": 26,
+    "special": null,
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  },
+  "schema": {
+    "name": "get_reply_mode",
+    "table": "project",
+    "data_type": "character varying",
+    "default_value": "summarize",
+    "max_length": 255,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": true,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}
