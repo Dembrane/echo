@@ -90,6 +90,7 @@ async def generate_reply_for_conversation(
                     "project_id.name",
                     "project_id.is_get_reply_enabled",
                     "project_id.get_reply_prompt",
+                    "project_id.get_reply_mode",
                     "project_id.context",
                     "tags.project_tag_id.text",
                     "participant_name",
@@ -133,7 +134,32 @@ async def generate_reply_for_conversation(
         "name": conversation["project_id"]["name"],
         "description": conversation["project_id"]["context"],
         "get_reply_prompt": conversation["project_id"]["get_reply_prompt"],
+        "get_reply_mode": conversation["project_id"]["get_reply_mode"],
     }
+
+    # Check if we should use summaries for adjacent conversations
+    get_reply_mode = current_project.get("get_reply_mode")
+    use_summaries = get_reply_mode in ["summary", "brainstorm", "custom"]
+    
+    # Determine fields to fetch based on mode
+    adjacent_fields = [
+        "id",
+        "participant_name",
+        "tags.project_tag_id.text",
+    ]
+    
+    if use_summaries:
+        adjacent_fields.append("summary")
+    else:
+        adjacent_fields.extend([
+            "chunks.id",
+            "chunks.timestamp", 
+            "chunks.transcript",
+            "replies.id",
+            "replies.date_created",
+            "replies.content_text",
+            "replies.type",
+        ])
 
     adjacent_conversations = directus.get_items(
         "conversation",
@@ -143,61 +169,77 @@ async def generate_reply_for_conversation(
                     "id": {"_neq": current_conversation.id},
                     "project_id": {"_eq": conversation["project_id"]["id"]},
                 },
-                "fields": [
-                    "id",
-                    "chunks.id",
-                    "chunks.timestamp",
-                    "chunks.transcript",
-                    "participant_name",
-                    "tags.project_tag_id.text",
-                    "replies.id",
-                    "replies.date_created",
-                    "replies.content_text",
-                    "replies.type",
-                ],
+                "fields": adjacent_fields,
                 "deep": {
                     # reverse chronological order
-                    "chunks": {"_sort": ["-timestamp"], "_limit": 1000},
-                    "replies": {"_sort": ["-date_created"], "_limit": 1000},
-                },
+                    "chunks": {"_sort": ["-timestamp"]},
+                    "replies": {"_sort": ["-date_created"]},
+                } if not use_summaries else {},
             }
         },
     )
 
-    adjacent_conversation_transcripts: list[Conversation] = []  # noqa
     total_tokens = 0
     token_limit = 40000
     target_tokens_per_conv = 2000  # Target size for each conversation
 
-    # First pass: truncate all conversations to target size
-    candidate_conversations = []
-    for conversation in adjacent_conversations:
-        # Create conversation with tags
-        c = Conversation(
-            id=conversation["id"],
-            name=conversation["participant_name"],
-            transcript=build_conversation_transcript(conversation),
-            tags=[
+    if use_summaries:
+        # Use summaries for adjacent conversations (similar to report_utils.py)
+        candidate_conversations = []
+        for conversation in adjacent_conversations:
+            if conversation["summary"] is None:
+                logger.info(f"Conversation {conversation['id']} has no summary, skipping")
+                continue
+                
+            # Create conversation with tags
+            tags = [
                 tag["project_tag_id"]["text"]
                 for tag in conversation["tags"]
                 if tag["project_tag_id"]["text"] is not None
-            ],
-        )
+            ] if conversation["tags"] else []
+            
+            c = Conversation(
+                id=conversation["id"],
+                name=conversation["participant_name"],
+                transcript=conversation["summary"],  # Use summary instead of full transcript
+                tags=tags,
+            )
 
-        # First check tokens for this conversation
-        formatted_conv = format_conversation(c)
-        tokens = count_tokens_anthropic(formatted_conv)
-
-        # If conversation is too large, truncate it
-        if tokens > target_tokens_per_conv:
-            # Rough approximation: truncate based on token ratio
-            truncation_ratio = target_tokens_per_conv / tokens
-            truncated_transcript = c.transcript[: int(len(c.transcript) * truncation_ratio)]
-            c.transcript = truncated_transcript + "\n[Truncated for brevity...]"
+            # Check tokens for this conversation
             formatted_conv = format_conversation(c)
             tokens = count_tokens_anthropic(formatted_conv)
 
-        candidate_conversations.append((formatted_conv, tokens))
+            candidate_conversations.append((formatted_conv, tokens))
+    else:
+        # Use full transcripts for adjacent conversations (original logic)
+        candidate_conversations = []
+        for conversation in adjacent_conversations:
+            # Create conversation with tags
+            c = Conversation(
+                id=conversation["id"],
+                name=conversation["participant_name"],
+                transcript=build_conversation_transcript(conversation),
+                tags=[
+                    tag["project_tag_id"]["text"]
+                    for tag in conversation["tags"]
+                    if tag["project_tag_id"]["text"] is not None
+                ],
+            )
+
+            # First check tokens for this conversation
+            formatted_conv = format_conversation(c)
+            tokens = count_tokens_anthropic(formatted_conv)
+
+            # If conversation is too large, truncate it
+            if tokens > target_tokens_per_conv:
+                # Rough approximation: truncate based on token ratio
+                truncation_ratio = target_tokens_per_conv / tokens
+                truncated_transcript = c.transcript[: int(len(c.transcript) * truncation_ratio)]
+                c.transcript = truncated_transcript + "\n[Truncated for brevity...]"
+                formatted_conv = format_conversation(c)
+                tokens = count_tokens_anthropic(formatted_conv)
+
+            candidate_conversations.append((formatted_conv, tokens))
 
     # Second pass: add as many conversations as possible
     formatted_conversations = []
@@ -210,12 +252,28 @@ async def generate_reply_for_conversation(
 
     logger.debug(f"Total tokens for adjacent conversations: {total_tokens}")
     logger.debug(f"Number of adjacent conversations included: {len(formatted_conversations)}")
+    logger.debug(f"Using summaries for adjacent conversations: {use_summaries}")
 
     formatted_adjacent_conversation = ""
     for formatted_conv in formatted_conversations:
         formatted_adjacent_conversation += formatted_conv
 
     formatted_current_conversation = format_conversation(current_conversation)
+
+    # Define custom prompts for different modes
+    custom_prompts = {
+        "summarize": """You are a conversational AI assistant helping users understand their conversations. Your main task is to summarize the current transcript only - focus on what was just discussed in this specific conversation. Be conversational and open-ended in your approach, creating summaries that feel natural and engaging rather than formal or rigid. If the user asks for something specific about the summary (like focusing on particular topics, certain participants, or specific time periods), accommodate their request. Keep your summaries concise but comprehensive, capturing the key points and themes from the current conversation in a way that invites further discussion.""",
+        
+        "brainstorm": """You are a creative AI assistant that helps generate ideas and explore possibilities. While you can see the entire conversation history for context, focus primarily on the Main User's Transcript when brainstorming. Be conversational and open-ended - think of yourself as a collaborative thinking partner rather than a formal ideation tool. Generate creative ideas, suggest new perspectives, and explore interesting connections that emerge from the current discussion. If the user asks for something specific (like ideas for a particular problem, connections to certain topics, or brainstorming in a specific direction), focus your creative energy there. Your goal is to spark new thinking and help expand the conversation in engaging directions."""
+    }
+
+    # Determine which prompt to use based on mode
+    if get_reply_mode in custom_prompts:
+        global_prompt = custom_prompts[get_reply_mode]
+        logger.debug(f"Using custom prompt for mode: {get_reply_mode}")
+    else:
+        global_prompt = current_project["get_reply_prompt"] if current_project["get_reply_prompt"] is not None else ""
+        logger.debug(f"Using project global prompt for mode: {get_reply_mode}")
 
     prompt = render_prompt(
         "get_reply",
@@ -224,9 +282,7 @@ async def generate_reply_for_conversation(
             "PROJECT_DESCRIPTION": current_project["description"]
             if current_project["description"] is not None
             else "",
-            "GLOBAL_PROMPT": current_project["get_reply_prompt"]
-            if current_project["get_reply_prompt"] is not None
-            else "",
+            "GLOBAL_PROMPT": global_prompt,
             "OTHER_TRANSCRIPTS": formatted_adjacent_conversation,
             "MAIN_USER_TRANSCRIPT": formatted_current_conversation,
         },

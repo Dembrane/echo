@@ -26,7 +26,7 @@ import { IconEye, IconEyeOff, IconRefresh } from "@tabler/icons-react";
 import { useProjectSharingLink } from "./ProjectQRCode";
 import { Resizable } from "re-resizable";
 import { FormLabel } from "../form/FormLabel";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { SaveStatus } from "../form/SaveStatus";
 import { z } from "zod";
@@ -43,6 +43,7 @@ const FormSchema = z.object({
   is_project_notification_subscription_allowed: z.boolean(),
   default_conversation_transcript_prompt: z.string(),
   is_get_reply_enabled: z.boolean(),
+  get_reply_mode: z.string(),
   get_reply_prompt: z.string(),
 });
 
@@ -153,6 +154,7 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
         default_conversation_transcript_prompt:
           project.default_conversation_transcript_prompt ?? "",
         is_get_reply_enabled: project.is_get_reply_enabled ?? false,
+        get_reply_mode: project.get_reply_mode ?? "summarize",
         get_reply_prompt: project.get_reply_prompt ?? "",
       },
       // for validation
@@ -160,6 +162,12 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
       mode: "onChange",
       reValidateMode: "onChange",
     });
+
+  const watchedReplyMode = useWatch({
+    control,
+    name: "get_reply_mode",
+    defaultValue: "summarize",
+  });
 
   const updateProjectMutation = useUpdateProjectByIdMutation();
 
@@ -399,29 +407,91 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
                   />
 
                   <Controller
-                    name="get_reply_prompt"
+                    name="get_reply_mode"
                     control={control}
                     render={({ field }) => (
-                      <Textarea
-                        label={
-                          <FormLabel
-                            label={t`Reply Prompt`}
-                            isDirty={formState.dirtyFields.get_reply_prompt}
-                            error={formState.errors.get_reply_prompt?.message}
-                          />
-                        }
-                        description={
+                      <Stack gap="xs">
+                        <FormLabel
+                          label={t`Mode`}
+                          isDirty={formState.dirtyFields.get_reply_mode}
+                          error={formState.errors.get_reply_mode?.message}
+                        />
+                        <Text size="sm" c="dimmed">
                           <Trans>
-                            This prompt guides how the AI responds to
-                            participants. Customize it to shape the type of
-                            feedback or engagement you want to encourage.
+                            Select the type of feedback or engagement you want
+                            to encourage.
                           </Trans>
-                        }
-                        minRows={5}
-                        {...field}
-                      />
+                        </Text>
+                        <Group gap="xs">
+                          <Badge
+                            className="capitalize cursor-pointer"
+                            variant={
+                              field.value === "summarize" ? "filled" : "default"
+                            }
+                            size="lg"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => field.onChange("summarize")}
+                          >
+                            <Trans>Summarize</Trans>
+                          </Badge>
+                          <Badge
+                            className="capitalize cursor-pointer"
+                            variant={
+                              field.value === "brainstorm"
+                                ? "filled"
+                                : "default"
+                            }
+                            size="lg"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => field.onChange("brainstorm")}
+                          >
+                            <Trans>Brainstorm Ideas</Trans>
+                          </Badge>
+                          <Badge
+                            className="capitalize cursor-pointer"
+                            variant={
+                              field.value === "custom" ? "filled" : "default"
+                            }
+                            size="lg"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => field.onChange("custom")}
+                          >
+                            <Trans>Custom</Trans>
+                          </Badge>
+                        </Group>
+                      </Stack>
                     )}
                   />
+
+                  {watchedReplyMode === "custom" && (
+                    <Controller
+                      name="get_reply_prompt"
+                      control={control}
+                      render={({ field }) => (
+                        <Textarea
+                          label={
+                            <FormLabel
+                              label={t`Reply Prompt`}
+                              isDirty={formState.dirtyFields.get_reply_prompt}
+                              error={formState.errors.get_reply_prompt?.message}
+                            />
+                          }
+                          description={
+                            <Box className="pb-2">
+                              <Trans>
+                                This prompt guides how the AI responds to
+                                participants. Customize it to shape the type of
+                                feedback or engagement you want to encourage.
+                              </Trans>
+                            </Box>
+                          }
+                          autosize
+                          minRows={5}
+                          {...field}
+                        />
+                      )}
+                    />
+                  )}
                 </Stack>
 
                 <Divider />
