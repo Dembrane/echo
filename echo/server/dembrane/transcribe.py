@@ -19,6 +19,7 @@ from dembrane.config import (
     ENABLE_RUNPOD_WHISPER_TRANSCRIPTION,
     ENABLE_LITELLM_WHISPER_TRANSCRIPTION,
     RUNPOD_WHISPER_MAX_REQUEST_THRESHOLD,
+    ENABLE_ENGLISH_TRANSCRIPTION_WITH_LITELLM,
 )
 
 # from dembrane.openai import client
@@ -33,7 +34,10 @@ class TranscriptionError(Exception):
 
 
 def queue_transcribe_audio_runpod(
-    audio_file_uri: str, language: Optional[str], whisper_prompt: Optional[str], is_priority: bool = False
+    audio_file_uri: str,
+    language: Optional[str],
+    whisper_prompt: Optional[str],
+    is_priority: bool = False,
 ) -> str:
     """Transcribe audio using RunPod"""
     logger = logging.getLogger("transcribe.transcribe_audio_runpod")
@@ -65,9 +69,7 @@ def queue_transcribe_audio_runpod(
             return job_id
         except Exception as e:
             logger.error(f"Failed to queue transcription job for RunPod: {e}")
-            raise TranscriptionError(
-                f"Failed to queue transcription job for RunPod: {e}"
-            ) from e
+            raise TranscriptionError(f"Failed to queue transcription job for RunPod: {e}") from e
     except Exception as e:
         logger.error(f"Failed to get signed url for {audio_file_uri}: {e}")
         raise TranscriptionError(f"Failed to get signed url for {audio_file_uri}: {e}") from e
@@ -190,8 +192,7 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str | None:
 
     if conversation["project_id"]["default_conversation_transcript_prompt"]:
         prompt_parts.append(
-            ' ' + conversation["project_id"]["default_conversation_transcript_prompt"]
-            + "."
+            " " + conversation["project_id"]["default_conversation_transcript_prompt"] + "."
         )
 
     # if previous_chunk_transcript:
@@ -201,22 +202,29 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str | None:
 
     logger.debug(f"whisper_prompt: {whisper_prompt}")
 
-    if ENABLE_RUNPOD_WHISPER_TRANSCRIPTION:
+    if ENABLE_RUNPOD_WHISPER_TRANSCRIPTION and not (
+        language == "en" and ENABLE_ENGLISH_TRANSCRIPTION_WITH_LITELLM
+    ):
+        logger.debug("Using RunPod for transcription")
         try:
             directus_response = directus.get_items(
                 "conversation_chunk",
                 {
-                    "query": {"filter": {"id": {"_eq": conversation_chunk_id}}, 
-                    "fields": ["source","runpod_job_status_link","runpod_request_count"]},
+                    "query": {
+                        "filter": {"id": {"_eq": conversation_chunk_id}},
+                        "fields": ["source", "runpod_job_status_link", "runpod_request_count"],
+                    },
                 },
             )
         except Exception as e:
             logger.error(f"Failed to get conversation chunk for {conversation_chunk_id}: {e}")
-            raise ValueError(f"Failed to get conversation chunk for {conversation_chunk_id}: {e}") from e
+            raise ValueError(
+                f"Failed to get conversation chunk for {conversation_chunk_id}: {e}"
+            ) from e
 
-        runpod_request_count = (directus_response[0]["runpod_request_count"])
-        source = (directus_response[0]["source"])
-        runpod_job_status_link = (directus_response[0]["runpod_job_status_link"])
+        runpod_request_count = directus_response[0]["runpod_request_count"]
+        source = directus_response[0]["source"]
+        runpod_job_status_link = directus_response[0]["runpod_job_status_link"]
 
         headers = {
             "Content-Type": "application/json",
@@ -224,12 +232,38 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str | None:
         }
 
         if runpod_job_status_link:
-            response = requests.get(runpod_job_status_link, headers=headers)
-            job_status = response.json()['status']
-            logger.debug(f"job_status: {job_status}")
-            if job_status == "IN_PROGRESS":
-                logger.info(f"RunPod job {runpod_job_status_link} is in progress")
-                return None
+            try:
+                response = requests.get(runpod_job_status_link, headers=headers, timeout=30)
+                response.raise_for_status()  # Raise an exception for bad status codes
+
+                response_data = response.json()
+                logger.debug(f"RunPod status response: {response_data}")
+
+                job_status = response_data.get("status")
+                if job_status is None:
+                    logger.warning(
+                        f"No 'status' field in RunPod response for {runpod_job_status_link}: {response_data}"
+                    )
+                    # If no status field, assume job is not in progress and continue
+                else:
+                    logger.debug(f"job_status: {job_status}")
+                    if job_status == "IN_PROGRESS":
+                        logger.info(f"RunPod job {runpod_job_status_link} is in progress")
+                        return None
+
+            except requests.RequestException as e:
+                logger.error(f"Failed to get RunPod job status from {runpod_job_status_link}: {e}")
+                # Continue with processing if status check fails
+            except ValueError as e:
+                logger.error(
+                    f"Invalid JSON response from RunPod status endpoint {runpod_job_status_link}: {e}"
+                )
+                # Continue with processing if JSON parsing fails
+            except Exception as e:
+                logger.error(
+                    f"Unexpected error checking RunPod job status {runpod_job_status_link}: {e}"
+                )
+                # Continue with processing if any other error occurs
 
         if runpod_request_count < RUNPOD_WHISPER_MAX_REQUEST_THRESHOLD:
             if source == "PORTAL_AUDIO":
@@ -237,7 +271,10 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str | None:
             else:
                 is_priority = False
             job_id = queue_transcribe_audio_runpod(
-                chunk["path"], language=language, whisper_prompt=whisper_prompt, is_priority=is_priority
+                chunk["path"],
+                language=language,
+                whisper_prompt=whisper_prompt,
+                is_priority=is_priority,
             )
             # Update job_id on directus
             directus.update_item(
@@ -260,6 +297,7 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str | None:
         return None
 
     elif ENABLE_LITELLM_WHISPER_TRANSCRIPTION:
+        logger.debug("Using LITELLM for transcription")
         transcript = transcribe_audio_litellm(
             chunk["path"], language=language, whisper_prompt=whisper_prompt
         )

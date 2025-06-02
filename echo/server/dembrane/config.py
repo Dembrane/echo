@@ -162,6 +162,12 @@ logger.debug("STORAGE_S3_SECRET: set")
 DISABLE_CORS = os.environ.get("DISABLE_CORS", "false").lower() in ["true", "1"]
 logger.debug(f"DISABLE_CORS: {DISABLE_CORS}")
 
+ENABLE_ENGLISH_TRANSCRIPTION_WITH_LITELLM = os.environ.get(
+    "ENABLE_ENGLISH_TRANSCRIPTION_WITH_LITELLM", "false"
+).lower() in ["true", "1"]
+# ENABLE_ENGLISH_TRANSCRIPTION_WITH_LITELLM is optional and defaults to false
+logger.debug("ENABLE_ENGLISH_TRANSCRIPTION_WITH_LITELLM: %s", ENABLE_ENGLISH_TRANSCRIPTION_WITH_LITELLM)
+
 ENABLE_RUNPOD_WHISPER_TRANSCRIPTION = os.environ.get(
     "ENABLE_RUNPOD_WHISPER_TRANSCRIPTION", "false"
 ).lower() in ["true", "1"]
