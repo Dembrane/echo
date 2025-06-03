@@ -36,6 +36,80 @@
     "_syncId": "9d9c2b69-dd1f-4a25-b776-aa81f9c75aa4"
   },
   {
+    "collection": "directus_files",
+    "action": "read",
+    "permissions": {
+      "_and": [
+        {
+          "_or": [
+            {
+              "folder": {
+                "name": {
+                  "_contains": "Public"
+                }
+              }
+            },
+            {
+              "folder": {
+                "parent": {
+                  "name": {
+                    "_contains": "Public"
+                  }
+                }
+              }
+            },
+            {
+              "folder": {
+                "parent": {
+                  "parent": {
+                    "name": {
+                      "_contains": "Public"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "description",
+      "id",
+      "title",
+      "tags",
+      "location",
+      "storage",
+      "focal_point_divider",
+      "focal_point_x",
+      "focal_point_y",
+      "storage_divider",
+      "filename_disk",
+      "filename_download",
+      "metadata",
+      "type",
+      "filesize",
+      "created_on",
+      "modified_by",
+      "modified_on",
+      "embed",
+      "uploaded_by",
+      "uploaded_on",
+      "folder",
+      "width",
+      "height",
+      "charset",
+      "duration",
+      "tus_id",
+      "$thumbnail",
+      "tus_data"
+    ],
+    "policy": "_sync_default_public_policy",
+    "_syncId": "f5228d52-f3a5-428c-929a-09dcf47d870f"
+  },
+  {
     "collection": "project_report_metric",
     "action": "create",
     "permissions": null,
