@@ -262,8 +262,8 @@ type Subscription {
   directus_access_mutated(event: EventEnum): directus_access_mutated
   directus_comments_mutated(event: EventEnum): directus_comments_mutated
   directus_versions_mutated(event: EventEnum): directus_versions_mutated
-  aspect_mutated(event: EventEnum): aspect_mutated
   directus_users_mutated(event: EventEnum): directus_users_mutated
+  quote_mutated(event: EventEnum): quote_mutated
   account_mutated(event: EventEnum): account_mutated
   account_directus_users_mutated(event: EventEnum): account_directus_users_mutated
   view_mutated(event: EventEnum): view_mutated
@@ -281,16 +281,16 @@ type Subscription {
   project_chat_message_metadata_mutated(event: EventEnum): project_chat_message_metadata_mutated
   project_report_mutated(event: EventEnum): project_report_mutated
   project_report_metric_mutated(event: EventEnum): project_report_metric_mutated
-  project_report_notification_participants_mutated(event: EventEnum): project_report_notification_participants_mutated
-  quote_mutated(event: EventEnum): quote_mutated
   quote_aspect_mutated(event: EventEnum): quote_aspect_mutated
-  conversation_segment_mutated(event: EventEnum): conversation_segment_mutated
-  conversation_mutated(event: EventEnum): conversation_mutated
-  project_chat_message_mutated(event: EventEnum): project_chat_message_mutated
-  project_mutated(event: EventEnum): project_mutated
-  conversation_chunk_mutated(event: EventEnum): conversation_chunk_mutated
   quote_aspect_1_mutated(event: EventEnum): quote_aspect_1_mutated
   quote_conversation_chunk_mutated(event: EventEnum): quote_conversation_chunk_mutated
+  conversation_chunk_mutated(event: EventEnum): conversation_chunk_mutated
+  aspect_mutated(event: EventEnum): aspect_mutated
+  conversation_mutated(event: EventEnum): conversation_mutated
+  project_mutated(event: EventEnum): project_mutated
+  project_chat_message_mutated(event: EventEnum): project_chat_message_mutated
+  conversation_segment_mutated(event: EventEnum): conversation_segment_mutated
+  project_report_notification_participants_mutated(event: EventEnum): project_report_notification_participants_mutated
   processing_status_mutated(event: EventEnum): processing_status_mutated
 }
 
@@ -435,7 +435,6 @@ type conversation {
   description: String
   duration: Float
   id: ID!
-  is_finished: Boolean
   merged_audio_path: String
   merged_transcript: String
   participant_email: String
@@ -451,6 +450,7 @@ type conversation {
   title: String
   updated_at: Date
   updated_at_func: datetime_functions
+  is_finished: Boolean
   is_audio_processing_finished: Boolean
   chunks(filter: conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_chunk]
   chunks_func: count_functions
@@ -482,8 +482,13 @@ type conversation_chunk {
   transcript: String
   updated_at: Date
   updated_at_func: datetime_functions
-  runpod_job_status_link: String
   runpod_request_count: Int
+  runpod_job_status_link: String
+  noise_ratio: Float
+  cross_talk_instances: Int
+  silence_ratio: Float
+  diarization: JSON
+  diarization_func: count_functions
   conversation_segments(filter: conversation_segment_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_segment_conversation_chunk]
   conversation_segments_func: count_functions
   quotes(filter: quote_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_conversation_chunk]
@@ -1924,24 +1929,24 @@ type project {
   id: ID!
   image_generation_model: String
   is_conversation_allowed: Boolean!
-  is_enhanced_audio_processing_enabled: Boolean
   is_get_reply_enabled: Boolean
-  is_project_notification_subscription_allowed: Boolean
   language: String
   name: String
   pin: String
   updated_at: Date
   updated_at_func: datetime_functions
+  is_enhanced_audio_processing_enabled: Boolean
+  is_project_notification_subscription_allowed: Boolean
   conversations(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation]
   conversations_func: count_functions
-  tags(filter: project_tag_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_tag]
-  tags_func: count_functions
   project_analysis_runs(filter: project_analysis_run_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_analysis_run]
   project_analysis_runs_func: count_functions
   project_chats(filter: project_chat_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat]
   project_chats_func: count_functions
   project_reports(filter: project_report_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_report]
   project_reports_func: count_functions
+  tags(filter: project_tag_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_tag]
+  tags_func: count_functions
 }
 
 type project_analysis_run {
@@ -2159,7 +2164,6 @@ type quote {
   conversation_id(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation
   created_at: Date
   created_at_func: datetime_functions
-  embedding: String
   id: ID!
   insight_id(filter: insight_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): insight
   order: Int
@@ -2169,6 +2173,7 @@ type quote {
   timestamp_func: datetime_functions
   updated_at: Date
   updated_at_func: datetime_functions
+  embedding: String
   aspects(filter: quote_aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_aspect]
   aspects_func: count_functions
   conversation_chunks(filter: quote_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_conversation_chunk]
@@ -2371,8 +2376,13 @@ input conversation_chunk_filter {
   transcript: string_filter_operators
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
-  runpod_job_status_link: string_filter_operators
   runpod_request_count: number_filter_operators
+  runpod_job_status_link: string_filter_operators
+  noise_ratio: number_filter_operators
+  cross_talk_instances: number_filter_operators
+  silence_ratio: number_filter_operators
+  diarization: string_filter_operators
+  diarization_func: count_function_filter_operators
   conversation_segments: conversation_segment_conversation_chunk_filter
   conversation_segments_func: count_function_filter_operators
   quotes: quote_conversation_chunk_filter
@@ -2388,7 +2398,6 @@ input conversation_filter {
   description: string_filter_operators
   duration: number_filter_operators
   id: string_filter_operators
-  is_finished: boolean_filter_operators
   merged_audio_path: string_filter_operators
   merged_transcript: string_filter_operators
   participant_email: string_filter_operators
@@ -2402,6 +2411,7 @@ input conversation_filter {
   title: string_filter_operators
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
+  is_finished: boolean_filter_operators
   is_audio_processing_finished: boolean_filter_operators
   chunks: conversation_chunk_filter
   chunks_func: count_function_filter_operators
@@ -2509,8 +2519,12 @@ input create_conversation_chunk_input {
   timestamp: Date!
   transcript: String
   updated_at: Date
-  runpod_job_status_link: String
   runpod_request_count: Int
+  runpod_job_status_link: String
+  noise_ratio: Float
+  cross_talk_instances: Int
+  silence_ratio: Float
+  diarization: JSON
   conversation_segments: [create_conversation_segment_conversation_chunk_input]
   quotes: [create_quote_conversation_chunk_input]
 }
@@ -2521,7 +2535,6 @@ input create_conversation_input {
   description: String
   duration: Float
   id: ID
-  is_finished: Boolean
   merged_audio_path: String
   merged_transcript: String
   participant_email: String
@@ -2536,6 +2549,7 @@ input create_conversation_input {
   summary: String
   title: String
   updated_at: Date
+  is_finished: Boolean
   is_audio_processing_finished: Boolean
   chunks: [create_conversation_chunk_input]
   project_chat_messages: [create_project_chat_message_conversation_input]
@@ -2984,18 +2998,18 @@ input create_project_input {
   id: ID
   image_generation_model: String
   is_conversation_allowed: Boolean!
-  is_enhanced_audio_processing_enabled: Boolean
   is_get_reply_enabled: Boolean
-  is_project_notification_subscription_allowed: Boolean
   language: String
   name: String
   pin: String
   updated_at: Date
+  is_enhanced_audio_processing_enabled: Boolean
+  is_project_notification_subscription_allowed: Boolean
   conversations: [create_conversation_input]
-  tags: [create_project_tag_input]
   project_analysis_runs: [create_project_analysis_run_input]
   project_chats: [create_project_chat_input]
   project_reports: [create_project_report_input]
+  tags: [create_project_tag_input]
 }
 
 input create_project_report_input {
@@ -3041,7 +3055,6 @@ input create_quote_conversation_chunk_input {
 input create_quote_input {
   conversation_id: create_conversation_input
   created_at: Date
-  embedding: String
   id: ID!
   insight_id: create_insight_input
   order: Int
@@ -3049,6 +3062,7 @@ input create_quote_input {
   text: String!
   timestamp: Date
   updated_at: Date
+  embedding: String
   aspects: [create_quote_aspect_input]
   conversation_chunks: [create_quote_conversation_chunk_input]
   representative_aspects: [create_quote_aspect_1_input]
@@ -3716,24 +3730,24 @@ input project_filter {
   id: string_filter_operators
   image_generation_model: string_filter_operators
   is_conversation_allowed: boolean_filter_operators
-  is_enhanced_audio_processing_enabled: boolean_filter_operators
   is_get_reply_enabled: boolean_filter_operators
-  is_project_notification_subscription_allowed: boolean_filter_operators
   language: string_filter_operators
   name: string_filter_operators
   pin: string_filter_operators
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
+  is_enhanced_audio_processing_enabled: boolean_filter_operators
+  is_project_notification_subscription_allowed: boolean_filter_operators
   conversations: conversation_filter
   conversations_func: count_function_filter_operators
-  tags: project_tag_filter
-  tags_func: count_function_filter_operators
   project_analysis_runs: project_analysis_run_filter
   project_analysis_runs_func: count_function_filter_operators
   project_chats: project_chat_filter
   project_chats_func: count_function_filter_operators
   project_reports: project_report_filter
   project_reports_func: count_function_filter_operators
+  tags: project_tag_filter
+  tags_func: count_function_filter_operators
   _and: [project_filter]
   _or: [project_filter]
 }
@@ -3797,7 +3811,6 @@ input quote_filter {
   conversation_id: conversation_filter
   created_at: date_filter_operators
   created_at_func: datetime_function_filter_operators
-  embedding: string_filter_operators
   id: string_filter_operators
   insight_id: insight_filter
   order: number_filter_operators
@@ -3807,6 +3820,7 @@ input quote_filter {
   timestamp_func: datetime_function_filter_operators
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
+  embedding: string_filter_operators
   aspects: quote_aspect_filter
   aspects_func: count_function_filter_operators
   conversation_chunks: quote_conversation_chunk_filter
@@ -3881,8 +3895,12 @@ input update_conversation_chunk_input {
   timestamp: Date
   transcript: String
   updated_at: Date
-  runpod_job_status_link: String
   runpod_request_count: Int
+  runpod_job_status_link: String
+  noise_ratio: Float
+  cross_talk_instances: Int
+  silence_ratio: Float
+  diarization: JSON
   conversation_segments: [update_conversation_segment_conversation_chunk_input]
   quotes: [update_quote_conversation_chunk_input]
 }
@@ -3893,7 +3911,6 @@ input update_conversation_input {
   description: String
   duration: Float
   id: ID
-  is_finished: Boolean
   merged_audio_path: String
   merged_transcript: String
   participant_email: String
@@ -3908,6 +3925,7 @@ input update_conversation_input {
   summary: String
   title: String
   updated_at: Date
+  is_finished: Boolean
   is_audio_processing_finished: Boolean
   chunks: [update_conversation_chunk_input]
   project_chat_messages: [update_project_chat_message_conversation_input]
@@ -4397,18 +4415,18 @@ input update_project_input {
   id: ID
   image_generation_model: String
   is_conversation_allowed: Boolean
-  is_enhanced_audio_processing_enabled: Boolean
   is_get_reply_enabled: Boolean
-  is_project_notification_subscription_allowed: Boolean
   language: String
   name: String
   pin: String
   updated_at: Date
+  is_enhanced_audio_processing_enabled: Boolean
+  is_project_notification_subscription_allowed: Boolean
   conversations: [update_conversation_input]
-  tags: [update_project_tag_input]
   project_analysis_runs: [update_project_analysis_run_input]
   project_chats: [update_project_chat_input]
   project_reports: [update_project_report_input]
+  tags: [update_project_tag_input]
 }
 
 input update_project_report_input {
@@ -4454,7 +4472,6 @@ input update_quote_conversation_chunk_input {
 input update_quote_input {
   conversation_id: update_conversation_input
   created_at: Date
-  embedding: String
   id: ID
   insight_id: update_insight_input
   order: Int
@@ -4462,6 +4479,7 @@ input update_quote_input {
   text: String
   timestamp: Date
   updated_at: Date
+  embedding: String
   aspects: [update_quote_aspect_input]
   conversation_chunks: [update_quote_conversation_chunk_input]
   representative_aspects: [update_quote_aspect_1_input]
