@@ -1,9 +1,14 @@
 import time
 import logging
+from typing import Any
+from datetime import timedelta
 
+import numpy as np
+import pandas as pd
 import requests
 
 from dembrane.s3 import get_signed_url
+from dembrane.utils import get_utc_timestamp
 from dembrane.config import (
     RUNPOD_DIARIZATION_API_KEY,
     RUNPOD_DIARIZATION_TIMEOUT,
@@ -24,10 +29,14 @@ def get_runpod_diarization(
     """
     logger.debug(f"***Starting diarization for chunk_id: {chunk_id}, path: {path}")
     try:
-        audio_file_uri = path if path else directus.get_item(
-            "conversation_chunk",
-            chunk_id,
-        )["path"]
+        audio_file_uri = (
+            path
+            if path
+            else directus.get_item(
+                "conversation_chunk",
+                chunk_id,
+            )["path"]
+        )
         logger.debug(f"Fetched audio_file_uri: {audio_file_uri}")
     except Exception as e:
         logger.error(f"Failed to fetch audio_file_uri for chunk_id {chunk_id}: {e}")
@@ -79,7 +88,9 @@ def get_runpod_diarization(
                 cross_talk_instances = dirz_response_data.get("cross_talk_instances")
                 silence_ratio = dirz_response_data.get("silence_ratio")
                 joined_diarization = dirz_response_data.get("joined_diarization")
-                logger.info(f"Diarization job {job_id} completed. Updating chunk {chunk_id} with results.")
+                logger.info(
+                    f"Diarization job {job_id} completed. Updating chunk {chunk_id} with results."
+                )
                 directus.update_item(
                     "conversation_chunk",
                     chunk_id,
@@ -106,3 +117,203 @@ def get_runpod_diarization(
     except Exception as e:
         logger.error(f"Failed to cancel diarization job {job_id}: {e}")
     return None
+
+
+def _process_data(df: pd.DataFrame) -> pd.DataFrame:
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    max_timestamp = df["timestamp"].max()
+    df["time_diff_seconds"] = (max_timestamp - df["timestamp"]).dt.total_seconds()
+    decay_factor = 30
+    df["recency_weight"] = np.exp(-df["time_diff_seconds"] / decay_factor)
+    df.drop(columns=["timestamp", "time_diff_seconds"], inplace=True)
+    df = df[
+        [
+            "project_id",
+            "conversation_id",
+            "noise_ratio",
+            "cross_talk_instances",
+            "silence_ratio",
+            "recency_weight",
+        ]
+    ]
+    df.dropna(inplace=True)
+    return df
+
+
+def _calculate_conversation_metrics(
+    df: pd.DataFrame, cross_talk_threshold: float, noise_threshold: float, silence_threshold: float
+) -> dict[str, Any]:
+    # Calculate conversation-level metrics (average of chunks within each conversation)
+    conversation_metrics = (
+        df.groupby(["project_id", "conversation_id"])
+        .agg({"noise_ratio": "mean", "cross_talk_instances": "mean", "silence_ratio": "mean"})
+        .reset_index()
+    )
+
+    def classify_conversation_issue(row: Any) -> str:
+        if row["cross_talk_instances"] > cross_talk_threshold:
+            return "HIGH_CROSSTALK"
+        elif row["noise_ratio"] > noise_threshold:
+            return "HIGH_NOISE"
+        elif row["silence_ratio"] > silence_threshold:
+            return "HIGH_SILENCE"
+        else:
+            return "NONE"
+
+    conversation_metrics["conversation_issue"] = conversation_metrics.apply(
+        classify_conversation_issue, axis=1
+    )
+
+    # Calculate project-level metrics (average of conversations within each project)
+    project_metrics = (
+        conversation_metrics.groupby("project_id")
+        .agg({"noise_ratio": "mean", "cross_talk_instances": "mean", "silence_ratio": "mean"})
+        .reset_index()
+    )
+
+    # Calculate global metrics (average of all projects)
+    global_metrics = project_metrics.agg(
+        {"noise_ratio": "mean", "cross_talk_instances": "mean", "silence_ratio": "mean"}
+    )
+
+    # Build the nested dictionary structure
+    result: dict[str, Any] = {
+        "global_noise_ratio": float(global_metrics["noise_ratio"]),
+        "global_cross_talk_instances": float(global_metrics["cross_talk_instances"]),
+        "global_silence_ratio": float(global_metrics["silence_ratio"]),
+        "projects": {},
+    }
+
+    # Build projects dictionary
+    projects_dict: dict[str, Any] = {}
+    for _, project_row in project_metrics.iterrows():
+        project_id = str(project_row["project_id"])
+        projects_dict[project_id] = {
+            "project_noise_ratio": float(project_row["noise_ratio"]),
+            "project_cross_talk_instances": float(project_row["cross_talk_instances"]),
+            "project_silence_ratio": float(project_row["silence_ratio"]),
+            "conversations": {},
+        }
+
+        # Add conversations for this project
+        conversations_dict: dict[str, Any] = {}
+        project_conversations = conversation_metrics[
+            conversation_metrics["project_id"] == project_row["project_id"]
+        ]
+        for _, conv_row in project_conversations.iterrows():
+            conversation_id = str(conv_row["conversation_id"])
+            conversations_dict[conversation_id] = {
+                "conversation_noise_ratio": float(conv_row["noise_ratio"]),
+                "conversation_cross_talk_instances": float(conv_row["cross_talk_instances"]),
+                "conversation_silence_ratio": float(conv_row["silence_ratio"]),
+                "conversation_issue": conv_row["conversation_issue"],
+            }
+        projects_dict[project_id]["conversations"] = conversations_dict
+    result["projects"] = projects_dict
+    return result
+
+
+def get_heath_status(
+    project_ids: list[str] | None = None,
+    conversation_ids: list[str] | None = None,
+    cross_talk_threshold: float = 1.0,
+    noise_threshold: float = 0.5,
+    silence_threshold: float = 0.8,
+) -> dict[str, Any]:
+    """
+    Get the health status of conversations.
+    """
+    if not project_ids and not conversation_ids:
+        raise ValueError("Either project_ids or conversation_ids must be provided")
+
+    chunk_li = _get_timebound_conversation_chunks(project_ids, conversation_ids)
+    df = pd.DataFrame(chunk_li)
+
+    if df.empty:
+        return {}
+
+    df = _process_data(df)
+    result = _calculate_conversation_metrics(
+        df, cross_talk_threshold, noise_threshold, silence_threshold
+    )
+    return result
+
+
+def _get_timebound_conversation_chunks(
+    project_ids: list[str] | None = None,
+    conversation_ids: list[str] | None = None,
+    time_threshold_mins: int = 5,
+    max_chunks_for_conversation: int = 2,
+) -> list[dict[str, Any]]:
+    """
+    Get all chunks in a project for the last 5 minutes.
+    """
+    if not project_ids and not conversation_ids:
+        raise ValueError("Either project_ids or conversation_ids must be provided")
+
+    filter_dict: dict[str, Any] = {
+        "timestamp": {
+            "_gte": (get_utc_timestamp() - timedelta(minutes=time_threshold_mins)).isoformat()
+        }
+    }
+
+    return_fields = [
+        "conversation_id.id",
+        "conversation_id.project_id",
+        "noise_ratio",
+        "cross_talk_instances",
+        "silence_ratio",
+        "timestamp",
+    ]
+
+    aggregated_response = []
+    if project_ids:
+        filter_dict["conversation_id"] = {}
+        filter_dict["conversation_id"]["project_id"] = {"_in": project_ids}
+        response = directus.get_items(
+            "conversation_chunk",
+            {
+                "query": {
+                    "filter": filter_dict,
+                    "fields": return_fields,
+                    "sort": ["-timestamp"],  # Sort by timestamp descending (newest first)
+                },
+            },
+        )
+        aggregated_response.extend(_flatten_response(response))
+    if conversation_ids:
+        filter_dict["conversation_id"] = {}
+        filter_dict["conversation_id"]["id"] = {"_in": conversation_ids}
+        response = directus.get_items(
+            "conversation_chunk",
+            {
+                "query": {
+                    "filter": filter_dict,
+                    "fields": return_fields,
+                    "sort": ["-timestamp"],  # Sort by timestamp descending (newest first)
+                },
+            },
+        )
+        response = response[:max_chunks_for_conversation]  # type: ignore
+        aggregated_response.extend(_flatten_response(response))
+    return aggregated_response
+
+
+def _flatten_response(response: Any) -> list[dict[str, Any]]:
+    flattened_response = []
+    if isinstance(response, list):
+        for item in response:
+            if isinstance(item, dict):
+                conversation_data = item.get("conversation_id", {})
+                if isinstance(conversation_data, dict):
+                    flattened_item = {
+                        "conversation_id": conversation_data.get("id"),
+                        "project_id": conversation_data.get("project_id"),
+                        "noise_ratio": item.get("noise_ratio"),
+                        "cross_talk_instances": item.get("cross_talk_instances"),
+                        "silence_ratio": item.get("silence_ratio"),
+                        "timestamp": item.get("timestamp"),
+                    }
+                    flattened_response.append(flattened_item)
+
+    return flattened_response
