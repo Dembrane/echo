@@ -41,6 +41,7 @@ from dembrane.conversation_utils import (
 	collect_unfinished_audio_processing_conversations,
 )
 from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.conversation_health import get_runpod_diarization
 from dembrane.processing_status_utils import ProcessingStatus, ProcessingStatusContext
 from dembrane.audio_lightrag.main.run_etl import run_etl_pipeline
 
@@ -386,6 +387,8 @@ def task_process_conversation_chunk(chunk_id: str, run_finish_hook: bool = False
 		if split_chunk_ids is None:
 			logger.error(f"Split audio chunk result is None for chunk: {chunk_id}")
 			raise ValueError(f"Split audio chunk result is None for chunk: {chunk_id}")
+
+		group([task_get_runpod_diarization.message(chunk_id)]).run()
 
 		logger.info(f"Split audio chunk result: {split_chunk_ids}")
 
@@ -983,3 +986,11 @@ def task_update_runpod_transcription_response() -> None:
     except Exception as e:
         logger.error(f"Error in task_update_runpod_transcription_response: {e}")
 
+@dramatiq.actor(queue_name="network", priority=50)
+def task_get_runpod_diarization(chunk_id: str) -> None:
+	logger = getLogger("dembrane.tasks.task_get_runpod_diarization")
+	logger.info(f"***Getting runpod diarization for chunk {chunk_id}")
+	try:
+		get_runpod_diarization(chunk_id)
+	except Exception as e:
+		logger.error(f"Error in task_get_runpod_diarization: {e}")
