@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
 import {
   Button,
   Checkbox,
@@ -128,37 +128,50 @@ const ProperNounInput = ({
   );
 };
 
-export const ProjectPortalEditor = ({ project }: { project: Project }) => {
+// Memoized MarkdownWYSIWYG wrapper
+const MemoizedMarkdownWYSIWYG = memo(MarkdownWYSIWYG);
+
+// Memoized ProjectTagsInput wrapper
+const MemoizedProjectTagsInput = memo(ProjectTagsInput);
+
+const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
+  project,
+}) => {
   const [showPreview, setShowPreview] = useState(false);
   const link = useProjectSharingLink(project);
   const [previewKey, setPreviewKey] = useState(0);
   const [previewWidth, setPreviewWidth] = useState(400);
   const [previewHeight, setPreviewHeight] = useState(300);
 
+  const defaultValues = useMemo(() => {
+    return {
+      default_conversation_tutorial_slug:
+        project.default_conversation_tutorial_slug ?? "none",
+      default_conversation_ask_for_participant_name:
+        project.default_conversation_ask_for_participant_name ?? false,
+      default_conversation_title: project.default_conversation_title ?? "",
+      default_conversation_description:
+        project.default_conversation_description ?? "",
+      default_conversation_finish_text:
+        project.default_conversation_finish_text ?? "",
+      is_project_notification_subscription_allowed:
+        project.is_project_notification_subscription_allowed ?? false,
+      language: (project.language ?? "en") as "en" | "nl" | "de" | "fr" | "es",
+      default_conversation_transcript_prompt:
+        project.default_conversation_transcript_prompt ?? "",
+      is_get_reply_enabled: project.is_get_reply_enabled ?? false,
+      get_reply_mode: project.get_reply_mode ?? "summarize",
+      get_reply_prompt: project.get_reply_prompt ?? "",
+    };
+  }, [project.id]);
+
+  const formResolver = useMemo(() => zodResolver(FormSchema), []);
+
   const { control, handleSubmit, watch, formState, reset } =
     useForm<ProjectPortalFormValues>({
-      defaultValues: {
-        default_conversation_tutorial_slug:
-          project.default_conversation_tutorial_slug ?? "none",
-        default_conversation_ask_for_participant_name:
-          project.default_conversation_ask_for_participant_name ?? false,
-        default_conversation_title: project.default_conversation_title ?? "",
-        default_conversation_description:
-          project.default_conversation_description ?? "",
-        default_conversation_finish_text:
-          project.default_conversation_finish_text ?? "",
-        is_project_notification_subscription_allowed:
-          project.is_project_notification_subscription_allowed ?? false,
-        language:
-          (project.language as "en" | "nl" | "de" | "fr" | "es") ?? "en",
-        default_conversation_transcript_prompt:
-          project.default_conversation_transcript_prompt ?? "",
-        is_get_reply_enabled: project.is_get_reply_enabled ?? false,
-        get_reply_mode: project.get_reply_mode ?? "summarize",
-        get_reply_prompt: project.get_reply_prompt ?? "",
-      },
+      defaultValues,
       // for validation
-      resolver: zodResolver(FormSchema),
+      resolver: formResolver,
       mode: "onChange",
       reValidateMode: "onChange",
     });
@@ -170,17 +183,18 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
 
   const updateProjectMutation = useUpdateProjectByIdMutation();
 
-  const onSave = async (values: ProjectPortalFormValues) => {
-    console.log("[ProjectPortalEditor] Saving values:", values);
-    const data = await updateProjectMutation.mutateAsync({
-      id: project.id,
-      payload: values,
-    });
-    console.log("[ProjectPortalEditor] Save response:", data);
+  const onSave = useCallback(
+    async (values: ProjectPortalFormValues) => {
+      const data = await updateProjectMutation.mutateAsync({
+        id: project.id,
+        payload: values,
+      });
 
-    // Reset the form with the current values to clear the dirty state
-    reset(values, { keepDirty: false, keepValues: true });
-  };
+      // Reset the form with the current values to clear the dirty state
+      reset(values, { keepDirty: false, keepValues: true });
+    },
+    [project.id, updateProjectMutation, reset],
+  );
 
   const {
     dispatchAutoSave,
@@ -194,24 +208,27 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
     initialLastSavedAt: project.updated_at ?? new Date(),
   });
 
+  // Create a stable reference to dispatchAutoSave
+  const dispatchAutoSaveRef = useRef(dispatchAutoSave);
   useEffect(() => {
-    console.log("[ProjectPortalEditor] Setting up form watch");
+    dispatchAutoSaveRef.current = dispatchAutoSave;
+  }, [dispatchAutoSave]);
+
+  useEffect(() => {
     const subscription = watch((values, { type }) => {
       if (type === "change" && values) {
-        console.log("[ProjectPortalEditor] Form values changed:", values);
-        dispatchAutoSave(values as ProjectPortalFormValues);
+        dispatchAutoSaveRef.current(values as ProjectPortalFormValues);
       }
     });
 
     return () => {
-      console.log("[ProjectPortalEditor] Cleaning up form watch");
       subscription.unsubscribe();
     };
-  }, [watch, dispatchAutoSave]);
+  }, [watch]); // Only depend on watch
 
-  const refreshPreview = () => {
+  const refreshPreview = useCallback(() => {
     setPreviewKey((prev) => prev + 1);
-  };
+  }, []);
 
   return (
     <Box>
@@ -244,10 +261,6 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
           <div className="max-w-[800px] flex-1">
             <form
               onSubmit={handleSubmit(async (values) => {
-                console.log(
-                  "[ProjectPortalEditor] Manual save triggered:",
-                  values,
-                );
                 await triggerManualSave(values);
               })}
             >
@@ -355,7 +368,7 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
                         />
                       )}
                     />
-                    <ProjectTagsInput project={project} />
+                    <MemoizedProjectTagsInput project={project} />
                   </Stack>
                 </Stack>
 
@@ -423,7 +436,7 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
                         </Text>
                         <Group gap="xs">
                           <Badge
-                            className="capitalize cursor-pointer"
+                            className="cursor-pointer capitalize"
                             variant={
                               field.value === "summarize" ? "filled" : "default"
                             }
@@ -434,7 +447,7 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
                             <Trans>Summarize</Trans>
                           </Badge>
                           <Badge
-                            className="capitalize cursor-pointer"
+                            className="cursor-pointer capitalize"
                             variant={
                               field.value === "brainstorm"
                                 ? "filled"
@@ -447,7 +460,7 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
                             <Trans>Brainstorm Ideas</Trans>
                           </Badge>
                           <Badge
-                            className="capitalize cursor-pointer"
+                            className="cursor-pointer capitalize"
                             variant={
                               field.value === "custom" ? "filled" : "default"
                             }
@@ -550,7 +563,7 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
                         name="default_conversation_description"
                         control={control}
                         render={({ field }) => (
-                          <MarkdownWYSIWYG
+                          <MemoizedMarkdownWYSIWYG
                             markdown={field.value}
                             onChange={field.onChange}
                           />
@@ -579,7 +592,7 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
                         name="default_conversation_finish_text"
                         control={control}
                         render={({ field }) => (
-                          <MarkdownWYSIWYG
+                          <MemoizedMarkdownWYSIWYG
                             markdown={field.value}
                             onChange={field.onChange}
                           />
@@ -746,3 +759,12 @@ export const ProjectPortalEditor = ({ project }: { project: Project }) => {
     </Box>
   );
 };
+
+// Memoize the component to prevent re-renders when project hasn't changed
+export const ProjectPortalEditor = memo(
+  ProjectPortalEditorComponent,
+  (prevProps, nextProps) => {
+    // Only re-render if the project ID has changed
+    return prevProps.project.id === nextProps.project.id;
+  },
+);

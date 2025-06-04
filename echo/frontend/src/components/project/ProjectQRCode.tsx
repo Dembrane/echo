@@ -14,6 +14,7 @@ import {
 import { IconCheck, IconCopy, IconShare } from "@tabler/icons-react";
 import { QRCode } from "../common/QRCode";
 import { PARTICIPANT_BASE_URL } from "@/config";
+import { useMemo } from "react";
 
 interface ProjectQRCodeProps {
   project?: Project;
@@ -21,38 +22,40 @@ interface ProjectQRCodeProps {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useProjectSharingLink = (project?: Project) => {
-  if (!project) {
-    return null;
-  }
+  return useMemo(() => {
+    if (!project) {
+      return null;
+    }
 
-  // map the project.language to the language code
-  const languageCode = {
-    en: "en-US",
-    nl: "nl-NL",
-    de: "de-DE",
-    fr: "fr-FR",
-    es: "es-ES",
-    "en-US": "en-US",
-    "nl-NL": "nl-NL",
-    "de-DE": "de-DE",
-    "fr-FR": "fr-FR",
-    "es-ES": "es-ES",
-  }[
-    project.language as
-      | "en"
-      | "nl"
-      | "de"
-      | "fr"
-      | "es"
-      | "en-US"
-      | "nl-NL"
-      | "de-DE"
-      | "fr-FR"
-      | "es-ES"
-  ];
+    // map the project.language to the language code
+    const languageCode = {
+      en: "en-US",
+      nl: "nl-NL",
+      de: "de-DE",
+      fr: "fr-FR",
+      es: "es-ES",
+      "en-US": "en-US",
+      "nl-NL": "nl-NL",
+      "de-DE": "de-DE",
+      "fr-FR": "fr-FR",
+      "es-ES": "es-ES",
+    }[
+      project.language as
+        | "en"
+        | "nl"
+        | "de"
+        | "fr"
+        | "es"
+        | "en-US"
+        | "nl-NL"
+        | "de-DE"
+        | "fr-FR"
+        | "es-ES"
+    ];
 
-  const link = `${PARTICIPANT_BASE_URL}/${languageCode}/${project.id}/start`;
-  return link;
+    const link = `${PARTICIPANT_BASE_URL}/${languageCode}/${project.id}/start`;
+    return link;
+  }, [project?.language, project?.id]);
 };
 
 export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {

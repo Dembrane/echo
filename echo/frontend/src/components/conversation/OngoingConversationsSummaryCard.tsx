@@ -39,7 +39,7 @@ export const OngoingConversationsSummaryCard = ({
 
       return uniqueConversations.size;
     },
-    refetchInterval: 15000, // Update every 10 seconds
+    refetchInterval: 15000,
   });
 
   return (

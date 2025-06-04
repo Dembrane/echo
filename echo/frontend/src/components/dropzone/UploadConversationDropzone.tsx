@@ -13,7 +13,6 @@ import {
   Paper,
   ActionIcon,
   Tooltip,
-  Notification,
   TextInput,
 } from "@mantine/core";
 import {
@@ -34,10 +33,10 @@ import {
   IconTrash,
   IconFileUpload,
   IconArrowRight,
-  IconInfoCircle,
   IconEdit,
   IconCheck,
 } from "@tabler/icons-react";
+import { toast } from "../common/Toaster";
 
 // Define file upload status type
 type FileUploadStatus = {
@@ -226,12 +225,28 @@ const useFileNameEditor = (
   };
 };
 
+// Config
+const MAX_FILES = 10;
+const MIN_FILE_SIZE = 5 * 1024; // 5KB in bytes
+const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB in bytes
+
+// Valid audio MIME types
+const VALID_AUDIO_TYPES = [
+  "audio/mp3",
+  "audio/wav",
+  "audio/mpeg",
+  "audio/ogg",
+  "audio/webm",
+  "audio/m4a",
+  "video/mp4", // MP4 can contain audio
+  "audio/aac",
+  "audio/flac",
+  "audio/opus",
+];
+
 export const UploadConversationDropzone = (
   props: PropsWithChildren<{
     projectId: string;
-    idle?: React.ReactNode;
-    reject?: React.ReactNode;
-    accept?: React.ReactNode;
   }>,
 ) => {
   // Modal state
@@ -242,29 +257,6 @@ export const UploadConversationDropzone = (
   const [uploadStatus, setUploadStatus] = useState<FileUploadStatus[]>([]);
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [uploadStarted, setUploadStarted] = useState(false);
-  const [notification, setNotification] = useState<{
-    message: string;
-    type: "error" | "warning" | "info";
-  } | null>(null);
-
-  // Config
-  const MAX_FILES = 10;
-  const MIN_FILE_SIZE = 5 * 1024; // 5KB in bytes
-  const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB in bytes
-
-  // Valid audio MIME types
-  const VALID_AUDIO_TYPES = [
-    "audio/mp3",
-    "audio/wav",
-    "audio/mpeg",
-    "audio/ogg",
-    "audio/webm",
-    "audio/m4a",
-    "video/mp4", // MP4 can contain audio
-    "audio/aac",
-    "audio/flac",
-    "audio/opus",
-  ];
 
   // Use our custom uploader hook
   const uploader = useConversationUploader();
@@ -328,27 +320,47 @@ export const UploadConversationDropzone = (
     uploader.uploadProgress,
     uploader.uploadErrors,
     selectedFiles,
-    uploadStatus,
   ]);
 
-  // Set global error if uploader has an error - with null check
+  // Reflect uploader error in a single place
   useEffect(() => {
-    const errorMessage = uploader.isError
-      ? uploader.error?.message || t`Upload failed. Please try again.`
-      : null;
-
-    if (globalError !== errorMessage) {
-      setGlobalError(errorMessage);
-    }
-  }, [uploader.isError, uploader.error, globalError]);
+    setGlobalError(
+      uploader.isError
+        ? uploader.error?.message || t`Upload failed. Please try again.`
+        : null,
+    );
+  }, [uploader.isError, uploader.error]);
 
   // Set upload started state based on uploader state
   useEffect(() => {
-    // Only update state if it actually needs to change
-    if (uploadStarted !== uploader.isUploading) {
-      setUploadStarted(uploader.isUploading);
+    setUploadStarted(uploader.isUploading);
+  }, [uploader.isUploading]);
+
+  // Track previous modal state so we only run cleanup when it transitions from open ➜ closed
+  const prevOpenedRef = useRef(opened);
+
+  // Reset states when modal **closes** (run only on the transition, not on every render)
+  useEffect(() => {
+    // Run cleanup only if the modal was previously open and is now closed
+    if (prevOpenedRef.current && !opened) {
+      // Reset in a specific order to prevent circular dependencies
+      const cleanup = () => {
+        fileEditor.cancelEditing();
+        setGlobalError(null);
+        setUploadStatus([]);
+        setSelectedFiles([]);
+        setUploadStarted(false);
+
+        // This should come last as it might trigger other state changes
+        uploader.resetUpload();
+      };
+
+      cleanup();
     }
-  }, [uploader.isUploading, uploadStarted]);
+
+    // Update the ref for the next render cycle
+    prevOpenedRef.current = opened;
+  }, [opened]);
 
   // Handle file selection - make this a useCallback to ensure stability
   const handleFileSelection = useCallback(
@@ -356,29 +368,26 @@ export const UploadConversationDropzone = (
       // First filter only audio files
       const audioFiles = Array.from(files).filter((file) => {
         if (!isAudioFile(file)) {
-          setNotification({
-            message: t`File "${file.name}" is not a supported audio format. Only audio files are allowed.`,
-            type: "error",
-          });
+          toast.error(
+            t`File "${file.name}" is not a supported audio format. Only audio files are allowed.`,
+          );
           return false;
         }
         return true;
       });
 
       if (audioFiles.length === 0) {
-        setNotification({
-          message: t`No valid audio files were selected. Please select audio files only (MP3, WAV, OGG, etc).`,
-          type: "error",
-        });
+        toast.error(
+          t`No valid audio files were selected. Please select audio files only (MP3, WAV, OGG, etc).`,
+        );
         return;
       }
 
       // Check for max files limit
       if (selectedFiles.length + audioFiles.length > MAX_FILES) {
-        setNotification({
-          message: t`You can only upload up to ${MAX_FILES} files at a time. Only the first ${MAX_FILES - selectedFiles.length} files will be added.`,
-          type: "warning",
-        });
+        toast.warning(
+          t`You can only upload up to ${MAX_FILES} files at a time. Only the first ${MAX_FILES - selectedFiles.length} files will be added.`,
+        );
 
         // Only take the number of files we can still add
         files = audioFiles.slice(0, MAX_FILES - selectedFiles.length);
@@ -389,10 +398,9 @@ export const UploadConversationDropzone = (
       // Filter out files that are too small
       const validFiles = files.filter((file) => {
         if (file.size < MIN_FILE_SIZE) {
-          setNotification({
-            message: t`File "${file.name}" is too small (${formatFileSize(file.size)}). Minimum size is ${formatFileSize(MIN_FILE_SIZE)}.`,
-            type: "error",
-          });
+          toast.error(
+            t`File "${file.name}" is too small (${formatFileSize(file.size)}). Minimum size is ${formatFileSize(MIN_FILE_SIZE)}.`,
+          );
           return false;
         }
         return true;
@@ -408,10 +416,9 @@ export const UploadConversationDropzone = (
 
       // Check for duplicate files
       if (newFiles.length < validFiles.length) {
-        setNotification({
-          message: t`Some files were already selected and won't be added twice.`,
-          type: "info",
-        });
+        toast.info(
+          t`Some files were already selected and won't be added twice.`,
+        );
       }
 
       const updatedFiles = [...selectedFiles, ...newFiles];
@@ -470,34 +477,6 @@ export const UploadConversationDropzone = (
     });
   }, [selectedFiles, props.projectId, projectQuery.data?.pin, uploader]);
 
-  // Close notification
-  const handleCloseNotification = useCallback(() => {
-    setNotification(null);
-  }, []);
-
-  // Reset states when modal closes with cleanup protection
-  useEffect(() => {
-    if (!opened) {
-      // Reset in a specific order to prevent circular dependencies
-      const cleanup = () => {
-        // Wrap in setTimeout to break call stack if needed
-        setTimeout(() => {
-          fileEditor.cancelEditing();
-          setNotification(null);
-          setGlobalError(null);
-          setUploadStatus([]);
-          setSelectedFiles([]);
-          setUploadStarted(false);
-
-          // This should come last as it might trigger other state changes
-          uploader.resetUpload();
-        }, 0);
-      };
-
-      cleanup();
-    }
-  }, [opened, fileEditor, uploader]);
-
   if (projectQuery.isLoading) {
     return <LoadingOverlay visible />;
   }
@@ -515,6 +494,7 @@ export const UploadConversationDropzone = (
 
       {/* Upload modal */}
       <Modal
+        withinPortal
         opened={opened}
         onClose={close}
         title={
@@ -531,37 +511,6 @@ export const UploadConversationDropzone = (
       >
         <Stack>
           {/* Notifications */}
-          {notification && (
-            <Notification
-              title={
-                notification.type === "error"
-                  ? t`Error`
-                  : notification.type === "warning"
-                    ? t`Warning`
-                    : t`Info`
-              }
-              color={
-                notification.type === "error"
-                  ? "red.3"
-                  : notification.type === "warning"
-                    ? "yellow.3"
-                    : "blue.3"
-              }
-              onClose={handleCloseNotification}
-              icon={
-                notification.type === "error" ? (
-                  <IconX size={18} />
-                ) : notification.type === "warning" ? (
-                  <IconAlertCircle size={18} />
-                ) : (
-                  <IconInfoCircle size={18} />
-                )
-              }
-            >
-              {notification.message}
-            </Notification>
-          )}
-
           {/* File selection area - always available if no upload is in progress */}
           {!uploadStarted && (
             <>
@@ -574,20 +523,17 @@ export const UploadConversationDropzone = (
                   const error = errorFile.errors[0];
 
                   if (error.code === "file-too-large") {
-                    setNotification({
-                      message: t`File "${errorFile.file.name}" exceeds the maximum size of ${formatFileSize(MAX_FILE_SIZE)}.`,
-                      type: "error",
-                    });
+                    toast.error(
+                      t`File "${errorFile.file.name}" exceeds the maximum size of ${formatFileSize(MAX_FILE_SIZE)}.`,
+                    );
                   } else if (error.code === "file-invalid-type") {
-                    setNotification({
-                      message: t`File "${errorFile.file.name}" has an unsupported format. Only audio files are allowed.`,
-                      type: "error",
-                    });
+                    toast.error(
+                      t`File "${errorFile.file.name}" has an unsupported format. Only audio files are allowed.`,
+                    );
                   } else {
-                    setNotification({
-                      message: t`Error uploading "${errorFile.file.name}": ${error.message}`,
-                      type: "error",
-                    });
+                    toast.error(
+                      t`Error uploading "${errorFile.file.name}": ${error.message}`,
+                    );
                   }
                 }}
                 loading={uploader.isPending}
@@ -738,7 +684,6 @@ export const UploadConversationDropzone = (
               </Group>
             </>
           )}
-
           {/* Upload progress area - shown after upload has started */}
           {uploadStarted && (
             <>

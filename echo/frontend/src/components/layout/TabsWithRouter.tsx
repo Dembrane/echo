@@ -1,7 +1,25 @@
-import { Stack, Tabs } from "@mantine/core";
-import { useEffect, useState } from "react";
+import { Stack, Tabs, Box, LoadingOverlay } from "@mantine/core";
+import { useEffect, useState, Suspense, useCallback } from "react";
 import { Outlet, useLocation, useParams } from "react-router-dom";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+
+const TabLoadingFallback = () => (
+  <Box pos="relative" h="100%">
+    <LoadingOverlay
+      visible={true}
+      zIndex={1000}
+      overlayProps={{
+        radius: "sm",
+        blur: 2,
+        backgroundOpacity: 0.1,
+      }}
+      loaderProps={{
+        size: "md",
+        type: "dots",
+      }}
+    />
+  </Box>
+);
 
 export const TabsWithRouter = ({
   basePath,
@@ -16,18 +34,21 @@ export const TabsWithRouter = ({
   const location = useLocation();
   const params = useParams();
 
-  const determineInitialTab = () => {
+  const determineInitialTab = useCallback(() => {
     return (
       tabs.find((tab) => location.pathname.includes(`/${tab.value}`))?.value ||
       tabs[0].value
     );
-  };
+  }, [tabs, location.pathname]);
 
   const [activeTab, setActiveTab] = useState(determineInitialTab());
 
   useEffect(() => {
-    setActiveTab(determineInitialTab());
-  }, [location.pathname]);
+    const newTab = determineInitialTab();
+    if (newTab !== activeTab) {
+      setActiveTab(newTab);
+    }
+  }, [determineInitialTab, activeTab]);
 
   const handleTabChange = (value: string | null) => {
     const path = basePath.replace(/:(\w+)/g, (_, param) => params[param] || "");
@@ -46,7 +67,9 @@ export const TabsWithRouter = ({
           ))}
         </Tabs.List>
       </Tabs>
-      <Outlet />
+      <Suspense fallback={<TabLoadingFallback />}>
+        <Outlet />
+      </Suspense>
     </Stack>
   );
 };

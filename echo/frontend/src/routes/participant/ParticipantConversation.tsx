@@ -27,7 +27,7 @@ import {
   IconUpload,
 } from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWakeLock } from "@/hooks/useWakeLock";
@@ -53,12 +53,29 @@ import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
 import { API_BASE_URL } from "@/config";
 import useChunkedAudioRecorder from "@/hooks/useChunkedAudioRecorder";
+import MicrophoneTest from "../../components/participant/MicrophoneTest";
 
 const DEFAULT_REPLY_COOLDOWN = 120; // 2 minutes in seconds
 
 export const ParticipantConversationAudioRoute = () => {
   const { projectId, conversationId } = useParams();
+  const [searchParams] = useSearchParams();
 
+  // Check if device ID exists in search params to determine if mic test is needed
+  const savedDeviceId = searchParams.get("micDeviceId");
+  const [showMicTest, setShowMicTest] = useState(!savedDeviceId);
+  const [deviceId, setDeviceId] = useState<string>(savedDeviceId || "");
+
+  if (showMicTest) {
+    return (
+      <MicrophoneTest
+        onContinue={(id: string) => {
+          setDeviceId(id);
+          setShowMicTest(false);
+        }}
+      />
+    );
+  }
   const projectQuery = useParticipantProjectById(projectId ?? "");
   const conversationQuery = useConversationQuery(projectId, conversationId);
   const chunks = useConversationChunksQuery(projectId, conversationId);
@@ -117,7 +134,7 @@ export const ParticipantConversationAudioRoute = () => {
     return () => clearInterval(interval);
   }, [lastReplyTime, getRemainingCooldown]);
 
-  const audioRecorder = useChunkedAudioRecorder({ onChunk });
+  const audioRecorder = useChunkedAudioRecorder({ onChunk, deviceId });
   useWakeLock({ obtainWakeLockOnMount: true });
 
   const {

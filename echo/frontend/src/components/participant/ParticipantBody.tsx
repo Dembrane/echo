@@ -101,7 +101,9 @@ export const ParticipantBody = ({
         <Trans>Welcome</Trans>
       </h2>
       <img
-        className="w-full animate-pulse object-contain duration-1000"
+        // className="w-full animate-pulse object-contain saturate-200 duration-1000"
+        className="w-full animate-pulse object-contain saturate-50 duration-1000"
+        // className="w-full object-contain !grayscale"
         src={WelcomeImage}
       />
       {projectQuery.data && (

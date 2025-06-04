@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 interface UseAudioRecorderOptions {
   onChunk: (chunk: Blob) => void;
+  deviceId?: string;
   mimeType?: string;
   timeslice?: number;
   debug?: boolean;
@@ -26,7 +27,7 @@ interface UseAudioRecorderResult {
 
 const preferredMimeTypes = ["audio/webm", "audio/wav", "video/mp4"];
 
-const getSupportedMimeType = () => {
+export const getSupportedMimeType = () => {
   for (const mimeType of preferredMimeTypes) {
     if (MediaRecorder.isTypeSupported(mimeType)) {
       return mimeType;
@@ -38,6 +39,7 @@ const getSupportedMimeType = () => {
 const defaultMimeType = getSupportedMimeType();
 const useChunkedAudioRecorder = ({
   onChunk,
+  deviceId,
   mimeType = defaultMimeType,
   timeslice = 30000, // 30 sec
   debug = false,
@@ -81,6 +83,7 @@ const useChunkedAudioRecorder = ({
       }
       if (audioContextRef.current) {
         audioContextRef.current.close();
+        audioContextRef.current = null;
       }
     };
   }, []);
@@ -140,7 +143,31 @@ const useChunkedAudioRecorder = ({
   const startRecording = async () => {
     try {
       log("Requesting access to the microphone...");
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const audioConstraint = deviceId
+        ? { deviceId: { exact: deviceId } }
+        : true;
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: audioConstraint,
+      });
+
+      if (!navigator.mediaDevices?.enumerateDevices) {
+        console.log("enumerateDevices() not supported.");
+      } else {
+        // List cameras and microphones.
+        navigator.mediaDevices
+          .enumerateDevices()
+          .then((devices) => {
+            devices.forEach((device) => {
+              console.log(
+                `${device.kind}: ${device.label} id = ${device.deviceId}`,
+              );
+            });
+          })
+          .catch((err) => {
+            console.error(`${err.name}: ${err.message}`);
+          });
+      }
+
       streamRef.current = stream;
       log("Access to microphone granted.", { stream });
 

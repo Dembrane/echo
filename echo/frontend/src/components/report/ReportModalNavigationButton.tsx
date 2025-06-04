@@ -37,7 +37,7 @@ export const ReportModalNavigationButton = () => {
 
   return (
     <>
-      <Modal opened={opened} onClose={close} title="Create Report">
+      <Modal opened={opened} onClose={close} title="Create Report" withinPortal>
         <Stack>
           <CreateReportForm onSuccess={handleSuccess} />
         </Stack>

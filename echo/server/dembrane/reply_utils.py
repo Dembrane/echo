@@ -10,6 +10,12 @@ from dembrane.anthropic import count_tokens_anthropic
 
 logger = getLogger("reply_utils")
 
+# Constants for token limits and conversation sizing
+GET_REPLY_TOKEN_LIMIT = 40000
+GET_REPLY_TARGET_TOKENS_PER_CONV = 2000
+GET_REPLY_TAG_BUFFER_MAX_SIZE = 100
+GET_REPLY_TAG_BUFFER_TRIM_SIZE = 20
+
 
 class Conversation(BaseModel):
     id: str
@@ -186,8 +192,8 @@ async def generate_reply_for_conversation(
     )
 
     total_tokens = 0
-    token_limit = 40000
-    target_tokens_per_conv = 2000  # Target size for each conversation
+    token_limit = GET_REPLY_TOKEN_LIMIT
+    target_tokens_per_conv = GET_REPLY_TARGET_TOKENS_PER_CONV  # Target size for each conversation
 
     candidate_conversations = []
     if use_summaries:
@@ -265,19 +271,6 @@ async def generate_reply_for_conversation(
 
     formatted_current_conversation = format_conversation(current_conversation)
 
-    # Determine which prompt to use based on mode
-    if get_reply_mode == "summarize":
-        # Load global prompt from summary template
-        global_prompt = render_prompt("summary", language, {})
-        logger.debug(f"Using summary template for global prompt: {get_reply_mode}")
-    elif get_reply_mode == "brainstorm":
-        # Load global prompt from brainstorm template  
-        global_prompt = render_prompt("brainstorm", language, {})
-        logger.debug(f"Using brainstorm template for global prompt: {get_reply_mode}")
-    else:
-        global_prompt = current_project["get_reply_prompt"] if current_project["get_reply_prompt"] is not None else ""
-        logger.debug(f"Using project global prompt for mode: {get_reply_mode}")
-
     # Build PROJECT_DESCRIPTION by combining context and additional project fields
     project_description_parts = []
     
@@ -295,8 +288,30 @@ async def generate_reply_for_conversation(
     
     project_description = "\n\n".join(project_description_parts)
 
+    # Determine which prompt to use based on mode
+    if get_reply_mode == "summarize":
+        # Load global prompt from summary template
+        global_prompt = render_prompt("get_reply_summarize", language, {})
+        logger.debug(f"Using get_reply_summarize template for global prompt: {get_reply_mode}")
+    elif get_reply_mode == "brainstorm":
+        # Load global prompt from brainstorm template  
+        global_prompt = render_prompt("get_reply_brainstorm", language, {})
+        logger.debug(f"Using get_reply_brainstorm template for global prompt: {get_reply_mode}")
+    elif get_reply_mode == "custom":
+        # Use project prompt if available, otherwise fall back to summarize
+        if current_project["get_reply_prompt"] and current_project["get_reply_prompt"].strip():
+            global_prompt = current_project["get_reply_prompt"]
+            logger.debug(f"Using project global prompt for custom mode: {get_reply_mode}")
+        else:
+            # If custom prompt is empty, use summarize prompt
+            global_prompt = render_prompt("get_reply_summarize", language, {})
+            logger.debug(f"Custom prompt is empty, falling back to get_reply_summarize template")
+    else:
+        global_prompt = current_project["get_reply_prompt"] if current_project["get_reply_prompt"] is not None else ""
+        logger.debug(f"Using project global prompt for mode: {get_reply_mode}")
+
     prompt = render_prompt(
-        "get_reply",
+        "get_reply_system",
         language,
         {
             "PROJECT_DESCRIPTION": project_description,
@@ -316,7 +331,6 @@ async def generate_reply_for_conversation(
     in_response_section = False
 
     # Stream the response
-    # FIXME: reply
     response = await litellm.acompletion(
         model="anthropic/claude-3-5-sonnet-20240620",
         messages=[
@@ -385,8 +399,8 @@ async def generate_reply_for_conversation(
                             yield content_after_tag
 
                     # If buffer gets too large without finding tag, trim it, keep only the last 20 characters
-                    if len(tag_buffer) > 100:
-                        tag_buffer = tag_buffer[-20:]
+                    if len(tag_buffer) > GET_REPLY_TAG_BUFFER_MAX_SIZE:
+                        tag_buffer = tag_buffer[-GET_REPLY_TAG_BUFFER_TRIM_SIZE:]
 
     try:
         response_content = ""
