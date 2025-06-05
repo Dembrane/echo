@@ -3,7 +3,7 @@ import asyncio
 from typing import List, Optional, AsyncGenerator
 from logging import getLogger
 
-from fastapi import Query, Request, APIRouter
+from fastapi import Request, APIRouter
 from pydantic import BaseModel
 from sqlalchemy.orm import noload, selectinload
 from fastapi.responses import RedirectResponse, StreamingResponse
@@ -91,8 +91,8 @@ async def get_conversation_chunks(
 
 async def generate_health_events(
     request: Request,
-    conversation_ids: List[str],
-    project_ids: List[str],
+    conversation_ids: List[str],  # noqa: ARG001
+    project_ids: List[str],  # noqa: ARG001
     client_info: str,
     interval_seconds: int = 45
 ) -> AsyncGenerator[str, None]:
