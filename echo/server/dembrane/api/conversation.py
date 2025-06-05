@@ -1,8 +1,9 @@
 import json
+import asyncio
 from typing import List, Optional, AsyncGenerator
 from logging import getLogger
 
-from fastapi import APIRouter
+from fastapi import Request, APIRouter
 from pydantic import BaseModel
 from sqlalchemy.orm import noload, selectinload
 from fastapi.responses import RedirectResponse, StreamingResponse
@@ -88,6 +89,50 @@ async def get_conversation_chunks(
 
     return chunks
 
+async def generate_health_events(
+    request: Request,
+    conversation_ids: List[str],  # noqa: ARG001
+    project_ids: List[str],  # noqa: ARG001
+    client_info: str,
+    interval_seconds: int = 45
+) -> AsyncGenerator[str, None]:
+    
+    ping_count = 0
+
+    try:
+        while True:
+            # Check if the client is disconnected
+            if await request.is_disconnected():
+                logger.info(f"Client {client_info} disconnected - stopping health stream")
+                break
+
+            ping_count += 1
+
+            # Send ping every 45 seconds
+            yield f"event: ping\ndata: {ping_count}\n\n"
+            
+            # Log every 10th ping
+            if ping_count % 10 == 0:
+                logger.debug(f"Health stream ping #{ping_count} sent to {client_info}")
+
+            await asyncio.sleep(interval_seconds)
+
+    except asyncio.CancelledError:
+        logger.info(f"Client disconnected during health stream to {client_info}")
+        raise
+    except ConnectionError as e:
+        logger.error(f"Connection error during stream to {client_info}: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in health stream to {client_info}: {e}", exc_info=True)
+                # Send error event before closing
+        try:
+            error_data = {"error": "Internal server error", "timestamp": asyncio.get_event_loop().time()}
+            yield f"event: error\ndata: {json.dumps(error_data)}\n\n"
+        except:  # noqa: E722
+            pass
+    finally:
+        logger.info(f"Health stream to {client_info} ended after {ping_count} pings")
 
 def raise_if_conversation_not_found_or_not_authorized(
     conversation_id: str, auth: DependencyDirectusSession
@@ -595,3 +640,53 @@ async def delete_conversation(
             status_code=500,
             detail=f"Failed to delete conversation: {str(e)}"
         ) from e
+
+@ConversationRouter.get("/health/stream")
+async def stream_health_data(
+    request: Request,
+    conversation_ids: Optional[str] = "",
+    project_ids: Optional[str] = "",
+) -> StreamingResponse:
+    
+    # ensure ids exist and are not empty
+    if conversation_ids is None:
+        conversation_ids = ""
+    if project_ids is None:
+        project_ids = ""
+    
+    def clean_ids(id_list: Optional[str]) -> List[str]:
+        return [id.strip() for id in id_list.split(",") if id and id.strip()] if id_list else []
+
+    conversation_ids_list = clean_ids(conversation_ids)
+    project_ids_list = clean_ids(project_ids)
+
+    logger.debug(f"Conversation IDs: {conversation_ids_list}")
+    logger.debug(f"Project IDs: {project_ids_list}")
+
+    if not conversation_ids_list and not project_ids_list:
+        raise HTTPException(
+            status_code=400,
+            detail="At least one of conversation_ids or project_ids must be provided"
+        )
+    
+    # Limit total IDs to prevent abuse
+    total_ids = len(conversation_ids_list) + len(project_ids_list)
+    if total_ids > 20:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Too many IDs provided ({total_ids}). Maximum allowed is 20."
+        )
+    
+    INTERVAL_SECONDS = 45
+    client_info = f"{request.client.host}:{request.client.port}" if request.client else "unknown client"
+    
+    return StreamingResponse(
+        generate_health_events(request, conversation_ids_list, project_ids_list, client_info, INTERVAL_SECONDS),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Content-Type": "text/event-stream",
+            "X-Accel-Buffering": "no",
+        },
+    )
