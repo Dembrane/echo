@@ -547,6 +547,7 @@ type Project = {
   image_generation_model?: string | null;
   is_conversation_allowed: boolean;
   is_get_reply_enabled?: boolean | null;
+  get_reply_mode?: string | null;
   is_library_insights_enabled?: boolean | null;
   language?: string | null;
   name?: string | null;

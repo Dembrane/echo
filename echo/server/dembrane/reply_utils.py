@@ -10,6 +10,12 @@ from dembrane.anthropic import count_tokens_anthropic
 
 logger = getLogger("reply_utils")
 
+# Constants for token limits and conversation sizing
+GET_REPLY_TOKEN_LIMIT = 40000
+GET_REPLY_TARGET_TOKENS_PER_CONV = 2000
+GET_REPLY_TAG_BUFFER_MAX_SIZE = 100
+GET_REPLY_TAG_BUFFER_TRIM_SIZE = 20
+
 
 class Conversation(BaseModel):
     id: str
@@ -90,7 +96,11 @@ async def generate_reply_for_conversation(
                     "project_id.name",
                     "project_id.is_get_reply_enabled",
                     "project_id.get_reply_prompt",
+                    "project_id.get_reply_mode",
                     "project_id.context",
+                    "project_id.default_conversation_title",
+                    "project_id.default_conversation_description",
+                    "project_id.default_conversation_transcript_prompt",
                     "tags.project_tag_id.text",
                     "participant_name",
                     "replies.id",
@@ -133,7 +143,35 @@ async def generate_reply_for_conversation(
         "name": conversation["project_id"]["name"],
         "description": conversation["project_id"]["context"],
         "get_reply_prompt": conversation["project_id"]["get_reply_prompt"],
+        "get_reply_mode": conversation["project_id"]["get_reply_mode"],
+        "default_conversation_title": conversation["project_id"]["default_conversation_title"],
+        "default_conversation_description": conversation["project_id"]["default_conversation_description"],
+        "default_conversation_transcript_prompt": conversation["project_id"]["default_conversation_transcript_prompt"],
     }
+
+    # Check if we should use summaries for adjacent conversations
+    get_reply_mode = current_project.get("get_reply_mode")
+    use_summaries = get_reply_mode in ["summarize", "brainstorm", "custom"]
+    
+    # Determine fields to fetch based on mode
+    adjacent_fields = [
+        "id",
+        "participant_name",
+        "tags.project_tag_id.text",
+    ]
+    
+    if use_summaries:
+        adjacent_fields.append("summary")
+    else:
+        adjacent_fields.extend([
+            "chunks.id",
+            "chunks.timestamp", 
+            "chunks.transcript",
+            "replies.id",
+            "replies.date_created",
+            "replies.content_text",
+            "replies.type",
+        ])
 
     adjacent_conversations = directus.get_items(
         "conversation",
@@ -143,61 +181,76 @@ async def generate_reply_for_conversation(
                     "id": {"_neq": current_conversation.id},
                     "project_id": {"_eq": conversation["project_id"]["id"]},
                 },
-                "fields": [
-                    "id",
-                    "chunks.id",
-                    "chunks.timestamp",
-                    "chunks.transcript",
-                    "participant_name",
-                    "tags.project_tag_id.text",
-                    "replies.id",
-                    "replies.date_created",
-                    "replies.content_text",
-                    "replies.type",
-                ],
+                "fields": adjacent_fields,
                 "deep": {
                     # reverse chronological order
                     "chunks": {"_sort": ["-timestamp"], "_limit": 1000},
                     "replies": {"_sort": ["-date_created"], "_limit": 1000},
-                },
+                } if not use_summaries else {},
             }
         },
     )
 
-    adjacent_conversation_transcripts: list[Conversation] = []  # noqa
     total_tokens = 0
-    token_limit = 40000
-    target_tokens_per_conv = 2000  # Target size for each conversation
+    token_limit = GET_REPLY_TOKEN_LIMIT
+    target_tokens_per_conv = GET_REPLY_TARGET_TOKENS_PER_CONV  # Target size for each conversation
 
-    # First pass: truncate all conversations to target size
     candidate_conversations = []
-    for conversation in adjacent_conversations:
-        # Create conversation with tags
-        c = Conversation(
-            id=conversation["id"],
-            name=conversation["participant_name"],
-            transcript=build_conversation_transcript(conversation),
-            tags=[
+    if use_summaries:
+        # Use summaries for adjacent conversations
+        for conversation in adjacent_conversations:
+            if conversation["summary"] is None:
+                logger.info(f"Conversation {conversation['id']} has no summary, skipping")
+                continue
+                
+            # Create conversation with tags
+            tags = [
                 tag["project_tag_id"]["text"]
                 for tag in conversation["tags"]
                 if tag["project_tag_id"]["text"] is not None
-            ],
-        )
+            ] if conversation["tags"] else []
+            
+            c = Conversation(
+                id=conversation["id"],
+                name=conversation["participant_name"],
+                transcript=conversation["summary"],  # Use summary instead of full transcript
+                tags=tags,
+            )
 
-        # First check tokens for this conversation
-        formatted_conv = format_conversation(c)
-        tokens = count_tokens_anthropic(formatted_conv)
-
-        # If conversation is too large, truncate it
-        if tokens > target_tokens_per_conv:
-            # Rough approximation: truncate based on token ratio
-            truncation_ratio = target_tokens_per_conv / tokens
-            truncated_transcript = c.transcript[: int(len(c.transcript) * truncation_ratio)]
-            c.transcript = truncated_transcript + "\n[Truncated for brevity...]"
+            # Check tokens for this conversation
             formatted_conv = format_conversation(c)
             tokens = count_tokens_anthropic(formatted_conv)
 
-        candidate_conversations.append((formatted_conv, tokens))
+            candidate_conversations.append((formatted_conv, tokens))
+    else:
+        # Use full transcripts for adjacent conversations (original logic)
+        for conversation in adjacent_conversations:
+            # Create conversation with tags
+            c = Conversation(
+                id=conversation["id"],
+                name=conversation["participant_name"],
+                transcript=build_conversation_transcript(conversation),
+                tags=[
+                    tag["project_tag_id"]["text"]
+                    for tag in conversation["tags"]
+                    if tag["project_tag_id"]["text"] is not None
+                ],
+            )
+
+            # First check tokens for this conversation
+            formatted_conv = format_conversation(c)
+            tokens = count_tokens_anthropic(formatted_conv)
+
+            # If conversation is too large, truncate it
+            if tokens > target_tokens_per_conv:
+                # Rough approximation: truncate based on token ratio
+                truncation_ratio = target_tokens_per_conv / tokens
+                truncated_transcript = c.transcript[: int(len(c.transcript) * truncation_ratio)]
+                c.transcript = truncated_transcript + "\n[Truncated for brevity...]"
+                formatted_conv = format_conversation(c)
+                tokens = count_tokens_anthropic(formatted_conv)
+
+            candidate_conversations.append((formatted_conv, tokens))
 
     # Second pass: add as many conversations as possible
     formatted_conversations = []
@@ -210,6 +263,7 @@ async def generate_reply_for_conversation(
 
     logger.debug(f"Total tokens for adjacent conversations: {total_tokens}")
     logger.debug(f"Number of adjacent conversations included: {len(formatted_conversations)}")
+    logger.debug(f"Using summaries for adjacent conversations: {use_summaries}")
 
     formatted_adjacent_conversation = ""
     for formatted_conv in formatted_conversations:
@@ -217,16 +271,51 @@ async def generate_reply_for_conversation(
 
     formatted_current_conversation = format_conversation(current_conversation)
 
+    # Build PROJECT_DESCRIPTION by combining context and additional project fields
+    project_description_parts = []
+    
+    if current_project["description"] is not None:
+        project_description_parts.append(current_project["description"])
+    
+    if current_project["default_conversation_title"] is not None:
+        project_description_parts.append(f"Default Conversation Title: {current_project['default_conversation_title']}")
+    
+    if current_project["default_conversation_description"] is not None:
+        project_description_parts.append(f"Default Conversation Description: {current_project['default_conversation_description']}")
+    
+    if current_project["default_conversation_transcript_prompt"] is not None:
+        project_description_parts.append(f"Default Conversation Transcript Prompt: {current_project['default_conversation_transcript_prompt']}")
+    
+    project_description = "\n\n".join(project_description_parts)
+
+    # Determine which prompt to use based on mode
+    if get_reply_mode == "summarize":
+        # Load global prompt from summary template
+        global_prompt = render_prompt("get_reply_summarize", language, {})
+        logger.debug(f"Using get_reply_summarize template for global prompt: {get_reply_mode}")
+    elif get_reply_mode == "brainstorm":
+        # Load global prompt from brainstorm template  
+        global_prompt = render_prompt("get_reply_brainstorm", language, {})
+        logger.debug(f"Using get_reply_brainstorm template for global prompt: {get_reply_mode}")
+    elif get_reply_mode == "custom":
+        # Use project prompt if available, otherwise fall back to summarize
+        if current_project["get_reply_prompt"] and current_project["get_reply_prompt"].strip():
+            global_prompt = current_project["get_reply_prompt"]
+            logger.debug(f"Using project global prompt for custom mode: {get_reply_mode}")
+        else:
+            # If custom prompt is empty, use summarize prompt
+            global_prompt = render_prompt("get_reply_summarize", language, {})
+            logger.debug("Custom prompt is empty, falling back to get_reply_summarize template")
+    else:
+        global_prompt = current_project["get_reply_prompt"] if current_project["get_reply_prompt"] is not None else ""
+        logger.debug(f"Using project global prompt for mode: {get_reply_mode}")
+
     prompt = render_prompt(
-        "get_reply",
+        "get_reply_system",
         language,
         {
-            "PROJECT_DESCRIPTION": current_project["description"]
-            if current_project["description"] is not None
-            else "",
-            "GLOBAL_PROMPT": current_project["get_reply_prompt"]
-            if current_project["get_reply_prompt"] is not None
-            else "",
+            "PROJECT_DESCRIPTION": project_description,
+            "GLOBAL_PROMPT": global_prompt,
             "OTHER_TRANSCRIPTS": formatted_adjacent_conversation,
             "MAIN_USER_TRANSCRIPT": formatted_current_conversation,
         },
@@ -242,7 +331,6 @@ async def generate_reply_for_conversation(
     in_response_section = False
 
     # Stream the response
-    # FIXME: reply
     response = await litellm.acompletion(
         model="anthropic/claude-3-5-sonnet-20240620",
         messages=[
@@ -311,8 +399,8 @@ async def generate_reply_for_conversation(
                             yield content_after_tag
 
                     # If buffer gets too large without finding tag, trim it, keep only the last 20 characters
-                    if len(tag_buffer) > 100:
-                        tag_buffer = tag_buffer[-20:]
+                    if len(tag_buffer) > GET_REPLY_TAG_BUFFER_MAX_SIZE:
+                        tag_buffer = tag_buffer[-GET_REPLY_TAG_BUFFER_TRIM_SIZE:]
 
     try:
         response_content = ""

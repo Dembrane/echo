@@ -2,76 +2,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python Debugger: Module",
+      "name": "Python Debugger: test_transcribe",
       "type": "debugpy",
       "request": "launch",
-      "module": "dembrane.tasks",
-      "cwd": "${workspaceFolder}/server",
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}/server"
-      },
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Python: Conversation Utils Debug",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "dembrane/conversation_utils.py",
-      "cwd": "${workspaceFolder}/server",
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}/server"
-      },
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Python: Contextual Chunk ETL Pipeline Debug",
-      "type": "python",
-      "request": "launch",
-      "program": "dembrane/audio_lightrag/tests/unit_tests/contextual_chunk_etl_pipeline_test.py",
-      "cwd": "${workspaceFolder}/server",
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}/server"
-      },
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Python Debugger: transcribe",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "dembrane.transcribe",
-      "cwd": "${workspaceFolder}/server",
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}/server"
-      },
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Python: LightRAG Embedding Debug",
-      "type": "python",
-      "request": "launch",
-      "program": "dembrane/audio_lightrag/utils/lightrag_utils.py",
-      "cwd": "${workspaceFolder}/server",
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}/server"
-      },
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Python: LightRAG Test",
-      "type": "python",
-      "request": "launch",
-      "program": "test.py",
-      "cwd": "${workspaceFolder}/server",
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}/server"
-      },
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Python: Conversation Utils Debug",
-      "type": "python",
-      "request": "launch",
-      "program": "dembrane/conversation_utils.py",
+      "module": "tests.test_transcribe",
       "cwd": "${workspaceFolder}/server",
       "env": {
         "PYTHONPATH": "${workspaceFolder}/server"

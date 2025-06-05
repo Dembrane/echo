@@ -15,6 +15,8 @@ import {
 } from "@mantine/core";
 import { IconDownload } from "@tabler/icons-react";
 import { useParams } from "react-router-dom";
+import { useMemo } from "react";
+import { UploadConversationDropzone } from "@/components/dropzone/UploadConversationDropzone";
 
 export const ProjectSettingsRoute = () => {
   const { projectId } = useParams();
@@ -38,6 +40,16 @@ export const ProjectSettingsRoute = () => {
 
       {projectQuery.data && (
         <>
+          <Divider />
+          <Stack gap="1.5rem">
+            <Title order={2}>
+              <Trans>Upload</Trans>
+            </Title>
+            <div>
+              <UploadConversationDropzone projectId={projectId ?? ""} />
+            </div>
+          </Stack>
+
           <Divider />
           <Stack gap="1.5rem">
             <Title order={2}>
@@ -72,6 +84,12 @@ export const ProjectPortalSettingsRoute = () => {
   const { projectId } = useParams();
   const projectQuery = useProjectById({ projectId: projectId ?? "" });
 
+  // Memoize the project data to ensure stable reference
+  const project = useMemo(
+    () => projectQuery.data,
+    [projectQuery.data?.id, projectQuery.data?.updated_at],
+  );
+
   return (
     <Stack
       className="relative"
@@ -85,7 +103,10 @@ export const ProjectPortalSettingsRoute = () => {
           <Trans>Error loading project</Trans>
         </Alert>
       )}
-      {projectQuery.data && <ProjectPortalEditor project={projectQuery.data} />}
+
+      {project && !projectQuery.isLoading && (
+        <ProjectPortalEditor project={project} />
+      )}
     </Stack>
   );
 };

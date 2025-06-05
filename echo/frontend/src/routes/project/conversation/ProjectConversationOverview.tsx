@@ -18,7 +18,7 @@ import {
 } from "@/lib/query";
 import { ConversationEdit } from "@/components/conversation/ConversationEdit";
 import { ConversationDangerZone } from "@/components/conversation/ConversationDangerZone";
-import { finishConversation, getConversationSummary } from "@/lib/api";
+import { finishConversation, generateConversationSummary } from "@/lib/api";
 import { IconRefresh } from "@tabler/icons-react";
 import { t } from "@lingui/core/macro";
 import { Markdown } from "@/components/common/Markdown";
@@ -38,7 +38,7 @@ export const ProjectConversationOverviewRoute = () => {
 
   const useHandleGenerateSummaryManually = useMutation({
     mutationFn: async () => {
-      const response = await getConversationSummary(conversationId ?? "");
+      const response = await generateConversationSummary(conversationId ?? "");
       toast.info(
         t`The summary is being regenerated. Please wait for the new summary to be available.`,
       );
@@ -107,26 +107,27 @@ export const ProjectConversationOverviewRoute = () => {
                 }
               />
 
-              {!conversationQuery.data?.summary &&
-                conversationQuery.data?.summary &&
+              {!conversationQuery.isFetching &&
+                !conversationQuery.data?.summary &&
                 conversationQuery.data?.source &&
                 !conversationQuery.data.source
                   .toLowerCase()
                   .includes("upload") && (
-                  <Button
-                    variant="outline"
-                    onClick={() => useHandleGenerateSummaryManually.mutate()}
-                    className="-mt-[2rem]"
-                    loading={
-                      useHandleGenerateSummaryManually.isPending ||
-                      conversationQuery.isFetching
-                    }
-                  >
-                    {t`Generate Summary`}
-                  </Button>
+                  <div>
+                    <Button
+                      variant="outline"
+                      className="-mt-[2rem]"
+                      loading={useHandleGenerateSummaryManually.isPending}
+                      onClick={() => {
+                        useHandleGenerateSummaryManually.mutate();
+                      }}
+                    >
+                      {t`Generate Summary`}
+                    </Button>
+                  </div>
                 )}
 
-              {conversationQuery.data?.summary && <Divider />}
+              <Divider />
             </>
           </Stack>
         )}

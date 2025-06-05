@@ -738,6 +738,7 @@ export default function DebugPage() {
 
   const { data: conversation } = useConversationById({
     conversationId: currentConversationId!,
+    loadConversationChunks: true,
   });
 
   const { data: chats } = useProjectChats(currentProjectId!, {
@@ -817,6 +818,7 @@ export default function DebugPage() {
       <Stack>
         <Title order={1}>Conversation</Title>
         <pre>{JSON.stringify(conversation, null, 2)}</pre>
+        <Divider />
         <Group>
           <Title order={3}>Logs</Title>
           <Button onClick={() => refetchConversationProcessingStatus()}>

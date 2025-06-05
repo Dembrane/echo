@@ -36,7 +36,7 @@ def get_runpod_diarization(
             else directus.get_item(
                 "conversation_chunk",
                 chunk_id,
-            )["path"]  # type: ignore
+            )["path"]
         )
         logger.debug(f"Fetched audio_file_uri: {audio_file_uri}")
     except Exception as e:
@@ -57,7 +57,7 @@ def get_runpod_diarization(
     project_language = directus.get_items(
         "conversation_chunk",
         query,
-    )[0]["conversation_id"]["project_id"]["language"]  # type: ignore
+    )[0]["conversation_id"]["project_id"]["language"]
     logger.debug(f"Project language is {project_language}")
 
     if DISABLE_MULTILINGUAL_DIARIZATION and project_language != "en":
@@ -218,7 +218,7 @@ def _get_timebound_conversation_chunks(
             },
         )
         try: 
-            response = response[:max_chunks_for_conversation]  # type: ignore
+            response = response[:max_chunks_for_conversation]
             aggregated_response.extend(_flatten_response(response))
         except Exception as e:
             logger.warning(f"Error fetching/flattening conversation chunks {e} : {response}")

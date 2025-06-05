@@ -2,6 +2,10 @@
 # system with built-in logging. It follows a "fail-fast" pattern by asserting
 # required environment variables and provides sensible defaults for optional ones.
 
+# 2025-06-05 FIXME: file's messy / needs a refactor. potential config management via yaml config?
+# patterns are inconsistent - ENABLE_LITELLM_WHISPER_TRANSCRIPTION needs to be set 
+# better yet modularize it and have modules manage their own config?
+
 import os
 import sys
 import logging

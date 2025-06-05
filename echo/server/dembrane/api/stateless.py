@@ -8,9 +8,11 @@ from lightrag.lightrag import QueryParam
 from lightrag.kg.shared_storage import initialize_pipeline_status
 
 from dembrane.prompts import render_prompt
+from dembrane.directus import directus
 from dembrane.rag_manager import RAGManager, get_rag
 from dembrane.postgresdb_manager import PostgresDBManager
 from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.processing_status_utils import ProcessingStatus
 from dembrane.audio_lightrag.utils.lightrag_utils import (
     is_valid_uuid,
     upsert_transcript,
@@ -267,3 +269,23 @@ async def delete_conversation(payload: DeleteConversationRequest,
         await delete_transcript_by_doc_id(postgres_db, str(doc_id))
         delete_segment_from_directus(str(doc_id))
     logger.info(f"Deleted {len(lightrag_doc_ids)} document(s) from RAG")
+
+
+@StatelessRouter.post("/webhook/transcribe")
+async def transcribe_webhook(payload: dict) -> None:
+    logger = getLogger("stateless.webhook.transcribe")
+    logger.debug(f"Transcribe webhook received: {payload}")
+    try:
+        directus.update_item(
+            collection_name="conversation_chunk",
+            item_id=payload["output"]["conversation_chunk_id"],
+            item_data={
+                "transcript": payload["output"]["joined_text"],
+                "processing_status": ProcessingStatus.COMPLETED.value,
+                "runpod_job_status_link": None
+            },
+        )
+        logger.info(f"updated chunk with transcript: {payload['output']['conversation_chunk_id']} - length: {len(payload['output']['joined_text'])}")
+    except Exception as e:
+        logger.exception("Failed to update conversation chunk")
+        raise HTTPException(status_code=500, detail=str(e)) from e

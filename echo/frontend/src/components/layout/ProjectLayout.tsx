@@ -5,61 +5,63 @@ import { Resizable } from "re-resizable";
 import { useSidebar } from "@/hooks/useSidebar";
 import { Icons } from "@/icons";
 import { useMediaQuery } from "@mantine/hooks";
+import { cn } from "@/lib/utils";
 
 // can be rendered inside BaseLayout
 export const ProjectLayout = () => {
-  const { isCollapsed, sidebarWidth, setSidebarWidth, toggleSidebar } =
-    useSidebar();
+  const { sidebarWidth, setSidebarWidth, toggleSidebar } = useSidebar();
 
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isCollapsed = false;
 
   return (
     <Box
-      className={`relative ${isMobile ? "flex flex-col" : "flex h-[calc(100vh-60px)]"} `}
+      // className={`relative ${isMobile ? "flex flex-col" : "flex h-[calc(100vh-60px)]"} `}
+      className={cn(
+        "relative flex flex-col md:h-[calc(100vh-60px)] md:flex-row",
+      )}
     >
-      {isMobile ? (
+      <aside
+        className={`block w-full overflow-y-auto border-b md:hidden ${isCollapsed ? "h-12" : "h-1/2"} transition-all duration-300`}
+      >
+        <ProjectSidebar />
+      </aside>
+
+      <Resizable
+        className="hidden md:block"
+        size={{ width: sidebarWidth }}
+        minWidth={325}
+        maxWidth="45%"
+        maxHeight={"100%"}
+        onResizeStop={(_e, _direction, _ref, d) => {
+          setSidebarWidth(sidebarWidth + d.width);
+        }}
+        enable={{
+          right: !isCollapsed,
+          bottom: false,
+          bottomLeft: false,
+          bottomRight: false,
+          top: false,
+          topLeft: false,
+          topRight: false,
+          left: false,
+        }}
+        handleStyles={{
+          right: {
+            width: "8px",
+            right: "-4px",
+            cursor: "col-resize",
+          },
+        }}
+        handleClasses={{
+          right: "hover:bg-blue-500/20 transition-colors",
+        }}
+      >
         <aside
-          className={`w-full overflow-y-auto border-b ${isCollapsed ? "h-12" : "h-1/2"} transition-all duration-300`}
+          className={`h-full overflow-y-auto border-r transition-all duration-300 ${isCollapsed ? "w-0" : ""}`}
         >
           <ProjectSidebar />
         </aside>
-      ) : (
-        <Resizable
-          size={{ width: sidebarWidth }}
-          minWidth={325}
-          maxWidth="45%"
-          maxHeight={"100%"}
-          onResizeStop={(_e, _direction, _ref, d) => {
-            setSidebarWidth(sidebarWidth + d.width);
-          }}
-          enable={{
-            right: !isCollapsed,
-            bottom: false,
-            bottomLeft: false,
-            bottomRight: false,
-            top: false,
-            topLeft: false,
-            topRight: false,
-            left: false,
-          }}
-          handleStyles={{
-            right: {
-              width: "8px",
-              right: "-4px",
-              cursor: "col-resize",
-            },
-          }}
-          handleClasses={{
-            right: "hover:bg-blue-500/20 transition-colors",
-          }}
-        >
-          <aside
-            className={`h-full overflow-y-auto border-r transition-all duration-300 ${isCollapsed ? "w-0" : ""}`}
-          >
-            <ProjectSidebar />
-          </aside>
-        </Resizable>
-      )}
+      </Resizable>
 
       {isCollapsed && (
         <ActionIcon
@@ -71,9 +73,7 @@ export const ProjectLayout = () => {
         </ActionIcon>
       )}
 
-      <section
-        className={`overflow-y-auto px-2 ${isMobile ? "flex-grow" : "flex-grow"}`}
-      >
+      <section className={`flex-grow overflow-y-auto px-2`}>
         <Outlet />
       </section>
     </Box>

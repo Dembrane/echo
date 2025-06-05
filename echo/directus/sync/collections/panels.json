@@ -21,7 +21,7 @@
     "_syncId": "10d105b0-55c3-4011-9e20-773f6a21ba80"
   },
   {
-    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
+    "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
     "name": "report views weekly",
     "icon": null,
     "color": null,
@@ -41,7 +41,49 @@
       "range": "auto",
       "missingData": "ignore"
     },
-    "_syncId": "1701ce40-76a0-48c6-aaea-189cccff7d2b"
+    "_syncId": "1c4abff6-b61b-440c-83fc-c034d941061a"
+  },
+  {
+    "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
+    "name": "signups - all time",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": null,
+    "type": "time-series",
+    "position_x": 30,
+    "position_y": 28,
+    "width": 27,
+    "height": 14,
+    "options": {
+      "collection": "directus_activity",
+      "dateField": "timestamp",
+      "valueField": "item",
+      "function": "countDistinct",
+      "range": "auto",
+      "missingData": "ignore",
+      "precision": "week",
+      "min": 0,
+      "filter": {
+        "_and": [
+          {
+            "_and": [
+              {
+                "action": {
+                  "_eq": "create"
+                }
+              },
+              {
+                "collection": {
+                  "_eq": "directus_users"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "_syncId": "25a32ec7-5397-4124-a821-66508523f883"
   },
   {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
@@ -99,47 +141,24 @@
     "_syncId": "26a37f7f-a58c-489d-a2c1-c53121db7d3a"
   },
   {
-    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
-    "name": "signups - all time",
+    "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
+    "name": "proj - audio",
     "icon": null,
     "color": null,
     "show_header": true,
     "note": null,
-    "type": "list",
-    "position_x": 58,
-    "position_y": 28,
-    "width": 27,
-    "height": 14,
+    "type": "metric",
+    "position_x": 1,
+    "position_y": 1,
+    "width": 8,
+    "height": 10,
     "options": {
-      "collection": "directus_activity",
-      "dateField": "timestamp",
-      "valueField": "item",
+      "collection": "project",
       "function": "countDistinct",
-      "range": "auto",
-      "missingData": "ignore",
-      "precision": "week",
-      "min": 0,
-      "filter": {
-        "_and": [
-          {
-            "_and": [
-              {
-                "action": {
-                  "_eq": "create"
-                }
-              },
-              {
-                "collection": {
-                  "_eq": "directus_users"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "limit": 10
+      "dateField": "created_at",
+      "field": "is_enhanced_audio_processing_enabled"
     },
-    "_syncId": "3529888c-b8b9-4316-a9f4-757072efc67d"
+    "_syncId": "3bc77a0e-4499-439f-b632-a3740a9bfe37"
   },
   {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
@@ -165,28 +184,47 @@
     "_syncId": "3f2471aa-5ddf-40a7-9b4f-15694d7043c1"
   },
   {
-    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
-    "name": "chat messages / week",
+    "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
+    "name": "imagen",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": null,
+    "type": "pie-chart",
+    "position_x": 24,
+    "position_y": 43,
+    "width": 10,
+    "height": 10,
+    "options": {
+      "collection": "project",
+      "column": "image_generation_model",
+      "showLabels": true,
+      "legend": "right"
+    },
+    "_syncId": "3fdf017d-33b9-4015-b6c7-f89058df310a"
+  },
+  {
+    "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
+    "name": "view gen / day ",
     "icon": null,
     "color": null,
     "show_header": true,
     "note": null,
     "type": "time-series",
-    "position_x": 10,
-    "position_y": 1,
-    "width": 21,
-    "height": 12,
+    "position_x": 1,
+    "position_y": 14,
+    "width": 31,
+    "height": 13,
     "options": {
-      "collection": "project_chat_message",
+      "collection": "view",
       "function": "countDistinct",
       "precision": "day",
-      "dateField": "date_created",
+      "dateField": "created_at",
       "valueField": "id",
       "range": "auto",
-      "filter": null,
       "missingData": "ignore"
     },
-    "_syncId": "462c4a2a-96c0-43f5-8337-7cc13f086e41"
+    "_syncId": "4cd13340-f2a5-4e81-a76b-3b4fd7a51623"
   },
   {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
@@ -220,68 +258,37 @@
     "_syncId": "58981e36-a7b3-49c9-aa59-ae0e59f0e3d0"
   },
   {
-    "dashboard": "21057c54-97fe-407c-9286-ec4b980e9fdd",
-    "name": null,
-    "icon": null,
-    "color": null,
-    "show_header": false,
-    "note": null,
-    "type": "time-series",
-    "position_x": 1,
-    "position_y": 1,
-    "width": 46,
-    "height": 34,
-    "options": {
-      "collection": "project_chat_message",
-      "function": "countDistinct",
-      "precision": "day",
-      "range": "auto",
-      "dateField": "date_created",
-      "valueField": "template_key"
-    },
-    "_syncId": "6e080069-4121-4bac-ae58-32a2997971a5"
-  },
-  {
-    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
-    "name": "signups - all time",
+    "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
+    "name": "MAU",
     "icon": null,
     "color": null,
     "show_header": true,
     "note": null,
     "type": "time-series",
-    "position_x": 30,
-    "position_y": 28,
+    "position_x": 1,
+    "position_y": 27,
     "width": 27,
-    "height": 14,
+    "height": 15,
     "options": {
       "collection": "directus_activity",
       "dateField": "timestamp",
       "valueField": "item",
       "function": "countDistinct",
-      "range": "auto",
+      "range": "12 months",
       "missingData": "ignore",
-      "precision": "week",
+      "precision": "month",
       "min": 0,
       "filter": {
         "_and": [
           {
-            "_and": [
-              {
-                "action": {
-                  "_eq": "create"
-                }
-              },
-              {
-                "collection": {
-                  "_eq": "directus_users"
-                }
-              }
-            ]
+            "action": {
+              "_contains": "login"
+            }
           }
         ]
       }
     },
-    "_syncId": "7f5fe38b-d292-429f-9e06-b4fcfb36a483"
+    "_syncId": "7badae0f-0f55-40f4-99a1-6dbba630595f"
   },
   {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
@@ -320,60 +327,27 @@
     "_syncId": "85da5c87-97f7-47ba-b9a5-15c982996889"
   },
   {
-    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
-    "name": "chunk / day ",
+    "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
+    "name": "new projects / week",
     "icon": null,
     "color": null,
     "show_header": true,
     "note": null,
     "type": "time-series",
-    "position_x": 31,
-    "position_y": 1,
-    "width": 25,
-    "height": 11,
+    "position_x": 3,
+    "position_y": 57,
+    "width": 39,
+    "height": 17,
     "options": {
-      "collection": "conversation_chunk",
+      "collection": "project",
       "function": "countDistinct",
-      "dateField": "timestamp",
-      "valueField": "id",
+      "precision": "week",
+      "dateField": "created_at",
       "range": "auto",
-      "precision": "day",
+      "valueField": "id",
       "missingData": "ignore"
     },
-    "_syncId": "94c75160-5581-4e79-9894-b1e8a5a762a2"
-  },
-  {
-    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
-    "name": "MAU",
-    "icon": null,
-    "color": null,
-    "show_header": true,
-    "note": null,
-    "type": "time-series",
-    "position_x": 1,
-    "position_y": 27,
-    "width": 27,
-    "height": 15,
-    "options": {
-      "collection": "directus_activity",
-      "dateField": "timestamp",
-      "valueField": "item",
-      "function": "countDistinct",
-      "range": "12 months",
-      "missingData": "ignore",
-      "precision": "month",
-      "min": 0,
-      "filter": {
-        "_and": [
-          {
-            "action": {
-              "_contains": "login"
-            }
-          }
-        ]
-      }
-    },
-    "_syncId": "979525e7-be5c-477a-a833-b42df6bbb4be"
+    "_syncId": "912a84fa-549c-4275-ba47-dcb7a4c6b99e"
   },
   {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
@@ -398,29 +372,6 @@
       "sortField": "id"
     },
     "_syncId": "97cd07c5-27be-419c-8e4e-701deec03ac8"
-  },
-  {
-    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
-    "name": "new projects / week",
-    "icon": null,
-    "color": null,
-    "show_header": true,
-    "note": null,
-    "type": "time-series",
-    "position_x": 3,
-    "position_y": 57,
-    "width": 39,
-    "height": 17,
-    "options": {
-      "collection": "project",
-      "function": "countDistinct",
-      "precision": "week",
-      "dateField": "created_at",
-      "range": "auto",
-      "valueField": "id",
-      "missingData": "ignore"
-    },
-    "_syncId": "9bbba5d7-e95d-4de2-ade2-113e356fa267"
   },
   {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
@@ -454,7 +405,7 @@
     "_syncId": "a3492153-f6b8-45ee-9796-c21a3019bfcc"
   },
   {
-    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
+    "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
     "name": "reports / day",
     "icon": null,
     "color": null,
@@ -474,32 +425,30 @@
       "valueField": "id",
       "missingData": "ignore"
     },
-    "_syncId": "ae0cc128-5076-4ade-bc55-d0089b4a8c7d"
+    "_syncId": "ae657d7a-3206-4341-b872-2e2a9cb54322"
   },
   {
-    "dashboard": "2a617714-a47e-4ae1-a4ea-8a3fb75c0491",
-    "name": "Live Chunks",
+    "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
+    "name": "chunk / month",
     "icon": null,
     "color": null,
     "show_header": true,
     "note": null,
     "type": "time-series",
-    "position_x": 1,
-    "position_y": 8,
-    "width": 49,
-    "height": 18,
+    "position_x": 57,
+    "position_y": 1,
+    "width": 25,
+    "height": 11,
     "options": {
       "collection": "conversation_chunk",
-      "grouping": "conversation_id",
-      "aggregation": "count",
-      "xAxis": "timestamp",
-      "showLegend": true,
       "function": "count",
       "dateField": "timestamp",
       "valueField": "id",
-      "filter": null
+      "range": "auto",
+      "precision": "month",
+      "missingData": "ignore"
     },
-    "_syncId": "b0672d62-873b-4c62-a0fd-34fb286450ca"
+    "_syncId": "b284f15f-5949-4d95-942e-da3004516ea4"
   },
   {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
@@ -521,26 +470,6 @@
       "valueField": "id"
     },
     "_syncId": "bb95bf10-c43b-401b-adb3-97ea6898f160"
-  },
-  {
-    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
-    "name": "proj - audio",
-    "icon": null,
-    "color": null,
-    "show_header": true,
-    "note": null,
-    "type": "metric",
-    "position_x": 1,
-    "position_y": 1,
-    "width": 8,
-    "height": 10,
-    "options": {
-      "collection": "project",
-      "function": "countDistinct",
-      "dateField": "created_at",
-      "field": "is_enhanced_audio_processing_enabled"
-    },
-    "_syncId": "c435658c-eb6f-48f5-ba62-796d3e7a8f01"
   },
   {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
@@ -578,24 +507,26 @@
     "_syncId": "c5a01857-a208-4034-b430-a9c7893d79ae"
   },
   {
-    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
-    "name": "imagen",
+    "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
+    "name": "chunk / NOW",
     "icon": null,
     "color": null,
     "show_header": true,
     "note": null,
-    "type": "pie-chart",
-    "position_x": 24,
-    "position_y": 43,
-    "width": 10,
-    "height": 10,
+    "type": "time-series",
+    "position_x": 58,
+    "position_y": 14,
+    "width": 25,
+    "height": 11,
     "options": {
-      "collection": "project",
-      "column": "image_generation_model",
-      "showLabels": true,
-      "legend": "right"
+      "collection": "conversation_chunk",
+      "function": "count",
+      "dateField": "timestamp",
+      "valueField": "id",
+      "range": "2 days",
+      "missingData": "ignore"
     },
-    "_syncId": "cbb0000e-b535-4aef-bc74-4815faee9ae1"
+    "_syncId": "cb5eebf3-4b85-4b64-bc12-0c1a0acb6b68"
   },
   {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
@@ -617,6 +548,114 @@
     "_syncId": "cee00ae2-95b9-49c6-b4fb-cc5666b401b2"
   },
   {
+    "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
+    "name": "chunk / day ",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": null,
+    "type": "time-series",
+    "position_x": 31,
+    "position_y": 1,
+    "width": 25,
+    "height": 11,
+    "options": {
+      "collection": "conversation_chunk",
+      "function": "countDistinct",
+      "dateField": "timestamp",
+      "valueField": "id",
+      "range": "auto",
+      "precision": "day",
+      "missingData": "ignore"
+    },
+    "_syncId": "d0d3b7de-e0a2-4530-9e40-7e5c9133b194"
+  },
+  {
+    "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
+    "name": "tutorial cards",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": null,
+    "type": "pie-chart",
+    "position_x": 55,
+    "position_y": 46,
+    "width": 15,
+    "height": 12,
+    "options": {
+      "collection": "project",
+      "column": "default_conversation_tutorial_slug",
+      "filter": {
+        "_and": [
+          {
+            "directus_user_id": {
+              "email": {
+                "_nends_with": "dembrane.com"
+              }
+            }
+          }
+        ]
+      },
+      "showLabels": true,
+      "legend": "right",
+      "conditionalFill": [
+        {
+          "operator": "=",
+          "value": "basic",
+          "color": "#1A66FF"
+        }
+      ],
+      "color": "#FFFFFF",
+      "donut": true
+    },
+    "_syncId": "d50c7774-4b57-4aa0-b6c3-8f3429dae302"
+  },
+  {
+    "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
+    "name": "language",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": null,
+    "type": "pie-chart",
+    "position_x": 36,
+    "position_y": 43,
+    "width": 15,
+    "height": 12,
+    "options": {
+      "collection": "project",
+      "column": "language",
+      "filter": {
+        "_and": [
+          {
+            "directus_user_id": {
+              "email": {
+                "_nends_with": "dembrane.com"
+              }
+            }
+          }
+        ]
+      },
+      "showLabels": true,
+      "legend": "right",
+      "conditionalFill": [
+        {
+          "operator": "=",
+          "value": "nl",
+          "color": "#1A66FF"
+        },
+        {
+          "operator": "=",
+          "value": "en",
+          "color": "#DEED07"
+        }
+      ],
+      "color": "#CADECC",
+      "donut": true
+    },
+    "_syncId": "de507cdf-90d9-4f7b-bc91-1e21921b0507"
+  },
+  {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
     "name": null,
     "icon": null,
@@ -632,29 +671,6 @@
       "text": "Measures Total"
     },
     "_syncId": "eaf1ce6b-879c-4fd6-8e37-5b8ed1bc1f6a"
-  },
-  {
-    "dashboard": "6fbb7a65-9d8d-4f5f-a2b0-dda5f327e0c0",
-    "name": "view gen / day ",
-    "icon": null,
-    "color": null,
-    "show_header": true,
-    "note": null,
-    "type": "time-series",
-    "position_x": 1,
-    "position_y": 14,
-    "width": 31,
-    "height": 13,
-    "options": {
-      "collection": "view",
-      "function": "countDistinct",
-      "precision": "day",
-      "dateField": "created_at",
-      "valueField": "id",
-      "range": "auto",
-      "missingData": "ignore"
-    },
-    "_syncId": "f3ddd4b0-fa81-4867-bee0-bcfa1eea2053"
   },
   {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
@@ -710,6 +726,30 @@
       }
     },
     "_syncId": "f7cf0d59-57d4-46ab-8743-4548a3745981"
+  },
+  {
+    "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
+    "name": "chat messages / week",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": null,
+    "type": "time-series",
+    "position_x": 10,
+    "position_y": 1,
+    "width": 21,
+    "height": 12,
+    "options": {
+      "collection": "project_chat_message",
+      "function": "countDistinct",
+      "precision": "day",
+      "dateField": "date_created",
+      "valueField": "id",
+      "range": "auto",
+      "filter": null,
+      "missingData": "ignore"
+    },
+    "_syncId": "f8188818-a2b2-451e-9962-0ba0e4aca1e8"
   },
   {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",

@@ -9,35 +9,16 @@ import { cn } from "@/lib/utils";
 
 const ParticipantHeader = () => {
   const [loadingFinished] = useSessionStorageState("loadingFinished", {
-    defaultValue: false,
+    defaultValue: true,
   });
-
-  const [showLogo, setShowLogo] = useState(false);
-
-  useEffect(() => {
-    if (loadingFinished) {
-      // Delay showing the logo to match the spinner's fade-out
-      setTimeout(() => {
-        setShowLogo(true);
-      }, 500);
-    }
-  }, [loadingFinished]);
 
   if (!loadingFinished) {
     return null;
   }
 
   return (
-    <Group
-      component="header"
-      justify="center"
-      className="py-2 shadow-sm"
-      style={{
-        opacity: showLogo ? 1 : 0,
-        transition: "opacity 500ms ease-in-out",
-      }}
-    >
-      <Logo hideLogo={!showLogo} hideTitle h="64px" />
+    <Group component="header" justify="center" className="py-2 shadow-sm">
+      <Logo hideTitle h="64px" />
     </Group>
   );
 };

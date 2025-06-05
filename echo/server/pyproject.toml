@@ -68,8 +68,8 @@ dependencies = [
     "neo4j==5.28.1",
     "boto3==1.37.*",
     # Uncategorized
-    "mypy==1.10.*",
-    "ruff==0.4.*",
+    "mypy>=1.16.0",
+    "ruff>=0.11.12",
     "isort==5.13.*",
     "tenacity==8.3.*",
     "networkx==3.4.*",
@@ -109,7 +109,7 @@ typecheck = { chain = ["typecheck:mypy"] }
 
 [tool.mypy]
 plugins = 'pydantic.mypy'
-exclude = ['server/alembic', 'alembic', 'scripts', 'tests']
+exclude = ['scripts', 'tests']
 warn_redundant_casts = true
 warn_unused_ignores = true
 check_untyped_defs = true

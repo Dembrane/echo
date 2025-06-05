@@ -7,6 +7,7 @@ import { useDeleteConversationByIdMutation } from "@/lib/query";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { MoveConversationButton } from "@/components/conversation/MoveConversationButton";
 import { api, getConversationContentLink } from "@/lib/api";
+import { UploadConversationDropzone } from "../dropzone/UploadConversationDropzone";
 
 export const ConversationDangerZone = ({
   conversation,

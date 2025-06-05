@@ -394,6 +394,7 @@ export const ConversationStatusIndicators = ({
         )
       }
 
+      {/* if enhanced audio processing is enabled*/}
       {!!project?.is_enhanced_audio_processing_enabled &&
         // if processing still
         // don't show this if both is_finished and is_audio_processing_finished are true
@@ -413,11 +414,9 @@ export const ConversationStatusIndicators = ({
           </Tooltip>
         )}
 
+      {/* if enhanced audio processing is disabled*/}
       {!project?.is_enhanced_audio_processing_enabled &&
-        !conversation.is_finished &&
-        !(conversation.processing_status ?? "")
-          .toLowerCase()
-          .includes("complete") && (
+        !conversation.is_finished && (
           <Tooltip
             label={
               conversation.processing_message ??

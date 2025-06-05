@@ -820,8 +820,8 @@ export const finishConversation = async (conversationId: string) => {
   );
 };
 
-export const getConversationSummary = async (conversationId: string) => {
-  return apiNoAuth.get<
+export const generateConversationSummary = async (conversationId: string) => {
+  return apiNoAuth.post<
     unknown,
     { status: string; summary: string } | { status: string; message: string }
   >(`/conversations/${conversationId}/summarize`);

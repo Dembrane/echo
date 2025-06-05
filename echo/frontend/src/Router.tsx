@@ -1,47 +1,112 @@
 import { Navigate, createBrowserRouter } from "react-router-dom";
+import {
+  createLazyRoute,
+  createLazyNamedRoute,
+} from "./components/common/LazyRoute";
+
+// Layout components - keep as regular imports since they're used frequently
 import { BaseLayout } from "./components/layout/BaseLayout";
-import { ProjectsHomeRoute } from "./routes/project/ProjectsHome";
+import { ProjectLayout } from "./components/layout/ProjectLayout";
+import { ProjectResourceLayout } from "./components/layout/ProjectResourceLayout";
+import { LanguageLayout } from "./components/layout/LanguageLayout";
+import { ProjectConversationLayout } from "./components/layout/ProjectConversationLayout";
+import { ProjectLibraryLayout } from "./components/layout/ProjectLibraryLayout";
+import { AuthLayout } from "./components/layout/AuthLayout";
+import { ProjectOverviewLayout } from "./components/layout/ProjectOverviewLayout";
+import { ParticipantLayout } from "./components/layout/ParticipantLayout";
+import { Protected } from "./components/common/Protected";
+import { ErrorPage } from "./components/error/ErrorPage";
+
+// Tab-based routes - import directly for now to debug
 import {
   ProjectPortalSettingsRoute,
   ProjectSettingsRoute,
 } from "./routes/project/ProjectRoutes";
-import { ProjectLayout } from "./components/layout/ProjectLayout";
-import { ProjectResourceLayout } from "./components/layout/ProjectResourceLayout";
-import { ProjectResourceOverviewRoute } from "./routes/project/resource/ProjectResourceOverview";
-import { ProjectResourceAnalysisRoute } from "./routes/project/resource/ProjectResourceAnalysis";
-import { LanguageLayout } from "./components/layout/LanguageLayout";
+import { ProjectConversationOverviewRoute } from "./routes/project/conversation/ProjectConversationOverview";
+import { ProjectConversationTranscript } from "./routes/project/conversation/ProjectConversationTranscript";
+import { ProjectConversationAnalysis } from "./routes/project/conversation/ProjectConversationAnalysis";
+import { ParticipantPostConversation } from "./routes/participant/ParticipantPostConversation";
 import {
   ParticipantConversationAudioRoute,
   ParticipantConversationTextRoute,
 } from "./routes/participant/ParticipantConversation";
-import { ProjectConversationLayout } from "./components/layout/ProjectConversationLayout";
-import { ProjectConversationOverviewRoute } from "./routes/project/conversation/ProjectConversationOverview";
-import { ProjectConversationTranscript } from "./routes/project/conversation/ProjectConversationTranscript";
-import { ProjectConversationAnalysis } from "./routes/project/conversation/ProjectConversationAnalysis";
-import { ProjectLibraryRoute } from "./routes/project/library/ProjectLibrary";
-import { ProjectLibraryInsight } from "./routes/project/library/ProjectLibraryInsight";
-import { ParticipantPostConversation } from "./routes/participant/ParticipantPostConversation";
-import { ProjectLibraryLayout } from "./components/layout/ProjectLibraryLayout";
-import { ProjectLibraryView } from "./routes/project/library/ProjectLibraryView";
-import { ProjectLibraryAspect } from "./routes/project/library/ProjectLibraryAspect";
-import { LoginRoute } from "./routes/auth/Login";
-import { RegisterRoute } from "./routes/auth/Register";
-import { Protected } from "./components/common/Protected";
-import { AuthLayout } from "./components/layout/AuthLayout";
-import { CheckYourEmailRoute } from "./routes/auth/CheckYourEmail";
-import { VerifyEmailRoute } from "./routes/auth/VerifyEmail";
-import { PasswordResetRoute } from "./routes/auth/PasswordReset";
-import { RequestPasswordResetRoute } from "./routes/auth/RequestPasswordReset";
-import { ProjectChatRoute } from "./routes/project/chat/ProjectChatRoute";
-import { ProjectOverviewLayout } from "./components/layout/ProjectOverviewLayout";
-import { ParticipantLayout } from "./components/layout/ParticipantLayout";
 import { ParticipantStartRoute } from "./routes/participant/ParticipantStart";
-import { ProjectReportRoute } from "./routes/project/report/ProjectReportRoute";
-import { ErrorPage } from "./components/error/ErrorPage";
-import { ParticipantReport } from "./routes/participant/ParticipantReport";
-import { ProjectUnsubscribe } from "./routes/project/unsubscribe/ProjectUnsubscribe";
-import DebugPage from "./routes/Debug";
-import { DEBUG_MODE } from "./config";
+
+// Lazy-loaded route components
+const ProjectsHomeRoute = createLazyNamedRoute(
+  () => import("./routes/project/ProjectsHome"),
+  "ProjectsHomeRoute",
+);
+
+// Regular lazy-loaded routes
+const ProjectResourceOverviewRoute = createLazyNamedRoute(
+  () => import("./routes/project/resource/ProjectResourceOverview"),
+  "ProjectResourceOverviewRoute",
+);
+const ProjectResourceAnalysisRoute = createLazyNamedRoute(
+  () => import("./routes/project/resource/ProjectResourceAnalysis"),
+  "ProjectResourceAnalysisRoute",
+);
+
+const ProjectLibraryRoute = createLazyNamedRoute(
+  () => import("./routes/project/library/ProjectLibrary"),
+  "ProjectLibraryRoute",
+);
+const ProjectLibraryInsight = createLazyNamedRoute(
+  () => import("./routes/project/library/ProjectLibraryInsight"),
+  "ProjectLibraryInsight",
+);
+
+const ProjectLibraryView = createLazyNamedRoute(
+  () => import("./routes/project/library/ProjectLibraryView"),
+  "ProjectLibraryView",
+);
+const ProjectLibraryAspect = createLazyNamedRoute(
+  () => import("./routes/project/library/ProjectLibraryAspect"),
+  "ProjectLibraryAspect",
+);
+const LoginRoute = createLazyNamedRoute(
+  () => import("./routes/auth/Login"),
+  "LoginRoute",
+);
+const RegisterRoute = createLazyNamedRoute(
+  () => import("./routes/auth/Register"),
+  "RegisterRoute",
+);
+const CheckYourEmailRoute = createLazyNamedRoute(
+  () => import("./routes/auth/CheckYourEmail"),
+  "CheckYourEmailRoute",
+);
+const VerifyEmailRoute = createLazyNamedRoute(
+  () => import("./routes/auth/VerifyEmail"),
+  "VerifyEmailRoute",
+);
+const PasswordResetRoute = createLazyNamedRoute(
+  () => import("./routes/auth/PasswordReset"),
+  "PasswordResetRoute",
+);
+const RequestPasswordResetRoute = createLazyNamedRoute(
+  () => import("./routes/auth/RequestPasswordReset"),
+  "RequestPasswordResetRoute",
+);
+const ProjectChatRoute = createLazyNamedRoute(
+  () => import("./routes/project/chat/ProjectChatRoute"),
+  "ProjectChatRoute",
+);
+
+const ProjectReportRoute = createLazyNamedRoute(
+  () => import("./routes/project/report/ProjectReportRoute"),
+  "ProjectReportRoute",
+);
+const ParticipantReport = createLazyNamedRoute(
+  () => import("./routes/participant/ParticipantReport"),
+  "ParticipantReport",
+);
+const ProjectUnsubscribe = createLazyNamedRoute(
+  () => import("./routes/project/unsubscribe/ProjectUnsubscribe"),
+  "ProjectUnsubscribe",
+);
+const DebugPage = createLazyRoute(() => import("./routes/Debug"));
 
 export const mainRouter = createBrowserRouter([
   {
@@ -125,11 +190,14 @@ export const mainRouter = createBrowserRouter([
                     element: <ProjectOverviewLayout />,
                     children: [
                       {
+                        index: true,
+                        element: <Navigate to="portal-editor" replace />,
+                      },
+                      {
                         path: "overview",
                         element: <ProjectSettingsRoute />,
                       },
                       {
-                        index: true,
                         path: "portal-editor",
                         element: <ProjectPortalSettingsRoute />,
                       },
@@ -153,6 +221,9 @@ export const mainRouter = createBrowserRouter([
                     children: [
                       {
                         index: true,
+                        element: <Navigate to="overview" replace />,
+                      },
+                      {
                         path: "overview",
                         element: <ProjectResourceOverviewRoute />,
                       },
@@ -166,6 +237,10 @@ export const mainRouter = createBrowserRouter([
                     path: "conversation/:conversationId",
                     element: <ProjectConversationLayout />,
                     children: [
+                      {
+                        index: true,
+                        element: <Navigate to="overview" replace />,
+                      },
                       {
                         path: "overview",
                         element: <ProjectConversationOverviewRoute />,
@@ -243,10 +318,6 @@ export const participantRouter = createBrowserRouter([
         path: "start",
         element: <ParticipantStartRoute />,
       },
-      // {
-      //   path: "spike/conversation/:conversationId",
-      //   element: <SpikeParticipantConversationAudioRoute />,
-      // },
       {
         path: "conversation/:conversationId",
         element: <ParticipantConversationAudioRoute />,
