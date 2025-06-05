@@ -66,16 +66,7 @@ export const ParticipantConversationAudioRoute = () => {
   const [showMicTest, setShowMicTest] = useState(!savedDeviceId);
   const [deviceId, setDeviceId] = useState<string>(savedDeviceId || "");
 
-  if (showMicTest) {
-    return (
-      <MicrophoneTest
-        onContinue={(id: string) => {
-          setDeviceId(id);
-          setShowMicTest(false);
-        }}
-      />
-    );
-  }
+
   const projectQuery = useParticipantProjectById(projectId ?? "");
   const conversationQuery = useConversationQuery(projectId, conversationId);
   const chunks = useConversationChunksQuery(projectId, conversationId);
@@ -238,6 +229,17 @@ export const ParticipantConversationAudioRoute = () => {
 
   const textModeUrl = `/${projectId}/conversation/${conversationId}/text`;
   const finishUrl = `/${projectId}/conversation/${conversationId}/finish`;
+
+  if (showMicTest) {
+    return (
+      <MicrophoneTest
+        onContinue={(id: string) => {
+          setDeviceId(id);
+          setShowMicTest(false);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="container mx-auto flex h-full max-w-2xl flex-col">

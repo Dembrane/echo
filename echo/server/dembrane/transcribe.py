@@ -9,6 +9,7 @@ from litellm import transcription
 
 from dembrane.s3 import get_signed_url, get_stream_from_s3
 from dembrane.config import (
+    API_BASE_URL,
     LITELLM_WHISPER_URL,
     LITELLM_WHISPER_MODEL,
     RUNPOD_WHISPER_API_KEY,
@@ -52,12 +53,13 @@ def queue_transcribe_audio_runpod(
             "audio": signed_url,
             "initial_prompt": whisper_prompt,
         }
+
         if language:
             input_payload["language"] = language
 
         data = {
-            "input": input_payload
-            # FIXME: add webhook here
+            "input": input_payload,
+            "webhook": f"{API_BASE_URL}/stateless/webhook/transcribe",
         }
 
         logger.debug(f"data: {data}")
@@ -114,7 +116,7 @@ def transcribe_audio_litellm(
 # Helper functions extracted to simplify `transcribe_conversation_chunk`
 # NOTE: These are internal helpers ‑ they should **not** be considered part of the public API.
 
-def _fetch_chunk(conversation_chunk_id: str):
+def _fetch_chunk(conversation_chunk_id: str) -> dict:
     """Return a single conversation_chunk row or raise a descriptive ValueError."""
     try:
         chunks = directus.get_items(
@@ -151,7 +153,7 @@ def _fetch_chunk(conversation_chunk_id: str):
     return chunk
 
 
-def _fetch_conversation(conversation_id: str):
+def _fetch_conversation(conversation_id: str) -> dict:
     """Return conversation row (including nested project) or raise ValueError."""
     try:
         conversation_rows = directus.get_items(
@@ -208,7 +210,7 @@ def _should_use_litellm() -> bool:
         return False
     return True
 
-def _get_status_runpod(runpod_job_status_link: str) -> str:
+def _get_status_runpod(runpod_job_status_link: str) -> tuple[str, dict]:
     """Get the status of a RunPod job."""
     headers = {
         "Content-Type": "application/json",

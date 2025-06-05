@@ -30,6 +30,7 @@ class ContextualChunkETLPipeline:
     ) -> None:
         self.conversation_history_num = AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM
         self.process_tracker = process_tracker
+        # FIXME: Why do we need this? @Arindam
         self.api_base_url = API_BASE_URL
 
     def extract(self) -> None:

@@ -183,7 +183,7 @@ marshmallow==3.21.2
 multidict==6.0.5
     # via aiohttp
     # via yarl
-mypy==1.10.0
+mypy==1.16.0
 mypy-extensions==1.0.0
     # via mypy
     # via typing-inspect
@@ -210,6 +210,8 @@ packaging==23.2
     # via pytest
 pandas==2.2.2
 pandas-stubs==2.2.2.240514
+pathspec==0.12.1
+    # via mypy
 pgvector==0.2.5
 pipmaster==0.5.1
 pluggy==1.5.0
@@ -291,7 +293,7 @@ rpds-py==0.22.3
     # via referencing
 rsa==4.9
     # via python-jose
-ruff==0.4.4
+ruff==0.11.12
 s3transfer==0.11.4
     # via boto3
 scikit-learn==1.4.2

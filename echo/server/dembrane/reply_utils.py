@@ -305,7 +305,7 @@ async def generate_reply_for_conversation(
         else:
             # If custom prompt is empty, use summarize prompt
             global_prompt = render_prompt("get_reply_summarize", language, {})
-            logger.debug(f"Custom prompt is empty, falling back to get_reply_summarize template")
+            logger.debug("Custom prompt is empty, falling back to get_reply_summarize template")
     else:
         global_prompt = current_project["get_reply_prompt"] if current_project["get_reply_prompt"] is not None else ""
         logger.debug(f"Using project global prompt for mode: {get_reply_mode}")

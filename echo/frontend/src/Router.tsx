@@ -25,6 +25,12 @@ import {
 import { ProjectConversationOverviewRoute } from "./routes/project/conversation/ProjectConversationOverview";
 import { ProjectConversationTranscript } from "./routes/project/conversation/ProjectConversationTranscript";
 import { ProjectConversationAnalysis } from "./routes/project/conversation/ProjectConversationAnalysis";
+import { ParticipantPostConversation } from "./routes/participant/ParticipantPostConversation";
+import {
+  ParticipantConversationAudioRoute,
+  ParticipantConversationTextRoute,
+} from "./routes/participant/ParticipantConversation";
+import { ParticipantStartRoute } from "./routes/participant/ParticipantStart";
 
 // Lazy-loaded route components
 const ProjectsHomeRoute = createLazyNamedRoute(
@@ -41,14 +47,7 @@ const ProjectResourceAnalysisRoute = createLazyNamedRoute(
   () => import("./routes/project/resource/ProjectResourceAnalysis"),
   "ProjectResourceAnalysisRoute",
 );
-const ParticipantConversationAudioRoute = createLazyNamedRoute(
-  () => import("./routes/participant/ParticipantConversation"),
-  "ParticipantConversationAudioRoute",
-);
-const ParticipantConversationTextRoute = createLazyNamedRoute(
-  () => import("./routes/participant/ParticipantConversation"),
-  "ParticipantConversationTextRoute",
-);
+
 const ProjectLibraryRoute = createLazyNamedRoute(
   () => import("./routes/project/library/ProjectLibrary"),
   "ProjectLibraryRoute",
@@ -57,10 +56,7 @@ const ProjectLibraryInsight = createLazyNamedRoute(
   () => import("./routes/project/library/ProjectLibraryInsight"),
   "ProjectLibraryInsight",
 );
-const ParticipantPostConversation = createLazyNamedRoute(
-  () => import("./routes/participant/ParticipantPostConversation"),
-  "ParticipantPostConversation",
-);
+
 const ProjectLibraryView = createLazyNamedRoute(
   () => import("./routes/project/library/ProjectLibraryView"),
   "ProjectLibraryView",
@@ -97,10 +93,7 @@ const ProjectChatRoute = createLazyNamedRoute(
   () => import("./routes/project/chat/ProjectChatRoute"),
   "ProjectChatRoute",
 );
-const ParticipantStartRoute = createLazyNamedRoute(
-  () => import("./routes/participant/ParticipantStart"),
-  "ParticipantStartRoute",
-);
+
 const ProjectReportRoute = createLazyNamedRoute(
   () => import("./routes/project/report/ProjectReportRoute"),
   "ProjectReportRoute",
@@ -325,10 +318,6 @@ export const participantRouter = createBrowserRouter([
         path: "start",
         element: <ParticipantStartRoute />,
       },
-      // {
-      //   path: "spike/conversation/:conversationId",
-      //   element: <SpikeParticipantConversationAudioRoute />,
-      // },
       {
         path: "conversation/:conversationId",
         element: <ParticipantConversationAudioRoute />,
