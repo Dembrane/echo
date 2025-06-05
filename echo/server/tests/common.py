@@ -19,6 +19,7 @@ def create_project(name: str, language: str, additional_data: Dict[str, Any] = N
 
 
 def delete_project(project_id: str):
+    logger.debug(f"Deleting project: {project_id}")
     directus.delete_item("project", project_id)
 
 
@@ -35,6 +36,7 @@ def create_conversation(project_id: str, name: str, additional_data: Dict[str, A
 
 
 def delete_conversation(conversation_id: str):
+    logger.debug(f"Deleting conversation: {conversation_id}")
     directus.delete_item("conversation", conversation_id)
 
 
@@ -56,6 +58,7 @@ def create_conversation_chunk(
 
 
 def delete_conversation_chunk(conversation_chunk_id: str):
+    logger.debug(f"Deleting conversation chunk: {conversation_chunk_id}")
     directus.delete_item("conversation_chunk", conversation_chunk_id)
 
 
