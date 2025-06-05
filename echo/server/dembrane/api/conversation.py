@@ -33,6 +33,7 @@ from dembrane.api.exceptions import (
     ConversationNotFoundException,
 )
 from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.conversation_health import get_health_status
 from dembrane.processing_status_utils import ProcessingStatus
 
 logger = getLogger("api.conversation")
@@ -98,6 +99,8 @@ async def generate_health_events(
 ) -> AsyncGenerator[str, None]:
     
     ping_count = 0
+    last_health_data = None
+    event_count = 0
 
     try:
         while True:
@@ -111,6 +114,16 @@ async def generate_health_events(
             # Send ping every 45 seconds
             yield f"event: ping\ndata: {ping_count}\n\n"
             
+            health_data = get_health_status(conversation_ids=conversation_ids, project_ids=project_ids)
+
+            # Only send health data if it has changed
+            if health_data != last_health_data:
+                yield f"event: health_update\ndata: {json.dumps(health_data)}\n\n"
+                last_health_data = health_data
+            
+                event_count += 1
+                logger.debug(f"Sent health event #{event_count} to {client_info}")
+
             # Log every 10th ping
             if ping_count % 10 == 0:
                 logger.debug(f"Health stream ping #{ping_count} sent to {client_info}")
