@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "http://localhost:8055",
+      "url": "http://172.30.150.228:8055",
       "description": "Your current Directus instance."
     }
   ],
@@ -22967,10 +22967,6 @@
             "nullable": true,
             "type": "string",
             "format": "timestamp"
-          },
-          "get_reply_mode": {
-            "nullable": true,
-            "type": "string"
           },
           "conversations": {
             "nullable": true,
