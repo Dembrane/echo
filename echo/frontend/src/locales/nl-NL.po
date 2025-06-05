@@ -95,8 +95,8 @@ msgstr "*Een moment a.u.b.*"
 #. placeholder {0}: Math.floor(remainingCooldown / 60)
 #. placeholder {1}: (remainingCooldown % 60) .toString() .padStart(2, "0")
 #. placeholder {1}: (remainingCooldown % 60) .toString() .padStart(2, "0")
-#: src/routes/participant/ParticipantConversation.tsx:390
-#: src/routes/participant/ParticipantConversation.tsx:474
+#: src/routes/participant/ParticipantConversation.tsx:391
+#: src/routes/participant/ParticipantConversation.tsx:475
 msgid "<0>Wait </0>{0}:{1}"
 msgstr "<0>Wacht </0>{0}:{1}"
 
@@ -271,7 +271,7 @@ msgid "Are you sure you want to delete this tag? This will remove the tag from e
 msgstr "Weet je zeker dat je dit trefwoord wilt verwijderen? Dit zal het trefwoord verwijderen uit bestaande gesprekken die het bevatten."
 
 #: src/routes/participant/ParticipantConversation.tsx:212
-#: src/routes/participant/ParticipantConversation.tsx:553
+#: src/routes/participant/ParticipantConversation.tsx:554
 msgid "Are you sure you want to finish?"
 msgstr "Weet je zeker dat je het wilt afmaken?"
 
@@ -485,6 +485,14 @@ msgstr "Publiceren bevestigen"
 msgid "Connecting to report services..."
 msgstr "Verbinding maken met rapportservices..."
 
+#: src/components/common/ConnectionHealthStatus.tsx:29
+msgid "Connection healthy"
+msgstr "Verbinding gezond"
+
+#: src/components/common/ConnectionHealthStatus.tsx:29
+msgid "Connection unhealthy"
+msgstr "Verbinding ongezond"
+
 #: src/components/conversation/AutoSelectConversations.tsx:209
 msgid "Contact sales"
 msgstr "Neem contact op met sales"
@@ -679,8 +687,8 @@ msgstr "Sleep audio bestanden hierheen of klik om bestanden te selecteren"
 msgid "Dutch"
 msgstr "Nederlands"
 
-#: src/routes/participant/ParticipantConversation.tsx:399
-#: src/routes/participant/ParticipantConversation.tsx:483
+#: src/routes/participant/ParticipantConversation.tsx:400
+#: src/routes/participant/ParticipantConversation.tsx:484
 msgid "ECHO"
 msgstr "ECHO"
 
@@ -890,8 +898,8 @@ msgstr "Bestandsgrootte: Min {0}, Max {1}, maximaal {MAX_FILES} bestanden"
 #~ msgid "Filter"
 #~ msgstr "Filteren"
 
-#: src/routes/participant/ParticipantConversation.tsx:426
-#: src/routes/participant/ParticipantConversation.tsx:618
+#: src/routes/participant/ParticipantConversation.tsx:427
+#: src/routes/participant/ParticipantConversation.tsx:619
 msgid "Finish"
 msgstr "Voltooien"
 
@@ -1393,7 +1401,7 @@ msgstr "Portal met wachtwoord beveiligen (aanvraag functie)"
 msgid "Passwords do not match"
 msgstr "Wachtwoorden komen niet overeen"
 
-#: src/routes/participant/ParticipantConversation.tsx:453
+#: src/routes/participant/ParticipantConversation.tsx:454
 msgid "Pause"
 msgstr "Pauze"
 
@@ -1430,7 +1438,7 @@ msgstr "Log in om door te gaan."
 #~ msgid "Please provide a concise summary of the following provided in the context."
 #~ msgstr "Geef een korte samenvatting van het volgende dat in de context is verstrekt."
 
-#: src/components/participant/ParticipantBody.tsx:122
+#: src/components/participant/ParticipantBody.tsx:145
 msgid "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon."
 msgstr "Neem uw antwoord op door op de knop \"Opnemen\" hieronder te klikken. U kunt er ook voor kiezen om in tekst te reageren door op het teksticoon te klikken."
 
@@ -1592,7 +1600,7 @@ msgstr "Quotes"
 #~ msgid "Ready!"
 #~ msgstr "Klaar om te beginnen"
 
-#: src/routes/participant/ParticipantConversation.tsx:370
+#: src/routes/participant/ParticipantConversation.tsx:371
 msgid "Record"
 msgstr "Opname starten"
 
@@ -1701,7 +1709,7 @@ msgstr "Wachtwoord resetten | Dembrane"
 msgid "Resources"
 msgstr "Bronnen"
 
-#: src/routes/participant/ParticipantConversation.tsx:443
+#: src/routes/participant/ParticipantConversation.tsx:444
 msgid "Resume"
 msgstr "Hervatten"
 
@@ -1942,11 +1950,11 @@ msgstr "Specifieke context"
 #~ msgstr "Opname starten"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:406
-#: src/routes/participant/ParticipantConversation.tsx:498
+#: src/routes/participant/ParticipantConversation.tsx:499
 msgid "Stop"
 msgstr "Stop"
 
-#: src/routes/participant/ParticipantConversation.tsx:601
+#: src/routes/participant/ParticipantConversation.tsx:602
 #: src/routes/auth/RequestPasswordReset.tsx:41
 msgid "Submit"
 msgstr "Stuur in"
@@ -2051,7 +2059,7 @@ msgstr "Er is een fout opgetreden bij het verifiëren van uw e-mail. Probeer het
 msgid "These are your default view templates. Once you create your library these will be your first two views."
 msgstr "Dit zijn uw standaard weergave sjablonen. Zodra u uw bibliotheek hebt gemaakt, zullen deze uw eerste twee weergaven zijn."
 
-#: src/routes/participant/ParticipantConversation.tsx:303
+#: src/routes/participant/ParticipantConversation.tsx:304
 msgid "Thinking..."
 msgstr "Denken..."
 
@@ -2264,7 +2272,7 @@ msgstr "Typ een bericht..."
 #~ msgid "Type context here..."
 #~ msgstr "Typ hier de context..."
 
-#: src/routes/participant/ParticipantConversation.tsx:588
+#: src/routes/participant/ParticipantConversation.tsx:589
 msgid "Type your response here"
 msgstr "Typ hier uw reactie"
 
@@ -2355,7 +2363,7 @@ msgstr "Gebruik Shift + Enter om een nieuwe regel toe te voegen"
 msgid "View"
 msgstr "View"
 
-#: src/components/participant/ParticipantBody.tsx:166
+#: src/components/participant/ParticipantBody.tsx:189
 msgid "View your responses"
 msgstr "Bekijk je reacties"
 
@@ -2379,7 +2387,7 @@ msgstr "We hebben u een e-mail gestuurd met de volgende stappen. Als u het niet 
 msgid "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 msgstr "We sturen u alleen een bericht als uw gastgever een rapport genereert, we delen uw gegevens niet met iemand. U kunt op elk moment afmelden."
 
-#: src/components/participant/ParticipantBody.tsx:101
+#: src/components/participant/ParticipantBody.tsx:116
 msgid "Welcome"
 msgstr "Welkom"
 
@@ -2456,7 +2464,7 @@ msgstr "Je bibliotheek is leeg. Maak een bibliotheek om je eerste inzichten te b
 msgid "Your response has been recorded. You may now close this tab."
 msgstr "Je reactie is opgenomen. Je kunt dit tabblad nu sluiten."
 
-#: src/components/participant/ParticipantBody.tsx:176
+#: src/components/participant/ParticipantBody.tsx:199
 msgid "Your responses"
 msgstr "Je reacties"
 
