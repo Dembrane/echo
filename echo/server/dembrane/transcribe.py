@@ -57,7 +57,7 @@ def queue_transcribe_audio_runpod(
             input_payload["language"] = language
 
         data = {"input": input_payload}
-        logger.debug(f"***data: {data}")
+        logger.debug(f"data: {data}")
         try:
             if is_priority:
                 url = f"{str(RUNPOD_WHISPER_PRIORITY_BASE_URL).rstrip('/')}/run"
