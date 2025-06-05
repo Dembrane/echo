@@ -293,6 +293,12 @@ msgstr "Audio Processing In Progress"
 msgid "Audio recordings are scheduled to be deleted after 30 days from the recording date"
 msgstr "Audio recordings are scheduled to be deleted after 30 days from the recording date"
 
+#: src/hooks/useConversationIssueBanner.ts:15
+#: src/hooks/useConversationIssueBanner.ts:22
+#: src/hooks/useConversationIssueBanner.ts:29
+msgid "Audio Tip"
+msgstr "Audio Tip"
+
 #: src/components/conversation/AutoSelectConversations.tsx:156
 msgid "Auto-select"
 msgstr "Auto-select"
@@ -924,6 +930,10 @@ msgstr "Invalid credentials."
 msgid "Invalid token. Please try again."
 msgstr "Invalid token. Please try again."
 
+#: src/hooks/useConversationIssueBanner.ts:20
+msgid "It sounds like more than one person is speaking. Taking turns will help us hear everyone clearly."
+msgstr "It sounds like more than one person is speaking. Taking turns will help us hear everyone clearly."
+
 #. placeholder {0}: project?.default_conversation_title ?? "the conversation"
 #: src/components/project/ProjectQRCode.tsx:95
 msgid "Join {0} on Dembrane"
@@ -1276,7 +1286,7 @@ msgstr "Please login to continue."
 #~ msgid "Please provide a concise summary of the following provided in the context."
 #~ msgstr "Please provide a concise summary of the following provided in the context."
 
-#: src/components/participant/ParticipantBody.tsx:145
+#: src/components/participant/ParticipantBody.tsx:182
 msgid "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon."
 msgstr "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon."
 
@@ -1737,6 +1747,10 @@ msgstr "Something went wrong"
 msgid "Something went wrong while uploading the file: {0}"
 msgstr "Something went wrong while uploading the file: {0}"
 
+#: src/components/participant/ParticipantBody.tsx:149
+msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
+msgstr "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
+
 #: src/routes/participant/ParticipantConversation.tsx:842
 #~ msgid "Something went wrong. Please try again."
 #~ msgstr "Something went wrong. Please try again."
@@ -1970,6 +1984,10 @@ msgstr "This will create a new conversation with the same audio but a fresh tran
 msgid "Time Created"
 msgstr "Time Created"
 
+#: src/components/participant/ParticipantBody.tsx:141
+msgid "Tip"
+msgstr "Tip"
+
 #: src/components/project/ProjectBasicEdit.tsx:80
 #~ msgid "Title"
 #~ msgstr "Title"
@@ -2070,6 +2088,10 @@ msgstr ""
 "\n"
 "Note: If the discussion lacks substantial decision points or insights, flag it for deeper exploration next time."
 
+#: src/hooks/useConversationIssueBanner.ts:27
+msgid "Try moving a bit closer to your microphone for better sound quality."
+msgstr "Try moving a bit closer to your microphone for better sound quality."
+
 #: src/routes/project/chat/ProjectChatRoute.tsx:500
 msgid "Type a message..."
 msgstr "Type a message..."
@@ -2161,7 +2183,7 @@ msgstr "Use Shift + Enter to add a new line"
 msgid "View"
 msgstr "View"
 
-#: src/components/participant/ParticipantBody.tsx:189
+#: src/components/participant/ParticipantBody.tsx:226
 msgid "View your responses"
 msgstr "View your responses"
 
@@ -2185,7 +2207,11 @@ msgstr "We have sent you an email with next steps. If you don't see it, check yo
 msgid "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 msgstr "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 
-#: src/components/participant/ParticipantBody.tsx:116
+#: src/hooks/useConversationIssueBanner.ts:13
+msgid "We’re picking up some silence. Try speaking up so your voice comes through clearly."
+msgstr "We’re picking up some silence. Try speaking up so your voice comes through clearly."
+
+#: src/components/participant/ParticipantBody.tsx:124
 msgid "Welcome"
 msgstr "Welcome"
 
@@ -2238,6 +2264,10 @@ msgstr "You may also choose to record another conversation."
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 
+#: src/components/participant/ParticipantBody.tsx:140
+msgid "You seem to be offline, please check your internet connection"
+msgstr "You seem to be offline, please check your internet connection"
+
 #: src/components/form/SaveStatus.tsx:55
 msgid "Your inputs will be saved automatically."
 msgstr "Your inputs will be saved automatically."
@@ -2250,7 +2280,7 @@ msgstr "Your library is empty. Create a library to see your first insights."
 msgid "Your response has been recorded. You may now close this tab."
 msgstr "Your response has been recorded. You may now close this tab."
 
-#: src/components/participant/ParticipantBody.tsx:199
+#: src/components/participant/ParticipantBody.tsx:236
 msgid "Your responses"
 msgstr "Your responses"
 

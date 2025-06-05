@@ -349,6 +349,12 @@ msgstr "Audio verwerking in uitvoering"
 msgid "Audio recordings are scheduled to be deleted after 30 days from the recording date"
 msgstr "Audio opnames worden 30 dagen na de opname verwijderd"
 
+#: src/hooks/useConversationIssueBanner.ts:15
+#: src/hooks/useConversationIssueBanner.ts:22
+#: src/hooks/useConversationIssueBanner.ts:29
+msgid "Audio Tip"
+msgstr "Audio Tip"
+
 #: src/components/conversation/AutoSelectConversations.tsx:156
 msgid "Auto-select"
 msgstr "Automatisch selecteren"
@@ -1045,6 +1051,10 @@ msgstr "Ongeldig token. Probeer het opnieuw."
 #~ msgid "Invite Link"
 #~ msgstr "Deelnemingslink"
 
+#: src/hooks/useConversationIssueBanner.ts:20
+msgid "It sounds like more than one person is speaking. Taking turns will help us hear everyone clearly."
+msgstr "Het lijkt erop dat meer dan één persoon spreekt. Het afwisselen zal ons helpen iedereen duidelijk te horen."
+
 #: src/routes/participant/Login.tsx:128
 #~ msgid "Join"
 #~ msgstr "Aansluiten"
@@ -1426,7 +1436,7 @@ msgstr "Log in om door te gaan."
 #~ msgid "Please provide a concise summary of the following provided in the context."
 #~ msgstr "Geef een korte samenvatting van het volgende dat in de context is verstrekt."
 
-#: src/components/participant/ParticipantBody.tsx:145
+#: src/components/participant/ParticipantBody.tsx:182
 msgid "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon."
 msgstr "Neem uw antwoord op door op de knop \"Opnemen\" hieronder te klikken. U kunt er ook voor kiezen om in tekst te reageren door op het teksticoon te klikken."
 
@@ -1900,6 +1910,10 @@ msgstr "Er ging iets mis"
 msgid "Something went wrong while uploading the file: {0}"
 msgstr "Er ging iets mis tijdens het uploaden van het bestand: {0}"
 
+#: src/components/participant/ParticipantBody.tsx:149
+msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
+msgstr "Er ging iets mis met het gesprek. Probeer het alstublieft opnieuw of neem contact op met de ondersteuning als het probleem blijft bestaan"
+
 #: src/routes/participant/ParticipantConversation.tsx:842
 #~ msgid "Something went wrong. Please try again."
 #~ msgstr "Er is iets misgegaan. Probeer het alstublieft opnieuw."
@@ -2141,6 +2155,10 @@ msgstr "Dit zal een nieuw gesprek maken met dezelfde audio maar een nieuwe trans
 msgid "Time Created"
 msgstr "Tijd gemaakt"
 
+#: src/components/participant/ParticipantBody.tsx:141
+msgid "Tip"
+msgstr "Tip"
+
 #: src/components/project/ProjectBasicEdit.tsx:80
 #~ msgid "Title"
 #~ msgstr "Titel"
@@ -2241,6 +2259,10 @@ msgstr ""
 "Balans tactische details met strategische visie\n"
 "\n"
 "Opmerking: Als de discussie geen substantiële besluitpunten of inzichten bevat, flag het voor een diepere exploratie de volgende keer."
+
+#: src/hooks/useConversationIssueBanner.ts:27
+msgid "Try moving a bit closer to your microphone for better sound quality."
+msgstr "Probeer een beetje dichter bij je microfoon te komen voor betere geluidskwaliteit."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:500
 msgid "Type a message..."
@@ -2346,7 +2368,7 @@ msgstr "Gebruik Shift + Enter om een nieuwe regel toe te voegen"
 msgid "View"
 msgstr "View"
 
-#: src/components/participant/ParticipantBody.tsx:189
+#: src/components/participant/ParticipantBody.tsx:226
 msgid "View your responses"
 msgstr "Bekijk je reacties"
 
@@ -2370,7 +2392,11 @@ msgstr "We hebben u een e-mail gestuurd met de volgende stappen. Als u het niet 
 msgid "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 msgstr "We sturen u alleen een bericht als uw gastgever een rapport genereert, we delen uw gegevens niet met iemand. U kunt op elk moment afmelden."
 
-#: src/components/participant/ParticipantBody.tsx:116
+#: src/hooks/useConversationIssueBanner.ts:13
+msgid "We’re picking up some silence. Try speaking up so your voice comes through clearly."
+msgstr "We horen wat stilte. Probeer harder te spreken zodat je stem duidelijk blijft."
+
+#: src/components/participant/ParticipantBody.tsx:124
 msgid "Welcome"
 msgstr "Welkom"
 
@@ -2435,6 +2461,10 @@ msgstr "Je kunt er ook voor kiezen om een ander gesprek op te nemen."
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "Je moet inloggen met dezelfde provider die u gebruikte om u aan te melden. Als u problemen ondervindt, neem dan contact op met de ondersteuning."
 
+#: src/components/participant/ParticipantBody.tsx:140
+msgid "You seem to be offline, please check your internet connection"
+msgstr "Je lijkt offline te zijn, controleer je internetverbinding"
+
 #: src/components/form/SaveStatus.tsx:55
 msgid "Your inputs will be saved automatically."
 msgstr "Uw invoer wordt automatisch opgeslagen."
@@ -2447,7 +2477,7 @@ msgstr "Je bibliotheek is leeg. Maak een bibliotheek om je eerste inzichten te b
 msgid "Your response has been recorded. You may now close this tab."
 msgstr "Je reactie is opgenomen. Je kunt dit tabblad nu sluiten."
 
-#: src/components/participant/ParticipantBody.tsx:199
+#: src/components/participant/ParticipantBody.tsx:236
 msgid "Your responses"
 msgstr "Je reacties"
 
