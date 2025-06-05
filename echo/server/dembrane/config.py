@@ -416,6 +416,14 @@ if LIGHTRAG_LITELLM_INFERENCE_API_BASE:
 else:
     logger.debug("LIGHTRAG_LITELLM_INFERENCE_API_BASE: not set")
 
+DISABLE_MULTILINGUAL_DIARIZATION = os.environ.get(
+    "DISABLE_MULTILINGUAL_DIARIZATION", "false"
+).lower() in [
+    "true",
+    "1",
+]
+logger.debug(f"DISABLE_MULTILINGUAL_DIARIZATION: {DISABLE_MULTILINGUAL_DIARIZATION}")
+
 ENABLE_RUNPOD_DIARIZATION = os.environ.get("ENABLE_RUNPOD_DIARIZATION", "false").lower() in [
     "true",
     "1",

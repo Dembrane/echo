@@ -13,6 +13,7 @@ from dembrane.config import (
     RUNPOD_DIARIZATION_API_KEY,
     RUNPOD_DIARIZATION_TIMEOUT,
     RUNPOD_DIARIZATION_BASE_URL,
+    DISABLE_MULTILINGUAL_DIARIZATION,
 )
 from dembrane.directus import directus
 
@@ -27,7 +28,7 @@ def get_runpod_diarization(
     Request diarization from RunPod, wait for a response, and cancel if no response in timeout.
     All responses and status updates are written to Directus.
     """
-    logger.debug(f"***Starting diarization for chunk_id: {chunk_id}, path: {path}")
+    logger.debug(f"Starting diarization for chunk_id: {chunk_id}, path: {path}")
     try:
         audio_file_uri = (
             path
@@ -35,7 +36,7 @@ def get_runpod_diarization(
             else directus.get_item(
                 "conversation_chunk",
                 chunk_id,
-            )["path"]
+            )["path"]  # type: ignore
         )
         logger.debug(f"Fetched audio_file_uri: {audio_file_uri}")
     except Exception as e:
@@ -47,6 +48,20 @@ def get_runpod_diarization(
         logger.debug(f"Generated signed audio_url: {audio_url}")
     except Exception as e:
         logger.error(f"Failed to generate signed URL for {audio_file_uri}: {e}")
+        return None
+
+    # Get project language
+    query = {
+        "query": {"filter": {"id": chunk_id}, "fields": ["conversation_id.project_id.language"]}
+    }
+    project_language = directus.get_items(
+        "conversation_chunk",
+        query,
+    )[0]["conversation_id"]["project_id"]["language"]  # type: ignore
+    logger.debug(f"Project language is {project_language}")
+
+    if DISABLE_MULTILINGUAL_DIARIZATION and project_language != "en":
+        logger.debug(f"Skipping diarization for chunk {chunk_id} because project language is {project_language}")
         return None
 
     timeout = RUNPOD_DIARIZATION_TIMEOUT
@@ -110,107 +125,15 @@ def get_runpod_diarization(
     # Timeout: cancel the job
     try:
         cancel_endpoint = f"{base_url}/cancel/{job_id}"
-        logger.warning(f"Timeout reached. Cancelling diarization job {job_id} at {cancel_endpoint}")
+        logger.warning(
+            f"Timeout reached. Cancelling diarization job {job_id} at {cancel_endpoint}"
+        )
         cancel_response = requests.post(cancel_endpoint, headers=headers, timeout=10)
         cancel_response.raise_for_status()
         logger.info(f"Cancelled diarization job {job_id} after timeout.")
     except Exception as e:
         logger.error(f"Failed to cancel diarization job {job_id}: {e}")
     return None
-
-
-def _process_data(df: pd.DataFrame) -> pd.DataFrame:
-    df["timestamp"] = pd.to_datetime(df["timestamp"])
-    max_timestamp = df["timestamp"].max()
-    df["time_diff_seconds"] = (max_timestamp - df["timestamp"]).dt.total_seconds()
-    decay_factor = 30
-    df["recency_weight"] = np.exp(-df["time_diff_seconds"] / decay_factor)
-    df.drop(columns=["timestamp", "time_diff_seconds"], inplace=True)
-    df = df[
-        [
-            "project_id",
-            "conversation_id",
-            "noise_ratio",
-            "cross_talk_instances",
-            "silence_ratio",
-            "recency_weight",
-        ]
-    ]
-    df.dropna(inplace=True)
-    return df
-
-
-def _calculate_conversation_metrics(
-    df: pd.DataFrame, cross_talk_threshold: float, noise_threshold: float, silence_threshold: float
-) -> dict[str, Any]:
-    # Calculate conversation-level metrics (average of chunks within each conversation)
-    conversation_metrics = (
-        df.groupby(["project_id", "conversation_id"])
-        .agg({"noise_ratio": "mean", "cross_talk_instances": "mean", "silence_ratio": "mean"})
-        .reset_index()
-    )
-
-    def classify_conversation_issue(row: Any) -> str:
-        if row["cross_talk_instances"] > cross_talk_threshold:
-            return "HIGH_CROSSTALK"
-        elif row["noise_ratio"] > noise_threshold:
-            return "HIGH_NOISE"
-        elif row["silence_ratio"] > silence_threshold:
-            return "HIGH_SILENCE"
-        else:
-            return "NONE"
-
-    conversation_metrics["conversation_issue"] = conversation_metrics.apply(
-        classify_conversation_issue, axis=1
-    )
-
-    # Calculate project-level metrics (average of conversations within each project)
-    project_metrics = (
-        conversation_metrics.groupby("project_id")
-        .agg({"noise_ratio": "mean", "cross_talk_instances": "mean", "silence_ratio": "mean"})
-        .reset_index()
-    )
-
-    # Calculate global metrics (average of all projects)
-    global_metrics = project_metrics.agg(
-        {"noise_ratio": "mean", "cross_talk_instances": "mean", "silence_ratio": "mean"}
-    )
-
-    # Build the nested dictionary structure
-    result: dict[str, Any] = {
-        "global_noise_ratio": float(global_metrics["noise_ratio"]),
-        "global_cross_talk_instances": float(global_metrics["cross_talk_instances"]),
-        "global_silence_ratio": float(global_metrics["silence_ratio"]),
-        "projects": {},
-    }
-
-    # Build projects dictionary
-    projects_dict: dict[str, Any] = {}
-    for _, project_row in project_metrics.iterrows():
-        project_id = str(project_row["project_id"])
-        projects_dict[project_id] = {
-            "project_noise_ratio": float(project_row["noise_ratio"]),
-            "project_cross_talk_instances": float(project_row["cross_talk_instances"]),
-            "project_silence_ratio": float(project_row["silence_ratio"]),
-            "conversations": {},
-        }
-
-        # Add conversations for this project
-        conversations_dict: dict[str, Any] = {}
-        project_conversations = conversation_metrics[
-            conversation_metrics["project_id"] == project_row["project_id"]
-        ]
-        for _, conv_row in project_conversations.iterrows():
-            conversation_id = str(conv_row["conversation_id"])
-            conversations_dict[conversation_id] = {
-                "conversation_noise_ratio": float(conv_row["noise_ratio"]),
-                "conversation_cross_talk_instances": float(conv_row["cross_talk_instances"]),
-                "conversation_silence_ratio": float(conv_row["silence_ratio"]),
-                "conversation_issue": conv_row["conversation_issue"],
-            }
-        projects_dict[project_id]["conversations"] = conversations_dict
-    result["projects"] = projects_dict
-    return result
 
 
 def get_heath_status(
@@ -317,3 +240,97 @@ def _flatten_response(response: Any) -> list[dict[str, Any]]:
                     flattened_response.append(flattened_item)
 
     return flattened_response
+
+
+def _process_data(df: pd.DataFrame) -> pd.DataFrame:
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    max_timestamp = df["timestamp"].max()
+    df["time_diff_seconds"] = (max_timestamp - df["timestamp"]).dt.total_seconds()
+    decay_factor = 30
+    df["recency_weight"] = np.exp(-df["time_diff_seconds"] / decay_factor)
+    df.drop(columns=["timestamp", "time_diff_seconds"], inplace=True)
+    df = df[
+        [
+            "project_id",
+            "conversation_id",
+            "noise_ratio",
+            "cross_talk_instances",
+            "silence_ratio",
+            "recency_weight",
+        ]
+    ]
+    df.dropna(inplace=True)
+    return df
+
+
+def _calculate_conversation_metrics(
+    df: pd.DataFrame, cross_talk_threshold: float, noise_threshold: float, silence_threshold: float
+) -> dict[str, Any]:
+    # Calculate conversation-level metrics (average of chunks within each conversation)
+    conversation_metrics = (
+        df.groupby(["project_id", "conversation_id"])
+        .agg({"noise_ratio": "mean", "cross_talk_instances": "mean", "silence_ratio": "mean"})
+        .reset_index()
+    )
+
+    def classify_conversation_issue(row: Any) -> str:
+        if row["cross_talk_instances"] > cross_talk_threshold:
+            return "HIGH_CROSSTALK"
+        elif row["noise_ratio"] > noise_threshold:
+            return "HIGH_NOISE"
+        elif row["silence_ratio"] > silence_threshold:
+            return "HIGH_SILENCE"
+        else:
+            return "NONE"
+
+    conversation_metrics["conversation_issue"] = conversation_metrics.apply(
+        classify_conversation_issue, axis=1
+    )
+
+    # Calculate project-level metrics (average of conversations within each project)
+    project_metrics = (
+        conversation_metrics.groupby("project_id")
+        .agg({"noise_ratio": "mean", "cross_talk_instances": "mean", "silence_ratio": "mean"})
+        .reset_index()
+    )
+
+    # Calculate global metrics (average of all projects)
+    global_metrics = project_metrics.agg(
+        {"noise_ratio": "mean", "cross_talk_instances": "mean", "silence_ratio": "mean"}
+    )
+
+    # Build the nested dictionary structure
+    result: dict[str, Any] = {
+        "global_noise_ratio": float(global_metrics["noise_ratio"]),
+        "global_cross_talk_instances": float(global_metrics["cross_talk_instances"]),
+        "global_silence_ratio": float(global_metrics["silence_ratio"]),
+        "projects": {},
+    }
+
+    # Build projects dictionary
+    projects_dict: dict[str, Any] = {}
+    for _, project_row in project_metrics.iterrows():
+        project_id = str(project_row["project_id"])
+        projects_dict[project_id] = {
+            "project_noise_ratio": float(project_row["noise_ratio"]),
+            "project_cross_talk_instances": float(project_row["cross_talk_instances"]),
+            "project_silence_ratio": float(project_row["silence_ratio"]),
+            "conversations": {},
+        }
+
+        # Add conversations for this project
+        conversations_dict: dict[str, Any] = {}
+        project_conversations = conversation_metrics[
+            conversation_metrics["project_id"] == project_row["project_id"]
+        ]
+        for _, conv_row in project_conversations.iterrows():
+            conversation_id = str(conv_row["conversation_id"])
+            conversations_dict[conversation_id] = {
+                "conversation_noise_ratio": float(conv_row["noise_ratio"]),
+                "conversation_cross_talk_instances": float(conv_row["cross_talk_instances"]),
+                "conversation_silence_ratio": float(conv_row["silence_ratio"]),
+                "conversation_issue": conv_row["conversation_issue"],
+            }
+        projects_dict[project_id]["conversations"] = conversations_dict
+    result["projects"] = projects_dict
+    return result

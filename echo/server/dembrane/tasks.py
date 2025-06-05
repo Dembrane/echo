@@ -989,7 +989,7 @@ def task_update_runpod_transcription_response() -> None:
 @dramatiq.actor(queue_name="network", priority=50)
 def task_get_runpod_diarization(chunk_id: str) -> None:
 	logger = getLogger("dembrane.tasks.task_get_runpod_diarization")
-	logger.info(f"***Getting runpod diarization for chunk {chunk_id}")
+	logger.info(f"Getting runpod diarization for chunk {chunk_id}")
 	try:
 		get_runpod_diarization(chunk_id)
 	except Exception as e:
