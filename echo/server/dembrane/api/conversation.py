@@ -644,27 +644,33 @@ async def delete_conversation(
 @ConversationRouter.get("/health/stream")
 async def stream_health_data(
     request: Request,
-    conversation_ids: Optional[List[str]] = Query(None),
-    project_ids: Optional[List[str]] = Query(None),
+    conversation_ids: Optional[str] = "",
+    project_ids: Optional[str] = "",
 ) -> StreamingResponse:
+    
     # ensure ids exist and are not empty
-    def clean_ids(id_list: Optional[List[str]]) -> List[str]:
-        return [id.strip() for id in id_list or [] if id and id.strip()]
+    if conversation_ids is None:
+        conversation_ids = ""
+    if project_ids is None:
+        project_ids = ""
+    
+    def clean_ids(id_list: Optional[str]) -> List[str]:
+        return [id.strip() for id in id_list.split(",") if id and id.strip()] if id_list else []
 
-    conversation_ids = clean_ids(conversation_ids)
-    project_ids = clean_ids(project_ids)
+    conversation_ids_list = clean_ids(conversation_ids)
+    project_ids_list = clean_ids(project_ids)
 
-    logger.debug(f"Conversation IDs: {conversation_ids}")
-    logger.debug(f"Project IDs: {project_ids}")
+    logger.debug(f"Conversation IDs: {conversation_ids_list}")
+    logger.debug(f"Project IDs: {project_ids_list}")
 
-    if not conversation_ids and not project_ids:
+    if not conversation_ids_list and not project_ids_list:
         raise HTTPException(
             status_code=400,
             detail="At least one of conversation_ids or project_ids must be provided"
         )
     
     # Limit total IDs to prevent abuse
-    total_ids = len(conversation_ids) + len(project_ids)
+    total_ids = len(conversation_ids_list) + len(project_ids_list)
     if total_ids > 20:
         raise HTTPException(
             status_code=400,
@@ -675,7 +681,7 @@ async def stream_health_data(
     client_info = f"{request.client.host}:{request.client.port}" if request.client else "unknown client"
     
     return StreamingResponse(
-        generate_health_events(request, conversation_ids, project_ids, client_info, INTERVAL_SECONDS),
+        generate_health_events(request, conversation_ids_list, project_ids_list, client_info, INTERVAL_SECONDS),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
