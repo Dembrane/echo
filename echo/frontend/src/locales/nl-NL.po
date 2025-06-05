@@ -291,7 +291,7 @@ msgstr "Weet je zeker dat je het samenvatting wilt hergenereren? Je verliest de 
 #~ msgid "Are you sure you want to stop recording?"
 #~ msgstr "Weet je zeker dat je wilt stoppen met opnemen?"
 
-#: src/components/project/ProjectSidebar.tsx:102
+#: src/components/project/ProjectSidebar.tsx:106
 msgid "Ask"
 msgstr "Stel vraag"
 
@@ -460,6 +460,10 @@ msgstr "Klik op \"Upload bestanden\" wanneer je klaar bent om de upload te start
 #: src/components/dropzone/UploadConversationDropzone.tsx:788
 msgid "Close"
 msgstr "Sluiten"
+
+#: src/components/project/MonitorModal.tsx:34
+msgid "Coming Soon!"
+msgstr "Binnenkort beschikbaar!"
 
 #: src/components/chat/ChatTemplatesMenu.tsx:51
 msgid "Compare & Contrast"
@@ -925,6 +929,10 @@ msgstr "Voornaam"
 #~ msgid "First we ask some short questions, and then you can start recording."
 #~ msgstr "Eerst vragen we een aantal korte vragen, en dan kan je beginnen met opnemen."
 
+#: src/components/project/MonitorModal.tsx:38
+msgid "For now we have targeted the Portal to help monitor their health. Soon you will be able to get an overview of all your participants at a glance."
+msgstr "Voor nu hebben we ons gericht op het Portal om hun gezondheid te monitoren. Binnenkort kunt u een overzicht krijgen van al uw deelnemers in één oogopslag."
+
 #: src/routes/auth/Login.tsx:168
 msgid "Forgot your password?"
 msgstr "Wachtwoord vergeten?"
@@ -1106,7 +1114,7 @@ msgstr "Laten we controleren of we je kunnen horen"
 #: src/routes/project/library/ProjectLibraryView.tsx:32
 #: src/routes/project/library/ProjectLibraryAspect.tsx:64
 #: src/routes/project/library/ProjectLibrary.tsx:150
-#: src/components/project/ProjectSidebar.tsx:111
+#: src/components/project/ProjectSidebar.tsx:115
 msgid "Library"
 msgstr "Bibliotheek"
 
@@ -1179,6 +1187,11 @@ msgstr "Toegang tot de microfoon wordt nog steeds geweigerd. Controleer uw inste
 #: src/components/project/ProjectPortalEditor.tsx:427
 msgid "Mode"
 msgstr "Modus"
+
+#: src/components/project/ProjectSidebar.tsx:133
+#: src/components/project/MonitorModal.tsx:20
+msgid "Monitor"
+msgstr "Monitor"
 
 #: src/components/conversation/MoveConversationButton.tsx:211
 #: src/components/conversation/ConversationAccordion.tsx:327
@@ -1519,12 +1532,13 @@ msgstr "Wacht aub terwijl we uw e-mailadres verifiëren."
 msgid "Portal Content"
 msgstr "Portal inhoud"
 
+#: src/components/project/ProjectSidebar.tsx:124
 #: src/components/project/ProjectPortalEditor.tsx:239
 #: src/components/layout/ProjectOverviewLayout.tsx:33
 msgid "Portal Editor"
 msgstr "Portal Editor"
 
-#: src/components/project/ProjectSidebar.tsx:133
+#: src/components/project/ProjectSidebar.tsx:155
 msgid "Powered by"
 msgstr "Gemaakt met ❤️ door"
 
@@ -1603,7 +1617,7 @@ msgstr "Projecten"
 msgid "Projects | Dembrane"
 msgstr "Projecten | Dembrane"
 
-#: src/components/project/ProjectSidebar.tsx:52
+#: src/components/project/ProjectSidebar.tsx:56
 msgid "Projects Home"
 msgstr "Projecten Home"
 

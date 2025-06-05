@@ -19,12 +19,16 @@ import { ProjectQRCode } from "./ProjectQRCode";
 import { I18nLink } from "../common/i18nLink";
 import { ReportModalNavigationButton } from "../report/ReportModalNavigationButton";
 import { LogoDembrane } from "../common/Logo";
+import { IconEdit, IconActivity } from "@tabler/icons-react";
+import { useState } from "react";
+import { MonitorModal } from "./MonitorModal";
 
 export const ProjectSidebar = () => {
   const { projectId, conversationId } = useParams();
 
   const projectQuery = useProjectById({ projectId: projectId ?? "" });
   const { pathname } = useLocation();
+  const [isMonitorModalOpen, setIsMonitorModalOpen] = useState(false);
 
   // const { isCollapsed, toggleSidebar } = useSidebarCollapsed();
 
@@ -111,6 +115,24 @@ export const ProjectSidebar = () => {
         <Trans>Library</Trans>
       </NavigationButton>
 
+      <NavigationButton
+        to={`/projects/${projectId}/portal-editor`}
+        component="a"
+        rightIcon={<IconEdit size={20} />}
+        active={pathname.includes("portal-editor")}
+      >
+        <Trans>Portal Editor</Trans>
+      </NavigationButton>
+
+      <NavigationButton
+        onClick={() => setIsMonitorModalOpen(true)}
+        component="button"
+        rightIcon={<IconActivity size={20} />}
+        style={{ opacity: 0.6, cursor: "pointer" }}
+      >
+        <Trans>Monitor</Trans>
+      </NavigationButton>
+
       <ReportModalNavigationButton />
 
       <Box hiddenFrom="lg">
@@ -135,6 +157,11 @@ export const ProjectSidebar = () => {
           <LogoDembrane />
         </Group>
       </Stack>
+      
+      <MonitorModal
+        opened={isMonitorModalOpen}
+        onClose={() => setIsMonitorModalOpen(false)}
+      />
     </Stack>
   );
 };

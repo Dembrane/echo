@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh pr view:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npx tsc:*)",
+      "Bash(pnpm messages:extract:*)",
+      "Bash(grep:*)",
+      "Bash(pnpm messages:compile:*)"
+    ],
+    "deny": []
+  }
+}

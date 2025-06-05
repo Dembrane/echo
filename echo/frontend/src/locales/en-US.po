@@ -255,7 +255,7 @@ msgstr "Are you sure you want to generate the library? This will take a while an
 msgid "Are you sure you want to regenerate the summary? You will lose the current summary."
 msgstr "Are you sure you want to regenerate the summary? You will lose the current summary."
 
-#: src/components/project/ProjectSidebar.tsx:102
+#: src/components/project/ProjectSidebar.tsx:106
 msgid "Ask"
 msgstr "Ask"
 
@@ -404,6 +404,10 @@ msgstr "Click \"Upload Files\" when you're ready to start the upload process."
 #: src/components/dropzone/UploadConversationDropzone.tsx:788
 msgid "Close"
 msgstr "Close"
+
+#: src/components/project/MonitorModal.tsx:34
+msgid "Coming Soon!"
+msgstr "Coming Soon!"
 
 #: src/components/chat/ChatTemplatesMenu.tsx:51
 msgid "Compare & Contrast"
@@ -833,6 +837,10 @@ msgstr "Finish"
 msgid "First Name"
 msgstr "First Name"
 
+#: src/components/project/MonitorModal.tsx:38
+msgid "For now we have targeted the Portal to help monitor their health. Soon you will be able to get an overview of all your participants at a glance."
+msgstr "For now we have targeted the Portal to help monitor their health. Soon you will be able to get an overview of all your participants at a glance."
+
 #: src/routes/auth/Login.tsx:168
 msgid "Forgot your password?"
 msgstr "Forgot your password?"
@@ -981,7 +989,7 @@ msgstr "Let's Make Sure We Can Hear You"
 #: src/routes/project/library/ProjectLibraryView.tsx:32
 #: src/routes/project/library/ProjectLibraryAspect.tsx:64
 #: src/routes/project/library/ProjectLibrary.tsx:150
-#: src/components/project/ProjectSidebar.tsx:111
+#: src/components/project/ProjectSidebar.tsx:115
 msgid "Library"
 msgstr "Library"
 
@@ -1054,6 +1062,11 @@ msgstr "Microphone access is still denied. Please check your settings and try ag
 #: src/components/project/ProjectPortalEditor.tsx:427
 msgid "Mode"
 msgstr "Mode"
+
+#: src/components/project/ProjectSidebar.tsx:133
+#: src/components/project/MonitorModal.tsx:20
+msgid "Monitor"
+msgstr "Monitor"
 
 #: src/components/conversation/MoveConversationButton.tsx:211
 #: src/components/conversation/ConversationAccordion.tsx:327
@@ -1369,12 +1382,13 @@ msgstr "Please wait while we verify your email address."
 msgid "Portal Content"
 msgstr "Portal Content"
 
+#: src/components/project/ProjectSidebar.tsx:124
 #: src/components/project/ProjectPortalEditor.tsx:239
 #: src/components/layout/ProjectOverviewLayout.tsx:33
 msgid "Portal Editor"
 msgstr "Portal Editor"
 
-#: src/components/project/ProjectSidebar.tsx:133
+#: src/components/project/ProjectSidebar.tsx:155
 msgid "Powered by"
 msgstr "Powered by"
 
@@ -1453,7 +1467,7 @@ msgstr "Projects"
 msgid "Projects | Dembrane"
 msgstr "Projects | Dembrane"
 
-#: src/components/project/ProjectSidebar.tsx:52
+#: src/components/project/ProjectSidebar.tsx:56
 msgid "Projects Home"
 msgstr "Projects Home"
 
