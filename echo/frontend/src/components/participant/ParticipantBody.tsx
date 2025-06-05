@@ -19,6 +19,10 @@ import SpikeMessage from "./SpikeMessage";
 import { ConnectionHealthStatus } from "../common/ConnectionHealthStatus";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useConversationsHealthStream } from "@/hooks/useConversationsHealthStream";
+import { IconExclamationCircle } from "@tabler/icons-react";
+import { TipBanner } from "../common/TipBanner";
+import { IconWifiOff } from "@tabler/icons-react";
+import { useConversationIssueBanner } from "@/hooks/useConversationIssueBanner";
 
 export const ParticipantBody = ({
   projectId,
@@ -47,6 +51,7 @@ export const ParticipantBody = ({
     countEventReceived,
     sseConnectionHealthy,
     lastPingTime,
+    conversationIssue,
   } = useConversationsHealthStream([conversationId]);
 
   const combinedMessages = useMemo(() => {
@@ -106,6 +111,10 @@ export const ParticipantBody = ({
     }
   }, []);
 
+  const conversationIssueBanner = useConversationIssueBanner(
+    conversationIssue ?? "NONE",
+  );
+
   return (
     <Stack ref={ref} className="max-h-full">
       <Toaster position="top-center" richColors />
@@ -125,8 +134,34 @@ export const ParticipantBody = ({
         </div>
       )}
 
+      {!isOnline && (
+        <TipBanner
+          icon={IconWifiOff}
+          message={t`You seem to be offline, please check your internet connection`}
+          tipLabel={t`Tip`}
+          color="blue"
+        />
+      )}
+
+      {!sseConnectionHealthy && (
+        <TipBanner
+          icon={IconExclamationCircle}
+          message={t`Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists`}
+          color="blue"
+        />
+      )}
+
+      {conversationIssueBanner && (
+        <TipBanner
+          icon={conversationIssueBanner.icon}
+          message={conversationIssueBanner.message}
+          tipLabel={conversationIssueBanner.tipLabel}
+          color={conversationIssueBanner.color}
+        />
+      )}
+
       <img
-        className={`w-full object-contain ${isOnline ? "animate-pulse duration-1000" : "grayscale filter"}`}
+        className={`w-full object-contain ${isOnline ? "animate-pulse duration-1000" : "grayscale filter"} ${!conversationIssueBanner ? "saturate-200" : "opacity-50"}`}
         src={WelcomeImage}
       />
       {projectQuery.data && (

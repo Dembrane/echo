@@ -276,6 +276,12 @@ msgstr "Traitement audio en cours"
 msgid "Audio recordings are scheduled to be deleted after 30 days from the recording date"
 msgstr "Les enregistrements audio seront supprimés après 30 jours à partir de la date d'enregistrement"
 
+#: src/hooks/useConversationIssueBanner.ts:15
+#: src/hooks/useConversationIssueBanner.ts:22
+#: src/hooks/useConversationIssueBanner.ts:29
+msgid "Audio Tip"
+msgstr "Conseil audio"
+
 #: src/components/conversation/AutoSelectConversations.tsx:156
 msgid "Auto-select"
 msgstr "Sélection automatique"
@@ -899,6 +905,10 @@ msgstr "Identifiants invalides."
 msgid "Invalid token. Please try again."
 msgstr "Jeton invalide. Veuillez réessayer."
 
+#: src/hooks/useConversationIssueBanner.ts:20
+msgid "It sounds like more than one person is speaking. Taking turns will help us hear everyone clearly."
+msgstr "Il semble que plusieurs personnes parlent. Prendre des tours nous aidera à entendre tout le monde clairement."
+
 #. placeholder {0}: project?.default_conversation_title ?? "the conversation"
 #: src/components/project/ProjectQRCode.tsx:95
 msgid "Join {0} on Dembrane"
@@ -1251,7 +1261,7 @@ msgstr "Veuillez vous connecter pour continuer."
 #~ msgid "Please provide a concise summary of the following provided in the context."
 #~ msgstr "Veuillez fournir un résumé succinct des éléments suivants fournis dans le contexte."
 
-#: src/components/participant/ParticipantBody.tsx:145
+#: src/components/participant/ParticipantBody.tsx:182
 msgid "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon."
 msgstr "Veuillez enregistrer votre réponse en cliquant sur le bouton \"Enregistrer\" ci-dessous. Vous pouvez également choisir de répondre par texte en cliquant sur l'icône texte."
 
@@ -1700,6 +1710,10 @@ msgstr "Une erreur s'est produite"
 msgid "Something went wrong while uploading the file: {0}"
 msgstr "Une erreur s'est produite lors de l'envoi du fichier : {0}"
 
+#: src/components/participant/ParticipantBody.tsx:149
+msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
+msgstr "Une erreur s'est produite avec la conversation. Veuillez réessayer ou contacter le support si le problème persiste"
+
 #: src/routes/participant/ParticipantConversation.tsx:842
 #~ msgid "Something went wrong. Please try again."
 #~ msgstr "Une erreur s'est produite. Veuillez réessayer."
@@ -1918,6 +1932,10 @@ msgstr "Cela créera une nouvelle conversation avec la même audio mais une tran
 msgid "Time Created"
 msgstr "Date de création"
 
+#: src/components/participant/ParticipantBody.tsx:141
+msgid "Tip"
+msgstr "Conseil"
+
 #: src/components/conversation/ConversationEdit.tsx:164
 msgid "To assign a new tag, please create it first in the project overview."
 msgstr "Pour assigner une nouvelle étiquette, veuillez la créer d'abord dans l'aperçu du projet."
@@ -2011,6 +2029,10 @@ msgstr ""
 "\n"
 "Note : Si la discussion manque de points de décision substantiels ou d'insights, veuillez le signaler pour une exploration plus approfondie la prochaine fois."
 
+#: src/hooks/useConversationIssueBanner.ts:27
+msgid "Try moving a bit closer to your microphone for better sound quality."
+msgstr "Essayez de vous rapprocher un peu plus de votre microphone pour une meilleure qualité audio."
+
 #: src/routes/project/chat/ProjectChatRoute.tsx:500
 msgid "Type a message..."
 msgstr "Tapez un message..."
@@ -2102,7 +2124,7 @@ msgstr "Utilisez Shift + Entrée pour ajouter une nouvelle ligne"
 msgid "View"
 msgstr "Vue"
 
-#: src/components/participant/ParticipantBody.tsx:189
+#: src/components/participant/ParticipantBody.tsx:226
 msgid "View your responses"
 msgstr "Voir vos réponses"
 
@@ -2126,7 +2148,11 @@ msgstr "Nous vous avons envoyé un e-mail avec les étapes suivantes. Si vous ne
 msgid "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 msgstr "Nous vous envoyerons un message uniquement si votre hôte génère un rapport, nous ne partageons jamais vos informations avec personne. Vous pouvez vous désinscrire à tout moment."
 
-#: src/components/participant/ParticipantBody.tsx:116
+#: src/hooks/useConversationIssueBanner.ts:13
+msgid "We’re picking up some silence. Try speaking up so your voice comes through clearly."
+msgstr "Nous entendons un peu de silence. Essayez de parler plus fort pour que votre voix soit claire."
+
+#: src/components/participant/ParticipantBody.tsx:124
 msgid "Welcome"
 msgstr "Bienvenue"
 
@@ -2171,6 +2197,10 @@ msgstr "Vous pouvez également choisir d'enregistrer une autre conversation."
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "Vous devez vous connecter avec le même fournisseur que vous avez utilisé pour vous inscrire. Si vous rencontrez des problèmes, veuillez contacter le support."
 
+#: src/components/participant/ParticipantBody.tsx:140
+msgid "You seem to be offline, please check your internet connection"
+msgstr "Vous semblez être hors ligne, veuillez vérifier votre connexion internet"
+
 #: src/components/form/SaveStatus.tsx:55
 msgid "Your inputs will be saved automatically."
 msgstr "Vos entrées seront automatiquement enregistrées."
@@ -2183,7 +2213,7 @@ msgstr "Votre bibliothèque est vide. Créez une bibliothèque pour voir vos pre
 msgid "Your response has been recorded. You may now close this tab."
 msgstr "Votre réponse a été enregistrée. Vous pouvez maintenant fermer cette page."
 
-#: src/components/participant/ParticipantBody.tsx:199
+#: src/components/participant/ParticipantBody.tsx:236
 msgid "Your responses"
 msgstr "Vos réponses"
 

@@ -33,6 +33,7 @@ from dembrane.api.exceptions import (
     ConversationNotFoundException,
 )
 from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.conversation_health import get_health_status
 from dembrane.processing_status_utils import ProcessingStatus
 
 logger = getLogger("api.conversation")
@@ -98,6 +99,8 @@ async def generate_health_events(
 ) -> AsyncGenerator[str, None]:
     
     ping_count = 0
+    last_health_data = None
+    event_count = 0
 
     try:
         while True:
@@ -111,6 +114,36 @@ async def generate_health_events(
             # Send ping every 45 seconds
             yield f"event: ping\ndata: {ping_count}\n\n"
             
+            health_data = get_health_status(conversation_ids=conversation_ids, project_ids=project_ids)
+
+            # Extract only conversation_issue for the single conversation_id if only one is passed
+            if len(conversation_ids) == 1:
+                conversation_id = conversation_ids[0]
+                conversation_issue = None
+                
+                # Find the conversation_issue in the nested structure
+                if health_data and "projects" in health_data:
+                    for project_data in health_data["projects"].values():
+                        if "conversations" in project_data and conversation_id in project_data["conversations"]:
+                            conversation_issue = project_data["conversations"][conversation_id].get("conversation_issue", "UNKNOWN")
+                            break
+                
+                # Create simplified response with just the conversation_issue
+                simplified_data = {"conversation_issue": conversation_issue}
+                
+                # Only send if changed
+                if simplified_data != last_health_data:
+                    yield f"event: health_update\ndata: {json.dumps(simplified_data)}\n\n"
+                    last_health_data = simplified_data
+            else:
+                # Send full health data if multiple IDs
+                if health_data != last_health_data:
+                    yield f"event: health_update\ndata: {json.dumps(health_data)}\n\n"
+                    last_health_data = health_data
+            
+                event_count += 1
+                logger.debug(f"Sent health event #{event_count} to {client_info}")
+
             # Log every 10th ping
             if ping_count % 10 == 0:
                 logger.debug(f"Health stream ping #{ping_count} sent to {client_info}")

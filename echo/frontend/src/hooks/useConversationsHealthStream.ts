@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { API_BASE_URL } from "@/config";
 
+type ConversationIssue = "HIGH_SILENCE" | "HIGH_CROSSTALK" | "HIGH_NOISE" | "NONE";
+
 export function useConversationsHealthStream(conversationIds?: string[]) {
   const eventSourceRef = useRef<EventSource | null>(null);
   const [countEventReceived, setCountEventReceived] = useState<number>(0);
   const [sseConnectionHealthy, setSseConnectionHealthy] = useState<boolean>(true);
   const [lastPingTime, setLastPingTime] = useState<Date | null>(null);
+  const [conversationIssue, setConversationIssue] = useState<ConversationIssue | null>(null);
 
   useEffect(() => {
     if (conversationIds && conversationIds.length > 0) {
@@ -24,6 +27,13 @@ export function useConversationsHealthStream(conversationIds?: string[]) {
         }
       });
 
+      eventSource.addEventListener("health_update", (ev: Event) => {
+        if (ev instanceof MessageEvent) {
+          const data = JSON.parse(ev.data);
+          setConversationIssue(data.conversation_issue);
+        }
+      });
+
       eventSource.addEventListener("error", () => {
         console.error("Health stream connection error");
         setSseConnectionHealthy(false);
@@ -31,7 +41,6 @@ export function useConversationsHealthStream(conversationIds?: string[]) {
 
       return () => {
         eventSource.close();
-        setSseConnectionHealthy(false);
       };
     }
   }, [conversationIds]);
@@ -48,8 +57,6 @@ export function useConversationsHealthStream(conversationIds?: string[]) {
           console.warn("No ping in last minute - marking unhealthy");
           setSseConnectionHealthy(false);
         }
-      } else {
-        setSseConnectionHealthy(false);
       }
     }, 10000);
 
@@ -61,5 +68,6 @@ export function useConversationsHealthStream(conversationIds?: string[]) {
     countEventReceived,
     sseConnectionHealthy,
     lastPingTime,
+    conversationIssue,
   };
 }
