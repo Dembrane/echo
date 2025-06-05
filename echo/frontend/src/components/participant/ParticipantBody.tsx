@@ -22,6 +22,7 @@ import { useConversationsHealthStream } from "@/hooks/useConversationsHealthStre
 import { IconExclamationCircle } from "@tabler/icons-react";
 import { TipBanner } from "../common/TipBanner";
 import { IconWifiOff } from "@tabler/icons-react";
+import { useConversationIssueBanner } from "@/hooks/useConversationIssueBanner";
 
 export const ParticipantBody = ({
   projectId,
@@ -50,6 +51,7 @@ export const ParticipantBody = ({
     countEventReceived,
     sseConnectionHealthy,
     lastPingTime,
+    conversationIssue,
   } = useConversationsHealthStream([conversationId]);
 
   const combinedMessages = useMemo(() => {
@@ -109,6 +111,10 @@ export const ParticipantBody = ({
     }
   }, []);
 
+  const conversationIssueBanner = useConversationIssueBanner(
+    conversationIssue ?? "NONE",
+  );
+
   return (
     <Stack ref={ref} className="max-h-full">
       <Toaster position="top-center" richColors />
@@ -142,6 +148,15 @@ export const ParticipantBody = ({
           icon={IconExclamationCircle}
           message={t`Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists`}
           color="blue"
+        />
+      )}
+
+      {conversationIssueBanner && (
+        <TipBanner
+          icon={conversationIssueBanner.icon}
+          message={conversationIssueBanner.message}
+          tipLabel={conversationIssueBanner.tipLabel}
+          color={conversationIssueBanner.color}
         />
       )}
 

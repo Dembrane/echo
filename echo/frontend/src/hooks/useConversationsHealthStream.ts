@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { API_BASE_URL } from "@/config";
 
+type ConversationIssue = "HIGH_SILENCE" | "HIGH_CROSSTALK" | "HIGH_NOISE" | "NONE";
+
 export function useConversationsHealthStream(conversationIds?: string[]) {
   const eventSourceRef = useRef<EventSource | null>(null);
   const [countEventReceived, setCountEventReceived] = useState<number>(0);
   const [sseConnectionHealthy, setSseConnectionHealthy] = useState<boolean>(true);
   const [lastPingTime, setLastPingTime] = useState<Date | null>(null);
+  const [conversationIssue, setConversationIssue] = useState<ConversationIssue | null>(null);
 
   useEffect(() => {
     if (conversationIds && conversationIds.length > 0) {
@@ -21,6 +24,13 @@ export function useConversationsHealthStream(conversationIds?: string[]) {
           setLastPingTime(now);
           setSseConnectionHealthy(true);
           setCountEventReceived(prev => prev + 1);
+        }
+      });
+
+      eventSource.addEventListener("health_update", (ev: Event) => {
+        if (ev instanceof MessageEvent) {
+          const data = JSON.parse(ev.data);
+          setConversationIssue(data.conversation_issue);
         }
       });
 
@@ -58,5 +68,6 @@ export function useConversationsHealthStream(conversationIds?: string[]) {
     countEventReceived,
     sseConnectionHealthy,
     lastPingTime,
+    conversationIssue,
   };
 }

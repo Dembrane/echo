@@ -116,10 +116,30 @@ async def generate_health_events(
             
             health_data = get_health_status(conversation_ids=conversation_ids, project_ids=project_ids)
 
-            # Only send health data if it has changed
-            if health_data != last_health_data:
-                yield f"event: health_update\ndata: {json.dumps(health_data)}\n\n"
-                last_health_data = health_data
+            # Extract only conversation_issue for the single conversation_id if only one is passed
+            if len(conversation_ids) == 1:
+                conversation_id = conversation_ids[0]
+                conversation_issue = None
+                
+                # Find the conversation_issue in the nested structure
+                if health_data and "projects" in health_data:
+                    for project_data in health_data["projects"].values():
+                        if "conversations" in project_data and conversation_id in project_data["conversations"]:
+                            conversation_issue = project_data["conversations"][conversation_id].get("conversation_issue", "UNKNOWN")
+                            break
+                
+                # Create simplified response with just the conversation_issue
+                simplified_data = {"conversation_issue": conversation_issue}
+                
+                # Only send if changed
+                if simplified_data != last_health_data:
+                    yield f"event: health_update\ndata: {json.dumps(simplified_data)}\n\n"
+                    last_health_data = simplified_data
+            else:
+                # Send full health data if multiple IDs
+                if health_data != last_health_data:
+                    yield f"event: health_update\ndata: {json.dumps(health_data)}\n\n"
+                    last_health_data = health_data
             
                 event_count += 1
                 logger.debug(f"Sent health event #{event_count} to {client_info}")
