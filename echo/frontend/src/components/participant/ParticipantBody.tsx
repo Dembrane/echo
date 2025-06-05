@@ -16,6 +16,10 @@ import SystemMessage from "./SystemMessage";
 import { t } from "@lingui/core/macro";
 import UserChunkMessage from "./UserChunkMessage";
 import SpikeMessage from "./SpikeMessage";
+import { ConnectionHealthStatus } from "../common/ConnectionHealthStatus";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { useConversationsHealthStream } from "@/hooks/useConversationsHealthStream";
+
 
 export const ParticipantBody = ({
   projectId,
@@ -23,11 +27,13 @@ export const ParticipantBody = ({
   viewResponses = false,
   children,
   interleaveMessages = true,
+  recordingStarted = false,
 }: PropsWithChildren<{
   projectId: string;
   conversationId: string;
   viewResponses?: boolean;
   interleaveMessages?: boolean;
+  recordingStarted?: boolean;
 }>) => {
   const [ref] = useAutoAnimate();
   const [chatRef] = useAutoAnimate();
@@ -36,6 +42,13 @@ export const ParticipantBody = ({
   const projectQuery = useParticipantProjectById(projectId);
   const chunksQuery = useConversationChunksQuery(projectId, conversationId);
   const repliesQuery = useConversationRepliesQuery(conversationId);
+  const isOnline = useOnlineStatus();
+  const {
+    eventSourceRef,
+    countEventReceived,
+    sseConnectionHealthy,
+    lastPingTime,
+  } = useConversationsHealthStream([conversationId]);
 
   const combinedMessages = useMemo(() => {
     const userChunks = (chunksQuery.data ?? []).map((chunk) => ({
@@ -97,11 +110,21 @@ export const ParticipantBody = ({
   return (
     <Stack ref={ref} className="max-h-full">
       <Toaster position="top-center" richColors />
-      <h2 className="text-center text-3xl">
-        <Trans>Welcome</Trans>
-      </h2>
+
+      {!recordingStarted && (
+        <h2 className="text-center text-3xl transition-opacity duration-500 ease-in-out">
+          <Trans>Welcome</Trans>
+        </h2>
+      )}
+
+      {recordingStarted && (
+        <div className="flex justify-center transition-opacity duration-500 ease-in-out min-h-[2.25rem]">
+          <ConnectionHealthStatus isOnline={isOnline} sseConnectionHealthy={sseConnectionHealthy} />
+        </div>
+      )}
+
       <img
-        className="w-full animate-pulse object-contain duration-1000"
+        className={`w-full object-contain ${isOnline ? "animate-pulse duration-1000" : "filter grayscale"}`}
         src={WelcomeImage}
       />
       {projectQuery.data && (

@@ -275,6 +275,7 @@ export const ParticipantConversationAudioRoute = () => {
             interleaveMessages={false}
             projectId={projectId ?? ""}
             conversationId={conversationId ?? ""}
+            recordingStarted={isRecording}
           />
         )}
 
