@@ -181,6 +181,11 @@ const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
     name: "get_reply_mode",
   });
 
+  const watchedReplyEnabled = useWatch({
+    control,
+    name: "is_get_reply_enabled",
+  });
+
   const updateProjectMutation = useUpdateProjectByIdMutation();
 
   const onSave = useCallback(
@@ -436,37 +441,46 @@ const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
                         </Text>
                         <Group gap="xs">
                           <Badge
-                            className="cursor-pointer capitalize"
+                            className={watchedReplyEnabled ? "cursor-pointer capitalize" : "capitalize"}
                             variant={
                               field.value === "summarize" ? "filled" : "default"
                             }
                             size="lg"
-                            style={{ cursor: "pointer" }}
-                            onClick={() => field.onChange("summarize")}
+                            style={{ 
+                              cursor: watchedReplyEnabled ? "pointer" : "not-allowed",
+                              opacity: watchedReplyEnabled ? 1 : 0.6
+                            }}
+                            onClick={() => watchedReplyEnabled && field.onChange("summarize")}
                           >
                             <Trans>Summarize</Trans>
                           </Badge>
                           <Badge
-                            className="cursor-pointer capitalize"
+                            className={watchedReplyEnabled ? "cursor-pointer capitalize" : "capitalize"}
                             variant={
                               field.value === "brainstorm"
                                 ? "filled"
                                 : "default"
                             }
                             size="lg"
-                            style={{ cursor: "pointer" }}
-                            onClick={() => field.onChange("brainstorm")}
+                            style={{ 
+                              cursor: watchedReplyEnabled ? "pointer" : "not-allowed",
+                              opacity: watchedReplyEnabled ? 1 : 0.6
+                            }}
+                            onClick={() => watchedReplyEnabled && field.onChange("brainstorm")}
                           >
                             <Trans>Brainstorm Ideas</Trans>
                           </Badge>
                           <Badge
-                            className="cursor-pointer capitalize"
+                            className={watchedReplyEnabled ? "cursor-pointer capitalize" : "capitalize"}
                             variant={
                               field.value === "custom" ? "filled" : "default"
                             }
                             size="lg"
-                            style={{ cursor: "pointer" }}
-                            onClick={() => field.onChange("custom")}
+                            style={{ 
+                              cursor: watchedReplyEnabled ? "pointer" : "not-allowed",
+                              opacity: watchedReplyEnabled ? 1 : 0.6
+                            }}
+                            onClick={() => watchedReplyEnabled && field.onChange("custom")}
                           >
                             <Trans>Custom</Trans>
                           </Badge>
@@ -499,6 +513,7 @@ const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
                           }
                           autosize
                           minRows={5}
+                          disabled={!watchedReplyEnabled}
                           {...field}
                         />
                       )}
