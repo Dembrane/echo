@@ -161,7 +161,7 @@ export const ParticipantBody = ({
       )}
 
       <img
-        className={`w-full object-contain ${isOnline ? "animate-pulse duration-1000" : "grayscale filter"}`}
+        className={`w-full object-contain ${isOnline ? "animate-pulse duration-1000" : "grayscale filter"} ${!conversationIssueBanner ? "saturate-200" : "opacity-50"}`}
         src={WelcomeImage}
       />
       {projectQuery.data && (
