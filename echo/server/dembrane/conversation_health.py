@@ -136,7 +136,7 @@ def get_runpod_diarization(
     return None
 
 
-def get_heath_status(
+def get_health_status(
     project_ids: list[str] | None = None,
     conversation_ids: list[str] | None = None,
     cross_talk_threshold: float = 1.0,
@@ -217,8 +217,11 @@ def _get_timebound_conversation_chunks(
                 },
             },
         )
-        response = response[:max_chunks_for_conversation]  # type: ignore
-        aggregated_response.extend(_flatten_response(response))
+        try: 
+            response = response[:max_chunks_for_conversation]  # type: ignore
+            aggregated_response.extend(_flatten_response(response))
+        except Exception as e:
+            logger.warning(f"Error fetching/flattening conversation chunks {e} : {response}")
     return aggregated_response
 
 
