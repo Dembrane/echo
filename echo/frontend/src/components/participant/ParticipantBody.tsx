@@ -19,7 +19,9 @@ import SpikeMessage from "./SpikeMessage";
 import { ConnectionHealthStatus } from "../common/ConnectionHealthStatus";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useConversationsHealthStream } from "@/hooks/useConversationsHealthStream";
-
+import { IconExclamationCircle } from "@tabler/icons-react";
+import { TipBanner } from "../common/TipBanner";
+import { IconWifiOff } from "@tabler/icons-react";
 
 export const ParticipantBody = ({
   projectId,
@@ -118,13 +120,33 @@ export const ParticipantBody = ({
       )}
 
       {recordingStarted && (
-        <div className="flex justify-center transition-opacity duration-500 ease-in-out min-h-[2.25rem]">
-          <ConnectionHealthStatus isOnline={isOnline} sseConnectionHealthy={sseConnectionHealthy} />
+        <div className="flex min-h-[2.25rem] justify-center transition-opacity duration-500 ease-in-out">
+          <ConnectionHealthStatus
+            isOnline={isOnline}
+            sseConnectionHealthy={sseConnectionHealthy}
+          />
         </div>
       )}
 
+      {!isOnline && (
+        <TipBanner
+          icon={IconWifiOff}
+          message={t`You seem to be offline, please check your internet connection`}
+          tipLabel={t`Tip`}
+          color="blue"
+        />
+      )}
+
+      {!sseConnectionHealthy && (
+        <TipBanner
+          icon={IconExclamationCircle}
+          message={t`Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists`}
+          color="blue"
+        />
+      )}
+
       <img
-        className={`w-full object-contain ${isOnline ? "animate-pulse duration-1000" : "filter grayscale"}`}
+        className={`w-full object-contain ${isOnline ? "animate-pulse duration-1000" : "grayscale filter"}`}
         src={WelcomeImage}
       />
       {projectQuery.data && (
