@@ -31,7 +31,6 @@ export function useConversationsHealthStream(conversationIds?: string[]) {
 
       return () => {
         eventSource.close();
-        setSseConnectionHealthy(false);
       };
     }
   }, [conversationIds]);
@@ -48,8 +47,6 @@ export function useConversationsHealthStream(conversationIds?: string[]) {
           console.warn("No ping in last minute - marking unhealthy");
           setSseConnectionHealthy(false);
         }
-      } else {
-        setSseConnectionHealthy(false);
       }
     }, 10000);
 
