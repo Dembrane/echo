@@ -38,6 +38,7 @@ def queue_transcribe_audio_runpod(
     language: Optional[str],
     whisper_prompt: Optional[str],
     is_priority: bool = False,
+    conversation_chunk_id: Optional[str] = "",
 ) -> str:
     """Transcribe audio using RunPod"""
     logger = logging.getLogger("transcribe.transcribe_audio_runpod")
@@ -52,6 +53,7 @@ def queue_transcribe_audio_runpod(
         input_payload = {
             "audio": signed_url,
             "initial_prompt": whisper_prompt,
+            "conversation_chunk_id": conversation_chunk_id,
         }
 
         if language:
@@ -272,6 +274,7 @@ def _process_runpod_transcription(
         language=language,
         whisper_prompt=whisper_prompt,
         is_priority=is_priority,
+        conversation_chunk_id=conversation_chunk_id,
     )
 
     directus.update_item(

@@ -275,6 +275,7 @@ async def delete_conversation(payload: DeleteConversationRequest,
 async def transcribe_webhook(payload: dict) -> None:
     logger = getLogger("stateless.webhook.transcribe")
     logger.debug(f"Transcribe webhook received: {payload}")
+    logger.info(f"Transcribe webhook received: {payload['output']['conversation_chunk_id']}")
     try:
         directus.update_item(
             collection_name="conversation_chunk",
