@@ -32,7 +32,18 @@ export const useWakeLock = ({ obtainWakeLockOnMount = true }) => {
     if (obtainWakeLockOnMount) {
       obtainWakeLock();
     }
+    // Re-acquire wake lock when tab becomes visible again
+    const handleVisibilityChange = () => {
+      if (
+        !document.hidden &&
+        (!wakeLock.current || wakeLock.current.released)
+      ) {
+        obtainWakeLock();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       releaseWakeLock();
     };
   }, [wakeLock]);
