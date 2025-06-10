@@ -20,50 +20,59 @@ from dembrane.directus import directus
 logger = logging.getLogger("conversation_health")
 
 
-def get_runpod_diarization(
-    chunk_id: str | None = None,
-    path: str | None = None,
-) -> None:
+def _fetch_chunk_data(chunk_id: str) -> tuple[str, str] | None:
     """
-    Request diarization from RunPod, wait for a response, and cancel if no response in timeout.
-    All responses and status updates are written to Directus.
+    Fetch chunk data from Directus including audio file URI and project language.
+    Returns (audio_file_uri, project_language) or None if failed.
     """
-    logger.debug(f"Starting diarization for chunk_id: {chunk_id}, path: {path}")
     try:
-        audio_file_uri = (
-            path
-            if path
-            else directus.get_item(
-                "conversation_chunk",
-                chunk_id,
-            )["path"]
-        )
-        logger.debug(f"Fetched audio_file_uri: {audio_file_uri}")
+        directus_item = directus.get_items(
+            "conversation_chunk",
+            {
+                "query": {
+                    "filter": {"id": {"_eq": chunk_id}},
+                    "fields": ["path", "conversation_id.project_id.language"]
+                }
+            }
+        )[0]
+        audio_file_uri = directus_item["path"]
+        project_language = directus_item["conversation_id"]["project_id"]["language"]
+        logger.debug(f"Starting diarization for chunk_id: {chunk_id}, path: {audio_file_uri}, project_language: {project_language}")
+        return audio_file_uri, project_language
     except Exception as e:
         logger.error(f"Failed to fetch audio_file_uri for chunk_id {chunk_id}: {e}")
         return None
 
+
+def _generate_audio_url(audio_file_uri: str) -> str | None:
+    """
+    Generate a signed URL for the audio file.
+    Returns the signed URL or None if failed.
+    """
     try:
         audio_url = get_signed_url(audio_file_uri)
         logger.debug(f"Generated signed audio_url: {audio_url}")
+        return audio_url
     except Exception as e:
         logger.error(f"Failed to generate signed URL for {audio_file_uri}: {e}")
         return None
 
-    # Get project language
-    query = {
-        "query": {"filter": {"id": chunk_id}, "fields": ["conversation_id.project_id.language"]}
-    }
-    project_language = directus.get_items(
-        "conversation_chunk",
-        query,
-    )[0]["conversation_id"]["project_id"]["language"]
-    logger.debug(f"Project language is {project_language}")
 
+def _should_skip_diarization(project_language: str) -> bool:
+    """
+    Check if diarization should be skipped based on language settings.
+    """
     if DISABLE_MULTILINGUAL_DIARIZATION and project_language != "en":
-        logger.debug(f"Skipping diarization for chunk {chunk_id} because project language is {project_language}")
-        return None
+        logger.debug(f"Skipping diarization because project language is {project_language}")
+        return True
+    return False
 
+
+def _submit_diarization_job(audio_url: str, project_language: str) -> tuple[str, str] | None:
+    """
+    Submit diarization job to RunPod.
+    Returns (job_id, job_status_link) or None if failed.
+    """
     timeout = RUNPOD_DIARIZATION_TIMEOUT
     api_key = RUNPOD_DIARIZATION_API_KEY
     base_url = RUNPOD_DIARIZATION_BASE_URL
@@ -73,66 +82,136 @@ def get_runpod_diarization(
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}",
     }
-    data = {"input": {"audio": audio_url}}
-    job_status_link = None
-    job_id = None
+    data = {"input": {"audio": audio_url, "language": project_language}}
+    
     try:
         logger.debug(f"Sending POST to {base_url}/run with data: {data}")
         response = requests.post(f"{base_url}/run", headers=headers, json=data, timeout=timeout)
         response.raise_for_status()
         job_id = response.json()["id"]
         job_status_link = f"{base_url}/status/{job_id}"
-        logger.info(f"Started diarization job {job_id} for chunk {chunk_id}")
+        logger.info(f"Started diarization job {job_id}")
+        return job_id, job_status_link
     except Exception as e:
         logger.error(f"Failed to queue diarization job: {e}")
         return None
 
-    # Wait for up to timeout seconds for a response
-    start_time = time.time()
-    while time.time() - start_time < timeout:
-        try:
-            logger.debug(f"Polling job status at {job_status_link}")
-            response = requests.get(job_status_link, headers=headers, timeout=10)
-            response.raise_for_status()
-            response_data = response.json()
-            status = response_data.get("status")
-            logger.debug(f"Job {job_id} status: {status}")
-            if status == "COMPLETED":
-                dirz_response_data = response_data.get("output")
-                noise_ratio = dirz_response_data.get("noise_ratio")
-                cross_talk_instances = dirz_response_data.get("cross_talk_instances")
-                silence_ratio = dirz_response_data.get("silence_ratio")
-                joined_diarization = dirz_response_data.get("joined_diarization")
-                logger.info(
-                    f"Diarization job {job_id} completed. Updating chunk {chunk_id} with results."
-                )
-                directus.update_item(
-                    "conversation_chunk",
-                    chunk_id,
-                    {
-                        "noise_ratio": noise_ratio,
-                        "cross_talk_instances": cross_talk_instances,
-                        "silence_ratio": silence_ratio,
-                        "diarization": joined_diarization,
-                    },
-                )
-                logger.debug(f"Updated chunk {chunk_id} with diarization results.")
-                return
-        except Exception as e:
-            logger.error(f"Error polling diarization job status for job {job_id}: {e}")
-        time.sleep(3)
 
-    # Timeout: cancel the job
+def _poll_job_status(job_status_link: str, headers: dict) -> dict | None:
+    """
+    Poll job status once.
+    Returns response data or None if failed.
+    """
+    try:
+        logger.debug(f"Polling job status at {job_status_link}")
+        response = requests.get(job_status_link, headers=headers, timeout=10)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        logger.error(f"Error polling diarization job status: {e}")
+        return None
+
+
+def _update_chunk_with_results(chunk_id: str, dirz_response_data: dict) -> None:
+    """
+    Update chunk in Directus with diarization results.
+    """
+    noise_ratio = dirz_response_data.get("noise_ratio")
+    cross_talk_instances = dirz_response_data.get("cross_talk_instances")
+    silence_ratio = dirz_response_data.get("silence_ratio")
+    joined_diarization = dirz_response_data.get("joined_diarization")
+    
+    directus.update_item(
+        "conversation_chunk",
+        chunk_id,
+        {
+            "noise_ratio": noise_ratio,
+            "cross_talk_instances": cross_talk_instances,
+            "silence_ratio": silence_ratio,
+            "diarization": joined_diarization,
+        },
+    )
+    logger.debug(f"Updated chunk {chunk_id} with diarization results.")
+
+
+def _cancel_job_on_timeout(job_id: str) -> None:
+    """
+    Cancel a diarization job that has timed out.
+    """
+    base_url = RUNPOD_DIARIZATION_BASE_URL
+    api_key = RUNPOD_DIARIZATION_API_KEY
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}",
+    }
+    
     try:
         cancel_endpoint = f"{base_url}/cancel/{job_id}"
-        logger.warning(
-            f"Timeout reached. Cancelling diarization job {job_id} at {cancel_endpoint}"
-        )
+        logger.warning(f"Timeout reached. Cancelling diarization job {job_id} at {cancel_endpoint}")
         cancel_response = requests.post(cancel_endpoint, headers=headers, timeout=10)
         cancel_response.raise_for_status()
         logger.info(f"Cancelled diarization job {job_id} after timeout.")
     except Exception as e:
         logger.error(f"Failed to cancel diarization job {job_id}: {e}")
+
+
+def get_runpod_diarization(
+    chunk_id: str,
+) -> None:
+    """
+    Request diarization from RunPod, wait for a response, and cancel if no response in timeout.
+    All responses and status updates are written to Directus.
+    """
+    # Fetch chunk data
+    chunk_data = _fetch_chunk_data(chunk_id)
+    if not chunk_data:
+        return None
+    audio_file_uri, project_language = chunk_data
+
+    # Generate signed URL
+    audio_url = _generate_audio_url(audio_file_uri)
+    if not audio_url:
+        return None
+
+    # Check if we should skip diarization
+    if _should_skip_diarization(project_language):
+        return None
+
+    # Submit diarization job
+    job_data = _submit_diarization_job(audio_url, project_language)
+    if not job_data:
+        return None
+    job_id, job_status_link = job_data
+
+    # Poll for job completion
+    timeout = RUNPOD_DIARIZATION_TIMEOUT
+    api_key = RUNPOD_DIARIZATION_API_KEY
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}",
+    }
+    
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        response_data = _poll_job_status(job_status_link, headers)
+        if response_data:
+            status = response_data.get("status")
+            logger.debug(f"Job {job_id} status: {status}")
+            
+            if status == "COMPLETED":
+                dirz_response_data = response_data.get("output")
+                if dirz_response_data:
+                    logger.info(f"Diarization job {job_id} completed. Updating chunk {chunk_id} with results.")
+                    _update_chunk_with_results(chunk_id, dirz_response_data)
+                    return
+                else:
+                    logger.warning(f"Diarization job {job_id} completed but no output data received.")
+                    return
+        
+        time.sleep(3)
+
+    # Timeout: cancel the job
+    _cancel_job_on_timeout(job_id)
     return None
 
 
