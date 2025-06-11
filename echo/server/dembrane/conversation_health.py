@@ -22,8 +22,10 @@ logger = logging.getLogger("conversation_health")
 
 def _fetch_chunk_data(chunk_id: str) -> tuple[str, str] | None:
     """
-    Fetch chunk data from Directus including audio file URI and project language.
-    Returns (audio_file_uri, project_language) or None if failed.
+    Retrieves the audio file URI and project language for a given chunk ID from Directus.
+    
+    Returns:
+        A tuple containing (audio_file_uri, project_language) if successful, or None if retrieval fails.
     """
     try:
         directus_item = directus.get_items(
@@ -46,8 +48,13 @@ def _fetch_chunk_data(chunk_id: str) -> tuple[str, str] | None:
 
 def _generate_audio_url(audio_file_uri: str) -> str | None:
     """
-    Generate a signed URL for the audio file.
-    Returns the signed URL or None if failed.
+    Generates a signed URL for the specified audio file.
+    
+    Args:
+        audio_file_uri: The URI of the audio file to sign.
+    
+    Returns:
+        The signed URL as a string if successful, or None if signing fails.
     """
     try:
         audio_url = get_signed_url(audio_file_uri)
@@ -60,7 +67,9 @@ def _generate_audio_url(audio_file_uri: str) -> str | None:
 
 def _should_skip_diarization(project_language: str) -> bool:
     """
-    Check if diarization should be skipped based on language settings.
+    Determines whether diarization should be skipped for a given project language.
+    
+    Returns True if diarization is disabled for non-English languages based on configuration; otherwise, returns False.
     """
     if DISABLE_MULTILINGUAL_DIARIZATION and project_language != "en":
         logger.debug(f"Skipping diarization because project language is {project_language}")
@@ -70,8 +79,14 @@ def _should_skip_diarization(project_language: str) -> bool:
 
 def _submit_diarization_job(audio_url: str, project_language: str) -> tuple[str, str] | None:
     """
-    Submit diarization job to RunPod.
-    Returns (job_id, job_status_link) or None if failed.
+    Submits an audio diarization job to RunPod using the provided audio URL and project language.
+    
+    Args:
+        audio_url: The signed URL of the audio file to be processed.
+        project_language: The language code associated with the project.
+    
+    Returns:
+        A tuple containing the job ID and the job status link if submission is successful, or None if the request fails.
     """
     timeout = RUNPOD_DIARIZATION_TIMEOUT
     api_key = RUNPOD_DIARIZATION_API_KEY
@@ -99,8 +114,14 @@ def _submit_diarization_job(audio_url: str, project_language: str) -> tuple[str,
 
 def _poll_job_status(job_status_link: str, headers: dict) -> dict | None:
     """
-    Poll job status once.
-    Returns response data or None if failed.
+    Retrieves the current status of a diarization job from the provided status link.
+    
+    Args:
+        job_status_link: The URL to poll for job status.
+        headers: HTTP headers to include in the request.
+    
+    Returns:
+        The JSON response containing job status information, or None if the request fails.
     """
     try:
         logger.debug(f"Polling job status at {job_status_link}")
@@ -114,7 +135,11 @@ def _poll_job_status(job_status_link: str, headers: dict) -> dict | None:
 
 def _update_chunk_with_results(chunk_id: str, dirz_response_data: dict) -> None:
     """
-    Update chunk in Directus with diarization results.
+    Updates a conversation chunk in Directus with diarization analysis results.
+    
+    Args:
+        chunk_id: The ID of the conversation chunk to update.
+        dirz_response_data: Dictionary containing diarization metrics and results to store.
     """
     noise_ratio = dirz_response_data.get("noise_ratio")
     cross_talk_instances = dirz_response_data.get("cross_talk_instances")
@@ -136,7 +161,9 @@ def _update_chunk_with_results(chunk_id: str, dirz_response_data: dict) -> None:
 
 def _cancel_job_on_timeout(job_id: str) -> None:
     """
-    Cancel a diarization job that has timed out.
+    Cancels a diarization job on RunPod if it has exceeded the allowed processing time.
+    
+    Logs a warning before attempting cancellation and logs an error if the cancellation fails.
     """
     base_url = RUNPOD_DIARIZATION_BASE_URL
     api_key = RUNPOD_DIARIZATION_API_KEY
@@ -159,8 +186,10 @@ def get_runpod_diarization(
     chunk_id: str,
 ) -> None:
     """
-    Request diarization from RunPod, wait for a response, and cancel if no response in timeout.
-    All responses and status updates are written to Directus.
+    Orchestrates the diarization process for a given chunk by submitting an audio diarization job to RunPod, polling for completion within a timeout, and updating Directus with the results or canceling the job if it times out.
+    
+    Args:
+        chunk_id: The identifier of the audio chunk to process.
     """
     # Fetch chunk data
     chunk_data = _fetch_chunk_data(chunk_id)
