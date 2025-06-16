@@ -1,5 +1,6 @@
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { I18nLink } from "@/components/common/i18nLink";
+import { useProjectSharingLink } from "@/components/project/ProjectQRCode";
 import {
   useUploadConversationChunk,
   useUploadConversationTextChunk,
@@ -21,6 +22,7 @@ import {
   IconPlayerPause,
   IconPlayerPlay,
   IconPlayerStopFilled,
+  IconPlus,
   IconQuestionMark,
   IconReload,
   IconTextCaption,
@@ -66,7 +68,6 @@ export const ParticipantConversationAudioRoute = () => {
   const [showMicTest, setShowMicTest] = useState(!savedDeviceId);
   const [deviceId, setDeviceId] = useState<string>(savedDeviceId || "");
 
-
   const projectQuery = useParticipantProjectById(projectId ?? "");
   const conversationQuery = useConversationQuery(projectId, conversationId);
   const chunks = useConversationChunksQuery(projectId, conversationId);
@@ -94,10 +95,15 @@ export const ParticipantConversationAudioRoute = () => {
   const [lastReplyTime, setLastReplyTime] = useState<Date | null>(null);
   const [remainingCooldown, setRemainingCooldown] = useState(0);
   const [showCooldownMessage, setShowCooldownMessage] = useState(false);
+  const [
+    conversationDeletedDuringRecording,
+    setConversationDeletedDuringRecording,
+  ] = useState(false);
 
   // Navigation and language
   const navigate = useI18nNavigate();
   const { iso639_1 } = useLanguage();
+  const newConversationLink = useProjectSharingLink(projectQuery.data);
 
   // Calculate remaining cooldown time
   const getRemainingCooldown = useCallback(() => {
@@ -139,6 +145,22 @@ export const ParticipantConversationAudioRoute = () => {
     errored,
     permissionError,
   } = audioRecorder;
+
+  // Monitor conversation status during recording - handle deletion mid-recording
+  useEffect(() => {
+    if (isRecording && (conversationQuery.isError || !conversationQuery.data)) {
+      console.warn(
+        "Conversation deleted or became unavailable during recording",
+      );
+      stopRecording();
+      setConversationDeletedDuringRecording(true);
+    }
+  }, [
+    isRecording,
+    conversationQuery.isError,
+    conversationQuery.data,
+    stopRecording,
+  ]);
 
   const {
     messages: echoMessages,
@@ -225,6 +247,62 @@ export const ParticipantConversationAudioRoute = () => {
 
   if (conversationQuery.isLoading || projectQuery.isLoading) {
     return <LoadingOverlay visible />;
+  }
+
+  // Check if conversation is not present or failed to load
+  if (
+    conversationQuery.isError ||
+    !conversationQuery.data ||
+    conversationDeletedDuringRecording
+  ) {
+    return (
+      <div className="container mx-auto flex h-full max-w-2xl flex-col items-center justify-center">
+        <div className="p-8 text-center">
+          <Text size="xl" fw={500} c="red" mb="md">
+            {conversationDeletedDuringRecording ? (
+              <Trans>Conversation Ended</Trans>
+            ) : (
+              <Trans>Something went wrong</Trans>
+            )}
+          </Text>
+          <Text size="md" c="dimmed" mb="lg">
+            {conversationDeletedDuringRecording ? (
+              <Trans>
+                It looks like the conversation was deleted while you were
+                recording. We've stopped the recording to prevent any issues.
+                You can start a new one anytime.
+              </Trans>
+            ) : (
+              <Trans>
+                The conversation could not be loaded. Please try again or
+                contact support.
+              </Trans>
+            )}
+          </Text>
+          <Group justify="center" gap="md">
+            <Button
+              variant="light"
+              size="md"
+              onClick={() => window.location.reload()}
+              leftSection={<IconReload />}
+            >
+              <Trans>Reload Page</Trans>
+            </Button>
+            {newConversationLink && (
+              <Button
+                leftSection={<IconPlus size={16} />}
+                variant="filled"
+                size="md"
+                component="a"
+                href={newConversationLink}
+              >
+                <Trans>Start New Conversation</Trans>
+              </Button>
+            )}
+          </Group>
+        </div>
+      </div>
+    );
   }
 
   const textModeUrl = `/${projectId}/conversation/${conversationId}/text`;
@@ -534,6 +612,7 @@ export const ParticipantConversationTextRoute = () => {
   const conversationQuery = useConversationQuery(projectId, conversationId);
   const chunks = useConversationChunksQuery(projectId, conversationId);
   const uploadChunkMutation = useUploadConversationTextChunk();
+  const newConversationLink = useProjectSharingLink(projectQuery.data);
 
   const [text, setText] = useState("");
 
@@ -577,6 +656,46 @@ export const ParticipantConversationTextRoute = () => {
 
   if (conversationQuery.isLoading || projectQuery.isLoading) {
     return <LoadingOverlay visible />;
+  }
+
+  // Check if conversation is not present or failed to load
+  if (conversationQuery.isError || !conversationQuery.data) {
+    return (
+      <div className="container mx-auto flex h-full max-w-2xl flex-col items-center justify-center">
+        <div className="p-8 text-center">
+          <Text size="xl" fw={500} c="red" mb="md">
+            <Trans>Something went wrong</Trans>
+          </Text>
+          <Text size="md" c="dimmed" mb="lg">
+            <Trans>
+              The conversation could not be loaded. Please try again or contact
+              support.
+            </Trans>
+          </Text>
+          <Group justify="center" gap="md">
+            <Button
+              variant="light"
+              size="md"
+              onClick={() => window.location.reload()}
+              leftSection={<IconReload />}
+            >
+              <Trans>Reload Page</Trans>
+            </Button>
+            {newConversationLink && (
+              <Button
+                leftSection={<IconPlus size={16} />}
+                variant="filled"
+                size="md"
+                component="a"
+                href={newConversationLink}
+              >
+                <Trans>Start New Conversation</Trans>
+              </Button>
+            )}
+          </Group>
+        </div>
+      </div>
+    );
   }
 
   return (
