@@ -1,21 +1,4 @@
 {
-  "mypy.runUsingActiveInterpreter": true,
-  "python.defaultInterpreterPath": "./server/.venv/bin/python",
-  "mypy.targets": ["./server/dembrane"],
-  "mypy.configFile": "./server/pyproject.toml",
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.useTabStops": true,
-    "editor.tabSize": 2
-  },
-  "[python]": {
-    "editor.tabSize": 4
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.useTabStops": true,
-    "editor.tabSize": 4
-  },
   "restoreTerminals.runOnStartup": false,
   "restoreTerminals.terminals": [
     {
@@ -73,13 +56,31 @@
   ],
   "files.eol": "\n",
   "debug.internalConsoleOptions": "neverOpen",
-  "python.linting.enabled": true,
-  "python.linting.pylintEnabled": false,
-  "python.linting.mypyEnabled": true,
+  // py
+  "python.languageServer": "Pylance",
+  "python.defaultInterpreterPath": "./server/.venv/bin/python",
+  "ruff.lint.enable": true,
+  "ruff.configuration": "./server/pyproject.toml",
+  "mypy.runUsingActiveInterpreter": true,
+  "mypy.targets": ["./server/dembrane"],
+  "mypy.configFile": "./server/pyproject.toml",
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.useTabStops": true
+  },
   "python.testing.pytestArgs": ["server"],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
   "python.testing.autoTestDiscoverOnSaveEnabled": true,
+  // ts
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.useTabStops": true
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.useTabStops": true
+  },
   "eslint.enable": true,
   "eslint.lintTask.options": "-c /workspaces/echo/frontend/.eslintrc"
 }
