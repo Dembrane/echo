@@ -448,6 +448,8 @@ async def get_reply_for_conversation(
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
+            "Content-Type": "text/event-stream",
+            "X-Accel-Buffering": "no",
         },
     )
 
