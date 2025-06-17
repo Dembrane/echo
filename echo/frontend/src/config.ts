@@ -2,8 +2,12 @@ export const USE_PARTICIPANT_ROUTER =
   import.meta.env.VITE_USE_PARTICIPANT_ROUTER === "1";
 export const ADMIN_BASE_URL =
   import.meta.env.VITE_ADMIN_BASE_URL ?? window.location.origin;
+export const ADMIN_HOSTNAME =
+  import.meta.env.VITE_ADMIN_HOSTNAME ?? window.location.hostname;
 export const PARTICIPANT_BASE_URL =
   import.meta.env.VITE_PARTICIPANT_BASE_URL ?? window.location.origin;
+export const PARTICIPANT_HOSTNAME =
+  import.meta.env.VITE_PARTICIPANT_HOSTNAME ?? window.location.hostname;
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 export const DIRECTUS_PUBLIC_URL =

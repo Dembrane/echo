@@ -8,8 +8,8 @@ import { RouterProvider } from "react-router-dom";
 import { I18nProvider } from "./components/layout/I18nProvider";
 import { mainRouter, participantRouter } from "./Router";
 import {
-  ADMIN_BASE_URL,
-  PARTICIPANT_BASE_URL,
+  ADMIN_HOSTNAME,
+  PARTICIPANT_HOSTNAME,
   PLAUSIBLE_API_HOST,
   USE_PARTICIPANT_ROUTER,
 } from "./config";
@@ -24,7 +24,7 @@ const router = USE_PARTICIPANT_ROUTER ? participantRouter : mainRouter;
 export const App = () => {
   useEffect(() => {
     const { enableAutoPageviews } = Plausible({
-      domain: USE_PARTICIPANT_ROUTER ? PARTICIPANT_BASE_URL : ADMIN_BASE_URL,
+      domain: USE_PARTICIPANT_ROUTER ? PARTICIPANT_HOSTNAME : ADMIN_HOSTNAME,
       apiHost: PLAUSIBLE_API_HOST,
     });
 
