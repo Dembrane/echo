@@ -351,6 +351,7 @@ async def generate_reply_for_conversation(
 
     # List of possible partial closing tags
     partial_closing_patterns = [
+        "</",
         "</r",
         "</re",
         "</res",
