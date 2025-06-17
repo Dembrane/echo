@@ -438,9 +438,14 @@ async def get_reply_for_conversation(
     body: GetReplyBodySchema,
 ) -> StreamingResponse:
     async def generate() -> AsyncGenerator[str, None]:
-        # Stream content chunks
-        async for chunk in generate_reply_for_conversation(conversation_id, body.language):
-            yield "0:" + json.dumps(chunk) + "\n"
+        try:
+            # Stream content chunks
+            async for chunk in generate_reply_for_conversation(conversation_id, body.language):
+                yield "0:" + json.dumps(chunk) + "\n"
+        except Exception as e:
+            # Handle errors by streaming an error payload
+            logger.error(f"Error generating reply for conversation {conversation_id}: {str(e)}")
+            yield "0:" + "Something went wrong." + "\n"
 
     return StreamingResponse(
         generate(),
