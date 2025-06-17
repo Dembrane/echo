@@ -19,7 +19,7 @@ const SpikeMessage = ({
         title={
           <Group>
             <div className={loading ? "animate-spin" : ""}>
-              <Logo hideTitle h="20px" my={4} />
+              <Logo className="min-w-[20px]" hideTitle h="20px" my={4} />
             </div>
           </Group>
         }
