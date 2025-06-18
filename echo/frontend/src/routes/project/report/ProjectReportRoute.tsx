@@ -191,6 +191,7 @@ export const ProjectReportRoute = () => {
                     variant="transparent"
                     color="gray.9"
                     size={24}
+                    className="lg:hidden"
                   >
                     <IconShare2 />
                   </ActionIcon>

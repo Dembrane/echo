@@ -90,6 +90,7 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
           <div className="flex flex-col flex-wrap gap-2">
             {canShare && (
               <Button
+                className="lg:hidden"
                 size="sm"
                 rightSection={<IconShare style={{ width: rem(16) }} />}
                 variant="outline"
