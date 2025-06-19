@@ -247,6 +247,7 @@ export const ParticipantConversationAudioRoute = () => {
         navigate(finishUrl);
       } catch (error) {
         console.error("Error finishing conversation:", error);
+        toast.error(t`Failed to finish conversation. Please try again.`);
         setIsFinishing(false);
       }
     }
