@@ -12,7 +12,7 @@ from dembrane.config import (
 )
 from dembrane.prompts import render_prompt
 from dembrane.directus import directus
-from dembrane.api.conversation import get_conversation_transcript
+from dembrane.api.conversation import summarize_conversation, get_conversation_transcript
 from dembrane.api.dependency_auth import DirectusSession
 
 logger = logging.getLogger("report_utils")
@@ -57,8 +57,18 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
         logger.info(f"Adding conversation {conversation['id']} to report")
 
         if conversation["summary"] is None:
-            logger.info(f"Conversation {conversation['id']} has no summary")
-            continue
+            logger.info(f"Conversation {conversation['id']} has no summary, attempting to generate one")
+            
+            result = summarize_conversation(conversation["id"], DirectusSession(user_id="none", is_admin=True))
+            
+            if result["status"] == "success" and result.get("summary"):
+                # Update the conversation object with the new summary
+                conversation["summary"] = result["summary"]
+                
+                logger.info(f"Summary generation result for conversation {conversation['id']}: {result}")
+            else:
+                logger.info(f"Could not generate summary for conversation {conversation['id']}, skipping")
+                continue
 
         token_count += token_counter(model=MEDIUM_LITELLM_MODEL, text=conversation["summary"])
 
