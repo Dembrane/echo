@@ -96,7 +96,11 @@ export const AutoSelectConversations = () => {
         auto_select_bool: true,
       });
     } else {
-      analytics.trackEvent(events.AUTO_SELECT_CONTACT_SALES);
+      try {
+        analytics.trackEvent(events.AUTO_SELECT_CONTACT_SALES);
+      } catch (error) {
+        console.warn("Analytics tracking failed:", error);
+      }
       window.open(SalesLinks.AUTO_SELECT_CONTACT, "_blank");
     }
   };
