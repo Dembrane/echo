@@ -100,6 +100,7 @@ export const ParticipantConversationAudioRoute = () => {
     setConversationDeletedDuringRecording,
   ] = useState(false);
 
+  const [isFinishing, setIsFinishing] = useState(false);
   // Navigation and language
   const navigate = useI18nNavigate();
   const { iso639_1 } = useLanguage();
@@ -240,8 +241,15 @@ export const ParticipantConversationAudioRoute = () => {
 
   const handleFinish = async () => {
     if (window.confirm(t`Are you sure you want to finish?`)) {
-      await finishConversation(conversationId ?? "");
-      navigate(finishUrl);
+      setIsFinishing(true);
+      try {
+        await finishConversation(conversationId ?? "");
+        navigate(finishUrl);
+      } catch (error) {
+        console.error("Error finishing conversation:", error);
+        toast.error(t`Failed to finish conversation. Please try again.`);
+        setIsFinishing(false);
+      }
     }
   };
 
@@ -516,10 +524,11 @@ export const ParticipantConversationAudioRoute = () => {
                       size="lg"
                       radius="md"
                       onClick={handleFinish}
-                      component="a"
                       variant="light"
                       rightSection={<IconCheck />}
                       className="w-full md:w-auto"
+                      loading={isFinishing}
+                      disabled={isFinishing}
                     >
                       <Trans>Finish</Trans>
                     </Button>
