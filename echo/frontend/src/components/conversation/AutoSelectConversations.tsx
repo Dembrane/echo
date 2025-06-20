@@ -24,6 +24,9 @@ import {
   IconInfoCircle,
 } from "@tabler/icons-react";
 import { t } from "@lingui/core/macro";
+import { analytics } from "@/lib/analytics";
+import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
+import { SalesLinks } from "@/lib/links";
 
 export const AutoSelectConversations = () => {
   const { chatId, projectId } = useParams();
@@ -93,9 +96,12 @@ export const AutoSelectConversations = () => {
         auto_select_bool: true,
       });
     } else {
-      window.alert(
-        t`Contact your sales representative to activate this feature today!`,
-      );
+      try {
+        analytics.trackEvent(events.AUTO_SELECT_CONTACT_SALES);
+      } catch (error) {
+        console.warn("Analytics tracking failed:", error);
+      }
+      window.open(SalesLinks.AUTO_SELECT_CONTACT, "_blank");
     }
   };
 

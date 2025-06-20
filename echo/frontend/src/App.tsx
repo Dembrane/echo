@@ -7,13 +7,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "react-router-dom";
 import { I18nProvider } from "./components/layout/I18nProvider";
 import { mainRouter, participantRouter } from "./Router";
-import {
-  PLAUSIBLE_API_HOST,
-  USE_PARTICIPANT_ROUTER,
-} from "./config";
+import { USE_PARTICIPANT_ROUTER } from "./config";
 import { theme } from "./theme";
 import { useEffect } from "react";
-import Plausible from "plausible-tracker";
+import { analytics } from "./lib/analytics";
 
 const queryClient = new QueryClient();
 
@@ -21,12 +18,7 @@ const router = USE_PARTICIPANT_ROUTER ? participantRouter : mainRouter;
 
 export const App = () => {
   useEffect(() => {
-    const { enableAutoPageviews } = Plausible({
-      domain: window.location.hostname,
-      apiHost: PLAUSIBLE_API_HOST,
-    });
-
-    const cleanup = enableAutoPageviews();
+    const cleanup = analytics.enableAutoPageviews();
 
     return () => {
       cleanup();
