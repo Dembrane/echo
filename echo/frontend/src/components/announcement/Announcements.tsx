@@ -11,7 +11,7 @@ import {
   Text,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconBell, IconX } from "@tabler/icons-react";
+import { IconSpeakerphone, IconX } from "@tabler/icons-react";
 import { Trans } from "@lingui/react/macro";
 import { useState } from "react";
 import { Drawer } from "../common/Drawer";
@@ -40,7 +40,8 @@ export const Announcements = () => {
       {/* done and checked */}
       <Box onClick={open} className="cursor-pointer">
         <Indicator
-          offset={7}
+          inline
+          offset={4}
           color="orange"
           label={unreadCount}
           size={20}
@@ -48,7 +49,7 @@ export const Announcements = () => {
           withBorder
         >
           <ActionIcon color="gray" variant="transparent">
-            <IconBell />
+            <IconSpeakerphone style={{ transform: 'rotate(340deg)' }} />
           </ActionIcon>
         </Indicator>
       </Box>
