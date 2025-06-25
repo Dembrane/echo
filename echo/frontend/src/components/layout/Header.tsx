@@ -25,6 +25,7 @@ import { useState, useEffect } from "react";
 import * as Sentry from "@sentry/react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useParams } from "react-router-dom";
+import { Announcements } from "../announcement/Announcements";
 
 const User = ({ name, email }: { name: string; email: string }) => (
   <div
@@ -126,45 +127,48 @@ export const Header = () => {
         </Group>
 
         {!loading && isAuthenticated && user ? (
-          <Menu withArrow arrowPosition="center">
-            <Menu.Target>
-              <ActionIcon color="gray" variant="transparent">
-                <IconSettings />
-              </ActionIcon>
-            </Menu.Target>
-            <Menu.Dropdown className="py-4">
-              <Stack gap="md" className="px-2">
-                <User
-                  // image={typeof user.avatar === "string" ? user.avatar : ""}
-                  name={t`Hi, ${user.first_name ?? "User"}`}
-                  email={user.email ?? ""}
-                />
+          <Group>
+            <Announcements />
+            <Menu withArrow arrowPosition="center">
+              <Menu.Target>
+                <ActionIcon color="gray" variant="transparent">
+                  <IconSettings />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown className="py-4">
+                <Stack gap="md" className="px-2">
+                  <User
+                    // image={typeof user.avatar === "string" ? user.avatar : ""}
+                    name={t`Hi, ${user.first_name ?? "User"}`}
+                    email={user.email ?? ""}
+                  />
 
-                <Menu.Divider />
+                  <Menu.Divider />
 
-                <Menu.Item
-                  rightSection={<IconNotes />}
-                  component="a"
-                  href={docUrl}
-                  target="_blank"
-                >
-                  <Group>
-                    <Trans>Documentation</Trans>
-                  </Group>
-                </Menu.Item>
+                  <Menu.Item
+                    rightSection={<IconNotes />}
+                    component="a"
+                    href={docUrl}
+                    target="_blank"
+                  >
+                    <Group>
+                      <Trans>Documentation</Trans>
+                    </Group>
+                  </Menu.Item>
 
-                <CreateFeedbackButton />
+                  <CreateFeedbackButton />
 
-                <Menu.Item rightSection={<IconLogout />} onClick={handleLogout}>
-                  <Trans>Logout</Trans>
-                </Menu.Item>
+                  <Menu.Item rightSection={<IconLogout />} onClick={handleLogout}>
+                    <Trans>Logout</Trans>
+                  </Menu.Item>
 
-                <Menu.Divider />
+                  <Menu.Divider />
 
-                <LanguagePicker />
-              </Stack>
-            </Menu.Dropdown>
-          </Menu>
+                  <LanguagePicker />
+                </Stack>
+              </Menu.Dropdown>
+            </Menu>
+          </Group>
         ) : (
           <Group>
             <LanguagePicker />
