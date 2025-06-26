@@ -16,7 +16,7 @@ import {
   IconUrgent,
 } from "@tabler/icons-react";
 import { Trans } from "@lingui/react/macro";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, forwardRef } from "react";
 import { Markdown } from "@/components/common/Markdown";
 
 type Announcement = {
@@ -60,28 +60,30 @@ const formatDate = (date: string | Date | null | undefined): string => {
   return dateObj.toLocaleDateString();
 };
 
-export const AnnouncementItem = ({
-  announcement,
-  onMarkAsRead,
-  index,
-  isMarkingAsRead = false,
-}: AnnouncementItemProps) => {
+export const AnnouncementItem = forwardRef<
+  HTMLDivElement,
+  AnnouncementItemProps
+>(({ announcement, onMarkAsRead, index, isMarkingAsRead = false }, ref) => {
   const theme = useMantineTheme();
   const [showMore, setShowMore] = useState(false);
   const [showReadMoreButton, setShowReadMoreButton] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const messageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (ref.current) {
-      console.log(ref.current.scrollHeight, ref.current.clientHeight);
+    if (messageRef.current) {
+      console.log(
+        messageRef.current.scrollHeight,
+        messageRef.current.clientHeight,
+      );
       setShowReadMoreButton(
-        ref.current.scrollHeight !== ref.current.clientHeight,
+        messageRef.current.scrollHeight !== messageRef.current.clientHeight,
       );
     }
   }, []);
 
   return (
     <Box
+      ref={ref}
       className={`group border-b border-gray-100 p-4 transition-all duration-200 hover:bg-blue-50 ${index === 0 ? "border-t-0" : ""} ${
         !announcement.read
           ? "border-l-4 border-l-blue-500"
@@ -130,7 +132,7 @@ export const AnnouncementItem = ({
               </Group>
             </Group>
 
-            <Text lineClamp={showMore ? undefined : 2} ref={ref}>
+            <Text lineClamp={showMore ? undefined : 2} ref={messageRef}>
               <Markdown
                 content={announcement.message}
                 className="text-sm text-gray-600"
@@ -187,4 +189,6 @@ export const AnnouncementItem = ({
       </Stack>
     </Box>
   );
-};
+});
+
+AnnouncementItem.displayName = "AnnouncementItem";

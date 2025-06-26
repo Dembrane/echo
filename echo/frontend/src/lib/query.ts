@@ -2182,15 +2182,23 @@ export const useSubmitNotificationParticipant = () => {
   });
 };
 
-export const useAnnouncements = ({
-  query = {},
+export const useInfiniteAnnouncements = ({
+  query,
+  options = {
+    initialLimit: 10,
+  },
 }: {
   query?: Partial<Query<CustomDirectusTypes, Announcement>>;
-} = {}) => {
-  return useQuery({
-    queryKey: ["announcements", query],
-    queryFn: async () => {
-      const announcements = await directus.request(
+  options?: {
+    initialLimit?: number;
+  };
+}) => {
+  const { initialLimit = 10 } = options;
+
+  return useInfiniteQuery({
+    queryKey: ["announcements", "infinite", query],
+    queryFn: async ({ pageParam = 0 }) => {
+      const response = await directus.request(
         readItems("announcement", {
           filter: {
             _or: [
@@ -2220,12 +2228,20 @@ export const useAnnouncements = ({
             },
           ],
           sort: ["-created_at"],
+          limit: initialLimit,
+          offset: pageParam * initialLimit,
           ...query,
         }),
       );
-      console.log(announcements, " ===> announcements query");
-      return announcements;
+
+      return {
+        announcements: response,
+        nextOffset:
+          response.length === initialLimit ? pageParam + 1 : undefined,
+      };
     },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextOffset,
   });
 };
 
@@ -2251,7 +2267,11 @@ export const useMarkAnnouncementAsReadMutation = () => {
       );
     },
     onSuccess: () => {
+      // Invalidate both regular and infinite announcements queries
       queryClient.invalidateQueries({ queryKey: ["announcements"] });
+      queryClient.invalidateQueries({
+        queryKey: ["announcements", "infinite"],
+      });
     },
     onError: (error) => {
       console.error("Error marking announcement as read:", error);

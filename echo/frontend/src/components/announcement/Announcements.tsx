@@ -6,15 +6,17 @@ import {
   Stack,
   Text,
   Loader,
+  Center,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconSpeakerphone } from "@tabler/icons-react";
 import { Trans } from "@lingui/react/macro";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useInView } from "react-intersection-observer";
 import { Drawer } from "../common/Drawer";
 import { AnnouncementItem } from "./AnnouncementItem";
 import {
-  useAnnouncements,
+  useInfiniteAnnouncements,
   useMarkAnnouncementAsReadMutation,
   useCurrentUser,
 } from "@/lib/query";
@@ -25,20 +27,46 @@ import { useProcessedAnnouncements } from "@/hooks/useProcessedAnnouncements";
 
 export const Announcements = () => {
   const [opened, { open, close }] = useDisclosure(false);
-  const { data: announcements = [], isLoading, error } = useAnnouncements();
   const { language } = useLanguage();
   const { data: currentUser } = useCurrentUser();
   const markAsReadMutation = useMarkAnnouncementAsReadMutation();
   const [markingAsReadId, setMarkingAsReadId] = useState<string | null>(null);
 
+  const { ref: loadMoreRef, inView } = useInView();
+
+  const {
+    data: announcementsData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    error,
+  } = useInfiniteAnnouncements({
+    options: {
+      initialLimit: 10,
+    },
+  });
+
+  // Flatten all announcements from all pages
+  const allAnnouncements =
+    announcementsData?.pages.flatMap((page) => page.announcements) ?? [];
+
   // Process announcements with translations and read status
   const processedAnnouncements = useProcessedAnnouncements(
-    announcements as Announcement[],
+    allAnnouncements as Announcement[],
     language,
   );
 
   const unreadAnnouncements = processedAnnouncements.filter((a) => !a.read);
   const unreadCount = unreadAnnouncements.length;
+
+  // Load more announcements when user scrolls to bottom
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleMarkAsRead = async (id: string) => {
     if (!currentUser?.id) {
@@ -82,7 +110,7 @@ export const Announcements = () => {
     }
   };
 
-  if (error) {
+  if (isError) {
     console.error("Error loading announcements:", error);
   }
 
@@ -139,15 +167,27 @@ export const Announcements = () => {
                   </Text>
                 </Box>
               ) : (
-                processedAnnouncements.map((announcement, index) => (
-                  <AnnouncementItem
-                    key={announcement.id}
-                    announcement={announcement}
-                    onMarkAsRead={handleMarkAsRead}
-                    index={index}
-                    isMarkingAsRead={markingAsReadId === announcement.id}
-                  />
-                ))
+                <>
+                  {processedAnnouncements.map((announcement, index) => (
+                    <AnnouncementItem
+                      key={announcement.id}
+                      announcement={announcement}
+                      onMarkAsRead={handleMarkAsRead}
+                      index={index}
+                      isMarkingAsRead={markingAsReadId === announcement.id}
+                      ref={
+                        index === processedAnnouncements.length - 1
+                          ? loadMoreRef
+                          : undefined
+                      }
+                    />
+                  ))}
+                  {isFetchingNextPage && (
+                    <Center>
+                      <Loader size="sm" />
+                    </Center>
+                  )}
+                </>
               )}
             </Stack>
           </ScrollArea>
