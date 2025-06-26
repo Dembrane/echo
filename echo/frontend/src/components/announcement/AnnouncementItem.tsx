@@ -1,44 +1,70 @@
 import {
-  ActionIcon,
   Box,
   Button,
-  Collapse,
   Group,
   Stack,
   Text,
   useMantineTheme,
+  Loader,
+  ThemeIcon,
 } from "@mantine/core";
 import {
-  IconAlertTriangle,
   IconChecks,
   IconChevronDown,
   IconChevronUp,
   IconInfoCircle,
+  IconUrgent,
 } from "@tabler/icons-react";
 import { Trans } from "@lingui/react/macro";
-import { useDisclosure } from "@mantine/hooks";
 import { useEffect, useRef, useState } from "react";
+import { Markdown } from "@/components/common/Markdown";
 
 type Announcement = {
-  id: number;
+  id: string;
   title: string;
   message: string;
-  created_at: string;
-  expires_at?: string;
-  read: boolean;
+  created_at: string | Date | null | undefined;
+  expires_at?: string | Date | null | undefined;
+  read?: boolean | null;
   level: "info" | "urgent";
 };
 
 interface AnnouncementItemProps {
   announcement: Announcement;
-  onMarkAsRead: (id: number) => void;
+  onMarkAsRead: (id: string) => void;
   index: number;
+  isMarkingAsRead?: boolean;
 }
+
+// TODO: need to check this function
+const formatDate = (date: string | Date | null | undefined): string => {
+  if (!date) return "";
+
+  // Convert string to Date object if needed
+  const dateObj = typeof date === "string" ? new Date(date) : date;
+
+  // Check if the date is valid
+  if (isNaN(dateObj.getTime())) return "";
+
+  const now = new Date();
+  const diffInHours = Math.floor(
+    (now.getTime() - dateObj.getTime()) / (1000 * 60 * 60),
+  );
+
+  if (diffInHours < 1) return "Just now";
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) return `${diffInDays}d ago`;
+
+  return dateObj.toLocaleDateString();
+};
 
 export const AnnouncementItem = ({
   announcement,
   onMarkAsRead,
   index,
+  isMarkingAsRead = false,
 }: AnnouncementItemProps) => {
   const theme = useMantineTheme();
   const [showMore, setShowMore] = useState(false);
@@ -53,31 +79,40 @@ export const AnnouncementItem = ({
       );
     }
   }, []);
-  //   }, [announcement.message, showMore]);
 
   return (
     <Box
       className={`group border-b border-gray-100 p-4 transition-all duration-200 hover:bg-blue-50 ${index === 0 ? "border-t-0" : ""} ${
         !announcement.read
           ? "border-l-4 border-l-blue-500"
-          : "border-l-4 border-l-gray-200 bg-gray-50"
+          : "border-l-4 border-l-gray-50/50 bg-gray-50/50"
       }`}
     >
       <Stack gap="xs">
         <Group gap="sm" align="flex-start">
           {
-            <IconInfoCircle
-              size={20}
-              color={announcement.level === "urgent" ? "orangered" : "gray"}
-            />
+            <ThemeIcon
+              size={25}
+              variant="light"
+              color={announcement.level === "urgent" ? "orange" : "blue"}
+              radius="xl"
+            >
+              {announcement.level === "urgent" ? (
+                <IconUrgent size={20} />
+              ) : (
+                <IconInfoCircle size={20} />
+              )}
+            </ThemeIcon>
           }
           <Stack gap="xs" style={{ flex: 1 }}>
             <Group justify="space-between" align="center">
-              <Text fw={500}>{announcement.title}</Text>
+              <div style={{ flex: 1 }}>
+                <Markdown content={announcement.title} />
+              </div>
 
               <Group gap="sm" align="center">
                 <Text size="xs" c="dimmed">
-                  {announcement.created_at}
+                  {formatDate(announcement.created_at)}
                 </Text>
 
                 {/* this part needs a second look */}
@@ -95,13 +130,11 @@ export const AnnouncementItem = ({
               </Group>
             </Group>
 
-            <Text
-              size="sm"
-              c="dimmed"
-              lineClamp={showMore ? undefined : 2}
-              ref={ref}
-            >
-              {announcement.message}
+            <Text lineClamp={showMore ? undefined : 2} ref={ref}>
+              <Markdown
+                content={announcement.message}
+                className="text-sm text-gray-600"
+              />
             </Text>
 
             <Group justify="space-between" align="center">
@@ -126,26 +159,28 @@ export const AnnouncementItem = ({
                 </Button>
               )}
 
-              {/* this part needs a second look */}
               <Box ml="auto">
-                {!announcement.read ? (
+                {!announcement.read && (
                   <Button
                     variant="subtle"
                     size="xs"
-                    onClick={() => onMarkAsRead(announcement.id)}
+                    onClick={() => {
+                      onMarkAsRead(announcement.id);
+                    }}
+                    loading={isMarkingAsRead}
+                    disabled={isMarkingAsRead}
                   >
-                    <Trans>Mark as read</Trans>
+                    {isMarkingAsRead ? (
+                      <Group gap="xs">
+                        <Loader size="xs" />
+                        <Trans>Marking...</Trans>
+                      </Group>
+                    ) : (
+                      <Trans>Mark as read</Trans>
+                    )}
                   </Button>
-                ) : (
-                  <Group gap="xs">
-                    <IconChecks size={16} color="darkturquoise" />
-                    <Text size="xs" c="dimmed">
-                      <Trans>Marked as read</Trans>
-                    </Text>
-                  </Group>
                 )}
               </Box>
-              {/* this part needs a second look */}
             </Group>
           </Stack>
         </Group>

@@ -2181,3 +2181,81 @@ export const useSubmitNotificationParticipant = () => {
     },
   });
 };
+
+export const useAnnouncements = ({
+  query = {},
+}: {
+  query?: Partial<Query<CustomDirectusTypes, Announcement>>;
+} = {}) => {
+  return useQuery({
+    queryKey: ["announcements", query],
+    queryFn: async () => {
+      const announcements = await directus.request(
+        readItems("announcement", {
+          filter: {
+            _or: [
+              {
+                expires_at: {
+                  // @ts-expect-error
+                  _gte: new Date().toISOString(),
+                },
+              },
+              {
+                expires_at: {
+                  _null: true,
+                },
+              },
+            ],
+          },
+          fields: [
+            "id",
+            "created_at",
+            "expires_at",
+            "level",
+            {
+              translations: ["id", "languages_code", "title", "message"],
+            },
+            {
+              activity: ["id", "user_id", "announcement_activity", "read"],
+            },
+          ],
+          sort: ["-created_at"],
+          ...query,
+        }),
+      );
+      console.log(announcements, " ===> announcements query");
+      return announcements;
+    },
+  });
+};
+
+export const useMarkAnnouncementAsReadMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      announcementIds,
+      userId,
+    }: {
+      announcementIds: string[];
+      userId: string;
+    }) => {
+      return directus.request(
+        createItems(
+          "announcement_activity",
+          announcementIds.map((id) => ({
+            user_id: userId,
+            announcement_activity: id,
+            read: true,
+          })) as any,
+        ),
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["announcements"] });
+    },
+    onError: (error) => {
+      console.error("Error marking announcement as read:", error);
+      toast.error("Failed to mark announcement as read");
+    },
+  });
+};

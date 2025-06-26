@@ -1,114 +1,154 @@
 import {
   ActionIcon,
-  Badge,
   Box,
-  Button,
-  Divider,
-  Group,
   Indicator,
   ScrollArea,
   Stack,
   Text,
+  Loader,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconSpeakerphone, IconX } from "@tabler/icons-react";
+import { IconSpeakerphone } from "@tabler/icons-react";
 import { Trans } from "@lingui/react/macro";
 import { useState } from "react";
 import { Drawer } from "../common/Drawer";
 import { AnnouncementItem } from "./AnnouncementItem";
-
-import { initialAnnouncements } from "./announcementList";
+import {
+  useAnnouncements,
+  useMarkAnnouncementAsReadMutation,
+  useCurrentUser,
+} from "@/lib/query";
+import { useLanguage } from "@/hooks/useLanguage";
+import { AnnouncementSkeleton } from "./AnnouncementSkeleton";
+import { AnnouncementDrawerHeader } from "./AnnouncementDrawerHeader";
+import { useProcessedAnnouncements } from "@/hooks/useProcessedAnnouncements";
 
 export const Announcements = () => {
   const [opened, { open, close }] = useDisclosure(false);
-  const [announcements, setAnnouncements] = useState(initialAnnouncements);
+  const { data: announcements = [], isLoading, error } = useAnnouncements();
+  const { language } = useLanguage();
+  const { data: currentUser } = useCurrentUser();
+  const markAsReadMutation = useMarkAnnouncementAsReadMutation();
+  const [markingAsReadId, setMarkingAsReadId] = useState<string | null>(null);
 
-  const handleMarkAsRead = (id: number) => {
-    setAnnouncements((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
-    );
+  // Process announcements with translations and read status
+  const processedAnnouncements = useProcessedAnnouncements(
+    announcements as Announcement[],
+    language,
+  );
+
+  const unreadAnnouncements = processedAnnouncements.filter((a) => !a.read);
+  const unreadCount = unreadAnnouncements.length;
+
+  const handleMarkAsRead = async (id: string) => {
+    if (!currentUser?.id) {
+      console.error("No current user found");
+      return;
+    }
+
+    setMarkingAsReadId(id);
+
+    try {
+      await markAsReadMutation.mutateAsync({
+        announcementIds: [id],
+        userId: currentUser.id,
+      });
+    } catch (error) {
+      console.error("Failed to mark announcement as read:", error);
+    } finally {
+      setMarkingAsReadId(null);
+    }
   };
 
-  const handleMarkAllAsRead = () => {
-    setAnnouncements((prev) => prev.map((n) => ({ ...n, read: true })));
+  const handleMarkAllAsRead = async () => {
+    if (!currentUser?.id) {
+      console.error("No current user found");
+      return;
+    }
+
+    try {
+      // Extract all unread announcement IDs
+      const unreadIds = unreadAnnouncements.map(
+        (announcement) => announcement.id,
+      );
+
+      // Mark all unread announcements as read in one call
+      await markAsReadMutation.mutateAsync({
+        announcementIds: unreadIds as string[],
+        userId: currentUser.id,
+      });
+    } catch (error) {
+      console.error("Failed to mark all announcements as read:", error);
+    }
   };
 
-  const unreadCount = announcements.filter((n) => !n.read).length;
+  if (error) {
+    console.error("Error loading announcements:", error);
+  }
 
   return (
     <>
-      {/* done and checked */}
       <Box onClick={open} className="cursor-pointer">
         <Indicator
           inline
           offset={4}
-          color="orange"
+          color="blue"
           label={unreadCount}
           size={20}
           disabled={unreadCount === 0}
           withBorder
         >
           <ActionIcon color="gray" variant="transparent">
-            <IconSpeakerphone style={{ transform: 'rotate(340deg)' }} />
+            {isLoading ? (
+              <Loader size="xs" />
+            ) : (
+              <IconSpeakerphone className="rotate-[340deg]" />
+            )}
           </ActionIcon>
         </Indicator>
       </Box>
 
-      {/* done and checked */}
       <Drawer
         opened={opened}
         onClose={close}
         position="right"
-        // add real title here
         title={
-          <Stack justify="space-between" align="flex-start" gap={0}>
-            <Group justify="space-between" align="center" w="100%">
-              <Text fw={500} size="lg">
-                <Trans>Announcements</Trans>
-              </Text>
-              <ActionIcon
-                variant="transparent"
-                onClick={close}
-                aria-label="Close drawer"
-              >
-                <IconX size={18} color="gray" />
-              </ActionIcon>
-            </Group>
-            <Group gap="xs" justify="space-between" w="100%">
-              {unreadCount > 0 && (
-                <Text size="sm" c="dimmed">
-                  {unreadCount} <Trans>unread announcements</Trans>
-                </Text>
-              )}
-              <Button
-                variant="subtle"
-                size="xs"
-                onClick={handleMarkAllAsRead}
-                disabled={unreadCount === 0}
-                className={`${unreadCount === 0 ? "ml-auto" : ""}`}
-              >
-                <Trans>Mark all read</Trans>
-              </Button>
-            </Group>
-          </Stack>
+          <AnnouncementDrawerHeader
+            unreadCount={unreadCount}
+            onClose={close}
+            onMarkAllAsRead={handleMarkAllAsRead}
+            isPending={markAsReadMutation.isPending}
+          />
         }
         classNames={{
-          title: "w-full",
+          title: "px-3 w-full",
+          header: "border-b",
           body: "p-0",
         }}
         withCloseButton={false}
       >
         <Stack h="100%">
-          <ScrollArea style={{ flex: 1 }}>
+          <ScrollArea className="flex-1">
             <Stack gap="0">
-              {announcements.map((announcement, index) => (
-                <AnnouncementItem
-                  key={announcement.id}
-                  announcement={announcement}
-                  onMarkAsRead={handleMarkAsRead}
-                  index={index}
-                />
-              ))}
+              {isLoading ? (
+                <AnnouncementSkeleton />
+              ) : processedAnnouncements.length === 0 ? (
+                <Box p="md">
+                  <Text c="dimmed" ta="center">
+                    <Trans>No announcements available</Trans>
+                  </Text>
+                </Box>
+              ) : (
+                processedAnnouncements.map((announcement, index) => (
+                  <AnnouncementItem
+                    key={announcement.id}
+                    announcement={announcement}
+                    onMarkAsRead={handleMarkAsRead}
+                    index={index}
+                    isMarkingAsRead={markingAsReadId === announcement.id}
+                  />
+                ))
+              )}
             </Stack>
           </ScrollArea>
         </Stack>

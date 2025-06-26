@@ -716,6 +716,32 @@ type View = {
   updated_at?: string | null;
 };
 
+type Announcement = {
+  id: string;
+  user_created?: string | DirectusUsers | null;
+  created_at?: Date | null;
+  expires_at?: Date | null;
+  level?: string | null;
+  translations: any[] | AnnouncementTranslations[];
+  activity: any[] | AnnouncementActivity[];
+};
+
+type AnnouncementTranslations = {
+  id: number;
+  languages_code?: string | Languages | null;
+  title?: string | null;
+  message?: string | null;
+};
+
+type AnnouncementActivity = {
+  id: string;
+  user_created?: string | DirectusUsers | null;
+  created_at?: string | null;
+  user_id?: string | null;
+  announcement_activity?: string | Announcement | null;
+  read: boolean | null;
+};
+
 type CustomDirectusTypes = {
   account: Account[];
   account_directus_users: AccountDirectusUsers[];
@@ -771,4 +797,7 @@ type CustomDirectusTypes = {
   quote_conversation_chunk: QuoteConversationChunk[];
   view: View[];
   processing_status: ProcessingStatus[];
+  announcement: Announcement[];
+  announcement_translations: AnnouncementTranslations[];
+  announcement_activity: AnnouncementActivity[];
 };
