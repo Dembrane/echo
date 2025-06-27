@@ -9,7 +9,6 @@ import {
 import { IconAlertTriangle, IconX } from "@tabler/icons-react";
 import {
   useLatestAnnouncement,
-  useCurrentUser,
   useMarkAnnouncementAsReadMutation,
 } from "@/lib/query";
 import { theme } from "@/theme";
@@ -24,16 +23,15 @@ import { t } from "@lingui/core/macro";
 export function TopAnnouncementBar() {
   const theme = useMantineTheme();
   const { data: announcement, isLoading } = useLatestAnnouncement();
-  const { data: currentUser } = useCurrentUser();
   const markAsReadMutation = useMarkAnnouncementAsReadMutation();
   const [isClosed, setIsClosed] = useState(false);
   const { open } = useAnnouncementDrawer();
   const { language } = useLanguage();
 
   // Check if the announcement has been read by the current user
+  // Directus already filters activity data for the current user
   const isRead = announcement?.activity?.some(
-    (activity) =>
-      activity.user_id === currentUser?.id && activity.read === true,
+    (activity) => activity.read === true,
   );
 
   // Only show if we have an urgent announcement, it's not closed, and it's not read
@@ -54,11 +52,10 @@ export function TopAnnouncementBar() {
     setIsClosed(true);
 
     // Mark announcement as read
-    if (currentUser?.id && announcement.id) {
+    if (announcement.id) {
       try {
         await markAsReadMutation.mutateAsync({
           announcementIds: [announcement.id],
-          userId: currentUser.id,
         });
       } catch (error) {
         console.error("Failed to mark announcement as read:", error);

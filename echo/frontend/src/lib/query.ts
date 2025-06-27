@@ -2296,15 +2296,15 @@ export const useMarkAnnouncementAsReadMutation = () => {
       userId,
     }: {
       announcementIds: string[];
-      userId: string;
+      userId?: string;
     }) => {
       return directus.request(
         createItems(
           "announcement_activity",
           announcementIds.map((id) => ({
-            user_id: userId,
             announcement_activity: id,
             read: true,
+            ...(userId ? { user_id: userId } : {}),
           })) as any,
         ),
       );

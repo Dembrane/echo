@@ -18,7 +18,6 @@ import { AnnouncementItem } from "./AnnouncementItem";
 import {
   useInfiniteAnnouncements,
   useMarkAnnouncementAsReadMutation,
-  useCurrentUser,
 } from "@/lib/query";
 import { useLanguage } from "@/hooks/useLanguage";
 import { AnnouncementSkeleton } from "./AnnouncementSkeleton";
@@ -29,7 +28,6 @@ import { useAnnouncementDrawer } from "@/hooks/useAnnouncementDrawer";
 export const Announcements = () => {
   const { isOpen, open, close } = useAnnouncementDrawer();
   const { language } = useLanguage();
-  const { data: currentUser } = useCurrentUser();
   const markAsReadMutation = useMarkAnnouncementAsReadMutation();
   const [markingAsReadId, setMarkingAsReadId] = useState<string | null>(null);
 
@@ -70,17 +68,11 @@ export const Announcements = () => {
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleMarkAsRead = async (id: string) => {
-    if (!currentUser?.id) {
-      console.error("No current user found");
-      return;
-    }
-
     setMarkingAsReadId(id);
 
     try {
       await markAsReadMutation.mutateAsync({
         announcementIds: [id],
-        userId: currentUser.id,
       });
     } catch (error) {
       console.error("Failed to mark announcement as read:", error);
@@ -90,11 +82,6 @@ export const Announcements = () => {
   };
 
   const handleMarkAllAsRead = async () => {
-    if (!currentUser?.id) {
-      console.error("No current user found");
-      return;
-    }
-
     try {
       // Extract all unread announcement IDs
       const unreadIds = unreadAnnouncements.map(
@@ -104,7 +91,6 @@ export const Announcements = () => {
       // Mark all unread announcements as read in one call
       await markAsReadMutation.mutateAsync({
         announcementIds: unreadIds as string[],
-        userId: currentUser.id,
       });
     } catch (error) {
       console.error("Failed to mark all announcements as read:", error);
