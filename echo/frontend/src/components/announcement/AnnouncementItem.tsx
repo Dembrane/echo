@@ -143,7 +143,9 @@ export const AnnouncementItem = forwardRef<
               {showReadMoreButton && (
                 <Button
                   variant="transparent"
+                  color="gray"
                   size="xs"
+                  className="hover:underline"
                   p={0}
                   onClick={() => setShowMore(!showMore)}
                 >
@@ -164,8 +166,10 @@ export const AnnouncementItem = forwardRef<
               <Box ml="auto">
                 {!announcement.read && (
                   <Button
-                    variant="subtle"
+                    variant="transparent"
                     size="xs"
+                    color="gray"
+                    className="hover:underline"
                     onClick={() => {
                       onMarkAsRead(announcement.id);
                     }}
