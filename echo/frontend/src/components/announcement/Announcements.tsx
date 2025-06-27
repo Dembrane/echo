@@ -24,9 +24,10 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { AnnouncementSkeleton } from "./AnnouncementSkeleton";
 import { AnnouncementDrawerHeader } from "./AnnouncementDrawerHeader";
 import { useProcessedAnnouncements } from "@/hooks/useProcessedAnnouncements";
+import { useAnnouncementDrawer } from "@/hooks/useAnnouncementDrawer";
 
 export const Announcements = () => {
-  const [opened, { open, close }] = useDisclosure(false);
+  const { isOpen, open, close } = useAnnouncementDrawer();
   const { language } = useLanguage();
   const { data: currentUser } = useCurrentUser();
   const markAsReadMutation = useMarkAnnouncementAsReadMutation();
@@ -137,7 +138,7 @@ export const Announcements = () => {
       </Box>
 
       <Drawer
-        opened={opened}
+        opened={isOpen}
         onClose={close}
         position="right"
         title={

@@ -13,7 +13,7 @@ import {
   IconChevronDown,
   IconChevronUp,
   IconInfoCircle,
-  IconUrgent,
+  IconAlertTriangle,
 } from "@tabler/icons-react";
 import { Trans } from "@lingui/react/macro";
 import { useEffect, useRef, useState, forwardRef } from "react";
@@ -100,7 +100,7 @@ export const AnnouncementItem = forwardRef<
               radius="xl"
             >
               {announcement.level === "urgent" ? (
-                <IconUrgent size={20} />
+                <IconAlertTriangle size={17} />
               ) : (
                 <IconInfoCircle size={20} />
               )}

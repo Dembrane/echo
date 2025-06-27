@@ -2182,6 +2182,47 @@ export const useSubmitNotificationParticipant = () => {
   });
 };
 
+export const useLatestAnnouncement = () => {
+  return useQuery({
+    queryKey: ["announcements", "latest"],
+    queryFn: async () => {
+      const response = await directus.request(
+        readItems("announcement", {
+          filter: {
+            _or: [
+              {
+                expires_at: {
+                  // @ts-expect-error
+                  _gte: new Date().toISOString(),
+                },
+              },
+              {
+                expires_at: {
+                  _null: true,
+                },
+              },
+            ],
+          },
+          fields: [
+            "id",
+            "created_at",
+            "expires_at",
+            "level",
+            {
+              translations: ["id", "languages_code", "title", "message"],
+            },
+          ],
+          sort: ["-created_at"],
+          limit: 1,
+        }),
+      );
+
+      return response.length > 0 ? response[0] : null;
+    },
+    staleTime: 10 * 60 * 1000, // optional: 10 min cache
+  });
+};
+
 export const useInfiniteAnnouncements = ({
   query,
   options = {

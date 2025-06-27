@@ -26,6 +26,7 @@ import * as Sentry from "@sentry/react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useParams } from "react-router-dom";
 import { Announcements } from "../announcement/Announcements";
+import { TopAnnouncementBar } from "../announcement/TopAnnouncementBar";
 
 const User = ({ name, email }: { name: string; email: string }) => (
   <div
@@ -101,6 +102,8 @@ export const Header = () => {
   };
 
   return (
+    <>
+      {isAuthenticated && user && <TopAnnouncementBar />}
     <Paper
       component="header"
       shadow="xs"
@@ -176,5 +179,6 @@ export const Header = () => {
         )}
       </Group>
     </Paper>
+    </>
   );
 };
