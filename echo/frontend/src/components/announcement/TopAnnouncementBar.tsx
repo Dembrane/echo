@@ -51,17 +51,17 @@ export function TopAnnouncementBar() {
       <Group justify="center" gap="md" wrap="nowrap">
         <ThemeIcon
           size={25}
-          variant="light"
+          variant="transparent"
           color={announcement.level === "urgent" ? "orange" : "blue"}
           radius="xl"
         >
-          <IconAlertTriangle size={18} />
+          <IconAlertTriangle size={20} />
         </ThemeIcon>
         <Text>{displayText}</Text>
       </Group>
 
       <ActionIcon
-        variant="subtle"
+        variant="transparent"
         size="sm"
         onClick={handleClose}
         className="absolute right-6"

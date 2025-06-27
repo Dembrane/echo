@@ -122,7 +122,11 @@ export const Announcements = () => {
           inline
           offset={4}
           color="blue"
-          label={unreadCount}
+          label={
+            <Box px={2} className="text-xs">
+              {unreadCount}
+            </Box>
+          }
           size={20}
           disabled={unreadCount === 0}
           withBorder
@@ -131,7 +135,7 @@ export const Announcements = () => {
             {isLoading ? (
               <Loader size="xs" />
             ) : (
-              <IconSpeakerphone className="rotate-[340deg]" />
+              <IconSpeakerphone className="me-1 rotate-[330deg]" />
             )}
           </ActionIcon>
         </Indicator>
