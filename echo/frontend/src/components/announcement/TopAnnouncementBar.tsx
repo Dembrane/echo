@@ -7,36 +7,64 @@ import {
   ThemeIcon,
 } from "@mantine/core";
 import { IconAlertTriangle, IconX } from "@tabler/icons-react";
-import { useLatestAnnouncement } from "@/lib/query";
+import {
+  useLatestAnnouncement,
+  useCurrentUser,
+  useMarkAnnouncementAsReadMutation,
+} from "@/lib/query";
 import { theme } from "@/theme";
 import { useState } from "react";
 import { useAnnouncementDrawer } from "@/hooks/useAnnouncementDrawer";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Markdown } from "@/components/common/Markdown";
 import { getTranslatedContent } from "@/hooks/useProcessedAnnouncements";
+import { toast } from "@/components/common/Toaster";
+import { t } from "@lingui/core/macro";
 
 export function TopAnnouncementBar() {
   const theme = useMantineTheme();
   const { data: announcement, isLoading } = useLatestAnnouncement();
+  const { data: currentUser } = useCurrentUser();
+  const markAsReadMutation = useMarkAnnouncementAsReadMutation();
   const [isClosed, setIsClosed] = useState(false);
   const { open } = useAnnouncementDrawer();
   const { language } = useLanguage();
 
-  // Only show if we have an urgent announcement and it's not closed
+  // Check if the announcement has been read by the current user
+  const isRead = announcement?.activity?.some(
+    (activity) =>
+      activity.user_id === currentUser?.id && activity.read === true,
+  );
+
+  // Only show if we have an urgent announcement, it's not closed, and it's not read
   if (
     isLoading ||
     !announcement ||
     announcement.level !== "urgent" ||
-    isClosed
+    isClosed ||
+    isRead
   ) {
     return null;
   }
 
   const { title } = getTranslatedContent(announcement, language);
 
-  const handleClose = (e: React.MouseEvent) => {
+  const handleClose = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsClosed(true);
+
+    // Mark announcement as read
+    if (currentUser?.id && announcement.id) {
+      try {
+        await markAsReadMutation.mutateAsync({
+          announcementIds: [announcement.id],
+          userId: currentUser.id,
+        });
+      } catch (error) {
+        console.error("Failed to mark announcement as read:", error);
+        toast.error(t`Failed to mark announcement as read`);
+      }
+    }
   };
 
   const handleBarClick = () => {

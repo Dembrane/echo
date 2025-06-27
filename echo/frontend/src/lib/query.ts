@@ -2211,6 +2211,9 @@ export const useLatestAnnouncement = () => {
             {
               translations: ["id", "languages_code", "title", "message"],
             },
+            {
+              activity: ["id", "user_id", "announcement_activity", "read"],
+            },
           ],
           sort: ["-created_at"],
           limit: 1,
