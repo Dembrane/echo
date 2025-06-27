@@ -2219,7 +2219,6 @@ export const useLatestAnnouncement = () => {
 
       return response.length > 0 ? response[0] : null;
     },
-    staleTime: 10 * 60 * 1000, // optional: 10 min cache
   });
 };
 

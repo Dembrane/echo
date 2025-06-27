@@ -11,12 +11,16 @@ import { useLatestAnnouncement } from "@/lib/query";
 import { theme } from "@/theme";
 import { useState } from "react";
 import { useAnnouncementDrawer } from "@/hooks/useAnnouncementDrawer";
+import { useLanguage } from "@/hooks/useLanguage";
+import { Markdown } from "@/components/common/Markdown";
+import { getTranslatedContent } from "@/hooks/useProcessedAnnouncements";
 
 export function TopAnnouncementBar() {
   const theme = useMantineTheme();
   const { data: announcement, isLoading } = useLatestAnnouncement();
   const [isClosed, setIsClosed] = useState(false);
   const { open } = useAnnouncementDrawer();
+  const { language } = useLanguage();
 
   // Only show if we have an urgent announcement and it's not closed
   if (
@@ -28,10 +32,7 @@ export function TopAnnouncementBar() {
     return null;
   }
 
-  // Get the first translation or fallback to empty string
-  const translation = announcement?.translations?.[0];
-  const displayText =
-    translation?.title || translation?.message || "Important announcement";
+  const { title } = getTranslatedContent(announcement, language);
 
   const handleClose = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -57,7 +58,7 @@ export function TopAnnouncementBar() {
         >
           <IconAlertTriangle size={20} />
         </ThemeIcon>
-        <Text>{displayText}</Text>
+        <Markdown content={title} />
       </Group>
 
       <ActionIcon

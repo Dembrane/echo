@@ -1,19 +1,30 @@
 import { useMemo } from "react";
 
+export const getTranslatedContent = (announcement: any, language: string) => {
+  const translation =
+    announcement.translations?.find(
+      (t: any) => t.languages_code === language && t.title,
+    ) ||
+    announcement.translations?.find((t: any) => t.languages_code === "en-US");
+
+  return {
+    title: translation?.title || "",
+    message: translation?.message || "",
+  };
+};
+
 export function useProcessedAnnouncements(
   announcements: Announcement[],
   language: string,
 ) {
   return useMemo(() => {
     return announcements.map((announcement) => {
-      const translation =
-        announcement.translations?.find((t) => t.languages_code === language) ||
-        announcement.translations?.[0];
+      const { title, message } = getTranslatedContent(announcement, language);
 
       return {
         id: announcement.id,
-        title: translation?.title || "",
-        message: translation?.message || "",
+        title,
+        message,
         created_at: announcement.created_at,
         expires_at: announcement.expires_at,
         level: announcement.level as "info" | "urgent",
