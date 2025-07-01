@@ -154,12 +154,12 @@ export const ParticipantBody = ({
         />
       )}
 
-      {ENABLE_CONVERSATION_HEALTH &&  && (
+      {ENABLE_CONVERSATION_HEALTH && conversationIssueBanner && (
         <TipBanner
-          icon={.icon}
-          message={.message}
-          tipLabel={.tipLabel}
-          color={.color}
+          icon={conversationIssueBanner.icon}
+          message={conversationIssueBanner.message}
+          tipLabel={conversationIssueBanner.tipLabel}
+          color={conversationIssueBanner.color}
         />
       )}
 
