@@ -25,6 +25,7 @@ import { useState, useEffect } from "react";
 import * as Sentry from "@sentry/react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useParams } from "react-router-dom";
+import { AnnouncementIcon } from "../announcement/AnnouncementIcon";
 import { Announcements } from "../announcement/Announcements";
 import { TopAnnouncementBar } from "../announcement/TopAnnouncementBar";
 
@@ -131,6 +132,7 @@ export const Header = () => {
 
         {!loading && isAuthenticated && user ? (
           <Group>
+            <AnnouncementIcon />
             <Announcements />
             <Menu withArrow arrowPosition="center">
               <Menu.Target>

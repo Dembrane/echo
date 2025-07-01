@@ -2186,42 +2186,49 @@ export const useLatestAnnouncement = () => {
   return useQuery({
     queryKey: ["announcements", "latest"],
     queryFn: async () => {
-      const response = await directus.request(
-        readItems("announcement", {
-          filter: {
-            _or: [
-              {
-                expires_at: {
-                  // @ts-expect-error
-                  _gte: new Date().toISOString(),
+      try {
+        const response = await directus.request(
+          readItems("announcement", {
+            filter: {
+              _or: [
+                {
+                  expires_at: {
+                    // @ts-ignore
+                    _gte: new Date().toISOString(),
+                  },
                 },
+                {
+                  expires_at: {
+                    _null: true,
+                  },
+                },
+              ],
+            },
+            fields: [
+              "id",
+              "created_at",
+              "expires_at",
+              "level",
+              {
+                translations: ["id", "languages_code", "title", "message"],
               },
               {
-                expires_at: {
-                  _null: true,
-                },
+                activity: ["id", "user_id", "announcement_activity", "read"],
               },
             ],
-          },
-          fields: [
-            "id",
-            "created_at",
-            "expires_at",
-            "level",
-            {
-              translations: ["id", "languages_code", "title", "message"],
-            },
-            {
-              activity: ["id", "user_id", "announcement_activity", "read"],
-            },
-          ],
-          sort: ["-created_at"],
-          limit: 1,
-        }),
-      );
+            sort: ["-created_at"],
+            limit: 1,
+          }),
+        );
 
-      return response.length > 0 ? response[0] : null;
+        return response.length > 0 ? response[0] : null;
+      } catch (error) {
+        console.error("Error fetching latest announcement:", error);
+        return null;
+      }
     },
+    retry: 2,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
 
@@ -2241,47 +2248,55 @@ export const useInfiniteAnnouncements = ({
   return useInfiniteQuery({
     queryKey: ["announcements", "infinite", query],
     queryFn: async ({ pageParam = 0 }) => {
-      const response = await directus.request(
-        readItems("announcement", {
-          filter: {
-            _or: [
-              {
-                expires_at: {
-                  // @ts-expect-error
-                  _gte: new Date().toISOString(),
+      try {
+        const response = await directus.request(
+          readItems("announcement", {
+            filter: {
+              _or: [
+                {
+                  expires_at: {
+                    // @ts-ignore
+                    _gte: new Date().toISOString(),
+                  },
                 },
+                {
+                  expires_at: {
+                    _null: true,
+                  },
+                },
+              ],
+            },
+            fields: [
+              "id",
+              "created_at",
+              "expires_at",
+              "level",
+              {
+                translations: ["id", "languages_code", "title", "message"],
               },
               {
-                expires_at: {
-                  _null: true,
-                },
+                activity: ["id", "user_id", "announcement_activity", "read"],
               },
             ],
-          },
-          fields: [
-            "id",
-            "created_at",
-            "expires_at",
-            "level",
-            {
-              translations: ["id", "languages_code", "title", "message"],
-            },
-            {
-              activity: ["id", "user_id", "announcement_activity", "read"],
-            },
-          ],
-          sort: ["-created_at"],
-          limit: initialLimit,
-          offset: pageParam * initialLimit,
-          ...query,
-        }),
-      );
+            sort: ["-created_at"],
+            limit: initialLimit,
+            offset: pageParam * initialLimit,
+            ...query,
+          }),
+        );
 
-      return {
-        announcements: response,
-        nextOffset:
-          response.length === initialLimit ? pageParam + 1 : undefined,
-      };
+        return {
+          announcements: response,
+          nextOffset:
+            response.length === initialLimit ? pageParam + 1 : undefined,
+        };
+      } catch (error) {
+        console.error("Error fetching announcements:", error);
+        return {
+          announcements: [],
+          nextOffset: undefined,
+        };
+      }
     },
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextOffset,
@@ -2298,27 +2313,85 @@ export const useMarkAnnouncementAsReadMutation = () => {
       announcementIds: string[];
       userId?: string;
     }) => {
-      return directus.request(
-        createItems(
-          "announcement_activity",
-          announcementIds.map((id) => ({
-            announcement_activity: id,
-            read: true,
-            ...(userId ? { user_id: userId } : {}),
-          })) as any,
-        ),
-      );
+      try {
+        return await directus.request(
+          createItems(
+            "announcement_activity",
+            announcementIds.map((id) => ({
+              announcement_activity: id,
+              read: true,
+              ...(userId ? { user_id: userId } : {}),
+            })) as any,
+          ),
+        );
+      } catch (error) {
+        console.error("Error in mutationFn:", error);
+        return {
+          success: false,
+          error: error,
+        };
+      }
     },
     onSuccess: () => {
-      // Invalidate both regular and infinite announcements queries
+      // Invalidate all announcement queries
       queryClient.invalidateQueries({ queryKey: ["announcements"] });
       queryClient.invalidateQueries({
         queryKey: ["announcements", "infinite"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["announcements", "unread"],
       });
     },
     onError: (error) => {
       console.error("Error marking announcement as read:", error);
       toast.error("Failed to mark announcement as read");
     },
+  });
+};
+
+export const useUnreadAnnouncements = () => {
+  return useQuery({
+    queryKey: ["announcements", "unread"],
+    queryFn: async () => {
+      try {
+        const unreadAnnouncements = await directus.request(
+          aggregate("announcement", {
+            aggregate: { count: "*" },
+            query: {
+              filter: {
+                _and: [
+                  {
+                    activity: {
+                      _null: true,
+                    },
+                  },
+                  {
+                    _or: [
+                      {
+                        expires_at: {
+                          _gte: new Date().toISOString(),
+                        },
+                      },
+                      {
+                        expires_at: {
+                          _null: true,
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          }),
+        );
+
+        return unreadAnnouncements?.[0]?.count ?? 0;
+      } catch (error) {
+        console.error("Error fetching unread announcements count:", error);
+        return 0;
+      }
+    },
+    retry: 2,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };

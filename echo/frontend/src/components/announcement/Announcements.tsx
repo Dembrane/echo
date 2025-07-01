@@ -1,15 +1,11 @@
 import {
-  ActionIcon,
   Box,
-  Indicator,
   ScrollArea,
   Stack,
   Text,
   Loader,
   Center,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { IconSpeakerphone } from "@tabler/icons-react";
 import { Trans } from "@lingui/react/macro";
 import { useState, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
@@ -26,7 +22,7 @@ import { useProcessedAnnouncements } from "@/hooks/useProcessedAnnouncements";
 import { useAnnouncementDrawer } from "@/hooks/useAnnouncementDrawer";
 
 export const Announcements = () => {
-  const { isOpen, open, close } = useAnnouncementDrawer();
+  const { isOpen, close } = useAnnouncementDrawer();
   const { language } = useLanguage();
   const markAsReadMutation = useMarkAnnouncementAsReadMutation();
   const [markingAsReadId, setMarkingAsReadId] = useState<string | null>(null);
@@ -102,32 +98,7 @@ export const Announcements = () => {
   }
 
   return (
-    <>
-      <Box onClick={open} className="cursor-pointer">
-        <Indicator
-          inline
-          offset={4}
-          color="blue"
-          label={
-            <Box px={2} className="text-xs">
-              {unreadCount}
-            </Box>
-          }
-          size={20}
-          disabled={unreadCount === 0}
-          withBorder
-        >
-          <ActionIcon color="gray" variant="transparent">
-            {isLoading ? (
-              <Loader size="xs" />
-            ) : (
-              <IconSpeakerphone className="me-1 rotate-[330deg]" />
-            )}
-          </ActionIcon>
-        </Indicator>
-      </Box>
-
-      <Drawer
+    <Drawer
         opened={isOpen}
         onClose={close}
         position="right"
@@ -184,6 +155,5 @@ export const Announcements = () => {
           </ScrollArea>
         </Stack>
       </Drawer>
-    </>
   );
 };
