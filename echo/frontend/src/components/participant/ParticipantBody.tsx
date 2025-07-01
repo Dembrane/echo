@@ -154,17 +154,17 @@ export const ParticipantBody = ({
         />
       )}
 
-      {ENABLE_CONVERSATION_HEALTH && conversationIssueBanner && (
+      {ENABLE_CONVERSATION_HEALTH &&  && (
         <TipBanner
-          icon={conversationIssueBanner.icon}
-          message={conversationIssueBanner.message}
-          tipLabel={conversationIssueBanner.tipLabel}
-          color={conversationIssueBanner.color}
+          icon={.icon}
+          message={.message}
+          tipLabel={.tipLabel}
+          color={.color}
         />
       )}
 
       <img
-        className={`w-full object-contain ${isOnline ? "animate-pulse duration-1000" : "grayscale filter"} ${ENABLE_CONVERSATION_HEALTH && !conversationIssueBanner ? "saturate-200" : ENABLE_CONVERSATION_HEALTH && conversationIssueBanner ? "opacity-50" : "saturate-200"}`}
+        className={`w-full object-contain ${isOnline ? "animate-pulse duration-1000" : "grayscale filter"} ${ENABLE_CONVERSATION_HEALTH && conversationIssueBanner ? "opacity-50" : "saturate-200"}`}
         src={WelcomeImage}
       />
       {projectQuery.data && (
