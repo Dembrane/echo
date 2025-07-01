@@ -35,3 +35,6 @@ export const PLAUSIBLE_API_HOST =
   import.meta.env.VITE_PLAUSIBLE_API_HOST ?? "https://plausible.io";
 
 export const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === "1";
+
+export const ENABLE_CONVERSATION_HEALTH = 
+  import.meta.env.VITE_ENABLE_CONVERSATION_HEALTH === "1";
