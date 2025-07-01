@@ -23,6 +23,7 @@ import { IconExclamationCircle } from "@tabler/icons-react";
 import { TipBanner } from "../common/TipBanner";
 import { IconWifiOff } from "@tabler/icons-react";
 import { useConversationIssueBanner } from "@/hooks/useConversationIssueBanner";
+import { ENABLE_CONVERSATION_HEALTH } from "@/config";
 
 export const ParticipantBody = ({
   projectId,
@@ -52,7 +53,7 @@ export const ParticipantBody = ({
     sseConnectionHealthy,
     lastPingTime,
     conversationIssue,
-  } = useConversationsHealthStream([conversationId]);
+  } = useConversationsHealthStream(ENABLE_CONVERSATION_HEALTH ? [conversationId] : undefined);
 
   const combinedMessages = useMemo(() => {
     const userChunks = (chunksQuery.data ?? []).map((chunk) => ({
@@ -112,7 +113,7 @@ export const ParticipantBody = ({
   }, []);
 
   const conversationIssueBanner = useConversationIssueBanner(
-    conversationIssue ?? "NONE",
+    ENABLE_CONVERSATION_HEALTH ? (conversationIssue ?? "NONE") : "NONE",
   );
 
   return (
@@ -127,10 +128,12 @@ export const ParticipantBody = ({
 
       {recordingStarted && (
         <div className="flex min-h-[2.25rem] justify-center transition-opacity duration-500 ease-in-out">
-          <ConnectionHealthStatus
-            isOnline={isOnline}
-            sseConnectionHealthy={sseConnectionHealthy}
-          />
+          {ENABLE_CONVERSATION_HEALTH && (
+            <ConnectionHealthStatus
+              isOnline={isOnline}
+              sseConnectionHealthy={sseConnectionHealthy}
+            />
+          )}
         </div>
       )}
 
@@ -143,7 +146,7 @@ export const ParticipantBody = ({
         />
       )}
 
-      {!sseConnectionHealthy && (
+      {ENABLE_CONVERSATION_HEALTH && !sseConnectionHealthy && (
         <TipBanner
           icon={IconExclamationCircle}
           message={t`Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists`}
@@ -151,7 +154,7 @@ export const ParticipantBody = ({
         />
       )}
 
-      {conversationIssueBanner && (
+      {ENABLE_CONVERSATION_HEALTH && conversationIssueBanner && (
         <TipBanner
           icon={conversationIssueBanner.icon}
           message={conversationIssueBanner.message}
@@ -161,7 +164,7 @@ export const ParticipantBody = ({
       )}
 
       <img
-        className={`w-full object-contain ${isOnline ? "animate-pulse duration-1000" : "grayscale filter"} ${!conversationIssueBanner ? "saturate-200" : "opacity-50"}`}
+        className={`w-full object-contain ${isOnline ? "animate-pulse duration-1000" : "grayscale filter"} ${ENABLE_CONVERSATION_HEALTH && conversationIssueBanner ? "opacity-50" : "saturate-200"}`}
         src={WelcomeImage}
       />
       {projectQuery.data && (
