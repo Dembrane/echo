@@ -7,10 +7,7 @@ import {
   ThemeIcon,
 } from "@mantine/core";
 import { IconAlertTriangle, IconX } from "@tabler/icons-react";
-import {
-  useLatestAnnouncement,
-  useMarkAnnouncementAsReadMutation,
-} from "@/lib/query";
+import { useLatestAnnouncement, useMarkAsReadMutation } from "@/lib/query";
 import { theme } from "@/theme";
 import { useState } from "react";
 import { useAnnouncementDrawer } from "@/hooks/useAnnouncementDrawer";
@@ -23,7 +20,7 @@ import { t } from "@lingui/core/macro";
 export function TopAnnouncementBar() {
   const theme = useMantineTheme();
   const { data: announcement, isLoading } = useLatestAnnouncement();
-  const markAsReadMutation = useMarkAnnouncementAsReadMutation();
+  const markAsReadMutation = useMarkAsReadMutation();
   const [isClosed, setIsClosed] = useState(false);
   const { open } = useAnnouncementDrawer();
   const { language } = useLanguage();
@@ -53,14 +50,9 @@ export function TopAnnouncementBar() {
 
     // Mark announcement as read
     if (announcement.id) {
-      try {
-        await markAsReadMutation.mutateAsync({
-          announcementIds: [announcement.id],
-        });
-      } catch (error) {
-        console.error("Failed to mark announcement as read:", error);
-        toast.error(t`Failed to mark announcement as read`);
-      }
+      markAsReadMutation.mutate({
+        announcementId: announcement.id,
+      });
     }
   };
 

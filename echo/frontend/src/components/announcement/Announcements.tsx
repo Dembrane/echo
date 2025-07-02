@@ -6,8 +6,8 @@ import { Drawer } from "../common/Drawer";
 import { AnnouncementItem } from "./AnnouncementItem";
 import {
   useInfiniteAnnouncements,
-  useMarkAnnouncementAsReadMutation,
-  useMarkAllAnnouncementsAsReadMutation,
+  useMarkAsReadMutation,
+  useMarkAllAsReadMutation,
 } from "@/lib/query";
 import { useLanguage } from "@/hooks/useLanguage";
 import { AnnouncementSkeleton } from "./AnnouncementSkeleton";
@@ -18,9 +18,8 @@ import { useAnnouncementDrawer } from "@/hooks/useAnnouncementDrawer";
 export const Announcements = () => {
   const { isOpen, close } = useAnnouncementDrawer();
   const { language } = useLanguage();
-  const markAsReadMutation = useMarkAnnouncementAsReadMutation();
-  const markAllAsReadMutation = useMarkAllAnnouncementsAsReadMutation();
-  const [markingAsReadId, setMarkingAsReadId] = useState<string | null>(null);
+  const markAsReadMutation = useMarkAsReadMutation();
+  const markAllAsReadMutation = useMarkAllAsReadMutation();
   const [openedOnce, setOpenedOnce] = useState(false);
 
   const { ref: loadMoreRef, inView } = useInView();
@@ -67,26 +66,13 @@ export const Announcements = () => {
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleMarkAsRead = async (id: string) => {
-    setMarkingAsReadId(id);
-
-    try {
-      await markAsReadMutation.mutateAsync({
-        announcementIds: [id],
-      });
-    } catch (error) {
-      console.error("Failed to mark announcement as read:", error);
-    } finally {
-      setMarkingAsReadId(null);
-    }
+    markAsReadMutation.mutate({
+      announcementId: id,
+    });
   };
 
   const handleMarkAllAsRead = async () => {
-    try {
-      // Use the new dedicated mutation for marking all as read
-      await markAllAsReadMutation.mutateAsync();
-    } catch (error) {
-      console.error("Failed to mark all announcements as read:", error);
-    }
+    markAllAsReadMutation.mutate();
   };
 
   if (isError) {
@@ -131,7 +117,6 @@ export const Announcements = () => {
                     announcement={announcement}
                     onMarkAsRead={handleMarkAsRead}
                     index={index}
-                    isMarkingAsRead={markingAsReadId === announcement.id}
                     ref={
                       index === processedAnnouncements.length - 1
                         ? loadMoreRef

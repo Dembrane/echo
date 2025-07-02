@@ -2306,26 +2306,23 @@ export const useInfiniteAnnouncements = ({
   });
 };
 
-export const useMarkAnnouncementAsReadMutation = () => {
+export const useMarkAsReadMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({
-      announcementIds,
+      announcementId,
       userId,
     }: {
-      announcementIds: string[];
+      announcementId: string;
       userId?: string;
     }) => {
       try {
         return await directus.request(
-          createItems(
-            "announcement_activity",
-            announcementIds.map((id) => ({
-              announcement_activity: id,
-              read: true,
-              ...(userId ? { user_id: userId } : {}),
-            })) as any,
-          ),
+          createItems("announcement_activity", {
+            announcement_activity: announcementId,
+            read: true,
+            ...(userId ? { user_id: userId } : {}),
+          } as any),
         );
       } catch (error) {
         console.error("Error in mutationFn:", error);
@@ -2335,25 +2332,94 @@ export const useMarkAnnouncementAsReadMutation = () => {
         };
       }
     },
-    onSuccess: () => {
-      // Invalidate all announcement queries
-      queryClient.invalidateQueries({ queryKey: ["announcements"] });
-      queryClient.invalidateQueries({
-        queryKey: ["announcements", "infinite"],
+    onMutate: async ({ announcementId }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["announcements"] });
+
+      // Snapshot the previous value
+      const previousAnnouncements = queryClient.getQueriesData({
+        queryKey: ["announcements"],
       });
-      queryClient.invalidateQueries({
-        queryKey: ["announcements", "unread"],
-      });
-      toast.success(t`Announcement marked as read successfully!`);
+
+      // Optimistically update infinite announcements
+      queryClient.setQueriesData(
+        { queryKey: ["announcements", "infinite"] },
+        (old: any) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page: any) => ({
+              ...page,
+              announcements: page.announcements.map((announcement: any) => {
+                if (announcement.id === announcementId) {
+                  return {
+                    ...announcement,
+                    activity: [
+                      {
+                        id: `temp-${announcement.id}`,
+                        read: true,
+                        user_id: null,
+                        announcement_activity: announcement.id,
+                      },
+                    ],
+                  };
+                }
+                return announcement;
+              }),
+            })),
+          };
+        },
+      );
+
+      // // Optimistically update latest announcement
+      queryClient.setQueriesData(
+        { queryKey: ["announcements", "latest"] },
+        (old: any) => {
+          if (!old || old.id !== announcementId) return old;
+          return {
+            ...old,
+            activity: [
+              {
+                id: `temp-${old.id}`,
+                read: true,
+                user_id: null,
+                announcement_activity: old.id,
+              },
+            ],
+          };
+        },
+      );
+
+      // // Optimistically update unread count
+      queryClient.setQueriesData(
+        { queryKey: ["announcements", "unread"] },
+        (old: number) => {
+          if (typeof old !== "number") return old;
+          return Math.max(0, old - 1);
+        },
+      );
+
+      // Return a context object with the snapshotted value
+      return { previousAnnouncements };
     },
-    onError: (error) => {
-      console.error("Error marking announcement as read:", error);
+    onError: (err, _newAnnouncementId, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousAnnouncements) {
+        context.previousAnnouncements.forEach(([queryKey, data]) => {
+          queryClient.setQueriesData({ queryKey }, data);
+        });
+      }
+      console.error("Error marking announcement as read:", err);
       toast.error(t`Failed to mark announcement as read`);
+    },
+    onSettled: () => {
+      // refetch after error or success to ensure cache consistency
+      queryClient.invalidateQueries({ queryKey: ["announcements"] });
     },
   });
 };
 
-export const useMarkAllAnnouncementsAsReadMutation = () => {
+export const useMarkAllAsReadMutation = () => {
   const queryClient = useQueryClient();
   const { data: currentUser } = useCurrentUser();
 
@@ -2416,21 +2482,78 @@ export const useMarkAllAnnouncementsAsReadMutation = () => {
         throw error;
       }
     },
-    onSuccess: () => {
-      // Invalidate all announcement queries
-      queryClient.invalidateQueries({ queryKey: ["announcements"] });
-      queryClient.invalidateQueries({
-        queryKey: ["announcements", "infinite"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["announcements", "unread"],
+    onMutate: async () => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["announcements"] });
+
+      // Snapshot the previous value
+      const previousAnnouncements = queryClient.getQueriesData({
+        queryKey: ["announcements"],
       });
 
-      toast.success(t`All announcements marked as read successfully!`);
+      // Optimistically update infinite announcements - mark all as read
+      queryClient.setQueriesData(
+        { queryKey: ["announcements", "infinite"] },
+        (old: any) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page: any) => ({
+              ...page,
+              announcements: page.announcements.map((announcement: any) => ({
+                ...announcement,
+                activity: [
+                  {
+                    id: `temp-all-${announcement.id}`,
+                    read: true,
+                    user_id: currentUser?.id || null,
+                    announcement_activity: announcement.id,
+                  },
+                ],
+              })),
+            })),
+          };
+        },
+      );
+
+      // Optimistically update latest announcement
+      queryClient.setQueriesData(
+        { queryKey: ["announcements", "latest"] },
+        (old: any) => {
+          if (!old) return old;
+          return {
+            ...old,
+            activity: [
+              {
+                id: `temp-all-${old.id}`,
+                read: true,
+                user_id: currentUser?.id || null,
+                announcement_activity: old.id,
+              },
+            ],
+          };
+        },
+      );
+
+      // Optimistically update unread count to 0
+      queryClient.setQueriesData({ queryKey: ["announcements", "unread"] }, 0);
+
+      // Return a context object with the snapshotted value
+      return { previousAnnouncements };
     },
-    onError: (error) => {
-      console.error("Error marking all announcements as read:", error);
+    onError: (err, _variables, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousAnnouncements) {
+        context.previousAnnouncements.forEach(([queryKey, data]) => {
+          queryClient.setQueriesData({ queryKey }, data);
+        });
+      }
+      console.error("Error marking all announcements as read:", err);
       toast.error(t`Failed to mark all announcements as read`);
+    },
+    onSettled: () => {
+      // refetch after error or success to ensure cache consistency
+      queryClient.invalidateQueries({ queryKey: ["announcements"] });
     },
   });
 };

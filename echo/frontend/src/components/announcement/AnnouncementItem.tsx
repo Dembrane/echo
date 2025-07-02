@@ -5,7 +5,6 @@ import {
   Stack,
   Text,
   useMantineTheme,
-  Loader,
   ThemeIcon,
 } from "@mantine/core";
 import {
@@ -33,7 +32,6 @@ interface AnnouncementItemProps {
   announcement: Announcement;
   onMarkAsRead: (id: string) => void;
   index: number;
-  isMarkingAsRead?: boolean;
 }
 
 // TODO: need to check this function
@@ -63,7 +61,7 @@ const formatDate = (date: string | Date | null | undefined): string => {
 export const AnnouncementItem = forwardRef<
   HTMLDivElement,
   AnnouncementItemProps
->(({ announcement, onMarkAsRead, index, isMarkingAsRead = false }, ref) => {
+>(({ announcement, onMarkAsRead, index }, ref) => {
   const theme = useMantineTheme();
   const [showMore, setShowMore] = useState(false);
   const [showReadMoreButton, setShowReadMoreButton] = useState(false);
@@ -173,17 +171,8 @@ export const AnnouncementItem = forwardRef<
                     onClick={() => {
                       onMarkAsRead(announcement.id);
                     }}
-                    loading={isMarkingAsRead}
-                    disabled={isMarkingAsRead}
                   >
-                    {isMarkingAsRead ? (
-                      <Group gap="xs">
-                        <Loader size="xs" />
-                        <Trans>Marking...</Trans>
-                      </Group>
-                    ) : (
-                      <Trans>Mark as read</Trans>
-                    )}
+                    <Trans>Mark as read</Trans>
                   </Button>
                 )}
               </Box>
