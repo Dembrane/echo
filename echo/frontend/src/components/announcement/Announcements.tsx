@@ -56,8 +56,6 @@ export const Announcements = () => {
     language,
   );
 
-  const unreadAnnouncements = processedAnnouncements.filter((a) => !a.read);
-
   // Load more announcements when user scrolls to bottom
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) {
