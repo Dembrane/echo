@@ -1,11 +1,4 @@
-import {
-  Box,
-  ScrollArea,
-  Stack,
-  Text,
-  Loader,
-  Center,
-} from "@mantine/core";
+import { Box, ScrollArea, Stack, Text, Loader, Center } from "@mantine/core";
 import { Trans } from "@lingui/react/macro";
 import { useState, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
@@ -26,8 +19,16 @@ export const Announcements = () => {
   const { language } = useLanguage();
   const markAsReadMutation = useMarkAnnouncementAsReadMutation();
   const [markingAsReadId, setMarkingAsReadId] = useState<string | null>(null);
+  const [openedOnce, setOpenedOnce] = useState(false);
 
   const { ref: loadMoreRef, inView } = useInView();
+
+  // Track when drawer is opened for the first time
+  useEffect(() => {
+    if (isOpen && !openedOnce) {
+      setOpenedOnce(true);
+    }
+  }, [isOpen, openedOnce]);
 
   const {
     data: announcementsData,
@@ -41,6 +42,7 @@ export const Announcements = () => {
     options: {
       initialLimit: 10,
     },
+    enabled: openedOnce,
   });
 
   // Flatten all announcements from all pages
@@ -99,61 +101,61 @@ export const Announcements = () => {
 
   return (
     <Drawer
-        opened={isOpen}
-        onClose={close}
-        position="right"
-        title={
-          <AnnouncementDrawerHeader
-            unreadCount={unreadCount}
-            onClose={close}
-            onMarkAllAsRead={handleMarkAllAsRead}
-            isPending={markAsReadMutation.isPending}
-          />
-        }
-        classNames={{
-          title: "px-3 w-full",
-          header: "border-b",
-          body: "p-0",
-        }}
-        withCloseButton={false}
-      >
-        <Stack h="100%">
-          <ScrollArea className="flex-1">
-            <Stack gap="0">
-              {isLoading ? (
-                <AnnouncementSkeleton />
-              ) : processedAnnouncements.length === 0 ? (
-                <Box p="md">
-                  <Text c="dimmed" ta="center">
-                    <Trans>No announcements available</Trans>
-                  </Text>
-                </Box>
-              ) : (
-                <>
-                  {processedAnnouncements.map((announcement, index) => (
-                    <AnnouncementItem
-                      key={announcement.id}
-                      announcement={announcement}
-                      onMarkAsRead={handleMarkAsRead}
-                      index={index}
-                      isMarkingAsRead={markingAsReadId === announcement.id}
-                      ref={
-                        index === processedAnnouncements.length - 1
-                          ? loadMoreRef
-                          : undefined
-                      }
-                    />
-                  ))}
-                  {isFetchingNextPage && (
-                    <Center>
-                      <Loader size="sm" />
-                    </Center>
-                  )}
-                </>
-              )}
-            </Stack>
-          </ScrollArea>
-        </Stack>
-      </Drawer>
+      opened={isOpen}
+      onClose={close}
+      position="right"
+      title={
+        <AnnouncementDrawerHeader
+          unreadCount={unreadCount}
+          onClose={close}
+          onMarkAllAsRead={handleMarkAllAsRead}
+          isPending={markAsReadMutation.isPending}
+        />
+      }
+      classNames={{
+        title: "px-3 w-full",
+        header: "border-b",
+        body: "p-0",
+      }}
+      withCloseButton={false}
+    >
+      <Stack h="100%">
+        <ScrollArea className="flex-1">
+          <Stack gap="0">
+            {isLoading ? (
+              <AnnouncementSkeleton />
+            ) : processedAnnouncements.length === 0 ? (
+              <Box p="md">
+                <Text c="dimmed" ta="center">
+                  <Trans>No announcements available</Trans>
+                </Text>
+              </Box>
+            ) : (
+              <>
+                {processedAnnouncements.map((announcement, index) => (
+                  <AnnouncementItem
+                    key={announcement.id}
+                    announcement={announcement}
+                    onMarkAsRead={handleMarkAsRead}
+                    index={index}
+                    isMarkingAsRead={markingAsReadId === announcement.id}
+                    ref={
+                      index === processedAnnouncements.length - 1
+                        ? loadMoreRef
+                        : undefined
+                    }
+                  />
+                ))}
+                {isFetchingNextPage && (
+                  <Center>
+                    <Loader size="sm" />
+                  </Center>
+                )}
+              </>
+            )}
+          </Stack>
+        </ScrollArea>
+      </Stack>
+    </Drawer>
   );
 };

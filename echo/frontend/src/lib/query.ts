@@ -2237,16 +2237,19 @@ export const useInfiniteAnnouncements = ({
   options = {
     initialLimit: 10,
   },
+  enabled = true,
 }: {
   query?: Partial<Query<CustomDirectusTypes, Announcement>>;
   options?: {
     initialLimit?: number;
   };
+  enabled?: boolean;
 }) => {
   const { initialLimit = 10 } = options;
 
   return useInfiniteQuery({
     queryKey: ["announcements", "infinite", query],
+    enabled,
     queryFn: async ({ pageParam = 0 }) => {
       try {
         const response = await directus.request(
