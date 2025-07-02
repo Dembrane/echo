@@ -145,8 +145,8 @@ export const Announcements = () => {
                   />
                 ))}
                 {isFetchingNextPage && (
-                  <Center>
-                    <Loader size="sm" />
+                  <Center py="xl">
+                    <Loader size="md" />
                   </Center>
                 )}
               </>
