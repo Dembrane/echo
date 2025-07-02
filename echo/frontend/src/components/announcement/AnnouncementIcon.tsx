@@ -29,8 +29,8 @@ export const AnnouncementIcon = () => {
   const isLoading = isLoadingLatest || isLoadingUnread;
 
   return (
-    <Group gap="sm" align="center">
-      <Box onClick={open} className="cursor-pointer">
+    <Group onClick={open} gap="sm" align="center" className="cursor-pointer">
+      <Box>
         <Indicator
           inline
           offset={4}
