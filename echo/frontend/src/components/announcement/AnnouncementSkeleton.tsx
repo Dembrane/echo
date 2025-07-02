@@ -1,20 +1,66 @@
-import { Box } from "@mantine/core";
-
-import { Stack } from "@mantine/core";
+import { Box, Group, Stack, ThemeIcon } from "@mantine/core";
+import { IconAlertTriangle, IconInfoCircle } from "@tabler/icons-react";
 
 export const AnnouncementSkeleton = () => (
-  <Stack gap="md" p="md">
-    {[1, 2, 3].map((i) => (
-      <Box key={i} className="animate-pulse">
-        <Box
-          className="mb-2 h-4 rounded bg-gray-200"
-          style={{ width: "60%" }}
-        />
-        <Box
-          className="mb-1 h-3 rounded bg-gray-200"
-          style={{ width: "100%" }}
-        />
-        <Box className="h-3 rounded bg-gray-200" style={{ width: "80%" }} />
+  <Stack gap="0" p="0">
+    {[1, 2, 3, 4, 5, 6].map((i) => (
+      <Box
+        key={i}
+        className="group animate-pulse border-b border-l-4 border-gray-100 border-l-gray-50/50 bg-gray-50/50 p-4 transition-all duration-200 hover:bg-blue-50"
+      >
+        <Stack gap="md">
+          <Group gap="sm" align="flex-start">
+            <ThemeIcon size={25} variant="light" color="gray" radius="xl">
+              {/* Use a generic icon skeleton */}
+              <IconInfoCircle size={20} color="#e5e7eb" />
+            </ThemeIcon>
+            <Stack gap="md" style={{ flex: 1 }}>
+              <Group justify="space-between" align="center" mt="sm">
+                <Box style={{ flex: 1 }}>
+                  <Box
+                    className="h-4 rounded bg-gray-200"
+                    style={{ width: "60%" }}
+                  />
+                </Box>
+                <Group gap="sm" align="center">
+                  <Box
+                    className="h-3 rounded bg-gray-200"
+                    style={{ width: 40, height: 12 }}
+                  />
+                  <Box
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      backgroundColor: "#e0e7ef",
+                    }}
+                  />
+                </Group>
+              </Group>
+              <Stack gap="xs">
+                <Box
+                  className="h-3 rounded bg-gray-200"
+                  style={{ width: "100%" }}
+                />
+                <Box
+                  className="h-3 rounded bg-gray-200"
+                  style={{ width: "80%" }}
+                />
+              </Stack>
+              <Group justify="space-between" align="center">
+                <Box
+                  className="h-3 rounded bg-gray-200"
+                  style={{ width: 80, height: 16 }}
+                />
+                <Box
+                  ml="auto"
+                  className="h-3 rounded bg-gray-200"
+                  style={{ width: 60, height: 16 }}
+                />
+              </Group>
+            </Stack>
+          </Group>
+        </Stack>
       </Box>
     ))}
   </Stack>
