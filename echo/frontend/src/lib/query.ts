@@ -2610,7 +2610,7 @@ export const useUnreadAnnouncements = () => {
         const count =
           parseInt(unreadAnnouncements?.[0]?.count?.toString() ?? "0") -
           parseInt(activities?.[0]?.count?.toString() ?? "0");
-        return count;
+        return Math.max(0, count);
       } catch (error) {
         console.error("Error fetching unread announcements count:", error);
         return 0;

@@ -1,4 +1,5 @@
 import useSessionStorageState from "use-session-storage-state";
+import { useEffect } from "react";
 
 export const useAnnouncementDrawer = () => {
   const [isOpen, setIsOpen] = useSessionStorageState(
@@ -7,6 +8,11 @@ export const useAnnouncementDrawer = () => {
       defaultValue: false,
     },
   );
+
+  // Reset drawer state on page reload
+  useEffect(() => {
+    setIsOpen(false);
+  }, []);
 
   const open = () => setIsOpen(true);
   const close = () => setIsOpen(false);
