@@ -34,16 +34,17 @@ export const AnnouncementDrawerHeader = ({
             {unreadCount} <Trans>unread announcements</Trans>
           </Text>
         )}
-        <Button
-          variant="subtle"
-          size="xs"
-          onClick={onMarkAllAsRead}
-          disabled={unreadCount === 0 || isPending}
-          loading={isPending}
-          className={`${unreadCount === 0 ? "ml-auto hidden" : ""}`}
-        >
-          <Trans>Mark all read</Trans>
-        </Button>
+        {unreadCount && parseInt(unreadCount) > 0 && (
+          <Button
+            variant="subtle"
+            size="xs"
+            onClick={onMarkAllAsRead}
+            disabled={isPending}
+            loading={isPending}
+          >
+            <Trans>Mark all read</Trans>
+          </Button>
+        )}
       </Group>
     </Stack>
   );

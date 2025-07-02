@@ -41,7 +41,7 @@ export const AnnouncementIcon = () => {
             </Box>
           }
           size={20}
-          disabled={(unreadCount || 0) === 0}
+          disabled={(parseInt(unreadCount || "0") || 0) === 0}
           withBorder
         >
           <ActionIcon color="gray" variant="transparent">
