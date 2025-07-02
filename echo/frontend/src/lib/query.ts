@@ -2452,30 +2452,16 @@ export const useUnreadAnnouncements = () => {
             aggregate: { count: "*" },
             query: {
               filter: {
-                _and: [
+                _or: [
                   {
-                    // Only count announcements that don't have activity records for this user
-                    activity: {
-                      _none: {
-                        user_id: {
-                          _eq: currentUser.id,
-                        },
-                      },
+                    expires_at: {
+                      _gte: new Date().toISOString(),
                     },
                   },
                   {
-                    _or: [
-                      {
-                        expires_at: {
-                          _gte: new Date().toISOString(),
-                        },
-                      },
-                      {
-                        expires_at: {
-                          _null: true,
-                        },
-                      },
-                    ],
+                    expires_at: {
+                      _null: true,
+                    },
                   },
                 ],
               },
@@ -2483,7 +2469,25 @@ export const useUnreadAnnouncements = () => {
           }),
         );
 
-        return unreadAnnouncements?.[0]?.count ?? 0;
+        const activities = await directus.request(
+          aggregate("announcement_activity", {
+            aggregate: { count: "*" },
+            query: {
+              filter: {
+                _and: [
+                  {
+                    user_id: { _eq: currentUser.id },
+                  },
+                ],
+              },
+            },
+          }),
+        );
+
+        const count =
+          parseInt(unreadAnnouncements?.[0]?.count?.toString() ?? "0") -
+          parseInt(activities?.[0]?.count?.toString() ?? "0");
+        return count;
       } catch (error) {
         console.error("Error fetching unread announcements count:", error);
         return 0;

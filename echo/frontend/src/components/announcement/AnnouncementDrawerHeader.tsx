@@ -29,12 +29,12 @@ export const AnnouncementDrawerHeader = ({
         </ActionIcon>
       </Group>
       <Group gap="xs" justify="space-between" w="100%">
-        {unreadCount && parseInt(unreadCount) > 0 && (
+        {unreadCount && unreadCount > 0 && (
           <Text size="sm" c="dimmed">
             {unreadCount} <Trans>unread announcements</Trans>
           </Text>
         )}
-        {unreadCount && parseInt(unreadCount) > 0 && (
+        {unreadCount && unreadCount > 0 && (
           <Button
             variant="subtle"
             size="xs"
