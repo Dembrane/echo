@@ -7,6 +7,7 @@ import { AnnouncementItem } from "./AnnouncementItem";
 import {
   useInfiniteAnnouncements,
   useMarkAnnouncementAsReadMutation,
+  useMarkAllAnnouncementsAsReadMutation,
 } from "@/lib/query";
 import { useLanguage } from "@/hooks/useLanguage";
 import { AnnouncementSkeleton } from "./AnnouncementSkeleton";
@@ -18,6 +19,7 @@ export const Announcements = () => {
   const { isOpen, close } = useAnnouncementDrawer();
   const { language } = useLanguage();
   const markAsReadMutation = useMarkAnnouncementAsReadMutation();
+  const markAllAsReadMutation = useMarkAllAnnouncementsAsReadMutation();
   const [markingAsReadId, setMarkingAsReadId] = useState<string | null>(null);
   const [openedOnce, setOpenedOnce] = useState(false);
 
@@ -80,15 +82,8 @@ export const Announcements = () => {
 
   const handleMarkAllAsRead = async () => {
     try {
-      // Extract all unread announcement IDs
-      const unreadIds = unreadAnnouncements.map(
-        (announcement) => announcement.id,
-      );
-
-      // Mark all unread announcements as read in one call
-      await markAsReadMutation.mutateAsync({
-        announcementIds: unreadIds as string[],
-      });
+      // Use the new dedicated mutation for marking all as read
+      await markAllAsReadMutation.mutateAsync();
     } catch (error) {
       console.error("Failed to mark all announcements as read:", error);
     }
@@ -107,7 +102,7 @@ export const Announcements = () => {
         <AnnouncementDrawerHeader
           onClose={close}
           onMarkAllAsRead={handleMarkAllAsRead}
-          isPending={markAsReadMutation.isPending}
+          isPending={markAllAsReadMutation.isPending}
         />
       }
       classNames={{

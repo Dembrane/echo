@@ -2344,10 +2344,93 @@ export const useMarkAnnouncementAsReadMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ["announcements", "unread"],
       });
+      toast.success(t`Announcement marked as read successfully!`);
     },
     onError: (error) => {
       console.error("Error marking announcement as read:", error);
-      toast.error("Failed to mark announcement as read");
+      toast.error(t`Failed to mark announcement as read`);
+    },
+  });
+};
+
+export const useMarkAllAnnouncementsAsReadMutation = () => {
+  const queryClient = useQueryClient();
+  const { data: currentUser } = useCurrentUser();
+
+  return useMutation({
+    mutationFn: async () => {
+      try {
+        // Step 1: Find all announcement IDs that don't have activity for this user
+        const unreadAnnouncements = await directus.request(
+          readItems("announcement", {
+            filter: {
+              _and: [
+                {
+                  // Only get announcements that don't have activity records for this user
+                  activity: {
+                    _none: {
+                      user_id: {
+                        _eq: currentUser?.id,
+                      },
+                    },
+                  },
+                },
+                {
+                  _or: [
+                    {
+                      expires_at: {
+                        // @ts-ignore
+                        _gte: new Date().toISOString(),
+                      },
+                    },
+                    {
+                      expires_at: {
+                        _null: true,
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+            fields: ["id"],
+          }),
+        );
+
+        // Step 2: Create activity records for all unread announcements
+        if (unreadAnnouncements.length > 0) {
+          return await directus.request(
+            createItems(
+              "announcement_activity",
+              unreadAnnouncements.map((announcement) => ({
+                announcement_activity: announcement.id,
+                read: true,
+                ...(currentUser?.id ? { user_id: currentUser.id } : {}),
+              })) as any,
+            ),
+          );
+        }
+
+        return [];
+      } catch (error) {
+        console.error("Error in markAllAsRead mutationFn:", error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      // Invalidate all announcement queries
+      queryClient.invalidateQueries({ queryKey: ["announcements"] });
+      queryClient.invalidateQueries({
+        queryKey: ["announcements", "infinite"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["announcements", "unread"],
+      });
+
+      toast.success(t`All announcements marked as read successfully!`);
+    },
+    onError: (error) => {
+      console.error("Error marking all announcements as read:", error);
+      toast.error(t`Failed to mark all announcements as read`);
     },
   });
 };
