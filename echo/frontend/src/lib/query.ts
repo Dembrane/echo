@@ -2353,10 +2353,17 @@ export const useMarkAnnouncementAsReadMutation = () => {
 };
 
 export const useUnreadAnnouncements = () => {
+  const { data: currentUser } = useCurrentUser();
+
   return useQuery({
-    queryKey: ["announcements", "unread"],
+    queryKey: ["announcements", "unread", currentUser?.id],
     queryFn: async () => {
       try {
+        // If no user is logged in, return 0
+        if (!currentUser?.id) {
+          return 0;
+        }
+
         const unreadAnnouncements = await directus.request(
           aggregate("announcement", {
             aggregate: { count: "*" },
@@ -2364,8 +2371,13 @@ export const useUnreadAnnouncements = () => {
               filter: {
                 _and: [
                   {
+                    // Only count announcements that don't have activity records for this user
                     activity: {
-                      _null: true,
+                      _none: {
+                        user_id: {
+                          _eq: currentUser.id,
+                        },
+                      },
                     },
                   },
                   {
@@ -2394,6 +2406,7 @@ export const useUnreadAnnouncements = () => {
         return 0;
       }
     },
+    enabled: !!currentUser?.id, // Only run query if user is logged in
     retry: 2,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
