@@ -56,7 +56,6 @@ export const Announcements = () => {
   );
 
   const unreadAnnouncements = processedAnnouncements.filter((a) => !a.read);
-  const unreadCount = unreadAnnouncements.length;
 
   // Load more announcements when user scrolls to bottom
   useEffect(() => {
@@ -106,7 +105,6 @@ export const Announcements = () => {
       position="right"
       title={
         <AnnouncementDrawerHeader
-          unreadCount={unreadCount}
           onClose={close}
           onMarkAllAsRead={handleMarkAllAsRead}
           isPending={markAsReadMutation.isPending}
