@@ -24,6 +24,7 @@ export const AnnouncementDrawerHeader = ({
           variant="transparent"
           onClick={onClose}
           aria-label="Close drawer"
+          className="focus:outline-none"
         >
           <IconX size={18} color="gray" />
         </ActionIcon>
