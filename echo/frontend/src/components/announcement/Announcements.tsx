@@ -8,7 +8,7 @@ import {
   useInfiniteAnnouncements,
   useMarkAsReadMutation,
   useMarkAllAsReadMutation,
-} from "@/lib/query";
+} from "./hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { AnnouncementSkeleton } from "./AnnouncementSkeleton";
 import { AnnouncementDrawerHeader } from "./AnnouncementDrawerHeader";

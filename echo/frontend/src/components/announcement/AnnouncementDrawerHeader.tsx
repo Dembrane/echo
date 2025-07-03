@@ -1,7 +1,7 @@
 import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Button, Group, Stack, Text } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
-import { useUnreadAnnouncements } from "@/lib/query";
+import { useUnreadAnnouncements } from "./hooks";
 
 export const AnnouncementDrawerHeader = ({
   onClose,

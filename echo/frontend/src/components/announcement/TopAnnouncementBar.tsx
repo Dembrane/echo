@@ -7,7 +7,7 @@ import {
   ThemeIcon,
 } from "@mantine/core";
 import { IconAlertTriangle, IconX } from "@tabler/icons-react";
-import { useLatestAnnouncement, useMarkAsReadMutation } from "@/lib/query";
+import { useLatestAnnouncement, useMarkAsReadMutation } from "./hooks";
 import { theme } from "@/theme";
 import { useState, useEffect } from "react";
 import { useAnnouncementDrawer } from "@/hooks/useAnnouncementDrawer";
@@ -28,7 +28,7 @@ export function TopAnnouncementBar() {
   // Check if the announcement has been read by the current user
   // Directus already filters activity data for the current user
   const isRead = announcement?.activity?.some(
-    (activity) => activity.read === true,
+    (activity: any) => activity.read === true,
   );
 
   useEffect(() => {
