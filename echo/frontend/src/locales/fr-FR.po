@@ -64,6 +64,14 @@ msgstr "{0}"
 msgid "{0} Conversations • Edited {1}"
 msgstr "{0} Conversations • Modifié le {1}"
 
+#: src/components/announcement/utils/dateUtils.ts:22
+msgid "{diffInDays}d ago"
+msgstr "{diffInDays} jours"
+
+#: src/components/announcement/utils/dateUtils.ts:19
+msgid "{diffInHours}h ago"
+msgstr "{diffInHours} heures"
+
 #: src/routes/participant/ParticipantConversation.tsx:213
 msgid "{minutes} minutes and {seconds} seconds"
 msgstr "{minutes} minutes et {seconds} secondes"
@@ -209,6 +217,10 @@ msgstr ""
 "\n"
 "Note : Si les similitudes/différences sont trop superficielles, veuillez me le signaler, nous avons besoin de matériel plus complexe à analyser."
 
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:22
+msgid "Announcements"
+msgstr "Annonces"
+
 #: src/components/conversation/ConversationDangerZone.tsx:24
 msgid "Are you sure you want to delete this conversation? This action cannot be undone."
 msgstr "Êtes-vous sûr de vouloir supprimer cette conversation ? Cette action ne peut pas être annulée."
@@ -268,7 +280,7 @@ msgstr "Aspects"
 #~ msgid "Assistant is typing..."
 #~ msgstr "L'assistant écrit..."
 
-#: src/components/conversation/AutoSelectConversations.tsx:182
+#: src/components/conversation/AutoSelectConversations.tsx:188
 msgid "Audio Processing In Progress"
 msgstr "Traitement audio en cours"
 
@@ -282,7 +294,7 @@ msgstr "Les enregistrements audio seront supprimés après 30 jours à partir de
 msgid "Audio Tip"
 msgstr "Conseil audio"
 
-#: src/components/conversation/AutoSelectConversations.tsx:156
+#: src/components/conversation/AutoSelectConversations.tsx:162
 msgid "Auto-select"
 msgstr "Sélection automatique"
 
@@ -290,11 +302,11 @@ msgstr "Sélection automatique"
 #~ msgid "Auto-select sources to add to the chat"
 #~ msgstr "Sélectionner les sources à ajouter à la conversation"
 
-#: src/components/conversation/AutoSelectConversations.tsx:162
+#: src/components/conversation/AutoSelectConversations.tsx:168
 msgid "Automatically includes relevant conversations for analysis without manual selection"
 msgstr "Inclut automatiquement les conversations pertinentes pour l'analyse sans sélection manuelle"
 
-#: src/components/conversation/AutoSelectConversations.tsx:121
+#: src/components/conversation/AutoSelectConversations.tsx:127
 msgid "Available"
 msgstr "Disponible"
 
@@ -426,13 +438,13 @@ msgstr "Connexion saine"
 msgid "Connection unhealthy"
 msgstr "Connexion défectueuse"
 
-#: src/components/conversation/AutoSelectConversations.tsx:209
+#: src/components/conversation/AutoSelectConversations.tsx:215
 msgid "Contact sales"
 msgstr "Contactez votre représentant commercial"
 
 #: src/components/conversation/AutoSelectConversations.tsx:97
-msgid "Contact your sales representative to activate this feature today!"
-msgstr "Contactez votre représentant commercial pour activer cette fonction aujourd'hui !"
+#~ msgid "Contact your sales representative to activate this feature today!"
+#~ msgstr "Contactez votre représentant commercial pour activer cette fonction aujourd'hui !"
 
 #: src/components/project/ProjectBasicEdit.tsx:133
 msgid "Context"
@@ -556,7 +568,7 @@ msgstr "Voulez-vous contribuer à ce projet ?"
 msgid "Do you want to stay in the loop?"
 msgstr "Voulez-vous rester dans la boucle ?"
 
-#: src/components/layout/Header.tsx:152
+#: src/components/layout/Header.tsx:160
 msgid "Documentation"
 msgstr "Documentation"
 
@@ -664,7 +676,7 @@ msgstr "Activez cette fonctionnalité pour permettre aux participants de demande
 #~ msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Get Reply\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 #~ msgstr "Activez cette fonctionnalité pour permettre aux participants de demander des réponses AI pendant leur conversation. Les participants peuvent cliquer sur \"Dembrane Réponse\" après avoir enregistre leurs pensées pour recevoir un feedback contextuel, encourager une réflexion plus profonde et une engagement plus élevé. Une période de cooldown s'applique entre les demandes."
 
-#: src/components/conversation/AutoSelectConversations.tsx:111
+#: src/components/conversation/AutoSelectConversations.tsx:117
 msgid "Enabled"
 msgstr "Activé"
 
@@ -751,6 +763,14 @@ msgstr "Échec de la suppression de la réponse"
 #: src/routes/participant/ParticipantConversation.tsx:250
 msgid "Failed to finish conversation. Please try again."
 msgstr "Échec de la fin de la conversation. Veuillez réessayer."
+
+#: src/components/announcement/hooks/index.ts:403
+msgid "Failed to mark all announcements as read"
+msgstr "Échec du marquage de toutes les annonces comme lues"
+
+#: src/components/announcement/hooks/index.ts:264
+msgid "Failed to mark announcement as read"
+msgstr "Échec du marquage de l'annonce comme lue"
 
 #: src/routes/project/conversation/ProjectConversationOverview.tsx:51
 msgid "Failed to regenerate the summary. Please try again later."
@@ -841,7 +861,7 @@ msgid "Grid view"
 msgstr "Vue en grille"
 
 #. placeholder {0}: user.first_name ?? "User"
-#: src/components/layout/Header.tsx:139
+#: src/components/layout/Header.tsx:147
 msgid "Hi, {0}"
 msgstr "Bonjour, {0}"
 
@@ -937,6 +957,10 @@ msgstr "Rejoindre {0} sur Dembrane"
 msgid "Just a moment"
 msgstr "Un instant"
 
+#: src/components/announcement/utils/dateUtils.ts:18
+msgid "Just now"
+msgstr "Juste maintenant"
+
 #: src/components/project/ProjectPortalEditor.tsx:285
 msgid "Language"
 msgstr "Langue"
@@ -1008,13 +1032,21 @@ msgstr "Connexion | Dembrane"
 msgid "Login as an existing user"
 msgstr "Se connecter en tant qu'utilisateur existant"
 
-#: src/components/layout/Header.tsx:159
+#: src/components/layout/Header.tsx:167
 msgid "Logout"
 msgstr "Déconnexion"
 
 #: src/components/conversation/ConversationAccordion.tsx:557
 msgid "Longest First"
 msgstr "Plus long en premier"
+
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:47
+msgid "Mark all read"
+msgstr "Marquer toutes comme lues"
+
+#: src/components/announcement/AnnouncementItem.tsx:148
+msgid "Mark as read"
+msgstr "Marquer comme lue"
 
 #: src/components/chat/ChatTemplatesMenu.tsx:66
 msgid "Meeting Notes"
@@ -1065,7 +1097,7 @@ msgstr "Nom A-Z"
 msgid "Name Z-A"
 msgstr "Nom Z-A"
 
-#: src/components/conversation/AutoSelectConversations.tsx:144
+#: src/components/conversation/AutoSelectConversations.tsx:150
 msgid "New"
 msgstr "Nouveau"
 
@@ -1094,6 +1126,10 @@ msgstr "Plus récent en premier"
 #: src/components/participant/ParticipantOnboardingCards.tsx:285
 msgid "Next"
 msgstr "Suivant"
+
+#: src/components/announcement/Announcements.tsx:107
+msgid "No announcements available"
+msgstr "Aucune annonce disponible"
 
 #: src/components/chat/ChatAccordion.tsx:129
 msgid "No chats found. Start a chat using the \"Ask\" button."
@@ -1292,7 +1328,7 @@ msgstr "Veuillez vous connecter pour continuer."
 #~ msgid "Please provide a concise summary of the following provided in the context."
 #~ msgstr "Veuillez fournir un résumé succinct des éléments suivants fournis dans le contexte."
 
-#: src/components/participant/ParticipantBody.tsx:182
+#: src/components/participant/ParticipantBody.tsx:185
 msgid "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon."
 msgstr "Veuillez enregistrer votre réponse en cliquant sur le bouton \"Enregistrer\" ci-dessous. Vous pouvez également choisir de répondre par texte en cliquant sur l'icône texte."
 
@@ -1509,7 +1545,7 @@ msgstr "Prompt de réponse"
 msgid "Report"
 msgstr "Rapport"
 
-#: src/components/layout/Header.tsx:71
+#: src/components/layout/Header.tsx:74
 msgid "Report an issue"
 msgstr "Signaler un problème"
 
@@ -1726,6 +1762,14 @@ msgstr "Afficher le lecteur audio"
 msgid "Show duration"
 msgstr "Afficher la durée"
 
+#: src/components/announcement/AnnouncementItem.tsx:125
+msgid "Show less"
+msgstr "Afficher moins"
+
+#: src/components/announcement/AnnouncementItem.tsx:130
+msgid "Show more"
+msgstr "Afficher plus"
+
 #: src/components/common/ReferencesIconButton.tsx:21
 #: src/components/common/ReferencesIconButton.tsx:28
 msgid "Show references"
@@ -1743,7 +1787,7 @@ msgstr "Se connecter avec Google"
 msgid "Skip"
 msgstr "Passer"
 
-#: src/components/conversation/AutoSelectConversations.tsx:186
+#: src/components/conversation/AutoSelectConversations.tsx:192
 msgid "Some conversations are still being processed. Auto-select will work optimally once audio processing is complete."
 msgstr "Certaines conversations sont encore en cours de traitement. La sélection automatique fonctionnera de manière optimale une fois le traitement audio terminé."
 
@@ -1764,7 +1808,7 @@ msgstr "Une erreur s'est produite"
 msgid "Something went wrong while uploading the file: {0}"
 msgstr "Une erreur s'est produite lors de l'envoi du fichier : {0}"
 
-#: src/components/participant/ParticipantBody.tsx:149
+#: src/components/participant/ParticipantBody.tsx:152
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Une erreur s'est produite avec la conversation. Veuillez réessayer ou contacter le support si le problème persiste"
 
@@ -1996,7 +2040,7 @@ msgstr "Cela créera une nouvelle conversation avec la même audio mais une tran
 msgid "Time Created"
 msgstr "Date de création"
 
-#: src/components/participant/ParticipantBody.tsx:141
+#: src/components/participant/ParticipantBody.tsx:144
 msgid "Tip"
 msgstr "Conseil"
 
@@ -2105,6 +2149,14 @@ msgstr "Tapez un message..."
 msgid "Type your response here"
 msgstr "Tapez votre réponse ici"
 
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:36
+msgid "unread announcement"
+msgstr "annonce non lue"
+
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:36
+msgid "unread announcements"
+msgstr "annonces non lues"
+
 #: src/components/form/FormLabel.tsx:18
 msgid "Unsaved changes"
 msgstr "Modifications non enregistrées"
@@ -2134,11 +2186,11 @@ msgstr "Mettre à jour le rapport pour inclure les données les plus récentes"
 msgid "Update your report to include the latest changes in your project. The link to share the report would remain the same."
 msgstr "Mettre à jour votre rapport pour inclure les dernières modifications de votre projet. Le lien pour partager le rapport restera le même."
 
-#: src/components/conversation/AutoSelectConversations.tsx:131
+#: src/components/conversation/AutoSelectConversations.tsx:137
 msgid "Upgrade"
 msgstr "Mettre à niveau"
 
-#: src/components/conversation/AutoSelectConversations.tsx:198
+#: src/components/conversation/AutoSelectConversations.tsx:204
 msgid "Upgrade to unlock Auto-select and analyze 10x more conversations in half the time—no more manual selection, just deeper insights instantly."
 msgstr "Mettre à niveau pour débloquer la sélection automatique et analyser 10 fois plus de conversations en moitié du temps — plus de sélection manuelle, juste des insights plus profonds instantanément."
 
@@ -2189,7 +2241,7 @@ msgstr "Utilisez Shift + Entrée pour ajouter une nouvelle ligne"
 msgid "View"
 msgstr "Vue"
 
-#: src/components/participant/ParticipantBody.tsx:226
+#: src/components/participant/ParticipantBody.tsx:229
 msgid "View your responses"
 msgstr "Voir vos réponses"
 
@@ -2225,7 +2277,7 @@ msgstr "Nous testerons votre microphone pour vous assurer la meilleure expérien
 msgid "We’re picking up some silence. Try speaking up so your voice comes through clearly."
 msgstr "Nous entendons un peu de silence. Essayez de parler plus fort pour que votre voix soit claire."
 
-#: src/components/participant/ParticipantBody.tsx:124
+#: src/components/participant/ParticipantBody.tsx:125
 msgid "Welcome"
 msgstr "Bienvenue"
 
@@ -2270,7 +2322,7 @@ msgstr "Vous pouvez également choisir d'enregistrer une autre conversation."
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "Vous devez vous connecter avec le même fournisseur que vous avez utilisé pour vous inscrire. Si vous rencontrez des problèmes, veuillez contacter le support."
 
-#: src/components/participant/ParticipantBody.tsx:140
+#: src/components/participant/ParticipantBody.tsx:143
 msgid "You seem to be offline, please check your internet connection"
 msgstr "Vous semblez être hors ligne, veuillez vérifier votre connexion internet"
 
@@ -2286,7 +2338,7 @@ msgstr "Votre bibliothèque est vide. Créez une bibliothèque pour voir vos pre
 msgid "Your response has been recorded. You may now close this tab."
 msgstr "Votre réponse a été enregistrée. Vous pouvez maintenant fermer cette page."
 
-#: src/components/participant/ParticipantBody.tsx:236
+#: src/components/participant/ParticipantBody.tsx:239
 msgid "Your responses"
 msgstr "Vos réponses"
 

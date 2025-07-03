@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Button, Group, Stack, Text } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
@@ -32,7 +33,7 @@ export const AnnouncementDrawerHeader = ({
       <Group gap="xs" justify="space-between" w="100%">
         {unreadCount && unreadCount > 0 && (
           <Text size="sm" c="dimmed">
-            {unreadCount} <Trans>unread announcements</Trans>
+            {unreadCount} {unreadCount === 1 ? t`unread announcement` : t`unread announcements`}
           </Text>
         )}
         {unreadCount && unreadCount > 0 && (
