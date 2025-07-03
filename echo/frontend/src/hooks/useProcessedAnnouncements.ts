@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 
-export const getTranslatedContent = (announcement: any, language: string) => {
+export const getTranslatedContent = (announcement: Announcement, language: string) => {
   const translation =
     announcement.translations?.find(
-      (t: any) => t.languages_code === language && t.title,
+      (t: AnnouncementTranslations) => t.languages_code === language && t.title,
     ) ||
-    announcement.translations?.find((t: any) => t.languages_code === "en-US");
+    announcement.translations?.find((t: AnnouncementTranslations) => t.languages_code === "en-US");
 
   return {
     title: translation?.title || "",
