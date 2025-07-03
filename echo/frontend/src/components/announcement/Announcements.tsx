@@ -96,6 +96,11 @@ export const Announcements = () => {
         body: "p-0",
       }}
       withCloseButton={false}
+      styles={{
+        content: {
+          maxWidth: "95%",
+        },
+      }}
     >
       <Stack h="100%">
         <ScrollArea className="flex-1">
