@@ -78,11 +78,11 @@ export function TopAnnouncementBar() {
 
   return (
     <Box
-      className="relative flex w-full cursor-pointer items-center justify-center p-3 text-center"
+      className="relative flex w-full cursor-pointer items-center justify-center px-4 py-3 text-center"
       bg={theme.colors.blue[0]}
       onClick={handleBarClick}
     >
-      <Group justify="center" gap="md" wrap="nowrap">
+      <Group justify="center" gap="md" wrap="nowrap" className="pr-9">
         <ThemeIcon
           size={25}
           variant="transparent"
