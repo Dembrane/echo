@@ -75,7 +75,7 @@ export function TopAnnouncementBar() {
         >
           <IconAlertTriangle size={20} />
         </ThemeIcon>
-        <Markdown content={title} />
+        <Markdown content={title} className="line-clamp-1" />
       </Group>
 
       <ActionIcon
