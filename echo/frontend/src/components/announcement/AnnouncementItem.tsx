@@ -17,7 +17,7 @@ import {
 import { Trans } from "@lingui/react/macro";
 import { useEffect, useRef, useState, forwardRef } from "react";
 import { Markdown } from "@/components/common/Markdown";
-import { formatDate } from "./utils/dateUtils";
+import { useFormatDate } from "./utils/dateUtils";
 
 type Announcement = {
   id: string;
@@ -43,6 +43,7 @@ export const AnnouncementItem = forwardRef<
   const [showMore, setShowMore] = useState(false);
   const [showReadMoreButton, setShowReadMoreButton] = useState(false);
   const messageRef = useRef<HTMLDivElement>(null);
+  const formatDate = useFormatDate();
 
   useEffect(() => {
     if (messageRef.current) {

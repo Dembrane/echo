@@ -1,25 +1,38 @@
-import { t } from "@lingui/core/macro";
+import { formatRelative } from "date-fns";
+import { enUS, nl, de, fr, es } from "date-fns/locale";
+import { useLanguage } from "@/hooks/useLanguage";
 
-// TODO: need to improve this function in future according to requirements
-export const formatDate = (date: string | Date | null | undefined): string => {
-    if (!date) return "";
-  
-    // Convert string to Date object if needed
-    const dateObj = typeof date === "string" ? new Date(date) : date;
-  
-    // Check if the date is valid
-    if (isNaN(dateObj.getTime())) return "";
-  
-    const now = new Date();
-    const diffInHours = Math.floor(
-      (now.getTime() - dateObj.getTime()) / (1000 * 60 * 60),
-    );
-  
-    if (diffInHours < 1) return t`Just now`;
-    if (diffInHours < 24) return t`${diffInHours}h ago`;
-  
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) return t`${diffInDays}d ago`;
-  
-    return dateObj.toLocaleDateString();
+// Map of supported locales to date-fns locales
+const localeMap = {
+  "en-US": enUS,
+  "nl-NL": nl,
+  "de-DE": de,
+  "fr-FR": fr,
+  "es-ES": es,
+} as const;
+
+type SupportedLocale = keyof typeof localeMap;
+
+export const formatDate = (
+  date: string | Date | null | undefined,
+  locale: string = "en-US",
+): string => {
+  if (!date) return "";
+
+  const dateObj = typeof date === "string" ? new Date(date) : date;
+
+  if (isNaN(dateObj.getTime())) return "";
+
+  const currentLocale =
+    localeMap[locale as SupportedLocale] || localeMap["en-US"];
+
+  return formatRelative(dateObj, new Date(), { locale: currentLocale });
+};
+
+export const useFormatDate = () => {
+  const { i18n } = useLanguage();
+
+  return (date: string | Date | null | undefined): string => {
+    return formatDate(date, i18n.locale);
   };
+};
