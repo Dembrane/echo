@@ -22,7 +22,7 @@ export const AnnouncementIcon = () => {
   // Check if the latest announcement is unread
   const isUrgentUnread = latestAnnouncement
     ? !latestAnnouncement.activity?.some(
-        (activity: any) => activity.read === true,
+        (activity: AnnouncementActivity) => activity.read === true,
       )
     : false;
 
