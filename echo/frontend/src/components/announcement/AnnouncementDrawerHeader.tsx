@@ -27,7 +27,7 @@ export const AnnouncementDrawerHeader = ({
           aria-label="Close drawer"
           className="focus:outline-none"
         >
-          <IconX size={18} color="gray" />
+          <IconX color="gray" />
         </ActionIcon>
       </Group>
       <Group gap="xs" justify="space-between" w="100%">
