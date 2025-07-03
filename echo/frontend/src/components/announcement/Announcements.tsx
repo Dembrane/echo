@@ -90,6 +90,7 @@ export const Announcements = () => {
         />
       }
       classNames={{
+        content: "border-0",
         title: "px-3 w-full",
         header: "border-b",
         body: "p-0",
