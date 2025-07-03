@@ -14,6 +14,7 @@ import {
   IconInfoCircle,
   IconAlertTriangle,
 } from "@tabler/icons-react";
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useEffect, useRef, useState, forwardRef } from "react";
 import { Markdown } from "@/components/common/Markdown";
@@ -34,7 +35,7 @@ interface AnnouncementItemProps {
   index: number;
 }
 
-// TODO: need to check this function
+// TODO: need to improve this function in future according to requirements
 const formatDate = (date: string | Date | null | undefined): string => {
   if (!date) return "";
 
@@ -49,11 +50,11 @@ const formatDate = (date: string | Date | null | undefined): string => {
     (now.getTime() - dateObj.getTime()) / (1000 * 60 * 60),
   );
 
-  if (diffInHours < 1) return "Just now";
-  if (diffInHours < 24) return `${diffInHours}h ago`;
+  if (diffInHours < 1) return t`Just now`;
+  if (diffInHours < 24) return t`${diffInHours}h ago`;
 
   const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays < 7) return `${diffInDays}d ago`;
+  if (diffInDays < 7) return t`${diffInDays}d ago`;
 
   return dateObj.toLocaleDateString();
 };
