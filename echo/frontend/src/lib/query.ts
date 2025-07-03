@@ -2183,6 +2183,8 @@ export const useSubmitNotificationParticipant = () => {
 };
 
 export const useLatestAnnouncement = () => {
+  const { data: currentUser } = useCurrentUser();
+
   return useQuery({
     queryKey: ["announcements", "latest"],
     queryFn: async () => {
@@ -2216,6 +2218,16 @@ export const useLatestAnnouncement = () => {
                 activity: ["id", "user_id", "announcement_activity", "read"],
               },
             ],
+            deep: {
+              // @ts-ignore
+              activity: {
+                _filter: {
+                  user_id: {
+                    _eq: currentUser?.id,
+                  },
+                },
+              },
+            },
             sort: ["-created_at"],
             limit: 1,
           }),
@@ -2245,6 +2257,7 @@ export const useInfiniteAnnouncements = ({
   };
   enabled?: boolean;
 }) => {
+  const { data: currentUser } = useCurrentUser();
   const { initialLimit = 10 } = options;
 
   return useInfiniteQuery({
@@ -2281,6 +2294,16 @@ export const useInfiniteAnnouncements = ({
                 activity: ["id", "user_id", "announcement_activity", "read"],
               },
             ],
+            deep: {
+              // @ts-ignore
+              activity: {
+                _filter: {
+                  user_id: {
+                    _eq: currentUser?.id,
+                  },
+                },
+              },
+            },
             sort: ["-created_at"],
             limit: initialLimit,
             offset: pageParam * initialLimit,
