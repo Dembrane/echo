@@ -1,0 +1,25 @@
+{
+  "collection": "announcement_translations",
+  "field": "announcement_id",
+  "related_collection": "announcement",
+  "meta": {
+    "junction_field": "languages_code",
+    "many_collection": "announcement_translations",
+    "many_field": "announcement_id",
+    "one_allowed_collections": null,
+    "one_collection": "announcement",
+    "one_collection_field": null,
+    "one_deselect_action": "nullify",
+    "one_field": "translations",
+    "sort_field": null
+  },
+  "schema": {
+    "table": "announcement_translations",
+    "column": "announcement_id",
+    "foreign_key_table": "announcement",
+    "foreign_key_column": "id",
+    "constraint_name": "announcement_translations_announcement_id_foreign",
+    "on_update": "NO ACTION",
+    "on_delete": "SET NULL"
+  }
+}

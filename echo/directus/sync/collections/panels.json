@@ -21,6 +21,29 @@
     "_syncId": "10d105b0-55c3-4011-9e20-773f6a21ba80"
   },
   {
+    "dashboard": "d88e3e89-f55a-4279-87a5-159d8efc6dbc",
+    "name": "Announcement Readers Graph",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": null,
+    "type": "time-series",
+    "position_x": 27,
+    "position_y": 1,
+    "width": 25,
+    "height": 16,
+    "options": {
+      "collection": "announcement_activity",
+      "precision": "day",
+      "function": "countDistinct",
+      "dateField": "created_at",
+      "valueField": "user_id",
+      "range": "auto",
+      "missingData": "ignore"
+    },
+    "_syncId": "1479f9f7-00ba-428c-beef-50d9f53c34bf"
+  },
+  {
     "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
     "name": "report views weekly",
     "icon": null,
@@ -405,6 +428,26 @@
     "_syncId": "a3492153-f6b8-45ee-9796-c21a3019bfcc"
   },
   {
+    "dashboard": "d88e3e89-f55a-4279-87a5-159d8efc6dbc",
+    "name": "Total Read Announcements",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": "Shows the number of people who marked announcement as read",
+    "type": "metric",
+    "position_x": 1,
+    "position_y": 17,
+    "width": 24,
+    "height": 18,
+    "options": {
+      "collection": "announcement_activity",
+      "field": "read",
+      "sortField": "id",
+      "function": "count"
+    },
+    "_syncId": "a5a88e2e-38b4-43a5-b7b4-266bdbc8debb"
+  },
+  {
     "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
     "name": "reports / day",
     "icon": null,
@@ -470,6 +513,26 @@
       "valueField": "id"
     },
     "_syncId": "bb95bf10-c43b-401b-adb3-97ea6898f160"
+  },
+  {
+    "dashboard": "d88e3e89-f55a-4279-87a5-159d8efc6dbc",
+    "name": "Read By Users",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": "Shows the number of people who marked announcement as read",
+    "type": "metric",
+    "position_x": 1,
+    "position_y": 1,
+    "width": 24,
+    "height": 16,
+    "options": {
+      "collection": "announcement_activity",
+      "field": "user_id",
+      "sortField": "id",
+      "function": "countDistinct"
+    },
+    "_syncId": "c478c29d-8855-46e3-a84a-06c5350b1e11"
   },
   {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
@@ -654,6 +717,37 @@
       "donut": true
     },
     "_syncId": "de507cdf-90d9-4f7b-bc91-1e21921b0507"
+  },
+  {
+    "dashboard": "d88e3e89-f55a-4279-87a5-159d8efc6dbc",
+    "name": "Read Count Per User",
+    "icon": null,
+    "color": null,
+    "show_header": true,
+    "note": null,
+    "type": "metric-list",
+    "position_x": 27,
+    "position_y": 17,
+    "width": 25,
+    "height": 18,
+    "options": {
+      "collection": "announcement_activity",
+      "aggregateField": "read",
+      "groupByField": "user_id",
+      "aggregateFunction": "countDistinct",
+      "sortField": "user_id",
+      "displayTemplate": "{{user_created.first_name}}",
+      "aggregation": "countDistinct",
+      "xAxis": "read",
+      "yAxis": "sort",
+      "grouping": "user_id",
+      "column": "user_id",
+      "donut": true,
+      "legend": "bottom",
+      "showLabels": true,
+      "limit": null
+    },
+    "_syncId": "e73a55b3-f505-41d2-aa84-012f7d76ad0a"
   },
   {
     "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",

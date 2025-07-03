@@ -1,0 +1,29 @@
+{
+  "collection": "announcement",
+  "field": "activity",
+  "type": "alias",
+  "meta": {
+    "collection": "announcement",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "activity",
+    "group": null,
+    "hidden": false,
+    "interface": "list-o2m",
+    "note": null,
+    "options": {
+      "template": "{{user_created.first_name}} . {{user_created.last_name}} . {{read}}"
+    },
+    "readonly": false,
+    "required": false,
+    "sort": 11,
+    "special": [
+      "o2m"
+    ],
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  }
+}
