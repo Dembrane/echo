@@ -69,10 +69,6 @@ export const AnnouncementItem = forwardRef<
 
   useEffect(() => {
     if (messageRef.current) {
-      console.log(
-        messageRef.current.scrollHeight,
-        messageRef.current.clientHeight,
-      );
       setShowReadMoreButton(
         messageRef.current.scrollHeight !== messageRef.current.clientHeight,
       );
