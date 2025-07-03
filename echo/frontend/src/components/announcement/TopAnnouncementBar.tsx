@@ -9,7 +9,7 @@ import {
 import { IconAlertTriangle, IconX } from "@tabler/icons-react";
 import { useLatestAnnouncement, useMarkAsReadMutation } from "@/lib/query";
 import { theme } from "@/theme";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAnnouncementDrawer } from "@/hooks/useAnnouncementDrawer";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Markdown } from "@/components/common/Markdown";
@@ -30,6 +30,22 @@ export function TopAnnouncementBar() {
   const isRead = announcement?.activity?.some(
     (activity) => activity.read === true,
   );
+
+  useEffect(() => {
+    const shouldUseDefaultHeight =
+      isLoading ||
+      !announcement ||
+      announcement.level !== "urgent" ||
+      isClosed ||
+      isRead;
+
+    const height = shouldUseDefaultHeight ? "60px" : "112px";
+    const root = document.documentElement.style;
+
+    root.setProperty("--base-layout-height", `calc(100% - ${height})`, "important");
+    root.setProperty("--base-layout-padding", height, "important");
+    root.setProperty("--project-layout-height", `calc(100vh - ${height})`, "important");
+  }, [isLoading, announcement, isClosed, isRead]);
 
   // Only show if we have an urgent announcement, it's not closed, and it's not read
   if (
