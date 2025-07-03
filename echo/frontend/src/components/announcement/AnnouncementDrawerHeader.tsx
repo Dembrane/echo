@@ -15,6 +15,8 @@ export const AnnouncementDrawerHeader = ({
 }) => {
   const { data: unreadCount, isLoading: isLoadingUnread } =
     useUnreadAnnouncements();
+  const hasUnreadAnnouncements = unreadCount && unreadCount > 0; 
+  
   return (
     <Stack justify="space-between" align="flex-start" gap="xs">
       <Group justify="space-between" align="center" w="100%">
@@ -31,12 +33,12 @@ export const AnnouncementDrawerHeader = ({
         </ActionIcon>
       </Group>
       <Group gap="xs" justify="space-between" w="100%">
-        {unreadCount && unreadCount > 0 && (
+        {hasUnreadAnnouncements && (
           <Text size="sm" c="dimmed">
             {unreadCount} {unreadCount === 1 ? t`unread announcement` : t`unread announcements`}
           </Text>
         )}
-        {unreadCount && unreadCount > 0 && (
+        {hasUnreadAnnouncements && (
           <Button
             variant="subtle"
             size="xs"

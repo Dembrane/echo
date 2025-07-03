@@ -28,7 +28,7 @@ export function TopAnnouncementBar() {
   // Check if the announcement has been read by the current user
   // Directus already filters activity data for the current user
   const isRead = announcement?.activity?.some(
-    (activity: any) => activity.read === true,
+    (activity: AnnouncementActivity) => activity.read === true,
   );
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export function TopAnnouncementBar() {
     return null;
   }
 
-  const { title } = getTranslatedContent(announcement, language);
+  const { title } = getTranslatedContent(announcement as Announcement, language);
 
   const handleClose = async (e: React.MouseEvent) => {
     e.stopPropagation();

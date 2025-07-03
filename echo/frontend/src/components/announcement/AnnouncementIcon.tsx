@@ -16,7 +16,7 @@ export const AnnouncementIcon = () => {
 
   // Get latest urgent announcement message
   const urgentMessage = latestAnnouncement
-    ? getTranslatedContent(latestAnnouncement, language).message
+    ? getTranslatedContent(latestAnnouncement as Announcement, language).message
     : "";
 
   // Check if the latest announcement is unread
