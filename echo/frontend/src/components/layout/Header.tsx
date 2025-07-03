@@ -28,6 +28,7 @@ import { useParams } from "react-router-dom";
 import { AnnouncementIcon } from "../announcement/AnnouncementIcon";
 import { Announcements } from "../announcement/Announcements";
 import { TopAnnouncementBar } from "../announcement/TopAnnouncementBar";
+import { ENABLE_ANNOUNCEMENTS } from "@/config";
 
 const User = ({ name, email }: { name: string; email: string }) => (
   <div
@@ -104,7 +105,7 @@ export const Header = () => {
 
   return (
     <>
-      {isAuthenticated && user && <TopAnnouncementBar />}
+      {isAuthenticated && user && ENABLE_ANNOUNCEMENTS && <TopAnnouncementBar />}
     <Paper
       component="header"
       shadow="xs"
@@ -132,8 +133,12 @@ export const Header = () => {
 
         {!loading && isAuthenticated && user ? (
           <Group>
-            <AnnouncementIcon />
-            <Announcements />
+            {ENABLE_ANNOUNCEMENTS && (
+              <>
+                <AnnouncementIcon />
+                <Announcements />
+              </>
+            )}
             <Menu withArrow arrowPosition="center">
               <Menu.Target>
                 <ActionIcon color="gray" variant="transparent">
