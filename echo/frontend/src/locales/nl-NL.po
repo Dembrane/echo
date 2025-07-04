@@ -64,6 +64,14 @@ msgstr "{0}"
 msgid "{0} Conversations • Edited {1}"
 msgstr "{0} Gesprekken • Bewerkt {1}"
 
+#: src/components/announcement/utils/dateUtils.ts:22
+msgid "{diffInDays}d ago"
+msgstr "{diffInDays} dagen geleden"
+
+#: src/components/announcement/utils/dateUtils.ts:19
+msgid "{diffInHours}h ago"
+msgstr "{diffInHours} uur geleden"
+
 #: src/routes/participant/ParticipantConversation.tsx:213
 msgid "{minutes} minutes and {seconds} seconds"
 msgstr "{minutes} minuten en {seconds} seconden"
@@ -238,6 +246,10 @@ msgstr ""
 #~ msgid "Analyze!"
 #~ msgstr "Analyseer!"
 
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:22
+msgid "Announcements"
+msgstr "Meldingen"
+
 #: src/components/participant/ParticipantInitiateForm.tsx:49
 #~ msgid "Anonymous Participant"
 #~ msgstr "Anonieme deelnemer"
@@ -337,7 +349,7 @@ msgstr "Aspecten"
 #~ msgid "Attach as many documents as you like to analyse"
 #~ msgstr "Voeg zoveel documenten toe als je wilt analyseren"
 
-#: src/components/conversation/AutoSelectConversations.tsx:182
+#: src/components/conversation/AutoSelectConversations.tsx:188
 msgid "Audio Processing In Progress"
 msgstr "Audio verwerking in uitvoering"
 
@@ -355,7 +367,7 @@ msgstr "Audio opnames worden 30 dagen na de opname verwijderd"
 msgid "Audio Tip"
 msgstr "Audio Tip"
 
-#: src/components/conversation/AutoSelectConversations.tsx:156
+#: src/components/conversation/AutoSelectConversations.tsx:162
 msgid "Auto-select"
 msgstr "Automatisch selecteren"
 
@@ -363,11 +375,11 @@ msgstr "Automatisch selecteren"
 #~ msgid "Auto-select sources to add to the chat"
 #~ msgstr "Automatisch selecteren bronnen om toe te voegen aan het gesprek"
 
-#: src/components/conversation/AutoSelectConversations.tsx:162
+#: src/components/conversation/AutoSelectConversations.tsx:168
 msgid "Automatically includes relevant conversations for analysis without manual selection"
 msgstr "Automatisch relevante gesprekken voor analyse zonder handmatige selectie"
 
-#: src/components/conversation/AutoSelectConversations.tsx:121
+#: src/components/conversation/AutoSelectConversations.tsx:127
 msgid "Available"
 msgstr "Beschikbaar"
 
@@ -499,13 +511,13 @@ msgstr "Verbinding gezond"
 msgid "Connection unhealthy"
 msgstr "Verbinding ongezond"
 
-#: src/components/conversation/AutoSelectConversations.tsx:209
+#: src/components/conversation/AutoSelectConversations.tsx:215
 msgid "Contact sales"
 msgstr "Neem contact op met sales"
 
 #: src/components/conversation/AutoSelectConversations.tsx:97
-msgid "Contact your sales representative to activate this feature today!"
-msgstr "Neem contact op met je verkoper om deze functie vandaag te activeren!"
+#~ msgid "Contact your sales representative to activate this feature today!"
+#~ msgstr "Neem contact op met je verkoper om deze functie vandaag te activeren!"
 
 #: src/components/project/ProjectBasicEdit.tsx:133
 msgid "Context"
@@ -657,7 +669,7 @@ msgstr "Wil je op de hoogte blijven?"
 #~ msgid "Document was deleted"
 #~ msgstr "Document is verwijderd"
 
-#: src/components/layout/Header.tsx:152
+#: src/components/layout/Header.tsx:160
 msgid "Documentation"
 msgstr "Documentatie"
 
@@ -777,7 +789,7 @@ msgstr "Schakel deze functie in om deelnemers toe te staan om AI-geïnspireerde 
 #~ msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Get Reply\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 #~ msgstr "Schakel deze functie in om deelnemers toe te staan om AI-geïnspireerde reacties aan te vragen tijdens hun gesprek. Deelnemers kunnen na het opnemen van hun gedachten op \"Dembrane Reactie\" klikken om contextuele feedback te ontvangen, waardoor dieper reflectie en betrokkenheid wordt bevorderd. Een cooldownperiode wordt toegepast tussen aanvragen."
 
-#: src/components/conversation/AutoSelectConversations.tsx:111
+#: src/components/conversation/AutoSelectConversations.tsx:117
 msgid "Enabled"
 msgstr "Ingeschakeld"
 
@@ -872,6 +884,14 @@ msgstr "Fout bij het verwijderen van de reactie"
 #: src/routes/participant/ParticipantConversation.tsx:250
 msgid "Failed to finish conversation. Please try again."
 msgstr "Fout bij het voltooien van het gesprek. Probeer het opnieuw."
+
+#: src/components/announcement/hooks/index.ts:403
+msgid "Failed to mark all announcements as read"
+msgstr "Fout bij het markeren van alle meldingen als gelezen"
+
+#: src/components/announcement/hooks/index.ts:264
+msgid "Failed to mark announcement as read"
+msgstr "Fout bij het markeren van de melding als gelezen"
 
 #: src/routes/project/conversation/ProjectConversationOverview.tsx:51
 msgid "Failed to regenerate the summary. Please try again later."
@@ -979,7 +999,7 @@ msgstr "Rasterweergave"
 #~ msgstr "Hallo, ik ben vandaag je onderzoeksassistent. Om te beginnen upload je de documenten die je wilt analyseren."
 
 #. placeholder {0}: user.first_name ?? "User"
-#: src/components/layout/Header.tsx:139
+#: src/components/layout/Header.tsx:147
 msgid "Hi, {0}"
 msgstr "Hallo, {0}"
 
@@ -1095,6 +1115,10 @@ msgstr "Aansluiten {0} op Dembrane"
 msgid "Just a moment"
 msgstr "Gewoon een momentje"
 
+#: src/components/announcement/utils/dateUtils.ts:18
+msgid "Just now"
+msgstr "Net zojuist"
+
 #: src/components/project/ProjectPortalEditor.tsx:285
 msgid "Language"
 msgstr "Taal"
@@ -1166,13 +1190,21 @@ msgstr "Inloggen | Dembrane"
 msgid "Login as an existing user"
 msgstr "Inloggen als bestaande gebruiker"
 
-#: src/components/layout/Header.tsx:159
+#: src/components/layout/Header.tsx:167
 msgid "Logout"
 msgstr "Uitloggen"
 
 #: src/components/conversation/ConversationAccordion.tsx:557
 msgid "Longest First"
 msgstr "Langste eerst"
+
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:47
+msgid "Mark all read"
+msgstr "Alle als gelezen markeren"
+
+#: src/components/announcement/AnnouncementItem.tsx:148
+msgid "Mark as read"
+msgstr "Als gelezen markeren"
 
 #: src/components/chat/ChatTemplatesMenu.tsx:66
 msgid "Meeting Notes"
@@ -1223,7 +1255,7 @@ msgstr "Naam A-Z"
 msgid "Name Z-A"
 msgstr "Naam Z-A"
 
-#: src/components/conversation/AutoSelectConversations.tsx:144
+#: src/components/conversation/AutoSelectConversations.tsx:150
 msgid "New"
 msgstr "Nieuw"
 
@@ -1252,6 +1284,10 @@ msgstr "Nieuwste eerst"
 #: src/components/participant/ParticipantOnboardingCards.tsx:285
 msgid "Next"
 msgstr "Volgende"
+
+#: src/components/announcement/Announcements.tsx:107
+msgid "No announcements available"
+msgstr "Geen meldingen beschikbaar"
 
 #: src/components/chat/ChatAccordion.tsx:129
 msgid "No chats found. Start a chat using the \"Ask\" button."
@@ -1479,7 +1515,7 @@ msgstr "Log in om door te gaan."
 #~ msgid "Please provide a concise summary of the following provided in the context."
 #~ msgstr "Geef een korte samenvatting van het volgende dat in de context is verstrekt."
 
-#: src/components/participant/ParticipantBody.tsx:182
+#: src/components/participant/ParticipantBody.tsx:185
 msgid "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon."
 msgstr "Neem uw antwoord op door op de knop \"Opnemen\" hieronder te klikken. U kunt er ook voor kiezen om in tekst te reageren door op het teksticoon te klikken."
 
@@ -1712,7 +1748,7 @@ msgstr "Reactie prompt"
 msgid "Report"
 msgstr "Rapport"
 
-#: src/components/layout/Header.tsx:71
+#: src/components/layout/Header.tsx:74
 msgid "Report an issue"
 msgstr "Rapporteer een probleem"
 
@@ -1942,6 +1978,14 @@ msgstr "Toon audiospeler"
 msgid "Show duration"
 msgstr "Toon duur"
 
+#: src/components/announcement/AnnouncementItem.tsx:125
+msgid "Show less"
+msgstr "Minder tonen"
+
+#: src/components/announcement/AnnouncementItem.tsx:130
+msgid "Show more"
+msgstr "Meer tonen"
+
 #: src/components/common/ReferencesIconButton.tsx:21
 #: src/components/common/ReferencesIconButton.tsx:28
 msgid "Show references"
@@ -1959,7 +2003,7 @@ msgstr "Inloggen met Google"
 msgid "Skip"
 msgstr "Overslaan"
 
-#: src/components/conversation/AutoSelectConversations.tsx:186
+#: src/components/conversation/AutoSelectConversations.tsx:192
 msgid "Some conversations are still being processed. Auto-select will work optimally once audio processing is complete."
 msgstr "Sommige gesprekken worden nog verwerkt. Automatische selectie zal optimaal werken zodra de audioverwerking is voltooid."
 
@@ -1980,7 +2024,7 @@ msgstr "Er ging iets mis"
 msgid "Something went wrong while uploading the file: {0}"
 msgstr "Er ging iets mis tijdens het uploaden van het bestand: {0}"
 
-#: src/components/participant/ParticipantBody.tsx:149
+#: src/components/participant/ParticipantBody.tsx:152
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Er ging iets mis met het gesprek. Probeer het alstublieft opnieuw of neem contact op met de ondersteuning als het probleem blijft bestaan"
 
@@ -2236,7 +2280,7 @@ msgstr "Dit zal een nieuw gesprek maken met dezelfde audio maar een nieuwe trans
 msgid "Time Created"
 msgstr "Tijd gemaakt"
 
-#: src/components/participant/ParticipantBody.tsx:141
+#: src/components/participant/ParticipantBody.tsx:144
 msgid "Tip"
 msgstr "Tip"
 
@@ -2362,6 +2406,14 @@ msgstr "Typ een bericht..."
 msgid "Type your response here"
 msgstr "Typ hier uw reactie"
 
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:36
+msgid "unread announcement"
+msgstr "ongelezen melding"
+
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:36
+msgid "unread announcements"
+msgstr "ongelezen meldingen"
+
 #: src/components/form/FormLabel.tsx:18
 msgid "Unsaved changes"
 msgstr "Niet-opgeslagen wijzigingen"
@@ -2391,11 +2443,11 @@ msgstr "Bijwerken rapport om de meest recente gegevens te bevatten"
 msgid "Update your report to include the latest changes in your project. The link to share the report would remain the same."
 msgstr "Bijwerken rapport om de meest recente wijzigingen in uw project te bevatten. De link om het rapport te delen zou hetzelfde blijven."
 
-#: src/components/conversation/AutoSelectConversations.tsx:131
+#: src/components/conversation/AutoSelectConversations.tsx:137
 msgid "Upgrade"
 msgstr "Upgrade"
 
-#: src/components/conversation/AutoSelectConversations.tsx:198
+#: src/components/conversation/AutoSelectConversations.tsx:204
 msgid "Upgrade to unlock Auto-select and analyze 10x more conversations in half the time—no more manual selection, just deeper insights instantly."
 msgstr "Upgrade naar Auto-select en analyseer 10x meer gesprekken in de helft van de tijd - geen handmatige selectie meer, gewoon diepere inzichten direct."
 
@@ -2450,7 +2502,7 @@ msgstr "Gebruik Shift + Enter om een nieuwe regel toe te voegen"
 msgid "View"
 msgstr "View"
 
-#: src/components/participant/ParticipantBody.tsx:226
+#: src/components/participant/ParticipantBody.tsx:229
 msgid "View your responses"
 msgstr "Bekijk je reacties"
 
@@ -2486,7 +2538,7 @@ msgstr "We testen je microfoon om de beste ervaring voor iedereen in de sessie t
 msgid "We’re picking up some silence. Try speaking up so your voice comes through clearly."
 msgstr "We horen wat stilte. Probeer harder te spreken zodat je stem duidelijk blijft."
 
-#: src/components/participant/ParticipantBody.tsx:124
+#: src/components/participant/ParticipantBody.tsx:125
 msgid "Welcome"
 msgstr "Welkom"
 
@@ -2551,7 +2603,7 @@ msgstr "Je kunt er ook voor kiezen om een ander gesprek op te nemen."
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "Je moet inloggen met dezelfde provider die u gebruikte om u aan te melden. Als u problemen ondervindt, neem dan contact op met de ondersteuning."
 
-#: src/components/participant/ParticipantBody.tsx:140
+#: src/components/participant/ParticipantBody.tsx:143
 msgid "You seem to be offline, please check your internet connection"
 msgstr "Je lijkt offline te zijn, controleer je internetverbinding"
 
@@ -2567,7 +2619,7 @@ msgstr "Je bibliotheek is leeg. Maak een bibliotheek om je eerste inzichten te b
 msgid "Your response has been recorded. You may now close this tab."
 msgstr "Je reactie is opgenomen. Je kunt dit tabblad nu sluiten."
 
-#: src/components/participant/ParticipantBody.tsx:236
+#: src/components/participant/ParticipantBody.tsx:239
 msgid "Your responses"
 msgstr "Je reacties"
 

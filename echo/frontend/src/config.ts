@@ -38,3 +38,6 @@ export const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === "1";
 
 export const ENABLE_CONVERSATION_HEALTH = 
   import.meta.env.VITE_ENABLE_CONVERSATION_HEALTH === "1";
+
+export const ENABLE_ANNOUNCEMENTS = 
+  import.meta.env.VITE_ENABLE_ANNOUNCEMENTS === "1";
