@@ -1,7 +1,7 @@
 {
   "collection": "conversation_chunk",
   "field": "processing_status",
-  "type": "text",
+  "type": "alias",
   "meta": {
     "collection": "conversation_chunk",
     "conditions": null,
@@ -10,34 +10,23 @@
     "field": "processing_status",
     "group": null,
     "hidden": false,
-    "interface": "input-multiline",
+    "interface": "list-o2m",
     "note": null,
-    "options": null,
+    "options": {
+      "enableLink": true,
+      "sort": "timestamp",
+      "sortDirection": "-",
+      "template": "{{event}}{{message}}{{duration_ms}}"
+    },
     "readonly": false,
     "required": false,
-    "sort": 12,
-    "special": null,
+    "sort": 2,
+    "special": [
+      "o2m"
+    ],
     "translations": null,
     "validation": null,
     "validation_message": null,
     "width": "full"
-  },
-  "schema": {
-    "name": "processing_status",
-    "table": "conversation_chunk",
-    "data_type": "text",
-    "default_value": null,
-    "max_length": null,
-    "numeric_precision": null,
-    "numeric_scale": null,
-    "is_nullable": true,
-    "is_unique": false,
-    "is_indexed": false,
-    "is_primary_key": false,
-    "is_generated": false,
-    "generation_expression": null,
-    "has_auto_increment": false,
-    "foreign_key_table": null,
-    "foreign_key_column": null
   }
 }

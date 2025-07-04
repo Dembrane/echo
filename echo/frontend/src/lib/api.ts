@@ -31,10 +31,14 @@ interface CustomAxiosRequestConfig extends AxiosRequestConfig {
 }
 
 export const getParticipantProjectById = async (projectId: string) => {
-  return directusParticipant.request<Project>(
-    readItem("project", projectId, {
-      fields: ["*", { tags: ["id", "project_id", "text"] }],
-    }),
+  return apiNoAuth.get<unknown, Project>(
+    `/participant/projects/${projectId}`,
+  );
+};
+
+export const getParticipantConversationById = async (projectId: string, conversationId: string) => {
+  return apiNoAuth.get<unknown, Conversation>(
+    `/participant/projects/${projectId}/conversations/${conversationId}`,
   );
 };
 
@@ -311,105 +315,125 @@ export const initiateConversation = async (payload: {
   );
 };
 
-// Utility function to normalize audio MIME types and extensions
-const normalizeAudioFile = async (
-  input: Blob | File,
-): Promise<{
-  normalizedBlob: Blob;
-  extension: string;
-  mimeType: string;
-  fileName: string;
-}> => {
-  let mimeType = input.type;
-  let extension = "";
-  let fileName = "";
-  let needsConversion = false;
-  let isFile = input instanceof File;
-
-  // If it's a File, try to extract extension from filename first
-  if (isFile) {
-    const file = input as File;
-    fileName = file.name;
-
-    // Extract extension from filename
-    const fileNameParts = file.name.split(".");
-    if (fileNameParts.length > 1) {
-      const fileExtension = fileNameParts.pop()?.toLowerCase() || "";
-      // Only use file extension if it's a known audio extension
-      if (
-        [
-          "mp3",
-          "wav",
-          "ogg",
-          "webm",
-          "m4a",
-          "mp4",
-          "aac",
-          "flac",
-          "opus",
-        ].includes(fileExtension)
-      ) {
-        extension = fileExtension;
-
-        // Update MIME type based on extension if needed
-        if (
-          fileExtension === "mp3" &&
-          (mimeType === "audio/mpeg" || !mimeType)
-        ) {
-          mimeType = "audio/mp3";
-          needsConversion = mimeType !== input.type;
-        }
-      }
-    }
+/**
+ * Helper to get file extension from MIME type
+ * 
+ * IMPORTANT BROWSER EDGE CASES:
+ * 
+ * 1. Safari < 18.4 does NOT support Opus/Vorbis in Ogg containers
+ *    - Opus only works in CAF files on macOS High Sierra (10.13) or iOS 11+
+ *    - Vorbis/Opus in Ogg was added in Safari 18.4+
+ * 
+ * 2. Chrome limitations:
+ *    - AAC only works in MP4 containers, not ADTS
+ *    - Only supports AAC Main Profile
+ *    - Chromium builds have NO AAC support at all
+ * 
+ * 3. Firefox quirks:
+ *    - AAC support depends on OS media framework
+ *    - Ogg Opus files > 12h 35m get truncated on Linux 64-bit
+ *    - Prior to v71, MP3 required platform-native libraries
+ * 
+ * 4. Non-standard MIME types seen in the wild:
+ *    - 'audio/x-mp3', 'audio/mpeg3' instead of 'audio/mpeg'
+ *    - 'audio/x-m4a' instead of 'audio/m4a' (especially from Apple devices)
+ *    - 'audio/vorbis' or 'audio/opus' instead of 'audio/ogg'
+ *    - 'audio/x-wav' or 'audio/vnd.wave' instead of 'audio/wav'
+ * 
+ * 5. Mobile browsers may report different MIME types than desktop
+ * 
+ * This function normalizes all these variations to standard extensions.
+ */
+const getExtensionFromMimeType = (mimeType: string): string => {
+  // Handle empty or invalid MIME types
+  if (!mimeType || mimeType === 'application/octet-stream') {
+    // Default to webm for recordings, as that's what MediaRecorder typically produces
+    return 'webm';
   }
-
-  // If extension not determined from filename, get it from MIME type
-  if (!extension) {
-    // Handle MP3 files correctly
-    if (mimeType === "audio/mpeg" || mimeType === "audio/mp3") {
-      mimeType = "audio/mp3";
-      extension = "mp3";
-      needsConversion = mimeType !== input.type;
-    } else if (mimeType === "audio/x-m4a") {
-      mimeType = "audio/m4a";
-      extension = "m4a";
-      needsConversion = true;
-    } else {
-      // For other types, extract extension from mime type
-      extension = input.type.split("/")[1]?.split(";")[0] || "";
-
-      // Fix common audio extension issues
-      if (extension === "mpeg") {
-        extension = "mp3";
-        mimeType = "audio/mp3";
-        needsConversion = true;
-      } else if (extension === "x-m4a") {
-        extension = "m4a";
-        mimeType = "audio/m4a";
-        needsConversion = true;
-      } else if (extension === "wav") extension = "wav";
-      else if (extension === "ogg") extension = "ogg";
-      else if (extension === "webm") extension = "webm";
-      else if (extension === "aac") extension = "aac";
-      else if (extension === "flac") extension = "flac";
-      else if (extension === "opus") extension = "opus";
-      else if (extension === "mp4") extension = "mp4";
-    }
+  
+  // Normalize the MIME type to lowercase for consistent lookup
+  const normalizedType = mimeType.toLowerCase().trim();
+  
+  const mimeToExt: Record<string, string> = {
+    // MP3 variations
+    'audio/mpeg': 'mp3',
+    'audio/mp3': 'mp3',
+    'audio/x-mp3': 'mp3',
+    'audio/mpeg3': 'mp3',
+    'audio/x-mpeg-3': 'mp3',
+    
+    // WAV variations
+    'audio/wav': 'wav',
+    'audio/wave': 'wav',
+    'audio/x-wav': 'wav',
+    'audio/vnd.wave': 'wav',
+    'audio/x-pn-wav': 'wav',
+    
+    // OGG variations
+    'audio/ogg': 'ogg',
+    'application/ogg': 'ogg',
+    'audio/x-ogg': 'ogg',
+    'audio/vorbis': 'ogg',
+    'audio/x-vorbis': 'ogg',
+    'audio/opus': 'ogg',
+    
+    // WebM variations
+    'audio/webm': 'webm',
+    'video/webm': 'webm',
+    
+    // M4A/MP4 audio variations
+    'audio/m4a': 'm4a',
+    'audio/x-m4a': 'm4a',
+    'audio/mp4': 'mp4',
+    'video/mp4': 'mp4',
+    'audio/mp4a-latm': 'm4a',
+    'audio/mpeg4-generic': 'm4a',
+    
+    // AAC variations
+    'audio/aac': 'aac',
+    'audio/aacp': 'aac',
+    'audio/x-aac': 'aac',
+    'audio/3gpp': '3gp',
+    'audio/3gpp2': '3gp',
+    'video/3gpp': '3gp',
+    'video/3gpp2': '3gp',
+    
+    // FLAC variations
+    'audio/flac': 'flac',
+    'audio/x-flac': 'flac',
+    
+    // Other formats
+    'audio/basic': 'au',
+    'audio/x-au': 'au',
+    'audio/x-pn-au': 'au',
+    'audio/vnd.rn-realaudio': 'ra',
+    'audio/x-pn-realaudio': 'ra',
+    'audio/x-realaudio': 'ra',
+    'audio/amr': 'amr',
+    'audio/amr-wb': 'awb',
+    'audio/x-caf': 'caf',
+    'audio/caf': 'caf',
+  };
+  
+  // Direct lookup first
+  const directMapping = mimeToExt[normalizedType];
+  if (directMapping) {
+    return directMapping;
   }
-
-  // Create default filename if one doesn't exist
-  if (!fileName) {
-    fileName = `chunk.${extension}`;
+  
+  // Fallback: extract from MIME type
+  const parts = normalizedType.split('/');
+  if (parts.length === 2) {
+    // Remove any parameters (e.g., 'audio/mp4; codecs=...')
+    const subtype = parts[1].split(';')[0].trim();
+    // Remove 'x-' prefix if present
+    const cleanSubtype = subtype.startsWith('x-') ? subtype.substring(2) : subtype;
+    // Remove 'vnd.' prefix if present
+    const finalSubtype = cleanSubtype.startsWith('vnd.') ? cleanSubtype.substring(4) : cleanSubtype;
+    return finalSubtype || 'webm';
   }
-
-  // Create a new blob with the correct MIME type if needed
-  let normalizedBlob = input;
-  if (needsConversion) {
-    console.log(`Normalizing ${input.type} to ${mimeType}`);
-    normalizedBlob = new Blob([await input.arrayBuffer()], { type: mimeType });
-  }
-
-  return { normalizedBlob, extension, mimeType, fileName };
+  
+  return 'webm'; // Default fallback
 };
 
 export const uploadConversationChunk = async (payload: {
@@ -424,21 +448,39 @@ export const uploadConversationChunk = async (payload: {
     throw new Error("No chunk provided");
   }
 
-  // Normalize the audio file
-  const { normalizedBlob, mimeType, fileName } = await normalizeAudioFile(
-    payload.chunk,
-  );
-
   // Create a file with the correct extension and MIME type
-  // If the original was a File, preserve its name but update its type
-  const file = new File([normalizedBlob], fileName, {
-    type: mimeType,
-  });
+  let fileName: string;
+  
+  if (payload.chunk instanceof File) {
+    fileName = payload.chunk.name;
+    // Check if file already has an extension
+    if (!fileName.includes('.')) {
+      // Add extension based on MIME type
+      const ext = getExtensionFromMimeType(payload.chunk.type);
+      fileName = `${fileName}.${ext}`;
+    } else {
+      // File has extension, validate it matches common audio formats
+      const existingExt = fileName.split('.').pop()?.toLowerCase() || '';
+      const knownAudioExts = ['mp3', 'wav', 'ogg', 'webm', 'm4a', 'mp4', 'aac', 'flac', 'opus', 'wma', 'amr', '3gp', 'au', 'ra', 'awb', 'caf'];
+      
+      if (!knownAudioExts.includes(existingExt)) {
+        // Extension doesn't look like audio, add one based on MIME type
+        const ext = getExtensionFromMimeType(payload.chunk.type);
+        fileName = `${fileName}.${ext}`;
+      }
+    }
+  } else {
+    // For blobs, create a filename with proper extension
+    const ext = getExtensionFromMimeType(payload.chunk.type);
+    fileName = `chunk-${Date.now()}.${ext}`;
+  }
+  
+  const fileToUpload = new File([payload.chunk], fileName, { type: payload.chunk.type });
 
   // If no progress callback provided, use standard Axios request
   if (!payload.onProgress) {
     const formData = new FormData();
-    formData.append("chunk", file);
+    formData.append("chunk", fileToUpload);
     formData.append("timestamp", payload.timestamp.toISOString());
     formData.append("source", payload.source);
     formData.append("run_finish_hook", payload.runFinishHook.toString());
@@ -462,7 +504,7 @@ export const uploadConversationChunk = async (payload: {
     const xhr = new XMLHttpRequest();
     const formData = new FormData();
 
-    formData.append("chunk", file);
+    formData.append("chunk", fileToUpload);
     formData.append("timestamp", payload.timestamp.toISOString());
     formData.append("source", payload.source);
     formData.append("run_finish_hook", payload.runFinishHook.toString());
@@ -594,12 +636,13 @@ export const initiateAndUploadConversationChunk = async (payload: {
     if (isFile) {
       name += chunk.name;
     } else {
-      name += `chunk-${i}.mp3`; // Default name for blobs
+      // Use proper extension based on MIME type
+      const ext = getExtensionFromMimeType(chunk.type);
+      name += `chunk-${i}.${ext}`;
     }
 
-    // Normalize the file/blob regardless of its type
-    const normalized = await normalizeAudioFile(chunk);
-    const normalizedChunk = normalized.normalizedBlob;
+    // Pass the chunk directly without normalization
+    const normalizedChunk = chunk;
 
     try {
       // Create the conversation first

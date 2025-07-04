@@ -252,21 +252,18 @@ type Subscription {
   directus_presets_mutated(event: EventEnum): directus_presets_mutated
   directus_settings_mutated(event: EventEnum): directus_settings_mutated
   aspect_mutated(event: EventEnum): aspect_mutated
-  conversation_chunk_mutated(event: EventEnum): conversation_chunk_mutated
-  account_mutated(event: EventEnum): account_mutated
-  account_directus_users_mutated(event: EventEnum): account_directus_users_mutated
   view_mutated(event: EventEnum): view_mutated
-  conversation_mutated(event: EventEnum): conversation_mutated
   conversation_project_tag_mutated(event: EventEnum): conversation_project_tag_mutated
   project_tag_mutated(event: EventEnum): project_tag_mutated
   conversation_reply_mutated(event: EventEnum): conversation_reply_mutated
   conversation_segment_mutated(event: EventEnum): conversation_segment_mutated
   conversation_segment_conversation_chunk_mutated(event: EventEnum): conversation_segment_conversation_chunk_mutated
-  document_mutated(event: EventEnum): document_mutated
   project_analysis_run_mutated(event: EventEnum): project_analysis_run_mutated
   insight_mutated(event: EventEnum): insight_mutated
   project_chat_mutated(event: EventEnum): project_chat_mutated
   project_mutated(event: EventEnum): project_mutated
+  conversation_mutated(event: EventEnum): conversation_mutated
+  conversation_chunk_mutated(event: EventEnum): conversation_chunk_mutated
   project_chat_conversation_mutated(event: EventEnum): project_chat_conversation_mutated
   directus_panels_mutated(event: EventEnum): directus_panels_mutated
   directus_notifications_mutated(event: EventEnum): directus_notifications_mutated
@@ -286,10 +283,6 @@ type Subscription {
   project_report_mutated(event: EventEnum): project_report_mutated
   project_report_metric_mutated(event: EventEnum): project_report_metric_mutated
   project_report_notification_participants_mutated(event: EventEnum): project_report_notification_participants_mutated
-  quote_mutated(event: EventEnum): quote_mutated
-  quote_aspect_mutated(event: EventEnum): quote_aspect_mutated
-  quote_aspect_1_mutated(event: EventEnum): quote_aspect_1_mutated
-  quote_conversation_chunk_mutated(event: EventEnum): quote_conversation_chunk_mutated
   directus_comments_mutated(event: EventEnum): directus_comments_mutated
   directus_sync_id_map_mutated(event: EventEnum): directus_sync_id_map_mutated
 }
@@ -368,35 +361,6 @@ enum server_info_websocket_rest_authentication {
   strict
 }
 
-type account {
-  date_created: Date
-  date_created_func: datetime_functions
-  date_updated: Date
-  date_updated_func: datetime_functions
-  id: ID!
-  status: String
-  users(filter: account_directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [account_directus_users]
-  users_func: count_functions
-}
-
-type account_directus_users {
-  account_id(filter: account_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): account
-  directus_users_id(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
-  id: ID!
-}
-
-type account_directus_users_mutated {
-  key: ID!
-  event: EventEnum
-  data: account_directus_users
-}
-
-type account_mutated {
-  key: ID!
-  event: EventEnum
-  data: account
-}
-
 type aspect {
   created_at: Date
   created_at_func: datetime_functions
@@ -409,11 +373,6 @@ type aspect {
   updated_at: Date
   updated_at_func: datetime_functions
   view_id(filter: view_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): view
-  centroid_embedding: String
-  quotes(filter: quote_aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_aspect]
-  quotes_func: count_functions
-  representative_quotes(filter: quote_aspect_1_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_aspect_1]
-  representative_quotes_func: count_functions
 }
 
 type aspect_mutated {
@@ -429,10 +388,8 @@ type auth_tokens {
 }
 
 type conversation {
-  context: String
   created_at: Date
   created_at_func: datetime_functions
-  description: String
   duration: Float
   id: ID!
   is_audio_processing_finished: Boolean
@@ -442,28 +399,28 @@ type conversation {
   participant_email: String
   participant_name: String
   participant_user_agent: String
-  processing_message: String
-  processing_status: String
   project_id(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): project
 
-  """This is set if not through PORTAL"""
+  """Unset if PORTAL"""
   source: String
   summary: String
-  title: String
   updated_at: Date
   updated_at_func: datetime_functions
+  is_all_chunks_transcribed: Boolean
   chunks(filter: conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_chunk]
   chunks_func: count_functions
-  conversation_segments(filter: conversation_segment_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_segment]
-  conversation_segments_func: count_functions
-  project_chat_messages(filter: project_chat_message_conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_message_conversation]
-  project_chat_messages_func: count_functions
   project_chats(filter: project_chat_conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_conversation]
   project_chats_func: count_functions
+  project_chat_messages(filter: project_chat_message_conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_message_conversation]
+  project_chat_messages_func: count_functions
   replies(filter: conversation_reply_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_reply]
   replies_func: count_functions
+  conversation_segments(filter: conversation_segment_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_segment]
+  conversation_segments_func: count_functions
   tags(filter: conversation_project_tag_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_project_tag]
   tags_func: count_functions
+  processing_status(filter: processing_status_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [processing_status]
+  processing_status_func: count_functions
 }
 
 type conversation_chunk {
@@ -472,8 +429,6 @@ type conversation_chunk {
   created_at_func: datetime_functions
   id: ID!
   path: String
-  processing_message: String
-  processing_status: String
 
   """This is set if not through PORTAL"""
   source: String
@@ -491,8 +446,8 @@ type conversation_chunk {
   silence_ratio: Float
   conversation_segments(filter: conversation_segment_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_segment_conversation_chunk]
   conversation_segments_func: count_functions
-  quotes(filter: quote_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_conversation_chunk]
-  quotes_func: count_functions
+  processing_status(filter: processing_status_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [processing_status]
+  processing_status_func: count_functions
 }
 
 type conversation_chunk_mutated {
@@ -1689,8 +1644,6 @@ type directus_users {
   If this is set, user won't be able to create projects using the Dashboard. Limitation: Internally / using the API they still can
   """
   disable_create_project: Boolean
-  accounts(filter: account_directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [account_directus_users]
-  accounts_func: count_functions
   projects(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project]
   projects_func: count_functions
   policies(filter: directus_access_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_access]
@@ -1736,7 +1689,6 @@ type directus_users_aggregated_count {
   If this is set, user won't be able to create projects using the Dashboard. Limitation: Internally / using the API they still can
   """
   disable_create_project: Int
-  accounts: Int
   projects: Int
   policies: Int
 }
@@ -1843,29 +1795,6 @@ type directus_webhooks_mutated {
   data: directus_webhooks
 }
 
-type document {
-  context: String
-  created_at: Date
-  created_at_func: datetime_functions
-  description: String
-  id: ID!
-  is_processed: Boolean!
-  original_filename: String
-  path: String
-  processing_error: String
-  project_id(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): project
-  title: String
-  type: String
-  updated_at: Date
-  updated_at_func: datetime_functions
-}
-
-type document_mutated {
-  key: ID!
-  event: EventEnum
-  data: document
-}
-
 type insight {
   created_at: Date
   created_at_func: datetime_functions
@@ -1875,8 +1804,6 @@ type insight {
   title: String
   updated_at: Date
   updated_at_func: datetime_functions
-  quotes(filter: quote_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote]
-  quotes_func: count_functions
 }
 
 type insight_mutated {
@@ -1892,15 +1819,15 @@ type policy_me_globals_type {
 }
 
 type processing_status {
-  collection_name: String
   duration_ms: Int
   event: String
   id: ID!
-  item_id: String
-  json: String
   message: String
   timestamp: Date
   timestamp_func: datetime_functions
+  conversation_chunk_id(filter: conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation_chunk
+  conversation_id(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation
+  parent(filter: processing_status_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): processing_status
 }
 
 type processing_status_mutated {
@@ -1934,7 +1861,6 @@ type project {
   is_project_notification_subscription_allowed: Boolean
   language: String
   name: String
-  pin: String
   updated_at: Date
   updated_at_func: datetime_functions
   get_reply_mode: String
@@ -1966,8 +1892,6 @@ type project_analysis_run {
   updated_at_func: datetime_functions
   insights(filter: insight_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [insight]
   insights_func: count_functions
-  quotes(filter: quote_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote]
-  quotes_func: count_functions
   views(filter: view_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [view]
   views_func: count_functions
 }
@@ -2161,70 +2085,6 @@ type project_tag_mutated {
   data: project_tag
 }
 
-type quote {
-  conversation_id(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation
-  created_at: Date
-  created_at_func: datetime_functions
-  embedding: String
-  id: ID!
-  insight_id(filter: insight_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): insight
-  order: Int
-  project_analysis_run_id(filter: project_analysis_run_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): project_analysis_run
-  text: String!
-  timestamp: Date
-  timestamp_func: datetime_functions
-  updated_at: Date
-  updated_at_func: datetime_functions
-  aspects(filter: quote_aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_aspect]
-  aspects_func: count_functions
-  conversation_chunks(filter: quote_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_conversation_chunk]
-  conversation_chunks_func: count_functions
-  representative_aspects(filter: quote_aspect_1_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_aspect_1]
-  representative_aspects_func: count_functions
-}
-
-type quote_aspect {
-  aspect_id(filter: aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): aspect
-  id: ID!
-  quote_id(filter: quote_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): quote
-}
-
-type quote_aspect_1 {
-  aspect_id(filter: aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): aspect
-  id: ID!
-  quote_id(filter: quote_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): quote
-}
-
-type quote_aspect_1_mutated {
-  key: ID!
-  event: EventEnum
-  data: quote_aspect_1
-}
-
-type quote_aspect_mutated {
-  key: ID!
-  event: EventEnum
-  data: quote_aspect
-}
-
-type quote_conversation_chunk {
-  conversation_chunk_id(filter: conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation_chunk
-  id: ID!
-  quote_id(filter: quote_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): quote
-}
-
-type quote_conversation_chunk_mutated {
-  key: ID!
-  event: EventEnum
-  data: quote_conversation_chunk
-}
-
-type quote_mutated {
-  key: ID!
-  event: EventEnum
-  data: quote
-}
-
 type server_info {
   project: server_info_project
   rateLimit: Boolean
@@ -2278,13 +2138,6 @@ type view {
   created_at_func: datetime_functions
   id: ID!
   name: String
-  processing_completed_at: Date
-  processing_completed_at_func: datetime_functions
-  processing_error: String
-  processing_message: String
-  processing_started_at: Date
-  processing_started_at_func: datetime_functions
-  processing_status: String
   project_analysis_run_id(filter: project_analysis_run_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): project_analysis_run
   summary: String
   updated_at: Date
@@ -2299,27 +2152,6 @@ type view_mutated {
   data: view
 }
 
-input account_directus_users_filter {
-  account_id: account_filter
-  directus_users_id: directus_users_filter
-  id: number_filter_operators
-  _and: [account_directus_users_filter]
-  _or: [account_directus_users_filter]
-}
-
-input account_filter {
-  date_created: date_filter_operators
-  date_created_func: datetime_function_filter_operators
-  date_updated: date_filter_operators
-  date_updated_func: datetime_function_filter_operators
-  id: string_filter_operators
-  status: string_filter_operators
-  users: account_directus_users_filter
-  users_func: count_function_filter_operators
-  _and: [account_filter]
-  _or: [account_filter]
-}
-
 input aspect_filter {
   created_at: date_filter_operators
   created_at_func: datetime_function_filter_operators
@@ -2332,11 +2164,6 @@ input aspect_filter {
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
   view_id: view_filter
-  centroid_embedding: string_filter_operators
-  quotes: quote_aspect_filter
-  quotes_func: count_function_filter_operators
-  representative_quotes: quote_aspect_1_filter
-  representative_quotes_func: count_function_filter_operators
   _and: [aspect_filter]
   _or: [aspect_filter]
 }
@@ -2369,8 +2196,6 @@ input conversation_chunk_filter {
   created_at_func: datetime_function_filter_operators
   id: string_filter_operators
   path: string_filter_operators
-  processing_message: string_filter_operators
-  processing_status: string_filter_operators
   source: string_filter_operators
   timestamp: date_filter_operators
   timestamp_func: datetime_function_filter_operators
@@ -2386,17 +2211,15 @@ input conversation_chunk_filter {
   silence_ratio: number_filter_operators
   conversation_segments: conversation_segment_conversation_chunk_filter
   conversation_segments_func: count_function_filter_operators
-  quotes: quote_conversation_chunk_filter
-  quotes_func: count_function_filter_operators
+  processing_status: processing_status_filter
+  processing_status_func: count_function_filter_operators
   _and: [conversation_chunk_filter]
   _or: [conversation_chunk_filter]
 }
 
 input conversation_filter {
-  context: string_filter_operators
   created_at: date_filter_operators
   created_at_func: datetime_function_filter_operators
-  description: string_filter_operators
   duration: number_filter_operators
   id: string_filter_operators
   is_audio_processing_finished: boolean_filter_operators
@@ -2406,26 +2229,26 @@ input conversation_filter {
   participant_email: string_filter_operators
   participant_name: string_filter_operators
   participant_user_agent: string_filter_operators
-  processing_message: string_filter_operators
-  processing_status: string_filter_operators
   project_id: project_filter
   source: string_filter_operators
   summary: string_filter_operators
-  title: string_filter_operators
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
+  is_all_chunks_transcribed: boolean_filter_operators
   chunks: conversation_chunk_filter
   chunks_func: count_function_filter_operators
-  conversation_segments: conversation_segment_filter
-  conversation_segments_func: count_function_filter_operators
-  project_chat_messages: project_chat_message_conversation_filter
-  project_chat_messages_func: count_function_filter_operators
   project_chats: project_chat_conversation_filter
   project_chats_func: count_function_filter_operators
+  project_chat_messages: project_chat_message_conversation_filter
+  project_chat_messages_func: count_function_filter_operators
   replies: conversation_reply_filter
   replies_func: count_function_filter_operators
+  conversation_segments: conversation_segment_filter
+  conversation_segments_func: count_function_filter_operators
   tags: conversation_project_tag_filter
   tags_func: count_function_filter_operators
+  processing_status: processing_status_filter
+  processing_status_func: count_function_filter_operators
   _and: [conversation_filter]
   _or: [conversation_filter]
 }
@@ -2478,20 +2301,6 @@ input count_function_filter_operators {
   count: number_filter_operators
 }
 
-input create_account_directus_users_input {
-  account_id: create_account_input
-  directus_users_id: create_directus_users_input
-  id: ID
-}
-
-input create_account_input {
-  date_created: Date
-  date_updated: Date
-  id: ID
-  status: String
-  users: [create_account_directus_users_input]
-}
-
 input create_aspect_input {
   created_at: Date
   description: String
@@ -2502,9 +2311,6 @@ input create_aspect_input {
   short_summary: String
   updated_at: Date
   view_id: create_view_input
-  centroid_embedding: String
-  quotes: [create_quote_aspect_input]
-  representative_quotes: [create_quote_aspect_1_input]
 }
 
 input create_conversation_chunk_input {
@@ -2512,8 +2318,6 @@ input create_conversation_chunk_input {
   created_at: Date
   id: ID
   path: String
-  processing_message: String
-  processing_status: String
 
   """This is set if not through PORTAL"""
   source: String
@@ -2527,13 +2331,11 @@ input create_conversation_chunk_input {
   noise_ratio: Float
   silence_ratio: Float
   conversation_segments: [create_conversation_segment_conversation_chunk_input]
-  quotes: [create_quote_conversation_chunk_input]
+  processing_status: [create_processing_status_input]
 }
 
 input create_conversation_input {
-  context: String
   created_at: Date
-  description: String
   duration: Float
   id: ID
   is_audio_processing_finished: Boolean
@@ -2543,21 +2345,20 @@ input create_conversation_input {
   participant_email: String
   participant_name: String
   participant_user_agent: String
-  processing_message: String
-  processing_status: String
   project_id: create_project_input
 
-  """This is set if not through PORTAL"""
+  """Unset if PORTAL"""
   source: String
   summary: String
-  title: String
   updated_at: Date
+  is_all_chunks_transcribed: Boolean
   chunks: [create_conversation_chunk_input]
-  conversation_segments: [create_conversation_segment_input]
-  project_chat_messages: [create_project_chat_message_conversation_input]
   project_chats: [create_project_chat_conversation_input]
+  project_chat_messages: [create_project_chat_message_conversation_input]
   replies: [create_conversation_reply_input]
+  conversation_segments: [create_conversation_segment_input]
   tags: [create_conversation_project_tag_input]
+  processing_status: [create_processing_status_input]
 }
 
 input create_conversation_project_tag_input {
@@ -2867,7 +2668,6 @@ input create_directus_users_input {
   If this is set, user won't be able to create projects using the Dashboard. Limitation: Internally / using the API they still can
   """
   disable_create_project: Boolean
-  accounts: [create_account_directus_users_input]
   projects: [create_project_input]
   policies: [create_directus_access_input]
 }
@@ -2907,7 +2707,17 @@ input create_insight_input {
   summary: String
   title: String
   updated_at: Date
-  quotes: [create_quote_input]
+}
+
+input create_processing_status_input {
+  duration_ms: Int
+  event: String
+  id: ID
+  message: String
+  timestamp: Date
+  conversation_chunk_id: create_conversation_chunk_input
+  conversation_id: create_conversation_input
+  parent: create_processing_status_input
 }
 
 input create_project_analysis_run_input {
@@ -2921,7 +2731,6 @@ input create_project_analysis_run_input {
   project_id: create_project_input
   updated_at: Date
   insights: [create_insight_input]
-  quotes: [create_quote_input]
   views: [create_view_input]
 }
 
@@ -3004,7 +2813,6 @@ input create_project_input {
   is_project_notification_subscription_allowed: Boolean
   language: String
   name: String
-  pin: String
   updated_at: Date
   get_reply_mode: String
   conversations: [create_conversation_input]
@@ -3036,49 +2844,10 @@ input create_project_tag_input {
   conversations: [create_conversation_project_tag_input]
 }
 
-input create_quote_aspect_1_input {
-  aspect_id: create_aspect_input
-  id: ID
-  quote_id: create_quote_input
-}
-
-input create_quote_aspect_input {
-  aspect_id: create_aspect_input
-  id: ID
-  quote_id: create_quote_input
-}
-
-input create_quote_conversation_chunk_input {
-  conversation_chunk_id: create_conversation_chunk_input
-  id: ID
-  quote_id: create_quote_input
-}
-
-input create_quote_input {
-  conversation_id: create_conversation_input
-  created_at: Date
-  embedding: String
-  id: ID!
-  insight_id: create_insight_input
-  order: Int
-  project_analysis_run_id: create_project_analysis_run_input
-  text: String!
-  timestamp: Date
-  updated_at: Date
-  aspects: [create_quote_aspect_input]
-  conversation_chunks: [create_quote_conversation_chunk_input]
-  representative_aspects: [create_quote_aspect_1_input]
-}
-
 input create_view_input {
   created_at: Date
   id: ID
   name: String
-  processing_completed_at: Date
-  processing_error: String
-  processing_message: String
-  processing_started_at: Date
-  processing_status: String
   project_analysis_run_id: create_project_analysis_run_input
   summary: String
   updated_at: Date
@@ -3532,8 +3301,6 @@ input directus_users_filter {
   theme_dark_overrides: string_filter_operators
   theme_dark_overrides_func: count_function_filter_operators
   disable_create_project: boolean_filter_operators
-  accounts: account_directus_users_filter
-  accounts_func: count_function_filter_operators
   projects: project_filter
   projects_func: count_function_filter_operators
   policies: directus_access_filter
@@ -3594,8 +3361,6 @@ input insight_filter {
   title: string_filter_operators
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
-  quotes: quote_filter
-  quotes_func: count_function_filter_operators
   _and: [insight_filter]
   _or: [insight_filter]
 }
@@ -3615,6 +3380,20 @@ input number_filter_operators {
   _nbetween: [GraphQLStringOrFloat]
 }
 
+input processing_status_filter {
+  duration_ms: number_filter_operators
+  event: string_filter_operators
+  id: big_int_filter_operators
+  message: string_filter_operators
+  timestamp: date_filter_operators
+  timestamp_func: datetime_function_filter_operators
+  conversation_chunk_id: conversation_chunk_filter
+  conversation_id: conversation_filter
+  parent: processing_status_filter
+  _and: [processing_status_filter]
+  _or: [processing_status_filter]
+}
+
 input project_analysis_run_filter {
   created_at: date_filter_operators
   created_at_func: datetime_function_filter_operators
@@ -3631,8 +3410,6 @@ input project_analysis_run_filter {
   updated_at_func: datetime_function_filter_operators
   insights: insight_filter
   insights_func: count_function_filter_operators
-  quotes: quote_filter
-  quotes_func: count_function_filter_operators
   views: view_filter
   views_func: count_function_filter_operators
   _and: [project_analysis_run_filter]
@@ -3737,7 +3514,6 @@ input project_filter {
   is_project_notification_subscription_allowed: boolean_filter_operators
   language: string_filter_operators
   name: string_filter_operators
-  pin: string_filter_operators
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
   get_reply_mode: string_filter_operators
@@ -3786,54 +3562,6 @@ input project_tag_filter {
   _or: [project_tag_filter]
 }
 
-input quote_aspect_1_filter {
-  aspect_id: aspect_filter
-  id: number_filter_operators
-  quote_id: quote_filter
-  _and: [quote_aspect_1_filter]
-  _or: [quote_aspect_1_filter]
-}
-
-input quote_aspect_filter {
-  aspect_id: aspect_filter
-  id: number_filter_operators
-  quote_id: quote_filter
-  _and: [quote_aspect_filter]
-  _or: [quote_aspect_filter]
-}
-
-input quote_conversation_chunk_filter {
-  conversation_chunk_id: conversation_chunk_filter
-  id: number_filter_operators
-  quote_id: quote_filter
-  _and: [quote_conversation_chunk_filter]
-  _or: [quote_conversation_chunk_filter]
-}
-
-input quote_filter {
-  conversation_id: conversation_filter
-  created_at: date_filter_operators
-  created_at_func: datetime_function_filter_operators
-  embedding: string_filter_operators
-  id: string_filter_operators
-  insight_id: insight_filter
-  order: number_filter_operators
-  project_analysis_run_id: project_analysis_run_filter
-  text: string_filter_operators
-  timestamp: date_filter_operators
-  timestamp_func: datetime_function_filter_operators
-  updated_at: date_filter_operators
-  updated_at_func: datetime_function_filter_operators
-  aspects: quote_aspect_filter
-  aspects_func: count_function_filter_operators
-  conversation_chunks: quote_conversation_chunk_filter
-  conversation_chunks_func: count_function_filter_operators
-  representative_aspects: quote_aspect_1_filter
-  representative_aspects_func: count_function_filter_operators
-  _and: [quote_filter]
-  _or: [quote_filter]
-}
-
 input string_filter_operators {
   _eq: String
   _neq: String
@@ -3856,20 +3584,6 @@ input string_filter_operators {
   _nempty: Boolean
 }
 
-input update_account_directus_users_input {
-  account_id: update_account_input
-  directus_users_id: update_directus_users_input
-  id: ID
-}
-
-input update_account_input {
-  date_created: Date
-  date_updated: Date
-  id: ID
-  status: String
-  users: [update_account_directus_users_input]
-}
-
 input update_aspect_input {
   created_at: Date
   description: String
@@ -3880,9 +3594,6 @@ input update_aspect_input {
   short_summary: String
   updated_at: Date
   view_id: update_view_input
-  centroid_embedding: String
-  quotes: [update_quote_aspect_input]
-  representative_quotes: [update_quote_aspect_1_input]
 }
 
 input update_conversation_chunk_input {
@@ -3890,8 +3601,6 @@ input update_conversation_chunk_input {
   created_at: Date
   id: ID
   path: String
-  processing_message: String
-  processing_status: String
 
   """This is set if not through PORTAL"""
   source: String
@@ -3905,13 +3614,11 @@ input update_conversation_chunk_input {
   noise_ratio: Float
   silence_ratio: Float
   conversation_segments: [update_conversation_segment_conversation_chunk_input]
-  quotes: [update_quote_conversation_chunk_input]
+  processing_status: [update_processing_status_input]
 }
 
 input update_conversation_input {
-  context: String
   created_at: Date
-  description: String
   duration: Float
   id: ID
   is_audio_processing_finished: Boolean
@@ -3921,21 +3628,20 @@ input update_conversation_input {
   participant_email: String
   participant_name: String
   participant_user_agent: String
-  processing_message: String
-  processing_status: String
   project_id: update_project_input
 
-  """This is set if not through PORTAL"""
+  """Unset if PORTAL"""
   source: String
   summary: String
-  title: String
   updated_at: Date
+  is_all_chunks_transcribed: Boolean
   chunks: [update_conversation_chunk_input]
-  conversation_segments: [update_conversation_segment_input]
-  project_chat_messages: [update_project_chat_message_conversation_input]
   project_chats: [update_project_chat_conversation_input]
+  project_chat_messages: [update_project_chat_message_conversation_input]
   replies: [update_conversation_reply_input]
+  conversation_segments: [update_conversation_segment_input]
   tags: [update_conversation_project_tag_input]
+  processing_status: [update_processing_status_input]
 }
 
 input update_conversation_project_tag_input {
@@ -4286,7 +3992,6 @@ input update_directus_users_input {
   If this is set, user won't be able to create projects using the Dashboard. Limitation: Internally / using the API they still can
   """
   disable_create_project: Boolean
-  accounts: [update_account_directus_users_input]
   projects: [update_project_input]
   policies: [update_directus_access_input]
 }
@@ -4326,7 +4031,17 @@ input update_insight_input {
   summary: String
   title: String
   updated_at: Date
-  quotes: [update_quote_input]
+}
+
+input update_processing_status_input {
+  duration_ms: Int
+  event: String
+  id: ID
+  message: String
+  timestamp: Date
+  conversation_chunk_id: update_conversation_chunk_input
+  conversation_id: update_conversation_input
+  parent: update_processing_status_input
 }
 
 input update_project_analysis_run_input {
@@ -4340,7 +4055,6 @@ input update_project_analysis_run_input {
   project_id: update_project_input
   updated_at: Date
   insights: [update_insight_input]
-  quotes: [update_quote_input]
   views: [update_view_input]
 }
 
@@ -4423,7 +4137,6 @@ input update_project_input {
   is_project_notification_subscription_allowed: Boolean
   language: String
   name: String
-  pin: String
   updated_at: Date
   get_reply_mode: String
   conversations: [update_conversation_input]
@@ -4455,49 +4168,10 @@ input update_project_tag_input {
   conversations: [update_conversation_project_tag_input]
 }
 
-input update_quote_aspect_1_input {
-  aspect_id: update_aspect_input
-  id: ID
-  quote_id: update_quote_input
-}
-
-input update_quote_aspect_input {
-  aspect_id: update_aspect_input
-  id: ID
-  quote_id: update_quote_input
-}
-
-input update_quote_conversation_chunk_input {
-  conversation_chunk_id: update_conversation_chunk_input
-  id: ID
-  quote_id: update_quote_input
-}
-
-input update_quote_input {
-  conversation_id: update_conversation_input
-  created_at: Date
-  embedding: String
-  id: ID
-  insight_id: update_insight_input
-  order: Int
-  project_analysis_run_id: update_project_analysis_run_input
-  text: String
-  timestamp: Date
-  updated_at: Date
-  aspects: [update_quote_aspect_input]
-  conversation_chunks: [update_quote_conversation_chunk_input]
-  representative_aspects: [update_quote_aspect_1_input]
-}
-
 input update_view_input {
   created_at: Date
   id: ID
   name: String
-  processing_completed_at: Date
-  processing_error: String
-  processing_message: String
-  processing_started_at: Date
-  processing_status: String
   project_analysis_run_id: update_project_analysis_run_input
   summary: String
   updated_at: Date
@@ -4509,13 +4183,6 @@ input view_filter {
   created_at_func: datetime_function_filter_operators
   id: string_filter_operators
   name: string_filter_operators
-  processing_completed_at: date_filter_operators
-  processing_completed_at_func: datetime_function_filter_operators
-  processing_error: string_filter_operators
-  processing_message: string_filter_operators
-  processing_started_at: date_filter_operators
-  processing_started_at_func: datetime_function_filter_operators
-  processing_status: string_filter_operators
   project_analysis_run_id: project_analysis_run_filter
   summary: string_filter_operators
   updated_at: date_filter_operators

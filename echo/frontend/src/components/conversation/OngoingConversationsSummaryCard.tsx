@@ -13,6 +13,7 @@ export const OngoingConversationsSummaryCard = ({
 }: {
   projectId: string;
 }) => {
+  // FIXME: could potentially use the "Aggregate" API to just get the count
   const conversationChunksQuery = useQuery({
     queryKey: ["conversation_chunks", projectId],
     queryFn: async () => {
@@ -39,7 +40,7 @@ export const OngoingConversationsSummaryCard = ({
 
       return uniqueConversations.size;
     },
-    refetchInterval: 15000,
+    refetchInterval: 30000,
   });
 
   return (

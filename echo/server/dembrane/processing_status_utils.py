@@ -17,22 +17,20 @@ class ProcessingStatus(Enum):
 
 
 def add_processing_status(
-    collection_name: str,
-    item_id: str,
+    conversation_id: str,
+    conversation_chunk_id: str,
     event: str,
     message: str,
-    json: Optional[dict] = None,
     duration_ms: Optional[int] = None,
 ) -> int:
-    logger.info(f"{event} {message} {str(json)} - {duration_ms}")
+    logger.info(f"{event} {message} - {duration_ms}")
     return directus.create_item(
         "processing_status",
         {
-            "collection_name": collection_name,
-            "item_id": item_id,
+            "conversation_id": conversation_id,
+            "conversation_chunk_id": conversation_chunk_id,
             "event": event,
             "message": message,
-            "json": json,
             "duration_ms": duration_ms,
         },
     )["data"]["id"]
@@ -43,17 +41,15 @@ class ProcessingStatusContext:
 
     def __init__(
         self,
-        collection_name: str,
-        item_id: str,
+        conversation_id: str,
+        conversation_chunk_id: str,
         event_prefix: str,
         message: str = "",
-        json: Optional[dict] = None,
     ):
-        self.collection_name = collection_name
-        self.item_id = item_id
+        self.conversation_id = conversation_id
+        self.conversation_chunk_id = conversation_chunk_id
         self.event_prefix = event_prefix
         self.message = message
-        self.json = json
         self.start_time: float = 0.0
         self.logger = getLogger(f"status.{self.event_prefix}")
 
@@ -65,11 +61,10 @@ class ProcessingStatusContext:
         # Log start event without duration
         self.start_time = time.time()
         self.processing_status_start_id = add_processing_status(
-            self.collection_name,
-            self.item_id,
+            conversation_id=self.conversation_id,
+            conversation_chunk_id=self.conversation_chunk_id,
             event=f"{self.event_prefix}.started",
             message=self.message,
-            json=self.json,
         )
         self.logger.info(f"{self.processing_status_start_id} {self.message}")
         return self
@@ -80,34 +75,30 @@ class ProcessingStatusContext:
         exc_value: Optional[BaseException],
         traceback: Any,
     ) -> Literal[False]:
-        # Compute duration in milliseconds
         duration_ms = int((time.time() - self.start_time) * 1000)
+        # if exception occurs, log FAILED event with error message and duration
         if exc_type:
-            # Log failure event with error message and duration
             err_msg = str(exc_value)
             self.processing_status_failed_id = add_processing_status(
-                self.collection_name,
-                self.item_id,
+                conversation_id=self.conversation_id,
+                conversation_chunk_id=self.conversation_chunk_id,
                 event=f"{self.event_prefix}.failed",
                 message=err_msg,
-                json=self.json,
                 duration_ms=duration_ms,
             )
             self.logger.error(
-                f"{self.processing_status_failed_id} {err_msg} (duration: {duration_ms/1000}s) (started: {self.processing_status_start_id})"
+                f"{self.processing_status_failed_id} {err_msg} (duration: {duration_ms / 1000}s) (started: {self.processing_status_start_id})"
             )
+        # if no exception occurs, log COMPLETED event with message and duration
         else:
-            # Log completion event with message and duration
             self.processing_status_completed_id = add_processing_status(
-                self.collection_name,
-                self.item_id,
+                conversation_id=self.conversation_id,
+                conversation_chunk_id=self.conversation_chunk_id,
                 event=f"{self.event_prefix}.completed",
                 message=self.message,
-                json=self.json,
                 duration_ms=duration_ms,
             )
             self.logger.info(
-                f"{self.processing_status_completed_id} {self.message} (duration: {duration_ms/1000}s) (started: {self.processing_status_start_id})"
+                f"{self.processing_status_completed_id} {self.message} (duration: {duration_ms / 1000}s) (started: {self.processing_status_start_id})"
             )
-        # Do not suppress exceptions
         return False
