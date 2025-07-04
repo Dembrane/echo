@@ -69,6 +69,14 @@ msgstr "{0}"
 msgid "{0} Conversations • Edited {1}"
 msgstr "{0} Conversations • Edited {1}"
 
+#: src/components/announcement/utils/dateUtils.ts:22
+msgid "{diffInDays}d ago"
+msgstr "{diffInDays}d ago"
+
+#: src/components/announcement/utils/dateUtils.ts:19
+msgid "{diffInHours}h ago"
+msgstr "{diffInHours}h ago"
+
 #: src/routes/participant/ParticipantConversation.tsx:213
 msgid "{minutes} minutes and {seconds} seconds"
 msgstr "{minutes} minutes and {seconds} seconds"
@@ -214,6 +222,10 @@ msgstr ""
 "\n"
 "Note: If the similarities/differences are too superficial, let me know we need more complex material to analyze."
 
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:22
+msgid "Announcements"
+msgstr "Announcements"
+
 #: src/components/participant/ParticipantInitiateForm.tsx:49
 #~ msgid "Anonymous Participant"
 #~ msgstr "Anonymous Participant"
@@ -281,7 +293,7 @@ msgstr "Aspects"
 #~ msgid "Assistant is typing..."
 #~ msgstr "Assistant is typing..."
 
-#: src/components/conversation/AutoSelectConversations.tsx:182
+#: src/components/conversation/AutoSelectConversations.tsx:188
 msgid "Audio Processing In Progress"
 msgstr "Audio Processing In Progress"
 
@@ -299,7 +311,7 @@ msgstr "Audio recordings are scheduled to be deleted after 30 days from the reco
 msgid "Audio Tip"
 msgstr "Audio Tip"
 
-#: src/components/conversation/AutoSelectConversations.tsx:156
+#: src/components/conversation/AutoSelectConversations.tsx:162
 msgid "Auto-select"
 msgstr "Auto-select"
 
@@ -307,11 +319,11 @@ msgstr "Auto-select"
 #~ msgid "Auto-select sources to add to the chat"
 #~ msgstr "Auto-select sources to add to the chat"
 
-#: src/components/conversation/AutoSelectConversations.tsx:162
+#: src/components/conversation/AutoSelectConversations.tsx:168
 msgid "Automatically includes relevant conversations for analysis without manual selection"
 msgstr "Automatically includes relevant conversations for analysis without manual selection"
 
-#: src/components/conversation/AutoSelectConversations.tsx:121
+#: src/components/conversation/AutoSelectConversations.tsx:127
 msgid "Available"
 msgstr "Available"
 
@@ -443,13 +455,13 @@ msgstr "Connection healthy"
 msgid "Connection unhealthy"
 msgstr "Connection unhealthy"
 
-#: src/components/conversation/AutoSelectConversations.tsx:209
+#: src/components/conversation/AutoSelectConversations.tsx:215
 msgid "Contact sales"
 msgstr "Contact sales"
 
 #: src/components/conversation/AutoSelectConversations.tsx:97
-msgid "Contact your sales representative to activate this feature today!"
-msgstr "Contact your sales representative to activate this feature today!"
+#~ msgid "Contact your sales representative to activate this feature today!"
+#~ msgstr "Contact your sales representative to activate this feature today!"
 
 #: src/components/project/ProjectBasicEdit.tsx:133
 msgid "Context"
@@ -577,7 +589,7 @@ msgstr "Do you want to contribute to this project?"
 msgid "Do you want to stay in the loop?"
 msgstr "Do you want to stay in the loop?"
 
-#: src/components/layout/Header.tsx:152
+#: src/components/layout/Header.tsx:160
 msgid "Documentation"
 msgstr "Documentation"
 
@@ -689,7 +701,7 @@ msgstr "Enable this feature to allow participants to request AI-powered response
 #~ msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Get Reply\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 #~ msgstr "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Get Reply\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 
-#: src/components/conversation/AutoSelectConversations.tsx:111
+#: src/components/conversation/AutoSelectConversations.tsx:117
 msgid "Enabled"
 msgstr "Enabled"
 
@@ -785,6 +797,14 @@ msgstr "Failed to delete response"
 msgid "Failed to finish conversation. Please try again."
 msgstr "Failed to finish conversation. Please try again."
 
+#: src/components/announcement/hooks/index.ts:403
+msgid "Failed to mark all announcements as read"
+msgstr "Failed to mark all announcements as read"
+
+#: src/components/announcement/hooks/index.ts:264
+msgid "Failed to mark announcement as read"
+msgstr "Failed to mark announcement as read"
+
 #: src/routes/project/conversation/ProjectConversationOverview.tsx:51
 msgid "Failed to regenerate the summary. Please try again later."
 msgstr "Failed to regenerate the summary. Please try again later."
@@ -874,7 +894,7 @@ msgid "Grid view"
 msgstr "Grid view"
 
 #. placeholder {0}: user.first_name ?? "User"
-#: src/components/layout/Header.tsx:139
+#: src/components/layout/Header.tsx:147
 msgid "Hi, {0}"
 msgstr "Hi, {0}"
 
@@ -970,6 +990,10 @@ msgstr "Join {0} on Dembrane"
 msgid "Just a moment"
 msgstr "Just a moment"
 
+#: src/components/announcement/utils/dateUtils.ts:18
+msgid "Just now"
+msgstr "Just now"
+
 #: src/components/project/ProjectPortalEditor.tsx:285
 msgid "Language"
 msgstr "Language"
@@ -1041,13 +1065,21 @@ msgstr "Login | Dembrane"
 msgid "Login as an existing user"
 msgstr "Login as an existing user"
 
-#: src/components/layout/Header.tsx:159
+#: src/components/layout/Header.tsx:167
 msgid "Logout"
 msgstr "Logout"
 
 #: src/components/conversation/ConversationAccordion.tsx:557
 msgid "Longest First"
 msgstr "Longest First"
+
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:47
+msgid "Mark all read"
+msgstr "Mark all read"
+
+#: src/components/announcement/AnnouncementItem.tsx:148
+msgid "Mark as read"
+msgstr "Mark as read"
 
 #: src/components/chat/ChatTemplatesMenu.tsx:66
 msgid "Meeting Notes"
@@ -1098,7 +1130,7 @@ msgstr "Name A-Z"
 msgid "Name Z-A"
 msgstr "Name Z-A"
 
-#: src/components/conversation/AutoSelectConversations.tsx:144
+#: src/components/conversation/AutoSelectConversations.tsx:150
 msgid "New"
 msgstr "New"
 
@@ -1127,6 +1159,10 @@ msgstr "Newest First"
 #: src/components/participant/ParticipantOnboardingCards.tsx:285
 msgid "Next"
 msgstr "Next"
+
+#: src/components/announcement/Announcements.tsx:107
+msgid "No announcements available"
+msgstr "No announcements available"
 
 #: src/components/chat/ChatAccordion.tsx:129
 msgid "No chats found. Start a chat using the \"Ask\" button."
@@ -1329,7 +1365,7 @@ msgstr "Please login to continue."
 #~ msgid "Please provide a concise summary of the following provided in the context."
 #~ msgstr "Please provide a concise summary of the following provided in the context."
 
-#: src/components/participant/ParticipantBody.tsx:182
+#: src/components/participant/ParticipantBody.tsx:185
 msgid "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon."
 msgstr "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon."
 
@@ -1558,7 +1594,7 @@ msgstr "Reply Prompt"
 msgid "Report"
 msgstr "Report"
 
-#: src/components/layout/Header.tsx:71
+#: src/components/layout/Header.tsx:74
 msgid "Report an issue"
 msgstr "Report an issue"
 
@@ -1779,6 +1815,14 @@ msgstr "Show audio player"
 msgid "Show duration"
 msgstr "Show duration"
 
+#: src/components/announcement/AnnouncementItem.tsx:125
+msgid "Show less"
+msgstr "Show less"
+
+#: src/components/announcement/AnnouncementItem.tsx:130
+msgid "Show more"
+msgstr "Show more"
+
 #: src/components/common/ReferencesIconButton.tsx:21
 #: src/components/common/ReferencesIconButton.tsx:28
 msgid "Show references"
@@ -1796,7 +1840,7 @@ msgstr "Sign in with Google"
 msgid "Skip"
 msgstr "Skip"
 
-#: src/components/conversation/AutoSelectConversations.tsx:186
+#: src/components/conversation/AutoSelectConversations.tsx:192
 msgid "Some conversations are still being processed. Auto-select will work optimally once audio processing is complete."
 msgstr "Some conversations are still being processed. Auto-select will work optimally once audio processing is complete."
 
@@ -1817,7 +1861,7 @@ msgstr "Something went wrong"
 msgid "Something went wrong while uploading the file: {0}"
 msgstr "Something went wrong while uploading the file: {0}"
 
-#: src/components/participant/ParticipantBody.tsx:149
+#: src/components/participant/ParticipantBody.tsx:152
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 
@@ -2065,7 +2109,7 @@ msgstr "This will create a new conversation with the same audio but a fresh tran
 msgid "Time Created"
 msgstr "Time Created"
 
-#: src/components/participant/ParticipantBody.tsx:141
+#: src/components/participant/ParticipantBody.tsx:144
 msgid "Tip"
 msgstr "Tip"
 
@@ -2181,6 +2225,14 @@ msgstr "Type a message..."
 msgid "Type your response here"
 msgstr "Type your response here"
 
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:36
+msgid "unread announcement"
+msgstr "unread announcement"
+
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:36
+msgid "unread announcements"
+msgstr "unread announcements"
+
 #: src/components/form/FormLabel.tsx:18
 msgid "Unsaved changes"
 msgstr "Unsaved changes"
@@ -2210,11 +2262,11 @@ msgstr "Update the report to include the latest data"
 msgid "Update your report to include the latest changes in your project. The link to share the report would remain the same."
 msgstr "Update your report to include the latest changes in your project. The link to share the report would remain the same."
 
-#: src/components/conversation/AutoSelectConversations.tsx:131
+#: src/components/conversation/AutoSelectConversations.tsx:137
 msgid "Upgrade"
 msgstr "Upgrade"
 
-#: src/components/conversation/AutoSelectConversations.tsx:198
+#: src/components/conversation/AutoSelectConversations.tsx:204
 msgid "Upgrade to unlock Auto-select and analyze 10x more conversations in half the time—no more manual selection, just deeper insights instantly."
 msgstr "Upgrade to unlock Auto-select and analyze 10x more conversations in half the time—no more manual selection, just deeper insights instantly."
 
@@ -2265,7 +2317,7 @@ msgstr "Use Shift + Enter to add a new line"
 msgid "View"
 msgstr "View"
 
-#: src/components/participant/ParticipantBody.tsx:226
+#: src/components/participant/ParticipantBody.tsx:229
 msgid "View your responses"
 msgstr "View your responses"
 
@@ -2301,7 +2353,7 @@ msgstr "We'll test your microphone to ensure the best experience for everyone in
 msgid "We’re picking up some silence. Try speaking up so your voice comes through clearly."
 msgstr "We’re picking up some silence. Try speaking up so your voice comes through clearly."
 
-#: src/components/participant/ParticipantBody.tsx:124
+#: src/components/participant/ParticipantBody.tsx:125
 msgid "Welcome"
 msgstr "Welcome"
 
@@ -2354,7 +2406,7 @@ msgstr "You may also choose to record another conversation."
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 
-#: src/components/participant/ParticipantBody.tsx:140
+#: src/components/participant/ParticipantBody.tsx:143
 msgid "You seem to be offline, please check your internet connection"
 msgstr "You seem to be offline, please check your internet connection"
 
@@ -2370,7 +2422,7 @@ msgstr "Your library is empty. Create a library to see your first insights."
 msgid "Your response has been recorded. You may now close this tab."
 msgstr "Your response has been recorded. You may now close this tab."
 
-#: src/components/participant/ParticipantBody.tsx:236
+#: src/components/participant/ParticipantBody.tsx:239
 msgid "Your responses"
 msgstr "Your responses"
 
