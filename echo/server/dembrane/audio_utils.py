@@ -530,7 +530,10 @@ MAX_CHUNK_SIZE = 15 * 1024 * 1024
 
 
 def split_audio_chunk(
-    original_chunk_id: str, output_format: str, chunk_size_bytes: int = MAX_CHUNK_SIZE
+    original_chunk_id: str,
+    output_format: str,
+    chunk_size_bytes: int = MAX_CHUNK_SIZE,
+    delete_original: bool = True,
 ) -> List[str]:
     logger = logging.getLogger("audio_utils.pre_process_audio")
 
@@ -656,6 +659,7 @@ def split_audio_chunk(
                 ).isoformat(),
                 "path": f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/{s3_chunk_path}",
                 "source": original_chunk["source"],
+                "id": chunk_id,
             }
             split_chunk_items.append(new_item)
             new_chunk_ids.append(chunk_id)
@@ -667,8 +671,9 @@ def split_audio_chunk(
 
     logger.debug("Created split chunks in Directus.")
 
-    directus.delete_item("conversation_chunk", original_chunk["id"])
-    logger.debug("Deleted original chunk from Directus after splitting.")
+    if delete_original:
+        directus.delete_item("conversation_chunk", original_chunk["id"])
+        logger.debug("Deleted original chunk from Directus after splitting.")
 
     logger.debug(f"Successfully split file into {number_chunks} chunks.")
     return new_ids

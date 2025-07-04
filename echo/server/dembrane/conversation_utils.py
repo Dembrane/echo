@@ -10,7 +10,7 @@ logger = logging.getLogger("dembrane.conversation_utils")
 
 def collect_unfinished_conversations() -> List[str]:
     # We want to collect:
-    # 1. All unfinished conversations from enhanced audio projects by default, EXCEPT
+    # 1. All unfinished conversations, EXCEPT
     # 2. Those that have at least one chunk in the last 15 minutes
 
     response = directus.get_items(
@@ -20,10 +20,6 @@ def collect_unfinished_conversations() -> List[str]:
                 "filter": {
                     # Must be unfinished
                     "is_finished": False,
-                    # Must be from a project with enhanced audio enabled
-                    "project_id": {
-                        "is_enhanced_audio_processing_enabled": True,
-                    },
                     # Must not have a chunk in the last 15 minutes :)
                     "chunks": {
                         "_none": {
@@ -34,7 +30,7 @@ def collect_unfinished_conversations() -> List[str]:
                     },
                 },
                 "fields": ["id"],
-                "limit": 100000,
+                "limit": -1,
             },
         },
     )
@@ -50,6 +46,7 @@ def collect_unfinished_conversations() -> List[str]:
     logger.info(f"Found {len(conversation_ids)} unfinished conversations")
 
     return conversation_ids
+
 
 def collect_unfinished_audio_processing_conversations() -> List[str]:
     unfinished_conversations = []
@@ -91,13 +88,12 @@ def collect_unfinished_audio_processing_conversations() -> List[str]:
                 },
             )
 
-
-        # Only add if there is at least one unprocessed segment
+            # Only add if there is at least one unprocessed segment
             if response and len(response) > 0:
                 unfinished_conversations.append(conversation["id"])
         except Exception as e:
             logger.error(f"Error collecting conversation {conversation['id']}: {e}")
-        
+
         try:
             total_segments = directus.get_items(
                 "conversation_segment",
@@ -116,4 +112,3 @@ def collect_unfinished_audio_processing_conversations() -> List[str]:
             logger.error(f"Error collecting conversation {conversation['id']}: {e}")
 
     return list(set(unfinished_conversations))
-

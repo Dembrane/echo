@@ -17,10 +17,10 @@ class ProcessingStatus(Enum):
 
 
 def add_processing_status(
-    conversation_id: str,
-    conversation_chunk_id: str,
-    event: str,
-    message: str,
+    conversation_id: Optional[str] = None,
+    conversation_chunk_id: Optional[str] = None,
+    event: Optional[str] = None,
+    message: Optional[str] = None,
     duration_ms: Optional[int] = None,
 ) -> int:
     logger.info(f"{event} {message} - {duration_ms}")
@@ -41,10 +41,10 @@ class ProcessingStatusContext:
 
     def __init__(
         self,
-        conversation_id: str,
-        conversation_chunk_id: str,
-        event_prefix: str,
-        message: str = "",
+        conversation_id: Optional[str] = None,
+        conversation_chunk_id: Optional[str] = None,
+        message: Optional[str] = None,
+        event_prefix: Optional[str] = None,
     ):
         self.conversation_id = conversation_id
         self.conversation_chunk_id = conversation_chunk_id
@@ -64,7 +64,7 @@ class ProcessingStatusContext:
             conversation_id=self.conversation_id,
             conversation_chunk_id=self.conversation_chunk_id,
             event=f"{self.event_prefix}.started",
-            message=self.message,
+            message=self.message if self.message else "",
         )
         self.logger.info(f"{self.processing_status_start_id} {self.message}")
         return self

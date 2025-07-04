@@ -18,7 +18,6 @@ from dembrane.config import REDIS_URL, RUNPOD_WHISPER_API_KEY, ENABLE_AUDIO_LIGH
 from dembrane.sentry import init_sentry
 from dembrane.directus import directus
 from dembrane.transcribe import transcribe_conversation_chunk
-from dembrane.audio_utils import split_audio_chunk
 from dembrane.conversation_utils import (
     collect_unfinished_conversations,
     collect_unfinished_audio_processing_conversations,
@@ -27,8 +26,6 @@ from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.conversation_health import get_runpod_diarization
 from dembrane.processing_status_utils import ProcessingStatus, ProcessingStatusContext
 from dembrane.audio_lightrag.main.run_etl import run_etl_pipeline
-
-from dembrane.service import conversation_service
 
 init_sentry()
 
@@ -99,10 +96,9 @@ def task_transcribe_chunk(conversation_chunk_id: str, conversation_id: str) -> N
     logger = getLogger("dembrane.tasks.task_transcribe_chunk")
     try:
         with ProcessingStatusContext(
-            "conversation",
-            conversation_id,
-            "task_transcribe_chunk",
-            json={"conversation_chunk_id": conversation_chunk_id},
+            conversation_id=conversation_id,
+            event_prefix="task_transcribe_chunk",
+            message=f"for chunk {conversation_chunk_id}",
         ):
             transcribe_conversation_chunk(conversation_chunk_id)
 
@@ -177,7 +173,8 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
         from dembrane.api.conversation import get_conversation_content
 
         with ProcessingStatusContext(
-            "conversation", conversation_id, "task_merge_conversation_chunks"
+            conversation_id=conversation_id,
+            event_prefix="task_merge_conversation_chunks",
         ):
             # todo: except if NoValidParts
             get_conversation_content(
@@ -271,7 +268,6 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
     """
     Finalize processing of a conversation and invoke follow-up tasks.
     1. Set status
-    2. Summarize
     3. Merge chunks into merged_audio_path
     4. Run ETL pipeline (if enabled)
     """
@@ -280,52 +276,38 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
     try:
         logger.info(f"Finishing conversation: {conversation_id}")
 
-        directus.update_item(
-            "conversation",
-            conversation_id,
-            item_data={
-                "is_finished": True,
-            },
+        from dembrane.service import conversation_service
+
+        conversation_service.update(conversation_id=conversation_id, is_finished=True)
+
+        logger.info(
+            f"Conversation {conversation_id} has not finished processing, running all follow-up tasks"
         )
 
-        # Create a group of follow-up tasks
-        follow_up_tasks = [
-            # task_summarize_conversation.message(conversation_id),
-            # task_merge_conversation_chunks.message(conversation_id),
-            # task_run_etl_pipeline.message(conversation_id),
-        ]
+        follow_up_tasks = []
+        follow_up_tasks.append(task_merge_conversation_chunks.message(conversation_id))
+        follow_up_tasks.append(task_run_etl_pipeline.message(conversation_id))
 
-        try:
-            conversation = directus.get_item("conversation", conversation_id)
-        except Exception:
-            logger.error(f"Conversation not found: {conversation_id}")
-            return
+        counts = conversation_service.get_chunk_counts(conversation_id)
+        logger.debug(counts)
 
-        try:
-            if conversation["processing_status"] == ProcessingStatus.COMPLETED.value:
-                logger.info(
-                    f"Conversation {conversation_id} has finished processing, running only ETL pipeline"
-                )
-                follow_up_tasks.append(task_run_etl_pipeline.message(conversation_id))
-            else:
-                logger.info(
-                    f"Conversation {conversation_id} has not finished processing, running all follow-up tasks"
-                )
-                follow_up_tasks.append(task_summarize_conversation.message(conversation_id))
-                follow_up_tasks.append(task_merge_conversation_chunks.message(conversation_id))
-                follow_up_tasks.append(task_run_etl_pipeline.message(conversation_id))
-        except Exception as e:
-            follow_up_tasks = []
-            follow_up_tasks.append(task_run_etl_pipeline.message(conversation_id))
-            logger.error(f"Error: {e}")
-        finally:
-            group(follow_up_tasks).run()
+        if counts["processed"] == counts["total"]:
+            logger.debug("allez c'est fini")
+            follow_up_tasks.append(task_summarize_conversation.message(conversation_id))
+
+            conversation_service.update(
+                conversation_id=conversation_id,
+                is_all_chunks_transcribed=True,
+            )
+        else:
+            logger.debug(
+                f"waiting for pending chunks {counts['pending']} ok({counts['ok']}) error({counts['error']}) total({counts['total']})"
+            )
+
+        group(follow_up_tasks).run()
 
         return
 
-    except JSONDecodeError as e:
-        logger.error(f"Error: {e}")
-        return
     except Exception as e:
         logger.error(f"Error: {e}")
         raise e from e
@@ -333,56 +315,45 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
 
 # cpu because it is also bottlenecked by the cpu queue due to the split_audio_chunk task
 @dramatiq.actor(queue_name="cpu", priority=0)
-def task_process_conversation_chunk(chunk_id: str, run_finish_hook: bool = False) -> None:
+def task_process_conversation_chunk(chunk_id: str) -> None:
     """
     Process a conversation chunk.
     """
     logger = getLogger("dembrane.tasks.task_process_conversation_chunk")
     try:
+        from dembrane.service import conversation_service
+
         chunk = conversation_service.get_chunk_by_id_or_raise(chunk_id)
         logger.debug(f"Chunk {chunk_id} found in conversation: {chunk['conversation_id']}")
 
         # critical section
         with ProcessingStatusContext(
             conversation_id=chunk["conversation_id"],
-            conversation_chunk_id=chunk_id,
             event_prefix="task_process_conversation_chunk.split_audio_chunk",
+            message=f"for chunk {chunk_id}",
         ):
-            split_chunk_ids = split_audio_chunk(chunk_id, "mp3")
+            from dembrane.audio_utils import split_audio_chunk
+
+            split_chunk_ids = split_audio_chunk(chunk_id, "mp3", delete_original=True)
 
         if split_chunk_ids is None:
             logger.error(f"Split audio chunk result is None for chunk: {chunk_id}")
             raise ValueError(f"Split audio chunk result is None for chunk: {chunk_id}")
-        
-        if chunk[""]
 
-        group([task_get_runpod_diarization.message(chunk_id)]).run()
+        if "upload" not in str(chunk["source"]).lower():
+            group([task_get_runpod_diarization.message(chunk_id)]).run()
 
         logger.info(f"Split audio chunk result: {split_chunk_ids}")
 
-        if run_finish_hook:
-            wf = Workflow(
-                Chain(
-                    Group(
-                        *[
-                            task_transcribe_chunk.message(inner_chunk_id, chunk["conversation_id"])
-                            for inner_chunk_id in split_chunk_ids
-                            if inner_chunk_id is not None
-                        ],
-                    ),
-                    task_finish_conversation_hook.message(chunk["conversation_id"]),
-                )
-            )
+        group(
+            [
+                task_transcribe_chunk.message(cid, chunk["conversation_id"])
+                for cid in split_chunk_ids
+                if cid is not None
+            ]
+        ).run()
 
-            return wf.run()
-        else:
-            return group(
-                [
-                    task_transcribe_chunk.message(chunk_id, chunk["conversation_id"])
-                    for chunk_id in split_chunk_ids
-                    if chunk_id is not None
-                ]
-            ).run()
+        return
 
     except Exception as e:
         logger.error(f"Error processing conversation chunk@[{chunk_id}]: {e}")
@@ -401,10 +372,14 @@ def task_collect_and_finish_unfinished_conversations() -> None:
         unfinished_conversation_ids = collect_unfinished_conversations()
         logger.info(f"Unfinished conversation ids: {unfinished_conversation_ids}")
 
-        unfinished_ap_conversation_ids = collect_unfinished_audio_processing_conversations()
-        logger.info(
-            f"Unfinished audio processing conversation ids: {unfinished_ap_conversation_ids}"
-        )
+        try:
+            unfinished_ap_conversation_ids = collect_unfinished_audio_processing_conversations()
+            logger.info(
+                f"Unfinished audio processing conversation ids: {unfinished_ap_conversation_ids}"
+            )
+        except Exception as e:
+            logger.error(f"Error collecting unfinished audio processing conversations: {e}")
+            unfinished_ap_conversation_ids = []
 
         group(
             [
@@ -467,19 +442,11 @@ def task_process_runpod_chunk_response(chunk_id: str, status_link: str) -> None:
     if response.status_code == 200:
         try:
             data = response.json()
-            transcript = data["output"]["joined_text"]
-            if transcript:
-                directus.update_item(
-                    "conversation_chunk",
-                    chunk_id,
-                    {
-                        "transcript": transcript,
-                        "runpod_job_status_link": None,
-                    },
-                )
-                logger.info(f"Transcript updated for chunk {chunk_id}")
-            else:
-                logger.warning(f"No transcript in response for chunk {chunk_id}")
+
+            from dembrane.runpod import load_runpod_transcription_response
+
+            load_runpod_transcription_response(data)
+
         except Exception as e:
             logger.error(f"Error parsing response for chunk {chunk_id}: {e}")
     else:

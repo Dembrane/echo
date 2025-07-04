@@ -739,6 +739,20 @@ export default function DebugPage() {
   const { data: conversation } = useConversationById({
     conversationId: currentConversationId!,
     loadConversationChunks: true,
+    query: {
+      fields: [
+        "*",
+        "processing_status.*" as any,
+        {
+          tags: [
+            {
+              project_tag_id: ["id", "text", "created_at"],
+            },
+          ],
+        },
+        { chunks: ["*", "processing_status.*"] as any },
+      ],
+    },
   });
 
   const { data: chats } = useProjectChats(currentProjectId!, {

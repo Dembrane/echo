@@ -352,9 +352,10 @@ export const ConversationStatusIndicators = ({
 
   const hasContent = useMemo(
     () =>
-      conversation.chunks?.some(
-        (chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
-      ),
+      // conversation.chunks?.some(
+      //   (chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
+      // ),
+      conversation.chunks?.length && conversation.chunks.length > 0,
     [conversation.chunks],
   );
 
@@ -386,15 +387,6 @@ export const ConversationStatusIndicators = ({
         </Badge>
       )}
 
-      {
-        // if from portal and not finished
-        !isUpload && conversation.processing_status === "PENDING" && (
-          // red pulsing dot
-          <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-        )
-      }
-
-      {/* if enhanced audio processing is enabled*/}
       {!!project?.is_enhanced_audio_processing_enabled &&
         // if processing still
         // don't show this if both is_finished and is_audio_processing_finished are true

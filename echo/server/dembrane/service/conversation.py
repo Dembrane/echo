@@ -1,8 +1,9 @@
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple
 from datetime import datetime
 
 from fastapi import UploadFile
 
+from dembrane.tasks import task_process_conversation_chunk
 from dembrane.utils import generate_uuid
 from dembrane.directus import DirectusBadRequest, directus_client_context
 from dembrane.service.event import ChunkCreatedEvent
@@ -129,6 +130,7 @@ class ConversationService:
         summary: Optional[str] = None,
         source: Optional[str] = None,
         is_finished: Optional[bool] = None,
+        is_all_chunks_transcribed: Optional[bool] = None,
     ) -> dict:
         update_data: dict[str, Any] = {}
         if participant_name is not None:
@@ -143,6 +145,8 @@ class ConversationService:
             update_data["source"] = source
         if is_finished is not None:
             update_data["is_finished"] = is_finished
+        if is_all_chunks_transcribed is not None:
+            update_data["is_all_chunks_transcribed"] = is_all_chunks_transcribed
 
         try:
             with directus_client_context() as client:
@@ -245,20 +249,23 @@ class ConversationService:
                 },
             )["data"]
 
-        self.event_service.publish(
-            ChunkCreatedEvent(
-                chunk_id=chunk_id,
-                conversation_id=conversation["id"],
-            )
-        )
+        # self.event_service.publish(
+        #     ChunkCreatedEvent(
+        #         chunk_id=chunk_id,
+        #         conversation_id=conversation["id"],
+        #     )
+        # )
+
+        task_process_conversation_chunk.send(chunk_id)
 
         return chunk
 
     def update_chunk(
         self,
         chunk_id: str,
-        transcript: str,
-        path: str,
+        transcript: Optional[str] = None,
+        path: Optional[str] = None,
+        runpod_job_status_link: Optional[str] = None,
     ) -> dict:
         update = {}
 
@@ -267,6 +274,9 @@ class ConversationService:
 
         if path is not None:
             update["path"] = path
+
+        if runpod_job_status_link is not None:
+            update["runpod_job_status_link"] = runpod_job_status_link
 
         if update.keys():
             try:
@@ -289,3 +299,65 @@ class ConversationService:
     ) -> None:
         with directus_client_context() as client:
             client.delete_item("conversation_chunk", chunk_id)
+
+    def get_chunk_counts(
+        self,
+        conversation_id: str,
+    ) -> dict:
+        """
+
+        total = error + pending + ok
+        total = processed + pending
+        processed = error + ok
+
+        Returns:
+        {
+            "total": int,
+            "processed": int,
+            "pending": int,
+            "error": int,
+            "ok": int,
+        }
+        """
+        try:
+            with directus_client_context() as client:
+                chunks = client.get_items(
+                    "conversation_chunk",
+                    {
+                        "query": {
+                            "filter": {"conversation_id": conversation_id},
+                            "fields": ["id", "error", "transcript"],
+                        }
+                    },
+                )["data"]
+        except DirectusBadRequest as e:
+            raise ConversationServiceException(
+                f"Failed to get chunk count for conversation {conversation_id}: {e}"
+            ) from e
+
+        total = len(chunks)
+        error = 0
+        pending = 0
+        ok = 0
+
+        for chunk in chunks:
+            if chunk["error"] is not None:
+                error += 1
+            elif chunk["transcript"] is not None:
+                ok += 1
+            else:
+                pending += 1
+
+        processed = error + ok
+
+        assert total == processed + pending
+        assert total == error + ok + pending
+        assert processed == error + ok
+
+        return {
+            "total": total,
+            "processed": processed,
+            "error": error,
+            "pending": pending,
+            "ok": ok,
+        }

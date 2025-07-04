@@ -90,14 +90,14 @@ async def get_conversation_chunks(
 
     return chunks
 
+
 async def generate_health_events(
     request: Request,
     conversation_ids: List[str],  # noqa: ARG001
     project_ids: List[str],  # noqa: ARG001
     client_info: str,
-    interval_seconds: int = 45
+    interval_seconds: int = 45,
 ) -> AsyncGenerator[str, None]:
-    
     ping_count = 0
     last_health_data = None
     event_count = 0
@@ -113,24 +113,31 @@ async def generate_health_events(
 
             # Send ping every 45 seconds
             yield f"event: ping\ndata: {ping_count}\n\n"
-            
-            health_data = get_health_status(conversation_ids=conversation_ids, project_ids=project_ids)
+
+            health_data = get_health_status(
+                conversation_ids=conversation_ids, project_ids=project_ids
+            )
 
             # Extract only conversation_issue for the single conversation_id if only one is passed
             if len(conversation_ids) == 1:
                 conversation_id = conversation_ids[0]
                 conversation_issue = None
-                
+
                 # Find the conversation_issue in the nested structure
                 if health_data and "projects" in health_data:
                     for project_data in health_data["projects"].values():
-                        if "conversations" in project_data and conversation_id in project_data["conversations"]:
-                            conversation_issue = project_data["conversations"][conversation_id].get("conversation_issue", "UNKNOWN")
+                        if (
+                            "conversations" in project_data
+                            and conversation_id in project_data["conversations"]
+                        ):
+                            conversation_issue = project_data["conversations"][conversation_id].get(
+                                "conversation_issue", "UNKNOWN"
+                            )
                             break
-                
+
                 # Create simplified response with just the conversation_issue
                 simplified_data = {"conversation_issue": conversation_issue}
-                
+
                 # Only send if changed
                 if simplified_data != last_health_data:
                     yield f"event: health_update\ndata: {json.dumps(simplified_data)}\n\n"
@@ -140,7 +147,7 @@ async def generate_health_events(
                 if health_data != last_health_data:
                     yield f"event: health_update\ndata: {json.dumps(health_data)}\n\n"
                     last_health_data = health_data
-            
+
                 event_count += 1
                 logger.debug(f"Sent health event #{event_count} to {client_info}")
 
@@ -158,14 +165,18 @@ async def generate_health_events(
         raise
     except Exception as e:
         logger.error(f"Unexpected error in health stream to {client_info}: {e}", exc_info=True)
-                # Send error event before closing
+        # Send error event before closing
         try:
-            error_data = {"error": "Internal server error", "timestamp": asyncio.get_event_loop().time()}
+            error_data = {
+                "error": "Internal server error",
+                "timestamp": asyncio.get_event_loop().time(),
+            }
             yield f"event: error\ndata: {json.dumps(error_data)}\n\n"
         except:  # noqa: E722
             pass
     finally:
         logger.info(f"Health stream to {client_info} ended after {ping_count} pings")
+
 
 def raise_if_conversation_not_found_or_not_authorized(
     conversation_id: str, auth: DependencyDirectusSession
@@ -616,7 +627,7 @@ async def retranscribe_conversation(
             # Import task locally to avoid circular imports
             from dembrane.tasks import task_process_conversation_chunk
 
-            task_process_conversation_chunk.send(chunk_id, run_finish_hook=False)
+            task_process_conversation_chunk.send(chunk_id)
 
             return {
                 "status": "success",
@@ -677,9 +688,9 @@ async def delete_conversation(
     except Exception as e:
         logger.exception(f"Error deleting conversation {conversation_id}: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to delete conversation: {str(e)}"
+            status_code=500, detail=f"Failed to delete conversation: {str(e)}"
         ) from e
+
 
 @ConversationRouter.get("/health/stream")
 async def stream_health_data(
@@ -687,13 +698,12 @@ async def stream_health_data(
     conversation_ids: Optional[str] = "",
     project_ids: Optional[str] = "",
 ) -> StreamingResponse:
-    
     # ensure ids exist and are not empty
     if conversation_ids is None:
         conversation_ids = ""
     if project_ids is None:
         project_ids = ""
-    
+
     def clean_ids(id_list: Optional[str]) -> List[str]:
         return [id.strip() for id in id_list.split(",") if id and id.strip()] if id_list else []
 
@@ -706,22 +716,25 @@ async def stream_health_data(
     if not conversation_ids_list and not project_ids_list:
         raise HTTPException(
             status_code=400,
-            detail="At least one of conversation_ids or project_ids must be provided"
+            detail="At least one of conversation_ids or project_ids must be provided",
         )
-    
+
     # Limit total IDs to prevent abuse
     total_ids = len(conversation_ids_list) + len(project_ids_list)
     if total_ids > 20:
         raise HTTPException(
-            status_code=400,
-            detail=f"Too many IDs provided ({total_ids}). Maximum allowed is 20."
+            status_code=400, detail=f"Too many IDs provided ({total_ids}). Maximum allowed is 20."
         )
-    
+
     INTERVAL_SECONDS = 45
-    client_info = f"{request.client.host}:{request.client.port}" if request.client else "unknown client"
-    
+    client_info = (
+        f"{request.client.host}:{request.client.port}" if request.client else "unknown client"
+    )
+
     return StreamingResponse(
-        generate_health_events(request, conversation_ids_list, project_ids_list, client_info, INTERVAL_SECONDS),
+        generate_health_events(
+            request, conversation_ids_list, project_ids_list, client_info, INTERVAL_SECONDS
+        ),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

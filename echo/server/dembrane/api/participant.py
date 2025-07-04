@@ -217,9 +217,7 @@ async def upload_conversation_chunk(
     chunk: UploadFile,
     timestamp: Annotated[datetime, Form()],
     source: Annotated[str, Form()] = "PORTAL_AUDIO",
-    run_finish_hook: Annotated[bool, Form()] = True,
 ) -> dict:
-    logger.warning("UNUSED: run_finish_hook: %s", run_finish_hook)
     try:
         return conversation_service.create_chunk(
             conversation_id=conversation_id,

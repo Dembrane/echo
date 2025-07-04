@@ -116,8 +116,6 @@ class ProjectModel(Base):
     )
     directus_user: Mapped["UserModel"] = relationship("UserModel")
 
-    pin: Mapped[str] = mapped_column(String, unique=True)
-
     language: Mapped[str] = mapped_column(String, default="en")
 
     name: Mapped[Optional[str]] = mapped_column(String, nullable=True)

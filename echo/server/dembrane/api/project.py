@@ -63,13 +63,9 @@ async def create_project(
     context = body.context or None
     language = body.language or "en"
 
-    # pin generation
-    pin = generate_4_digit_pin()
-
     project = ProjectModel(
         id=generate_uuid(),
         directus_user_id=auth.user_id,
-        pin=pin,
         name=name,
         context=context,
         language=language,
