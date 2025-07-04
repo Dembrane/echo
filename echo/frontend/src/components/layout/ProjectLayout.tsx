@@ -17,7 +17,7 @@ export const ProjectLayout = () => {
     <Box
       // className={`relative ${isMobile ? "flex flex-col" : "flex h-[calc(100vh-60px)]"} `}
       className={cn(
-        "relative flex flex-col md:h-[calc(100vh-60px)] md:flex-row",
+        "relative flex flex-col md:h-project-layout-height md:flex-row",
       )}
     >
       <aside

@@ -6,6 +6,14 @@ export default {
   theme: {
     extend: {
       fontFamily: "'Space Grotesk', sans-serif",
+      height: {
+        "base-layout-height": "var(--base-layout-height, calc(100% - 60px))",
+        "project-layout-height":
+          "var(--project-layout-height, calc(100vh - 60px))",
+      },
+      spacing: {
+        "base-layout-padding": "var(--base-layout-padding, 60px)",
+      },
       colors: {
         // from mantine primary
         //   [

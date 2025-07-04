@@ -1096,6 +1096,32 @@ export type TestimonialsTranslations = {
   testimonials_id?: string | Testimonials | null;
 };
 
+export type Announcement = {
+  id: string;
+  user_created?: string | DirectusUsers | null;
+  created_at?: Date | null | undefined;
+  expires_at?: Date | null | undefined;
+  level?: string | null;
+  translations: any[] | AnnouncementTranslations[];
+  activity: any[] | AnnouncementActivity[];
+};
+
+export type AnnouncementTranslations = {
+  id: number;
+  languages_code?: string | Languages | null;
+  title?: string | null;
+  message?: string | null;
+};
+
+export type AnnouncementActivity = {
+  id: string;
+  user_created?: string | DirectusUsers | null;
+  created_at?: string | null;
+  user_id?: string | null;
+  announcement_activity?: string | Announcement | null;
+  read: boolean | null;
+};
+
 export type CustomDirectusTypes = {
   block_button: BlockButton;
   block_button_group: BlockButtonGroup;
@@ -1200,4 +1226,7 @@ export type CustomDirectusTypes = {
   team: Team;
   testimonials: Testimonials;
   testimonials_translations: TestimonialsTranslations;
+  announcement: Announcement;
+  announcement_translations: AnnouncementTranslations;
+  announcement_activity: AnnouncementActivity;
 };

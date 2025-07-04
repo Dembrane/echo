@@ -8,12 +8,12 @@ import { ErrorBoundary } from "../error/ErrorBoundary";
 export const BaseLayout = ({ children }: PropsWithChildren) => {
   return (
     <Box className="min-h-screen">
-      <Box className="fixed top-0 z-10 h-[60px] w-full">
+      <Box className="fixed top-0 z-10 w-full">
         <Header />
       </Box>
 
       <ErrorBoundary>
-        <main className="h-[calc(100%-60px)] w-full pt-[60px]">
+        <main className="h-base-layout-height pt-base-layout-padding w-full">
           <Outlet />
           {children}
         </main>
