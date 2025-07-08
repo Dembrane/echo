@@ -262,20 +262,29 @@ type Subscription {
   directus_access_mutated(event: EventEnum): directus_access_mutated
   directus_comments_mutated(event: EventEnum): directus_comments_mutated
   directus_versions_mutated(event: EventEnum): directus_versions_mutated
-  aspect_mutated(event: EventEnum): aspect_mutated
+  processing_status_mutated(event: EventEnum): processing_status_mutated
   directus_users_mutated(event: EventEnum): directus_users_mutated
   account_mutated(event: EventEnum): account_mutated
   account_directus_users_mutated(event: EventEnum): account_directus_users_mutated
+  announcement_mutated(event: EventEnum): announcement_mutated
+  announcement_activity_mutated(event: EventEnum): announcement_activity_mutated
+  announcement_translations_mutated(event: EventEnum): announcement_translations_mutated
+  languages_mutated(event: EventEnum): languages_mutated
   view_mutated(event: EventEnum): view_mutated
+  project_mutated(event: EventEnum): project_mutated
+  conversation_mutated(event: EventEnum): conversation_mutated
+  conversation_chunk_mutated(event: EventEnum): conversation_chunk_mutated
   conversation_project_tag_mutated(event: EventEnum): conversation_project_tag_mutated
   project_tag_mutated(event: EventEnum): project_tag_mutated
   conversation_reply_mutated(event: EventEnum): conversation_reply_mutated
   conversation_segment_conversation_chunk_mutated(event: EventEnum): conversation_segment_conversation_chunk_mutated
+  dashboard_announcements_translations_mutated(event: EventEnum): dashboard_announcements_translations_mutated
   document_mutated(event: EventEnum): document_mutated
   project_analysis_run_mutated(event: EventEnum): project_analysis_run_mutated
   insight_mutated(event: EventEnum): insight_mutated
   project_chat_mutated(event: EventEnum): project_chat_mutated
   project_chat_conversation_mutated(event: EventEnum): project_chat_conversation_mutated
+  project_chat_message_mutated(event: EventEnum): project_chat_message_mutated
   project_chat_message_conversation_mutated(event: EventEnum): project_chat_message_conversation_mutated
   project_chat_message_conversation_1_mutated(event: EventEnum): project_chat_message_conversation_1_mutated
   project_chat_message_metadata_mutated(event: EventEnum): project_chat_message_metadata_mutated
@@ -284,19 +293,11 @@ type Subscription {
   project_report_notification_participants_mutated(event: EventEnum): project_report_notification_participants_mutated
   quote_mutated(event: EventEnum): quote_mutated
   quote_aspect_mutated(event: EventEnum): quote_aspect_mutated
-  conversation_segment_mutated(event: EventEnum): conversation_segment_mutated
-  conversation_mutated(event: EventEnum): conversation_mutated
-  project_chat_message_mutated(event: EventEnum): project_chat_message_mutated
-  project_mutated(event: EventEnum): project_mutated
-  conversation_chunk_mutated(event: EventEnum): conversation_chunk_mutated
   quote_aspect_1_mutated(event: EventEnum): quote_aspect_1_mutated
   quote_conversation_chunk_mutated(event: EventEnum): quote_conversation_chunk_mutated
-  processing_status_mutated(event: EventEnum): processing_status_mutated
-  announcement_mutated(event: EventEnum): announcement_mutated
-  languages_mutated(event: EventEnum): languages_mutated
-  announcement_translations_mutated(event: EventEnum): announcement_translations_mutated
-  dashboard_announcements_translations_mutated(event: EventEnum): dashboard_announcements_translations_mutated
-  announcement_activity_mutated(event: EventEnum): announcement_activity_mutated
+  aspect_mutated(event: EventEnum): aspect_mutated
+  conversation_segment_mutated(event: EventEnum): conversation_segment_mutated
+  aspect_segment_mutated(event: EventEnum): aspect_segment_mutated
 }
 
 """The `Boolean` scalar type represents `true` or `false`."""
@@ -403,35 +404,35 @@ type account_mutated {
 }
 
 type announcement {
-  id: ID!
-  sort: Int
-  user_created(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
   created_at: Date
   created_at_func: datetime_functions
-  user_updated(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
-  updated_at: Date
-  updated_at_func: datetime_functions
   expires_at: Date
   expires_at_func: datetime_functions
+  id: ID!
   level: String
-  translations(filter: announcement_translations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [announcement_translations]
-  translations_func: count_functions
+  sort: Int
+  updated_at: Date
+  updated_at_func: datetime_functions
+  user_created(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
+  user_updated(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
   activity(filter: announcement_activity_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [announcement_activity]
   activity_func: count_functions
+  translations(filter: announcement_translations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [announcement_translations]
+  translations_func: count_functions
 }
 
 type announcement_activity {
-  id: ID!
-  sort: Int
-  user_created(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
+  announcement_activity(filter: announcement_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): announcement
   created_at: Date
   created_at_func: datetime_functions
-  user_updated(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
+  id: ID!
+  read: Boolean
+  sort: Int
   updated_at: Date
   updated_at_func: datetime_functions
+  user_created(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
   user_id: String
-  read: Boolean
-  announcement_activity(filter: announcement_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): announcement
+  user_updated(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
 }
 
 type announcement_activity_mutated {
@@ -447,11 +448,11 @@ type announcement_mutated {
 }
 
 type announcement_translations {
-  id: ID!
   announcement_id(filter: announcement_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): announcement
+  id: ID!
   languages_code(filter: languages_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): languages
-  title: String
   message: String
+  title: String
 }
 
 type announcement_translations_mutated {
@@ -485,6 +486,21 @@ type aspect_mutated {
   data: aspect
 }
 
+type aspect_segment {
+  id: ID!
+  description: String
+  verbatim_transcript: String
+  relevant_index: String
+  segment(filter: conversation_segment_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation_segment
+  aspect(filter: aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): aspect
+}
+
+type aspect_segment_mutated {
+  key: ID!
+  event: EventEnum
+  data: aspect_segment
+}
+
 type auth_tokens {
   access_token: String
   expires: GraphQLBigInt
@@ -498,6 +514,7 @@ type conversation {
   description: String
   duration: Float
   id: ID!
+  is_audio_processing_finished: Boolean
   is_finished: Boolean
   merged_audio_path: String
   merged_transcript: String
@@ -514,9 +531,10 @@ type conversation {
   title: String
   updated_at: Date
   updated_at_func: datetime_functions
-  is_audio_processing_finished: Boolean
   chunks(filter: conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_chunk]
   chunks_func: count_functions
+  conversation_segments(filter: conversation_segment_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_segment]
+  conversation_segments_func: count_functions
   project_chat_messages(filter: project_chat_message_conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_message_conversation]
   project_chat_messages_func: count_functions
   project_chats(filter: project_chat_conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_conversation]
@@ -525,18 +543,23 @@ type conversation {
   replies_func: count_functions
   tags(filter: conversation_project_tag_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_project_tag]
   tags_func: count_functions
-  conversation_segments(filter: conversation_segment_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_segment]
-  conversation_segments_func: count_functions
 }
 
 type conversation_chunk {
   conversation_id(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation
   created_at: Date
   created_at_func: datetime_functions
+  cross_talk_instances: Int
+  diarization: JSON
+  diarization_func: count_functions
   id: ID!
+  noise_ratio: Float
   path: String
   processing_message: String
   processing_status: String
+  runpod_job_status_link: String
+  runpod_request_count: Int
+  silence_ratio: Float
 
   """This is set if not through PORTAL"""
   source: String
@@ -545,13 +568,6 @@ type conversation_chunk {
   transcript: String
   updated_at: Date
   updated_at_func: datetime_functions
-  runpod_job_status_link: String
-  runpod_request_count: Int
-  cross_talk_instances: Int
-  diarization: JSON
-  diarization_func: count_functions
-  noise_ratio: Float
-  silence_ratio: Float
   conversation_segments(filter: conversation_segment_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_segment_conversation_chunk]
   conversation_segments_func: count_functions
   quotes(filter: quote_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_conversation_chunk]
@@ -602,12 +618,12 @@ type conversation_reply_mutated {
 type conversation_segment {
   config_id: String
   contextual_transcript: String
+  conversation_id(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation
   counter: Float
   id: ID!
   lightrag_flag: Boolean
   path: String
   transcript: String
-  conversation_id(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation
   chunks(filter: conversation_segment_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_segment_conversation_chunk]
   chunks_func: count_functions
 }
@@ -637,9 +653,9 @@ type count_functions {
 type dashboard_announcements_translations {
   id: ID!
   languages_code(filter: languages_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): languages
+  mark_all_as_read: String
   title: String
   unread_notifications: String
-  mark_all_as_read: String
 }
 
 type dashboard_announcements_translations_mutated {
@@ -1964,8 +1980,8 @@ type insight_mutated {
 
 type languages {
   code: ID!
-  name: String
   direction: String
+  name: String
 }
 
 type languages_mutated {
@@ -2014,6 +2030,7 @@ type project {
   """
   default_conversation_tutorial_slug: String
   directus_user_id(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
+  get_reply_mode: String
   get_reply_prompt: String
   id: ID!
   image_generation_model: String
@@ -2026,17 +2043,16 @@ type project {
   pin: String
   updated_at: Date
   updated_at_func: datetime_functions
-  get_reply_mode: String
   conversations(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation]
   conversations_func: count_functions
-  tags(filter: project_tag_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_tag]
-  tags_func: count_functions
   project_analysis_runs(filter: project_analysis_run_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_analysis_run]
   project_analysis_runs_func: count_functions
   project_chats(filter: project_chat_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat]
   project_chats_func: count_functions
   project_reports(filter: project_report_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_report]
   project_reports_func: count_functions
+  tags(filter: project_tag_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_tag]
+  tags_func: count_functions
 }
 
 type project_analysis_run {
@@ -2104,9 +2120,9 @@ type project_chat_message {
   id: ID!
   message_from: String
   project_chat_id(filter: project_chat_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): project_chat
+  template_key: String
   text: String
   tokens_count: Int
-  template_key: String
   added_conversations(filter: project_chat_message_conversation_1_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_message_conversation_1]
   added_conversations_func: count_functions
   chat_message_metadata(filter: project_chat_message_metadata_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_message_metadata]
@@ -2410,47 +2426,47 @@ input account_filter {
 }
 
 input announcement_activity_filter {
-  id: string_filter_operators
-  sort: number_filter_operators
-  user_created: directus_users_filter
+  announcement_activity: announcement_filter
   created_at: date_filter_operators
   created_at_func: datetime_function_filter_operators
-  user_updated: directus_users_filter
+  id: string_filter_operators
+  read: boolean_filter_operators
+  sort: number_filter_operators
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
+  user_created: directus_users_filter
   user_id: string_filter_operators
-  read: boolean_filter_operators
-  announcement_activity: announcement_filter
+  user_updated: directus_users_filter
   _and: [announcement_activity_filter]
   _or: [announcement_activity_filter]
 }
 
 input announcement_filter {
-  id: string_filter_operators
-  sort: number_filter_operators
-  user_created: directus_users_filter
   created_at: date_filter_operators
   created_at_func: datetime_function_filter_operators
-  user_updated: directus_users_filter
-  updated_at: date_filter_operators
-  updated_at_func: datetime_function_filter_operators
   expires_at: date_filter_operators
   expires_at_func: datetime_function_filter_operators
+  id: string_filter_operators
   level: string_filter_operators
-  translations: announcement_translations_filter
-  translations_func: count_function_filter_operators
+  sort: number_filter_operators
+  updated_at: date_filter_operators
+  updated_at_func: datetime_function_filter_operators
+  user_created: directus_users_filter
+  user_updated: directus_users_filter
   activity: announcement_activity_filter
   activity_func: count_function_filter_operators
+  translations: announcement_translations_filter
+  translations_func: count_function_filter_operators
   _and: [announcement_filter]
   _or: [announcement_filter]
 }
 
 input announcement_translations_filter {
-  id: number_filter_operators
   announcement_id: announcement_filter
+  id: number_filter_operators
   languages_code: languages_filter
-  title: string_filter_operators
   message: string_filter_operators
+  title: string_filter_operators
   _and: [announcement_translations_filter]
   _or: [announcement_translations_filter]
 }
@@ -2502,23 +2518,23 @@ input conversation_chunk_filter {
   conversation_id: conversation_filter
   created_at: date_filter_operators
   created_at_func: datetime_function_filter_operators
+  cross_talk_instances: number_filter_operators
+  diarization: string_filter_operators
+  diarization_func: count_function_filter_operators
   id: string_filter_operators
+  noise_ratio: number_filter_operators
   path: string_filter_operators
   processing_message: string_filter_operators
   processing_status: string_filter_operators
+  runpod_job_status_link: string_filter_operators
+  runpod_request_count: number_filter_operators
+  silence_ratio: number_filter_operators
   source: string_filter_operators
   timestamp: date_filter_operators
   timestamp_func: datetime_function_filter_operators
   transcript: string_filter_operators
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
-  runpod_job_status_link: string_filter_operators
-  runpod_request_count: number_filter_operators
-  cross_talk_instances: number_filter_operators
-  diarization: string_filter_operators
-  diarization_func: count_function_filter_operators
-  noise_ratio: number_filter_operators
-  silence_ratio: number_filter_operators
   conversation_segments: conversation_segment_conversation_chunk_filter
   conversation_segments_func: count_function_filter_operators
   quotes: quote_conversation_chunk_filter
@@ -2534,6 +2550,7 @@ input conversation_filter {
   description: string_filter_operators
   duration: number_filter_operators
   id: string_filter_operators
+  is_audio_processing_finished: boolean_filter_operators
   is_finished: boolean_filter_operators
   merged_audio_path: string_filter_operators
   merged_transcript: string_filter_operators
@@ -2548,9 +2565,10 @@ input conversation_filter {
   title: string_filter_operators
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
-  is_audio_processing_finished: boolean_filter_operators
   chunks: conversation_chunk_filter
   chunks_func: count_function_filter_operators
+  conversation_segments: conversation_segment_filter
+  conversation_segments_func: count_function_filter_operators
   project_chat_messages: project_chat_message_conversation_filter
   project_chat_messages_func: count_function_filter_operators
   project_chats: project_chat_conversation_filter
@@ -2559,8 +2577,6 @@ input conversation_filter {
   replies_func: count_function_filter_operators
   tags: conversation_project_tag_filter
   tags_func: count_function_filter_operators
-  conversation_segments: conversation_segment_filter
-  conversation_segments_func: count_function_filter_operators
   _and: [conversation_filter]
   _or: [conversation_filter]
 }
@@ -2597,12 +2613,12 @@ input conversation_segment_conversation_chunk_filter {
 input conversation_segment_filter {
   config_id: string_filter_operators
   contextual_transcript: string_filter_operators
+  conversation_id: conversation_filter
   counter: number_filter_operators
   id: number_filter_operators
   lightrag_flag: boolean_filter_operators
   path: string_filter_operators
   transcript: string_filter_operators
-  conversation_id: conversation_filter
   chunks: conversation_segment_conversation_chunk_filter
   chunks_func: count_function_filter_operators
   _and: [conversation_segment_filter]
@@ -2645,22 +2661,22 @@ input create_aspect_input {
 input create_conversation_chunk_input {
   conversation_id: create_conversation_input
   created_at: Date
+  cross_talk_instances: Int
+  diarization: JSON
   id: ID
+  noise_ratio: Float
   path: String
   processing_message: String
   processing_status: String
+  runpod_job_status_link: String
+  runpod_request_count: Int
+  silence_ratio: Float
 
   """This is set if not through PORTAL"""
   source: String
   timestamp: Date!
   transcript: String
   updated_at: Date
-  runpod_job_status_link: String
-  runpod_request_count: Int
-  cross_talk_instances: Int
-  diarization: JSON
-  noise_ratio: Float
-  silence_ratio: Float
   conversation_segments: [create_conversation_segment_conversation_chunk_input]
   quotes: [create_quote_conversation_chunk_input]
 }
@@ -2671,6 +2687,7 @@ input create_conversation_input {
   description: String
   duration: Float
   id: ID
+  is_audio_processing_finished: Boolean
   is_finished: Boolean
   merged_audio_path: String
   merged_transcript: String
@@ -2686,13 +2703,12 @@ input create_conversation_input {
   summary: String
   title: String
   updated_at: Date
-  is_audio_processing_finished: Boolean
   chunks: [create_conversation_chunk_input]
+  conversation_segments: [create_conversation_segment_input]
   project_chat_messages: [create_project_chat_message_conversation_input]
   project_chats: [create_project_chat_conversation_input]
   replies: [create_conversation_reply_input]
   tags: [create_conversation_project_tag_input]
-  conversation_segments: [create_conversation_segment_input]
 }
 
 input create_conversation_project_tag_input {
@@ -2720,12 +2736,12 @@ input create_conversation_segment_conversation_chunk_input {
 input create_conversation_segment_input {
   config_id: String
   contextual_transcript: String
+  conversation_id: create_conversation_input
   counter: Float
   id: ID
   lightrag_flag: Boolean
   path: String
   transcript: String
-  conversation_id: create_conversation_input
   chunks: [create_conversation_segment_conversation_chunk_input]
 }
 
@@ -3097,9 +3113,9 @@ input create_project_chat_message_input {
   id: ID
   message_from: String
   project_chat_id: create_project_chat_input
+  template_key: String
   text: String
   tokens_count: Int
-  template_key: String
   added_conversations: [create_project_chat_message_conversation_1_input]
   chat_message_metadata: [create_project_chat_message_metadata_input]
   used_conversations: [create_project_chat_message_conversation_input]
@@ -3130,6 +3146,7 @@ input create_project_input {
   """
   default_conversation_tutorial_slug: String
   directus_user_id: create_directus_users_input
+  get_reply_mode: String
   get_reply_prompt: String
   id: ID
   image_generation_model: String
@@ -3141,12 +3158,11 @@ input create_project_input {
   name: String
   pin: String
   updated_at: Date
-  get_reply_mode: String
   conversations: [create_conversation_input]
-  tags: [create_project_tag_input]
   project_analysis_runs: [create_project_analysis_run_input]
   project_chats: [create_project_chat_input]
   project_reports: [create_project_report_input]
+  tags: [create_project_tag_input]
 }
 
 input create_project_report_input {
@@ -3737,8 +3753,8 @@ input insight_filter {
 
 input languages_filter {
   code: string_filter_operators
-  name: string_filter_operators
   direction: string_filter_operators
+  name: string_filter_operators
   _and: [languages_filter]
   _or: [languages_filter]
 }
@@ -3833,9 +3849,9 @@ input project_chat_message_filter {
   id: string_filter_operators
   message_from: string_filter_operators
   project_chat_id: project_chat_filter
+  template_key: string_filter_operators
   text: string_filter_operators
   tokens_count: number_filter_operators
-  template_key: string_filter_operators
   added_conversations: project_chat_message_conversation_1_filter
   added_conversations_func: count_function_filter_operators
   chat_message_metadata: project_chat_message_metadata_filter
@@ -3871,6 +3887,7 @@ input project_filter {
   default_conversation_transcript_prompt: string_filter_operators
   default_conversation_tutorial_slug: string_filter_operators
   directus_user_id: directus_users_filter
+  get_reply_mode: string_filter_operators
   get_reply_prompt: string_filter_operators
   id: string_filter_operators
   image_generation_model: string_filter_operators
@@ -3883,17 +3900,16 @@ input project_filter {
   pin: string_filter_operators
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
-  get_reply_mode: string_filter_operators
   conversations: conversation_filter
   conversations_func: count_function_filter_operators
-  tags: project_tag_filter
-  tags_func: count_function_filter_operators
   project_analysis_runs: project_analysis_run_filter
   project_analysis_runs_func: count_function_filter_operators
   project_chats: project_chat_filter
   project_chats_func: count_function_filter_operators
   project_reports: project_report_filter
   project_reports_func: count_function_filter_operators
+  tags: project_tag_filter
+  tags_func: count_function_filter_operators
   _and: [project_filter]
   _or: [project_filter]
 }
@@ -4031,22 +4047,22 @@ input update_aspect_input {
 input update_conversation_chunk_input {
   conversation_id: update_conversation_input
   created_at: Date
+  cross_talk_instances: Int
+  diarization: JSON
   id: ID
+  noise_ratio: Float
   path: String
   processing_message: String
   processing_status: String
+  runpod_job_status_link: String
+  runpod_request_count: Int
+  silence_ratio: Float
 
   """This is set if not through PORTAL"""
   source: String
   timestamp: Date
   transcript: String
   updated_at: Date
-  runpod_job_status_link: String
-  runpod_request_count: Int
-  cross_talk_instances: Int
-  diarization: JSON
-  noise_ratio: Float
-  silence_ratio: Float
   conversation_segments: [update_conversation_segment_conversation_chunk_input]
   quotes: [update_quote_conversation_chunk_input]
 }
@@ -4057,6 +4073,7 @@ input update_conversation_input {
   description: String
   duration: Float
   id: ID
+  is_audio_processing_finished: Boolean
   is_finished: Boolean
   merged_audio_path: String
   merged_transcript: String
@@ -4072,13 +4089,12 @@ input update_conversation_input {
   summary: String
   title: String
   updated_at: Date
-  is_audio_processing_finished: Boolean
   chunks: [update_conversation_chunk_input]
+  conversation_segments: [update_conversation_segment_input]
   project_chat_messages: [update_project_chat_message_conversation_input]
   project_chats: [update_project_chat_conversation_input]
   replies: [update_conversation_reply_input]
   tags: [update_conversation_project_tag_input]
-  conversation_segments: [update_conversation_segment_input]
 }
 
 input update_conversation_project_tag_input {
@@ -4106,12 +4122,12 @@ input update_conversation_segment_conversation_chunk_input {
 input update_conversation_segment_input {
   config_id: String
   contextual_transcript: String
+  conversation_id: update_conversation_input
   counter: Float
   id: ID
   lightrag_flag: Boolean
   path: String
   transcript: String
-  conversation_id: update_conversation_input
   chunks: [update_conversation_segment_conversation_chunk_input]
 }
 
@@ -4524,9 +4540,9 @@ input update_project_chat_message_input {
   id: ID
   message_from: String
   project_chat_id: update_project_chat_input
+  template_key: String
   text: String
   tokens_count: Int
-  template_key: String
   added_conversations: [update_project_chat_message_conversation_1_input]
   chat_message_metadata: [update_project_chat_message_metadata_input]
   used_conversations: [update_project_chat_message_conversation_input]
@@ -4557,6 +4573,7 @@ input update_project_input {
   """
   default_conversation_tutorial_slug: String
   directus_user_id: update_directus_users_input
+  get_reply_mode: String
   get_reply_prompt: String
   id: ID
   image_generation_model: String
@@ -4568,12 +4585,11 @@ input update_project_input {
   name: String
   pin: String
   updated_at: Date
-  get_reply_mode: String
   conversations: [update_conversation_input]
-  tags: [update_project_tag_input]
   project_analysis_runs: [update_project_analysis_run_input]
   project_chats: [update_project_chat_input]
   project_reports: [update_project_report_input]
+  tags: [update_project_tag_input]
 }
 
 input update_project_report_input {
