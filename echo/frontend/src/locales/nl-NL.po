@@ -65,12 +65,12 @@ msgid "{0} Conversations • Edited {1}"
 msgstr "{0} Gesprekken • Bewerkt {1}"
 
 #: src/components/announcement/utils/dateUtils.ts:22
-msgid "{diffInDays}d ago"
-msgstr "{diffInDays} dagen geleden"
+#~ msgid "{diffInDays}d ago"
+#~ msgstr "{diffInDays} dagen geleden"
 
 #: src/components/announcement/utils/dateUtils.ts:19
-msgid "{diffInHours}h ago"
-msgstr "{diffInHours} uur geleden"
+#~ msgid "{diffInHours}h ago"
+#~ msgstr "{diffInHours} uur geleden"
 
 #: src/routes/participant/ParticipantConversation.tsx:213
 msgid "{minutes} minutes and {seconds} seconds"
@@ -246,7 +246,7 @@ msgstr ""
 #~ msgid "Analyze!"
 #~ msgstr "Analyseer!"
 
-#: src/components/announcement/AnnouncementDrawerHeader.tsx:22
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:24
 msgid "Announcements"
 msgstr "Meldingen"
 
@@ -370,6 +370,14 @@ msgstr "Audio Tip"
 #: src/components/conversation/AutoSelectConversations.tsx:162
 msgid "Auto-select"
 msgstr "Automatisch selecteren"
+
+#: src/lib/query.ts:1695
+msgid "Auto-select disabled"
+msgstr "Automatisch selecteren uitgeschakeld"
+
+#: src/lib/query.ts:1557
+msgid "Auto-select enabled"
+msgstr "Automatisch selecteren ingeschakeld"
 
 #: src/components/conversation/AutoSelectConversations.tsx:36
 #~ msgid "Auto-select sources to add to the chat"
@@ -531,9 +539,17 @@ msgstr "Context toegevoegd:"
 msgid "Continue"
 msgstr "Doorgaan"
 
+#: src/lib/query.ts:1558
+msgid "Conversation added to chat"
+msgstr "Gesprek toegevoegd aan chat"
+
 #: src/routes/participant/ParticipantConversation.tsx:271
 msgid "Conversation Ended"
 msgstr "Gesprek beëindigd"
+
+#: src/lib/query.ts:1696
+msgid "Conversation removed from chat"
+msgstr "Gesprek verwijderd uit chat"
 
 #: src/components/conversation/ConversationAccordion.tsx:738
 msgid "Conversations"
@@ -669,7 +685,7 @@ msgstr "Wil je op de hoogte blijven?"
 #~ msgid "Document was deleted"
 #~ msgstr "Document is verwijderd"
 
-#: src/components/layout/Header.tsx:160
+#: src/components/layout/Header.tsx:165
 msgid "Documentation"
 msgstr "Documentatie"
 
@@ -877,9 +893,28 @@ msgstr "Exporteer"
 msgid "Failed"
 msgstr "Mislukt"
 
+#: src/lib/query.ts:1543
+msgid "Failed to add conversation to chat"
+msgstr "Fout bij het toevoegen van het gesprek aan de chat"
+
+#. placeholder {0}: error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
+#: src/lib/query.ts:1535
+msgid "Failed to add conversation to chat{0}"
+msgstr "Fout bij het toevoegen van het gesprek aan de chat{0}"
+
 #: src/components/participant/UserChunkMessage.tsx:65
 msgid "Failed to delete response"
 msgstr "Fout bij het verwijderen van de reactie"
+
+#: src/lib/query.ts:1676
+#: src/lib/query.ts:1682
+msgid "Failed to disable Auto Select for this chat"
+msgstr "Fout bij het uitschakelen van het automatisch selecteren voor deze chat"
+
+#: src/lib/query.ts:1539
+#: src/lib/query.ts:1545
+msgid "Failed to enable Auto Select for this chat"
+msgstr "Fout bij het inschakelen van het automatisch selecteren voor deze chat"
 
 #: src/routes/participant/ParticipantConversation.tsx:250
 msgid "Failed to finish conversation. Please try again."
@@ -897,7 +932,16 @@ msgstr "Fout bij het markeren van de melding als gelezen"
 msgid "Failed to regenerate the summary. Please try again later."
 msgstr "Fout bij het hergenereren van de samenvatting. Probeer het opnieuw later."
 
-#: src/lib/query.ts:1959
+#: src/lib/query.ts:1680
+msgid "Failed to remove conversation from chat"
+msgstr "Fout bij het verwijderen van het gesprek uit de chat"
+
+#. placeholder {0}: error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
+#: src/lib/query.ts:1672
+msgid "Failed to remove conversation from chat{0}"
+msgstr "Fout bij het verwijderen van het gesprek uit de chat{0}"
+
+#: src/lib/query.ts:2178
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Fout bij het hertranscriptie van het gesprek. Probeer het opnieuw."
 
@@ -999,7 +1043,7 @@ msgstr "Rasterweergave"
 #~ msgstr "Hallo, ik ben vandaag je onderzoeksassistent. Om te beginnen upload je de documenten die je wilt analyseren."
 
 #. placeholder {0}: user.first_name ?? "User"
-#: src/components/layout/Header.tsx:147
+#: src/components/layout/Header.tsx:152
 msgid "Hi, {0}"
 msgstr "Hallo, {0}"
 
@@ -1116,8 +1160,8 @@ msgid "Just a moment"
 msgstr "Gewoon een momentje"
 
 #: src/components/announcement/utils/dateUtils.ts:18
-msgid "Just now"
-msgstr "Net zojuist"
+#~ msgid "Just now"
+#~ msgstr "Net zojuist"
 
 #: src/components/project/ProjectPortalEditor.tsx:285
 msgid "Language"
@@ -1174,6 +1218,7 @@ msgstr "Bezig met laden"
 msgid "loading..."
 msgstr "bezig met laden..."
 
+#: src/lib/query.ts:1478
 #: src/components/conversation/ConversationAccordion.tsx:103
 msgid "Loading..."
 msgstr "Bezig met laden..."
@@ -1190,7 +1235,7 @@ msgstr "Inloggen | Dembrane"
 msgid "Login as an existing user"
 msgstr "Inloggen als bestaande gebruiker"
 
-#: src/components/layout/Header.tsx:167
+#: src/components/layout/Header.tsx:172
 msgid "Logout"
 msgstr "Uitloggen"
 
@@ -1198,11 +1243,11 @@ msgstr "Uitloggen"
 msgid "Longest First"
 msgstr "Langste eerst"
 
-#: src/components/announcement/AnnouncementDrawerHeader.tsx:47
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:49
 msgid "Mark all read"
 msgstr "Alle als gelezen markeren"
 
-#: src/components/announcement/AnnouncementItem.tsx:148
+#: src/components/announcement/AnnouncementItem.tsx:149
 msgid "Mark as read"
 msgstr "Als gelezen markeren"
 
@@ -1285,7 +1330,7 @@ msgstr "Nieuwste eerst"
 msgid "Next"
 msgstr "Volgende"
 
-#: src/components/announcement/Announcements.tsx:107
+#: src/components/announcement/Announcements.tsx:113
 msgid "No announcements available"
 msgstr "Geen meldingen beschikbaar"
 
@@ -1748,7 +1793,7 @@ msgstr "Reactie prompt"
 msgid "Report"
 msgstr "Rapport"
 
-#: src/components/layout/Header.tsx:74
+#: src/components/layout/Header.tsx:75
 msgid "Report an issue"
 msgstr "Rapporteer een probleem"
 
@@ -1815,7 +1860,7 @@ msgstr "Hertranscriptie gesprek"
 msgid "Retranscribe Conversation"
 msgstr "Hertranscriptie gesprek"
 
-#: src/lib/query.ts:1955
+#: src/lib/query.ts:2174
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "Hertranscriptie gestart. Nieuw gesprek wordt binnenkort beschikbaar."
 
@@ -1978,11 +2023,11 @@ msgstr "Toon audiospeler"
 msgid "Show duration"
 msgstr "Toon duur"
 
-#: src/components/announcement/AnnouncementItem.tsx:125
+#: src/components/announcement/AnnouncementItem.tsx:126
 msgid "Show less"
 msgstr "Minder tonen"
 
-#: src/components/announcement/AnnouncementItem.tsx:130
+#: src/components/announcement/AnnouncementItem.tsx:131
 msgid "Show more"
 msgstr "Meer tonen"
 
@@ -2406,11 +2451,11 @@ msgstr "Typ een bericht..."
 msgid "Type your response here"
 msgstr "Typ hier uw reactie"
 
-#: src/components/announcement/AnnouncementDrawerHeader.tsx:36
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:38
 msgid "unread announcement"
 msgstr "ongelezen melding"
 
-#: src/components/announcement/AnnouncementDrawerHeader.tsx:36
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:38
 msgid "unread announcements"
 msgstr "ongelezen meldingen"
 
