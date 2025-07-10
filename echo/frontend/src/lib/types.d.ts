@@ -156,6 +156,7 @@ type TTask =
 
 type TProjectChatContext = {
   conversations: Array<{
+    optimisticId?: string;
     conversation_id: string;
     conversation_participant_name?: string;
     locked: boolean;
