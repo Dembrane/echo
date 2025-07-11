@@ -473,13 +473,6 @@ export const useResourceById = (resourceId: string) => {
   });
 };
 
-export const useResourcesByProjectId = (projectId: string) => {
-  return useQuery({
-    queryKey: ["projects", projectId, "resources"],
-    queryFn: () => getResourcesByProjectId(projectId),
-  });
-};
-
 export const useConversationById = ({
   conversationId,
   loadConversationChunks = false,
@@ -514,19 +507,6 @@ export const useConversationById = ({
         }),
       ),
     ...useQueryOpts,
-  });
-};
-
-export const useDeleteConversationChunkByIdMutation = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (chunkId: string) =>
-      directus.request(deleteItem("conversation_chunk", chunkId)),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["conversations"],
-      });
-    },
   });
 };
 
@@ -626,13 +606,6 @@ export const useCurrentUser = () =>
       }
     },
   });
-
-// export const useConversationTokenCount = (conversationId: string) => {
-//   return useQuery({
-//     queryKey: ["conversations", conversationId, "token_count"],
-//     queryFn: () => getConversationTokenCount(conversationId),
-//   });
-// };
 
 export const useChat = (chatId: string) => {
   return useQuery({
@@ -759,25 +732,6 @@ export const useProjectReportViews = (reportId: number) => {
       };
     },
     refetchInterval: 30000,
-  });
-};
-
-// always give the project_report_id in payload used for invalidation
-export const usePostProjectReportMetricMutation = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (payload: {
-      reportId: number;
-      payload: Partial<ProjectReportMetric>;
-    }) => directus.request(createItem("project_report_metric", payload as any)),
-    onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({
-        queryKey: ["projects", vars.payload.project_report_id, "report"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["reports", vars.reportId],
-      });
-    },
   });
 };
 
