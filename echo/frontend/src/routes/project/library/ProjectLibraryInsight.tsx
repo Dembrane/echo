@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { useInsight } from "@/lib/query";
+import { useInsight } from "@/components/library/hooks";
 import {
   ActionIcon,
   Container,

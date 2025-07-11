@@ -8,12 +8,14 @@ import { ViewExpandedCard } from "@/components/view/View";
 import { Icons } from "@/icons";
 import {
   useConversationsByProjectId,
-  useGenerateProjectLibraryMutation,
   useLatestProjectAnalysisRunByProjectId,
   useProjectById,
+} from "@/lib/query";
+import {
+  useGenerateProjectLibraryMutation,
   useProjectInsights,
   useProjectViews,
-} from "@/lib/query";
+} from "@/components/library/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import {

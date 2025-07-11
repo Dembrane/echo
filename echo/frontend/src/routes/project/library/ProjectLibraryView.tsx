@@ -3,7 +3,7 @@ import { Markdown } from "@/components/common/Markdown";
 import { AspectCard } from "@/components/aspect/AspectCard";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { Icons } from "@/icons";
-import { useViewById } from "@/lib/query";
+import { useViewById } from "@/components/library/hooks";
 import {
   Divider,
   Group,
