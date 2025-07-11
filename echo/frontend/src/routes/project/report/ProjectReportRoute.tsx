@@ -1,11 +1,10 @@
 import { useParams } from "react-router-dom";
+import { useLatestProjectReport, useProjectReportViews } from "@/lib/query";
 import {
-  useDoesProjectReportNeedUpdate,
-  useGetProjectParticipants,
-  useLatestProjectReport,
-  useProjectReportViews,
   useUpdateProjectReportMutation,
-} from "@/lib/query";
+  useGetProjectParticipants,
+  useDoesProjectReportNeedUpdate,
+} from "@/components/report/hooks";
 import {
   ActionIcon,
   Badge,

@@ -3,9 +3,9 @@ import { Trans } from "@lingui/react/macro";
 import {
   useCreateProjectTagMutation,
   useDeleteTagByIdMutation,
-  useProjectById,
   useUpdateProjectTagByIdMutation,
-} from "@/lib/query";
+} from "./hooks";
+import { useProjectById } from "@/lib/query";
 import {
   ActionIcon,
   Alert,

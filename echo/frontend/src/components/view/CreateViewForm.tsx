@@ -15,7 +15,7 @@ import {
 } from "@mantine/core";
 
 import { useLanguage } from "@/hooks/useLanguage";
-import { useGenerateProjectViewMutation } from "@/lib/query";
+import { useGenerateProjectViewMutation } from "./hooks";
 import { CloseableAlert } from "../common/ClosableAlert";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 

@@ -1,10 +1,9 @@
 import {
-  useAddChatContextMutation,
   useConversationsByProjectId,
-  useDeleteChatContextMutation,
   useProjectById,
   useProjectChatContext,
 } from "@/lib/query";
+import { useAddChatContextMutation, useDeleteChatContextMutation } from "./hooks";
 import { Trans } from "@lingui/react/macro";
 import {
   Box,

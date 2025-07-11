@@ -2,7 +2,7 @@ import { Trans } from "@lingui/react/macro";
 import { Alert, Button, NativeSelect, Stack } from "@mantine/core";
 
 import { useEffect, useState } from "react";
-import { useCreateProjectReportMutation } from "@/lib/query";
+import { useCreateProjectReportMutation } from "./hooks";
 import { useParams } from "react-router-dom";
 import { t } from "@lingui/core/macro";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";

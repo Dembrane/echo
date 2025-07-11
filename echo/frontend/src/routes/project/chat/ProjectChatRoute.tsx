@@ -3,12 +3,10 @@ import { Trans } from "@lingui/react/macro";
 import { ChatContextProgress } from "@/components/chat/ChatContextProgress";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import {
-  useAddChatMessageMutation,
-  useChatHistory,
-  useLockConversationsMutation,
   useChat as useProjectChat,
   useProjectChatContext,
 } from "@/lib/query";
+import { useAddChatMessageMutation, useChatHistory, useLockConversationsMutation } from "@/components/chat/hooks";
 import {
   Alert,
   Box,

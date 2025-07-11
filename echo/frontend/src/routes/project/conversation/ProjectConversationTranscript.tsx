@@ -3,10 +3,8 @@ import { Trans } from "@lingui/react/macro";
 import { InformationTooltip } from "@/components/common/InformationTooltip";
 import {
   useConversationById,
-  useConversationTranscriptString,
-  useInfiniteConversationChunks,
-  useRetranscribeConversationMutation,
 } from "@/lib/query";
+import { useInfiniteConversationChunks, useRetranscribeConversationMutation, useConversationTranscriptString} from "@/components/conversation/hooks";
 import {
   ActionIcon,
   Group,

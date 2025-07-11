@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { useUploadResourceByProjectIdMutation } from "@/lib/query";
+import { useUploadResourceByProjectIdMutation } from "./hooks";
 import { PDF_MIME_TYPE } from "@mantine/dropzone";
 import { PropsWithChildren } from "react";
 import { CommonDropzone } from "./Dropzone";

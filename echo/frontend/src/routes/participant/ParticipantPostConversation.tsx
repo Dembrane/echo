@@ -29,9 +29,7 @@ import { useParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { directus } from "@/lib/directus";
 import { readItems, createItems } from "@directus/sdk";
-import {
-  useSubmitNotificationParticipant,
-} from "@/lib/query";
+import { useSubmitNotificationParticipant } from "@/components/participant/hooks";
 
 export const ParticipantPostConversation = () => {
   const { projectId, conversationId } = useParams();

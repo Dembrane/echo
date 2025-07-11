@@ -14,7 +14,7 @@ import { Controller, useForm } from "react-hook-form";
 import {
   useUpdateConversationByIdMutation,
   useUpdateConversationTagsMutation,
-} from "@/lib/query";
+} from "./hooks";
 import { CloseableAlert } from "../common/ClosableAlert";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { FormLabel } from "../form/FormLabel";

@@ -1,9 +1,9 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-  useConversationQuotes,
   useInsightsByConversationId,
-} from "@/lib/query";
+  useConversationQuotes,
+} from "@/components/conversation/hooks";
 import {
   Anchor,
   Button,

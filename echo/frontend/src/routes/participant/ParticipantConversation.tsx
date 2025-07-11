@@ -1,10 +1,7 @@
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { I18nLink } from "@/components/common/i18nLink";
 import { useProjectSharingLink } from "@/components/project/ProjectQRCode";
-import {
-  useUploadConversationChunk,
-  useUploadConversationTextChunk,
-} from "@/lib/query";
+import { useUploadConversationChunk, useUploadConversationTextChunk } from "@/components/participant/hooks";
 import {
   ActionIcon,
   Box,

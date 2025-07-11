@@ -11,7 +11,7 @@ import {
   AreaChart,
 } from "recharts";
 import { Skeleton, Text } from "@mantine/core";
-import { useProjectReportTimelineData } from "@/lib/query";
+import { useProjectReportTimelineData } from "./hooks";
 import { addDays, format, subDays } from "date-fns";
 import { t } from "@lingui/core/macro";
 import { useState } from "react";
