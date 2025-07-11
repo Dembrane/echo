@@ -15,18 +15,13 @@ import {
   generateProjectLibrary as generateProjectLibrary,
   getLatestProjectAnalysisRunByProjectId,
   getProjectChatContext,
-  getProjectInsights,
-  getProjectViews,
   getResourceById,
-  getResourcesByProjectId,
 } from "./api";
 import { toast } from "@/components/common/Toaster";
 import { directus } from "./directus";
 import {
   Query,
   aggregate,
-  createItem,
-  deleteItem,
   passwordRequest,
   passwordReset,
   readItem,
