@@ -65,12 +65,12 @@ msgid "{0} Conversations • Edited {1}"
 msgstr "{0} Conversaciones • Editado {1}"
 
 #: src/components/announcement/utils/dateUtils.ts:22
-msgid "{diffInDays}d ago"
-msgstr "{diffInDays} días atrás"
+#~ msgid "{diffInDays}d ago"
+#~ msgstr "{diffInDays} días atrás"
 
 #: src/components/announcement/utils/dateUtils.ts:19
-msgid "{diffInHours}h ago"
-msgstr "{diffInHours} horas atrás"
+#~ msgid "{diffInHours}h ago"
+#~ msgstr "{diffInHours} horas atrás"
 
 #: src/routes/participant/ParticipantConversation.tsx:213
 msgid "{minutes} minutes and {seconds} seconds"
@@ -217,7 +217,7 @@ msgstr ""
 "\n"
 "Nota: Si las similitudes/diferencias son demasiado superficiales, por favor házmelo saber, necesitamos material más complejo para analizar."
 
-#: src/components/announcement/AnnouncementDrawerHeader.tsx:22
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:24
 msgid "Announcements"
 msgstr "Anuncios"
 
@@ -297,6 +297,14 @@ msgstr "Consejo de audio"
 #: src/components/conversation/AutoSelectConversations.tsx:162
 msgid "Auto-select"
 msgstr "Seleccionar automáticamente"
+
+#: src/lib/query.ts:1695
+msgid "Auto-select disabled"
+msgstr "Seleccionar automáticamente desactivado"
+
+#: src/lib/query.ts:1557
+msgid "Auto-select enabled"
+msgstr "Seleccionar automáticamente activado"
 
 #: src/components/conversation/AutoSelectConversations.tsx:36
 #~ msgid "Auto-select sources to add to the chat"
@@ -458,9 +466,17 @@ msgstr "Contexto añadido:"
 msgid "Continue"
 msgstr "Continuar"
 
+#: src/lib/query.ts:1558
+msgid "Conversation added to chat"
+msgstr "Conversación añadida al chat"
+
 #: src/routes/participant/ParticipantConversation.tsx:271
 msgid "Conversation Ended"
 msgstr "Conversación Terminada"
+
+#: src/lib/query.ts:1696
+msgid "Conversation removed from chat"
+msgstr "Conversación eliminada del chat"
 
 #: src/components/conversation/ConversationAccordion.tsx:738
 msgid "Conversations"
@@ -568,7 +584,7 @@ msgstr "¿Quieres contribuir a este proyecto?"
 msgid "Do you want to stay in the loop?"
 msgstr "¿Quieres estar en el bucle?"
 
-#: src/components/layout/Header.tsx:160
+#: src/components/layout/Header.tsx:165
 msgid "Documentation"
 msgstr "Documentación"
 
@@ -756,9 +772,28 @@ msgstr "Exportar"
 msgid "Failed"
 msgstr "Error"
 
+#: src/lib/query.ts:1543
+msgid "Failed to add conversation to chat"
+msgstr "Error al añadir la conversación al chat"
+
+#. placeholder {0}: error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
+#: src/lib/query.ts:1535
+msgid "Failed to add conversation to chat{0}"
+msgstr "Error al añadir la conversación al chat{0}"
+
 #: src/components/participant/UserChunkMessage.tsx:65
 msgid "Failed to delete response"
 msgstr "Error al eliminar la respuesta"
+
+#: src/lib/query.ts:1676
+#: src/lib/query.ts:1682
+msgid "Failed to disable Auto Select for this chat"
+msgstr "Error al desactivar la selección automática para este chat"
+
+#: src/lib/query.ts:1539
+#: src/lib/query.ts:1545
+msgid "Failed to enable Auto Select for this chat"
+msgstr "Error al activar la selección automática para este chat"
 
 #: src/routes/participant/ParticipantConversation.tsx:250
 msgid "Failed to finish conversation. Please try again."
@@ -776,7 +811,16 @@ msgstr "Error al marcar el anuncio como leído"
 msgid "Failed to regenerate the summary. Please try again later."
 msgstr "Error al regenerar el resumen. Por favor, inténtalo de nuevo más tarde."
 
-#: src/lib/query.ts:1959
+#: src/lib/query.ts:1680
+msgid "Failed to remove conversation from chat"
+msgstr "Error al eliminar la conversación del chat"
+
+#. placeholder {0}: error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
+#: src/lib/query.ts:1672
+msgid "Failed to remove conversation from chat{0}"
+msgstr "Error al eliminar la conversación del chat{0}"
+
+#: src/lib/query.ts:2178
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Error al retranscribir la conversación. Por favor, inténtalo de nuevo."
 
@@ -861,7 +905,7 @@ msgid "Grid view"
 msgstr "Vista de cuadrícula"
 
 #. placeholder {0}: user.first_name ?? "User"
-#: src/components/layout/Header.tsx:147
+#: src/components/layout/Header.tsx:152
 msgid "Hi, {0}"
 msgstr "Hola, {0}"
 
@@ -958,8 +1002,8 @@ msgid "Just a moment"
 msgstr "Un momento"
 
 #: src/components/announcement/utils/dateUtils.ts:18
-msgid "Just now"
-msgstr "Justo ahora"
+#~ msgid "Just now"
+#~ msgstr "Justo ahora"
 
 #: src/components/project/ProjectPortalEditor.tsx:285
 msgid "Language"
@@ -1016,6 +1060,7 @@ msgstr "Cargando"
 msgid "loading..."
 msgstr "cargando..."
 
+#: src/lib/query.ts:1478
 #: src/components/conversation/ConversationAccordion.tsx:103
 msgid "Loading..."
 msgstr "Cargando..."
@@ -1032,7 +1077,7 @@ msgstr "Iniciar sesión | Dembrane"
 msgid "Login as an existing user"
 msgstr "Iniciar sesión como usuario existente"
 
-#: src/components/layout/Header.tsx:167
+#: src/components/layout/Header.tsx:172
 msgid "Logout"
 msgstr "Cerrar sesión"
 
@@ -1040,11 +1085,11 @@ msgstr "Cerrar sesión"
 msgid "Longest First"
 msgstr "Más largo primero"
 
-#: src/components/announcement/AnnouncementDrawerHeader.tsx:47
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:49
 msgid "Mark all read"
 msgstr "Marcar todos como leídos"
 
-#: src/components/announcement/AnnouncementItem.tsx:148
+#: src/components/announcement/AnnouncementItem.tsx:149
 msgid "Mark as read"
 msgstr "Marcar como leído"
 
@@ -1127,7 +1172,7 @@ msgstr "Más nuevos primero"
 msgid "Next"
 msgstr "Siguiente"
 
-#: src/components/announcement/Announcements.tsx:107
+#: src/components/announcement/Announcements.tsx:113
 msgid "No announcements available"
 msgstr "No hay anuncios disponibles"
 
@@ -1545,7 +1590,7 @@ msgstr "Prompt de Respuesta"
 msgid "Report"
 msgstr "Informe"
 
-#: src/components/layout/Header.tsx:74
+#: src/components/layout/Header.tsx:75
 msgid "Report an issue"
 msgstr "Reportar un problema"
 
@@ -1612,7 +1657,7 @@ msgstr "Retranscribir conversación"
 msgid "Retranscribe Conversation"
 msgstr "Retranscribir conversación"
 
-#: src/lib/query.ts:1955
+#: src/lib/query.ts:2174
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "La retranscripción ha comenzado. La nueva conversación estará disponible pronto."
 
@@ -1762,11 +1807,11 @@ msgstr "Mostrar reproductor de audio"
 msgid "Show duration"
 msgstr "Mostrar duración"
 
-#: src/components/announcement/AnnouncementItem.tsx:125
+#: src/components/announcement/AnnouncementItem.tsx:126
 msgid "Show less"
 msgstr "Mostrar menos"
 
-#: src/components/announcement/AnnouncementItem.tsx:130
+#: src/components/announcement/AnnouncementItem.tsx:131
 msgid "Show more"
 msgstr "Mostrar más"
 
@@ -2149,11 +2194,11 @@ msgstr "Escribe un mensaje..."
 msgid "Type your response here"
 msgstr "Escribe tu respuesta aquí"
 
-#: src/components/announcement/AnnouncementDrawerHeader.tsx:36
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:38
 msgid "unread announcement"
 msgstr "anuncio sin leer"
 
-#: src/components/announcement/AnnouncementDrawerHeader.tsx:36
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:38
 msgid "unread announcements"
 msgstr "anuncios sin leer"
 
