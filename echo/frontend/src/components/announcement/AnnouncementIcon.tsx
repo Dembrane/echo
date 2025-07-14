@@ -59,7 +59,7 @@ export const AnnouncementIcon = () => {
           className="hidden max-w-xs [mask-image:linear-gradient(to_right,black_80%,transparent)] md:block"
           style={{ maxWidth: "400px" }}
         >
-          <Markdown content={urgentMessage} className="truncate" />
+          <Markdown content={urgentMessage} className="line-clamp-1" />
         </Box>
       )}
     </Group>
