@@ -248,7 +248,11 @@ def task_run_etl_pipeline(conversation_id: str) -> None:
         )
 
         try:
-            with ProcessingStatusContext("conversation", conversation_id, "task_run_etl_pipeline"):
+            with ProcessingStatusContext(
+                conversation_id=conversation_id,
+                message=f"for conversation {conversation_id}",
+                event_prefix="task_run_etl_pipeline",
+            ):
                 run_etl_pipeline([conversation_id])
 
         except Exception as e:
