@@ -15,6 +15,7 @@ if DIRECTUS_TOKEN:
 
 directus = DirectusClient(url=DIRECTUS_BASE_URL, token=directus_token)
 
+
 class DirectusGenericException(Exception):
     pass
 

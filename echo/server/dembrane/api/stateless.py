@@ -8,11 +8,9 @@ from lightrag.lightrag import QueryParam
 from lightrag.kg.shared_storage import initialize_pipeline_status
 
 from dembrane.prompts import render_prompt
-from dembrane.directus import directus
 from dembrane.rag_manager import RAGManager, get_rag
 from dembrane.postgresdb_manager import PostgresDBManager
 from dembrane.api.dependency_auth import DependencyDirectusSession
-from dembrane.processing_status_utils import ProcessingStatus
 from dembrane.audio_lightrag.utils.lightrag_utils import (
     is_valid_uuid,
     upsert_transcript,
@@ -29,6 +27,7 @@ nest_asyncio.apply()
 logger = getLogger("api.stateless")
 
 StatelessRouter = APIRouter(tags=["stateless"])
+
 
 def generate_summary(transcript: str, language: str | None) -> str:
     """
@@ -63,9 +62,10 @@ def generate_summary(transcript: str, language: str | None) -> str:
 
     return response_content
 
+
 def validate_segment_id(echo_segment_ids: list[str] | None) -> bool:
     if echo_segment_ids is None:
-        return True 
+        return True
     try:
         [int(id) for id in echo_segment_ids]
         return True
@@ -73,19 +73,23 @@ def validate_segment_id(echo_segment_ids: list[str] | None) -> bool:
         logger.exception(f"Invalid segment ID: {e}")
         return False
 
+
 class InsertRequest(BaseModel):
     content: str | list[str]
     transcripts: list[str]
     echo_segment_id: str
 
+
 class InsertResponse(BaseModel):
     status: str
     result: dict
 
+
 @StatelessRouter.post("/rag/insert")
-async def insert_item(payload: InsertRequest,
-                      session: DependencyDirectusSession #Needed for fake auth
-                      ) -> InsertResponse:
+async def insert_item(
+    payload: InsertRequest,
+    session: DependencyDirectusSession,  # Needed for fake auth
+) -> InsertResponse:
     session = session
     if not RAGManager.is_initialized():
         await RAGManager.initialize()
@@ -111,9 +115,9 @@ async def insert_item(payload: InsertRequest,
                 file_paths=["SEGMENT_ID_" + x for x in echo_segment_ids],
             )
             for transcript in payload.transcripts:
-                await upsert_transcript(postgres_db, 
-                                    document_id = str(payload.echo_segment_id), 
-                                    content = transcript)
+                await upsert_transcript(
+                    postgres_db, document_id=str(payload.echo_segment_id), content=transcript
+                )
             result = {"status": "inserted", "content": payload.content}
             return InsertResponse(status="success", result=result)
         else:
@@ -122,20 +126,24 @@ async def insert_item(payload: InsertRequest,
         logger.exception("Insert operation failed")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+
 class SimpleQueryRequest(BaseModel):
     query: str
     echo_segment_ids: list[str] | None = None
     get_transcripts: bool = False
+
 
 class SimpleQueryResponse(BaseModel):
     status: str
     result: str
     transcripts: list[str]
 
+
 @StatelessRouter.post("/rag/simple_query")
-async def query_item(payload: SimpleQueryRequest,
-                     session: DependencyDirectusSession  #Needed for fake auth
-                     ) -> SimpleQueryResponse:
+async def query_item(
+    payload: SimpleQueryRequest,
+    session: DependencyDirectusSession,  # Needed for fake auth
+) -> SimpleQueryResponse:
     session = session
     if not RAGManager.is_initialized():
         await RAGManager.initialize()
@@ -150,29 +158,41 @@ async def query_item(payload: SimpleQueryRequest,
         raise HTTPException(status_code=500, detail="Database connection failed") from e
     try:
         if isinstance(payload.echo_segment_ids, list):
-            echo_segment_ids = payload.echo_segment_ids 
+            echo_segment_ids = payload.echo_segment_ids
         else:
             echo_segment_ids = None
-        
+
         if validate_segment_id(echo_segment_ids):
-            result = rag.query(payload.query, param=QueryParam(mode="mix", 
-                                                            ids=echo_segment_ids if echo_segment_ids else None))
+            result = rag.query(
+                payload.query,
+                param=QueryParam(mode="mix", ids=echo_segment_ids if echo_segment_ids else None),
+            )
             if payload.get_transcripts:
-                transcripts = await fetch_query_transcript(postgres_db, 
-                                                str(result), 
-                                                ids = echo_segment_ids if echo_segment_ids else None)
-                transcript_contents = [t['content'] for t in transcripts] if isinstance(transcripts, list)  else [transcripts['content']] # type: ignore
+                transcripts = await fetch_query_transcript(
+                    postgres_db, str(result), ids=echo_segment_ids if echo_segment_ids else None
+                )
+                transcript_contents = (
+                    [t for t in transcripts] if isinstance(transcripts, list) else []
+                )
+                # transcript_contents = (
+                #     [t["content"] for t in transcripts]
+                #     if isinstance(transcripts, list)
+                #     else [transcripts["content"]]
+                # )
             else:
                 transcript_contents = []
-            return SimpleQueryResponse(status="success", result=result, transcripts=transcript_contents)
+            return SimpleQueryResponse(
+                status="success", result=result, transcripts=transcript_contents
+            )
         else:
             raise HTTPException(status_code=400, detail="Invalid segment ID")
     except Exception as e:
         logger.exception("Query operation failed")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+
 class GetLightragQueryRequest(BaseModel):
-    query: str 
+    query: str
     conversation_history: list[dict[str, str]] | None = None
     echo_segment_ids: list[str] | None = None
     echo_conversation_ids: list[str] | None = None
@@ -181,29 +201,39 @@ class GetLightragQueryRequest(BaseModel):
     get_transcripts: bool = False
     top_k: int = 60
 
+
 @StatelessRouter.post("/rag/get_lightrag_prompt")
-async def get_lightrag_prompt(payload: GetLightragQueryRequest,
-                       session: DependencyDirectusSession  #Needed for fake auth
-                       ) -> str:
+async def get_lightrag_prompt(
+    payload: GetLightragQueryRequest,
+    session: DependencyDirectusSession,  # Needed for fake auth
+) -> str:
     session = session
     # Validate payload
     if not payload.auto_select_bool:
-        if payload.echo_segment_ids is None and payload.echo_conversation_ids is None and payload.echo_project_ids is None:
-            raise HTTPException(status_code=400, 
-                                detail="At least one of echo_segment_ids, echo_conversation_ids, or echo_project_ids must be provided if auto_select_bool is False")
+        if (
+            payload.echo_segment_ids is None
+            and payload.echo_conversation_ids is None
+            and payload.echo_project_ids is None
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="At least one of echo_segment_ids, echo_conversation_ids, or echo_project_ids must be provided if auto_select_bool is False",
+            )
     # Initialize database
     try:
         postgres_db = await PostgresDBManager.get_initialized_db()
     except Exception as e:
         logger.exception("Failed to get initialized PostgreSQLDB for query")
         raise HTTPException(status_code=500, detail="Database connection failed") from e
-    
+
     # Get echo segment ids
     echo_segment_ids: list[int] = []
     if payload.echo_segment_ids:
         echo_segment_ids += [int(id) for id in payload.echo_segment_ids]
     if payload.echo_conversation_ids:
-        conversation_segments = await get_segment_from_conversation_chunk_ids(postgres_db, payload.echo_conversation_ids)
+        conversation_segments = await get_segment_from_conversation_chunk_ids(
+            postgres_db, payload.echo_conversation_ids
+        )
         echo_segment_ids += conversation_segments
     if payload.echo_project_ids:
         project_segments = await get_segment_from_project_ids(postgres_db, payload.echo_project_ids)
@@ -211,7 +241,7 @@ async def get_lightrag_prompt(payload: GetLightragQueryRequest,
     # if payload.auto_select_bool:
     #     all_segments = await get_all_segments(postgres_db, payload.echo_conversation_ids) # type: ignore
     #     echo_segment_ids += all_segments
-    
+
     # Initialize RAG
     if not RAGManager.is_initialized():
         await RAGManager.initialize()
@@ -220,32 +250,37 @@ async def get_lightrag_prompt(payload: GetLightragQueryRequest,
     if rag is None:
         raise HTTPException(status_code=500, detail="RAG object not initialized")
 
-    # Process segment ids  
-    try:        
+    # Process segment ids
+    try:
         if validate_segment_id([str(id) for id in echo_segment_ids]):
-            param = QueryParam(mode="mix",
-                               conversation_history=payload.conversation_history,
-                               history_turns=10,
-                               only_need_prompt=True,
-                               ids= [str(id) for id in echo_segment_ids],
-                               top_k = payload.top_k)
+            param = QueryParam(
+                mode="mix",
+                conversation_history=payload.conversation_history,
+                history_turns=10,
+                only_need_prompt=True,
+                ids=[str(id) for id in echo_segment_ids],
+                top_k=payload.top_k,
+            )
             response = await rag.aquery(payload.query, param=param)
             logger.debug(f"Response: {response}")
             return response
-            
+
         else:
             raise HTTPException(status_code=400, detail="Invalid segment ID")
     except Exception as e:
         logger.exception("Query streaming operation failed")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+
 class DeleteConversationRequest(BaseModel):
     conversation_ids: list[str]
 
+
 @StatelessRouter.post("/rag/delete_conversation")
-async def delete_conversation(payload: DeleteConversationRequest,
-                              session: DependencyDirectusSession  #Needed for fake auth
-                              ) -> None:
+async def delete_conversation(
+    payload: DeleteConversationRequest,
+    session: DependencyDirectusSession,  # Needed for fake auth
+) -> None:
     session = session
 
     conversation_ids = payload.conversation_ids
@@ -275,18 +310,11 @@ async def delete_conversation(payload: DeleteConversationRequest,
 async def transcribe_webhook(payload: dict) -> None:
     logger = getLogger("stateless.webhook.transcribe")
     logger.debug(f"Transcribe webhook received: {payload}")
-    logger.info(f"Transcribe webhook received: {payload['output']['conversation_chunk_id']}")
     try:
-        directus.update_item(
-            collection_name="conversation_chunk",
-            item_id=payload["output"]["conversation_chunk_id"],
-            item_data={
-                "transcript": payload["output"]["joined_text"],
-                "processing_status": ProcessingStatus.COMPLETED.value,
-                "runpod_job_status_link": None
-            },
-        )
-        logger.info(f"updated chunk with transcript: {payload['output']['conversation_chunk_id']} - length: {len(payload['output']['joined_text'])}")
+        from dembrane.runpod import load_runpod_transcription_response
+
+        load_runpod_transcription_response(payload)
+
     except Exception as e:
         logger.exception("Failed to update conversation chunk")
         raise HTTPException(status_code=500, detail=str(e)) from e

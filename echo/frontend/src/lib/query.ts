@@ -26,6 +26,7 @@ import {
   getConversationTranscriptString,
   getLatestProjectAnalysisRunByProjectId,
   getProjectChatContext,
+  getProjectConversationCounts,
   getProjectInsights,
   getProjectViews,
   getQuotesByConversationId,
@@ -821,6 +822,14 @@ export const useDeleteConversationChunkByIdMutation = () => {
   });
 };
 
+export const useProjectConversationCounts = (projectId: string) => {
+  return useQuery({
+    queryKey: ["projects", projectId, "conversation-counts"],
+    queryFn: () => getProjectConversationCounts(projectId),
+    refetchInterval: 15000,
+  });
+};
+
 export const useConversationsByProjectId = (
   projectId: string,
   loadChunks?: boolean,
@@ -860,6 +869,7 @@ export const useConversationsByProjectId = (
               _limit: loadChunks ? 1000 : 1,
             },
           },
+          // @ts-expect-error filterBySource is not typed
           filter: {
             project_id: {
               _eq: projectId,

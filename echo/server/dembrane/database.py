@@ -351,15 +351,8 @@ class ConversationModel(Base):
     participant_email: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     participant_user_agent: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
-    title: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    context: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-
     summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     source: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-
-    processing_status: Mapped[ProcessingStatusEnum] = mapped_column(String, default="PENDING")
-    processing_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     chunks: Mapped[List["ConversationChunkModel"]] = relationship(
         "ConversationChunkModel",

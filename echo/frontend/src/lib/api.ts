@@ -702,6 +702,28 @@ export const initiateAndUploadConversationChunk = async (payload: {
   return results;
 };
 
+export const getProjectConversationCounts = async (projectId: string) => {
+  const conversations = await directus.request(readItems("conversation", {
+    filter: {
+      project_id: {
+        _eq: projectId,
+      },
+    },
+    fields: ["id", "is_finished", "summary", "participant_name", "updated_at", "created_at"],
+  }));
+
+  const finishedConversations = conversations.filter((conversation) => conversation.is_finished);
+  const pendingConversations = conversations.filter((conversation) => !conversation.is_finished);
+
+  return {
+    finished: finishedConversations.length,
+    pending: pendingConversations.length,
+    total: conversations.length,
+    finishedConversations,
+    pendingConversations,
+  };
+};
+
 export const getConversationContentLink = (conversationId: string) =>
   `${apiCommonConfig.baseURL}/conversations/${conversationId}/content`;
 

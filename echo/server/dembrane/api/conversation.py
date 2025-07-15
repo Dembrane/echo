@@ -218,6 +218,20 @@ def return_url_or_redirect(
     return RedirectResponse(revised_url)
 
 
+@ConversationRouter.get("/{conversation_id}/counts")
+async def get_conversation_counts(
+    conversation_id: str,
+    auth: DependencyDirectusSession,
+) -> dict:
+    raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
+
+    from dembrane.service import conversation_service
+
+    counts = conversation_service.get_chunk_counts(conversation_id)
+
+    return counts
+
+
 @ConversationRouter.get("/{conversation_id}/content", response_model=None)
 def get_conversation_content(
     conversation_id: str,
@@ -618,8 +632,6 @@ async def retranscribe_conversation(
                     "timestamp": timestamp,
                     "path": merged_audio_path,
                     "source": "CLONE",
-                    "processing_status": ProcessingStatus.PENDING.value,
-                    "processing_message": "Waiting to be transcribed",
                 },
             )["data"]
 

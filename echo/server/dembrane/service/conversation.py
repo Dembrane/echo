@@ -1,17 +1,19 @@
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple
+# conversation.py
+from typing import TYPE_CHECKING, Any, List, Tuple, Optional
 from datetime import datetime
 
 from fastapi import UploadFile
 
-from dembrane.tasks import task_process_conversation_chunk
 from dembrane.utils import generate_uuid
 from dembrane.directus import DirectusBadRequest, directus_client_context
-from dembrane.service.event import ChunkCreatedEvent
 
 if TYPE_CHECKING:
     from dembrane.service.file import FileService
     from dembrane.service.event import EventService
     from dembrane.service.project import ProjectService
+
+# allows for None to be a sentinel value
+_UNSET = object()
 
 
 class ConversationServiceException(Exception):
@@ -124,28 +126,28 @@ class ConversationService:
     def update(
         self,
         conversation_id: str,
-        participant_name: Optional[str] = None,
-        participant_email: Optional[str] = None,
-        participant_user_agent: Optional[str] = None,
-        summary: Optional[str] = None,
-        source: Optional[str] = None,
-        is_finished: Optional[bool] = None,
-        is_all_chunks_transcribed: Optional[bool] = None,
+        participant_name: Any = _UNSET,
+        participant_email: Any = _UNSET,
+        participant_user_agent: Any = _UNSET,
+        summary: Any = _UNSET,
+        source: Any = _UNSET,
+        is_finished: Any = _UNSET,
+        is_all_chunks_transcribed: Any = _UNSET,
     ) -> dict:
         update_data: dict[str, Any] = {}
-        if participant_name is not None:
+        if participant_name is not _UNSET:
             update_data["participant_name"] = participant_name
-        if participant_email is not None:
+        if participant_email is not _UNSET:
             update_data["participant_email"] = participant_email
-        if participant_user_agent is not None:
+        if participant_user_agent is not _UNSET:
             update_data["participant_user_agent"] = participant_user_agent
-        if summary is not None:
+        if summary is not _UNSET:
             update_data["summary"] = summary
-        if source is not None:
+        if source is not _UNSET:
             update_data["source"] = source
-        if is_finished is not None:
+        if is_finished is not _UNSET:
             update_data["is_finished"] = is_finished
-        if is_all_chunks_transcribed is not None:
+        if is_all_chunks_transcribed is not _UNSET:
             update_data["is_all_chunks_transcribed"] = is_all_chunks_transcribed
 
         try:
@@ -171,6 +173,19 @@ class ConversationService:
         self,
         chunk_id: str,
     ) -> dict:
+        """
+        Get a conversation chunk by its ID.
+
+        Args:
+            chunk_id: The ID of the chunk. (str)
+
+        Returns:
+            The conversation chunk. (dict)
+
+        Raises:
+        - ConversationChunkNotFoundException: If the chunk is not found, or the request is malformed.
+        - DirectusGenericException -> DirectusServerError: If the request to the Directus server fails.
+        """
         try:
             with directus_client_context() as client:
                 chunk = client.get_items(
@@ -218,6 +233,8 @@ class ConversationService:
         Returns:
             The created conversation chunk. (dict)
         """
+        from dembrane.tasks import task_process_conversation_chunk
+
         conversation = self.get_by_id_or_raise(conversation_id)
 
         project = self.project_service.get_by_id_or_raise(conversation["project_id"])
@@ -225,8 +242,8 @@ class ConversationService:
         if project.get("is_conversation_allowed", False) is False:
             raise ConversationNotOpenForParticipationException()
 
-        if conversation.get("is_finished", False) is True:
-            raise ConversationNotOpenForParticipationException()
+        # if conversation.get("is_finished", False) is True:
+        #     raise ConversationNotOpenForParticipationException()
 
         chunk_id = generate_uuid()
 
@@ -263,20 +280,48 @@ class ConversationService:
     def update_chunk(
         self,
         chunk_id: str,
-        transcript: Optional[str] = None,
-        path: Optional[str] = None,
-        runpod_job_status_link: Optional[str] = None,
+        raw_transcript: Any = _UNSET,
+        transcript: Any = _UNSET,
+        path: Any = _UNSET,
+        runpod_job_status_link: Any = _UNSET,
+        error: Any = _UNSET,
+        hallucination_reason: Any = _UNSET,
+        hallucination_score: Any = _UNSET,
+        desired_language: Any = _UNSET,
+        detected_language: Any = _UNSET,
+        detected_language_confidence: Any = _UNSET,
     ) -> dict:
-        update = {}
+        update: dict[str, Any] = {}
 
-        if transcript is not None:
+        if raw_transcript is not _UNSET:
+            update["raw_transcript"] = raw_transcript
+
+        if transcript is not _UNSET:
             update["transcript"] = transcript
 
-        if path is not None:
+        if path is not _UNSET:
             update["path"] = path
 
-        if runpod_job_status_link is not None:
+        if runpod_job_status_link is not _UNSET:
             update["runpod_job_status_link"] = runpod_job_status_link
+
+        if error is not _UNSET:
+            update["error"] = error
+
+        if hallucination_reason is not _UNSET:
+            update["hallucination_reason"] = hallucination_reason
+
+        if hallucination_score is not _UNSET:
+            update["hallucination_score"] = hallucination_score
+
+        if desired_language is not _UNSET:
+            update["desired_language"] = desired_language
+
+        if detected_language is not _UNSET:
+            update["detected_language"] = detected_language
+
+        if detected_language_confidence is not _UNSET:
+            update["detected_language_confidence"] = detected_language_confidence
 
         if update.keys():
             try:
@@ -329,7 +374,7 @@ class ConversationService:
                             "fields": ["id", "error", "transcript"],
                         }
                     },
-                )["data"]
+                )
         except DirectusBadRequest as e:
             raise ConversationServiceException(
                 f"Failed to get chunk count for conversation {conversation_id}: {e}"

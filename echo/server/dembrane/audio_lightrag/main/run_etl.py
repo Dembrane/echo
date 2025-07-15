@@ -18,21 +18,19 @@ from dembrane.audio_lightrag.pipelines.contextual_chunk_etl_pipeline import (
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
-
 
 
 def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
     """
     Runs the complete ETL pipeline including Directus, Audio, and Contextual Chunk processes.
     Uses Redis locks to prevent the same conversation ID from being processed within 1 hour.
-    
+
     Args:
         conv_id_list: List of conversation IDs to process
-        
+
     Returns:
         bool: True if pipeline completes successfully, False if there's an error
         None: If input validation fails
@@ -45,7 +43,7 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
         # Filter conversation IDs that are already being processed (via Redis locks)
         redis_client = redis.from_url(REDIS_URL)
         filtered_conv_ids = []
-        
+
         for conv_id in conv_id_list:
             lock_key = f"{AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX}{conv_id}"
             # Atomically acquire the lock - fail fast if someone already owns it
@@ -55,21 +53,25 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
                 ttl = redis_client.ttl(lock_key)
                 if ttl > 0:
                     minutes_remaining = round(ttl / 60)
-                    logger.info(f"Skipping conversation ID {conv_id}: already processed or being processed. Lock expires in ~{minutes_remaining} minutes.")
+                    logger.info(
+                        f"Skipping conversation ID {conv_id}: already processed or being processed. Lock expires in ~{minutes_remaining} minutes."
+                    )
                 else:
                     logger.info(f"Race-lost lock for {conv_id}, skipping.")
                 continue
-            
+
             filtered_conv_ids.append(conv_id)
-        
+
         if not filtered_conv_ids:
             logger.info(
                 "All conversation IDs are already being processed or locked. Nothing to do."
             )
             return False
-            
-        logger.info(f"Starting ETL pipeline for {len(filtered_conv_ids)} conversations (after filtering)")
-        
+
+        logger.info(
+            f"Starting ETL pipeline for {len(filtered_conv_ids)} conversations (after filtering)"
+        )
+
         # Directus Pipeline
         try:
             directus_pl = DirectusETLPipeline()
@@ -101,17 +103,15 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
             raise
 
         logger.info("All ETL pipelines completed successfully")
-        
+
         for conv_id in filtered_conv_ids:
             directus.update_item(
                 "conversation",
                 conv_id,
                 {
                     "is_audio_processing_finished": True,
-                    "processing_status": ProcessingStatus.COMPLETED.value,
-                    "processing_message": "Audio analysis finished",
                 },
-		    )
+            )
 
         return True
 
@@ -130,11 +130,12 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
 
 if __name__ == "__main__":
     # Steps for manual run
-    # cd server 
+    # cd server
     # python -m dembrane.audio_lightrag.main.run_etl
     import os
 
     from dotenv import load_dotenv
+
     load_dotenv()
 
     TEST_CONV_UUID = str(os.getenv("TEST_CONV_UUID"))

@@ -7,7 +7,7 @@ import lz4.frame
 from dramatiq import group
 from dramatiq.encoder import JSONEncoder, MessageData
 from dramatiq.results import Results
-from dramatiq_workflow import Chain, Group, Workflow, WorkflowMiddleware
+from dramatiq_workflow import WorkflowMiddleware
 from dramatiq.middleware import GroupCallbacks
 from dramatiq.brokers.redis import RedisBroker
 from dramatiq.rate_limits.backends import RedisBackend as RateLimitRedisBackend
@@ -24,7 +24,10 @@ from dembrane.conversation_utils import (
 )
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.conversation_health import get_runpod_diarization
-from dembrane.processing_status_utils import ProcessingStatus, ProcessingStatusContext
+from dembrane.processing_status_utils import (
+    ProcessingStatusContext,
+    set_error_status,
+)
 from dembrane.audio_lightrag.main.run_etl import run_etl_pipeline
 
 init_sentry()
@@ -116,30 +119,31 @@ def task_summarize_conversation(conversation_id: str) -> None:
     """
     logger = getLogger("dembrane.tasks.task_summarize_conversation")
 
+    from dembrane.service.conversation import ConversationNotFoundException
+
     try:
-        try:
-            conversation = directus.get_item("conversation", conversation_id)
+        from dembrane.service import conversation_service
 
-            if conversation is None:
-                logger.error(f"Conversation not found: {conversation_id}")
-                return
+        conversation = conversation_service.get_by_id_or_raise(conversation_id)
 
-            if conversation["is_finished"] and conversation["summary"] is not None:
-                logger.info(f"Conversation {conversation_id} already summarized, skipping")
-                return
-        except Exception as e:
-            logger.error(f"Error: {e}")
+        if conversation["is_finished"] and conversation["summary"] is not None:
+            logger.info(f"Conversation {conversation_id} already summarized, skipping")
             return
 
         from dembrane.api.conversation import summarize_conversation
 
         with ProcessingStatusContext(
-            "conversation", conversation_id, "task_summarize_conversation"
+            conversation_id=conversation_id,
+            event_prefix="task_summarize_conversation",
         ):
             summarize_conversation(
-                conversation_id, auth=DependencyDirectusSession(user_id="none", is_admin=True)
+                conversation_id=conversation_id,
+                auth=DependencyDirectusSession(user_id="none", is_admin=True),
             )
 
+        return
+    except ConversationNotFoundException:
+        logger.error(f"Conversation not found: {conversation_id}")
         return
     except Exception as e:
         logger.error(f"Error: {e}")
@@ -153,13 +157,22 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
     """
     logger = getLogger("dembrane.tasks.task_merge_conversation_chunks")
 
+    from dembrane.service import conversation_service
+
+    try:
+        counts = conversation_service.get_chunk_counts(conversation_id)
+        if counts["total"] == 0:
+            logger.info(
+                f"Conversation {conversation_id} has no chunks (total=0); skipping merge task."
+            )
+            return
+    except Exception as e:
+        # If we can't determine counts, proceed with existing logic (may retry if still failing)
+        logger.debug(f"Could not fetch chunk counts before merge: {e}")
+
     try:
         try:
-            conversation = directus.get_item("conversation", conversation_id)
-
-            if conversation is None:
-                logger.error(f"Conversation not found: {conversation_id}")
-                return
+            conversation = conversation_service.get_by_id_or_raise(conversation_id)
 
             if conversation["is_finished"] and conversation["merged_audio_path"] is not None:
                 logger.info(f"Conversation {conversation_id} already merged, skipping")
@@ -231,8 +244,6 @@ def task_run_etl_pipeline(conversation_id: str) -> None:
             conversation_id,
             {
                 "is_audio_processing_finished": False,
-                "processing_status": ProcessingStatus.PROCESSING.value,
-                "processing_message": "Analysing audio",
             },
         )
 
@@ -248,8 +259,6 @@ def task_run_etl_pipeline(conversation_id: str) -> None:
                 conversation_id,
                 {
                     "is_audio_processing_finished": False,
-                    "processing_status": ProcessingStatus.FAILED.value,
-                    "processing_message": "Audio analysis failed",
                 },
             )
             raise e from e
@@ -287,14 +296,12 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
         follow_up_tasks = []
         follow_up_tasks.append(task_merge_conversation_chunks.message(conversation_id))
         follow_up_tasks.append(task_run_etl_pipeline.message(conversation_id))
+        follow_up_tasks.append(task_summarize_conversation.message(conversation_id))
 
         counts = conversation_service.get_chunk_counts(conversation_id)
-        logger.debug(counts)
 
         if counts["processed"] == counts["total"]:
             logger.debug("allez c'est fini")
-            follow_up_tasks.append(task_summarize_conversation.message(conversation_id))
-
             conversation_service.update(
                 conversation_id=conversation_id,
                 is_all_chunks_transcribed=True,
@@ -429,32 +436,76 @@ def task_create_project_library(project_id: str, language: str) -> None:
 @dramatiq.actor(queue_name="network", priority=50)
 def task_process_runpod_chunk_response(chunk_id: str, status_link: str) -> None:
     logger = getLogger("dembrane.tasks.task_process_runpod_chunk_response")
+
+    # pre-flight check to avoid processing chunks that are not in a conversation
+    from dembrane.service import conversation_service
+    from dembrane.service.conversation import ConversationChunkNotFoundException
+
     try:
+        chunk_object = conversation_service.get_chunk_by_id_or_raise(chunk_id)
+        conversation_id = chunk_object["conversation_id"]
+    # unrecoverable error, we can't process the chunk
+    except ConversationChunkNotFoundException:
+        logger.error(f"Chunk {chunk_id} not found, skipping")
+        return
+    # retry
+    except Exception as e:
+        logger.error(f"Error fetching conversation for chunk {chunk_id}: {e}")
+        set_error_status(
+            conversation_chunk_id=chunk_id, error="Failed to fetch conversation for this chunk."
+        )
+        raise e from e
+
+    with ProcessingStatusContext(
+        conversation_id=conversation_id,
+        conversation_chunk_id=chunk_id,
+        event_prefix="task_process_runpod_chunk_response",
+    ):
+        chunk_object = conversation_service.get_chunk_by_id_or_raise(chunk_id)
+        conversation_id = chunk_object["conversation_id"]
+
         headers = {
             "Authorization": f"Bearer {RUNPOD_WHISPER_API_KEY}",
             "Content-Type": "application/json",
         }
         response = requests.get(status_link, headers=headers, timeout=30)
-    except Exception as e:
-        logger.error(f"Failed to fetch status for chunk {chunk_id}: {e}")
-        return
 
-    if response.status_code == 200:
-        try:
-            data = response.json()
+        if response.status_code == 200:
+            try:
+                logger.debug(f"About to parse JSON for chunk {chunk_id}")
+                data = response.json()
+                logger.debug(f"Successfully parsed JSON for chunk {chunk_id}")
 
-            from dembrane.runpod import load_runpod_transcription_response
+                # Debug logging to see the actual structure
+                logger.debug(f"Raw response data structure for chunk {chunk_id}: {data}")
+                logger.debug(f"Type of data: {type(data)}")
+                if "output" in data:
+                    logger.debug(f"Type of data['output']: {type(data['output'])}")
 
-            load_runpod_transcription_response(data)
+                logger.debug(
+                    f"About to call load_runpod_transcription_response for chunk {chunk_id}"
+                )
+                from dembrane.runpod import load_runpod_transcription_response
 
-        except Exception as e:
-            logger.error(f"Error parsing response for chunk {chunk_id}: {e}")
-    else:
-        logger.info(f"Non-200 response for chunk {chunk_id}, retrying transcription.")
-        try:
-            transcribe_conversation_chunk(chunk_id)
-        except Exception as e:
-            logger.error(f"Failed to re-trigger transcription for chunk {chunk_id}: {e}")
+                load_runpod_transcription_response(data)
+                logger.debug(
+                    f"Successfully completed load_runpod_transcription_response for chunk {chunk_id}"
+                )
+
+            except Exception as e:
+                logger.error(f"Error parsing response for chunk {chunk_id}: {e}")
+                logger.error(f"Error type: {type(e)}")
+                logger.error(f"Error traceback:", exc_info=True)
+                # Log the raw response for debugging
+                logger.error(f"Raw response text: {response.text}")
+                logger.error(f"Response status: {response.status_code}")
+                logger.error(f"Response headers: {response.headers}")
+        else:
+            logger.info(f"Non-200 response for chunk {chunk_id}, retrying transcription.")
+            try:
+                transcribe_conversation_chunk(chunk_id)
+            except Exception as e:
+                logger.error(f"Failed to re-trigger transcription for chunk {chunk_id}: {e}")
 
 
 @dramatiq.actor(queue_name="network", priority=50)

@@ -4,7 +4,7 @@ from typing import Any, Type, Optional
 from logging import getLogger
 from typing_extensions import Literal
 
-from dembrane.directus import directus
+from dembrane.directus import directus_client_context
 
 logger = getLogger("status")
 
@@ -24,16 +24,51 @@ def add_processing_status(
     duration_ms: Optional[int] = None,
 ) -> int:
     logger.info(f"{event} {message} - {duration_ms}")
-    return directus.create_item(
-        "processing_status",
-        {
-            "conversation_id": conversation_id,
-            "conversation_chunk_id": conversation_chunk_id,
-            "event": event,
-            "message": message,
-            "duration_ms": duration_ms,
-        },
-    )["data"]["id"]
+    with directus_client_context() as client:
+        return client.create_item(
+            "processing_status",
+            {
+                "conversation_id": conversation_id,
+                "conversation_chunk_id": conversation_chunk_id,
+                "event": event,
+                "message": message,
+                "duration_ms": duration_ms,
+            },
+        )["data"]["id"]
+
+
+def set_error_status(
+    error: str,
+    conversation_chunk_id: Optional[str] = None,
+    raise_on_error: bool = False,
+) -> None:
+    from dembrane.service import conversation_service
+
+    exceptions = []
+
+    try:
+        if conversation_chunk_id:
+            conversation_service.update_chunk(
+                conversation_chunk_id,
+                error=error,
+            )
+    except Exception as e:
+        logger.error(
+            f"Error setting error status for conversation chunk {conversation_chunk_id}: {e}"
+        )
+        exceptions.append(e)
+
+    if exceptions:
+        error_message = (
+            f"Error setting error status for conversation chunk '{conversation_chunk_id}'"
+            f": {str(exceptions)}"
+        )
+        if raise_on_error:
+            raise Exception(error_message)
+        else:
+            logger.error(error_message)
+
+    return
 
 
 class ProcessingStatusContext:
@@ -46,6 +81,19 @@ class ProcessingStatusContext:
         message: Optional[str] = None,
         event_prefix: Optional[str] = None,
     ):
+        """
+        Context manager to automatically log processing status events with duration.
+
+        When entering the context, the context manager will log a STARTED event with the message and duration.
+        When an exception occurs, the context manager will log a FAILED event with the error message and duration.
+        When no exception occurs, the context manager will log a COMPLETED event with the message and duration.
+
+        Args:
+            conversation_id: The ID of the conversation. (str)
+            conversation_chunk_id: The ID of the conversation chunk. (str)
+            message: The message to log. (str)
+            event_prefix: The prefix of the event. (str) Conventionally, you will see this being set to method name.
+        """
         self.conversation_id = conversation_id
         self.conversation_chunk_id = conversation_chunk_id
         self.event_prefix = event_prefix

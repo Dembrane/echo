@@ -11,7 +11,7 @@ logger = logging.getLogger("dembrane.conversation_utils")
 def collect_unfinished_conversations() -> List[str]:
     # We want to collect:
     # 1. All unfinished conversations, EXCEPT
-    # 2. Those that have at least one chunk in the last 15 minutes
+    # 2. Those that have at least one chunk in the last 5 minutes
 
     response = directus.get_items(
         "conversation",
@@ -20,11 +20,11 @@ def collect_unfinished_conversations() -> List[str]:
                 "filter": {
                     # Must be unfinished
                     "is_finished": False,
-                    # Must not have a chunk in the last 15 minutes :)
+                    # Must not have a chunk in the last 5 minutes :)
                     "chunks": {
                         "_none": {
                             "timestamp": {
-                                "_gte": (get_utc_timestamp() - timedelta(minutes=15)).isoformat()
+                                "_gte": (get_utc_timestamp() - timedelta(minutes=5)).isoformat()
                             }
                         }
                     },

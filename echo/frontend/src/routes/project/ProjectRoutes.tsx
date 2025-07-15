@@ -12,15 +12,18 @@ import {
   LoadingOverlay,
   Stack,
   Title,
+  Modal,
 } from "@mantine/core";
+import { ConversationStatusTable } from "@/components/report/ConversationStatusTable";
 import { IconDownload } from "@tabler/icons-react";
 import { useParams } from "react-router-dom";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { UploadConversationDropzone } from "@/components/dropzone/UploadConversationDropzone";
 
 export const ProjectSettingsRoute = () => {
   const { projectId } = useParams();
   const projectQuery = useProjectById({ projectId: projectId ?? "" });
+  const [modalOpened, setModalOpened] = useState(false);
 
   return (
     <Stack
@@ -67,6 +70,25 @@ export const ProjectSettingsRoute = () => {
               </Button>
             </Box>
           </Stack>
+
+          {/* Conversation status modal */}
+          <Divider />
+          {projectId && (
+            <>
+              <Button variant="subtle" onClick={() => setModalOpened(true)}>
+                <Trans>View Conversation Status</Trans>
+              </Button>
+              <Modal
+                opened={modalOpened}
+                onClose={() => setModalOpened(false)}
+                title={<Trans>Conversation Status</Trans>}
+                size="lg"
+                centered
+              >
+                <ConversationStatusTable projectId={projectId} />
+              </Modal>
+            </>
+          )}
         </>
       )}
 
