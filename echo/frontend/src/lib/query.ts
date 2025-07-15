@@ -325,33 +325,6 @@ export const useLogoutMutation = () => {
   });
 };
 
-export const useProcessingStatus = ({
-  collectionName,
-  itemId,
-}: {
-  collectionName: string;
-  itemId: string;
-}) => {
-  return useQuery({
-    queryKey: ["processing_status", collectionName, itemId],
-    queryFn: () =>
-      directus.request(
-        readItems("processing_status", {
-          filter: {
-            collection_name: {
-              _eq: collectionName,
-            },
-            item_id: {
-              _eq: itemId,
-            },
-          },
-          sort: ["-timestamp"],
-          fields: ["*"],
-        }),
-      ),
-  });
-};
-
 export const useProjectById = ({
   projectId,
   query = {
