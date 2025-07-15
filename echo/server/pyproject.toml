@@ -86,6 +86,7 @@ dependencies = [
     "dramatiq-workflow==0.2.*",
     "lz4==4.4.*",
     "gevent>=25.4.2",
+    "pylance>=0.30.0",
 ]
 
 [tool.setuptools]
@@ -135,7 +136,7 @@ python_functions = "test_*"
 markers = [
     "slow: mark a test as slow",
 ]
-addopts = "--strict-markers"
+addopts = "--strict-markers --log-cli-level=INFO --log-cli-format='%(asctime)s [%(levelname)8s] %(name)s: %(message)s' --log-cli-date-format='%Y-%m-%d %H:%M:%S'"
 
 [tool.coverage.run]
 source = ["dembrane"]

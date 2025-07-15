@@ -41,18 +41,17 @@ type ProcessingStatus = {
 type Conversation = {
   is_finished: boolean;
   is_audio_processing_finished: boolean;
+  is_all_chunks_processed: boolean;
   chunks: any[] | ConversationChunk[];
   context?: string | null;
   created_at?: string | null;
   description?: string | null;
   id: string;
-  source?: string | null;
+  source?: "DASHBOARD_UPLOAD" | "CLONE" | null
   duration?: number | null;
   participant_email?: string | null;
   participant_name?: string | null;
   participant_user_agent?: string | null;
-  processing_status?: string | null;
-  processing_message?: string | null;
   project_chat_messages: any[] | ProjectChatMessageConversation[];
   project_chats: any[] | ProjectChatConversation[];
   project_id: string | Project;
@@ -61,6 +60,9 @@ type Conversation = {
   tags: any[] | ConversationProjectTag[];
   title?: string | null;
   updated_at?: string | null;
+  merged_transcript?: string | null;
+  merged_audio_path?: string | null;
+  error?: string | null;
 };
 
 type ConversationChunk = {
@@ -72,6 +74,15 @@ type ConversationChunk = {
   timestamp: string;
   transcript?: string | null;
   updated_at?: string | null;
+  error?: string | null;
+  source?: "DASHBOARD_UPLOAD" | "SPLIT" | "PORTAL_AUDIO" | "PORTAL_TEXT" | null;
+  hallucination_score?: number | null;
+  hallucination_reason?: string | null;
+  desired_language?: string | null;
+  detected_language?: string | null;
+  detected_language_confidence?: number | null;
+  raw_transcript?: string | null;
+  translation_error?: string | null;
 };
 
 type ConversationProjectTag = {

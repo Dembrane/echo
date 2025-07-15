@@ -57,7 +57,8 @@
   "files.eol": "\n",
   "debug.internalConsoleOptions": "neverOpen",
   // py
-  "python.languageServer": "Pylance",
+  "cursorpyright.analysis.typeCheckingMode": "off",
+  "python.languageServer": "None",
   "python.defaultInterpreterPath": "./server/.venv/bin/python",
   "ruff.lint.enable": true,
   "ruff.configuration": "./server/pyproject.toml",
@@ -66,7 +67,9 @@
   "mypy.configFile": "./server/pyproject.toml",
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff",
-    "editor.useTabStops": true
+    "editor.useTabStops": true,
+    "editor.tabSize": 4,
+    "editor.formatOnSave": true
   },
   "python.testing.pytestArgs": ["server"],
   "python.testing.unittestEnabled": false,

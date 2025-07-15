@@ -4,7 +4,7 @@ from typing import Any, Type, Optional
 from logging import getLogger
 from typing_extensions import Literal
 
-from dembrane.directus import directus
+from dembrane.directus import directus_client_context
 
 logger = getLogger("status")
 
@@ -17,25 +17,58 @@ class ProcessingStatus(Enum):
 
 
 def add_processing_status(
-    collection_name: str,
-    item_id: str,
-    event: str,
-    message: str,
-    json: Optional[dict] = None,
+    conversation_id: Optional[str] = None,
+    conversation_chunk_id: Optional[str] = None,
+    event: Optional[str] = None,
+    message: Optional[str] = None,
     duration_ms: Optional[int] = None,
 ) -> int:
-    logger.info(f"{event} {message} {str(json)} - {duration_ms}")
-    return directus.create_item(
-        "processing_status",
-        {
-            "collection_name": collection_name,
-            "item_id": item_id,
-            "event": event,
-            "message": message,
-            "json": json,
-            "duration_ms": duration_ms,
-        },
-    )["data"]["id"]
+    logger.info(f"{event} {message} - {duration_ms}")
+    with directus_client_context() as client:
+        return client.create_item(
+            "processing_status",
+            {
+                "conversation_id": conversation_id,
+                "conversation_chunk_id": conversation_chunk_id,
+                "event": event,
+                "message": message,
+                "duration_ms": duration_ms,
+            },
+        )["data"]["id"]
+
+
+def set_error_status(
+    error: str,
+    conversation_chunk_id: Optional[str] = None,
+    raise_on_error: bool = False,
+) -> None:
+    from dembrane.service import conversation_service
+
+    exceptions = []
+
+    try:
+        if conversation_chunk_id:
+            conversation_service.update_chunk(
+                conversation_chunk_id,
+                error=error,
+            )
+    except Exception as e:
+        logger.error(
+            f"Error setting error status for conversation chunk {conversation_chunk_id}: {e}"
+        )
+        exceptions.append(e)
+
+    if exceptions:
+        error_message = (
+            f"Error setting error status for conversation chunk '{conversation_chunk_id}'"
+            f": {str(exceptions)}"
+        )
+        if raise_on_error:
+            raise Exception(error_message)
+        else:
+            logger.error(error_message)
+
+    return
 
 
 class ProcessingStatusContext:
@@ -43,17 +76,28 @@ class ProcessingStatusContext:
 
     def __init__(
         self,
-        collection_name: str,
-        item_id: str,
-        event_prefix: str,
-        message: str = "",
-        json: Optional[dict] = None,
+        conversation_id: Optional[str] = None,
+        conversation_chunk_id: Optional[str] = None,
+        message: Optional[str] = None,
+        event_prefix: Optional[str] = None,
     ):
-        self.collection_name = collection_name
-        self.item_id = item_id
+        """
+        Context manager to automatically log processing status events with duration.
+
+        When entering the context, the context manager will log a STARTED event with the message and duration.
+        When an exception occurs, the context manager will log a FAILED event with the error message and duration.
+        When no exception occurs, the context manager will log a COMPLETED event with the message and duration.
+
+        Args:
+            conversation_id: The ID of the conversation. (str)
+            conversation_chunk_id: The ID of the conversation chunk. (str)
+            message: The message to log. (str)
+            event_prefix: The prefix of the event. (str) Conventionally, you will see this being set to method name.
+        """
+        self.conversation_id = conversation_id
+        self.conversation_chunk_id = conversation_chunk_id
         self.event_prefix = event_prefix
         self.message = message
-        self.json = json
         self.start_time: float = 0.0
         self.logger = getLogger(f"status.{self.event_prefix}")
 
@@ -65,11 +109,10 @@ class ProcessingStatusContext:
         # Log start event without duration
         self.start_time = time.time()
         self.processing_status_start_id = add_processing_status(
-            self.collection_name,
-            self.item_id,
+            conversation_id=self.conversation_id,
+            conversation_chunk_id=self.conversation_chunk_id,
             event=f"{self.event_prefix}.started",
-            message=self.message,
-            json=self.json,
+            message=self.message if self.message else "",
         )
         self.logger.info(f"{self.processing_status_start_id} {self.message}")
         return self
@@ -80,34 +123,30 @@ class ProcessingStatusContext:
         exc_value: Optional[BaseException],
         traceback: Any,
     ) -> Literal[False]:
-        # Compute duration in milliseconds
         duration_ms = int((time.time() - self.start_time) * 1000)
+        # if exception occurs, log FAILED event with error message and duration
         if exc_type:
-            # Log failure event with error message and duration
             err_msg = str(exc_value)
             self.processing_status_failed_id = add_processing_status(
-                self.collection_name,
-                self.item_id,
+                conversation_id=self.conversation_id,
+                conversation_chunk_id=self.conversation_chunk_id,
                 event=f"{self.event_prefix}.failed",
                 message=err_msg,
-                json=self.json,
                 duration_ms=duration_ms,
             )
             self.logger.error(
-                f"{self.processing_status_failed_id} {err_msg} (duration: {duration_ms/1000}s) (started: {self.processing_status_start_id})"
+                f"{self.processing_status_failed_id} {err_msg} (duration: {duration_ms / 1000}s) (started: {self.processing_status_start_id})"
             )
+        # if no exception occurs, log COMPLETED event with message and duration
         else:
-            # Log completion event with message and duration
             self.processing_status_completed_id = add_processing_status(
-                self.collection_name,
-                self.item_id,
+                conversation_id=self.conversation_id,
+                conversation_chunk_id=self.conversation_chunk_id,
                 event=f"{self.event_prefix}.completed",
                 message=self.message,
-                json=self.json,
                 duration_ms=duration_ms,
             )
             self.logger.info(
-                f"{self.processing_status_completed_id} {self.message} (duration: {duration_ms/1000}s) (started: {self.processing_status_start_id})"
+                f"{self.processing_status_completed_id} {self.message} (duration: {duration_ms / 1000}s) (started: {self.processing_status_start_id})"
             )
-        # Do not suppress exceptions
         return False

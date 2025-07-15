@@ -1,8 +1,16 @@
 import { Trans } from "@lingui/react/macro";
-import { Alert, Button, NativeSelect, Stack } from "@mantine/core";
+import {
+  Alert,
+  Button,
+  NativeSelect,
+  Stack,
+  Text,
+  Modal,
+} from "@mantine/core";
+import { ConversationStatusTable } from "./ConversationStatusTable";
 
 import { useEffect, useState } from "react";
-import { useCreateProjectReportMutation } from "@/lib/query";
+import { useCreateProjectReportMutation, useProjectConversationCounts } from "@/lib/query";
 import { useParams } from "react-router-dom";
 import { t } from "@lingui/core/macro";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
@@ -18,8 +26,10 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
     error,
   } = useCreateProjectReportMutation();
   const { projectId } = useParams();
+  const { data: conversationCounts } = useProjectConversationCounts(projectId ?? "");
   const { iso639_1 } = useLanguage();
   const [language, setLanguage] = useState(iso639_1);
+  const [modalOpened, setModalOpened] = useState(false);
 
   useEffect(() => {
     if (report) {
@@ -53,11 +63,47 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
   }
 
   return (
-    <Stack>
-      <CloseableAlert>
-        It looks like you don't have a report for this project yet. Please
-        create one to get started.
-      </CloseableAlert>
+    <Stack maw="500px">
+
+
+      {/* Inform the user about conversation processing status */}
+      {conversationCounts && conversationCounts.total > 0 && (
+        <CloseableAlert color="blue" title={t`Conversation processing`} mb={"sm"}>
+          <Text>
+            <Trans>
+              Only the {conversationCounts.finished} finished
+              {" "}
+              {conversationCounts.finished === 1
+                ? "conversation"
+                : "conversations"} will be included in the report right now.
+              {" "}
+            </Trans>
+          </Text>
+        </CloseableAlert>
+      )}
+
+      {/* Detailed Conversation Modal */}
+      {conversationCounts && conversationCounts.total > 0 && (
+        <>
+          <Button
+            variant="subtle"
+            size="xs"
+            mt="xs"
+            onClick={() => setModalOpened(true)}
+          >
+            <Trans>See conversation status details</Trans>
+          </Button>
+          <Modal
+            opened={modalOpened}
+            onClose={() => setModalOpened(false)}
+            title={<Trans>Conversation Status Details</Trans>}
+            size="lg"
+            centered
+          >
+            <ConversationStatusTable projectId={projectId ?? ""} />
+          </Modal>
+        </>
+      )}
 
       <NativeSelect
         value={language}
@@ -76,7 +122,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
         loading={isPending}
         disabled={isPending}
       >
-        Create Report
+        <Trans>Create Report</Trans>
       </Button>
     </Stack>
   );

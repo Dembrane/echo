@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Echo Development Environment Tmux Setup Script
 # This script sets up a complete tmux development environment with all services
