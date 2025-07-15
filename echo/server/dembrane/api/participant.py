@@ -31,6 +31,7 @@ class PublicProjectSchema(BaseModel):
 
     is_conversation_allowed: bool
     is_get_reply_enabled: bool
+    is_project_notification_subscription_allowed: bool
 
     # onboarding
     default_conversation_tutorial_slug: Optional[str] = None
