@@ -14,9 +14,15 @@ from dramatiq.rate_limits.backends import RedisBackend as RateLimitRedisBackend
 from dramatiq.results.backends.redis import RedisBackend as ResultsRedisBackend
 
 from dembrane.utils import get_utc_timestamp
-from dembrane.config import REDIS_URL, RUNPOD_WHISPER_API_KEY, ENABLE_AUDIO_LIGHTRAG_INPUT
+from dembrane.config import (
+    REDIS_URL,
+    RUNPOD_WHISPER_API_KEY,
+    RUNPOD_TOPIC_MODELER_URL,
+    ENABLE_AUDIO_LIGHTRAG_INPUT,
+    RUNPOD_TOPIC_MODELER_API_KEY,
+)
 from dembrane.sentry import init_sentry
-from dembrane.directus import directus
+from dembrane.directus import directus, directus_client_context
 from dembrane.transcribe import transcribe_conversation_chunk
 from dembrane.conversation_utils import (
     collect_unfinished_conversations,
@@ -418,9 +424,59 @@ def task_create_view(
     language: str,
 ) -> None:
     logger = getLogger("dembrane.tasks.task_create_view")
-    logger.warning(
-        f"NOT IMPLEMENTED: task_create_view (project_analysis_run_id: {project_analysis_run_id}, user_query: {user_query}, user_query_context: {user_query_context}, language: {language})"
-    )
+    try:
+        with directus_client_context() as client:
+            response = client.get_items(
+                "project_analysis_run",
+                {
+                    "query": {
+                        "filter": {
+                            "id": project_analysis_run_id,
+                        },
+                        "fields": ["project_id"],
+                    }
+                },
+            )
+            project_id = response[0]["project_id"]
+            # get all segment ids from project_id
+            segments = client.get_items(
+                "project",
+                {
+                    "query": {
+                        "filter": {
+                            "id": project_id,
+                        },
+                        "fields": ["conversations.conversation_segments.id"],
+                    }
+                },
+            )
+            segment_ids = list(
+                set(
+                    [
+                        seg["id"]
+                        for conv in segments[0]["conversations"]
+                        for seg in conv["conversation_segments"]
+                    ]
+                )
+            )
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {RUNPOD_TOPIC_MODELER_API_KEY}",
+            }
+            data = {
+                "input": {
+                    "response_language": language,
+                    "segment_ids": segment_ids,
+                    "user_prompt": "\n\n\n".join([user_query, user_query_context]),
+                    "project_analysis_run_id": project_analysis_run_id,
+                }
+            }
+            url = f"{str(RUNPOD_TOPIC_MODELER_URL).rstrip('/')}/run"
+
+            response = requests.post(url, headers=headers, json=data, timeout=600)
+    except Exception as e:
+        logger.error(f"Error in task_create_view: {e}")
+        raise e from e
     return
 
 
