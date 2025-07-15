@@ -1,13 +1,13 @@
 {
-  "collection": "dashboard_announcements_translations",
-  "field": "title",
+  "collection": "conversation_chunk",
+  "field": "detected_language",
   "type": "string",
   "meta": {
-    "collection": "dashboard_announcements_translations",
+    "collection": "conversation_chunk",
     "conditions": null,
     "display": null,
     "display_options": null,
-    "field": "title",
+    "field": "detected_language",
     "group": null,
     "hidden": false,
     "interface": "input",
@@ -15,16 +15,16 @@
     "options": null,
     "readonly": false,
     "required": false,
-    "sort": 4,
+    "sort": 21,
     "special": null,
     "translations": null,
     "validation": null,
     "validation_message": null,
-    "width": "half"
+    "width": "full"
   },
   "schema": {
-    "name": "title",
-    "table": "dashboard_announcements_translations",
+    "name": "detected_language",
+    "table": "conversation_chunk",
     "data_type": "character varying",
     "default_value": null,
     "max_length": 255,

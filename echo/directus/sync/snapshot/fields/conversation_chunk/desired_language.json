@@ -1,21 +1,21 @@
 {
-  "collection": "dashboard_announcements_translations",
-  "field": "languages_code",
+  "collection": "conversation_chunk",
+  "field": "desired_language",
   "type": "string",
   "meta": {
-    "collection": "dashboard_announcements_translations",
+    "collection": "conversation_chunk",
     "conditions": null,
     "display": null,
     "display_options": null,
-    "field": "languages_code",
+    "field": "desired_language",
     "group": null,
-    "hidden": true,
-    "interface": null,
+    "hidden": false,
+    "interface": "input",
     "note": null,
     "options": null,
     "readonly": false,
     "required": false,
-    "sort": 3,
+    "sort": 20,
     "special": null,
     "translations": null,
     "validation": null,
@@ -23,8 +23,8 @@
     "width": "full"
   },
   "schema": {
-    "name": "languages_code",
-    "table": "dashboard_announcements_translations",
+    "name": "desired_language",
+    "table": "conversation_chunk",
     "data_type": "character varying",
     "default_value": null,
     "max_length": 255,
@@ -37,7 +37,7 @@
     "is_generated": false,
     "generation_expression": null,
     "has_auto_increment": false,
-    "foreign_key_table": "languages",
-    "foreign_key_column": "code"
+    "foreign_key_table": null,
+    "foreign_key_column": null
   }
 }
