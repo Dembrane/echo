@@ -1,6 +1,6 @@
 {
   "$schema": "https://cdn.statically.io/gh/nguyenngoclongdev/cdn/main/schema/v10/terminal-keeper.json",
-  "theme": "default",
+  "theme": "tribe",
   "active": "default",
   "keepExistingTerminals": false,
   "sessions": {
@@ -8,6 +8,7 @@
       {
         "autoExecuteCommands": true,
         "name": "server",
+        "icon": "server",
         "commands": [
           "cd server",
           "source .venv/bin/activate",
@@ -18,6 +19,7 @@
         {
           "autoExecuteCommands": true,
           "name": "workers",
+          "icon": "gear",
           "commands": [
             "cd server",
             "source .venv/bin/activate",
@@ -27,6 +29,7 @@
         {
           "autoExecuteCommands": true,
           "name": "workers-cpu",
+          "icon": "gear",
           "commands": [
             "cd server",
             "source .venv/bin/activate",
@@ -36,6 +39,7 @@
         {
           "autoExecuteCommands": true,
           "name": "scheduler",
+          "icon": "clock",
           "commands": [
             "cd server",
             "source .venv/bin/activate",
@@ -47,6 +51,7 @@
         {
           "autoExecuteCommands": true,
           "name": "admin-dashboard",
+          "icon": "browser",
           "commands": [
             "cd frontend",
             "pnpm run dev"
@@ -55,6 +60,7 @@
         {
           "autoExecuteCommands": true,
           "name": "participant-portal",
+          "icon": "browser",
           "commands": [
             "cd frontend",
             "pnpm run participant:dev"
