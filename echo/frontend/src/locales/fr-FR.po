@@ -42,7 +42,7 @@ msgstr "Une erreur s'est produite"
 msgid " Submit"
 msgstr " Envoyer"
 
-#: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:67
+#: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:57
 msgid " Unsubscribe from Notifications"
 msgstr " Se désabonner des notifications"
 
@@ -184,8 +184,8 @@ msgid "An error occurred."
 msgstr "Une erreur s'est produite."
 
 #: src/components/layout/ProjectResourceLayout.tsx:48
-msgid "Analysis"
-msgstr "Analyse"
+#~ msgid "Analysis"
+#~ msgstr "Analyse"
 
 #: src/components/view/CreateViewForm.tsx:110
 msgid "Analysis Language"
@@ -284,7 +284,7 @@ msgstr "Aspects"
 msgid "Audio Processing In Progress"
 msgstr "Traitement audio en cours"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:219
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:221
 msgid "Audio recordings are scheduled to be deleted after 30 days from the recording date"
 msgstr "Les enregistrements audio seront supprimés après 30 jours à partir de la date d'enregistrement"
 
@@ -298,11 +298,11 @@ msgstr "Conseil audio"
 msgid "Auto-select"
 msgstr "Sélection automatique"
 
-#: src/lib/query.ts:1695
+#: src/lib/query.ts:1705
 msgid "Auto-select disabled"
 msgstr "Sélection automatique désactivée"
 
-#: src/lib/query.ts:1557
+#: src/lib/query.ts:1567
 msgid "Auto-select enabled"
 msgstr "Sélection automatique activée"
 
@@ -466,7 +466,7 @@ msgstr "Contexte ajouté :"
 msgid "Continue"
 msgstr "Continuer"
 
-#: src/lib/query.ts:1558
+#: src/lib/query.ts:1568
 msgid "Conversation added to chat"
 msgstr "Conversation ajoutée à la discussion"
 
@@ -474,11 +474,23 @@ msgstr "Conversation ajoutée à la discussion"
 msgid "Conversation Ended"
 msgstr "Conversation terminée"
 
-#: src/lib/query.ts:1696
+#: src/components/report/CreateReportForm.tsx:71
+msgid "Conversation processing"
+msgstr "Traitement de la conversation"
+
+#: src/lib/query.ts:1706
 msgid "Conversation removed from chat"
 msgstr "Conversation retirée de la discussion"
 
-#: src/components/conversation/ConversationAccordion.tsx:738
+#: src/routes/project/ProjectRoutes.tsx:84
+msgid "Conversation Status"
+msgstr "Statut de la conversation"
+
+#: src/components/report/CreateReportForm.tsx:99
+msgid "Conversation Status Details"
+msgstr "Détails du statut de la conversation"
+
+#: src/components/conversation/ConversationAccordion.tsx:713
 msgid "Conversations"
 msgstr "Conversations"
 
@@ -511,7 +523,7 @@ msgstr "Copier le lien pour partager ce rapport"
 msgid "Copy Summary"
 msgstr "Copier le résumé"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:182
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:184
 msgid "Copy transcript"
 msgstr "Copier la transcription"
 
@@ -531,6 +543,10 @@ msgstr "Créer une bibliothèque"
 msgid "Create new view"
 msgstr "Créer une nouvelle vue"
 
+#: src/components/report/CreateReportForm.tsx:125
+msgid "Create Report"
+msgstr "Créer un rapport"
+
 #: src/routes/project/library/ProjectLibrary.tsx:237
 #: src/components/view/CreateViewForm.tsx:119
 msgid "Create View"
@@ -544,7 +560,7 @@ msgstr "Créé le"
 msgid "Custom"
 msgstr "Personnalisé"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:232
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:234
 msgid "Custom Filename"
 msgstr "Nom de fichier personnalisé"
 
@@ -588,11 +604,11 @@ msgstr "Voulez-vous rester dans la boucle ?"
 msgid "Documentation"
 msgstr "Documentation"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:244
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:246
 msgid "Download"
 msgstr "Télécharger"
 
-#: src/routes/project/ProjectRoutes.tsx:66
+#: src/routes/project/ProjectRoutes.tsx:69
 msgid "Download All Transcripts"
 msgstr "Télécharger toutes les transcriptions"
 
@@ -600,11 +616,11 @@ msgstr "Télécharger toutes les transcriptions"
 msgid "Download Audio"
 msgstr "Télécharger l'audio"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:170
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:172
 msgid "Download transcript"
 msgstr "Télécharger la transcription"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:228
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:230
 msgid "Download Transcript Options"
 msgstr "Options de téléchargement de la transcription"
 
@@ -663,8 +679,8 @@ msgstr "E-mail vérifié avec succès. Vous serez redirigé vers la page de conn
 msgid "email@work.com"
 msgstr "email@travail.com"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:166
-#: src/components/conversation/ConversationAccordion.tsx:445
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:168
+#: src/components/conversation/ConversationAccordion.tsx:420
 msgid "Empty"
 msgstr "Vide"
 
@@ -704,7 +720,7 @@ msgstr "Anglais"
 msgid "Enter a key term or proper noun"
 msgstr "Entrez un terme clé ou un nom propre"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:283
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:285
 msgid "Enter a name for the new conversation"
 msgstr "Entrez un nom pour le nouveau conversation"
 
@@ -722,11 +738,11 @@ msgstr "Entrez votre requête"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:661
 #: src/components/dropzone/UploadConversationDropzone.tsx:759
-#: src/components/conversation/ConversationAccordion.tsx:455
+#: src/components/conversation/ConversationAccordion.tsx:430
 msgid "Error"
 msgstr "Erreur"
 
-#: src/components/report/CreateReportForm.tsx:46
+#: src/components/report/CreateReportForm.tsx:56
 msgid "Error creating report"
 msgstr "Erreur lors de la création du rapport"
 
@@ -734,8 +750,8 @@ msgstr "Erreur lors de la création du rapport"
 msgid "Error loading insights"
 msgstr "Erreur lors du chargement des perspectives"
 
-#: src/routes/project/ProjectRoutes.tsx:35
-#: src/routes/project/ProjectRoutes.tsx:103
+#: src/routes/project/ProjectRoutes.tsx:38
+#: src/routes/project/ProjectRoutes.tsx:125
 msgid "Error loading project"
 msgstr "Erreur lors du chargement du projet"
 
@@ -758,13 +774,13 @@ msgid "Everything looks good – you can continue."
 msgstr "Tout semble bon – vous pouvez continuer."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:67
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:257
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:259
 #: src/components/project/ProjectPortalEditor.tsx:389
 #: src/components/conversation/MoveConversationButton.tsx:128
 msgid "Experimental"
 msgstr "Expérimental"
 
-#: src/routes/project/ProjectRoutes.tsx:56
+#: src/routes/project/ProjectRoutes.tsx:59
 msgid "Export"
 msgstr "Exporter"
 
@@ -772,12 +788,12 @@ msgstr "Exporter"
 msgid "Failed"
 msgstr "Échec"
 
-#: src/lib/query.ts:1543
+#: src/lib/query.ts:1553
 msgid "Failed to add conversation to chat"
 msgstr "Échec de l'ajout de la conversation à la discussion"
 
 #. placeholder {0}: error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
-#: src/lib/query.ts:1535
+#: src/lib/query.ts:1545
 msgid "Failed to add conversation to chat{0}"
 msgstr "Échec de l'ajout de la conversation à la discussion{0}"
 
@@ -785,13 +801,13 @@ msgstr "Échec de l'ajout de la conversation à la discussion{0}"
 msgid "Failed to delete response"
 msgstr "Échec de la suppression de la réponse"
 
-#: src/lib/query.ts:1676
-#: src/lib/query.ts:1682
+#: src/lib/query.ts:1686
+#: src/lib/query.ts:1692
 msgid "Failed to disable Auto Select for this chat"
 msgstr "Échec de la désactivation de la sélection automatique pour cette discussion"
 
-#: src/lib/query.ts:1539
-#: src/lib/query.ts:1545
+#: src/lib/query.ts:1549
+#: src/lib/query.ts:1555
 msgid "Failed to enable Auto Select for this chat"
 msgstr "Échec de l'activation de la sélection automatique pour cette discussion"
 
@@ -811,16 +827,16 @@ msgstr "Échec du marquage de l'annonce comme lue"
 msgid "Failed to regenerate the summary. Please try again later."
 msgstr "Échec de la régénération du résumé. Veuillez réessayer plus tard."
 
-#: src/lib/query.ts:1680
+#: src/lib/query.ts:1690
 msgid "Failed to remove conversation from chat"
 msgstr "Échec de la suppression de la conversation de la discussion"
 
 #. placeholder {0}: error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
-#: src/lib/query.ts:1672
+#: src/lib/query.ts:1682
 msgid "Failed to remove conversation from chat{0}"
 msgstr "Échec de la suppression de la conversation de la discussion{0}"
 
-#: src/lib/query.ts:2178
+#: src/lib/query.ts:2188
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Échec de la transcription de la conversation. Veuillez réessayer."
 
@@ -866,6 +882,10 @@ msgstr "Taille du fichier: Min {0}, Max {1}, jusqu'à {MAX_FILES} fichiers"
 #: src/routes/participant/ParticipantConversation.tsx:766
 msgid "Finish"
 msgstr "Terminer"
+
+#: src/components/report/ConversationStatusTable.tsx:75
+msgid "Finished"
+msgstr "Terminé"
 
 #: src/routes/auth/Register.tsx:75
 #: src/routes/auth/Register.tsx:77
@@ -1021,6 +1041,10 @@ msgstr "Nom"
 msgid "Last saved {0}"
 msgstr "Dernièrement enregistré le {0}"
 
+#: src/components/report/ConversationStatusTable.tsx:53
+msgid "Last Updated"
+msgstr "Dernière mise à jour"
+
 #: src/components/participant/MicrophoneTest.tsx:247
 msgid "Let's Make Sure We Can Hear You"
 msgstr "Vérifions que nous pouvons vous entendre"
@@ -1039,6 +1063,10 @@ msgstr "Création de la bibliothèque en cours"
 #: src/routes/project/library/ProjectLibrary.tsx:173
 msgid "Library is currently being processed"
 msgstr "La bibliothèque est en cours de traitement"
+
+#: src/components/report/ConversationStatusTable.tsx:59
+msgid "Link"
+msgstr "Lien"
 
 #: src/components/chat/ChatTemplatesMenu.tsx:68
 #~ msgid "LinkedIn Post (Experimental)"
@@ -1060,7 +1088,7 @@ msgstr "Chargement"
 msgid "loading..."
 msgstr "chargement..."
 
-#: src/lib/query.ts:1478
+#: src/lib/query.ts:1488
 #: src/components/conversation/ConversationAccordion.tsx:103
 msgid "Loading..."
 msgstr "Chargement..."
@@ -1081,7 +1109,7 @@ msgstr "Se connecter en tant qu'utilisateur existant"
 msgid "Logout"
 msgstr "Déconnexion"
 
-#: src/components/conversation/ConversationAccordion.tsx:557
+#: src/components/conversation/ConversationAccordion.tsx:532
 msgid "Longest First"
 msgstr "Plus long en premier"
 
@@ -1134,11 +1162,11 @@ msgstr "Déplacer vers un projet"
 msgid "Name"
 msgstr "Nom"
 
-#: src/components/conversation/ConversationAccordion.tsx:555
+#: src/components/conversation/ConversationAccordion.tsx:530
 msgid "Name A-Z"
 msgstr "Nom A-Z"
 
-#: src/components/conversation/ConversationAccordion.tsx:556
+#: src/components/conversation/ConversationAccordion.tsx:531
 msgid "Name Z-A"
 msgstr "Nom Z-A"
 
@@ -1146,7 +1174,7 @@ msgstr "Nom Z-A"
 msgid "New"
 msgstr "Nouveau"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:282
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:284
 msgid "New Conversation Name"
 msgstr "Nom du nouveau conversation"
 
@@ -1164,7 +1192,7 @@ msgstr "Nouveau mot de passe"
 msgid "New Project"
 msgstr "Nouveau projet"
 
-#: src/components/conversation/ConversationAccordion.tsx:553
+#: src/components/conversation/ConversationAccordion.tsx:528
 msgid "Newest First"
 msgstr "Plus récent en premier"
 
@@ -1188,7 +1216,11 @@ msgstr "Aucune conversation disponible pour créer la bibliothèque"
 msgid "No conversations available to create library. Please add some conversations to get started."
 msgstr "Aucune conversation disponible pour créer la bibliothèque. Veuillez ajouter des conversations pour commencer."
 
-#: src/components/conversation/ConversationAccordion.tsx:864
+#: src/components/report/ConversationStatusTable.tsx:33
+msgid "No conversations found."
+msgstr "Aucune conversation trouvée."
+
+#: src/components/conversation/ConversationAccordion.tsx:839
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "Aucune conversation trouvée. Commencez une conversation en utilisant le lien d'invitation à participer depuis la <0><1>vue d'ensemble du projet.</1></0>"
 
@@ -1222,8 +1254,8 @@ msgid "No report found"
 msgstr "Aucun rapport trouvé"
 
 #: src/components/resource/ResourceAccordion.tsx:38
-msgid "No resources found."
-msgstr "Aucune ressource trouvée."
+#~ msgid "No resources found."
+#~ msgstr "Aucune ressource trouvée."
 
 #: src/components/conversation/ConversationEdit.tsx:171
 msgid "No tags found"
@@ -1233,7 +1265,7 @@ msgstr "Aucune étiquette trouvée"
 msgid "No tags have been added to this project yet. Add a tag using the text input above to get started."
 msgstr "Aucune étiquette n'a encore été ajoutée à ce projet. Ajoutez une étiquette en utilisant le champ de texte ci-dessus pour commencer."
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:305
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:307
 msgid "No Transcript Available"
 msgstr "Aucune transcription disponible"
 
@@ -1241,7 +1273,7 @@ msgstr "Aucune transcription disponible"
 #~ msgid "No transcript available for this conversation."
 #~ msgstr "Aucune transcription disponible pour cette conversation."
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:308
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:310
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "Aucune transcription n'existe pour cette conversation. Veuillez vérifier plus tard."
 
@@ -1258,16 +1290,22 @@ msgid "No valid audio files were selected. Please select audio files only (MP3, 
 msgstr "Aucun fichier audio valide n'a été sélectionné. Veuillez sélectionner uniquement des fichiers audio (MP3, WAV, OGG, etc)."
 
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:58
-msgid "Not available"
-msgstr "Non disponible"
+#~ msgid "Not available"
+#~ msgstr "Non disponible"
 
-#: src/components/conversation/ConversationAccordion.tsx:554
+#: src/components/conversation/ConversationAccordion.tsx:529
 msgid "Oldest First"
 msgstr "Plus ancien en premier"
 
-#: src/components/conversation/OngoingConversationsSummaryCard.tsx:56
+#: src/components/conversation/OngoingConversationsSummaryCard.tsx:60
 msgid "Ongoing Conversations"
 msgstr "Conversations en cours"
+
+#. placeholder {0}: conversationCounts.finished
+#. placeholder {1}: conversationCounts.finished === 1 ? "conversation" : "conversations"
+#: src/components/report/CreateReportForm.tsx:73
+msgid "Only the {0} finished {1} will be included in the report right now. "
+msgstr "Seules les {0} conversations terminées {1} seront incluses dans le rapport en ce moment. "
 
 #: src/routes/participant/ParticipantConversation.tsx:345
 msgid "Oops! It looks like microphone access was denied. No worries, though! We've got a handy troubleshooting guide for you. Feel free to check it out. Once you've resolved the issue, come back and visit this page again to check if your microphone is ready."
@@ -1290,12 +1328,11 @@ msgstr "Ouvert à la participation ?"
 msgid "Open troubleshooting guide"
 msgstr "Ouvrir le guide de dépannage"
 
-#: src/components/conversation/ConversationAccordion.tsx:791
-#: src/components/conversation/ConversationAccordion.tsx:805
+#: src/components/conversation/ConversationAccordion.tsx:766
+#: src/components/conversation/ConversationAccordion.tsx:780
 msgid "Options"
 msgstr "Options"
 
-#: src/components/layout/ProjectResourceLayout.tsx:45
 #: src/components/layout/ProjectConversationLayout.tsx:38
 msgid "Overview"
 msgstr "Aperçu"
@@ -1312,6 +1349,7 @@ msgstr "Page non trouvée"
 msgid "Page Title"
 msgstr "Titre de la page"
 
+#: src/components/report/ConversationStatusTable.tsx:50
 #: src/components/participant/ParticipantInitiateForm.tsx:45
 msgid "Participant"
 msgstr "Participant"
@@ -1339,6 +1377,10 @@ msgstr "Les mots de passe ne correspondent pas"
 #: src/routes/participant/ParticipantConversation.tsx:560
 msgid "Pause"
 msgstr "Pause"
+
+#: src/components/report/ConversationStatusTable.tsx:79
+msgid "Pending"
+msgstr "En attente"
 
 #: src/components/participant/MicrophoneTest.tsx:285
 msgid "Please allow microphone access to start the test."
@@ -1381,7 +1423,7 @@ msgstr "Veuillez enregistrer votre réponse en cliquant sur le bouton \"Enregist
 #~ msgid "Please record your response by clicking the \"Start Recording\" button below. You may also choose to respond in text by clicking the text icon."
 #~ msgstr "Veuillez enregistrer votre réponse en cliquant sur le bouton \"Démarrer l'enregistrement\" ci-dessous. Vous pouvez également répondre en texte en cliquant sur l'icône texte."
 
-#: src/components/report/CreateReportForm.tsx:64
+#: src/components/report/CreateReportForm.tsx:110
 msgid "Please select a language for your report"
 msgstr "Veuillez sélectionner une langue pour votre rapport"
 
@@ -1405,11 +1447,11 @@ msgstr "Veuillez attendre {timeStr} avant de demander un autre Echo."
 #~ msgid "Please wait {timeStr} before requesting another reply."
 #~ msgstr "Veuillez attendre {timeStr} avant de demander une autre réponse."
 
-#: src/components/report/CreateReportForm.tsx:34
+#: src/components/report/CreateReportForm.tsx:44
 msgid "Please wait while we generate your report. You will automatically be redirected to the report page."
 msgstr "Veuillez patienter pendant que nous générons votre rapport. Vous serez automatiquement redirigé vers la page du rapport."
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:265
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:267
 msgid "Please wait while we process your retranscription request. You will be redirected to the new conversation when ready."
 msgstr "Veuillez patienter pendant que nous traitons votre demande de retranscription. Vous serez redirigé vers la nouvelle conversation lorsque prêt."
 
@@ -1450,26 +1492,28 @@ msgstr "Déclarations de confidentialité"
 msgid "Proceed"
 msgstr "Continuer"
 
-#: src/components/conversation/ConversationAccordion.tsx:410
-#: src/components/conversation/ConversationAccordion.tsx:428
+#: src/components/conversation/ConversationAccordion.tsx:402
 msgid "Processing"
 msgstr "Traitement"
 
-#. placeholder {0}: conversation.processing_status ?? "Unknown"
+#: src/components/conversation/ConversationAccordion.tsx:426
+msgid "Processing failed for this conversation. This conversation will not be available for analysis and chat."
+msgstr "Le traitement de cette conversation a échoué. Cette conversation ne sera pas disponible pour l'analyse et le chat."
+
 #: src/components/conversation/ConversationAccordion.tsx:451
-msgid "Processing failed for this conversation. This conversation will not be available for analysis and chat. Last Known Status: {0}"
-msgstr "Le traitement de cette conversation a échoué. Cette conversation ne sera pas disponible pour l'analyse et le chat. Dernier statut connu : {0}"
+#~ msgid "Processing failed for this conversation. This conversation will not be available for analysis and chat. Last Known Status: {0}"
+#~ msgstr "Le traitement de cette conversation a échoué. Cette conversation ne sera pas disponible pour l'analyse et le chat. Dernier statut connu : {0}"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:316
-msgid "Processing Transcript"
-msgstr "Traitement de la transcription"
+#~ msgid "Processing Transcript"
+#~ msgstr "Traitement de la transcription"
 
 #: src/components/report/UpdateReportModalButton.tsx:72
-#: src/components/report/CreateReportForm.tsx:33
+#: src/components/report/CreateReportForm.tsx:43
 msgid "Processing your report..."
 msgstr "Traitement de votre rapport..."
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:264
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:266
 msgid "Processing your retranscription request..."
 msgstr "Traitement de votre demande de retranscription..."
 
@@ -1624,7 +1668,7 @@ msgstr "Demander le Réinitialisation du Mot de Passe | Dembrane"
 msgid "Requesting microphone access to detect available devices..."
 msgstr "Demande d'accès au microphone pour détecter les appareils disponibles..."
 
-#: src/components/conversation/ConversationAccordion.tsx:841
+#: src/components/conversation/ConversationAccordion.tsx:816
 msgid "Reset All Options"
 msgstr "Réinitialiser toutes les options"
 
@@ -1638,26 +1682,26 @@ msgid "Reset Password | Dembrane"
 msgstr "Réinitialiser le Mot de Passe | Dembrane"
 
 #: src/components/resource/ResourceAccordion.tsx:21
-msgid "Resources"
-msgstr "Ressources"
+#~ msgid "Resources"
+#~ msgstr "Ressources"
 
 #: src/routes/participant/ParticipantConversation.tsx:550
 msgid "Resume"
 msgstr "Reprendre"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:295
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:297
 msgid "Retranscribe"
 msgstr "Rétranscrire"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:196
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:198
 msgid "Retranscribe conversation"
 msgstr "Rétranscrire la conversation"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:255
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:257
 msgid "Retranscribe Conversation"
 msgstr "Rétranscrire la conversation"
 
-#: src/lib/query.ts:2174
+#: src/lib/query.ts:2184
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "La rétranscrire a commencé. La nouvelle conversation sera disponible bientôt."
 
@@ -1693,7 +1737,7 @@ msgstr "Défiler vers le bas"
 msgid "Search"
 msgstr "Rechercher"
 
-#: src/components/conversation/ConversationAccordion.tsx:783
+#: src/components/conversation/ConversationAccordion.tsx:758
 msgid "Search conversations"
 msgstr "Rechercher des conversations"
 
@@ -1717,6 +1761,10 @@ msgstr "Recherché parmi les sources les plus pertinentes"
 #: src/components/chat/SourcesSearch.tsx:13
 msgid "Searching through the most relevant sources"
 msgstr "Recherche parmi les sources les plus pertinentes"
+
+#: src/components/report/CreateReportForm.tsx:94
+msgid "See conversation status details"
+msgstr "Voir les détails du statut de la conversation"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:506
 msgid "Select Audio Files to Upload"
@@ -1787,7 +1835,7 @@ msgstr "Partager votre voix"
 msgid "Share your voice by scanning the QR code below."
 msgstr "Partager votre voix en scanant le code QR ci-dessous."
 
-#: src/components/conversation/ConversationAccordion.tsx:558
+#: src/components/conversation/ConversationAccordion.tsx:533
 msgid "Shortest First"
 msgstr "Plus court en premier"
 
@@ -1799,11 +1847,11 @@ msgstr "Plus court en premier"
 msgid "Show all"
 msgstr "Afficher tout"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:215
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:217
 msgid "Show audio player"
 msgstr "Afficher le lecteur audio"
 
-#: src/components/conversation/ConversationAccordion.tsx:808
+#: src/components/conversation/ConversationAccordion.tsx:783
 msgid "Show duration"
 msgstr "Afficher la durée"
 
@@ -1848,10 +1896,9 @@ msgstr "Certains fichiers ont déjà été sélectionnés et ne seront pas ajout
 msgid "Something went wrong"
 msgstr "Une erreur s'est produite"
 
-#. placeholder {0}: files[0].errors[0].message
 #: src/components/dropzone/UploadResourceDropzone.tsx:28
-msgid "Something went wrong while uploading the file: {0}"
-msgstr "Une erreur s'est produite lors de l'envoi du fichier : {0}"
+#~ msgid "Something went wrong while uploading the file: {0}"
+#~ msgstr "Une erreur s'est produite lors de l'envoi du fichier : {0}"
 
 #: src/components/participant/ParticipantBody.tsx:152
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
@@ -1861,7 +1908,7 @@ msgstr "Une erreur s'est produite avec la conversation. Veuillez réessayer ou c
 #~ msgid "Something went wrong. Please try again."
 #~ msgstr "Une erreur s'est produite. Veuillez réessayer."
 
-#: src/components/conversation/ConversationAccordion.tsx:817
+#: src/components/conversation/ConversationAccordion.tsx:792
 msgid "Sort"
 msgstr "Trier"
 
@@ -1894,6 +1941,10 @@ msgstr "Commencer une nouvelle conversation"
 #: src/routes/participant/ParticipantConversation.tsx:1018
 #~ msgid "Start Recording"
 #~ msgstr "Démarrer l'enregistrement"
+
+#: src/components/report/ConversationStatusTable.tsx:56
+msgid "Status"
+msgstr "Statut"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:406
 #: src/routes/participant/ParticipantConversation.tsx:605
@@ -1975,10 +2026,10 @@ msgstr "Le résumé est en cours de régénération. Veuillez patienter jusqu'à
 #~ msgstr "Le résumé est en cours de régénération. Veuillez patienter jusqu'à 2 minutes pour que le nouveau résumé soit disponible."
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:319
-msgid "The transcript for this conversation is being processed. Please check back later."
-msgstr "La transcription de cette conversation est en cours de traitement. Veuillez vérifier plus tard."
+#~ msgid "The transcript for this conversation is being processed. Please check back later."
+#~ msgstr "La transcription de cette conversation est en cours de traitement. Veuillez vérifier plus tard."
 
-#: src/components/report/CreateReportForm.tsx:47
+#: src/components/report/CreateReportForm.tsx:57
 msgid "There was an error creating your report. Please try again or contact support."
 msgstr "Il y avait une erreur lors de la création de votre rapport. Veuillez réessayer ou contacter le support."
 
@@ -2006,8 +2057,7 @@ msgstr "Voici vos modèles de vue par défaut. Une fois que vous avez créé vot
 msgid "Thinking..."
 msgstr "Réflexion en cours..."
 
-#: src/components/conversation/ConversationAccordion.tsx:406
-#: src/components/conversation/ConversationAccordion.tsx:423
+#: src/components/conversation/ConversationAccordion.tsx:398
 msgid "This conversation is still being processed. It will be available for analysis and chat shortly."
 msgstr "Cette conversation est encore en cours de traitement. Elle sera disponible pour l'analyse et le chat sous peu."
 
@@ -2077,7 +2127,7 @@ msgstr "Ce titre est affiché aux participants lorsqu'ils commencent une convers
 msgid "This will clear your current input. Are you sure?"
 msgstr "Cela effacera votre entrée actuelle. Êtes-vous sûr ?"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:275
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:277
 msgid "This will create a new conversation with the same audio but a fresh transcription. The original conversation will remain unchanged."
 msgstr "Cela créera une nouvelle conversation avec la même audio mais une transcription fraîche. La conversation d'origine restera inchangée."
 
@@ -2098,10 +2148,14 @@ msgstr "Pour assigner une nouvelle étiquette, veuillez la créer d'abord dans l
 msgid "Topics"
 msgstr "Sujets"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:162
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:164
 #: src/components/layout/ProjectConversationLayout.tsx:39
 msgid "Transcript"
 msgstr "Transcription"
+
+#: src/components/conversation/ConversationChunkAudioTranscript.tsx:60
+msgid "Transcript not available"
+msgstr "Transcription non disponible"
 
 #: src/components/project/ProjectTranscriptSettings.tsx:95
 #~ msgid "Transcript Settings"
@@ -2206,7 +2260,7 @@ msgstr "annonces non lues"
 msgid "Unsaved changes"
 msgstr "Modifications non enregistrées"
 
-#: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:89
+#: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:79
 msgid "Unsubscribe"
 msgstr "Se désabonner"
 
@@ -2239,8 +2293,8 @@ msgstr "Mettre à niveau"
 msgid "Upgrade to unlock Auto-select and analyze 10x more conversations in half the time—no more manual selection, just deeper insights instantly."
 msgstr "Mettre à niveau pour débloquer la sélection automatique et analyser 10 fois plus de conversations en moitié du temps — plus de sélection manuelle, juste des insights plus profonds instantanément."
 
-#: src/routes/project/ProjectRoutes.tsx:46
-#: src/components/conversation/ConversationAccordion.tsx:385
+#: src/routes/project/ProjectRoutes.tsx:49
+#: src/components/conversation/ConversationAccordion.tsx:386
 msgid "Upload"
 msgstr "Télécharger"
 
@@ -2265,8 +2319,8 @@ msgstr "Télécharger les fichiers"
 #~ msgstr "Téléchargement en cours"
 
 #: src/components/resource/ResourceAccordion.tsx:23
-msgid "Upload resources"
-msgstr "Télécharger des ressources"
+#~ msgid "Upload resources"
+#~ msgstr "Télécharger des ressources"
 
 #: src/components/conversation/ConversationAccordion.tsx:393
 #~ msgid "Uploaded"
@@ -2283,8 +2337,13 @@ msgstr "Utilisez Shift + Entrée pour ajouter une nouvelle ligne"
 #: src/routes/project/library/ProjectLibraryView.tsx:36
 #: src/routes/project/library/ProjectLibraryAspect.tsx:68
 #: src/components/view/View.tsx:52
+#: src/components/report/ConversationStatusTable.tsx:88
 msgid "View"
 msgstr "Vue"
+
+#: src/routes/project/ProjectRoutes.tsx:79
+msgid "View Conversation Status"
+msgstr "Voir le statut de la conversation"
 
 #: src/components/participant/ParticipantBody.tsx:229
 msgid "View your responses"
@@ -2346,7 +2405,7 @@ msgstr "Bienvenue !"
 msgid "You"
 msgstr "Vous"
 
-#: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:93
+#: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:83
 msgid "You are already unsubscribed or your link is invalid."
 msgstr "Vous êtes déjà désinscrit ou votre lien est invalide."
 
@@ -2355,7 +2414,7 @@ msgstr "Vous êtes déjà désinscrit ou votre lien est invalide."
 msgid "You can only upload up to {MAX_FILES} files at a time. Only the first {0} files will be added."
 msgstr "Vous ne pouvez télécharger que jusqu'à {MAX_FILES} fichiers à la fois. Seuls les premiers {0} fichiers seront ajoutés."
 
-#: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:77
+#: src/routes/project/unsubscribe/ProjectUnsubscribe.tsx:67
 msgid "You have successfully unsubscribed."
 msgstr "Vous avez été désinscrit avec succès."
 
