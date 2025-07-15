@@ -2032,18 +2032,6 @@
   },
   {
     "collection": "announcement",
-    "action": "create",
-    "permissions": null,
-    "validation": null,
-    "presets": null,
-    "fields": [
-      "*"
-    ],
-    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
-    "_syncId": "05a75abf-cb1f-43f8-b54a-f9d3fbe5897c"
-  },
-  {
-    "collection": "announcement",
     "action": "read",
     "permissions": null,
     "validation": null,
@@ -2057,14 +2045,22 @@
   {
     "collection": "announcement",
     "action": "update",
-    "permissions": null,
+    "permissions": {
+      "_and": [
+        {
+          "activity": {
+            "user_id": {
+              "_eq": "$CURRENT_USER"
+            }
+          }
+        }
+      ]
+    },
     "validation": null,
     "presets": null,
-    "fields": [
-      "*"
-    ],
+    "fields": null,
     "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
-    "_syncId": "ba3d0726-d35e-46c1-9679-7b21d4956ed2"
+    "_syncId": "d8d2c4ee-2431-4ea2-8f22-c2b3f4a01014"
   },
   {
     "collection": "aspect",
@@ -2518,15 +2514,7 @@
   {
     "collection": "processing_status",
     "action": "read",
-    "permissions": {
-      "_and": [
-        {
-          "item_id": {
-            "_nempty": true
-          }
-        }
-      ]
-    },
+    "permissions": null,
     "validation": null,
     "presets": null,
     "fields": [
