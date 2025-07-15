@@ -46,16 +46,6 @@ export const ProjectUnsubscribe = () => {
 
   return (
     <div className="relative flex !h-dvh flex-col overflow-y-auto">
-      <Group
-        component="header"
-        justify="center"
-        className="py-2 shadow-sm"
-        style={{
-          transition: "opacity 500ms ease-in-out",
-        }}
-      >
-        <Logo hideTitle h="64px" />
-      </Group>
       <main className="container mx-auto h-full max-w-2xl">
         <Stack
           className="mt-[64px] px-4 py-8"
