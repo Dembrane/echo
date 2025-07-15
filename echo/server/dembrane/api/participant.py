@@ -4,43 +4,40 @@ from datetime import datetime
 
 from fastapi import Form, APIRouter, UploadFile, HTTPException
 from pydantic import BaseModel
-from sqlalchemy.orm import joinedload
 
-from dembrane.s3 import save_to_s3_from_file_like
-from dembrane.utils import generate_uuid
-from dembrane.schemas import (
-    ProjectTagSchema,
-    ConversationChunkSchema,
-)
-from dembrane.database import (
-    ProjectModel,
-    ProjectTagModel,
-    ConversationModel,
-    ConversationChunkModel,
-    DependencyInjectDatabase,
-)
+from dembrane.service import project_service, conversation_service
 from dembrane.directus import directus
-from dembrane.api.exceptions import (
-    ProjectNotFoundException,
+from dembrane.service.project import ProjectNotFoundException
+from dembrane.service.conversation import (
     ConversationNotFoundException,
-    ConversationInvalidPinException,
     ConversationNotOpenForParticipationException,
 )
-from dembrane.processing_status_utils import ProcessingStatus
 
 logger = getLogger("api.participant")
 
 ParticipantRouter = APIRouter(tags=["participant"])
 
 
+class PublicProjectTagSchema(BaseModel):
+    id: str
+    text: str
+
+
 class PublicProjectSchema(BaseModel):
     id: str
     language: str
-    pin: str
 
-    tags: Optional[List[ProjectTagSchema]] = []
+    tags: Optional[List[PublicProjectTagSchema]] = []
 
     is_conversation_allowed: bool
+    is_get_reply_enabled: bool
+
+    # onboarding
+    default_conversation_tutorial_slug: Optional[str] = None
+    conversation_ask_for_participant_name_label: Optional[str] = None
+    default_conversation_ask_for_participant_name: Optional[bool] = True
+
+    # portal content
     default_conversation_title: Optional[str] = None
     default_conversation_description: Optional[str] = None
     default_conversation_finish_text: Optional[str] = None
@@ -49,8 +46,10 @@ class PublicProjectSchema(BaseModel):
 class PublicConversationChunkSchema(BaseModel):
     id: str
     conversation_id: str
+    path: Optional[str] = None
     transcript: Optional[str] = None
     timestamp: datetime
+    source: str
 
 
 class PublicConversationSchema(BaseModel):
@@ -63,18 +62,183 @@ class PublicConversationSchema(BaseModel):
     participant_email: Optional[str] = None
     participant_name: Optional[str] = None
 
-    tags: Optional[List[ProjectTagSchema]] = []
-    chunks: Optional[List[ConversationChunkSchema]] = []  # noqa: F821
-
 
 class InitiateConversationRequestBodySchema(BaseModel):
     name: str
-    pin: str
+    pin: str  # FIXME: not used
     conversation_id: Optional[str] = None
     email: Optional[str] = None
     user_agent: Optional[str] = None
     tag_id_list: Optional[List[str]] = []
-    source: Optional[str] = "PORTAL_AUDIO"
+    source: Optional[str] = None
+
+
+@ParticipantRouter.post(
+    "/projects/{project_id}/conversations/initiate",
+    tags=["conversation"],
+    response_model=PublicConversationSchema,
+)
+async def initiate_conversation(
+    body: InitiateConversationRequestBodySchema,
+    project_id: str,
+) -> dict:
+    try:
+        conversation = conversation_service.create(
+            project_id=project_id,
+            participant_name=body.name,
+            participant_email=body.email,
+            participant_user_agent=body.user_agent,
+            project_tag_id_list=body.tag_id_list,
+            source=body.source,
+        )
+
+        return conversation
+    except ConversationNotOpenForParticipationException as e:
+        raise HTTPException(
+            status_code=403, detail="Conversation not open for participation"
+        ) from e
+
+
+@ParticipantRouter.get("/projects/{project_id}", response_model=PublicProjectSchema)
+async def get_project(
+    project_id: str,
+) -> dict:
+    try:
+        project = project_service.get_by_id_or_raise(project_id, with_tags=True)
+
+        if project.get("is_conversation_allowed", False) is False:
+            raise HTTPException(status_code=403, detail="Conversation not open for participation")
+
+        return project
+
+    except ProjectNotFoundException as e:
+        raise HTTPException(status_code=404, detail="Project not found") from e
+
+
+@ParticipantRouter.get(
+    "/projects/{project_id}/conversations/{conversation_id}",
+    response_model=PublicConversationSchema,
+)
+async def get_conversation(
+    project_id: str,
+    conversation_id: str,
+) -> dict:
+    try:
+        project = project_service.get_by_id_or_raise(project_id)
+        conversation = conversation_service.get_by_id_or_raise(conversation_id, with_tags=True)
+
+        if project.get("is_conversation_allowed", False) is False:
+            raise HTTPException(status_code=403, detail="Conversation not open for participation")
+
+        return conversation
+    except (ProjectNotFoundException, ConversationNotFoundException) as e:
+        raise HTTPException(status_code=404, detail="Conversation not found") from e
+
+
+@ParticipantRouter.get(
+    "/projects/{project_id}/conversations/{conversation_id}/chunks",
+    response_model=List[PublicConversationChunkSchema],
+)
+async def get_conversation_chunks(
+    project_id: str,
+    conversation_id: str,
+) -> List[dict]:
+    try:
+        project = project_service.get_by_id_or_raise(project_id)
+        conversation = conversation_service.get_by_id_or_raise(conversation_id, with_chunks=True)
+
+        if project.get("is_conversation_allowed", False) is False:
+            raise HTTPException(status_code=403, detail="Conversation not open for participation")
+
+        return conversation.get("chunks", [])
+    except (ProjectNotFoundException, ConversationNotFoundException) as e:
+        raise HTTPException(status_code=404, detail="Conversation not found") from e
+
+
+@ParticipantRouter.delete(
+    "/projects/{project_id}/conversations/{conversation_id}/chunks/{chunk_id}",
+)
+async def delete_conversation_chunk(
+    project_id: str,
+    conversation_id: str,
+    chunk_id: str,
+) -> None:
+    try:
+        conversation = conversation_service.get_by_id_or_raise(conversation_id)
+    except ConversationNotFoundException as e:
+        raise HTTPException(status_code=404, detail="Conversation not found") from e
+
+    if project_id != conversation.get("project_id"):
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    conversation_service.delete_chunk(chunk_id)
+
+    return
+
+
+class UploadConversationBodySchema(BaseModel):
+    timestamp: datetime
+    content: str
+    source: Optional[str] = "PORTAL_TEXT"
+
+
+@ParticipantRouter.post(
+    "/conversations/{conversation_id}/upload-text", response_model=PublicConversationChunkSchema
+)
+async def upload_conversation_text(
+    conversation_id: str,
+    body: UploadConversationBodySchema,
+) -> dict:
+    try:
+        chunk = conversation_service.create_chunk(
+            conversation_id=conversation_id,
+            timestamp=body.timestamp,
+            transcript=body.content,
+            source=body.source or "PORTAL_TEXT",
+        )
+
+        return chunk
+
+    except ConversationNotOpenForParticipationException as e:
+        raise HTTPException(
+            status_code=403, detail="Conversation not open for participation"
+        ) from e
+
+
+@ParticipantRouter.post(
+    "/conversations/{conversation_id}/upload-chunk",
+    response_model=PublicConversationChunkSchema,
+)
+async def upload_conversation_chunk(
+    conversation_id: str,
+    chunk: UploadFile,
+    timestamp: Annotated[datetime, Form()],
+    source: Annotated[str, Form()] = "PORTAL_AUDIO",
+) -> dict:
+    try:
+        return conversation_service.create_chunk(
+            conversation_id=conversation_id,
+            timestamp=timestamp,
+            source=source,
+            file_obj=chunk,
+        )
+    except ConversationNotOpenForParticipationException as e:
+        raise HTTPException(
+            status_code=403, detail="Conversation not open for participation"
+        ) from e
+
+
+@ParticipantRouter.post(
+    "/conversations/{conversation_id}/finish",
+)
+async def run_when_conversation_is_finished(
+    conversation_id: str,
+) -> str:
+    # Import locally to avoid circular imports
+    from dembrane.tasks import task_finish_conversation_hook
+
+    task_finish_conversation_hook.send(conversation_id)
+    return "OK"
 
 
 class UnsubscribeParticipantRequest(BaseModel):
@@ -91,287 +255,6 @@ class NotificationSubscriptionRequest(BaseModel):
     emails: List[str]
     project_id: str
     conversation_id: str
-
-
-@ParticipantRouter.post(
-    "/projects/{project_id}/conversations/initiate",
-    response_model=PublicConversationSchema,
-    tags=["conversation"],
-)
-async def initiate_conversation(
-    body: InitiateConversationRequestBodySchema,
-    project_id: str,
-    db: DependencyInjectDatabase,
-) -> ConversationModel:
-    project = db.query(ProjectModel).filter(ProjectModel.id == project_id).first()
-
-    if not project or project.pin != body.pin:
-        raise ConversationInvalidPinException
-
-    if project.is_conversation_allowed is False:
-        raise ConversationNotOpenForParticipationException
-
-    if body.conversation_id:
-        conversation = (
-            db.query(ConversationModel)
-            .filter(
-                ConversationModel.project_id == project.id,
-                ConversationModel.id == body.conversation_id,
-            )
-            .first()
-        )
-
-        # Rejoin a conversation
-        if conversation:
-            logger.info(f"Conversation already exists: {conversation.id}")
-
-            conversation.participant_name = body.name
-            if body.user_agent:
-                conversation.participant_user_agent = body.user_agent
-            if body.email:
-                conversation.participant_email = body.email
-            if body.source:
-                conversation.source = body.source
-
-            if body.tag_id_list is not None and len(body.tag_id_list) > 0:
-                tags = (
-                    db.query(ProjectTagModel).filter(ProjectTagModel.id.in_(body.tag_id_list)).all()
-                )
-                conversation.tags = tags
-
-            db.commit()
-            return conversation
-
-    # Create a new conversation
-    new_conversation = ConversationModel(
-        id=generate_uuid(),
-        project_id=project.id,
-        participant_name=body.name,
-        participant_email=body.email if body.email else None,
-        participant_user_agent=body.user_agent if body.user_agent else None,
-        source=body.source,
-    )
-
-    if body.tag_id_list is not None and len(body.tag_id_list) > 0:
-        tags = db.query(ProjectTagModel).filter(ProjectTagModel.id.in_(body.tag_id_list)).all()
-        new_conversation.tags = tags
-
-    db.add(new_conversation)
-    db.commit()
-
-    return new_conversation
-
-
-@ParticipantRouter.get("/projects/{project_id}", response_model=PublicProjectSchema)
-async def get_project(
-    project_id: str,
-    db: DependencyInjectDatabase,
-) -> ProjectModel:
-    project = (
-        db.query(ProjectModel)
-        .options(joinedload(ProjectModel.tags))
-        .filter(
-            ProjectModel.id == project_id,
-        )
-        .first()
-    )
-    if not project:
-        raise ProjectNotFoundException
-
-    return project
-
-
-@ParticipantRouter.get(
-    "/projects/{project_id}/conversations/{conversation_id}",
-    response_model=PublicConversationSchema,
-)
-async def get_conversation(
-    project_id: str,
-    conversation_id: str,
-    db: DependencyInjectDatabase,
-) -> ConversationModel:
-    conversation = (
-        db.query(ConversationModel)
-        .options(joinedload(ConversationModel.tags))
-        .filter(
-            ConversationModel.project_id == project_id,
-            ConversationModel.id == conversation_id,
-        )
-        .first()
-    )
-
-    if not conversation:
-        raise ConversationNotFoundException
-
-    return conversation
-
-
-@ParticipantRouter.get(
-    "/projects/{project_id}/conversations/{conversation_id}/chunks",
-    response_model=List[PublicConversationChunkSchema],
-)
-async def get_conversation_chunks(
-    project_id: str,
-    conversation_id: str,
-    db: DependencyInjectDatabase,
-) -> List[ConversationChunkModel]:
-    project = db.get(ProjectModel, project_id)
-
-    if not project:
-        raise ConversationNotFoundException
-
-    conversation = db.get(ConversationModel, conversation_id)
-
-    if not conversation or conversation.project_id != project.id:
-        raise ConversationNotFoundException
-
-    chunks = (
-        db.query(ConversationChunkModel)
-        .filter(ConversationChunkModel.conversation_id == conversation_id)
-        .order_by(ConversationChunkModel.timestamp)
-        .all()
-    )
-
-    return chunks
-
-
-@ParticipantRouter.delete(
-    "/projects/{project_id}/conversations/{conversation_id}/chunks/{chunk_id}",
-    response_model=PublicConversationChunkSchema,
-)
-async def delete_conversation_chunk(
-    project_id: str,
-    conversation_id: str,
-    chunk_id: str,
-    db: DependencyInjectDatabase,
-) -> ConversationChunkModel:
-    conversation = db.get(ConversationModel, conversation_id)
-
-    if not conversation or conversation.project_id != project_id:
-        raise ConversationNotFoundException
-
-    chunk = db.get(ConversationChunkModel, chunk_id)
-
-    if not chunk or chunk.conversation_id != conversation_id:
-        raise ConversationNotFoundException
-
-    db.delete(chunk)
-    db.commit()
-
-    return chunk
-
-
-class UploadConversationBodySchema(BaseModel):
-    timestamp: datetime
-    content: str
-    source: Optional[str] = "PORTAL_TEXT"
-
-
-@ParticipantRouter.post(
-    "/conversations/{conversation_id}/upload-text", response_model=PublicConversationChunkSchema
-)
-async def upload_conversation_text(
-    conversation_id: str,
-    body: UploadConversationBodySchema,
-) -> ConversationChunkModel:
-    conversation = directus.get_items(
-        "conversation",
-        {
-            "query": {
-                "filter": {"id": {"_eq": conversation_id}},
-                "fields": ["id"],
-            },
-        },
-    )
-
-    if not conversation or len(conversation) == 0:
-        raise ConversationNotFoundException
-
-    conversation = conversation[0]
-
-    source = body.source or "PORTAL_TEXT"
-
-    chunk = directus.create_item(
-        "conversation_chunk",
-        item_data={
-            "conversation_id": conversation["id"],
-            "timestamp": str(body.timestamp.utcnow()),
-            "transcript": body.content,
-            "source": source,
-            "path": None,
-        },
-    )["data"]
-
-    return chunk
-
-
-@ParticipantRouter.post(
-    "/conversations/{conversation_id}/upload-chunk",
-)
-async def upload_conversation_chunk(
-    conversation_id: str,
-    chunk: UploadFile,
-    timestamp: Annotated[datetime, Form()],
-    source: Annotated[str, Form()] = "PORTAL_AUDIO",
-    run_finish_hook: Annotated[bool, Form()] = True,
-) -> list[str]:
-    conversation = directus.get_items(
-        "conversation",
-        {
-            "query": {
-                "filter": {"id": {"_eq": conversation_id}},
-                "fields": ["id"],
-            },
-        },
-    )
-    logger.debug(f"Conversation: {conversation}")
-
-    if not conversation or len(conversation) == 0:
-        raise ConversationNotFoundException
-
-    conversation = conversation[0]
-
-    chunk_id = generate_uuid()
-
-    file_name = f"audio-chunks/{conversation['id']}-{chunk_id}-{chunk.filename}"
-
-    uploaded_file_url = save_to_s3_from_file_like(file_obj=chunk, file_name=file_name, public=False)
-
-    chunk_created = directus.create_item(
-        "conversation_chunk",
-        item_data={
-            "conversation_id": conversation["id"],
-            "timestamp": timestamp.isoformat(),
-            "path": uploaded_file_url,
-            "id": chunk_id,
-            "source": source,
-            "processing_status": ProcessingStatus.PENDING.value,
-            "processing_message": "Waiting to be transcribed",
-        },
-    )["data"]
-
-    # Import locally to avoid circular imports
-    from dembrane.tasks import task_process_conversation_chunk
-
-    logger.info(
-        f"adding task to process conversation chunk {chunk_id}, run_finish_hook: {run_finish_hook}"
-    )
-    task_process_conversation_chunk.send(chunk_id, run_finish_hook)
-
-    return [chunk_created["id"]]
-
-
-@ParticipantRouter.post(
-    "/conversations/{conversation_id}/finish",
-)
-async def run_when_conversation_is_finished(
-    conversation_id: str,
-) -> str:
-    # Import locally to avoid circular imports
-    from dembrane.tasks import task_finish_conversation_hook
-
-    task_finish_conversation_hook.send(conversation_id)
-    return "OK"
 
 
 @ParticipantRouter.post("/report/subscribe")

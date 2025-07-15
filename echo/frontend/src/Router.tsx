@@ -7,7 +7,6 @@ import {
 // Layout components - keep as regular imports since they're used frequently
 import { BaseLayout } from "./components/layout/BaseLayout";
 import { ProjectLayout } from "./components/layout/ProjectLayout";
-import { ProjectResourceLayout } from "./components/layout/ProjectResourceLayout";
 import { LanguageLayout } from "./components/layout/LanguageLayout";
 import { ProjectConversationLayout } from "./components/layout/ProjectConversationLayout";
 import { ProjectLibraryLayout } from "./components/layout/ProjectLibraryLayout";
@@ -214,24 +213,6 @@ export const mainRouter = createBrowserRouter([
                   {
                     path: "chats/:chatId/debug",
                     element: <DebugPage />,
-                  },
-                  {
-                    path: "resources/:resourceId",
-                    element: <ProjectResourceLayout />,
-                    children: [
-                      {
-                        index: true,
-                        element: <Navigate to="overview" replace />,
-                      },
-                      {
-                        path: "overview",
-                        element: <ProjectResourceOverviewRoute />,
-                      },
-                      {
-                        path: "chat",
-                        element: <ProjectResourceAnalysisRoute />,
-                      },
-                    ],
                   },
                   {
                     path: "conversation/:conversationId",

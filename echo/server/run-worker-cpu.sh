@@ -1,1 +1,1 @@
-dramatiq --queues cpu --processes 2 --threads 4 dembrane.tasks
+dramatiq --queues cpu --processes 1 --threads 2 dembrane.tasks

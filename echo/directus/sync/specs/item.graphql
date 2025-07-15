@@ -1,20 +1,12 @@
 type Query {
-  directus_sync_id_map(filter: directus_sync_id_map_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_sync_id_map!]!
-  directus_sync_id_map_by_id(id: ID!, version: String): directus_sync_id_map
-  directus_sync_id_map_aggregated(groupBy: [String], filter: directus_sync_id_map_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_sync_id_map_aggregated!]!
-  directus_sync_id_map_by_version(version: String!, id: ID!): version_directus_sync_id_map
+  processing_status(filter: processing_status_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [processing_status!]!
+  processing_status_by_id(id: ID!, version: String): processing_status
+  processing_status_aggregated(groupBy: [String], filter: processing_status_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [processing_status_aggregated!]!
+  processing_status_by_version(version: String!, id: ID!): version_processing_status
   aspect(filter: aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [aspect!]!
   aspect_by_id(id: ID!, version: String): aspect
   aspect_aggregated(groupBy: [String], filter: aspect_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [aspect_aggregated!]!
   aspect_by_version(version: String!, id: ID!): version_aspect
-  account(filter: account_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [account!]!
-  account_by_id(id: ID!, version: String): account
-  account_aggregated(groupBy: [String], filter: account_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [account_aggregated!]!
-  account_by_version(version: String!, id: ID!): version_account
-  account_directus_users(filter: account_directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [account_directus_users!]!
-  account_directus_users_by_id(id: ID!, version: String): account_directus_users
-  account_directus_users_aggregated(groupBy: [String], filter: account_directus_users_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [account_directus_users_aggregated!]!
-  account_directus_users_by_version(version: String!, id: ID!): version_account_directus_users
   view(filter: view_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [view!]!
   view_by_id(id: ID!, version: String): view
   view_aggregated(groupBy: [String], filter: view_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [view_aggregated!]!
@@ -31,14 +23,14 @@ type Query {
   conversation_reply_by_id(id: ID!, version: String): conversation_reply
   conversation_reply_aggregated(groupBy: [String], filter: conversation_reply_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [conversation_reply_aggregated!]!
   conversation_reply_by_version(version: String!, id: ID!): version_conversation_reply
+  conversation_segment(filter: conversation_segment_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_segment!]!
+  conversation_segment_by_id(id: ID!, version: String): conversation_segment
+  conversation_segment_aggregated(groupBy: [String], filter: conversation_segment_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [conversation_segment_aggregated!]!
+  conversation_segment_by_version(version: String!, id: ID!): version_conversation_segment
   conversation_segment_conversation_chunk(filter: conversation_segment_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_segment_conversation_chunk!]!
   conversation_segment_conversation_chunk_by_id(id: ID!, version: String): conversation_segment_conversation_chunk
   conversation_segment_conversation_chunk_aggregated(groupBy: [String], filter: conversation_segment_conversation_chunk_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [conversation_segment_conversation_chunk_aggregated!]!
   conversation_segment_conversation_chunk_by_version(version: String!, id: ID!): version_conversation_segment_conversation_chunk
-  document(filter: document_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [document!]!
-  document_by_id(id: ID!, version: String): document
-  document_aggregated(groupBy: [String], filter: document_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [document_aggregated!]!
-  document_by_version(version: String!, id: ID!): version_document
   project_analysis_run(filter: project_analysis_run_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_analysis_run!]!
   project_analysis_run_by_id(id: ID!, version: String): project_analysis_run
   project_analysis_run_aggregated(groupBy: [String], filter: project_analysis_run_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [project_analysis_run_aggregated!]!
@@ -51,10 +43,26 @@ type Query {
   project_chat_by_id(id: ID!, version: String): project_chat
   project_chat_aggregated(groupBy: [String], filter: project_chat_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [project_chat_aggregated!]!
   project_chat_by_version(version: String!, id: ID!): version_project_chat
+  project(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project!]!
+  project_by_id(id: ID!, version: String): project
+  project_aggregated(groupBy: [String], filter: project_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [project_aggregated!]!
+  project_by_version(version: String!, id: ID!): version_project
+  conversation(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation!]!
+  conversation_by_id(id: ID!, version: String): conversation
+  conversation_aggregated(groupBy: [String], filter: conversation_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [conversation_aggregated!]!
+  conversation_by_version(version: String!, id: ID!): version_conversation
+  conversation_chunk(filter: conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_chunk!]!
+  conversation_chunk_by_id(id: ID!, version: String): conversation_chunk
+  conversation_chunk_aggregated(groupBy: [String], filter: conversation_chunk_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [conversation_chunk_aggregated!]!
+  conversation_chunk_by_version(version: String!, id: ID!): version_conversation_chunk
   project_chat_conversation(filter: project_chat_conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_conversation!]!
   project_chat_conversation_by_id(id: ID!, version: String): project_chat_conversation
   project_chat_conversation_aggregated(groupBy: [String], filter: project_chat_conversation_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [project_chat_conversation_aggregated!]!
   project_chat_conversation_by_version(version: String!, id: ID!): version_project_chat_conversation
+  project_chat_message(filter: project_chat_message_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_message!]!
+  project_chat_message_by_id(id: ID!, version: String): project_chat_message
+  project_chat_message_aggregated(groupBy: [String], filter: project_chat_message_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [project_chat_message_aggregated!]!
+  project_chat_message_by_version(version: String!, id: ID!): version_project_chat_message
   project_chat_message_conversation(filter: project_chat_message_conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_message_conversation!]!
   project_chat_message_conversation_by_id(id: ID!, version: String): project_chat_message_conversation
   project_chat_message_conversation_aggregated(groupBy: [String], filter: project_chat_message_conversation_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [project_chat_message_conversation_aggregated!]!
@@ -79,77 +87,33 @@ type Query {
   project_report_notification_participants_by_id(id: ID!, version: String): project_report_notification_participants
   project_report_notification_participants_aggregated(groupBy: [String], filter: project_report_notification_participants_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [project_report_notification_participants_aggregated!]!
   project_report_notification_participants_by_version(version: String!, id: ID!): version_project_report_notification_participants
-  quote(filter: quote_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote!]!
-  quote_by_id(id: ID!, version: String): quote
-  quote_aggregated(groupBy: [String], filter: quote_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [quote_aggregated!]!
-  quote_by_version(version: String!, id: ID!): version_quote
-  quote_aspect(filter: quote_aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_aspect!]!
-  quote_aspect_by_id(id: ID!, version: String): quote_aspect
-  quote_aspect_aggregated(groupBy: [String], filter: quote_aspect_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [quote_aspect_aggregated!]!
-  quote_aspect_by_version(version: String!, id: ID!): version_quote_aspect
-  conversation_segment(filter: conversation_segment_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_segment!]!
-  conversation_segment_by_id(id: ID!, version: String): conversation_segment
-  conversation_segment_aggregated(groupBy: [String], filter: conversation_segment_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [conversation_segment_aggregated!]!
-  conversation_segment_by_version(version: String!, id: ID!): version_conversation_segment
-  conversation(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation!]!
-  conversation_by_id(id: ID!, version: String): conversation
-  conversation_aggregated(groupBy: [String], filter: conversation_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [conversation_aggregated!]!
-  conversation_by_version(version: String!, id: ID!): version_conversation
-  project_chat_message(filter: project_chat_message_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_message!]!
-  project_chat_message_by_id(id: ID!, version: String): project_chat_message
-  project_chat_message_aggregated(groupBy: [String], filter: project_chat_message_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [project_chat_message_aggregated!]!
-  project_chat_message_by_version(version: String!, id: ID!): version_project_chat_message
-  project(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project!]!
-  project_by_id(id: ID!, version: String): project
-  project_aggregated(groupBy: [String], filter: project_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [project_aggregated!]!
-  project_by_version(version: String!, id: ID!): version_project
-  conversation_chunk(filter: conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_chunk!]!
-  conversation_chunk_by_id(id: ID!, version: String): conversation_chunk
-  conversation_chunk_aggregated(groupBy: [String], filter: conversation_chunk_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [conversation_chunk_aggregated!]!
-  conversation_chunk_by_version(version: String!, id: ID!): version_conversation_chunk
-  quote_aspect_1(filter: quote_aspect_1_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_aspect_1!]!
-  quote_aspect_1_by_id(id: ID!, version: String): quote_aspect_1
-  quote_aspect_1_aggregated(groupBy: [String], filter: quote_aspect_1_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [quote_aspect_1_aggregated!]!
-  quote_aspect_1_by_version(version: String!, id: ID!): version_quote_aspect_1
-  quote_conversation_chunk(filter: quote_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_conversation_chunk!]!
-  quote_conversation_chunk_by_id(id: ID!, version: String): quote_conversation_chunk
-  quote_conversation_chunk_aggregated(groupBy: [String], filter: quote_conversation_chunk_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [quote_conversation_chunk_aggregated!]!
-  quote_conversation_chunk_by_version(version: String!, id: ID!): version_quote_conversation_chunk
-  processing_status(filter: processing_status_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [processing_status!]!
-  processing_status_by_id(id: ID!, version: String): processing_status
-  processing_status_aggregated(groupBy: [String], filter: processing_status_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [processing_status_aggregated!]!
-  processing_status_by_version(version: String!, id: ID!): version_processing_status
   announcement(filter: announcement_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [announcement!]!
   announcement_by_id(id: ID!, version: String): announcement
   announcement_aggregated(groupBy: [String], filter: announcement_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [announcement_aggregated!]!
   announcement_by_version(version: String!, id: ID!): version_announcement
-  languages(filter: languages_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [languages!]!
-  languages_by_id(id: ID!, version: String): languages
-  languages_aggregated(groupBy: [String], filter: languages_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [languages_aggregated!]!
-  languages_by_version(version: String!, id: ID!): version_languages
-  announcement_translations(filter: announcement_translations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [announcement_translations!]!
-  announcement_translations_by_id(id: ID!, version: String): announcement_translations
-  announcement_translations_aggregated(groupBy: [String], filter: announcement_translations_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [announcement_translations_aggregated!]!
-  announcement_translations_by_version(version: String!, id: ID!): version_announcement_translations
-  dashboard_announcements_translations(filter: dashboard_announcements_translations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [dashboard_announcements_translations!]!
-  dashboard_announcements_translations_by_id(id: ID!, version: String): dashboard_announcements_translations
-  dashboard_announcements_translations_aggregated(groupBy: [String], filter: dashboard_announcements_translations_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [dashboard_announcements_translations_aggregated!]!
-  dashboard_announcements_translations_by_version(version: String!, id: ID!): version_dashboard_announcements_translations
+  directus_sync_id_map(filter: directus_sync_id_map_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_sync_id_map!]!
+  directus_sync_id_map_by_id(id: ID!, version: String): directus_sync_id_map
+  directus_sync_id_map_aggregated(groupBy: [String], filter: directus_sync_id_map_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [directus_sync_id_map_aggregated!]!
+  directus_sync_id_map_by_version(version: String!, id: ID!): version_directus_sync_id_map
   announcement_activity(filter: announcement_activity_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [announcement_activity!]!
   announcement_activity_by_id(id: ID!, version: String): announcement_activity
   announcement_activity_aggregated(groupBy: [String], filter: announcement_activity_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [announcement_activity_aggregated!]!
   announcement_activity_by_version(version: String!, id: ID!): version_announcement_activity
+  announcement_translations(filter: announcement_translations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [announcement_translations!]!
+  announcement_translations_by_id(id: ID!, version: String): announcement_translations
+  announcement_translations_aggregated(groupBy: [String], filter: announcement_translations_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [announcement_translations_aggregated!]!
+  announcement_translations_by_version(version: String!, id: ID!): version_announcement_translations
+  languages(filter: languages_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [languages!]!
+  languages_by_id(id: ID!, version: String): languages
+  languages_aggregated(groupBy: [String], filter: languages_filter, limit: Int, offset: Int, page: Int, search: String, sort: [String]): [languages_aggregated!]!
+  languages_by_version(version: String!, id: ID!): version_languages
 }
 
 type Mutation {
-  create_directus_sync_id_map_items(filter: directus_sync_id_map_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_sync_id_map_input!]): [directus_sync_id_map!]!
-  create_directus_sync_id_map_item(data: create_directus_sync_id_map_input!): directus_sync_id_map
+  create_processing_status_items(filter: processing_status_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_processing_status_input!]): [processing_status!]!
+  create_processing_status_item(data: create_processing_status_input!): processing_status
   create_aspect_items(filter: aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_aspect_input!]): [aspect!]!
   create_aspect_item(data: create_aspect_input!): aspect
-  create_account_items(filter: account_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_account_input!]): [account!]!
-  create_account_item(data: create_account_input!): account
-  create_account_directus_users_items(filter: account_directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_account_directus_users_input!]): [account_directus_users!]!
-  create_account_directus_users_item(data: create_account_directus_users_input!): account_directus_users
   create_view_items(filter: view_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_view_input!]): [view!]!
   create_view_item(data: create_view_input!): view
   create_conversation_project_tag_items(filter: conversation_project_tag_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_conversation_project_tag_input!]): [conversation_project_tag!]!
@@ -158,18 +122,26 @@ type Mutation {
   create_project_tag_item(data: create_project_tag_input!): project_tag
   create_conversation_reply_items(filter: conversation_reply_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_conversation_reply_input!]): [conversation_reply!]!
   create_conversation_reply_item(data: create_conversation_reply_input!): conversation_reply
+  create_conversation_segment_items(filter: conversation_segment_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_conversation_segment_input!]): [conversation_segment!]!
+  create_conversation_segment_item(data: create_conversation_segment_input!): conversation_segment
   create_conversation_segment_conversation_chunk_items(filter: conversation_segment_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_conversation_segment_conversation_chunk_input!]): [conversation_segment_conversation_chunk!]!
   create_conversation_segment_conversation_chunk_item(data: create_conversation_segment_conversation_chunk_input!): conversation_segment_conversation_chunk
-  create_document_items(filter: document_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_document_input!]): [document!]!
-  create_document_item(data: create_document_input!): document
   create_project_analysis_run_items(filter: project_analysis_run_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_project_analysis_run_input!]): [project_analysis_run!]!
   create_project_analysis_run_item(data: create_project_analysis_run_input!): project_analysis_run
   create_insight_items(filter: insight_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_insight_input!]): [insight!]!
   create_insight_item(data: create_insight_input!): insight
   create_project_chat_items(filter: project_chat_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_project_chat_input!]): [project_chat!]!
   create_project_chat_item(data: create_project_chat_input!): project_chat
+  create_project_items(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_project_input!]): [project!]!
+  create_project_item(data: create_project_input!): project
+  create_conversation_items(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_conversation_input!]): [conversation!]!
+  create_conversation_item(data: create_conversation_input!): conversation
+  create_conversation_chunk_items(filter: conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_conversation_chunk_input!]): [conversation_chunk!]!
+  create_conversation_chunk_item(data: create_conversation_chunk_input!): conversation_chunk
   create_project_chat_conversation_items(filter: project_chat_conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_project_chat_conversation_input!]): [project_chat_conversation!]!
   create_project_chat_conversation_item(data: create_project_chat_conversation_input!): project_chat_conversation
+  create_project_chat_message_items(filter: project_chat_message_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_project_chat_message_input!]): [project_chat_message!]!
+  create_project_chat_message_item(data: create_project_chat_message_input!): project_chat_message
   create_project_chat_message_conversation_items(filter: project_chat_message_conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_project_chat_message_conversation_input!]): [project_chat_message_conversation!]!
   create_project_chat_message_conversation_item(data: create_project_chat_message_conversation_input!): project_chat_message_conversation
   create_project_chat_message_conversation_1_items(filter: project_chat_message_conversation_1_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_project_chat_message_conversation_1_input!]): [project_chat_message_conversation_1!]!
@@ -182,48 +154,22 @@ type Mutation {
   create_project_report_metric_item(data: create_project_report_metric_input!): project_report_metric
   create_project_report_notification_participants_items(filter: project_report_notification_participants_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_project_report_notification_participants_input!]): [project_report_notification_participants!]!
   create_project_report_notification_participants_item(data: create_project_report_notification_participants_input!): project_report_notification_participants
-  create_quote_items(filter: quote_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_quote_input!]): [quote!]!
-  create_quote_item(data: create_quote_input!): quote
-  create_quote_aspect_items(filter: quote_aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_quote_aspect_input!]): [quote_aspect!]!
-  create_quote_aspect_item(data: create_quote_aspect_input!): quote_aspect
-  create_conversation_segment_items(filter: conversation_segment_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_conversation_segment_input!]): [conversation_segment!]!
-  create_conversation_segment_item(data: create_conversation_segment_input!): conversation_segment
-  create_conversation_items(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_conversation_input!]): [conversation!]!
-  create_conversation_item(data: create_conversation_input!): conversation
-  create_project_chat_message_items(filter: project_chat_message_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_project_chat_message_input!]): [project_chat_message!]!
-  create_project_chat_message_item(data: create_project_chat_message_input!): project_chat_message
-  create_project_items(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_project_input!]): [project!]!
-  create_project_item(data: create_project_input!): project
-  create_conversation_chunk_items(filter: conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_conversation_chunk_input!]): [conversation_chunk!]!
-  create_conversation_chunk_item(data: create_conversation_chunk_input!): conversation_chunk
-  create_quote_aspect_1_items(filter: quote_aspect_1_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_quote_aspect_1_input!]): [quote_aspect_1!]!
-  create_quote_aspect_1_item(data: create_quote_aspect_1_input!): quote_aspect_1
-  create_quote_conversation_chunk_items(filter: quote_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_quote_conversation_chunk_input!]): [quote_conversation_chunk!]!
-  create_quote_conversation_chunk_item(data: create_quote_conversation_chunk_input!): quote_conversation_chunk
-  create_processing_status_items(filter: processing_status_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_processing_status_input!]): [processing_status!]!
-  create_processing_status_item(data: create_processing_status_input!): processing_status
   create_announcement_items(filter: announcement_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_announcement_input!]): [announcement!]!
   create_announcement_item(data: create_announcement_input!): announcement
-  create_languages_items(filter: languages_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_languages_input!]): [languages!]!
-  create_languages_item(data: create_languages_input!): languages
-  create_announcement_translations_items(filter: announcement_translations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_announcement_translations_input!]): [announcement_translations!]!
-  create_announcement_translations_item(data: create_announcement_translations_input!): announcement_translations
-  create_dashboard_announcements_translations_items(filter: dashboard_announcements_translations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_dashboard_announcements_translations_input!]): [dashboard_announcements_translations!]!
-  create_dashboard_announcements_translations_item(data: create_dashboard_announcements_translations_input!): dashboard_announcements_translations
+  create_directus_sync_id_map_items(filter: directus_sync_id_map_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_directus_sync_id_map_input!]): [directus_sync_id_map!]!
+  create_directus_sync_id_map_item(data: create_directus_sync_id_map_input!): directus_sync_id_map
   create_announcement_activity_items(filter: announcement_activity_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_announcement_activity_input!]): [announcement_activity!]!
   create_announcement_activity_item(data: create_announcement_activity_input!): announcement_activity
-  update_directus_sync_id_map_items(filter: directus_sync_id_map_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_sync_id_map_input!): [directus_sync_id_map!]!
-  update_directus_sync_id_map_batch(filter: directus_sync_id_map_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_sync_id_map_input!]): [directus_sync_id_map!]!
-  update_directus_sync_id_map_item(id: ID!, data: update_directus_sync_id_map_input!): directus_sync_id_map
+  create_announcement_translations_items(filter: announcement_translations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_announcement_translations_input!]): [announcement_translations!]!
+  create_announcement_translations_item(data: create_announcement_translations_input!): announcement_translations
+  create_languages_items(filter: languages_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [create_languages_input!]): [languages!]!
+  create_languages_item(data: create_languages_input!): languages
+  update_processing_status_items(filter: processing_status_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_processing_status_input!): [processing_status!]!
+  update_processing_status_batch(filter: processing_status_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_processing_status_input!]): [processing_status!]!
+  update_processing_status_item(id: ID!, data: update_processing_status_input!): processing_status
   update_aspect_items(filter: aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_aspect_input!): [aspect!]!
   update_aspect_batch(filter: aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_aspect_input!]): [aspect!]!
   update_aspect_item(id: ID!, data: update_aspect_input!): aspect
-  update_account_items(filter: account_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_account_input!): [account!]!
-  update_account_batch(filter: account_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_account_input!]): [account!]!
-  update_account_item(id: ID!, data: update_account_input!): account
-  update_account_directus_users_items(filter: account_directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_account_directus_users_input!): [account_directus_users!]!
-  update_account_directus_users_batch(filter: account_directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_account_directus_users_input!]): [account_directus_users!]!
-  update_account_directus_users_item(id: ID!, data: update_account_directus_users_input!): account_directus_users
   update_view_items(filter: view_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_view_input!): [view!]!
   update_view_batch(filter: view_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_view_input!]): [view!]!
   update_view_item(id: ID!, data: update_view_input!): view
@@ -236,12 +182,12 @@ type Mutation {
   update_conversation_reply_items(filter: conversation_reply_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_conversation_reply_input!): [conversation_reply!]!
   update_conversation_reply_batch(filter: conversation_reply_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_conversation_reply_input!]): [conversation_reply!]!
   update_conversation_reply_item(id: ID!, data: update_conversation_reply_input!): conversation_reply
+  update_conversation_segment_items(filter: conversation_segment_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_conversation_segment_input!): [conversation_segment!]!
+  update_conversation_segment_batch(filter: conversation_segment_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_conversation_segment_input!]): [conversation_segment!]!
+  update_conversation_segment_item(id: ID!, data: update_conversation_segment_input!): conversation_segment
   update_conversation_segment_conversation_chunk_items(filter: conversation_segment_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_conversation_segment_conversation_chunk_input!): [conversation_segment_conversation_chunk!]!
   update_conversation_segment_conversation_chunk_batch(filter: conversation_segment_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_conversation_segment_conversation_chunk_input!]): [conversation_segment_conversation_chunk!]!
   update_conversation_segment_conversation_chunk_item(id: ID!, data: update_conversation_segment_conversation_chunk_input!): conversation_segment_conversation_chunk
-  update_document_items(filter: document_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_document_input!): [document!]!
-  update_document_batch(filter: document_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_document_input!]): [document!]!
-  update_document_item(id: ID!, data: update_document_input!): document
   update_project_analysis_run_items(filter: project_analysis_run_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_project_analysis_run_input!): [project_analysis_run!]!
   update_project_analysis_run_batch(filter: project_analysis_run_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_project_analysis_run_input!]): [project_analysis_run!]!
   update_project_analysis_run_item(id: ID!, data: update_project_analysis_run_input!): project_analysis_run
@@ -251,9 +197,21 @@ type Mutation {
   update_project_chat_items(filter: project_chat_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_project_chat_input!): [project_chat!]!
   update_project_chat_batch(filter: project_chat_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_project_chat_input!]): [project_chat!]!
   update_project_chat_item(id: ID!, data: update_project_chat_input!): project_chat
+  update_project_items(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_project_input!): [project!]!
+  update_project_batch(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_project_input!]): [project!]!
+  update_project_item(id: ID!, data: update_project_input!): project
+  update_conversation_items(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_conversation_input!): [conversation!]!
+  update_conversation_batch(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_conversation_input!]): [conversation!]!
+  update_conversation_item(id: ID!, data: update_conversation_input!): conversation
+  update_conversation_chunk_items(filter: conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_conversation_chunk_input!): [conversation_chunk!]!
+  update_conversation_chunk_batch(filter: conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_conversation_chunk_input!]): [conversation_chunk!]!
+  update_conversation_chunk_item(id: ID!, data: update_conversation_chunk_input!): conversation_chunk
   update_project_chat_conversation_items(filter: project_chat_conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_project_chat_conversation_input!): [project_chat_conversation!]!
   update_project_chat_conversation_batch(filter: project_chat_conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_project_chat_conversation_input!]): [project_chat_conversation!]!
   update_project_chat_conversation_item(id: ID!, data: update_project_chat_conversation_input!): project_chat_conversation
+  update_project_chat_message_items(filter: project_chat_message_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_project_chat_message_input!): [project_chat_message!]!
+  update_project_chat_message_batch(filter: project_chat_message_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_project_chat_message_input!]): [project_chat_message!]!
+  update_project_chat_message_item(id: ID!, data: update_project_chat_message_input!): project_chat_message
   update_project_chat_message_conversation_items(filter: project_chat_message_conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_project_chat_message_conversation_input!): [project_chat_message_conversation!]!
   update_project_chat_message_conversation_batch(filter: project_chat_message_conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_project_chat_message_conversation_input!]): [project_chat_message_conversation!]!
   update_project_chat_message_conversation_item(id: ID!, data: update_project_chat_message_conversation_input!): project_chat_message_conversation
@@ -272,59 +230,25 @@ type Mutation {
   update_project_report_notification_participants_items(filter: project_report_notification_participants_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_project_report_notification_participants_input!): [project_report_notification_participants!]!
   update_project_report_notification_participants_batch(filter: project_report_notification_participants_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_project_report_notification_participants_input!]): [project_report_notification_participants!]!
   update_project_report_notification_participants_item(id: ID!, data: update_project_report_notification_participants_input!): project_report_notification_participants
-  update_quote_items(filter: quote_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_quote_input!): [quote!]!
-  update_quote_batch(filter: quote_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_quote_input!]): [quote!]!
-  update_quote_item(id: ID!, data: update_quote_input!): quote
-  update_quote_aspect_items(filter: quote_aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_quote_aspect_input!): [quote_aspect!]!
-  update_quote_aspect_batch(filter: quote_aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_quote_aspect_input!]): [quote_aspect!]!
-  update_quote_aspect_item(id: ID!, data: update_quote_aspect_input!): quote_aspect
-  update_conversation_segment_items(filter: conversation_segment_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_conversation_segment_input!): [conversation_segment!]!
-  update_conversation_segment_batch(filter: conversation_segment_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_conversation_segment_input!]): [conversation_segment!]!
-  update_conversation_segment_item(id: ID!, data: update_conversation_segment_input!): conversation_segment
-  update_conversation_items(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_conversation_input!): [conversation!]!
-  update_conversation_batch(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_conversation_input!]): [conversation!]!
-  update_conversation_item(id: ID!, data: update_conversation_input!): conversation
-  update_project_chat_message_items(filter: project_chat_message_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_project_chat_message_input!): [project_chat_message!]!
-  update_project_chat_message_batch(filter: project_chat_message_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_project_chat_message_input!]): [project_chat_message!]!
-  update_project_chat_message_item(id: ID!, data: update_project_chat_message_input!): project_chat_message
-  update_project_items(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_project_input!): [project!]!
-  update_project_batch(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_project_input!]): [project!]!
-  update_project_item(id: ID!, data: update_project_input!): project
-  update_conversation_chunk_items(filter: conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_conversation_chunk_input!): [conversation_chunk!]!
-  update_conversation_chunk_batch(filter: conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_conversation_chunk_input!]): [conversation_chunk!]!
-  update_conversation_chunk_item(id: ID!, data: update_conversation_chunk_input!): conversation_chunk
-  update_quote_aspect_1_items(filter: quote_aspect_1_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_quote_aspect_1_input!): [quote_aspect_1!]!
-  update_quote_aspect_1_batch(filter: quote_aspect_1_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_quote_aspect_1_input!]): [quote_aspect_1!]!
-  update_quote_aspect_1_item(id: ID!, data: update_quote_aspect_1_input!): quote_aspect_1
-  update_quote_conversation_chunk_items(filter: quote_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_quote_conversation_chunk_input!): [quote_conversation_chunk!]!
-  update_quote_conversation_chunk_batch(filter: quote_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_quote_conversation_chunk_input!]): [quote_conversation_chunk!]!
-  update_quote_conversation_chunk_item(id: ID!, data: update_quote_conversation_chunk_input!): quote_conversation_chunk
-  update_processing_status_items(filter: processing_status_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_processing_status_input!): [processing_status!]!
-  update_processing_status_batch(filter: processing_status_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_processing_status_input!]): [processing_status!]!
-  update_processing_status_item(id: ID!, data: update_processing_status_input!): processing_status
   update_announcement_items(filter: announcement_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_announcement_input!): [announcement!]!
   update_announcement_batch(filter: announcement_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_announcement_input!]): [announcement!]!
   update_announcement_item(id: ID!, data: update_announcement_input!): announcement
-  update_languages_items(filter: languages_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_languages_input!): [languages!]!
-  update_languages_batch(filter: languages_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_languages_input!]): [languages!]!
-  update_languages_item(id: ID!, data: update_languages_input!): languages
-  update_announcement_translations_items(filter: announcement_translations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_announcement_translations_input!): [announcement_translations!]!
-  update_announcement_translations_batch(filter: announcement_translations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_announcement_translations_input!]): [announcement_translations!]!
-  update_announcement_translations_item(id: ID!, data: update_announcement_translations_input!): announcement_translations
-  update_dashboard_announcements_translations_items(filter: dashboard_announcements_translations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_dashboard_announcements_translations_input!): [dashboard_announcements_translations!]!
-  update_dashboard_announcements_translations_batch(filter: dashboard_announcements_translations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_dashboard_announcements_translations_input!]): [dashboard_announcements_translations!]!
-  update_dashboard_announcements_translations_item(id: ID!, data: update_dashboard_announcements_translations_input!): dashboard_announcements_translations
+  update_directus_sync_id_map_items(filter: directus_sync_id_map_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_directus_sync_id_map_input!): [directus_sync_id_map!]!
+  update_directus_sync_id_map_batch(filter: directus_sync_id_map_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_directus_sync_id_map_input!]): [directus_sync_id_map!]!
+  update_directus_sync_id_map_item(id: ID!, data: update_directus_sync_id_map_input!): directus_sync_id_map
   update_announcement_activity_items(filter: announcement_activity_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_announcement_activity_input!): [announcement_activity!]!
   update_announcement_activity_batch(filter: announcement_activity_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_announcement_activity_input!]): [announcement_activity!]!
   update_announcement_activity_item(id: ID!, data: update_announcement_activity_input!): announcement_activity
-  delete_directus_sync_id_map_items(ids: [ID]!): delete_many
-  delete_directus_sync_id_map_item(id: ID!): delete_one
+  update_announcement_translations_items(filter: announcement_translations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_announcement_translations_input!): [announcement_translations!]!
+  update_announcement_translations_batch(filter: announcement_translations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_announcement_translations_input!]): [announcement_translations!]!
+  update_announcement_translations_item(id: ID!, data: update_announcement_translations_input!): announcement_translations
+  update_languages_items(filter: languages_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, ids: [ID]!, data: update_languages_input!): [languages!]!
+  update_languages_batch(filter: languages_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String, data: [update_languages_input!]): [languages!]!
+  update_languages_item(id: ID!, data: update_languages_input!): languages
+  delete_processing_status_items(ids: [ID]!): delete_many
+  delete_processing_status_item(id: ID!): delete_one
   delete_aspect_items(ids: [ID]!): delete_many
   delete_aspect_item(id: ID!): delete_one
-  delete_account_items(ids: [ID]!): delete_many
-  delete_account_item(id: ID!): delete_one
-  delete_account_directus_users_items(ids: [ID]!): delete_many
-  delete_account_directus_users_item(id: ID!): delete_one
   delete_view_items(ids: [ID]!): delete_many
   delete_view_item(id: ID!): delete_one
   delete_conversation_project_tag_items(ids: [ID]!): delete_many
@@ -333,18 +257,26 @@ type Mutation {
   delete_project_tag_item(id: ID!): delete_one
   delete_conversation_reply_items(ids: [ID]!): delete_many
   delete_conversation_reply_item(id: ID!): delete_one
+  delete_conversation_segment_items(ids: [ID]!): delete_many
+  delete_conversation_segment_item(id: ID!): delete_one
   delete_conversation_segment_conversation_chunk_items(ids: [ID]!): delete_many
   delete_conversation_segment_conversation_chunk_item(id: ID!): delete_one
-  delete_document_items(ids: [ID]!): delete_many
-  delete_document_item(id: ID!): delete_one
   delete_project_analysis_run_items(ids: [ID]!): delete_many
   delete_project_analysis_run_item(id: ID!): delete_one
   delete_insight_items(ids: [ID]!): delete_many
   delete_insight_item(id: ID!): delete_one
   delete_project_chat_items(ids: [ID]!): delete_many
   delete_project_chat_item(id: ID!): delete_one
+  delete_project_items(ids: [ID]!): delete_many
+  delete_project_item(id: ID!): delete_one
+  delete_conversation_items(ids: [ID]!): delete_many
+  delete_conversation_item(id: ID!): delete_one
+  delete_conversation_chunk_items(ids: [ID]!): delete_many
+  delete_conversation_chunk_item(id: ID!): delete_one
   delete_project_chat_conversation_items(ids: [ID]!): delete_many
   delete_project_chat_conversation_item(id: ID!): delete_one
+  delete_project_chat_message_items(ids: [ID]!): delete_many
+  delete_project_chat_message_item(id: ID!): delete_one
   delete_project_chat_message_conversation_items(ids: [ID]!): delete_many
   delete_project_chat_message_conversation_item(id: ID!): delete_one
   delete_project_chat_message_conversation_1_items(ids: [ID]!): delete_many
@@ -357,95 +289,67 @@ type Mutation {
   delete_project_report_metric_item(id: ID!): delete_one
   delete_project_report_notification_participants_items(ids: [ID]!): delete_many
   delete_project_report_notification_participants_item(id: ID!): delete_one
-  delete_quote_items(ids: [ID]!): delete_many
-  delete_quote_item(id: ID!): delete_one
-  delete_quote_aspect_items(ids: [ID]!): delete_many
-  delete_quote_aspect_item(id: ID!): delete_one
-  delete_conversation_segment_items(ids: [ID]!): delete_many
-  delete_conversation_segment_item(id: ID!): delete_one
-  delete_conversation_items(ids: [ID]!): delete_many
-  delete_conversation_item(id: ID!): delete_one
-  delete_project_chat_message_items(ids: [ID]!): delete_many
-  delete_project_chat_message_item(id: ID!): delete_one
-  delete_project_items(ids: [ID]!): delete_many
-  delete_project_item(id: ID!): delete_one
-  delete_conversation_chunk_items(ids: [ID]!): delete_many
-  delete_conversation_chunk_item(id: ID!): delete_one
-  delete_quote_aspect_1_items(ids: [ID]!): delete_many
-  delete_quote_aspect_1_item(id: ID!): delete_one
-  delete_quote_conversation_chunk_items(ids: [ID]!): delete_many
-  delete_quote_conversation_chunk_item(id: ID!): delete_one
-  delete_processing_status_items(ids: [ID]!): delete_many
-  delete_processing_status_item(id: ID!): delete_one
   delete_announcement_items(ids: [ID]!): delete_many
   delete_announcement_item(id: ID!): delete_one
-  delete_languages_items(ids: [ID]!): delete_many
-  delete_languages_item(id: ID!): delete_one
-  delete_announcement_translations_items(ids: [ID]!): delete_many
-  delete_announcement_translations_item(id: ID!): delete_one
-  delete_dashboard_announcements_translations_items(ids: [ID]!): delete_many
-  delete_dashboard_announcements_translations_item(id: ID!): delete_one
+  delete_directus_sync_id_map_items(ids: [ID]!): delete_many
+  delete_directus_sync_id_map_item(id: ID!): delete_one
   delete_announcement_activity_items(ids: [ID]!): delete_many
   delete_announcement_activity_item(id: ID!): delete_one
+  delete_announcement_translations_items(ids: [ID]!): delete_many
+  delete_announcement_translations_item(id: ID!): delete_one
+  delete_languages_items(ids: [ID]!): delete_many
+  delete_languages_item(id: ID!): delete_one
 }
 
 type Subscription {
   directus_roles_mutated(event: EventEnum): directus_roles_mutated
+  processing_status_mutated(event: EventEnum): processing_status_mutated
   directus_revisions_mutated(event: EventEnum): directus_revisions_mutated
   directus_folders_mutated(event: EventEnum): directus_folders_mutated
   directus_activity_mutated(event: EventEnum): directus_activity_mutated
-  directus_files_mutated(event: EventEnum): directus_files_mutated
-  directus_presets_mutated(event: EventEnum): directus_presets_mutated
-  directus_permissions_mutated(event: EventEnum): directus_permissions_mutated
-  directus_settings_mutated(event: EventEnum): directus_settings_mutated
-  directus_panels_mutated(event: EventEnum): directus_panels_mutated
-  directus_notifications_mutated(event: EventEnum): directus_notifications_mutated
-  directus_flows_mutated(event: EventEnum): directus_flows_mutated
-  directus_shares_mutated(event: EventEnum): directus_shares_mutated
-  directus_operations_mutated(event: EventEnum): directus_operations_mutated
-  directus_dashboards_mutated(event: EventEnum): directus_dashboards_mutated
-  directus_translations_mutated(event: EventEnum): directus_translations_mutated
-  directus_sync_id_map_mutated(event: EventEnum): directus_sync_id_map_mutated
   directus_webhooks_mutated(event: EventEnum): directus_webhooks_mutated
-  directus_policies_mutated(event: EventEnum): directus_policies_mutated
-  directus_access_mutated(event: EventEnum): directus_access_mutated
-  directus_comments_mutated(event: EventEnum): directus_comments_mutated
-  directus_versions_mutated(event: EventEnum): directus_versions_mutated
+  directus_files_mutated(event: EventEnum): directus_files_mutated
+  directus_permissions_mutated(event: EventEnum): directus_permissions_mutated
+  directus_presets_mutated(event: EventEnum): directus_presets_mutated
+  directus_settings_mutated(event: EventEnum): directus_settings_mutated
   aspect_mutated(event: EventEnum): aspect_mutated
-  directus_users_mutated(event: EventEnum): directus_users_mutated
-  account_mutated(event: EventEnum): account_mutated
-  account_directus_users_mutated(event: EventEnum): account_directus_users_mutated
   view_mutated(event: EventEnum): view_mutated
   conversation_project_tag_mutated(event: EventEnum): conversation_project_tag_mutated
   project_tag_mutated(event: EventEnum): project_tag_mutated
   conversation_reply_mutated(event: EventEnum): conversation_reply_mutated
+  conversation_segment_mutated(event: EventEnum): conversation_segment_mutated
   conversation_segment_conversation_chunk_mutated(event: EventEnum): conversation_segment_conversation_chunk_mutated
-  document_mutated(event: EventEnum): document_mutated
   project_analysis_run_mutated(event: EventEnum): project_analysis_run_mutated
   insight_mutated(event: EventEnum): insight_mutated
   project_chat_mutated(event: EventEnum): project_chat_mutated
+  project_mutated(event: EventEnum): project_mutated
+  conversation_mutated(event: EventEnum): conversation_mutated
+  conversation_chunk_mutated(event: EventEnum): conversation_chunk_mutated
   project_chat_conversation_mutated(event: EventEnum): project_chat_conversation_mutated
+  directus_panels_mutated(event: EventEnum): directus_panels_mutated
+  directus_notifications_mutated(event: EventEnum): directus_notifications_mutated
+  directus_shares_mutated(event: EventEnum): directus_shares_mutated
+  directus_dashboards_mutated(event: EventEnum): directus_dashboards_mutated
+  directus_flows_mutated(event: EventEnum): directus_flows_mutated
+  directus_operations_mutated(event: EventEnum): directus_operations_mutated
+  directus_users_mutated(event: EventEnum): directus_users_mutated
+  directus_translations_mutated(event: EventEnum): directus_translations_mutated
+  directus_policies_mutated(event: EventEnum): directus_policies_mutated
+  directus_access_mutated(event: EventEnum): directus_access_mutated
+  directus_versions_mutated(event: EventEnum): directus_versions_mutated
+  project_chat_message_mutated(event: EventEnum): project_chat_message_mutated
   project_chat_message_conversation_mutated(event: EventEnum): project_chat_message_conversation_mutated
   project_chat_message_conversation_1_mutated(event: EventEnum): project_chat_message_conversation_1_mutated
   project_chat_message_metadata_mutated(event: EventEnum): project_chat_message_metadata_mutated
   project_report_mutated(event: EventEnum): project_report_mutated
   project_report_metric_mutated(event: EventEnum): project_report_metric_mutated
   project_report_notification_participants_mutated(event: EventEnum): project_report_notification_participants_mutated
-  quote_mutated(event: EventEnum): quote_mutated
-  quote_aspect_mutated(event: EventEnum): quote_aspect_mutated
-  conversation_segment_mutated(event: EventEnum): conversation_segment_mutated
-  conversation_mutated(event: EventEnum): conversation_mutated
-  project_chat_message_mutated(event: EventEnum): project_chat_message_mutated
-  project_mutated(event: EventEnum): project_mutated
-  conversation_chunk_mutated(event: EventEnum): conversation_chunk_mutated
-  quote_aspect_1_mutated(event: EventEnum): quote_aspect_1_mutated
-  quote_conversation_chunk_mutated(event: EventEnum): quote_conversation_chunk_mutated
-  processing_status_mutated(event: EventEnum): processing_status_mutated
+  directus_comments_mutated(event: EventEnum): directus_comments_mutated
   announcement_mutated(event: EventEnum): announcement_mutated
-  languages_mutated(event: EventEnum): languages_mutated
-  announcement_translations_mutated(event: EventEnum): announcement_translations_mutated
-  dashboard_announcements_translations_mutated(event: EventEnum): dashboard_announcements_translations_mutated
+  directus_sync_id_map_mutated(event: EventEnum): directus_sync_id_map_mutated
   announcement_activity_mutated(event: EventEnum): announcement_activity_mutated
+  announcement_translations_mutated(event: EventEnum): announcement_translations_mutated
+  languages_mutated(event: EventEnum): languages_mutated
 }
 
 """The `Boolean` scalar type represents `true` or `false`."""
@@ -494,103 +398,36 @@ enum EventEnum {
   delete
 }
 
-type account {
-  date_created: Date
-  date_created_func: datetime_functions
-  date_updated: Date
-  date_updated_func: datetime_functions
-  id: ID!
-  status: String
-  users(filter: account_directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [account_directus_users]
-  users_func: count_functions
-}
-
-type account_aggregated {
-  group: JSON
-  countAll: Int
-  count: account_aggregated_count
-  countDistinct: account_aggregated_count
-}
-
-type account_aggregated_count {
-  date_created: Int
-  date_updated: Int
-  id: Int
-  status: Int
-  users: Int
-}
-
-type account_directus_users {
-  account_id(filter: account_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): account
-  directus_users_id(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
-  id: ID!
-}
-
-type account_directus_users_aggregated {
-  group: JSON
-  countAll: Int
-  count: account_directus_users_aggregated_count
-  countDistinct: account_directus_users_aggregated_count
-  avg: account_directus_users_aggregated_fields
-  sum: account_directus_users_aggregated_fields
-  avgDistinct: account_directus_users_aggregated_fields
-  sumDistinct: account_directus_users_aggregated_fields
-  min: account_directus_users_aggregated_fields
-  max: account_directus_users_aggregated_fields
-}
-
-type account_directus_users_aggregated_count {
-  account_id: Int
-  directus_users_id: Int
-  id: Int
-}
-
-type account_directus_users_aggregated_fields {
-  id: Float
-}
-
-type account_directus_users_mutated {
-  key: ID!
-  event: EventEnum
-  data: account_directus_users
-}
-
-type account_mutated {
-  key: ID!
-  event: EventEnum
-  data: account
-}
-
 type announcement {
-  id: ID!
-  sort: Int
-  user_created(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
   created_at: Date
   created_at_func: datetime_functions
-  user_updated(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
-  updated_at: Date
-  updated_at_func: datetime_functions
   expires_at: Date
   expires_at_func: datetime_functions
+  id: ID!
   level: String
-  translations(filter: announcement_translations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [announcement_translations]
-  translations_func: count_functions
+  sort: Int
+  updated_at: Date
+  updated_at_func: datetime_functions
+  user_created(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
+  user_updated(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
   activity(filter: announcement_activity_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [announcement_activity]
   activity_func: count_functions
+  translations(filter: announcement_translations_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [announcement_translations]
+  translations_func: count_functions
 }
 
 type announcement_activity {
-  id: ID!
-  sort: Int
-  user_created(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
+  announcement_activity(filter: announcement_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): announcement
   created_at: Date
   created_at_func: datetime_functions
-  user_updated(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
+  id: ID!
+  read: Boolean
+  sort: Int
   updated_at: Date
   updated_at_func: datetime_functions
+  user_created(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
   user_id: String
-  read: Boolean
-  announcement_activity(filter: announcement_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): announcement
+  user_updated(filter: directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): directus_users
 }
 
 type announcement_activity_aggregated {
@@ -607,15 +444,15 @@ type announcement_activity_aggregated {
 }
 
 type announcement_activity_aggregated_count {
-  id: Int
-  sort: Int
-  user_created: Int
-  created_at: Int
-  user_updated: Int
-  updated_at: Int
-  user_id: Int
-  read: Int
   announcement_activity: Int
+  created_at: Int
+  id: Int
+  read: Int
+  sort: Int
+  updated_at: Int
+  user_created: Int
+  user_id: Int
+  user_updated: Int
 }
 
 type announcement_activity_aggregated_fields {
@@ -642,16 +479,16 @@ type announcement_aggregated {
 }
 
 type announcement_aggregated_count {
-  id: Int
-  sort: Int
-  user_created: Int
   created_at: Int
-  user_updated: Int
-  updated_at: Int
   expires_at: Int
+  id: Int
   level: Int
-  translations: Int
+  sort: Int
+  updated_at: Int
+  user_created: Int
+  user_updated: Int
   activity: Int
+  translations: Int
 }
 
 type announcement_aggregated_fields {
@@ -665,11 +502,11 @@ type announcement_mutated {
 }
 
 type announcement_translations {
-  id: ID!
   announcement_id(filter: announcement_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): announcement
+  id: ID!
   languages_code(filter: languages_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): languages
-  title: String
   message: String
+  title: String
 }
 
 type announcement_translations_aggregated {
@@ -686,11 +523,11 @@ type announcement_translations_aggregated {
 }
 
 type announcement_translations_aggregated_count {
-  id: Int
   announcement_id: Int
+  id: Int
   languages_code: Int
-  title: Int
   message: Int
+  title: Int
 }
 
 type announcement_translations_aggregated_fields {
@@ -715,11 +552,6 @@ type aspect {
   updated_at: Date
   updated_at_func: datetime_functions
   view_id(filter: view_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): view
-  centroid_embedding: String
-  quotes(filter: quote_aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_aspect]
-  quotes_func: count_functions
-  representative_quotes(filter: quote_aspect_1_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_aspect_1]
-  representative_quotes_func: count_functions
 }
 
 type aspect_aggregated {
@@ -739,9 +571,6 @@ type aspect_aggregated_count {
   short_summary: Int
   updated_at: Int
   view_id: Int
-  centroid_embedding: Int
-  quotes: Int
-  representative_quotes: Int
 }
 
 type aspect_mutated {
@@ -751,41 +580,39 @@ type aspect_mutated {
 }
 
 type conversation {
-  context: String
   created_at: Date
   created_at_func: datetime_functions
-  description: String
   duration: Float
   id: ID!
+  is_audio_processing_finished: Boolean
   is_finished: Boolean
   merged_audio_path: String
   merged_transcript: String
   participant_email: String
   participant_name: String
   participant_user_agent: String
-  processing_message: String
-  processing_status: String
   project_id(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): project
 
-  """This is set if not through PORTAL"""
+  """Unset if PORTAL"""
   source: String
   summary: String
-  title: String
   updated_at: Date
   updated_at_func: datetime_functions
-  is_audio_processing_finished: Boolean
+  is_all_chunks_transcribed: Boolean
   chunks(filter: conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_chunk]
   chunks_func: count_functions
-  project_chat_messages(filter: project_chat_message_conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_message_conversation]
-  project_chat_messages_func: count_functions
   project_chats(filter: project_chat_conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_conversation]
   project_chats_func: count_functions
+  project_chat_messages(filter: project_chat_message_conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_message_conversation]
+  project_chat_messages_func: count_functions
   replies(filter: conversation_reply_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_reply]
   replies_func: count_functions
-  tags(filter: conversation_project_tag_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_project_tag]
-  tags_func: count_functions
   conversation_segments(filter: conversation_segment_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_segment]
   conversation_segments_func: count_functions
+  tags(filter: conversation_project_tag_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_project_tag]
+  tags_func: count_functions
+  processing_status(filter: processing_status_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [processing_status]
+  processing_status_func: count_functions
 }
 
 type conversation_aggregated {
@@ -802,33 +629,30 @@ type conversation_aggregated {
 }
 
 type conversation_aggregated_count {
-  context: Int
   created_at: Int
-  description: Int
   duration: Int
   id: Int
+  is_audio_processing_finished: Int
   is_finished: Int
   merged_audio_path: Int
   merged_transcript: Int
   participant_email: Int
   participant_name: Int
   participant_user_agent: Int
-  processing_message: Int
-  processing_status: Int
   project_id: Int
 
-  """This is set if not through PORTAL"""
+  """Unset if PORTAL"""
   source: Int
   summary: Int
-  title: Int
   updated_at: Int
-  is_audio_processing_finished: Int
+  is_all_chunks_transcribed: Int
   chunks: Int
-  project_chat_messages: Int
   project_chats: Int
+  project_chat_messages: Int
   replies: Int
-  tags: Int
   conversation_segments: Int
+  tags: Int
+  processing_status: Int
 }
 
 type conversation_aggregated_fields {
@@ -841,8 +665,6 @@ type conversation_chunk {
   created_at_func: datetime_functions
   id: ID!
   path: String
-  processing_message: String
-  processing_status: String
 
   """This is set if not through PORTAL"""
   source: String
@@ -858,10 +680,18 @@ type conversation_chunk {
   diarization_func: count_functions
   noise_ratio: Float
   silence_ratio: Float
+  error: String
+  hallucination_reason: String
+  hallucination_score: Float
+  desired_language: String
+  detected_language: String
+  detected_language_confidence: Float
+  raw_transcript: String
+  translation_error: String
   conversation_segments(filter: conversation_segment_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_segment_conversation_chunk]
   conversation_segments_func: count_functions
-  quotes(filter: quote_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_conversation_chunk]
-  quotes_func: count_functions
+  processing_status(filter: processing_status_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [processing_status]
+  processing_status_func: count_functions
 }
 
 type conversation_chunk_aggregated {
@@ -882,8 +712,6 @@ type conversation_chunk_aggregated_count {
   created_at: Int
   id: Int
   path: Int
-  processing_message: Int
-  processing_status: Int
 
   """This is set if not through PORTAL"""
   source: Int
@@ -896,8 +724,16 @@ type conversation_chunk_aggregated_count {
   diarization: Int
   noise_ratio: Int
   silence_ratio: Int
+  error: Int
+  hallucination_reason: Int
+  hallucination_score: Int
+  desired_language: Int
+  detected_language: Int
+  detected_language_confidence: Int
+  raw_transcript: Int
+  translation_error: Int
   conversation_segments: Int
-  quotes: Int
+  processing_status: Int
 }
 
 type conversation_chunk_aggregated_fields {
@@ -905,6 +741,8 @@ type conversation_chunk_aggregated_fields {
   cross_talk_instances: Float
   noise_ratio: Float
   silence_ratio: Float
+  hallucination_score: Float
+  detected_language_confidence: Float
 }
 
 type conversation_chunk_mutated {
@@ -1001,12 +839,12 @@ type conversation_reply_mutated {
 type conversation_segment {
   config_id: String
   contextual_transcript: String
+  conversation_id(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation
   counter: Float
   id: ID!
   lightrag_flag: Boolean
   path: String
   transcript: String
-  conversation_id(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation
   chunks(filter: conversation_segment_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation_segment_conversation_chunk]
   chunks_func: count_functions
 }
@@ -1027,12 +865,12 @@ type conversation_segment_aggregated {
 type conversation_segment_aggregated_count {
   config_id: Int
   contextual_transcript: Int
+  conversation_id: Int
   counter: Int
   id: Int
   lightrag_flag: Int
   path: Int
   transcript: Int
-  conversation_id: Int
   chunks: Int
 }
 
@@ -1085,45 +923,6 @@ type conversation_segment_mutated {
 
 type count_functions {
   count: Int
-}
-
-type dashboard_announcements_translations {
-  id: ID!
-  languages_code(filter: languages_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): languages
-  title: String
-  unread_notifications: String
-  mark_all_as_read: String
-}
-
-type dashboard_announcements_translations_aggregated {
-  group: JSON
-  countAll: Int
-  count: dashboard_announcements_translations_aggregated_count
-  countDistinct: dashboard_announcements_translations_aggregated_count
-  avg: dashboard_announcements_translations_aggregated_fields
-  sum: dashboard_announcements_translations_aggregated_fields
-  avgDistinct: dashboard_announcements_translations_aggregated_fields
-  sumDistinct: dashboard_announcements_translations_aggregated_fields
-  min: dashboard_announcements_translations_aggregated_fields
-  max: dashboard_announcements_translations_aggregated_fields
-}
-
-type dashboard_announcements_translations_aggregated_count {
-  id: Int
-  languages_code: Int
-  title: Int
-  unread_notifications: Int
-  mark_all_as_read: Int
-}
-
-type dashboard_announcements_translations_aggregated_fields {
-  id: Float
-}
-
-type dashboard_announcements_translations_mutated {
-  key: ID!
-  event: EventEnum
-  data: dashboard_announcements_translations
 }
 
 type datetime_functions {
@@ -1652,8 +1451,6 @@ type directus_users {
   If this is set, user won't be able to create projects using the Dashboard. Limitation: Internally / using the API they still can
   """
   disable_create_project: Boolean
-  accounts(filter: account_directus_users_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [account_directus_users]
-  accounts_func: count_functions
   projects(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project]
   projects_func: count_functions
   policies(filter: directus_access_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [directus_access]
@@ -1710,51 +1507,6 @@ type directus_webhooks_mutated {
   data: directus_webhooks
 }
 
-type document {
-  context: String
-  created_at: Date
-  created_at_func: datetime_functions
-  description: String
-  id: ID!
-  is_processed: Boolean!
-  original_filename: String
-  path: String
-  processing_error: String
-  project_id(filter: project_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): project
-  title: String
-  type: String
-  updated_at: Date
-  updated_at_func: datetime_functions
-}
-
-type document_aggregated {
-  group: JSON
-  countAll: Int
-  count: document_aggregated_count
-  countDistinct: document_aggregated_count
-}
-
-type document_aggregated_count {
-  context: Int
-  created_at: Int
-  description: Int
-  id: Int
-  is_processed: Int
-  original_filename: Int
-  path: Int
-  processing_error: Int
-  project_id: Int
-  title: Int
-  type: Int
-  updated_at: Int
-}
-
-type document_mutated {
-  key: ID!
-  event: EventEnum
-  data: document
-}
-
 type insight {
   created_at: Date
   created_at_func: datetime_functions
@@ -1764,8 +1516,6 @@ type insight {
   title: String
   updated_at: Date
   updated_at_func: datetime_functions
-  quotes(filter: quote_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote]
-  quotes_func: count_functions
 }
 
 type insight_aggregated {
@@ -1782,7 +1532,6 @@ type insight_aggregated_count {
   summary: Int
   title: Int
   updated_at: Int
-  quotes: Int
 }
 
 type insight_mutated {
@@ -1793,8 +1542,8 @@ type insight_mutated {
 
 type languages {
   code: ID!
-  name: String
   direction: String
+  name: String
 }
 
 type languages_aggregated {
@@ -1806,8 +1555,8 @@ type languages_aggregated {
 
 type languages_aggregated_count {
   code: Int
-  name: Int
   direction: Int
+  name: Int
 }
 
 type languages_mutated {
@@ -1817,15 +1566,15 @@ type languages_mutated {
 }
 
 type processing_status {
-  collection_name: String
   duration_ms: Int
   event: String
   id: ID!
-  item_id: String
-  json: String
   message: String
   timestamp: Date
   timestamp_func: datetime_functions
+  conversation_chunk_id(filter: conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation_chunk
+  conversation_id(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation
+  parent(filter: processing_status_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): processing_status
 }
 
 type processing_status_aggregated {
@@ -1842,19 +1591,20 @@ type processing_status_aggregated {
 }
 
 type processing_status_aggregated_count {
-  collection_name: Int
   duration_ms: Int
   event: Int
   id: Int
-  item_id: Int
-  json: Int
   message: Int
   timestamp: Int
+  conversation_chunk_id: Int
+  conversation_id: Int
+  parent: Int
 }
 
 type processing_status_aggregated_fields {
   duration_ms: Float
   id: Float
+  parent: Float
 }
 
 type processing_status_mutated {
@@ -1888,20 +1638,19 @@ type project {
   is_project_notification_subscription_allowed: Boolean
   language: String
   name: String
-  pin: String
   updated_at: Date
   updated_at_func: datetime_functions
   get_reply_mode: String
   conversations(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [conversation]
   conversations_func: count_functions
-  tags(filter: project_tag_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_tag]
-  tags_func: count_functions
   project_analysis_runs(filter: project_analysis_run_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_analysis_run]
   project_analysis_runs_func: count_functions
   project_chats(filter: project_chat_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat]
   project_chats_func: count_functions
   project_reports(filter: project_report_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_report]
   project_reports_func: count_functions
+  tags(filter: project_tag_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_tag]
+  tags_func: count_functions
 }
 
 type project_aggregated {
@@ -1935,14 +1684,13 @@ type project_aggregated_count {
   is_project_notification_subscription_allowed: Int
   language: Int
   name: Int
-  pin: Int
   updated_at: Int
   get_reply_mode: Int
   conversations: Int
-  tags: Int
   project_analysis_runs: Int
   project_chats: Int
   project_reports: Int
+  tags: Int
 }
 
 type project_analysis_run {
@@ -1961,8 +1709,6 @@ type project_analysis_run {
   updated_at_func: datetime_functions
   insights(filter: insight_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [insight]
   insights_func: count_functions
-  quotes(filter: quote_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote]
-  quotes_func: count_functions
   views(filter: view_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [view]
   views_func: count_functions
 }
@@ -1985,7 +1731,6 @@ type project_analysis_run_aggregated_count {
   project_id: Int
   updated_at: Int
   insights: Int
-  quotes: Int
   views: Int
 }
 
@@ -2075,9 +1820,9 @@ type project_chat_message {
   id: ID!
   message_from: String
   project_chat_id(filter: project_chat_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): project_chat
+  template_key: String
   text: String
   tokens_count: Int
-  template_key: String
   added_conversations(filter: project_chat_message_conversation_1_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_message_conversation_1]
   added_conversations_func: count_functions
   chat_message_metadata(filter: project_chat_message_metadata_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [project_chat_message_metadata]
@@ -2105,9 +1850,9 @@ type project_chat_message_aggregated_count {
   id: Int
   message_from: Int
   project_chat_id: Int
+  template_key: Int
   text: Int
   tokens_count: Int
-  template_key: Int
 
   """delta conversations added"""
   added_conversations: Int
@@ -2418,222 +2163,40 @@ type project_tag_mutated {
   data: project_tag
 }
 
-type quote {
-  conversation_id(filter: conversation_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation
-  created_at: Date
-  created_at_func: datetime_functions
-  embedding: String
-  id: ID!
-  insight_id(filter: insight_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): insight
-  order: Int
-  project_analysis_run_id(filter: project_analysis_run_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): project_analysis_run
-  text: String!
-  timestamp: Date
-  timestamp_func: datetime_functions
-  updated_at: Date
-  updated_at_func: datetime_functions
-  aspects(filter: quote_aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_aspect]
-  aspects_func: count_functions
-  conversation_chunks(filter: quote_conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_conversation_chunk]
-  conversation_chunks_func: count_functions
-  representative_aspects(filter: quote_aspect_1_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): [quote_aspect_1]
-  representative_aspects_func: count_functions
-}
-
-type quote_aggregated {
-  group: JSON
-  countAll: Int
-  count: quote_aggregated_count
-  countDistinct: quote_aggregated_count
-  avg: quote_aggregated_fields
-  sum: quote_aggregated_fields
-  avgDistinct: quote_aggregated_fields
-  sumDistinct: quote_aggregated_fields
-  min: quote_aggregated_fields
-  max: quote_aggregated_fields
-}
-
-type quote_aggregated_count {
-  conversation_id: Int
-  created_at: Int
-  embedding: Int
-  id: Int
-  insight_id: Int
-  order: Int
-  project_analysis_run_id: Int
-  text: Int
-  timestamp: Int
-  updated_at: Int
-  aspects: Int
-  conversation_chunks: Int
-  representative_aspects: Int
-}
-
-type quote_aggregated_fields {
-  order: Float
-}
-
-type quote_aspect {
-  aspect_id(filter: aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): aspect
-  id: ID!
-  quote_id(filter: quote_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): quote
-}
-
-type quote_aspect_1 {
-  aspect_id(filter: aspect_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): aspect
-  id: ID!
-  quote_id(filter: quote_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): quote
-}
-
-type quote_aspect_1_aggregated {
-  group: JSON
-  countAll: Int
-  count: quote_aspect_1_aggregated_count
-  countDistinct: quote_aspect_1_aggregated_count
-  avg: quote_aspect_1_aggregated_fields
-  sum: quote_aspect_1_aggregated_fields
-  avgDistinct: quote_aspect_1_aggregated_fields
-  sumDistinct: quote_aspect_1_aggregated_fields
-  min: quote_aspect_1_aggregated_fields
-  max: quote_aspect_1_aggregated_fields
-}
-
-type quote_aspect_1_aggregated_count {
-  aspect_id: Int
-  id: Int
-  quote_id: Int
-}
-
-type quote_aspect_1_aggregated_fields {
-  id: Float
-}
-
-type quote_aspect_1_mutated {
-  key: ID!
-  event: EventEnum
-  data: quote_aspect_1
-}
-
-type quote_aspect_aggregated {
-  group: JSON
-  countAll: Int
-  count: quote_aspect_aggregated_count
-  countDistinct: quote_aspect_aggregated_count
-  avg: quote_aspect_aggregated_fields
-  sum: quote_aspect_aggregated_fields
-  avgDistinct: quote_aspect_aggregated_fields
-  sumDistinct: quote_aspect_aggregated_fields
-  min: quote_aspect_aggregated_fields
-  max: quote_aspect_aggregated_fields
-}
-
-type quote_aspect_aggregated_count {
-  aspect_id: Int
-  id: Int
-  quote_id: Int
-}
-
-type quote_aspect_aggregated_fields {
-  id: Float
-}
-
-type quote_aspect_mutated {
-  key: ID!
-  event: EventEnum
-  data: quote_aspect
-}
-
-type quote_conversation_chunk {
-  conversation_chunk_id(filter: conversation_chunk_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): conversation_chunk
-  id: ID!
-  quote_id(filter: quote_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): quote
-}
-
-type quote_conversation_chunk_aggregated {
-  group: JSON
-  countAll: Int
-  count: quote_conversation_chunk_aggregated_count
-  countDistinct: quote_conversation_chunk_aggregated_count
-  avg: quote_conversation_chunk_aggregated_fields
-  sum: quote_conversation_chunk_aggregated_fields
-  avgDistinct: quote_conversation_chunk_aggregated_fields
-  sumDistinct: quote_conversation_chunk_aggregated_fields
-  min: quote_conversation_chunk_aggregated_fields
-  max: quote_conversation_chunk_aggregated_fields
-}
-
-type quote_conversation_chunk_aggregated_count {
-  conversation_chunk_id: Int
-  id: Int
-  quote_id: Int
-}
-
-type quote_conversation_chunk_aggregated_fields {
-  id: Float
-}
-
-type quote_conversation_chunk_mutated {
-  key: ID!
-  event: EventEnum
-  data: quote_conversation_chunk
-}
-
-type quote_mutated {
-  key: ID!
-  event: EventEnum
-  data: quote
-}
-
-""""""
-type version_account {
-  date_created: Date
-  date_updated: Date
-  id: ID
-  status: String
-  users: JSON
-}
-
-""""""
-type version_account_directus_users {
-  account_id: JSON
-  directus_users_id: JSON
-  id: ID
-}
-
 """"""
 type version_announcement {
-  id: ID
-  sort: Int
-  user_created: JSON
   created_at: Date
-  user_updated: JSON
-  updated_at: Date
   expires_at: Date
+  id: ID
   level: String
-  translations: JSON
+  sort: Int
+  updated_at: Date
+  user_created: JSON
+  user_updated: JSON
   activity: JSON
+  translations: JSON
 }
 
 """"""
 type version_announcement_activity {
-  id: ID
-  sort: Int
-  user_created: JSON
-  created_at: Date
-  user_updated: JSON
-  updated_at: Date
-  user_id: String
-  read: Boolean
   announcement_activity: JSON
+  created_at: Date
+  id: ID
+  read: Boolean
+  sort: Int
+  updated_at: Date
+  user_created: JSON
+  user_id: String
+  user_updated: JSON
 }
 
 """"""
 type version_announcement_translations {
-  id: ID
   announcement_id: JSON
+  id: ID
   languages_code: JSON
-  title: String
   message: String
+  title: String
 }
 
 """"""
@@ -2647,40 +2210,34 @@ type version_aspect {
   short_summary: String
   updated_at: Date
   view_id: JSON
-  centroid_embedding: String
-  quotes: JSON
-  representative_quotes: JSON
 }
 
 """"""
 type version_conversation {
-  context: String
   created_at: Date
-  description: String
   duration: Float
   id: ID
+  is_audio_processing_finished: Boolean
   is_finished: Boolean
   merged_audio_path: String
   merged_transcript: String
   participant_email: String
   participant_name: String
   participant_user_agent: String
-  processing_message: String
-  processing_status: String
   project_id: JSON
 
-  """This is set if not through PORTAL"""
+  """Unset if PORTAL"""
   source: String
   summary: String
-  title: String
   updated_at: Date
-  is_audio_processing_finished: Boolean
+  is_all_chunks_transcribed: Boolean
   chunks: JSON
-  project_chat_messages: JSON
   project_chats: JSON
+  project_chat_messages: JSON
   replies: JSON
-  tags: JSON
   conversation_segments: JSON
+  tags: JSON
+  processing_status: JSON
 }
 
 """"""
@@ -2689,8 +2246,6 @@ type version_conversation_chunk {
   created_at: Date
   id: ID
   path: String
-  processing_message: String
-  processing_status: String
 
   """This is set if not through PORTAL"""
   source: String
@@ -2703,8 +2258,16 @@ type version_conversation_chunk {
   diarization: JSON
   noise_ratio: Float
   silence_ratio: Float
+  error: String
+  hallucination_reason: String
+  hallucination_score: Float
+  desired_language: String
+  detected_language: String
+  detected_language_confidence: Float
+  raw_transcript: String
+  translation_error: String
   conversation_segments: JSON
-  quotes: JSON
+  processing_status: JSON
 }
 
 """"""
@@ -2729,12 +2292,12 @@ type version_conversation_reply {
 type version_conversation_segment {
   config_id: String
   contextual_transcript: String
+  conversation_id: JSON
   counter: Float
   id: ID
   lightrag_flag: Boolean
   path: String
   transcript: String
-  conversation_id: JSON
   chunks: JSON
 }
 
@@ -2743,15 +2306,6 @@ type version_conversation_segment_conversation_chunk {
   conversation_chunk_id: JSON
   conversation_segment_id: JSON
   id: ID
-}
-
-""""""
-type version_dashboard_announcements_translations {
-  id: ID
-  languages_code: JSON
-  title: String
-  unread_notifications: String
-  mark_all_as_read: String
 }
 
 """"""
@@ -2764,22 +2318,6 @@ type version_directus_sync_id_map {
 }
 
 """"""
-type version_document {
-  context: String
-  created_at: Date
-  description: String
-  id: ID
-  is_processed: Boolean
-  original_filename: String
-  path: String
-  processing_error: String
-  project_id: JSON
-  title: String
-  type: String
-  updated_at: Date
-}
-
-""""""
 type version_insight {
   created_at: Date
   id: ID
@@ -2787,26 +2325,25 @@ type version_insight {
   summary: String
   title: String
   updated_at: Date
-  quotes: JSON
 }
 
 """"""
 type version_languages {
   code: ID
-  name: String
   direction: String
+  name: String
 }
 
 """"""
 type version_processing_status {
-  collection_name: String
   duration_ms: Int
   event: String
   id: ID
-  item_id: String
-  json: String
   message: String
   timestamp: Date
+  conversation_chunk_id: JSON
+  conversation_id: JSON
+  parent: JSON
 }
 
 """"""
@@ -2834,14 +2371,13 @@ type version_project {
   is_project_notification_subscription_allowed: Boolean
   language: String
   name: String
-  pin: String
   updated_at: Date
   get_reply_mode: String
   conversations: JSON
-  tags: JSON
   project_analysis_runs: JSON
   project_chats: JSON
   project_reports: JSON
+  tags: JSON
 }
 
 """"""
@@ -2856,7 +2392,6 @@ type version_project_analysis_run {
   project_id: JSON
   updated_at: Date
   insights: JSON
-  quotes: JSON
   views: JSON
 }
 
@@ -2888,9 +2423,9 @@ type version_project_chat_message {
   id: ID
   message_from: String
   project_chat_id: JSON
+  template_key: String
   text: String
   tokens_count: Int
-  template_key: String
   added_conversations: JSON
   chat_message_metadata: JSON
   used_conversations: JSON
@@ -2969,53 +2504,10 @@ type version_project_tag {
 }
 
 """"""
-type version_quote {
-  conversation_id: JSON
-  created_at: Date
-  embedding: String
-  id: ID
-  insight_id: JSON
-  order: Int
-  project_analysis_run_id: JSON
-  text: String
-  timestamp: Date
-  updated_at: Date
-  aspects: JSON
-  conversation_chunks: JSON
-  representative_aspects: JSON
-}
-
-""""""
-type version_quote_aspect {
-  aspect_id: JSON
-  id: ID
-  quote_id: JSON
-}
-
-""""""
-type version_quote_aspect_1 {
-  aspect_id: JSON
-  id: ID
-  quote_id: JSON
-}
-
-""""""
-type version_quote_conversation_chunk {
-  conversation_chunk_id: JSON
-  id: ID
-  quote_id: JSON
-}
-
-""""""
 type version_view {
   created_at: Date
   id: ID
   name: String
-  processing_completed_at: Date
-  processing_error: String
-  processing_message: String
-  processing_started_at: Date
-  processing_status: String
   project_analysis_run_id: JSON
   summary: String
   updated_at: Date
@@ -3027,13 +2519,6 @@ type view {
   created_at_func: datetime_functions
   id: ID!
   name: String
-  processing_completed_at: Date
-  processing_completed_at_func: datetime_functions
-  processing_error: String
-  processing_message: String
-  processing_started_at: Date
-  processing_started_at_func: datetime_functions
-  processing_status: String
   project_analysis_run_id(filter: project_analysis_run_filter, sort: [String], limit: Int, offset: Int, page: Int, search: String): project_analysis_run
   summary: String
   updated_at: Date
@@ -3053,11 +2538,6 @@ type view_aggregated_count {
   created_at: Int
   id: Int
   name: Int
-  processing_completed_at: Int
-  processing_error: Int
-  processing_message: Int
-  processing_started_at: Int
-  processing_status: Int
   project_analysis_run_id: Int
   summary: Int
   updated_at: Int
@@ -3070,69 +2550,48 @@ type view_mutated {
   data: view
 }
 
-input account_directus_users_filter {
-  account_id: account_filter
-  directus_users_id: directus_users_filter
-  id: number_filter_operators
-  _and: [account_directus_users_filter]
-  _or: [account_directus_users_filter]
-}
-
-input account_filter {
-  date_created: date_filter_operators
-  date_created_func: datetime_function_filter_operators
-  date_updated: date_filter_operators
-  date_updated_func: datetime_function_filter_operators
-  id: string_filter_operators
-  status: string_filter_operators
-  users: account_directus_users_filter
-  users_func: count_function_filter_operators
-  _and: [account_filter]
-  _or: [account_filter]
-}
-
 input announcement_activity_filter {
-  id: string_filter_operators
-  sort: number_filter_operators
-  user_created: directus_users_filter
+  announcement_activity: announcement_filter
   created_at: date_filter_operators
   created_at_func: datetime_function_filter_operators
-  user_updated: directus_users_filter
+  id: string_filter_operators
+  read: boolean_filter_operators
+  sort: number_filter_operators
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
+  user_created: directus_users_filter
   user_id: string_filter_operators
-  read: boolean_filter_operators
-  announcement_activity: announcement_filter
+  user_updated: directus_users_filter
   _and: [announcement_activity_filter]
   _or: [announcement_activity_filter]
 }
 
 input announcement_filter {
-  id: string_filter_operators
-  sort: number_filter_operators
-  user_created: directus_users_filter
   created_at: date_filter_operators
   created_at_func: datetime_function_filter_operators
-  user_updated: directus_users_filter
-  updated_at: date_filter_operators
-  updated_at_func: datetime_function_filter_operators
   expires_at: date_filter_operators
   expires_at_func: datetime_function_filter_operators
+  id: string_filter_operators
   level: string_filter_operators
-  translations: announcement_translations_filter
-  translations_func: count_function_filter_operators
+  sort: number_filter_operators
+  updated_at: date_filter_operators
+  updated_at_func: datetime_function_filter_operators
+  user_created: directus_users_filter
+  user_updated: directus_users_filter
   activity: announcement_activity_filter
   activity_func: count_function_filter_operators
+  translations: announcement_translations_filter
+  translations_func: count_function_filter_operators
   _and: [announcement_filter]
   _or: [announcement_filter]
 }
 
 input announcement_translations_filter {
-  id: number_filter_operators
   announcement_id: announcement_filter
+  id: number_filter_operators
   languages_code: languages_filter
-  title: string_filter_operators
   message: string_filter_operators
+  title: string_filter_operators
   _and: [announcement_translations_filter]
   _or: [announcement_translations_filter]
 }
@@ -3149,11 +2608,6 @@ input aspect_filter {
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
   view_id: view_filter
-  centroid_embedding: string_filter_operators
-  quotes: quote_aspect_filter
-  quotes_func: count_function_filter_operators
-  representative_quotes: quote_aspect_1_filter
-  representative_quotes_func: count_function_filter_operators
   _and: [aspect_filter]
   _or: [aspect_filter]
 }
@@ -3186,8 +2640,6 @@ input conversation_chunk_filter {
   created_at_func: datetime_function_filter_operators
   id: string_filter_operators
   path: string_filter_operators
-  processing_message: string_filter_operators
-  processing_status: string_filter_operators
   source: string_filter_operators
   timestamp: date_filter_operators
   timestamp_func: datetime_function_filter_operators
@@ -3201,48 +2653,54 @@ input conversation_chunk_filter {
   diarization_func: count_function_filter_operators
   noise_ratio: number_filter_operators
   silence_ratio: number_filter_operators
+  error: string_filter_operators
+  hallucination_reason: string_filter_operators
+  hallucination_score: number_filter_operators
+  desired_language: string_filter_operators
+  detected_language: string_filter_operators
+  detected_language_confidence: number_filter_operators
+  raw_transcript: string_filter_operators
+  translation_error: string_filter_operators
   conversation_segments: conversation_segment_conversation_chunk_filter
   conversation_segments_func: count_function_filter_operators
-  quotes: quote_conversation_chunk_filter
-  quotes_func: count_function_filter_operators
+  processing_status: processing_status_filter
+  processing_status_func: count_function_filter_operators
   _and: [conversation_chunk_filter]
   _or: [conversation_chunk_filter]
 }
 
 input conversation_filter {
-  context: string_filter_operators
   created_at: date_filter_operators
   created_at_func: datetime_function_filter_operators
-  description: string_filter_operators
   duration: number_filter_operators
   id: string_filter_operators
+  is_audio_processing_finished: boolean_filter_operators
   is_finished: boolean_filter_operators
   merged_audio_path: string_filter_operators
   merged_transcript: string_filter_operators
   participant_email: string_filter_operators
   participant_name: string_filter_operators
   participant_user_agent: string_filter_operators
-  processing_message: string_filter_operators
-  processing_status: string_filter_operators
   project_id: project_filter
   source: string_filter_operators
   summary: string_filter_operators
-  title: string_filter_operators
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
-  is_audio_processing_finished: boolean_filter_operators
+  is_all_chunks_transcribed: boolean_filter_operators
   chunks: conversation_chunk_filter
   chunks_func: count_function_filter_operators
-  project_chat_messages: project_chat_message_conversation_filter
-  project_chat_messages_func: count_function_filter_operators
   project_chats: project_chat_conversation_filter
   project_chats_func: count_function_filter_operators
+  project_chat_messages: project_chat_message_conversation_filter
+  project_chat_messages_func: count_function_filter_operators
   replies: conversation_reply_filter
   replies_func: count_function_filter_operators
-  tags: conversation_project_tag_filter
-  tags_func: count_function_filter_operators
   conversation_segments: conversation_segment_filter
   conversation_segments_func: count_function_filter_operators
+  tags: conversation_project_tag_filter
+  tags_func: count_function_filter_operators
+  processing_status: processing_status_filter
+  processing_status_func: count_function_filter_operators
   _and: [conversation_filter]
   _or: [conversation_filter]
 }
@@ -3279,12 +2737,12 @@ input conversation_segment_conversation_chunk_filter {
 input conversation_segment_filter {
   config_id: string_filter_operators
   contextual_transcript: string_filter_operators
+  conversation_id: conversation_filter
   counter: number_filter_operators
   id: number_filter_operators
   lightrag_flag: boolean_filter_operators
   path: string_filter_operators
   transcript: string_filter_operators
-  conversation_id: conversation_filter
   chunks: conversation_segment_conversation_chunk_filter
   chunks_func: count_function_filter_operators
   _and: [conversation_segment_filter]
@@ -3295,51 +2753,37 @@ input count_function_filter_operators {
   count: number_filter_operators
 }
 
-input create_account_directus_users_input {
-  account_id: create_account_input
-  directus_users_id: create_directus_users_input
-  id: ID
-}
-
-input create_account_input {
-  date_created: Date
-  date_updated: Date
-  id: ID
-  status: String
-  users: [create_account_directus_users_input]
-}
-
 input create_announcement_activity_input {
-  id: ID
-  sort: Int
-  user_created: create_directus_users_input
-  created_at: Date
-  user_updated: create_directus_users_input
-  updated_at: Date
-  user_id: String
-  read: Boolean
   announcement_activity: create_announcement_input
+  created_at: Date
+  id: ID
+  read: Boolean
+  sort: Int
+  updated_at: Date
+  user_created: create_directus_users_input
+  user_id: String
+  user_updated: create_directus_users_input
 }
 
 input create_announcement_input {
-  id: ID
-  sort: Int
-  user_created: create_directus_users_input
   created_at: Date
-  user_updated: create_directus_users_input
-  updated_at: Date
   expires_at: Date
+  id: ID
   level: String
-  translations: [create_announcement_translations_input]
+  sort: Int
+  updated_at: Date
+  user_created: create_directus_users_input
+  user_updated: create_directus_users_input
   activity: [create_announcement_activity_input]
+  translations: [create_announcement_translations_input]
 }
 
 input create_announcement_translations_input {
-  id: ID
   announcement_id: create_announcement_input
+  id: ID
   languages_code: create_languages_input
-  title: String
   message: String
+  title: String
 }
 
 input create_aspect_input {
@@ -3352,9 +2796,6 @@ input create_aspect_input {
   short_summary: String
   updated_at: Date
   view_id: create_view_input
-  centroid_embedding: String
-  quotes: [create_quote_aspect_input]
-  representative_quotes: [create_quote_aspect_1_input]
 }
 
 input create_conversation_chunk_input {
@@ -3362,8 +2803,6 @@ input create_conversation_chunk_input {
   created_at: Date
   id: ID
   path: String
-  processing_message: String
-  processing_status: String
 
   """This is set if not through PORTAL"""
   source: String
@@ -3376,38 +2815,43 @@ input create_conversation_chunk_input {
   diarization: JSON
   noise_ratio: Float
   silence_ratio: Float
+  error: String
+  hallucination_reason: String
+  hallucination_score: Float
+  desired_language: String
+  detected_language: String
+  detected_language_confidence: Float
+  raw_transcript: String
+  translation_error: String
   conversation_segments: [create_conversation_segment_conversation_chunk_input]
-  quotes: [create_quote_conversation_chunk_input]
+  processing_status: [create_processing_status_input]
 }
 
 input create_conversation_input {
-  context: String
   created_at: Date
-  description: String
   duration: Float
   id: ID
+  is_audio_processing_finished: Boolean
   is_finished: Boolean
   merged_audio_path: String
   merged_transcript: String
   participant_email: String
   participant_name: String
   participant_user_agent: String
-  processing_message: String
-  processing_status: String
   project_id: create_project_input
 
-  """This is set if not through PORTAL"""
+  """Unset if PORTAL"""
   source: String
   summary: String
-  title: String
   updated_at: Date
-  is_audio_processing_finished: Boolean
+  is_all_chunks_transcribed: Boolean
   chunks: [create_conversation_chunk_input]
-  project_chat_messages: [create_project_chat_message_conversation_input]
   project_chats: [create_project_chat_conversation_input]
+  project_chat_messages: [create_project_chat_message_conversation_input]
   replies: [create_conversation_reply_input]
-  tags: [create_conversation_project_tag_input]
   conversation_segments: [create_conversation_segment_input]
+  tags: [create_conversation_project_tag_input]
+  processing_status: [create_processing_status_input]
 }
 
 input create_conversation_project_tag_input {
@@ -3435,21 +2879,13 @@ input create_conversation_segment_conversation_chunk_input {
 input create_conversation_segment_input {
   config_id: String
   contextual_transcript: String
+  conversation_id: create_conversation_input
   counter: Float
   id: ID
   lightrag_flag: Boolean
   path: String
   transcript: String
-  conversation_id: create_conversation_input
   chunks: [create_conversation_segment_conversation_chunk_input]
-}
-
-input create_dashboard_announcements_translations_input {
-  id: ID
-  languages_code: create_languages_input
-  title: String
-  unread_notifications: String
-  mark_all_as_read: String
 }
 
 input create_directus_access_input {
@@ -3573,24 +3009,8 @@ input create_directus_users_input {
   If this is set, user won't be able to create projects using the Dashboard. Limitation: Internally / using the API they still can
   """
   disable_create_project: Boolean
-  accounts: [create_account_directus_users_input]
   projects: [create_project_input]
   policies: [create_directus_access_input]
-}
-
-input create_document_input {
-  context: String
-  created_at: Date
-  description: String
-  id: ID
-  is_processed: Boolean!
-  original_filename: String
-  path: String
-  processing_error: String
-  project_id: create_project_input
-  title: String
-  type: String
-  updated_at: Date
 }
 
 input create_insight_input {
@@ -3600,24 +3020,23 @@ input create_insight_input {
   summary: String
   title: String
   updated_at: Date
-  quotes: [create_quote_input]
 }
 
 input create_languages_input {
   code: ID!
-  name: String
   direction: String
+  name: String
 }
 
 input create_processing_status_input {
-  collection_name: String
   duration_ms: Int
   event: String
   id: ID
-  item_id: String
-  json: String
   message: String
   timestamp: Date
+  conversation_chunk_id: create_conversation_chunk_input
+  conversation_id: create_conversation_input
+  parent: create_processing_status_input
 }
 
 input create_project_analysis_run_input {
@@ -3631,7 +3050,6 @@ input create_project_analysis_run_input {
   project_id: create_project_input
   updated_at: Date
   insights: [create_insight_input]
-  quotes: [create_quote_input]
   views: [create_view_input]
 }
 
@@ -3672,9 +3090,9 @@ input create_project_chat_message_input {
   id: ID
   message_from: String
   project_chat_id: create_project_chat_input
+  template_key: String
   text: String
   tokens_count: Int
-  template_key: String
   added_conversations: [create_project_chat_message_conversation_1_input]
   chat_message_metadata: [create_project_chat_message_metadata_input]
   used_conversations: [create_project_chat_message_conversation_input]
@@ -3714,14 +3132,13 @@ input create_project_input {
   is_project_notification_subscription_allowed: Boolean
   language: String
   name: String
-  pin: String
   updated_at: Date
   get_reply_mode: String
   conversations: [create_conversation_input]
-  tags: [create_project_tag_input]
   project_analysis_runs: [create_project_analysis_run_input]
   project_chats: [create_project_chat_input]
   project_reports: [create_project_report_input]
+  tags: [create_project_tag_input]
 }
 
 input create_project_report_input {
@@ -3767,63 +3184,14 @@ input create_project_tag_input {
   conversations: [create_conversation_project_tag_input]
 }
 
-input create_quote_aspect_1_input {
-  aspect_id: create_aspect_input
-  id: ID
-  quote_id: create_quote_input
-}
-
-input create_quote_aspect_input {
-  aspect_id: create_aspect_input
-  id: ID
-  quote_id: create_quote_input
-}
-
-input create_quote_conversation_chunk_input {
-  conversation_chunk_id: create_conversation_chunk_input
-  id: ID
-  quote_id: create_quote_input
-}
-
-input create_quote_input {
-  conversation_id: create_conversation_input
-  created_at: Date
-  embedding: String
-  id: ID!
-  insight_id: create_insight_input
-  order: Int
-  project_analysis_run_id: create_project_analysis_run_input
-  text: String!
-  timestamp: Date
-  updated_at: Date
-  aspects: [create_quote_aspect_input]
-  conversation_chunks: [create_quote_conversation_chunk_input]
-  representative_aspects: [create_quote_aspect_1_input]
-}
-
 input create_view_input {
   created_at: Date
   id: ID
   name: String
-  processing_completed_at: Date
-  processing_error: String
-  processing_message: String
-  processing_started_at: Date
-  processing_status: String
   project_analysis_run_id: create_project_analysis_run_input
   summary: String
   updated_at: Date
   aspects: [create_aspect_input]
-}
-
-input dashboard_announcements_translations_filter {
-  id: number_filter_operators
-  languages_code: languages_filter
-  title: string_filter_operators
-  unread_notifications: string_filter_operators
-  mark_all_as_read: string_filter_operators
-  _and: [dashboard_announcements_translations_filter]
-  _or: [dashboard_announcements_translations_filter]
 }
 
 input date_filter_operators {
@@ -4111,8 +3479,6 @@ input directus_users_filter {
   theme_dark_overrides: string_filter_operators
   theme_dark_overrides_func: count_function_filter_operators
   disable_create_project: boolean_filter_operators
-  accounts: account_directus_users_filter
-  accounts_func: count_function_filter_operators
   projects: project_filter
   projects_func: count_function_filter_operators
   policies: directus_access_filter
@@ -4140,25 +3506,6 @@ input directus_versions_filter {
   _or: [directus_versions_filter]
 }
 
-input document_filter {
-  context: string_filter_operators
-  created_at: date_filter_operators
-  created_at_func: datetime_function_filter_operators
-  description: string_filter_operators
-  id: string_filter_operators
-  is_processed: boolean_filter_operators
-  original_filename: string_filter_operators
-  path: string_filter_operators
-  processing_error: string_filter_operators
-  project_id: project_filter
-  title: string_filter_operators
-  type: string_filter_operators
-  updated_at: date_filter_operators
-  updated_at_func: datetime_function_filter_operators
-  _and: [document_filter]
-  _or: [document_filter]
-}
-
 input hash_filter_operators {
   _null: Boolean
   _nnull: Boolean
@@ -4175,16 +3522,14 @@ input insight_filter {
   title: string_filter_operators
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
-  quotes: quote_filter
-  quotes_func: count_function_filter_operators
   _and: [insight_filter]
   _or: [insight_filter]
 }
 
 input languages_filter {
   code: string_filter_operators
-  name: string_filter_operators
   direction: string_filter_operators
+  name: string_filter_operators
   _and: [languages_filter]
   _or: [languages_filter]
 }
@@ -4205,15 +3550,15 @@ input number_filter_operators {
 }
 
 input processing_status_filter {
-  collection_name: string_filter_operators
   duration_ms: number_filter_operators
   event: string_filter_operators
   id: big_int_filter_operators
-  item_id: string_filter_operators
-  json: string_filter_operators
   message: string_filter_operators
   timestamp: date_filter_operators
   timestamp_func: datetime_function_filter_operators
+  conversation_chunk_id: conversation_chunk_filter
+  conversation_id: conversation_filter
+  parent: processing_status_filter
   _and: [processing_status_filter]
   _or: [processing_status_filter]
 }
@@ -4234,8 +3579,6 @@ input project_analysis_run_filter {
   updated_at_func: datetime_function_filter_operators
   insights: insight_filter
   insights_func: count_function_filter_operators
-  quotes: quote_filter
-  quotes_func: count_function_filter_operators
   views: view_filter
   views_func: count_function_filter_operators
   _and: [project_analysis_run_filter]
@@ -4293,9 +3636,9 @@ input project_chat_message_filter {
   id: string_filter_operators
   message_from: string_filter_operators
   project_chat_id: project_chat_filter
+  template_key: string_filter_operators
   text: string_filter_operators
   tokens_count: number_filter_operators
-  template_key: string_filter_operators
   added_conversations: project_chat_message_conversation_1_filter
   added_conversations_func: count_function_filter_operators
   chat_message_metadata: project_chat_message_metadata_filter
@@ -4340,20 +3683,19 @@ input project_filter {
   is_project_notification_subscription_allowed: boolean_filter_operators
   language: string_filter_operators
   name: string_filter_operators
-  pin: string_filter_operators
   updated_at: date_filter_operators
   updated_at_func: datetime_function_filter_operators
   get_reply_mode: string_filter_operators
   conversations: conversation_filter
   conversations_func: count_function_filter_operators
-  tags: project_tag_filter
-  tags_func: count_function_filter_operators
   project_analysis_runs: project_analysis_run_filter
   project_analysis_runs_func: count_function_filter_operators
   project_chats: project_chat_filter
   project_chats_func: count_function_filter_operators
   project_reports: project_report_filter
   project_reports_func: count_function_filter_operators
+  tags: project_tag_filter
+  tags_func: count_function_filter_operators
   _and: [project_filter]
   _or: [project_filter]
 }
@@ -4418,54 +3760,6 @@ input project_tag_filter {
   _or: [project_tag_filter]
 }
 
-input quote_aspect_1_filter {
-  aspect_id: aspect_filter
-  id: number_filter_operators
-  quote_id: quote_filter
-  _and: [quote_aspect_1_filter]
-  _or: [quote_aspect_1_filter]
-}
-
-input quote_aspect_filter {
-  aspect_id: aspect_filter
-  id: number_filter_operators
-  quote_id: quote_filter
-  _and: [quote_aspect_filter]
-  _or: [quote_aspect_filter]
-}
-
-input quote_conversation_chunk_filter {
-  conversation_chunk_id: conversation_chunk_filter
-  id: number_filter_operators
-  quote_id: quote_filter
-  _and: [quote_conversation_chunk_filter]
-  _or: [quote_conversation_chunk_filter]
-}
-
-input quote_filter {
-  conversation_id: conversation_filter
-  created_at: date_filter_operators
-  created_at_func: datetime_function_filter_operators
-  embedding: string_filter_operators
-  id: string_filter_operators
-  insight_id: insight_filter
-  order: number_filter_operators
-  project_analysis_run_id: project_analysis_run_filter
-  text: string_filter_operators
-  timestamp: date_filter_operators
-  timestamp_func: datetime_function_filter_operators
-  updated_at: date_filter_operators
-  updated_at_func: datetime_function_filter_operators
-  aspects: quote_aspect_filter
-  aspects_func: count_function_filter_operators
-  conversation_chunks: quote_conversation_chunk_filter
-  conversation_chunks_func: count_function_filter_operators
-  representative_aspects: quote_aspect_1_filter
-  representative_aspects_func: count_function_filter_operators
-  _and: [quote_filter]
-  _or: [quote_filter]
-}
-
 input string_filter_operators {
   _eq: String
   _neq: String
@@ -4488,51 +3782,37 @@ input string_filter_operators {
   _nempty: Boolean
 }
 
-input update_account_directus_users_input {
-  account_id: update_account_input
-  directus_users_id: update_directus_users_input
-  id: ID
-}
-
-input update_account_input {
-  date_created: Date
-  date_updated: Date
-  id: ID
-  status: String
-  users: [update_account_directus_users_input]
-}
-
 input update_announcement_activity_input {
-  id: ID
-  sort: Int
-  user_created: update_directus_users_input
-  created_at: Date
-  user_updated: update_directus_users_input
-  updated_at: Date
-  user_id: String
-  read: Boolean
   announcement_activity: update_announcement_input
+  created_at: Date
+  id: ID
+  read: Boolean
+  sort: Int
+  updated_at: Date
+  user_created: update_directus_users_input
+  user_id: String
+  user_updated: update_directus_users_input
 }
 
 input update_announcement_input {
-  id: ID
-  sort: Int
-  user_created: update_directus_users_input
   created_at: Date
-  user_updated: update_directus_users_input
-  updated_at: Date
   expires_at: Date
+  id: ID
   level: String
-  translations: [update_announcement_translations_input]
+  sort: Int
+  updated_at: Date
+  user_created: update_directus_users_input
+  user_updated: update_directus_users_input
   activity: [update_announcement_activity_input]
+  translations: [update_announcement_translations_input]
 }
 
 input update_announcement_translations_input {
-  id: ID
   announcement_id: update_announcement_input
+  id: ID
   languages_code: update_languages_input
-  title: String
   message: String
+  title: String
 }
 
 input update_aspect_input {
@@ -4545,9 +3825,6 @@ input update_aspect_input {
   short_summary: String
   updated_at: Date
   view_id: update_view_input
-  centroid_embedding: String
-  quotes: [update_quote_aspect_input]
-  representative_quotes: [update_quote_aspect_1_input]
 }
 
 input update_conversation_chunk_input {
@@ -4555,8 +3832,6 @@ input update_conversation_chunk_input {
   created_at: Date
   id: ID
   path: String
-  processing_message: String
-  processing_status: String
 
   """This is set if not through PORTAL"""
   source: String
@@ -4569,38 +3844,43 @@ input update_conversation_chunk_input {
   diarization: JSON
   noise_ratio: Float
   silence_ratio: Float
+  error: String
+  hallucination_reason: String
+  hallucination_score: Float
+  desired_language: String
+  detected_language: String
+  detected_language_confidence: Float
+  raw_transcript: String
+  translation_error: String
   conversation_segments: [update_conversation_segment_conversation_chunk_input]
-  quotes: [update_quote_conversation_chunk_input]
+  processing_status: [update_processing_status_input]
 }
 
 input update_conversation_input {
-  context: String
   created_at: Date
-  description: String
   duration: Float
   id: ID
+  is_audio_processing_finished: Boolean
   is_finished: Boolean
   merged_audio_path: String
   merged_transcript: String
   participant_email: String
   participant_name: String
   participant_user_agent: String
-  processing_message: String
-  processing_status: String
   project_id: update_project_input
 
-  """This is set if not through PORTAL"""
+  """Unset if PORTAL"""
   source: String
   summary: String
-  title: String
   updated_at: Date
-  is_audio_processing_finished: Boolean
+  is_all_chunks_transcribed: Boolean
   chunks: [update_conversation_chunk_input]
-  project_chat_messages: [update_project_chat_message_conversation_input]
   project_chats: [update_project_chat_conversation_input]
+  project_chat_messages: [update_project_chat_message_conversation_input]
   replies: [update_conversation_reply_input]
-  tags: [update_conversation_project_tag_input]
   conversation_segments: [update_conversation_segment_input]
+  tags: [update_conversation_project_tag_input]
+  processing_status: [update_processing_status_input]
 }
 
 input update_conversation_project_tag_input {
@@ -4628,21 +3908,13 @@ input update_conversation_segment_conversation_chunk_input {
 input update_conversation_segment_input {
   config_id: String
   contextual_transcript: String
+  conversation_id: update_conversation_input
   counter: Float
   id: ID
   lightrag_flag: Boolean
   path: String
   transcript: String
-  conversation_id: update_conversation_input
   chunks: [update_conversation_segment_conversation_chunk_input]
-}
-
-input update_dashboard_announcements_translations_input {
-  id: ID
-  languages_code: update_languages_input
-  title: String
-  unread_notifications: String
-  mark_all_as_read: String
 }
 
 input update_directus_access_input {
@@ -4766,24 +4038,8 @@ input update_directus_users_input {
   If this is set, user won't be able to create projects using the Dashboard. Limitation: Internally / using the API they still can
   """
   disable_create_project: Boolean
-  accounts: [update_account_directus_users_input]
   projects: [update_project_input]
   policies: [update_directus_access_input]
-}
-
-input update_document_input {
-  context: String
-  created_at: Date
-  description: String
-  id: ID
-  is_processed: Boolean
-  original_filename: String
-  path: String
-  processing_error: String
-  project_id: update_project_input
-  title: String
-  type: String
-  updated_at: Date
 }
 
 input update_insight_input {
@@ -4793,24 +4049,23 @@ input update_insight_input {
   summary: String
   title: String
   updated_at: Date
-  quotes: [update_quote_input]
 }
 
 input update_languages_input {
   code: ID
-  name: String
   direction: String
+  name: String
 }
 
 input update_processing_status_input {
-  collection_name: String
   duration_ms: Int
   event: String
   id: ID
-  item_id: String
-  json: String
   message: String
   timestamp: Date
+  conversation_chunk_id: update_conversation_chunk_input
+  conversation_id: update_conversation_input
+  parent: update_processing_status_input
 }
 
 input update_project_analysis_run_input {
@@ -4824,7 +4079,6 @@ input update_project_analysis_run_input {
   project_id: update_project_input
   updated_at: Date
   insights: [update_insight_input]
-  quotes: [update_quote_input]
   views: [update_view_input]
 }
 
@@ -4865,9 +4119,9 @@ input update_project_chat_message_input {
   id: ID
   message_from: String
   project_chat_id: update_project_chat_input
+  template_key: String
   text: String
   tokens_count: Int
-  template_key: String
   added_conversations: [update_project_chat_message_conversation_1_input]
   chat_message_metadata: [update_project_chat_message_metadata_input]
   used_conversations: [update_project_chat_message_conversation_input]
@@ -4907,14 +4161,13 @@ input update_project_input {
   is_project_notification_subscription_allowed: Boolean
   language: String
   name: String
-  pin: String
   updated_at: Date
   get_reply_mode: String
   conversations: [update_conversation_input]
-  tags: [update_project_tag_input]
   project_analysis_runs: [update_project_analysis_run_input]
   project_chats: [update_project_chat_input]
   project_reports: [update_project_report_input]
+  tags: [update_project_tag_input]
 }
 
 input update_project_report_input {
@@ -4960,49 +4213,10 @@ input update_project_tag_input {
   conversations: [update_conversation_project_tag_input]
 }
 
-input update_quote_aspect_1_input {
-  aspect_id: update_aspect_input
-  id: ID
-  quote_id: update_quote_input
-}
-
-input update_quote_aspect_input {
-  aspect_id: update_aspect_input
-  id: ID
-  quote_id: update_quote_input
-}
-
-input update_quote_conversation_chunk_input {
-  conversation_chunk_id: update_conversation_chunk_input
-  id: ID
-  quote_id: update_quote_input
-}
-
-input update_quote_input {
-  conversation_id: update_conversation_input
-  created_at: Date
-  embedding: String
-  id: ID
-  insight_id: update_insight_input
-  order: Int
-  project_analysis_run_id: update_project_analysis_run_input
-  text: String
-  timestamp: Date
-  updated_at: Date
-  aspects: [update_quote_aspect_input]
-  conversation_chunks: [update_quote_conversation_chunk_input]
-  representative_aspects: [update_quote_aspect_1_input]
-}
-
 input update_view_input {
   created_at: Date
   id: ID
   name: String
-  processing_completed_at: Date
-  processing_error: String
-  processing_message: String
-  processing_started_at: Date
-  processing_status: String
   project_analysis_run_id: update_project_analysis_run_input
   summary: String
   updated_at: Date
@@ -5014,13 +4228,6 @@ input view_filter {
   created_at_func: datetime_function_filter_operators
   id: string_filter_operators
   name: string_filter_operators
-  processing_completed_at: date_filter_operators
-  processing_completed_at_func: datetime_function_filter_operators
-  processing_error: string_filter_operators
-  processing_message: string_filter_operators
-  processing_started_at: date_filter_operators
-  processing_started_at_func: datetime_function_filter_operators
-  processing_status: string_filter_operators
   project_analysis_run_id: project_analysis_run_filter
   summary: string_filter_operators
   updated_at: date_filter_operators
