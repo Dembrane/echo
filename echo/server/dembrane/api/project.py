@@ -11,11 +11,7 @@ from sqlalchemy.orm import Session
 from fastapi.responses import StreamingResponse
 
 from dembrane.tasks import task_create_view, task_create_project_library
-from dembrane.utils import (
-    generate_uuid,
-    get_safe_filename,
-    generate_4_digit_pin,
-)
+from dembrane.utils import generate_uuid, get_safe_filename
 from dembrane.config import BASE_DIR
 from dembrane.schemas import (
     ProjectSchema,

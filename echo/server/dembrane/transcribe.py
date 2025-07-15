@@ -173,6 +173,7 @@ def _build_whisper_prompt(conversation: dict, language: str) -> str:
 
 def _should_use_runpod(language: str) -> bool:
     """Decide whether RunPod should be used for the given language."""
+    logger.debug(f"the language str is unused: {language}")
     if not ENABLE_RUNPOD_WHISPER_TRANSCRIPTION:
         return False
     # Removed English + override logic - now use RunPod for all languages

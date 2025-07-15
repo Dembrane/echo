@@ -395,25 +395,7 @@ export const ConversationStatusIndicators = ({
           conversation.is_finished && conversation.is_audio_processing_finished
         ) && (
           <Tooltip
-            label={t`This conversation is still being processed. It will be available for analysis and chat shortly.`}
-          >
-            <Badge size="xs" color="violet" variant="light">
-              <Group gap="xs">
-                <Trans>Processing</Trans>
-                <IconInfoCircle size={12} />
-              </Group>
-            </Badge>
-          </Tooltip>
-        )}
-
-      {/* if enhanced audio processing is disabled*/}
-      {!project?.is_enhanced_audio_processing_enabled &&
-        !conversation.is_finished && (
-          <Tooltip
-            label={
-              conversation.processing_message ??
-              t`This conversation is still being processed. It will be available for analysis and chat shortly.`
-            }
+            label={t`This conversation is still being processed. It will be available for analysis and chat shortly.` + "(for enhanced audio processing)"}
           >
             <Badge size="xs" color="violet" variant="light">
               <Group gap="xs">
@@ -432,15 +414,16 @@ export const ConversationStatusIndicators = ({
 
       {!hasContent &&
         conversation.is_finished === true &&
-        conversation.processing_status !== "FAILED" && (
+        conversation.is_all_chunks_processed === true &&
+        conversation.error == null && (
           <Badge size="xs" color="red" variant="light">
             {t`Empty`}
           </Badge>
         )}
 
-      {conversation.processing_status === "FAILED" && (
+      {conversation.error != null  && (
         <Tooltip
-          label={t`Processing failed for this conversation. This conversation will not be available for analysis and chat. Last Known Status: ${conversation.processing_status ?? "Unknown"}`}
+          label={t`Processing failed for this conversation. This conversation will not be available for analysis and chat.`}
         >
           <Badge size="xs" color="red" variant="light">
             <Group gap="xs">

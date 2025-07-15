@@ -1,5 +1,5 @@
 # conversation.py
-from typing import TYPE_CHECKING, Any, List, Tuple, Optional
+from typing import TYPE_CHECKING, Any, List, Optional
 from datetime import datetime
 
 from fastapi import UploadFile

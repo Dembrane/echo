@@ -9,7 +9,6 @@ from dembrane.config import (
     AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX,
 )
 from dembrane.directus import directus
-from dembrane.processing_status_utils import ProcessingStatus
 from dembrane.audio_lightrag.pipelines.audio_etl_pipeline import AudioETLPipeline
 from dembrane.audio_lightrag.pipelines.directus_etl_pipeline import DirectusETLPipeline
 from dembrane.audio_lightrag.pipelines.contextual_chunk_etl_pipeline import (

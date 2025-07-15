@@ -495,7 +495,7 @@ def task_process_runpod_chunk_response(chunk_id: str, status_link: str) -> None:
             except Exception as e:
                 logger.error(f"Error parsing response for chunk {chunk_id}: {e}")
                 logger.error(f"Error type: {type(e)}")
-                logger.error(f"Error traceback:", exc_info=True)
+                logger.error("Error traceback:", exc_info=True)
                 # Log the raw response for debugging
                 logger.error(f"Raw response text: {response.text}")
                 logger.error(f"Response status: {response.status_code}")

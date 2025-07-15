@@ -62,6 +62,7 @@ type Conversation = {
   updated_at?: string | null;
   merged_transcript?: string | null;
   merged_audio_path?: string | null;
+  error?: string | null;
 };
 
 type ConversationChunk = {

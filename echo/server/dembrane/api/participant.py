@@ -5,9 +5,6 @@ from datetime import datetime
 from fastapi import Form, APIRouter, UploadFile, HTTPException
 from pydantic import BaseModel
 
-from dembrane.schemas import (
-    ProjectTagSchema,
-)
 from dembrane.service import project_service, conversation_service
 from dembrane.directus import directus
 from dembrane.service.project import ProjectNotFoundException

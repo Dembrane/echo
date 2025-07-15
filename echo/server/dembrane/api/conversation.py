@@ -34,7 +34,6 @@ from dembrane.api.exceptions import (
 )
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.conversation_health import get_health_status
-from dembrane.processing_status_utils import ProcessingStatus
 
 logger = getLogger("api.conversation")
 ConversationRouter = APIRouter(tags=["conversation"])
