@@ -14,10 +14,10 @@
         }
       }
     },
-    "resolve": "5f9aad15-ff17-4cb5-8ab8-e9ef169470fd",
-    "reject": "435e2a60-3c92-4225-91aa-45156884ac2b",
+    "resolve": "3dbf2ea1-17f8-4bde-aa89-43278fe9a00f",
+    "reject": "eaeb2c39-32e0-428d-ad03-ff0e6052adcc",
     "flow": "17703446-fef0-49e9-bdc4-385db1311137",
-    "_syncId": "11fdc301-7101-40f3-bc82-af3b472fd914"
+    "_syncId": "5bea9e07-e6f0-41c6-821d-b426dec3427c"
   },
   {
     "name": "Check Report Language",
@@ -40,10 +40,10 @@
       },
       "collection": "project_report"
     },
-    "resolve": "6fba7361-0b76-40b0-b4ae-ef094d896bb6",
+    "resolve": "efb3982e-5703-4c07-8982-a6e1b5218e4a",
     "reject": null,
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
-    "_syncId": "7be4966b-477b-4961-a341-26c663f9d27a"
+    "_syncId": "d154ee34-0931-43f3-aaca-9168f88fa04b"
   },
   {
     "name": "Dutch",
@@ -60,10 +60,10 @@
         }
       }
     },
-    "resolve": "21b8e36a-a71d-4912-b428-9ee67c1df1ba",
-    "reject": "13856746-f10a-402a-bf4b-68a4213b6c21",
+    "resolve": "34fb6ee5-2813-484a-a1cc-f97de097509b",
+    "reject": "8d8d787a-dbc4-44f9-9ab4-28e3f3d5f31c",
     "flow": "17703446-fef0-49e9-bdc4-385db1311137",
-    "_syncId": "435e2a60-3c92-4225-91aa-45156884ac2b"
+    "_syncId": "eaeb2c39-32e0-428d-ad03-ff0e6052adcc"
   },
   {
     "name": "Email Send Operation Failed",
@@ -77,7 +77,7 @@
     "resolve": null,
     "reject": null,
     "flow": "17703446-fef0-49e9-bdc4-385db1311137",
-    "_syncId": "16319ea2-0cdf-4e50-9e83-d62cd9f29d71"
+    "_syncId": "920bd181-b2a2-4f0d-94dc-3b1a08c3f4ef"
   },
   {
     "name": "Email Send Operation Failed Dutch",
@@ -91,7 +91,7 @@
     "resolve": null,
     "reject": null,
     "flow": "17703446-fef0-49e9-bdc4-385db1311137",
-    "_syncId": "97bc1561-dd12-4fbf-9ebd-4b44c06d4fb9"
+    "_syncId": "84c38ea6-5d15-429f-8c24-9485d54ba7be"
   },
   {
     "name": "failed",
@@ -105,7 +105,7 @@
     "resolve": null,
     "reject": null,
     "flow": "17703446-fef0-49e9-bdc4-385db1311137",
-    "_syncId": "13856746-f10a-402a-bf4b-68a4213b6c21"
+    "_syncId": "8d8d787a-dbc4-44f9-9ab4-28e3f3d5f31c"
   },
   {
     "name": "Filter Emails",
@@ -116,10 +116,10 @@
     "options": {
       "code": "module.exports = async function(data) {\n\n    const submissions = data.get_all_participants;\n    \n    // Filter submissions to only include those where email_opt_in is true\n    const filteredSubmissions = submissions.filter(sub => sub.email_opt_in === true);\n\n    // Create an array with email, project_id and an email_opt_out token for each submission\n    const result = filteredSubmissions.map(sub => ({\n        project_name: data.project_data[0].name || '',\n\t\tdefault_conversation_title: data.project_data[0].default_conversation_title || '',\n\t\tconversation_name: sub.conversation_id.participant_name || '',\n        email: sub.email,\n        project_id: sub.project_id || '',\n        token: sub.email_opt_out_token,\n        language: data.check_report_language[0].language || 'empty',\n        ADMIN_BASE_URL: \"{{ $env.ADMIN_BASE_URL }}\" || \"http://localhost:5173\",\n        PARTICIPANT_BASE_URL: \"{{ $env.PARTICIPANT_BASE_URL }}\" || \"http://localhost:5174\",        \n    }));\n    \n    return result;\n};"
     },
-    "resolve": "b10f5a01-3355-4884-8e37-308caf3c56d7",
+    "resolve": "e101f00d-2fb8-4f40-9e0e-4d24da5bb1e9",
     "reject": null,
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
-    "_syncId": "6fba7361-0b76-40b0-b4ae-ef094d896bb6"
+    "_syncId": "efb3982e-5703-4c07-8982-a6e1b5218e4a"
   },
   {
     "name": "Get All Participants",
@@ -143,10 +143,10 @@
       },
       "collection": "project_report_notification_participants"
     },
-    "resolve": "7be4966b-477b-4961-a341-26c663f9d27a",
+    "resolve": "d154ee34-0931-43f3-aaca-9168f88fa04b",
     "reject": null,
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
-    "_syncId": "dad81699-20ef-435d-a3e3-a7c09ed97c42"
+    "_syncId": "107ebc18-7d2d-4299-9d98-b7d1e7322b7c"
   },
   {
     "name": "log environment vars",
@@ -160,7 +160,7 @@
     "resolve": null,
     "reject": null,
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
-    "_syncId": "9c98061e-46a1-4947-804d-0cddfdf05b69"
+    "_syncId": "da5f4cce-eff0-426d-a207-d61366899d1f"
   },
   {
     "name": "PROCEED_ONLY_IF \"published\" in payload",
@@ -179,10 +179,10 @@
         }
       }
     },
-    "resolve": "57fb6535-6c26-413d-858d-9ccf89846205",
-    "reject": "60af30e5-dd72-422c-b51c-8bff6d5bc614",
+    "resolve": "ea051ae4-776f-490b-8b02-eaf4099243ef",
+    "reject": "84852456-3f3a-4906-be94-8b750159883b",
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
-    "_syncId": "cb0759e3-a837-4f4b-9f61-276f17958f2b"
+    "_syncId": "239c6fea-242d-4b7d-b854-c99d2fe43cf3"
   },
   {
     "name": "Project Data",
@@ -202,10 +202,10 @@
         }
       }
     },
-    "resolve": "dad81699-20ef-435d-a3e3-a7c09ed97c42",
+    "resolve": "107ebc18-7d2d-4299-9d98-b7d1e7322b7c",
     "reject": null,
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
-    "_syncId": "57fb6535-6c26-413d-858d-9ccf89846205"
+    "_syncId": "ea051ae4-776f-490b-8b02-eaf4099243ef"
   },
   {
     "name": "Report Not Published",
@@ -219,7 +219,7 @@
     "resolve": null,
     "reject": null,
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
-    "_syncId": "60af30e5-dd72-422c-b51c-8bff6d5bc614"
+    "_syncId": "84852456-3f3a-4906-be94-8b750159883b"
   },
   {
     "name": "Send Email Dutch",
@@ -248,9 +248,9 @@
       ]
     },
     "resolve": null,
-    "reject": "97bc1561-dd12-4fbf-9ebd-4b44c06d4fb9",
+    "reject": "84c38ea6-5d15-429f-8c24-9485d54ba7be",
     "flow": "17703446-fef0-49e9-bdc4-385db1311137",
-    "_syncId": "21b8e36a-a71d-4912-b428-9ee67c1df1ba"
+    "_syncId": "34fb6ee5-2813-484a-a1cc-f97de097509b"
   },
   {
     "name": "Send Email English",
@@ -279,9 +279,9 @@
       ]
     },
     "resolve": null,
-    "reject": "16319ea2-0cdf-4e50-9e83-d62cd9f29d71",
+    "reject": "920bd181-b2a2-4f0d-94dc-3b1a08c3f4ef",
     "flow": "17703446-fef0-49e9-bdc4-385db1311137",
-    "_syncId": "5f9aad15-ff17-4cb5-8ab8-e9ef169470fd"
+    "_syncId": "3dbf2ea1-17f8-4bde-aa89-43278fe9a00f"
   },
   {
     "name": "Trigger Email Flow",
@@ -297,6 +297,6 @@
     "resolve": null,
     "reject": null,
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
-    "_syncId": "b10f5a01-3355-4884-8e37-308caf3c56d7"
+    "_syncId": "e101f00d-2fb8-4f40-9e0e-4d24da5bb1e9"
   }
 ]
