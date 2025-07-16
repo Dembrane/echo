@@ -10,22 +10,24 @@ url=""
 username=""
 password=""
 action=""
+force="false"
 
 # Function to show usage
 show_usage() {
-    echo "Usage: $0 [-u URL] [-e USERNAME] [-p PASSWORD] ACTION"
+    echo "Usage: $0 [-u URL] [-e USERNAME] [-p PASSWORD] [-f] ACTION"
     echo "Actions: push, pull, diff"
-    echo ""
+    echo "Flags: -f, --force"
     echo "If parameters are not provided, you will be prompted for them."
     exit 1
 }
 
 # Parse command line arguments
-while getopts "u:e:p:h" opt; do
+while getopts "u:e:p:fv:h" opt; do
     case $opt in
         u) url="$OPTARG" ;;
         e) username="$OPTARG" ;;
         p) password="$OPTARG" ;;
+        f) force="true" ;;
         h) show_usage ;;
         ?) show_usage ;;
     esac
@@ -71,4 +73,8 @@ if [ -z "$password" ]; then
 fi
 
 # Execute directus-sync command
-npx -y directus-sync -u "$url" -e "$username" -p "$password" "$action" -d
+if [ "$force" = "true" ]; then
+    npx -y directus-sync -u "$url" -e "$username" -p "$password" "$action" -d -f
+else
+    npx -y directus-sync -u "$url" -e "$username" -p "$password" "$action" -d
+fi

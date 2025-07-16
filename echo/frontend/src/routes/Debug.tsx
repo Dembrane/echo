@@ -18,7 +18,6 @@ import { useParams } from "react-router-dom";
 import {
   useConversationById,
   useCurrentUser,
-  useProcessingStatus,
   useProjectById,
   useProjectChats,
 } from "@/lib/query";
@@ -767,14 +766,6 @@ export default function DebugPage() {
     },
   });
 
-  const {
-    data: conversationProcessingStatus,
-    refetch: refetchConversationProcessingStatus,
-  } = useProcessingStatus({
-    collectionName: "conversation",
-    itemId: currentConversationId!,
-  });
-
   const variables = {
     DEBUG_MODE: true,
     BUILD_VERSION,
@@ -832,14 +823,13 @@ export default function DebugPage() {
       <Stack>
         <Title order={1}>Conversation</Title>
         <pre>{JSON.stringify(conversation, null, 2)}</pre>
-        <Divider />
-        <Group>
+        {/* <Group>
           <Title order={3}>Logs</Title>
           <Button onClick={() => refetchConversationProcessingStatus()}>
             Refetch Logs
           </Button>
         </Group>
-        <LogTable data={conversationProcessingStatus ?? []} />
+        <LogTable data={conversationProcessingStatus ?? []} /> */}
       </Stack>
       <Divider />
       <Stack>
