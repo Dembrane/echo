@@ -29,12 +29,12 @@ type Aspect = {
 
 type ProcessingStatus = {
   id: int;
-  collection: string;
-  item_id: string;
+  parent?: string | ProcessingStatus | null;
+  conversation_id?: string | Conversation | null;
+  conversation_chunk_id?: string | ConversationChunk | null;
   timestamp: string;
   event?: string | null;
   message?: string | null;
-  json?: any | null;
   duration_ms?: number | null;
 };
 
