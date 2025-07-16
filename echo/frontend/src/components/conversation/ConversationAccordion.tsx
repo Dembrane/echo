@@ -387,6 +387,13 @@ export const ConversationStatusIndicators = ({
         </Badge>
       )}
 
+      {
+        // if from portal and not finished
+        !isUpload && conversation.is_finished === false && (
+          <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
+        )
+      }
+
       {!!project?.is_enhanced_audio_processing_enabled &&
         // if processing still
         // don't show this if both is_finished and is_audio_processing_finished are true
@@ -395,7 +402,10 @@ export const ConversationStatusIndicators = ({
           conversation.is_finished && conversation.is_audio_processing_finished
         ) && (
           <Tooltip
-            label={t`This conversation is still being processed. It will be available for analysis and chat shortly.` + "(for enhanced audio processing)"}
+            label={
+              t`This conversation is still being processed. It will be available for analysis and chat shortly.` +
+              "(for enhanced audio processing)"
+            }
           >
             <Badge size="xs" color="violet" variant="light">
               <Group gap="xs">
@@ -421,7 +431,7 @@ export const ConversationStatusIndicators = ({
           </Badge>
         )}
 
-      {conversation.error != null  && (
+      {conversation.error != null && (
         <Tooltip
           label={t`Processing failed for this conversation. This conversation will not be available for analysis and chat.`}
         >
