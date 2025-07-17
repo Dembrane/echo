@@ -94,7 +94,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
             <Trans>Generate insights from your conversations</Trans>
           </CloseableAlert>
 
-          {hasFinishedConversations && conversationCounts.pending !== 0 && (
+          {conversationCounts.pending !== 0 && (
             <Box mb="xl">
               <Stack gap={8}>
                 {/* Title Row */}
