@@ -22,10 +22,10 @@ export const ConversationStatusTable = ({
   if (!data) return null;
 
   // Merge finished and pending into one list for easier iteration
-  const conversations = ([
+  const conversations = [
     ...(data.finishedConversations ?? []),
     ...(data.pendingConversations ?? []),
-  ]) as Conversation[];
+  ] as Conversation[];
 
   if (conversations.length === 0) {
     return (
@@ -35,8 +35,13 @@ export const ConversationStatusTable = ({
     );
   }
 
-  // Sort by updated_at desc (fallback created_at)
+  // Sort by status (pending first) then by updated_at desc (fallback created_at)
   conversations.sort((a, b) => {
+    // First sort by status: pending (false) comes before finished (true)
+    if (a.is_finished !== b.is_finished) {
+      return a.is_finished ? 1 : -1;
+    }
+    // Then sort by date: most recent first
     const dateA = new Date(a.updated_at ?? a.created_at ?? 0).getTime();
     const dateB = new Date(b.updated_at ?? b.created_at ?? 0).getTime();
     return dateB - dateA;
@@ -65,7 +70,7 @@ export const ConversationStatusTable = ({
           <Table.Tr key={conv.id}>
             <Table.Td>{conv.participant_name ?? "-"}</Table.Td>
             <Table.Td>
-              {(conv.updated_at || conv.created_at)
+              {conv.updated_at || conv.created_at
                 ? new Date(conv.updated_at ?? conv.created_at!).toLocaleString()
                 : "-"}
             </Table.Td>
@@ -93,4 +98,4 @@ export const ConversationStatusTable = ({
       </Table.Tbody>
     </Table>
   );
-}; 
+};

@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { IconEdit } from "@tabler/icons-react";
-import { Modal, Stack } from "@mantine/core";
+import { Modal, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
 import { NavigationButton } from "../common/NavigationButton";
@@ -37,7 +37,19 @@ export const ReportModalNavigationButton = () => {
 
   return (
     <>
-      <Modal opened={opened} onClose={close} title="Create Report" withinPortal>
+      <Modal
+        opened={opened}
+        onClose={close}
+        title={
+          <Text fw={500} size="lg">
+            <Trans>Create Report</Trans>
+          </Text>
+        }
+        withinPortal
+        classNames={{
+          header: "border-b",
+        }}
+      >
         <Stack>
           <CreateReportForm onSuccess={handleSuccess} />
         </Stack>
