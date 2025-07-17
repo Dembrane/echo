@@ -1,31 +1,38 @@
 {
-  "collection": "project_analysis_run",
-  "field": "processing_error",
-  "type": "text",
+  "collection": "processing_status",
+  "field": "project_id",
+  "type": "uuid",
   "meta": {
-    "collection": "project_analysis_run",
+    "collection": "processing_status",
     "conditions": null,
     "display": null,
     "display_options": null,
-    "field": "processing_error",
+    "field": "project_id",
     "group": null,
     "hidden": false,
-    "interface": null,
+    "interface": "select-dropdown-m2o",
     "note": null,
-    "options": null,
+    "options": {
+      "enableCreate": false,
+      "enableLink": true,
+      "enableSelect": false,
+      "template": "{{name}}"
+    },
     "readonly": false,
     "required": false,
-    "sort": 8,
-    "special": null,
+    "sort": 9,
+    "special": [
+      "m2o"
+    ],
     "translations": null,
     "validation": null,
     "validation_message": null,
     "width": "full"
   },
   "schema": {
-    "name": "processing_error",
-    "table": "project_analysis_run",
-    "data_type": "text",
+    "name": "project_id",
+    "table": "processing_status",
+    "data_type": "uuid",
     "default_value": null,
     "max_length": null,
     "numeric_precision": null,
@@ -37,7 +44,7 @@
     "is_generated": false,
     "generation_expression": null,
     "has_auto_increment": false,
-    "foreign_key_table": null,
-    "foreign_key_column": null
+    "foreign_key_table": "project",
+    "foreign_key_column": "id"
   }
 }

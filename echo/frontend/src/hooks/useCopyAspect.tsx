@@ -29,13 +29,15 @@ export const useCopyAspect = () => {
           "image_url",
           "view_id",
           {
-            representative_quotes: [
+            aspect_segment: [
               {
-                quote_id: [
+                segment: [
                   {
                     conversation_id: ["id", "participant_name"],
                   },
-                  "text",
+                  "description",
+                  "verbatim_transcript",
+                  "relevant_index",
                 ],
               },
             ],
@@ -62,22 +64,27 @@ export const useCopyAspect = () => {
       );
     }
 
-    const quotes = Array.isArray(aspect.representative_quotes)
-      ? (aspect.representative_quotes as Quote[])
+    const quotes = Array.isArray(aspect.aspect_segment)
+      ? (aspect.aspect_segment as AspectSegment[])
       : [];
     if (quotes.length > 0) {
       stringBuilder.push(`## Top Quotes`);
 
       for (const quote of quotes) {
-        if (!quote.quote_id) continue;
+        if (!quote.segment) continue;
+
+        const conversationId = (quote.segment as ConversationSegment).conversation_id as string;
+        const description = quote.description ?? "No description available";
+        const conversation = (quote.segment as ConversationSegment)?.conversation_id as Conversation;
+        const participantName = conversation?.participant_name ?? "Unknown";
 
         const conversationUrl =
           window.location.origin +
-          `/${language}/projects/${projectId}/conversation/${quote.quote_id.conversation_id.id}/transcript`;
+          `/${language}/projects/${projectId}/conversation/${conversationId}/transcript`;
 
-        stringBuilder.push(`"${quote.quote_id.text}"\n`);
+        stringBuilder.push(`"${description}"\n`);
         stringBuilder.push(
-          `from [${quote.quote_id.conversation_id.participant_name}](${conversationUrl})\n\n`,
+          `from [${participantName}](${conversationUrl})\n\n`,
         );
       }
     }
