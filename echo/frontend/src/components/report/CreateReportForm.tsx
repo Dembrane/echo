@@ -62,7 +62,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
   if (isPending) {
     return (
       <Stack>
-        <Alert title={t`Processing your report...`}>
+        <Alert title={t`Processing your report...`} mt={12}>
           <Trans>
             Please wait while we generate your report. You will automatically be
             redirected to the report page.
@@ -75,7 +75,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
   if (error) {
     return (
-      <Alert title={t`Error creating report`} color="red">
+      <Alert title={t`Error creating report`} color="red" mt={12}>
         <Trans>
           There was an error creating your report. Please try again or contact
           support.
