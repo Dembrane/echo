@@ -48,7 +48,7 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
                     "updated_at",
                 ],
                 # Sort by updated_at descending to get most recent conversations first
-                "sort": ["-updated_at"],
+                "sort": "-updated_at",
             }
         },
     )

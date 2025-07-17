@@ -200,12 +200,25 @@ async def get_project_transcripts(
 def get_latest_project_analysis_run(project_id: str) -> Optional[dict]:
     try:
         with directus_client_context() as client:
-            analysis_run = client.get_item("project_analysis_run", project_id)
+            analysis_run = client.get_items(
+                "project_analysis_run",
+                {
+                    "query": {
+                        "filter": {
+                            "project_id": project_id,
+                        },
+                        "sort": "-created_at",
+                    },
+                },
+            )
 
             if analysis_run is None:
                 return None
 
-            return analysis_run
+            if len(analysis_run) == 0:
+                return None
+
+            return analysis_run[0]
 
     except DirectusBadRequest as e:
         logger.error(f"Failed to get latest project analysis run for project {project_id}: {e}")
@@ -225,10 +238,10 @@ async def post_create_project_library(
     project_id: str,
     body: CreateLibraryRequestBodySchema,
 ) -> None:
-    try:
-        from dembrane.service import project_service
-        from dembrane.service.project_service import ProjectNotFoundException
+    from dembrane.service import project_service
+    from dembrane.service.project import ProjectNotFoundException
 
+    try:
         project = project_service.get_by_id_or_raise(project_id)
     except ProjectNotFoundException as e:
         raise HTTPException(status_code=404, detail="Project not found") from e
@@ -273,10 +286,10 @@ async def post_create_view(
     if not project_analysis_run:
         raise HTTPException(status_code=404, detail="No analysis found for this project")
 
-    try:
-        from dembrane.service import project_service
-        from dembrane.service.project_service import ProjectNotFoundException
+    from dembrane.service import project_service
+    from dembrane.service.project import ProjectNotFoundException
 
+    try:
         project = project_service.get_by_id_or_raise(project_id)
     except ProjectNotFoundException as e:
         raise HTTPException(status_code=404, detail="Project not found") from e
