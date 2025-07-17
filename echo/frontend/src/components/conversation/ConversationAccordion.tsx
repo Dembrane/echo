@@ -403,8 +403,8 @@ export const ConversationStatusIndicators = ({
         ) && (
           <Tooltip
             label={
-              t`This conversation is still being processed. It will be available for analysis and chat shortly.` +
-              "(for enhanced audio processing)"
+              t`This conversation is still being processed. It will be available for analysis and chat shortly. ` +
+              t`(for enhanced audio processing)`
             }
           >
             <Badge size="xs" color="violet" variant="light">
