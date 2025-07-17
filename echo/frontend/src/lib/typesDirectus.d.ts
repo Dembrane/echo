@@ -607,6 +607,8 @@ type Project = {
   project_reports: any[] | ProjectReport[];
   tags: any[] | ProjectTag[];
   updated_at?: string | null;
+
+  conversations_count?: number | null;
 };
 
 type ProjectAnalysisRun = {

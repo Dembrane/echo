@@ -68,11 +68,11 @@ export const ViewExpandedCard = ({ data }: { data: View }) => {
           </Group>
         </Group>
 
-        {data.processing_status !== "DONE" && (
+        {/* {data.processing_status !== "DONE" && (
           <Text className="italic text-gray-700">
             {data.processing_status}: {data.processing_message}
           </Text>
-        )}
+        )} */}
 
         <Text className="text-2xl font-semibold">{data.name}</Text>
         <Group>

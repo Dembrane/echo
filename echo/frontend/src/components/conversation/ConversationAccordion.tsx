@@ -424,13 +424,12 @@ export const ConversationStatusIndicators = ({
 
       {!hasContent &&
         conversation.is_finished === true &&
-        conversation.is_all_chunks_processed === true &&
-        conversation.error == null && (
+        conversation.is_all_chunks_transcribed === true && (
           <Badge size="xs" color="red" variant="light">
             {t`Empty`}
           </Badge>
         )}
-
+{/* 
       {conversation.error != null && (
         <Tooltip
           label={t`Processing failed for this conversation. This conversation will not be available for analysis and chat.`}
@@ -442,7 +441,7 @@ export const ConversationStatusIndicators = ({
             </Group>
           </Badge>
         </Tooltip>
-      )}
+      )} */}
     </Group>
   );
 };

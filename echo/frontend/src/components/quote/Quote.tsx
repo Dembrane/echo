@@ -4,41 +4,155 @@ import { I18nLink } from "../common/i18nLink";
 import { cn } from "@/lib/utils";
 import { useCopyQuote } from "@/hooks/useCopyQuote";
 import { CopyIconButton } from "../common/CopyIconButton";
+import { useState } from "react";
+import { ActionIcon, Tooltip } from "@mantine/core";
+import { IconChevronDown, IconChevronUp, IconQuote, IconBulb } from "@tabler/icons-react";
 
+
+// replacement for AspectSegment
 export const Quote = ({
   data,
   className,
 }: {
-  data: Quote;
+  data: AspectSegment;
   className?: string;
 }) => {
   const { projectId } = useParams();
+  const [showTranscript, setShowTranscript] = useState(false);
   const { copyQuote, copied } = useCopyQuote();
+
+  let conversationId: string | undefined;
+  try {
+    conversationId = (data.segment as ConversationSegment)?.conversation_id as string;
+  } catch (e) {
+    console.error(e);
+  }
+
+  // Parse the relevant_index to extract the portion of transcript
+  const getTranscriptExcerpt = () => {
+    if (!data.verbatim_transcript || !data.relevant_index) return null;
+    
+    const [startStr, endStr] = data.relevant_index.split(':');
+    const start = parseInt(startStr);
+    const end = parseInt(endStr);
+    
+    if (isNaN(start) || isNaN(end)) return null;
+    
+    return data.verbatim_transcript.slice(start, end);
+  };
+
+  const transcriptExcerpt = getTranscriptExcerpt();
+  const hasTranscript = !!data.verbatim_transcript;
 
   return (
     <Paper
-      p="sm"
-      className={cn(data.conversation_id ? "border" : "", className)}
+      p="md"
+      className={cn("transition-all duration-200", className)}
+      withBorder
+      radius="md"
     >
-      <Text size="sm" pb="xs">
-        "{data.text}"
-      </Text>
-      {data.conversation_id && (
-        <Group>
-          <I18nLink
-            to={`/projects/${projectId}/conversation/${(data.conversation_id as unknown as Conversation).id}/analysis`}
+      {/* Main insight/reason */}
+      <Group justify="space-between" align="flex-start" mb="sm">
+        <div className="flex-1">
+          <Group mb="xs">
+            <IconBulb size={16} className="text-blue-500 flex-shrink-0 mt-0.5" />
+            <Text size="sm" c="dimmed" fw={500}>
+              Insight
+            </Text>
+          </Group>
+          <Text size="md" fw={500} mb="xs">
+            {data.description}
+          </Text>
+        </div>
+        
+        <CopyIconButton
+          onCopy={() => copyQuote(data.description || "")}
+          copied={copied}
+          copyTooltip="Copy"
+          size={16}
+        />
+      </Group>
+
+      {/* Supporting transcript */}
+      {transcriptExcerpt && (
+        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <Group justify="space-between" align="center" mb="xs">
+            <Group gap="xs">
+              <IconQuote size={14} className="text-gray-500" />
+              <Text size="xs" c="dimmed" fw={500}>
+                Supporting Quote
+                {data.relevant_index && (
+                  <Text component="span" size="xs" c="dimmed" ml="xs">
+                    ({data.relevant_index})
+                  </Text>
+                )}
+              </Text>
+            </Group>
+            
+            {hasTranscript && (
+              <Tooltip label={showTranscript ? "Hide full context" : "Show full context"}>
+                <ActionIcon
+                  variant="subtle"
+                  size="sm"
+                  onClick={() => setShowTranscript(!showTranscript)}
+                >
+                  {showTranscript ? <IconChevronUp size={14} /> : <IconChevronDown size={14} />}
+                </ActionIcon>
+              </Tooltip>
+            )}
+          </Group>
+          
+          <div 
+            className={cn(
+              "rounded-lg bg-gray-50 dark:bg-gray-800 p-3 text-sm",
+              !showTranscript && hasTranscript && "cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            )}
+            onClick={() => !showTranscript && hasTranscript && setShowTranscript(true)}
           >
-            <Pill>
-              {((data as any).conversation_id as Conversation)
-                .participant_name ?? ""}
+            {showTranscript ? (
+              <div className="space-y-3">
+                <Text size="sm" className="italic whitespace-pre-wrap leading-relaxed">
+                  {data.verbatim_transcript}
+                </Text>
+                {data.relevant_index && (
+                  <div className="border-t border-gray-300 dark:border-gray-600 pt-2">
+                    <Text size="xs" c="dimmed">
+                      <strong>Highlighted portion:</strong> characters {data.relevant_index}
+                    </Text>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div>
+                <Text size="sm" className="italic" lineClamp={2}>
+                  "{transcriptExcerpt}"
+                </Text>
+                {hasTranscript && (
+                  <Text size="xs" c="dimmed" mt="xs">
+                    Click to see full context
+                  </Text>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* Conversation link */}
+      {conversationId && (
+        <Group mt="md" pt="sm" className="border-t border-gray-200 dark:border-gray-700">
+          <I18nLink
+            to={`/projects/${projectId}/conversation/${conversationId}/analysis`}
+          >
+            <Pill 
+              size="sm" 
+              variant="light"
+              className="hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors"
+            >
+              {((data.segment as ConversationSegment).conversation_id as Conversation)
+                .participant_name ?? "View Conversation"}
             </Pill>
           </I18nLink>
-
-          <CopyIconButton
-            onCopy={() => copyQuote(data.id)}
-            copied={copied}
-            size={18}
-          />
         </Group>
       )}
     </Paper>

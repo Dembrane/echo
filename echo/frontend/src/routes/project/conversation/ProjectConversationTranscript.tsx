@@ -123,7 +123,6 @@ export const ProjectConversationTranscript = () => {
         a.download = filename;
       } else {
         a.download =
-          conversationQuery.data.title ??
           "Conversation" +
             "-" +
             conversationQuery.data.participant_email +

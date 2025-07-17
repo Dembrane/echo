@@ -23,7 +23,6 @@ import {
 } from "./routes/project/ProjectRoutes";
 import { ProjectConversationOverviewRoute } from "./routes/project/conversation/ProjectConversationOverview";
 import { ProjectConversationTranscript } from "./routes/project/conversation/ProjectConversationTranscript";
-import { ProjectConversationAnalysis } from "./routes/project/conversation/ProjectConversationAnalysis";
 import { ParticipantPostConversation } from "./routes/participant/ParticipantPostConversation";
 import {
   ParticipantConversationAudioRoute,
@@ -50,10 +49,6 @@ const ProjectResourceAnalysisRoute = createLazyNamedRoute(
 const ProjectLibraryRoute = createLazyNamedRoute(
   () => import("./routes/project/library/ProjectLibrary"),
   "ProjectLibraryRoute",
-);
-const ProjectLibraryInsight = createLazyNamedRoute(
-  () => import("./routes/project/library/ProjectLibraryInsight"),
-  "ProjectLibraryInsight",
 );
 
 const ProjectLibraryView = createLazyNamedRoute(
@@ -231,10 +226,6 @@ export const mainRouter = createBrowserRouter([
                         element: <ProjectConversationTranscript />,
                       },
                       {
-                        path: "analysis",
-                        element: <ProjectConversationAnalysis />,
-                      },
-                      {
                         path: "debug",
                         element: <DebugPage />,
                       },
@@ -252,10 +243,6 @@ export const mainRouter = createBrowserRouter([
                       {
                         path: "views/:viewId",
                         element: <ProjectLibraryView />,
-                      },
-                      {
-                        path: "insights/:insightId",
-                        element: <ProjectLibraryInsight />,
                       },
                       {
                         index: true,
