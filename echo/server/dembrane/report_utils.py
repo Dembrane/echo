@@ -31,8 +31,6 @@ class ContextTooLongException(Exception):
     pass
 
 
-
-
 async def get_report_content_for_project(project_id: str, language: str) -> str:
     conversations = directus.get_items(
         "conversation",
@@ -41,7 +39,16 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
                 "filter": {
                     "project_id": project_id,
                 },
-                "fields": ["id", "participant_name", "tags.project_tag_id.text", "summary"],
+                "fields": [
+                    "id",
+                    "participant_name",
+                    "tags.project_tag_id.text",
+                    "summary",
+                    "created_at",
+                    "updated_at",
+                ],
+                # Sort by updated_at descending to get most recent conversations first
+                "sort": ["-updated_at"],
             }
         },
     )
@@ -50,7 +57,7 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
     logger.debug(f"Conversations: {conversations}")
 
     token_count = 0
-    conversation_data_dict = {}
+    conversation_data_dict: dict = {}
 
     # first add all the summaries to the list
     for conversation in conversations:
@@ -60,7 +67,16 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
             logger.info(f"Conversation {conversation['id']} has no summary")
             continue
 
-        token_count += token_counter(model=MEDIUM_LITELLM_MODEL, text=conversation["summary"])
+        # Count tokens before adding
+        summary_tokens = token_counter(model=MEDIUM_LITELLM_MODEL, text=conversation["summary"])
+
+        # Check if adding this conversation would exceed the limit
+        if token_count + summary_tokens >= MAX_REPORT_CONTEXT_LENGTH:
+            logger.info(
+                f"Reached context limit. Added {len(conversation_data_dict)} conversations. "
+                f"Token count: {token_count}, attempted to add: {summary_tokens}"
+            )
+            break
 
         # Guard against missing or null tags coming back from the API
         try:
@@ -77,22 +93,21 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
             except (KeyError, TypeError):
                 continue
 
-        if token_count < MAX_REPORT_CONTEXT_LENGTH:
-            conversation_data_dict[conversation["id"]] = {
-                "name": conversation["participant_name"],
-                "tags": tags_text,
-                "transcript": conversation["summary"],
-            }
-        else:
-            logger.info(
-                f"Context too long for report for project {project_id}, token count: {token_count}"
-            )
-            break
+        # Add the conversation after confirming it fits
+        conversation_data_dict[conversation["id"]] = {
+            "name": conversation["participant_name"],
+            "tags": tags_text,
+            "transcript": conversation["summary"],
+            "created_at": conversation.get("created_at"),
+            "updated_at": conversation.get("updated_at"),
+        }
+        token_count += summary_tokens
 
+    # Now try to add full transcripts for conversations that have summaries
+    # Process in the same order (most recent first)
     for conversation in conversations:
         # Only attempt to append a transcript if the conversation was added during the
-        # first pass (i.e.
-        # it had a non-empty summary). This prevents KeyError when the summary was null.
+        # first pass (i.e. it had a non-empty summary).
         if conversation["id"] not in conversation_data_dict:
             continue
 
@@ -107,21 +122,31 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
             logger.info(f"Conversation {conversation['id']} has empty transcript – skipping")
             continue
 
-        prospective_token_count = token_count + token_counter(model=MEDIUM_LITELLM_MODEL, text=transcript)
+        # Calculate token count for the transcript
+        transcript_tokens = token_counter(model=MEDIUM_LITELLM_MODEL, text=transcript)
 
-        if prospective_token_count < MAX_REPORT_CONTEXT_LENGTH:
+        if token_count + transcript_tokens < MAX_REPORT_CONTEXT_LENGTH:
             # Append with a newline to keep paragraphs separated
             conversation_data_dict[conversation["id"]]["transcript"] += "\n" + transcript
-            token_count = prospective_token_count
+            token_count += transcript_tokens
+            logger.info(
+                f"Added transcript for conversation {conversation['id']}. Total tokens: {token_count}"
+            )
         else:
             logger.info(
-                f"Context too long for report for project {project_id}, token count: {prospective_token_count}"
+                f"Cannot add transcript for conversation {conversation['id']}. "
+                f"Would exceed limit: {token_count} + {transcript_tokens} > {MAX_REPORT_CONTEXT_LENGTH}"
             )
+            # Since conversations are sorted by recency, if we can't fit this one,
+            # we likely can't fit any subsequent ones either
             break
 
     conversation_data_list = list(conversation_data_dict.values())
 
-    logger.debug(f"Getting report content for project {project_id}. Token count: {token_count}.")
+    logger.info(
+        f"Report for project {project_id} will include {len(conversation_data_list)} conversations. "
+        f"Total token count: {token_count} of {MAX_REPORT_CONTEXT_LENGTH} allowed."
+    )
 
     prompt_message = render_prompt(
         "system_report", language, {"conversations": conversation_data_list}
