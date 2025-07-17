@@ -1,4 +1,5 @@
 from json import JSONDecodeError
+from typing import Optional
 from logging import getLogger
 
 import dramatiq
@@ -13,7 +14,7 @@ from dramatiq.brokers.redis import RedisBroker
 from dramatiq.rate_limits.backends import RedisBackend as RateLimitRedisBackend
 from dramatiq.results.backends.redis import RedisBackend as ResultsRedisBackend
 
-from dembrane.utils import get_utc_timestamp
+from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.config import (
     REDIS_URL,
     RUNPOD_WHISPER_API_KEY,
@@ -22,7 +23,12 @@ from dembrane.config import (
     RUNPOD_TOPIC_MODELER_API_KEY,
 )
 from dembrane.sentry import init_sentry
-from dembrane.directus import directus, directus_client_context
+from dembrane.directus import (
+    DirectusBadRequest,
+    DirectusServerError,
+    directus,
+    directus_client_context,
+)
 from dembrane.transcribe import transcribe_conversation_chunk
 from dembrane.conversation_utils import (
     collect_unfinished_conversations,
@@ -424,73 +430,255 @@ def task_collect_and_finish_unfinished_conversations() -> None:
 def task_create_view(
     project_analysis_run_id: str,
     user_query: str,
-    user_query_context: str,
+    user_query_context: Optional[str],
     language: str,
 ) -> None:
     logger = getLogger("dembrane.tasks.task_create_view")
+    logger.info(f"Creating view for project_analysis_run_id: {project_analysis_run_id}")
+
+    if not project_analysis_run_id or not user_query:
+        logger.error(
+            f"Invalid project_analysis_run_id: {project_analysis_run_id} or user_query: {user_query}"
+        )
+        return
+
+    logger.info(f"User query: {user_query}")
+
+    project_id: Optional[str] = None
+
     try:
         with directus_client_context() as client:
-            response = client.get_items(
-                "project_analysis_run",
-                {
-                    "query": {
-                        "filter": {
-                            "id": project_analysis_run_id,
-                        },
-                        "fields": ["project_id"],
-                    }
-                },
-            )
-            project_id = response[0]["project_id"]
-            # get all segment ids from project_id
-            segments = client.get_items(
-                "project",
-                {
-                    "query": {
-                        "filter": {
-                            "id": project_id,
-                        },
-                        "fields": ["conversations.conversation_segments.id"],
-                    }
-                },
-            )
-            segment_ids = list(
-                set(
-                    [
-                        seg["id"]
-                        for conv in segments[0]["conversations"]
-                        for seg in conv["conversation_segments"]
-                    ]
+            project_analysis_run = client.get_item("project_analysis_run", project_analysis_run_id)
+
+            if not project_analysis_run:
+                logger.error(f"Project analysis run not found: {project_analysis_run_id}")
+                return
+
+            project_id = project_analysis_run["project_id"]
+    except DirectusBadRequest as e:
+        logger.error(
+            f"Bad Directus request. Something item might be missing? analysis_run_id: {project_analysis_run_id} {e}"
+        )
+        return
+    except DirectusServerError as e:
+        logger.error(
+            f"Can retry. Directus server down? analysis_run_id: {project_analysis_run_id} {e}"
+        )
+        raise e from e
+    except Exception as e:
+        logger.error(
+            f"Can retry. Failed to get project_analysis_run: analysis_run_id: {project_analysis_run_id} {e}"
+        )
+        raise e from e
+
+    with ProcessingStatusContext(
+        project_analysis_run_id=project_analysis_run_id,
+        project_id=project_id,
+        event_prefix="task_create_view",
+    ) as status_ctx:
+        try:
+            with directus_client_context() as client:
+                # get all segment ids from project_id
+                segments = client.get_items(
+                    "project",
+                    {
+                        "query": {
+                            "filter": {
+                                "id": project_id,
+                            },
+                            "fields": ["conversations.conversation_segments.id"],
+                        }
+                    },
                 )
-            )
+
+                if not segments or len(segments) == 0:
+                    status_ctx.set_exit_message(f"No segments found for project: {project_id}")
+                    logger.error(f"No segments found for project: {project_id}")
+                    return
+
+                segment_ids = list(
+                    set(
+                        [
+                            seg["id"]
+                            for conv in segments[0]["conversations"]
+                            for seg in conv["conversation_segments"]
+                        ]
+                    )
+                )
+
             headers = {
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {RUNPOD_TOPIC_MODELER_API_KEY}",
             }
+
             data = {
                 "input": {
+                    "project_analysis_run_id": project_analysis_run_id,
                     "response_language": language,
                     "segment_ids": segment_ids,
-                    "user_prompt": "\n\n\n".join([user_query, user_query_context]),
-                    "project_analysis_run_id": project_analysis_run_id,
+                    "user_input": user_query,
+                    "user_input_description": user_query_context or "",
+                    "user_prompt": "\n\n\n".join([user_query, user_query_context or ""]),  # depr
                 }
             }
+
             url = f"{str(RUNPOD_TOPIC_MODELER_URL).rstrip('/')}/run"
+            logger.debug(f"sending url to runpod: {url} with data: {data}")
 
             response = requests.post(url, headers=headers, json=data, timeout=600)
-    except Exception as e:
-        logger.error(f"Error in task_create_view: {e}")
-        raise e from e
-    return
+
+            # Handle the response
+            if not response.status_code == 200:
+                status_ctx.set_exit_message(
+                    f"RunPod API returned status {response.status_code}: {response.text}"
+                )
+                logger.error(f"RunPod API returned status {response.status_code}: {response.text}")
+                # TODO: handle class of error in runpod
+                raise Exception(f"RunPod API failed with status {response.status_code}")
+
+            status_ctx.set_exit_message(
+                f"Successfully created view with {len(segment_ids)} segments"
+            )
+            logger.info(
+                f"Successfully created view for project_analysis_run_id: {project_analysis_run_id}"
+            )
+            logger.debug(f"RunPod response: {response.json()}")
+            return
+
+        except DirectusBadRequest as e:
+            status_ctx.set_exit_message(f"Bad Directus request: {str(e)}")
+            logger.error(f"Bad Directus request. Something item might be missing? {e}")
+            return
+
+        except DirectusServerError as e:
+            status_ctx.set_exit_message(f"Can retry. Directus server down? {e}")
+            logger.error(f"Can retry. Directus server down? {e}")
+            raise e from e
+
+        except requests.exceptions.RequestException as e:
+            status_ctx.set_exit_message(f"Can retry. Network error calling RunPod API: {e}")
+            logger.error(f"Can retry. Network error calling RunPod API: {e}")
+            raise e from e
+
+        except Exception as e:
+            status_ctx.set_exit_message(
+                f"Can retry. Views failed to create for unknown reason: {e}"
+            )
+            logger.error(f"Can retry. Views failed to create for unknown reason: {e}")
+            raise e from e
 
 
-@dramatiq.actor(queue_name="cpu", priority=50)
+@dramatiq.actor(queue_name="network", priority=50)
 def task_create_project_library(project_id: str, language: str) -> None:
     logger = getLogger("dembrane.tasks.task_create_project_library")
-    logger.warning(
-        f"NOT IMPLEMENTED: task_create_project_library (project_id: {project_id}, language: {language})"
-    )
-    return
+
+    with ProcessingStatusContext(
+        project_id=project_id,
+        event_prefix="task_create_project_library",
+    ) as status_ctx:
+        logger.info(f"Creating project library for project: {project_id}")
+
+        try:
+            with directus_client_context() as client:
+                project = client.get_item("project", project_id)
+
+                if not project:
+                    status_ctx.set_exit_message(f"Project not found: {project_id}")
+                    logger.error(f"Project not found: {project_id}")
+                    return
+
+                new_run_id = client.create_item(
+                    "project_analysis_run",
+                    {
+                        "id": generate_uuid(),
+                        "project_id": project_id,
+                    },
+                )["data"]["id"]
+
+                status_ctx.set_exit_message(f"Successfully created library: {new_run_id}")
+                logger.info(f"Successfully created library: {new_run_id}")
+        except DirectusBadRequest as e:
+            status_ctx.set_exit_message(f"Bad Directus request: {str(e)}")
+            logger.error(f"Bad Directus request: {str(e)}")
+            return
+        except DirectusServerError as e:
+            status_ctx.set_exit_message(f"Can retry. Directus server down? {e}")
+            logger.error(f"Can retry. Directus server down? {e}")
+            raise e from e
+        except Exception as e:
+            status_ctx.set_exit_message(f"Can retry. Failed to create project analysis run: {e}")
+            logger.error(f"Can retry. Failed to create project analysis run: {e}")
+            raise e from e
+
+        DEFAULT_PROMPTS = {
+            "en": [
+                {
+                    "user_query": "Power Plays",
+                    "user_query_context": "Identify who drives conversations, influences decisions, and shapes outcomes. Focus on detecting authority patterns, persuasion dynamics, and organizational hierarchy signals. Analyze speaking time distribution, interruption patterns, and whose ideas get adopted or dismissed. Map the power architecture of decision-making processes. Expected aspects: 3-7 for small datasets, 5-12 for medium datasets, 8-15 for large datasets. Processing hint: Look for distinct power centers, influence networks, and decision-making bottlenecks. Quality threshold: Each aspect should represent a unique power dynamic with clear behavioral evidence.",
+                },
+                {
+                    "user_query": "Smart vs. Loud",
+                    "user_query_context": "Distinguish between evidence-backed arguments and opinion-based statements. Identify participants who support claims with data, examples, and logical reasoning versus those relying on volume, authority, or emotional appeals. Measure argument quality, source credibility, and reasoning depth across different speakers. Expected aspects: 2-5 for small datasets, 4-8 for medium datasets, 6-12 for large datasets. Processing hint: Focus on argument structure, evidence types, and persuasion mechanisms. Quality threshold: Each aspect should demonstrate clear qualitative differences in reasoning approaches.",
+                },
+                {
+                    "user_query": "Mind Changes",
+                    "user_query_context": "Track position shifts, consensus formation, and persuasion effectiveness throughout conversations. Identify moments where participants change their stance, what triggers these shifts, and which arguments successfully influence others. Map the evolution from initial disagreement to final alignment or persistent division. Expected aspects: 2-6 for small datasets, 4-10 for medium datasets, 6-14 for large datasets. Processing hint: Identify temporal patterns, trigger events, and persuasion pathways. Quality threshold: Each aspect should show distinct change mechanisms with clear before/after states.",
+                },
+                {
+                    "user_query": "Trust Signals",
+                    "user_query_context": "Analyze what evidence types, sources, and expertise different participants find credible and compelling. Identify which data sources carry weight, whose opinions influence others, and how different groups validate information. Reveal the implicit credibility hierarchy that drives decision-making. Expected aspects: 3-6 for small datasets, 5-10 for medium datasets, 7-13 for large datasets. Processing hint: Map credibility networks, authority recognition patterns, and validation processes. Quality threshold: Each aspect should represent distinct credibility criteria with supporting behavioral evidence.",
+                },
+                {
+                    "user_query": "Getting Stuff Done",
+                    "user_query_context": "Measure conversation momentum toward actionable outcomes. Track progression from problem identification to concrete solutions, next steps, and ownership assignment. Identify which discussions generate accountability versus those that circle without resolution. Focus on decision-making effectiveness and implementation planning. Expected aspects: 2-5 for small datasets, 3-8 for medium datasets, 5-11 for large datasets. Processing hint: Focus on resolution patterns, accountability mechanisms, and implementation pathways. Quality threshold: Each aspect should demonstrate measurable progress toward concrete outcomes.",
+                },
+            ],
+            "nl": [
+                {
+                    "user_query": "Wie heeft de touwtjes in handen",
+                    "user_query_context": "Kijk wie de gesprekken stuurt, beslissingen beïnvloedt en de uitkomsten bepaalt. Let op wie het meeste spreekt, wie anderen onderbreekt en wiens ideeën worden opgepakt. Breng in kaart hoe de machtsbalans werkt en wie echt de lakens uitdeelt. Verwachte aspecten: 3-7 voor kleine datasets, 5-12 voor middelgrote datasets, 8-15 voor grote datasets. Verwerkingstip: Zoek naar duidelijke machtscentra, invloedsnetwerken en besluitvormingsknelpunten. Kwaliteitsdrempel: Elk aspect moet een unieke machtsdynamiek tonen met duidelijk gedragsbewijs.",
+                },
+                {
+                    "user_query": "Slim praten vs. hard praten",
+                    "user_query_context": "Onderscheid tussen argumenten met bewijs en loze praatjes. Wie ondersteunt hun punt met data en voorbeelden? Wie vertrouwt vooral op volume, status of emoties? Ontdek het verschil tussen echte inhoud en veel lawaai maken. Verwachte aspecten: 2-5 voor kleine datasets, 4-8 voor middelgrote datasets, 6-12 voor grote datasets. Verwerkingstip: Focus op argumentstructuur, bewijstypen en overtuigingsmechanismen. Kwaliteitsdrempel: Elk aspect moet duidelijke kwaliteitsverschillen in redeneerbenaderingen tonen.",
+                },
+                {
+                    "user_query": "Van mening veranderen",
+                    "user_query_context": "Volg wie van standpunt wisselt tijdens gesprekken. Wat zorgt ervoor dat mensen hun mening bijstellen? Welke argumenten werken echt? Zie hoe discussies evoleren van onenigheid naar overeenstemming (of juist niet). Verwachte aspecten: 2-6 voor kleine datasets, 4-10 voor middelgrote datasets, 6-14 voor grote datasets. Verwerkingstip: Identificeer tijdspatronen, trigger events en overtuigingstrajecten. Kwaliteitsdrempel: Elk aspect moet duidelijke veranderingsmechanismen tonen met voor/na situaties.",
+                },
+                {
+                    "user_query": "Wat mensen geloven",
+                    "user_query_context": "Analyseer waar verschillende mensen op vertrouwen. Welke bronnen vinden ze geloofwaardig? Wiens mening telt? Hoe valideren verschillende groepen informatie? Ontdek de onzichtbare geloofwaardigheidshiërarchie die beslissingen stuurt. Verwachte aspecten: 3-6 voor kleine datasets, 5-10 voor middelgrote datasets, 7-13 voor grote datasets. Verwerkingstip: Breng geloofwaardigheidsnetwerken, autoriteitsherkenning en validatieprocessen in kaart. Kwaliteitsdrempel: Elk aspect moet verschillende geloofwaardigheidscriteria tonen met gedragsbewijs.",
+                },
+                {
+                    "user_query": "Shit voor elkaar krijgen",
+                    "user_query_context": "Meet hoe gesprekken leiden tot echte actie. Gaan discussies van probleem naar oplossing? Wie pakt wat op? Welke gesprekken leiden tot resultaat en welke draaien maar rond zonder uitkomst? Focus op wat er daadwerkelijk gebeurt na het praten. Verwachte aspecten: 2-5 voor kleine datasets, 3-8 voor middelgrote datasets, 5-11 voor grote datasets. Verwerkingstip: Focus op oplossingspatronen, verantwoordelijkheidsmechanismen en implementatietrajecten. Kwaliteitsdrempel: Elk aspect moet meetbare vooruitgang naar concrete resultaten tonen.",
+                },
+            ],
+        }
+
+        messages = []
+
+        for prompt in DEFAULT_PROMPTS[language]:
+            messages.append(
+                task_create_view.message(
+                    project_analysis_run_id=new_run_id,
+                    user_query=prompt["user_query"],
+                    user_query_context=prompt["user_query_context"],
+                    language=language,
+                )
+            )
+
+        group(messages).run()
+
+        status_ctx.set_exit_message(
+            f"Successfully created {len(messages)} views for project: {project_id}"
+        )
+        logger.info(
+            f"Successfully created {len(messages)} views for project: {project_id} (language: {language})"
+        )
+
+        return
 
 
 @dramatiq.actor(queue_name="network", priority=50)

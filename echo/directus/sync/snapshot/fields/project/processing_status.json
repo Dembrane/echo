@@ -1,9 +1,9 @@
 {
-  "collection": "project_analysis_run",
+  "collection": "project",
   "field": "processing_status",
   "type": "alias",
   "meta": {
-    "collection": "project_analysis_run",
+    "collection": "project",
     "conditions": null,
     "display": null,
     "display_options": null,
@@ -15,7 +15,7 @@
     "options": null,
     "readonly": false,
     "required": false,
-    "sort": 14,
+    "sort": 29,
     "special": [
       "o2m"
     ],

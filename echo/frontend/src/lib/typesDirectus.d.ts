@@ -1,88 +1,108 @@
-type Account = {
-  date_created?: string | null;
-  date_updated?: string | null;
+type Announcement = {
+  activity: any[] | AnnouncementActivity[];
+  created_at?: string | null;
+  expires_at?: string | null;
   id: string;
-  status: string;
-  users: any[] | AccountDirectusUsers[];
+  level?: string | null;
+  sort?: number | null;
+  translations: any[] | AnnouncementTranslations[];
+  updated_at?: string | null;
+  user_created?: string | DirectusUsers | null;
+  user_updated?: string | DirectusUsers | null;
 };
 
-type AccountDirectusUsers = {
-  account_id?: string | Account | null;
-  directus_users_id?: string | DirectusUsers | null;
+type AnnouncementActivity = {
+  announcement_activity?: string | Announcement | null;
+  created_at?: string | null;
+  id: string;
+  read?: boolean | null;
+  sort?: number | null;
+  updated_at?: string | null;
+  user_created?: string | DirectusUsers | null;
+  user_id?: string | null;
+  user_updated?: string | DirectusUsers | null;
+};
+
+type AnnouncementTranslations = {
+  announcement_id?: string | Announcement | null;
   id: number;
+  languages_code?: string | Languages | null;
+  message?: string | null;
+  title?: string | null;
 };
 
 type Aspect = {
-  centroid_embedding?: string | null;
+  aspect_segment: any[] | AspectSegment[];
   created_at?: string | null;
   description?: string | null;
   id: string;
   image_url?: string | null;
   long_summary?: string | null;
   name?: string | null;
-  quotes: any[] | QuoteAspect[];
-  representative_quotes: any[] | QuoteAspect1[];
   short_summary?: string | null;
   updated_at?: string | null;
   view_id?: string | View | null;
 };
 
-type ProcessingStatus = {
-  id: int;
-  parent?: string | ProcessingStatus | null;
-  conversation_id?: string | Conversation | null;
-  conversation_chunk_id?: string | ConversationChunk | null;
-  timestamp: string;
-  event?: string | null;
-  message?: string | null;
-  duration_ms?: number | null;
+type AspectSegment = {
+  aspect?: string | Aspect | null;
+  description?: string | null;
+  id: string;
+  relevant_index?: string | null;
+  segment?: number | ConversationSegment | null;
+  verbatim_transcript?: string | null;
 };
 
 type Conversation = {
-  is_finished: boolean;
-  is_audio_processing_finished: boolean;
-  is_all_chunks_processed: boolean;
   chunks: any[] | ConversationChunk[];
-  context?: string | null;
+  conversation_segments: any[] | ConversationSegment[];
   created_at?: string | null;
-  description?: string | null;
-  id: string;
-  source?: "DASHBOARD_UPLOAD" | "CLONE" | null
   duration?: number | null;
+  id: string;
+  is_all_chunks_transcribed?: boolean | null;
+  is_audio_processing_finished?: boolean | null;
+  is_finished?: boolean | null;
+  merged_audio_path?: string | null;
+  merged_transcript?: string | null;
   participant_email?: string | null;
   participant_name?: string | null;
   participant_user_agent?: string | null;
+  processing_status: any[] | ProcessingStatus[];
   project_chat_messages: any[] | ProjectChatMessageConversation[];
   project_chats: any[] | ProjectChatConversation[];
   project_id: string | Project;
   replies: any[] | ConversationReply[];
+  source?: string | null;
   summary?: string | null;
   tags: any[] | ConversationProjectTag[];
-  title?: string | null;
   updated_at?: string | null;
-  merged_transcript?: string | null;
-  merged_audio_path?: string | null;
-  error?: string | null;
 };
 
 type ConversationChunk = {
   conversation_id: string | Conversation;
+  conversation_segments: any[] | ConversationSegmentConversationChunk[];
   created_at?: string | null;
-  id: string;
-  path?: string | null;
-  quotes: any[] | QuoteConversationChunk[];
-  timestamp: string;
-  transcript?: string | null;
-  updated_at?: string | null;
-  error?: string | null;
-  source?: "DASHBOARD_UPLOAD" | "SPLIT" | "PORTAL_AUDIO" | "PORTAL_TEXT" | null;
-  hallucination_score?: number | null;
-  hallucination_reason?: string | null;
+  cross_talk_instances?: number | null;
   desired_language?: string | null;
   detected_language?: string | null;
   detected_language_confidence?: number | null;
+  diarization?: unknown | null;
+  error?: string | null;
+  hallucination_reason?: string | null;
+  hallucination_score?: number | null;
+  id: string;
+  noise_ratio?: number | null;
+  path?: string | null;
+  processing_status: any[] | ProcessingStatus[];
   raw_transcript?: string | null;
+  runpod_job_status_link?: string | null;
+  runpod_request_count?: number | null;
+  silence_ratio?: number | null;
+  source?: string | null;
+  timestamp: string;
+  transcript?: string | null;
   translation_error?: string | null;
+  updated_at?: string | null;
 };
 
 type ConversationProjectTag = {
@@ -93,10 +113,30 @@ type ConversationProjectTag = {
 
 type ConversationReply = {
   content_text?: string | null;
-  conversation_id?: string | Conversation | null;
+  conversation_id?: string | null;
   date_created?: string | null;
-  id: number;
+  id: string;
+  reply?: string | Conversation | null;
+  sort?: number | null;
   type?: string | null;
+};
+
+type ConversationSegment = {
+  chunks: any[] | ConversationSegmentConversationChunk[];
+  config_id?: string | null;
+  contextual_transcript?: string | null;
+  conversation_id?: string | Conversation | null;
+  counter?: number | null;
+  id: number;
+  lightrag_flag?: boolean | null;
+  path?: string | null;
+  transcript?: string | null;
+};
+
+type ConversationSegmentConversationChunk = {
+  conversation_chunk_id?: string | ConversationChunk | null;
+  conversation_segment_id?: number | ConversationSegment | null;
+  id: number;
 };
 
 type DirectusAccess = {
@@ -453,11 +493,11 @@ type DirectusTranslations = {
 };
 
 type DirectusUsers = {
-  accounts: any[] | AccountDirectusUsers[];
   appearance?: string | null;
   auth_data?: unknown | null;
   avatar?: string | DirectusFiles | null;
   description?: string | null;
+  disable_create_project?: boolean | null;
   email?: string | null;
   email_notifications?: boolean | null;
   external_identifier?: string | null;
@@ -482,7 +522,6 @@ type DirectusUsers = {
   theme_light_overrides?: unknown | null;
   title?: string | null;
   token?: string | null;
-  disable_create_project?: boolean | null;
 };
 
 type DirectusVersions = {
@@ -513,34 +552,34 @@ type DirectusWebhooks = {
   was_active_before_deprecation: boolean;
 };
 
-type Document = {
-  context?: string | null;
-  created_at?: string | null;
-  description?: string | null;
-  id: string;
-  is_processed: boolean;
-  original_filename?: string | null;
-  path?: string | null;
-  processing_error?: string | null;
-  project_id: string | Project;
-  title?: string | null;
-  type?: string | null;
-  updated_at?: string | null;
-};
-
 type Insight = {
   created_at?: string | null;
   id: string;
   project_analysis_run_id?: string | ProjectAnalysisRun | null;
-  quotes: any[] | Quote[];
   summary?: string | null;
   title?: string | null;
   updated_at?: string | null;
 };
 
+type Languages = {
+  code: string;
+  direction?: string | null;
+  name?: string | null;
+};
+
+type ProcessingStatus = {
+  conversation_chunk_id?: string | ConversationChunk | null;
+  conversation_id?: string | Conversation | null;
+  duration_ms?: number | null;
+  event?: string | null;
+  id: number;
+  message?: string | null;
+  parent?: number | ProcessingStatus | null;
+  project_id?: string | Project | null;
+  timestamp?: string | null;
+};
+
 type Project = {
-  conversations_count?: number | null;
-  is_enhanced_audio_processing_enabled?: boolean | null;
   context?: string | null;
   conversation_ask_for_participant_name_label?: string | null;
   conversations: any[] | Conversation[];
@@ -548,21 +587,21 @@ type Project = {
   default_conversation_ask_for_participant_name?: boolean | null;
   default_conversation_description?: string | null;
   default_conversation_finish_text?: string | null;
-  is_project_notification_subscription_allowed?: boolean | null;
   default_conversation_title?: string | null;
   default_conversation_transcript_prompt?: string | null;
   default_conversation_tutorial_slug?: string | null;
   directus_user_id?: string | DirectusUsers | null;
+  get_reply_mode?: string | null;
   get_reply_prompt?: string | null;
   id: string;
   image_generation_model?: string | null;
   is_conversation_allowed: boolean;
+  is_enhanced_audio_processing_enabled?: boolean | null;
   is_get_reply_enabled?: boolean | null;
-  get_reply_mode?: string | null;
-  is_library_insights_enabled?: boolean | null;
+  is_project_notification_subscription_allowed?: boolean | null;
   language?: string | null;
   name?: string | null;
-  pin?: string | null;
+  processing_status: any[] | ProcessingStatus[];
   project_analysis_runs: any[] | ProjectAnalysisRun[];
   project_chats: any[] | ProjectChat[];
   project_reports: any[] | ProjectReport[];
@@ -574,13 +613,7 @@ type ProjectAnalysisRun = {
   created_at?: string | null;
   id: string;
   insights: any[] | Insight[];
-  processing_completed_at?: string | null;
-  processing_error?: string | null;
-  processing_message?: string | null;
-  processing_started_at?: string | null;
-  processing_status?: string | null;
   project_id?: string | Project | null;
-  quotes: any[] | Quote[];
   updated_at?: string | null;
   views: any[] | View[];
 };
@@ -606,25 +639,16 @@ type ProjectChatConversation = {
 
 type ProjectChatMessage = {
   added_conversations: any[] | ProjectChatMessageConversation1[];
+  chat_message_metadata: any[] | ProjectChatMessageMetadata[];
   date_created?: string | null;
   date_updated?: string | null;
   id: string;
   message_from?: string | null;
-  chat_message_metadata?: any[] | ProjectChatMessageMetadata[];
   project_chat_id?: string | ProjectChat | null;
+  template_key?: string | null;
   text?: string | null;
   tokens_count?: number | null;
   used_conversations: any[] | ProjectChatMessageConversation[];
-};
-
-type ProjectChatMessageMetadata = {
-  id?: string;
-  type: "reference" | "citation";
-  conversation: string | Conversation;
-  conversation_title?: string;
-  ratio: number;
-  reference_text?: string;
-  message_metadata?: string;
 };
 
 type ProjectChatMessageConversation = {
@@ -639,6 +663,16 @@ type ProjectChatMessageConversation1 = {
   project_chat_message_id?: string | ProjectChatMessage | null;
 };
 
+type ProjectChatMessageMetadata = {
+  conversation?: string | Conversation | null;
+  date_created?: string | null;
+  id: string;
+  message_metadata?: string | ProjectChatMessage | null;
+  ratio?: number | null;
+  reference_text?: string | null;
+  type?: string | null;
+};
+
 type ProjectReport = {
   content?: string | null;
   date_created?: string | null;
@@ -651,14 +685,6 @@ type ProjectReport = {
   status: string;
 };
 
-type ProjectReportNotificationParticipants = {
-  id: number;
-  email?: string | null;
-  project_id?: string | number | null;
-  email_opt_in?: boolean;
-  email_opt_out_token?: string | null;
-};
-
 type ProjectReportMetric = {
   date_created?: string | null;
   date_updated?: string | null;
@@ -666,6 +692,18 @@ type ProjectReportMetric = {
   ip?: string | null;
   project_report_id?: number | ProjectReport | null;
   type?: string | null;
+};
+
+type ProjectReportNotificationParticipants = {
+  conversation_id?: string | Conversation | null;
+  date_submitted?: string | null;
+  date_updated?: string | null;
+  email?: string | null;
+  email_opt_in?: boolean | null;
+  email_opt_out_token?: string | null;
+  id: string;
+  project_id?: string | null;
+  sort?: number | null;
 };
 
 type ProjectTag = {
@@ -678,89 +716,30 @@ type ProjectTag = {
   updated_at?: string | null;
 };
 
-type Quote = {
-  aspects: any[] | QuoteAspect[];
-  conversation_chunks: any[] | QuoteConversationChunk[];
-  conversation_id: string | Conversation;
-  created_at?: string | null;
-  embedding: string;
-  id: string;
-  insight_id?: string | Insight | null;
-  order?: number | null;
-  project_analysis_run_id?: string | ProjectAnalysisRun | null;
-  representative_aspects: any[] | QuoteAspect1[];
-  text: string;
-  timestamp?: string | null;
-  updated_at?: string | null;
-};
-
-type QuoteAspect = {
-  aspect_id?: string | Aspect | null;
-  id: number;
-  quote_id?: string | Quote | null;
-};
-
-type QuoteAspect1 = {
-  aspect_id?: string | Aspect | null;
-  id: number;
-  quote_id?: string | Quote | null;
-};
-
-type QuoteConversationChunk = {
-  conversation_chunk_id?: string | ConversationChunk | null;
-  id: number;
-  quote_id?: string | Quote | null;
-};
-
 type View = {
   aspects: any[] | Aspect[];
   created_at?: string | null;
   id: string;
   name?: string | null;
-  processing_completed_at?: string | null;
-  processing_error?: string | null;
-  processing_message?: string | null;
-  processing_started_at?: string | null;
-  processing_status?: string | null;
   project_analysis_run_id?: string | ProjectAnalysisRun | null;
   summary?: string | null;
   updated_at?: string | null;
-};
-
-type Announcement = {
-  id: string;
-  user_created?: string | DirectusUsers | null;
-  created_at?: Date | null;
-  expires_at?: Date | null;
-  level?: string | null;
-  translations: any[] | AnnouncementTranslations[];
-  activity: any[] | AnnouncementActivity[];
-};
-
-type AnnouncementTranslations = {
-  id: number;
-  languages_code?: string | Languages | null;
-  title?: string | null;
-  message?: string | null;
-};
-
-type AnnouncementActivity = {
-  id: string;
-  user_created?: string | DirectusUsers | null;
-  created_at?: string | null;
-  user_id?: string | null;
-  announcement_activity?: string | Announcement | null;
-  read: boolean | null;
+  user_input?: string | null;
+  user_input_description?: string | null;
 };
 
 type CustomDirectusTypes = {
-  account: Account[];
-  account_directus_users: AccountDirectusUsers[];
+  announcement: Announcement[];
+  announcement_activity: AnnouncementActivity[];
+  announcement_translations: AnnouncementTranslations[];
   aspect: Aspect[];
+  aspect_segment: AspectSegment[];
   conversation: Conversation[];
   conversation_chunk: ConversationChunk[];
   conversation_project_tag: ConversationProjectTag[];
   conversation_reply: ConversationReply[];
+  conversation_segment: ConversationSegment[];
+  conversation_segment_conversation_chunk: ConversationSegmentConversationChunk[];
   directus_access: DirectusAccess[];
   directus_activity: DirectusActivity[];
   directus_collections: DirectusCollections[];
@@ -789,8 +768,9 @@ type CustomDirectusTypes = {
   directus_users: DirectusUsers[];
   directus_versions: DirectusVersions[];
   directus_webhooks: DirectusWebhooks[];
-  document: Document[];
   insight: Insight[];
+  languages: Languages[];
+  processing_status: ProcessingStatus[];
   project: Project[];
   project_analysis_run: ProjectAnalysisRun[];
   project_chat: ProjectChat[];
@@ -798,17 +778,10 @@ type CustomDirectusTypes = {
   project_chat_message: ProjectChatMessage[];
   project_chat_message_conversation: ProjectChatMessageConversation[];
   project_chat_message_conversation_1: ProjectChatMessageConversation1[];
+  project_chat_message_metadata: ProjectChatMessageMetadata[];
   project_report: ProjectReport[];
   project_report_metric: ProjectReportMetric[];
   project_report_notification_participants: ProjectReportNotificationParticipants[];
   project_tag: ProjectTag[];
-  quote: Quote[];
-  quote_aspect: QuoteAspect[];
-  quote_aspect_1: QuoteAspect1[];
-  quote_conversation_chunk: QuoteConversationChunk[];
   view: View[];
-  processing_status: ProcessingStatus[];
-  announcement: Announcement[];
-  announcement_translations: AnnouncementTranslations[];
-  announcement_activity: AnnouncementActivity[];
 };
