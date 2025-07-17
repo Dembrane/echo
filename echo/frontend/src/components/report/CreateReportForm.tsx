@@ -176,7 +176,18 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
         <>
           <Stack gap={0} mb="sm">
             <Text size="sm" c="gray.6" my="sm">
-              <Text span fw={500} c="gray.9">
+              <Text
+                span
+                component="a"
+                c="blue.7"
+                href="#"
+                fw={500}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setModalOpened(true);
+                }}
+                className="cursor-pointer underline-offset-4 hover:underline"
+              >
                 {conversationCounts.finished} <Trans>conversations</Trans>{" "}
               </Text>
               <Trans>will be included in your report</Trans>
@@ -185,19 +196,11 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
             {hasPendingConversations && (
               <Text size="sm" c="gray.6">
                 <Trans>
-                  You can still use the Ask feature to chat with any
-                  conversation
+                  In the meantime, if you want to analyze the conversations that
+                  are still processing, you can use the Chat feature
                 </Trans>
               </Text>
             )}
-            <Button
-              variant="transparent"
-              size="compact-sm"
-              onClick={() => setModalOpened(true)}
-              className="underline-offset-4 hover:underline"
-            >
-              <Trans>View conversation details</Trans>
-            </Button>
           </Stack>
 
           <Modal
@@ -211,18 +214,19 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
           </Modal>
         </>
       )}
-      
 
-      <NativeSelect
-        value={language}
-        label={
-          <Box pb="xs">
-            <Trans>Please select a language for your report</Trans>
-          </Box>
-        }
-        onChange={(e) => setLanguage(e.target.value)}
-        data={languageOptionsByIso639_1}
-      />
+      {hasFinishedConversations && (
+        <NativeSelect
+          value={language}
+          label={
+            <Box pb="xs">
+              <Trans>Please select a language for your report</Trans>
+            </Box>
+          }
+          onChange={(e) => setLanguage(e.target.value)}
+          data={languageOptionsByIso639_1}
+        />
+      )}
 
       <Button
         onClick={() =>
