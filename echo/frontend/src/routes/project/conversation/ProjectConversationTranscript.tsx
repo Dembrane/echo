@@ -107,8 +107,8 @@ export const ProjectConversationTranscript = () => {
   const hasValidTranscripts = allChunks.some(
     (chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
   );
-  
-  const isEmptyConversation = !hasValidTranscripts;
+
+  const isEmptyConversation = !hasValidTranscripts && conversationQuery.data?.is_finished;
 
   const handleDownloadTranscript = (filename: string) => {
     const text = transcriptQuery.data ?? "";

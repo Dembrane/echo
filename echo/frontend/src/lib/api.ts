@@ -204,13 +204,8 @@ export const getProjectViews = async (projectId: string) => {
     readItems("view", {
       fields: [
         "*",
-        { aspects: ["*", "count(quotes)", "quotes", "representative_quotes"] },
+        { aspects: ["*", "count(aspect_segment)", "aspect_segment"] },
       ],
-      deep: {
-        aspects: {
-          _sort: "-count(representative_quotes)",
-        } as any,
-      },
       filter: {
         project_analysis_run_id: project_analysis_run?.id,
       },

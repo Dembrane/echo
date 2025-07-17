@@ -19,11 +19,9 @@ from dembrane.schemas import (
 from dembrane.database import (
     ProjectModel,
     ConversationModel,
-    ProcessingStatusEnum,
-    ProjectAnalysisRunModel,
     DependencyInjectDatabase,
 )
-from dembrane.directus import directus
+from dembrane.directus import DirectusBadRequest, directus_client_context
 from dembrane.report_utils import ContextTooLongException, get_report_content_for_project
 from dembrane.api.exceptions import (
     ProjectLanguageNotSupportedException,
@@ -199,89 +197,32 @@ async def get_project_transcripts(
     return response
 
 
-# @ProjectRouter.get(
-#     "/{project_id}/resources", response_model=List[ResourceSchema], tags=["resource"]
-# )
-# async def get_all_resources_for_project(
-#     project_id: str, db: DependencyInjectDatabase
-# ) -> List[ResourceModel]:
-#     return db.query(ResourceModel).filter(ResourceModel.project_id == project_id).all()
+def get_latest_project_analysis_run(project_id: str) -> Optional[dict]:
+    try:
+        with directus_client_context() as client:
+            analysis_run = client.get_items(
+                "project_analysis_run",
+                {
+                    "query": {
+                        "filter": {
+                            "project_id": project_id,
+                        },
+                        "sort": "-created_at",
+                    },
+                },
+            )
 
+            if analysis_run is None:
+                return None
 
-# @ProjectRouter.post(
-#     "/{project_id}/resources/upload",
-#     response_model=List[ResourceSchema],
-#     tags=["resource"],
-# )
-# async def upload_resources(
-#     files: List[UploadFile],
-#     project_id: str,
-#     db: DependencyInjectDatabase,
-# ) -> List[ResourceModel]:
-#     resources = []
+            if len(analysis_run) == 0:
+                return None
 
-#     for file in files:
-#         if not file.filename:
-#             original_filename = file.filename
+            return analysis_run[0]
 
-#             if not file.filename:
-#                 raise ResourceInvalidFileFormatException
-
-#             if not file.filename.endswith(".pdf"):
-#                 raise ResourceInvalidFileFormatException
-
-#             file_name = file.filename.replace(" ", "_")
-#             type = "PDF"
-#             file_path = os.path.join(RESOURCE_UPLOADS_DIR, file_name)
-#             uuid = generate_uuid()
-
-#             if os.path.exists(file_path):
-#                 logger.info(f"{file_path} already exists. Generating a unique filename")
-#                 unique_filename = uuid + "_" + file_name
-#                 file_path = os.path.join(RESOURCE_UPLOADS_DIR, unique_filename)
-
-#             file_content = await file.read()
-
-#             try:
-#                 with open(file_path, "wb") as f:
-#                     logger.info(f"Saving the file to {file_path}")
-#                     f.write(file_content)
-
-#                 resource = ResourceModel(
-#                     id=uuid,
-#                     project_id=project_id,
-#                     # initialize title with original filename
-#                     # doc will be summarized and title would be updated later
-#                     original_filename=original_filename,
-#                     type=type,
-#                     path=file_path,
-#                     title=original_filename,
-#                 )
-#                 db.add(resource)
-#                 db.commit()
-#                 resources.append(resource)
-
-#                 # process_resource_queue.add_task(
-#                 #     ProcessResourceTaskQueueItem(resource=resource)
-#                 # )
-
-#             except Exception as e:
-#                 logger.error(f"Failed to save the file: {e}")
-#                 raise ResourceFailedToSaveFileException from e
-
-#     db.commit()
-#     return resources
-
-
-def get_latest_project_analysis_run(
-    db: DependencyInjectDatabase, project_id: str
-) -> Optional[ProjectAnalysisRunModel]:
-    return (
-        db.query(ProjectAnalysisRunModel)
-        .filter(ProjectAnalysisRunModel.project_id == project_id)
-        .order_by(ProjectAnalysisRunModel.created_at.desc())
-        .first()
-    )
+    except DirectusBadRequest as e:
+        logger.error(f"Failed to get latest project analysis run for project {project_id}: {e}")
+        return None
 
 
 class CreateLibraryRequestBodySchema(BaseModel):
@@ -293,29 +234,31 @@ class CreateLibraryRequestBodySchema(BaseModel):
     status_code=HTTPStatus.ACCEPTED,
 )
 async def post_create_project_library(
-    db: DependencyInjectDatabase,
     auth: DependencyDirectusSession,
     project_id: str,
     body: CreateLibraryRequestBodySchema,
 ) -> None:
-    project = db.get(ProjectModel, project_id)
+    from dembrane.service import project_service
+    from dembrane.service.project import ProjectNotFoundException
 
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+    try:
+        project = project_service.get_by_id_or_raise(project_id)
+    except ProjectNotFoundException as e:
+        raise HTTPException(status_code=404, detail="Project not found") from e
 
-    if not auth.is_admin and project.directus_user_id != auth.user_id:
+    if not auth.is_admin and project.get("directus_user_id", "") != auth.user_id:
         raise HTTPException(status_code=403, detail="User does not have access to this project")
 
-    analysis_run = get_latest_project_analysis_run(db, project.id)
+    # analysis_run = get_latest_project_analysis_run(project.id)
 
-    if analysis_run and analysis_run.processing_status in [
-        ProcessingStatusEnum.PENDING,
-        ProcessingStatusEnum.PROCESSING,
-    ]:
-        raise HTTPException(
-            status_code=409,
-            detail="Analysis is already in progress",
-        )
+    # if analysis_run and analysis_run["processing_status"] in [
+    #     ProcessingStatusEnum.PENDING,
+    #     ProcessingStatusEnum.PROCESSING,
+    # ]:
+    #     raise HTTPException(
+    #         status_code=409,
+    #         detail="Analysis is already in progress",
+    #     )
 
     task_create_project_library.send(project_id, body.language or "en")
 
@@ -336,24 +279,29 @@ class CreateViewRequestBodySchema(BaseModel):
 async def post_create_view(
     project_id: str,
     body: CreateViewRequestBodySchema,
-    db: DependencyInjectDatabase,
     auth: DependencyDirectusSession,
 ) -> None:
-    project_analysis_run = get_latest_project_analysis_run(db, project_id)
+    project_analysis_run = get_latest_project_analysis_run(project_id)
 
     if not project_analysis_run:
         raise HTTPException(status_code=404, detail="No analysis found for this project")
 
-    project = db.get(ProjectModel, project_id)
+    from dembrane.service import project_service
+    from dembrane.service.project import ProjectNotFoundException
 
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+    try:
+        project = project_service.get_by_id_or_raise(project_id)
+    except ProjectNotFoundException as e:
+        raise HTTPException(status_code=404, detail="Project not found") from e
 
-    if not auth.is_admin and project.directus_user_id != auth.user_id:
+    if not auth.is_admin and project.get("directus_user_id", "") != auth.user_id:
         raise HTTPException(status_code=403, detail="User does not have access to this project")
 
     task_create_view.send(
-        project_analysis_run.id, body.query, body.additional_context or "", body.language or "en"
+        project_analysis_run["id"],
+        body.query,
+        body.additional_context or "",
+        body.language or "en",
     )
 
     logger.info(f"Create View task created for project {project_id}. Language: {body.language}")
@@ -371,28 +319,30 @@ async def create_report(project_id: str, body: CreateReportRequestBodySchema) ->
     try:
         report_content_response = await get_report_content_for_project(project_id, language)
     except ContextTooLongException:
-        report = directus.create_item(
-            "project_report",
-            item_data={
-                "content": "",
-                "project_id": project_id,
-                "language": language,
-                "status": "error",
-                "error_code": "CONTEXT_TOO_LONG",
-            },
-        )["data"]
+        with directus_client_context() as client:
+            report = client.create_item(
+                "project_report",
+                item_data={
+                    "content": "",
+                    "project_id": project_id,
+                    "language": language,
+                    "status": "error",
+                    "error_code": "CONTEXT_TOO_LONG",
+                },
+            )["data"]
         return report
     except Exception as e:
         raise e
 
-    report = directus.create_item(
-        "project_report",
-        item_data={
-            "content": report_content_response,
-            "project_id": project_id,
-            "language": language,
-            "status": "archived",
-        },
-    )["data"]
+    with directus_client_context() as client:
+        report = client.create_item(
+            "project_report",
+            item_data={
+                "content": report_content_response,
+                "project_id": project_id,
+                "language": language,
+                "status": "archived",
+            },
+        )["data"]
 
     return report
