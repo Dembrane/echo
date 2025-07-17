@@ -9,7 +9,6 @@ import {
   Box,
   Flex,
   Group,
-  Center,
   Title,
 } from "@mantine/core";
 import { ConversationStatusTable } from "./ConversationStatusTable";
@@ -85,126 +84,123 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
   }
 
   return (
-    <Stack maw="500px">
+    <Stack maw="500px" className="pt-4">
       {/* Inform the user about conversation processing status */}
 
       {/* Conversation Status Section */}
       {hasConversations ? (
         <>
-          <Center mt="xl" mb="md">
-            <Stack gap={4} align="center">
-              <Title order={3} size="h5" c="gray.9" mb={2}>
-                <Trans>Welcome to Reports!</Trans>
-              </Title>
-              <Text size="sm" c="gray.6">
-                <Trans>Generate insights from your conversations</Trans>
-              </Text>
-            </Stack>
-          </Center>
-          <Box mb="xl" px="sm">
-            <Stack gap={8}>
-              {/* Title Row */}
-              <Flex justify="space-between">
-                <Text size="sm">
-                  <Trans>Your Conversations</Trans>
-                </Text>
-                <Text size="sm" c="gray.6">
-                  {conversationCounts.total} <Trans>total</Trans>
-                </Text>
-              </Flex>
+          <CloseableAlert title={t`Welcome to Reports!`}>
+            <Trans>Generate insights from your conversations</Trans>
+          </CloseableAlert>
 
-              {/* Ready Row - only show if there are finished conversations */}
-              {hasFinishedConversations && (
-                <Flex justify="space-between" align="center">
-                  <Group gap={6}>
-                    <CheckCircleIcon className="h-4 w-4 text-green-500" />
-                    <Text size="sm" c="gray.6">
-                      {conversationCounts.pending === 0 ? (
-                        <Trans>All conversations ready</Trans>
-                      ) : (
-                        <Trans>
-                          {conversationCounts.finished}{" "}
-                          {conversationCounts.finished === 1
-                            ? t`conversation`
-                            : t`conversations`}{" "}
-                          <Trans>ready</Trans>
-                        </Trans>
-                      )}
-                    </Text>
-                  </Group>
-                  <CheckIcon className="h-4 w-4 text-green-500" />
+          {conversationCounts.pending !== 0 && (
+            <Box mb="xl">
+              <Stack gap={8}>
+                {/* Title Row */}
+                <Flex justify="space-between">
+                  <Text size="sm">
+                    <Trans>Your Conversations</Trans>
+                  </Text>
+                  <Text size="sm" c="gray.6">
+                    {conversationCounts.total} <Trans>total</Trans>
+                  </Text>
                 </Flex>
-              )}
 
-              {/* Processing Row - only show if there are pending conversations */}
-              {hasPendingConversations && (
-                <>
+                {/* Ready Row - only show if there are finished conversations */}
+                {hasFinishedConversations && (
                   <Flex justify="space-between" align="center">
                     <Group gap={6}>
-                      <ClockIcon className="h-4 w-4 text-orange-500" />
+                      <CheckCircleIcon className="h-4 w-4 text-green-500" />
                       <Text size="sm" c="gray.6">
-                        {conversationCounts.pending}{" "}
-                        {conversationCounts.pending === 1
-                          ? t`conversation`
-                          : t`conversations`}{" "}
-                        <Trans>processing</Trans>
+                        {conversationCounts.pending === 0 ? (
+                          <Trans>All conversations ready</Trans>
+                        ) : (
+                          <Trans>
+                            {conversationCounts.finished}{" "}
+                            {conversationCounts.finished === 1
+                              ? t`conversation`
+                              : t`conversations`}{" "}
+                            <Trans>ready</Trans>
+                          </Trans>
+                        )}
                       </Text>
                     </Group>
-                    <Text size="sm" c="orange.6">
-                      ~30 <Trans>min</Trans>
-                    </Text>
+                    <CheckIcon className="h-4 w-4 text-green-500" />
                   </Flex>
-                </>
-              )}
-            </Stack>
-          </Box>
+                )}
+
+                {/* Processing Row - only show if there are pending conversations */}
+                {hasPendingConversations && (
+                  <>
+                    <Flex justify="space-between" align="center">
+                      <Group gap={6}>
+                        <ClockIcon className="h-4 w-4 text-orange-500" />
+                        <Text size="sm" c="gray.6">
+                          {conversationCounts.pending}{" "}
+                          {conversationCounts.pending === 1
+                            ? t`conversation`
+                            : t`conversations`}{" "}
+                          <Trans>processing</Trans>
+                        </Text>
+                      </Group>
+                      <Text size="sm" c="orange.6">
+                        ~30 <Trans>min</Trans>
+                      </Text>
+                    </Flex>
+                  </>
+                )}
+              </Stack>
+            </Box>
+          )}
         </>
       ) : (
         /* No conversations message */
         <Box mb="xl" px="sm" mt="xl">
-          <Center>
-            <Stack gap={8} align="center">
-              <MessageCircleIcon className="h-10 w-10" color="darkgray" />
-              <Text size="sm" c="gray.9" ta="center" fw={500}>
-                <Trans>No conversations yet</Trans>
-              </Text>
-              <Text size="sm" c="gray.6" ta="center">
-                <Trans>
-                  To generate a report, please start by adding conversations in
-                  your project
-                </Trans>
-              </Text>
-            </Stack>
-          </Center>
+          <Stack gap={8} align="center">
+            <MessageCircleIcon className="h-10 w-10" color="darkgray" />
+            <Text size="sm" c="gray.9" ta="center" fw={500}>
+              <Trans>No conversations yet</Trans>
+            </Text>
+            <Text size="sm" c="gray.6" ta="center">
+              <Trans>
+                To generate a report, please start by adding conversations in
+                your project
+              </Trans>
+            </Text>
+          </Stack>
         </Box>
       )}
       {/* Detailed Conversation Modal */}
       {hasConversations && hasPendingConversations && (
         <>
-          <Stack gap={0} align="center" mb="sm">
-            <Text size="sm" c="gray.6" ta="center" my="sm">
-              <Text span fw={500} c="gray.9">
+          <Stack gap={0} mb="sm">
+            <Text size="sm" c="gray.6" my="sm">
+              <Text
+                span
+                component="a"
+                c="blue.7"
+                href="#"
+                fw={500}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setModalOpened(true);
+                }}
+                className="cursor-pointer underline-offset-4 hover:underline"
+              >
                 {conversationCounts.finished} <Trans>conversations</Trans>{" "}
               </Text>
               <Trans>will be included in your report</Trans>
             </Text>
 
             {hasPendingConversations && (
-              <Text size="sm" c="gray.6" ta="center">
+              <Text size="sm" c="gray.6">
                 <Trans>
-                  You can still use the Ask feature to chat with any
-                  conversation
+                  In the meantime, if you want to analyze the conversations that
+                  are still processing, you can use the Chat feature
                 </Trans>
               </Text>
             )}
-            <Button
-              variant="transparent"
-              size="compact-sm"
-              onClick={() => setModalOpened(true)}
-              className="underline-offset-4 hover:underline"
-            >
-              <Trans>View conversation details</Trans>
-            </Button>
           </Stack>
 
           <Modal
@@ -219,16 +215,18 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
         </>
       )}
 
-      <NativeSelect
-        value={language}
-        label={
-          <Box pb="xs">
-            <Trans>Please select a language for your report</Trans>
-          </Box>
-        }
-        onChange={(e) => setLanguage(e.target.value)}
-        data={languageOptionsByIso639_1}
-      />
+      {hasFinishedConversations && (
+        <NativeSelect
+          value={language}
+          label={
+            <Box pb="xs">
+              <Trans>Please select a language for your report</Trans>
+            </Box>
+          }
+          onChange={(e) => setLanguage(e.target.value)}
+          data={languageOptionsByIso639_1}
+        />
+      )}
 
       <Button
         onClick={() =>
