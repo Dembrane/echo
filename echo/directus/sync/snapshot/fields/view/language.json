@@ -1,13 +1,13 @@
 {
   "collection": "view",
-  "field": "user_input",
+  "field": "language",
   "type": "string",
   "meta": {
     "collection": "view",
     "conditions": null,
     "display": null,
     "display_options": null,
-    "field": "user_input",
+    "field": "language",
     "group": null,
     "hidden": false,
     "interface": "input",
@@ -15,7 +15,7 @@
     "options": null,
     "readonly": false,
     "required": false,
-    "sort": 9,
+    "sort": 11,
     "special": null,
     "translations": null,
     "validation": null,
@@ -23,7 +23,7 @@
     "width": "full"
   },
   "schema": {
-    "name": "user_input",
+    "name": "language",
     "table": "view",
     "data_type": "character varying",
     "default_value": null,

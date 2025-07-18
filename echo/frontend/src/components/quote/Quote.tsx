@@ -142,7 +142,7 @@ export const Quote = ({
       {conversationId && (
         <Group mt="md" pt="sm" className="border-t border-gray-200 dark:border-gray-700">
           <I18nLink
-            to={`/projects/${projectId}/conversation/${conversationId}/analysis`}
+            to={`/projects/${projectId}/conversation/${conversationId}/transcript`}
           >
             <Pill 
               size="sm" 
