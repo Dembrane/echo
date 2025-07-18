@@ -728,6 +728,7 @@ type View = {
   updated_at?: string | null;
   user_input?: string | null;
   user_input_description?: string | null;
+  description?: string | null;
 };
 
 type CustomDirectusTypes = {
