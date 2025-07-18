@@ -800,6 +800,10 @@ msgstr "Error"
 msgid "Error creating report"
 msgstr "Error creating report"
 
+#: src/components/announcement/Announcements.tsx:97
+msgid "Error loading announcements"
+msgstr "Error loading announcements"
+
 #: src/routes/project/conversation/ProjectConversationAnalysis.tsx:58
 #~ msgid "Error loading insights"
 #~ msgstr "Error loading insights"
@@ -873,11 +877,26 @@ msgstr "Failed to enable Auto Select for this chat"
 msgid "Failed to finish conversation. Please try again."
 msgstr "Failed to finish conversation. Please try again."
 
-#: src/components/announcement/hooks/index.ts:403
+#: src/components/announcement/Announcements.tsx:101
+#: src/components/announcement/hooks/index.ts:152
+msgid "Failed to get announcements"
+msgstr "Failed to get announcements"
+
+#: src/components/announcement/hooks/index.ts:68
+msgid "Failed to get the latest announcement"
+msgstr "Failed to get the latest announcement"
+
+#: src/components/announcement/hooks/index.ts:470
+msgid "Failed to get unread announcements count"
+msgstr "Failed to get unread announcements count"
+
+#: src/components/announcement/hooks/index.ts:334
+#: src/components/announcement/hooks/index.ts:406
 msgid "Failed to mark all announcements as read"
 msgstr "Failed to mark all announcements as read"
 
-#: src/components/announcement/hooks/index.ts:264
+#: src/components/announcement/hooks/index.ts:182
+#: src/components/announcement/hooks/index.ts:265
 msgid "Failed to mark announcement as read"
 msgstr "Failed to mark announcement as read"
 
@@ -1270,7 +1289,7 @@ msgstr "Newest First"
 msgid "Next"
 msgstr "Next"
 
-#: src/components/announcement/Announcements.tsx:113
+#: src/components/announcement/Announcements.tsx:153
 msgid "No announcements available"
 msgstr "No announcements available"
 
@@ -2370,6 +2389,10 @@ msgstr ""
 "Balance tactical details with strategic vision\n"
 "\n"
 "Note: If the discussion lacks substantial decision points or insights, flag it for deeper exploration next time."
+
+#: src/components/announcement/Announcements.tsx:111
+msgid "Try Again"
+msgstr "Try Again"
 
 #: src/hooks/useConversationIssueBanner.ts:27
 msgid "Try moving a bit closer to your microphone for better sound quality."

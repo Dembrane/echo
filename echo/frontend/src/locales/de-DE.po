@@ -767,6 +767,10 @@ msgstr "Fehler"
 msgid "Error creating report"
 msgstr "Fehler beim Erstellen des Berichts"
 
+#: src/components/announcement/Announcements.tsx:97
+msgid "Error loading announcements"
+msgstr "Fehler beim Laden der Ankündigungen"
+
 #: src/routes/project/conversation/ProjectConversationAnalysis.tsx:58
 #~ msgid "Error loading insights"
 #~ msgstr "Fehler beim Laden der Erkenntnisse"
@@ -836,11 +840,26 @@ msgstr "Fehler beim Aktivieren des Automatischen Auswählens für diesen Chat"
 msgid "Failed to finish conversation. Please try again."
 msgstr "Fehler beim Beenden des Gesprächs. Bitte versuchen Sie es erneut."
 
-#: src/components/announcement/hooks/index.ts:403
+#: src/components/announcement/Announcements.tsx:101
+#: src/components/announcement/hooks/index.ts:152
+msgid "Failed to get announcements"
+msgstr "Fehler beim Laden der Ankündigungen"
+
+#: src/components/announcement/hooks/index.ts:68
+msgid "Failed to get the latest announcement"
+msgstr "Fehler beim Laden der neuesten Ankündigung"
+
+#: src/components/announcement/hooks/index.ts:470
+msgid "Failed to get unread announcements count"
+msgstr "Fehler beim Laden der Anzahl der ungelesenen Ankündigungen"
+
+#: src/components/announcement/hooks/index.ts:334
+#: src/components/announcement/hooks/index.ts:406
 msgid "Failed to mark all announcements as read"
 msgstr "Fehler beim Markieren aller Ankündigungen als gelesen"
 
-#: src/components/announcement/hooks/index.ts:264
+#: src/components/announcement/hooks/index.ts:182
+#: src/components/announcement/hooks/index.ts:265
 msgid "Failed to mark announcement as read"
 msgstr "Fehler beim Markieren der Ankündigung als gelesen"
 
@@ -1233,7 +1252,7 @@ msgstr "Neueste zuerst"
 msgid "Next"
 msgstr "Weiter"
 
-#: src/components/announcement/Announcements.tsx:113
+#: src/components/announcement/Announcements.tsx:153
 msgid "No announcements available"
 msgstr "Keine Ankündigungen verfügbar"
 
@@ -2293,6 +2312,10 @@ msgstr ""
 "Halten Sie die Taktik mit der Strategie im Gleichgewicht\n"
 "\n"
 "Hinweis: Wenn die Diskussion wenig wichtige Entscheidungspunkte oder Einblicke enthält, markieren Sie sie für eine tiefere Untersuchung beim nächsten Mal."
+
+#: src/components/announcement/Announcements.tsx:111
+msgid "Try Again"
+msgstr "Erneut versuchen"
 
 #: src/hooks/useConversationIssueBanner.ts:27
 msgid "Try moving a bit closer to your microphone for better sound quality."

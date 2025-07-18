@@ -771,6 +771,10 @@ msgstr "Erreur"
 msgid "Error creating report"
 msgstr "Erreur lors de la création du rapport"
 
+#: src/components/announcement/Announcements.tsx:97
+msgid "Error loading announcements"
+msgstr "Erreur lors du chargement des annonces"
+
 #: src/routes/project/conversation/ProjectConversationAnalysis.tsx:58
 #~ msgid "Error loading insights"
 #~ msgstr "Erreur lors du chargement des perspectives"
@@ -840,11 +844,26 @@ msgstr "Échec de l'activation de la sélection automatique pour cette discussio
 msgid "Failed to finish conversation. Please try again."
 msgstr "Échec de la fin de la conversation. Veuillez réessayer."
 
-#: src/components/announcement/hooks/index.ts:403
+#: src/components/announcement/Announcements.tsx:101
+#: src/components/announcement/hooks/index.ts:152
+msgid "Failed to get announcements"
+msgstr "Échec de la récupération des annonces"
+
+#: src/components/announcement/hooks/index.ts:68
+msgid "Failed to get the latest announcement"
+msgstr "Échec de la récupération de la dernière annonce"
+
+#: src/components/announcement/hooks/index.ts:470
+msgid "Failed to get unread announcements count"
+msgstr "Échec de la récupération du nombre d'annonces non lues"
+
+#: src/components/announcement/hooks/index.ts:334
+#: src/components/announcement/hooks/index.ts:406
 msgid "Failed to mark all announcements as read"
 msgstr "Échec du marquage de toutes les annonces comme lues"
 
-#: src/components/announcement/hooks/index.ts:264
+#: src/components/announcement/hooks/index.ts:182
+#: src/components/announcement/hooks/index.ts:265
 msgid "Failed to mark announcement as read"
 msgstr "Échec du marquage de l'annonce comme lue"
 
@@ -1237,7 +1256,7 @@ msgstr "Plus récent en premier"
 msgid "Next"
 msgstr "Suivant"
 
-#: src/components/announcement/Announcements.tsx:113
+#: src/components/announcement/Announcements.tsx:153
 msgid "No announcements available"
 msgstr "Aucune annonce disponible"
 
@@ -2294,6 +2313,10 @@ msgstr ""
 "Équilibrez les détails tactiques avec la vision stratégique\n"
 "\n"
 "Note : Si la discussion manque de points de décision substantiels ou d'insights, veuillez le signaler pour une exploration plus approfondie la prochaine fois."
+
+#: src/components/announcement/Announcements.tsx:111
+msgid "Try Again"
+msgstr "Réessayer"
 
 #: src/hooks/useConversationIssueBanner.ts:27
 msgid "Try moving a bit closer to your microphone for better sound quality."
