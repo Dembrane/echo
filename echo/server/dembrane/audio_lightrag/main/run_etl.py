@@ -8,9 +8,12 @@ from dembrane.config import (
     AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY,
     AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX,
 )
-from dembrane.directus import directus
+from dembrane.audio_lightrag.utils.echo_utils import finish_conversation
 from dembrane.audio_lightrag.pipelines.audio_etl_pipeline import AudioETLPipeline
-from dembrane.audio_lightrag.pipelines.directus_etl_pipeline import DirectusETLPipeline
+from dembrane.audio_lightrag.pipelines.directus_etl_pipeline import (
+    DirectusException,
+    DirectusETLPipeline,
+)
 from dembrane.audio_lightrag.pipelines.contextual_chunk_etl_pipeline import (
     ContextualChunkETLPipeline,
 )
@@ -79,6 +82,9 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
                 run_timestamp=None,  # pass timestamp to avoid processing files uploaded earlier than cooloff
             )
             logger.info("1/3...Directus ETL pipeline completed successfully")
+        except DirectusException as e:
+            logger.error(f"Directus ETL pipeline failed: {str(e)}")
+            return False
         except Exception as e:
             logger.error(f"Directus ETL pipeline failed: {str(e)}")
             raise
@@ -104,13 +110,7 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
         logger.info("All ETL pipelines completed successfully")
 
         for conv_id in filtered_conv_ids:
-            directus.update_item(
-                "conversation",
-                conv_id,
-                {
-                    "is_audio_processing_finished": True,
-                },
-            )
+            finish_conversation(conv_id)
 
         return True
 
