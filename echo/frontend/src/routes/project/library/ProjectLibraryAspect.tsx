@@ -81,7 +81,7 @@ export const ProjectLibraryAspect = () => {
               <>
                 {aspect?.aspect_segment?.length && aspect?.aspect_segment?.length > 0 && (
                   <Title order={2}>
-                    <Trans>Segments</Trans>
+                    <Trans>Insights</Trans>
                   </Title>
                 )}
                 {aspect?.aspect_segment?.map((segment: AspectSegment) => (
