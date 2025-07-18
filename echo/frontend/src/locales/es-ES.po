@@ -771,6 +771,10 @@ msgstr "Error"
 msgid "Error creating report"
 msgstr "Error al crear el informe"
 
+#: src/components/announcement/Announcements.tsx:97
+msgid "Error loading announcements"
+msgstr "Error al cargar los anuncios"
+
 #: src/routes/project/conversation/ProjectConversationAnalysis.tsx:58
 #~ msgid "Error loading insights"
 #~ msgstr "Error al cargar los insights"
@@ -840,11 +844,26 @@ msgstr "Error al activar la selección automática para este chat"
 msgid "Failed to finish conversation. Please try again."
 msgstr "Error al finalizar la conversación. Por favor, inténtalo de nuevo."
 
-#: src/components/announcement/hooks/index.ts:403
+#: src/components/announcement/Announcements.tsx:101
+#: src/components/announcement/hooks/index.ts:152
+msgid "Failed to get announcements"
+msgstr "Error al obtener los anuncios"
+
+#: src/components/announcement/hooks/index.ts:68
+msgid "Failed to get the latest announcement"
+msgstr "Error al obtener la última notificación"
+
+#: src/components/announcement/hooks/index.ts:470
+msgid "Failed to get unread announcements count"
+msgstr "Error al obtener el número de notificaciones no leídas"
+
+#: src/components/announcement/hooks/index.ts:334
+#: src/components/announcement/hooks/index.ts:406
 msgid "Failed to mark all announcements as read"
 msgstr "Error al marcar todos los anuncios como leídos"
 
-#: src/components/announcement/hooks/index.ts:264
+#: src/components/announcement/hooks/index.ts:182
+#: src/components/announcement/hooks/index.ts:265
 msgid "Failed to mark announcement as read"
 msgstr "Error al marcar el anuncio como leído"
 
@@ -1237,7 +1256,7 @@ msgstr "Más nuevos primero"
 msgid "Next"
 msgstr "Siguiente"
 
-#: src/components/announcement/Announcements.tsx:113
+#: src/components/announcement/Announcements.tsx:153
 msgid "No announcements available"
 msgstr "No hay anuncios disponibles"
 
@@ -2294,6 +2313,10 @@ msgstr ""
 "Equilibra detalles tácticos con visión estratégica\n"
 "\n"
 "Nota: Si la discusión carece de puntos de decisión sustanciales o insights, marca para una exploración más profunda la próxima vez."
+
+#: src/components/announcement/Announcements.tsx:111
+msgid "Try Again"
+msgstr "Intentar de nuevo"
 
 #: src/hooks/useConversationIssueBanner.ts:27
 msgid "Try moving a bit closer to your microphone for better sound quality."

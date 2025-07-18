@@ -888,6 +888,10 @@ msgstr "Error"
 msgid "Error creating report"
 msgstr "Fout bij het maken van het rapport"
 
+#: src/components/announcement/Announcements.tsx:97
+msgid "Error loading announcements"
+msgstr "Fout bij laden van meldingen"
+
 #: src/routes/project/conversation/ProjectConversationAnalysis.tsx:58
 #~ msgid "Error loading insights"
 #~ msgstr "Fout bij laden van inzichten"
@@ -961,11 +965,26 @@ msgstr "Fout bij het inschakelen van het automatisch selecteren voor deze chat"
 msgid "Failed to finish conversation. Please try again."
 msgstr "Fout bij het voltooien van het gesprek. Probeer het opnieuw."
 
-#: src/components/announcement/hooks/index.ts:403
+#: src/components/announcement/Announcements.tsx:101
+#: src/components/announcement/hooks/index.ts:152
+msgid "Failed to get announcements"
+msgstr "Fout bij het ophalen van meldingen"
+
+#: src/components/announcement/hooks/index.ts:68
+msgid "Failed to get the latest announcement"
+msgstr "Fout bij het ophalen van de laatste melding"
+
+#: src/components/announcement/hooks/index.ts:470
+msgid "Failed to get unread announcements count"
+msgstr "Fout bij het ophalen van het aantal ongelezen meldingen"
+
+#: src/components/announcement/hooks/index.ts:334
+#: src/components/announcement/hooks/index.ts:406
 msgid "Failed to mark all announcements as read"
 msgstr "Fout bij het markeren van alle meldingen als gelezen"
 
-#: src/components/announcement/hooks/index.ts:264
+#: src/components/announcement/hooks/index.ts:182
+#: src/components/announcement/hooks/index.ts:265
 msgid "Failed to mark announcement as read"
 msgstr "Fout bij het markeren van de melding als gelezen"
 
@@ -1395,7 +1414,7 @@ msgstr "Nieuwste eerst"
 msgid "Next"
 msgstr "Volgende"
 
-#: src/components/announcement/Announcements.tsx:113
+#: src/components/announcement/Announcements.tsx:153
 msgid "No announcements available"
 msgstr "Geen meldingen beschikbaar"
 
@@ -2542,6 +2561,10 @@ msgstr ""
 "Balans tactische details met strategische visie\n"
 "\n"
 "Opmerking: Als de discussie geen substantiële besluitpunten of inzichten bevat, flag het voor een diepere exploratie de volgende keer."
+
+#: src/components/announcement/Announcements.tsx:111
+msgid "Try Again"
+msgstr "Opnieuw proberen"
 
 #: src/hooks/useConversationIssueBanner.ts:27
 msgid "Try moving a bit closer to your microphone for better sound quality."
