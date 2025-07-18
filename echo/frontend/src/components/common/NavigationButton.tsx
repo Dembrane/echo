@@ -56,13 +56,15 @@ export const NavigationButton = ({
         active ? "border-primary-500" : "",
         disabled || loading
           ? "opacity-60 hover:border-gray-300"
-          : borderColor === "green" ? `hover:border-green-500` : "hover:border-primary-500",
+          : borderColor === "green"
+            ? `hover:border-green-500`
+            : "hover:border-primary-500",
         props.className,
       )}
     >
       <Group align="center" wrap="nowrap">
         {to ? (
-          <I18nLink to={to} className="flex-grow px-4 py-2 max-w-full">
+          <I18nLink to={to} className="max-w-full flex-grow px-4 py-2">
             <UnstyledButton
               {...props}
               className={cn(
@@ -71,7 +73,7 @@ export const NavigationButton = ({
               )}
             >
               <Group className="w-full justify-between">
-                <Text size="lg" className="font-semibold max-w-full">
+                <Text size="lg" className="max-w-full flex-1 font-semibold">
                   {children}
                 </Text>
                 {!!rightContent && rightContent}
