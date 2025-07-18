@@ -11,7 +11,7 @@ type SummaryCardProps = {
 export const SummaryCard = (props: SummaryCardProps) => {
   return (
     <Paper px="md" py="md" shadow="0" className="relative h-full basis-1/4">
-      <LoadingOverlay visible={props.loading} />
+      <LoadingOverlay visible={props.loading} zIndex={1} />
       <Stack align="start" justify="center" h="100%" gap="md">
         <Group gap="md" align="center">
           <div>{props.icon}</div>
