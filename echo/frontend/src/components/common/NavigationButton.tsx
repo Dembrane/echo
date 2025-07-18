@@ -71,7 +71,7 @@ export const NavigationButton = ({
               )}
             >
               <Group className="w-full justify-between">
-                <Text size="lg" className="font-semibold max-w-full">
+                <Text size="lg" className="font-semibold max-w-full flex-1">
                   {children}
                 </Text>
                 {!!rightContent && rightContent}
