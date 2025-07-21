@@ -67,7 +67,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
             redirected to the report page.
           </Trans>
         </Alert>
-        <ExponentialProgress expectedDuration={60} isLoading={true} />
+        <ExponentialProgress expectedDuration={250} isLoading={true} />
       </Stack>
     );
   }
