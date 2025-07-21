@@ -7,7 +7,6 @@ import {
 // Layout components - keep as regular imports since they're used frequently
 import { BaseLayout } from "./components/layout/BaseLayout";
 import { ProjectLayout } from "./components/layout/ProjectLayout";
-import { ProjectResourceLayout } from "./components/layout/ProjectResourceLayout";
 import { LanguageLayout } from "./components/layout/LanguageLayout";
 import { ProjectConversationLayout } from "./components/layout/ProjectConversationLayout";
 import { ProjectLibraryLayout } from "./components/layout/ProjectLibraryLayout";
@@ -24,7 +23,6 @@ import {
 } from "./routes/project/ProjectRoutes";
 import { ProjectConversationOverviewRoute } from "./routes/project/conversation/ProjectConversationOverview";
 import { ProjectConversationTranscript } from "./routes/project/conversation/ProjectConversationTranscript";
-import { ProjectConversationAnalysis } from "./routes/project/conversation/ProjectConversationAnalysis";
 import { ParticipantPostConversation } from "./routes/participant/ParticipantPostConversation";
 import {
   ParticipantConversationAudioRoute,
@@ -51,10 +49,6 @@ const ProjectResourceAnalysisRoute = createLazyNamedRoute(
 const ProjectLibraryRoute = createLazyNamedRoute(
   () => import("./routes/project/library/ProjectLibrary"),
   "ProjectLibraryRoute",
-);
-const ProjectLibraryInsight = createLazyNamedRoute(
-  () => import("./routes/project/library/ProjectLibraryInsight"),
-  "ProjectLibraryInsight",
 );
 
 const ProjectLibraryView = createLazyNamedRoute(
@@ -216,24 +210,6 @@ export const mainRouter = createBrowserRouter([
                     element: <DebugPage />,
                   },
                   {
-                    path: "resources/:resourceId",
-                    element: <ProjectResourceLayout />,
-                    children: [
-                      {
-                        index: true,
-                        element: <Navigate to="overview" replace />,
-                      },
-                      {
-                        path: "overview",
-                        element: <ProjectResourceOverviewRoute />,
-                      },
-                      {
-                        path: "chat",
-                        element: <ProjectResourceAnalysisRoute />,
-                      },
-                    ],
-                  },
-                  {
                     path: "conversation/:conversationId",
                     element: <ProjectConversationLayout />,
                     children: [
@@ -248,10 +224,6 @@ export const mainRouter = createBrowserRouter([
                       {
                         path: "transcript",
                         element: <ProjectConversationTranscript />,
-                      },
-                      {
-                        path: "analysis",
-                        element: <ProjectConversationAnalysis />,
                       },
                       {
                         path: "debug",
@@ -271,10 +243,6 @@ export const mainRouter = createBrowserRouter([
                       {
                         path: "views/:viewId",
                         element: <ProjectLibraryView />,
-                      },
-                      {
-                        path: "insights/:insightId",
-                        element: <ProjectLibraryInsight />,
                       },
                       {
                         index: true,

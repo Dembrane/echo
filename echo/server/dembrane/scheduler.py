@@ -19,7 +19,7 @@ scheduler.configure(jobstores=jobstores, timezone=utc)
 # Add periodic tasks
 scheduler.add_job(
     func="dembrane.tasks:task_collect_and_finish_unfinished_conversations.send",
-    trigger=CronTrigger(minute="*/5"),
+    trigger=CronTrigger(minute="*/3"),
     id="task_collect_and_finish_unfinished_conversations",
     name="Collect and finish unfinished conversations",
     replace_existing=True,
@@ -28,7 +28,7 @@ scheduler.add_job(
 if DEBUG_MODE:
     scheduler.add_job(
         func="dembrane.tasks:task_update_runpod_transcription_response.send",
-        trigger=CronTrigger(second="*/30"),
+        trigger=CronTrigger(minute="*/2"),
         id="task_update_runpod_transcription_response",
         name="update runpod transcription responses",
         replace_existing=True,

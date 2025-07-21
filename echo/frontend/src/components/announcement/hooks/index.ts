@@ -4,6 +4,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+import * as Sentry from "@sentry/react";
 import { Query, readItems, createItems, aggregate } from "@directus/sdk";
 import { directus } from "@/lib/directus";
 import { useCurrentUser } from "@/lib/query";
@@ -63,8 +64,10 @@ export const useLatestAnnouncement = () => {
 
         return response.length > 0 ? response[0] : null;
       } catch (error) {
+        Sentry.captureException(error);
+        toast.error(t`Failed to get the latest announcement`);
         console.error("Error fetching latest announcement:", error);
-        return null;
+        throw error;
       }
     },
     retry: 2,
@@ -145,11 +148,10 @@ export const useInfiniteAnnouncements = ({
             response.length === initialLimit ? pageParam + 1 : undefined,
         };
       } catch (error) {
+        Sentry.captureException(error);
+        toast.error(t`Failed to get announcements`);
         console.error("Error fetching announcements:", error);
-        return {
-          announcements: [],
-          nextOffset: undefined,
-        };
+        throw error;
       }
     },
     initialPageParam: 0,
@@ -176,11 +178,10 @@ export const useMarkAsReadMutation = () => {
           } as any),
         );
       } catch (error) {
+        Sentry.captureException(error);
+        toast.error(t`Failed to mark announcement as read`);
         console.error("Error in mutationFn:", error);
-        return {
-          success: false,
-          error: error,
-        };
+        throw error;
       }
     },
     onMutate: async ({ announcementId }) => {
@@ -329,6 +330,8 @@ export const useMarkAllAsReadMutation = () => {
 
         return [];
       } catch (error) {
+        Sentry.captureException(error);
+        toast.error(t`Failed to mark all announcements as read`);
         console.error("Error in markAllAsRead mutationFn:", error);
         throw error;
       }
@@ -463,8 +466,10 @@ export const useUnreadAnnouncements = () => {
           parseInt(activities?.[0]?.count?.toString() ?? "0");
         return Math.max(0, count);
       } catch (error) {
+        Sentry.captureException(error);
+        toast.error(t`Failed to get unread announcements count`);
         console.error("Error fetching unread announcements count:", error);
-        return 0;
+        throw error;
       }
     },
     enabled: !!currentUser?.id, // Only run query if user is logged in

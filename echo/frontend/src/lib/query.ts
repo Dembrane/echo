@@ -26,9 +26,8 @@ import {
   getConversationTranscriptString,
   getLatestProjectAnalysisRunByProjectId,
   getProjectChatContext,
-  getProjectInsights,
+  getProjectConversationCounts,
   getProjectViews,
-  getQuotesByConversationId,
   getResourceById,
   getResourcesByProjectId,
   initiateAndUploadConversationChunk,
@@ -324,33 +323,6 @@ export const useLogoutMutation = () => {
   });
 };
 
-export const useProcessingStatus = ({
-  collectionName,
-  itemId,
-}: {
-  collectionName: string;
-  itemId: string;
-}) => {
-  return useQuery({
-    queryKey: ["processing_status", collectionName, itemId],
-    queryFn: () =>
-      directus.request(
-        readItems("processing_status", {
-          filter: {
-            collection_name: {
-              _eq: collectionName,
-            },
-            item_id: {
-              _eq: itemId,
-            },
-          },
-          sort: ["-timestamp"],
-          fields: ["*"],
-        }),
-      ),
-  });
-};
-
 export const useProjectById = ({
   projectId,
   query = {
@@ -378,35 +350,6 @@ export const useProjectById = ({
   });
 };
 
-export const useProjectInsights = (projectId: string) => {
-  return useQuery({
-    queryKey: ["projects", projectId, "insights"],
-    queryFn: () => getProjectInsights(projectId),
-  });
-};
-
-export const useInsight = (insightId: string) => {
-  return useQuery({
-    queryKey: ["insights", insightId],
-    queryFn: () =>
-      directus.request<Insight>(
-        readItem("insight", insightId, {
-          fields: [
-            "*",
-            {
-              quotes: [
-                "*",
-                {
-                  conversation_id: ["id", "participant_name", "created_at"],
-                },
-              ],
-            },
-          ],
-        }),
-      ),
-  });
-};
-
 export const useProjectViews = (projectId: string) => {
   return useQuery({
     queryKey: ["projects", projectId, "views"],
@@ -421,11 +364,16 @@ export const useViewById = (projectId: string, viewId: string) => {
     queryFn: () =>
       directus.request<View>(
         readItem("view", viewId, {
-          fields: ["*", { aspects: ["*", "count(quotes)"] }],
+          fields: [
+            "*",
+            {
+              aspects: ["*", "count(aspect_segment)"],
+            },
+          ],
           deep: {
-            // get the aspects that have at least one representative quote
+            // get the aspects that have at least one aspect segment
             aspects: {
-              _sort: "-count(representative_quotes)",
+              _sort: "-count(aspect_segment)",
             } as any,
           },
         }),
@@ -442,35 +390,15 @@ export const useAspectById = (projectId: string, aspectId: string) => {
           fields: [
             "*",
             {
-              quotes: [
+              "aspect_segment": [
                 "*",
-                {
-                  quote_id: [
-                    "id",
-                    "text",
-                    "created_at",
-                    {
-                      conversation_id: ["id", "participant_name", "created_at"],
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              representative_quotes: [
-                "*",
-                {
-                  quote_id: [
-                    "id",
-                    "text",
-                    "created_at",
-                    {
-                      conversation_id: ["id", "participant_name", "created_at"],
-                    },
-                  ],
-                },
-              ],
-            },
+                { 
+                  "segment": [
+                    "*",
+                  ]
+                }
+              ]
+            }
           ],
         }),
       ),
@@ -632,13 +560,6 @@ export const useConversationById = ({
         }),
       ),
     ...useQueryOpts,
-  });
-};
-
-export const useConversationQuotes = (conversationId: string) => {
-  return useQuery({
-    queryKey: ["conversations", conversationId, "quotes"],
-    queryFn: () => getQuotesByConversationId(conversationId),
   });
 };
 
@@ -818,6 +739,14 @@ export const useDeleteConversationChunkByIdMutation = () => {
         queryKey: ["conversations"],
       });
     },
+  });
+};
+
+export const useProjectConversationCounts = (projectId: string) => {
+  return useQuery({
+    queryKey: ["projects", projectId, "conversation-counts"],
+    queryFn: () => getProjectConversationCounts(projectId),
+    refetchInterval: 15000,
   });
 };
 
@@ -1258,33 +1187,6 @@ export const useConversationTranscriptString = (conversationId: string) => {
   return useQuery({
     queryKey: ["conversations", conversationId, "transcript"],
     queryFn: () => getConversationTranscriptString(conversationId),
-  });
-};
-
-// export const useConversationTokenCount = (conversationId: string) => {
-//   return useQuery({
-//     queryKey: ["conversations", conversationId, "token_count"],
-//     queryFn: () => getConversationTokenCount(conversationId),
-//   });
-// };
-
-export const useInsightsByConversationId = (conversationId: string) => {
-  return useQuery({
-    queryKey: ["conversations", conversationId, "insights"],
-    queryFn: () =>
-      directus.request(
-        readItems("insight", {
-          filter: {
-            quotes: {
-              _some: {
-                conversation_id: {
-                  _eq: conversationId,
-                },
-              },
-            },
-          },
-        }),
-      ),
   });
 };
 

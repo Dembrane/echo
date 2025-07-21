@@ -18,7 +18,6 @@ import { useParams } from "react-router-dom";
 import {
   useConversationById,
   useCurrentUser,
-  useProcessingStatus,
   useProjectById,
   useProjectChats,
 } from "@/lib/query";
@@ -739,6 +738,20 @@ export default function DebugPage() {
   const { data: conversation } = useConversationById({
     conversationId: currentConversationId!,
     loadConversationChunks: true,
+    query: {
+      fields: [
+        "*",
+        "processing_status.*" as any,
+        {
+          tags: [
+            {
+              project_tag_id: ["id", "text", "created_at"],
+            },
+          ],
+        },
+        { chunks: ["*", "processing_status.*"] as any },
+      ],
+    },
   });
 
   const { data: chats } = useProjectChats(currentProjectId!, {
@@ -751,14 +764,6 @@ export default function DebugPage() {
         _gt: 0,
       },
     },
-  });
-
-  const {
-    data: conversationProcessingStatus,
-    refetch: refetchConversationProcessingStatus,
-  } = useProcessingStatus({
-    collectionName: "conversation",
-    itemId: currentConversationId!,
   });
 
   const variables = {
@@ -818,14 +823,13 @@ export default function DebugPage() {
       <Stack>
         <Title order={1}>Conversation</Title>
         <pre>{JSON.stringify(conversation, null, 2)}</pre>
-        <Divider />
-        <Group>
+        {/* <Group>
           <Title order={3}>Logs</Title>
           <Button onClick={() => refetchConversationProcessingStatus()}>
             Refetch Logs
           </Button>
         </Group>
-        <LogTable data={conversationProcessingStatus ?? []} />
+        <LogTable data={conversationProcessingStatus ?? []} /> */}
       </Stack>
       <Divider />
       <Stack>

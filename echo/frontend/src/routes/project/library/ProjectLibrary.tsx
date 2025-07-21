@@ -2,7 +2,6 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { CloseableAlert } from "@/components/common/ClosableAlert";
-import { Insight } from "@/components/insight/Insight";
 import { ProjectAnalysisRunStatus } from "@/components/project/ProjectAnalysisRunStatus";
 import { ViewExpandedCard } from "@/components/view/View";
 import { Icons } from "@/icons";
@@ -11,7 +10,6 @@ import {
   useGenerateProjectLibraryMutation,
   useLatestProjectAnalysisRunByProjectId,
   useProjectById,
-  useProjectInsights,
   useProjectViews,
 } from "@/lib/query";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -54,7 +52,6 @@ export const ProjectLibraryRoute = () => {
   const projectQuery = useProjectById({
     projectId: projectId ?? "",
   });
-  const insightsQuery = useProjectInsights(projectId ?? "");
   const conversationsQuery = useConversationsByProjectId(
     projectId ?? "",
     false,
@@ -84,44 +81,6 @@ export const ProjectLibraryRoute = () => {
     );
   }
 
-  const sortInsights = (data: Insight[], sortBy: SortBy) => {
-    try {
-      if (sortBy === "default") {
-        return data.sort(
-          (a, b) =>
-            new Date(a.created_at!).getTime() -
-            new Date(b.created_at!).getTime(),
-        );
-      } else if (sortBy === "relevance") {
-        // Ubiquity - Measured by the number of unique conversations in each insight.
-        // Relevance - Measured by the number of quotes present in each insight.
-        return data.sort((a, b) => {
-          const uniqueConversationsA = new Set(
-            a.quotes.map((quote) => (quote as Quote).conversation_id),
-          ).size;
-          const uniqueConversationsB = new Set(
-            b.quotes.map((quote) => (quote as Quote).conversation_id),
-          ).size;
-
-          // primary sort on the number of unique conversations
-          if (uniqueConversationsA !== uniqueConversationsB) {
-            return uniqueConversationsB - uniqueConversationsA; // descending order
-          }
-
-          // secondary sort on the number of quotes
-          return b.quotes.length - a.quotes.length; // descending order
-        });
-      } else {
-        throw new Error("Invalid sortBy value");
-      }
-    } catch (err) {
-      console.error("Invalid sort", err);
-      return data;
-    }
-  };
-
-  const insightsExist =
-    insightsQuery && insightsQuery.data && insightsQuery.data.length > 0;
 
   const viewsExist =
     viewsQuery && viewsQuery.data && viewsQuery.data.length > 0;
@@ -154,7 +113,7 @@ export const ProjectLibraryRoute = () => {
           ]}
         />
 
-        {latestRun && latestRun.processing_completed_at ? (
+        {latestRun  ? (
           <Button
             variant="outline"
             leftSection={<IconRefresh />}
@@ -169,15 +128,16 @@ export const ProjectLibraryRoute = () => {
                 ? t`Library creation is in progress`
                 : conversationsQuery.data?.length === 0
                   ? t`No conversations available to create library`
-                  : latestRun?.processing_status === "PROCESSING"
-                    ? t`Library is currently being processed`
+                  // : latestRun?.processing_status === "PROCESSING"
+                  //   ? t`Library is currently being processed`
                     : null
             }
             disabled={
               !(
                 requestProjectLibraryMutation.isPending ||
-                conversationsQuery.data?.length === 0 ||
-                latestRun?.processing_status === "PROCESSING"
+                conversationsQuery.data?.length === 0 
+                // ||
+                // latestRun?.processing_status === "PROCESSING"
               )
             }
           >
@@ -188,8 +148,9 @@ export const ProjectLibraryRoute = () => {
               disabled={
                 // TODO: this should really be a server-side check
                 requestProjectLibraryMutation.isPending ||
-                conversationsQuery.data?.length === 0 ||
-                latestRun?.processing_status === "PROCESSING"
+                conversationsQuery.data?.length === 0 
+                // ||
+                // latestRun?.processing_status === "PROCESSING"
               }
             >
               <Trans>Create Library</Trans>
@@ -232,7 +193,9 @@ export const ProjectLibraryRoute = () => {
         <Button
           leftSection={<IconPlus />}
           onClick={toggle}
-          disabled={!(latestRun && latestRun.processing_status === "DONE")}
+          disabled={!(latestRun 
+            // && latestRun.processing_status === "DONE"
+            )}
         >
           <Trans>Create View</Trans>
         </Button>
@@ -242,7 +205,9 @@ export const ProjectLibraryRoute = () => {
         <CreateView projectId={projectId ?? ""} onClose={close} />
       </Collapse>
 
-      {!opened && latestRun && latestRun.processing_status === "DONE" && (
+      {!opened && latestRun
+       // && latestRun.processing_status === "DONE"
+       && (
         <CloseableAlert variant="light" icon={<Icons.View />}>
           <Text>
             <Trans>
@@ -258,67 +223,6 @@ export const ProjectLibraryRoute = () => {
         {viewsQuery.data &&
           viewsQuery.data.map((v) => <ViewExpandedCard key={v.id} data={v} />)}
       </Stack>
-
-      {projectQuery.data?.is_library_insights_enabled && (
-        <>
-          <Divider />
-          <Title order={2} id="insights">
-            <Trans>All Insights</Trans>
-          </Title>
-
-          {!insightsExist && (
-            <Alert variant="light" icon={<IconInfoCircle />}>
-              <Text>
-                <Trans>
-                  Your library is empty. Create a library to see your first
-                  insights.
-                </Trans>
-              </Text>
-            </Alert>
-          )}
-
-          {insightsQuery.data && insightsQuery.data.length > 0 && (
-            <>
-              <Group gap="md">
-                <Button
-                  onClick={toggleSort}
-                  color={sortBy === "relevance" ? "blue" : "gray"}
-                  variant={sortBy === "relevance" ? "filled" : "subtle"}
-                  leftSection={<IconSortAscending />}
-                >
-                  <Trans>Relevance</Trans>
-                </Button>
-
-                <Button
-                  onClick={toggleSort}
-                  color={sortBy === "default" ? "blue" : "gray"}
-                  variant={sortBy === "default" ? "filled" : "subtle"}
-                  leftSection={<IconClock />}
-                >
-                  <Trans>Time Created</Trans>
-                </Button>
-              </Group>
-
-              <div
-                ref={parent}
-                className="grid grid-cols-1 gap-4 md:grid-cols-3"
-              >
-                {insightsQuery.isLoading && (
-                  <>
-                    <Skeleton height={100} />
-                    <Skeleton height={100} />
-                  </>
-                )}
-                {insightsQuery.data &&
-                  insightsQuery.data.length > 0 &&
-                  sortInsights(insightsQuery.data, sortBy).map((insight) => (
-                    <Insight key={insight.id} data={insight as Insight} />
-                  ))}
-              </div>
-            </>
-          )}
-        </>
-      )}
     </Stack>
   );
 };

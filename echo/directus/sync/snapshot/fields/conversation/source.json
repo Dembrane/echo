@@ -11,30 +11,18 @@
     "group": null,
     "hidden": false,
     "interface": "select-dropdown",
-    "note": "This is set if not through PORTAL",
+    "note": "Unset if PORTAL",
     "options": {
       "choices": [
         {
           "text": "DASHBOARD_UPLOAD",
           "value": "DASHBOARD_UPLOAD"
-        },
-        {
-          "text": "PORTAL_AUDIO",
-          "value": "PORTAL_AUDIO"
-        },
-        {
-          "text": "PORTAL_TEXT",
-          "value": "PORTAL_TEXT"
-        },
-        {
-          "text": "SPLIT",
-          "value": "SPLIT"
         }
       ]
     },
     "readonly": false,
     "required": false,
-    "sort": 21,
+    "sort": 11,
     "special": null,
     "translations": null,
     "validation": null,

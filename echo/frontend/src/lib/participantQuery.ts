@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import {
+  getParticipantConversationById,
   getParticipantConversationChunks,
   getParticipantProjectById,
   getParticipantTutorialCardsBySlug,
 } from "./api";
 import { directus } from "./directus";
-import { readItem, readItems } from "@directus/sdk";
+import { readItems } from "@directus/sdk";
 
 export const useParticipantProjectById = (projectId: string) => {
   return useQuery({
@@ -58,10 +59,9 @@ export const useConversationQuery = (
 ) => {
   return useQuery({
     queryKey: ["participant", "conversation", projectId, conversationId],
-    queryFn: () =>
-      directus.request(readItem("conversation", conversationId ?? "")),
-    enabled: !!conversationId,
-    refetchInterval: 30000,
+    queryFn: () => getParticipantConversationById(projectId ?? "", conversationId ?? ""),
+    enabled: !!conversationId && !!projectId,
+    refetchInterval: 60000,
   });
 };
 
@@ -73,7 +73,6 @@ export const useConversationChunksQuery = (
     queryKey: ["participant", "conversation_chunks", conversationId],
     queryFn: () =>
       getParticipantConversationChunks(projectId ?? "", conversationId ?? ""),
-    enabled: !!conversationId,
-    refetchInterval: 15000,
+    refetchInterval: 60000,
   });
 };

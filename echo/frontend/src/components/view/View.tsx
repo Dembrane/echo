@@ -2,8 +2,6 @@ import { Trans } from "@lingui/react/macro";
 import { Icons } from "@/icons";
 import {
   ActionIcon,
-  Button,
-  CopyButton,
   Group,
   Paper,
   Pill,
@@ -11,15 +9,15 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { IconArrowsDiagonal, IconCopy } from "@tabler/icons-react";
+import { IconArrowsDiagonal } from "@tabler/icons-react";
 import { AspectCard } from "../aspect/AspectCard";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Markdown } from "../common/Markdown";
 import { I18nLink } from "../common/i18nLink";
 import { useCopyView } from "../../hooks/useCopyView";
 import { CopyIconButton } from "../common/CopyIconButton";
 
-export const ViewCard = ({ data }: { data: TView }) => {
+export const ViewCard = ({ data }: { data: View }) => {
   return (
     <Paper bg="white" p="md">
       <Stack gap="sm">
@@ -68,11 +66,11 @@ export const ViewExpandedCard = ({ data }: { data: View }) => {
           </Group>
         </Group>
 
-        {data.processing_status !== "DONE" && (
+        {/* {data.processing_status !== "DONE" && (
           <Text className="italic text-gray-700">
             {data.processing_status}: {data.processing_message}
           </Text>
-        )}
+        )} */}
 
         <Text className="text-2xl font-semibold">{data.name}</Text>
         <Group>
@@ -85,7 +83,7 @@ export const ViewExpandedCard = ({ data }: { data: View }) => {
           </Pill>
         </Group>
         <Spoiler maxHeight={120} showLabel="Show more" hideLabel="Show less">
-          <Markdown content={data.summary ?? ""} />
+          <Markdown content={data.description ?? ""} />
         </Spoiler>
 
         <div className="flex w-full snap-x overflow-x-auto pb-2">

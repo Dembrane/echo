@@ -13,22 +13,9 @@ import { Quote } from "../../../components/quote/Quote";
 import { Markdown } from "@/components/common/Markdown";
 import { useAspectById, useProjectById } from "@/lib/query";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
-import { useMemo } from "react";
 import { useCopyAspect } from "@/hooks/useCopyAspect";
 import { CopyIconButton } from "@/components/common/CopyIconButton";
 import { sanitizeImageUrl } from "@/lib/utils";
-
-const dedupeQuotes = (quotes: QuoteAspect[]): QuoteAspect[] => {
-  const seen = new Set();
-
-  return quotes.filter((quote) => {
-    if (seen.has((quote.quote_id as Quote).id)) {
-      return false;
-    }
-    seen.add((quote.quote_id as Quote).id);
-    return true;
-  });
-};
 
 export const ProjectLibraryAspect = () => {
   const { projectId, viewId, aspectId } = useParams();
@@ -47,14 +34,6 @@ export const ProjectLibraryAspect = () => {
     },
   });
 
-  const quotes = useMemo(
-    () =>
-      dedupeQuotes([
-        ...(aspect?.representative_quotes ?? []),
-        ...(aspect?.quotes ?? []),
-      ]),
-    [aspect],
-  );
 
   return (
     <Stack className="relative px-4 py-6">
@@ -100,23 +79,15 @@ export const ProjectLibraryAspect = () => {
             />
             {!isLoading ? (
               <>
-                {quotes.length > 0 && (
+                {aspect?.aspect_segment?.length && aspect?.aspect_segment?.length > 0 && (
                   <Title order={2}>
-                    <Trans>Quotes</Trans>
+                    <Trans>Insights</Trans>
                   </Title>
                 )}
-                {quotes.map((quote: QuoteAspect) => (
+                {aspect?.aspect_segment?.map((segment: AspectSegment) => (
                   <Quote
-                    key={quote.id}
-                    data={quote.quote_id as Quote}
-                    className={
-                      aspect?.representative_quotes &&
-                      aspect?.representative_quotes.find(
-                        (q) => q.id === quote.id,
-                      )
-                        ? "border-gray-400"
-                        : ""
-                    }
+                    key={segment.id}
+                    data={segment}
                   />
                 ))}
               </>

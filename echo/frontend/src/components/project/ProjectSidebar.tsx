@@ -119,7 +119,7 @@ export const ProjectSidebar = () => {
 
       <ProjectAccordion projectId={projectId} />
 
-      <Stack className="text-center">
+      <Stack className="text-center md:pb-10">
         <Group
           component="a"
           // @ts-ignore

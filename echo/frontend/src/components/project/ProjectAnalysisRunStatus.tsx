@@ -56,30 +56,42 @@ export const ProjectAnalysisRunStatus = ({
     return null;
   }
 
-  if (data.processing_status === "DONE") {
-    return (
-      <Stack className="italic text-gray-700">
-        {!!conversationChunksQuery.data && conversationChunksQuery.data > 0 ? (
+  // if (data.processing_status === "DONE") {
+  //   return (
+  //     <Stack className="italic text-gray-700">
+  //       {!!conversationChunksQuery.data && conversationChunksQuery.data > 0 ? (
+  //         <CloseableAlert>
+  //           <Trans>
+  //             New conversations have been added since the library was generated.
+  //             Regenerate the library to process them.
+  //           </Trans>
+  //         </CloseableAlert>
+  //       ) : (
+  //         <></>
+  //       )}
+  //       <div>
+  //         <Trans>This project library was generated on</Trans>{" "}
+  //         {new Date(data.created_at ?? new Date()).toLocaleString()}.
+  //       </div>
+  //     </Stack>
+  //   );
+  // }
+
+
+  return (
+
+    <div className="italic text-gray-700">
+      {
+        conversationChunksQuery.data && conversationChunksQuery.data > 0 && (
           <CloseableAlert>
             <Trans>
               New conversations have been added since the library was generated.
               Regenerate the library to process them.
             </Trans>
           </CloseableAlert>
-        ) : (
-          <></>
-        )}
-        <div>
-          <Trans>This project library was generated on</Trans>{" "}
-          {new Date(data.created_at ?? new Date()).toLocaleString()}.
-        </div>
-      </Stack>
-    );
-  }
-
-  return (
-    <div className="italic text-gray-700">
-      {data.processing_status}: {data.processing_message}{" "}
+        )
+      }
+      {/* {data.processing_status}: {data.processing_message}{" "} */}
     </div>
   );
 };
