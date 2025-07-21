@@ -8,6 +8,7 @@ import {
   useQueryClient,
   useInfiniteQuery,
 } from "@tanstack/react-query";
+import * as Sentry from "@sentry/react";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
   addChatContext,
@@ -25,9 +26,8 @@ import {
   getConversationTranscriptString,
   getLatestProjectAnalysisRunByProjectId,
   getProjectChatContext,
-  getProjectInsights,
+  getProjectConversationCounts,
   getProjectViews,
-  getQuotesByConversationId,
   getResourceById,
   getResourcesByProjectId,
   initiateAndUploadConversationChunk,
@@ -323,33 +323,6 @@ export const useLogoutMutation = () => {
   });
 };
 
-export const useProcessingStatus = ({
-  collectionName,
-  itemId,
-}: {
-  collectionName: string;
-  itemId: string;
-}) => {
-  return useQuery({
-    queryKey: ["processing_status", collectionName, itemId],
-    queryFn: () =>
-      directus.request(
-        readItems("processing_status", {
-          filter: {
-            collection_name: {
-              _eq: collectionName,
-            },
-            item_id: {
-              _eq: itemId,
-            },
-          },
-          sort: ["-timestamp"],
-          fields: ["*"],
-        }),
-      ),
-  });
-};
-
 export const useProjectById = ({
   projectId,
   query = {
@@ -377,35 +350,6 @@ export const useProjectById = ({
   });
 };
 
-export const useProjectInsights = (projectId: string) => {
-  return useQuery({
-    queryKey: ["projects", projectId, "insights"],
-    queryFn: () => getProjectInsights(projectId),
-  });
-};
-
-export const useInsight = (insightId: string) => {
-  return useQuery({
-    queryKey: ["insights", insightId],
-    queryFn: () =>
-      directus.request<Insight>(
-        readItem("insight", insightId, {
-          fields: [
-            "*",
-            {
-              quotes: [
-                "*",
-                {
-                  conversation_id: ["id", "participant_name", "created_at"],
-                },
-              ],
-            },
-          ],
-        }),
-      ),
-  });
-};
-
 export const useProjectViews = (projectId: string) => {
   return useQuery({
     queryKey: ["projects", projectId, "views"],
@@ -420,11 +364,16 @@ export const useViewById = (projectId: string, viewId: string) => {
     queryFn: () =>
       directus.request<View>(
         readItem("view", viewId, {
-          fields: ["*", { aspects: ["*", "count(quotes)"] }],
+          fields: [
+            "*",
+            {
+              aspects: ["*", "count(aspect_segment)"],
+            },
+          ],
           deep: {
-            // get the aspects that have at least one representative quote
+            // get the aspects that have at least one aspect segment
             aspects: {
-              _sort: "-count(representative_quotes)",
+              _sort: "-count(aspect_segment)",
             } as any,
           },
         }),
@@ -441,35 +390,15 @@ export const useAspectById = (projectId: string, aspectId: string) => {
           fields: [
             "*",
             {
-              quotes: [
+              "aspect_segment": [
                 "*",
-                {
-                  quote_id: [
-                    "id",
-                    "text",
-                    "created_at",
-                    {
-                      conversation_id: ["id", "participant_name", "created_at"],
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              representative_quotes: [
-                "*",
-                {
-                  quote_id: [
-                    "id",
-                    "text",
-                    "created_at",
-                    {
-                      conversation_id: ["id", "participant_name", "created_at"],
-                    },
-                  ],
-                },
-              ],
-            },
+                { 
+                  "segment": [
+                    "*",
+                  ]
+                }
+              ]
+            }
           ],
         }),
       ),
@@ -631,13 +560,6 @@ export const useConversationById = ({
         }),
       ),
     ...useQueryOpts,
-  });
-};
-
-export const useConversationQuotes = (conversationId: string) => {
-  return useQuery({
-    queryKey: ["conversations", conversationId, "quotes"],
-    queryFn: () => getQuotesByConversationId(conversationId),
   });
 };
 
@@ -817,6 +739,14 @@ export const useDeleteConversationChunkByIdMutation = () => {
         queryKey: ["conversations"],
       });
     },
+  });
+};
+
+export const useProjectConversationCounts = (projectId: string) => {
+  return useQuery({
+    queryKey: ["projects", projectId, "conversation-counts"],
+    queryFn: () => getProjectConversationCounts(projectId),
+    refetchInterval: 15000,
   });
 };
 
@@ -1260,33 +1190,6 @@ export const useConversationTranscriptString = (conversationId: string) => {
   });
 };
 
-// export const useConversationTokenCount = (conversationId: string) => {
-//   return useQuery({
-//     queryKey: ["conversations", conversationId, "token_count"],
-//     queryFn: () => getConversationTokenCount(conversationId),
-//   });
-// };
-
-export const useInsightsByConversationId = (conversationId: string) => {
-  return useQuery({
-    queryKey: ["conversations", conversationId, "insights"],
-    queryFn: () =>
-      directus.request(
-        readItems("insight", {
-          filter: {
-            quotes: {
-              _some: {
-                conversation_id: {
-                  _eq: conversationId,
-                },
-              },
-            },
-          },
-        }),
-      ),
-  });
-};
-
 export const useCreateChatMutation = () => {
   const navigate = useI18nNavigate();
   const queryClient = useQueryClient();
@@ -1440,20 +1343,122 @@ export const useAddChatContextMutation = () => {
         payload.conversationId,
         payload.auto_select_bool,
       ),
-    onError: (error) => {
-      if (error instanceof AxiosError) {
-        alert(
-          "Failed to add conversation to chat: " + error.response?.data.detail,
+    onMutate: async (variables) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({
+        queryKey: ["chats", "context", variables.chatId],
+      });
+
+      // Snapshot the previous value
+      const previousChatContext = queryClient.getQueryData([
+        "chats",
+        "context",
+        variables.chatId,
+      ]);
+
+      // Optimistically update the chat context
+      let optimisticId: string | undefined = undefined;
+      queryClient.setQueryData(
+        ["chats", "context", variables.chatId],
+        (oldData: TProjectChatContext | undefined) => {
+          if (!oldData) return oldData;
+
+          // If conversationId is provided, add it to the conversations array
+          if (variables.conversationId) {
+            const existingConversation = oldData.conversations.find(
+              (conv) => conv.conversation_id === variables.conversationId,
+            );
+
+            if (!existingConversation) {
+              optimisticId = "optimistic-" + Date.now() + Math.random();
+              return {
+                ...oldData,
+                conversations: [
+                  ...oldData.conversations,
+                  {
+                    conversation_id: variables.conversationId,
+                    conversation_participant_name: t`Loading...`,
+                    locked: false,
+                    token_usage: 0,
+                    optimisticId,
+                  },
+                ],
+              };
+            }
+          }
+
+          // If auto_select_bool is provided, update it
+          if (variables.auto_select_bool !== undefined) {
+            return {
+              ...oldData,
+              auto_select_bool: variables.auto_select_bool,
+            };
+          }
+
+          return oldData;
+        },
+      );
+
+      // Return a context object with the snapshotted value
+      return {
+        previousChatContext,
+        optimisticId,
+        conversationId: variables.conversationId ?? undefined,
+      };
+    },
+    onError: (error, variables, context) => {
+      Sentry.captureException(error);
+
+      // Only rollback the failed optimistic entry
+      if (context?.optimisticId && context?.conversationId) {
+        queryClient.setQueryData(
+          ["chats", "context", variables.chatId],
+          (oldData: TProjectChatContext | undefined) => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              conversations: oldData.conversations.filter(
+                (conv) =>
+                  conv.conversation_id !== context.conversationId ||
+                  conv.optimisticId !== context.optimisticId,
+              ),
+            };
+          },
         );
+      } else if (context?.previousChatContext) {
+        // fallback: full rollback
+        queryClient.setQueryData(
+          ["chats", "context", variables.chatId],
+          context.previousChatContext,
+        );
+      }
+
+      if (error instanceof AxiosError) {
+        let errorMessage = t`Failed to add conversation to chat${
+          error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
+        }`;
+        if (variables.auto_select_bool) {
+          errorMessage = t`Failed to enable Auto Select for this chat`;
+        }
+        toast.error(errorMessage);
       } else {
-        alert("Failed to add conversation to chat");
+        let errorMessage = t`Failed to add conversation to chat`;
+        if (variables.auto_select_bool) {
+          errorMessage = t`Failed to enable Auto Select for this chat`;
+        }
+        toast.error(errorMessage);
       }
     },
-    onSuccess: (_, vars) => {
+    onSettled: (_, __, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["chats", "context", vars.chatId],
+        queryKey: ["chats", "context", variables.chatId],
       });
-      toast.success("Conversation added to chat");
+    },
+    onSuccess: (_, variables) => {
+      const message = variables.auto_select_bool
+        ? t`Auto-select enabled`
+        : t`Conversation added to chat`;
+      toast.success(message);
     },
   });
 };
@@ -1471,11 +1476,127 @@ export const useDeleteChatContextMutation = () => {
         payload.conversationId,
         payload.auto_select_bool,
       ),
-    onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({
-        queryKey: ["chats", "context", vars.chatId],
+    onMutate: async (variables) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({
+        queryKey: ["chats", "context", variables.chatId],
       });
-      toast.success("Conversation removed from chat");
+
+      // Snapshot the previous value
+      const previousChatContext = queryClient.getQueryData([
+        "chats",
+        "context",
+        variables.chatId,
+      ]);
+
+      // Optimistically update the chat context
+      queryClient.setQueryData(
+        ["chats", "context", variables.chatId],
+        (oldData: TProjectChatContext | undefined) => {
+          if (!oldData) return oldData;
+
+          // If conversationId is provided, remove it from the conversations array
+          if (variables.conversationId) {
+            const conversationToRemove = oldData.conversations.find(
+              (conv) => conv.conversation_id === variables.conversationId,
+            );
+
+            if (conversationToRemove) {
+              return {
+                ...oldData,
+                conversations: oldData.conversations.filter(
+                  (conv) => conv.conversation_id !== variables.conversationId,
+                ),
+              };
+            }
+          }
+
+          // If auto_select_bool is provided, update it
+          if (variables.auto_select_bool !== undefined) {
+            return {
+              ...oldData,
+              auto_select_bool: variables.auto_select_bool,
+            };
+          }
+
+          return oldData;
+        },
+      );
+
+      // Return a context object with the snapshotted value
+      return {
+        previousChatContext,
+        conversationId: variables.conversationId ?? undefined,
+      };
+    },
+    onError: (error, variables, context) => {
+      Sentry.captureException(error);
+
+      // Only rollback the failed optimistic entry
+      if (context?.conversationId) {
+        queryClient.setQueryData(
+          ["chats", "context", variables.chatId],
+          (oldData: TProjectChatContext | undefined) => {
+            if (!oldData) return oldData;
+
+            // Find the conversation that was removed optimistically
+            const previousContext = context.previousChatContext as
+              | TProjectChatContext
+              | undefined;
+            const removedConversation = previousContext?.conversations?.find(
+              (conv) => conv.conversation_id === context.conversationId,
+            );
+
+            if (removedConversation) {
+              return {
+                ...oldData,
+                conversations: [
+                  ...oldData.conversations,
+                  {
+                    ...removedConversation,
+                  },
+                ],
+              };
+            }
+
+            return oldData;
+          },
+        );
+      } else if (context?.previousChatContext) {
+        // fallback: full rollback
+        queryClient.setQueryData(
+          ["chats", "context", variables.chatId],
+          context.previousChatContext,
+        );
+      }
+
+      if (error instanceof AxiosError) {
+        let errorMessage = t`Failed to remove conversation from chat${
+          error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
+        }`;
+        if (variables.auto_select_bool === false) {
+          errorMessage = t`Failed to disable Auto Select for this chat`;
+        }
+        toast.error(errorMessage);
+      } else {
+        let errorMessage = t`Failed to remove conversation from chat`;
+        if (variables.auto_select_bool === false) {
+          errorMessage = t`Failed to disable Auto Select for this chat`;
+        }
+        toast.error(errorMessage);
+      }
+    },
+    onSettled: (_, __, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["chats", "context", variables.chatId],
+      });
+    },
+    onSuccess: (_, variables) => {
+      const message =
+        variables.auto_select_bool === false
+          ? t`Auto-select disabled`
+          : t`Conversation removed from chat`;
+      toast.success(message);
     },
   });
 };

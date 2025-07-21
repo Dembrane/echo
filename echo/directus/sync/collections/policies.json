@@ -16,9 +16,9 @@
     "_syncId": "_sync_default_admin_policy"
   },
   {
-    "name": "$t:public_label",
-    "icon": "public",
-    "description": "$t:public_description",
+    "name": "Views Pipeline Processing",
+    "icon": "badge",
+    "description": null,
     "ip_access": null,
     "enforce_tfa": false,
     "admin_access": false,
@@ -62,6 +62,22 @@
       }
     ],
     "_syncId": "37a60e48-dd00-4867-af07-1fb22ac89078"
+  },
+  {
+    "name": "$t:public_label",
+    "icon": "public",
+    "description": "$t:public_description",
+    "ip_access": null,
+    "enforce_tfa": false,
+    "admin_access": false,
+    "app_access": false,
+    "roles": [
+      {
+        "role": null,
+        "sort": 1
+      }
+    ],
+    "_syncId": "abf8a154-5b1c-4a46-ac9c-7300570f4f17"
   },
   {
     "name": "Read Only - everything",

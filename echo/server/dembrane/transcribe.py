@@ -1,8 +1,9 @@
+# transcribe.py
 import io
 import os
 import logging
 import mimetypes
-from typing import Optional
+from typing import List, Optional
 
 import requests
 from litellm import transcription
@@ -20,11 +21,9 @@ from dembrane.config import (
     ENABLE_RUNPOD_WHISPER_TRANSCRIPTION,
     ENABLE_LITELLM_WHISPER_TRANSCRIPTION,
     RUNPOD_WHISPER_MAX_REQUEST_THRESHOLD,
-    ENABLE_ENGLISH_TRANSCRIPTION_WITH_LITELLM,
 )
 from dembrane.prompts import render_prompt
 from dembrane.directus import directus
-from dembrane.processing_status_utils import ProcessingStatus
 
 logger = logging.getLogger("transcribe")
 
@@ -36,7 +35,7 @@ class TranscriptionError(Exception):
 def queue_transcribe_audio_runpod(
     audio_file_uri: str,
     language: Optional[str],
-    whisper_prompt: Optional[str],
+    hotwords: Optional[List[str]] = None,
     is_priority: bool = False,
     conversation_chunk_id: Optional[str] = "",
 ) -> str:
@@ -52,7 +51,7 @@ def queue_transcribe_audio_runpod(
 
         input_payload = {
             "audio": signed_url,
-            "initial_prompt": whisper_prompt,
+            "hotwords": ", ".join(hotwords) if hotwords else None,
             "conversation_chunk_id": conversation_chunk_id,
         }
 
@@ -118,37 +117,12 @@ def transcribe_audio_litellm(
 # Helper functions extracted to simplify `transcribe_conversation_chunk`
 # NOTE: These are internal helpers ‑ they should **not** be considered part of the public API.
 
+
 def _fetch_chunk(conversation_chunk_id: str) -> dict:
-    """Return a single conversation_chunk row or raise a descriptive ValueError."""
-    try:
-        chunks = directus.get_items(
-            "conversation_chunk",
-            {
-                "query": {
-                    "filter": {"id": {"_eq": conversation_chunk_id}},
-                    "fields": [
-                        "id",
-                        "path",
-                        "conversation_id",
-                        "timestamp",
-                        "source",
-                        "runpod_job_status_link",
-                        "runpod_request_count",
-                    ],
-                },
-            },
-        )
+    from dembrane.service import conversation_service
 
-    except Exception as exc:
-        logger.error("Failed to get chunks for %s: %s", conversation_chunk_id, exc)
-        raise ValueError(f"Failed to get chunks for {conversation_chunk_id}: {exc}") from exc
+    chunk = conversation_service.get_chunk_by_id_or_raise(conversation_chunk_id)
 
-    if not chunks or not chunks[0]:
-        raise ValueError(f"Chunk {conversation_chunk_id} not found")
-
-    chunk = dict(chunks[0])
-
-    # validate
     if not chunk.get("path"):
         raise ValueError(f"chunk {conversation_chunk_id} has no path")
 
@@ -199,18 +173,19 @@ def _build_whisper_prompt(conversation: dict, language: str) -> str:
 
 def _should_use_runpod(language: str) -> bool:
     """Decide whether RunPod should be used for the given language."""
+    logger.debug(f"the language str is unused: {language}")
     if not ENABLE_RUNPOD_WHISPER_TRANSCRIPTION:
         return False
-    # When English + override -> prefer LiteLLM, not RunPod
-    if language == "en" and ENABLE_ENGLISH_TRANSCRIPTION_WITH_LITELLM:
-        return False
+    # Removed English + override logic - now use RunPod for all languages
     return True
+
 
 def _should_use_litellm() -> bool:
     """Decide whether LiteLLM should be used for the given language."""
     if not ENABLE_LITELLM_WHISPER_TRANSCRIPTION:
         return False
     return True
+
 
 def _get_status_runpod(runpod_job_status_link: str) -> tuple[str, dict]:
     """Get the status of a RunPod job."""
@@ -225,11 +200,12 @@ def _get_status_runpod(runpod_job_status_link: str) -> tuple[str, dict]:
 
     return response_data["status"], response_data
 
+
 def _process_runpod_transcription(
     chunk: dict,
     conversation_chunk_id: str,
     language: str,
-    whisper_prompt: str,
+    hotwords: Optional[List[str]],
 ) -> str:
     """Handle RunPod status checking, queuing new jobs and Directus updates.
 
@@ -260,8 +236,6 @@ def _process_runpod_transcription(
             item_id=conversation_chunk_id,
             item_data={
                 "runpod_job_status_link": None,
-                "processing_status": ProcessingStatus.FAILED.value,
-                "processing_message": "RunPod request threshold reached",
             },
         )
         return conversation_chunk_id
@@ -272,7 +246,7 @@ def _process_runpod_transcription(
     job_id = queue_transcribe_audio_runpod(
         chunk["path"],
         language=language,
-        whisper_prompt=whisper_prompt,
+        hotwords=hotwords,
         is_priority=is_priority,
         conversation_chunk_id=conversation_chunk_id,
     )
@@ -292,8 +266,8 @@ def _process_runpod_transcription(
 def transcribe_conversation_chunk(conversation_chunk_id: str) -> str:
     """Process conversation chunk for transcription
 
-    Note: If RunPod is enabled / LiteLLM is disabled / English is enabled with LiteLLM,
-    then it errors out.
+    Note: RunPod is now used for all transcription when enabled.
+    Falls back to LiteLLM only if RunPod is disabled.
 
     Returns:
         str: The conversation chunk ID if successful
@@ -315,9 +289,14 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str:
 
         if _should_use_runpod(language):
             logger.info("Using RunPod for transcription")
-            return _process_runpod_transcription(
-                chunk, conversation_chunk_id, language, whisper_prompt
+
+            hotwords_str = conversation["project_id"].get(
+                "default_conversation_transcript_prompt", None
             )
+
+            hotwords = hotwords_str.split(",") if hotwords_str else None
+
+            return _process_runpod_transcription(chunk, conversation_chunk_id, language, hotwords)
 
         elif _should_use_litellm():
             logger.info("Using LITELLM for transcription")
@@ -347,4 +326,6 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str:
 
     except Exception as e:
         logger.error(f"Failed to process conversation chunk {conversation_chunk_id}: {e}")
-        raise TranscriptionError(f"Failed to process conversation chunk {conversation_chunk_id}: {e}") from e
+        raise TranscriptionError(
+            f"Failed to process conversation chunk {conversation_chunk_id}: {e}"
+        ) from e

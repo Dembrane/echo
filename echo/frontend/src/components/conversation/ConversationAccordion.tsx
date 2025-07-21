@@ -33,6 +33,7 @@ import {
   ScrollArea,
   Center,
   Badge,
+  Box,
 } from "@mantine/core";
 import {
   useState,
@@ -352,9 +353,10 @@ export const ConversationStatusIndicators = ({
 
   const hasContent = useMemo(
     () =>
-      conversation.chunks?.some(
-        (chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
-      ),
+      // conversation.chunks?.some(
+      //   (chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
+      // ),
+      conversation.chunks?.length && conversation.chunks.length > 0,
     [conversation.chunks],
   );
 
@@ -386,15 +388,6 @@ export const ConversationStatusIndicators = ({
         </Badge>
       )}
 
-      {
-        // if from portal and not finished
-        !isUpload && conversation.processing_status === "PENDING" && (
-          // red pulsing dot
-          <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-        )
-      }
-
-      {/* if enhanced audio processing is enabled*/}
       {!!project?.is_enhanced_audio_processing_enabled &&
         // if processing still
         // don't show this if both is_finished and is_audio_processing_finished are true
@@ -403,24 +396,9 @@ export const ConversationStatusIndicators = ({
           conversation.is_finished && conversation.is_audio_processing_finished
         ) && (
           <Tooltip
-            label={t`This conversation is still being processed. It will be available for analysis and chat shortly.`}
-          >
-            <Badge size="xs" color="violet" variant="light">
-              <Group gap="xs">
-                <Trans>Processing</Trans>
-                <IconInfoCircle size={12} />
-              </Group>
-            </Badge>
-          </Tooltip>
-        )}
-
-      {/* if enhanced audio processing is disabled*/}
-      {!project?.is_enhanced_audio_processing_enabled &&
-        !conversation.is_finished && (
-          <Tooltip
             label={
-              conversation.processing_message ??
-              t`This conversation is still being processed. It will be available for analysis and chat shortly.`
+              t`This conversation is still being processed. It will be available for analysis and chat shortly. ` +
+              t`(for enhanced audio processing)`
             }
           >
             <Badge size="xs" color="violet" variant="light">
@@ -440,15 +418,15 @@ export const ConversationStatusIndicators = ({
 
       {!hasContent &&
         conversation.is_finished === true &&
-        conversation.processing_status !== "FAILED" && (
+        conversation.is_all_chunks_transcribed === true && (
           <Badge size="xs" color="red" variant="light">
             {t`Empty`}
           </Badge>
         )}
-
-      {conversation.processing_status === "FAILED" && (
+      {/* 
+      {conversation.error != null && (
         <Tooltip
-          label={t`Processing failed for this conversation. This conversation will not be available for analysis and chat. Last Known Status: ${conversation.processing_status ?? "Unknown"}`}
+          label={t`Processing failed for this conversation. This conversation will not be available for analysis and chat.`}
         >
           <Badge size="xs" color="red" variant="light">
             <Group gap="xs">
@@ -457,7 +435,7 @@ export const ConversationStatusIndicators = ({
             </Group>
           </Badge>
         </Tooltip>
-      )}
+      )} */}
     </Group>
   );
 };
@@ -486,6 +464,8 @@ const ConversationAccordionItem = ({
   );
 
   const isAutoSelectEnabled = chatContextQuery.data?.auto_select_bool ?? false;
+  const isUpload =
+    conversation.source?.toLowerCase().includes("upload") ?? false;
 
   // Check if conversation has any content
 
@@ -520,13 +500,24 @@ const ConversationAccordionItem = ({
             showDuration={showDuration}
           />
         </Stack>
-        <div>
+        <div className="flex items-center justify-between gap-4">
           <Text size="xs" c="gray.6" className="pl-[4px]">
             {formatRelative(
               new Date(conversation.created_at ?? new Date()),
               new Date(),
             )}
           </Text>
+          {
+            // if from portal and not finished
+            !isUpload && conversation.is_finished === false && (
+              <Box className="flex items-center gap-1 pr-[4px]">
+                <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
+                <Text size="xs" fs="italic" fw={500}>
+                  <Trans>Live</Trans>
+                </Text>
+              </Box>
+            )
+          }
         </div>
         <Group gap="4" pr="sm" wrap="wrap">
           {conversation.tags &&

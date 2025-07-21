@@ -1,4 +1,13 @@
-import { Box, ScrollArea, Stack, Text, Loader, Center } from "@mantine/core";
+import {
+  Box,
+  ScrollArea,
+  Stack,
+  Text,
+  Loader,
+  Center,
+  Alert,
+  Button,
+} from "@mantine/core";
 import { Trans } from "@lingui/react/macro";
 import { useState, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
@@ -14,6 +23,7 @@ import { AnnouncementSkeleton } from "./AnnouncementSkeleton";
 import { AnnouncementDrawerHeader } from "./AnnouncementDrawerHeader";
 import { useProcessedAnnouncements } from "@/hooks/useProcessedAnnouncements";
 import { useAnnouncementDrawer } from "@/hooks/useAnnouncementDrawer";
+import { IconAlertCircle, IconRefresh } from "@tabler/icons-react";
 
 export const Announcements = () => {
   const { isOpen, close } = useAnnouncementDrawer();
@@ -39,6 +49,7 @@ export const Announcements = () => {
     isLoading,
     isError,
     error,
+    refetch,
   } = useInfiniteAnnouncements({
     options: {
       initialLimit: 10,
@@ -73,9 +84,36 @@ export const Announcements = () => {
     markAllAsReadMutation.mutate();
   };
 
-  if (isError) {
-    console.error("Error loading announcements:", error);
-  }
+  const handleRetry = () => {
+    refetch();
+  };
+  // Error state component
+  const ErrorState = () => (
+    <Box p="md">
+      <Alert
+        icon={<IconAlertCircle size="1rem" />}
+        color="red"
+        variant="light"
+        title={<Trans>Error loading announcements</Trans>}
+      >
+        <Stack gap="md">
+          <Text size="sm">
+            <Trans>Failed to get announcements</Trans>
+          </Text>
+          <Button
+            variant="light"
+            color="red"
+            size="sm"
+            leftSection={<IconRefresh size="1rem" />}
+            onClick={handleRetry}
+            loading={isLoading}
+          >
+            <Trans>Try Again</Trans>
+          </Button>
+        </Stack>
+      </Alert>
+    </Box>
+  );
 
   return (
     <Drawer
@@ -105,7 +143,9 @@ export const Announcements = () => {
       <Stack h="100%">
         <ScrollArea className="flex-1">
           <Stack gap="0">
-            {isLoading ? (
+            {isError ? (
+              <ErrorState />
+            ) : isLoading ? (
               <AnnouncementSkeleton />
             ) : processedAnnouncements.length === 0 ? (
               <Box p="md">

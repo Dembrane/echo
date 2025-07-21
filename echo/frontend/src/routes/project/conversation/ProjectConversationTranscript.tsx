@@ -103,10 +103,12 @@ export const ProjectConversationTranscript = () => {
   }
 
   const allChunks = chunksData?.pages.flatMap((page) => page.chunks) ?? [];
+
   const hasValidTranscripts = allChunks.some(
     (chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
   );
-  const isEmptyConversation = !hasValidTranscripts;
+
+  const isEmptyConversation = !hasValidTranscripts && conversationQuery.data?.is_finished;
 
   const handleDownloadTranscript = (filename: string) => {
     const text = transcriptQuery.data ?? "";
@@ -121,7 +123,6 @@ export const ProjectConversationTranscript = () => {
         a.download = filename;
       } else {
         a.download =
-          conversationQuery.data.title ??
           "Conversation" +
             "-" +
             conversationQuery.data.participant_email +
@@ -310,23 +311,21 @@ export const ProjectConversationTranscript = () => {
                 back later.
               </Trans>
             </Alert>
-          ) : !hasValidTranscripts ? (
-            <Alert
-              icon={<IconAlertCircle size={16} />}
-              title={t`Processing Transcript`}
-              color="gray"
-            >
-              <Trans>
-                The transcript for this conversation is being processed. Please
-                check back later.
-              </Trans>
-            </Alert>
-          ) : (
+          ) : 
+          // !hasValidTranscripts ? (
+          //   <Alert
+          //     icon={<IconAlertCircle size={16} />}
+          //     title={t`Processing Transcript`}
+          //     color="gray"
+          //   >
+          //     <Trans>
+          //       The transcript for this conversation is being processed. Please
+          //       check back later.
+          //     </Trans>
+          //   </Alert>
+          // ) :
+           (
             allChunks
-              .filter(
-                (chunk) =>
-                  !!chunk.transcript && chunk.transcript.trim().length > 0,
-              )
               .map((chunk, index, array) => {
                 const isLastChunk = index === array.length - 1;
                 return (

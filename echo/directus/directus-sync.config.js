@@ -4,4 +4,5 @@ module.exports = {
   // OR needs to be run in the same container as the directus server
   dumpPath: './sync',
   preserveIds: ['roles', 'policies', 'dashboards', 'panels'],
+  specs: false,
 };

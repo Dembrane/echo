@@ -14,6 +14,7 @@ import ffmpeg
 from dembrane.s3 import s3_client, delete_from_s3, get_stream_from_s3, get_sanitized_s3_key
 from dembrane.utils import generate_uuid
 from dembrane.config import STORAGE_S3_BUCKET, STORAGE_S3_ENDPOINT
+from dembrane.service import conversation_service
 from dembrane.directus import directus
 
 logger = logging.getLogger("audio_utils")
@@ -529,33 +530,14 @@ MAX_CHUNK_SIZE = 15 * 1024 * 1024
 
 
 def split_audio_chunk(
-    original_chunk_id: str, output_format: str, chunk_size_bytes: int = MAX_CHUNK_SIZE
+    original_chunk_id: str,
+    output_format: str,
+    chunk_size_bytes: int = MAX_CHUNK_SIZE,
+    delete_original: bool = True,
 ) -> List[str]:
     logger = logging.getLogger("audio_utils.pre_process_audio")
 
-    # Retrieve the original chunk details from Directus.
-    original_chunks = directus.get_items(
-        "conversation_chunk",
-        {
-            "query": {
-                "filter": {"id": {"_eq": original_chunk_id}},
-                "fields": [
-                    "id",
-                    "path",
-                    "conversation_id",
-                    "created_at",
-                    "updated_at",
-                    "timestamp",
-                ],
-            }
-        },
-    )
-
-    if not original_chunks:
-        logger.error(f"Chunk not found: {original_chunk_id}")
-        raise ValueError(f"Chunk not found: {original_chunk_id}")
-
-    original_chunk = original_chunks[0]
+    original_chunk = conversation_service.get_chunk_by_id_or_raise(original_chunk_id)
 
     logger.debug(f"Processing chunk: {original_chunk['id']}")
 
@@ -676,7 +658,8 @@ def split_audio_chunk(
                     + timedelta(seconds=start_time)
                 ).isoformat(),
                 "path": f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/{s3_chunk_path}",
-                "source": "SPLIT",
+                "source": original_chunk["source"],
+                "id": chunk_id,
             }
             split_chunk_items.append(new_item)
             new_chunk_ids.append(chunk_id)
@@ -688,8 +671,9 @@ def split_audio_chunk(
 
     logger.debug("Created split chunks in Directus.")
 
-    directus.delete_item("conversation_chunk", original_chunk["id"])
-    logger.debug("Deleted original chunk from Directus after splitting.")
+    if delete_original:
+        directus.delete_item("conversation_chunk", original_chunk["id"])
+        logger.debug("Deleted original chunk from Directus after splitting.")
 
     logger.debug(f"Successfully split file into {number_chunks} chunks.")
     return new_ids

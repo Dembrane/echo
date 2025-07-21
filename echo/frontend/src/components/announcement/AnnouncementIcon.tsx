@@ -15,16 +15,19 @@ export const AnnouncementIcon = () => {
     useUnreadAnnouncements();
 
   // Get latest urgent announcement message
-  const urgentMessage = latestAnnouncement
+  const message = latestAnnouncement
     ? getTranslatedContent(latestAnnouncement as Announcement, language).message
     : "";
 
   // Check if the latest announcement is unread
-  const isUrgentUnread = latestAnnouncement
+  const isUnread = latestAnnouncement
     ? !latestAnnouncement.activity?.some(
         (activity: AnnouncementActivity) => activity.read === true,
       )
     : false;
+
+  const showMessage =
+    isUnread && message && latestAnnouncement?.level === "info";
 
   const isLoading = isLoadingLatest || isLoadingUnread;
 
@@ -54,12 +57,12 @@ export const AnnouncementIcon = () => {
         </Indicator>
       </Box>
 
-      {isUrgentUnread && urgentMessage && (
+      {showMessage && (
         <Box
           className="hidden max-w-xs [mask-image:linear-gradient(to_right,black_80%,transparent)] md:block"
           style={{ maxWidth: "400px" }}
         >
-          <Markdown content={urgentMessage} className="truncate" />
+          <Markdown content={message} className="line-clamp-1" />
         </Box>
       )}
     </Group>
