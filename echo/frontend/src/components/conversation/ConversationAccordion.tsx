@@ -33,6 +33,7 @@ import {
   ScrollArea,
   Center,
   Badge,
+  Box,
 } from "@mantine/core";
 import {
   useState,
@@ -387,13 +388,6 @@ export const ConversationStatusIndicators = ({
         </Badge>
       )}
 
-      {
-        // if from portal and not finished
-        !isUpload && conversation.is_finished === false && (
-          <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-        )
-      }
-
       {!!project?.is_enhanced_audio_processing_enabled &&
         // if processing still
         // don't show this if both is_finished and is_audio_processing_finished are true
@@ -429,7 +423,7 @@ export const ConversationStatusIndicators = ({
             {t`Empty`}
           </Badge>
         )}
-{/* 
+      {/* 
       {conversation.error != null && (
         <Tooltip
           label={t`Processing failed for this conversation. This conversation will not be available for analysis and chat.`}
@@ -470,6 +464,8 @@ const ConversationAccordionItem = ({
   );
 
   const isAutoSelectEnabled = chatContextQuery.data?.auto_select_bool ?? false;
+  const isUpload =
+    conversation.source?.toLowerCase().includes("upload") ?? false;
 
   // Check if conversation has any content
 
@@ -504,13 +500,24 @@ const ConversationAccordionItem = ({
             showDuration={showDuration}
           />
         </Stack>
-        <div>
+        <div className="flex items-center justify-between gap-4">
           <Text size="xs" c="gray.6" className="pl-[4px]">
             {formatRelative(
               new Date(conversation.created_at ?? new Date()),
               new Date(),
             )}
           </Text>
+          {
+            // if from portal and not finished
+            !isUpload && conversation.is_finished === false && (
+              <Box className="flex items-center gap-1 pr-[4px]">
+                <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
+                <Text size="xs" fs="italic" fw={500}>
+                  <Trans>Live</Trans>
+                </Text>
+              </Box>
+            )
+          }
         </div>
         <Group gap="4" pr="sm" wrap="wrap">
           {conversation.tags &&
