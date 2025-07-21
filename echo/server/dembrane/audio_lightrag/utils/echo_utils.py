@@ -11,13 +11,26 @@ from dembrane.directus import directus
 
 logger = getLogger(__name__)
 
+_redis_client = None
+
+
+def _get_redis_client():
+    global _redis_client
+    if _redis_client is None:
+        _redis_client = redis.from_url(REDIS_URL)
+    return _redis_client
+
 
 def finish_conversation(conversation_id: str) -> None:
-    directus.update_item(
-        "conversation",
-        conversation_id,
-        {"is_audio_processing_finished": True},
-    )
+    try:
+        directus.update_item(
+            "conversation",
+            conversation_id,
+            {"is_audio_processing_finished": True},
+        )
+    except Exception as e:
+        logger.error(f"Failed to finish conversation {conversation_id}: {e}")
+        raise
 
 
 def renew_redis_lock(conversation_id: str) -> bool:
@@ -32,7 +45,7 @@ def renew_redis_lock(conversation_id: str) -> bool:
         bool: True if lock exists or was successfully created, False otherwise
     """
     try:
-        redis_client = redis.from_url(REDIS_URL)
+        redis_client = _get_redis_client()
         lock_key = f"{AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX}{conversation_id}"
 
         # Check if lock exists
