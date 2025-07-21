@@ -508,8 +508,8 @@ const ConversationAccordionItem = ({
             )}
           </Text>
           {
-            // if from portal and not finished
-            !isUpload && conversation.is_finished === false && (
+            // Show live indicator based on the live field from the query
+            !isUpload && conversation.live && (
               <Box className="flex items-center gap-1 pr-[4px]">
                 <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
                 <Text size="xs" fs="italic" fw={500}>
