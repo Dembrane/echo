@@ -1,0 +1,50 @@
+{
+  "collection": "processing_status",
+  "field": "parent",
+  "type": "bigInteger",
+  "meta": {
+    "collection": "processing_status",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "parent",
+    "group": null,
+    "hidden": false,
+    "interface": "select-dropdown-m2o",
+    "note": null,
+    "options": {
+      "enableCreate": false,
+      "enableLink": true,
+      "enableSelect": false,
+      "template": "{{event}}{{message}}"
+    },
+    "readonly": false,
+    "required": false,
+    "sort": 1,
+    "special": [
+      "m2o"
+    ],
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  },
+  "schema": {
+    "name": "parent",
+    "table": "processing_status",
+    "data_type": "bigint",
+    "default_value": null,
+    "max_length": null,
+    "numeric_precision": 64,
+    "numeric_scale": 0,
+    "is_nullable": true,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": "processing_status",
+    "foreign_key_column": "id"
+  }
+}

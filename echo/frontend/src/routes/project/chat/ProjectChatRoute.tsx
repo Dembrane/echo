@@ -166,7 +166,8 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
     try {
       // Lock conversations first
       await lockConversationsMutation.mutateAsync({ chatId });
-
+      await chatContextQuery.refetch();
+      
       // Submit the chat
       handleSubmit();
 

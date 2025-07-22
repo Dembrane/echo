@@ -1,0 +1,25 @@
+{
+  "collection": "conversation_link",
+  "field": "target_conversation_id",
+  "related_collection": "conversation",
+  "meta": {
+    "junction_field": null,
+    "many_collection": "conversation_link",
+    "many_field": "target_conversation_id",
+    "one_allowed_collections": null,
+    "one_collection": "conversation",
+    "one_collection_field": null,
+    "one_deselect_action": "nullify",
+    "one_field": "linking_conversations",
+    "sort_field": null
+  },
+  "schema": {
+    "table": "conversation_link",
+    "column": "target_conversation_id",
+    "foreign_key_table": "conversation",
+    "foreign_key_column": "id",
+    "constraint_name": "conversation_link_target_conversation_id_foreign",
+    "on_update": "NO ACTION",
+    "on_delete": "SET NULL"
+  }
+}

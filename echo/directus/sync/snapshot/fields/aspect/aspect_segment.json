@@ -1,0 +1,31 @@
+{
+  "collection": "aspect",
+  "field": "aspect_segment",
+  "type": "alias",
+  "meta": {
+    "collection": "aspect",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "aspect_segment",
+    "group": null,
+    "hidden": false,
+    "interface": "list-o2m",
+    "note": null,
+    "options": {
+      "enableLink": true,
+      "sort": null,
+      "template": "{{segment.id}}"
+    },
+    "readonly": false,
+    "required": false,
+    "sort": 10,
+    "special": [
+      "o2m"
+    ],
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  }
+}

@@ -1,41 +1,11 @@
 import {
   generateProjectLibrary,
-  getProjectInsights,
   getProjectViews,
 } from "@/lib/api";
 import { directus } from "@/lib/directus";
 import { readItem } from "@directus/sdk";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
-
-export const useProjectInsights = (projectId: string) => {
-  return useQuery({
-    queryKey: ["projects", projectId, "insights"],
-    queryFn: () => getProjectInsights(projectId),
-  });
-};
-
-export const useInsight = (insightId: string) => {
-  return useQuery({
-    queryKey: ["insights", insightId],
-    queryFn: () =>
-      directus.request<Insight>(
-        readItem("insight", insightId, {
-          fields: [
-            "*",
-            {
-              quotes: [
-                "*",
-                {
-                  conversation_id: ["id", "participant_name", "created_at"],
-                },
-              ],
-            },
-          ],
-        }),
-      ),
-  });
-};
 
 export const useProjectViews = (projectId: string) => {
   return useQuery({
@@ -51,11 +21,16 @@ export const useViewById = (projectId: string, viewId: string) => {
     queryFn: () =>
       directus.request<View>(
         readItem("view", viewId, {
-          fields: ["*", { aspects: ["*", "count(quotes)"] }],
+          fields: [
+            "*",
+            {
+              aspects: ["*", "count(aspect_segment)"],
+            },
+          ],
           deep: {
-            // get the aspects that have at least one representative quote
+            // get the aspects that have at least one aspect segment
             aspects: {
-              _sort: "-count(representative_quotes)",
+              _sort: "-count(aspect_segment)",
             } as any,
           },
         }),
@@ -72,35 +47,15 @@ export const useAspectById = (projectId: string, aspectId: string) => {
           fields: [
             "*",
             {
-              quotes: [
+              "aspect_segment": [
                 "*",
-                {
-                  quote_id: [
-                    "id",
-                    "text",
-                    "created_at",
-                    {
-                      conversation_id: ["id", "participant_name", "created_at"],
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              representative_quotes: [
-                "*",
-                {
-                  quote_id: [
-                    "id",
-                    "text",
-                    "created_at",
-                    {
-                      conversation_id: ["id", "participant_name", "created_at"],
-                    },
-                  ],
-                },
-              ],
-            },
+                { 
+                  "segment": [
+                    "*",
+                  ]
+                }
+              ]
+            }
           ],
         }),
       ),

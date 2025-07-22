@@ -54,8 +54,10 @@ export const ConversationChunkAudioTranscript = ({
       }
     >
       <Text>
-        {chunk.transcript ?? (
-          <span className="italic text-gray-500">{t`Not available`}</span>
+        {chunk.transcript && chunk.transcript.trim().length > 0 ? (
+          chunk.transcript
+        ) : (
+          <span className="italic text-gray-500">{t`Transcript not available`}</span>
         )}
       </Text>
     </BaseMessage>

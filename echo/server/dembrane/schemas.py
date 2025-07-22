@@ -28,7 +28,6 @@ class ProjectSchema(BaseModel):
     created_at: datetime
     updated_at: datetime
     language: str
-    pin: str
     name: Optional[str] = None
     context: Optional[str] = None
 

@@ -1,0 +1,32 @@
+{
+  "collection": "conversation",
+  "field": "linked_conversations",
+  "type": "alias",
+  "meta": {
+    "collection": "conversation",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "linked_conversations",
+    "group": null,
+    "hidden": false,
+    "interface": "list-o2m",
+    "note": null,
+    "options": {
+      "enableCreate": false,
+      "enableLink": true,
+      "enableSelect": false,
+      "template": "{{target_conversation_id.participant_name}}"
+    },
+    "readonly": false,
+    "required": false,
+    "sort": 23,
+    "special": [
+      "o2m"
+    ],
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  }
+}

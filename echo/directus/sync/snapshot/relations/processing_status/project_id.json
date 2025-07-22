@@ -1,0 +1,25 @@
+{
+  "collection": "processing_status",
+  "field": "project_id",
+  "related_collection": "project",
+  "meta": {
+    "junction_field": null,
+    "many_collection": "processing_status",
+    "many_field": "project_id",
+    "one_allowed_collections": null,
+    "one_collection": "project",
+    "one_collection_field": null,
+    "one_deselect_action": "nullify",
+    "one_field": "processing_status",
+    "sort_field": null
+  },
+  "schema": {
+    "table": "processing_status",
+    "column": "project_id",
+    "foreign_key_table": "project",
+    "foreign_key_column": "id",
+    "constraint_name": "processing_status_project_id_foreign",
+    "on_update": "NO ACTION",
+    "on_delete": "SET NULL"
+  }
+}

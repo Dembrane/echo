@@ -388,6 +388,7 @@ export const ParticipantConversationAudioRoute = () => {
                 <SpikeMessage
                   key={message.id}
                   message={{
+                    // @ts-expect-error - id is a string
                     id: parseInt(message.id) || 0,
                     content_text: message.content,
                     type:
@@ -402,6 +403,7 @@ export const ParticipantConversationAudioRoute = () => {
                 <SpikeMessage
                   key="thinking"
                   message={{
+                    // @ts-expect-error - id is a string
                     id: 0,
                     content_text: t`Thinking...`,
                     type: "assistant_reply",

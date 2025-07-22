@@ -472,11 +472,11 @@ export const UploadConversationDropzone = (
       projectId: props.projectId,
       namePrefix: "",
       chunks: selectedFiles,
-      pin: projectQuery.data?.pin || "",
+      pin: "",
       tagIdList: [],
       timestamps: selectedFiles.map(() => new Date()),
     });
-  }, [selectedFiles, props.projectId, projectQuery.data?.pin, uploader]);
+  }, [selectedFiles, props.projectId, uploader]);
 
   if (projectQuery.isLoading) {
     return <LoadingOverlay visible />;

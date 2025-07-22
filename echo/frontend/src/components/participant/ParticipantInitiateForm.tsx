@@ -43,7 +43,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
     initiateConversationMutation.mutate({
       projectId: project.id,
       name: data.name ?? t`Participant`,
-      pin: project.pin ?? "",
+      pin:"",
       tagIdList: data.tagIdList,
       source: "PORTAL_AUDIO",
     });

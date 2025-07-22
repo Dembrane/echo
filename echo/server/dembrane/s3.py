@@ -185,6 +185,12 @@ def delete_from_s3(file_name: str) -> None:
     s3_client.delete_object(Bucket=STORAGE_S3_BUCKET, Key=file_name)
 
 
+def get_file_size_bytes_from_s3(file_name: str) -> int:
+    file_name = get_sanitized_s3_key(file_name)
+    response = s3_client.head_object(Bucket=STORAGE_S3_BUCKET, Key=file_name)
+    return response["ContentLength"]
+
+
 def get_file_size_from_s3_mb(file_name: str) -> float:
     file_name = get_sanitized_s3_key(file_name)
 
@@ -211,4 +217,3 @@ def save_audio_to_s3(audio: AudioSegment, file_name: str, public: bool = False) 
     file_like = UploadFile(filename=file_name, file=audio_buffer)
     s3_url = save_to_s3_from_file_like(file_like, file_name, public)
     return s3_url
-

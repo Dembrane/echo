@@ -12,9 +12,9 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
   api,
   checkUnsubscribeStatus,
-  generateProjectLibrary as generateProjectLibrary,
   getLatestProjectAnalysisRunByProjectId,
   getProjectChatContext,
+  getProjectConversationCounts,
   getResourceById,
 } from "./api";
 import { toast } from "@/components/common/Toaster";
@@ -30,9 +30,9 @@ import {
   registerUser,
   registerUserVerify,
   updateItem,
+  deleteItem,
 } from "@directus/sdk";
 import { ADMIN_BASE_URL } from "@/config";
-import { t } from "@lingui/core/macro";
 
 // always throws a error with a message
 function throwWithMessage(e: unknown): never {
@@ -294,33 +294,6 @@ export const useLogoutMutation = () => {
   });
 };
 
-export const useProcessingStatus = ({
-  collectionName,
-  itemId,
-}: {
-  collectionName: string;
-  itemId: string;
-}) => {
-  return useQuery({
-    queryKey: ["processing_status", collectionName, itemId],
-    queryFn: () =>
-      directus.request(
-        readItems("processing_status", {
-          filter: {
-            collection_name: {
-              _eq: collectionName,
-            },
-            item_id: {
-              _eq: itemId,
-            },
-          },
-          sort: ["-timestamp"],
-          fields: ["*"],
-        }),
-      ),
-  });
-};
-
 export const useProjectById = ({
   projectId,
   query = {
@@ -403,6 +376,27 @@ export const useConversationById = ({
         }),
       ),
     ...useQueryOpts,
+  });
+};
+
+export const useDeleteConversationChunkByIdMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (chunkId: string) =>
+      directus.request(deleteItem("conversation_chunk", chunkId)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["conversations"],
+      });
+    },
+  });
+};
+
+export const useProjectConversationCounts = (projectId: string) => {
+  return useQuery({
+    queryKey: ["projects", projectId, "conversation-counts"],
+    queryFn: () => getProjectConversationCounts(projectId),
+    refetchInterval: 15000,
   });
 };
 
