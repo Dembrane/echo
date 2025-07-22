@@ -19,7 +19,6 @@ import {
   deleteConversationById,
   getConversationChunkContentLink,
   getConversationTranscriptString,
-  getQuotesByConversationId,
   retranscribeConversation,
 } from "@/lib/api";
 import { toast } from "@/components/common/Toaster";
@@ -534,33 +533,6 @@ export const useDeleteChatContextMutation = () => {
           : t`Conversation removed from chat`;
       toast.success(message);
     },
-  });
-};
-
-export const useInsightsByConversationId = (conversationId: string) => {
-  return useQuery({
-    queryKey: ["conversations", conversationId, "insights"],
-    queryFn: () =>
-      directus.request(
-        readItems("insight", {
-          filter: {
-            quotes: {
-              _some: {
-                conversation_id: {
-                  _eq: conversationId,
-                },
-              },
-            },
-          },
-        }),
-      ),
-  });
-};
-
-export const useConversationQuotes = (conversationId: string) => {
-  return useQuery({
-    queryKey: ["conversations", conversationId, "quotes"],
-    queryFn: () => getQuotesByConversationId(conversationId),
   });
 };
 
