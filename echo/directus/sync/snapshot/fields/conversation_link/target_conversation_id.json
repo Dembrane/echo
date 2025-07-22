@@ -18,7 +18,7 @@
       "template": "{{participant_name}}.{{project_id.name}}"
     },
     "readonly": false,
-    "required": true,
+    "required": false,
     "sort": 6,
     "special": [
       "m2o"
