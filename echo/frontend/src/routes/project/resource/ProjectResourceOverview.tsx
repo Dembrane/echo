@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { useResourceById } from "@/lib/query";
+import { useResourceById } from "@/components/resource/hooks";
 import {
   useDeleteResourceByIdMutation,
   useUpdateResourceByIdMutation,

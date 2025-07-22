@@ -14,7 +14,7 @@ import {
 import { ConversationStatusTable } from "./ConversationStatusTable";
 import { useEffect, useState } from "react";
 import { useCreateProjectReportMutation } from "./hooks";
-import { useProjectConversationCounts } from "@/lib/query";
+import { useProjectConversationCounts } from "@/components/report/hooks";
 import { useParams } from "react-router-dom";
 import { t } from "@lingui/core/macro";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";

@@ -1,5 +1,9 @@
-import { deleteResourceById, updateResourceById } from "@/lib/api";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  deleteResourceById,
+  getResourceById,
+  updateResourceById,
+} from "@/lib/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
 
 export const useUpdateResourceByIdMutation = () => {
@@ -31,5 +35,12 @@ export const useDeleteResourceByIdMutation = () => {
       });
       toast.success("Resource deleted successfully");
     },
+  });
+};
+
+export const useResourceById = (resourceId: string) => {
+  return useQuery({
+    queryKey: ["resources", resourceId],
+    queryFn: () => getResourceById(resourceId),
   });
 };

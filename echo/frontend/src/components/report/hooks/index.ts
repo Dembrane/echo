@@ -1,4 +1,4 @@
-import { createProjectReport } from "@/lib/api";
+import { createProjectReport, getProjectConversationCounts } from "@/lib/api";
 import { directus } from "@/lib/directus";
 import { readItem, readItems, updateItem } from "@directus/sdk";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -250,5 +250,13 @@ export const useProjectReport = (reportId: number) => {
     queryKey: ["reports", reportId],
     queryFn: () => directus.request(readItem("project_report", reportId)),
     refetchInterval: 30000,
+  });
+};
+
+export const useProjectConversationCounts = (projectId: string) => {
+  return useQuery({
+    queryKey: ["projects", projectId, "conversation-counts"],
+    queryFn: () => getProjectConversationCounts(projectId),
+    refetchInterval: 15000,
   });
 };
