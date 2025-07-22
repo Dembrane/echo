@@ -62,6 +62,7 @@ type Conversation = {
   is_all_chunks_transcribed?: boolean | null;
   is_audio_processing_finished?: boolean | null;
   is_finished?: boolean | null;
+  live?: boolean | null;
   merged_audio_path?: string | null;
   merged_transcript?: string | null;
   participant_email?: string | null;

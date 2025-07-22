@@ -758,6 +758,8 @@ export const useConversationsByProjectId = (
   query?: Partial<Query<CustomDirectusTypes, Conversation>>,
   filterBySource?: string[],
 ) => {
+  const TIME_INTERVAL_SECONDS = 40;
+  
   return useQuery({
     queryKey: [
       "projects",
@@ -768,8 +770,8 @@ export const useConversationsByProjectId = (
       query,
       filterBySource,
     ],
-    queryFn: () =>
-      directus.request(
+    queryFn: async () => {
+      const conversations = await directus.request(
         readItems("conversation", {
           sort: "-updated_at",
           fields: [
@@ -811,7 +813,27 @@ export const useConversationsByProjectId = (
           limit: 1000,
           ...query,
         }),
-      ),
+      );
+
+      // Add live field to each conversation based on recent chunk activity
+      const cutoffTime = new Date(Date.now() - TIME_INTERVAL_SECONDS * 1000);
+      
+      return conversations.map((conversation: any) => {
+        const hasRecentChunks = conversation.chunks?.some((chunk: any) => {
+          // Skip upload chunks
+          if (chunk.source === "DASHBOARD_UPLOAD" || chunk.source === "CLONE") return false;
+          
+          // Check if chunk timestamp is recent
+          const chunkTime = new Date(chunk.timestamp || chunk.created_at || 0);
+          return chunkTime > cutoffTime;
+        });
+
+        return {
+          ...conversation,
+          live: hasRecentChunks || false,
+        };
+      });
+    },
     refetchInterval: 30000,
   });
 };
