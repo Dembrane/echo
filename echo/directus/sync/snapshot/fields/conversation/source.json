@@ -15,8 +15,14 @@
     "options": {
       "choices": [
         {
+          "icon": "upload",
           "text": "DASHBOARD_UPLOAD",
           "value": "DASHBOARD_UPLOAD"
+        },
+        {
+          "icon": "content_copy",
+          "text": "CLONE",
+          "value": "CLONE"
         }
       ]
     },

@@ -596,12 +596,24 @@ async def retranscribe_conversation(
             signed=False,
         )
 
+        # because return_url is True
+        assert isinstance(merged_audio_path, str)
+
+        duration = None
+        try:
+            duration = get_duration_from_s3(merged_audio_path)
+        except Exception as e:
+            logger.error(f"Error getting duration from s3: {str(e)}")
+
         # Create a new conversation
         new_conversation_id = generate_uuid()
+
         directus.create_item(
             "conversation",
             item_data={
                 "id": new_conversation_id,
+                "duration": duration,
+                "source": "CLONE",
                 "project_id": project_id,
                 "participant_name": (
                     body.new_conversation_name
@@ -616,7 +628,21 @@ async def retranscribe_conversation(
                 else None,
                 "merged_audio_path": merged_audio_path,
             },
-        )["data"]
+        )
+
+        try:
+            logger.info(f"Creating links from {conversation_id} to {new_conversation_id}")
+            link_id = directus.create_item(
+                "conversation_link",
+                item_data={
+                    "source_conversation_id": conversation_id,
+                    "target_conversation_id": new_conversation_id,
+                    "link_type": "CLONE",
+                },
+            )["data"]["id"]
+            logger.info(f"Link created: {link_id}")
+        except Exception as e:
+            logger.error(f"Error creating links: {str(e)}")
 
         try:
             # Create a new conversation chunk
