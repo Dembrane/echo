@@ -637,7 +637,7 @@ async def retranscribe_conversation(
                 item_data={
                     "source_conversation_id": conversation_id,
                     "target_conversation_id": new_conversation_id,
-                    "type": "CLONE",
+                    "link_type": "CLONE",
                 },
             )["data"]["id"]
             logger.info(f"Link created: {link_id}")
