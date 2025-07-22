@@ -446,10 +446,8 @@ export const ProjectChatRoute = () => {
       </Box>
       {/* Footer */}
       <Box className="bottom-0 w-full bg-white pb-2 pt-4 md:sticky">
-        <Stack className="py-2">
-          {messages.length === 0 && !contextToBeAdded?.auto_select_bool && (
-            <ChatTemplatesMenu onTemplateSelect={handleTemplateSelect} />
-          )}
+        <Stack className="pb-2">
+          <ChatTemplatesMenu onTemplateSelect={handleTemplateSelect} />
 
           <Divider />
           {(!ENABLE_CHAT_AUTO_SELECT
