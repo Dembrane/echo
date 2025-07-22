@@ -1,31 +1,37 @@
 {
-  "collection": "view",
-  "field": "user_input_description",
-  "type": "text",
+  "collection": "conversation_link",
+  "field": "target_conversation_id",
+  "type": "uuid",
   "meta": {
-    "collection": "view",
+    "collection": "conversation_link",
     "conditions": null,
     "display": null,
     "display_options": null,
-    "field": "user_input_description",
+    "field": "target_conversation_id",
     "group": null,
     "hidden": false,
-    "interface": "input",
+    "interface": "select-dropdown-m2o",
     "note": null,
-    "options": null,
+    "options": {
+      "enableCreate": false,
+      "enableLink": true,
+      "template": "{{participant_name}}.{{project_id.name}}"
+    },
     "readonly": false,
     "required": false,
-    "sort": 13,
-    "special": null,
+    "sort": 6,
+    "special": [
+      "m2o"
+    ],
     "translations": null,
     "validation": null,
     "validation_message": null,
     "width": "full"
   },
   "schema": {
-    "name": "user_input_description",
-    "table": "view",
-    "data_type": "text",
+    "name": "target_conversation_id",
+    "table": "conversation_link",
+    "data_type": "uuid",
     "default_value": null,
     "max_length": null,
     "numeric_precision": null,
@@ -37,7 +43,7 @@
     "is_generated": false,
     "generation_expression": null,
     "has_auto_increment": false,
-    "foreign_key_table": null,
-    "foreign_key_column": null
+    "foreign_key_table": "conversation",
+    "foreign_key_column": "id"
   }
 }

@@ -1,31 +1,35 @@
 {
-  "collection": "view",
-  "field": "user_input_description",
-  "type": "text",
+  "collection": "conversation_link",
+  "field": "date_created",
+  "type": "timestamp",
   "meta": {
-    "collection": "view",
+    "collection": "conversation_link",
     "conditions": null,
-    "display": null,
-    "display_options": null,
-    "field": "user_input_description",
+    "display": "datetime",
+    "display_options": {
+      "relative": true
+    },
+    "field": "date_created",
     "group": null,
-    "hidden": false,
-    "interface": "input",
+    "hidden": true,
+    "interface": "datetime",
     "note": null,
     "options": null,
-    "readonly": false,
+    "readonly": true,
     "required": false,
-    "sort": 13,
-    "special": null,
+    "sort": 3,
+    "special": [
+      "date-created"
+    ],
     "translations": null,
     "validation": null,
     "validation_message": null,
-    "width": "full"
+    "width": "half"
   },
   "schema": {
-    "name": "user_input_description",
-    "table": "view",
-    "data_type": "text",
+    "name": "date_created",
+    "table": "conversation_link",
+    "data_type": "timestamp with time zone",
     "default_value": null,
     "max_length": null,
     "numeric_precision": null,
