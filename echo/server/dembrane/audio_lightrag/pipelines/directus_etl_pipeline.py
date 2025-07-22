@@ -5,6 +5,7 @@ import pandas as pd
 
 from dembrane.config import AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS
 from dembrane.directus import directus
+from dembrane.processing_status_utils import add_processing_status
 from dembrane.audio_lightrag.utils.echo_utils import finish_conversation
 from dembrane.audio_lightrag.utils.process_tracker import ProcessTracker
 
@@ -47,7 +48,7 @@ class DirectusETLPipeline:
                     "default_conversation_title",
                     "default_conversation_description",
                 ],
-                "limit": 100000,
+                "limit": -1,
                 "filter": {"id": {"_in": []}},
             }
         }
@@ -183,16 +184,13 @@ class DirectusETLPipeline:
     def directus_failure(
         self, conversations: List[Dict[str, Any]], projects: List[Dict[str, Any]]
     ) -> None:
+        for conversation in conversations:
+            finish_conversation(conversation["id"])
         conversations_str = "\n".join(
             [f"Conversation ID: {conversation['id']}" for conversation in conversations]
         )
         projects_str = "\n".join([f"Project ID: {project['id']}" for project in projects])
-        directus.create_item(
-            "processing_status",
-            {
-                "event": "directus_etl_pipeline.failed",
-                "message": f"Directus ETL pipeline failed for conversations: {conversations_str}; projects: {projects_str}",
-            },
+        add_processing_status(
+            event="directus_etl_pipeline.failed",
+            message=f"Directus ETL pipeline failed for conversations: {conversations_str}; projects: {projects_str}",
         )
-        for conversation in conversations:
-            finish_conversation(conversation["id"])
