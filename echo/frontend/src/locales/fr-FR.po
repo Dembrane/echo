@@ -312,11 +312,11 @@ msgstr "Conseil audio"
 msgid "Auto-select"
 msgstr "Sélection automatique"
 
-#: src/lib/query.ts:1597
+#: src/lib/query.ts:1619
 msgid "Auto-select disabled"
 msgstr "Sélection automatique désactivée"
 
-#: src/lib/query.ts:1459
+#: src/lib/query.ts:1481
 msgid "Auto-select enabled"
 msgstr "Sélection automatique activée"
 
@@ -485,7 +485,7 @@ msgstr "Continuer"
 msgid "conversation"
 msgstr "conversation"
 
-#: src/lib/query.ts:1460
+#: src/lib/query.ts:1482
 msgid "Conversation added to chat"
 msgstr "Conversation ajoutée à la discussion"
 
@@ -497,7 +497,7 @@ msgstr "Conversation terminée"
 #~ msgid "Conversation processing"
 #~ msgstr "Traitement de la conversation"
 
-#: src/lib/query.ts:1598
+#: src/lib/query.ts:1620
 msgid "Conversation removed from chat"
 msgstr "Conversation retirée de la discussion"
 
@@ -817,12 +817,12 @@ msgstr "Exporter"
 msgid "Failed"
 msgstr "Échec"
 
-#: src/lib/query.ts:1445
+#: src/lib/query.ts:1467
 msgid "Failed to add conversation to chat"
 msgstr "Échec de l'ajout de la conversation à la discussion"
 
 #. placeholder {0}: error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
-#: src/lib/query.ts:1437
+#: src/lib/query.ts:1459
 msgid "Failed to add conversation to chat{0}"
 msgstr "Échec de l'ajout de la conversation à la discussion{0}"
 
@@ -830,13 +830,13 @@ msgstr "Échec de l'ajout de la conversation à la discussion{0}"
 msgid "Failed to delete response"
 msgstr "Échec de la suppression de la réponse"
 
-#: src/lib/query.ts:1578
-#: src/lib/query.ts:1584
+#: src/lib/query.ts:1600
+#: src/lib/query.ts:1606
 msgid "Failed to disable Auto Select for this chat"
 msgstr "Échec de la désactivation de la sélection automatique pour cette discussion"
 
-#: src/lib/query.ts:1441
-#: src/lib/query.ts:1447
+#: src/lib/query.ts:1463
+#: src/lib/query.ts:1469
 msgid "Failed to enable Auto Select for this chat"
 msgstr "Échec de l'activation de la sélection automatique pour cette discussion"
 
@@ -871,16 +871,16 @@ msgstr "Échec du marquage de l'annonce comme lue"
 msgid "Failed to regenerate the summary. Please try again later."
 msgstr "Échec de la régénération du résumé. Veuillez réessayer plus tard."
 
-#: src/lib/query.ts:1582
+#: src/lib/query.ts:1604
 msgid "Failed to remove conversation from chat"
 msgstr "Échec de la suppression de la conversation de la discussion"
 
 #. placeholder {0}: error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
-#: src/lib/query.ts:1574
+#: src/lib/query.ts:1596
 msgid "Failed to remove conversation from chat{0}"
 msgstr "Échec de la suppression de la conversation de la discussion{0}"
 
-#: src/lib/query.ts:2080
+#: src/lib/query.ts:2102
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Échec de la transcription de la conversation. Veuillez réessayer."
 
@@ -1124,8 +1124,8 @@ msgstr "Lien"
 #~ msgstr "Publication LinkedIn (Expérimental)"
 
 #: src/components/conversation/ConversationAccordion.tsx:516
-msgid "Live"
-msgstr "Direct"
+#~ msgid "Live"
+#~ msgstr "Direct"
 
 #: src/components/participant/MicrophoneTest.tsx:274
 msgid "Live audio level:"
@@ -1143,7 +1143,7 @@ msgstr "Chargement"
 msgid "loading..."
 msgstr "chargement..."
 
-#: src/lib/query.ts:1380
+#: src/lib/query.ts:1402
 #: src/components/conversation/ConversationAccordion.tsx:104
 msgid "Loading..."
 msgstr "Chargement..."
@@ -1359,6 +1359,15 @@ msgstr "Aucun fichier audio valide n'a été sélectionné. Veuillez sélectionn
 #: src/components/conversation/ConversationAccordion.tsx:545
 msgid "Oldest First"
 msgstr "Plus ancien en premier"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/ConversationAccordion.tsx:516
+msgid "conversation.ongoing"
+msgstr "En cours"
+
+#: src/components/conversation/ConversationAccordion.tsx:516
+#~ msgid "Ongoing"
+#~ msgstr "En cours"
 
 #: src/components/conversation/OngoingConversationsSummaryCard.tsx:60
 msgid "Ongoing Conversations"
@@ -1766,7 +1775,7 @@ msgstr "Rétranscrire la conversation"
 msgid "Retranscribe Conversation"
 msgstr "Rétranscrire la conversation"
 
-#: src/lib/query.ts:2076
+#: src/lib/query.ts:2098
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "La rétranscrire a commencé. La nouvelle conversation sera disponible bientôt."
 

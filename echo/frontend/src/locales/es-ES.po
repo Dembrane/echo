@@ -312,11 +312,11 @@ msgstr "Consejo de audio"
 msgid "Auto-select"
 msgstr "Seleccionar automáticamente"
 
-#: src/lib/query.ts:1597
+#: src/lib/query.ts:1619
 msgid "Auto-select disabled"
 msgstr "Seleccionar automáticamente desactivado"
 
-#: src/lib/query.ts:1459
+#: src/lib/query.ts:1481
 msgid "Auto-select enabled"
 msgstr "Seleccionar automáticamente activado"
 
@@ -485,7 +485,7 @@ msgstr "Continuar"
 msgid "conversation"
 msgstr "conversación"
 
-#: src/lib/query.ts:1460
+#: src/lib/query.ts:1482
 msgid "Conversation added to chat"
 msgstr "Conversación añadida al chat"
 
@@ -497,7 +497,7 @@ msgstr "Conversación Terminada"
 #~ msgid "Conversation processing"
 #~ msgstr "Procesando conversación"
 
-#: src/lib/query.ts:1598
+#: src/lib/query.ts:1620
 msgid "Conversation removed from chat"
 msgstr "Conversación eliminada del chat"
 
@@ -817,12 +817,12 @@ msgstr "Exportar"
 msgid "Failed"
 msgstr "Error"
 
-#: src/lib/query.ts:1445
+#: src/lib/query.ts:1467
 msgid "Failed to add conversation to chat"
 msgstr "Error al añadir la conversación al chat"
 
 #. placeholder {0}: error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
-#: src/lib/query.ts:1437
+#: src/lib/query.ts:1459
 msgid "Failed to add conversation to chat{0}"
 msgstr "Error al añadir la conversación al chat{0}"
 
@@ -830,13 +830,13 @@ msgstr "Error al añadir la conversación al chat{0}"
 msgid "Failed to delete response"
 msgstr "Error al eliminar la respuesta"
 
-#: src/lib/query.ts:1578
-#: src/lib/query.ts:1584
+#: src/lib/query.ts:1600
+#: src/lib/query.ts:1606
 msgid "Failed to disable Auto Select for this chat"
 msgstr "Error al desactivar la selección automática para este chat"
 
-#: src/lib/query.ts:1441
-#: src/lib/query.ts:1447
+#: src/lib/query.ts:1463
+#: src/lib/query.ts:1469
 msgid "Failed to enable Auto Select for this chat"
 msgstr "Error al activar la selección automática para este chat"
 
@@ -871,16 +871,16 @@ msgstr "Error al marcar el anuncio como leído"
 msgid "Failed to regenerate the summary. Please try again later."
 msgstr "Error al regenerar el resumen. Por favor, inténtalo de nuevo más tarde."
 
-#: src/lib/query.ts:1582
+#: src/lib/query.ts:1604
 msgid "Failed to remove conversation from chat"
 msgstr "Error al eliminar la conversación del chat"
 
 #. placeholder {0}: error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
-#: src/lib/query.ts:1574
+#: src/lib/query.ts:1596
 msgid "Failed to remove conversation from chat{0}"
 msgstr "Error al eliminar la conversación del chat{0}"
 
-#: src/lib/query.ts:2080
+#: src/lib/query.ts:2102
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Error al retranscribir la conversación. Por favor, inténtalo de nuevo."
 
@@ -1124,8 +1124,8 @@ msgstr "Enlace"
 #~ msgstr "Publicación LinkedIn (Experimental)"
 
 #: src/components/conversation/ConversationAccordion.tsx:516
-msgid "Live"
-msgstr "Vivo"
+#~ msgid "Live"
+#~ msgstr "Vivo"
 
 #: src/components/participant/MicrophoneTest.tsx:274
 msgid "Live audio level:"
@@ -1143,7 +1143,7 @@ msgstr "Cargando"
 msgid "loading..."
 msgstr "cargando..."
 
-#: src/lib/query.ts:1380
+#: src/lib/query.ts:1402
 #: src/components/conversation/ConversationAccordion.tsx:104
 msgid "Loading..."
 msgstr "Cargando..."
@@ -1359,6 +1359,15 @@ msgstr "No se seleccionaron archivos de audio válidos. Por favor, selecciona so
 #: src/components/conversation/ConversationAccordion.tsx:545
 msgid "Oldest First"
 msgstr "Más antiguos primero"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/ConversationAccordion.tsx:516
+msgid "conversation.ongoing"
+msgstr "En curso"
+
+#: src/components/conversation/ConversationAccordion.tsx:516
+#~ msgid "Ongoing"
+#~ msgstr "En curso"
 
 #: src/components/conversation/OngoingConversationsSummaryCard.tsx:60
 msgid "Ongoing Conversations"
@@ -1766,7 +1775,7 @@ msgstr "Retranscribir conversación"
 msgid "Retranscribe Conversation"
 msgstr "Retranscribir conversación"
 
-#: src/lib/query.ts:2076
+#: src/lib/query.ts:2098
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "La retranscripción ha comenzado. La nueva conversación estará disponible pronto."
 

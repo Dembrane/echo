@@ -821,7 +821,7 @@ export const useConversationsByProjectId = (
       return conversations.map((conversation: any) => {
         const hasRecentChunks = conversation.chunks?.some((chunk: any) => {
           // Skip upload chunks
-          if (chunk.source === "DASHBOARD_UPLOAD" || chunk.source === "CLONE") return false;
+          if (chunk.source === "DASHBOARD_UPLOAD") return false;
           
           // Check if chunk timestamp is recent
           const chunkTime = new Date(chunk.timestamp || chunk.created_at || 0);

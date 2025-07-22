@@ -308,11 +308,11 @@ msgstr "Audio-Tipp"
 msgid "Auto-select"
 msgstr "Automatisch auswählen"
 
-#: src/lib/query.ts:1597
+#: src/lib/query.ts:1619
 msgid "Auto-select disabled"
 msgstr "Automatisch auswählen deaktiviert"
 
-#: src/lib/query.ts:1459
+#: src/lib/query.ts:1481
 msgid "Auto-select enabled"
 msgstr "Automatisch auswählen aktiviert"
 
@@ -481,7 +481,7 @@ msgstr "Weiter"
 msgid "conversation"
 msgstr "Gespräch"
 
-#: src/lib/query.ts:1460
+#: src/lib/query.ts:1482
 msgid "Conversation added to chat"
 msgstr "Gespräch zum Chat hinzugefügt"
 
@@ -493,7 +493,7 @@ msgstr "Gespräch beendet"
 #~ msgid "Conversation processing"
 #~ msgstr "Gespräch wird verarbeitet"
 
-#: src/lib/query.ts:1598
+#: src/lib/query.ts:1620
 msgid "Conversation removed from chat"
 msgstr "Gespräch aus dem Chat entfernt"
 
@@ -813,12 +813,12 @@ msgstr "Exportieren"
 msgid "Failed"
 msgstr "Fehlgeschlagen"
 
-#: src/lib/query.ts:1445
+#: src/lib/query.ts:1467
 msgid "Failed to add conversation to chat"
 msgstr "Fehler beim Hinzufügen des Gesprächs zum Chat"
 
 #. placeholder {0}: error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
-#: src/lib/query.ts:1437
+#: src/lib/query.ts:1459
 msgid "Failed to add conversation to chat{0}"
 msgstr "Fehler beim Hinzufügen des Gesprächs zum Chat{0}"
 
@@ -826,13 +826,13 @@ msgstr "Fehler beim Hinzufügen des Gesprächs zum Chat{0}"
 msgid "Failed to delete response"
 msgstr "Fehler beim Löschen der Antwort"
 
-#: src/lib/query.ts:1578
-#: src/lib/query.ts:1584
+#: src/lib/query.ts:1600
+#: src/lib/query.ts:1606
 msgid "Failed to disable Auto Select for this chat"
 msgstr "Fehler beim Deaktivieren des Automatischen Auswählens für diesen Chat"
 
-#: src/lib/query.ts:1441
-#: src/lib/query.ts:1447
+#: src/lib/query.ts:1463
+#: src/lib/query.ts:1469
 msgid "Failed to enable Auto Select for this chat"
 msgstr "Fehler beim Aktivieren des Automatischen Auswählens für diesen Chat"
 
@@ -867,16 +867,16 @@ msgstr "Fehler beim Markieren der Ankündigung als gelesen"
 msgid "Failed to regenerate the summary. Please try again later."
 msgstr "Fehler beim erneuten Generieren der Zusammenfassung. Bitte versuchen Sie es erneut."
 
-#: src/lib/query.ts:1582
+#: src/lib/query.ts:1604
 msgid "Failed to remove conversation from chat"
 msgstr "Fehler beim Entfernen des Gesprächs aus dem Chat"
 
 #. placeholder {0}: error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
-#: src/lib/query.ts:1574
+#: src/lib/query.ts:1596
 msgid "Failed to remove conversation from chat{0}"
 msgstr "Fehler beim Entfernen des Gesprächs aus dem Chat{0}"
 
-#: src/lib/query.ts:2080
+#: src/lib/query.ts:2102
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Fehler beim Hertranskribieren des Gesprächs. Bitte versuchen Sie es erneut."
 
@@ -1120,8 +1120,8 @@ msgstr "Link"
 #~ msgstr "LinkedIn-Beitrag (Experimentell)"
 
 #: src/components/conversation/ConversationAccordion.tsx:516
-msgid "Live"
-msgstr "Live"
+#~ msgid "Live"
+#~ msgstr "Live"
 
 #: src/components/participant/MicrophoneTest.tsx:274
 msgid "Live audio level:"
@@ -1139,7 +1139,7 @@ msgstr "Laden"
 msgid "loading..."
 msgstr "wird geladen..."
 
-#: src/lib/query.ts:1380
+#: src/lib/query.ts:1402
 #: src/components/conversation/ConversationAccordion.tsx:104
 msgid "Loading..."
 msgstr "Laden..."
@@ -1355,6 +1355,15 @@ msgstr "Es wurden keine gültigen Audio-Dateien ausgewählt. Bitte wählen Sie n
 #: src/components/conversation/ConversationAccordion.tsx:545
 msgid "Oldest First"
 msgstr "Älteste zuerst"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/ConversationAccordion.tsx:516
+msgid "conversation.ongoing"
+msgstr "Laufend"
+
+#: src/components/conversation/ConversationAccordion.tsx:516
+#~ msgid "Ongoing"
+#~ msgstr "Laufend"
 
 #: src/components/conversation/OngoingConversationsSummaryCard.tsx:60
 msgid "Ongoing Conversations"
@@ -1762,7 +1771,7 @@ msgstr "Gespräch hertranskribieren"
 msgid "Retranscribe Conversation"
 msgstr "Gespräch hertranskribieren"
 
-#: src/lib/query.ts:2076
+#: src/lib/query.ts:2098
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "Hertranskription gestartet. Das neue Gespräch wird bald verfügbar sein."
 
