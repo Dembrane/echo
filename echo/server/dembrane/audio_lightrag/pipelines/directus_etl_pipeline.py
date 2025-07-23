@@ -6,7 +6,7 @@ import pandas as pd
 from dembrane.config import AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS
 from dembrane.directus import directus
 from dembrane.processing_status_utils import add_processing_status
-from dembrane.audio_lightrag.utils.echo_utils import finish_conversation
+from dembrane.audio_lightrag.utils.echo_utils import release_redis_lock, finish_conversation
 from dembrane.audio_lightrag.utils.process_tracker import ProcessTracker
 
 logger = logging.getLogger("dembrane.audio_lightrag.pipelines.directus_etl_pipeline")
@@ -79,7 +79,7 @@ class DirectusETLPipeline:
             self.conversation_request["query"]["filter"] = {"id": {"_in": conversation_id_list}}
         else:
             logger.warning("No conversation id list provided, getting all conversations")
-            return [], []
+            raise DirectusException("No conversation id list provided")
         conversation = self.directus.get_items("conversation", self.conversation_request)
         project_id_list = list(
             set([conversation_request["project_id"] for conversation_request in conversation])
@@ -102,7 +102,7 @@ class DirectusETLPipeline:
             and self.validate_directus_response(projects)
         ):
             logger.error("Directus response validation failed")
-            self.directus_failure(conversations, projects)
+            self.directus_failure(conversations)
             raise DirectusException("Directus response validation failed")
 
         conversation_df = pd.DataFrame(conversations)
@@ -181,16 +181,13 @@ class DirectusETLPipeline:
         process_tracker = self.load_to_process_tracker(conversation_df, project_df)
         return process_tracker
 
-    def directus_failure(
-        self, conversations: List[Dict[str, Any]], projects: List[Dict[str, Any]]
-    ) -> None:
+    def directus_failure(self, conversations: List[Dict[str, Any]]) -> None:
         for conversation in conversations:
-            finish_conversation(conversation["id"])
-        conversations_str = "\n".join(
-            [f"Conversation ID: {conversation['id']}" for conversation in conversations]
-        )
-        projects_str = "\n".join([f"Project ID: {project['id']}" for project in projects])
-        add_processing_status(
-            event="directus_etl_pipeline.failed",
-            message=f"Directus ETL pipeline failed for conversations: {conversations_str}; projects: {projects_str}",
-        )
+            conversation_id = conversation["id"]
+            finish_conversation(conversation_id)
+            add_processing_status(
+                conversation_id=conversation_id,
+                event="directus_etl_pipeline.failed",
+                message=f"Directus ETL pipeline failed for conversation due to directus error: {conversation_id}",
+            )
+            release_redis_lock(conversation_id)

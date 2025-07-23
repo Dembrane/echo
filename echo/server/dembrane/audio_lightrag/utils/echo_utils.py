@@ -11,10 +11,10 @@ from dembrane.directus import directus
 
 logger = getLogger(__name__)
 
-_redis_client = None
+_redis_client: redis.Redis | None = None
 
 
-def _get_redis_client():
+def _get_redis_client() -> redis.Redis:
     global _redis_client
     if _redis_client is None:
         _redis_client = redis.from_url(REDIS_URL)
@@ -64,3 +64,17 @@ def renew_redis_lock(conversation_id: str) -> bool:
     except Exception as e:
         logger.error(f"Error maintaining Redis lock for conversation {conversation_id}: {e}")
         return False
+
+
+def release_redis_lock(conversation_id: str) -> None:
+    try:
+        redis_client = _get_redis_client()
+        lock_key = f"{AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX}{conversation_id}"
+        if redis_client.exists(lock_key):
+            redis_client.delete(lock_key)
+            logger.info(f"Released Redis lock for conversation {conversation_id}")
+        else:
+            logger.warning(f"Redis lock for conversation {conversation_id} does not exist")
+    except Exception as e:
+        logger.error(f"Error releasing Redis lock for conversation {conversation_id}: {e}")
+        raise
