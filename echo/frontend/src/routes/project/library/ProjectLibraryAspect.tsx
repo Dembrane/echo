@@ -14,7 +14,7 @@ import { Markdown } from "@/components/common/Markdown";
 import { useProjectById } from "@/components/project/hooks";
 import { useAspectById } from "@/components/library/hooks";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
-import { useCopyAspect } from "@/hooks/useCopyAspect";
+import { useCopyAspect } from "@/components/aspect/hooks/useCopyAspect";
 import { CopyIconButton } from "@/components/common/CopyIconButton";
 import { sanitizeImageUrl } from "@/lib/utils";
 

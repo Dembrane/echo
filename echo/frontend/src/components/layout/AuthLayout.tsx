@@ -4,7 +4,7 @@ import { Header } from "./Header";
 import { Outlet, useNavigate, useSearchParams } from "react-router-dom";
 import { PropsWithChildren, useEffect } from "react";
 import { Toaster } from "../common/Toaster";
-import { useAuthenticated } from "@/hooks/useAuthenticated";
+import { useAuthenticated } from "@/components/auth/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
 export const AuthLayout = (props: PropsWithChildren) => {
