@@ -11,7 +11,8 @@ import {
 import { useParams } from "react-router-dom";
 import { Quote } from "../../../components/quote/Quote";
 import { Markdown } from "@/components/common/Markdown";
-import { useAspectById, useProjectById } from "@/lib/query";
+import { useProjectById } from "@/components/project/hooks";
+import { useAspectById } from "@/components/library/hooks";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { useCopyAspect } from "@/hooks/useCopyAspect";
 import { CopyIconButton } from "@/components/common/CopyIconButton";

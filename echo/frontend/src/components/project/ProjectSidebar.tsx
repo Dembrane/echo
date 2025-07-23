@@ -1,7 +1,8 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Icons } from "@/icons";
-import { useCreateChatMutation, useProjectById } from "@/lib/query";
+import { useProjectById } from "@/components/project/hooks";
+import { useCreateChatMutation } from "./hooks";
 import {
   ActionIcon,
   Box,

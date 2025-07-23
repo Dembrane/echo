@@ -4,7 +4,7 @@ import { Box, Button, LoadingOverlay, Paper, Stack, Text } from "@mantine/core";
 import { IconArrowsDiagonal } from "@tabler/icons-react";
 import { useParams } from "react-router-dom";
 import { I18nLink } from "@/components/common/i18nLink";
-import { useProjectById } from "@/lib/query";
+import { useProjectById } from "@/components/project/hooks";
 
 export const AspectCard = ({
   data,

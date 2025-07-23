@@ -1,9 +1,9 @@
 import { Trans } from "@lingui/react/macro";
+import { useResourceById } from "@/components/resource/hooks";
 import {
   useDeleteResourceByIdMutation,
-  useResourceById,
   useUpdateResourceByIdMutation,
-} from "@/lib/query";
+} from "@/components/resource/hooks";
 import {
   ActionIcon,
   Box,

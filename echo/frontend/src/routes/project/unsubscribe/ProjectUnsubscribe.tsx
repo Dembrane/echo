@@ -1,5 +1,5 @@
 import { useSearchParams } from "react-router-dom";
-import { useCheckUnsubscribeStatus } from "@/lib/query";
+import { useCheckUnsubscribeStatus } from "@/components/unsubscribe/hooks";
 import { Button, Stack, Title, Text, Loader, Group } from "@mantine/core";
 import { useState } from "react";
 import { Logo } from "@/components/common/Logo";

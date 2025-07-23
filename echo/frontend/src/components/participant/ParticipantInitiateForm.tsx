@@ -12,7 +12,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
-import { useInitiateConversationMutation } from "@/lib/query";
+import { useInitiateConversationMutation } from "./hooks";
 import { AxiosError } from "axios";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 

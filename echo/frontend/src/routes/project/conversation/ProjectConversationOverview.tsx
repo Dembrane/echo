@@ -11,11 +11,8 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useParams } from "react-router-dom";
-import {
-  useConversationById,
-  useConversationChunks,
-  useProjectById,
-} from "@/lib/query";
+import { useProjectById } from "@/components/project/hooks";
+import { useConversationById, useConversationChunks } from "@/components/conversation/hooks";
 import { ConversationEdit } from "@/components/conversation/ConversationEdit";
 import { ConversationDangerZone } from "@/components/conversation/ConversationDangerZone";
 import { finishConversation, generateConversationSummary } from "@/lib/api";
