@@ -10,10 +10,10 @@ import { IconAlertTriangle, IconX } from "@tabler/icons-react";
 import { useLatestAnnouncement, useMarkAsReadMutation } from "./hooks";
 import { theme } from "@/theme";
 import { useState, useEffect } from "react";
-import { useAnnouncementDrawer } from "@/hooks/useAnnouncementDrawer";
+import { useAnnouncementDrawer } from "@/components/announcement/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Markdown } from "@/components/common/Markdown";
-import { getTranslatedContent } from "@/hooks/useProcessedAnnouncements";
+import { getTranslatedContent } from "@/components/announcement/hooks/useProcessedAnnouncements";
 import { toast } from "@/components/common/Toaster";
 import { t } from "@lingui/core/macro";
 

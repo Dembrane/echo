@@ -2,7 +2,7 @@ import { ActionIcon, Box } from "@mantine/core";
 import { Outlet } from "react-router-dom";
 import { ProjectSidebar } from "../project/ProjectSidebar";
 import { Resizable } from "re-resizable";
-import { useSidebar } from "@/hooks/useSidebar";
+import { useSidebar } from "@/components/layout/hooks/useSidebar";
 import { Icons } from "@/icons";
 import { useMediaQuery } from "@mantine/hooks";
 import { cn } from "@/lib/utils";

@@ -3,11 +3,16 @@ import {
   submitNotificationParticipant,
   uploadConversationChunk,
   uploadConversationText,
+  getParticipantConversationById,
+  getParticipantConversationChunks,
+  getParticipantProjectById,
+  getParticipantTutorialCardsBySlug,
 } from "@/lib/api";
 import { directus } from "@/lib/directus";
-import { createItem } from "@directus/sdk";
+import { createItem, readItems } from "@directus/sdk";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
+import { useQuery } from "@tanstack/react-query";
 
 export const useCreateProjectReportMetricOncePerDayMutation = () => {
   return useMutation({
@@ -270,5 +275,75 @@ export const useSubmitNotificationParticipant = () => {
     onError: (error) => {
       console.error("Notification submission failed:", error);
     },
+  });
+};
+
+
+export const useParticipantProjectById = (projectId: string) => {
+  return useQuery({
+    queryKey: ["participantProject", projectId],
+    queryFn: () => getParticipantProjectById(projectId),
+  });
+};
+
+export const useParticipantTutorialCardBySlug = (slug: string) => {
+  return useQuery({
+    queryKey: ["participantTutorialCard", slug],
+    queryFn: () => getParticipantTutorialCardsBySlug(slug),
+    select: (data) => (data.length > 0 ? data[0] : null),
+    enabled: slug !== "",
+  });
+};
+
+export const combineUserChunks = (
+  chunks: { type: "user_chunk"; timestamp: Date; data: TConversationChunk }[],
+) => {
+  return {
+    type: "user_chunk" as const,
+    timestamp: chunks[0].timestamp,
+    data: {
+      ...chunks[0].data,
+      transcript: chunks.map((c) => c.data.transcript).join("..."),
+    },
+  };
+};
+
+export const useConversationRepliesQuery = (conversationId: string | undefined) => {
+  return useQuery({
+    queryKey: ["participant", "conversation_replies", conversationId],
+    queryFn: () =>
+      directus.request(
+        readItems("conversation_reply", {
+          filter: { conversation_id: { _eq: conversationId } },
+          fields: ["id", "content_text", "date_created", "type"],
+          sort: ["date_created"],
+        }),
+      ),
+    enabled: !!conversationId,
+    // refetchInterval: 15000,
+  });
+};
+
+export const useConversationQuery = (
+  projectId: string | undefined,
+  conversationId: string | undefined,
+) => {
+  return useQuery({
+    queryKey: ["participant", "conversation", projectId, conversationId],
+    queryFn: () => getParticipantConversationById(projectId ?? "", conversationId ?? ""),
+    enabled: !!conversationId && !!projectId,
+    refetchInterval: 60000,
+  });
+};
+
+export const useConversationChunksQuery = (
+  projectId: string | undefined,
+  conversationId: string | undefined,
+) => {
+  return useQuery({
+    queryKey: ["participant", "conversation_chunks", conversationId],
+    queryFn: () =>
+      getParticipantConversationChunks(projectId ?? "", conversationId ?? ""),
+    refetchInterval: 60000,
   });
 };

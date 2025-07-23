@@ -38,7 +38,7 @@ import {
   useConversationQuery,
   useConversationRepliesQuery,
   useParticipantProjectById,
-} from "@/lib/participantQuery";
+} from "@/components/participant/hooks";
 
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
@@ -51,7 +51,7 @@ import { checkPermissionError, scrollToBottom } from "@/lib/utils";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
 import { API_BASE_URL } from "@/config";
-import useChunkedAudioRecorder from "@/hooks/useChunkedAudioRecorder";
+import useChunkedAudioRecorder from "@/components/participant/hooks/useChunkedAudioRecorder";
 import MicrophoneTest from "../../components/participant/MicrophoneTest";
 
 const DEFAULT_REPLY_COOLDOWN = 120; // 2 minutes in seconds

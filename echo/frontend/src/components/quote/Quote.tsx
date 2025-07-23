@@ -2,7 +2,7 @@ import { Group, Paper, Pill, Text } from "@mantine/core";
 import { useParams } from "react-router-dom";
 import { I18nLink } from "../common/i18nLink";
 import { cn } from "@/lib/utils";
-import { useCopyQuote } from "@/hooks/useCopyQuote";
+import { useCopyQuote } from "@/components/aspect/hooks/useCopyQuote";
 import { CopyIconButton } from "../common/CopyIconButton";
 import { useState } from "react";
 import { ActionIcon, Tooltip } from "@mantine/core";

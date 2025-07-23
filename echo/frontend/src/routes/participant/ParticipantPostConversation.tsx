@@ -3,7 +3,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { I18nLink } from "@/components/common/i18nLink";
 import { Markdown } from "@/components/common/Markdown";
-import { useParticipantProjectById } from "@/lib/participantQuery";
+import { useParticipantProjectById } from "@/components/participant/hooks";
 import {
   Box,
   Button,

@@ -14,7 +14,7 @@ import { AspectCard } from "../aspect/AspectCard";
 import { useParams } from "react-router-dom";
 import { Markdown } from "../common/Markdown";
 import { I18nLink } from "../common/i18nLink";
-import { useCopyView } from "../../hooks/useCopyView";
+import { useCopyView } from "./hooks/useCopyView";
 import { CopyIconButton } from "../common/CopyIconButton";
 
 export const ViewCard = ({ data }: { data: View }) => {

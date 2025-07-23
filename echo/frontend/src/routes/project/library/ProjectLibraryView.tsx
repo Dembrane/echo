@@ -16,7 +16,7 @@ import {
 } from "@mantine/core";
 import { useParams } from "react-router-dom";
 import { CopyIconButton } from "@/components/common/CopyIconButton";
-import { useCopyView } from "@/hooks/useCopyView";
+import { useCopyView } from "@/components/view/hooks/useCopyView";
 
 export const ProjectLibraryView = () => {
   const { projectId, viewId } = useParams();
