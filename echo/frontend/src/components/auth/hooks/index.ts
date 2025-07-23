@@ -1,15 +1,28 @@
 import { toast } from "@/components/common/Toaster";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { directus } from "@/lib/directus";
 import {
   passwordRequest,
   passwordReset,
+  readUser,
   registerUser,
   registerUserVerify,
 } from "@directus/sdk";
-import { throwWithMessage } from "@/lib/query";
 import { ADMIN_BASE_URL } from "@/config";
+import { throwWithMessage } from "../utils/errorUtils";
+
+export const useCurrentUser = () =>
+  useQuery({
+    queryKey: ["users", "me"],
+    queryFn: () => {
+      try {
+        return directus.request(readUser("me"));
+      } catch (error) {
+        return null;
+      }
+    },
+  });
 
 export const useResetPasswordMutation = () => {
   const navigate = useI18nNavigate();
@@ -133,6 +146,37 @@ export const useLoginMutation = () => {
     },
     onSuccess: () => {
       toast.success("Login successful");
+    },
+  });
+};
+
+export const useLogoutMutation = () => {
+  const queryClient = useQueryClient();
+  const navigate = useI18nNavigate();
+
+  return useMutation({
+    mutationFn: async ({
+      next: _,
+    }: {
+      next?: string;
+      reason?: string;
+      doRedirect: boolean;
+    }) => {
+      try {
+        await directus.logout();
+      } catch (e) {
+        throwWithMessage(e);
+      }
+    },
+    onMutate: async ({ next, reason, doRedirect }) => {
+      queryClient.resetQueries();
+      if (doRedirect) {
+        navigate(
+          "/login" +
+            (next ? `?next=${encodeURIComponent(next)}` : "") +
+            (reason ? `&reason=${reason}` : ""),
+        );
+      }
     },
   });
 };

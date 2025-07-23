@@ -4,9 +4,11 @@ import { ChatContextProgress } from "@/components/chat/ChatContextProgress";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import {
   useChat as useProjectChat,
+  useAddChatMessageMutation,
+  useChatHistory,
+  useLockConversationsMutation,
   useProjectChatContext,
-} from "@/lib/query";
-import { useAddChatMessageMutation, useChatHistory, useLockConversationsMutation } from "@/components/chat/hooks";
+} from "@/components/chat/hooks";
 import {
   Alert,
   Box,
@@ -35,7 +37,10 @@ import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButt
 import { ConversationLinks } from "@/components/conversation/ConversationLinks";
 import { ChatHistoryMessage } from "@/components/chat/ChatHistoryMessage";
 import { ChatTemplatesMenu } from "@/components/chat/ChatTemplatesMenu";
-import { extractMessageMetadata, formatMessage } from "@/components/chat/chatUtils";
+import {
+  extractMessageMetadata,
+  formatMessage,
+} from "@/components/chat/chatUtils";
 import SourcesSearch from "@/components/chat/SourcesSearch";
 import SpikeMessage from "@/components/participant/SpikeMessage";
 import { Logo } from "@/components/common/Logo";
@@ -167,7 +172,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
       // Lock conversations first
       await lockConversationsMutation.mutateAsync({ chatId });
       await chatContextQuery.refetch();
-      
+
       // Submit the chat
       handleSubmit();
 

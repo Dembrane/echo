@@ -5,7 +5,7 @@ import {
   useDeleteTagByIdMutation,
   useUpdateProjectTagByIdMutation,
 } from "./hooks";
-import { useProjectById } from "@/lib/query";
+import { useProjectById } from "@/components/project/hooks";
 import {
   ActionIcon,
   Alert,

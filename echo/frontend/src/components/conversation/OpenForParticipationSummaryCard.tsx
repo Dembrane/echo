@@ -2,7 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Checkbox, Switch, Tooltip } from "@mantine/core";
 import { Icons } from "@/icons";
 import { SummaryCard } from "../common/SummaryCard";
-import { useProjectById, useUpdateProjectByIdMutation } from "@/lib/query";
+import { useProjectById, useUpdateProjectByIdMutation } from "@/components/project/hooks";
 
 interface OpenForParticipationSummaryCardProps {
   projectId: string;

@@ -3,8 +3,10 @@ import { Trans } from "@lingui/react/macro";
 import { InformationTooltip } from "@/components/common/InformationTooltip";
 import {
   useConversationById,
-} from "@/lib/query";
-import { useInfiniteConversationChunks, useRetranscribeConversationMutation, useConversationTranscriptString} from "@/components/conversation/hooks";
+  useInfiniteConversationChunks,
+  useRetranscribeConversationMutation,
+  useConversationTranscriptString,
+} from "@/components/conversation/hooks";
 import {
   ActionIcon,
   Group,
@@ -106,7 +108,8 @@ export const ProjectConversationTranscript = () => {
     (chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
   );
 
-  const isEmptyConversation = !hasValidTranscripts && conversationQuery.data?.is_finished;
+  const isEmptyConversation =
+    !hasValidTranscripts && conversationQuery.data?.is_finished;
 
   const handleDownloadTranscript = (filename: string) => {
     const text = transcriptQuery.data ?? "";
@@ -122,9 +125,9 @@ export const ProjectConversationTranscript = () => {
       } else {
         a.download =
           "Conversation" +
-            "-" +
-            conversationQuery.data.participant_email +
-            ".md";
+          "-" +
+          conversationQuery.data.participant_email +
+          ".md";
       }
     }
 
@@ -309,35 +312,30 @@ export const ProjectConversationTranscript = () => {
                 back later.
               </Trans>
             </Alert>
-          ) : 
-          // !hasValidTranscripts ? (
-          //   <Alert
-          //     icon={<IconAlertCircle size={16} />}
-          //     title={t`Processing Transcript`}
-          //     color="gray"
-          //   >
-          //     <Trans>
-          //       The transcript for this conversation is being processed. Please
-          //       check back later.
-          //     </Trans>
-          //   </Alert>
-          // ) :
-           (
-            allChunks
-              .map((chunk, index, array) => {
-                const isLastChunk = index === array.length - 1;
-                return (
-                  <div
-                    key={chunk.id}
-                    ref={isLastChunk ? loadMoreRef : undefined}
-                  >
-                    <ConversationChunkAudioTranscript
-                      chunk={chunk}
-                      showAudioPlayer={showAudioPlayer}
-                    />
-                  </div>
-                );
-              })
+          ) : (
+            // !hasValidTranscripts ? (
+            //   <Alert
+            //     icon={<IconAlertCircle size={16} />}
+            //     title={t`Processing Transcript`}
+            //     color="gray"
+            //   >
+            //     <Trans>
+            //       The transcript for this conversation is being processed. Please
+            //       check back later.
+            //     </Trans>
+            //   </Alert>
+            // ) :
+            allChunks.map((chunk, index, array) => {
+              const isLastChunk = index === array.length - 1;
+              return (
+                <div key={chunk.id} ref={isLastChunk ? loadMoreRef : undefined}>
+                  <ConversationChunkAudioTranscript
+                    chunk={chunk}
+                    showAudioPlayer={showAudioPlayer}
+                  />
+                </div>
+              );
+            })
           )}
           {isFetchingNextPage && (
             <Stack>

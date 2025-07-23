@@ -7,10 +7,10 @@ import { getDirectusErrorString } from "@/lib/directus";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import {
   useCreateProjectMutation,
-  useCurrentUser,
   useInfiniteProjects,
   useUpdateProjectByIdMutation,
-} from "@/lib/query";
+} from "@/components/project/hooks";
+import { useCurrentUser } from "@/components/auth/hooks";
 import {
   ActionIcon,
   Alert,

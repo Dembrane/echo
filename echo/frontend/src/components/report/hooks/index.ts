@@ -1,6 +1,6 @@
 import { createProjectReport, getProjectConversationCounts } from "@/lib/api";
 import { directus } from "@/lib/directus";
-import { readItem, readItems, updateItem } from "@directus/sdk";
+import { aggregate, readItem, readItems, updateItem } from "@directus/sdk";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // always give the project_id in payload used for invalidation
@@ -258,5 +258,86 @@ export const useProjectConversationCounts = (projectId: string) => {
     queryKey: ["projects", projectId, "conversation-counts"],
     queryFn: () => getProjectConversationCounts(projectId),
     refetchInterval: 15000,
+  });
+};
+
+export const useProjectReportViews = (reportId: number) => {
+  return useQuery({
+    queryKey: ["reports", reportId, "views"],
+    queryFn: async () => {
+      const report = await directus.request(
+        readItem("project_report", reportId, {
+          fields: ["project_id"],
+        }),
+      );
+
+      const total = await directus.request(
+        aggregate("project_report_metric", {
+          aggregate: {
+            count: "*",
+          },
+          query: {
+            filter: {
+              project_report_id: {
+                project_id: {
+                  _eq: report.project_id,
+                },
+              },
+            },
+          },
+        }),
+      );
+
+      const recent = await directus.request(
+        aggregate("project_report_metric", {
+          aggregate: {
+            count: "*",
+          },
+          query: {
+            filter: {
+              project_report_id: {},
+              // in the last 10 mins
+              date_created: {
+                // @ts-ignore
+                _gte: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+              },
+            },
+          },
+        }),
+      );
+
+      return {
+        total: total[0].count,
+        recent: recent[0].count,
+      };
+    },
+    refetchInterval: 30000,
+  });
+};
+
+export const useLatestProjectReport = (projectId: string) => {
+  return useQuery({
+    queryKey: ["projects", projectId, "report"],
+    queryFn: async () => {
+      const reports = await directus.request(
+        readItems("project_report", {
+          filter: {
+            project_id: {
+              _eq: projectId,
+            },
+          },
+          fields: ["*"],
+          sort: "-date_created",
+          limit: 1,
+        }),
+      );
+
+      if (reports.length === 0) {
+        return null;
+      }
+
+      return reports[0];
+    },
+    refetchInterval: 30000,
   });
 };

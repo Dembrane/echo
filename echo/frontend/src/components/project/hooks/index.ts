@@ -1,8 +1,24 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createItem, deleteItem, readItem, updateItem } from "@directus/sdk";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useInfiniteQuery,
+} from "@tanstack/react-query";
+import {
+  Query,
+  createItem,
+  deleteItem,
+  readItem,
+  readItems,
+  updateItem,
+} from "@directus/sdk";
 import { directus } from "@/lib/directus";
 import { toast } from "@/components/common/Toaster";
-import { addChatContext } from "@/lib/api";
+import {
+  addChatContext,
+  api,
+  getLatestProjectAnalysisRunByProjectId,
+} from "@/lib/api";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
 export const useDeleteProjectByIdMutation = () => {
@@ -117,5 +133,106 @@ export const useCreateChatMutation = () => {
       });
       toast.success("Chat created successfully");
     },
+  });
+};
+
+export const useLatestProjectAnalysisRunByProjectId = (projectId: string) => {
+  return useQuery({
+    queryKey: ["projects", projectId, "latest_analysis"],
+    queryFn: () => getLatestProjectAnalysisRunByProjectId(projectId),
+    refetchInterval: 10000,
+  });
+};
+
+export const useUpdateProjectByIdMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: Partial<Project> }) =>
+      directus.request<Project>(updateItem("project", id, payload)),
+    onSuccess: (_values, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["projects", variables.id],
+      });
+      toast.success("Project updated successfully");
+    },
+  });
+};
+
+export const useCreateProjectMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: Partial<Project>) => {
+      return api.post<unknown, TProject>("/projects", payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast.success("Project created successfully");
+    },
+    onError: (e) => {
+      console.error(e);
+      toast.error("Error creating project");
+    },
+  });
+};
+
+export const useInfiniteProjects = ({
+  query,
+  options = {
+    initialLimit: 15,
+  },
+}: {
+  query: Partial<Query<CustomDirectusTypes, Project>>;
+  options?: {
+    initialLimit?: number;
+  };
+}) => {
+  const { initialLimit = 15 } = options;
+
+  return useInfiniteQuery({
+    queryKey: ["projects", query],
+    queryFn: async ({ pageParam = 0 }) => {
+      const response = await directus.request(
+        readItems("project", {
+          ...query,
+          limit: initialLimit,
+          offset: pageParam * initialLimit,
+        }),
+      );
+
+      return {
+        projects: response,
+        nextOffset:
+          response.length === initialLimit ? pageParam + 1 : undefined,
+      };
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextOffset,
+  });
+};
+
+export const useProjectById = ({
+  projectId,
+  query = {
+    fields: [
+      "*",
+      {
+        tags: ["id", "created_at", "text", "sort"],
+      },
+    ],
+    deep: {
+      // @ts-expect-error tags won't be typed
+      tags: {
+        _sort: "sort",
+      },
+    },
+  },
+}: {
+  projectId: string;
+  query?: Partial<Query<CustomDirectusTypes, Project>>;
+}) => {
+  return useQuery({
+    queryKey: ["projects", projectId, query],
+    queryFn: () =>
+      directus.request<Project>(readItem("project", projectId, query)),
   });
 };

@@ -3,7 +3,7 @@ import ProjectBasicEdit from "@/components/project/ProjectBasicEdit";
 import { ProjectDangerZone } from "@/components/project/ProjectDangerZone";
 import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
 import { getProjectTranscriptsLink } from "@/lib/api";
-import { useProjectById } from "@/lib/query";
+import { useProjectById } from "@/components/project/hooks";
 import {
   Alert,
   Box,

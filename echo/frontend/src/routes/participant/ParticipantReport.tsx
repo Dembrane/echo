@@ -1,10 +1,7 @@
 import { useParams, useSearchParams } from "react-router-dom";
 import { ReportRenderer } from "@/components/report/ReportRenderer";
-import {
-  useLatestProjectReport,
-  useProjectReportViews,
-} from "@/lib/query";
 import { useCreateProjectReportMetricOncePerDayMutation } from "@/components/participant/hooks";
+import { useProjectReportViews, useLatestProjectReport } from "@/components/report/hooks";
 import { LoadingOverlay, Text, Title, Stack } from "@mantine/core";
 import { Trans } from "@lingui/react/macro";
 import { Logo } from "@/components/common/Logo";

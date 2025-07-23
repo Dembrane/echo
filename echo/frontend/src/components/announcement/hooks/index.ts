@@ -7,9 +7,9 @@ import {
 import * as Sentry from "@sentry/react";
 import { Query, readItems, createItems, aggregate } from "@directus/sdk";
 import { directus } from "@/lib/directus";
-import { useCurrentUser } from "@/lib/query";
 import { toast } from "@/components/common/Toaster";
 import { t } from "@lingui/core/macro";
+import { useCurrentUser } from "@/components/auth/hooks";
 
 export const useLatestAnnouncement = () => {
   const { data: currentUser } = useCurrentUser();

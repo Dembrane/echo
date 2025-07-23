@@ -17,7 +17,7 @@ import {
   IconNotes,
   IconSettings,
 } from "@tabler/icons-react";
-import { useCurrentUser, useLogoutMutation } from "@/lib/query";
+import { useCurrentUser, useLogoutMutation } from "@/components/auth/hooks";
 import { useAuthenticated } from "@/hooks/useAuthenticated";
 import { I18nLink } from "@/components/common/i18nLink";
 import { LanguagePicker } from "../language/LanguagePicker";

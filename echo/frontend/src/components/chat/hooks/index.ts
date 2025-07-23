@@ -1,6 +1,17 @@
-import { getChatHistory, lockConversations } from "@/lib/api";
+import {
+  getChatHistory,
+  getProjectChatContext,
+  lockConversations,
+} from "@/lib/api";
 import { directus } from "@/lib/directus";
-import { createItem, deleteItem, updateItem } from "@directus/sdk";
+import {
+  Query,
+  createItem,
+  deleteItem,
+  readItem,
+  readItems,
+  updateItem,
+} from "@directus/sdk";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
 
@@ -87,5 +98,52 @@ export const useUpdateChatMutation = () => {
       });
       toast.success("Chat updated successfully");
     },
+  });
+};
+
+export const useProjectChatContext = (chatId: string) => {
+  return useQuery({
+    queryKey: ["chats", "context", chatId],
+    queryFn: () => getProjectChatContext(chatId),
+    enabled: chatId !== "",
+  });
+};
+
+export const useChat = (chatId: string) => {
+  return useQuery({
+    queryKey: ["chats", chatId],
+    queryFn: () =>
+      directus.request(
+        readItem("project_chat", chatId, {
+          fields: [
+            "*",
+            {
+              used_conversations: ["*"],
+            },
+          ],
+        }),
+      ),
+  });
+};
+
+export const useProjectChats = (
+  projectId: string,
+  query?: Partial<Query<CustomDirectusTypes, ProjectChat>>,
+) => {
+  return useQuery({
+    queryKey: ["projects", projectId, "chats", query],
+    queryFn: () =>
+      directus.request(
+        readItems("project_chat", {
+          fields: ["id", "project_id", "date_created", "date_updated", "name"],
+          sort: "-date_created",
+          filter: {
+            project_id: {
+              _eq: projectId,
+            },
+          },
+          ...query,
+        }),
+      ),
   });
 };

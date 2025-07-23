@@ -4,8 +4,10 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  UseQueryOptions,
 } from "@tanstack/react-query";
 import {
+  Query,
   createItems,
   deleteItems,
   readItem,
@@ -611,5 +613,108 @@ export const useConversationChunks = (
         }),
       ),
     refetchInterval,
+  });
+};
+
+export const useConversationsByProjectId = (
+  projectId: string,
+  loadChunks?: boolean,
+  // unused
+  loadWhereTranscriptExists?: boolean,
+  query?: Partial<Query<CustomDirectusTypes, Conversation>>,
+  filterBySource?: string[],
+) => {
+  return useQuery({
+    queryKey: [
+      "projects",
+      projectId,
+      "conversations",
+      loadChunks ? "chunks" : "no-chunks",
+      loadWhereTranscriptExists ? "transcript" : "no-transcript",
+      query,
+      filterBySource,
+    ],
+    queryFn: () =>
+      directus.request(
+        readItems("conversation", {
+          sort: "-updated_at",
+          fields: [
+            "*",
+            {
+              tags: [
+                {
+                  project_tag_id: ["id", "text", "created_at"],
+                },
+              ],
+            },
+            { chunks: ["*"] },
+          ],
+          deep: {
+            // @ts-expect-error chunks is not typed
+            chunks: {
+              _limit: loadChunks ? 1000 : 1,
+            },
+          },
+          filter: {
+            project_id: {
+              _eq: projectId,
+            },
+            chunks: {
+              ...(loadWhereTranscriptExists && {
+                _some: {
+                  transcript: {
+                    _nempty: true,
+                  },
+                },
+              }),
+            },
+            ...(filterBySource && {
+              source: {
+                _in: filterBySource,
+              },
+            }),
+          },
+          limit: 1000,
+          ...query,
+        }),
+      ),
+    refetchInterval: 30000,
+  });
+};
+
+export const useConversationById = ({
+  conversationId,
+  loadConversationChunks = false,
+  query = {},
+  useQueryOpts = {
+    refetchInterval: 10000,
+  },
+}: {
+  conversationId: string;
+  loadConversationChunks?: boolean;
+  // query overrides the default query and loadChunks
+  query?: Partial<Query<CustomDirectusTypes, Conversation>>;
+  useQueryOpts?: Partial<UseQueryOptions<Conversation>>;
+}) => {
+  return useQuery({
+    queryKey: ["conversations", conversationId, loadConversationChunks, query],
+    queryFn: () =>
+      directus.request<Conversation>(
+        readItem("conversation", conversationId, {
+          fields: [
+            "*",
+            {
+              tags: [
+                {
+                  project_tag_id: ["id", "text", "created_at"],
+                },
+              ],
+            },
+            ...(loadConversationChunks ? [{ chunks: ["*"] as any }] : []),
+          ],
+          ...query,
+        }),
+      ),
+    ...useQueryOpts,
   });
 };

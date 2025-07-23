@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { useProjectById } from "@/lib/query";
+import { useProjectById } from "@/components/project/hooks";
 import { useConversationUploader } from "./hooks";
 import {
   LoadingOverlay,

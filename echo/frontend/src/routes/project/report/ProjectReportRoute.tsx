@@ -1,9 +1,10 @@
 import { useParams } from "react-router-dom";
-import { useLatestProjectReport, useProjectReportViews } from "@/lib/query";
 import {
   useUpdateProjectReportMutation,
   useGetProjectParticipants,
   useDoesProjectReportNeedUpdate,
+  useProjectReportViews,
+  useLatestProjectReport,
 } from "@/components/report/hooks";
 import {
   ActionIcon,
