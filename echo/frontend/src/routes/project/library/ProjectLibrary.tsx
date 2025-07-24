@@ -209,18 +209,6 @@ export const ProjectLibraryRoute = () => {
         <CreateView projectId={projectId ?? ""} onClose={close} />
       </Collapse>
 
-      {!opened && latestRun && (
-        // && latestRun.processing_status === "DONE"
-        <CloseableAlert variant="light" icon={<Icons.View />}>
-          <Text>
-            <Trans>
-              In order to better navigate through the quotes, create additional
-              views. The quotes will then be clustered based on your view.
-            </Trans>
-          </Text>
-        </CloseableAlert>
-      )}
-
       <Stack>
         {!viewsExist && <DummyViews />}
         {viewsQuery.data &&

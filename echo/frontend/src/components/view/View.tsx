@@ -16,6 +16,7 @@ import { Markdown } from "../common/Markdown";
 import { I18nLink } from "../common/i18nLink";
 import { useCopyView } from "./hooks/useCopyView";
 import { CopyIconButton } from "../common/CopyIconButton";
+import { formatRelative } from "date-fns";
 
 export const ViewCard = ({ data }: { data: View }) => {
   return (
@@ -49,6 +50,14 @@ export const ViewExpandedCard = ({ data }: { data: View }) => {
             <Text className="font-semibold">
               <Trans>View</Trans>
             </Text>
+            {data.created_at && (
+              <Text size="sm" c="gray">
+                {formatRelative(
+                  new Date(data.created_at ?? new Date()),
+                  new Date(),
+                )}
+              </Text>
+            )}
           </Group>
 
           <Group>
