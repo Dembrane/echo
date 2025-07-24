@@ -704,6 +704,22 @@ export const useConversationById = ({
           fields: [
             "*",
             {
+              linking_conversations: [
+                "id",
+                "source_conversation_id.id",
+                "source_conversation_id.participant_name",
+                "link_type",
+              ],
+            },
+            {
+              linked_conversations: [
+                "id",
+                "target_conversation_id.id",
+                "target_conversation_id.participant_name",
+                "link_type",
+              ],
+            },
+            {
               tags: [
                 {
                   project_tag_id: ["id", "text", "created_at"],

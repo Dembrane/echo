@@ -25,6 +25,7 @@ import { useMutation } from "@tanstack/react-query";
 import { CopyIconButton } from "@/components/common/CopyIconButton";
 import { useClipboard } from "@mantine/hooks";
 import { toast } from "@/components/common/Toaster";
+import { ConversationLink } from "@/components/conversation/ConversationLink";
 
 export const ProjectConversationOverviewRoute = () => {
   const { conversationId, projectId } = useParams();
@@ -143,6 +144,14 @@ export const ProjectConversationOverviewRoute = () => {
           </Stack>
 
           <Divider />
+          <ConversationLink
+            conversation={conversationQuery.data}
+            projectId={projectId ?? ""}
+          />
+          {conversationQuery?.data?.linked_conversations?.length ||
+          conversationQuery?.data?.linking_conversations?.length ? (
+            <Divider />
+          ) : null}
 
           <Stack gap="2.5rem">
             <ConversationDangerZone conversation={conversationQuery.data} />

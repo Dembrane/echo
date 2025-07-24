@@ -75,7 +75,16 @@ type Conversation = {
   source?: string | null;
   summary?: string | null;
   tags: any[] | ConversationProjectTag[];
+  linking_conversations?: any[] | ConversationLink[];
+  linked_conversations?: any[] | ConversationLink[];
   updated_at?: string | null;
+};
+
+type ConversationLink = {
+  id: string;
+  link_type: string;
+  source_conversation_id: Conversation | null;
+  target_conversation_id: Conversation | null;
 };
 
 type ConversationChunk = {
