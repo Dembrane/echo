@@ -112,9 +112,11 @@ def render_message(
     except json.JSONDecodeError as e:
         logger.error(f"Failed to parse JSON from rendered prompt: {rendered_prompt}")
         raise ValueError(f"Error: {e}") from e
-    if len([key for key in keys_to_validate if key not in message.keys()]) > 0:
+
+    missing_keys = [key for key in keys_to_validate if key not in message]
+    if missing_keys:
         raise ValueError(
-            f"Missing keys in message: {keys_to_validate}. Please check the prompt template: {prompt_name}. \n"
+            f"Missing keys in message: {missing_keys}. Please check the prompt template: {prompt_name}. \n"
             f"Message: {message}"
         )
 

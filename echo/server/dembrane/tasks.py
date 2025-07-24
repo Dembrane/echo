@@ -611,7 +611,7 @@ def task_create_project_library(project_id: str, language: str) -> None:
             logger.error(f"Can retry. Failed to create project analysis run: {e}")
             raise e from e
 
-        default_view_name_list = ["default_view_reccuring_themes"]
+        default_view_name_list = ["default_view_recurring_themes"]
         messages = []
 
         for view_name in default_view_name_list:
