@@ -2,7 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Text, Divider, Skeleton } from "@mantine/core";
 
 import { BaseMessage } from "../chat/BaseMessage";
-import { useConversationChunkContentUrl } from "@/lib/query";
+import { useConversationChunkContentUrl } from "./hooks";
 
 export const ConversationChunkAudioTranscript = ({
   chunk,

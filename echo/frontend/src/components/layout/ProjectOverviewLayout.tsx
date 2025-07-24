@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { useProjectById } from "@/lib/query";
+import { useProjectById } from "@/components/project/hooks";
 import { Box, Divider, LoadingOverlay, Stack } from "@mantine/core";
 import { useParams } from "react-router-dom";
 import { TabsWithRouter } from "./TabsWithRouter";

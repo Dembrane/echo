@@ -5,11 +5,12 @@ import { useDisclosure } from "@mantine/hooks";
 
 import { NavigationButton } from "../common/NavigationButton";
 import { useCallback } from "react";
-import { useLatestProjectReport } from "@/lib/query";
+
 import { useParams, useLocation } from "react-router-dom";
 import { t } from "@lingui/core/macro";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { CreateReportForm } from "./CreateReportForm";
+import { useLatestProjectReport } from "./hooks";
 
 export const ReportModalNavigationButton = () => {
   const [opened, { open, close }] = useDisclosure();

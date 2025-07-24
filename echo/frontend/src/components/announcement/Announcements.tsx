@@ -21,8 +21,8 @@ import {
 import { useLanguage } from "@/hooks/useLanguage";
 import { AnnouncementSkeleton } from "./AnnouncementSkeleton";
 import { AnnouncementDrawerHeader } from "./AnnouncementDrawerHeader";
-import { useProcessedAnnouncements } from "@/hooks/useProcessedAnnouncements";
-import { useAnnouncementDrawer } from "@/hooks/useAnnouncementDrawer";
+import { useProcessedAnnouncements } from "@/components/announcement/hooks/useProcessedAnnouncements";
+import { useAnnouncementDrawer } from "@/components/announcement/hooks";
 import { IconAlertCircle, IconRefresh } from "@tabler/icons-react";
 
 export const Announcements = () => {

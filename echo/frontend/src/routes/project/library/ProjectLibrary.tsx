@@ -5,13 +5,13 @@ import { CloseableAlert } from "@/components/common/ClosableAlert";
 import { ProjectAnalysisRunStatus } from "@/components/project/ProjectAnalysisRunStatus";
 import { ViewExpandedCard } from "@/components/view/View";
 import { Icons } from "@/icons";
+import { useProjectById } from "@/components/project/hooks";
 import {
-  useConversationsByProjectId,
   useGenerateProjectLibraryMutation,
-  useLatestProjectAnalysisRunByProjectId,
-  useProjectById,
   useProjectViews,
-} from "@/lib/query";
+} from "@/components/library/hooks";
+import { useLatestProjectAnalysisRunByProjectId } from "@/components/project/hooks";
+import { useConversationsByProjectId } from "@/components/conversation/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import {
@@ -81,7 +81,6 @@ export const ProjectLibraryRoute = () => {
     );
   }
 
-
   const viewsExist =
     viewsQuery && viewsQuery.data && viewsQuery.data.length > 0;
 
@@ -113,7 +112,7 @@ export const ProjectLibraryRoute = () => {
           ]}
         />
 
-        {latestRun  ? (
+        {latestRun ? (
           <Button
             variant="outline"
             leftSection={<IconRefresh />}
@@ -128,14 +127,16 @@ export const ProjectLibraryRoute = () => {
                 ? t`Library creation is in progress`
                 : conversationsQuery.data?.length === 0
                   ? t`No conversations available to create library`
-                  // : latestRun?.processing_status === "PROCESSING"
-                  //   ? t`Library is currently being processed`
-                    : null
+                  : // : latestRun?.processing_status === "PROCESSING"
+                    //   ? t`Library is currently being processed`
+                    null
             }
             disabled={
               !(
-                requestProjectLibraryMutation.isPending ||
-                conversationsQuery.data?.length === 0 
+                (
+                  requestProjectLibraryMutation.isPending ||
+                  conversationsQuery.data?.length === 0
+                )
                 // ||
                 // latestRun?.processing_status === "PROCESSING"
               )
@@ -148,7 +149,7 @@ export const ProjectLibraryRoute = () => {
               disabled={
                 // TODO: this should really be a server-side check
                 requestProjectLibraryMutation.isPending ||
-                conversationsQuery.data?.length === 0 
+                conversationsQuery.data?.length === 0
                 // ||
                 // latestRun?.processing_status === "PROCESSING"
               }
@@ -193,9 +194,12 @@ export const ProjectLibraryRoute = () => {
         <Button
           leftSection={<IconPlus />}
           onClick={toggle}
-          disabled={!(latestRun 
-            // && latestRun.processing_status === "DONE"
-            )}
+          disabled={
+            !(
+              latestRun
+              // && latestRun.processing_status === "DONE"
+            )
+          }
         >
           <Trans>Create View</Trans>
         </Button>
@@ -205,9 +209,8 @@ export const ProjectLibraryRoute = () => {
         <CreateView projectId={projectId ?? ""} onClose={close} />
       </Collapse>
 
-      {!opened && latestRun
-       // && latestRun.processing_status === "DONE"
-       && (
+      {!opened && latestRun && (
+        // && latestRun.processing_status === "DONE"
         <CloseableAlert variant="light" icon={<Icons.View />}>
           <Text>
             <Trans>

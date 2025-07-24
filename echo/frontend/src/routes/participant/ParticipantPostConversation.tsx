@@ -3,7 +3,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { I18nLink } from "@/components/common/i18nLink";
 import { Markdown } from "@/components/common/Markdown";
-import { useParticipantProjectById } from "@/lib/participantQuery";
+import { useParticipantProjectById } from "@/components/participant/hooks";
 import {
   Box,
   Button,
@@ -29,9 +29,7 @@ import { useParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { directus } from "@/lib/directus";
 import { readItems, createItems } from "@directus/sdk";
-import {
-  useSubmitNotificationParticipant,
-} from "@/lib/query";
+import { useSubmitNotificationParticipant } from "@/components/participant/hooks";
 
 export const ParticipantPostConversation = () => {
   const { projectId, conversationId } = useParams();

@@ -1,4 +1,4 @@
-import { useAuthenticated } from "@/hooks/useAuthenticated";
+import { useAuthenticated } from "@/components/auth/hooks";
 import { Box, Container, LoadingOverlay } from "@mantine/core";
 import { PropsWithChildren } from "react";
 

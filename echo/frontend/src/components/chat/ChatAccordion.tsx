@@ -1,10 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import {
-  useDeleteChatMutation,
-  useProjectChats,
-  useUpdateChatMutation,
-} from "@/lib/query";
+import { useDeleteChatMutation, useProjectChats, useUpdateChatMutation } from "./hooks";
 import {
   Accordion,
   ActionIcon,

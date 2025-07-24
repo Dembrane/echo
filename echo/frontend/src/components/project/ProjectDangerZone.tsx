@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { useDeleteProjectByIdMutation } from "@/lib/query";
+import { useDeleteProjectByIdMutation } from "./hooks";
 import { Box, Button, Stack, Title } from "@mantine/core";
 import { IconTrash } from "@tabler/icons-react";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";

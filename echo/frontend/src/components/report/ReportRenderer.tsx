@@ -1,4 +1,4 @@
-import { useProjectReport } from "@/lib/query";
+import { useProjectReport } from "./hooks";
 import {
   Button,
   Center,

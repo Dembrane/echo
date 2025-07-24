@@ -1,8 +1,8 @@
 import { t } from "@lingui/core/macro";
-import { useProjectChatContext } from "@/lib/query";
 import { capitalize } from "@/lib/utils";
 import { Box, Progress, Skeleton, Tooltip } from "@mantine/core";
 import { ENABLE_CHAT_AUTO_SELECT } from "@/config";
+import { useProjectChatContext } from "./hooks";
 
 export const ChatContextProgress = ({ chatId }: { chatId: string }) => {
   const chatContextQuery = useProjectChatContext(chatId);

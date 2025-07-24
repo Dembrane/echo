@@ -4,7 +4,7 @@ import {
   useConversationChunksQuery,
   useConversationRepliesQuery,
   useParticipantProjectById,
-} from "@/lib/participantQuery";
+} from "@/components/participant/hooks";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { PropsWithChildren, useEffect, useMemo, useRef } from "react";
 
@@ -18,11 +18,11 @@ import UserChunkMessage from "./UserChunkMessage";
 import SpikeMessage from "./SpikeMessage";
 import { ConnectionHealthStatus } from "../common/ConnectionHealthStatus";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { useConversationsHealthStream } from "@/hooks/useConversationsHealthStream";
+import { useConversationsHealthStream } from "@/components/participant/hooks/useConversationsHealthStream";
 import { IconExclamationCircle } from "@tabler/icons-react";
 import { TipBanner } from "../common/TipBanner";
 import { IconWifiOff } from "@tabler/icons-react";
-import { useConversationIssueBanner } from "@/hooks/useConversationIssueBanner";
+import { useConversationIssueBanner } from "@/components/participant/hooks/useConversationIssueBanner";
 import { ENABLE_CONVERSATION_HEALTH } from "@/config";
 
 export const ParticipantBody = ({

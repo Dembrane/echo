@@ -20,13 +20,8 @@ export const directusContent = createDirectus<CustomDirectusTypesContent>(
   DIRECTUS_CONTENT_PUBLIC_URL,
 ).with(rest());
 
-// remove any http or https from the url
-const directusBaseUrl = ((DIRECTUS_PUBLIC_URL as string) ?? "").replace(
-  /^(https?:\/\/)/,
-  "",
-);
-
-// TODO: localization
+// @TODO: this is not used as much? maybe an opportunity to standardize error handling?
+// @TODO: localization
 export const getDirectusErrorString = (error: any, i18n?: I18n) => {
   if (error.errors && error.errors.length > 0) {
     return error.errors[0].message;

@@ -3,7 +3,8 @@ import { Trans } from "@lingui/react/macro";
 import { DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { directus } from "@/lib/directus";
-import { useCreateProjectMutation, useLoginMutation } from "@/lib/query";
+import { useLoginMutation } from "@/components/auth/hooks";
+import { useCreateProjectMutation } from "@/components/project/hooks";
 import { readItems, readProviders } from "@directus/sdk";
 import {
   Alert,
