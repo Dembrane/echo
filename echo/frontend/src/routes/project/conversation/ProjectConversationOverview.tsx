@@ -25,6 +25,8 @@ import { useMutation } from "@tanstack/react-query";
 import { CopyIconButton } from "@/components/common/CopyIconButton";
 import { useClipboard } from "@mantine/hooks";
 import { toast } from "@/components/common/Toaster";
+import { ConversationLink } from "@/components/conversation/ConversationLink";
+import { ENABLE_DISPLAY_CONVERSATION_LINKS } from "@/config";
 
 export const ProjectConversationOverviewRoute = () => {
   const { conversationId, projectId } = useParams();
@@ -143,6 +145,31 @@ export const ProjectConversationOverviewRoute = () => {
           </Stack>
 
           <Divider />
+
+          {ENABLE_DISPLAY_CONVERSATION_LINKS && (
+            <>
+              <ConversationLink
+                conversation={conversationQuery.data}
+                projectId={projectId ?? ""}
+              />
+              {conversationQuery?.data?.linked_conversations?.length ||
+              conversationQuery?.data?.linking_conversations?.length ? (
+                <Divider />
+              ) : null}
+            </>
+          )}
+
+          {/* TODO: better design the links component */}
+          {/* {conversationQuery?.data?.linked_conversations?.length ||
+          conversationQuery?.data?.linking_conversations?.length ? (
+            <Stack gap="2.5rem">
+              <ConversationLink
+                linkingConversations={conversationQuery.data.linking_conversations}
+                linkedConversations={conversationQuery.data.linked_conversations}
+              />
+              <Divider />
+            </Stack>
+          ) : null} */}
 
           <Stack gap="2.5rem">
             <ConversationDangerZone conversation={conversationQuery.data} />
