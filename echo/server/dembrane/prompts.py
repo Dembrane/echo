@@ -14,8 +14,9 @@ Attributes:
 """
 
 import os
+import json
 import logging
-from typing import Any
+from typing import Any, Optional
 from collections import defaultdict
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -86,3 +87,35 @@ def render_prompt(prompt_name: str, language: str, kwargs: dict[str, Any]) -> st
 
     template = env.get_template(full_prompt_name)
     return template.render(**kwargs)
+
+
+def render_message(
+    prompt_name: str,
+    language: str,
+    kwargs: dict[str, Any],
+    keys_to_validate: Optional[list[str]] = None,
+) -> dict[str, Any]:
+    """Render a message template with the given arguments and return a dictionary object.
+
+    Args:
+        prompt_name: Name of the prompt template file (without .jinja extension)
+        language: ISO 639-1 language code of the prompt template file (example: "en", "nl", "fr", "es", "de". etc.)
+        kwargs: Dictionary of arguments to pass to the template renderer
+        keys_to_validate: List of keys to validate in the message
+
+    """
+    if keys_to_validate is None:
+        keys_to_validate = []
+    rendered_prompt = render_prompt(prompt_name, language, kwargs)
+    try:
+        message = json.loads(rendered_prompt)
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse JSON from rendered prompt: {rendered_prompt}")
+        raise ValueError(f"Error: {e}") from e
+    if len([key for key in keys_to_validate if key not in message.keys()]) > 0:
+        raise ValueError(
+            f"Missing keys in message: {keys_to_validate}. Please check the prompt template: {prompt_name}. \n"
+            f"Message: {message}"
+        )
+
+    return message
