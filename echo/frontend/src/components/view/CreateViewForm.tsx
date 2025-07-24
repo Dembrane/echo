@@ -64,19 +64,21 @@ export const CreateView = ({
   }, [createViewMutation.isSuccess, reset]);
 
   return (
-    <Paper
-      className="max-w-[800px] border-none"
-    >
+    <Paper className="max-w-[800px] border-none" py="sm">
       <Stack>
         <form>
-          <Stack gap="sm">
+          <Stack gap="lg">
             {createViewMutation.isError && (
               <Alert variant="filled" color="red">
                 {createViewMutation.error?.message}
               </Alert>
             )}
             {createViewMutation.isSuccess && (
-              <CloseableAlert variant="light" color="green" icon={<IconCircleCheck />}>
+              <CloseableAlert
+                variant="light"
+                color="green"
+                icon={<IconCircleCheck />}
+              >
                 <Text>
                   <Trans>
                     Your view has been created. Please wait as we process and
@@ -85,6 +87,11 @@ export const CreateView = ({
                 </Text>
               </CloseableAlert>
             )}
+            <NativeSelect
+              {...register("language")}
+              label={t`Analysis Language`}
+              data={languageOptionsByIso639_1}
+            />
             <TextInput
               {...register("query")}
               label={t`Enter your query`}
@@ -96,11 +103,6 @@ export const CreateView = ({
               {...register("additionalContext")}
               label={t`Add additional context (Optional)`}
               placeholder={t`Give me a list of 5-10 topics that are being discussed.`}
-            />
-            <NativeSelect
-              {...register("language")}
-              label={t`Analysis Language`}
-              data={languageOptionsByIso639_1}
             />
             <Group className="w-full" justify="flex-end">
               <Button
