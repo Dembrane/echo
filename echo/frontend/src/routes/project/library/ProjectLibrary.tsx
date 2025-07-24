@@ -71,6 +71,17 @@ export const ProjectLibraryRoute = () => {
 
   const [opened, { toggle, close }] = useDisclosure(false);
 
+  // Calculate number of finished and unfinished audio processing conversations
+  const finishedConversationsCount =
+    conversationsQuery.data?.filter(
+      (conversation) => conversation.is_audio_processing_finished === true,
+    ).length ?? 0;
+
+  const unfinishedConversationsCount =
+    conversationsQuery.data?.filter(
+      (conversation) => conversation.is_audio_processing_finished === false,
+    ).length ?? 0;
+
   if (conversationsQuery.isLoading) {
     return (
       <Container>
@@ -179,11 +190,16 @@ export const ProjectLibraryRoute = () => {
         conversationsQuery.data?.length &&
         conversationsQuery.data?.length > 0 && (
           <CloseableAlert>
-            <Trans>
-              This is your project library. Currently,
-              {conversationsQuery.data?.length} conversations are waiting to be
-              processed.
-            </Trans>
+            <>
+              <Trans id="library.conversations.processing.status">
+                Currently {finishedConversationsCount} conversations are ready
+                to be analyzed. {unfinishedConversationsCount} still processing.
+              </Trans>
+              <Trans id="library.generate.duration.message">
+                {" "}
+                Generating library can take up to an hour.
+              </Trans>
+            </>
           </CloseableAlert>
         )}
 
