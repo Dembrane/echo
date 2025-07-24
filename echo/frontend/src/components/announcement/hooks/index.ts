@@ -7,9 +7,11 @@ import {
 import * as Sentry from "@sentry/react";
 import { Query, readItems, createItems, aggregate } from "@directus/sdk";
 import { directus } from "@/lib/directus";
-import { useCurrentUser } from "@/lib/query";
 import { toast } from "@/components/common/Toaster";
 import { t } from "@lingui/core/macro";
+import { useCurrentUser } from "@/components/auth/hooks";
+import { useEffect } from "react";
+import useSessionStorageState from "use-session-storage-state";
 
 export const useLatestAnnouncement = () => {
   const { data: currentUser } = useCurrentUser();
@@ -476,4 +478,30 @@ export const useUnreadAnnouncements = () => {
     retry: 2,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
+};
+
+export const useAnnouncementDrawer = () => {
+  const [isOpen, setIsOpen] = useSessionStorageState(
+    "announcement-drawer-open",
+    {
+      defaultValue: false,
+    },
+  );
+
+  // Reset drawer state on page reload
+  useEffect(() => {
+    setIsOpen(false);
+  }, []);
+
+  const open = () => setIsOpen(true);
+  const close = () => setIsOpen(false);
+  const toggle = () => setIsOpen(!isOpen);
+
+  return {
+    isOpen,
+    setIsOpen,
+    open,
+    close,
+    toggle,
+  };
 };

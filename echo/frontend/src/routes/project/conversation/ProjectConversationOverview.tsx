@@ -4,21 +4,20 @@ import {
   Group,
   LoadingOverlay,
   Stack,
-  Text,
   Title,
   Button,
   ActionIcon,
   Tooltip,
 } from "@mantine/core";
 import { useParams } from "react-router-dom";
+import { useProjectById } from "@/components/project/hooks";
 import {
   useConversationById,
   useConversationChunks,
-  useProjectById,
-} from "@/lib/query";
+} from "@/components/conversation/hooks";
 import { ConversationEdit } from "@/components/conversation/ConversationEdit";
 import { ConversationDangerZone } from "@/components/conversation/ConversationDangerZone";
-import { finishConversation, generateConversationSummary } from "@/lib/api";
+import { generateConversationSummary } from "@/lib/api";
 import { IconRefresh } from "@tabler/icons-react";
 import { t } from "@lingui/core/macro";
 import { Markdown } from "@/components/common/Markdown";
@@ -26,6 +25,8 @@ import { useMutation } from "@tanstack/react-query";
 import { CopyIconButton } from "@/components/common/CopyIconButton";
 import { useClipboard } from "@mantine/hooks";
 import { toast } from "@/components/common/Toaster";
+import { ConversationLink } from "@/components/conversation/ConversationLink";
+import { ENABLE_DISPLAY_CONVERSATION_LINKS } from "@/config";
 
 export const ProjectConversationOverviewRoute = () => {
   const { conversationId, projectId } = useParams();
@@ -55,14 +56,14 @@ export const ProjectConversationOverviewRoute = () => {
   const clipboard = useClipboard();
 
   return (
-    <Stack gap="3rem" className="relative" px="2rem" pt="2rem" pb="2rem">
+    <Stack gap="4rem" className="relative" px="2rem" pt="2rem" pb="2rem">
       <LoadingOverlay visible={conversationQuery.isLoading} />
       {conversationChunksQuery.data &&
-        conversationChunksQuery.data?.length > 0 && (
-          <Stack gap="1.5rem">
+        conversationChunksQuery.data?.length > 1 && (
+          <Stack gap="2.5rem">
             <>
               <Group>
-                <Title order={2}>
+                <Title order={3}>
                   {(conversationQuery.data?.summary ||
                     (conversationQuery.data?.source &&
                       !conversationQuery.data.source
@@ -72,7 +73,7 @@ export const ProjectConversationOverviewRoute = () => {
                 <Group gap="sm">
                   {conversationQuery.data?.summary && (
                     <CopyIconButton
-                      size={22}
+                      size={23}
                       onCopy={() => {
                         clipboard.copy(conversationQuery.data?.summary ?? "");
                       }}
@@ -90,7 +91,7 @@ export const ProjectConversationOverviewRoute = () => {
                           ) && useHandleGenerateSummaryManually.mutate()
                         }
                       >
-                        <IconRefresh size={22} color="gray" />
+                        <IconRefresh size={23} color="gray" />
                       </ActionIcon>
                     </Tooltip>
                   )}
@@ -116,7 +117,7 @@ export const ProjectConversationOverviewRoute = () => {
                   <div>
                     <Button
                       variant="outline"
-                      className="-mt-[2rem]"
+                      className="-mt-[3rem]"
                       loading={useHandleGenerateSummaryManually.isPending}
                       onClick={() => {
                         useHandleGenerateSummaryManually.mutate();
@@ -127,14 +128,15 @@ export const ProjectConversationOverviewRoute = () => {
                   </div>
                 )}
 
-              <Divider />
+              {conversationQuery.data?.summary ||
+                (conversationQuery.data?.is_finished && <Divider />)}
             </>
           </Stack>
         )}
 
       {conversationQuery.data && projectQuery.data && (
         <>
-          <Stack gap="1.5rem">
+          <Stack gap="2.5rem">
             <ConversationEdit
               key={conversationQuery.data.id}
               conversation={conversationQuery.data}
@@ -144,7 +146,32 @@ export const ProjectConversationOverviewRoute = () => {
 
           <Divider />
 
-          <Stack gap="1.5rem">
+          {ENABLE_DISPLAY_CONVERSATION_LINKS && (
+            <>
+              <ConversationLink
+                conversation={conversationQuery.data}
+                projectId={projectId ?? ""}
+              />
+              {conversationQuery?.data?.linked_conversations?.length ||
+              conversationQuery?.data?.linking_conversations?.length ? (
+                <Divider />
+              ) : null}
+            </>
+          )}
+
+          {/* TODO: better design the links component */}
+          {/* {conversationQuery?.data?.linked_conversations?.length ||
+          conversationQuery?.data?.linking_conversations?.length ? (
+            <Stack gap="2.5rem">
+              <ConversationLink
+                linkingConversations={conversationQuery.data.linking_conversations}
+                linkedConversations={conversationQuery.data.linked_conversations}
+              />
+              <Divider />
+            </Stack>
+          ) : null} */}
+
+          <Stack gap="2.5rem">
             <ConversationDangerZone conversation={conversationQuery.data} />
           </Stack>
         </>

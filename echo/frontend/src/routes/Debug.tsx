@@ -15,12 +15,10 @@ import {
 import { toast } from "@/components/common/Toaster";
 import { useRef, useState, useMemo, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import {
-  useConversationById,
-  useCurrentUser,
-  useProjectById,
-  useProjectChats,
-} from "@/lib/query";
+import { useProjectById } from "@/components/project/hooks";
+import { useConversationById } from "@/components/conversation/hooks";
+import { useProjectChats } from "@/components/chat/hooks";
+import { useCurrentUser } from "@/components/auth/hooks";
 import {
   ENABLE_CHAT_AUTO_SELECT,
   API_BASE_URL,

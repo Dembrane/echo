@@ -13,6 +13,7 @@ export const getTranslatedContent = (announcement: Announcement, language: strin
   };
 };
 
+// @FIXME: this doesn't need to be a hook, it can be a simple function, memo for a .find is overkill
 export function useProcessedAnnouncements(
   announcements: Announcement[],
   language: string,

@@ -3,7 +3,7 @@ import { Markdown } from "@/components/common/Markdown";
 import { AspectCard } from "@/components/aspect/AspectCard";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { Icons } from "@/icons";
-import { useViewById } from "@/lib/query";
+import { useViewById } from "@/components/library/hooks";
 import {
   Divider,
   Group,
@@ -16,7 +16,7 @@ import {
 } from "@mantine/core";
 import { useParams } from "react-router-dom";
 import { CopyIconButton } from "@/components/common/CopyIconButton";
-import { useCopyView } from "@/hooks/useCopyView";
+import { useCopyView } from "@/components/view/hooks/useCopyView";
 
 export const ProjectLibraryView = () => {
   const { projectId, viewId } = useParams();

@@ -36,16 +36,6 @@ const ProjectsHomeRoute = createLazyNamedRoute(
   "ProjectsHomeRoute",
 );
 
-// Regular lazy-loaded routes
-const ProjectResourceOverviewRoute = createLazyNamedRoute(
-  () => import("./routes/project/resource/ProjectResourceOverview"),
-  "ProjectResourceOverviewRoute",
-);
-const ProjectResourceAnalysisRoute = createLazyNamedRoute(
-  () => import("./routes/project/resource/ProjectResourceAnalysis"),
-  "ProjectResourceAnalysisRoute",
-);
-
 const ProjectLibraryRoute = createLazyNamedRoute(
   () => import("./routes/project/library/ProjectLibrary"),
   "ProjectLibraryRoute",
@@ -195,10 +185,7 @@ export const mainRouter = createBrowserRouter([
                         path: "portal-editor",
                         element: <ProjectPortalSettingsRoute />,
                       },
-                      // {
-                      //   path: "transcript-settings",
-                      //   element: <ProjectTranscriptSettingsRoute />,
-                      // },
+
                     ],
                   },
                   {

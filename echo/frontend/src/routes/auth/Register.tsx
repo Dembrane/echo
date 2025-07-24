@@ -2,7 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { I18nLink } from "@/components/common/i18nLink";
 import { ADMIN_BASE_URL } from "@/config";
-import { useRegisterMutation } from "@/lib/query";
+import { useRegisterMutation } from "@/components/auth/hooks";
 import {
   Alert,
   Button,

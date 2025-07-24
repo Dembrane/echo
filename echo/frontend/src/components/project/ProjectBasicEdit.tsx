@@ -13,7 +13,7 @@ import {
   Badge,
 } from "@mantine/core";
 import { useForm, Controller } from "react-hook-form";
-import { useUpdateProjectByIdMutation } from "@/lib/query";
+import { useUpdateProjectByIdMutation } from "./hooks";
 import { SaveStatus } from "../form/SaveStatus";
 import { FormLabel } from "../form/FormLabel";
 import { useAutoSave } from "@/hooks/useAutoSave";

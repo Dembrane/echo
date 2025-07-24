@@ -2,7 +2,7 @@ import { t } from "@lingui/core/macro";
 import {
   useParticipantProjectById,
   useParticipantTutorialCardBySlug,
-} from "@/lib/participantQuery";
+} from "@/components/participant/hooks";
 import { useParams } from "react-router-dom";
 import { useEffect } from "react";
 import useSessionStorageState from "use-session-storage-state";

@@ -21,7 +21,7 @@ import {
 } from "@mantine/core";
 import { ProjectTagsInput } from "./ProjectTagsInput";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
-import { useUpdateProjectByIdMutation } from "@/lib/query";
+
 import { IconEye, IconEyeOff, IconRefresh } from "@tabler/icons-react";
 import { useProjectSharingLink } from "./ProjectQRCode";
 import { Resizable } from "re-resizable";
@@ -32,6 +32,7 @@ import { SaveStatus } from "../form/SaveStatus";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Logo } from "../common/Logo";
+import { useUpdateProjectByIdMutation } from "./hooks";
 
 const FormSchema = z.object({
   language: z.enum(["en", "nl", "de", "fr", "es"]),
@@ -441,46 +442,71 @@ const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
                         </Text>
                         <Group gap="xs">
                           <Badge
-                            className={watchedReplyEnabled ? "cursor-pointer capitalize" : "capitalize"}
+                            className={
+                              watchedReplyEnabled
+                                ? "cursor-pointer capitalize"
+                                : "capitalize"
+                            }
                             variant={
                               field.value === "summarize" ? "filled" : "default"
                             }
                             size="lg"
-                            style={{ 
-                              cursor: watchedReplyEnabled ? "pointer" : "not-allowed",
-                              opacity: watchedReplyEnabled ? 1 : 0.6
+                            style={{
+                              cursor: watchedReplyEnabled
+                                ? "pointer"
+                                : "not-allowed",
+                              opacity: watchedReplyEnabled ? 1 : 0.6,
                             }}
-                            onClick={() => watchedReplyEnabled && field.onChange("summarize")}
+                            onClick={() =>
+                              watchedReplyEnabled && field.onChange("summarize")
+                            }
                           >
                             <Trans>Summarize</Trans>
                           </Badge>
                           <Badge
-                            className={watchedReplyEnabled ? "cursor-pointer capitalize" : "capitalize"}
+                            className={
+                              watchedReplyEnabled
+                                ? "cursor-pointer capitalize"
+                                : "capitalize"
+                            }
                             variant={
                               field.value === "brainstorm"
                                 ? "filled"
                                 : "default"
                             }
                             size="lg"
-                            style={{ 
-                              cursor: watchedReplyEnabled ? "pointer" : "not-allowed",
-                              opacity: watchedReplyEnabled ? 1 : 0.6
+                            style={{
+                              cursor: watchedReplyEnabled
+                                ? "pointer"
+                                : "not-allowed",
+                              opacity: watchedReplyEnabled ? 1 : 0.6,
                             }}
-                            onClick={() => watchedReplyEnabled && field.onChange("brainstorm")}
+                            onClick={() =>
+                              watchedReplyEnabled &&
+                              field.onChange("brainstorm")
+                            }
                           >
                             <Trans>Brainstorm Ideas</Trans>
                           </Badge>
                           <Badge
-                            className={watchedReplyEnabled ? "cursor-pointer capitalize" : "capitalize"}
+                            className={
+                              watchedReplyEnabled
+                                ? "cursor-pointer capitalize"
+                                : "capitalize"
+                            }
                             variant={
                               field.value === "custom" ? "filled" : "default"
                             }
                             size="lg"
-                            style={{ 
-                              cursor: watchedReplyEnabled ? "pointer" : "not-allowed",
-                              opacity: watchedReplyEnabled ? 1 : 0.6
+                            style={{
+                              cursor: watchedReplyEnabled
+                                ? "pointer"
+                                : "not-allowed",
+                              opacity: watchedReplyEnabled ? 1 : 0.6,
                             }}
-                            onClick={() => watchedReplyEnabled && field.onChange("custom")}
+                            onClick={() =>
+                              watchedReplyEnabled && field.onChange("custom")
+                            }
                           >
                             <Trans>Custom</Trans>
                           </Badge>

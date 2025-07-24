@@ -2,8 +2,8 @@ import { ActionIcon, Box, Group, Indicator, Loader, Text } from "@mantine/core";
 import { IconSpeakerphone } from "@tabler/icons-react";
 import { useLatestAnnouncement, useUnreadAnnouncements } from "./hooks";
 import { useLanguage } from "@/hooks/useLanguage";
-import { useAnnouncementDrawer } from "@/hooks/useAnnouncementDrawer";
-import { getTranslatedContent } from "@/hooks/useProcessedAnnouncements";
+import { useAnnouncementDrawer } from "@/components/announcement/hooks";
+import { getTranslatedContent } from "@/components/announcement/hooks/useProcessedAnnouncements";
 import { Markdown } from "@/components/common/Markdown";
 
 export const AnnouncementIcon = () => {

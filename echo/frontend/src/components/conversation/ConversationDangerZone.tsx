@@ -3,7 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import { Button, Group, Stack } from "@mantine/core";
 import { useParams } from "react-router-dom";
 import { IconDownload, IconTrash } from "@tabler/icons-react";
-import { useDeleteConversationByIdMutation } from "@/lib/query";
+import { useDeleteConversationByIdMutation } from "./hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { MoveConversationButton } from "@/components/conversation/MoveConversationButton";
 import { api, getConversationContentLink } from "@/lib/api";

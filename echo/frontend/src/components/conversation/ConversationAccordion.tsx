@@ -1,15 +1,15 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Icons } from "@/icons";
+import { useProjectById } from "@/components/project/hooks";
 import {
   useAddChatContextMutation,
-  useConversationsByProjectId,
   useDeleteChatContextMutation,
-  useProjectChatContext,
   useMoveConversationMutation,
-  useInfiniteProjects,
-  useProjectById,
-} from "@/lib/query";
+  useConversationsByProjectId,
+} from "./hooks";
+import { useInfiniteProjects } from "@/components/project/hooks";
+import { useProjectChatContext } from "@/components/chat/hooks";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import {
   Accordion,
