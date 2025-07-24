@@ -706,16 +706,18 @@ export const useConversationById = ({
             {
               linking_conversations: [
                 "id",
-                "source_conversation_id.id",
-                "source_conversation_id.participant_name",
+                {
+                  source_conversation_id: ["id", "participant_name"],
+                },
                 "link_type",
               ],
             },
             {
               linked_conversations: [
                 "id",
-                "target_conversation_id.id",
-                "target_conversation_id.participant_name",
+                {
+                  target_conversation_id: ["id", "participant_name"],
+                },
                 "link_type",
               ],
             },
