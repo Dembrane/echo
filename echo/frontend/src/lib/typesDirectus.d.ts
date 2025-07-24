@@ -62,6 +62,8 @@ type Conversation = {
   is_all_chunks_transcribed?: boolean | null;
   is_audio_processing_finished?: boolean | null;
   is_finished?: boolean | null;
+  linked_conversations: any[] | ConversationLink[];
+  linking_conversations: any[] | ConversationLink[];
   merged_audio_path?: string | null;
   merged_transcript?: string | null;
   participant_email?: string | null;
@@ -75,16 +77,7 @@ type Conversation = {
   source?: string | null;
   summary?: string | null;
   tags: any[] | ConversationProjectTag[];
-  linking_conversations?: any[] | ConversationLink[];
-  linked_conversations?: any[] | ConversationLink[];
   updated_at?: string | null;
-};
-
-type ConversationLink = {
-  id: string;
-  link_type: string;
-  source_conversation_id: Conversation | null;
-  target_conversation_id: Conversation | null;
 };
 
 type ConversationChunk = {
@@ -112,6 +105,15 @@ type ConversationChunk = {
   transcript?: string | null;
   translation_error?: string | null;
   updated_at?: string | null;
+};
+
+type ConversationLink = {
+  date_created?: string | null;
+  date_updated?: string | null;
+  id: number;
+  link_type?: string | null;
+  source_conversation_id?: string | Conversation | null;
+  target_conversation_id?: string | Conversation | null;
 };
 
 type ConversationProjectTag = {
@@ -584,11 +586,13 @@ type ProcessingStatus = {
   id: number;
   message?: string | null;
   parent?: number | ProcessingStatus | null;
+  project_analysis_run_id?: string | ProjectAnalysisRun | null;
   project_id?: string | Project | null;
   timestamp?: string | null;
 };
 
 type Project = {
+  conversations_count?: number | null;
   context?: string | null;
   conversation_ask_for_participant_name_label?: string | null;
   conversations: any[] | Conversation[];
@@ -616,14 +620,13 @@ type Project = {
   project_reports: any[] | ProjectReport[];
   tags: any[] | ProjectTag[];
   updated_at?: string | null;
-
-  conversations_count?: number | null;
 };
 
 type ProjectAnalysisRun = {
   created_at?: string | null;
   id: string;
   insights: any[] | Insight[];
+  processing_status: any[] | ProcessingStatus[];
   project_id?: string | Project | null;
   updated_at?: string | null;
   views: any[] | View[];
@@ -730,14 +733,15 @@ type ProjectTag = {
 type View = {
   aspects: any[] | Aspect[];
   created_at?: string | null;
+  description?: string | null;
   id: string;
+  language?: string | null;
   name?: string | null;
   project_analysis_run_id?: string | ProjectAnalysisRun | null;
   summary?: string | null;
   updated_at?: string | null;
   user_input?: string | null;
   user_input_description?: string | null;
-  description?: string | null;
 };
 
 type CustomDirectusTypes = {
@@ -748,6 +752,7 @@ type CustomDirectusTypes = {
   aspect_segment: AspectSegment[];
   conversation: Conversation[];
   conversation_chunk: ConversationChunk[];
+  conversation_link: ConversationLink[];
   conversation_project_tag: ConversationProjectTag[];
   conversation_reply: ConversationReply[];
   conversation_segment: ConversationSegment[];

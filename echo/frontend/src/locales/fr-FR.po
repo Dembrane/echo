@@ -1123,8 +1123,8 @@ msgstr "Lien"
 #~ msgstr "Publication LinkedIn (Expérimental)"
 
 #: src/components/conversation/ConversationAccordion.tsx:516
-msgid "Live"
-msgstr "Direct"
+#~ msgid "Live"
+#~ msgstr "Direct"
 
 #: src/components/participant/MicrophoneTest.tsx:274
 msgid "Live audio level:"
@@ -1358,6 +1358,15 @@ msgstr "Aucun fichier audio valide n'a été sélectionné. Veuillez sélectionn
 #: src/components/conversation/ConversationAccordion.tsx:545
 msgid "Oldest First"
 msgstr "Plus ancien en premier"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/ConversationAccordion.tsx:516
+msgid "conversation.ongoing"
+msgstr "En cours"
+
+#: src/components/conversation/ConversationAccordion.tsx:516
+#~ msgid "Ongoing"
+#~ msgstr "En cours"
 
 #: src/components/conversation/OngoingConversationsSummaryCard.tsx:60
 msgid "Ongoing Conversations"

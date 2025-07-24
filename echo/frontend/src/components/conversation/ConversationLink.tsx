@@ -79,12 +79,12 @@ export const ConversationLink = ({
             <List>
               {conversation.linked_conversations.map(
                 (conversationLink: ConversationLink) =>
-                  conversationLink?.target_conversation_id?.id && (
+                  (conversationLink?.target_conversation_id as Conversation)?.id && (
                     <List.Item key={conversationLink?.id}>
                       <ConversationAnchor
-                        to={`/projects/${projectId}/conversation/${conversationLink?.target_conversation_id?.id}/overview`}
+                        to={`/projects/${projectId}/conversation/${(conversationLink?.target_conversation_id as Conversation)?.id}/overview`}
                         name={
-                          conversationLink?.target_conversation_id
+                          (conversationLink?.target_conversation_id as Conversation)
                             ?.participant_name ?? ""
                         }
                       />

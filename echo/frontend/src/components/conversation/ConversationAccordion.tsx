@@ -445,7 +445,7 @@ const ConversationAccordionItem = ({
   highlight = false,
   showDuration = false,
 }: {
-  conversation: Conversation;
+  conversation?: Conversation & {live: boolean};
   highlight?: boolean;
   showDuration?: boolean;
 }) => {
@@ -459,15 +459,15 @@ const ConversationAccordionItem = ({
     return <Skeleton height={60} />;
   }
 
+  if (!conversation) {
+    return null;
+  }
+
   const isLocked = chatContextQuery.data?.conversations?.find(
     (c) => c.conversation_id === conversation.id && c.locked,
   );
 
   const isAutoSelectEnabled = chatContextQuery.data?.auto_select_bool ?? false;
-  const isUpload =
-    conversation.source?.toLowerCase().includes("upload") ?? false;
-
-  // Check if conversation has any content
 
   return (
     <NavigationButton
@@ -509,11 +509,11 @@ const ConversationAccordionItem = ({
           </Text>
           {
             // if from portal and not finished
-            !isUpload && conversation.is_finished === false && (
-              <Box className="flex items-center gap-1 pr-[4px]">
+            (["portal_audio"].includes(conversation.source?.toLowerCase() ?? "")) && conversation.live && (
+              <Box className="flex items-baseline gap-1 pr-[4px]">
                 <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
                 <Text size="xs" fs="italic" fw={500}>
-                  <Trans>Live</Trans>
+                  <Trans id="conversation.ongoing">Ongoing</Trans>
                 </Text>
               </Box>
             )
@@ -868,7 +868,7 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
               <ConversationAccordionItem
                 key={item.id}
                 highlight={item.id === activeConversationId}
-                conversation={item as Conversation}
+                conversation={item as Conversation & {live: boolean} ?? null}
                 showDuration={showDuration}
               />
             ))}

@@ -624,6 +624,8 @@ export const useConversationsByProjectId = (
   query?: Partial<Query<CustomDirectusTypes, Conversation>>,
   filterBySource?: string[],
 ) => {
+  const TIME_INTERVAL_SECONDS = 40;
+  
   return useQuery({
     queryKey: [
       "projects",
@@ -634,8 +636,8 @@ export const useConversationsByProjectId = (
       query,
       filterBySource,
     ],
-    queryFn: () =>
-      directus.request(
+    queryFn: async () => {
+      const conversations = await directus.request(
         readItems("conversation", {
           sort: "-updated_at",
           fields: [
@@ -677,7 +679,43 @@ export const useConversationsByProjectId = (
           limit: 1000,
           ...query,
         }),
-      ),
+      );
+
+      return conversations;
+    },
+    select: (data) => {
+      // Add live field to each conversation based on recent chunk activity
+      const cutoffTime = new Date(Date.now() - TIME_INTERVAL_SECONDS * 1000);
+
+      if (data.length === 0) return [];
+      
+      return data.map((conversation) => {
+
+          // Skip upload chunks
+          if (
+            ["upload", "clone"].includes(conversation.source ?? "")
+          ) return {
+            ...conversation,
+            live: false,
+          };
+          
+          if (conversation.chunks?.length === 0) return {
+            ...conversation,
+            live: false,
+          };
+
+        const hasRecentChunks = conversation.chunks?.some((chunk: any) => {
+          // Check if chunk timestamp is recent
+          const chunkTime = new Date(chunk.timestamp || chunk.created_at || 0);
+          return chunkTime > cutoffTime;
+        });
+
+        return {
+          ...conversation,
+          live: hasRecentChunks || false,
+        };
+      });
+    },
     refetchInterval: 30000,
   });
 };
