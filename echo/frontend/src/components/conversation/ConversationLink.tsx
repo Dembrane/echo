@@ -4,6 +4,7 @@ import { I18nLink } from "@/components/common/i18nLink";
 
 interface ConversationLinkProps {
   conversation: Conversation;
+  // TODO: remove this prop can read from conversation
   projectId: string;
 }
 
@@ -14,6 +15,25 @@ const ConversationAnchor = ({ to, name }: { to: string; name: string }) => (
     </Anchor>
   </I18nLink>
 );
+
+/**
+ * input:
+{
+  projectId: string;
+  linkingConversations: {
+    sourceConversationId: {
+      id: string;
+      participantName: string;
+    }
+  }[]
+  linkedConversations: {
+    targetConversationId: {
+      id: string;
+      participantName: string;
+    }
+  }[]
+}
+*/
 
 export const ConversationLink = ({
   conversation,
@@ -41,7 +61,7 @@ export const ConversationLink = ({
                 />
               </>
             ) : (
-              <Text c="red" fs="italic">
+              <Text c="gray" fs="italic">
                 <Trans id="conversation.linking_conversations.deleted">
                   The source conversation was deleted
                 </Trans>
