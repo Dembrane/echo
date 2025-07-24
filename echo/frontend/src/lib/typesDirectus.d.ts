@@ -592,6 +592,7 @@ type ProcessingStatus = {
 };
 
 type Project = {
+  conversations_count?: number | null;
   context?: string | null;
   conversation_ask_for_participant_name_label?: string | null;
   conversations: any[] | Conversation[];
