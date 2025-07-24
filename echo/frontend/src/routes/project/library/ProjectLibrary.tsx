@@ -17,11 +17,11 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import {
   Alert,
   Button,
-  Collapse,
   Container,
   Divider,
   Group,
   LoadingOverlay,
+  Modal,
   Skeleton,
   Stack,
   Text,
@@ -205,9 +205,19 @@ export const ProjectLibraryRoute = () => {
         </Button>
       </Group>
 
-      <Collapse in={opened}>
+      <Modal
+        opened={opened}
+        onClose={close}
+        title={
+          <Text fw={500} size="lg">
+            <Trans>Create new view</Trans>
+          </Text>
+        }
+        withinPortal
+        size="lg"
+      >
         <CreateView projectId={projectId ?? ""} onClose={close} />
-      </Collapse>
+      </Modal>
 
       <Stack>
         {!viewsExist && <DummyViews />}

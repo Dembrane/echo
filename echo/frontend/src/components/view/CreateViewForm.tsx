@@ -19,7 +19,7 @@ import { useGenerateProjectViewMutation } from "./hooks";
 import { CloseableAlert } from "../common/ClosableAlert";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 
-import { IconInfoCircle } from "@tabler/icons-react";
+import { IconCircleCheck } from "@tabler/icons-react";
 import { Icons } from "@/icons";
 
 import { t } from "@lingui/core/macro";
@@ -64,18 +64,10 @@ export const CreateView = ({
   }, [createViewMutation.isSuccess, reset]);
 
   return (
-    <Paper className="max-w-[800px]" p="md">
+    <Paper
+      className="max-w-[800px] border-none"
+    >
       <Stack>
-        <Group gap="md">
-          <ActionIcon variant="transparent" onClick={onClose}>
-            <CloseButton />
-          </ActionIcon>
-          <Icons.View />
-          <Text>
-            <Trans>Create new view</Trans>
-          </Text>
-        </Group>
-
         <form>
           <Stack gap="sm">
             {createViewMutation.isError && (
@@ -84,7 +76,7 @@ export const CreateView = ({
               </Alert>
             )}
             {createViewMutation.isSuccess && (
-              <CloseableAlert variant="light" icon={<IconInfoCircle />}>
+              <CloseableAlert variant="light" color="green" icon={<IconCircleCheck />}>
                 <Text>
                   <Trans>
                     Your view has been created. Please wait as we process and
