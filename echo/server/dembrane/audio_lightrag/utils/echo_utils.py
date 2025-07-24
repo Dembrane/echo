@@ -66,7 +66,7 @@ def renew_redis_lock(conversation_id: str) -> bool:
         return False
 
 
-def release_redis_lock(conversation_id: str) -> None:
+def release_redis_lock(conversation_id: str) -> bool:
     try:
         redis_client = _get_redis_client()
         lock_key = f"{AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX}{conversation_id}"
@@ -75,6 +75,7 @@ def release_redis_lock(conversation_id: str) -> None:
             logger.info(f"Released Redis lock for conversation {conversation_id}")
         else:
             logger.warning(f"Redis lock for conversation {conversation_id} does not exist")
+        return True
     except Exception as e:
         logger.error(f"Error releasing Redis lock for conversation {conversation_id}: {e}")
-        raise
+        return False

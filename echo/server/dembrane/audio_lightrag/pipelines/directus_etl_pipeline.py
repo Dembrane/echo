@@ -6,7 +6,7 @@ import pandas as pd
 from dembrane.config import AUDIO_LIGHTRAG_COOL_OFF_TIME_SECONDS
 from dembrane.directus import directus
 from dembrane.processing_status_utils import add_processing_status
-from dembrane.audio_lightrag.utils.echo_utils import release_redis_lock, finish_conversation
+from dembrane.audio_lightrag.utils.echo_utils import finish_conversation
 from dembrane.audio_lightrag.utils.process_tracker import ProcessTracker
 
 logger = logging.getLogger("dembrane.audio_lightrag.pipelines.directus_etl_pipeline")
@@ -190,4 +190,3 @@ class DirectusETLPipeline:
                 event="directus_etl_pipeline.failed",
                 message=f"Directus ETL pipeline failed for conversation due to directus error: {conversation_id}",
             )
-            release_redis_lock(conversation_id)
