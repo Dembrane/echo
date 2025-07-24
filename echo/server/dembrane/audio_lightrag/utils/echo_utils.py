@@ -21,16 +21,17 @@ def _get_redis_client() -> redis.Redis:
     return _redis_client
 
 
-def finish_conversation(conversation_id: str) -> None:
+def finish_conversation(conversation_id: str) -> bool:
     try:
         directus.update_item(
             "conversation",
             conversation_id,
             {"is_audio_processing_finished": True},
         )
+        return True
     except Exception as e:
         logger.error(f"Failed to finish conversation {conversation_id}: {e}")
-        raise
+        return False
 
 
 def renew_redis_lock(conversation_id: str) -> bool:
