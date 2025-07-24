@@ -681,14 +681,30 @@ export const useConversationsByProjectId = (
         }),
       );
 
+      return conversations;
+    },
+    select: (data) => {
       // Add live field to each conversation based on recent chunk activity
       const cutoffTime = new Date(Date.now() - TIME_INTERVAL_SECONDS * 1000);
+
+      if (data.length === 0) return [];
       
-      return conversations.map((conversation: any) => {
-        const hasRecentChunks = conversation.chunks?.some((chunk: any) => {
+      return data.map((conversation) => {
+
           // Skip upload chunks
-          if (chunk.source === "DASHBOARD_UPLOAD") return false;
+          if (
+            ["upload", "clone"].includes(conversation.source ?? "")
+          ) return {
+            ...conversation,
+            live: false,
+          };
           
+          if (conversation.chunks?.length === 0) return {
+            ...conversation,
+            live: false,
+          };
+
+        const hasRecentChunks = conversation.chunks?.some((chunk: any) => {
           // Check if chunk timestamp is recent
           const chunkTime = new Date(chunk.timestamp || chunk.created_at || 0);
           return chunkTime > cutoffTime;
