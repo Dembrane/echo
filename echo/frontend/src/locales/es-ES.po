@@ -38,6 +38,11 @@ msgstr "Error del servidor"
 msgid "Something went wrong"
 msgstr "Algo salió mal"
 
+#. js-lingui-explicit-id
+#: src/routes/project/library/ProjectLibrary.tsx:248
+msgid "library.generate.duration.message"
+msgstr "La biblioteca tardará {duration}"
+
 #: src/routes/participant/ParticipantPostConversation.tsx:244
 msgid " Submit"
 msgstr "Enviar"
@@ -107,7 +112,6 @@ msgid "<0>Wait </0>{0}:{1}"
 msgstr "<0>Espera </0>{0}:{1}"
 
 #: src/components/view/DummyViews.tsx:21
-#: src/components/view/DummyViews.tsx:31
 msgid "0 Aspects"
 msgstr "0 Aspectos"
 
@@ -115,7 +119,7 @@ msgstr "0 Aspectos"
 msgid "Add"
 msgstr "Añadir"
 
-#: src/components/view/CreateViewForm.tsx:105
+#: src/components/view/CreateViewForm.tsx:108
 msgid "Add additional context (Optional)"
 msgstr "Añadir contexto adicional (Opcional)"
 
@@ -201,7 +205,7 @@ msgstr "Ocurrió un error."
 #~ msgid "Analysis"
 #~ msgstr "Análisis"
 
-#: src/components/view/CreateViewForm.tsx:110
+#: src/components/view/CreateViewForm.tsx:93
 msgid "Analysis Language"
 msgstr "Lenguaje de análisis"
 
@@ -260,11 +264,11 @@ msgstr "¿Estás seguro de que quieres eliminar esta etiqueta? Esto eliminará l
 msgid "Are you sure you want to finish?"
 msgstr "¿Estás seguro de que quieres terminar?"
 
-#: src/routes/project/library/ProjectLibrary.tsx:90
+#: src/routes/project/library/ProjectLibrary.tsx:114
 msgid "Are you sure you want to generate the library? This will take a while and overwrite your current views and insights."
 msgstr "¿Estás seguro de que quieres generar la biblioteca? Esto tomará un tiempo y sobrescribirá tus vistas e insights actuales."
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:89
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:90
 msgid "Are you sure you want to regenerate the summary? You will lose the current summary."
 msgstr "¿Estás seguro de que quieres regenerar el resumen? Perderás el resumen actual."
 
@@ -285,8 +289,8 @@ msgid "Aspect"
 msgstr "Aspecto"
 
 #: src/routes/project/library/ProjectLibraryView.tsx:56
-#: src/components/view/View.tsx:29
-#: src/components/view/View.tsx:80
+#: src/components/view/View.tsx:30
+#: src/components/view/View.tsx:89
 msgid "Aspects"
 msgstr "Aspectos"
 
@@ -459,6 +463,11 @@ msgstr "Conexión saludable"
 msgid "Connection unhealthy"
 msgstr "Conexión no saludable"
 
+#. js-lingui-explicit-id
+#: src/routes/project/library/ProjectLibrary.tsx:152
+msgid "library.contact.sales"
+msgstr "Contactar a ventas"
+
 #: src/components/conversation/AutoSelectConversations.tsx:211
 msgid "Contact sales"
 msgstr "Contactar a ventas"
@@ -543,7 +552,7 @@ msgstr "Copiar enlace"
 msgid "Copy link to share this report"
 msgstr "Copiar enlace para compartir este informe"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:80
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:81
 msgid "Copy Summary"
 msgstr "Copiar Resumen"
 
@@ -559,27 +568,46 @@ msgstr "Crear"
 msgid "Create an Account"
 msgstr "Crear una Cuenta"
 
+#. js-lingui-explicit-id
+#: src/routes/project/library/ProjectLibrary.tsx:202
+msgid "library.create"
+msgstr "Crear biblioteca"
+
 #: src/routes/project/library/ProjectLibrary.tsx:157
-msgid "Create Library"
-msgstr "Crear Biblioteca"
+#~ msgid "Create Library"
+#~ msgstr "Crear Biblioteca"
+
+#. js-lingui-explicit-id
+#: src/routes/project/library/ProjectLibrary.tsx:293
+msgid "library.create.view.modal.title"
+msgstr "Crear nueva vista"
 
 #: src/components/view/CreateViewForm.tsx:75
-msgid "Create new view"
-msgstr "Crear nueva vista"
+#~ msgid "Create new view"
+#~ msgstr "Crear nueva vista"
 
 #: src/components/report/ReportModalNavigationButton.tsx:46
 #: src/components/report/CreateReportForm.tsx:240
 msgid "Create Report"
 msgstr "Crear informe"
 
-#: src/routes/project/library/ProjectLibrary.tsx:204
-#: src/components/view/CreateViewForm.tsx:119
+#. js-lingui-explicit-id
+#: src/routes/project/library/ProjectLibrary.tsx:284
+msgid "library.create.view"
+msgstr "Crear vista"
+
+#: src/components/view/CreateViewForm.tsx:117
 msgid "Create View"
 msgstr "Crear Vista"
 
 #: src/components/conversation/ConversationEdit.tsx:116
 msgid "Created on"
 msgstr "Creado el"
+
+#. js-lingui-explicit-id
+#: src/routes/project/library/ProjectLibrary.tsx:244
+msgid "library.conversations.processing.status"
+msgstr "Conversaciones en proceso"
 
 #: src/components/project/ProjectPortalEditor.tsx:511
 msgid "Custom"
@@ -757,7 +785,7 @@ msgstr "Ingresa el nombre del archivo (sin extensión)"
 msgid "Enter new name for the chat:"
 msgstr "Ingresa un nuevo nombre para el chat:"
 
-#: src/components/view/CreateViewForm.tsx:98
+#: src/components/view/CreateViewForm.tsx:101
 msgid "Enter your query"
 msgstr "Ingresa tu consulta"
 
@@ -866,7 +894,7 @@ msgstr "Error al marcar todos los anuncios como leídos"
 msgid "Failed to mark announcement as read"
 msgstr "Error al marcar el anuncio como leído"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:51
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:52
 msgid "Failed to regenerate the summary. Please try again later."
 msgstr "Error al regenerar el resumen. Por favor, inténtalo de nuevo más tarde."
 
@@ -951,7 +979,7 @@ msgstr "Generar perspectivas a partir de tus conversaciones"
 #~ msgid "Generate structured meeting notes based on the following discussion points provided in the context."
 #~ msgstr "Generar notas estructuradas de la reunión basadas en los siguientes puntos de discusión proporcionados en el contexto."
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:125
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:126
 msgid "Generate Summary"
 msgstr "Generar Resumen"
 
@@ -959,7 +987,7 @@ msgstr "Generar Resumen"
 msgid "German"
 msgstr "Alemán"
 
-#: src/components/view/CreateViewForm.tsx:106
+#: src/components/view/CreateViewForm.tsx:109
 msgid "Give me a list of 5-10 topics that are being discussed."
 msgstr "Dame una lista de 5-10 temas que se están discutiendo."
 
@@ -1006,9 +1034,24 @@ msgstr ""
 "* ¿Cuál es el objetivo principal o métrica clave?\n"
 "* ¿Cómo se ve el éxito?"
 
+#: src/components/library/LibraryTemplatesMenu.tsx:22
+msgid ""
+"Identify and analyze the recurring themes in this content. Please:\n"
+"\n"
+"Extract patterns that appear consistently across multiple sources\n"
+"Look for underlying principles that connect different ideas\n"
+"Identify themes that challenge conventional thinking\n"
+"Structure the analysis to show how themes evolve or repeat\n"
+"Focus on insights that reveal deeper organizational or conceptual patterns\n"
+"Maintain analytical depth while being accessible\n"
+"Highlight themes that could inform future decision-making\n"
+"\n"
+"Note: If the content lacks sufficient thematic consistency, let me know we need more diverse material to identify meaningful patterns."
+msgstr "Identifica y analiza los temas recurrentes en este contenido. Por favor:\n"
+
 #: src/routes/project/library/ProjectLibrary.tsx:216
-msgid "In order to better navigate through the quotes, create additional views. The quotes will then be clustered based on your view."
-msgstr "Para navegar mejor por las citas, crea vistas adicionales. Las citas se agruparán según tu vista."
+#~ msgid "In order to better navigate through the quotes, create additional views. The quotes will then be clustered based on your view."
+#~ msgstr "Para navegar mejor por las citas, crea vistas adicionales. Las citas se agruparán según tu vista."
 
 #: src/components/report/CreateReportForm.tsx:195
 msgid "In the meantime, if you want to analyze the conversations that are still processing, you can use the Chat feature"
@@ -1058,6 +1101,11 @@ msgstr "Token inválido. Por favor intenta de nuevo."
 msgid "It looks like the conversation was deleted while you were recording. We've stopped the recording to prevent any issues. You can start a new one anytime."
 msgstr "Parece que la conversación se eliminó mientras grababas. Hemos detenido la grabación para evitar cualquier problema. Puedes iniciar una nueva en cualquier momento."
 
+#. js-lingui-explicit-id
+#: src/routes/project/library/ProjectLibrary.tsx:231
+msgid "library.not.available"
+msgstr "Biblioteca no disponible"
+
 #: src/components/participant/hooks/useConversationIssueBanner.ts:20
 msgid "It sounds like more than one person is speaking. Taking turns will help us hear everyone clearly."
 msgstr "Suena como si hablaran más de una persona. Tomar turnos nos ayudará a escuchar a todos claramente."
@@ -1099,14 +1147,18 @@ msgstr "Última actualización"
 msgid "Let's Make Sure We Can Hear You"
 msgstr "Vamos a asegurarnos de que podemos escucharte"
 
+#. js-lingui-explicit-id
+#: src/routes/project/library/ProjectLibrary.tsx:143
+msgid "library.title"
+msgstr "Biblioteca"
+
 #: src/routes/project/library/ProjectLibraryView.tsx:32
 #: src/routes/project/library/ProjectLibraryAspect.tsx:44
-#: src/routes/project/library/ProjectLibrary.tsx:108
 #: src/components/project/ProjectSidebar.tsx:112
 msgid "Library"
 msgstr "Biblioteca"
 
-#: src/routes/project/library/ProjectLibrary.tsx:127
+#: src/routes/project/library/ProjectLibrary.tsx:168
 msgid "Library creation is in progress"
 msgstr "La creación de la biblioteca está en progreso"
 
@@ -1266,13 +1318,18 @@ msgstr "No hay anuncios disponibles"
 msgid "No chats found. Start a chat using the \"Ask\" button."
 msgstr "No se encontraron chats. Inicia un chat usando el botón \"Preguntar\"."
 
-#: src/routes/project/library/ProjectLibrary.tsx:129
+#: src/routes/project/library/ProjectLibrary.tsx:172
 msgid "No conversations available to create library"
 msgstr "No hay conversaciones disponibles para crear la biblioteca"
 
+#. js-lingui-explicit-id
+#: src/routes/project/library/ProjectLibrary.tsx:216
+msgid "library.no.conversations"
+msgstr "No hay conversaciones disponibles para crear la biblioteca"
+
 #: src/routes/project/library/ProjectLibrary.tsx:170
-msgid "No conversations available to create library. Please add some conversations to get started."
-msgstr "No hay conversaciones disponibles para crear la biblioteca. Por favor añade algunas conversaciones para comenzar."
+#~ msgid "No conversations available to create library. Please add some conversations to get started."
+#~ msgstr "No hay conversaciones disponibles para crear la biblioteca. Por favor añade algunas conversaciones para comenzar."
 
 #: src/components/report/ConversationStatusTable.tsx:33
 msgid "No conversations found."
@@ -1351,9 +1408,9 @@ msgstr "Sin tutorial (solo declaraciones de privacidad)"
 msgid "No valid audio files were selected. Please select audio files only (MP3, WAV, OGG, etc)."
 msgstr "No se seleccionaron archivos de audio válidos. Por favor, selecciona solo archivos de audio (MP3, WAV, OGG, etc)."
 
-#: src/components/conversation/ConversationChunkAudioTranscript.tsx:58
-#~ msgid "Not available"
-#~ msgstr "No disponible"
+#: src/routes/project/library/ProjectLibrary.tsx:170
+msgid "Not available"
+msgstr "No disponible"
 
 #: src/components/conversation/ConversationAccordion.tsx:545
 msgid "Oldest First"
@@ -1520,6 +1577,12 @@ msgstr "Por favor, espera {timeStr} antes de solicitar otro Echo."
 msgid "Please wait while we generate your report. You will automatically be redirected to the report page."
 msgstr "Por favor, espera mientras generamos tu informe. Serás redirigido automáticamente a la página del informe."
 
+#. js-lingui-explicit-id
+#. placeholder {0}: formatRelative( new Date(latestRun.created_at ?? new Date()), new Date(), )
+#: src/routes/project/library/ProjectLibrary.tsx:259
+msgid "library.processing.request"
+msgstr "Biblioteca en proceso"
+
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:267
 msgid "Please wait while we process your retranscription request. You will be redirected to the new conversation when ready."
 msgstr "Por favor, espera mientras procesamos tu solicitud de retranscripción. Serás redirigido a la nueva conversación cuando esté lista."
@@ -1648,6 +1711,11 @@ msgstr "Grabar"
 msgid "Record another conversation"
 msgstr "Registrar otra conversación"
 
+#: src/components/view/DummyViews.tsx:17
+#: src/components/library/LibraryTemplatesMenu.tsx:20
+msgid "Recurring Themes"
+msgstr "Temas recurrentes"
+
 #: src/components/chat/References.tsx:19
 msgid "References"
 msgstr "Referencias"
@@ -1656,11 +1724,16 @@ msgstr "Referencias"
 msgid "Refresh"
 msgstr "Actualizar"
 
-#: src/routes/project/library/ProjectLibrary.tsx:121
-msgid "Regenerate Library"
-msgstr "Regenerar Biblioteca"
+#. js-lingui-explicit-id
+#: src/routes/project/library/ProjectLibrary.tsx:162
+msgid "library.regenerate"
+msgstr "Biblioteca regenerada"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:84
+#: src/routes/project/library/ProjectLibrary.tsx:121
+#~ msgid "Regenerate Library"
+#~ msgstr "Regenerar Biblioteca"
+
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:85
 msgid "Regenerate Summary"
 msgstr "Regenerar Resumen"
 
@@ -1881,8 +1954,8 @@ msgid "Send"
 msgstr "Enviar"
 
 #: src/components/view/DummyViews.tsx:27
-msgid "Sentiment"
-msgstr "Sentimiento"
+#~ msgid "Sentiment"
+#~ msgstr "Sentimiento"
 
 #: src/components/participant/ParticipantInitiateForm.tsx:91
 msgid "Session Name"
@@ -2037,6 +2110,7 @@ msgstr "Enviar"
 msgid "Success"
 msgstr "Éxito"
 
+#: src/components/library/LibraryTemplatesMenu.tsx:40
 #: src/components/chat/ChatTemplatesMenu.tsx:101
 msgid "Suggested:"
 msgstr "Sugerido:"
@@ -2046,7 +2120,7 @@ msgstr "Sugerido:"
 msgid "Summarize"
 msgstr "Resumir"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:70
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:71
 msgid "Summary"
 msgstr "Resumen"
 
@@ -2095,11 +2169,11 @@ msgstr "La conversación no pudo ser cargada. Por favor, inténtalo de nuevo o c
 #~ msgstr "la biblioteca del proyecto."
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationLink.tsx:45
+#: src/components/conversation/ConversationLink.tsx:65
 msgid "conversation.linking_conversations.deleted"
 msgstr "La fuente fue eliminada"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:43
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:44
 msgid "The summary is being regenerated. Please wait for the new summary to be available."
 msgstr "El resumen está siendo regenerado. Por favor, espera hasta que el nuevo resumen esté disponible."
 
@@ -2132,20 +2206,24 @@ msgstr "Hubo un error al verificar tu correo electrónico. Por favor, inténtalo
 #~ msgstr "Estas son algunas plantillas útiles para que te pongas en marcha."
 
 #: src/components/view/DummyViews.tsx:8
-msgid "These are your default view templates. Once you create your library these will be your first two views."
-msgstr "Estas son tus plantillas de vista predeterminadas. Una vez que crees tu biblioteca, estas serán tus primeras dos vistas."
+#~ msgid "These are your default view templates. Once you create your library these will be your first two views."
+#~ msgstr "Estas son tus plantillas de vista predeterminadas. Una vez que crees tu biblioteca, estas serán tus primeras dos vistas."
+
+#: src/components/view/DummyViews.tsx:8
+msgid "These default view templates will be generated when you create your first library."
+msgstr "Estas plantillas de vista predeterminadas se generarán cuando crees tu primera biblioteca."
 
 #: src/routes/participant/ParticipantConversation.tsx:408
 msgid "Thinking..."
 msgstr "Pensando..."
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationLink.tsx:56
+#: src/components/conversation/ConversationLink.tsx:76
 msgid "conversation.linked_conversations.description"
 msgstr "Esta conversación tiene las siguientes copias:"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationLink.tsx:30
+#: src/components/conversation/ConversationLink.tsx:50
 msgid "conversation.linking_conversations.description"
 msgstr "Esta conversación es una copia de"
 
@@ -2169,10 +2247,14 @@ msgstr "Este correo electrónico ya está en la lista."
 msgid "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
 msgstr "Esta es una vista previa en vivo del portal del participante. Necesitarás actualizar la página para ver los cambios más recientes."
 
-#. placeholder {0}: conversationsQuery.data?.length
+#. js-lingui-explicit-id
+#: src/routes/project/library/ProjectLibrary.tsx:224
+msgid "library.description"
+msgstr "Biblioteca"
+
 #: src/routes/project/library/ProjectLibrary.tsx:182
-msgid "This is your project library. Currently,{0} conversations are waiting to be processed."
-msgstr "Esta es tu biblioteca del proyecto. Actualmente,{0} conversaciones están esperando ser procesadas."
+#~ msgid "This is your project library. Currently,{0} conversations are waiting to be processed."
+#~ msgstr "Esta es tu biblioteca del proyecto. Actualmente,{0} conversaciones están esperando ser procesadas."
 
 #: src/components/project/ProjectPortalEditor.tsx:265
 #~ msgid "This language will be used for the Participant's Portal and transcription."
@@ -2243,8 +2325,7 @@ msgstr "Para asignar una nueva etiqueta, primero crea una en la vista general de
 msgid "To generate a report, please start by adding conversations in your project"
 msgstr "Para generar un informe, por favor comienza agregando conversaciones en tu proyecto"
 
-#: src/components/view/DummyViews.tsx:17
-#: src/components/view/CreateViewForm.tsx:100
+#: src/components/view/CreateViewForm.tsx:103
 msgid "Topics"
 msgstr "Temas"
 
@@ -2444,7 +2525,7 @@ msgstr "Usa Shift + Enter para agregar una nueva línea"
 
 #: src/routes/project/library/ProjectLibraryView.tsx:36
 #: src/routes/project/library/ProjectLibraryAspect.tsx:48
-#: src/components/view/View.tsx:50
+#: src/components/view/View.tsx:51
 #: src/components/report/ConversationStatusTable.tsx:93
 msgid "View"
 msgstr "Vista"
@@ -2574,10 +2655,15 @@ msgstr "Tu respuesta ha sido registrada. Puedes cerrar esta pestaña ahora."
 msgid "Your responses"
 msgstr "Tus respuestas"
 
-#: src/components/view/CreateViewForm.tsx:89
+#: src/components/view/CreateViewForm.tsx:84
 msgid "Your view has been created. Please wait as we process and analyse the data."
 msgstr "Tu vista ha sido creada. Por favor, espera mientras procesamos y analizamos los datos."
 
-#: src/routes/project/library/ProjectLibrary.tsx:192
-msgid "Your Views"
+#. js-lingui-explicit-id
+#: src/routes/project/library/ProjectLibrary.tsx:272
+msgid "library.views.title"
 msgstr "Tus Vistas"
+
+#: src/routes/project/library/ProjectLibrary.tsx:192
+#~ msgid "Your Views"
+#~ msgstr "Tus Vistas"
