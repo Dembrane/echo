@@ -153,15 +153,7 @@ export const ProjectLibraryRoute = () => {
             </Button>
           )}
 
-          {latestRun ? (
-            <Button
-              variant="outline"
-              leftSection={<IconRefresh />}
-              onClick={handleCreateLibrary}
-            >
-              <Trans id="library.regenerate">Regenerate Library</Trans>
-            </Button>
-          ) : (
+          {!latestRun && (
             <Tooltip
               label={
                 requestProjectLibraryMutation.isPending
