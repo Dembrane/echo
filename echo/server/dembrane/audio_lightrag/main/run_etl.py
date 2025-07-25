@@ -8,7 +8,7 @@ from dembrane.config import (
     AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY,
     AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX,
 )
-from dembrane.audio_lightrag.utils.echo_utils import release_redis_lock, finish_conversation
+from dembrane.audio_lightrag.utils.echo_utils import release_redis_lock
 from dembrane.audio_lightrag.pipelines.audio_etl_pipeline import AudioETLPipeline
 from dembrane.audio_lightrag.pipelines.directus_etl_pipeline import (
     DirectusException,
@@ -25,6 +25,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+# FIXME: cleanup function
 def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
     """
     Runs the complete ETL pipeline including Directus, Audio, and Contextual Chunk processes.
@@ -113,8 +114,7 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
 
         logger.info("All ETL pipelines completed successfully")
 
-        for conv_id in filtered_conv_ids:
-            finish_conversation(conv_id)
+        [release_redis_lock(conv_id) for conv_id in filtered_conv_ids]
 
         return True
 

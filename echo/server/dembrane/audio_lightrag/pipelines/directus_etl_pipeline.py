@@ -55,8 +55,8 @@ class DirectusETLPipeline:
         self.conversation_request = {
             "query": {
                 "fields": ["id", "project_id", "chunks.id", "chunks.path", "chunks.timestamp"],
-                "limit": 100000,
-                "deep": {"chunks": {"_limit": 100000, "_sort": "timestamp"}},
+                "limit": -1,
+                "deep": {"chunks": {"_limit": -1, "_sort": "timestamp"}},
             }
         }
         self.segment_request = {
@@ -143,7 +143,7 @@ class DirectusETLPipeline:
             k: ",".join([str(x) for x in sorted(v)])  # type: ignore
             for k, v in chunk_to_segments.items()
             if len(v) != 0
-        }  # type: ignore
+        }
         conversation_df["segment"] = conversation_df.chunk_id.map(chunk_to_segments)
         if run_timestamp is not None:
             run_timestamp = pd.to_datetime(run_timestamp)  # type: ignore
