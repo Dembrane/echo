@@ -181,7 +181,10 @@ export const ProjectLibraryRoute = () => {
               <Button
                 leftSection={!isLibraryEnabled ? <IconLock /> : <IconPlus />}
                 onClick={handleCreateLibrary}
-                loading={requestProjectLibraryMutation.isPending}
+                loading={
+                  requestProjectLibraryMutation.isPending ||
+                  requestProjectLibraryMutation.isSuccess
+                }
                 disabled={
                   // TODO: this should really be a server-side check
                   requestProjectLibraryMutation.isPending ||
