@@ -44,7 +44,12 @@ msgstr "Une erreur s'est produite"
 #~ msgstr "Bibliothèque régénérée"
 
 #. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:240
+#: src/routes/project/library/ProjectLibrary.tsx:236
+#~ msgid "library.conversations.processing.status"
+#~ msgstr "Conversations en cours de traitement"
+
+#. js-lingui-explicit-id
+#: src/routes/project/library/ProjectLibrary.tsx:246
 msgid "library.generate.duration.message"
 msgstr "La bibliothèque prendra {duration}"
 
@@ -92,6 +97,11 @@ msgstr "{0} Conversations • Modifié le {1}"
 #~ msgid "{diffInHours}h ago"
 #~ msgstr "{diffInHours} heures"
 
+#. js-lingui-explicit-id
+#: src/routes/project/library/ProjectLibrary.tsx:237
+msgid "library.conversations.to.be.analyzed"
+msgstr "Actuellement {0} conversations sont prêtes à être analysées."
+
 #: src/routes/participant/ParticipantConversation.tsx:210
 msgid "{minutes} minutes and {seconds} seconds"
 msgstr "{minutes} minutes et {seconds} secondes"
@@ -103,6 +113,11 @@ msgstr "{readingNow} lit actuellement"
 #: src/routes/participant/ParticipantConversation.tsx:211
 msgid "{seconds} seconds"
 msgstr "{seconds} secondes"
+
+#. js-lingui-explicit-id
+#: src/routes/project/library/ProjectLibrary.tsx:243
+msgid "library.conversations.still.processing"
+msgstr "{0} en cours de traitement."
 
 #: src/components/participant/UserChunkMessage.tsx:104
 msgid "*Transcription in progress.*"
@@ -124,7 +139,7 @@ msgstr "0 Aspects"
 msgid "Add"
 msgstr "Ajouter"
 
-#: src/components/view/CreateViewForm.tsx:135
+#: src/components/view/CreateViewForm.tsx:133
 msgid "Add additional context (Optional)"
 msgstr "Ajouter un contexte supplémentaire (Optionnel)"
 
@@ -210,7 +225,7 @@ msgstr "Une erreur s'est produite."
 #~ msgid "Analysis"
 #~ msgstr "Analyse"
 
-#: src/components/view/CreateViewForm.tsx:120
+#: src/components/view/CreateViewForm.tsx:118
 msgid "Analysis Language"
 msgstr "Langue d'analyse"
 
@@ -574,7 +589,7 @@ msgid "Create an Account"
 msgstr "Créer un compte"
 
 #. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:194
+#: src/routes/project/library/ProjectLibrary.tsx:195
 msgid "library.create"
 msgstr "Créer une bibliothèque"
 
@@ -583,7 +598,7 @@ msgstr "Créer une bibliothèque"
 #~ msgstr "Créer une bibliothèque"
 
 #. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:287
+#: src/routes/project/library/ProjectLibrary.tsx:293
 msgid "library.create.view.modal.title"
 msgstr "Créer une nouvelle vue"
 
@@ -597,22 +612,17 @@ msgid "Create Report"
 msgstr "Créer un rapport"
 
 #. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:276
+#: src/routes/project/library/ProjectLibrary.tsx:282
 msgid "library.create.view"
 msgstr "Créer une vue"
 
-#: src/components/view/CreateViewForm.tsx:144
+#: src/components/view/CreateViewForm.tsx:142
 msgid "Create View"
 msgstr "Créer une vue"
 
 #: src/components/conversation/ConversationEdit.tsx:116
 msgid "Created on"
 msgstr "Créé le"
-
-#. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:236
-msgid "library.conversations.processing.status"
-msgstr "Conversations en cours de traitement"
 
 #: src/components/project/ProjectPortalEditor.tsx:511
 msgid "Custom"
@@ -790,7 +800,7 @@ msgstr "Entrez le nom du fichier (sans extension)"
 msgid "Enter new name for the chat:"
 msgstr "Entrez un nouveau nom pour la discussion :"
 
-#: src/components/view/CreateViewForm.tsx:128
+#: src/components/view/CreateViewForm.tsx:126
 msgid "Enter your query"
 msgstr "Entrez votre requête"
 
@@ -992,7 +1002,7 @@ msgstr "Générer un résumé"
 msgid "German"
 msgstr "Allemand"
 
-#: src/components/view/CreateViewForm.tsx:136
+#: src/components/view/CreateViewForm.tsx:134
 msgid "Give me a list of 5-10 topics that are being discussed."
 msgstr "Donnez-moi une liste de 5 à 10 sujets qui sont discutés."
 
@@ -1113,7 +1123,7 @@ msgid "It looks like the conversation was deleted while you were recording. We'v
 msgstr "Il semble que la conversation a été supprimée pendant que vous enregistriez. Nous avons arrêté l'enregistrement pour éviter tout problème. Vous pouvez en commencer une nouvelle à tout moment."
 
 #. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:223
+#: src/routes/project/library/ProjectLibrary.tsx:224
 msgid "library.not.available"
 msgstr "Bibliothèque non disponible"
 
@@ -1339,7 +1349,7 @@ msgid "No conversations available to create library"
 msgstr "Aucune conversation disponible pour créer la bibliothèque"
 
 #. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:208
+#: src/routes/project/library/ProjectLibrary.tsx:209
 msgid "library.no.conversations"
 msgstr "Aucune conversation disponible pour créer la bibliothèque"
 
@@ -1595,7 +1605,7 @@ msgstr "Veuillez patienter pendant que nous générons votre rapport. Vous serez
 
 #. js-lingui-explicit-id
 #. placeholder {0}: formatRelative( new Date(latestRun.created_at ?? new Date()), new Date(), )
-#: src/routes/project/library/ProjectLibrary.tsx:251
+#: src/routes/project/library/ProjectLibrary.tsx:257
 msgid "library.processing.request"
 msgstr "Bibliothèque en cours de traitement"
 
@@ -2268,7 +2278,7 @@ msgid "This is a live preview of the participant's portal. You will need to refr
 msgstr "Cette est une vue en direct du portail du participant. Vous devrez actualiser la page pour voir les dernières modifications."
 
 #. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:216
+#: src/routes/project/library/ProjectLibrary.tsx:217
 msgid "library.description"
 msgstr "Bibliothèque"
 
@@ -2322,7 +2332,7 @@ msgid "This title is shown to participants when they start a conversation"
 msgstr "Ce titre est affiché aux participants lorsqu'ils commencent une conversation"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:310
-#: src/components/view/CreateViewForm.tsx:85
+#: src/components/view/CreateViewForm.tsx:83
 msgid "This will clear your current input. Are you sure?"
 msgstr "Cela effacera votre entrée actuelle. Êtes-vous sûr ?"
 
@@ -2346,7 +2356,7 @@ msgstr "Pour assigner une nouvelle étiquette, veuillez la créer d'abord dans l
 msgid "To generate a report, please start by adding conversations in your project"
 msgstr "Pour générer un rapport, veuillez commencer par ajouter des conversations dans votre projet"
 
-#: src/components/view/CreateViewForm.tsx:130
+#: src/components/view/CreateViewForm.tsx:128
 msgid "Topics"
 msgstr "Sujets"
 
@@ -2676,12 +2686,12 @@ msgstr "Votre réponse a été enregistrée. Vous pouvez maintenant fermer cette
 msgid "Your responses"
 msgstr "Vos réponses"
 
-#: src/components/view/CreateViewForm.tsx:111
+#: src/components/view/CreateViewForm.tsx:109
 msgid "Your view has been created. Please wait as we process and analyse the data."
 msgstr "Votre vue a été créée. Veuillez patienter pendant que nous traitons et analysons les données."
 
 #. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:264
+#: src/routes/project/library/ProjectLibrary.tsx:270
 msgid "library.views.title"
 msgstr "Vos vues"
 

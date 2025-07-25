@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Trans, Plural } from "@lingui/react/macro";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { CloseableAlert } from "@/components/common/ClosableAlert";
 import { ProjectAnalysisRunStatus } from "@/components/project/ProjectAnalysisRunStatus";
@@ -186,7 +186,8 @@ export const ProjectLibraryRoute = () => {
                   // TODO: this should really be a server-side check
                   requestProjectLibraryMutation.isPending ||
                   !isLibraryEnabled ||
-                  conversationsQuery.data?.length === 0
+                  conversationsQuery.data?.length === 0 ||
+                  latestRunQuery.isFetching
                   // ||
                   // latestRun?.processing_status === "PROCESSING"
                 }
@@ -233,9 +234,14 @@ export const ProjectLibraryRoute = () => {
         conversationsQuery.data?.length > 0 && (
           <CloseableAlert>
             <>
-              <Trans id="library.conversations.processing.status">
-                Currently {finishedConversationsCount} conversations are ready
-                to be analyzed. {unfinishedConversationsCount} still processing.
+              <Plural
+                id="library.conversations.to.be.analyzed"
+                value={finishedConversationsCount}
+                one="Currently # conversation is ready to be analyzed."
+                other="Currently # conversations are ready to be analyzed."
+              />{" "}
+              <Trans id="library.conversations.still.processing">
+                {unfinishedConversationsCount} still processing.
               </Trans>
               <Trans id="library.generate.duration.message">
                 {" "}
