@@ -21,15 +21,22 @@ from collections import defaultdict
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from dembrane.config import PROMPT_TEMPLATES_DIR
+from dembrane.config import JSON_TEMPLATES_DIR, PROMPT_TEMPLATES_DIR
 
 logger = logging.getLogger("prompts")
 
-env = Environment(loader=FileSystemLoader(PROMPT_TEMPLATES_DIR), autoescape=select_autoescape())
+prompt_env = Environment(
+    loader=FileSystemLoader(PROMPT_TEMPLATES_DIR), autoescape=select_autoescape()
+)
+json_env = Environment(loader=FileSystemLoader(JSON_TEMPLATES_DIR), autoescape=select_autoescape())
 
 # Load all the files from PROMPT_TEMPLATES_DIR that end with .jinja
 PROMPT_TEMPLATE_LIST = [
     f.name for f in os.scandir(PROMPT_TEMPLATES_DIR) if f.is_file() and f.name.endswith(".jinja")
+]
+
+JSON_TEMPLATE_LIST = [
+    f.name for f in os.scandir(JSON_TEMPLATES_DIR) if f.is_file() and f.name.endswith(".jinja")
 ]
 
 # Create a dictionary to map template names to their supported languages
@@ -85,11 +92,11 @@ def render_prompt(prompt_name: str, language: str, kwargs: dict[str, Any]) -> st
                 f"Prompt template {full_prompt_name} not found and no default available"
             )
 
-    template = env.get_template(full_prompt_name)
+    template = prompt_env.get_template(full_prompt_name)
     return template.render(**kwargs)
 
 
-def render_message(
+def render_json(
     prompt_name: str,
     language: str,
     kwargs: dict[str, Any],
@@ -106,7 +113,20 @@ def render_message(
     """
     if keys_to_validate is None:
         keys_to_validate = []
-    rendered_prompt = render_prompt(prompt_name, language, kwargs)
+    full_json_template_name = f"{prompt_name}.{language}.jinja"
+    if full_json_template_name not in JSON_TEMPLATE_LIST:
+        default_json_template_name = f"{prompt_name}.en.jinja"
+        if default_json_template_name in JSON_TEMPLATE_LIST:
+            logger.warning(
+                f"JSON template {full_json_template_name} not found, using default {default_json_template_name}."
+            )
+            full_json_template_name = default_json_template_name
+        else:
+            raise ValueError(
+                f"JSON template {full_json_template_name} not found and no default available"
+            )
+    template = json_env.get_template(full_json_template_name)
+    rendered_prompt = template.render(**kwargs)
     try:
         message = json.loads(rendered_prompt)
     except json.JSONDecodeError as e:

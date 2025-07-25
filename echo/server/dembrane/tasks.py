@@ -23,7 +23,7 @@ from dembrane.config import (
     RUNPOD_TOPIC_MODELER_API_KEY,
 )
 from dembrane.sentry import init_sentry
-from dembrane.prompts import render_message
+from dembrane.prompts import render_json
 from dembrane.directus import (
     DirectusBadRequest,
     DirectusServerError,
@@ -615,7 +615,7 @@ def task_create_project_library(project_id: str, language: str) -> None:
         messages = []
 
         for view_name in default_view_name_list:
-            message = render_message(view_name, language, {}, ["user_query", "user_query_context"])
+            message = render_json(view_name, language, {}, ["user_query", "user_query_context"])
             logger.info(f"Message: {message}")
             messages.append(
                 task_create_view.message(
