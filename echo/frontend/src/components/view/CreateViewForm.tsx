@@ -43,11 +43,14 @@ export const CreateView = ({
 
   const { iso639_1 } = useLanguage();
 
-  const { register, handleSubmit, reset } = useForm<CreateViewForm>({
+  const { register, handleSubmit, reset, setValue, watch } = useForm<CreateViewForm>({
     defaultValues: {
       language: iso639_1,
     },
   });
+
+  const queryValue = watch("query");
+  const additionalContextValue = watch("additionalContext");
 
   const onSubmit = (data: CreateViewForm) => {
     createViewMutation.mutate({
@@ -63,6 +66,26 @@ export const CreateView = ({
       reset();
     }
   }, [createViewMutation.isSuccess, reset]);
+
+  const handleTemplateSelect = ({
+    query,
+    additionalContext,
+    key,
+  }: {
+    query: string;
+    additionalContext: string;
+    key: string;
+  }) => {
+    if (
+      (queryValue?.trim() !== "" || additionalContextValue?.trim() !== "") &&
+      !window.confirm(t`This will clear your current input. Are you sure?`)
+    ) {
+      return;
+    }
+
+    setValue("query", query);
+    setValue("additionalContext", additionalContext);
+  };
 
   return (
     <Paper className="max-w-[800px] border-none" py="sm">
@@ -94,7 +117,7 @@ export const CreateView = ({
               data={languageOptionsByIso639_1}
             />
 
-            <LibraryTemplatesMenu onTemplateSelect={() => {}} />
+            <LibraryTemplatesMenu onTemplateSelect={handleTemplateSelect} />
 
             <TextInput
               {...register("query")}

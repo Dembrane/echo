@@ -8,10 +8,12 @@ export const LibraryTemplatesMenu = ({
   onTemplateSelect,
 }: {
   onTemplateSelect: ({
-    content,
+    query,
+    additionalContext,
     key,
   }: {
-    content: string;
+    query: string;
+    additionalContext: string;
     key: string;
   }) => void;
 }) => {
@@ -19,17 +21,8 @@ export const LibraryTemplatesMenu = ({
     {
       title: t`Recurring Themes`,
       icon: IconNotes,
-      content: t`Identify and analyze the recurring themes in this content. Please:
-
-Extract patterns that appear consistently across multiple sources
-Look for underlying principles that connect different ideas
-Identify themes that challenge conventional thinking
-Structure the analysis to show how themes evolve or repeat
-Focus on insights that reveal deeper organizational or conceptual patterns
-Maintain analytical depth while being accessible
-Highlight themes that could inform future decision-making
-
-Note: If the content lacks sufficient thematic consistency, let me know we need more diverse material to identify meaningful patterns.`,
+      query: t`Provide an overview of the main topics and recurring themes`,
+      additionalContext: t`Identify recurring themes, topics, and arguments that appear consistently across conversations. Analyze their frequency, intensity, and consistency. Expected output: 3-7 aspects for small datasets, 5-12 for medium datasets, 8-15 for large datasets. Processing guidance: Focus on distinct patterns that emerge across multiple conversations.`,
     },
   ];
 
@@ -47,9 +40,15 @@ Note: If the content lacks sufficient thematic consistency, let me know we need 
             variant="default"
             bg="transparent"
             className="border"
-            onClick={() =>
-              onTemplateSelect({ content: t.content, key: t.title })
-            }
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onTemplateSelect({
+                query: t.query,
+                additionalContext: t.additionalContext,
+                key: t.title,
+              });
+            }}
           >
             <Text size="sm">{t.title}</Text>
           </Pill>
