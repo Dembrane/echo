@@ -74,11 +74,9 @@ export const CreateView = ({
   const handleTemplateSelect = ({
     query,
     additionalContext,
-    key,
   }: {
     query: string;
     additionalContext: string;
-    key: string;
   }) => {
     if (
       (queryValue?.trim() !== "" || additionalContextValue?.trim() !== "") &&
