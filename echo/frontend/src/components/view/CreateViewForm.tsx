@@ -19,11 +19,12 @@ import { useGenerateProjectViewMutation } from "./hooks";
 import { CloseableAlert } from "../common/ClosableAlert";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 
-import { IconInfoCircle } from "@tabler/icons-react";
+import { IconCircleCheck } from "@tabler/icons-react";
 import { Icons } from "@/icons";
 
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
+import { LibraryTemplatesMenu } from "@/components/library/LibraryTemplatesMenu";
 
 type CreateViewForm = {
   query: string;
@@ -33,20 +34,27 @@ type CreateViewForm = {
 
 export const CreateView = ({
   projectId,
-  onClose,
+  initialQuery,
+  initialAdditionalContext,
 }: {
   projectId: string;
-  onClose: () => void;
+  initialQuery?: string;
+  initialAdditionalContext?: string;
 }) => {
   const createViewMutation = useGenerateProjectViewMutation();
 
   const { iso639_1 } = useLanguage();
 
-  const { register, handleSubmit, reset } = useForm<CreateViewForm>({
+  const { register, handleSubmit, reset, setValue, watch } = useForm<CreateViewForm>({
     defaultValues: {
       language: iso639_1,
+      query: initialQuery || "",
+      additionalContext: initialAdditionalContext || "",
     },
   });
+
+  const queryValue = watch("query");
+  const additionalContextValue = watch("additionalContext");
 
   const onSubmit = (data: CreateViewForm) => {
     createViewMutation.mutate({
@@ -63,28 +71,40 @@ export const CreateView = ({
     }
   }, [createViewMutation.isSuccess, reset]);
 
-  return (
-    <Paper className="max-w-[800px]" p="md">
-      <Stack>
-        <Group gap="md">
-          <ActionIcon variant="transparent" onClick={onClose}>
-            <CloseButton />
-          </ActionIcon>
-          <Icons.View />
-          <Text>
-            <Trans>Create new view</Trans>
-          </Text>
-        </Group>
+  const handleTemplateSelect = ({
+    query,
+    additionalContext,
+  }: {
+    query: string;
+    additionalContext: string;
+  }) => {
+    if (
+      (queryValue?.trim() !== "" || additionalContextValue?.trim() !== "") &&
+      !window.confirm(t`This will clear your current input. Are you sure?`)
+    ) {
+      return;
+    }
 
+    setValue("query", query);
+    setValue("additionalContext", additionalContext);
+  };
+
+  return (
+    <Paper className="max-w-[800px] border-none" py="sm">
+      <Stack>
         <form>
-          <Stack gap="sm">
+          <Stack gap="lg">
             {createViewMutation.isError && (
               <Alert variant="filled" color="red">
                 {createViewMutation.error?.message}
               </Alert>
             )}
             {createViewMutation.isSuccess && (
-              <CloseableAlert variant="light" icon={<IconInfoCircle />}>
+              <CloseableAlert
+                variant="light"
+                color="green"
+                icon={<IconCircleCheck />}
+              >
                 <Text>
                   <Trans>
                     Your view has been created. Please wait as we process and
@@ -93,6 +113,14 @@ export const CreateView = ({
                 </Text>
               </CloseableAlert>
             )}
+            <NativeSelect
+              {...register("language")}
+              label={t`Analysis Language`}
+              data={languageOptionsByIso639_1}
+            />
+
+            <LibraryTemplatesMenu onTemplateSelect={handleTemplateSelect} />
+
             <TextInput
               {...register("query")}
               label={t`Enter your query`}
@@ -104,11 +132,6 @@ export const CreateView = ({
               {...register("additionalContext")}
               label={t`Add additional context (Optional)`}
               placeholder={t`Give me a list of 5-10 topics that are being discussed.`}
-            />
-            <NativeSelect
-              {...register("language")}
-              label={t`Analysis Language`}
-              data={languageOptionsByIso639_1}
             />
             <Group className="w-full" justify="flex-end">
               <Button

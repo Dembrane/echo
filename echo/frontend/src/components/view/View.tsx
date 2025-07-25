@@ -8,14 +8,18 @@ import {
   Spoiler,
   Stack,
   Text,
+  Modal,
 } from "@mantine/core";
-import { IconArrowsDiagonal } from "@tabler/icons-react";
+import { IconArrowsDiagonal, IconRefresh } from "@tabler/icons-react";
 import { AspectCard } from "../aspect/AspectCard";
 import { useParams } from "react-router-dom";
 import { Markdown } from "../common/Markdown";
 import { I18nLink } from "../common/i18nLink";
 import { useCopyView } from "./hooks/useCopyView";
 import { CopyIconButton } from "../common/CopyIconButton";
+import { formatRelative } from "date-fns";
+import { useDisclosure } from "@mantine/hooks";
+import { CreateView } from "./CreateViewForm";
 
 export const ViewCard = ({ data }: { data: View }) => {
   return (
@@ -39,6 +43,7 @@ export const ViewCard = ({ data }: { data: View }) => {
 export const ViewExpandedCard = ({ data }: { data: View }) => {
   const { projectId } = useParams();
   const { copyView, copied } = useCopyView();
+  const [opened, { open, close }] = useDisclosure(false);
 
   return (
     <Paper p="md">
@@ -49,6 +54,14 @@ export const ViewExpandedCard = ({ data }: { data: View }) => {
             <Text className="font-semibold">
               <Trans>View</Trans>
             </Text>
+            {data.created_at && (
+              <Text size="sm" c="gray">
+                {formatRelative(
+                  new Date(data.created_at ?? new Date()),
+                  new Date(),
+                )}
+              </Text>
+            )}
           </Group>
 
           <Group>
@@ -57,6 +70,14 @@ export const ViewExpandedCard = ({ data }: { data: View }) => {
               onCopy={() => copyView(data.id)}
               copied={copied}
             />
+
+            <ActionIcon
+              variant="transparent"
+              c="gray"
+              onClick={open}
+            >
+              <IconRefresh />
+            </ActionIcon>
 
             <I18nLink to={`/projects/${projectId}/library/views/${data.id}`}>
               <ActionIcon component="a" variant="transparent" c="gray">
@@ -94,6 +115,27 @@ export const ViewExpandedCard = ({ data }: { data: View }) => {
           ))}
         </div>
       </Stack>
+
+      <Modal
+        opened={opened}
+        onClose={close}
+        title={
+          <Group>
+            <Icons.View />
+            <Text fw={500} size="lg">
+              <Trans id="view.recreate.modal.title">Recreate View</Trans>
+            </Text>
+          </Group>
+        }
+        withinPortal
+        size="lg"
+      >
+        <CreateView
+          projectId={projectId ?? ""}
+          initialQuery={data.user_input ?? ""}
+          initialAdditionalContext={data.user_input_description ?? ""}
+        />
+      </Modal>
     </Paper>
   );
 };

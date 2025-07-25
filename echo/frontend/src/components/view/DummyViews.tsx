@@ -6,25 +6,15 @@ export const DummyViews = () => {
     <Stack>
       <Text c="gray">
         <Trans>
-          These are your default view templates. Once you create your library
-          these will be your first two views.
+          These default view templates will be generated when you create your
+          first library.
         </Trans>
       </Text>
       <Paper p="md">
         <SimpleGrid cols={3}>
           <Paper bg="white" p="md">
             <Text className="font-xl pb-2 font-semibold">
-              <Trans>Topics</Trans>
-            </Text>
-            <Group>
-              <Pill>
-                <Trans>0 Aspects</Trans>
-              </Pill>
-            </Group>
-          </Paper>
-          <Paper bg="white" p="md">
-            <Text className="font-xl pb-2 font-semibold">
-              <Trans>Sentiment</Trans>
+              <Trans>Recurring Themes</Trans>
             </Text>
             <Group>
               <Pill>

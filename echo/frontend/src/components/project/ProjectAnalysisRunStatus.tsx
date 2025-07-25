@@ -77,20 +77,16 @@ export const ProjectAnalysisRunStatus = ({
   //   );
   // }
 
-
   return (
-
     <div className="italic text-gray-700">
-      {
-        conversationChunksQuery.data && conversationChunksQuery.data > 0 && (
-          <CloseableAlert>
-            <Trans>
-              New conversations have been added since the library was generated.
-              Regenerate the library to process them.
-            </Trans>
-          </CloseableAlert>
-        )
-      }
+      {conversationChunksQuery.data && conversationChunksQuery.data > 0 ? (
+        <CloseableAlert>
+          <Trans id="library.new.conversations">
+            New conversations have been added since the creation of the library.
+            Create a new view to add these to the analysis.
+          </Trans>
+        </CloseableAlert>
+      ) : null}
       {/* {data.processing_status}: {data.processing_message}{" "} */}
     </div>
   );

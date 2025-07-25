@@ -17,11 +17,12 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import {
   Alert,
   Button,
-  Collapse,
   Container,
   Divider,
   Group,
+  Loader,
   LoadingOverlay,
+  Modal,
   Skeleton,
   Stack,
   Text,
@@ -35,11 +36,17 @@ import {
   IconPlus,
   IconRefresh,
   IconSortAscending,
+  IconCalendarEvent,
+  IconLock,
 } from "@tabler/icons-react";
 import { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 import { CreateView } from "@/components/view/CreateViewForm";
 import { DummyViews } from "../../../components/view/DummyViews";
+import { analytics } from "@/lib/analytics";
+import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
+import { SalesLinks } from "@/lib/links";
+import { formatRelative } from "date-fns";
 
 type SortBy = "relevance" | "default";
 
@@ -51,6 +58,9 @@ export const ProjectLibraryRoute = () => {
   const viewsQuery = useProjectViews(projectId ?? "");
   const projectQuery = useProjectById({
     projectId: projectId ?? "",
+    query: {
+      fields: ["is_enhanced_audio_processing_enabled"],
+    },
   });
   const conversationsQuery = useConversationsByProjectId(
     projectId ?? "",
@@ -70,6 +80,20 @@ export const ProjectLibraryRoute = () => {
   const latestRun = latestRunQuery.data ?? null;
 
   const [opened, { toggle, close }] = useDisclosure(false);
+
+  const isLibraryEnabled =
+    projectQuery.data?.is_enhanced_audio_processing_enabled ?? false;
+
+  // To show number of ready and processing conversations
+  const finishedConversationsCount =
+    conversationsQuery.data?.filter(
+      (conversation) => conversation.is_audio_processing_finished === true,
+    ).length ?? 0;
+
+  const unfinishedConversationsCount =
+    conversationsQuery.data?.filter(
+      (conversation) => conversation.is_audio_processing_finished === false,
+    ).length ?? 0;
 
   if (conversationsQuery.isLoading) {
     return (
@@ -97,6 +121,17 @@ export const ProjectLibraryRoute = () => {
     }
   };
 
+  const contactSales = () => {
+    if (!isLibraryEnabled) {
+      try {
+        analytics.trackEvent(events.LIBRARY_CONTACT_SALES);
+      } catch (error) {
+        console.warn("Analytics tracking failed:", error);
+      }
+      window.open(SalesLinks.AUTO_SELECT_CONTACT, "_blank");
+    }
+  };
+
   return (
     <Stack className="relative px-4 py-6">
       <Group justify="space-between">
@@ -105,59 +140,62 @@ export const ProjectLibraryRoute = () => {
             {
               label: (
                 <Title order={1}>
-                  <Trans>Library</Trans>
+                  <Trans id="library.title">Library</Trans>
                 </Title>
               ),
             },
           ]}
         />
+        <Group gap="xl">
+          {!isLibraryEnabled && (
+            <Button onClick={contactSales} leftSection={<IconCalendarEvent />}>
+              <Trans id="library.contact.sales">Contact sales</Trans>
+            </Button>
+          )}
 
-        {latestRun ? (
-          <Button
-            variant="outline"
-            leftSection={<IconRefresh />}
-            onClick={handleCreateLibrary}
-          >
-            <Trans>Regenerate Library</Trans>
-          </Button>
-        ) : (
-          <Tooltip
-            label={
-              requestProjectLibraryMutation.isPending
-                ? t`Library creation is in progress`
-                : conversationsQuery.data?.length === 0
-                  ? t`No conversations available to create library`
-                  : // : latestRun?.processing_status === "PROCESSING"
-                    //   ? t`Library is currently being processed`
-                    null
-            }
-            disabled={
-              !(
-                (
-                  requestProjectLibraryMutation.isPending ||
-                  conversationsQuery.data?.length === 0
-                )
-                // ||
-                // latestRun?.processing_status === "PROCESSING"
-              )
-            }
-          >
-            <Button
-              leftSection={<IconPlus />}
-              onClick={handleCreateLibrary}
-              loading={requestProjectLibraryMutation.isPending}
+          {!latestRun && (
+            <Tooltip
+              label={
+                requestProjectLibraryMutation.isPending
+                  ? t`Library creation is in progress`
+                  : !isLibraryEnabled
+                    ? t`Not available`
+                    : conversationsQuery.data?.length === 0
+                      ? t`No conversations available to create library`
+                      : // : latestRun?.processing_status === "PROCESSING"
+                        //   ? t`Library is currently being processed`
+                        null
+              }
               disabled={
-                // TODO: this should really be a server-side check
-                requestProjectLibraryMutation.isPending ||
-                conversationsQuery.data?.length === 0
-                // ||
-                // latestRun?.processing_status === "PROCESSING"
+                !(
+                  (
+                    requestProjectLibraryMutation.isPending ||
+                    !isLibraryEnabled ||
+                    conversationsQuery.data?.length === 0
+                  )
+                  // ||
+                  // latestRun?.processing_status === "PROCESSING"
+                )
               }
             >
-              <Trans>Create Library</Trans>
-            </Button>
-          </Tooltip>
-        )}
+              <Button
+                leftSection={!isLibraryEnabled ? <IconLock /> : <IconPlus />}
+                onClick={handleCreateLibrary}
+                loading={requestProjectLibraryMutation.isPending}
+                disabled={
+                  // TODO: this should really be a server-side check
+                  requestProjectLibraryMutation.isPending ||
+                  !isLibraryEnabled ||
+                  conversationsQuery.data?.length === 0
+                  // ||
+                  // latestRun?.processing_status === "PROCESSING"
+                }
+              >
+                <Trans id="library.create">Create Library</Trans>
+              </Button>
+            </Tooltip>
+          )}
+        </Group>
       </Group>
 
       <Divider />
@@ -167,7 +205,7 @@ export const ProjectLibraryRoute = () => {
       {conversationsQuery.data?.length === 0 && (
         <CloseableAlert variant="light" icon={<IconInfoCircle />}>
           <Text>
-            <Trans>
+            <Trans id="library.no.conversations">
               No conversations available to create library. Please add some
               conversations to get started.
             </Trans>
@@ -175,21 +213,55 @@ export const ProjectLibraryRoute = () => {
         </CloseableAlert>
       )}
 
+      <Trans id="library.description">
+        This is your project library. Create views to analyse your entire
+        project at once.
+      </Trans>
+
+      {!isLibraryEnabled && (
+        <CloseableAlert color="orange" variant="light">
+          <Trans id="library.not.available">
+            It looks like the library is not available for your account. Please
+            contact sales to unlock this feature.
+          </Trans>
+        </CloseableAlert>
+      )}
+
       {!latestRun &&
+        isLibraryEnabled &&
         conversationsQuery.data?.length &&
         conversationsQuery.data?.length > 0 && (
           <CloseableAlert>
-            <Trans>
-              This is your project library. Currently,
-              {conversationsQuery.data?.length} conversations are waiting to be
-              processed.
-            </Trans>
+            <>
+              <Trans id="library.conversations.processing.status">
+                Currently {finishedConversationsCount} conversations are ready
+                to be analyzed. {unfinishedConversationsCount} still processing.
+              </Trans>
+              <Trans id="library.generate.duration.message">
+                {" "}
+                Generating library can take up to an hour.
+              </Trans>
+            </>
           </CloseableAlert>
         )}
 
+      {latestRun && !viewsExist && isLibraryEnabled && (
+        <Group align="center" gap="md" my="sm">
+          <Loader size="xs" />
+          <Trans id="library.processing.request">
+            Please wait while we process your request. You requested to create
+            the library on{" "}
+            {formatRelative(
+              new Date(latestRun.created_at ?? new Date()),
+              new Date(),
+            )}
+          </Trans>
+        </Group>
+      )}
+
       <Group justify="space-between">
         <Title order={2}>
-          <Trans>Your Views</Trans>
+          <Trans id="library.views.title">Your Views</Trans>
         </Title>
         <Button
           leftSection={<IconPlus />}
@@ -201,25 +273,28 @@ export const ProjectLibraryRoute = () => {
             )
           }
         >
-          <Trans>Create View</Trans>
+          <Trans id="library.create.view">Create View</Trans>
         </Button>
       </Group>
 
-      <Collapse in={opened}>
-        <CreateView projectId={projectId ?? ""} onClose={close} />
-      </Collapse>
-
-      {!opened && latestRun && (
-        // && latestRun.processing_status === "DONE"
-        <CloseableAlert variant="light" icon={<Icons.View />}>
-          <Text>
-            <Trans>
-              In order to better navigate through the quotes, create additional
-              views. The quotes will then be clustered based on your view.
-            </Trans>
-          </Text>
-        </CloseableAlert>
-      )}
+      <Modal
+        opened={opened}
+        onClose={close}
+        title={
+          <Group>
+            <Icons.View />
+            <Text fw={500} size="lg">
+              <Trans id="library.create.view.modal.title">
+                Create new view
+              </Trans>
+            </Text>
+          </Group>
+        }
+        withinPortal
+        size="lg"
+      >
+        <CreateView projectId={projectId ?? ""} />
+      </Modal>
 
       <Stack>
         {!viewsExist && <DummyViews />}
