@@ -6,7 +6,7 @@ export const DummyViews = () => {
     <Stack>
       <Text c="gray">
         <Trans>
-          These default view templates will be created when you generate your
+          These default view templates will be generated when you create your
           first library.
         </Trans>
       </Text>

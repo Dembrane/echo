@@ -20,6 +20,7 @@ import {
   Container,
   Divider,
   Group,
+  Loader,
   LoadingOverlay,
   Modal,
   Skeleton,
@@ -45,6 +46,7 @@ import { DummyViews } from "../../../components/view/DummyViews";
 import { analytics } from "@/lib/analytics";
 import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { SalesLinks } from "@/lib/links";
+import { formatRelative } from "date-fns";
 
 type SortBy = "relevance" | "default";
 
@@ -250,6 +252,20 @@ export const ProjectLibraryRoute = () => {
             </>
           </CloseableAlert>
         )}
+
+      {latestRun && !viewsExist && isLibraryEnabled && (
+        <Group align="center" gap="md" my="sm">
+          <Loader size="xs" />
+          <Trans id="library.processing.request">
+            Please wait while we process your request. You requested to create
+            the library on{" "}
+            {formatRelative(
+              new Date(latestRun.created_at ?? new Date()),
+              new Date(),
+            )}
+          </Trans>
+        </Group>
+      )}
 
       <Group justify="space-between">
         <Title order={2}>
