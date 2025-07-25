@@ -186,7 +186,8 @@ export const ProjectLibraryRoute = () => {
                   // TODO: this should really be a server-side check
                   requestProjectLibraryMutation.isPending ||
                   !isLibraryEnabled ||
-                  conversationsQuery.data?.length === 0
+                  conversationsQuery.data?.length === 0 ||
+                  latestRunQuery.isFetching
                   // ||
                   // latestRun?.processing_status === "PROCESSING"
                 }
