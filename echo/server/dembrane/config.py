@@ -79,6 +79,9 @@ logger.debug(f"DISABLE_REDACTION: {DISABLE_REDACTION}")
 PROMPT_TEMPLATES_DIR = os.path.join(BASE_DIR, "prompt_templates")
 logger.debug(f"PROMPT_TEMPLATES_DIR: {PROMPT_TEMPLATES_DIR}")
 
+JSON_TEMPLATES_DIR = os.path.join(BASE_DIR, "json_templates")
+logger.debug(f"JSON_TEMPLATES_DIR: {JSON_TEMPLATES_DIR}")
+
 DIRECTUS_SECRET = os.environ.get("DIRECTUS_SECRET")
 assert DIRECTUS_SECRET, "DIRECTUS_SECRET environment variable is not set"
 logger.debug("DIRECTUS_SECRET: set")

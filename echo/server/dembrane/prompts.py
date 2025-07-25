@@ -14,17 +14,20 @@ Attributes:
 """
 
 import os
+import json
 import logging
-from typing import Any
+from typing import Any, Optional
 from collections import defaultdict
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from dembrane.config import PROMPT_TEMPLATES_DIR
+from dembrane.config import JSON_TEMPLATES_DIR, PROMPT_TEMPLATES_DIR
 
 logger = logging.getLogger("prompts")
 
-env = Environment(loader=FileSystemLoader(PROMPT_TEMPLATES_DIR), autoescape=select_autoescape())
+prompt_env = Environment(
+    loader=FileSystemLoader(PROMPT_TEMPLATES_DIR), autoescape=select_autoescape()
+)
 
 # Load all the files from PROMPT_TEMPLATES_DIR that end with .jinja
 PROMPT_TEMPLATE_LIST = [
@@ -84,5 +87,63 @@ def render_prompt(prompt_name: str, language: str, kwargs: dict[str, Any]) -> st
                 f"Prompt template {full_prompt_name} not found and no default available"
             )
 
-    template = env.get_template(full_prompt_name)
+    template = prompt_env.get_template(full_prompt_name)
     return template.render(**kwargs)
+
+
+JSON_TEMPLATE_LIST = [
+    f.name for f in os.scandir(JSON_TEMPLATES_DIR) if f.is_file() and f.name.endswith(".jinja")
+]
+
+json_env = Environment(loader=FileSystemLoader(JSON_TEMPLATES_DIR), autoescape=select_autoescape())
+
+for name in set(JSON_TEMPLATE_LIST):
+    logger.info(f"JSON template {name} found in {JSON_TEMPLATES_DIR}")
+
+
+def render_json(
+    prompt_name: str,
+    language: str,
+    kwargs: dict[str, Any],
+    # json keys to validate
+    keys_to_validate: Optional[list[str]] = None,
+) -> dict[str, Any]:
+    """Render a message template with the given arguments and return a dictionary object.
+
+    Args:
+        prompt_name: Name of the prompt template file (without .jinja extension)
+        language: ISO 639-1 language code of the prompt template file (example: "en", "nl", "fr", "es", "de". etc.)
+        kwargs: Dictionary of arguments to pass to the template renderer
+        keys_to_validate: List of keys to validate in the message
+
+    """
+    if keys_to_validate is None:
+        keys_to_validate = []
+    full_json_template_name = f"{prompt_name}.{language}.jinja"
+    if full_json_template_name not in JSON_TEMPLATE_LIST:
+        default_json_template_name = f"{prompt_name}.en.jinja"
+        if default_json_template_name in JSON_TEMPLATE_LIST:
+            logger.warning(
+                f"JSON template {full_json_template_name} not found, using default {default_json_template_name}."
+            )
+            full_json_template_name = default_json_template_name
+        else:
+            raise ValueError(
+                f"JSON template {full_json_template_name} not found and no default available"
+            )
+    template = json_env.get_template(full_json_template_name)
+    rendered_prompt = template.render(**kwargs)
+    try:
+        message = json.loads(rendered_prompt)
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse JSON from rendered prompt: {rendered_prompt}")
+        raise ValueError(f"Error: {e}") from e
+
+    missing_keys = [key for key in keys_to_validate if key not in message]
+    if missing_keys:
+        raise ValueError(
+            f"Missing keys in message: {missing_keys}. Please check the prompt template: {prompt_name}. \n"
+            f"Message: {message}"
+        )
+
+    return message

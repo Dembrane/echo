@@ -23,6 +23,7 @@ from dembrane.config import (
     RUNPOD_TOPIC_MODELER_API_KEY,
 )
 from dembrane.sentry import init_sentry
+from dembrane.prompts import render_json
 from dembrane.directus import (
     DirectusBadRequest,
     DirectusServerError,
@@ -610,61 +611,17 @@ def task_create_project_library(project_id: str, language: str) -> None:
             logger.error(f"Can retry. Failed to create project analysis run: {e}")
             raise e from e
 
-        DEFAULT_PROMPTS = {
-            "en": [
-                {
-                    "user_query": "Power Plays",
-                    "user_query_context": "Identify who drives conversations, influences decisions, and shapes outcomes. Focus on detecting authority patterns, persuasion dynamics, and organizational hierarchy signals. Analyze speaking time distribution, interruption patterns, and whose ideas get adopted or dismissed. Map the power architecture of decision-making processes. Expected aspects: 3-7 for small datasets, 5-12 for medium datasets, 8-15 for large datasets. Processing hint: Look for distinct power centers, influence networks, and decision-making bottlenecks. Quality threshold: Each aspect should represent a unique power dynamic with clear behavioral evidence.",
-                },
-                {
-                    "user_query": "Smart vs. Loud",
-                    "user_query_context": "Distinguish between evidence-backed arguments and opinion-based statements. Identify participants who support claims with data, examples, and logical reasoning versus those relying on volume, authority, or emotional appeals. Measure argument quality, source credibility, and reasoning depth across different speakers. Expected aspects: 2-5 for small datasets, 4-8 for medium datasets, 6-12 for large datasets. Processing hint: Focus on argument structure, evidence types, and persuasion mechanisms. Quality threshold: Each aspect should demonstrate clear qualitative differences in reasoning approaches.",
-                },
-                {
-                    "user_query": "Mind Changes",
-                    "user_query_context": "Track position shifts, consensus formation, and persuasion effectiveness throughout conversations. Identify moments where participants change their stance, what triggers these shifts, and which arguments successfully influence others. Map the evolution from initial disagreement to final alignment or persistent division. Expected aspects: 2-6 for small datasets, 4-10 for medium datasets, 6-14 for large datasets. Processing hint: Identify temporal patterns, trigger events, and persuasion pathways. Quality threshold: Each aspect should show distinct change mechanisms with clear before/after states.",
-                },
-                {
-                    "user_query": "Trust Signals",
-                    "user_query_context": "Analyze what evidence types, sources, and expertise different participants find credible and compelling. Identify which data sources carry weight, whose opinions influence others, and how different groups validate information. Reveal the implicit credibility hierarchy that drives decision-making. Expected aspects: 3-6 for small datasets, 5-10 for medium datasets, 7-13 for large datasets. Processing hint: Map credibility networks, authority recognition patterns, and validation processes. Quality threshold: Each aspect should represent distinct credibility criteria with supporting behavioral evidence.",
-                },
-                {
-                    "user_query": "Getting Stuff Done",
-                    "user_query_context": "Measure conversation momentum toward actionable outcomes. Track progression from problem identification to concrete solutions, next steps, and ownership assignment. Identify which discussions generate accountability versus those that circle without resolution. Focus on decision-making effectiveness and implementation planning. Expected aspects: 2-5 for small datasets, 3-8 for medium datasets, 5-11 for large datasets. Processing hint: Focus on resolution patterns, accountability mechanisms, and implementation pathways. Quality threshold: Each aspect should demonstrate measurable progress toward concrete outcomes.",
-                },
-            ],
-            "nl": [
-                {
-                    "user_query": "Wie heeft de touwtjes in handen",
-                    "user_query_context": "Kijk wie de gesprekken stuurt, beslissingen beïnvloedt en de uitkomsten bepaalt. Let op wie het meeste spreekt, wie anderen onderbreekt en wiens ideeën worden opgepakt. Breng in kaart hoe de machtsbalans werkt en wie echt de lakens uitdeelt. Verwachte aspecten: 3-7 voor kleine datasets, 5-12 voor middelgrote datasets, 8-15 voor grote datasets. Verwerkingstip: Zoek naar duidelijke machtscentra, invloedsnetwerken en besluitvormingsknelpunten. Kwaliteitsdrempel: Elk aspect moet een unieke machtsdynamiek tonen met duidelijk gedragsbewijs.",
-                },
-                {
-                    "user_query": "Slim praten vs. hard praten",
-                    "user_query_context": "Onderscheid tussen argumenten met bewijs en loze praatjes. Wie ondersteunt hun punt met data en voorbeelden? Wie vertrouwt vooral op volume, status of emoties? Ontdek het verschil tussen echte inhoud en veel lawaai maken. Verwachte aspecten: 2-5 voor kleine datasets, 4-8 voor middelgrote datasets, 6-12 voor grote datasets. Verwerkingstip: Focus op argumentstructuur, bewijstypen en overtuigingsmechanismen. Kwaliteitsdrempel: Elk aspect moet duidelijke kwaliteitsverschillen in redeneerbenaderingen tonen.",
-                },
-                {
-                    "user_query": "Van mening veranderen",
-                    "user_query_context": "Volg wie van standpunt wisselt tijdens gesprekken. Wat zorgt ervoor dat mensen hun mening bijstellen? Welke argumenten werken echt? Zie hoe discussies evoleren van onenigheid naar overeenstemming (of juist niet). Verwachte aspecten: 2-6 voor kleine datasets, 4-10 voor middelgrote datasets, 6-14 voor grote datasets. Verwerkingstip: Identificeer tijdspatronen, trigger events en overtuigingstrajecten. Kwaliteitsdrempel: Elk aspect moet duidelijke veranderingsmechanismen tonen met voor/na situaties.",
-                },
-                {
-                    "user_query": "Wat mensen geloven",
-                    "user_query_context": "Analyseer waar verschillende mensen op vertrouwen. Welke bronnen vinden ze geloofwaardig? Wiens mening telt? Hoe valideren verschillende groepen informatie? Ontdek de onzichtbare geloofwaardigheidshiërarchie die beslissingen stuurt. Verwachte aspecten: 3-6 voor kleine datasets, 5-10 voor middelgrote datasets, 7-13 voor grote datasets. Verwerkingstip: Breng geloofwaardigheidsnetwerken, autoriteitsherkenning en validatieprocessen in kaart. Kwaliteitsdrempel: Elk aspect moet verschillende geloofwaardigheidscriteria tonen met gedragsbewijs.",
-                },
-                {
-                    "user_query": "Shit voor elkaar krijgen",
-                    "user_query_context": "Meet hoe gesprekken leiden tot echte actie. Gaan discussies van probleem naar oplossing? Wie pakt wat op? Welke gesprekken leiden tot resultaat en welke draaien maar rond zonder uitkomst? Focus op wat er daadwerkelijk gebeurt na het praten. Verwachte aspecten: 2-5 voor kleine datasets, 3-8 voor middelgrote datasets, 5-11 voor grote datasets. Verwerkingstip: Focus op oplossingspatronen, verantwoordelijkheidsmechanismen en implementatietrajecten. Kwaliteitsdrempel: Elk aspect moet meetbare vooruitgang naar concrete resultaten tonen.",
-                },
-            ],
-        }
-
+        default_view_name_list = ["default_view_recurring_themes"]
         messages = []
 
-        for prompt in DEFAULT_PROMPTS[language]:
+        for view_name in default_view_name_list:
+            message = render_json(view_name, language, {}, ["user_query", "user_query_context"])
+            logger.info(f"Message: {message}")
             messages.append(
                 task_create_view.message(
                     project_analysis_run_id=new_run_id,
-                    user_query=prompt["user_query"],
-                    user_query_context=prompt["user_query_context"],
+                    user_query=message["user_query"],
+                    user_query_context=message["user_query_context"],
                     language=language,
                 )
             )
