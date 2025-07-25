@@ -299,10 +299,12 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
     """
     logger = getLogger("dembrane.tasks.task_finish_conversation_hook")
 
+    from dembrane.service import conversation_service
+    from dembrane.service.conversation import ConversationNotFoundException
+
     try:
         logger.info(f"Finishing conversation: {conversation_id}")
 
-        from dembrane.service import conversation_service
 
         conversation_service.update(conversation_id=conversation_id, is_finished=True)
 
@@ -331,7 +333,11 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
         group(follow_up_tasks).run()
 
         return
-
+    
+    except ConversationNotFoundException as e:
+        logger.error(f"NO RETRY: Conversation not found: {conversation_id}")
+        return
+    
     except Exception as e:
         logger.error(f"Error: {e}")
         raise e from e
