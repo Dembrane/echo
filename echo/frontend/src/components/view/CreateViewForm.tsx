@@ -34,10 +34,12 @@ type CreateViewForm = {
 
 export const CreateView = ({
   projectId,
-  onClose,
+  initialQuery,
+  initialAdditionalContext,
 }: {
   projectId: string;
-  onClose: () => void;
+  initialQuery?: string;
+  initialAdditionalContext?: string;
 }) => {
   const createViewMutation = useGenerateProjectViewMutation();
 
@@ -46,6 +48,8 @@ export const CreateView = ({
   const { register, handleSubmit, reset, setValue, watch } = useForm<CreateViewForm>({
     defaultValues: {
       language: iso639_1,
+      query: initialQuery || "",
+      additionalContext: initialAdditionalContext || "",
     },
   });
 

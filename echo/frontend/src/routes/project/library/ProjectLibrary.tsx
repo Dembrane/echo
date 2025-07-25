@@ -293,7 +293,7 @@ export const ProjectLibraryRoute = () => {
         withinPortal
         size="lg"
       >
-        <CreateView projectId={projectId ?? ""} onClose={close} />
+        <CreateView projectId={projectId ?? ""} />
       </Modal>
 
       <Stack>
