@@ -305,6 +305,11 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
     try:
         logger.info(f"Finishing conversation: {conversation_id}")
 
+        conversation_obj = conversation_service.get_by_id_or_raise(conversation_id)
+
+        if conversation_obj["is_finished"]:
+            logger.info(f"Conversation {conversation_id} already finished, skipping")
+            return
 
         conversation_service.update(conversation_id=conversation_id, is_finished=True)
 
