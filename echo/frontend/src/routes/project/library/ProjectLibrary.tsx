@@ -35,11 +35,16 @@ import {
   IconPlus,
   IconRefresh,
   IconSortAscending,
+  IconCalendarEvent,
+  IconLock,
 } from "@tabler/icons-react";
 import { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 import { CreateView } from "@/components/view/CreateViewForm";
 import { DummyViews } from "../../../components/view/DummyViews";
+import { analytics } from "@/lib/analytics";
+import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
+import { SalesLinks } from "@/lib/links";
 
 type SortBy = "relevance" | "default";
 
@@ -51,6 +56,9 @@ export const ProjectLibraryRoute = () => {
   const viewsQuery = useProjectViews(projectId ?? "");
   const projectQuery = useProjectById({
     projectId: projectId ?? "",
+    query: {
+      fields: ["is_enhanced_audio_processing_enabled"],
+    },
   });
   const conversationsQuery = useConversationsByProjectId(
     projectId ?? "",
@@ -71,7 +79,10 @@ export const ProjectLibraryRoute = () => {
 
   const [opened, { toggle, close }] = useDisclosure(false);
 
-  // Calculate number of finished and unfinished audio processing conversations
+  const isLibraryEnabled =
+    projectQuery.data?.is_enhanced_audio_processing_enabled ?? false;
+
+  // To show number of ready and processing conversations
   const finishedConversationsCount =
     conversationsQuery.data?.filter(
       (conversation) => conversation.is_audio_processing_finished === true,
@@ -108,6 +119,17 @@ export const ProjectLibraryRoute = () => {
     }
   };
 
+  const contactSales = () => {
+    if (!isLibraryEnabled) {
+      try {
+        analytics.trackEvent(events.LIBRARY_CONTACT_SALES);
+      } catch (error) {
+        console.warn("Analytics tracking failed:", error);
+      }
+      window.open(SalesLinks.AUTO_SELECT_CONTACT, "_blank");
+    }
+  };
+
   return (
     <Stack className="relative px-4 py-6">
       <Group justify="space-between">
@@ -116,59 +138,70 @@ export const ProjectLibraryRoute = () => {
             {
               label: (
                 <Title order={1}>
-                  <Trans>Library</Trans>
+                  <Trans id="library.title">Library</Trans>
                 </Title>
               ),
             },
           ]}
         />
+        <Group gap="xl">
+          {!isLibraryEnabled && (
+            <Button onClick={contactSales} leftSection={<IconCalendarEvent />}>
+              <Trans id="library.contact.sales">Contact sales</Trans>
+            </Button>
+          )}
 
-        {latestRun ? (
-          <Button
-            variant="outline"
-            leftSection={<IconRefresh />}
-            onClick={handleCreateLibrary}
-          >
-            <Trans>Regenerate Library</Trans>
-          </Button>
-        ) : (
-          <Tooltip
-            label={
-              requestProjectLibraryMutation.isPending
-                ? t`Library creation is in progress`
-                : conversationsQuery.data?.length === 0
-                  ? t`No conversations available to create library`
-                  : // : latestRun?.processing_status === "PROCESSING"
-                    //   ? t`Library is currently being processed`
-                    null
-            }
-            disabled={
-              !(
-                (
-                  requestProjectLibraryMutation.isPending ||
-                  conversationsQuery.data?.length === 0
-                )
-                // ||
-                // latestRun?.processing_status === "PROCESSING"
-              )
-            }
-          >
+          {latestRun ? (
             <Button
-              leftSection={<IconPlus />}
+              variant="outline"
+              leftSection={<IconRefresh />}
               onClick={handleCreateLibrary}
-              loading={requestProjectLibraryMutation.isPending}
+            >
+              <Trans id="library.regenerate">Regenerate Library</Trans>
+            </Button>
+          ) : (
+            <Tooltip
+              label={
+                requestProjectLibraryMutation.isPending
+                  ? t`Library creation is in progress`
+                  : !isLibraryEnabled
+                    ? t`Not available`
+                    : conversationsQuery.data?.length === 0
+                      ? t`No conversations available to create library`
+                      : // : latestRun?.processing_status === "PROCESSING"
+                        //   ? t`Library is currently being processed`
+                        null
+              }
               disabled={
-                // TODO: this should really be a server-side check
-                requestProjectLibraryMutation.isPending ||
-                conversationsQuery.data?.length === 0
-                // ||
-                // latestRun?.processing_status === "PROCESSING"
+                !(
+                  (
+                    requestProjectLibraryMutation.isPending ||
+                    !isLibraryEnabled ||
+                    conversationsQuery.data?.length === 0
+                  )
+                  // ||
+                  // latestRun?.processing_status === "PROCESSING"
+                )
               }
             >
-              <Trans>Create Library</Trans>
-            </Button>
-          </Tooltip>
-        )}
+              <Button
+                leftSection={!isLibraryEnabled ? <IconLock /> : <IconPlus />}
+                onClick={handleCreateLibrary}
+                loading={requestProjectLibraryMutation.isPending}
+                disabled={
+                  // TODO: this should really be a server-side check
+                  requestProjectLibraryMutation.isPending ||
+                  !isLibraryEnabled ||
+                  conversationsQuery.data?.length === 0
+                  // ||
+                  // latestRun?.processing_status === "PROCESSING"
+                }
+              >
+                <Trans id="library.create">Create Library</Trans>
+              </Button>
+            </Tooltip>
+          )}
+        </Group>
       </Group>
 
       <Divider />
@@ -178,7 +211,7 @@ export const ProjectLibraryRoute = () => {
       {conversationsQuery.data?.length === 0 && (
         <CloseableAlert variant="light" icon={<IconInfoCircle />}>
           <Text>
-            <Trans>
+            <Trans id="library.no.conversations">
               No conversations available to create library. Please add some
               conversations to get started.
             </Trans>
@@ -186,7 +219,22 @@ export const ProjectLibraryRoute = () => {
         </CloseableAlert>
       )}
 
+      <Trans id="library.description">
+        This is your project library. Create views to analyse your entire
+        project at once.
+      </Trans>
+
+      {!isLibraryEnabled && (
+        <CloseableAlert color="orange" variant="light">
+          <Trans id="library.not.available">
+            It looks like the library is not available for your account. Please
+            contact sales to unlock this feature.
+          </Trans>
+        </CloseableAlert>
+      )}
+
       {!latestRun &&
+        isLibraryEnabled &&
         conversationsQuery.data?.length &&
         conversationsQuery.data?.length > 0 && (
           <CloseableAlert>
@@ -205,7 +253,7 @@ export const ProjectLibraryRoute = () => {
 
       <Group justify="space-between">
         <Title order={2}>
-          <Trans>Your Views</Trans>
+          <Trans id="library.views.title">Your Views</Trans>
         </Title>
         <Button
           leftSection={<IconPlus />}
@@ -217,7 +265,7 @@ export const ProjectLibraryRoute = () => {
             )
           }
         >
-          <Trans>Create View</Trans>
+          <Trans id="library.create.view">Create View</Trans>
         </Button>
       </Group>
 
@@ -226,7 +274,7 @@ export const ProjectLibraryRoute = () => {
         onClose={close}
         title={
           <Text fw={500} size="lg">
-            <Trans>Create new view</Trans>
+            <Trans id="library.create.view.modal.title">Create new view</Trans>
           </Text>
         }
         withinPortal
