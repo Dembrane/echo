@@ -28,15 +28,10 @@ logger = logging.getLogger("prompts")
 prompt_env = Environment(
     loader=FileSystemLoader(PROMPT_TEMPLATES_DIR), autoescape=select_autoescape()
 )
-json_env = Environment(loader=FileSystemLoader(JSON_TEMPLATES_DIR), autoescape=select_autoescape())
 
 # Load all the files from PROMPT_TEMPLATES_DIR that end with .jinja
 PROMPT_TEMPLATE_LIST = [
     f.name for f in os.scandir(PROMPT_TEMPLATES_DIR) if f.is_file() and f.name.endswith(".jinja")
-]
-
-JSON_TEMPLATE_LIST = [
-    f.name for f in os.scandir(JSON_TEMPLATES_DIR) if f.is_file() and f.name.endswith(".jinja")
 ]
 
 # Create a dictionary to map template names to their supported languages
@@ -96,10 +91,21 @@ def render_prompt(prompt_name: str, language: str, kwargs: dict[str, Any]) -> st
     return template.render(**kwargs)
 
 
+JSON_TEMPLATE_LIST = [
+    f.name for f in os.scandir(JSON_TEMPLATES_DIR) if f.is_file() and f.name.endswith(".jinja")
+]
+
+json_env = Environment(loader=FileSystemLoader(JSON_TEMPLATES_DIR), autoescape=select_autoescape())
+
+for name in set(JSON_TEMPLATE_LIST):
+    logger.info(f"JSON template {name} found in {JSON_TEMPLATES_DIR}")
+
+
 def render_json(
     prompt_name: str,
     language: str,
     kwargs: dict[str, Any],
+    # json keys to validate
     keys_to_validate: Optional[list[str]] = None,
 ) -> dict[str, Any]:
     """Render a message template with the given arguments and return a dictionary object.
