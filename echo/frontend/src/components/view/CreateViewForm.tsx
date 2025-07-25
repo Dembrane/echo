@@ -24,6 +24,7 @@ import { Icons } from "@/icons";
 
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
+import { LibraryTemplatesMenu } from "@/components/library/LibraryTemplatesMenu";
 
 type CreateViewForm = {
   query: string;
@@ -92,6 +93,9 @@ export const CreateView = ({
               label={t`Analysis Language`}
               data={languageOptionsByIso639_1}
             />
+
+            <LibraryTemplatesMenu onTemplateSelect={() => {}} />
+
             <TextInput
               {...register("query")}
               label={t`Enter your query`}
