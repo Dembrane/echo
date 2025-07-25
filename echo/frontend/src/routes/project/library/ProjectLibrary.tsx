@@ -289,9 +289,14 @@ export const ProjectLibraryRoute = () => {
         opened={opened}
         onClose={close}
         title={
-          <Text fw={500} size="lg">
-            <Trans id="library.create.view.modal.title">Create new view</Trans>
-          </Text>
+          <Group>
+            <Icons.View />
+            <Text fw={500} size="lg">
+              <Trans id="library.create.view.modal.title">
+                Create new view
+              </Trans>
+            </Text>
+          </Group>
         }
         withinPortal
         size="lg"
