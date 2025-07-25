@@ -334,7 +334,7 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
 
         return
     
-    except ConversationNotFoundException as e:
+    except ConversationNotFoundException:
         logger.error(f"NO RETRY: Conversation not found: {conversation_id}")
         return
     
