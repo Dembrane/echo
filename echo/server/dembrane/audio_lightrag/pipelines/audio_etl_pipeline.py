@@ -2,6 +2,7 @@ import logging
 
 from dembrane.config import LIGHTRAG_CONFIG_ID, AUDIO_LIGHTRAG_MAX_AUDIO_FILE_SIZE_MB
 from dembrane.directus import directus
+from dembrane.audio_lightrag.utils.echo_utils import renew_redis_lock
 from dembrane.audio_lightrag.utils.audio_utils import (
     process_audio_files,
     create_directus_segment,
@@ -57,6 +58,7 @@ class AudioETLPipeline:
 
         # Process audio files
         for project_id, conversation_id in zip_unique_audio:
+            renew_redis_lock(conversation_id)
             unprocessed_chunk_file_uri_li = transform_audio_process_tracker_df.loc[
                 (transform_audio_process_tracker_df.project_id == project_id)
                 & (transform_audio_process_tracker_df.conversation_id == conversation_id)

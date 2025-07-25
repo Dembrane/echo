@@ -8,9 +8,12 @@ from dembrane.config import (
     AUDIO_LIGHTRAG_REDIS_LOCK_EXPIRY,
     AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX,
 )
-from dembrane.directus import directus
+from dembrane.audio_lightrag.utils.echo_utils import release_redis_lock, finish_conversation
 from dembrane.audio_lightrag.pipelines.audio_etl_pipeline import AudioETLPipeline
-from dembrane.audio_lightrag.pipelines.directus_etl_pipeline import DirectusETLPipeline
+from dembrane.audio_lightrag.pipelines.directus_etl_pipeline import (
+    DirectusException,
+    DirectusETLPipeline,
+)
 from dembrane.audio_lightrag.pipelines.contextual_chunk_etl_pipeline import (
     ContextualChunkETLPipeline,
 )
@@ -22,6 +25,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+# FIXME: cleanup function
 def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
     """
     Runs the complete ETL pipeline including Directus, Audio, and Contextual Chunk processes.
@@ -79,8 +83,13 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
                 run_timestamp=None,  # pass timestamp to avoid processing files uploaded earlier than cooloff
             )
             logger.info("1/3...Directus ETL pipeline completed successfully")
+        except DirectusException as e:
+            logger.error(f"Directus ETL pipeline failed: {str(e)}")
+            [release_redis_lock(conv_id) for conv_id in filtered_conv_ids]
+            return False
         except Exception as e:
             logger.error(f"Directus ETL pipeline failed: {str(e)}")
+            [release_redis_lock(conv_id) for conv_id in filtered_conv_ids]
             raise
 
         # Audio Pipeline
@@ -90,6 +99,7 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
             logger.info("2/3...Audio ETL pipeline completed successfully")
         except Exception as e:
             logger.error(f"Audio ETL pipeline failed: {str(e)}")
+            [release_redis_lock(conv_id) for conv_id in filtered_conv_ids]
             raise
 
         # Contextual Chunk Pipeline
@@ -99,31 +109,21 @@ def run_etl_pipeline(conv_id_list: list[str]) -> Optional[bool]:
             logger.info("3/3...Contextual Chunk ETL pipeline completed successfully")
         except Exception as e:
             logger.error(f"Contextual Chunk ETL pipeline failed: {str(e)}")
+            [release_redis_lock(conv_id) for conv_id in filtered_conv_ids]
             raise
 
         logger.info("All ETL pipelines completed successfully")
 
+        [release_redis_lock(conv_id) for conv_id in filtered_conv_ids]
+
         for conv_id in filtered_conv_ids:
-            directus.update_item(
-                "conversation",
-                conv_id,
-                {
-                    "is_audio_processing_finished": True,
-                },
-            )
+            finish_conversation(conv_id)
 
         return True
 
     except Exception as e:
         logger.error(f"ETL pipeline failed with error: {str(e)}")
-        # Release locks for all IDs in case of failure to allow retries
-        try:
-            redis_client = redis.from_url(REDIS_URL)
-            for conv_id in filtered_conv_ids:
-                redis_client.delete(f"{AUDIO_LIGHTRAG_REDIS_LOCK_PREFIX}{conv_id}")
-            logger.info("Released Redis locks due to failure")
-        except Exception as release_err:
-            logger.error(f"Failed to release Redis locks: {str(release_err)}")
+        [release_redis_lock(conv_id) for conv_id in filtered_conv_ids]
         return False
 
 

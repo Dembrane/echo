@@ -16,6 +16,7 @@ from dembrane.api.stateless import (
 )
 from dembrane.api.dependency_auth import DirectusSession
 from dembrane.audio_lightrag.utils.prompts import Prompts
+from dembrane.audio_lightrag.utils.echo_utils import renew_redis_lock
 from dembrane.audio_lightrag.utils.audio_utils import wav_to_str
 from dembrane.audio_lightrag.utils.litellm_utils import get_json_dict_from_audio
 from dembrane.audio_lightrag.utils.process_tracker import ProcessTracker
@@ -61,19 +62,34 @@ class ContextualChunkETLPipeline:
                 ]
             )
             responses = {}
+
             for idx, segment_id in enumerate(segment_li):
-                previous_contextual_transcript_li = []
-                for previous_segment in segment_li[
-                    max(0, idx - int(self.conversation_history_num)) : idx
-                ]:
-                    try:
-                        contextual_transcript = directus.get_item(
-                            "conversation_segment", int(previous_segment)
-                        )["contextual_transcript"]
-                        previous_contextual_transcript_li.append(contextual_transcript)
-                    except Exception as e:
-                        logger.exception(f"Error in getting contextual transcript : {e}")
-                        continue
+                renew_redis_lock(conversation_id)
+                try:
+                    segment_ids = segment_li[max(0, idx - int(self.conversation_history_num)) : idx]
+                    if len(segment_ids) != 0:
+                        previous_segments = directus.get_items(
+                            "conversation_segment",
+                            {
+                                "query": {
+                                    "fields": ["contextual_transcript"],
+                                    "sort": ["id"],
+                                    "filter": {
+                                        "id": {"_in": segment_ids},
+                                    },
+                                }
+                            },
+                        )
+                        previous_contextual_transcript_li = [
+                            x["contextual_transcript"] for x in previous_segments
+                        ]
+                    else:
+                        previous_contextual_transcript_li = []
+                except Exception as e:
+                    logger.warning(f"Warning: Error in getting previous segments : {e}")
+                    previous_contextual_transcript_li = []
+                    continue
+
                 previous_contextual_transcript = "\n\n".join(previous_contextual_transcript_li)
                 audio_model_prompt = Prompts.audio_model_system_prompt(
                     event_text, previous_contextual_transcript
@@ -107,7 +123,7 @@ class ContextualChunkETLPipeline:
                         )
                     except Exception as e:
                         logger.exception(
-                            f"Error in getting contextual transcript : {e}. Check LiteLLM API configs"
+                            f"Error in getting contextual transcript : {e}. Segment ID: {segment_id}"
                         )
                         continue
                 else:
@@ -154,6 +170,7 @@ class ContextualChunkETLPipeline:
 
             non_audio_load_tracker = load_tracker[load_tracker.path == "NO_AUDIO_FOUND"]
             for segment_id in set(non_audio_load_tracker.segment):
+                renew_redis_lock(conversation_id)
                 non_audio_segment_response = directus.get_item(
                     "conversation_segment", int(segment_id)
                 )
