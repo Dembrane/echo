@@ -24,7 +24,7 @@ export const OngoingConversationsSummaryCard = ({
               project_id: projectId,
             },
             source: {
-              _neq: "DASHBOARD_UPLOAD",
+              _nin: ["DASHBOARD_UPLOAD", "CLONE"],
             },
             timestamp: {
               // @ts-expect-error gt is not typed
