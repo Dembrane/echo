@@ -59,11 +59,11 @@ export const ProjectConversationOverviewRoute = () => {
     <Stack gap="4rem" className="relative" px="2rem" pt="2rem" pb="2rem">
       <LoadingOverlay visible={conversationQuery.isLoading} />
       {conversationChunksQuery.data &&
-        conversationChunksQuery.data?.length > 1 && (
+        conversationChunksQuery.data?.length > 0 && (
           <Stack gap="2.5rem">
             <>
               <Group>
-                <Title order={3}>
+                <Title order={2}>
                   {(conversationQuery.data?.summary ||
                     (conversationQuery.data?.source &&
                       !conversationQuery.data.source
@@ -128,8 +128,8 @@ export const ProjectConversationOverviewRoute = () => {
                   </div>
                 )}
 
-              {conversationQuery.data?.summary ||
-                (conversationQuery.data?.is_finished && <Divider />)}
+              {conversationQuery.data?.summary &&
+                conversationQuery.data?.is_finished && <Divider />}
             </>
           </Stack>
         )}
