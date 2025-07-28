@@ -56,11 +56,11 @@ export const ProjectConversationOverviewRoute = () => {
   const clipboard = useClipboard();
 
   return (
-    <Stack gap="4rem" className="relative" px="2rem" pt="2rem" pb="2rem">
+    <Stack gap="3rem" className="relative" px="2rem" pt="2rem" pb="2rem">
       <LoadingOverlay visible={conversationQuery.isLoading} />
       {conversationChunksQuery.data &&
         conversationChunksQuery.data?.length > 0 && (
-          <Stack gap="2.5rem">
+          <Stack gap="1.5rem">
             <>
               <Group>
                 <Title order={2}>
@@ -117,7 +117,7 @@ export const ProjectConversationOverviewRoute = () => {
                   <div>
                     <Button
                       variant="outline"
-                      className="-mt-[3rem]"
+                      className="-mt-[2rem]"
                       loading={useHandleGenerateSummaryManually.isPending}
                       onClick={() => {
                         useHandleGenerateSummaryManually.mutate();
@@ -136,7 +136,7 @@ export const ProjectConversationOverviewRoute = () => {
 
       {conversationQuery.data && projectQuery.data && (
         <>
-          <Stack gap="2.5rem">
+          <Stack gap="1.5rem">
             <ConversationEdit
               key={conversationQuery.data.id}
               conversation={conversationQuery.data}
@@ -171,7 +171,7 @@ export const ProjectConversationOverviewRoute = () => {
             </Stack>
           ) : null} */}
 
-          <Stack gap="2.5rem">
+          <Stack gap="1.5rem">
             <ConversationDangerZone conversation={conversationQuery.data} />
           </Stack>
         </>
