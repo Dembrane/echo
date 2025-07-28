@@ -55,15 +55,22 @@ export const ProjectConversationOverviewRoute = () => {
 
   const clipboard = useClipboard();
 
+  // Determine if summary section should be shown at all
+  const showSummarySection =
+    conversationQuery.data?.summary ||
+    (conversationQuery.data?.source &&
+      !conversationQuery.data.source.toLowerCase().includes("upload"));
+
   return (
-    <Stack gap="4rem" className="relative" px="2rem" pt="2rem" pb="2rem">
+    <Stack gap="3rem" className="relative" px="2rem" pt="2rem" pb="2rem">
       <LoadingOverlay visible={conversationQuery.isLoading} />
       {conversationChunksQuery.data &&
-        conversationChunksQuery.data?.length > 1 && (
-          <Stack gap="2.5rem">
+        conversationChunksQuery.data?.length > 0 &&
+        showSummarySection && (
+          <Stack gap="1.5rem">
             <>
               <Group>
-                <Title order={3}>
+                <Title order={2}>
                   {(conversationQuery.data?.summary ||
                     (conversationQuery.data?.source &&
                       !conversationQuery.data.source
@@ -117,7 +124,7 @@ export const ProjectConversationOverviewRoute = () => {
                   <div>
                     <Button
                       variant="outline"
-                      className="-mt-[3rem]"
+                      className="-mt-[2rem]"
                       loading={useHandleGenerateSummaryManually.isPending}
                       onClick={() => {
                         useHandleGenerateSummaryManually.mutate();
@@ -128,15 +135,15 @@ export const ProjectConversationOverviewRoute = () => {
                   </div>
                 )}
 
-              {conversationQuery.data?.summary ||
-                (conversationQuery.data?.is_finished && <Divider />)}
+              {conversationQuery.data?.summary &&
+                conversationQuery.data?.is_finished && <Divider />}
             </>
           </Stack>
         )}
 
       {conversationQuery.data && projectQuery.data && (
         <>
-          <Stack gap="2.5rem">
+          <Stack gap="1.5rem">
             <ConversationEdit
               key={conversationQuery.data.id}
               conversation={conversationQuery.data}
@@ -171,7 +178,7 @@ export const ProjectConversationOverviewRoute = () => {
             </Stack>
           ) : null} */}
 
-          <Stack gap="2.5rem">
+          <Stack gap="1.5rem">
             <ConversationDangerZone conversation={conversationQuery.data} />
           </Stack>
         </>
