@@ -55,11 +55,18 @@ export const ProjectConversationOverviewRoute = () => {
 
   const clipboard = useClipboard();
 
+  // Determine if summary section should be shown at all
+  const showSummarySection =
+    conversationQuery.data?.summary ||
+    (conversationQuery.data?.source &&
+      !conversationQuery.data.source.toLowerCase().includes("upload"));
+
   return (
     <Stack gap="3rem" className="relative" px="2rem" pt="2rem" pb="2rem">
       <LoadingOverlay visible={conversationQuery.isLoading} />
       {conversationChunksQuery.data &&
-        conversationChunksQuery.data?.length > 0 && (
+        conversationChunksQuery.data?.length > 0 &&
+        showSummarySection && (
           <Stack gap="1.5rem">
             <>
               <Group>
