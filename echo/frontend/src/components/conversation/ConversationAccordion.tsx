@@ -361,7 +361,9 @@ export const ConversationStatusIndicators = ({
   );
 
   const hasOnlyTextContent = useMemo(
-    () => conversation.chunks?.every(chunk => chunk.source === "PORTAL_TEXT"),
+    () =>
+      conversation.chunks?.length > 0 &&
+      conversation.chunks?.every((chunk) => chunk.source === "PORTAL_TEXT"),
     [conversation.chunks],
   );
 
@@ -414,14 +416,12 @@ export const ConversationStatusIndicators = ({
             </Badge>
           </Tooltip>
         )}
-      
-      {
-        hasOnlyTextContent && (
-          <Badge size="xs" color="blue" variant="light">
-            <Trans>Text</Trans>
-          </Badge>
-        )
-      }
+
+      {hasOnlyTextContent && (
+        <Badge size="xs" color="blue" variant="light">
+          <Trans>Text</Trans>
+        </Badge>
+      )}
 
       {conversation.duration && conversation.duration > 0 && showDuration && (
         <Badge size="xs" color="violet" variant="light">
@@ -458,7 +458,7 @@ const ConversationAccordionItem = ({
   highlight = false,
   showDuration = false,
 }: {
-  conversation?: Conversation & {live: boolean};
+  conversation?: Conversation & { live: boolean };
   highlight?: boolean;
   showDuration?: boolean;
 }) => {
@@ -522,14 +522,17 @@ const ConversationAccordionItem = ({
           </Text>
           {
             // if from portal and not finished
-            (["portal_audio"].includes(conversation.source?.toLowerCase() ?? "")) && conversation.live && (
-              <Box className="flex items-baseline gap-1 pr-[4px]">
-                <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-                <Text size="xs" fs="italic" fw={500}>
-                  <Trans id="conversation.ongoing">Ongoing</Trans>
-                </Text>
-              </Box>
-            )
+            ["portal_audio"].includes(
+              conversation.source?.toLowerCase() ?? "",
+            ) &&
+              conversation.live && (
+                <Box className="flex items-baseline gap-1 pr-[4px]">
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
+                  <Text size="xs" fs="italic" fw={500}>
+                    <Trans id="conversation.ongoing">Ongoing</Trans>
+                  </Text>
+                </Box>
+              )
           }
         </div>
         <Group gap="4" pr="sm" wrap="wrap">
@@ -881,7 +884,9 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
               <ConversationAccordionItem
                 key={item.id}
                 highlight={item.id === activeConversationId}
-                conversation={item as Conversation & {live: boolean} ?? null}
+                conversation={
+                  (item as Conversation & { live: boolean }) ?? null
+                }
                 showDuration={showDuration}
               />
             ))}
