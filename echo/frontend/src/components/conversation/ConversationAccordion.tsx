@@ -360,6 +360,11 @@ export const ConversationStatusIndicators = ({
     [conversation.chunks],
   );
 
+  const hasOnlyTextContent = useMemo(
+    () => conversation.chunks?.every(chunk => chunk.source === "PORTAL_TEXT"),
+    [conversation.chunks],
+  );
+
   const fDuration = useCallback((duration: number) => {
     const d = intervalToDuration({
       start: 0,
@@ -409,6 +414,14 @@ export const ConversationStatusIndicators = ({
             </Badge>
           </Tooltip>
         )}
+      
+      {
+        hasOnlyTextContent && (
+          <Badge size="xs" color="blue" variant="light">
+            <Trans>Text</Trans>
+          </Badge>
+        )
+      }
 
       {conversation.duration && conversation.duration > 0 && showDuration && (
         <Badge size="xs" color="violet" variant="light">

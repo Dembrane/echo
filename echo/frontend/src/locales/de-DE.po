@@ -49,7 +49,7 @@ msgstr "Etwas ist schief gelaufen"
 #~ msgstr "Gespräche werden verarbeitet"
 
 #. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:246
+#: src/routes/project/library/ProjectLibrary.tsx:249
 msgid "library.generate.duration.message"
 msgstr "Die Bibliothek wird {duration} dauern."
 
@@ -61,7 +61,7 @@ msgstr " Absenden"
 msgid " Unsubscribe from Notifications"
 msgstr " Von Benachrichtigungen abmelden"
 
-#: src/components/conversation/ConversationAccordion.tsx:401
+#: src/components/conversation/ConversationAccordion.tsx:406
 msgid "(for enhanced audio processing)"
 msgstr "(für verbesserte Audioverarbeitung)"
 
@@ -98,7 +98,7 @@ msgstr "{0} Gespräche • Bearbeitet {1}"
 #~ msgstr "{diffInHours} Stunden zuvor"
 
 #. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:237
+#: src/routes/project/library/ProjectLibrary.tsx:240
 msgid "library.conversations.to.be.analyzed"
 msgstr "Aktuell {0} Gespräche sind bereit, um analysiert zu werden."
 
@@ -115,7 +115,7 @@ msgid "{seconds} seconds"
 msgstr "{seconds} Sekunden"
 
 #. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:243
+#: src/routes/project/library/ProjectLibrary.tsx:246
 msgid "library.conversations.still.processing"
 msgstr "{0} werden noch verarbeitet."
 
@@ -539,7 +539,7 @@ msgstr "Gesprächstatusdetails"
 msgid "conversations"
 msgstr "Gespräche"
 
-#: src/components/conversation/ConversationAccordion.tsx:729
+#: src/components/conversation/ConversationAccordion.tsx:742
 msgid "Conversations"
 msgstr "Gespräche"
 
@@ -585,7 +585,7 @@ msgid "Create an Account"
 msgstr "Konto erstellen"
 
 #. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:195
+#: src/routes/project/library/ProjectLibrary.tsx:198
 msgid "library.create"
 msgstr "Bibliothek erstellen"
 
@@ -594,7 +594,7 @@ msgstr "Bibliothek erstellen"
 #~ msgstr "Bibliothek erstellen"
 
 #. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:293
+#: src/routes/project/library/ProjectLibrary.tsx:296
 msgid "library.create.view.modal.title"
 msgstr "Neue Ansicht erstellen"
 
@@ -608,7 +608,7 @@ msgid "Create Report"
 msgstr "Bericht erstellen"
 
 #. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:282
+#: src/routes/project/library/ProjectLibrary.tsx:285
 msgid "library.create.view"
 msgstr "Ansicht erstellen"
 
@@ -744,7 +744,7 @@ msgid "email@work.com"
 msgstr "email@work.com"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:168
-#: src/components/conversation/ConversationAccordion.tsx:423
+#: src/components/conversation/ConversationAccordion.tsx:436
 msgid "Empty"
 msgstr "Leer"
 
@@ -1119,7 +1119,7 @@ msgid "It looks like the conversation was deleted while you were recording. We'v
 msgstr "Es scheint, dass das Gespräch während der Aufnahme gelöscht wurde. Wir haben die Aufnahme beendet, um Probleme zu vermeiden. Sie können jederzeit ein neues Gespräch starten."
 
 #. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:224
+#: src/routes/project/library/ProjectLibrary.tsx:227
 msgid "library.not.available"
 msgstr "Bibliothek nicht verfügbar"
 
@@ -1232,7 +1232,7 @@ msgstr "Als bestehender Benutzer anmelden"
 msgid "Logout"
 msgstr "Abmelden"
 
-#: src/components/conversation/ConversationAccordion.tsx:548
+#: src/components/conversation/ConversationAccordion.tsx:561
 msgid "Longest First"
 msgstr "Längste zuerst"
 
@@ -1289,11 +1289,11 @@ msgstr "Gespräch zu einem anderen Projekt verschieben"
 msgid "Name"
 msgstr "Name"
 
-#: src/components/conversation/ConversationAccordion.tsx:546
+#: src/components/conversation/ConversationAccordion.tsx:559
 msgid "Name A-Z"
 msgstr "Name A-Z"
 
-#: src/components/conversation/ConversationAccordion.tsx:547
+#: src/components/conversation/ConversationAccordion.tsx:560
 msgid "Name Z-A"
 msgstr "Name Z-A"
 
@@ -1324,7 +1324,7 @@ msgstr "Neues Passwort"
 msgid "New Project"
 msgstr "Neues Projekt"
 
-#: src/components/conversation/ConversationAccordion.tsx:544
+#: src/components/conversation/ConversationAccordion.tsx:557
 msgid "Newest First"
 msgstr "Neueste zuerst"
 
@@ -1345,7 +1345,7 @@ msgid "No conversations available to create library"
 msgstr "Keine Gespräche verfügbar, um eine Bibliothek zu erstellen"
 
 #. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:209
+#: src/routes/project/library/ProjectLibrary.tsx:212
 msgid "library.no.conversations"
 msgstr "Keine Gespräche verfügbar, um eine Bibliothek zu erstellen"
 
@@ -1357,7 +1357,7 @@ msgstr "Keine Gespräche verfügbar, um eine Bibliothek zu erstellen"
 msgid "No conversations found."
 msgstr "Keine Gespräche gefunden."
 
-#: src/components/conversation/ConversationAccordion.tsx:855
+#: src/components/conversation/ConversationAccordion.tsx:868
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "Keine Gespräche gefunden. Starten Sie ein Gespräch über den Teilnahme-Einladungslink aus der <0><1>Projektübersicht.</1></0>"
 
@@ -1434,12 +1434,12 @@ msgstr "Es wurden keine gültigen Audio-Dateien ausgewählt. Bitte wählen Sie n
 msgid "Not available"
 msgstr "Nicht verfügbar"
 
-#: src/components/conversation/ConversationAccordion.tsx:545
+#: src/components/conversation/ConversationAccordion.tsx:558
 msgid "Oldest First"
 msgstr "Älteste zuerst"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:516
+#: src/components/conversation/ConversationAccordion.tsx:529
 msgid "conversation.ongoing"
 msgstr "Laufend"
 
@@ -1476,8 +1476,8 @@ msgstr "Offen für Teilnahme?"
 msgid "Open troubleshooting guide"
 msgstr "Fehlerbehebungsleitfaden öffnen"
 
-#: src/components/conversation/ConversationAccordion.tsx:782
-#: src/components/conversation/ConversationAccordion.tsx:796
+#: src/components/conversation/ConversationAccordion.tsx:795
+#: src/components/conversation/ConversationAccordion.tsx:809
 msgid "Options"
 msgstr "Optionen"
 
@@ -1601,7 +1601,7 @@ msgstr "Bitte warten Sie, während wir Ihren Bericht generieren. Sie werden auto
 
 #. js-lingui-explicit-id
 #. placeholder {0}: formatRelative( new Date(latestRun.created_at ?? new Date()), new Date(), )
-#: src/routes/project/library/ProjectLibrary.tsx:257
+#: src/routes/project/library/ProjectLibrary.tsx:260
 msgid "library.processing.request"
 msgstr "Bibliothek wird verarbeitet"
 
@@ -1650,7 +1650,7 @@ msgstr "Fortfahren"
 msgid "processing"
 msgstr "verarbeitet"
 
-#: src/components/conversation/ConversationAccordion.tsx:406
+#: src/components/conversation/ConversationAccordion.tsx:411
 msgid "Processing"
 msgstr "Verarbeitet"
 
@@ -1840,7 +1840,7 @@ msgstr "Passwort zurücksetzen anfordern | Dembrane"
 msgid "Requesting microphone access to detect available devices..."
 msgstr "Mikrofonzugriff anfordern, um verfügbare Geräte zu erkennen..."
 
-#: src/components/conversation/ConversationAccordion.tsx:832
+#: src/components/conversation/ConversationAccordion.tsx:845
 msgid "Reset All Options"
 msgstr "Alle Optionen zurücksetzen"
 
@@ -1909,7 +1909,7 @@ msgstr "Nach unten scrollen"
 msgid "Search"
 msgstr "Suchen"
 
-#: src/components/conversation/ConversationAccordion.tsx:774
+#: src/components/conversation/ConversationAccordion.tsx:787
 msgid "Search conversations"
 msgstr "Gespräche suchen"
 
@@ -2011,7 +2011,7 @@ msgstr "Ihre Stimme teilen"
 msgid "Share your voice by scanning the QR code below."
 msgstr "Teilen Sie Ihre Stimme, indem Sie den unten stehenden QR-Code scannen."
 
-#: src/components/conversation/ConversationAccordion.tsx:549
+#: src/components/conversation/ConversationAccordion.tsx:562
 msgid "Shortest First"
 msgstr "Kürzeste zuerst"
 
@@ -2027,7 +2027,7 @@ msgstr "Kürzeste zuerst"
 msgid "Show audio player"
 msgstr "Audio-Player anzeigen"
 
-#: src/components/conversation/ConversationAccordion.tsx:799
+#: src/components/conversation/ConversationAccordion.tsx:812
 msgid "Show duration"
 msgstr "Dauer anzeigen"
 
@@ -2084,7 +2084,7 @@ msgstr "Beim Gespräch ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut
 #~ msgid "Something went wrong. Please try again."
 #~ msgstr "Etwas ist schief gelaufen. Bitte versuchen Sie es erneut."
 
-#: src/components/conversation/ConversationAccordion.tsx:808
+#: src/components/conversation/ConversationAccordion.tsx:821
 msgid "Sort"
 msgstr "Sortieren"
 
@@ -2168,6 +2168,10 @@ msgstr "Tags"
 #: src/components/chat/ChatTemplatesMenu.tsx:111
 #~ msgid "Templates"
 #~ msgstr "Vorlagen"
+
+#: src/components/conversation/ConversationAccordion.tsx:421
+msgid "Text"
+msgstr "Text"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:137
 msgid "Thank you for participating!"
@@ -2257,7 +2261,7 @@ msgstr "Dieses Gespräch ist eine Kopie von"
 #~ msgid "This conversation is still being processed. It will be available for analysis and chat shortly."
 #~ msgstr "Dieses Gespräch wird noch verarbeitet. Es wird bald für die Analyse und das Chatten verfügbar sein."
 
-#: src/components/conversation/ConversationAccordion.tsx:400
+#: src/components/conversation/ConversationAccordion.tsx:405
 msgid "This conversation is still being processed. It will be available for analysis and chat shortly. "
 msgstr "Dieses Gespräch wird noch verarbeitet. Es wird bald für die Analyse und das Chatten verfügbar sein. "
 
@@ -2274,7 +2278,7 @@ msgid "This is a live preview of the participant's portal. You will need to refr
 msgstr "Dies ist eine Live-Vorschau des Teilnehmerportals. Sie müssen die Seite aktualisieren, um die neuesten Änderungen zu sehen."
 
 #. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:217
+#: src/routes/project/library/ProjectLibrary.tsx:220
 msgid "library.description"
 msgstr "Bibliothek"
 
@@ -2513,7 +2517,7 @@ msgid "Upgrade to unlock Auto-select and analyze 10x more conversations in half 
 msgstr "Upgrade auf Auto-select und analysieren Sie 10x mehr Gespräche in der Hälfte der Zeit - keine manuelle Auswahl mehr, nur tiefere Einblicke sofort."
 
 #: src/routes/project/ProjectRoutes.tsx:49
-#: src/components/conversation/ConversationAccordion.tsx:387
+#: src/components/conversation/ConversationAccordion.tsx:392
 msgid "Upload"
 msgstr "Hochladen"
 
@@ -2690,7 +2694,7 @@ msgid "Your view has been created. Please wait as we process and analyse the dat
 msgstr "Ihre Ansicht wurde erstellt. Bitte warten Sie, während wir die Daten verarbeiten und analysieren."
 
 #. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:270
+#: src/routes/project/library/ProjectLibrary.tsx:273
 msgid "library.views.title"
 msgstr "Ihre Ansichten"
 
