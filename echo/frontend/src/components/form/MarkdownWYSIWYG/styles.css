@@ -1781,8 +1781,8 @@ form._multiFieldForm_sects_1209 ._formField_sects_1215 label {
 }
 
 ._popupContainer_sects_1235 {
-  position: relative;
-  z-index: 2;
+  position: fixed;
+  z-index: 9999;
 }
 
 ._inputSizer_sects_1240 {
