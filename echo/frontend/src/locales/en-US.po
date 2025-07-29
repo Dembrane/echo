@@ -61,7 +61,7 @@ msgstr " Submit"
 msgid " Unsubscribe from Notifications"
 msgstr " Unsubscribe from Notifications"
 
-#: src/components/conversation/ConversationAccordion.tsx:406
+#: src/components/conversation/ConversationAccordion.tsx:408
 msgid "(for enhanced audio processing)"
 msgstr "(for enhanced audio processing)"
 
@@ -301,7 +301,7 @@ msgstr "Are you sure you want to generate the library? This will take a while an
 #~ msgid "Are you sure you want to generate the library? This will take a while."
 #~ msgstr "Are you sure you want to generate the library? This will take a while."
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:90
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:97
 msgid "Are you sure you want to regenerate the summary? You will lose the current summary."
 msgstr "Are you sure you want to regenerate the summary? You will lose the current summary."
 
@@ -322,8 +322,8 @@ msgid "Aspect"
 msgstr "Aspect"
 
 #: src/routes/project/library/ProjectLibraryView.tsx:56
-#: src/components/view/View.tsx:33
-#: src/components/view/View.tsx:101
+#: src/components/view/View.tsx:34
+#: src/components/view/View.tsx:100
 msgid "Aspects"
 msgstr "Aspects"
 
@@ -560,7 +560,7 @@ msgstr "Conversation Status Details"
 msgid "conversations"
 msgstr "conversations"
 
-#: src/components/conversation/ConversationAccordion.tsx:742
+#: src/components/conversation/ConversationAccordion.tsx:745
 msgid "Conversations"
 msgstr "Conversations"
 
@@ -589,7 +589,7 @@ msgstr "Copy link"
 msgid "Copy link to share this report"
 msgstr "Copy link to share this report"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:81
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:88
 msgid "Copy Summary"
 msgstr "Copy Summary"
 
@@ -615,7 +615,7 @@ msgstr "Create Library"
 #~ msgstr "Create Library"
 
 #. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:296
+#: src/routes/project/library/ProjectLibrary.tsx:298
 msgid "library.create.view.modal.title"
 msgstr "Create new view"
 
@@ -629,7 +629,7 @@ msgid "Create Report"
 msgstr "Create Report"
 
 #. js-lingui-explicit-id
-#: src/routes/project/library/ProjectLibrary.tsx:285
+#: src/routes/project/library/ProjectLibrary.tsx:286
 msgid "library.create.view"
 msgstr "Create View"
 
@@ -1027,7 +1027,7 @@ msgstr "Generate insights from your conversations"
 #~ msgid "Generate structured meeting notes based on the following discussion points provided in the context."
 #~ msgstr "Generate structured meeting notes based on the following discussion points provided in the context."
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:126
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:133
 msgid "Generate Summary"
 msgstr "Generate Summary"
 
@@ -1278,7 +1278,7 @@ msgstr "Login as an existing user"
 msgid "Logout"
 msgstr "Logout"
 
-#: src/components/conversation/ConversationAccordion.tsx:561
+#: src/components/conversation/ConversationAccordion.tsx:564
 msgid "Longest First"
 msgstr "Longest First"
 
@@ -1335,11 +1335,11 @@ msgstr "Move to Project"
 msgid "Name"
 msgstr "Name"
 
-#: src/components/conversation/ConversationAccordion.tsx:559
+#: src/components/conversation/ConversationAccordion.tsx:562
 msgid "Name A-Z"
 msgstr "Name A-Z"
 
-#: src/components/conversation/ConversationAccordion.tsx:560
+#: src/components/conversation/ConversationAccordion.tsx:563
 msgid "Name Z-A"
 msgstr "Name Z-A"
 
@@ -1370,7 +1370,7 @@ msgstr "New Password"
 msgid "New Project"
 msgstr "New Project"
 
-#: src/components/conversation/ConversationAccordion.tsx:557
+#: src/components/conversation/ConversationAccordion.tsx:560
 msgid "Newest First"
 msgstr "Newest First"
 
@@ -1403,7 +1403,7 @@ msgstr "No conversations available to create library. Please add some conversati
 msgid "No conversations found."
 msgstr "No conversations found."
 
-#: src/components/conversation/ConversationAccordion.tsx:868
+#: src/components/conversation/ConversationAccordion.tsx:871
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 
@@ -1480,12 +1480,12 @@ msgstr "No valid audio files were selected. Please select audio files only (MP3,
 msgid "Not available"
 msgstr "Not available"
 
-#: src/components/conversation/ConversationAccordion.tsx:558
+#: src/components/conversation/ConversationAccordion.tsx:561
 msgid "Oldest First"
 msgstr "Oldest First"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:529
+#: src/components/conversation/ConversationAccordion.tsx:532
 msgid "conversation.ongoing"
 msgstr "Ongoing"
 
@@ -1522,8 +1522,8 @@ msgstr "Open for Participation?"
 msgid "Open troubleshooting guide"
 msgstr "Open troubleshooting guide"
 
-#: src/components/conversation/ConversationAccordion.tsx:795
-#: src/components/conversation/ConversationAccordion.tsx:809
+#: src/components/conversation/ConversationAccordion.tsx:798
+#: src/components/conversation/ConversationAccordion.tsx:812
 msgid "Options"
 msgstr "Options"
 
@@ -1700,7 +1700,7 @@ msgstr "Proceed"
 msgid "processing"
 msgstr "processing"
 
-#: src/components/conversation/ConversationAccordion.tsx:411
+#: src/components/conversation/ConversationAccordion.tsx:413
 msgid "Processing"
 msgstr "Processing"
 
@@ -1800,7 +1800,12 @@ msgid "Record another conversation"
 msgstr "Record another conversation"
 
 #. js-lingui-explicit-id
-#: src/components/view/View.tsx:126
+#: src/components/view/View.tsx:75
+msgid "view.recreate.tooltip"
+msgstr "Recreate View"
+
+#. js-lingui-explicit-id
+#: src/components/view/View.tsx:125
 msgid "view.recreate.modal.title"
 msgstr "Recreate View"
 
@@ -1821,7 +1826,7 @@ msgstr "Refresh"
 #~ msgid "Regenerate Library"
 #~ msgstr "Regenerate Library"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:85
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:92
 msgid "Regenerate Summary"
 msgstr "Regenerate Summary"
 
@@ -1902,7 +1907,7 @@ msgstr "Request Password Reset | Dembrane"
 msgid "Requesting microphone access to detect available devices..."
 msgstr "Requesting microphone access to detect available devices..."
 
-#: src/components/conversation/ConversationAccordion.tsx:845
+#: src/components/conversation/ConversationAccordion.tsx:848
 msgid "Reset All Options"
 msgstr "Reset All Options"
 
@@ -1971,7 +1976,7 @@ msgstr "Scroll to bottom"
 msgid "Search"
 msgstr "Search"
 
-#: src/components/conversation/ConversationAccordion.tsx:787
+#: src/components/conversation/ConversationAccordion.tsx:790
 msgid "Search conversations"
 msgstr "Search conversations"
 
@@ -2077,7 +2082,7 @@ msgstr "Share your voice"
 msgid "Share your voice by scanning the QR code below."
 msgstr "Share your voice by scanning the QR code below."
 
-#: src/components/conversation/ConversationAccordion.tsx:562
+#: src/components/conversation/ConversationAccordion.tsx:565
 msgid "Shortest First"
 msgstr "Shortest First"
 
@@ -2093,7 +2098,7 @@ msgstr "Shortest First"
 msgid "Show audio player"
 msgstr "Show audio player"
 
-#: src/components/conversation/ConversationAccordion.tsx:812
+#: src/components/conversation/ConversationAccordion.tsx:815
 msgid "Show duration"
 msgstr "Show duration"
 
@@ -2150,7 +2155,7 @@ msgstr "Something went wrong with the conversation. Please try refreshing the pa
 #~ msgid "Something went wrong. Please try again."
 #~ msgstr "Something went wrong. Please try again."
 
-#: src/components/conversation/ConversationAccordion.tsx:821
+#: src/components/conversation/ConversationAccordion.tsx:824
 msgid "Sort"
 msgstr "Sort"
 
@@ -2212,7 +2217,7 @@ msgstr "Suggested:"
 msgid "Summarize"
 msgstr "Summarize"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:71
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:78
 msgid "Summary"
 msgstr "Summary"
 
@@ -2235,7 +2240,7 @@ msgstr "Tags"
 #~ msgid "Templates"
 #~ msgstr "Templates"
 
-#: src/components/conversation/ConversationAccordion.tsx:421
+#: src/components/conversation/ConversationAccordion.tsx:422
 msgid "Text"
 msgstr "Text"
 
@@ -2331,7 +2336,7 @@ msgstr "This conversation is a copy of"
 #~ msgid "This conversation is still being processed. It will be available for analysis and chat shortly."
 #~ msgstr "This conversation is still being processed. It will be available for analysis and chat shortly."
 
-#: src/components/conversation/ConversationAccordion.tsx:405
+#: src/components/conversation/ConversationAccordion.tsx:407
 msgid "This conversation is still being processed. It will be available for analysis and chat shortly. "
 msgstr "This conversation is still being processed. It will be available for analysis and chat shortly. "
 
@@ -2603,7 +2608,7 @@ msgid "Upgrade to unlock Auto-select and analyze 10x more conversations in half 
 msgstr "Upgrade to unlock Auto-select and analyze 10x more conversations in half the time—no more manual selection, just deeper insights instantly."
 
 #: src/routes/project/ProjectRoutes.tsx:49
-#: src/components/conversation/ConversationAccordion.tsx:392
+#: src/components/conversation/ConversationAccordion.tsx:394
 msgid "Upload"
 msgstr "Upload"
 
@@ -2645,7 +2650,7 @@ msgstr "Use Shift + Enter to add a new line"
 
 #: src/routes/project/library/ProjectLibraryView.tsx:36
 #: src/routes/project/library/ProjectLibraryAspect.tsx:48
-#: src/components/view/View.tsx:55
+#: src/components/view/View.tsx:56
 #: src/components/report/ConversationStatusTable.tsx:93
 msgid "View"
 msgstr "View"

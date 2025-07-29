@@ -9,6 +9,7 @@ import {
   Stack,
   Text,
   Modal,
+  Tooltip,
 } from "@mantine/core";
 import { IconArrowsDiagonal, IconRefresh } from "@tabler/icons-react";
 import { AspectCard } from "../aspect/AspectCard";
@@ -40,7 +41,7 @@ export const ViewCard = ({ data }: { data: View }) => {
   );
 };
 
-export const ViewExpandedCard = ({ data }: { data: View }) => {
+export const ViewExpandedCard = ({ data, isLibraryEnabled }: { data: View; isLibraryEnabled: boolean }) => {
   const { projectId } = useParams();
   const { copyView, copied } = useCopyView();
   const [opened, { open, close }] = useDisclosure(false);
@@ -70,15 +71,13 @@ export const ViewExpandedCard = ({ data }: { data: View }) => {
               onCopy={() => copyView(data.id)}
               copied={copied}
             />
-
-            <ActionIcon
-              variant="transparent"
-              c="gray"
-              onClick={open}
-            >
-              <IconRefresh />
-            </ActionIcon>
-
+            {isLibraryEnabled && (
+              <Tooltip label={<Trans id="view.recreate.tooltip">Recreate View</Trans>} position="bottom">
+                <ActionIcon variant="transparent" c="gray" onClick={open}>
+                  <IconRefresh />
+                </ActionIcon>
+              </Tooltip>
+            )}
             <I18nLink to={`/projects/${projectId}/library/views/${data.id}`}>
               <ActionIcon component="a" variant="transparent" c="gray">
                 <IconArrowsDiagonal />
