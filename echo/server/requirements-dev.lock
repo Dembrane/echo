@@ -78,7 +78,7 @@ cryptography==42.0.8
 dataclasses-json==0.6.6
     # via langchain
     # via langchain-community
-directus-sdk-py==1.1.0
+directus-py-sdk==1.1.0
 distro==1.9.0
     # via anthropic
     # via openai
@@ -286,7 +286,7 @@ referencing==0.36.2
 regex==2024.5.15
     # via tiktoken
 requests==2.31.0
-    # via directus-sdk-py
+    # via directus-py-sdk
     # via huggingface-hub
     # via langchain
     # via langchain-community
@@ -323,7 +323,7 @@ sqlalchemy==2.0.30
     # via langchain
     # via langchain-community
 sqlparse==0.5.3
-    # via directus-sdk-py
+    # via directus-py-sdk
 starlette==0.36.3
     # via fastapi
 tenacity==8.3.0
@@ -373,7 +373,7 @@ tzlocal==5.3.1
     # via apscheduler
 urllib3==2.2.1
     # via botocore
-    # via directus-sdk-py
+    # via directus-py-sdk
     # via requests
     # via sentry-sdk
     # via types-requests
