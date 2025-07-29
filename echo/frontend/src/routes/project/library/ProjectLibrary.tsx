@@ -204,7 +204,7 @@ export const ProjectLibraryRoute = () => {
 
       <Divider />
 
-      <ProjectAnalysisRunStatus projectId={projectId ?? ""} />
+      {isLibraryEnabled && <ProjectAnalysisRunStatus projectId={projectId ?? ""} />}
 
       {conversationsQuery.data?.length === 0 && (
         <CloseableAlert variant="light" icon={<IconInfoCircle />}>
@@ -272,18 +272,20 @@ export const ProjectLibraryRoute = () => {
         <Title order={2}>
           <Trans id="library.views.title">Your Views</Trans>
         </Title>
-        <Button
-          leftSection={<IconPlus />}
-          onClick={toggle}
-          disabled={
-            !(
-              latestRun
-              // && latestRun.processing_status === "DONE"
-            )
-          }
-        >
-          <Trans id="library.create.view">Create View</Trans>
-        </Button>
+        {isLibraryEnabled && (
+          <Button
+            leftSection={<IconPlus />}
+            onClick={toggle}
+            disabled={
+              !(
+                latestRun
+                // && latestRun.processing_status === "DONE"
+              )
+            }
+          >
+            <Trans id="library.create.view">Create View</Trans>
+          </Button>
+        )}
       </Group>
 
       <Modal
@@ -308,7 +310,7 @@ export const ProjectLibraryRoute = () => {
       <Stack>
         {!viewsExist && <DummyViews />}
         {viewsQuery.data &&
-          viewsQuery.data.map((v) => <ViewExpandedCard key={v.id} data={v} />)}
+          viewsQuery.data.map((v) => <ViewExpandedCard key={v.id} data={v} isLibraryEnabled={isLibraryEnabled} />)}
       </Stack>
     </Stack>
   );
