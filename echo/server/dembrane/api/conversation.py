@@ -469,7 +469,7 @@ async def get_reply_for_conversation(
         except Exception as e:
             # Handle errors by streaming an error payload
             logger.error(f"Error generating reply for conversation {conversation_id}: {str(e)}")
-            yield "0:" + "Something went wrong." + "\n"
+            yield "3:" + "Something went wrong." + "\n"
 
     return StreamingResponse(
         generate(),

@@ -1,7 +1,10 @@
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { I18nLink } from "@/components/common/i18nLink";
 import { useProjectSharingLink } from "@/components/project/ProjectQRCode";
-import { useUploadConversationChunk, useUploadConversationTextChunk } from "@/components/participant/hooks";
+import {
+  useUploadConversationChunk,
+  useUploadConversationTextChunk,
+} from "@/components/participant/hooks";
 import {
   ActionIcon,
   Box,
@@ -53,6 +56,7 @@ import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
 import { API_BASE_URL } from "@/config";
 import useChunkedAudioRecorder from "@/components/participant/hooks/useChunkedAudioRecorder";
 import MicrophoneTest from "../../components/participant/MicrophoneTest";
+import { EchoErrorAlert } from "@/components/participant/EchoErrorAlert";
 
 const DEFAULT_REPLY_COOLDOWN = 120; // 2 minutes in seconds
 
@@ -164,6 +168,8 @@ export const ParticipantConversationAudioRoute = () => {
     messages: echoMessages,
     isLoading,
     status,
+    error,
+    reload,
     input,
     handleInputChange,
     handleSubmit,
@@ -399,7 +405,7 @@ export const ParticipantConversationAudioRoute = () => {
                   className={`min-h-[180px] md:min-h-[169px] ${index !== echoMessages.length - 1 ? "border-b" : ""}`}
                 />
               ))}
-              {status !== "streaming" && status !== "ready" && (
+              {status !== "streaming" && status !== "ready" && !error && (
                 <SpikeMessage
                   key="thinking"
                   message={{
@@ -415,6 +421,8 @@ export const ParticipantConversationAudioRoute = () => {
               )}
             </>
           )}
+
+          {error && <EchoErrorAlert />}
         </Stack>
         <div ref={scrollTargetRef} />
       </Box>
