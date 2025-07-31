@@ -1,21 +1,21 @@
 import re
-import sentry_sdk
-from logging import getLogger
 from typing import AsyncGenerator
+from logging import getLogger
 
+import sentry_sdk
 from litellm import acompletion
-from litellm.exceptions import ContentPolicyViolationError
-from litellm.utils import token_counter
 from pydantic import BaseModel
+from litellm.utils import token_counter
+from litellm.exceptions import ContentPolicyViolationError
 
 from dembrane.config import (
-    MEDIUM_LITELLM_API_BASE,
-    MEDIUM_LITELLM_API_KEY,
-    MEDIUM_LITELLM_API_VERSION,
     MEDIUM_LITELLM_MODEL,
+    MEDIUM_LITELLM_API_KEY,
+    MEDIUM_LITELLM_API_BASE,
+    MEDIUM_LITELLM_API_VERSION,
 )
-from dembrane.directus import directus
 from dembrane.prompts import render_prompt
+from dembrane.directus import directus
 
 logger = getLogger("reply_utils")
 
