@@ -479,6 +479,7 @@ async def generate_reply_for_conversation(
     except Exception as e:
         logger.error(f"Failed to store reply in Directus: {e}")
         sentry_sdk.capture_exception(e)
+        raise
 
 
 if __name__ == "__main__":
