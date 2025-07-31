@@ -49,6 +49,11 @@ msgstr "Something went wrong"
 #~ msgstr "Currently {finishedConversationsCount} conversations are ready to be analyzed. {unfinishedConversationsCount} still processing."
 
 #. js-lingui-explicit-id
+#: src/components/participant/EchoErrorAlert.tsx:14
+#~ msgid "participant.echo.error.message"
+#~ msgstr "Something went wrong. Please try again by pressing the <0>ECHO</0> button, or contact support if the issue continues."
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:249
 msgid "library.generate.duration.message"
 msgstr " Generating library can take up to an hour."
@@ -597,7 +602,7 @@ msgstr "Copy Summary"
 msgid "Copy transcript"
 msgstr "Copy transcript"
 
-#: src/routes/project/ProjectsHome.tsx:152
+#: src/routes/project/ProjectsHome.tsx:153
 msgid "Create"
 msgstr "Create"
 
@@ -1043,7 +1048,7 @@ msgstr "Give me a list of 5-10 topics that are being discussed."
 msgid "Go home"
 msgstr "Go home"
 
-#: src/routes/project/ProjectsHome.tsx:178
+#: src/routes/project/ProjectsHome.tsx:179
 msgid "Grid view"
 msgstr "Grid view"
 
@@ -1068,7 +1073,7 @@ msgstr "Hi, {0}"
 #~ msgid "Hide Conversations Without Content"
 #~ msgstr "Hide Conversations Without Content"
 
-#: src/routes/project/ProjectsHome.tsx:137
+#: src/routes/project/ProjectsHome.tsx:138
 msgid "Home"
 msgstr "Home"
 
@@ -1365,7 +1370,7 @@ msgstr "New conversations have been added since the creation of the library. Cre
 msgid "New Password"
 msgstr "New Password"
 
-#: src/routes/project/ProjectsHome.tsx:105
+#: src/routes/project/ProjectsHome.tsx:106
 #: src/routes/auth/Login.tsx:95
 msgid "New Project"
 msgstr "New Project"
@@ -1424,7 +1429,7 @@ msgstr "No conversations yet"
 msgid "No projects found {0}"
 msgstr "No projects found {0}"
 
-#: src/routes/project/ProjectsHome.tsx:222
+#: src/routes/project/ProjectsHome.tsx:227
 msgid "No projects found for search term"
 msgstr "No projects found for search term"
 
@@ -1753,11 +1758,11 @@ msgstr "Project Overview | Dembrane"
 msgid "Project Settings"
 msgstr "Project Settings"
 
-#: src/routes/project/ProjectsHome.tsx:159
+#: src/routes/project/ProjectsHome.tsx:160
 msgid "Projects"
 msgstr "Projects"
 
-#: src/routes/project/ProjectsHome.tsx:49
+#: src/routes/project/ProjectsHome.tsx:50
 msgid "Projects | Dembrane"
 msgstr "Projects | Dembrane"
 
@@ -1980,7 +1985,7 @@ msgstr "Search"
 msgid "Search conversations"
 msgstr "Search conversations"
 
-#: src/routes/project/ProjectsHome.tsx:212
+#: src/routes/project/ProjectsHome.tsx:215
 msgid "Search projects"
 msgstr "Search projects"
 
@@ -2152,13 +2157,18 @@ msgid "Something went wrong with the conversation. Please try refreshing the pag
 msgstr "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 
 #. js-lingui-explicit-id
-#: src/components/participant/EchoErrorAlert.tsx:14
-msgid "participant.echo.error.message"
+#: src/components/participant/EchoErrorAlert.tsx:21
+msgid "participant.echo.generic.error.message"
 msgstr "Something went wrong. Please try again by pressing the <0>ECHO</0> button, or contact support if the issue continues."
 
 #: src/routes/participant/ParticipantConversation.tsx:842
 #~ msgid "Something went wrong. Please try again."
 #~ msgstr "Something went wrong. Please try again."
+
+#. js-lingui-explicit-id
+#: src/components/participant/EchoErrorAlert.tsx:16
+msgid "participant.echo.content.policy.violation.error.message"
+msgstr "Sorry, we cannot process this request due to an LLM provider's content policy."
 
 #: src/components/conversation/ConversationAccordion.tsx:824
 msgid "Sort"
@@ -2720,7 +2730,7 @@ msgstr "Welcome to Dembrane!"
 msgid "Welcome to Reports!"
 msgstr "Welcome to Reports!"
 
-#: src/routes/project/ProjectsHome.tsx:188
+#: src/routes/project/ProjectsHome.tsx:191
 msgid "Welcome to Your Home! Here you can see all your projects and get access to tutorial resources. Currently, you have no projects. Click \"Create\" to configure to get started!"
 msgstr "Welcome to Your Home! Here you can see all your projects and get access to tutorial resources. Currently, you have no projects. Click \"Create\" to configure to get started!"
 

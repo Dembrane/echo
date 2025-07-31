@@ -49,6 +49,11 @@ msgstr "Algo salió mal"
 #~ msgstr "Conversaciones en proceso"
 
 #. js-lingui-explicit-id
+#: src/components/participant/EchoErrorAlert.tsx:14
+#~ msgid "participant.echo.error.message"
+#~ msgstr "Algo salió mal. Por favor, inténtalo de nuevo, presionando el botón <0>ECHO</0>, o contacta al soporte si el problema persiste."
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:249
 msgid "library.generate.duration.message"
 msgstr "La biblioteca tardará {duration}"
@@ -580,7 +585,7 @@ msgstr "Copiar Resumen"
 msgid "Copy transcript"
 msgstr "Copiar transcripción"
 
-#: src/routes/project/ProjectsHome.tsx:152
+#: src/routes/project/ProjectsHome.tsx:153
 msgid "Create"
 msgstr "Crear"
 
@@ -1010,7 +1015,7 @@ msgstr "Dame una lista de 5-10 temas que se están discutiendo."
 msgid "Go home"
 msgstr "Ir al inicio"
 
-#: src/routes/project/ProjectsHome.tsx:178
+#: src/routes/project/ProjectsHome.tsx:179
 msgid "Grid view"
 msgstr "Vista de cuadrícula"
 
@@ -1035,7 +1040,7 @@ msgstr "Hola, {0}"
 #~ msgid "Hide Conversations Without Content"
 #~ msgstr "Ocultar Conversaciones Sin Contenido"
 
-#: src/routes/project/ProjectsHome.tsx:137
+#: src/routes/project/ProjectsHome.tsx:138
 msgid "Home"
 msgstr "Inicio"
 
@@ -1323,7 +1328,7 @@ msgstr "Se han añadido nuevas conversaciones desde que se generó la biblioteca
 msgid "New Password"
 msgstr "Nueva Contraseña"
 
-#: src/routes/project/ProjectsHome.tsx:105
+#: src/routes/project/ProjectsHome.tsx:106
 #: src/routes/auth/Login.tsx:95
 msgid "New Project"
 msgstr "Nuevo Proyecto"
@@ -1382,7 +1387,7 @@ msgstr "No hay conversaciones aún"
 msgid "No projects found {0}"
 msgstr "No se encontraron proyectos {0}"
 
-#: src/routes/project/ProjectsHome.tsx:222
+#: src/routes/project/ProjectsHome.tsx:227
 msgid "No projects found for search term"
 msgstr "No se encontraron proyectos para el término de búsqueda"
 
@@ -1699,11 +1704,11 @@ msgstr "Vista General del Proyecto | Dembrane"
 msgid "Project Settings"
 msgstr "Configuración del Proyecto"
 
-#: src/routes/project/ProjectsHome.tsx:159
+#: src/routes/project/ProjectsHome.tsx:160
 msgid "Projects"
 msgstr "Proyectos"
 
-#: src/routes/project/ProjectsHome.tsx:49
+#: src/routes/project/ProjectsHome.tsx:50
 msgid "Projects | Dembrane"
 msgstr "Proyectos | Dembrane"
 
@@ -1922,7 +1927,7 @@ msgstr "Buscar"
 msgid "Search conversations"
 msgstr "Buscar conversaciones"
 
-#: src/routes/project/ProjectsHome.tsx:212
+#: src/routes/project/ProjectsHome.tsx:215
 msgid "Search projects"
 msgstr "Buscar proyectos"
 
@@ -2090,13 +2095,18 @@ msgid "Something went wrong with the conversation. Please try refreshing the pag
 msgstr "Algo salió mal con la conversación. Por favor, inténtalo de nuevo o contacta al soporte si el problema persiste"
 
 #. js-lingui-explicit-id
-#: src/components/participant/EchoErrorAlert.tsx:14
-msgid "participant.echo.error.message"
-msgstr "Algo salió mal. Por favor, inténtalo de nuevo, presionando el botón <0>ECHO</0>, o contacta al soporte si el problema persiste."
+#: src/components/participant/EchoErrorAlert.tsx:21
+msgid "participant.echo.generic.error.message"
+msgstr "Algo salió mal. Por favor, inténtalo de nuevo."
 
 #: src/routes/participant/ParticipantConversation.tsx:842
 #~ msgid "Something went wrong. Please try again."
 #~ msgstr "Algo salió mal. Por favor, inténtalo de nuevo."
+
+#. js-lingui-explicit-id
+#: src/components/participant/EchoErrorAlert.tsx:16
+msgid "participant.echo.content.policy.violation.error.message"
+msgstr "Lo sentimos, no podemos procesar esta solicitud debido a la política de contenido del proveedor de LLM."
 
 #: src/components/conversation/ConversationAccordion.tsx:824
 msgid "Sort"
@@ -2635,7 +2645,7 @@ msgstr "¡Bienvenido a Dembrane!"
 msgid "Welcome to Reports!"
 msgstr "¡Bienvenido a los informes!"
 
-#: src/routes/project/ProjectsHome.tsx:188
+#: src/routes/project/ProjectsHome.tsx:191
 msgid "Welcome to Your Home! Here you can see all your projects and get access to tutorial resources. Currently, you have no projects. Click \"Create\" to configure to get started!"
 msgstr "¡Bienvenido a Tu Inicio! Aquí puedes ver todos tus proyectos y acceder a recursos de tutorial. Actualmente, no tienes proyectos. Haz clic en \"Crear\" para configurar para comenzar!"
 

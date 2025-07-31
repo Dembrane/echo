@@ -49,6 +49,11 @@ msgstr "Er is iets fout gegaan"
 #~ msgstr "Gesprekken worden verwerkt"
 
 #. js-lingui-explicit-id
+#: src/components/participant/EchoErrorAlert.tsx:14
+#~ msgid "participant.echo.error.message"
+#~ msgstr "Er ging iets mis. Probeer het alstublieft opnieuw door op de knop <0>ECHO</0> te drukken, of neem contact op met de ondersteuning als het probleem blijft bestaan."
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:249
 msgid "library.generate.duration.message"
 msgstr "De bibliotheek zal {duration} duren"
@@ -653,7 +658,7 @@ msgstr "Kopieer samenvatting"
 msgid "Copy transcript"
 msgstr "Kopieer transcript"
 
-#: src/routes/project/ProjectsHome.tsx:152
+#: src/routes/project/ProjectsHome.tsx:153
 msgid "Create"
 msgstr "Maak"
 
@@ -1144,7 +1149,7 @@ msgstr "Ga naar home"
 #~ msgid "Great! Your documents are now being uploaded. While the documents are being processed, can you tell me what this analysis is about?"
 #~ msgstr "Geweldig! Uw documenten worden nu geüpload. Terwijl de documenten worden verwerkt, kunt u mij vertellen waar deze analyse over gaat?"
 
-#: src/routes/project/ProjectsHome.tsx:178
+#: src/routes/project/ProjectsHome.tsx:179
 msgid "Grid view"
 msgstr "Rasterweergave"
 
@@ -1177,7 +1182,7 @@ msgstr "Hallo, {0}"
 #~ msgid "Hide Conversations Without Content"
 #~ msgstr "Verbergen gesprekken zonder inhoud"
 
-#: src/routes/project/ProjectsHome.tsx:137
+#: src/routes/project/ProjectsHome.tsx:138
 msgid "Home"
 msgstr "Home"
 
@@ -1481,7 +1486,7 @@ msgstr "Er zijn nieuwe gesprekken toegevoegd sinds de bibliotheek is gegenereerd
 msgid "New Password"
 msgstr "Nieuw wachtwoord"
 
-#: src/routes/project/ProjectsHome.tsx:105
+#: src/routes/project/ProjectsHome.tsx:106
 #: src/routes/auth/Login.tsx:95
 msgid "New Project"
 msgstr "Nieuw project"
@@ -1544,7 +1549,7 @@ msgstr "Nog geen gesprekken"
 msgid "No projects found {0}"
 msgstr "Geen projecten gevonden {0}"
 
-#: src/routes/project/ProjectsHome.tsx:222
+#: src/routes/project/ProjectsHome.tsx:227
 msgid "No projects found for search term"
 msgstr "Geen projecten gevonden voor de zoekterm"
 
@@ -1894,11 +1899,11 @@ msgstr "Project Overzicht | Dembrane"
 msgid "Project Settings"
 msgstr "Project Instellingen"
 
-#: src/routes/project/ProjectsHome.tsx:159
+#: src/routes/project/ProjectsHome.tsx:160
 msgid "Projects"
 msgstr "Projecten"
 
-#: src/routes/project/ProjectsHome.tsx:49
+#: src/routes/project/ProjectsHome.tsx:50
 msgid "Projects | Dembrane"
 msgstr "Projecten | Dembrane"
 
@@ -2125,7 +2130,7 @@ msgstr "Zoeken"
 msgid "Search conversations"
 msgstr "Zoek gesprekken"
 
-#: src/routes/project/ProjectsHome.tsx:212
+#: src/routes/project/ProjectsHome.tsx:215
 msgid "Search projects"
 msgstr "Zoek projecten"
 
@@ -2306,13 +2311,18 @@ msgid "Something went wrong with the conversation. Please try refreshing the pag
 msgstr "Er ging iets mis met het gesprek. Probeer het alstublieft opnieuw of neem contact op met de ondersteuning als het probleem blijft bestaan"
 
 #. js-lingui-explicit-id
-#: src/components/participant/EchoErrorAlert.tsx:14
-msgid "participant.echo.error.message"
-msgstr "Er ging iets mis. Probeer het alstublieft opnieuw door op de knop <0>ECHO</0> te drukken, of neem contact op met de ondersteuning als het probleem blijft bestaan."
+#: src/components/participant/EchoErrorAlert.tsx:21
+msgid "participant.echo.generic.error.message"
+msgstr "Er is iets misgegaan. Probeer het alstublieft opnieuw."
 
 #: src/routes/participant/ParticipantConversation.tsx:842
 #~ msgid "Something went wrong. Please try again."
 #~ msgstr "Er is iets misgegaan. Probeer het alstublieft opnieuw."
+
+#. js-lingui-explicit-id
+#: src/components/participant/EchoErrorAlert.tsx:16
+msgid "participant.echo.content.policy.violation.error.message"
+msgstr "We kunnen deze aanvraag niet verwerken vanwege de inhoudsbeleid van de LLM-provider."
 
 #: src/components/conversation/ConversationAccordion.tsx:824
 msgid "Sort"
@@ -2896,7 +2906,7 @@ msgstr "Welkom bij Dembrane!"
 msgid "Welcome to Reports!"
 msgstr "Welkom bij Rapporten!"
 
-#: src/routes/project/ProjectsHome.tsx:188
+#: src/routes/project/ProjectsHome.tsx:191
 msgid "Welcome to Your Home! Here you can see all your projects and get access to tutorial resources. Currently, you have no projects. Click \"Create\" to configure to get started!"
 msgstr "Welkom op je Home! Hier kun je al je projecten bekijken en toegang krijgen tot tutorialbronnen. Momenteel heb je nog geen projecten. Klik op \"Maak\" om te beginnen!"
 

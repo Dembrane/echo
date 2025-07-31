@@ -49,6 +49,11 @@ msgstr "Etwas ist schief gelaufen"
 #~ msgstr "Gespräche werden verarbeitet"
 
 #. js-lingui-explicit-id
+#: src/components/participant/EchoErrorAlert.tsx:14
+#~ msgid "participant.echo.error.message"
+#~ msgstr "Etwas ist schief gelaufen. Bitte versuchen Sie es erneut, indem Sie den <0>ECHO</0> drücken, oder wenden Sie sich an den Support, wenn das Problem weiterhin besteht."
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:249
 msgid "library.generate.duration.message"
 msgstr "Die Bibliothek wird {duration} dauern."
@@ -576,7 +581,7 @@ msgstr "Zusammenfassung kopieren"
 msgid "Copy transcript"
 msgstr "Transkript kopieren"
 
-#: src/routes/project/ProjectsHome.tsx:152
+#: src/routes/project/ProjectsHome.tsx:153
 msgid "Create"
 msgstr "Erstellen"
 
@@ -1006,7 +1011,7 @@ msgstr "Geben Sie mir eine Liste von 5-10 Themen, die diskutiert werden."
 msgid "Go home"
 msgstr "Zur Startseite"
 
-#: src/routes/project/ProjectsHome.tsx:178
+#: src/routes/project/ProjectsHome.tsx:179
 msgid "Grid view"
 msgstr "Rasteransicht"
 
@@ -1031,7 +1036,7 @@ msgstr "Hallo, {0}"
 #~ msgid "Hide Conversations Without Content"
 #~ msgstr "Gespräche ohne Inhalt ausblenden"
 
-#: src/routes/project/ProjectsHome.tsx:137
+#: src/routes/project/ProjectsHome.tsx:138
 msgid "Home"
 msgstr "Startseite"
 
@@ -1319,7 +1324,7 @@ msgstr "Seit der Erstellung der Bibliothek wurden neue Gespräche hinzugefügt. 
 msgid "New Password"
 msgstr "Neues Passwort"
 
-#: src/routes/project/ProjectsHome.tsx:105
+#: src/routes/project/ProjectsHome.tsx:106
 #: src/routes/auth/Login.tsx:95
 msgid "New Project"
 msgstr "Neues Projekt"
@@ -1378,7 +1383,7 @@ msgstr "Noch keine Gespräche"
 msgid "No projects found {0}"
 msgstr "Keine Projekte gefunden {0}"
 
-#: src/routes/project/ProjectsHome.tsx:222
+#: src/routes/project/ProjectsHome.tsx:227
 msgid "No projects found for search term"
 msgstr "Keine Projekte für den Suchbegriff gefunden"
 
@@ -1695,11 +1700,11 @@ msgstr "Projektübersicht | Dembrane"
 msgid "Project Settings"
 msgstr "Projekt Einstellungen"
 
-#: src/routes/project/ProjectsHome.tsx:159
+#: src/routes/project/ProjectsHome.tsx:160
 msgid "Projects"
 msgstr "Projekte"
 
-#: src/routes/project/ProjectsHome.tsx:49
+#: src/routes/project/ProjectsHome.tsx:50
 msgid "Projects | Dembrane"
 msgstr "Projekte | Dembrane"
 
@@ -1918,7 +1923,7 @@ msgstr "Suchen"
 msgid "Search conversations"
 msgstr "Gespräche suchen"
 
-#: src/routes/project/ProjectsHome.tsx:212
+#: src/routes/project/ProjectsHome.tsx:215
 msgid "Search projects"
 msgstr "Projekte suchen"
 
@@ -2086,13 +2091,18 @@ msgid "Something went wrong with the conversation. Please try refreshing the pag
 msgstr "Beim Gespräch ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut oder wenden Sie sich an den Support, wenn das Problem weiterhin besteht"
 
 #. js-lingui-explicit-id
-#: src/components/participant/EchoErrorAlert.tsx:14
-msgid "participant.echo.error.message"
-msgstr "Etwas ist schief gelaufen. Bitte versuchen Sie es erneut, indem Sie den <0>ECHO</0> drücken, oder wenden Sie sich an den Support, wenn das Problem weiterhin besteht."
+#: src/components/participant/EchoErrorAlert.tsx:21
+msgid "participant.echo.generic.error.message"
+msgstr "Etwas ist schief gelaufen. Bitte versuchen Sie es erneut."
 
 #: src/routes/participant/ParticipantConversation.tsx:842
 #~ msgid "Something went wrong. Please try again."
 #~ msgstr "Etwas ist schief gelaufen. Bitte versuchen Sie es erneut."
+
+#. js-lingui-explicit-id
+#: src/components/participant/EchoErrorAlert.tsx:16
+msgid "participant.echo.content.policy.violation.error.message"
+msgstr "Wir können diese Anfrage nicht verarbeiten, da die Inhaltsrichtlinie des LLM-Anbieters verletzt wird."
 
 #: src/components/conversation/ConversationAccordion.tsx:824
 msgid "Sort"
@@ -2634,7 +2644,7 @@ msgstr "Willkommen bei Dembrane!"
 msgid "Welcome to Reports!"
 msgstr "Willkommen bei Berichten!"
 
-#: src/routes/project/ProjectsHome.tsx:188
+#: src/routes/project/ProjectsHome.tsx:191
 msgid "Welcome to Your Home! Here you can see all your projects and get access to tutorial resources. Currently, you have no projects. Click \"Create\" to configure to get started!"
 msgstr "Willkommen in Ihrem Home-Bereich! Hier können Sie alle Ihre Projekte sehen und auf Tutorial-Ressourcen zugreifen. Derzeit haben Sie keine Projekte. Klicken Sie auf \"Erstellen\", um mit der Konfiguration zu beginnen!"
 

@@ -49,6 +49,11 @@ msgstr "Une erreur s'est produite"
 #~ msgstr "Conversations en cours de traitement"
 
 #. js-lingui-explicit-id
+#: src/components/participant/EchoErrorAlert.tsx:14
+#~ msgid "participant.echo.error.message"
+#~ msgstr "Une erreur s'est produite. Veuillez réessayer en appuyant sur le bouton <0>ECHO</0>, ou contacter le support si le problème persiste."
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:249
 msgid "library.generate.duration.message"
 msgstr "La bibliothèque prendra {duration}"
@@ -580,7 +585,7 @@ msgstr "Copier le résumé"
 msgid "Copy transcript"
 msgstr "Copier la transcription"
 
-#: src/routes/project/ProjectsHome.tsx:152
+#: src/routes/project/ProjectsHome.tsx:153
 msgid "Create"
 msgstr "Créer"
 
@@ -1010,7 +1015,7 @@ msgstr "Donnez-moi une liste de 5 à 10 sujets qui sont discutés."
 msgid "Go home"
 msgstr "Retour à l'accueil"
 
-#: src/routes/project/ProjectsHome.tsx:178
+#: src/routes/project/ProjectsHome.tsx:179
 msgid "Grid view"
 msgstr "Vue en grille"
 
@@ -1035,7 +1040,7 @@ msgstr "Bonjour, {0}"
 #~ msgid "Hide Conversations Without Content"
 #~ msgstr "Masquer les conversations sans contenu"
 
-#: src/routes/project/ProjectsHome.tsx:137
+#: src/routes/project/ProjectsHome.tsx:138
 msgid "Home"
 msgstr "Accueil"
 
@@ -1323,7 +1328,7 @@ msgstr "De nouvelles conversations ont été ajoutées depuis la génération de
 msgid "New Password"
 msgstr "Nouveau mot de passe"
 
-#: src/routes/project/ProjectsHome.tsx:105
+#: src/routes/project/ProjectsHome.tsx:106
 #: src/routes/auth/Login.tsx:95
 msgid "New Project"
 msgstr "Nouveau projet"
@@ -1382,7 +1387,7 @@ msgstr "Aucune conversation"
 msgid "No projects found {0}"
 msgstr "Aucun projet trouvé {0}"
 
-#: src/routes/project/ProjectsHome.tsx:222
+#: src/routes/project/ProjectsHome.tsx:227
 msgid "No projects found for search term"
 msgstr "Aucun projet trouvé pour ce terme de recherche"
 
@@ -1699,11 +1704,11 @@ msgstr "Aperçu du projet | Dembrane"
 msgid "Project Settings"
 msgstr "Paramètres du projet"
 
-#: src/routes/project/ProjectsHome.tsx:159
+#: src/routes/project/ProjectsHome.tsx:160
 msgid "Projects"
 msgstr "Projets"
 
-#: src/routes/project/ProjectsHome.tsx:49
+#: src/routes/project/ProjectsHome.tsx:50
 msgid "Projects | Dembrane"
 msgstr "Projets | Dembrane"
 
@@ -1922,7 +1927,7 @@ msgstr "Rechercher"
 msgid "Search conversations"
 msgstr "Rechercher des conversations"
 
-#: src/routes/project/ProjectsHome.tsx:212
+#: src/routes/project/ProjectsHome.tsx:215
 msgid "Search projects"
 msgstr "Rechercher des projets"
 
@@ -2090,13 +2095,18 @@ msgid "Something went wrong with the conversation. Please try refreshing the pag
 msgstr "Une erreur s'est produite avec la conversation. Veuillez réessayer ou contacter le support si le problème persiste"
 
 #. js-lingui-explicit-id
-#: src/components/participant/EchoErrorAlert.tsx:14
-msgid "participant.echo.error.message"
-msgstr "Une erreur s'est produite. Veuillez réessayer en appuyant sur le bouton <0>ECHO</0>, ou contacter le support si le problème persiste."
+#: src/components/participant/EchoErrorAlert.tsx:21
+msgid "participant.echo.generic.error.message"
+msgstr "Une erreur s'est produite. Veuillez réessayer."
 
 #: src/routes/participant/ParticipantConversation.tsx:842
 #~ msgid "Something went wrong. Please try again."
 #~ msgstr "Une erreur s'est produite. Veuillez réessayer."
+
+#. js-lingui-explicit-id
+#: src/components/participant/EchoErrorAlert.tsx:16
+msgid "participant.echo.content.policy.violation.error.message"
+msgstr "Nous ne pouvons pas traiter cette requête en raison de la politique de contenu du fournisseur de LLM."
 
 #: src/components/conversation/ConversationAccordion.tsx:824
 msgid "Sort"
@@ -2635,7 +2645,7 @@ msgstr "Bienvenue sur Dembrane!"
 msgid "Welcome to Reports!"
 msgstr "Bienvenue dans les rapports !"
 
-#: src/routes/project/ProjectsHome.tsx:188
+#: src/routes/project/ProjectsHome.tsx:191
 msgid "Welcome to Your Home! Here you can see all your projects and get access to tutorial resources. Currently, you have no projects. Click \"Create\" to configure to get started!"
 msgstr "Bienvenue sur votre Accueil! Ici, vous pouvez voir tous vos projets et accéder aux ressources de tutoriel. Actuellement, vous n'avez aucun projet. Cliquez sur \"Créer\" pour configurer pour commencer !"
 
