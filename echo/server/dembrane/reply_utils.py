@@ -5,6 +5,7 @@ from logging import getLogger
 from litellm import acompletion
 from pydantic import BaseModel
 from litellm.utils import token_counter
+from litellm.exceptions import ContentPolicyViolationError
 
 from dembrane.config import (
     MEDIUM_LITELLM_MODEL,
@@ -371,6 +372,11 @@ async def generate_reply_for_conversation(
             ],
             stream=True,
         )
+    except ContentPolicyViolationError as e:
+        logger.error(
+            f"Content policy violation for conversation {conversation_id}. Error: {str(e)}"
+        )
+        raise
     except Exception as e:
         logger.error(f"LiteLLM completion failed for {conversation_id}: {str(e)}")
         raise

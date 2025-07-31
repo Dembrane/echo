@@ -422,7 +422,7 @@ export const ParticipantConversationAudioRoute = () => {
             </>
           )}
 
-          {error && <EchoErrorAlert />}
+          {error && <EchoErrorAlert error={error} />}
         </Stack>
         <div ref={scrollTargetRef} />
       </Box>
