@@ -6,6 +6,7 @@ from litellm import acompletion
 from pydantic import BaseModel
 from litellm.utils import token_counter
 from litellm.exceptions import ContentPolicyViolationError
+import sentry_sdk
 
 from dembrane.config import (
     MEDIUM_LITELLM_MODEL,
@@ -376,9 +377,11 @@ async def generate_reply_for_conversation(
         logger.error(
             f"Content policy violation for conversation {conversation_id}. Error: {str(e)}"
         )
+        sentry_sdk.capture_exception(e)
         raise
     except Exception as e:
         logger.error(f"LiteLLM completion failed for {conversation_id}: {str(e)}")
+        sentry_sdk.capture_exception(e)
         raise
 
     # List of possible partial closing tags
@@ -448,6 +451,7 @@ async def generate_reply_for_conversation(
                             tag_buffer = tag_buffer[-GET_REPLY_TAG_BUFFER_TRIM_SIZE:]
     except Exception as e:
         logger.error(f"Streaming failed for conversation {current_conversation.id}: {e}")
+        sentry_sdk.capture_exception(e)
         raise
 
     try:
@@ -474,6 +478,7 @@ async def generate_reply_for_conversation(
         )
     except Exception as e:
         logger.error(f"Failed to store reply in Directus: {e}")
+        sentry_sdk.capture_exception(e)
 
 
 if __name__ == "__main__":

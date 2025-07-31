@@ -11,7 +11,7 @@ export const EchoErrorAlert = ({ error }: { error: Error }) => {
       radius="md"
       className="my-5 md:my-7"
     >
-      <Text>
+      <Text size="sm">
         {error?.message?.includes("CONTENT_POLICY_VIOLATION") ? (
           <Trans id="participant.echo.content.policy.violation.error.message">
             Sorry, we cannot process this request due to an LLM provider's
