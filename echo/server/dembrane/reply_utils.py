@@ -1,4 +1,5 @@
 import re
+import sentry_sdk
 from typing import AsyncGenerator
 from logging import getLogger
 
@@ -6,7 +7,6 @@ from litellm import acompletion
 from pydantic import BaseModel
 from litellm.utils import token_counter
 from litellm.exceptions import ContentPolicyViolationError
-import sentry_sdk
 
 from dembrane.config import (
     MEDIUM_LITELLM_MODEL,
