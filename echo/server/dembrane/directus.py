@@ -3,7 +3,7 @@ from logging import getLogger
 from contextlib import contextmanager
 
 import requests
-from directus_sdk_py import DirectusClient
+from directus_py_sdk import DirectusClient
 
 from dembrane.config import DIRECTUS_TOKEN, DIRECTUS_BASE_URL
 
