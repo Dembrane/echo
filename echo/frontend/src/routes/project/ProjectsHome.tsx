@@ -239,59 +239,59 @@ export const ProjectsHomeRoute = () => {
           <ProjectListSkeleton view={view} searchValue={debouncedSearchValue} />
         )}
         {allProjects.length > 0 && (
-        <Box className="relative">
-          {view === "grid" && (
-            <Box
-              ref={gridParent}
-              className="grid grid-cols-12 place-content-stretch gap-4"
-            >
-              {allProjects.map((project) => (
-                <Box
-                  key={project.id}
-                  className="col-span-full h-full md:col-span-4"
-                  ref={
-                    allProjects[allProjects.length - 1].id === project.id
-                      ? loadMoreRef
-                      : undefined
-                  }
-                >
-                  <ProjectCard project={project as Project} />
-                </Box>
-              ))}
-              {isFetchingNextPage && (
-                <ProjectListSkeleton
-                  view={view}
-                  searchValue={"none"}
-                  count={3}
-                  wrapper={false}
-                />
-              )}
-            </Box>
-          )}
+          <Box className="relative">
+            {view === "grid" && (
+              <Box
+                ref={gridParent}
+                className="grid grid-cols-12 place-content-stretch gap-4"
+              >
+                {allProjects.map((project) => (
+                  <Box
+                    key={project.id}
+                    className="col-span-full h-full md:col-span-4"
+                    ref={
+                      allProjects[allProjects.length - 1].id === project.id
+                        ? loadMoreRef
+                        : undefined
+                    }
+                  >
+                    <ProjectCard project={project as Project} />
+                  </Box>
+                ))}
+                {isFetchingNextPage && (
+                  <ProjectListSkeleton
+                    view={view}
+                    searchValue={"none"}
+                    count={3}
+                    wrapper={false}
+                  />
+                )}
+              </Box>
+            )}
 
-          {view === "list" && (
-            <Stack ref={listParent} gap="sm">
-              {allProjects.map((project) => (
-                <Box
-                  key={project.id}
-                  ref={
-                    allProjects[allProjects.length - 1].id === project.id
-                      ? loadMoreRef
-                      : undefined
-                  }
-                >
-                  <ProjectListItem project={project as Project} />
-                </Box>
-              ))}
-              {isFetchingNextPage && (
-                <ProjectListSkeleton
-                  view={view}
-                  searchValue={"none"}
-                  count={3}
-                  wrapper={false}
-                />
-              )}
-            </Stack>
+            {view === "list" && (
+              <Stack ref={listParent} gap="sm">
+                {allProjects.map((project) => (
+                  <Box
+                    key={project.id}
+                    ref={
+                      allProjects[allProjects.length - 1].id === project.id
+                        ? loadMoreRef
+                        : undefined
+                    }
+                  >
+                    <ProjectListItem project={project as Project} />
+                  </Box>
+                ))}
+                {isFetchingNextPage && (
+                  <ProjectListSkeleton
+                    view={view}
+                    searchValue={"none"}
+                    count={3}
+                    wrapper={false}
+                  />
+                )}
+              </Stack>
             )}
           </Box>
         )}
