@@ -238,7 +238,7 @@ export const ProjectsHomeRoute = () => {
         {status === "pending" && (
           <ProjectListSkeleton view={view} searchValue={debouncedSearchValue} />
         )}
-
+        {allProjects.length > 0 && (
         <Box className="relative">
           {view === "grid" && (
             <Box
@@ -292,8 +292,9 @@ export const ProjectsHomeRoute = () => {
                 />
               )}
             </Stack>
-          )}
-        </Box>
+            )}
+          </Box>
+        )}
       </Stack>
     </Container>
   );
