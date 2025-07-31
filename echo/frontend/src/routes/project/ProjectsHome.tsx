@@ -44,6 +44,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { CloseableAlert } from "@/components/common/ClosableAlert";
 import { useInView } from "react-intersection-observer";
 import { useSearchParams } from "react-router-dom";
+import { ProjectListSkeleton } from "@/components/project/ProjectListSkeleton";
 
 export const ProjectsHomeRoute = () => {
   useDocumentTitle(t`Projects | Dembrane`);
@@ -183,15 +184,17 @@ export const ProjectsHomeRoute = () => {
           </Group>
         </Group>
 
-        {allProjects.length === 0 && debouncedSearchValue === "" && (
-          <CloseableAlert icon={<IconInfoCircle />}>
-            <Trans>
-              Welcome to Your Home! Here you can see all your projects and get
-              access to tutorial resources. Currently, you have no projects.
-              Click "Create" to configure to get started!
-            </Trans>
-          </CloseableAlert>
-        )}
+        {allProjects.length === 0 &&
+          debouncedSearchValue === "" &&
+          status === "success" && (
+            <CloseableAlert icon={<IconInfoCircle />}>
+              <Trans>
+                Welcome to Your Home! Here you can see all your projects and get
+                access to tutorial resources. Currently, you have no projects.
+                Click "Create" to configure to get started!
+              </Trans>
+            </CloseableAlert>
+          )}
 
         {!(allProjects.length === 0 && debouncedSearchValue === "") && (
           <TextInput
@@ -217,17 +220,23 @@ export const ProjectsHomeRoute = () => {
           />
         )}
 
-        {allProjects.length === 0 && debouncedSearchValue !== "" && (
-          <Text>
-            <Trans>No projects found for search term</Trans>{" "}
-            <i>{debouncedSearchValue}</i>
-          </Text>
-        )}
+        {allProjects.length === 0 &&
+          debouncedSearchValue !== "" &&
+          status === "success" && (
+            <Text>
+              <Trans>No projects found for search term</Trans>{" "}
+              <i>{debouncedSearchValue}</i>
+            </Text>
+          )}
 
         {isError && (
           <Alert color="red" title="Error">
             {getDirectusErrorString(error)}
           </Alert>
+        )}
+
+        {status === "pending" && (
+          <ProjectListSkeleton view={view} searchValue={debouncedSearchValue} />
         )}
 
         <Box className="relative">
@@ -249,12 +258,14 @@ export const ProjectsHomeRoute = () => {
                   <ProjectCard project={project as Project} />
                 </Box>
               ))}
-              {isFetchingNextPage &&
-                Array.from({ length: 3 }).map((_, i) => (
-                  <Box key={i} className="col-span-full h-full md:col-span-4">
-                    <Skeleton height={80} radius="md" />
-                  </Box>
-                ))}
+              {isFetchingNextPage && (
+                <ProjectListSkeleton
+                  view={view}
+                  searchValue={"none"}
+                  count={3}
+                  wrapper={false}
+                />
+              )}
             </Box>
           )}
 
@@ -273,11 +284,12 @@ export const ProjectsHomeRoute = () => {
                 </Box>
               ))}
               {isFetchingNextPage && (
-                <>
-                  <Skeleton height={60} radius="md" />
-                  <Skeleton height={60} radius="md" />
-                  <Skeleton height={60} radius="md" />
-                </>
+                <ProjectListSkeleton
+                  view={view}
+                  searchValue={"none"}
+                  count={3}
+                  wrapper={false}
+                />
               )}
             </Stack>
           )}
