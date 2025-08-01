@@ -2,9 +2,11 @@ import re
 from typing import AsyncGenerator
 from logging import getLogger
 
+import sentry_sdk
 from litellm import acompletion
 from pydantic import BaseModel
 from litellm.utils import token_counter
+from litellm.exceptions import ContentPolicyViolationError
 
 from dembrane.config import (
     MEDIUM_LITELLM_MODEL,
@@ -152,33 +154,39 @@ async def generate_reply_for_conversation(
         "get_reply_prompt": conversation["project_id"]["get_reply_prompt"],
         "get_reply_mode": conversation["project_id"]["get_reply_mode"],
         "default_conversation_title": conversation["project_id"]["default_conversation_title"],
-        "default_conversation_description": conversation["project_id"]["default_conversation_description"],
-        "default_conversation_transcript_prompt": conversation["project_id"]["default_conversation_transcript_prompt"],
+        "default_conversation_description": conversation["project_id"][
+            "default_conversation_description"
+        ],
+        "default_conversation_transcript_prompt": conversation["project_id"][
+            "default_conversation_transcript_prompt"
+        ],
     }
 
     # Check if we should use summaries for adjacent conversations
     get_reply_mode = current_project.get("get_reply_mode")
     use_summaries = get_reply_mode in ["summarize", "brainstorm", "custom"]
-    
+
     # Determine fields to fetch based on mode
     adjacent_fields = [
         "id",
         "participant_name",
         "tags.project_tag_id.text",
     ]
-    
+
     if use_summaries:
         adjacent_fields.append("summary")
     else:
-        adjacent_fields.extend([
-            "chunks.id",
-            "chunks.timestamp", 
-            "chunks.transcript",
-            "replies.id",
-            "replies.date_created",
-            "replies.content_text",
-            "replies.type",
-        ])
+        adjacent_fields.extend(
+            [
+                "chunks.id",
+                "chunks.timestamp",
+                "chunks.transcript",
+                "replies.id",
+                "replies.date_created",
+                "replies.content_text",
+                "replies.type",
+            ]
+        )
 
     adjacent_conversations = directus.get_items(
         "conversation",
@@ -193,7 +201,9 @@ async def generate_reply_for_conversation(
                     # reverse chronological order
                     "chunks": {"_sort": ["-timestamp"], "_limit": 1000},
                     "replies": {"_sort": ["-date_created"], "_limit": 1000},
-                } if not use_summaries else {},
+                }
+                if not use_summaries
+                else {},
             }
         },
     )
@@ -209,14 +219,18 @@ async def generate_reply_for_conversation(
             if conversation["summary"] is None:
                 logger.info(f"Conversation {conversation['id']} has no summary, skipping")
                 continue
-                
+
             # Create conversation with tags
-            tags = [
-                tag["project_tag_id"]["text"]
-                for tag in conversation["tags"]
-                if tag["project_tag_id"]["text"] is not None
-            ] if conversation["tags"] else []
-            
+            tags = (
+                [
+                    tag["project_tag_id"]["text"]
+                    for tag in conversation["tags"]
+                    if tag["project_tag_id"]["text"] is not None
+                ]
+                if conversation["tags"]
+                else []
+            )
+
             c = Conversation(
                 id=conversation["id"],
                 name=conversation["participant_name"],
@@ -280,19 +294,25 @@ async def generate_reply_for_conversation(
 
     # Build PROJECT_DESCRIPTION by combining context and additional project fields
     project_description_parts = []
-    
+
     if current_project["description"] is not None:
         project_description_parts.append(current_project["description"])
-    
+
     if current_project["default_conversation_title"] is not None:
-        project_description_parts.append(f"Default Conversation Title: {current_project['default_conversation_title']}")
-    
+        project_description_parts.append(
+            f"Default Conversation Title: {current_project['default_conversation_title']}"
+        )
+
     if current_project["default_conversation_description"] is not None:
-        project_description_parts.append(f"Default Conversation Description: {current_project['default_conversation_description']}")
-    
+        project_description_parts.append(
+            f"Default Conversation Description: {current_project['default_conversation_description']}"
+        )
+
     if current_project["default_conversation_transcript_prompt"] is not None:
-        project_description_parts.append(f"Default Conversation Transcript Prompt: {current_project['default_conversation_transcript_prompt']}")
-    
+        project_description_parts.append(
+            f"Default Conversation Transcript Prompt: {current_project['default_conversation_transcript_prompt']}"
+        )
+
     project_description = "\n\n".join(project_description_parts)
 
     # Determine which prompt to use based on mode
@@ -301,7 +321,7 @@ async def generate_reply_for_conversation(
         global_prompt = render_prompt("get_reply_summarize", language, {})
         logger.debug(f"Using get_reply_summarize template for global prompt: {get_reply_mode}")
     elif get_reply_mode == "brainstorm":
-        # Load global prompt from brainstorm template  
+        # Load global prompt from brainstorm template
         global_prompt = render_prompt("get_reply_brainstorm", language, {})
         logger.debug(f"Using get_reply_brainstorm template for global prompt: {get_reply_mode}")
     elif get_reply_mode == "custom":
@@ -314,7 +334,11 @@ async def generate_reply_for_conversation(
             global_prompt = render_prompt("get_reply_summarize", language, {})
             logger.debug("Custom prompt is empty, falling back to get_reply_summarize template")
     else:
-        global_prompt = current_project["get_reply_prompt"] if current_project["get_reply_prompt"] is not None else ""
+        global_prompt = (
+            current_project["get_reply_prompt"]
+            if current_project["get_reply_prompt"] is not None
+            else ""
+        )
         logger.debug(f"Using project global prompt for mode: {get_reply_mode}")
 
     prompt = render_prompt(
@@ -338,16 +362,27 @@ async def generate_reply_for_conversation(
     in_response_section = False
 
     # Stream the response
-    response = await acompletion(
-        model=MEDIUM_LITELLM_MODEL,
-        api_key=MEDIUM_LITELLM_API_KEY,
-        api_version=MEDIUM_LITELLM_API_VERSION,
-        api_base=MEDIUM_LITELLM_API_BASE,
-        messages=[
-            {"role": "user", "content": prompt},
-        ],
-        stream=True,
-    )
+    try:
+        response = await acompletion(
+            model=MEDIUM_LITELLM_MODEL,
+            api_key=MEDIUM_LITELLM_API_KEY,
+            api_version=MEDIUM_LITELLM_API_VERSION,
+            api_base=MEDIUM_LITELLM_API_BASE,
+            messages=[
+                {"role": "user", "content": prompt},
+            ],
+            stream=True,
+        )
+    except ContentPolicyViolationError as e:
+        logger.error(
+            f"Content policy violation for conversation {conversation_id}. Error: {str(e)}"
+        )
+        sentry_sdk.capture_exception(e)
+        raise
+    except Exception as e:
+        logger.error(f"LiteLLM completion failed for {conversation_id}: {str(e)}")
+        sentry_sdk.capture_exception(e)
+        raise
 
     # List of possible partial closing tags
     partial_closing_patterns = [
@@ -363,64 +398,73 @@ async def generate_reply_for_conversation(
         "</response>",
     ]
 
-    async for chunk in response:
-        if chunk.choices[0].delta.content:
-            content = chunk.choices[0].delta.content
-            accumulated_response += content
+    try:
+        async for chunk in response:
+            if chunk.choices[0].delta.content:
+                content = chunk.choices[0].delta.content
+                accumulated_response += content
 
-            if in_response_section:
-                # While inside the response section, check for closing tag
-                if any(partial in (tag_buffer + content) for partial in partial_closing_patterns):
-                    combined = tag_buffer + content
+                if in_response_section:
+                    # While inside the response section, check for closing tag
+                    if any(
+                        partial in (tag_buffer + content) for partial in partial_closing_patterns
+                    ):
+                        combined = tag_buffer + content
 
-                    for partial in partial_closing_patterns:
-                        partial_index = combined.find(partial)
-                        if partial_index != -1:
-                            to_yield = combined[:partial_index]
-                            if to_yield.strip():
-                                yield to_yield
-                            break  # Stop checking further once the first match is found
+                        for partial in partial_closing_patterns:
+                            partial_index = combined.find(partial)
+                            if partial_index != -1:
+                                to_yield = combined[:partial_index]
+                                if to_yield.strip():
+                                    yield to_yield
+                                break  # Stop checking further once the first match is found
 
-                    # Stop streaming
-                    in_response_section = False
-                    tag_buffer = ""
-                else:
-                    # No closing tag found, continue yielding content
-                    if (tag_buffer + content).strip():
-                        yield tag_buffer + content
-                    tag_buffer = ""
-            else:
-                if not found_response_tag:
-                    # Append to buffer to handle split tags
-                    tag_buffer += content
-
-                    # Check if buffer contains <response>
-                    if "<response>" in tag_buffer:
-                        found_response_tag = True
-                        in_response_section = True
-
-                        # Extract content after the opening tag
-                        start_idx = tag_buffer.find("<response>") + len("<response>")
-                        content_after_tag = tag_buffer[start_idx:]
-
-                        # Reset buffer and yield content if any
+                        # Stop streaming
+                        in_response_section = False
                         tag_buffer = ""
-                        if content_after_tag.strip():
-                            yield content_after_tag
+                    else:
+                        # No closing tag found, continue yielding content
+                        if (tag_buffer + content).strip():
+                            yield tag_buffer + content
+                        tag_buffer = ""
+                else:
+                    if not found_response_tag:
+                        # Append to buffer to handle split tags
+                        tag_buffer += content
 
-                    # If buffer gets too large without finding tag, trim it, keep only the last 20 characters
-                    if len(tag_buffer) > GET_REPLY_TAG_BUFFER_MAX_SIZE:
-                        tag_buffer = tag_buffer[-GET_REPLY_TAG_BUFFER_TRIM_SIZE:]
+                        # Check if buffer contains <response>
+                        if "<response>" in tag_buffer:
+                            found_response_tag = True
+                            in_response_section = True
+
+                            # Extract content after the opening tag
+                            start_idx = tag_buffer.find("<response>") + len("<response>")
+                            content_after_tag = tag_buffer[start_idx:]
+
+                            # Reset buffer and yield content if any
+                            tag_buffer = ""
+                            if content_after_tag.strip():
+                                yield content_after_tag
+
+                        # If buffer gets too large without finding tag, trim it, keep only the last 20 characters
+                        if len(tag_buffer) > GET_REPLY_TAG_BUFFER_MAX_SIZE:
+                            tag_buffer = tag_buffer[-GET_REPLY_TAG_BUFFER_TRIM_SIZE:]
+    except Exception as e:
+        logger.error(f"Streaming failed for conversation {current_conversation.id}: {e}")
+        sentry_sdk.capture_exception(e)
+        raise
 
     try:
         response_content = accumulated_response
-        
+
         # Remove everything between <detailed_analysis> and </detailed_analysis> tags
-        response_content = re.sub(r'<detailed_analysis>.*?</detailed_analysis>', '', response_content, flags=re.DOTALL)
-        
+        response_content = re.sub(
+            r"<detailed_analysis>.*?</detailed_analysis>", "", response_content, flags=re.DOTALL
+        )
+
         # Replace <response> and </response> tags with empty strings
         response_content = response_content.replace("<response>", "").replace("</response>", "")
-        
+
         # Strip whitespace
         response_content = response_content.strip()
 
@@ -434,6 +478,8 @@ async def generate_reply_for_conversation(
         )
     except Exception as e:
         logger.error(f"Failed to store reply in Directus: {e}")
+        sentry_sdk.capture_exception(e)
+        raise
 
 
 if __name__ == "__main__":

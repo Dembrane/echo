@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import noload, selectinload
 from fastapi.responses import RedirectResponse, StreamingResponse
 from fastapi.exceptions import HTTPException
+from litellm.exceptions import ContentPolicyViolationError
 
 from dembrane.s3 import get_signed_url
 from dembrane.utils import CacheWithExpiration, generate_uuid, get_utc_timestamp
@@ -466,10 +467,13 @@ async def get_reply_for_conversation(
             # Stream content chunks
             async for chunk in generate_reply_for_conversation(conversation_id, body.language):
                 yield "0:" + json.dumps(chunk) + "\n"
+        except ContentPolicyViolationError as e:
+            logger.error(f"Content policy violation for conversation {conversation_id}: {str(e)}")
+            yield "3:" + json.dumps("CONTENT_POLICY_VIOLATION") + "\n"
         except Exception as e:
             # Handle errors by streaming an error payload
             logger.error(f"Error generating reply for conversation {conversation_id}: {str(e)}")
-            yield "0:" + "Something went wrong." + "\n"
+            yield "3:" + json.dumps("Something went wrong.") + "\n"
 
     return StreamingResponse(
         generate(),

@@ -49,6 +49,11 @@ msgstr "Er is iets fout gegaan"
 #~ msgstr "Gesprekken worden verwerkt"
 
 #. js-lingui-explicit-id
+#: src/components/participant/EchoErrorAlert.tsx:14
+#~ msgid "participant.echo.error.message"
+#~ msgstr "Er ging iets mis. Probeer het alstublieft opnieuw door op de knop <0>ECHO</0> te drukken, of neem contact op met de ondersteuning als het probleem blijft bestaan."
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:249
 msgid "library.generate.duration.message"
 msgstr "De bibliotheek zal {duration} duren"
@@ -102,7 +107,7 @@ msgstr "{0} Gesprekken • Bewerkt {1}"
 msgid "library.conversations.to.be.analyzed"
 msgstr "Er zijn {0} gesprekken klaar om te worden geanalyseerd."
 
-#: src/routes/participant/ParticipantConversation.tsx:210
+#: src/routes/participant/ParticipantConversation.tsx:216
 msgid "{minutes} minutes and {seconds} seconds"
 msgstr "{minutes} minuten en {seconds} seconden"
 
@@ -110,7 +115,7 @@ msgstr "{minutes} minuten en {seconds} seconden"
 msgid "{readingNow} reading now"
 msgstr "{readingNow} leest nu"
 
-#: src/routes/participant/ParticipantConversation.tsx:211
+#: src/routes/participant/ParticipantConversation.tsx:217
 msgid "{seconds} seconds"
 msgstr "{seconds} seconden"
 
@@ -138,8 +143,8 @@ msgstr "*Een moment a.u.b.*"
 #. placeholder {0}: Math.floor(remainingCooldown / 60)
 #. placeholder {1}: (remainingCooldown % 60) .toString() .padStart(2, "0")
 #. placeholder {1}: (remainingCooldown % 60) .toString() .padStart(2, "0")
-#: src/routes/participant/ParticipantConversation.tsx:495
-#: src/routes/participant/ParticipantConversation.tsx:580
+#: src/routes/participant/ParticipantConversation.tsx:503
+#: src/routes/participant/ParticipantConversation.tsx:588
 msgid "<0>Wait </0>{0}:{1}"
 msgstr "<0>Wacht </0>{0}:{1}"
 
@@ -320,8 +325,8 @@ msgstr "Weet je zeker dat je dit project wilt verwijderen?"
 msgid "Are you sure you want to delete this tag? This will remove the tag from existing conversations that contain it."
 msgstr "Weet je zeker dat je dit trefwoord wilt verwijderen? Dit zal het trefwoord verwijderen uit bestaande gesprekken die het bevatten."
 
-#: src/routes/participant/ParticipantConversation.tsx:240
-#: src/routes/participant/ParticipantConversation.tsx:660
+#: src/routes/participant/ParticipantConversation.tsx:246
+#: src/routes/participant/ParticipantConversation.tsx:668
 msgid "Are you sure you want to finish?"
 msgstr "Weet je zeker dat je het wilt afmaken?"
 
@@ -494,7 +499,7 @@ msgstr "Chat | Dembrane"
 msgid "Chats"
 msgstr "Chats"
 
-#: src/routes/participant/ParticipantConversation.tsx:368
+#: src/routes/participant/ParticipantConversation.tsx:374
 msgid "Check microphone access"
 msgstr "Controleer microfoontoegang"
 
@@ -590,7 +595,7 @@ msgstr "gesprek"
 msgid "Conversation added to chat"
 msgstr "Gesprek toegevoegd aan chat"
 
-#: src/routes/participant/ParticipantConversation.tsx:268
+#: src/routes/participant/ParticipantConversation.tsx:274
 msgid "Conversation Ended"
 msgstr "Gesprek beëindigd"
 
@@ -653,7 +658,7 @@ msgstr "Kopieer samenvatting"
 msgid "Copy transcript"
 msgstr "Kopieer transcript"
 
-#: src/routes/project/ProjectsHome.tsx:152
+#: src/routes/project/ProjectsHome.tsx:153
 msgid "Create"
 msgstr "Maak"
 
@@ -813,8 +818,8 @@ msgstr "Sleep audio bestanden hierheen of klik om bestanden te selecteren"
 msgid "Dutch"
 msgstr "Nederlands"
 
-#: src/routes/participant/ParticipantConversation.tsx:504
-#: src/routes/participant/ParticipantConversation.tsx:589
+#: src/routes/participant/ParticipantConversation.tsx:512
+#: src/routes/participant/ParticipantConversation.tsx:597
 msgid "ECHO"
 msgstr "ECHO"
 
@@ -1003,7 +1008,7 @@ msgstr "Fout bij het uitschakelen van het automatisch selecteren voor deze chat"
 msgid "Failed to enable Auto Select for this chat"
 msgstr "Fout bij het inschakelen van het automatisch selecteren voor deze chat"
 
-#: src/routes/participant/ParticipantConversation.tsx:247
+#: src/routes/participant/ParticipantConversation.tsx:253
 msgid "Failed to finish conversation. Please try again."
 msgstr "Fout bij het voltooien van het gesprek. Probeer het opnieuw."
 
@@ -1085,8 +1090,8 @@ msgstr "Bestandsgrootte: Min {0}, Max {1}, maximaal {MAX_FILES} bestanden"
 #~ msgid "Filter"
 #~ msgstr "Filteren"
 
-#: src/routes/participant/ParticipantConversation.tsx:532
-#: src/routes/participant/ParticipantConversation.tsx:765
+#: src/routes/participant/ParticipantConversation.tsx:540
+#: src/routes/participant/ParticipantConversation.tsx:773
 msgid "Finish"
 msgstr "Voltooien"
 
@@ -1144,7 +1149,7 @@ msgstr "Ga naar home"
 #~ msgid "Great! Your documents are now being uploaded. While the documents are being processed, can you tell me what this analysis is about?"
 #~ msgstr "Geweldig! Uw documenten worden nu geüpload. Terwijl de documenten worden verwerkt, kunt u mij vertellen waar deze analyse over gaat?"
 
-#: src/routes/project/ProjectsHome.tsx:178
+#: src/routes/project/ProjectsHome.tsx:179
 msgid "Grid view"
 msgstr "Rasterweergave"
 
@@ -1177,7 +1182,7 @@ msgstr "Hallo, {0}"
 #~ msgid "Hide Conversations Without Content"
 #~ msgstr "Verbergen gesprekken zonder inhoud"
 
-#: src/routes/project/ProjectsHome.tsx:137
+#: src/routes/project/ProjectsHome.tsx:138
 msgid "Home"
 msgstr "Home"
 
@@ -1272,7 +1277,7 @@ msgstr "Ongeldig token. Probeer het opnieuw."
 #~ msgid "Invite Link"
 #~ msgstr "Deelnemingslink"
 
-#: src/routes/participant/ParticipantConversation.tsx:275
+#: src/routes/participant/ParticipantConversation.tsx:281
 msgid "It looks like the conversation was deleted while you were recording. We've stopped the recording to prevent any issues. You can start a new one anytime."
 msgstr "Het lijkt erop dat het gesprek werd verwijderd terwijl je opnam. We hebben de opname gestopt om problemen te voorkomen. Je kunt een nieuwe opnemen wanneer je wilt."
 
@@ -1416,7 +1421,7 @@ msgstr "Vergaderingenotes"
 msgid "Messages from {0} - {1}%"
 msgstr "Berichten van {0} - {1}%"
 
-#: src/routes/participant/ParticipantConversation.tsx:197
+#: src/routes/participant/ParticipantConversation.tsx:203
 msgid "Microphone access is still denied. Please check your settings and try again."
 msgstr "Toegang tot de microfoon wordt nog steeds geweigerd. Controleer uw instellingen en probeer het opnieuw."
 
@@ -1481,7 +1486,7 @@ msgstr "Er zijn nieuwe gesprekken toegevoegd sinds de bibliotheek is gegenereerd
 msgid "New Password"
 msgstr "Nieuw wachtwoord"
 
-#: src/routes/project/ProjectsHome.tsx:105
+#: src/routes/project/ProjectsHome.tsx:106
 #: src/routes/auth/Login.tsx:95
 msgid "New Project"
 msgstr "Nieuw project"
@@ -1544,7 +1549,7 @@ msgstr "Nog geen gesprekken"
 msgid "No projects found {0}"
 msgstr "Geen projecten gevonden {0}"
 
-#: src/routes/project/ProjectsHome.tsx:222
+#: src/routes/project/ProjectsHome.tsx:227
 msgid "No projects found for search term"
 msgstr "Geen projecten gevonden voor de zoekterm"
 
@@ -1625,7 +1630,7 @@ msgstr "Actieve Gesprekken"
 #~ msgid "Only the {0} finished {1} will be included in the report right now. "
 #~ msgstr "Alleen de {0} voltooide {1} worden nu in het rapport opgenomen. "
 
-#: src/routes/participant/ParticipantConversation.tsx:342
+#: src/routes/participant/ParticipantConversation.tsx:348
 msgid "Oops! It looks like microphone access was denied. No worries, though! We've got a handy troubleshooting guide for you. Feel free to check it out. Once you've resolved the issue, come back and visit this page again to check if your microphone is ready."
 msgstr "Oeps! Het lijkt erop dat toegang tot de microfoon geweigerd is. Geen zorgen, we hebben een handige probleemoplossingsgids voor je. Voel je vrij om deze te bekijken. Zodra je het probleem hebt opgelost, kom dan terug naar deze pagina om te controleren of je microfoon klaar is voor gebruik."
 
@@ -1646,7 +1651,7 @@ msgstr "Openen"
 msgid "Open for Participation?"
 msgstr "Open voor deelneming?"
 
-#: src/routes/participant/ParticipantConversation.tsx:359
+#: src/routes/participant/ParticipantConversation.tsx:365
 msgid "Open troubleshooting guide"
 msgstr "Open de probleemoplossingsgids"
 
@@ -1709,7 +1714,7 @@ msgstr "Portal met wachtwoord beveiligen (aanvraag functie)"
 msgid "Passwords do not match"
 msgstr "Wachtwoorden komen niet overeen"
 
-#: src/routes/participant/ParticipantConversation.tsx:559
+#: src/routes/participant/ParticipantConversation.tsx:567
 msgid "Pause"
 msgstr "Pauze"
 
@@ -1778,7 +1783,7 @@ msgstr "Kies een taal voor je bijgewerkte rapport"
 #~ msgid "Please wait {timeStr} before requesting another echo."
 #~ msgstr "Wacht {timeStr} voordat u een ander echo aanvraagt."
 
-#: src/routes/participant/ParticipantConversation.tsx:213
+#: src/routes/participant/ParticipantConversation.tsx:219
 msgid "Please wait {timeStr} before requesting another Echo."
 msgstr "Wacht {timeStr} voordat u een andere Echo aanvraagt."
 
@@ -1894,11 +1899,11 @@ msgstr "Project Overzicht | Dembrane"
 msgid "Project Settings"
 msgstr "Project Instellingen"
 
-#: src/routes/project/ProjectsHome.tsx:159
+#: src/routes/project/ProjectsHome.tsx:160
 msgid "Projects"
 msgstr "Projecten"
 
-#: src/routes/project/ProjectsHome.tsx:49
+#: src/routes/project/ProjectsHome.tsx:50
 msgid "Projects | Dembrane"
 msgstr "Projecten | Dembrane"
 
@@ -1936,7 +1941,7 @@ msgstr "Klaar om te beginnen?"
 #~ msgid "Ready!"
 #~ msgstr "Klaar om te beginnen"
 
-#: src/routes/participant/ParticipantConversation.tsx:475
+#: src/routes/participant/ParticipantConversation.tsx:483
 msgid "Record"
 msgstr "Opname starten"
 
@@ -1987,8 +1992,8 @@ msgstr "Registreer als nieuwe gebruiker"
 #~ msgid "Relevance"
 #~ msgstr "Relevantie"
 
-#: src/routes/participant/ParticipantConversation.tsx:294
-#: src/routes/participant/ParticipantConversation.tsx:690
+#: src/routes/participant/ParticipantConversation.tsx:300
+#: src/routes/participant/ParticipantConversation.tsx:698
 msgid "Reload Page"
 msgstr "Pagina herladen"
 
@@ -2069,7 +2074,7 @@ msgstr "Wachtwoord resetten | Dembrane"
 #~ msgid "Resources"
 #~ msgstr "Bronnen"
 
-#: src/routes/participant/ParticipantConversation.tsx:549
+#: src/routes/participant/ParticipantConversation.tsx:557
 msgid "Resume"
 msgstr "Hervatten"
 
@@ -2125,7 +2130,7 @@ msgstr "Zoeken"
 msgid "Search conversations"
 msgstr "Zoek gesprekken"
 
-#: src/routes/project/ProjectsHome.tsx:212
+#: src/routes/project/ProjectsHome.tsx:215
 msgid "Search projects"
 msgstr "Zoek projecten"
 
@@ -2289,8 +2294,8 @@ msgstr "Sommige gesprekken worden nog verwerkt. Automatische selectie zal optima
 msgid "Some files were already selected and won't be added twice."
 msgstr "Sommige bestanden werden al geselecteerd en worden niet dubbel toegevoegd."
 
-#: src/routes/participant/ParticipantConversation.tsx:270
-#: src/routes/participant/ParticipantConversation.tsx:675
+#: src/routes/participant/ParticipantConversation.tsx:276
+#: src/routes/participant/ParticipantConversation.tsx:683
 #: src/routes/auth/Login.tsx:115
 #: src/components/participant/ParticipantInitiateForm.tsx:78
 #: src/components/conversation/ConversationEdit.tsx:109
@@ -2305,9 +2310,19 @@ msgstr "Er ging iets mis"
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Er ging iets mis met het gesprek. Probeer het alstublieft opnieuw of neem contact op met de ondersteuning als het probleem blijft bestaan"
 
+#. js-lingui-explicit-id
+#: src/components/participant/EchoErrorAlert.tsx:21
+msgid "participant.echo.generic.error.message"
+msgstr "Er is iets misgegaan. Probeer het alstublieft opnieuw."
+
 #: src/routes/participant/ParticipantConversation.tsx:842
 #~ msgid "Something went wrong. Please try again."
 #~ msgstr "Er is iets misgegaan. Probeer het alstublieft opnieuw."
+
+#. js-lingui-explicit-id
+#: src/components/participant/EchoErrorAlert.tsx:16
+msgid "participant.echo.content.policy.violation.error.message"
+msgstr "We kunnen deze aanvraag niet verwerken vanwege de inhoudsbeleid van de LLM-provider."
 
 #: src/components/conversation/ConversationAccordion.tsx:824
 msgid "Sort"
@@ -2334,8 +2349,8 @@ msgstr "Spreker"
 msgid "Specific Context"
 msgstr "Specifieke context"
 
-#: src/routes/participant/ParticipantConversation.tsx:304
-#: src/routes/participant/ParticipantConversation.tsx:700
+#: src/routes/participant/ParticipantConversation.tsx:310
+#: src/routes/participant/ParticipantConversation.tsx:708
 msgid "Start New Conversation"
 msgstr "Nieuw gesprek starten"
 
@@ -2348,11 +2363,11 @@ msgid "Status"
 msgstr "Status"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:410
-#: src/routes/participant/ParticipantConversation.tsx:604
+#: src/routes/participant/ParticipantConversation.tsx:612
 msgid "Stop"
 msgstr "Stop"
 
-#: src/routes/participant/ParticipantConversation.tsx:748
+#: src/routes/participant/ParticipantConversation.tsx:756
 #: src/routes/auth/RequestPasswordReset.tsx:41
 msgid "Submit"
 msgstr "Stuur in"
@@ -2418,8 +2433,8 @@ msgstr "Bedankt pagina inhoud"
 msgid "Thank you! We'll notify you when the report is ready."
 msgstr "Bedankt! We zullen u waarschuwen wanneer het rapport klaar is."
 
-#: src/routes/participant/ParticipantConversation.tsx:281
-#: src/routes/participant/ParticipantConversation.tsx:678
+#: src/routes/participant/ParticipantConversation.tsx:287
+#: src/routes/participant/ParticipantConversation.tsx:686
 msgid "The conversation could not be loaded. Please try again or contact support."
 msgstr "Het gesprek kon niet worden geladen. Probeer het alstublieft opnieuw of neem contact op met de ondersteuning."
 
@@ -2476,7 +2491,7 @@ msgstr "Er is een fout opgetreden bij het verifiëren van uw e-mail. Probeer het
 msgid "These default view templates will be generated when you create your first library."
 msgstr "Deze standaard weergave sjablonen worden gegenereerd wanneer u uw eerste bibliotheek maakt."
 
-#: src/routes/participant/ParticipantConversation.tsx:408
+#: src/routes/participant/ParticipantConversation.tsx:414
 msgid "Thinking..."
 msgstr "Denken..."
 
@@ -2730,7 +2745,7 @@ msgstr "Typ een bericht..."
 #~ msgid "Type context here..."
 #~ msgstr "Typ hier de context..."
 
-#: src/routes/participant/ParticipantConversation.tsx:735
+#: src/routes/participant/ParticipantConversation.tsx:743
 msgid "Type your response here"
 msgstr "Typ hier uw reactie"
 
@@ -2891,7 +2906,7 @@ msgstr "Welkom bij Dembrane!"
 msgid "Welcome to Reports!"
 msgstr "Welkom bij Rapporten!"
 
-#: src/routes/project/ProjectsHome.tsx:188
+#: src/routes/project/ProjectsHome.tsx:191
 msgid "Welcome to Your Home! Here you can see all your projects and get access to tutorial resources. Currently, you have no projects. Click \"Create\" to configure to get started!"
 msgstr "Welkom op je Home! Hier kun je al je projecten bekijken en toegang krijgen tot tutorialbronnen. Momenteel heb je nog geen projecten. Klik op \"Maak\" om te beginnen!"
 
