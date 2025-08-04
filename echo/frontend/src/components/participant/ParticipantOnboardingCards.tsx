@@ -8,8 +8,10 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { Button, Stack, Title } from "@mantine/core";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import { cn } from "@/lib/utils";
+import { IconMicrophone } from "@tabler/icons-react";
 import { Play } from "lucide-react";
 import { ParticipantInitiateForm } from "./ParticipantInitiateForm";
+import MicrophoneTest from "./MicrophoneTest";
 
 interface Slide {
   title: string;
@@ -45,18 +47,48 @@ const ParticipantOnboardingCards = ({
   project: Project;
   initialCards: LanguageCards;
 }) => {
+  const [searchParams] = useSearchParams();
+  const skipOnboarding = searchParams.get("skipOnboarding");
+
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [checkboxStates, setCheckboxStates] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [animationDirection, setAnimationDirection] = useState("");
+  const [micTestSuccess, setMicTestSuccess] = useState(false);
+
+  const { language } = useLanguage();
+
   const InitiateFormComponent = useMemo(
     () => () => <ParticipantInitiateForm project={project} />,
     [project],
   );
 
-  const [searchParams] = useSearchParams();
-  const skipOnboarding = searchParams.get("skipOnboarding");
+  const MicrophoneTestComponent = useMemo(
+    () => () => (
+      <MicrophoneTest
+        onContinue={(_id: string) => {}}
+        onMicTestSuccess={setMicTestSuccess}
+      />
+    ),
+    [setMicTestSuccess],
+  );
 
   const cards: LanguageCards = {
     ...initialCards,
     "en-US": [
       ...initialCards["en-US"],
+      {
+        section: "Microphone Check",
+        slides: [
+          {
+            title: "Microphone Check",
+            content: "Let's Make Sure We Can Hear You.",
+            icon: IconMicrophone,
+            component: MicrophoneTestComponent,
+          },
+        ],
+      },
       {
         section: "Get Started",
         slides: [
@@ -71,6 +103,17 @@ const ParticipantOnboardingCards = ({
     "nl-NL": [
       ...initialCards["nl-NL"],
       {
+        section: "Microfoon Controle",
+        slides: [
+          {
+            title: "Microfoon Controle",
+            content: "Laten we zorgen dat we je kunnen horen.",
+            icon: IconMicrophone,
+            component: MicrophoneTestComponent,
+          },
+        ],
+      },
+      {
         section: "Aan de slag",
         slides: [
           {
@@ -83,6 +126,17 @@ const ParticipantOnboardingCards = ({
     ],
     "de-DE": [
       ...initialCards["de-DE"],
+      {
+        section: "Mikrofon-Check",
+        slides: [
+          {
+            title: "Mikrofon-Check",
+            content: "Lass uns sichergehen, dass wir dich hören können.",
+            icon: IconMicrophone,
+            component: MicrophoneTestComponent,
+          },
+        ],
+      },
       {
         section: "Bereit zum Start?",
         slides: [
@@ -97,6 +151,17 @@ const ParticipantOnboardingCards = ({
     "fr-FR": [
       ...initialCards["fr-FR"],
       {
+        section: "Vérification du Microphone",
+        slides: [
+          {
+            title: "Vérification du Microphone",
+            content: "Vérifions que nous puissions vous entendre.",
+            icon: IconMicrophone,
+            component: MicrophoneTestComponent,
+          },
+        ],
+      },
+      {
         section: "Prêt à commencer?",
         slides: [
           {
@@ -110,6 +175,17 @@ const ParticipantOnboardingCards = ({
     "es-ES": [
       ...initialCards["es-ES"],
       {
+        section: "Verificación del Micrófono",
+        slides: [
+          {
+            title: "Verificación del Micrófono",
+            content: "Verifiquemos que podamos escucharte.",
+            icon: IconMicrophone,
+            component: MicrophoneTestComponent,
+          },
+        ],
+      },
+      {
         section: "¿Listo para empezar?",
         slides: [
           {
@@ -121,14 +197,6 @@ const ParticipantOnboardingCards = ({
       },
     ],
   };
-
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [checkboxStates, setCheckboxStates] = useState<Record<string, boolean>>(
-    {},
-  );
-  const [animationDirection, setAnimationDirection] = useState("");
-
-  const { language } = useLanguage();
 
   // Add this check to ensure we have valid data
   const languageCards = cards[language as keyof typeof cards] || [];
@@ -182,7 +250,7 @@ const ParticipantOnboardingCards = ({
       {skipOnboarding === "1" ? (
         <Stack className="w-full max-w-[400px] text-left">
           <Title order={2}>
-            <Trans>Ready to Begin?</Trans>
+            <Trans id="participant.ready.to.begin">Ready to Begin?</Trans>
           </Title>
           <ParticipantInitiateForm project={project} />
         </Stack>
@@ -262,28 +330,56 @@ const ParticipantOnboardingCards = ({
           </div>
 
           <div className="mt-8 flex w-full items-center justify-between gap-4">
-            <Button
-              onClick={prevSlide}
-              variant="outline"
-              color="gray"
-              size="md"
-              disabled={currentSlideIndex === 0}
-              className={!isLastSlide ? "basis-1/2" : "w-full"}
-            >
-              <Trans>Back</Trans>
-            </Button>
-            {!isLastSlide && (
-              <Button
-                onClick={nextSlide}
-                size="md"
-                disabled={
-                  currentCard.checkbox?.required &&
-                  !checkboxStates[`${currentSlideIndex}`]
-                }
-                className="basis-1/2"
-              >
-                {currentCard.cta ? currentCard.cta : <Trans>Next</Trans>}
-              </Button>
+            {currentCard.title.includes("Microphone") ? (
+              <>
+                <Button
+                  onClick={prevSlide}
+                  variant="outline"
+                  color="gray"
+                  size="md"
+                  className="basis-1/2"
+                >
+                  <Trans id="participant.button.back.microphone">Back</Trans>
+                </Button>
+                <Button
+                  onClick={nextSlide}
+                  size="md"
+                  disabled={!micTestSuccess}
+                  className="basis-1/2"
+                >
+                  <Trans id="participant.button.continue">Continue</Trans>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  onClick={prevSlide}
+                  variant="outline"
+                  color="gray"
+                  size="md"
+                  disabled={currentSlideIndex === 0}
+                  className={!isLastSlide ? "basis-1/2" : "w-full"}
+                >
+                  <Trans id="participant.button.back">Back</Trans>
+                </Button>
+                {!isLastSlide && (
+                  <Button
+                    onClick={nextSlide}
+                    size="md"
+                    disabled={
+                      currentCard.checkbox?.required &&
+                      !checkboxStates[`${currentSlideIndex}`]
+                    }
+                    className="basis-1/2"
+                  >
+                    {currentCard.cta ? (
+                      currentCard.cta
+                    ) : (
+                      <Trans id="participant.button.next">Next</Trans>
+                    )}
+                  </Button>
+                )}
+              </>
             )}
           </div>
 

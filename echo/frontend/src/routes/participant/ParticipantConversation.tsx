@@ -33,6 +33,7 @@ import { useParams, useSearchParams } from "react-router-dom";
 
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWakeLock } from "@/hooks/useWakeLock";
+import Cookies from "js-cookie";
 import clsx from "clsx";
 
 import { finishConversation } from "@/lib/api";
@@ -55,7 +56,6 @@ import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
 import { API_BASE_URL } from "@/config";
 import useChunkedAudioRecorder from "@/components/participant/hooks/useChunkedAudioRecorder";
-import MicrophoneTest from "../../components/participant/MicrophoneTest";
 import { EchoErrorAlert } from "@/components/participant/EchoErrorAlert";
 
 const DEFAULT_REPLY_COOLDOWN = 120; // 2 minutes in seconds
@@ -64,10 +64,9 @@ export const ParticipantConversationAudioRoute = () => {
   const { projectId, conversationId } = useParams();
   const [searchParams] = useSearchParams();
 
-  // Check if device ID exists in search params to determine if mic test is needed
-  const savedDeviceId = searchParams.get("micDeviceId");
-  const [showMicTest, setShowMicTest] = useState(!savedDeviceId);
-  const [deviceId, setDeviceId] = useState<string>(savedDeviceId || "");
+  // Get device ID from cookies for audio recording
+  const savedDeviceId = Cookies.get("micDeviceId");
+  const deviceId = savedDeviceId || "";
 
   const projectQuery = useParticipantProjectById(projectId ?? "");
   const conversationQuery = useConversationQuery(projectId, conversationId);
@@ -271,20 +270,24 @@ export const ParticipantConversationAudioRoute = () => {
         <div className="p-8 text-center">
           <Text size="xl" fw={500} c="red" mb="md">
             {conversationDeletedDuringRecording ? (
-              <Trans>Conversation Ended</Trans>
+              <Trans id="participant.conversation.ended">
+                Conversation Ended
+              </Trans>
             ) : (
-              <Trans>Something went wrong</Trans>
+              <Trans id="participant.conversation.error">
+                Something went wrong
+              </Trans>
             )}
           </Text>
           <Text size="md" c="dimmed" mb="lg">
             {conversationDeletedDuringRecording ? (
-              <Trans>
+              <Trans id="participant.conversation.error.deleted">
                 It looks like the conversation was deleted while you were
                 recording. We've stopped the recording to prevent any issues.
                 You can start a new one anytime.
               </Trans>
             ) : (
-              <Trans>
+              <Trans id="participant.conversation.error.loading">
                 The conversation could not be loaded. Please try again or
                 contact support.
               </Trans>
@@ -297,7 +300,7 @@ export const ParticipantConversationAudioRoute = () => {
               onClick={() => window.location.reload()}
               leftSection={<IconReload />}
             >
-              <Trans>Reload Page</Trans>
+              <Trans id="participant.button.reload">Reload Page</Trans>
             </Button>
             {newConversationLink && (
               <Button
@@ -307,7 +310,9 @@ export const ParticipantConversationAudioRoute = () => {
                 component="a"
                 href={newConversationLink}
               >
-                <Trans>Start New Conversation</Trans>
+                <Trans id="participant.button.start.new.conversation">
+                  Start New Conversation
+                </Trans>
               </Button>
             )}
           </Group>
@@ -318,17 +323,6 @@ export const ParticipantConversationAudioRoute = () => {
 
   const textModeUrl = `/${projectId}/conversation/${conversationId}/text`;
   const finishUrl = `/${projectId}/conversation/${conversationId}/finish`;
-
-  if (showMicTest) {
-    return (
-      <MicrophoneTest
-        onContinue={(id: string) => {
-          setDeviceId(id);
-          setShowMicTest(false);
-        }}
-      />
-    );
-  }
 
   return (
     <div className="container mx-auto flex h-full max-w-2xl flex-col">
@@ -345,7 +339,7 @@ export const ParticipantConversationAudioRoute = () => {
         <div className="h-full rounded-md bg-white py-4">
           <Stack className="container mx-auto mt-4 max-w-2xl px-2" gap="lg">
             <div className="max-w-prose text-lg">
-              <Trans>
+              <Trans id="participant.alert.microphone.access.failure">
                 Oops! It looks like microphone access was denied. No worries,
                 though! We've got a handy troubleshooting guide for you. Feel
                 free to check it out. Once you've resolved the issue, come back
@@ -362,7 +356,9 @@ export const ParticipantConversationAudioRoute = () => {
               variant={!troubleShootingGuideOpened ? "filled" : "light"}
               onClick={() => setTroubleShootingGuideOpened(true)}
             >
-              <Trans>Open troubleshooting guide</Trans>
+              <Trans id="participant.button.open.troubleshooting.guide">
+                Open troubleshooting guide
+              </Trans>
             </Button>
             <Divider />
             <Button
@@ -371,7 +367,9 @@ export const ParticipantConversationAudioRoute = () => {
               variant={troubleShootingGuideOpened ? "filled" : "light"}
               onClick={handleCheckMicrophoneAccess}
             >
-              <Trans>Check microphone access</Trans>
+              <Trans id="participant.button.check.microphone.access">
+                Check microphone access
+              </Trans>
             </Button>
           </Stack>
         </div>
@@ -480,7 +478,7 @@ export const ParticipantConversationAudioRoute = () => {
                     onClick={startRecording}
                     className="flex-grow"
                   >
-                    <Trans>Record</Trans>
+                    <Trans id="participant.button.record">Record</Trans>
                   </Button>
 
                   {chunks?.data &&
@@ -509,7 +507,7 @@ export const ParticipantConversationAudioRoute = () => {
                               </Trans>
                             </Text>
                           ) : (
-                            <Trans>ECHO</Trans>
+                            <Trans id="participant.button.echo">ECHO</Trans>
                           )}
                         </Button>
                       </Group>
@@ -537,7 +535,7 @@ export const ParticipantConversationAudioRoute = () => {
                       loading={isFinishing}
                       disabled={isFinishing}
                     >
-                      <Trans>Finish</Trans>
+                      <Trans id="participant.button.finish">Finish</Trans>
                     </Button>
                   )}
                 </Group>
@@ -554,7 +552,7 @@ export const ParticipantConversationAudioRoute = () => {
                     rightSection={<IconPlayerPlay size={16} />}
                     onClick={resumeRecording}
                   >
-                    <Trans>Resume</Trans>
+                    <Trans id="participant.button.resume">Resume</Trans>
                   </Button>
                 ) : (
                   <Button
@@ -564,7 +562,7 @@ export const ParticipantConversationAudioRoute = () => {
                     rightSection={<IconPlayerPause size={16} />}
                     onClick={pauseRecording}
                   >
-                    <Trans>Pause</Trans>
+                    <Trans id="participant.button.pause">Pause</Trans>
                   </Button>
                 )}
 
@@ -594,7 +592,7 @@ export const ParticipantConversationAudioRoute = () => {
                             </Trans>
                           </Text>
                         ) : (
-                          <Trans>ECHO</Trans>
+                          <Trans id="participant.button.echo">ECHO</Trans>
                         )}
                       </Button>
                     </Group>
@@ -609,7 +607,7 @@ export const ParticipantConversationAudioRoute = () => {
                   }}
                 >
                   <span className="hidden md:block">
-                    <Trans>Stop</Trans>
+                    <Trans id="participant.button.stop">Stop</Trans>
                   </span>
                   <IconPlayerStopFilled size={20} className="ml-0 md:ml-1" />
                 </Button>
@@ -680,10 +678,12 @@ export const ParticipantConversationTextRoute = () => {
       <div className="container mx-auto flex h-full max-w-2xl flex-col items-center justify-center">
         <div className="p-8 text-center">
           <Text size="xl" fw={500} c="red" mb="md">
-            <Trans>Something went wrong</Trans>
+            <Trans id="participant.conversation.error.text.mode">
+              Something went wrong
+            </Trans>
           </Text>
           <Text size="md" c="dimmed" mb="lg">
-            <Trans>
+            <Trans id="participant.conversation.error.loading.text.mode">
               The conversation could not be loaded. Please try again or contact
               support.
             </Trans>
@@ -695,7 +695,9 @@ export const ParticipantConversationTextRoute = () => {
               onClick={() => window.location.reload()}
               leftSection={<IconReload />}
             >
-              <Trans>Reload Page</Trans>
+              <Trans id="participant.button.reload.page.text.mode">
+                Reload Page
+              </Trans>
             </Button>
             {newConversationLink && (
               <Button
@@ -705,7 +707,9 @@ export const ParticipantConversationTextRoute = () => {
                 component="a"
                 href={newConversationLink}
               >
-                <Trans>Start New Conversation</Trans>
+                <Trans id="participant.button.start.new.conversation.text.mode">
+                  Start New Conversation
+                </Trans>
               </Button>
             )}
           </Group>
@@ -753,7 +757,7 @@ export const ParticipantConversationTextRoute = () => {
             loading={uploadChunkMutation.isPending}
             className="flex-grow"
           >
-            <Trans>Submit</Trans>
+            <Trans id="participant.button.submit.text.mode">Submit</Trans>
           </Button>
 
           <I18nLink to={audioModeUrl}>
@@ -770,7 +774,7 @@ export const ParticipantConversationTextRoute = () => {
               variant="light"
               rightSection={<IconCheck />}
             >
-              <Trans>Finish</Trans>
+              <Trans id="participant.button.finish.text.mode">Finish</Trans>
             </Button>
           )}
         </Group>

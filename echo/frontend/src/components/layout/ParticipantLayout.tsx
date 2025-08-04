@@ -1,11 +1,15 @@
 import { Outlet, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { Group } from "@mantine/core";
+import { useState } from "react";
+import { Group, ActionIcon, Box } from "@mantine/core";
 import useSessionStorageState from "use-session-storage-state";
+import { IconSettings } from "@tabler/icons-react";
 
 import { Logo } from "../common/Logo";
 import { I18nProvider } from "./I18nProvider";
-import { cn } from "@/lib/utils";
+
+import { t } from "@lingui/core/macro";
+
+import { ParticipantSettingsModal } from "../participant/ParticipantSettingsModal";
 
 const ParticipantHeader = () => {
   const [loadingFinished] = useSessionStorageState("loadingFinished", {
@@ -26,6 +30,7 @@ const ParticipantHeader = () => {
 export const ParticipantLayout = () => {
   const { pathname } = useLocation();
   const isReportPage = pathname.includes("report");
+  const [settingsModalOpened, setSettingsModalOpened] = useState(false);
 
   if (isReportPage) {
     return (
@@ -39,9 +44,24 @@ export const ParticipantLayout = () => {
 
   return (
     <I18nProvider>
+      <ParticipantSettingsModal
+        opened={settingsModalOpened}
+        onClose={() => setSettingsModalOpened(false)}
+      />
+
       <main className="relative !h-dvh overflow-y-auto">
         <div className="flex h-full flex-col">
           <ParticipantHeader />
+          <Box className="absolute right-4 top-5 z-20">
+            <ActionIcon
+              size="lg"
+              variant="transparent"
+              onClick={() => setSettingsModalOpened(true)}
+              title={t`Settings`}
+            >
+              <IconSettings size={24} color="black" />
+            </ActionIcon>
+          </Box>
           <main className="relative grow">
             <Outlet />
           </main>
