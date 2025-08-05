@@ -259,10 +259,22 @@ const ParticipantOnboardingCards = ({
           <div
             key={currentSlideIndex}
             className={cn(
-              `flex w-full max-w-[400px] flex-grow flex-col items-center justify-center gap-4 rounded-xl bg-white p-4 text-center shadow`,
+              `relative flex w-full max-w-[400px] flex-grow flex-col items-center justify-center gap-4 rounded-xl bg-white p-4 text-center shadow`,
               `${animationDirection}`,
             )}
           >
+            {currentCard.title.includes("Microphone") && (
+              <Button
+                onClick={nextSlide}
+                variant="subtle"
+                color="blue"
+                size="md"
+                p="sm"
+                className="absolute right-4 top-4"
+              >
+                <Trans id="participant.mic.check.button.skip">Skip</Trans>
+              </Button>
+            )}
             <div
               className={cn(
                 "transform transition-all duration-300 ease-in-out hover:scale-110",

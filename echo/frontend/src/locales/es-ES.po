@@ -131,8 +131,8 @@ msgstr "*Transcripción en progreso.*"
 #. placeholder {0}: Math.floor(remainingCooldown / 60)
 #. placeholder {1}: (remainingCooldown % 60) .toString() .padStart(2, "0")
 #. placeholder {1}: (remainingCooldown % 60) .toString() .padStart(2, "0")
-#: src/routes/participant/ParticipantConversation.tsx:569
-#: src/routes/participant/ParticipantConversation.tsx:635
+#: src/routes/participant/ParticipantConversation.tsx:571
+#: src/routes/participant/ParticipantConversation.tsx:637
 msgid "<0>Wait </0>{0}:{1}"
 msgstr "<0>Espera </0>{0}:{1}"
 
@@ -290,7 +290,7 @@ msgid "participant.modal.stop.message"
 msgstr "¿Estás seguro de que quieres detener la conversación?"
 
 #. js-lingui-explicit-id
-#: src/routes/participant/ParticipantConversation.tsx:821
+#: src/routes/participant/ParticipantConversation.tsx:830
 msgid "participant.modal.finish.message.text.mode"
 msgstr "¿Estás seguro de que quieres terminar la conversación?"
 
@@ -371,12 +371,12 @@ msgid "Available"
 msgstr "Disponible"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:342
+#: src/components/participant/ParticipantOnboardingCards.tsx:354
 msgid "participant.button.back.microphone"
 msgstr "Volver"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:363
+#: src/components/participant/ParticipantOnboardingCards.tsx:375
 msgid "participant.button.back"
 msgstr "Volver"
 
@@ -534,7 +534,7 @@ msgid "Context added:"
 msgstr "Contexto añadido:"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:350
+#: src/components/participant/ParticipantOnboardingCards.tsx:362
 #: src/components/participant/MicrophoneTest.tsx:345
 msgid "participant.button.continue"
 msgstr "Continuar"
@@ -741,12 +741,12 @@ msgid "Dutch"
 msgstr "Holandés"
 
 #. js-lingui-explicit-id
-#: src/routes/participant/ParticipantConversation.tsx:578
+#: src/routes/participant/ParticipantConversation.tsx:580
 msgid "participant.button.echo"
 msgstr "Echo"
 
 #. js-lingui-explicit-id
-#: src/routes/participant/ParticipantConversation.tsx:644
+#: src/routes/participant/ParticipantConversation.tsx:646
 msgid "participant.button.is.recording.echo"
 msgstr "Echo"
 
@@ -1021,12 +1021,12 @@ msgstr "Tamaño del archivo: Mínimo {0}, Máximo {1}, hasta {MAX_FILES} archivo
 #~ msgstr "Filtrar"
 
 #. js-lingui-explicit-id
-#: src/routes/participant/ParticipantConversation.tsx:609
+#: src/routes/participant/ParticipantConversation.tsx:611
 msgid "participant.button.finish"
 msgstr "Finalizar"
 
 #. js-lingui-explicit-id
-#: src/routes/participant/ParticipantConversation.tsx:896
+#: src/routes/participant/ParticipantConversation.tsx:911
 msgid "participant.button.finish.text.mode"
 msgstr "Finalizar"
 
@@ -1041,7 +1041,7 @@ msgid "participant.modal.stop.title"
 msgstr "¿Estás seguro de que quieres detener la conversación?"
 
 #. js-lingui-explicit-id
-#: src/routes/participant/ParticipantConversation.tsx:810
+#: src/routes/participant/ParticipantConversation.tsx:819
 msgid "participant.modal.finish.title.text.mode"
 msgstr "¿Estás seguro de que quieres terminar la conversación?"
 
@@ -1423,7 +1423,7 @@ msgid "Newest First"
 msgstr "Más nuevos primero"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:378
+#: src/components/participant/ParticipantOnboardingCards.tsx:390
 msgid "participant.button.next"
 msgstr "Siguiente"
 
@@ -1437,12 +1437,12 @@ msgstr "¿Listo para comenzar?"
 #~ msgstr "Siguiente"
 
 #. js-lingui-explicit-id
-#: src/routes/participant/ParticipantConversation.tsx:432
+#: src/routes/participant/ParticipantConversation.tsx:433
 msgid "participant.button.stop.no"
 msgstr "Detener"
 
 #. js-lingui-explicit-id
-#: src/routes/participant/ParticipantConversation.tsx:833
+#: src/routes/participant/ParticipantConversation.tsx:843
 msgid "participant.button.finish.no.text.mode"
 msgstr "Detener"
 
@@ -1647,7 +1647,7 @@ msgid "Passwords do not match"
 msgstr "Las contraseñas no coinciden"
 
 #. js-lingui-explicit-id
-#: src/routes/participant/ParticipantConversation.tsx:672
+#: src/routes/participant/ParticipantConversation.tsx:674
 msgid "participant.button.pause"
 msgstr "Pausar"
 
@@ -1869,7 +1869,7 @@ msgstr "¿Listo para comenzar?"
 #~ msgstr "¿Listo para comenzar?"
 
 #. js-lingui-explicit-id
-#: src/routes/participant/ParticipantConversation.tsx:549
+#: src/routes/participant/ParticipantConversation.tsx:551
 msgid "participant.button.record"
 msgstr "Grabar"
 
@@ -1930,7 +1930,7 @@ msgid "participant.button.reload"
 msgstr "Recargar"
 
 #. js-lingui-explicit-id
-#: src/routes/participant/ParticipantConversation.tsx:778
+#: src/routes/participant/ParticipantConversation.tsx:787
 msgid "participant.button.reload.page.text.mode"
 msgstr "Recargar"
 
@@ -2022,7 +2022,7 @@ msgstr "Restablecer Contraseña | Dembrane"
 #~ msgstr "Recursos"
 
 #. js-lingui-explicit-id
-#: src/routes/participant/ParticipantConversation.tsx:660
+#: src/routes/participant/ParticipantConversation.tsx:662
 msgid "participant.button.resume"
 msgstr "Reanudar"
 
@@ -2244,6 +2244,11 @@ msgstr "Mostrar línea de tiempo en el informe (solicitar función)"
 msgid "Sign in with Google"
 msgstr "Iniciar sesión con Google"
 
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantOnboardingCards.tsx:275
+msgid "participant.mic.check.button.skip"
+msgstr "Omitir"
+
 #: src/components/participant/MicrophoneTest.tsx:330
 #~ msgid "Skip"
 #~ msgstr "Omitir"
@@ -2262,7 +2267,7 @@ msgid "participant.conversation.error"
 msgstr "Algo salió mal con la conversación. Por favor, inténtalo de nuevo o contacta al soporte si el problema persiste"
 
 #. js-lingui-explicit-id
-#: src/routes/participant/ParticipantConversation.tsx:761
+#: src/routes/participant/ParticipantConversation.tsx:770
 msgid "participant.conversation.error.text.mode"
 msgstr "Algo salió mal con la conversación. Por favor, inténtalo de nuevo o contacta al soporte si el problema persiste"
 
@@ -2325,7 +2330,7 @@ msgid "participant.button.start.new.conversation"
 msgstr "Iniciar nueva conversación"
 
 #. js-lingui-explicit-id
-#: src/routes/participant/ParticipantConversation.tsx:790
+#: src/routes/participant/ParticipantConversation.tsx:799
 msgid "participant.button.start.new.conversation.text.mode"
 msgstr "Iniciar nueva conversación"
 
@@ -2342,17 +2347,17 @@ msgstr "Iniciar nueva conversación"
 msgid "Status"
 msgstr "Estado"
 
-#. js-lingui-explicit-id
-#: src/routes/participant/ParticipantConversation.tsx:686
-msgid "participant.button.stop"
-msgstr "Detener"
-
 #: src/routes/project/chat/ProjectChatRoute.tsx:410
 msgid "Stop"
 msgstr "Detener"
 
 #. js-lingui-explicit-id
-#: src/routes/participant/ParticipantConversation.tsx:879
+#: src/routes/participant/ParticipantConversation.tsx:695
+msgid "participant.button.stop"
+msgstr "Detener"
+
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:894
 msgid "participant.button.submit.text.mode"
 msgstr "Enviar"
 
@@ -2419,7 +2424,7 @@ msgid "participant.conversation.error.loading"
 msgstr "Algo salió mal con la conversación. Por favor, inténtalo de nuevo o contacta al soporte si el problema persiste"
 
 #. js-lingui-explicit-id
-#: src/routes/participant/ParticipantConversation.tsx:766
+#: src/routes/participant/ParticipantConversation.tsx:775
 msgid "participant.conversation.error.loading.text.mode"
 msgstr "Algo salió mal con la conversación. Por favor, inténtalo de nuevo o contacta al soporte si el problema persiste"
 
@@ -2481,7 +2486,7 @@ msgstr "Hubo un error al verificar tu correo electrónico. Por favor, inténtalo
 msgid "These default view templates will be generated when you create your first library."
 msgstr "Estas plantillas de vista predeterminadas se generarán cuando crees tu primera biblioteca."
 
-#: src/routes/participant/ParticipantConversation.tsx:480
+#: src/routes/participant/ParticipantConversation.tsx:482
 msgid "Thinking..."
 msgstr "Pensando..."
 
@@ -2702,7 +2707,7 @@ msgstr "Intenta moverte un poco más cerca de tu micrófono para mejorar la cali
 msgid "Type a message..."
 msgstr "Escribe un mensaje..."
 
-#: src/routes/participant/ParticipantConversation.tsx:866
+#: src/routes/participant/ParticipantConversation.tsx:881
 msgid "Type your response here"
 msgstr "Escribe tu respuesta aquí"
 
@@ -2882,12 +2887,12 @@ msgid "will be included in your report"
 msgstr "se incluirá en tu informe"
 
 #. js-lingui-explicit-id
-#: src/routes/participant/ParticipantConversation.tsx:440
+#: src/routes/participant/ParticipantConversation.tsx:442
 msgid "participant.button.stop.yes"
 msgstr "Detener"
 
 #. js-lingui-explicit-id
-#: src/routes/participant/ParticipantConversation.tsx:836
+#: src/routes/participant/ParticipantConversation.tsx:851
 msgid "participant.button.finish.yes.text.mode"
 msgstr "Detener"
 
