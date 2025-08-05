@@ -428,6 +428,7 @@ export const ParticipantConversationAudioRoute = () => {
               disabled={isStopping}
               miw={100}
               radius="md"
+              size="md"
             >
               <Trans id="participant.button.stop.no">No</Trans>
             </Button>
@@ -436,6 +437,7 @@ export const ParticipantConversationAudioRoute = () => {
               loading={isStopping}
               miw={100}
               radius="md"
+              size="md"
             >
               <Trans id="participant.button.stop.yes">Yes</Trans>
             </Button>
@@ -682,6 +684,13 @@ export const ParticipantConversationAudioRoute = () => {
                   color="red"
                   onClick={handleStopRecording}
                   disabled={isStopping}
+                  className={
+                    !chunks?.data ||
+                    chunks.data.length === 0 ||
+                    !projectQuery.data?.is_get_reply_enabled
+                      ? "flex-1"
+                      : ""
+                  }
                 >
                   <Trans id="participant.button.stop">Stop</Trans>
                   <IconPlayerStopFilled
@@ -829,10 +838,16 @@ export const ParticipantConversationTextRoute = () => {
               onClick={closeFinishModal}
               miw={100}
               radius="md"
+              size="md"
             >
               <Trans id="participant.button.finish.no.text.mode">No</Trans>
             </Button>
-            <Button onClick={handleConfirmFinishButton} miw={100} radius="md">
+            <Button
+              onClick={handleConfirmFinishButton}
+              miw={100}
+              radius="md"
+              size="md"
+            >
               <Trans id="participant.button.finish.yes.text.mode">Yes</Trans>
             </Button>
           </Group>
