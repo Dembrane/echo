@@ -30,7 +30,7 @@ import {
 } from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-
+import { useDisclosure } from "@mantine/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import Cookies from "js-cookie";
@@ -101,6 +101,8 @@ export const ParticipantConversationAudioRoute = () => {
   ] = useState(false);
 
   const [isFinishing, setIsFinishing] = useState(false);
+  const [isStopping, setIsStopping] = useState(false);
+  const [opened, { open, close }] = useDisclosure(false);
   // Navigation and language
   const navigate = useI18nNavigate();
   const { iso639_1 } = useLanguage();
@@ -255,6 +257,34 @@ export const ParticipantConversationAudioRoute = () => {
     }
   };
 
+  const handleStopRecording = () => {
+    if (isRecording) {
+      pauseRecording();
+      open();
+    }
+  };
+
+  const handleResumeRecording = () => {
+    close();
+    if (isPaused) {
+      resumeRecording();
+    }
+  };
+
+  const handleConfirmFinish = async () => {
+    setIsStopping(true);
+    try {
+      stopRecording();
+      await finishConversation(conversationId ?? "");
+      close();
+      navigate(finishUrl);
+    } catch (error) {
+      console.error("Error finishing conversation:", error);
+      toast.error(t`Failed to finish conversation. Please try again.`);
+      setIsStopping(false);
+    }
+  };
+
   if (conversationQuery.isLoading || projectQuery.isLoading) {
     return <LoadingOverlay visible />;
   }
@@ -373,6 +403,51 @@ export const ParticipantConversationAudioRoute = () => {
             </Button>
           </Stack>
         </div>
+      </Modal>
+
+      {/* modal for stop recording confirmation */}
+      <Modal
+        opened={opened}
+        onClose={isStopping ? () => {} : handleResumeRecording}
+        closeOnClickOutside={!isStopping}
+        closeOnEscape={!isStopping}
+        centered
+        title={
+          <Text fw={500}>
+            <Trans id="participant.modal.stop.title">Confirm Action</Trans>
+          </Text>
+        }
+        size="sm"
+        radius="md"
+        padding="xl"
+      >
+        <Stack gap="lg">
+          <Text>
+            <Trans id="participant.modal.stop.message">
+              Are you sure you want to finish the conversation?
+            </Trans>
+          </Text>
+          <Group grow gap="md">
+            <Button
+              variant="outline"
+              color="gray"
+              onClick={handleResumeRecording}
+              disabled={isStopping}
+              miw={100}
+              radius="md"
+            >
+              <Trans id="participant.button.stop.no">No</Trans>
+            </Button>
+            <Button
+              onClick={handleConfirmFinish}
+              loading={isStopping}
+              miw={100}
+              radius="md"
+            >
+              <Trans id="participant.button.stop.yes">Yes</Trans>
+            </Button>
+          </Group>
+        </Stack>
       </Modal>
 
       <Box className={clsx("relative flex-grow p-4 pb-12 transition-all")}>
@@ -524,20 +599,23 @@ export const ParticipantConversationAudioRoute = () => {
                     </ActionIcon>
                   </I18nLink>
 
-                  {!isRecording && chunks?.data && chunks.data.length > 0 && (
-                    <Button
-                      size="lg"
-                      radius="md"
-                      onClick={handleFinish}
-                      variant="light"
-                      rightSection={<IconCheck />}
-                      className="w-full md:w-auto"
-                      loading={isFinishing}
-                      disabled={isFinishing}
-                    >
-                      <Trans id="participant.button.finish">Finish</Trans>
-                    </Button>
-                  )}
+                  {!isRecording &&
+                    !isStopping &&
+                    chunks?.data &&
+                    chunks.data.length > 0 && (
+                      <Button
+                        size="lg"
+                        radius="md"
+                        onClick={handleFinish}
+                        variant="light"
+                        rightSection={<IconCheck />}
+                        className="w-full md:w-auto"
+                        loading={isFinishing}
+                        disabled={isFinishing}
+                      >
+                        <Trans id="participant.button.finish">Finish</Trans>
+                      </Button>
+                    )}
                 </Group>
               </>
             )}
@@ -609,9 +687,8 @@ export const ParticipantConversationAudioRoute = () => {
                   size="lg"
                   radius="md"
                   color="red"
-                  onClick={() => {
-                    stopRecording();
-                  }}
+                  onClick={handleStopRecording}
+                  disabled={isStopping}
                 >
                   <Trans id="participant.button.stop">Stop</Trans>
                   <IconPlayerStopFilled

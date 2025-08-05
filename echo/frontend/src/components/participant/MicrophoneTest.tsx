@@ -338,7 +338,9 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
             <Button
               onClick={handleContinue}
               color="blue"
+              radius="md"
               disabled={!isMicTestSuccessful}
+              className="basis-1/2"
             >
               <Trans id="participant.button.continue">Continue</Trans>
             </Button>

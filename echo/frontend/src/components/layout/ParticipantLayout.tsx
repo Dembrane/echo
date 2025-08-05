@@ -10,6 +10,7 @@ import { I18nProvider } from "./I18nProvider";
 import { t } from "@lingui/core/macro";
 
 import { ParticipantSettingsModal } from "../participant/ParticipantSettingsModal";
+import { useDisclosure } from "@mantine/hooks";
 
 const ParticipantHeader = () => {
   const [loadingFinished] = useSessionStorageState("loadingFinished", {
@@ -31,7 +32,7 @@ export const ParticipantLayout = () => {
   const { pathname } = useLocation();
   const isReportPage = pathname.includes("report");
   const isOnboardingPage = pathname.includes("start");
-  const [settingsModalOpened, setSettingsModalOpened] = useState(false);
+  const [opened, { open, close }] = useDisclosure(false);
 
   if (isReportPage) {
     return (
@@ -45,10 +46,7 @@ export const ParticipantLayout = () => {
 
   return (
     <I18nProvider>
-      <ParticipantSettingsModal
-        opened={settingsModalOpened}
-        onClose={() => setSettingsModalOpened(false)}
-      />
+      <ParticipantSettingsModal opened={opened} onClose={close} />
 
       <main className="relative !h-dvh overflow-y-auto">
         <div className="flex h-full flex-col">
@@ -58,7 +56,7 @@ export const ParticipantLayout = () => {
               <ActionIcon
                 size="lg"
                 variant="transparent"
-                onClick={() => setSettingsModalOpened(true)}
+                onClick={open}
                 title={t`Settings`}
               >
                 <IconSettings size={24} color="gray" />
