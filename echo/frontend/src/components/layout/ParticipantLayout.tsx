@@ -30,6 +30,7 @@ const ParticipantHeader = () => {
 export const ParticipantLayout = () => {
   const { pathname } = useLocation();
   const isReportPage = pathname.includes("report");
+  const isOnboardingPage = pathname.includes("start");
   const [settingsModalOpened, setSettingsModalOpened] = useState(false);
 
   if (isReportPage) {
@@ -52,16 +53,18 @@ export const ParticipantLayout = () => {
       <main className="relative !h-dvh overflow-y-auto">
         <div className="flex h-full flex-col">
           <ParticipantHeader />
-          <Box className="absolute right-4 top-5 z-20">
-            <ActionIcon
-              size="lg"
-              variant="transparent"
-              onClick={() => setSettingsModalOpened(true)}
-              title={t`Settings`}
-            >
-              <IconSettings size={24} color="black" />
-            </ActionIcon>
-          </Box>
+          {!isOnboardingPage && (
+            <Box className="absolute right-4 top-5 z-20">
+              <ActionIcon
+                size="lg"
+                variant="transparent"
+                onClick={() => setSettingsModalOpened(true)}
+                title={t`Settings`}
+              >
+                <IconSettings size={24} color="black" />
+              </ActionIcon>
+            </Box>
+          )}
           <main className="relative grow">
             <Outlet />
           </main>
