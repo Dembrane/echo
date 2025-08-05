@@ -1,5 +1,4 @@
 import { Outlet, useLocation } from "react-router-dom";
-import { useState } from "react";
 import { Group, ActionIcon, Box } from "@mantine/core";
 import useSessionStorageState from "use-session-storage-state";
 import { IconSettings } from "@tabler/icons-react";

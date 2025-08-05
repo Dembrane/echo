@@ -14,6 +14,7 @@ import { ParticipantInitiateForm } from "./ParticipantInitiateForm";
 import MicrophoneTest from "./MicrophoneTest";
 
 interface Slide {
+  type?: string;
   title: string;
   content?: string;
   icon: any;
@@ -82,6 +83,7 @@ const ParticipantOnboardingCards = ({
         section: "Microphone Check",
         slides: [
           {
+            type: "microphone",
             title: "Microphone Check",
             content: "Let's Make Sure We Can Hear You.",
             icon: IconMicrophone,
@@ -106,6 +108,7 @@ const ParticipantOnboardingCards = ({
         section: "Microfoon Controle",
         slides: [
           {
+            type: "microphone",
             title: "Microfoon Controle",
             content: "Laten we zorgen dat we je kunnen horen.",
             icon: IconMicrophone,
@@ -130,6 +133,7 @@ const ParticipantOnboardingCards = ({
         section: "Mikrofon-Check",
         slides: [
           {
+            type: "microphone",
             title: "Mikrofon-Check",
             content: "Lass uns sichergehen, dass wir dich hören können.",
             icon: IconMicrophone,
@@ -154,6 +158,7 @@ const ParticipantOnboardingCards = ({
         section: "Vérification du Microphone",
         slides: [
           {
+            type: "microphone",
             title: "Vérification du Microphone",
             content: "Vérifions que nous puissions vous entendre.",
             icon: IconMicrophone,
@@ -178,6 +183,7 @@ const ParticipantOnboardingCards = ({
         section: "Verificación del Micrófono",
         slides: [
           {
+            type: "microphone",
             title: "Verificación del Micrófono",
             content: "Verifiquemos que podamos escucharte.",
             icon: IconMicrophone,
@@ -263,7 +269,7 @@ const ParticipantOnboardingCards = ({
               `${animationDirection}`,
             )}
           >
-            {currentCard.title.includes("Microphone") && (
+            {currentCard?.type === "microphone" && (
               <Button
                 onClick={nextSlide}
                 variant="subtle"
@@ -342,7 +348,7 @@ const ParticipantOnboardingCards = ({
           </div>
 
           <div className="mt-8 flex w-full items-center justify-between gap-4">
-            {currentCard.title.includes("Microphone") ? (
+            {currentCard?.type === "microphone" ? (
               <>
                 <Button
                   onClick={prevSlide}
