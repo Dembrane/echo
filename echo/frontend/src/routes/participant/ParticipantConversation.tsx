@@ -707,6 +707,10 @@ export const ParticipantConversationTextRoute = () => {
   const newConversationLink = useProjectSharingLink(projectQuery.data);
 
   const [text, setText] = useState("");
+  const [
+    finishModalOpened,
+    { open: openFinishModal, close: closeFinishModal },
+  ] = useDisclosure(false);
 
   const [scrollTargetRef, isVisible] = useElementOnScreen({
     root: null,
@@ -740,10 +744,8 @@ export const ParticipantConversationTextRoute = () => {
   const audioModeUrl = `/${projectId}/conversation/${conversationId}`;
   const finishUrl = `/${projectId}/conversation/${conversationId}/finish`;
 
-  const handleFinish = () => {
-    if (window.confirm(t`Are you sure you want to finish?`)) {
-      navigate(finishUrl);
-    }
+  const handleConfirmFinishButton = () => {
+    navigate(finishUrl);
   };
 
   if (conversationQuery.isLoading || projectQuery.isLoading) {
@@ -798,6 +800,45 @@ export const ParticipantConversationTextRoute = () => {
 
   return (
     <div className="container mx-auto flex h-full max-w-2xl flex-col">
+      {/* modal for finish conversation confirmation */}
+      <Modal
+        opened={finishModalOpened}
+        onClose={closeFinishModal}
+        centered
+        title={
+          <Text fw={500}>
+            <Trans id="participant.modal.finish.title.text.mode">
+              Finish Conversation
+            </Trans>
+          </Text>
+        }
+        size="sm"
+        radius="md"
+        padding="xl"
+      >
+        <Stack gap="lg">
+          <Text>
+            <Trans id="participant.modal.finish.message.text.mode">
+              Are you sure you want to finish the conversation?
+            </Trans>
+          </Text>
+          <Group grow gap="md">
+            <Button
+              variant="outline"
+              color="gray"
+              onClick={closeFinishModal}
+              miw={100}
+              radius="md"
+            >
+              <Trans id="participant.button.finish.no.text.mode">No</Trans>
+            </Button>
+            <Button onClick={handleConfirmFinishButton} miw={100} radius="md">
+              <Trans id="participant.button.finish.yes.text.mode">Yes</Trans>
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
       <Box className={clsx("relative flex-grow px-4 py-12 transition-all")}>
         {projectQuery.data && conversationQuery.data && (
           <ParticipantBody
@@ -847,7 +888,7 @@ export const ParticipantConversationTextRoute = () => {
             <Button
               size="lg"
               radius="md"
-              onClick={handleFinish}
+              onClick={openFinishModal}
               component="a"
               variant="light"
               rightSection={<IconCheck />}
