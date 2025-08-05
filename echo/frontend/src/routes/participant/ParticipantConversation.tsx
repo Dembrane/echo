@@ -264,13 +264,6 @@ export const ParticipantConversationAudioRoute = () => {
     }
   };
 
-  const handleResumeRecording = () => {
-    close();
-    if (isPaused) {
-      resumeRecording();
-    }
-  };
-
   const handleConfirmFinish = async () => {
     setIsStopping(true);
     try {
@@ -408,7 +401,7 @@ export const ParticipantConversationAudioRoute = () => {
       {/* modal for stop recording confirmation */}
       <Modal
         opened={opened}
-        onClose={isStopping ? () => {} : handleResumeRecording}
+        onClose={isStopping ? () => {} : close}
         closeOnClickOutside={!isStopping}
         closeOnEscape={!isStopping}
         centered
@@ -431,7 +424,7 @@ export const ParticipantConversationAudioRoute = () => {
             <Button
               variant="outline"
               color="gray"
-              onClick={handleResumeRecording}
+              onClick={close}
               disabled={isStopping}
               miw={100}
               radius="md"
