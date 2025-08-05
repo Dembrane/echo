@@ -43,7 +43,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
     initiateConversationMutation.mutate({
       projectId: project.id,
       name: data.name ?? t`Participant`,
-      pin:"",
+      pin: "",
       tagIdList: data.tagIdList,
       source: "PORTAL_AUDIO",
     });
@@ -125,7 +125,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
           loading={initiateConversationMutation.isPending}
           fullWidth
         >
-          <Trans>Begin!</Trans>
+          <Trans id="participant.ready.to.begin.button.text">Next</Trans>
         </Button>
       </Stack>
     </form>

@@ -61,7 +61,7 @@ export const ParticipantLayout = () => {
                 onClick={() => setSettingsModalOpened(true)}
                 title={t`Settings`}
               >
-                <IconSettings size={24} color="black" />
+                <IconSettings size={24} color="gray" />
               </ActionIcon>
             </Box>
           )}

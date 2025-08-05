@@ -544,28 +544,6 @@ export const ParticipantConversationAudioRoute = () => {
 
             {isRecording && (
               <>
-                {isPaused ? (
-                  <Button
-                    className="flex-1"
-                    size="lg"
-                    radius="md"
-                    rightSection={<IconPlayerPlay size={16} />}
-                    onClick={resumeRecording}
-                  >
-                    <Trans id="participant.button.resume">Resume</Trans>
-                  </Button>
-                ) : (
-                  <Button
-                    className="flex-1"
-                    size="lg"
-                    radius="md"
-                    rightSection={<IconPlayerPause size={16} />}
-                    onClick={pauseRecording}
-                  >
-                    <Trans id="participant.button.pause">Pause</Trans>
-                  </Button>
-                )}
-
                 {chunks?.data &&
                   chunks.data.length > 0 &&
                   !!projectQuery.data?.is_get_reply_enabled && (
@@ -592,11 +570,40 @@ export const ParticipantConversationAudioRoute = () => {
                             </Trans>
                           </Text>
                         ) : (
-                          <Trans id="participant.button.echo">ECHO</Trans>
+                          <Trans id="participant.button.is.recording.echo">
+                            ECHO
+                          </Trans>
                         )}
                       </Button>
                     </Group>
                   )}
+
+                {isPaused ? (
+                  <Button
+                    className="flex-1"
+                    size="lg"
+                    radius="md"
+                    onClick={resumeRecording}
+                  >
+                    <span className="hidden md:block">
+                      <Trans id="participant.button.resume">Resume</Trans>
+                    </span>
+                    <IconPlayerPlay size={18} className="ml-0 md:ml-1" />
+                  </Button>
+                ) : (
+                  <Button
+                    className="flex-1"
+                    size="lg"
+                    radius="md"
+                    onClick={pauseRecording}
+                  >
+                    <span className="hidden md:block">
+                      <Trans id="participant.button.pause">Pause</Trans>
+                    </span>
+                    <IconPlayerPause size={18} className="ml-0 md:ml-1" />
+                  </Button>
+                )}
+
                 <Button
                   variant="outline"
                   size="lg"
@@ -606,10 +613,11 @@ export const ParticipantConversationAudioRoute = () => {
                     stopRecording();
                   }}
                 >
-                  <span className="hidden md:block">
-                    <Trans id="participant.button.stop">Stop</Trans>
-                  </span>
-                  <IconPlayerStopFilled size={20} className="ml-0 md:ml-1" />
+                  <Trans id="participant.button.stop">Stop</Trans>
+                  <IconPlayerStopFilled
+                    size={18}
+                    className="ml-0 hidden md:ml-1 md:block"
+                  />
                 </Button>
               </>
             )}
