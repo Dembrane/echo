@@ -414,7 +414,7 @@ export const ParticipantConversationAudioRoute = () => {
         centered
         title={
           <Text fw={500}>
-            <Trans id="participant.modal.stop.title">Confirm Action</Trans>
+            <Trans id="participant.modal.stop.title">Finish Conversation</Trans>
           </Text>
         }
         size="sm"
