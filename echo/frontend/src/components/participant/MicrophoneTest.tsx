@@ -325,7 +325,7 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
             </Alert>
           ) : (
             <Alert color="yellow" className="w-full text-start">
-              <Trans id="participant.alert.microphone.access.failure">
+              <Trans id="participant.alert.microphone.access.issue">
                 We cannot hear you. Please try changing your microphone or get a
                 little closer to the device.
               </Trans>
