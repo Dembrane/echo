@@ -150,7 +150,14 @@ export const ParticipantConversationAudioRoute = () => {
   } = audioRecorder;
 
   const handleMicrophoneDeviceChanged = async () => {
-    stopRecording();
+    try {
+      stopRecording();
+    } catch (error) {
+      toast.error(
+        t`Failed to stop recording on device change. Please try again.`,
+      );
+      console.error("Failed to stop recording on device change:", error);
+    }
   };
 
   useWindowEvent("microphoneDeviceChanged", handleMicrophoneDeviceChanged);
