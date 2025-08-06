@@ -51,7 +51,6 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
   const dataArrayRef = useRef<Uint8Array | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const silenceStartRef = useRef<number | null>(null);
-  const [opened, { open, close }] = useDisclosure(false);
   const { pathname } = useLocation();
   const isStartPage = pathname.includes("start");
   // Request permission and enumerate audio input devices
@@ -274,13 +273,11 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
     // Apply the pending device change
     setSelectedDeviceId(displayDeviceId);
     onContinue(selectedDeviceId);
-    close();
   };
 
   const handleCancelMicChange = () => {
     // Reset pending device and close modal
     setShowSecondModal(false);
-    close();
   };
   return (
     <Box className="w-full">
