@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Trans } from "@lingui/react/macro";
+import { t } from "@lingui/core/macro";
 import {
   Box,
   Title,
@@ -9,18 +10,29 @@ import {
   Button,
   Alert,
   Stack,
+  Group,
 } from "@mantine/core";
 import { IconMicrophone } from "@tabler/icons-react";
-import { useSearchParams } from "react-router-dom";
+import { Modal } from "@mantine/core";
+import Cookies from "js-cookie";
+import { useDisclosure } from "@mantine/hooks";
+import { useLocation } from "react-router-dom";
 
 interface MicrophoneTestProps {
   onContinue: (deviceId: string) => void;
+  onMicTestSuccess: (success: boolean) => void;
+  isInModal?: boolean;
 }
 
-const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onContinue }) => {
-  const [searchParams, setSearchParams] = useSearchParams();
+const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
+  onContinue,
+  onMicTestSuccess,
+  isInModal = false,
+}) => {
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
+  const [displayDeviceId, setDisplayDeviceId] = useState<string>("");
+  const [showSecondModal, setShowSecondModal] = useState(false);
   const [isLoadingDevices, setIsLoadingDevices] = useState(true);
   const [level, setLevel] = useState<number>(0);
   const SILENCE_THRESHOLD = 2;
@@ -30,7 +42,6 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onContinue }) => {
   const [micAccessGranted, setMicAccessGranted] = useState(false);
   const [micAccessDenied, setMicAccessDenied] = useState(false);
   const [isMicTestSuccessful, setIsMicTestSuccessful] = useState(false);
-  const [hasBeenSuccessful, setHasBeenSuccessful] = useState(false);
   const isMicSuccessRef = useRef(false);
   const displayLevel = Math.min(Math.sqrt(level / 255) * 100, 100);
 
@@ -40,7 +51,8 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onContinue }) => {
   const dataArrayRef = useRef<Uint8Array | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const silenceStartRef = useRef<number | null>(null);
-
+  const { pathname } = useLocation();
+  const isStartPage = pathname.includes("start");
   // Request permission and enumerate audio input devices
   useEffect(() => {
     const initializeDevices = async () => {
@@ -57,15 +69,17 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onContinue }) => {
           const inputs = all.filter((d) => d.kind === "audioinput");
           setDevices(inputs);
 
-          // Check if device ID is in search params
-          const savedDeviceId = searchParams.get("micDeviceId");
+          // Check if device ID is in cookies
+          const savedDeviceId = Cookies.get("micDeviceId");
           if (
             savedDeviceId &&
             inputs.some((d) => d.deviceId === savedDeviceId)
           ) {
             setSelectedDeviceId(savedDeviceId);
+            setDisplayDeviceId(savedDeviceId);
           } else if (inputs.length > 0 && !selectedDeviceId) {
             setSelectedDeviceId(inputs[0].deviceId);
+            setDisplayDeviceId(inputs[0].deviceId);
           }
         }
 
@@ -90,16 +104,7 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onContinue }) => {
     };
 
     initializeDevices();
-  }, [searchParams]);
-
-  // Save device ID to search params when it changes
-  useEffect(() => {
-    if (selectedDeviceId) {
-      const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.set("micDeviceId", selectedDeviceId);
-      setSearchParams(newSearchParams, { replace: true });
-    }
-  }, [selectedDeviceId, searchParams, setSearchParams]);
+  }, []);
 
   const stopAnalyzer = () => {
     if (animationFrameRef.current) {
@@ -140,7 +145,7 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onContinue }) => {
           if (!isMicSuccessRef.current) {
             setIsMicTestSuccessful(true);
             isMicSuccessRef.current = true;
-            setHasBeenSuccessful(true);
+            onMicTestSuccess(true);
           }
         } else {
           if (silenceStartRef.current === null) {
@@ -164,11 +169,25 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onContinue }) => {
     const setup = async () => {
       if (!selectedDeviceId) return;
 
+      // Check if current device is different from cookie device
+      const savedDeviceId = Cookies.get("micDeviceId");
+      const isDeviceChanged =
+        savedDeviceId && savedDeviceId !== selectedDeviceId;
+
+      Cookies.set("micDeviceId", selectedDeviceId, {
+        expires: 1,
+      });
+
       // Reset success state when device changes
       setIsMicTestSuccessful(false);
-      setHasBeenSuccessful(false);
+      onMicTestSuccess(false);
       isMicSuccessRef.current = false;
       silenceStartRef.current = null;
+
+      if (isDeviceChanged) {
+        // Emit global event for microphoneDeviceChanged
+        window.dispatchEvent(new CustomEvent("microphoneDeviceChanged"));
+      }
 
       // cleanup old
       stopAnalyzer();
@@ -229,49 +248,81 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onContinue }) => {
   }, [selectedDeviceId]);
 
   const handleContinue = () => {
-    // Ensure device ID is saved in search params before continuing
-    if (selectedDeviceId) {
-      const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.set("micDeviceId", selectedDeviceId);
-      setSearchParams(newSearchParams, { replace: true });
+    // Ensure device ID is saved in cookies before continuing
+    if (displayDeviceId !== selectedDeviceId) {
+      setShowSecondModal(true);
+    } else {
+      onContinue(selectedDeviceId);
     }
+  };
+
+  const handleMicChange = (newDeviceId: string | null) => {
+    // ignore invalid or duplicate device ID
+    if (!newDeviceId || newDeviceId === selectedDeviceId) {
+      return;
+    }
+    if (isStartPage) {
+      setDisplayDeviceId(newDeviceId);
+      setSelectedDeviceId(newDeviceId);
+    } else {
+      setDisplayDeviceId(newDeviceId);
+    }
+  };
+
+  const handleConfirmMicChange = () => {
+    // Apply the pending device change
+    setSelectedDeviceId(displayDeviceId);
     onContinue(selectedDeviceId);
   };
 
+  const handleCancelMicChange = () => {
+    // Reset pending device and close modal
+    setShowSecondModal(false);
+  };
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50">
-      <Box className="w-full max-w-[400px] rounded-xl bg-white p-6 text-center shadow-lg">
+    <Box className="w-full">
+      {!showSecondModal ? (
         <Stack gap="md" className="items-center">
-          <IconMicrophone size={64} className="text-blue-500" />
-          <Title order={2}>
-            <Trans>Let's Make Sure We Can Hear You</Trans>
-          </Title>
-          <Text color="dimmed" size="sm">
-            <Trans>
-              We'll test your microphone to ensure the best experience for
-              everyone in the session.
-            </Trans>
-          </Text>
+          {!isInModal && (
+            <>
+              <Text c="dimmed" size="sm" ta="center">
+                <Trans id="participant.test.microphone.description">
+                  We'll test your microphone to ensure the best experience for
+                  everyone in the session.
+                </Trans>
+              </Text>
+            </>
+          )}
 
           <Select
             className="w-full text-start"
-            label={<Trans>Select your microphone:</Trans>}
+            label={
+              isInModal ? (
+                <Trans id="participant.selected.microphone">
+                  Selected microphone:
+                </Trans>
+              ) : (
+                <Trans id="participant.select.microphone">
+                  Select your microphone:
+                </Trans>
+              )
+            }
             placeholder={
               isLoadingDevices
-                ? "Loading microphones..."
-                : "Select a microphone"
+                ? t`Loading microphones...`
+                : t`Select a microphone`
             }
             disabled={isLoadingDevices}
             data={devices.map((d) => ({
               value: d.deviceId,
               label: d.label || `Microphone ${d.deviceId.slice(0, 8)}...`,
             }))}
-            value={selectedDeviceId}
-            onChange={(v) => setSelectedDeviceId(v || "")}
+            value={displayDeviceId}
+            onChange={handleMicChange}
           />
 
           <Text size="sm" className="w-full text-start">
-            <Trans>Live audio level:</Trans>
+            <Trans id="participant.live.audio.level">Live audio level:</Trans>
           </Text>
           <Progress
             value={displayLevel}
@@ -282,7 +333,9 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onContinue }) => {
           {/* Show error or permission prompt */}
           {!micAccessGranted && !isLoadingDevices && !micAccessDenied && (
             <Alert color="yellow" className="w-full text-start">
-              <Trans>Please allow microphone access to start the test.</Trans>
+              <Trans id="participant.alert.microphone.access">
+                Please allow microphone access to start the test.
+              </Trans>
             </Alert>
           )}
 
@@ -293,7 +346,7 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onContinue }) => {
           )}
           {isLoadingDevices && (
             <Alert color="blue" className="w-full text-start">
-              <Trans>
+              <Trans id="participant.alert.microphone.access.loading">
                 Requesting microphone access to detect available devices...
               </Trans>
             </Alert>
@@ -303,36 +356,63 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onContinue }) => {
           {micAccessGranted &&
             (isMicTestSuccessful ? (
               <Alert color="green" className="w-full text-start">
-                <Trans>Everything looks good – you can continue.</Trans>
+                <Trans id="participant.alert.microphone.access.success">
+                  Everything looks good – you can continue.
+                </Trans>
               </Alert>
             ) : (
               <Alert color="yellow" className="w-full text-start">
-                <Trans>
+                <Trans id="participant.alert.microphone.access.issue">
                   We cannot hear you. Please try changing your microphone or get
                   a little closer to the device.
                 </Trans>
               </Alert>
             ))}
 
-          <div className="mt-8 flex w-full flex-wrap items-start gap-2">
-            <div className="w-full flex-1 flex-grow">
+          {/* Continue button for modal mode */}
+          {isInModal && (
+            <div className="mt-4 flex w-full justify-end">
               <Button
                 onClick={handleContinue}
-                variant="outline"
-                className="w-full"
-                fullWidth
-                disabled={!hasBeenSuccessful}
+                color="blue"
+                radius="md"
+                disabled={!isMicTestSuccessful}
+                className="basis-1/2"
               >
-                <Trans>Continue</Trans>
+                <Trans id="participant.button.continue">Continue</Trans>
               </Button>
             </div>
-            <Button onClick={handleContinue} variant="subtle" className="">
-              <Trans>Skip</Trans>
-            </Button>
-          </div>
+          )}
         </Stack>
-      </Box>
-    </div>
+      ) : (
+        <Stack gap="lg">
+          <Text>
+            <Trans id="participant.modal.change.mic.confirmation.text">
+              You have changed the mic. Doing this will save your audio till
+              this point and restart your recording.
+            </Trans>
+          </Text>
+          <Group grow gap="md" mt="xl">
+            <Button
+              variant="outline"
+              color="gray"
+              onClick={handleCancelMicChange}
+              miw={100}
+              radius="md"
+            >
+              <Trans id="participant.mic.settings.modal.second.confirm.cancel">
+                Cancel
+              </Trans>
+            </Button>
+            <Button onClick={handleConfirmMicChange} miw={100} radius="md">
+              <Trans id="participant.mic.settings.modal.second.confirm.button">
+                Confirm
+              </Trans>
+            </Button>
+          </Group>
+        </Stack>
+      )}
+    </Box>
   );
 };
 

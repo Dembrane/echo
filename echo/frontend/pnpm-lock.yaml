@@ -110,6 +110,9 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
+      js-cookie:
+        specifier: ^3.0.5
+        version: 3.0.5
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -224,6 +227,9 @@ importers:
       '@tailwindcss/typography':
         specifier: ^0.5.16
         version: 0.5.16(tailwindcss@3.4.17)
+      '@types/js-cookie':
+        specifier: ^3.0.6
+        version: 3.0.6
       '@types/node':
         specifier: ^22.13.14
         version: 22.13.14
@@ -2346,6 +2352,9 @@ packages:
   '@types/istanbul-reports@3.0.4':
     resolution: {integrity: sha512-pk2B1NWalF9toCRu6gjBzR69syFjP4Od8WRAX+0mmf9lAjCRicLOWc+ZrxZHx/0XRjotgkF9t6iaMJ+aXcOdZQ==}
 
+  '@types/js-cookie@3.0.6':
+    resolution: {integrity: sha512-wkw9yd1kEXOPnvEeEV1Go1MmxtBJL0RR79aOTAApecWFVu7w0NNXNqhcWgvw2YgZDYadliXkl14pa3WXw5jlCQ==}
+
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
@@ -3433,6 +3442,10 @@ packages:
   jiti@1.21.7:
     resolution: {integrity: sha512-/imKNG4EbWNrVjoNC/1H5/9GFy+tqjGBHCaSsN+P2RnPqjsLmv6UD3Ej+Kj8nBWaRAwyk7kK5ZUc+OEatnTR3A==}
     hasBin: true
+
+  js-cookie@3.0.5:
+    resolution: {integrity: sha512-cEiJEAEoIbWfCZYKWhVwFuvPX1gETRYPw6LlaTKoxD3s2AkXzkCjnp6h0V77ozyqj0jakteJ4YqDJT830+lVGw==}
+    engines: {node: '>=14'}
 
   js-sha256@0.10.1:
     resolution: {integrity: sha512-5obBtsz9301ULlsgggLg542s/jqtddfOpV5KJc4hajc9JV8GeY2gZHSVpYBn4nWqAUTJ9v+xwtbJ1mIBgIH5Vw==}
@@ -7321,6 +7334,8 @@ snapshots:
     dependencies:
       '@types/istanbul-lib-report': 3.0.3
 
+  '@types/js-cookie@3.0.6': {}
+
   '@types/json-schema@7.0.15': {}
 
   '@types/lodash@4.17.20': {}
@@ -8537,6 +8552,8 @@ snapshots:
       pretty-format: 29.7.0
 
   jiti@1.21.7: {}
+
+  js-cookie@3.0.5: {}
 
   js-sha256@0.10.1: {}
 

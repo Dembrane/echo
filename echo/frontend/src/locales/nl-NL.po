@@ -107,7 +107,7 @@ msgstr "{0} Gesprekken • Bewerkt {1}"
 msgid "library.conversations.to.be.analyzed"
 msgstr "Er zijn {0} gesprekken klaar om te worden geanalyseerd."
 
-#: src/routes/participant/ParticipantConversation.tsx:216
+#: src/routes/participant/ParticipantConversation.tsx:230
 msgid "{minutes} minutes and {seconds} seconds"
 msgstr "{minutes} minuten en {seconds} seconden"
 
@@ -115,7 +115,7 @@ msgstr "{minutes} minuten en {seconds} seconden"
 msgid "{readingNow} reading now"
 msgstr "{readingNow} leest nu"
 
-#: src/routes/participant/ParticipantConversation.tsx:217
+#: src/routes/participant/ParticipantConversation.tsx:231
 msgid "{seconds} seconds"
 msgstr "{seconds} seconden"
 
@@ -143,8 +143,8 @@ msgstr "*Een moment a.u.b.*"
 #. placeholder {0}: Math.floor(remainingCooldown / 60)
 #. placeholder {1}: (remainingCooldown % 60) .toString() .padStart(2, "0")
 #. placeholder {1}: (remainingCooldown % 60) .toString() .padStart(2, "0")
-#: src/routes/participant/ParticipantConversation.tsx:503
-#: src/routes/participant/ParticipantConversation.tsx:588
+#: src/routes/participant/ParticipantConversation.tsx:560
+#: src/routes/participant/ParticipantConversation.tsx:636
 msgid "<0>Wait </0>{0}:{1}"
 msgstr "<0>Wacht </0>{0}:{1}"
 
@@ -325,10 +325,19 @@ msgstr "Weet je zeker dat je dit project wilt verwijderen?"
 msgid "Are you sure you want to delete this tag? This will remove the tag from existing conversations that contain it."
 msgstr "Weet je zeker dat je dit trefwoord wilt verwijderen? Dit zal het trefwoord verwijderen uit bestaande gesprekken die het bevatten."
 
-#: src/routes/participant/ParticipantConversation.tsx:246
-#: src/routes/participant/ParticipantConversation.tsx:668
-msgid "Are you sure you want to finish?"
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:418
+msgid "participant.modal.stop.message"
+msgstr "Weet je zeker dat je het wilt stoppen?"
+
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:829
+msgid "participant.modal.finish.message.text.mode"
 msgstr "Weet je zeker dat je het wilt afmaken?"
+
+#: src/routes/participant/ParticipantConversation.tsx:247
+#~ msgid "Are you sure you want to finish?"
+#~ msgstr "Weet je zeker dat je het wilt afmaken?"
 
 #: src/routes/project/library/ProjectLibrary.tsx:114
 msgid "Are you sure you want to generate the library? This will take a while and overwrite your current views and insights."
@@ -434,9 +443,19 @@ msgstr "Automatisch relevante gesprekken voor analyse zonder handmatige selectie
 msgid "Available"
 msgstr "Beschikbaar"
 
-#: src/components/participant/ParticipantOnboardingCards.tsx:273
-msgid "Back"
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantOnboardingCards.tsx:360
+msgid "participant.button.back.microphone"
+msgstr "Terug naar microfoon"
+
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantOnboardingCards.tsx:381
+msgid "participant.button.back"
 msgstr "Terug"
+
+#: src/components/participant/ParticipantOnboardingCards.tsx:273
+#~ msgid "Back"
+#~ msgstr "Terug"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:798
 msgid "Back to Selection"
@@ -451,8 +470,8 @@ msgid "Basic Settings"
 msgstr "Basis instellingen"
 
 #: src/components/participant/ParticipantInitiateForm.tsx:128
-msgid "Begin!"
-msgstr "Begin!"
+#~ msgid "Begin!"
+#~ msgstr "Begin!"
 
 #: src/components/project/ProjectPortalEditor.tsx:489
 msgid "Brainstorm Ideas"
@@ -461,6 +480,11 @@ msgstr "Brainstorm ideeën"
 #: src/components/project/ProjectDangerZone.tsx:16
 msgid "By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you ABSOLUTELY sure you want to delete this project?"
 msgstr "Door dit project te verwijderen, verwijder je alle gegevens die eraan gerelateerd zijn. Dit kan niet ongedaan worden gemaakt. Weet je zeker dat je dit project wilt verwijderen?"
+
+#. js-lingui-explicit-id
+#: src/components/participant/MicrophoneTest.tsx:403
+msgid "participant.mic.settings.modal.second.confirm.cancel"
+msgstr "Annuleren"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:329
 #: src/components/dropzone/UploadConversationDropzone.tsx:674
@@ -499,9 +523,14 @@ msgstr "Chat | Dembrane"
 msgid "Chats"
 msgstr "Chats"
 
-#: src/routes/participant/ParticipantConversation.tsx:374
-msgid "Check microphone access"
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:392
+msgid "participant.button.check.microphone.access"
 msgstr "Controleer microfoontoegang"
+
+#: src/routes/participant/ParticipantConversation.tsx:374
+#~ msgid "Check microphone access"
+#~ msgstr "Controleer microfoontoegang"
 
 #: src/routes/auth/CheckYourEmail.tsx:11
 msgid "Check your email"
@@ -534,6 +563,11 @@ msgstr "Vergelijk en contrast   "
 #: src/components/dropzone/UploadConversationDropzone.tsx:732
 msgid "Complete"
 msgstr "Voltooid"
+
+#. js-lingui-explicit-id
+#: src/components/participant/MicrophoneTest.tsx:408
+msgid "participant.mic.settings.modal.second.confirm.button"
+msgstr "Doorgaan"
 
 #: src/routes/auth/PasswordReset.tsx:64
 #: src/routes/auth/PasswordReset.tsx:67
@@ -582,9 +616,15 @@ msgstr "Context"
 msgid "Context added:"
 msgstr "Context toegevoegd:"
 
-#: src/components/participant/MicrophoneTest.tsx:326
-msgid "Continue"
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantOnboardingCards.tsx:368
+#: src/components/participant/MicrophoneTest.tsx:382
+msgid "participant.button.continue"
 msgstr "Doorgaan"
+
+#: src/components/participant/MicrophoneTest.tsx:326
+#~ msgid "Continue"
+#~ msgstr "Doorgaan"
 
 #: src/components/report/CreateReportForm.tsx:119
 #: src/components/report/CreateReportForm.tsx:139
@@ -595,9 +635,14 @@ msgstr "gesprek"
 msgid "Conversation added to chat"
 msgstr "Gesprek toegevoegd aan chat"
 
-#: src/routes/participant/ParticipantConversation.tsx:274
-msgid "Conversation Ended"
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:295
+msgid "participant.conversation.ended"
 msgstr "Gesprek beëindigd"
+
+#: src/routes/participant/ParticipantConversation.tsx:274
+#~ msgid "Conversation Ended"
+#~ msgstr "Gesprek beëindigd"
 
 #: src/components/report/CreateReportForm.tsx:71
 #~ msgid "Conversation processing"
@@ -818,10 +863,20 @@ msgstr "Sleep audio bestanden hierheen of klik om bestanden te selecteren"
 msgid "Dutch"
 msgstr "Nederlands"
 
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:569
+msgid "participant.button.echo"
+msgstr "Echo"
+
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:645
+msgid "participant.button.is.recording.echo"
+msgstr "Je bent aan het opnemen"
+
 #: src/routes/participant/ParticipantConversation.tsx:512
 #: src/routes/participant/ParticipantConversation.tsx:597
-msgid "ECHO"
-msgstr "ECHO"
+#~ msgid "ECHO"
+#~ msgstr "ECHO"
 
 #: src/routes/participant/ParticipantConversation.tsx:549
 #: src/routes/participant/ParticipantConversation.tsx:975
@@ -962,9 +1017,14 @@ msgstr "Fout bij het bijwerken van het rapport"
 msgid "Error uploading \"{0}\": {1}"
 msgstr "Fout bij het uploaden van \"{0}\": {1}"
 
-#: src/components/participant/MicrophoneTest.tsx:306
-msgid "Everything looks good – you can continue."
+#. js-lingui-explicit-id
+#: src/components/participant/MicrophoneTest.tsx:359
+msgid "participant.alert.microphone.access.success"
 msgstr "Alles lijkt goed – je kunt doorgaan."
+
+#: src/components/participant/MicrophoneTest.tsx:306
+#~ msgid "Everything looks good – you can continue."
+#~ msgstr "Alles lijkt goed – je kunt doorgaan."
 
 #: src/components/project/ProjectTranscriptSettings.tsx:88
 #~ msgid "Example: This conversation is about [topic]. Key terms include [term1], [term2]. Please pay special attention to [specific aspect]."
@@ -1008,7 +1068,7 @@ msgstr "Fout bij het uitschakelen van het automatisch selecteren voor deze chat"
 msgid "Failed to enable Auto Select for this chat"
 msgstr "Fout bij het inschakelen van het automatisch selecteren voor deze chat"
 
-#: src/routes/participant/ParticipantConversation.tsx:253
+#: src/routes/participant/ParticipantConversation.tsx:275
 msgid "Failed to finish conversation. Please try again."
 msgstr "Fout bij het voltooien van het gesprek. Probeer het opnieuw."
 
@@ -1052,6 +1112,10 @@ msgstr "Fout bij het verwijderen van het gesprek uit de chat{0}"
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Fout bij het hertranscriptie van het gesprek. Probeer het opnieuw."
 
+#: src/routes/participant/ParticipantConversation.tsx:157
+msgid "Failed to stop recording on device change. Please try again."
+msgstr "Fout bij het stoppen van de opname bij wijziging van het apparaat. Probeer het opnieuw."
+
 #: src/routes/participant/ParticipantPostConversation.tsx:134
 #: src/routes/participant/ParticipantPostConversation.tsx:139
 #~ msgid "Failed to verify email status. Please try again."
@@ -1090,10 +1154,30 @@ msgstr "Bestandsgrootte: Min {0}, Max {1}, maximaal {MAX_FILES} bestanden"
 #~ msgid "Filter"
 #~ msgstr "Filteren"
 
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:610
+msgid "participant.button.finish"
+msgstr "Voltooien"
+
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:910
+msgid "participant.button.finish.text.mode"
+msgstr "Voltooien"
+
 #: src/routes/participant/ParticipantConversation.tsx:540
 #: src/routes/participant/ParticipantConversation.tsx:773
-msgid "Finish"
-msgstr "Voltooien"
+#~ msgid "Finish"
+#~ msgstr "Voltooien"
+
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:409
+msgid "participant.modal.stop.title"
+msgstr "Gesprek stoppen"
+
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:818
+msgid "participant.modal.finish.title.text.mode"
+msgstr "Gesprek afmaken"
 
 #: src/components/report/ConversationStatusTable.tsx:80
 msgid "Finished"
@@ -1277,9 +1361,14 @@ msgstr "Ongeldig token. Probeer het opnieuw."
 #~ msgid "Invite Link"
 #~ msgstr "Deelnemingslink"
 
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:306
+msgid "participant.conversation.error.deleted"
+msgstr "Het gesprek is verwijderd terwijl je opnam. We hebben de opname gestopt om problemen te voorkomen. Je kunt een nieuwe opnemen wanneer je wilt."
+
 #: src/routes/participant/ParticipantConversation.tsx:281
-msgid "It looks like the conversation was deleted while you were recording. We've stopped the recording to prevent any issues. You can start a new one anytime."
-msgstr "Het lijkt erop dat het gesprek werd verwijderd terwijl je opnam. We hebben de opname gestopt om problemen te voorkomen. Je kunt een nieuwe opnemen wanneer je wilt."
+#~ msgid "It looks like the conversation was deleted while you were recording. We've stopped the recording to prevent any issues. You can start a new one anytime."
+#~ msgstr "Het lijkt erop dat het gesprek werd verwijderd terwijl je opnam. We hebben de opname gestopt om problemen te voorkomen. Je kunt een nieuwe opnemen wanneer je wilt."
 
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:227
@@ -1328,8 +1417,8 @@ msgid "Last Updated"
 msgstr "Laatst bijgewerkt"
 
 #: src/components/participant/MicrophoneTest.tsx:247
-msgid "Let's Make Sure We Can Hear You"
-msgstr "Laten we controleren of we je kunnen horen"
+#~ msgid "Let's Make Sure We Can Hear You"
+#~ msgstr "Laten we controleren of we je kunnen horen"
 
 #: src/routes/project/library/ProjectLibraryView.tsx:32
 #: src/routes/project/library/ProjectLibraryAspect.tsx:44
@@ -1362,9 +1451,14 @@ msgstr "Link"
 #~ msgid "Live"
 #~ msgstr "Live"
 
+#. js-lingui-explicit-id
+#: src/components/participant/MicrophoneTest.tsx:325
+msgid "participant.live.audio.level"
+msgstr "Live audio niveau:"
+
 #: src/components/participant/MicrophoneTest.tsx:274
-msgid "Live audio level:"
-msgstr "Live audio level:"
+#~ msgid "Live audio level:"
+#~ msgstr "Live audio level:"
 
 #: src/components/project/ProjectPortalEditor.tsx:765
 msgid "Live Preview"
@@ -1373,6 +1467,10 @@ msgstr "Live Voorbeeld"
 #: src/components/common/DembraneLoadingSpinner/index.tsx:23
 msgid "Loading"
 msgstr "Bezig met laden"
+
+#: src/components/participant/MicrophoneTest.tsx:312
+msgid "Loading microphones..."
+msgstr "Microfoons laden..."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:322
 msgid "loading..."
@@ -1421,7 +1519,7 @@ msgstr "Vergaderingenotes"
 msgid "Messages from {0} - {1}%"
 msgstr "Berichten van {0} - {1}%"
 
-#: src/routes/participant/ParticipantConversation.tsx:203
+#: src/routes/participant/ParticipantConversation.tsx:217
 msgid "Microphone access is still denied. Please check your settings and try again."
 msgstr "Toegang tot de microfoon wordt nog steeds geweigerd. Controleer uw instellingen en probeer het opnieuw."
 
@@ -1495,9 +1593,29 @@ msgstr "Nieuw project"
 msgid "Newest First"
 msgstr "Nieuwste eerst"
 
-#: src/components/participant/ParticipantOnboardingCards.tsx:285
-msgid "Next"
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantOnboardingCards.tsx:396
+msgid "participant.button.next"
 msgstr "Volgende"
+
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantInitiateForm.tsx:128
+msgid "participant.ready.to.begin.button.text"
+msgstr "Klaar om te beginnen"
+
+#: src/components/participant/ParticipantOnboardingCards.tsx:285
+#~ msgid "Next"
+#~ msgstr "Volgende"
+
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:432
+msgid "participant.button.stop.no"
+msgstr "Nee"
+
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:842
+msgid "participant.button.finish.no.text.mode"
+msgstr "Nee"
 
 #: src/components/announcement/Announcements.tsx:153
 msgid "No announcements available"
@@ -1630,9 +1748,14 @@ msgstr "Actieve Gesprekken"
 #~ msgid "Only the {0} finished {1} will be included in the report right now. "
 #~ msgstr "Alleen de {0} voltooide {1} worden nu in het rapport opgenomen. "
 
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:364
+msgid "participant.alert.microphone.access.failure"
+msgstr "Het lijkt erop dat toegang tot de microfoon geweigerd is. Geen zorgen, we hebben een handige probleemoplossingsgids voor je. Voel je vrij om deze te bekijken. Zodra je het probleem hebt opgelost, kom dan terug naar deze pagina om te controleren of je microfoon klaar is voor gebruik."
+
 #: src/routes/participant/ParticipantConversation.tsx:348
-msgid "Oops! It looks like microphone access was denied. No worries, though! We've got a handy troubleshooting guide for you. Feel free to check it out. Once you've resolved the issue, come back and visit this page again to check if your microphone is ready."
-msgstr "Oeps! Het lijkt erop dat toegang tot de microfoon geweigerd is. Geen zorgen, we hebben een handige probleemoplossingsgids voor je. Voel je vrij om deze te bekijken. Zodra je het probleem hebt opgelost, kom dan terug naar deze pagina om te controleren of je microfoon klaar is voor gebruik."
+#~ msgid "Oops! It looks like microphone access was denied. No worries, though! We've got a handy troubleshooting guide for you. Feel free to check it out. Once you've resolved the issue, come back and visit this page again to check if your microphone is ready."
+#~ msgstr "Oeps! Het lijkt erop dat toegang tot de microfoon geweigerd is. Geen zorgen, we hebben een handige probleemoplossingsgids voor je. Voel je vrij om deze te bekijken. Zodra je het probleem hebt opgelost, kom dan terug naar deze pagina om te controleren of je microfoon klaar is voor gebruik."
 
 #: src/components/project/ProjectCard.tsx:51
 #: src/components/aspect/AspectCard.tsx:45
@@ -1651,9 +1774,14 @@ msgstr "Openen"
 msgid "Open for Participation?"
 msgstr "Open voor deelneming?"
 
-#: src/routes/participant/ParticipantConversation.tsx:365
-msgid "Open troubleshooting guide"
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:381
+msgid "participant.button.open.troubleshooting.guide"
 msgstr "Open de probleemoplossingsgids"
+
+#: src/routes/participant/ParticipantConversation.tsx:365
+#~ msgid "Open troubleshooting guide"
+#~ msgstr "Open de probleemoplossingsgids"
 
 #: src/components/conversation/ConversationAccordion.tsx:798
 #: src/components/conversation/ConversationAccordion.tsx:812
@@ -1714,17 +1842,27 @@ msgstr "Portal met wachtwoord beveiligen (aanvraag functie)"
 msgid "Passwords do not match"
 msgstr "Wachtwoorden komen niet overeen"
 
-#: src/routes/participant/ParticipantConversation.tsx:567
-msgid "Pause"
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:673
+msgid "participant.button.pause"
 msgstr "Pauze"
+
+#: src/routes/participant/ParticipantConversation.tsx:567
+#~ msgid "Pause"
+#~ msgstr "Pauze"
 
 #: src/components/report/ConversationStatusTable.tsx:84
 msgid "Pending"
 msgstr "In afwachting"
 
-#: src/components/participant/MicrophoneTest.tsx:285
-msgid "Please allow microphone access to start the test."
+#. js-lingui-explicit-id
+#: src/components/participant/MicrophoneTest.tsx:336
+msgid "participant.alert.microphone.access"
 msgstr "Schakel microfoontoegang in om de test te starten."
+
+#: src/components/participant/MicrophoneTest.tsx:285
+#~ msgid "Please allow microphone access to start the test."
+#~ msgstr "Schakel microfoontoegang in om de test te starten."
 
 #: src/routes/participant/ParticipantReport.tsx:56
 msgid "Please check back later or contact the project owner for more information."
@@ -1783,7 +1921,7 @@ msgstr "Kies een taal voor je bijgewerkte rapport"
 #~ msgid "Please wait {timeStr} before requesting another echo."
 #~ msgstr "Wacht {timeStr} voordat u een ander echo aanvraagt."
 
-#: src/routes/participant/ParticipantConversation.tsx:219
+#: src/routes/participant/ParticipantConversation.tsx:233
 msgid "Please wait {timeStr} before requesting another Echo."
 msgstr "Wacht {timeStr} voordat u een andere Echo aanvraagt."
 
@@ -1933,17 +2071,27 @@ msgstr "Gepubliceerd"
 #~ msgid "Quotes"
 #~ msgstr "Quotes"
 
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantOnboardingCards.tsx:259
+msgid "participant.ready.to.begin"
+msgstr "Klaar om te beginnen"
+
 #: src/components/participant/ParticipantOnboardingCards.tsx:185
-msgid "Ready to Begin?"
-msgstr "Klaar om te beginnen?"
+#~ msgid "Ready to Begin?"
+#~ msgstr "Klaar om te beginnen?"
 
 #: src/routes/participant/ParticipantLogin.tsx:148
 #~ msgid "Ready!"
 #~ msgstr "Klaar om te beginnen"
 
-#: src/routes/participant/ParticipantConversation.tsx:483
-msgid "Record"
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:582
+msgid "participant.button.record"
 msgstr "Opname starten"
+
+#: src/routes/participant/ParticipantConversation.tsx:483
+#~ msgid "Record"
+#~ msgstr "Opname starten"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:150
 msgid "Record another conversation"
@@ -1992,10 +2140,20 @@ msgstr "Registreer als nieuwe gebruiker"
 #~ msgid "Relevance"
 #~ msgstr "Relevantie"
 
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:325
+msgid "participant.button.reload"
+msgstr "Pagina herladen"
+
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:786
+msgid "participant.button.reload.page.text.mode"
+msgstr "Pagina herladen"
+
 #: src/routes/participant/ParticipantConversation.tsx:300
 #: src/routes/participant/ParticipantConversation.tsx:698
-msgid "Reload Page"
-msgstr "Pagina herladen"
+#~ msgid "Reload Page"
+#~ msgstr "Pagina herladen"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:207
 msgid "Remove Email"
@@ -2053,9 +2211,14 @@ msgstr "Wachtwoord reset aanvragen"
 msgid "Request Password Reset | Dembrane"
 msgstr "Wachtwoord reset aanvragen | Dembrane"
 
-#: src/components/participant/MicrophoneTest.tsx:296
-msgid "Requesting microphone access to detect available devices..."
+#. js-lingui-explicit-id
+#: src/components/participant/MicrophoneTest.tsx:349
+msgid "participant.alert.microphone.access.loading"
 msgstr "Microfoontoegang aanvragen om beschikbare apparaten te detecteren..."
+
+#: src/components/participant/MicrophoneTest.tsx:296
+#~ msgid "Requesting microphone access to detect available devices..."
+#~ msgstr "Microfoontoegang aanvragen om beschikbare apparaten te detecteren..."
 
 #: src/components/conversation/ConversationAccordion.tsx:848
 msgid "Reset All Options"
@@ -2074,9 +2237,14 @@ msgstr "Wachtwoord resetten | Dembrane"
 #~ msgid "Resources"
 #~ msgstr "Bronnen"
 
-#: src/routes/participant/ParticipantConversation.tsx:557
-msgid "Resume"
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:661
+msgid "participant.button.resume"
 msgstr "Hervatten"
+
+#: src/routes/participant/ParticipantConversation.tsx:557
+#~ msgid "Resume"
+#~ msgstr "Hervatten"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:297
 msgid "Retranscribe"
@@ -2159,6 +2327,10 @@ msgstr "Zoeken door de meest relevante bronnen"
 #~ msgid "Segments"
 #~ msgstr "Segmenten"
 
+#: src/components/participant/MicrophoneTest.tsx:313
+msgid "Select a microphone"
+msgstr "Selecteer een microfoon"
+
 #: src/components/dropzone/UploadConversationDropzone.tsx:507
 msgid "Select Audio Files to Upload"
 msgstr "Selecteer audiobestanden om te uploaden"
@@ -2192,14 +2364,24 @@ msgstr "Selecteer tutorial"
 #~ msgid "Select your group"
 #~ msgstr "Selecteer je groep"
 
+#. js-lingui-explicit-id
+#: src/components/participant/MicrophoneTest.tsx:305
+msgid "participant.select.microphone"
+msgstr "Selecteer een microfoon"
+
 #: src/components/participant/MicrophoneTest.tsx:258
-msgid "Select your microphone:"
-msgstr "Selecteer je microfoon:"
+#~ msgid "Select your microphone:"
+#~ msgstr "Selecteer je microfoon:"
 
 #. placeholder {0}: selectedFiles.length
 #: src/components/dropzone/UploadConversationDropzone.tsx:564
 msgid "Selected Files ({0}/{MAX_FILES})"
 msgstr "Geselecteerde bestanden ({0}/{MAX_FILES})"
+
+#. js-lingui-explicit-id
+#: src/components/participant/MicrophoneTest.tsx:301
+msgid "participant.selected.microphone"
+msgstr "Geselecteerde microfoon"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:533
 msgid "Send"
@@ -2217,9 +2399,14 @@ msgstr "Sessienaam"
 msgid "Setting up your first project"
 msgstr "Installeer je eerste project"
 
-#: src/components/layout/Header.tsx:105
-#~ msgid "Settings"
-#~ msgstr "Instellingen"
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantSettingsModal.tsx:22
+msgid "participant.settings.modal.title"
+msgstr "Instellingen"
+
+#: src/components/layout/ParticipantLayout.tsx:59
+msgid "Settings"
+msgstr "Instellingen"
 
 #: src/components/project/ProjectQRCode.tsx:104
 msgid "Share"
@@ -2282,9 +2469,14 @@ msgstr "Toon tijdlijn in rapport (aanvraag functie)"
 msgid "Sign in with Google"
 msgstr "Inloggen met Google"
 
-#: src/components/participant/MicrophoneTest.tsx:330
-msgid "Skip"
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantOnboardingCards.tsx:281
+msgid "participant.mic.check.button.skip"
 msgstr "Overslaan"
+
+#: src/components/participant/MicrophoneTest.tsx:330
+#~ msgid "Skip"
+#~ msgstr "Overslaan"
 
 #: src/components/conversation/AutoSelectConversations.tsx:188
 msgid "Some conversations are still being processed. Auto-select will work optimally once audio processing is complete."
@@ -2294,8 +2486,16 @@ msgstr "Sommige gesprekken worden nog verwerkt. Automatische selectie zal optima
 msgid "Some files were already selected and won't be added twice."
 msgstr "Sommige bestanden werden al geselecteerd en worden niet dubbel toegevoegd."
 
-#: src/routes/participant/ParticipantConversation.tsx:276
-#: src/routes/participant/ParticipantConversation.tsx:683
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:299
+msgid "participant.conversation.error"
+msgstr "Er is iets misgegaan met het gesprek. Probeer het alstublieft opnieuw of neem contact op met de ondersteuning als het probleem blijft bestaan"
+
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:769
+msgid "participant.conversation.error.text.mode"
+msgstr "Er is iets misgegaan met het gesprek. Probeer het alstublieft opnieuw of neem contact op met de ondersteuning als het probleem blijft bestaan"
+
 #: src/routes/auth/Login.tsx:115
 #: src/components/participant/ParticipantInitiateForm.tsx:78
 #: src/components/conversation/ConversationEdit.tsx:109
@@ -2349,10 +2549,20 @@ msgstr "Spreker"
 msgid "Specific Context"
 msgstr "Specifieke context"
 
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:335
+msgid "participant.button.start.new.conversation"
+msgstr "Nieuw gesprek starten"
+
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:798
+msgid "participant.button.start.new.conversation.text.mode"
+msgstr "Nieuw gesprek starten"
+
 #: src/routes/participant/ParticipantConversation.tsx:310
 #: src/routes/participant/ParticipantConversation.tsx:708
-msgid "Start New Conversation"
-msgstr "Nieuw gesprek starten"
+#~ msgid "Start New Conversation"
+#~ msgstr "Nieuw gesprek starten"
 
 #: src/routes/participant/ParticipantConversation.tsx:1018
 #~ msgid "Start Recording"
@@ -2363,11 +2573,19 @@ msgid "Status"
 msgstr "Status"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:410
-#: src/routes/participant/ParticipantConversation.tsx:612
 msgid "Stop"
 msgstr "Stop"
 
-#: src/routes/participant/ParticipantConversation.tsx:756
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:694
+msgid "participant.button.stop"
+msgstr "Stop"
+
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:893
+msgid "participant.button.submit.text.mode"
+msgstr "Stuur in"
+
 #: src/routes/auth/RequestPasswordReset.tsx:41
 msgid "Submit"
 msgstr "Stuur in"
@@ -2433,10 +2651,20 @@ msgstr "Bedankt pagina inhoud"
 msgid "Thank you! We'll notify you when the report is ready."
 msgstr "Bedankt! We zullen u waarschuwen wanneer het rapport klaar is."
 
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:312
+msgid "participant.conversation.error.loading"
+msgstr "Er is iets misgegaan met het gesprek. Probeer het alstublieft opnieuw of neem contact op met de ondersteuning als het probleem blijft bestaan"
+
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:774
+msgid "participant.conversation.error.loading.text.mode"
+msgstr "Er is iets misgegaan met het gesprek. Probeer het alstublieft opnieuw of neem contact op met de ondersteuning als het probleem blijft bestaan"
+
 #: src/routes/participant/ParticipantConversation.tsx:287
 #: src/routes/participant/ParticipantConversation.tsx:686
-msgid "The conversation could not be loaded. Please try again or contact support."
-msgstr "Het gesprek kon niet worden geladen. Probeer het alstublieft opnieuw of neem contact op met de ondersteuning."
+#~ msgid "The conversation could not be loaded. Please try again or contact support."
+#~ msgstr "Het gesprek kon niet worden geladen. Probeer het alstublieft opnieuw of neem contact op met de ondersteuning."
 
 #: src/components/project/ProjectPortalEditor.tsx:191
 #~ msgid "The Portal is the website that loads when participants scan the QR code."
@@ -2491,7 +2719,7 @@ msgstr "Er is een fout opgetreden bij het verifiëren van uw e-mail. Probeer het
 msgid "These default view templates will be generated when you create your first library."
 msgstr "Deze standaard weergave sjablonen worden gegenereerd wanneer u uw eerste bibliotheek maakt."
 
-#: src/routes/participant/ParticipantConversation.tsx:414
+#: src/routes/participant/ParticipantConversation.tsx:481
 msgid "Thinking..."
 msgstr "Denken..."
 
@@ -2745,7 +2973,7 @@ msgstr "Typ een bericht..."
 #~ msgid "Type context here..."
 #~ msgstr "Typ hier de context..."
 
-#: src/routes/participant/ParticipantConversation.tsx:743
+#: src/routes/participant/ParticipantConversation.tsx:880
 msgid "Type your response here"
 msgstr "Typ hier uw reactie"
 
@@ -2866,9 +3094,14 @@ msgstr "Bekijk je reacties"
 #~ msgid "Warning"
 #~ msgstr "Waarschuwing"
 
-#: src/components/participant/MicrophoneTest.tsx:310
-msgid "We cannot hear you. Please try changing your microphone or get a little closer to the device."
+#. js-lingui-explicit-id
+#: src/components/participant/MicrophoneTest.tsx:365
+msgid "participant.alert.microphone.access.issue"
 msgstr "We kunnen je niet horen. Probeer je microfoon te wisselen of een beetje dichter bij het apparaat te komen."
+
+#: src/components/participant/MicrophoneTest.tsx:310
+#~ msgid "We cannot hear you. Please try changing your microphone or get a little closer to the device."
+#~ msgstr "We kunnen je niet horen. Probeer je microfoon te wisselen of een beetje dichter bij het apparaat te komen."
 
 #: src/routes/auth/CheckYourEmail.tsx:14
 #~ msgid "We have sent you an email with next steps. If you don't see it, check your spam folder."
@@ -2882,9 +3115,14 @@ msgstr "We hebben u een e-mail gestuurd met de volgende stappen. Als u het niet 
 msgid "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 msgstr "We sturen u alleen een bericht als uw gastgever een rapport genereert, we delen uw gegevens niet met iemand. U kunt op elk moment afmelden."
 
-#: src/components/participant/MicrophoneTest.tsx:250
-msgid "We'll test your microphone to ensure the best experience for everyone in the session."
+#. js-lingui-explicit-id
+#: src/components/participant/MicrophoneTest.tsx:289
+msgid "participant.test.microphone.description"
 msgstr "We testen je microfoon om de beste ervaring voor iedereen in de sessie te garanderen."
+
+#: src/components/participant/MicrophoneTest.tsx:250
+#~ msgid "We'll test your microphone to ensure the best experience for everyone in the session."
+#~ msgstr "We testen je microfoon om de beste ervaring voor iedereen in de sessie te garanderen."
 
 #: src/components/participant/hooks/useConversationIssueBanner.ts:13
 msgid "We’re picking up some silence. Try speaking up so your voice comes through clearly."
@@ -2926,6 +3164,16 @@ msgstr "wordt in uw rapport opgenomen"
 #~ msgid "Workspaces"
 #~ msgstr "Werkruimtes"
 
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:441
+msgid "participant.button.stop.yes"
+msgstr "Ja"
+
+#. js-lingui-explicit-id
+#: src/routes/participant/ParticipantConversation.tsx:850
+msgid "participant.button.finish.yes.text.mode"
+msgstr "Ja"
+
 #: src/components/chat/BaseMessage.tsx:40
 msgid "You"
 msgstr "Jij"
@@ -2946,6 +3194,11 @@ msgstr "U kunt maximaal {MAX_FILES} bestanden tegelijk uploaden. Alleen de eerst
 #: src/routes/participant/ParticipantLogin.tsx:142
 #~ msgid "You can use this by yourself to share your own story, or you can record a conversation between several people, which can often be fun and insightful!"
 #~ msgstr "Je kan dit in je eentje gebruiken om je eigen verhaal te delen, of je kan een gesprek opnemen tussen meerdere mensen, wat vaak leuk en inzichtelijk kan zijn!"
+
+#. js-lingui-explicit-id
+#: src/components/participant/MicrophoneTest.tsx:390
+msgid "participant.modal.change.mic.confirmation.text"
+msgstr "Je hebt je microfoon gewisseld. Klik op \"Doorgaan\" om verder te gaan met de sessie."
 
 #: src/components/project/ProjectAnalysisRunStatus.tsx:101
 #~ msgid "You have some conversations that have not been processed yet. Regenerate the library to process them."

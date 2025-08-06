@@ -789,6 +789,7 @@ const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
                       src={link}
                       className="h-full w-full flex-1 bg-white"
                       title="Portal Preview"
+                      allow="microphone *"
                     />
                   </Paper>
                 </Resizable>

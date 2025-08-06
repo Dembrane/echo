@@ -30,9 +30,10 @@ import {
 } from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-
+import { useDisclosure, useWindowEvent } from "@mantine/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWakeLock } from "@/hooks/useWakeLock";
+import Cookies from "js-cookie";
 import clsx from "clsx";
 
 import { finishConversation } from "@/lib/api";
@@ -55,7 +56,6 @@ import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
 import { API_BASE_URL } from "@/config";
 import useChunkedAudioRecorder from "@/components/participant/hooks/useChunkedAudioRecorder";
-import MicrophoneTest from "../../components/participant/MicrophoneTest";
 import { EchoErrorAlert } from "@/components/participant/EchoErrorAlert";
 
 const DEFAULT_REPLY_COOLDOWN = 120; // 2 minutes in seconds
@@ -64,10 +64,9 @@ export const ParticipantConversationAudioRoute = () => {
   const { projectId, conversationId } = useParams();
   const [searchParams] = useSearchParams();
 
-  // Check if device ID exists in search params to determine if mic test is needed
-  const savedDeviceId = searchParams.get("micDeviceId");
-  const [showMicTest, setShowMicTest] = useState(!savedDeviceId);
-  const [deviceId, setDeviceId] = useState<string>(savedDeviceId || "");
+  // Get device ID from cookies for audio recording
+  const savedDeviceId = Cookies.get("micDeviceId");
+  const deviceId = savedDeviceId || "";
 
   const projectQuery = useParticipantProjectById(projectId ?? "");
   const conversationQuery = useConversationQuery(projectId, conversationId);
@@ -102,6 +101,8 @@ export const ParticipantConversationAudioRoute = () => {
   ] = useState(false);
 
   const [isFinishing, setIsFinishing] = useState(false);
+  const [isStopping, setIsStopping] = useState(false);
+  const [opened, { open, close }] = useDisclosure(false);
   // Navigation and language
   const navigate = useI18nNavigate();
   const { iso639_1 } = useLanguage();
@@ -147,6 +148,19 @@ export const ParticipantConversationAudioRoute = () => {
     errored,
     permissionError,
   } = audioRecorder;
+
+  const handleMicrophoneDeviceChanged = async () => {
+    try {
+      stopRecording();
+    } catch (error) {
+      toast.error(
+        t`Failed to stop recording on device change. Please try again.`,
+      );
+      console.error("Failed to stop recording on device change:", error);
+    }
+  };
+
+  useWindowEvent("microphoneDeviceChanged", handleMicrophoneDeviceChanged);
 
   // Monitor conversation status during recording - handle deletion mid-recording
   useEffect(() => {
@@ -242,17 +256,24 @@ export const ParticipantConversationAudioRoute = () => {
     }
   };
 
-  const handleFinish = async () => {
-    if (window.confirm(t`Are you sure you want to finish?`)) {
-      setIsFinishing(true);
-      try {
-        await finishConversation(conversationId ?? "");
-        navigate(finishUrl);
-      } catch (error) {
-        console.error("Error finishing conversation:", error);
-        toast.error(t`Failed to finish conversation. Please try again.`);
-        setIsFinishing(false);
-      }
+  const handleStopRecording = () => {
+    if (isRecording) {
+      pauseRecording();
+      open();
+    }
+  };
+
+  const handleConfirmFinish = async () => {
+    setIsStopping(true);
+    try {
+      stopRecording();
+      await finishConversation(conversationId ?? "");
+      close();
+      navigate(finishUrl);
+    } catch (error) {
+      console.error("Error finishing conversation:", error);
+      toast.error(t`Failed to finish conversation. Please try again.`);
+      setIsStopping(false);
     }
   };
 
@@ -271,20 +292,24 @@ export const ParticipantConversationAudioRoute = () => {
         <div className="p-8 text-center">
           <Text size="xl" fw={500} c="red" mb="md">
             {conversationDeletedDuringRecording ? (
-              <Trans>Conversation Ended</Trans>
+              <Trans id="participant.conversation.ended">
+                Conversation Ended
+              </Trans>
             ) : (
-              <Trans>Something went wrong</Trans>
+              <Trans id="participant.conversation.error">
+                Something went wrong
+              </Trans>
             )}
           </Text>
           <Text size="md" c="dimmed" mb="lg">
             {conversationDeletedDuringRecording ? (
-              <Trans>
+              <Trans id="participant.conversation.error.deleted">
                 It looks like the conversation was deleted while you were
                 recording. We've stopped the recording to prevent any issues.
                 You can start a new one anytime.
               </Trans>
             ) : (
-              <Trans>
+              <Trans id="participant.conversation.error.loading">
                 The conversation could not be loaded. Please try again or
                 contact support.
               </Trans>
@@ -297,7 +322,7 @@ export const ParticipantConversationAudioRoute = () => {
               onClick={() => window.location.reload()}
               leftSection={<IconReload />}
             >
-              <Trans>Reload Page</Trans>
+              <Trans id="participant.button.reload">Reload Page</Trans>
             </Button>
             {newConversationLink && (
               <Button
@@ -307,7 +332,9 @@ export const ParticipantConversationAudioRoute = () => {
                 component="a"
                 href={newConversationLink}
               >
-                <Trans>Start New Conversation</Trans>
+                <Trans id="participant.button.start.new.conversation">
+                  Start New Conversation
+                </Trans>
               </Button>
             )}
           </Group>
@@ -318,17 +345,6 @@ export const ParticipantConversationAudioRoute = () => {
 
   const textModeUrl = `/${projectId}/conversation/${conversationId}/text`;
   const finishUrl = `/${projectId}/conversation/${conversationId}/finish`;
-
-  if (showMicTest) {
-    return (
-      <MicrophoneTest
-        onContinue={(id: string) => {
-          setDeviceId(id);
-          setShowMicTest(false);
-        }}
-      />
-    );
-  }
 
   return (
     <div className="container mx-auto flex h-full max-w-2xl flex-col">
@@ -345,7 +361,7 @@ export const ParticipantConversationAudioRoute = () => {
         <div className="h-full rounded-md bg-white py-4">
           <Stack className="container mx-auto mt-4 max-w-2xl px-2" gap="lg">
             <div className="max-w-prose text-lg">
-              <Trans>
+              <Trans id="participant.alert.microphone.access.failure">
                 Oops! It looks like microphone access was denied. No worries,
                 though! We've got a handy troubleshooting guide for you. Feel
                 free to check it out. Once you've resolved the issue, come back
@@ -362,7 +378,9 @@ export const ParticipantConversationAudioRoute = () => {
               variant={!troubleShootingGuideOpened ? "filled" : "light"}
               onClick={() => setTroubleShootingGuideOpened(true)}
             >
-              <Trans>Open troubleshooting guide</Trans>
+              <Trans id="participant.button.open.troubleshooting.guide">
+                Open troubleshooting guide
+              </Trans>
             </Button>
             <Divider />
             <Button
@@ -371,10 +389,59 @@ export const ParticipantConversationAudioRoute = () => {
               variant={troubleShootingGuideOpened ? "filled" : "light"}
               onClick={handleCheckMicrophoneAccess}
             >
-              <Trans>Check microphone access</Trans>
+              <Trans id="participant.button.check.microphone.access">
+                Check microphone access
+              </Trans>
             </Button>
           </Stack>
         </div>
+      </Modal>
+
+      {/* modal for stop recording confirmation */}
+      <Modal
+        opened={opened}
+        onClose={isStopping ? () => {} : close}
+        closeOnClickOutside={!isStopping}
+        closeOnEscape={!isStopping}
+        centered
+        title={
+          <Text fw={500}>
+            <Trans id="participant.modal.stop.title">Finish Conversation</Trans>
+          </Text>
+        }
+        size="sm"
+        radius="md"
+        padding="xl"
+      >
+        <Stack gap="lg">
+          <Text>
+            <Trans id="participant.modal.stop.message">
+              Are you sure you want to finish the conversation?
+            </Trans>
+          </Text>
+          <Group grow gap="md">
+            <Button
+              variant="outline"
+              color="gray"
+              onClick={close}
+              disabled={isStopping}
+              miw={100}
+              radius="md"
+              size="md"
+            >
+              <Trans id="participant.button.stop.no">No</Trans>
+            </Button>
+            <Button
+              onClick={handleConfirmFinish}
+              loading={isStopping}
+              miw={100}
+              radius="md"
+              size="md"
+            >
+              <Trans id="participant.button.stop.yes">Yes</Trans>
+            </Button>
+          </Group>
+        </Stack>
       </Modal>
 
       <Box className={clsx("relative flex-grow p-4 pb-12 transition-all")}>
@@ -473,16 +540,6 @@ export const ParticipantConversationAudioRoute = () => {
             {!isRecording && (
               <>
                 <Group className="w-full">
-                  <Button
-                    size="lg"
-                    radius="md"
-                    rightSection={<IconMicrophone />}
-                    onClick={startRecording}
-                    className="flex-grow"
-                  >
-                    <Trans>Record</Trans>
-                  </Button>
-
                   {chunks?.data &&
                     chunks.data.length > 0 &&
                     !!projectQuery.data?.is_get_reply_enabled && (
@@ -509,11 +566,21 @@ export const ParticipantConversationAudioRoute = () => {
                               </Trans>
                             </Text>
                           ) : (
-                            <Trans>ECHO</Trans>
+                            <Trans id="participant.button.echo">ECHO</Trans>
                           )}
                         </Button>
                       </Group>
                     )}
+
+                  <Button
+                    size="lg"
+                    radius="md"
+                    rightSection={<IconMicrophone />}
+                    onClick={startRecording}
+                    className="flex-grow"
+                  >
+                    <Trans id="participant.button.record">Record</Trans>
+                  </Button>
 
                   <I18nLink to={textModeUrl}>
                     <ActionIcon
@@ -526,48 +593,29 @@ export const ParticipantConversationAudioRoute = () => {
                     </ActionIcon>
                   </I18nLink>
 
-                  {!isRecording && chunks?.data && chunks.data.length > 0 && (
-                    <Button
-                      size="lg"
-                      radius="md"
-                      onClick={handleFinish}
-                      variant="light"
-                      rightSection={<IconCheck />}
-                      className="w-full md:w-auto"
-                      loading={isFinishing}
-                      disabled={isFinishing}
-                    >
-                      <Trans>Finish</Trans>
-                    </Button>
-                  )}
+                  {!isRecording &&
+                    !isStopping &&
+                    chunks?.data &&
+                    chunks.data.length > 0 && (
+                      <Button
+                        size="lg"
+                        radius="md"
+                        onClick={open}
+                        variant="light"
+                        rightSection={<IconCheck />}
+                        className="w-full md:w-auto"
+                        loading={isFinishing}
+                        disabled={isFinishing}
+                      >
+                        <Trans id="participant.button.finish">Finish</Trans>
+                      </Button>
+                    )}
                 </Group>
               </>
             )}
 
             {isRecording && (
               <>
-                {isPaused ? (
-                  <Button
-                    className="flex-1"
-                    size="lg"
-                    radius="md"
-                    rightSection={<IconPlayerPlay size={16} />}
-                    onClick={resumeRecording}
-                  >
-                    <Trans>Resume</Trans>
-                  </Button>
-                ) : (
-                  <Button
-                    className="flex-1"
-                    size="lg"
-                    radius="md"
-                    rightSection={<IconPlayerPause size={16} />}
-                    onClick={pauseRecording}
-                  >
-                    <Trans>Pause</Trans>
-                  </Button>
-                )}
-
                 {chunks?.data &&
                   chunks.data.length > 0 &&
                   !!projectQuery.data?.is_get_reply_enabled && (
@@ -594,24 +642,60 @@ export const ParticipantConversationAudioRoute = () => {
                             </Trans>
                           </Text>
                         ) : (
-                          <Trans>ECHO</Trans>
+                          <Trans id="participant.button.is.recording.echo">
+                            ECHO
+                          </Trans>
                         )}
                       </Button>
                     </Group>
                   )}
+
+                {isPaused ? (
+                  <Button
+                    className="flex-1"
+                    size="lg"
+                    radius="md"
+                    onClick={resumeRecording}
+                  >
+                    <span className="hidden md:block">
+                      <Trans id="participant.button.resume">Resume</Trans>
+                    </span>
+                    <IconPlayerPlay size={18} className="ml-0 md:ml-1" />
+                  </Button>
+                ) : (
+                  <Button
+                    className="flex-1"
+                    size="lg"
+                    radius="md"
+                    onClick={pauseRecording}
+                  >
+                    <span className="hidden md:block">
+                      <Trans id="participant.button.pause">Pause</Trans>
+                    </span>
+                    <IconPlayerPause size={18} className="ml-0 md:ml-1" />
+                  </Button>
+                )}
+
                 <Button
                   variant="outline"
                   size="lg"
                   radius="md"
                   color="red"
-                  onClick={() => {
-                    stopRecording();
-                  }}
+                  onClick={handleStopRecording}
+                  disabled={isStopping}
+                  className={
+                    !chunks?.data ||
+                    chunks.data.length === 0 ||
+                    !projectQuery.data?.is_get_reply_enabled
+                      ? "flex-1"
+                      : ""
+                  }
                 >
-                  <span className="hidden md:block">
-                    <Trans>Stop</Trans>
-                  </span>
-                  <IconPlayerStopFilled size={20} className="ml-0 md:ml-1" />
+                  <Trans id="participant.button.stop">Stop</Trans>
+                  <IconPlayerStopFilled
+                    size={18}
+                    className="ml-0 hidden md:ml-1 md:block"
+                  />
                 </Button>
               </>
             )}
@@ -631,6 +715,10 @@ export const ParticipantConversationTextRoute = () => {
   const newConversationLink = useProjectSharingLink(projectQuery.data);
 
   const [text, setText] = useState("");
+  const [
+    finishModalOpened,
+    { open: openFinishModal, close: closeFinishModal },
+  ] = useDisclosure(false);
 
   const [scrollTargetRef, isVisible] = useElementOnScreen({
     root: null,
@@ -664,10 +752,8 @@ export const ParticipantConversationTextRoute = () => {
   const audioModeUrl = `/${projectId}/conversation/${conversationId}`;
   const finishUrl = `/${projectId}/conversation/${conversationId}/finish`;
 
-  const handleFinish = () => {
-    if (window.confirm(t`Are you sure you want to finish?`)) {
-      navigate(finishUrl);
-    }
+  const handleConfirmFinishButton = () => {
+    navigate(finishUrl);
   };
 
   if (conversationQuery.isLoading || projectQuery.isLoading) {
@@ -680,10 +766,12 @@ export const ParticipantConversationTextRoute = () => {
       <div className="container mx-auto flex h-full max-w-2xl flex-col items-center justify-center">
         <div className="p-8 text-center">
           <Text size="xl" fw={500} c="red" mb="md">
-            <Trans>Something went wrong</Trans>
+            <Trans id="participant.conversation.error.text.mode">
+              Something went wrong
+            </Trans>
           </Text>
           <Text size="md" c="dimmed" mb="lg">
-            <Trans>
+            <Trans id="participant.conversation.error.loading.text.mode">
               The conversation could not be loaded. Please try again or contact
               support.
             </Trans>
@@ -695,7 +783,9 @@ export const ParticipantConversationTextRoute = () => {
               onClick={() => window.location.reload()}
               leftSection={<IconReload />}
             >
-              <Trans>Reload Page</Trans>
+              <Trans id="participant.button.reload.page.text.mode">
+                Reload Page
+              </Trans>
             </Button>
             {newConversationLink && (
               <Button
@@ -705,7 +795,9 @@ export const ParticipantConversationTextRoute = () => {
                 component="a"
                 href={newConversationLink}
               >
-                <Trans>Start New Conversation</Trans>
+                <Trans id="participant.button.start.new.conversation.text.mode">
+                  Start New Conversation
+                </Trans>
               </Button>
             )}
           </Group>
@@ -716,6 +808,51 @@ export const ParticipantConversationTextRoute = () => {
 
   return (
     <div className="container mx-auto flex h-full max-w-2xl flex-col">
+      {/* modal for finish conversation confirmation */}
+      <Modal
+        opened={finishModalOpened}
+        onClose={closeFinishModal}
+        centered
+        title={
+          <Text fw={500}>
+            <Trans id="participant.modal.finish.title.text.mode">
+              Finish Conversation
+            </Trans>
+          </Text>
+        }
+        size="sm"
+        radius="md"
+        padding="xl"
+      >
+        <Stack gap="lg">
+          <Text>
+            <Trans id="participant.modal.finish.message.text.mode">
+              Are you sure you want to finish the conversation?
+            </Trans>
+          </Text>
+          <Group grow gap="md">
+            <Button
+              variant="outline"
+              color="gray"
+              onClick={closeFinishModal}
+              miw={100}
+              radius="md"
+              size="md"
+            >
+              <Trans id="participant.button.finish.no.text.mode">No</Trans>
+            </Button>
+            <Button
+              onClick={handleConfirmFinishButton}
+              miw={100}
+              radius="md"
+              size="md"
+            >
+              <Trans id="participant.button.finish.yes.text.mode">Yes</Trans>
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
       <Box className={clsx("relative flex-grow px-4 py-12 transition-all")}>
         {projectQuery.data && conversationQuery.data && (
           <ParticipantBody
@@ -753,7 +890,7 @@ export const ParticipantConversationTextRoute = () => {
             loading={uploadChunkMutation.isPending}
             className="flex-grow"
           >
-            <Trans>Submit</Trans>
+            <Trans id="participant.button.submit.text.mode">Submit</Trans>
           </Button>
 
           <I18nLink to={audioModeUrl}>
@@ -765,12 +902,12 @@ export const ParticipantConversationTextRoute = () => {
             <Button
               size="lg"
               radius="md"
-              onClick={handleFinish}
+              onClick={openFinishModal}
               component="a"
               variant="light"
               rightSection={<IconCheck />}
             >
-              <Trans>Finish</Trans>
+              <Trans id="participant.button.finish.text.mode">Finish</Trans>
             </Button>
           )}
         </Group>
