@@ -273,8 +273,6 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
   const handleConfirmMicChange = () => {
     // Apply the pending device change
     setSelectedDeviceId(displayDeviceId);
-    setShowSecondModal(false);
-
     onContinue(selectedDeviceId);
     close();
   };
