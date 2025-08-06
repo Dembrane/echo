@@ -30,7 +30,7 @@ import {
 } from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useWindowEvent } from "@mantine/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import Cookies from "js-cookie";
@@ -149,6 +149,12 @@ export const ParticipantConversationAudioRoute = () => {
     permissionError,
   } = audioRecorder;
 
+  const handleMicrophoneDeviceChanged = async () => {
+    stopRecording();
+  };
+
+  useWindowEvent("microphoneDeviceChanged", handleMicrophoneDeviceChanged);
+
   // Monitor conversation status during recording - handle deletion mid-recording
   useEffect(() => {
     if (isRecording && (conversationQuery.isError || !conversationQuery.data)) {
@@ -240,20 +246,6 @@ export const ParticipantConversationAudioRoute = () => {
       setRemainingCooldown(DEFAULT_REPLY_COOLDOWN);
     } catch (error) {
       console.error("Error during echo:", error);
-    }
-  };
-
-  const handleFinish = async () => {
-    if (window.confirm(t`Are you sure you want to finish?`)) {
-      setIsFinishing(true);
-      try {
-        await finishConversation(conversationId ?? "");
-        navigate(finishUrl);
-      } catch (error) {
-        console.error("Error finishing conversation:", error);
-        toast.error(t`Failed to finish conversation. Please try again.`);
-        setIsFinishing(false);
-      }
     }
   };
 
@@ -541,16 +533,6 @@ export const ParticipantConversationAudioRoute = () => {
             {!isRecording && (
               <>
                 <Group className="w-full">
-                  <Button
-                    size="lg"
-                    radius="md"
-                    rightSection={<IconMicrophone />}
-                    onClick={startRecording}
-                    className="flex-grow"
-                  >
-                    <Trans id="participant.button.record">Record</Trans>
-                  </Button>
-
                   {chunks?.data &&
                     chunks.data.length > 0 &&
                     !!projectQuery.data?.is_get_reply_enabled && (
@@ -583,6 +565,16 @@ export const ParticipantConversationAudioRoute = () => {
                       </Group>
                     )}
 
+                  <Button
+                    size="lg"
+                    radius="md"
+                    rightSection={<IconMicrophone />}
+                    onClick={startRecording}
+                    className="flex-grow"
+                  >
+                    <Trans id="participant.button.record">Record</Trans>
+                  </Button>
+
                   <I18nLink to={textModeUrl}>
                     <ActionIcon
                       component="a"
@@ -601,7 +593,7 @@ export const ParticipantConversationAudioRoute = () => {
                       <Button
                         size="lg"
                         radius="md"
-                        onClick={handleFinish}
+                        onClick={open}
                         variant="light"
                         rightSection={<IconCheck />}
                         className="w-full md:w-auto"
