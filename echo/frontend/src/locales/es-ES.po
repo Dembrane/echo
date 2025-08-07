@@ -111,7 +111,7 @@ msgstr "Actualmente {0} conversaciones están listas para ser analizadas."
 msgid "{minutes} minutes and {seconds} seconds"
 msgstr "{minutes} minutos y {seconds} segundos"
 
-#: src/components/report/ReportRenderer.tsx:78
+#: src/components/report/ReportRenderer.tsx:84
 msgid "{readingNow} reading now"
 msgstr "{readingNow} leyendo ahora"
 
@@ -210,7 +210,7 @@ msgstr "Ya añadido a este chat"
 
 #. placeholder {0}: participantCount !== undefined ? participantCount : t`loading...`
 #. placeholder {1}: participantCount == 1 ? "" : "s"
-#: src/routes/project/report/ProjectReportRoute.tsx:318
+#: src/routes/project/report/ProjectReportRoute.tsx:328
 msgid "An email notification will be sent to {0} participant{1}. Do you want to proceed?"
 msgstr "Se enviará una notificación por correo electrónico a {0} participante{1}. ¿Quieres continuar?"
 
@@ -408,7 +408,7 @@ msgstr "Ideas de brainstorming"
 msgid "By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you ABSOLUTELY sure you want to delete this project?"
 msgstr "Al eliminar este proyecto, eliminarás todos los datos asociados con él. Esta acción no se puede deshacer. ¿Estás ABSOLUTAMENTE seguro de que quieres eliminar este proyecto?"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:329
+#: src/routes/project/report/ProjectReportRoute.tsx:339
 #: src/components/dropzone/UploadConversationDropzone.tsx:674
 #: src/components/dropzone/UploadConversationDropzone.tsx:789
 #: src/components/conversation/MoveConversationButton.tsx:202
@@ -506,7 +506,7 @@ msgstr "Confirmar Nueva Contraseña"
 msgid "Confirm Password"
 msgstr "Confirmar Contraseña"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:315
+#: src/routes/project/report/ProjectReportRoute.tsx:325
 msgid "Confirm Publishing"
 msgstr "Publicar"
 
@@ -623,7 +623,7 @@ msgstr "Copiar"
 msgid "Copy link"
 msgstr "Copiar enlace"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:204
+#: src/routes/project/report/ProjectReportRoute.tsx:205
 msgid "Copy link to share this report"
 msgstr "Copiar enlace para compartir este informe"
 
@@ -715,7 +715,7 @@ msgstr "Dembrane Echo"
 #~ msgid "Dembrane Reply"
 #~ msgstr "Dembrane Respuesta"
 
-#: src/components/report/ReportRenderer.tsx:21
+#: src/components/report/ReportRenderer.tsx:22
 msgid "Do you want to contribute to this project?"
 msgstr "¿Quieres contribuir a este proyecto?"
 
@@ -787,9 +787,22 @@ msgstr "Editar nombre de archivo"
 msgid "Edit Project"
 msgstr "Editar Proyecto"
 
+#: src/components/report/ReportEditor.tsx:112
+msgid "Edit Report Content"
+msgstr "Editar Contenido del Informe"
+
 #: src/routes/project/resource/ProjectResourceOverview.tsx:114
 #~ msgid "Edit Resource"
 #~ msgstr "Editar Recurso"
+
+#. js-lingui-explicit-id
+#: src/components/report/ReportEditor.tsx:125
+msgid "report.editor.description"
+msgstr "Edita el contenido del informe usando el editor de texto enriquecido a continuación. Puede formatear texto, agregar enlaces, imágenes y más."
+
+#: src/routes/project/report/ProjectReportRoute.tsx:305
+msgid "Editing mode"
+msgstr "Modo de edición"
 
 #: src/routes/auth/Login.tsx:152
 #: src/routes/auth/Login.tsx:155
@@ -1172,7 +1185,7 @@ msgstr "Identifica temas recurrentes, temas y argumentos que aparecen consistent
 msgid "In the meantime, if you want to analyze the conversations that are still processing, you can use the Chat feature"
 msgstr "Mientras tanto, si quieres analizar las conversaciones que aún están en proceso, puedes usar la función de Chat"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:275
+#: src/routes/project/report/ProjectReportRoute.tsx:276
 msgid "Include portal link in report"
 msgstr "Incluir enlace al portal en el informe"
 
@@ -1319,7 +1332,7 @@ msgstr "Cargando"
 msgid "Loading microphones..."
 msgstr "Cargando micrófonos..."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:322
+#: src/routes/project/report/ProjectReportRoute.tsx:332
 msgid "loading..."
 msgstr "cargando..."
 
@@ -1522,7 +1535,7 @@ msgstr "No se encontraron proyectos para el término de búsqueda"
 #~ msgid "No quotes available. Generate quotes for this conversation by visiting<0><1> the project library.</1></0>"
 #~ msgstr "No hay citas disponibles. Genera citas para esta conversación visitando<0><1> la biblioteca del proyecto.</1></0>"
 
-#: src/components/report/ReportRenderer.tsx:112
+#: src/components/report/ReportRenderer.tsx:120
 msgid "No report found"
 msgstr "No se encontró ningún informe"
 
@@ -1655,7 +1668,7 @@ msgstr "Los participantes podrán seleccionar etiquetas al crear conversaciones"
 msgid "Password"
 msgstr "Contraseña"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:294
+#: src/routes/project/report/ProjectReportRoute.tsx:295
 msgid "Password protect portal (request feature)"
 msgstr "Proteger el portal con contraseña (solicitar función)"
 
@@ -1786,7 +1799,7 @@ msgstr "Propulsado por"
 msgid "Preparing your experience"
 msgstr "Preparando tu experiencia"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:211
+#: src/routes/project/report/ProjectReportRoute.tsx:212
 msgid "Print this report"
 msgstr "Imprimir este informe"
 
@@ -1794,7 +1807,7 @@ msgstr "Imprimir este informe"
 msgid "Privacy Statements"
 msgstr "Declaraciones de Privacidad"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:332
+#: src/routes/project/report/ProjectReportRoute.tsx:342
 msgid "Proceed"
 msgstr "Continuar"
 
@@ -1863,11 +1876,11 @@ msgstr "Inicio de Proyectos"
 msgid "Provide an overview of the main topics and recurring themes"
 msgstr "Proporciona una visión general de los temas principales y los temas recurrentes"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:232
+#: src/routes/project/report/ProjectReportRoute.tsx:233
 msgid "Publish"
 msgstr "Publicar"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:232
+#: src/routes/project/report/ProjectReportRoute.tsx:233
 msgid "Published"
 msgstr "Publicado"
 
@@ -1978,7 +1991,7 @@ msgid "Reply Prompt"
 msgstr "Prompt de Respuesta"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:64
-#: src/components/report/ReportRenderer.tsx:72
+#: src/components/report/ReportRenderer.tsx:78
 #: src/components/report/ReportModalNavigationButton.tsx:66
 msgid "Report"
 msgstr "Informe"
@@ -1992,7 +2005,7 @@ msgstr "Reportar un problema"
 msgid "Report Created - {0}"
 msgstr "Informe creado - {0}"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:155
+#: src/routes/project/report/ProjectReportRoute.tsx:156
 msgid "Report generation is currently in beta and limited to projects with fewer than 10 hours of recording."
 msgstr "La generación de informes está actualmente en fase beta y limitada a proyectos con menos de 10 horas de grabación."
 
@@ -2205,7 +2218,7 @@ msgstr "Configuración"
 msgid "Share"
 msgstr "Compartir"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:181
+#: src/routes/project/report/ProjectReportRoute.tsx:182
 msgid "Share this report"
 msgstr "Compartir este informe"
 
@@ -2213,11 +2226,11 @@ msgstr "Compartir este informe"
 msgid "Share your details here"
 msgstr "Comparte tus detalles aquí"
 
-#: src/components/report/ReportRenderer.tsx:29
+#: src/components/report/ReportRenderer.tsx:30
 msgid "Share your voice"
 msgstr "Compartir tu voz"
 
-#: src/components/report/ReportRenderer.tsx:33
+#: src/components/report/ReportRenderer.tsx:34
 msgid "Share your voice by scanning the QR code below."
 msgstr "Comparte tu voz escaneando el código QR de abajo."
 
@@ -2254,7 +2267,7 @@ msgstr "Mostrar más"
 msgid "Show references"
 msgstr "Mostrar referencias"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:289
+#: src/routes/project/report/ProjectReportRoute.tsx:290
 msgid "Show timeline in report (request feature)"
 msgstr "Mostrar línea de tiempo en el informe (solicitar función)"
 
@@ -2480,7 +2493,7 @@ msgstr "El resumen está siendo regenerado. Por favor, espera hasta que el nuevo
 msgid "There was an error creating your report. Please try again or contact support."
 msgstr "Hubo un error al crear tu informe. Por favor, inténtalo de nuevo o contacta al soporte."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:162
+#: src/routes/project/report/ProjectReportRoute.tsx:163
 msgid "There was an error generating your report. In the meantime, you can analyze all your data using the library or select specific conversations to chat with."
 msgstr "Hubo un error al generar tu informe. En el tiempo, puedes analizar todos tus datos usando la biblioteca o seleccionar conversaciones específicas para conversar."
 

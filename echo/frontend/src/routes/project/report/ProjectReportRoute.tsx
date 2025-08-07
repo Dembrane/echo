@@ -25,13 +25,7 @@ import { AnimatePresence } from "motion/react";
 import { CreateReportForm } from "@/components/report/CreateReportForm";
 import { Trans } from "@lingui/react/macro";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
-import {
-  IconPrinter,
-  IconSettings,
-  IconShare2,
-  IconEdit,
-  IconEye,
-} from "@tabler/icons-react";
+import { IconPrinter, IconSettings, IconShare2 } from "@tabler/icons-react";
 import { Icons } from "@/icons";
 import { t } from "@lingui/core/macro";
 import { ReportRenderer } from "@/components/report/ReportRenderer";
@@ -307,12 +301,12 @@ export const ProjectReportRoute = () => {
 
         <Divider />
         <div className="flex justify-end">
-            <Switch
-              label={t`Editing mode`}
-              checked={isEditing}
-              onChange={() => setIsEditing(!isEditing)}
-              size="md"
-            />
+          <Switch
+            label={t`Editing mode`}
+            checked={isEditing}
+            onChange={() => setIsEditing(!isEditing)}
+            size="md"
+          />
         </div>
         <ReportRenderer
           reportId={data.id}

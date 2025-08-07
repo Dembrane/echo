@@ -1,14 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useEffect, useCallback, useMemo, useRef, memo } from "react";
-import {
-  Group,
-  Stack,
-  Title,
-  Box,
-  Text,
-  Switch,
-} from "@mantine/core";
+import { Group, Stack, Box, Text } from "@mantine/core";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
 import { FormLabel } from "../form/FormLabel";
 import { useForm, Controller, useWatch } from "react-hook-form";
@@ -28,9 +21,9 @@ type ReportEditorFormValues = z.infer<typeof FormSchema>;
 // Memoized MarkdownWYSIWYG wrapper
 const MemoizedMarkdownWYSIWYG = memo(MarkdownWYSIWYG);
 
-const ReportEditorComponent: React.FC<{ 
+const ReportEditorComponent: React.FC<{
   report: ProjectReport;
-  onSaveSuccess?: () => void; 
+  onSaveSuccess?: () => void;
 }> = ({ report, onSaveSuccess }) => {
   const defaultValues = useMemo(() => {
     return {
@@ -53,10 +46,11 @@ const ReportEditorComponent: React.FC<{
 
   const onSave = useCallback(
     async (values: ReportEditorFormValues) => {
-      const projectId = typeof report.project_id === 'object' && report.project_id?.id 
-        ? report.project_id.id 
-        : report.project_id;
-        
+      const projectId =
+        typeof report.project_id === "object" && report.project_id?.id
+          ? report.project_id.id
+          : report.project_id;
+
       const data = await updateReportMutation.mutateAsync({
         reportId: report.id,
         payload: {
@@ -81,7 +75,9 @@ const ReportEditorComponent: React.FC<{
     lastSavedAt,
   } = useAutoSave({
     onSave,
-    initialLastSavedAt: report.date_updated ? new Date(report.date_updated) : new Date(),
+    initialLastSavedAt: report.date_updated
+      ? new Date(report.date_updated)
+      : new Date(),
   });
 
   // Create a stable reference to dispatchAutoSave
@@ -104,51 +100,46 @@ const ReportEditorComponent: React.FC<{
 
   return (
     <Box>
-      <Stack gap="2rem">
-
-
-        <form
-          onSubmit={handleSubmit(async (values) => {
-            await triggerManualSave(values);
-          })}
-        >
-          <Stack gap="2rem">
-            
-            <Stack gap="sm">
-              <Group>
-
+      <form
+        onSubmit={handleSubmit(async (values) => {
+          await triggerManualSave(values);
+        })}
+      >
+        <Stack gap="2rem">
+          <Stack gap="sm">
+            <Group>
               <FormLabel
                 label={t`Edit Report Content`}
                 isDirty={formState.dirtyFields.content}
                 error={formState.errors.content?.message}
               />
-               <SaveStatus
-              formErrors={formState.errors}
-              savedAt={lastSavedAt}
-              isPendingSave={isPendingSave}
-              isSaving={isSaving}
-              isError={isError}
-            />
-              </Group>
-              <Text size="sm" c="dimmed">
-                <Trans>
-                  Edit the report content using the rich text editor below. You can format text, add links, images, and more.
-                </Trans>
-              </Text>
-              <Controller
-                name="content"
-                control={control}
-                render={({ field }) => (
-                  <MemoizedMarkdownWYSIWYG
-                    markdown={field.value}
-                    onChange={field.onChange}
-                  />
-                )}
+              <SaveStatus
+                formErrors={formState.errors}
+                savedAt={lastSavedAt}
+                isPendingSave={isPendingSave}
+                isSaving={isSaving}
+                isError={isError}
               />
-            </Stack>
+            </Group>
+            <Text size="sm" c="dimmed">
+              <Trans id="report.editor.description">
+                Edit the report content using the rich text editor below. You
+                can format text, add links, images, and more.
+              </Trans>
+            </Text>
+            <Controller
+              name="content"
+              control={control}
+              render={({ field }) => (
+                <MemoizedMarkdownWYSIWYG
+                  markdown={field.value}
+                  onChange={field.onChange}
+                />
+              )}
+            />
           </Stack>
-        </form>
-      </Stack>
+        </Stack>
+      </form>
     </Box>
   );
 };
@@ -160,4 +151,4 @@ export const ReportEditor = memo(
     // Only re-render if the report ID has changed
     return prevProps.report.id === nextProps.report.id;
   },
-); 
+);
