@@ -42,6 +42,7 @@ import {
   useReducer,
   useMemo,
   useCallback,
+  Suspense,
 } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { UploadConversationDropzone } from "../dropzone/UploadConversationDropzone";
@@ -73,6 +74,7 @@ import { FormLabel } from "@/components/form/FormLabel";
 import { AutoSelectConversations } from "./AutoSelectConversations";
 import { ENABLE_CHAT_AUTO_SELECT } from "@/config";
 import { InformationTooltip } from "../common/InformationTooltip";
+import { ConversationSkeleton } from "./ConversationSkeleton";
 
 type SortOption = {
   label: string;
@@ -555,7 +557,11 @@ const ConversationAccordionItem = ({
 };
 
 // Conversation Accordion
-export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
+export const ConversationAccordionMain = ({
+  projectId,
+}: {
+  projectId: string;
+}) => {
   const SORT_OPTIONS: SortOption[] = [
     { label: t`Newest First`, value: "-created_at" },
     { label: t`Oldest First`, value: "created_at" },
@@ -901,5 +907,13 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
         </Stack>
       </Accordion.Panel>
     </Accordion.Item>
+  );
+};
+
+export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
+  return (
+    <Suspense fallback={<ConversationSkeleton />}>
+      <ConversationAccordionMain projectId={projectId} />
+    </Suspense>
   );
 };
