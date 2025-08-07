@@ -5,6 +5,7 @@ import {
   useQuery,
   useQueryClient,
   UseQueryOptions,
+  useSuspenseQuery,
 } from "@tanstack/react-query";
 import {
   Query,
@@ -626,7 +627,7 @@ export const useConversationsByProjectId = (
 ) => {
   const TIME_INTERVAL_SECONDS = 40;
   
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: [
       "projects",
       projectId,
