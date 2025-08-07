@@ -11,6 +11,7 @@ import { USE_PARTICIPANT_ROUTER } from "./config";
 import { theme } from "./theme";
 import { useEffect } from "react";
 import { analytics } from "./lib/analytics";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ export const App = () => {
   }, []);
   return (
     <QueryClientProvider client={queryClient}>
+      <ReactQueryDevtools initialIsOpen={false} />
       <MantineProvider theme={theme}>
         <I18nProvider>
           <RouterProvider router={router} />

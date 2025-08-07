@@ -25,7 +25,13 @@ import { AnimatePresence } from "motion/react";
 import { CreateReportForm } from "@/components/report/CreateReportForm";
 import { Trans } from "@lingui/react/macro";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
-import { IconPrinter, IconSettings, IconShare2 } from "@tabler/icons-react";
+import {
+  IconPrinter,
+  IconSettings,
+  IconShare2,
+  IconEdit,
+  IconEye,
+} from "@tabler/icons-react";
 import { Icons } from "@/icons";
 import { t } from "@lingui/core/macro";
 import { ReportRenderer } from "@/components/report/ReportRenderer";
@@ -109,6 +115,7 @@ export const ProjectReportRoute = () => {
     useUpdateProjectReportMutation();
   const [modalOpened, { open, close }] = useDisclosure(false);
   const [publishStatus, setPublishStatus] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const { data: participantCount } = useGetProjectParticipants(projectId ?? "");
   const handleConfirmPublish = () => {
     if (!data?.id) return;
@@ -299,8 +306,17 @@ export const ProjectReportRoute = () => {
         </Stack>
 
         <Divider />
+        <div className="flex justify-end">
+            <Switch
+              label={t`Editing mode`}
+              checked={isEditing}
+              onChange={() => setIsEditing(!isEditing)}
+              size="md"
+            />
+        </div>
         <ReportRenderer
           reportId={data.id}
+          isEditing={isEditing}
           opts={{
             showBorder: true,
             contributeLink: data.show_portal_link
