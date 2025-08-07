@@ -13,6 +13,7 @@ import { Logo } from "../common/Logo";
 import { Trans } from "@lingui/react/macro";
 import { cn } from "@/lib/utils";
 import { QRCode } from "../common/QRCode";
+import { ReportEditor } from "./ReportEditor";
 
 const ContributeToReportCTA = ({ href }: { href: string }) => {
   return (
@@ -45,6 +46,7 @@ type ReportLayoutOpts = {
   contributeLink?: string;
   readingNow?: number;
   showBorder?: boolean;
+  className?: string;
 };
 
 const ReportLayout = ({
@@ -52,6 +54,7 @@ const ReportLayout = ({
   contributeLink,
   readingNow,
   showBorder,
+  className,
 }: {
   children: React.ReactNode;
 } & ReportLayoutOpts) => {
@@ -60,10 +63,13 @@ const ReportLayout = ({
       gap="2rem"
       px={{ base: "1rem", md: "2rem" }}
       py={{ base: "2rem", md: "4rem" }}
-      className={cn({
-        "border-gray-200 md:border print:border-none": showBorder,
-        "mx-auto max-w-2xl": true,
-      })}
+      className={cn(
+        {
+          "border-gray-200 md:border print:border-none": showBorder,
+        },
+        "mx-auto max-w-2xl transition-all duration-300",
+        className,
+      )}
     >
       <Group justify="space-between" align="center">
         <Group align="center">
@@ -90,9 +96,11 @@ const ReportLayout = ({
 export const ReportRenderer = ({
   reportId,
   opts,
+  isEditing,
 }: {
   reportId: number;
   opts?: ReportLayoutOpts;
+  isEditing?: boolean;
 }) => {
   const { data, isLoading } = useProjectReport(reportId);
 
@@ -117,8 +125,16 @@ export const ReportRenderer = ({
 
   return (
     <div className="py-8">
-      <ReportLayout {...opts} showBorder={true}>
-        <Markdown content={data?.content ?? ""} />
+      <ReportLayout
+        {...opts}
+        showBorder={true}
+        className={isEditing ? "max-w-3xl" : ""}
+      >
+        {isEditing ? (
+          <ReportEditor report={data as ProjectReport} />
+        ) : (
+          <Markdown content={data?.content ?? ""} />
+        )}
       </ReportLayout>
     </div>
   );
