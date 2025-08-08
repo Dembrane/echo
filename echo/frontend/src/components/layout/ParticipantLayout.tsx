@@ -30,7 +30,7 @@ const ParticipantHeader = () => {
 export const ParticipantLayout = () => {
   const { pathname } = useLocation();
   const isReportPage = pathname.includes("report");
-  const isOnboardingPage = pathname.includes("start");
+  const hideSettingsButton = pathname.includes("start") || pathname.includes("finish");
   const [opened, { open, close }] = useDisclosure(false);
 
   if (isReportPage) {
@@ -50,13 +50,14 @@ export const ParticipantLayout = () => {
       <main className="relative !h-dvh overflow-y-auto">
         <div className="flex h-full flex-col">
           <ParticipantHeader />
-          {!isOnboardingPage && (
+          {!hideSettingsButton  && (
             <Box className="absolute right-4 top-5 z-20">
               <ActionIcon
                 size="lg"
                 variant="transparent"
                 onClick={open}
                 title={t`Settings`}
+                aria-label={t`Settings`}
               >
                 <IconSettings size={24} color="gray" />
               </ActionIcon>
