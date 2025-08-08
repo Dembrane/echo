@@ -57,6 +57,7 @@ export const ParticipantLayout = () => {
                 variant="transparent"
                 onClick={open}
                 title={t`Settings`}
+                aria-label={t`Settings`}
               >
                 <IconSettings size={24} color="gray" />
               </ActionIcon>
