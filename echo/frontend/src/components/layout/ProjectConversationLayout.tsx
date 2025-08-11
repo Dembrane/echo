@@ -3,7 +3,7 @@ import { Stack, Title } from "@mantine/core";
 import { useParams } from "react-router-dom";
 import { TabsWithRouter } from "./TabsWithRouter";
 import { ConversationStatusIndicators } from "../conversation/ConversationAccordion";
-import { useConversationById } from "../conversation/hooks";
+import { CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS, useConversationById } from "../conversation/hooks";
 
 export const ProjectConversationLayout = () => {
   const { conversationId } = useParams();
@@ -11,7 +11,7 @@ export const ProjectConversationLayout = () => {
   const conversationQuery = useConversationById({
     conversationId: conversationId ?? "",
     query: {
-      fields: ["*", { chunks: ["transcript"] }],
+      fields: [...CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS, { chunks: ["transcript"] }],
       deep: {
         // @ts-expect-error chunks is not typed
         chunks: {

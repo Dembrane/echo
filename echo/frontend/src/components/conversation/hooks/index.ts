@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-query";
 import {
   Query,
+  QueryFields,
   createItems,
   deleteItems,
   readItem,
@@ -56,6 +57,7 @@ export const useInfiniteConversationChunks = (
           sort: ["timestamp"],
           limit: initialLimit,
           offset: pageParam * initialLimit,
+          fields: ["id", "conversation_id", "transcript", "path", "timestamp"],
         }),
       );
 
@@ -599,6 +601,7 @@ export const useConversationTranscriptString = (conversationId: string) => {
 export const useConversationChunks = (
   conversationId: string,
   refetchInterval: number = 10000,
+  fields: string[] = ["id"],
 ) => {
   return useQuery({
     queryKey: ["conversations", conversationId, "chunks"],
@@ -610,6 +613,7 @@ export const useConversationChunks = (
               _eq: conversationId,
             },
           },
+          fields: fields as any,
           sort: "timestamp",
         }),
       ),
@@ -642,7 +646,7 @@ export const useConversationsByProjectId = (
         readItems("conversation", {
           sort: "-updated_at",
           fields: [
-            "*",
+            ...CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS,
             {
               tags: [
                 {
@@ -721,6 +725,32 @@ export const useConversationsByProjectId = (
   });
 };
 
+export const CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS: QueryFields<CustomDirectusTypes, Conversation> = [
+  "id",
+  "created_at",
+  "updated_at",
+  "project_id",
+  "participant_name",
+  "participant_email",
+  "participant_user_agent",
+  "tags",
+  "summary",
+  "source",
+  "chunks",
+  "project_chats",
+  "project_chat_messages",
+  "replies",
+  "conversation_segments",
+  "duration",
+  "merged_transcript",
+  "merged_audio_path",
+  "is_finished",
+  "is_audio_processing_finished",
+  "is_all_chunks_transcribed",
+  "linked_conversations",
+  "linking_conversations"
+ ]
+
 export const useConversationById = ({
   conversationId,
   loadConversationChunks = false,
@@ -741,7 +771,7 @@ export const useConversationById = ({
       directus.request<Conversation>(
         readItem("conversation", conversationId, {
           fields: [
-            "*",
+            ...CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS,
             {
               linking_conversations: [
                 "id",

@@ -38,7 +38,6 @@ import useSessionStorageState from "use-session-storage-state";
 import { useInView } from "react-intersection-observer";
 import { ConversationChunkAudioTranscript } from "@/components/conversation/ConversationChunkAudioTranscript";
 import { ExponentialProgress } from "@/components/common/ExponentialProgress";
-import { CloseableAlert } from "@/components/common/ClosableAlert";
 
 export const ProjectConversationTranscript = () => {
   const { conversationId } = useParams();
@@ -330,7 +329,13 @@ export const ProjectConversationTranscript = () => {
               return (
                 <div key={chunk.id} ref={isLastChunk ? loadMoreRef : undefined}>
                   <ConversationChunkAudioTranscript
-                    chunk={chunk}
+                    chunk={{
+                      conversation_id: chunk.conversation_id as string,
+                      id: chunk.id,
+                      path: chunk.path ?? "",
+                      timestamp: chunk.timestamp ?? "",
+                      transcript: chunk.transcript ?? "",
+                    }}
                     showAudioPlayer={showAudioPlayer}
                   />
                 </div>
