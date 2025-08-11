@@ -8,7 +8,13 @@ export const ConversationChunkAudioTranscript = ({
   chunk,
   showAudioPlayer = true,
 }: {
-  chunk: ConversationChunk;
+  chunk: {
+    conversation_id: string;
+    id: string;
+    path: string;
+    timestamp: string;
+    transcript: string;
+  };
   showAudioPlayer?: boolean;
 }) => {
   const audioUrlQuery = useConversationChunkContentUrl(
@@ -36,7 +42,7 @@ export const ConversationChunkAudioTranscript = ({
             ) : audioUrlQuery.isLoading ? (
               <Skeleton height={36} width="100%" />
             ) : audioUrlQuery.isError ? (
-              <Text size="xs" color="gray">
+              <Text size="xs" c="gray">
                 Failed to load audio or the audio is not available
               </Text>
             ) : (

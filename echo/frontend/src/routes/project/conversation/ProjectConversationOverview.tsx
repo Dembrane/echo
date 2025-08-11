@@ -34,7 +34,7 @@ export const ProjectConversationOverviewRoute = () => {
   const conversationQuery = useConversationById({
     conversationId: conversationId ?? "",
   });
-  const conversationChunksQuery = useConversationChunks(conversationId ?? "");
+  const conversationChunksQuery = useConversationChunks(conversationId ?? "", 10000, ["id"]);
   const projectQuery = useProjectById({ projectId: projectId ?? "" });
 
   const useHandleGenerateSummaryManually = useMutation({

@@ -355,9 +355,6 @@ export const ConversationStatusIndicators = ({
 
   const hasContent = useMemo(
     () =>
-      // conversation.chunks?.some(
-      //   (chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
-      // ),
       conversation.chunks?.length && conversation.chunks.length > 0,
     [conversation.chunks],
   );
