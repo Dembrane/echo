@@ -59,6 +59,11 @@ msgstr "Etwas ist schief gelaufen"
 #~ msgstr "Kontakt zu Verkaufsvertretern"
 
 #. js-lingui-explicit-id
+#: src/routes/project/library/ProjectLibrary.tsx:227
+#~ msgid "library.not.available"
+#~ msgstr "Bibliothek nicht verfügbar"
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:249
 msgid "library.generate.duration.message"
 msgstr "Die Bibliothek wird {duration} dauern."
@@ -1232,8 +1237,8 @@ msgstr "Das Gespräch wurde während der Aufnahme gelöscht. Wir haben die Aufna
 
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:227
-msgid "library.not.available"
-msgstr "Bibliothek nicht verfügbar"
+msgid "library.not.available.message"
+msgstr "Es scheint, dass die Bibliothek für Ihr Konto nicht verfügbar ist. Bitte fordern Sie Zugriff an, um dieses Feature zu entsperren."
 
 #: src/components/participant/hooks/useConversationIssueBanner.ts:20
 msgid "It sounds like more than one person is speaking. Taking turns will help us hear everyone clearly."

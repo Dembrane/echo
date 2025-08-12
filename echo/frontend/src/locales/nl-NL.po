@@ -59,6 +59,11 @@ msgstr "Er is iets fout gegaan"
 #~ msgstr "Neem contact op met sales"
 
 #. js-lingui-explicit-id
+#: src/routes/project/library/ProjectLibrary.tsx:227
+#~ msgid "library.not.available"
+#~ msgstr "Bibliotheek niet beschikbaar"
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:249
 msgid "library.generate.duration.message"
 msgstr "De bibliotheek zal {duration} duren"
@@ -1390,8 +1395,8 @@ msgstr "Het gesprek is verwijderd terwijl je opnam. We hebben de opname gestopt 
 
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:227
-msgid "library.not.available"
-msgstr "Bibliotheek niet beschikbaar"
+msgid "library.not.available.message"
+msgstr "Het lijkt erop dat de bibliotheek niet beschikbaar is voor uw account. Vraag om toegang om deze functionaliteit te ontgrendelen."
 
 #: src/components/participant/hooks/useConversationIssueBanner.ts:20
 msgid "It sounds like more than one person is speaking. Taking turns will help us hear everyone clearly."

@@ -59,6 +59,11 @@ msgstr "Something went wrong"
 #~ msgstr "Contact sales"
 
 #. js-lingui-explicit-id
+#: src/routes/project/library/ProjectLibrary.tsx:227
+#~ msgid "library.not.available"
+#~ msgstr "It looks like the library is not available for your account. Please contact sales to unlock this feature."
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:249
 msgid "library.generate.duration.message"
 msgstr " Generating library can take up to an hour."
@@ -1278,8 +1283,8 @@ msgstr "It looks like the conversation was deleted while you were recording. We'
 
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:227
-msgid "library.not.available"
-msgstr "It looks like the library is not available for your account. Please contact sales to unlock this feature."
+msgid "library.not.available.message"
+msgstr "It looks like the library is not available for your account. Please request access to unlock this feature."
 
 #: src/components/participant/hooks/useConversationIssueBanner.ts:20
 msgid "It sounds like more than one person is speaking. Taking turns will help us hear everyone clearly."
