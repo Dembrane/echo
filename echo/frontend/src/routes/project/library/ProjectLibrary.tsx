@@ -224,9 +224,9 @@ export const ProjectLibraryRoute = () => {
 
       {!isLibraryEnabled && (
         <CloseableAlert color="orange" variant="light">
-          <Trans id="library.not.available">
+          <Trans id="library.not.available.message">
             It looks like the library is not available for your account. Please
-            contact sales to unlock this feature.
+            request access to unlock this feature.
           </Trans>
         </CloseableAlert>
       )}

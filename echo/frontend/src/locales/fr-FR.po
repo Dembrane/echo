@@ -59,6 +59,11 @@ msgstr "Une erreur s'est produite"
 #~ msgstr "Contactez votre représentant commercial"
 
 #. js-lingui-explicit-id
+#: src/routes/project/library/ProjectLibrary.tsx:227
+#~ msgid "library.not.available"
+#~ msgstr "Bibliothèque non disponible"
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:249
 msgid "library.generate.duration.message"
 msgstr "La bibliothèque prendra {duration}"
@@ -1236,8 +1241,8 @@ msgstr "Il semble que la conversation a été supprimée pendant que vous enregi
 
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:227
-msgid "library.not.available"
-msgstr "Bibliothèque non disponible"
+msgid "library.not.available.message"
+msgstr "Il semble que la bibliothèque n'est pas disponible pour votre compte. Veuillez demander un accès pour débloquer cette fonctionnalité."
 
 #: src/components/participant/hooks/useConversationIssueBanner.ts:20
 msgid "It sounds like more than one person is speaking. Taking turns will help us hear everyone clearly."
