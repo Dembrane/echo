@@ -1,7 +1,4 @@
-import {
-  generateProjectLibrary,
-  getProjectViews,
-} from "@/lib/api";
+import { generateProjectLibrary, getProjectViews } from "@/lib/api";
 import { directus } from "@/lib/directus";
 import { readItem } from "@directus/sdk";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -47,15 +44,18 @@ export const useAspectById = (projectId: string, aspectId: string) => {
           fields: [
             "*",
             {
-              "aspect_segment": [
+              aspect_segment: [
                 "*",
-                { 
-                  "segment": [
+                {
+                  segment: [
                     "*",
-                  ]
-                }
-              ]
-            }
+                    {
+                      conversation_id: ["id", "participant_name"],
+                    },
+                  ],
+                },
+              ],
+            },
           ],
         }),
       ),
