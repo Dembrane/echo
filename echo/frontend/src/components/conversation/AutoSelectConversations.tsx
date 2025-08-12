@@ -208,7 +208,7 @@ export const AutoSelectConversations = () => {
               onClick={enableAutoSelect}
               leftSection={<IconLock size={14} />}
             >
-              <Trans>Contact sales</Trans>
+              <Trans>Request Access</Trans>
             </Button>
           </Stack>
         </Box>

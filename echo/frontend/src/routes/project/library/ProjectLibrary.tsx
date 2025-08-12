@@ -149,7 +149,7 @@ export const ProjectLibraryRoute = () => {
         <Group gap="xl">
           {!isLibraryEnabled && (
             <Button onClick={contactSales} leftSection={<IconCalendarEvent />}>
-              <Trans id="library.contact.sales">Contact sales</Trans>
+              <Trans id="library.request.access">Request Access</Trans>
             </Button>
           )}
 
