@@ -461,7 +461,7 @@ export const ProjectChatRoute = () => {
       </Box>
 
       {/* Scroll target for scroll to bottom button */}
-      <div ref={scrollTargetRef} />
+      <div ref={scrollTargetRef} aria-hidden="true" />
 
       {/* Footer */}
       <Box className="bottom-0 w-full bg-white pb-2 pt-4 md:sticky">
