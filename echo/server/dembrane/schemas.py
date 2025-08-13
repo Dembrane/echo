@@ -77,6 +77,7 @@ class ConversationSchema(BaseModel):
 
     participant_email: Optional[str] = None
     participant_name: Optional[str] = None
+    duration: Optional[float] = None
 
     tags: Optional[List[ProjectTagSchema]] = None
     chunks: Optional[List[ConversationChunkSchema]] = None
