@@ -44,6 +44,8 @@ import {
 import SourcesSearch from "@/components/chat/SourcesSearch";
 import SpikeMessage from "@/components/participant/SpikeMessage";
 import { Logo } from "@/components/common/Logo";
+import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
+import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 
 const useDembraneChat = ({ chatId }: { chatId: string }) => {
   const chatHistoryQuery = useChatHistory(chatId);
@@ -59,6 +61,12 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 
   const lastInput = useRef("");
   const lastMessageRef = useRef<HTMLDivElement>(null);
+
+  const [scrollTargetRef, isVisible] = useElementOnScreen({
+    root: null,
+    rootMargin: "-83px",
+    threshold: 0.1,
+  });
 
   const contextToBeAdded = useMemo(() => {
     if (!chatContextQuery.data) {
@@ -238,6 +246,8 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
     error,
     lastInputRef: lastInput,
     lastMessageRef,
+    scrollTargetRef,
+    isVisible,
     reload,
     setInput,
     handleInputChange,
@@ -267,6 +277,8 @@ export const ProjectChatRoute = () => {
     error,
     contextToBeAdded,
     lastMessageRef,
+    scrollTargetRef,
+    isVisible,
     setInput,
     handleInputChange,
     handleSubmit,
@@ -447,9 +459,24 @@ export const ProjectChatRoute = () => {
           )}
         </Stack>
       </Box>
+
+      {/* Scroll target for scroll to bottom button */}
+      <div ref={scrollTargetRef} />
+
       {/* Footer */}
       <Box className="bottom-0 w-full bg-white pb-2 pt-4 md:sticky">
         <Stack className="pb-2">
+          {/* Scroll to bottom button */}
+          <Group
+            justify="center"
+            className="absolute bottom-[105%] left-1/2 z-50 hidden translate-x-[-50%] md:flex"
+          >
+            <ScrollToBottomButton
+              elementRef={scrollTargetRef}
+              isVisible={isVisible}
+            />
+          </Group>
+
           <ChatTemplatesMenu onTemplateSelect={handleTemplateSelect} />
 
           <Divider />
