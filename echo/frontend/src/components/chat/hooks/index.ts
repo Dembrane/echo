@@ -12,7 +12,12 @@ import {
   readItems,
   updateItem,
 } from "@directus/sdk";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
 
 export const useChatHistory = (chatId: string) => {
@@ -130,7 +135,7 @@ export const useProjectChats = (
   projectId: string,
   query?: Partial<Query<CustomDirectusTypes, ProjectChat>>,
 ) => {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: ["projects", projectId, "chats", query],
     queryFn: () =>
       directus.request(

@@ -1,6 +1,10 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { useDeleteChatMutation, useProjectChats, useUpdateChatMutation } from "./hooks";
+import {
+  useDeleteChatMutation,
+  useProjectChats,
+  useUpdateChatMutation,
+} from "./hooks";
 import {
   Accordion,
   ActionIcon,
@@ -16,6 +20,8 @@ import { IconDotsVertical, IconPencil, IconTrash } from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
 import { NavigationButton } from "../common/NavigationButton";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { Suspense } from "react";
+import { ChatSkeleton } from "./ChatSkeleton";
 
 const ChatAccordionItemMenu = ({ chat }: { chat: Partial<ProjectChat> }) => {
   const deleteChatMutation = useDeleteChatMutation();
@@ -75,7 +81,7 @@ const ChatAccordionItemMenu = ({ chat }: { chat: Partial<ProjectChat> }) => {
 };
 
 // Chat Accordion
-export const ChatAccordion = ({ projectId }: { projectId: string }) => {
+export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
   const { chatId: activeChatId } = useParams();
 
   const chatsQuery = useProjectChats(projectId, {
@@ -149,5 +155,13 @@ export const ChatAccordion = ({ projectId }: { projectId: string }) => {
         </Stack>
       </Accordion.Panel>
     </Accordion.Item>
+  );
+};
+
+export const ChatAccordion = ({ projectId }: { projectId: string }) => {
+  return (
+    <Suspense fallback={<ChatSkeleton />}>
+      <ChatAccordionMain projectId={projectId} />
+    </Suspense>
   );
 };
