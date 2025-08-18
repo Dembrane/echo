@@ -18,7 +18,7 @@ import {
   useQuery,
   useQueryClient,
   useSuspenseQuery,
-  useSuspenseInfiniteQuery,
+  useInfiniteQuery,
 } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
 
@@ -164,7 +164,7 @@ export const useInfiniteProjectChats = (
 ) => {
   const { initialLimit = 15 } = options ?? {};
 
-  return useSuspenseInfiniteQuery({
+  return useInfiniteQuery({
     queryKey: ["projects", projectId, "chats", "infinite", query],
     queryFn: async ({ pageParam = 0 }) => {
       const response = await directus.request(
