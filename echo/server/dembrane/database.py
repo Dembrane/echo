@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from fastapi import Depends
 from sqlalchemy import (
     Text,
+    Float,
     Table,
     Column,
     String,
@@ -353,6 +354,7 @@ class ConversationModel(Base):
 
     summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     source: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    duration: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
     chunks: Mapped[List["ConversationChunkModel"]] = relationship(
         "ConversationChunkModel",

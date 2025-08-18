@@ -122,6 +122,10 @@ async def create_system_messages_for_chat(
             {
                 "name": conversation.participant_name,
                 "tags": ", ".join([tag.text for tag in conversation.tags]),
+                "created_at": conversation.created_at.isoformat()
+                if conversation.created_at
+                else None,
+                "duration": conversation.duration,
                 "transcript": get_conversation_transcript(
                     conversation.id,
                     # fake auth to get this fn call
