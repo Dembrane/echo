@@ -63,7 +63,7 @@ const ChatAccordionItemMenu = ({ chat }: { chat: Partial<ProjectChat> }) => {
               }
             }}
           >
-            <Trans>Rename</Trans>
+            <Trans id="project.sidebar.chat.rename">Rename</Trans>
           </Menu.Item>
           <Menu.Item
             leftSection={<IconTrash />}
@@ -76,7 +76,7 @@ const ChatAccordionItemMenu = ({ chat }: { chat: Partial<ProjectChat> }) => {
               navigate(`/projects/${chat.project_id}/overview`);
             }}
           >
-            <Trans>Delete</Trans>
+            <Trans id="project.sidebar.chat.delete">Delete</Trans>
           </Menu.Item>
         </Stack>
       </Menu.Dropdown>
@@ -172,7 +172,7 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
             <span className="min-w-[48px] pr-2 font-normal text-gray-500">
               {totalChats}
             </span>
-            <Trans>Chats</Trans>
+            <Trans id="project.sidebar.chat.title">Chats</Trans>
           </Title>
         </Group>
       </Accordion.Control>
@@ -181,7 +181,7 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
         <Stack gap="xs">
           {totalChats === 0 && (
             <Text size="sm">
-              <Trans>
+              <Trans id="project.sidebar.chat.empty.description">
                 No chats found. Start a chat using the "Ask" button.
               </Trans>
             </Text>
@@ -214,7 +214,9 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
           {!chatsQuery.hasNextPage && allChats.length > 0 && (
             <Center py="md">
               <Text size="xs" c="dimmed" ta="center" fs="italic">
-                <Trans>End of list • All {totalChats} chats loaded</Trans>
+                <Trans id="project.sidebar.chat.end.description">
+                  End of list • All {totalChats} chats loaded
+                </Trans>
               </Text>
             </Center>
           )}
