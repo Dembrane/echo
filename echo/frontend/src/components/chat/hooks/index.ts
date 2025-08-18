@@ -6,6 +6,7 @@ import {
 import { directus } from "@/lib/directus";
 import {
   Query,
+  aggregate,
   createItem,
   deleteItem,
   readItem,
@@ -17,6 +18,7 @@ import {
   useQuery,
   useQueryClient,
   useSuspenseQuery,
+  useSuspenseInfiniteQuery,
 } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
 
@@ -150,5 +152,71 @@ export const useProjectChats = (
           ...query,
         }),
       ),
+  });
+};
+
+export const useInfiniteProjectChats = (
+  projectId: string,
+  query?: Partial<Query<CustomDirectusTypes, ProjectChat>>,
+  options?: {
+    initialLimit?: number;
+  },
+) => {
+  const { initialLimit = 15 } = options ?? {};
+
+  return useSuspenseInfiniteQuery({
+    queryKey: ["projects", projectId, "chats", "infinite", query],
+    queryFn: async ({ pageParam = 0 }) => {
+      const response = await directus.request(
+        readItems("project_chat", {
+          fields: ["id", "project_id", "date_created", "date_updated", "name"],
+          sort: "-date_created",
+          filter: {
+            project_id: {
+              _eq: projectId,
+            },
+            ...(query?.filter && query.filter),
+          },
+          limit: initialLimit,
+          offset: pageParam * initialLimit,
+          ...query,
+        }),
+      );
+
+      return {
+        chats: response,
+        nextOffset:
+          response.length === initialLimit ? pageParam + 1 : undefined,
+      };
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextOffset,
+  });
+};
+
+export const useProjectChatsCount = (
+  projectId: string,
+  query?: Partial<Query<CustomDirectusTypes, ProjectChat>>,
+) => {
+  return useSuspenseQuery({
+    queryKey: ["projects", projectId, "chats", "count", query],
+    queryFn: async () => {
+      const response = await directus.request(
+        aggregate("project_chat", {
+          aggregate: {
+            count: "*",
+          },
+          query: {
+            filter: {
+              project_id: {
+                _eq: projectId,
+              },
+              ...(query?.filter && query.filter),
+            },
+          },
+        }),
+      );
+      return response[0].count;
+    },
   });
 };
