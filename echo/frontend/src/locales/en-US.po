@@ -69,6 +69,11 @@ msgstr "Something went wrong"
 #~ msgstr "Conversations"
 
 #. js-lingui-explicit-id
+#: src/components/chat/ChatAccordion.tsx:217
+#~ msgid "project.sidebar.chat.end.description"
+#~ msgstr "End of list • All {totalChats} chats loaded"
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:249
 msgid "library.generate.duration.message"
 msgstr " Generating library can take up to an hour."
@@ -88,7 +93,7 @@ msgstr "(for enhanced audio processing)"
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: showPreview ? "Hide Preview" : "Show Preview"
 #. placeholder {0}: citation.reference_text
-#: src/routes/project/chat/ProjectChatRoute.tsx:411
+#: src/routes/project/chat/ProjectChatRoute.tsx:422
 #: src/components/project/ProjectPortalEditor.tsx:262
 #: src/components/chat/References.tsx:27
 msgid "{0}"
@@ -192,7 +197,7 @@ msgstr "Add to this chat"
 msgid "Added emails"
 msgstr "Added emails"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:499
+#: src/routes/project/chat/ProjectChatRoute.tsx:510
 msgid "Adding Context:"
 msgstr "Adding Context:"
 
@@ -242,7 +247,7 @@ msgstr "An email notification will be sent to {0} participant{1}. Do you want to
 msgid "An error occurred while loading the Portal. Please contact the support team."
 msgstr "An error occurred while loading the Portal. Please contact the support team."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:448
+#: src/routes/project/chat/ProjectChatRoute.tsx:459
 msgid "An error occurred."
 msgstr "An error occurred."
 
@@ -469,12 +474,12 @@ msgstr "Changes will be saved automatically"
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:344
-#: src/routes/project/chat/ProjectChatRoute.tsx:348
+#: src/routes/project/chat/ProjectChatRoute.tsx:347
+#: src/routes/project/chat/ProjectChatRoute.tsx:351
 msgid "Chat"
 msgstr "Chat"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:264
+#: src/routes/project/chat/ProjectChatRoute.tsx:267
 msgid "Chat | Dembrane"
 msgstr "Chat | Dembrane"
 
@@ -484,7 +489,7 @@ msgid "chat.accordion.skeleton.title"
 msgstr "Chats"
 
 #. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:175
+#: src/components/chat/ChatAccordion.tsx:183
 msgid "project.sidebar.chat.title"
 msgstr "Chats"
 
@@ -724,7 +729,7 @@ msgid "Danger Zone"
 msgstr "Danger Zone"
 
 #. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:79
+#: src/components/chat/ChatAccordion.tsx:87
 msgid "project.sidebar.chat.delete"
 msgstr "Delete"
 
@@ -903,15 +908,9 @@ msgstr "Enable this feature to allow participants to request AI-powered response
 msgid "Enabled"
 msgstr "Enabled"
 
-#. placeholder {0}: totalConversations ?? allConversations.length
 #: src/components/conversation/ConversationAccordion.tsx:944
-msgid "End of list • All {0} conversations loaded"
-msgstr "End of list • All {0} conversations loaded"
-
-#. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:217
-msgid "project.sidebar.chat.end.description"
-msgstr "End of list • All {totalChats} chats loaded"
+#~ msgid "End of list • All {0} conversations loaded"
+#~ msgstr "End of list • All {0} conversations loaded"
 
 #: src/components/project/ProjectPortalEditor.tsx:293
 msgid "English"
@@ -929,7 +928,7 @@ msgstr "Enter a name for the new conversation"
 msgid "Enter filename (without extension)"
 msgstr "Enter filename (without extension)"
 
-#: src/components/chat/ChatAccordion.tsx:54
+#: src/components/chat/ChatAccordion.tsx:60
 msgid "Enter new name for the chat:"
 msgstr "Enter new name for the chat:"
 
@@ -1554,7 +1553,7 @@ msgid "No announcements available"
 msgstr "No announcements available"
 
 #. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:184
+#: src/components/chat/ChatAccordion.tsx:192
 msgid "project.sidebar.chat.empty.description"
 msgstr "No chats found. Start a chat using the \"Ask\" button."
 
@@ -1640,7 +1639,7 @@ msgstr "No Transcript Available"
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "No transcript exists for this conversation yet. Please check back later."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:489
+#: src/routes/project/chat/ProjectChatRoute.tsx:500
 msgid "No transcripts are selected for this chat"
 msgstr "No transcripts are selected for this chat"
 
@@ -2076,7 +2075,7 @@ msgid "Remove from this chat"
 msgstr "Remove from this chat"
 
 #. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:66
+#: src/components/chat/ChatAccordion.tsx:72
 msgid "project.sidebar.chat.rename"
 msgstr "Rename"
 
@@ -2184,7 +2183,7 @@ msgstr "Retranscribe Conversation"
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "Retranscription started. New conversation will be available soon."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:456
+#: src/routes/project/chat/ProjectChatRoute.tsx:467
 msgid "Retry"
 msgstr "Retry"
 
@@ -2208,7 +2207,8 @@ msgstr "Save Error!"
 msgid "Saving..."
 msgstr "Saving..."
 
-#: src/components/common/ScrollToBottom.tsx:25
+#: src/components/common/ScrollToBottom.tsx:21
+#: src/components/common/ScrollToBottom.tsx:26
 msgid "Scroll to bottom"
 msgstr "Scroll to bottom"
 
@@ -2296,7 +2296,7 @@ msgstr "Selected Files ({0}/{MAX_FILES})"
 msgid "participant.selected.microphone"
 msgstr "Selected microphone:"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:560
+#: src/routes/project/chat/ProjectChatRoute.tsx:571
 msgid "Send"
 msgstr "Send"
 
@@ -2486,7 +2486,7 @@ msgstr "Start New Conversation"
 msgid "Status"
 msgstr "Status"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:422
+#: src/routes/project/chat/ProjectChatRoute.tsx:433
 msgid "Stop"
 msgstr "Stop"
 
@@ -2729,7 +2729,7 @@ msgstr "This report was opened by {0} people"
 msgid "This title is shown to participants when they start a conversation"
 msgstr "This title is shown to participants when they start a conversation"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:322
+#: src/routes/project/chat/ProjectChatRoute.tsx:325
 #: src/components/view/CreateViewForm.tsx:83
 msgid "This will clear your current input. Are you sure?"
 msgstr "This will clear your current input. Are you sure?"
@@ -2865,7 +2865,7 @@ msgstr "Try Again"
 msgid "Try moving a bit closer to your microphone for better sound quality."
 msgstr "Try moving a bit closer to your microphone for better sound quality."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:529
+#: src/routes/project/chat/ProjectChatRoute.tsx:540
 msgid "Type a message..."
 msgstr "Type a message..."
 
@@ -2955,7 +2955,7 @@ msgstr "Upload Files"
 msgid "Uploading Audio Files..."
 msgstr "Uploading Audio Files..."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:567
+#: src/routes/project/chat/ProjectChatRoute.tsx:578
 msgid "Use Shift + Enter to add a new line"
 msgstr "Use Shift + Enter to add a new line"
 
@@ -3024,7 +3024,7 @@ msgstr "We’re picking up some silence. Try speaking up so your voice comes thr
 msgid "Welcome"
 msgstr "Welcome"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:363
+#: src/routes/project/chat/ProjectChatRoute.tsx:374
 msgid "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
 msgstr "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
 

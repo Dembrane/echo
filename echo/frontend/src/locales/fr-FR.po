@@ -69,6 +69,11 @@ msgstr "Une erreur s'est produite"
 #~ msgstr "Conversations"
 
 #. js-lingui-explicit-id
+#: src/components/chat/ChatAccordion.tsx:217
+#~ msgid "project.sidebar.chat.end.description"
+#~ msgstr "Fin de la liste • Toutes les {0} conversations chargées"
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:249
 msgid "library.generate.duration.message"
 msgstr "La bibliothèque prendra {duration}"
@@ -88,7 +93,7 @@ msgstr "(pour un traitement audio amélioré)"
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: showPreview ? "Hide Preview" : "Show Preview"
 #. placeholder {0}: citation.reference_text
-#: src/routes/project/chat/ProjectChatRoute.tsx:411
+#: src/routes/project/chat/ProjectChatRoute.tsx:422
 #: src/components/project/ProjectPortalEditor.tsx:262
 #: src/components/chat/References.tsx:27
 msgid "{0}"
@@ -187,7 +192,7 @@ msgstr "Ajouter à cette conversation"
 msgid "Added emails"
 msgstr "E-mails ajoutés"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:499
+#: src/routes/project/chat/ProjectChatRoute.tsx:510
 msgid "Adding Context:"
 msgstr "Ajout du contexte :"
 
@@ -237,7 +242,7 @@ msgstr "Une notification par e-mail sera envoyée à {0} participant{1}. Voulez-
 msgid "An error occurred while loading the Portal. Please contact the support team."
 msgstr "Une erreur s'est produite lors du chargement du Portail. Veuillez contacter l'équipe de support."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:448
+#: src/routes/project/chat/ProjectChatRoute.tsx:459
 msgid "An error occurred."
 msgstr "Une erreur s'est produite."
 
@@ -452,12 +457,12 @@ msgstr "Les modifications seront enregistrées automatiquement"
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Changer de langue pendant une conversation active peut provoquer des résultats inattendus. Il est recommandé de commencer une nouvelle conversation après avoir changé la langue. Êtes-vous sûr de vouloir continuer ?"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:344
-#: src/routes/project/chat/ProjectChatRoute.tsx:348
+#: src/routes/project/chat/ProjectChatRoute.tsx:347
+#: src/routes/project/chat/ProjectChatRoute.tsx:351
 msgid "Chat"
 msgstr "Discussion"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:264
+#: src/routes/project/chat/ProjectChatRoute.tsx:267
 msgid "Chat | Dembrane"
 msgstr "Discussion | Dembrane"
 
@@ -467,7 +472,7 @@ msgid "chat.accordion.skeleton.title"
 msgstr "Discussions"
 
 #. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:175
+#: src/components/chat/ChatAccordion.tsx:183
 msgid "project.sidebar.chat.title"
 msgstr "Discussions"
 
@@ -707,7 +712,7 @@ msgid "Danger Zone"
 msgstr "Zone dangereuse"
 
 #. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:79
+#: src/components/chat/ChatAccordion.tsx:87
 msgid "project.sidebar.chat.delete"
 msgstr "Supprimer la discussion"
 
@@ -878,15 +883,9 @@ msgstr "Activez cette fonctionnalité pour permettre aux participants de demande
 msgid "Enabled"
 msgstr "Activé"
 
-#. placeholder {0}: totalConversations ?? allConversations.length
 #: src/components/conversation/ConversationAccordion.tsx:944
-msgid "End of list • All {0} conversations loaded"
-msgstr "Fin de la liste • Toutes les {0} conversations chargées"
-
-#. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:217
-msgid "project.sidebar.chat.end.description"
-msgstr "Fin de la liste • Toutes les {0} conversations chargées"
+#~ msgid "End of list • All {0} conversations loaded"
+#~ msgstr "Fin de la liste • Toutes les {0} conversations chargées"
 
 #: src/components/project/ProjectPortalEditor.tsx:293
 msgid "English"
@@ -904,7 +903,7 @@ msgstr "Entrez un nom pour le nouveau conversation"
 msgid "Enter filename (without extension)"
 msgstr "Entrez le nom du fichier (sans extension)"
 
-#: src/components/chat/ChatAccordion.tsx:54
+#: src/components/chat/ChatAccordion.tsx:60
 msgid "Enter new name for the chat:"
 msgstr "Entrez un nouveau nom pour la discussion :"
 
@@ -1512,7 +1511,7 @@ msgid "No announcements available"
 msgstr "Aucune annonce disponible"
 
 #. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:184
+#: src/components/chat/ChatAccordion.tsx:192
 msgid "project.sidebar.chat.empty.description"
 msgstr "Aucune discussion trouvée. Commencez une discussion en utilisant le bouton \"Demander\"."
 
@@ -1598,7 +1597,7 @@ msgstr "Aucune transcription disponible"
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "Aucune transcription n'existe pour cette conversation. Veuillez vérifier plus tard."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:489
+#: src/routes/project/chat/ProjectChatRoute.tsx:500
 msgid "No transcripts are selected for this chat"
 msgstr "Aucune transcription n'est sélectionnée pour cette conversation"
 
@@ -2018,7 +2017,7 @@ msgid "Remove from this chat"
 msgstr "Supprimer de cette conversation"
 
 #. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:66
+#: src/components/chat/ChatAccordion.tsx:72
 msgid "project.sidebar.chat.rename"
 msgstr "Renommer"
 
@@ -2126,7 +2125,7 @@ msgstr "Rétranscrire la conversation"
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "La rétranscrire a commencé. La nouvelle conversation sera disponible bientôt."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:456
+#: src/routes/project/chat/ProjectChatRoute.tsx:467
 msgid "Retry"
 msgstr "Réessayer"
 
@@ -2150,7 +2149,8 @@ msgstr "Erreur lors de l'enregistrement !"
 msgid "Saving..."
 msgstr "Enregistrement..."
 
-#: src/components/common/ScrollToBottom.tsx:25
+#: src/components/common/ScrollToBottom.tsx:21
+#: src/components/common/ScrollToBottom.tsx:26
 msgid "Scroll to bottom"
 msgstr "Défiler vers le bas"
 
@@ -2238,7 +2238,7 @@ msgstr "Fichiers sélectionnés ({0}/{MAX_FILES})"
 msgid "participant.selected.microphone"
 msgstr "Microphone sélectionné"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:560
+#: src/routes/project/chat/ProjectChatRoute.tsx:571
 msgid "Send"
 msgstr "Envoyer"
 
@@ -2428,7 +2428,7 @@ msgstr "Commencer une nouvelle conversation"
 msgid "Status"
 msgstr "Statut"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:422
+#: src/routes/project/chat/ProjectChatRoute.tsx:433
 msgid "Stop"
 msgstr "Arrêter"
 
@@ -2655,7 +2655,7 @@ msgstr "Ce rapport a été ouvert par {0} personnes"
 msgid "This title is shown to participants when they start a conversation"
 msgstr "Ce titre est affiché aux participants lorsqu'ils commencent une conversation"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:322
+#: src/routes/project/chat/ProjectChatRoute.tsx:325
 #: src/components/view/CreateViewForm.tsx:83
 msgid "This will clear your current input. Are you sure?"
 msgstr "Cela effacera votre entrée actuelle. Êtes-vous sûr ?"
@@ -2784,7 +2784,7 @@ msgstr "Réessayer"
 msgid "Try moving a bit closer to your microphone for better sound quality."
 msgstr "Essayez de vous rapprocher un peu plus de votre microphone pour une meilleure qualité audio."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:529
+#: src/routes/project/chat/ProjectChatRoute.tsx:540
 msgid "Type a message..."
 msgstr "Tapez un message..."
 
@@ -2874,7 +2874,7 @@ msgstr "Télécharger les fichiers"
 msgid "Uploading Audio Files..."
 msgstr "Téléchargement des fichiers audio..."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:567
+#: src/routes/project/chat/ProjectChatRoute.tsx:578
 msgid "Use Shift + Enter to add a new line"
 msgstr "Utilisez Shift + Entrée pour ajouter une nouvelle ligne"
 
@@ -2943,7 +2943,7 @@ msgstr "Nous entendons un peu de silence. Essayez de parler plus fort pour que v
 msgid "Welcome"
 msgstr "Bienvenue"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:363
+#: src/routes/project/chat/ProjectChatRoute.tsx:374
 msgid "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
 msgstr "Bienvenue sur Dembrane Chat ! Utilisez la barre latérale pour sélectionner les ressources et les conversations que vous souhaitez analyser. Ensuite, vous pouvez poser des questions sur les ressources et les conversations sélectionnées."
 
