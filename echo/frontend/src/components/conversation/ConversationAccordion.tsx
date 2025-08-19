@@ -792,7 +792,7 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
 
       <Accordion.Panel>
         <Stack ref={parent2} className="relative">
-          {inChatMode && ENABLE_CHAT_AUTO_SELECT && totalConversations && (
+          {inChatMode && ENABLE_CHAT_AUTO_SELECT && totalConversations > 0 && (
             <Stack gap="xs" className="relative">
               <LoadingOverlay visible={conversationsQuery.isLoading} />
               <AutoSelectConversations />
