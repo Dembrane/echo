@@ -7,6 +7,8 @@ import {
   useDeleteChatContextMutation,
   useMoveConversationMutation,
   useConversationsByProjectId,
+  useInfiniteConversationsByProjectId,
+  useConversationsCountByProjectId,
 } from "./hooks";
 import { useInfiniteProjects } from "@/components/project/hooks";
 import { useProjectChatContext } from "@/components/chat/hooks";
@@ -74,7 +76,8 @@ import { FormLabel } from "@/components/form/FormLabel";
 import { AutoSelectConversations } from "./AutoSelectConversations";
 import { ENABLE_CHAT_AUTO_SELECT } from "@/config";
 import { InformationTooltip } from "../common/InformationTooltip";
-import { ConversationSkeleton } from "./ConversationSkeleton";
+import { BaseSkeleton } from "../common/BaseSkeleton";
+import { useInView } from "react-intersection-observer";
 
 type SortOption = {
   label: string;
@@ -354,8 +357,7 @@ export const ConversationStatusIndicators = ({
   });
 
   const hasContent = useMemo(
-    () =>
-      conversation.chunks?.length && conversation.chunks.length > 0,
+    () => conversation.chunks?.length && conversation.chunks.length > 0,
     [conversation.chunks],
   );
 
@@ -554,11 +556,7 @@ const ConversationAccordionItem = ({
 };
 
 // Conversation Accordion
-export const ConversationAccordionMain = ({
-  projectId,
-}: {
-  projectId: string;
-}) => {
+export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
   const SORT_OPTIONS: SortOption[] = [
     { label: t`Newest First`, value: "-created_at" },
     { label: t`Oldest First`, value: "created_at" },
@@ -570,6 +568,9 @@ export const ConversationAccordionMain = ({
 
   const location = useLocation();
   const inChatMode = location.pathname.includes("/chats/");
+  const { conversationId: activeConversationId } = useParams();
+  const { ref: loadMoreRef, inView } = useInView();
+
   // Temporarily disabled source filters
   // const FILTER_OPTIONS = [
   //   { label: t`Conversations from QR Code`, value: "PORTAL_AUDIO" },
@@ -581,7 +582,6 @@ export const ConversationAccordionMain = ({
     defaultValue: "-created_at",
   });
 
-  const { conversationId: activeConversationId } = useParams();
   const [conversationSearch, setConversationSearch] = useState("");
   const [debouncedConversationSearchValue] = useDebouncedValue(
     conversationSearch,
@@ -650,7 +650,7 @@ export const ConversationAccordionMain = ({
     defaultValue: true,
   });
 
-  const conversationsQuery = useConversationsByProjectId(
+  const conversationsQuery = useInfiniteConversationsByProjectId(
     projectId,
     false,
     false,
@@ -666,7 +666,35 @@ export const ConversationAccordionMain = ({
     },
     // Temporarily disabled source filters
     // filterBySource,
+    undefined,
+    {
+      initialLimit: 15,
+    },
   );
+
+  // Get total conversations count for display
+  const conversationsCountQuery = useConversationsCountByProjectId(projectId);
+  const totalConversations = Number(conversationsCountQuery.data) ?? 0;
+
+  // Load more conversations when user scrolls to bottom
+  useEffect(() => {
+    if (
+      inView &&
+      conversationsQuery.hasNextPage &&
+      !conversationsQuery.isFetchingNextPage
+    ) {
+      conversationsQuery.fetchNextPage();
+    }
+  }, [
+    inView,
+    conversationsQuery.hasNextPage,
+    conversationsQuery.isFetchingNextPage,
+    conversationsQuery.fetchNextPage,
+  ]);
+
+  // Flatten all conversations from all pages
+  const allConversations =
+    conversationsQuery.data?.pages.flatMap((page) => page.conversations) ?? [];
 
   const [parent2] = useAutoAnimate();
 
@@ -743,7 +771,11 @@ export const ConversationAccordionMain = ({
         <Group justify="space-between">
           <Title order={3}>
             <span className="min-w-[48px] pr-2 font-normal text-gray-500">
-              {conversationsQuery.data?.length ?? 0}
+              {conversationsCountQuery.isLoading ? (
+                <Loader size="xs" />
+              ) : (
+                totalConversations
+              )}
             </span>
             <Trans>Conversations</Trans>
           </Title>
@@ -760,18 +792,15 @@ export const ConversationAccordionMain = ({
 
       <Accordion.Panel>
         <Stack ref={parent2} className="relative">
-          {inChatMode &&
-            ENABLE_CHAT_AUTO_SELECT &&
-            conversationsQuery.data?.length !== 0 && (
-              <Stack gap="xs" className="relative">
-                <LoadingOverlay visible={conversationsQuery.isLoading} />
-                <AutoSelectConversations />
-              </Stack>
-            )}
+          {inChatMode && ENABLE_CHAT_AUTO_SELECT && totalConversations > 0 && (
+            <Stack gap="xs" className="relative">
+              <LoadingOverlay visible={conversationsQuery.isLoading} />
+              <AutoSelectConversations />
+            </Stack>
+          )}
 
           {!(
-            conversationsQuery.data &&
-            conversationsQuery.data.length === 0 &&
+            allConversations.length === 0 &&
             debouncedConversationSearchValue === ""
           ) && (
             <Group justify="space-between" align="center" gap="xs">
@@ -780,7 +809,6 @@ export const ConversationAccordionMain = ({
                 rightSection={
                   !!conversationSearch && (
                     <ActionIcon
-                      disabled={conversationsQuery.isLoading}
                       variant="transparent"
                       onClick={() => {
                         setConversationSearch("");
@@ -869,7 +897,7 @@ export const ConversationAccordionMain = ({
             </Group>
           )} */}
 
-          {conversationsQuery.data?.length === 0 && (
+          {allConversations.length === 0 && !conversationsQuery.isLoading && (
             <Text size="sm">
               <Trans>
                 No conversations found. Start a conversation using the
@@ -882,19 +910,47 @@ export const ConversationAccordionMain = ({
           )}
 
           <Stack gap="xs" className="relative">
-            <LoadingOverlay visible={conversationsQuery.isLoading} />
-            {conversationsQuery.data?.map((item) => (
-              <ConversationAccordionItem
+            {conversationsQuery.status === "pending" && (
+              <BaseSkeleton count={3} height="80px" width="100%" radius="xs" />
+            )}
+            {allConversations.map((item, index) => (
+              <div
                 key={item.id}
-                highlight={item.id === activeConversationId}
-                conversation={
-                  (item as Conversation & { live: boolean }) ?? null
+                ref={
+                  index === allConversations.length - 1
+                    ? loadMoreRef
+                    : undefined
                 }
-                showDuration={showDuration}
-              />
+              >
+                <ConversationAccordionItem
+                  highlight={item.id === activeConversationId}
+                  conversation={
+                    (item as Conversation & { live: boolean }) ?? null
+                  }
+                  showDuration={showDuration}
+                />
+              </div>
             ))}
+            {conversationsQuery.isFetchingNextPage && (
+              <Center py="md">
+                <Loader size="sm" />
+              </Center>
+            )}
+            {!conversationsQuery.hasNextPage &&
+              allConversations.length > 0 &&
+              debouncedConversationSearchValue === "" && (
+                <Center py="md">
+                  <Text size="xs" c="dimmed" ta="center" fs="italic">
+                    <Trans>
+                      End of list • All{" "}
+                      {totalConversations ?? allConversations.length}{" "}
+                      conversations loaded
+                    </Trans>
+                  </Text>
+                </Center>
+              )}
             {/* Temporarily disabled source filters */}
-            {/* {conversationsQuery.data?.length === 0 &&
+            {/* {allConversations.length === 0 &&
               filterBySource.length === 0 && (
                 <Text size="sm">
                   <Trans>Please select at least one source</Trans>
@@ -904,13 +960,5 @@ export const ConversationAccordionMain = ({
         </Stack>
       </Accordion.Panel>
     </Accordion.Item>
-  );
-};
-
-export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
-  return (
-    <Suspense fallback={<ConversationSkeleton />}>
-      <ConversationAccordionMain projectId={projectId} />
-    </Suspense>
   );
 };
