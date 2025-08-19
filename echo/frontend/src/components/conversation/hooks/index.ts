@@ -808,6 +808,127 @@ export const useConversationById = ({
   });
 };
 
+export const useInfiniteConversationsByProjectId = (
+  projectId: string,
+  loadChunks?: boolean,
+  // unused
+  loadWhereTranscriptExists?: boolean,
+  query?: Partial<Query<CustomDirectusTypes, Conversation>>,
+  filterBySource?: string[],
+  options?: {
+    initialLimit?: number;
+  },
+) => {
+  const { initialLimit = 15 } = options ?? {};
+  const TIME_INTERVAL_SECONDS = 40;
+
+  return useInfiniteQuery({
+    queryKey: [
+      "projects",
+      projectId,
+      "conversations",
+      "infinite",
+      loadChunks ? "chunks" : "no-chunks",
+      loadWhereTranscriptExists ? "transcript" : "no-transcript",
+      query,
+      filterBySource,
+    ],
+    queryFn: async ({ pageParam = 0 }) => {
+      const conversations = await directus.request(
+        readItems("conversation", {
+          sort: "-updated_at",
+          fields: [
+            ...CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS,
+            {
+              tags: [
+                {
+                  project_tag_id: ["id", "text", "created_at"],
+                },
+              ],
+            },
+            { chunks: ["*"] },
+          ],
+          deep: {
+            // @ts-expect-error chunks is not typed
+            chunks: {
+              _limit: loadChunks ? 1000 : 1,
+            },
+          },
+          filter: {
+            project_id: {
+              _eq: projectId,
+            },
+            chunks: {
+              ...(loadWhereTranscriptExists && {
+                _some: {
+                  transcript: {
+                    _nempty: true,
+                  },
+                },
+              }),
+            },
+            ...(filterBySource && {
+              source: {
+                _in: filterBySource,
+              },
+            }),
+          },
+          limit: initialLimit,
+          offset: pageParam * initialLimit,
+          ...query,
+        }),
+      );
+
+      return {
+        conversations: conversations,
+        nextOffset:
+          conversations.length === initialLimit ? pageParam + 1 : undefined,
+      };
+    },
+    select: (data) => {
+      // Add live field to each conversation based on recent chunk activity
+      const cutoffTime = new Date(Date.now() - TIME_INTERVAL_SECONDS * 1000);
+
+      return {
+        ...data,
+        pages: data.pages.map((page) => ({
+          ...page,
+          conversations: page.conversations.map((conversation) => {
+            // Skip upload chunks
+            if (["upload", "clone"].includes(conversation.source ?? ""))
+              return {
+                ...conversation,
+                live: false,
+              };
+
+            if (conversation.chunks?.length === 0)
+              return {
+                ...conversation,
+                live: false,
+              };
+
+            const hasRecentChunks = conversation.chunks?.some((chunk: any) => {
+              // Check if chunk timestamp is recent
+              const chunkTime = new Date(
+                chunk.timestamp || chunk.created_at || 0,
+              );
+              return chunkTime > cutoffTime;
+            });
+
+            return {
+              ...conversation,
+              live: hasRecentChunks || false,
+            };
+          }),
+        })),
+      };
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextOffset,
+    refetchInterval: 30000,
+  });
+};
+
 export const useConversationsCountByProjectId = (
   projectId: string,
   query?: Partial<Query<CustomDirectusTypes, Conversation>>,
