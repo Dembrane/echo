@@ -375,6 +375,30 @@ async def post_chat(
     protocol: str = Query("data"),
     language: str = Query("en"),
 ) -> StreamingResponse:  # ignore: type
+    """
+    Handle a chat interaction: persist the user's message, optionally generate a title, and stream an LLM-generated response.
+    
+    This endpoint records the incoming user message into the chat, may asynchronously generate and persist a chat title if missing, and then produces a streaming response from the configured LLM. Two generation modes are supported:
+    - Auto-select (when enabled for the chat): builds a RAG prompt, retrieves conversation references and citations, and streams the model output.
+    - Manual-select: builds system messages from locked conversations and streams the model output.
+    
+    Side effects:
+    - Persists a new ProjectChatMessageModel for the user message.
+    - May update the chat name and the message's template key.
+    - On generation failure the in-flight user message is deleted.
+    
+    Parameters:
+    - chat_id: ID of the target chat (used to validate access and load context).
+    - body: ChatBodySchema containing the messages (the last user message is used as the prompt) and optional template_key.
+    - protocol: Response protocol; "data" (default) yields structured data frames, "text" yields raw text chunks.
+    - language: Language code used for title generation and system message creation.
+    
+    Returns:
+    - StreamingResponse that yields streamed model content and, in auto-select mode, header payloads containing conversation references and citations.
+    
+    Raises:
+    - HTTPException: 404 if the chat (or required conversation data) is not found; 400 when auto-select cannot satisfy context-length constraints or request validation fails.
+    """
     raise_if_chat_not_found_or_not_authorized(chat_id, auth)
 
     chat = db.get(ProjectChatModel, chat_id)
@@ -524,6 +548,23 @@ async def post_chat(
         )
 
         async def stream_response_async_manualselect() -> AsyncGenerator[str, None]:
+            """
+            Asynchronously stream a model-generated assistant response for the manual-selection chat path.
+            
+            Builds the outgoing message sequence by combining provided system messages (list or string) with recent user/assistant messages, removes a duplicated trailing user message if present, then calls the Litellm streaming completion API and yields text chunks as they arrive.
+            
+            Yields:
+                - If protocol == "text": successive raw text fragments from the model.
+                - If protocol == "data": framed data lines of the form `0:<json>` for each fragment.
+                - On generation error: a single error payload matching the active protocol (`"Error: ..." ` for text, or `3:"..."` for data).
+            
+            Side effects:
+                - On an exception during generation, deletes the in-flight `user_message` from the database and commits the change.
+            
+            Notes:
+                - Expects surrounding scope variables: `messages`, `system_messages`, `litellm`, model/API constants, `protocol`, `user_message`, and `logger`.
+                - Returns when the stream completes.
+            """
             with DatabaseSession() as db:
                 filtered_messages: List[Dict[str, Any]] = []
 
