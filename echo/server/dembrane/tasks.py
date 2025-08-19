@@ -163,7 +163,7 @@ def task_summarize_conversation(conversation_id: str) -> None:
         raise e from e
 
 
-@dramatiq.actor(store_results=True, queue_name="cpu", priority=30)
+@dramatiq.actor(store_results=True, queue_name="cpu", priority=10)
 def task_merge_conversation_chunks(conversation_id: str) -> None:
     """
     Merge conversation chunks.
@@ -219,7 +219,7 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
 
 @dramatiq.actor(
     queue_name="cpu",
-    priority=10,
+    priority=50,
     # 45 minutes
     time_limit=45 * 60 * 1000,
 )
@@ -338,11 +338,11 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
         group(follow_up_tasks).run()
 
         return
-    
+
     except ConversationNotFoundException:
         logger.error(f"NO RETRY: Conversation not found: {conversation_id}")
         return
-    
+
     except Exception as e:
         logger.error(f"Error: {e}")
         raise e from e
@@ -649,7 +649,7 @@ def task_create_project_library(project_id: str, language: str) -> None:
         return
 
 
-@dramatiq.actor(queue_name="network", priority=50)
+@dramatiq.actor(queue_name="network", priority=10)
 def task_process_runpod_chunk_response(chunk_id: str, status_link: str) -> None:
     logger = getLogger("dembrane.tasks.task_process_runpod_chunk_response")
 
@@ -724,7 +724,7 @@ def task_process_runpod_chunk_response(chunk_id: str, status_link: str) -> None:
                 logger.error(f"Failed to re-trigger transcription for chunk {chunk_id}: {e}")
 
 
-@dramatiq.actor(queue_name="network", priority=50)
+@dramatiq.actor(queue_name="network", priority=10)
 def task_update_runpod_transcription_response() -> None:
     logger = getLogger("dembrane.tasks.task_update_runpod_transcription_response")
     try:
@@ -755,7 +755,7 @@ def task_update_runpod_transcription_response() -> None:
         logger.error(f"Error in task_update_runpod_transcription_response: {e}")
 
 
-@dramatiq.actor(queue_name="network", priority=50)
+@dramatiq.actor(queue_name="network", priority=30)
 def task_get_runpod_diarization(chunk_id: str) -> None:
     logger = getLogger("dembrane.tasks.task_get_runpod_diarization")
     logger.info(f"Getting runpod diarization for chunk {chunk_id}")
