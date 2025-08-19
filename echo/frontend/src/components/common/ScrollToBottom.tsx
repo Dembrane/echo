@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { ActionIcon } from "@mantine/core";
+import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconArrowDown } from "@tabler/icons-react";
 
 interface ScrollToBottomButtonProps {
@@ -18,15 +18,17 @@ export const ScrollToBottomButton = ({
   if (isVisible) return null; // Hide when visible
 
   return (
-    <ActionIcon
-      variant="default"
-      radius="xl"
-      size={32}
-      aria-label={t`Scroll to bottom`}
-      className="rounded-full"
-      onClick={scrollToBottom}
-    >
-      <IconArrowDown style={{ width: "70%", height: "70%" }} stroke={2} />
-    </ActionIcon>
+    <Tooltip label={t`Scroll to bottom`}>
+      <ActionIcon
+        variant="default"
+        radius="xl"
+        size={32}
+        aria-label={t`Scroll to bottom`}
+        className="rounded-full"
+        onClick={scrollToBottom}
+      >
+        <IconArrowDown style={{ width: "70%", height: "70%" }} stroke={2} />
+      </ActionIcon>
+    </Tooltip>
   );
 };

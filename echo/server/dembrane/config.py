@@ -76,6 +76,14 @@ logger.debug(f"DIRECTUS_BASE_URL: {DIRECTUS_BASE_URL}")
 DISABLE_REDACTION = os.environ.get("DISABLE_REDACTION", "false").lower() in ["true", "1"]
 logger.debug(f"DISABLE_REDACTION: {DISABLE_REDACTION}")
 
+DISABLE_CHAT_TITLE_GENERATION = os.environ.get(
+    "DISABLE_CHAT_TITLE_GENERATION", "false"
+).lower() in [
+    "true",
+    "1",
+]
+logger.debug(f"DISABLE_CHAT_TITLE_GENERATION: {DISABLE_CHAT_TITLE_GENERATION}")
+
 PROMPT_TEMPLATES_DIR = os.path.join(BASE_DIR, "prompt_templates")
 logger.debug(f"PROMPT_TEMPLATES_DIR: {PROMPT_TEMPLATES_DIR}")
 

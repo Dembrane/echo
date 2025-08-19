@@ -31,6 +31,7 @@ from dembrane.database import (
 from dembrane.directus import directus
 from dembrane.chat_utils import (
     MAX_CHAT_CONTEXT_LENGTH,
+    generate_title,
     get_project_chat_history,
     get_conversation_citations,
     get_conversation_references,
@@ -399,6 +400,13 @@ async def post_chat(
     db.commit()
 
     try:
+        if chat.name is None:
+            chat.name = await generate_title(body.messages[-1].content, language)
+            db.commit()
+    except Exception as e:
+        logger.warning(f"Error generating title: {str(e)}")
+
+    try:
         logger.debug("checking if user submitted template key")
         if body.template_key is not None:
             logger.debug(f"updating template key to: {body.template_key}")
@@ -534,7 +542,7 @@ async def post_chat(
 
                 try:
                     accumulated_response = ""
-                    
+
                     # Check message token count and add padding if needed
                     # Handle system_messages whether it's a list or string
                     if isinstance(system_messages, list):
@@ -543,8 +551,10 @@ async def post_chat(
                             messages_to_send.append({"role": "system", "content": msg["text"]})
                         messages_to_send.extend(filtered_messages)
                     else:
-                        messages_to_send = [{"role": "system", "content": system_messages}] + filtered_messages
-                    
+                        messages_to_send = [
+                            {"role": "system", "content": system_messages}
+                        ] + filtered_messages
+
                     logger.debug(f"messages_to_send: {messages_to_send}")
                     response = await litellm.acompletion(
                         model=LIGHTRAG_LITELLM_INFERENCE_MODEL,

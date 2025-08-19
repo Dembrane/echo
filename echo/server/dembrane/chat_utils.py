@@ -2,11 +2,15 @@ import json
 import logging
 from typing import Any, Dict, List, Optional
 
-from litellm import completion
+from litellm import completion, acompletion
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from dembrane.config import (
+    SMALL_LITELLM_MODEL,
+    SMALL_LITELLM_API_KEY,
+    SMALL_LITELLM_API_BASE,
+    DISABLE_CHAT_TITLE_GENERATION,
     LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL,
     LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY,
     LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE,
@@ -193,6 +197,37 @@ class CitationSingleSchema(BaseModel):
 
 class CitationsSchema(BaseModel):
     citations: List[CitationSingleSchema]
+
+
+async def generate_title(
+    user_query: str,
+    language: str,
+) -> str | None:
+    if DISABLE_CHAT_TITLE_GENERATION:
+        logger.debug("Skipping title generation because DISABLE_CHAT_TITLE_GENERATION is set")
+        return None
+
+    if len(user_query.strip()) < 2:
+        logger.debug("Skipping title generation because user query is too short (<2 chars)")
+        return None
+
+    # here we use the english prompt template, but the language is passed in to make it simple
+    title_prompt = render_prompt(
+        "generate_chat_title", "en", {"user_query": user_query, "language": language}
+    )
+
+    response = await acompletion(
+        model=SMALL_LITELLM_MODEL,
+        messages=[{"role": "user", "content": title_prompt}],
+        api_base=SMALL_LITELLM_API_BASE,
+        api_key=SMALL_LITELLM_API_KEY,
+    )
+
+    if response.choices[0].message.content is None:
+        logger.warning(f"No title generated for user query: {user_query}")
+        return None
+
+    return response.choices[0].message.content
 
 
 async def get_conversation_citations(

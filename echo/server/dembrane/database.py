@@ -306,6 +306,7 @@ class ProjectChatModel(Base):
     )
 
     auto_select_bool: Mapped[bool] = mapped_column("auto_select", Boolean, default=False)
+    name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
 
 class ResourceTypeEnum(Enum):

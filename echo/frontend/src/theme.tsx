@@ -235,6 +235,7 @@ export const theme = createTheme({
           },
           content: {
             padding: 0,
+            paddingBottom: "24px",
           },
           item: {
             backgroundColor: "transparent",
