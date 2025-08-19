@@ -7,6 +7,7 @@ import {
   useDeleteChatContextMutation,
   useMoveConversationMutation,
   useConversationsByProjectId,
+  useConversationsCountByProjectId,
 } from "./hooks";
 import { useInfiniteProjects } from "@/components/project/hooks";
 import { useProjectChatContext } from "@/components/chat/hooks";
@@ -74,7 +75,7 @@ import { FormLabel } from "@/components/form/FormLabel";
 import { AutoSelectConversations } from "./AutoSelectConversations";
 import { ENABLE_CHAT_AUTO_SELECT } from "@/config";
 import { InformationTooltip } from "../common/InformationTooltip";
-import { ConversationSkeleton } from "./ConversationSkeleton";
+import { BaseSkeleton } from "../common/BaseSkeleton";
 
 type SortOption = {
   label: string;
@@ -554,7 +555,7 @@ const ConversationAccordionItem = ({
 };
 
 // Conversation Accordion
-export const ConversationAccordionMain = ({
+export const ConversationAccordion = ({
   projectId,
 }: {
   projectId: string;
@@ -668,6 +669,9 @@ export const ConversationAccordionMain = ({
     // filterBySource,
   );
 
+  // Get total conversations count for display
+  const conversationsCountQuery = useConversationsCountByProjectId(projectId);
+
   const [parent2] = useAutoAnimate();
 
   const filterApplied = useMemo(
@@ -743,7 +747,11 @@ export const ConversationAccordionMain = ({
         <Group justify="space-between">
           <Title order={3}>
             <span className="min-w-[48px] pr-2 font-normal text-gray-500">
-              {conversationsQuery.data?.length ?? 0}
+              {conversationsCountQuery.isLoading ? (
+                <Loader size="xs" />
+              ) : (
+                conversationsCountQuery.data ?? 0
+              )}
             </span>
             <Trans>Conversations</Trans>
           </Title>
@@ -780,7 +788,6 @@ export const ConversationAccordionMain = ({
                 rightSection={
                   !!conversationSearch && (
                     <ActionIcon
-                      disabled={conversationsQuery.isLoading}
                       variant="transparent"
                       onClick={() => {
                         setConversationSearch("");
@@ -882,7 +889,9 @@ export const ConversationAccordionMain = ({
           )}
 
           <Stack gap="xs" className="relative">
-            <LoadingOverlay visible={conversationsQuery.isLoading} />
+          {
+            conversationsQuery.status === "pending" && <BaseSkeleton count={3} height="80px" width="100%" radius="xs" />
+          }
             {conversationsQuery.data?.map((item) => (
               <ConversationAccordionItem
                 key={item.id}
@@ -904,13 +913,5 @@ export const ConversationAccordionMain = ({
         </Stack>
       </Accordion.Panel>
     </Accordion.Item>
-  );
-};
-
-export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
-  return (
-    <Suspense fallback={<ConversationSkeleton />}>
-      <ConversationAccordionMain projectId={projectId} />
-    </Suspense>
   );
 };

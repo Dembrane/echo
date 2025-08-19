@@ -5,11 +5,11 @@ import {
   useQuery,
   useQueryClient,
   UseQueryOptions,
-  useSuspenseQuery,
 } from "@tanstack/react-query";
 import {
   Query,
   QueryFields,
+  aggregate,
   createItems,
   deleteItems,
   readItem,
@@ -630,8 +630,8 @@ export const useConversationsByProjectId = (
   filterBySource?: string[],
 ) => {
   const TIME_INTERVAL_SECONDS = 40;
-  
-  return useSuspenseQuery({
+
+  return useQuery({
     queryKey: [
       "projects",
       projectId,
@@ -693,18 +693,17 @@ export const useConversationsByProjectId = (
       const cutoffTime = new Date(Date.now() - TIME_INTERVAL_SECONDS * 1000);
 
       if (data.length === 0) return [];
-      
-      return data.map((conversation) => {
 
-          // Skip upload chunks
-          if (
-            ["upload", "clone"].includes(conversation.source ?? "")
-          ) return {
+      return data.map((conversation) => {
+        // Skip upload chunks
+        if (["upload", "clone"].includes(conversation.source ?? ""))
+          return {
             ...conversation,
             live: false,
           };
-          
-          if (conversation.chunks?.length === 0) return {
+
+        if (conversation.chunks?.length === 0)
+          return {
             ...conversation,
             live: false,
           };
@@ -725,7 +724,10 @@ export const useConversationsByProjectId = (
   });
 };
 
-export const CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS: QueryFields<CustomDirectusTypes, Conversation> = [
+export const CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS: QueryFields<
+  CustomDirectusTypes,
+  Conversation
+> = [
   "id",
   "created_at",
   "updated_at",
@@ -748,8 +750,8 @@ export const CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS: QueryFields<CustomDi
   "is_audio_processing_finished",
   "is_all_chunks_transcribed",
   "linked_conversations",
-  "linking_conversations"
- ]
+  "linking_conversations",
+];
 
 export const useConversationById = ({
   conversationId,
@@ -803,5 +805,32 @@ export const useConversationById = ({
         }),
       ),
     ...useQueryOpts,
+  });
+};
+
+export const useConversationsCountByProjectId = (
+  projectId: string,
+  query?: Partial<Query<CustomDirectusTypes, Conversation>>,
+) => {
+  return useQuery({
+    queryKey: ["projects", projectId, "conversations", "count", query],
+    queryFn: async () => {
+      const response = await directus.request(
+        aggregate("conversation", {
+          aggregate: {
+            count: "*",
+          },
+          query: {
+            filter: {
+              project_id: {
+                _eq: projectId,
+              },
+              ...(query?.filter && query.filter),
+            },
+          },
+        }),
+      );
+      return response[0].count;
+    },
   });
 };
