@@ -203,6 +203,18 @@ async def generate_title(
     user_query: str,
     language: str,
 ) -> str | None:
+    """
+    Generate a short chat title from a user's query using a small LLM.
+    
+    If title generation is disabled via configuration or the trimmed query is shorter than 2 characters, the function returns None. The function builds a prompt (using the English prompt template) and asynchronously calls a configured small LLM; it returns the generated title string or None if the model returns no content.
+    
+    Parameters:
+        user_query (str): The user's chat message or query to generate a title from.
+        language (str): Target language for the generated title (affects prompt content; the prompt template used is English).
+    
+    Returns:
+        str | None: The generated title, or None if generation is disabled, the query is too short, or the model produced no content.
+    """
     if DISABLE_CHAT_TITLE_GENERATION:
         logger.debug("Skipping title generation because DISABLE_CHAT_TITLE_GENERATION is set")
         return None
@@ -236,6 +248,21 @@ async def get_conversation_citations(
     project_ids: List[str],
     language: str = "en",
 ) -> List[Dict[str, Any]]:
+    """
+    Extract structured conversation citations from an accumulated assistant response using a text-structuring model, map those citations to conversations, and return only citations that belong to the given project IDs.
+    
+    This function:
+    - Renders a text-structuring prompt using `rag_prompt` and `accumulated_response` and sends it to the configured text-structure LLM.
+    - Parses the model's JSON response (expected to follow `CitationsSchema`) to obtain citation entries that include `segment_id` and `verbatim_reference_text_chunk`.
+    - For each citation, resolves `segment_id` to a (conversation_id, conversation_name) pair and derives the citation's project id.
+    - Filters citations to include only those whose project id is present in `project_ids`.
+    - Returns a single-item list containing a dict with the key "citations", where each item is a dict with keys:
+      - "conversation": conversation id (str)
+      - "reference_text": verbatim reference text chunk (str)
+      - "conversation_title": conversation name/title (str)
+    
+    If the model output cannot be parsed or a segment-to-conversation mapping fails for an individual citation, that citation is skipped; parsing errors do not raise but are logged and result in an empty citations list in the returned structure.
+    """
     text_structuring_model_message = render_prompt(
         "text_structuring_model_message",
         language,
