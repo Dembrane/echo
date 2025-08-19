@@ -5,7 +5,7 @@ import { LoadingSpinner } from "../common/LoadingSpinner";
 
 export const ChatSkeleton = () => {
   return (
-    <Accordion.Item value="chats">
+    <Accordion.Item value="chat">
       <Accordion.Control>
         <Group gap="sm" align="baseline">
           <LoadingSpinner size="xs" />
