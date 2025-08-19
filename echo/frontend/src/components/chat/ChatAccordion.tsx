@@ -10,7 +10,6 @@ import {
   Accordion,
   ActionIcon,
   Group,
-  LoadingOverlay,
   Menu,
   Stack,
   Text,
@@ -27,7 +26,13 @@ import { Suspense, useEffect } from "react";
 import { ChatSkeleton } from "./ChatSkeleton";
 import { useInView } from "react-intersection-observer";
 
-const ChatAccordionItemMenu = ({ chat }: { chat: Partial<ProjectChat> }) => {
+export const ChatAccordionItemMenu = ({
+  chat,
+  size = "sm",
+}: {
+  chat: Partial<ProjectChat>;
+  size?: "sm" | "md";
+}) => {
   const deleteChatMutation = useDeleteChatMutation();
   const updateChatMutation = useUpdateChatMutation();
   const navigate = useI18nNavigate();
@@ -38,6 +43,7 @@ const ChatAccordionItemMenu = ({ chat }: { chat: Partial<ProjectChat> }) => {
         <ActionIcon
           variant="transparent"
           c="gray"
+          size={size}
           className="flex items-center justify-center"
         >
           <IconDotsVertical />
@@ -69,11 +75,13 @@ const ChatAccordionItemMenu = ({ chat }: { chat: Partial<ProjectChat> }) => {
             leftSection={<IconTrash />}
             disabled={deleteChatMutation.isPending}
             onClick={() => {
+              if (confirm(`Are you sure you want to delete this chat?`)) { 
               deleteChatMutation.mutate({
                 chatId: chat.id ?? "",
-                projectId: (chat.project_id as string) ?? "",
-              });
-              navigate(`/projects/${chat.project_id}/overview`);
+                  projectId: (chat.project_id as string) ?? "",
+                });
+                navigate(`/projects/${chat.project_id}/overview`);
+              }
             }}
           >
             <Trans id="project.sidebar.chat.delete">Delete</Trans>
@@ -196,14 +204,25 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
               }
               ref={index === allChats.length - 1 ? loadMoreRef : undefined}
             >
-              <Text size="xs">
-                {item.name
-                  ? item.name
-                  : formatRelative(
+              <Stack gap="xs">
+                <Text size="sm">
+                  {item.name
+                    ? item.name
+                    : formatRelative(
+                        new Date(item.date_created ?? new Date()),
+                        new Date(),
+                      )}
+                </Text>
+
+                {item.name && (
+                  <Text size="xs" c="gray.6">
+                    {formatRelative(
                       new Date(item.date_created ?? new Date()),
                       new Date(),
                     )}
-              </Text>
+                  </Text>
+                )}
+              </Stack>
             </NavigationButton>
           ))}
           {chatsQuery.isFetchingNextPage && (
@@ -211,7 +230,7 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
               <Loader size="sm" />
             </Center>
           )}
-          {!chatsQuery.hasNextPage && allChats.length > 0 && (
+          {/* {!chatsQuery.hasNextPage && allChats.length > 0 && (
             <Center py="md">
               <Text size="xs" c="dimmed" ta="center" fs="italic">
                 <Trans id="project.sidebar.chat.end.description">
@@ -219,7 +238,7 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
                 </Trans>
               </Text>
             </Center>
-          )}
+          )} */}
         </Stack>
       </Accordion.Panel>
     </Accordion.Item>

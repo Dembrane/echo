@@ -936,7 +936,7 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
                 <Loader size="sm" />
               </Center>
             )}
-            {!conversationsQuery.hasNextPage &&
+            {/* {!conversationsQuery.hasNextPage &&
               allConversations.length > 0 &&
               debouncedConversationSearchValue === "" && (
                 <Center py="md">
@@ -948,7 +948,7 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
                     </Trans>
                   </Text>
                 </Center>
-              )}
+              )} */}
             {/* Temporarily disabled source filters */}
             {/* {allConversations.length === 0 &&
               filterBySource.length === 0 && (

@@ -20,6 +20,7 @@ import {
   Text,
   Textarea,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import {
@@ -46,6 +47,8 @@ import SpikeMessage from "@/components/participant/SpikeMessage";
 import { Logo } from "@/components/common/Logo";
 import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
+import { ChatAccordionItemMenu } from "@/components/chat/ChatAccordion";
+import { ErrorBoundary } from "@sentry/react";
 
 const useDembraneChat = ({ chatId }: { chatId: string }) => {
   const chatHistoryQuery = useChatHistory(chatId);
@@ -348,6 +351,14 @@ export const ProjectChatRoute = () => {
                 `# ${chatQuery.data?.name ?? t`Chat`}\n\n` + computedChatForCopy
               }
             />
+            <ErrorBoundary>
+              {chatQuery.data && (
+                <ChatAccordionItemMenu
+                  chat={chatQuery.data as ProjectChat}
+                  size="sm"
+                />
+              )}
+            </ErrorBoundary>
           </Group>
         </Group>
         <Divider />
