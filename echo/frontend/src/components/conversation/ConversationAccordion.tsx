@@ -780,7 +780,9 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
             <Trans>Conversations</Trans>
           </Title>
 
-          <UploadConversationDropzone projectId={projectId} />
+          <div onClick={(e) => e.stopPropagation()}>
+            <UploadConversationDropzone projectId={projectId} />
+          </div>
         </Group>
       </Accordion.Control>
 
