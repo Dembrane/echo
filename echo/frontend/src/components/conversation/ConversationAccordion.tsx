@@ -780,13 +780,9 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
             <Trans>Conversations</Trans>
           </Title>
 
-          <Tooltip label={`Upload conversations`}>
-            <div>
-              <UploadConversationDropzone projectId={projectId}>
-                <Icons.Plus stroke="black" fill="black" />
-              </UploadConversationDropzone>
-            </div>
-          </Tooltip>
+          <UploadConversationDropzone projectId={projectId}>
+            <Icons.Plus stroke="black" fill="black" />
+          </UploadConversationDropzone>
         </Group>
       </Accordion.Control>
 

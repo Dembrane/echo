@@ -485,13 +485,15 @@ export const UploadConversationDropzone = (
   return (
     <>
       {/* Upload button */}
-      <Button
-        leftSection={<IconPlus size={16} />}
-        onClick={open}
-        variant="outline"
-      >
-        {t`Upload Audio`}
-      </Button>
+      <Tooltip label={t`Upload conversations`}>
+        <Button
+          leftSection={<IconPlus size={16} />}
+          onClick={open}
+          variant="outline"
+        >
+          {t`Upload Audio`}
+        </Button>
+      </Tooltip>
 
       {/* Upload modal */}
       <Modal
