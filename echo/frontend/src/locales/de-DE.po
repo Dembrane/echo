@@ -208,7 +208,7 @@ msgstr "Erweiterte Einstellungen"
 msgid "All conversations ready"
 msgstr "Alle Gespräche bereit"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:778
+#: src/components/dropzone/UploadConversationDropzone.tsx:780
 msgid "All files were uploaded successfully."
 msgstr "Alle Dateien wurden erfolgreich hochgeladen."
 
@@ -400,7 +400,7 @@ msgstr "Zurück"
 #~ msgid "Back"
 #~ msgstr "Zurück"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:798
+#: src/components/dropzone/UploadConversationDropzone.tsx:800
 msgid "Back to Selection"
 msgstr "Zurück zur Auswahl"
 
@@ -425,8 +425,8 @@ msgid "By deleting this project, you will delete all the data associated with it
 msgstr "Durch das Löschen dieses Projekts werden alle damit verbundenen Daten gelöscht. Diese Aktion kann nicht rückgängig gemacht werden. Sind Sie ABSOLUT sicher, dass Sie dieses Projekt löschen möchten?"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:339
-#: src/components/dropzone/UploadConversationDropzone.tsx:674
-#: src/components/dropzone/UploadConversationDropzone.tsx:789
+#: src/components/dropzone/UploadConversationDropzone.tsx:676
+#: src/components/dropzone/UploadConversationDropzone.tsx:791
 #: src/components/conversation/MoveConversationButton.tsx:202
 #: src/components/conversation/ConversationAccordion.tsx:323
 msgid "Cancel"
@@ -497,11 +497,11 @@ msgstr "Überprüfe..."
 msgid "Citing the following sources"
 msgstr "Quellen zitieren"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:653
+#: src/components/dropzone/UploadConversationDropzone.tsx:655
 msgid "Click \"Upload Files\" when you're ready to start the upload process."
 msgstr "Klicken Sie auf \"Dateien hochladen\", wenn Sie bereit sind, den Upload-Prozess zu starten."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:789
+#: src/components/dropzone/UploadConversationDropzone.tsx:791
 msgid "Close"
 msgstr "Schließen"
 
@@ -513,7 +513,7 @@ msgstr "Vergleichen & Gegenüberstellen"
 #~ msgid "Compare and contrast the following items provided in the context."
 #~ msgstr "Vergleichen und stellen Sie die folgenden im Kontext bereitgestellten Elemente gegenüber."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:732
+#: src/components/dropzone/UploadConversationDropzone.tsx:734
 msgid "Complete"
 msgstr "Abgeschlossen"
 
@@ -768,7 +768,7 @@ msgstr "Transkript herunterladen"
 msgid "Download Transcript Options"
 msgstr "Transkript-Download-Optionen"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:548
+#: src/components/dropzone/UploadConversationDropzone.tsx:550
 msgid "Drag audio files here or click to select files"
 msgstr "Ziehen Sie Audio-Dateien hier oder klicken Sie, um Dateien auszuwählen"
 
@@ -800,7 +800,7 @@ msgstr "Sie sind gerade aufnahmebereit"
 msgid "Edit Conversation"
 msgstr "Gespräch bearbeiten"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:618
+#: src/components/dropzone/UploadConversationDropzone.tsx:620
 msgid "Edit file name"
 msgstr "Dateiname bearbeiten"
 
@@ -895,7 +895,7 @@ msgstr "Geben Sie einen Schlüsselbegriff oder Eigennamen ein"
 msgid "Enter a name for the new conversation"
 msgstr "Geben Sie einen Namen für das neue Gespräch ein"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:587
+#: src/components/dropzone/UploadConversationDropzone.tsx:589
 msgid "Enter filename (without extension)"
 msgstr "Dateiname eingeben (ohne Erweiterung)"
 
@@ -907,8 +907,8 @@ msgstr "Geben Sie einen neuen Namen für den Chat ein:"
 msgid "Enter your query"
 msgstr "Geben Sie Ihre Anfrage ein"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:662
-#: src/components/dropzone/UploadConversationDropzone.tsx:760
+#: src/components/dropzone/UploadConversationDropzone.tsx:664
+#: src/components/dropzone/UploadConversationDropzone.tsx:762
 msgid "Error"
 msgstr "Fehler"
 
@@ -939,7 +939,7 @@ msgstr "Fehler beim Aktualisieren des Berichts"
 
 #. placeholder {0}: errorFile.file.name
 #. placeholder {1}: error.message
-#: src/components/dropzone/UploadConversationDropzone.tsx:536
+#: src/components/dropzone/UploadConversationDropzone.tsx:538
 msgid "Error uploading \"{0}\": {1}"
 msgstr "Fehler beim Hochladen von \"{0}\": {1}"
 
@@ -963,7 +963,7 @@ msgstr "Experimentell"
 msgid "Export"
 msgstr "Exportieren"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:734
+#: src/components/dropzone/UploadConversationDropzone.tsx:736
 msgid "Failed"
 msgstr "Fehlgeschlagen"
 
@@ -1045,12 +1045,12 @@ msgstr "Fehler beim Beenden der Aufnahme bei Änderung des Mikrofons. Bitte vers
 
 #. placeholder {0}: errorFile.file.name
 #. placeholder {1}: formatFileSize(MAX_FILE_SIZE)
-#: src/components/dropzone/UploadConversationDropzone.tsx:528
+#: src/components/dropzone/UploadConversationDropzone.tsx:530
 msgid "File \"{0}\" exceeds the maximum size of {1}."
 msgstr "Datei \"{0}\" überschreitet die maximale Größe von {1}."
 
 #. placeholder {0}: errorFile.file.name
-#: src/components/dropzone/UploadConversationDropzone.tsx:532
+#: src/components/dropzone/UploadConversationDropzone.tsx:534
 msgid "File \"{0}\" has an unsupported format. Only audio files are allowed."
 msgstr "Datei \"{0}\" hat ein nicht unterstütztes Format. Nur Audio-Dateien sind erlaubt."
 
@@ -1068,7 +1068,7 @@ msgstr "Datei \"{0}\" ist zu klein ({1}). Mindestgröße ist {2}."
 
 #. placeholder {0}: formatFileSize(MIN_FILE_SIZE)
 #. placeholder {1}: formatFileSize(MAX_FILE_SIZE)
-#: src/components/dropzone/UploadConversationDropzone.tsx:553
+#: src/components/dropzone/UploadConversationDropzone.tsx:555
 msgid "File size: Min {0}, Max {1}, up to {MAX_FILES} files"
 msgstr "Dateigröße: Min {0}, Max {1}, bis zu {MAX_FILES} Dateien"
 
@@ -1532,7 +1532,7 @@ msgstr "Keine Gespräche verfügbar, um eine Bibliothek zu erstellen"
 msgid "No conversations found."
 msgstr "Keine Gespräche gefunden."
 
-#: src/components/conversation/ConversationAccordion.tsx:902
+#: src/components/conversation/ConversationAccordion.tsx:898
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "Keine Gespräche gefunden. Starten Sie ein Gespräch über den Teilnahme-Einladungslink aus der <0><1>Projektübersicht.</1></0>"
 
@@ -1661,8 +1661,8 @@ msgstr "Fehlerbehebungsleitfaden öffnen"
 #~ msgid "Open troubleshooting guide"
 #~ msgstr "Fehlerbehebungsleitfaden öffnen"
 
-#: src/components/conversation/ConversationAccordion.tsx:829
-#: src/components/conversation/ConversationAccordion.tsx:843
+#: src/components/conversation/ConversationAccordion.tsx:825
+#: src/components/conversation/ConversationAccordion.tsx:839
 msgid "Options"
 msgstr "Optionen"
 
@@ -2004,7 +2004,7 @@ msgstr "Seite neu laden"
 msgid "Remove Email"
 msgstr "E-Mail entfernen"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:631
+#: src/components/dropzone/UploadConversationDropzone.tsx:633
 msgid "Remove file"
 msgstr "Datei entfernen"
 
@@ -2079,7 +2079,7 @@ msgstr "Mikrofonzugriff wird angefragt..."
 #~ msgid "Requesting microphone access to detect available devices..."
 #~ msgstr "Mikrofonzugriff anfordern, um verfügbare Geräte zu erkennen..."
 
-#: src/components/conversation/ConversationAccordion.tsx:879
+#: src/components/conversation/ConversationAccordion.tsx:875
 msgid "Reset All Options"
 msgstr "Alle Optionen zurücksetzen"
 
@@ -2125,11 +2125,11 @@ msgstr "Hertranskription gestartet. Das neue Gespräch wird bald verfügbar sein
 msgid "Retry"
 msgstr "Erneut versuchen"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:803
+#: src/components/dropzone/UploadConversationDropzone.tsx:805
 msgid "Retry Upload"
 msgstr "Upload erneut versuchen"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:569
+#: src/components/dropzone/UploadConversationDropzone.tsx:571
 msgid "Review files before uploading"
 msgstr "Dateien vor dem Hochladen überprüfen"
 
@@ -2154,7 +2154,7 @@ msgstr "Nach unten scrollen"
 msgid "Search"
 msgstr "Suchen"
 
-#: src/components/conversation/ConversationAccordion.tsx:821
+#: src/components/conversation/ConversationAccordion.tsx:817
 msgid "Search conversations"
 msgstr "Gespräche suchen"
 
@@ -2191,7 +2191,7 @@ msgstr "Durchsucht die relevantesten Quellen"
 msgid "Select a microphone"
 msgstr "Mikrofon auswählen"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:507
+#: src/components/dropzone/UploadConversationDropzone.tsx:509
 msgid "Select Audio Files to Upload"
 msgstr "Audio-Dateien auswählen"
 
@@ -2225,7 +2225,7 @@ msgstr "Mikrofon auswählen"
 #~ msgstr "Wählen Sie Ihr Mikrofon:"
 
 #. placeholder {0}: selectedFiles.length
-#: src/components/dropzone/UploadConversationDropzone.tsx:564
+#: src/components/dropzone/UploadConversationDropzone.tsx:566
 msgid "Selected Files ({0}/{MAX_FILES})"
 msgstr "Ausgewählte Dateien ({0}/{MAX_FILES})"
 
@@ -2296,7 +2296,7 @@ msgstr "Kürzeste zuerst"
 msgid "Show audio player"
 msgstr "Audio-Player anzeigen"
 
-#: src/components/conversation/ConversationAccordion.tsx:846
+#: src/components/conversation/ConversationAccordion.tsx:842
 msgid "Show duration"
 msgstr "Dauer anzeigen"
 
@@ -2376,7 +2376,7 @@ msgstr "Etwas ist schief gelaufen. Bitte versuchen Sie es erneut."
 msgid "participant.echo.content.policy.violation.error.message"
 msgstr "Wir können diese Anfrage nicht verarbeiten, da die Inhaltsrichtlinie des LLM-Anbieters verletzt wird."
 
-#: src/components/conversation/ConversationAccordion.tsx:855
+#: src/components/conversation/ConversationAccordion.tsx:851
 msgid "Sort"
 msgstr "Sortieren"
 
@@ -2442,7 +2442,7 @@ msgstr "Absenden"
 msgid "Submit"
 msgstr "Absenden"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:774
+#: src/components/dropzone/UploadConversationDropzone.tsx:776
 msgid "Success"
 msgstr "Erfolg"
 
@@ -2464,7 +2464,7 @@ msgstr "Zusammenfassung"
 #~ msgid "Summary not available yet"
 #~ msgstr "Zusammenfassung noch nicht verfügbar"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:550
+#: src/components/dropzone/UploadConversationDropzone.tsx:552
 msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 msgstr "Unterstützte Formate: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 
@@ -2841,19 +2841,23 @@ msgstr "Upgrade auf Auto-select und analysieren Sie 10x mehr Gespräche in der H
 msgid "Upload"
 msgstr "Hochladen"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:493
+#: src/components/dropzone/UploadConversationDropzone.tsx:494
 msgid "Upload Audio"
 msgstr "Audio hochladen"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:505
+#: src/components/dropzone/UploadConversationDropzone.tsx:507
 msgid "Upload Complete"
 msgstr "Hochladen abgeschlossen"
+
+#: src/components/dropzone/UploadConversationDropzone.tsx:488
+msgid "Upload conversations"
+msgstr "Gespräche hochladen"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:330
 msgid "Upload failed. Please try again."
 msgstr "Hochladen fehlgeschlagen. Bitte versuchen Sie es erneut."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:682
+#: src/components/dropzone/UploadConversationDropzone.tsx:684
 msgid "Upload Files"
 msgstr "Dateien hochladen"
 
@@ -2869,7 +2873,7 @@ msgstr "Dateien hochladen"
 #~ msgid "Uploaded"
 #~ msgstr "Hochgeladen"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:506
+#: src/components/dropzone/UploadConversationDropzone.tsx:508
 msgid "Uploading Audio Files..."
 msgstr "Audio-Dateien werden hochgeladen..."
 
