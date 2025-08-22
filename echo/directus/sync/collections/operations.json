@@ -40,6 +40,46 @@
     "_syncId": "af7a671d-78fa-4d07-adad-c3bfabc4617c"
   },
   {
+    "name": "Check Language",
+    "key": "check_language",
+    "type": "condition",
+    "position_x": 20,
+    "position_y": 1,
+    "options": {
+      "filter": {
+        "$trigger": {
+          "language": {
+            "_eq": "en"
+          }
+        }
+      }
+    },
+    "resolve": "528ddb67-1a33-459b-88ac-e9851adfa470",
+    "reject": "b86ed989-2b09-42fe-bc19-fb5bc1f4cd8b",
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "8a2cc38e-443a-41a2-a7e3-9dd7bbdabbe8"
+  },
+  {
+    "name": "Check Language",
+    "key": "check_language",
+    "type": "condition",
+    "position_x": 20,
+    "position_y": 1,
+    "options": {
+      "filter": {
+        "$trigger": {
+          "language": {
+            "_eq": "en"
+          }
+        }
+      }
+    },
+    "resolve": "922d6207-d0da-41d4-b7b2-4c570b13c19b",
+    "reject": "71355a51-3678-4f5a-9701-b527d5b5a4f1",
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "c3f2d50b-7592-47d2-8c7c-1556788078c2"
+  },
+  {
     "name": "Check Report Language",
     "key": "check_report_language",
     "type": "item-read",
@@ -92,6 +132,58 @@
     "_syncId": "c5d2aff3-1a1a-4ea2-8e39-5189409b7dc1"
   },
   {
+    "name": "Check Report Language",
+    "key": "check_report_language",
+    "type": "item-read",
+    "position_x": 73,
+    "position_y": 1,
+    "options": {
+      "query": {
+        "filter": {
+          "project_id": {
+            "id": {
+              "_eq": "{{$trigger.payload.project_id.id}}"
+            }
+          }
+        },
+        "fields": [
+          "language"
+        ]
+      },
+      "collection": "project_report"
+    },
+    "resolve": "e598fa14-52fb-4741-86f7-468801c440c0",
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "7d3f7cd6-a02e-4593-8073-6297fb9b5ca6"
+  },
+  {
+    "name": "Check Report Language",
+    "key": "check_report_language",
+    "type": "item-read",
+    "position_x": 73,
+    "position_y": 1,
+    "options": {
+      "query": {
+        "filter": {
+          "project_id": {
+            "id": {
+              "_eq": "{{$trigger.payload.project_id.id}}"
+            }
+          }
+        },
+        "fields": [
+          "language"
+        ]
+      },
+      "collection": "project_report"
+    },
+    "resolve": "dfb45a27-c2d3-4252-ab46-55bac06a7c71",
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "48272b58-223e-4260-b6a4-c35e37a55b02"
+  },
+  {
     "name": "Dutch",
     "key": "dutch",
     "type": "condition",
@@ -130,6 +222,74 @@
     "reject": "eb6f8253-647f-4fb1-9010-e93594ba065e",
     "flow": "17703446-fef0-49e9-bdc4-385db1311137",
     "_syncId": "4795cc24-3f3c-4be9-9844-24552da522fa"
+  },
+  {
+    "name": "Dutch",
+    "key": "dutch",
+    "type": "condition",
+    "position_x": 20,
+    "position_y": 20,
+    "options": {
+      "filter": {
+        "$trigger": {
+          "language": {
+            "_eq": "nl"
+          }
+        }
+      }
+    },
+    "resolve": "18b93ae9-dfe9-48b6-ba8d-f687316fe3ec",
+    "reject": "4fe0cf69-952b-4134-bfce-a7d783ecd335",
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "71355a51-3678-4f5a-9701-b527d5b5a4f1"
+  },
+  {
+    "name": "Dutch",
+    "key": "dutch",
+    "type": "condition",
+    "position_x": 20,
+    "position_y": 20,
+    "options": {
+      "filter": {
+        "$trigger": {
+          "language": {
+            "_eq": "nl"
+          }
+        }
+      }
+    },
+    "resolve": "07c4b2dd-2e0b-4119-b444-d51c1609e08f",
+    "reject": "a5c042e9-c72f-4190-aeb2-1465381bc4ce",
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "b86ed989-2b09-42fe-bc19-fb5bc1f4cd8b"
+  },
+  {
+    "name": "Email Send Operation Failed",
+    "key": "email_send_operation_failed",
+    "type": "log",
+    "position_x": 58,
+    "position_y": 1,
+    "options": {
+      "message": "An email could not be sent due to some error: {{$last}}"
+    },
+    "resolve": null,
+    "reject": null,
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "a8493bf0-851d-443c-b8ed-1d38d79e5645"
+  },
+  {
+    "name": "Email Send Operation Failed",
+    "key": "email_send_operation_failed",
+    "type": "log",
+    "position_x": 58,
+    "position_y": 1,
+    "options": {
+      "message": "An email could not be sent due to some error: {{$last}}"
+    },
+    "resolve": null,
+    "reject": null,
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "b4f25f50-6308-4992-ad55-b17f723b8d0d"
   },
   {
     "name": "Email Send Operation Failed",
@@ -171,6 +331,34 @@
     "resolve": null,
     "reject": null,
     "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "615a54cd-a72e-41ad-9403-9577c80280d6"
+  },
+  {
+    "name": "Email Send Operation Failed Dutch",
+    "key": "email_send_operation_failed_dutch",
+    "type": "log",
+    "position_x": 58,
+    "position_y": 20,
+    "options": {
+      "message": "An email could not be sent due to some error: {{$last}}"
+    },
+    "resolve": null,
+    "reject": null,
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "71dab14d-c09b-4ee3-802c-55ac4dea1efc"
+  },
+  {
+    "name": "Email Send Operation Failed Dutch",
+    "key": "email_send_operation_failed_dutch",
+    "type": "log",
+    "position_x": 58,
+    "position_y": 20,
+    "options": {
+      "message": "An email could not be sent due to some error: {{$last}}"
+    },
+    "resolve": null,
+    "reject": null,
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
     "_syncId": "84c38ea6-5d15-429f-8c24-9485d54ba7be"
   },
   {
@@ -185,7 +373,35 @@
     "resolve": null,
     "reject": null,
     "flow": "17703446-fef0-49e9-bdc4-385db1311137",
-    "_syncId": "615a54cd-a72e-41ad-9403-9577c80280d6"
+    "_syncId": "a9e2f5a0-2004-4161-a624-5fa0404a7ed9"
+  },
+  {
+    "name": "failed",
+    "key": "failed",
+    "type": "log",
+    "position_x": 20,
+    "position_y": 39,
+    "options": {
+      "message": "language detection failed"
+    },
+    "resolve": null,
+    "reject": null,
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "4fe0cf69-952b-4134-bfce-a7d783ecd335"
+  },
+  {
+    "name": "failed",
+    "key": "failed",
+    "type": "log",
+    "position_x": 20,
+    "position_y": 39,
+    "options": {
+      "message": "language detection failed"
+    },
+    "resolve": null,
+    "reject": null,
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "a5c042e9-c72f-4190-aeb2-1465381bc4ce"
   },
   {
     "name": "failed",
@@ -224,10 +440,10 @@
     "options": {
       "code": "module.exports = async function(data) {\n\n    const submissions = data.get_all_participants;\n    \n    // Filter submissions to only include those where email_opt_in is true\n    const filteredSubmissions = submissions.filter(sub => sub.email_opt_in === true);\n\n    // Create an array with email, project_id and an email_opt_out token for each submission\n    const result = filteredSubmissions.map(sub => ({\n        project_name: data.project_data[0].name || '',\n\t\tdefault_conversation_title: data.project_data[0].default_conversation_title || '',\n\t\tconversation_name: sub.conversation_id.participant_name || '',\n        email: sub.email,\n        project_id: sub.project_id || '',\n        token: sub.email_opt_out_token,\n        language: data.check_report_language[0].language || 'empty',\n        ADMIN_BASE_URL: \"{{ $env.ADMIN_BASE_URL }}\" || \"http://localhost:5173\",\n        PARTICIPANT_BASE_URL: \"{{ $env.PARTICIPANT_BASE_URL }}\" || \"http://localhost:5174\",        \n    }));\n    \n    return result;\n};"
     },
-    "resolve": "e101f00d-2fb8-4f40-9e0e-4d24da5bb1e9",
+    "resolve": "b8144cee-59f6-40d9-a849-dd0c639e4e31",
     "reject": null,
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
-    "_syncId": "efb3982e-5703-4c07-8982-a6e1b5218e4a"
+    "_syncId": "ca1ffbc5-cfce-4fb4-8f15-c128ea407d41"
   },
   {
     "name": "Filter Emails",
@@ -238,10 +454,92 @@
     "options": {
       "code": "module.exports = async function(data) {\n\n    const submissions = data.get_all_participants;\n    \n    // Filter submissions to only include those where email_opt_in is true\n    const filteredSubmissions = submissions.filter(sub => sub.email_opt_in === true);\n\n    // Create an array with email, project_id and an email_opt_out token for each submission\n    const result = filteredSubmissions.map(sub => ({\n        project_name: data.project_data[0].name || '',\n\t\tdefault_conversation_title: data.project_data[0].default_conversation_title || '',\n\t\tconversation_name: sub.conversation_id.participant_name || '',\n        email: sub.email,\n        project_id: sub.project_id || '',\n        token: sub.email_opt_out_token,\n        language: data.check_report_language[0].language || 'empty',\n        ADMIN_BASE_URL: \"{{ $env.ADMIN_BASE_URL }}\" || \"http://localhost:5173\",\n        PARTICIPANT_BASE_URL: \"{{ $env.PARTICIPANT_BASE_URL }}\" || \"http://localhost:5174\",        \n    }));\n    \n    return result;\n};"
     },
-    "resolve": "b8144cee-59f6-40d9-a849-dd0c639e4e31",
+    "resolve": "64108c9f-d6bb-4141-8f9c-b023ff5d7549",
     "reject": null,
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
-    "_syncId": "ca1ffbc5-cfce-4fb4-8f15-c128ea407d41"
+    "_syncId": "dfb45a27-c2d3-4252-ab46-55bac06a7c71"
+  },
+  {
+    "name": "Filter Emails",
+    "key": "filter_emails",
+    "type": "exec",
+    "position_x": 91,
+    "position_y": 1,
+    "options": {
+      "code": "module.exports = async function(data) {\n\n    const submissions = data.get_all_participants;\n    \n    // Filter submissions to only include those where email_opt_in is true\n    const filteredSubmissions = submissions.filter(sub => sub.email_opt_in === true);\n\n    // Create an array with email, project_id and an email_opt_out token for each submission\n    const result = filteredSubmissions.map(sub => ({\n        project_name: data.project_data[0].name || '',\n\t\tdefault_conversation_title: data.project_data[0].default_conversation_title || '',\n\t\tconversation_name: sub.conversation_id.participant_name || '',\n        email: sub.email,\n        project_id: sub.project_id || '',\n        token: sub.email_opt_out_token,\n        language: data.check_report_language[0].language || 'empty',\n        ADMIN_BASE_URL: \"{{ $env.ADMIN_BASE_URL }}\" || \"http://localhost:5173\",\n        PARTICIPANT_BASE_URL: \"{{ $env.PARTICIPANT_BASE_URL }}\" || \"http://localhost:5174\",        \n    }));\n    \n    return result;\n};"
+    },
+    "resolve": "18df11f6-d6d9-41f4-be23-4a759620864c",
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "e598fa14-52fb-4741-86f7-468801c440c0"
+  },
+  {
+    "name": "Filter Emails",
+    "key": "filter_emails",
+    "type": "exec",
+    "position_x": 91,
+    "position_y": 1,
+    "options": {
+      "code": "module.exports = async function(data) {\n\n    const submissions = data.get_all_participants;\n    \n    // Filter submissions to only include those where email_opt_in is true\n    const filteredSubmissions = submissions.filter(sub => sub.email_opt_in === true);\n\n    // Create an array with email, project_id and an email_opt_out token for each submission\n    const result = filteredSubmissions.map(sub => ({\n        project_name: data.project_data[0].name || '',\n\t\tdefault_conversation_title: data.project_data[0].default_conversation_title || '',\n\t\tconversation_name: sub.conversation_id.participant_name || '',\n        email: sub.email,\n        project_id: sub.project_id || '',\n        token: sub.email_opt_out_token,\n        language: data.check_report_language[0].language || 'empty',\n        ADMIN_BASE_URL: \"{{ $env.ADMIN_BASE_URL }}\" || \"http://localhost:5173\",\n        PARTICIPANT_BASE_URL: \"{{ $env.PARTICIPANT_BASE_URL }}\" || \"http://localhost:5174\",        \n    }));\n    \n    return result;\n};"
+    },
+    "resolve": "e101f00d-2fb8-4f40-9e0e-4d24da5bb1e9",
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "efb3982e-5703-4c07-8982-a6e1b5218e4a"
+  },
+  {
+    "name": "Get All Participants",
+    "key": "get_all_participants",
+    "type": "item-read",
+    "position_x": 55,
+    "position_y": 1,
+    "options": {
+      "query": {
+        "filter": {
+          "project_id": {
+            "id": {
+              "_eq": "{{$trigger.payload.project_id}}"
+            }
+          }
+        },
+        "fields": [
+          "*",
+          "conversation_id.participant_name"
+        ]
+      },
+      "collection": "project_report_notification_participants"
+    },
+    "resolve": "d154ee34-0931-43f3-aaca-9168f88fa04b",
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "107ebc18-7d2d-4299-9d98-b7d1e7322b7c"
+  },
+  {
+    "name": "Get All Participants",
+    "key": "get_all_participants",
+    "type": "item-read",
+    "position_x": 55,
+    "position_y": 1,
+    "options": {
+      "query": {
+        "filter": {
+          "project_id": {
+            "id": {
+              "_eq": "{{$trigger.payload.project_id}}"
+            }
+          }
+        },
+        "fields": [
+          "*",
+          "conversation_id.participant_name"
+        ]
+      },
+      "collection": "project_report_notification_participants"
+    },
+    "resolve": "7d3f7cd6-a02e-4593-8073-6297fb9b5ca6",
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "e219d427-fe53-4f95-8c03-70b305ee92c0"
   },
   {
     "name": "Get All Participants",
@@ -292,10 +590,10 @@
       },
       "collection": "project_report_notification_participants"
     },
-    "resolve": "d154ee34-0931-43f3-aaca-9168f88fa04b",
+    "resolve": "48272b58-223e-4260-b6a4-c35e37a55b02",
     "reject": null,
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
-    "_syncId": "107ebc18-7d2d-4299-9d98-b7d1e7322b7c"
+    "_syncId": "c37ec6cb-c7f1-4be5-8bec-4d4fd49cc966"
   },
   {
     "name": "log environment vars",
@@ -323,7 +621,35 @@
     "resolve": null,
     "reject": null,
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "d82482db-cab4-43f0-b434-e5e6e5b73188"
+  },
+  {
+    "name": "log environment vars",
+    "key": "log_environment_vars",
+    "type": "log",
+    "position_x": 127,
+    "position_y": 1,
+    "options": {
+      "message": "{{data['$env']}}  {{data.$env}} {{process.env}} {{$env}} {{$env.PARTICIPANT_BASE_URL}}"
+    },
+    "resolve": null,
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
     "_syncId": "da5f4cce-eff0-426d-a207-d61366899d1f"
+  },
+  {
+    "name": "log environment vars",
+    "key": "log_environment_vars",
+    "type": "log",
+    "position_x": 127,
+    "position_y": 1,
+    "options": {
+      "message": "{{data['$env']}}  {{data.$env}} {{process.env}} {{$env}} {{$env.PARTICIPANT_BASE_URL}}"
+    },
+    "resolve": null,
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "3dc611dc-7d1d-47dd-bd47-bd47e7e0326c"
   },
   {
     "name": "PROCEED_ONLY_IF \"published\" in payload",
@@ -364,10 +690,100 @@
         }
       }
     },
+    "resolve": "994ec698-46e4-4f69-bf44-d1ed1c820ccc",
+    "reject": "40e7af64-55e2-4a84-ad35-18002ead367f",
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "0f470d6b-2aef-4f50-913e-45cda36cb121"
+  },
+  {
+    "name": "PROCEED_ONLY_IF \"published\" in payload",
+    "key": "proceed_only_if_published_in_payload",
+    "type": "condition",
+    "position_x": 19,
+    "position_y": 1,
+    "options": {
+      "filter": {
+        "$trigger": {
+          "payload": {
+            "status": {
+              "_eq": "published"
+            }
+          }
+        }
+      }
+    },
+    "resolve": "3f3aa09e-9a47-4684-8559-50f2a5b3e7a7",
+    "reject": "5d4b1b90-48f6-468b-a019-a1a9fc45653a",
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "c0ad54a5-9de0-4d36-bff5-d901d5bf2cd5"
+  },
+  {
+    "name": "PROCEED_ONLY_IF \"published\" in payload",
+    "key": "proceed_only_if_published_in_payload",
+    "type": "condition",
+    "position_x": 19,
+    "position_y": 1,
+    "options": {
+      "filter": {
+        "$trigger": {
+          "payload": {
+            "status": {
+              "_eq": "published"
+            }
+          }
+        }
+      }
+    },
     "resolve": "d8554457-95b6-474f-ba67-dfd5f936d575",
     "reject": "e8274ad4-5844-42cd-8a6b-d40d08cf83d3",
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
     "_syncId": "2784a141-2ae3-48d1-aedf-57c0be3bcc74"
+  },
+  {
+    "name": "Project Data",
+    "key": "project_data",
+    "type": "item-read",
+    "position_x": 37,
+    "position_y": 1,
+    "options": {
+      "collection": "project",
+      "query": {
+        "filter": {
+          "id": {
+            "id": {
+              "_eq": "{{$trigger.payload.project_id}}"
+            }
+          }
+        }
+      }
+    },
+    "resolve": "47f1463c-3cb6-4420-a50e-92938fed3197",
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "d8554457-95b6-474f-ba67-dfd5f936d575"
+  },
+  {
+    "name": "Project Data",
+    "key": "project_data",
+    "type": "item-read",
+    "position_x": 37,
+    "position_y": 1,
+    "options": {
+      "collection": "project",
+      "query": {
+        "filter": {
+          "id": {
+            "id": {
+              "_eq": "{{$trigger.payload.project_id}}"
+            }
+          }
+        }
+      }
+    },
+    "resolve": "c37ec6cb-c7f1-4be5-8bec-4d4fd49cc966",
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "994ec698-46e4-4f69-bf44-d1ed1c820ccc"
   },
   {
     "name": "Project Data",
@@ -410,10 +826,10 @@
         }
       }
     },
-    "resolve": "47f1463c-3cb6-4420-a50e-92938fed3197",
+    "resolve": "e219d427-fe53-4f95-8c03-70b305ee92c0",
     "reject": null,
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
-    "_syncId": "d8554457-95b6-474f-ba67-dfd5f936d575"
+    "_syncId": "3f3aa09e-9a47-4684-8559-50f2a5b3e7a7"
   },
   {
     "name": "Report Not Published",
@@ -427,7 +843,21 @@
     "resolve": null,
     "reject": null,
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
-    "_syncId": "e8274ad4-5844-42cd-8a6b-d40d08cf83d3"
+    "_syncId": "40e7af64-55e2-4a84-ad35-18002ead367f"
+  },
+  {
+    "name": "Report Not Published",
+    "key": "report_not_published",
+    "type": "log",
+    "position_x": 19,
+    "position_y": 19,
+    "options": {
+      "message": "The report is not yet published"
+    },
+    "resolve": null,
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "5d4b1b90-48f6-468b-a019-a1a9fc45653a"
   },
   {
     "name": "Report Not Published",
@@ -442,6 +872,20 @@
     "reject": null,
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
     "_syncId": "84852456-3f3a-4906-be94-8b750159883b"
+  },
+  {
+    "name": "Report Not Published",
+    "key": "report_not_published",
+    "type": "log",
+    "position_x": 19,
+    "position_y": 19,
+    "options": {
+      "message": "The report is not yet published"
+    },
+    "resolve": null,
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "e8274ad4-5844-42cd-8a6b-d40d08cf83d3"
   },
   {
     "name": "Send Email Dutch",
@@ -501,9 +945,102 @@
       ]
     },
     "resolve": null,
+    "reject": "a9e2f5a0-2004-4161-a624-5fa0404a7ed9",
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "07c4b2dd-2e0b-4119-b444-d51c1609e08f"
+  },
+  {
+    "name": "Send Email Dutch",
+    "key": "send_email_dutch",
+    "type": "mail",
+    "position_x": 39,
+    "position_y": 20,
+    "options": {
+      "to": [
+        "{{$trigger.email}}"
+      ],
+      "type": "template",
+      "subject": "Er is een rapport klaar met uw inbreng",
+      "body": null,
+      "data": {
+        "PARTICIPANT_BASE_URL": "{{$trigger.PARTICIPANT_BASE_URL}}",
+        "project_id": "{{$trigger.project_id}}",
+        "project_name": "{{$trigger.project_name}}",
+        "default_conversation_title": "{{$trigger.default_conversation_title}}",
+        "conversation_name": "{{$trigger.conversation_name}}",
+        "token": "{{$trigger.token}}"
+      },
+      "template": "report-notification-nl",
+      "replyTo": [
+        "info@dembrane.com"
+      ]
+    },
+    "resolve": null,
+    "reject": "71dab14d-c09b-4ee3-802c-55ac4dea1efc",
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "18b93ae9-dfe9-48b6-ba8d-f687316fe3ec"
+  },
+  {
+    "name": "Send Email Dutch",
+    "key": "send_email_dutch",
+    "type": "mail",
+    "position_x": 39,
+    "position_y": 20,
+    "options": {
+      "to": [
+        "{{$trigger.email}}"
+      ],
+      "type": "template",
+      "subject": "Er is een rapport klaar met uw inbreng",
+      "body": null,
+      "data": {
+        "PARTICIPANT_BASE_URL": "{{$trigger.PARTICIPANT_BASE_URL}}",
+        "project_id": "{{$trigger.project_id}}",
+        "project_name": "{{$trigger.project_name}}",
+        "default_conversation_title": "{{$trigger.default_conversation_title}}",
+        "conversation_name": "{{$trigger.conversation_name}}",
+        "token": "{{$trigger.token}}"
+      },
+      "template": "report-notification-nl",
+      "replyTo": [
+        "info@dembrane.com"
+      ]
+    },
+    "resolve": null,
     "reject": "84c38ea6-5d15-429f-8c24-9485d54ba7be",
     "flow": "17703446-fef0-49e9-bdc4-385db1311137",
     "_syncId": "34fb6ee5-2813-484a-a1cc-f97de097509b"
+  },
+  {
+    "name": "Send Email English",
+    "key": "send_email_english",
+    "type": "mail",
+    "position_x": 39,
+    "position_y": 1,
+    "options": {
+      "to": [
+        "{{$trigger.email}}"
+      ],
+      "subject": "A Report Featuring Your Input is Ready",
+      "body": null,
+      "type": "template",
+      "template": "report-notification-en",
+      "data": {
+        "PARTICIPANT_BASE_URL": "{{$trigger.PARTICIPANT_BASE_URL}}",
+        "project_id": "{{$trigger.project_id}}",
+        "project_name": "{{$trigger.project_name}}",
+        "default_conversation_title": "{{$trigger.default_conversation_title}}",
+        "conversation_name": "{{$trigger.conversation_name}}",
+        "token": "{{$trigger.token}}"
+      },
+      "replyTo": [
+        "info@dembrane.com"
+      ]
+    },
+    "resolve": null,
+    "reject": "a8493bf0-851d-443c-b8ed-1d38d79e5645",
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "922d6207-d0da-41d4-b7b2-4c570b13c19b"
   },
   {
     "name": "Send Email English",
@@ -568,6 +1105,37 @@
     "_syncId": "3dbf2ea1-17f8-4bde-aa89-43278fe9a00f"
   },
   {
+    "name": "Send Email English",
+    "key": "send_email_english",
+    "type": "mail",
+    "position_x": 39,
+    "position_y": 1,
+    "options": {
+      "to": [
+        "{{$trigger.email}}"
+      ],
+      "subject": "A Report Featuring Your Input is Ready",
+      "body": null,
+      "type": "template",
+      "template": "report-notification-en",
+      "data": {
+        "PARTICIPANT_BASE_URL": "{{$trigger.PARTICIPANT_BASE_URL}}",
+        "project_id": "{{$trigger.project_id}}",
+        "project_name": "{{$trigger.project_name}}",
+        "default_conversation_title": "{{$trigger.default_conversation_title}}",
+        "conversation_name": "{{$trigger.conversation_name}}",
+        "token": "{{$trigger.token}}"
+      },
+      "replyTo": [
+        "info@dembrane.com"
+      ]
+    },
+    "resolve": null,
+    "reject": "b4f25f50-6308-4992-ad55-b17f723b8d0d",
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "528ddb67-1a33-459b-88ac-e9851adfa470"
+  },
+  {
     "name": "Trigger Email Flow",
     "key": "trigger_email_flow",
     "type": "trigger",
@@ -598,5 +1166,37 @@
     "reject": null,
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
     "_syncId": "e101f00d-2fb8-4f40-9e0e-4d24da5bb1e9"
+  },
+  {
+    "name": "Trigger Email Flow",
+    "key": "trigger_email_flow",
+    "type": "trigger",
+    "position_x": 109,
+    "position_y": 1,
+    "options": {
+      "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+      "iterationMode": "serial",
+      "payload": "{{filter_emails}}"
+    },
+    "resolve": null,
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "64108c9f-d6bb-4141-8f9c-b023ff5d7549"
+  },
+  {
+    "name": "Trigger Email Flow",
+    "key": "trigger_email_flow",
+    "type": "trigger",
+    "position_x": 109,
+    "position_y": 1,
+    "options": {
+      "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+      "iterationMode": "serial",
+      "payload": "{{filter_emails}}"
+    },
+    "resolve": null,
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "18df11f6-d6d9-41f4-be23-4a759620864c"
   }
 ]
