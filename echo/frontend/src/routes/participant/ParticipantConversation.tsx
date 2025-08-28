@@ -57,8 +57,10 @@ import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
 import { API_BASE_URL } from "@/config";
 import useChunkedAudioRecorder from "@/components/participant/hooks/useChunkedAudioRecorder";
 import { EchoErrorAlert } from "@/components/participant/EchoErrorAlert";
+import { AxiosError } from "axios";
 
 const DEFAULT_REPLY_COOLDOWN = 120; // 2 minutes in seconds
+const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
 
 export const ParticipantConversationAudioRoute = () => {
   const { projectId, conversationId } = useParams();
@@ -164,17 +166,44 @@ export const ParticipantConversationAudioRoute = () => {
 
   // Monitor conversation status during recording - handle deletion mid-recording
   useEffect(() => {
-    if (isRecording && (conversationQuery.isError || !conversationQuery.data)) {
-      console.warn(
-        "Conversation deleted or became unavailable during recording",
-      );
-      stopRecording();
-      setConversationDeletedDuringRecording(true);
+    if (!isRecording) return;
+
+    if (
+      conversationQuery.isError &&
+      !conversationQuery.isFetching &&
+      !conversationQuery.isLoading
+    ) {
+      const error = conversationQuery.error as AxiosError;
+      const httpStatus = error?.response?.status;
+
+      if (
+        httpStatus &&
+        CONVERSATION_DELETION_STATUS_CODES.includes(httpStatus)
+      ) {
+        console.warn(
+          "Conversation was deleted or is no longer accessible during recording",
+          {
+            status: httpStatus,
+            error: error?.response?.data || error?.message,
+          },
+        );
+        stopRecording();
+        setConversationDeletedDuringRecording(true);
+      } else {
+        console.warn(
+          "Temporary error fetching conversation during recording - continuing",
+          {
+            status: httpStatus,
+            error: error?.message,
+          },
+        );
+      }
     }
   }, [
     isRecording,
     conversationQuery.isError,
-    conversationQuery.data,
+    conversationQuery.isLoading,
+    conversationQuery.isFetching,
     stopRecording,
   ]);
 

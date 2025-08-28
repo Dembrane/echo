@@ -13,6 +13,7 @@ import { createItem, readItems } from "@directus/sdk";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
 import { useQuery } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 
 export const useCreateProjectReportMetricOncePerDayMutation = () => {
   return useMutation({
@@ -278,7 +279,6 @@ export const useSubmitNotificationParticipant = () => {
   });
 };
 
-
 export const useParticipantProjectById = (projectId: string) => {
   return useQuery({
     queryKey: ["participantProject", projectId],
@@ -308,7 +308,9 @@ export const combineUserChunks = (
   };
 };
 
-export const useConversationRepliesQuery = (conversationId: string | undefined) => {
+export const useConversationRepliesQuery = (
+  conversationId: string | undefined,
+) => {
   return useQuery({
     queryKey: ["participant", "conversation_replies", conversationId],
     queryFn: () =>
@@ -330,9 +332,19 @@ export const useConversationQuery = (
 ) => {
   return useQuery({
     queryKey: ["participant", "conversation", projectId, conversationId],
-    queryFn: () => getParticipantConversationById(projectId ?? "", conversationId ?? ""),
+    queryFn: () =>
+      getParticipantConversationById(projectId ?? "", conversationId ?? ""),
     enabled: !!conversationId && !!projectId,
     refetchInterval: 60000,
+    retry: (failureCount, error: AxiosError) => {
+      const status = error?.response?.status;
+      // Don't retry if conversation is deleted
+      if (status && [404, 403, 410].includes(status as number)) {
+        return false;
+      }
+
+      return failureCount < 3;
+    },
   });
 };
 
