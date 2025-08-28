@@ -57,7 +57,6 @@ import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
 import { API_BASE_URL } from "@/config";
 import useChunkedAudioRecorder from "@/components/participant/hooks/useChunkedAudioRecorder";
 import { EchoErrorAlert } from "@/components/participant/EchoErrorAlert";
-import { AxiosError } from "axios";
 
 const DEFAULT_REPLY_COOLDOWN = 120; // 2 minutes in seconds
 const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
@@ -173,7 +172,7 @@ export const ParticipantConversationAudioRoute = () => {
       !conversationQuery.isFetching &&
       !conversationQuery.isLoading
     ) {
-      const error = conversationQuery.error as AxiosError;
+      const error = conversationQuery.error;
       const httpStatus = error?.response?.status;
 
       if (
