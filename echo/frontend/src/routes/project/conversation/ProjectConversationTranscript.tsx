@@ -216,9 +216,6 @@ export const ProjectConversationTranscript = () => {
               label={t`Show audio player`}
               disabled={isAudioExpired()}
             />
-            <InformationTooltip
-              label={t`Audio recordings are scheduled to be deleted after 30 days from the recording date`}
-            />
           </Group>
         </Group>
 
