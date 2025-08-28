@@ -182,20 +182,14 @@ export const ParticipantConversationAudioRoute = () => {
       ) {
         console.warn(
           "Conversation was deleted or is no longer accessible during recording",
-          {
-            status: httpStatus,
-            error: error?.response?.data || error?.message,
-          },
+          { status: httpStatus, message: error?.message },
         );
         stopRecording();
         setConversationDeletedDuringRecording(true);
       } else {
         console.warn(
-          "Temporary error fetching conversation during recording - continuing",
-          {
-            status: httpStatus,
-            error: error?.message,
-          },
+          "Error fetching conversation during recording - continuing",
+          { status: httpStatus, message: error?.message },
         );
       }
     }
@@ -204,6 +198,7 @@ export const ParticipantConversationAudioRoute = () => {
     conversationQuery.isError,
     conversationQuery.isLoading,
     conversationQuery.isFetching,
+    conversationQuery.error,
     stopRecording,
   ]);
 
