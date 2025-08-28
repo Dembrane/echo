@@ -146,12 +146,12 @@ export const ProjectConversationTranscript = () => {
   };
 
   // Add function to check if conversation is older than 30 days
-  const isAudioExpired = () => {
-    if (!conversationQuery.data?.created_at) return false;
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    return new Date(conversationQuery.data.created_at) < thirtyDaysAgo;
-  };
+  // const isAudioExpired = () => {
+  //   if (!conversationQuery.data?.created_at) return false;
+  //   const thirtyDaysAgo = new Date();
+  //   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  //   return new Date(conversationQuery.data.created_at) < thirtyDaysAgo;
+  // };
 
   return (
     <Stack>
@@ -200,7 +200,6 @@ export const ProjectConversationTranscript = () => {
                 size="md"
                 variant="subtle"
                 color="gray"
-                disabled={isAudioExpired()}
               >
                 <IconRefresh size={48} />
               </ActionIcon>
@@ -214,10 +213,6 @@ export const ProjectConversationTranscript = () => {
                 setShowAudioPlayer(event.currentTarget.checked)
               }
               label={t`Show audio player`}
-              disabled={isAudioExpired()}
-            />
-            <InformationTooltip
-              label={t`Audio recordings are scheduled to be deleted after 30 days from the recording date`}
             />
           </Group>
         </Group>
