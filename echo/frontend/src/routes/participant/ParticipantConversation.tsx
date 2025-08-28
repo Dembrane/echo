@@ -59,6 +59,7 @@ import useChunkedAudioRecorder from "@/components/participant/hooks/useChunkedAu
 import { EchoErrorAlert } from "@/components/participant/EchoErrorAlert";
 
 const DEFAULT_REPLY_COOLDOWN = 120; // 2 minutes in seconds
+const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
 
 export const ParticipantConversationAudioRoute = () => {
   const { projectId, conversationId } = useParams();
@@ -164,17 +165,39 @@ export const ParticipantConversationAudioRoute = () => {
 
   // Monitor conversation status during recording - handle deletion mid-recording
   useEffect(() => {
-    if (isRecording && (conversationQuery.isError || !conversationQuery.data)) {
-      console.warn(
-        "Conversation deleted or became unavailable during recording",
-      );
-      stopRecording();
-      setConversationDeletedDuringRecording(true);
+    if (!isRecording) return;
+
+    if (
+      conversationQuery.isError &&
+      !conversationQuery.isFetching &&
+      !conversationQuery.isLoading
+    ) {
+      const error = conversationQuery.error;
+      const httpStatus = error?.response?.status;
+
+      if (
+        httpStatus &&
+        CONVERSATION_DELETION_STATUS_CODES.includes(httpStatus)
+      ) {
+        console.warn(
+          "Conversation was deleted or is no longer accessible during recording",
+          { status: httpStatus, message: error?.message },
+        );
+        stopRecording();
+        setConversationDeletedDuringRecording(true);
+      } else {
+        console.warn(
+          "Error fetching conversation during recording - continuing",
+          { status: httpStatus, message: error?.message },
+        );
+      }
     }
   }, [
     isRecording,
     conversationQuery.isError,
-    conversationQuery.data,
+    conversationQuery.isLoading,
+    conversationQuery.isFetching,
+    conversationQuery.error,
     stopRecording,
   ]);
 
