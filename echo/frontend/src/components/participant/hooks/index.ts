@@ -56,7 +56,7 @@ export const useUploadConversationChunk = () => {
 
   return useMutation({
     mutationFn: uploadConversationChunk,
-    retry: 10,
+    retry: 20,
     // When mutate is called:
     onMutate: async (variables) => {
       // Cancel any outgoing refetches
