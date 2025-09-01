@@ -43,7 +43,7 @@ def queue_transcribe_audio_runpod(
     logger = logging.getLogger("transcribe.transcribe_audio_runpod")
 
     try:
-        signed_url = get_signed_url(audio_file_uri)
+        signed_url = get_signed_url(audio_file_uri, expires_in_seconds=3 * 24 * 60 * 60)  # 3 days
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {RUNPOD_WHISPER_API_KEY}",
