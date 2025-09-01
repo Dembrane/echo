@@ -64,11 +64,11 @@ The following guide is to run the whole application locally. it is recommended t
 
 1. Run the [database migrations](./docs//database_migrations.md)
 
-1. (Optional) Use the "Restore Terminals" Extension for opening the relevant terminals from the container. (see [.vscode/settings.json](.vscode/settings.json) for the exact commands run when the terminals are opened)
+1. (Optional) Use the "Terminal Keeper" Extension for opening the relevant terminals from the container. (see [.vscode/settings.json](.vscode/sessions.json) for the exact commands run when the terminals are opened)
 
 	- <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> to open the command palette.
-	- Type **"Restore Terminals"**.
-	- Click **"Restore Terminals"**.
+	- Type **"Active session"**.
+	- Click **"Terminal Keeper: Active session"**.
 
 ## FAQ
 
