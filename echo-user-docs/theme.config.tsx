@@ -6,14 +6,14 @@ const config: DocsThemeConfig = {
   docsRepositoryBase: "https://github.com/Dembrane/pilot/tree/main/docs",
   banner: {
     key: 'in-progress',
-    text: "🚧 Dembrane Docs is under construction - Things will change"
+    content: "🚧 Dembrane Docs is under construction - Things will change"
   },
   footer: {
-    text: "Dembrane Docs",
+    content: "Dembrane Docs",
   },
   i18n: [
-    { locale: "en-US", text: "English" },
-    { locale: "nl-NL", text: "Nederlands" },
+    { locale: "en-US", name: "English" },
+    { locale: "nl-NL", name: "Nederlands" },
   ],
   
 }
