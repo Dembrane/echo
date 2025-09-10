@@ -3,7 +3,7 @@ import { DocsThemeConfig } from 'nextra-theme-docs'
 
 const config: DocsThemeConfig = {
   logo: <span> Dembrane Docs: ECHO</span>,
-  docsRepositoryBase: "https://github.com/Dembrane/pilot/tree/main/docs",
+  docsRepositoryBase: "https://github.com/Dembrane/echo/tree/main/echo-user-docs",
   banner: {
     key: 'in-progress',
     content: "🚧 Dembrane Docs is under construction - Things will change"
