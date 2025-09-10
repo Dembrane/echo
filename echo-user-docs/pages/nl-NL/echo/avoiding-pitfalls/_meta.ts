@@ -1,4 +1,4 @@
 export default {
-  "social": "Faciltatie",
+  "social": "Facilitatie",
   "technical": "AI Betrouwbaarheid"
 };
