@@ -404,8 +404,15 @@ def probe_from_bytes(file_bytes: bytes, input_format: str) -> dict:
         Dict containing the ffprobe output
 
     Raises:
+        ValueError: If input validation fails
         Exception: If ffprobe fails or returns invalid data
     """
+    # Validate input_format against allowed formats
+    if input_format not in ACCEPTED_AUDIO_FORMATS:
+        raise ValueError(
+            f"Unsupported or invalid input format '{input_format}'. Must be one of: {ACCEPTED_AUDIO_FORMATS}"
+        )
+
     # Make sure we have valid input
     if not file_bytes:
         raise ValueError("Empty file content provided to probe_from_bytes")
