@@ -21,6 +21,19 @@ logger = logging.getLogger("audio_utils")
 
 ACCEPTED_AUDIO_FORMATS = ["aac", "wav", "mp3", "ogg", "flac", "webm", "opus", "m4a", "mp4", "mpeg"]
 
+FFPROBE_FORMAT_MAP = {
+    "aac": "aac",
+    "wav": "wav",
+    "mp3": "mp3",
+    "ogg": "ogg",
+    "flac": "flac",
+    "webm": "webm",
+    "opus": "opus",
+    "m4a": "m4a",
+    "mp4": "mp4",
+    "mpeg": "mpeg",
+}
+
 
 def get_file_format_from_file_path(file_path: str) -> str:
     extension = file_path.lower().split(".")[-1].split("?")[0]
@@ -474,6 +487,12 @@ def probe_from_bytes(file_bytes: bytes, input_format: str) -> dict:
                 logger.warning(
                     f"Auto format detection failed, trying with explicit format: {input_format}"
                 )
+                # Map input_format to a hard-coded allowlist value for ffprobe
+                if input_format not in FFPROBE_FORMAT_MAP:
+                    raise ValueError(
+                        f"Unsupported or invalid input format '{input_format}' for ffprobe mapping."
+                    )
+                mapped_format = FFPROBE_FORMAT_MAP[input_format]
                 cmd = [
                     "ffprobe",
                     "-hide_banner",
@@ -484,7 +503,7 @@ def probe_from_bytes(file_bytes: bytes, input_format: str) -> dict:
                     "-show_format",
                     "-show_streams",
                     "-f",
-                    input_format,
+                    mapped_format,
                     temp_file_path,
                 ]
 
