@@ -5,7 +5,6 @@ import { ActionIcon, Button, Group, Paper, Stack, Text } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
 import { PropsWithChildren } from "react";
-import { Link, useParams } from "react-router";
 import { I18nLink } from "../common/i18nLink";
 
 export const ProjectListItem = ({

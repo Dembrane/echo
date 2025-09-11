@@ -51,7 +51,7 @@ import { formatRelative } from "date-fns";
 type SortBy = "relevance" | "default";
 
 export const ProjectLibraryRoute = () => {
-  const { projectId } = useParams();
+  const { projectId } = useParams<{ projectId: string }>();
 
   const { iso639_1 } = useLanguage();
 

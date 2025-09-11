@@ -6,7 +6,7 @@ import { ConversationStatusIndicators } from "../conversation/ConversationAccord
 import { CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS, useConversationById } from "../conversation/hooks";
 
 export const ProjectConversationLayout = () => {
-  const { conversationId } = useParams();
+  const { conversationId } = useParams<{ conversationId: string }>();
 
   const conversationQuery = useConversationById({
     conversationId: conversationId ?? "",

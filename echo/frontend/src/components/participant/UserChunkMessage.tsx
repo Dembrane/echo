@@ -14,7 +14,7 @@ const UserChunkMessage = ({
   chunk?: TConversationChunk;
   hide?: boolean;
 }) => {
-  const { projectId, conversationId } = useParams();
+  const { projectId, conversationId } = useParams<{ projectId: string; conversationId: string }>();
   const queryClient = useQueryClient();
 
   const deleteChunkMutation = useMutation({

@@ -20,7 +20,7 @@ type QuoteWithConversation = {
 };
 
 export const useCopyQuote = () => {
-  const { language, projectId } = useParams();
+  const { language, projectId } = useParams<{ language: string; projectId: string }>();
   const { copied, copy } = useCopyToRichText();
 
   // actually aspect Segment ID

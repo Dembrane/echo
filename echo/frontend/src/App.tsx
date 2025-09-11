@@ -4,7 +4,7 @@ import "@mantine/dropzone/styles.css";
 
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RouterProvider } from "react-router";
+import { RouterProvider } from "react-router/dom";
 import { I18nProvider } from "./components/layout/I18nProvider";
 import { mainRouter, participantRouter } from "./Router";
 import { USE_PARTICIPANT_ROUTER } from "./config";

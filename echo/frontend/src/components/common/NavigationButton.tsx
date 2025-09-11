@@ -10,7 +10,6 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { PropsWithChildren } from "react";
-import { Link } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import { LoadingSpinner } from "./LoadingSpinner";
 

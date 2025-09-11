@@ -35,7 +35,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
     data: report,
     error,
   } = useCreateProjectReportMutation();
-  const { projectId } = useParams();
+  const { projectId } = useParams<{ projectId: string }>();
   const { data: conversationCounts } = useProjectConversationCounts(
     projectId ?? "",
   );
