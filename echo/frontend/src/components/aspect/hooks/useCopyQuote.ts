@@ -1,7 +1,7 @@
 import { directus } from "@/lib/directus";
 import { readItem } from "@directus/sdk";
 import useCopyToRichText from "@/hooks/useCopyToRichText";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { string } from "zod";
 
 // Define types inline since the .d.ts file is not a module

@@ -5,7 +5,7 @@ import { t } from "@lingui/core/macro";
 import { ActionIcon, Menu, Paper, Text } from "@mantine/core";
 import { IconDotsVertical, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 
 const UserChunkMessage = ({
   chunk,

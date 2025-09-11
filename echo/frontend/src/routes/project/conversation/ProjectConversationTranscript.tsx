@@ -33,7 +33,7 @@ import {
 } from "@tabler/icons-react";
 
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import useSessionStorageState from "use-session-storage-state";
 import { useInView } from "react-intersection-observer";
 import { ConversationChunkAudioTranscript } from "@/components/conversation/ConversationChunkAudioTranscript";

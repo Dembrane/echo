@@ -1,7 +1,7 @@
 import { SUPPORTED_LANGUAGES } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
 import React from "react";
-import { Link, LinkProps, useParams } from "react-router-dom";
+import { Link, LinkProps, useParams } from "react-router";
 
 export const I18nLink: React.FC<LinkProps> = ({ to, ...props }) => {
   const { language } = useParams<{ language?: string }>();

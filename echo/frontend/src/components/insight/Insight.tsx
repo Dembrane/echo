@@ -1,5 +1,5 @@
 import { Paper, Stack, Text } from "@mantine/core";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 
 export const Insight = ({

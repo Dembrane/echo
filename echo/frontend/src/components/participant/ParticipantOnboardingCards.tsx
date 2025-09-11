@@ -1,7 +1,7 @@
 import { Trans } from "@lingui/react/macro";
 // Start of Selection
 import React, { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 
 import "./ParticipantOnboardingCards.css";
 import { useLanguage } from "@/hooks/useLanguage";

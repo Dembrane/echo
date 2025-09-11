@@ -1,6 +1,6 @@
 import { Stack, Tabs, Box, LoadingOverlay } from "@mantine/core";
 import { useEffect, useState, Suspense, useCallback } from "react";
-import { Outlet, useLocation, useParams } from "react-router-dom";
+import { Outlet, useLocation, useParams } from "react-router";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
 const TabLoadingFallback = () => (

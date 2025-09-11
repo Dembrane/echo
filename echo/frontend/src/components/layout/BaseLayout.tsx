@@ -1,6 +1,6 @@
 import { Box } from "@mantine/core";
 import { Toaster } from "../common/Toaster";
-import { Outlet } from "react-router-dom";
+import { Outlet } from "react-router";
 import { PropsWithChildren } from "react";
 import { Header } from "./Header";
 import { ErrorBoundary } from "../error/ErrorBoundary";

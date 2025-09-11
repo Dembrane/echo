@@ -1,7 +1,7 @@
 import { Divider, LoadingOverlay } from "@mantine/core";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
-import { Outlet, useNavigate, useSearchParams } from "react-router-dom";
+import { Outlet, useNavigate, useSearchParams } from "react-router";
 import { PropsWithChildren, useEffect } from "react";
 import { Toaster } from "../common/Toaster";
 import { useAuthenticated } from "@/components/auth/hooks";

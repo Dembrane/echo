@@ -6,7 +6,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { NavigationButton } from "../common/NavigationButton";
 import { useCallback } from "react";
 
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation } from "react-router";
 import { t } from "@lingui/core/macro";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { CreateReportForm } from "./CreateReportForm";

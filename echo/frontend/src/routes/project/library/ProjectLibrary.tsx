@@ -40,7 +40,7 @@ import {
   IconLock,
 } from "@tabler/icons-react";
 import { useCallback, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { CreateView } from "@/components/view/CreateViewForm";
 import { DummyViews } from "../../../components/view/DummyViews";
 import { analytics } from "@/lib/analytics";

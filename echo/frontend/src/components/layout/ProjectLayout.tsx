@@ -1,5 +1,5 @@
 import { ActionIcon, Box } from "@mantine/core";
-import { Outlet } from "react-router-dom";
+import { Outlet } from "react-router";
 import { ProjectSidebar } from "../project/ProjectSidebar";
 import { Resizable } from "re-resizable";
 import { useSidebar } from "@/components/layout/hooks/useSidebar";

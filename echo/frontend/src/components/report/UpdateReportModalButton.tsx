@@ -10,7 +10,7 @@ import {
 
 import { useEffect, useState } from "react";
 import { useProjectReport, useCreateProjectReportMutation, useDoesProjectReportNeedUpdate} from "./hooks";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { t } from "@lingui/core/macro";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 import { useLanguage } from "@/hooks/useLanguage";

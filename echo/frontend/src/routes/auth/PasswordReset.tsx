@@ -12,7 +12,7 @@ import {
 import { useDocumentTitle } from "@mantine/hooks";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 
 export const PasswordResetRoute = () => {
   useDocumentTitle(t`Reset Password | Dembrane`);

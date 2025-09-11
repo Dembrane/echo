@@ -9,7 +9,7 @@ import {
   ActionIcon,
   Tooltip,
 } from "@mantine/core";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { useProjectById } from "@/components/project/hooks";
 import {
   useConversationById,

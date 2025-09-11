@@ -16,7 +16,7 @@ import { IconMicrophone } from "@tabler/icons-react";
 import { Modal } from "@mantine/core";
 import Cookies from "js-cookie";
 import { useDisclosure } from "@mantine/hooks";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 
 interface MicrophoneTestProps {
   onContinue: (deviceId: string) => void;

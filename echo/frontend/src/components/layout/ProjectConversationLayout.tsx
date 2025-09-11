@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Stack, Title } from "@mantine/core";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { TabsWithRouter } from "./TabsWithRouter";
 import { ConversationStatusIndicators } from "../conversation/ConversationAccordion";
 import { CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS, useConversationById } from "../conversation/hooks";

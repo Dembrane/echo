@@ -3,7 +3,7 @@ import { SUPPORTED_LANGUAGES } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
 import { NativeSelect } from "@mantine/core";
 import { ChangeEvent } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 
 const data: Array<{
   language: (typeof SUPPORTED_LANGUAGES)[number];

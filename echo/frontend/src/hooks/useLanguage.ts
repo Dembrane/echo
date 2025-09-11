@@ -1,7 +1,7 @@
 import { i18n } from "@lingui/core";
 
 
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { useEffect, useState } from "react";
 import { SUPPORTED_LANGUAGES } from "@/config";
 
