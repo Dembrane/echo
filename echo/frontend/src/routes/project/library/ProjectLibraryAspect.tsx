@@ -8,7 +8,7 @@ import {
   Stack,
   Title,
 } from "@mantine/core";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { Quote } from "../../../components/quote/Quote";
 import { Markdown } from "@/components/common/Markdown";
 import { useProjectById } from "@/components/project/hooks";

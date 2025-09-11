@@ -19,7 +19,7 @@ import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButt
 import { ConversationLinks } from "@/components/conversation/ConversationLinks";
 import SourcesSearched from "./SourcesSearched";
 import { I18nLink } from "@/components/common/i18nLink";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { IconInfoCircle } from "@tabler/icons-react";
 import { Sources } from "./Sources";
 import { ReferencesIconButton } from "../common/ReferencesIconButton";

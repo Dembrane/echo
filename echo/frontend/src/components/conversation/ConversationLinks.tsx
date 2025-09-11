@@ -1,5 +1,5 @@
 import { Anchor, Group } from "@mantine/core";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 
 export const ConversationLinks = ({

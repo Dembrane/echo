@@ -12,7 +12,7 @@ import {
 import { ADMIN_BASE_URL } from "@/config";
 import { throwWithMessage } from "../utils/errorUtils";
 import { useEffect, useState } from "react";
-import { useLocation, useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router";
 
 export const useCurrentUser = () =>
   useQuery({

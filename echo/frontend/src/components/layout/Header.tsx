@@ -24,7 +24,7 @@ import { LanguagePicker } from "../language/LanguagePicker";
 import { useState, useEffect } from "react";
 import * as Sentry from "@sentry/react";
 import { useLanguage } from "@/hooks/useLanguage";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { AnnouncementIcon } from "../announcement/AnnouncementIcon";
 import { Announcements } from "../announcement/Announcements";
 import { TopAnnouncementBar } from "../announcement/TopAnnouncementBar";

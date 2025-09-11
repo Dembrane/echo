@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 import { IconArrowsDiagonal, IconRefresh } from "@tabler/icons-react";
 import { AspectCard } from "../aspect/AspectCard";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { Markdown } from "../common/Markdown";
 import { I18nLink } from "../common/i18nLink";
 import { useCopyView } from "./hooks/useCopyView";

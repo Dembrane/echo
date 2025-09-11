@@ -12,7 +12,7 @@ import {
   Button,
   Alert,
 } from "@mantine/core";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import {
   IconCheck,
   IconLock,

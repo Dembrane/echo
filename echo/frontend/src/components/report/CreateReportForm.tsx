@@ -15,7 +15,7 @@ import { ConversationStatusTable } from "./ConversationStatusTable";
 import { useEffect, useState } from "react";
 import { useCreateProjectReportMutation } from "./hooks";
 import { useProjectConversationCounts } from "@/components/report/hooks";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { t } from "@lingui/core/macro";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -35,7 +35,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
     data: report,
     error,
   } = useCreateProjectReportMutation();
-  const { projectId } = useParams();
+  const { projectId } = useParams<{ projectId: string }>();
   const { data: conversationCounts } = useProjectConversationCounts(
     projectId ?? "",
   );

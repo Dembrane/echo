@@ -24,7 +24,7 @@ import { IconBrandGoogle } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import { useLanguage } from "@/hooks/useLanguage";
 import { toast } from "@/components/common/Toaster";

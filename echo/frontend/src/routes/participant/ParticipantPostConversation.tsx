@@ -24,7 +24,7 @@ import {
   IconLoader2,
   IconMail,
 } from "@tabler/icons-react";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 
 import { useMutation } from "@tanstack/react-query";
 import { directus } from "@/lib/directus";

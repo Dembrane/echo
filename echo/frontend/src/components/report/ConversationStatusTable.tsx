@@ -1,7 +1,7 @@
 import { Trans } from "@lingui/react/macro";
 import { Anchor, Table, Text } from "@mantine/core";
 import { useProjectConversationCounts } from "@/components/report/hooks";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 interface Conversation {
   id: string;
