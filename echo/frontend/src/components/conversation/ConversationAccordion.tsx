@@ -46,7 +46,7 @@ import {
   useCallback,
   Suspense,
 } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router";
 import { UploadConversationDropzone } from "../dropzone/UploadConversationDropzone";
 import { useDebouncedValue } from "@mantine/hooks";
 import {

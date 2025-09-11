@@ -14,7 +14,7 @@ import {
 } from "@mantine/core";
 import { toast } from "@/components/common/Toaster";
 import { useRef, useState, useMemo, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { useProjectById } from "@/components/project/hooks";
 import { useConversationById } from "@/components/conversation/hooks";
 import { useProjectChats } from "@/components/chat/hooks";

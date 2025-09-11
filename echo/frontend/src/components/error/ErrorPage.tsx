@@ -1,5 +1,5 @@
 import { Box, Button, Text, Title } from "@mantine/core";
-import { useRouteError, isRouteErrorResponse } from "react-router-dom";
+import { useRouteError, isRouteErrorResponse } from "react-router";
 import { BaseLayout } from "../layout/BaseLayout";
 import { DEBUG_MODE } from "@/config";
 

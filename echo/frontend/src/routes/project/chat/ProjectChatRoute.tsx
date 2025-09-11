@@ -29,7 +29,7 @@ import {
   IconSend,
   IconSquare,
 } from "@tabler/icons-react";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { useChat } from "@ai-sdk/react";
 import { API_BASE_URL, ENABLE_CHAT_AUTO_SELECT } from "@/config";
 import { useEffect, useMemo, useRef, useState } from "react";

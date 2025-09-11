@@ -1,4 +1,4 @@
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router";
 import { ReportRenderer } from "@/components/report/ReportRenderer";
 import { useCreateProjectReportMetricOncePerDayMutation } from "@/components/participant/hooks";
 import { useProjectReportViews, useLatestProjectReport } from "@/components/report/hooks";

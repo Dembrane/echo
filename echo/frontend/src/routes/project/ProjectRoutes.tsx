@@ -16,7 +16,7 @@ import {
 } from "@mantine/core";
 import { ConversationStatusTable } from "@/components/report/ConversationStatusTable";
 import { IconDownload } from "@tabler/icons-react";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { useMemo, useState } from "react";
 import { UploadConversationDropzone } from "@/components/dropzone/UploadConversationDropzone";
 

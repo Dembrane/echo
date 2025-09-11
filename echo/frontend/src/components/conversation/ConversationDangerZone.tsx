@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Button, Group, Stack } from "@mantine/core";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { IconDownload, IconTrash } from "@tabler/icons-react";
 import { useDeleteConversationByIdMutation } from "./hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";

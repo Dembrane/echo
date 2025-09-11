@@ -4,7 +4,7 @@ import { useVerifyMutation } from "@/components/auth/hooks";
 import { Container, Group, Loader, Stack, Text, Title } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 
 export const VerifyEmailRoute = () => {
   useDocumentTitle(t`Email Verification | Dembrane`);

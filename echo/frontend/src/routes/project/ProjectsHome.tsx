@@ -43,7 +43,7 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { CloseableAlert } from "@/components/common/ClosableAlert";
 import { useInView } from "react-intersection-observer";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { ProjectListSkeleton } from "@/components/project/ProjectListSkeleton";
 
 export const ProjectsHomeRoute = () => {

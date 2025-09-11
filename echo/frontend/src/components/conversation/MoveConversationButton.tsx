@@ -22,7 +22,7 @@ import { useMoveConversationMutation } from "./hooks";
 import { useInfiniteProjects } from "@/components/project/hooks";
 import { Trans } from "@lingui/react/macro";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 
 export const MoveConversationButton = ({
   conversation,

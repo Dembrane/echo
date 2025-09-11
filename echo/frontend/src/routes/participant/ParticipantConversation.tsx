@@ -29,7 +29,7 @@ import {
   IconUpload,
 } from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router";
 import { useDisclosure, useWindowEvent } from "@mantine/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWakeLock } from "@/hooks/useWakeLock";

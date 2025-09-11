@@ -40,7 +40,7 @@ import {
   IconLock,
 } from "@tabler/icons-react";
 import { useCallback, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { CreateView } from "@/components/view/CreateViewForm";
 import { DummyViews } from "../../../components/view/DummyViews";
 import { analytics } from "@/lib/analytics";
@@ -51,7 +51,7 @@ import { formatRelative } from "date-fns";
 type SortBy = "relevance" | "default";
 
 export const ProjectLibraryRoute = () => {
-  const { projectId } = useParams();
+  const { projectId } = useParams<{ projectId: string }>();
 
   const { iso639_1 } = useLanguage();
 

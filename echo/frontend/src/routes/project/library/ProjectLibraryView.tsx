@@ -14,7 +14,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { CopyIconButton } from "@/components/common/CopyIconButton";
 import { useCopyView } from "@/components/view/hooks/useCopyView";
 

@@ -1,5 +1,5 @@
 import { Group, Paper, Pill, Text } from "@mantine/core";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { I18nLink } from "../common/i18nLink";
 import { cn } from "@/lib/utils";
 import { useCopyQuote } from "@/components/aspect/hooks/useCopyQuote";

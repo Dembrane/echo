@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { useProjectById } from "@/components/project/hooks";
 import { Box, Divider, LoadingOverlay, Stack } from "@mantine/core";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { TabsWithRouter } from "./TabsWithRouter";
 import { useDocumentTitle } from "@mantine/hooks";
 import { ProjectQRCode } from "../project/ProjectQRCode";
