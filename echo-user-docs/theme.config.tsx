@@ -3,17 +3,17 @@ import { DocsThemeConfig } from 'nextra-theme-docs'
 
 const config: DocsThemeConfig = {
   logo: <span> Dembrane Docs: ECHO</span>,
-  docsRepositoryBase: "https://github.com/Dembrane/pilot/tree/main/docs",
+  docsRepositoryBase: "https://github.com/Dembrane/echo/tree/main/echo-user-docs",
   banner: {
     key: 'in-progress',
-    text: "🚧 Dembrane Docs is under construction - Things will change"
+    content: "🚧 Dembrane Docs is under construction - Things will change"
   },
   footer: {
-    text: "Dembrane Docs",
+    content: "Dembrane Docs",
   },
   i18n: [
-    { locale: "en-US", text: "English" },
-    { locale: "nl-NL", text: "Nederlands" },
+    { locale: "en-US", name: "English" },
+    { locale: "nl-NL", name: "Nederlands" },
   ],
   
 }

@@ -1,0 +1,6 @@
+export default {
+  "getting-started": "Getting Started",
+  "core-concepts": "Core Concepts",
+  "first-aid": "First Aid for ECHO",
+  "avoiding-pitfalls": "Avoiding Pitfalls"
+};
