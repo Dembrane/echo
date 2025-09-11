@@ -2063,51 +2063,33 @@
     "_syncId": "d8d2c4ee-2431-4ea2-8f22-c2b3f4a01014"
   },
   {
-    "collection": "aspect_segment",
-    "action": "read",
-    "permissions": {
-      "_and": [
-        {
-          "aspect": {
-            "view_id": {
-              "project_analysis_run_id": {
-                "project_id": {
-                  "directus_user_id": {
-                    "_eq": "$CURRENT_USER"
-                  }
-                }
-              }
-            }
-          }
-        }
-      ]
-    },
+    "collection": "aspect",
+    "action": "create",
+    "permissions": null,
     "validation": null,
     "presets": null,
     "fields": [
       "*"
     ],
     "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
-    "_syncId": "9c4c00f9-1b2c-4642-a912-fa4bc4d1a054"
+    "_syncId": "e853e3bf-cba6-4ff2-99c8-2a9c23c0320e"
+  },
+  {
+    "collection": "aspect",
+    "action": "delete",
+    "permissions": null,
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
+    "_syncId": "69b438b8-3a23-4945-8fa2-ccb5ccf8b72e"
   },
   {
     "collection": "aspect",
     "action": "read",
-    "permissions": {
-      "_and": [
-        {
-          "view_id": {
-            "project_analysis_run_id": {
-              "project_id": {
-                "directus_user_id": {
-                  "_eq": "$CURRENT_USER"
-                }
-              }
-            }
-          }
-        }
-      ]
-    },
+    "permissions": null,
     "validation": null,
     "presets": null,
     "fields": [
@@ -2115,6 +2097,18 @@
     ],
     "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
     "_syncId": "5f279729-e0c9-43bd-bb08-1ac7426ea4e2"
+  },
+  {
+    "collection": "aspect",
+    "action": "update",
+    "permissions": null,
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
+    "_syncId": "df279954-aa99-47aa-ad0c-4986a6010734"
   },
   {
     "collection": "conversation_chunk",
@@ -2211,39 +2205,6 @@
     ],
     "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
     "_syncId": "4039c10b-4765-4d30-9992-9ab2b326a7bc"
-  },
-  {
-    "collection": "conversation_link",
-    "action": "read",
-    "permissions": {
-      "_and": [
-        {
-          "_and": [
-            {
-              "source_conversation_id": {
-                "project_id": {
-                  "directus_user_id": {
-                    "_eq": "$CURRENT_USER"
-                  }
-                }
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "validation": null,
-    "presets": null,
-    "fields": [
-      "id",
-      "date_updated",
-      "target_conversation_id",
-      "source_conversation_id",
-      "link_type",
-      "date_created"
-    ],
-    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
-    "_syncId": "e209e43b-6a5b-42da-b383-6e9ec7590a2a"
   },
   {
     "collection": "conversation_project_tag",
@@ -2395,7 +2356,7 @@
       "date_created"
     ],
     "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
-    "_syncId": "6dcf040d-3975-4861-9530-3c2a9e0ec33a"
+    "_syncId": "217f5586-f8b7-414b-82b7-6d40212501a8"
   },
   {
     "collection": "conversation_reply",
@@ -2501,6 +2462,66 @@
     ],
     "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
     "_syncId": "b35e076e-2e7c-4558-8ea7-8a1b19ac69b7"
+  },
+  {
+    "collection": "insight",
+    "action": "create",
+    "permissions": null,
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
+    "_syncId": "e8cea976-f633-408b-8a0f-239dbda32105"
+  },
+  {
+    "collection": "insight",
+    "action": "delete",
+    "permissions": null,
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
+    "_syncId": "ad1a848a-bc9d-4e53-8094-90aa5864b3ff"
+  },
+  {
+    "collection": "insight",
+    "action": "read",
+    "permissions": null,
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
+    "_syncId": "007f024d-cbeb-46e8-b032-c7e358870026"
+  },
+  {
+    "collection": "insight",
+    "action": "update",
+    "permissions": null,
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
+    "_syncId": "bacd7a94-79d4-42cc-b4dd-bbca8d6a74f5"
+  },
+  {
+    "collection": "processing_status",
+    "action": "read",
+    "permissions": null,
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
+    "_syncId": "04689a5c-fd8e-43d3-808e-86b3a231c7e8"
   },
   {
     "collection": "project_analysis_run",
@@ -3157,20 +3178,20 @@
   },
   {
     "collection": "view",
+    "action": "create",
+    "permissions": null,
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
+    "_syncId": "ec54eaac-1b2f-49fa-9a0f-4d1fa86050f2"
+  },
+  {
+    "collection": "view",
     "action": "delete",
-    "permissions": {
-      "_and": [
-        {
-          "project_analysis_run_id": {
-            "project_id": {
-              "directus_user_id": {
-                "_eq": "$CURRENT_USER"
-              }
-            }
-          }
-        }
-      ]
-    },
+    "permissions": null,
     "validation": null,
     "presets": null,
     "fields": [
@@ -3182,19 +3203,7 @@
   {
     "collection": "view",
     "action": "read",
-    "permissions": {
-      "_and": [
-        {
-          "project_analysis_run_id": {
-            "project_id": {
-              "directus_user_id": {
-                "_eq": "$CURRENT_USER"
-              }
-            }
-          }
-        }
-      ]
-    },
+    "permissions": null,
     "validation": null,
     "presets": null,
     "fields": [
@@ -3204,179 +3213,16 @@
     "_syncId": "b9e92ecb-d92d-44bb-b7c2-802453104893"
   },
   {
-    "collection": "conversation_reply",
-    "action": "read",
+    "collection": "view",
+    "action": "update",
     "permissions": null,
     "validation": null,
     "presets": null,
     "fields": [
-      "id",
-      "content_text",
-      "reply",
-      "conversation_id",
-      "date_created",
-      "type"
+      "*"
     ],
-    "policy": "abf8a154-5b1c-4a46-ac9c-7300570f4f17",
-    "_syncId": "1d26957a-255b-4aa0-b4d9-1bc084211457"
-  },
-  {
-    "collection": "directus_files",
-    "action": "read",
-    "permissions": {
-      "_and": [
-        {
-          "_or": [
-            {
-              "folder": {
-                "name": {
-                  "_contains": "Public"
-                }
-              }
-            },
-            {
-              "folder": {
-                "parent": {
-                  "name": {
-                    "_contains": "Public"
-                  }
-                }
-              }
-            },
-            {
-              "folder": {
-                "parent": {
-                  "parent": {
-                    "name": {
-                      "_contains": "Public"
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "validation": null,
-    "presets": null,
-    "fields": [
-      "description",
-      "id",
-      "title",
-      "tags",
-      "location",
-      "storage",
-      "focal_point_divider",
-      "focal_point_x",
-      "focal_point_y",
-      "storage_divider",
-      "filename_disk",
-      "filename_download",
-      "metadata",
-      "type",
-      "filesize",
-      "created_on",
-      "modified_by",
-      "modified_on",
-      "embed",
-      "uploaded_by",
-      "uploaded_on",
-      "folder",
-      "width",
-      "height",
-      "charset",
-      "duration",
-      "tus_id",
-      "$thumbnail",
-      "tus_data"
-    ],
-    "policy": "abf8a154-5b1c-4a46-ac9c-7300570f4f17",
-    "_syncId": "996d6fa1-0ec8-4f52-8627-77b3648e065e"
-  },
-  {
-    "collection": "project_report_metric",
-    "action": "create",
-    "permissions": null,
-    "validation": {
-      "_and": [
-        {
-          "project_report_id": {
-            "_nnull": true
-          }
-        },
-        {
-          "type": {
-            "_eq": "view"
-          }
-        }
-      ]
-    },
-    "presets": null,
-    "fields": [
-      "id",
-      "type",
-      "project_report_id",
-      "date_created",
-      "date_updated",
-      "ip"
-    ],
-    "policy": "abf8a154-5b1c-4a46-ac9c-7300570f4f17",
-    "_syncId": "634d73dd-3bdc-4edf-8be3-2f01c9956725"
-  },
-  {
-    "collection": "project_report_metric",
-    "action": "read",
-    "permissions": {
-      "_and": [
-        {
-          "project_report_id": {
-            "project_id": {
-              "_nnull": true
-            }
-          }
-        }
-      ]
-    },
-    "validation": null,
-    "presets": null,
-    "fields": [
-      "type",
-      "date_updated",
-      "id",
-      "date_created",
-      "project_report_id"
-    ],
-    "policy": "abf8a154-5b1c-4a46-ac9c-7300570f4f17",
-    "_syncId": "50549508-2da8-4123-ab2c-1d3414061464"
-  },
-  {
-    "collection": "project_report",
-    "action": "read",
-    "permissions": {
-      "_and": [
-        {
-          "status": {
-            "_eq": "published"
-          }
-        }
-      ]
-    },
-    "validation": null,
-    "presets": null,
-    "fields": [
-      "status",
-      "id",
-      "date_created",
-      "content",
-      "language",
-      "project_id",
-      "show_portal_link",
-      "date_updated",
-      "error_code"
-    ],
-    "policy": "abf8a154-5b1c-4a46-ac9c-7300570f4f17",
-    "_syncId": "8a8e0d56-e394-47af-8473-9c77b6a0870f"
+    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
+    "_syncId": "0f9edf9d-2231-4119-a604-f8be69d0c4c1"
   },
   {
     "collection": "aspect",
