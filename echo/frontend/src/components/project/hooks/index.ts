@@ -14,10 +14,7 @@ import {
 } from "@directus/sdk";
 import { directus } from "@/lib/directus";
 import { toast } from "@/components/common/Toaster";
-import {
-  api,
-  getLatestProjectAnalysisRunByProjectId,
-} from "@/lib/api";
+import { api, getLatestProjectAnalysisRunByProjectId } from "@/lib/api";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useAddChatContextMutation } from "@/components/conversation/hooks";
 
@@ -109,9 +106,11 @@ export const useCreateChatMutation = () => {
       const chat = await directus.request(
         createItem("project_chat", {
           ...(payload as any),
-          auto_select: payload.conversationId && project.is_enhanced_audio_processing_enabled 
-            ? false 
-            : !!project.is_enhanced_audio_processing_enabled,
+          auto_select:
+            payload.conversationId &&
+            project.is_enhanced_audio_processing_enabled
+              ? false
+              : !!project.is_enhanced_audio_processing_enabled,
         }),
       );
 
@@ -119,16 +118,11 @@ export const useCreateChatMutation = () => {
         navigate(`/projects/${payload.project_id.id}/chats/${chat.id}`);
       }
 
-      try {
-        if (payload.conversationId) {
-          addChatContextMutation.mutate({
-            chatId: chat.id,
-            conversationId: payload.conversationId,
-          });
-        }
-      } catch (error) {
-        console.error("Failed to add conversation to chat:", error);
-        toast.error("Failed to add conversation to chat");
+      if (payload.conversationId) {
+        addChatContextMutation.mutate({
+          chatId: chat.id,
+          conversationId: payload.conversationId,
+        });
       }
 
       return chat;
