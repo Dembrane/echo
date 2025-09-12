@@ -109,7 +109,9 @@ export const useCreateChatMutation = () => {
       const chat = await directus.request(
         createItem("project_chat", {
           ...(payload as any),
-          auto_select: !!project.is_enhanced_audio_processing_enabled,
+          auto_select: payload.conversationId && project.is_enhanced_audio_processing_enabled 
+            ? false 
+            : !!project.is_enhanced_audio_processing_enabled,
         }),
       );
 
@@ -118,7 +120,7 @@ export const useCreateChatMutation = () => {
       }
 
       try {
-        if (payload.conversationId && !project.is_enhanced_audio_processing_enabled) {
+        if (payload.conversationId) {
           addChatContextMutation.mutate({
             chatId: chat.id,
             conversationId: payload.conversationId,
