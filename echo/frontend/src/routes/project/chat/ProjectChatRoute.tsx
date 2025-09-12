@@ -556,14 +556,14 @@ export const ProjectChatRoute = () => {
                 <Group
                   justify="space-between"
                   gap="xs"
-                  className="mt-1 hidden md:flex"
+                  className="mt-1 hidden lg:flex"
                 >
                   <Text size="xs" className="italic" c="dimmed">
                     <Trans>Use Shift + Enter to add a new line</Trans>
                   </Text>
                   <Text size="xs" c="dimmed">
                     <Trans>
-                      Echo is powered by AI. Please double check responses.
+                      Echo is powered by AI. Please double-check responses.
                     </Trans>
                   </Text>
                 </Group>
@@ -587,20 +587,16 @@ export const ProjectChatRoute = () => {
                 </Box>
               </Stack>
             </Group>
-            <Group
-              justify="space-between"
-              gap="xs"
-              className="mt-1 flex md:hidden"
-            >
+            <Stack gap={2} className="mt-1 flex lg:hidden">
               <Text size="xs" className="italic" c="dimmed">
                 <Trans>Use Shift + Enter to add a new line</Trans>
               </Text>
               <Text size="xs" c="dimmed">
                 <Trans>
-                  Echo is powered by AI. Please double check responses.
+                  Echo is powered by AI. Please double-check responses.
                 </Trans>
               </Text>
-            </Group>
+            </Stack>
           </form>
         </Stack>
       </Box>
