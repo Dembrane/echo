@@ -534,7 +534,7 @@ export const ProjectChatRoute = () => {
               handleSubmit();
             }}
           >
-            <Group>
+            <Group className="flex-nowrap">
               <Box className="grow">
                 <Textarea
                   placeholder={t`Type a message...`}
