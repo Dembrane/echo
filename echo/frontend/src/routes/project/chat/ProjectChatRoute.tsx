@@ -553,7 +553,11 @@ export const ProjectChatRoute = () => {
                   }}
                   color="gray"
                 />
-                <Group justify="space-between" gap="xs" className="mt-1">
+                <Group
+                  justify="space-between"
+                  gap="xs"
+                  className="mt-1 hidden md:flex"
+                >
                   <Text size="xs" className="italic" c="dimmed">
                     <Trans>Use Shift + Enter to add a new line</Trans>
                   </Text>
@@ -582,6 +586,20 @@ export const ProjectChatRoute = () => {
                   </Button>
                 </Box>
               </Stack>
+            </Group>
+            <Group
+              justify="space-between"
+              gap="xs"
+              className="mt-1 flex md:hidden"
+            >
+              <Text size="xs" className="italic" c="dimmed">
+                <Trans>Use Shift + Enter to add a new line</Trans>
+              </Text>
+              <Text size="xs" c="dimmed">
+                <Trans>
+                  Echo is powered by AI. Please double check responses.
+                </Trans>
+              </Text>
             </Group>
           </form>
         </Stack>
