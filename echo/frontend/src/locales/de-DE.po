@@ -2877,9 +2877,13 @@ msgstr "Dateien hochladen"
 msgid "Uploading Audio Files..."
 msgstr "Audio-Dateien werden hochgeladen..."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:578
+#: src/routes/project/chat/ProjectChatRoute.tsx:558
 msgid "Use Shift + Enter to add a new line"
 msgstr "Verwenden Sie Shift + Enter, um eine neue Zeile hinzuzufügen"
+
+#: src/routes/project/chat/ProjectChatRoute.tsx:562
+msgid "Echo is powered by AI. Please double check responses."
+msgstr "Echo wird durch AI unterstützt. Bitte überprüfen Sie die Antworten."
 
 #: src/routes/project/library/ProjectLibraryView.tsx:36
 #: src/routes/project/library/ProjectLibraryAspect.tsx:48
