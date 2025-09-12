@@ -534,7 +534,7 @@ export const ProjectChatRoute = () => {
               handleSubmit();
             }}
           >
-            <Group>
+            <Group className="flex-nowrap">
               <Box className="grow">
                 <Textarea
                   placeholder={t`Type a message...`}
@@ -553,6 +553,20 @@ export const ProjectChatRoute = () => {
                   }}
                   color="gray"
                 />
+                <Group
+                  justify="space-between"
+                  gap="sm"
+                  className="mt-1 hidden lg:flex"
+                >
+                  <Text size="xs" className="italic" c="dimmed">
+                    <Trans>Use Shift + Enter to add a new line</Trans>
+                  </Text>
+                  <Text size="xs" className="italic" c="dimmed">
+                    <Trans>
+                      Echo is powered by AI. Please double-check responses.
+                    </Trans>
+                  </Text>
+                </Group>
               </Box>
               <Stack className="h-full" gap="xs">
                 <Box>
@@ -573,10 +587,16 @@ export const ProjectChatRoute = () => {
                 </Box>
               </Stack>
             </Group>
-
-            <Text size="xs" className="mt-1 italic" c="dimmed">
-              <Trans>Use Shift + Enter to add a new line</Trans>
-            </Text>
+            <Stack gap="sm" className="mt-1 flex lg:hidden">
+              <Text size="xs" className="italic" c="dimmed">
+                <Trans>Use Shift + Enter to add a new line</Trans>
+              </Text>
+              <Text size="xs" className="italic" c="dimmed">
+                <Trans>
+                  Echo is powered by AI. Please double-check responses.
+                </Trans>
+              </Text>
+            </Stack>
           </form>
         </Stack>
       </Box>
