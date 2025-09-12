@@ -3135,9 +3135,13 @@ msgstr "Bestanden uploaden"
 msgid "Uploading Audio Files..."
 msgstr "Audio bestanden uploaden..."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:578
+#: src/routes/project/chat/ProjectChatRoute.tsx:579
 msgid "Use Shift + Enter to add a new line"
 msgstr "Gebruik Shift + Enter om een nieuwe regel toe te voegen"
+
+#: src/routes/project/chat/ProjectChatRoute.tsx:582
+msgid "Echo is powered by AI. Please double check responses."
+msgstr "Echo wordt aangestuurd door AI. Controleer de antwoorden dubbel."
 
 #: src/routes/project/library/ProjectLibraryView.tsx:36
 #: src/routes/project/library/ProjectLibraryAspect.tsx:48

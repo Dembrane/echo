@@ -574,9 +574,15 @@ export const ProjectChatRoute = () => {
               </Stack>
             </Group>
 
-            <Text size="xs" className="mt-1 italic" c="dimmed">
-              <Trans>Use Shift + Enter to add a new line</Trans>
-            </Text>
+            <Group justify="space-between" className="mt-1 w-full" gap="xs">
+              <Text size="xs" className="italic" c="dimmed">
+                <Trans>Use Shift + Enter to add a new line</Trans>
+              </Text>
+              <Text size="xs" className="italic" c="dimmed">
+                <Trans>Echo is powered by AI. Please double check responses.</Trans>
+              </Text>
+            </Group>
+
           </form>
         </Stack>
       </Box>
