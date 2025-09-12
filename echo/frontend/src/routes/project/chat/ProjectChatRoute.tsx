@@ -535,7 +535,7 @@ export const ProjectChatRoute = () => {
             }}
           >
             <Group>
-  {/* Textarea + helper texts */}
+
   <Box className="grow">
     <Textarea
       placeholder={t`Type a message...`}
