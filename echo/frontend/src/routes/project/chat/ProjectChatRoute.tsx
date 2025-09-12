@@ -535,24 +535,35 @@ export const ProjectChatRoute = () => {
             }}
           >
             <Group>
-              <Box className="grow">
-                <Textarea
-                  placeholder={t`Type a message...`}
-                  minRows={4}
-                  maxRows={10}
-                  autosize
-                  value={input}
-                  onChange={handleInputChange}
-                  disabled={isLoading || isSubmitting}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleSubmit();
-                    }
-                  }}
-                  color="gray"
-                />
+  {/* Textarea + helper texts */}
+  <Box className="grow">
+    <Textarea
+      placeholder={t`Type a message...`}
+      minRows={4}
+      maxRows={10}
+      autosize
+      value={input}
+      onChange={handleInputChange}
+      disabled={isLoading || isSubmitting}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          e.stopPropagation();
+          handleSubmit();
+        }
+      }}
+      color="gray"
+    />
+
+    <Group justify="space-between" gap="xs" className="mt-1">
+      <Text size="xs" className="italic" c="dimmed">
+        <Trans>Use Shift + Enter to add a new line</Trans>
+      </Text>
+      <Text size="xs" c="dimmed">
+        <Trans>Echo is powered by AI. Please double check responses.</Trans>
+      </Text>
+    </Group>
+
               </Box>
               <Stack className="h-full" gap="xs">
                 <Box>
@@ -572,15 +583,6 @@ export const ProjectChatRoute = () => {
                   </Button>
                 </Box>
               </Stack>
-            </Group>
-
-            <Group justify="space-between" className="mt-1 w-full" gap="xs">
-              <Text size="xs" className="italic" c="dimmed">
-                <Trans>Use Shift + Enter to add a new line</Trans>
-              </Text>
-              <Text size="xs" className="italic" c="dimmed">
-                <Trans>Echo is powered by AI. Please double check responses.</Trans>
-              </Text>
             </Group>
 
           </form>
