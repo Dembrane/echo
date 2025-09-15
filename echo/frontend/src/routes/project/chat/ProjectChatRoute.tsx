@@ -331,6 +331,13 @@ export const ProjectChatRoute = () => {
     setTemplateKey(key);
   };
 
+  // Clear template selection when input becomes empty
+  useEffect(() => {
+    if (input.trim() === "" && templateKey) {
+      setTemplateKey(null);
+    }
+  }, [input, templateKey, setTemplateKey]);
+
   if (isInitializing || chatQuery.isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -488,7 +495,10 @@ export const ProjectChatRoute = () => {
             />
           </Group>
 
-          <ChatTemplatesMenu onTemplateSelect={handleTemplateSelect} />
+          <ChatTemplatesMenu
+            onTemplateSelect={handleTemplateSelect}
+            selectedTemplateKey={templateKey}
+          />
 
           <Divider />
           {(!ENABLE_CHAT_AUTO_SELECT
