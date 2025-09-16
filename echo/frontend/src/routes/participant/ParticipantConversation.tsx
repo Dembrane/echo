@@ -253,7 +253,7 @@ export const ParticipantConversationAudioRoute = () => {
           ? t`${minutes} minutes and ${seconds} seconds`
           : t`${seconds} seconds`;
 
-      toast.info(t`Please wait ${timeStr} before requesting another Echo.`);
+      toast.info(t`Please wait ${timeStr} before requesting another ECHO.`);
       return;
     }
 
