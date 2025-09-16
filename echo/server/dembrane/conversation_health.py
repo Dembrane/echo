@@ -10,6 +10,7 @@ import requests
 from dembrane.s3 import get_signed_url
 from dembrane.utils import get_utc_timestamp
 from dembrane.config import (
+    ENABLE_RUNPOD_DIARIZATION,
     RUNPOD_DIARIZATION_API_KEY,
     RUNPOD_DIARIZATION_TIMEOUT,
     RUNPOD_DIARIZATION_BASE_URL,
@@ -23,7 +24,7 @@ logger = logging.getLogger("conversation_health")
 def _fetch_chunk_data(chunk_id: str) -> tuple[str, str] | None:
     """
     Retrieves the audio file URI and project language for a given chunk ID from Directus.
-    
+
     Returns:
         A tuple containing (audio_file_uri, project_language) if successful, or None if retrieval fails.
     """
@@ -33,13 +34,15 @@ def _fetch_chunk_data(chunk_id: str) -> tuple[str, str] | None:
             {
                 "query": {
                     "filter": {"id": {"_eq": chunk_id}},
-                    "fields": ["path", "conversation_id.project_id.language"]
+                    "fields": ["path", "conversation_id.project_id.language"],
                 }
-            }
+            },
         )[0]
         audio_file_uri = directus_item["path"]
         project_language = directus_item["conversation_id"]["project_id"]["language"]
-        logger.debug(f"Starting diarization for chunk_id: {chunk_id}, path: {audio_file_uri}, project_language: {project_language}")
+        logger.debug(
+            f"Starting diarization for chunk_id: {chunk_id}, path: {audio_file_uri}, project_language: {project_language}"
+        )
         return audio_file_uri, project_language
     except Exception as e:
         logger.error(f"Failed to fetch audio_file_uri for chunk_id {chunk_id}: {e}")
@@ -49,10 +52,10 @@ def _fetch_chunk_data(chunk_id: str) -> tuple[str, str] | None:
 def _generate_audio_url(audio_file_uri: str) -> str | None:
     """
     Generates a signed URL for the specified audio file.
-    
+
     Args:
         audio_file_uri: The URI of the audio file to sign.
-    
+
     Returns:
         The signed URL as a string if successful, or None if signing fails.
     """
@@ -68,7 +71,7 @@ def _generate_audio_url(audio_file_uri: str) -> str | None:
 def _should_skip_diarization(project_language: str) -> bool:
     """
     Determines whether diarization should be skipped for a given project language.
-    
+
     Returns True if diarization is disabled for non-English languages based on configuration; otherwise, returns False.
     """
     if DISABLE_MULTILINGUAL_DIARIZATION and project_language != "en":
@@ -80,11 +83,11 @@ def _should_skip_diarization(project_language: str) -> bool:
 def _submit_diarization_job(audio_url: str, project_language: str) -> tuple[str, str] | None:
     """
     Submits an audio diarization job to RunPod using the provided audio URL and project language.
-    
+
     Args:
         audio_url: The signed URL of the audio file to be processed.
         project_language: The language code associated with the project.
-    
+
     Returns:
         A tuple containing the job ID and the job status link if submission is successful, or None if the request fails.
     """
@@ -98,7 +101,7 @@ def _submit_diarization_job(audio_url: str, project_language: str) -> tuple[str,
         "Authorization": f"Bearer {api_key}",
     }
     data = {"input": {"audio": audio_url, "language": project_language}}
-    
+
     try:
         logger.debug(f"Sending POST to {base_url}/run with data: {data}")
         response = requests.post(f"{base_url}/run", headers=headers, json=data, timeout=timeout)
@@ -115,11 +118,11 @@ def _submit_diarization_job(audio_url: str, project_language: str) -> tuple[str,
 def _poll_job_status(job_status_link: str, headers: dict) -> dict | None:
     """
     Retrieves the current status of a diarization job from the provided status link.
-    
+
     Args:
         job_status_link: The URL to poll for job status.
         headers: HTTP headers to include in the request.
-    
+
     Returns:
         The JSON response containing job status information, or None if the request fails.
     """
@@ -136,7 +139,7 @@ def _poll_job_status(job_status_link: str, headers: dict) -> dict | None:
 def _update_chunk_with_results(chunk_id: str, dirz_response_data: dict) -> None:
     """
     Updates a conversation chunk in Directus with diarization analysis results.
-    
+
     Args:
         chunk_id: The ID of the conversation chunk to update.
         dirz_response_data: Dictionary containing diarization metrics and results to store.
@@ -145,7 +148,7 @@ def _update_chunk_with_results(chunk_id: str, dirz_response_data: dict) -> None:
     cross_talk_instances = dirz_response_data.get("cross_talk_instances")
     silence_ratio = dirz_response_data.get("silence_ratio")
     joined_diarization = dirz_response_data.get("joined_diarization")
-    
+
     directus.update_item(
         "conversation_chunk",
         chunk_id,
@@ -162,7 +165,7 @@ def _update_chunk_with_results(chunk_id: str, dirz_response_data: dict) -> None:
 def _cancel_job_on_timeout(job_id: str) -> None:
     """
     Cancels a diarization job on RunPod if it has exceeded the allowed processing time.
-    
+
     Logs a warning before attempting cancellation and logs an error if the cancellation fails.
     """
     base_url = RUNPOD_DIARIZATION_BASE_URL
@@ -171,7 +174,7 @@ def _cancel_job_on_timeout(job_id: str) -> None:
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}",
     }
-    
+
     try:
         cancel_endpoint = f"{base_url}/cancel/{job_id}"
         logger.warning(f"Timeout reached. Cancelling diarization job {job_id} at {cancel_endpoint}")
@@ -187,10 +190,14 @@ def get_runpod_diarization(
 ) -> None:
     """
     Orchestrates the diarization process for a given chunk by submitting an audio diarization job to RunPod, polling for completion within a timeout, and updating Directus with the results or canceling the job if it times out.
-    
+
     Args:
         chunk_id: The identifier of the audio chunk to process.
     """
+    if not ENABLE_RUNPOD_DIARIZATION:
+        logger.debug("Skipping diarization because ENABLE_RUNPOD_DIARIZATION is disabled")
+        return None
+
     # Fetch chunk data
     chunk_data = _fetch_chunk_data(chunk_id)
     if not chunk_data:
@@ -219,24 +226,28 @@ def get_runpod_diarization(
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}",
     }
-    
+
     start_time = time.time()
     while time.time() - start_time < timeout:
         response_data = _poll_job_status(job_status_link, headers)
         if response_data:
             status = response_data.get("status")
             logger.debug(f"Job {job_id} status: {status}")
-            
+
             if status == "COMPLETED":
                 dirz_response_data = response_data.get("output")
                 if dirz_response_data:
-                    logger.info(f"Diarization job {job_id} completed. Updating chunk {chunk_id} with results.")
+                    logger.info(
+                        f"Diarization job {job_id} completed. Updating chunk {chunk_id} with results."
+                    )
                     _update_chunk_with_results(chunk_id, dirz_response_data)
                     return
                 else:
-                    logger.warning(f"Diarization job {job_id} completed but no output data received.")
+                    logger.warning(
+                        f"Diarization job {job_id} completed but no output data received."
+                    )
                     return
-        
+
         time.sleep(3)
 
     # Timeout: cancel the job
@@ -254,6 +265,10 @@ def get_health_status(
     """
     Get the health status of conversations.
     """
+    if not ENABLE_RUNPOD_DIARIZATION:
+        logger.debug("Skipping diarization because ENABLE_RUNPOD_DIARIZATION is disabled")
+        return {}
+
     if not project_ids and not conversation_ids:
         raise ValueError("Either project_ids or conversation_ids must be provided")
 
@@ -325,7 +340,7 @@ def _get_timebound_conversation_chunks(
                 },
             },
         )
-        try: 
+        try:
             response = response[:max_chunks_for_conversation]
             aggregated_response.extend(_flatten_response(response))
         except Exception as e:

@@ -15,18 +15,35 @@ Usage:
     project = project_service.get_by_id_or_raise(project_id)
 """
 
-# Import service classes
-from .file import get_file_service
-from .event import EventService
-from .project import ProjectService
-from .conversation import ConversationService
+from .file import FileServiceException, get_file_service
+from .project import ProjectService, ProjectServiceException, ProjectNotFoundException
+from .conversation import (
+    ConversationService,
+    ConversationServiceException,
+    ConversationNotFoundException,
+    ConversationChunkNotFoundException,
+    ConversationNotOpenForParticipationException,
+)
 
-# Create service instances without circular dependencies
 file_service = get_file_service()
-event_service = EventService()
 project_service = ProjectService()
 conversation_service = ConversationService(
     file_service=file_service,
-    event_service=event_service,
     project_service=project_service,
 )
+
+exceptions = {
+    "file": {
+        "FileServiceException": FileServiceException,
+    },
+    "conversation": {
+        "ConversationChunkNotFoundException": ConversationChunkNotFoundException,
+        "ConversationNotFoundException": ConversationNotFoundException,
+        "ConversationNotOpenForParticipationException": ConversationNotOpenForParticipationException,
+        "ConversationServiceException": ConversationServiceException,
+    },
+    "project": {
+        "ProjectNotFoundException": ProjectNotFoundException,
+        "ProjectServiceException": ProjectServiceException,
+    },
+}

@@ -141,6 +141,9 @@ def save_to_s3_from_file_like(
 
 
 def get_signed_url(file_name: str, expires_in_seconds: int = 3600) -> str:
+    """
+    WARNING: this will also "get fake signed urls" for files that don't exist
+    """
     return s3_client.generate_presigned_url(
         "get_object",
         Params={"Bucket": STORAGE_S3_BUCKET, "Key": get_sanitized_s3_key(file_name)},

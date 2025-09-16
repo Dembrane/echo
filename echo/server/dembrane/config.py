@@ -6,6 +6,13 @@
 # patterns are inconsistent - ENABLE_LITELLM_WHISPER_TRANSCRIPTION needs to be set
 # better yet modularize it and have modules manage their own config?
 
+## ENABLE_ASSEMBLYAI_TRANSCRIPTION = os.environ.get(
+# "ENABLE_ASSEMBLYAI_TRANSCRIPTION", "false"
+# ).lower() in ["true", "1"]
+# This is a bad pattern for hygiene because it allows for multiple values to be set if you want it to be true/false
+
+# This file inits twice for some reason...
+
 import os
 import sys
 import logging
@@ -177,13 +184,20 @@ logger.debug("STORAGE_S3_SECRET: set")
 DISABLE_CORS = os.environ.get("DISABLE_CORS", "false").lower() in ["true", "1"]
 logger.debug(f"DISABLE_CORS: {DISABLE_CORS}")
 
-ENABLE_ENGLISH_TRANSCRIPTION_WITH_LITELLM = os.environ.get(
-    "ENABLE_ENGLISH_TRANSCRIPTION_WITH_LITELLM", "false"
+### Transcription
+
+ENABLE_ASSEMBLYAI_TRANSCRIPTION = os.environ.get(
+    "ENABLE_ASSEMBLYAI_TRANSCRIPTION", "false"
 ).lower() in ["true", "1"]
-# ENABLE_ENGLISH_TRANSCRIPTION_WITH_LITELLM is optional and defaults to false
-logger.debug(
-    "ENABLE_ENGLISH_TRANSCRIPTION_WITH_LITELLM: %s", ENABLE_ENGLISH_TRANSCRIPTION_WITH_LITELLM
-)
+logger.debug(f"ENABLE_ASSEMBLYAI_TRANSCRIPTION: {ENABLE_ASSEMBLYAI_TRANSCRIPTION}")
+
+ASSEMBLYAI_API_KEY = os.environ.get("ASSEMBLYAI_API_KEY")
+if ENABLE_ASSEMBLYAI_TRANSCRIPTION:
+    assert ASSEMBLYAI_API_KEY, "ASSEMBLYAI_API_KEY environment variable is not set"
+    logger.debug("ASSEMBLYAI_API_KEY: set")
+
+ASSEMBLYAI_BASE_URL = os.environ.get("ASSEMBLYAI_BASE_URL", "https://api.eu.assemblyai.com")
+logger.debug(f"ASSEMBLYAI_BASE_URL: {ASSEMBLYAI_BASE_URL}")
 
 ENABLE_RUNPOD_WHISPER_TRANSCRIPTION = os.environ.get(
     "ENABLE_RUNPOD_WHISPER_TRANSCRIPTION", "false"
@@ -194,7 +208,6 @@ RUNPOD_WHISPER_API_KEY = os.environ.get("RUNPOD_WHISPER_API_KEY")
 if ENABLE_RUNPOD_WHISPER_TRANSCRIPTION:
     assert RUNPOD_WHISPER_API_KEY, "RUNPOD_WHISPER_API_KEY environment variable is not set"
     logger.debug("RUNPOD_WHISPER_API_KEY: set")
-
 
 RUNPOD_WHISPER_BASE_URL = os.environ.get("RUNPOD_WHISPER_BASE_URL")
 if ENABLE_RUNPOD_WHISPER_TRANSCRIPTION:
@@ -211,6 +224,35 @@ if ENABLE_RUNPOD_WHISPER_TRANSCRIPTION:
 RUNPOD_WHISPER_MAX_REQUEST_THRESHOLD = int(
     str(os.environ.get("RUNPOD_WHISPER_MAX_REQUEST_THRESHOLD"))
 )
+
+ENABLE_LITELLM_WHISPER_TRANSCRIPTION = os.environ.get(
+    "ENABLE_LITELLM_WHISPER_TRANSCRIPTION", "false"
+).lower() in ["true", "1"]
+logger.debug(f"ENABLE_LITELLM_WHISPER_TRANSCRIPTION: {ENABLE_LITELLM_WHISPER_TRANSCRIPTION}")
+
+LITELLM_WHISPER_API_KEY = os.environ.get("LITELLM_WHISPER_API_KEY")
+if ENABLE_LITELLM_WHISPER_TRANSCRIPTION:
+    assert LITELLM_WHISPER_API_KEY, "LITELLM_WHISPER_API_KEY environment variable is not set"
+    logger.debug("LITELLM_WHISPER_API_KEY: set")
+
+LITELLM_WHISPER_API_VERSION = os.environ.get("LITELLM_WHISPER_API_VERSION", "2024-06-01")
+if ENABLE_LITELLM_WHISPER_TRANSCRIPTION:
+    assert LITELLM_WHISPER_API_VERSION, (
+        "LITELLM_WHISPER_API_VERSION environment variable is not set"
+    )
+    logger.debug(f"LITELLM_WHISPER_API_VERSION: {LITELLM_WHISPER_API_VERSION}")
+
+LITELLM_WHISPER_MODEL = os.environ.get("LITELLM_WHISPER_MODEL")
+if ENABLE_LITELLM_WHISPER_TRANSCRIPTION:
+    assert LITELLM_WHISPER_MODEL, "LITELLM_WHISPER_MODEL environment variable is not set"
+    logger.debug(f"LITELLM_WHISPER_MODEL: {LITELLM_WHISPER_MODEL}")
+
+LITELLM_WHISPER_URL = os.environ.get("LITELLM_WHISPER_URL")
+if ENABLE_LITELLM_WHISPER_TRANSCRIPTION:
+    assert LITELLM_WHISPER_URL, "LITELLM_WHISPER_URL environment variable is not set"
+    logger.debug(f"LITELLM_WHISPER_URL: {LITELLM_WHISPER_URL}")
+
+### END Transcription
 
 RUNPOD_TOPIC_MODELER_URL = os.environ.get("RUNPOD_TOPIC_MODELER_URL")
 logger.debug(f"RUNPOD_TOPIC_MODELER_URL: {RUNPOD_TOPIC_MODELER_URL}")
@@ -275,33 +317,6 @@ logger.debug(f"LARGE_LITELLM_API_VERSION: {LARGE_LITELLM_API_VERSION}")
 LARGE_LITELLM_API_BASE = os.environ.get("LARGE_LITELLM_API_BASE")
 assert LARGE_LITELLM_API_BASE, "LARGE_LITELLM_API_BASE environment variable is not set"
 logger.debug(f"LARGE_LITELLM_API_BASE: {LARGE_LITELLM_API_BASE}")
-
-ENABLE_LITELLM_WHISPER_TRANSCRIPTION = os.environ.get(
-    "ENABLE_LITELLM_WHISPER_TRANSCRIPTION", "false"
-).lower() in ["true", "1"]
-logger.debug(f"ENABLE_LITELLM_WHISPER_TRANSCRIPTION: {ENABLE_LITELLM_WHISPER_TRANSCRIPTION}")
-
-LITELLM_WHISPER_API_KEY = os.environ.get("LITELLM_WHISPER_API_KEY")
-if ENABLE_LITELLM_WHISPER_TRANSCRIPTION:
-    assert LITELLM_WHISPER_API_KEY, "LITELLM_WHISPER_API_KEY environment variable is not set"
-    logger.debug("LITELLM_WHISPER_API_KEY: set")
-
-LITELLM_WHISPER_API_VERSION = os.environ.get("LITELLM_WHISPER_API_VERSION", "2024-06-01")
-if ENABLE_LITELLM_WHISPER_TRANSCRIPTION:
-    assert LITELLM_WHISPER_API_VERSION, (
-        "LITELLM_WHISPER_API_VERSION environment variable is not set"
-    )
-    logger.debug(f"LITELLM_WHISPER_API_VERSION: {LITELLM_WHISPER_API_VERSION}")
-
-LITELLM_WHISPER_MODEL = os.environ.get("LITELLM_WHISPER_MODEL")
-if ENABLE_LITELLM_WHISPER_TRANSCRIPTION:
-    assert LITELLM_WHISPER_MODEL, "LITELLM_WHISPER_MODEL environment variable is not set"
-    logger.debug(f"LITELLM_WHISPER_MODEL: {LITELLM_WHISPER_MODEL}")
-
-LITELLM_WHISPER_URL = os.environ.get("LITELLM_WHISPER_URL")
-if ENABLE_LITELLM_WHISPER_TRANSCRIPTION:
-    assert LITELLM_WHISPER_URL, "LITELLM_WHISPER_URL environment variable is not set"
-    logger.debug(f"LITELLM_WHISPER_URL: {LITELLM_WHISPER_URL}")
 
 # *****************LIGHTRAG CONFIGURATIONS*****************
 

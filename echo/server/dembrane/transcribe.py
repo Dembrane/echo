@@ -1,9 +1,17 @@
+"""
+File is messy. Need to split implementations of different transcription providers into different classes perhaps.
+Add interface for a generic transcription provider. (Which can be sync or async.)
+But it is probably not needed.
+Can provide selfhost options through "litellm" and api use through "assembly"
+"""
+
 # transcribe.py
 import io
 import os
+import time
 import logging
 import mimetypes
-from typing import List, Optional
+from typing import Any, List, Literal, Optional
 
 import requests
 from litellm import transcription
@@ -11,18 +19,22 @@ from litellm import transcription
 from dembrane.s3 import get_signed_url, get_stream_from_s3
 from dembrane.config import (
     API_BASE_URL,
+    ASSEMBLYAI_API_KEY,
+    ASSEMBLYAI_BASE_URL,
     LITELLM_WHISPER_URL,
     LITELLM_WHISPER_MODEL,
     RUNPOD_WHISPER_API_KEY,
     LITELLM_WHISPER_API_KEY,
     RUNPOD_WHISPER_BASE_URL,
     LITELLM_WHISPER_API_VERSION,
+    ENABLE_ASSEMBLYAI_TRANSCRIPTION,
     RUNPOD_WHISPER_PRIORITY_BASE_URL,
     ENABLE_RUNPOD_WHISPER_TRANSCRIPTION,
     ENABLE_LITELLM_WHISPER_TRANSCRIPTION,
     RUNPOD_WHISPER_MAX_REQUEST_THRESHOLD,
 )
 from dembrane.prompts import render_prompt
+from dembrane.service import conversation_service
 from dembrane.directus import directus
 
 logger = logging.getLogger("transcribe")
@@ -114,6 +126,60 @@ def transcribe_audio_litellm(
         raise TranscriptionError(f"LiteLLM transcription failed: {e}") from e
 
 
+def transcribe_audio_assemblyai(
+    audio_file_uri: str,
+    language: Optional[str],  # pyright: ignore[reportUnusedParameter]
+    hotwords: Optional[List[str]],
+) -> tuple[str, dict[str, Any]]:
+    """Transcribe audio through AssemblyAI"""
+    logger = logging.getLogger("transcribe.transcribe_audio_assemblyai")
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {ASSEMBLYAI_API_KEY}",
+    }
+
+    data: dict[str, Any] = {
+        "audio_url": audio_file_uri,
+        "speech_model": "universal",
+        "language_detection_options": {
+            "expected_languages": ["nl", "en", "fr", "es", "de", "it", "pt"],
+        },
+    }
+
+    if language:
+        if language == "auto":
+            data["language_detection"] = True
+        else:
+            data["language_code"] = language
+
+    if hotwords:
+        data["keyterms_prompt"] = hotwords
+
+    try:
+        response = requests.post(f"{ASSEMBLYAI_BASE_URL}/v2/transcript", headers=headers, json=data)
+        response.raise_for_status()
+
+        transcript_id = response.json()["id"]
+        polling_endpoint = f"{ASSEMBLYAI_BASE_URL}/v2/transcript/{transcript_id}"
+
+        # TODO: using webhooks will be ideal, but this is easy to impl and test for ;)
+        # we will be blocking some of our cheap "workers" here with time.sleep
+        while True:
+            transcript = requests.get(polling_endpoint, headers=headers).json()
+            if transcript["status"] == "completed":
+                # return both to add the diarization response later...
+                return transcript["text"], transcript
+            elif transcript["status"] == "error":
+                raise RuntimeError(f"Transcription failed: {transcript['error']}")
+            else:
+                time.sleep(3)
+
+    except Exception as e:
+        logger.error(f"AssemblyAI transcription failed: {e}")
+        raise TranscriptionError(f"AssemblyAI transcription failed: {e}") from e
+
+
 # Helper functions extracted to simplify `transcribe_conversation_chunk`
 # NOTE: These are internal helpers ‑ they should **not** be considered part of the public API.
 
@@ -156,6 +222,14 @@ def _fetch_conversation(conversation_id: str) -> dict:
     return conversation_rows[0]
 
 
+def _save_transcript(
+    conversation_chunk_id: str, transcript: str, diarization: Optional[dict] = None
+) -> None:
+    conversation_service.update_chunk(
+        conversation_chunk_id, transcript=transcript, diarization=diarization
+    )
+
+
 def _build_whisper_prompt(conversation: dict, language: str) -> str:
     """Compose the whisper prompt from defaults and project-specific overrides."""
     default_prompt = render_prompt("default_whisper_prompt", language, {})
@@ -171,24 +245,26 @@ def _build_whisper_prompt(conversation: dict, language: str) -> str:
     return " ".join(prompt_parts)
 
 
-def _should_use_runpod(language: str) -> bool:
-    """Decide whether RunPod should be used for the given language."""
-    logger.debug(f"the language str is unused: {language}")
-    if not ENABLE_RUNPOD_WHISPER_TRANSCRIPTION:
-        return False
-    # Removed English + override logic - now use RunPod for all languages
-    return True
+def _build_hotwords(conversation: dict) -> Optional[List[str]]:
+    """Build the hotwords from the conversation"""
+    hotwords_str = conversation["project_id"].get("default_conversation_transcript_prompt")
+    if hotwords_str:
+        return [str(word.strip()) for word in hotwords_str.split(",")]
+    return None
 
 
-def _should_use_litellm() -> bool:
-    """Decide whether LiteLLM should be used for the given language."""
-    if not ENABLE_LITELLM_WHISPER_TRANSCRIPTION:
-        return False
-    return True
+def _get_transcript_provider() -> Literal["Runpod", "LiteLLM", "AssemblyAI"]:
+    if ENABLE_ASSEMBLYAI_TRANSCRIPTION:
+        return "AssemblyAI"
+    elif ENABLE_RUNPOD_WHISPER_TRANSCRIPTION:
+        return "Runpod"
+    elif ENABLE_LITELLM_WHISPER_TRANSCRIPTION:
+        return "LiteLLM"
+    else:
+        raise TranscriptionError("No valid transcription configuration found.")
 
 
 def _get_status_runpod(runpod_job_status_link: str) -> tuple[str, dict]:
-    """Get the status of a RunPod job."""
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {RUNPOD_WHISPER_API_KEY}",
@@ -264,10 +340,9 @@ def _process_runpod_transcription(
 
 
 def transcribe_conversation_chunk(conversation_chunk_id: str) -> str:
-    """Process conversation chunk for transcription
-
-    Note: RunPod is now used for all transcription when enabled.
-    Falls back to LiteLLM only if RunPod is disabled.
+    """
+    Process conversation chunk for transcription
+    matches on _get_transcript_provider()
 
     Returns:
         str: The conversation chunk ID if successful
@@ -281,48 +356,40 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str:
         chunk = _fetch_chunk(conversation_chunk_id)
         conversation = _fetch_conversation(chunk["conversation_id"])
         language = conversation["project_id"]["language"] or "en"
-        logger.debug(f"using language: {language}")
 
-        whisper_prompt = _build_whisper_prompt(conversation, language)
+        transcript_provider = _get_transcript_provider()
 
-        logger.debug(f"whisper_prompt: {whisper_prompt}")
-
-        if _should_use_runpod(language):
-            logger.info("Using RunPod for transcription")
-
-            hotwords_str = conversation["project_id"].get(
-                "default_conversation_transcript_prompt", None
-            )
-
-            hotwords = hotwords_str.split(",") if hotwords_str else None
-
-            return _process_runpod_transcription(chunk, conversation_chunk_id, language, hotwords)
-
-        elif _should_use_litellm():
-            logger.info("Using LITELLM for transcription")
-
-            transcript = transcribe_audio_litellm(
-                chunk["path"], language=language, whisper_prompt=whisper_prompt
-            )
-            logger.debug(f"transcript: {transcript}")
-
-            directus.update_item(
-                "conversation_chunk",
-                conversation_chunk_id,
-                {
-                    "transcript": transcript,
-                },
-            )
-
-            logger.info(f"Processed chunk for transcription: {conversation_chunk_id}")
-            return conversation_chunk_id
-
-        else:
-            raise TranscriptionError(
-                "No valid transcription configuration found."
-                "If `ENABLE_ENGLISH_TRANSCRIPTION_WITH_LITELLM` is enabled, "
-                "then `ENABLE_LITELLM_WHISPER_TRANSCRIPTION` must be enabled."
-            )
+        match transcript_provider:
+            case "AssemblyAI":
+                logger.info("Using AssemblyAI for transcription")
+                hotwords = _build_hotwords(conversation)
+                signed_url = get_signed_url(chunk["path"], expires_in_seconds=3 * 24 * 60 * 60)
+                transcript, assemblyai_response = transcribe_audio_assemblyai(
+                    signed_url, language=language, hotwords=hotwords
+                )
+                _save_transcript(
+                    conversation_chunk_id,
+                    transcript,
+                    diarization={
+                        "schema": "ASSEMBLYAI",
+                        "data": assemblyai_response.get("words", {}),
+                    },
+                )
+                return conversation_chunk_id
+            case "Runpod":
+                logger.info("Using RunPod for transcription")
+                hotwords = _build_hotwords(conversation)
+                return _process_runpod_transcription(
+                    chunk, conversation_chunk_id, language, hotwords
+                )
+            case "LiteLLM":
+                logger.info("Using LITELLM for transcription")
+                whisper_prompt = _build_whisper_prompt(conversation, language)
+                transcript = transcribe_audio_litellm(
+                    chunk["path"], language=language, whisper_prompt=whisper_prompt
+                )
+                _save_transcript(conversation_chunk_id, transcript, diarization=None)
+                return conversation_chunk_id
 
     except Exception as e:
         logger.error(f"Failed to process conversation chunk {conversation_chunk_id}: {e}")
