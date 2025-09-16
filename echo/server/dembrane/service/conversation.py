@@ -9,7 +9,6 @@ from dembrane.directus import DirectusBadRequest, directus_client_context
 
 if TYPE_CHECKING:
     from dembrane.service.file import FileService
-    from dembrane.service.event import EventService
     from dembrane.service.project import ProjectService
 
 # allows for None to be a sentinel value
@@ -36,11 +35,9 @@ class ConversationService:
     def __init__(
         self,
         file_service: "FileService",
-        event_service: "EventService",
         project_service: "ProjectService",
     ):
         self.file_service = file_service
-        self.event_service = event_service
         self.project_service = project_service
 
     def get_by_id_or_raise(
@@ -280,9 +277,10 @@ class ConversationService:
     def update_chunk(
         self,
         chunk_id: str,
-        raw_transcript: Any = _UNSET,
-        transcript: Any = _UNSET,
         path: Any = _UNSET,
+        diarization: Any = _UNSET,
+        transcript: Any = _UNSET,
+        raw_transcript: Any = _UNSET,
         runpod_job_status_link: Any = _UNSET,
         error: Any = _UNSET,
         hallucination_reason: Any = _UNSET,
@@ -295,6 +293,9 @@ class ConversationService:
 
         if raw_transcript is not _UNSET:
             update["raw_transcript"] = raw_transcript
+
+        if diarization is not _UNSET:
+            update["diarization"] = diarization
 
         if transcript is not _UNSET:
             update["transcript"] = transcript
