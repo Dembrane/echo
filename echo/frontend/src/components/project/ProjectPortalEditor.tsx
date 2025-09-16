@@ -383,7 +383,7 @@ const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
                 <Stack gap="md">
                   <Group>
                     <Title order={4}>
-                      <Trans>Dembrane Echo</Trans>
+                      <Trans>Dembrane ECHO</Trans>
                     </Title>
                     <Logo hideTitle />
                     <Badge>
@@ -395,7 +395,7 @@ const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
                     <Trans>
                       Enable this feature to allow participants to request
                       AI-powered responses during their conversation.
-                      Participants can click "Echo" after recording their
+                      Participants can click "ECHO" after recording their
                       thoughts to receive contextual feedback, encouraging
                       deeper reflection and engagement. A cooldown period
                       applies between requests.
@@ -409,7 +409,7 @@ const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
                       <Switch
                         label={
                           <FormLabel
-                            label={t`Enable Dembrane Echo`}
+                            label={t`Enable Dembrane ECHO`}
                             isDirty={formState.dirtyFields.is_get_reply_enabled}
                             error={
                               formState.errors.is_get_reply_enabled?.message

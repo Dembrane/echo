@@ -331,6 +331,13 @@ export const ProjectChatRoute = () => {
     setTemplateKey(key);
   };
 
+  // Clear template selection when input becomes empty
+  useEffect(() => {
+    if (input.trim() === "" && templateKey) {
+      setTemplateKey(null);
+    }
+  }, [input, templateKey, setTemplateKey]);
+
   if (isInitializing || chatQuery.isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -488,7 +495,10 @@ export const ProjectChatRoute = () => {
             />
           </Group>
 
-          <ChatTemplatesMenu onTemplateSelect={handleTemplateSelect} />
+          <ChatTemplatesMenu
+            onTemplateSelect={handleTemplateSelect}
+            selectedTemplateKey={templateKey}
+          />
 
           <Divider />
           {(!ENABLE_CHAT_AUTO_SELECT
@@ -563,7 +573,7 @@ export const ProjectChatRoute = () => {
                   </Text>
                   <Text size="xs" className="italic" c="dimmed">
                     <Trans>
-                      Echo is powered by AI. Please double-check responses.
+                      ECHO is powered by AI. Please double-check responses.
                     </Trans>
                   </Text>
                 </Group>
@@ -593,7 +603,7 @@ export const ProjectChatRoute = () => {
               </Text>
               <Text size="xs" className="italic" c="dimmed">
                 <Trans>
-                  Echo is powered by AI. Please double-check responses.
+                  ECHO is powered by AI. Please double-check responses.
                 </Trans>
               </Text>
             </Stack>
