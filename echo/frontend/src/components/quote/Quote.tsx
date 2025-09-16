@@ -121,10 +121,10 @@ export const Quote = ({
 
           <div
             className={cn(
-              "rounded-lg bg-gray-50 p-3 text-sm dark:bg-gray-800",
+              "rounded-lg bg-gray-50 p-3 text-sm",
               !showTranscript &&
                 hasTranscript &&
-                "cursor-pointer transition-colors hover:bg-gray-100 dark:hover:bg-gray-700",
+                "cursor-pointer transition-colors hover:bg-gray-100",
             )}
             onClick={() =>
               !showTranscript && hasTranscript && setShowTranscript(true)
