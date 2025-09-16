@@ -142,16 +142,25 @@ def transcribe_audio_assemblyai(
     data: dict[str, Any] = {
         "audio_url": audio_file_uri,
         "speech_model": "universal",
+        "language_detection": True,
         "language_detection_options": {
-            "expected_languages": ["nl", "en", "fr", "es", "de", "it", "pt"],
+            "expected_languages": [
+                "nl",
+                "fr",
+                "es",
+                "de",
+                "it",
+                "pt",
+                "en",
+            ],
         },
     }
 
     if language:
         if language == "auto":
-            data["language_detection"] = True
+            data["language_detection_options"]["fallback_language"] = "en"
         else:
-            data["language_code"] = language
+            data["language_detection_options"]["fallback_language"] = language
 
     if hotwords:
         data["keyterms_prompt"] = hotwords
@@ -392,7 +401,7 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str:
                 return conversation_chunk_id
 
     except Exception as e:
-        logger.error(f"Failed to process conversation chunk {conversation_chunk_id}: {e}")
+        logger.error("Failed to process conversation chunk %s: %s", conversation_chunk_id, e)
         raise TranscriptionError(
-            f"Failed to process conversation chunk {conversation_chunk_id}: {e}"
+            "Failed to process conversation chunk %s: %s" % (conversation_chunk_id, e)
         ) from e
