@@ -22,7 +22,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Logo } from "../common/Logo";
 
 const FormSchema = z.object({
-  name: z.string().min(4, t`Project name must be at least 4 characters long`),
+  name: z.string().min(4, t`Project name must be at least 4 characters long`.toString()),
   context: z.string().optional(),
 });
 
