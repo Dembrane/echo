@@ -21,13 +21,6 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Logo } from "../common/Logo";
 
-const FormSchema = z.object({
-  name: z.string().min(4, t`Project name must be at least 4 characters long`),
-  context: z.string().optional(),
-});
-
-type TFormSchema = z.infer<typeof FormSchema>;
-
 type ProjectBasicEditProps = {
   project: Project;
 };
@@ -35,6 +28,14 @@ type ProjectBasicEditProps = {
 export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
   project,
 }) => {
+
+  const FormSchema = z.object({
+  name: z.string().min(4, t`Project name must be at least 4 characters long`),
+  context: z.string().optional(),
+});
+
+type TFormSchema = z.infer<typeof FormSchema>;
+
   const { control, handleSubmit, watch, trigger, formState, getValues, reset } =
     useForm<TFormSchema>({
       defaultValues: {

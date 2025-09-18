@@ -76,7 +76,7 @@ msgstr "Er is iets fout gegaan"
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:249
 msgid "library.generate.duration.message"
-msgstr "De bibliotheek zal {duration} duren"
+msgstr "Het genereren van een bibliotheek kan tot een uur duren"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:244
 msgid " Submit"
@@ -91,7 +91,7 @@ msgid "(for enhanced audio processing)"
 msgstr "(voor verbeterde audioverwerking)"
 
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
-#. placeholder {0}: showPreview ? "Hide Preview" : "Show Preview"
+#. placeholder {0}: showPreview ? "Verstop Voorvertoning" : "Voorvertoning"
 #. placeholder {0}: citation.reference_text
 #: src/routes/project/chat/ProjectChatRoute.tsx:429
 #: src/components/project/ProjectPortalEditor.tsx:262
@@ -483,7 +483,7 @@ msgstr "Terug naar selectie"
 
 #: src/components/project/ProjectPortalEditor.tsx:365
 msgid "Basic (Essential tutorial slides)"
-msgstr "Basis (Essentieel tutorial slides)"
+msgstr "Basis (Alleen essentiële tutorial slides)"
 
 #: src/components/project/ProjectPortalEditor.tsx:276
 msgid "Basic Settings"
@@ -584,7 +584,7 @@ msgstr "Sluiten"
 
 #: src/components/chat/templates.ts:30
 msgid "Compare & Contrast"
-msgstr "Vergelijk en contrast   "
+msgstr "Vergelijk"
 
 #: src/components/chat/ChatTemplatesMenu.tsx:26
 #~ msgid "Compare and contrast the following items provided in the context."
@@ -790,7 +790,7 @@ msgstr "Aangepaste bestandsnaam"
 
 #: src/components/project/ProjectDangerZone.tsx:28
 msgid "Danger Zone"
-msgstr "Gevaarlijke zone"
+msgstr "Gevarenzone"
 
 #. js-lingui-explicit-id
 #: src/components/chat/ChatAccordion.tsx:87
@@ -1022,23 +1022,23 @@ msgstr "Dembrane ECHO inschakelen"
 
 #: src/components/project/ProjectPortalEditor.tsx:666
 msgid "Enable Report Notifications"
-msgstr "Berichtsbenachrichtigingen inschakelen"
+msgstr "Rapportmeldingen inschakelen"
 
 #: src/components/project/ProjectPortalEditor.tsx:650
 msgid "Enable this feature to allow participants to receive notifications when a report is published or updated. Participants can enter their email to subscribe for updates and stay informed."
-msgstr "Schakel deze functie in om deelnemers toe te staan om meldingen te ontvangen wanneer een rapport wordt gepubliceerd of bijgewerkt. Deelnemers kunnen hun e-mailadres invoeren om updates te abonneren en op de hoogte te blijven."
+msgstr "Schakel deze functie in zodat deelnemers meldingen kunnen ontvangen wanneer een rapport wordt gepubliceerd of bijgewerkt. Deelnemers kunnen hun e-mailadres invoeren om zich te abonneren op updates."
 
 #: src/components/project/ProjectPortalEditor.tsx:395
 #~ msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Echo\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
-#~ msgstr "Schakel deze functie in om deelnemers toe te staan om AI-geïnspireerde reacties aan te vragen tijdens hun gesprek. Deelnemers kunnen na het opnemen van hun gedachten op \"Dembrane Echo\" klikken om contextuele feedback te ontvangen, waardoor dieper reflectie en betrokkenheid wordt bevorderd. Een cooldownperiode wordt toegepast tussen aanvragen."
+#~ msgstr "Schakel deze functie in zodat deelnemers AI-suggesties kunnen opvragen tijdens het gesprek. Deelnemers kunnen na het vastleggen van hun gedachten op \"ECHO\" klikken voor contextuele feedback, wat diepere reflectie en betrokkenheid stimuleert. Tussen elke aanvraag zit een korte pauze."
 
 #: src/components/project/ProjectPortalEditor.tsx:395
 msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"ECHO\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
-msgstr "Schakel deze functie in om deelnemers toe te staan om AI-geïnspireerde reacties aan te vragen tijdens hun gesprek. Deelnemers kunnen na het opnemen van hun gedachten op \"ECHO\" klikken om contextuele feedback te ontvangen, waardoor dieper reflectie en betrokkenheid wordt bevorderd. Een cooldownperiode wordt toegepast tussen aanvragen."
+msgstr "Schakel deze functie in zodat deelnemers AI-suggesties kunnen opvragen tijdens het gesprek. Deelnemers kunnen na het vastleggen van hun gedachten op \"ECHO\" klikken voor contextuele feedback, wat diepere reflectie en betrokkenheid stimuleert. Tussen elke aanvraag zit een korte pauze."
 
 #: src/components/project/ProjectBasicEdit.tsx:165
 #~ msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Get Reply\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
-#~ msgstr "Schakel deze functie in om deelnemers toe te staan om AI-geïnspireerde reacties aan te vragen tijdens hun gesprek. Deelnemers kunnen na het opnemen van hun gedachten op \"Dembrane Reactie\" klikken om contextuele feedback te ontvangen, waardoor dieper reflectie en betrokkenheid wordt bevorderd. Een cooldownperiode wordt toegepast tussen aanvragen."
+#~ msgstr "Schakel deze functie in zodat deelnemers AI-suggesties kunnen opvragen tijdens het gesprek. Deelnemers kunnen na het vastleggen van hun gedachten op \"ECHO\" klikken voor contextuele feedback, wat diepere reflectie en betrokkenheid stimuleert. Tussen elke aanvraag zit een korte pauze."
 
 #: src/components/conversation/AutoSelectConversations.tsx:113
 msgid "Enabled"
@@ -1372,8 +1372,8 @@ msgid ""
 "* What does success look like"
 msgstr ""
 "Hoe zou je een collega uitleggen wat je probeert te bereiken met dit project?\n"
-"* Wat is de noordsterdoel of belangrijkste maatstaf\n"
-"* Wat ziet eruit als succes"
+"* Wat is het doel of belangrijkste maatstaf\n"
+"* Hoe ziet succes eruit"
 
 #: src/components/library/LibraryTemplatesMenu.tsx:22
 #~ msgid ""
@@ -1610,7 +1610,7 @@ msgstr "Als gelezen markeren"
 
 #: src/components/chat/templates.ts:46
 msgid "Meeting Notes"
-msgstr "Vergaderingenotes"
+msgstr "Vergadernotities"
 
 #. placeholder {0}: capitalize(m.role)
 #. placeholder {1}: Math.ceil(m.token_usage * 100)
@@ -1880,7 +1880,7 @@ msgstr "Openen"
 
 #: src/components/conversation/OpenForParticipationSummaryCard.tsx:32
 msgid "Open for Participation?"
-msgstr "Open voor deelneming?"
+msgstr "Open voor deelname?"
 
 #. js-lingui-explicit-id
 #: src/routes/participant/ParticipantConversation.tsx:404
@@ -2222,7 +2222,7 @@ msgstr "Bekijk opnieuw"
 #: src/components/view/DummyViews.tsx:17
 #: src/components/library/LibraryTemplatesMenu.tsx:22
 msgid "Recurring Themes"
-msgstr "Herhalende Thema's"
+msgstr "Terugkerende thema's"
 
 #: src/components/chat/References.tsx:19
 msgid "References"
@@ -2733,7 +2733,7 @@ msgstr "Succes"
 #: src/components/library/LibraryTemplatesMenu.tsx:33
 #: src/components/chat/ChatTemplatesMenu.tsx:48
 msgid "Suggested:"
-msgstr "Aanbeveling:"
+msgstr "Aanbevelingen:"
 
 #: src/components/project/ProjectPortalEditor.tsx:464
 #: src/components/chat/templates.ts:14
@@ -2852,7 +2852,7 @@ msgstr "Er is een fout opgetreden bij het verifiëren van uw e-mail. Probeer het
 
 #: src/components/view/DummyViews.tsx:8
 msgid "These default view templates will be generated when you create your first library."
-msgstr "Deze standaard weergave sjablonen worden gegenereerd wanneer u uw eerste bibliotheek maakt."
+msgstr "Deze standaardweergaven worden automatisch aangemaakt wanneer je je eerste bibliotheek maakt."
 
 #: src/routes/participant/ParticipantConversation.tsx:504
 msgid "Thinking..."
@@ -2895,7 +2895,7 @@ msgstr "Dit is een live voorbeeld van het portaal van de deelnemer. U moet de pa
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:220
 msgid "library.description"
-msgstr "Bibliotheek"
+msgstr "Dit is uw projectbibliotheek. Creëer weergaven om uw hele project tegelijk te analyseren."
 
 #: src/routes/project/library/ProjectLibrary.tsx:312
 #~ msgid "This is your project library. Currently, {0} conversations are waiting to be processed."
@@ -2939,7 +2939,7 @@ msgstr "Deze pagina wordt getoond aan deelnemers wanneer ze een gesprek starten 
 
 #: src/components/project/ProjectPortalEditor.tsx:533
 msgid "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
-msgstr "Deze prompt bepaalt hoe de AI reageert op deelnemers. Aanpassen om de soort feedback of betrokkenheid te bepalen die u wilt stimuleren."
+msgstr "Deze prompt bepaalt hoe de AI reageert op deelnemers. Deze prompt stuurt aan hoe de AI reageert"
 
 #: src/routes/participant/ParticipantReport.tsx:52
 msgid "This report is not yet available. "
@@ -3278,7 +3278,7 @@ msgstr "Welkom"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:381
 msgid "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
-msgstr "Welkom bij Dembrane Chat! Gebruik de zijbalk om bronnen en gesprekken te selecteren die u wilt analyseren. Dan kunt u vragen stellen over de geselecteerde bronnen en gesprekken."
+msgstr "Welkom bij Dembrane Chat! Gebruik de zijbalk om bronnen en gesprekken te selecteren die je wilt analyseren. Daarna kun je vragen stellen over de geselecteerde inhoud."
 
 #: src/components/common/DembraneLoadingSpinner/index.tsx:22
 msgid "Welcome to Dembrane!"
