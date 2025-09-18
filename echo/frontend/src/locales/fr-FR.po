@@ -46,7 +46,7 @@ msgstr "Une erreur s'est produite"
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:236
 #~ msgid "library.conversations.processing.status"
-#~ msgstr "Conversations en cours de traitement"
+#~ msgstr "Actuellement, {finishedConversationsCount} conversations sont prêtes à être analysées. {unfinishedConversationsCount} sont encore en cours de traitement."
 
 #. js-lingui-explicit-id
 #: src/components/participant/EchoErrorAlert.tsx:14
@@ -125,7 +125,7 @@ msgstr "{0} Conversations • Modifié le {1}"
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:240
 msgid "library.conversations.to.be.analyzed"
-msgstr "Actuellement {0} conversations sont prêtes à être analysées."
+msgstr "{finishedConversationsCount, plural, one {Actuellement, # conversation est prête à être analysée.} other {Actuellement, # conversations sont prêtes à être analysées.}}"
 
 #: src/routes/participant/ParticipantConversation.tsx:253
 msgid "{minutes} minutes and {seconds} seconds"

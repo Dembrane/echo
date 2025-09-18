@@ -46,7 +46,7 @@ msgstr "Algo salió mal"
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:236
 #~ msgid "library.conversations.processing.status"
-#~ msgstr "Conversaciones en proceso"
+#~ msgstr "Actualmente, {finishedConversationsCount} conversaciones están listas para ser analizadas. {unfinishedConversationsCount} aún en proceso."
 
 #. js-lingui-explicit-id
 #: src/components/participant/EchoErrorAlert.tsx:14
@@ -125,7 +125,7 @@ msgstr "{0} Conversaciones • Editado {1}"
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:240
 msgid "library.conversations.to.be.analyzed"
-msgstr "Actualmente {0} conversaciones están listas para ser analizadas."
+msgstr "{finishedConversationsCount, plural, one {Actualmente, # conversación está lista para ser analizada.} other {Actualmente, # conversaciones están listas para ser analizadas.}}"
 
 #: src/routes/participant/ParticipantConversation.tsx:253
 msgid "{minutes} minutes and {seconds} seconds"

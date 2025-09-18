@@ -46,7 +46,7 @@ msgstr "Er is iets fout gegaan"
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:236
 #~ msgid "library.conversations.processing.status"
-#~ msgstr "Gesprekken worden verwerkt"
+#~ msgstr "Momenteel zijn {finishedConversationsCount} gesprekken klaar om geanalyseerd te worden. {unfinishedConversationsCount} worden nog verwerkt."
 
 #. js-lingui-explicit-id
 #: src/components/participant/EchoErrorAlert.tsx:14
@@ -125,7 +125,7 @@ msgstr "{0} Gesprekken • Bewerkt {1}"
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:240
 msgid "library.conversations.to.be.analyzed"
-msgstr "Er zijn {0} gesprekken klaar om te worden geanalyseerd."
+msgstr "{finishedConversationsCount, plural, one {Momenteel is # gesprek klaar om te worden geanalyseerd.} other {Momenteel zijn # gesprekken klaar om te worden geanalyseerd.}}"
 
 #: src/routes/participant/ParticipantConversation.tsx:253
 msgid "{minutes} minutes and {seconds} seconds"
