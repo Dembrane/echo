@@ -759,9 +759,7 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
   );
 
   const appliedFiltersCount = useMemo(() => {
-    let count = 0;
-    count += selectedTagIds.length;
-    return count;
+    return selectedTagIds.length;
   }, [sortBy, selectedTagIds.length]);
 
   const [showFilterActions, setShowFilterActions] = useState(false);
