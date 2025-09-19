@@ -1015,7 +1015,7 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
                 <Menu.Dropdown>
                   <Stack py="md" px="lg" gap="sm" w={280}>
                     <TextInput
-                      placeholder={t`Search for tag`}
+                      placeholder={t`Search tags`}
                       value={tagSearch}
                       onChange={(e) => setTagSearch(e.currentTarget.value)}
                       size="sm"
