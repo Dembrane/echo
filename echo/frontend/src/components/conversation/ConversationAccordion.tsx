@@ -36,6 +36,7 @@ import {
   Center,
   Badge,
   Box,
+  Divider,
 } from "@mantine/core";
 import {
   useState,
@@ -62,6 +63,9 @@ import {
   IconArrowsUpDown,
   IconDotsVertical,
   IconInfoCircle,
+  IconTags,
+  IconChevronDown,
+  IconChevronUp,
 } from "@tabler/icons-react";
 import { formatDuration, formatRelative, intervalToDuration } from "date-fns";
 import { NavigationButton } from "../common/NavigationButton";
@@ -650,6 +654,37 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
     defaultValue: true,
   });
 
+  // Tags filter state (fetch only tags for minimal payload)
+  const { data: projectTags, isLoading: projectTagsLoading } = useProjectById({
+    projectId,
+    query: {
+      fields: [
+        {
+          tags: ["id", "text", "sort"],
+        },
+      ],
+      deep: {
+        // @ts-expect-error tags not typed in CustomDirectusTypes
+        tags: {
+          _sort: "sort",
+        },
+      },
+    },
+  });
+  const [tagSearch, setTagSearch] = useState("");
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const allProjectTags = useMemo(
+    () => (projectTags?.tags as unknown as ProjectTag[]) ?? [],
+    [projectTags?.tags],
+  );
+  const filteredProjectTags = useMemo(() => {
+    const query = tagSearch.trim().toLowerCase();
+    if (!query) return allProjectTags;
+    return allProjectTags.filter((t) =>
+      (t.text ?? "").toLowerCase().includes(query),
+    );
+  }, [allProjectTags, tagSearch]);
+
   const conversationsQuery = useInfiniteConversationsByProjectId(
     projectId,
     false,
@@ -662,6 +697,19 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
         chunks: {
           _limit: 25,
         },
+      },
+      // Override filter to add tag filtering while preserving project scope
+      filter: {
+        project_id: { _eq: projectId },
+        ...(selectedTagIds.length > 0 && {
+          tags: {
+            _some: {
+              project_tag_id: {
+                id: { _in: selectedTagIds },
+              },
+            },
+          },
+        }),
       },
     },
     // Temporarily disabled source filters
@@ -699,13 +747,26 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
   const [parent2] = useAutoAnimate();
 
   const filterApplied = useMemo(
-    () => debouncedConversationSearchValue !== "" || sortBy !== "-created_at",
+    () =>
+      debouncedConversationSearchValue !== "" ||
+      sortBy !== "-created_at" ||
+      selectedTagIds.length > 0,
     // Temporarily disabled source filters
     //   sortBy !== "-created_at" ||
     //   activeFilters.length !== FILTER_OPTIONS.length,
     // [debouncedConversationSearchValue, sortBy, activeFilters],
-    [debouncedConversationSearchValue, sortBy],
+    [debouncedConversationSearchValue, sortBy, selectedTagIds.length],
   );
+
+  const appliedFiltersCount = useMemo(() => {
+    let count = 0;
+    count += selectedTagIds.length;
+    return count;
+  }, [sortBy, selectedTagIds.length]);
+
+  const [showFilterActions, setShowFilterActions] = useState(false);
+  const [sortMenuOpened, setSortMenuOpened] = useState(false);
+  const [tagsMenuOpened, setTagsMenuOpened] = useState(false);
 
   const resetEverything = useCallback(() => {
     setConversationSearch("");
@@ -713,6 +774,8 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
     // Temporarily disabled source filters
     // setActiveFilters(["PORTAL_AUDIO", "DASHBOARD_UPLOAD"]);
     setShowDuration(true);
+    setSelectedTagIds([]);
+    setTagSearch("");
   }, []);
 
   // Temporarily disabled source filters
@@ -787,7 +850,7 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
       </Accordion.Control>
 
       <Accordion.Panel>
-        <Stack ref={parent2} className="relative">
+        <Stack gap="sm" ref={parent2} className="relative">
           {inChatMode && ENABLE_CHAT_AUTO_SELECT && totalConversations > 0 && (
             <Stack gap="xs" className="relative">
               <LoadingOverlay visible={conversationsQuery.isLoading} />
@@ -796,8 +859,7 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
           )}
 
           {!(
-            allConversations.length === 0 &&
-            debouncedConversationSearchValue === ""
+            totalConversations === 0 && debouncedConversationSearchValue === ""
           ) && (
             <Group justify="space-between" align="center" gap="xs">
               <TextInput
@@ -820,32 +882,65 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
                 onChange={(e) => setConversationSearch(e.currentTarget.value)}
                 className="flex-grow"
               />
-              <Menu withArrow position="right" shadow="md">
-                <Menu.Target>
-                  <Tooltip label={t`Options`}>
-                    <ActionIcon
-                      variant="outline"
-                      color={filterApplied ? "primary" : "gray"}
-                      c={filterApplied ? "primary" : "gray"}
+              <Tooltip label={t`Options`}>
+                <Box className="relative">
+                  <ActionIcon
+                    variant="outline"
+                    color={filterApplied ? "primary" : "gray"}
+                    c={filterApplied ? "primary" : "gray"}
+                    onClick={() => setShowFilterActions((prev) => !prev)}
+                    aria-label={t`Options`}
+                  >
+                    {showFilterActions ? (
+                      <IconChevronUp size={16} />
+                    ) : (
+                      <IconChevronDown size={16} />
+                    )}
+                  </ActionIcon>
+                  {appliedFiltersCount > 0 && (
+                    <Badge
+                      size="xs"
+                      variant="filled"
+                      color="blue"
+                      className="absolute -right-1 -top-1 px-1"
                     >
-                      <IconDotsVertical size={16} />
-                    </ActionIcon>
-                  </Tooltip>
+                      {appliedFiltersCount}
+                    </Badge>
+                  )}
+                </Box>
+              </Tooltip>
+            </Group>
+          )}
+
+          {showFilterActions && (
+            <Group gap="xs">
+              <Menu
+                withArrow
+                position="bottom-start"
+                shadow="md"
+                opened={sortMenuOpened}
+                onChange={setSortMenuOpened}
+              >
+                <Menu.Target>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    color="gray"
+                    fw={500}
+                    leftSection={<IconArrowsUpDown size={16} />}
+                    rightSection={
+                      sortMenuOpened ? (
+                        <IconChevronUp size={16} />
+                      ) : (
+                        <IconChevronDown size={16} />
+                      )
+                    }
+                  >
+                    <Trans>Sort</Trans>
+                  </Button>
                 </Menu.Target>
                 <Menu.Dropdown>
                   <Stack py="md" px="lg" gap="md">
-                    <Stack gap="xs">
-                      <Text size="lg">
-                        <Trans>Options</Trans>
-                      </Text>
-                      <Checkbox
-                        label={t`Show duration`}
-                        checked={showDuration}
-                        onChange={(e) =>
-                          setShowDuration(e.currentTarget.checked)
-                        }
-                      />
-                    </Stack>
                     <Stack gap="xs">
                       <Text size="lg">
                         <Trans>Sort</Trans>
@@ -877,6 +972,136 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
                   </Stack>
                 </Menu.Dropdown>
               </Menu>
+
+              <Menu
+                withArrow
+                position="bottom-start"
+                shadow="md"
+                opened={tagsMenuOpened}
+                onChange={setTagsMenuOpened}
+              >
+                <Menu.Target>
+                  <Button
+                    variant="outline"
+                    color="gray"
+                    size="sm"
+                    fw={500}
+                    leftSection={<IconTags size={16} />}
+                    rightSection={
+                      tagsMenuOpened ? (
+                        <IconChevronUp size={16} />
+                      ) : (
+                        <IconChevronDown size={16} />
+                      )
+                    }
+                  >
+                    {selectedTagIds.length > 0 ? (
+                      <Group gap={6}>
+                        <Badge
+                          size="sm"
+                          variant="light"
+                          color="blue"
+                          className="text-xs"
+                        >
+                          {selectedTagIds.length}
+                        </Badge>
+                        <Trans>Tags</Trans>
+                      </Group>
+                    ) : (
+                      <Trans>Tags</Trans>
+                    )}
+                  </Button>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Stack py="md" px="lg" gap="sm" w={280}>
+                    <TextInput
+                      placeholder={t`Search for tag`}
+                      value={tagSearch}
+                      onChange={(e) => setTagSearch(e.currentTarget.value)}
+                      size="sm"
+                      rightSection={
+                        !!tagSearch && (
+                          <ActionIcon
+                            variant="transparent"
+                            onClick={() => setTagSearch("")}
+                            size="sm"
+                          >
+                            <IconX size={16} />
+                          </ActionIcon>
+                        )
+                      }
+                    />
+
+                    {selectedTagIds.length > 0 && (
+                      <Group gap="xs" wrap="wrap" mt="sm">
+                        {selectedTagIds.map((tagId) => {
+                          const tag = allProjectTags.find(
+                            (t) => t.id === tagId,
+                          );
+                          if (!tag) return null;
+                          return (
+                            <Pill
+                              key={tagId}
+                              size="sm"
+                              withRemoveButton
+                              onRemove={() =>
+                                setSelectedTagIds((prev) =>
+                                  prev.filter((id) => id !== tagId),
+                                )
+                              }
+                            >
+                              {tag.text}
+                            </Pill>
+                          );
+                        })}
+                      </Group>
+                    )}
+
+                    <Divider my="sm" />
+
+                    {projectTagsLoading ? (
+                      <Center h={220}>
+                        <Loader size="sm" />
+                      </Center>
+                    ) : (
+                      <ScrollArea h={220} type="always" scrollbars="y">
+                        <Stack gap="sm">
+                          {filteredProjectTags.map((tag) => {
+                            const checked = selectedTagIds.includes(tag.id);
+                            return (
+                              <Checkbox
+                                key={tag.id}
+                                checked={checked}
+                                label={tag.text}
+                                onChange={(e) => {
+                                  const isChecked = e.currentTarget.checked;
+                                  setSelectedTagIds((prev) => {
+                                    if (isChecked) {
+                                      if (prev.includes(tag.id)) return prev;
+                                      return [...prev, tag.id];
+                                    }
+                                    return prev.filter((id) => id !== tag.id);
+                                  });
+                                }}
+                                styles={{
+                                  labelWrapper: {
+                                    width: "100%",
+                                  },
+                                }}
+                              />
+                            );
+                          })}
+                          {filteredProjectTags.length === 0 && (
+                            <Text size="sm" ta="center" c="dimmed">
+                              <Trans>No tags found</Trans>
+                            </Text>
+                          )}
+                        </Stack>
+                      </ScrollArea>
+                    )}
+                  </Stack>
+                </Menu.Dropdown>
+              </Menu>
             </Group>
           )}
 
@@ -905,7 +1130,7 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
             </Text>
           )}
 
-          <Stack gap="xs" className="relative">
+          <Stack gap="xs" mt="sm" className="relative">
             {conversationsQuery.status === "pending" && (
               <BaseSkeleton count={3} height="80px" width="100%" radius="xs" />
             )}
