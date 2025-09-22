@@ -618,7 +618,7 @@ msgstr "Detalles del estado de la conversación"
 msgid "conversations"
 msgstr "conversaciones"
 
-#: src/components/conversation/ConversationAccordion.tsx:843
+#: src/components/conversation/ConversationAccordion.tsx:841
 msgid "Conversations"
 msgstr "Conversaciones"
 
@@ -1592,7 +1592,7 @@ msgstr "No hay conversaciones disponibles para crear la biblioteca"
 msgid "No conversations found."
 msgstr "No se encontraron conversaciones."
 
-#: src/components/conversation/ConversationAccordion.tsx:1123
+#: src/components/conversation/ConversationAccordion.tsx:1121
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "No se encontraron conversaciones. Inicia una conversación usando el enlace de invitación de participación desde la <0><1>vista general del proyecto.</1></0>"
 
@@ -1634,7 +1634,7 @@ msgstr "No se encontró ningún informe"
 #~ msgstr "No se encontraron recursos."
 
 #: src/components/conversation/ConversationEdit.tsx:171
-#: src/components/conversation/ConversationAccordion.tsx:1096
+#: src/components/conversation/ConversationAccordion.tsx:1094
 msgid "No tags found"
 msgstr "No se encontraron etiquetas"
 
@@ -1722,8 +1722,8 @@ msgstr "Abrir guía de solución de problemas"
 #~ msgid "Open troubleshooting guide"
 #~ msgstr "Abrir guía de solución de problemas"
 
-#: src/components/conversation/ConversationAccordion.tsx:885
-#: src/components/conversation/ConversationAccordion.tsx:892
+#: src/components/conversation/ConversationAccordion.tsx:883
+#: src/components/conversation/ConversationAccordion.tsx:890
 msgid "Options"
 msgstr "Opciones"
 
@@ -2144,7 +2144,7 @@ msgstr "Por favor, espera mientras verificamos el acceso al micrófono."
 #~ msgid "Requesting microphone access to detect available devices..."
 #~ msgstr "Solicitando acceso al micrófono para detectar dispositivos disponibles..."
 
-#: src/components/conversation/ConversationAccordion.tsx:970
+#: src/components/conversation/ConversationAccordion.tsx:968
 msgid "Reset All Options"
 msgstr "Restablecer todas las opciones"
 
@@ -2219,7 +2219,7 @@ msgstr "Desplazarse al final"
 msgid "Search"
 msgstr "Buscar"
 
-#: src/components/conversation/ConversationAccordion.tsx:879
+#: src/components/conversation/ConversationAccordion.tsx:877
 msgid "Search conversations"
 msgstr "Buscar conversaciones"
 
@@ -2236,7 +2236,7 @@ msgstr "Buscar Proyectos"
 msgid "Search projects..."
 msgstr "Buscar proyectos..."
 
-#: src/components/conversation/ConversationAccordion.tsx:1018
+#: src/components/conversation/ConversationAccordion.tsx:1016
 msgid "Search tags"
 msgstr "Buscar etiquetas"
 
@@ -2449,8 +2449,8 @@ msgstr "Algo salió mal. Por favor, inténtalo de nuevo."
 msgid "participant.echo.content.policy.violation.error.message"
 msgstr "Lo sentimos, no podemos procesar esta solicitud debido a la política de contenido del proveedor de LLM."
 
-#: src/components/conversation/ConversationAccordion.tsx:939
-#: src/components/conversation/ConversationAccordion.tsx:946
+#: src/components/conversation/ConversationAccordion.tsx:937
+#: src/components/conversation/ConversationAccordion.tsx:944
 msgid "Sort"
 msgstr "Ordenar"
 
@@ -2467,7 +2467,7 @@ msgstr "Fuente {0}"
 msgid "Spanish"
 msgstr "Español"
 
-#: src/components/conversation/ConversationChunkAudioTranscript.tsx:28
+#: src/components/conversation/ConversationChunkAudioTranscript.tsx:29
 msgid "Speaker"
 msgstr "Locutor"
 
@@ -2549,8 +2549,8 @@ msgstr "Formatos soportados: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 #: src/components/project/ProjectTagsInput.tsx:219
 #: src/components/participant/ParticipantInitiateForm.tsx:101
 #: src/components/conversation/ConversationEdit.tsx:143
-#: src/components/conversation/ConversationAccordion.tsx:1008
-#: src/components/conversation/ConversationAccordion.tsx:1011
+#: src/components/conversation/ConversationAccordion.tsx:1006
+#: src/components/conversation/ConversationAccordion.tsx:1009
 msgid "Tags"
 msgstr "Etiquetas"
 
@@ -2768,13 +2768,17 @@ msgstr "total"
 msgid "Transcript"
 msgstr "Transcripción"
 
-#: src/components/conversation/ConversationChunkAudioTranscript.tsx:66
+#: src/components/conversation/ConversationChunkAudioTranscript.tsx:67
 msgid "Transcript not available"
 msgstr "Transcripción no disponible"
 
 #: src/components/project/ProjectTranscriptSettings.tsx:95
 #~ msgid "Transcript Settings"
 #~ msgstr "Configuración de Transcripción"
+
+#: src/components/conversation/ConversationChunkAudioTranscript.tsx:69
+msgid "Transcription in progress…"
+msgstr "Transcripción en progreso…"
 
 #: src/components/chat/ChatTemplatesMenu.tsx:70
 #~ msgid ""
