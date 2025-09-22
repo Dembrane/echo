@@ -86,7 +86,7 @@ msgstr " Envoyer"
 msgid " Unsubscribe from Notifications"
 msgstr " Se désabonner des notifications"
 
-#: src/components/conversation/ConversationAccordion.tsx:409
+#: src/components/conversation/ConversationAccordion.tsx:413
 msgid "(for enhanced audio processing)"
 msgstr "(pour un traitement audio amélioré)"
 
@@ -184,7 +184,7 @@ msgstr "Ajouter une étiquette"
 msgid "Add Tags"
 msgstr "Ajouter des étiquettes"
 
-#: src/components/conversation/ConversationAccordion.tsx:154
+#: src/components/conversation/ConversationAccordion.tsx:158
 msgid "Add to this chat"
 msgstr "Ajouter à cette conversation"
 
@@ -224,7 +224,7 @@ msgstr "Permettre aux participants d'utiliser le lien pour démarrer de nouvelle
 msgid "Almost there"
 msgstr "Presque terminé"
 
-#: src/components/conversation/ConversationAccordion.tsx:149
+#: src/components/conversation/ConversationAccordion.tsx:153
 msgid "Already added to this chat"
 msgstr "Déjà ajouté à cette conversation"
 
@@ -432,7 +432,7 @@ msgstr "En supprimant ce projet, vous supprimerez toutes les données qui y sont
 #: src/components/dropzone/UploadConversationDropzone.tsx:676
 #: src/components/dropzone/UploadConversationDropzone.tsx:791
 #: src/components/conversation/MoveConversationButton.tsx:202
-#: src/components/conversation/ConversationAccordion.tsx:323
+#: src/components/conversation/ConversationAccordion.tsx:327
 msgid "Cancel"
 msgstr "Annuler"
 
@@ -441,7 +441,7 @@ msgstr "Annuler"
 msgid "participant.mic.settings.modal.second.confirm.cancel"
 msgstr "Annuler"
 
-#: src/components/conversation/ConversationAccordion.tsx:151
+#: src/components/conversation/ConversationAccordion.tsx:155
 msgid "Cannot add empty conversation"
 msgstr "Impossible d'ajouter une conversation vide"
 
@@ -560,7 +560,7 @@ msgstr "Connexion défectueuse"
 #~ msgid "Contact your sales representative to activate this feature today!"
 #~ msgstr "Contactez votre représentant commercial pour activer cette fonction aujourd'hui !"
 
-#: src/components/project/ProjectBasicEdit.tsx:133
+#: src/components/project/ProjectBasicEdit.tsx:134
 msgid "Context"
 msgstr "Contexte"
 
@@ -618,7 +618,7 @@ msgstr "Détails du statut de la conversation"
 msgid "conversations"
 msgstr "conversations"
 
-#: src/components/conversation/ConversationAccordion.tsx:780
+#: src/components/conversation/ConversationAccordion.tsx:843
 msgid "Conversations"
 msgstr "Conversations"
 
@@ -848,7 +848,7 @@ msgstr "Modifier la conversation"
 msgid "Edit file name"
 msgstr "Modifier le nom du fichier"
 
-#: src/components/project/ProjectBasicEdit.tsx:90
+#: src/components/project/ProjectBasicEdit.tsx:91
 msgid "Edit Project"
 msgstr "Modifier le projet"
 
@@ -891,7 +891,7 @@ msgid "email@work.com"
 msgstr "email@travail.com"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:167
-#: src/components/conversation/ConversationAccordion.tsx:437
+#: src/components/conversation/ConversationAccordion.tsx:441
 msgid "Empty"
 msgstr "Vide"
 
@@ -1223,7 +1223,7 @@ msgstr "Bonjour, {0}"
 msgid "Home"
 msgstr "Accueil"
 
-#: src/components/project/ProjectBasicEdit.tsx:139
+#: src/components/project/ProjectBasicEdit.tsx:140
 msgid ""
 "How would you describe to a colleague what are you trying to accomplish with this project?\n"
 "* What is the north star goal or key metric\n"
@@ -1417,7 +1417,7 @@ msgstr "Chargement des microphones..."
 msgid "loading..."
 msgstr "chargement..."
 
-#: src/components/conversation/ConversationAccordion.tsx:109
+#: src/components/conversation/ConversationAccordion.tsx:113
 #: src/components/conversation/hooks/index.ts:320
 msgid "Loading..."
 msgstr "Chargement..."
@@ -1438,7 +1438,7 @@ msgstr "Se connecter en tant qu'utilisateur existant"
 msgid "Logout"
 msgstr "Déconnexion"
 
-#: src/components/conversation/ConversationAccordion.tsx:565
+#: src/components/conversation/ConversationAccordion.tsx:569
 msgid "Longest First"
 msgstr "Plus long en premier"
 
@@ -1477,12 +1477,12 @@ msgid "More templates"
 msgstr "Plus de templates"
 
 #: src/components/conversation/MoveConversationButton.tsx:212
-#: src/components/conversation/ConversationAccordion.tsx:333
+#: src/components/conversation/ConversationAccordion.tsx:337
 msgid "Move"
 msgstr "Déplacer"
 
 #: src/components/conversation/MoveConversationButton.tsx:135
-#: src/components/conversation/ConversationAccordion.tsx:254
+#: src/components/conversation/ConversationAccordion.tsx:258
 msgid "Move Conversation"
 msgstr "Déplacer"
 
@@ -1490,20 +1490,20 @@ msgstr "Déplacer"
 msgid "Move to Another Project"
 msgstr "Déplacer vers un autre projet"
 
-#: src/components/conversation/ConversationAccordion.tsx:251
+#: src/components/conversation/ConversationAccordion.tsx:255
 msgid "Move to Project"
 msgstr "Déplacer vers un projet"
 
-#: src/components/project/ProjectBasicEdit.tsx:115
+#: src/components/project/ProjectBasicEdit.tsx:116
 #: src/components/conversation/ConversationEdit.tsx:126
 msgid "Name"
 msgstr "Nom"
 
-#: src/components/conversation/ConversationAccordion.tsx:563
+#: src/components/conversation/ConversationAccordion.tsx:567
 msgid "Name A-Z"
 msgstr "Nom A-Z"
 
-#: src/components/conversation/ConversationAccordion.tsx:564
+#: src/components/conversation/ConversationAccordion.tsx:568
 msgid "Name Z-A"
 msgstr "Nom Z-A"
 
@@ -1534,7 +1534,7 @@ msgstr "Nouveau mot de passe"
 msgid "New Project"
 msgstr "Nouveau projet"
 
-#: src/components/conversation/ConversationAccordion.tsx:561
+#: src/components/conversation/ConversationAccordion.tsx:565
 msgid "Newest First"
 msgstr "Plus récent en premier"
 
@@ -1592,7 +1592,7 @@ msgstr "Aucune conversation disponible pour créer la bibliothèque"
 msgid "No conversations found."
 msgstr "Aucune conversation trouvée."
 
-#: src/components/conversation/ConversationAccordion.tsx:898
+#: src/components/conversation/ConversationAccordion.tsx:1123
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "Aucune conversation trouvée. Commencez une conversation en utilisant le lien d'invitation à participer depuis la <0><1>vue d'ensemble du projet.</1></0>"
 
@@ -1634,6 +1634,7 @@ msgstr "Aucun rapport trouvé"
 #~ msgstr "Aucune ressource trouvée."
 
 #: src/components/conversation/ConversationEdit.tsx:171
+#: src/components/conversation/ConversationAccordion.tsx:1096
 msgid "No tags found"
 msgstr "Aucune étiquette trouvée"
 
@@ -1669,12 +1670,12 @@ msgstr "Aucun fichier audio valide n'a été sélectionné. Veuillez sélectionn
 msgid "Not available"
 msgstr "Non disponible"
 
-#: src/components/conversation/ConversationAccordion.tsx:562
+#: src/components/conversation/ConversationAccordion.tsx:566
 msgid "Oldest First"
 msgstr "Plus ancien en premier"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:533
+#: src/components/conversation/ConversationAccordion.tsx:537
 msgid "conversation.ongoing"
 msgstr "En cours"
 
@@ -1721,8 +1722,8 @@ msgstr "Ouvrir le guide de dépannage"
 #~ msgid "Open troubleshooting guide"
 #~ msgstr "Ouvrir le guide de dépannage"
 
-#: src/components/conversation/ConversationAccordion.tsx:825
-#: src/components/conversation/ConversationAccordion.tsx:839
+#: src/components/conversation/ConversationAccordion.tsx:885
+#: src/components/conversation/ConversationAccordion.tsx:892
 msgid "Options"
 msgstr "Options"
 
@@ -1909,7 +1910,7 @@ msgstr "Continuer"
 msgid "processing"
 msgstr "traitement"
 
-#: src/components/conversation/ConversationAccordion.tsx:414
+#: src/components/conversation/ConversationAccordion.tsx:418
 msgid "Processing"
 msgstr "Traitement"
 
@@ -1942,7 +1943,7 @@ msgstr "Projet créé"
 msgid "Project Library | Dembrane"
 msgstr "Bibliothèque de projet | Dembrane"
 
-#: src/components/project/ProjectBasicEdit.tsx:25
+#: src/components/project/ProjectBasicEdit.tsx:33
 msgid "Project name must be at least 4 characters long"
 msgstr "Le nom du projet doit comporter au moins 4 caractères"
 
@@ -2072,7 +2073,7 @@ msgstr "Supprimer l'e-mail"
 msgid "Remove file"
 msgstr "Supprimer le fichier"
 
-#: src/components/conversation/ConversationAccordion.tsx:153
+#: src/components/conversation/ConversationAccordion.tsx:157
 msgid "Remove from this chat"
 msgstr "Supprimer de cette conversation"
 
@@ -2143,7 +2144,7 @@ msgstr "Accès au microphone en cours..."
 #~ msgid "Requesting microphone access to detect available devices..."
 #~ msgstr "Demande d'accès au microphone pour détecter les appareils disponibles..."
 
-#: src/components/conversation/ConversationAccordion.tsx:875
+#: src/components/conversation/ConversationAccordion.tsx:970
 msgid "Reset All Options"
 msgstr "Réinitialiser toutes les options"
 
@@ -2218,7 +2219,7 @@ msgstr "Défiler vers le bas"
 msgid "Search"
 msgstr "Rechercher"
 
-#: src/components/conversation/ConversationAccordion.tsx:817
+#: src/components/conversation/ConversationAccordion.tsx:879
 msgid "Search conversations"
 msgstr "Rechercher des conversations"
 
@@ -2226,14 +2227,18 @@ msgstr "Rechercher des conversations"
 msgid "Search projects"
 msgstr "Rechercher des projets"
 
-#: src/components/conversation/ConversationAccordion.tsx:264
+#: src/components/conversation/ConversationAccordion.tsx:268
 msgid "Search Projects"
 msgstr "Rechercher des projets"
 
 #: src/components/conversation/MoveConversationButton.tsx:141
-#: src/components/conversation/ConversationAccordion.tsx:268
+#: src/components/conversation/ConversationAccordion.tsx:272
 msgid "Search projects..."
 msgstr "Rechercher des projets..."
+
+#: src/components/conversation/ConversationAccordion.tsx:1018
+msgid "Search tags"
+msgstr "Rechercher des tags"
 
 #: src/components/chat/TemplatesModal.tsx:62
 msgid "Search templates..."
@@ -2263,7 +2268,7 @@ msgstr "Sélectionner un microphone"
 msgid "Select Audio Files to Upload"
 msgstr "Sélectionner les fichiers audio à télécharger"
 
-#: src/components/conversation/ConversationAccordion.tsx:288
+#: src/components/conversation/ConversationAccordion.tsx:292
 msgid "Select Project"
 msgstr "Sélectionner un projet"
 
@@ -2348,7 +2353,7 @@ msgstr "Partager votre voix"
 msgid "Share your voice by scanning the QR code below."
 msgstr "Partager votre voix en scanant le code QR ci-dessous."
 
-#: src/components/conversation/ConversationAccordion.tsx:566
+#: src/components/conversation/ConversationAccordion.tsx:570
 msgid "Shortest First"
 msgstr "Plus court en premier"
 
@@ -2365,8 +2370,8 @@ msgid "Show audio player"
 msgstr "Afficher le lecteur audio"
 
 #: src/components/conversation/ConversationAccordion.tsx:842
-msgid "Show duration"
-msgstr "Afficher la durée"
+#~ msgid "Show duration"
+#~ msgstr "Afficher la durée"
 
 #: src/components/announcement/AnnouncementItem.tsx:126
 msgid "Show less"
@@ -2444,7 +2449,8 @@ msgstr "Une erreur s'est produite. Veuillez réessayer."
 msgid "participant.echo.content.policy.violation.error.message"
 msgstr "Nous ne pouvons pas traiter cette requête en raison de la politique de contenu du fournisseur de LLM."
 
-#: src/components/conversation/ConversationAccordion.tsx:851
+#: src/components/conversation/ConversationAccordion.tsx:939
+#: src/components/conversation/ConversationAccordion.tsx:946
 msgid "Sort"
 msgstr "Trier"
 
@@ -2543,6 +2549,8 @@ msgstr "Formats supportés: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 #: src/components/project/ProjectTagsInput.tsx:219
 #: src/components/participant/ParticipantInitiateForm.tsx:101
 #: src/components/conversation/ConversationEdit.tsx:143
+#: src/components/conversation/ConversationAccordion.tsx:1008
+#: src/components/conversation/ConversationAccordion.tsx:1011
 msgid "Tags"
 msgstr "Étiquettes"
 
@@ -2550,7 +2558,7 @@ msgstr "Étiquettes"
 msgid "Templates"
 msgstr "Modèles"
 
-#: src/components/conversation/ConversationAccordion.tsx:423
+#: src/components/conversation/ConversationAccordion.tsx:427
 msgid "Text"
 msgstr "Texte"
 
@@ -2652,7 +2660,7 @@ msgstr "Cette conversation est une copie de"
 #~ msgid "This conversation is still being processed. It will be available for analysis and chat shortly."
 #~ msgstr "Cette conversation est encore en cours de traitement. Elle sera disponible pour l'analyse et le chat sous peu."
 
-#: src/components/conversation/ConversationAccordion.tsx:408
+#: src/components/conversation/ConversationAccordion.tsx:412
 msgid "This conversation is still being processed. It will be available for analysis and chat shortly. "
 msgstr "Cette conversation est encore en cours de traitement. Elle sera disponible pour l'analyse et le chat sous peu. "
 
@@ -2905,7 +2913,7 @@ msgid "Upgrade to unlock Auto-select and analyze 10x more conversations in half 
 msgstr "Mettre à niveau pour débloquer la sélection automatique et analyser 10 fois plus de conversations en moitié du temps — plus de sélection manuelle, juste des insights plus profonds instantanément."
 
 #: src/routes/project/ProjectRoutes.tsx:49
-#: src/components/conversation/ConversationAccordion.tsx:395
+#: src/components/conversation/ConversationAccordion.tsx:399
 msgid "Upload"
 msgstr "Télécharger"
 
