@@ -14,6 +14,7 @@ export const ConversationChunkAudioTranscript = ({
     path: string;
     timestamp: string;
     transcript: string;
+    error?: string | null;
   };
   showAudioPlayer?: boolean;
 }) => {
@@ -62,8 +63,10 @@ export const ConversationChunkAudioTranscript = ({
       <Text>
         {chunk.transcript && chunk.transcript.trim().length > 0 ? (
           chunk.transcript
-        ) : (
+        ) : chunk.error ? (
           <span className="italic text-gray-500">{t`Transcript not available`}</span>
+        ) : (
+          <span className="italic text-gray-500">{t`Transcription in progress…`}</span>
         )}
       </Text>
     </BaseMessage>

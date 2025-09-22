@@ -330,6 +330,7 @@ export const ProjectConversationTranscript = () => {
                       path: chunk.path ?? "",
                       timestamp: chunk.timestamp ?? "",
                       transcript: chunk.transcript ?? "",
+                      error: chunk.error ?? "",
                     }}
                     showAudioPlayer={showAudioPlayer}
                   />

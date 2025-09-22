@@ -87,6 +87,7 @@ type TConversationChunk = {
 
   transcript?: string;
   timestamp: Date;
+  error?: string | null;
 };
 
 type TProject = {
