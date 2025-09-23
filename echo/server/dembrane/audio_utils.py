@@ -19,6 +19,12 @@ from dembrane.directus import directus
 
 logger = logging.getLogger("audio_utils")
 
+
+def sanitize_filename_component(val: str) -> str:
+    # Only allow alphanumeric, dash, and underscore. Remove other chars.
+    return "".join(c for c in val if c.isalnum() or c in ("-", "_"))
+
+
 ACCEPTED_AUDIO_FORMATS = ["aac", "wav", "mp3", "ogg", "flac", "webm", "opus", "m4a", "mp4", "mpeg"]
 
 FFPROBE_FORMAT_MAP = {
@@ -270,7 +276,8 @@ def convert_and_save_to_s3(
     if delete_original:
         delete_from_s3(input_file_name)
 
-    public_url = f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/{output_file_name}"
+    sanitized_output_file_name = sanitize_filename_component(output_file_name)
+    public_url = f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/{sanitized_output_file_name}"
     return public_url
 
 
@@ -438,6 +445,7 @@ def probe_from_bytes(file_bytes: bytes, input_format: str) -> dict:
         logger.warning("File content does not start with OGG header signature")
 
     # Use a temporary file approach for more reliable probing
+    # Using whitelisted input_format for temp file suffix is safe due to prior validation.
     with tempfile.NamedTemporaryFile(suffix=f".{input_format}", delete=False) as temp_file:
         try:
             # Write the bytes to a temporary file
