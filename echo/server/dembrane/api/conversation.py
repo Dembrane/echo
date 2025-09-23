@@ -20,6 +20,7 @@ from dembrane.database import (
 from dembrane.directus import directus
 from dembrane.audio_utils import (
     get_duration_from_s3,
+    sanitize_filename_component,
     merge_multiple_audio_files_and_save_to_s3,
 )
 from dembrane.quote_utils import count_tokens
@@ -321,7 +322,9 @@ def get_conversation_content(
         uuid = generate_uuid()
 
         merged_path = merge_multiple_audio_files_and_save_to_s3(
-            file_paths, f"audio-conversations/merged-{conversation_id}-{uuid}.mp3", "mp3"
+            file_paths,
+            f"audio-conversations/merged-{sanitize_filename_component(conversation_id)}-{uuid}.mp3",
+            "mp3",
         )
 
         logger.debug(f"Successfully merged audio to: {merged_path}")
