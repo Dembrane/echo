@@ -53,7 +53,9 @@ export const ParticipantBody = ({
     sseConnectionHealthy,
     lastPingTime,
     conversationIssue,
-  } = useConversationsHealthStream(ENABLE_CONVERSATION_HEALTH ? [conversationId] : undefined);
+  } = useConversationsHealthStream(
+    ENABLE_CONVERSATION_HEALTH ? [conversationId] : undefined,
+  );
 
   const combinedMessages = useMemo(() => {
     const userChunks = (chunksQuery.data ?? []).map((chunk) => ({
@@ -181,11 +183,11 @@ export const ParticipantBody = ({
             />
           )}
 
-<SystemMessage
-  markdown={`${t`Please record your response by clicking the "Record" button below. You may also choose to respond in text by clicking the text icon.`}  
+          <SystemMessage
+            markdown={`${t`Please record your response by clicking the "Record" button below. You may also choose to respond in text by clicking the text icon.`}  
 **${t`Please keep this screen lit up`}**`}
-  className="mb-4"
-/>
+            className="mb-4"
+          />
 
           {children}
 
