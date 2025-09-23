@@ -181,10 +181,11 @@ export const ParticipantBody = ({
             />
           )}
 
-          <SystemMessage
-            markdown={t`Please record your response by clicking the "Record" button below. You may also choose to respond in text by clicking the text icon.`}
-            className="mb-4"
-          />
+<SystemMessage
+  markdown={`${t`Please record your response by clicking the "Record" button below. You may also choose to respond in text by clicking the text icon.`}  
+**${t`Please keep this screen lit up`}**`}
+  className="mb-4"
+/>
 
           {children}
 
