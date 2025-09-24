@@ -171,7 +171,7 @@ langsmith==0.1.59
     # via langchain-community
     # via langchain-core
 lightrag-dembrane==1.2.7.8
-litellm==1.59.9
+litellm==1.61.20
 lz4==4.4.4
 mako==1.3.5
     # via alembic
@@ -199,7 +199,7 @@ numpy==1.26.4
     # via pylance
     # via scikit-learn
     # via scipy
-openai==1.57.2
+openai==1.61.1
     # via langchain-openai
     # via litellm
 orjson==3.10.3
