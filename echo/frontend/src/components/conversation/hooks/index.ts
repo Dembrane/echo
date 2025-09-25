@@ -57,7 +57,7 @@ export const useInfiniteConversationChunks = (
           sort: ["timestamp"],
           limit: initialLimit,
           offset: pageParam * initialLimit,
-          fields: ["id", "conversation_id", "transcript", "path", "timestamp", "error"],
+          fields: ["id", "conversation_id", "transcript", "path", "timestamp", "error", "diarization"],
         }),
       );
 

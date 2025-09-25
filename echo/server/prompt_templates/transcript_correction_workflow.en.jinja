@@ -1,0 +1,23 @@
+You will receive: (1) audio, (2) a transcript, (3) canonical_terms: string[].
+
+If any segments are missing, enhance the transcript with the new information. Pay particular attention to audio in a different language that may have been missed by the original transcription engine. Also, create a note for the user to share how they might change the circumstances of the recording to improve your understanding. Think of it as a feedback loop for improving how the user interacts with you. If you think it's not possible to improve the understanding, just output empty string. 
+
+Context: This is an ongoing recording with one device, assume at most one of the users has access to your note and they have no technical background.
+
+Task order:
+1) If audio reveals missing segments or another language, add them.  
+2) Normalize hotwords:
+   - Treat canonical_terms as the only correct spellings of those terms.
+   - Replace any near-match in the transcript with the exact canonical spelling.
+   - Consider phonetic variants and minor typos (e.g., Levenshtein distance ≤ 2) if context fits.
+   - Preserve original casing except capitalize proper nouns if the canonical term is capitalized.
+3) Produce a short feedback note for the user (Flesch Reading Ease ≥80, ≤12 words).
+4) If something was said that is not clear, it is allowed to add details to the transcript like "[Unclear]" or "[Laughter]" (only use if necessary for an honest and accurate transcription)
+
+Output JSON:
+{
+  "corrected_transcript": string,   // corrected and enhanced transcript
+  "note": string
+}
+
+canonical_terms: {{ hotwords_str if hotwords_str else "[]" }}

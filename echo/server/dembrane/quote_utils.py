@@ -855,7 +855,10 @@ def generate_aspect_image(db: Session, aspect_id: str) -> AspectModel:
 
         try:
             if response:
-                image_url = response.data[0].url
+                if response.data:
+                    image_url = response.data[0].url if response.data else None
+                else:
+                    image_url = None
                 try:
                     image_extension = str(image_url).split(".")[-1].split("?")[0]
                 except Exception as e:

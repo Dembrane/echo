@@ -331,6 +331,7 @@ export const ProjectConversationTranscript = () => {
                       timestamp: chunk.timestamp ?? "",
                       transcript: chunk.transcript ?? "",
                       error: chunk.error ?? "",
+                      diarization: chunk.diarization ?? null,
                     }}
                     showAudioPlayer={showAudioPlayer}
                   />

@@ -6,24 +6,28 @@ Can provide selfhost options through "litellm" and api use through "assembly"
 """
 
 # transcribe.py
+from base64 import b64encode, encode
 import io
+import json
 import os
 import time
 import logging
 import mimetypes
 from typing import Any, List, Literal, Optional
 
+import litellm
 import requests
-from litellm import transcription
 
 from dembrane.s3 import get_signed_url, get_stream_from_s3
 from dembrane.config import (
     API_BASE_URL,
+    GEMINI_API_KEY,
     ASSEMBLYAI_API_KEY,
     ASSEMBLYAI_BASE_URL,
     LITELLM_WHISPER_URL,
     LITELLM_WHISPER_MODEL,
     RUNPOD_WHISPER_API_KEY,
+    TRANSCRIPTION_PROVIDER,
     LITELLM_WHISPER_API_KEY,
     RUNPOD_WHISPER_BASE_URL,
     LITELLM_WHISPER_API_VERSION,
@@ -34,7 +38,7 @@ from dembrane.config import (
     RUNPOD_WHISPER_MAX_REQUEST_THRESHOLD,
 )
 from dembrane.prompts import render_prompt
-from dembrane.service import conversation_service
+from dembrane.service import conversation_service, file_service
 from dembrane.directus import directus
 
 logger = logging.getLogger("transcribe")
@@ -111,7 +115,7 @@ def transcribe_audio_litellm(
         raise TranscriptionError(f"Failed to get audio stream from S3: {exc}") from exc
 
     try:
-        response = transcription(
+        response = litellm.transcription(
             model=LITELLM_WHISPER_MODEL,
             file=file_upload,
             api_key=LITELLM_WHISPER_API_KEY,
@@ -189,6 +193,136 @@ def transcribe_audio_assemblyai(
         raise TranscriptionError(f"AssemblyAI transcription failed: {e}") from e
 
 
+def _get_audio_file_object(audio_file_uri: str) -> Any:
+    try:
+        audio_stream = file_service.get_stream(audio_file_uri)
+        encoded_data = b64encode(audio_stream.read()).decode("utf-8")
+        return {
+            "type": "file",
+            "file": {
+                "file_data": "data:audio/mp3;base64,{}".format(encoded_data),
+            },
+        }
+    except Exception as e:
+        logger.warning(f"failed to get audio bytes for {audio_file_uri} using file service: {e}")
+        logger.info("trying to get audio bytes naively")
+        audio_bytes = requests.get(audio_file_uri).content
+        encoded_data = b64encode(audio_bytes).decode("utf-8")
+        return {
+            "type": "file",
+            "file": {
+                "file_data": "data:audio/mp3;base64,{}".format(encoded_data),
+            },
+        }
+
+
+def _transcript_correction_workflow(
+    audio_file_uri: str, candidate_transcript: str, hotwords: Optional[List[str]]
+) -> tuple[str, str]:
+    """
+    Correct the transcript using the transcript correction workflow
+    """
+    logger = logging.getLogger("transcribe.transcript_correction_workflow")
+
+    logger.debug(f"candidate_transcript: {len(candidate_transcript)}")
+    logger.debug(f"hotwords: {hotwords}")
+    logger.debug(f"audio_file_uri: {audio_file_uri}")
+
+    transcript_correction_prompt = render_prompt(
+        "transcript_correction_workflow",
+        "en",
+        {
+            "hotwords_str": ", ".join(hotwords) if hotwords else "",
+        },
+    )
+
+    logger.debug(f"transcript_correction_prompt: {transcript_correction_prompt}")
+
+    response_schema = {
+        "type": "object",
+        "properties": {
+            "corrected_transcript": {
+                "type": "string",
+            },
+            "note": {
+                "type": "string",
+            },
+        },
+        "required": ["corrected_transcript", "note"],
+    }
+
+    assert GEMINI_API_KEY, "GEMINI_API_KEY is not set"
+    response = litellm.completion(
+        model="gemini/gemini-2.5-flash",
+        messages=[
+            {
+                "role": "system",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": transcript_correction_prompt,
+                    },
+                ],
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": candidate_transcript,
+                    },
+                    _get_audio_file_object(audio_file_uri),
+                ],
+            },
+        ],
+        response_format={
+            "type": "json_object",
+            "response_schema": response_schema,
+        },
+    )
+
+    json_response = json.loads(response.choices[0].message.content)
+
+    corrected_transcript = json_response["corrected_transcript"]
+    note = json_response["note"]
+
+    logger.debug(f"corrected_transcript: {len(corrected_transcript)}")
+    logger.debug(f"note: {note}")
+
+    return corrected_transcript, note
+
+
+def transcribe_audio_dembrane_25_09(
+    audio_file_uri: str,
+    language: Optional[str],  # pyright: ignore[reportUnusedParameter]
+    hotwords: Optional[List[str]],
+) -> tuple[str, dict[str, Any]]:
+    """Transcribe audio through custom Dembrane-25-09 workflow
+
+    Returns:
+        0: The corrected transcript
+        1: Object
+        {
+            "note": The note to the user
+            "raw": AssemblyAI response
+        }
+    """
+    logger = logging.getLogger("transcribe.transcribe_audio_dembrane_25_09")
+
+    transcript, response = transcribe_audio_assemblyai(audio_file_uri, language, hotwords)
+    logger.debug(f"transcript from assemblyai: {transcript}")
+
+    # use correction workflow to correct keyterms and fix missing segments
+    corrected_transcript, note = _transcript_correction_workflow(
+        audio_file_uri, transcript, hotwords
+    )
+
+    return corrected_transcript, {
+        "note": note,
+        "raw": response,
+    }
+
+
 # Helper functions extracted to simplify `transcribe_conversation_chunk`
 # NOTE: These are internal helpers ‑ they should **not** be considered part of the public API.
 
@@ -262,8 +396,10 @@ def _build_hotwords(conversation: dict) -> Optional[List[str]]:
     return None
 
 
-def _get_transcript_provider() -> Literal["Runpod", "LiteLLM", "AssemblyAI"]:
-    if ENABLE_ASSEMBLYAI_TRANSCRIPTION:
+def _get_transcript_provider() -> Literal["Runpod", "LiteLLM", "AssemblyAI", "Dembrane-25-09"]:
+    if TRANSCRIPTION_PROVIDER:
+        return TRANSCRIPTION_PROVIDER
+    elif ENABLE_ASSEMBLYAI_TRANSCRIPTION:
         return "AssemblyAI"
     elif ENABLE_RUNPOD_WHISPER_TRANSCRIPTION:
         return "Runpod"
@@ -369,6 +505,20 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str:
         transcript_provider = _get_transcript_provider()
 
         match transcript_provider:
+            case "Dembrane-25-09":
+                logger.info("Using Dembrane-25-09 for transcription")
+                hotwords = _build_hotwords(conversation)
+                signed_url = get_signed_url(chunk["path"], expires_in_seconds=3 * 24 * 60 * 60)
+                transcript, response = transcribe_audio_dembrane_25_09(
+                    signed_url, language=language, hotwords=hotwords
+                )
+                _save_transcript(
+                    conversation_chunk_id,
+                    transcript,
+                    diarization={"schema": "Dembrane-25-09", "data": response},
+                )
+                return conversation_chunk_id
+
             case "AssemblyAI":
                 logger.info("Using AssemblyAI for transcription")
                 hotwords = _build_hotwords(conversation)
@@ -405,3 +555,26 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str:
         raise TranscriptionError(
             "Failed to process conversation chunk %s: %s" % (conversation_chunk_id, e)
         ) from e
+
+
+if __name__ == "__main__":
+    transcript, response = transcribe_audio_dembrane_25_09(
+        "https://ams3.digitaloceanspaces.com/dbr-echo-dev-uploads/3.mp3",
+        language="en",
+        hotwords=["Dembrane", "Sameer"],
+    )
+
+    gemini_transcript = transcript
+    assemblyai_transcript = response["raw"]["text"]
+
+    def print_diff(a: str, b: str) -> None:
+        for a_line, b_line in zip(a.split("\n"), b.split("\n"), strict=False):
+            if a_line != b_line:
+                print("Gemini")
+                print(a_line)
+                print("-" * 10)
+                print("AssemblyAI")
+                print(b_line)
+                print("-" * 10)
+
+    print_diff(gemini_transcript, assemblyai_transcript)
