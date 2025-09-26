@@ -183,8 +183,8 @@ export const ParticipantBody = ({
 
           <SystemMessage
             markdown={t`Please record your response by clicking the "Record" button below. You may also choose to respond in text by clicking the text icon.  
-**Please keep this screen turned on  
-(black screen = not recording)**`}
+**Please keep this screen lit up**  
+(black screen = not recording)`}
             className="mb-4"
           />
 
