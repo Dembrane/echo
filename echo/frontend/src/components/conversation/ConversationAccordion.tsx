@@ -964,9 +964,6 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
                         </Radio.Group>
                       </Stack>
                     </Stack>
-                    <Button variant="subtle" onClick={resetEverything}>
-                      <Trans>Reset All Options</Trans>
-                    </Button>
                   </Stack>
                 </Menu.Dropdown>
               </Menu>
@@ -1100,6 +1097,17 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
                   </Stack>
                 </Menu.Dropdown>
               </Menu>
+
+              <Tooltip label={t`Reset to default`}>
+                <ActionIcon
+                  variant="outline"
+                  color="grey"
+                  onClick={resetEverything}
+                  aria-label={t`Reset to default`}
+                >
+                  <IconX size={16} />
+                </ActionIcon>
+              </Tooltip>
             </Group>
           )}
 
