@@ -1101,7 +1101,7 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
               <Tooltip label={t`Reset to default`}>
                 <ActionIcon
                   variant="outline"
-                  color="grey"
+                  color="gray"
                   onClick={resetEverything}
                   aria-label={t`Reset to default`}
                 >
