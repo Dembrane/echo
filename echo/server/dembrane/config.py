@@ -16,6 +16,7 @@
 import os
 import sys
 import logging
+from typing import Literal, cast
 
 try:
     import colorlog
@@ -185,6 +186,33 @@ DISABLE_CORS = os.environ.get("DISABLE_CORS", "false").lower() in ["true", "1"]
 logger.debug(f"DISABLE_CORS: {DISABLE_CORS}")
 
 ### Transcription
+
+TranscriptionProvider = Literal["Runpod", "LiteLLM", "AssemblyAI", "Dembrane-25-09"]
+_ALLOWED_TRANSCRIPTION_PROVIDERS: set[str] = {
+    "Runpod",
+    "LiteLLM",
+    "AssemblyAI",
+    "Dembrane-25-09",
+}
+
+TRANSCRIPTION_PROVIDER_RAW: str | None = os.environ.get("TRANSCRIPTION_PROVIDER")
+if not TRANSCRIPTION_PROVIDER_RAW:
+    TRANSCRIPTION_PROVIDER: TranscriptionProvider | None = None
+    logger.debug("TRANSCRIPTION_PROVIDER: not set")
+else:
+    if TRANSCRIPTION_PROVIDER_RAW not in _ALLOWED_TRANSCRIPTION_PROVIDERS:
+        raise ValueError(
+            f"TRANSCRIPTION_PROVIDER is not valid: {TRANSCRIPTION_PROVIDER_RAW}. "
+            f"Allowed: {', '.join(sorted(_ALLOWED_TRANSCRIPTION_PROVIDERS))}"
+        )
+    TRANSCRIPTION_PROVIDER = cast(TranscriptionProvider, TRANSCRIPTION_PROVIDER_RAW)
+    logger.debug(f"TRANSCRIPTION_PROVIDER: {TRANSCRIPTION_PROVIDER}")
+
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+if GEMINI_API_KEY:
+    logger.debug("GEMINI_API_KEY: set")
+else:
+    logger.debug("GEMINI_API_KEY: not set")
 
 ENABLE_ASSEMBLYAI_TRANSCRIPTION = os.environ.get(
     "ENABLE_ASSEMBLYAI_TRANSCRIPTION", "false"

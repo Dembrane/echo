@@ -22,6 +22,7 @@ import {
   deleteChatContext,
   deleteConversationById,
   getConversationChunkContentLink,
+  getConversationContentLink,
   getConversationTranscriptString,
   retranscribeConversation,
 } from "@/lib/api";
@@ -57,7 +58,7 @@ export const useInfiniteConversationChunks = (
           sort: ["timestamp"],
           limit: initialLimit,
           offset: pageParam * initialLimit,
-          fields: ["id", "conversation_id", "transcript", "path", "timestamp", "error"],
+          fields: ["id", "conversation_id", "transcript", "path", "timestamp", "error", "diarization"],
         }),
       );
 
@@ -555,6 +556,22 @@ export const useConversationChunkContentUrl = (
         true,
       );
       return apiNoAuth.get<unknown, string>(url);
+    },
+    enabled,
+    staleTime: 1000 * 60 * 30, // 30 minutes
+    gcTime: 1000 * 60 * 60, // 1 hour
+  });
+};
+
+export const useConversationContentUrl = (
+  conversationId: string,
+  enabled: boolean = true,
+) => {
+  return useQuery({
+    queryKey: ["conversation", conversationId, "merged-audio-url"],
+    queryFn: async () => {
+      const url = getConversationContentLink(conversationId, false);
+      return url
     },
     enabled,
     staleTime: 1000 * 60 * 30, // 30 minutes

@@ -113,7 +113,7 @@ def generate_image(prompt: str) -> str:
 
     try:
         if response is not None:
-            image_url = response.data[0].url
+            image_url = response.data[0].url if response.data else None
             if image_url:
                 logger.debug("saving the image and getting the public url")
                 image_url = save_to_s3_from_url(image_url, "images/" + generate_uuid(), public=True)

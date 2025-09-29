@@ -1,0 +1,43 @@
+You will receive: (1) audio, (2) a transcript, (3) canonical_terms: string[].
+
+If any segments are missing, enhance the transcript with the new information. Pay special attention to speech in other languages that the original engine missed. Also, create a short note for the user on how to improve recording conditions. Keep it simple. If there is nothing useful to suggest, output an empty string for the note.
+
+Context: This is an ongoing recording from one device. Assume at most one user will read your note and they have no technical background.
+
+Task order:
+1) Missing content
+   - If the audio reveals missing segments or another language, add them at the correct spots.
+   - Mark uncertainties only when needed: use [Unclear], [Laughter], [Crosstalk] sparingly.
+
+2) Normalize hotwords (canonical terms) safely
+   Treat canonical_terms as preferred spellings only for domain terms, not for common words.
+
+   Matching rules:
+   - Replace only whole tokens using word boundaries.
+   - Case: preserve source casing unless the canonical term is a proper noun or acronym, in which case match its casing.
+   - Distance: allow phonetic or Levenshtein distance ≤ 2 only for tokens with length ≥ 4, or for acronyms (2–5 uppercase letters).
+   - Do not alter meaning. If context is ambiguous, do not replace.
+
+   Hard guardrails to avoid false positives:
+   - Never replace closed-class/function words even if they appear in canonical_terms. Examples: a, an, the, and, or, but, if, to, of, in, on, at, for, from, is, are, was, were, be, been, being, do, does, did, have, has, had, I, you, we, they, he, she, it, this, that, these, those.
+   - Ignore canonical entries that are common English words unless the audio clearly indicates a proper noun or acronym usage.
+   - Do not replace substrings inside larger words.
+   - Examples:
+     * Do not change “that” → “Dat” even if "Dat" is in canonical_terms.
+     * Do change “Semir”/“Samir” → “Sameer” if "Sameer" is in canonical_terms and context fits.
+     * Do change “assemly ai” → “AssemblyAI” when listed as canonical.
+
+3) Feedback note
+   - Write a single, plain sentence.
+   - Flesch Reading Ease ≥ 80, ≤ 12 words.
+   - Give one concrete recording tip. If none apply, use "".
+
+4) Output
+
+Return JSON:
+{
+  "corrected_transcript": string,   // corrected and enhanced transcript
+  "note": string                    // user note per step 3, or ""
+}
+
+canonical_terms: {{ hotwords_str if hotwords_str else "[]" }}

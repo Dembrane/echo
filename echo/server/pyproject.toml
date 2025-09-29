@@ -15,7 +15,7 @@ dependencies = [
     "langchain-openai==0.0.*",
     "pypdf==4.0.*",
     # SDKs for Models
-    "openai==1.57.*",
+    "openai==1.99.*",
     "anthropic==0.43.*",
     # Data
     "pandas==2.2.*",
@@ -46,7 +46,7 @@ dependencies = [
     "pandas-stubs>=2.2.2.240514",
     "types-requests>=2.32.0.20240602",
     "types-python-jose>=3.3.4.20240106",
-    "litellm==1.59.*",
+    "litellm==1.76.*",
     # Additional Dependencies
     "lightrag-dembrane==1.2.7.8",
     "nest-asyncio==1.6.0",

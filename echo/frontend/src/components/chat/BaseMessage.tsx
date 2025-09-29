@@ -31,9 +31,9 @@ export const BaseMessage = (
     >
       <Stack>
         <Group align="start" wrap="nowrap">
-          <div className="pt-1">
+          {/* <div className="pt-1">
             <Icons.Diamond color="black" />
-          </div>
+          </div> */}
           <Box flex={1}>
             <Group align="center" justify="space-between">
               <Text mb="xs" size="sm">

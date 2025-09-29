@@ -648,8 +648,13 @@ export const getProjectConversationCounts = async (projectId: string) => {
   };
 };
 
-export const getConversationContentLink = (conversationId: string) =>
-  `${apiCommonConfig.baseURL}/conversations/${conversationId}/content`;
+export const getConversationContentLink = (
+  conversationId: string,
+  returnUrl: boolean = false,
+) =>
+  `${apiCommonConfig.baseURL}/conversations/${conversationId}/content${
+    returnUrl ? "?return_url=true" : ""
+  }`;
 
 export const getConversationChunkContentLink = (
   conversationId: string,
