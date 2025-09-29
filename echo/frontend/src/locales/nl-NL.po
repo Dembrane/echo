@@ -86,16 +86,20 @@ msgstr " Verzenden"
 msgid " Unsubscribe from Notifications"
 msgstr " Afmelden voor meldingen"
 
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:579
+msgid "-5s"
+msgstr ""
+
 #: src/components/conversation/ConversationAccordion.tsx:413
 msgid "(for enhanced audio processing)"
 msgstr "(voor verbeterde audioverwerking)"
 
-#. placeholder {0}: citation.reference_text
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: showPreview ? "Hide Preview" : "Show Preview"
-#: src/components/chat/References.tsx:27
-#: src/components/project/ProjectPortalEditor.tsx:262
+#. placeholder {0}: citation.reference_text
 #: src/routes/project/chat/ProjectChatRoute.tsx:429
+#: src/components/project/ProjectPortalEditor.tsx:262
+#: src/components/chat/References.tsx:27
 msgid "{0}"
 msgstr "{0}"
 
@@ -105,12 +109,12 @@ msgstr "{0}"
 msgid "{0} {1} ready"
 msgstr "{0} {1} klaar"
 
-#. placeholder {0}: project.conversations?.length ?? 0
 #. placeholder {0}: project?.conversations_count ?? project?.conversations?.length ?? 0
+#. placeholder {0}: project.conversations?.length ?? 0
 #. placeholder {1}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
 #. placeholder {1}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
-#: src/components/project/ProjectCard.tsx:36
 #: src/components/project/ProjectListItem.tsx:34
+#: src/components/project/ProjectCard.tsx:36
 msgid "{0} Conversations • Edited {1}"
 msgstr "{0} Gesprekken • Bewerkt {1}"
 
@@ -159,6 +163,10 @@ msgstr "*Een moment a.u.b.*"
 #: src/routes/participant/ParticipantLogin.tsx:154
 #~ msgid "*We make sure nothing can be traced back to you, and even if you accidentally say your name, we remove it before analysing everything. By using this tool, you agree to our privacy terms. Want to know more? Then read our [privacy statement]"
 #~ msgstr "*We zorgen dat niks terug te leiden is naar jou als persoon, ook al zeg je per ongeluk je naam, verwijderen wij deze voordat we alles analyseren. Door deze tool te gebruiken, ga je akkoord met onze privacy voorwaarden. Wil je meer weten? Lees dan onze [privacy verklaring]"
+
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:597
+msgid "+5s"
+msgstr ""
 
 #. placeholder {0}: Math.floor(remainingCooldown / 60)
 #. placeholder {1}: (remainingCooldown % 60) .toString() .padStart(2, "0")
@@ -407,9 +415,9 @@ msgstr "Vraag deelnemers om hun naam te geven wanneer ze een gesprek starten"
 msgid "Aspect"
 msgstr "Aspect"
 
+#: src/routes/project/library/ProjectLibraryView.tsx:56
 #: src/components/view/View.tsx:34
 #: src/components/view/View.tsx:100
-#: src/routes/project/library/ProjectLibraryView.tsx:56
 msgid "Aspects"
 msgstr "Aspecten"
 
@@ -443,11 +451,11 @@ msgstr "Audio Tip"
 msgid "Auto-select"
 msgstr "Automatisch selecteren"
 
-#: src/components/conversation/hooks/index.ts:537
+#: src/components/conversation/hooks/index.ts:538
 msgid "Auto-select disabled"
 msgstr "Automatisch selecteren uitgeschakeld"
 
-#: src/components/conversation/hooks/index.ts:399
+#: src/components/conversation/hooks/index.ts:400
 msgid "Auto-select enabled"
 msgstr "Automatisch selecteren ingeschakeld"
 
@@ -501,11 +509,11 @@ msgstr "Brainstorm ideeën"
 msgid "By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you ABSOLUTELY sure you want to delete this project?"
 msgstr "Door dit project te verwijderen, verwijder je alle gegevens die eraan gerelateerd zijn. Dit kan niet ongedaan worden gemaakt. Weet je zeker dat je dit project wilt verwijderen?"
 
-#: src/components/conversation/ConversationAccordion.tsx:327
-#: src/components/conversation/MoveConversationButton.tsx:202
+#: src/routes/project/report/ProjectReportRoute.tsx:339
 #: src/components/dropzone/UploadConversationDropzone.tsx:676
 #: src/components/dropzone/UploadConversationDropzone.tsx:791
-#: src/routes/project/report/ProjectReportRoute.tsx:339
+#: src/components/conversation/MoveConversationButton.tsx:202
+#: src/components/conversation/ConversationAccordion.tsx:327
 msgid "Cancel"
 msgstr "Annuleren"
 
@@ -642,8 +650,8 @@ msgid "Context added:"
 msgstr "Context toegevoegd:"
 
 #. js-lingui-explicit-id
-#: src/components/participant/MicrophoneTest.tsx:382
 #: src/components/participant/ParticipantOnboardingCards.tsx:368
+#: src/components/participant/MicrophoneTest.tsx:382
 msgid "participant.button.continue"
 msgstr "Doorgaan"
 
@@ -656,9 +664,13 @@ msgstr "Doorgaan"
 msgid "conversation"
 msgstr "gesprek"
 
-#: src/components/conversation/hooks/index.ts:400
+#: src/components/conversation/hooks/index.ts:401
 msgid "Conversation added to chat"
 msgstr "Gesprek toegevoegd aan chat"
+
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:553
+msgid "Conversation Audio"
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/routes/participant/ParticipantConversation.tsx:318
@@ -673,7 +685,7 @@ msgstr "Gesprek beëindigd"
 #~ msgid "Conversation processing"
 #~ msgstr "Gesprek wordt verwerkt"
 
-#: src/components/conversation/hooks/index.ts:538
+#: src/components/conversation/hooks/index.ts:539
 msgid "Conversation removed from chat"
 msgstr "Gesprek verwijderd uit chat"
 
@@ -703,8 +715,8 @@ msgstr "Gesprekken"
 #~ msgid "Conversations from Upload"
 #~ msgstr "Gesprekken van upload"
 
-#: src/components/common/CopyIconButton.tsx:17
 #: src/components/project/ProjectQRCode.tsx:121
+#: src/components/common/CopyIconButton.tsx:17
 msgid "Copied"
 msgstr "Gekopieerd"
 
@@ -724,7 +736,7 @@ msgstr "Kopieer link om dit rapport te delen"
 msgid "Copy Summary"
 msgstr "Kopieer samenvatting"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:183
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:637
 msgid "Copy transcript"
 msgstr "Kopieer transcript"
 
@@ -762,8 +774,8 @@ msgstr "Maak nieuwe view aan"
 #~ msgid "Create new view"
 #~ msgstr "Maak nieuwe view aan"
 
-#: src/components/report/CreateReportForm.tsx:240
 #: src/components/report/ReportModalNavigationButton.tsx:46
+#: src/components/report/CreateReportForm.tsx:240
 msgid "Create Report"
 msgstr "Maak rapport"
 
@@ -784,7 +796,7 @@ msgstr "Gemaakt op"
 msgid "Custom"
 msgstr "Aangepast"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:228
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:662
 msgid "Custom Filename"
 msgstr "Aangepaste bestandsnaam"
 
@@ -887,7 +899,7 @@ msgstr "Documentatie"
 #~ msgid "Documents"
 #~ msgstr "Documenten"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:240
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:674
 msgid "Download"
 msgstr "Downloaden"
 
@@ -903,11 +915,11 @@ msgstr "Download alle transcripten"
 msgid "Download Audio"
 msgstr "Audio downloaden"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:171
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:630
 msgid "Download transcript"
 msgstr "Download transcript"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:224
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:659
 msgid "Download Transcript Options"
 msgstr "Download transcript opties"
 
@@ -1003,8 +1015,8 @@ msgstr "Email is succesvol geverifieerd. Je wordt doorgestuurd naar de inlogpagi
 msgid "email@work.com"
 msgstr "email@werk.com"
 
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:614
 #: src/components/conversation/ConversationAccordion.tsx:441
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:167
 msgid "Empty"
 msgstr "Leeg"
 
@@ -1056,7 +1068,7 @@ msgstr "Engels"
 msgid "Enter a key term or proper noun"
 msgstr "Voer een sleutelterm of eigennamen in"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:279
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:711
 msgid "Enter a name for the new conversation"
 msgstr "Voer een naam in voor het nieuwe gesprek"
 
@@ -1125,10 +1137,10 @@ msgstr "Alles lijkt goed – je kunt doorgaan."
 #~ msgid "Example: This conversation is about [topic]. Key terms include [term1], [term2]. Please pay special attention to [specific aspect]."
 #~ msgstr "Voorbeeld: Dit gesprek gaat over [onderwerp]. Belangrijke termen zijn [term1], [term2]. Let speciaal op [specifieke aspect]."
 
-#: src/components/conversation/MoveConversationButton.tsx:129
-#: src/components/project/ProjectPortalEditor.tsx:390
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:253
 #: src/routes/project/report/ProjectReportRoute.tsx:67
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:686
+#: src/components/project/ProjectPortalEditor.tsx:390
+#: src/components/conversation/MoveConversationButton.tsx:129
 msgid "Experimental"
 msgstr "Experimenteel"
 
@@ -1140,12 +1152,12 @@ msgstr "Exporteer"
 msgid "Failed"
 msgstr "Mislukt"
 
-#: src/components/conversation/hooks/index.ts:385
+#: src/components/conversation/hooks/index.ts:386
 msgid "Failed to add conversation to chat"
 msgstr "Fout bij het toevoegen van het gesprek aan de chat"
 
 #. placeholder {0}: error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
-#: src/components/conversation/hooks/index.ts:377
+#: src/components/conversation/hooks/index.ts:378
 msgid "Failed to add conversation to chat{0}"
 msgstr "Fout bij het toevoegen van het gesprek aan de chat{0}"
 
@@ -1153,13 +1165,13 @@ msgstr "Fout bij het toevoegen van het gesprek aan de chat{0}"
 msgid "Failed to delete response"
 msgstr "Fout bij het verwijderen van de reactie"
 
-#: src/components/conversation/hooks/index.ts:518
-#: src/components/conversation/hooks/index.ts:524
+#: src/components/conversation/hooks/index.ts:519
+#: src/components/conversation/hooks/index.ts:525
 msgid "Failed to disable Auto Select for this chat"
 msgstr "Fout bij het uitschakelen van het automatisch selecteren voor deze chat"
 
-#: src/components/conversation/hooks/index.ts:381
-#: src/components/conversation/hooks/index.ts:387
+#: src/components/conversation/hooks/index.ts:382
+#: src/components/conversation/hooks/index.ts:388
 msgid "Failed to enable Auto Select for this chat"
 msgstr "Fout bij het inschakelen van het automatisch selecteren voor deze chat"
 
@@ -1180,6 +1192,11 @@ msgstr "Fout bij het ophalen van de laatste melding"
 msgid "Failed to get unread announcements count"
 msgstr "Fout bij het ophalen van het aantal ongelezen meldingen"
 
+#: src/components/conversation/ConversationChunkAudioTranscript.tsx:295
+#: src/components/conversation/ConversationChunkAudioTranscript.tsx:385
+msgid "Failed to load audio or the audio is not available"
+msgstr ""
+
 #: src/components/announcement/hooks/index.ts:336
 #: src/components/announcement/hooks/index.ts:408
 msgid "Failed to mark all announcements as read"
@@ -1194,16 +1211,16 @@ msgstr "Fout bij het markeren van de melding als gelezen"
 msgid "Failed to regenerate the summary. Please try again later."
 msgstr "Fout bij het hergenereren van de samenvatting. Probeer het opnieuw later."
 
-#: src/components/conversation/hooks/index.ts:522
+#: src/components/conversation/hooks/index.ts:523
 msgid "Failed to remove conversation from chat"
 msgstr "Fout bij het verwijderen van het gesprek uit de chat"
 
 #. placeholder {0}: error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
-#: src/components/conversation/hooks/index.ts:514
+#: src/components/conversation/hooks/index.ts:515
 msgid "Failed to remove conversation from chat{0}"
 msgstr "Fout bij het verwijderen van het gesprek uit de chat{0}"
 
-#: src/components/conversation/hooks/index.ts:588
+#: src/components/conversation/hooks/index.ts:605
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Fout bij het hertranscriptie van het gesprek. Probeer het opnieuw."
 
@@ -1286,6 +1303,14 @@ msgstr "Voornaam"
 #: src/routes/participant/ParticipantLogin.tsx:140
 #~ msgid "First we ask some short questions, and then you can start recording."
 #~ msgstr "Eerst vragen we een aantal korte vragen, en dan kan je beginnen met opnemen."
+
+#: src/components/conversation/ConversationChunkAudioTranscript.tsx:263
+msgid "Follow"
+msgstr ""
+
+#: src/components/conversation/ConversationChunkAudioTranscript.tsx:258
+msgid "Follow playback"
+msgstr ""
 
 #: src/routes/auth/Login.tsx:169
 msgid "Forgot your password?"
@@ -1500,10 +1525,10 @@ msgstr "Taal"
 msgid "Last Name"
 msgstr "Achternaam"
 
-#. placeholder {0}: formatDistance(new Date(savedAt), new Date(), { addSuffix: true })
 #. placeholder {0}: formatRelative(lastSavedAt, new Date())
-#: src/components/form/SaveStatus.tsx:62
+#. placeholder {0}: formatDistance(new Date(savedAt), new Date(), { addSuffix: true })
 #: src/components/form/UnsavedChanges.tsx:18
+#: src/components/form/SaveStatus.tsx:62
 msgid "Last saved {0}"
 msgstr "Laatst opgeslagen {0}"
 
@@ -1519,9 +1544,9 @@ msgstr "Laten we weten!"
 #~ msgid "Let's Make Sure We Can Hear You"
 #~ msgstr "Laten we controleren of we je kunnen horen"
 
-#: src/components/project/ProjectSidebar.tsx:113
-#: src/routes/project/library/ProjectLibraryAspect.tsx:44
 #: src/routes/project/library/ProjectLibraryView.tsx:32
+#: src/routes/project/library/ProjectLibraryAspect.tsx:44
+#: src/components/project/ProjectSidebar.tsx:113
 msgid "Library"
 msgstr "Bibliotheek"
 
@@ -1576,7 +1601,7 @@ msgid "loading..."
 msgstr "bezig met laden..."
 
 #: src/components/conversation/ConversationAccordion.tsx:113
-#: src/components/conversation/hooks/index.ts:320
+#: src/components/conversation/hooks/index.ts:321
 msgid "Loading..."
 msgstr "Bezig met laden..."
 
@@ -1634,13 +1659,13 @@ msgstr "Modus"
 msgid "More templates"
 msgstr "Meer templates"
 
-#: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/conversation/MoveConversationButton.tsx:212
+#: src/components/conversation/ConversationAccordion.tsx:337
 msgid "Move"
 msgstr "Verplaatsen"
 
-#: src/components/conversation/ConversationAccordion.tsx:258
 #: src/components/conversation/MoveConversationButton.tsx:135
+#: src/components/conversation/ConversationAccordion.tsx:258
 msgid "Move Conversation"
 msgstr "Verplaats gesprek"
 
@@ -1652,8 +1677,8 @@ msgstr "Verplaats naar een ander project"
 msgid "Move to Project"
 msgstr "Verplaats naar project"
 
-#: src/components/conversation/ConversationEdit.tsx:126
 #: src/components/project/ProjectBasicEdit.tsx:116
+#: src/components/conversation/ConversationEdit.tsx:126
 msgid "Name"
 msgstr "Naam"
 
@@ -1669,7 +1694,7 @@ msgstr "Naam Z-A"
 msgid "New"
 msgstr "Nieuw"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:278
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:710
 msgid "New Conversation Name"
 msgstr "Nieuwe Gesprek Naam"
 
@@ -1687,8 +1712,8 @@ msgstr "Er zijn nieuwe gesprekken toegevoegd sinds de bibliotheek is gegenereerd
 msgid "New Password"
 msgstr "Nieuw wachtwoord"
 
-#: src/routes/auth/Login.tsx:95
 #: src/routes/project/ProjectsHome.tsx:106
+#: src/routes/auth/Login.tsx:95
 msgid "New Project"
 msgstr "Nieuw project"
 
@@ -1732,6 +1757,10 @@ msgstr "Geen chats gevonden. Start een chat met behulp van de \"Vraag\" knop."
 #: src/components/chat/ChatAccordion.tsx:125
 #~ msgid "No chats found. Start a chat using the \"Ask\" button."
 #~ msgstr "Geen chats gevonden. Start een chat met behulp van de \"Vraag\" knop."
+
+#: src/components/conversation/ConversationChunkAudioTranscript.tsx:355
+msgid "No content"
+msgstr ""
 
 #: src/routes/project/library/ProjectLibrary.tsx:164
 msgid "No conversations available to create library"
@@ -1799,8 +1828,8 @@ msgstr "Geen rapport gevonden"
 #~ msgid "No resources found. Add resources using the button above."
 #~ msgstr "Geen bronnen gevonden. Voeg bronnen toe met behulp van de knop boven aan."
 
-#: src/components/conversation/ConversationAccordion.tsx:1094
 #: src/components/conversation/ConversationEdit.tsx:171
+#: src/components/conversation/ConversationAccordion.tsx:1094
 msgid "No tags found"
 msgstr "Geen trefwoorden gevonden"
 
@@ -1808,7 +1837,7 @@ msgstr "Geen trefwoorden gevonden"
 msgid "No tags have been added to this project yet. Add a tag using the text input above to get started."
 msgstr "Er zijn nog geen trefwoorden toegevoegd aan dit project. Voeg een trefwoord toe met behulp van de tekstinvoer boven aan om te beginnen."
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:301
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:734
 msgid "No Transcript Available"
 msgstr "Geen transcript beschikbaar"
 
@@ -1816,7 +1845,7 @@ msgstr "Geen transcript beschikbaar"
 #~ msgid "No transcript available for this conversation."
 #~ msgstr "Er is geen transcript beschikbaar voor dit gesprek."
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:304
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:735
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "Er is nog geen transcript beschikbaar voor dit gesprek. Controleer later opnieuw."
 
@@ -1835,6 +1864,10 @@ msgstr "Er zijn geen geldige audiobestanden geselecteerd. Selecteer alleen audio
 #: src/routes/project/library/ProjectLibrary.tsx:162
 msgid "Not available"
 msgstr "Niet beschikbaar"
+
+#: src/components/conversation/ConversationChunkAudioTranscript.tsx:341
+msgid "Now"
+msgstr ""
 
 #: src/components/conversation/ConversationAccordion.tsx:566
 msgid "Oldest First"
@@ -1866,8 +1899,8 @@ msgstr "Het lijkt erop dat toegang tot de microfoon geweigerd is. Geen zorgen, w
 #~ msgid "Oops! It looks like microphone access was denied. No worries, though! We've got a handy troubleshooting guide for you. Feel free to check it out. Once you've resolved the issue, come back and visit this page again to check if your microphone is ready."
 #~ msgstr "Oeps! Het lijkt erop dat toegang tot de microfoon geweigerd is. Geen zorgen, we hebben een handige probleemoplossingsgids voor je. Voel je vrij om deze te bekijken. Zodra je het probleem hebt opgelost, kom dan terug naar deze pagina om te controleren of je microfoon klaar is voor gebruik."
 
-#: src/components/aspect/AspectCard.tsx:45
 #: src/components/project/ProjectCard.tsx:51
+#: src/components/aspect/AspectCard.tsx:45
 msgid "Open"
 msgstr "Openen"
 
@@ -1921,8 +1954,8 @@ msgstr "Pagina niet gevonden"
 msgid "Page Title"
 msgstr "Pagina titel"
 
-#: src/components/participant/ParticipantInitiateForm.tsx:45
 #: src/components/report/ConversationStatusTable.tsx:55
+#: src/components/participant/ParticipantInitiateForm.tsx:45
 msgid "Participant"
 msgstr "Deelnemer"
 
@@ -1935,10 +1968,10 @@ msgstr "Deelnemers kunnen trefwoorden selecteren wanneer ze een gesprek starten"
 #~ msgid "Participation"
 #~ msgstr "Deelneming"
 
-#: src/routes/auth/Login.tsx:160
-#: src/routes/auth/Login.tsx:163
 #: src/routes/auth/Register.tsx:97
 #: src/routes/auth/Register.tsx:100
+#: src/routes/auth/Login.tsx:160
+#: src/routes/auth/Login.tsx:163
 msgid "Password"
 msgstr "Wachtwoord"
 
@@ -1946,8 +1979,8 @@ msgstr "Wachtwoord"
 msgid "Password protect portal (request feature)"
 msgstr "Portal met wachtwoord beveiligen (aanvraag functie)"
 
-#: src/routes/auth/PasswordReset.tsx:30
 #: src/routes/auth/Register.tsx:37
+#: src/routes/auth/PasswordReset.tsx:30
 msgid "Passwords do not match"
 msgstr "Wachtwoorden komen niet overeen"
 
@@ -2012,16 +2045,13 @@ msgstr "Log in om door te gaan."
 
 #: src/components/participant/ParticipantBody.tsx:185
 msgid ""
-"Please record your response by clicking the \"Record\" button below. You may "
-"also choose to respond in text by clicking the text icon.  \n"
+"Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.  \n"
 "**Please keep this screen turned on  \n"
 "(black screen = not recording)**"
 msgstr ""
-"Neem uw antwoord op door op de knop \"Opnemen\" hieronder te klikken. U kunt "
-"er ook voor kiezen om in tekst te reageren door op het teksticoon te klikken.  \n"
+"Neem uw antwoord op door op de knop \"Opnemen\" hieronder te klikken. U kunt er ook voor kiezen om in tekst te reageren door op het teksticoon te klikken.  \n"
 "**Houd dit scherm aan  \n"
 "(zwart scherm = geen opname)**"
-
 
 #: src/components/participant/ParticipantBody.tsx:122
 #~ msgid "Please record your response by clicking the \"Start Recording\" button below. You may also choose to respond in text by clicking the text icon."
@@ -2065,7 +2095,7 @@ msgstr "Wacht aub terwijl we je rapport genereren. Je wordt automatisch doorgest
 msgid "library.processing.request"
 msgstr "Bibliotheek wordt verwerkt"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:261
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:693
 msgid "Please wait while we process your retranscription request. You will be redirected to the new conversation when ready."
 msgstr "Wacht aub terwijl we uw hertranscriptieaanvraag verwerken. U wordt automatisch doorgestuurd naar het nieuwe gesprek wanneer klaar."
 
@@ -2081,8 +2111,8 @@ msgstr "Wacht aub terwijl we uw e-mailadres verifiëren."
 msgid "Portal Content"
 msgstr "Portal inhoud"
 
-#: src/components/layout/ProjectOverviewLayout.tsx:33
 #: src/components/project/ProjectPortalEditor.tsx:245
+#: src/components/layout/ProjectOverviewLayout.tsx:33
 msgid "Portal Editor"
 msgstr "Portal Editor"
 
@@ -2126,12 +2156,12 @@ msgstr "Bezig met verwerken"
 #~ msgid "Processing Transcript"
 #~ msgstr "Transcript wordt verwerkt"
 
-#: src/components/report/CreateReportForm.tsx:61
 #: src/components/report/UpdateReportModalButton.tsx:68
+#: src/components/report/CreateReportForm.tsx:61
 msgid "Processing your report..."
 msgstr "Rapport wordt verwerkt..."
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:260
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:692
 msgid "Processing your retranscription request..."
 msgstr "Hertranscriptieaanvraag wordt verwerkt..."
 
@@ -2233,8 +2263,8 @@ msgstr "Bekijk opnieuw"
 msgid "view.recreate.modal.title"
 msgstr "Bekijk opnieuw"
 
-#: src/components/library/LibraryTemplatesMenu.tsx:22
 #: src/components/view/DummyViews.tsx:17
+#: src/components/library/LibraryTemplatesMenu.tsx:22
 msgid "Recurring Themes"
 msgstr "Terugkerende thema's"
 
@@ -2306,9 +2336,9 @@ msgstr "Naam wijzigen"
 msgid "Reply Prompt"
 msgstr "Reactie prompt"
 
-#: src/components/report/ReportModalNavigationButton.tsx:66
-#: src/components/report/ReportRenderer.tsx:78
 #: src/routes/project/report/ProjectReportRoute.tsx:64
+#: src/components/report/ReportRenderer.tsx:78
+#: src/components/report/ReportModalNavigationButton.tsx:66
 msgid "Report"
 msgstr "Rapport"
 
@@ -2386,19 +2416,19 @@ msgstr "Hervatten"
 #~ msgid "Resume"
 #~ msgstr "Hervatten"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:291
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:721
 msgid "Retranscribe"
 msgstr "Hertranscriptie"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:197
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:650
 msgid "Retranscribe conversation"
 msgstr "Hertranscriptie gesprek"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:251
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:685
 msgid "Retranscribe Conversation"
 msgstr "Hertranscriptie gesprek"
 
-#: src/components/conversation/hooks/index.ts:584
+#: src/components/conversation/hooks/index.ts:601
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "Hertranscriptie gestart. Nieuw gesprek wordt binnenkort beschikbaar."
 
@@ -2447,8 +2477,8 @@ msgstr "Zoek projecten"
 msgid "Search Projects"
 msgstr "Zoek projecten"
 
-#: src/components/conversation/ConversationAccordion.tsx:272
 #: src/components/conversation/MoveConversationButton.tsx:141
+#: src/components/conversation/ConversationAccordion.tsx:272
 msgid "Search projects..."
 msgstr "Zoek projecten..."
 
@@ -2590,7 +2620,7 @@ msgstr "Kortste eerst"
 #~ msgid "Show all"
 #~ msgstr "Toon alles"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:215
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:622
 msgid "Show audio player"
 msgstr "Toon audiospeler"
 
@@ -2636,12 +2666,6 @@ msgstr "Sommige gesprekken worden nog verwerkt. Automatische selectie zal optima
 msgid "Some files were already selected and won't be added twice."
 msgstr "Sommige bestanden werden al geselecteerd en worden niet dubbel toegevoegd."
 
-#: src/components/conversation/ConversationEdit.tsx:109
-#: src/components/participant/ParticipantInitiateForm.tsx:78
-#: src/routes/auth/Login.tsx:115
-msgid "Something went wrong"
-msgstr "Er ging iets mis"
-
 #. js-lingui-explicit-id
 #: src/routes/participant/ParticipantConversation.tsx:322
 msgid "participant.conversation.error"
@@ -2651,6 +2675,12 @@ msgstr "Er is iets misgegaan met het gesprek. Probeer het alstublieft opnieuw of
 #: src/routes/participant/ParticipantConversation.tsx:792
 msgid "participant.conversation.error.text.mode"
 msgstr "Er is iets misgegaan met het gesprek. Probeer het alstublieft opnieuw of neem contact op met de ondersteuning als het probleem blijft bestaan"
+
+#: src/routes/auth/Login.tsx:115
+#: src/components/participant/ParticipantInitiateForm.tsx:78
+#: src/components/conversation/ConversationEdit.tsx:109
+msgid "Something went wrong"
+msgstr "Er ging iets mis"
 
 #: src/components/dropzone/UploadResourceDropzone.tsx:28
 #~ msgid "Something went wrong while uploading the file: {0}"
@@ -2693,8 +2723,8 @@ msgid "Spanish"
 msgstr "Spaans"
 
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:29
-msgid "Speaker"
-msgstr "Spreker"
+#~ msgid "Speaker"
+#~ msgstr "Spreker"
 
 #: src/components/project/ProjectPortalEditor.tsx:100
 msgid "Specific Context"
@@ -2736,26 +2766,31 @@ msgstr "Stop"
 msgid "Strategic Planning"
 msgstr "Strategische Planning"
 
-#: src/routes/auth/RequestPasswordReset.tsx:41
-msgid "Submit"
-msgstr "Stuur in"
-
 #. js-lingui-explicit-id
 #: src/routes/participant/ParticipantConversation.tsx:916
 msgid "participant.button.submit.text.mode"
 msgstr "Stuur in"
 
+#: src/routes/auth/RequestPasswordReset.tsx:41
+msgid "Submit"
+msgstr "Stuur in"
+
+#: src/components/conversation/ConversationChunkAudioTranscript.tsx:289
+#: src/components/conversation/ConversationChunkAudioTranscript.tsx:379
+msgid "Submitted via text input"
+msgstr ""
+
 #: src/components/dropzone/UploadConversationDropzone.tsx:776
 msgid "Success"
 msgstr "Succes"
 
-#: src/components/chat/ChatTemplatesMenu.tsx:48
 #: src/components/library/LibraryTemplatesMenu.tsx:33
+#: src/components/chat/ChatTemplatesMenu.tsx:48
 msgid "Suggested:"
 msgstr "Aanbevelingen:"
 
-#: src/components/chat/templates.ts:14
 #: src/components/project/ProjectPortalEditor.tsx:464
+#: src/components/chat/templates.ts:14
 msgid "Summarize"
 msgstr "Samenvatten"
 
@@ -2771,11 +2806,11 @@ msgstr "Samenvatting"
 msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 msgstr "Ondersteunde formaten: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 
+#: src/components/project/ProjectTagsInput.tsx:219
+#: src/components/participant/ParticipantInitiateForm.tsx:101
+#: src/components/conversation/ConversationEdit.tsx:143
 #: src/components/conversation/ConversationAccordion.tsx:1006
 #: src/components/conversation/ConversationAccordion.tsx:1009
-#: src/components/conversation/ConversationEdit.tsx:143
-#: src/components/participant/ParticipantInitiateForm.tsx:101
-#: src/components/project/ProjectTagsInput.tsx:219
 msgid "Tags"
 msgstr "Trefwoorden"
 
@@ -2979,12 +3014,12 @@ msgstr "Dit rapport werd geopend door {0} mensen"
 msgid "This title is shown to participants when they start a conversation"
 msgstr "Deze titel wordt getoond aan deelnemers wanneer ze een gesprek starten"
 
-#: src/components/view/CreateViewForm.tsx:83
 #: src/routes/project/chat/ProjectChatRoute.tsx:325
+#: src/components/view/CreateViewForm.tsx:83
 msgid "This will clear your current input. Are you sure?"
 msgstr "Dit zal uw huidige invoer wissen. Weet u het zeker?"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:271
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:703
 msgid "This will create a new conversation with the same audio but a fresh transcription. The original conversation will remain unchanged."
 msgstr "Dit zal een nieuw gesprek maken met dezelfde audio maar een nieuwe transcriptie. Het originele gesprek blijft ongewijzigd."
 
@@ -3016,8 +3051,8 @@ msgstr "Onderwerpen"
 msgid "total"
 msgstr "totaal"
 
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:612
 #: src/components/layout/ProjectConversationLayout.tsx:39
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:163
 msgid "Transcript"
 msgstr "Transcript"
 
@@ -3025,7 +3060,7 @@ msgstr "Transcript"
 #~ msgid "Transcript Name"
 #~ msgstr "Naam afschrift"
 
-#: src/components/conversation/ConversationChunkAudioTranscript.tsx:67
+#: src/components/conversation/ConversationChunkAudioTranscript.tsx:217
 msgid "Transcript not available"
 msgstr "Transcript niet beschikbaar"
 
@@ -3033,7 +3068,11 @@ msgstr "Transcript niet beschikbaar"
 #~ msgid "Transcript Settings"
 #~ msgstr "Transcriptie Instellingen"
 
-#: src/components/conversation/ConversationChunkAudioTranscript.tsx:69
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:730
+msgid "Transcription in progress..."
+msgstr ""
+
+#: src/components/conversation/ConversationChunkAudioTranscript.tsx:219
 msgid "Transcription in progress…"
 msgstr "Transcriptie wordt uitgevoerd…"
 
@@ -3182,8 +3221,8 @@ msgstr "Upgrade"
 msgid "Upgrade to unlock Auto-select and analyze 10x more conversations in half the time—no more manual selection, just deeper insights instantly."
 msgstr "Upgrade naar Auto-select en analyseer 10x meer gesprekken in de helft van de tijd - geen handmatige selectie meer, gewoon diepere inzichten direct."
 
-#: src/components/conversation/ConversationAccordion.tsx:399
 #: src/routes/project/ProjectRoutes.tsx:49
+#: src/components/conversation/ConversationAccordion.tsx:399
 msgid "Upload"
 msgstr "Upload"
 
@@ -3227,15 +3266,19 @@ msgstr "Bestanden uploaden"
 msgid "Uploading Audio Files..."
 msgstr "Audio bestanden uploaden..."
 
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:628
+msgid "Use experimental features"
+msgstr ""
+
 #: src/routes/project/chat/ProjectChatRoute.tsx:572
 #: src/routes/project/chat/ProjectChatRoute.tsx:602
 msgid "Use Shift + Enter to add a new line"
 msgstr "Gebruik Shift + Enter om een nieuwe regel toe te voegen"
 
-#: src/components/report/ConversationStatusTable.tsx:93
-#: src/components/view/View.tsx:56
-#: src/routes/project/library/ProjectLibraryAspect.tsx:48
 #: src/routes/project/library/ProjectLibraryView.tsx:36
+#: src/routes/project/library/ProjectLibraryAspect.tsx:48
+#: src/components/view/View.tsx:56
+#: src/components/report/ConversationStatusTable.tsx:93
 msgid "View"
 msgstr "View"
 
@@ -3271,6 +3314,10 @@ msgstr "We kunnen je niet horen. Probeer je microfoon te wisselen of een beetje 
 #: src/components/participant/MicrophoneTest.tsx:310
 #~ msgid "We cannot hear you. Please try changing your microphone or get a little closer to the device."
 #~ msgstr "We kunnen je niet horen. Probeer je microfoon te wisselen of een beetje dichter bij het apparaat te komen."
+
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:561
+msgid "We couldn't load the audio. Please try again later."
+msgstr ""
 
 #: src/routes/auth/CheckYourEmail.tsx:14
 #~ msgid "We have sent you an email with next steps. If you don't see it, check your spam folder."
@@ -3392,6 +3439,10 @@ msgstr "Je moet inloggen met dezelfde provider die u gebruikte om u aan te melde
 #: src/components/participant/ParticipantBody.tsx:143
 msgid "You seem to be offline, please check your internet connection"
 msgstr "Je lijkt offline te zijn, controleer je internetverbinding"
+
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:731
+msgid "Your conversation is currently being transcribed. Please check back in a few moments."
+msgstr ""
 
 #: src/components/report/CreateReportForm.tsx:100
 msgid "Your Conversations"
