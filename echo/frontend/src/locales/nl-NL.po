@@ -736,7 +736,7 @@ msgstr "Kopieer link om dit rapport te delen"
 msgid "Copy Summary"
 msgstr "Kopieer samenvatting"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:637
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:641
 msgid "Copy transcript"
 msgstr "Kopieer transcript"
 
@@ -796,7 +796,7 @@ msgstr "Gemaakt op"
 msgid "Custom"
 msgstr "Aangepast"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:662
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:666
 msgid "Custom Filename"
 msgstr "Aangepaste bestandsnaam"
 
@@ -899,7 +899,7 @@ msgstr "Documentatie"
 #~ msgid "Documents"
 #~ msgstr "Documenten"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:674
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:678
 msgid "Download"
 msgstr "Downloaden"
 
@@ -915,11 +915,11 @@ msgstr "Download alle transcripten"
 msgid "Download Audio"
 msgstr "Audio downloaden"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:630
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:634
 msgid "Download transcript"
 msgstr "Download transcript"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:659
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:663
 msgid "Download Transcript Options"
 msgstr "Download transcript opties"
 
@@ -1068,7 +1068,7 @@ msgstr "Engels"
 msgid "Enter a key term or proper noun"
 msgstr "Voer een sleutelterm of eigennamen in"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:711
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:715
 msgid "Enter a name for the new conversation"
 msgstr "Voer een naam in voor het nieuwe gesprek"
 
@@ -1138,7 +1138,7 @@ msgstr "Alles lijkt goed – je kunt doorgaan."
 #~ msgstr "Voorbeeld: Dit gesprek gaat over [onderwerp]. Belangrijke termen zijn [term1], [term2]. Let speciaal op [specifieke aspect]."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:67
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:686
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:690
 #: src/components/project/ProjectPortalEditor.tsx:390
 #: src/components/conversation/MoveConversationButton.tsx:129
 msgid "Experimental"
@@ -1694,7 +1694,7 @@ msgstr "Naam Z-A"
 msgid "New"
 msgstr "Nieuw"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:710
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:714
 msgid "New Conversation Name"
 msgstr "Nieuwe Gesprek Naam"
 
@@ -1837,7 +1837,7 @@ msgstr "Geen trefwoorden gevonden"
 msgid "No tags have been added to this project yet. Add a tag using the text input above to get started."
 msgstr "Er zijn nog geen trefwoorden toegevoegd aan dit project. Voeg een trefwoord toe met behulp van de tekstinvoer boven aan om te beginnen."
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:734
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:738
 msgid "No Transcript Available"
 msgstr "Geen transcript beschikbaar"
 
@@ -1845,7 +1845,7 @@ msgstr "Geen transcript beschikbaar"
 #~ msgid "No transcript available for this conversation."
 #~ msgstr "Er is geen transcript beschikbaar voor dit gesprek."
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:735
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:739
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "Er is nog geen transcript beschikbaar voor dit gesprek. Controleer later opnieuw."
 
@@ -2095,7 +2095,7 @@ msgstr "Wacht aub terwijl we je rapport genereren. Je wordt automatisch doorgest
 msgid "library.processing.request"
 msgstr "Bibliotheek wordt verwerkt"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:693
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:697
 msgid "Please wait while we process your retranscription request. You will be redirected to the new conversation when ready."
 msgstr "Wacht aub terwijl we uw hertranscriptieaanvraag verwerken. U wordt automatisch doorgestuurd naar het nieuwe gesprek wanneer klaar."
 
@@ -2161,7 +2161,7 @@ msgstr "Bezig met verwerken"
 msgid "Processing your report..."
 msgstr "Rapport wordt verwerkt..."
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:692
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:696
 msgid "Processing your retranscription request..."
 msgstr "Hertranscriptieaanvraag wordt verwerkt..."
 
@@ -2416,15 +2416,15 @@ msgstr "Hervatten"
 #~ msgid "Resume"
 #~ msgstr "Hervatten"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:721
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:725
 msgid "Retranscribe"
 msgstr "Hertranscriptie"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:650
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:654
 msgid "Retranscribe conversation"
 msgstr "Hertranscriptie gesprek"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:685
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:689
 msgid "Retranscribe Conversation"
 msgstr "Hertranscriptie gesprek"
 
@@ -2644,6 +2644,10 @@ msgstr "Toon referenties"
 #: src/routes/project/report/ProjectReportRoute.tsx:290
 msgid "Show timeline in report (request feature)"
 msgstr "Toon tijdlijn in rapport (aanvraag functie)"
+
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:630
+msgid "Show timestamps (experimental)"
+msgstr ""
 
 #: src/routes/auth/Login.tsx:194
 msgid "Sign in with Google"
@@ -3019,7 +3023,7 @@ msgstr "Deze titel wordt getoond aan deelnemers wanneer ze een gesprek starten"
 msgid "This will clear your current input. Are you sure?"
 msgstr "Dit zal uw huidige invoer wissen. Weet u het zeker?"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:703
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:707
 msgid "This will create a new conversation with the same audio but a fresh transcription. The original conversation will remain unchanged."
 msgstr "Dit zal een nieuw gesprek maken met dezelfde audio maar een nieuwe transcriptie. Het originele gesprek blijft ongewijzigd."
 
@@ -3068,7 +3072,7 @@ msgstr "Transcript niet beschikbaar"
 #~ msgid "Transcript Settings"
 #~ msgstr "Transcriptie Instellingen"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:730
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:734
 msgid "Transcription in progress..."
 msgstr ""
 
@@ -3267,8 +3271,8 @@ msgid "Uploading Audio Files..."
 msgstr "Audio bestanden uploaden..."
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:628
-msgid "Use experimental features"
-msgstr ""
+#~ msgid "Use experimental features"
+#~ msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:572
 #: src/routes/project/chat/ProjectChatRoute.tsx:602
@@ -3440,7 +3444,7 @@ msgstr "Je moet inloggen met dezelfde provider die u gebruikte om u aan te melde
 msgid "You seem to be offline, please check your internet connection"
 msgstr "Je lijkt offline te zijn, controleer je internetverbinding"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:731
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:735
 msgid "Your conversation is currently being transcribed. Please check back in a few moments."
 msgstr ""
 

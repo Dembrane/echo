@@ -663,7 +663,7 @@ msgstr "Copiar enlace para compartir este informe"
 msgid "Copy Summary"
 msgstr "Copiar Resumen"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:637
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:641
 msgid "Copy transcript"
 msgstr "Copiar transcripción"
 
@@ -715,7 +715,7 @@ msgstr "Creado el"
 msgid "Custom"
 msgstr "Personalizado"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:662
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:666
 msgid "Custom Filename"
 msgstr "Nombre de archivo personalizado"
 
@@ -794,7 +794,7 @@ msgstr "¿Quieres estar en el bucle?"
 msgid "Documentation"
 msgstr "Documentación"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:674
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:678
 msgid "Download"
 msgstr "Descargar"
 
@@ -806,11 +806,11 @@ msgstr "Descargar Todas las Transcripciones"
 msgid "Download Audio"
 msgstr "Descargar Audio"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:630
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:634
 msgid "Download transcript"
 msgstr "Descargar transcripción"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:659
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:663
 msgid "Download Transcript Options"
 msgstr "Opciones de Descarga de Transcripción"
 
@@ -955,7 +955,7 @@ msgstr "Inglés"
 msgid "Enter a key term or proper noun"
 msgstr "Ingresa un término clave o nombre propio"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:711
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:715
 msgid "Enter a name for the new conversation"
 msgstr "Ingresa un nombre para el nuevo conversation"
 
@@ -1017,7 +1017,7 @@ msgstr "Acceso al micrófono verificado con éxito"
 #~ msgstr "Todo parece bien – puedes continuar."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:67
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:686
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:690
 #: src/components/project/ProjectPortalEditor.tsx:390
 #: src/components/conversation/MoveConversationButton.tsx:129
 msgid "Experimental"
@@ -1536,7 +1536,7 @@ msgstr "Nombre Z-A"
 msgid "New"
 msgstr "Nuevo"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:710
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:714
 msgid "New Conversation Name"
 msgstr "Nuevo nombre de conversación"
 
@@ -1671,7 +1671,7 @@ msgstr "No se encontraron etiquetas"
 msgid "No tags have been added to this project yet. Add a tag using the text input above to get started."
 msgstr "Aún no se han añadido etiquetas a este proyecto. Añade una etiqueta usando el campo de texto de arriba para comenzar."
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:734
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:738
 msgid "No Transcript Available"
 msgstr "No hay transcripción disponible"
 
@@ -1679,7 +1679,7 @@ msgstr "No hay transcripción disponible"
 #~ msgid "No transcript available for this conversation."
 #~ msgstr "No hay transcripción disponible para esta conversación."
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:735
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:739
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "Aún no existe transcripción para esta conversación. Por favor, revisa más tarde."
 
@@ -1908,7 +1908,7 @@ msgstr "Por favor, espera mientras generamos tu informe. Serás redirigido autom
 msgid "library.processing.request"
 msgstr "Biblioteca en proceso"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:693
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:697
 msgid "Please wait while we process your retranscription request. You will be redirected to the new conversation when ready."
 msgstr "Por favor, espera mientras procesamos tu solicitud de retranscripción. Serás redirigido a la nueva conversación cuando esté lista."
 
@@ -1974,7 +1974,7 @@ msgstr "Procesando"
 msgid "Processing your report..."
 msgstr "Procesando tu informe..."
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:692
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:696
 msgid "Processing your retranscription request..."
 msgstr "Procesando tu solicitud de retranscripción..."
 
@@ -2213,15 +2213,15 @@ msgstr "Reanudar"
 #~ msgid "Resume"
 #~ msgstr "Reanudar"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:721
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:725
 msgid "Retranscribe"
 msgstr "Retranscribir"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:650
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:654
 msgid "Retranscribe conversation"
 msgstr "Retranscribir conversación"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:685
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:689
 msgid "Retranscribe Conversation"
 msgstr "Retranscribir conversación"
 
@@ -2432,6 +2432,10 @@ msgstr "Mostrar referencias"
 #: src/routes/project/report/ProjectReportRoute.tsx:290
 msgid "Show timeline in report (request feature)"
 msgstr "Mostrar línea de tiempo en el informe (solicitar función)"
+
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:630
+msgid "Show timestamps (experimental)"
+msgstr ""
 
 #: src/routes/auth/Login.tsx:194
 msgid "Sign in with Google"
@@ -2783,7 +2787,7 @@ msgstr "Este título se muestra a los participantes cuando inician una conversac
 msgid "This will clear your current input. Are you sure?"
 msgstr "Esto borrará tu entrada actual. ¿Estás seguro?"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:703
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:707
 msgid "This will create a new conversation with the same audio but a fresh transcription. The original conversation will remain unchanged."
 msgstr "Esto creará una nueva conversación con el mismo audio pero una transcripción fresca. La conversación original permanecerá sin cambios."
 
@@ -2824,7 +2828,7 @@ msgstr "Transcripción no disponible"
 #~ msgid "Transcript Settings"
 #~ msgstr "Configuración de Transcripción"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:730
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:734
 msgid "Transcription in progress..."
 msgstr ""
 
@@ -3010,8 +3014,8 @@ msgid "Uploading Audio Files..."
 msgstr "Subiendo archivos de audio..."
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:628
-msgid "Use experimental features"
-msgstr ""
+#~ msgid "Use experimental features"
+#~ msgstr ""
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:572
 #: src/routes/project/chat/ProjectChatRoute.tsx:602
@@ -3163,7 +3167,7 @@ msgstr "Debes iniciar sesión con el mismo proveedor con el que te registraste. 
 msgid "You seem to be offline, please check your internet connection"
 msgstr "Pareces estar desconectado, por favor verifica tu conexión a internet"
 
-#: src/routes/project/conversation/ProjectConversationTranscript.tsx:731
+#: src/routes/project/conversation/ProjectConversationTranscript.tsx:735
 msgid "Your conversation is currently being transcribed. Please check back in a few moments."
 msgstr ""
 

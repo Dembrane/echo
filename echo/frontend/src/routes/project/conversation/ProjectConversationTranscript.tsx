@@ -625,7 +625,11 @@ export const ProjectConversationTranscript = () => {
             <Switch
               checked={!legacyView}
               onChange={(e) => setLegacyView(!e.currentTarget.checked)}
-              label={t`Use experimental features`}
+              label={
+                <Group gap="xs">
+                  <Trans>Show timestamps (experimental)</Trans>
+                </Group>
+              }
             />
             <Tooltip label={t`Download transcript`}>
               <ActionIcon onClick={openDownload} size="md" variant="subtle" color="gray">
