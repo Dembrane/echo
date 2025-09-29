@@ -1100,6 +1100,17 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
                   </Stack>
                 </Menu.Dropdown>
               </Menu>
+
+              <Tooltip label={t`Reset to default`}>
+                <ActionIcon
+                  variant="outline"
+                  color="gray"
+                  onClick={resetEverything}
+                  aria-label={t`Reset to default`}
+                >
+                  <IconX size={16} />
+                </ActionIcon>
+              </Tooltip>
             </Group>
           )}
 
