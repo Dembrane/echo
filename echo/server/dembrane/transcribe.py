@@ -6,13 +6,13 @@ Can provide selfhost options through "litellm" and api use through "assembly"
 """
 
 # transcribe.py
-from base64 import b64encode, encode
 import io
-import json
 import os
+import json
 import time
 import logging
 import mimetypes
+from base64 import b64encode
 from typing import Any, List, Literal, Optional
 
 import litellm
@@ -38,7 +38,7 @@ from dembrane.config import (
     RUNPOD_WHISPER_MAX_REQUEST_THRESHOLD,
 )
 from dembrane.prompts import render_prompt
-from dembrane.service import conversation_service, file_service
+from dembrane.service import file_service, conversation_service
 from dembrane.directus import directus
 
 logger = logging.getLogger("transcribe")
