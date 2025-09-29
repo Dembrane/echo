@@ -752,7 +752,6 @@ export const ProjectConversationTranscript = () => {
                 showAudioPlayer={false} // Global player is used
                 isActive={true}
                 onSeek={seekAbs}
-                globalAudioRef={audioRef}
                 currentTime={currentTime}
                 chunkOffsetStart={0} // Offsets are pre-calculated in mergedSegments
                 legacyView={legacyView}
@@ -778,7 +777,6 @@ export const ProjectConversationTranscript = () => {
                     showAudioPlayer={legacyView && showAudioPlayer && !hasMergedAudio}
                     isActive={activeChunkId === chunk.id}
                     onSeek={hasMergedAudio ? seekAbs : undefined}
-                    globalAudioRef={hasMergedAudio ? audioRef : undefined}
                     currentTime={hasMergedAudio ? currentTime : undefined}
                     chunkOffsetStart={hasMergedAudio && o ? o.start : 0}
                     legacyView={legacyView}

@@ -69,7 +69,6 @@ export const ConversationChunkAudioTranscript = ({
   showAudioPlayer = true,
   isActive = false,
   onSeek,
-  globalAudioRef,
   currentTime,
   chunkOffsetStart = 0,
   legacyView = false,
@@ -87,7 +86,6 @@ export const ConversationChunkAudioTranscript = ({
   showAudioPlayer?: boolean;
   isActive?: boolean;
   onSeek?: (timeSec: number) => void;
-  globalAudioRef?: React.RefObject<HTMLAudioElement | null>;
   currentTime?: number;
   chunkOffsetStart?: number;
   legacyView?: boolean;
