@@ -400,28 +400,6 @@ export const ConversationStatusIndicators = ({
         </Badge>
       )}
 
-      {!!project?.is_enhanced_audio_processing_enabled &&
-        // if processing still
-        // don't show this if both is_finished and is_audio_processing_finished are true
-        // but if project.is_enhanced_audio_processing_enabled is true, just see the is_finished
-        !(
-          conversation.is_finished && conversation.is_audio_processing_finished
-        ) && (
-          <Tooltip
-            label={
-              t`This conversation is still being processed. It will be available for analysis and chat shortly. ` +
-              t`(for enhanced audio processing)`
-            }
-          >
-            <Badge size="xs" color="violet" variant="light">
-              <Group gap="xs">
-                <Trans>Processing</Trans>
-                <IconInfoCircle size={12} />
-              </Group>
-            </Badge>
-          </Tooltip>
-        )}
-
       {hasOnlyTextContent && (
         <Badge size="xs" color="blue" variant="light">
           <Trans>Text</Trans>
