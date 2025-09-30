@@ -498,7 +498,6 @@ const ConversationAccordionItem = ({
         "!bg-primary-50": isLocked,
       })}
       rightSection={
-        (!ENABLE_CHAT_AUTO_SELECT || !isAutoSelectEnabled) &&
         inChatMode && (
           <ConversationAccordionLabelChatSelection
             conversation={conversation}

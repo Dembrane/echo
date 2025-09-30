@@ -242,6 +242,63 @@ async def generate_title(
     return response.choices[0].message.content
 
 
+async def auto_select_conversations(
+    user_query_inputs: List[str],
+    project_id_list: List[str],
+    db: Session,
+) -> Dict[str, Any]:
+    """
+    Dummy function for auto-selecting conversations based on user queries.
+
+    This is a placeholder implementation that randomly selects up to 3 conversations
+    from the given project. In the future, this will use RAG/semantic search to find
+    the most relevant conversations for the given queries.
+
+    Args:
+        user_query_inputs: List of user query strings (currently up to 3)
+        project_id_list: List containing a single project ID
+        db: Database session
+
+    Returns:
+        Dictionary with structure:
+        {
+            "results": {
+                "<project_id>": {
+                    "conversation_id_list": [<conversation_ids>]
+                }
+            }
+        }
+    """
+    import random
+
+    logger.info(f"Auto-select called with queries: {user_query_inputs}")
+    logger.info(f"Auto-select called for project(s): {project_id_list}")
+
+    results = {}
+
+    for project_id in project_id_list:
+        # Get all conversations for this project
+        conversations = (
+            db.query(ConversationModel).filter(ConversationModel.project_id == project_id).all()
+        )
+
+        if not conversations:
+            logger.warning(f"No conversations found for project {project_id}")
+            results[project_id] = {"conversation_id_list": []}
+            continue
+
+        # Randomly select up to 3 conversations
+        num_to_select = min(3, len(conversations))
+        selected_conversations = random.sample(conversations, num_to_select)
+        conversation_ids = [conv.id for conv in selected_conversations]
+
+        logger.info(f"Selected {len(conversation_ids)} conversations: {conversation_ids}")
+
+        results[project_id] = {"conversation_id_list": conversation_ids}
+
+    return {"results": results}
+
+
 async def get_conversation_citations(
     rag_prompt: str,
     accumulated_response: str,
