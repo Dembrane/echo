@@ -499,11 +499,19 @@ async def post_chat(
                     conversations_added.append(conversation)
                     all_conversations_added.append(conversation)  # Track all added
 
+            # Create a message to lock the auto-selected conversations
             if conversations_added:
-                db.commit()
-                logger.info(
-                    f"Added {len(conversations_added)} conversations via auto-select (not locked)"
+                auto_select_message = ProjectChatMessageModel(
+                    id=generate_uuid(),
+                    date_created=get_utc_timestamp(),
+                    message_from="dembrane",
+                    text=f"Auto-selected and added {len(conversations_added)} conversations as context to the chat.",
+                    project_chat_id=chat_id,
+                    used_conversations=conversations_added,
                 )
+                db.add(auto_select_message)
+                db.commit()
+                logger.info(f"Added {len(conversations_added)} conversations via auto-select")
 
             # Get updated chat context
             updated_chat_context = await get_chat_context(chat_id, db, auth)

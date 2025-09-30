@@ -18,7 +18,7 @@ export const Sources = ({
       <Group gap="sm" align="center">
         <Box w={15} h={15} bg="green.5" style={{ borderRadius: "50%" }} />
         <Text size="sm" fw={500} my={2}>
-          <Trans>Citing the following sources</Trans>
+          <Trans>The following conversations were automatically added to the context</Trans>
         </Text>
       </Group>
       <Group gap="xs" mt={10}>
