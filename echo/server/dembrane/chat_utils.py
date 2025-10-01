@@ -1,10 +1,14 @@
 import json
+import math
 import logging
 from typing import Any, Dict, List, Optional
 
 from litellm import completion, acompletion
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import (
+    Session,
+    selectinload,
+)
 
 from dembrane.config import (
     SMALL_LITELLM_MODEL,
@@ -205,13 +209,13 @@ async def generate_title(
 ) -> str | None:
     """
     Generate a short chat title from a user's query using a small LLM.
-    
+
     If title generation is disabled via configuration or the trimmed query is shorter than 2 characters, the function returns None. The function builds a prompt (using the English prompt template) and asynchronously calls a configured small LLM; it returns the generated title string or None if the model returns no content.
-    
+
     Parameters:
         user_query (str): The user's chat message or query to generate a title from.
         language (str): Target language for the generated title (affects prompt content; the prompt template used is English).
-    
+
     Returns:
         str | None: The generated title, or None if generation is disabled, the query is too short, or the model produced no content.
     """
@@ -246,18 +250,20 @@ async def auto_select_conversations(
     user_query_inputs: List[str],
     project_id_list: List[str],
     db: Session,
+    language: str = "en",
 ) -> Dict[str, Any]:
     """
-    Dummy function for auto-selecting conversations based on user queries.
+    Auto-select conversations based on user queries using LLM-based relevance assessment.
 
-    This is a placeholder implementation that randomly selects up to 3 conversations
-    from the given project. In the future, this will use RAG/semantic search to find
-    the most relevant conversations for the given queries.
+    This function fetches conversation summaries from the database and uses an LLM
+    to select the most relevant conversations for the given queries. It handles
+    batching to stay within LLM context limits.
 
     Args:
         user_query_inputs: List of user query strings (currently up to 3)
         project_id_list: List containing a single project ID
         db: Database session
+        language: Language code for the prompt template (default: "en")
 
     Returns:
         Dictionary with structure:
@@ -269,17 +275,21 @@ async def auto_select_conversations(
             }
         }
     """
-    import random
-
     logger.info(f"Auto-select called with queries: {user_query_inputs}")
     logger.info(f"Auto-select called for project(s): {project_id_list}")
 
-    results = {}
+    results: Dict[str, Any] = {}
+    # Batch size: number of conversations to process in each LLM call
+    # Adjust based on context limits and average summary length
+    BATCH_SIZE = 20
 
     for project_id in project_id_list:
         # Get all conversations for this project
         conversations = (
-            db.query(ConversationModel).filter(ConversationModel.project_id == project_id).all()
+            db.query(ConversationModel)
+            .filter(ConversationModel.project_id == project_id)
+            .options(selectinload(ConversationModel.tags))
+            .all()
         )
 
         if not conversations:
@@ -287,14 +297,119 @@ async def auto_select_conversations(
             results[project_id] = {"conversation_id_list": []}
             continue
 
-        # Randomly select up to 3 conversations
-        num_to_select = min(3, len(conversations))
-        selected_conversations = random.sample(conversations, num_to_select)
-        conversation_ids = [conv.id for conv in selected_conversations]
+        logger.info(f"To remove this line::: {conversations} ::: for project {project_id}")
+        logger.info(f"Found {len(conversations)} total conversations for project {project_id}")
 
-        logger.info(f"Selected {len(conversation_ids)} conversations: {conversation_ids}")
+        # Calculate expected number of LLM calls for observability
+        expected_llm_calls = math.ceil(len(conversations) / BATCH_SIZE)
+        logger.info(
+            f"Auto-select will make up to {expected_llm_calls} LLM call(s) "
+            f"for {len(conversations)} conversations (batch size: {BATCH_SIZE})"
+        )
 
-        results[project_id] = {"conversation_id_list": conversation_ids}
+        # Batch conversations and process them
+        all_selected_ids = []
+        llm_calls_made = 0
+        for i in range(0, len(conversations), BATCH_SIZE):
+            batch = conversations[i : i + BATCH_SIZE]
+            logger.info(
+                f"Processing batch {i // BATCH_SIZE + 1} "
+                f"({len(batch)} conversations, indices {i} to {i + len(batch) - 1})"
+            )
+
+            # Prepare conversation data for the prompt
+            conversation_data = []
+            for conv in batch:
+                # Get summary or fallback to transcript excerpt
+                summary_text = None
+                if conv.summary and conv.summary.strip():
+                    summary_text = conv.summary
+                else:
+                    # Use transcript as fallback
+                    try:
+                        transcript = get_conversation_transcript(
+                            conv.id,
+                            DirectusSession(user_id="none", is_admin=True),
+                        )
+                        # Limit transcript to first 500 characters for context
+                        if transcript and len(transcript) > 500:
+                            summary_text = transcript[:500] + "..."
+                        elif transcript:
+                            summary_text = transcript
+                    except Exception as e:
+                        logger.warning(f"Could not get transcript for conversation {conv.id}: {e}")
+
+                # Skip conversations with no content at all
+                if not summary_text:
+                    logger.debug(f"Skipping conversation {conv.id} - no summary or transcript")
+                    continue
+
+                conv_data = {
+                    "id": conv.id,
+                    "participant_name": conv.participant_name or "Unknown",
+                    "summary": summary_text,
+                }
+                if conv.tags:
+                    conv_data["tags"] = ", ".join([tag.text for tag in conv.tags])
+                if conv.created_at:
+                    conv_data["created_at"] = conv.created_at.isoformat()
+                conversation_data.append(conv_data)
+
+            # Skip batch if no valid conversations
+            if not conversation_data:
+                logger.warning(
+                    f"Batch {i // BATCH_SIZE + 1} has no valid conversations with content. Skipping."
+                )
+                continue
+
+            # Render the prompt
+            prompt = render_prompt(
+                "auto_select_conversations",
+                language,
+                {
+                    "user_queries": user_query_inputs,
+                    "conversations": conversation_data,
+                },
+            )
+
+            # Call the LLM
+            try:
+                response = await acompletion(
+                    model=SMALL_LITELLM_MODEL,
+                    messages=[{"role": "user", "content": prompt}],
+                    api_base=SMALL_LITELLM_API_BASE,
+                    api_key=SMALL_LITELLM_API_KEY,
+                    response_format={"type": "json_object"},
+                )
+                llm_calls_made += 1
+
+                if response.choices[0].message.content:
+                    result = json.loads(response.choices[0].message.content)
+                    batch_selected_ids = result.get("selected_conversation_ids", [])
+                    all_selected_ids.extend(batch_selected_ids)
+                    logger.info(
+                        f"Batch {i // BATCH_SIZE + 1} selected {len(batch_selected_ids)} "
+                        f"conversations: {batch_selected_ids}"
+                    )
+                else:
+                    logger.warning(f"No response from LLM for batch {i // BATCH_SIZE + 1}")
+
+            except Exception as e:
+                logger.error(
+                    f"Error processing batch {i // BATCH_SIZE + 1}: {str(e)}. Skipping batch."
+                )
+                continue
+
+        # Remove duplicates while preserving order
+        unique_selected_ids = list(dict.fromkeys(all_selected_ids))
+
+        logger.info(
+            f"Auto-select completed: Made {llm_calls_made} LLM call(s), "
+            f"selected {len(unique_selected_ids)} unique conversations "
+            f"for project {project_id}: {unique_selected_ids}"
+        )
+
+        results[project_id] = {"conversation_id_list": unique_selected_ids}
 
     return {"results": results}
 
@@ -307,7 +422,7 @@ async def get_conversation_citations(
 ) -> List[Dict[str, Any]]:
     """
     Extract structured conversation citations from an accumulated assistant response using a text-structuring model, map those citations to conversations, and return only citations that belong to the given project IDs.
-    
+
     This function:
     - Renders a text-structuring prompt using `rag_prompt` and `accumulated_response` and sends it to the configured text-structure LLM.
     - Parses the model's JSON response (expected to follow `CitationsSchema`) to obtain citation entries that include `segment_id` and `verbatim_reference_text_chunk`.
@@ -317,7 +432,7 @@ async def get_conversation_citations(
       - "conversation": conversation id (str)
       - "reference_text": verbatim reference text chunk (str)
       - "conversation_title": conversation name/title (str)
-    
+
     If the model output cannot be parsed or a segment-to-conversation mapping fails for an individual citation, that citation is skipped; parsing errors do not raise but are logged and result in an empty citations list in the returned structure.
     """
     text_structuring_model_message = render_prompt(

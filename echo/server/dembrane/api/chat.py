@@ -479,6 +479,7 @@ async def post_chat(
                 user_query_inputs=user_query_inputs,
                 project_id_list=[project_id],
                 db=db,
+                language=language,
             )
 
             logger.info(f"Auto-select result: {auto_select_result}")
@@ -544,7 +545,7 @@ async def post_chat(
                 )
 
         # Build references list from all conversations added during auto-select
-        conversation_references = {"references": []}
+        conversation_references: dict[str, list[dict[str, str]]] = {"references": []}
         for conv in all_conversations_added:
             conversation_references["references"].append(
                 {
