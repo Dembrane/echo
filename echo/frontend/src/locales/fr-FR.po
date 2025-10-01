@@ -88,7 +88,7 @@ msgstr " Se désabonner des notifications"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:579
 msgid "-5s"
-msgstr ""
+msgstr "-5s"
 
 #: src/components/conversation/ConversationAccordion.tsx:413
 msgid "(for enhanced audio processing)"
@@ -154,7 +154,7 @@ msgstr "*Transcription en cours.*"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:597
 msgid "+5s"
-msgstr ""
+msgstr "+5s"
 
 #. placeholder {0}: Math.floor(remainingCooldown / 60)
 #. placeholder {1}: (remainingCooldown % 60) .toString() .padStart(2, "0")
@@ -597,7 +597,7 @@ msgstr "Conversation ajoutée à la discussion"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:553
 msgid "Conversation Audio"
-msgstr ""
+msgstr "Conversation audio"
 
 #. js-lingui-explicit-id
 #: src/routes/participant/ParticipantConversation.tsx:318
@@ -1074,7 +1074,7 @@ msgstr "Échec de la récupération du nombre d'annonces non lues"
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:295
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:385
 msgid "Failed to load audio or the audio is not available"
-msgstr ""
+msgstr "Échec du chargement de l'audio ou l'audio n'est pas disponible"
 
 #: src/components/announcement/hooks/index.ts:336
 #: src/components/announcement/hooks/index.ts:408
@@ -1181,11 +1181,11 @@ msgstr "Prénom"
 
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:263
 msgid "Follow"
-msgstr ""
+msgstr "Suivre"
 
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:258
 msgid "Follow playback"
-msgstr ""
+msgstr "Suivre la lecture"
 
 #: src/routes/auth/Login.tsx:169
 msgid "Forgot your password?"
@@ -1602,7 +1602,7 @@ msgstr "Aucune discussion trouvée. Commencez une discussion en utilisant le bou
 
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:355
 msgid "No content"
-msgstr ""
+msgstr "Aucun contenu"
 
 #: src/routes/project/library/ProjectLibrary.tsx:164
 msgid "No conversations available to create library"
@@ -1701,7 +1701,7 @@ msgstr "Non disponible"
 
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:341
 msgid "Now"
-msgstr ""
+msgstr "Maintenant"
 
 #: src/components/conversation/ConversationAccordion.tsx:566
 msgid "Oldest First"
@@ -2435,7 +2435,7 @@ msgstr "Afficher la chronologie dans le rapport (demande de fonctionnalité)"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:630
 msgid "Show timestamps (experimental)"
-msgstr ""
+msgstr "Afficher les horodatages (expérimental)"
 
 #: src/routes/auth/Login.tsx:194
 msgid "Sign in with Google"
@@ -2575,7 +2575,7 @@ msgstr "Soumettre"
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:289
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:379
 msgid "Submitted via text input"
-msgstr ""
+msgstr "Soumis via la saisie de texte"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:776
 msgid "Success"
@@ -2835,7 +2835,7 @@ msgstr "Transcription non disponible"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:734
 msgid "Transcription in progress..."
-msgstr ""
+msgstr "Transcription en cours..."
 
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:219
 msgid "Transcription in progress…"
@@ -3020,7 +3020,7 @@ msgstr "Téléchargement des fichiers audio..."
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:628
 #~ msgid "Use experimental features"
-#~ msgstr ""
+#~ msgstr "Utiliser des fonctionnalités expérimentales"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:572
 #: src/routes/project/chat/ProjectChatRoute.tsx:602
@@ -3069,7 +3069,7 @@ msgstr "Nous ne pouvons pas vous entendre. Veuillez essayer de changer de microp
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:561
 msgid "We couldn't load the audio. Please try again later."
-msgstr ""
+msgstr "Impossible de charger l'audio. Veuillez réessayer ultérieurement."
 
 #: src/routes/auth/CheckYourEmail.tsx:14
 #~ msgid "We have sent you an email with next steps. If you don't see it, check your spam folder."
@@ -3174,7 +3174,7 @@ msgstr "Vous semblez être hors ligne, veuillez vérifier votre connexion intern
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:735
 msgid "Your conversation is currently being transcribed. Please check back in a few moments."
-msgstr ""
+msgstr "Votre conversation est en cours de transcription. Veuillez revenir plus tard."
 
 #: src/components/report/CreateReportForm.tsx:100
 msgid "Your Conversations"

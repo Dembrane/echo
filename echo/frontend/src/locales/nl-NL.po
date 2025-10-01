@@ -88,7 +88,7 @@ msgstr " Afmelden voor meldingen"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:579
 msgid "-5s"
-msgstr ""
+msgstr "-5s"
 
 #: src/components/conversation/ConversationAccordion.tsx:413
 msgid "(for enhanced audio processing)"
@@ -166,7 +166,7 @@ msgstr "*Een moment a.u.b.*"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:597
 msgid "+5s"
-msgstr ""
+msgstr "+5s"
 
 #. placeholder {0}: Math.floor(remainingCooldown / 60)
 #. placeholder {1}: (remainingCooldown % 60) .toString() .padStart(2, "0")
@@ -670,7 +670,7 @@ msgstr "Gesprek toegevoegd aan chat"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:553
 msgid "Conversation Audio"
-msgstr ""
+msgstr "Gespreksaudio"
 
 #. js-lingui-explicit-id
 #: src/routes/participant/ParticipantConversation.tsx:318
@@ -1195,7 +1195,7 @@ msgstr "Fout bij het ophalen van het aantal ongelezen meldingen"
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:295
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:385
 msgid "Failed to load audio or the audio is not available"
-msgstr ""
+msgstr "Het laden van de audio is mislukt of de audio is niet beschikbaar"
 
 #: src/components/announcement/hooks/index.ts:336
 #: src/components/announcement/hooks/index.ts:408
@@ -1306,11 +1306,11 @@ msgstr "Voornaam"
 
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:263
 msgid "Follow"
-msgstr ""
+msgstr "Volgen"
 
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:258
 msgid "Follow playback"
-msgstr ""
+msgstr "Volg de opname"
 
 #: src/routes/auth/Login.tsx:169
 msgid "Forgot your password?"
@@ -1760,7 +1760,7 @@ msgstr "Geen chats gevonden. Start een chat met behulp van de \"Vraag\" knop."
 
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:355
 msgid "No content"
-msgstr ""
+msgstr "Geen inhoud"
 
 #: src/routes/project/library/ProjectLibrary.tsx:164
 msgid "No conversations available to create library"
@@ -1867,7 +1867,7 @@ msgstr "Niet beschikbaar"
 
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:341
 msgid "Now"
-msgstr ""
+msgstr "Nu"
 
 #: src/components/conversation/ConversationAccordion.tsx:566
 msgid "Oldest First"
@@ -2647,7 +2647,7 @@ msgstr "Toon tijdlijn in rapport (aanvraag functie)"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:630
 msgid "Show timestamps (experimental)"
-msgstr ""
+msgstr "Tijdstempels weergeven (experimenteel)"
 
 #: src/routes/auth/Login.tsx:194
 msgid "Sign in with Google"
@@ -2787,7 +2787,7 @@ msgstr "Stuur in"
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:289
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:379
 msgid "Submitted via text input"
-msgstr ""
+msgstr "Ingevoerd via tekst"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:776
 msgid "Success"
@@ -3079,7 +3079,7 @@ msgstr "Transcript niet beschikbaar"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:734
 msgid "Transcription in progress..."
-msgstr ""
+msgstr "Transcriptie is bezig..."
 
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:219
 msgid "Transcription in progress…"
@@ -3277,7 +3277,7 @@ msgstr "Audio bestanden uploaden..."
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:628
 #~ msgid "Use experimental features"
-#~ msgstr ""
+#~ msgstr "Gebruik experimentele functies"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:572
 #: src/routes/project/chat/ProjectChatRoute.tsx:602
@@ -3326,7 +3326,7 @@ msgstr "We kunnen je niet horen. Probeer je microfoon te wisselen of een beetje 
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:561
 msgid "We couldn't load the audio. Please try again later."
-msgstr ""
+msgstr "Het is niet gelukt om de audio te laden. Probeer het later opnieuw."
 
 #: src/routes/auth/CheckYourEmail.tsx:14
 #~ msgid "We have sent you an email with next steps. If you don't see it, check your spam folder."
@@ -3451,7 +3451,7 @@ msgstr "Je lijkt offline te zijn, controleer je internetverbinding"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:735
 msgid "Your conversation is currently being transcribed. Please check back in a few moments."
-msgstr ""
+msgstr "Je gesprek wordt momenteel getranscribeerd. Kom over enkele ogenblikken terug."
 
 #: src/components/report/CreateReportForm.tsx:100
 msgid "Your Conversations"
