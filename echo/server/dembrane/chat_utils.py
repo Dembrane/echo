@@ -455,7 +455,24 @@ async def _process_single_batch(
 
         if response.choices[0].message.content:
             result = json.loads(response.choices[0].message.content)
-            batch_selected_ids = result.get("selected_conversation_ids", [])
+            raw_selected_ids = result.get("selected_conversation_ids", [])
+
+            # Validate LLM response: ensure all returned IDs are from this batch
+            valid_ids = {conv.id for conv in batch}
+            batch_selected_ids = [
+                id for id in raw_selected_ids if isinstance(id, (int, str)) and id in valid_ids
+            ]
+
+            # Log warning if LLM returned invalid IDs
+            if len(batch_selected_ids) != len(raw_selected_ids):
+                filtered_count = len(raw_selected_ids) - len(batch_selected_ids)
+                invalid_ids = [id for id in raw_selected_ids if id not in valid_ids]
+                logger.warning(
+                    f"Batch {batch_num}: LLM returned {filtered_count} invalid ID(s), "
+                    f"filtered from {len(raw_selected_ids)} to {len(batch_selected_ids)}. "
+                    f"Invalid IDs: {invalid_ids}"
+                )
+
             logger.info(
                 f"Batch {batch_num} selected {len(batch_selected_ids)} "
                 f"conversations: {batch_selected_ids}"
