@@ -1,5 +1,6 @@
 import json
 import math
+import asyncio
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -257,7 +258,8 @@ async def auto_select_conversations(
 
     This function fetches conversation summaries from the database and uses an LLM
     to select the most relevant conversations for the given queries. It handles
-    batching to stay within LLM context limits.
+    batching to stay within LLM context limits and processes batches in parallel
+    for optimal performance.
 
     Args:
         user_query_inputs: List of user query strings (currently up to 3)
@@ -297,121 +299,175 @@ async def auto_select_conversations(
             results[project_id] = {"conversation_id_list": []}
             continue
 
-        logger.info(f"To remove this line::: {conversations} ::: for project {project_id}")
         logger.info(f"Found {len(conversations)} total conversations for project {project_id}")
 
         # Calculate expected number of LLM calls for observability
         expected_llm_calls = math.ceil(len(conversations) / BATCH_SIZE)
         logger.info(
-            f"Auto-select will make up to {expected_llm_calls} LLM call(s) "
+            f"Auto-select will make {expected_llm_calls} parallel LLM call(s) "
             f"for {len(conversations)} conversations (batch size: {BATCH_SIZE})"
         )
 
-        # Batch conversations and process them
-        all_selected_ids = []
-        llm_calls_made = 0
+        # Create batches and prepare parallel tasks
+        tasks = []
         for i in range(0, len(conversations), BATCH_SIZE):
             batch = conversations[i : i + BATCH_SIZE]
-            logger.info(
-                f"Processing batch {i // BATCH_SIZE + 1} "
-                f"({len(batch)} conversations, indices {i} to {i + len(batch) - 1})"
+            batch_num = i // BATCH_SIZE + 1
+            tasks.append(
+                _process_single_batch(
+                    batch=batch,
+                    batch_num=batch_num,
+                    user_query_inputs=user_query_inputs,
+                    language=language,
+                )
             )
 
-            # Prepare conversation data for the prompt
-            conversation_data = []
-            for conv in batch:
-                # Get summary or fallback to transcript excerpt
-                summary_text = None
-                if conv.summary and conv.summary.strip():
-                    summary_text = conv.summary
-                else:
-                    # Use transcript as fallback
-                    try:
-                        transcript = get_conversation_transcript(
-                            conv.id,
-                            DirectusSession(user_id="none", is_admin=True),
-                        )
-                        # Limit transcript to first 500 characters for context
-                        if transcript and len(transcript) > 500:
-                            summary_text = transcript[:500] + "..."
-                        elif transcript:
-                            summary_text = transcript
-                    except Exception as e:
-                        logger.warning(f"Could not get transcript for conversation {conv.id}: {e}")
+        # Execute all batches in parallel
+        logger.info(f"Executing {len(tasks)} batches in parallel...")
+        batch_results = await asyncio.gather(*tasks, return_exceptions=True)
 
-                # Skip conversations with no content at all
-                if not summary_text:
-                    logger.debug(f"Skipping conversation {conv.id} - no summary or transcript")
-                    continue
+        # Aggregate results from all batches
+        all_selected_ids = []
+        successful_batches = 0
+        failed_batches = 0
 
-                conv_data = {
-                    "id": conv.id,
-                    "participant_name": conv.participant_name or "Unknown",
-                    "summary": summary_text,
-                }
-                if conv.tags:
-                    conv_data["tags"] = ", ".join([tag.text for tag in conv.tags])
-                if conv.created_at:
-                    conv_data["created_at"] = conv.created_at.isoformat()
-                conversation_data.append(conv_data)
-
-            # Skip batch if no valid conversations
-            if not conversation_data:
-                logger.warning(
-                    f"Batch {i // BATCH_SIZE + 1} has no valid conversations with content. Skipping."
-                )
+        for i, batch_result in enumerate(batch_results):
+            # Handle exceptions from gather
+            if isinstance(batch_result, Exception):
+                logger.error(f"Batch {i + 1} failed with exception: {str(batch_result)}")
+                failed_batches += 1
                 continue
 
-            # Render the prompt
-            prompt = render_prompt(
-                "auto_select_conversations",
-                language,
-                {
-                    "user_queries": user_query_inputs,
-                    "conversations": conversation_data,
-                },
-            )
-
-            # Call the LLM
-            try:
-                response = await acompletion(
-                    model=SMALL_LITELLM_MODEL,
-                    messages=[{"role": "user", "content": prompt}],
-                    api_base=SMALL_LITELLM_API_BASE,
-                    api_key=SMALL_LITELLM_API_KEY,
-                    response_format={"type": "json_object"},
-                )
-                llm_calls_made += 1
-
-                if response.choices[0].message.content:
-                    result = json.loads(response.choices[0].message.content)
-                    batch_selected_ids = result.get("selected_conversation_ids", [])
-                    all_selected_ids.extend(batch_selected_ids)
-                    logger.info(
-                        f"Batch {i // BATCH_SIZE + 1} selected {len(batch_selected_ids)} "
-                        f"conversations: {batch_selected_ids}"
-                    )
-                else:
-                    logger.warning(f"No response from LLM for batch {i // BATCH_SIZE + 1}")
-
-            except Exception as e:
-                logger.error(
-                    f"Error processing batch {i // BATCH_SIZE + 1}: {str(e)}. Skipping batch."
-                )
+            # Type check: ensure batch_result is a dict, not an exception
+            if not isinstance(batch_result, dict):
+                logger.error(f"Batch {i + 1} returned unexpected type: {type(batch_result)}")
+                failed_batches += 1
                 continue
+
+            # Handle batch results
+            if "error" in batch_result:
+                failed_batches += 1
+            else:
+                successful_batches += 1
+
+            selected_ids = batch_result.get("selected_ids", [])
+            all_selected_ids.extend(selected_ids)
 
         # Remove duplicates while preserving order
         unique_selected_ids = list(dict.fromkeys(all_selected_ids))
 
         logger.info(
-            f"Auto-select completed: Made {llm_calls_made} LLM call(s), "
-            f"selected {len(unique_selected_ids)} unique conversations "
+            f"Auto-select completed: {successful_batches}/{len(tasks)} batches successful "
+            f"({failed_batches} failed), selected {len(unique_selected_ids)} unique conversations "
             f"for project {project_id}: {unique_selected_ids}"
         )
 
         results[project_id] = {"conversation_id_list": unique_selected_ids}
 
     return {"results": results}
+
+
+async def _process_single_batch(
+    batch: List[ConversationModel],
+    batch_num: int,
+    user_query_inputs: List[str],
+    language: str,
+) -> Dict[str, Any]:
+    """
+    Process a single batch of conversations and return selected IDs.
+
+    Args:
+        batch: List of ConversationModel instances to process
+        batch_num: Batch number for logging
+        user_query_inputs: User queries to match against
+        language: Language code for the prompt template
+
+    Returns:
+        Dictionary with:
+        - "selected_ids": List of selected conversation IDs
+        - "batch_num": The batch number
+        - "error": Error message if processing failed (optional)
+    """
+    logger.info(f"Processing batch {batch_num} ({len(batch)} conversations, parallel execution)")
+
+    # Prepare conversation data for the prompt
+    conversation_data = []
+    for conv in batch:
+        # Get summary or fallback to transcript excerpt
+        summary_text = None
+        if conv.summary and conv.summary.strip():
+            summary_text = conv.summary
+        else:
+            # Use transcript as fallback
+            try:
+                transcript = get_conversation_transcript(
+                    conv.id,
+                    DirectusSession(user_id="none", is_admin=True),
+                )
+                # Limit transcript to first 500 characters for context
+                if transcript and len(transcript) > 500:
+                    summary_text = transcript[:500] + "..."
+                elif transcript:
+                    summary_text = transcript
+            except Exception as e:
+                logger.warning(f"Could not get transcript for conversation {conv.id}: {e}")
+
+        # Skip conversations with no content at all
+        if not summary_text:
+            logger.debug(f"Skipping conversation {conv.id} - no summary or transcript")
+            continue
+
+        conv_data = {
+            "id": conv.id,
+            "participant_name": conv.participant_name or "Unknown",
+            "summary": summary_text,
+        }
+        if conv.tags:
+            conv_data["tags"] = ", ".join([tag.text for tag in conv.tags])
+        if conv.created_at:
+            conv_data["created_at"] = conv.created_at.isoformat()
+        conversation_data.append(conv_data)
+
+    # Skip batch if no valid conversations
+    if not conversation_data:
+        logger.warning(f"Batch {batch_num} has no valid conversations with content. Skipping.")
+        return {"selected_ids": [], "batch_num": batch_num}
+
+    # Render the prompt
+    prompt = render_prompt(
+        "auto_select_conversations",
+        language,
+        {
+            "user_queries": user_query_inputs,
+            "conversations": conversation_data,
+        },
+    )
+
+    # Call the LLM
+    try:
+        response = await acompletion(
+            model=SMALL_LITELLM_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            api_base=SMALL_LITELLM_API_BASE,
+            api_key=SMALL_LITELLM_API_KEY,
+            response_format={"type": "json_object"},
+        )
+
+        if response.choices[0].message.content:
+            result = json.loads(response.choices[0].message.content)
+            batch_selected_ids = result.get("selected_conversation_ids", [])
+            logger.info(
+                f"Batch {batch_num} selected {len(batch_selected_ids)} "
+                f"conversations: {batch_selected_ids}"
+            )
+            return {"selected_ids": batch_selected_ids, "batch_num": batch_num}
+        else:
+            logger.warning(f"No response from LLM for batch {batch_num}")
+            return {"selected_ids": [], "batch_num": batch_num}
+
+    except Exception as e:
+        logger.error(f"Error processing batch {batch_num}: {str(e)}. Skipping batch.")
+        return {"selected_ids": [], "batch_num": batch_num, "error": str(e)}
 
 
 async def get_conversation_citations(
