@@ -252,6 +252,7 @@ async def auto_select_conversations(
     project_id_list: List[str],
     db: Session,
     language: str = "en",
+    batch_size: int = 20,
 ) -> Dict[str, Any]:
     """
     Auto-select conversations based on user queries using LLM-based relevance assessment.
@@ -266,6 +267,7 @@ async def auto_select_conversations(
         project_id_list: List containing a single project ID
         db: Database session
         language: Language code for the prompt template (default: "en")
+        batch_size: Number of conversations to process in each LLM call (default: 20)
 
     Returns:
         Dictionary with structure:
@@ -282,8 +284,8 @@ async def auto_select_conversations(
 
     results: Dict[str, Any] = {}
     # Batch size: number of conversations to process in each LLM call
-    # Adjust based on context limits and average summary length
-    BATCH_SIZE = 20
+    # Can be adjusted per-chat via the auto_select_batch_size field
+    BATCH_SIZE = batch_size
 
     for project_id in project_id_list:
         # Get all conversations for this project
