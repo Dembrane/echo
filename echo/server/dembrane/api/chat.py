@@ -544,9 +544,10 @@ async def post_chat(
                     detail="Auto select is not possible with the current context length",
                 )
 
-        # Build references list from all conversations added during auto-select
+        # Build references list from ALL conversations in context (both manually selected and auto-selected)
         conversation_references: dict[str, list[dict[str, str]]] = {"references": []}
-        for conv in all_conversations_added:
+        # Use chat.used_conversations directly - it already has all conversation objects
+        for conv in chat.used_conversations:
             conversation_references["references"].append(
                 {
                     "conversation": conv.id,
@@ -554,7 +555,9 @@ async def post_chat(
                 }
             )
 
-        logger.info(f"Selected conversations for frontend: {conversation_references}")
+        logger.info(
+            f"Selected conversations for frontend (manually selected + auto-selected): {conversation_references}"
+        )
 
         async def stream_response_async_autoselect() -> AsyncGenerator[str, None]:
             # Send conversation references (selected conversations)
