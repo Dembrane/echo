@@ -14,6 +14,9 @@ from fastapi.responses import StreamingResponse
 
 from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.config import (
+    SMALL_LITELLM_MODEL,
+    SMALL_LITELLM_API_KEY,
+    SMALL_LITELLM_API_BASE,
     ENABLE_CHAT_AUTO_SELECT,
     LIGHTRAG_LITELLM_INFERENCE_MODEL,
     LIGHTRAG_LITELLM_INFERENCE_API_KEY,
@@ -80,12 +83,12 @@ async def is_followup_question(
 
     try:
         response = await litellm.acompletion(
-            model=LIGHTRAG_LITELLM_INFERENCE_MODEL,
-            api_key=LIGHTRAG_LITELLM_INFERENCE_API_KEY,
-            api_version=LIGHTRAG_LITELLM_INFERENCE_API_VERSION,
-            api_base=LIGHTRAG_LITELLM_INFERENCE_API_BASE,
+            model=SMALL_LITELLM_MODEL,
+            api_key=SMALL_LITELLM_API_KEY,
+            api_base=SMALL_LITELLM_API_BASE,
             messages=[{"role": "user", "content": prompt}],
             temperature=0,  # Deterministic
+            timeout=60,  # 1 minute timeout for quick decision
         )
 
         result_text = response.choices[0].message.content.strip()
@@ -643,6 +646,8 @@ async def post_chat(
                     api_base=LIGHTRAG_LITELLM_INFERENCE_API_BASE,
                     messages=formatted_messages,
                     stream=True,
+                    timeout=300,  # 5 minute timeout for response
+                    stream_timeout=180,  # 3 minute timeout for streaming
                     # mock_response="It's simple to use and easy to get started",
                 )
                 async for chunk in response:
@@ -733,6 +738,8 @@ async def post_chat(
                         api_base=LIGHTRAG_LITELLM_INFERENCE_API_BASE,
                         messages=messages_to_send,
                         stream=True,
+                        timeout=300,  # 5 minute timeout for response
+                        stream_timeout=180,  # 3 minute timeout for streaming
                     )
                     async for chunk in response:
                         if chunk.choices[0].delta.content:

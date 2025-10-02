@@ -4,11 +4,17 @@ import asyncio
 import logging
 from typing import Any, Dict, List, Optional
 
+import backoff
 from litellm import completion, acompletion
 from pydantic import BaseModel
-from sqlalchemy.orm import (
-    Session,
-    selectinload,
+from litellm.utils import token_counter
+from sqlalchemy.orm import Session, selectinload
+from litellm.exceptions import (
+    Timeout,
+    APIError,
+    RateLimitError,
+    BadRequestError,
+    ContextWindowExceededError,
 )
 
 from dembrane.config import (
@@ -369,6 +375,25 @@ async def auto_select_conversations(
     return {"results": results}
 
 
+@backoff.on_exception(
+    backoff.expo,
+    (RateLimitError, Timeout, APIError),
+    max_tries=3,
+    max_time=5 * 60,  # 5 minutes
+)
+async def _call_llm_with_backoff(prompt: str, batch_num: int) -> Any:
+    """Call LLM with automatic retry for transient errors."""
+    logger.debug(f"Calling LLM for batch {batch_num}")
+    return await acompletion(
+        model=SMALL_LITELLM_MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        api_base=SMALL_LITELLM_API_BASE,
+        api_key=SMALL_LITELLM_API_KEY,
+        response_format={"type": "json_object"},
+        timeout=5 * 60,  # 5 minutes
+    )
+
+
 async def _process_single_batch(
     batch: List[ConversationModel],
     batch_num: int,
@@ -445,14 +470,55 @@ async def _process_single_batch(
         },
     )
 
-    # Call the LLM
+    # Validate prompt size before sending
     try:
-        response = await acompletion(
-            model=SMALL_LITELLM_MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            api_base=SMALL_LITELLM_API_BASE,
-            api_key=SMALL_LITELLM_API_KEY,
-            response_format={"type": "json_object"},
+        prompt_tokens = token_counter(model=SMALL_LITELLM_MODEL, text=prompt)
+        MAX_BATCH_CONTEXT = 100000  # Leave headroom for response
+
+        if prompt_tokens > MAX_BATCH_CONTEXT:
+            # If batch has only 1 conversation, we can't split further
+            if len(batch) == 1:
+                logger.error(
+                    f"Batch {batch_num} single conversation exceeds context limit: "
+                    f"{prompt_tokens} tokens. Skipping conversation {batch[0].id}."
+                )
+                return {
+                    "selected_ids": [],
+                    "batch_num": batch_num,
+                    "error": "single_conversation_too_large",
+                }
+
+            # Split batch in half and process recursively
+            mid = len(batch) // 2
+            batch_1 = batch[:mid]
+            batch_2 = batch[mid:]
+
+            logger.warning(
+                f"Batch {batch_num} prompt too large ({prompt_tokens} tokens). "
+                f"Splitting into 2 sub-batches: {len(batch_1)} and {len(batch_2)} conversations."
+            )
+
+            # Process both halves recursively
+            result_1 = await _process_single_batch(batch_1, batch_num, user_query_inputs, language)
+            result_2 = await _process_single_batch(batch_2, batch_num, user_query_inputs, language)
+
+            # Combine results from both sub-batches
+            combined_ids = result_1.get("selected_ids", []) + result_2.get("selected_ids", [])
+
+            logger.info(
+                f"Batch {batch_num} split processing complete: "
+                f"{len(combined_ids)} conversations selected from sub-batches."
+            )
+
+            return {"selected_ids": combined_ids, "batch_num": batch_num}
+    except Exception as e:
+        logger.warning(f"Could not count tokens for batch {batch_num}: {e}")
+
+    # Call the LLM with retry logic for transient errors
+    try:
+        response = await _call_llm_with_backoff(
+            prompt=prompt,
+            batch_num=batch_num,
         )
 
         if response.choices[0].message.content:
@@ -484,9 +550,25 @@ async def _process_single_batch(
             logger.warning(f"No response from LLM for batch {batch_num}")
             return {"selected_ids": [], "batch_num": batch_num}
 
-    except Exception as e:
-        logger.error(f"Error processing batch {batch_num}: {str(e)}. Skipping batch.")
+    except ContextWindowExceededError as e:
+        logger.error(
+            f"Batch {batch_num} exceeded context window ({len(batch)} conversations). "
+            f"Error: {str(e)}"
+        )
+        return {"selected_ids": [], "batch_num": batch_num, "error": "context_exceeded"}
+
+    except (RateLimitError, Timeout) as e:
+        # These are already retried by backoff, so if we get here, all retries failed
+        logger.error(f"Batch {batch_num} failed after retries: {type(e).__name__}")
         return {"selected_ids": [], "batch_num": batch_num, "error": str(e)}
+
+    except (APIError, BadRequestError) as e:
+        logger.error(f"Batch {batch_num} API error: {str(e)}")
+        return {"selected_ids": [], "batch_num": batch_num, "error": "api_error"}
+
+    except Exception as e:
+        logger.error(f"Batch {batch_num} unexpected error: {str(e)}")
+        return {"selected_ids": [], "batch_num": batch_num, "error": "unknown"}
 
 
 async def get_conversation_citations(
