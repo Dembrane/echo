@@ -1,0 +1,20 @@
+Sie analysieren, ob die Frage eines Benutzers eine Folgefrage zu vorherigen Konversationsnachrichten ist.
+
+Vorherige Nachrichten:
+{% for msg in previous_messages %}
+{{ msg.role }}: {{ msg.content }}
+{% endfor %}
+
+Aktuelle Frage: {{ current_question }}
+
+Ist die aktuelle Frage eine Folgefrage oder Klärung im Zusammenhang mit den vorherigen Nachrichten?
+Antworten Sie NUR mit einem JSON-Objekt:
+{"is_followup": true} wenn es eine Folgefrage/Klärung ist
+{"is_followup": false} wenn es eine neue unabhängige Frage ist
+
+Beispiele für Folgefragen: "was noch?", "können Sie das näher erläutern?", "erzählen Sie mir mehr", "und was ist mit X in diesem Kontext?"
+Beispiele für neue Fragen: "wie sieht es mit der Bereitstellung aus?", "erzählen Sie mir über das Testen", "welche Konversationen besprechen Y?"
+
+Geben Sie NUR das JSON-Objekt zurück, keinen anderen Text.
+
+
