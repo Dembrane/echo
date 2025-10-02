@@ -15,7 +15,6 @@ from fastapi.responses import StreamingResponse
 from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.config import (
     ENABLE_CHAT_AUTO_SELECT,
-    AUDIO_LIGHTRAG_TOP_K_PROMPT,
     LIGHTRAG_LITELLM_INFERENCE_MODEL,
     LIGHTRAG_LITELLM_INFERENCE_API_KEY,
     LIGHTRAG_LITELLM_INFERENCE_API_BASE,
@@ -511,8 +510,6 @@ async def post_chat(
         ):
             filtered_messages = filtered_messages[:-1]
 
-        top_k = AUDIO_LIGHTRAG_TOP_K_PROMPT
-        prompt_len = float("inf")
         query = filtered_messages[-1]["content"]
         conversation_history = filtered_messages
 
@@ -545,86 +542,77 @@ async def post_chat(
                 ] + conversation_history
         else:
             # Run auto-select for first query or new independent questions
-            all_conversations_added = []
+            user_query_inputs = [query]
 
-            while MAX_CHAT_CONTEXT_LENGTH < prompt_len:
-                formatted_messages = []
-                top_k = max(5, top_k - 10)
+            logger.info(f"Calling auto_select_conversations with query: {query}")
+            auto_select_result = await auto_select_conversations(
+                user_query_inputs=user_query_inputs,
+                project_id_list=[project_id],
+                db=db,
+                language=language,
+            )
 
-                # Call auto-select function (replaces the get_lightrag_prompt_by_params function)
-                user_query_inputs = [query]
+            logger.info(f"Auto-select result: {auto_select_result}")
 
-                logger.info(
-                    f"Calling auto_select_conversations with query: {query}, top_k: {top_k}"
+            # Extract selected conversation IDs
+            selected_conversation_ids = []
+            if "results" in auto_select_result:
+                for proj_result in auto_select_result["results"].values():
+                    if "conversation_id_list" in proj_result:
+                        selected_conversation_ids.extend(proj_result["conversation_id_list"])
+
+            # Add selected conversations to chat context
+            conversations_added = []
+            for conversation_id in selected_conversation_ids:
+                conversation = db.get(ConversationModel, conversation_id)
+                if conversation and conversation not in chat.used_conversations:
+                    chat.used_conversations.append(conversation)
+                    conversations_added.append(conversation)
+
+            # Create a message to lock the auto-selected conversations
+            if conversations_added:
+                auto_select_message = ProjectChatMessageModel(
+                    id=generate_uuid(),
+                    date_created=get_utc_timestamp(),
+                    message_from="dembrane",
+                    text=f"Auto-selected and added {len(conversations_added)} conversations as context to the chat.",
+                    project_chat_id=chat_id,
+                    used_conversations=conversations_added,
                 )
-                auto_select_result = await auto_select_conversations(
-                    user_query_inputs=user_query_inputs,
-                    project_id_list=[project_id],
-                    db=db,
-                    language=language,
+                db.add(auto_select_message)
+                db.commit()
+                logger.info(f"Added {len(conversations_added)} conversations via auto-select")
+
+            # Get updated chat context
+            updated_chat_context = await get_chat_context(chat_id, db, auth)
+            updated_conversation_id_list = updated_chat_context.conversation_id_list
+
+            # Build system messages from the selected conversations
+            system_messages = await create_system_messages_for_chat(
+                updated_conversation_id_list, db, language, project_id
+            )
+
+            # Build messages to send
+            formatted_messages = []
+            if isinstance(system_messages, list):
+                for msg in system_messages:
+                    formatted_messages.append({"role": "system", "content": msg["text"]})
+                formatted_messages.extend(conversation_history)
+            else:
+                formatted_messages = [
+                    {"role": "system", "content": system_messages}
+                ] + conversation_history
+
+            # Check context length
+            prompt_len = token_counter(
+                model=LIGHTRAG_LITELLM_INFERENCE_MODEL, messages=formatted_messages
+            )
+
+            if prompt_len > MAX_CHAT_CONTEXT_LENGTH:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Auto select returned too many conversations. The selected conversations exceed the maximum context length.",
                 )
-
-                logger.info(f"Auto-select result: {auto_select_result}")
-
-                # Extract selected conversation IDs
-                selected_conversation_ids = []
-                if "results" in auto_select_result:
-                    for proj_result in auto_select_result["results"].values():
-                        if "conversation_id_list" in proj_result:
-                            selected_conversation_ids.extend(proj_result["conversation_id_list"])
-
-                # Add selected conversations to chat context
-                conversations_added = []
-                for conversation_id in selected_conversation_ids:
-                    conversation = db.get(ConversationModel, conversation_id)
-                    if conversation and conversation not in chat.used_conversations:
-                        chat.used_conversations.append(conversation)
-                        conversations_added.append(conversation)
-                        all_conversations_added.append(conversation)  # Track all added
-
-                # Create a message to lock the auto-selected conversations
-                if conversations_added:
-                    auto_select_message = ProjectChatMessageModel(
-                        id=generate_uuid(),
-                        date_created=get_utc_timestamp(),
-                        message_from="dembrane",
-                        text=f"Auto-selected and added {len(conversations_added)} conversations as context to the chat.",
-                        project_chat_id=chat_id,
-                        used_conversations=conversations_added,
-                    )
-                    db.add(auto_select_message)
-                    db.commit()
-                    logger.info(f"Added {len(conversations_added)} conversations via auto-select")
-
-                # Get updated chat context
-                updated_chat_context = await get_chat_context(chat_id, db, auth)
-                updated_conversation_id_list = updated_chat_context.conversation_id_list
-
-                # Build system messages from the selected conversations
-                system_messages = await create_system_messages_for_chat(
-                    updated_conversation_id_list, db, language, project_id
-                )
-
-                # Build messages to send
-                if isinstance(system_messages, list):
-                    for msg in system_messages:
-                        formatted_messages.append({"role": "system", "content": msg["text"]})
-                    formatted_messages.extend(conversation_history)
-                else:
-                    formatted_messages = [
-                        {"role": "system", "content": system_messages}
-                    ] + conversation_history
-
-                # Check context length
-                prompt_len = token_counter(
-                    model=LIGHTRAG_LITELLM_INFERENCE_MODEL, messages=formatted_messages
-                )
-
-                if top_k <= 5:
-                    raise HTTPException(
-                        status_code=400,
-                        detail="Auto select is not possible with the current context length",
-                    )
 
         # Build references list from ALL conversations in context (both manually selected and auto-selected)
         conversation_references: dict[str, list[dict[str, str]]] = {"references": []}
