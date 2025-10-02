@@ -516,6 +516,9 @@ async def post_chat(
         query = filtered_messages[-1]["content"]
         conversation_history = filtered_messages
 
+        # Track newly added conversations for displaying in the frontend
+        conversations_added: list[ConversationModel] = []
+
         # Check if this is a follow-up question (only if we have locked conversations)
         should_reuse_locked = False
         if locked_conversation_id_list:
@@ -617,10 +620,10 @@ async def post_chat(
                     detail="Auto select returned too many conversations. The selected conversations exceed the maximum context length.",
                 )
 
-        # Build references list from ALL conversations in context (both manually selected and auto-selected)
+        # Build references list from ONLY newly added conversations (not all conversations)
         conversation_references: dict[str, list[dict[str, str]]] = {"references": []}
-        # Use chat.used_conversations directly - it already has all conversation objects
-        for conv in chat.used_conversations:
+        # Only include conversations that were just added via auto-select
+        for conv in conversations_added:
             conversation_references["references"].append(
                 {
                     "conversation": conv.id,
@@ -628,9 +631,7 @@ async def post_chat(
                 }
             )
 
-        logger.info(
-            f"Selected conversations for frontend (manually selected + auto-selected): {conversation_references}"
-        )
+        logger.info(f"Newly added conversations for frontend: {conversation_references}")
 
         async def stream_response_async_autoselect() -> AsyncGenerator[str, None]:
             # Send conversation references (selected conversations)
