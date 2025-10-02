@@ -87,6 +87,8 @@ dependencies = [
     "lz4==4.4.*",
     "gevent>=25.4.2",
     "pylance>=0.30.0",
+    "trankit==1.1.*",
+    "torch==2.4.*",
 ]
 
 [tool.setuptools]

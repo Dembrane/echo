@@ -62,6 +62,7 @@ click==8.1.7
     # via click-plugins
     # via click-repl
     # via litellm
+    # via sacremoses
     # via uvicorn
 click-didyoumean==0.3.1
     # via celery
@@ -96,22 +97,26 @@ fastuuid==0.12.0
 ffmpeg-python==0.2.0
 filelock==3.17.0
     # via huggingface-hub
+    # via torch
+    # via trankit
 flower==2.0.1
 frozenlist==1.4.1
     # via aiohttp
     # via aiosignal
 fsspec==2024.12.0
     # via huggingface-hub
+    # via torch
 future==1.0.0
     # via ffmpeg-python
 gevent==25.4.2
     # via watchdog-gevent
 greenlet==3.2.1
     # via gevent
-    # via sqlalchemy
 h11==0.14.0
     # via httpcore
     # via uvicorn
+hf-xet==1.1.10
+    # via huggingface-hub
 httpcore==1.0.5
     # via httpx
 httptools==0.6.1
@@ -120,7 +125,7 @@ httpx==0.27.0
     # via anthropic
     # via litellm
     # via openai
-huggingface-hub==0.28.0
+huggingface-hub==0.35.3
     # via tokenizers
 humanize==4.9.0
     # via flower
@@ -136,6 +141,7 @@ iniconfig==2.1.0
 isort==5.13.2
 jinja2==3.1.4
     # via litellm
+    # via torch
 jiter==0.5.0
     # via anthropic
     # via openai
@@ -143,6 +149,7 @@ jmespath==1.0.1
     # via boto3
     # via botocore
 joblib==1.4.2
+    # via sacremoses
     # via scikit-learn
 jsonpatch==1.33
     # via langchain-core
@@ -168,6 +175,8 @@ langchain-experimental==0.0.57
 langchain-openai==0.0.8
 langchain-text-splitters==0.0.2
     # via langchain
+langid==1.1.6
+    # via trankit
 langsmith==0.1.59
     # via langchain
     # via langchain-community
@@ -182,6 +191,8 @@ markupsafe==2.1.5
     # via mako
 marshmallow==3.21.2
     # via dataclasses-json
+mpmath==1.3.0
+    # via sympy
 multidict==6.0.5
     # via aiohttp
     # via yarl
@@ -192,15 +203,18 @@ mypy-extensions==1.0.0
 neo4j==5.28.1
 nest-asyncio==1.6.0
 networkx==3.4.2
+    # via torch
 numpy==1.26.4
     # via langchain
     # via langchain-community
+    # via langid
     # via pandas
     # via pandas-stubs
     # via pgvector
     # via pylance
     # via scikit-learn
     # via scipy
+    # via trankit
 openai==1.99.9
     # via langchain-openai
     # via litellm
@@ -211,6 +225,7 @@ packaging==23.2
     # via langchain-core
     # via marshmallow
     # via pytest
+    # via trankit
 pandas==2.2.2
 pandas-stubs==2.2.2.240514
 pathspec==0.12.1
@@ -227,6 +242,8 @@ prompt-toolkit==3.0.43
 propcache==0.3.0
     # via aiohttp
     # via yarl
+protobuf==6.32.1
+    # via trankit
 psycopg==3.1.19
 psycopg-binary==3.1.19
     # via psycopg
@@ -286,7 +303,9 @@ referencing==0.36.2
     # via jsonschema
     # via jsonschema-specifications
 regex==2024.5.15
+    # via sacremoses
     # via tiktoken
+    # via trankit
 requests==2.31.0
     # via directus-py-sdk
     # via huggingface-hub
@@ -294,6 +313,7 @@ requests==2.31.0
     # via langchain-community
     # via langsmith
     # via tiktoken
+    # via trankit
 rpds-py==0.22.3
     # via jsonschema
     # via referencing
@@ -302,9 +322,13 @@ rsa==4.9
 ruff==0.11.12
 s3transfer==0.11.4
     # via boto3
+sacremoses==0.1.1
+    # via trankit
 scikit-learn==1.4.2
 scipy==1.13.0
     # via scikit-learn
+sentencepiece==0.2.1
+    # via trankit
 sentry-dramatiq==0.3.3
 sentry-sdk==2.2.1
     # via sentry-dramatiq
@@ -328,6 +352,8 @@ sqlparse==0.5.3
     # via directus-py-sdk
 starlette==0.36.3
     # via fastapi
+sympy==1.14.0
+    # via torch
 tenacity==8.3.0
     # via langchain
     # via langchain-community
@@ -339,11 +365,17 @@ tiktoken==0.9.0
     # via litellm
 tokenizers==0.21.0
     # via litellm
+    # via trankit
+torch==2.4.1
+    # via trankit
 tornado==6.4.1
     # via flower
 tqdm==4.66.4
     # via huggingface-hub
     # via openai
+    # via sacremoses
+    # via trankit
+trankit==1.1.1
 types-aiofiles==23.2.0.20240403
 types-pyasn1==0.6.0.20240402
     # via types-python-jose
@@ -365,6 +397,7 @@ typing-extensions==4.12.2
     # via pydantic-core
     # via referencing
     # via sqlalchemy
+    # via torch
     # via typing-inspect
 typing-inspect==0.9.0
     # via dataclasses-json

@@ -6,8 +6,17 @@ export const PARTICIPANT_BASE_URL =
   import.meta.env.VITE_PARTICIPANT_BASE_URL ?? window.location.origin;
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
-export const DIRECTUS_PUBLIC_URL =
-  import.meta.env.VITE_DIRECTUS_PUBLIC_URL ?? "http://localhost:8055";
+// Resolve Directus base URL: supports absolute URLs or relative paths like "/directus"
+// Relative paths are resolved to current origin to work with Vite proxy and dynamic ports
+export const DIRECTUS_PUBLIC_URL = (() => {
+  const env = import.meta.env.VITE_DIRECTUS_PUBLIC_URL;
+  // If absolute URL, use as-is
+  if (env?.startsWith("http")) return env;
+  // If relative path, resolve to current origin (for Vite proxy)
+  if (env?.startsWith("/")) return `${window.location.origin}${env}`;
+  // Default fallback
+  return "http://localhost:8055";
+})();
 
 export const DIRECTUS_CONTENT_PUBLIC_URL =
   import.meta.env.VITE_DIRECTUS_CONTENT_PUBLIC_URL ??
