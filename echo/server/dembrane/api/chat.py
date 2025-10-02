@@ -546,6 +546,17 @@ async def post_chat(
                 formatted_messages = [
                     {"role": "system", "content": system_messages}
                 ] + conversation_history
+
+            # Check context length
+            prompt_len = token_counter(
+                model=LIGHTRAG_LITELLM_INFERENCE_MODEL, messages=formatted_messages
+            )
+
+            if prompt_len > MAX_CHAT_CONTEXT_LENGTH:
+                raise HTTPException(
+                    status_code=400,
+                    detail="The conversation context with the new message exceeds the maximum context length.",
+                )
         else:
             # Run auto-select for first query or new independent questions
             user_query_inputs = [query]
