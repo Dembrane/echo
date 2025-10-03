@@ -8,6 +8,9 @@ WORKDIR /extensions
 COPY extensions/package*.json ./
 
 RUN npm install
+
+# Copy the rest of the extensions after npm install
+COPY extensions/. ./
 # Move all extensions the starts with 'directus-extension-', using find, to the /extensions/directus folder
 RUN mkdir -p ./directus
 

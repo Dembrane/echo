@@ -29,6 +29,12 @@ RUN pip install --no-cache-dir -r requirements.lock
 COPY pyproject.toml /code/server/
 COPY dembrane/ /code/server/dembrane/
 
+# Copy runtime assets (scripts, templates, migrations, etc.)
+COPY prod*.sh run*.sh /code/server/
+COPY initdb/ /code/server/initdb/
+COPY json_templates/ /code/server/json_templates/
+COPY prompt_templates/ /code/server/prompt_templates/
+
 EXPOSE 8000
 
 CMD ["uvicorn", "dembrane.main:app", "--host", "0.0.0.0", "--proxy-headers"]
