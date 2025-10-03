@@ -13,13 +13,13 @@ echo "  Max Requests: $MAX_REQUESTS"
 echo "📊 Scale with K8s replicas (not workers per pod)"
 
 exec gunicorn dembrane.main:app \
-  --workers $WORKERS \
+  --workers "$WORKERS" \
   --worker-class uvicorn.workers.UvicornWorker \
   --bind 0.0.0.0:8000 \
-  --timeout $TIMEOUT \
+  --timeout "$TIMEOUT" \
   --graceful-timeout 30 \
   --keep-alive 5 \
-  --max-requests $MAX_REQUESTS \
+  --max-requests "$MAX_REQUESTS" \
   --max-requests-jitter 50 \
   --access-logfile - \
   --error-logfile - \
