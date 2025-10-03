@@ -2,6 +2,7 @@
 from logging import getLogger
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, List, Optional
+from urllib.parse import urlparse
 
 from fastapi import UploadFile
 
@@ -16,6 +17,12 @@ if TYPE_CHECKING:
 
 # allows for None to be a sentinel value
 _UNSET = object()
+
+
+def sanitize_url_for_logging(url: str) -> str:
+    """Remove sensitive query params and fragments from URL for safe logging."""
+    parsed = urlparse(url)
+    return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
 
 
 class ConversationServiceException(Exception):
@@ -252,9 +259,9 @@ class ConversationService:
             assert file_obj is not None
             file_name = f"conversation/{conversation['id']}/chunks/{chunk_id}-{file_obj.filename}"
             file_url = self.file_service.save(file=file_obj, key=file_name, public=False)
-            logger.info(f"File uploaded to S3 via API: {file_url}")
+            logger.info(f"File uploaded to S3 via API: {sanitize_url_for_logging(file_url)}")
         elif file_url:
-            logger.info(f"Using pre-uploaded file from presigned URL: {file_url}")
+            logger.info(f"Using pre-uploaded file from presigned URL: {sanitize_url_for_logging(file_url)}")
 
         with directus_client_context() as client:
             chunk = client.create_item(
