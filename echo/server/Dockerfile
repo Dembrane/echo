@@ -20,10 +20,14 @@ RUN \
 
 WORKDIR /code/server
 
+# Install dependencies first (better layer caching)
 COPY requirements.lock /code/server/requirements.lock
 RUN pip install --no-cache-dir -r requirements.lock
 
-COPY ./ /code/server
+# Copy project configuration and application code
+# This order ensures that changes to application code don't invalidate the pip install cache
+COPY pyproject.toml /code/server/
+COPY dembrane/ /code/server/dembrane/
 
 EXPOSE 8000
 
