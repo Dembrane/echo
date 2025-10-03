@@ -1,11 +1,14 @@
 # conversation.py
 from typing import TYPE_CHECKING, Any, List, Optional
 from datetime import datetime
+from logging import getLogger
 
 from fastapi import UploadFile
 
 from dembrane.utils import generate_uuid
 from dembrane.directus import DirectusBadRequest, directus_client_context
+
+logger = getLogger("dembrane.service.conversation")
 
 if TYPE_CHECKING:
     from dembrane.service.file import FileService
@@ -249,6 +252,9 @@ class ConversationService:
             assert file_obj is not None
             file_name = f"conversation/{conversation['id']}/chunks/{chunk_id}-{file_obj.filename}"
             file_url = self.file_service.save(file=file_obj, key=file_name, public=False)
+            logger.info(f"File uploaded to S3 via API: {file_url}")
+        elif file_url:
+            logger.info(f"Using pre-uploaded file from presigned URL: {file_url}")
 
         with directus_client_context() as client:
             chunk = client.create_item(
@@ -257,7 +263,7 @@ class ConversationService:
                     "id": chunk_id,
                     "conversation_id": conversation["id"],
                     "timestamp": timestamp.isoformat(),
-                    "path": file_url if needs_upload else None,
+                    "path": file_url,  # ✅ FIXED: Always use file_url when provided
                     "source": source,
                     "transcript": transcript,
                 },
@@ -270,6 +276,8 @@ class ConversationService:
         #     )
         # )
 
+        # Trigger background processing (works same for both upload methods)
+        logger.info(f"Triggering background processing for chunk {chunk_id}")
         task_process_conversation_chunk.send(chunk_id)
 
         return chunk

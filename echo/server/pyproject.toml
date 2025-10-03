@@ -7,6 +7,7 @@ dependencies = [
     # API server
     "fastapi==0.109.*",
     "uvicorn[standard]==0.27.*",
+    "gunicorn==21.2.*",
     "python-multipart==0.0.*",
     # Langchain
     "langchain==0.1.*",
