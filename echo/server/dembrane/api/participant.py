@@ -93,7 +93,17 @@ class ConfirmUploadRequest(BaseModel):
     source: str = "PORTAL_AUDIO"
 
 
-# Simple in-memory rate limiter (for production, use Redis)
+# Simple in-memory rate limiter
+# NOTE: This is process-local and won't be shared across workers/pods.
+# With API_WORKERS=2 and horizontal scaling, the effective limit becomes
+# 10 × workers × pods instead of strict 10 req/min.
+# 
+# DECISION (2025-10-03): We accept this risk because:
+# - Users are authenticated municipal employees (paid customers)
+# - Normal usage: 6-10 req/min (well under distributed limit)
+# - Still catches frontend bugs and accidental infinite loops
+# - Can upgrade to Redis-based rate limiting (slowap) if abuse is detected
+
 _rate_limit_cache: dict[str, list[float]] = {}
 _RATE_LIMIT_WINDOW = 60  # 1 minute
 _RATE_LIMIT_MAX_REQUESTS = 10  # 10 requests per minute per conversation
