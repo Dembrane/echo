@@ -24,16 +24,9 @@ WORKDIR /code/server
 COPY requirements.lock ./requirements.lock
 RUN pip install --no-cache-dir -r requirements.lock
 
-# Copy project configuration and application code
-# This order ensures that changes to application code don't invalidate the pip install cache
-COPY pyproject.toml ./
-COPY dembrane/ ./dembrane/
-
-# Copy runtime assets (scripts, templates, migrations, etc.)
-COPY prod*.sh run*.sh ./
-COPY initdb/ ./initdb/
-COPY json_templates/ ./json_templates/
-COPY prompt_templates/ ./prompt_templates/
+# Copy everything else after pip install
+# This ensures dependency layer is cached separately from application code
+COPY . .
 
 EXPOSE 8000
 
