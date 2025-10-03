@@ -16,6 +16,7 @@ from dembrane.s3 import get_file_size_bytes_from_s3, get_sanitized_s3_key
 from dembrane.service.conversation import (
     ConversationNotFoundException,
     ConversationNotOpenForParticipationException,
+    ConversationServiceException,
 )
 
 logger = getLogger("api.participant")
@@ -249,6 +250,10 @@ async def upload_conversation_text(
 
         return chunk
 
+    except ConversationServiceException as e:
+        raise HTTPException(
+            status_code=400, detail=str(e)
+        ) from e
     except ConversationNotOpenForParticipationException as e:
         raise HTTPException(
             status_code=403, detail="Conversation not open for participation"
@@ -433,6 +438,12 @@ async def confirm_chunk_upload(
         
         return chunk
         
+    except ConversationServiceException as e:
+        logger.error(f"Failed to create chunk: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail=str(e)
+        ) from e
     except ConversationNotOpenForParticipationException as e:
         logger.error(f"Conversation not open for participation: {conversation_id}")
         raise HTTPException(
