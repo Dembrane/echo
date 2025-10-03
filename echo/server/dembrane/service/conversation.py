@@ -1,8 +1,8 @@
 # conversation.py
+from typing import TYPE_CHECKING, Any, List, Optional
 from logging import getLogger
 from datetime import datetime
 from urllib.parse import urlparse
-from typing import TYPE_CHECKING, Any, List, Optional
 
 from fastapi import UploadFile
 
