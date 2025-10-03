@@ -7,11 +7,11 @@ from typing import Annotated, List, Optional
 from pydantic import BaseModel
 from fastapi import APIRouter, Form, HTTPException, UploadFile
 
-from dembrane.utils import generate_uuid
 from dembrane.directus import directus
-from dembrane.service.project import ProjectNotFoundException
+from dembrane.utils import generate_uuid
 from dembrane.config import STORAGE_S3_BUCKET, STORAGE_S3_ENDPOINT
 from dembrane.service import conversation_service, project_service
+from dembrane.service.project import ProjectNotFoundException
 from dembrane.s3 import get_file_size_bytes_from_s3, get_sanitized_s3_key
 from dembrane.service.conversation import (
     ConversationNotFoundException,
