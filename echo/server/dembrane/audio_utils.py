@@ -769,32 +769,21 @@ def split_audio_chunk(
 
 
 def probe_audio_from_s3(s3_path: str) -> dict:
-    """
-    Probe audio file metadata without downloading entire file.
-    Only reads first 8KB for format detection.
-    
+    """Probe full media metadata for an S3 object using a presigned URL.
+
+    This respects the source format (no hardcoded suffix) and returns the full
+    ffprobe payload including both ``format`` and ``streams``.
+
     Args:
-        s3_path: S3 path (e.g. "conversation/123/chunks/456.mp3")
-    
+        s3_path: S3 key or public URL to the object.
+
     Returns:
-        dict with format, duration, bit_rate, etc.
+        dict: Full ffprobe output with keys like ``format`` and ``streams``.
     """
     try:
-        # Download only first 8KB for probing
-        stream = get_stream_from_s3(s3_path)
-        header_bytes = stream.read(8192)
-        
-        # Use ffprobe on header bytes
-        with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as temp:
-            temp.write(header_bytes)
-            temp_path = temp.name
-        
-        try:
-            probe = ffmpeg.probe(temp_path)
-            return probe['format']
-        finally:
-            os.unlink(temp_path)
-            
+        sanitized_key = get_sanitized_s3_key(s3_path)
+        signed_url = get_signed_url(sanitized_key, expires_in_seconds=15 * 60)
+        return ffmpeg.probe(signed_url)
     except Exception as e:
         logger.error(f"Failed to probe audio from S3: {s3_path}, error: {e}")
         raise
@@ -883,8 +872,9 @@ def split_audio_chunk_streaming(
 
     temp_input_path = None
     original_format = get_file_format_from_file_path(original_path)
-    new_chunk_ids: List[str] = []
-    upload_tasks = []
+    new_chunk_ids: List[str] = []  # Track only successfully processed chunk IDs
+    upload_tasks = []  # Tuples of (s3_key, data, chunk_id)
+    successful_chunks = []  # Tuples of (chunk_id, start_time_offset)
 
     try:
         with tempfile.NamedTemporaryFile(suffix=f".{original_format}", delete=False) as temp_input:
@@ -909,10 +899,8 @@ def split_audio_chunk_streaming(
             if duration <= 0:
                 continue
 
-            new_chunk_id = generate_uuid()
-            new_chunk_ids.append(new_chunk_id)
-
             try:
+                new_chunk_id = generate_uuid()
                 process = (
                     ffmpeg.input(temp_input_path, ss=start_time)
                     .output(
@@ -934,6 +922,8 @@ def split_audio_chunk_streaming(
 
                 s3_key = f"conversation/{conversation_id}/chunks/{new_chunk_id}.{output_format}"
                 upload_tasks.append((s3_key, chunk_output, new_chunk_id))
+                new_chunk_ids.append(new_chunk_id)
+                successful_chunks.append((new_chunk_id, start_time))
 
             except Exception as e:
                 logger.error(f"Failed to process chunk {i}: {e}")
@@ -970,11 +960,10 @@ def split_audio_chunk_streaming(
             future.result()  # Raises exception if upload failed
     
     # Create database records for new chunks
-    logger.info(f"Creating database records for {len(new_chunk_ids)} split chunks")
-    
-    for i, new_chunk_id in enumerate(new_chunk_ids):
+    logger.info(f"Creating database records for {len(successful_chunks)} split chunks")
+
+    for new_chunk_id, start_time_offset in successful_chunks:
         s3_key = f"conversation/{conversation_id}/chunks/{new_chunk_id}.{output_format}"
-        start_time_offset = i * target_duration_seconds
         
         # Calculate timestamp for this chunk
         original_timestamp = datetime.datetime.fromisoformat(chunk["timestamp"])
