@@ -11,8 +11,8 @@ echo "📊 Scale with K8s replicas"
 
 exec dramatiq \
   --queues cpu \
-  --processes $PROCESSES \
-  --threads $THREADS \
+  --processes "$PROCESSES" \
+  --threads "$THREADS" \
   --watch . \
   --watch-use-polling \
   dembrane.tasks
