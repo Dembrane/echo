@@ -1,5 +1,5 @@
 from json import JSONDecodeError
-from typing import Optional
+from typing import List, Optional
 from logging import getLogger
 
 import dramatiq
@@ -243,18 +243,34 @@ def task_merge_conversation_chunks_incremental(conversation_id: str) -> None:
     try:
         conversation = conversation_service.get_by_id_or_raise(conversation_id)
         
-        # Fetch chunks using directus directly
-        chunks = directus.get_items(
-            "conversation_chunk",
-            {
-                "query": {
-                    "filter": {"conversation_id": {"_eq": conversation_id}},
-                    "sort": "timestamp",
-                    "fields": ["id", "path", "timestamp"],
-                    "limit": 1000,
+        # Fetch chunks using directus directly (handle conversations with >1000 chunks)
+        chunks: List[dict] = []
+        page = 1
+        page_size = 500
+
+        while True:
+            batch = directus.get_items(
+                "conversation_chunk",
+                {
+                    "query": {
+                        "filter": {"conversation_id": {"_eq": conversation_id}},
+                        "sort": "timestamp",
+                        "fields": ["id", "path", "timestamp"],
+                        "limit": page_size,
+                        "page": page,
+                    },
                 },
-            },
-        )
+            )
+
+            if not batch:
+                break
+
+            chunks.extend(batch)
+
+            if len(batch) < page_size:
+                break
+
+            page += 1
         
         if not chunks:
             logger.info(f"No chunks to merge for conversation {conversation_id}")
@@ -462,7 +478,9 @@ def task_process_conversation_chunk(chunk_id: str) -> None:
     try:
         chunk = conversation_service.get_chunk_by_id_or_raise(chunk_id)
         conversation_id = chunk["conversation_id"]
-        
+
+        split_chunk_ids: Optional[List[str]] = None
+
         # Intelligent triage: check if splitting is needed
         needs_split = should_split_chunk(chunk_id, max_size_mb=20)
         
@@ -507,8 +525,10 @@ def task_process_conversation_chunk(chunk_id: str) -> None:
         # Diarization (if not from upload source)
         source = str(chunk.get("source", "")).lower()
         if "upload" not in source:
-            logger.info(f"Dispatching diarization for {chunk_id}")
-            task_get_runpod_diarization.send(chunk_id)
+            diarization_targets = split_chunk_ids if split_chunk_ids else [chunk_id]
+            for diarization_chunk_id in diarization_targets:
+                logger.info(f"Dispatching diarization for {diarization_chunk_id}")
+                task_get_runpod_diarization.send(diarization_chunk_id)
         
         logger.info(f"Processing complete for chunk {chunk_id}")
         

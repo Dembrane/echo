@@ -338,7 +338,8 @@ def merge_multiple_audio_files_and_save_to_s3(
         sanitized_input_key = _sanitize_key(i_name)
 
         try:
-            probe_result = probe_from_s3(sanitized_input_key, get_file_format_from_file_path(i_name))
+            signed_probe_url = get_signed_url(sanitized_input_key, expires_in_seconds=15 * 60)
+            probe_result = ffmpeg.probe(signed_probe_url)
 
             format_name = probe_result.get("format", {}).get("format_name", "").lower()
             is_output_format = output_format in format_name if format_name else False
@@ -357,11 +358,13 @@ def merge_multiple_audio_files_and_save_to_s3(
             else:
                 final_key = sanitized_input_key
 
+            size_bytes = get_file_size_bytes_from_s3(final_key)
             processed_keys.append(final_key)
-            total_size_bytes += get_file_size_bytes_from_s3(final_key)
+            total_size_bytes += size_bytes
 
         except Exception as e:
             logger.error("Failed preparing %s for merge: %s", sanitized_input_key, e, exc_info=True)
+            continue
 
     if not processed_keys:
         raise ValueError("No valid input files available for merge")
@@ -706,7 +709,8 @@ def split_audio_chunk(
             chunk_output, err = process.communicate(input=None)
 
             if process.returncode != 0:
-                raise FFmpegError(f"ffmpeg splitting failed: {err.decode().strip()}")
+                err_msg = err.decode().strip() if err else "unknown error"
+                raise FFmpegError(f"ffmpeg splitting failed: {err_msg}")
 
             s3_client.put_object(
                 Bucket=STORAGE_S3_BUCKET,
@@ -820,10 +824,10 @@ def split_audio_chunk_streaming(
     delete_original: bool = False,
 ) -> List[str]:
     """
-    Split audio chunk using streaming operations (no temp files for download).
+    Split audio chunk using optimized streaming operations.
     
     Improvements over old split_audio_chunk():
-    - Uses ffmpeg piping instead of always using temp files
+    - Downloads once and seeks efficiently for each segment
     - Parallelizes chunk uploads
     - Better error handling
     
@@ -864,57 +868,71 @@ def split_audio_chunk_streaming(
         return [original_chunk_id]
     
     logger.info(f"Splitting chunk {original_chunk_id} into {num_chunks} chunks")
-    
-    # Download original file once
-    audio_stream = get_stream_from_s3(original_path)
-    audio_data = audio_stream.read()
-    
-    # Process splits in parallel
-    new_chunk_ids = []
+
+    temp_input_path = None
+    original_format = get_file_format_from_file_path(original_path)
+    new_chunk_ids: List[str] = []
     upload_tasks = []
-    
-    for i in range(num_chunks):
-        start_time = i * target_duration_seconds
-        duration = min(target_duration_seconds, total_duration - start_time)
-        
-        # Generate new chunk ID
-        new_chunk_id = generate_uuid()
-        new_chunk_ids.append(new_chunk_id)
-        
-        # Process with ffmpeg using pipes (no temp files)
-        try:
-            process = (
-                ffmpeg
-                .input('pipe:0')  # Read from stdin
-                .output(
-                    'pipe:1',  # Write to stdout
-                    format=output_format,
-                    ss=start_time,
-                    t=duration,
-                    **{"c:a": "libmp3lame", "b:a": "128k"} if output_format == "mp3" else {}
+
+    try:
+        with tempfile.NamedTemporaryFile(suffix=f".{original_format}", delete=False) as temp_input:
+            temp_input_path = temp_input.name
+            audio_stream = get_stream_from_s3(original_path)
+            while True:
+                chunk_bytes = audio_stream.read(1024 * 1024)
+                if not chunk_bytes:
+                    break
+                temp_input.write(chunk_bytes)
+            temp_input.flush()
+
+        codec_kwargs = {}
+        if output_format == "mp3":
+            codec_kwargs = {"acodec": "libmp3lame", "q": "5", "preset": "veryfast"}
+        elif output_format == "ogg":
+            codec_kwargs = {"acodec": "libvorbis", "q": "5"}
+
+        for i in range(num_chunks):
+            start_time = i * target_duration_seconds
+            duration = max(0, min(target_duration_seconds, total_duration - start_time))
+            if duration <= 0:
+                continue
+
+            new_chunk_id = generate_uuid()
+            new_chunk_ids.append(new_chunk_id)
+
+            try:
+                process = (
+                    ffmpeg.input(temp_input_path, ss=start_time)
+                    .output(
+                        "pipe:1",
+                        format=output_format,
+                        t=duration,
+                        **codec_kwargs,
+                    )
+                    .global_args("-hide_banner", "-loglevel", "error")
+                    .run_async(pipe_stdout=True, pipe_stderr=True)
                 )
-                .run_async(
-                    pipe_stdin=True,
-                    pipe_stdout=True,
-                    pipe_stderr=True,
-                    quiet=True
-                )
-            )
-            
-            # Process audio (stream through ffmpeg)
-            chunk_output, err = process.communicate(input=audio_data)
-            
-            if process.returncode != 0:
-                logger.error(f"FFmpeg error for chunk {i}: {err.decode()}")
-                raise Exception(f"FFmpeg failed: {err.decode()}")
-            
-            # Prepare S3 upload
-            s3_key = f"conversation/{conversation_id}/chunks/{new_chunk_id}.{output_format}"
-            upload_tasks.append((s3_key, chunk_output, new_chunk_id))
-            
-        except Exception as e:
-            logger.error(f"Failed to process chunk {i}: {e}")
-            raise
+
+                chunk_output, err = process.communicate()
+
+                if process.returncode != 0:
+                    err_msg = err.decode() if err else "unknown error"
+                    logger.error(f"FFmpeg error for chunk {i}: {err_msg}")
+                    raise Exception(f"FFmpeg failed: {err_msg}")
+
+                s3_key = f"conversation/{conversation_id}/chunks/{new_chunk_id}.{output_format}"
+                upload_tasks.append((s3_key, chunk_output, new_chunk_id))
+
+            except Exception as e:
+                logger.error(f"Failed to process chunk {i}: {e}")
+                raise
+
+    finally:
+        if temp_input_path and os.path.exists(temp_input_path):
+            try:
+                os.unlink(temp_input_path)
+            except OSError as cleanup_err:
+                logger.warning(f"Failed to remove temp file {temp_input_path}: {cleanup_err}")
     
     # Upload all chunks in parallel (using threads)
     logger.info(f"Uploading {len(upload_tasks)} split chunks in parallel")

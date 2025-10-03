@@ -393,6 +393,7 @@ class ConversationService:
                         "query": {
                             "filter": {"conversation_id": conversation_id},
                             "fields": ["id", "error", "transcript"],
+                            "limit": -1,
                         }
                     },
                 )
