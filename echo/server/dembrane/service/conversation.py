@@ -1,12 +1,12 @@
 # conversation.py
-from typing import TYPE_CHECKING, Any, List, Optional
 from datetime import datetime
 from logging import getLogger
+from typing import TYPE_CHECKING, Any, List, Optional
 
 from fastapi import UploadFile
 
-from dembrane.utils import generate_uuid
 from dembrane.directus import DirectusBadRequest, directus_client_context
+from dembrane.utils import generate_uuid
 
 logger = getLogger("dembrane.service.conversation")
 
