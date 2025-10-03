@@ -14,9 +14,9 @@ import ffmpeg
 from dembrane.s3 import (
     s3_client,
     delete_from_s3,
+    get_signed_url,
     get_stream_from_s3,
     get_sanitized_s3_key,
-    get_signed_url,
     get_file_size_bytes_from_s3,
 )
 from dembrane.utils import generate_uuid
@@ -836,8 +836,9 @@ def split_audio_chunk_streaming(
     Returns:
         List of new chunk IDs created
     """
-    from dembrane.s3 import save_bytes_to_s3
     from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    from dembrane.s3 import save_bytes_to_s3
     
     logger.info(f"Starting streaming split for chunk {original_chunk_id}")
     

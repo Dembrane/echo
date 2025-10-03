@@ -275,6 +275,7 @@ class ConversationService:
         
         # NEW: Proactive merge every 5 chunks for real-time viewing
         from logging import getLogger
+
         from dembrane.tasks import task_merge_conversation_chunks_incremental
         
         logger = getLogger("dembrane.service.conversation")

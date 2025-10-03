@@ -234,9 +234,8 @@ def task_merge_conversation_chunks_incremental(conversation_id: str) -> None:
     - Otherwise, merge all chunks and cache result
     """
     from dembrane.service import conversation_service
-    from dembrane.audio_utils import merge_multiple_audio_files_and_save_to_s3
-    from dembrane.s3 import get_file_exists_in_s3
     from dembrane.directus import directus
+    from dembrane.audio_utils import merge_multiple_audio_files_and_save_to_s3
     
     logger = getLogger("dembrane.tasks.task_merge_conversation_chunks_incremental")
     logger.info(f"Incremental merge for conversation {conversation_id}")
@@ -454,8 +453,8 @@ def task_process_conversation_chunk(chunk_id: str) -> None:
     Old flow: Always split → transcribe
     New flow: Triage → split if needed → transcribe in parallel
     """
-    from dembrane.audio_utils import should_split_chunk, split_audio_chunk_streaming
     from dembrane.service import conversation_service
+    from dembrane.audio_utils import should_split_chunk, split_audio_chunk_streaming
     
     logger = getLogger("dembrane.tasks.task_process_conversation_chunk")
     logger.info(f"Processing conversation chunk: {chunk_id}")
