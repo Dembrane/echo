@@ -2,8 +2,11 @@ import io
 import os
 import base64
 from io import BytesIO
+from logging import getLogger
+from typing import Optional
 
 import pandas as pd
+import requests
 from pydub import AudioSegment
 
 from dembrane.s3 import (
@@ -11,6 +14,111 @@ from dembrane.s3 import (
     get_stream_from_s3,
 )
 from dembrane.directus import directus
+
+logger = getLogger(__name__)
+
+
+def validate_audio_file(chunk_uri: str, min_size_bytes: int = 1000) -> tuple[bool, str]:
+    """
+    Validate audio file before processing to prevent ffmpeg failures.
+    
+    This prevents common errors like:
+    - FileNotFoundError (404s)
+    - FileTooSmallError (incomplete uploads)
+    - Decoding failures (corrupted files)
+    
+    Args:
+        chunk_uri: S3 URI of the audio file
+        min_size_bytes: Minimum file size in bytes (default 1KB)
+        
+    Returns:
+        tuple: (is_valid, error_message)
+        - is_valid: True if file is valid, False otherwise
+        - error_message: Empty string if valid, error description if invalid
+    """
+    try:
+        # Check if file exists and get metadata
+        response = requests.head(chunk_uri, timeout=5)
+        
+        if response.status_code == 404:
+            return (False, "File not found (404)")
+        
+        if response.status_code >= 400:
+            return (False, f"HTTP error {response.status_code}")
+        
+        # Check file size
+        content_length = int(response.headers.get("Content-Length", 0))
+        if content_length < min_size_bytes:
+            return (False, f"File too small: {content_length} bytes (minimum {min_size_bytes})")
+        
+        # Check content type (some S3 buckets don't set this, so it's optional)
+        content_type = response.headers.get("Content-Type", "").lower()
+        if content_type and "audio" not in content_type and content_type not in ["application/octet-stream", ""]:
+            logger.warning(f"Unexpected content type: {content_type}")
+        
+        return (True, "")
+        
+    except requests.exceptions.Timeout:
+        return (False, "Request timeout")
+    except Exception as e:
+        return (False, f"Validation error: {str(e)}")
+
+
+def safe_audio_decode(
+    chunk_uri: str, 
+    primary_format: str = "mp3",
+    fallback_formats: Optional[list[str]] = None
+) -> Optional[AudioSegment]:
+    """
+    Safely decode audio with fallback formats to handle ffmpeg decoding failures.
+    
+    This handles errors like:
+    - "Decoding failed. ffmpeg returned error"
+    - Unsupported codec/format
+    - Corrupted audio files
+    
+    Args:
+        chunk_uri: S3 URI of the audio file
+        primary_format: Primary format to try first
+        fallback_formats: List of fallback formats to try if primary fails
+        
+    Returns:
+        AudioSegment if successful, None if all formats fail
+    """
+    if fallback_formats is None:
+        fallback_formats = ["wav", "ogg", "mp3", "flac", "m4a"]
+    
+    # Remove primary format from fallbacks to avoid duplicate attempts
+    fallback_formats = [f for f in fallback_formats if f != primary_format]
+    
+    # Try primary format first
+    try:
+        stream = get_stream_from_s3(chunk_uri)
+        audio = AudioSegment.from_file(io.BytesIO(stream.read()), format=primary_format)
+        logger.debug(f"Successfully decoded {chunk_uri} as {primary_format}")
+        return audio
+        
+    except Exception as e:
+        logger.warning(f"Failed to decode {chunk_uri} as {primary_format}: {e}")
+        
+        # Try fallback formats
+        for fallback_format in fallback_formats:
+            try:
+                stream = get_stream_from_s3(chunk_uri)
+                audio = AudioSegment.from_file(
+                    io.BytesIO(stream.read()), 
+                    format=fallback_format
+                )
+                logger.info(f"Successfully decoded {chunk_uri} as {fallback_format} (fallback)")
+                return audio
+                
+            except Exception as fallback_error:
+                logger.debug(f"Fallback format {fallback_format} also failed: {fallback_error}")
+                continue
+        
+        # All formats failed
+        logger.error(f"All decoding formats failed for {chunk_uri}")
+        return None
 
 
 def _read_mp3_from_s3_and_get_wav_file_size(uri: str, format: str = "mp3") -> float:
@@ -24,12 +132,16 @@ def _read_mp3_from_s3_and_get_wav_file_size(uri: str, format: str = "mp3") -> fl
 
     Returns:
         float: The size of the audio in WAV format in MB
+        
+    Raises:
+        Exception: If audio file cannot be decoded or size cannot be calculated
     """
-    audio_stream = get_stream_from_s3(uri)
-
     try:
-        # Load the audio file from S3 into an AudioSegment
-        audio = AudioSegment.from_file(io.BytesIO(audio_stream.read()), format=format)
+        # Use safe_audio_decode with format fallbacks
+        audio = safe_audio_decode(uri, primary_format=format)
+        
+        if audio is None:
+            raise Exception(f"Failed to decode audio file {uri} in any supported format")
 
         # Export to WAV to calculate uncompressed size
         wav_buffer = io.BytesIO()
@@ -95,10 +207,26 @@ def process_audio_files(
     ]
     process_tracker_df = process_tracker_df.sort_values(by="timestamp")
     chunk_id_2_uri = dict(process_tracker_df[["chunk_id", "path"]].values)
-    chunk_id_2_size = {
-        chunk_id: _read_mp3_from_s3_and_get_wav_file_size(uri)
-        for chunk_id, uri in chunk_id_2_uri.items()
-    }
+    
+    # Validate and calculate sizes, skipping invalid files
+    chunk_id_2_size = {}
+    for chunk_id, uri in chunk_id_2_uri.items():
+        # Validate before processing
+        is_valid, error_msg = validate_audio_file(uri)
+        if not is_valid:
+            logger.warning(f"Skipping invalid audio file {chunk_id} ({uri}): {error_msg}")
+            continue
+        
+        try:
+            chunk_id_2_size[chunk_id] = _read_mp3_from_s3_and_get_wav_file_size(uri, format)
+        except Exception as e:
+            logger.error(f"Error calculating size for {chunk_id} ({uri}): {e}")
+            continue
+    
+    # If no valid chunks, return early
+    if not chunk_id_2_size:
+        logger.warning("No valid audio chunks to process after validation")
+        return ([], [], counter)
     chunk_id = list(chunk_id_2_size.keys())[0]
     chunk_id_2_segment: list[tuple[str, str]] = []
     segment_2_path: dict[str, str] = {}

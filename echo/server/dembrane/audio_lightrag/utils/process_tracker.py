@@ -1,4 +1,8 @@
+import json
+import base64
 import pandas as pd
+from typing import Dict, Any
+from io import StringIO
 
 
 class ProcessTracker:
@@ -33,4 +37,31 @@ class ProcessTracker:
     
     def update_value_for_chunk_id(self, chunk_id: str, column_name: str, value: str) -> None:
         self.df.loc[(self.df.chunk_id == chunk_id), column_name] = value
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Serialize ProcessTracker to a dictionary for passing between tasks.
+        
+        Returns:
+            Dict with base64-encoded dataframes
+        """
+        return {
+            "conversation_df": self.df.to_json(orient="split", date_format="iso"),
+            "project_df": self.project_df.to_json(orient="split", date_format="iso"),
+        }
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "ProcessTracker":
+        """
+        Deserialize ProcessTracker from a dictionary.
+        
+        Args:
+            data: Dict with serialized dataframes
+            
+        Returns:
+            ProcessTracker instance
+        """
+        conversation_df = pd.read_json(StringIO(data["conversation_df"]), orient="split")
+        project_df = pd.read_json(StringIO(data["project_df"]), orient="split")
+        return cls(conversation_df, project_df)
 

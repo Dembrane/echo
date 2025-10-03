@@ -88,6 +88,42 @@ class DirectusETLPipeline:
         project = self.directus.get_items("project", self.project_request)
         return conversation, project
 
+    def _safe_extract_chunk_values(self, chunks: Any) -> List[List[Any]]:
+        """
+        Safely extract chunk values, handling various data types from Directus.
+        
+        This prevents errors like "string indices must be integers, not 'str'"
+        when Directus returns unexpected data formats.
+        """
+        try:
+            # Handle None or empty
+            if not chunks:
+                return []
+            
+            # Handle string (sometimes Directus returns serialized JSON)
+            if isinstance(chunks, str):
+                logger.warning(f"Got string instead of dict for chunks: {chunks[:100]}")
+                return []
+            
+            # Handle list of dicts (expected case)
+            if isinstance(chunks, list):
+                result = []
+                for chunk in chunks:
+                    if isinstance(chunk, dict):
+                        # Extract values safely
+                        result.append(list(chunk.values()))
+                    else:
+                        logger.warning(f"Skipping non-dict chunk: {type(chunk)}")
+                return result
+            
+            # Unexpected type
+            logger.warning(f"Unexpected chunks type: {type(chunks)}")
+            return []
+            
+        except Exception as e:
+            logger.error(f"Error extracting chunk values: {e}")
+            return []
+
     def transform(
         self,
         conversations: List[Dict[str, Any]],
@@ -106,18 +142,78 @@ class DirectusETLPipeline:
             raise DirectusException("Directus response validation failed")
 
         conversation_df = pd.DataFrame(conversations)
-        conversation_df = conversation_df[conversation_df.chunks.apply(lambda x: len(x) != 0)]
+        
+        # Safe filtering of conversations with chunks
+        try:
+            conversation_df = conversation_df[
+                conversation_df.chunks.apply(lambda x: isinstance(x, list) and len(x) > 0)
+            ]
+        except Exception as e:
+            logger.error(f"Error filtering conversations by chunks: {e}")
+            conversation_df = conversation_df[conversation_df.chunks.apply(lambda x: bool(x))]
+        
+        # Safe extraction of chunk values
         conversation_df["chunks_id_path_ts"] = conversation_df.chunks.apply(
-            lambda chunks: [list(chunk.values()) for chunk in chunks]
+            self._safe_extract_chunk_values
         )
+        # Filter out empty chunk lists before exploding
+        conversation_df = conversation_df[
+            conversation_df["chunks_id_path_ts"].apply(lambda x: len(x) > 0)
+        ]
+        
+        if conversation_df.empty:
+            logger.warning("No valid conversations with chunks after filtering")
+            # Return empty dataframes but with correct structure
+            empty_conv_df = pd.DataFrame(
+                columns=["conversation_id", "project_id", "chunk_id", "path", "timestamp", "format", "segment"]
+            )
+            empty_proj_df = pd.DataFrame(projects)
+            if not empty_proj_df.empty:
+                empty_proj_df.set_index("id", inplace=True)
+            return empty_conv_df, empty_proj_df
+        
         conversation_df = conversation_df.explode("chunks_id_path_ts")
-        conversation_df[["chunk_id", "path", "timestamp"]] = pd.DataFrame(
-            conversation_df["chunks_id_path_ts"].tolist(), index=conversation_df.index
-        )
+        
+        try:
+            conversation_df[["chunk_id", "path", "timestamp"]] = pd.DataFrame(
+                conversation_df["chunks_id_path_ts"].tolist(), index=conversation_df.index
+            )
+        except Exception as e:
+            logger.error(f"Error creating chunk columns: {e}")
+            # Try salvaging partial data
+            valid_rows = []
+            for idx, row in conversation_df.iterrows():
+                try:
+                    chunk_values = row["chunks_id_path_ts"]
+                    if isinstance(chunk_values, list) and len(chunk_values) >= 3:
+                        valid_rows.append({
+                            "id": row["id"],
+                            "project_id": row["project_id"],
+                            "chunk_id": chunk_values[0],
+                            "path": chunk_values[1],
+                            "timestamp": chunk_values[2]
+                        })
+                except Exception as row_error:
+                    logger.debug(f"Skipping row {idx}: {row_error}")
+                    continue
+            
+            if not valid_rows:
+                logger.error("Could not salvage any conversation data")
+                raise DirectusException("Failed to parse conversation chunks")
+            
+            conversation_df = pd.DataFrame(valid_rows)
+            logger.warning(f"Salvaged {len(valid_rows)} rows from {len(conversation_df)} total")
+        
         conversation_df = conversation_df.reset_index(drop=True)
         conversation_df = conversation_df[["id", "project_id", "chunk_id", "path", "timestamp"]]
+        
+        # Safe path handling
         conversation_df.path = conversation_df.path.fillna("NO_AUDIO_FOUND")
-        conversation_df["format"] = conversation_df.path.apply(lambda x: x.split(".")[-1])
+        conversation_df.path = conversation_df.path.astype(str)  # Ensure string type
+        
+        conversation_df["format"] = conversation_df.path.apply(
+            lambda x: x.split(".")[-1] if isinstance(x, str) and "." in x else "unknown"
+        )
         conversation_df = conversation_df[
             conversation_df.format.isin(self.accepted_formats + ["NO_AUDIO_FOUND"])
         ]
@@ -129,16 +225,40 @@ class DirectusETLPipeline:
         project_df.set_index("id", inplace=True)
         chunk_id_list = conversation_df.chunk_id.to_list()
         self.segment_request["query"]["filter"] = {"id": {"_in": chunk_id_list}}
-        segment = self.directus.get_items("conversation_chunk", self.segment_request)
+        
+        try:
+            segment = self.directus.get_items("conversation_chunk", self.segment_request)
+        except Exception as e:
+            logger.error(f"Error fetching segments from Directus: {e}")
+            segment = []
+        
         chunk_to_segments = {}
         for chunk in segment:
-            chunk_id = chunk["id"]
-            segment_ids = [
-                segment["conversation_segment_id"] for segment in chunk.get("conversation_segments")
-            ]
-            chunk_to_segments[chunk_id] = [
-                segment_id for segment_id in segment_ids if isinstance(segment_id, int)
-            ]
+            try:
+                chunk_id = chunk.get("id") if isinstance(chunk, dict) else None
+                if not chunk_id:
+                    continue
+                
+                conversation_segments = chunk.get("conversation_segments", [])
+                if not isinstance(conversation_segments, list):
+                    logger.warning(f"Unexpected conversation_segments type for chunk {chunk_id}: {type(conversation_segments)}")
+                    continue
+                
+                segment_ids = []
+                for seg in conversation_segments:
+                    if isinstance(seg, dict):
+                        seg_id = seg.get("conversation_segment_id")
+                        if isinstance(seg_id, int):
+                            segment_ids.append(seg_id)
+                
+                if segment_ids:
+                    chunk_to_segments[chunk_id] = [
+                        segment_id for segment_id in segment_ids if isinstance(segment_id, int)
+                    ]
+            except Exception as e:
+                logger.warning(f"Error processing chunk {chunk.get('id', 'unknown')}: {e}")
+                continue
+        
         chunk_to_segments = {
             k: ",".join([str(x) for x in sorted(v)])  # type: ignore
             for k, v in chunk_to_segments.items()

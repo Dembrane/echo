@@ -17,9 +17,10 @@ from dembrane.api.stateless import (
 from dembrane.api.dependency_auth import DirectusSession
 from dembrane.audio_lightrag.utils.prompts import Prompts
 from dembrane.audio_lightrag.utils.echo_utils import renew_redis_lock
-from dembrane.audio_lightrag.utils.audio_utils import wav_to_str
+from dembrane.audio_lightrag.utils.audio_utils import wav_to_str, safe_audio_decode
 from dembrane.audio_lightrag.utils.litellm_utils import get_json_dict_from_audio
 from dembrane.audio_lightrag.utils.process_tracker import ProcessTracker
+from dembrane.audio_lightrag.utils.async_utils import run_async_in_new_loop
 
 logger = getLogger("audio_lightrag.pipelines.contextual_chunk_etl_pipeline")
 
@@ -101,12 +102,19 @@ class ContextualChunkETLPipeline:
                 except Exception as e:
                     logger.exception(f"Error in getting conversation segment : {e}")
                     continue
-                audio_stream = get_stream_from_s3(audio_segment_response["path"])
+                
                 if audio_segment_response["contextual_transcript"] is None:
                     try:
-                        wav_encoding = wav_to_str(
-                            AudioSegment.from_file(BytesIO(audio_stream.read()), format="wav")
-                        )
+                        # Use safe_audio_decode to handle decoding failures gracefully
+                        audio = safe_audio_decode(audio_segment_response["path"], primary_format="wav")
+                        
+                        if audio is None:
+                            logger.warning(
+                                f"Failed to decode audio for segment {segment_id}. Skipping..."
+                            )
+                            continue
+                        
+                        wav_encoding = wav_to_str(audio)
                         responses[segment_id] = get_json_dict_from_audio(
                             wav_encoding=wav_encoding,
                             audio_model_prompt=audio_model_prompt,
@@ -214,34 +222,7 @@ class ContextualChunkETLPipeline:
     def run(self) -> None:
         self.extract()
         self.transform()
-        # Re-use a long-lived event loop instead of creating and closing a new
-        # one for every pipeline run. Creating a fresh event loop each time
-        # (as ``asyncio.run`` does) breaks objects such as the asyncpg
-        # connection pool that are bound to the loop they were first created
-        # on (inside ``LightRAG``).  The pool is then reused from a different
-        # loop the next time the ETL pipeline is executed which results in
-        # errors like "Task got Future attached to a different loop" or
-        # "cannot perform operation: another operation is in progress".
-        #
-        # We therefore obtain (or create) the global event loop once and keep
-        # it alive for the lifetime of the worker process.
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            # No current event loop – create one and set it as the default
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-
-        if loop.is_closed():
-            # Should never happen but guard against it – recreate the loop
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-
-        if loop.is_running():
-            # If we're somehow already inside an event loop (unlikely in the
-            # dramatiq worker context) we schedule the coroutine and wait for
-            # it to finish.
-            fut = asyncio.run_coroutine_threadsafe(self.load(), loop)
-            fut.result()
-        else:
-            loop.run_until_complete(self.load())
+        # Use a fresh event loop for each task to avoid "Future attached to
+        # different loop" errors. This creates a completely isolated async
+        # context that won't interfere with other Dramatiq workers or tasks.
+        run_async_in_new_loop(self.load())

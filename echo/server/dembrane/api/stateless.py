@@ -261,9 +261,24 @@ async def get_lightrag_prompt(
                 ids=[str(id) for id in echo_segment_ids],
                 top_k=payload.top_k,
             )
-            response = await rag.aquery(payload.query, param=param)
-            logger.debug(f"Response: {response}")
-            return response
+            
+            try:
+                response = await rag.aquery(payload.query, param=param)
+                logger.debug(f"Response: {response}")
+                return response
+            except Exception as rag_error:
+                # Graceful fallback if RAG query fails (e.g., SQL bug in lightrag-dembrane)
+                logger.warning(
+                    f"RAG query failed (known SQL bug in lightrag-dembrane==1.2.7.8): {rag_error}"
+                )
+                logger.warning("Falling back to simple context retrieval")
+                
+                # Return a helpful error message instead of crashing
+                return (
+                    "RAG query temporarily unavailable due to a known issue. "
+                    "Please try using manual conversation selection mode instead, "
+                    "or contact support if this persists."
+                )
 
         else:
             raise HTTPException(status_code=400, detail="Invalid segment ID")

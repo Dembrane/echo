@@ -219,13 +219,165 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
 
 @dramatiq.actor(
     queue_name="cpu",
+    priority=10,
+    time_limit=10 * 60 * 1000,  # 10 minutes
+    max_retries=3,
+    store_results=True,
+)
+def task_run_directus_etl(conversation_id: str) -> dict:
+    """
+    Stage 1: Extract data from Directus and prepare process tracker.
+    
+    This is the first stage of the ETL pipeline. It:
+    - Fetches conversation and chunk data from Directus
+    - Validates the data
+    - Creates a ProcessTracker for downstream stages
+    
+    Returns serialized ProcessTracker for next stage.
+    """
+    from dembrane.audio_lightrag.pipelines.directus_etl_pipeline import (
+        DirectusException,
+        DirectusETLPipeline,
+    )
+    
+    logger = getLogger("dembrane.tasks.task_run_directus_etl")
+    
+    try:
+        logger.info(f"Starting Directus ETL for conversation {conversation_id}")
+        
+        with ProcessingStatusContext(
+            conversation_id=conversation_id,
+            message=f"Stage 1/3: Fetching data from Directus",
+            event_prefix="task_run_directus_etl",
+        ):
+            directus_pl = DirectusETLPipeline()
+            process_tracker = directus_pl.run(
+                [conversation_id],
+                run_timestamp=None,
+            )
+            
+        logger.info(f"Directus ETL completed for conversation {conversation_id}")
+        
+        # Serialize process tracker for next stage
+        return process_tracker.to_dict()
+        
+    except DirectusException as e:
+        logger.error(f"Directus ETL failed for {conversation_id}: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"Directus ETL failed for {conversation_id}: {e}", exc_info=True)
+        raise
+
+
+@dramatiq.actor(
+    queue_name="cpu",
+    priority=20,
+    time_limit=15 * 60 * 1000,  # 15 minutes
+    max_retries=3,
+    store_results=True,
+)
+def task_run_audio_etl(conversation_id: str, process_tracker_data: dict) -> dict:
+    """
+    Stage 2: Process audio chunks into segments.
+    
+    This is the second stage of the ETL pipeline. It:
+    - Takes ProcessTracker from Stage 1
+    - Processes audio chunks into segments
+    - Updates ProcessTracker with segment mappings
+    
+    Returns updated ProcessTracker for next stage.
+    """
+    from dembrane.audio_lightrag.pipelines.audio_etl_pipeline import AudioETLPipeline
+    from dembrane.audio_lightrag.utils.process_tracker import ProcessTracker
+    
+    logger = getLogger("dembrane.tasks.task_run_audio_etl")
+    
+    try:
+        logger.info(f"Starting Audio ETL for conversation {conversation_id}")
+        
+        # Deserialize process tracker
+        process_tracker = ProcessTracker.from_dict(process_tracker_data)
+        
+        with ProcessingStatusContext(
+            conversation_id=conversation_id,
+            message=f"Stage 2/3: Processing audio chunks",
+            event_prefix="task_run_audio_etl",
+        ):
+            audio_pl = AudioETLPipeline(process_tracker)
+            audio_pl.run()
+            
+        logger.info(f"Audio ETL completed for conversation {conversation_id}")
+        
+        # Serialize updated process tracker for next stage
+        return process_tracker.to_dict()
+        
+    except Exception as e:
+        logger.error(f"Audio ETL failed for {conversation_id}: {e}", exc_info=True)
+        raise
+
+
+@dramatiq.actor(
+    queue_name="cpu",
+    priority=30,
+    time_limit=35 * 60 * 1000,  # 35 minutes
+    max_retries=2,  # Fewer retries for the longest task
+)
+def task_run_contextual_etl(conversation_id: str, process_tracker_data: dict) -> None:
+    """
+    Stage 3: Generate contextual transcripts and insert into LightRAG.
+    
+    This is the final stage of the ETL pipeline. It:
+    - Takes ProcessTracker from Stage 2
+    - Generates contextual transcripts using LLM
+    - Inserts data into LightRAG (Neo4j + PostgreSQL)
+    - Marks conversation as processing finished
+    """
+    from dembrane.audio_lightrag.pipelines.contextual_chunk_etl_pipeline import (
+        ContextualChunkETLPipeline,
+    )
+    from dembrane.audio_lightrag.utils.process_tracker import ProcessTracker
+    from dembrane.audio_lightrag.utils.echo_utils import finish_conversation, release_redis_lock
+    
+    logger = getLogger("dembrane.tasks.task_run_contextual_etl")
+    
+    try:
+        logger.info(f"Starting Contextual ETL for conversation {conversation_id}")
+        
+        # Deserialize process tracker
+        process_tracker = ProcessTracker.from_dict(process_tracker_data)
+        
+        with ProcessingStatusContext(
+            conversation_id=conversation_id,
+            message=f"Stage 3/3: Generating contextual transcripts",
+            event_prefix="task_run_contextual_etl",
+        ):
+            contextual_chunk_pl = ContextualChunkETLPipeline(process_tracker)
+            contextual_chunk_pl.run()
+            
+        logger.info(f"Contextual ETL completed for conversation {conversation_id}")
+        
+        # Release lock and mark as finished
+        release_redis_lock(conversation_id)
+        finish_conversation(conversation_id)
+        
+    except Exception as e:
+        logger.error(f"Contextual ETL failed for {conversation_id}: {e}", exc_info=True)
+        release_redis_lock(conversation_id)
+        raise
+
+
+@dramatiq.actor(
+    queue_name="cpu",
     priority=50,
     # 45 minutes
     time_limit=45 * 60 * 1000,
 )
 def task_run_etl_pipeline(conversation_id: str) -> None:
     """
-    Run the AudioLightrag ETL pipeline.
+    Run the AudioLightrag ETL pipeline (LEGACY - being replaced by 3-stage pipeline).
+    
+    NEW: This now chains together 3 separate tasks for better worker utilization.
+    Each stage can be retried independently and workers are freed between stages.
     """
     logger = getLogger("dembrane.tasks.task_run_etl_pipeline")
 
@@ -261,15 +413,42 @@ def task_run_etl_pipeline(conversation_id: str) -> None:
         )
 
         try:
-            with ProcessingStatusContext(
-                conversation_id=conversation_id,
-                message=f"for conversation {conversation_id}",
-                event_prefix="task_run_etl_pipeline",
-            ):
-                run_etl_pipeline([conversation_id])
+            # TEMPORARY: Call pipeline functions directly until dramatiq discovers actors
+            # TODO: Switch back to task chaining once worker discovery is fixed
+            
+            logger.info(f"="*80)
+            logger.info(f"Starting 3-stage ETL pipeline for conversation {conversation_id}")
+            logger.info(f"Project ID: {project_id}")
+            logger.info(f"Audio processing enabled: {is_enhanced_audio_processing_enabled}")
+            logger.info(f"="*80)
+            
+            # Stage 1: Directus ETL
+            logger.info(f">>> STAGE 1/3: Running Directus ETL for {conversation_id}")
+            process_tracker_data = task_run_directus_etl(conversation_id)
+            logger.info(f">>> STAGE 1/3: Directus ETL completed, got process_tracker_data: {type(process_tracker_data)}")
+            
+            logger.info(f"Stage 1 complete, starting Stage 2 for {conversation_id}")
+            
+            # Stage 2: Audio ETL
+            logger.info(f">>> STAGE 2/3: Running Audio ETL for {conversation_id}")
+            process_tracker_data = task_run_audio_etl(conversation_id, process_tracker_data)
+            logger.info(f">>> STAGE 2/3: Audio ETL completed")
+            
+            logger.info(f"Stage 2 complete, starting Stage 3 for {conversation_id}")
+            
+            # Stage 3: Contextual ETL
+            logger.info(f">>> STAGE 3/3: Running Contextual ETL for {conversation_id}")
+            task_run_contextual_etl(conversation_id, process_tracker_data)
+            logger.info(f">>> STAGE 3/3: Contextual ETL completed")
+            
+            logger.info(f"="*80)
+            logger.info(f"SUCCESS: All 3 stages completed for conversation {conversation_id}")
+            logger.info(f"="*80)
 
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.error(f"="*80)
+            logger.error(f"FAILED: Error in ETL pipeline for {conversation_id}: {e}")
+            logger.error(f"="*80, exc_info=True)
 
             directus.update_item(
                 "conversation",
@@ -317,10 +496,11 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
             f"Conversation {conversation_id} has not finished processing, running all follow-up tasks"
         )
 
-        follow_up_tasks = []
-        follow_up_tasks.append(task_merge_conversation_chunks.message(conversation_id))
-        follow_up_tasks.append(task_run_etl_pipeline.message(conversation_id))
-        follow_up_tasks.append(task_summarize_conversation.message(conversation_id))
+        # Dispatch follow-up tasks directly
+        # Note: Using .send() instead of group() to ensure tasks are actually dispatched
+        task_merge_conversation_chunks.send(conversation_id)
+        task_run_etl_pipeline.send(conversation_id)
+        task_summarize_conversation.send(conversation_id)
 
         counts = conversation_service.get_chunk_counts(conversation_id)
 
@@ -334,8 +514,6 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
             logger.debug(
                 f"waiting for pending chunks {counts['pending']} ok({counts['ok']}) error({counts['error']}) total({counts['total']})"
             )
-
-        group(follow_up_tasks).run()
 
         return
 
