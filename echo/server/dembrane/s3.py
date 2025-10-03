@@ -202,6 +202,55 @@ def get_file_size_from_s3_mb(file_name: str) -> float:
     return response["ContentLength"] / (1024 * 1024)
 
 
+def save_bytes_to_s3(data: bytes, file_name: str, public: bool = False) -> str:
+    """
+    Save bytes directly to S3 without temp file.
+    
+    Args:
+        data: Bytes to upload
+        file_name: S3 key
+        public: Whether to make file public
+    
+    Returns:
+        Full S3 URL
+    """
+    file_name = get_sanitized_s3_key(file_name)
+    
+    s3_client.put_object(
+        Bucket=STORAGE_S3_BUCKET,
+        Key=file_name,
+        Body=data,
+        ACL="public-read" if public else "private",
+    )
+    
+    return f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/{file_name}"
+
+
+def get_file_exists_in_s3(file_name: str) -> bool:
+    """
+    Check if file exists in S3 without downloading.
+    Uses HEAD request.
+    
+    Args:
+        file_name: S3 key
+    
+    Returns:
+        True if file exists
+    """
+    from botocore.exceptions import ClientError
+    
+    try:
+        s3_client.head_object(
+            Bucket=STORAGE_S3_BUCKET,
+            Key=get_sanitized_s3_key(file_name)
+        )
+        return True
+    except ClientError as e:
+        if e.response['Error']['Code'] == '404':
+            return False
+        raise
+
+
 def save_audio_to_s3(audio: AudioSegment, file_name: str, public: bool = False) -> str:
     """
     Save an AudioSegment object directly to S3.

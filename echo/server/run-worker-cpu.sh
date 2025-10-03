@@ -1,1 +1,2 @@
+#!/bin/bash
 dramatiq --queues cpu --processes 1 --threads 2 dembrane.tasks

@@ -6,8 +6,11 @@ export const PARTICIPANT_BASE_URL =
   import.meta.env.VITE_PARTICIPANT_BASE_URL ?? window.location.origin;
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
-export const DIRECTUS_PUBLIC_URL =
-  import.meta.env.VITE_DIRECTUS_PUBLIC_URL ?? "http://localhost:8055";
+// Handle relative URLs for Directus proxy
+const directusEnvUrl = import.meta.env.VITE_DIRECTUS_PUBLIC_URL ?? "http://localhost:8055";
+export const DIRECTUS_PUBLIC_URL = directusEnvUrl.startsWith('/')
+  ? `${window.location.origin}${directusEnvUrl}`
+  : directusEnvUrl;
 
 export const DIRECTUS_CONTENT_PUBLIC_URL =
   import.meta.env.VITE_DIRECTUS_CONTENT_PUBLIC_URL ??

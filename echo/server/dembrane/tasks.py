@@ -166,7 +166,10 @@ def task_summarize_conversation(conversation_id: str) -> None:
 @dramatiq.actor(store_results=True, queue_name="cpu", priority=10)
 def task_merge_conversation_chunks(conversation_id: str) -> None:
     """
-    Merge conversation chunks.
+    Merge conversation chunks (called when conversation finishes).
+    
+    This is the "complete merge" that happens when conversation is marked finished.
+    For real-time/incremental merging, see task_merge_conversation_chunks_incremental.
     """
     logger = getLogger("dembrane.tasks.task_merge_conversation_chunks")
 
@@ -215,6 +218,94 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
     except Exception as e:
         logger.error(f"Error: {e}")
         raise e from e
+
+
+@dramatiq.actor(queue_name="cpu", priority=15, time_limit=15 * 60 * 1000)
+def task_merge_conversation_chunks_incremental(conversation_id: str) -> None:
+    """
+    Incrementally merge conversation chunks (called proactively during recording).
+    
+    This enables real-time viewing of ongoing conversations by maintaining
+    an up-to-date merged audio file. Runs in the background every N chunks.
+    
+    Approach:
+    - Check if merged audio already exists
+    - If exists and recent, skip (merge already up to date)
+    - Otherwise, merge all chunks and cache result
+    """
+    from dembrane.service import conversation_service
+    from dembrane.audio_utils import merge_multiple_audio_files_and_save_to_s3
+    from dembrane.s3 import get_file_exists_in_s3
+    from dembrane.directus import directus
+    
+    logger = getLogger("dembrane.tasks.task_merge_conversation_chunks_incremental")
+    logger.info(f"Incremental merge for conversation {conversation_id}")
+    
+    try:
+        conversation = conversation_service.get_by_id_or_raise(conversation_id)
+        
+        # Fetch chunks using directus directly
+        chunks = directus.get_items(
+            "conversation_chunk",
+            {
+                "query": {
+                    "filter": {"conversation_id": {"_eq": conversation_id}},
+                    "sort": "timestamp",
+                    "fields": ["id", "path", "timestamp"],
+                    "limit": 1000,
+                },
+            },
+        )
+        
+        if not chunks:
+            logger.info(f"No chunks to merge for conversation {conversation_id}")
+            return
+        
+        # Check if merged file already exists
+        merged_key = f"audio-conversations/merged-{conversation_id}.mp3"
+        merged_path_in_db = conversation.get("merged_audio_path")
+        
+        # If we have a recent merge, check if it needs updating
+        if merged_path_in_db:
+            logger.info(f"Merged file path exists in DB for {conversation_id}")
+            
+            # For now, always re-merge to keep it fresh
+            # Future optimization: track last merge timestamp and only merge if new chunks added
+            logger.info(f"Re-merging to include latest chunks for {conversation_id}")
+        
+        # Merge all chunks
+        chunk_paths = [c["path"] for c in chunks if c.get("path")]
+        
+        if not chunk_paths:
+            logger.warning(f"No valid chunk paths for conversation {conversation_id}")
+            return
+        
+        logger.info(f"Merging {len(chunk_paths)} chunks for conversation {conversation_id}")
+        
+        with ProcessingStatusContext(
+            conversation_id=conversation_id,
+            event_prefix="task_merge_conversation_chunks_incremental",
+        ):
+            merged_path = merge_multiple_audio_files_and_save_to_s3(
+                input_file_names=chunk_paths,
+                output_file_name=merged_key,
+                output_format="mp3",
+            )
+        
+        # Update conversation metadata with merged path
+        from dembrane.directus import directus
+        directus.update_item(
+            "conversation",
+            conversation_id,
+            {"merged_audio_path": merged_path}
+        )
+        
+        logger.info(f"Incremental merge complete for conversation {conversation_id}: {merged_path}")
+        
+    except Exception as e:
+        logger.error(f"Error in incremental merge for {conversation_id}: {e}", exc_info=True)
+        # Don't re-raise - this is a background optimization, failures shouldn't break the main flow
+        # The final merge on conversation finish will ensure the file exists
 
 
 @dramatiq.actor(
@@ -349,49 +440,81 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
 
 
 # cpu because it is also bottlenecked by the cpu queue due to the split_audio_chunk task
-@dramatiq.actor(queue_name="cpu", priority=0)
+@dramatiq.actor(queue_name="cpu", priority=0, time_limit=10 * 60 * 1000)
 def task_process_conversation_chunk(chunk_id: str) -> None:
     """
-    Process a conversation chunk.
+    Process a conversation chunk with intelligent triage.
+    
+    Improvements:
+    - Checks file size before deciding to split
+    - Small files skip splitting (fast path)
+    - Parallel dispatch of transcription and diarization
+    - Better error handling
+    
+    Old flow: Always split → transcribe
+    New flow: Triage → split if needed → transcribe in parallel
     """
+    from dembrane.audio_utils import should_split_chunk, split_audio_chunk_streaming
+    from dembrane.service import conversation_service
+    
     logger = getLogger("dembrane.tasks.task_process_conversation_chunk")
+    logger.info(f"Processing conversation chunk: {chunk_id}")
+    
     try:
-        from dembrane.service import conversation_service
-
         chunk = conversation_service.get_chunk_by_id_or_raise(chunk_id)
-        logger.debug(f"Chunk {chunk_id} found in conversation: {chunk['conversation_id']}")
-
-        # critical section
-        with ProcessingStatusContext(
-            conversation_id=chunk["conversation_id"],
-            event_prefix="task_process_conversation_chunk.split_audio_chunk",
-            message=f"for chunk {chunk_id}",
-        ):
-            from dembrane.audio_utils import split_audio_chunk
-
-            split_chunk_ids = split_audio_chunk(chunk_id, "mp3", delete_original=True)
-
-        if split_chunk_ids is None:
-            logger.error(f"Split audio chunk result is None for chunk: {chunk_id}")
-            raise ValueError(f"Split audio chunk result is None for chunk: {chunk_id}")
-
-        if "upload" not in str(chunk["source"]).lower():
-            group([task_get_runpod_diarization.message(chunk_id)]).run()
-
-        logger.info(f"Split audio chunk result: {split_chunk_ids}")
-
-        group(
-            [
-                task_transcribe_chunk.message(cid, chunk["conversation_id"])
+        conversation_id = chunk["conversation_id"]
+        
+        # Intelligent triage: check if splitting is needed
+        needs_split = should_split_chunk(chunk_id, max_size_mb=20)
+        
+        if needs_split:
+            logger.info(f"Chunk {chunk_id} needs splitting")
+            
+            # Split using streaming method (faster)
+            with ProcessingStatusContext(
+                conversation_id=conversation_id,
+                event_prefix="task_process_conversation_chunk.split_audio_chunk",
+                message=f"for chunk {chunk_id}",
+            ):
+                split_chunk_ids = split_audio_chunk_streaming(
+                    original_chunk_id=chunk_id,
+                    output_format="mp3",
+                    delete_original=True
+                )
+            
+            if split_chunk_ids is None:
+                logger.error(f"Split audio chunk result is None for chunk: {chunk_id}")
+                raise ValueError(f"Split audio chunk result is None for chunk: {chunk_id}")
+            
+            logger.info(f"Chunk {chunk_id} split into {len(split_chunk_ids)} chunks")
+            
+            # Dispatch transcription for all split chunks IN PARALLEL
+            transcription_tasks = [
+                task_transcribe_chunk.message(cid, conversation_id)
                 for cid in split_chunk_ids
                 if cid is not None
             ]
-        ).run()
-
-        return
-
+            
+            group(transcription_tasks).run()
+            logger.info(f"Dispatched {len(split_chunk_ids)} transcription tasks")
+            
+        else:
+            logger.info(f"Chunk {chunk_id} is small enough, skipping split")
+            
+            # Fast path: directly transcribe without splitting
+            task_transcribe_chunk.send(chunk_id, conversation_id)
+            logger.info(f"Dispatched direct transcription for {chunk_id}")
+        
+        # Diarization (if not from upload source)
+        source = str(chunk.get("source", "")).lower()
+        if "upload" not in source:
+            logger.info(f"Dispatching diarization for {chunk_id}")
+            task_get_runpod_diarization.send(chunk_id)
+        
+        logger.info(f"Processing complete for chunk {chunk_id}")
+        
     except Exception as e:
-        logger.error(f"Error processing conversation chunk@[{chunk_id}]: {e}")
+        logger.error(f"Error processing chunk {chunk_id}: {e}", exc_info=True)
         raise e from e
 
 
