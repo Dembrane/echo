@@ -285,7 +285,7 @@ class ConversationService:
                     "id": chunk_id,
                     "conversation_id": conversation["id"],
                     "timestamp": timestamp.isoformat(),
-                    "path": file_url,  # ✅ FIXED: Always use file_url when provided
+                    "path": file_url,  
                     "source": source,
                     "transcript": transcript,
                 },
