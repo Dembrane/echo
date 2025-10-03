@@ -1,22 +1,22 @@
 import asyncio
-from datetime import datetime
-from logging import getLogger
 from time import time
+from logging import getLogger
+from datetime import datetime
 from typing import Annotated, List, Optional
 
-from fastapi import APIRouter, Form, HTTPException, UploadFile
 from pydantic import BaseModel
+from fastapi import APIRouter, Form, HTTPException, UploadFile
 
-from dembrane.config import STORAGE_S3_BUCKET, STORAGE_S3_ENDPOINT
+from dembrane.utils import generate_uuid
 from dembrane.directus import directus
-from dembrane.s3 import get_file_size_bytes_from_s3, get_sanitized_s3_key
+from dembrane.service.project import ProjectNotFoundException
+from dembrane.config import STORAGE_S3_BUCKET, STORAGE_S3_ENDPOINT
 from dembrane.service import conversation_service, project_service
+from dembrane.s3 import get_file_size_bytes_from_s3, get_sanitized_s3_key
 from dembrane.service.conversation import (
     ConversationNotFoundException,
     ConversationNotOpenForParticipationException,
 )
-from dembrane.service.project import ProjectNotFoundException
-from dembrane.utils import generate_uuid
 
 logger = getLogger("api.participant")
 
