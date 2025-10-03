@@ -439,6 +439,9 @@ async def confirm_chunk_upload(
             status_code=403, 
             detail="Conversation not open for participation"
         ) from e
+    except ConversationNotFoundException as e:
+        logger.error(f"Conversation not found while confirming upload: {conversation_id}")
+        raise HTTPException(status_code=404, detail="Conversation not found") from e
     except HTTPException:
         # Re-raise HTTP exceptions as-is
         raise
