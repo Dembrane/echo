@@ -28,6 +28,8 @@ logger = logging.getLogger("audio_utils")
 
 
 def sanitize_filename_component(val: str) -> str:
+    """Return a filesystem-safe component by stripping unsupported characters."""
+
     # Only allow alphanumeric, dash, and underscore. Remove other chars.
     return "".join(c for c in val if c.isalnum() or c in ("-", "_"))
 
@@ -49,6 +51,8 @@ FFPROBE_FORMAT_MAP = {
 
 
 def get_file_format_from_file_path(file_path: str) -> str:
+    """Infer the lowercase format/extension for a given file path."""
+
     extension = file_path.lower().split(".")[-1].split("?")[0]
     if extension in ACCEPTED_AUDIO_FORMATS:
         return extension
@@ -57,6 +61,8 @@ def get_file_format_from_file_path(file_path: str) -> str:
 
 
 def get_mime_type_from_file_path(file_path: str) -> str:
+    """Map a file path to a best-effort MIME type based on its extension."""
+
     if file_path.endswith(".wav"):
         return "audio/wav"
     elif file_path.endswith(".mp3"):
@@ -586,10 +592,14 @@ def probe_from_bytes(file_bytes: bytes, input_format: str) -> dict:
 
 
 def probe_from_s3(file_name: str, input_format: str) -> dict:
+    """Probe metadata for an S3 object by streaming it into ``probe_from_bytes``."""
+
     return probe_from_bytes(get_stream_from_s3(file_name).read(), input_format)
 
 
 def get_duration_from_s3(file_name: str) -> float:
+    """Return the media duration in seconds for an object stored in S3."""
+
     probe_data = probe_from_s3(file_name, get_file_format_from_file_path(file_name))
     if "format" in probe_data and "duration" in probe_data["format"]:
         return float(probe_data["format"]["duration"])
@@ -606,6 +616,8 @@ def split_audio_chunk(
     chunk_size_bytes: int = MAX_CHUNK_SIZE,
     delete_original: bool = True,
 ) -> List[str]:
+    """Split a stored chunk by approximate byte size using temporary files."""
+
     logger = logging.getLogger("audio_utils.pre_process_audio")
 
     original_chunk = conversation_service.get_chunk_by_id_or_raise(original_chunk_id)
