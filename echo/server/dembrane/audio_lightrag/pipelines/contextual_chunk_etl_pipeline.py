@@ -21,6 +21,8 @@ from dembrane.audio_lightrag.utils.audio_utils import wav_to_str, safe_audio_dec
 from dembrane.audio_lightrag.utils.litellm_utils import get_json_dict_from_audio
 from dembrane.audio_lightrag.utils.process_tracker import ProcessTracker
 from dembrane.audio_lightrag.utils.async_utils import run_async_in_new_loop
+from dembrane.audio_lightrag.utils.batch_directus import BatchDirectusWriter
+from dembrane.audio_lightrag.utils.parallel_llm import parallel_llm_calls
 
 logger = getLogger("audio_lightrag.pipelines.contextual_chunk_etl_pipeline")
 
@@ -42,7 +44,9 @@ class ContextualChunkETLPipeline:
         pass
 
     async def load(self) -> None:
-        # Trancribe and contextualize audio chunks
+        # Trancribe and contextualize audio chunks with batched Directus writes
+        batch_writer = BatchDirectusWriter(auto_flush_size=20)
+        
         for conversation_id in self.process_tracker().conversation_id.unique():
             load_tracker = self.process_tracker()[
                 self.process_tracker()["conversation_id"] == conversation_id
@@ -119,7 +123,8 @@ class ContextualChunkETLPipeline:
                             wav_encoding=wav_encoding,
                             audio_model_prompt=audio_model_prompt,
                         )
-                        directus.update_item(
+                        # Use batch writer for updates (will be flushed at end of conversation)
+                        batch_writer.queue_update(
                             "conversation_segment",
                             int(segment_id),
                             {
@@ -151,7 +156,7 @@ class ContextualChunkETLPipeline:
                             logger.info(
                                 f"No transcript found for segment {segment_id}. Skipping..."
                             )
-                            directus.update_item(
+                            batch_writer.queue_update(
                                 "conversation_segment", int(segment_id), {"lightrag_flag": True}
                             )
                             continue
@@ -165,7 +170,7 @@ class ContextualChunkETLPipeline:
                         audio_segment_insert_response = await insert_item(payload, session)
 
                         if audio_segment_insert_response.status == "success":
-                            directus.update_item(
+                            batch_writer.queue_update(
                                 "conversation_segment", int(segment_id), {"lightrag_flag": True}
                             )
                         else:
@@ -194,7 +199,7 @@ class ContextualChunkETLPipeline:
                             logger.info(
                                 f"No transcript found for segment {segment_id}. Skipping..."
                             )
-                            directus.update_item(
+                            batch_writer.queue_update(
                                 "conversation_segment", int(segment_id), {"lightrag_flag": True}
                             )
                             continue
@@ -208,7 +213,7 @@ class ContextualChunkETLPipeline:
                         non_audio_segment_insert_response = await insert_item(payload, session)
 
                         if non_audio_segment_insert_response.status == "success":
-                            directus.update_item(
+                            batch_writer.queue_update(
                                 "conversation_segment", int(segment_id), {"lightrag_flag": True}
                             )
                         else:

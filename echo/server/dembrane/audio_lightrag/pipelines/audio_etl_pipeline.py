@@ -8,6 +8,7 @@ from dembrane.audio_lightrag.utils.audio_utils import (
     create_directus_segment,
 )
 from dembrane.audio_lightrag.utils.process_tracker import ProcessTracker
+from dembrane.audio_lightrag.utils.batch_directus import BatchDirectusWriter
 
 # Configure logging
 logging.basicConfig(
@@ -56,48 +57,50 @@ class AudioETLPipeline:
             )
         )
 
-        # Process audio files
-        for project_id, conversation_id in zip_unique_audio:
-            renew_redis_lock(conversation_id)
-            unprocessed_chunk_file_uri_li = transform_audio_process_tracker_df.loc[
-                (transform_audio_process_tracker_df.project_id == project_id)
-                & (transform_audio_process_tracker_df.conversation_id == conversation_id)
-            ].path.to_list()
-            counter = 0
-            chunk_id_2_segment = []
-            while len(unprocessed_chunk_file_uri_li) != 0:
-                try:
-                    logger.info(
-                        f"Processing {len(unprocessed_chunk_file_uri_li)} files for project_id={project_id}, conversation_id={conversation_id}"
-                    )
-                    logger.debug(
-                        f"Counter value: {counter}, Max size: {self.max_size_mb}MB, Config ID: {self.configid}"
-                    )
-                    unprocessed_chunk_file_uri_li, chunk_id_2_segment_temp, counter = (
-                        process_audio_files(
-                            unprocessed_chunk_file_uri_li,
-                            configid=str(self.configid),
-                            max_size_mb=float(self.max_size_mb),
-                            counter=counter,
-                            process_tracker_df=transform_audio_process_tracker_df,
+        # Process audio files with batched writes
+        with BatchDirectusWriter(auto_flush_size=50) as batch_writer:
+            for project_id, conversation_id in zip_unique_audio:
+                renew_redis_lock(conversation_id)
+                unprocessed_chunk_file_uri_li = transform_audio_process_tracker_df.loc[
+                    (transform_audio_process_tracker_df.project_id == project_id)
+                    & (transform_audio_process_tracker_df.conversation_id == conversation_id)
+                ].path.to_list()
+                counter = 0
+                chunk_id_2_segment = []
+                while len(unprocessed_chunk_file_uri_li) != 0:
+                    try:
+                        logger.info(
+                            f"Processing {len(unprocessed_chunk_file_uri_li)} files for project_id={project_id}, conversation_id={conversation_id}"
                         )
-                    )
-
-                    for chunk_id, segment_id in chunk_id_2_segment_temp:
-                        mapping_data = {
-                            "conversation_segment_id": segment_id,
-                            "conversation_chunk_id": chunk_id,
-                        }
-                        directus.create_item(
-                            "conversation_segment_conversation_chunk", mapping_data
+                        logger.debug(
+                            f"Counter value: {counter}, Max size: {self.max_size_mb}MB, Config ID: {self.configid}"
+                        )
+                        unprocessed_chunk_file_uri_li, chunk_id_2_segment_temp, counter = (
+                            process_audio_files(
+                                unprocessed_chunk_file_uri_li,
+                                configid=str(self.configid),
+                                max_size_mb=float(self.max_size_mb),
+                                counter=counter,
+                                process_tracker_df=transform_audio_process_tracker_df,
+                            )
                         )
 
-                    chunk_id_2_segment.extend(chunk_id_2_segment_temp)
-                except Exception as e:
-                    logger.error(
-                        f"Error processing files for project_id={project_id}, conversation_id={conversation_id}: {str(e)}"
-                    )
-                    raise e
+                        # Queue writes in batch instead of individual creates
+                        for chunk_id, segment_id in chunk_id_2_segment_temp:
+                            mapping_data = {
+                                "conversation_segment_id": segment_id,
+                                "conversation_chunk_id": chunk_id,
+                            }
+                            batch_writer.queue_create(
+                                "conversation_segment_conversation_chunk", mapping_data
+                            )
+
+                        chunk_id_2_segment.extend(chunk_id_2_segment_temp)
+                    except Exception as e:
+                        logger.error(
+                            f"Error processing files for project_id={project_id}, conversation_id={conversation_id}: {str(e)}"
+                        )
+                        raise e
 
             chunk_id_2_segment_dict: dict[str, list[int]] = {}
             for chunk_id, segment_id in chunk_id_2_segment:
@@ -111,41 +114,42 @@ class AudioETLPipeline:
                     column_name="segment",
                     value=",".join([str(segment_id) for segment_id in segment_id_li]),
                 )
-        # Process non-audio files
-        if transform_non_audio_process_tracker_df.empty is not True:
-            conversation_id = transform_non_audio_process_tracker_df.conversation_id.iloc[0]
-            full_transcript = ""
-            segment_id = str(create_directus_segment(self.configid, -1, conversation_id))
+            # Process non-audio files with batched writes
+            if transform_non_audio_process_tracker_df.empty is not True:
+                conversation_id = transform_non_audio_process_tracker_df.conversation_id.iloc[0]
+                full_transcript = ""
+                segment_id = str(create_directus_segment(self.configid, -1, conversation_id))
 
-            chunk_ids = transform_non_audio_process_tracker_df.chunk_id.to_list()
-            chunk_records = directus.get_items(
-                "conversation_chunk",
-                {
-                    "query": {
-                        "filter": {"id": {"_in": chunk_ids}},
-                        "fields": ["id", "transcript"],
-                        "limit": len(chunk_ids),
-                    }
-                },
-            )
-            id2transcript = {rec["id"]: rec.get("transcript", "") for rec in chunk_records}
-            for chunk_id in chunk_ids:
-                transcript = id2transcript.get(chunk_id, "")
-                full_transcript += transcript + "\n\n"
-                self.process_tracker.update_value_for_chunk_id(
-                    chunk_id=chunk_id, column_name="segment", value=segment_id
+                chunk_ids = transform_non_audio_process_tracker_df.chunk_id.to_list()
+                chunk_records = directus.get_items(
+                    "conversation_chunk",
+                    {
+                        "query": {
+                            "filter": {"id": {"_in": chunk_ids}},
+                            "fields": ["id", "transcript"],
+                            "limit": len(chunk_ids),
+                        }
+                    },
                 )
-                mapping_data = {
-                    "conversation_segment_id": segment_id,
-                    "conversation_chunk_id": chunk_id,
-                }
-                directus.create_item("conversation_segment_conversation_chunk", mapping_data)
+                id2transcript = {rec["id"]: rec.get("transcript", "") for rec in chunk_records}
+                for chunk_id in chunk_ids:
+                    transcript = id2transcript.get(chunk_id, "")
+                    full_transcript += transcript + "\n\n"
+                    self.process_tracker.update_value_for_chunk_id(
+                        chunk_id=chunk_id, column_name="segment", value=segment_id
+                    )
+                    mapping_data = {
+                        "conversation_segment_id": segment_id,
+                        "conversation_chunk_id": chunk_id,
+                    }
+                    batch_writer.queue_create("conversation_segment_conversation_chunk", mapping_data)
 
-            directus.update_item(
-                "conversation_segment",
-                segment_id,
-                {"transcript": full_transcript, "contextual_transcript": full_transcript},
-            )
+                # This update happens after the batch context, so it's outside
+                directus.update_item(
+                    "conversation_segment",
+                    segment_id,
+                    {"transcript": full_transcript, "contextual_transcript": full_transcript},
+                )
 
     def load(self) -> None:
         pass
