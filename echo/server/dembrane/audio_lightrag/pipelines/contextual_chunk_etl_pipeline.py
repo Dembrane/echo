@@ -223,6 +223,11 @@ class ContextualChunkETLPipeline:
 
                     except Exception as e:
                         logger.exception(f"Error in inserting transcript into LightRAG : {e}")
+        
+        # Flush all batched writes at the end
+        logger.info("Flushing batched Directus writes...")
+        batch_writer.flush()
+        logger.info("All batched writes completed")
 
     def run(self) -> None:
         self.extract()

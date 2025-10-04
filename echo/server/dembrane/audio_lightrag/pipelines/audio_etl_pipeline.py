@@ -59,6 +59,9 @@ class AudioETLPipeline:
 
         # Process audio files with batched writes
         with BatchDirectusWriter(auto_flush_size=50) as batch_writer:
+            # Initialize outside loop in case zip_unique_audio is empty
+            all_chunk_id_2_segment = []
+            
             for project_id, conversation_id in zip_unique_audio:
                 renew_redis_lock(conversation_id)
                 unprocessed_chunk_file_uri_li = transform_audio_process_tracker_df.loc[
@@ -101,9 +104,13 @@ class AudioETLPipeline:
                             f"Error processing files for project_id={project_id}, conversation_id={conversation_id}: {str(e)}"
                         )
                         raise e
+                
+                # Add this conversation's mappings to the global list
+                all_chunk_id_2_segment.extend(chunk_id_2_segment)
 
+            # Process all chunk-to-segment mappings
             chunk_id_2_segment_dict: dict[str, list[int]] = {}
-            for chunk_id, segment_id in chunk_id_2_segment:
+            for chunk_id, segment_id in all_chunk_id_2_segment:
                 if chunk_id not in chunk_id_2_segment_dict.keys():
                     chunk_id_2_segment_dict[chunk_id] = [int(segment_id)]
                 else:

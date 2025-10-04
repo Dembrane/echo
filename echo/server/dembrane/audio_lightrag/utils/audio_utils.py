@@ -14,6 +14,7 @@ from dembrane.s3 import (
     get_stream_from_s3,
 )
 from dembrane.directus import directus
+from dembrane.audio_lightrag.utils.s3_cache import get_cached_s3_stream
 
 logger = getLogger(__name__)
 
@@ -67,7 +68,8 @@ def validate_audio_file(chunk_uri: str, min_size_bytes: int = 1000) -> tuple[boo
 def safe_audio_decode(
     chunk_uri: str, 
     primary_format: str = "mp3",
-    fallback_formats: Optional[list[str]] = None
+    fallback_formats: Optional[list[str]] = None,
+    use_cache: bool = True
 ) -> Optional[AudioSegment]:
     """
     Safely decode audio with fallback formats to handle ffmpeg decoding failures.
@@ -81,6 +83,7 @@ def safe_audio_decode(
         chunk_uri: S3 URI of the audio file
         primary_format: Primary format to try first
         fallback_formats: List of fallback formats to try if primary fails
+        use_cache: If True, use S3 stream caching to avoid redundant downloads
         
     Returns:
         AudioSegment if successful, None if all formats fail
@@ -91,24 +94,36 @@ def safe_audio_decode(
     # Remove primary format from fallbacks to avoid duplicate attempts
     fallback_formats = [f for f in fallback_formats if f != primary_format]
     
-    # Try primary format first
+    # Try primary format first (with caching if enabled)
     try:
-        stream = get_stream_from_s3(chunk_uri)
-        audio = AudioSegment.from_file(io.BytesIO(stream.read()), format=primary_format)
+        if use_cache:
+            stream = get_cached_s3_stream(chunk_uri)
+        else:
+            stream = get_stream_from_s3(chunk_uri)
+        
+        if stream is None:
+            logger.error(f"Failed to download {chunk_uri}")
+            return None
+            
+        audio = AudioSegment.from_file(stream, format=primary_format)
         logger.debug(f"Successfully decoded {chunk_uri} as {primary_format}")
         return audio
         
     except Exception as e:
         logger.warning(f"Failed to decode {chunk_uri} as {primary_format}: {e}")
         
-        # Try fallback formats
+        # Try fallback formats (reuse cached stream if available)
         for fallback_format in fallback_formats:
             try:
-                stream = get_stream_from_s3(chunk_uri)
-                audio = AudioSegment.from_file(
-                    io.BytesIO(stream.read()), 
-                    format=fallback_format
-                )
+                if use_cache:
+                    stream = get_cached_s3_stream(chunk_uri)
+                else:
+                    stream = get_stream_from_s3(chunk_uri)
+                
+                if stream is None:
+                    continue
+                    
+                audio = AudioSegment.from_file(stream, format=fallback_format)
                 logger.info(f"Successfully decoded {chunk_uri} as {fallback_format} (fallback)")
                 return audio
                 
