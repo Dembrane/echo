@@ -3,10 +3,10 @@ Parallel LLM call utilities with rate limiting.
 
 Enables processing multiple segments concurrently while respecting API rate limits.
 """
+import time
 import asyncio
 import logging
-from typing import List, Dict, Any, Callable, Optional, Coroutine
-import time
+from typing import Any, List, Callable, Optional, Coroutine
 
 logger = logging.getLogger(__name__)
 

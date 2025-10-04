@@ -1,10 +1,5 @@
-import asyncio
-from io import BytesIO
 from logging import getLogger
 
-from pydub import AudioSegment
-
-from dembrane.s3 import get_stream_from_s3
 from dembrane.config import (
     API_BASE_URL,
     AUDIO_LIGHTRAG_CONVERSATION_HISTORY_NUM,
@@ -17,12 +12,12 @@ from dembrane.api.stateless import (
 from dembrane.api.dependency_auth import DirectusSession
 from dembrane.audio_lightrag.utils.prompts import Prompts
 from dembrane.audio_lightrag.utils.echo_utils import renew_redis_lock
-from dembrane.audio_lightrag.utils.audio_utils import wav_to_str, safe_audio_decode
-from dembrane.audio_lightrag.utils.litellm_utils import get_json_dict_from_audio
-from dembrane.audio_lightrag.utils.process_tracker import ProcessTracker
 from dembrane.audio_lightrag.utils.async_utils import run_async_in_new_loop
-from dembrane.audio_lightrag.utils.batch_directus import BatchDirectusWriter
+from dembrane.audio_lightrag.utils.audio_utils import wav_to_str, safe_audio_decode
 from dembrane.audio_lightrag.utils.parallel_llm import parallel_llm_calls
+from dembrane.audio_lightrag.utils.litellm_utils import get_json_dict_from_audio
+from dembrane.audio_lightrag.utils.batch_directus import BatchDirectusWriter
+from dembrane.audio_lightrag.utils.process_tracker import ProcessTracker
 
 logger = getLogger("audio_lightrag.pipelines.contextual_chunk_etl_pipeline")
 
@@ -52,7 +47,7 @@ class ContextualChunkETLPipeline:
                 self.process_tracker()["conversation_id"] == conversation_id
             ]
             audio_load_tracker = load_tracker[load_tracker.path != "NO_AUDIO_FOUND"]
-            segment_li = ",".join(audio_load_tracker.sort_values("timestamp").segment).split(",")
+            segment_li = ",".join(audio_load_tracker.sort_values("timestamp").segment.astype(str)).split(",")
             segment_li = [int(x) for x in list(dict.fromkeys(segment_li)) if x != ""]  # type: ignore
             project_id = self.process_tracker()[
                 self.process_tracker()["conversation_id"] == conversation_id
@@ -66,9 +61,12 @@ class ContextualChunkETLPipeline:
                     .items()
                 ]
             )
+            
             responses = {}
 
-            for idx, segment_id in enumerate(segment_li):
+            # Define async function to process a single segment
+            async def process_segment(idx_and_segment):
+                idx, segment_id = idx_and_segment
                 renew_redis_lock(conversation_id)
                 try:
                     segment_ids = segment_li[max(0, idx - int(self.conversation_history_num)) : idx]
@@ -92,8 +90,7 @@ class ContextualChunkETLPipeline:
                         previous_contextual_transcript_li = []
                 except Exception as e:
                     logger.warning(f"Warning: Error in getting previous segments : {e}")
-                    previous_contextual_transcript_li = []
-                    continue
+                    return None
 
                 previous_contextual_transcript = "\n\n".join(previous_contextual_transcript_li)
                 audio_model_prompt = Prompts.audio_model_system_prompt(
@@ -105,7 +102,7 @@ class ContextualChunkETLPipeline:
                     )
                 except Exception as e:
                     logger.exception(f"Error in getting conversation segment : {e}")
-                    continue
+                    return None
                 
                 if audio_segment_response["contextual_transcript"] is None:
                     try:
@@ -116,10 +113,10 @@ class ContextualChunkETLPipeline:
                             logger.warning(
                                 f"Failed to decode audio for segment {segment_id}. Skipping..."
                             )
-                            continue
+                            return None
                         
                         wav_encoding = wav_to_str(audio)
-                        responses[segment_id] = get_json_dict_from_audio(
+                        response = get_json_dict_from_audio(
                             wav_encoding=wav_encoding,
                             audio_model_prompt=audio_model_prompt,
                         )
@@ -128,22 +125,50 @@ class ContextualChunkETLPipeline:
                             "conversation_segment",
                             int(segment_id),
                             {
-                                "transcript": "\n\n".join(responses[segment_id]["TRANSCRIPTS"]),
-                                "contextual_transcript": responses[segment_id][
-                                    "CONTEXTUAL_TRANSCRIPT"
-                                ],
+                                "transcript": "\n\n".join(response["TRANSCRIPTS"]),
+                                "contextual_transcript": response["CONTEXTUAL_TRANSCRIPT"],
                             },
                         )
+                        return (segment_id, response)
                     except Exception as e:
                         logger.exception(
                             f"Error in getting contextual transcript : {e}. Segment ID: {segment_id}"
                         )
-                        continue
+                        return None
                 else:
-                    responses[segment_id] = {
+                    response = {
                         "CONTEXTUAL_TRANSCRIPT": audio_segment_response["contextual_transcript"],
                         "TRANSCRIPTS": audio_segment_response["transcript"].split("\n\n"),
                     }
+                    return (segment_id, response)
+            
+            # Process all segments in parallel with rate limiting
+            logger.info(f"Processing {len(segment_li)} segments in parallel (max_concurrent=10)")
+            segment_pairs = list(enumerate(segment_li))
+            results = await parallel_llm_calls(
+                segment_pairs,
+                process_segment,
+                max_concurrent=10,
+                requests_per_minute=1000  # Adjust based on your LLM provider's rate limits
+            )
+            
+            # Collect successful responses
+            for result in results:
+                if result is not None and not isinstance(result, Exception):
+                    segment_id, response = result
+                    responses[segment_id] = response
+            
+            # Insert into LightRAG for all processed segments
+            for segment_id in responses.keys():
+                renew_redis_lock(conversation_id)
+                try:
+                    audio_segment_response = directus.get_item(
+                        "conversation_segment", int(segment_id)
+                    )
+                except Exception as e:
+                    logger.exception(f"Error in getting conversation segment for LightRAG: {e}")
+                    continue
+                    
                 if audio_segment_response["lightrag_flag"] is not True:
                     try:
                         session = DirectusSession(user_id="none", is_admin=True)

@@ -29,9 +29,8 @@ class DirectusETLPipeline:
             if "error" in response.keys():
                 logger.warning(f"Directus Error: {response['error']}")
                 return False
-            if "chunks" in response.keys() and len(response["chunks"]) == 0:
-                logger.warning(f"No chunks found for conversation: {response['id']}")
-                return False
+            # Note: Empty chunks (len == 0) is valid - conversation has no data yet
+            # We'll handle this gracefully in transform() by returning empty dataframes
         return True
 
     def __init__(self) -> None:
@@ -199,7 +198,7 @@ class DirectusETLPipeline:
             
             if not valid_rows:
                 logger.error("Could not salvage any conversation data")
-                raise DirectusException("Failed to parse conversation chunks")
+                raise DirectusException("Failed to parse conversation chunks") from e
             
             conversation_df = pd.DataFrame(valid_rows)
             logger.warning(f"Salvaged {len(valid_rows)} rows from {len(conversation_df)} total")

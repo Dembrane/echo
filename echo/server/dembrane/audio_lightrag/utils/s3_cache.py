@@ -9,9 +9,8 @@ Problem: Current code downloads the same S3 file multiple times:
 Solution: Cache the bytes in memory (audio files are typically < 5MB each).
 """
 import logging
-from typing import Optional, Dict
 from io import BytesIO
-import time
+from typing import Dict, Optional
 
 from dembrane.s3 import get_stream_from_s3
 

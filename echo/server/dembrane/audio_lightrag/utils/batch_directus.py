@@ -4,9 +4,9 @@ Batch operations for Directus to reduce API call overhead.
 This module provides utilities for batching Directus create/update operations,
 reducing the number of API calls from N (individual) to 1 (batch).
 """
+import asyncio
 import logging
 from typing import Any, Dict, List, Optional
-import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
 from dembrane.directus import directus
