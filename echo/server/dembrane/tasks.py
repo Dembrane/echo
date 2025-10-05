@@ -302,15 +302,23 @@ def task_run_etl_pipeline(conversation_id: str) -> None:
             full_transcript = "\n\n".join(transcripts)
             logger.info(f"Full transcript length: {len(full_transcript)} characters")
             
-            # Step 3: Get project context
+            # Step 3: Get project context (format as event_text like old pipeline)
             logger.info("Step 3/6: Getting project context")
-            project_context = {
-                "name": project.get("name", "Unknown Project"),
-                "context": project.get("context", ""),
-                "language": project.get("language", "en"),
-            }
+            project_language = project.get("language", "en")
             
-            # Step 4: Rich contextualization with Claude
+            # Format project data as key:value pairs (same as old pipeline)
+            event_text = "\n\n".join([
+                f"{k} : {v}" for k, v in project.items()
+                if k in ["name", "context", "language", "description"]
+            ])
+            
+            # Step 3b: Get previous conversation segments for context
+            # (For now, we'll start with empty - can enhance later)
+            previous_conversation_text = ""
+            # TODO: In future, fetch previous segments' contextual_transcripts from this conversation
+            # and join with \n\n like old pipeline did
+            
+            # Step 4: Rich contextualization with Claude (using old prompt template)
             logger.info("Step 4/6: Contextualizing with Claude")
             from dembrane.api.stateless import InsertRequest, insert_item
             from dembrane.api.dependency_auth import DependencyDirectusSession
@@ -321,8 +329,13 @@ def task_run_etl_pipeline(conversation_id: str) -> None:
             
             # Define async function that does all async work in ONE loop
             async def process_with_rag():
-                # Step 4a: Contextualize transcript
-                contextual_transcript = await contextualizer.contextualize(full_transcript, project_context)
+                # Step 4a: Contextualize transcript (using old audio_model_system_prompt)
+                contextual_transcript = await contextualizer.contextualize(
+                    full_transcript, 
+                    event_text, 
+                    previous_conversation_text,
+                    project_language
+                )
                 
                 # Step 5: Create segment record
                 logger.info("Step 5/6: Creating conversation segment")
@@ -358,6 +371,32 @@ def task_run_etl_pipeline(conversation_id: str) -> None:
             
             logger.info(f"Successfully processed conversation {conversation_id} for RAG")
             logger.info(f"Segment ID: {segment_id}")
+
+            # Mark segment as processed in RAG (same as old pipeline)
+            directus.update_item("conversation_segment", segment_id, {"lightrag_flag": True})
+            logger.info(f"Marked segment {segment_id} as RAG processed")
+
+            # CRITICAL: Mark ALL segments for this conversation as processed
+            # (There may be old segments from previous audio processing runs)
+            try:
+                # Batch update all segments for this conversation
+                all_segments = directus.get_items("conversation_segment", {
+                    "query": {
+                        "filter": {"conversation_id": conversation_id, "lightrag_flag": False},
+                        "fields": ["id"],
+                        "limit": -1
+                    }
+                })
+                
+                if all_segments and len(all_segments) > 0:
+                    logger.warning(f"Found {len(all_segments)} old unprocessed segments for conversation {conversation_id}, marking as processed")
+                    for old_seg in all_segments:
+                        try:
+                            directus.update_item("conversation_segment", old_seg["id"], {"lightrag_flag": True})
+                        except Exception as e:
+                            logger.error(f"Failed to update old segment {old_seg['id']}: {e}")
+            except Exception as e:
+                logger.error(f"Failed to check/update old segments: {e}")
 
             if finish_conversation(conversation_id):
                 logger.info(f"Marked conversation {conversation_id} as audio processing finished")
