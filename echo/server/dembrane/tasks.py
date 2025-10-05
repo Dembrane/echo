@@ -261,6 +261,11 @@ def task_run_etl_pipeline(conversation_id: str) -> None:
         
         if not (ENABLE_AUDIO_LIGHTRAG_INPUT and is_enabled):
             logger.info(f"RAG processing disabled for project {project_id}, skipping")
+            try:
+                finish_conversation(conversation_id)
+                logger.info(f"Marked conversation {conversation_id} as finished (RAG disabled)")
+            except Exception as e:
+                logger.error(f"Failed to mark conversation {conversation_id} as finished: {e}")
             return
         
         with ProcessingStatusContext(
