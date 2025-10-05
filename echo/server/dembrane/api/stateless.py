@@ -267,18 +267,11 @@ async def get_lightrag_prompt(
                 logger.debug(f"Response: {response}")
                 return response
             except Exception as rag_error:
-                # Graceful fallback if RAG query fails (e.g., SQL bug in lightrag-dembrane)
-                logger.warning(
-                    f"RAG query failed (known SQL bug in lightrag-dembrane==1.2.7.8): {rag_error}"
-                )
-                logger.warning("Falling back to simple context retrieval")
-                
-                # Return a helpful error message instead of crashing
-                return (
-                    "RAG query temporarily unavailable due to a known issue. "
-                    "Please try using manual conversation selection mode instead, "
-                    "or contact support if this persists."
-                )
+                logger.exception(f"RAG query failed: {rag_error}")
+                raise HTTPException(
+                    status_code=503,
+                    detail="RAG query temporarily unavailable. Please try manual conversation selection or contact support.",
+                ) from rag_error
 
         else:
             raise HTTPException(status_code=400, detail="Invalid segment ID")

@@ -29,7 +29,7 @@ try:
     print(f"Message ID: {message.message_id}")
     print(f"Waiting for result (30 second timeout)...")
     
-    result = message.get_result(block=True, timeout=30000)  # 30 seconds
+    result = message.get_result(block=True, timeout=30)
     print(f"Result: {result}")
     
 except Exception as e:

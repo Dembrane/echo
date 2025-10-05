@@ -47,10 +47,20 @@ def validate_audio_file(chunk_uri: str, min_size_bytes: int = 1000) -> tuple[boo
         if response.status_code >= 400:
             return (False, f"HTTP error {response.status_code}")
         
-        # Check file size
-        content_length = int(response.headers.get("Content-Length", 0))
-        if content_length < min_size_bytes:
-            return (False, f"File too small: {content_length} bytes (minimum {min_size_bytes})")
+        # Check file size when header is available
+        content_length_header = response.headers.get("Content-Length")
+        if content_length_header:
+            try:
+                content_length = int(content_length_header)
+                if content_length < min_size_bytes:
+                    return (
+                        False,
+                        f"File too small: {content_length} bytes (minimum {min_size_bytes})",
+                    )
+            except ValueError:
+                logger.warning(
+                    f"Invalid Content-Length header for {chunk_uri}: {content_length_header}"
+                )
         
         # Check content type (some S3 buckets don't set this, so it's optional)
         content_type = response.headers.get("Content-Type", "").lower()

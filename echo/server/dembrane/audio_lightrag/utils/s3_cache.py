@@ -58,6 +58,7 @@ class S3StreamCache:
         self.cache_misses += 1
         logger.debug(f"Cache MISS for {s3_uri} (hits={self.cache_hits}, misses={self.cache_misses})")
         
+        stream = None
         try:
             stream = get_stream_from_s3(s3_uri)
             data = stream.read()
@@ -86,6 +87,12 @@ class S3StreamCache:
         except Exception as e:
             logger.error(f"Failed to download/cache {s3_uri}: {e}")
             return None
+        finally:
+            if stream is not None:
+                try:
+                    stream.close()
+                except Exception as close_error:
+                    logger.warning(f"Failed to close S3 stream for {s3_uri}: {close_error}")
     
     def clear(self) -> None:
         """Clear the cache to free memory."""
