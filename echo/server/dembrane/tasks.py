@@ -34,13 +34,13 @@ from dembrane.conversation_utils import (
     collect_unfinished_conversations,
     collect_unfinished_audio_processing_conversations,
 )
-from dembrane.audio_lightrag.utils.echo_utils import finish_conversation
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.conversation_health import get_runpod_diarization
 from dembrane.processing_status_utils import (
     ProcessingStatusContext,
     set_error_status,
 )
+from dembrane.audio_lightrag.utils.echo_utils import finish_conversation
 
 init_sentry()
 
