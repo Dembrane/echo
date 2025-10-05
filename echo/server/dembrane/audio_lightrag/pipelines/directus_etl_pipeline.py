@@ -36,7 +36,7 @@ class DirectusETLPipeline:
     def __init__(self) -> None:
         # Load environment variables from the .env file
         self.directus = directus
-        self.accepted_formats = ["wav", "mp3", "m4a", "ogg"]
+        self.accepted_formats = ["wav", "mp3", "m4a", "ogg", "webm"]
         self.project_request = {
             "query": {
                 "fields": [

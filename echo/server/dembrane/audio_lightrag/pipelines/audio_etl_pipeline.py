@@ -40,12 +40,25 @@ class AudioETLPipeline:
         transform_process_tracker_df = self.process_tracker.get_unprocesssed_process_tracker_df(
             "segment"
         )
+        
+        # DEBUG: Log what we got from Stage 1
+        logger.info(f"[DEBUG] Stage 2 received process_tracker with {len(transform_process_tracker_df)} rows")
+        if not transform_process_tracker_df.empty:
+            logger.info(f"[DEBUG] Columns: {list(transform_process_tracker_df.columns)}")
+            logger.info(f"[DEBUG] First few rows:\n{transform_process_tracker_df.head()}")
+        else:
+            logger.warning("[DEBUG] Process tracker is EMPTY - no data to process!")
+            return
+        
         transform_audio_process_tracker_df = transform_process_tracker_df[
             transform_process_tracker_df.path != "NO_AUDIO_FOUND"
         ]
         transform_non_audio_process_tracker_df = transform_process_tracker_df[
             transform_process_tracker_df.path == "NO_AUDIO_FOUND"
         ]
+        
+        logger.info(f"[DEBUG] Audio chunks to process: {len(transform_audio_process_tracker_df)}")
+        logger.info(f"[DEBUG] Non-audio chunks to process: {len(transform_non_audio_process_tracker_df)}")
 
         zip_unique_audio = list(
             set(
@@ -56,6 +69,8 @@ class AudioETLPipeline:
                 )
             )
         )
+        
+        logger.info(f"[DEBUG] Unique (project_id, conversation_id) pairs: {len(zip_unique_audio)}")
 
         # Process audio files with batched writes
         with BatchDirectusWriter(auto_flush_size=50) as batch_writer:
