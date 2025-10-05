@@ -2,8 +2,8 @@ import io
 import os
 import base64
 from io import BytesIO
-from logging import getLogger
 from typing import Optional
+from logging import getLogger
 
 import pandas as pd
 import requests
