@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from typing import Dict
 
@@ -43,8 +42,7 @@ class ConversationContextualizer:
             
             # Call Claude via llm_model_func (LightRAG-compatible interface)
             logger.info(f"Calling Claude for contextualization (transcript length: {len(transcript)} chars)")
-            contextual_transcript = await asyncio.to_thread(
-                llm_model_func,
+            contextual_transcript = await llm_model_func(
                 prompt=prompt,
                 system_prompt="You are an expert conversation analyst for deliberation research.",
                 temperature=0.3,

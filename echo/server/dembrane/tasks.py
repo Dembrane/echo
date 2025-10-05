@@ -34,6 +34,7 @@ from dembrane.conversation_utils import (
     collect_unfinished_conversations,
     collect_unfinished_audio_processing_conversations,
 )
+from dembrane.audio_lightrag.utils.echo_utils import finish_conversation
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.conversation_health import get_runpod_diarization
 from dembrane.processing_status_utils import (
@@ -357,6 +358,13 @@ def task_run_etl_pipeline(conversation_id: str) -> None:
             
             logger.info(f"Successfully processed conversation {conversation_id} for RAG")
             logger.info(f"Segment ID: {segment_id}")
+
+            if finish_conversation(conversation_id):
+                logger.info(f"Marked conversation {conversation_id} as audio processing finished")
+            else:
+                logger.warning(
+                    f"Failed to mark conversation {conversation_id} as audio processing finished"
+                )
             
     except Exception as e:
         logger.error(f"RAG processing failed for conversation {conversation_id}: {e}", exc_info=True)

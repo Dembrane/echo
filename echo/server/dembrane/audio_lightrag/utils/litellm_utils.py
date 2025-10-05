@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import Any, Optional
 
@@ -106,7 +107,8 @@ async def llm_model_func(
         messages.extend(history_messages)
     messages.append({"role": "user", "content": prompt})
 
-    chat_completion = completion(
+    chat_completion = await asyncio.to_thread(
+        completion,
         model=f"{LIGHTRAG_LITELLM_MODEL}",  # litellm format for Azure models
         messages=messages,
         temperature=kwargs.get("temperature", 0.2),
