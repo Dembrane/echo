@@ -1,8 +1,8 @@
 #!/bin/bash
 echo "Starting Network Workers (Kubernetes mode)"
 
-PROCESSES=${NETWORK_WORKER_PROCESSES:-4}
-THREADS=${NETWORK_WORKER_THREADS:-2}
+PROCESSES=${NETWORK_WORKER_PROCESSES:-3}
+THREADS=${NETWORK_WORKER_THREADS:-50}
 
 echo "Configuration:"
 echo "  Processes: $PROCESSES | Threads: $THREADS"
