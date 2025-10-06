@@ -448,12 +448,6 @@ async def confirm_chunk_upload(
         
         return chunk
         
-    except ConversationServiceException as e:
-        logger.error(f"Failed to create chunk: {e}")
-        raise HTTPException(
-            status_code=400,
-            detail=str(e)
-        ) from e
     except ConversationNotOpenForParticipationException as e:
         logger.error(f"Conversation not open for participation: {conversation_id}")
         raise HTTPException(
@@ -463,6 +457,12 @@ async def confirm_chunk_upload(
     except ConversationNotFoundException as e:
         logger.error(f"Conversation not found while confirming upload: {conversation_id}")
         raise HTTPException(status_code=404, detail="Conversation not found") from e
+    except ConversationServiceException as e:
+        logger.error(f"Failed to create chunk: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail=str(e)
+        ) from e
     except HTTPException:
         # Re-raise HTTP exceptions as-is
         raise
