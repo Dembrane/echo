@@ -1,1 +1,1 @@
-dramatiq-gevent --queues network --processes 1 --threads 2 dembrane.tasks
+dramatiq-gevent --queues network --processes 2 --threads 1 dembrane.tasks
