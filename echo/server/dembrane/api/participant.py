@@ -335,7 +335,6 @@ async def get_chunk_upload_url(
         chunk_id = generate_uuid()
         
         # Sanitize filename to prevent path traversal
-        from dembrane.s3 import get_sanitized_s3_key
         safe_filename = get_sanitized_s3_key(body.filename)
         
         # Create S3 key with sanitized filename

@@ -15,6 +15,7 @@ from sklearn.cluster import KMeans
 from pgvector.sqlalchemy import Vector
 
 from dembrane.s3 import save_to_s3_from_url
+
 # from dembrane.ner import anonymize_sentence  # Commented out to exclude trankit + torch
 from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.config import (

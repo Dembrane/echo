@@ -657,7 +657,7 @@ export const initiateAndUploadConversationChunk = async (payload: {
   email?: string;
   onProgress?: (fileName: string, progress: number) => void;
   source?: string;
-}) => {
+}): Promise<(TConversationChunk | { error: Error; name: string })[]> => {
   // Show a single toast for the overall upload process
   toast(`Starting upload of ${payload.chunks.length} file(s)`);
 
