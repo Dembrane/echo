@@ -20,10 +20,13 @@ RUN \
 
 WORKDIR /code/server
 
-COPY requirements.lock /code/server/requirements.lock
+# Install dependencies first (better layer caching)
+COPY requirements.lock ./requirements.lock
 RUN pip install --no-cache-dir -r requirements.lock
 
-COPY ./ /code/server
+# Copy everything else after pip install
+# This ensures dependency layer is cached separately from application code
+COPY . .
 
 EXPOSE 8000
 

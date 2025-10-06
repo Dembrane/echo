@@ -4,12 +4,16 @@ on:
   push:
     tags: [ "v*.*.*" ]  # Triggers on tags like v1.2.3
 
+concurrency:
+  group: prod-deploy-gitops-backends-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   prod-deploy-gitops-backends:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository with Tag
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Fetches all history and tags
           # GitHub Actions automatically checks out the tag that triggered the workflow
@@ -24,7 +28,7 @@ jobs:
           echo "Tag commit hash: $(git rev-parse HEAD)"
 
       - name: Checkout GitOps Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: dembrane/echo-gitops
           token: ${{ secrets.GITOPS_REPO_TOKEN }}
