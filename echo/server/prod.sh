@@ -15,6 +15,7 @@ echo "📊 Scale with K8s replicas (not workers per pod)"
 exec gunicorn dembrane.main:app \
   --workers "$WORKERS" \
   --worker-class uvicorn.workers.UvicornWorker \
+  --loop asyncio \
   --bind 0.0.0.0:8000 \
   --timeout "$TIMEOUT" \
   --graceful-timeout 30 \
