@@ -11,7 +11,14 @@ from datetime import timedelta
 
 import ffmpeg
 
-from dembrane.s3 import s3_client, delete_from_s3, get_stream_from_s3, get_sanitized_s3_key
+from dembrane.s3 import (
+    s3_client,
+    delete_from_s3,
+    get_signed_url,
+    get_stream_from_s3,
+    get_sanitized_s3_key,
+    get_file_size_bytes_from_s3,
+)
 from dembrane.utils import generate_uuid
 from dembrane.config import STORAGE_S3_BUCKET, STORAGE_S3_ENDPOINT
 from dembrane.service import conversation_service
@@ -21,6 +28,8 @@ logger = logging.getLogger("audio_utils")
 
 
 def sanitize_filename_component(val: str) -> str:
+    """Return a filesystem-safe component by stripping unsupported characters."""
+
     # Only allow alphanumeric, dash, and underscore. Remove other chars.
     return "".join(c for c in val if c.isalnum() or c in ("-", "_"))
 
@@ -42,6 +51,8 @@ FFPROBE_FORMAT_MAP = {
 
 
 def get_file_format_from_file_path(file_path: str) -> str:
+    """Infer the lowercase format/extension for a given file path."""
+
     extension = file_path.lower().split(".")[-1].split("?")[0]
     if extension in ACCEPTED_AUDIO_FORMATS:
         return extension
@@ -50,6 +61,8 @@ def get_file_format_from_file_path(file_path: str) -> str:
 
 
 def get_mime_type_from_file_path(file_path: str) -> str:
+    """Map a file path to a best-effort MIME type based on its extension."""
+
     if file_path.endswith(".wav"):
         return "audio/wav"
     elif file_path.endswith(".mp3"):
@@ -315,81 +328,109 @@ def merge_multiple_audio_files_and_save_to_s3(
     logger.info(f"Starting audio merge for {len(input_file_names)} files")
     start_time = time.time()
 
-    # Check total size of all input files and load data
-    total_size_mb = 0
+    total_size_bytes = 0
 
     # Process each file - probe format and convert if needed
-    processed_data_streams = []
-    for i_name in input_file_names:
-        # Probe file to determine format
-        try:
-            probe_result = probe_from_s3(i_name, get_file_format_from_file_path(i_name))
+    processed_keys: List[str] = []
 
-            # Check if format is output_format
-            is_output_format = False
-            if "format" in probe_result:
-                format_name = probe_result["format"].get("format_name", "").lower()
-                if output_format in format_name:
-                    is_output_format = True
-                    logger.info(f"File {i_name} is already in {output_format} format")
+    def _sanitize_key(path: str) -> str:
+        return get_sanitized_s3_key(path)
+
+    def _with_extension(path: str, ext: str) -> str:
+        base = path.rsplit(".", 1)[0] if "." in path else path
+        return f"{base}.{ext}"
+
+    for i_name in input_file_names:
+        sanitized_input_key = _sanitize_key(i_name)
+
+        try:
+            signed_probe_url = get_signed_url(sanitized_input_key, expires_in_seconds=15 * 60)
+            probe_result = ffmpeg.probe(signed_probe_url)
+
+            format_name = probe_result.get("format", {}).get("format_name", "").lower()
+            is_output_format = output_format in format_name if format_name else False
 
             if not is_output_format:
-                logger.warning(f"File {i_name} is not in {output_format} format, converting")
-                converted_file_name = i_name + f".{output_format}"
-                convert_and_save_to_s3(i_name, converted_file_name, output_format)
-                # Get the stream from S3
-                processed_data_streams.append(get_stream_from_s3(converted_file_name))
-
+                logger.info(
+                    "Converting %s to %s before merge", sanitized_input_key, output_format
+                )
+                converted_key = _with_extension(sanitized_input_key, output_format)
+                convert_and_save_to_s3(
+                    sanitized_input_key,
+                    converted_key,
+                    output_format,
+                )
+                final_key = converted_key
             else:
-                # Already output_format, use as-is
-                processed_data_streams.append(get_stream_from_s3(i_name))
+                final_key = sanitized_input_key
+
+            size_bytes = get_file_size_bytes_from_s3(final_key)
+            processed_keys.append(final_key)
+            total_size_bytes += size_bytes
 
         except Exception as e:
-            logger.error(f"Error probing file {i_name}: {str(e)} - Moving on to next file")
+            logger.error("Failed preparing %s for merge: %s", sanitized_input_key, e, exc_info=True)
+            continue
 
-    if not processed_data_streams:
-        raise ValueError("No processed data streams")
+    if not processed_keys:
+        raise ValueError("No valid input files available for merge")
 
-    with tempfile.NamedTemporaryFile(suffix=f".{output_format}") as temp_file:
-        for data_stream in processed_data_streams:
-            temp_file.write(data_stream.read())
+    # Build concat playlist using presigned URLs so ffmpeg streams directly from storage
+    playlist_lines: List[str] = []
+    for key in processed_keys:
+        signed_url = get_signed_url(key, expires_in_seconds=15 * 60)
+        safe_url = signed_url.replace("'", "'\\''")
+        playlist_lines.append(f"file '{safe_url}'")
 
-        temp_file.flush()
+    playlist_bytes = ("\n".join(playlist_lines) + "\n").encode("utf-8")
 
-        if output_format == "ogg":
-            # Final processing to ensure consistent output
-            process = (
-                ffmpeg.input(temp_file.name, format=output_format)
-                .output("pipe:1", f="ogg", acodec="libvorbis", q="5")
-                .global_args("-hide_banner", "-loglevel", "warning")
-                .overwrite_output()
-                .run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True)
-            )
-        elif output_format == "mp3":
-            process = (
-                ffmpeg.input(temp_file.name, format=output_format)
-                .output(
-                    "pipe:1",
-                    f="mp3",
-                    acodec="libmp3lame",
-                    q="5",
-                    preset="veryfast",
-                )
-                .global_args("-hide_banner", "-loglevel", "warning")
-                .overwrite_output()
-                .run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True)
-            )
-        else:
-            raise ValueError(f"Not implemented for file format: {output_format}")
+    logger.info("Starting streaming merge via ffmpeg concat for %d files", len(processed_keys))
 
-        output, err = process.communicate(input=None)
+    output_kwargs = {
+        "format": output_format,
+    }
+
+    if output_format == "ogg":
+        output_kwargs.update({"acodec": "libvorbis", "q": "5"})
+    elif output_format == "mp3":
+        output_kwargs.update({"acodec": "libmp3lame", "q": "5", "preset": "veryfast"})
+    else:
+        raise ValueError(f"Not implemented for file format: {output_format}")
+
+    process = (
+        ffmpeg.input(
+            "pipe:0",
+            format="concat",
+            safe=0,
+            protocol_whitelist="file,pipe,data,http,https,tcp,tls,crypto",
+        )
+        .output("pipe:1", **output_kwargs)
+        .global_args(
+            "-hide_banner",
+            "-loglevel",
+            "warning",
+        )
+        .run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True)
+    )
+
+    output = None
+    err = None
+
+    try:
+        output, err = process.communicate(input=playlist_bytes)
+    finally:
+        if process.stdin:
+            process.stdin.close()
 
     if process.returncode != 0:
         error_message = err.decode() if err else "Unknown FFmpeg error"
+        logger.error("FFmpeg concat failed: %s", error_message)
         raise FFmpegError(f"FFmpeg final processing failed: {error_message}")
 
-    # Save to S3
-    logger.info(f"Saving merged audio to S3 as {output_file_name}")
+    if not output:
+        raise ConversionError("FFmpeg produced empty output during merge")
+
+    logger.info("Saving merged audio to S3 as %s", output_file_name)
     s3_client.put_object(
         Bucket=STORAGE_S3_BUCKET,
         Key=get_sanitized_s3_key(output_file_name),
@@ -400,13 +441,15 @@ def merge_multiple_audio_files_and_save_to_s3(
     info = s3_client.head_object(
         Bucket=STORAGE_S3_BUCKET, Key=get_sanitized_s3_key(output_file_name)
     )
-    logger.debug(f"Head object from S3: {info}")
+    logger.debug("Head object from S3: %s", info)
 
     duration = time.time() - start_time
 
     logger.info(
-        f"Completed merging {len(input_file_names)} files in {duration:.2f}s. "
-        f"Total input size: {total_size_mb:.1f}MB"
+        "Completed streaming merge of %d files in %.2fs. Total input size: %.1fMB",
+        len(processed_keys),
+        duration,
+        total_size_bytes / (1024 * 1024),
     )
 
     public_url = f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/{output_file_name}"
@@ -549,10 +592,14 @@ def probe_from_bytes(file_bytes: bytes, input_format: str) -> dict:
 
 
 def probe_from_s3(file_name: str, input_format: str) -> dict:
+    """Probe metadata for an S3 object by streaming it into ``probe_from_bytes``."""
+
     return probe_from_bytes(get_stream_from_s3(file_name).read(), input_format)
 
 
 def get_duration_from_s3(file_name: str) -> float:
+    """Return the media duration in seconds for an object stored in S3."""
+
     probe_data = probe_from_s3(file_name, get_file_format_from_file_path(file_name))
     if "format" in probe_data and "duration" in probe_data["format"]:
         return float(probe_data["format"]["duration"])
@@ -569,6 +616,8 @@ def split_audio_chunk(
     chunk_size_bytes: int = MAX_CHUNK_SIZE,
     delete_original: bool = True,
 ) -> List[str]:
+    """Split a stored chunk by approximate byte size using temporary files."""
+
     logger = logging.getLogger("audio_utils.pre_process_audio")
 
     original_chunk = conversation_service.get_chunk_by_id_or_raise(original_chunk_id)
@@ -672,7 +721,8 @@ def split_audio_chunk(
             chunk_output, err = process.communicate(input=None)
 
             if process.returncode != 0:
-                raise FFmpegError(f"ffmpeg splitting failed: {err.decode().strip()}")
+                err_msg = err.decode().strip() if err else "unknown error"
+                raise FFmpegError(f"ffmpeg splitting failed: {err_msg}")
 
             s3_client.put_object(
                 Bucket=STORAGE_S3_BUCKET,
@@ -711,3 +761,234 @@ def split_audio_chunk(
 
     logger.debug(f"Successfully split file into {number_chunks} chunks.")
     return new_ids
+
+
+# ============================================================================
+# STREAMING AUDIO PROCESSING FUNCTIONS (Optimized)
+# ============================================================================
+
+
+def probe_audio_from_s3(s3_path: str) -> dict:
+    """Probe full media metadata for an S3 object using a presigned URL.
+
+    This respects the source format (no hardcoded suffix) and returns the full
+    ffprobe payload including both ``format`` and ``streams``.
+
+    Args:
+        s3_path: S3 key or public URL to the object.
+
+    Returns:
+        dict: Full ffprobe output with keys like ``format`` and ``streams``.
+    """
+    try:
+        sanitized_key = get_sanitized_s3_key(s3_path)
+        signed_url = get_signed_url(sanitized_key, expires_in_seconds=15 * 60)
+        return ffmpeg.probe(signed_url)
+    except Exception as e:
+        logger.error(f"Failed to probe audio from S3: {s3_path}, error: {e}")
+        raise
+
+
+def should_split_chunk(chunk_id: str, max_size_mb: int = 20) -> bool:
+    """
+    Determine if chunk needs splitting based on file size.
+    Uses HEAD request (no download).
+    
+    Args:
+        chunk_id: Chunk ID to check
+        max_size_mb: Maximum size before splitting
+    
+    Returns:
+        True if chunk should be split
+    """
+    from dembrane.s3 import get_file_size_bytes_from_s3
+    
+    chunk = conversation_service.get_chunk_by_id_or_raise(chunk_id)
+    s3_path = chunk["path"]
+    
+    try:
+        file_size_bytes = get_file_size_bytes_from_s3(s3_path)
+        file_size_mb = file_size_bytes / (1024 * 1024)
+        
+        logger.info(f"Chunk {chunk_id} size: {file_size_mb:.2f}MB")
+        return file_size_mb > max_size_mb
+        
+    except Exception as e:
+        logger.warning(f"Could not determine chunk size, assuming needs split: {e}")
+        return True  # Conservative: split if unsure
+
+
+def split_audio_chunk_streaming(
+    original_chunk_id: str,
+    output_format: str = "mp3",
+    target_duration_seconds: int = 300,
+    delete_original: bool = False,
+) -> List[str]:
+    """
+    Split audio chunk using optimized streaming operations.
+    
+    Improvements over old split_audio_chunk():
+    - Downloads once and seeks efficiently for each segment
+    - Parallelizes chunk uploads
+    - Better error handling
+    
+    Args:
+        original_chunk_id: ID of chunk to split
+        output_format: Target format (mp3, webm, etc.)
+        target_duration_seconds: Target duration per split chunk
+        delete_original: Whether to delete original after splitting
+    
+    Returns:
+        List of new chunk IDs created
+    """
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    from dembrane.s3 import save_bytes_to_s3
+    
+    logger.info(f"Starting streaming split for chunk {original_chunk_id}")
+    
+    # Get chunk metadata
+    chunk = conversation_service.get_chunk_by_id_or_raise(original_chunk_id)
+    conversation_id = chunk["conversation_id"]
+    original_path = chunk["path"]
+    
+    # Probe file to get duration
+    try:
+        probe_info = probe_from_s3(original_path, get_file_format_from_file_path(original_path))
+        total_duration = float(probe_info['format']['duration'])
+        logger.info(f"Chunk {original_chunk_id} duration: {total_duration}s")
+    except Exception as e:
+        logger.error(f"Failed to probe chunk {original_chunk_id}: {e}")
+        raise
+    
+    # Calculate number of chunks needed
+    num_chunks = math.ceil(total_duration / target_duration_seconds)
+    
+    if num_chunks <= 1:
+        logger.info(f"Chunk {original_chunk_id} doesn't need splitting (duration: {total_duration}s)")
+        return [original_chunk_id]
+    
+    logger.info(f"Splitting chunk {original_chunk_id} into {num_chunks} chunks")
+
+    temp_input_path = None
+    original_format = get_file_format_from_file_path(original_path)
+    new_chunk_ids: List[str] = []  # Track only successfully processed chunk IDs
+    upload_tasks = []  # Tuples of (s3_key, data, chunk_id)
+    successful_chunks = []  # Tuples of (chunk_id, start_time_offset)
+
+    try:
+        with tempfile.NamedTemporaryFile(suffix=f".{original_format}", delete=False) as temp_input:
+            temp_input_path = temp_input.name
+            audio_stream = get_stream_from_s3(original_path)
+            while True:
+                chunk_bytes = audio_stream.read(1024 * 1024)
+                if not chunk_bytes:
+                    break
+                temp_input.write(chunk_bytes)
+            temp_input.flush()
+
+        codec_kwargs = {}
+        if output_format == "mp3":
+            codec_kwargs = {"acodec": "libmp3lame", "q": "5", "preset": "veryfast"}
+        elif output_format == "ogg":
+            codec_kwargs = {"acodec": "libvorbis", "q": "5"}
+
+        for i in range(num_chunks):
+            start_time = i * target_duration_seconds
+            duration = max(0, min(target_duration_seconds, total_duration - start_time))
+            if duration <= 0:
+                continue
+
+            try:
+                new_chunk_id = generate_uuid()
+                process = (
+                    ffmpeg.input(temp_input_path, ss=start_time)
+                    .output(
+                        "pipe:1",
+                        format=output_format,
+                        t=duration,
+                        **codec_kwargs,
+                    )
+                    .global_args("-hide_banner", "-loglevel", "error")
+                    .run_async(pipe_stdout=True, pipe_stderr=True)
+                )
+
+                chunk_output, err = process.communicate()
+
+                if process.returncode != 0:
+                    err_msg = err.decode() if err else "unknown error"
+                    logger.error(f"FFmpeg error for chunk {i}: {err_msg}")
+                    raise Exception(f"FFmpeg failed: {err_msg}")
+
+                s3_key = f"conversation/{conversation_id}/chunks/{new_chunk_id}.{output_format}"
+                upload_tasks.append((s3_key, chunk_output, new_chunk_id))
+                new_chunk_ids.append(new_chunk_id)
+                successful_chunks.append((new_chunk_id, start_time))
+
+            except Exception as e:
+                logger.error(f"Failed to process chunk {i}: {e}")
+                raise
+
+    finally:
+        if temp_input_path and os.path.exists(temp_input_path):
+            try:
+                os.unlink(temp_input_path)
+            except OSError as cleanup_err:
+                logger.warning(f"Failed to remove temp file {temp_input_path}: {cleanup_err}")
+    
+    # Upload all chunks in parallel (using threads)
+    logger.info(f"Uploading {len(upload_tasks)} split chunks in parallel")
+    
+    def upload_chunk(s3_key: str, data: bytes, chunk_id: str):
+        """Upload a single chunk to S3"""
+        try:
+            save_bytes_to_s3(data, s3_key, public=False)
+            logger.info(f"Uploaded chunk {chunk_id} ({len(data)} bytes)")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to upload chunk {chunk_id}: {e}")
+            raise
+    
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = [
+            executor.submit(upload_chunk, s3_key, data, chunk_id)
+            for s3_key, data, chunk_id in upload_tasks
+        ]
+        
+        # Wait for all uploads to complete
+        for future in as_completed(futures):
+            future.result()  # Raises exception if upload failed
+    
+    # Create database records for new chunks
+    logger.info(f"Creating database records for {len(successful_chunks)} split chunks")
+
+    for new_chunk_id, start_time_offset in successful_chunks:
+        s3_key = f"conversation/{conversation_id}/chunks/{new_chunk_id}.{output_format}"
+        
+        # Calculate timestamp for this chunk
+        original_timestamp = datetime.datetime.fromisoformat(chunk["timestamp"])
+        new_timestamp = original_timestamp + timedelta(seconds=start_time_offset)
+        
+        # Create chunk record
+        directus.create_item(
+            "conversation_chunk",
+            item_data={
+                "id": new_chunk_id,
+                "conversation_id": conversation_id,
+                "timestamp": new_timestamp.isoformat(),
+                "path": f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/{s3_key}",
+                "source": chunk["source"],
+            },
+        )
+    
+    # Delete original chunk if requested
+    if delete_original:
+        logger.info(f"Deleting original chunk {original_chunk_id}")
+        try:
+            delete_from_s3(original_path)
+            directus.delete_item("conversation_chunk", original_chunk_id)
+        except Exception as e:
+            logger.warning(f"Failed to delete original chunk: {e}")
+    
+    logger.info(f"Split complete: {original_chunk_id} → {len(new_chunk_ids)} chunks")
+    return new_chunk_ids

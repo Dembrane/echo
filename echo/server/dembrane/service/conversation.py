@@ -270,7 +270,27 @@ class ConversationService:
         #     )
         # )
 
+        # Trigger background processing
         task_process_conversation_chunk.send(chunk_id)
+        
+        # NEW: Proactive merge every 5 chunks for real-time viewing
+        from logging import getLogger
+
+        from dembrane.tasks import task_merge_conversation_chunks_incremental
+        
+        logger = getLogger("dembrane.service.conversation")
+        
+        try:
+            chunk_count = self.get_chunk_counts(conversation_id)["total"]
+            logger.info(f"Conversation {conversation_id} now has {chunk_count} chunks")
+            
+            # Trigger incremental merge every 5 chunks (adjustable)
+            if chunk_count % 5 == 0 and chunk_count > 0:
+                logger.info(f"Triggering proactive merge for conversation {conversation_id} (chunk count: {chunk_count})")
+                task_merge_conversation_chunks_incremental.send(conversation_id)
+        except Exception as e:
+            # Don't fail chunk creation if merge trigger fails
+            logger.warning(f"Could not trigger proactive merge for {conversation_id}: {e}")
 
         return chunk
 
@@ -373,6 +393,7 @@ class ConversationService:
                         "query": {
                             "filter": {"conversation_id": conversation_id},
                             "fields": ["id", "error", "transcript"],
+                            "limit": -1,
                         }
                     },
                 )

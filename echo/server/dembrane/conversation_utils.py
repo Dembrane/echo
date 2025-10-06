@@ -20,11 +20,11 @@ def collect_unfinished_conversations() -> List[str]:
                 "filter": {
                     # Must be unfinished
                     "is_finished": False,
-                    # Must not have a chunk in the last 5 minutes :)
+                    # Must not have a chunk in the last 3 minutes :)
                     "chunks": {
                         "_none": {
                             "timestamp": {
-                                "_gte": (get_utc_timestamp() - timedelta(minutes=5)).isoformat()
+                                "_gte": (get_utc_timestamp() - timedelta(minutes=3)).isoformat()
                             }
                         }
                     },
