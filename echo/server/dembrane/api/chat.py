@@ -10,8 +10,8 @@ import litellm
 from fastapi import Query, APIRouter, HTTPException
 from litellm import token_counter  # type: ignore
 from pydantic import BaseModel
-from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import selectinload
+from fastapi.responses import StreamingResponse
 
 from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.config import (
