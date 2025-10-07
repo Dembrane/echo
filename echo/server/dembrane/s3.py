@@ -151,6 +151,52 @@ def get_signed_url(file_name: str, expires_in_seconds: int = 3600) -> str:
     )
 
 
+def generate_presigned_post(
+    file_name: str,
+    content_type: str,
+    size_limit_mb: int = 2048,
+    expires_in_seconds: int = 3600,
+) -> dict:
+    """
+    Generate a presigned POST URL for direct S3 upload.
+    
+    Args:
+        file_name: Target S3 key for the file
+        content_type: MIME type of the file
+        size_limit_mb: Maximum file size in MB
+        expires_in_seconds: URL expiry time (default 1 hour)
+    
+    Returns:
+        dict with 'url', 'fields', and 'key'
+    """
+    file_name = get_sanitized_s3_key(file_name)
+    
+    # Conditions for the upload
+    conditions = [
+        {"acl": "private"},
+        {"Content-Type": content_type},
+        ["content-length-range", 0, size_limit_mb * 1024 * 1024]
+    ]
+    
+    # Generate presigned POST
+    presigned_post = s3_client.generate_presigned_post(
+        Bucket=STORAGE_S3_BUCKET,
+        Key=file_name,
+        Fields={
+            "acl": "private",
+            "Content-Type": content_type,
+        },
+        Conditions=conditions,
+        ExpiresIn=expires_in_seconds,
+    )
+    
+    return {
+        "url": presigned_post["url"],
+        "fields": presigned_post["fields"],
+        "key": file_name,
+    }
+
+
 def get_sanitized_s3_key(file_name: str) -> str:
     if not file_name:
         raise ValueError("Empty file name provided to get_sanitized_s3_key")
@@ -160,6 +206,9 @@ def get_sanitized_s3_key(file_name: str) -> str:
     # Check if it's a full URL and extract the path
     if file_name.startswith(f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/"):
         key = file_name.split(f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/")[1]
+        # Security: Prevent path traversal attacks
+        if ".." in key or key.startswith("/"):
+            raise ValueError(f"Invalid S3 key: path traversal detected in {key}")
         return key
     # Handle URLs with any endpoint but correct format (http://endpoint/bucket/key)
     elif file_name.startswith("http://") or file_name.startswith("https://"):
@@ -167,12 +216,23 @@ def get_sanitized_s3_key(file_name: str) -> str:
         if len(parts) >= 5:  # http:// + domain + bucket + rest of path
             # Skip http(s):// + domain + bucket
             key = "/".join(parts[4:])
+            # Security: Prevent path traversal attacks
+            if ".." in key or key.startswith("/"):
+                raise ValueError(f"Invalid S3 key: path traversal detected in {key}")
             return key
     # Also handle cases with forward slashes at the beginning
     elif file_name.startswith("/"):
         # Remove any leading slashes
-        return file_name.lstrip("/")
+        key = file_name.lstrip("/")
+        # Security: Prevent path traversal attacks
+        if ".." in key:
+            raise ValueError(f"Invalid S3 key: path traversal detected in {key}")
+        return key
 
+    # Security: Prevent path traversal attacks in regular file names
+    if ".." in file_name:
+        raise ValueError(f"Invalid file name: path traversal detected in {file_name}")
+    
     return file_name
 
 
