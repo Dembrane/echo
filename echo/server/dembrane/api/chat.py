@@ -11,6 +11,7 @@ from fastapi import Query, APIRouter, HTTPException
 from litellm import token_counter  # type: ignore
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
+from sqlalchemy.orm import selectinload
 
 from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.config import (
@@ -101,7 +102,12 @@ async def get_chat_context(
 ) -> ChatContextSchema:
     raise_if_chat_not_found_or_not_authorized(chat_id, auth)
 
-    chat = db.get(ProjectChatModel, chat_id)
+    chat = (
+        db.query(ProjectChatModel)
+        .options(selectinload(ProjectChatModel.used_conversations))
+        .filter(ProjectChatModel.id == chat_id)
+        .first()
+    )
 
     if chat is None:
         # i still have to check for this because: mypy
@@ -109,6 +115,7 @@ async def get_chat_context(
 
     messages = (
         db.query(ProjectChatMessageModel)
+        .options(selectinload(ProjectChatMessageModel.used_conversations))
         .filter(ProjectChatMessageModel.project_chat_id == chat_id)
         .all()
     )
@@ -309,6 +316,7 @@ async def lock_conversations(
 
     db_messages = (
         db.query(ProjectChatMessageModel)
+        .options(selectinload(ProjectChatMessageModel.used_conversations))
         .filter(ProjectChatMessageModel.project_chat_id == chat_id)
         .order_by(ProjectChatMessageModel.date_created.desc())
         .all()
