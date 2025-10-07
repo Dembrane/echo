@@ -1,4 +1,3 @@
-from json import JSONDecodeError
 from typing import Optional
 from logging import getLogger
 
@@ -41,7 +40,7 @@ from dembrane.processing_status_utils import (
     ProcessingStatusContext,
     set_error_status,
 )
-from dembrane.audio_lightrag.main.run_etl import run_etl_pipeline
+from dembrane.audio_lightrag.utils.echo_utils import finish_conversation
 
 init_sentry()
 
@@ -219,74 +218,201 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
 
 @dramatiq.actor(
     queue_name="cpu",
-    priority=50,
-    # 45 minutes
-    time_limit=45 * 60 * 1000,
+    priority=10,
+    time_limit=5 * 60 * 1000,  # 5 minutes (no audio processing!)
+    max_retries=3,
 )
 def task_run_etl_pipeline(conversation_id: str) -> None:
     """
-    Run the AudioLightrag ETL pipeline.
+    THE PIVOT: Process finished conversation for RAG using existing transcripts.
+    NO audio processing - text-only!
+    
+    Steps:
+    1. Fetch conversation chunks from Directus (with existing transcripts)
+    2. Concatenate chunk.transcript fields (from standard Whisper pipeline)
+    3. Get project context
+    4. Rich contextualization with Claude
+    5. Create conversation_segment record
+    6. Insert into LightRAG (Neo4j + PostgreSQL)
     """
     logger = getLogger("dembrane.tasks.task_run_etl_pipeline")
-
+    
     try:
+        # Check if conversation exists
         try:
             conversation_object = directus.get_item("conversation", conversation_id)
         except Exception:
-            logger.error("failed to get conversation")
+            logger.error(f"Failed to get conversation {conversation_id}")
             return
-
+        
         if conversation_object is None:
             logger.error(f"Conversation not found: {conversation_id}")
             return
-
+        
         project_id = conversation_object["project_id"]
-
-        is_enhanced_audio_processing_enabled = directus.get_item("project", project_id)[
-            "is_enhanced_audio_processing_enabled"
-        ]
-
-        if not (ENABLE_AUDIO_LIGHTRAG_INPUT and is_enhanced_audio_processing_enabled):
-            logger.info(
-                f"Audio processing disabled for project {project_id}, skipping etl pipeline run"
-            )
-            return
-
-        directus.update_item(
-            "conversation",
-            conversation_id,
-            {
-                "is_audio_processing_finished": False,
-            },
-        )
-
+        
+        # Check if RAG processing is enabled for this project
         try:
-            with ProcessingStatusContext(
-                conversation_id=conversation_id,
-                message=f"for conversation {conversation_id}",
-                event_prefix="task_run_etl_pipeline",
-            ):
-                run_etl_pipeline([conversation_id])
-
+            project = directus.get_item("project", project_id)
+            is_enabled = project.get("is_enhanced_audio_processing_enabled", False)
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.error(f"Failed to get project {project_id}: {e}")
+            return
+        
+        if not (ENABLE_AUDIO_LIGHTRAG_INPUT and is_enabled):
+            logger.info(f"RAG processing disabled for project {project_id}, skipping")
+            try:
+                finish_conversation(conversation_id)
+                logger.info(f"Marked conversation {conversation_id} as finished (RAG disabled)")
+            except Exception as e:
+                logger.error(f"Failed to mark conversation {conversation_id} as finished: {e}")
+            return
+        
+        with ProcessingStatusContext(
+            conversation_id=conversation_id,
+            event_prefix="task_run_etl_pipeline",
+            message="Processing conversation for RAG (transcript-only)",
+        ):
+            logger.info(f"Starting RAG processing for conversation {conversation_id}")
+            
+            # Step 1: Fetch chunks with transcripts from Directus
+            logger.info("Step 1/6: Fetching chunks from Directus")
+            chunks_response = directus.get_items("conversation_chunk", {
+                "query": {
+                    "filter": {
+                        "conversation_id": conversation_id
+                    },
+                    "fields": ["id", "transcript", "timestamp", "conversation_id"],
+                    "sort": ["timestamp"],
+                    "limit": -1
+                }
+            })
+            
+            if not chunks_response or len(chunks_response) == 0:
+                logger.warning(f"No chunks found for conversation {conversation_id}")
+                return
+            
+            # Step 2: Concatenate transcripts
+            logger.info(f"Step 2/6: Concatenating {len(chunks_response)} chunk transcripts")
+            transcripts = []
+            for chunk in chunks_response:
+                transcript = chunk.get("transcript", "")
+                if transcript and transcript.strip():
+                    transcripts.append(transcript.strip())
+            
+            if not transcripts:
+                logger.warning(f"No valid transcripts found in chunks for conversation {conversation_id}")
+                return
+            
+            full_transcript = "\n\n".join(transcripts)
+            logger.info(f"Full transcript length: {len(full_transcript)} characters")
+            
+            # Step 3: Get project context (format as event_text like old pipeline)
+            logger.info("Step 3/6: Getting project context")
+            project_language = project.get("language", "en")
+            
+            # Format project data as key:value pairs (same as old pipeline)
+            event_text = "\n\n".join([
+                f"{k} : {v}" for k, v in project.items()
+                if k in ["name", "context", "language", "description"]
+            ])
+            
+            # Step 3b: Get previous conversation segments for context
+            # (For now, we'll start with empty - can enhance later)
+            previous_conversation_text = ""
+            # TODO: In future, fetch previous segments' contextual_transcripts from this conversation
+            # and join with \n\n like old pipeline did
+            
+            # Step 4: Rich contextualization with Claude (using old prompt template)
+            logger.info("Step 4/6: Contextualizing with Claude")
+            from dembrane.api.stateless import InsertRequest, insert_item
+            from dembrane.api.dependency_auth import DependencyDirectusSession
+            from dembrane.audio_lightrag.utils.async_utils import run_async_in_new_loop
+            from dembrane.audio_lightrag.services.contextualizer import get_contextualizer
+            
+            contextualizer = get_contextualizer()
+            
+            # Define async function that does all async work in ONE loop
+            async def process_with_rag():
+                # Step 4a: Contextualize transcript (using old audio_model_system_prompt)
+                contextual_transcript = await contextualizer.contextualize(
+                    full_transcript, 
+                    event_text, 
+                    previous_conversation_text,
+                    project_language
+                )
+                
+                # Step 5: Create segment record
+                logger.info("Step 5/6: Creating conversation segment")
+                segment_data = {
+                    "conversation_id": conversation_id,
+                    "transcript": full_transcript,
+                    "contextual_transcript": contextual_transcript,
+                }
+                segment = directus.create_item("conversation_segment", segment_data)
+                segment_id = segment["data"]["id"]
+                logger.info(f"Created segment {segment_id} for conversation {conversation_id}")
+                
+                # Step 6: Insert into RAG (using same pattern as old code)
+                logger.info("Step 6/6: Inserting into LightRAG")
+                payload = InsertRequest(
+                    content=contextual_transcript,
+                    echo_segment_id=str(segment_id),
+                    transcripts=[full_transcript],
+                )
+                # Create fake admin session (same as old code)
+                fake_session = DependencyDirectusSession(user_id="none", is_admin=True)
+                
+                # Call insert_item directly (not via HTTP)
+                insert_response = await insert_item(payload, fake_session)
+                
+                if insert_response.status != "success":
+                    raise RuntimeError(f"RAG insertion failed: {insert_response.status}")
+                
+                return segment_id
+            
+            # Run all async work in ONE event loop
+            segment_id = run_async_in_new_loop(process_with_rag())
+            
+            logger.info(f"Successfully processed conversation {conversation_id} for RAG")
+            logger.info(f"Segment ID: {segment_id}")
 
-            directus.update_item(
-                "conversation",
-                conversation_id,
-                {
-                    "is_audio_processing_finished": False,
-                },
-            )
-            raise e from e
+            # Mark segment as processed in RAG (same as old pipeline)
+            directus.update_item("conversation_segment", segment_id, {"lightrag_flag": True})
+            logger.info(f"Marked segment {segment_id} as RAG processed")
 
-        return
-    except JSONDecodeError as e:
-        logger.error(f"Error: {e}")
-        return
+            # CRITICAL: Mark ALL segments for this conversation as processed
+            # (There may be old segments from previous audio processing runs)
+            try:
+                # Batch update all segments for this conversation
+                all_segments = directus.get_items("conversation_segment", {
+                    "query": {
+                        "filter": {"conversation_id": conversation_id, "lightrag_flag": False},
+                        "fields": ["id"],
+                        "limit": -1
+                    }
+                })
+                
+                if all_segments and len(all_segments) > 0:
+                    logger.warning(f"Found {len(all_segments)} old unprocessed segments for conversation {conversation_id}, marking as processed")
+                    for old_seg in all_segments:
+                        try:
+                            directus.update_item("conversation_segment", old_seg["id"], {"lightrag_flag": True})
+                        except Exception as e:
+                            logger.error(f"Failed to update old segment {old_seg['id']}: {e}")
+            except Exception as e:
+                logger.error(f"Failed to check/update old segments: {e}")
+
+            if finish_conversation(conversation_id):
+                logger.info(f"Marked conversation {conversation_id} as audio processing finished")
+            else:
+                logger.warning(
+                    f"Failed to mark conversation {conversation_id} as audio processing finished"
+                )
+            
     except Exception as e:
-        logger.error(f"Error: {e}")
-        raise e from e
+        logger.error(f"RAG processing failed for conversation {conversation_id}: {e}", exc_info=True)
+        raise
 
 
 @dramatiq.actor(queue_name="network", priority=30)
@@ -317,10 +443,11 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
             f"Conversation {conversation_id} has not finished processing, running all follow-up tasks"
         )
 
-        follow_up_tasks = []
-        follow_up_tasks.append(task_merge_conversation_chunks.message(conversation_id))
-        follow_up_tasks.append(task_run_etl_pipeline.message(conversation_id))
-        follow_up_tasks.append(task_summarize_conversation.message(conversation_id))
+        # Dispatch follow-up tasks directly
+        # Note: Using .send() instead of group() to ensure tasks are actually dispatched
+        task_merge_conversation_chunks.send(conversation_id)
+        task_run_etl_pipeline.send(conversation_id)  # THE PIVOT: Drop-in replacement with new logic!
+        task_summarize_conversation.send(conversation_id)
 
         counts = conversation_service.get_chunk_counts(conversation_id)
 
@@ -334,8 +461,6 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
             logger.debug(
                 f"waiting for pending chunks {counts['pending']} ok({counts['ok']}) error({counts['error']}) total({counts['total']})"
             )
-
-        group(follow_up_tasks).run()
 
         return
 
