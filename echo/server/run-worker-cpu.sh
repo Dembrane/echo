@@ -1,1 +1,3 @@
-dramatiq --queues cpu --processes 1 --threads 2 dembrane.tasks
+#!/usr/bin/env bash
+
+dramatiq --queues cpu --processes 2 --threads 1 dembrane.tasks
