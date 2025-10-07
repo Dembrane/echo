@@ -360,7 +360,157 @@ const getExtensionFromMimeType = (mimeType: string): string => {
   return 'webm'; // Default fallback
 };
 
-export const uploadConversationChunk = async (payload: {
+/**
+ * Upload a conversation chunk using presigned URL (direct to S3)
+ * 
+ * This is the new, preferred method as it doesn't block the API server.
+ * Includes retry logic and comprehensive error handling.
+ */
+export const uploadConversationChunkWithPresignedUrl = async (payload: {
+  conversationId: string;
+  chunk?: Blob | File;
+  timestamp: Date;
+  source: string;
+  onProgress?: (progress: number) => void;
+  runFinishHook?: boolean; // Ignored - kept for backward compatibility
+}) => {
+  if (!payload.chunk) {
+    throw new Error("No chunk provided");
+  }
+
+  // Ensure we have a proper filename
+  let fileName: string;
+  if (payload.chunk instanceof File) {
+    fileName = payload.chunk.name;
+  } else {
+    const ext = getExtensionFromMimeType(payload.chunk.type);
+    fileName = `chunk-${Date.now()}.${ext}`;
+  }
+
+  // Step 1: Get presigned URL from API (fast, <100ms)
+  console.log(`[Upload] Requesting presigned URL for ${fileName}`);
+  
+  let presignedResponse;
+  try {
+    presignedResponse = await apiNoAuth.post<unknown, {
+      chunk_id: string;
+      upload_url: string;
+      fields: Record<string, string>;
+      file_url: string;
+    }>(
+      `/participant/conversations/${payload.conversationId}/get-upload-url`,
+      {
+        filename: fileName,
+        content_type: payload.chunk.type,
+        conversation_id: payload.conversationId,
+      }
+    );
+  } catch (error) {
+    console.error('[Upload] Failed to get presigned URL:', error);
+    throw new Error('Failed to get upload URL from server. Please try again.');
+  }
+
+  const { chunk_id, upload_url, fields, file_url } = presignedResponse;
+  console.log(`[Upload] Got presigned URL for chunk ${chunk_id}`);
+
+  // Step 2: Upload directly to S3 using presigned URL with retry
+  const formData = new FormData();
+  
+  // Add all required fields from presigned POST
+  Object.entries(fields).forEach(([key, value]) => {
+    formData.append(key, value);
+  });
+  
+  // Add the file itself (must be last for DigitalOcean Spaces!)
+  formData.append('file', payload.chunk, fileName);
+
+  // Retry logic for S3 upload
+  const maxRetries = 3;
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`[Upload] Uploading to S3 (attempt ${attempt}/${maxRetries})...`);
+      
+      await axios.post(upload_url, formData, {
+        headers: {
+          // Don't set Content-Type - browser will set it with boundary
+        },
+        timeout: 300000, // 5 minutes
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total && payload.onProgress) {
+            // Report 0-90% during S3 upload, reserve 90-100% for confirmation
+            const s3Progress = (progressEvent.loaded / progressEvent.total) * 90;
+            payload.onProgress(Math.round(s3Progress));
+          }
+        },
+      });
+      
+      console.log(`[Upload] S3 upload successful for chunk ${chunk_id}`);
+      break; // Success, exit retry loop
+      
+    } catch (error) {
+      lastError = error as Error;
+      console.error(`[Upload] S3 upload failed (attempt ${attempt}/${maxRetries}):`, error);
+      
+      if (attempt < maxRetries) {
+        // Exponential backoff: 1s, 2s, 4s
+        const delay = Math.pow(2, attempt - 1) * 1000;
+        console.log(`[Upload] Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      } else {
+        throw new Error(
+          `Failed to upload file to S3 after ${maxRetries} attempts. ` +
+          `Please check your internet connection and try again. ` +
+          `Error: ${lastError?.message || 'Unknown error'}`
+        );
+      }
+    }
+  }
+
+  // Step 3: Confirm upload with API (fast, just creates DB record)
+  // Report 90% progress before confirmation
+  payload.onProgress?.(90);
+  
+  console.log(`[Upload] Confirming upload with API for chunk ${chunk_id}`);
+  
+  try {
+    const confirmResponse = await apiNoAuth.post<unknown, TConversationChunk>(
+      `/participant/conversations/${payload.conversationId}/confirm-upload`,
+      {
+        chunk_id,
+        file_url,
+        timestamp: payload.timestamp.toISOString(),
+        source: payload.source,
+      }
+    );
+    
+    // Report 100% after successful confirmation
+    payload.onProgress?.(100);
+    console.log(`[Upload] Upload confirmed successfully for chunk ${chunk_id}`);
+    
+    return confirmResponse;
+    
+  } catch (error) {
+    console.error('[Upload] Failed to confirm upload:', error);
+    // File is in S3 but not in database - this is an orphaned file
+    // Log error for monitoring/cleanup
+    throw new Error(
+      'File uploaded to storage but failed to register in system. ' +
+      'Please contact support if this persists.'
+    );
+  }
+};
+
+// Export the new presigned URL method as the default uploadConversationChunk
+export const uploadConversationChunk = uploadConversationChunkWithPresignedUrl;
+
+/**
+ * Legacy upload method (through API server)
+ * 
+ * Keep this for backward compatibility but prefer presigned URL method.
+ */
+export const uploadConversationChunkLegacy = async (payload: {
   conversationId: string;
   chunk?: Blob | File;
   timestamp: Date;
@@ -507,102 +657,89 @@ export const initiateAndUploadConversationChunk = async (payload: {
   email?: string;
   onProgress?: (fileName: string, progress: number) => void;
   source?: string;
-}) => {
+}): Promise<(TConversationChunk | { error: Error; name: string })[]> => {
   // Show a single toast for the overall upload process
   toast(`Starting upload of ${payload.chunks.length} file(s)`);
 
-  // Limit concurrent uploads to avoid overwhelming the server
+  // Limit concurrent uploads
   const MAX_CONCURRENT = 3;
-  const results: (TConversationChunk[] | { error: Error; name: string })[] = [];
-  const fileQueue = [...Array(payload.chunks.length).keys()]; // Create array of indices [0,1,2...]
+  const results: (TConversationChunk | { error: Error; name: string })[] = [];
+  const fileQueue = [...Array(payload.chunks.length).keys()];
   const inProgress = new Set<number>();
-
-  // Process uploads with concurrency control
-  const processNext = async () => {
-    // Keep processing until queue is empty and nothing in progress
-    while (fileQueue.length > 0 || inProgress.size > 0) {
-      // If we can start more uploads and there are files waiting
-      while (inProgress.size < MAX_CONCURRENT && fileQueue.length > 0) {
-        const index = fileQueue.shift()!;
-        inProgress.add(index);
-
-        // Start this upload (don't await here)
-        processFile(index).finally(() => {
-          inProgress.delete(index);
-          // Try to process more files when this one finishes
-          processNext();
-        });
-      }
-
-      // If we've reached max concurrent uploads, wait for some to finish
-      if (inProgress.size >= MAX_CONCURRENT || fileQueue.length === 0) {
-        break;
-      }
-    }
-  };
+  
+  // Track conversation ID for finish hook
+  let conversationId: string | null = null;
 
   // Process a single file
   const processFile = async (i: number) => {
     const chunk = payload.chunks[i];
-    let name = "";
-
-    // Get proper name based on chunk type
-    if (payload.namePrefix) {
-      name = payload.namePrefix;
-    }
-
-    // Determine if this is likely from MediaRecorder or file upload
-    const isFile = chunk instanceof File;
-    // Default source based on type if not explicitly provided
-    const source =
-      payload.source || (isFile ? "DASHBOARD_UPLOAD" : "PORTAL_AUDIO");
-
-    if (isFile) {
-      name += chunk.name;
+    let fileName = "";
+    
+    if (chunk instanceof File) {
+      fileName = chunk.name;
     } else {
-      // Use proper extension based on MIME type
       const ext = getExtensionFromMimeType(chunk.type);
-      name += `chunk-${i}.${ext}`;
+      fileName = `recording-${i + 1}.${ext}`;
     }
 
-    // Pass the chunk directly without normalization
-    const normalizedChunk = chunk;
+    const source = payload.source || "PORTAL_AUDIO";
 
     try {
-      // Create the conversation first
+      // Create the conversation first (one per file in this implementation)
       const conversation = await initiateConversation({
         projectId: payload.projectId,
         email: payload.email,
-        name: `${name}`,
+        name: `${payload.namePrefix} - ${fileName}`,
         pin: payload.pin,
         source: source,
         tagIdList: payload.tagIdList,
       });
-
-      // Then upload the chunk with progress tracking
-      let progressHandler = undefined;
-      if (payload.onProgress) {
-        const callback = payload.onProgress; // Store in local variable
-        progressHandler = (progress: number) => callback(name, progress);
+      
+      // Store conversation ID for finish hook
+      if (!conversationId) {
+        conversationId = conversation.id;
       }
 
-      const result = await uploadConversationChunk({
+      // Upload using new presigned URL method
+      const result = await uploadConversationChunkWithPresignedUrl({
         conversationId: conversation.id,
-        chunk: normalizedChunk,
+        chunk,
         timestamp: payload.timestamps[i] ?? new Date(),
-        source: source,
-        onProgress: progressHandler,
-        // we want to finish the conversation after the chunk is uploaded
-        runFinishHook: true,
+        source,
+        onProgress: (progress) => {
+          payload.onProgress?.(fileName, progress);
+        },
       });
 
       results[i] = result;
       return result;
+      
     } catch (error) {
-      console.error(`Error uploading file ${name}:`, error);
-      // Store the error to potentially handle it
-      results[i] = { error: error as Error, name };
-      throw error; // Re-throw so the finally clause knows it failed
+      console.error(`Upload failed for ${fileName}:`, error);
+      results[i] = { 
+        error: error instanceof Error ? error : new Error('Unknown error'),
+        name: fileName 
+      };
+      throw error;
+    }
+  };
+
+  // Process uploads with concurrency control
+  const processNext = async () => {
+    while (fileQueue.length > 0 || inProgress.size > 0) {
+      while (inProgress.size < MAX_CONCURRENT && fileQueue.length > 0) {
+        const index = fileQueue.shift()!;
+        inProgress.add(index);
+
+        processFile(index).finally(() => {
+          inProgress.delete(index);
+          processNext();
+        });
+      }
+
+      if (inProgress.size >= MAX_CONCURRENT || fileQueue.length === 0) {
+        break;
+      }
     }
   };
 
@@ -621,6 +758,22 @@ export const initiateAndUploadConversationChunk = async (payload: {
 
   if (failures.length > 0) {
     console.error(`${failures.length} file(s) failed to upload`);
+    toast.error(`${failures.length} file(s) failed to upload`);
+  } else {
+    toast.success(`All ${payload.chunks.length} file(s) uploaded successfully`);
+  }
+  
+  // IMPORTANT: Trigger finish hook after all uploads complete
+  // This triggers: audio merging, ETL pipeline, summarization
+  if (conversationId && failures.length === 0) {
+    console.log(`[Upload] Triggering finish hook for conversation ${conversationId}`);
+    try {
+      await finishConversation(conversationId);
+      console.log(`[Upload] Finish hook triggered successfully`);
+    } catch (error) {
+      console.error('[Upload] Failed to trigger finish hook:', error);
+      // Don't throw - uploads succeeded, this is just post-processing
+    }
   }
 
   return results;

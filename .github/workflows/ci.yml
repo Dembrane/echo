@@ -14,6 +14,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ci-check-server:
     name: ci-check-server
@@ -28,10 +32,10 @@ jobs:
           python-version: "3.11"
 
       - name: Cache pip
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('server/requirements.lock') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('echo/server/requirements.lock') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -77,11 +81,11 @@ jobs:
         run: |
           echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Setup pnpm cache
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('echo/frontend/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
@@ -113,10 +117,10 @@ jobs:
     
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
         with:
           # This enables the creation of a builder instance with persistent cache
           driver-opts: |
@@ -131,7 +135,7 @@ jobs:
           password: ${{ secrets.DO_REGISTRY_TOKEN }}
       
       - name: Build (also push sometimes) ${{ matrix.image.name }}
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.image.context }}
           file: ${{ matrix.image.context }}/${{ matrix.image.dockerfile }}
@@ -139,8 +143,6 @@ jobs:
           push: ${{ github.event_name == 'push' }}
           tags: registry.digitalocean.com/dbr-cr/${{ matrix.image.tag }}:${{ github.sha }}
           build-args: ${{ matrix.image.build_args }}
-          # Enhanced cache settings
-          cache-from: |
-            type=gha,scope=${{ matrix.image.name }}
-            type=registry,ref=registry.digitalocean.com/dbr-cr/${{ matrix.image.tag }}:latest
-          cache-to: type=gha,scope=${{ matrix.image.name }},mode=max
+          # Enhanced cache settings - using GitHub Actions cache for better performance
+          cache-from: type=gha,scope=build-${{ matrix.image.name }}
+          cache-to: type=gha,scope=build-${{ matrix.image.name }},mode=max
