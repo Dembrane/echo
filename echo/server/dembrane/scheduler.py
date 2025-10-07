@@ -19,7 +19,7 @@ scheduler.configure(jobstores=jobstores, timezone=utc)
 # Add periodic tasks
 scheduler.add_job(
     func="dembrane.tasks:task_collect_and_finish_unfinished_conversations.send",
-    trigger=CronTrigger(minute="*/3"),
+    trigger=CronTrigger(minute="*/1"),
     id="task_collect_and_finish_unfinished_conversations",
     name="Collect and finish unfinished conversations",
     replace_existing=True,
