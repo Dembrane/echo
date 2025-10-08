@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from dembrane.utils import get_utc_timestamp
 from dembrane.directus import directus
+from dembrane.config import ENABLE_AUDIO_LIGHTRAG_INPUT
 
 logger = logging.getLogger("dembrane.conversation_utils")
 
@@ -49,6 +50,13 @@ def collect_unfinished_conversations() -> List[str]:
 
 
 def collect_unfinished_audio_processing_conversations() -> List[str]:
+    # Match task_run_etl_pipeline logic: check both global AND project flags
+    # This prevents infinite loops where collector picks up conversations
+    # that the task will immediately mark as finished (RAG disabled)
+    if not ENABLE_AUDIO_LIGHTRAG_INPUT:
+        logger.info("ENABLE_AUDIO_LIGHTRAG_INPUT is False, skipping RAG collection")
+        return []
+    
     unfinished_conversations = []
 
     # if they are already in process
