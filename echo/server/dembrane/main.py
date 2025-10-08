@@ -37,6 +37,7 @@ from dembrane.audio_lightrag.utils.lightrag_utils import (
     check_audio_lightrag_tables,
 )
 
+# LightRAG requires nest_asyncio for nested event loops
 nest_asyncio.apply()
 
 logger = getLogger("server")

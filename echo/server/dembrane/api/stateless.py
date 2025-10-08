@@ -22,6 +22,7 @@ from dembrane.audio_lightrag.utils.lightrag_utils import (
     get_segment_from_conversation_chunk_ids,
 )
 
+# LightRAG requires nest_asyncio for nested event loops
 nest_asyncio.apply()
 
 logger = getLogger("api.stateless")
