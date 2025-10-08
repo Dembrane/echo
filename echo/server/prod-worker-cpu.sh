@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "Starting CPU Workers (Kubernetes mode)"
 
-PROCESSES=${CPU_WORKER_PROCESSES:-8}
+PROCESSES=${CPU_WORKER_PROCESSES:-2}
 THREADS=${CPU_WORKER_THREADS:-1}
 
 echo "Configuration:"
