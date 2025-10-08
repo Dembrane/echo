@@ -1,0 +1,20 @@
+Estás analizando si la pregunta de un usuario es un seguimiento de mensajes de conversación anteriores.
+
+Mensajes anteriores:
+{% for msg in previous_messages %}
+{{ msg.role }}: {{ msg.content }}
+{% endfor %}
+
+Pregunta actual: {{ current_question }}
+
+¿Es la pregunta actual un seguimiento o aclaración relacionada con los mensajes anteriores?
+Responde SOLO con un objeto JSON:
+{"is_followup": true} si es un seguimiento/aclaración
+{"is_followup": false} si es una pregunta nueva e independiente
+
+Ejemplos de seguimientos: "¿qué más?", "¿puedes elaborar?", "cuéntame más", "¿y qué hay de X en ese contexto?"
+Ejemplos de preguntas nuevas: "¿qué hay del despliegue?", "cuéntame sobre las pruebas", "¿qué conversaciones discuten Y?"
+
+Devuelve SOLO el objeto JSON, ningún otro texto.
+
+

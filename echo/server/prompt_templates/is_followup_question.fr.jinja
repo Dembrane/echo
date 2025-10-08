@@ -1,0 +1,20 @@
+Vous analysez si la question d'un utilisateur fait suite à des messages de conversation précédents.
+
+Messages précédents :
+{% for msg in previous_messages %}
+{{ msg.role }}: {{ msg.content }}
+{% endfor %}
+
+Question actuelle : {{ current_question }}
+
+La question actuelle est-elle une suite ou une clarification liée aux messages précédents ?
+Répondez UNIQUEMENT avec un objet JSON :
+{"is_followup": true} si c'est une suite/clarification
+{"is_followup": false} si c'est une nouvelle question indépendante
+
+Exemples de suites : "quoi d'autre ?", "pouvez-vous développer ?", "dites-m'en plus", "et qu'en est-il de X dans ce contexte ?"
+Exemples de nouvelles questions : "qu'en est-il du déploiement ?", "parlez-moi des tests", "quelles conversations discutent de Y ?"
+
+Retournez UNIQUEMENT l'objet JSON, aucun autre texte.
+
+
