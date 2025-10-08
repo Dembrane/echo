@@ -90,6 +90,7 @@ def collect_unfinished_audio_processing_conversations() -> List[str]:
 
             # Only add if there is at least one unprocessed segment
             if response and len(response) > 0:
+                logger.warning(f"Found {len(response)} segments with lightrag_flag=False for conversation {conversation['id']} (marked as finished={conversation.get('is_audio_processing_finished')})")
                 unfinished_conversations.append(conversation["id"])
         except Exception as e:
             logger.error(f"Error collecting conversation {conversation['id']}: {e}")

@@ -261,9 +261,17 @@ async def get_lightrag_prompt(
                 ids=[str(id) for id in echo_segment_ids],
                 top_k=payload.top_k,
             )
-            response = await rag.aquery(payload.query, param=param)
-            logger.debug(f"Response: {response}")
-            return response
+            
+            try:
+                response = await rag.aquery(payload.query, param=param)
+                logger.debug(f"Response: {response}")
+                return response
+            except Exception as rag_error:
+                logger.exception(f"RAG query failed: {rag_error}")
+                raise HTTPException(
+                    status_code=503,
+                    detail="RAG query temporarily unavailable. Please try manual conversation selection or contact support.",
+                ) from rag_error
 
         else:
             raise HTTPException(status_code=400, detail="Invalid segment ID")
