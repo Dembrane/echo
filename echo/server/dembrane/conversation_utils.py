@@ -3,8 +3,8 @@ from typing import List
 from datetime import timedelta
 
 from dembrane.utils import get_utc_timestamp
-from dembrane.directus import directus
 from dembrane.config import ENABLE_AUDIO_LIGHTRAG_INPUT
+from dembrane.directus import directus
 
 logger = logging.getLogger("dembrane.conversation_utils")
 
