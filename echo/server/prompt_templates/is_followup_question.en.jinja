@@ -1,0 +1,19 @@
+You are analyzing if a user's question is a follow-up to previous conversation messages.
+
+Previous messages:
+{% for msg in previous_messages %}
+{{ msg.role }}: {{ msg.content }}
+{% endfor %}
+
+Current question: {{ current_question }}
+
+Is the current question a follow-up or clarification related to the previous messages?
+Answer ONLY with a JSON object:
+{"is_followup": true} if it's a follow-up/clarification
+{"is_followup": false} if it's a new independent question
+
+Examples of follow-ups: "what else?", "can you elaborate?", "tell me more", "and what about X in that context?"
+Examples of new questions: "what about deployment?", "tell me about testing", "which conversations discuss Y?"
+
+Return ONLY the JSON object, no other text.
+

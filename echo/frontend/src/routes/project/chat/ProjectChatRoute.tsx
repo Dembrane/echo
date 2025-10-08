@@ -121,6 +121,9 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
     onResponse: async (_response) => {
       setShowProgress(false);
       setProgressValue(0);
+      if (ENABLE_CHAT_AUTO_SELECT && contextToBeAdded?.auto_select_bool) {
+        chatContextQuery.refetch();
+      }
     },
     onFinish: async (message) => {
       // this uses the response stream from the backend and makes a chat message IN THE FRONTEND

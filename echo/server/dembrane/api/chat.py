@@ -15,13 +15,16 @@ from fastapi.responses import StreamingResponse
 
 from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.config import (
+    SMALL_LITELLM_MODEL,
+    SMALL_LITELLM_API_KEY,
+    SMALL_LITELLM_API_BASE,
     ENABLE_CHAT_AUTO_SELECT,
-    AUDIO_LIGHTRAG_TOP_K_PROMPT,
     LIGHTRAG_LITELLM_INFERENCE_MODEL,
     LIGHTRAG_LITELLM_INFERENCE_API_KEY,
     LIGHTRAG_LITELLM_INFERENCE_API_BASE,
     LIGHTRAG_LITELLM_INFERENCE_API_VERSION,
 )
+from dembrane.prompts import render_prompt
 from dembrane.database import (
     DatabaseSession,
     ProjectChatModel,
@@ -34,21 +37,70 @@ from dembrane.chat_utils import (
     MAX_CHAT_CONTEXT_LENGTH,
     generate_title,
     get_project_chat_history,
-    get_conversation_citations,
-    get_conversation_references,
-    get_lightrag_prompt_by_params,
+    auto_select_conversations,
     create_system_messages_for_chat,
 )
 from dembrane.quote_utils import count_tokens
 from dembrane.api.conversation import get_conversation_token_count
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
-from dembrane.audio_lightrag.utils.lightrag_utils import (
-    get_project_id,
-)
+from dembrane.audio_lightrag.utils.lightrag_utils import get_project_id
 
 ChatRouter = APIRouter(tags=["chat"])
 
 logger = logging.getLogger("dembrane.chat")
+
+
+async def is_followup_question(
+    conversation_history: List[Dict[str, str]], language: str = "en"
+) -> bool:
+    """
+    Determine if the current question is a follow-up to previous messages.
+    Uses a small LLM call to check semantic relationship.
+
+    Returns:
+        True if it's a follow-up question, False if it's a new independent question
+    """
+    if len(conversation_history) < 2:
+        # No previous context, can't be a follow-up
+        return False
+
+    # Take last 4 messages for context (2 exchanges)
+    recent_messages = conversation_history[-4:]
+
+    # Format messages for the prompt
+    previous_messages = [
+        {"role": msg["role"], "content": msg["content"]} for msg in recent_messages[:-1]
+    ]
+    current_question = recent_messages[-1]["content"]
+
+    prompt = render_prompt(
+        "is_followup_question",
+        language,
+        {
+            "previous_messages": previous_messages,
+            "current_question": current_question,
+        },
+    )
+
+    try:
+        response = await litellm.acompletion(
+            model=SMALL_LITELLM_MODEL,
+            api_key=SMALL_LITELLM_API_KEY,
+            api_base=SMALL_LITELLM_API_BASE,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0,  # Deterministic
+            timeout=60,  # 1 minute timeout for quick decision
+        )
+
+        result_text = response.choices[0].message.content.strip()
+        result = json.loads(result_text)
+        is_followup = result.get("is_followup", False)
+
+        logger.info(f"Follow-up detection: {is_followup} for query: {current_question[:50]}...")
+        return is_followup
+    except Exception as e:
+        logger.warning(f"Follow-up detection failed: {e}. Defaulting to False (run auto-select)")
+        return False
 
 
 class ChatContextConversationSchema(BaseModel):
@@ -385,25 +437,20 @@ async def post_chat(
 ) -> StreamingResponse:  # ignore: type
     """
     Handle a chat interaction: persist the user's message, optionally generate a title, and stream an LLM-generated response.
-    
     This endpoint records the incoming user message into the chat, may asynchronously generate and persist a chat title if missing, and then produces a streaming response from the configured LLM. Two generation modes are supported:
     - Auto-select (when enabled for the chat): builds a RAG prompt, retrieves conversation references and citations, and streams the model output.
     - Manual-select: builds system messages from locked conversations and streams the model output.
-    
     Side effects:
     - Persists a new ProjectChatMessageModel for the user message.
     - May update the chat name and the message's template key.
     - On generation failure the in-flight user message is deleted.
-    
     Parameters:
     - chat_id: ID of the target chat (used to validate access and load context).
     - body: ChatBodySchema containing the messages (the last user message is used as the prompt) and optional template_key.
     - protocol: Response protocol; "data" (default) yields structured data frames, "text" yields raw text chunks.
     - language: Language code used for title generation and system message creation.
-    
     Returns:
     - StreamingResponse that yields streamed model content and, in auto-select mode, header payloads containing conversation references and citations.
-    
     Raises:
     - HTTPException: 404 if the chat (or required conversation data) is not found; 400 when auto-select cannot satisfy context-length constraints or request validation fails.
     """
@@ -473,38 +520,141 @@ async def post_chat(
             and filtered_messages[-2]["content"] == filtered_messages[-1]["content"]
         ):
             filtered_messages = filtered_messages[:-1]
-        top_k = AUDIO_LIGHTRAG_TOP_K_PROMPT
-        prompt_len = float("inf")
-        while MAX_CHAT_CONTEXT_LENGTH < prompt_len:
-            formatted_messages = []
-            top_k = max(5, top_k - 10)
-            query = filtered_messages[-1]["content"]
-            conversation_history = filtered_messages
-            rag_prompt = await get_lightrag_prompt_by_params(
-                query=query,
-                conversation_history=conversation_history,
-                echo_conversation_ids=chat_context.conversation_id_list,
-                echo_project_ids=[project_id],
-                auto_select_bool=chat_context.auto_select_bool,
-                get_transcripts=True,
-                top_k=top_k,
+
+        query = filtered_messages[-1]["content"]
+        conversation_history = filtered_messages
+
+        # Track newly added conversations for displaying in the frontend
+        conversations_added: list[ConversationModel] = []
+
+        # Check if this is a follow-up question (only if we have locked conversations)
+        should_reuse_locked = False
+        if locked_conversation_id_list:
+            is_followup = await is_followup_question(conversation_history, language)
+            if is_followup:
+                logger.info("Detected follow-up question - reusing locked conversations")
+                should_reuse_locked = True
+            else:
+                logger.info("New independent question - running auto-select")
+
+        if should_reuse_locked:
+            # Reuse existing locked conversations for follow-up questions
+            updated_conversation_id_list = locked_conversation_id_list
+
+            system_messages = await create_system_messages_for_chat(
+                updated_conversation_id_list, db, language, project_id
             )
-            logger.info(f"rag_prompt: {rag_prompt}")
-            formatted_messages.append({"role": "system", "content": rag_prompt})
-            formatted_messages.append({"role": "user", "content": filtered_messages[-1]["content"]})
+
+            formatted_messages = []
+            if isinstance(system_messages, list):
+                for msg in system_messages:
+                    formatted_messages.append({"role": "system", "content": msg["text"]})
+                formatted_messages.extend(conversation_history)
+            else:
+                formatted_messages = [
+                    {"role": "system", "content": system_messages}
+                ] + conversation_history
+
+            # Check context length
             prompt_len = token_counter(
                 model=LIGHTRAG_LITELLM_INFERENCE_MODEL, messages=formatted_messages
             )
-            if top_k <= 5:
+
+            if prompt_len > MAX_CHAT_CONTEXT_LENGTH:
                 raise HTTPException(
                     status_code=400,
-                    detail="Auto select is not possible with the current context length",
+                    detail="The conversation context with the new message exceeds the maximum context length.",
+                )
+        else:
+            # Run auto-select for first query or new independent questions
+            user_query_inputs = [query]
+
+            logger.info(f"Calling auto_select_conversations with query: {query}")
+            auto_select_result = await auto_select_conversations(
+                user_query_inputs=user_query_inputs,
+                project_id_list=[project_id],
+                db=db,
+                language=language,
+            )
+
+            logger.info(f"Auto-select result: {auto_select_result}")
+
+            # Extract selected conversation IDs
+            selected_conversation_ids = []
+            if "results" in auto_select_result:
+                for proj_result in auto_select_result["results"].values():
+                    if "conversation_id_list" in proj_result:
+                        selected_conversation_ids.extend(proj_result["conversation_id_list"])
+
+            # Add selected conversations to chat context
+            conversations_added = []
+            for conversation_id in selected_conversation_ids:
+                conversation = db.get(ConversationModel, conversation_id)
+                if conversation and conversation not in chat.used_conversations:
+                    chat.used_conversations.append(conversation)
+                    conversations_added.append(conversation)
+
+            # Create a message to lock the auto-selected conversations
+            if conversations_added:
+                auto_select_message = ProjectChatMessageModel(
+                    id=generate_uuid(),
+                    date_created=get_utc_timestamp(),
+                    message_from="dembrane",
+                    text=f"Auto-selected and added {len(conversations_added)} conversations as context to the chat.",
+                    project_chat_id=chat_id,
+                    used_conversations=conversations_added,
+                )
+                db.add(auto_select_message)
+                db.commit()
+                logger.info(f"Added {len(conversations_added)} conversations via auto-select")
+
+            # Get updated chat context
+            updated_chat_context = await get_chat_context(chat_id, db, auth)
+            updated_conversation_id_list = updated_chat_context.conversation_id_list
+
+            # Build system messages from the selected conversations
+            system_messages = await create_system_messages_for_chat(
+                updated_conversation_id_list, db, language, project_id
+            )
+
+            # Build messages to send
+            formatted_messages = []
+            if isinstance(system_messages, list):
+                for msg in system_messages:
+                    formatted_messages.append({"role": "system", "content": msg["text"]})
+                formatted_messages.extend(conversation_history)
+            else:
+                formatted_messages = [
+                    {"role": "system", "content": system_messages}
+                ] + conversation_history
+
+            # Check context length
+            prompt_len = token_counter(
+                model=LIGHTRAG_LITELLM_INFERENCE_MODEL, messages=formatted_messages
+            )
+
+            if prompt_len > MAX_CHAT_CONTEXT_LENGTH:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Auto select returned too many conversations. The selected conversations exceed the maximum context length.",
                 )
 
-        conversation_references = await get_conversation_references(rag_prompt, [project_id])
+        # Build references list from ONLY newly added conversations (not all conversations)
+        conversation_references: dict[str, list[dict[str, str]]] = {"references": []}
+        # Only include conversations that were just added via auto-select
+        for conv in conversations_added:
+            conversation_references["references"].append(
+                {
+                    "conversation": conv.id,
+                    "conversation_title": conv.participant_name,
+                }
+            )
+
+        logger.info(f"Newly added conversations for frontend: {conversation_references}")
 
         async def stream_response_async_autoselect() -> AsyncGenerator[str, None]:
-            conversation_references_yeild = f"h:{json.dumps(conversation_references)}\n"
+            # Send conversation references (selected conversations)
+            conversation_references_yeild = f"h:{json.dumps([conversation_references])}\n"
             yield conversation_references_yeild
 
             accumulated_response = ""
@@ -516,6 +666,8 @@ async def post_chat(
                     api_base=LIGHTRAG_LITELLM_INFERENCE_API_BASE,
                     messages=formatted_messages,
                     stream=True,
+                    timeout=300,  # 5 minute timeout for response
+                    stream_timeout=180,  # 3 minute timeout for streaming
                     # mock_response="It's simple to use and easy to get started",
                 )
                 async for chunk in response:
@@ -539,12 +691,6 @@ async def post_chat(
                     yield "Error: An error occurred while processing the chat response."
                 return  # Stop generation on error
 
-            citations_list = await get_conversation_citations(
-                rag_prompt, accumulated_response, [project_id]
-            )
-            citations_yeild = f"h:{json.dumps(citations_list)}\n"
-            yield citations_yeild
-
         headers = {"Content-Type": "text/event-stream"}
         if protocol == "data":
             headers["x-vercel-ai-data-stream"] = "v1"
@@ -558,17 +704,17 @@ async def post_chat(
         async def stream_response_async_manualselect() -> AsyncGenerator[str, None]:
             """
             Asynchronously stream a model-generated assistant response for the manual-selection chat path.
-            
+
             Builds the outgoing message sequence by combining provided system messages (list or string) with recent user/assistant messages, removes a duplicated trailing user message if present, then calls the Litellm streaming completion API and yields text chunks as they arrive.
-            
+
             Yields:
                 - If protocol == "text": successive raw text fragments from the model.
                 - If protocol == "data": framed data lines of the form `0:<json>` for each fragment.
                 - On generation error: a single error payload matching the active protocol (`"Error: ..." ` for text, or `3:"..."` for data).
-            
+
             Side effects:
                 - On an exception during generation, deletes the in-flight `user_message` from the database and commits the change.
-            
+
             Notes:
                 - Expects surrounding scope variables: `messages`, `system_messages`, `litellm`, model/API constants, `protocol`, `user_message`, and `logger`.
                 - Returns when the stream completes.
@@ -612,6 +758,8 @@ async def post_chat(
                         api_base=LIGHTRAG_LITELLM_INFERENCE_API_BASE,
                         messages=messages_to_send,
                         stream=True,
+                        timeout=300,  # 5 minute timeout for response
+                        stream_timeout=180,  # 3 minute timeout for streaming
                     )
                     async for chunk in response:
                         if chunk.choices[0].delta.content:

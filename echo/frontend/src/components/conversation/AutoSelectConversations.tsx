@@ -58,15 +58,6 @@ export const AutoSelectConversations = () => {
     (conversation) => conversation.is_audio_processing_finished,
   );
 
-  console.log(hasProcessedConversations, conversations);
-
-  // Show warning if feature is available but no conversations are processed
-  const showProcessingWarning =
-    !isDisabled &&
-    conversations &&
-    conversations.length > 0 &&
-    !hasProcessedConversations;
-
   const handleCheckboxChange = (checked: boolean) => {
     if (isDisabled) {
       return;
@@ -176,22 +167,6 @@ export const AutoSelectConversations = () => {
           onChange={(e) => handleCheckboxChange(e.currentTarget.checked)}
         />
       </Group>
-
-      {showProcessingWarning && (
-        <Alert
-          color="yellow"
-          icon={<IconInfoCircle size={16} />}
-          title={<Trans>Audio Processing In Progress</Trans>}
-          className="border-t border-yellow-200 bg-yellow-50 p-3"
-        >
-          <Text size="xs">
-            <Trans>
-              Some conversations are still being processed. Auto-select will
-              work optimally once audio processing is complete.
-            </Trans>
-          </Text>
-        </Alert>
-      )}
 
       {isDisabled && (
         <Box className="border-t border-gray-200 bg-gray-50 p-4">

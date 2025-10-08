@@ -1,0 +1,20 @@
+U analyseert of de vraag van een gebruiker een vervolgvraag is op eerdere gespreksberichten.
+
+Eerdere berichten:
+{% for msg in previous_messages %}
+{{ msg.role }}: {{ msg.content }}
+{% endfor %}
+
+Huidige vraag: {{ current_question }}
+
+Is de huidige vraag een vervolgvraag of verduidelijking gerelateerd aan de eerdere berichten?
+Antwoord ALLEEN met een JSON-object:
+{"is_followup": true} als het een vervolgvraag/verduidelijking is
+{"is_followup": false} als het een nieuwe onafhankelijke vraag is
+
+Voorbeelden van vervolgvragen: "wat nog meer?", "kun je dat uitwerken?", "vertel me meer", "en hoe zit het met X in die context?"
+Voorbeelden van nieuwe vragen: "hoe zit het met deployment?", "vertel me over testen", "welke gesprekken bespreken Y?"
+
+Geef ALLEEN het JSON-object terug, geen andere tekst.
+
+

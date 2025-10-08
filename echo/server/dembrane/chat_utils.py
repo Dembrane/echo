@@ -1,10 +1,21 @@
 import json
+import math
+import asyncio
 import logging
 from typing import Any, Dict, List, Optional
 
+import backoff
 from litellm import completion, acompletion
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
+from litellm.utils import token_counter
+from sqlalchemy.orm import Session, selectinload
+from litellm.exceptions import (
+    Timeout,
+    APIError,
+    RateLimitError,
+    BadRequestError,
+    ContextWindowExceededError,
+)
 
 from dembrane.config import (
     SMALL_LITELLM_MODEL,
@@ -205,13 +216,13 @@ async def generate_title(
 ) -> str | None:
     """
     Generate a short chat title from a user's query using a small LLM.
-    
+
     If title generation is disabled via configuration or the trimmed query is shorter than 2 characters, the function returns None. The function builds a prompt (using the English prompt template) and asynchronously calls a configured small LLM; it returns the generated title string or None if the model returns no content.
-    
+
     Parameters:
         user_query (str): The user's chat message or query to generate a title from.
         language (str): Target language for the generated title (affects prompt content; the prompt template used is English).
-    
+
     Returns:
         str | None: The generated title, or None if generation is disabled, the query is too short, or the model produced no content.
     """
@@ -242,6 +253,324 @@ async def generate_title(
     return response.choices[0].message.content
 
 
+async def auto_select_conversations(
+    user_query_inputs: List[str],
+    project_id_list: List[str],
+    db: Session,
+    language: str = "en",
+    batch_size: int = 20,
+) -> Dict[str, Any]:
+    """
+    Auto-select conversations based on user queries using LLM-based relevance assessment.
+
+    This function fetches conversation summaries from the database and uses an LLM
+    to select the most relevant conversations for the given queries. It handles
+    batching to stay within LLM context limits and processes batches in parallel
+    for optimal performance.
+
+    Args:
+        user_query_inputs: List of user query strings (currently up to 3)
+        project_id_list: List containing a single project ID
+        db: Database session
+        language: Language code for the prompt template (default: "en")
+        batch_size: Number of conversations to process in each LLM call (default: 20)
+
+    Returns:
+        Dictionary with structure:
+        {
+            "results": {
+                "<project_id>": {
+                    "conversation_id_list": [<conversation_ids>]
+                }
+            }
+        }
+    """
+    logger.info(f"Auto-select called with queries: {user_query_inputs}")
+    logger.info(f"Auto-select called for project(s): {project_id_list}")
+
+    results: Dict[str, Any] = {}
+    # Batch size: number of conversations to process in each LLM call
+    # Can be adjusted per-chat via the auto_select_batch_size field
+    BATCH_SIZE = batch_size
+
+    for project_id in project_id_list:
+        # Get all conversations for this project
+        conversations = (
+            db.query(ConversationModel)
+            .filter(ConversationModel.project_id == project_id)
+            .options(selectinload(ConversationModel.tags))
+            .all()
+        )
+
+        if not conversations:
+            logger.warning(f"No conversations found for project {project_id}")
+            results[project_id] = {"conversation_id_list": []}
+            continue
+
+        logger.info(f"Found {len(conversations)} total conversations for project {project_id}")
+
+        # Calculate expected number of LLM calls for observability
+        expected_llm_calls = math.ceil(len(conversations) / BATCH_SIZE)
+        logger.info(
+            f"Auto-select will make {expected_llm_calls} parallel LLM call(s) "
+            f"for {len(conversations)} conversations (batch size: {BATCH_SIZE})"
+        )
+
+        # Create batches and prepare parallel tasks
+        tasks = []
+        for i in range(0, len(conversations), BATCH_SIZE):
+            batch = conversations[i : i + BATCH_SIZE]
+            batch_num = i // BATCH_SIZE + 1
+            tasks.append(
+                _process_single_batch(
+                    batch=batch,
+                    batch_num=batch_num,
+                    user_query_inputs=user_query_inputs,
+                    language=language,
+                )
+            )
+
+        # Execute all batches in parallel
+        logger.info(f"Executing {len(tasks)} batches in parallel...")
+        batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Aggregate results from all batches
+        all_selected_ids = []
+        successful_batches = 0
+        failed_batches = 0
+
+        for i, batch_result in enumerate(batch_results):
+            # Handle exceptions from gather
+            if isinstance(batch_result, Exception):
+                logger.error(f"Batch {i + 1} failed with exception: {str(batch_result)}")
+                failed_batches += 1
+                continue
+
+            # Type check: ensure batch_result is a dict, not an exception
+            if not isinstance(batch_result, dict):
+                logger.error(f"Batch {i + 1} returned unexpected type: {type(batch_result)}")
+                failed_batches += 1
+                continue
+
+            # Handle batch results
+            if "error" in batch_result:
+                failed_batches += 1
+            else:
+                successful_batches += 1
+
+            selected_ids = batch_result.get("selected_ids", [])
+            all_selected_ids.extend(selected_ids)
+
+        # Remove duplicates while preserving order
+        unique_selected_ids = list(dict.fromkeys(all_selected_ids))
+
+        logger.info(
+            f"Auto-select completed: {successful_batches}/{len(tasks)} batches successful "
+            f"({failed_batches} failed), selected {len(unique_selected_ids)} unique conversations "
+            f"for project {project_id}: {unique_selected_ids}"
+        )
+
+        results[project_id] = {"conversation_id_list": unique_selected_ids}
+
+    return {"results": results}
+
+
+@backoff.on_exception(
+    backoff.expo,
+    (RateLimitError, Timeout, APIError),
+    max_tries=3,
+    max_time=5 * 60,  # 5 minutes
+)
+async def _call_llm_with_backoff(prompt: str, batch_num: int) -> Any:
+    """Call LLM with automatic retry for transient errors."""
+    logger.debug(f"Calling LLM for batch {batch_num}")
+    return await acompletion(
+        model=SMALL_LITELLM_MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        api_base=SMALL_LITELLM_API_BASE,
+        api_key=SMALL_LITELLM_API_KEY,
+        response_format={"type": "json_object"},
+        timeout=5 * 60,  # 5 minutes
+    )
+
+
+async def _process_single_batch(
+    batch: List[ConversationModel],
+    batch_num: int,
+    user_query_inputs: List[str],
+    language: str,
+) -> Dict[str, Any]:
+    """
+    Process a single batch of conversations and return selected IDs.
+
+    Args:
+        batch: List of ConversationModel instances to process
+        batch_num: Batch number for logging
+        user_query_inputs: User queries to match against
+        language: Language code for the prompt template
+
+    Returns:
+        Dictionary with:
+        - "selected_ids": List of selected conversation IDs
+        - "batch_num": The batch number
+        - "error": Error message if processing failed (optional)
+    """
+    logger.info(f"Processing batch {batch_num} ({len(batch)} conversations, parallel execution)")
+
+    # Prepare conversation data for the prompt
+    conversation_data = []
+    for conv in batch:
+        # Get summary or fallback to transcript excerpt
+        summary_text = None
+        if conv.summary and conv.summary.strip():
+            summary_text = conv.summary
+        else:
+            # Use transcript as fallback
+            try:
+                transcript = get_conversation_transcript(
+                    conv.id,
+                    DirectusSession(user_id="none", is_admin=True),
+                )
+                # Limit transcript to first 500 characters for context
+                if transcript and len(transcript) > 500:
+                    summary_text = transcript[:500] + "..."
+                elif transcript:
+                    summary_text = transcript
+            except Exception as e:
+                logger.warning(f"Could not get transcript for conversation {conv.id}: {e}")
+
+        # Skip conversations with no content at all
+        if not summary_text:
+            logger.debug(f"Skipping conversation {conv.id} - no summary or transcript")
+            continue
+
+        conv_data = {
+            "id": conv.id,
+            "participant_name": conv.participant_name or "Unknown",
+            "summary": summary_text,
+        }
+        if conv.tags:
+            conv_data["tags"] = ", ".join([tag.text for tag in conv.tags])
+        if conv.created_at:
+            conv_data["created_at"] = conv.created_at.isoformat()
+        conversation_data.append(conv_data)
+
+    # Skip batch if no valid conversations
+    if not conversation_data:
+        logger.warning(f"Batch {batch_num} has no valid conversations with content. Skipping.")
+        return {"selected_ids": [], "batch_num": batch_num}
+
+    # Render the prompt
+    prompt = render_prompt(
+        "auto_select_conversations",
+        language,
+        {
+            "user_queries": user_query_inputs,
+            "conversations": conversation_data,
+        },
+    )
+
+    # Validate prompt size before sending
+    try:
+        prompt_tokens = token_counter(model=SMALL_LITELLM_MODEL, text=prompt)
+        MAX_BATCH_CONTEXT = 100000  # Leave headroom for response
+
+        if prompt_tokens > MAX_BATCH_CONTEXT:
+            # If batch has only 1 conversation, we can't split further
+            if len(batch) == 1:
+                logger.error(
+                    f"Batch {batch_num} single conversation exceeds context limit: "
+                    f"{prompt_tokens} tokens. Skipping conversation {batch[0].id}."
+                )
+                return {
+                    "selected_ids": [],
+                    "batch_num": batch_num,
+                    "error": "single_conversation_too_large",
+                }
+
+            # Split batch in half and process recursively
+            mid = len(batch) // 2
+            batch_1 = batch[:mid]
+            batch_2 = batch[mid:]
+
+            logger.warning(
+                f"Batch {batch_num} prompt too large ({prompt_tokens} tokens). "
+                f"Splitting into 2 sub-batches: {len(batch_1)} and {len(batch_2)} conversations."
+            )
+
+            # Process both halves recursively
+            result_1 = await _process_single_batch(batch_1, batch_num, user_query_inputs, language)
+            result_2 = await _process_single_batch(batch_2, batch_num, user_query_inputs, language)
+
+            # Combine results from both sub-batches
+            combined_ids = result_1.get("selected_ids", []) + result_2.get("selected_ids", [])
+
+            logger.info(
+                f"Batch {batch_num} split processing complete: "
+                f"{len(combined_ids)} conversations selected from sub-batches."
+            )
+
+            return {"selected_ids": combined_ids, "batch_num": batch_num}
+    except Exception as e:
+        logger.warning(f"Could not count tokens for batch {batch_num}: {e}")
+
+    # Call the LLM with retry logic for transient errors
+    try:
+        response = await _call_llm_with_backoff(
+            prompt=prompt,
+            batch_num=batch_num,
+        )
+
+        if response.choices[0].message.content:
+            result = json.loads(response.choices[0].message.content)
+            raw_selected_ids = result.get("selected_conversation_ids", [])
+
+            # Validate LLM response: ensure all returned IDs are from this batch
+            valid_ids = {conv.id for conv in batch}
+            batch_selected_ids = [
+                id for id in raw_selected_ids if isinstance(id, (int, str)) and id in valid_ids
+            ]
+
+            # Log warning if LLM returned invalid IDs
+            if len(batch_selected_ids) != len(raw_selected_ids):
+                filtered_count = len(raw_selected_ids) - len(batch_selected_ids)
+                invalid_ids = [id for id in raw_selected_ids if id not in valid_ids]
+                logger.warning(
+                    f"Batch {batch_num}: LLM returned {filtered_count} invalid ID(s), "
+                    f"filtered from {len(raw_selected_ids)} to {len(batch_selected_ids)}. "
+                    f"Invalid IDs: {invalid_ids}"
+                )
+
+            logger.info(
+                f"Batch {batch_num} selected {len(batch_selected_ids)} "
+                f"conversations: {batch_selected_ids}"
+            )
+            return {"selected_ids": batch_selected_ids, "batch_num": batch_num}
+        else:
+            logger.warning(f"No response from LLM for batch {batch_num}")
+            return {"selected_ids": [], "batch_num": batch_num}
+
+    except ContextWindowExceededError as e:
+        logger.error(
+            f"Batch {batch_num} exceeded context window ({len(batch)} conversations). "
+            f"Error: {str(e)}"
+        )
+        return {"selected_ids": [], "batch_num": batch_num, "error": "context_exceeded"}
+
+    except (RateLimitError, Timeout) as e:
+        # These are already retried by backoff, so if we get here, all retries failed
+        logger.error(f"Batch {batch_num} failed after retries: {type(e).__name__}")
+        return {"selected_ids": [], "batch_num": batch_num, "error": str(e)}
+
+    except (APIError, BadRequestError) as e:
+        logger.error(f"Batch {batch_num} API error: {str(e)}")
+        return {"selected_ids": [], "batch_num": batch_num, "error": "api_error"}
+
+    except Exception as e:
+        logger.error(f"Batch {batch_num} unexpected error: {str(e)}")
+        return {"selected_ids": [], "batch_num": batch_num, "error": "unknown"}
+
+
 async def get_conversation_citations(
     rag_prompt: str,
     accumulated_response: str,
@@ -250,7 +579,7 @@ async def get_conversation_citations(
 ) -> List[Dict[str, Any]]:
     """
     Extract structured conversation citations from an accumulated assistant response using a text-structuring model, map those citations to conversations, and return only citations that belong to the given project IDs.
-    
+
     This function:
     - Renders a text-structuring prompt using `rag_prompt` and `accumulated_response` and sends it to the configured text-structure LLM.
     - Parses the model's JSON response (expected to follow `CitationsSchema`) to obtain citation entries that include `segment_id` and `verbatim_reference_text_chunk`.
@@ -260,7 +589,7 @@ async def get_conversation_citations(
       - "conversation": conversation id (str)
       - "reference_text": verbatim reference text chunk (str)
       - "conversation_title": conversation name/title (str)
-    
+
     If the model output cannot be parsed or a segment-to-conversation mapping fails for an individual citation, that citation is skipped; parsing errors do not raise but are logged and result in an empty citations list in the returned structure.
     """
     text_structuring_model_message = render_prompt(
