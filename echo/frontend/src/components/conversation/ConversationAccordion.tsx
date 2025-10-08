@@ -46,10 +46,11 @@ import {
   useMemo,
   useCallback,
   Suspense,
+  RefObject,
 } from "react";
 import { useLocation, useParams } from "react-router";
 import { UploadConversationDropzone } from "../dropzone/UploadConversationDropzone";
-import { useDebouncedValue } from "@mantine/hooks";
+import { useDebouncedValue, useMediaQuery } from "@mantine/hooks";
 import {
   IconFilter,
   IconSearch,
@@ -537,7 +538,13 @@ const ConversationAccordionItem = ({
 };
 
 // Conversation Accordion
-export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
+export const ConversationAccordion = ({ 
+  projectId,
+  qrCodeRef
+}: { 
+  projectId: string;
+  qrCodeRef?: RefObject<HTMLDivElement | null>;
+}) => {
   const SORT_OPTIONS: SortOption[] = [
     { label: t`Newest First`, value: "-created_at" },
     { label: t`Oldest First`, value: "created_at" },
@@ -549,6 +556,7 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
 
   const location = useLocation();
   const inChatMode = location.pathname.includes("/chats/");
+  const isMobile = useMediaQuery("(max-width: 768px)");
   const { conversationId: activeConversationId } = useParams();
   const { ref: loadMoreRef, inView } = useInView();
 
@@ -1108,7 +1116,16 @@ export const ConversationAccordion = ({ projectId }: { projectId: string }) => {
                 No conversations found. Start a conversation using the
                 participation invite link from the{" "}
                 <I18nLink to={`/projects/${projectId}/overview`}>
-                  <Anchor>project overview.</Anchor>
+                  <Anchor
+                    onClick={(e) => {
+                      if (qrCodeRef?.current && isMobile) {
+                        e.preventDefault();
+                        qrCodeRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+                      }
+                    }}
+                  >
+                    project overview.
+                  </Anchor>
                 </I18nLink>
               </Trans>
             </Text>

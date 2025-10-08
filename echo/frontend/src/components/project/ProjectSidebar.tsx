@@ -20,9 +20,11 @@ import { ProjectQRCode } from "./ProjectQRCode";
 import { I18nLink } from "../common/i18nLink";
 import { ReportModalNavigationButton } from "../report/ReportModalNavigationButton";
 import { LogoDembrane } from "../common/Logo";
+import { useRef } from "react";
 
 export const ProjectSidebar = () => {
   const { projectId, conversationId } = useParams();
+  const qrCodeRef = useRef<HTMLDivElement>(null);
 
   const projectQuery = useProjectById({ projectId: projectId ?? "" });
   const { pathname } = useLocation();
@@ -115,11 +117,11 @@ export const ProjectSidebar = () => {
 
       <ReportModalNavigationButton />
 
-      <Box hiddenFrom="lg">
+      <Box hiddenFrom="lg" ref={qrCodeRef}>
         <ProjectQRCode project={projectQuery.data} />
       </Box>
 
-      <ProjectAccordion projectId={projectId} />
+      <ProjectAccordion projectId={projectId} qrCodeRef={qrCodeRef} />
 
       <Stack className="text-center md:pb-10">
         <Group
