@@ -463,7 +463,7 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
             except Exception as e:
                 logger.error(f"Failed to check RAG status for conversation {conversation_id}: {e}")
         else:
-            logger.info(f"ENABLE_AUDIO_LIGHTRAG_INPUT is False, skipping RAG task")
+            logger.info("ENABLE_AUDIO_LIGHTRAG_INPUT is False, skipping RAG task")
         
         task_summarize_conversation.send(conversation_id)
 
