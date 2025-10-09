@@ -591,12 +591,6 @@ export const ConversationAccordion = ({
     false,
     {
       limit: 1,
-      deep: {
-        // @ts-expect-error chunks is not typed
-        chunks: {
-          _limit: 25,
-        },
-      },
     },
   );
 
@@ -677,12 +671,6 @@ export const ConversationAccordion = ({
     {
       search: debouncedConversationSearchValue,
       sort: sortBy,
-      deep: {
-        // @ts-expect-error chunks is not typed
-        chunks: {
-          _limit: 25,
-        },
-      },
       // Override filter to add tag filtering while preserving project scope
       filter: {
         project_id: { _eq: projectId },
