@@ -16,9 +16,9 @@ import redis
 from lightrag.kg.postgres_impl import PostgreSQLDB
 
 from dembrane.directus import directus
+from dembrane.async_helpers import run_in_thread_pool
 from dembrane.postgresdb_manager import PostgresDBManager
 from dembrane.audio_lightrag.utils.litellm_utils import embedding_func
-from dembrane.async_helpers import run_in_thread_pool
 
 logger = logging.getLogger("audio_lightrag_utils")
 
