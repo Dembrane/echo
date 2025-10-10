@@ -18,6 +18,7 @@ from lightrag.kg.postgres_impl import PostgreSQLDB
 from dembrane.directus import directus
 from dembrane.postgresdb_manager import PostgresDBManager
 from dembrane.audio_lightrag.utils.litellm_utils import embedding_func
+from dembrane.async_helpers import run_in_thread_pool
 
 logger = logging.getLogger("audio_lightrag_utils")
 
@@ -149,10 +150,12 @@ async def get_segment_from_conversation_ids(
             "filter": {"conversation_id": {"_in": conversation_ids}},
         }
     }
-    segment_result = directus.get_items("conversation_segment", segment_request)
+    segment_result = await run_in_thread_pool(
+        directus.get_items, "conversation_segment", segment_request
+    )
     
     segment_ids = []
-    if segment_result and not (isinstance(segment_result, dict) and "error" in segment_result):
+    if segment_result:
         segment_ids = [int(seg["id"]) for seg in segment_result if seg.get("id")]
     
     # Method 2: Also check old pipeline (segments linked via junction table to chunks)
@@ -165,12 +168,11 @@ async def get_segment_from_conversation_ids(
             "filter": {"id": {"_in": conversation_ids}},
         }
     }
-    conversation_request_result = directus.get_items("conversation", conversation_request)
+    conversation_request_result = await run_in_thread_pool(
+        directus.get_items, "conversation", conversation_request
+    )
     
-    if (
-        conversation_request_result
-        and not (isinstance(conversation_request_result, dict) and "error" in conversation_request_result.keys())
-    ):
+    if conversation_request_result:
         conversation_chunk_ids = [
             [x["id"] for x in conversation_request_result_dict.get("chunks", [])]
             for conversation_request_result_dict in conversation_request_result
@@ -194,7 +196,9 @@ async def get_segment_from_project_ids(db: PostgreSQLDB, project_ids: list[str])
         }
     }
     project_request["query"]["filter"] = {"id": {"_in": project_ids}}
-    project_request_result = directus.get_items("project", project_request)
+    project_request_result = await run_in_thread_pool(
+        directus.get_items, "project", project_request
+    )
     conversation_ids = [
         [x["id"] for x in project_request_result_dict["conversations"]]
         for project_request_result_dict in project_request_result

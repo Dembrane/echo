@@ -21,36 +21,47 @@ Usage:
 
 import os
 import asyncio
-from typing import Any, TypeVar, Callable
+import threading
+from typing import Any, TypeVar, Callable, Optional
 from logging import getLogger
 from functools import partial
+from concurrent.futures import ThreadPoolExecutor
 
 logger = getLogger("async_helpers")
 
 T = TypeVar('T')
 
 # Get thread pool size from environment or use default
-THREAD_POOL_SIZE = int(os.getenv("THREAD_POOL_SIZE", "64"))
+try:
+    THREAD_POOL_SIZE = int(os.getenv("THREAD_POOL_SIZE", "64"))
+    THREAD_POOL_SIZE = max(1, min(THREAD_POOL_SIZE, 1024))
+except (TypeError, ValueError):
+    THREAD_POOL_SIZE = 64
+    logger.warning("Invalid THREAD_POOL_SIZE; defaulting to 64")
 
 # Create a single ThreadPoolExecutor for the entire application
 # This will be initialized lazily on first use
-_thread_pool_executor = None
+_thread_pool_executor: Optional[ThreadPoolExecutor] = None
+_executor_lock = threading.Lock()
 
 
-def get_thread_pool_executor():
+def get_thread_pool_executor() -> ThreadPoolExecutor:
     """
     Get or create the global ThreadPoolExecutor.
     
     This is lazily initialized to ensure it's created after the event loop starts.
+    Thread-safe initialization using a lock.
     """
     global _thread_pool_executor
     if _thread_pool_executor is None:
-        from concurrent.futures import ThreadPoolExecutor
-        _thread_pool_executor = ThreadPoolExecutor(
-            max_workers=THREAD_POOL_SIZE,
-            thread_name_prefix="blocking_io"
-        )
-        logger.info(f"Initialized ThreadPoolExecutor with {THREAD_POOL_SIZE} threads")
+        with _executor_lock:
+            # Double-check pattern: another thread might have initialized it
+            if _thread_pool_executor is None:
+                _thread_pool_executor = ThreadPoolExecutor(
+                    max_workers=THREAD_POOL_SIZE,
+                    thread_name_prefix="blocking_io"
+                )
+                logger.info(f"Initialized ThreadPoolExecutor with {THREAD_POOL_SIZE} threads")
     return _thread_pool_executor
 
 
@@ -62,12 +73,15 @@ async def run_in_thread_pool(func: Callable[..., T], *args: Any, **kwargs: Any) 
     allowing the async application to handle many concurrent requests.
     
     Args:
-        func: The blocking function to execute
+        func: The blocking function to execute (must be synchronous, not async)
         *args: Positional arguments to pass to the function
         **kwargs: Keyword arguments to pass to the function
         
     Returns:
         The result of the blocking function
+        
+    Raises:
+        TypeError: If an async function or coroutine is passed
         
     Example:
         # Database query
@@ -95,7 +109,21 @@ async def run_in_thread_pool(func: Callable[..., T], *args: Any, **kwargs: Any) 
         - DO NOT use this for LightRAG operations (rag.aquery, rag.ainsert, etc.)
         - Only use for truly blocking I/O (DB queries, S3 calls, HTTP with requests library)
         - Already-async functions should be awaited directly, not wrapped
+        - This helper only accepts synchronous functions
     """
+    # Guard against async callables
+    if asyncio.iscoroutinefunction(func):
+        raise TypeError(
+            f"run_in_thread_pool received an async function '{func.__name__}'. "
+            "Async functions should be awaited directly, not wrapped in a thread pool."
+        )
+    
+    if asyncio.iscoroutine(func):
+        raise TypeError(
+            "run_in_thread_pool received a coroutine object. "
+            "Coroutines should be awaited directly, not wrapped in a thread pool."
+        )
+    
     loop = asyncio.get_running_loop()
     
     # If there are kwargs, use partial to bind them
