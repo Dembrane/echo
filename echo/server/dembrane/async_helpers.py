@@ -21,9 +21,9 @@ Usage:
 
 import os
 import asyncio
-from typing import TypeVar, Callable, Any
-from functools import partial
+from typing import Any, TypeVar, Callable
 from logging import getLogger
+from functools import partial
 
 logger = getLogger("async_helpers")
 

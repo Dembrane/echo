@@ -23,12 +23,12 @@ from dembrane.database import (
 )
 from dembrane.directus import DirectusBadRequest, directus_client_context
 from dembrane.report_utils import ContextTooLongException, get_report_content_for_project
+from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.exceptions import (
     ProjectLanguageNotSupportedException,
 )
 from dembrane.api.conversation import get_conversation, get_conversation_chunks
 from dembrane.api.dependency_auth import DependencyDirectusSession
-from dembrane.async_helpers import run_in_thread_pool
 
 logger = getLogger("api.project")
 

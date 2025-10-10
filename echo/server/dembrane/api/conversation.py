@@ -30,13 +30,13 @@ from dembrane.api.stateless import (
     generate_summary,
     delete_conversation as delete_conversation_from_lightrag,
 )
+from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.exceptions import (
     NoContentFoundException,
     ConversationNotFoundException,
 )
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.conversation_health import get_health_status
-from dembrane.async_helpers import run_in_thread_pool
 
 logger = getLogger("api.conversation")
 ConversationRouter = APIRouter(tags=["conversation"])
