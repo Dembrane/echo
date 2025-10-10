@@ -28,6 +28,7 @@ from dembrane.api.exceptions import (
 )
 from dembrane.api.conversation import get_conversation, get_conversation_chunks
 from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.async_helpers import run_in_thread_pool
 
 logger = getLogger("api.project")
 
@@ -197,28 +198,31 @@ async def get_project_transcripts(
     return response
 
 
-def get_latest_project_analysis_run(project_id: str) -> Optional[dict]:
+async def get_latest_project_analysis_run(project_id: str) -> Optional[dict]:
     try:
-        with directus_client_context() as client:
-            analysis_run = client.get_items(
-                "project_analysis_run",
-                {
-                    "query": {
-                        "filter": {
-                            "project_id": project_id,
+        def _get_analysis_run():
+            with directus_client_context() as client:
+                return client.get_items(
+                    "project_analysis_run",
+                    {
+                        "query": {
+                            "filter": {
+                                "project_id": project_id,
+                            },
+                            "sort": "-created_at",
                         },
-                        "sort": "-created_at",
                     },
-                },
-            )
+                )
+        
+        analysis_run = await run_in_thread_pool(_get_analysis_run)
 
-            if analysis_run is None:
-                return None
+        if analysis_run is None:
+            return None
 
-            if len(analysis_run) == 0:
-                return None
+        if len(analysis_run) == 0:
+            return None
 
-            return analysis_run[0]
+        return analysis_run[0]
 
     except DirectusBadRequest as e:
         logger.error(f"Failed to get latest project analysis run for project {project_id}: {e}")
@@ -242,7 +246,10 @@ async def post_create_project_library(
     from dembrane.service.project import ProjectNotFoundException
 
     try:
-        project = project_service.get_by_id_or_raise(project_id)
+        project = await run_in_thread_pool(
+            project_service.get_by_id_or_raise,
+            project_id
+        )
     except ProjectNotFoundException as e:
         raise HTTPException(status_code=404, detail="Project not found") from e
 
@@ -281,7 +288,7 @@ async def post_create_view(
     body: CreateViewRequestBodySchema,
     auth: DependencyDirectusSession,
 ) -> None:
-    project_analysis_run = get_latest_project_analysis_run(project_id)
+    project_analysis_run = await get_latest_project_analysis_run(project_id)
 
     if not project_analysis_run:
         raise HTTPException(status_code=404, detail="No analysis found for this project")
@@ -290,7 +297,10 @@ async def post_create_view(
     from dembrane.service.project import ProjectNotFoundException
 
     try:
-        project = project_service.get_by_id_or_raise(project_id)
+        project = await run_in_thread_pool(
+            project_service.get_by_id_or_raise,
+            project_id
+        )
     except ProjectNotFoundException as e:
         raise HTTPException(status_code=404, detail="Project not found") from e
 
@@ -319,30 +329,35 @@ async def create_report(project_id: str, body: CreateReportRequestBodySchema) ->
     try:
         report_content_response = await get_report_content_for_project(project_id, language)
     except ContextTooLongException:
-        with directus_client_context() as client:
-            report = client.create_item(
-                "project_report",
-                item_data={
-                    "content": "",
-                    "project_id": project_id,
-                    "language": language,
-                    "status": "error",
-                    "error_code": "CONTEXT_TOO_LONG",
-                },
-            )["data"]
+        def _create_error_report():
+            with directus_client_context() as client:
+                return client.create_item(
+                    "project_report",
+                    item_data={
+                        "content": "",
+                        "project_id": project_id,
+                        "language": language,
+                        "status": "error",
+                        "error_code": "CONTEXT_TOO_LONG",
+                    },
+                )["data"]
+        
+        report = await run_in_thread_pool(_create_error_report)
         return report
     except Exception as e:
         raise e
 
-    with directus_client_context() as client:
-        report = client.create_item(
-            "project_report",
-            item_data={
-                "content": report_content_response,
-                "project_id": project_id,
-                "language": language,
-                "status": "archived",
-            },
-        )["data"]
-
+    def _create_report():
+        with directus_client_context() as client:
+            return client.create_item(
+                "project_report",
+                item_data={
+                    "content": report_content_response,
+                    "project_id": project_id,
+                    "language": language,
+                    "status": "archived",
+                },
+            )["data"]
+    
+    report = await run_in_thread_pool(_create_report)
     return report

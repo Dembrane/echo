@@ -134,29 +134,56 @@ async def get_segment_from_conversation_chunk_ids(
 async def get_segment_from_conversation_ids(
     db: PostgreSQLDB, conversation_ids: list[str]
 ) -> list[int]:
+    """
+    Get segment IDs for given conversation IDs.
+    
+    This handles both old pipeline (segments linked to chunks) and new pipeline
+    (segments linked directly to conversations).
+    """
+    # Method 1: Query segments directly by conversation_id (NEW PIPELINE)
+    # This works for segments created by task_run_etl_pipeline
+    segment_request = {
+        "query": {
+            "fields": ["id"],
+            "limit": -1,
+            "filter": {"conversation_id": {"_in": conversation_ids}},
+        }
+    }
+    segment_result = directus.get_items("conversation_segment", segment_request)
+    
+    segment_ids = []
+    if segment_result and not (isinstance(segment_result, dict) and "error" in segment_result):
+        segment_ids = [int(seg["id"]) for seg in segment_result if seg.get("id")]
+    
+    # Method 2: Also check old pipeline (segments linked via junction table to chunks)
+    # This ensures backwards compatibility with old audio processing pipeline
     conversation_request = {
         "query": {
             "fields": ["chunks.id"],
             "limit": -1,
             "deep": {"chunks": {"_limit": -1, "_sort": "timestamp"}},
-            # "filter": {"id": {"_in": ['0c6b0061-f6ec-490d-b279-0715ca9a7994']}}
+            "filter": {"id": {"_in": conversation_ids}},
         }
     }
-    conversation_request["query"]["filter"] = {"id": {"_in": conversation_ids}}
     conversation_request_result = directus.get_items("conversation", conversation_request)
+    
     if (
-        isinstance(conversation_request_result, dict)
-        and "error" in conversation_request_result.keys()
+        conversation_request_result
+        and not (isinstance(conversation_request_result, dict) and "error" in conversation_request_result.keys())
     ):
-        return []
-    conversation_chunk_ids = [
-        [x["id"] for x in conversation_request_result_dict["chunks"]]
-        for conversation_request_result_dict in conversation_request_result
-    ]
-    flat_conversation_chunk_ids: list[str] = [
-        item for sublist in conversation_chunk_ids for item in sublist if item is not None
-    ]
-    return await get_segment_from_conversation_chunk_ids(db, flat_conversation_chunk_ids)
+        conversation_chunk_ids = [
+            [x["id"] for x in conversation_request_result_dict.get("chunks", [])]
+            for conversation_request_result_dict in conversation_request_result
+        ]
+        flat_conversation_chunk_ids: list[str] = [
+            item for sublist in conversation_chunk_ids for item in sublist if item is not None
+        ]
+        if flat_conversation_chunk_ids:
+            chunk_segment_ids = await get_segment_from_conversation_chunk_ids(db, flat_conversation_chunk_ids)
+            segment_ids.extend(chunk_segment_ids)
+    
+    # Return unique segment IDs
+    return list(set(segment_ids))
 
 
 async def get_segment_from_project_ids(db: PostgreSQLDB, project_ids: list[str]) -> list[int]:

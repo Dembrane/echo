@@ -196,17 +196,21 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
 
         # local import to avoid circular imports
         from dembrane.api.conversation import get_conversation_content
+        from dembrane.audio_lightrag.utils.async_utils import run_async_in_new_loop
 
         with ProcessingStatusContext(
             conversation_id=conversation_id,
             event_prefix="task_merge_conversation_chunks",
         ):
             # todo: except if NoValidParts
-            get_conversation_content(
-                conversation_id,
-                auth=DependencyDirectusSession(user_id="none", is_admin=True),
-                force_merge=True,
-                return_url=True,
+            # Run async function in new event loop (CPU worker context)
+            run_async_in_new_loop(
+                get_conversation_content(
+                    conversation_id,
+                    auth=DependencyDirectusSession(user_id="none", is_admin=True),
+                    force_merge=True,
+                    return_url=True,
+                )
             )
 
         return
