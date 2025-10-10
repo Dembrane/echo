@@ -195,6 +195,7 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
             return
 
         # local import to avoid circular imports
+        from dembrane.api.exceptions import NoContentFoundException
         from dembrane.api.conversation import get_conversation_content
         from dembrane.audio_lightrag.utils.async_utils import run_async_in_new_loop
 
@@ -202,7 +203,6 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
             conversation_id=conversation_id,
             event_prefix="task_merge_conversation_chunks",
         ):
-            # todo: except if NoValidParts
             # Run async function in new event loop (CPU worker context)
             run_async_in_new_loop(
                 get_conversation_content(
@@ -215,6 +215,9 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
 
         return
 
+    except NoContentFoundException:
+        logger.info(f"No valid content found for conversation {conversation_id}; skipping merge task.")
+        return
     except Exception as e:
         logger.error(f"Error: {e}")
         raise e from e

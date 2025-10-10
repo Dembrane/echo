@@ -20,6 +20,7 @@ Usage:
 """
 
 import os
+import atexit
 import asyncio
 import threading
 from typing import Any, TypeVar, Callable, Optional
@@ -62,6 +63,10 @@ def get_thread_pool_executor() -> ThreadPoolExecutor:
                     thread_name_prefix="blocking_io"
                 )
                 logger.info(f"Initialized ThreadPoolExecutor with {THREAD_POOL_SIZE} threads")
+                # Ensure clean shutdown on process exit
+                atexit.register(
+                    lambda: _thread_pool_executor and _thread_pool_executor.shutdown(wait=True)
+                )
     return _thread_pool_executor
 
 
