@@ -638,6 +638,31 @@ export const useConversationChunks = (
   });
 };
 
+export const CONVERSATION_LIST_FIELDS: QueryFields<
+  CustomDirectusTypes,
+  Conversation
+> = [
+  "id",
+  "created_at",
+  "updated_at",
+  "project_id",
+  "participant_name",
+  "participant_email",
+  "source",
+  "duration",
+  "is_finished",
+  "is_audio_processing_finished",
+  "is_all_chunks_transcribed",
+];
+
+const CONVERSATION_LIST_CHUNK_FIELDS = [
+  "id",
+  "timestamp",
+  "created_at",
+  "source",
+  "transcript",
+] as const;
+
 export const useConversationsByProjectId = (
   projectId: string,
   loadChunks?: boolean,
@@ -663,7 +688,7 @@ export const useConversationsByProjectId = (
         readItems("conversation", {
           sort: "-updated_at",
           fields: [
-            ...CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS,
+            ...CONVERSATION_LIST_FIELDS,
             {
               tags: [
                 {
@@ -671,12 +696,12 @@ export const useConversationsByProjectId = (
                 },
               ],
             },
-            { chunks: ["*"] },
+            { chunks: CONVERSATION_LIST_CHUNK_FIELDS },
           ],
           deep: {
             // @ts-expect-error chunks is not typed
             chunks: {
-              _limit: loadChunks ? 1000 : 1,
+              _limit: loadChunks ? 1000 : 25,
             },
           },
           filter: {
@@ -855,7 +880,7 @@ export const useInfiniteConversationsByProjectId = (
         readItems("conversation", {
           sort: "-updated_at",
           fields: [
-            ...CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS,
+            ...CONVERSATION_LIST_FIELDS,
             {
               tags: [
                 {
@@ -863,12 +888,12 @@ export const useInfiniteConversationsByProjectId = (
                 },
               ],
             },
-            { chunks: ["*"] },
+            { chunks: CONVERSATION_LIST_CHUNK_FIELDS },
           ],
           deep: {
             // @ts-expect-error chunks is not typed
             chunks: {
-              _limit: loadChunks ? 1000 : 1,
+              _limit: loadChunks ? 1000 : 25,
             },
           },
           filter: {
