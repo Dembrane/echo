@@ -446,7 +446,25 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
         # Dispatch follow-up tasks directly
         # Note: Using .send() instead of group() to ensure tasks are actually dispatched
         task_merge_conversation_chunks.send(conversation_id)
-        task_run_etl_pipeline.send(conversation_id)  # THE PIVOT: Drop-in replacement with new logic!
+        
+        # Only dispatch RAG task if globally enabled and project has it enabled
+        if ENABLE_AUDIO_LIGHTRAG_INPUT:
+            try:
+                project_id = conversation_obj.get("project_id")
+                if project_id:
+                    project = directus.get_item("project", project_id)
+                    if project and project.get("is_enhanced_audio_processing_enabled", False):
+                        task_run_etl_pipeline.send(conversation_id)
+                        logger.info(f"Dispatched RAG task for conversation {conversation_id}")
+                    else:
+                        logger.info(f"RAG disabled for project {project_id}, skipping RAG task")
+                else:
+                    logger.warning(f"No project_id for conversation {conversation_id}, skipping RAG task")
+            except Exception as e:
+                logger.error(f"Failed to check RAG status for conversation {conversation_id}: {e}")
+        else:
+            logger.info("ENABLE_AUDIO_LIGHTRAG_INPUT is False, skipping RAG task")
+        
         task_summarize_conversation.send(conversation_id)
 
         counts = conversation_service.get_chunk_counts(conversation_id)
