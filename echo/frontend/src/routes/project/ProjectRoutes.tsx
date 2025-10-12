@@ -2,29 +2,18 @@ import { Trans } from "@lingui/react/macro";
 import ProjectBasicEdit from "@/components/project/ProjectBasicEdit";
 import { ProjectDangerZone } from "@/components/project/ProjectDangerZone";
 import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
+import { ProjectUploadSection } from "@/components/project/ProjectUploadSection";
+import { ProjectExportSection } from "@/components/project/ProjectExportSection";
+import { ProjectConversationStatusSection } from "@/components/project/ProjectConversationStatusSection";
 import { getProjectTranscriptsLink } from "@/lib/api";
 import { useProjectById } from "@/components/project/hooks";
-import {
-  Alert,
-  Box,
-  Button,
-  Divider,
-  LoadingOverlay,
-  Stack,
-  Title,
-  Modal,
-} from "@mantine/core";
-import { ConversationStatusTable } from "@/components/report/ConversationStatusTable";
-import { IconDownload } from "@tabler/icons-react";
+import { Alert, Divider, LoadingOverlay, Stack } from "@mantine/core";
 import { useParams } from "react-router";
-import { useMemo, useState } from "react";
-import { UploadConversationDropzone } from "@/components/dropzone/UploadConversationDropzone";
+import { useMemo } from "react";
 
 export const ProjectSettingsRoute = () => {
   const { projectId } = useParams();
   const projectQuery = useProjectById({ projectId: projectId ?? "" });
-  const [modalOpened, setModalOpened] = useState(false);
-
   return (
     <Stack
       gap="3rem"
@@ -44,56 +33,22 @@ export const ProjectSettingsRoute = () => {
       {projectQuery.data && (
         <>
           <Divider />
-          <Stack gap="1.5rem">
-            <Title order={2}>
-              <Trans>Upload</Trans>
-            </Title>
-            <div>
-              <UploadConversationDropzone projectId={projectId ?? ""} />
-            </div>
-          </Stack>
+          <ProjectUploadSection projectId={projectId ?? ""} />
 
           <Divider />
-          <Stack gap="1.5rem">
-            <Title order={2}>
-              <Trans>Export</Trans>
-            </Title>
-            <Box>
-              <Button
-                component="a"
-                href={getProjectTranscriptsLink(projectId ?? "")}
-                download={`${projectQuery.data.name ?? "Project"}-Transcripts.zip`}
-                rightSection={<IconDownload />}
-                variant="outline"
-              >
-                <Trans>Download All Transcripts</Trans>
-              </Button>
-            </Box>
-          </Stack>
+          <ProjectExportSection
+            exportLink={getProjectTranscriptsLink(projectId ?? "")}
+            projectName={projectQuery.data.name}
+          />
 
-          {/* Conversation status modal */}
-          <Divider />
+          {/* 
           {projectId && (
             <>
-              <Button variant="subtle" onClick={() => setModalOpened(true)}>
-                <Trans>View Conversation Status</Trans>
-              </Button>
-              <Modal
-                opened={modalOpened}
-                onClose={() => setModalOpened(false)}
-                title={<Trans>Conversation Status</Trans>}
-                size="lg"
-                centered
-              >
-                <ConversationStatusTable projectId={projectId} />
-              </Modal>
+              <Divider />
+              <ProjectConversationStatusSection projectId={projectId} />
             </>
-          )}
-        </>
-      )}
+          )} */}
 
-      {projectQuery.data && (
-        <>
           <Divider />
           <ProjectDangerZone project={projectQuery.data} />
         </>

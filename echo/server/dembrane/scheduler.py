@@ -4,7 +4,7 @@ from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 # from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
-from dembrane.config import DEBUG_MODE
+from dembrane.config import DEBUG_MODE, TRANSCRIPTION_PROVIDER
 
 # from dembrane.config import DATABASE_URL
 
@@ -25,19 +25,15 @@ scheduler.add_job(
     replace_existing=True,
 )
 
-if DEBUG_MODE:
+if TRANSCRIPTION_PROVIDER is not None and "runpod" in TRANSCRIPTION_PROVIDER.lower():
+    if DEBUG_MODE:
+        trigger = CronTrigger(minute="*/2")
+    else:
+        trigger = CronTrigger(minute="*/10")
+
     scheduler.add_job(
         func="dembrane.tasks:task_update_runpod_transcription_response.send",
-        trigger=CronTrigger(minute="*/2"),
-        id="task_update_runpod_transcription_response",
-        name="update runpod transcription responses",
-        replace_existing=True,
-    )
-else:
-    # we really don't need this in production because we have a webhook
-    scheduler.add_job(
-        func="dembrane.tasks:task_update_runpod_transcription_response.send",
-        trigger=CronTrigger(minute="*/10"),
+        trigger=trigger,
         id="task_update_runpod_transcription_response",
         name="update runpod transcription responses",
         replace_existing=True,
