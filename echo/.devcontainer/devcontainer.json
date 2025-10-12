@@ -15,18 +15,17 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "esbenp.prettier-vscode",
         "YoavBls.pretty-ts-errors",
         "bradlc.vscode-tailwindcss",
         "ms-python.python",
         "charliermarsh.ruff",
         "matangover.mypy",
         "ms-azuretools.vscode-docker",
-        "dbaeumer.vscode-eslint",
         "mhutchie.git-graph",
         "cweijan.vscode-postgresql-client2",
         "github.vscode-pull-request-github",
         "nguyenngoclong.terminal-keeper",
+        "biomejs.biome",
         // for cursor specifically lol
         "anysphere.cursorpyright"
       ]

@@ -218,6 +218,30 @@ export const getProjectViews = async (projectId: string) => {
 export const getProjectTranscriptsLink = (projectId: string) =>
   `${apiCommonConfig.baseURL}/projects/${projectId}/transcripts`;
 
+export const cloneProjectById = async ({
+  projectId,
+  name,
+  language,
+}: {
+  projectId: string;
+  name?: string;
+  language?: string;
+}) => {
+  const payload: Record<string, string> = {};
+
+  if (typeof name === "string" && name.trim().length > 0) {
+    payload.name = name.trim();
+  }
+
+  if (typeof language === "string" && language.trim().length > 0) {
+    payload.language = language.trim();
+  }
+
+  return api.post<unknown, string>(`/projects/${projectId}/clone`, {
+    ...payload,
+  });
+};
+
 export const initiateConversation = async (payload: {
   projectId: string;
   email?: string;

@@ -217,7 +217,10 @@ def _get_audio_file_object(audio_file_uri: str) -> Any:
 
 
 def _transcript_correction_workflow(
-    audio_file_uri: str, candidate_transcript: str, hotwords: Optional[List[str]]
+    audio_file_uri: str,
+    candidate_transcript: str,
+    hotwords: Optional[List[str]],
+    use_pii_redaction: bool,
 ) -> tuple[str, str]:
     """
     Correct the transcript using the transcript correction workflow
@@ -233,6 +236,7 @@ def _transcript_correction_workflow(
         "en",
         {
             "hotwords_str": ", ".join(hotwords) if hotwords else "",
+            "pii_redaction": use_pii_redaction,
         },
     )
 
@@ -296,6 +300,7 @@ def transcribe_audio_dembrane_25_09(
     audio_file_uri: str,
     language: Optional[str],  # pyright: ignore[reportUnusedParameter]
     hotwords: Optional[List[str]],
+    use_pii_redaction: bool = False,
 ) -> tuple[str, dict[str, Any]]:
     """Transcribe audio through custom Dembrane-25-09 workflow
 
@@ -314,8 +319,11 @@ def transcribe_audio_dembrane_25_09(
 
     # use correction workflow to correct keyterms and fix missing segments
     corrected_transcript, note = _transcript_correction_workflow(
-        audio_file_uri, transcript, hotwords
+        audio_file_uri, transcript, hotwords, use_pii_redaction
     )
+
+    if corrected_transcript == "":
+        corrected_transcript = "[Nothing to transcribe]"
 
     return corrected_transcript, {
         "note": note,
@@ -515,6 +523,7 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str:
                 _save_transcript(
                     conversation_chunk_id,
                     transcript,
+                    # repurpose of legacy field. It's not a "diarization". This contains the raw transcription response and word lvl timestamps from Assembly
                     diarization={"schema": "Dembrane-25-09", "data": response},
                 )
                 return conversation_chunk_id
@@ -559,9 +568,10 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str:
 
 if __name__ == "__main__":
     transcript, response = transcribe_audio_dembrane_25_09(
-        "https://ams3.digitaloceanspaces.com/dbr-echo-dev-uploads/3.mp3",
+        "https://ams3.digitaloceanspaces.com/dbr-echo-dev-uploads/azc.mp3?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=DO00KZG7DP4VR6VAKQKE%2F20250930%2Fams3%2Fs3%2Faws4_request&X-Amz-Date=20250930T115847Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=7b83a1b86df4656671e659c61a352080dd4830dce5889d97bb2b72192dc2abfe",
         language="en",
         hotwords=["Dembrane", "Sameer"],
+        use_pii_redaction=True,
     )
 
     gemini_transcript = transcript

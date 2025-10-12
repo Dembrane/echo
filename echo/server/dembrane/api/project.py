@@ -16,6 +16,7 @@ from dembrane.config import BASE_DIR
 from dembrane.schemas import (
     ProjectSchema,
 )
+from dembrane.service import project_service
 from dembrane.database import (
     ProjectModel,
     ConversationModel,
@@ -346,3 +347,27 @@ async def create_report(project_id: str, body: CreateReportRequestBodySchema) ->
         )["data"]
 
     return report
+
+
+class CloneProjectRequestBodySchema(BaseModel):
+    name: Optional[str] = None
+    language: Optional[str] = None
+
+
+@ProjectRouter.post("/{project_id}/clone")
+async def clone_project(project_id: str, body: CloneProjectRequestBodySchema) -> str:
+    logger.info(f"Cloning project {project_id}")
+
+    overrides = {}
+    if body.name:
+        overrides["name"] = body.name
+    if body.language:
+        overrides["language"] = body.language
+
+    new_project_id = project_service.create_shallow_clone(
+        project_id,
+        with_tags=True,
+        **overrides,
+    )
+
+    return new_project_id

@@ -87,3 +87,82 @@ def test_delete_project():
 
     with pytest.raises(ProjectNotFoundException):
         project_service.get_by_id_or_raise(project["id"])
+
+
+def test_create_shallow_clone():
+    project = project_service.create(
+        name="Test Project",
+        language="en",
+        is_conversation_allowed=True,
+        default_conversation_title="Test Conversation",
+        default_conversation_description="Test Conversation Description",
+        default_conversation_finish_text="Test Conversation Finish Text",
+        default_conversation_ask_for_participant_name=True,
+        default_conversation_tutorial_slug="test-tutorial-slug",
+        default_conversation_transcript_prompt="Test Conversation Transcript Prompt",
+        conversation_ask_for_participant_name_label="Test Conversation Ask for Participant Name Label",
+        image_generation_model="Test Image Generation Model",
+        is_enhanced_audio_processing_enabled=True,
+        is_get_reply_enabled=True,
+        is_project_notification_subscription_allowed=True,
+        context="Test Context",
+    )
+
+    tags = project_service.create_tags_and_link(project["id"], ["tag1", "tag2"])
+
+    new_project_id = project_service.create_shallow_clone(project["id"], with_tags=True)
+
+    new_project = project_service.get_by_id_or_raise(new_project_id, with_tags=True)
+
+    assert new_project_id is not None
+
+    assert project["name"] == new_project["name"]
+    assert project["language"] == new_project["language"]
+    assert project["is_conversation_allowed"] == new_project["is_conversation_allowed"]
+    assert project["default_conversation_title"] == new_project["default_conversation_title"]
+    assert (
+        project["default_conversation_description"]
+        == new_project["default_conversation_description"]
+    )
+    assert (
+        project["default_conversation_finish_text"]
+        == new_project["default_conversation_finish_text"]
+    )
+    assert (
+        project["default_conversation_ask_for_participant_name"]
+        == new_project["default_conversation_ask_for_participant_name"]
+    )
+    assert (
+        project["default_conversation_tutorial_slug"]
+        == new_project["default_conversation_tutorial_slug"]
+    )
+    assert (
+        project["default_conversation_transcript_prompt"]
+        == new_project["default_conversation_transcript_prompt"]
+    )
+    assert (
+        project["conversation_ask_for_participant_name_label"]
+        == new_project["conversation_ask_for_participant_name_label"]
+    )
+    assert project["image_generation_model"] == new_project["image_generation_model"]
+    assert (
+        project["is_enhanced_audio_processing_enabled"]
+        == new_project["is_enhanced_audio_processing_enabled"]
+    )
+    assert project["is_get_reply_enabled"] == new_project["is_get_reply_enabled"]
+    assert (
+        project["is_project_notification_subscription_allowed"]
+        == new_project["is_project_notification_subscription_allowed"]
+    )
+    assert project["context"] == new_project["context"]
+
+    tags_str = []
+    for tags in new_project["tags"]:
+        tags_str.append(tags["text"])
+
+    assert len(tags_str) == 2
+    assert tags_str[0] == "tag1"
+    assert tags_str[1] == "tag2"
+
+    project_service.delete(project["id"])
+    project_service.delete(new_project_id)
