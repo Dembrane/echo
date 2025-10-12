@@ -1,43 +1,73 @@
-You will receive: (1) audio, (2) a transcript, (3) canonical_terms: string[].
+You will receive: (1) audio, (2) a transcript, (3) canonical_terms: string[], (4) keyterms: string[], and (5) pii_redaction: boolean.
 
-If any segments are missing, enhance the transcript with the new information. Pay special attention to speech in other languages that the original engine missed. Also, create a short note for the user on how to improve recording conditions. Keep it simple. If there is nothing useful to suggest, output an empty string for the note.
+Context: Ongoing single-device recording. One non-technical user will read your note.
 
-Context: This is an ongoing recording from one device. Assume at most one user will read your note and they have no technical background.
+Inputs:
+- canonical_terms: {{ hotwords_str if hotwords_str else "[]" }}
+- keyterms: {{ keyterms_str if keyterms_str else "[]" }}
+- pii_redaction: {{ pii_redaction | default(false) }}
+
+Precedence & Bias:
+- Resolve conflicts by: Audio > keyterms allow-list > canonical_terms > transcript.
+- If audio and transcript disagree, trust audio; delete unsupported transcript text.
+- If unsure where to insert newly heard content, place it near the closest matching 10–20 word context window from the transcript.
+- Prefer omission over guessing when audio is only noise/room tone.
+
+Tokenization:
+- A token is letters/digits plus @ . _ - # and Unicode letters with diacritics.
+- Match/replace only whole tokens; never inside larger tokens.
+
+Allowed square-bracket tags:
+- Only these (lowercase): [unclear] [crosstalk] 
+- Use tags sparingly and only when the specific word(s) cannot be recovered.
 
 Task order:
-1) Missing content
-   - If the audio reveals missing segments or another language, add them at the correct spots.
-   - Mark uncertainties only when needed: use [Unclear], [Laughter], [Crosstalk] sparingly.
+
+1) Missing content & cleanup
+   - Add speech the audio reveals (including other languages) at correct spots using context windows.
+   - Remove transcript lines not supported by audio.
+   - Prefer empty output over guessing when audio is only noise.
 
 2) Normalize hotwords (canonical terms) safely
-   Treat canonical_terms as preferred spellings only for domain terms, not for common words.
-
-   Matching rules:
-   - Replace only whole tokens using word boundaries.
-   - Case: preserve source casing unless the canonical term is a proper noun or acronym, in which case match its casing.
-   - Distance: allow phonetic or Levenshtein distance ≤ 2 only for tokens with length ≥ 4, or for acronyms (2–5 uppercase letters).
-   - Do not alter meaning. If context is ambiguous, do not replace.
-
-   Hard guardrails to avoid false positives:
-   - Never replace closed-class/function words even if they appear in canonical_terms. Examples: a, an, the, and, or, but, if, to, of, in, on, at, for, from, is, are, was, were, be, been, being, do, does, did, have, has, had, I, you, we, they, he, she, it, this, that, these, those.
-   - Ignore canonical entries that are common English words unless the audio clearly indicates a proper noun or acronym usage.
-   - Do not replace substrings inside larger words.
+   - Allowed set for normalization = keyterms ∪ canonical_terms (treat as preferred spellings for domain terms).
+   - Replace only whole tokens.
+   - Case: preserve source casing unless the canonical is a proper noun/brand or an acronym (2–5 uppercase letters); then use canonical casing (e.g., iOS, eBay, YouTube, NASA).
+   - Distance: allow phonetic or Levenshtein ≤ 2 only if (a) same first AND last character, OR (b) same-length acronym (2–5) with ≥80% overlap.
+   - Never replace if the source token is a common word whose meaning would change in context.
    - Examples:
-     * Do not change “that” → “Dat” even if "Dat" is in canonical_terms.
-     * Do change “Semir”/“Samir” → “Sameer” if "Sameer" is in canonical_terms and context fits.
-     * Do change “assemly ai” → “AssemblyAI” when listed as canonical.
+     * Do NOT change “that” → “Dat” even if "Dat" is listed.
+     * Do change “Semir/Samir” → “Sameer” when context fits.
+     * Do change “assemly ai” → “AssemblyAI” when listed and context fits.
 
-3) Feedback note
-   - Write a single, plain sentence.
-   - Flesch Reading Ease ≥ 80, ≤ 12 words.
-   - Give one concrete recording tip. If none apply, use "".
+3) PII redaction (when pii_redaction = true)
+   - Detect PII with NER/patterns: personal names, emails, phone numbers, addresses/postcodes, usernames/handles, unique IDs (passport/national ID), IBAN, credit cards, license plates.
+   - Locale hints (examples): NL phone (+31/0… patterns), NL IBAN (NL##), postcode “1234 AB”, BSN 8–9 digits.
+   - Allow-list: if a detected PII token or exact multi-token phrase appears in keyterms, KEEP it as spoken (no redaction).
+   - Otherwise, ALWAYS replace the entire detected PII span with the exact lowercase angle-bracket placeholder:
+       PERSON → <redacted_name>
+       EMAIL → <redacted_email>
+       PHONE → <redacted_phone>
+       ADDRESS/POSTCODE → <redacted_address>
+       USERNAME/HANDLE → <redacted_username>
+       NATIONAL ID/PASSPORT → <redacted_id>
+       IBAN → <redacted_iban>
+       CREDIT CARD → <redacted_card>
+       LICENSE PLATE → <redacted_license_plate>
+   - Do not invent other angle-bracket tags.
+   - Preserve surrounding punctuation; after redaction, collapse extra spaces and fix stray commas/periods.
 
-4) Output
+4) Feedback note
+   - One sentence, 6–10 simple words, no commas.
+   - Give one concrete recording tip. If none, use "".
 
-Return JSON:
+5) Output (STRICT)
+   - If the audio contains only noise/room tone and no intelligible speech, set "corrected_transcript" to "".
+   - Return raw JSON ONLY (no markdown). Keys exactly:
 {
-  "corrected_transcript": string,   // corrected and enhanced transcript
-  "note": string                    // user note per step 3, or ""
+  "corrected_transcript": string,   // may be ""
+  "note": string                    // per step 4, or ""
 }
+   - Escape quotes and backslashes inside strings. No extra keys, no comments.
 
-canonical_terms: {{ hotwords_str if hotwords_str else "[]" }}
+Anti-summarization:
+- Do not summarize or paraphrase; keep meaning-preserving words from audio and only add missing audible content.

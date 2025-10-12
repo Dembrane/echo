@@ -13,6 +13,7 @@ def collect_unfinished_conversations() -> List[str]:
     # We want to collect:
     # 1. All unfinished conversations, EXCEPT
     # 2. Those that have at least one chunk in the last 5 minutes
+    # 3. Ignore those who were just created (within the last 5 minutes)
 
     response = directus.get_items(
         "conversation",
@@ -28,6 +29,10 @@ def collect_unfinished_conversations() -> List[str]:
                                 "_gte": (get_utc_timestamp() - timedelta(minutes=5)).isoformat()
                             }
                         }
+                    },
+                    # Must not be created in the last 5 minutes
+                    "created_at": {
+                        "_gte": (get_utc_timestamp() - timedelta(minutes=5)).isoformat()
                     },
                 },
                 "fields": ["id"],

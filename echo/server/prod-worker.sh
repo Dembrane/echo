@@ -13,6 +13,4 @@ exec dramatiq-gevent \
   --queues network \
   --processes "$PROCESSES" \
   --threads "$THREADS" \
-  --watch . \
-  --watch-use-polling \
   dembrane.tasks
