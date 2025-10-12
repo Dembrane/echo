@@ -20,8 +20,8 @@ import requests
 
 from dembrane.s3 import get_signed_url, get_stream_from_s3
 from dembrane.config import (
+    GCP_SA_JSON,
     API_BASE_URL,
-    GEMINI_API_KEY,
     ASSEMBLYAI_API_KEY,
     ASSEMBLYAI_BASE_URL,
     LITELLM_WHISPER_URL,
@@ -255,9 +255,11 @@ def _transcript_correction_workflow(
         "required": ["corrected_transcript", "note"],
     }
 
-    assert GEMINI_API_KEY, "GEMINI_API_KEY is not set"
+    assert GCP_SA_JSON, "GCP_SA_JSON is not set"
+
     response = litellm.completion(
-        model="gemini/gemini-2.5-flash",
+        model="vertex_ai/gemini-2.5-flash",
+        vertex_credentials=GCP_SA_JSON,
         messages=[
             {
                 "role": "system",
@@ -578,7 +580,7 @@ def transcribe_conversation_chunk(
 
 if __name__ == "__main__":
     transcript, response = transcribe_audio_dembrane_25_09(
-        "https://ams3.digitaloceanspaces.com/dbr-echo-dev-uploads/azc.mp3?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=DO00KZG7DP4VR6VAKQKE%2F20250930%2Fams3%2Fs3%2Faws4_request&X-Amz-Date=20250930T115847Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=7b83a1b86df4656671e659c61a352080dd4830dce5889d97bb2b72192dc2abfe",
+        "https://ams3.digitaloceanspaces.com/dbr-echo-dev-uploads/2.wav?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=DO00KZG7DP4VR6VAKQKE%2F20251012%2Fams3%2Fs3%2Faws4_request&X-Amz-Date=20251012T224032Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=ea500dfe3e883259d1ccb4f948a0bd8eeb16646e461a213b081f9b85bd4ca6ea",
         language="en",
         hotwords=["Dembrane", "Sameer"],
         use_pii_redaction=True,
