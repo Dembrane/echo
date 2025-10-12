@@ -594,20 +594,22 @@ export const useRetranscribeConversationMutation = () => {
 		mutationFn: ({
 			conversationId,
 			newConversationName,
+			usePiiRedaction,
 		}: {
 			conversationId: string;
 			newConversationName: string;
-		}) => retranscribeConversation(conversationId, newConversationName),
+			usePiiRedaction: boolean;
+		}) =>
+			retranscribeConversation(
+				conversationId,
+				newConversationName,
+				usePiiRedaction,
+			),
 		onSuccess: (_data) => {
 			// Invalidate all conversation related queries
 			queryClient.invalidateQueries({
 				queryKey: ["conversations"],
 			});
-
-			// Toast success message
-			toast.success(
-				t`Retranscription started. New conversation will be available soon.`,
-			);
 		},
 		onError: (error) => {
 			toast.error(t`Failed to retranscribe conversation. Please try again.`);

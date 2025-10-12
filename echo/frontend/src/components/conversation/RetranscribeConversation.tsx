@@ -8,6 +8,7 @@ import {
 	Group,
 	Modal,
 	Stack,
+	Switch,
 	Text,
 	TextInput,
 	Tooltip,
@@ -15,13 +16,18 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconRefresh } from "@tabler/icons-react";
 import { useState } from "react";
+import { useParams } from "react-router";
+import { toast } from "sonner";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { ExponentialProgress } from "../common/ExponentialProgress";
 import { useRetranscribeConversationMutation } from "./hooks";
 
 export const RetranscribeConversationModalActionIcon = ({
 	conversationId,
+	conversationName,
 }: {
 	conversationId: string;
+	conversationName: string;
 }) => {
 	const [opened, { open, close }] = useDisclosure(false);
 
@@ -35,6 +41,7 @@ export const RetranscribeConversationModalActionIcon = ({
 
 			<RetranscribeConversationModal
 				conversationId={conversationId}
+				conversationName={conversationName}
 				opened={opened}
 				onClose={close}
 			/>
@@ -44,23 +51,53 @@ export const RetranscribeConversationModalActionIcon = ({
 
 export const RetranscribeConversationModal = ({
 	conversationId,
+	conversationName,
 	opened,
 	onClose,
 }: {
 	conversationId: string;
+	conversationName: string;
 	opened: boolean;
 	onClose: () => void;
 }) => {
+	// this should rly be a prop im lazy
+	const { projectId } = useParams();
+
 	const retranscribeMutation = useRetranscribeConversationMutation();
 
-	const [newConversationName, setNewConversationName] = useState("");
+	const [newConversationName, setNewConversationName] = useState(
+		conversationName ?? "",
+	);
+	const [usePiiRedaction, setUsePiiRedaction] = useState(false);
+
+	const navigate = useI18nNavigate();
 
 	const handleRetranscribe = async () => {
 		if (!conversationId || !newConversationName.trim()) return;
-		await retranscribeMutation.mutateAsync({
+		const { new_conversation_id } = await retranscribeMutation.mutateAsync({
 			conversationId,
 			newConversationName: newConversationName.trim(),
+			usePiiRedaction,
 		});
+		if (new_conversation_id) {
+			onClose();
+			toast.success(
+				t`Retranscription started. New conversation will be available soon.`,
+				{
+					action: {
+						label: t`Go to new conversation`,
+						actionButtonStyle: {
+							color: "blue",
+						},
+						onClick: () => {
+							navigate(
+								`/projects/${projectId}/conversations/${new_conversation_id}/transcript`,
+							);
+						},
+					},
+				},
+			);
+		}
 	};
 
 	return (
@@ -101,6 +138,12 @@ export const RetranscribeConversationModal = ({
 						value={newConversationName}
 						onChange={(e) => setNewConversationName(e.currentTarget.value)}
 						required
+					/>
+					<Switch
+						label={t`Use PII Redaction`}
+						description={t`This will replace personally identifiable information with <redacted>.`}
+						checked={usePiiRedaction}
+						onChange={(e) => setUsePiiRedaction(e.currentTarget.checked)}
 					/>
 					<Button
 						onClick={handleRetranscribe}

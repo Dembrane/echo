@@ -7,7 +7,7 @@
 
 
 - (feature) new "Dembrane 25-09" transcription provider used for all new transcription (AssemblyAI + Gemini)
-- (feature) add pii redaction option when retranscription
+- (feature) updated retranscribe flow (pii redaction, toast that takes you to new conversation)
 - (feature) add clone project functionality (only metadata) + tests
 - (bug) fix premature calling of "finish conversation" (duration bug)
 - dev stuff:

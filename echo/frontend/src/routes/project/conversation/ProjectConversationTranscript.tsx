@@ -95,6 +95,7 @@ export const ProjectConversationTranscript = () => {
 						/>
 						<RetranscribeConversationModalActionIcon
 							conversationId={conversationId ?? ""}
+							conversationName={conversationQuery.data?.participant_name ?? ""}
 						/>
 					</Group>
 
@@ -133,6 +134,7 @@ export const ProjectConversationTranscript = () => {
 											path: chunk.path ?? "",
 											timestamp: chunk.timestamp ?? "",
 											transcript: chunk.transcript ?? "",
+											error: chunk.error ?? "",
 										}}
 										showAudioPlayer={showAudioPlayer}
 									/>

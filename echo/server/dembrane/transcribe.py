@@ -492,7 +492,9 @@ def _process_runpod_transcription(
     return conversation_chunk_id
 
 
-def transcribe_conversation_chunk(conversation_chunk_id: str) -> str:
+def transcribe_conversation_chunk(
+    conversation_chunk_id: str, use_pii_redaction: bool = False
+) -> str:
     """
     Process conversation chunk for transcription
     matches on _get_transcript_provider()
@@ -512,13 +514,21 @@ def transcribe_conversation_chunk(conversation_chunk_id: str) -> str:
 
         transcript_provider = _get_transcript_provider()
 
+        if use_pii_redaction and transcript_provider != "Dembrane-25-09":
+            logger.warning(
+                f"PII redaction is not supported for {transcript_provider}. Ignoring use_pii_redaction."
+            )
+
         match transcript_provider:
             case "Dembrane-25-09":
                 logger.info("Using Dembrane-25-09 for transcription")
                 hotwords = _build_hotwords(conversation)
                 signed_url = get_signed_url(chunk["path"], expires_in_seconds=3 * 24 * 60 * 60)
                 transcript, response = transcribe_audio_dembrane_25_09(
-                    signed_url, language=language, hotwords=hotwords
+                    signed_url,
+                    language=language,
+                    hotwords=hotwords,
+                    use_pii_redaction=use_pii_redaction,
                 )
                 _save_transcript(
                     conversation_chunk_id,
