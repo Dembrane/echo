@@ -91,7 +91,7 @@ export const RetranscribeConversationModal = ({
 						},
 						onClick: () => {
 							navigate(
-								`/projects/${projectId}/conversations/${new_conversation_id}/transcript`,
+								`/projects/${projectId}/conversation/${new_conversation_id}/transcript`,
 							);
 						},
 					},
