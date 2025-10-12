@@ -5,4 +5,4 @@
 - pr size
 - dockerfile update
 
-
+- can probably run ruff / mypy in parallel

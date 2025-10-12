@@ -13,9 +13,9 @@
 
 # This file inits twice for some reason...
 
-import json
 import os
 import sys
+import json
 import logging
 from typing import Literal, cast
 
