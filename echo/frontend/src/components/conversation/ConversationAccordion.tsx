@@ -38,26 +38,16 @@ import {
 	IconArrowsUpDown,
 	IconChevronDown,
 	IconChevronUp,
-	IconDotsVertical,
-	IconFileUpload,
-	IconFilter,
-	IconInfoCircle,
-	IconPinned,
-	IconPinnedFilled,
-	IconQrcode,
 	IconSearch,
-	IconSort09,
 	IconTags,
 	IconX,
 } from "@tabler/icons-react";
-import { formatDuration, formatRelative, intervalToDuration } from "date-fns";
+import { formatRelative, intervalToDuration } from "date-fns";
 import {
 	type RefObject,
-	Suspense,
 	useCallback,
 	useEffect,
 	useMemo,
-	useReducer,
 	useRef,
 	useState,
 } from "react";
@@ -72,16 +62,13 @@ import {
 	useProjectById,
 } from "@/components/project/hooks";
 import { ENABLE_CHAT_AUTO_SELECT } from "@/config";
-import { Icons } from "@/icons";
 import { cn } from "@/lib/utils";
 import { BaseSkeleton } from "../common/BaseSkeleton";
-import { InformationTooltip } from "../common/InformationTooltip";
 import { NavigationButton } from "../common/NavigationButton";
 import { UploadConversationDropzone } from "../dropzone/UploadConversationDropzone";
 import { AutoSelectConversations } from "./AutoSelectConversations";
 import {
 	useAddChatContextMutation,
-	useConversationsByProjectId,
 	useConversationsCountByProjectId,
 	useDeleteChatContextMutation,
 	useInfiniteConversationsByProjectId,
@@ -223,7 +210,7 @@ export const MoveConversationButton = ({
 		if (!opened) {
 			form.reset();
 		}
-	}, [opened]);
+	}, [opened, form.reset]);
 
 	const handleMove = (data: MoveConversationFormData) => {
 		if (!data.targetProjectId) return;
@@ -244,7 +231,11 @@ export const MoveConversationButton = ({
 		if (entry?.isIntersecting && projectsQuery.hasNextPage) {
 			projectsQuery.fetchNextPage();
 		}
-	}, [entry?.isIntersecting]);
+	}, [
+		entry?.isIntersecting,
+		projectsQuery.fetchNextPage,
+		projectsQuery.hasNextPage,
+	]);
 
 	const allProjects =
 		projectsQuery.data?.pages.flatMap((page) => page.projects) ?? [];
@@ -358,7 +349,7 @@ export const ConversationStatusIndicators = ({
 }) => {
 	const { projectId } = useParams();
 
-	const { data: project } = useProjectById({
+	useProjectById({
 		projectId: projectId ?? "",
 		query: {
 			fields: ["is_enhanced_audio_processing_enabled"],
@@ -523,18 +514,17 @@ const ConversationAccordionItem = ({
 					}
 				</div>
 				<Group gap="4" pr="sm" wrap="wrap">
-					{conversation.tags &&
-						conversation.tags
-							.filter((tag) => tag.project_tag_id && tag.project_tag_id != null)
-							.map((tag) => (
-								<Pill
-									key={`${tag.id}-${(tag?.project_tag_id as unknown as ProjectTag)?.text}`}
-									size="sm"
-									className="font-normal"
-								>
-									{(tag?.project_tag_id as unknown as ProjectTag)?.text}
-								</Pill>
-							))}
+					{conversation.tags
+						?.filter((tag) => tag.project_tag_id && tag.project_tag_id != null)
+						.map((tag) => (
+							<Pill
+								key={`${tag.id}-${(tag?.project_tag_id as unknown as ProjectTag)?.text}`}
+								size="sm"
+								className="font-normal"
+							>
+								{(tag?.project_tag_id as unknown as ProjectTag)?.text}
+							</Pill>
+						))}
 				</Group>
 			</Stack>
 		</NavigationButton>
@@ -589,20 +579,6 @@ export const ConversationAccordion = ({
 	// ]);
 
 	// Get total conversations count without filters
-	const totalConversationsQuery = useConversationsByProjectId(
-		projectId,
-		false,
-		false,
-		{
-			limit: 1,
-			deep: {
-				// @ts-expect-error chunks is not typed
-				chunks: {
-					_limit: 25,
-				},
-			},
-		},
-	);
 
 	// Generalized toggle with improved UX
 	// Temporarily disabled source filters
@@ -747,6 +723,7 @@ export const ConversationAccordion = ({
 		[debouncedConversationSearchValue, sortBy, selectedTagIds.length],
 	);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <should update when sortBy or selectedTagIds.length changes>
 	const appliedFiltersCount = useMemo(() => {
 		return selectedTagIds.length;
 	}, [sortBy, selectedTagIds.length]);
@@ -763,7 +740,8 @@ export const ConversationAccordion = ({
 		setShowDuration(true);
 		setSelectedTagIds([]);
 		setTagSearch("");
-	}, []);
+		// not sure why only these 2 were needed. biome seems to shut up with these 2. i tried putting all. will need to investigate
+	}, [setSortBy, setShowDuration]);
 
 	// Temporarily disabled source filters
 	// const FilterPin = ({
@@ -830,6 +808,8 @@ export const ConversationAccordion = ({
 						<Trans>Conversations</Trans>
 					</Title>
 
+					{/** biome-ignore lint/a11y/noStaticElementInteractions: <todo> */}
+					{/** biome-ignore lint/a11y/useKeyWithClickEvents: <todo> */}
 					<div onClick={(e) => e.stopPropagation()}>
 						<UploadConversationDropzone projectId={projectId} />
 					</div>

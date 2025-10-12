@@ -6,8 +6,12 @@
 - dockerfile update
 
 
-- add biome
-- (feature) add clone project (only metadata) + tests
+- (feature) new "Dembrane 25-09" transcription provider used for all new transcription (AssemblyAI + Gemini)
+- (feature) add pii redaction option when retranscription
+- (feature) add clone project functionality (only metadata) + tests
 - (bug) fix premature calling of "finish conversation" (duration bug)
-
-- remove grid view
+- dev stuff:
+    - use vertex ai instead of gemini api
+    - remove grid view
+    - add biome for frontend linting and formatting (eslint + prettier was breaking my pc lol)
+    - refactor conversation transcript into maintainable components

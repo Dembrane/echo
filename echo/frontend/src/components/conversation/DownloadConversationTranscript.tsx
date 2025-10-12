@@ -1,6 +1,13 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { ActionIcon, Button, Modal, Stack, TextInput } from "@mantine/core";
+import {
+	ActionIcon,
+	Button,
+	Modal,
+	Stack,
+	TextInput,
+	Tooltip,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconDownload } from "@tabler/icons-react";
 import { useState } from "react";
@@ -15,9 +22,11 @@ export const DownloadConversationTranscriptModalActionIcon = ({
 
 	return (
 		<>
-			<ActionIcon onClick={open} size="md" variant="subtle" color="gray">
-				<IconDownload size={20} />
-			</ActionIcon>
+			<Tooltip label={t`Download transcript`}>
+				<ActionIcon onClick={open} size="md" variant="subtle" color="gray">
+					<IconDownload size={20} />
+				</ActionIcon>
+			</Tooltip>
 			<DownloadConversationTranscriptModal
 				conversationId={conversationId}
 				opened={opened}
