@@ -408,13 +408,14 @@ export const ConversationStatusIndicators = ({
 				</Badge>
 			)}
 
-			{!hasContent &&
+			{/* {!hasContent &&
 				conversation.is_finished === true &&
 				conversation.is_all_chunks_transcribed === true && (
 					<Badge size="xs" color="red" variant="light">
 						{t`Empty`}
 					</Badge>
-				)}
+				)} */}
+
 			{/* 
       {conversation.error != null && (
         <Tooltip
