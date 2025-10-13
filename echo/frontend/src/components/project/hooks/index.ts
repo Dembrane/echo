@@ -14,7 +14,11 @@ import {
 } from "@directus/sdk";
 import { directus } from "@/lib/directus";
 import { toast } from "@/components/common/Toaster";
-import { api, getLatestProjectAnalysisRunByProjectId } from "@/lib/api";
+import {
+  api,
+  cloneProjectById,
+  getLatestProjectAnalysisRunByProjectId,
+} from "@/lib/api";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useAddChatContextMutation } from "@/components/conversation/hooks";
 
@@ -29,6 +33,39 @@ export const useDeleteProjectByIdMutation = () => {
       });
       queryClient.resetQueries();
       toast.success("Project deleted successfully");
+    },
+  });
+};
+
+export const useCloneProjectByIdMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload?: { name?: string; language?: string };
+    }) =>
+      cloneProjectById({
+        projectId: id,
+        ...(payload ?? {}),
+      }),
+    onSuccess: (newProjectId, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      if (variables?.id) {
+        queryClient.invalidateQueries({ queryKey: ["projects", variables.id] });
+      }
+      if (newProjectId) {
+        queryClient.invalidateQueries({
+          queryKey: ["projects", newProjectId],
+        });
+      }
+      toast.success("Project cloned successfully");
+    },
+    onError: (error) => {
+      console.error(error);
+      toast.error("Error cloning project");
     },
   });
 };

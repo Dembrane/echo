@@ -567,6 +567,7 @@ async def summarize_conversation(
 
 class RetranscribeConversationBodySchema(BaseModel):
     new_conversation_name: str
+    use_pii_redaction: bool = False
 
 
 @ConversationRouter.post("/{conversation_id}/retranscribe")
@@ -702,7 +703,7 @@ async def retranscribe_conversation(
             # Import task locally to avoid circular imports
             from dembrane.tasks import task_process_conversation_chunk
 
-            task_process_conversation_chunk.send(chunk_id)
+            task_process_conversation_chunk.send(chunk_id, use_pii_redaction=body.use_pii_redaction)
 
             return {
                 "status": "success",

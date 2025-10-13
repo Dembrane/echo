@@ -15,6 +15,8 @@
 
 import os
 import sys
+import json
+import base64
 import logging
 from typing import Literal, cast
 
@@ -208,11 +210,37 @@ else:
     TRANSCRIPTION_PROVIDER = cast(TranscriptionProvider, TRANSCRIPTION_PROVIDER_RAW)
     logger.debug(f"TRANSCRIPTION_PROVIDER: {TRANSCRIPTION_PROVIDER}")
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-if GEMINI_API_KEY:
-    logger.debug("GEMINI_API_KEY: set")
-else:
-    logger.debug("GEMINI_API_KEY: not set")
+# GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+# if GEMINI_API_KEY:
+#     logger.debug("GEMINI_API_KEY: set")
+# else:
+#     logger.debug("GEMINI_API_KEY: not set")
+
+# not needed according to docs? https://docs.litellm.ai/docs/providers/vertex
+# VERTEX_GENERATE_URL = os.environ.get("VERTEX_GENERATE_URL")
+# if VERTEX_GENERATE_URL:
+#     logger.debug("VERTEX_GENERATE_URL: set")
+# else:
+#     logger.debug("VERTEX_GENERATE_URL: not set")
+
+GCP_SA_JSON_RAW = os.environ.get("GCP_SA_JSON")
+GCP_SA_JSON = None
+try:
+    if GCP_SA_JSON_RAW:
+        GCP_SA_JSON = json.loads(GCP_SA_JSON_RAW)
+        logger.info("GCP_SA_JSON: set")
+    else:
+        logger.info("GCP_SA_JSON: not set")
+except Exception as e:
+    logger.error(f"GCP_SA_JSON: not set (invalid json): {e}")
+    try:
+        logger.info("attempt to b64 decode then json load")
+        GCP_SA_JSON = json.loads(base64.b64decode(GCP_SA_JSON_RAW or ""))
+        logger.info("GCP_SA_JSON: set")
+    except Exception as e:
+        logger.error(f"GCP_SA_JSON: not set (invalid b64): {e}")
+    logger.info("GCP_SA_JSON: set")
+
 
 ENABLE_ASSEMBLYAI_TRANSCRIPTION = os.environ.get(
     "ENABLE_ASSEMBLYAI_TRANSCRIPTION", "false"

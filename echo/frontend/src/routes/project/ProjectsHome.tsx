@@ -1,6 +1,5 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { ProjectCard } from "@/components/project/ProjectCard";
 import { ProjectListItem } from "@/components/project/ProjectListItem";
 import { Icons } from "@/icons";
 import { getDirectusErrorString } from "@/lib/directus";
@@ -19,7 +18,6 @@ import {
   Container,
   Divider,
   Group,
-  Skeleton,
   Stack,
   Text,
   TextInput,
@@ -28,12 +26,9 @@ import {
 import {
   useDebouncedValue,
   useDocumentTitle,
-  useSessionStorage,
 } from "@mantine/hooks";
 import {
   IconInfoCircle,
-  IconLayoutGrid,
-  IconLayoutList,
   IconSearch,
   IconX,
 } from "@tabler/icons-react";
@@ -88,11 +83,6 @@ export const ProjectsHomeRoute = () => {
       fetchNextPage();
     }
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const [view, setView] = useSessionStorage<"grid" | "list">({
-    key: "projects-home-view",
-    defaultValue: "list",
-  });
 
   const navigate = useI18nNavigate();
   const createProjectMutation = useCreateProjectMutation();
@@ -159,29 +149,6 @@ export const ProjectsHomeRoute = () => {
           <Title order={2}>
             <Trans>Projects</Trans>
           </Title>
-
-          <Group gap="xs">
-            <ActionIcon
-              disabled={allProjects.length === 0 && debouncedSearchValue === ""}
-              variant="transparent"
-              onClick={() => setView("list")}
-              title="List view"
-              color={view === "list" ? "blue" : "gray"}
-            >
-              <IconLayoutList />
-            </ActionIcon>
-
-            <Divider orientation="vertical" />
-            <ActionIcon
-              disabled={allProjects.length === 0 && debouncedSearchValue === ""}
-              variant="transparent"
-              onClick={() => setView("grid")}
-              title={t`Grid view`}
-              color={view === "grid" ? "blue" : "gray"}
-            >
-              <IconLayoutGrid />
-            </ActionIcon>
-          </Group>
         </Group>
 
         {allProjects.length === 0 &&
@@ -236,40 +203,13 @@ export const ProjectsHomeRoute = () => {
         )}
 
         {status === "pending" && (
-          <ProjectListSkeleton view={view} searchValue={debouncedSearchValue} />
+          <ProjectListSkeleton searchValue={debouncedSearchValue} />
         )}
+
         {allProjects.length > 0 && (
           <Box className="relative">
-            {view === "grid" && (
-              <Box
-                ref={gridParent}
-                className="grid grid-cols-12 place-content-stretch gap-4"
-              >
-                {allProjects.map((project) => (
-                  <Box
-                    key={project.id}
-                    className="col-span-full h-full md:col-span-4"
-                    ref={
-                      allProjects[allProjects.length - 1].id === project.id
-                        ? loadMoreRef
-                        : undefined
-                    }
-                  >
-                    <ProjectCard project={project as Project} />
-                  </Box>
-                ))}
-                {isFetchingNextPage && (
-                  <ProjectListSkeleton
-                    view={view}
-                    searchValue={"none"}
-                    count={3}
-                    wrapper={false}
-                  />
-                )}
-              </Box>
-            )}
+ 
 
-            {view === "list" && (
               <Stack ref={listParent} gap="sm">
                 {allProjects.map((project) => (
                   <Box
@@ -283,16 +223,15 @@ export const ProjectsHomeRoute = () => {
                     <ProjectListItem project={project as Project} />
                   </Box>
                 ))}
+
                 {isFetchingNextPage && (
                   <ProjectListSkeleton
-                    view={view}
                     searchValue={"none"}
                     count={3}
                     wrapper={false}
                   />
                 )}
               </Stack>
-            )}
           </Box>
         )}
       </Stack>
