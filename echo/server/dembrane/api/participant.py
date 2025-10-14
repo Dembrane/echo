@@ -89,6 +89,7 @@ class GetUploadUrlRequest(BaseModel):
 class ConfirmUploadRequest(BaseModel):
     chunk_id: str
     file_url: str
+    file_key: str  # S3 key for the uploaded file
     timestamp: datetime
     source: str = "PORTAL_AUDIO"
 
@@ -362,6 +363,7 @@ async def get_chunk_upload_url(
             "upload_url": presigned_data["url"],
             "fields": presigned_data["fields"],
             "file_url": file_url,
+            "file_key": file_key,
         }
         
     except ConversationNotFoundException as e:
@@ -400,8 +402,10 @@ async def confirm_chunk_upload(
     logger.info(f"Confirming upload for chunk {body.chunk_id}, conversation {conversation_id}")
     
     try:
+        # Use the file_key directly from the request instead of parsing from URL
+        file_key = body.file_key if hasattr(body, 'file_key') and body.file_key else get_sanitized_s3_key(body.file_url)
+        
         # Verify file exists in S3 with retry logic (eventual consistency)
-        file_key = get_sanitized_s3_key(body.file_url)
         file_size = None
         max_retries = 3
         retry_delays = [0.1, 0.5, 2.0]  # 100ms, 500ms, 2s

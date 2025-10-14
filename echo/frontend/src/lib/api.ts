@@ -425,6 +425,7 @@ export const uploadConversationChunkWithPresignedUrl = async (payload: {
 		upload_url: string;
 		fields: Record<string, string>;
 		file_url: string;
+		file_key: string;
 	};
 
 	try {
@@ -435,6 +436,7 @@ export const uploadConversationChunkWithPresignedUrl = async (payload: {
 				upload_url: string;
 				fields: Record<string, string>;
 				file_url: string;
+				file_key: string;
 			}
 		>(`/participant/conversations/${payload.conversationId}/get-upload-url`, {
 			filename: fileName,
@@ -446,7 +448,7 @@ export const uploadConversationChunkWithPresignedUrl = async (payload: {
 		throw new Error("Failed to get upload URL from server. Please try again.");
 	}
 
-	const { chunk_id, upload_url, fields, file_url } = presignedResponse;
+	const { chunk_id, upload_url, fields, file_url, file_key } = presignedResponse;
 	console.log(`[Upload] Got presigned URL for chunk ${chunk_id}`);
 
 	// Step 2: Upload directly to S3 using presigned URL with retry
@@ -521,6 +523,7 @@ export const uploadConversationChunkWithPresignedUrl = async (payload: {
 			{
 				chunk_id,
 				file_url,
+				file_key,
 				timestamp: payload.timestamp.toISOString(),
 				source: payload.source,
 			},
