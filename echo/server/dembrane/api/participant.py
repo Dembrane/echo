@@ -89,7 +89,7 @@ class GetUploadUrlRequest(BaseModel):
 class ConfirmUploadRequest(BaseModel):
     chunk_id: str
     file_url: str
-    file_key: str  # S3 key for the uploaded file
+    file_key: Optional[str] = None  # S3 key for the uploaded file
     timestamp: datetime
     source: str = "PORTAL_AUDIO"
 
