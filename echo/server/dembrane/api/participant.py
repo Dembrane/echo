@@ -402,8 +402,8 @@ async def confirm_chunk_upload(
     logger.info(f"Confirming upload for chunk {body.chunk_id}, conversation {conversation_id}")
     
     try:
-        # Use the file_key directly from the request instead of parsing from URL
-        file_key = body.file_key if hasattr(body, 'file_key') and body.file_key else get_sanitized_s3_key(body.file_url)
+        # Use the file_key directly from the request instead of parsing from URL else fallback
+        file_key = body.file_key if body.file_key else get_sanitized_s3_key(body.file_url)
         
         # Verify file exists in S3 with retry logic (eventual consistency)
         file_size = None
