@@ -8,10 +8,14 @@
     "participant:dev": "VITE_DISABLE_SENTRY=1 VITE_USE_PARTICIPANT_ROUTER=1 vite --port 5174 --host 0.0.0.0",
     "messages:extract": "lingui extract",
     "messages:compile": "lingui compile --typescript",
-    "build": "tsc && vite build",
-    "participant:build": "tsc && VITE_API_BASE_URL=http://localhost:8000/api VITE_USE_PARTICIPANT_ROUTER=1 vite build",
-    "format": "prettier --write .",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "build": "biome check . && tsc && vite build",
+    "participant:build": "biome check . && tsc && VITE_API_BASE_URL=http://localhost:8000/api VITE_USE_PARTICIPANT_ROUTER=1 vite build",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "check": "biome check .",
+    "fix": "biome check --write .",
     "preview": "vite preview"
   },
   "dependencies": {

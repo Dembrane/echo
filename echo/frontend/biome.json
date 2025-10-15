@@ -1,23 +1,56 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.2.4/schema.json",
-	"vcs": {
-		"enabled": false,
-		"clientKind": "git",
-		"useIgnoreFile": false
+	"assist": {
+		"enabled": true,
+		"actions": {
+			"source": {
+				"useSortedKeys": "off",
+				"organizeImports": "on"
+			}
+		}
+	},
+	"css": {
+		"linter": {
+			"enabled": true
+		}
 	},
 	"files": {
 		"ignoreUnknown": false
 	},
 	"formatter": {
-		"enabled": true,
 		"indentStyle": "tab"
+	},
+	"json": {
+		"formatter": {
+			"indentStyle": "tab"
+		}
 	},
 	"linter": {
 		"enabled": true,
 		"rules": {
 			"recommended": true,
+			"style": {
+				"noParameterAssign": "error",
+				"useDefaultParameterLast": "error",
+				"useSingleVarDeclarator": "error",
+				"useConst": "error",
+				"noInferrableTypes": "error",
+				"useSelfClosingElements": "error",
+				"useNumberNamespace": "error",
+				"useAsConstAssertion": "error",
+				"noUnusedTemplateLiteral": "error",
+				"useTemplate": "error",
+				"useEnumInitializers": "error"
+			},
 			"correctness": {
+				"noUndeclaredDependencies": "error",
+				"noUnusedVariables": "error",
 				"useUniqueElementIds": "off"
+			},
+			"suspicious": {
+				"noVar": "on",
+				"noConsole": "warn",
+				"noDebugger": "error"
 			}
 		}
 	},
@@ -26,12 +59,9 @@
 			"quoteStyle": "double"
 		}
 	},
-	"assist": {
+	"vcs": {
 		"enabled": true,
-		"actions": {
-			"source": {
-				"organizeImports": "on"
-			}
-		}
+		"clientKind": "git",
+		"useIgnoreFile": true
 	}
 }
