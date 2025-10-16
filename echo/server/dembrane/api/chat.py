@@ -586,11 +586,46 @@ async def post_chat(
                     if "conversation_id_list" in proj_result:
                         selected_conversation_ids.extend(proj_result["conversation_id_list"])
 
-            # Add selected conversations to chat context
+            # Add selected conversations to chat context, but only up to 80% of max context length
             conversations_added = []
+            MAX_CONTEXT_THRESHOLD = int(MAX_CHAT_CONTEXT_LENGTH * 0.8)
+
             for conversation_id in selected_conversation_ids:
                 conversation = db.get(ConversationModel, conversation_id)
                 if conversation and conversation not in chat.used_conversations:
+                    # Temporarily add to test token count
+                    temp_conversation_list = [c.id for c in conversations_added] + [conversation_id]
+
+                    # Build system messages for current set of conversations
+                    temp_system_messages = await create_system_messages_for_chat(
+                        temp_conversation_list, db, language, project_id
+                    )
+
+                    # Build formatted messages to check token count
+                    temp_formatted_messages = []
+                    if isinstance(temp_system_messages, list):
+                        for msg in temp_system_messages:
+                            temp_formatted_messages.append(
+                                {"role": "system", "content": msg["text"]}
+                            )
+                        temp_formatted_messages.extend(conversation_history)
+                    else:
+                        temp_formatted_messages = [
+                            {"role": "system", "content": temp_system_messages}
+                        ] + conversation_history
+
+                    # Check if adding this conversation would exceed 80% threshold
+                    prompt_len = token_counter(
+                        model=LIGHTRAG_LITELLM_INFERENCE_MODEL, messages=temp_formatted_messages
+                    )
+
+                    if prompt_len > MAX_CONTEXT_THRESHOLD:
+                        logger.info(
+                            f"Reached 80% context threshold ({prompt_len}/{MAX_CONTEXT_THRESHOLD} tokens). Stopping conversation addition. Added {len(conversations_added)}/{len(selected_conversation_ids)} conversations."
+                        )
+                        break
+
+                    # If we're still under threshold, add the conversation
                     chat.used_conversations.append(conversation)
                     conversations_added.append(conversation)
 
