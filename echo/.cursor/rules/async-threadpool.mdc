@@ -1,0 +1,28 @@
+---
+description: Enforce wrapping blocking I/O calls in run_in_thread_pool
+globs:
+  - server/dembrane/**/*.py
+alwaysApply: true
+---
+
+Asynchronous programming guideline for backend (Python):
+
+- Always wrap blocking I/O calls using `run_in_thread_pool` from `dembrane.async_helpers`.
+- Wrap calls to `directus.*`, `conversation_service.*`, `project_service.*`, S3 helpers, and CPU-heavy utilities like token counting or summary generation if they are sync.
+- Do not wrap already-async functions or LightRAG calls (e.g., `rag.aquery`, `rag.ainsert`).
+- Prefer converting endpoints to `async def` and `await` results.
+
+Example:
+```python
+from dembrane.async_helpers import run_in_thread_pool
+
+conversation = await run_in_thread_pool(
+    conversation_service.get_by_id_or_raise,
+    conversation_id
+)
+```
+
+Non-example:
+```python
+conversation = conversation_service.get_by_id_or_raise(conversation_id)  # blocks event loop
+```
