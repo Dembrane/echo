@@ -145,14 +145,18 @@ def task_summarize_conversation(conversation_id: str) -> None:
             return
 
         from dembrane.api.conversation import summarize_conversation
+        from dembrane.audio_lightrag.utils.async_utils import run_async_in_new_loop
 
         with ProcessingStatusContext(
             conversation_id=conversation_id,
             event_prefix="task_summarize_conversation",
         ):
-            summarize_conversation(
-                conversation_id=conversation_id,
-                auth=DependencyDirectusSession(user_id="none", is_admin=True),
+            # Run async function in new event loop (CPU worker context)
+            run_async_in_new_loop(
+                summarize_conversation(
+                    conversation_id=conversation_id,
+                    auth=DependencyDirectusSession(user_id="none", is_admin=True),
+                )
             )
 
         return
@@ -197,22 +201,29 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
             return
 
         # local import to avoid circular imports
+        from dembrane.api.exceptions import NoContentFoundException
         from dembrane.api.conversation import get_conversation_content
+        from dembrane.audio_lightrag.utils.async_utils import run_async_in_new_loop
 
         with ProcessingStatusContext(
             conversation_id=conversation_id,
             event_prefix="task_merge_conversation_chunks",
         ):
-            # todo: except if NoValidParts
-            get_conversation_content(
-                conversation_id,
-                auth=DependencyDirectusSession(user_id="none", is_admin=True),
-                force_merge=True,
-                return_url=True,
-            )
+            try:
+                # Run async function in new event loop (CPU worker context)
+                run_async_in_new_loop(
+                    get_conversation_content(
+                        conversation_id,
+                        auth=DependencyDirectusSession(user_id="none", is_admin=True),
+                        force_merge=True,
+                        return_url=True,
+                    )
+                )
+            except NoContentFoundException:
+                logger.info(f"No valid content found for conversation {conversation_id}; skipping merge task.")
+                return
 
         return
-
     except Exception as e:
         logger.error(f"Error: {e}")
         raise e from e
