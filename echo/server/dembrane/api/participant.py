@@ -12,6 +12,7 @@ from dembrane.utils import generate_uuid
 from dembrane.config import STORAGE_S3_BUCKET, STORAGE_S3_ENDPOINT
 from dembrane.service import project_service, conversation_service
 from dembrane.directus import directus
+from dembrane.async_helpers import run_in_thread_pool
 from dembrane.service.project import ProjectNotFoundException
 from dembrane.service.conversation import (
     ConversationServiceException,
@@ -144,7 +145,8 @@ async def initiate_conversation(
     project_id: str,
 ) -> dict:
     try:
-        conversation = conversation_service.create(
+        conversation = await run_in_thread_pool(
+            conversation_service.create,
             project_id=project_id,
             participant_name=body.name,
             participant_email=body.email,
@@ -165,7 +167,11 @@ async def get_project(
     project_id: str,
 ) -> dict:
     try:
-        project = project_service.get_by_id_or_raise(project_id, with_tags=True)
+        project = await run_in_thread_pool(
+            project_service.get_by_id_or_raise,
+            project_id,
+            with_tags=True
+        )
 
         if project.get("is_conversation_allowed", False) is False:
             raise HTTPException(status_code=403, detail="Conversation not open for participation")
@@ -185,8 +191,15 @@ async def get_conversation(
     conversation_id: str,
 ) -> dict:
     try:
-        project = project_service.get_by_id_or_raise(project_id)
-        conversation = conversation_service.get_by_id_or_raise(conversation_id, with_tags=True)
+        project = await run_in_thread_pool(
+            project_service.get_by_id_or_raise,
+            project_id
+        )
+        conversation = await run_in_thread_pool(
+            conversation_service.get_by_id_or_raise,
+            conversation_id,
+            with_tags=True
+        )
 
         if project.get("is_conversation_allowed", False) is False:
             raise HTTPException(status_code=403, detail="Conversation not open for participation")
@@ -205,8 +218,15 @@ async def get_conversation_chunks(
     conversation_id: str,
 ) -> List[dict]:
     try:
-        project = project_service.get_by_id_or_raise(project_id)
-        conversation = conversation_service.get_by_id_or_raise(conversation_id, with_chunks=True)
+        project = await run_in_thread_pool(
+            project_service.get_by_id_or_raise,
+            project_id
+        )
+        conversation = await run_in_thread_pool(
+            conversation_service.get_by_id_or_raise,
+            conversation_id,
+            with_chunks=True
+        )
 
         if project.get("is_conversation_allowed", False) is False:
             raise HTTPException(status_code=403, detail="Conversation not open for participation")
@@ -225,14 +245,20 @@ async def delete_conversation_chunk(
     chunk_id: str,
 ) -> None:
     try:
-        conversation = conversation_service.get_by_id_or_raise(conversation_id)
+        conversation = await run_in_thread_pool(
+            conversation_service.get_by_id_or_raise,
+            conversation_id
+        )
     except ConversationNotFoundException as e:
         raise HTTPException(status_code=404, detail="Conversation not found") from e
 
     if project_id != conversation.get("project_id"):
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    conversation_service.delete_chunk(chunk_id)
+    await run_in_thread_pool(
+        conversation_service.delete_chunk,
+        chunk_id
+    )
 
     return
 
@@ -251,7 +277,8 @@ async def upload_conversation_text(
     body: UploadConversationBodySchema,
 ) -> dict:
     try:
-        chunk = conversation_service.create_chunk(
+        chunk = await run_in_thread_pool(
+            conversation_service.create_chunk,
             conversation_id=conversation_id,
             timestamp=body.timestamp,
             transcript=body.content,
@@ -281,7 +308,8 @@ async def upload_conversation_chunk(
     source: Annotated[str, Form()] = "PORTAL_AUDIO",
 ) -> dict:
     try:
-        return conversation_service.create_chunk(
+        return await run_in_thread_pool(
+            conversation_service.create_chunk,
             conversation_id=conversation_id,
             timestamp=timestamp,
             source=source,
@@ -321,8 +349,14 @@ async def get_chunk_upload_url(
             )
         
         # Verify conversation exists and is open
-        conversation = conversation_service.get_by_id_or_raise(conversation_id)
-        project = project_service.get_by_id_or_raise(conversation["project_id"])
+        conversation = await run_in_thread_pool(
+            conversation_service.get_by_id_or_raise,
+            conversation_id
+        )
+        project = await run_in_thread_pool(
+            project_service.get_by_id_or_raise,
+            conversation["project_id"]
+        )
         
         if not project.get("is_conversation_allowed", False):
             logger.warning(f"Conversation {conversation_id} not open for participation")
@@ -345,7 +379,8 @@ async def get_chunk_upload_url(
         # Generate presigned POST
         from dembrane.s3 import generate_presigned_post
         
-        presigned_data = generate_presigned_post(
+        presigned_data = await run_in_thread_pool(
+            generate_presigned_post,
             file_name=file_key,
             content_type=body.content_type,
             size_limit_mb=2048,  # 2GB limit
@@ -408,7 +443,10 @@ async def confirm_chunk_upload(
         
         for attempt in range(max_retries):
             try:
-                file_size = get_file_size_bytes_from_s3(file_key)
+                file_size = await run_in_thread_pool(
+                    get_file_size_bytes_from_s3,
+                    file_key
+                )
                 logger.info(f"File verified in S3: {file_key}, size: {file_size} bytes, attempt: {attempt + 1}")
                 break
             except Exception as e:
@@ -431,7 +469,8 @@ async def confirm_chunk_upload(
                     ) from e
         
         # Create chunk record (reuse existing logic)
-        chunk = conversation_service.create_chunk(
+        chunk = await run_in_thread_pool(
+            conversation_service.create_chunk,
             conversation_id=conversation_id,
             timestamp=body.timestamp,
             source=body.source,
@@ -517,7 +556,8 @@ async def subscribe_notifications(data: NotificationSubscriptionRequest) -> dict
             email = email.lower()
 
             # Check if user already exists
-            existing = directus.get_items(
+            existing = await run_in_thread_pool(
+                directus.get_items,
                 "project_report_notification_participants",
                 {
                     "query": {
@@ -538,12 +578,15 @@ async def subscribe_notifications(data: NotificationSubscriptionRequest) -> dict
                     continue  # Already opted in — skip
                 else:
                     # Delete old entry
-                    directus.delete_item(
-                        "project_report_notification_participants", participant["id"]
+                    await run_in_thread_pool(
+                        directus.delete_item,
+                        "project_report_notification_participants",
+                        participant["id"]
                     )
 
             # Create new entry with opt-in
-            directus.create_item(
+            await run_in_thread_pool(
+                directus.create_item,
                 "project_report_notification_participants",
                 {
                     "email": email,
@@ -576,7 +619,8 @@ async def unsubscribe_participant(
     """
     try:
         # Fetch relevant IDs
-        submissions = directus.get_items(
+        submissions = await run_in_thread_pool(
+            directus.get_items,
             "project_report_notification_participants",
             {
                 "query": {
@@ -598,7 +642,8 @@ async def unsubscribe_participant(
 
         # Update email_opt_in status for fetched IDs
         for item_id in ids:
-            directus.update_item(
+            await run_in_thread_pool(
+                directus.update_item,
                 "project_report_notification_participants",
                 item_id,
                 {"email_opt_in": payload.email_opt_in},
@@ -622,7 +667,8 @@ async def check_unsubscribe_eligibility(
     if not token or not project_id:
         raise HTTPException(status_code=400, detail="Invalid or missing unsubscribe link.")
 
-    submissions = directus.get_items(
+    submissions = await run_in_thread_pool(
+        directus.get_items,
         "project_report_notification_participants",
         {
             "query": {
