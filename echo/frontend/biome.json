@@ -1,13 +1,13 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.2.4/schema.json",
 	"assist": {
-		"enabled": true,
 		"actions": {
 			"source": {
-				"useSortedKeys": "off",
-				"organizeImports": "on"
+				"organizeImports": "on",
+				"useSortedKeys": "on"
 			}
-		}
+		},
+		"enabled": true
 	},
 	"css": {
 		"linter": {
@@ -20,6 +20,11 @@
 	"formatter": {
 		"indentStyle": "tab"
 	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double"
+		}
+	},
 	"json": {
 		"formatter": {
 			"indentStyle": "tab"
@@ -28,40 +33,35 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true,
-			"style": {
-				"noParameterAssign": "error",
-				"useDefaultParameterLast": "error",
-				"useSingleVarDeclarator": "error",
-				"useConst": "error",
-				"noInferrableTypes": "error",
-				"useSelfClosingElements": "error",
-				"useNumberNamespace": "error",
-				"useAsConstAssertion": "error",
-				"noUnusedTemplateLiteral": "error",
-				"useTemplate": "error",
-				"useEnumInitializers": "error"
-			},
 			"correctness": {
 				"noUndeclaredDependencies": "error",
 				"noUnusedVariables": "error",
 				"useUniqueElementIds": "off"
 			},
+			"recommended": true,
+			"style": {
+				"noInferrableTypes": "error",
+				"noParameterAssign": "error",
+				"noUnusedTemplateLiteral": "error",
+				"useAsConstAssertion": "error",
+				"useConst": "error",
+				"useDefaultParameterLast": "error",
+				"useEnumInitializers": "error",
+				"useNumberNamespace": "error",
+				"useSelfClosingElements": "error",
+				"useSingleVarDeclarator": "error",
+				"useTemplate": "error"
+			},
 			"suspicious": {
-				"noVar": "on",
 				"noConsole": "warn",
-				"noDebugger": "error"
+				"noDebugger": "error",
+				"noVar": "on"
 			}
 		}
 	},
-	"javascript": {
-		"formatter": {
-			"quoteStyle": "double"
-		}
-	},
 	"vcs": {
-		"enabled": true,
 		"clientKind": "git",
+		"enabled": true,
 		"useIgnoreFile": true
 	}
 }
