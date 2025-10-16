@@ -38,12 +38,13 @@
 				"noUnusedVariables": "error",
 				"useUniqueElementIds": "off"
 			},
-			"recommended": true,
 			"style": {
 				"noInferrableTypes": "error",
 				"noParameterAssign": "error",
 				"noUnusedTemplateLiteral": "error",
+				"useArrayLiterals": "error",
 				"useAsConstAssertion": "error",
+				"useCollapsedElseIf": "error",
 				"useConst": "error",
 				"useDefaultParameterLast": "error",
 				"useEnumInitializers": "error",
@@ -53,9 +54,9 @@
 				"useTemplate": "error"
 			},
 			"suspicious": {
-				"noConsole": "warn",
-				"noDebugger": "error",
-				"noVar": "on"
+				"noAlert": "warn",
+				"noCatchAssign": "error",
+				"noVar": "error"
 			}
 		}
 	},
