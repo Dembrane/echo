@@ -15,7 +15,8 @@
 		}
 	},
 	"files": {
-		"ignoreUnknown": false
+		"ignoreUnknown": false,
+		"includes": ["**/*", "!**/dist", "!**/node_modules", "!**/package-lock.json", "!**/package.json"]
 	},
 	"formatter": {
 		"indentStyle": "tab"
