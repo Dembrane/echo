@@ -53,9 +53,7 @@ export const ProjectConversationTranscript = () => {
 		},
 	);
 
-	const allChunks = (
-		(chunksData?.pages ?? []) as { chunks: ConversationChunk[] }[]
-	).flatMap((page) => page.chunks);
+	const allChunks = (chunksData?.pages ?? []).flatMap((page) => page.chunks);
 
 	const hasValidTranscripts = allChunks.some(
 		(chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
