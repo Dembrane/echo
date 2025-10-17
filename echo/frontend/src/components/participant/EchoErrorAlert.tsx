@@ -3,28 +3,28 @@ import { Alert, Text } from "@mantine/core";
 import { IconAlertCircle } from "@tabler/icons-react";
 
 export const EchoErrorAlert = ({ error }: { error: Error }) => {
-  return (
-    <Alert
-      icon={<IconAlertCircle size="1rem" />}
-      color="red"
-      variant="outline"
-      radius="md"
-      className="my-5 md:my-7"
-    >
-      <Text size="sm">
-        {error?.message?.includes("CONTENT_POLICY_VIOLATION") ? (
-          <Trans id="participant.echo.content.policy.violation.error.message">
-            Sorry, we cannot process this request due to an LLM provider's
-            content policy.
-          </Trans>
-        ) : (
-          <Trans id="participant.echo.generic.error.message">
-            Something went wrong. Please try again by pressing the{" "}
-            <span className="font-bold">ECHO</span> button, or contact support
-            if the issue continues.
-          </Trans>
-        )}
-      </Text>
-    </Alert>
-  );
+	return (
+		<Alert
+			icon={<IconAlertCircle size="1rem" />}
+			color="red"
+			variant="outline"
+			radius="md"
+			className="my-5 md:my-7"
+		>
+			<Text size="sm">
+				{error?.message?.includes("CONTENT_POLICY_VIOLATION") ? (
+					<Trans id="participant.echo.content.policy.violation.error.message">
+						Sorry, we cannot process this request due to an LLM provider's
+						content policy.
+					</Trans>
+				) : (
+					<Trans id="participant.echo.generic.error.message">
+						Something went wrong. Please try again by pressing the{" "}
+						<span className="font-bold">ECHO</span> button, or contact support
+						if the issue continues.
+					</Trans>
+				)}
+			</Text>
+		</Alert>
+	);
 };

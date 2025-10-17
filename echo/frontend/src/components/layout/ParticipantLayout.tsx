@@ -1,73 +1,72 @@
-import { Outlet, useLocation } from "react-router";
-import { Group, ActionIcon, Box } from "@mantine/core";
-import useSessionStorageState from "use-session-storage-state";
-import { IconSettings } from "@tabler/icons-react";
-
-import { Logo } from "../common/Logo";
-import { I18nProvider } from "./I18nProvider";
-
 import { t } from "@lingui/core/macro";
+import { ActionIcon, Box, Group } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconSettings } from "@tabler/icons-react";
+import { Outlet, useLocation } from "react-router";
+import useSessionStorageState from "use-session-storage-state";
+import { Logo } from "../common/Logo";
 
 import { ParticipantSettingsModal } from "../participant/ParticipantSettingsModal";
-import { useDisclosure } from "@mantine/hooks";
+import { I18nProvider } from "./I18nProvider";
 
 const ParticipantHeader = () => {
-  const [loadingFinished] = useSessionStorageState("loadingFinished", {
-    defaultValue: true,
-  });
+	const [loadingFinished] = useSessionStorageState("loadingFinished", {
+		defaultValue: true,
+	});
 
-  if (!loadingFinished) {
-    return null;
-  }
+	if (!loadingFinished) {
+		return null;
+	}
 
-  return (
-    <Group component="header" justify="center" className="py-2 shadow-sm">
-      <Logo hideTitle h="64px" />
-    </Group>
-  );
+	return (
+		<Group component="header" justify="center" className="py-2 shadow-sm">
+			<Logo hideTitle h="64px" />
+		</Group>
+	);
 };
 
 export const ParticipantLayout = () => {
-  const { pathname } = useLocation();
-  const isReportPage = pathname.includes("report");
-  const hideSettingsButton = pathname.includes("start") || pathname.includes("finish");
-  const [opened, { open, close }] = useDisclosure(false);
+	const { pathname } = useLocation();
+	const isReportPage = pathname.includes("report");
+	const hideSettingsButton =
+		pathname.includes("start") || pathname.includes("finish");
+	const [opened, { open, close }] = useDisclosure(false);
 
-  if (isReportPage) {
-    return (
-      <I18nProvider>
-        <main className="relative min-h-dvh">
-          <Outlet />
-        </main>
-      </I18nProvider>
-    );
-  }
+	if (isReportPage) {
+		return (
+			<I18nProvider>
+				<main className="relative min-h-dvh">
+					<Outlet />
+				</main>
+			</I18nProvider>
+		);
+	}
 
-  return (
-    <I18nProvider>
-      <ParticipantSettingsModal opened={opened} onClose={close} />
+	return (
+		<I18nProvider>
+			<ParticipantSettingsModal opened={opened} onClose={close} />
 
-      <main className="relative !h-dvh overflow-y-auto">
-        <div className="flex h-full flex-col">
-          <ParticipantHeader />
-          {!hideSettingsButton  && (
-            <Box className="absolute right-4 top-5 z-20">
-              <ActionIcon
-                size="lg"
-                variant="transparent"
-                onClick={open}
-                title={t`Settings`}
-                aria-label={t`Settings`}
-              >
-                <IconSettings size={24} color="gray" />
-              </ActionIcon>
-            </Box>
-          )}
-          <main className="relative grow">
-            <Outlet />
-          </main>
-        </div>
-      </main>
-    </I18nProvider>
-  );
+			<main className="relative !h-dvh overflow-y-auto">
+				<div className="flex h-full flex-col">
+					<ParticipantHeader />
+					{!hideSettingsButton && (
+						<Box className="absolute right-4 top-5 z-20">
+							<ActionIcon
+								size="lg"
+								variant="transparent"
+								onClick={open}
+								title={t`Settings`}
+								aria-label={t`Settings`}
+							>
+								<IconSettings size={24} color="gray" />
+							</ActionIcon>
+						</Box>
+					)}
+					<main className="relative grow">
+						<Outlet />
+					</main>
+				</div>
+			</main>
+		</I18nProvider>
+	);
 };

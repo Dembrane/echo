@@ -85,10 +85,10 @@ export const RetranscribeConversationModal = ({
 				t`Retranscription started. New conversation will be available soon.`,
 				{
 					action: {
-						label: t`Go to new conversation`,
 						actionButtonStyle: {
 							color: "blue",
 						},
+						label: t`Go to new conversation`,
 						onClick: () => {
 							navigate(
 								`/projects/${projectId}/conversation/${new_conversation_id}/transcript`,

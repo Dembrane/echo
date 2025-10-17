@@ -46,18 +46,12 @@ export const useInfiniteConversationChunks = (
 	const { initialLimit, refetchInterval } = { ...defaultOptions, ...options };
 
 	return useInfiniteQuery({
-		queryKey: ["conversations", conversationId, "chunks", "infinite"],
+		getNextPageParam: (lastPage: { nextOffset?: number }) =>
+			lastPage.nextOffset,
+		initialPageParam: 0,
 		queryFn: async ({ pageParam = 0 }) => {
 			const response = await directus.request(
 				readItems("conversation_chunk", {
-					filter: {
-						conversation_id: {
-							_eq: conversationId,
-						},
-					},
-					sort: ["timestamp"],
-					limit: initialLimit,
-					offset: pageParam * initialLimit,
 					fields: [
 						"id",
 						"conversation_id",
@@ -67,6 +61,14 @@ export const useInfiniteConversationChunks = (
 						"error",
 						"diarization",
 					],
+					filter: {
+						conversation_id: {
+							_eq: conversationId,
+						},
+					},
+					limit: initialLimit,
+					offset: pageParam * initialLimit,
+					sort: ["timestamp"],
 				}),
 			);
 
@@ -76,8 +78,7 @@ export const useInfiniteConversationChunks = (
 					response.length === initialLimit ? pageParam + 1 : undefined,
 			};
 		},
-		initialPageParam: 0,
-		getNextPageParam: (lastPage) => lastPage.nextOffset,
+		queryKey: ["conversations", conversationId, "chunks", "infinite"],
 		refetchInterval,
 	});
 };
@@ -128,6 +129,7 @@ export const useUpdateConversationTagsMutation = () => {
 			try {
 				const validTags = await directus.request<ProjectTag[]>(
 					readItems("project_tag", {
+						fields: ["*"],
 						filter: {
 							id: {
 								_in: projectTagIdList,
@@ -136,12 +138,11 @@ export const useUpdateConversationTagsMutation = () => {
 								_eq: projectId,
 							},
 						},
-						fields: ["*"],
 					}),
 				);
 
 				validTagsIds = validTags.map((tag) => tag.id);
-			} catch (error) {
+			} catch (_error) {
 				validTagsIds = [];
 			}
 
@@ -233,6 +234,9 @@ export const useDeleteConversationByIdMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: deleteConversationById,
+		onError: (error: Error) => {
+			toast.error(error.message);
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects"],
@@ -241,9 +245,6 @@ export const useDeleteConversationByIdMutation = () => {
 				queryKey: ["conversations"],
 			});
 			toast.success("Conversation deleted successfully");
-		},
-		onError: (error: Error) => {
-			toast.error(error.message);
 		},
 	});
 };
@@ -264,17 +265,17 @@ export const useMoveConversationMutation = () => {
 						project_id: targetProjectId,
 					}),
 				);
-			} catch (error) {
+			} catch (_error) {
 				toast.error("Failed to move conversation.");
 			}
+		},
+		onError: (error: Error) => {
+			toast.error(`Failed to move conversation: ${error.message}`);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["conversations"] });
 			queryClient.invalidateQueries({ queryKey: ["projects"] });
 			toast.success("Conversation moved successfully");
-		},
-		onError: (error: Error) => {
-			toast.error("Failed to move conversation: " + error.message);
 		},
 	});
 };
@@ -292,6 +293,48 @@ export const useAddChatContextMutation = () => {
 				payload.conversationId,
 				payload.auto_select_bool,
 			),
+		onError: (error, variables, context) => {
+			Sentry.captureException(error);
+
+			// Only rollback the failed optimistic entry
+			if ((context as any)?.optimisticId && (context as any)?.conversationId) {
+				queryClient.setQueryData(
+					["chats", "context", variables.chatId],
+					(oldData: TProjectChatContext | undefined) => {
+						if (!oldData) return oldData;
+						return {
+							...oldData,
+							conversations: oldData.conversations.filter(
+								(conv) =>
+									conv.conversation_id !== (context as any).conversationId ||
+									conv.optimisticId !== (context as any).optimisticId,
+							),
+						};
+					},
+				);
+			} else if ((context as any)?.previousChatContext) {
+				// fallback: full rollback
+				queryClient.setQueryData(
+					["chats", "context", variables.chatId],
+					(context as any).previousChatContext,
+				);
+			}
+			if (error instanceof AxiosError) {
+				let errorMessage = t`Failed to add conversation to chat${
+					error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
+				}`;
+				if (variables.auto_select_bool) {
+					errorMessage = t`Failed to enable Auto Select for this chat`;
+				}
+				toast.error(errorMessage);
+			} else {
+				let errorMessage = t`Failed to add conversation to chat`;
+				if (variables.auto_select_bool) {
+					errorMessage = t`Failed to enable Auto Select for this chat`;
+				}
+				toast.error(errorMessage);
+			}
+		},
 		onMutate: async (variables) => {
 			// Cancel any outgoing refetches
 			await queryClient.cancelQueries({
@@ -319,7 +362,7 @@ export const useAddChatContextMutation = () => {
 						);
 
 						if (!existingConversation) {
-							optimisticId = "optimistic-" + Date.now() + Math.random();
+							optimisticId = `optimistic-${Date.now()}${Math.random()}`;
 							return {
 								...oldData,
 								conversations: [
@@ -328,8 +371,8 @@ export const useAddChatContextMutation = () => {
 										conversation_id: variables.conversationId,
 										conversation_participant_name: t`Loading...`,
 										locked: false,
-										token_usage: 0,
 										optimisticId,
+										token_usage: 0,
 									},
 								],
 							};
@@ -350,53 +393,10 @@ export const useAddChatContextMutation = () => {
 
 			// Return a context object with the snapshotted value
 			return {
-				previousChatContext,
-				optimisticId,
 				conversationId: variables.conversationId ?? undefined,
+				optimisticId,
+				previousChatContext,
 			};
-		},
-		onError: (error, variables, context) => {
-			Sentry.captureException(error);
-
-			// Only rollback the failed optimistic entry
-			if (context?.optimisticId && context?.conversationId) {
-				queryClient.setQueryData(
-					["chats", "context", variables.chatId],
-					(oldData: TProjectChatContext | undefined) => {
-						if (!oldData) return oldData;
-						return {
-							...oldData,
-							conversations: oldData.conversations.filter(
-								(conv) =>
-									conv.conversation_id !== context.conversationId ||
-									conv.optimisticId !== context.optimisticId,
-							),
-						};
-					},
-				);
-			} else if (context?.previousChatContext) {
-				// fallback: full rollback
-				queryClient.setQueryData(
-					["chats", "context", variables.chatId],
-					context.previousChatContext,
-				);
-			}
-
-			if (error instanceof AxiosError) {
-				let errorMessage = t`Failed to add conversation to chat${
-					error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
-				}`;
-				if (variables.auto_select_bool) {
-					errorMessage = t`Failed to enable Auto Select for this chat`;
-				}
-				toast.error(errorMessage);
-			} else {
-				let errorMessage = t`Failed to add conversation to chat`;
-				if (variables.auto_select_bool) {
-					errorMessage = t`Failed to enable Auto Select for this chat`;
-				}
-				toast.error(errorMessage);
-			}
 		},
 		onSettled: (_, __, variables) => {
 			queryClient.invalidateQueries({
@@ -425,6 +425,67 @@ export const useDeleteChatContextMutation = () => {
 				payload.conversationId,
 				payload.auto_select_bool,
 			),
+		onError: (error, variables, context) => {
+			Sentry.captureException(error);
+
+			// Only rollback the failed optimistic entry
+			const conversationId = (context as { conversationId?: string })
+				?.conversationId;
+			const previousChatContext = (
+				context as { previousChatContext?: TProjectChatContext }
+			)?.previousChatContext;
+
+			if (conversationId) {
+				queryClient.setQueryData(
+					["chats", "context", variables.chatId],
+					(oldData: TProjectChatContext | undefined) => {
+						if (!oldData) return oldData;
+
+						const removedConversation = (
+							previousChatContext as TProjectChatContext | undefined
+						)?.conversations?.find(
+							(conv) => conv.conversation_id === conversationId,
+						);
+
+						if (removedConversation) {
+							return {
+								...oldData,
+								conversations: [
+									...oldData.conversations,
+									{
+										...removedConversation,
+									},
+								],
+							};
+						}
+
+						return oldData;
+					},
+				);
+			} else if (previousChatContext) {
+				// fallback: full rollback
+				queryClient.setQueryData(
+					["chats", "context", variables.chatId],
+					previousChatContext,
+				);
+			}
+
+			if (error instanceof AxiosError) {
+				let errorMessage = t`Failed to remove conversation from chat${
+					error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
+				}`;
+				if (variables.auto_select_bool === false) {
+					errorMessage = t`Failed to disable Auto Select for this chat`;
+				}
+				toast.error(errorMessage);
+			} else {
+				let errorMessage = t`Failed to remove conversation from chat`;
+				if (variables.auto_select_bool === false) {
+					errorMessage = t`Failed to disable Auto Select for this chat`;
+				}
+				toast.error(errorMessage);
+			}
+		},
 		onMutate: async (variables) => {
 			// Cancel any outgoing refetches
 			await queryClient.cancelQueries({
@@ -474,66 +535,9 @@ export const useDeleteChatContextMutation = () => {
 
 			// Return a context object with the snapshotted value
 			return {
-				previousChatContext,
 				conversationId: variables.conversationId ?? undefined,
+				previousChatContext,
 			};
-		},
-		onError: (error, variables, context) => {
-			Sentry.captureException(error);
-
-			// Only rollback the failed optimistic entry
-			if (context?.conversationId) {
-				queryClient.setQueryData(
-					["chats", "context", variables.chatId],
-					(oldData: TProjectChatContext | undefined) => {
-						if (!oldData) return oldData;
-
-						// Find the conversation that was removed optimistically
-						const previousContext = context.previousChatContext as
-							| TProjectChatContext
-							| undefined;
-						const removedConversation = previousContext?.conversations?.find(
-							(conv) => conv.conversation_id === context.conversationId,
-						);
-
-						if (removedConversation) {
-							return {
-								...oldData,
-								conversations: [
-									...oldData.conversations,
-									{
-										...removedConversation,
-									},
-								],
-							};
-						}
-
-						return oldData;
-					},
-				);
-			} else if (context?.previousChatContext) {
-				// fallback: full rollback
-				queryClient.setQueryData(
-					["chats", "context", variables.chatId],
-					context.previousChatContext,
-				);
-			}
-
-			if (error instanceof AxiosError) {
-				let errorMessage = t`Failed to remove conversation from chat${
-					error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
-				}`;
-				if (variables.auto_select_bool === false) {
-					errorMessage = t`Failed to disable Auto Select for this chat`;
-				}
-				toast.error(errorMessage);
-			} else {
-				let errorMessage = t`Failed to remove conversation from chat`;
-				if (variables.auto_select_bool === false) {
-					errorMessage = t`Failed to disable Auto Select for this chat`;
-				}
-				toast.error(errorMessage);
-			}
 		},
 		onSettled: (_, __, variables) => {
 			queryClient.invalidateQueries({
@@ -553,10 +557,11 @@ export const useDeleteChatContextMutation = () => {
 export const useConversationChunkContentUrl = (
 	conversationId: string,
 	chunkId: string,
-	enabled: boolean = true,
+	enabled = true,
 ) => {
 	return useQuery({
-		queryKey: ["conversation", conversationId, "chunk", chunkId, "audio-url"],
+		enabled,
+		gcTime: 1000 * 60 * 60, // 1 hour
 		queryFn: async () => {
 			const url = getConversationChunkContentLink(
 				conversationId,
@@ -565,25 +570,24 @@ export const useConversationChunkContentUrl = (
 			);
 			return apiNoAuth.get<unknown, string>(url);
 		},
-		enabled,
+		queryKey: ["conversation", conversationId, "chunk", chunkId, "audio-url"],
 		staleTime: 1000 * 60 * 30, // 30 minutes
-		gcTime: 1000 * 60 * 60, // 1 hour
 	});
 };
 
 export const useConversationContentUrl = (
 	conversationId: string,
-	enabled: boolean = true,
+	enabled = true,
 ) => {
 	return useQuery({
-		queryKey: ["conversation", conversationId, "merged-audio-url"],
+		enabled,
+		gcTime: 1000 * 60 * 60, // 1 hour
 		queryFn: async () => {
 			const url = getConversationContentLink(conversationId, true);
 			return url;
 		},
-		enabled,
+		queryKey: ["conversation", conversationId, "merged-audio-url"],
 		staleTime: 1000 * 60 * 30, // 30 minutes
-		gcTime: 1000 * 60 * 60, // 1 hour
 	});
 };
 
@@ -605,15 +609,15 @@ export const useRetranscribeConversationMutation = () => {
 				newConversationName,
 				usePiiRedaction,
 			),
+		onError: (error) => {
+			toast.error(t`Failed to retranscribe conversation. Please try again.`);
+			console.error("Retranscribe error:", error);
+		},
 		onSuccess: (_data) => {
 			// Invalidate all conversation related queries
 			queryClient.invalidateQueries({
 				queryKey: ["conversations"],
 			});
-		},
-		onError: (error) => {
-			toast.error(t`Failed to retranscribe conversation. Please try again.`);
-			console.error("Retranscribe error:", error);
 		},
 	});
 };
@@ -627,23 +631,23 @@ export const useGetConversationTranscriptStringMutation = () => {
 
 export const useConversationChunks = (
 	conversationId: string,
-	refetchInterval: number = 10000,
+	refetchInterval = 10000,
 	fields: string[] = ["id"],
 ) => {
 	return useQuery({
-		queryKey: ["conversations", conversationId, "chunks"],
 		queryFn: () =>
 			directus.request(
 				readItems("conversation_chunk", {
+					fields: fields as any,
 					filter: {
 						conversation_id: {
 							_eq: conversationId,
 						},
 					},
-					fields: fields as any,
 					sort: "timestamp",
 				}),
 			),
+		queryKey: ["conversations", conversationId, "chunks"],
 		refetchInterval,
 	});
 };
@@ -659,19 +663,15 @@ export const useConversationsByProjectId = (
 	const TIME_INTERVAL_SECONDS = 40;
 
 	return useQuery({
-		queryKey: [
-			"projects",
-			projectId,
-			"conversations",
-			loadChunks ? "chunks" : "no-chunks",
-			loadWhereTranscriptExists ? "transcript" : "no-transcript",
-			query,
-			filterBySource,
-		],
 		queryFn: async () => {
 			const conversations = await directus.request(
 				readItems("conversation", {
-					sort: "-updated_at",
+					deep: {
+						// @ts-expect-error chunks is not typed
+						chunks: {
+							_limit: loadChunks ? 1000 : 1,
+						},
+					},
 					fields: [
 						...CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS,
 						{
@@ -683,16 +683,7 @@ export const useConversationsByProjectId = (
 						},
 						{ chunks: ["*"] },
 					],
-					deep: {
-						// @ts-expect-error chunks is not typed
-						chunks: {
-							_limit: loadChunks ? 1000 : 1,
-						},
-					},
 					filter: {
-						project_id: {
-							_eq: projectId,
-						},
 						chunks: {
 							...(loadWhereTranscriptExists && {
 								_some: {
@@ -702,6 +693,9 @@ export const useConversationsByProjectId = (
 								},
 							}),
 						},
+						project_id: {
+							_eq: projectId,
+						},
 						...(filterBySource && {
 							source: {
 								_in: filterBySource,
@@ -709,12 +703,23 @@ export const useConversationsByProjectId = (
 						}),
 					},
 					limit: 1000,
+					sort: "-updated_at",
 					...query,
 				}),
 			);
 
 			return conversations;
 		},
+		queryKey: [
+			"projects",
+			projectId,
+			"conversations",
+			loadChunks ? "chunks" : "no-chunks",
+			loadWhereTranscriptExists ? "transcript" : "no-transcript",
+			query,
+			filterBySource,
+		],
+		refetchInterval: 30000,
 		select: (data) => {
 			// Add live field to each conversation based on recent chunk activity
 			const cutoffTime = new Date(Date.now() - TIME_INTERVAL_SECONDS * 1000);
@@ -747,7 +752,6 @@ export const useConversationsByProjectId = (
 				};
 			});
 		},
-		refetchInterval: 30000,
 	});
 };
 
@@ -795,7 +799,6 @@ export const useConversationById = ({
 	useQueryOpts?: Partial<UseQueryOptions<Conversation>>;
 }) => {
 	return useQuery({
-		queryKey: ["conversations", conversationId, loadConversationChunks, query],
 		queryFn: () =>
 			directus.request<Conversation>(
 				readItem("conversation", conversationId, {
@@ -831,6 +834,7 @@ export const useConversationById = ({
 					...query,
 				}),
 			),
+		queryKey: ["conversations", conversationId, loadConversationChunks, query],
 		...useQueryOpts,
 	});
 };
@@ -850,20 +854,18 @@ export const useInfiniteConversationsByProjectId = (
 	const TIME_INTERVAL_SECONDS = 40;
 
 	return useInfiniteQuery({
-		queryKey: [
-			"projects",
-			projectId,
-			"conversations",
-			"infinite",
-			loadChunks ? "chunks" : "no-chunks",
-			loadWhereTranscriptExists ? "transcript" : "no-transcript",
-			query,
-			filterBySource,
-		],
+		getNextPageParam: (lastPage: { nextOffset?: number }) =>
+			lastPage.nextOffset,
+		initialPageParam: 0,
 		queryFn: async ({ pageParam = 0 }) => {
 			const conversations = await directus.request(
 				readItems("conversation", {
-					sort: "-updated_at",
+					deep: {
+						// @ts-expect-error chunks is not typed
+						chunks: {
+							_limit: loadChunks ? 1000 : 1,
+						},
+					},
 					fields: [
 						...CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS,
 						{
@@ -875,16 +877,7 @@ export const useInfiniteConversationsByProjectId = (
 						},
 						{ chunks: ["*"] },
 					],
-					deep: {
-						// @ts-expect-error chunks is not typed
-						chunks: {
-							_limit: loadChunks ? 1000 : 1,
-						},
-					},
 					filter: {
-						project_id: {
-							_eq: projectId,
-						},
 						chunks: {
 							...(loadWhereTranscriptExists && {
 								_some: {
@@ -894,6 +887,9 @@ export const useInfiniteConversationsByProjectId = (
 								},
 							}),
 						},
+						project_id: {
+							_eq: projectId,
+						},
 						...(filterBySource && {
 							source: {
 								_in: filterBySource,
@@ -902,6 +898,7 @@ export const useInfiniteConversationsByProjectId = (
 					},
 					limit: initialLimit,
 					offset: pageParam * initialLimit,
+					sort: "-updated_at",
 					...query,
 				}),
 			);
@@ -912,6 +909,17 @@ export const useInfiniteConversationsByProjectId = (
 					conversations.length === initialLimit ? pageParam + 1 : undefined,
 			};
 		},
+		queryKey: [
+			"projects",
+			projectId,
+			"conversations",
+			"infinite",
+			loadChunks ? "chunks" : "no-chunks",
+			loadWhereTranscriptExists ? "transcript" : "no-transcript",
+			query,
+			filterBySource,
+		],
+		refetchInterval: 30000,
 		select: (data) => {
 			// Add live field to each conversation based on recent chunk activity
 			const cutoffTime = new Date(Date.now() - TIME_INTERVAL_SECONDS * 1000);
@@ -950,9 +958,6 @@ export const useInfiniteConversationsByProjectId = (
 				})),
 			};
 		},
-		initialPageParam: 0,
-		getNextPageParam: (lastPage) => lastPage.nextOffset,
-		refetchInterval: 30000,
 	});
 };
 
@@ -961,7 +966,6 @@ export const useConversationsCountByProjectId = (
 	query?: Partial<Query<CustomDirectusTypes, Conversation>>,
 ) => {
 	return useQuery({
-		queryKey: ["projects", projectId, "conversations", "count", query],
 		queryFn: async () => {
 			const response = await directus.request(
 				aggregate("conversation", {
@@ -980,5 +984,6 @@ export const useConversationsCountByProjectId = (
 			);
 			return response[0].count;
 		},
+		queryKey: ["projects", projectId, "conversations", "count", query],
 	});
 };

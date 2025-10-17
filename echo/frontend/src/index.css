@@ -1,28 +1,29 @@
 /* Import the Space Grotesk variable font */
-@import '@fontsource-variable/space-grotesk';
+@import "@fontsource-variable/space-grotesk";
 
 @layer tailwind {
-  @tailwind base;
+	/* biome-ignore lint/suspicious/noUnknownAtRules: <explanation> */
+	@tailwind base;
 }
+/* biome-ignore lint/suspicious/noUnknownAtRules: <explanation> */
 @tailwind components;
+/* biome-ignore lint/suspicious/noUnknownAtRules: <explanation> */
 @tailwind utilities;
 
-
-
 .space-grotesk {
-  font-family: "Space Grotesk", sans-serif !important;
+	font-family: "Space Grotesk", sans-serif !important;
 }
 
 /* Override Tailwind's prose with a more specific selector */
 .prose.space-grotesk {
-  font-family: "Space Grotesk", sans-serif !important;
+	font-family: "Space Grotesk", sans-serif !important;
 }
 
 /* Ensure all elements within also use the font */
 .prose.space-grotesk * {
-  font-family: "Space Grotesk", sans-serif !important;
+	font-family: "Space Grotesk", sans-serif !important;
 }
 
 [aria-label="editable markdown"] {
-  font-family: "Space Grotesk", sans-serif !important;
+	font-family: "Space Grotesk", sans-serif !important;
 }

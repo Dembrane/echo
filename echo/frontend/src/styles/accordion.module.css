@@ -1,8 +1,8 @@
 .chevron {
-  padding: 0;
-  margin-left: 0px;
-  margin-right: 8px;
-  &[data-rotate] {
-    transform: rotate(90deg);
-  }
+	padding: 0;
+	margin-left: 0px;
+	margin-right: 8px;
+	&[data-rotate] {
+		transform: rotate(90deg);
+	}
 }

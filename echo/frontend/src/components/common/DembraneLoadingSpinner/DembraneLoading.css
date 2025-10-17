@@ -1,33 +1,33 @@
 @keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
+	from {
+		transform: rotate(0deg);
+	}
 
-  to {
-    transform: rotate(360deg);
-  }
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 @keyframes fadeInOut {
-  0%,
-  100% {
-    opacity: 0.4;
-  }
+	0%,
+	100% {
+		opacity: 0.4;
+	}
 
-  50% {
-    opacity: 1;
-  }
+	50% {
+		opacity: 1;
+	}
 }
 
 .loading-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
 }
 
 .loading-image {
-  animation:
-    rotate 10s linear infinite,
-    fadeInOut 1.5s ease-in-out infinite;
+	animation:
+		rotate 10s linear infinite,
+		fadeInOut 1.5s ease-in-out infinite;
 }

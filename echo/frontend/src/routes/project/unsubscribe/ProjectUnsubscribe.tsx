@@ -1,94 +1,90 @@
+import { Trans } from "@lingui/react/macro";
+import { Button, Loader, Stack, Text, Title } from "@mantine/core";
+import { IconCheck } from "@tabler/icons-react";
+import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
 import { useSearchParams } from "react-router";
 import { useCheckUnsubscribeStatus } from "@/components/unsubscribe/hooks";
-import { Button, Stack, Title, Text, Loader, Group } from "@mantine/core";
-import { useState } from "react";
-import { Logo } from "@/components/common/Logo";
-import { IconCheck } from "@tabler/icons-react";
-import { Trans } from "@lingui/react/macro";
-import { t } from "@lingui/core/macro";
-import { useMutation } from "@tanstack/react-query";
 import { unsubscribeParticipant } from "@/lib/api";
 
 export const ProjectUnsubscribe = () => {
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get("token") ?? "";
-  const project_id = searchParams.get("project_id") ?? "";
+	const [searchParams] = useSearchParams();
+	const token = searchParams.get("token") ?? "";
+	const project_id = searchParams.get("project_id") ?? "";
 
-  const {
-    data,
-    isLoading,
-    error,
-  } = useCheckUnsubscribeStatus(token, project_id);
+	const { data, isLoading, error } = useCheckUnsubscribeStatus(
+		token,
+		project_id,
+	);
 
-  const [success, setSuccess] = useState(false);
+	const [success, setSuccess] = useState(false);
 
-  const { mutate, isPending } = useMutation({
-    mutationFn: ({
-      project_id,
-      token,
-      email_opt_in,
-    }: {
-      project_id: string;
-      token: string;
-      email_opt_in: boolean;
-    }) => unsubscribeParticipant(project_id, token, email_opt_in),
-    onSuccess: () => setSuccess(true),
-  });
+	const { mutate, isPending } = useMutation({
+		mutationFn: ({
+			project_id,
+			token,
+			email_opt_in,
+		}: {
+			project_id: string;
+			token: string;
+			email_opt_in: boolean;
+		}) => unsubscribeParticipant(project_id, token, email_opt_in),
+		onSuccess: () => setSuccess(true),
+	});
 
-  const handleUnsubscribe = () => {
-    mutate(
-      { token, project_id, email_opt_in: false },
-      {
-        onSuccess: () => setSuccess(true),
-      },
-    );
-  };
+	const handleUnsubscribe = () => {
+		mutate(
+			{ email_opt_in: false, project_id, token },
+			{
+				onSuccess: () => setSuccess(true),
+			},
+		);
+	};
 
-  return (
-    <div className="relative flex !h-dvh flex-col overflow-y-auto">
-      <main className="container mx-auto h-full max-w-2xl">
-        <Stack
-          className="mt-[64px] px-4 py-8"
-          px="2rem"
-          py="2rem"
-          align="center"
-        >
-          <Title order={2}>
-            <Trans> Unsubscribe from Notifications</Trans>
-          </Title>
+	return (
+		<div className="relative flex !h-dvh flex-col overflow-y-auto">
+			<main className="container mx-auto h-full max-w-2xl">
+				<Stack
+					className="mt-[64px] px-4 py-8"
+					px="2rem"
+					py="2rem"
+					align="center"
+				>
+					<Title order={2}>
+						<Trans> Unsubscribe from Notifications</Trans>
+					</Title>
 
-          {isLoading && <Loader size="sm" />}
-          {error && <Text c="red">{error.message}</Text>}
-          {success && (
-            <Text c="green" size="md" className="flex items-center gap-2">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white">
-                <IconCheck size={16} strokeWidth={3} />
-              </span>
-              <Trans>You have successfully unsubscribed.</Trans>
-            </Text>
-          )}
+					{isLoading && <Loader size="sm" />}
+					{error && <Text c="red">{error.message}</Text>}
+					{success && (
+						<Text c="green" size="md" className="flex items-center gap-2">
+							<span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white">
+								<IconCheck size={16} strokeWidth={3} />
+							</span>
+							<Trans>You have successfully unsubscribed.</Trans>
+						</Text>
+					)}
 
-          {!isLoading && !error && !success && (
-            <>
-              {data?.eligible ? (
-                <Button
-                  onClick={handleUnsubscribe}
-                  disabled={isPending}
-                  loading={isPending}
-                >
-                  <Trans>Unsubscribe</Trans>
-                </Button>
-              ) : (
-                <Text c="dimmed" size="md" ta="center">
-                  <Trans>
-                    You are already unsubscribed or your link is invalid.
-                  </Trans>
-                </Text>
-              )}
-            </>
-          )}
-        </Stack>
-      </main>
-    </div>
-  );
+					{!isLoading &&
+						!error &&
+						!success &&
+						(data?.eligible ? (
+							<Button
+								onClick={handleUnsubscribe}
+								disabled={isPending}
+								loading={isPending}
+							>
+								<Trans>Unsubscribe</Trans>
+							</Button>
+						) : (
+							<Text c="dimmed" size="md" ta="center">
+								<Trans>
+									You are already unsubscribed or your link is invalid.
+								</Trans>
+							</Text>
+						))}
+				</Stack>
+			</main>
+		</div>
+	);
 };

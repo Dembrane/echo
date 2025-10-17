@@ -48,11 +48,6 @@ export const getParticipantConversationById = async (
 export const getParticipantTutorialCardsBySlug = async (slug: string) => {
 	return directusContent.request<EchoPortalTutorial[]>(
 		readItems("echo__portal_tutorial", {
-			filter: {
-				slug: {
-					_eq: slug,
-				},
-			},
 			deep: {
 				cards: {
 					_sort: "sort",
@@ -80,6 +75,11 @@ export const getParticipantTutorialCardsBySlug = async (slug: string) => {
 					],
 				},
 			],
+			filter: {
+				slug: {
+					_eq: slug,
+				},
+			},
 		}),
 	);
 };
@@ -168,10 +168,10 @@ export const uploadResourceByProjectId = async (payload: {
 		`/projects/${payload.projectId}/resources/upload`,
 		formData,
 		{
-			timeout: 60000,
 			headers: {
 				"Content-Type": "multipart/form-data",
 			},
+			timeout: 60000,
 		},
 	);
 };
@@ -258,9 +258,9 @@ export const initiateConversation = async (payload: {
 			email: payload.email ?? undefined,
 			name: payload.name,
 			pin: payload.pin,
+			source: payload.source,
 			tag_id_list: payload.tagIdList,
 			user_agent: navigator.userAgent ?? undefined,
-			source: payload.source,
 		},
 	);
 };
@@ -305,64 +305,64 @@ const getExtensionFromMimeType = (mimeType: string): string => {
 	const normalizedType = mimeType.toLowerCase().trim();
 
 	const mimeToExt: Record<string, string> = {
-		// MP3 variations
-		"audio/mpeg": "mp3",
-		"audio/mp3": "mp3",
-		"audio/x-mp3": "mp3",
-		"audio/mpeg3": "mp3",
-		"audio/x-mpeg-3": "mp3",
-
-		// WAV variations
-		"audio/wav": "wav",
-		"audio/wave": "wav",
-		"audio/x-wav": "wav",
-		"audio/vnd.wave": "wav",
-		"audio/x-pn-wav": "wav",
-
-		// OGG variations
-		"audio/ogg": "ogg",
 		"application/ogg": "ogg",
-		"audio/x-ogg": "ogg",
-		"audio/vorbis": "ogg",
-		"audio/x-vorbis": "ogg",
-		"audio/opus": "ogg",
-
-		// WebM variations
-		"audio/webm": "webm",
-		"video/webm": "webm",
-
-		// M4A/MP4 audio variations
-		"audio/m4a": "m4a",
-		"audio/x-m4a": "m4a",
-		"audio/mp4": "mp4",
-		"video/mp4": "mp4",
-		"audio/mp4a-latm": "m4a",
-		"audio/mpeg4-generic": "m4a",
+		"audio/3gpp": "3gp",
+		"audio/3gpp2": "3gp",
 
 		// AAC variations
 		"audio/aac": "aac",
 		"audio/aacp": "aac",
-		"audio/x-aac": "aac",
-		"audio/3gpp": "3gp",
-		"audio/3gpp2": "3gp",
-		"video/3gpp": "3gp",
-		"video/3gpp2": "3gp",
-
-		// FLAC variations
-		"audio/flac": "flac",
-		"audio/x-flac": "flac",
+		"audio/amr": "amr",
+		"audio/amr-wb": "awb",
 
 		// Other formats
 		"audio/basic": "au",
-		"audio/x-au": "au",
-		"audio/x-pn-au": "au",
-		"audio/vnd.rn-realaudio": "ra",
-		"audio/x-pn-realaudio": "ra",
-		"audio/x-realaudio": "ra",
-		"audio/amr": "amr",
-		"audio/amr-wb": "awb",
-		"audio/x-caf": "caf",
 		"audio/caf": "caf",
+
+		// FLAC variations
+		"audio/flac": "flac",
+
+		// M4A/MP4 audio variations
+		"audio/m4a": "m4a",
+		"audio/mp3": "mp3",
+		"audio/mp4": "mp4",
+		"audio/mp4a-latm": "m4a",
+		// MP3 variations
+		"audio/mpeg": "mp3",
+		"audio/mpeg3": "mp3",
+		"audio/mpeg4-generic": "m4a",
+
+		// OGG variations
+		"audio/ogg": "ogg",
+		"audio/opus": "ogg",
+		"audio/vnd.rn-realaudio": "ra",
+		"audio/vnd.wave": "wav",
+		"audio/vorbis": "ogg",
+
+		// WAV variations
+		"audio/wav": "wav",
+		"audio/wave": "wav",
+
+		// WebM variations
+		"audio/webm": "webm",
+		"audio/x-aac": "aac",
+		"audio/x-au": "au",
+		"audio/x-caf": "caf",
+		"audio/x-flac": "flac",
+		"audio/x-m4a": "m4a",
+		"audio/x-mp3": "mp3",
+		"audio/x-mpeg-3": "mp3",
+		"audio/x-ogg": "ogg",
+		"audio/x-pn-au": "au",
+		"audio/x-pn-realaudio": "ra",
+		"audio/x-pn-wav": "wav",
+		"audio/x-realaudio": "ra",
+		"audio/x-vorbis": "ogg",
+		"audio/x-wav": "wav",
+		"video/3gpp": "3gp",
+		"video/3gpp2": "3gp",
+		"video/mp4": "mp4",
+		"video/webm": "webm",
 	};
 
 	// Direct lookup first
@@ -437,9 +437,9 @@ export const uploadConversationChunkWithPresignedUrl = async (payload: {
 				file_url: string;
 			}
 		>(`/participant/conversations/${payload.conversationId}/get-upload-url`, {
-			filename: fileName,
 			content_type: payload.chunk.type,
 			conversation_id: payload.conversationId,
+			filename: fileName,
 		});
 	} catch (error) {
 		console.error("[Upload] Failed to get presigned URL:", error);
@@ -474,7 +474,6 @@ export const uploadConversationChunkWithPresignedUrl = async (payload: {
 				headers: {
 					// Don't set Content-Type - browser will set it with boundary
 				},
-				timeout: 300000, // 5 minutes
 				onUploadProgress: (progressEvent) => {
 					if (progressEvent.total && payload.onProgress) {
 						// Report 0-90% during S3 upload, reserve 90-100% for confirmation
@@ -483,6 +482,7 @@ export const uploadConversationChunkWithPresignedUrl = async (payload: {
 						payload.onProgress(Math.round(s3Progress));
 					}
 				},
+				timeout: 300000, // 5 minutes
 			});
 
 			console.log(`[Upload] S3 upload successful for chunk ${chunk_id}`);
@@ -502,7 +502,7 @@ export const uploadConversationChunkWithPresignedUrl = async (payload: {
 			} else {
 				throw new Error(
 					`Failed to upload file to S3 after ${maxRetries} attempts. ` +
-						`Please check your internet connection and try again. ` +
+						"Please check your internet connection and try again. " +
 						`Error: ${lastError?.message || "Unknown error"}`,
 				);
 			}
@@ -521,8 +521,8 @@ export const uploadConversationChunkWithPresignedUrl = async (payload: {
 			{
 				chunk_id,
 				file_url,
-				timestamp: payload.timestamp.toISOString(),
 				source: payload.source,
+				timestamp: payload.timestamp.toISOString(),
 			},
 		);
 
@@ -622,12 +622,12 @@ export const uploadConversationChunkLegacy = async (payload: {
 			`/participant/conversations/${payload.conversationId}/upload-chunk`,
 			formData,
 			{
-				timeout: 600000,
-				maxBodyLength: 25 * 1024 * 1024,
-				maxContentLength: 25 * 1024 * 1024,
 				headers: {
 					"Content-Type": "multipart/form-data",
 				},
+				maxBodyLength: 25 * 1024 * 1024,
+				maxContentLength: 25 * 1024 * 1024,
+				timeout: 600000,
 			},
 		);
 	}
@@ -662,7 +662,7 @@ export const uploadConversationChunkLegacy = async (payload: {
 						payload.onProgress(100);
 					}
 					resolve(response);
-				} catch (e) {
+				} catch (_e) {
 					reject(new Error("Invalid response format"));
 				}
 			} else {
@@ -700,8 +700,8 @@ export const uploadConversationText = async (payload: {
 		`/participant/conversations/${payload.conversationId}/upload-text`,
 		{
 			content: payload.content,
-			timestamp: payload.timestamp.toISOString(),
 			source: payload.source,
+			timestamp: payload.timestamp.toISOString(),
 		},
 	);
 };
@@ -746,10 +746,10 @@ export const initiateAndUploadConversationChunk = async (payload: {
 		try {
 			// Create the conversation first (one per file in this implementation)
 			const conversation = await initiateConversation({
-				projectId: payload.projectId,
 				email: payload.email,
 				name: `${payload.namePrefix} - ${fileName}`,
 				pin: payload.pin,
+				projectId: payload.projectId,
 				source: source,
 				tagIdList: payload.tagIdList,
 			});
@@ -761,13 +761,13 @@ export const initiateAndUploadConversationChunk = async (payload: {
 
 			// Upload using new presigned URL method
 			const result = await uploadConversationChunkWithPresignedUrl({
-				conversationId: conversation.id,
 				chunk,
-				timestamp: payload.timestamps[i] ?? new Date(),
-				source,
+				conversationId: conversation.id,
 				onProgress: (progress) => {
 					payload.onProgress?.(fileName, progress);
 				},
+				source,
+				timestamp: payload.timestamps[i] ?? new Date(),
 			});
 
 			results[i] = result;
@@ -829,7 +829,7 @@ export const initiateAndUploadConversationChunk = async (payload: {
 		);
 		try {
 			await finishConversation(conversationId);
-			console.log(`[Upload] Finish hook triggered successfully`);
+			console.log("[Upload] Finish hook triggered successfully");
 		} catch (error) {
 			console.error("[Upload] Failed to trigger finish hook:", error);
 			// Don't throw - uploads succeeded, this is just post-processing
@@ -842,11 +842,6 @@ export const initiateAndUploadConversationChunk = async (payload: {
 export const getProjectConversationCounts = async (projectId: string) => {
 	const conversations = await directus.request(
 		readItems("conversation", {
-			filter: {
-				project_id: {
-					_eq: projectId,
-				},
-			},
 			fields: [
 				"id",
 				"is_finished",
@@ -855,6 +850,11 @@ export const getProjectConversationCounts = async (projectId: string) => {
 				"updated_at",
 				"created_at",
 			],
+			filter: {
+				project_id: {
+					_eq: projectId,
+				},
+			},
 		}),
 	);
 
@@ -867,16 +867,16 @@ export const getProjectConversationCounts = async (projectId: string) => {
 
 	return {
 		finished: finishedConversations.length,
-		pending: pendingConversations.length,
-		total: conversations.length,
 		finishedConversations,
+		pending: pendingConversations.length,
 		pendingConversations,
+		total: conversations.length,
 	};
 };
 
 export const getConversationContentLink = (
 	conversationId: string,
-	returnUrl: boolean = false,
+	returnUrl = false,
 ) =>
 	`${apiCommonConfig.baseURL}/conversations/${conversationId}/content${
 		returnUrl ? "?return_url=true" : ""
@@ -885,7 +885,7 @@ export const getConversationContentLink = (
 export const getConversationChunkContentLink = (
 	conversationId: string,
 	chunkId: string,
-	returnUrl: boolean = false,
+	returnUrl = false,
 ) =>
 	`${apiCommonConfig.baseURL}/conversations/${conversationId}/chunks/${chunkId}/content${returnUrl ? "?return_url=true" : ""}`;
 
@@ -905,9 +905,9 @@ export const generateProjectView = async (payload: {
 	additionalContext?: string;
 }) => {
 	return api.post<unknown>(`/projects/${payload.projectId}/create-view`, {
-		query: payload.query,
 		additional_context: payload.additionalContext,
 		language: payload.language,
+		query: payload.query,
 	});
 };
 
@@ -945,8 +945,8 @@ export const addChatContext = async (
 	return api.post<unknown, TProjectChatContext>(
 		`/chats/${chatId}/add-context`,
 		{
-			conversation_id: conversationId,
 			auto_select_bool: auto_select_bool,
+			conversation_id: conversationId,
 		},
 	);
 };
@@ -959,8 +959,8 @@ export const deleteChatContext = async (
 	return api.post<unknown, TProjectChatContext>(
 		`/chats/${chatId}/delete-context`,
 		{
-			conversation_id: conversationId,
 			auto_select_bool: auto_select_bool,
+			conversation_id: conversationId,
 		},
 	);
 };
@@ -975,10 +975,6 @@ export const lockConversations = async (chatId: string) => {
 export const getChatHistory = async (chatId: string): Promise<ChatHistory> => {
 	const data = await directus.request<ProjectChatMessage[]>(
 		readItems("project_chat_message", {
-			filter: {
-				project_chat_id: chatId,
-			},
-			sort: "date_created",
 			fields: [
 				"*",
 				{
@@ -1000,16 +996,20 @@ export const getChatHistory = async (chatId: string): Promise<ChatHistory> => {
 					],
 				},
 			],
+			filter: {
+				project_chat_id: chatId,
+			},
+			sort: "date_created",
 		}),
 	);
 
 	return data.map((message) => ({
+		_original: message,
+		content: message.text ?? "",
 		createdAt: message.date_created,
 		id: message.id,
-		role: message.message_from as "user" | "assistant",
-		content: message.text ?? "",
-		_original: message,
 		metadata: message.chat_message_metadata ?? [],
+		role: message.message_from as "user" | "assistant",
 	}));
 };
 
@@ -1055,8 +1055,8 @@ export const unsubscribeParticipant = async (
 	email_opt_in: boolean,
 ) => {
 	return apiNoAuth.post(`/participant/${projectId}/report/unsubscribe`, {
-		token,
 		email_opt_in,
+		token,
 	});
 };
 
@@ -1068,12 +1068,12 @@ export const submitNotificationParticipant = async (
 ) => {
 	try {
 		const response = await apiNoAuth.post("/participant/report/subscribe", {
+			conversation_id: conversationId,
 			emails,
 			project_id: projectId,
-			conversation_id: conversationId,
 		});
 		return response;
-	} catch (error) {
+	} catch (_error) {
 		throw new Error("Failed to subscribe to notifications");
 	}
 };
@@ -1098,12 +1098,12 @@ export const checkUnsubscribeStatus = async (
 		const response = await apiNoAuth.get(
 			"/participant/report/unsubscribe/eligibility",
 			{
-				params: { token, project_id: projectId },
+				params: { project_id: projectId, token },
 			},
 		);
 
 		return response;
-	} catch (error) {
+	} catch (_error) {
 		throw new Error("No matching subscription found.");
 	}
 };

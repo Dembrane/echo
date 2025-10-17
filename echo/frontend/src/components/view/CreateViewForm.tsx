@@ -1,150 +1,145 @@
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import {
-  ActionIcon,
-  Alert,
-  Button,
-  Text,
-  CloseButton,
-  Group,
-  NativeSelect,
-  Paper,
-  Stack,
-  Textarea,
-  TextInput,
-} from "@mantine/core";
-
-import { useLanguage } from "@/hooks/useLanguage";
-import { useGenerateProjectViewMutation } from "./hooks";
-import { CloseableAlert } from "../common/ClosableAlert";
-import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
-
-import { IconCircleCheck } from "@tabler/icons-react";
-import { Icons } from "@/icons";
-
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
+import {
+	Alert,
+	Button,
+	Group,
+	NativeSelect,
+	Paper,
+	Stack,
+	Text,
+	Textarea,
+	TextInput,
+} from "@mantine/core";
+import { IconCircleCheck } from "@tabler/icons-react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { LibraryTemplatesMenu } from "@/components/library/LibraryTemplatesMenu";
+import { useLanguage } from "@/hooks/useLanguage";
+import { CloseableAlert } from "../common/ClosableAlert";
+import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
+import { useGenerateProjectViewMutation } from "./hooks";
 
 type CreateViewForm = {
-  query: string;
-  additionalContext: string;
-  language: string;
+	query: string;
+	additionalContext: string;
+	language: string;
 };
 
 export const CreateView = ({
-  projectId,
-  initialQuery,
-  initialAdditionalContext,
+	projectId,
+	initialQuery,
+	initialAdditionalContext,
 }: {
-  projectId: string;
-  initialQuery?: string;
-  initialAdditionalContext?: string;
+	projectId: string;
+	initialQuery?: string;
+	initialAdditionalContext?: string;
 }) => {
-  const createViewMutation = useGenerateProjectViewMutation();
+	const createViewMutation = useGenerateProjectViewMutation();
 
-  const { iso639_1 } = useLanguage();
+	const { iso639_1 } = useLanguage();
 
-  const { register, handleSubmit, reset, setValue, watch } = useForm<CreateViewForm>({
-    defaultValues: {
-      language: iso639_1,
-      query: initialQuery || "",
-      additionalContext: initialAdditionalContext || "",
-    },
-  });
+	const { register, handleSubmit, reset, setValue, watch } =
+		useForm<CreateViewForm>({
+			defaultValues: {
+				additionalContext: initialAdditionalContext || "",
+				language: iso639_1,
+				query: initialQuery || "",
+			},
+		});
 
-  const queryValue = watch("query");
-  const additionalContextValue = watch("additionalContext");
+	const queryValue = watch("query");
+	const additionalContextValue = watch("additionalContext");
 
-  const onSubmit = (data: CreateViewForm) => {
-    createViewMutation.mutate({
-      projectId,
-      query: data.query,
-      additionalContext: data.additionalContext,
-      language: data.language || iso639_1,
-    });
-  };
+	const onSubmit = (data: CreateViewForm) => {
+		createViewMutation.mutate({
+			additionalContext: data.additionalContext,
+			language: data.language || iso639_1,
+			projectId,
+			query: data.query,
+		});
+	};
 
-  useEffect(() => {
-    if (createViewMutation.isSuccess) {
-      reset();
-    }
-  }, [createViewMutation.isSuccess, reset]);
+	useEffect(() => {
+		if (createViewMutation.isSuccess) {
+			reset();
+		}
+	}, [createViewMutation.isSuccess, reset]);
 
-  const handleTemplateSelect = ({
-    query,
-    additionalContext,
-  }: {
-    query: string;
-    additionalContext: string;
-  }) => {
-    if (
-      (queryValue?.trim() !== "" || additionalContextValue?.trim() !== "") &&
-      !window.confirm(t`This will clear your current input. Are you sure?`)
-    ) {
-      return;
-    }
+	const handleTemplateSelect = ({
+		query,
+		additionalContext,
+	}: {
+		query: string;
+		additionalContext: string;
+	}) => {
+		if (
+			(queryValue?.trim() !== "" || additionalContextValue?.trim() !== "") &&
+			!window.confirm(t`This will clear your current input. Are you sure?`)
+		) {
+			return;
+		}
 
-    setValue("query", query);
-    setValue("additionalContext", additionalContext);
-  };
+		setValue("query", query);
+		setValue("additionalContext", additionalContext);
+	};
 
-  return (
-    <Paper className="max-w-[800px] border-none" py="sm">
-      <Stack>
-        <form>
-          <Stack gap="lg">
-            {createViewMutation.isError && (
-              <Alert variant="filled" color="red">
-                {createViewMutation.error?.message}
-              </Alert>
-            )}
-            {createViewMutation.isSuccess && (
-              <CloseableAlert
-                variant="light"
-                color="green"
-                icon={<IconCircleCheck />}
-              >
-                <Text>
-                  <Trans>
-                    Your view has been created. Please wait as we process and
-                    analyse the data.
-                  </Trans>
-                </Text>
-              </CloseableAlert>
-            )}
-            <NativeSelect
-              {...register("language")}
-              label={t`Analysis Language`}
-              data={languageOptionsByIso639_1}
-            />
+	return (
+		<Paper className="max-w-[800px] border-none" py="sm">
+			<Stack>
+				<form>
+					<Stack gap="lg">
+						{createViewMutation.isError && (
+							<Alert variant="filled" color="red">
+								{createViewMutation.error?.message}
+							</Alert>
+						)}
+						{createViewMutation.isSuccess && (
+							<CloseableAlert
+								variant="light"
+								color="green"
+								icon={<IconCircleCheck />}
+							>
+								<Text>
+									<Trans>
+										Your view has been created. Please wait as we process and
+										analyse the data.
+									</Trans>
+								</Text>
+							</CloseableAlert>
+						)}
+						<NativeSelect
+							{...register("language")}
+							label={t`Analysis Language`}
+							data={languageOptionsByIso639_1}
+						/>
 
-            <LibraryTemplatesMenu onTemplateSelect={handleTemplateSelect} />
+						<LibraryTemplatesMenu onTemplateSelect={handleTemplateSelect} />
 
-            <TextInput
-              {...register("query")}
-              label={t`Enter your query`}
-              required
-              placeholder={t`Topics`}
-            />
-            <Textarea
-              rows={5}
-              {...register("additionalContext")}
-              label={t`Add additional context (Optional)`}
-              placeholder={t`Give me a list of 5-10 topics that are being discussed.`}
-            />
-            <Group className="w-full" justify="flex-end">
-              <Button
-                onClick={handleSubmit(onSubmit)}
-                loading={createViewMutation.isPending}
-                disabled={createViewMutation.isPending}
-              >
-                <Trans>Create View</Trans>
-              </Button>
-            </Group>
-          </Stack>
-        </form>
-      </Stack>
-    </Paper>
-  );
+						<TextInput
+							{...register("query")}
+							label={t`Enter your query`}
+							required
+							placeholder={t`Topics`}
+						/>
+						<Textarea
+							rows={5}
+							{...register("additionalContext")}
+							label={t`Add additional context (Optional)`}
+							placeholder={t`Give me a list of 5-10 topics that are being discussed.`}
+						/>
+						<Group className="w-full" justify="flex-end">
+							<Button
+								onClick={handleSubmit(onSubmit)}
+								loading={createViewMutation.isPending}
+								disabled={createViewMutation.isPending}
+							>
+								<Trans>Create View</Trans>
+							</Button>
+						</Group>
+					</Stack>
+				</form>
+			</Stack>
+		</Paper>
+	);
 };

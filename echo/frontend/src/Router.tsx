@@ -1,302 +1,298 @@
-import { Navigate, createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 import {
-  createLazyRoute,
-  createLazyNamedRoute,
+	createLazyNamedRoute,
+	createLazyRoute,
 } from "./components/common/LazyRoute";
-
-// Layout components - keep as regular imports since they're used frequently
-import { BaseLayout } from "./components/layout/BaseLayout";
-import { ProjectLayout } from "./components/layout/ProjectLayout";
-import { LanguageLayout } from "./components/layout/LanguageLayout";
-import { ProjectConversationLayout } from "./components/layout/ProjectConversationLayout";
-import { ProjectLibraryLayout } from "./components/layout/ProjectLibraryLayout";
-import { AuthLayout } from "./components/layout/AuthLayout";
-import { ProjectOverviewLayout } from "./components/layout/ProjectOverviewLayout";
-import { ParticipantLayout } from "./components/layout/ParticipantLayout";
 import { Protected } from "./components/common/Protected";
 import { ErrorPage } from "./components/error/ErrorPage";
-
-// Tab-based routes - import directly for now to debug
+import { AuthLayout } from "./components/layout/AuthLayout";
+// Layout components - keep as regular imports since they're used frequently
+import { BaseLayout } from "./components/layout/BaseLayout";
+import { LanguageLayout } from "./components/layout/LanguageLayout";
+import { ParticipantLayout } from "./components/layout/ParticipantLayout";
+import { ProjectConversationLayout } from "./components/layout/ProjectConversationLayout";
+import { ProjectLayout } from "./components/layout/ProjectLayout";
+import { ProjectLibraryLayout } from "./components/layout/ProjectLibraryLayout";
+import { ProjectOverviewLayout } from "./components/layout/ProjectOverviewLayout";
 import {
-  ProjectPortalSettingsRoute,
-  ProjectSettingsRoute,
-} from "./routes/project/ProjectRoutes";
+	ParticipantConversationAudioRoute,
+	ParticipantConversationTextRoute,
+} from "./routes/participant/ParticipantConversation";
+import { ParticipantPostConversation } from "./routes/participant/ParticipantPostConversation";
+import { ParticipantStartRoute } from "./routes/participant/ParticipantStart";
 import { ProjectConversationOverviewRoute } from "./routes/project/conversation/ProjectConversationOverview";
 import { ProjectConversationTranscript } from "./routes/project/conversation/ProjectConversationTranscript";
-import { ParticipantPostConversation } from "./routes/participant/ParticipantPostConversation";
+// Tab-based routes - import directly for now to debug
 import {
-  ParticipantConversationAudioRoute,
-  ParticipantConversationTextRoute,
-} from "./routes/participant/ParticipantConversation";
-import { ParticipantStartRoute } from "./routes/participant/ParticipantStart";
+	ProjectPortalSettingsRoute,
+	ProjectSettingsRoute,
+} from "./routes/project/ProjectRoutes";
 
 // Lazy-loaded route components
 const ProjectsHomeRoute = createLazyNamedRoute(
-  () => import("./routes/project/ProjectsHome"),
-  "ProjectsHomeRoute",
+	() => import("./routes/project/ProjectsHome"),
+	"ProjectsHomeRoute",
 );
 
 const ProjectLibraryRoute = createLazyNamedRoute(
-  () => import("./routes/project/library/ProjectLibrary"),
-  "ProjectLibraryRoute",
+	() => import("./routes/project/library/ProjectLibrary"),
+	"ProjectLibraryRoute",
 );
 
 const ProjectLibraryView = createLazyNamedRoute(
-  () => import("./routes/project/library/ProjectLibraryView"),
-  "ProjectLibraryView",
+	() => import("./routes/project/library/ProjectLibraryView"),
+	"ProjectLibraryView",
 );
 const ProjectLibraryAspect = createLazyNamedRoute(
-  () => import("./routes/project/library/ProjectLibraryAspect"),
-  "ProjectLibraryAspect",
+	() => import("./routes/project/library/ProjectLibraryAspect"),
+	"ProjectLibraryAspect",
 );
 const LoginRoute = createLazyNamedRoute(
-  () => import("./routes/auth/Login"),
-  "LoginRoute",
+	() => import("./routes/auth/Login"),
+	"LoginRoute",
 );
 const RegisterRoute = createLazyNamedRoute(
-  () => import("./routes/auth/Register"),
-  "RegisterRoute",
+	() => import("./routes/auth/Register"),
+	"RegisterRoute",
 );
 const CheckYourEmailRoute = createLazyNamedRoute(
-  () => import("./routes/auth/CheckYourEmail"),
-  "CheckYourEmailRoute",
+	() => import("./routes/auth/CheckYourEmail"),
+	"CheckYourEmailRoute",
 );
 const VerifyEmailRoute = createLazyNamedRoute(
-  () => import("./routes/auth/VerifyEmail"),
-  "VerifyEmailRoute",
+	() => import("./routes/auth/VerifyEmail"),
+	"VerifyEmailRoute",
 );
 const PasswordResetRoute = createLazyNamedRoute(
-  () => import("./routes/auth/PasswordReset"),
-  "PasswordResetRoute",
+	() => import("./routes/auth/PasswordReset"),
+	"PasswordResetRoute",
 );
 const RequestPasswordResetRoute = createLazyNamedRoute(
-  () => import("./routes/auth/RequestPasswordReset"),
-  "RequestPasswordResetRoute",
+	() => import("./routes/auth/RequestPasswordReset"),
+	"RequestPasswordResetRoute",
 );
 const ProjectChatRoute = createLazyNamedRoute(
-  () => import("./routes/project/chat/ProjectChatRoute"),
-  "ProjectChatRoute",
+	() => import("./routes/project/chat/ProjectChatRoute"),
+	"ProjectChatRoute",
 );
 
 const ProjectReportRoute = createLazyNamedRoute(
-  () => import("./routes/project/report/ProjectReportRoute"),
-  "ProjectReportRoute",
+	() => import("./routes/project/report/ProjectReportRoute"),
+	"ProjectReportRoute",
 );
 const ParticipantReport = createLazyNamedRoute(
-  () => import("./routes/participant/ParticipantReport"),
-  "ParticipantReport",
+	() => import("./routes/participant/ParticipantReport"),
+	"ParticipantReport",
 );
 const ProjectUnsubscribe = createLazyNamedRoute(
-  () => import("./routes/project/unsubscribe/ProjectUnsubscribe"),
-  "ProjectUnsubscribe",
+	() => import("./routes/project/unsubscribe/ProjectUnsubscribe"),
+	"ProjectUnsubscribe",
 );
 const DebugPage = createLazyRoute(() => import("./routes/Debug"));
 
 export const mainRouter = createBrowserRouter([
-  {
-    path: "/:language?",
-    element: <LanguageLayout />,
-    errorElement: <ErrorPage />,
-    children: [
-      {
-        path: "",
-        element: <Navigate to="/login" />,
-      },
-      {
-        path: "login",
-        element: (
-          <AuthLayout>
-            <LoginRoute />
-          </AuthLayout>
-        ),
-      },
-      {
-        path: "register",
-        element: (
-          <AuthLayout>
-            <RegisterRoute />
-          </AuthLayout>
-        ),
-      },
-      {
-        path: "check-your-email",
-        element: (
-          <AuthLayout>
-            <CheckYourEmailRoute />
-          </AuthLayout>
-        ),
-      },
-      {
-        path: "password-reset",
-        element: (
-          <AuthLayout>
-            <PasswordResetRoute />
-          </AuthLayout>
-        ),
-      },
-      {
-        path: "request-password-reset",
-        element: (
-          <AuthLayout>
-            <RequestPasswordResetRoute />
-          </AuthLayout>
-        ),
-      },
-      {
-        path: "verify-email",
-        element: (
-          <AuthLayout>
-            <VerifyEmailRoute />
-          </AuthLayout>
-        ),
-      },
-      {
-        path: "projects",
-        element: (
-          <Protected>
-            <BaseLayout />
-          </Protected>
-        ),
+	{
+		children: [
+			{
+				element: <Navigate to="/login" />,
+				path: "",
+			},
+			{
+				element: (
+					<AuthLayout>
+						<LoginRoute />
+					</AuthLayout>
+				),
+				path: "login",
+			},
+			{
+				element: (
+					<AuthLayout>
+						<RegisterRoute />
+					</AuthLayout>
+				),
+				path: "register",
+			},
+			{
+				element: (
+					<AuthLayout>
+						<CheckYourEmailRoute />
+					</AuthLayout>
+				),
+				path: "check-your-email",
+			},
+			{
+				element: (
+					<AuthLayout>
+						<PasswordResetRoute />
+					</AuthLayout>
+				),
+				path: "password-reset",
+			},
+			{
+				element: (
+					<AuthLayout>
+						<RequestPasswordResetRoute />
+					</AuthLayout>
+				),
+				path: "request-password-reset",
+			},
+			{
+				element: (
+					<AuthLayout>
+						<VerifyEmailRoute />
+					</AuthLayout>
+				),
+				path: "verify-email",
+			},
+			{
+				children: [
+					{
+						element: <ProjectsHomeRoute />,
+						index: true,
+					},
+					{
+						children: [
+							{
+								children: [
+									{
+										children: [
+											{
+												element: <Navigate to="portal-editor" replace />,
+												index: true,
+											},
+											{
+												element: <ProjectSettingsRoute />,
+												path: "overview",
+											},
+											{
+												element: <ProjectPortalSettingsRoute />,
+												path: "portal-editor",
+											},
+										],
+										element: <ProjectOverviewLayout />,
+										path: "",
+									},
+									{
+										element: <ProjectChatRoute />,
+										path: "chats/:chatId",
+									},
+									{
+										element: <DebugPage />,
+										path: "chats/:chatId/debug",
+									},
+									{
+										children: [
+											{
+												element: <Navigate to="overview" replace />,
+												index: true,
+											},
+											{
+												element: <ProjectConversationOverviewRoute />,
+												path: "overview",
+											},
+											{
+												element: <ProjectConversationTranscript />,
+												path: "transcript",
+											},
+											{
+												element: <DebugPage />,
+												path: "debug",
+											},
+										],
+										element: <ProjectConversationLayout />,
+										path: "conversation/:conversationId",
+									},
 
-        children: [
-          {
-            index: true,
-            element: <ProjectsHomeRoute />,
-          },
-          {
-            path: ":projectId",
-            children: [
-              {
-                element: <ProjectLayout />,
-                children: [
-                  {
-                    path: "",
-                    element: <ProjectOverviewLayout />,
-                    children: [
-                      {
-                        index: true,
-                        element: <Navigate to="portal-editor" replace />,
-                      },
-                      {
-                        path: "overview",
-                        element: <ProjectSettingsRoute />,
-                      },
-                      {
-                        path: "portal-editor",
-                        element: <ProjectPortalSettingsRoute />,
-                      },
-
-                    ],
-                  },
-                  {
-                    path: "chats/:chatId",
-                    element: <ProjectChatRoute />,
-                  },
-                  {
-                    path: "chats/:chatId/debug",
-                    element: <DebugPage />,
-                  },
-                  {
-                    path: "conversation/:conversationId",
-                    element: <ProjectConversationLayout />,
-                    children: [
-                      {
-                        index: true,
-                        element: <Navigate to="overview" replace />,
-                      },
-                      {
-                        path: "overview",
-                        element: <ProjectConversationOverviewRoute />,
-                      },
-                      {
-                        path: "transcript",
-                        element: <ProjectConversationTranscript />,
-                      },
-                      {
-                        path: "debug",
-                        element: <DebugPage />,
-                      },
-                    ],
-                  },
-
-                  {
-                    path: "library",
-                    element: <ProjectLibraryLayout />,
-                    children: [
-                      {
-                        path: "views/:viewId/aspects/:aspectId",
-                        element: <ProjectLibraryAspect />,
-                      },
-                      {
-                        path: "views/:viewId",
-                        element: <ProjectLibraryView />,
-                      },
-                      {
-                        index: true,
-                        element: <ProjectLibraryRoute />,
-                      },
-                    ],
-                  },
-                  {
-                    path: "report",
-                    element: <ProjectReportRoute />,
-                  },
-                  {
-                    path: "debug",
-                    element: <DebugPage />,
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-      {
-        path: "*",
-        element: <ErrorPage />,
-      },
-    ],
-  },
+									{
+										children: [
+											{
+												element: <ProjectLibraryAspect />,
+												path: "views/:viewId/aspects/:aspectId",
+											},
+											{
+												element: <ProjectLibraryView />,
+												path: "views/:viewId",
+											},
+											{
+												element: <ProjectLibraryRoute />,
+												index: true,
+											},
+										],
+										element: <ProjectLibraryLayout />,
+										path: "library",
+									},
+									{
+										element: <ProjectReportRoute />,
+										path: "report",
+									},
+									{
+										element: <DebugPage />,
+										path: "debug",
+									},
+								],
+								element: <ProjectLayout />,
+							},
+						],
+						path: ":projectId",
+					},
+				],
+				element: (
+					<Protected>
+						<BaseLayout />
+					</Protected>
+				),
+				path: "projects",
+			},
+			{
+				element: <ErrorPage />,
+				path: "*",
+			},
+		],
+		element: <LanguageLayout />,
+		errorElement: <ErrorPage />,
+		path: "/:language?",
+	},
 ]);
 
 export const participantRouter = createBrowserRouter([
-  {
-    path: "/:language?/:projectId",
-    element: <ParticipantLayout />,
-    errorElement: <ErrorPage />,
-    children: [
-      {
-        path: "",
-        element: <Navigate to="start" />,
-      },
-      {
-        path: "start",
-        element: <ParticipantStartRoute />,
-      },
-      {
-        path: "conversation/:conversationId",
-        element: <ParticipantConversationAudioRoute />,
-      },
-      {
-        path: "conversation/:conversationId/text",
-        element: <ParticipantConversationTextRoute />,
-      },
-      {
-        path: "conversation/:conversationId/finish",
-        element: <ParticipantPostConversation />,
-      },
-      {
-        path: "report",
-        element: <ParticipantReport />,
-      },
-      {
-        path: "unsubscribe",
-        element: <ProjectUnsubscribe />,
-      },
-      {
-        path: "*",
-        element: <ErrorPage />,
-      },
-    ],
-  },
+	{
+		children: [
+			{
+				element: <Navigate to="start" />,
+				path: "",
+			},
+			{
+				element: <ParticipantStartRoute />,
+				path: "start",
+			},
+			{
+				element: <ParticipantConversationAudioRoute />,
+				path: "conversation/:conversationId",
+			},
+			{
+				element: <ParticipantConversationTextRoute />,
+				path: "conversation/:conversationId/text",
+			},
+			{
+				element: <ParticipantPostConversation />,
+				path: "conversation/:conversationId/finish",
+			},
+			{
+				element: <ParticipantReport />,
+				path: "report",
+			},
+			{
+				element: <ProjectUnsubscribe />,
+				path: "unsubscribe",
+			},
+			{
+				element: <ErrorPage />,
+				path: "*",
+			},
+		],
+		element: <ParticipantLayout />,
+		errorElement: <ErrorPage />,
+		path: "/:language?/:projectId",
+	},
 ]);
