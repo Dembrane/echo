@@ -21,7 +21,7 @@ export const formatDate = (
 
 	const dateObj = typeof date === "string" ? new Date(date) : date;
 
-	if (isNaN(dateObj.getTime())) return "";
+	if (Number.isNaN(dateObj.getTime())) return "";
 
 	const currentLocale =
 		localeMap[locale as SupportedLocale] || localeMap["en-US"];

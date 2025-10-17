@@ -79,7 +79,9 @@ const useChunkedAudioRecorder = ({
 	useEffect(() => {
 		return () => {
 			if (streamRef.current) {
-				streamRef.current.getTracks().forEach((track) => track.stop());
+				streamRef.current.getTracks().forEach((track) => {
+					track.stop();
+				});
 			}
 			if (audioContextRef.current) {
 				audioContextRef.current.close();
@@ -94,6 +96,7 @@ const useChunkedAudioRecorder = ({
 
 	const chunkBufferRef = useRef<Blob[]>([]);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be looked at
 	const startRecordingChunk = useCallback(() => {
 		log("startRecordingChunk", {
 			isRecording,
@@ -230,7 +233,9 @@ const useChunkedAudioRecorder = ({
 		// close the audio context
 		audioContextRef.current?.close();
 		audioContextRef.current = null;
-		streamRef.current?.getTracks().forEach((track) => track.stop());
+		streamRef.current?.getTracks().forEach((track) => {
+			track.stop();
+		});
 		streamRef.current = null;
 	};
 

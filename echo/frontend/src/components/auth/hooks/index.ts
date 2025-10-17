@@ -19,7 +19,7 @@ export const useCurrentUser = () =>
 		queryFn: () => {
 			try {
 				return directus.request(readUser("me"));
-			} catch (error) {
+			} catch (_error) {
 				return null;
 			}
 		},
@@ -46,7 +46,7 @@ export const useResetPasswordMutation = () => {
 		onError: (e) => {
 			try {
 				toast.error(e.message);
-			} catch (e) {
+			} catch (_e) {
 				toast.error("Error resetting password. Please contact support.");
 			}
 		},
@@ -194,7 +194,7 @@ export const useAuthenticated = (doRedirect = false) => {
 		try {
 			await directus.refresh();
 			setIsAuthenticated(true);
-		} catch (e) {
+		} catch (_e) {
 			setIsAuthenticated(false);
 			await logoutMutation.mutateAsync({
 				doRedirect,
@@ -204,6 +204,7 @@ export const useAuthenticated = (doRedirect = false) => {
 		}
 	};
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: no need
 	useEffect(() => {
 		setLoading(true);
 		checkAuth()

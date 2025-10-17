@@ -11,8 +11,10 @@ export function ProjectListSkeleton({
 	count = 6,
 	wrapper = true,
 }: ProjectListSkeletonProps) {
+	// biome-ignore lint/correctness/noNestedComponentDefinitions: needs to be fixed
 	const ListItems = () =>
 		Array.from({ length: count }).map((_, i) => (
+			// biome-ignore lint/suspicious/noArrayIndexKey: needs to be fixed
 			<Skeleton key={i} height={67} radius="sm" />
 		));
 

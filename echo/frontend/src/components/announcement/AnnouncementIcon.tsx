@@ -1,4 +1,4 @@
-import { ActionIcon, Box, Group, Indicator, Loader, Text } from "@mantine/core";
+import { ActionIcon, Box, Group, Indicator, Loader } from "@mantine/core";
 import { IconSpeakerphone } from "@tabler/icons-react";
 import { useAnnouncementDrawer } from "@/components/announcement/hooks";
 import { getTranslatedContent } from "@/components/announcement/hooks/useProcessedAnnouncements";

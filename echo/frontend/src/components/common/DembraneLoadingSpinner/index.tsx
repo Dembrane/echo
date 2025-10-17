@@ -27,6 +27,7 @@ const DembraneLoadingSpinner: React.FC<DembraneLoadingSpinnerProps> = ({
 		t`Just a moment`,
 	];
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be looked at
 	useEffect(() => {
 		const interval = setInterval(() => {
 			setMessageIndex((index) => (index + 1) % messages.length);

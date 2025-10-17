@@ -34,6 +34,7 @@ const CustomReferenceLabel = ({ value, viewBox }: any) => {
 	const [isHovered, setIsHovered] = useState(false);
 
 	return (
+		// biome-ignore lint/a11y/noStaticElementInteractions: needs to be fixed
 		<g
 			onMouseEnter={() => setIsHovered(true)}
 			onMouseLeave={() => setIsHovered(false)}

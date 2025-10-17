@@ -65,6 +65,7 @@ const ParticipantOnboardingCards = ({
 		[project],
 	);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be looked at
 	const MicrophoneTestComponent = useMemo(
 		() => () => (
 			<MicrophoneTest
@@ -212,6 +213,7 @@ const ParticipantOnboardingCards = ({
 
 	const currentCard = allSlides[currentSlideIndex];
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be inspected
 	useEffect(() => {
 		const timer = setTimeout(() => setAnimationDirection(""), 300);
 		return () => clearTimeout(timer);
@@ -403,9 +405,9 @@ const ParticipantOnboardingCards = ({
 
 					<div className="mt-4 flex items-center justify-between">
 						<div className="flex space-x-2">
-							{allSlides.map((_, index) => (
+							{allSlides.map((slide, index) => (
 								<div
-									key={index}
+									key={slide.title}
 									className={`h-2 w-2 rounded-full transition-all duration-200 ${
 										index === currentSlideIndex
 											? "w-4 bg-blue-500"
