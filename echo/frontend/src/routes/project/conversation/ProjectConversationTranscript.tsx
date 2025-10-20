@@ -53,7 +53,7 @@ export const ProjectConversationTranscript = () => {
 		},
 	);
 
-	const allChunks = chunksData?.pages.flatMap((page) => page.chunks) ?? [];
+	const allChunks = (chunksData?.pages ?? []).flatMap((page) => page.chunks);
 
 	const hasValidTranscripts = allChunks.some(
 		(chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
@@ -130,11 +130,11 @@ export const ProjectConversationTranscript = () => {
 									<ConversationChunkAudioTranscript
 										chunk={{
 											conversation_id: chunk.conversation_id as string,
+											error: chunk.error ?? "",
 											id: chunk.id,
 											path: chunk.path ?? "",
 											timestamp: chunk.timestamp ?? "",
 											transcript: chunk.transcript ?? "",
-											error: chunk.error ?? "",
 										}}
 										showAudioPlayer={showAudioPlayer}
 									/>

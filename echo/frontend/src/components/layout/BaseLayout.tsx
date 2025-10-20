@@ -1,25 +1,25 @@
 import { Box } from "@mantine/core";
-import { Toaster } from "../common/Toaster";
+import type { PropsWithChildren } from "react";
 import { Outlet } from "react-router";
-import { PropsWithChildren } from "react";
-import { Header } from "./Header";
+import { Toaster } from "../common/Toaster";
 import { ErrorBoundary } from "../error/ErrorBoundary";
+import { Header } from "./Header";
 
 export const BaseLayout = ({ children }: PropsWithChildren) => {
-  return (
-    <Box className="min-h-screen">
-      <Box className="fixed top-0 z-10 w-full">
-        <Header />
-      </Box>
+	return (
+		<Box className="min-h-screen">
+			<Box className="fixed top-0 z-10 w-full">
+				<Header />
+			</Box>
 
-      <ErrorBoundary>
-        <main className="h-base-layout-height pt-base-layout-padding w-full">
-          <Outlet />
-          {children}
-        </main>
-      </ErrorBoundary>
+			<ErrorBoundary>
+				<main className="h-base-layout-height pt-base-layout-padding w-full">
+					<Outlet />
+					{children}
+				</main>
+			</ErrorBoundary>
 
-      <Toaster />
-    </Box>
-  );
+			<Toaster />
+		</Box>
+	);
 };
