@@ -192,15 +192,15 @@ export const MoveConversationButton = ({
 	const search = watch("search");
 
 	const projectsQuery = useInfiniteProjects({
+		enabled: opened,
 		query: {
-			sort: ["-updated_at"],
 			filter: {
 				// @ts-expect-error not tyed
 				_and: [{ id: { _neq: conversation.project_id } }],
 			},
 			search: search,
+			sort: ["-updated_at"],
 		},
-		enabled: opened,
 	});
 
 	const moveConversationMutation = useMoveConversationMutation();
@@ -238,7 +238,11 @@ export const MoveConversationButton = ({
 	]);
 
 	const allProjects =
-		projectsQuery.data?.pages.flatMap((page) => page.projects) ?? [];
+		(
+			projectsQuery.data?.pages as
+				| { projects: Project[]; nextOffset?: number }[]
+				| undefined
+		)?.flatMap((page) => page.projects) ?? [];
 
 	return (
 		<>
@@ -356,10 +360,10 @@ export const ConversationStatusIndicators = ({
 		},
 	});
 
-	const hasContent = useMemo(
-		() => conversation.chunks?.length && conversation.chunks.length > 0,
-		[conversation.chunks],
-	);
+	// const hasContent = useMemo(
+	// 	() => conversation.chunks?.length && conversation.chunks.length > 0,
+	// 	[conversation.chunks],
+	// );
 
 	const hasOnlyTextContent = useMemo(
 		() =>
@@ -370,8 +374,8 @@ export const ConversationStatusIndicators = ({
 
 	const fDuration = useCallback((duration: number) => {
 		const d = intervalToDuration({
-			start: 0,
 			end: duration * 1000,
+			start: 0,
 		});
 
 		const hours = d.hours || 0;
@@ -562,8 +566,8 @@ export const ConversationAccordion = ({
 	// ];
 
 	const [sortBy, setSortBy] = useSessionStorage<SortOption["value"]>({
-		key: "conversations-sort",
 		defaultValue: "-created_at",
+		key: "conversations-sort",
 	});
 
 	const [conversationSearch, setConversationSearch] = useState("");
@@ -616,25 +620,25 @@ export const ConversationAccordion = ({
 	// const filterBySource = useMemo(() => activeFilters, [activeFilters]);
 
 	const [showDuration, setShowDuration] = useSessionStorage<boolean>({
-		key: "conversations-show-duration",
 		defaultValue: true,
+		key: "conversations-show-duration",
 	});
 
 	// Tags filter state (fetch only tags for minimal payload)
 	const { data: projectTags, isLoading: projectTagsLoading } = useProjectById({
 		projectId,
 		query: {
-			fields: [
-				{
-					tags: ["id", "text", "sort"],
-				},
-			],
 			deep: {
 				// @ts-expect-error tags not typed in CustomDirectusTypes
 				tags: {
 					_sort: "sort",
 				},
 			},
+			fields: [
+				{
+					tags: ["id", "text", "sort"],
+				},
+			],
 		},
 	});
 	const [tagSearch, setTagSearch] = useState("");
@@ -656,8 +660,6 @@ export const ConversationAccordion = ({
 		false,
 		false,
 		{
-			search: debouncedConversationSearchValue,
-			sort: sortBy,
 			deep: {
 				// @ts-expect-error chunks is not typed
 				chunks: {
@@ -677,6 +679,8 @@ export const ConversationAccordion = ({
 					},
 				}),
 			},
+			search: debouncedConversationSearchValue,
+			sort: sortBy,
 		},
 		// Temporarily disabled source filters
 		// filterBySource,
