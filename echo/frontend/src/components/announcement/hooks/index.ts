@@ -66,7 +66,6 @@ export const useLatestAnnouncement = () => {
 				return response.length > 0 ? response[0] : null;
 			} catch (error) {
 				Sentry.captureException(error);
-				toast.error(t`Failed to get the latest announcement`);
 				console.error("Error fetching latest announcement:", error);
 				throw error;
 			}
@@ -155,7 +154,6 @@ export const useInfiniteAnnouncements = ({
 				};
 			} catch (error) {
 				Sentry.captureException(error);
-				toast.error(t`Failed to get announcements`);
 				console.error("Error fetching announcements:", error);
 				throw error;
 			}
@@ -478,7 +476,6 @@ export const useUnreadAnnouncements = () => {
 				return Math.max(0, count);
 			} catch (error) {
 				Sentry.captureException(error);
-				toast.error(t`Failed to get unread announcements count`);
 				console.error("Error fetching unread announcements count:", error);
 				throw error;
 			}
