@@ -7,13 +7,12 @@ These are handled through the [directus-sync](https://github.com/tractr/directus
 2. **Run** the sync command in the dev container terminal or a WSL terminal inside "echo > directus" directory:
 
 ```bash
-./sync.sh
+1. run command: ./sync.sh
+2. choose option 1: push
 ```
-
-and follow the instructions.
 
 3. Run the SQL script on the machine
 
-CREATE EXTENSION IF NOT EXISTS vector;
-ALTER TABLE quote ADD COLUMN IF NOT EXISTS embedding vector;
-ALTER TABLE aspect ADD COLUMN IF NOT EXISTS centroid_embedding vector;
+```bash
+CREATE extension vector;
+```
