@@ -63,13 +63,12 @@ export const useLatestAnnouncement = () => {
 					}),
 				);
 
-				return response.length > 0 ? response[0] : null;
-			} catch (error) {
-				Sentry.captureException(error);
-				toast.error(t`Failed to get the latest announcement`);
-				console.error("Error fetching latest announcement:", error);
-				throw error;
-			}
+			return response.length > 0 ? response[0] : null;
+		} catch (error) {
+			Sentry.captureException(error);
+			console.error("Error fetching latest announcement:", error);
+			throw error;
+		}
 		},
 		queryKey: ["announcements", "latest"],
 		retry: 2,
@@ -148,17 +147,16 @@ export const useInfiniteAnnouncements = ({
 					}),
 				);
 
-				return {
-					announcements: response,
-					nextOffset:
-						response.length === initialLimit ? pageParam + 1 : undefined,
-				};
-			} catch (error) {
-				Sentry.captureException(error);
-				toast.error(t`Failed to get announcements`);
-				console.error("Error fetching announcements:", error);
-				throw error;
-			}
+			return {
+				announcements: response,
+				nextOffset:
+					response.length === initialLimit ? pageParam + 1 : undefined,
+			};
+		} catch (error) {
+			Sentry.captureException(error);
+			console.error("Error fetching announcements:", error);
+			throw error;
+		}
 		},
 		queryKey: ["announcements", "infinite", query],
 	});
@@ -472,16 +470,15 @@ export const useUnreadAnnouncements = () => {
 					}),
 				);
 
-				const count =
-					Number.parseInt(unreadAnnouncements?.[0]?.count?.toString() ?? "0") -
-					Number.parseInt(activities?.[0]?.count?.toString() ?? "0");
-				return Math.max(0, count);
-			} catch (error) {
-				Sentry.captureException(error);
-				toast.error(t`Failed to get unread announcements count`);
-				console.error("Error fetching unread announcements count:", error);
-				throw error;
-			}
+			const count =
+				Number.parseInt(unreadAnnouncements?.[0]?.count?.toString() ?? "0") -
+				Number.parseInt(activities?.[0]?.count?.toString() ?? "0");
+			return Math.max(0, count);
+		} catch (error) {
+			Sentry.captureException(error);
+			console.error("Error fetching unread announcements count:", error);
+			throw error;
+		}
 		},
 		queryKey: ["announcements", "unread", currentUser?.id],
 		retry: 2,
