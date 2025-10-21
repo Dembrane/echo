@@ -1096,30 +1096,29 @@ msgid "Failed to finish conversation. Please try again."
 msgstr "Fehler beim Beenden des Gesprächs. Bitte versuchen Sie es erneut."
 
 #: src/components/announcement/AnnouncementErrorState.tsx:24
-#: src/components/announcement/hooks/index.ts:158
 msgid "Failed to get announcements"
 msgstr "Fehler beim Laden der Ankündigungen"
 
 #: src/components/announcement/hooks/index.ts:69
-msgid "Failed to get the latest announcement"
-msgstr "Fehler beim Laden der neuesten Ankündigung"
+#~ msgid "Failed to get the latest announcement"
+#~ msgstr "Fehler beim Laden der neuesten Ankündigung"
 
 #: src/components/announcement/hooks/index.ts:481
-msgid "Failed to get unread announcements count"
-msgstr "Fehler beim Laden der Anzahl der ungelesenen Ankündigungen"
+#~ msgid "Failed to get unread announcements count"
+#~ msgstr "Fehler beim Laden der Anzahl der ungelesenen Ankündigungen"
 
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:295
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:385
 #~ msgid "Failed to load audio or the audio is not available"
 #~ msgstr "Fehler beim Laden des Audio oder das Audio ist nicht verfügbar"
 
-#: src/components/announcement/hooks/index.ts:345
-#: src/components/announcement/hooks/index.ts:358
+#: src/components/announcement/hooks/index.ts:343
+#: src/components/announcement/hooks/index.ts:356
 msgid "Failed to mark all announcements as read"
 msgstr "Fehler beim Markieren aller Ankündigungen als gelesen"
 
-#: src/components/announcement/hooks/index.ts:187
-#: src/components/announcement/hooks/index.ts:206
+#: src/components/announcement/hooks/index.ts:185
+#: src/components/announcement/hooks/index.ts:204
 msgid "Failed to mark announcement as read"
 msgstr "Fehler beim Markieren der Ankündigung als gelesen"
 
