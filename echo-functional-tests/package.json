@@ -4,9 +4,11 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest"
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^24.9.1"
   },
-  "peerDependencies": {
-    "typescript": "^5"
+  "scripts": {},
+  "dependencies": {
+    "dotenv": "^17.2.3"
   }
 }
