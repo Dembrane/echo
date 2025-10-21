@@ -92,7 +92,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint and build
+      - name: Lint 
+        run: pnpm run lint
+
+      - name: Build
         run: pnpm run build
 
   ci-build-and-push-servers:
