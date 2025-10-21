@@ -9,7 +9,7 @@ test('can create project as admin', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Create' }).click();
 
-  expect(page.url()).toMatch(/projects\/[a-f0-9-]+\/overview/);
+  await expect(page.url()).toMatch(/projects\/[a-f0-9-]+\/overview/);
 
-  expect(page.getByText('New Project')).toBeVisible();
+  await expect(page.getByText('New Project')).toBeVisible();
 });
