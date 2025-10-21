@@ -1221,30 +1221,29 @@ msgid "Failed to finish conversation. Please try again."
 msgstr "Fout bij het voltooien van het gesprek. Probeer het opnieuw."
 
 #: src/components/announcement/AnnouncementErrorState.tsx:24
-#: src/components/announcement/hooks/index.ts:158
 msgid "Failed to get announcements"
 msgstr "Fout bij het ophalen van meldingen"
 
 #: src/components/announcement/hooks/index.ts:69
-msgid "Failed to get the latest announcement"
-msgstr "Fout bij het ophalen van de laatste melding"
+#~ msgid "Failed to get the latest announcement"
+#~ msgstr "Fout bij het ophalen van de laatste melding"
 
 #: src/components/announcement/hooks/index.ts:481
-msgid "Failed to get unread announcements count"
-msgstr "Fout bij het ophalen van het aantal ongelezen meldingen"
+#~ msgid "Failed to get unread announcements count"
+#~ msgstr "Fout bij het ophalen van het aantal ongelezen meldingen"
 
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:295
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:385
 #~ msgid "Failed to load audio or the audio is not available"
 #~ msgstr "Het laden van de audio is mislukt of de audio is niet beschikbaar"
 
-#: src/components/announcement/hooks/index.ts:345
-#: src/components/announcement/hooks/index.ts:358
+#: src/components/announcement/hooks/index.ts:343
+#: src/components/announcement/hooks/index.ts:356
 msgid "Failed to mark all announcements as read"
 msgstr "Fout bij het markeren van alle meldingen als gelezen"
 
-#: src/components/announcement/hooks/index.ts:187
-#: src/components/announcement/hooks/index.ts:206
+#: src/components/announcement/hooks/index.ts:185
+#: src/components/announcement/hooks/index.ts:204
 msgid "Failed to mark announcement as read"
 msgstr "Fout bij het markeren van de melding als gelezen"
 
@@ -1583,7 +1582,7 @@ msgstr "Laatst bijgewerkt"
 
 #: src/components/chat/TemplatesModal.tsx:127
 msgid "Let us know!"
-msgstr "Laten we weten!"
+msgstr "Laat het ons weten!"
 
 #: src/components/participant/MicrophoneTest.tsx:247
 #~ msgid "Let's Make Sure We Can Hear You"
