@@ -52,7 +52,7 @@ The project is actively maintained by Dembrane B.V. ([dembrane.com](https://demb
 
 ## Getting Started
 
-If you're interested in using Dembrane ECHO but aren't sure where to start, reach out to jules@dembrane.com. 
+If you're interested in using Dembrane ECHO but aren't sure where to start, reach out to evelien@dembrane.com. 
 
 We offer several ways to get started:
 
@@ -88,7 +88,7 @@ Dembrane is currently independent but working towards becoming steward-owned. We
 - For urgent PRs: sameer@dembrane.com
 - For legal inquiries: bram@dembrane.com
 - For mission/vision and press: jorim@dembrane.com
-- For all other inquiries including hosting and support: jules@dembrane.com
+- For all other inquiries including hosting and support: evelien@dembrane.com
 
 ## For Potential Contributors
 
