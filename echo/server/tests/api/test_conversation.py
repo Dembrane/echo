@@ -1,5 +1,7 @@
 import logging
 
+import pytest
+
 from tests.common import (
     create_project,
     delete_project,
@@ -15,7 +17,8 @@ from dembrane.api.dependency_auth import DirectusSession
 logger = logging.getLogger("dembrane.tests.api.test_conversation")
 
 
-def test_get_conversation_transcript():
+@pytest.mark.asyncio
+async def test_get_conversation_transcript():
     project = create_project("test", "en")
     conversation = create_conversation(project["id"], "test")
     chunks = [
@@ -23,7 +26,7 @@ def test_get_conversation_transcript():
         create_conversation_chunk(conversation["id"], "check456"),
     ]
 
-    transcript = get_conversation_transcript(
+    transcript = await get_conversation_transcript(
         conversation["id"], auth=DirectusSession(user_id="none", is_admin=True)
     )
     assert transcript == "check123\ncheck456"
@@ -35,11 +38,12 @@ def test_get_conversation_transcript():
     delete_project(project["id"])
 
 
-def test_summarize_conversation():
+@pytest.mark.asyncio
+async def test_summarize_conversation():
     project = create_project("test", "en")
     conversation = create_conversation(project["id"], "test")
 
-    response = summarize_conversation(
+    response = await summarize_conversation(
         conversation["id"], auth=DirectusSession(user_id="none", is_admin=True)
     )
 
@@ -48,7 +52,7 @@ def test_summarize_conversation():
 
     chunk = create_conversation_chunk(conversation["id"], "Hello, how are you?")
 
-    response = summarize_conversation(
+    response = await summarize_conversation(
         conversation["id"], auth=DirectusSession(user_id="none", is_admin=True)
     )
 
