@@ -111,7 +111,7 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
         if conversation["id"] not in conversation_data_dict:
             continue
 
-        transcript = get_conversation_transcript(
+        transcript = await get_conversation_transcript(
             conversation["id"],
             DirectusSession(user_id="none", is_admin=True),
         )
