@@ -27,9 +27,12 @@ export const ProjectConversationTranscript = () => {
 	const { conversationId } = useParams();
 	const conversationQuery = useConversationById({
 		conversationId: conversationId ?? "",
-		loadConversationChunks: true,
+		loadConversationChunks: false,
+		query: {
+			fields: ["id", "participant_name", "is_finished"],
+		},
 	});
-
+	console.log(conversationQuery.data, " ==>here");
 	const { ref: loadMoreRef, inView } = useInView();
 
 	const {

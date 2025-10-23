@@ -644,6 +644,7 @@ export const useConversationChunks = (
 							_eq: conversationId,
 						},
 					},
+					limit: 1, // Only need to check if chunks exist
 					sort: "timestamp",
 				}),
 			),

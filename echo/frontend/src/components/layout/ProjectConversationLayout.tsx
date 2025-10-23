@@ -2,10 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Stack, Title } from "@mantine/core";
 import { useParams } from "react-router";
 import { ConversationStatusIndicators } from "../conversation/ConversationAccordion";
-import {
-	CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS,
-	useConversationById,
-} from "../conversation/hooks";
+import { useConversationById } from "../conversation/hooks";
 import { TabsWithRouter } from "./TabsWithRouter";
 
 export const ProjectConversationLayout = () => {
@@ -21,8 +18,14 @@ export const ProjectConversationLayout = () => {
 				},
 			},
 			fields: [
-				...CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS,
-				{ chunks: ["transcript"] },
+				"id",
+				"participant_name",
+				"duration",
+				"is_finished",
+				"is_audio_processing_finished",
+				"created_at",
+				"updated_at",
+				{ chunks: ["source", "transcript"] },
 			],
 		},
 	});
