@@ -12,7 +12,12 @@ import { getProjectTranscriptsLink } from "@/lib/api";
 
 export const ProjectSettingsRoute = () => {
 	const { projectId } = useParams();
-	const projectQuery = useProjectById({ projectId: projectId ?? "" });
+	const projectQuery = useProjectById({
+		projectId: projectId ?? "",
+		query: {
+			fields: ["id", "name", "context", "updated_at", "language"],
+		},
+	});
 	return (
 		<Stack
 			gap="3rem"
@@ -58,7 +63,35 @@ export const ProjectSettingsRoute = () => {
 
 export const ProjectPortalSettingsRoute = () => {
 	const { projectId } = useParams();
-	const projectQuery = useProjectById({ projectId: projectId ?? "" });
+	const projectQuery = useProjectById({
+		projectId: projectId ?? "",
+		query: {
+			deep: {
+				// @ts-expect-error tags won't be typed
+				tags: {
+					_sort: "sort",
+				},
+			},
+			fields: [
+				"id",
+				"updated_at",
+				"language",
+				"default_conversation_ask_for_participant_name",
+				"default_conversation_description",
+				"default_conversation_finish_text",
+				"default_conversation_title",
+				"default_conversation_transcript_prompt",
+				"default_conversation_tutorial_slug",
+				"get_reply_mode",
+				"get_reply_prompt",
+				"is_get_reply_enabled",
+				"is_project_notification_subscription_allowed",
+				{
+					tags: ["id", "created_at", "text", "sort"],
+				},
+			],
+		},
+	});
 
 	// Memoize the project data to ensure stable reference
 	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be fixed

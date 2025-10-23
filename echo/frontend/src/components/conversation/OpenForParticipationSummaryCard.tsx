@@ -14,7 +14,12 @@ interface OpenForParticipationSummaryCardProps {
 export const OpenForParticipationSummaryCard = ({
 	projectId,
 }: OpenForParticipationSummaryCardProps) => {
-	const projectQuery = useProjectById({ projectId });
+	const projectQuery = useProjectById({
+		projectId,
+		query: {
+			fields: ["id", "is_conversation_allowed"],
+		},
+	});
 	const updateProjectMutation = useUpdateProjectByIdMutation();
 
 	const handleOpenForParticipationCheckboxChange = (
