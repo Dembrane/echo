@@ -18,7 +18,11 @@ export const useCurrentUser = () =>
 	useQuery({
 		queryFn: () => {
 			try {
-				return directus.request(readUser("me"));
+				return directus.request(
+					readUser("me", {
+						fields: ["id", "first_name", "email", "disable_create_project"],
+					}),
+				);
 			} catch (_error) {
 				return null;
 			}
