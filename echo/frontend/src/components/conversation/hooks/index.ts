@@ -681,7 +681,18 @@ export const useConversationsByProjectId = (
 								},
 							],
 						},
-						{ chunks: ["*"] },
+						{
+							chunks: [
+								"id",
+								"conversation_id",
+								"transcript",
+								"source",
+								"path",
+								"timestamp",
+								"created_at",
+								"error",
+							],
+						},
 					],
 					filter: {
 						chunks: {
@@ -765,21 +776,13 @@ export const CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS: QueryFields<
 	"project_id",
 	"participant_name",
 	"participant_email",
-	"participant_user_agent",
 	"tags",
 	"summary",
 	"source",
 	"chunks",
-	"project_chats",
-	"project_chat_messages",
-	"replies",
-	"conversation_segments",
 	"duration",
-	"merged_transcript",
-	"merged_audio_path",
 	"is_finished",
 	"is_audio_processing_finished",
-	"is_all_chunks_transcribed",
 	"linked_conversations",
 	"linking_conversations",
 ];
@@ -825,11 +828,26 @@ export const useConversationById = ({
 						{
 							tags: [
 								{
-									project_tag_id: ["id", "text", "created_at"],
+									project_tag_id: ["id", "text"],
 								},
 							],
 						},
-						...(loadConversationChunks ? [{ chunks: ["*"] as any }] : []),
+						...(loadConversationChunks
+							? [
+									{
+										chunks: [
+											"id",
+											"conversation_id",
+											"transcript",
+											"source",
+											"path",
+											"timestamp",
+											"created_at",
+											"error",
+										],
+									},
+								]
+							: []),
 					],
 					...query,
 				}),
@@ -871,11 +889,22 @@ export const useInfiniteConversationsByProjectId = (
 						{
 							tags: [
 								{
-									project_tag_id: ["id", "text", "created_at"],
+									project_tag_id: ["id", "text"],
 								},
 							],
 						},
-						{ chunks: ["*"] },
+						{
+							chunks: [
+								"id",
+								"conversation_id",
+								"transcript",
+								"source",
+								"path",
+								"timestamp",
+								"created_at",
+								"error",
+							],
+						},
 					],
 					filter: {
 						chunks: {

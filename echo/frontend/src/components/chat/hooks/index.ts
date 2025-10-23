@@ -121,12 +121,8 @@ export const useChat = (chatId: string) => {
 		queryFn: () =>
 			directus.request(
 				readItem("project_chat", chatId, {
-					fields: [
-						"*",
-						{
-							used_conversations: ["*"],
-						},
-					],
+					// Only fetch fields used in chat UI: id, name, project_id
+					fields: ["id", "name", "project_id"],
 				}),
 			),
 		queryKey: ["chats", chatId],
