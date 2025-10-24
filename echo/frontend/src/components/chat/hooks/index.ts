@@ -24,7 +24,8 @@ import { directus } from "@/lib/directus";
 
 export const useChatHistory = (chatId: string) => {
 	return useQuery({
-		queryFn: () => getChatHistory(chatId ?? ""),
+		enabled: chatId !== "",
+		queryFn: () => getChatHistory(chatId),
 		queryKey: ["chats", "history", chatId],
 	});
 };
