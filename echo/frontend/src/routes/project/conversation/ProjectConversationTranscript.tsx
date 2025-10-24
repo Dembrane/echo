@@ -32,7 +32,6 @@ export const ProjectConversationTranscript = () => {
 			fields: ["id", "participant_name", "is_finished"],
 		},
 	});
-	console.log(conversationQuery.data, " ==>here");
 	const { ref: loadMoreRef, inView } = useInView();
 
 	const {
