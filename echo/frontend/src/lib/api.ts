@@ -220,7 +220,7 @@ export const getProjectViews = async (projectId: string) => {
 						"description",
 						"image_url",
 						"view_id",
-						"image_generation_model ",
+						"image_generation_model",
 					],
 				},
 			],
