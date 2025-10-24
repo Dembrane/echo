@@ -129,7 +129,7 @@ export const useUpdateConversationTagsMutation = () => {
 			try {
 				const validTags = await directus.request<ProjectTag[]>(
 					readItems("project_tag", {
-						fields: ["*"],
+						fields: ["id"],
 						filter: {
 							id: {
 								_in: projectTagIdList,
@@ -152,9 +152,6 @@ export const useUpdateConversationTagsMutation = () => {
 						"id",
 						{
 							project_tag_id: ["id"],
-						},
-						{
-							conversation_id: ["id"],
 						},
 					],
 					filter: {
