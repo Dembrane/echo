@@ -112,7 +112,23 @@ export const ProjectTagPill = ({ tag }: { tag: ProjectTag }) => {
 };
 
 export const ProjectTagsInput = (props: { project: Project }) => {
-	const projectQuery = useProjectById({ projectId: props.project.id });
+	const projectQuery = useProjectById({
+		projectId: props.project.id,
+		query: {
+			deep: {
+				// @ts-expect-error tags won't be typed
+				tags: {
+					_sort: "sort",
+				},
+			},
+			fields: [
+				"id",
+				{
+					tags: ["id", "created_at", "text", "sort"],
+				},
+			],
+		},
+	});
 	const createTagMutation = useCreateProjectTagMutation();
 	const updateTagMutation = useUpdateProjectTagByIdMutation();
 

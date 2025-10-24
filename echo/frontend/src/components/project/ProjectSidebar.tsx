@@ -26,7 +26,18 @@ export const ProjectSidebar = () => {
 	const { projectId, conversationId } = useParams();
 	const qrCodeRef = useRef<HTMLDivElement>(null);
 
-	const projectQuery = useProjectById({ projectId: projectId ?? "" });
+	const projectQuery = useProjectById({
+		projectId: projectId ?? "",
+		query: {
+			fields: [
+				"id",
+				"name",
+				"language",
+				"is_conversation_allowed",
+				"default_conversation_title",
+			],
+		},
+	});
 	const { pathname } = useLocation();
 
 	// const { isCollapsed, toggleSidebar } = useSidebarCollapsed();

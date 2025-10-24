@@ -56,7 +56,7 @@ export const ProjectsHomeRoute = () => {
 		error,
 	} = useInfiniteProjects({
 		query: {
-			fields: ["count(conversations)", "*"],
+			fields: ["id", "name", "updated_at", "count(conversations)"],
 			search: debouncedSearchValue,
 			sort: "-updated_at",
 		},

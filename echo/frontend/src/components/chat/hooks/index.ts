@@ -24,7 +24,8 @@ import { directus } from "@/lib/directus";
 
 export const useChatHistory = (chatId: string) => {
 	return useQuery({
-		queryFn: () => getChatHistory(chatId ?? ""),
+		enabled: chatId !== "",
+		queryFn: () => getChatHistory(chatId),
 		queryKey: ["chats", "history", chatId],
 	});
 };
@@ -121,12 +122,8 @@ export const useChat = (chatId: string) => {
 		queryFn: () =>
 			directus.request(
 				readItem("project_chat", chatId, {
-					fields: [
-						"*",
-						{
-							used_conversations: ["*"],
-						},
-					],
+					// Only fetch fields used in chat UI: id, name, project_id
+					fields: ["id", "name", "project_id"],
 				}),
 			),
 		queryKey: ["chats", chatId],

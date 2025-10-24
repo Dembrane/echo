@@ -48,23 +48,26 @@ export const useCreateProjectReportMutation = () => {
 
 export const useGetProjectParticipants = (project_id: string) => {
 	return useQuery({
-		enabled: !!project_id, // Only run query if project_id exists
+		enabled: !!project_id,
 		queryFn: async () => {
 			if (!project_id) return 0;
 
-			const submissions = await directus.request(
-				readItems("project_report_notification_participants", {
-					fields: ["id"],
-					filter: {
-						_and: [
-							{ project_id: { _eq: project_id } },
-							{ email_opt_in: { _eq: true } },
-						],
+			const result = await directus.request(
+				aggregate("project_report_notification_participants", {
+					aggregate: {
+						count: "*",
+					},
+					query: {
+						filter: {
+							_and: [
+								{ project_id: { _eq: project_id } },
+								{ email_opt_in: { _eq: true } },
+							],
+						},
 					},
 				}),
 			);
-
-			return submissions.length;
+			return Number.parseInt(result[0]?.count ?? "0", 10) || 0;
 		},
 		queryKey: ["projectParticipants", project_id],
 	});
@@ -99,6 +102,7 @@ export const useProjectReportTimelineData = (projectReportId: string) => {
 
 			const allProjectReports = await directus.request(
 				readItems("project_report", {
+					fields: ["id", "date_created"],
 					filter: {
 						project_id: {
 							_eq: projectReport.project_id,
@@ -247,7 +251,21 @@ export const useDoesProjectReportNeedUpdate = (projectReportId: number) => {
 
 export const useProjectReport = (reportId: number) => {
 	return useQuery({
-		queryFn: () => directus.request(readItem("project_report", reportId)),
+		queryFn: () =>
+			directus.request(
+				readItem("project_report", reportId, {
+					fields: [
+						"id",
+						"status",
+						"project_id",
+						"content",
+						"show_portal_link",
+						"language",
+						"date_created",
+						"date_updated",
+					],
+				}),
+			),
 		queryKey: ["reports", reportId],
 		refetchInterval: 30000,
 	});
@@ -320,7 +338,7 @@ export const useLatestProjectReport = (projectId: string) => {
 		queryFn: async () => {
 			const reports = await directus.request(
 				readItems("project_report", {
-					fields: ["*"],
+					fields: ["id", "status", "project_id", "show_portal_link"],
 					filter: {
 						project_id: {
 							_eq: projectId,

@@ -39,7 +39,23 @@ export const ProjectConversationOverviewRoute = () => {
 		10000,
 		["id"],
 	);
-	const projectQuery = useProjectById({ projectId: projectId ?? "" });
+	const projectQuery = useProjectById({
+		projectId: projectId ?? "",
+		query: {
+			deep: {
+				// @ts-expect-error tags won't be typed
+				tags: {
+					_sort: "sort",
+				},
+			},
+			fields: [
+				"id",
+				{
+					tags: ["id", "created_at", "text", "sort"],
+				},
+			],
+		},
+	});
 
 	const useHandleGenerateSummaryManually = useMutation({
 		mutationFn: async () => {

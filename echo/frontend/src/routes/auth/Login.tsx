@@ -83,15 +83,9 @@ export const LoginRoute = () => {
 			setError("");
 			await loginMutation.mutateAsync([data.email, data.password]);
 
-			const projectsCount = await directus.request<Project[]>(
-				readItems("project", { limit: 1 }),
-			);
-			const isNewAccount =
-				searchParams.get("new") === "true" && projectsCount.length === 0;
-
-			if (isNewAccount) {
+			// Auto-create first project for new users
+			if (searchParams.get("new") === "true") {
 				toast(t`Setting up your first project`);
-				await loginMutation.mutateAsync([data.email, data.password]);
 				const project = await createProjectMutation.mutateAsync({
 					name: t`New Project`,
 				});
