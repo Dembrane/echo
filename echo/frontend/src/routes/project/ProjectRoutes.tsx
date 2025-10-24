@@ -12,11 +12,16 @@ import { getProjectTranscriptsLink } from "@/lib/api";
 
 export const ProjectSettingsRoute = () => {
 	const { projectId } = useParams();
+	const query = useMemo(
+		() => ({
+			fields: ["id", "name", "context", "updated_at", "language"],
+		}),
+		[],
+	);
 	const projectQuery = useProjectById({
 		projectId: projectId ?? "",
-		query: {
-			fields: ["id", "name", "context", "updated_at", "language"],
-		},
+		// @ts-expect-error tags field structure not properly typed in Directus SDK
+		query,
 	});
 	return (
 		<Stack
@@ -63,11 +68,9 @@ export const ProjectSettingsRoute = () => {
 
 export const ProjectPortalSettingsRoute = () => {
 	const { projectId } = useParams();
-	const projectQuery = useProjectById({
-		projectId: projectId ?? "",
-		query: {
+	const query = useMemo(
+		() => ({
 			deep: {
-				// @ts-expect-error tags won't be typed
 				tags: {
 					_sort: "sort",
 				},
@@ -90,7 +93,13 @@ export const ProjectPortalSettingsRoute = () => {
 					tags: ["id", "created_at", "text", "sort"],
 				},
 			],
-		},
+		}),
+		[],
+	);
+	const projectQuery = useProjectById({
+		projectId: projectId ?? "",
+		// @ts-expect-error tags field structure not properly typed in Directus SDK
+		query,
 	});
 
 	// Memoize the project data to ensure stable reference
