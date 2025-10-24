@@ -206,8 +206,23 @@ export const getProjectViews = async (projectId: string) => {
 	return directus.request<View[]>(
 		readItems("view", {
 			fields: [
-				"*",
-				{ aspects: ["*", "count(aspect_segment)", "aspect_segment"] },
+				"id",
+				"name",
+				"description",
+				"created_at",
+				"user_input",
+				"user_input_description",
+				{
+					aspects: [
+						"id",
+						"name",
+						"short_summary",
+						"description",
+						"image_url",
+						"view_id",
+						"image_generation_model ",
+					],
+				},
 			],
 			filter: {
 				project_analysis_run_id: project_analysis_run?.id,
