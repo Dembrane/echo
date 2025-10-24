@@ -25,9 +25,13 @@ COPY ./directus-sync.config.js ./directus-sync.config.js
 
 COPY --from=third-party-ext /extensions/directus ./extensions
 COPY ./templates ./templates/
+COPY ./migrations ./migrations/
+
+ENV MIGRATIONS_PATH=./migrations
 
 # https://github.com/directus/directus/blob/main/Dockerfile
 CMD : \
     && node cli.js bootstrap \
+    && node cli.js database migrate:latest \
     && pm2-runtime start ecosystem.config.cjs \
     ;

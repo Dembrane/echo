@@ -7,7 +7,7 @@
 Data Storage:
 
 - PostgreSQL Database
-- Redis (used by celery and directus)
+- Redis (used by dramatiq and directus)
 - S3 Compatible Object Storage (used for user assets)
 
 Service:
@@ -48,7 +48,7 @@ The following guide is to run the whole application locally. it is recommended t
 
 1. This installs the following:
 
-	- Devcontainer with `pnpm`, `rye` installed and configured (see [devcontainer.json](.devcontainer/devcontainer.json) for more context)
+	- Devcontainer with `pnpm`, `uv` installed and configured (see [devcontainer.json](.devcontainer/devcontainer.json) for more context)
 	- Postgres database running and exposed on port 5432
 	- Redis instance
 	- Minio server running and exposed on port 9001

@@ -6,3 +6,7 @@
 - dockerfile update
 
 - can probably run ruff / mypy in parallel
+
+- rye to uv
+- pyrefly
+- fix biome

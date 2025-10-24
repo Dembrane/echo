@@ -18,7 +18,8 @@ const queryClient = new QueryClient();
 const router = USE_PARTICIPANT_ROUTER ? participantRouter : mainRouter;
 
 export const App = () => {
-	useEffect(() => {
+
+useEffect(() => {
 		const cleanup = analytics.enableAutoPageviews();
 
 		return () => {

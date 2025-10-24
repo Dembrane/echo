@@ -15,19 +15,23 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "YoavBls.pretty-ts-errors",
-        "bradlc.vscode-tailwindcss",
-        "ms-python.python",
-        "charliermarsh.ruff",
-        "matangover.mypy",
+        // general
         "ms-azuretools.vscode-docker",
         "mhutchie.git-graph",
-        "cweijan.vscode-postgresql-client2",
         "github.vscode-pull-request-github",
         "nguyenngoclong.terminal-keeper",
+        // web
         "biomejs.biome",
+        "bradlc.vscode-tailwindcss",
+        "YoavBls.pretty-ts-errors",
+        // py
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "meta.pyrefly",
         // for cursor specifically lol
-        "anysphere.cursorpyright"
+        "anysphere.cursorpyright",
+        // pg
+        "cweijan.vscode-postgresql-client2"
       ]
     }
   },

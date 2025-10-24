@@ -20,6 +20,8 @@
 			"!**/dist",
 			"!**/node_modules",
 			"!**/package-lock.json",
+			"!**/pnpm-lock.yaml",
+			"!**/pnpm-workspace.yaml",
 			"!**/package.json",
 			"!**/locales"
 		]
@@ -64,7 +66,22 @@
 				"noAlert": "warn",
 				"noCatchAssign": "error",
 				"noVar": "error"
-			}
+			},
+			"nursery": {
+        "useSortedClasses": {
+          "options": {
+            "attributes": [
+              "classList"
+            ],
+            "functions": [
+              "clsx",
+              "cva",
+              "tw",
+              "tw.*"
+            ]
+          }
+        }
+      }
 		}
 	},
 	"vcs": {

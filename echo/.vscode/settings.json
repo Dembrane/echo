@@ -7,9 +7,6 @@
   "python.defaultInterpreterPath": "./server/.venv/bin/python",
   "ruff.lint.enable": true,
   "ruff.configuration": "./server/pyproject.toml",
-  "mypy.runUsingActiveInterpreter": true,
-  "mypy.targets": ["./server/dembrane"],
-  "mypy.configFile": "./server/pyproject.toml",
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.useTabStops": true,
@@ -20,22 +17,21 @@
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
   "python.testing.autoTestDiscoverOnSaveEnabled": true,
+  "python.pyrefly.displayTypeErrors": "default",
   // ts
   "[typescript]": {
     "editor.defaultFormatter": "biomejs.biome",
     "editor.formatOnSave": true,
-    "editor.useTabStops": true
   },
   "[typescriptreact]": {
     "editor.defaultFormatter": "biomejs.biome",
-    "editor.useTabStops": true,
     "editor.formatOnSave": true
   },
   "biome.enabled": true,
-  "biome.lsp.bin": "frontend/node_modules/.bin/biome",
-  "biome.configurationPath": "frontend/biome.json",
+  "biome.lsp.bin": "./frontend/node_modules/@biomejs/biome/bin/biome",
+  "editor.inlayHints.enabled": "on",
   "editor.codeActionsOnSave": {
     "source.fixAll.biome": "always",
-    "source.action.organizeImports.biome": "always"
-  }
+    "source.action.organizeImports.biome": "always",
+  },
 }

@@ -94,21 +94,8 @@ dependencies = [
 [tool.setuptools]
 packages = ["dembrane"]
 
-[tool.rye]
-virtual = true
-managed = true
-
-[tool.rye.scripts]
-"format" = { chain = ["format:isort", "format:ruff", "fix:ruff"] }
-"format:ruff" = "ruff format"
-"format:isort" = "isort ."
-"lint" = { chain = ["check:ruff", "typecheck"] }
-"check:ruff" = "ruff ."
-"fix:ruff" = "ruff --fix ."
-typecheck = { chain = ["typecheck:mypy"] }
-"typecheck:mypy" = "mypy ."
-"test" = "pytest"
-"test:cov" = "pytest --cov=dembrane --cov-report=term --cov-report=html"
+[tool.uv]
+package = false
 
 [tool.mypy]
 plugins = 'pydantic.mypy'

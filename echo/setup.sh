@@ -12,19 +12,18 @@ frontend_setup () {
   npm i -g pnpm
   pnpm config set store-dir /home/node/.local/share/pnpm/store
 
-  pnpm install -g azure-functions-core-tools@4
+  pnpm i -g @openai/codex
 
   cd frontend
   pnpm install
 }
 
 server_setup() {
-  curl -sSf https://rye.astral.sh/get | RYE_INSTALL_OPTION="--yes" bash
-  echo 'source "$HOME/.rye/env"' >> ~/.bashrc
-  . $HOME/.rye/env
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+  export PATH="$HOME/.local/bin:$PATH"
   cd server
-  rye sync
-  pip install mypy
+  uv sync
 }
 
 # hide stdout, only show stderr
