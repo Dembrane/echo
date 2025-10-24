@@ -845,7 +845,6 @@ export const getProjectConversationCounts = async (projectId: string) => {
 			fields: [
 				"id",
 				"is_finished",
-				"summary",
 				"participant_name",
 				"updated_at",
 				"created_at",
