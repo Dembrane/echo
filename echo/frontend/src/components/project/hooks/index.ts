@@ -137,7 +137,9 @@ export const useCreateChatMutation = () => {
 			};
 		}) => {
 			const project = await directus.request(
-				readItem("project", payload.project_id.id),
+				readItem("project", payload.project_id.id, {
+					fields: ["is_enhanced_audio_processing_enabled"],
+				}),
 			);
 
 			const chat = await directus.request(

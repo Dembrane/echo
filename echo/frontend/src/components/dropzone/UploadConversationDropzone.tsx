@@ -263,6 +263,9 @@ export const UploadConversationDropzone = (
 	const uploader = useConversationUploader();
 	const projectQuery = useProjectById({
 		projectId: props.projectId,
+		query: {
+			fields: ["id"],
+		},
 	});
 
 	// Handle file rename with the custom hook
