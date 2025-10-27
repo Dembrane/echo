@@ -10,7 +10,17 @@ import { TabsWithRouter } from "./TabsWithRouter";
 
 export const ProjectOverviewLayout = () => {
 	const projectId = useParams().projectId;
-	const projectQuery = useProjectById({ projectId: projectId ?? "" });
+	const projectQuery = useProjectById({
+		projectId: projectId ?? "",
+		query: {
+			fields: [
+				"id",
+				"language",
+				"is_conversation_allowed",
+				"default_conversation_title",
+			],
+		},
+	});
 
 	useDocumentTitle(t`Project Overview | Dembrane`);
 

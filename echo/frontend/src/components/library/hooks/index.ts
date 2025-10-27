@@ -24,9 +24,20 @@ export const useViewById = (projectId: string, viewId: string) => {
 						} as any,
 					},
 					fields: [
-						"*",
+						"id",
+						"name",
+						"summary",
+						"created_at",
 						{
-							aspects: ["*", "count(aspect_segment)"],
+							aspects: [
+								"id",
+								"name",
+								"short_summary",
+								"description",
+								"image_url",
+								"view_id",
+								"image_generation_model",
+							],
 						},
 					],
 				}),
@@ -41,13 +52,19 @@ export const useAspectById = (projectId: string, aspectId: string) => {
 			directus.request<Aspect>(
 				readItem("aspect", aspectId, {
 					fields: [
-						"*",
+						"id",
+						"name",
+						"image_url",
+						"long_summary",
 						{
 							aspect_segment: [
-								"*",
+								"id",
+								"description",
+								"verbatim_transcript",
+								"relevant_index",
 								{
 									segment: [
-										"*",
+										"id",
 										{
 											conversation_id: ["id", "participant_name"],
 										},
