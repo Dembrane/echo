@@ -230,7 +230,6 @@ export const ParticipantConversationText = () => {
 							size="lg"
 							radius="md"
 							onClick={openFinishModal}
-							component="a"
 							variant="light"
 							rightSection={<IconCheck />}
 						>

@@ -56,6 +56,8 @@ const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
 
 export const ParticipantConversationAudio = () => {
 	const { projectId, conversationId } = useParams();
+	const textModeUrl = `/${projectId}/conversation/${conversationId}/text`;
+	const finishUrl = `/${projectId}/conversation/${conversationId}/finish`;
 
 	// Get device ID from cookies for audio recording
 	const savedDeviceId = Cookies.get("micDeviceId");
@@ -354,9 +356,6 @@ export const ParticipantConversationAudio = () => {
 		);
 	}
 
-	const textModeUrl = `/${projectId}/conversation/${conversationId}/text`;
-	const finishUrl = `/${projectId}/conversation/${conversationId}/finish`;
-
 	return (
 		<div className="container mx-auto flex h-full max-w-2xl flex-col">
 			{/* modal for permissions error */}
@@ -595,12 +594,7 @@ export const ParticipantConversationAudio = () => {
 								</Button>
 
 								<I18nLink to={textModeUrl}>
-									<ActionIcon
-										component="a"
-										size="50"
-										variant="default"
-										radius="md"
-									>
+									<ActionIcon size="50" variant="default" radius="md">
 										<IconTextCaption />
 									</ActionIcon>
 								</I18nLink>
