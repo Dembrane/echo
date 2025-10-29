@@ -219,12 +219,9 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
                         return_url=True,
                     )
                 )
-            except Exception as e:
-                logger.info(
-                    f"No valid content found for conversation {conversation_id}; skipping merge task."
-                )
-                logger.info(f"Error: {e}")
-                raise NoContentFoundException from e
+            except NoContentFoundException:  # type: ignore
+                logger.info(f"No valid content found for conversation {conversation_id}; skipping merge task.")
+                return
 
         return
     except Exception as e:
