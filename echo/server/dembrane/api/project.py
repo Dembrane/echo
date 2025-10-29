@@ -201,9 +201,11 @@ async def get_project_transcripts(
 
 async def get_latest_project_analysis_run(project_id: str) -> Optional[dict]:
     try:
-        def _get_analysis_run():
-            with directus_client_context() as client:
-                return client.get_items(
+        analysis_run = await run_in_thread_pool(
+            lambda: (
+                directus_client_context()
+                .__enter__()
+                .get_items(
                     "project_analysis_run",
                     {
                         "query": {
@@ -214,8 +216,8 @@ async def get_latest_project_analysis_run(project_id: str) -> Optional[dict]:
                         },
                     },
                 )
-        
-        analysis_run = await run_in_thread_pool(_get_analysis_run)
+            )
+        )
 
         if analysis_run is None:
             return None
@@ -247,10 +249,7 @@ async def post_create_project_library(
     from dembrane.service.project import ProjectNotFoundException
 
     try:
-        project = await run_in_thread_pool(
-            project_service.get_by_id_or_raise,
-            project_id
-        )
+        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
     except ProjectNotFoundException as e:
         raise HTTPException(status_code=404, detail="Project not found") from e
 
@@ -298,10 +297,7 @@ async def post_create_view(
     from dembrane.service.project import ProjectNotFoundException
 
     try:
-        project = await run_in_thread_pool(
-            project_service.get_by_id_or_raise,
-            project_id
-        )
+        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
     except ProjectNotFoundException as e:
         raise HTTPException(status_code=404, detail="Project not found") from e
 
@@ -325,12 +321,13 @@ class CreateReportRequestBodySchema(BaseModel):
 
 
 @ProjectRouter.post("/{project_id}/create-report")
-async def create_report(project_id: str, body: CreateReportRequestBodySchema) -> None:
+async def create_report(project_id: str, body: CreateReportRequestBodySchema) -> dict:
     language = body.language or "en"
     try:
         report_content_response = await get_report_content_for_project(project_id, language)
     except ContextTooLongException:
-        def _create_error_report():
+
+        def _create_error_report() -> dict:
             with directus_client_context() as client:
                 return client.create_item(
                     "project_report",
@@ -342,13 +339,13 @@ async def create_report(project_id: str, body: CreateReportRequestBodySchema) ->
                         "error_code": "CONTEXT_TOO_LONG",
                     },
                 )["data"]
-        
+
         report = await run_in_thread_pool(_create_error_report)
         return report
     except Exception as e:
         raise e
 
-    def _create_report():
+    def _create_report() -> dict:
         with directus_client_context() as client:
             return client.create_item(
                 "project_report",
@@ -359,7 +356,7 @@ async def create_report(project_id: str, body: CreateReportRequestBodySchema) ->
                     "status": "archived",
                 },
             )["data"]
-    
+
     report = await run_in_thread_pool(_create_report)
     return report
 
