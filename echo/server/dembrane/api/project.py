@@ -201,11 +201,9 @@ async def get_project_transcripts(
 
 async def get_latest_project_analysis_run(project_id: str) -> Optional[dict]:
     try:
-        analysis_run = await run_in_thread_pool(
-            lambda: (
-                directus_client_context()
-                .__enter__()
-                .get_items(
+        def _get_analysis_run() -> Optional[list[dict]]:
+            with directus_client_context() as client:
+                return client.get_items(
                     "project_analysis_run",
                     {
                         "query": {
@@ -216,8 +214,8 @@ async def get_latest_project_analysis_run(project_id: str) -> Optional[dict]:
                         },
                     },
                 )
-            )
-        )
+        
+        analysis_run: Optional[list[dict]] = await run_in_thread_pool(_get_analysis_run)
 
         if analysis_run is None:
             return None
