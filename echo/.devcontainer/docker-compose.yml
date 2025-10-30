@@ -8,7 +8,7 @@ services:
       - 9001:9001
     entrypoint: >
       /bin/sh -c "
-      /usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+      /usr/bin/mc config host add myminio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
       /usr/bin/mc mb --ignore-existing myminio/dembrane;
       /usr/bin/mc policy set download myminio/dembrane;
       minio server /mnt/data --console-address ":9001"
@@ -22,11 +22,9 @@ services:
     restart: unless-stopped
 
   redis:
-    image: 'bitnami/redis:6.2.14'
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
+    image: valkey/valkey:8.0
     volumes:
-      - ./redis_data:/bitnami/redis/data
+      - ./redis_data:/data
 
   postgres:
     image: pgvector/pgvector:0.6.2-pg16
@@ -141,5 +139,3 @@ services:
       - postgres
       - redis
       - neo4j
-
-
