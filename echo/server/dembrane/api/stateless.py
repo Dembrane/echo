@@ -11,6 +11,12 @@ from dembrane.prompts import render_prompt
 from dembrane.rag_manager import RAGManager, get_rag
 from dembrane.postgresdb_manager import PostgresDBManager
 from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.config import (
+    SMALL_LITELLM_MODEL,
+    SMALL_LITELLM_API_KEY,
+    SMALL_LITELLM_API_BASE,
+    SMALL_LITELLM_API_VERSION,
+)
 from dembrane.audio_lightrag.utils.lightrag_utils import (
     is_valid_uuid,
     upsert_transcript,
@@ -50,13 +56,16 @@ def generate_summary(transcript: str, language: str | None) -> str:
 
     # Call the model over the provided API endpoint
     response = completion(
-        model="anthropic/claude-3-5-sonnet-20240620",
+        model=SMALL_LITELLM_MODEL,
         messages=[
             {
                 "content": prompt,
                 "role": "user",
             }
         ],
+        api_key=SMALL_LITELLM_API_KEY,
+        api_base=SMALL_LITELLM_API_BASE,
+        api_version=SMALL_LITELLM_API_VERSION,
     )
 
     response_content = response["choices"][0]["message"]["content"]
