@@ -25,8 +25,8 @@ def stream_anthropic_chat_response(
     system: List[Dict[str, Any]], messages: List[Dict[str, Any]], protocol: str = "data"
 ) -> Generator[str, None, None]:
     """
-    Generates response from Anthropic 
-    and returns openAI like stream response 
+    Generates response from Anthropic
+    and returns openAI like stream response
     """
     stream = anthropic_client.messages.create(
         model="claude-3-5-sonnet-20241022",

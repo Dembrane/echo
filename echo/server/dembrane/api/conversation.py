@@ -5,6 +5,7 @@ from logging import getLogger
 
 from fastapi import Request, APIRouter
 from pydantic import BaseModel
+from litellm.utils import token_counter
 from sqlalchemy.orm import noload, selectinload
 from fastapi.responses import RedirectResponse, StreamingResponse
 from fastapi.exceptions import HTTPException
@@ -12,6 +13,7 @@ from litellm.exceptions import ContentPolicyViolationError
 
 from dembrane.s3 import get_signed_url
 from dembrane.utils import CacheWithExpiration, generate_uuid, get_utc_timestamp
+from dembrane.config import LIGHTRAG_LITELLM_INFERENCE_MODEL
 from dembrane.database import (
     ConversationModel,
     ConversationChunkModel,
@@ -23,7 +25,6 @@ from dembrane.audio_utils import (
     sanitize_filename_component,
     merge_multiple_audio_files_and_save_to_s3,
 )
-from dembrane.quote_utils import count_tokens
 from dembrane.reply_utils import generate_reply_for_conversation
 from dembrane.api.stateless import (
     DeleteConversationRequest,
@@ -230,10 +231,7 @@ async def get_conversation_counts(
 
     from dembrane.service import conversation_service
 
-    counts = await run_in_thread_pool(
-        conversation_service.get_chunk_counts,
-        conversation_id
-    )
+    counts = await run_in_thread_pool(conversation_service.get_chunk_counts, conversation_id)
 
     return counts
 
@@ -339,10 +337,7 @@ async def get_conversation_content(
 
         duration = -1.0
         try:
-            duration = await run_in_thread_pool(
-                get_duration_from_s3,
-                merged_path
-            )
+            duration = await run_in_thread_pool(get_duration_from_s3, merged_path)
         except Exception as e:
             logger.error(f"Error getting duration from s3: {str(e)}")
 
@@ -462,10 +457,11 @@ async def get_conversation_token_count(
 
     # If not in cache, calculate the token count
     transcript = await get_conversation_transcript(conversation_id, auth)
+
     token_count = await run_in_thread_pool(
-        count_tokens,
-        transcript,
-        provider="anthropic"
+        token_counter,
+        model=LIGHTRAG_LITELLM_INFERENCE_MODEL,
+        messages=[{"role": "user", "content": transcript}],
     )
 
     # Store the result in the cache
@@ -535,7 +531,9 @@ async def summarize_conversation(
 
     language = conversation_data["project_id"]["language"]
 
-    transcript_str = await get_conversation_transcript(conversation_id, auth, include_project_data=True)
+    transcript_str = await get_conversation_transcript(
+        conversation_id, auth, include_project_data=True
+    )
 
     if transcript_str == "":
         return {
@@ -544,9 +542,7 @@ async def summarize_conversation(
         }
     else:
         summary = await run_in_thread_pool(
-            generate_summary,
-            transcript_str,
-            language if language else "en"
+            generate_summary, transcript_str, language if language else "en"
         )
 
         await run_in_thread_pool(
@@ -634,10 +630,7 @@ async def retranscribe_conversation(
 
         duration = None
         try:
-            duration = await run_in_thread_pool(
-                get_duration_from_s3,
-                merged_audio_path
-            )
+            duration = await run_in_thread_pool(get_duration_from_s3, merged_audio_path)
         except Exception as e:
             logger.error(f"Error getting duration from s3: {str(e)}")
 
@@ -669,15 +662,17 @@ async def retranscribe_conversation(
 
         try:
             logger.info(f"Creating links from {conversation_id} to {new_conversation_id}")
-            link_id = (await run_in_thread_pool(
-                directus.create_item,
-                "conversation_link",
-                item_data={
-                    "source_conversation_id": conversation_id,
-                    "target_conversation_id": new_conversation_id,
-                    "link_type": "CLONE",
-                },
-            ))["data"]["id"]
+            link_id = (
+                await run_in_thread_pool(
+                    directus.create_item,
+                    "conversation_link",
+                    item_data={
+                        "source_conversation_id": conversation_id,
+                        "target_conversation_id": new_conversation_id,
+                        "link_type": "CLONE",
+                    },
+                )
+            )["data"]["id"]
             logger.info(f"Link created: {link_id}")
         except Exception as e:
             logger.error(f"Error creating links: {str(e)}")
@@ -687,17 +682,19 @@ async def retranscribe_conversation(
             chunk_id = generate_uuid()
             timestamp = get_utc_timestamp().isoformat()
 
-            (await run_in_thread_pool(
-                directus.create_item,
-                "conversation_chunk",
-                item_data={
-                    "id": chunk_id,
-                    "conversation_id": new_conversation_id,
-                    "timestamp": timestamp,
-                    "path": merged_audio_path,
-                    "source": "CLONE",
-                },
-            ))["data"]
+            (
+                await run_in_thread_pool(
+                    directus.create_item,
+                    "conversation_chunk",
+                    item_data={
+                        "id": chunk_id,
+                        "conversation_id": new_conversation_id,
+                        "timestamp": timestamp,
+                        "path": merged_audio_path,
+                        "source": "CLONE",
+                    },
+                )
+            )["data"]
 
             logger.debug(f"Queuing transcription for chunk {chunk_id}")
             # Import task locally to avoid circular imports
@@ -712,11 +709,7 @@ async def retranscribe_conversation(
             }
         except Exception as e:
             # Clean up the partially created conversation
-            await run_in_thread_pool(
-                directus.delete_item,
-                "conversation",
-                new_conversation_id
-            )
+            await run_in_thread_pool(directus.delete_item, "conversation", new_conversation_id)
             logger.error(f"Error during retranscription: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Failed to process audio: {str(e)}") from e
 
@@ -763,11 +756,7 @@ async def delete_conversation(
             session=auth,
         )
         # Run Directus deletion
-        await run_in_thread_pool(
-            directus.delete_item,
-            "conversation",
-            conversation_id
-        )
+        await run_in_thread_pool(directus.delete_item, "conversation", conversation_id)
         return {"status": "success", "message": "Conversation deleted successfully"}
     except Exception as e:
         logger.exception(f"Error deleting conversation {conversation_id}: {e}")

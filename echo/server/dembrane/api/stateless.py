@@ -7,6 +7,12 @@ from pydantic import BaseModel
 from lightrag.lightrag import QueryParam
 from lightrag.kg.shared_storage import initialize_pipeline_status
 
+from dembrane.config import (
+    SMALL_LITELLM_MODEL,
+    SMALL_LITELLM_API_KEY,
+    SMALL_LITELLM_API_BASE,
+    SMALL_LITELLM_API_VERSION,
+)
 from dembrane.prompts import render_prompt
 from dembrane.rag_manager import RAGManager, get_rag
 from dembrane.postgresdb_manager import PostgresDBManager
@@ -50,13 +56,16 @@ def generate_summary(transcript: str, language: str | None) -> str:
 
     # Call the model over the provided API endpoint
     response = completion(
-        model="anthropic/claude-3-5-sonnet-20240620",
+        model=SMALL_LITELLM_MODEL,
         messages=[
             {
                 "content": prompt,
                 "role": "user",
             }
         ],
+        api_key=SMALL_LITELLM_API_KEY,
+        api_base=SMALL_LITELLM_API_BASE,
+        api_version=SMALL_LITELLM_API_VERSION,
     )
 
     response_content = response["choices"][0]["message"]["content"]
@@ -262,7 +271,7 @@ async def get_lightrag_prompt(
                 ids=[str(id) for id in echo_segment_ids],
                 top_k=payload.top_k,
             )
-            
+
             try:
                 response = await rag.aquery(payload.query, param=param)
                 logger.debug(f"Response: {response}")
