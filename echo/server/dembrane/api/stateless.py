@@ -7,16 +7,16 @@ from pydantic import BaseModel
 from lightrag.lightrag import QueryParam
 from lightrag.kg.shared_storage import initialize_pipeline_status
 
-from dembrane.prompts import render_prompt
-from dembrane.rag_manager import RAGManager, get_rag
-from dembrane.postgresdb_manager import PostgresDBManager
-from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.config import (
     SMALL_LITELLM_MODEL,
     SMALL_LITELLM_API_KEY,
     SMALL_LITELLM_API_BASE,
     SMALL_LITELLM_API_VERSION,
 )
+from dembrane.prompts import render_prompt
+from dembrane.rag_manager import RAGManager, get_rag
+from dembrane.postgresdb_manager import PostgresDBManager
+from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.audio_lightrag.utils.lightrag_utils import (
     is_valid_uuid,
     upsert_transcript,
@@ -271,7 +271,7 @@ async def get_lightrag_prompt(
                 ids=[str(id) for id in echo_segment_ids],
                 top_k=payload.top_k,
             )
-            
+
             try:
                 response = await rag.aquery(payload.query, param=param)
                 logger.debug(f"Response: {response}")
