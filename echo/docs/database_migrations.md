@@ -13,6 +13,10 @@ These are handled through the [directus-sync](https://github.com/tractr/directus
 
 3. Run the SQL script on the machine
 
+`psql -h postgres -p 5432 -U dembrane`
+
+- default password is dembrane if you're using the dev container
+
 ```bash
-CREATE extension vector;
+psql > CREATE extension vector;
 ```

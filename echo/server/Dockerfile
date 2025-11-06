@@ -27,6 +27,8 @@ WORKDIR /code/server
 COPY pyproject.toml uv.lock* ./
 RUN uv sync --frozen
 
+FROM base AS runner
+
 # Copy everything else after dependency installation
 # This ensures dependency layer is cached separately from application code
 COPY . .

@@ -31,18 +31,25 @@ If you try logging into directus and it doesn't work with what you have in the .
 
 Solution: You need to reset the DB. (delete ".devcontainer/postgres_data" and rebuild / migrate the DB again / etc)
 
-### Redis not starting (Docker Desktop)
+### Redis/Valkey not starting (Docker Desktop)
 
 `Can't open the append-only file: Permission denied`
+`redis.exceptions.ResponseError: MISCONF Valkey is configured to save RDB snapshots, but it's currently unable to persist to disk. Commands that may modify the data set are disabled, because this instance is configured to report errors during writes if RDB snapshotting fails (stop-writes-on-bgsave-error option). Please check the Valkey logs for details about the RDB error.`
 
-If your Redis container fails to start and you see a “Permission denied” error about the append-only file, you may need to change permissions on the Redis data folder.
+If your Redis/Valkey container fails to start and you see a “Permission denied” error about the append-only file, you may need to change permissions on the Redis data folder.
+
+0. First make sure that the folder `.devcontainer/redis_data` exists
 
 1. **Open a local WSL terminal** (outside of the container).
 2. **Run**:
    ```bash
-   sudo chown -R 1001:1001 ./echo/.devcontainer/redis_data
+   sudo chown -R 1001:1001 .devcontainer/redis_data
    ```
 3. **Restart** the redis container from Docker Desktop.
+
+### Able to login, "Error creating Project"
+
+- do [Database Migrations](./docs/database_migrations.md)
 
 ### Minio not starting 
 

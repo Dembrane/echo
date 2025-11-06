@@ -77,5 +77,6 @@ The following guide is to run the whole application locally. it is HIGHLY recomm
 	- Click **"Terminal Keeper: Active session"**.
 
 ## FAQ [./docs/troubleshooting-tips.md](./docs/troubleshooting-tips.md)
+- Check this file for common queries while developing, before raising a request.
 
 Enjoy building with Dembrane!

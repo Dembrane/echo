@@ -220,6 +220,35 @@ install_server_deps() {
     fi
 }
 
+install_postgresql_client() {
+    if command_exists psql && psql --version | grep -q "psql (PostgreSQL) 16"; then
+        log_info "PostgreSQL client 16 already installed: $(psql --version)"
+        return
+    fi
+
+    log_info "Installing PostgreSQL client 16..."
+
+    # Install postgresql-common first
+    ensure_apt_packages postgresql-common
+
+    # Run the pgdg script to add PostgreSQL repository (non-interactive)
+    if [ -f "/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh" ]; then
+        log_info "Adding PostgreSQL repository..."
+        echo "" | /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh || log_warn "PostgreSQL repository script may have already run"
+    else
+        log_warn "PostgreSQL repository script not found, attempting to install postgresql-client-16 anyway"
+    fi
+
+    # Install postgresql-client-16
+    ensure_apt_packages postgresql-client-16
+
+    if command_exists psql; then
+        log_info "PostgreSQL client installed: $(psql --version)"
+    else
+        log_warn "PostgreSQL client installation completed but psql command not found"
+    fi
+}
+
 show_help() {
     cat <<EOF
 Usage: ./setup.sh [options]
@@ -230,6 +259,7 @@ Options:
   --skip-frontend     Skip frontend dependency installation
   --skip-server       Skip server dependency installation
   --skip-python       Skip managed Python setup for uv
+  --skip-postgres     Skip PostgreSQL client installation
 
 Environment overrides:
   NODE_VERSION (default: ${NODE_VERSION})
@@ -243,6 +273,7 @@ parse_args() {
     SKIP_FRONTEND="false"
     SKIP_SERVER="false"
     SKIP_PYTHON="false"
+    SKIP_POSTGRES="false"
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
@@ -264,6 +295,10 @@ parse_args() {
                 ;;
             --skip-python)
                 SKIP_PYTHON="true"
+                shift
+                ;;
+            --skip-postgres)
+                SKIP_POSTGRES="true"
                 shift
                 ;;
             *)
@@ -319,6 +354,12 @@ main() {
         ensure_uv_python
     else
         log_info "Skipping Python setup"
+    fi
+
+    if [ "$SKIP_POSTGRES" = "false" ]; then
+        install_postgresql_client
+    else
+        log_info "Skipping PostgreSQL client installation"
     fi
 
     if [ "$SKIP_FRONTEND" = "false" ]; then

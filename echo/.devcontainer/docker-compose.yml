@@ -3,6 +3,8 @@ services:
     image: valkey/valkey:8.0.6-alpine
     volumes:
       - ./redis_data:/data
+    networks:
+      - dembrane-network
 
   postgres:
     image: pgvector/pgvector:0.8.1-pg16
@@ -16,6 +18,8 @@ services:
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - dembrane-network
 
   neo4j:
     image: neo4j:5.26.16-community
@@ -30,6 +34,8 @@ services:
       - 7687:7687 # Neo4j Bolt protocol
     environment:
       - NEO4J_AUTH=neo4j/admin@dembrane
+    networks:
+      - dembrane-network
 
   directus:
     build:
@@ -67,14 +73,8 @@ services:
       - USER_REGISTER_URL_ALLOW_LIST=http://localhost:5173/verify-email
       - PASSWORD_RESET_URL_ALLOW_LIST=http://localhost:5173/password-reset
       - STORAGE_LOCATIONS=local
-      - EMAIL_TRANSPORT="smtp"
-      - EMAIL_FROM=""
-      - EMAIL_SMTP_HOST=""
-      - EMAIL_SMTP_PORT=587
-      - EMAIL_SMTP_USER=""
-      - EMAIL_SMTP_PASSWORD=""
-      - EMAIL_SMTP_SECURE=false
-      - EMAIL_SMTP_IGNORE_TLS=false
+    networks:
+      - dembrane-network
 
     depends_on:
       - postgres
@@ -98,7 +98,6 @@ services:
       - ADMIN_BASE_URL=http://localhost:5173
       - PARTICIPANT_BASE_URL=http://localhost:5174
       - DIRECTUS_BASE_URL=http://directus:8055
-      - DEBUG_MODE=1
       - DISABLE_SENTRY=1
       - SERVE_API_DOCS=1
       - DISABLE_REDACTION=1
@@ -112,9 +111,14 @@ services:
       - ../..:/workspaces:cached
       # for docker passthrough
       - /var/run/docker.sock:/var/run/docker.sock
-
+    networks:
+      - dembrane-network
     command: sleep infinity
     depends_on:
       - postgres
       - redis
       - neo4j
+
+networks:
+  dembrane-network:
+    driver: bridge
