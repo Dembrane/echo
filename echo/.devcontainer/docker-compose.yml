@@ -1,40 +1,14 @@
-version: '3.8'
-
 services:
-  minio:
-    image: minio/minio:latest
-    ports:
-      - 9000:9000
-      - 9001:9001
-    entrypoint: >
-      /bin/sh -c "
-      /usr/bin/mc config host add myminio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
-      /usr/bin/mc mb --ignore-existing myminio/dembrane;
-      /usr/bin/mc policy set download myminio/dembrane;
-      minio server /mnt/data --console-address ":9001"
-      "
-    environment:
-      - MINIO_ROOT_USER=dembrane
-      - MINIO_ROOT_PASSWORD=dembrane
-      - MINIO_VOLUMES=/mnt/data
-    volumes:
-      - ./minio_data:/mnt/data
-    restart: unless-stopped
-
   redis:
-    image: valkey/valkey:8.0
+    image: valkey/valkey:8.0.6-alpine
     volumes:
       - ./redis_data:/data
 
   postgres:
-    image: pgvector/pgvector:0.6.2-pg16
+    image: pgvector/pgvector:0.8.1-pg16
     restart: unless-stopped
     ports:
-      - 5432:5432      
-      - 7474:7474  # Neo4j Browser
-      - 7687:7687  # Neo4j Bolt protocol
-      - 5173:5173
-      - 5174:5174
+      - 5432:5432
     environment:
       POSTGRES_DB: dembrane
       POSTGRES_USER: dembrane
@@ -44,16 +18,18 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   neo4j:
-    image: neo4j:5.26.4
+    image: neo4j:5.26.16-community
+    restart: unless-stopped
     volumes:
       - ./neo4j_data/logs:/logs
       - ./neo4j_data/config:/config
       - ./neo4j_data/data:/data
       - ./neo4j_data/plugins:/plugins
+    ports:
+      - 7474:7474 # Neo4j Browser
+      - 7687:7687 # Neo4j Bolt protocol
     environment:
       - NEO4J_AUTH=neo4j/admin@dembrane
-    network_mode: service:postgres
-    restart: unless-stopped
 
   directus:
     build:
@@ -64,6 +40,8 @@ services:
     volumes:
       - ../directus/uploads:/directus/uploads
       - ../directus/templates:/directus/templates
+    env_file:
+      - ../directus/.env
     environment:
       - PUBLIC_URL=http://localhost:8055
       - PORT=8055
@@ -88,11 +66,7 @@ services:
       - USER_INVITE_URL_ALLOW_LIST=http://localhost:5173/invite
       - USER_REGISTER_URL_ALLOW_LIST=http://localhost:5173/verify-email
       - PASSWORD_RESET_URL_ALLOW_LIST=http://localhost:5173/password-reset
-      - STORAGE_LOCATIONS=local,s3
-      - STORAGE_S3_KEY=dembrane
-      - STORAGE_S3_SECRET=dembrane
-      - STORAGE_S3_BUCKET=dembrane
-      - STORAGE_S3_ENDPOINT=http://minio:9000
+      - STORAGE_LOCATIONS=local
       - EMAIL_TRANSPORT="smtp"
       - EMAIL_FROM=""
       - EMAIL_SMTP_HOST=""
@@ -111,6 +85,10 @@ services:
       context: ../server
       dockerfile: Dockerfile
       target: base
+    ports:
+      - 8000:8000
+      - 5173:5173
+      - 5174:5174
     environment:
       - DIRECTUS_SECRET=secret
       - DIRECTUS_TOKEN=admin
@@ -129,11 +107,12 @@ services:
       - STORAGE_S3_BUCKET=dembrane
       - STORAGE_S3_ENDPOINT=http://minio:9000
       - NEO4J_URL=bolt://neo4j:7687
-      
+
     volumes:
       - ../..:/workspaces:cached
+      # for docker passthrough
       - /var/run/docker.sock:/var/run/docker.sock
-    network_mode: service:postgres
+
     command: sleep infinity
     depends_on:
       - postgres

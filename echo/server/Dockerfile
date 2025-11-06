@@ -18,13 +18,16 @@ RUN \
     apt-get install -y --no-install-recommends git curl ca-certificates pkg-config zip build-essential && \
     chmod +x /usr/local/bin/ffmpeg /usr/local/bin/ffprobe
 
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
 WORKDIR /code/server
 
 # Install dependencies first (better layer caching)
-COPY requirements.lock ./requirements.lock
-RUN pip install --no-cache-dir -r requirements.lock
+COPY pyproject.toml uv.lock* ./
+RUN uv sync --frozen
 
-# Copy everything else after pip install
+# Copy everything else after dependency installation
 # This ensures dependency layer is cached separately from application code
 COPY . .
 

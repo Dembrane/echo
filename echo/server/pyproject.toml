@@ -2,7 +2,7 @@
 name = "Dembrane"
 version = "0.0.1"
 description = "Python project for the Dembrane API"
-requires-python = "== 3.11"
+requires-python = ">= 3.11, < 3.12"
 dependencies = [
     # API server
     "fastapi==0.109.*",
@@ -94,42 +94,24 @@ dependencies = [
 [tool.setuptools]
 packages = ["dembrane"]
 
-[tool.rye]
-virtual = true
-managed = true
+[tool.uv]
+package = false
 
-[tool.rye.scripts]
-"format" = { chain = ["format:isort", "format:ruff", "fix:ruff"] }
-"format:ruff" = "ruff format"
-"format:isort" = "isort ."
-"lint" = { chain = ["check:ruff", "typecheck"] }
-"check:ruff" = "ruff ."
-"fix:ruff" = "ruff --fix ."
-typecheck = { chain = ["typecheck:mypy"] }
-"typecheck:mypy" = "mypy ."
-"test" = "pytest"
-"test:cov" = "pytest --cov=dembrane --cov-report=term --cov-report=html"
+# [tool.mypy]
+# plugins = 'pydantic.mypy'
+# exclude = ['scripts', 'tests']
+# warn_redundant_casts = true
+# warn_unused_ignores = true
+# check_untyped_defs = true
+# no_implicit_reexport = true
+# disallow_untyped_defs = true
+# ignore_missing_imports = true
 
-[tool.mypy]
-plugins = 'pydantic.mypy'
-exclude = ['scripts', 'tests']
-warn_redundant_casts = true
-warn_unused_ignores = true
-check_untyped_defs = true
-no_implicit_reexport = true
-disallow_untyped_defs = true
-ignore_missing_imports = true
-
-# Removed trankit mypy override since trankit is no longer a dependency
-# [[tool.mypy.overrides]]
-# follow_imports = "skip"
-# module = ["trankit.*"]
-
-[tool.pydantic-mypy]
-init_forbid_extra = true
-init_typed = true
-warn_required_dynamic_aliases = true
-warn_untyped_fields = true
+# [tool.pydantic-mypy]
+# init_forbid_extra = true
+# init_typed = true
+# warn_required_dynamic_aliases = true
+# warn_untyped_fields = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "dembrane"]
@@ -231,6 +213,13 @@ ignore = []
 fixable = ["ALL"]
 unfixable = []
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.pyrefly]
+project-excludes = [
+    "**/scripts*",
+    "**/tests*",
+]
+ignore-missing-imports = ["*"]
 
 [tool.ruff.format]
 quote-style = "double"
