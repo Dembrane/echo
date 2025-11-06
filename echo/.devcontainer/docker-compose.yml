@@ -105,7 +105,9 @@ services:
       - STORAGE_S3_SECRET=dembrane
       - STORAGE_S3_BUCKET=dembrane
       - STORAGE_S3_ENDPOINT=http://minio:9000
-      - NEO4J_URL=bolt://neo4j:7687
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USERNAME=neo4j
+      - NEO4J_PASSWORD=admin@dembrane
 
     volumes:
       - ../..:/workspaces:cached

@@ -123,6 +123,22 @@ install_pnpm() {
     log_info "pnpm installed: $(pnpm --version)"
 }
 
+install_codex() {
+    if command_exists codex; then
+        log_info "codex already installed: $(codex --version 2>/dev/null || echo 'installed')"
+        return
+    fi
+
+    if ! command_exists npm; then
+        log_error "npm not found, cannot install codex"
+        return 1
+    fi
+
+    log_info "Installing @openai/codex globally..."
+    npm install -g @openai/codex@latest
+    log_info "codex installed"
+}
+
 install_uv() {
     if command_exists uv; then
         log_info "uv already installed: $(uv --version)"
@@ -256,6 +272,7 @@ Usage: ./setup.sh [options]
 Options:
   -h, --help          Show this help message
   --skip-node         Skip fnm/Node.js/pnpm installation
+  --skip-codex        Skip codex installation
   --skip-frontend     Skip frontend dependency installation
   --skip-server       Skip server dependency installation
   --skip-python       Skip managed Python setup for uv
@@ -270,6 +287,7 @@ EOF
 
 parse_args() {
     SKIP_NODE="false"
+    SKIP_CODEX="false"
     SKIP_FRONTEND="false"
     SKIP_SERVER="false"
     SKIP_PYTHON="false"
@@ -283,6 +301,10 @@ parse_args() {
                 ;;
             --skip-node)
                 SKIP_NODE="true"
+                shift
+                ;;
+            --skip-codex)
+                SKIP_CODEX="true"
                 shift
                 ;;
             --skip-frontend)
@@ -344,6 +366,11 @@ main() {
         install_fnm
         install_node
         install_pnpm
+        if [ "$SKIP_CODEX" = "false" ]; then
+            install_codex
+        else
+            log_info "Skipping codex installation"
+        fi
     else
         log_info "Skipping Node.js tooling setup"
     fi

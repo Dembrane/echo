@@ -97,21 +97,21 @@ packages = ["dembrane"]
 [tool.uv]
 package = false
 
-# [tool.mypy]
-# plugins = 'pydantic.mypy'
-# exclude = ['scripts', 'tests']
-# warn_redundant_casts = true
-# warn_unused_ignores = true
-# check_untyped_defs = true
-# no_implicit_reexport = true
-# disallow_untyped_defs = true
-# ignore_missing_imports = true
+[tool.mypy]
+plugins = 'pydantic.mypy'
+exclude = ['scripts', 'tests']
+warn_redundant_casts = true
+warn_unused_ignores = true
+check_untyped_defs = true
+no_implicit_reexport = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
 
-# [tool.pydantic-mypy]
-# init_forbid_extra = true
-# init_typed = true
-# warn_required_dynamic_aliases = true
-# warn_untyped_fields = true
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+warn_untyped_fields = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "dembrane"]

@@ -89,6 +89,10 @@ const ProjectUnsubscribe = createLazyNamedRoute(
 	"ProjectUnsubscribe",
 );
 const DebugPage = createLazyRoute(() => import("./routes/Debug"));
+const UserSettingsRoute = createLazyNamedRoute(
+	() => import("./routes/settings/UserSettingsRoute"),
+	"UserSettingsRoute",
+);
 
 export const mainRouter = createBrowserRouter([
 	{
@@ -243,6 +247,20 @@ export const mainRouter = createBrowserRouter([
 					</Protected>
 				),
 				path: "projects",
+			},
+			{
+				children: [
+					{
+						element: <UserSettingsRoute />,
+						index: true,
+					},
+				],
+				element: (
+					<Protected>
+						<BaseLayout />
+					</Protected>
+				),
+				path: "settings",
 			},
 			{
 				element: <ErrorPage />,

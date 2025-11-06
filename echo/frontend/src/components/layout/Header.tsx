@@ -7,6 +7,7 @@ import {
 	IconLogout,
 	IconNotes,
 	IconSettings,
+	IconShieldLock,
 } from "@tabler/icons-react";
 import { useParams } from "react-router";
 import {
@@ -21,6 +22,7 @@ import { Announcements } from "../announcement/Announcements";
 import { TopAnnouncementBar } from "../announcement/TopAnnouncementBar";
 import { Logo } from "../common/Logo";
 import { LanguagePicker } from "../language/LanguagePicker";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
 const User = ({ name, email }: { name: string; email: string }) => (
 	<div
@@ -75,6 +77,7 @@ export const Header = () => {
 	const logoutMutation = useLogoutMutation();
 	const { loading, isAuthenticated } = useAuthenticated();
 	const { data: user } = useCurrentUser();
+	const navigate = useI18nNavigate();
 
 	// maybe useEffect(params) / useState is better here?
 	// but when we change language, we reload the page (check LanguagePicker.tsx)
@@ -92,6 +95,9 @@ export const Header = () => {
 		await logoutMutation.mutateAsync({
 			doRedirect: true,
 		});
+	};
+	const handleSettingsClick = () => {
+		navigate("/settings");
 	};
 
 	return (
@@ -147,6 +153,15 @@ export const Header = () => {
 										/>
 
 										<Menu.Divider />
+
+										<Menu.Item
+											rightSection={<IconShieldLock />}
+											onClick={handleSettingsClick}
+										>
+											<Group>
+												<Trans>Settings</Trans>
+											</Group>
+										</Menu.Item>
 
 										<Menu.Item
 											rightSection={<IconNotes />}

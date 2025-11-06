@@ -20,7 +20,13 @@ export const useCurrentUser = () =>
 			try {
 				return directus.request(
 					readUser("me", {
-						fields: ["id", "first_name", "email", "disable_create_project"],
+						fields: [
+							"id",
+							"first_name",
+							"email",
+							"disable_create_project",
+							"tfa_secret",
+						],
 					}),
 				);
 			} catch (_error) {
@@ -147,8 +153,22 @@ export const useRegisterMutation = () => {
 // todo: add redirection logic here
 export const useLoginMutation = () => {
 	return useMutation({
-		mutationFn: (payload: Parameters<typeof directus.login>) => {
-			return directus.login(...payload);
+		mutationFn: async ({
+			email,
+			password,
+			otp,
+		}: {
+			email: string;
+			password: string;
+			otp?: string;
+		}) => {
+			return directus.login(
+				email,
+				password,
+				{
+					otp: otp || undefined,
+				},
+			);
 		},
 		onSuccess: () => {
 			toast.success("Login successful");
