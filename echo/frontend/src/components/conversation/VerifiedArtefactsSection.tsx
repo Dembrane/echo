@@ -45,7 +45,7 @@ export const VerifiedArtefactsSection = ({
 						"approved_at",
 						"key",
 						"content",
-						"title",
+						// "title",
 					],
 					filter: { conversation_id: { _eq: conversationId } },
 					sort: ["-approved_at"],
@@ -92,7 +92,8 @@ export const VerifiedArtefactsSection = ({
 								<Accordion.Control>
 									<Group gap="sm" wrap="nowrap">
 										<Stack gap={2}>
-											<Text fw={500}>{artefact.title ?? artefact.key}</Text>
+											{/* <Text fw={500}>{artefact.title ?? artefact.key}</Text> */}
+											<Text fw={500}>{artefact.key || ""}</Text>
 											{formattedDate && (
 												<Text size="xs" c="dimmed">
 													<Trans id="conversation.verified.approved">
