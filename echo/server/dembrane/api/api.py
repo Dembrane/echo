@@ -10,6 +10,7 @@ from dembrane.api.resource import ResourceRouter
 from dembrane.api.stateless import StatelessRouter
 from dembrane.api.participant import ParticipantRouter
 from dembrane.api.conversation import ConversationRouter
+from dembrane.api.verify import VerifyRouter
 
 logger = getLogger("api")
 
@@ -27,3 +28,4 @@ api.include_router(ResourceRouter, prefix="/resources")
 api.include_router(ParticipantRouter, prefix="/participant")
 api.include_router(ConversationRouter, prefix="/conversations")
 api.include_router(StatelessRouter, prefix="/stateless")
+api.include_router(VerifyRouter, prefix="/verify")

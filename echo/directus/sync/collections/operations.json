@@ -180,6 +180,28 @@
     "_syncId": "da5f4cce-eff0-426d-a207-d61366899d1f"
   },
   {
+    "name": "Send Email",
+    "key": "mail_vndml",
+    "type": "mail",
+    "position_x": 19,
+    "position_y": 1,
+    "options": {
+      "type": "markdown",
+      "to": [
+        "sameer@dembrane.com"
+      ],
+      "subject": "Test",
+      "replyTo": [
+        "usama@dembrane.com"
+      ],
+      "body": "Hello world"
+    },
+    "resolve": null,
+    "reject": null,
+    "flow": "92b4aa37-5068-4dea-92d8-22cd6007c8b9",
+    "_syncId": "302997e3-b03d-4305-90f6-f5ebc7a0cb3e"
+  },
+  {
     "name": "Report Not Published",
     "key": "report_not_published",
     "type": "log",

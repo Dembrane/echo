@@ -33,6 +33,23 @@
     "_syncId": "392f4954-059e-4bf1-bdc6-11cc1b66971c"
   },
   {
+    "name": "Send Email Base",
+    "icon": "alternate_email",
+    "color": "#3CD3AD",
+    "description": null,
+    "status": "active",
+    "trigger": "manual",
+    "accountability": "activity",
+    "options": {
+      "collections": [
+        "project"
+      ],
+      "requireConfirmation": true
+    },
+    "operation": "302997e3-b03d-4305-90f6-f5ebc7a0cb3e",
+    "_syncId": "92b4aa37-5068-4dea-92d8-22cd6007c8b9"
+  },
+  {
     "name": "Send Report Emails",
     "icon": "mail",
     "color": "#FFA439",

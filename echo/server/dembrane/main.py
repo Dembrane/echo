@@ -27,6 +27,7 @@ from dembrane.config import (
 )
 from dembrane.sentry import init_sentry
 from dembrane.api.api import api
+from dembrane.api.verify import seed_default_verification_topics
 from dembrane.postgresdb_manager import PostgresDBManager
 
 # from lightrag.llm.azure_openai import azure_openai_complete
@@ -84,6 +85,12 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
         initialize_pipeline_status()
     )  # This function is called during FASTAPI lifespan for each worker.
     logger.info("RAG object has been initialized")
+
+    try:
+        await seed_default_verification_topics()
+        logger.info("Verification topics seeded")
+    except Exception:  # pragma: no cover - startup logging only
+        logger.exception("Failed to seed verification topics during startup")
 
     yield
     # shutdown
