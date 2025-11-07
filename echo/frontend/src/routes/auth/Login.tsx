@@ -1,10 +1,9 @@
-import { readProviders } from "@directus/sdk";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Alert,
 	Anchor,
-	Box,
 	Button,
 	Container,
 	Divider,
@@ -16,10 +15,6 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { IconBrandGoogle } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
-import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router";
@@ -27,38 +22,35 @@ import { useLoginMutation } from "@/components/auth/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
 import { useCreateProjectMutation } from "@/components/project/hooks";
-import { DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { useLanguage } from "@/hooks/useLanguage";
-import { directus } from "@/lib/directus";
 
-const LoginWithProvider = ({
-	provider,
-	icon,
-	label,
-}: {
-	provider: string;
-	icon: React.ReactNode;
-	label: string;
-}) => {
-	const { language } = useLanguage();
-	return (
-		<Button
-			component="a"
-			href={`${DIRECTUS_PUBLIC_URL}/auth/login/${provider}?redirect=${encodeURIComponent(
-				`${window.location.origin}/${language}/projects`,
-			)}`}
-			size="lg"
-			c="gray"
-			color="gray.6"
-			variant="outline"
-			rightSection={icon}
-			fullWidth
-		>
-			{label}
-		</Button>
-	);
-};
+// const LoginWithProvider = ({
+// 	provider,
+// 	icon,
+// 	label,
+// }: {
+// 	provider: string;
+// 	icon: React.ReactNode;
+// 	label: string;
+// }) => {
+// 	const { language } = useLanguage();
+// 	return (
+// 		<Button
+// 			component="a"
+// 			href={`${DIRECTUS_PUBLIC_URL}/auth/login/${provider}?redirect=${encodeURIComponent(
+// 				`${window.location.origin}/${language}/projects`,
+// 			)}`}
+// 			size="lg"
+// 			c="gray"
+// 			color="gray.6"
+// 			variant="outline"
+// 			rightSection={icon}
+// 			fullWidth
+// 		>
+// 			{label}
+// 		</Button>
+// 	);
+// };
 
 export const LoginRoute = () => {
 	useDocumentTitle(t`Login | Dembrane`);
@@ -74,11 +66,6 @@ export const LoginRoute = () => {
 	});
 
 	const [searchParams, _setSearchParams] = useSearchParams();
-
-	const providerQuery = useQuery({
-		queryFn: () => directus.request(readProviders()),
-		queryKey: ["auth-providers"],
-	});
 
 	const navigate = useI18nNavigate();
 	const createProjectMutation = useCreateProjectMutation();
@@ -108,8 +95,8 @@ export const LoginRoute = () => {
 
 			await loginMutation.mutateAsync({
 				email: data.email,
-				password: data.password,
 				otp: otpRequired ? trimmedOtp || undefined : undefined,
+				password: data.password,
 			});
 
 			setOtpRequired(false);
@@ -135,6 +122,7 @@ export const LoginRoute = () => {
 				navigate("/projects");
 			}
 		} catch (error) {
+			// biome-ignore lint/suspicious/noExplicitAny: <todo>
 			const errors = (error as any)?.errors;
 			const firstError = Array.isArray(errors) ? errors[0] : undefined;
 			const code = firstError?.extensions?.code;
@@ -230,8 +218,8 @@ export const LoginRoute = () => {
 											const { email, password } = getValues();
 											void submitLogin({
 												email,
-												password,
 												otp: value,
+												password,
 											});
 										}}
 										inputMode="numeric"
@@ -278,7 +266,11 @@ export const LoginRoute = () => {
 								</div>
 							)}
 							<Button size="lg" type="submit" loading={loginMutation.isPending}>
-								{otpRequired ? <Trans>Verify code</Trans> : <Trans>Login</Trans>}
+								{otpRequired ? (
+									<Trans>Verify code</Trans>
+								) : (
+									<Trans>Login</Trans>
+								)}
 							</Button>
 						</Stack>
 					</form>

@@ -3,14 +3,13 @@ import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Container,
+	Divider,
 	Group,
 	Stack,
-	Text,
 	Title,
-	Divider,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { IconShieldLock, IconArrowLeft } from "@tabler/icons-react";
+import { IconArrowLeft } from "@tabler/icons-react";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { TwoFactorSettingsCard } from "@/components/settings/TwoFactorSettingsCard";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -29,7 +28,7 @@ export const UserSettingsRoute = () => {
 					<ActionIcon
 						variant="subtle"
 						color="gray"
-						onClick={() => navigate(-1)}
+						onClick={() => navigate("..")}
 						aria-label={t`Go back`}
 					>
 						<IconArrowLeft size={18} />
@@ -38,7 +37,6 @@ export const UserSettingsRoute = () => {
 						<Trans>Settings</Trans>
 					</Title>
 				</Group>
-
 
 				<Divider />
 

@@ -163,8 +163,7 @@ export const useLoginMutation = () => {
 			otp?: string;
 		}) => {
 			return directus.login(
-				email,
-				password,
+				{ email, password },
 				{
 					otp: otp || undefined,
 				},
