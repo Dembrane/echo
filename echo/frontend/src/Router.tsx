@@ -14,6 +14,10 @@ import { ProjectConversationLayout } from "./components/layout/ProjectConversati
 import { ProjectLayout } from "./components/layout/ProjectLayout";
 import { ProjectLibraryLayout } from "./components/layout/ProjectLibraryLayout";
 import { ProjectOverviewLayout } from "./components/layout/ProjectOverviewLayout";
+import { ParticipantConversationAudioContent } from "./components/participant/ParticipantConversationAudioContent";
+import { Verify } from "./components/participant/verify/Verify";
+import { VerifyArtefact } from "./components/participant/verify/VerifyArtefact";
+import { VerifySelection } from "./components/participant/verify/VerifySelection";
 import {
 	ParticipantConversationAudioRoute,
 	ParticipantConversationTextRoute,
@@ -285,6 +289,26 @@ export const participantRouter = createBrowserRouter([
 				path: "start",
 			},
 			{
+				children: [
+					{
+						element: <ParticipantConversationAudioContent />,
+						index: true,
+					},
+					{
+						children: [
+							{
+								element: <VerifySelection />,
+								index: true,
+							},
+							{
+								element: <VerifyArtefact />,
+								path: "approve",
+							},
+						],
+						element: <Verify />,
+						path: "verify",
+					},
+				],
 				element: <ParticipantConversationAudioRoute />,
 				path: "conversation/:conversationId",
 			},

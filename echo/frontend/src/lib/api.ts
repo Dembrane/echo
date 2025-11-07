@@ -1063,6 +1063,63 @@ export const generateConversationSummary = async (conversationId: string) => {
 	>(`/conversations/${conversationId}/summarize`);
 };
 
+// Mock API call for generating verification artefacts
+// TODO: Replace with actual API endpoint
+export const generateVerificationArtefact = async (payload: {
+	conversationId: string;
+	topicList: string[];
+}): Promise<
+	{
+		id: string;
+		approved_at?: string | null;
+		content: string;
+		conversation_id: string;
+		key: string;
+		read_aloud_stream_url: string;
+	}[]
+> => {
+	// Simulate API delay (3 seconds)
+	await new Promise((resolve) => setTimeout(resolve, 2000));
+
+	// Mock response matching the API pattern
+	const mockContent = `
+### 1. Mapping, Wisdom, and Collaboration
+
+The participants exchanged perspectives on collective intelligence, mapping tools, and developing processes that foster group wisdom. There was mutual interest in both browser-based collaborative mind mapping (like Mindmeister and XMind) and participatory conversation tools that can capture, visualize, and refine insights.
+
+### 2. Influences and Foundations
+
+They discussed influential thinkers and frameworks that shape their approaches:
+
+* Tom Atlee's Wise Democracy Pattern Language, with an emphasis on collective wisdom oriented toward long-term, broad benefit.
+* Doug Engelbart's concepts of dynamic knowledge repositories and networked improvement communities, emphasizing continual, systemic improvement.
+
+### 3. Next Steps
+
+Moving forward, the team agreed to:
+
+1. Schedule a follow-up meeting to dive deeper into specific tools
+2. Share relevant resources and documentation
+3. Explore potential collaboration opportunities`;
+
+	return [
+		{
+			approved_at: new Date().toISOString(),
+			content: mockContent,
+			conversation_id: payload.conversationId,
+			id: `artifact-${Date.now()}`,
+			key: `key-${Date.now()}`,
+			read_aloud_stream_url: "",
+		},
+	];
+
+	// When ready to use real API, replace with:
+	// return apiNoAuth.post<GenerateVerificationArtefactRequest, GenerateVerificationArtefactResponse>(
+	//   '/verify/generate',
+	//   payload
+	// );
+};
+
 export const unsubscribeParticipant = async (
 	projectId: string,
 	token: string,
