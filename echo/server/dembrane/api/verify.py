@@ -165,6 +165,25 @@ class UpdateVerificationTopicsRequest(BaseModel):
     topic_list: List[str] = Field(default_factory=list)
 
 
+class UseConversationPayload(BaseModel):
+    conversation_id: str = Field(..., alias="conversationId")
+    timestamp: datetime
+
+    class Config:
+        allow_population_by_field_name = True
+
+
+class UpdateArtifactRequest(BaseModel):
+    use_conversation: Optional[UseConversationPayload] = Field(
+        None, alias="useConversation"
+    )
+    content: Optional[str] = None
+    approved_at: Optional[datetime] = Field(None, alias="approvedAt")
+
+    class Config:
+        allow_population_by_field_name = True
+
+
 def _parse_directus_datetime(value: Optional[str]) -> Optional[datetime]:
     if value is None:
         return None
@@ -359,6 +378,32 @@ async def update_verification_topics(
     return GetVerificationTopicsResponse(selected_topics=selected_topics, available_topics=refreshed_topics)
 
 
+async def _get_artifact_or_404(artifact_id: str) -> dict:
+    artifact_rows = await run_in_thread_pool(
+        directus.get_items,
+        "conversation_artifact",
+        {
+            "query": {
+                "filter": {"id": {"_eq": artifact_id}},
+                "fields": [
+                    "id",
+                    "conversation_id",
+                    "content",
+                    "key",
+                    "approved_at",
+                    "read_aloud_stream_url",
+                ],
+                "limit": 1,
+            }
+        },
+    )
+
+    if not artifact_rows:
+        raise HTTPException(status_code=404, detail="Artifact not found")
+
+    return artifact_rows[0]
+
+
 async def _get_conversation_with_project(conversation_id: str) -> dict:
     conversation_rows = await run_in_thread_pool(
         directus.get_items,
@@ -462,6 +507,17 @@ def _build_transcript_text(chunks: List[dict]) -> str:
         if transcript:
             transcripts.append(transcript)
     return "\n".join(transcripts)
+
+
+def _build_feedback_text(chunks: List[dict], reference_time: datetime) -> str:
+    feedback_segments: List[str] = []
+    for chunk in chunks:
+        timestamp = chunk.get("timestamp")
+        if timestamp and isinstance(timestamp, datetime) and timestamp > reference_time:
+            transcript = (chunk.get("transcript") or "").strip()
+            if transcript:
+                feedback_segments.append(f"[{timestamp.isoformat()}] {transcript}")
+    return "\n".join(feedback_segments)
 
 
 def _select_audio_chunks(
@@ -665,3 +721,142 @@ async def generate_verification_artifacts(
     )
 
     return GenerateArtifactsResponse(artifact_list=[artifact_response])
+
+
+@VerifyRouter.put("/artifact/{artifact_id}", response_model=ConversationArtifactResponse)
+async def update_verification_artifact(
+    artifact_id: str,
+    body: UpdateArtifactRequest,
+    auth: DependencyDirectusSession,  # noqa: ARG001 - reserved for future use
+) -> ConversationArtifactResponse:
+    if not (body.use_conversation or body.content is not None or body.approved_at is not None):
+        raise HTTPException(status_code=400, detail="No updates provided")
+
+    if body.use_conversation and body.content is not None:
+        raise HTTPException(
+            status_code=400,
+            detail="Provide either useConversation or content, not both",
+        )
+
+    artifact = await _get_artifact_or_404(artifact_id)
+    conversation_id = artifact.get("conversation_id")
+
+    updates: Dict[str, Any] = {}
+
+    if body.approved_at is not None:
+        updates["approved_at"] = body.approved_at.isoformat()
+
+    generated_text = None
+
+    if body.use_conversation:
+        if not GCP_SA_JSON:
+            raise HTTPException(status_code=500, detail="GCP credentials are not configured")
+
+        reference_conversation_id = body.use_conversation.conversation_id
+        reference_timestamp = body.use_conversation.timestamp
+
+        conversation = await _get_conversation_with_project(reference_conversation_id)
+        chunks = await _get_conversation_chunks(reference_conversation_id)
+
+        conversation_transcript = _build_transcript_text(chunks)
+        feedback_text = _build_feedback_text(chunks, reference_timestamp)
+
+        if not feedback_text and not any(
+            chunk.get("path")
+            for chunk in chunks
+            if chunk.get("timestamp")
+            and isinstance(chunk.get("timestamp"), datetime)
+            and chunk.get("timestamp") > reference_timestamp
+            and not (chunk.get("transcript") or "").strip()
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="No new feedback found since provided timestamp",
+            )
+
+        audio_chunks = _select_audio_chunks(chunks, reference_timestamp)
+
+        system_prompt = render_prompt(
+            "revise_artifact",
+            "en",
+            {
+                "transcript": conversation_transcript or "No transcript available.",
+                "outcome": artifact.get("content") or "",
+                "feedback": feedback_text or "No textual feedback available.",
+            },
+        )
+
+        message_content: List[Dict[str, Any]] = [
+            {
+                "type": "text",
+                "text": "Please revise the outcome using the feedback provided. Audio clips accompany segments without transcripts.",
+            }
+        ]
+
+        for chunk in audio_chunks:
+            timestamp = chunk.get("timestamp")
+            ts_value = timestamp.isoformat() if isinstance(timestamp, datetime) else "unknown"
+            chunk_id = chunk.get("id")
+            message_content.append(
+                {
+                    "type": "text",
+                    "text": f"Audio chunk {chunk_id} captured at {ts_value}",
+                }
+            )
+            path = chunk.get("path")
+            if path:
+                try:
+                    message_content.append(_get_audio_file_object(path))
+                except Exception as exc:  # pragma: no cover - logging side effect
+                    logger.warning("Failed to attach audio chunk %s: %s", chunk_id, exc)
+
+        try:
+            response = litellm.completion(
+                model="vertex_ai/gemini-2.5-flash",
+                vertex_credentials=GCP_SA_JSON,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": system_prompt,
+                            }
+                        ],
+                    },
+                    {
+                        "role": "user",
+                        "content": message_content,
+                    },
+                ],
+            )
+        except Exception as exc:  # pragma: no cover - external failure
+            logger.error("Gemini revision failed: %s", exc, exc_info=True)
+            raise HTTPException(status_code=500, detail="Failed to revise verification artifact") from exc
+
+        generated_text = _extract_response_text(response)
+        updates["content"] = generated_text
+    elif body.content is not None:
+        updates["content"] = body.content
+
+    if not updates:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+
+    updated_artifact = await run_in_thread_pool(
+        directus.update_item,
+        "conversation_artifact",
+        artifact_id,
+        updates,
+    )
+    updated_data = updated_artifact.get("data", {})
+
+    return ConversationArtifactResponse(
+        id=updated_data.get("id", artifact_id),
+        key=updated_data.get("key"),
+        content=updated_data.get("content") or updates.get("content") or artifact.get("content") or "",
+        conversation_id=updated_data.get("conversation_id") or conversation_id or "",
+        approved_at=updated_data.get("approved_at") or updates.get("approved_at"),
+        read_aloud_stream_url=updated_data.get("read_aloud_stream_url")
+        or artifact.get("read_aloud_stream_url")
+        or "",
+    )

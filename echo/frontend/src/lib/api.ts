@@ -1125,6 +1125,34 @@ export const generateVerificationArtefact = async (payload: {
 	return response?.artifact_list ?? [];
 };
 
+export type UpdateVerificationArtefactPayload = {
+	artifactId: string;
+	useConversation?: {
+		conversationId: string;
+		timestamp: string;
+	};
+	content?: string;
+	approvedAt?: string;
+};
+
+export const updateVerificationArtefact = async ({
+	artifactId,
+	useConversation,
+	content,
+	approvedAt,
+}: UpdateVerificationArtefactPayload) => {
+	return api.put<unknown, VerificationArtifact>(`/verify/artifact/${artifactId}`, {
+		use_conversation: useConversation
+			? {
+					conversationId: useConversation.conversationId,
+					timestamp: useConversation.timestamp,
+				}
+			: undefined,
+		content,
+		approvedAt,
+	});
+};
+
 export const unsubscribeParticipant = async (
 	projectId: string,
 	token: string,

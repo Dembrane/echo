@@ -1,9 +1,11 @@
-import { readItems, updateItem } from "@directus/sdk";
+import { readItems } from "@directus/sdk";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
 import {
 	generateVerificationArtefact,
 	getVerificationTopics,
+	updateVerificationArtefact,
+	type UpdateVerificationArtefactPayload,
 } from "@/lib/api";
 import { directus } from "@/lib/directus";
 
@@ -27,32 +29,44 @@ export const useGenerateVerificationArtefact = () => {
 };
 
 // Hook for saving verification artefacts
-export const useSaveVerificationArtefact = () => {
+type UpdateArtefactVariables = {
+	artifactId: string;
+	conversationId: string;
+	useConversation?: {
+		conversationId: string;
+		timestamp: string;
+	};
+	content?: string;
+	approvedAt?: string;
+	successMessage?: string;
+};
+
+export const useUpdateVerificationArtefact = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
 		mutationFn: async ({
-			artefactId,
-			conversationId,
-			artefactContent,
-		}: {
-			artefactId: string;
-			conversationId: string;
-			artefactContent: string;
-		}) => {
-			return directus.request(
-				updateItem("conversation_artifact", artefactId, {
-					approved_at: new Date().toISOString(),
-					content: artefactContent,
-				}),
-			);
+			artifactId,
+			useConversation,
+			content,
+			approvedAt,
+		}: UpdateArtefactVariables) => {
+			const payload: UpdateVerificationArtefactPayload = {
+				artifactId,
+				useConversation,
+				content,
+				approvedAt,
+			};
+			return updateVerificationArtefact(payload);
 		},
 		onError: (error) => {
 			console.error("Failed to save verification artefact:", error);
 			toast.error("Failed to approve artefact. Please try again.");
 		},
 		onSuccess: (_data, variables) => {
-			toast.success("Artefact approved successfully!");
+			toast.success(
+				variables?.successMessage ?? "Verification artefact updated successfully!",
+			);
 			queryClient.invalidateQueries({
 				queryKey: ["conversations", variables.conversationId],
 			});

@@ -11,19 +11,28 @@ import {
 	Title,
 } from "@mantine/core";
 import { IconPencil, IconPlayerPause, IconVolume } from "@tabler/icons-react";
-import { memo, useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
+import { toast } from "@/components/common/Toaster";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { Logo } from "../../common/Logo";
 import { Markdown } from "../../common/Markdown";
 import { MarkdownWYSIWYG } from "../../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
-import { useParticipantProjectById } from "../hooks";
+import {
+	useConversationChunksQuery,
+	useParticipantProjectById,
+} from "../hooks";
 import {
 	useGenerateVerificationArtefact,
-	useSaveVerificationArtefact,
+	useUpdateVerificationArtefact,
 	useVerificationTopics,
 } from "./hooks";
 import { VerifyInstructions } from "./VerifyInstructions";
+
+type ConversationChunkLike = {
+	timestamp?: string | null;
+};
 
 const LANGUAGE_TO_LOCALE: Record<string, string> = {
 	de: "de-DE",
@@ -35,19 +44,38 @@ const LANGUAGE_TO_LOCALE: Record<string, string> = {
 
 const MemoizedMarkdownWYSIWYG = memo(MarkdownWYSIWYG);
 
+const computeLatestTimestamp = (
+	chunks: ConversationChunkLike[] | undefined,
+): string | null => {
+	if (!chunks || chunks.length === 0) {
+		return null;
+	}
+
+	let latest: string | null = null;
+	for (const chunk of chunks) {
+		if (!chunk.timestamp) continue;
+		const currentIso = new Date(chunk.timestamp).toISOString();
+		if (!latest || new Date(currentIso) > new Date(latest)) {
+			latest = currentIso;
+		}
+	}
+	return latest;
+};
+
 export const VerifyArtefact = () => {
 	const { projectId, conversationId } = useParams();
 	const navigate = useI18nNavigate();
 	const [searchParams] = useSearchParams();
-	const saveArtefactMutation = useSaveVerificationArtefact();
+	const queryClient = useQueryClient();
+
 	const generateArtefactMutation = useGenerateVerificationArtefact();
+	const updateArtefactMutation = useUpdateVerificationArtefact();
 	const projectQuery = useParticipantProjectById(projectId ?? "");
 	const topicsQuery = useVerificationTopics(projectId);
+	const chunksQuery = useConversationChunksQuery(projectId, conversationId);
 
-	// Get selected option from URL params
 	const selectedOptionKey = searchParams.get("key");
 
-	// States
 	const [showInstructions, setShowInstructions] = useState(true);
 	const [isApproving, setIsApproving] = useState(false);
 	const [isRevising, setIsRevising] = useState(false);
@@ -62,10 +90,15 @@ export const VerifyArtefact = () => {
 	const [generatedArtifactId, setGeneratedArtifactId] = useState<string | null>(
 		null,
 	);
+	const [contextTimestamp, setContextTimestamp] = useState<string | null>(null);
 
-	// Ref for audio element
 	const audioRef = useRef<HTMLAudioElement | null>(null);
 	const reviseTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+	const latestChunkTimestamp = useMemo(
+		() => computeLatestTimestamp(chunksQuery.data as ConversationChunkLike[]),
+		[chunksQuery.data],
+	);
 
 	const projectLanguage = projectQuery.data?.language ?? "en";
 	const languageLocale =
@@ -84,12 +117,10 @@ export const VerifyArtefact = () => {
 		selectedTopic?.key ??
 		t`verified`;
 
-	// Redirect back if no selected option key
 	useEffect(() => {
 		if (
 			!selectedOptionKey ||
-			(topicsQuery.isSuccess &&
-				!selectedTopics.includes(selectedOptionKey))
+			(topicsQuery.isSuccess && !selectedTopics.includes(selectedOptionKey))
 		) {
 			navigate(`/${projectId}/conversation/${conversationId}/verify`, {
 				replace: true,
@@ -104,7 +135,7 @@ export const VerifyArtefact = () => {
 		conversationId,
 	]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: we want to regenerate the artefact if the user clicks the next button
+	// biome-ignore lint/correctness/useExhaustiveDependencies: regenerate only when generating first artefact
 	useEffect(() => {
 		if (
 			!selectedOptionKey ||
@@ -112,30 +143,33 @@ export const VerifyArtefact = () => {
 			hasGenerated ||
 			topicsQuery.isLoading ||
 			!selectedTopics.includes(selectedOptionKey)
-		)
+		) {
 			return;
+		}
 
 		const generateArtefact = async () => {
 			try {
 				setHasGenerated(true);
 				setGeneratedArtifactId(null);
 				setReadAloudUrl("");
+
 				const response = await generateArtefactMutation.mutateAsync({
 					conversationId,
-					topicList: [selectedOptionKey], // only one for now
+					topicList: [selectedOptionKey],
 				});
 
-				// Get the first artifact from the response
 				if (response && response.length > 0) {
 					const artifact = response[0];
 					setArtefactContent(artifact.content);
 					setGeneratedArtifactId(artifact.id);
-					// Set read aloud URL from API response
 					setReadAloudUrl(artifact.read_aloud_stream_url || "");
+					if (latestChunkTimestamp) {
+						setContextTimestamp(latestChunkTimestamp);
+					}
 				}
 			} catch (error) {
 				console.error("Failed to generate artifact:", error);
-				setHasGenerated(false); // Reset on error so user can retry
+				setHasGenerated(false);
 			}
 		};
 
@@ -147,6 +181,7 @@ export const VerifyArtefact = () => {
 		topicsQuery.isLoading,
 		selectedTopics,
 		generateArtefactMutation,
+		latestChunkTimestamp,
 	]);
 
 	const handleNextFromInstructions = () => {
@@ -159,18 +194,20 @@ export const VerifyArtefact = () => {
 			!selectedOptionKey ||
 			!artefactContent ||
 			!generatedArtifactId
-		)
+		) {
 			return;
+		}
 
 		setIsApproving(true);
 		try {
-			await saveArtefactMutation.mutateAsync({
-				artefactId: generatedArtifactId,
-				artefactContent,
+			await updateArtefactMutation.mutateAsync({
+				artifactId: generatedArtifactId,
 				conversationId,
+				content: artefactContent,
+				approvedAt: new Date().toISOString(),
+				successMessage: t`Artefact approved successfully!`,
 			});
 
-			// Navigate back to conversation
 			const conversationUrl = `/${projectId}/conversation/${conversationId}`;
 			navigate(conversationUrl);
 		} finally {
@@ -179,23 +216,43 @@ export const VerifyArtefact = () => {
 	};
 
 	const handleRevise = async () => {
-		if (!conversationId || !selectedOptionKey) return;
+		if (!conversationId || !selectedOptionKey || !generatedArtifactId) {
+			return;
+		}
+		const timestampToUse = contextTimestamp ?? latestChunkTimestamp;
+		if (!timestampToUse) {
+			toast.error("No feedback available yet. Try again after sharing updates.");
+			return;
+		}
+
 		setIsRevising(true);
 		try {
-			setGeneratedArtifactId(null);
-			setReadAloudUrl("");
-			const response = await generateArtefactMutation.mutateAsync({
-				conversationId: conversationId,
-				topicList: [selectedOptionKey], // only one for now
+			const response = await updateArtefactMutation.mutateAsync({
+				artifactId: generatedArtifactId,
+				conversationId,
+				useConversation: {
+					conversationId,
+					timestamp: timestampToUse,
+				},
+				successMessage: t`Artefact revised successfully!`,
 			});
 
-			if (response && response.length > 0) {
-				const artifact = response[0];
-				setArtefactContent(artifact.content);
-				setGeneratedArtifactId(artifact.id);
-				setReadAloudUrl(artifact.read_aloud_stream_url || "");
+			if (response) {
+				setArtefactContent(response.content);
+				setGeneratedArtifactId(response.id);
+				setReadAloudUrl(response.read_aloud_stream_url || "");
 			}
-			setLastReviseTime(Date.now()); // Start cooldown timer
+
+			setLastReviseTime(Date.now());
+			const refreshed = await chunksQuery.refetch();
+			await queryClient.invalidateQueries({
+				queryKey: ["participant", "conversation_chunks", conversationId],
+			});
+
+			const updatedLatest = computeLatestTimestamp(
+				(refreshed.data ?? chunksQuery.data) as ConversationChunkLike[],
+			);
+			setContextTimestamp(updatedLatest ?? timestampToUse);
 		} finally {
 			setIsRevising(false);
 		}
@@ -211,14 +268,27 @@ export const VerifyArtefact = () => {
 		setEditedContent("");
 	};
 
-	const handleSaveEdit = () => {
-		if (!editedContent) return;
-
-		// Update the artefact content with edited content
-		setArtefactContent(editedContent);
-		// Exit edit mode to show Revise/Approve buttons
-		setIsEditing(false);
-		setEditedContent("");
+	const handleSaveEdit = async () => {
+		if (!editedContent || !generatedArtifactId || !conversationId) {
+			return;
+		}
+		try {
+			const response = await updateArtefactMutation.mutateAsync({
+				artifactId: generatedArtifactId,
+				conversationId,
+				content: editedContent,
+				successMessage: t`Artefact updated successfully!`,
+			});
+			if (response) {
+				setArtefactContent(response.content);
+			} else {
+				setArtefactContent(editedContent);
+			}
+			setIsEditing(false);
+			setEditedContent("");
+		} catch (error) {
+			console.error("Failed to update artefact content:", error);
+		}
 	};
 
 	const handleReadAloud = () => {
@@ -241,31 +311,23 @@ export const VerifyArtefact = () => {
 		}
 	};
 
-	// Cooldown timer for revise button (2 minutes)
 	useEffect(() => {
 		if (lastReviseTime === null) return;
 
-		const COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes in milliseconds
+		const COOLDOWN_MS = 2 * 60 * 1000;
 
 		const updateTimer = () => {
 			const now = Date.now();
 			const elapsed = now - lastReviseTime;
 			const remaining = Math.max(0, COOLDOWN_MS - elapsed);
-
 			setReviseTimeRemaining(remaining);
-
-			if (remaining === 0) {
-				if (reviseTimerRef.current) {
-					clearInterval(reviseTimerRef.current);
-					reviseTimerRef.current = null;
-				}
+			if (remaining === 0 && reviseTimerRef.current) {
+				clearInterval(reviseTimerRef.current);
+				reviseTimerRef.current = null;
 			}
 		};
 
-		// Update immediately
 		updateTimer();
-
-		// Update every second
 		reviseTimerRef.current = setInterval(updateTimer, 1000);
 
 		return () => {
@@ -276,7 +338,6 @@ export const VerifyArtefact = () => {
 		};
 	}, [lastReviseTime]);
 
-	// Cleanup audio on unmount
 	useEffect(() => {
 		return () => {
 			if (audioRef.current) {
@@ -286,13 +347,34 @@ export const VerifyArtefact = () => {
 		};
 	}, []);
 
+	if (projectQuery.isError || topicsQuery.isError) {
+		return (
+			<Stack gap="md" align="center" justify="center" className="h-full">
+				<Text c="red">
+					<Trans>
+						Something went wrong while preparing the verification experience.
+					</Trans>
+				</Text>
+				<Button
+					variant="subtle"
+					onClick={() =>
+						navigate(`/${projectId}/conversation/${conversationId}/verify`, {
+							replace: true,
+						})
+					}
+				>
+					<Trans>Go back</Trans>
+				</Button>
+			</Stack>
+		);
+	}
+
 	const isInitialLoading =
 		topicsQuery.isLoading ||
 		projectQuery.isLoading ||
 		generateArtefactMutation.isPending ||
-		!generatedArtifactId;
+		(!generatedArtifactId && !artefactContent);
 
-	// step 1: show instructions while generating response from api
 	if (showInstructions) {
 		return (
 			<VerifyInstructions
@@ -303,7 +385,6 @@ export const VerifyArtefact = () => {
 		);
 	}
 
-	// step 2: show artefact with revise/approve once user clicks next on step 1
 	return (
 		<Stack gap="lg" className="h-full">
 			<ScrollArea className="flex-grow">
@@ -326,19 +407,15 @@ export const VerifyArtefact = () => {
 								</Text>
 								<Text size="sm" c="dimmed">
 									<Trans id="participant.verify.regenerating.artefact.description">
-										This would just take a few moments
+										This will just take a few moments
 									</Trans>
 								</Text>
 							</Stack>
 						</Stack>
 					) : (
 						<Stack gap="md">
-							{/* Title with Read Aloud Button */}
 							<Group justify="space-between" align="center" wrap="nowrap">
 								<Title order={4} className="font-semibold">
-									{selectedOptionIcon ? (
-										<span className="mr-2">{selectedOptionIcon}</span>
-									) : null}
 									<Trans id="participant.verify.artefact.title">
 										Artefact: {selectedOptionLabel}
 									</Trans>
@@ -360,7 +437,6 @@ export const VerifyArtefact = () => {
 								)}
 							</Group>
 
-							{/* Markdown Content or Editor */}
 							{isEditing ? (
 								<MemoizedMarkdownWYSIWYG
 									markdown={editedContent}
@@ -376,7 +452,6 @@ export const VerifyArtefact = () => {
 				</Paper>
 			</ScrollArea>
 
-			{/* Action buttons */}
 			<Group gap="md" className="w-full sticky bottom-[11%] bg-white py-2 px-1">
 				{isEditing ? (
 					<>
@@ -394,6 +469,7 @@ export const VerifyArtefact = () => {
 							radius="md"
 							className="flex-1"
 							onClick={handleSaveEdit}
+							loading={updateArtefactMutation.isPending}
 						>
 							<Trans id="participant.verify.action.button.save">Save</Trans>
 						</Button>
@@ -412,7 +488,7 @@ export const VerifyArtefact = () => {
 									isRevising ||
 									isApproving ||
 									reviseTimeRemaining > 0 ||
-									!selectedOptionKey
+									!generatedArtifactId
 								}
 							>
 								{reviseTimeRemaining > 0 ? (
@@ -464,31 +540,3 @@ export const VerifyArtefact = () => {
 		</Stack>
 	);
 };
-	const selectedOptionIcon =
-		(selectedTopic &&
-			(TOPIC_ICON_MAP[selectedTopic.key] ??
-				(selectedTopic.icon && !selectedTopic.icon.startsWith(":")
-					? selectedTopic.icon
-					: undefined))) ??
-		undefined;
-	if (projectQuery.isError || topicsQuery.isError) {
-		return (
-			<Stack gap="md" align="center" justify="center" className="h-full">
-				<Text c="red">
-					<Trans>
-						Something went wrong while preparing the verification experience.
-					</Trans>
-				</Text>
-				<Button
-					variant="subtle"
-					onClick={() =>
-						navigate(`/${projectId}/conversation/${conversationId}/verify`, {
-							replace: true,
-						})
-					}
-				>
-					<Trans>Go back</Trans>
-				</Button>
-			</Stack>
-		);
-	}
