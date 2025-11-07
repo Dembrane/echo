@@ -29,6 +29,7 @@ import { Logo } from "../common/Logo";
 import { FormLabel } from "../form/FormLabel";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
 import { SaveStatus } from "../form/SaveStatus";
+import { VERIFY_OPTIONS } from "../participant/verify/VerifySelection";
 import { useUpdateProjectByIdMutation } from "./hooks";
 import { useProjectSharingLink } from "./ProjectQRCode";
 import { ProjectTagsInput } from "./ProjectTagsInput";
@@ -44,7 +45,9 @@ const FormSchema = z.object({
 	get_reply_prompt: z.string(),
 	is_get_reply_enabled: z.boolean(),
 	is_project_notification_subscription_allowed: z.boolean(),
+	is_verify_enabled: z.boolean(),
 	language: z.enum(["en", "nl", "de", "fr", "es"]),
+	verification_topics: z.array(z.string()),
 });
 
 type ProjectPortalFormValues = z.infer<typeof FormSchema>;
@@ -162,7 +165,9 @@ const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
 			is_get_reply_enabled: project.is_get_reply_enabled ?? false,
 			is_project_notification_subscription_allowed:
 				project.is_project_notification_subscription_allowed ?? false,
+			is_verify_enabled: project.is_verify_enabled ?? false,
 			language: (project.language ?? "en") as "en" | "nl" | "de" | "fr" | "es",
+			verification_topics: project.verification_topics ?? [],
 		};
 	}, [project.id]);
 
@@ -185,6 +190,11 @@ const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
 	const watchedReplyEnabled = useWatch({
 		control,
 		name: "is_get_reply_enabled",
+	});
+
+	const watchedVerifyEnabled = useWatch({
+		control,
+		name: "is_verify_enabled",
 	});
 
 	const updateProjectMutation = useUpdateProjectByIdMutation();
@@ -545,6 +555,112 @@ const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
 											)}
 										/>
 									)}
+								</Stack>
+
+								<Divider />
+
+								<Stack gap="md">
+									<Group>
+										<Title order={4}>
+											<Trans id="dashboard.dembrane.verify.title">
+												Dembrane Verify
+											</Trans>
+										</Title>
+										<Logo hideTitle />
+										<Badge>
+											<Trans id="dashboard.dembrane.verify.experimental">
+												Experimental
+											</Trans>
+										</Badge>
+									</Group>
+
+									<Text size="sm" c="dimmed">
+										<Trans id="dashboard.dembrane.verify.description">
+											Enable this feature to allow participants to create and
+											approve "verified objects" from their submissions. This
+											helps crystallize key ideas, concerns, or summaries. After
+											the conversation, you can filter for discussions with
+											verified objects and review them in the overview.
+										</Trans>
+									</Text>
+
+									<Controller
+										name="is_verify_enabled"
+										control={control}
+										render={({ field }) => (
+											<Switch
+												label={
+													<FormLabel
+														label={t`Enable Dembrane Verify`}
+														isDirty={formState.dirtyFields.is_verify_enabled}
+														error={formState.errors.is_verify_enabled?.message}
+													/>
+												}
+												checked={field.value}
+												onChange={(e) =>
+													field.onChange(e.currentTarget.checked)
+												}
+											/>
+										)}
+									/>
+
+									<Controller
+										name="verification_topics"
+										control={control}
+										render={({ field }) => (
+											<Stack gap="xs">
+												<FormLabel
+													label={t`Verification Topics`}
+													isDirty={!!formState.dirtyFields.verification_topics}
+													error={formState.errors.verification_topics?.message}
+												/>
+												<Text size="sm" c="dimmed">
+													<Trans id="dashboard.dembrane.verify.topic.select">
+														Select which topics participants can use for
+														verification.
+													</Trans>
+												</Text>
+												<Group gap="xs">
+													{VERIFY_OPTIONS.map((topic) => (
+														<Badge
+															key={topic.key}
+															className={
+																watchedVerifyEnabled
+																	? "cursor-pointer capitalize"
+																	: "capitalize"
+															}
+															variant={
+																field.value.includes(topic.key)
+																	? "filled"
+																	: "default"
+															}
+															size="lg"
+															style={{
+																cursor: watchedVerifyEnabled
+																	? "pointer"
+																	: "not-allowed",
+																opacity: watchedVerifyEnabled ? 1 : 0.6,
+															}}
+															onClick={() => {
+																if (!watchedVerifyEnabled) return;
+																const newTopics = field.value.includes(
+																	topic.key,
+																)
+																	? field.value.filter((t) => t !== topic.key)
+																	: [...field.value, topic.key];
+																field.onChange(newTopics);
+															}}
+														>
+															<Group gap="xs">
+																<span>{topic.icon}</span>
+																<span>{topic.label}</span>
+															</Group>
+														</Badge>
+													))}
+												</Group>
+											</Stack>
+										)}
+									/>
 								</Stack>
 
 								<Divider />

@@ -903,6 +903,9 @@ export const useInfiniteConversationsByProjectId = (
 								"error",
 							],
 						},
+						{
+							artefacts: ["id", "approved_at"],
+						},
 					],
 					filter: {
 						chunks: {

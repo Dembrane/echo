@@ -151,6 +151,8 @@ class ProjectService:
             "is_project_notification_subscription_allowed": current_project[
                 "is_project_notification_subscription_allowed"
             ],
+            "is_verify_enabled": current_project["is_verify_enabled"],
+            "verification_topics": current_project["verification_topics"],
         }
 
         if overrides:

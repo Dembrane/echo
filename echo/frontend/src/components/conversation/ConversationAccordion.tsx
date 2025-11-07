@@ -38,6 +38,7 @@ import {
 	IconArrowsUpDown,
 	IconChevronDown,
 	IconChevronUp,
+	IconRosetteDiscountCheckFilled,
 	IconSearch,
 	IconTags,
 	IconX,
@@ -466,6 +467,12 @@ const ConversationAccordionItem = ({
 
 	const isAutoSelectEnabled = chatContextQuery.data?.auto_select_bool ?? false;
 
+	// Check if conversation has approved artefacts
+	const hasVerifiedArtefacts =
+		conversation?.artefacts &&
+		conversation?.artefacts?.length > 0 &&
+		conversation?.artefacts?.some((artefact) => artefact.approved_at);
+
 	return (
 		<NavigationButton
 			to={`/projects/${conversation.project_id}/conversation/${conversation.id}/overview`}
@@ -490,6 +497,19 @@ const ConversationAccordionItem = ({
 						<Text className="pl-[4px] text-sm font-normal">
 							{conversation.participant_email ?? conversation.participant_name}
 						</Text>
+						{hasVerifiedArtefacts && (
+							<Tooltip label={t`Has verified artifacts`}>
+								<ActionIcon
+									variant="subtle"
+									color="blue"
+									aria-label={t`verified artifacts`}
+									size={18}
+									style={{ cursor: "default" }}
+								>
+									<IconRosetteDiscountCheckFilled />
+								</ActionIcon>
+							</Tooltip>
+						)}
 					</Group>
 					<ConversationStatusIndicators
 						conversation={conversation}
@@ -643,6 +663,7 @@ export const ConversationAccordion = ({
 	});
 	const [tagSearch, setTagSearch] = useState("");
 	const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+	const [showOnlyVerified, setShowOnlyVerified] = useState(false);
 	const allProjectTags = useMemo(
 		() => (projectTags?.tags as unknown as ProjectTag[]) ?? [],
 		[projectTags?.tags],
@@ -674,6 +695,15 @@ export const ConversationAccordion = ({
 						_some: {
 							project_tag_id: {
 								id: { _in: selectedTagIds },
+							},
+						},
+					},
+				}),
+				...(showOnlyVerified && {
+					artefacts: {
+						_some: {
+							approved_at: {
+								_nnull: true,
 							},
 						},
 					},
@@ -720,18 +750,24 @@ export const ConversationAccordion = ({
 		() =>
 			debouncedConversationSearchValue !== "" ||
 			sortBy !== "-created_at" ||
-			selectedTagIds.length > 0,
+			selectedTagIds.length > 0 ||
+			showOnlyVerified,
 		// Temporarily disabled source filters
 		//   sortBy !== "-created_at" ||
 		//   activeFilters.length !== FILTER_OPTIONS.length,
 		// [debouncedConversationSearchValue, sortBy, activeFilters],
-		[debouncedConversationSearchValue, sortBy, selectedTagIds.length],
+		[
+			debouncedConversationSearchValue,
+			sortBy,
+			selectedTagIds.length,
+			showOnlyVerified,
+		],
 	);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <should update when sortBy or selectedTagIds.length changes>
 	const appliedFiltersCount = useMemo(() => {
-		return selectedTagIds.length;
-	}, [sortBy, selectedTagIds.length]);
+		return selectedTagIds.length + (showOnlyVerified ? 1 : 0);
+	}, [sortBy, selectedTagIds.length, showOnlyVerified]);
 
 	const [showFilterActions, setShowFilterActions] = useState(false);
 	const [sortMenuOpened, setSortMenuOpened] = useState(false);
@@ -745,6 +781,7 @@ export const ConversationAccordion = ({
 		setShowDuration(true);
 		setSelectedTagIds([]);
 		setTagSearch("");
+		setShowOnlyVerified(false);
 		// not sure why only these 2 were needed. biome seems to shut up with these 2. i tried putting all. will need to investigate
 	}, [setSortBy, setShowDuration]);
 
@@ -896,7 +933,7 @@ export const ConversationAccordion = ({
 								<Menu.Target>
 									<Button
 										variant="outline"
-										size="sm"
+										size="xs"
 										color="gray"
 										fw={500}
 										leftSection={<IconArrowsUpDown size={16} />}
@@ -953,7 +990,7 @@ export const ConversationAccordion = ({
 									<Button
 										variant="outline"
 										color="gray"
-										size="sm"
+										size="xs"
 										fw={500}
 										leftSection={<IconTags size={16} />}
 										rightSection={
@@ -1072,6 +1109,17 @@ export const ConversationAccordion = ({
 								</Menu.Dropdown>
 							</Menu>
 
+							<Button
+								variant={showOnlyVerified ? "filled" : "outline"}
+								color={showOnlyVerified ? "blue" : "gray"}
+								size="xs"
+								fw={500}
+								leftSection={<IconRosetteDiscountCheckFilled size={16} />}
+								onClick={() => setShowOnlyVerified((prev) => !prev)}
+							>
+								<Trans id="conversation.filters.verified.text">Verified</Trans>
+							</Button>
+
 							<Tooltip label={t`Reset to default`}>
 								<ActionIcon
 									variant="outline"
@@ -1079,6 +1127,9 @@ export const ConversationAccordion = ({
 									onClick={resetEverything}
 									aria-label={t`Reset to default`}
 									disabled={!filterApplied}
+									size="md"
+									py={14}
+									ml="auto"
 								>
 									<IconX size={16} />
 								</ActionIcon>

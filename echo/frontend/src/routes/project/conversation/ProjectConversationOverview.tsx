@@ -24,6 +24,7 @@ import {
 	useConversationById,
 	useConversationChunks,
 } from "@/components/conversation/hooks";
+import { VerifiedArtefactsSection } from "@/components/conversation/VerifiedArtefactsSection";
 import { useProjectById } from "@/components/project/hooks";
 import { ENABLE_DISPLAY_CONVERSATION_LINKS } from "@/config";
 import { generateConversationSummary } from "@/lib/api";
@@ -158,6 +159,11 @@ export const ProjectConversationOverviewRoute = () => {
 							conversationQuery.data?.is_finished && <Divider />}
 					</Stack>
 				)}
+
+			{/* Verified artefacts */}
+			{conversationId && (
+				<VerifiedArtefactsSection conversationId={conversationId} />
+			)}
 
 			{conversationQuery.data && projectQuery.data && (
 				<>
