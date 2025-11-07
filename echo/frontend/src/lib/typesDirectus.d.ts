@@ -56,6 +56,7 @@ type AspectSegment = {
 };
 
 type Conversation = {
+	artefacts: any[] | ConversationArtefact[];
 	chunks: any[] | ConversationChunk[];
 	conversation_segments: any[] | ConversationSegment[];
 	created_at?: string | null;
@@ -79,6 +80,16 @@ type Conversation = {
 	source?: string | null;
 	summary?: string | null;
 	tags: any[] | ConversationProjectTag[];
+	updated_at?: string | null;
+};
+
+type ConversationArtefact = {
+	approved_at?: string | null;
+	content?: string | null;
+	conversation_id?: string | Conversation | null;
+	created_at?: string | null;
+	id: string;
+	key?: string | null;
 	updated_at?: string | null;
 };
 
@@ -613,6 +624,8 @@ type Project = {
 	is_conversation_allowed: boolean;
 	is_enhanced_audio_processing_enabled?: boolean | null;
 	is_get_reply_enabled?: boolean | null;
+	is_verify_enabled?: boolean | null;
+	verification_topics?: string[] | null;
 	is_project_notification_subscription_allowed?: boolean | null;
 	language?: string | null;
 	name?: string | null;
@@ -753,6 +766,7 @@ type CustomDirectusTypes = {
 	aspect: Aspect[];
 	aspect_segment: AspectSegment[];
 	conversation: Conversation[];
+	conversation_artefact: ConversationArtefact[];
 	conversation_chunk: ConversationChunk[];
 	conversation_link: ConversationLink[];
 	conversation_project_tag: ConversationProjectTag[];
