@@ -68,7 +68,6 @@ export const StopRecordingConfirmationModal = ({
 					size="sm"
 					pt="sm"
 					ta="left"
-					style={{ pointerEvents: isStopping ? "none" : "auto" }}
 					disabled={isStopping}
 				>
 					<Trans id="participant.link.switch.text">Switch to text input</Trans>

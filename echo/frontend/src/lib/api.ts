@@ -1109,8 +1109,7 @@ Moving forward, the team agreed to:
 			conversation_id: payload.conversationId,
 			id: `artifact-${Date.now()}`,
 			key: `key-${Date.now()}`,
-			read_aloud_stream_url:
-				"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+			read_aloud_stream_url: "",
 		},
 	];
 

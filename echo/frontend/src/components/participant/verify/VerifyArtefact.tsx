@@ -121,7 +121,6 @@ export const VerifyArtefact = () => {
 	const handleRevise = async () => {
 		if (!conversationId || !selectedOptionKey) return;
 		setIsRevising(true);
-		setLastReviseTime(Date.now()); // Start cooldown timer
 		try {
 			// Mock API call to revise artefact (3 seconds)
 			await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -138,6 +137,7 @@ export const VerifyArtefact = () => {
 				// Set read aloud URL from API response
 				setReadAloudUrl(artifact.read_aloud_stream_url || "");
 			}
+			setLastReviseTime(Date.now()); // Start cooldown timer
 		} finally {
 			setIsRevising(false);
 		}
@@ -164,7 +164,10 @@ export const VerifyArtefact = () => {
 	};
 
 	const handleReadAloud = () => {
-		if (!audioRef.current) {
+		if (!readAloudUrl) return;
+
+		if (!audioRef.current || audioRef.current.src !== readAloudUrl) {
+			audioRef.current?.pause();
 			audioRef.current = new Audio(readAloudUrl);
 			audioRef.current.addEventListener("ended", () => {
 				setIsPlaying(false);

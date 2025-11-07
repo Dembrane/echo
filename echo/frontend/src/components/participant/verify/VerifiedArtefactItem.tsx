@@ -19,7 +19,13 @@ export const VerifiedArtefactItem = ({
 
 	// Format the timestamp using date-fns
 	const formattedDate = artefact.approved_at
-		? format(new Date(artefact.approved_at), "h:mm a")
+		? (() => {
+				try {
+					return format(new Date(artefact.approved_at), "h:mm a");
+				} catch {
+					return "";
+				}
+			})()
 		: "";
 
 	return (
