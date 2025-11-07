@@ -1,57 +1,75 @@
-import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Box, Button, Group, Stack, Title } from "@mantine/core";
+import { Box, Button, Group, Stack, Text, Title } from "@mantine/core";
 import { IconArrowRight } from "@tabler/icons-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useParticipantProjectById } from "../hooks";
+import { useVerificationTopics } from "./hooks";
 
-// Verify options that match the verification_topics field
-export const VERIFY_OPTIONS = [
-	{
-		icon: "✅",
-		key: "agreements",
-		label: t`What we actually agreed on`,
-	},
-	{
-		icon: "🔍",
-		key: "gems",
-		label: t`Hidden gems`,
-	},
-	{
-		icon: "👀",
-		key: "truths",
-		label: t`Painful truths`,
-	},
-	{
-		icon: "🚀",
-		key: "moments",
-		label: t`Breakthrough moments`,
-	},
-	{
-		icon: "↗️",
-		key: "actions",
-		label: t`What we think should happen`,
-	},
-	{
-		icon: "⚠️",
-		key: "disagreements",
-		label: t`Moments we agreed to disagree`,
-	},
-];
+const LANGUAGE_TO_LOCALE: Record<string, string> = {
+	de: "de-DE",
+	en: "en-US",
+	es: "es-ES",
+	fr: "fr-FR",
+	nl: "nl-NL",
+};
+
+export const TOPIC_ICON_MAP: Record<string, string> = {
+	actions: "↗️",
+	agreements: "✅",
+	disagreements: "⚠️",
+	gems: "🔍",
+	moments: "🚀",
+	truths: "👀",
+};
 
 export const VerifySelection = () => {
 	const { projectId, conversationId } = useParams();
 	const navigate = useI18nNavigate();
 	const [selectedOption, setSelectedOption] = useState<string | null>(null);
 	const projectQuery = useParticipantProjectById(projectId ?? "");
+	const topicsQuery = useVerificationTopics(projectId);
 
-	// Filter options based on enabled topics
-	const enabledTopics = projectQuery.data?.verification_topics ?? [];
-	const availableOptions = VERIFY_OPTIONS.filter((option) =>
-		enabledTopics.includes(option.key),
-	);
+	const projectLanguage = projectQuery.data?.language ?? "en";
+	const languageLocale =
+		LANGUAGE_TO_LOCALE[projectLanguage] ?? LANGUAGE_TO_LOCALE.en;
+
+	const selectedTopics = topicsQuery.data?.selected_topics ?? [];
+	const availableTopics = topicsQuery.data?.available_topics ?? [];
+
+	const availableOptions = availableTopics
+		.filter((topic) => selectedTopics.includes(topic.key))
+		.map((topic) => {
+			const translations = topic.translations ?? {};
+			const localizedLabel =
+				translations[languageLocale]?.label ??
+				translations["en-US"]?.label ??
+				topic.key;
+
+			const icon =
+				TOPIC_ICON_MAP[topic.key] ??
+				(topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined) ??
+				"•";
+
+			return {
+				key: topic.key,
+				label: localizedLabel,
+				icon,
+			};
+		});
+
+	const isLoading = projectQuery.isLoading || topicsQuery.isLoading;
+
+	useEffect(() => {
+		if (
+			selectedOption &&
+			selectedTopics.length > 0 &&
+			!selectedTopics.includes(selectedOption)
+		) {
+			setSelectedOption(null);
+		}
+	}, [selectedOption, selectedTopics]);
 
 	const handleNext = () => {
 		if (!selectedOption) return;
@@ -74,6 +92,16 @@ export const VerifySelection = () => {
 
 				{/* Options list */}
 				<Group gap="md">
+					{isLoading && (
+						<Text size="sm" c="dimmed">
+							<Trans>Loading verification topics…</Trans>
+						</Text>
+					)}
+					{!isLoading && availableOptions.length === 0 && (
+						<Text size="sm" c="dimmed">
+							<Trans>No verification topics are configured for this project.</Trans>
+						</Text>
+					)}
 					{availableOptions.map((option) => (
 						<Box
 							key={option.key}
@@ -99,10 +127,18 @@ export const VerifySelection = () => {
 				radius="3xl"
 				onClick={handleNext}
 				className="w-full"
-				rightSection={<IconArrowRight size={20} className="ml-1" />}
-				disabled={!selectedOption}
+				rightSection={
+					isLoading ? null : <IconArrowRight size={20} className="ml-1" />
+				}
+				disabled={!selectedOption || isLoading}
 			>
-				<Trans id="participant.verify.selection.button.next">Next</Trans>
+				{isLoading ? (
+					<Trans>Loading…</Trans>
+				) : (
+					<Trans id="participant.verify.selection.button.next">
+						Next
+					</Trans>
+				)}
 			</Button>
 		</Stack>
 	);

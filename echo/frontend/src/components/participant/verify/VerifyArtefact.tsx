@@ -17,12 +17,21 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { Logo } from "../../common/Logo";
 import { Markdown } from "../../common/Markdown";
 import { MarkdownWYSIWYG } from "../../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
+import { useParticipantProjectById } from "../hooks";
 import {
 	useGenerateVerificationArtefact,
 	useSaveVerificationArtefact,
+	useVerificationTopics,
 } from "./hooks";
 import { VerifyInstructions } from "./VerifyInstructions";
-import { VERIFY_OPTIONS } from "./VerifySelection";
+
+const LANGUAGE_TO_LOCALE: Record<string, string> = {
+	de: "de-DE",
+	en: "en-US",
+	es: "es-ES",
+	fr: "fr-FR",
+	nl: "nl-NL",
+};
 
 const MemoizedMarkdownWYSIWYG = memo(MarkdownWYSIWYG);
 
@@ -32,6 +41,8 @@ export const VerifyArtefact = () => {
 	const [searchParams] = useSearchParams();
 	const saveArtefactMutation = useSaveVerificationArtefact();
 	const generateArtefactMutation = useGenerateVerificationArtefact();
+	const projectQuery = useParticipantProjectById(projectId ?? "");
+	const topicsQuery = useVerificationTopics(projectId);
 
 	// Get selected option from URL params
 	const selectedOptionKey = searchParams.get("key");
@@ -48,32 +59,67 @@ export const VerifyArtefact = () => {
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [lastReviseTime, setLastReviseTime] = useState<number | null>(null);
 	const [reviseTimeRemaining, setReviseTimeRemaining] = useState<number>(0);
+	const [generatedArtifactId, setGeneratedArtifactId] = useState<string | null>(
+		null,
+	);
 
 	// Ref for audio element
 	const audioRef = useRef<HTMLAudioElement | null>(null);
 	const reviseTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-	const selectedOption = VERIFY_OPTIONS.find(
-		(opt) => opt.key === selectedOptionKey,
+	const projectLanguage = projectQuery.data?.language ?? "en";
+	const languageLocale =
+		LANGUAGE_TO_LOCALE[projectLanguage] ?? LANGUAGE_TO_LOCALE.en;
+
+	const availableTopics = topicsQuery.data?.available_topics ?? [];
+	const selectedTopics = topicsQuery.data?.selected_topics ?? [];
+
+	const selectedTopic = availableTopics.find(
+		(topic) => topic.key === selectedOptionKey,
 	);
-	const selectedOptionLabel = selectedOption?.label || t`verified`;
+
+	const selectedOptionLabel =
+		selectedTopic?.translations?.[languageLocale]?.label ??
+		selectedTopic?.translations?.["en-US"]?.label ??
+		selectedTopic?.key ??
+		t`verified`;
 
 	// Redirect back if no selected option key
 	useEffect(() => {
-		if (!selectedOptionKey) {
+		if (
+			!selectedOptionKey ||
+			(topicsQuery.isSuccess &&
+				!selectedTopics.includes(selectedOptionKey))
+		) {
 			navigate(`/${projectId}/conversation/${conversationId}/verify`, {
 				replace: true,
 			});
 		}
-	}, [selectedOptionKey, navigate, projectId, conversationId]);
+	}, [
+		selectedOptionKey,
+		selectedTopics,
+		topicsQuery.isSuccess,
+		navigate,
+		projectId,
+		conversationId,
+	]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: we want to regenerate the artefact if the user clicks the next button
 	useEffect(() => {
-		if (!selectedOptionKey || !conversationId || hasGenerated) return;
+		if (
+			!selectedOptionKey ||
+			!conversationId ||
+			hasGenerated ||
+			topicsQuery.isLoading ||
+			!selectedTopics.includes(selectedOptionKey)
+		)
+			return;
 
 		const generateArtefact = async () => {
 			try {
 				setHasGenerated(true);
+				setGeneratedArtifactId(null);
+				setReadAloudUrl("");
 				const response = await generateArtefactMutation.mutateAsync({
 					conversationId,
 					topicList: [selectedOptionKey], // only one for now
@@ -83,6 +129,7 @@ export const VerifyArtefact = () => {
 				if (response && response.length > 0) {
 					const artifact = response[0];
 					setArtefactContent(artifact.content);
+					setGeneratedArtifactId(artifact.id);
 					// Set read aloud URL from API response
 					setReadAloudUrl(artifact.read_aloud_stream_url || "");
 				}
@@ -93,21 +140,34 @@ export const VerifyArtefact = () => {
 		};
 
 		generateArtefact();
-	}, [selectedOptionKey, conversationId, hasGenerated]);
+	}, [
+		selectedOptionKey,
+		conversationId,
+		hasGenerated,
+		topicsQuery.isLoading,
+		selectedTopics,
+		generateArtefactMutation,
+	]);
 
 	const handleNextFromInstructions = () => {
 		setShowInstructions(false);
 	};
 
 	const handleApprove = async () => {
-		if (!conversationId || !selectedOptionKey || !artefactContent) return;
+		if (
+			!conversationId ||
+			!selectedOptionKey ||
+			!artefactContent ||
+			!generatedArtifactId
+		)
+			return;
 
 		setIsApproving(true);
 		try {
 			await saveArtefactMutation.mutateAsync({
+				artefactId: generatedArtifactId,
 				artefactContent,
 				conversationId,
-				key: selectedOptionKey,
 			});
 
 			// Navigate back to conversation
@@ -122,19 +182,17 @@ export const VerifyArtefact = () => {
 		if (!conversationId || !selectedOptionKey) return;
 		setIsRevising(true);
 		try {
-			// Mock API call to revise artefact (3 seconds)
-			await new Promise((resolve) => setTimeout(resolve, 3000));
-
+			setGeneratedArtifactId(null);
+			setReadAloudUrl("");
 			const response = await generateArtefactMutation.mutateAsync({
 				conversationId: conversationId,
 				topicList: [selectedOptionKey], // only one for now
 			});
 
-			// Get the first artifact from the response
 			if (response && response.length > 0) {
 				const artifact = response[0];
 				setArtefactContent(artifact.content);
-				// Set read aloud URL from API response
+				setGeneratedArtifactId(artifact.id);
 				setReadAloudUrl(artifact.read_aloud_stream_url || "");
 			}
 			setLastReviseTime(Date.now()); // Start cooldown timer
@@ -228,12 +286,18 @@ export const VerifyArtefact = () => {
 		};
 	}, []);
 
+	const isInitialLoading =
+		topicsQuery.isLoading ||
+		projectQuery.isLoading ||
+		generateArtefactMutation.isPending ||
+		!generatedArtifactId;
+
 	// step 1: show instructions while generating response from api
 	if (showInstructions) {
 		return (
 			<VerifyInstructions
 				objectLabel={selectedOptionLabel}
-				isLoading={generateArtefactMutation.isPending}
+				isLoading={isInitialLoading}
 				onNext={handleNextFromInstructions}
 			/>
 		);
@@ -272,6 +336,9 @@ export const VerifyArtefact = () => {
 							{/* Title with Read Aloud Button */}
 							<Group justify="space-between" align="center" wrap="nowrap">
 								<Title order={4} className="font-semibold">
+									{selectedOptionIcon ? (
+										<span className="mr-2">{selectedOptionIcon}</span>
+									) : null}
 									<Trans id="participant.verify.artefact.title">
 										Artefact: {selectedOptionLabel}
 									</Trans>
@@ -340,7 +407,13 @@ export const VerifyArtefact = () => {
 								variant="default"
 								className="flex-1"
 								onClick={handleRevise}
-								disabled={isRevising || isApproving || reviseTimeRemaining > 0}
+								disabled={
+									isInitialLoading ||
+									isRevising ||
+									isApproving ||
+									reviseTimeRemaining > 0 ||
+									!selectedOptionKey
+								}
 							>
 								{reviseTimeRemaining > 0 ? (
 									<>{Math.ceil(reviseTimeRemaining / 1000)}s</>
@@ -356,7 +429,12 @@ export const VerifyArtefact = () => {
 								variant="default"
 								onClick={handleEdit}
 								px="sm"
-								disabled={isRevising || isApproving}
+								disabled={
+									isRevising ||
+									isApproving ||
+									isInitialLoading ||
+									!generatedArtifactId
+								}
 							>
 								<IconPencil size={20} />
 							</Button>
@@ -368,9 +446,15 @@ export const VerifyArtefact = () => {
 							className="flex-1"
 							onClick={handleApprove}
 							loading={isApproving}
-							disabled={isApproving || isRevising}
+							disabled={
+								isApproving ||
+								isRevising ||
+								isInitialLoading ||
+								!generatedArtifactId ||
+								!artefactContent
+							}
 						>
-							<Trans id="participant.verify.action.button.aprrove">
+							<Trans id="participant.verify.action.button.approve">
 								Approve
 							</Trans>
 						</Button>
@@ -380,3 +464,31 @@ export const VerifyArtefact = () => {
 		</Stack>
 	);
 };
+	const selectedOptionIcon =
+		(selectedTopic &&
+			(TOPIC_ICON_MAP[selectedTopic.key] ??
+				(selectedTopic.icon && !selectedTopic.icon.startsWith(":")
+					? selectedTopic.icon
+					: undefined))) ??
+		undefined;
+	if (projectQuery.isError || topicsQuery.isError) {
+		return (
+			<Stack gap="md" align="center" justify="center" className="h-full">
+				<Text c="red">
+					<Trans>
+						Something went wrong while preparing the verification experience.
+					</Trans>
+				</Text>
+				<Button
+					variant="subtle"
+					onClick={() =>
+						navigate(`/${projectId}/conversation/${conversationId}/verify`, {
+							replace: true,
+						})
+					}
+				>
+					<Trans>Go back</Trans>
+				</Button>
+			</Stack>
+		);
+	}

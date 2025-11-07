@@ -25,12 +25,16 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import type { VerificationTopicsResponse } from "@/lib/api";
 import { Logo } from "../common/Logo";
 import { FormLabel } from "../form/FormLabel";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
 import { SaveStatus } from "../form/SaveStatus";
-import { VERIFY_OPTIONS } from "../participant/verify/VerifySelection";
-import { useUpdateProjectByIdMutation } from "./hooks";
+import { TOPIC_ICON_MAP } from "../participant/verify/VerifySelection";
+import {
+	useUpdateProjectByIdMutation,
+	useUpdateVerificationTopicsMutation,
+} from "./hooks";
 import { useProjectSharingLink } from "./ProjectQRCode";
 import { ProjectTagsInput } from "./ProjectTagsInput";
 
@@ -51,6 +55,17 @@ const FormSchema = z.object({
 });
 
 type ProjectPortalFormValues = z.infer<typeof FormSchema>;
+
+const LANGUAGE_TO_LOCALE: Record<string, string> = {
+	de: "de-DE",
+	en: "en-US",
+	es: "es-ES",
+	fr: "fr-FR",
+	nl: "nl-NL",
+};
+
+const normalizeTopicList = (topics: string[]): string[] =>
+	Array.from(new Set(topics.map((topic) => topic.trim()).filter(Boolean))).sort();
 
 const ProperNounInput = ({
 	value,
@@ -137,14 +152,53 @@ const MemoizedMarkdownWYSIWYG = memo(MarkdownWYSIWYG);
 // Memoized ProjectTagsInput wrapper
 const MemoizedProjectTagsInput = memo(ProjectTagsInput);
 
-const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
+type ProjectPortalEditorProps = {
+	project: Project;
+	verificationTopics: VerificationTopicsResponse;
+	isVerificationTopicsLoading?: boolean;
+};
+
+const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	project,
+	verificationTopics,
+	isVerificationTopicsLoading = false,
 }) => {
 	const [showPreview, setShowPreview] = useState(false);
 	const link = useProjectSharingLink(project);
 	const [previewKey, setPreviewKey] = useState(0);
 	const [previewWidth, setPreviewWidth] = useState(400);
 	const [previewHeight, setPreviewHeight] = useState(300);
+
+	const projectLanguageCode = (project.language ?? "en") as
+		| "en"
+		| "nl"
+		| "de"
+		| "fr"
+		| "es";
+	const languageLocale =
+		LANGUAGE_TO_LOCALE[projectLanguageCode] ?? LANGUAGE_TO_LOCALE.en;
+
+	const availableVerifyTopics = useMemo(
+		() =>
+			(verificationTopics?.available_topics ?? []).map((topic) => ({
+				key: topic.key,
+				label:
+					topic.translations?.[languageLocale]?.label ??
+					topic.translations?.["en-US"]?.label ??
+					topic.key,
+				icon:
+					TOPIC_ICON_MAP[topic.key] ??
+					(topic.icon && !topic.icon.startsWith(":")
+						? topic.icon
+						: undefined),
+			})),
+		[verificationTopics, languageLocale],
+	);
+
+	const selectedTopicDefaults = useMemo(
+		() => verificationTopics?.selected_topics ?? [],
+		[verificationTopics],
+	);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: just a dependency issue biome catches, not an issue though
 	const defaultValues = useMemo(() => {
@@ -166,14 +220,14 @@ const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
 			is_project_notification_subscription_allowed:
 				project.is_project_notification_subscription_allowed ?? false,
 			is_verify_enabled: project.is_verify_enabled ?? false,
-			language: (project.language ?? "en") as "en" | "nl" | "de" | "fr" | "es",
-			verification_topics: project.verification_topics ?? [],
+			language: projectLanguageCode,
+			verification_topics: selectedTopicDefaults,
 		};
-	}, [project.id]);
+	}, [project.id, projectLanguageCode, selectedTopicDefaults]);
 
 	const formResolver = useMemo(() => zodResolver(FormSchema), []);
 
-	const { control, handleSubmit, watch, formState, reset } =
+	const { control, handleSubmit, watch, formState, reset, setValue, getValues } =
 		useForm<ProjectPortalFormValues>({
 			defaultValues,
 			mode: "onChange",
@@ -198,18 +252,50 @@ const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
 	});
 
 	const updateProjectMutation = useUpdateProjectByIdMutation();
+	const updateVerificationTopicsMutation =
+		useUpdateVerificationTopicsMutation();
 
 	const onSave = useCallback(
 		async (values: ProjectPortalFormValues) => {
+			const { verification_topics, ...projectPayload } = values;
+
 			await updateProjectMutation.mutateAsync({
 				id: project.id,
-				payload: values,
+				payload: projectPayload,
 			});
 
+			const normalizedNewTopics = normalizeTopicList(verification_topics);
+			const normalizedCurrentTopics = normalizeTopicList(
+				selectedTopicDefaults,
+			);
+			const topicsChanged =
+				normalizedNewTopics.length !== normalizedCurrentTopics.length ||
+				normalizedNewTopics.some(
+					(topic, index) => topic !== normalizedCurrentTopics[index],
+				);
+
+			if (topicsChanged) {
+				await updateVerificationTopicsMutation.mutateAsync({
+					projectId: project.id,
+					topicList: normalizedNewTopics,
+				});
+			}
+
 			// Reset the form with the current values to clear the dirty state
-			reset(values, { keepDirty: false, keepValues: true });
+			reset(
+				{
+					...values,
+					verification_topics: normalizedNewTopics,
+				}
+			);
 		},
-		[project.id, updateProjectMutation, reset],
+		[
+			project.id,
+			updateProjectMutation,
+			updateVerificationTopicsMutation,
+			reset,
+			selectedTopicDefaults,
+		],
 	);
 
 	const {
@@ -229,6 +315,38 @@ const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
 	useEffect(() => {
 		dispatchAutoSaveRef.current = dispatchAutoSave;
 	}, [dispatchAutoSave]);
+
+	useEffect(() => {
+		if (!verificationTopics || isVerificationTopicsLoading) {
+			return;
+		}
+
+		if (formState.dirtyFields.verification_topics) {
+			return;
+		}
+
+		const normalizedSelected = normalizeTopicList(
+			verificationTopics.selected_topics ?? [],
+		);
+		const current = normalizeTopicList(getValues("verification_topics") ?? []);
+
+		const differs =
+			normalizedSelected.length !== current.length ||
+			normalizedSelected.some((topic, index) => topic !== current[index]);
+
+		if (differs) {
+			setValue("verification_topics", normalizedSelected, {
+				shouldDirty: false,
+				shouldTouch: false,
+			});
+		}
+	}, [
+		formState.dirtyFields.verification_topics,
+		getValues,
+		setValue,
+		verificationTopics,
+		isVerificationTopicsLoading,
+	]);
 
 	useEffect(() => {
 		const subscription = watch((values, { type }) => {
@@ -620,44 +738,68 @@ const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
 														verification.
 													</Trans>
 												</Text>
-												<Group gap="xs">
-													{VERIFY_OPTIONS.map((topic) => (
-														<Badge
-															key={topic.key}
-															className={
-																watchedVerifyEnabled
-																	? "cursor-pointer capitalize"
-																	: "capitalize"
-															}
-															variant={
-																field.value.includes(topic.key)
-																	? "filled"
-																	: "default"
-															}
-															size="lg"
-															style={{
-																cursor: watchedVerifyEnabled
-																	? "pointer"
-																	: "not-allowed",
-																opacity: watchedVerifyEnabled ? 1 : 0.6,
-															}}
-															onClick={() => {
-																if (!watchedVerifyEnabled) return;
-																const newTopics = field.value.includes(
-																	topic.key,
-																)
-																	? field.value.filter((t) => t !== topic.key)
-																	: [...field.value, topic.key];
-																field.onChange(newTopics);
-															}}
-														>
+												{isVerificationTopicsLoading ? (
+													<Text size="sm" c="dimmed">
+														<Trans>Loading verification topics…</Trans>
+													</Text>
+												) : (
+													<>
+														{availableVerifyTopics.length === 0 ? (
+															<Text size="sm" c="dimmed">
+																<Trans>No verification topics available.</Trans>
+															</Text>
+														) : (
 															<Group gap="xs">
-																<span>{topic.icon}</span>
-																<span>{topic.label}</span>
+																{availableVerifyTopics.map((topic) => (
+																	<Badge
+																		key={topic.key}
+																		className={
+																			watchedVerifyEnabled
+																				? "cursor-pointer capitalize"
+																				: "capitalize"
+																		}
+																		variant={
+																			field.value.includes(topic.key)
+																				? "filled"
+																				: "default"
+																		}
+																		size="lg"
+																		style={{
+																			cursor: watchedVerifyEnabled
+																				? "pointer"
+																				: "not-allowed",
+																			opacity: watchedVerifyEnabled ? 1 : 0.6,
+																		}}
+																		onClick={() => {
+																			if (!watchedVerifyEnabled) return;
+																			const normalizedCurrent =
+																				normalizeTopicList(field.value ?? []);
+																			const isSelected = normalizedCurrent.includes(
+																				topic.key,
+																			);
+																			const updated = isSelected
+																				? normalizedCurrent.filter(
+																						(item) => item !== topic.key,
+																					)
+																				: normalizeTopicList([
+																						...normalizedCurrent,
+																						topic.key,
+																					]);
+																			field.onChange(updated);
+																		}}
+																	>
+																		<Group gap="xs">
+																			{topic.icon ? (
+																				<span>{topic.icon}</span>
+																			) : null}
+																			<span>{topic.label}</span>
+																		</Group>
+																	</Badge>
+																))}
 															</Group>
-														</Badge>
-													))}
-												</Group>
+														)}
+													</>
+												)}
 											</Stack>
 										)}
 									/>

@@ -31,7 +31,11 @@ export const ParticipantConversationAudioContent = () => {
 				/>
 			)}
 
-			<VerifiedArtefactsList conversationId={conversationId ?? ""} />
+			<VerifiedArtefactsList
+				conversationId={conversationId ?? ""}
+				projectId={projectId ?? ""}
+				projectLanguage={projectQuery.data?.language}
+			/>
 
 			<ParticipantEchoMessages
 				echoMessages={echoMessages}

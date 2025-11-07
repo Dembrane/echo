@@ -161,6 +161,10 @@ class GenerateArtifactsResponse(BaseModel):
     artifact_list: List[ConversationArtifactResponse]
 
 
+class UpdateVerificationTopicsRequest(BaseModel):
+    topic_list: List[str] = Field(default_factory=list)
+
+
 def _parse_directus_datetime(value: Optional[str]) -> Optional[datetime]:
     if value is None:
         return None
@@ -323,6 +327,36 @@ async def get_verification_topics(
     selected_topics = _parse_selected_topics(project.get("selected_verification_key_list"), topics)
 
     return GetVerificationTopicsResponse(selected_topics=selected_topics, available_topics=topics)
+
+
+@VerifyRouter.put("/topics/{project_id}", response_model=GetVerificationTopicsResponse)
+async def update_verification_topics(
+    project_id: str,
+    body: UpdateVerificationTopicsRequest,
+    auth: DependencyDirectusSession,  # noqa: ARG001 - reserved for future use
+) -> GetVerificationTopicsResponse:
+    await _get_project(project_id)
+    topics = await _get_verification_topics_for_project(project_id)
+    available_keys = [topic.key for topic in topics if topic.key]
+
+    normalized_keys = []
+    for key in body.topic_list:
+        key = key.strip()
+        if key and key in available_keys and key not in normalized_keys:
+            normalized_keys.append(key)
+
+    serialized_keys = ",".join(normalized_keys)
+
+    await run_in_thread_pool(
+        directus.update_item,
+        "project",
+        project_id,
+        {"selected_verification_key_list": serialized_keys or None},
+    )
+
+    refreshed_topics = await _get_verification_topics_for_project(project_id)
+    selected_topics = _parse_selected_topics(serialized_keys, refreshed_topics)
+    return GetVerificationTopicsResponse(selected_topics=selected_topics, available_topics=refreshed_topics)
 
 
 async def _get_conversation_with_project(conversation_id: str) -> dict:

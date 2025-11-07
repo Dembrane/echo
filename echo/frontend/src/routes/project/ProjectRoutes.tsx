@@ -2,7 +2,10 @@ import { Trans } from "@lingui/react/macro";
 import { Alert, Divider, LoadingOverlay, Stack } from "@mantine/core";
 import { useMemo } from "react";
 import { useParams } from "react-router";
-import { useProjectById } from "@/components/project/hooks";
+import {
+	useProjectById,
+	useVerificationTopicsQuery,
+} from "@/components/project/hooks";
 import ProjectBasicEdit from "@/components/project/ProjectBasicEdit";
 import { ProjectDangerZone } from "@/components/project/ProjectDangerZone";
 import { ProjectExportSection } from "@/components/project/ProjectExportSection";
@@ -103,6 +106,10 @@ export const ProjectPortalSettingsRoute = () => {
 		// @ts-expect-error tags field structure not properly typed in Directus SDK
 		query,
 	});
+	const verificationTopicsQuery = useVerificationTopicsQuery(projectId);
+
+	const isLoading = projectQuery.isLoading || verificationTopicsQuery.isLoading;
+	const isError = projectQuery.isError || verificationTopicsQuery.isError;
 
 	// Memoize the project data to ensure stable reference
 	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be fixed
@@ -118,15 +125,19 @@ export const ProjectPortalSettingsRoute = () => {
 			px={{ base: "1rem", md: "2rem" }}
 			py={{ base: "2rem", md: "4rem" }}
 		>
-			{projectQuery.isLoading && <LoadingOverlay visible />}
-			{projectQuery.isError && (
+			{isLoading && <LoadingOverlay visible />}
+			{isError && (
 				<Alert variant="outline" color="red">
 					<Trans>Error loading project</Trans>
 				</Alert>
 			)}
 
-			{project && !projectQuery.isLoading && (
-				<ProjectPortalEditor project={project} />
+			{project && verificationTopicsQuery.data && !isLoading && (
+				<ProjectPortalEditor
+					project={project}
+					verificationTopics={verificationTopicsQuery.data}
+					isVerificationTopicsLoading={verificationTopicsQuery.isLoading}
+				/>
 			)}
 		</Stack>
 	);

@@ -1,8 +1,19 @@
-import { createItem, readItems } from "@directus/sdk";
+import { readItems, updateItem } from "@directus/sdk";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
-import { generateVerificationArtefact } from "@/lib/api";
+import {
+	generateVerificationArtefact,
+	getVerificationTopics,
+} from "@/lib/api";
 import { directus } from "@/lib/directus";
+
+export const useVerificationTopics = (projectId: string | undefined) => {
+	return useQuery({
+		enabled: !!projectId,
+		queryFn: () => getVerificationTopics(projectId!),
+		queryKey: ["verify", "topics", projectId],
+	});
+};
 
 // Hook for generating verification artefacts
 export const useGenerateVerificationArtefact = () => {
@@ -21,21 +32,18 @@ export const useSaveVerificationArtefact = () => {
 
 	return useMutation({
 		mutationFn: async ({
+			artefactId,
 			conversationId,
 			artefactContent,
-			key,
 		}: {
+			artefactId: string;
 			conversationId: string;
 			artefactContent: string;
-			key: string;
 		}) => {
-			// await new Promise((resolve) => setTimeout(resolve, 1000));
 			return directus.request(
-				createItem("conversation_artefact", {
+				updateItem("conversation_artifact", artefactId, {
 					approved_at: new Date().toISOString(),
 					content: artefactContent,
-					conversation_id: conversationId,
-					key,
 				}),
 			);
 		},
