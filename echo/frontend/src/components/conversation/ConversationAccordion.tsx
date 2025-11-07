@@ -38,6 +38,7 @@ import {
 	IconArrowsUpDown,
 	IconChevronDown,
 	IconChevronUp,
+	IconRosetteDiscountCheckFilled,
 	IconSearch,
 	IconTags,
 	IconX,
@@ -466,6 +467,12 @@ const ConversationAccordionItem = ({
 
 	const isAutoSelectEnabled = chatContextQuery.data?.auto_select_bool ?? false;
 
+	// Check if conversation has approved artefacts
+	const hasVerifiedArtefacts =
+		conversation?.artefacts &&
+		conversation?.artefacts?.length > 0 &&
+		conversation?.artefacts?.some((artefact) => artefact.approved_at);
+
 	return (
 		<NavigationButton
 			to={`/projects/${conversation.project_id}/conversation/${conversation.id}/overview`}
@@ -490,6 +497,19 @@ const ConversationAccordionItem = ({
 						<Text className="pl-[4px] text-sm font-normal">
 							{conversation.participant_email ?? conversation.participant_name}
 						</Text>
+						{hasVerifiedArtefacts && (
+							<Tooltip label={t`Has verified artifacts`}>
+								<ActionIcon
+									variant="subtle"
+									color="blue"
+									aria-label={t`verified artifacts`}
+									size={18}
+									style={{ cursor: "default" }}
+								>
+									<IconRosetteDiscountCheckFilled />
+								</ActionIcon>
+							</Tooltip>
+						)}
 					</Group>
 					<ConversationStatusIndicators
 						conversation={conversation}

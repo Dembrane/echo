@@ -90,6 +90,7 @@ type ConversationArtefact = {
 	created_at?: string | null;
 	id: string;
 	key?: string | null;
+	title?: string | null;
 	updated_at?: string | null;
 };
 
