@@ -121,7 +121,9 @@ const ConversationAccordionLabelChatSelection = ({
 
 	// Check if conversation has any content
 	const hasContent = conversation.chunks?.some(
-		(chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
+		(chunk) =>
+			(chunk as unknown as ConversationChunk).transcript &&
+			(chunk as unknown as ConversationChunk).transcript?.trim().length > 0,
 	);
 
 	const handleSelectChat = () => {
@@ -196,7 +198,6 @@ export const MoveConversationButton = ({
 		enabled: opened,
 		query: {
 			filter: {
-				// @ts-expect-error not tyed
 				_and: [{ id: { _neq: conversation.project_id } }],
 			},
 			search: search,
@@ -369,7 +370,10 @@ export const ConversationStatusIndicators = ({
 	const hasOnlyTextContent = useMemo(
 		() =>
 			conversation.chunks?.length > 0 &&
-			conversation.chunks?.every((chunk) => chunk.source === "PORTAL_TEXT"),
+			conversation.chunks?.every(
+				(chunk) =>
+					(chunk as unknown as ConversationChunk).source === "PORTAL_TEXT",
+			),
 		[conversation.chunks],
 	);
 
@@ -469,9 +473,11 @@ const ConversationAccordionItem = ({
 
 	// Check if conversation has approved artefacts
 	const hasVerifiedArtefacts =
-		conversation?.artefacts &&
-		conversation?.artefacts?.length > 0 &&
-		conversation?.artefacts?.some((artefact) => artefact.approved_at);
+		conversation?.conversation_artifacts &&
+		conversation?.conversation_artifacts?.length > 0 &&
+		conversation?.conversation_artifacts?.some(
+			(artefact) => artefact.approved_at,
+		);
 
 	return (
 		<NavigationButton
@@ -700,7 +706,7 @@ export const ConversationAccordion = ({
 					},
 				}),
 				...(showOnlyVerified && {
-					artefacts: {
+					conversation_artifacts: {
 						_some: {
 							approved_at: {
 								_nnull: true,

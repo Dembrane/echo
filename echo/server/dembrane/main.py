@@ -29,6 +29,8 @@ from dembrane.sentry import init_sentry
 from dembrane.api.api import api
 from dembrane.api.verify import seed_default_verification_topics
 from dembrane.postgresdb_manager import PostgresDBManager
+from dembrane.async_helpers import run_in_thread_pool
+from dembrane.directus import directus
 
 # from lightrag.llm.azure_openai import azure_openai_complete
 from dembrane.audio_lightrag.utils.litellm_utils import embedding_func, llm_model_func
@@ -42,6 +44,44 @@ from dembrane.audio_lightrag.utils.lightrag_utils import (
 nest_asyncio.apply()
 
 logger = getLogger("server")
+
+
+DEFAULT_DIRECTUS_LANGUAGES = [
+    {"code": "en-US", "name": "English (United States)", "direction": "ltr"},
+    {"code": "nl-NL", "name": "Dutch (Netherlands)", "direction": "ltr"},
+    {"code": "de-DE", "name": "German (Germany)", "direction": "ltr"},
+    {"code": "es-ES", "name": "Spanish (Spain)", "direction": "ltr"},
+    {"code": "fr-FR", "name": "French (France)", "direction": "ltr"},
+]
+
+
+async def seed_default_languages() -> None:
+    for language in DEFAULT_DIRECTUS_LANGUAGES:
+        existing = await run_in_thread_pool(
+            directus.get_items,
+            "languages",
+            {
+                "query": {
+                    "filter": {"code": {"_eq": language["code"]}},
+                    "fields": ["code"],
+                    "limit": 1,
+                }
+            },
+        )
+
+        if existing:
+            continue
+
+        logger.info("Seeding language %s", language["code"])
+        await run_in_thread_pool(
+            directus.create_item,
+            "languages",
+            {
+                "code": language["code"],
+                "name": language["name"],
+                "direction": language["direction"],
+            },
+        )
 
 
 @asynccontextmanager
@@ -85,6 +125,12 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
         initialize_pipeline_status()
     )  # This function is called during FASTAPI lifespan for each worker.
     logger.info("RAG object has been initialized")
+
+    try:
+        await seed_default_languages()
+        logger.info("Languages seeded")
+    except Exception:  # pragma: no cover - startup logging only
+        logger.exception("Failed to seed languages during startup")
 
     try:
         await seed_default_verification_topics()

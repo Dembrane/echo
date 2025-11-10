@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "@/components/common/Toaster";
 import { throwWithMessage } from "@/components/auth/utils/errorUtils";
+import { toast } from "@/components/common/Toaster";
 import { directus } from "@/lib/directus";
 
 export interface GenerateTwoFactorResponse {

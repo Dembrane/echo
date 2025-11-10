@@ -1,9 +1,10 @@
 import { ActionIcon, Box, Group, Paper, Text } from "@mantine/core";
 import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
 import { format } from "date-fns";
+import type { VerificationArtifact } from "@/lib/api";
 
 type VerifiedArtefactItemProps = {
-	artefact: ConversationArtefact;
+	artefact: VerificationArtifact;
 	label: string;
 	icon?: string;
 	onViewArtefact: (artefactId: string) => void;
@@ -19,7 +20,12 @@ const formatArtefactTime = (timestamp: string | null | undefined): string => {
 	}
 };
 
-export const VerifiedArtefactItem = ({ artefact, label, icon, onViewArtefact }: VerifiedArtefactItemProps) => {
+export const VerifiedArtefactItem = ({
+	artefact,
+	label,
+	icon,
+	onViewArtefact,
+}: VerifiedArtefactItemProps) => {
 	// Format the timestamp using date-fns
 	const formattedDate = formatArtefactTime(artefact.approved_at);
 

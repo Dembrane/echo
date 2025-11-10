@@ -1081,21 +1081,8 @@ export type VerificationTopicsResponse = {
 };
 
 export const getVerificationTopics = async (projectId: string) => {
-	return api.get<unknown, VerificationTopicsResponse>(`/verify/topics/${projectId}`);
-};
-
-export const updateVerificationTopics = async ({
-	projectId,
-	topicList,
-}: {
-	projectId: string;
-	topicList: string[];
-}) => {
-	return api.put<unknown, VerificationTopicsResponse>(
+	return api.get<unknown, VerificationTopicsResponse>(
 		`/verify/topics/${projectId}`,
-		{
-			topic_list: topicList,
-		},
 	);
 };
 
@@ -1141,16 +1128,25 @@ export const updateVerificationArtefact = async ({
 	content,
 	approvedAt,
 }: UpdateVerificationArtefactPayload) => {
-	return api.put<unknown, VerificationArtifact>(`/verify/artifact/${artifactId}`, {
-		use_conversation: useConversation
-			? {
-					conversationId: useConversation.conversationId,
-					timestamp: useConversation.timestamp,
-				}
-			: undefined,
-		content,
-		approvedAt,
-	});
+	return api.put<unknown, VerificationArtifact>(
+		`/verify/artifact/${artifactId}`,
+		{
+			approvedAt,
+			content,
+			use_conversation: useConversation
+				? {
+						conversationId: useConversation.conversationId,
+						timestamp: useConversation.timestamp,
+					}
+				: undefined,
+		},
+	);
+};
+
+export const getVerificationArtefacts = async (conversationId: string) => {
+	return api.get<unknown, VerificationArtifact[]>(
+		`/verify/artifacts/${conversationId}`,
+	);
 };
 
 export const unsubscribeParticipant = async (

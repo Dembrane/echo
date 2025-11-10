@@ -20,7 +20,6 @@ import {
 	cloneProjectById,
 	getLatestProjectAnalysisRunByProjectId,
 	getVerificationTopics,
-	updateVerificationTopics,
 } from "@/lib/api";
 import { directus } from "@/lib/directus";
 
@@ -284,31 +283,5 @@ export const useVerificationTopicsQuery = (projectId: string | undefined) => {
 		enabled: !!projectId,
 		queryFn: () => getVerificationTopics(projectId!),
 		queryKey: ["verify", "topics", projectId],
-	});
-};
-
-export const useUpdateVerificationTopicsMutation = () => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: ({
-			projectId,
-			topicList,
-		}: {
-			projectId: string;
-			topicList: string[];
-		}) =>
-			updateVerificationTopics({
-				projectId,
-				topicList,
-			}),
-		onSuccess: (_data, variables) => {
-			queryClient.invalidateQueries({
-				queryKey: ["verify", "topics", variables.projectId],
-			});
-		},
-		onError: (error) => {
-			console.error("Failed to update verification topics", error);
-			toast.error("Failed to update verification topics");
-		},
 	});
 };

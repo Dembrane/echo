@@ -20,6 +20,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { IconEye, IconEyeOff, IconRefresh } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Resizable } from "re-resizable";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
@@ -31,10 +32,7 @@ import { FormLabel } from "../form/FormLabel";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
 import { SaveStatus } from "../form/SaveStatus";
 import { TOPIC_ICON_MAP } from "../participant/verify/VerifySelection";
-import {
-	useUpdateProjectByIdMutation,
-	useUpdateVerificationTopicsMutation,
-} from "./hooks";
+import { useUpdateProjectByIdMutation } from "./hooks";
 import { useProjectSharingLink } from "./ProjectQRCode";
 import { ProjectTagsInput } from "./ProjectTagsInput";
 
@@ -65,7 +63,9 @@ const LANGUAGE_TO_LOCALE: Record<string, string> = {
 };
 
 const normalizeTopicList = (topics: string[]): string[] =>
-	Array.from(new Set(topics.map((topic) => topic.trim()).filter(Boolean))).sort();
+	Array.from(
+		new Set(topics.map((topic) => topic.trim()).filter(Boolean)),
+	).sort();
 
 const ProperNounInput = ({
 	value,
@@ -163,6 +163,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	verificationTopics,
 	isVerificationTopicsLoading = false,
 }) => {
+	const queryClient = useQueryClient();
 	const [showPreview, setShowPreview] = useState(false);
 	const link = useProjectSharingLink(project);
 	const [previewKey, setPreviewKey] = useState(0);
@@ -181,16 +182,14 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	const availableVerifyTopics = useMemo(
 		() =>
 			(verificationTopics?.available_topics ?? []).map((topic) => ({
+				icon:
+					TOPIC_ICON_MAP[topic.key] ??
+					(topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined),
 				key: topic.key,
 				label:
 					topic.translations?.[languageLocale]?.label ??
 					topic.translations?.["en-US"]?.label ??
 					topic.key,
-				icon:
-					TOPIC_ICON_MAP[topic.key] ??
-					(topic.icon && !topic.icon.startsWith(":")
-						? topic.icon
-						: undefined),
 			})),
 		[verificationTopics, languageLocale],
 	);
@@ -227,14 +226,21 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 
 	const formResolver = useMemo(() => zodResolver(FormSchema), []);
 
-	const { control, handleSubmit, watch, formState, reset, setValue, getValues } =
-		useForm<ProjectPortalFormValues>({
-			defaultValues,
-			mode: "onChange",
-			// for validation
-			resolver: formResolver,
-			reValidateMode: "onChange",
-		});
+	const {
+		control,
+		handleSubmit,
+		watch,
+		formState,
+		reset,
+		setValue,
+		getValues,
+	} = useForm<ProjectPortalFormValues>({
+		defaultValues,
+		mode: "onChange",
+		// for validation
+		resolver: formResolver,
+		reValidateMode: "onChange",
+	});
 
 	const watchedReplyMode = useWatch({
 		control,
@@ -252,50 +258,32 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	});
 
 	const updateProjectMutation = useUpdateProjectByIdMutation();
-	const updateVerificationTopicsMutation =
-		useUpdateVerificationTopicsMutation();
 
 	const onSave = useCallback(
 		async (values: ProjectPortalFormValues) => {
 			const { verification_topics, ...projectPayload } = values;
+			const normalizedTopics = normalizeTopicList(verification_topics);
+			const serializedTopics =
+				normalizedTopics.length > 0 ? normalizedTopics.join(",") : null;
 
 			await updateProjectMutation.mutateAsync({
 				id: project.id,
-				payload: projectPayload,
+				payload: {
+					...projectPayload,
+					selected_verification_key_list: serializedTopics,
+				},
 			});
 
-			const normalizedNewTopics = normalizeTopicList(verification_topics);
-			const normalizedCurrentTopics = normalizeTopicList(
-				selectedTopicDefaults,
-			);
-			const topicsChanged =
-				normalizedNewTopics.length !== normalizedCurrentTopics.length ||
-				normalizedNewTopics.some(
-					(topic, index) => topic !== normalizedCurrentTopics[index],
-				);
+			await queryClient.invalidateQueries({
+				queryKey: ["verify", "topics", project.id],
+			});
 
-			if (topicsChanged) {
-				await updateVerificationTopicsMutation.mutateAsync({
-					projectId: project.id,
-					topicList: normalizedNewTopics,
-				});
-			}
-
-			// Reset the form with the current values to clear the dirty state
-			reset(
-				{
-					...values,
-					verification_topics: normalizedNewTopics,
-				}
-			);
+			reset({
+				...values,
+				verification_topics: normalizedTopics,
+			});
 		},
-		[
-			project.id,
-			updateProjectMutation,
-			updateVerificationTopicsMutation,
-			reset,
-			selectedTopicDefaults,
-		],
+		[project.id, updateProjectMutation, reset, queryClient],
 	);
 
 	const {
@@ -774,9 +762,8 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																			if (!watchedVerifyEnabled) return;
 																			const normalizedCurrent =
 																				normalizeTopicList(field.value ?? []);
-																			const isSelected = normalizedCurrent.includes(
-																				topic.key,
-																			);
+																			const isSelected =
+																				normalizedCurrent.includes(topic.key);
 																			const updated = isSelected
 																				? normalizedCurrent.filter(
 																						(item) => item !== topic.key,

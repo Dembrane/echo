@@ -174,9 +174,7 @@ class UseConversationPayload(BaseModel):
 
 
 class UpdateArtifactRequest(BaseModel):
-    use_conversation: Optional[UseConversationPayload] = Field(
-        None, alias="useConversation"
-    )
+    use_conversation: Optional[UseConversationPayload] = Field(None, alias="useConversation")
     content: Optional[str] = None
     approved_at: Optional[datetime] = Field(None, alias="approvedAt")
 
@@ -264,8 +262,6 @@ async def _get_project(project_id: str) -> dict:
         raise ProjectNotFoundException
 
     project = project_rows[0]
-    if not project.get("is_verify_enabled", False):
-        raise HTTPException(status_code=403, detail="Verify is not enabled for this project")
 
     return project
 
@@ -375,7 +371,44 @@ async def update_verification_topics(
 
     refreshed_topics = await _get_verification_topics_for_project(project_id)
     selected_topics = _parse_selected_topics(serialized_keys, refreshed_topics)
-    return GetVerificationTopicsResponse(selected_topics=selected_topics, available_topics=refreshed_topics)
+    return GetVerificationTopicsResponse(
+        selected_topics=selected_topics, available_topics=refreshed_topics
+    )
+
+
+@VerifyRouter.get("/artifacts/{conversation_id}", response_model=List[ConversationArtifactResponse])
+async def list_verification_artifacts(
+    conversation_id: str,
+    auth: DependencyDirectusSession,  # noqa: ARG001 - reserved for future use
+) -> List[ConversationArtifactResponse]:
+    await _get_conversation_with_project(conversation_id)
+    artifacts = await _get_conversation_artifacts(conversation_id)
+
+    def _sort_key(item: dict) -> tuple[bool, str]:
+        approved = item.get("approved_at")
+        created = item.get("date_created")
+        if approved:
+            return (False, approved)
+        if created:
+            return (True, created)
+        return (True, "")
+
+    artifacts.sort(key=_sort_key, reverse=True)
+
+    response: List[ConversationArtifactResponse] = []
+    for artifact in artifacts:
+        response.append(
+            ConversationArtifactResponse(
+                id=artifact.get("id"),
+                key=artifact.get("key"),
+                content=artifact.get("content") or "",
+                conversation_id=artifact.get("conversation_id") or conversation_id,
+                approved_at=artifact.get("approved_at"),
+                read_aloud_stream_url=artifact.get("read_aloud_stream_url") or "",
+            )
+        )
+
+    return response
 
 
 async def _get_artifact_or_404(artifact_id: str) -> dict:
@@ -428,9 +461,6 @@ async def _get_conversation_with_project(conversation_id: str) -> dict:
         raise ConversationNotFoundException
 
     conversation = conversation_rows[0]
-    project = conversation.get("project_id") or {}
-    if not project.get("is_verify_enabled", False):
-        raise HTTPException(status_code=403, detail="Verify is not enabled for this project")
 
     return conversation
 
@@ -832,7 +862,9 @@ async def update_verification_artifact(
             )
         except Exception as exc:  # pragma: no cover - external failure
             logger.error("Gemini revision failed: %s", exc, exc_info=True)
-            raise HTTPException(status_code=500, detail="Failed to revise verification artifact") from exc
+            raise HTTPException(
+                status_code=500, detail="Failed to revise verification artifact"
+            ) from exc
 
         generated_text = _extract_response_text(response)
         updates["content"] = generated_text
@@ -853,7 +885,10 @@ async def update_verification_artifact(
     return ConversationArtifactResponse(
         id=updated_data.get("id", artifact_id),
         key=updated_data.get("key"),
-        content=updated_data.get("content") or updates.get("content") or artifact.get("content") or "",
+        content=updated_data.get("content")
+        or updates.get("content")
+        or artifact.get("content")
+        or "",
         conversation_id=updated_data.get("conversation_id") or conversation_id or "",
         approved_at=updated_data.get("approved_at") or updates.get("approved_at"),
         read_aloud_stream_url=updated_data.get("read_aloud_stream_url")

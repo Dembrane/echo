@@ -17,12 +17,12 @@ import {
 } from "@/components/auth/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
 import { ENABLE_ANNOUNCEMENTS } from "@/config";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { AnnouncementIcon } from "../announcement/AnnouncementIcon";
 import { Announcements } from "../announcement/Announcements";
 import { TopAnnouncementBar } from "../announcement/TopAnnouncementBar";
 import { Logo } from "../common/Logo";
 import { LanguagePicker } from "../language/LanguagePicker";
-import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
 const User = ({ name, email }: { name: string; email: string }) => (
 	<div

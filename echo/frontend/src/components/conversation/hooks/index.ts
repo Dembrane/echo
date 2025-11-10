@@ -904,7 +904,7 @@ export const useInfiniteConversationsByProjectId = (
 							],
 						},
 						{
-							artefacts: ["id", "approved_at"],
+							conversation_artifacts: ["id", "approved_at"],
 						},
 					],
 					filter: {

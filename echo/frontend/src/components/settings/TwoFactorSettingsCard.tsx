@@ -2,8 +2,8 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
-	Anchor,
 	Alert,
+	Anchor,
 	Badge,
 	Button,
 	CopyButton,
@@ -11,15 +11,15 @@ import {
 	Group,
 	List,
 	Modal,
-	PasswordInput,
 	Paper,
+	PasswordInput,
+	PinInput,
 	Skeleton,
 	Stack,
 	Switch,
 	Text,
 	TextInput,
 	Tooltip,
-	PinInput,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -65,8 +65,10 @@ export const TwoFactorSettingsCard = ({
 	isLoading,
 	isTwoFactorEnabled,
 }: TwoFactorSettingsCardProps) => {
-	const [enableModalOpened, { close: closeEnableModal, open: openEnableModal }] =
-		useDisclosure(false);
+	const [
+		enableModalOpened,
+		{ close: closeEnableModal, open: openEnableModal },
+	] = useDisclosure(false);
 	const [
 		disableModalOpened,
 		{ close: closeDisableModal, open: openDisableModal },
@@ -100,21 +102,14 @@ export const TwoFactorSettingsCard = ({
 			resetGenerateSecret();
 			resetEnableTwoFactor();
 		}
-	}, [
-		enableModalOpened,
-		resetEnableTwoFactor,
-		resetGenerateSecret,
-	]);
+	}, [enableModalOpened, resetEnableTwoFactor, resetGenerateSecret]);
 
 	useEffect(() => {
 		if (!disableModalOpened) {
 			setDisableOtp("");
 			resetDisableTwoFactor();
 		}
-	}, [
-		disableModalOpened,
-		resetDisableTwoFactor,
-	]);
+	}, [disableModalOpened, resetDisableTwoFactor]);
 
 	const handleToggle = () => {
 		if (isTwoFactorEnabled) {
@@ -226,7 +221,7 @@ export const TwoFactorSettingsCard = ({
 				<Paper withBorder p="md" radius="md">
 					<Stack gap="sm" align="center">
 						<div className="h-[200px] w-[200px]">
-						<QRCode value={generatedSecret.otpauth_url} />
+							<QRCode value={generatedSecret.otpauth_url} />
 						</div>
 						<Group align="center" gap="xs">
 							<Text fw={600} size="lg">
@@ -294,8 +289,9 @@ export const TwoFactorSettingsCard = ({
 								</Text>
 								<Text size="sm" c="dimmed" maw={520}>
 									<Trans>
-									Keep access secure with a one-time code from your authenticator
-									app. Toggle two-factor authentication for this account.
+										Keep access secure with a one-time code from your
+										authenticator app. Toggle two-factor authentication for this
+										account.
 									</Trans>
 								</Text>
 							</Stack>
@@ -356,38 +352,40 @@ export const TwoFactorSettingsCard = ({
 			>
 				<Stack gap="lg">
 					<Text>
-						<Trans>Enter a valid code to turn off two-factor authentication.</Trans>
+						<Trans>
+							Enter a valid code to turn off two-factor authentication.
+						</Trans>
 					</Text>
 
-			<Stack gap="xs">
-				<Text fw={500} size="sm">
-					<Trans>Authenticator code</Trans>
-				</Text>
-				<PinInput
-					length={6}
-					type="number"
-					size="md"
-					oneTimeCode
-					value={disableOtp}
-					onChange={(value) => setDisableOtp(value)}
-					onComplete={(value) => handleDisableTwoFactor(value)}
-					inputMode="numeric"
-					disabled={disableTwoFactorMutation.isPending}
-				/>
-			</Stack>
+					<Stack gap="xs">
+						<Text fw={500} size="sm">
+							<Trans>Authenticator code</Trans>
+						</Text>
+						<PinInput
+							length={6}
+							type="number"
+							size="md"
+							oneTimeCode
+							value={disableOtp}
+							onChange={(value) => setDisableOtp(value)}
+							onComplete={(value) => handleDisableTwoFactor(value)}
+							inputMode="numeric"
+							disabled={disableTwoFactorMutation.isPending}
+						/>
+					</Stack>
 
-		{disableTwoFactorMutation.isError && (
-			<Alert color="red" variant="light">
-				{disableTwoFactorMutation.error?.message ??
-					t`We couldn’t disable two-factor authentication. Try again with a fresh code.`}
-			</Alert>
-		)}
+					{disableTwoFactorMutation.isError && (
+						<Alert color="red" variant="light">
+							{disableTwoFactorMutation.error?.message ??
+								t`We couldn’t disable two-factor authentication. Try again with a fresh code.`}
+						</Alert>
+					)}
 
-		<Group justify="flex-end">
-			<Button variant="subtle" onClick={closeDisableModal}>
-				<Trans>Cancel</Trans>
-			</Button>
-			<Button
+					<Group justify="flex-end">
+						<Button variant="subtle" onClick={closeDisableModal}>
+							<Trans>Cancel</Trans>
+						</Button>
+						<Button
 							color="red"
 							onClick={() => handleDisableTwoFactor()}
 							loading={disableTwoFactorMutation.isPending}

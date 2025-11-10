@@ -80,7 +80,6 @@ export const VerifyArtefact = () => {
 	const [isApproving, setIsApproving] = useState(false);
 	const [isRevising, setIsRevising] = useState(false);
 	const [artefactContent, setArtefactContent] = useState<string>("");
-	const [hasGenerated, setHasGenerated] = useState(false);
 	const [isEditing, setIsEditing] = useState(false);
 	const [editedContent, setEditedContent] = useState<string>("");
 	const [readAloudUrl, setReadAloudUrl] = useState<string>("");
@@ -94,6 +93,7 @@ export const VerifyArtefact = () => {
 
 	const audioRef = useRef<HTMLAudioElement | null>(null);
 	const reviseTimerRef = useRef<NodeJS.Timeout | null>(null);
+	const generationKeyRef = useRef<string | null>(null);
 
 	const latestChunkTimestamp = useMemo(
 		() => computeLatestTimestamp(chunksQuery.data as ConversationChunkLike[]),
@@ -135,30 +135,37 @@ export const VerifyArtefact = () => {
 		conversationId,
 	]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: regenerate only when generating first artefact
+	// biome-ignore lint/correctness/useExhaustiveDependencies: generation guard handled via ref
 	useEffect(() => {
 		if (
 			!selectedOptionKey ||
 			!conversationId ||
-			hasGenerated ||
 			topicsQuery.isLoading ||
 			!selectedTopics.includes(selectedOptionKey)
 		) {
 			return;
 		}
 
+		const generationKey = `${conversationId}:${selectedOptionKey}`;
+		if (generationKeyRef.current === generationKey) {
+			return;
+		}
+
+		let isCancelled = false;
+		generationKeyRef.current = generationKey;
+		setGeneratedArtifactId(null);
+		setReadAloudUrl("");
+		setArtefactContent("");
+		setContextTimestamp(null);
+
 		const generateArtefact = async () => {
 			try {
-				setHasGenerated(true);
-				setGeneratedArtifactId(null);
-				setReadAloudUrl("");
-
 				const response = await generateArtefactMutation.mutateAsync({
 					conversationId,
 					topicList: [selectedOptionKey],
 				});
 
-				if (response && response.length > 0) {
+				if (!isCancelled && response && response.length > 0) {
 					const artifact = response[0];
 					setArtefactContent(artifact.content);
 					setGeneratedArtifactId(artifact.id);
@@ -169,15 +176,19 @@ export const VerifyArtefact = () => {
 				}
 			} catch (error) {
 				console.error("Failed to generate artifact:", error);
-				setHasGenerated(false);
+				if (!isCancelled) {
+					generationKeyRef.current = null;
+				}
 			}
 		};
 
 		generateArtefact();
+		return () => {
+			isCancelled = true;
+		};
 	}, [
 		selectedOptionKey,
 		conversationId,
-		hasGenerated,
 		topicsQuery.isLoading,
 		selectedTopics,
 		generateArtefactMutation,
@@ -201,10 +212,10 @@ export const VerifyArtefact = () => {
 		setIsApproving(true);
 		try {
 			await updateArtefactMutation.mutateAsync({
-				artifactId: generatedArtifactId,
-				conversationId,
-				content: artefactContent,
 				approvedAt: new Date().toISOString(),
+				artifactId: generatedArtifactId,
+				content: artefactContent,
+				conversationId,
 				successMessage: t`Artefact approved successfully!`,
 			});
 
@@ -221,7 +232,9 @@ export const VerifyArtefact = () => {
 		}
 		const timestampToUse = contextTimestamp ?? latestChunkTimestamp;
 		if (!timestampToUse) {
-			toast.error("No feedback available yet. Try again after sharing updates.");
+			toast.error(
+				"No feedback available yet. Try again after sharing updates.",
+			);
 			return;
 		}
 
@@ -230,11 +243,11 @@ export const VerifyArtefact = () => {
 			const response = await updateArtefactMutation.mutateAsync({
 				artifactId: generatedArtifactId,
 				conversationId,
+				successMessage: t`Artefact revised successfully!`,
 				useConversation: {
 					conversationId,
 					timestamp: timestampToUse,
 				},
-				successMessage: t`Artefact revised successfully!`,
 			});
 
 			if (response) {
@@ -275,8 +288,8 @@ export const VerifyArtefact = () => {
 		try {
 			const response = await updateArtefactMutation.mutateAsync({
 				artifactId: generatedArtifactId,
-				conversationId,
 				content: editedContent,
+				conversationId,
 				successMessage: t`Artefact updated successfully!`,
 			});
 			if (response) {

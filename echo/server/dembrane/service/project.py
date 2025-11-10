@@ -152,7 +152,9 @@ class ProjectService:
                 "is_project_notification_subscription_allowed"
             ],
             "is_verify_enabled": current_project["is_verify_enabled"],
-            "verification_topics": current_project["verification_topics"],
+            "selected_verification_key_list": current_project.get(
+                "selected_verification_key_list"
+            ),
         }
 
         if overrides:

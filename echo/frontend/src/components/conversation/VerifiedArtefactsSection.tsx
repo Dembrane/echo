@@ -1,4 +1,3 @@
-import { readItems } from "@directus/sdk";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -14,7 +13,7 @@ import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Markdown } from "@/components/common/Markdown";
-import { directus } from "@/lib/directus";
+import { getVerificationArtefacts } from "@/lib/api";
 
 type VerifiedArtefactsSectionProps = {
 	conversationId: string;
@@ -36,22 +35,8 @@ export const VerifiedArtefactsSection = ({
 	// Fetch all artefacts with content for display
 	const { data: artefacts, isLoading } = useQuery({
 		enabled: !!conversationId,
-		queryFn: () =>
-			directus.request(
-				readItems("conversation_artefact", {
-					fields: [
-						"id",
-						"conversation_id",
-						"approved_at",
-						"key",
-						"content",
-						// "title",
-					],
-					filter: { conversation_id: { _eq: conversationId } },
-					sort: ["-approved_at"],
-				}),
-			),
-		queryKey: ["conversation_artefacts_full", conversationId],
+		queryFn: () => getVerificationArtefacts(conversationId),
+		queryKey: ["verify", "conversation_artifacts", conversationId],
 	});
 
 	// Don't show the section if there are no artefacts

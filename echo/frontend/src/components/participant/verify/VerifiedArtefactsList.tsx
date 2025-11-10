@@ -1,14 +1,11 @@
 import { Box, Skeleton, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useState } from "react";
+import type { VerificationArtifact } from "@/lib/api";
 import { ArtefactModal } from "./ArtefactModal";
-import {
-	useConversationArtefact,
-	useConversationArtefacts,
-	useVerificationTopics,
-} from "./hooks";
-import { TOPIC_ICON_MAP } from "./VerifySelection";
+import { useConversationArtefacts, useVerificationTopics } from "./hooks";
 import { VerifiedArtefactItem } from "./VerifiedArtefactItem";
+import { TOPIC_ICON_MAP } from "./VerifySelection";
 
 type VerifiedArtefactsListProps = {
 	conversationId: string;
@@ -27,10 +24,6 @@ export const VerifiedArtefactsList = ({
 	const [selectedArtefactId, setSelectedArtefactId] = useState<string | null>(
 		null,
 	);
-
-	// Fetch the full artefact content when one is selected
-	const { data: selectedArtefact, isLoading: isLoadingArtefact } =
-		useConversationArtefact(selectedArtefactId ?? undefined);
 	const topicsQuery = useVerificationTopics(projectId);
 
 	const LANGUAGE_TO_LOCALE: Record<string, string> = {
@@ -49,13 +42,13 @@ export const VerifiedArtefactsList = ({
 		availableTopics.map((topic) => [
 			topic.key,
 			{
+				icon:
+					TOPIC_ICON_MAP[topic.key] ??
+					(topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined),
 				label:
 					topic.translations?.[locale]?.label ??
 					topic.translations?.["en-US"]?.label ??
 					topic.key,
-				icon:
-					TOPIC_ICON_MAP[topic.key] ??
-					(topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined),
 			},
 		]),
 	);
@@ -73,6 +66,8 @@ export const VerifiedArtefactsList = ({
 		setSelectedArtefactId(null);
 	};
 
+	const artefactList: VerificationArtifact[] = artefacts ?? [];
+
 	if (isLoading) {
 		return (
 			<Stack gap="sm" align="flex-end">
@@ -81,14 +76,14 @@ export const VerifiedArtefactsList = ({
 		);
 	}
 
-	if (!artefacts || artefacts.length === 0) {
+	if (artefactList.length === 0) {
 		return null;
 	}
 
 	return (
 		<>
 			<Box>
-				{artefacts.map((artefact: ConversationArtefact) => (
+				{artefactList.map((artefact) => (
 					<VerifiedArtefactItem
 						key={artefact.id}
 						artefact={artefact}
@@ -102,8 +97,13 @@ export const VerifiedArtefactsList = ({
 				opened={opened}
 				onClose={handleCloseModal}
 				onExited={handleModalExited}
-				isLoading={isLoadingArtefact}
-				artefact={selectedArtefact}
+				isLoading={false}
+				artefact={
+					selectedArtefactId
+						? (artefactList.find((item) => item.id === selectedArtefactId) ??
+							null)
+						: null
+				}
 			/>
 		</>
 	);

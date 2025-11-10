@@ -53,9 +53,9 @@ export const VerifySelection = () => {
 				"•";
 
 			return {
+				icon,
 				key: topic.key,
 				label: localizedLabel,
-				icon,
 			};
 		});
 
@@ -99,7 +99,9 @@ export const VerifySelection = () => {
 					)}
 					{!isLoading && availableOptions.length === 0 && (
 						<Text size="sm" c="dimmed">
-							<Trans>No verification topics are configured for this project.</Trans>
+							<Trans>
+								No verification topics are configured for this project.
+							</Trans>
 						</Text>
 					)}
 					{availableOptions.map((option) => (
@@ -135,9 +137,7 @@ export const VerifySelection = () => {
 				{isLoading ? (
 					<Trans>Loading…</Trans>
 				) : (
-					<Trans id="participant.verify.selection.button.next">
-						Next
-					</Trans>
+					<Trans id="participant.verify.selection.button.next">Next</Trans>
 				)}
 			</Button>
 		</Stack>
