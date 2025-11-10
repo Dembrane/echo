@@ -120,11 +120,10 @@ const ConversationAccordionLabelChatSelection = ({
 		projectChatContextQuery.data?.auto_select_bool ?? false;
 
 	// Check if conversation has any content
-	const hasContent = conversation.chunks?.some(
-		(chunk) =>
-			(chunk as unknown as ConversationChunk).transcript &&
-			(chunk as unknown as ConversationChunk).transcript?.trim().length > 0,
-	);
+	const hasContent = conversation.chunks?.some((chunk) => {
+		const transcript = (chunk as unknown as ConversationChunk).transcript;
+		return typeof transcript === "string" && transcript.trim().length > 0;
+	});
 
 	const handleSelectChat = () => {
 		if (!isSelected) {
@@ -195,7 +194,6 @@ export const MoveConversationButton = ({
 	const search = watch("search");
 
 	const projectsQuery = useInfiniteProjects({
-		enabled: opened,
 		query: {
 			filter: {
 				_and: [{ id: { _neq: conversation.project_id } }],
@@ -442,6 +440,24 @@ export const ConversationStatusIndicators = ({
 	);
 };
 
+const ConversationProjectTagPill = ({
+	tag,
+}: {
+	tag: ConversationProjectTag;
+}) => {
+	const text = (tag?.project_tag_id as ProjectTag)?.text ?? "";
+
+	if (!text) {
+		return null;
+	}
+
+	return (
+		<Pill size="sm" className="font-normal">
+			{text}
+		</Pill>
+	);
+};
+
 const ConversationAccordionItem = ({
 	conversation,
 	highlight = false,
@@ -476,7 +492,7 @@ const ConversationAccordionItem = ({
 		conversation?.conversation_artifacts &&
 		conversation?.conversation_artifacts?.length > 0 &&
 		conversation?.conversation_artifacts?.some(
-			(artefact) => artefact.approved_at,
+			(artefact) => (artefact as ConversationArtifact).approved_at,
 		);
 
 	return (
@@ -545,17 +561,12 @@ const ConversationAccordionItem = ({
 					}
 				</div>
 				<Group gap="4" pr="sm" wrap="wrap">
-					{conversation.tags
-						?.filter((tag) => tag.project_tag_id && tag.project_tag_id != null)
-						.map((tag) => (
-							<Pill
-								key={`${tag.id}-${(tag?.project_tag_id as unknown as ProjectTag)?.text}`}
-								size="sm"
-								className="font-normal"
-							>
-								{(tag?.project_tag_id as unknown as ProjectTag)?.text}
-							</Pill>
-						))}
+					{conversation.tags?.map((tag) => (
+						<ConversationProjectTagPill
+							key={(tag as ConversationProjectTag).id}
+							tag={tag as ConversationProjectTag}
+						/>
+					))}
 				</Group>
 			</Stack>
 		</NavigationButton>
@@ -655,7 +666,6 @@ export const ConversationAccordion = ({
 		projectId,
 		query: {
 			deep: {
-				// @ts-expect-error tags not typed in CustomDirectusTypes
 				tags: {
 					_sort: "sort",
 				},
@@ -688,7 +698,6 @@ export const ConversationAccordion = ({
 		false,
 		{
 			deep: {
-				// @ts-expect-error chunks is not typed
 				chunks: {
 					_limit: 25,
 				},

@@ -1,16 +1,12 @@
 import { Box, LoadingOverlay, Modal, ScrollArea } from "@mantine/core";
+import type { VerificationArtifact } from "@/lib/api";
 import { Markdown } from "../../common/Markdown";
 
 type ArtefactModalProps = {
 	opened: boolean;
 	onClose: () => void;
 	onExited?: () => void;
-	artefact?: {
-		id: string;
-		content: string | null | undefined;
-		conversation_id: string | Conversation | null | undefined;
-		approved_at: string | null | undefined;
-	} | null;
+	artefact?: (ConversationArtifact | VerificationArtifact) | null;
 	isLoading?: boolean;
 };
 

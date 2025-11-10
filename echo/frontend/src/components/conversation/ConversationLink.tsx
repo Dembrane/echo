@@ -1,10 +1,9 @@
 import { Trans } from "@lingui/react/macro";
-import { Anchor, Group, List, Stack, Text } from "@mantine/core";
+import { Anchor, Group, List, Stack } from "@mantine/core";
 import { I18nLink } from "@/components/common/i18nLink";
 
 interface ConversationLinkProps {
 	conversation: Conversation;
-	// TODO: remove this prop can read from conversation
 	projectId: string;
 }
 
@@ -16,86 +15,65 @@ const ConversationAnchor = ({ to, name }: { to: string; name: string }) => (
 	</I18nLink>
 );
 
-/**
- * input:
-{
-  projectId: string;
-  linkingConversations: {
-    sourceConversationId: {
-      id: string;
-      participantName: string;
-    }
-  }[]
-  linkedConversations: {
-    targetConversationId: {
-      id: string;
-      participantName: string;
-    }
-  }[]
-}
-*/
-
 export const ConversationLink = ({
 	conversation,
 	projectId,
 }: ConversationLinkProps) => {
+	const linkingConversation = conversation
+		.linking_conversations[0] as unknown as ConversationLink;
+	const linkedConversations =
+		conversation.linked_conversations as unknown as ConversationLink[];
+
+	if (!linkingConversation || !linkedConversations) {
+		return null;
+	}
+
 	return (
 		<>
-			{conversation?.linking_conversations &&
-				conversation?.linking_conversations.length > 0 && (
-					<Group gap="sm">
-						{conversation.linking_conversations[0]?.source_conversation_id
-							?.id ? (
-							<>
-								<Trans id="conversation.linking_conversations.description">
-									This conversation is a copy of
-								</Trans>
-
-								<ConversationAnchor
-									key={conversation?.linking_conversations?.[0]?.id}
-									to={`/projects/${projectId}/conversation/${conversation?.linking_conversations?.[0]?.source_conversation_id?.id}/overview`}
-									name={
-										conversation?.linking_conversations?.[0]
-											?.source_conversation_id?.participant_name ?? ""
-									}
-								/>
-							</>
-						) : (
-							<Text c="gray" fs="italic">
-								<Trans id="conversation.linking_conversations.deleted">
-									The source conversation was deleted
-								</Trans>
-							</Text>
-						)}
-					</Group>
-				)}
-
-			{conversation?.linked_conversations &&
-				conversation?.linked_conversations.length > 0 && (
-					<Stack gap="xs">
-						<Trans id="conversation.linked_conversations.description">
-							This conversation has the following copies:
+			<Group gap="sm">
+				{(linkingConversation?.source_conversation_id as Conversation)?.id && (
+					<>
+						<Trans id="conversation.linking_conversations.description">
+							This conversation is a copy of
 						</Trans>
-						<List>
-							{conversation.linked_conversations.map(
-								(conversationLink: ConversationLink) =>
-									(conversationLink?.target_conversation_id as Conversation)
-										?.id && (
-										<List.Item key={conversationLink?.id}>
-											<ConversationAnchor
-												to={`/projects/${projectId}/conversation/${(conversationLink?.target_conversation_id as Conversation)?.id}/overview`}
-												name={
-													(
-														conversationLink?.target_conversation_id as Conversation
-													)?.participant_name ?? ""
-												}
-											/>
-										</List.Item>
-									),
-							)}
-						</List>
-					</Stack>
+
+						<ConversationAnchor
+							key={linkingConversation?.id}
+							to={`/projects/${projectId}/conversation/${(linkingConversation?.source_conversation_id as Conversation)?.id}/overview`}
+							name={
+								(linkingConversation?.source_conversation_id as Conversation)
+									?.participant_name ?? ""
+							}
+						/>
+					</>
 				)}
+			</Group>
+
+			{linkedConversations && linkedConversations.length > 0 && (
+				<Stack gap="xs">
+					<Trans id="conversation.linked_conversations.description">
+						This conversation has the following copies:
+					</Trans>
+					<List>
+						{linkedConversations.map(
+							(conversationLink: ConversationLink) =>
+								(conversationLink?.target_conversation_id as Conversation)
+									?.id && (
+									<List.Item key={conversationLink?.id}>
+										<ConversationAnchor
+											to={`/projects/${projectId}/conversation/${(conversationLink?.target_conversation_id as Conversation)?.id}/overview`}
+											name={
+												(
+													conversationLink?.target_conversation_id as Conversation
+												)?.participant_name ?? ""
+											}
+										/>
+									</List.Item>
+								),
+						)}
+					</List>
+				</Stack>
+			)}
 		</>
 	);
 };

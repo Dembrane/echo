@@ -24,10 +24,10 @@ export const useCopyAspect = () => {
 								segment: [
 									{
 										conversation_id: ["id", "participant_name"],
+										description: true,
+										relevant_index: true,
+										verbatim_transcript: true,
 									},
-									"description",
-									"verbatim_transcript",
-									"relevant_index",
 								],
 							},
 						],

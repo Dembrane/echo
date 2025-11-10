@@ -27,10 +27,10 @@ from dembrane.config import (
 )
 from dembrane.sentry import init_sentry
 from dembrane.api.api import api
-from dembrane.api.verify import seed_default_verification_topics
-from dembrane.postgresdb_manager import PostgresDBManager
-from dembrane.async_helpers import run_in_thread_pool
 from dembrane.directus import directus
+from dembrane.api.verify import seed_default_verification_topics
+from dembrane.async_helpers import run_in_thread_pool
+from dembrane.postgresdb_manager import PostgresDBManager
 
 # from lightrag.llm.azure_openai import azure_openai_complete
 from dembrane.audio_lightrag.utils.litellm_utils import embedding_func, llm_model_func

@@ -44,7 +44,6 @@ export const ProjectConversationOverviewRoute = () => {
 		projectId: projectId ?? "",
 		query: {
 			deep: {
-				// @ts-expect-error tags won't be typed
 				tags: {
 					_sort: "sort",
 				},
@@ -171,7 +170,7 @@ export const ProjectConversationOverviewRoute = () => {
 						<ConversationEdit
 							key={conversationQuery.data.id}
 							conversation={conversationQuery.data}
-							projectTags={projectQuery.data.tags}
+							projectTags={projectQuery.data.tags as ProjectTag[]}
 						/>
 					</Stack>
 

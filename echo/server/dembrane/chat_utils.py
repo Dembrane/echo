@@ -5,7 +5,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 import backoff
-from litellm import completion, acompletion
+from litellm import acompletion
 from pydantic import BaseModel
 from litellm.utils import token_counter
 from sqlalchemy.orm import Session, selectinload
@@ -22,22 +22,12 @@ from dembrane.config import (
     SMALL_LITELLM_API_KEY,
     SMALL_LITELLM_API_BASE,
     DISABLE_CHAT_TITLE_GENERATION,
-    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL,
-    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY,
-    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE,
-    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION,
 )
 from dembrane.prompts import render_prompt
 from dembrane.database import ConversationModel, ProjectChatMessageModel
 from dembrane.directus import directus
-from dembrane.api.stateless import GetLightragQueryRequest, get_lightrag_prompt
 from dembrane.api.conversation import get_conversation_transcript
 from dembrane.api.dependency_auth import DirectusSession
-from dembrane.audio_lightrag.utils.lightrag_utils import (
-    run_segment_id_to_conversation_id,
-    get_project_id_from_conversation_id,
-    get_conversation_details_for_rag_query,
-)
 
 MAX_CHAT_CONTEXT_LENGTH = 100000
 
@@ -164,41 +154,6 @@ async def create_system_messages_for_chat(
     }
 
     return [prompt_message, project_message, context_message]
-
-
-async def get_lightrag_prompt_by_params(
-    top_k: int,
-    query: str,
-    conversation_history: list[dict[str, str]],
-    echo_conversation_ids: list[str],
-    echo_project_ids: list[str],
-    auto_select_bool: bool,
-    get_transcripts: bool,
-) -> str:
-    payload = GetLightragQueryRequest(
-        query=query,
-        conversation_history=conversation_history,
-        echo_conversation_ids=echo_conversation_ids,
-        echo_project_ids=echo_project_ids,
-        auto_select_bool=auto_select_bool,
-        get_transcripts=get_transcripts,
-        top_k=top_k,
-    )
-    session = DirectusSession(user_id="none", is_admin=True)  # fake session
-    rag_prompt = await get_lightrag_prompt(payload, session)
-    return rag_prompt
-
-
-async def get_conversation_references(
-    rag_prompt: str, project_ids: List[str]
-) -> List[Dict[str, Any]]:
-    try:
-        references = await get_conversation_details_for_rag_query(rag_prompt, project_ids)
-        conversation_references = {"references": references}
-    except Exception as e:
-        logger.warning(f"No references found. Error: {str(e)}")
-        conversation_references = {"references": []}
-    return [conversation_references]
 
 
 class CitationSingleSchema(BaseModel):
@@ -569,74 +524,3 @@ async def _process_single_batch(
     except Exception as e:
         logger.error(f"Batch {batch_num} unexpected error: {str(e)}")
         return {"selected_ids": [], "batch_num": batch_num, "error": "unknown"}
-
-
-async def get_conversation_citations(
-    rag_prompt: str,
-    accumulated_response: str,
-    project_ids: List[str],
-    language: str = "en",
-) -> List[Dict[str, Any]]:
-    """
-    Extract structured conversation citations from an accumulated assistant response using a text-structuring model, map those citations to conversations, and return only citations that belong to the given project IDs.
-
-    This function:
-    - Renders a text-structuring prompt using `rag_prompt` and `accumulated_response` and sends it to the configured text-structure LLM.
-    - Parses the model's JSON response (expected to follow `CitationsSchema`) to obtain citation entries that include `segment_id` and `verbatim_reference_text_chunk`.
-    - For each citation, resolves `segment_id` to a (conversation_id, conversation_name) pair and derives the citation's project id.
-    - Filters citations to include only those whose project id is present in `project_ids`.
-    - Returns a single-item list containing a dict with the key "citations", where each item is a dict with keys:
-      - "conversation": conversation id (str)
-      - "reference_text": verbatim reference text chunk (str)
-      - "conversation_title": conversation name/title (str)
-
-    If the model output cannot be parsed or a segment-to-conversation mapping fails for an individual citation, that citation is skipped; parsing errors do not raise but are logged and result in an empty citations list in the returned structure.
-    """
-    text_structuring_model_message = render_prompt(
-        "text_structuring_model_message",
-        language,
-        {"accumulated_response": accumulated_response, "rag_prompt": rag_prompt},
-    )
-    text_structuring_model_messages = [
-        {"role": "system", "content": text_structuring_model_message},
-    ]
-    text_structuring_model_generation = completion(
-        model=f"{LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL}",
-        messages=text_structuring_model_messages,
-        api_base=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE,
-        api_version=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION,
-        api_key=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY,
-        response_format=CitationsSchema,
-    )
-    try:
-        citations_by_segment_dict = json.loads(
-            text_structuring_model_generation.choices[0].message.content
-        )
-        logger.debug(f"Citations by segment dict: {citations_by_segment_dict}")
-        citations_list = citations_by_segment_dict["citations"]
-        logger.debug(f"Citations list: {citations_list}")
-        citations_by_conversation_dict: Dict[str, List[Dict[str, Any]]] = {"citations": []}
-        if len(citations_list) > 0:
-            for _, citation in enumerate(citations_list):
-                try:
-                    (conversation_id, conversation_name) = await run_segment_id_to_conversation_id(
-                        citation["segment_id"]
-                    )
-                    citation_project_id = get_project_id_from_conversation_id(conversation_id)
-                except Exception as e:
-                    logger.warning(
-                        f"WARNING: Error in citation extraction for segment {citation['segment_id']}. Skipping citations: {str(e)}"
-                    )
-                    continue
-                if citation_project_id in project_ids:
-                    current_citation_dict = {
-                        "conversation": conversation_id,
-                        "reference_text": citation["verbatim_reference_text_chunk"],
-                        "conversation_title": conversation_name,
-                    }
-                    citations_by_conversation_dict["citations"].append(current_citation_dict)
-        else:
-            logger.warning("WARNING: No citations found")
-    except Exception as e:
-        logger.warning(f"WARNING: Error in citation extraction. Skipping citations: {str(e)}")
-    return [citations_by_conversation_dict]

@@ -220,7 +220,6 @@ export const getProjectViews = async (projectId: string) => {
 						"description",
 						"image_url",
 						"view_id",
-						"image_generation_model",
 					],
 				},
 			],
@@ -1017,6 +1016,7 @@ export const getChatHistory = async (chatId: string): Promise<ChatHistory> => {
 		}),
 	);
 
+	// @ts-expect-error TODO
 	return data.map((message) => ({
 		_original: message,
 		content: message.text ?? "",

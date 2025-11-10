@@ -96,7 +96,10 @@ export const VerifyArtefact = () => {
 	const generationKeyRef = useRef<string | null>(null);
 
 	const latestChunkTimestamp = useMemo(
-		() => computeLatestTimestamp(chunksQuery.data as ConversationChunkLike[]),
+		() =>
+			computeLatestTimestamp(
+				chunksQuery.data as unknown as ConversationChunkLike[],
+			),
 		[chunksQuery.data],
 	);
 
@@ -263,7 +266,8 @@ export const VerifyArtefact = () => {
 			});
 
 			const updatedLatest = computeLatestTimestamp(
-				(refreshed.data ?? chunksQuery.data) as ConversationChunkLike[],
+				(refreshed.data ??
+					chunksQuery.data) as unknown as ConversationChunkLike[],
 			);
 			setContextTimestamp(updatedLatest ?? timestampToUse);
 		} finally {

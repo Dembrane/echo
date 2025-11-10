@@ -6,7 +6,7 @@ from datetime import datetime
 
 import litellm
 from fastapi import APIRouter, HTTPException
-from pydantic import Field, BaseModel, validator
+from pydantic import Field, BaseModel
 
 from dembrane.utils import generate_uuid
 from dembrane.config import GCP_SA_JSON
@@ -137,15 +137,8 @@ class GetVerificationTopicsResponse(BaseModel):
 
 
 class GenerateArtifactsRequest(BaseModel):
-    topic_list: List[str] = Field(..., min_items=1)
+    topic_list: List[str]
     conversation_id: str
-
-    @validator("topic_list")
-    def validate_topic_list(cls, value: List[str]) -> List[str]:
-        cleaned = [item.strip() for item in value if item and item.strip()]
-        if not cleaned:
-            raise ValueError("topic_list must contain at least one topic key")
-        return cleaned
 
 
 class ConversationArtifactResponse(BaseModel):
@@ -399,7 +392,7 @@ async def list_verification_artifacts(
     for artifact in artifacts:
         response.append(
             ConversationArtifactResponse(
-                id=artifact.get("id"),
+                id=artifact.get("id") or "",
                 key=artifact.get("key"),
                 content=artifact.get("content") or "",
                 conversation_id=artifact.get("conversation_id") or conversation_id,
@@ -742,7 +735,7 @@ async def generate_verification_artifacts(
     )
 
     artifact_response = ConversationArtifactResponse(
-        id=artifact_record.get("id"),
+        id=artifact_record.get("id") or "",
         key=artifact_record.get("key"),
         content=artifact_record.get("content", ""),
         conversation_id=artifact_record.get("conversation_id", body.conversation_id),
@@ -795,8 +788,8 @@ async def update_verification_artifact(
             chunk.get("path")
             for chunk in chunks
             if chunk.get("timestamp")
-            and isinstance(chunk.get("timestamp"), datetime)
-            and chunk.get("timestamp") > reference_timestamp
+            and datetime.fromisoformat(str(chunk.get("timestamp")))
+            > (reference_timestamp or datetime.min)
             and not (chunk.get("transcript") or "").strip()
         ):
             raise HTTPException(

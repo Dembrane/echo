@@ -100,8 +100,10 @@ export const VerifiedArtefactsList = ({
 				isLoading={false}
 				artefact={
 					selectedArtefactId
-						? (artefactList.find((item) => item.id === selectedArtefactId) ??
-							null)
+						? (artefactList.find(
+								(item) =>
+									(item as VerificationArtifact).id === selectedArtefactId,
+							) ?? null)
 						: null
 				}
 			/>

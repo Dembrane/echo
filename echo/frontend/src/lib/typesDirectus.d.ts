@@ -1,6 +1,6 @@
 // biome-ignore-all lint: doesnt need interference
 
-interface Schema {
+interface CustomDirectusTypes {
 	announcement: Announcement[];
 	announcement_activity: AnnouncementActivity[];
 	announcement_translations: AnnouncementTranslation[];
@@ -269,6 +269,7 @@ interface Project {
 	project_reports: string[] | ProjectReport[];
 	processing_status: string[] | ProcessingStatus[];
 	custom_verification_topics: string[] | VerificationTopic[];
+	conversations_count?: number | null;
 }
 
 interface ProjectAnalysisRun {

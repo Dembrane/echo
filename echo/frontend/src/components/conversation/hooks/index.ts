@@ -665,7 +665,6 @@ export const useConversationsByProjectId = (
 			const conversations = await directus.request(
 				readItems("conversation", {
 					deep: {
-						// @ts-expect-error chunks is not typed
 						chunks: {
 							_limit: loadChunks ? 1000 : 1,
 						},
@@ -692,6 +691,7 @@ export const useConversationsByProjectId = (
 							],
 						},
 					],
+					// @ts-expect-error TODO
 					filter: {
 						chunks: {
 							...(loadWhereTranscriptExists && {
@@ -803,6 +803,7 @@ export const useConversationById = ({
 		queryFn: () =>
 			directus.request<Conversation>(
 				readItem("conversation", conversationId, {
+					// @ts-expect-error TODO
 					fields: [
 						...CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS,
 						{
@@ -877,7 +878,6 @@ export const useInfiniteConversationsByProjectId = (
 			const conversations = await directus.request(
 				readItems("conversation", {
 					deep: {
-						// @ts-expect-error chunks is not typed
 						chunks: {
 							_limit: loadChunks ? 1000 : 1,
 						},
@@ -907,6 +907,7 @@ export const useInfiniteConversationsByProjectId = (
 							conversation_artifacts: ["id", "approved_at"],
 						},
 					],
+					// @ts-expect-error TODO
 					filter: {
 						chunks: {
 							...(loadWhereTranscriptExists && {

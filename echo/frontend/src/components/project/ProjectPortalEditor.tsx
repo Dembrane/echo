@@ -269,7 +269,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 			await updateProjectMutation.mutateAsync({
 				id: project.id,
 				payload: {
-					...projectPayload,
+					...(projectPayload as Partial<Project>),
 					selected_verification_key_list: serializedTopics,
 				},
 			});

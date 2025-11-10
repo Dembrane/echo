@@ -116,7 +116,6 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 		projectId: props.project.id,
 		query: {
 			deep: {
-				// @ts-expect-error tags won't be typed
 				tags: {
 					_sort: "sort",
 				},
@@ -149,7 +148,8 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 
 		const currentMaxSort = Math.max(
 			0,
-			...(projectQuery.data?.tags?.map((t) => t.sort ?? 0) ?? []),
+			...(projectQuery.data?.tags?.map((t) => (t as ProjectTag).sort ?? 0) ??
+				[]),
 		);
 
 		// Wait for all tag creation mutations to complete
@@ -175,10 +175,10 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 		if (!active || !over || active.id === over.id) return;
 
 		const oldIndex = projectQuery.data?.tags?.findIndex(
-			(tag) => tag.id === active.id,
+			(tag) => (tag as ProjectTag).id === active.id,
 		);
 		const newIndex = projectQuery.data?.tags?.findIndex(
-			(tag) => tag.id === over.id,
+			(tag) => (tag as ProjectTag).id === over.id,
 		);
 
 		if (
@@ -189,7 +189,11 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 			return;
 
 		// Create new array with updated positions
-		const newTags = arrayMove(projectQuery.data.tags, oldIndex, newIndex);
+		const newTags = arrayMove(
+			projectQuery.data.tags as unknown as ProjectTag[],
+			oldIndex,
+			newIndex,
+		);
 
 		// Update sort values for all affected tags
 		newTags.forEach((tag: ProjectTag, index: number) => {
@@ -212,10 +216,12 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 	}
 
 	// Sort tags by sort field before rendering
-	const sortedTags = [...(projectQuery.data?.tags ?? [])].sort(
+	const sortedTags = [
+		...((projectQuery.data?.tags as unknown as ProjectTag[]) ?? []),
+	].sort(
 		(a, b) =>
-			(a.sort ?? Number.POSITIVE_INFINITY) -
-			(b.sort ?? Number.POSITIVE_INFINITY),
+			((a as ProjectTag).sort ?? Number.POSITIVE_INFINITY) -
+			((b as ProjectTag).sort ?? Number.POSITIVE_INFINITY),
 	);
 
 	return (
@@ -271,11 +277,14 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 								onDragEnd={handleDragEnd}
 							>
 								<SortableContext
-									items={sortedTags.map((tag) => tag.id)}
+									items={sortedTags.map((tag) => (tag as ProjectTag).id)}
 									strategy={horizontalListSortingStrategy}
 								>
 									{sortedTags.map((tag) => (
-										<ProjectTagPill key={tag.id} tag={tag} />
+										<ProjectTagPill
+											key={(tag as ProjectTag).id}
+											tag={tag as ProjectTag}
+										/>
 									))}
 								</SortableContext>
 							</DndContext>

@@ -198,7 +198,7 @@ export const ParticipantBody = ({
 										<UserChunkMessage chunk={message.data} />
 									) : (
 										<SpikeMessage
-											message={message.data}
+											message={message.data as unknown as ConversationReply}
 											className={
 												index !== combinedMessages.length - 1 ? "border-b" : ""
 											}

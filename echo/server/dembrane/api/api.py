@@ -5,12 +5,12 @@ from fastapi import (
 )
 
 from dembrane.api.chat import ChatRouter
+from dembrane.api.verify import VerifyRouter
 from dembrane.api.project import ProjectRouter
 from dembrane.api.resource import ResourceRouter
 from dembrane.api.stateless import StatelessRouter
 from dembrane.api.participant import ParticipantRouter
 from dembrane.api.conversation import ConversationRouter
-from dembrane.api.verify import VerifyRouter
 
 logger = getLogger("api")
 
