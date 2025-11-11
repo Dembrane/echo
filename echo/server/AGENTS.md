@@ -21,6 +21,9 @@ Last updated: 2025-11-07T08:32:55Z
 # Repeating Patterns
 - `uv run` wraps all local entry points (uvicorn, python modules, dramatiq runners) to ensure env + dependencies stay consistent. Prefer this manager whenever spawning dev services.
 - For API handlers, favor Directus queries over raw SQLAlchemy sessions when reading project/conversation data to keep behavior consistent with the admin console.
+- Config changes live in `dembrane/settings.py`: add new env vars as fields on `AppSettings`, expose grouped accessors (e.g., `feature_flags`, `directus`) if multiple modules read them, and fetch config at runtime with `settings = get_settings()`—never import env vars directly.
+- Embeddings use `settings.embedding`; populate `EMBEDDING_*` env vars (model, key/base URL/version) before calling `dembrane.embedding.embed_text`.
+- Ongoing clean-up: Several legacy modules and JSON templates were removed; see the pruning checklist (note 2025-11-11) before reviving anything.
 
 # Change Hotspots (last 90 days)
 - High-churn (watch for conflicts): `echo/server/dembrane/tasks.py`, `echo/server/dembrane/transcribe.py`, `echo/server/pyproject.toml`

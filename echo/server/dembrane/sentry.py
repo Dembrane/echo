@@ -10,8 +10,8 @@ logger = getLogger("sentry")
 ATTEMPTED_SENTRY_INIT = False
 settings = get_settings()
 ENVIRONMENT = settings.environment
-BUILD_VERSION = settings.build_version
-DISABLE_SENTRY = settings.disable_sentry
+BUILD_VERSION = settings.build.build_version
+DISABLE_SENTRY = settings.feature_flags.disable_sentry
 
 
 def init_sentry() -> None:

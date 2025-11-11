@@ -21,7 +21,7 @@ from dembrane.llms import MODELS, get_completion_kwargs
 logger = logging.getLogger("api.verify")
 
 settings = get_settings()
-GCP_SA_JSON = settings.gcp_sa_json
+GCP_SA_JSON = settings.transcription.gcp_sa_json
 
 VerifyRouter = APIRouter(tags=["verify"])
 

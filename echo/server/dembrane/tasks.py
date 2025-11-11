@@ -15,7 +15,6 @@ from dramatiq.results.backends.redis import RedisBackend as ResultsRedisBackend
 from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.settings import get_settings
 from dembrane.sentry import init_sentry
-from dembrane.prompts import render_json
 from dembrane.directus import (
     DirectusBadRequest,
     DirectusServerError,
@@ -32,7 +31,7 @@ from dembrane.processing_status_utils import (
 )
 
 settings = get_settings()
-REDIS_URL = settings.redis_url
+REDIS_URL = settings.cache.redis_url
 
 init_sentry()
 
@@ -454,28 +453,8 @@ def task_create_project_library(project_id: str, language: str) -> None:
             logger.error(f"Can retry. Failed to create project analysis run: {e}")
             raise e from e
 
-        default_view_name_list = ["default_view_recurring_themes"]
-        messages = []
-
-        for view_name in default_view_name_list:
-            message = render_json(view_name, language, {}, ["user_query", "user_query_context"])
-            logger.info(f"Message: {message}")
-            messages.append(
-                task_create_view.message(
-                    project_analysis_run_id=new_run_id,
-                    user_query=message["user_query"],
-                    user_query_context=message["user_query_context"],
-                    language=language,
-                )
-            )
-
-        group(messages).run()
-
-        status_ctx.set_exit_message(
-            f"Successfully created {len(messages)} views for project: {project_id}"
-        )
         logger.info(
-            f"Successfully created {len(messages)} views for project: {project_id} (language: {language})"
+            "Skipping default view generation for project %s; JSON templates have been removed.",
+            project_id,
         )
-
         return

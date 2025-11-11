@@ -4,10 +4,11 @@ from logging import getLogger
 
 import sentry_sdk
 from litellm import acompletion
+from litellm.utils import token_counter
 from pydantic import BaseModel
 from litellm.exceptions import ContentPolicyViolationError
 
-from dembrane.llms import MODELS, count_tokens, get_completion_kwargs
+from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.prompts import render_prompt
 from dembrane.directus import directus
 
@@ -234,9 +235,9 @@ async def generate_reply_for_conversation(
 
             # Check tokens for this conversation
             formatted_conv = format_conversation(c)
-            tokens = count_tokens(
-                MODELS.TEXT_FAST,
-                [{"role": "user", "content": formatted_conv}],
+            tokens = token_counter(
+                messages=[{"role": "user", "content": formatted_conv}],
+                **get_completion_kwargs(MODELS.TEXT_FAST),
             )
 
             candidate_conversations.append((formatted_conv, tokens))
@@ -257,9 +258,9 @@ async def generate_reply_for_conversation(
 
             # First check tokens for this conversation
             formatted_conv = format_conversation(c)
-            tokens = count_tokens(
-                MODELS.TEXT_FAST,
-                [{"role": "user", "content": formatted_conv}],
+            tokens = token_counter(
+                messages=[{"role": "user", "content": formatted_conv}],
+                **get_completion_kwargs(MODELS.TEXT_FAST),
             )
 
             # If conversation is too large, truncate it
@@ -269,9 +270,9 @@ async def generate_reply_for_conversation(
                 truncated_transcript = c.transcript[: int(len(c.transcript) * truncation_ratio)]
                 c.transcript = truncated_transcript + "\n[Truncated for brevity...]"
                 formatted_conv = format_conversation(c)
-                tokens = count_tokens(
-                    MODELS.TEXT_FAST,
-                    [{"role": "user", "content": formatted_conv}],
+                tokens = token_counter(
+                    messages=[{"role": "user", "content": formatted_conv}],
+                    **get_completion_kwargs(MODELS.TEXT_FAST),
                 )
 
             candidate_conversations.append((formatted_conv, tokens))

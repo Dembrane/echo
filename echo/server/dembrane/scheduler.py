@@ -15,7 +15,7 @@ scheduler = BlockingScheduler()
 scheduler.configure(jobstores=jobstores, timezone=utc)
 
 settings = get_settings()
-DEBUG_MODE = settings.debug_mode
+DEBUG_MODE = settings.feature_flags.debug_mode
 
 # Add periodic tasks
 scheduler.add_job(

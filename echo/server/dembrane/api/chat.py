@@ -5,12 +5,13 @@ import logging
 from typing import Any, Dict, List, Literal, Optional, AsyncGenerator
 
 import litellm
+from litellm.utils import token_counter
 from fastapi import Query, APIRouter, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import selectinload
 from fastapi.responses import StreamingResponse
 
-from dembrane.llms import MODELS, count_tokens, get_completion_kwargs
+from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.settings import get_settings
 from dembrane.prompts import render_prompt
@@ -37,7 +38,7 @@ ChatRouter = APIRouter(tags=["chat"])
 logger = logging.getLogger("dembrane.chat")
 
 settings = get_settings()
-ENABLE_CHAT_AUTO_SELECT = settings.enable_chat_auto_select
+ENABLE_CHAT_AUTO_SELECT = settings.feature_flags.enable_chat_auto_select
 
 
 async def is_followup_question(
@@ -173,9 +174,9 @@ async def get_chat_context(
         if message.message_from in ["user", "assistant"]:
             # if tokens_count is not set, set it
             if message.tokens_count is None:
-                message.tokens_count = count_tokens(
-                    MODELS.TEXT_FAST,
-                    [{"role": message.message_from, "content": message.text}],
+                message.tokens_count = token_counter(
+                    messages=[{"role": message.message_from, "content": message.text}],
+                    **get_completion_kwargs(MODELS.TEXT_FAST),
                 )
                 db.commit()
 
@@ -555,9 +556,9 @@ async def post_chat(
                 ] + conversation_history
 
             # Check context length
-            prompt_len = count_tokens(
-                MODELS.MULTI_MODAL_PRO,
-                formatted_messages,
+            prompt_len = token_counter(
+                messages=formatted_messages,
+                **get_completion_kwargs(MODELS.MULTI_MODAL_PRO),
             )
 
             if prompt_len > MAX_CHAT_CONTEXT_LENGTH:
@@ -615,9 +616,9 @@ async def post_chat(
                         ] + conversation_history
 
                     # Check if adding this conversation would exceed 80% threshold
-                    prompt_len = count_tokens(
-                        MODELS.MULTI_MODAL_PRO,
-                        temp_formatted_messages,
+                    prompt_len = token_counter(
+                        messages=temp_formatted_messages,
+                        **get_completion_kwargs(MODELS.MULTI_MODAL_PRO),
                     )
 
                     if prompt_len > MAX_CONTEXT_THRESHOLD:
@@ -665,9 +666,9 @@ async def post_chat(
                 ] + conversation_history
 
             # Check context length
-            prompt_len = count_tokens(
-                MODELS.MULTI_MODAL_PRO,
-                formatted_messages,
+            prompt_len = token_counter(
+                messages=formatted_messages,
+                **get_completion_kwargs(MODELS.MULTI_MODAL_PRO),
             )
 
             if prompt_len > MAX_CHAT_CONTEXT_LENGTH:

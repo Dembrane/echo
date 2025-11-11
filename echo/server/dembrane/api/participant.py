@@ -25,8 +25,8 @@ logger = getLogger("api.participant")
 ParticipantRouter = APIRouter(tags=["participant"])
 
 settings = get_settings()
-STORAGE_S3_BUCKET = settings.storage_s3_bucket
-STORAGE_S3_ENDPOINT = settings.storage_s3_endpoint
+STORAGE_S3_BUCKET = settings.storage.bucket
+STORAGE_S3_ENDPOINT = settings.storage.endpoint
 
 
 class PublicProjectTagSchema(BaseModel):

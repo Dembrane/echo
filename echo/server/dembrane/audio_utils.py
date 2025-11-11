@@ -95,8 +95,8 @@ class FileTooSmallError(Exception):
 
 
 settings = get_settings()
-STORAGE_S3_BUCKET = settings.storage_s3_bucket
-STORAGE_S3_ENDPOINT = settings.storage_s3_endpoint
+STORAGE_S3_BUCKET = settings.storage.bucket
+STORAGE_S3_ENDPOINT = settings.storage.endpoint
 
 
 def convert_and_save_to_s3(

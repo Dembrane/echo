@@ -10,11 +10,9 @@ from dembrane.settings import get_settings
 logger = getLogger("directus")
 
 settings = get_settings()
-directus_token = settings.directus_token
-if directus_token:
-    logger.debug("Directus token retrieved from settings")
+directus_token = settings.directus.token
 
-directus = DirectusClient(url=settings.directus_base_url, token=directus_token)
+directus = DirectusClient(url=settings.directus.base_url, token=directus_token)
 
 
 class DirectusGenericException(Exception):

@@ -56,11 +56,11 @@ from dembrane.settings import get_settings
 logger = logging.getLogger("s3")
 
 settings = get_settings()
-STORAGE_S3_KEY = settings.storage_s3_key
-STORAGE_S3_BUCKET = settings.storage_s3_bucket
-STORAGE_S3_REGION = settings.storage_s3_region
-STORAGE_S3_SECRET = settings.storage_s3_secret
-STORAGE_S3_ENDPOINT = settings.storage_s3_endpoint
+STORAGE_S3_KEY = settings.storage.key
+STORAGE_S3_BUCKET = settings.storage.bucket
+STORAGE_S3_REGION = settings.storage.region
+STORAGE_S3_SECRET = settings.storage.secret
+STORAGE_S3_ENDPOINT = settings.storage.endpoint
 
 session = boto3.session.Session()
 

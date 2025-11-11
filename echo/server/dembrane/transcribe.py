@@ -20,7 +20,7 @@ import requests
 
 from dembrane.s3 import get_signed_url, get_stream_from_s3
 from dembrane.settings import get_settings
-from dembrane.llms import MODELS, get_completion_kwargs, resolve_config
+from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.prompts import render_prompt
 from dembrane.service import file_service, conversation_service
 from dembrane.directus import directus
@@ -28,13 +28,15 @@ from dembrane.directus import directus
 logger = logging.getLogger("transcribe")
 
 settings = get_settings()
-GCP_SA_JSON = settings.gcp_sa_json
-API_BASE_URL = settings.api_base_url
-ASSEMBLYAI_API_KEY = settings.assemblyai_api_key
-ASSEMBLYAI_BASE_URL = settings.assemblyai_base_url
-TRANSCRIPTION_PROVIDER = settings.transcription_provider
-ENABLE_ASSEMBLYAI_TRANSCRIPTION = settings.enable_assemblyai_transcription
-ENABLE_LITELLM_WHISPER_TRANSCRIPTION = settings.enable_litellm_whisper_transcription
+transcription_cfg = settings.transcription
+GCP_SA_JSON = transcription_cfg.gcp_sa_json
+ASSEMBLYAI_API_KEY = transcription_cfg.assemblyai_api_key
+ASSEMBLYAI_BASE_URL = transcription_cfg.assemblyai_base_url
+TRANSCRIPTION_PROVIDER = transcription_cfg.provider
+LITELLM_TRANSCRIPTION_MODEL = transcription_cfg.litellm_model
+LITELLM_TRANSCRIPTION_API_KEY = transcription_cfg.litellm_api_key
+LITELLM_TRANSCRIPTION_API_BASE = transcription_cfg.litellm_api_base
+LITELLM_TRANSCRIPTION_API_VERSION = transcription_cfg.litellm_api_version
 
 
 class TranscriptionError(Exception):
@@ -58,18 +60,23 @@ def transcribe_audio_litellm(
         raise TranscriptionError(f"Failed to get audio stream from S3: {exc}") from exc
 
     try:
-        whisper_config = resolve_config(MODELS.MULTI_MODAL_FAST)
-        if not whisper_config.model or not whisper_config.api_key:
-            raise TranscriptionError("LiteLLM Whisper configuration is incomplete.")
-        response = litellm.transcription(
-            model=whisper_config.model,
-            file=file_upload,
-            api_key=whisper_config.api_key,
-            api_base=whisper_config.api_base,
-            api_version=whisper_config.api_version,
-            language=language,
-            prompt=whisper_prompt,
-        )
+        if not LITELLM_TRANSCRIPTION_MODEL or not LITELLM_TRANSCRIPTION_API_KEY:
+            raise TranscriptionError("LiteLLM transcription configuration is incomplete.")
+
+        request_kwargs: dict[str, Any] = {
+            "model": LITELLM_TRANSCRIPTION_MODEL,
+            "file": file_upload,
+            "language": language,
+            "prompt": whisper_prompt,
+            "api_key": LITELLM_TRANSCRIPTION_API_KEY,
+        }
+
+        if LITELLM_TRANSCRIPTION_API_BASE:
+            request_kwargs["api_base"] = LITELLM_TRANSCRIPTION_API_BASE
+        if LITELLM_TRANSCRIPTION_API_VERSION:
+            request_kwargs["api_version"] = LITELLM_TRANSCRIPTION_API_VERSION
+
+        response = litellm.transcription(**request_kwargs)
         return response["text"]
     except Exception as e:
         logger.error(f"LiteLLM transcription failed: {e}")
@@ -356,12 +363,7 @@ def _build_hotwords(conversation: dict) -> Optional[List[str]]:
 def _get_transcript_provider() -> Literal["LiteLLM", "AssemblyAI", "Dembrane-25-09"]:
     if TRANSCRIPTION_PROVIDER:
         return TRANSCRIPTION_PROVIDER
-    elif ENABLE_ASSEMBLYAI_TRANSCRIPTION:
-        return "AssemblyAI"
-    elif ENABLE_LITELLM_WHISPER_TRANSCRIPTION:
-        return "LiteLLM"
-    else:
-        raise TranscriptionError("No valid transcription configuration found.")
+    raise TranscriptionError("No valid transcription configuration found.")
 
 
 def transcribe_conversation_chunk(
@@ -434,6 +436,8 @@ def transcribe_conversation_chunk(
                 )
                 _save_transcript(conversation_chunk_id, transcript, diarization=None)
                 return conversation_chunk_id
+            case _:
+                raise TranscriptionError(f"Unsupported transcription provider: {transcript_provider}")
 
     except Exception as e:
         logger.error("Failed to process conversation chunk %s: %s", conversation_chunk_id, e)

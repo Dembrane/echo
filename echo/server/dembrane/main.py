@@ -25,10 +25,10 @@ nest_asyncio.apply()
 
 logger = getLogger("server")
 settings = get_settings()
-DISABLE_CORS = settings.disable_cors
-ADMIN_BASE_URL = str(settings.admin_base_url)
-PARTICIPANT_BASE_URL = str(settings.participant_base_url)
-SERVE_API_DOCS = settings.serve_api_docs
+DISABLE_CORS = settings.feature_flags.disable_cors
+ADMIN_BASE_URL = str(settings.urls.admin_base_url)
+PARTICIPANT_BASE_URL = str(settings.urls.participant_base_url)
+SERVE_API_DOCS = settings.feature_flags.serve_api_docs
 
 
 @asynccontextmanager

@@ -38,7 +38,7 @@ logger = getLogger("database")
 
 # Create the engine and connect to the SQLite database file
 settings = get_settings()
-DATABASE_URL = settings.database_url
+DATABASE_URL = settings.database.database_url
 logger.debug(f"Connecting to database: {DATABASE_URL}")
 engine = create_engine(DATABASE_URL)
 

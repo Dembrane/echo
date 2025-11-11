@@ -3,6 +3,8 @@ import logging
 
 import pytest
 
+os.environ.setdefault("TRANSCRIPTION_PROVIDER", "AssemblyAI")
+
 TEST_AUDIO_URL = "https://storage.googleapis.com/aai-platform-public/samples/1765269382848385.wav"
 
 from dembrane.s3 import delete_from_s3, save_to_s3_from_url
@@ -17,9 +19,7 @@ def _require_assemblyai():
     """Ensure AssemblyAI is enabled and credentials are present or skip."""
     if not os.environ.get("ASSEMBLYAI_API_KEY"):
         pytest.skip("ASSEMBLYAI_API_KEY not set; skipping AssemblyAI tests")
-    # Force provider selection to AssemblyAI in config by env flags
-    os.environ["ENABLE_ASSEMBLYAI_TRANSCRIPTION"] = "true"
-    os.environ["ENABLE_LITELLM_WHISPER_TRANSCRIPTION"] = "false"
+    os.environ["TRANSCRIPTION_PROVIDER"] = "AssemblyAI"
 
 
 @pytest.fixture

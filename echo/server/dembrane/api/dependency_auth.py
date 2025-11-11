@@ -9,8 +9,8 @@ from dembrane.api.exceptions import SessionInvalidException
 
 logger = getLogger("api.session")
 settings = get_settings()
-DIRECTUS_SECRET = settings.directus_secret
-DIRECTUS_SESSION_COOKIE_NAME = settings.directus_session_cookie_name
+DIRECTUS_SECRET = settings.directus.secret
+DIRECTUS_SESSION_COOKIE_NAME = settings.directus.session_cookie_name
 
 
 class DirectusSession:

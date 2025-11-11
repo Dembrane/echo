@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import noload, selectinload
 from fastapi.responses import RedirectResponse, StreamingResponse
 from fastapi.exceptions import HTTPException
+from litellm.utils import token_counter
 from litellm.exceptions import ContentPolicyViolationError
 
 from dembrane.s3 import get_signed_url
@@ -24,6 +25,7 @@ from dembrane.audio_utils import (
     merge_multiple_audio_files_and_save_to_s3,
 )
 from dembrane.reply_utils import generate_reply_for_conversation
+from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.api.stateless import generate_summary
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.exceptions import (
@@ -430,9 +432,9 @@ async def get_conversation_token_count(
     # If not in cache, calculate the token count
     transcript = await get_conversation_transcript(conversation_id, auth)
 
-    token_count = count_tokens(
-        MODELS.MULTI_MODAL_PRO,
-        [{"role": "user", "content": transcript}],
+    token_count = token_counter(
+        messages=[{"role": "user", "content": transcript}],
+        **get_completion_kwargs(MODELS.MULTI_MODAL_PRO),
     )
 
     # Store the result in the cache

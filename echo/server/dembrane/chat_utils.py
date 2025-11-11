@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 
 import backoff
 from litellm import acompletion
+from litellm.utils import token_counter
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, selectinload
 from litellm.exceptions import (
@@ -16,7 +17,7 @@ from litellm.exceptions import (
     ContextWindowExceededError,
 )
 
-from dembrane.llms import MODELS, count_tokens, get_completion_kwargs
+from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.settings import get_settings
 from dembrane.prompts import render_prompt
 from dembrane.database import ConversationModel, ProjectChatMessageModel
@@ -29,7 +30,7 @@ MAX_CHAT_CONTEXT_LENGTH = 100000
 logger = logging.getLogger("chat_utils")
 
 settings = get_settings()
-DISABLE_CHAT_TITLE_GENERATION = settings.disable_chat_title_generation
+DISABLE_CHAT_TITLE_GENERATION = settings.feature_flags.disable_chat_title_generation
 
 
 class ClientAttachment(BaseModel):
@@ -421,9 +422,9 @@ async def _process_single_batch(
 
     # Validate prompt size before sending
     try:
-        prompt_tokens = count_tokens(
-            MODELS.TEXT_FAST,
-            [{"role": "user", "content": prompt}],
+        prompt_tokens = token_counter(
+            messages=[{"role": "user", "content": prompt}],
+            **get_completion_kwargs(MODELS.TEXT_FAST),
         )
         MAX_BATCH_CONTEXT = 100000  # Leave headroom for response
 

@@ -2,8 +2,9 @@ import re
 import logging
 
 from litellm import completion
+from litellm.utils import get_max_tokens, token_counter
 
-from dembrane.llms import MODELS, count_tokens, get_completion_kwargs, resolve_config
+from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.prompts import render_prompt
 from dembrane.directus import directus
 from dembrane.api.conversation import get_conversation_transcript
@@ -11,14 +12,21 @@ from dembrane.api.dependency_auth import DirectusSession
 
 logger = logging.getLogger("report_utils")
 
-TEXT_PROVIDER_CONFIG = resolve_config(MODELS.TEXT_FAST)
+TEXT_PROVIDER_KWARGS = get_completion_kwargs(MODELS.TEXT_FAST)
+TEXT_PROVIDER_MODEL = TEXT_PROVIDER_KWARGS["model"]
+TOKEN_COUNT_KWARGS = TEXT_PROVIDER_KWARGS.copy()
 
-if "4.1" in str(TEXT_PROVIDER_CONFIG.model):
-    logger.info("using 700k context length for report")
-    MAX_REPORT_CONTEXT_LENGTH = 700000
+_max_tokens = get_max_tokens(TEXT_PROVIDER_MODEL)
+
+if _max_tokens is None:
+    logger.error(f"Could not get max tokens for model {TEXT_PROVIDER_MODEL}")
+    MAX_REPORT_CONTEXT_LENGTH = 128000  # good default
 else:
-    logger.info("using 128k context length for report")
-    MAX_REPORT_CONTEXT_LENGTH = 128000
+    MAX_REPORT_CONTEXT_LENGTH = int(_max_tokens * 0.8)
+
+logger.info(
+    f"Using {TEXT_PROVIDER_MODEL} for report generation with context length {MAX_REPORT_CONTEXT_LENGTH}"
+)
 
 
 class ContextTooLongException(Exception):
@@ -64,9 +72,9 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
             continue
 
         # Count tokens before adding
-        summary_tokens = count_tokens(
-            MODELS.TEXT_FAST,
-            [{"role": "user", "content": conversation["summary"]}],
+        summary_tokens = token_counter(
+            messages=[{"role": "user", "content": conversation["summary"]}],
+            **TOKEN_COUNT_KWARGS,
         )
 
         # Check if adding this conversation would exceed the limit
@@ -122,9 +130,9 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
             continue
 
         # Calculate token count for the transcript
-        transcript_tokens = count_tokens(
-            MODELS.TEXT_FAST,
-            [{"role": "user", "content": transcript}],
+        transcript_tokens = token_counter(
+            messages=[{"role": "user", "content": transcript}],
+            **TOKEN_COUNT_KWARGS,
         )
 
         if token_count + transcript_tokens < MAX_REPORT_CONTEXT_LENGTH:

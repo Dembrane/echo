@@ -22,8 +22,8 @@ logger = logging.getLogger(__name__)
 
 settings = get_settings()
 BASE_DIR = settings.base_dir
-STORAGE_S3_BUCKET = settings.storage_s3_bucket
-STORAGE_S3_ENDPOINT = settings.storage_s3_endpoint
+STORAGE_S3_BUCKET = settings.storage.bucket
+STORAGE_S3_ENDPOINT = settings.storage.endpoint
 
 
 AUDIO_FILES = [
