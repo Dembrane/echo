@@ -110,7 +110,7 @@ jobs:
           while [ $ELAPSED -lt $MAX_WAIT ]; do
             echo "Checking API health (${ELAPSED}s elapsed)..."
             
-            if curl -f -s https://api.echo-testing.dembrane.com/health > /dev/null 2>&1; then
+            if curl -f -s https://api.echo-testing.dembrane.com/api/health > /dev/null 2>&1; then
               echo "✅ API is healthy!"
               exit 0
             fi
