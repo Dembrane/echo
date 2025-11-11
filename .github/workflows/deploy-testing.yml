@@ -1,0 +1,285 @@
+name: Deploy to Testing
+
+on:
+  push:
+    branches:
+      - testing
+
+env:
+  REGISTRY: registry.digitalocean.com/dbr-cr
+  GITOPS_REPO: dembrane/echo-gitops
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  build-and-push:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate image tag
+        id: meta
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          echo "tag=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "📦 Image tag: $SHORT_SHA"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to DigitalOcean Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DO_REGISTRY_TOKEN }}
+          password: ${{ secrets.DO_REGISTRY_TOKEN }}
+
+      - name: Build and Push API Server
+        uses: docker/build-push-action@v5
+        with:
+          context: ./echo/server
+          file: ./echo/server/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/dbr-echo-server:${{ steps.meta.outputs.tag }}
+            ${{ env.REGISTRY }}/dbr-echo-server:testing
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and Push Directus
+        uses: docker/build-push-action@v5
+        with:
+          context: ./echo/directus
+          file: ./echo/directus/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/dbr-echo-directus:${{ steps.meta.outputs.tag }}
+            ${{ env.REGISTRY }}/dbr-echo-directus:testing
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  update-gitops:
+    name: Update GitOps Repo
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+    steps:
+      - name: Checkout GitOps repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.GITOPS_REPO }}
+          token: ${{ secrets.GITOPS_REPO_TOKEN }}
+          ref: main
+
+      - name: Update image tag in values-testing.yaml
+        run: |
+          IMAGE_TAG="${{ needs.build-and-push.outputs.image-tag }}"
+          echo "Updating imageTag to: $IMAGE_TAG"
+          
+          sed -i "s/imageTag: \".*\"/imageTag: \"$IMAGE_TAG\"/" helm/echo/values-testing.yaml
+          
+          echo "Updated values-testing.yaml:"
+          grep "imageTag:" helm/echo/values-testing.yaml
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add helm/echo/values-testing.yaml
+          git commit -m "Update testing image tag to ${{ needs.build-and-push.outputs.image-tag }}"
+          git push origin main
+
+  wait-for-deployment:
+    name: Wait for ArgoCD Deployment
+    runs-on: ubuntu-latest
+    needs: [update-gitops, build-and-push]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for deployment
+        run: |
+          echo "⏳ Waiting for ArgoCD to sync and deploy..."
+          echo "Image tag: ${{ needs.build-and-push.outputs.image-tag }}"
+          
+          MAX_WAIT=600  # 10 minutes
+          INTERVAL=15
+          ELAPSED=0
+          
+          while [ $ELAPSED -lt $MAX_WAIT ]; do
+            echo "Checking API health (${ELAPSED}s elapsed)..."
+            
+            if curl -f -s https://api.echo-testing.dembrane.com/health > /dev/null 2>&1; then
+              echo "✅ API is healthy!"
+              exit 0
+            fi
+            
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+          done
+          
+          echo "❌ Deployment did not become healthy within ${MAX_WAIT}s"
+          exit 1
+
+  smoke-tests:
+    name: Run Smoke Tests
+    runs-on: ubuntu-latest
+    needs: [wait-for-deployment, build-and-push]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd echo/server
+          pip install -r requirements.lock
+          pip install requests
+
+      - name: Run Smoke Tests
+        env:
+          TEST_API_URL: https://api.echo-testing.dembrane.com
+          TEST_DIRECTUS_URL: https://directus.echo-testing.dembrane.com
+        run: |
+          cd echo/server
+          pytest tests/smoke/ -v --timeout=600 --maxfail=1
+
+  e2e-tests:
+    name: Run E2E Tests
+    runs-on: ubuntu-latest
+    needs: [smoke-tests]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: |
+          cd echo/frontend
+          pnpm install
+
+      - name: Install Playwright Browsers
+        run: |
+          cd echo/frontend
+          pnpm exec playwright install --with-deps chromium
+
+      - name: Run Playwright Tests
+        env:
+          TEST_BASE_URL: https://api.echo-testing.dembrane.com
+        run: |
+          cd echo/frontend
+          pnpm exec playwright test
+
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: echo/frontend/playwright-report/
+          retention-days: 7
+
+  notify-slack:
+    name: Notify Slack
+    runs-on: ubuntu-latest
+    needs: [build-and-push, smoke-tests, e2e-tests]
+    if: always()
+    steps:
+      - name: Determine status
+        id: status
+        run: |
+          if [ "${{ needs.smoke-tests.result }}" == "success" ] && [ "${{ needs.e2e-tests.result }}" == "success" ]; then
+            echo "result=success" >> $GITHUB_OUTPUT
+            echo "emoji=✅" >> $GITHUB_OUTPUT
+            echo "color=good" >> $GITHUB_OUTPUT
+          else
+            echo "result=failure" >> $GITHUB_OUTPUT
+            echo "emoji=❌" >> $GITHUB_OUTPUT
+            echo "color=danger" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send Slack notification
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "attachments": [
+                {
+                  "color": "${{ steps.status.outputs.color }}",
+                  "blocks": [
+                    {
+                      "type": "header",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "${{ steps.status.outputs.emoji }} Testing Deployment: ${{ steps.status.outputs.result }}"
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*Repository:*\necho"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*Branch:*\ntesting"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*Image Tag:*\n`${{ needs.build-and-push.outputs.image-tag }}`"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*Commit:*\n<https://github.com/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*Smoke Tests:*\n${{ needs.smoke-tests.result }}"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*E2E Tests:*\n${{ needs.e2e-tests.result }}"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "*Links:*\n• <https://api.echo-testing.dembrane.com|API>\n• <https://directus.echo-testing.dembrane.com|Directus>\n• <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|GitHub Actions>"
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "${{ steps.status.outputs.result == 'failure' && '⚠️ *Rollback Instructions:*\n```\ncd echo-gitops\ngit revert HEAD\ngit push origin main\n```\nOr keep for debugging and fix forward.' || '🎉 All tests passed! Environment is stable.' }}"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
