@@ -6,7 +6,7 @@ import pytest
 
 from dembrane.s3 import s3_client, get_sanitized_s3_key
 from dembrane.utils import generate_uuid
-from dembrane.config import BASE_DIR, STORAGE_S3_BUCKET, STORAGE_S3_ENDPOINT
+from dembrane.settings import get_settings
 from dembrane.directus import directus
 from dembrane.audio_utils import (
     probe_from_s3,
@@ -19,6 +19,11 @@ from dembrane.audio_utils import (
 )
 
 logger = logging.getLogger(__name__)
+
+settings = get_settings()
+BASE_DIR = settings.base_dir
+STORAGE_S3_BUCKET = settings.storage_s3_bucket
+STORAGE_S3_ENDPOINT = settings.storage_s3_endpoint
 
 
 AUDIO_FILES = [

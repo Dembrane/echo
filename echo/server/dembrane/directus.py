@@ -5,15 +5,16 @@ from contextlib import contextmanager
 import requests
 from directus_py_sdk import DirectusClient
 
-from dembrane.config import DIRECTUS_TOKEN, DIRECTUS_BASE_URL
+from dembrane.settings import get_settings
 
 logger = getLogger("directus")
 
-if DIRECTUS_TOKEN:
-    directus_token = DIRECTUS_TOKEN
-    logger.debug(f"DIRECTUS_TOKEN: {directus_token}")
+settings = get_settings()
+directus_token = settings.directus_token
+if directus_token:
+    logger.debug("Directus token retrieved from settings")
 
-directus = DirectusClient(url=DIRECTUS_BASE_URL, token=directus_token)
+directus = DirectusClient(url=settings.directus_base_url, token=directus_token)
 
 
 class DirectusGenericException(Exception):

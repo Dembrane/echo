@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from dembrane.s3 import get_sanitized_s3_key, get_file_size_bytes_from_s3
 from dembrane.utils import generate_uuid
-from dembrane.config import STORAGE_S3_BUCKET, STORAGE_S3_ENDPOINT
+from dembrane.settings import get_settings
 from dembrane.service import project_service, conversation_service
 from dembrane.directus import directus
 from dembrane.async_helpers import run_in_thread_pool
@@ -23,6 +23,10 @@ from dembrane.service.conversation import (
 logger = getLogger("api.participant")
 
 ParticipantRouter = APIRouter(tags=["participant"])
+
+settings = get_settings()
+STORAGE_S3_BUCKET = settings.storage_s3_bucket
+STORAGE_S3_ENDPOINT = settings.storage_s3_endpoint
 
 
 class PublicProjectTagSchema(BaseModel):

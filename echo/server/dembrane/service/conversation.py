@@ -314,7 +314,6 @@ class ConversationService:
         diarization: Any = _UNSET,
         transcript: Any = _UNSET,
         raw_transcript: Any = _UNSET,
-        runpod_job_status_link: Any = _UNSET,
         error: Any = _UNSET,
         hallucination_reason: Any = _UNSET,
         hallucination_score: Any = _UNSET,
@@ -335,9 +334,6 @@ class ConversationService:
 
         if path is not _UNSET:
             update["path"] = path
-
-        if runpod_job_status_link is not _UNSET:
-            update["runpod_job_status_link"] = runpod_job_status_link
 
         if error is not _UNSET:
             update["error"] = error

@@ -7,7 +7,6 @@ from typing import Any, Dict, List, Optional
 import backoff
 from litellm import acompletion
 from pydantic import BaseModel
-from litellm.utils import token_counter
 from sqlalchemy.orm import Session, selectinload
 from litellm.exceptions import (
     Timeout,
@@ -17,12 +16,8 @@ from litellm.exceptions import (
     ContextWindowExceededError,
 )
 
-from dembrane.config import (
-    SMALL_LITELLM_MODEL,
-    SMALL_LITELLM_API_KEY,
-    SMALL_LITELLM_API_BASE,
-    DISABLE_CHAT_TITLE_GENERATION,
-)
+from dembrane.llms import MODELS, count_tokens, get_completion_kwargs
+from dembrane.settings import get_settings
 from dembrane.prompts import render_prompt
 from dembrane.database import ConversationModel, ProjectChatMessageModel
 from dembrane.directus import directus
@@ -32,6 +27,9 @@ from dembrane.api.dependency_auth import DirectusSession
 MAX_CHAT_CONTEXT_LENGTH = 100000
 
 logger = logging.getLogger("chat_utils")
+
+settings = get_settings()
+DISABLE_CHAT_TITLE_GENERATION = settings.disable_chat_title_generation
 
 
 class ClientAttachment(BaseModel):
@@ -195,10 +193,8 @@ async def generate_title(
     )
 
     response = await acompletion(
-        model=SMALL_LITELLM_MODEL,
         messages=[{"role": "user", "content": title_prompt}],
-        api_base=SMALL_LITELLM_API_BASE,
-        api_key=SMALL_LITELLM_API_KEY,
+        **get_completion_kwargs(MODELS.TEXT_FAST),
     )
 
     if response.choices[0].message.content is None:
@@ -340,12 +336,10 @@ async def _call_llm_with_backoff(prompt: str, batch_num: int) -> Any:
     """Call LLM with automatic retry for transient errors."""
     logger.debug(f"Calling LLM for batch {batch_num}")
     return await acompletion(
-        model=SMALL_LITELLM_MODEL,
         messages=[{"role": "user", "content": prompt}],
-        api_base=SMALL_LITELLM_API_BASE,
-        api_key=SMALL_LITELLM_API_KEY,
         response_format={"type": "json_object"},
         timeout=5 * 60,  # 5 minutes
+        **get_completion_kwargs(MODELS.TEXT_FAST),
     )
 
 
@@ -427,7 +421,10 @@ async def _process_single_batch(
 
     # Validate prompt size before sending
     try:
-        prompt_tokens = token_counter(model=SMALL_LITELLM_MODEL, text=prompt)
+        prompt_tokens = count_tokens(
+            MODELS.TEXT_FAST,
+            [{"role": "user", "content": prompt}],
+        )
         MAX_BATCH_CONTEXT = 100000  # Leave headroom for response
 
         if prompt_tokens > MAX_BATCH_CONTEXT:

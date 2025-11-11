@@ -12,7 +12,7 @@ from fastapi.responses import StreamingResponse
 
 from dembrane.tasks import task_create_view, task_create_project_library
 from dembrane.utils import generate_uuid, get_safe_filename
-from dembrane.config import BASE_DIR
+from dembrane.settings import get_settings
 from dembrane.schemas import (
     ProjectSchema,
 )
@@ -35,6 +35,8 @@ logger = getLogger("api.project")
 
 ProjectRouter = APIRouter(tags=["project"])
 PROJECT_ALLOWED_LANGUAGES = ["en", "nl", "de", "fr", "es"]
+settings = get_settings()
+BASE_DIR = settings.base_dir
 
 
 class CreateProjectRequestSchema(BaseModel):

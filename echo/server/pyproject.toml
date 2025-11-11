@@ -13,11 +13,8 @@ dependencies = [
     "langchain==0.1.*",
     "langchain-community==0.0.*",
     "langchain-experimental==0.0.*",
-    "langchain-openai==0.0.*",
     "pypdf==4.0.*",
     # SDKs for Models
-    "openai==1.99.*",
-    "anthropic==0.43.*",
     # Data
     "pandas==2.2.*",
     "numpy==1.26.*",
@@ -52,6 +49,7 @@ dependencies = [
     "lightrag-dembrane==1.2.7.8",
     "nest-asyncio==1.6.0",
     "pydantic==2.10.6",
+    "pydantic-settings==2.6.1",
     "pydub==0.25.1",
     "pytest==8.3.4",
     "PyYAML==6.0.2",
@@ -66,7 +64,6 @@ dependencies = [
     # LLM Tools
     "tiktoken==0.9.0",
     "asyncpg==0.30.0",
-    "neo4j==5.28.1",
     "boto3==1.37.*",
     # Uncategorized
     "mypy>=1.16.0",

@@ -23,17 +23,16 @@ Last updated: 2025-11-07T08:32:55Z
 - For API handlers, favor Directus queries over raw SQLAlchemy sessions when reading project/conversation data to keep behavior consistent with the admin console.
 
 # Change Hotspots (last 90 days)
-- High-churn (watch for conflicts): `echo/server/dembrane/tasks.py`, `echo/server/dembrane/config.py`, `echo/server/dembrane/transcribe.py`, `echo/server/pyproject.toml`
+- High-churn (watch for conflicts): `echo/server/dembrane/tasks.py`, `echo/server/dembrane/transcribe.py`, `echo/server/pyproject.toml`
 - Slow movers (risk of stale assumptions): CI workflow YAMLs under `.github/workflows/`, `contributors.yml`, and `echo-user-docs` backups.
 
 # TODO / FIXME / HACK Inventory
-- `dembrane/config.py:5` – Refactor messy config handling; consider YAML-based management.
+- `dembrane/settings.py` – Centralized env loading; keep structure consistent as new services integrate.
 - `dembrane/embedding.py:8` – Replace placeholder embeddings with Dembrane implementation.
 - `dembrane/sentry.py:47` – Complete Sentry integration per docs.
 - `dembrane/tasks.py:72` – Remove SSL bypass once proper certificate/VPC isolation exists.
 - `dembrane/tasks.py:342` – Fetch contextual transcripts for previous segments.
 - `dembrane/tasks.py:525` – Respect `use_pii_redaction` flag when available.
-- `dembrane/tasks.py:724` – Handle RunPod error class explicitly.
 - `dembrane/quote_utils.py:118/272/289` – Link quotes to chunks; fix sampling algorithm; adjust context limit math.
 - `dembrane/service/conversation.py:101` – Validate `project_tag_id_list`.
 - `dembrane/transcribe.py:179` – Replace polling with webhook approach.
@@ -45,3 +44,4 @@ Last updated: 2025-11-07T08:32:55Z
 - CPU Dramatiq worker deliberately single-threaded to dodge LightRAG locking issues—respect `THREADS=1` guidance in prod.
 - Watching directories (`--watch`, `--watch-use-polling`) adds overhead; keep file changes minimal when workers run locally.
 - S3 audio paths used in verification/transcription flows should be loaded via the shared file service (`_get_audio_file_object`) so Gemini always receives fresh bytes—signed URLs may expire mid-request.
+- When a Dramatiq actor needs to invoke an async FastAPI handler (e.g., `dembrane.api.conversation.summarize_conversation`), run the coroutine via `run_async_in_new_loop` from `dembrane.async_helpers` instead of calling it directly or with `asyncio.run` to avoid clashing with nested event loops.

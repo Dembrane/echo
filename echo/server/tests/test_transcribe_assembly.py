@@ -3,6 +3,8 @@ import logging
 
 import pytest
 
+TEST_AUDIO_URL = "https://storage.googleapis.com/aai-platform-public/samples/1765269382848385.wav"
+
 from dembrane.s3 import delete_from_s3, save_to_s3_from_url
 from dembrane.utils import get_utc_timestamp
 from dembrane.directus import directus
@@ -17,7 +19,6 @@ def _require_assemblyai():
         pytest.skip("ASSEMBLYAI_API_KEY not set; skipping AssemblyAI tests")
     # Force provider selection to AssemblyAI in config by env flags
     os.environ["ENABLE_ASSEMBLYAI_TRANSCRIPTION"] = "true"
-    os.environ["ENABLE_RUNPOD_WHISPER_TRANSCRIPTION"] = "false"
     os.environ["ENABLE_LITELLM_WHISPER_TRANSCRIPTION"] = "false"
 
 
@@ -40,10 +41,7 @@ def fixture_chunk_en():
         {"project_id": p["id"], "participant_name": "test_assembly_en", "language": "en"},
     )["data"]
 
-    path = save_to_s3_from_url(
-        "https://github.com/runpod-workers/sample-inputs/raw/refs/heads/main/audio/Arthur.mp3",
-        public=True,
-    )
+    path = save_to_s3_from_url(TEST_AUDIO_URL, public=True)
 
     cc = directus.create_item(
         "conversation_chunk",
@@ -87,10 +85,7 @@ def fixture_chunk_nl():
         {"project_id": p["id"], "participant_name": "test_assembly_nl", "language": "nl"},
     )["data"]
 
-    path = save_to_s3_from_url(
-        "https://github.com/runpod-workers/sample-inputs/raw/refs/heads/main/audio/Arthur.mp3",
-        public=True,
-    )
+    path = save_to_s3_from_url(TEST_AUDIO_URL, public=True)
 
     cc = directus.create_item(
         "conversation_chunk",
@@ -140,7 +135,7 @@ class TestTranscribeAssemblyAI:
 
 def test_transcribe_audio_assemblyai():
     transcript, response = transcribe_audio_assemblyai(
-        audio_file_uri="https://github.com/runpod-workers/sample-inputs/raw/refs/heads/main/audio/Arthur.mp3",
+        audio_file_uri=TEST_AUDIO_URL,
         language="en",
         hotwords=["Arther"],
     )

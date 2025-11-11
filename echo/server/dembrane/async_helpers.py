@@ -23,7 +23,7 @@ import os
 import atexit
 import asyncio
 import threading
-from typing import Any, TypeVar, Callable, Optional
+from typing import Any, TypeVar, Callable, Optional, Awaitable, Coroutine
 from logging import getLogger
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor
@@ -140,3 +140,48 @@ async def run_in_thread_pool(func: Callable[..., T], *args: Any, **kwargs: Any) 
     # Note: We use the global thread pool instead of None (default) to ensure
     # we have control over the thread count via environment variable
     return await loop.run_in_executor(get_thread_pool_executor(), func, *args)
+
+
+# Persistent event loops per worker thread for LightRAG compatibility
+_thread_loops: dict[int, asyncio.AbstractEventLoop] = {}
+_thread_loops_lock = threading.Lock()
+
+
+def _get_thread_event_loop() -> asyncio.AbstractEventLoop:
+    """
+    Fetch or create the persistent event loop for the current thread.
+    Mirrors the previous dembrane.audio_lightrag.utils.async_utils implementation
+    so LightRAG objects tied to an event loop (e.g., RAGManager) continue to work.
+    """
+    thread_id = threading.get_ident()
+
+    if thread_id in _thread_loops:
+        return _thread_loops[thread_id]
+
+    with _thread_loops_lock:
+        if thread_id in _thread_loops:
+            return _thread_loops[thread_id]
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        _thread_loops[thread_id] = loop
+        logger.info("Created persistent event loop for thread %s", thread_id)
+        return loop
+
+
+def run_async_in_new_loop(coro: Coroutine[Any, Any, T]) -> T:
+    """
+    Execute an async coroutine on this thread's persistent event loop.
+
+    Use from synchronous contexts such as Dramatiq actors or CLI scripts to
+    invoke async FastAPI handlers / LightRAG routines without hitting
+    "Future attached to a different loop" errors.
+    """
+    if not asyncio.iscoroutine(coro) and not asyncio.isfuture(coro):
+        raise TypeError("run_async_in_new_loop expects a coroutine or Future.")
+
+    loop = _get_thread_event_loop()
+    logger.debug("Running async coroutine in thread loop: %s", coro)
+    result = loop.run_until_complete(coro)
+    logger.debug("Completed async coroutine: %s", coro)
+    return result

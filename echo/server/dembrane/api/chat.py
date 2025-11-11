@@ -1,29 +1,18 @@
 # TODO:
 # - Change db calls to directus calls
-# - Change anthropic api to litellm
-
 import json
 import logging
 from typing import Any, Dict, List, Literal, Optional, AsyncGenerator
 
 import litellm
 from fastapi import Query, APIRouter, HTTPException
-from litellm import token_counter  # type: ignore
 from pydantic import BaseModel
 from sqlalchemy.orm import selectinload
 from fastapi.responses import StreamingResponse
 
+from dembrane.llms import MODELS, count_tokens, get_completion_kwargs
 from dembrane.utils import generate_uuid, get_utc_timestamp
-from dembrane.config import (
-    SMALL_LITELLM_MODEL,
-    SMALL_LITELLM_API_KEY,
-    SMALL_LITELLM_API_BASE,
-    ENABLE_CHAT_AUTO_SELECT,
-    LIGHTRAG_LITELLM_INFERENCE_MODEL,
-    LIGHTRAG_LITELLM_INFERENCE_API_KEY,
-    LIGHTRAG_LITELLM_INFERENCE_API_BASE,
-    LIGHTRAG_LITELLM_INFERENCE_API_VERSION,
-)
+from dembrane.settings import get_settings
 from dembrane.prompts import render_prompt
 from dembrane.database import (
     DatabaseSession,
@@ -40,14 +29,15 @@ from dembrane.chat_utils import (
     auto_select_conversations,
     create_system_messages_for_chat,
 )
-from dembrane.quote_utils import count_tokens
 from dembrane.api.conversation import get_conversation_token_count
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
-from dembrane.audio_lightrag.utils.lightrag_utils import get_project_id
 
 ChatRouter = APIRouter(tags=["chat"])
 
 logger = logging.getLogger("dembrane.chat")
+
+settings = get_settings()
+ENABLE_CHAT_AUTO_SELECT = settings.enable_chat_auto_select
 
 
 async def is_followup_question(
@@ -84,12 +74,10 @@ async def is_followup_question(
 
     try:
         response = await litellm.acompletion(
-            model=SMALL_LITELLM_MODEL,
-            api_key=SMALL_LITELLM_API_KEY,
-            api_base=SMALL_LITELLM_API_BASE,
             messages=[{"role": "user", "content": prompt}],
             temperature=0,  # Deterministic
             timeout=60,  # 1 minute timeout for quick decision
+            **get_completion_kwargs(MODELS.TEXT_FAST),
         )
 
         result_text = response.choices[0].message.content.strip()
@@ -185,7 +173,10 @@ async def get_chat_context(
         if message.message_from in ["user", "assistant"]:
             # if tokens_count is not set, set it
             if message.tokens_count is None:
-                message.tokens_count = count_tokens(message.text)
+                message.tokens_count = count_tokens(
+                    MODELS.TEXT_FAST,
+                    [{"role": message.message_from, "content": message.text}],
+                )
                 db.commit()
 
             if message.message_from == "user":
@@ -495,7 +486,15 @@ async def post_chat(
     except Exception as e:
         logger.error(f"Error updating template key: {str(e)}")
 
-    project_id = get_project_id(chat.id)  # TODO: Write directus call here
+    project_id = directus.get_items(
+        "project_chat",
+        {
+            "query": {
+                "filter": {"id": {"_eq": chat.id}},
+                "fields": ["project_id"],
+            },
+        },
+    )[0]["project_id"]
 
     messages = get_project_chat_history(chat_id, db)
 
@@ -556,8 +555,9 @@ async def post_chat(
                 ] + conversation_history
 
             # Check context length
-            prompt_len = token_counter(
-                model=LIGHTRAG_LITELLM_INFERENCE_MODEL, messages=formatted_messages
+            prompt_len = count_tokens(
+                MODELS.MULTI_MODAL_PRO,
+                formatted_messages,
             )
 
             if prompt_len > MAX_CHAT_CONTEXT_LENGTH:
@@ -615,8 +615,9 @@ async def post_chat(
                         ] + conversation_history
 
                     # Check if adding this conversation would exceed 80% threshold
-                    prompt_len = token_counter(
-                        model=LIGHTRAG_LITELLM_INFERENCE_MODEL, messages=temp_formatted_messages
+                    prompt_len = count_tokens(
+                        MODELS.MULTI_MODAL_PRO,
+                        temp_formatted_messages,
                     )
 
                     if prompt_len > MAX_CONTEXT_THRESHOLD:
@@ -664,8 +665,9 @@ async def post_chat(
                 ] + conversation_history
 
             # Check context length
-            prompt_len = token_counter(
-                model=LIGHTRAG_LITELLM_INFERENCE_MODEL, messages=formatted_messages
+            prompt_len = count_tokens(
+                MODELS.MULTI_MODAL_PRO,
+                formatted_messages,
             )
 
             if prompt_len > MAX_CHAT_CONTEXT_LENGTH:
@@ -695,15 +697,11 @@ async def post_chat(
             accumulated_response = ""
             try:
                 response = await litellm.acompletion(
-                    model=LIGHTRAG_LITELLM_INFERENCE_MODEL,
-                    api_key=LIGHTRAG_LITELLM_INFERENCE_API_KEY,
-                    api_version=LIGHTRAG_LITELLM_INFERENCE_API_VERSION,
-                    api_base=LIGHTRAG_LITELLM_INFERENCE_API_BASE,
                     messages=formatted_messages,
                     stream=True,
                     timeout=300,  # 5 minute timeout for response
                     stream_timeout=180,  # 3 minute timeout for streaming
-                    # mock_response="It's simple to use and easy to get started",
+                    **get_completion_kwargs(MODELS.MULTI_MODAL_PRO),
                 )
                 async for chunk in response:
                     if chunk.choices[0].delta.content:
@@ -787,14 +785,11 @@ async def post_chat(
 
                     logger.debug(f"messages_to_send: {messages_to_send}")
                     response = await litellm.acompletion(
-                        model=LIGHTRAG_LITELLM_INFERENCE_MODEL,
-                        api_key=LIGHTRAG_LITELLM_INFERENCE_API_KEY,
-                        api_version=LIGHTRAG_LITELLM_INFERENCE_API_VERSION,
-                        api_base=LIGHTRAG_LITELLM_INFERENCE_API_BASE,
                         messages=messages_to_send,
                         stream=True,
                         timeout=300,  # 5 minute timeout for response
                         stream_timeout=180,  # 3 minute timeout for streaming
+                        **get_completion_kwargs(MODELS.MULTI_MODAL_PRO),
                     )
                     async for chunk in response:
                         if chunk.choices[0].delta.content:

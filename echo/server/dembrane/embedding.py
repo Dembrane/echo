@@ -4,12 +4,7 @@ from typing import List
 import backoff
 import litellm
 
-from dembrane.config import (
-    # FIXME: update to use dembrane embeddings
-    LIGHTRAG_LITELLM_EMBEDDING_API_KEY,
-    LIGHTRAG_LITELLM_EMBEDDING_API_BASE,
-    LIGHTRAG_LITELLM_EMBEDDING_API_VERSION,
-)
+from dembrane.llms import MODELS, resolve_config
 
 EMBEDDING_DIM = 3072
 
@@ -21,11 +16,14 @@ logger.setLevel(logging.DEBUG)
 def embed_text(text: str) -> List[float]:
     text = text.replace("\n", " ").strip()
     try:
+        config = resolve_config(MODELS.MULTI_MODAL_PRO)
+        if not config.model:
+            raise ValueError("Embedding model is not configured.")
         response = litellm.embedding(
-            api_key=str(LIGHTRAG_LITELLM_EMBEDDING_API_KEY),
-            api_base=str(LIGHTRAG_LITELLM_EMBEDDING_API_BASE),
-            api_version=str(LIGHTRAG_LITELLM_EMBEDDING_API_VERSION),
-            model="azure/text-embedding-3-large",
+            api_key=config.api_key,
+            api_base=config.api_base,
+            api_version=config.api_version,
+            model=config.model,
             input=text,
         )
         return response["data"][0]["embedding"]

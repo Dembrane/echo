@@ -21,7 +21,11 @@ from collections import defaultdict
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from dembrane.config import JSON_TEMPLATES_DIR, PROMPT_TEMPLATES_DIR
+from dembrane.settings import get_settings
+
+settings = get_settings()
+JSON_TEMPLATES_DIR = settings.json_templates_dir
+PROMPT_TEMPLATES_DIR = settings.prompt_templates_dir
 
 logger = logging.getLogger("prompts")
 

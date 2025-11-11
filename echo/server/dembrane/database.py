@@ -31,13 +31,14 @@ from sqlalchemy.orm import (
 from pgvector.sqlalchemy import Vector
 from sqlalchemy.dialects.postgresql import UUID
 
-from dembrane.config import DATABASE_URL
+from dembrane.settings import get_settings
 from dembrane.embedding import EMBEDDING_DIM
 
 logger = getLogger("database")
 
 # Create the engine and connect to the SQLite database file
-assert DATABASE_URL is not None
+settings = get_settings()
+DATABASE_URL = settings.database_url
 logger.debug(f"Connecting to database: {DATABASE_URL}")
 engine = create_engine(DATABASE_URL)
 
