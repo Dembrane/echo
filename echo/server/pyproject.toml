@@ -138,6 +138,8 @@ python_classes = "Test*"
 python_functions = "test_*"
 markers = [
     "slow: mark a test as slow",
+    "smoke: smoke tests for deployment validation",
+    "integration: integration tests requiring external services",
 ]
 addopts = "--strict-markers --log-cli-level=INFO --log-cli-format='%(asctime)s [%(levelname)8s] %(name)s: %(message)s' --log-cli-date-format='%Y-%m-%d %H:%M:%S'"
 
