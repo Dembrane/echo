@@ -401,7 +401,7 @@ async def get_conversation_token_count(
 
     token_count = token_counter(
         messages=[{"role": "user", "content": transcript}],
-        **get_completion_kwargs(MODELS.MULTI_MODAL_PRO)["model"],
+        model=get_completion_kwargs(MODELS.MULTI_MODAL_PRO)["model"],
     )
 
     # Store the result in the cache

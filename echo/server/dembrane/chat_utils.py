@@ -450,7 +450,7 @@ async def _process_single_batch(
     try:
         prompt_tokens = token_counter(
             messages=[{"role": "user", "content": prompt}],
-            **get_completion_kwargs(MODELS.TEXT_FAST)["model"],
+            model=get_completion_kwargs(MODELS.TEXT_FAST)["model"],
         )
         MAX_BATCH_CONTEXT = 100000  # Leave headroom for response
 

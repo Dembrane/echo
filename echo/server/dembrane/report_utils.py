@@ -73,7 +73,7 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
         # Count tokens before adding
         summary_tokens = token_counter(
             messages=[{"role": "user", "content": conversation["summary"]}],
-            **get_completion_kwargs(MODELS.TEXT_FAST)["model_kwargs"],
+            model=get_completion_kwargs(MODELS.TEXT_FAST)["model"],
         )
 
         # Check if adding this conversation would exceed the limit
@@ -131,7 +131,7 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
         # Calculate token count for the transcript
         transcript_tokens = token_counter(
             messages=[{"role": "user", "content": transcript}],
-            **get_completion_kwargs(MODELS.TEXT_FAST)["model_kwargs"],
+            model=get_completion_kwargs(MODELS.TEXT_FAST)["model"],
         )
 
         if token_count + transcript_tokens < MAX_REPORT_CONTEXT_LENGTH:
