@@ -2,7 +2,7 @@ import re
 import logging
 
 from litellm import completion
-from litellm.utils import get_max_tokens, token_counter
+from litellm.utils import token_counter, get_max_tokens
 
 from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.prompts import render_prompt
@@ -14,7 +14,6 @@ logger = logging.getLogger("report_utils")
 
 TEXT_PROVIDER_KWARGS = get_completion_kwargs(MODELS.TEXT_FAST)
 TEXT_PROVIDER_MODEL = TEXT_PROVIDER_KWARGS["model"]
-TOKEN_COUNT_KWARGS = TEXT_PROVIDER_KWARGS.copy()
 
 _max_tokens = get_max_tokens(TEXT_PROVIDER_MODEL)
 
@@ -74,7 +73,7 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
         # Count tokens before adding
         summary_tokens = token_counter(
             messages=[{"role": "user", "content": conversation["summary"]}],
-            **TOKEN_COUNT_KWARGS,
+            **get_completion_kwargs(MODELS.TEXT_FAST)["model_kwargs"],
         )
 
         # Check if adding this conversation would exceed the limit
@@ -132,7 +131,7 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
         # Calculate token count for the transcript
         transcript_tokens = token_counter(
             messages=[{"role": "user", "content": transcript}],
-            **TOKEN_COUNT_KWARGS,
+            **get_completion_kwargs(MODELS.TEXT_FAST)["model_kwargs"],
         )
 
         if token_count + transcript_tokens < MAX_REPORT_CONTEXT_LENGTH:

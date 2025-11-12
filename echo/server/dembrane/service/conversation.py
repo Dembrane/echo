@@ -7,13 +7,15 @@ from urllib.parse import urlparse
 from fastapi import UploadFile
 
 from dembrane.utils import generate_uuid
-from dembrane.directus import DirectusBadRequest, directus_client_context
+from dembrane.directus import DirectusBadRequest, DirectusGenericException, directus_client_context
+from dembrane.service.events import ChunkCreatedEvent
 
 logger = getLogger("dembrane.service.conversation")
 
 if TYPE_CHECKING:
     from dembrane.service.file import FileService
     from dembrane.service.project import ProjectService
+    from dembrane.service.events import EventService
 
 # allows for None to be a sentinel value
 _UNSET = object()
@@ -44,11 +46,37 @@ class ConversationChunkNotFoundException(ConversationServiceException):
 class ConversationService:
     def __init__(
         self,
-        file_service: "FileService",
-        project_service: "ProjectService",
+        file_service: Optional["FileService"] = None,
+        project_service: Optional["ProjectService"] = None,
+        event_service: Optional["EventService"] = None,
     ):
-        self.file_service = file_service
-        self.project_service = project_service
+        self._file_service = file_service
+        self._project_service = project_service
+        self._event_service = event_service
+
+    @property
+    def file_service(self) -> "FileService":
+        if self._file_service is None:
+            from dembrane.service.file import get_file_service
+
+            self._file_service = get_file_service()
+        return self._file_service
+
+    @property
+    def project_service(self) -> "ProjectService":
+        if self._project_service is None:
+            from dembrane.service.project import ProjectService
+
+            self._project_service = ProjectService()
+        return self._project_service
+
+    @property
+    def event_service(self) -> "EventService":
+        if self._event_service is None:
+            from dembrane.service.events import EventService
+
+            self._event_service = EventService()
+        return self._event_service
 
     def get_by_id_or_raise(
         self,
@@ -81,7 +109,7 @@ class ConversationService:
                     },
                 )
 
-        except DirectusBadRequest as e:
+        except (DirectusBadRequest, DirectusGenericException) as e:
             raise ConversationNotFoundException() from e
 
         try:
@@ -226,7 +254,7 @@ class ConversationService:
                 )["data"]
 
             return updated_conversation
-        except DirectusBadRequest as e:
+        except (DirectusBadRequest, DirectusGenericException) as e:
             raise ConversationNotFoundException() from e
 
     def delete(
@@ -309,8 +337,8 @@ class ConversationService:
         if project.get("is_conversation_allowed", False) is False:
             raise ConversationNotOpenForParticipationException()
 
-        # if conversation.get("is_finished", False) is True:
-        #     raise ConversationNotOpenForParticipationException()
+        if conversation.get("is_finished") is True:
+            raise ConversationNotOpenForParticipationException()
 
         chunk_id = generate_uuid()
 
@@ -353,12 +381,11 @@ class ConversationService:
                 },
             )["data"]
 
-        # self.event_service.publish(
-        #     ChunkCreatedEvent(
-        #         chunk_id=chunk_id,
-        #         conversation_id=conversation["id"],
-        #     )
-        # )
+        event = ChunkCreatedEvent(chunk_id=chunk_id, conversation_id=conversation["id"])
+        try:
+            self.event_service.publish(event)
+        except Exception:
+            logger.exception("Failed to publish ChunkCreatedEvent for %s", chunk_id)
 
         # Only trigger background audio processing if there's a file to process
         if has_file:

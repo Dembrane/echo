@@ -30,12 +30,15 @@ from .chat import (
     ChatNotFoundException,
     ChatMessageNotFoundException,
 )
+from .events import EventService
 
 file_service = get_file_service()
 project_service = ProjectService()
+event_service = EventService()
 conversation_service = ConversationService(
     file_service=file_service,
     project_service=project_service,
+    event_service=event_service,
 )
 
 chat_service = ChatService()

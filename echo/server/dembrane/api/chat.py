@@ -173,7 +173,7 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
             if tokens_count is None:
                 tokens_count = token_counter(
                     messages=[{"role": message_from, "content": message_text}],
-                    **get_completion_kwargs(MODELS.TEXT_FAST),
+                    **get_completion_kwargs(MODELS.TEXT_FAST)["model"],
                 )
                 try:
                     await run_in_thread_pool(
@@ -568,7 +568,7 @@ async def post_chat(
                 candidate_messages = await build_formatted_messages(temp_ids)
                 prompt_len = token_counter(
                     messages=candidate_messages,
-                    **get_completion_kwargs(MODELS.MULTI_MODAL_PRO),
+                    **get_completion_kwargs(MODELS.MULTI_MODAL_PRO)["model"],
                 )
 
                 if prompt_len > max_context_threshold:
@@ -605,7 +605,7 @@ async def post_chat(
 
             prompt_len = token_counter(
                 messages=formatted_messages,
-                **get_completion_kwargs(MODELS.MULTI_MODAL_PRO),
+                **get_completion_kwargs(MODELS.MULTI_MODAL_PRO)["model"],
             )
             if prompt_len > MAX_CHAT_CONTEXT_LENGTH:
                 raise HTTPException(

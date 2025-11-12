@@ -84,9 +84,10 @@ export const LoginRoute = () => {
 	}) => {
 		if (loginMutation.isPending) return;
 
+		const trimmedOtp = data.otp?.trim();
+
 		try {
 			setError("");
-			const trimmedOtp = data.otp?.trim();
 
 			if (otpRequired && (!trimmedOtp || trimmedOtp.length < 6)) {
 				setError(t`Enter the 6-digit code from your authenticator app.`);
@@ -133,11 +134,15 @@ export const LoginRoute = () => {
 
 			if (code === "INVALID_OTP") {
 				setOtpRequired(true);
-				setError(
-					t`That code didn't work. Try again with a fresh code from your authenticator app.`,
-				);
-				setValue("otp", "");
-				setOtpValue("");
+				if (trimmedOtp && trimmedOtp.length > 0) {
+					setError(
+						t`That code didn't work. Try again with a fresh code from your authenticator app.`,
+					);
+					setValue("otp", "");
+					setOtpValue("");
+				} else {
+					setError("");
+				}
 				return;
 			}
 

@@ -56,19 +56,38 @@ for template_name in sorted(PROMPT_TEMPLATE_LIST):
     name, lang, _ = template_name.rsplit(".", 2)
     template_support[name].add(lang)
 
-# Log the template support matrix
-header = "Name                           | de  | en  | es  | fr  | nl"
-separator = "-" * len(header)
-rows = []
-for name, languages in template_support.items():
-    # Pad the name to 19 characters to align with header
-    padded_name = f"{name[:30]}{' ' * (30 - len(name[:30]))}"
-    row = f"{padded_name}| " + " | ".join(
-        " y " if lang in languages else " n " for lang in ["de", "en", "es", "fr", "nl"]
-    )
-    rows.append(row)
+logger.info("Loaded %d prompt templates", len(PROMPT_TEMPLATE_LIST))
 
-logger.info(f"Loaded {len(rows)} prompt templates:\n{header}\n{separator}\n" + "\n".join(rows))
+
+def log_template_support(level: int = logging.DEBUG) -> None:
+    """Emit the language availability matrix for prompt templates."""
+    if not template_support:
+        logger.log(level, "No prompt templates available to display language support")
+        return
+
+    header = "Name                           | de  | en  | es  | fr  | nl"
+    separator = "-" * len(header)
+    rows = []
+    templates_payload = []
+    for name, languages in sorted(template_support.items()):
+        padded_name = f"{name[:30]}{' ' * (30 - len(name[:30]))}"
+        row = f"{padded_name}| " + " | ".join(
+            " y " if lang in languages else " n " for lang in ["de", "en", "es", "fr", "nl"]
+        )
+        rows.append(row)
+        templates_payload.append({"name": name, "languages": sorted(languages)})
+
+    message = f"{header}\n{separator}\n" + "\n".join(rows)
+    logger.log(
+        level,
+        "Prompt template language support matrix:\n%s",
+        message,
+        extra={"prompt_template_languages": templates_payload},
+    )
+
+
+if settings.feature_flags.debug_mode:
+    log_template_support(level=logging.INFO)
 
 
 def render_prompt(prompt_name: str, language: str, kwargs: dict[str, Any]) -> str:

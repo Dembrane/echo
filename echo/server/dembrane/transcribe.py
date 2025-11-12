@@ -122,10 +122,9 @@ def transcribe_audio_assemblyai(
     if hotwords:
         data["keyterms_prompt"] = hotwords
 
-    try:
-        response = requests.post(f"{ASSEMBLYAI_BASE_URL}/v2/transcript", headers=headers, json=data)
-        response.raise_for_status()
+    response = requests.post(f"{ASSEMBLYAI_BASE_URL}/v2/transcript", headers=headers, json=data)
 
+    if response.status_code == 200:
         transcript_id = response.json()["id"]
         polling_endpoint = f"{ASSEMBLYAI_BASE_URL}/v2/transcript/{transcript_id}"
 
@@ -137,13 +136,13 @@ def transcribe_audio_assemblyai(
                 # return both to add the diarization response later...
                 return transcript["text"], transcript
             elif transcript["status"] == "error":
-                raise RuntimeError(f"Transcription failed: {transcript['error']}")
+                raise TranscriptionError(f"Transcription failed: {transcript['error']}")
             else:
                 time.sleep(3)
-
-    except Exception as e:
-        logger.error(f"AssemblyAI transcription failed: {e}")
-        raise TranscriptionError(f"AssemblyAI transcription failed: {e}") from e
+    elif response.status_code == 400:
+        raise TranscriptionError(f"Transcription failed: {response.json()['error']}")
+    else:
+        raise Exception(f"Transcription failed: {response.json()['error']}")
 
 
 def _get_audio_file_object(audio_file_uri: str) -> Any:
@@ -237,7 +236,6 @@ def _transcript_correction_workflow(
             "type": "json_object",
             "response_schema": response_schema,
         },
-        vertex_credentials=GCP_SA_JSON,
         **completion_kwargs,
     )
 
@@ -270,8 +268,14 @@ def transcribe_audio_dembrane_25_09(
     """
     logger = logging.getLogger("transcribe.transcribe_audio_dembrane_25_09")
 
-    transcript, response = transcribe_audio_assemblyai(audio_file_uri, language, hotwords)
-    logger.debug(f"transcript from assemblyai: {transcript}")
+    try:
+        transcript, response = transcribe_audio_assemblyai(audio_file_uri, language, hotwords)
+        logger.debug(f"transcript from assemblyai: {transcript}")
+    except TranscriptionError as e:
+        logger.info(
+            f"Transcription failed with AssemblyAI. So we will continue with the correction workflow with empty transcript: {e}"
+        )
+        transcript, response = "[Nothing to transcribe]", {}
 
     # use correction workflow to correct keyterms and fix missing segments
     corrected_transcript, note = _transcript_correction_workflow(
@@ -437,7 +441,9 @@ def transcribe_conversation_chunk(
                 _save_transcript(conversation_chunk_id, transcript, diarization=None)
                 return conversation_chunk_id
             case _:
-                raise TranscriptionError(f"Unsupported transcription provider: {transcript_provider}")
+                raise TranscriptionError(
+                    f"Unsupported transcription provider: {transcript_provider}"
+                )
 
     except Exception as e:
         logger.error("Failed to process conversation chunk %s: %s", conversation_chunk_id, e)

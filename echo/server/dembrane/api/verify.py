@@ -581,7 +581,6 @@ async def generate_verification_artifacts(
                     "content": message_content,
                 },
             ],
-            vertex_credentials=GCP_SA_JSON,
             **completion_kwargs,
         )
     except Exception as exc:
@@ -696,12 +695,12 @@ async def update_verification_artifact(
         revision_completion_kwargs = get_completion_kwargs(MODELS.MULTI_MODAL_PRO)
 
         try:
-            response = litellm.completion(
-                messages=[
-                    {
-                        "role": "system",
-                        "content": [
-                            {
+                response = litellm.completion(
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": [
+                                {
                                 "type": "text",
                                 "text": system_prompt,
                             }
@@ -710,11 +709,10 @@ async def update_verification_artifact(
                     {
                         "role": "user",
                         "content": message_content,
-                    },
-                ],
-                vertex_credentials=GCP_SA_JSON,
-                **revision_completion_kwargs,
-            )
+                        },
+                    ],
+                    **revision_completion_kwargs,
+                )
         except Exception as exc:  # pragma: no cover - external failure
             logger.error("Gemini revision failed: %s", exc, exc_info=True)
             raise HTTPException(

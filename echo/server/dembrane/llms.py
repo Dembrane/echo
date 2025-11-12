@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 from enum import Enum
 from typing import Any, Dict
@@ -31,17 +32,24 @@ def get_completion_kwargs(model: MODELS, **overrides: Any) -> Dict[str, Any]:
     provider = getattr(settings.llms, attr, None)
     if provider is None:
         raise ValueError(f"No configuration found for model group {model.value}.")
-    if not provider.model:
-        raise ValueError(f"Model name is not configured for {model.value}")
 
-    kwargs: Dict[str, Any] = {"model": provider.model}
+    resolved = provider.resolve()
 
-    if provider.api_key:
-        kwargs["api_key"] = provider.api_key
-    if provider.api_base:
-        kwargs["api_base"] = provider.api_base
-    if provider.api_version:
-        kwargs["api_version"] = provider.api_version
+    kwargs: Dict[str, Any] = {"model": resolved.model}
+
+    if resolved.api_key:
+        kwargs["api_key"] = resolved.api_key
+    if resolved.api_base:
+        kwargs["api_base"] = resolved.api_base
+    if resolved.api_version:
+        kwargs["api_version"] = resolved.api_version
+    vertex_credentials = resolved.vertex_credentials or settings.transcription.gcp_sa_json
+    if vertex_credentials:
+        kwargs["vertex_credentials"] = json.dumps(vertex_credentials)
+    if resolved.vertex_project:
+        kwargs["vertex_project"] = resolved.vertex_project
+    if resolved.vertex_location:
+        kwargs["vertex_location"] = resolved.vertex_location
 
     # Allow callers to override any field (e.g., temperature, max_tokens)
     kwargs.update(overrides)

@@ -20,10 +20,51 @@ from typing import Any, Dict, Literal, Optional
 from pathlib import Path
 from functools import lru_cache
 
+from dotenv import load_dotenv
 from pydantic import Field, BaseModel, AliasChoices, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 TranscriptionProvider = Literal["LiteLLM", "AssemblyAI", "Dembrane-25-09"]
+
+_MODULE_BASE_DIR = Path(__file__).resolve().parent.parent
+_DEFAULT_ENV_PATH = _MODULE_BASE_DIR / ".env"
+
+if _DEFAULT_ENV_PATH.exists():
+    logging.info(f"Loading environment variables from {_DEFAULT_ENV_PATH}")
+    load_dotenv(_DEFAULT_ENV_PATH, override=True)
+else:
+    logging.info(f"Environment variables file not found at {_DEFAULT_ENV_PATH}. Skipping.")
+
+
+def _coerce_service_account(value: Optional[Any]) -> Optional[Dict[str, Any]]:
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str):
+        trimmed = value.strip()
+        if trimmed in {"", "null", "None"}:
+            return None
+        raw_value: str | bytes = trimmed
+    elif isinstance(value, (bytes, bytearray)):
+        if not value:
+            return None
+        raw_value = value
+    else:
+        raise ValueError(
+            "Service account JSON must be a mapping, JSON string, or base64-encoded JSON"
+        )
+
+    try:
+        return json.loads(raw_value)
+    except (TypeError, json.JSONDecodeError):
+        try:
+            decoded = base64.b64decode(raw_value)
+            return json.loads(decoded)
+        except (ValueError, json.JSONDecodeError, TypeError) as exc:
+            raise ValueError(
+                "Service account JSON must be valid JSON or base64-encoded JSON"
+            ) from exc
 
 
 class ResolvedLLMConfig(BaseModel):
@@ -31,6 +72,9 @@ class ResolvedLLMConfig(BaseModel):
     api_key: Optional[str] = None
     api_base: Optional[str] = None
     api_version: Optional[str] = None
+    vertex_credentials: Optional[Dict[str, Any]] = None
+    vertex_project: Optional[str] = None
+    vertex_location: Optional[str] = None
 
 
 class LLMProviderConfig(BaseModel):
@@ -38,6 +82,22 @@ class LLMProviderConfig(BaseModel):
     api_key: Optional[str] = None
     api_base: Optional[str] = None
     api_version: Optional[str] = None
+    vertex_credentials: Optional[Dict[str, Any]] = None
+    gcp_sa_json: Optional[Dict[str, Any]] = None
+    vertex_project: Optional[str] = None
+    vertex_location: Optional[str] = None
+
+    @field_validator("vertex_credentials", mode="before")
+    @classmethod
+    def parse_vertex_credentials(
+        cls, value: Optional[Any]
+    ) -> Optional[Dict[str, Any]]:
+        return _coerce_service_account(value)
+
+    @field_validator("gcp_sa_json", mode="before")
+    @classmethod
+    def parse_gcp_sa_json(cls, value: Optional[Any]) -> Optional[Dict[str, Any]]:
+        return _coerce_service_account(value)
 
     def resolve(self) -> ResolvedLLMConfig:
         if not self.model:
@@ -48,6 +108,9 @@ class LLMProviderConfig(BaseModel):
             api_key=self.api_key,
             api_base=self.api_base,
             api_version=self.api_version,
+            vertex_credentials=self.vertex_credentials or self.gcp_sa_json,
+            vertex_project=self.vertex_project,
+            vertex_location=self.vertex_location,
         )
 
 
@@ -309,30 +372,7 @@ class TranscriptionSettings(BaseSettings):
     @field_validator("gcp_sa_json", mode="before")
     @classmethod
     def parse_gcp_sa_json(cls, value: Optional[Any]) -> Optional[Dict[str, Any]]:
-        if value is None:
-            return None
-        if isinstance(value, dict):
-            return value
-        if isinstance(value, str):
-            trimmed = value.strip()
-            if trimmed in {"", "null", "None"}:
-                return None
-            raw_value: str | bytes = trimmed
-        elif isinstance(value, (bytes, bytearray)):
-            if not value:
-                return None
-            raw_value = value
-        else:
-            raise ValueError("GCP_SA_JSON must be a mapping, JSON string, or base64-encoded JSON")
-
-        try:
-            return json.loads(raw_value)
-        except (TypeError, json.JSONDecodeError):
-            try:
-                decoded = base64.b64decode(raw_value)
-                return json.loads(decoded)
-            except (ValueError, json.JSONDecodeError, TypeError) as exc:
-                raise ValueError("GCP_SA_JSON must be valid JSON or base64-encoded JSON") from exc
+        return _coerce_service_account(value)
 
     def ensure_valid(self) -> None:
         if self.provider == "AssemblyAI":
@@ -388,6 +428,7 @@ class AppSettings:
     @property
     def prompt_templates_dir(self) -> Path:
         return self.base_dir / "prompt_templates"
+
 
 @lru_cache
 def get_settings() -> AppSettings:

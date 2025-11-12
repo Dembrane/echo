@@ -237,7 +237,7 @@ async def generate_reply_for_conversation(
             formatted_conv = format_conversation(c)
             tokens = token_counter(
                 messages=[{"role": "user", "content": formatted_conv}],
-                **get_completion_kwargs(MODELS.TEXT_FAST),
+                **get_completion_kwargs(MODELS.TEXT_FAST)["model"],
             )
 
             candidate_conversations.append((formatted_conv, tokens))
@@ -260,7 +260,7 @@ async def generate_reply_for_conversation(
             formatted_conv = format_conversation(c)
             tokens = token_counter(
                 messages=[{"role": "user", "content": formatted_conv}],
-                **get_completion_kwargs(MODELS.TEXT_FAST),
+                **get_completion_kwargs(MODELS.TEXT_FAST)["model"],
             )
 
             # If conversation is too large, truncate it
@@ -272,7 +272,7 @@ async def generate_reply_for_conversation(
                 formatted_conv = format_conversation(c)
                 tokens = token_counter(
                     messages=[{"role": "user", "content": formatted_conv}],
-                    **get_completion_kwargs(MODELS.TEXT_FAST),
+                    **get_completion_kwargs(MODELS.TEXT_FAST)["model"],
                 )
 
             candidate_conversations.append((formatted_conv, tokens))
