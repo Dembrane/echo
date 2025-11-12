@@ -1,19 +1,17 @@
 import time
-from typing import Any, AsyncGenerator
+from typing import Any, AsyncGenerator, Awaitable, Callable, cast
 from logging import getLogger
 from contextlib import asynccontextmanager
 
 import nest_asyncio
-from fastapi import (
-    FastAPI,
-    Request,
-    HTTPException,
-)
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware import Middleware
 from fastapi.openapi.utils import get_openapi
 from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import Response
+from starlette.types import Scope
 
 from dembrane.settings import get_settings
 from dembrane.sentry import init_sentry
@@ -80,7 +78,10 @@ app = FastAPI(lifespan=lifespan, docs_url=docs_url, redoc_url=None, middleware=m
 
 
 @app.middleware("http")
-async def add_process_time_header(request: Request, call_next):  # type: ignore
+async def add_process_time_header(
+    request: Request,
+    call_next: Callable[[Request], Awaitable[Response]],
+) -> Response:
     start_time = time.time()
     response = await call_next(request)
     process_time = time.time() - start_time
@@ -93,7 +94,7 @@ app.include_router(api, prefix="/api")
 
 
 class SPAStaticFiles(StaticFiles):
-    async def get_response(self, path: str, scope):  # type: ignore
+    async def get_response(self, path: str, scope: Scope) -> Response:
         try:
             return await super().get_response(path, scope)
         except (HTTPException, StarletteHTTPException) as ex:
@@ -116,7 +117,7 @@ def custom_openapi() -> Any:
     return app.openapi_schema
 
 
-app.openapi = custom_openapi  # type: ignore
+app.openapi = cast(Callable[[], dict[str, Any]], custom_openapi)
 
 
 if __name__ == "__main__":

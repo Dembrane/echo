@@ -24,6 +24,12 @@ from .conversation import (
     ConversationChunkNotFoundException,
     ConversationNotOpenForParticipationException,
 )
+from .chat import (
+    ChatService,
+    ChatServiceException,
+    ChatNotFoundException,
+    ChatMessageNotFoundException,
+)
 
 file_service = get_file_service()
 project_service = ProjectService()
@@ -31,6 +37,8 @@ conversation_service = ConversationService(
     file_service=file_service,
     project_service=project_service,
 )
+
+chat_service = ChatService()
 
 exceptions = {
     "file": {
@@ -41,6 +49,11 @@ exceptions = {
         "ConversationNotFoundException": ConversationNotFoundException,
         "ConversationNotOpenForParticipationException": ConversationNotOpenForParticipationException,
         "ConversationServiceException": ConversationServiceException,
+    },
+    "chat": {
+        "ChatServiceException": ChatServiceException,
+        "ChatNotFoundException": ChatNotFoundException,
+        "ChatMessageNotFoundException": ChatMessageNotFoundException,
     },
     "project": {
         "ProjectNotFoundException": ProjectNotFoundException,

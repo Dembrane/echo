@@ -6,9 +6,8 @@ from typing import Any, Dict, List, Optional
 
 import backoff
 from litellm import acompletion
-from litellm.utils import token_counter
 from pydantic import BaseModel
-from sqlalchemy.orm import Session, selectinload
+from litellm.utils import token_counter
 from litellm.exceptions import (
     Timeout,
     APIError,
@@ -18,10 +17,11 @@ from litellm.exceptions import (
 )
 
 from dembrane.llms import MODELS, get_completion_kwargs
-from dembrane.settings import get_settings
 from dembrane.prompts import render_prompt
-from dembrane.database import ConversationModel, ProjectChatMessageModel
+from dembrane.service import chat_service, conversation_service
 from dembrane.directus import directus
+from dembrane.settings import get_settings
+from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.conversation import get_conversation_transcript
 from dembrane.api.dependency_auth import DirectusSession
 
@@ -66,20 +66,25 @@ def convert_to_openai_messages(messages: List[ClientMessage]) -> List[Dict[str, 
     return openai_messages
 
 
-def get_project_chat_history(chat_id: str, db: Session) -> List[Dict[str, Any]]:
-    db_messages = (
-        db.query(ProjectChatMessageModel)
-        .filter(ProjectChatMessageModel.project_chat_id == chat_id)
-        .order_by(ProjectChatMessageModel.date_created.asc())
-        .all()
+async def get_project_chat_history(chat_id: str) -> List[Dict[str, Any]]:
+    messages_raw = await run_in_thread_pool(
+        chat_service.list_messages,
+        chat_id,
+        include_relationships=False,
+        order="asc",
     )
 
-    messages = []
-    for i in db_messages:
+    messages: List[Dict[str, Any]] = []
+    for message in messages_raw:
+        message_from = message.get("message_from")
+        if message_from is None:
+            continue
         messages.append(
             {
-                "role": i.message_from,
-                "content": i.text,
+                "role": message_from,
+                "content": message.get("text", ""),
+                "id": message.get("id"),
+                "tokens_count": message.get("tokens_count"),
             }
         )
 
@@ -87,12 +92,13 @@ def get_project_chat_history(chat_id: str, db: Session) -> List[Dict[str, Any]]:
 
 
 async def create_system_messages_for_chat(
-    locked_conversation_id_list: List[str], db: Session, language: str, project_id: str
+    locked_conversation_id_list: List[str], language: str, project_id: str
 ) -> List[Dict[str, Any]]:
-    conversations = (
-        db.query(ConversationModel)
-        .filter(ConversationModel.id.in_(locked_conversation_id_list))
-        .all()
+    conversations = await run_in_thread_pool(
+        conversation_service.list_by_ids,
+        locked_conversation_id_list,
+        with_chunks=False,
+        with_tags=True,
     )
     try:
         project_query = {
@@ -122,16 +128,22 @@ async def create_system_messages_for_chat(
 
     conversation_data_list = []
     for conversation in conversations:
+        tag_text_list: List[str] = []
+        for tag_entry in conversation.get("tags", []) or []:
+            if isinstance(tag_entry, dict):
+                project_tag = tag_entry.get("project_tag_id")
+                if isinstance(project_tag, dict):
+                    tag_text = project_tag.get("text")
+                    if tag_text:
+                        tag_text_list.append(str(tag_text))
         conversation_data_list.append(
             {
-                "name": conversation.participant_name,
-                "tags": ", ".join([tag.text for tag in conversation.tags]),
-                "created_at": conversation.created_at.isoformat()
-                if conversation.created_at
-                else None,
-                "duration": conversation.duration,
+                "name": conversation.get("participant_name"),
+                "tags": ", ".join(tag_text_list),
+                "created_at": conversation.get("created_at"),
+                "duration": conversation.get("duration"),
                 "transcript": await get_conversation_transcript(
-                    conversation.id,
+                    conversation.get("id", ""),
                     # fake auth to get this fn call
                     DirectusSession(user_id="none", is_admin=True),
                 ),
@@ -208,7 +220,6 @@ async def generate_title(
 async def auto_select_conversations(
     user_query_inputs: List[str],
     project_id_list: List[str],
-    db: Session,
     language: str = "en",
     batch_size: int = 20,
 ) -> Dict[str, Any]:
@@ -247,11 +258,11 @@ async def auto_select_conversations(
 
     for project_id in project_id_list:
         # Get all conversations for this project
-        conversations = (
-            db.query(ConversationModel)
-            .filter(ConversationModel.project_id == project_id)
-            .options(selectinload(ConversationModel.tags))
-            .all()
+        conversations = await run_in_thread_pool(
+            conversation_service.list_by_project,
+            project_id,
+            with_chunks=False,
+            with_tags=True,
         )
 
         if not conversations:
@@ -345,7 +356,7 @@ async def _call_llm_with_backoff(prompt: str, batch_num: int) -> Any:
 
 
 async def _process_single_batch(
-    batch: List[ConversationModel],
+    batch: List[dict],
     batch_num: int,
     user_query_inputs: List[str],
     language: str,
@@ -354,7 +365,7 @@ async def _process_single_batch(
     Process a single batch of conversations and return selected IDs.
 
     Args:
-        batch: List of ConversationModel instances to process
+        batch: List of conversation dictionaries to process
         batch_num: Batch number for logging
         user_query_inputs: User queries to match against
         language: Language code for the prompt template
@@ -368,17 +379,21 @@ async def _process_single_batch(
     logger.info(f"Processing batch {batch_num} ({len(batch)} conversations, parallel execution)")
 
     # Prepare conversation data for the prompt
-    conversation_data = []
+    conversation_data: List[Dict[str, Any]] = []
     for conv in batch:
-        # Get summary or fallback to transcript excerpt
-        summary_text = None
-        if conv.summary and conv.summary.strip():
-            summary_text = conv.summary
+        conv_id = conv.get("id")
+        if not conv_id:
+            continue
+
+        summary_text: Optional[str] = None
+        conv_summary = conv.get("summary")
+        if isinstance(conv_summary, str) and conv_summary.strip():
+            summary_text = conv_summary
         else:
             # Use transcript as fallback
             try:
                 transcript = await get_conversation_transcript(
-                    conv.id,
+                    conv_id,
                     DirectusSession(user_id="none", is_admin=True),
                 )
                 # Limit transcript to first 500 characters for context
@@ -387,23 +402,34 @@ async def _process_single_batch(
                 elif transcript:
                     summary_text = transcript
             except Exception as e:
-                logger.warning(f"Could not get transcript for conversation {conv.id}: {e}")
+                logger.warning(f"Could not get transcript for conversation {conv_id}: {e}")
 
         # Skip conversations with no content at all
         if not summary_text:
-            logger.debug(f"Skipping conversation {conv.id} - no summary or transcript")
+            logger.debug(f"Skipping conversation {conv_id} - no summary or transcript")
             continue
 
-        conv_data = {
-            "id": conv.id,
-            "participant_name": conv.participant_name or "Unknown",
+        tag_values: List[str] = []
+        for tag_entry in conv.get("tags", []) or []:
+            if isinstance(tag_entry, dict):
+                project_tag = tag_entry.get("project_tag_id")
+                if isinstance(project_tag, dict):
+                    tag_text = project_tag.get("text")
+                    if tag_text:
+                        tag_values.append(str(tag_text))
+
+        conversation_entry: Dict[str, Any] = {
+            "id": conv_id,
+            "participant_name": conv.get("participant_name") or "Unknown",
             "summary": summary_text,
         }
-        if conv.tags:
-            conv_data["tags"] = ", ".join([tag.text for tag in conv.tags])
-        if conv.created_at:
-            conv_data["created_at"] = conv.created_at.isoformat()
-        conversation_data.append(conv_data)
+        if tag_values:
+            conversation_entry["tags"] = ", ".join(tag_values)
+        created_at_value = conv.get("created_at")
+        if created_at_value:
+            conversation_entry["created_at"] = created_at_value
+
+        conversation_data.append(conversation_entry)
 
     # Skip batch if no valid conversations
     if not conversation_data:
@@ -431,9 +457,10 @@ async def _process_single_batch(
         if prompt_tokens > MAX_BATCH_CONTEXT:
             # If batch has only 1 conversation, we can't split further
             if len(batch) == 1:
+                conversation_identifier = batch[0].get("id")
                 logger.error(
                     f"Batch {batch_num} single conversation exceeds context limit: "
-                    f"{prompt_tokens} tokens. Skipping conversation {batch[0].id}."
+                    f"{prompt_tokens} tokens. Skipping conversation {conversation_identifier}."
                 )
                 return {
                     "selected_ids": [],
@@ -479,9 +506,11 @@ async def _process_single_batch(
             raw_selected_ids = result.get("selected_conversation_ids", [])
 
             # Validate LLM response: ensure all returned IDs are from this batch
-            valid_ids = {conv.id for conv in batch}
+            valid_ids = {conv.get("id") for conv in batch if conv.get("id") is not None}
             batch_selected_ids = [
-                id for id in raw_selected_ids if isinstance(id, (int, str)) and id in valid_ids
+                selected_id
+                for selected_id in raw_selected_ids
+                if isinstance(selected_id, (int, str)) and selected_id in valid_ids
             ]
 
             # Log warning if LLM returned invalid IDs

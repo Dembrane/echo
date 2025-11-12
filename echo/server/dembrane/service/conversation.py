@@ -1,5 +1,5 @@
 # conversation.py
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import TYPE_CHECKING, Any, List, Iterable, Optional
 from logging import getLogger
 from datetime import datetime
 from urllib.parse import urlparse
@@ -88,6 +88,66 @@ class ConversationService:
             return conversation[0]
         except (KeyError, IndexError) as e:
             raise ConversationNotFoundException() from e
+
+    def list_by_project(
+        self,
+        project_id: str,
+        with_chunks: bool = False,
+        with_tags: bool = False,
+    ) -> List[dict]:
+        return self._list_conversations(
+            filter_query={"project_id": {"_eq": project_id}},
+            with_chunks=with_chunks,
+            with_tags=with_tags,
+        )
+
+    def list_by_ids(
+        self,
+        conversation_id_list: Iterable[str],
+        with_chunks: bool = False,
+        with_tags: bool = False,
+    ) -> List[dict]:
+        ids = [conversation_id for conversation_id in conversation_id_list]
+        if not ids:
+            return []
+
+        return self._list_conversations(
+            filter_query={"id": {"_in": ids}},
+            with_chunks=with_chunks,
+            with_tags=with_tags,
+        )
+
+    def list_chunks(self, conversation_id: str) -> List[dict]:
+        try:
+            with directus_client_context() as client:
+                chunks: Optional[List[dict]] = client.get_items(
+                    "conversation_chunk",
+                    {
+                        "query": {
+                            "filter": {"conversation_id": {"_eq": conversation_id}},
+                            "fields": [
+                                "id",
+                                "conversation_id",
+                                "timestamp",
+                                "transcript",
+                                "path",
+                                "created_at",
+                                "updated_at",
+                            ],
+                            "sort": "timestamp",
+                            "limit": 2000,
+                        }
+                    },
+                )
+        except DirectusBadRequest as e:
+            logger.error(
+                "Failed to list chunks for conversation %s via Directus: %s",
+                conversation_id,
+                e,
+            )
+            raise ConversationServiceException() from e
+
+        return chunks or []
 
     def create(
         self,
@@ -261,12 +321,14 @@ class ConversationService:
             file_url = self.file_service.save(file=file_obj, key=file_name, public=False)
             logger.info(f"File uploaded to S3 via API: {sanitize_url_for_logging(file_url)}")
         elif file_url:
-            logger.info(f"Using pre-uploaded file from presigned URL: {sanitize_url_for_logging(file_url)}")
+            logger.info(
+                f"Using pre-uploaded file from presigned URL: {sanitize_url_for_logging(file_url)}"
+            )
 
         # Validate that we have either a file or a transcript
         has_file = file_url and len(file_url.strip()) > 0
         has_transcript = transcript and len(transcript.strip()) > 0
-        
+
         if not has_file and not has_transcript:
             logger.error(
                 f"Cannot create chunk without content. "
@@ -285,7 +347,7 @@ class ConversationService:
                     "id": chunk_id,
                     "conversation_id": conversation["id"],
                     "timestamp": timestamp.isoformat(),
-                    "path": file_url,  
+                    "path": file_url,
                     "source": source,
                     "transcript": transcript,
                 },
@@ -436,3 +498,66 @@ class ConversationService:
             "pending": pending,
             "ok": ok,
         }
+
+    def _list_conversations(
+        self,
+        filter_query: dict[str, Any],
+        with_chunks: bool = False,
+        with_tags: bool = False,
+    ) -> List[dict]:
+        fields: List[str] = [
+            "id",
+            "project_id",
+            "participant_name",
+            "participant_email",
+            "participant_user_agent",
+            "created_at",
+            "updated_at",
+            "duration",
+            "summary",
+            "source",
+            "is_finished",
+            "is_all_chunks_transcribed",
+        ]
+
+        deep: dict[str, Any] = {}
+
+        if with_tags:
+            fields.extend(
+                [
+                    "tags.id",
+                    "tags.project_tag_id.id",
+                    "tags.project_tag_id.text",
+                ]
+            )
+            deep.setdefault("tags", {})
+
+        if with_chunks:
+            fields.extend(
+                [
+                    "chunks.id",
+                    "chunks.timestamp",
+                    "chunks.transcript",
+                    "chunks.path",
+                ]
+            )
+            deep["chunks"] = {"_sort": "timestamp"}
+
+        try:
+            with directus_client_context() as client:
+                conversations: Optional[List[dict]] = client.get_items(
+                    "conversation",
+                    {
+                        "query": {
+                            "filter": filter_query,
+                            "fields": fields,
+                            "deep": deep,
+                            "limit": 1000,
+                        }
+                    },
+                )
+        except DirectusBadRequest as e:
+            logger.error("Failed to list conversations via Directus: %s", e)
+            raise ConversationServiceException() from e
+
+        return conversations or []

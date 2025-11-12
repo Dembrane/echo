@@ -5,7 +5,6 @@ from logging import getLogger
 
 from fastapi import Request, APIRouter
 from pydantic import BaseModel
-from sqlalchemy.orm import noload, selectinload
 from fastapi.responses import RedirectResponse, StreamingResponse
 from fastapi.exceptions import HTTPException
 from litellm.utils import token_counter
@@ -13,11 +12,6 @@ from litellm.exceptions import ContentPolicyViolationError
 
 from dembrane.s3 import get_signed_url
 from dembrane.utils import CacheWithExpiration, generate_uuid, get_utc_timestamp
-from dembrane.database import (
-    ConversationModel,
-    ConversationChunkModel,
-    DependencyInjectDatabase,
-)
 from dembrane.directus import directus
 from dembrane.audio_utils import (
     get_duration_from_s3,
@@ -33,58 +27,32 @@ from dembrane.api.exceptions import (
     ConversationNotFoundException,
 )
 from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.service import conversation_service
 
 logger = getLogger("api.conversation")
 ConversationRouter = APIRouter(tags=["conversation"])
 
 
 async def get_conversation(
-    conversation_id: str, db: DependencyInjectDatabase, load_chunks: Optional[bool] = True
-) -> ConversationModel:
-    if load_chunks:
-        conversation = (
-            db.query(ConversationModel)
-            .options(
-                selectinload(ConversationModel.tags),
-                selectinload(ConversationModel.chunks),
-            )
-            .filter(
-                ConversationModel.id == conversation_id,
-            )
-            .first()
-        )
-    else:
-        conversation = (
-            db.query(ConversationModel)
-            .options(
-                noload(ConversationModel.chunks),
-                selectinload(ConversationModel.tags),
-            )
-            .filter(
-                ConversationModel.id == conversation_id,
-            )
-            .first()
-        )
-
-    if not conversation:
-        raise ConversationNotFoundException
+    conversation_id: str,
+    load_chunks: bool = True,
+    with_tags: bool = True,
+) -> dict:
+    conversation = await run_in_thread_pool(
+        conversation_service.get_by_id_or_raise,
+        conversation_id,
+        with_tags,
+        load_chunks,
+    )
 
     return conversation
 
 
 async def get_conversation_chunks(
-    conversation_id: str, db: DependencyInjectDatabase
-) -> List[ConversationChunkModel]:
-    conversation = await get_conversation(conversation_id, db, load_chunks=False)
-
-    chunks = (
-        db.query(ConversationChunkModel)
-        .filter(
-            ConversationChunkModel.conversation_id == conversation.id,
-        )
-        .order_by(ConversationChunkModel.timestamp)
-        .all()
-    )
+    conversation_id: str,
+) -> List[dict]:
+    await get_conversation(conversation_id, load_chunks=False)
+    chunks = await run_in_thread_pool(conversation_service.list_chunks, conversation_id)
 
     return chunks
 
@@ -419,7 +387,6 @@ token_count_cache = CacheWithExpiration(ttl=500)
 @ConversationRouter.get("/{conversation_id}/token-count")
 async def get_conversation_token_count(
     conversation_id: str,
-    _db: DependencyInjectDatabase,
     auth: DependencyDirectusSession,
 ) -> int:
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)

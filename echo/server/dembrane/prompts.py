@@ -15,10 +15,10 @@ Attributes:
 
 import logging
 from typing import Any
-from collections import defaultdict
 from pathlib import Path
+from collections import defaultdict
 
-from jinja2 import Environment, FileSystemLoader, DictLoader, select_autoescape
+from jinja2 import BaseLoader, DictLoader, Environment, FileSystemLoader, select_autoescape
 
 from dembrane.settings import get_settings
 
@@ -28,6 +28,8 @@ PROMPT_TEMPLATES_DIR = settings.prompt_templates_dir
 logger = logging.getLogger("prompts")
 
 prompt_templates_path = Path(PROMPT_TEMPLATES_DIR)
+prompt_loader: BaseLoader
+
 if prompt_templates_path.exists() and prompt_templates_path.is_dir():
     prompt_loader = FileSystemLoader(prompt_templates_path)
     prompt_template_names = [

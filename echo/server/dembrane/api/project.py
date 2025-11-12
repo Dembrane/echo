@@ -1,34 +1,24 @@
 import os
 import asyncio
 import zipfile
+from datetime import datetime
 from http import HTTPStatus
-from typing import List, Optional, Generator
+from typing import Any, List, Optional, Generator
 from logging import getLogger
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 from fastapi.responses import StreamingResponse
 
 from dembrane.tasks import task_create_view, task_create_project_library
 from dembrane.utils import generate_uuid, get_safe_filename
 from dembrane.settings import get_settings
-from dembrane.schemas import (
-    ProjectSchema,
-)
-from dembrane.service import project_service
-from dembrane.database import (
-    ProjectModel,
-    ConversationModel,
-    DependencyInjectDatabase,
-)
-from dembrane.directus import DirectusBadRequest, directus_client_context
+from dembrane.service import project_service, conversation_service
 from dembrane.report_utils import ContextTooLongException, get_report_content_for_project
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.exceptions import (
     ProjectLanguageNotSupportedException,
 )
-from dembrane.api.conversation import get_conversation, get_conversation_chunks
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
 logger = getLogger("api.project")
@@ -49,85 +39,121 @@ class CreateProjectRequestSchema(BaseModel):
     default_conversation_finish_text: Optional[str] = None
 
 
-@ProjectRouter.post("", response_model=ProjectSchema)
+@ProjectRouter.post("")
 async def create_project(
     body: CreateProjectRequestSchema,
-    db: DependencyInjectDatabase,
     auth: DependencyDirectusSession,
-) -> ProjectModel:
+) -> dict:
     if body.language is not None and body.language not in PROJECT_ALLOWED_LANGUAGES:
         raise ProjectLanguageNotSupportedException
     name = body.name or "New Project"
     context = body.context or None
     language = body.language or "en"
 
-    project = ProjectModel(
-        id=generate_uuid(),
-        directus_user_id=auth.user_id,
-        name=name,
-        context=context,
-        language=language,
+    is_conversation_allowed = (
+        body.is_conversation_allowed if body.is_conversation_allowed is not None else True
     )
-    db.add(project)
-    db.commit()
+
+    optional_fields: dict[str, Any] = {
+        "context": context,
+        "default_conversation_title": body.default_conversation_title,
+        "default_conversation_description": body.default_conversation_description,
+        "default_conversation_finish_text": body.default_conversation_finish_text,
+    }
+
+    filtered_optional_fields = {
+        key: value for key, value in optional_fields.items() if value is not None
+    }
+
+    project = await run_in_thread_pool(
+        project_service.create,
+        name=name,
+        language=language,
+        is_conversation_allowed=is_conversation_allowed,
+        directus_user_id=auth.user_id,
+        id=generate_uuid(),
+        **filtered_optional_fields,
+    )
 
     return project
 
 
-async def generate_transcript_file(conversation_id: str, db: Session) -> Optional[str]:
-    logger.info(f"generating transcript for conversation {conversation_id}")
-    chunks = await get_conversation_chunks(conversation_id, db)
+def _parse_iso_datetime(value: Any) -> datetime:
+    if isinstance(value, datetime):
+        return value
 
+    if isinstance(value, str):
+        normalized = value.replace("Z", "+00:00")
+        try:
+            return datetime.fromisoformat(normalized)
+        except ValueError:
+            logger.warning(
+                "Unable to parse datetime string '%s', falling back to current UTC", value
+            )
+
+    return datetime.utcnow()
+
+
+def _sanitize_for_filename(text: str, max_length: int = 30) -> str:
+    if not text:
+        return ""
+    safe_text = "".join(c if c.isalnum() else "_" for c in text)
+    safe_text = "_".join(filter(None, safe_text.split("_")))
+    return safe_text[:max_length]
+
+
+def _generate_transcript_file_sync(conversation: dict) -> Optional[str]:
+    conversation_id = conversation.get("id")
+    logger.info(f"generating transcript for conversation {conversation_id}")
+
+    chunks: List[dict] = conversation.get("chunks") or []
     if not chunks:
         return None
 
-    conversation = await get_conversation(conversation_id, db, load_chunks=False)
-    email = conversation.participant_email
-    name = conversation.participant_name
-    # Add timestamp to make filename unique
-    timestamp = conversation.created_at.strftime("%Y%m%d_%H%M%S")
+    transcript_lines = [
+        str(chunk.get("transcript"))
+        for chunk in chunks
+        if isinstance(chunk, dict) and chunk.get("transcript")
+    ]
+
+    if not transcript_lines:
+        return None
+
+    created_at = _parse_iso_datetime(conversation.get("created_at"))
+    timestamp = created_at.strftime("%Y%m%d_%H%M%S")
 
     name_for_file = f"{timestamp}"
 
-    def sanitize_for_filename(text: str, max_length: int = 30) -> str:
-        """Sanitize text to be used in filenames by replacing invalid chars with underscore."""
-        if not text:
-            return ""
-        # Replace any non-alphanumeric chars with underscore
-        safe_text = "".join(c if c.isalnum() else "_" for c in text)
-        # Collapse multiple underscores
-        safe_text = "_".join(filter(None, safe_text.split("_")))
-        return safe_text[:max_length]
-
-    if name:
-        safe_name = sanitize_for_filename(name, max_length=50)
-        if safe_name:  # Only add if we have valid chars left
+    name_value = conversation.get("participant_name")
+    if name_value:
+        safe_name = _sanitize_for_filename(name_value, max_length=50)
+        if safe_name:
             name_for_file += f"_{safe_name}"
 
-    if email:
-        # Extract username part and sanitize
-        email_part = email.split("@")[0]
-        safe_email = sanitize_for_filename(email_part, max_length=30)
-        if safe_email:  # Only add if we have valid chars left
+    email_value = conversation.get("participant_email")
+    if email_value:
+        email_part = email_value.split("@")[0]
+        safe_email = _sanitize_for_filename(email_part, max_length=30)
+        if safe_email:
             name_for_file += f"_{safe_email}"
 
-    # Add conversation ID to ensure uniqueness
-    name_for_file += f"_{conversation_id[:8]}"
+    if conversation_id:
+        name_for_file += f"_{conversation_id[:8]}"
 
-    conversation_dir = os.path.join(BASE_DIR, "transcripts", conversation_id)
+    conversation_dir = os.path.join(BASE_DIR, "transcripts", conversation_id or "unknown")
     os.makedirs(conversation_dir, exist_ok=True)
 
     file_path = os.path.join(conversation_dir, f"{name_for_file}-transcript.md")
 
     with open(file_path, "w") as file:
-        for chunk in chunks:
-            try:
-                if chunk.transcript is not None:
-                    file.write(str(chunk.transcript) + "\n")
-            except Exception as e:
-                logger.error(f"Failed to write transcript for chunk {chunk.id}: {e}")
+        for line in transcript_lines:
+            file.write(line + "\n")
 
     return file_path
+
+
+async def generate_transcript_file(conversation: dict) -> Optional[str]:
+    return await run_in_thread_pool(_generate_transcript_file_sync, conversation)
 
 
 async def cleanup_files(zip_file_name: str, filenames: List[str]) -> None:
@@ -139,42 +165,52 @@ async def cleanup_files(zip_file_name: str, filenames: List[str]) -> None:
 @ProjectRouter.get("/{project_id}/transcripts")
 async def get_project_transcripts(
     project_id: str,
-    db: DependencyInjectDatabase,
     auth: DependencyDirectusSession,
     background_tasks: BackgroundTasks,
 ) -> StreamingResponse:
-    project = db.get(ProjectModel, project_id)
+    from dembrane.service.project import ProjectNotFoundException
 
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+    try:
+        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
+    except ProjectNotFoundException as exc:
+        raise HTTPException(status_code=404, detail="Project not found") from exc
 
-    if not auth.is_admin and project.directus_user_id != auth.user_id:
+    if not auth.is_admin and project.get("directus_user_id", "") != auth.user_id:
         raise HTTPException(status_code=403, detail="User does not have access to this project")
 
-    conversations = (
-        db.query(ConversationModel).filter(ConversationModel.project_id == project_id).all()
+    conversations = await run_in_thread_pool(
+        conversation_service.list_by_project,
+        project_id,
+        with_chunks=True,
+        with_tags=False,
     )
 
     if not conversations:
         raise HTTPException(status_code=404, detail="No conversations found for this project")
 
-    conversations = [
-        c for c in conversations if c.chunks and any(ch.transcript is not None for ch in c.chunks)
+    conversations_with_transcripts = [
+        conversation
+        for conversation in conversations
+        if any(
+            isinstance(chunk, dict) and chunk.get("transcript")
+            for chunk in (conversation.get("chunks") or [])
+        )
     ]
 
-    filename_futures = [
-        generate_transcript_file(conversation.id, db) for conversation in conversations
-    ]
+    if not conversations_with_transcripts:
+        raise HTTPException(status_code=404, detail="No transcripts available for this project")
 
-    filenames_with_none: List[str | None] = await asyncio.gather(*filename_futures)
+    filenames_with_none: List[Optional[str]] = await asyncio.gather(
+        *[generate_transcript_file(conversation) for conversation in conversations_with_transcripts]
+    )
 
     filenames: List[str] = [filename for filename in filenames_with_none if filename is not None]
 
     if not filenames:
         raise HTTPException(status_code=404, detail="No transcripts available for this project")
 
-    project_name_or_id = project.name if project.name is not None else project.id
-    safe_project_name = get_safe_filename(project_name_or_id)
+    project_name_or_id = project.get("name") if project.get("name") is not None else project_id
+    safe_project_name = get_safe_filename(str(project_name_or_id))
     zip_file_name = f"{safe_project_name}_transcripts.zip"
 
     with zipfile.ZipFile(zip_file_name, "w", zipfile.ZIP_DEFLATED) as zipf:
@@ -202,34 +238,12 @@ async def get_project_transcripts(
 
 
 async def get_latest_project_analysis_run(project_id: str) -> Optional[dict]:
-    try:
-        def _get_analysis_run() -> Optional[list[dict]]:
-            with directus_client_context() as client:
-                return client.get_items(
-                    "project_analysis_run",
-                    {
-                        "query": {
-                            "filter": {
-                                "project_id": project_id,
-                            },
-                            "sort": "-created_at",
-                        },
-                    },
-                )
-        
-        analysis_run: Optional[list[dict]] = await run_in_thread_pool(_get_analysis_run)
+    analysis_run = await run_in_thread_pool(project_service.get_latest_analysis_run, project_id)
 
-        if analysis_run is None:
-            return None
-
-        if len(analysis_run) == 0:
-            return None
-
-        return analysis_run[0]
-
-    except DirectusBadRequest as e:
-        logger.error(f"Failed to get latest project analysis run for project {project_id}: {e}")
+    if not analysis_run:
         return None
+
+    return analysis_run
 
 
 class CreateLibraryRequestBodySchema(BaseModel):
@@ -326,38 +340,24 @@ async def create_report(project_id: str, body: CreateReportRequestBodySchema) ->
     try:
         report_content_response = await get_report_content_for_project(project_id, language)
     except ContextTooLongException:
-
-        def _create_error_report() -> dict:
-            with directus_client_context() as client:
-                return client.create_item(
-                    "project_report",
-                    item_data={
-                        "content": "",
-                        "project_id": project_id,
-                        "language": language,
-                        "status": "error",
-                        "error_code": "CONTEXT_TOO_LONG",
-                    },
-                )["data"]
-
-        report = await run_in_thread_pool(_create_error_report)
+        report = await run_in_thread_pool(
+            project_service.create_report,
+            project_id,
+            language,
+            "",
+            "error",
+            "CONTEXT_TOO_LONG",
+        )
         return report
     except Exception as e:
         raise e
 
-    def _create_report() -> dict:
-        with directus_client_context() as client:
-            return client.create_item(
-                "project_report",
-                item_data={
-                    "content": report_content_response,
-                    "project_id": project_id,
-                    "language": language,
-                    "status": "archived",
-                },
-            )["data"]
-
-    report = await run_in_thread_pool(_create_report)
+    report = await run_in_thread_pool(
+        project_service.create_report,
+        project_id,
+        language,
+        report_content_response,
+    )
     return report
 
 
