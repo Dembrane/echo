@@ -167,11 +167,10 @@ export const ProjectReportRoute = () => {
 		<ReportLayout
 			rightSection={
 				<Group>
+					<UpdateReportModalButton reportId={data.id} />
 					<AnimatePresence>
 						{data.status === "published" && (
 							<Group>
-								<UpdateReportModalButton reportId={data.id} />
-
 								<Tooltip label={t`Share this report`}>
 									<ActionIcon
 										onClick={() => {

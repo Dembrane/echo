@@ -208,9 +208,6 @@ export const useDoesProjectReportNeedUpdate = (projectReportId: number) => {
 						id: {
 							_eq: projectReportId,
 						},
-						status: {
-							_eq: "published",
-						},
 					},
 					limit: 1,
 					sort: "-date_created",
