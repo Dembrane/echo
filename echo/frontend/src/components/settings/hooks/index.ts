@@ -3,6 +3,8 @@ import { throwWithMessage } from "@/components/auth/utils/errorUtils";
 import { toast } from "@/components/common/Toaster";
 import { directus } from "@/lib/directus";
 
+export * from "./useAuditLogsQuery";
+
 export interface GenerateTwoFactorResponse {
 	secret: string;
 	otpauth_url: string;
