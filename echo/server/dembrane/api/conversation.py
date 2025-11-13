@@ -6,19 +6,14 @@ from logging import getLogger
 from fastapi import Request, APIRouter
 from pydantic import BaseModel
 from litellm.utils import token_counter
-from sqlalchemy.orm import noload, selectinload
 from fastapi.responses import RedirectResponse, StreamingResponse
 from fastapi.exceptions import HTTPException
 from litellm.exceptions import ContentPolicyViolationError
 
 from dembrane.s3 import get_signed_url
+from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.utils import CacheWithExpiration, generate_uuid, get_utc_timestamp
-from dembrane.config import LIGHTRAG_LITELLM_INFERENCE_MODEL
-from dembrane.database import (
-    ConversationModel,
-    ConversationChunkModel,
-    DependencyInjectDatabase,
-)
+from dembrane.service import conversation_service
 from dembrane.directus import directus
 from dembrane.audio_utils import (
     get_duration_from_s3,
@@ -26,70 +21,38 @@ from dembrane.audio_utils import (
     merge_multiple_audio_files_and_save_to_s3,
 )
 from dembrane.reply_utils import generate_reply_for_conversation
-from dembrane.api.stateless import (
-    DeleteConversationRequest,
-    generate_summary,
-    delete_conversation as delete_conversation_from_lightrag,
-)
+from dembrane.api.stateless import generate_summary
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.exceptions import (
     NoContentFoundException,
     ConversationNotFoundException,
 )
 from dembrane.api.dependency_auth import DependencyDirectusSession
-from dembrane.conversation_health import get_health_status
 
 logger = getLogger("api.conversation")
 ConversationRouter = APIRouter(tags=["conversation"])
 
 
 async def get_conversation(
-    conversation_id: str, db: DependencyInjectDatabase, load_chunks: Optional[bool] = True
-) -> ConversationModel:
-    if load_chunks:
-        conversation = (
-            db.query(ConversationModel)
-            .options(
-                selectinload(ConversationModel.tags),
-                selectinload(ConversationModel.chunks),
-            )
-            .filter(
-                ConversationModel.id == conversation_id,
-            )
-            .first()
-        )
-    else:
-        conversation = (
-            db.query(ConversationModel)
-            .options(
-                noload(ConversationModel.chunks),
-                selectinload(ConversationModel.tags),
-            )
-            .filter(
-                ConversationModel.id == conversation_id,
-            )
-            .first()
-        )
-
-    if not conversation:
-        raise ConversationNotFoundException
+    conversation_id: str,
+    load_chunks: bool = True,
+    with_tags: bool = True,
+) -> dict:
+    conversation = await run_in_thread_pool(
+        conversation_service.get_by_id_or_raise,
+        conversation_id,
+        with_tags,
+        load_chunks,
+    )
 
     return conversation
 
 
 async def get_conversation_chunks(
-    conversation_id: str, db: DependencyInjectDatabase
-) -> List[ConversationChunkModel]:
-    conversation = await get_conversation(conversation_id, db, load_chunks=False)
-
-    chunks = (
-        db.query(ConversationChunkModel)
-        .filter(
-            ConversationChunkModel.conversation_id == conversation.id,
-        )
-        .order_by(ConversationChunkModel.timestamp)
-        .all()
-    )
+    conversation_id: str,
+) -> List[dict]:
+    await get_conversation(conversation_id, load_chunks=False)
+    chunks = await run_in_thread_pool(conversation_service.list_chunks, conversation_id)
 
     return chunks
 
@@ -103,7 +66,6 @@ async def generate_health_events(
 ) -> AsyncGenerator[str, None]:
     ping_count = 0
     last_health_data = None
-    event_count = 0
 
     try:
         while True:
@@ -117,26 +79,9 @@ async def generate_health_events(
             # Send ping every 45 seconds
             yield f"event: ping\ndata: {ping_count}\n\n"
 
-            health_data = get_health_status(
-                conversation_ids=conversation_ids, project_ids=project_ids
-            )
-
             # Extract only conversation_issue for the single conversation_id if only one is passed
             if len(conversation_ids) == 1:
-                conversation_id = conversation_ids[0]
                 conversation_issue = None
-
-                # Find the conversation_issue in the nested structure
-                if health_data and "projects" in health_data:
-                    for project_data in health_data["projects"].values():
-                        if (
-                            "conversations" in project_data
-                            and conversation_id in project_data["conversations"]
-                        ):
-                            conversation_issue = project_data["conversations"][conversation_id].get(
-                                "conversation_issue", "UNKNOWN"
-                            )
-                            break
 
                 # Create simplified response with just the conversation_issue
                 simplified_data = {"conversation_issue": conversation_issue}
@@ -146,13 +91,10 @@ async def generate_health_events(
                     yield f"event: health_update\ndata: {json.dumps(simplified_data)}\n\n"
                     last_health_data = simplified_data
             else:
-                # Send full health data if multiple IDs
-                if health_data != last_health_data:
-                    yield f"event: health_update\ndata: {json.dumps(health_data)}\n\n"
-                    last_health_data = health_data
-
-                event_count += 1
-                logger.debug(f"Sent health event #{event_count} to {client_info}")
+                logger.warning(
+                    "Multiple conversation IDs passed to health stream, only one is supported"
+                )
+                raise HTTPException(status_code=400, detail="Only one conversation ID is supported")
 
             # Log every 10th ping
             if ping_count % 10 == 0:
@@ -445,7 +387,6 @@ token_count_cache = CacheWithExpiration(ttl=500)
 @ConversationRouter.get("/{conversation_id}/token-count")
 async def get_conversation_token_count(
     conversation_id: str,
-    _db: DependencyInjectDatabase,
     auth: DependencyDirectusSession,
 ) -> int:
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
@@ -458,10 +399,9 @@ async def get_conversation_token_count(
     # If not in cache, calculate the token count
     transcript = await get_conversation_transcript(conversation_id, auth)
 
-    token_count = await run_in_thread_pool(
-        token_counter,
-        model=LIGHTRAG_LITELLM_INFERENCE_MODEL,
+    token_count = token_counter(
         messages=[{"role": "user", "content": transcript}],
+        model=get_completion_kwargs(MODELS.MULTI_MODAL_PRO)["model"],
     )
 
     # Store the result in the cache
@@ -750,12 +690,6 @@ async def delete_conversation(
     """
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
     try:
-        # Run RAG deletion (documents, transcripts, segments)
-        await delete_conversation_from_lightrag(
-            DeleteConversationRequest(conversation_ids=[conversation_id]),
-            session=auth,
-        )
-        # Run Directus deletion
         await run_in_thread_pool(directus.delete_item, "conversation", conversation_id)
         return {"status": "success", "message": "Conversation deleted successfully"}
     except Exception as e:

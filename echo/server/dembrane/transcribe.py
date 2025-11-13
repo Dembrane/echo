@@ -19,83 +19,28 @@ import litellm
 import requests
 
 from dembrane.s3 import get_signed_url, get_stream_from_s3
-from dembrane.config import (
-    GCP_SA_JSON,
-    API_BASE_URL,
-    ASSEMBLYAI_API_KEY,
-    ASSEMBLYAI_BASE_URL,
-    LITELLM_WHISPER_URL,
-    LITELLM_WHISPER_MODEL,
-    RUNPOD_WHISPER_API_KEY,
-    TRANSCRIPTION_PROVIDER,
-    LITELLM_WHISPER_API_KEY,
-    RUNPOD_WHISPER_BASE_URL,
-    LITELLM_WHISPER_API_VERSION,
-    ENABLE_ASSEMBLYAI_TRANSCRIPTION,
-    RUNPOD_WHISPER_PRIORITY_BASE_URL,
-    ENABLE_RUNPOD_WHISPER_TRANSCRIPTION,
-    ENABLE_LITELLM_WHISPER_TRANSCRIPTION,
-    RUNPOD_WHISPER_MAX_REQUEST_THRESHOLD,
-)
+from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.prompts import render_prompt
 from dembrane.service import file_service, conversation_service
 from dembrane.directus import directus
+from dembrane.settings import get_settings
 
 logger = logging.getLogger("transcribe")
+
+settings = get_settings()
+transcription_cfg = settings.transcription
+GCP_SA_JSON = transcription_cfg.gcp_sa_json
+ASSEMBLYAI_API_KEY = transcription_cfg.assemblyai_api_key
+ASSEMBLYAI_BASE_URL = transcription_cfg.assemblyai_base_url
+TRANSCRIPTION_PROVIDER = transcription_cfg.provider
+LITELLM_TRANSCRIPTION_MODEL = transcription_cfg.litellm_model
+LITELLM_TRANSCRIPTION_API_KEY = transcription_cfg.litellm_api_key
+LITELLM_TRANSCRIPTION_API_BASE = transcription_cfg.litellm_api_base
+LITELLM_TRANSCRIPTION_API_VERSION = transcription_cfg.litellm_api_version
 
 
 class TranscriptionError(Exception):
     pass
-
-
-def queue_transcribe_audio_runpod(
-    audio_file_uri: str,
-    language: Optional[str],
-    hotwords: Optional[List[str]] = None,
-    is_priority: bool = False,
-    conversation_chunk_id: Optional[str] = "",
-) -> str:
-    """Transcribe audio using RunPod"""
-    logger = logging.getLogger("transcribe.transcribe_audio_runpod")
-
-    try:
-        signed_url = get_signed_url(audio_file_uri, expires_in_seconds=3 * 24 * 60 * 60)  # 3 days
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {RUNPOD_WHISPER_API_KEY}",
-        }
-
-        input_payload = {
-            "audio": signed_url,
-            "hotwords": ", ".join(hotwords) if hotwords else None,
-            "conversation_chunk_id": conversation_chunk_id,
-        }
-
-        if language:
-            input_payload["language"] = language
-
-        data = {
-            "input": input_payload,
-            "webhook": f"{API_BASE_URL}/stateless/webhook/transcribe",
-        }
-
-        logger.debug(f"data: {data}")
-
-        try:
-            if is_priority:
-                url = f"{str(RUNPOD_WHISPER_PRIORITY_BASE_URL).rstrip('/')}/run"
-            else:
-                url = f"{str(RUNPOD_WHISPER_BASE_URL).rstrip('/')}/run"
-            response = requests.post(url, headers=headers, json=data, timeout=600)
-            response.raise_for_status()
-            job_id = response.json()["id"]
-            return job_id
-        except Exception as e:
-            logger.error(f"Failed to queue transcription job for RunPod: {e}")
-            raise TranscriptionError(f"Failed to queue transcription job for RunPod: {e}") from e
-    except Exception as e:
-        logger.error(f"Failed to get signed url for {audio_file_uri}: {e}")
-        raise TranscriptionError(f"Failed to get signed url for {audio_file_uri}: {e}") from e
 
 
 def transcribe_audio_litellm(
@@ -115,15 +60,23 @@ def transcribe_audio_litellm(
         raise TranscriptionError(f"Failed to get audio stream from S3: {exc}") from exc
 
     try:
-        response = litellm.transcription(
-            model=LITELLM_WHISPER_MODEL,
-            file=file_upload,
-            api_key=LITELLM_WHISPER_API_KEY,
-            api_base=LITELLM_WHISPER_URL,
-            api_version=LITELLM_WHISPER_API_VERSION,
-            language=language,
-            prompt=whisper_prompt,
-        )
+        if not LITELLM_TRANSCRIPTION_MODEL or not LITELLM_TRANSCRIPTION_API_KEY:
+            raise TranscriptionError("LiteLLM transcription configuration is incomplete.")
+
+        request_kwargs: dict[str, Any] = {
+            "model": LITELLM_TRANSCRIPTION_MODEL,
+            "file": file_upload,
+            "language": language,
+            "prompt": whisper_prompt,
+            "api_key": LITELLM_TRANSCRIPTION_API_KEY,
+        }
+
+        if LITELLM_TRANSCRIPTION_API_BASE:
+            request_kwargs["api_base"] = LITELLM_TRANSCRIPTION_API_BASE
+        if LITELLM_TRANSCRIPTION_API_VERSION:
+            request_kwargs["api_version"] = LITELLM_TRANSCRIPTION_API_VERSION
+
+        response = litellm.transcription(**request_kwargs)
         return response["text"]
     except Exception as e:
         logger.error(f"LiteLLM transcription failed: {e}")
@@ -137,6 +90,7 @@ def transcribe_audio_assemblyai(
 ) -> tuple[str, dict[str, Any]]:
     """Transcribe audio through AssemblyAI"""
     logger = logging.getLogger("transcribe.transcribe_audio_assemblyai")
+    logger.info("Submitting AssemblyAI transcription request for %s", audio_file_uri)
 
     headers = {
         "Content-Type": "application/json",
@@ -169,10 +123,9 @@ def transcribe_audio_assemblyai(
     if hotwords:
         data["keyterms_prompt"] = hotwords
 
-    try:
-        response = requests.post(f"{ASSEMBLYAI_BASE_URL}/v2/transcript", headers=headers, json=data)
-        response.raise_for_status()
+    response = requests.post(f"{ASSEMBLYAI_BASE_URL}/v2/transcript", headers=headers, json=data)
 
+    if response.status_code == 200:
         transcript_id = response.json()["id"]
         polling_endpoint = f"{ASSEMBLYAI_BASE_URL}/v2/transcript/{transcript_id}"
 
@@ -184,13 +137,13 @@ def transcribe_audio_assemblyai(
                 # return both to add the diarization response later...
                 return transcript["text"], transcript
             elif transcript["status"] == "error":
-                raise RuntimeError(f"Transcription failed: {transcript['error']}")
+                raise TranscriptionError(f"Transcription failed: {transcript['error']}")
             else:
                 time.sleep(3)
-
-    except Exception as e:
-        logger.error(f"AssemblyAI transcription failed: {e}")
-        raise TranscriptionError(f"AssemblyAI transcription failed: {e}") from e
+    elif response.status_code == 400:
+        raise TranscriptionError(f"Transcription failed: {response.json()['error']}")
+    else:
+        raise Exception(f"Transcription failed: {response.json()['error']}")
 
 
 def _get_audio_file_object(audio_file_uri: str) -> Any:
@@ -257,9 +210,8 @@ def _transcript_correction_workflow(
 
     assert GCP_SA_JSON, "GCP_SA_JSON is not set"
 
+    completion_kwargs = get_completion_kwargs(MODELS.MULTI_MODAL_PRO)
     response = litellm.completion(
-        model="vertex_ai/gemini-2.5-flash",
-        vertex_credentials=GCP_SA_JSON,
         messages=[
             {
                 "role": "system",
@@ -285,6 +237,7 @@ def _transcript_correction_workflow(
             "type": "json_object",
             "response_schema": response_schema,
         },
+        **completion_kwargs,
     )
 
     json_response = json.loads(response.choices[0].message.content)
@@ -316,8 +269,14 @@ def transcribe_audio_dembrane_25_09(
     """
     logger = logging.getLogger("transcribe.transcribe_audio_dembrane_25_09")
 
-    transcript, response = transcribe_audio_assemblyai(audio_file_uri, language, hotwords)
-    logger.debug(f"transcript from assemblyai: {transcript}")
+    try:
+        transcript, response = transcribe_audio_assemblyai(audio_file_uri, language, hotwords)
+        logger.debug(f"transcript from assemblyai: {transcript}")
+    except TranscriptionError as e:
+        logger.info(
+            f"Transcription failed with AssemblyAI. So we will continue with the correction workflow with empty transcript: {e}"
+        )
+        transcript, response = "[Nothing to transcribe]", {}
 
     # use correction workflow to correct keyterms and fix missing segments
     corrected_transcript, note = _transcript_correction_workflow(
@@ -406,92 +365,10 @@ def _build_hotwords(conversation: dict) -> Optional[List[str]]:
     return None
 
 
-def _get_transcript_provider() -> Literal["Runpod", "LiteLLM", "AssemblyAI", "Dembrane-25-09"]:
+def _get_transcript_provider() -> Literal["LiteLLM", "AssemblyAI", "Dembrane-25-09"]:
     if TRANSCRIPTION_PROVIDER:
         return TRANSCRIPTION_PROVIDER
-    elif ENABLE_ASSEMBLYAI_TRANSCRIPTION:
-        return "AssemblyAI"
-    elif ENABLE_RUNPOD_WHISPER_TRANSCRIPTION:
-        return "Runpod"
-    elif ENABLE_LITELLM_WHISPER_TRANSCRIPTION:
-        return "LiteLLM"
-    else:
-        raise TranscriptionError("No valid transcription configuration found.")
-
-
-def _get_status_runpod(runpod_job_status_link: str) -> tuple[str, dict]:
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {RUNPOD_WHISPER_API_KEY}",
-    }
-    response = requests.get(runpod_job_status_link, headers=headers, timeout=30)
-    response.raise_for_status()
-
-    response_data = response.json()
-
-    return response_data["status"], response_data
-
-
-def _process_runpod_transcription(
-    chunk: dict,
-    conversation_chunk_id: str,
-    language: str,
-    hotwords: Optional[List[str]],
-) -> str:
-    """Handle RunPod status checking, queuing new jobs and Directus updates.
-
-    Returns:
-        str: The conversation chunk ID if successful
-    """
-    runpod_request_count = chunk["runpod_request_count"]
-    source = chunk["source"]
-    runpod_job_status_link = chunk["runpod_job_status_link"]
-
-    # 1. Check status of an existing job, if any
-    if runpod_job_status_link:
-        try:
-            job_status, _ = _get_status_runpod(runpod_job_status_link)
-
-            if job_status == "IN_PROGRESS":
-                logger.info("RunPod job %s is still in progress", runpod_job_status_link)
-                return conversation_chunk_id
-
-        except Exception as exc:  # Broad catch – any issue we continue to (re)queue
-            logger.error("Unable to fetch RunPod status from %s: %s", runpod_job_status_link, exc)
-
-    # 2. Respect max-request threshold
-    if runpod_request_count >= RUNPOD_WHISPER_MAX_REQUEST_THRESHOLD:
-        logger.info("RunPod request threshold reached for chunk %s", conversation_chunk_id)
-        directus.update_item(
-            collection_name="conversation_chunk",
-            item_id=conversation_chunk_id,
-            item_data={
-                "runpod_job_status_link": None,
-            },
-        )
-        return conversation_chunk_id
-
-    # 3. Queue a new transcription job
-    is_priority = source == "PORTAL_AUDIO"
-
-    job_id = queue_transcribe_audio_runpod(
-        chunk["path"],
-        language=language,
-        hotwords=hotwords,
-        is_priority=is_priority,
-        conversation_chunk_id=conversation_chunk_id,
-    )
-
-    directus.update_item(
-        collection_name="conversation_chunk",
-        item_id=conversation_chunk_id,
-        item_data={
-            "runpod_job_status_link": f"{str(RUNPOD_WHISPER_BASE_URL)}/status/{job_id}",
-            "runpod_request_count": runpod_request_count + 1,
-        },
-    )
-
-    return conversation_chunk_id
+    raise TranscriptionError("No valid transcription configuration found.")
 
 
 def transcribe_conversation_chunk(
@@ -556,12 +433,6 @@ def transcribe_conversation_chunk(
                     },
                 )
                 return conversation_chunk_id
-            case "Runpod":
-                logger.info("Using RunPod for transcription")
-                hotwords = _build_hotwords(conversation)
-                return _process_runpod_transcription(
-                    chunk, conversation_chunk_id, language, hotwords
-                )
             case "LiteLLM":
                 logger.info("Using LITELLM for transcription")
                 whisper_prompt = _build_whisper_prompt(conversation, language)
@@ -570,6 +441,10 @@ def transcribe_conversation_chunk(
                 )
                 _save_transcript(conversation_chunk_id, transcript, diarization=None)
                 return conversation_chunk_id
+            case _:
+                raise TranscriptionError(
+                    f"Unsupported transcription provider: {transcript_provider}"
+                )
 
     except Exception as e:
         logger.error("Failed to process conversation chunk %s: %s", conversation_chunk_id, e)

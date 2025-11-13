@@ -64,18 +64,6 @@ export const AspectCard = ({
 									{data.short_summary ?? data.description ?? ""}
 								</Text>
 							</Stack>
-							{/* <Stack className="pt-4">
-                <Divider />
-                <Group>
-                  <Pill>
-                    <Group>
-                      <Text className="font-semibold">
-                        {data.quotes_count ?? 0} <Trans>Quotes</Trans>
-                      </Text>
-                    </Group>
-                  </Pill>
-                </Group>
-              </Stack> */}
 						</Box>
 					</Box>
 				</Paper>

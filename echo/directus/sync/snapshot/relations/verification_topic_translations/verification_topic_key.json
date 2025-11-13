@@ -1,0 +1,25 @@
+{
+  "collection": "verification_topic_translations",
+  "field": "verification_topic_key",
+  "related_collection": "verification_topic",
+  "meta": {
+    "junction_field": "languages_code",
+    "many_collection": "verification_topic_translations",
+    "many_field": "verification_topic_key",
+    "one_allowed_collections": null,
+    "one_collection": "verification_topic",
+    "one_collection_field": null,
+    "one_deselect_action": "nullify",
+    "one_field": "translations",
+    "sort_field": null
+  },
+  "schema": {
+    "table": "verification_topic_translations",
+    "column": "verification_topic_key",
+    "foreign_key_table": "verification_topic",
+    "foreign_key_column": "key",
+    "constraint_name": "verification_topic_translations_verificati__34868e89_foreign",
+    "on_update": "NO ACTION",
+    "on_delete": "SET NULL"
+  }
+}

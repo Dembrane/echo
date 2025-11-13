@@ -2,14 +2,9 @@ import re
 import logging
 
 from litellm import completion
-from litellm.utils import token_counter
+from litellm.utils import token_counter, get_max_tokens
 
-from dembrane.config import (
-    MEDIUM_LITELLM_MODEL,
-    MEDIUM_LITELLM_API_KEY,
-    MEDIUM_LITELLM_API_BASE,
-    MEDIUM_LITELLM_API_VERSION,
-)
+from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.prompts import render_prompt
 from dembrane.directus import directus
 from dembrane.api.conversation import get_conversation_transcript
@@ -17,12 +12,20 @@ from dembrane.api.dependency_auth import DirectusSession
 
 logger = logging.getLogger("report_utils")
 
-if "4.1" in str(MEDIUM_LITELLM_MODEL):
-    logger.info("using 700k context length for report")
-    MAX_REPORT_CONTEXT_LENGTH = 700000
+TEXT_PROVIDER_KWARGS = get_completion_kwargs(MODELS.TEXT_FAST)
+TEXT_PROVIDER_MODEL = TEXT_PROVIDER_KWARGS["model"]
+
+_max_tokens = get_max_tokens(TEXT_PROVIDER_MODEL)
+
+if _max_tokens is None:
+    logger.error(f"Could not get max tokens for model {TEXT_PROVIDER_MODEL}")
+    MAX_REPORT_CONTEXT_LENGTH = 128000  # good default
 else:
-    logger.info("using 128k context length for report")
-    MAX_REPORT_CONTEXT_LENGTH = 128000
+    MAX_REPORT_CONTEXT_LENGTH = int(_max_tokens * 0.8)
+
+logger.info(
+    f"Using {TEXT_PROVIDER_MODEL} for report generation with context length {MAX_REPORT_CONTEXT_LENGTH}"
+)
 
 
 class ContextTooLongException(Exception):
@@ -68,7 +71,10 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
             continue
 
         # Count tokens before adding
-        summary_tokens = token_counter(model=MEDIUM_LITELLM_MODEL, text=conversation["summary"])
+        summary_tokens = token_counter(
+            messages=[{"role": "user", "content": conversation["summary"]}],
+            model=get_completion_kwargs(MODELS.TEXT_FAST)["model"],
+        )
 
         # Check if adding this conversation would exceed the limit
         if token_count + summary_tokens >= MAX_REPORT_CONTEXT_LENGTH:
@@ -123,7 +129,10 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
             continue
 
         # Calculate token count for the transcript
-        transcript_tokens = token_counter(model=MEDIUM_LITELLM_MODEL, text=transcript)
+        transcript_tokens = token_counter(
+            messages=[{"role": "user", "content": transcript}],
+            model=get_completion_kwargs(MODELS.TEXT_FAST)["model"],
+        )
 
         if token_count + transcript_tokens < MAX_REPORT_CONTEXT_LENGTH:
             # Append with a newline to keep paragraphs separated
@@ -152,19 +161,14 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
         "system_report", language, {"conversations": conversation_data_list}
     )
 
-    # Use litellm.completion instead of anthropic client
+    # Use the configured Litellm provider for report generation
     response = completion(
-        model=MEDIUM_LITELLM_MODEL,
-        api_key=MEDIUM_LITELLM_API_KEY,
-        api_version=MEDIUM_LITELLM_API_VERSION,
-        api_base=MEDIUM_LITELLM_API_BASE,
-        # max tokens needed for "anthropic"
-        # max_tokens=4096,
         messages=[
             {"role": "user", "content": prompt_message},
-            # prefill message only for "anthropic"
+            # Some providers expect a prefilled assistant message; add if needed.
             # {"role": "assistant", "content": "<article>"},
         ],
+        **get_completion_kwargs(MODELS.TEXT_FAST),
     )
 
     response_content = response.choices[0].message.content

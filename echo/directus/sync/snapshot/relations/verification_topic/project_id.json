@@ -1,0 +1,25 @@
+{
+  "collection": "verification_topic",
+  "field": "project_id",
+  "related_collection": "project",
+  "meta": {
+    "junction_field": null,
+    "many_collection": "verification_topic",
+    "many_field": "project_id",
+    "one_allowed_collections": null,
+    "one_collection": "project",
+    "one_collection_field": null,
+    "one_deselect_action": "nullify",
+    "one_field": "custom_verification_topics",
+    "sort_field": null
+  },
+  "schema": {
+    "table": "verification_topic",
+    "column": "project_id",
+    "foreign_key_table": "project",
+    "foreign_key_column": "id",
+    "constraint_name": "verification_topic_project_id_foreign",
+    "on_update": "NO ACTION",
+    "on_delete": "SET NULL"
+  }
+}

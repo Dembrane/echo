@@ -12,11 +12,9 @@ echo "  Timeout: ${TIMEOUT}s"
 echo "  Max Requests: $MAX_REQUESTS"
 echo "📊 Scale with K8s replicas (not workers per pod)"
 
-# Use custom worker that configures asyncio loop for LightRAG compatibility
-# (LightRAG uses asyncio.run() which requires nest_asyncio, incompatible with uvloop)
 exec gunicorn dembrane.main:app \
   --workers "$WORKERS" \
-  --worker-class dembrane.lightrag_uvicorn_worker.LightRagUvicornWorker \
+  --worker-class dembrane.asyncio_uvicorn_worker.AsyncioUvicornWorker \
   --bind 0.0.0.0:8000 \
   --timeout "$TIMEOUT" \
   --graceful-timeout 30 \

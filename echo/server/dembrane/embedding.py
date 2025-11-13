@@ -1,31 +1,39 @@
 import logging
-from typing import List
+from typing import Any, Dict, List
 
 import backoff
 import litellm
 
-from dembrane.config import (
-    # FIXME: update to use dembrane embeddings
-    LIGHTRAG_LITELLM_EMBEDDING_API_KEY,
-    LIGHTRAG_LITELLM_EMBEDDING_API_BASE,
-    LIGHTRAG_LITELLM_EMBEDDING_API_VERSION,
-)
+from dembrane.settings import get_settings
 
 EMBEDDING_DIM = 3072
 
 logger = logging.getLogger("embedding")
 logger.setLevel(logging.DEBUG)
 
+settings = get_settings()
+embedding_settings = settings.embedding
+
 
 @backoff.on_exception(backoff.expo, (Exception), max_tries=5)
 def embed_text(text: str) -> List[float]:
     text = text.replace("\n", " ").strip()
     try:
+        if not embedding_settings.model:
+            raise ValueError("Embedding model is not configured.")
+
+        embedding_kwargs: Dict[str, Any] = {
+            "model": embedding_settings.model,
+        }
+        if embedding_settings.api_key:
+            embedding_kwargs["api_key"] = embedding_settings.api_key
+        if embedding_settings.base_url:
+            embedding_kwargs["api_base"] = embedding_settings.base_url
+        if embedding_settings.api_version:
+            embedding_kwargs["api_version"] = embedding_settings.api_version
+
         response = litellm.embedding(
-            api_key=str(LIGHTRAG_LITELLM_EMBEDDING_API_KEY),
-            api_base=str(LIGHTRAG_LITELLM_EMBEDDING_API_BASE),
-            api_version=str(LIGHTRAG_LITELLM_EMBEDDING_API_VERSION),
-            model="azure/text-embedding-3-large",
+            **embedding_kwargs,
             input=text,
         )
         return response["data"][0]["embedding"]

@@ -30,7 +30,7 @@ export const ProjectListItem = ({
 						</Group>
 						<Text size="sm" c="dimmed">
 							<Trans>
-								{project?.conversations_count ??
+								{project.conversations_count ??
 									project?.conversations?.length ??
 									0}{" "}
 								Conversations • Edited{" "}

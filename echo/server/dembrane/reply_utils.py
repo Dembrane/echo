@@ -8,12 +8,7 @@ from pydantic import BaseModel
 from litellm.utils import token_counter
 from litellm.exceptions import ContentPolicyViolationError
 
-from dembrane.config import (
-    MEDIUM_LITELLM_MODEL,
-    MEDIUM_LITELLM_API_KEY,
-    MEDIUM_LITELLM_API_BASE,
-    MEDIUM_LITELLM_API_VERSION,
-)
+from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.prompts import render_prompt
 from dembrane.directus import directus
 
@@ -240,7 +235,10 @@ async def generate_reply_for_conversation(
 
             # Check tokens for this conversation
             formatted_conv = format_conversation(c)
-            tokens = token_counter(text=formatted_conv, model=MEDIUM_LITELLM_MODEL)
+            tokens = token_counter(
+                messages=[{"role": "user", "content": formatted_conv}],
+                model=get_completion_kwargs(MODELS.TEXT_FAST)["model"],
+            )
 
             candidate_conversations.append((formatted_conv, tokens))
     else:
@@ -260,7 +258,10 @@ async def generate_reply_for_conversation(
 
             # First check tokens for this conversation
             formatted_conv = format_conversation(c)
-            tokens = token_counter(text=formatted_conv, model=MEDIUM_LITELLM_MODEL)
+            tokens = token_counter(
+                messages=[{"role": "user", "content": formatted_conv}],
+                model=get_completion_kwargs(MODELS.TEXT_FAST)["model"],
+            )
 
             # If conversation is too large, truncate it
             if tokens > target_tokens_per_conv:
@@ -269,7 +270,10 @@ async def generate_reply_for_conversation(
                 truncated_transcript = c.transcript[: int(len(c.transcript) * truncation_ratio)]
                 c.transcript = truncated_transcript + "\n[Truncated for brevity...]"
                 formatted_conv = format_conversation(c)
-                tokens = token_counter(text=formatted_conv, model=MEDIUM_LITELLM_MODEL)
+                tokens = token_counter(
+                    messages=[{"role": "user", "content": formatted_conv}],
+                    model=get_completion_kwargs(MODELS.TEXT_FAST)["model"],
+                )
 
             candidate_conversations.append((formatted_conv, tokens))
 
@@ -364,14 +368,11 @@ async def generate_reply_for_conversation(
     # Stream the response
     try:
         response = await acompletion(
-            model=MEDIUM_LITELLM_MODEL,
-            api_key=MEDIUM_LITELLM_API_KEY,
-            api_version=MEDIUM_LITELLM_API_VERSION,
-            api_base=MEDIUM_LITELLM_API_BASE,
             messages=[
                 {"role": "user", "content": prompt},
             ],
             stream=True,
+            **get_completion_kwargs(MODELS.TEXT_FAST),
         )
     except ContentPolicyViolationError as e:
         logger.error(

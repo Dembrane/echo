@@ -38,6 +38,7 @@ import {
 	IconArrowsUpDown,
 	IconChevronDown,
 	IconChevronUp,
+	IconRosetteDiscountCheckFilled,
 	IconSearch,
 	IconTags,
 	IconX,
@@ -119,9 +120,10 @@ const ConversationAccordionLabelChatSelection = ({
 		projectChatContextQuery.data?.auto_select_bool ?? false;
 
 	// Check if conversation has any content
-	const hasContent = conversation.chunks?.some(
-		(chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
-	);
+	const hasContent = conversation.chunks?.some((chunk) => {
+		const transcript = (chunk as unknown as ConversationChunk).transcript;
+		return typeof transcript === "string" && transcript.trim().length > 0;
+	});
 
 	const handleSelectChat = () => {
 		if (!isSelected) {
@@ -192,10 +194,8 @@ export const MoveConversationButton = ({
 	const search = watch("search");
 
 	const projectsQuery = useInfiniteProjects({
-		enabled: opened,
 		query: {
 			filter: {
-				// @ts-expect-error not tyed
 				_and: [{ id: { _neq: conversation.project_id } }],
 			},
 			search: search,
@@ -368,7 +368,10 @@ export const ConversationStatusIndicators = ({
 	const hasOnlyTextContent = useMemo(
 		() =>
 			conversation.chunks?.length > 0 &&
-			conversation.chunks?.every((chunk) => chunk.source === "PORTAL_TEXT"),
+			conversation.chunks?.every(
+				(chunk) =>
+					(chunk as unknown as ConversationChunk).source === "PORTAL_TEXT",
+			),
 		[conversation.chunks],
 	);
 
@@ -437,6 +440,24 @@ export const ConversationStatusIndicators = ({
 	);
 };
 
+const ConversationProjectTagPill = ({
+	tag,
+}: {
+	tag: ConversationProjectTag;
+}) => {
+	const text = (tag?.project_tag_id as ProjectTag)?.text ?? "";
+
+	if (!text) {
+		return null;
+	}
+
+	return (
+		<Pill size="sm" className="font-normal">
+			{text}
+		</Pill>
+	);
+};
+
 const ConversationAccordionItem = ({
 	conversation,
 	highlight = false,
@@ -466,6 +487,14 @@ const ConversationAccordionItem = ({
 
 	const isAutoSelectEnabled = chatContextQuery.data?.auto_select_bool ?? false;
 
+	// Check if conversation has approved artefacts
+	const hasVerifiedArtefacts =
+		conversation?.conversation_artifacts &&
+		conversation?.conversation_artifacts?.length > 0 &&
+		conversation?.conversation_artifacts?.some(
+			(artefact) => (artefact as ConversationArtifact).approved_at,
+		);
+
 	return (
 		<NavigationButton
 			to={`/projects/${conversation.project_id}/conversation/${conversation.id}/overview`}
@@ -490,6 +519,19 @@ const ConversationAccordionItem = ({
 						<Text className="pl-[4px] text-sm font-normal">
 							{conversation.participant_email ?? conversation.participant_name}
 						</Text>
+						{hasVerifiedArtefacts && (
+							<Tooltip label={t`Has verified artifacts`}>
+								<ActionIcon
+									variant="subtle"
+									color="blue"
+									aria-label={t`verified artifacts`}
+									size={18}
+									style={{ cursor: "default" }}
+								>
+									<IconRosetteDiscountCheckFilled />
+								</ActionIcon>
+							</Tooltip>
+						)}
 					</Group>
 					<ConversationStatusIndicators
 						conversation={conversation}
@@ -519,17 +561,12 @@ const ConversationAccordionItem = ({
 					}
 				</div>
 				<Group gap="4" pr="sm" wrap="wrap">
-					{conversation.tags
-						?.filter((tag) => tag.project_tag_id && tag.project_tag_id != null)
-						.map((tag) => (
-							<Pill
-								key={`${tag.id}-${(tag?.project_tag_id as unknown as ProjectTag)?.text}`}
-								size="sm"
-								className="font-normal"
-							>
-								{(tag?.project_tag_id as unknown as ProjectTag)?.text}
-							</Pill>
-						))}
+					{conversation.tags?.map((tag) => (
+						<ConversationProjectTagPill
+							key={(tag as ConversationProjectTag).id}
+							tag={tag as ConversationProjectTag}
+						/>
+					))}
 				</Group>
 			</Stack>
 		</NavigationButton>
@@ -629,7 +666,6 @@ export const ConversationAccordion = ({
 		projectId,
 		query: {
 			deep: {
-				// @ts-expect-error tags not typed in CustomDirectusTypes
 				tags: {
 					_sort: "sort",
 				},
@@ -643,6 +679,7 @@ export const ConversationAccordion = ({
 	});
 	const [tagSearch, setTagSearch] = useState("");
 	const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+	const [showOnlyVerified, setShowOnlyVerified] = useState(false);
 	const allProjectTags = useMemo(
 		() => (projectTags?.tags as unknown as ProjectTag[]) ?? [],
 		[projectTags?.tags],
@@ -661,7 +698,6 @@ export const ConversationAccordion = ({
 		false,
 		{
 			deep: {
-				// @ts-expect-error chunks is not typed
 				chunks: {
 					_limit: 25,
 				},
@@ -674,6 +710,15 @@ export const ConversationAccordion = ({
 						_some: {
 							project_tag_id: {
 								id: { _in: selectedTagIds },
+							},
+						},
+					},
+				}),
+				...(showOnlyVerified && {
+					conversation_artifacts: {
+						_some: {
+							approved_at: {
+								_nnull: true,
 							},
 						},
 					},
@@ -720,18 +765,24 @@ export const ConversationAccordion = ({
 		() =>
 			debouncedConversationSearchValue !== "" ||
 			sortBy !== "-created_at" ||
-			selectedTagIds.length > 0,
+			selectedTagIds.length > 0 ||
+			showOnlyVerified,
 		// Temporarily disabled source filters
 		//   sortBy !== "-created_at" ||
 		//   activeFilters.length !== FILTER_OPTIONS.length,
 		// [debouncedConversationSearchValue, sortBy, activeFilters],
-		[debouncedConversationSearchValue, sortBy, selectedTagIds.length],
+		[
+			debouncedConversationSearchValue,
+			sortBy,
+			selectedTagIds.length,
+			showOnlyVerified,
+		],
 	);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <should update when sortBy or selectedTagIds.length changes>
 	const appliedFiltersCount = useMemo(() => {
-		return selectedTagIds.length;
-	}, [sortBy, selectedTagIds.length]);
+		return selectedTagIds.length + (showOnlyVerified ? 1 : 0);
+	}, [sortBy, selectedTagIds.length, showOnlyVerified]);
 
 	const [showFilterActions, setShowFilterActions] = useState(false);
 	const [sortMenuOpened, setSortMenuOpened] = useState(false);
@@ -745,6 +796,7 @@ export const ConversationAccordion = ({
 		setShowDuration(true);
 		setSelectedTagIds([]);
 		setTagSearch("");
+		setShowOnlyVerified(false);
 		// not sure why only these 2 were needed. biome seems to shut up with these 2. i tried putting all. will need to investigate
 	}, [setSortBy, setShowDuration]);
 
@@ -896,7 +948,7 @@ export const ConversationAccordion = ({
 								<Menu.Target>
 									<Button
 										variant="outline"
-										size="sm"
+										size="xs"
 										color="gray"
 										fw={500}
 										leftSection={<IconArrowsUpDown size={16} />}
@@ -953,7 +1005,7 @@ export const ConversationAccordion = ({
 									<Button
 										variant="outline"
 										color="gray"
-										size="sm"
+										size="xs"
 										fw={500}
 										leftSection={<IconTags size={16} />}
 										rightSection={
@@ -1072,6 +1124,17 @@ export const ConversationAccordion = ({
 								</Menu.Dropdown>
 							</Menu>
 
+							<Button
+								variant={showOnlyVerified ? "filled" : "outline"}
+								color={showOnlyVerified ? "blue" : "gray"}
+								size="xs"
+								fw={500}
+								leftSection={<IconRosetteDiscountCheckFilled size={16} />}
+								onClick={() => setShowOnlyVerified((prev) => !prev)}
+							>
+								<Trans id="conversation.filters.verified.text">Verified</Trans>
+							</Button>
+
 							<Tooltip label={t`Reset to default`}>
 								<ActionIcon
 									variant="outline"
@@ -1079,6 +1142,9 @@ export const ConversationAccordion = ({
 									onClick={resetEverything}
 									aria-label={t`Reset to default`}
 									disabled={!filterApplied}
+									size="md"
+									py={14}
+									ml="auto"
 								>
 									<IconX size={16} />
 								</ActionIcon>

@@ -6,15 +6,17 @@ export const getTranslatedContent = (
 ) => {
 	const translation =
 		announcement.translations?.find(
-			(t: AnnouncementTranslations) => t.languages_code === language && t.title,
+			(t) =>
+				(t as AnnouncementTranslation).languages_code === language &&
+				(t as AnnouncementTranslation).title,
 		) ||
 		announcement.translations?.find(
-			(t: AnnouncementTranslations) => t.languages_code === "en-US",
+			(t) => (t as AnnouncementTranslation).languages_code === "en-US",
 		);
 
 	return {
-		message: translation?.message || "",
-		title: translation?.title || "",
+		message: (translation as AnnouncementTranslation)?.message || "",
+		title: (translation as AnnouncementTranslation)?.title || "",
 	};
 };
 
@@ -33,7 +35,8 @@ export function useProcessedAnnouncements(
 				id: announcement.id,
 				level: announcement.level as "info" | "urgent",
 				message,
-				read: announcement.activity?.[0]?.read || false,
+				read:
+					(announcement.activity?.[0] as AnnouncementActivity)?.read || false,
 				title,
 			};
 		});
