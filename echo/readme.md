@@ -43,6 +43,7 @@ The following guide is to run the whole application locally. it is HIGHLY recomm
 
 	- Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> to open the command palette.
 	- Type **"Dev Containers: Open Folder in Container"** (or "Reopen in Container").
+	- Create .envs `touch server/.env && touch directus/.env`
 	- Choose the `/echo/echo` folder (this is the folder containing the `.devcontainer/` folder)
 	- Wait for the containers to build. This will take a few minutes.
 

@@ -222,7 +222,7 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
         if not conversation_id:
             continue
 
-        participant_name = conversation_ref.get("participant_name")
+        participant_name = str(conversation_ref.get("participant_name") or "")
         is_locked = conversation_id in locked_conversations
         token_count = await get_conversation_token_count(conversation_id, auth)
 
@@ -462,7 +462,7 @@ async def post_chat(
     user_message_content = body.messages[-1].content
     user_message_id = generate_uuid()
 
-    user_message = await run_in_thread_pool(
+    await run_in_thread_pool(
         chat_service.create_message,
         chat_id,
         "user",

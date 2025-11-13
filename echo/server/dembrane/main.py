@@ -1,22 +1,22 @@
 import time
-from typing import Any, AsyncGenerator, Awaitable, Callable, cast
+from typing import Any, Callable, Awaitable, AsyncGenerator
 from logging import getLogger
 from contextlib import asynccontextmanager
 
 import nest_asyncio
 from fastapi import FastAPI, Request, HTTPException
+from starlette.types import Scope
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware import Middleware
 from fastapi.openapi.utils import get_openapi
 from starlette.middleware.cors import CORSMiddleware
-from starlette.responses import Response
-from starlette.types import Scope
 
-from dembrane.settings import get_settings
+from dembrane.seed import seed_default_languages, seed_default_verification_topics
 from dembrane.sentry import init_sentry
 from dembrane.api.api import api
-from dembrane.seed import seed_default_languages, seed_default_verification_topics
+from dembrane.settings import get_settings
 
 # LightRAG requires nest_asyncio for nested event loops
 nest_asyncio.apply()
@@ -104,7 +104,7 @@ class SPAStaticFiles(StaticFiles):
                 raise ex
 
 
-def custom_openapi() -> Any:
+def custom_openapi() -> dict[str, Any]:
     if app.openapi_schema:
         return app.openapi_schema
     openapi_schema = get_openapi(
@@ -114,10 +114,10 @@ def custom_openapi() -> Any:
     )
     openapi_schema["info"]["x-logo"] = {"url": "/dembrane-logo.png"}
     app.openapi_schema = openapi_schema
-    return app.openapi_schema
+    return openapi_schema
 
 
-app.openapi = cast(Callable[[], dict[str, Any]], custom_openapi)
+setattr(app, "openapi", custom_openapi)
 
 
 if __name__ == "__main__":

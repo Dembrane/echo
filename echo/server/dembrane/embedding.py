@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import Any, Dict, List
 
 import backoff
 import litellm
@@ -22,7 +22,7 @@ def embed_text(text: str) -> List[float]:
         if not embedding_settings.model:
             raise ValueError("Embedding model is not configured.")
 
-        embedding_kwargs = {
+        embedding_kwargs: Dict[str, Any] = {
             "model": embedding_settings.model,
         }
         if embedding_settings.api_key:
