@@ -14,8 +14,8 @@ logger = getLogger("dembrane.service.conversation")
 
 if TYPE_CHECKING:
     from dembrane.service.file import FileService
-    from dembrane.service.project import ProjectService
     from dembrane.service.events import EventService
+    from dembrane.service.project import ProjectService
 
 # allows for None to be a sentinel value
 _UNSET = object()

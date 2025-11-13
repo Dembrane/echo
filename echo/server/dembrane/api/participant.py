@@ -9,9 +9,9 @@ from pydantic import BaseModel
 
 from dembrane.s3 import get_sanitized_s3_key, get_file_size_bytes_from_s3
 from dembrane.utils import generate_uuid
-from dembrane.settings import get_settings
 from dembrane.service import project_service, conversation_service
 from dembrane.directus import directus
+from dembrane.settings import get_settings
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.service.project import ProjectNotFoundException
 from dembrane.service.conversation import (

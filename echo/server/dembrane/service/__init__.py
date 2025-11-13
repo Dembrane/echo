@@ -15,7 +15,14 @@ Usage:
     project = project_service.get_by_id_or_raise(project_id)
 """
 
+from .chat import (
+    ChatService,
+    ChatServiceException,
+    ChatNotFoundException,
+    ChatMessageNotFoundException,
+)
 from .file import FileServiceException, get_file_service
+from .events import EventService
 from .project import ProjectService, ProjectServiceException, ProjectNotFoundException
 from .conversation import (
     ConversationService,
@@ -24,13 +31,6 @@ from .conversation import (
     ConversationChunkNotFoundException,
     ConversationNotOpenForParticipationException,
 )
-from .chat import (
-    ChatService,
-    ChatServiceException,
-    ChatNotFoundException,
-    ChatMessageNotFoundException,
-)
-from .events import EventService
 
 file_service = get_file_service()
 project_service = ProjectService()

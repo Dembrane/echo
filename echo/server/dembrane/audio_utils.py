@@ -13,9 +13,9 @@ import ffmpeg
 
 from dembrane.s3 import s3_client, delete_from_s3, get_stream_from_s3, get_sanitized_s3_key
 from dembrane.utils import generate_uuid
-from dembrane.settings import get_settings
 from dembrane.service import conversation_service
 from dembrane.directus import directus
+from dembrane.settings import get_settings
 
 logger = logging.getLogger("audio_utils")
 

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from logging import getLogger
 from typing import Any
+from logging import getLogger
+from dataclasses import dataclass
 
 logger = getLogger("dembrane.service.events")
 

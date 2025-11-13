@@ -6,8 +6,8 @@ import pytest
 
 from dembrane.s3 import s3_client, get_sanitized_s3_key
 from dembrane.utils import generate_uuid
-from dembrane.settings import get_settings
 from dembrane.directus import directus
+from dembrane.settings import get_settings
 from dembrane.audio_utils import (
     probe_from_s3,
     probe_from_bytes,

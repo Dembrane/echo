@@ -8,15 +8,15 @@ import litellm
 from fastapi import APIRouter, HTTPException
 from pydantic import Field, BaseModel
 
+from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.utils import generate_uuid
-from dembrane.settings import get_settings
 from dembrane.prompts import render_prompt
 from dembrane.directus import directus
+from dembrane.settings import get_settings
 from dembrane.transcribe import _get_audio_file_object
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.exceptions import ProjectNotFoundException, ConversationNotFoundException
 from dembrane.api.dependency_auth import DependencyDirectusSession
-from dembrane.llms import MODELS, get_completion_kwargs
 
 logger = logging.getLogger("api.verify")
 

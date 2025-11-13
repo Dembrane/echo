@@ -117,7 +117,7 @@ def custom_openapi() -> dict[str, Any]:
     return openapi_schema
 
 
-setattr(app, "openapi", custom_openapi)
+app.openapi = custom_openapi
 
 
 if __name__ == "__main__":

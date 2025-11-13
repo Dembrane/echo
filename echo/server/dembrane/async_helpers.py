@@ -23,7 +23,7 @@ import os
 import atexit
 import asyncio
 import threading
-from typing import Any, TypeVar, Callable, Optional, Awaitable, Coroutine
+from typing import Any, TypeVar, Callable, Optional, Coroutine
 from logging import getLogger
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor

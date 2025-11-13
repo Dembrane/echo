@@ -19,11 +19,11 @@ import litellm
 import requests
 
 from dembrane.s3 import get_signed_url, get_stream_from_s3
-from dembrane.settings import get_settings
 from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.prompts import render_prompt
 from dembrane.service import file_service, conversation_service
 from dembrane.directus import directus
+from dembrane.settings import get_settings
 
 logger = logging.getLogger("transcribe")
 
@@ -90,6 +90,7 @@ def transcribe_audio_assemblyai(
 ) -> tuple[str, dict[str, Any]]:
     """Transcribe audio through AssemblyAI"""
     logger = logging.getLogger("transcribe.transcribe_audio_assemblyai")
+    logger.info("Submitting AssemblyAI transcription request for %s", audio_file_uri)
 
     headers = {
         "Content-Type": "application/json",

@@ -1,4 +1,4 @@
-from typing import Any, Iterable, List, Optional
+from typing import Any, List, Iterable, Optional
 from logging import getLogger
 
 from dembrane.directus import DirectusBadRequest, directus_client_context

@@ -2,11 +2,11 @@
 Seeding helpers for bootstrap tasks that need to run during application startup.
 """
 
+from typing import Any, Dict, List, Mapping, Iterable
 from logging import getLogger
-from typing import Any, Dict, Iterable, Mapping, List
 
-from dembrane.async_helpers import run_in_thread_pool
 from dembrane.directus import directus
+from dembrane.async_helpers import run_in_thread_pool
 
 logger = getLogger("dembrane.seed")
 

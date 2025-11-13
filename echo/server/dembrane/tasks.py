@@ -13,21 +13,19 @@ from dramatiq.rate_limits.backends import RedisBackend as RateLimitRedisBackend
 from dramatiq.results.backends.redis import RedisBackend as ResultsRedisBackend
 
 from dembrane.utils import generate_uuid, get_utc_timestamp
-from dembrane.settings import get_settings
 from dembrane.sentry import init_sentry
 from dembrane.directus import (
     DirectusBadRequest,
     DirectusServerError,
-    directus,
     directus_client_context,
 )
+from dembrane.settings import get_settings
 from dembrane.transcribe import transcribe_conversation_chunk
-from dembrane.async_helpers import run_in_thread_pool, run_async_in_new_loop
+from dembrane.async_helpers import run_async_in_new_loop
 from dembrane.conversation_utils import collect_unfinished_conversations
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.processing_status_utils import (
     ProcessingStatusContext,
-    set_error_status,
 )
 
 settings = get_settings()
@@ -367,6 +365,13 @@ def task_create_view(
         return
 
     logger.info(f"User query: {user_query}")
+    if user_query_context:
+        logger.info(
+            "User query context provided (%d characters).", len(user_query_context)
+        )
+    else:
+        logger.info("No additional user query context provided.")
+    logger.info("Requested language for view generation: %s", language or "unspecified")
 
     project_id: Optional[str] = None
 
@@ -414,6 +419,7 @@ def task_create_view(
 @dramatiq.actor(queue_name="network", priority=50)
 def task_create_project_library(project_id: str, language: str) -> None:
     logger = getLogger("dembrane.tasks.task_create_project_library")
+    logger.info("Requested language for project library creation: %s", language or "unspecified")
 
     with ProcessingStatusContext(
         project_id=project_id,

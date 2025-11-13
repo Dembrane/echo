@@ -4,8 +4,8 @@ from logging import getLogger
 
 import sentry_sdk
 from litellm import acompletion
-from litellm.utils import token_counter
 from pydantic import BaseModel
+from litellm.utils import token_counter
 from litellm.exceptions import ContentPolicyViolationError
 
 from dembrane.llms import MODELS, get_completion_kwargs
