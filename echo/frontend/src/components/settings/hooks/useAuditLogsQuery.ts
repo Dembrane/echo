@@ -1,4 +1,4 @@
-import { readActivities } from "@directus/sdk";
+import { readActivities, type DirectusActivity, type Query } from "@directus/sdk";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { directus } from "@/lib/directus";
 
@@ -76,25 +76,17 @@ const AGGREGATE_BATCH_SIZE = 500;
 
 type ActivityResponse<T> = T[] & {
 	meta?: {
-		filter_count?: number;
+		filter_count?: number | string | null;
 	};
 };
-type ActivityQueryParams = Parameters<typeof readActivities>[0];
-type RawActivityQuery =
-	ActivityQueryParams extends undefined ? Record<string, never>
-	: NonNullable<ActivityQueryParams>;
-type ActivityMetaValue = "filter_count" | "total_count";
-type ActivityQuery = Omit<RawActivityQuery, "meta"> & {
-	meta?: ActivityMetaValue;
-};
+type ActivitiesQuery = Query<
+	CustomDirectusTypes,
+	DirectusActivity<CustomDirectusTypes>
+>;
 
-const FILTER_COUNT_META: ActivityMetaValue = "filter_count";
-
-const requestActivities = async <T>(params: ActivityQuery) => {
-	return directus.request<T>(readActivities(params as ActivityQueryParams));
-};
-
-const buildFilter = (filters?: AuditLogFilters): ActivityQuery["filter"] => {
+const buildFilter = (
+	filters?: AuditLogFilters,
+): ActivitiesQuery["filter"] | undefined => {
 	if (!filters) return undefined;
 
 	const filter: Record<string, unknown> = {};
@@ -111,7 +103,9 @@ const buildFilter = (filters?: AuditLogFilters): ActivityQuery["filter"] => {
 		};
 	}
 
-	return Object.keys(filter).length > 0 ? (filter as ActivityQuery["filter"]) : undefined;
+	return Object.keys(filter).length > 0
+		? (filter as ActivitiesQuery["filter"])
+		: undefined;
 };
 
 const normalizeCount = (value: unknown): number => {
@@ -138,15 +132,18 @@ const fetchAuditLogsPage = async ({
 }: AuditLogQueryArgs): Promise<AuditLogQueryResult> => {
 	const filter = buildFilter(filters);
 
-	const response = await requestActivities<ActivityResponse<AuditLogEntry>>({
-		fields:
-			AUDIT_LOG_FIELDS as unknown as ActivityQuery["fields"],
-		filter,
-		limit: pageSize,
-		meta: FILTER_COUNT_META,
-		offset: page * pageSize,
-		sort: ["-timestamp"],
-	});
+	const response = await directus.request<ActivityResponse<AuditLogEntry>>(
+		readActivities<CustomDirectusTypes, ActivitiesQuery>(
+			{
+				fields: AUDIT_LOG_FIELDS as unknown as ActivitiesQuery["fields"],
+				filter,
+				limit: pageSize,
+				meta: "filter_count",
+				offset: page * pageSize,
+				sort: ["-timestamp"],
+			} as unknown as ActivitiesQuery,
+		),
+	);
 
 	const items = [...response];
 	const metaTotal = response.meta?.filter_count;
@@ -160,33 +157,37 @@ const fetchAuditLogsPage = async ({
 
 const fetchAuditLogOptions = async (): Promise<AuditLogMetadata> => {
 	const [actions, collections] = await Promise.all([
-		requestActivities<
+		directus.request<
 			Array<{
 				action: string | null;
 				count: number;
 			}>
 		>(
-			{
-				aggregate: {
-					count: "*",
-				},
-				groupBy: ["action"],
-				sort: ["action"],
-			},
+			readActivities<CustomDirectusTypes, ActivitiesQuery>(
+				{
+					aggregate: {
+						count: "*",
+					},
+					groupBy: ["action"],
+					sort: ["action"],
+				} as unknown as ActivitiesQuery,
+			),
 		),
-		requestActivities<
+		directus.request<
 			Array<{
 				collection: string | null;
 				count: number;
 			}>
 		>(
-			{
-				aggregate: {
-					count: "*",
-				},
-				groupBy: ["collection"],
-				sort: ["collection"],
-			},
+			readActivities<CustomDirectusTypes, ActivitiesQuery>(
+				{
+					aggregate: {
+						count: "*",
+					},
+					groupBy: ["collection"],
+					sort: ["collection"],
+				} as unknown as ActivitiesQuery,
+			),
 		),
 	]);
 
@@ -230,14 +231,17 @@ const fetchAuditLogsForExport = async ({
 
 	// eslint-disable-next-line no-constant-condition
 	while (true) {
-		const batch = await requestActivities<ActivityResponse<AuditLogEntry>>({
-			fields:
-				AUDIT_LOG_FIELDS as unknown as ActivityQuery["fields"],
-			filter,
-			limit: AGGREGATE_BATCH_SIZE,
-			offset,
-			sort: ["-timestamp"],
-		});
+		const batch = await directus.request<ActivityResponse<AuditLogEntry>>(
+			readActivities<CustomDirectusTypes, ActivitiesQuery>(
+				{
+					fields: AUDIT_LOG_FIELDS as unknown as ActivitiesQuery["fields"],
+					filter,
+					limit: AGGREGATE_BATCH_SIZE,
+					offset,
+					sort: ["-timestamp"],
+				} as unknown as ActivitiesQuery,
+			),
+		);
 
 		records.push(...batch);
 
