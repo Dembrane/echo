@@ -129,6 +129,9 @@ jobs:
         working-directory: echo/frontend
 
       - name: Build Project Artifacts
+        env:
+          VITE_DIRECTUS_PUBLIC_URL: https://directus.echo-testing.dembrane.com
+          VITE_API_BASE_URL: https://api.echo-testing.dembrane.com/api
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
         working-directory: echo/frontend
 
@@ -183,6 +186,9 @@ jobs:
         working-directory: echo/frontend
 
       - name: Build Project Artifacts
+        env:
+          VITE_DIRECTUS_PUBLIC_URL: https://directus.echo-testing.dembrane.com
+          VITE_API_BASE_URL: https://api.echo-testing.dembrane.com/api
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
         working-directory: echo/frontend
 
