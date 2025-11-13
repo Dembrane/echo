@@ -116,9 +116,17 @@ const buildFilter = (filters?: AuditLogFilters): ActivityQuery["filter"] => {
 
 const normalizeCount = (value: unknown): number => {
 	if (typeof value === "number") return value;
+	if (typeof value === "string") {
+		const parsed = Number.parseInt(value, 10);
+		return Number.isNaN(parsed) ? 0 : parsed;
+	}
 	if (typeof value === "object" && value !== null) {
 		const firstValue = Object.values(value)[0];
 		if (typeof firstValue === "number") return firstValue;
+		if (typeof firstValue === "string") {
+			const parsed = Number.parseInt(firstValue, 10);
+			return Number.isNaN(parsed) ? 0 : parsed;
+		}
 	}
 	return 0;
 };
@@ -142,10 +150,11 @@ const fetchAuditLogsPage = async ({
 
 	const items = [...response];
 	const metaTotal = response.meta?.filter_count;
+	const normalizedTotal = normalizeCount(metaTotal);
 
 	return {
 		items,
-		total: metaTotal ?? page * pageSize + items.length,
+		total: normalizedTotal > 0 ? normalizedTotal : page * pageSize + items.length,
 	};
 };
 
