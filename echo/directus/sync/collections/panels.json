@@ -1,26 +1,5 @@
 [
   {
-    "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
-    "name": "Insight generation over the past week",
-    "icon": null,
-    "color": null,
-    "show_header": true,
-    "note": null,
-    "type": "time-series",
-    "position_x": 2,
-    "position_y": 87,
-    "width": 23,
-    "height": 9,
-    "options": {
-      "collection": "insight",
-      "function": "count",
-      "dateField": "created_at",
-      "valueField": "id",
-      "filter": null
-    },
-    "_syncId": "10d105b0-55c3-4011-9e20-773f6a21ba80"
-  },
-  {
     "dashboard": "d88e3e89-f55a-4279-87a5-159d8efc6dbc",
     "name": "Announcement Readers Graph",
     "icon": null,
@@ -109,61 +88,6 @@
     "_syncId": "25a32ec7-5397-4124-a821-66508523f883"
   },
   {
-    "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
-    "name": "Total Chats",
-    "icon": null,
-    "color": null,
-    "show_header": true,
-    "note": null,
-    "type": "metric",
-    "position_x": 27,
-    "position_y": 33,
-    "width": 15,
-    "height": 9,
-    "options": {
-      "collection": "project_chat",
-      "field": "id",
-      "function": "count"
-    },
-    "_syncId": "2644d6f3-af03-4050-b142-b0aeaa72a6ee"
-  },
-  {
-    "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
-    "name": "Number of projects",
-    "icon": null,
-    "color": null,
-    "show_header": true,
-    "note": null,
-    "type": "metric",
-    "position_x": 27,
-    "position_y": 65,
-    "width": 15,
-    "height": 9,
-    "options": {
-      "collection": "project",
-      "field": "id",
-      "function": "count",
-      "filter": {
-        "_and": [
-          {
-            "_and": [
-              {
-                "created_at": {
-                  "_between": [
-                    "$NOW(-7)",
-                    "$NOW"
-                  ]
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "sortField": "id"
-    },
-    "_syncId": "26a37f7f-a58c-489d-a2c1-c53121db7d3a"
-  },
-  {
     "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
     "name": "proj - audio",
     "icon": null,
@@ -182,29 +106,6 @@
       "field": "is_enhanced_audio_processing_enabled"
     },
     "_syncId": "3bc77a0e-4499-439f-b632-a3740a9bfe37"
-  },
-  {
-    "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
-    "name": "Insight generation over the past 3 months",
-    "icon": null,
-    "color": null,
-    "show_header": true,
-    "note": null,
-    "type": "time-series",
-    "position_x": 2,
-    "position_y": 33,
-    "width": 23,
-    "height": 9,
-    "options": {
-      "collection": "insight",
-      "function": "count",
-      "dateField": "created_at",
-      "range": "3 months",
-      "valueField": "id",
-      "filter": null,
-      "precision": "day"
-    },
-    "_syncId": "3f2471aa-5ddf-40a7-9b4f-15694d7043c1"
   },
   {
     "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
@@ -250,37 +151,6 @@
     "_syncId": "4cd13340-f2a5-4e81-a76b-3b4fd7a51623"
   },
   {
-    "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
-    "name": "Total Chats",
-    "icon": null,
-    "color": null,
-    "show_header": true,
-    "note": null,
-    "type": "metric",
-    "position_x": 27,
-    "position_y": 87,
-    "width": 15,
-    "height": 9,
-    "options": {
-      "collection": "project_chat",
-      "field": "id",
-      "function": "count",
-      "filter": {
-        "_and": [
-          {
-            "date_created": {
-              "_between": [
-                "$NOW(-7)",
-                "$NOW"
-              ]
-            }
-          }
-        ]
-      }
-    },
-    "_syncId": "58981e36-a7b3-49c9-aa59-ae0e59f0e3d0"
-  },
-  {
     "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
     "name": "MAU",
     "icon": null,
@@ -314,42 +184,6 @@
     "_syncId": "7badae0f-0f55-40f4-99a1-6dbba630595f"
   },
   {
-    "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
-    "name": null,
-    "icon": null,
-    "color": null,
-    "show_header": false,
-    "note": null,
-    "type": "label",
-    "position_x": 2,
-    "position_y": 60,
-    "width": 23,
-    "height": 3,
-    "options": {
-      "text": "Measures Weekly\n"
-    },
-    "_syncId": "844e94da-44a5-4447-ada6-e9255157d479"
-  },
-  {
-    "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
-    "name": "Total Conversations",
-    "icon": null,
-    "color": null,
-    "show_header": true,
-    "note": null,
-    "type": "metric",
-    "position_x": 27,
-    "position_y": 22,
-    "width": 15,
-    "height": 9,
-    "options": {
-      "collection": "conversation",
-      "field": "id",
-      "function": "count"
-    },
-    "_syncId": "85da5c87-97f7-47ba-b9a5-15c982996889"
-  },
-  {
     "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
     "name": "new projects / week",
     "icon": null,
@@ -371,61 +205,6 @@
       "missingData": "ignore"
     },
     "_syncId": "912a84fa-549c-4275-ba47-dcb7a4c6b99e"
-  },
-  {
-    "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
-    "name": "Number of insights",
-    "icon": null,
-    "color": null,
-    "show_header": true,
-    "note": null,
-    "type": "metric",
-    "position_x": 2,
-    "position_y": 44,
-    "width": 23,
-    "height": 9,
-    "options": {
-      "collection": "insight",
-      "field": "id",
-      "function": "count",
-      "filter": null,
-      "conditionalFormatting": null,
-      "suffix": "Insights",
-      "numberStyle": "unit",
-      "sortField": "id"
-    },
-    "_syncId": "97cd07c5-27be-419c-8e4e-701deec03ac8"
-  },
-  {
-    "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
-    "name": "Total Conversations",
-    "icon": null,
-    "color": null,
-    "show_header": true,
-    "note": null,
-    "type": "metric",
-    "position_x": 27,
-    "position_y": 76,
-    "width": 15,
-    "height": 9,
-    "options": {
-      "collection": "conversation",
-      "field": "id",
-      "function": "count",
-      "filter": {
-        "_and": [
-          {
-            "created_at": {
-              "_between": [
-                "$NOW(-7)",
-                "$NOW"
-              ]
-            }
-          }
-        ]
-      }
-    },
-    "_syncId": "a3492153-f6b8-45ee-9796-c21a3019bfcc"
   },
   {
     "dashboard": "d88e3e89-f55a-4279-87a5-159d8efc6dbc",
@@ -494,27 +273,6 @@
     "_syncId": "b284f15f-5949-4d95-942e-da3004516ea4"
   },
   {
-    "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
-    "name": "Number of conversations past week",
-    "icon": null,
-    "color": null,
-    "show_header": true,
-    "note": null,
-    "type": "time-series",
-    "position_x": 2,
-    "position_y": 65,
-    "width": 23,
-    "height": 20,
-    "options": {
-      "collection": "conversation",
-      "function": "count",
-      "dateField": "created_at",
-      "color": null,
-      "valueField": "id"
-    },
-    "_syncId": "bb95bf10-c43b-401b-adb3-97ea6898f160"
-  },
-  {
     "dashboard": "d88e3e89-f55a-4279-87a5-159d8efc6dbc",
     "name": "Read By Users",
     "icon": null,
@@ -533,41 +291,6 @@
       "function": "countDistinct"
     },
     "_syncId": "c478c29d-8855-46e3-a84a-06c5350b1e11"
-  },
-  {
-    "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
-    "name": "Number of insights",
-    "icon": null,
-    "color": null,
-    "show_header": true,
-    "note": null,
-    "type": "metric",
-    "position_x": 2,
-    "position_y": 98,
-    "width": 23,
-    "height": 9,
-    "options": {
-      "collection": "insight",
-      "field": "id",
-      "function": "count",
-      "filter": {
-        "_and": [
-          {
-            "created_at": {
-              "_between": [
-                "$NOW(-7)",
-                "$NOW"
-              ]
-            }
-          }
-        ]
-      },
-      "conditionalFormatting": null,
-      "suffix": "Insights",
-      "numberStyle": "unit",
-      "sortField": "id"
-    },
-    "_syncId": "c5a01857-a208-4034-b430-a9c7893d79ae"
   },
   {
     "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
@@ -590,25 +313,6 @@
       "missingData": "ignore"
     },
     "_syncId": "cb5eebf3-4b85-4b64-bc12-0c1a0acb6b68"
-  },
-  {
-    "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
-    "name": "Number of projects",
-    "icon": null,
-    "color": null,
-    "show_header": true,
-    "note": null,
-    "type": "metric",
-    "position_x": 27,
-    "position_y": 11,
-    "width": 15,
-    "height": 9,
-    "options": {
-      "collection": "project",
-      "field": "id",
-      "function": "count"
-    },
-    "_syncId": "cee00ae2-95b9-49c6-b4fb-cc5666b401b2"
   },
   {
     "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
@@ -750,78 +454,6 @@
     "_syncId": "e73a55b3-f505-41d2-aa84-012f7d76ad0a"
   },
   {
-    "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
-    "name": null,
-    "icon": null,
-    "color": null,
-    "show_header": false,
-    "note": null,
-    "type": "label",
-    "position_x": 2,
-    "position_y": 6,
-    "width": 23,
-    "height": 3,
-    "options": {
-      "text": "Measures Total"
-    },
-    "_syncId": "eaf1ce6b-879c-4fd6-8e37-5b8ed1bc1f6a"
-  },
-  {
-    "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
-    "name": "Number of conversations past 3 months",
-    "icon": null,
-    "color": null,
-    "show_header": true,
-    "note": null,
-    "type": "time-series",
-    "position_x": 2,
-    "position_y": 11,
-    "width": 23,
-    "height": 20,
-    "options": {
-      "collection": "conversation",
-      "function": "count",
-      "dateField": "created_at",
-      "color": null,
-      "precision": "day",
-      "range": "3 months",
-      "valueField": "id"
-    },
-    "_syncId": "f7cdfc84-8f95-4824-8d14-477dab874fbd"
-  },
-  {
-    "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
-    "name": "Number of Views generated",
-    "icon": null,
-    "color": null,
-    "show_header": true,
-    "note": null,
-    "type": "metric",
-    "position_x": 27,
-    "position_y": 98,
-    "width": 15,
-    "height": 9,
-    "options": {
-      "collection": "view",
-      "field": "id",
-      "function": "count",
-      "sortField": null,
-      "filter": {
-        "_and": [
-          {
-            "created_at": {
-              "_between": [
-                "$NOW(-7)",
-                "$NOW"
-              ]
-            }
-          }
-        ]
-      }
-    },
-    "_syncId": "f7cf0d59-57d4-46ab-8743-4548a3745981"
-  },
-  {
     "dashboard": "fadfb3fb-a781-41f1-a202-ef0f92174226",
     "name": "chat messages / week",
     "icon": null,
@@ -844,25 +476,5 @@
       "missingData": "ignore"
     },
     "_syncId": "f8188818-a2b2-451e-9962-0ba0e4aca1e8"
-  },
-  {
-    "dashboard": "79cde56d-c5cd-4a4c-9903-d99d3b4b796b",
-    "name": "Number of Views generated",
-    "icon": null,
-    "color": null,
-    "show_header": true,
-    "note": null,
-    "type": "metric",
-    "position_x": 27,
-    "position_y": 44,
-    "width": 15,
-    "height": 9,
-    "options": {
-      "collection": "view",
-      "field": "id",
-      "function": "count",
-      "sortField": null
-    },
-    "_syncId": "fc1cf84b-354a-4e7f-80fe-b083558d13b3"
   }
 ]

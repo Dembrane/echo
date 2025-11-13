@@ -98,7 +98,7 @@ export const useUploadConversationChunk = () => {
 									timestamp: new Date().toISOString(),
 									transcript: undefined,
 									updated_at: new Date().toISOString(),
-								} as ConversationChunk,
+								} as unknown as ConversationChunk,
 							]
 						: [];
 				},
@@ -117,7 +117,7 @@ export const useUploadConversationChunk = () => {
 									timestamp: new Date().toISOString(),
 									transcript: undefined,
 									updated_at: new Date().toISOString(),
-								} as ConversationChunk,
+								} as unknown as ConversationChunk,
 							]
 						: [];
 				},
@@ -194,7 +194,7 @@ export const useUploadConversationTextChunk = () => {
 									timestamp: new Date().toISOString(),
 									transcript: undefined,
 									updated_at: new Date().toISOString(),
-								} as ConversationChunk,
+								} as unknown as ConversationChunk,
 							]
 						: [];
 				},
@@ -213,7 +213,7 @@ export const useUploadConversationTextChunk = () => {
 									timestamp: new Date().toISOString(),
 									transcript: undefined,
 									updated_at: new Date().toISOString(),
-								} as ConversationChunk,
+								} as unknown as ConversationChunk,
 							]
 						: [];
 				},

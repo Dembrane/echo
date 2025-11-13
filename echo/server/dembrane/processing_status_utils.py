@@ -28,19 +28,23 @@ def add_processing_status(
 ) -> int:
     logger.info(f"{event} {message} - {duration_ms}")
     with directus_client_context() as client:
-        return client.create_item(
-            "processing_status",
-            {
-                "conversation_id": conversation_id,
-                "conversation_chunk_id": conversation_chunk_id,
-                "project_id": project_id,
-                "project_analysis_run_id": project_analysis_run_id,
-                "event": event,
-                "message": message,
-                "duration_ms": duration_ms,
-                "parent_id": parent_id,
-            },
-        )["data"]["id"]
+        # add to DB only if
+        if duration_ms is not None or (event and "error" in event):
+            return client.create_item(
+                "processing_status",
+                {
+                    "conversation_id": conversation_id,
+                    "conversation_chunk_id": conversation_chunk_id,
+                    "project_id": project_id,
+                    "project_analysis_run_id": project_analysis_run_id,
+                    "event": event,
+                    "message": message,
+                    "duration_ms": duration_ms,
+                    "parent_id": parent_id,
+                },
+            )["data"]["id"]
+        else:
+            return -1
 
 
 def set_error_status(

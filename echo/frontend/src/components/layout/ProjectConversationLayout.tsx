@@ -12,7 +12,6 @@ export const ProjectConversationLayout = () => {
 		conversationId: conversationId ?? "",
 		query: {
 			deep: {
-				// @ts-expect-error chunks is not typed
 				chunks: {
 					_limit: 25,
 				},

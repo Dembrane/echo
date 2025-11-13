@@ -36,7 +36,6 @@ export const useViewById = (projectId: string, viewId: string) => {
 								"description",
 								"image_url",
 								"view_id",
-								"image_generation_model",
 							],
 						},
 					],

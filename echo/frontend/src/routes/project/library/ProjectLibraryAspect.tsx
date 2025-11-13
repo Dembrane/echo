@@ -85,8 +85,11 @@ export const ProjectLibraryAspect = () => {
 											<Trans>Insights</Trans>
 										</Title>
 									)}
-								{aspect?.aspect_segment?.map((segment: AspectSegment) => (
-									<Quote key={segment.id} data={segment} />
+								{aspect?.aspect_segment?.map((segment) => (
+									<Quote
+										key={(segment as AspectSegment).id}
+										data={segment as AspectSegment}
+									/>
 								))}
 							</>
 						) : (
