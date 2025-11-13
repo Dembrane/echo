@@ -281,21 +281,21 @@ export const TwoFactorSettingsCard = ({
 			<Paper withBorder p="lg" radius="lg">
 				<Stack gap="lg">
 					<Group justify="space-between" align="flex-start">
-						<Group gap="sm" align="flex-start">
-							<IconLock size={20} />
-							<Stack gap={2}>
+						<Stack gap={2}>
+							<Group gap="sm" align="center">
+								<IconLock size={20} />
 								<Text size="lg" fw={600}>
 									<Trans>Two-factor authentication</Trans>
 								</Text>
-								<Text size="sm" c="dimmed" maw={520}>
-									<Trans>
-										Keep access secure with a one-time code from your
-										authenticator app. Toggle two-factor authentication for this
-										account.
-									</Trans>
-								</Text>
-							</Stack>
-						</Group>
+							</Group>
+							<Text size="sm" c="dimmed" maw={520}>
+								<Trans>
+									Keep access secure with a one-time code from your
+									authenticator app. Toggle two-factor authentication for this
+									account.
+								</Trans>
+							</Text>
+						</Stack>
 
 						<Stack gap={8} align="flex-end">
 							{isLoading ? (
@@ -312,26 +312,29 @@ export const TwoFactorSettingsCard = ({
 						</Stack>
 					</Group>
 
-					<Divider />
+					{!isTwoFactorEnabled && (
+						<>
+							<Divider />
 
-					<Stack gap="md">
-						<Group gap="xs" align="center">
-							<IconInfoCircle size={16} />
-							<Text fw={500}>
-								<Trans>Recommended apps</Trans>
-							</Text>
-						</Group>
+							<Stack gap="md">
+								<Group gap="xs" align="center">
+									<Text fw={500}>
+										<Trans>Recommended apps</Trans>
+									</Text>
+								</Group>
 
-						<List spacing={6} size="sm">
-							{AUTH_APP_LINKS.map((link) => (
-								<List.Item key={link.href}>
-									<Anchor href={link.href} target="_blank" rel="noreferrer">
-										{link.label}
-									</Anchor>
-								</List.Item>
-							))}
-						</List>
-					</Stack>
+								<List spacing={6} size="sm">
+									{AUTH_APP_LINKS.map((link) => (
+										<List.Item key={link.href}>
+											<Anchor href={link.href} target="_blank" rel="noreferrer">
+												{link.label}
+											</Anchor>
+										</List.Item>
+									))}
+								</List>
+							</Stack>
+						</>
+					)}
 				</Stack>
 			</Paper>
 
