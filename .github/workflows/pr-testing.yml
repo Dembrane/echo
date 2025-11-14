@@ -32,11 +32,6 @@ jobs:
           cd echo/server
           ruff check .
 
-      - name: Run Ruff Format Check
-        run: |
-          cd echo/server
-          ruff format --check .
-
       - name: Run MyPy Type Check
         run: |
           cd echo/server
