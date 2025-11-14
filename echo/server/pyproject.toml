@@ -142,6 +142,7 @@ markers = [
     "integration: integration tests requiring external services",
 ]
 addopts = "--strict-markers --log-cli-level=INFO --log-cli-format='%(asctime)s [%(levelname)8s] %(name)s: %(message)s' --log-cli-date-format='%Y-%m-%d %H:%M:%S'"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.coverage.run]
 source = ["dembrane"]

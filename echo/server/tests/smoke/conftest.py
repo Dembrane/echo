@@ -1,4 +1,5 @@
 import os
+
 import pytest
 
 
@@ -12,4 +13,3 @@ def api_url():
 def directus_url():
     """Directus URL for smoke tests"""
     return os.getenv("TEST_DIRECTUS_URL", "https://directus.echo-testing.dembrane.com")
-
