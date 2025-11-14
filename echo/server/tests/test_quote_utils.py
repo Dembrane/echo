@@ -4,6 +4,7 @@ import logging
 import datetime
 from typing import List
 
+import pytest
 import numpy as np
 from sqlalchemy.orm import Session
 
@@ -25,6 +26,8 @@ from .common import (
 )
 
 logger = logging.getLogger("test_quote_utils")
+
+pytestmark = pytest.mark.integration
 
 
 def test_create_test_quotes(

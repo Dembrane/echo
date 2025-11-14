@@ -14,6 +14,8 @@ from dembrane.transcribe import (
 
 logger = logging.getLogger("test_transcribe")
 
+pytestmark = pytest.mark.integration
+
 @pytest.fixture
 def fixture_english_chunk():
 	logger.info("setup")

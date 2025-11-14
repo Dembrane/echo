@@ -8,6 +8,8 @@ from dembrane.service.project import ProjectNotFoundException
 
 logger = logging.getLogger(__name__)
 
+pytestmark = pytest.mark.integration
+
 
 def test_create_project():
     project = project_service.create(

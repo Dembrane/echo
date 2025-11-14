@@ -16,6 +16,8 @@ from dembrane.service.conversation import (
 
 logger = logging.getLogger(__name__)
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def project():
