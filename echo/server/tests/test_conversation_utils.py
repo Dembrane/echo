@@ -1,6 +1,8 @@
 import logging
 from datetime import timedelta
 
+import pytest
+
 from dembrane.utils import get_utc_timestamp
 from dembrane.directus import directus
 from dembrane.conversation_utils import (
@@ -19,6 +21,8 @@ from .common import (
 )
 
 logger = logging.getLogger("test_conversation_utils")
+
+pytestmark = pytest.mark.integration
 
 
 def test_create_conversation_chunk():

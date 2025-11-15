@@ -16,6 +16,8 @@ from dembrane.api.dependency_auth import DirectusSession
 
 logger = logging.getLogger("dembrane.tests.api.test_conversation")
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 async def test_get_conversation_transcript():

@@ -10,6 +10,8 @@ from dembrane.transcribe import transcribe_audio_assemblyai, transcribe_conversa
 
 logger = logging.getLogger("test_transcribe_assembly")
 
+pytestmark = pytest.mark.integration
+
 
 def _require_assemblyai():
     """Ensure AssemblyAI is enabled and credentials are present or skip."""

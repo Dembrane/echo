@@ -5,6 +5,7 @@ import datetime
 from typing import List
 
 import numpy as np
+import pytest
 from sqlalchemy.orm import Session
 
 from dembrane.utils import generate_uuid
@@ -25,6 +26,8 @@ from .common import (
 )
 
 logger = logging.getLogger("test_quote_utils")
+
+pytestmark = pytest.mark.integration
 
 
 def test_create_test_quotes(

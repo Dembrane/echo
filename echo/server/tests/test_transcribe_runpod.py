@@ -14,6 +14,9 @@ from dembrane.transcribe import (
 
 logger = logging.getLogger("test_transcribe")
 
+# Runpod is no longer used in the platform; keep tests for reference but skip them.
+pytestmark = pytest.mark.skip(reason="Runpod transcription is deprecated and no longer used")
+
 @pytest.fixture
 def fixture_english_chunk():
 	logger.info("setup")

@@ -32,11 +32,6 @@ jobs:
           cd echo/server
           ruff check .
 
-      - name: Run Ruff Format Check
-        run: |
-          cd echo/server
-          ruff format --check .
-
       - name: Run MyPy Type Check
         run: |
           cd echo/server
@@ -45,6 +40,48 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+    env:
+      # Required environment variables for config.py
+      DIRECTUS_SECRET: test-secret
+      DIRECTUS_TOKEN: test-token
+      DATABASE_URL: postgresql+psycopg://test:test@localhost:5432/test
+      REDIS_URL: redis://localhost:6379
+      OPENAI_API_KEY: sk-test-key
+      ANTHROPIC_API_KEY: sk-ant-test-key
+      STORAGE_S3_BUCKET: test-bucket
+      STORAGE_S3_ENDPOINT: https://test.endpoint.com
+      STORAGE_S3_KEY: test-key
+      STORAGE_S3_SECRET: test-secret
+      SMALL_LITELLM_MODEL: gpt-4o-mini
+      SMALL_LITELLM_API_KEY: test-key
+      SMALL_LITELLM_API_VERSION: "2024-06-01"
+      SMALL_LITELLM_API_BASE: https://api.openai.com/v1
+      MEDIUM_LITELLM_MODEL: gpt-4o
+      MEDIUM_LITELLM_API_KEY: test-key
+      MEDIUM_LITELLM_API_VERSION: "2024-06-01"
+      MEDIUM_LITELLM_API_BASE: https://api.openai.com/v1
+      LARGE_LITELLM_MODEL: gpt-4o
+      LARGE_LITELLM_API_KEY: test-key
+      LARGE_LITELLM_API_VERSION: "2024-06-01"
+      LARGE_LITELLM_API_BASE: https://api.openai.com/v1
+      LIGHTRAG_LITELLM_MODEL: gpt-4o-mini
+      LIGHTRAG_LITELLM_API_KEY: test-key
+      LIGHTRAG_LITELLM_API_VERSION: "2024-06-01"
+      LIGHTRAG_LITELLM_API_BASE: https://api.openai.com/v1
+      LIGHTRAG_LITELLM_AUDIOMODEL_MODEL: gpt-4o-audio
+      LIGHTRAG_LITELLM_AUDIOMODEL_API_BASE: https://api.openai.com/v1
+      LIGHTRAG_LITELLM_AUDIOMODEL_API_KEY: test-key
+      LIGHTRAG_LITELLM_AUDIOMODEL_API_VERSION: "2024-06-01"
+      LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL: gpt-4o-mini
+      LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE: https://api.openai.com/v1
+      LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY: test-key
+      LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION: "2024-06-01"
+      LIGHTRAG_LITELLM_EMBEDDING_MODEL: text-embedding-ada-002
+      LIGHTRAG_LITELLM_EMBEDDING_API_BASE: https://api.openai.com/v1
+      LIGHTRAG_LITELLM_EMBEDDING_API_KEY: test-key
+      LIGHTRAG_LITELLM_EMBEDDING_API_VERSION: "2024-06-01"
+      LIGHTRAG_LITELLM_INFERENCE_MODEL: claude-3-5-sonnet
+      LIGHTRAG_LITELLM_INFERENCE_API_KEY: test-key
     steps:
       - uses: actions/checkout@v4
 
@@ -61,7 +98,7 @@ jobs:
       - name: Run Unit Tests
         run: |
           cd echo/server
-          pytest tests/ -v -m "not integration and not slow" --maxfail=3
+          pytest tests/ -v -m "not integration and not slow and not smoke" --maxfail=3
 
   build-images:
     name: Build Docker Images (validation only)

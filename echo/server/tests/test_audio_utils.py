@@ -20,6 +20,8 @@ from dembrane.audio_utils import (
 
 logger = logging.getLogger(__name__)
 
+pytestmark = pytest.mark.integration
+
 
 AUDIO_FILES = [
     "wav.wav",

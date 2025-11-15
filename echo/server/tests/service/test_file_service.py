@@ -10,6 +10,8 @@ from dembrane.service.file import S3FileService, FileServiceException
 
 logger = logging.getLogger(__name__)
 
+pytestmark = pytest.mark.integration
+
 
 class TestS3FileService:
     """Test S3FileService implementation."""

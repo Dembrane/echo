@@ -1,6 +1,10 @@
 import math
 
+import pytest
+
 from dembrane.embedding import EMBEDDING_DIM, embed_text
+
+pytestmark = pytest.mark.integration
 
 
 def test_embed_text_returns_list_of_floats():

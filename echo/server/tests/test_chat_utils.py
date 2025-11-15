@@ -1,6 +1,10 @@
 import asyncio
 
+import pytest
+
 from dembrane.chat_utils import generate_title
+
+pytestmark = pytest.mark.integration
 
 
 def test_generate_title():
