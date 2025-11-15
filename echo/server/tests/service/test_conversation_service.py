@@ -16,8 +16,6 @@ from dembrane.service.conversation import (
 
 logger = logging.getLogger(__name__)
 
-pytestmark = pytest.mark.integration
-
 
 @pytest.fixture
 def project():
@@ -32,6 +30,7 @@ def project():
     project_service.delete(project["id"])
 
 
+@pytest.mark.integration
 def test_create_conversation(project):
     conversation = conversation_service.create(
         project_id=project["id"],
@@ -51,6 +50,7 @@ def test_create_conversation(project):
     conversation_service.delete(conversation["id"])
 
 
+@pytest.mark.integration
 def test_create_conversation_with_tags(project):
     tags = project_service.create_tags_and_link(project.get("id"), ["tag1", "tag2"])
 
@@ -87,6 +87,7 @@ def test_create_conversation_with_tags(project):
     conversation_service.delete(conversation["id"])
 
 
+@pytest.mark.integration
 def test_create_conversation_not_allowed():
     project = project_service.create(
         name="Test Project No Conversations",
@@ -103,6 +104,7 @@ def test_create_conversation_not_allowed():
     project_service.delete(project["id"])
 
 
+@pytest.mark.integration
 def test_get_by_id_or_raise(project):
     conversation = conversation_service.create(
         project_id=project["id"],
@@ -117,6 +119,7 @@ def test_get_by_id_or_raise(project):
     conversation_service.delete(conversation["id"])
 
 
+@pytest.mark.integration
 def test_get_by_id_or_raise_not_found():
     try:
         conversation_service.get_by_id_or_raise("non-existent-id")
@@ -124,6 +127,7 @@ def test_get_by_id_or_raise_not_found():
         assert isinstance(e, ConversationNotFoundException)
 
 
+@pytest.mark.integration
 def test_update_conversation(project):
     conversation = conversation_service.create(
         project_id=project["id"],
@@ -151,6 +155,7 @@ def test_update_conversation(project):
     conversation_service.delete(conversation["id"])
 
 
+@pytest.mark.integration
 def test_update_conversation_partial(project):
     conversation = conversation_service.create(
         project_id=project["id"],
@@ -176,6 +181,7 @@ def test_update_conversation_partial(project):
     conversation_service.delete(conversation["id"])
 
 
+@pytest.mark.integration
 def test_update_conversation_not_found():
     with pytest.raises(ConversationNotFoundException):
         conversation_service.update(
@@ -184,6 +190,7 @@ def test_update_conversation_not_found():
         )
 
 
+@pytest.mark.integration
 def test_delete_conversation(project):
     conversation = conversation_service.create(
         project_id=project["id"],
@@ -196,32 +203,30 @@ def test_delete_conversation(project):
         conversation_service.get_by_id_or_raise(conversation["id"])
 
 
+# Unit test - tests service initialization with dependencies
 def test_conversation_service_property_getters():
-    """Test lazy initialization of service dependencies."""
-    # Create a fresh service instance
-    service = ConversationService()
+    """Test that service dependencies are properly set on initialization."""
+    from dembrane.service.file import get_file_service
+    from dembrane.service.project import ProjectService
+    
+    # Create service instances
+    file_service = get_file_service()
+    project_svc = ProjectService()
+    
+    # Create conversation service with dependencies
+    service = ConversationService(
+        file_service=file_service,
+        project_service=project_svc,
+    )
 
-    # Initially, all services should be None
-    assert service._file_service is None
-    assert service._event_service is None
-    assert service._project_service is None
-
-    # Access properties to trigger lazy initialization
-    file_service = service.file_service
-    event_service = service.event_service
-    project_service = service.project_service
-
-    # Verify services are initialized
-    assert file_service is not None
-    assert event_service is not None
-    assert project_service is not None
-
-    # Verify subsequent access returns same instances
+    # Verify services are set correctly
+    assert service.file_service is not None
+    assert service.project_service is not None
     assert service.file_service is file_service
-    assert service.event_service is event_service
-    assert service.project_service is project_service
+    assert service.project_service is project_svc
 
 
+# Unit test - uses mocks, no external dependencies
 def test_get_by_id_directus_bad_request():
     """Test exception handling when Directus returns bad request."""
     with patch("dembrane.service.conversation.directus_client_context") as mock_context:
@@ -233,6 +238,7 @@ def test_get_by_id_directus_bad_request():
             conversation_service.get_by_id_or_raise("test-id")
 
 
+# Unit test - uses mocks, no external dependencies
 def test_get_by_id_empty_result():
     """Test exception handling when no conversation found."""
     with patch("dembrane.service.conversation.directus_client_context") as mock_context:
@@ -244,6 +250,7 @@ def test_get_by_id_empty_result():
             conversation_service.get_by_id_or_raise("test-id")
 
 
+# Unit test - uses mocks, no external dependencies
 def test_update_conversation_directus_bad_request():
     """Test exception handling when updating non-existent conversation."""
     with patch("dembrane.service.conversation.directus_client_context") as mock_context:
@@ -255,6 +262,8 @@ def test_update_conversation_directus_bad_request():
             conversation_service.update(conversation_id="non-existent-id", participant_name="Test")
 
 
+# Unit test - uses mocks for S3 and events, but still needs DB for conversation
+@pytest.mark.integration
 def test_create_chunk_from_file(project):
     """Test creating conversation chunk from file upload."""
     conversation = conversation_service.create(
@@ -297,6 +306,7 @@ def test_create_chunk_from_file(project):
     conversation_service.delete(conversation["id"])
 
 
+@pytest.mark.integration
 def test_create_chunk_from_file_finished_conversation(project):
     """Test that chunks cannot be added to finished conversations."""
     conversation = conversation_service.create(
@@ -320,6 +330,8 @@ def test_create_chunk_from_file_finished_conversation(project):
     conversation_service.delete(conversation["id"])
 
 
+# Uses mock for events, but still needs DB for conversation
+@pytest.mark.integration
 def test_create_chunk_from_text(project):
     """Test creating conversation chunk from text."""
     conversation = conversation_service.create(
@@ -357,6 +369,7 @@ def test_create_chunk_from_text(project):
     conversation_service.delete(conversation["id"])
 
 
+@pytest.mark.integration
 def test_create_chunk_from_text_finished_conversation(project):
     """Test that text chunks cannot be added to finished conversations."""
     conversation = conversation_service.create(
@@ -378,6 +391,7 @@ def test_create_chunk_from_text_finished_conversation(project):
     conversation_service.delete(conversation["id"])
 
 
+@pytest.mark.integration
 def test_get_by_id_with_chunks(project):
     """Test retrieving conversation with chunks sorted by timestamp."""
     conversation = conversation_service.create(
@@ -407,6 +421,7 @@ def test_get_by_id_with_chunks(project):
     conversation_service.delete(conversation["id"])
 
 
+@pytest.mark.integration
 def test_delete_chunk(project):
     conversation = conversation_service.create(
         project_id=project["id"],
@@ -448,6 +463,7 @@ def test_delete_chunk(project):
     conversation_service.delete(conversation["id"])
 
 
+@pytest.mark.integration
 def test_chunk_timestamp_functionality(project):
     """Test comprehensive timestamp functionality for conversation chunks."""
     conversation = conversation_service.create(
@@ -538,6 +554,7 @@ def test_chunk_timestamp_functionality(project):
     conversation_service.delete(conversation["id"])
 
 
+@pytest.mark.integration
 def test_chunk_timestamp_edge_cases(project):
     """Test edge cases for timestamp handling."""
     conversation = conversation_service.create(

@@ -4,8 +4,8 @@ import logging
 import datetime
 from typing import List
 
-import pytest
 import numpy as np
+import pytest
 from sqlalchemy.orm import Session
 
 from dembrane.utils import generate_uuid

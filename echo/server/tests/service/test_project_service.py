@@ -8,9 +8,8 @@ from dembrane.service.project import ProjectNotFoundException
 
 logger = logging.getLogger(__name__)
 
-pytestmark = pytest.mark.integration
 
-
+@pytest.mark.integration
 def test_create_project():
     project = project_service.create(
         name="Test Project",
@@ -26,6 +25,7 @@ def test_create_project():
     project_service.delete(project["id"])
 
 
+@pytest.mark.integration
 def test_create_and_link_tags():
     project = project_service.create(
         name="Test Project",
@@ -50,6 +50,7 @@ def test_create_and_link_tags():
     project_service.delete(project["id"])
 
 
+@pytest.mark.integration
 def test_get_by_id_or_raise():
     project = project_service.create(
         name="Test Project",
@@ -62,11 +63,13 @@ def test_get_by_id_or_raise():
     project_service.delete(project["id"])
 
 
+@pytest.mark.integration
 def test_get_by_id_not_found():
     with pytest.raises(ProjectNotFoundException):
         project_service.get_by_id_or_raise("not-found")
 
 
+# Unit test - uses mocks, no external dependencies
 def test_get_by_id_empty_result():
     """Test exception handling when no project found."""
     with patch("dembrane.service.project.directus_client_context") as mock_context:
@@ -78,6 +81,7 @@ def test_get_by_id_empty_result():
             project_service.get_by_id_or_raise("test-id")
 
 
+@pytest.mark.integration
 def test_delete_project():
     project = project_service.create(
         name="Test Project",
@@ -91,6 +95,7 @@ def test_delete_project():
         project_service.get_by_id_or_raise(project["id"])
 
 
+@pytest.mark.integration
 def test_create_shallow_clone():
     project = project_service.create(
         name="Test Project",

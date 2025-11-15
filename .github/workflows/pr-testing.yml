@@ -98,7 +98,7 @@ jobs:
       - name: Run Unit Tests
         run: |
           cd echo/server
-          pytest tests/ -v -m "not integration and not slow" --maxfail=3
+          pytest tests/ -v -m "not integration and not slow and not smoke" --maxfail=3
 
   build-images:
     name: Build Docker Images (validation only)
