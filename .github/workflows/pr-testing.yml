@@ -141,7 +141,7 @@ jobs:
       - name: Auto-merge PR
         uses: pascalgn/automerge-action@v0.16.2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_AUTO_MERGE_TOKEN }}
           MERGE_LABELS: ""
           MERGE_METHOD: "squash"
           MERGE_COMMIT_MESSAGE: "pull-request-title"
