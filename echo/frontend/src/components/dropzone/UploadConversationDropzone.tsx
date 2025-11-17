@@ -484,6 +484,7 @@ export const UploadConversationDropzone = (
 			projectId: props.projectId,
 			tagIdList: [],
 			timestamps: selectedFiles.map(() => new Date()),
+			source: "DASHBOARD_UPLOAD",
 		});
 	}, [selectedFiles, props.projectId, uploader]);
 
