@@ -32,11 +32,11 @@ export class ErrorBoundary extends Component<PropsWithChildren<Props>, State> {
 						<Text>We apologize for the inconvenience.</Text>
 						<Button
 							onClick={() => {
-								this.setState({ hasError: false });
-								window.location.href = "/";
-							}}
+							this.setState({ hasError: false });
+							window.location.href = "/projects";
+						}}
 						>
-							Return to Home
+							Return to Projects
 						</Button>
 					</Box>
 				)

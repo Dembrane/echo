@@ -174,6 +174,7 @@ def _transcript_correction_workflow(
     candidate_transcript: str,
     hotwords: Optional[List[str]],
     use_pii_redaction: bool,
+    custom_guidance_prompt: Optional[str] = None,
 ) -> tuple[str, str]:
     """
     Correct the transcript using the transcript correction workflow
@@ -190,10 +191,9 @@ def _transcript_correction_workflow(
         {
             "hotwords_str": ", ".join(hotwords) if hotwords else "",
             "pii_redaction": use_pii_redaction,
+            "custom_guidance_prompt": custom_guidance_prompt,
         },
     )
-
-    logger.debug(f"transcript_correction_prompt: {transcript_correction_prompt}")
 
     response_schema = {
         "type": "object",
@@ -253,9 +253,10 @@ def _transcript_correction_workflow(
 
 def transcribe_audio_dembrane_25_09(
     audio_file_uri: str,
-    language: Optional[str],  # pyright: ignore[reportUnusedParameter]
-    hotwords: Optional[List[str]],
+    language: Optional[str] = "en",
+    hotwords: Optional[List[str]] = None,
     use_pii_redaction: bool = False,
+    custom_guidance_prompt: Optional[str] = None,
 ) -> tuple[str, dict[str, Any]]:
     """Transcribe audio through custom Dembrane-25-09 workflow
 
@@ -269,19 +270,30 @@ def transcribe_audio_dembrane_25_09(
     """
     logger = logging.getLogger("transcribe.transcribe_audio_dembrane_25_09")
 
+    assemblyai_response_failed = False
     try:
         transcript, response = transcribe_audio_assemblyai(audio_file_uri, language, hotwords)
         logger.debug(f"transcript from assemblyai: {transcript}")
     except TranscriptionError as e:
+        assemblyai_response_failed = True
         logger.info(
             f"Transcription failed with AssemblyAI. So we will continue with the correction workflow with empty transcript: {e}"
         )
         transcript, response = "[Nothing to transcribe]", {}
 
     # use correction workflow to correct keyterms and fix missing segments
-    corrected_transcript, note = _transcript_correction_workflow(
-        audio_file_uri, transcript, hotwords, use_pii_redaction
-    )
+    note = None
+    try:
+        corrected_transcript, note = _transcript_correction_workflow(
+            audio_file_uri, transcript, hotwords, use_pii_redaction, custom_guidance_prompt
+        )
+    except Exception as e:
+        logger.error(f"Error in transcript correction workflow: {e}")
+        # if the gemini step fail, just use the assemblyai transcript
+        if assemblyai_response_failed:
+            raise e from e
+        else:
+            corrected_transcript = transcript
 
     if corrected_transcript == "":
         corrected_transcript = "[Nothing to transcribe]"
@@ -289,6 +301,7 @@ def transcribe_audio_dembrane_25_09(
     return corrected_transcript, {
         "note": note,
         "raw": response,
+        "error": None,
     }
 
 

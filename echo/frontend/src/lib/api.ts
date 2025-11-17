@@ -132,50 +132,6 @@ api.interceptors.response.use(
 	},
 );
 
-export const getResourcesByProjectId = async (projectId: string) => {
-	return api.get<unknown, TResource[]>(`/projects/${projectId}/resources`);
-};
-
-export const getResourceById = async (resourceId: string) => {
-	return api.get<unknown, TResource>(`/resources/${resourceId}`);
-};
-
-export const updateResourceById = async (payload: {
-	id: string;
-	update: Partial<TResource>;
-}) => {
-	return api.put<unknown, TResource>(
-		`/resources/${payload.id}`,
-		payload.update,
-	);
-};
-
-export const deleteResourceById = async (resourceId: string) => {
-	return api.delete(`/resources/${resourceId}`);
-};
-
-export const uploadResourceByProjectId = async (payload: {
-	projectId: string;
-	files: File[];
-}) => {
-	const formData = new FormData();
-
-	payload.files.forEach((file) => {
-		formData.append("files", file);
-	});
-
-	return api.post<unknown, TResource[]>(
-		`/projects/${payload.projectId}/resources/upload`,
-		formData,
-		{
-			headers: {
-				"Content-Type": "multipart/form-data",
-			},
-			timeout: 60000,
-		},
-	);
-};
-
 export const getLatestProjectAnalysisRunByProjectId = async (
 	projectId: string,
 ) => {

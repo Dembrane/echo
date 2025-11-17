@@ -6,24 +6,32 @@ from typing import Any, List, Optional, Generator
 from logging import getLogger
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import Depends, APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 
 from dembrane.tasks import task_create_view, task_create_project_library
 from dembrane.utils import generate_uuid, get_safe_filename
-from dembrane.service import project_service, conversation_service
+from dembrane.service import build_conversation_service
 from dembrane.settings import get_settings
 from dembrane.report_utils import ContextTooLongException, get_report_content_for_project
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.exceptions import (
     ProjectLanguageNotSupportedException,
 )
-from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.service.project import (
+    ProjectService,
+    ProjectServiceException,
+    ProjectNotFoundException,
+)
+from dembrane.api.dependency_auth import DependencyDirectusSession, require_directus_client
 
 logger = getLogger("api.project")
 
-ProjectRouter = APIRouter(tags=["project"])
+ProjectRouter = APIRouter(
+    tags=["project"],
+    dependencies=[Depends(require_directus_client)],
+)
 PROJECT_ALLOWED_LANGUAGES = ["en", "nl", "de", "fr", "es"]
 settings = get_settings()
 BASE_DIR = settings.base_dir
@@ -64,6 +72,8 @@ async def create_project(
     filtered_optional_fields = {
         key: value for key, value in optional_fields.items() if value is not None
     }
+
+    project_service = ProjectService(directus_client=auth.client)
 
     project = await run_in_thread_pool(
         project_service.create,
@@ -170,6 +180,8 @@ async def get_project_transcripts(
 ) -> StreamingResponse:
     from dembrane.service.project import ProjectNotFoundException
 
+    project_service = ProjectService(directus_client=auth.client)
+
     try:
         project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
     except ProjectNotFoundException as exc:
@@ -178,8 +190,10 @@ async def get_project_transcripts(
     if not auth.is_admin and project.get("directus_user_id", "") != auth.user_id:
         raise HTTPException(status_code=403, detail="User does not have access to this project")
 
+    conversation_service_auth = build_conversation_service(auth.client)
+
     conversations = await run_in_thread_pool(
-        conversation_service.list_by_project,
+        conversation_service_auth.list_by_project,
         project_id,
         with_chunks=True,
         with_tags=False,
@@ -237,15 +251,6 @@ async def get_project_transcripts(
     return response
 
 
-async def get_latest_project_analysis_run(project_id: str) -> Optional[dict]:
-    analysis_run = await run_in_thread_pool(project_service.get_latest_analysis_run, project_id)
-
-    if not analysis_run:
-        return None
-
-    return analysis_run
-
-
 class CreateLibraryRequestBodySchema(BaseModel):
     language: Optional[str] = "en"
 
@@ -259,12 +264,11 @@ async def post_create_project_library(
     project_id: str,
     body: CreateLibraryRequestBodySchema,
 ) -> None:
-    from dembrane.service import project_service
-    from dembrane.service.project import ProjectNotFoundException
+    project_service = ProjectService(directus_client=auth.client)
 
     try:
         project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
-    except ProjectNotFoundException as e:
+    except ProjectServiceException as e:
         raise HTTPException(status_code=404, detail="Project not found") from e
 
     if not auth.is_admin and project.get("directus_user_id", "") != auth.user_id:
@@ -302,13 +306,13 @@ async def post_create_view(
     body: CreateViewRequestBodySchema,
     auth: DependencyDirectusSession,
 ) -> None:
-    project_analysis_run = await get_latest_project_analysis_run(project_id)
+    project_service = ProjectService(directus_client=auth.client)
+    project_analysis_run = await run_in_thread_pool(
+        project_service.get_latest_analysis_run, project_id
+    )
 
     if not project_analysis_run:
         raise HTTPException(status_code=404, detail="No analysis found for this project")
-
-    from dembrane.service import project_service
-    from dembrane.service.project import ProjectNotFoundException
 
     try:
         project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
@@ -335,7 +339,12 @@ class CreateReportRequestBodySchema(BaseModel):
 
 
 @ProjectRouter.post("/{project_id}/create-report")
-async def create_report(project_id: str, body: CreateReportRequestBodySchema) -> dict:
+async def create_report(
+    project_id: str,
+    body: CreateReportRequestBodySchema,
+    auth: DependencyDirectusSession,
+) -> dict:
+    project_service = ProjectService(directus_client=auth.client)
     language = body.language or "en"
     try:
         report_content_response = await get_report_content_for_project(project_id, language)
@@ -367,7 +376,12 @@ class CloneProjectRequestBodySchema(BaseModel):
 
 
 @ProjectRouter.post("/{project_id}/clone")
-async def clone_project(project_id: str, body: CloneProjectRequestBodySchema) -> str:
+async def clone_project(
+    project_id: str,
+    body: CloneProjectRequestBodySchema,
+    auth: DependencyDirectusSession,
+) -> str:
+    project_service = ProjectService(directus_client=auth.client)
     logger.info(f"Cloning project {project_id}")
 
     overrides = {}

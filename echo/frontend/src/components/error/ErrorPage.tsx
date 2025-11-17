@@ -26,10 +26,10 @@ export const ErrorPage = () => {
 				)}
 				<Button
 					onClick={() => {
-						window.location.href = "/";
+						window.location.href = "/projects";
 					}}
 				>
-					Return to Home
+					Return to Projects
 				</Button>
 			</Box>
 		</BaseLayout>

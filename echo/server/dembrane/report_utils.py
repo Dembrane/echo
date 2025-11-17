@@ -2,7 +2,7 @@ import re
 import logging
 
 from litellm import completion
-from litellm.utils import token_counter, get_max_tokens
+from litellm.utils import token_counter, get_model_info
 
 from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.prompts import render_prompt
@@ -15,13 +15,14 @@ logger = logging.getLogger("report_utils")
 TEXT_PROVIDER_KWARGS = get_completion_kwargs(MODELS.TEXT_FAST)
 TEXT_PROVIDER_MODEL = TEXT_PROVIDER_KWARGS["model"]
 
-_max_tokens = get_max_tokens(TEXT_PROVIDER_MODEL)
+_model_info = get_model_info(TEXT_PROVIDER_MODEL)
+_max_input_tokens = _model_info["max_input_tokens"] if _model_info else None
 
-if _max_tokens is None:
-    logger.error(f"Could not get max tokens for model {TEXT_PROVIDER_MODEL}")
+if _max_input_tokens is None:
+    logger.warning(f"Could not get max tokens for model {TEXT_PROVIDER_MODEL}")
     MAX_REPORT_CONTEXT_LENGTH = 128000  # good default
 else:
-    MAX_REPORT_CONTEXT_LENGTH = int(_max_tokens * 0.8)
+    MAX_REPORT_CONTEXT_LENGTH = int(_max_input_tokens * 0.8)
 
 logger.info(
     f"Using {TEXT_PROVIDER_MODEL} for report generation with context length {MAX_REPORT_CONTEXT_LENGTH}"

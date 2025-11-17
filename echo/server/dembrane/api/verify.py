@@ -11,7 +11,7 @@ from pydantic import Field, BaseModel
 from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.utils import generate_uuid
 from dembrane.prompts import render_prompt
-from dembrane.directus import directus
+from dembrane.directus import directus, DirectusClient
 from dembrane.settings import get_settings
 from dembrane.transcribe import _get_audio_file_object
 from dembrane.async_helpers import run_in_thread_pool
@@ -24,6 +24,7 @@ settings = get_settings()
 GCP_SA_JSON = settings.transcription.gcp_sa_json
 
 VerifyRouter = APIRouter(tags=["verify"])
+
 
 class VerificationTopicTranslation(BaseModel):
     label: str
@@ -92,9 +93,9 @@ def _parse_directus_datetime(value: Optional[str]) -> Optional[datetime]:
         return None
 
 
-async def _get_project(project_id: str) -> dict:
+async def _get_project(project_id: str, client: DirectusClient) -> dict:
     project_rows = await run_in_thread_pool(
-        directus.get_items,
+        client.get_items,
         "project",
         {
             "query": {
@@ -118,9 +119,11 @@ async def _get_project(project_id: str) -> dict:
     return project
 
 
-async def _get_verification_topics_for_project(project_id: str) -> List[VerificationTopicMetadata]:
+async def _get_verification_topics_for_project(
+    project_id: str, client: DirectusClient
+) -> List[VerificationTopicMetadata]:
     topic_rows = await run_in_thread_pool(
-        directus.get_items,
+        client.get_items,
         "verification_topic",
         {
             "query": {
@@ -189,8 +192,9 @@ async def get_verification_topics(
     project_id: str,
     auth: DependencyDirectusSession,  # noqa: ARG001 - reserved for future use
 ) -> GetVerificationTopicsResponse:
-    project = await _get_project(project_id)
-    topics = await _get_verification_topics_for_project(project_id)
+    client = auth.client or directus
+    project = await _get_project(project_id, client)
+    topics = await _get_verification_topics_for_project(project_id, client)
     selected_topics = _parse_selected_topics(project.get("selected_verification_key_list"), topics)
 
     return GetVerificationTopicsResponse(selected_topics=selected_topics, available_topics=topics)
@@ -200,10 +204,11 @@ async def get_verification_topics(
 async def update_verification_topics(
     project_id: str,
     body: UpdateVerificationTopicsRequest,
-    auth: DependencyDirectusSession,  # noqa: ARG001 - reserved for future use
+    auth: DependencyDirectusSession,
 ) -> GetVerificationTopicsResponse:
-    await _get_project(project_id)
-    topics = await _get_verification_topics_for_project(project_id)
+    client = auth.client or directus
+    await _get_project(project_id, client)
+    topics = await _get_verification_topics_for_project(project_id, client)
     available_keys = [topic.key for topic in topics if topic.key]
 
     normalized_keys = []
@@ -215,13 +220,13 @@ async def update_verification_topics(
     serialized_keys = ",".join(normalized_keys)
 
     await run_in_thread_pool(
-        directus.update_item,
+        client.update_item,
         "project",
         project_id,
         {"selected_verification_key_list": serialized_keys or None},
     )
 
-    refreshed_topics = await _get_verification_topics_for_project(project_id)
+    refreshed_topics = await _get_verification_topics_for_project(project_id, client)
     selected_topics = _parse_selected_topics(serialized_keys, refreshed_topics)
     return GetVerificationTopicsResponse(
         selected_topics=selected_topics, available_topics=refreshed_topics
@@ -231,10 +236,11 @@ async def update_verification_topics(
 @VerifyRouter.get("/artifacts/{conversation_id}", response_model=List[ConversationArtifactResponse])
 async def list_verification_artifacts(
     conversation_id: str,
-    auth: DependencyDirectusSession,  # noqa: ARG001 - reserved for future use
+    auth: DependencyDirectusSession,
 ) -> List[ConversationArtifactResponse]:
-    await _get_conversation_with_project(conversation_id)
-    artifacts = await _get_conversation_artifacts(conversation_id)
+    client = auth.client or directus
+    await _get_conversation_with_project(conversation_id, client)
+    artifacts = await _get_conversation_artifacts(conversation_id, client)
 
     def _sort_key(item: dict) -> tuple[bool, str]:
         approved = item.get("approved_at")
@@ -263,9 +269,9 @@ async def list_verification_artifacts(
     return response
 
 
-async def _get_artifact_or_404(artifact_id: str) -> dict:
+async def _get_artifact_or_404(artifact_id: str, client: DirectusClient) -> dict:
     artifact_rows = await run_in_thread_pool(
-        directus.get_items,
+        client.get_items,
         "conversation_artifact",
         {
             "query": {
@@ -289,9 +295,9 @@ async def _get_artifact_or_404(artifact_id: str) -> dict:
     return artifact_rows[0]
 
 
-async def _get_conversation_with_project(conversation_id: str) -> dict:
+async def _get_conversation_with_project(conversation_id: str, client: DirectusClient) -> dict:
     conversation_rows = await run_in_thread_pool(
-        directus.get_items,
+        client.get_items,
         "conversation",
         {
             "query": {
@@ -317,9 +323,9 @@ async def _get_conversation_with_project(conversation_id: str) -> dict:
     return conversation
 
 
-async def _get_conversation_artifacts(conversation_id: str) -> List[dict]:
+async def _get_conversation_artifacts(conversation_id: str, client: DirectusClient) -> List[dict]:
     artifacts = await run_in_thread_pool(
-        directus.get_items,
+        client.get_items,
         "conversation_artifact",
         {
             "query": {
@@ -354,9 +360,9 @@ def _format_previous_artifacts(artifacts: List[dict]) -> str:
     return "\n".join(lines)
 
 
-async def _get_conversation_chunks(conversation_id: str) -> List[dict]:
+async def _get_conversation_chunks(conversation_id: str, client: DirectusClient) -> List[dict]:
     chunk_rows = await run_in_thread_pool(
-        directus.get_items,
+        client.get_items,
         "conversation_chunk",
         {
             "query": {
@@ -484,6 +490,7 @@ async def _create_conversation_artifact(
     conversation_id: str,
     key: str,
     content: str,
+    client: DirectusClient,
 ) -> dict:
     artifact_payload = {
         "id": generate_uuid(),
@@ -494,7 +501,7 @@ async def _create_conversation_artifact(
     }
 
     created = await run_in_thread_pool(
-        directus.create_item,
+        client.create_item,
         "conversation_artifact",
         item_data=artifact_payload,
     )
@@ -504,17 +511,19 @@ async def _create_conversation_artifact(
 @VerifyRouter.post("/generate", response_model=GenerateArtifactsResponse)
 async def generate_verification_artifacts(
     body: GenerateArtifactsRequest,
-    auth: DependencyDirectusSession,  # noqa: ARG001 - reserved for future use
+    auth: DependencyDirectusSession,
 ) -> GenerateArtifactsResponse:
     if not GCP_SA_JSON:
         raise HTTPException(status_code=500, detail="GCP credentials are not configured")
 
-    conversation = await _get_conversation_with_project(body.conversation_id)
+    client = auth.client or directus
+
+    conversation = await _get_conversation_with_project(body.conversation_id, client)
     project_id = (conversation.get("project_id") or {}).get("id")
     if not project_id:
         raise HTTPException(status_code=400, detail="Conversation is missing project information")
 
-    topics = await _get_verification_topics_for_project(project_id)
+    topics = await _get_verification_topics_for_project(project_id, client)
     topic_map = {topic.key: topic for topic in topics if topic.key}
 
     target_topic_key = body.topic_list[0]
@@ -524,12 +533,12 @@ async def generate_verification_artifacts(
             status_code=400, detail=f"Verification topic '{target_topic_key}' not found"
         )
 
-    artifacts = await _get_conversation_artifacts(body.conversation_id)
+    artifacts = await _get_conversation_artifacts(body.conversation_id, client)
     last_artifact_time = None
     if artifacts:
         last_artifact_time = _parse_directus_datetime(artifacts[-1].get("date_created"))
 
-    chunks = await _get_conversation_chunks(body.conversation_id)
+    chunks = await _get_conversation_chunks(body.conversation_id, client)
     transcript_text = _build_transcript_text(chunks)
     audio_chunks = _select_audio_chunks(chunks, last_artifact_time)
     audio_summary = _format_audio_summary(audio_chunks)
@@ -591,7 +600,7 @@ async def generate_verification_artifacts(
 
     generated_text = _extract_response_text(response)
     artifact_record = await _create_conversation_artifact(
-        body.conversation_id, target_topic_key, generated_text
+        body.conversation_id, target_topic_key, generated_text, client
     )
 
     artifact_response = ConversationArtifactResponse(
@@ -610,7 +619,7 @@ async def generate_verification_artifacts(
 async def update_verification_artifact(
     artifact_id: str,
     body: UpdateArtifactRequest,
-    auth: DependencyDirectusSession,  # noqa: ARG001 - reserved for future use
+    auth: DependencyDirectusSession,
 ) -> ConversationArtifactResponse:
     if not (body.use_conversation or body.content is not None or body.approved_at is not None):
         raise HTTPException(status_code=400, detail="No updates provided")
@@ -621,7 +630,9 @@ async def update_verification_artifact(
             detail="Provide either useConversation or content, not both",
         )
 
-    artifact = await _get_artifact_or_404(artifact_id)
+    client = auth.client or directus
+
+    artifact = await _get_artifact_or_404(artifact_id, client)
     conversation_id = artifact.get("conversation_id")
 
     updates: Dict[str, Any] = {}
@@ -638,7 +649,7 @@ async def update_verification_artifact(
         reference_conversation_id = body.use_conversation.conversation_id
         reference_timestamp = body.use_conversation.timestamp
 
-        chunks = await _get_conversation_chunks(reference_conversation_id)
+        chunks = await _get_conversation_chunks(reference_conversation_id, client)
 
         conversation_transcript = _build_transcript_text(chunks)
         feedback_text = _build_feedback_text(chunks, reference_timestamp)
@@ -695,12 +706,12 @@ async def update_verification_artifact(
         revision_completion_kwargs = get_completion_kwargs(MODELS.MULTI_MODAL_PRO)
 
         try:
-                response = litellm.completion(
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": [
-                                {
+            response = litellm.completion(
+                messages=[
+                    {
+                        "role": "system",
+                        "content": [
+                            {
                                 "type": "text",
                                 "text": system_prompt,
                             }
@@ -709,10 +720,10 @@ async def update_verification_artifact(
                     {
                         "role": "user",
                         "content": message_content,
-                        },
-                    ],
-                    **revision_completion_kwargs,
-                )
+                    },
+                ],
+                **revision_completion_kwargs,
+            )
         except Exception as exc:  # pragma: no cover - external failure
             logger.error("Gemini revision failed: %s", exc, exc_info=True)
             raise HTTPException(
@@ -728,7 +739,7 @@ async def update_verification_artifact(
         raise HTTPException(status_code=400, detail="No valid fields to update")
 
     updated_artifact = await run_in_thread_pool(
-        directus.update_item,
+        client.update_item,
         "conversation_artifact",
         artifact_id,
         updates,

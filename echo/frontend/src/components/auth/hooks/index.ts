@@ -6,7 +6,7 @@ import {
 	registerUserVerify,
 } from "@directus/sdk";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useLocation, useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { ADMIN_BASE_URL } from "@/config";
@@ -14,7 +14,7 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { directus } from "@/lib/directus";
 import { throwWithMessage } from "../utils/errorUtils";
 
-export const useCurrentUser = () =>
+export const useCurrentUser = ({ enabled = true }: { enabled?: boolean } = {}) =>
 	useQuery({
 		queryFn: () => {
 			try {
@@ -34,6 +34,7 @@ export const useCurrentUser = () =>
 			}
 		},
 		queryKey: ["users", "me"],
+		enabled,
 	});
 
 export const useResetPasswordMutation = () => {
@@ -152,6 +153,7 @@ export const useRegisterMutation = () => {
 
 // todo: add redirection logic here
 export const useLoginMutation = () => {
+	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: async ({
 			email,
@@ -169,8 +171,11 @@ export const useLoginMutation = () => {
 				},
 			);
 		},
-		onSuccess: () => {
-			toast.success("Login successful");
+		onSuccess: async () => {
+			await Promise.all([
+				queryClient.invalidateQueries({ queryKey: ["auth", "session"] }),
+				queryClient.invalidateQueries({ queryKey: ["users", "me"] }),
+			]);
 		},
 	});
 };
@@ -190,11 +195,19 @@ export const useLogoutMutation = () => {
 			try {
 				await directus.logout();
 			} catch (e) {
+				const status = (e as { response?: { status?: number } })?.response?.status;
+				if (status === 401 || status === 403) {
+					return;
+				}
 				throwWithMessage(e);
 			}
 		},
-		onMutate: async ({ next, reason, doRedirect }) => {
-			queryClient.resetQueries();
+		onMutate: async () => {
+			await queryClient.cancelQueries();
+			queryClient.setQueryData(["auth", "session"], false);
+			queryClient.removeQueries({ queryKey: ["users", "me"], exact: false });
+		},
+		onSuccess: (_data, { next, reason, doRedirect }) => {
 			if (doRedirect) {
 				navigate(
 					"/login" +
@@ -203,39 +216,50 @@ export const useLogoutMutation = () => {
 				);
 			}
 		},
+		onError: (_error, { next, reason, doRedirect }) => {
+			if (doRedirect) {
+				navigate(
+					"/login" +
+						(next ? `?next=${encodeURIComponent(next)}` : "") +
+						(reason ? `&reason=${reason}` : ""),
+				);
+			}
+		},
+		onSettled: () => {
+			queryClient.invalidateQueries({ queryKey: ["auth", "session"] });
+		},
 	});
 };
 
 export const useAuthenticated = (doRedirect = false) => {
 	const logoutMutation = useLogoutMutation();
-	const [loading, setLoading] = useState(false);
-	const [isAuthenticated, setIsAuthenticated] = useState(false);
 	const location = useLocation();
 	const [searchParams] = useSearchParams();
+	const hasLoggedOutRef = useRef(false);
 
-	const checkAuth = async () => {
-		try {
+	const sessionQuery = useQuery({
+		queryKey: ["auth", "session"],
+		queryFn: async () => {
 			await directus.refresh();
-			setIsAuthenticated(true);
-		} catch (_e) {
-			setIsAuthenticated(false);
-			await logoutMutation.mutateAsync({
+			return true as const;
+		},
+		staleTime: 60_000,
+		retry: false,
+	});
+
+	useEffect(() => {
+		if (sessionQuery.isError && doRedirect && !hasLoggedOutRef.current) {
+			hasLoggedOutRef.current = true;
+			logoutMutation.mutate({
 				doRedirect,
 				next: location.pathname,
 				reason: searchParams.get("reason") ?? "",
 			});
 		}
+	}, [doRedirect, location.pathname, logoutMutation, searchParams, sessionQuery.isError]);
+
+	return {
+		isAuthenticated: sessionQuery.data === true,
+		loading: sessionQuery.isLoading,
 	};
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: no need
-	useEffect(() => {
-		setLoading(true);
-		checkAuth()
-			.catch((_e) => {})
-			.finally(() => {
-				setLoading(false);
-			});
-	}, []);
-
-	return { isAuthenticated, loading };
 };

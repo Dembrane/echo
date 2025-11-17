@@ -102,7 +102,7 @@ export const mainRouter = createBrowserRouter([
 	{
 		children: [
 			{
-				element: <Navigate to="/login" />,
+				element: <Navigate to="projects" />,
 				path: "",
 			},
 			{

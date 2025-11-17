@@ -9,21 +9,40 @@ export const I18nLink: React.FC<LinkProps> = ({ to, ...props }) => {
 
 	const finalLanguage = language ?? i18nLanguage;
 
-	if (to.toString() === "..") {
+	const extractPathname = () => {
+		if (typeof to === "string") {
+			return to;
+		}
+		if (typeof to === "object" && to !== null && "pathname" in to) {
+			return (to.pathname as string | undefined) ?? undefined;
+		}
+		return undefined;
+	};
+
+	const pathname = extractPathname();
+	const isRelative = pathname
+		? pathname === ".." || pathname === "." || pathname.startsWith("../") || pathname.startsWith("./")
+		: to.toString() === "..";
+
+	if (isRelative) {
 		return <Link to={to} {...props} />;
 	}
 
-	// Check if URL already starts with a supported language prefix
-	const hasLanguagePrefix = SUPPORTED_LANGUAGES.some((lang) =>
-		to.toString().startsWith(`/${lang}`),
-	);
+	const hasLanguagePrefix = pathname
+		? SUPPORTED_LANGUAGES.some(
+				(lang) => pathname === `/${lang}` || pathname.startsWith(`/${lang}/`),
+		  )
+		: SUPPORTED_LANGUAGES.some((lang) => to.toString().startsWith(`/${lang}`));
 
 	if (hasLanguagePrefix) {
 		return <Link to={to} {...props} />;
 	}
 
 	const languagePrefix = finalLanguage ? `/${finalLanguage}` : "";
-	const modifiedTo = typeof to === "string" ? `${languagePrefix}${to}` : to;
+	const modifiedTo =
+		typeof to === "string"
+			? `${languagePrefix}${to}`
+			: { ...to, pathname: `${languagePrefix}${to.pathname ?? ""}` };
 
 	return <Link to={modifiedTo} {...props} />;
 };

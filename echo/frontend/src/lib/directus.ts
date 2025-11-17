@@ -1,9 +1,9 @@
-import { authentication, createDirectus, rest } from "@directus/sdk";
+import { authentication, createDirectus, realtime, rest } from "@directus/sdk";
 import type { I18n } from "@lingui/core";
 import { DIRECTUS_CONTENT_PUBLIC_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import type { CustomDirectusTypes as CustomDirectusTypesContent } from "./typesDirectusContent";
 
-export const directus = createDirectus<CustomDirectusTypes>(DIRECTUS_PUBLIC_URL)
+const baseDirectus = createDirectus<CustomDirectusTypes>(DIRECTUS_PUBLIC_URL)
 	.with(
 		authentication("session", { autoRefresh: true, credentials: "include" }),
 	)
@@ -13,6 +13,11 @@ export const directus = createDirectus<CustomDirectusTypes>(DIRECTUS_PUBLIC_URL)
 		}),
 	);
 
+export const directus = baseDirectus;
+
+export const directusRealtime = realtime({
+	authMode: "handshake",
+})(baseDirectus);
 export const directusParticipant = createDirectus<CustomDirectusTypes>(
 	DIRECTUS_PUBLIC_URL,
 ).with(rest());

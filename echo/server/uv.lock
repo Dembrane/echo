@@ -453,7 +453,6 @@ dependencies = [
     { name = "boto3" },
     { name = "colorlog" },
     { name = "configparser" },
-    { name = "directus-py-sdk" },
     { name = "dramatiq", extra = ["redis", "watch"] },
     { name = "dramatiq-workflow" },
     { name = "fastapi" },
@@ -514,7 +513,6 @@ requires-dist = [
     { name = "boto3", specifier = "==1.37.*" },
     { name = "colorlog", specifier = ">=6.9.0" },
     { name = "configparser", specifier = "==7.2.0" },
-    { name = "directus-py-sdk", specifier = "==1.1.1" },
     { name = "dramatiq", extras = ["redis", "watch"], specifier = "==1.17.*" },
     { name = "dramatiq-workflow", specifier = "==0.2.*" },
     { name = "fastapi", specifier = "==0.109.*" },
@@ -565,20 +563,6 @@ requires-dist = [
     { name = "types-requests", specifier = ">=2.32.0.20240602" },
     { name = "types-tqdm", specifier = ">4" },
     { name = "uvicorn", extras = ["standard"], specifier = "==0.27.*" },
-]
-
-[[package]]
-name = "directus-py-sdk"
-version = "1.1.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "requests" },
-    { name = "sqlparse" },
-    { name = "urllib3" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/81/2b/5a8c3722d9947a26bf9af6ae2f1ca25d8c2199cc2e0038aa348f9b8aec62/directus_py_sdk-1.1.1.tar.gz", hash = "sha256:d20d6503c01fcba09d342a5348e2039399085ae0212dd9b5c634ca60628fe542", size = 16689, upload-time = "2025-07-29T13:54:47.441Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/1b/1c/e210bd60fca009a18ec296955f7634af45fc10eaba3fd2a899e4ed2d1f82/directus_py_sdk-1.1.1-py3-none-any.whl", hash = "sha256:a199e2aba6bac3d46801cb014bc78c73a63d59da2dd54ba65d9aed54fc0687cb", size = 14717, upload-time = "2025-07-29T13:54:46.004Z" },
 ]
 
 [[package]]
@@ -2352,15 +2336,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/f8/3b/55c09b285cb2d55bdfa711e778bdffdd0dc3ffa052b0af41f1c5d6e582fa/sqlalchemy-2.0.44-cp311-cp311-win32.whl", hash = "sha256:253e2f29843fb303eca6b2fc645aca91fa7aa0aa70b38b6950da92d44ff267f3", size = 2105392, upload-time = "2025-10-10T15:38:20.051Z" },
     { url = "https://files.pythonhosted.org/packages/c7/23/907193c2f4d680aedbfbdf7bf24c13925e3c7c292e813326c1b84a0b878e/sqlalchemy-2.0.44-cp311-cp311-win_amd64.whl", hash = "sha256:7a8694107eb4308a13b425ca8c0e67112f8134c846b6e1f722698708741215d5", size = 2130293, upload-time = "2025-10-10T15:38:21.601Z" },
     { url = "https://files.pythonhosted.org/packages/9c/5e/6a29fa884d9fb7ddadf6b69490a9d45fded3b38541713010dad16b77d015/sqlalchemy-2.0.44-py3-none-any.whl", hash = "sha256:19de7ca1246fbef9f9d1bff8f1ab25641569df226364a0e40457dc5457c54b05", size = 1928718, upload-time = "2025-10-10T15:29:45.32Z" },
-]
-
-[[package]]
-name = "sqlparse"
-version = "0.5.3"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e5/40/edede8dd6977b0d3da179a342c198ed100dd2aba4be081861ee5911e4da4/sqlparse-0.5.3.tar.gz", hash = "sha256:09f67787f56a0b16ecdbde1bfc7f5d9c3371ca683cfeaa8e6ff60b4807ec9272", size = 84999, upload-time = "2024-12-10T12:05:30.728Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a9/5c/bfd6bd0bf979426d405cc6e71eceb8701b148b16c21d2dc3c261efc61c7b/sqlparse-0.5.3-py3-none-any.whl", hash = "sha256:cf2196ed3418f3ba5de6af7e82c694a9fbdbfecccdfc72e281548517081f16ca", size = 44415, upload-time = "2024-12-10T12:05:27.824Z" },
 ]
 
 [[package]]
