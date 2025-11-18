@@ -953,17 +953,6 @@ export const getChatHistory = async (chatId: string): Promise<ChatHistory> => {
 						},
 					],
 				},
-				{
-					chat_message_metadata: [
-						"type",
-						"conversation",
-						"ratio",
-						"reference_text",
-						{
-							conversation: ["id", "participant_name"],
-						},
-					],
-				},
 			],
 			filter: {
 				project_chat_id: chatId,
@@ -978,7 +967,7 @@ export const getChatHistory = async (chatId: string): Promise<ChatHistory> => {
 		content: message.text ?? "",
 		createdAt: message.date_created,
 		id: message.id,
-		metadata: message.chat_message_metadata ?? [],
+		// metadata: message.chat_message_metadata ?? [],
 		role: message.message_from as "user" | "assistant",
 	}));
 };
