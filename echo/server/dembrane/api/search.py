@@ -1,16 +1,16 @@
 from __future__ import annotations
 
+from typing import Any, Dict, List, Optional
 from asyncio import gather
 from datetime import datetime
-from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel, Field
+from fastapi import Query, Depends, APIRouter
+from pydantic import Field, BaseModel
 
-from dembrane.api.dependency_auth import DependencyDirectusSession, require_directus_client
-from dembrane.api.rate_limit import create_user_rate_limiter
-from dembrane.async_helpers import run_in_thread_pool
 from dembrane.directus import DirectusClient
+from dembrane.async_helpers import run_in_thread_pool
+from dembrane.api.rate_limit import create_user_rate_limiter
+from dembrane.api.dependency_auth import DependencyDirectusSession, require_directus_client
 
 SearchRouter = APIRouter(
     tags=["search"],
@@ -18,9 +18,7 @@ SearchRouter = APIRouter(
     dependencies=[Depends(require_directus_client)],
 )
 
-search_rate_limiter = create_user_rate_limiter(
-    capacity=40, window_seconds=60, name="home_search"
-)
+search_rate_limiter = create_user_rate_limiter(capacity=40, window_seconds=60, name="home_search")
 
 
 class ConversationCard(BaseModel):
@@ -160,9 +158,7 @@ def _normalize_project(payload: Dict[str, Any]) -> ProjectCard:
         except ValueError:
             updated_at = None
 
-    conversations_count = payload.get("conversations_count") or payload.get(
-        "count_conversations"
-    )
+    conversations_count = payload.get("conversations_count") or payload.get("count_conversations")
     if isinstance(conversations_count, dict):
         conversations_count = conversations_count.get("aggregate")
     if isinstance(conversations_count, dict):
@@ -173,7 +169,7 @@ def _normalize_project(payload: Dict[str, Any]) -> ProjectCard:
 
     if not isinstance(conversations_count, int):
         try:
-            conversations_count = int(conversations_count)
+            conversations_count = int(conversations_count or 0)
         except Exception:  # noqa: BLE001
             conversations_count = None
 
