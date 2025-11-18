@@ -4,10 +4,13 @@ from logging import getLogger
 from jose import JWTError, jwt
 from fastapi import Depends, Request
 
-from dembrane.config import DIRECTUS_SECRET, DIRECTUS_SESSION_COOKIE_NAME
+from dembrane.settings import get_settings
 from dembrane.api.exceptions import SessionInvalidException
 
 logger = getLogger("api.session")
+settings = get_settings()
+DIRECTUS_SECRET = settings.directus.secret
+DIRECTUS_SESSION_COOKIE_NAME = settings.directus.session_cookie_name
 
 
 class DirectusSession:

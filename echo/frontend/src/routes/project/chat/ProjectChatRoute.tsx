@@ -174,7 +174,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 		};
 
 		// publish the incomplete result to the backend
-		addChatMessageMutation.mutate(body);
+		addChatMessageMutation.mutate(body as Partial<ProjectChatMessage>);
 	};
 
 	const customHandleSubmit = async () => {

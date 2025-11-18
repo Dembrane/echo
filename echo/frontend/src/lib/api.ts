@@ -220,7 +220,6 @@ export const getProjectViews = async (projectId: string) => {
 						"description",
 						"image_url",
 						"view_id",
-						"image_generation_model",
 					],
 				},
 			],
@@ -1017,6 +1016,7 @@ export const getChatHistory = async (chatId: string): Promise<ChatHistory> => {
 		}),
 	);
 
+	// @ts-expect-error TODO
 	return data.map((message) => ({
 		_original: message,
 		content: message.text ?? "",
@@ -1061,6 +1061,94 @@ export const generateConversationSummary = async (conversationId: string) => {
 		unknown,
 		{ status: string; summary: string } | { status: string; message: string }
 	>(`/conversations/${conversationId}/summarize`);
+};
+
+export type VerificationTopicTranslation = {
+	label: string;
+};
+
+export type VerificationTopicMetadata = {
+	key: string;
+	prompt?: string | null;
+	icon?: string | null;
+	sort?: number | null;
+	translations: Record<string, VerificationTopicTranslation>;
+};
+
+export type VerificationTopicsResponse = {
+	selected_topics: string[];
+	available_topics: VerificationTopicMetadata[];
+};
+
+export const getVerificationTopics = async (projectId: string) => {
+	return apiNoAuth.get<unknown, VerificationTopicsResponse>(
+		`/verify/topics/${projectId}`,
+	);
+};
+
+export type VerificationArtifact = {
+	id: string;
+	approved_at?: string | null;
+	date_created?: string | null;
+	content: string;
+	conversation_id: string;
+	key: string;
+	read_aloud_stream_url: string;
+};
+
+export const generateVerificationArtefact = async (payload: {
+	conversationId: string;
+	topicList: string[];
+}): Promise<VerificationArtifact[]> => {
+	const response = await apiNoAuth.post<
+		unknown,
+		{
+			artifact_list?: VerificationArtifact[];
+		}
+	>("/verify/generate", {
+		conversation_id: payload.conversationId,
+		topic_list: payload.topicList,
+	});
+
+	return response?.artifact_list ?? [];
+};
+
+export type UpdateVerificationArtefactPayload = {
+	artifactId: string;
+	useConversation?: {
+		conversationId: string;
+		timestamp: string;
+	};
+	content?: string;
+	approvedAt?: string;
+};
+
+export const updateVerificationArtefact = async ({
+	artifactId,
+	useConversation,
+	content,
+	approvedAt,
+}: UpdateVerificationArtefactPayload) => {
+	const response = await apiNoAuth.put<unknown, VerificationArtifact>(
+		`/verify/artifact/${artifactId}`,
+		{
+			approvedAt,
+			content,
+			useConversation: useConversation
+				? {
+						conversationId: useConversation.conversationId,
+						timestamp: useConversation.timestamp,
+					}
+				: undefined,
+		},
+	);
+	return response;
+};
+
+export const getVerificationArtefacts = async (conversationId: string) => {
+	return apiNoAuth.get<unknown, VerificationArtifact[]>(
+		`/verify/artifacts/${conversationId}`,
+	);
 };
 
 export const unsubscribeParticipant = async (

@@ -24,6 +24,7 @@ export const OngoingConversationsSummaryCard = ({
 							project_id: projectId,
 						},
 						source: {
+							// @ts-expect-error source is not typed
 							_nin: ["DASHBOARD_UPLOAD", "CLONE"],
 						},
 						timestamp: {

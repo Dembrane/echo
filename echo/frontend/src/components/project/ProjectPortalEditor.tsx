@@ -20,15 +20,18 @@ import {
 	Title,
 } from "@mantine/core";
 import { IconEye, IconEyeOff, IconRefresh } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Resizable } from "re-resizable";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import type { VerificationTopicsResponse } from "@/lib/api";
 import { Logo } from "../common/Logo";
 import { FormLabel } from "../form/FormLabel";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
 import { SaveStatus } from "../form/SaveStatus";
+import { TOPIC_ICON_MAP } from "../participant/verify/VerifySelection";
 import { useUpdateProjectByIdMutation } from "./hooks";
 import { useProjectSharingLink } from "./ProjectQRCode";
 import { ProjectTagsInput } from "./ProjectTagsInput";
@@ -44,10 +47,25 @@ const FormSchema = z.object({
 	get_reply_prompt: z.string(),
 	is_get_reply_enabled: z.boolean(),
 	is_project_notification_subscription_allowed: z.boolean(),
+	is_verify_enabled: z.boolean(),
 	language: z.enum(["en", "nl", "de", "fr", "es"]),
+	verification_topics: z.array(z.string()),
 });
 
 type ProjectPortalFormValues = z.infer<typeof FormSchema>;
+
+const LANGUAGE_TO_LOCALE: Record<string, string> = {
+	de: "de-DE",
+	en: "en-US",
+	es: "es-ES",
+	fr: "fr-FR",
+	nl: "nl-NL",
+};
+
+const normalizeTopicList = (topics: string[]): string[] =>
+	Array.from(
+		new Set(topics.map((topic) => topic.trim()).filter(Boolean)),
+	).sort();
 
 const ProperNounInput = ({
 	value,
@@ -134,14 +152,52 @@ const MemoizedMarkdownWYSIWYG = memo(MarkdownWYSIWYG);
 // Memoized ProjectTagsInput wrapper
 const MemoizedProjectTagsInput = memo(ProjectTagsInput);
 
-const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
+type ProjectPortalEditorProps = {
+	project: Project;
+	verificationTopics: VerificationTopicsResponse;
+	isVerificationTopicsLoading?: boolean;
+};
+
+const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	project,
+	verificationTopics,
+	isVerificationTopicsLoading = false,
 }) => {
+	const queryClient = useQueryClient();
 	const [showPreview, setShowPreview] = useState(false);
 	const link = useProjectSharingLink(project);
 	const [previewKey, setPreviewKey] = useState(0);
 	const [previewWidth, setPreviewWidth] = useState(400);
 	const [previewHeight, setPreviewHeight] = useState(300);
+
+	const projectLanguageCode = (project.language ?? "en") as
+		| "en"
+		| "nl"
+		| "de"
+		| "fr"
+		| "es";
+	const languageLocale =
+		LANGUAGE_TO_LOCALE[projectLanguageCode] ?? LANGUAGE_TO_LOCALE.en;
+
+	const availableVerifyTopics = useMemo(
+		() =>
+			(verificationTopics?.available_topics ?? []).map((topic) => ({
+				icon:
+					TOPIC_ICON_MAP[topic.key] ??
+					(topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined),
+				key: topic.key,
+				label:
+					topic.translations?.[languageLocale]?.label ??
+					topic.translations?.["en-US"]?.label ??
+					topic.key,
+			})),
+		[verificationTopics, languageLocale],
+	);
+
+	const selectedTopicDefaults = useMemo(
+		() => verificationTopics?.selected_topics ?? [],
+		[verificationTopics],
+	);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: just a dependency issue biome catches, not an issue though
 	const defaultValues = useMemo(() => {
@@ -162,20 +218,29 @@ const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
 			is_get_reply_enabled: project.is_get_reply_enabled ?? false,
 			is_project_notification_subscription_allowed:
 				project.is_project_notification_subscription_allowed ?? false,
-			language: (project.language ?? "en") as "en" | "nl" | "de" | "fr" | "es",
+			is_verify_enabled: project.is_verify_enabled ?? false,
+			language: projectLanguageCode,
+			verification_topics: selectedTopicDefaults,
 		};
-	}, [project.id]);
+	}, [project.id, projectLanguageCode, selectedTopicDefaults]);
 
 	const formResolver = useMemo(() => zodResolver(FormSchema), []);
 
-	const { control, handleSubmit, watch, formState, reset } =
-		useForm<ProjectPortalFormValues>({
-			defaultValues,
-			mode: "onChange",
-			// for validation
-			resolver: formResolver,
-			reValidateMode: "onChange",
-		});
+	const {
+		control,
+		handleSubmit,
+		watch,
+		formState,
+		reset,
+		setValue,
+		getValues,
+	} = useForm<ProjectPortalFormValues>({
+		defaultValues,
+		mode: "onChange",
+		// for validation
+		resolver: formResolver,
+		reValidateMode: "onChange",
+	});
 
 	const watchedReplyMode = useWatch({
 		control,
@@ -187,19 +252,44 @@ const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
 		name: "is_get_reply_enabled",
 	});
 
+	const watchedVerifyEnabled = useWatch({
+		control,
+		name: "is_verify_enabled",
+	});
+
 	const updateProjectMutation = useUpdateProjectByIdMutation();
 
 	const onSave = useCallback(
 		async (values: ProjectPortalFormValues) => {
+			const { verification_topics, ...projectPayload } = values;
+			const normalizedTopics = normalizeTopicList(verification_topics);
+			const serializedTopics =
+				normalizedTopics.length > 0 ? normalizedTopics.join(",") : null;
+
 			await updateProjectMutation.mutateAsync({
 				id: project.id,
-				payload: values,
+				payload: {
+					...(projectPayload as Partial<Project>),
+					selected_verification_key_list: serializedTopics,
+				},
 			});
 
-			// Reset the form with the current values to clear the dirty state
-			reset(values, { keepDirty: false, keepValues: true });
+			await queryClient.invalidateQueries({
+				queryKey: ["verify", "topics", project.id],
+			});
+
+			reset(
+				{
+					...values,
+					verification_topics: normalizedTopics,
+				},
+				{
+					keepDirty: false,
+					keepDirtyValues: true,
+				},
+			);
 		},
-		[project.id, updateProjectMutation, reset],
+		[project.id, updateProjectMutation, reset, queryClient],
 	);
 
 	const {
@@ -219,6 +309,38 @@ const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
 	useEffect(() => {
 		dispatchAutoSaveRef.current = dispatchAutoSave;
 	}, [dispatchAutoSave]);
+
+	useEffect(() => {
+		if (!verificationTopics || isVerificationTopicsLoading) {
+			return;
+		}
+
+		if (formState.dirtyFields.verification_topics) {
+			return;
+		}
+
+		const normalizedSelected = normalizeTopicList(
+			verificationTopics.selected_topics ?? [],
+		);
+		const current = normalizeTopicList(getValues("verification_topics") ?? []);
+
+		const differs =
+			normalizedSelected.length !== current.length ||
+			normalizedSelected.some((topic, index) => topic !== current[index]);
+
+		if (differs) {
+			setValue("verification_topics", normalizedSelected, {
+				shouldDirty: false,
+				shouldTouch: false,
+			});
+		}
+	}, [
+		formState.dirtyFields.verification_topics,
+		getValues,
+		setValue,
+		verificationTopics,
+		isVerificationTopicsLoading,
+	]);
 
 	useEffect(() => {
 		const subscription = watch((values, { type }) => {
@@ -545,6 +667,135 @@ const ProjectPortalEditorComponent: React.FC<{ project: Project }> = ({
 											)}
 										/>
 									)}
+								</Stack>
+
+								<Divider />
+
+								<Stack gap="md">
+									<Group>
+										<Title order={4}>
+											<Trans id="dashboard.dembrane.verify.title">
+												Dembrane Verify
+											</Trans>
+										</Title>
+										<Logo hideTitle />
+										<Badge>
+											<Trans id="dashboard.dembrane.verify.experimental">
+												Experimental
+											</Trans>
+										</Badge>
+									</Group>
+
+									<Text size="sm" c="dimmed">
+										<Trans id="dashboard.dembrane.verify.description">
+											Enable this feature to allow participants to create and
+											approve "verified objects" from their submissions. This
+											helps crystallize key ideas, concerns, or summaries. After
+											the conversation, you can filter for discussions with
+											verified objects and review them in the overview.
+										</Trans>
+									</Text>
+
+									<Controller
+										name="is_verify_enabled"
+										control={control}
+										render={({ field }) => (
+											<Switch
+												label={
+													<FormLabel
+														label={t`Enable Dembrane Verify`}
+														isDirty={formState.dirtyFields.is_verify_enabled}
+														error={formState.errors.is_verify_enabled?.message}
+													/>
+												}
+												checked={field.value}
+												onChange={(e) =>
+													field.onChange(e.currentTarget.checked)
+												}
+											/>
+										)}
+									/>
+
+									<Controller
+										name="verification_topics"
+										control={control}
+										render={({ field }) => (
+											<Stack gap="xs">
+												<FormLabel
+													label={t`Verification Topics`}
+													isDirty={!!formState.dirtyFields.verification_topics}
+													error={formState.errors.verification_topics?.message}
+												/>
+												<Text size="sm" c="dimmed">
+													<Trans id="dashboard.dembrane.verify.topic.select">
+														Select which topics participants can use for
+														verification.
+													</Trans>
+												</Text>
+												{isVerificationTopicsLoading ? (
+													<Text size="sm" c="dimmed">
+														<Trans>Loading verification topics…</Trans>
+													</Text>
+												) : (
+													<>
+														{availableVerifyTopics.length === 0 ? (
+															<Text size="sm" c="dimmed">
+																<Trans>No verification topics available.</Trans>
+															</Text>
+														) : (
+															<Group gap="xs">
+																{availableVerifyTopics.map((topic) => (
+																	<Badge
+																		key={topic.key}
+																		className={
+																			watchedVerifyEnabled
+																				? "cursor-pointer capitalize"
+																				: "capitalize"
+																		}
+																		variant={
+																			field.value.includes(topic.key)
+																				? "filled"
+																				: "default"
+																		}
+																		size="lg"
+																		style={{
+																			cursor: watchedVerifyEnabled
+																				? "pointer"
+																				: "not-allowed",
+																			opacity: watchedVerifyEnabled ? 1 : 0.6,
+																		}}
+																		onClick={() => {
+																			if (!watchedVerifyEnabled) return;
+																			const normalizedCurrent =
+																				normalizeTopicList(field.value ?? []);
+																			const isSelected =
+																				normalizedCurrent.includes(topic.key);
+																			const updated = isSelected
+																				? normalizedCurrent.filter(
+																						(item) => item !== topic.key,
+																					)
+																				: normalizeTopicList([
+																						...normalizedCurrent,
+																						topic.key,
+																					]);
+																			field.onChange(updated);
+																		}}
+																	>
+																		<Group gap="xs">
+																			{topic.icon ? (
+																				<span>{topic.icon}</span>
+																			) : null}
+																			<span>{topic.label}</span>
+																		</Group>
+																	</Badge>
+																))}
+															</Group>
+														)}
+													</>
+												)}
+											</Stack>
+										)}
+									/>
 								</Stack>
 
 								<Divider />

@@ -13,9 +13,9 @@ import ffmpeg
 
 from dembrane.s3 import s3_client, delete_from_s3, get_stream_from_s3, get_sanitized_s3_key
 from dembrane.utils import generate_uuid
-from dembrane.config import STORAGE_S3_BUCKET, STORAGE_S3_ENDPOINT
 from dembrane.service import conversation_service
 from dembrane.directus import directus
+from dembrane.settings import get_settings
 
 logger = logging.getLogger("audio_utils")
 
@@ -92,6 +92,11 @@ class FileTooSmallError(Exception):
     """Custom exception for files that are too small to process"""
 
     pass
+
+
+settings = get_settings()
+STORAGE_S3_BUCKET = settings.storage.bucket
+STORAGE_S3_ENDPOINT = settings.storage.endpoint
 
 
 def convert_and_save_to_s3(

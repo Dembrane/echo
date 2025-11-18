@@ -7,11 +7,11 @@
     "_syncId": "_sync_default_admin_role"
   },
   {
-    "name": "Application User",
+    "name": "Basic User With 2FA",
     "icon": "supervised_user_circle",
     "description": null,
-    "parent": null,
-    "_syncId": "2446660a-ab6c-4801-ad69-5711030cba83"
+    "parent": "feebe863-90b1-41d1-a7ef-9694ddee3844",
+    "_syncId": "502f00a4-fa44-4cdf-9650-1d15f3ea23dd"
   },
   {
     "name": "Read-Only",
@@ -21,10 +21,10 @@
     "_syncId": "d49f0a90-9ea8-429f-aa56-6f3e6ae0dd87"
   },
   {
-    "name": "Project User",
+    "name": "Basic User",
     "icon": "supervised_user_circle",
     "description": null,
-    "parent": "2446660a-ab6c-4801-ad69-5711030cba83",
+    "parent": null,
     "_syncId": "feebe863-90b1-41d1-a7ef-9694ddee3844"
   }
 ]

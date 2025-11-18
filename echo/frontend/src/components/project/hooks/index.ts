@@ -1,4 +1,5 @@
 import {
+	aggregate,
 	createItem,
 	deleteItem,
 	type Query,
@@ -19,6 +20,7 @@ import {
 	api,
 	cloneProjectById,
 	getLatestProjectAnalysisRunByProjectId,
+	getVerificationTopics,
 } from "@/lib/api";
 import { directus } from "@/lib/directus";
 
@@ -243,7 +245,9 @@ export const useInfiniteProjects = ({
 			return {
 				nextOffset:
 					response.length === initialLimit ? pageParam + 1 : undefined,
-				projects: response,
+				projects: response.map((r) => ({
+					...r,
+				})),
 			};
 		},
 		queryKey: ["projects", query],
@@ -254,7 +258,6 @@ export const useProjectById = ({
 	projectId,
 	query = {
 		deep: {
-			// @ts-expect-error tags won't be typed
 			tags: {
 				_sort: "sort",
 			},
@@ -274,5 +277,13 @@ export const useProjectById = ({
 		queryFn: () =>
 			directus.request<Project>(readItem("project", projectId, query)),
 		queryKey: ["projects", projectId, query],
+	});
+};
+
+export const useVerificationTopicsQuery = (projectId: string | undefined) => {
+	return useQuery({
+		enabled: !!projectId,
+		queryFn: () => getVerificationTopics(projectId!),
+		queryKey: ["verify", "topics", projectId],
 	});
 };

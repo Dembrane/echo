@@ -230,7 +230,6 @@ export default function DebugPage() {
 	const { data: chats } = useProjectChats(currentProjectId ?? "", {
 		filter: {
 			"count(project_chat_messages)": {
-				// @ts-expect-error - Directus filter type limitation
 				_gt: 0,
 			},
 			project_id: {

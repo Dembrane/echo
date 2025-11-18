@@ -65,13 +65,16 @@ export const ProjectLibraryView = () => {
 						}}
 						spacing="md"
 					>
-						{view.data?.aspects?.map((aspect: Aspect) => (
-							<AspectCard
-								key={aspect.id}
-								data={aspect}
-								className="h-full w-full"
-							/>
-						))}
+						{view.data?.aspects?.map(
+							(aspect) =>
+								aspect && (
+									<AspectCard
+										key={(aspect as Aspect).id}
+										data={aspect as Aspect}
+										className="h-full w-full"
+									/>
+								),
+						)}
 					</SimpleGrid>
 				</Stack>
 			</Paper>

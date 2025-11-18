@@ -36,8 +36,13 @@ export const ConversationEdit = ({
 		participant_name: conversation.participant_name ?? "",
 		tagIdList:
 			conversation.tags
-				?.filter((tag) => tag.project_tag_id != null)
-				.map((tag) => tag.project_tag_id.id) ?? [],
+				?.filter(
+					(tag) => (tag as ConversationProjectTag).project_tag_id != null,
+				)
+				.map(
+					(tag) =>
+						((tag as ConversationProjectTag).project_tag_id as ProjectTag).id,
+				) ?? [],
 	};
 
 	const { register, formState, reset, setValue, control, watch } =

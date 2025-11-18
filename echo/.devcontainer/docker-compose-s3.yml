@@ -1,0 +1,15 @@
+services:
+  minio:
+    image: minio/minio:latest
+    ports:
+      - 9000:9000
+      - 9001:9001
+    entrypoint: >
+      /bin/sh -c " /usr/bin/mc config host add myminio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD; /usr/bin/mc mb --ignore-existing myminio/dembrane; /usr/bin/mc policy set download myminio/dembrane; minio server /mnt/data --console-address ":9001" "
+    environment:
+      - MINIO_ROOT_USER=dembrane
+      - MINIO_ROOT_PASSWORD=dembrane
+      - MINIO_VOLUMES=/mnt/data
+    volumes:
+      - ./minio_data:/mnt/data
+    restart: unless-stopped

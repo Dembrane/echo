@@ -102,7 +102,6 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
 		{
 			filter: {
 				_or: [
-					// @ts-expect-error
 					...(activeChatId
 						? [
 								{
@@ -112,7 +111,6 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
 								},
 							]
 						: []),
-					// @ts-expect-error
 					{
 						"count(project_chat_messages)": {
 							_gt: 0,
@@ -133,7 +131,6 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
 	const chatsCountQuery = useProjectChatsCount(projectId, {
 		filter: {
 			_or: [
-				// @ts-expect-error
 				...(activeChatId
 					? [
 							{
@@ -143,7 +140,6 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
 							},
 						]
 					: []),
-				// @ts-expect-error
 				{
 					"count(project_chat_messages)": {
 						_gt: 0,

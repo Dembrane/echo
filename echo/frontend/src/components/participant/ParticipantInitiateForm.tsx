@@ -113,10 +113,10 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 							position: "top",
 							withinPortal: false,
 						}}
-						data={project.tags
+						data={(project.tags as unknown as ProjectTag[])
 							.filter((tag) => tag && tag.text != null && tag.id != null)
 							.map((tag) => ({
-								label: tag.text,
+								label: tag.text ?? "",
 								value: tag.id,
 							}))}
 						onChange={(value) => {

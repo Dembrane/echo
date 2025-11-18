@@ -1,0 +1,28 @@
+{
+  "collection": "project",
+  "field": "custom_verification_topics",
+  "type": "alias",
+  "meta": {
+    "collection": "project",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "custom_verification_topics",
+    "group": null,
+    "hidden": false,
+    "interface": "list-o2m",
+    "note": null,
+    "options": null,
+    "readonly": false,
+    "required": false,
+    "searchable": true,
+    "sort": 30,
+    "special": [
+      "o2m"
+    ],
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  }
+}

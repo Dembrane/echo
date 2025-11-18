@@ -117,8 +117,11 @@ export const ViewExpandedCard = ({
 
 				<div className="flex w-full snap-x overflow-x-auto pb-2">
 					{data.aspects?.map((a) => (
-						<div className="ml-4 grid snap-start scroll-ml-4" key={a.id}>
-							<AspectCard data={a} />
+						<div
+							className="ml-4 grid snap-start scroll-ml-4"
+							key={(a as Aspect).id}
+						>
+							<AspectCard data={a as Aspect} />
 						</div>
 					))}
 				</div>

@@ -15,8 +15,8 @@ importers:
         specifier: ^1.2.12
         version: 1.2.12(react@19.0.0)(zod@3.24.2)
       '@directus/sdk':
-        specifier: ^18.0.3
-        version: 18.0.3
+        specifier: ^20.1.1
+        version: 20.1.1
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -627,9 +627,9 @@ packages:
       react: ^16.8.0 || ^17 || ^18 || ^19
       react-dom: ^16.8.0 || ^17 || ^18 || ^19
 
-  '@directus/sdk@18.0.3':
-    resolution: {integrity: sha512-PnEDRDqr2x/DG3HZ3qxU7nFp2nW6zqJqswjii57NhriXgTz4TBUI8NmSdzQvnyHuTL9J0nedYfQGfW4v8odS1A==}
-    engines: {node: '>=18.0.0'}
+  '@directus/sdk@20.1.1':
+    resolution: {integrity: sha512-cCWvxDRKOygVHBkKA7l1I4O4niomK8SKR/+Ul1L9NFF1K2zAf3jRqhjc7JavCECOiiAWME/s2wYatNFqFFh0gQ==}
+    engines: {node: '>=22'}
 
   '@dnd-kit/accessibility@3.1.1':
     resolution: {integrity: sha512-2P+YgaXF+gRsIihwwY1gCsQSYnu9Zyj2py8kY5fFvUM1qm2WA2u639R6YNVfU4GWr+ZM5mqEsfHZZLoRONbemw==}
@@ -5172,7 +5172,7 @@ snapshots:
       react-dom: 19.0.0(react@19.0.0)
       react-is: 17.0.2
 
-  '@directus/sdk@18.0.3': {}
+  '@directus/sdk@20.1.1': {}
 
   '@dnd-kit/accessibility@3.1.1(react@19.0.0)':
     dependencies:

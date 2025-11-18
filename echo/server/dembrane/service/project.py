@@ -1,5 +1,5 @@
 # project.py
-from typing import Any, List
+from typing import Any, List, Optional
 from logging import getLogger
 
 from dembrane.directus import DirectusBadRequest, directus_client_context
@@ -74,6 +74,51 @@ class ProjectService:
             )["data"]
 
         return project
+
+    def get_latest_analysis_run(self, project_id: str) -> Optional[dict]:
+        try:
+            with directus_client_context() as client:
+                runs: Optional[List[dict]] = client.get_items(
+                    "project_analysis_run",
+                    {
+                        "query": {
+                            "filter": {"project_id": project_id},
+                            "sort": "-created_at",
+                            "limit": 1,
+                        }
+                    },
+                )
+        except DirectusBadRequest as e:
+            logger.error("Failed to fetch analysis run for %s: %s", project_id, e)
+            return None
+
+        if not runs:
+            return None
+
+        return runs[0]
+
+    def create_report(
+        self,
+        project_id: str,
+        language: str,
+        content: str,
+        status: str = "archived",
+        error_code: Optional[str] = None,
+    ) -> dict:
+        payload = {
+            "project_id": project_id,
+            "language": language,
+            "content": content,
+            "status": status,
+        }
+
+        if error_code is not None:
+            payload["error_code"] = error_code
+
+        with directus_client_context() as client:
+            report = client.create_item("project_report", item_data=payload)["data"]
+
+        return report
 
     def delete(
         self,
@@ -151,6 +196,10 @@ class ProjectService:
             "is_project_notification_subscription_allowed": current_project[
                 "is_project_notification_subscription_allowed"
             ],
+            "is_verify_enabled": current_project["is_verify_enabled"],
+            "selected_verification_key_list": current_project.get(
+                "selected_verification_key_list"
+            ),
         }
 
         if overrides:
