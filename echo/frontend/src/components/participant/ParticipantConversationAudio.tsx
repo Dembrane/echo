@@ -1,4 +1,3 @@
-import { useChat } from "@ai-sdk/react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -20,13 +19,11 @@ import {
 } from "@tabler/icons-react";
 import clsx from "clsx";
 import Cookies from "js-cookie";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, useLocation, useParams } from "react-router";
 
-import { API_BASE_URL } from "@/config";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { useLanguage } from "@/hooks/useLanguage";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { finishConversation } from "@/lib/api";
 import { I18nLink } from "../common/i18nLink";
@@ -38,7 +35,6 @@ import { ConversationErrorView } from "./ConversationErrorView";
 import {
 	useConversationChunksQuery,
 	useConversationQuery,
-	useConversationRepliesQuery,
 	useParticipantProjectById,
 	useUploadConversationChunk,
 } from "./hooks";
@@ -46,7 +42,6 @@ import useChunkedAudioRecorder from "./hooks/useChunkedAudioRecorder";
 import { PermissionErrorModal } from "./PermissionErrorModal";
 import { StopRecordingConfirmationModal } from "./StopRecordingConfirmationModal";
 
-const DEFAULT_REPLY_COOLDOWN = 120; // 2 minutes in seconds
 const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
 
 export const ParticipantConversationAudio = () => {
@@ -54,52 +49,19 @@ export const ParticipantConversationAudio = () => {
 	const location = useLocation();
 	const textModeUrl = `/${projectId}/conversation/${conversationId}/text`;
 	const finishUrl = `/${projectId}/conversation/${conversationId}/finish`;
-	const verifyUrl = `/${projectId}/conversation/${conversationId}/verify`;
 
-	// Check if we're on the verify route
+	// Check if we're on the verify or refine route
 	const isOnVerifyRoute = location.pathname.includes("/verify");
+	const isOnRefineRoute = location.pathname.includes("/refine");
 
 	// Get device ID from cookies for audio recording
 	const savedDeviceId = Cookies.get("micDeviceId");
 	const deviceId = savedDeviceId || "";
 
-	const { iso639_1 } = useLanguage();
 	const projectQuery = useParticipantProjectById(projectId ?? "");
 	const conversationQuery = useConversationQuery(projectId, conversationId);
 	const chunks = useConversationChunksQuery(projectId, conversationId);
 	const uploadChunkMutation = useUploadConversationChunk();
-	const repliesQuery = useConversationRepliesQuery(conversationId);
-
-	// State for Echo cooldown management
-	const [lastReplyTime, setLastReplyTime] = useState<Date | null>(null);
-	const [remainingCooldown, setRemainingCooldown] = useState(0);
-	const [showCooldownMessage, setShowCooldownMessage] = useState(false);
-
-	// useChat hook for Echo messages
-	const {
-		messages: echoMessages,
-		isLoading: echoIsLoading,
-		status: echoStatus,
-		error: echoError,
-		handleSubmit,
-	} = useChat({
-		api: `${API_BASE_URL}/conversations/${conversationId}/get-reply`,
-		body: { language: iso639_1 },
-		experimental_prepareRequestBody() {
-			return {
-				language: iso639_1,
-			};
-		},
-		initialMessages:
-			repliesQuery.data?.map((msg) => ({
-				content: msg.content_text ?? "",
-				id: String(msg.id),
-				role: msg.type === "assistant_reply" ? "assistant" : "user",
-			})) ?? [],
-		onError: (error) => {
-			console.error("onError", error);
-		},
-	});
 
 	const onChunk = (chunk: Blob) => {
 		uploadChunkMutation.mutate({
@@ -156,32 +118,6 @@ export const ParticipantConversationAudio = () => {
 	};
 
 	useWindowEvent("microphoneDeviceChanged", handleMicrophoneDeviceChanged);
-
-	// Calculate remaining cooldown time
-	const getRemainingCooldown = useCallback(() => {
-		if (!lastReplyTime) return 0;
-		const cooldownSeconds = DEFAULT_REPLY_COOLDOWN;
-		const elapsedSeconds = Math.floor(
-			(Date.now() - lastReplyTime.getTime()) / 1000,
-		);
-		return Math.max(0, cooldownSeconds - elapsedSeconds);
-	}, [lastReplyTime]);
-
-	// Update cooldown timer
-	useEffect(() => {
-		if (!lastReplyTime) return;
-
-		const interval = setInterval(() => {
-			const remaining = getRemainingCooldown();
-			setRemainingCooldown(remaining);
-
-			if (remaining <= 0) {
-				clearInterval(interval);
-			}
-		}, 1000);
-
-		return () => clearInterval(interval);
-	}, [lastReplyTime, getRemainingCooldown]);
 
 	// Monitor conversation status during recording - handle deletion mid-recording
 	useEffect(() => {
@@ -249,41 +185,8 @@ export const ParticipantConversationAudio = () => {
 		navigate(textModeUrl);
 	};
 
-	const handleReply = async (e: React.MouseEvent<HTMLButtonElement>) => {
-		const remaining = getRemainingCooldown();
-		if (remaining > 0) {
-			setShowCooldownMessage(true);
-			const minutes = Math.floor(remaining / 60);
-			const seconds = remaining % 60;
-			const timeStr =
-				minutes > 0
-					? t`${minutes} minutes and ${seconds} seconds`
-					: t`${seconds} seconds`;
-
-			toast.info(t`Please wait ${timeStr} before requesting another ECHO.`);
-			return;
-		}
-
-		try {
-			setShowCooldownMessage(false);
-			// Wait for pending uploads to complete
-			while (uploadChunkMutation.isPending) {
-				await new Promise((resolve) => setTimeout(resolve, 1000));
-			}
-
-			// scroll to bottom of the page
-			setTimeout(() => {
-				if (scrollTargetRef.current) {
-					scrollTargetRef.current.scrollIntoView({ behavior: "smooth" });
-				}
-			}, 0);
-
-			handleSubmit(e, { allowEmptySubmit: true });
-			setLastReplyTime(new Date());
-			setRemainingCooldown(DEFAULT_REPLY_COOLDOWN);
-		} catch (error) {
-			console.error("Error during echo:", error);
-		}
+	const handleRefineClick = () => {
+		navigate(`/${projectId}/conversation/${conversationId}/refine`);
 	};
 
 	if (conversationQuery.isLoading || projectQuery.isLoading) {
@@ -322,10 +225,6 @@ export const ParticipantConversationAudio = () => {
 			<Box className={clsx("relative flex-grow p-4 transition-all")}>
 				<Outlet
 					context={{
-						echoError,
-						echoIsLoading,
-						echoMessages,
-						echoStatus,
 						isRecording,
 					}}
 				/>
@@ -340,7 +239,7 @@ export const ParticipantConversationAudio = () => {
 					<Group
 						justify="center"
 						className={`absolute left-1/2 z-50 translate-x-[-50%] bottom-[125%] ${
-							isOnVerifyRoute ? "hidden" : ""
+							isOnVerifyRoute || isOnRefineRoute ? "hidden" : ""
 						}`}
 					>
 						<ScrollToBottomButton
@@ -417,46 +316,18 @@ export const ParticipantConversationAudio = () => {
 
 						{isRecording && (
 							<Group gap="lg">
-								{projectQuery.data?.is_get_reply_enabled &&
-									!projectQuery.data?.is_verify_enabled &&
-									!isOnVerifyRoute &&
-									chunks?.data &&
-									chunks.data.length > 0 && (
-										<Button
-											variant="default"
-											size="lg"
-											radius="md"
-											onClick={(e) => {
-												handleReply(e);
-											}}
-											loading={echoIsLoading}
-											loaderProps={{ type: "dots" }}
-										>
-											{showCooldownMessage && remainingCooldown > 0 ? (
-												<Text>
-													<Trans>
-														<span className="hidden md:inline">Wait </span>
-														{Math.floor(remainingCooldown / 60)}:
-														{(remainingCooldown % 60)
-															.toString()
-															.padStart(2, "0")}
-													</Trans>
-												</Text>
-											) : (
-												<Trans id="participant.button.echo">ECHO</Trans>
-											)}
-										</Button>
-									)}
 								{recordingTime >= 60 &&
 									!isOnVerifyRoute &&
-									projectQuery.data?.is_verify_enabled && (
+									!isOnRefineRoute &&
+									(projectQuery.data?.is_verify_enabled ||
+										projectQuery.data?.is_get_reply_enabled) && (
 										<Button
 											size="lg"
 											radius="md"
-											onClick={() => navigate(verifyUrl)}
+											onClick={handleRefineClick}
 											disabled={isStopping}
 										>
-											<Trans id="participant.button.verify">Verify</Trans>
+											<Trans id="participant.button.refine">Refine</Trans>
 										</Button>
 									)}
 								<Button
