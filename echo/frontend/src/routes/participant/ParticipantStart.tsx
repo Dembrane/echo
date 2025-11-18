@@ -26,6 +26,7 @@ const getLucideIcon = (icon: string) => {
 	return IconComponent;
 };
 
+// biome-ignore lint/correctness/noUnusedVariables: TODO
 const transformCard = (card?: EchoPortalTutorial): LanguageCards => {
 	const languageCards: LanguageCards = {
 		"de-DE": [],
@@ -117,6 +118,7 @@ export const ParticipantStartRoute = () => {
 		error: tutorialCardError,
 	} = useParticipantTutorialCardBySlug(
 		project?.default_conversation_tutorial_slug ?? "",
+		false,
 	);
 
 	const [loadingFinished, setLoadingFinished] = useSessionStorageState(
@@ -148,7 +150,14 @@ export const ParticipantStartRoute = () => {
 				<DembraneLoadingSpinner isLoading />
 			) : (
 				<ParticipantOnboardingCards
-					initialCards={transformCard(tutorialCard as EchoPortalTutorial)}
+					// initialCards={transformCard(tutorialCard as EchoPortalTutorial)}
+					initialCards={{
+						"de-DE": [],
+						"en-US": [],
+						"es-ES": [],
+						"fr-FR": [],
+						"nl-NL": [],
+					}}
 					project={project as Project}
 				/>
 			)}

@@ -283,9 +283,12 @@ export const useParticipantProjectById = (projectId: string) => {
 	});
 };
 
-export const useParticipantTutorialCardBySlug = (slug: string) => {
+export const useParticipantTutorialCardBySlug = (
+	slug: string,
+	enabled: boolean,
+) => {
 	return useQuery({
-		enabled: slug !== "",
+		enabled: enabled && slug !== "",
 		queryFn: () => getParticipantTutorialCardsBySlug(slug),
 		queryKey: ["participantTutorialCard", slug],
 		select: (data) => (data.length > 0 ? data[0] : null),
