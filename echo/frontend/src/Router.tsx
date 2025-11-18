@@ -15,6 +15,7 @@ import { ProjectLayout } from "./components/layout/ProjectLayout";
 import { ProjectLibraryLayout } from "./components/layout/ProjectLibraryLayout";
 import { ProjectOverviewLayout } from "./components/layout/ProjectOverviewLayout";
 import { ParticipantConversationAudioContent } from "./components/participant/ParticipantConversationAudioContent";
+import { RefineSelection } from "./components/participant/refine/RefineSelection";
 import { Verify } from "./components/participant/verify/Verify";
 import { VerifyArtefact } from "./components/participant/verify/VerifyArtefact";
 import { VerifySelection } from "./components/participant/verify/VerifySelection";
@@ -293,6 +294,10 @@ export const participantRouter = createBrowserRouter([
 					{
 						element: <ParticipantConversationAudioContent />,
 						index: true,
+					},
+					{
+						element: <RefineSelection />,
+						path: "refine",
 					},
 					{
 						children: [

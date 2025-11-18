@@ -1026,7 +1026,7 @@ export type VerificationTopicsResponse = {
 };
 
 export const getVerificationTopics = async (projectId: string) => {
-	return api.get<unknown, VerificationTopicsResponse>(
+	return apiNoAuth.get<unknown, VerificationTopicsResponse>(
 		`/verify/topics/${projectId}`,
 	);
 };
@@ -1034,6 +1034,7 @@ export const getVerificationTopics = async (projectId: string) => {
 export type VerificationArtifact = {
 	id: string;
 	approved_at?: string | null;
+	date_created?: string | null;
 	content: string;
 	conversation_id: string;
 	key: string;
@@ -1044,7 +1045,7 @@ export const generateVerificationArtefact = async (payload: {
 	conversationId: string;
 	topicList: string[];
 }): Promise<VerificationArtifact[]> => {
-	const response = await api.post<
+	const response = await apiNoAuth.post<
 		unknown,
 		{
 			artifact_list?: VerificationArtifact[];
@@ -1073,12 +1074,12 @@ export const updateVerificationArtefact = async ({
 	content,
 	approvedAt,
 }: UpdateVerificationArtefactPayload) => {
-	return api.put<unknown, VerificationArtifact>(
+	const response = await apiNoAuth.put<unknown, VerificationArtifact>(
 		`/verify/artifact/${artifactId}`,
 		{
 			approvedAt,
 			content,
-			use_conversation: useConversation
+			useConversation: useConversation
 				? {
 						conversationId: useConversation.conversationId,
 						timestamp: useConversation.timestamp,
@@ -1086,10 +1087,11 @@ export const updateVerificationArtefact = async ({
 				: undefined,
 		},
 	);
+	return response;
 };
 
 export const getVerificationArtefacts = async (conversationId: string) => {
-	return api.get<unknown, VerificationArtifact[]>(
+	return apiNoAuth.get<unknown, VerificationArtifact[]>(
 		`/verify/artifacts/${conversationId}`,
 	);
 };
