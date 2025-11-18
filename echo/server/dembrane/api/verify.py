@@ -16,7 +16,6 @@ from dembrane.settings import get_settings
 from dembrane.transcribe import _get_audio_file_object
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.exceptions import ProjectNotFoundException, ConversationNotFoundException
-from dembrane.api.dependency_auth import DependencyDirectusSession
 
 logger = logging.getLogger("api.verify")
 
@@ -24,6 +23,7 @@ settings = get_settings()
 GCP_SA_JSON = settings.transcription.gcp_sa_json
 
 VerifyRouter = APIRouter(tags=["verify"])
+
 
 class VerificationTopicTranslation(BaseModel):
     label: str
@@ -53,6 +53,7 @@ class ConversationArtifactResponse(BaseModel):
     content: str
     conversation_id: str
     approved_at: Optional[str] = None
+    date_created: Optional[str] = None
     read_aloud_stream_url: str
 
 
@@ -75,7 +76,7 @@ class UseConversationPayload(BaseModel):
 class UpdateArtifactRequest(BaseModel):
     use_conversation: Optional[UseConversationPayload] = Field(None, alias="useConversation")
     content: Optional[str] = None
-    approved_at: Optional[datetime] = Field(None, alias="approvedAt")
+    approved_at: Optional[str] = Field(None, alias="approvedAt")
 
     class Config:
         allow_population_by_field_name = True
@@ -187,7 +188,6 @@ def _parse_selected_topics(
 @VerifyRouter.get("/topics/{project_id}", response_model=GetVerificationTopicsResponse)
 async def get_verification_topics(
     project_id: str,
-    auth: DependencyDirectusSession,  # noqa: ARG001 - reserved for future use
 ) -> GetVerificationTopicsResponse:
     project = await _get_project(project_id)
     topics = await _get_verification_topics_for_project(project_id)
@@ -200,7 +200,6 @@ async def get_verification_topics(
 async def update_verification_topics(
     project_id: str,
     body: UpdateVerificationTopicsRequest,
-    auth: DependencyDirectusSession,  # noqa: ARG001 - reserved for future use
 ) -> GetVerificationTopicsResponse:
     await _get_project(project_id)
     topics = await _get_verification_topics_for_project(project_id)
@@ -231,7 +230,6 @@ async def update_verification_topics(
 @VerifyRouter.get("/artifacts/{conversation_id}", response_model=List[ConversationArtifactResponse])
 async def list_verification_artifacts(
     conversation_id: str,
-    auth: DependencyDirectusSession,  # noqa: ARG001 - reserved for future use
 ) -> List[ConversationArtifactResponse]:
     await _get_conversation_with_project(conversation_id)
     artifacts = await _get_conversation_artifacts(conversation_id)
@@ -256,6 +254,7 @@ async def list_verification_artifacts(
                 content=artifact.get("content") or "",
                 conversation_id=artifact.get("conversation_id") or conversation_id,
                 approved_at=artifact.get("approved_at"),
+                date_created=artifact.get("date_created"),
                 read_aloud_stream_url=artifact.get("read_aloud_stream_url") or "",
             )
         )
@@ -275,6 +274,7 @@ async def _get_artifact_or_404(artifact_id: str) -> dict:
                     "conversation_id",
                     "content",
                     "key",
+                    "date_created",
                     "approved_at",
                     "read_aloud_stream_url",
                 ],
@@ -504,7 +504,6 @@ async def _create_conversation_artifact(
 @VerifyRouter.post("/generate", response_model=GenerateArtifactsResponse)
 async def generate_verification_artifacts(
     body: GenerateArtifactsRequest,
-    auth: DependencyDirectusSession,  # noqa: ARG001 - reserved for future use
 ) -> GenerateArtifactsResponse:
     if not GCP_SA_JSON:
         raise HTTPException(status_code=500, detail="GCP credentials are not configured")
@@ -600,6 +599,7 @@ async def generate_verification_artifacts(
         content=artifact_record.get("content", ""),
         conversation_id=artifact_record.get("conversation_id", body.conversation_id),
         approved_at=artifact_record.get("approved_at"),
+        date_created=artifact_record.get("date_created"),
         read_aloud_stream_url=artifact_record.get("read_aloud_stream_url") or "",
     )
 
@@ -610,9 +610,9 @@ async def generate_verification_artifacts(
 async def update_verification_artifact(
     artifact_id: str,
     body: UpdateArtifactRequest,
-    auth: DependencyDirectusSession,  # noqa: ARG001 - reserved for future use
 ) -> ConversationArtifactResponse:
-    if not (body.use_conversation or body.content is not None or body.approved_at is not None):
+    # raise HTTPException(status_code=400, detail="No updates provided")
+    if not (body.use_conversation or body.content is not None):
         raise HTTPException(status_code=400, detail="No updates provided")
 
     if body.use_conversation and body.content is not None:
@@ -625,9 +625,8 @@ async def update_verification_artifact(
     conversation_id = artifact.get("conversation_id")
 
     updates: Dict[str, Any] = {}
-
     if body.approved_at is not None:
-        updates["approved_at"] = body.approved_at.isoformat()
+        updates["approved_at"] = body.approved_at
 
     generated_text = None
 
@@ -642,21 +641,13 @@ async def update_verification_artifact(
 
         conversation_transcript = _build_transcript_text(chunks)
         feedback_text = _build_feedback_text(chunks, reference_timestamp)
+        audio_chunks = _select_audio_chunks(chunks, reference_timestamp)
 
-        if not feedback_text and not any(
-            chunk.get("path")
-            for chunk in chunks
-            if chunk.get("timestamp")
-            and datetime.fromisoformat(str(chunk.get("timestamp")))
-            > (reference_timestamp or datetime.min)
-            and not (chunk.get("transcript") or "").strip()
-        ):
+        if not feedback_text and not audio_chunks:
             raise HTTPException(
                 status_code=400,
                 detail="No new feedback found since provided timestamp",
             )
-
-        audio_chunks = _select_audio_chunks(chunks, reference_timestamp)
 
         system_prompt = render_prompt(
             "revise_artifact",
@@ -695,12 +686,12 @@ async def update_verification_artifact(
         revision_completion_kwargs = get_completion_kwargs(MODELS.MULTI_MODAL_PRO)
 
         try:
-                response = litellm.completion(
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": [
-                                {
+            response = litellm.completion(
+                messages=[
+                    {
+                        "role": "system",
+                        "content": [
+                            {
                                 "type": "text",
                                 "text": system_prompt,
                             }
@@ -709,10 +700,10 @@ async def update_verification_artifact(
                     {
                         "role": "user",
                         "content": message_content,
-                        },
-                    ],
-                    **revision_completion_kwargs,
-                )
+                    },
+                ],
+                **revision_completion_kwargs,
+            )
         except Exception as exc:  # pragma: no cover - external failure
             logger.error("Gemini revision failed: %s", exc, exc_info=True)
             raise HTTPException(
@@ -733,6 +724,7 @@ async def update_verification_artifact(
         artifact_id,
         updates,
     )
+
     updated_data = updated_artifact.get("data", {})
 
     return ConversationArtifactResponse(
@@ -744,6 +736,7 @@ async def update_verification_artifact(
         or "",
         conversation_id=updated_data.get("conversation_id") or conversation_id or "",
         approved_at=updated_data.get("approved_at") or updates.get("approved_at"),
+        date_created=updated_data.get("date_created") or artifact.get("date_created"),
         read_aloud_stream_url=updated_data.get("read_aloud_stream_url")
         or artifact.get("read_aloud_stream_url")
         or "",

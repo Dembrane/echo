@@ -1,4 +1,4 @@
-import { Box, LoadingOverlay, Modal, ScrollArea } from "@mantine/core";
+import { LoadingOverlay, Modal } from "@mantine/core";
 import type { VerificationArtifact } from "@/lib/api";
 import { Markdown } from "../../common/Markdown";
 
@@ -24,14 +24,14 @@ export const ArtefactModal = ({
 			onExitTransitionEnd={onExited}
 			size="xl"
 			radius="md"
-			scrollAreaComponent={ScrollArea.Autosize}
 			yOffset="10vh"
 			padding="xl"
 		>
 			<LoadingOverlay visible={isLoading} />
-			<Box>
-				<Markdown className="prose-sm" content={artefact?.content || ""} />
-			</Box>
+			<Markdown
+				className="prose-sm max-w-none"
+				content={artefact?.content || ""}
+			/>
 		</Modal>
 	);
 };
