@@ -11,7 +11,12 @@ from fastapi.responses import StreamingResponse
 from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.utils import generate_uuid
 from dembrane.prompts import render_prompt
-from dembrane.service import chat_service, conversation_service
+from dembrane.service import (
+    chat_service,
+    conversation_service,
+    build_chat_service,
+    build_conversation_service,
+)
 from dembrane.settings import get_settings
 from dembrane.chat_utils import (
     MAX_CHAT_CONTEXT_LENGTH,
@@ -31,6 +36,18 @@ logger = logging.getLogger("dembrane.chat")
 
 settings = get_settings()
 ENABLE_CHAT_AUTO_SELECT = settings.feature_flags.enable_chat_auto_select
+
+
+def _chat_service_for_auth(auth_session: DirectusSession):
+    if auth_session.client is None:
+        return chat_service
+    return build_chat_service(auth_session.client)
+
+
+def _conversation_service_for_auth(auth_session: DirectusSession):
+    if auth_session.client is None:
+        return conversation_service
+    return build_conversation_service(auth_session.client)
 
 
 async def is_followup_question(
@@ -110,9 +127,10 @@ async def raise_if_chat_not_found_or_not_authorized(
     *,
     include_used_conversations: bool = False,
 ) -> dict:
+    chat_svc = _chat_service_for_auth(auth_session)
     try:
         chat = await run_in_thread_pool(
-            chat_service.get_by_id_or_raise,
+            chat_svc.get_by_id_or_raise,
             chat_id,
             include_used_conversations,
         )
@@ -148,8 +166,14 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
         include_used_conversations=True,
     )
 
+    chat_svc = _chat_service_for_auth(auth)
+    conversation_svc = _conversation_service_for_auth(auth)
+
+    chat_svc = _chat_service_for_auth(auth)
+    conversation_svc = _conversation_service_for_auth(auth)
+
     messages = await run_in_thread_pool(
-        chat_service.list_messages,
+        chat_svc.list_messages,
         chat_id,
         include_relationships=True,
         order="asc",
@@ -177,7 +201,7 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
                 )
                 try:
                     await run_in_thread_pool(
-                        chat_service.update_message,
+                        chat_svc.update_message,
                         message.get("id"),
                         {"tokens_count": tokens_count},
                     )
@@ -257,6 +281,9 @@ async def add_chat_context(
         include_used_conversations=True,
     )
 
+    chat_svc = _chat_service_for_auth(auth)
+    conversation_svc = _conversation_service_for_auth(auth)
+
     if body.conversation_id is None and body.auto_select_bool is None:
         raise HTTPException(
             status_code=400, detail="conversation_id or auto_select_bool is required"
@@ -270,7 +297,7 @@ async def add_chat_context(
     if body.conversation_id is not None:
         try:
             await run_in_thread_pool(
-                conversation_service.get_by_id_or_raise,
+                conversation_svc.get_by_id_or_raise,
                 body.conversation_id,
                 True,
                 False,
@@ -302,7 +329,7 @@ async def add_chat_context(
             )
 
         await run_in_thread_pool(
-            chat_service.attach_conversations,
+            chat_svc.attach_conversations,
             chat_id,
             [body.conversation_id],
         )
@@ -314,7 +341,7 @@ async def add_chat_context(
         )
 
     if body.auto_select_bool is not None:
-        await run_in_thread_pool(chat_service.set_auto_select, chat_id, body.auto_select_bool)
+        await run_in_thread_pool(chat_svc.set_auto_select, chat_id, body.auto_select_bool)
 
 
 class ChatDeleteContextSchema(BaseModel):
@@ -328,6 +355,7 @@ async def delete_chat_context(
     body: ChatDeleteContextSchema,
     auth: DependencyDirectusSession,
 ) -> None:
+    chat_svc = _chat_service_for_auth(auth)
     await raise_if_chat_not_found_or_not_authorized(chat_id, auth)
     if body.conversation_id is None and body.auto_select_bool is None:
         raise HTTPException(
@@ -361,13 +389,13 @@ async def delete_chat_context(
             raise HTTPException(status_code=400, detail="Conversation is locked")
 
         await run_in_thread_pool(
-            chat_service.detach_conversation,
+            chat_svc.detach_conversation,
             chat_id,
             body.conversation_id,
         )
 
     if body.auto_select_bool is not None:
-        await run_in_thread_pool(chat_service.set_auto_select, chat_id, body.auto_select_bool)
+        await run_in_thread_pool(chat_svc.set_auto_select, chat_id, body.auto_select_bool)
 
 
 @ChatRouter.post("/{chat_id}/lock-conversations", response_model=None)
@@ -377,8 +405,11 @@ async def lock_conversations(
 ) -> List[dict]:
     await raise_if_chat_not_found_or_not_authorized(chat_id, auth)
 
+    chat_svc = _chat_service_for_auth(auth)
+    conversation_svc = _conversation_service_for_auth(auth)
+
     messages = await run_in_thread_pool(
-        chat_service.list_messages,
+        chat_svc.list_messages,
         chat_id,
         include_relationships=True,
         order="desc",
@@ -406,7 +437,7 @@ async def lock_conversations(
         )
 
         await run_in_thread_pool(
-            chat_service.create_message,
+            chat_svc.create_message,
             chat_id,
             "dembrane",
             message_text,
@@ -416,7 +447,7 @@ async def lock_conversations(
         )
 
     used_conversations = await run_in_thread_pool(
-        conversation_service.list_by_ids,
+        conversation_svc.list_by_ids,
         current_context.conversation_id_list,
         with_chunks=False,
         with_tags=True,
@@ -463,7 +494,7 @@ async def post_chat(
     user_message_id = generate_uuid()
 
     await run_in_thread_pool(
-        chat_service.create_message,
+        chat_svc.create_message,
         chat_id,
         "user",
         user_message_content,
@@ -474,11 +505,11 @@ async def post_chat(
         if not chat.get("name"):
             generated_title = await generate_title(user_message_content, language)
             if generated_title:
-                await run_in_thread_pool(chat_service.set_chat_name, chat_id, generated_title)
+                await run_in_thread_pool(chat_svc.set_chat_name, chat_id, generated_title)
 
         if body.template_key is not None:
             await run_in_thread_pool(
-                chat_service.update_message,
+                chat_svc.update_message,
                 user_message_id,
                 {"template_key": body.template_key},
             )
@@ -580,7 +611,7 @@ async def post_chat(
                     break
 
                 await run_in_thread_pool(
-                    chat_service.attach_conversations,
+                    chat_svc.attach_conversations,
                     chat_id,
                     [conversation_id],
                 )
@@ -589,7 +620,7 @@ async def post_chat(
 
             if conversations_added_ids:
                 await run_in_thread_pool(
-                    chat_service.create_message,
+                    chat_svc.create_message,
                     chat_id,
                     "dembrane",
                     text=f"Auto-selected and added {len(conversations_added_ids)} conversations as context to the chat.",
@@ -615,7 +646,7 @@ async def post_chat(
 
             if conversations_added_ids:
                 added_details = await run_in_thread_pool(
-                    conversation_service.list_by_ids,
+                    conversation_svc.list_by_ids,
                     conversations_added_ids,
                     with_chunks=False,
                     with_tags=False,
@@ -655,7 +686,7 @@ async def post_chat(
                             yield f"0:{json.dumps(delta)}\n"
             except Exception as exc:  # pragma: no cover - runtime safeguard
                 logger.error("Error in litellm stream response: %s", exc)
-                await run_in_thread_pool(chat_service.delete_message, user_message_id)
+                await run_in_thread_pool(chat_svc.delete_message, user_message_id)
                 if protocol == "text":
                     yield "Error: An error occurred while processing the chat response."
                 else:
@@ -674,5 +705,5 @@ async def post_chat(
 
     except Exception:
         # Ensure the user message does not linger on failure
-        await run_in_thread_pool(chat_service.delete_message, user_message_id)
+        await run_in_thread_pool(chat_svc.delete_message, user_message_id)
         raise

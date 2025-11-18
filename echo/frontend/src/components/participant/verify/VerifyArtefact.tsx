@@ -378,14 +378,14 @@ export const VerifyArtefact = () => {
 				</Paper>
 			</ScrollArea>
 
-			<Group gap="md" className="w-full sticky bottom-[11%] bg-white py-2 px-1">
-				{isEditing ? (
+			<Group gap="md" className="w-full sticky bottom-[10%] p-4 mx-auto rounded-md shadow-sm border-gray-200 border  bg-white/20 backdrop-blur-sm">
+				{isEditing ? ( 
 					<>
 						<Button
 							size="lg"
 							radius="md"
 							variant="default"
-							className="flex-1"
+							className="flex-1 shadow-xl"
 							onClick={handleCancelEdit}
 						>
 							<Trans id="participant.verify.action.button.cancel">Cancel</Trans>
@@ -393,7 +393,7 @@ export const VerifyArtefact = () => {
 						<Button
 							size="lg"
 							radius="md"
-							className="flex-1"
+							className="flex-1 shadow-xl"
 							onClick={handleSaveEdit}
 						>
 							<Trans id="participant.verify.action.button.save">Save</Trans>

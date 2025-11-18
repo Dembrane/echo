@@ -44,12 +44,12 @@ const data: Array<{
 ];
 
 export const languageOptions = data.map((d) => ({
-	label: `${d.label} ${d.flag}`,
+	label: `${d.label}`,
 	value: d.language,
 }));
 
 export const languageOptionsByIso639_1 = data.map((d) => ({
-	label: `${d.label} ${d.flag}`,
+	label: `${d.label}`,
 	value: d.iso639_1,
 }));
 
@@ -66,6 +66,7 @@ export const LanguagePicker = () => {
 		// Check if we're in a chat context
 		const isInChat = pathname.includes("/chats/");
 		if (isInChat) {
+			// biome-ignore lint/suspicious/noAlert: TODO
 			const confirmed = window.confirm(
 				t`Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?`,
 			);

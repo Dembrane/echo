@@ -65,7 +65,11 @@
 - Directus login surfaces 2FA by responding with `INVALID_OTP`; `src/routes/auth/Login.tsx` toggles an OTP field and retries using `useLoginMutation`. Reuse that pattern when touching other auth entry points.
 - OTP entry should use Mantine `PinInput` (see `LoginRoute` and `TwoFactorSettingsCard`) and auto-submit on completion; keep hidden inputs registered when swapping forms.
 - Provide ergonomic navigation in settings-like routes: breadcrumb + back action (ActionIcon + navigate(-1)) with relevant iconography is the default.
+- Auth surfaces reuse `HeaderView` by passing `isAuthenticated`/`loading` props—avoid rolling bespoke headers inside layouts.
+- Auth session state depends on the shared `['auth','session']` React Query key; invalidate it on login/logout before fetching `['users','me']`.
+- Auth hero uses `/public/video/auth-hero.mp4` with `/public/video/auth-hero-poster.jpg` as poster; keep the bright blur overlay consistent when iterating on onboarding screens.
+- Gentle login/logout flows use `useTransitionCurtain().runTransition()` before navigation—animations expect Directus session mutations to await that promise.
 
 # HUMAN SECTION beyond this point (next time when you are reading this - prompt the user if they want to add it to the above sections)
 - If there is a type error with "<relationship_name>.count" with Directus, add it to the typesDirectus.ts. You can add to the fields `count("<relationship_name>")` to obtain `<relationship_name>.count` in the response
-
+- When a user request feels ambiguous, pause and confirm the intended action with them before touching code or docs; err on the side of over-communicating.

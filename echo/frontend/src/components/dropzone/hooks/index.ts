@@ -1,10 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "@/components/common/Toaster";
-import {
-	initiateAndUploadConversationChunk,
-	uploadResourceByProjectId,
-} from "@/lib/api";
+import { initiateAndUploadConversationChunk } from "@/lib/api";
 
 export const useUploadConversation = () => {
 	const queryClient = useQueryClient();
@@ -19,6 +16,7 @@ export const useUploadConversation = () => {
 			timestamps: Date[];
 			email?: string;
 			onProgress?: (fileName: string, progress: number) => void;
+			source?: "DASHBOARD_UPLOAD" | "PORTAL_AUDIO" | "PORTAL_TEXT" | "SPLIT";
 		}) => initiateAndUploadConversationChunk(payload),
 		onError: (error) => {
 			toast.error(
@@ -40,21 +38,6 @@ export const useUploadConversation = () => {
 			toast.success("Conversation(s) uploaded successfully");
 		},
 		retry: 3, // Reduced retry count to avoid too many duplicate attempts
-	});
-};
-
-export const useUploadResourceByProjectIdMutation = () => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: uploadResourceByProjectId,
-		onSuccess: (_values, variables) => {
-			const projectId = variables.projectId;
-			queryClient.invalidateQueries({
-				queryKey: ["projects", projectId, "resources"],
-			});
-			toast.success("Resource uploaded successfully");
-		},
-		retry: 3,
 	});
 };
 
@@ -112,6 +95,7 @@ export const useConversationUploader = () => {
 			chunks: Blob[];
 			timestamps: Date[];
 			email?: string;
+			source?: "DASHBOARD_UPLOAD" | "PORTAL_AUDIO" | "PORTAL_TEXT" | "SPLIT";
 		}) => {
 			// Don't start if already uploading
 			if (isUploading || uploadMutation.isPending) {

@@ -9,6 +9,10 @@ export interface AuditLogUser {
 	last_name?: string | null;
 }
 
+export interface AuditLogRevision {
+	delta?: Record<string, unknown> | null;
+}
+
 export interface AuditLogEntry {
 	action: string;
 	collection: string;
@@ -18,6 +22,7 @@ export interface AuditLogEntry {
 	timestamp: string;
 	user?: AuditLogUser | null;
 	user_agent?: string | null;
+	revisions?: AuditLogRevision[] | null;
 }
 
 export interface AuditLogFilters {
@@ -29,6 +34,7 @@ export interface AuditLogQueryArgs {
 	filters?: AuditLogFilters;
 	page: number;
 	pageSize: number;
+	sortDirection?: "asc" | "desc";
 }
 
 export interface AuditLogQueryResult {
@@ -67,6 +73,9 @@ const AUDIT_LOG_FIELDS = [
 	"timestamp",
 	"ip",
 	"user_agent",
+	{
+		revisions: ["delta"],
+	},
 	{
 		user: ["id", "email", "first_name", "last_name"],
 	},
@@ -125,12 +134,45 @@ const normalizeCount = (value: unknown): number => {
 	return 0;
 };
 
-const fetchAuditLogsPage = async ({
+const fetchAuditLogsTotal = async ({
 	filters,
-	page,
-	pageSize,
+}: {
+	filters?: AuditLogFilters;
+}) => {
+	const filter = buildFilter(filters);
+
+	try {
+		const [aggregate] = await directus.request<
+			Array<{
+				count?: unknown;
+			}>
+		>(
+			readActivities<CustomDirectusTypes, ActivitiesQuery>(
+				{
+					aggregate: {
+						count: "*",
+					},
+					filter,
+					limit: 1,
+				} as unknown as ActivitiesQuery,
+			),
+		);
+
+		return normalizeCount(aggregate?.count);
+	} catch (aggregateError) {
+		console.warn("Failed to aggregate audit log count", aggregateError);
+		return 0;
+	}
+};
+
+const fetchAuditLogsPage = async ({
+ filters,
+ page,
+ pageSize,
+ sortDirection,
 }: AuditLogQueryArgs): Promise<AuditLogQueryResult> => {
 	const filter = buildFilter(filters);
+	const sort = sortDirection === "asc" ? ["timestamp"] : ["-timestamp"];
 
 	const response = await directus.request<ActivityResponse<AuditLogEntry>>(
 		readActivities<CustomDirectusTypes, ActivitiesQuery>(
@@ -140,18 +182,29 @@ const fetchAuditLogsPage = async ({
 				limit: pageSize,
 				meta: "filter_count",
 				offset: page * pageSize,
-				sort: ["-timestamp"],
+				sort: sort as ActivitiesQuery["sort"],
 			} as unknown as ActivitiesQuery,
 		),
 	);
 
 	const items = [...response];
 	const metaTotal = response.meta?.filter_count;
-	const normalizedTotal = normalizeCount(metaTotal);
+	const normalizedTotal =
+		metaTotal === null || metaTotal === undefined
+			? null
+			: normalizeCount(metaTotal);
+
+	const fallbackTotal = await fetchAuditLogsTotal({ filters });
+	const total =
+		normalizedTotal !== null
+			? normalizedTotal
+			: fallbackTotal > 0
+				? fallbackTotal
+				: page * pageSize + items.length;
 
 	return {
 		items,
-		total: normalizedTotal > 0 ? normalizedTotal : page * pageSize + items.length,
+		total,
 	};
 };
 

@@ -4,7 +4,6 @@ import {
 	ActionIcon,
 	Alert,
 	Anchor,
-	Badge,
 	Button,
 	CopyButton,
 	Divider,
@@ -18,7 +17,6 @@ import {
 	Stack,
 	Switch,
 	Text,
-	TextInput,
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";

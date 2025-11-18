@@ -15,6 +15,10 @@ Usage:
     project = project_service.get_by_id_or_raise(project_id)
 """
 
+from typing import Optional
+
+from dembrane.directus import DirectusClient, directus
+
 from .chat import (
     ChatService,
     ChatServiceException,
@@ -33,15 +37,32 @@ from .conversation import (
 )
 
 file_service = get_file_service()
-project_service = ProjectService()
 event_service = EventService()
-conversation_service = ConversationService(
-    file_service=file_service,
-    project_service=project_service,
-    event_service=event_service,
-)
 
-chat_service = ChatService()
+
+def build_project_service(directus_client=None) -> ProjectService:
+    return ProjectService(directus_client=directus_client or directus)
+
+
+def build_chat_service(directus_client=None) -> ChatService:
+    return ChatService(directus_client=directus_client or directus)
+
+
+def build_conversation_service(
+    directus_client: Optional[DirectusClient] = None,
+) -> ConversationService:
+    client = directus_client or directus
+    return ConversationService(
+        file_service=file_service,
+        project_service=build_project_service(client),
+        event_service=event_service,
+        directus_client=client,
+    )
+
+
+project_service = build_project_service()
+conversation_service = build_conversation_service()
+chat_service = build_chat_service()
 
 exceptions = {
     "file": {
