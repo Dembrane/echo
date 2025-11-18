@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useParticipantProjectById } from "../hooks";
+import { startCooldown } from "../refine/hooks/useRefineSelectionCooldown";
 import { useVerificationTopics } from "./hooks";
 
 const LANGUAGE_TO_LOCALE: Record<string, string> = {
@@ -72,7 +73,10 @@ export const VerifySelection = () => {
 	}, [selectedOption, selectedTopics]);
 
 	const handleNext = () => {
-		if (!selectedOption) return;
+		if (!selectedOption || !conversationId) return;
+
+		// Start cooldown for verify
+		startCooldown(conversationId, "verify");
 
 		// Navigate directly to approve route with URL param
 		navigate(

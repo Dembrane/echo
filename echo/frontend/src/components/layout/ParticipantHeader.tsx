@@ -19,7 +19,8 @@ export const ParticipantHeader = () => {
 	const [opened, { open, close }] = useDisclosure(false);
 
 	const showBackButton =
-		pathname.includes("/verify") && !pathname.includes("/verify/approve");
+		(pathname.includes("/verify") || pathname.includes("/refine")) &&
+		!pathname.includes("/verify/approve");
 	const hideSettingsButton =
 		pathname.includes("start") || pathname.includes("finish");
 
