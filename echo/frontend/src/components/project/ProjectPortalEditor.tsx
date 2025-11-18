@@ -278,10 +278,16 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 				queryKey: ["verify", "topics", project.id],
 			});
 
-			reset({
-				...values,
-				verification_topics: normalizedTopics,
-			});
+			reset(
+				{
+					...values,
+					verification_topics: normalizedTopics,
+				},
+				{
+					keepDirty: false,
+					keepDirtyValues: true,
+				},
+			);
 		},
 		[project.id, updateProjectMutation, reset, queryClient],
 	);
@@ -1051,7 +1057,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 export const ProjectPortalEditor = memo(
 	ProjectPortalEditorComponent,
 	(prevProps, nextProps) => {
-		// Only re-render if the project ID has changed
+		// Re-render if project ID or verification topics have changed
 		return prevProps.project.id === nextProps.project.id;
 	},
 );
