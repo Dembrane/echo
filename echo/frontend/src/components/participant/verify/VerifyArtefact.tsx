@@ -12,27 +12,20 @@ import {
 } from "@mantine/core";
 import { IconPencil, IconPlayerPause, IconVolume } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { Logo } from "../../common/Logo";
 import { Markdown } from "../../common/Markdown";
 import { MarkdownWYSIWYG } from "../../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
-import {
-	useConversationChunksQuery,
-	useParticipantProjectById,
-} from "../hooks";
+import { useParticipantProjectById } from "../hooks";
 import {
 	useGenerateVerificationArtefact,
 	useUpdateVerificationArtefact,
 	useVerificationTopics,
 } from "./hooks";
 import { VerifyInstructions } from "./VerifyInstructions";
-
-type ConversationChunkLike = {
-	timestamp?: string | null;
-};
 
 const LANGUAGE_TO_LOCALE: Record<string, string> = {
 	de: "de-DE",
@@ -44,64 +37,47 @@ const LANGUAGE_TO_LOCALE: Record<string, string> = {
 
 const MemoizedMarkdownWYSIWYG = memo(MarkdownWYSIWYG);
 
-const computeLatestTimestamp = (
-	chunks: ConversationChunkLike[] | undefined,
-): string | null => {
-	if (!chunks || chunks.length === 0) {
-		return null;
-	}
-
-	let latest: string | null = null;
-	for (const chunk of chunks) {
-		if (!chunk.timestamp) continue;
-		const currentIso = new Date(chunk.timestamp).toISOString();
-		if (!latest || new Date(currentIso) > new Date(latest)) {
-			latest = currentIso;
-		}
-	}
-	return latest;
-};
-
 export const VerifyArtefact = () => {
 	const { projectId, conversationId } = useParams();
 	const navigate = useI18nNavigate();
 	const [searchParams] = useSearchParams();
 	const queryClient = useQueryClient();
 
-	const generateArtefactMutation = useGenerateVerificationArtefact();
+	const selectedOptionKey = searchParams.get("key");
 	const updateArtefactMutation = useUpdateVerificationArtefact();
 	const projectQuery = useParticipantProjectById(projectId ?? "");
 	const topicsQuery = useVerificationTopics(projectId);
-	const chunksQuery = useConversationChunksQuery(projectId, conversationId);
 
-	const selectedOptionKey = searchParams.get("key");
+	// Use query to automatically fetch or generate the artefact
+	const artefactQuery = useGenerateVerificationArtefact(
+		conversationId,
+		selectedOptionKey ?? undefined,
+		!!(
+			selectedOptionKey &&
+			topicsQuery.data?.selected_topics?.includes(selectedOptionKey)
+		),
+	);
 
 	const [showInstructions, setShowInstructions] = useState(true);
 	const [isApproving, setIsApproving] = useState(false);
 	const [isRevising, setIsRevising] = useState(false);
-	const [artefactContent, setArtefactContent] = useState<string>("");
 	const [isEditing, setIsEditing] = useState(false);
 	const [editedContent, setEditedContent] = useState<string>("");
-	const [readAloudUrl, setReadAloudUrl] = useState<string>("");
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [lastReviseTime, setLastReviseTime] = useState<number | null>(null);
 	const [reviseTimeRemaining, setReviseTimeRemaining] = useState<number>(0);
-	const [generatedArtifactId, setGeneratedArtifactId] = useState<string | null>(
-		null,
-	);
-	const [contextTimestamp, setContextTimestamp] = useState<string | null>(null);
+	const [localArtefactContent, setLocalArtefactContent] = useState<
+		string | null
+	>(null);
 
 	const audioRef = useRef<HTMLAudioElement | null>(null);
 	const reviseTimerRef = useRef<NodeJS.Timeout | null>(null);
-	const generationKeyRef = useRef<string | null>(null);
 
-	const latestChunkTimestamp = useMemo(
-		() =>
-			computeLatestTimestamp(
-				chunksQuery.data as unknown as ConversationChunkLike[],
-			),
-		[chunksQuery.data],
-	);
+	const artefactContent =
+		localArtefactContent ?? artefactQuery.data?.content ?? "";
+	const generatedArtifactId = artefactQuery.data?.id ?? null;
+	const readAloudUrl = artefactQuery.data?.read_aloud_stream_url ?? "";
+	const artefactDateUpdated = artefactQuery.data?.date_created ?? null;
 
 	const projectLanguage = projectQuery.data?.language ?? "en";
 	const languageLocale =
@@ -120,6 +96,7 @@ export const VerifyArtefact = () => {
 		selectedTopic?.key ??
 		t`verified`;
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: no need for navigate function in dependency
 	useEffect(() => {
 		if (
 			!selectedOptionKey ||
@@ -133,69 +110,8 @@ export const VerifyArtefact = () => {
 		selectedOptionKey,
 		selectedTopics,
 		topicsQuery.isSuccess,
-		navigate,
 		projectId,
 		conversationId,
-	]);
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: generation guard handled via ref
-	useEffect(() => {
-		if (
-			!selectedOptionKey ||
-			!conversationId ||
-			topicsQuery.isLoading ||
-			!selectedTopics.includes(selectedOptionKey)
-		) {
-			return;
-		}
-
-		const generationKey = `${conversationId}:${selectedOptionKey}`;
-		if (generationKeyRef.current === generationKey) {
-			return;
-		}
-
-		let isCancelled = false;
-		generationKeyRef.current = generationKey;
-		setGeneratedArtifactId(null);
-		setReadAloudUrl("");
-		setArtefactContent("");
-		setContextTimestamp(null);
-
-		const generateArtefact = async () => {
-			try {
-				const response = await generateArtefactMutation.mutateAsync({
-					conversationId,
-					topicList: [selectedOptionKey],
-				});
-
-				if (!isCancelled && response && response.length > 0) {
-					const artifact = response[0];
-					setArtefactContent(artifact.content);
-					setGeneratedArtifactId(artifact.id);
-					setReadAloudUrl(artifact.read_aloud_stream_url || "");
-					if (latestChunkTimestamp) {
-						setContextTimestamp(latestChunkTimestamp);
-					}
-				}
-			} catch (error) {
-				console.error("Failed to generate artifact:", error);
-				if (!isCancelled) {
-					generationKeyRef.current = null;
-				}
-			}
-		};
-
-		generateArtefact();
-		return () => {
-			isCancelled = true;
-		};
-	}, [
-		selectedOptionKey,
-		conversationId,
-		topicsQuery.isLoading,
-		selectedTopics,
-		generateArtefactMutation,
-		latestChunkTimestamp,
 	]);
 
 	const handleNextFromInstructions = () => {
@@ -219,11 +135,19 @@ export const VerifyArtefact = () => {
 				artifactId: generatedArtifactId,
 				content: artefactContent,
 				conversationId,
-				successMessage: t`Artefact approved successfully!`,
 			});
 
 			const conversationUrl = `/${projectId}/conversation/${conversationId}`;
 			navigate(conversationUrl);
+
+			// Show toast after navigation so it appears in the destination route's Toaster
+			setTimeout(() => {
+				toast.success(t`Artefact approved successfully!`);
+				setIsApproving(false);
+			}, 100);
+		} catch (error) {
+			toast.error(t`Failed to approve artefact. Please try again.`);
+			console.error("error approving artefact: ", error);
 		} finally {
 			setIsApproving(false);
 		}
@@ -233,43 +157,37 @@ export const VerifyArtefact = () => {
 		if (!conversationId || !selectedOptionKey || !generatedArtifactId) {
 			return;
 		}
-		const timestampToUse = contextTimestamp ?? latestChunkTimestamp;
+		const timestampToUse = artefactDateUpdated;
 		if (!timestampToUse) {
-			toast.error(
-				"No feedback available yet. Try again after sharing updates.",
-			);
+			toast.error(t`Something went wrong. Please try again.`);
 			return;
 		}
-
 		setIsRevising(true);
 		try {
-			const response = await updateArtefactMutation.mutateAsync({
+			const updatedArtefact = await updateArtefactMutation.mutateAsync({
 				artifactId: generatedArtifactId,
 				conversationId,
-				successMessage: t`Artefact revised successfully!`,
 				useConversation: {
 					conversationId,
 					timestamp: timestampToUse,
 				},
 			});
 
-			if (response) {
-				setArtefactContent(response.content);
-				setGeneratedArtifactId(response.id);
-				setReadAloudUrl(response.read_aloud_stream_url || "");
-			}
-
 			setLastReviseTime(Date.now());
-			const refreshed = await chunksQuery.refetch();
-			await queryClient.invalidateQueries({
-				queryKey: ["participant", "conversation_chunks", conversationId],
-			});
 
-			const updatedLatest = computeLatestTimestamp(
-				(refreshed.data ??
-					chunksQuery.data) as unknown as ConversationChunkLike[],
+			// Clear local edits since we have fresh content from backend
+			setLocalArtefactContent(null);
+
+			// Update the query cache directly with the revised artifact
+			queryClient.setQueryData(
+				["verify", "artifact_by_topic", conversationId, selectedOptionKey],
+				updatedArtefact,
 			);
-			setContextTimestamp(updatedLatest ?? timestampToUse);
+
+			toast.success(t`Artefact revised successfully!`);
+		} catch (error) {
+			toast.error(t`Failed to revise artefact. Please try again.`);
+			console.error("error revising artefact: ", error);
 		} finally {
 			setIsRevising(false);
 		}
@@ -285,27 +203,16 @@ export const VerifyArtefact = () => {
 		setEditedContent("");
 	};
 
-	const handleSaveEdit = async () => {
-		if (!editedContent || !generatedArtifactId || !conversationId) {
+	const handleSaveEdit = () => {
+		if (!editedContent) {
 			return;
 		}
-		try {
-			const response = await updateArtefactMutation.mutateAsync({
-				artifactId: generatedArtifactId,
-				content: editedContent,
-				conversationId,
-				successMessage: t`Artefact updated successfully!`,
-			});
-			if (response) {
-				setArtefactContent(response.content);
-			} else {
-				setArtefactContent(editedContent);
-			}
-			setIsEditing(false);
-			setEditedContent("");
-		} catch (error) {
-			console.error("Failed to update artefact content:", error);
-		}
+
+		// Update local state only - backend save happens on approve
+		setLocalArtefactContent(editedContent);
+		setIsEditing(false);
+		setEditedContent("");
+		toast.success(t`Artefact updated successfully!`);
 	};
 
 	const handleReadAloud = () => {
@@ -364,11 +271,11 @@ export const VerifyArtefact = () => {
 		};
 	}, []);
 
-	if (projectQuery.isError || topicsQuery.isError) {
+	if (projectQuery.isError || topicsQuery.isError || artefactQuery.isError) {
 		return (
 			<Stack gap="md" align="center" justify="center" className="h-full">
 				<Text c="red">
-					<Trans>
+					<Trans id="participant.verify.artefact.error.message">
 						Something went wrong while preparing the verification experience.
 					</Trans>
 				</Text>
@@ -380,23 +287,25 @@ export const VerifyArtefact = () => {
 						})
 					}
 				>
-					<Trans>Go back</Trans>
+					<Trans id="participant.verify.artefact.action.button.go.back">
+						Go back
+					</Trans>
 				</Button>
 			</Stack>
 		);
 	}
 
-	const isInitialLoading =
+	const isLoading =
 		topicsQuery.isLoading ||
 		projectQuery.isLoading ||
-		generateArtefactMutation.isPending ||
-		(!generatedArtifactId && !artefactContent);
+		artefactQuery.isLoading ||
+		artefactQuery.isFetching;
 
 	if (showInstructions) {
 		return (
 			<VerifyInstructions
 				objectLabel={selectedOptionLabel}
-				isLoading={isInitialLoading}
+				isLoading={isLoading}
 				onNext={handleNextFromInstructions}
 			/>
 		);
@@ -486,7 +395,6 @@ export const VerifyArtefact = () => {
 							radius="md"
 							className="flex-1"
 							onClick={handleSaveEdit}
-							loading={updateArtefactMutation.isPending}
 						>
 							<Trans id="participant.verify.action.button.save">Save</Trans>
 						</Button>
@@ -501,7 +409,7 @@ export const VerifyArtefact = () => {
 								className="flex-1"
 								onClick={handleRevise}
 								disabled={
-									isInitialLoading ||
+									isLoading ||
 									isRevising ||
 									isApproving ||
 									reviseTimeRemaining > 0 ||
@@ -523,10 +431,7 @@ export const VerifyArtefact = () => {
 								onClick={handleEdit}
 								px="sm"
 								disabled={
-									isRevising ||
-									isApproving ||
-									isInitialLoading ||
-									!generatedArtifactId
+									isRevising || isApproving || isLoading || !generatedArtifactId
 								}
 							>
 								<IconPencil size={20} />
@@ -542,7 +447,7 @@ export const VerifyArtefact = () => {
 							disabled={
 								isApproving ||
 								isRevising ||
-								isInitialLoading ||
+								isLoading ||
 								!generatedArtifactId ||
 								!artefactContent
 							}

@@ -1,4 +1,6 @@
+import { t } from "@lingui/core/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { toast } from "@/components/common/Toaster";
 import {
 	generateVerificationArtefact,
@@ -6,38 +8,40 @@ import {
 	getVerificationTopics,
 	type UpdateVerificationArtefactPayload,
 	updateVerificationArtefact,
+	type VerificationArtifact,
 } from "@/lib/api";
 
 export const useVerificationTopics = (projectId: string | undefined) => {
 	return useQuery({
 		enabled: !!projectId,
+		// biome-ignore lint/style/noNonNullAssertion: projectId is guaranteed to be defined
 		queryFn: () => getVerificationTopics(projectId!),
 		queryKey: ["verify", "topics", projectId],
 	});
 };
 
 // Hook for generating verification artefacts
-export const useGenerateVerificationArtefact = () => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: generateVerificationArtefact,
-		onError: (error) => {
-			console.error("Failed to generate verification artefact:", error);
-			toast.error("Failed to generate artefact. Please try again.");
-		},
-		onSuccess: (_data, variables) => {
-			queryClient.invalidateQueries({
-				queryKey: [
-					"verify",
-					"conversation_artifacts",
-					variables.conversationId,
-				],
+export const useGenerateVerificationArtefact = (
+	conversationId: string | undefined,
+	topicKey: string | undefined,
+	enabled = true,
+) => {
+	return useQuery({
+		enabled: !!conversationId && !!topicKey && enabled,
+		queryFn: async (): Promise<VerificationArtifact | null> => {
+			const generatedArtefacts = await generateVerificationArtefact({
+				conversationId: conversationId ?? "",
+				topicList: [topicKey ?? ""],
 			});
+
+			return generatedArtefacts[0] ?? null;
 		},
+		queryKey: ["verify", "artifact_by_topic", conversationId, topicKey],
+		refetchOnWindowFocus: false,
+		retry: 1,
 	});
 };
 
-// Hook for saving verification artefacts
 type UpdateArtefactVariables = {
 	artifactId: string;
 	conversationId: string;
@@ -47,12 +51,9 @@ type UpdateArtefactVariables = {
 	};
 	content?: string;
 	approvedAt?: string;
-	successMessage?: string;
 };
 
 export const useUpdateVerificationArtefact = () => {
-	const queryClient = useQueryClient();
-
 	return useMutation({
 		mutationFn: async ({
 			artifactId,
@@ -68,26 +69,6 @@ export const useUpdateVerificationArtefact = () => {
 			};
 			return updateVerificationArtefact(payload);
 		},
-		onError: (error) => {
-			console.error("Failed to save verification artefact:", error);
-			toast.error("Failed to approve artefact. Please try again.");
-		},
-		onSuccess: (_data, variables) => {
-			toast.success(
-				variables?.successMessage ??
-					"Verification artefact updated successfully!",
-			);
-			queryClient.invalidateQueries({
-				queryKey: ["conversations", variables.conversationId],
-			});
-			queryClient.invalidateQueries({
-				queryKey: [
-					"verify",
-					"conversation_artifacts",
-					variables.conversationId,
-				],
-			});
-		},
 	});
 };
 
@@ -97,6 +78,7 @@ export const useConversationArtefacts = (
 ) => {
 	return useQuery({
 		enabled: !!conversationId,
+		// biome-ignore lint/style/noNonNullAssertion: conversationId is guaranteed to be undefined
 		queryFn: () => getVerificationArtefacts(conversationId!),
 		queryKey: ["verify", "conversation_artifacts", conversationId],
 	});
