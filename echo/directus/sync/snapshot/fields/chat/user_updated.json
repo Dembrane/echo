@@ -1,31 +1,35 @@
 {
-  "collection": "project_chat_message_metadata",
-  "field": "message_metadata",
+  "collection": "chat",
+  "field": "user_updated",
   "type": "uuid",
   "meta": {
-    "collection": "project_chat_message_metadata",
+    "collection": "chat",
     "conditions": null,
-    "display": null,
+    "display": "user",
     "display_options": null,
-    "field": "message_metadata",
+    "field": "user_updated",
     "group": null,
     "hidden": true,
     "interface": "select-dropdown-m2o",
     "note": null,
-    "options": null,
-    "readonly": false,
+    "options": {
+      "template": "{{avatar}} {{first_name}} {{last_name}}"
+    },
+    "readonly": true,
     "required": false,
     "searchable": true,
     "sort": 4,
-    "special": null,
+    "special": [
+      "user-updated"
+    ],
     "translations": null,
     "validation": null,
     "validation_message": null,
-    "width": "full"
+    "width": "half"
   },
   "schema": {
-    "name": "message_metadata",
-    "table": "project_chat_message_metadata",
+    "name": "user_updated",
+    "table": "chat",
     "data_type": "uuid",
     "default_value": null,
     "max_length": null,
@@ -38,7 +42,7 @@
     "is_generated": false,
     "generation_expression": null,
     "has_auto_increment": false,
-    "foreign_key_table": "project_chat_message",
+    "foreign_key_table": "directus_users",
     "foreign_key_column": "id"
   }
 }

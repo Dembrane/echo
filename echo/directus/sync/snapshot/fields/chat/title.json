@@ -1,33 +1,22 @@
 {
-  "collection": "project_chat_message_metadata",
-  "field": "type",
-  "type": "string",
+  "collection": "chat",
+  "field": "title",
+  "type": "text",
   "meta": {
-    "collection": "project_chat_message_metadata",
+    "collection": "chat",
     "conditions": null,
     "display": null,
     "display_options": null,
-    "field": "type",
+    "field": "title",
     "group": null,
     "hidden": false,
-    "interface": "select-dropdown",
+    "interface": "input",
     "note": null,
-    "options": {
-      "choices": [
-        {
-          "text": "reference",
-          "value": "reference"
-        },
-        {
-          "text": "citation",
-          "value": "citation"
-        }
-      ]
-    },
+    "options": null,
     "readonly": false,
     "required": false,
     "searchable": true,
-    "sort": 3,
+    "sort": 6,
     "special": null,
     "translations": null,
     "validation": null,
@@ -35,11 +24,11 @@
     "width": "full"
   },
   "schema": {
-    "name": "type",
-    "table": "project_chat_message_metadata",
-    "data_type": "character varying",
+    "name": "title",
+    "table": "chat",
+    "data_type": "text",
     "default_value": null,
-    "max_length": 255,
+    "max_length": null,
     "numeric_precision": null,
     "numeric_scale": null,
     "is_nullable": true,

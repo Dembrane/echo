@@ -37,13 +37,13 @@ export const SUPPORTED_LANGUAGES = [
 export const PRIVACY_POLICY_URL =
 	"https://dembrane.notion.site/Privacy-statements-all-languages-fa97a183f9d841f7a1089079e77ffb52" as const;
 
-export const ENABLE_CHAT_AUTO_SELECT = true;
 
 export const PLAUSIBLE_API_HOST =
 	import.meta.env.VITE_PLAUSIBLE_API_HOST ?? "https://plausible.io";
 
 export const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === "1";
 
+export const ENABLE_CHAT_AUTO_SELECT = true;
 export const ENABLE_CONVERSATION_HEALTH = true;
 export const ENABLE_ANNOUNCEMENTS = true;
 export const ENABLE_DISPLAY_CONVERSATION_LINKS = true;
