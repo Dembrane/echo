@@ -1057,7 +1057,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 export const ProjectPortalEditor = memo(
 	ProjectPortalEditorComponent,
 	(prevProps, nextProps) => {
-		// Re-render if project ID or verification topics have changed
+		// Only re-render if the project ID has changed
 		return prevProps.project.id === nextProps.project.id;
 	},
 );
