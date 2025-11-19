@@ -15,17 +15,19 @@ import { useQueryClient } from "@tanstack/react-query";
 import { memo, useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
+import { useCooldown } from "@/hooks/useCooldown";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { Logo } from "../../common/Logo";
 import { Markdown } from "../../common/Markdown";
 import { MarkdownWYSIWYG } from "../../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
 import { useParticipantProjectById } from "../hooks";
 import {
-	useGenerateVerificationArtefact,
 	useUpdateVerificationArtefact,
+	useVerificationArtefactById,
 	useVerificationTopics,
 } from "./hooks";
-import { VerifyInstructions } from "./VerifyInstructions";
+import { VerifyArtefactError } from "./VerifyArtefactError";
+import { VerifyArtefactLoading } from "./VerifyArtefactLoading";
 
 const LANGUAGE_TO_LOCALE: Record<string, string> = {
 	de: "de-DE",
@@ -43,41 +45,35 @@ export const VerifyArtefact = () => {
 	const [searchParams] = useSearchParams();
 	const queryClient = useQueryClient();
 
-	const selectedOptionKey = searchParams.get("key");
 	const updateArtefactMutation = useUpdateVerificationArtefact();
 	const projectQuery = useParticipantProjectById(projectId ?? "");
 	const topicsQuery = useVerificationTopics(projectId);
 
-	// Use query to automatically fetch or generate the artefact
-	const artefactQuery = useGenerateVerificationArtefact(
+	// Get artifact_id from URL to fetch the specific artifact
+	const selectedArtifactId = searchParams.get("artifact_id");
+	const artefactQuery = useVerificationArtefactById(
 		conversationId,
-		selectedOptionKey ?? undefined,
-		!!(
-			selectedOptionKey &&
-			topicsQuery.data?.selected_topics?.includes(selectedOptionKey)
-		),
+		selectedArtifactId,
 	);
 
-	const [showInstructions, setShowInstructions] = useState(true);
 	const [isApproving, setIsApproving] = useState(false);
 	const [isRevising, setIsRevising] = useState(false);
 	const [isEditing, setIsEditing] = useState(false);
 	const [editedContent, setEditedContent] = useState<string>("");
 	const [isPlaying, setIsPlaying] = useState(false);
-	const [lastReviseTime, setLastReviseTime] = useState<number | null>(null);
-	const [reviseTimeRemaining, setReviseTimeRemaining] = useState<number>(0);
 	const [localArtefactContent, setLocalArtefactContent] = useState<
 		string | null
 	>(null);
 
 	const audioRef = useRef<HTMLAudioElement | null>(null);
-	const reviseTimerRef = useRef<NodeJS.Timeout | null>(null);
+	const reviseCooldown = useCooldown(30 * 1000); // 30 second cooldown
 
 	const artefactContent =
 		localArtefactContent ?? artefactQuery.data?.content ?? "";
 	const generatedArtifactId = artefactQuery.data?.id ?? null;
 	const readAloudUrl = artefactQuery.data?.read_aloud_stream_url ?? "";
 	const artefactDateUpdated = artefactQuery.data?.date_created ?? null;
+	const selectedOptionKey = artefactQuery.data?.key ?? null;
 
 	const projectLanguage = projectQuery.data?.language ?? "en";
 	const languageLocale =
@@ -98,33 +94,47 @@ export const VerifyArtefact = () => {
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: no need for navigate function in dependency
 	useEffect(() => {
-		if (
-			!selectedOptionKey ||
-			(topicsQuery.isSuccess && !selectedTopics.includes(selectedOptionKey))
-		) {
-			navigate(`/${projectId}/conversation/${conversationId}/verify`, {
+		// Redirect if artifact_id is missing from URL
+		if (!selectedArtifactId) {
+			navigate(`/${projectId}/conversation/${conversationId}`, {
+				replace: true,
+			});
+			return;
+		}
+
+		// Wait for queries to complete before validating
+		if (!artefactQuery.isSuccess || !topicsQuery.isSuccess) {
+			return;
+		}
+
+		// Redirect if artifact failed to load
+		if (!artefactQuery.data) {
+			toast.error(t`Unable to load the generated artefact. Please try again.`);
+			navigate(`/${projectId}/conversation/${conversationId}`, {
+				replace: true,
+			});
+			return;
+		}
+
+		// Redirect if the artifact's key is not in the selected topics
+		if (selectedOptionKey && !selectedTopics.includes(selectedOptionKey)) {
+			navigate(`/${projectId}/conversation/${conversationId}`, {
 				replace: true,
 			});
 		}
 	}, [
+		selectedArtifactId,
 		selectedOptionKey,
 		selectedTopics,
 		topicsQuery.isSuccess,
+		artefactQuery.isSuccess,
+		artefactQuery.data,
 		projectId,
 		conversationId,
 	]);
 
-	const handleNextFromInstructions = () => {
-		setShowInstructions(false);
-	};
-
 	const handleApprove = async () => {
-		if (
-			!conversationId ||
-			!selectedOptionKey ||
-			!artefactContent ||
-			!generatedArtifactId
-		) {
+		if (!conversationId || !artefactContent || !generatedArtifactId) {
 			return;
 		}
 
@@ -154,7 +164,7 @@ export const VerifyArtefact = () => {
 	};
 
 	const handleRevise = async () => {
-		if (!conversationId || !selectedOptionKey || !generatedArtifactId) {
+		if (!conversationId || !generatedArtifactId) {
 			return;
 		}
 		const timestampToUse = artefactDateUpdated;
@@ -173,14 +183,14 @@ export const VerifyArtefact = () => {
 				},
 			});
 
-			setLastReviseTime(Date.now());
+			reviseCooldown.trigger();
 
 			// Clear local edits since we have fresh content from backend
 			setLocalArtefactContent(null);
 
 			// Update the query cache directly with the revised artifact
 			queryClient.setQueryData(
-				["verify", "artifact_by_topic", conversationId, selectedOptionKey],
+				["verify", "artifact_by_id", generatedArtifactId],
 				updatedArtefact,
 			);
 
@@ -235,32 +245,19 @@ export const VerifyArtefact = () => {
 		}
 	};
 
-	useEffect(() => {
-		if (lastReviseTime === null) return;
-
-		const COOLDOWN_MS = 2 * 60 * 1000;
-
-		const updateTimer = () => {
-			const now = Date.now();
-			const elapsed = now - lastReviseTime;
-			const remaining = Math.max(0, COOLDOWN_MS - elapsed);
-			setReviseTimeRemaining(remaining);
-			if (remaining === 0 && reviseTimerRef.current) {
-				clearInterval(reviseTimerRef.current);
-				reviseTimerRef.current = null;
-			}
-		};
-
-		updateTimer();
-		reviseTimerRef.current = setInterval(updateTimer, 1000);
-
-		return () => {
-			if (reviseTimerRef.current) {
-				clearInterval(reviseTimerRef.current);
-				reviseTimerRef.current = null;
-			}
-		};
-	}, [lastReviseTime]);
+	const handleReload = async () => {
+		try {
+			await Promise.all([
+				projectQuery.refetch(),
+				topicsQuery.refetch(),
+				artefactQuery.refetch(),
+			]);
+			toast.success(t`Artefact reloaded successfully!`);
+		} catch (error) {
+			toast.error(t`Failed to reload. Please try again.`);
+			console.error("error reloading artefact: ", error);
+		}
+	};
 
 	useEffect(() => {
 		return () => {
@@ -272,26 +269,21 @@ export const VerifyArtefact = () => {
 	}, []);
 
 	if (projectQuery.isError || topicsQuery.isError || artefactQuery.isError) {
+		const isReloading =
+			projectQuery.isRefetching ||
+			topicsQuery.isRefetching ||
+			artefactQuery.isRefetching;
+
 		return (
-			<Stack gap="md" align="center" justify="center" className="h-full">
-				<Text c="red">
-					<Trans id="participant.verify.artefact.error.message">
-						Something went wrong while preparing the verification experience.
-					</Trans>
-				</Text>
-				<Button
-					variant="subtle"
-					onClick={() =>
-						navigate(`/${projectId}/conversation/${conversationId}/verify`, {
-							replace: true,
-						})
-					}
-				>
-					<Trans id="participant.verify.artefact.action.button.go.back">
-						Go back
-					</Trans>
-				</Button>
-			</Stack>
+			<VerifyArtefactError
+				onReload={handleReload}
+				onGoBack={() =>
+					navigate(`/${projectId}/conversation/${conversationId}`, {
+						replace: true,
+					})
+				}
+				isReloading={isReloading}
+			/>
 		);
 	}
 
@@ -301,14 +293,8 @@ export const VerifyArtefact = () => {
 		artefactQuery.isLoading ||
 		artefactQuery.isFetching;
 
-	if (showInstructions) {
-		return (
-			<VerifyInstructions
-				objectLabel={selectedOptionLabel}
-				isLoading={isLoading}
-				onNext={handleNextFromInstructions}
-			/>
-		);
+	if (isLoading && !artefactQuery.data) {
+		return <VerifyArtefactLoading />;
 	}
 
 	return (
@@ -378,8 +364,11 @@ export const VerifyArtefact = () => {
 				</Paper>
 			</ScrollArea>
 
-			<Group gap="md" className="w-full sticky bottom-[10%] p-4 mx-auto rounded-md shadow-sm border-gray-200 border  bg-white/20 backdrop-blur-sm">
-				{isEditing ? ( 
+			<Group
+				gap="md"
+				className="w-full sticky bottom-[10%] p-4 mx-auto rounded-md shadow-sm border-gray-200 border  bg-white/20 backdrop-blur-sm"
+			>
+				{isEditing ? (
 					<>
 						<Button
 							size="lg"
@@ -412,12 +401,12 @@ export const VerifyArtefact = () => {
 									isLoading ||
 									isRevising ||
 									isApproving ||
-									reviseTimeRemaining > 0 ||
+									reviseCooldown.isOnCooldown ||
 									!generatedArtifactId
 								}
 							>
-								{reviseTimeRemaining > 0 ? (
-									<>{Math.ceil(reviseTimeRemaining / 1000)}s</>
+								{reviseCooldown.isOnCooldown ? (
+									<>{reviseCooldown.timeRemainingSeconds}s</>
 								) : (
 									<Trans id="participant.verify.action.button.revise">
 										Revise

@@ -1041,6 +1041,15 @@ export type VerificationArtifact = {
 	read_aloud_stream_url: string;
 };
 
+export type VerificationArtifactDetail = {
+	id: string;
+	content: string;
+	date_created: string | null;
+	approved_at?: string | null;
+	key: string;
+	read_aloud_stream_url: string;
+};
+
 export const generateVerificationArtefact = async (payload: {
 	conversationId: string;
 	topicList: string[];
@@ -1093,6 +1102,12 @@ export const updateVerificationArtefact = async ({
 export const getVerificationArtefacts = async (conversationId: string) => {
 	return apiNoAuth.get<unknown, VerificationArtifact[]>(
 		`/verify/artifacts/${conversationId}`,
+	);
+};
+
+export const getVerificationArtefactById = async (artifactId: string) => {
+	return apiNoAuth.get<unknown, VerificationArtifactDetail>(
+		`/verify/artifact/${artifactId}`,
 	);
 };
 

@@ -57,6 +57,15 @@ class ConversationArtifactResponse(BaseModel):
     read_aloud_stream_url: str
 
 
+class ConversationArtifactDetailResponse(BaseModel):
+    id: str
+    key: Optional[str] = None
+    content: str
+    date_created: Optional[str] = None
+    approved_at: Optional[str] = None
+    read_aloud_stream_url: str
+
+
 class GenerateArtifactsResponse(BaseModel):
     artifact_list: List[ConversationArtifactResponse]
 
@@ -265,6 +274,29 @@ async def list_verification_artifacts(
         )
 
     return response
+
+
+@VerifyRouter.get(
+    "/artifact/{artifact_id}",
+    response_model=ConversationArtifactDetailResponse,
+)
+async def get_verification_artifact(
+    artifact_id: str,
+) -> ConversationArtifactDetailResponse:
+    if not artifact_id or not artifact_id.strip():
+        raise HTTPException(status_code=400, detail="The artifact_id field is required.")
+
+    client = directus
+    artifact = await _get_artifact_or_404(artifact_id, client)
+
+    return ConversationArtifactDetailResponse(
+        id=artifact.get("id") or artifact_id,
+        key=artifact.get("key") or "",
+        content=artifact.get("content") or "",
+        date_created=artifact.get("date_created"),
+        approved_at=artifact.get("approved_at"),
+        read_aloud_stream_url=artifact.get("read_aloud_stream_url") or "",
+    )
 
 
 async def _get_artifact_or_404(artifact_id: str, client: DirectusClient) -> dict:

@@ -1,12 +1,19 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Box, Button, Group, Stack, Text, Title } from "@mantine/core";
 import { IconArrowRight } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
+import { Logo } from "@/components/common/Logo";
+import { toast } from "@/components/common/Toaster";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useParticipantProjectById } from "../hooks";
 import { startCooldown } from "../refine/hooks/useRefineSelectionCooldown";
-import { useVerificationTopics } from "./hooks";
+import {
+	useGenerateVerificationArtefactMutation,
+	useVerificationTopics,
+} from "./hooks";
+import { VerifyInstructions } from "./VerifyInstructions";
 
 const LANGUAGE_TO_LOCALE: Record<string, string> = {
 	de: "de-DE",
@@ -28,7 +35,16 @@ export const TOPIC_ICON_MAP: Record<string, string> = {
 export const VerifySelection = () => {
 	const { projectId, conversationId } = useParams();
 	const navigate = useI18nNavigate();
+	const [searchParams, setSearchParams] = useSearchParams();
 	const [selectedOption, setSelectedOption] = useState<string | null>(null);
+	const [instructionTopicKey, setInstructionTopicKey] = useState<string | null>(
+		null,
+	);
+	const showInstructions = searchParams.get("instructions") === "true";
+	const [generatedArtefactId, setGeneratedArtefactId] = useState<string | null>(
+		null,
+	);
+	const generateArtefactMutation = useGenerateVerificationArtefactMutation();
 	const projectQuery = useParticipantProjectById(projectId ?? "");
 	const topicsQuery = useVerificationTopics(projectId);
 
@@ -72,17 +88,70 @@ export const VerifySelection = () => {
 		}
 	}, [selectedOption, selectedTopics]);
 
+	const getOptionLabel = (key: string | null) => {
+		if (!key) return t`Hidden gem`;
+		return availableOptions.find((option) => option.key === key)?.label ?? key;
+	};
+
+	const handleGenerationFlow = async (topicKey: string) => {
+		if (!conversationId) return;
+		setGeneratedArtefactId(null);
+		setInstructionTopicKey(topicKey);
+		setSearchParams({ instructions: "true" });
+		try {
+			const artefact = await generateArtefactMutation.mutateAsync({
+				conversationId,
+				topicKey,
+			});
+			setGeneratedArtefactId(artefact.id);
+		} catch (error) {
+			console.error("error generating verification artefact", error);
+			toast.error(t`Failed to generate Hidden gems. Please try again.`);
+			setSearchParams({});
+		}
+	};
+
 	const handleNext = () => {
 		if (!selectedOption || !conversationId) return;
 
 		// Start cooldown for verify
 		startCooldown(conversationId, "verify");
 
-		// Navigate directly to approve route with URL param
+		void handleGenerationFlow(selectedOption);
+	};
+
+	const handleInstructionsNext = () => {
+		if (
+			!conversationId ||
+			!projectId ||
+			!instructionTopicKey ||
+			!generatedArtefactId
+		) {
+			return;
+		}
+
+		const params = new URLSearchParams({
+			artifact_id: generatedArtefactId,
+		});
+
 		navigate(
-			`/${projectId}/conversation/${conversationId}/verify/approve?key=${selectedOption}`,
+			`/${projectId}/conversation/${conversationId}/verify/approve?${params.toString()}`,
 		);
 	};
+
+	if (showInstructions) {
+		const objectLabel = getOptionLabel(instructionTopicKey);
+		return (
+			<VerifyInstructions
+				objectLabel={objectLabel}
+				isLoading={generateArtefactMutation.isPending}
+				canProceed={
+					!generateArtefactMutation.isPending && !!generatedArtefactId
+				}
+				onNext={handleInstructionsNext}
+			/>
+		);
+	}
 
 	return (
 		<Stack gap="lg" className="h-full">
@@ -97,9 +166,11 @@ export const VerifySelection = () => {
 				{/* Options list */}
 				<Group gap="md">
 					{isLoading && (
-						<Text size="sm" c="dimmed">
-							<Trans>Loading verification topics…</Trans>
-						</Text>
+						<Stack align="center" justify="center" className="w-full py-8">
+							<div className="animate-spin">
+								<Logo hideTitle h="48px" />
+							</div>
+						</Stack>
 					)}
 					{!isLoading && availableOptions.length === 0 && (
 						<Text size="sm" c="dimmed">
