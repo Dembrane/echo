@@ -28,6 +28,7 @@ import { z } from "zod";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import type { VerificationTopicsResponse } from "@/lib/api";
 import { Logo } from "../common/Logo";
+import { toast } from "../common/Toaster";
 import { FormLabel } from "../form/FormLabel";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
 import { SaveStatus } from "../form/SaveStatus";
@@ -169,6 +170,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	const [previewKey, setPreviewKey] = useState(0);
 	const [previewWidth, setPreviewWidth] = useState(400);
 	const [previewHeight, setPreviewHeight] = useState(300);
+	const savedTopicsRef = useRef<string | null>(null);
 
 	const projectLanguageCode = (project.language ?? "en") as
 		| "en"
@@ -278,6 +280,9 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 				queryKey: ["verify", "topics", project.id],
 			});
 
+			// Store what we saved to detect when query refetches
+			savedTopicsRef.current = normalizedTopics.join(",");
+
 			reset(
 				{
 					...values,
@@ -285,7 +290,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 				},
 				{
 					keepDirty: false,
-					keepDirtyValues: true,
+					keepValues: true,
 				},
 			);
 		},
@@ -313,6 +318,19 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	useEffect(() => {
 		if (!verificationTopics || isVerificationTopicsLoading) {
 			return;
+		}
+
+		if (savedTopicsRef.current) {
+			const normalizedSelected = normalizeTopicList(
+				verificationTopics.selected_topics ?? [],
+			);
+			const savedTopicsNormalized = savedTopicsRef.current;
+
+			if (normalizedSelected.join(",") === savedTopicsNormalized) {
+				savedTopicsRef.current = null; // Clear flag, allow sync
+			} else {
+				return; // Still waiting for query to refetch
+			}
 		}
 
 		if (formState.dirtyFields.verification_topics) {
@@ -736,62 +754,72 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													<Text size="sm" c="dimmed">
 														<Trans>Loading verification topics…</Trans>
 													</Text>
+												) : availableVerifyTopics.length === 0 ? (
+													<Text size="sm" c="dimmed">
+														<Trans>No verification topics available.</Trans>
+													</Text>
 												) : (
-													<>
-														{availableVerifyTopics.length === 0 ? (
-															<Text size="sm" c="dimmed">
-																<Trans>No verification topics available.</Trans>
-															</Text>
-														) : (
-															<Group gap="xs">
-																{availableVerifyTopics.map((topic) => (
-																	<Badge
-																		key={topic.key}
-																		className={
-																			watchedVerifyEnabled
-																				? "cursor-pointer capitalize"
-																				: "capitalize"
-																		}
-																		variant={
-																			field.value.includes(topic.key)
-																				? "filled"
-																				: "default"
-																		}
-																		size="lg"
-																		style={{
-																			cursor: watchedVerifyEnabled
-																				? "pointer"
-																				: "not-allowed",
-																			opacity: watchedVerifyEnabled ? 1 : 0.6,
-																		}}
-																		onClick={() => {
-																			if (!watchedVerifyEnabled) return;
-																			const normalizedCurrent =
-																				normalizeTopicList(field.value ?? []);
-																			const isSelected =
-																				normalizedCurrent.includes(topic.key);
-																			const updated = isSelected
-																				? normalizedCurrent.filter(
-																						(item) => item !== topic.key,
-																					)
-																				: normalizeTopicList([
-																						...normalizedCurrent,
-																						topic.key,
-																					]);
-																			field.onChange(updated);
-																		}}
-																	>
-																		<Group gap="xs">
-																			{topic.icon ? (
-																				<span>{topic.icon}</span>
-																			) : null}
-																			<span>{topic.label}</span>
-																		</Group>
-																	</Badge>
-																))}
-															</Group>
-														)}
-													</>
+													<Group gap="xs">
+														{availableVerifyTopics.map((topic) => (
+															<Badge
+																key={topic.key}
+																className={
+																	watchedVerifyEnabled
+																		? "cursor-pointer capitalize"
+																		: "capitalize"
+																}
+																variant={
+																	field.value.includes(topic.key)
+																		? "filled"
+																		: "default"
+																}
+																size="lg"
+																style={{
+																	cursor: watchedVerifyEnabled
+																		? "pointer"
+																		: "not-allowed",
+																	opacity: watchedVerifyEnabled ? 1 : 0.6,
+																}}
+																onClick={() => {
+																	if (!watchedVerifyEnabled) return;
+																	const normalizedCurrent = normalizeTopicList(
+																		field.value ?? [],
+																	);
+																	const isSelected = normalizedCurrent.includes(
+																		topic.key,
+																	);
+
+																	// Prevent deselecting the last topic
+																	if (
+																		isSelected &&
+																		normalizedCurrent.length === 1
+																	) {
+																		toast.error(
+																			t`At least one topic must be selected to enable Dembrane Verify`,
+																		);
+																		return;
+																	}
+
+																	const updated = isSelected
+																		? normalizedCurrent.filter(
+																				(item) => item !== topic.key,
+																			)
+																		: normalizeTopicList([
+																				...normalizedCurrent,
+																				topic.key,
+																			]);
+																	field.onChange(updated);
+																}}
+															>
+																<Group gap="xs">
+																	{topic.icon ? (
+																		<span>{topic.icon}</span>
+																	) : null}
+																	<span>{topic.label}</span>
+																</Group>
+															</Badge>
+														))}
+													</Group>
 												)}
 											</Stack>
 										)}
