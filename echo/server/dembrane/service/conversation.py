@@ -95,8 +95,7 @@ class ConversationService:
 
                 if with_chunks:
                     fields.append("chunks.*")
-                    deep["chunks"] = {"_sort": "-timestamp"}
-                    deep["chunks"] = {"_limit": 1200}  # type: ignore
+                    deep["chunks"] = {"_sort": "-timestamp", "_limit": 1200}
 
                 conversation = client.get_items(
                     "conversation",
