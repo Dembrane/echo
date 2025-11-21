@@ -109,9 +109,7 @@ export const LoginRoute = () => {
 			const isNewUser = searchParams.get("new") === "true";
 			const next = searchParams.get("next");
 			const transitionPromise = runTransition({
-				message: isNewUser
-					? t`Setting up your first project`
-					: t`Welcome back`,
+				message: isNewUser ? t`Setting up your first project` : t`Welcome back`,
 			});
 
 			if (isNewUser) {
@@ -120,7 +118,7 @@ export const LoginRoute = () => {
 					name: t`New Project`,
 				});
 				await transitionPromise;
-				navigate("/projects");
+				navigate(`/projects/${project.id}`);
 				return;
 			}
 

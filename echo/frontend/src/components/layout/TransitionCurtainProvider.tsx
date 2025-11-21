@@ -1,13 +1,13 @@
 import { useLingui } from "@lingui/react";
 import {
 	createContext,
+	type PropsWithChildren,
 	useCallback,
 	useContext,
 	useEffect,
 	useMemo,
 	useRef,
 	useState,
-	type PropsWithChildren,
 } from "react";
 
 type TransitionOptions = {
@@ -33,9 +33,7 @@ export const useTransitionCurtain = () => {
 	return value;
 };
 
-export const TransitionCurtainProvider = ({
-	children,
-}: PropsWithChildren) => {
+export const TransitionCurtainProvider = ({ children }: PropsWithChildren) => {
 	const [isActive, setIsActive] = useState(false);
 	const [hasEntered, setHasEntered] = useState(false);
 	const [message, setMessage] = useState<string | undefined>(undefined);
@@ -122,8 +120,8 @@ export const TransitionCurtainProvider = ({
 
 	const contextValue = useMemo(
 		(): TransitionCurtainContextValue => ({
-			runTransition,
 			isActive,
+			runTransition,
 		}),
 		[isActive, runTransition],
 	);
@@ -132,7 +130,7 @@ export const TransitionCurtainProvider = ({
 	const resolvedDescription =
 		description === null
 			? null
-			: description ?? i18n._("We're preparing your workspace.");
+			: (description ?? i18n._("We're preparing your workspace."));
 
 	return (
 		<TransitionCurtainContext.Provider value={contextValue}>
@@ -161,7 +159,9 @@ export const TransitionCurtainProvider = ({
 								{message ?? i18n._("Welcome back")}
 							</p>
 							{resolvedDescription && (
-								<p className="text-base text-slate-700">{resolvedDescription}</p>
+								<p className="text-base text-slate-700">
+									{resolvedDescription}
+								</p>
 							)}
 						</div>
 					</div>

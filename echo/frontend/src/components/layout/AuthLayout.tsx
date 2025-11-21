@@ -76,4 +76,3 @@ const AuthLayoutInner = (props: PropsWithChildren) => {
 		</>
 	);
 };
-

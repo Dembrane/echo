@@ -21,7 +21,10 @@ export const I18nLink: React.FC<LinkProps> = ({ to, ...props }) => {
 
 	const pathname = extractPathname();
 	const isRelative = pathname
-		? pathname === ".." || pathname === "." || pathname.startsWith("../") || pathname.startsWith("./")
+		? pathname === ".." ||
+			pathname === "." ||
+			pathname.startsWith("../") ||
+			pathname.startsWith("./")
 		: to.toString() === "..";
 
 	if (isRelative) {
@@ -31,7 +34,7 @@ export const I18nLink: React.FC<LinkProps> = ({ to, ...props }) => {
 	const hasLanguagePrefix = pathname
 		? SUPPORTED_LANGUAGES.some(
 				(lang) => pathname === `/${lang}` || pathname.startsWith(`/${lang}/`),
-		  )
+			)
 		: SUPPORTED_LANGUAGES.some((lang) => to.toString().startsWith(`/${lang}`));
 
 	if (hasLanguagePrefix) {

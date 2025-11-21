@@ -30,7 +30,8 @@ export const App = () => {
 		const preloadRoutes = () => {
 			const loaders = [
 				() => import("./routes/project/ProjectsHome"),
-				() => import("./routes/project/conversation/ProjectConversationOverview"),
+				() =>
+					import("./routes/project/conversation/ProjectConversationOverview"),
 				() => import("./routes/project/ProjectRoutes"),
 			];
 
@@ -45,18 +46,26 @@ export const App = () => {
 		let timeoutId: number | null = null;
 
 		const anyWindow = window as typeof window & {
-			requestIdleCallback?: (cb: IdleRequestCallback, options?: IdleRequestOptions) => number;
+			requestIdleCallback?: (
+				cb: IdleRequestCallback,
+				options?: IdleRequestOptions,
+			) => number;
 			cancelIdleCallback?: (handle: number) => void;
 		};
 
 		if (typeof anyWindow.requestIdleCallback === "function") {
-			idleHandle = anyWindow.requestIdleCallback(preloadRoutes, { timeout: 1500 });
+			idleHandle = anyWindow.requestIdleCallback(preloadRoutes, {
+				timeout: 1500,
+			});
 		} else {
 			timeoutId = window.setTimeout(preloadRoutes, 1500);
 		}
 
 		return () => {
-			if (idleHandle !== null && typeof anyWindow.cancelIdleCallback === "function") {
+			if (
+				idleHandle !== null &&
+				typeof anyWindow.cancelIdleCallback === "function"
+			) {
 				anyWindow.cancelIdleCallback(idleHandle);
 			}
 
@@ -65,7 +74,6 @@ export const App = () => {
 			}
 		};
 	}, []);
-
 
 	return (
 		<QueryClientProvider client={queryClient}>

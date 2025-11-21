@@ -30,7 +30,11 @@ export function useI18nNavigate() {
 		const isRelativePath = (value?: string) =>
 			!!value && (value.startsWith("../") || value.startsWith("./"));
 
-		if (isRelativePath(targetPath) || targetPath === ".." || targetPath === ".") {
+		if (
+			isRelativePath(targetPath) ||
+			targetPath === ".." ||
+			targetPath === "."
+		) {
 			navigate(to, options);
 			return;
 		}

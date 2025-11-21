@@ -40,8 +40,8 @@ import {
 	useUploadConversationChunk,
 } from "./hooks";
 import useChunkedAudioRecorder from "./hooks/useChunkedAudioRecorder";
-import { useRefineSelectionCooldown } from "./refine/hooks/useRefineSelectionCooldown";
 import { PermissionErrorModal } from "./PermissionErrorModal";
+import { useRefineSelectionCooldown } from "./refine/hooks/useRefineSelectionCooldown";
 import { StopRecordingConfirmationModal } from "./StopRecordingConfirmationModal";
 
 const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];

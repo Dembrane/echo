@@ -14,8 +14,13 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { directus } from "@/lib/directus";
 import { throwWithMessage } from "../utils/errorUtils";
 
-export const useCurrentUser = ({ enabled = true }: { enabled?: boolean } = {}) =>
+export const useCurrentUser = ({
+	enabled = true,
+}: {
+	enabled?: boolean;
+} = {}) =>
 	useQuery({
+		enabled,
 		queryFn: () => {
 			try {
 				return directus.request(
@@ -34,7 +39,6 @@ export const useCurrentUser = ({ enabled = true }: { enabled?: boolean } = {}) =
 			}
 		},
 		queryKey: ["users", "me"],
-		enabled,
 	});
 
 export const useResetPasswordMutation = () => {
@@ -195,25 +199,12 @@ export const useLogoutMutation = () => {
 			try {
 				await directus.logout();
 			} catch (e) {
-				const status = (e as { response?: { status?: number } })?.response?.status;
+				const status = (e as { response?: { status?: number } })?.response
+					?.status;
 				if (status === 401 || status === 403) {
 					return;
 				}
 				throwWithMessage(e);
-			}
-		},
-		onMutate: async () => {
-			await queryClient.cancelQueries();
-			queryClient.setQueryData(["auth", "session"], false);
-			queryClient.removeQueries({ queryKey: ["users", "me"], exact: false });
-		},
-		onSuccess: (_data, { next, reason, doRedirect }) => {
-			if (doRedirect) {
-				navigate(
-					"/login" +
-						(next ? `?next=${encodeURIComponent(next)}` : "") +
-						(reason ? `&reason=${reason}` : ""),
-				);
 			}
 		},
 		onError: (_error, { next, reason, doRedirect }) => {
@@ -225,8 +216,22 @@ export const useLogoutMutation = () => {
 				);
 			}
 		},
+		onMutate: async () => {
+			await queryClient.cancelQueries();
+			queryClient.setQueryData(["auth", "session"], false);
+			queryClient.removeQueries({ exact: false, queryKey: ["users", "me"] });
+		},
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["auth", "session"] });
+		},
+		onSuccess: (_data, { next, reason, doRedirect }) => {
+			if (doRedirect) {
+				navigate(
+					"/login" +
+						(next ? `?next=${encodeURIComponent(next)}` : "") +
+						(reason ? `&reason=${reason}` : ""),
+				);
+			}
 		},
 	});
 };
@@ -238,13 +243,13 @@ export const useAuthenticated = (doRedirect = false) => {
 	const hasLoggedOutRef = useRef(false);
 
 	const sessionQuery = useQuery({
-		queryKey: ["auth", "session"],
 		queryFn: async () => {
 			await directus.refresh();
 			return true as const;
 		},
-		staleTime: 60_000,
+		queryKey: ["auth", "session"],
 		retry: false,
+		staleTime: 60_000,
 	});
 
 	useEffect(() => {
@@ -256,7 +261,13 @@ export const useAuthenticated = (doRedirect = false) => {
 				reason: searchParams.get("reason") ?? "",
 			});
 		}
-	}, [doRedirect, location.pathname, logoutMutation, searchParams, sessionQuery.isError]);
+	}, [
+		doRedirect,
+		location.pathname,
+		logoutMutation,
+		searchParams,
+		sessionQuery.isError,
+	]);
 
 	return {
 		isAuthenticated: sessionQuery.data === true,

@@ -2,6 +2,7 @@
 
 frontend() {
   cd frontend
+  pnpm run lint
   pnpm run build
 }
 

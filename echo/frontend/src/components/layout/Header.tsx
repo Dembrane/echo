@@ -101,8 +101,8 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 		if (logoutMutation.isPending) return;
 
 		await runTransition({
-			message: t`See you soon`,
 			description: null,
+			message: t`See you soon`,
 		});
 
 		await logoutMutation.mutateAsync({
@@ -131,7 +131,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 					className="h-full min-h-[58px] w-full"
 				>
 					<Group gap="md">
-					<I18nLink to="/projects">
+						<I18nLink to="/projects">
 							<Group align="center">
 								<Logo hideTitle={false} />
 							</Group>

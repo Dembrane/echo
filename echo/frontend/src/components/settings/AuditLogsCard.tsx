@@ -158,20 +158,17 @@ export const AuditLogsCard = () => {
 
 	const exportMutation = useAuditLogsExport();
 
-const totalItems = data?.total ?? 0;
-const tableData = data?.items ?? [];
-const displayedRows = useMemo(() => {
-	if (tableData.length <= 1) return tableData;
-	return [...tableData].sort((a, b) => {
-		const aTime = new Date(a.timestamp).getTime();
-		const bTime = new Date(b.timestamp).getTime();
-		return sortDirection === "asc" ? aTime - bTime : bTime - aTime;
-	});
-}, [tableData, sortDirection]);
-const totalPages = Math.max(
-	1,
-	Math.ceil(totalItems / pagination.pageSize),
-);
+	const totalItems = data?.total ?? 0;
+	const tableData = data?.items ?? [];
+	const displayedRows = useMemo(() => {
+		if (tableData.length <= 1) return tableData;
+		return [...tableData].sort((a, b) => {
+			const aTime = new Date(a.timestamp).getTime();
+			const bTime = new Date(b.timestamp).getTime();
+			return sortDirection === "asc" ? aTime - bTime : bTime - aTime;
+		});
+	}, [tableData, sortDirection]);
+	const totalPages = Math.max(1, Math.ceil(totalItems / pagination.pageSize));
 
 	const columns = useMemo<ColumnDef<AuditLogEntry>[]>(
 		() => [
@@ -303,18 +300,16 @@ const totalPages = Math.max(
 		manualSorting: true,
 		onPaginationChange: (updater) => {
 			setPagination((prev) => {
-				const next =
-					typeof updater === "function" ? updater(prev) : updater;
+				const next = typeof updater === "function" ? updater(prev) : updater;
 				return next;
 			});
 		},
 		onSortingChange: (updater) => {
 			setSorting((prev) => {
-				const updated =
-					typeof updater === "function" ? updater(prev) : updater;
+				const updated = typeof updater === "function" ? updater(prev) : updater;
 				const next = updated.filter((entry) => entry.id === "timestamp");
 				if (next.length === 0) {
-					return [{ id: "timestamp", desc: true }];
+					return [{ desc: true, id: "timestamp" }];
 				}
 				return next;
 			});
@@ -388,9 +383,7 @@ const totalPages = Math.max(
 
 	const isEmpty = !isLoading && displayedRows.length === 0;
 	const displayFrom =
-		totalItems === 0
-			? 0
-			: pagination.pageIndex * pagination.pageSize + 1;
+		totalItems === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1;
 	const displayTo = Math.min(
 		totalItems,
 		(pagination.pageIndex + 1) * pagination.pageSize,
@@ -499,11 +492,11 @@ const totalPages = Math.max(
 							disabled={isMetadataLoading}
 						/>
 
-				<Switch
-					label={t`Show IP addresses`}
-					checked={showIps}
-					onChange={(event) => setShowIps(event.currentTarget.checked)}
-					labelPosition="left"
+						<Switch
+							label={t`Show IP addresses`}
+							checked={showIps}
+							onChange={(event) => setShowIps(event.currentTarget.checked)}
+							labelPosition="left"
 							size="sm"
 						/>
 					</Group>
@@ -525,43 +518,49 @@ const totalPages = Math.max(
 				>
 					<Table striped highlightOnHover>
 						<Table.Thead className="bg-gray-50 dark:bg-dark-7">
-						{table.getHeaderGroups().map((headerGroup) => (
-							<Table.Tr key={headerGroup.id}>
-								{headerGroup.headers.map((header) => {
-									const canSort = header.column.getCanSort();
-									const sortState = header.column.getIsSorted();
-									const sortIcon =
-										sortState === "desc"
-											? <IconArrowDown size={14} />
-										: sortState === "asc"
-											?
+							{table.getHeaderGroups().map((headerGroup) => (
+								<Table.Tr key={headerGroup.id}>
+									{headerGroup.headers.map((header) => {
+										const canSort = header.column.getCanSort();
+										const sortState = header.column.getIsSorted();
+										const sortIcon =
+											sortState === "desc" ? (
+												<IconArrowDown size={14} />
+											) : sortState === "asc" ? (
 												<IconArrowUp size={14} />
-											: canSort
-											?
+											) : canSort ? (
 												<IconArrowsSort size={14} className="text-gray-400" />
-											: null;
+											) : null;
 
-								return (
-									<Table.Th
-										key={header.id}
-										onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
-										className={`uppercase tracking-wide text-xs font-semibold text-gray-600 dark:text-gray-3 ${canSort ? "cursor-pointer select-none" : ""}`}
-										style={header.column.id === "item" ? { width: "1%" } : undefined}
-									>
-											{header.isPlaceholder ? null : (
-												<Group gap={6} wrap="nowrap" align="center">
-													{flexRender(
-														header.column.columnDef.header,
-														header.getContext(),
-													)}
-													{sortIcon}
-												</Group>
-											)}
-										</Table.Th>
-									);
-								})}
-							</Table.Tr>
-						))}
+										return (
+											<Table.Th
+												key={header.id}
+												onClick={
+													canSort
+														? header.column.getToggleSortingHandler()
+														: undefined
+												}
+												className={`uppercase tracking-wide text-xs font-semibold text-gray-600 dark:text-gray-3 ${canSort ? "cursor-pointer select-none" : ""}`}
+												style={
+													header.column.id === "item"
+														? { width: "1%" }
+														: undefined
+												}
+											>
+												{header.isPlaceholder ? null : (
+													<Group gap={6} wrap="nowrap" align="center">
+														{flexRender(
+															header.column.columnDef.header,
+															header.getContext(),
+														)}
+														{sortIcon}
+													</Group>
+												)}
+											</Table.Th>
+										);
+									})}
+								</Table.Tr>
+							))}
 						</Table.Thead>
 
 						<Table.Tbody>
@@ -640,35 +639,35 @@ const totalPages = Math.max(
 					</Table>
 				</ScrollArea>
 
-		<Group justify="space-between" align="center">
-			<Group gap="sm" align="center">
-				<Select
-					label={t`Rows per page`}
-					data={PAGE_SIZE_OPTIONS}
-					value={pagination.pageSize.toString()}
-					onChange={handlePageSizeChange}
-					allowDeselect={false}
-					className="w-[140px]"
-				/>
+				<Group justify="space-between" align="center">
+					<Group gap="sm" align="center">
+						<Select
+							label={t`Rows per page`}
+							data={PAGE_SIZE_OPTIONS}
+							value={pagination.pageSize.toString()}
+							onChange={handlePageSizeChange}
+							allowDeselect={false}
+							className="w-[140px]"
+						/>
 
-				<Text size="sm" c="dimmed">
-					{displayedRows.length === 0 && pagination.pageIndex === 0 ? (
-						<Trans>No results</Trans>
-					) : (
-						<Trans>
-							Showing {displayFrom}–{displayTo} of {totalItems} entries
-						</Trans>
-					)}
-				</Text>
-			</Group>
+						<Text size="sm" c="dimmed">
+							{displayedRows.length === 0 && pagination.pageIndex === 0 ? (
+								<Trans>No results</Trans>
+							) : (
+								<Trans>
+									Showing {displayFrom}–{displayTo} of {totalItems} entries
+								</Trans>
+							)}
+						</Text>
+					</Group>
 
-			<Pagination
-				total={totalPages}
-				value={pagination.pageIndex + 1}
-				onChange={(pageNumber) => table.setPageIndex(pageNumber - 1)}
-				disabled={totalPages <= 1}
-			/>
-		</Group>
+					<Pagination
+						total={totalPages}
+						value={pagination.pageIndex + 1}
+						onChange={(pageNumber) => table.setPageIndex(pageNumber - 1)}
+						disabled={totalPages <= 1}
+					/>
+				</Group>
 			</Stack>
 		</Paper>
 	);
