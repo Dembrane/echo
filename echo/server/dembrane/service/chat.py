@@ -1,7 +1,7 @@
-from typing import Any, List, Iterable, Optional
+from typing import Any, List, Iterable, Optional, ContextManager
 from logging import getLogger
 
-from dembrane.directus import DirectusClient, DirectusBadRequest, directus_client_context, directus
+from dembrane.directus import DirectusClient, DirectusBadRequest, directus, directus_client_context
 
 logger = getLogger("dembrane.service.chat")
 
@@ -22,7 +22,9 @@ class ChatService:
     def __init__(self, directus_client: Optional[DirectusClient] = None) -> None:
         self._directus_client = directus_client or directus
 
-    def _client_context(self, override_client: Optional[DirectusClient] = None):
+    def _client_context(
+        self, override_client: Optional[DirectusClient] = None
+    ) -> ContextManager[DirectusClient]:
         return directus_client_context(override_client or self._directus_client)
 
     def get_by_id_or_raise(
@@ -157,8 +159,7 @@ class ChatService:
 
     def attach_conversations(self, chat_id: str, conversation_ids: Iterable[str]) -> None:
         payload_list = [
-            {"conversation_id": conversation_id}
-            for conversation_id in conversation_ids
+            {"conversation_id": conversation_id} for conversation_id in conversation_ids
         ]
 
         if not payload_list:
@@ -240,15 +241,13 @@ class ChatService:
         used_ids = list(used_conversation_ids or [])
         if used_ids:
             payload.setdefault("used_conversations", {})["create"] = [
-                {"conversation_id": conversation_id}
-                for conversation_id in used_ids
+                {"conversation_id": conversation_id} for conversation_id in used_ids
             ]
 
         added_ids = list(added_conversation_ids or [])
         if added_ids:
             payload.setdefault("added_conversations", {})["create"] = [
-                {"conversation_id": conversation_id}
-                for conversation_id in added_ids
+                {"conversation_id": conversation_id} for conversation_id in added_ids
             ]
 
         try:

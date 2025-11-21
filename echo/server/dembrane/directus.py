@@ -657,7 +657,7 @@ class DirectusClient(DirectusClientProtocol):
         self,
         collection_name: str,
         item_id: str,
-        query: Optional[Dict[str, Any]] = None,
+        uery: Optional[Dict[str, Any]] = None,  # noqa: ARG002
         **kwargs: Any,
     ) -> Any:
         """
@@ -666,7 +666,7 @@ class DirectusClient(DirectusClientProtocol):
         return self.get(f"/items/{collection_name}/{item_id}", **kwargs)
 
     def create_item(
-        self, collection_name: str, item_data: Dict[str, Any], **kwargs: Any
+        self, collection_name: str, item_data: Dict[str, Any] | List[Dict[str, Any]], **kwargs: Any
     ) -> Dict[str, Any]:
         """
         Create a new item in a collection.
@@ -825,7 +825,11 @@ class DirectusClient(DirectusClientProtocol):
                 raise
 
     def search_query(
-        self, query: str, exclude_worlds_len: int = 2, cut_words: bool = True, **kwargs: Any
+        self,
+        query: str,
+        exclude_worlds_len: int = 2,
+        cut_words: bool = True,
+        **kwargs: Any,  # noqa: ARG002
     ) -> Dict[str, Any]:
         words: List[str]
         if cut_words:

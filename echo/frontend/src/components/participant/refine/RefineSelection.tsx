@@ -54,13 +54,12 @@ export const RefineSelection = () => {
 					}}
 				>
 					<Stack
-						gap="xs"
+						gap="lg"
 						align="center"
-						justify="space-around"
-						className="h-full py-6"
+						className="h-full px-6 py-6 justify-center"
 					>
 						<Group gap="sm" align="center">
-							<IconMessageFilled size={24} />
+							<IconMessageFilled size={32} />
 							<Title order={2} fw={600}>
 								<Trans id="participant.refine.make.concrete">
 									Make it concrete
@@ -108,13 +107,12 @@ export const RefineSelection = () => {
 					}}
 				>
 					<Stack
-						gap="xs"
+						gap="lg"
 						align="center"
-						justify="space-around"
-						className="h-full py-6"
+						className="h-full px-6 py-6 justify-center"
 					>
 						<Group gap="sm" align="center">
-							<IconArrowDownToArc size={24} />
+							<IconArrowDownToArc size={32} />
 							<Title order={2} fw={600}>
 								<Trans id="participant.refine.go.deeper">Go deeper</Trans>
 							</Title>

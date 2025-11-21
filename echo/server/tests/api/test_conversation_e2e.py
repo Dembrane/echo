@@ -59,7 +59,7 @@ def patch_thread_pool(monkeypatch):
 
 
 @pytest.fixture
-async def api_client(monkeypatch):
+async def api_client(monkeypatch):  # pyright: ignore[reportUnusedParameter]  # noqa: ARG001
     async def _override_session():
         return _make_test_session()
 

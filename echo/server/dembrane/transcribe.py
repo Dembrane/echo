@@ -38,6 +38,8 @@ LITELLM_TRANSCRIPTION_API_KEY = transcription_cfg.litellm_api_key
 LITELLM_TRANSCRIPTION_API_BASE = transcription_cfg.litellm_api_base
 LITELLM_TRANSCRIPTION_API_VERSION = transcription_cfg.litellm_api_version
 
+ASSEMBLYAI_MAX_HOTWORDS = 40
+
 
 class TranscriptionError(Exception):
     pass
@@ -121,7 +123,9 @@ def transcribe_audio_assemblyai(
             data["language_detection_options"]["fallback_language"] = language
 
     if hotwords:
-        data["keyterms_prompt"] = hotwords
+        # AssemblyAI supports up to 1000 hotwords
+        # We slice to ensure we don't exceed the limit
+        data["keyterms_prompt"] = hotwords[:ASSEMBLYAI_MAX_HOTWORDS]
 
     response = requests.post(f"{ASSEMBLYAI_BASE_URL}/v2/transcript", headers=headers, json=data)
 

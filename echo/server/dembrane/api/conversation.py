@@ -14,7 +14,7 @@ from dembrane.s3 import get_signed_url
 from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.utils import CacheWithExpiration, generate_uuid, get_utc_timestamp
 from dembrane.service import conversation_service, build_conversation_service
-from dembrane.directus import DirectusClient, directus
+from dembrane.directus import directus
 from dembrane.audio_utils import (
     get_duration_from_s3,
     sanitize_filename_component,
@@ -197,7 +197,7 @@ async def get_conversation_content(
     return_url: bool = False,
     signed: bool = True,
 ) -> StreamingResponse | RedirectResponse | str:
-    svc = conversation_service_for_auth(auth)
+    # svc = conversation_service_for_auth(auth)
     active_client = auth.client or directus
 
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
@@ -327,7 +327,7 @@ async def get_conversation_chunk_content(
     return_url: bool = False,
     signed: bool = True,
 ) -> StreamingResponse | RedirectResponse | str:
-    svc = conversation_service_for_auth(auth)
+    # svc = conversation_service_for_auth(auth)
     active_client = auth.client or directus
 
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
@@ -365,7 +365,7 @@ async def get_conversation_chunk_content(
 async def get_conversation_transcript(
     conversation_id: str, auth: DependencyDirectusSession, include_project_data: bool = False
 ) -> str:
-    svc = conversation_service_for_auth(auth)
+    # svc = conversation_service_for_auth(auth)
     active_client = auth.client or directus
 
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
@@ -409,7 +409,7 @@ async def get_conversation_token_count(
     conversation_id: str,
     auth: DependencyDirectusSession,
 ) -> int:
-    svc = conversation_service_for_auth(auth)
+    # svc = conversation_service_for_auth(auth)
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
     # Try to get the token count from the cache

@@ -1,8 +1,8 @@
 import logging
 from typing import Any, Dict
 
-from dembrane.directus import directus
 from dembrane.utils import get_utc_timestamp
+from dembrane.directus import directus
 
 logger = logging.getLogger("test_common")
 

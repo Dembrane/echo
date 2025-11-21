@@ -298,7 +298,7 @@ export const VerifyArtefact = () => {
 	}
 
 	return (
-		<Stack gap="lg" className="h-full">
+		<Stack gap="lg" className="h-full mt-10">
 			<ScrollArea className="flex-grow">
 				<Paper
 					withBorder
@@ -325,7 +325,7 @@ export const VerifyArtefact = () => {
 							</Stack>
 						</Stack>
 					) : (
-						<Stack gap="md">
+						<Stack gap="md" className="py-4">
 							<Group justify="space-between" align="center" wrap="nowrap">
 								<Title order={4} className="font-semibold">
 									<Trans id="participant.verify.artefact.title">
@@ -356,7 +356,7 @@ export const VerifyArtefact = () => {
 								/>
 							) : (
 								<div>
-									<Markdown className="prose-sm" content={artefactContent} />
+									<Markdown className="prose-md" content={artefactContent} />
 								</div>
 							)}
 						</Stack>

@@ -13,8 +13,8 @@ from dembrane.utils import generate_uuid
 from dembrane.prompts import render_prompt
 from dembrane.service import (
     chat_service,
-    conversation_service,
     build_chat_service,
+    conversation_service,
     build_conversation_service,
 )
 from dembrane.settings import get_settings
@@ -25,10 +25,11 @@ from dembrane.chat_utils import (
     auto_select_conversations,
     create_system_messages_for_chat,
 )
-from dembrane.service.chat import ChatServiceException, ChatNotFoundException
+from dembrane.service.chat import ChatService, ChatServiceException, ChatNotFoundException
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.conversation import get_conversation_token_count
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
+from dembrane.service.conversation import ConversationService
 
 ChatRouter = APIRouter(tags=["chat"])
 
@@ -38,13 +39,13 @@ settings = get_settings()
 ENABLE_CHAT_AUTO_SELECT = settings.feature_flags.enable_chat_auto_select
 
 
-def _chat_service_for_auth(auth_session: DirectusSession):
+def _chat_service_for_auth(auth_session: DirectusSession) -> ChatService:
     if auth_session.client is None:
         return chat_service
     return build_chat_service(auth_session.client)
 
 
-def _conversation_service_for_auth(auth_session: DirectusSession):
+def _conversation_service_for_auth(auth_session: DirectusSession) -> ConversationService:
     if auth_session.client is None:
         return conversation_service
     return build_conversation_service(auth_session.client)
@@ -167,10 +168,7 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
     )
 
     chat_svc = _chat_service_for_auth(auth)
-    conversation_svc = _conversation_service_for_auth(auth)
-
-    chat_svc = _chat_service_for_auth(auth)
-    conversation_svc = _conversation_service_for_auth(auth)
+    # conversation_svc = _conversation_service_for_auth(auth)
 
     messages = await run_in_thread_pool(
         chat_svc.list_messages,
@@ -479,6 +477,9 @@ async def post_chat(
         auth,
         include_used_conversations=True,
     )
+
+    chat_svc = _chat_service_for_auth(auth)
+    conversation_svc = _conversation_service_for_auth(auth)
 
     project_info = chat.get("project_id")
     project_id: Optional[str]

@@ -11,6 +11,16 @@ No conversations added by the user yet. Gently nudge them to add some by selecti
    <transcript>
    {{ conversation.transcript }}
    </transcript>
+   {% if conversation.artifacts %}
+   <artifacts>
+      {% for artifact in conversation.artifacts %}
+      <artifact>
+         <key>{{ artifact.key }}</key>
+         <content>{{ artifact.content }}</content>
+      </artifact>
+      {% endfor %}
+   </artifacts>
+   {% endif %}
 </conversation>
    {% endfor %}
 {% endif %}

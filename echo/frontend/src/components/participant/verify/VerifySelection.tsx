@@ -154,12 +154,12 @@ export const VerifySelection = () => {
 	}
 
 	return (
-		<Stack gap="lg" className="h-full">
+		<Stack gap="lg" className="h-full pt-10">
 			{/* Main content */}
 			<Stack gap="xl" className="flex-grow">
-				<Title order={2} className="text-2xl font-semibold">
+				<Title order={2} className="font-semibold">
 					<Trans id="participant.verify.selection.title">
-						What do you want to verify?
+						What do you want to make concrete?
 					</Trans>
 				</Title>
 

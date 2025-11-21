@@ -347,9 +347,6 @@ class ConversationService:
         if project.get("is_conversation_allowed", False) is False:
             raise ConversationNotOpenForParticipationException()
 
-        if conversation.get("is_finished") is True:
-            raise ConversationNotOpenForParticipationException()
-
         chunk_id = generate_uuid()
 
         needs_upload = file_obj is not None and file_url is None

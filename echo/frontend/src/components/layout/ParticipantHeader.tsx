@@ -48,6 +48,7 @@ export const ParticipantHeader = () => {
 				{showBackButton && (
 					<Box className="absolute left-4 top-1/2 -translate-y-1/2">
 						<Button
+							size="md"
 							variant="light"
 							leftSection={<IconArrowLeft size={16} />}
 							className="rounded-full"

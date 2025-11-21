@@ -2,7 +2,7 @@
 from typing import Any, List, Optional
 from logging import getLogger
 
-from dembrane.directus import DirectusClient, DirectusBadRequest, directus_client_context, directus
+from dembrane.directus import DirectusClient, DirectusBadRequest, directus, directus_client_context
 
 PROJECT_ALLOWED_LANGUAGES = ["en", "nl", "de", "fr", "es"]
 
@@ -133,6 +133,9 @@ class ProjectService:
         project_id: str,
         tag_str_list: List[str],
     ) -> List[dict]:
+        if len(tag_str_list) == 0:
+            raise ValueError("tag_str_list cannot be empty")
+
         with directus_client_context(self.directus_client) as client:
             project = self.get_by_id_or_raise(project_id)
 
