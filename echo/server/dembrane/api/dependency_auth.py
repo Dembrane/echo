@@ -18,7 +18,7 @@ settings = get_settings()
 DIRECTUS_SECRET = settings.directus.secret
 DIRECTUS_SESSION_COOKIE_NAME = settings.directus.session_cookie_name
 
-logger.debug("DIRECTUS_SECRET: %s", DIRECTUS_SECRET)
+# logger.debug("DIRECTUS_SECRET: %s", DIRECTUS_SECRET)  # Removed for security: do not log secrets
 logger.debug("DIRECTUS_SESSION_COOKIE_NAME: %s", DIRECTUS_SESSION_COOKIE_NAME)
 
 
