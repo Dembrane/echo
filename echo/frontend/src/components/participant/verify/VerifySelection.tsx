@@ -106,7 +106,8 @@ export const VerifySelection = () => {
 			setGeneratedArtefactId(artefact.id);
 		} catch (error) {
 			console.error("error generating verification artefact", error);
-			toast.error(t`Failed to generate Hidden gems. Please try again.`);
+			const label = getOptionLabel(topicKey);
+			toast.error(t`Failed to generate ${label}. Please try again.`);
 			setSearchParams({});
 		}
 	};
