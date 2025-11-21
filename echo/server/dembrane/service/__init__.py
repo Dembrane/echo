@@ -26,7 +26,6 @@ from .chat import (
     ChatMessageNotFoundException,
 )
 from .file import FileServiceException, get_file_service
-from .events import EventService
 from .project import ProjectService, ProjectServiceException, ProjectNotFoundException
 from .conversation import (
     ConversationService,
@@ -37,14 +36,13 @@ from .conversation import (
 )
 
 file_service = get_file_service()
-event_service = EventService()
 
 
-def build_project_service(directus_client=None) -> ProjectService:
+def build_project_service(directus_client: Optional[DirectusClient] = None) -> ProjectService:
     return ProjectService(directus_client=directus_client or directus)
 
 
-def build_chat_service(directus_client=None) -> ChatService:
+def build_chat_service(directus_client: Optional[DirectusClient] = None) -> ChatService:
     return ChatService(directus_client=directus_client or directus)
 
 
@@ -55,7 +53,6 @@ def build_conversation_service(
     return ConversationService(
         file_service=file_service,
         project_service=build_project_service(client),
-        event_service=event_service,
         directus_client=client,
     )
 

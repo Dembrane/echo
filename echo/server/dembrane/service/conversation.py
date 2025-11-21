@@ -1,5 +1,5 @@
 # conversation.py
-from typing import TYPE_CHECKING, Any, List, Iterable, Optional
+from typing import TYPE_CHECKING, Any, List, Iterable, Optional, ContextManager
 from logging import getLogger
 from datetime import datetime
 from urllib.parse import urlparse
@@ -11,16 +11,14 @@ from dembrane.directus import (
     DirectusClient,
     DirectusBadRequest,
     DirectusGenericException,
-    directus_client_context,
     directus,
+    directus_client_context,
 )
-from dembrane.service.events import ChunkCreatedEvent
 
 logger = getLogger("dembrane.service.conversation")
 
 if TYPE_CHECKING:
     from dembrane.service.file import FileService
-    from dembrane.service.events import EventService
     from dembrane.service.project import ProjectService
 
 # allows for None to be a sentinel value
@@ -54,15 +52,15 @@ class ConversationService:
         self,
         file_service: Optional["FileService"] = None,
         project_service: Optional["ProjectService"] = None,
-        event_service: Optional["EventService"] = None,
         directus_client: Optional[DirectusClient] = None,
     ):
         self._file_service = file_service
         self._project_service = project_service
-        self._event_service = event_service
         self._directus_client = directus_client or directus
 
-    def _client_context(self, override_client: Optional[DirectusClient] = None):
+    def _client_context(
+        self, override_client: Optional[DirectusClient] = None
+    ) -> ContextManager[DirectusClient]:
         return directus_client_context(override_client or self._directus_client)
 
     @property
@@ -80,14 +78,6 @@ class ConversationService:
 
             self._project_service = ProjectService(directus_client=self._directus_client)
         return self._project_service
-
-    @property
-    def event_service(self) -> "EventService":
-        if self._event_service is None:
-            from dembrane.service.events import EventService
-
-            self._event_service = EventService()
-        return self._event_service
 
     def get_by_id_or_raise(
         self,
@@ -400,12 +390,6 @@ class ConversationService:
                     "transcript": transcript,
                 },
             )["data"]
-
-        event = ChunkCreatedEvent(chunk_id=chunk_id, conversation_id=conversation["id"])
-        try:
-            self.event_service.publish(event)
-        except Exception:
-            logger.exception("Failed to publish ChunkCreatedEvent for %s", chunk_id)
 
         # Only trigger background audio processing if there's a file to process
         if has_file:
