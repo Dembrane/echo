@@ -71,3 +71,8 @@ Task order:
 
 Anti-summarization:
 - Do not summarize or paraphrase; keep meaning-preserving words from audio and only add missing audible content.
+
+{% if custom_guidance_prompt %}
+User defined rules (follow these if applicable):
+{{ custom_guidance_prompt }}
+{% endif %}

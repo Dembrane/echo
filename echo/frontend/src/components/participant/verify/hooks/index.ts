@@ -1,11 +1,13 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	generateVerificationArtefact,
+	getVerificationArtefactById,
 	getVerificationArtefacts,
 	getVerificationTopics,
 	type UpdateVerificationArtefactPayload,
 	updateVerificationArtefact,
 	type VerificationArtifact,
+	type VerificationArtifactDetail,
 } from "@/lib/api";
 
 export const useVerificationTopics = (projectId: string | undefined) => {
@@ -18,24 +20,40 @@ export const useVerificationTopics = (projectId: string | undefined) => {
 };
 
 // Hook for generating verification artefacts
-export const useGenerateVerificationArtefact = (
-	conversationId: string | undefined,
-	topicKey: string | undefined,
-	enabled = true,
-) => {
-	return useQuery({
-		enabled: !!conversationId && !!topicKey && enabled,
-		queryFn: async (): Promise<VerificationArtifact | null> => {
+type GenerateArtefactVariables = {
+	conversationId: string;
+	topicKey: string;
+};
+
+export const useGenerateVerificationArtefactMutation = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({
+			conversationId,
+			topicKey,
+		}: GenerateArtefactVariables): Promise<VerificationArtifact> => {
 			const generatedArtefacts = await generateVerificationArtefact({
-				conversationId: conversationId ?? "",
-				topicList: [topicKey ?? ""],
+				conversationId,
+				topicList: [topicKey],
 			});
 
-			return generatedArtefacts[0] ?? null;
+			const artefact = generatedArtefacts[0];
+			if (!artefact) {
+				throw new Error("No artefact returned from generate endpoint.");
+			}
+
+			queryClient.setQueryData(
+				["verify", "artifact_by_topic", conversationId, topicKey],
+				artefact,
+			);
+			queryClient.setQueryData(
+				["verify", "artifact_by_id", artefact.id],
+				artefact,
+			);
+
+			return artefact;
 		},
-		queryKey: ["verify", "artifact_by_topic", conversationId, topicKey],
-		refetchOnWindowFocus: false,
-		retry: 1,
 	});
 };
 
@@ -66,6 +84,44 @@ export const useUpdateVerificationArtefact = () => {
 			};
 			return updateVerificationArtefact(payload);
 		},
+	});
+};
+
+export const useVerificationArtefactById = (
+	conversationId: string | undefined,
+	artifactId: string | null | undefined,
+) => {
+	const queryClient = useQueryClient();
+
+	return useQuery({
+		enabled: !!conversationId && !!artifactId,
+		queryFn: async (): Promise<VerificationArtifactDetail | null> => {
+			if (!conversationId || !artifactId) {
+				return null;
+			}
+
+			const cachedArtifact =
+				queryClient.getQueryData<VerificationArtifactDetail>([
+					"verify",
+					"artifact_by_id",
+					artifactId,
+				]);
+			if (cachedArtifact) {
+				return cachedArtifact;
+			}
+
+			const artefact = await getVerificationArtefactById(artifactId);
+
+			queryClient.setQueryData(
+				["verify", "artifact_by_id", artifactId],
+				artefact,
+			);
+
+			return artefact;
+		},
+		queryKey: ["verify", "artifact_by_id", artifactId],
+		refetchOnWindowFocus: false,
+		retry: 1,
 	});
 };
 

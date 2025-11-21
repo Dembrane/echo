@@ -13,7 +13,7 @@ from litellm.exceptions import ContentPolicyViolationError
 from dembrane.s3 import get_signed_url
 from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.utils import CacheWithExpiration, generate_uuid, get_utc_timestamp
-from dembrane.service import conversation_service
+from dembrane.service import conversation_service, build_conversation_service
 from dembrane.directus import directus
 from dembrane.audio_utils import (
     get_duration_from_s3,
@@ -27,19 +27,26 @@ from dembrane.api.exceptions import (
     NoContentFoundException,
     ConversationNotFoundException,
 )
-from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
+from dembrane.service.conversation import ConversationService
 
 logger = getLogger("api.conversation")
 ConversationRouter = APIRouter(tags=["conversation"])
+
+
+def conversation_service_for_auth(auth: DirectusSession) -> ConversationService:
+    return build_conversation_service(auth.client)
 
 
 async def get_conversation(
     conversation_id: str,
     load_chunks: bool = True,
     with_tags: bool = True,
+    service: Optional[ConversationService] = None,
 ) -> dict:
+    svc = service or conversation_service
     conversation = await run_in_thread_pool(
-        conversation_service.get_by_id_or_raise,
+        svc.get_by_id_or_raise,
         conversation_id,
         with_tags,
         load_chunks,
@@ -50,9 +57,11 @@ async def get_conversation(
 
 async def get_conversation_chunks(
     conversation_id: str,
+    service: Optional[ConversationService] = None,
 ) -> List[dict]:
-    await get_conversation(conversation_id, load_chunks=False)
-    chunks = await run_in_thread_pool(conversation_service.list_chunks, conversation_id)
+    svc = service or conversation_service
+    await get_conversation(conversation_id, load_chunks=False, service=svc)
+    chunks = await run_in_thread_pool(svc.list_chunks, conversation_id)
 
     return chunks
 
@@ -124,10 +133,13 @@ async def generate_health_events(
 
 
 async def raise_if_conversation_not_found_or_not_authorized(
-    conversation_id: str, auth: DependencyDirectusSession
+    conversation_id: str,
+    auth: DependencyDirectusSession,
 ) -> None:
+    active_client = auth.client or directus
+
     conversation = await run_in_thread_pool(
-        directus.get_items,
+        active_client.get_items,
         "conversation",
         {
             "query": {
@@ -169,11 +181,10 @@ async def get_conversation_counts(
     conversation_id: str,
     auth: DependencyDirectusSession,
 ) -> dict:
+    svc = conversation_service_for_auth(auth)
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
-    from dembrane.service import conversation_service
-
-    counts = await run_in_thread_pool(conversation_service.get_chunk_counts, conversation_id)
+    counts = await run_in_thread_pool(svc.get_chunk_counts, conversation_id)
 
     return counts
 
@@ -186,6 +197,9 @@ async def get_conversation_content(
     return_url: bool = False,
     signed: bool = True,
 ) -> StreamingResponse | RedirectResponse | str:
+    # svc = conversation_service_for_auth(auth)
+    active_client = auth.client or directus
+
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
     logger.debug(
@@ -194,7 +208,7 @@ async def get_conversation_content(
 
     # First, get all conversation chunks with more information for debugging
     chunks = await run_in_thread_pool(
-        directus.get_items,
+        active_client.get_items,
         "conversation_chunk",
         {
             "query": {
@@ -213,7 +227,7 @@ async def get_conversation_content(
     logger.debug(f"Found {len(chunks)} total chunks for conversation {conversation_id}")
 
     conversations = await run_in_thread_pool(
-        directus.get_items,
+        active_client.get_items,
         "conversation",
         {
             "query": {
@@ -284,7 +298,7 @@ async def get_conversation_content(
             logger.error(f"Error getting duration from s3: {str(e)}")
 
         await run_in_thread_pool(
-            directus.update_item,
+            active_client.update_item,
             "conversation",
             conversation_id,
             {
@@ -313,10 +327,13 @@ async def get_conversation_chunk_content(
     return_url: bool = False,
     signed: bool = True,
 ) -> StreamingResponse | RedirectResponse | str:
+    # svc = conversation_service_for_auth(auth)
+    active_client = auth.client or directus
+
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
     chunks = await run_in_thread_pool(
-        directus.get_items,
+        active_client.get_items,
         "conversation_chunk",
         {
             "query": {
@@ -348,6 +365,9 @@ async def get_conversation_chunk_content(
 async def get_conversation_transcript(
     conversation_id: str, auth: DependencyDirectusSession, include_project_data: bool = False
 ) -> str:
+    # svc = conversation_service_for_auth(auth)
+    active_client = auth.client or directus
+
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
     if include_project_data:
@@ -355,7 +375,7 @@ async def get_conversation_transcript(
         logger.warning("Not implemented yet")
 
     conversation_chunks = await run_in_thread_pool(
-        directus.get_items,
+        active_client.get_items,
         "conversation_chunk",
         {
             "query": {
@@ -389,6 +409,7 @@ async def get_conversation_token_count(
     conversation_id: str,
     auth: DependencyDirectusSession,
 ) -> int:
+    # svc = conversation_service_for_auth(auth)
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
     # Try to get the token count from the cache
@@ -449,10 +470,12 @@ async def summarize_conversation(
     conversation_id: str,
     auth: DependencyDirectusSession,
 ) -> dict:
+    active_client = auth.client or directus
+
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
     conversation_data = await run_in_thread_pool(
-        directus.get_items,
+        active_client.get_items,
         "conversation",
         {
             "query": {
@@ -486,7 +509,7 @@ async def summarize_conversation(
         )
 
         await run_in_thread_pool(
-            directus.update_item,
+            active_client.update_item,
             "conversation",
             conversation_id,
             {
@@ -529,12 +552,14 @@ async def retranscribe_conversation(
         Dictionary with status info and the new conversation ID
     """
     try:
+        active_client = auth.client or directus
+
         # Check if the user owns the conversation
         await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
         # Get the original conversation details
         conversation = await run_in_thread_pool(
-            directus.get_items,
+            active_client.get_items,
             "conversation",
             {
                 "query": {
@@ -578,7 +603,7 @@ async def retranscribe_conversation(
         new_conversation_id = generate_uuid()
 
         await run_in_thread_pool(
-            directus.create_item,
+            active_client.create_item,
             "conversation",
             item_data={
                 "id": new_conversation_id,
@@ -604,7 +629,7 @@ async def retranscribe_conversation(
             logger.info(f"Creating links from {conversation_id} to {new_conversation_id}")
             link_id = (
                 await run_in_thread_pool(
-                    directus.create_item,
+                    active_client.create_item,
                     "conversation_link",
                     item_data={
                         "source_conversation_id": conversation_id,
@@ -624,7 +649,7 @@ async def retranscribe_conversation(
 
             (
                 await run_in_thread_pool(
-                    directus.create_item,
+                    active_client.create_item,
                     "conversation_chunk",
                     item_data={
                         "id": chunk_id,
@@ -649,7 +674,7 @@ async def retranscribe_conversation(
             }
         except Exception as e:
             # Clean up the partially created conversation
-            await run_in_thread_pool(directus.delete_item, "conversation", new_conversation_id)
+            await run_in_thread_pool(active_client.delete_item, "conversation", new_conversation_id)
             logger.error(f"Error during retranscription: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Failed to process audio: {str(e)}") from e
 
@@ -690,7 +715,8 @@ async def delete_conversation(
     """
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
     try:
-        await run_in_thread_pool(directus.delete_item, "conversation", conversation_id)
+        conversation_service = conversation_service_for_auth(auth)
+        await run_in_thread_pool(conversation_service.delete, conversation_id)
         return {"status": "success", "message": "Conversation deleted successfully"}
     except Exception as e:
         logger.exception(f"Error deleting conversation {conversation_id}: {e}")

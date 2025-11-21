@@ -1,6 +1,7 @@
 import logging
 from typing import Any, Dict
 
+from dembrane.utils import get_utc_timestamp
 from dembrane.directus import directus
 
 logger = logging.getLogger("test_common")
@@ -46,15 +47,16 @@ def create_conversation_chunk(
     logger.debug(
         f"Creating conversation chunk with data: {additional_data}, transcript: {transcript}, conversation_id: {conversation_id}"
     )
-    return directus.create_item(
-        "conversation_chunk",
-        {
-            "transcript": transcript,
-            "participant_name": "test_participant",
-            "conversation_id": conversation_id,
-            **(additional_data or {}),
-        },
-    )["data"]
+    payload: Dict[str, Any] = {
+        "transcript": transcript,
+        "participant_name": "test_participant",
+        "conversation_id": conversation_id,
+        "timestamp": get_utc_timestamp().isoformat(),
+    }
+    if additional_data:
+        payload.update(additional_data)
+
+    return directus.create_item("conversation_chunk", payload)["data"]
 
 
 def delete_conversation_chunk(conversation_chunk_id: str):

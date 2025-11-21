@@ -105,6 +105,35 @@ For other language files (de-DE, es-ES, fr-FR, nl-NL), you should either:
 
 Note: The first empty `msgstr` in each `.po` file is the header and should remain empty.
 
+### Tips for Filling `msgstr` Values
+
+- Use `rg 'msgstr ""' frontend/src/locales/*.po` to quickly spot empty entries, then open the surrounding context to confirm the string is truly empty (multi-line translations look like `msgstr ""` followed by quoted lines, so double-check before editing).
+- When a locale entry only shows an identifier (e.g., `participant.verify.selection.title`), copy the UX copy from `frontend/src/locales/en-US.po` to understand the intended wording before translating.
+- Keep placeholders exactly as they appear in English (`{variable}`, `<0>`, `#`, etc.) to avoid runtime errors.
+- When many strings are missing, you can script the audit with `polib`:
+
+```bash
+python3 -m pip install polib  # one-time
+# run an inline snippet (example below) to list missing strings
+```
+
+Example inline snippet:
+
+```bash
+python3 - <<'PY'
+import polib, glob
+for path in glob.glob("frontend/src/locales/*.po"):
+    if path.endswith("en-US.po"):
+        continue
+    po = polib.pofile(path)
+    missing = [e.msgid for e in po if not e.obsolete and not e.msgstr]
+    if missing:
+        print(path, len(missing))
+PY
+```
+
+This ensures every non-English catalog stays in sync with the English source before compiling.
+
 ### Step 3: Compile Messages
 
 Run the following command to compile the messages:

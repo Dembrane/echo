@@ -21,6 +21,7 @@ import { useSearchParams } from "react-router";
 import { useLoginMutation } from "@/components/auth/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
+import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
 import { useCreateProjectMutation } from "@/components/project/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
@@ -69,6 +70,7 @@ export const LoginRoute = () => {
 
 	const navigate = useI18nNavigate();
 	const createProjectMutation = useCreateProjectMutation();
+	const { runTransition } = useTransitionCurtain();
 
 	const [error, setError] = useState("");
 	const [otpRequired, setOtpRequired] = useState(false);
@@ -104,22 +106,26 @@ export const LoginRoute = () => {
 			setValue("otp", "");
 			setOtpValue("");
 
-			// Auto-create first project for new users
-			if (searchParams.get("new") === "true") {
+			const isNewUser = searchParams.get("new") === "true";
+			const next = searchParams.get("next");
+			const transitionPromise = runTransition({
+				message: isNewUser ? t`Setting up your first project` : t`Welcome back`,
+			});
+
+			if (isNewUser) {
 				toast(t`Setting up your first project`);
 				const project = await createProjectMutation.mutateAsync({
 					name: t`New Project`,
 				});
-				navigate(`/projects/${project.id}/overview`);
+				await transitionPromise;
+				navigate(`/projects/${project.id}`);
 				return;
 			}
 
-			const next = searchParams.get("next");
+			await transitionPromise;
 			if (!!next && next !== "/login") {
-				// window.location.href = next;
 				navigate(next);
 			} else {
-				// window.location.href = "/projects";
 				navigate("/projects");
 			}
 		} catch (error) {

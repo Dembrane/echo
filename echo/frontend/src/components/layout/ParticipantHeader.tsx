@@ -3,7 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Box, Button, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconArrowLeft, IconSettings } from "@tabler/icons-react";
-import { useLocation, useParams } from "react-router";
+import { useLocation, useParams, useSearchParams } from "react-router";
 import useSessionStorageState from "use-session-storage-state";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { Logo } from "../common/Logo";
@@ -17,10 +17,13 @@ export const ParticipantHeader = () => {
 	const { projectId, conversationId } = useParams();
 	const navigate = useI18nNavigate();
 	const [opened, { open, close }] = useDisclosure(false);
+	const [searchParams] = useSearchParams();
 
+	const showInstructions = searchParams.get("instructions") === "true";
 	const showBackButton =
 		(pathname.includes("/verify") || pathname.includes("/refine")) &&
-		!pathname.includes("/verify/approve");
+		!pathname.includes("/verify/approve") &&
+		!showInstructions;
 	const hideSettingsButton =
 		pathname.includes("start") || pathname.includes("finish");
 
@@ -45,6 +48,7 @@ export const ParticipantHeader = () => {
 				{showBackButton && (
 					<Box className="absolute left-4 top-1/2 -translate-y-1/2">
 						<Button
+							size="md"
 							variant="light"
 							leftSection={<IconArrowLeft size={16} />}
 							className="rounded-full"

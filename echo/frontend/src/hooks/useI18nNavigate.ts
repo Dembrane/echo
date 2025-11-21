@@ -20,11 +20,29 @@ export function useI18nNavigate() {
 			return;
 		}
 
-		const isString = to.toString();
+		const targetPath =
+			typeof to === "string"
+				? to
+				: typeof to === "object" && to !== null && "pathname" in to
+					? (to.pathname as string | undefined)
+					: undefined;
+
+		const isRelativePath = (value?: string) =>
+			!!value && (value.startsWith("../") || value.startsWith("./"));
+
+		if (
+			isRelativePath(targetPath) ||
+			targetPath === ".." ||
+			targetPath === "."
+		) {
+			navigate(to, options);
+			return;
+		}
 
 		// Check if 'to' starts with any supported language prefix
+		const pathToCheck = targetPath ?? to.toString();
 		const hasLanguagePrefix = SUPPORTED_LANGUAGES.some((lang) =>
-			isString.startsWith(`/${lang}`),
+			pathToCheck.startsWith(`/${lang}`),
 		);
 
 		if (hasLanguagePrefix) {
@@ -32,7 +50,15 @@ export function useI18nNavigate() {
 		} else {
 			// Add the language prefix if it's not already present
 			const languagePrefix = finalLanguage ? `/${finalLanguage}` : "";
-			navigate(`${languagePrefix}${to}`, options);
+			if (typeof to === "string") {
+				navigate(`${languagePrefix}${to}`, options);
+			} else {
+				const nextTo = {
+					...to,
+					pathname: `${languagePrefix}${to.pathname ?? ""}`,
+				};
+				navigate(nextTo, options);
+			}
 		}
 	};
 }

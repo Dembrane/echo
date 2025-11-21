@@ -6,6 +6,7 @@ import {
 	Button,
 	Group,
 	LoadingOverlay,
+	Modal,
 	Stack,
 	Text,
 } from "@mantine/core";
@@ -40,9 +41,11 @@ import {
 } from "./hooks";
 import useChunkedAudioRecorder from "./hooks/useChunkedAudioRecorder";
 import { PermissionErrorModal } from "./PermissionErrorModal";
+import { useRefineSelectionCooldown } from "./refine/hooks/useRefineSelectionCooldown";
 import { StopRecordingConfirmationModal } from "./StopRecordingConfirmationModal";
 
 const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
+const REFINE_BUTTON_THRESHOLD_SECONDS = 60;
 
 export const ParticipantConversationAudio = () => {
 	const { projectId, conversationId } = useParams();
@@ -87,9 +90,14 @@ export const ParticipantConversationAudio = () => {
 	const [isFinishing, _setIsFinishing] = useState(false);
 	const [isStopping, setIsStopping] = useState(false);
 	const [opened, { open, close }] = useDisclosure(false);
+	const [
+		refineInfoModalOpened,
+		{ open: openRefineInfoModal, close: closeRefineInfoModal },
+	] = useDisclosure(false);
 	// Navigation and language
 	const navigate = useI18nNavigate();
 	const newConversationLink = useProjectSharingLink(projectQuery.data);
+	const cooldown = useRefineSelectionCooldown(conversationId);
 
 	const audioRecorder = useChunkedAudioRecorder({ deviceId, onChunk });
 	useWakeLock({ obtainWakeLockOnMount: true });
@@ -157,6 +165,16 @@ export const ParticipantConversationAudio = () => {
 		stopRecording,
 	]);
 
+	// Auto-close refine info modal when threshold is reached
+	useEffect(() => {
+		if (
+			refineInfoModalOpened &&
+			recordingTime >= REFINE_BUTTON_THRESHOLD_SECONDS
+		) {
+			closeRefineInfoModal();
+		}
+	}, [refineInfoModalOpened, recordingTime, closeRefineInfoModal]);
+
 	// Handlers
 	const handleStopRecording = () => {
 		if (isRecording) {
@@ -185,7 +203,26 @@ export const ParticipantConversationAudio = () => {
 		navigate(textModeUrl);
 	};
 
+	const showVerify = projectQuery.data?.is_verify_enabled;
+	const showEcho = projectQuery.data?.is_get_reply_enabled;
+
 	const handleRefineClick = () => {
+		if (recordingTime < REFINE_BUTTON_THRESHOLD_SECONDS) {
+			openRefineInfoModal();
+			return;
+		}
+
+		if (showVerify && !showEcho) {
+			navigate(`/${projectId}/conversation/${conversationId}/verify`);
+			return;
+		}
+
+		if (showEcho && !showVerify) {
+			cooldown.startEchoCooldown();
+			navigate(`/${projectId}/conversation/${conversationId}?echo=1`);
+			return;
+		}
+
 		navigate(`/${projectId}/conversation/${conversationId}/refine`);
 	};
 
@@ -207,6 +244,82 @@ export const ParticipantConversationAudio = () => {
 		);
 	}
 
+	const refineProgress = Math.min(
+		(recordingTime / REFINE_BUTTON_THRESHOLD_SECONDS) * 100,
+		100,
+	);
+
+	const getRefineInfoText = () => {
+		if (showVerify && showEcho) {
+			return t`Take some time to create an outcome that makes your contribution concrete or get an immediate reply from Dembrane to help you deepen the conversation.`;
+		}
+		if (showVerify) {
+			return t`Take some time to create an outcome that makes your contribution concrete.`;
+		}
+		if (showEcho) {
+			return t`Get an immediate reply from Dembrane to help you deepen the conversation.`;
+		}
+		return "";
+	};
+
+	const getRefineModalTitle = () => {
+		if (showVerify && showEcho) {
+			return (
+				<Trans id="participant.modal.refine.info.title.generic">
+					"Refine" available soon
+				</Trans>
+			);
+		}
+		if (showVerify) {
+			return (
+				<Trans id="participant.modal.refine.info.title.verify">
+					"Make it concrete" available soon
+				</Trans>
+			);
+		}
+		if (showEcho) {
+			return (
+				<Trans id="participant.modal.refine.info.title.echo">
+					"Go deeper" available soon
+				</Trans>
+			);
+		}
+		return (
+			<Trans id="participant.modal.refine.info.title">
+				Feature available soon
+			</Trans>
+		);
+	};
+
+	const getRefineButtonText = () => {
+		if (showVerify && showEcho) {
+			return <Trans id="participant.button.refine">Refine</Trans>;
+		}
+		if (showVerify) {
+			return (
+				<Trans id="participant.button.make.concrete">Make it concrete</Trans>
+			);
+		}
+		if (showEcho) {
+			return <Trans id="participant.button.go.deeper">Go deeper</Trans>;
+		}
+		return <Trans id="participant.button.refine">Refine</Trans>;
+	};
+
+	const getRefineInfoReason = () => {
+		return (
+			<Trans id="participant.modal.refine.info.reason">
+				We need a bit more context to help you refine effectively. Please
+				continue recording so we can provide better suggestions.
+			</Trans>
+		);
+	};
+
+	const remainingTime = Math.max(
+		0,
+		REFINE_BUTTON_THRESHOLD_SECONDS - Math.floor(recordingTime),
+	);
+
 	return (
 		<Box className="container mx-auto flex h-full max-w-2xl flex-col justify-end">
 			{/* modal for permissions error */}
@@ -221,6 +334,41 @@ export const ParticipantConversationAudio = () => {
 				handleResume={resumeRecording}
 				handleSwitchToText={handleSwitchToText}
 			/>
+
+			{/* Modal for refine info */}
+			<Modal
+				opened={refineInfoModalOpened}
+				onClose={closeRefineInfoModal}
+				centered
+				size="sm"
+				radius="md"
+				padding="xl"
+				title={
+					<Text fw={600} size="lg">
+						{getRefineModalTitle()}
+					</Text>
+				}
+			>
+				<Stack gap="lg">
+					<Text>{getRefineInfoText()}</Text>
+					<Text c="dimmed" size="sm">
+						{getRefineInfoReason()}
+					</Text>
+					<Text c="dimmed" size="sm">
+						<Trans id="participant.modal.refine.info.available.in">
+							This feature will be available in {remainingTime} seconds.
+						</Trans>
+					</Text>
+					<Button
+						onClick={closeRefineInfoModal}
+						fullWidth
+						radius="md"
+						size="md"
+					>
+						<Trans id="participant.button.i.understand">I understand</Trans>
+					</Button>
+				</Stack>
+			</Modal>
 
 			<Box className={clsx("relative flex-grow p-4 transition-all")}>
 				<Outlet
@@ -316,8 +464,7 @@ export const ParticipantConversationAudio = () => {
 
 						{isRecording && (
 							<Group gap="lg">
-								{recordingTime >= 60 &&
-									!isOnVerifyRoute &&
+								{!isOnVerifyRoute &&
 									!isOnRefineRoute &&
 									(projectQuery.data?.is_verify_enabled ||
 										projectQuery.data?.is_get_reply_enabled) && (
@@ -326,8 +473,22 @@ export const ParticipantConversationAudio = () => {
 											radius="md"
 											onClick={handleRefineClick}
 											disabled={isStopping}
+											className="relative overflow-hidden"
+											variant={
+												recordingTime < REFINE_BUTTON_THRESHOLD_SECONDS
+													? "light"
+													: "filled"
+											}
 										>
-											<Trans id="participant.button.refine">Refine</Trans>
+											{recordingTime < REFINE_BUTTON_THRESHOLD_SECONDS && (
+												<div
+													className="absolute bottom-0 left-0 top-0 bg-blue-200/50 transition-all duration-1000 ease-linear"
+													style={{ width: `${refineProgress}%` }}
+												/>
+											)}
+											<span className="relative z-10">
+												{getRefineButtonText()}
+											</span>
 										</Button>
 									)}
 								<Button

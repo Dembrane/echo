@@ -11,6 +11,10 @@
       {
         "role": "_sync_default_admin_role",
         "sort": 1
+      },
+      {
+        "role": null,
+        "sort": null
       }
     ],
     "_syncId": "_sync_default_admin_policy"
@@ -33,7 +37,7 @@
     "ip_access": null,
     "enforce_tfa": false,
     "admin_access": false,
-    "app_access": false,
+    "app_access": true,
     "roles": [
       {
         "role": "feebe863-90b1-41d1-a7ef-9694ddee3844",
@@ -43,6 +47,17 @@
     "_syncId": "37a60e48-dd00-4867-af07-1fb22ac89078"
   },
   {
+    "name": "Can read current user activity",
+    "icon": "assignment",
+    "description": null,
+    "ip_access": null,
+    "enforce_tfa": false,
+    "admin_access": false,
+    "app_access": false,
+    "roles": [],
+    "_syncId": "5d2910d1-6e9f-49a8-a1fe-a32972636ae5"
+  },
+  {
     "name": "2FA",
     "icon": "badge",
     "description": null,
@@ -50,12 +65,7 @@
     "enforce_tfa": true,
     "admin_access": false,
     "app_access": false,
-    "roles": [
-      {
-        "role": "502f00a4-fa44-4cdf-9650-1d15f3ea23dd",
-        "sort": 1
-      }
-    ],
+    "roles": [],
     "_syncId": "60564979-8a3b-46d4-8bd2-a04a2a2dff9f"
   },
   {

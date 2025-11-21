@@ -100,6 +100,35 @@ async def create_system_messages_for_chat(
         with_chunks=False,
         with_tags=True,
     )
+
+    artifacts_by_conv: Dict[str, List[Dict[str, Any]]] = {}
+    if conversations:
+        conv_ids = [c["id"] for c in conversations if c.get("id")]
+        if conv_ids:
+            try:
+                artifacts_query = {
+                    "query": {
+                        "filter": {
+                            "_and": [
+                                {"conversation_id": {"_in": conv_ids}},
+                                {"approved_at": {"_nnull": True}},
+                            ]
+                        },
+                        "fields": ["conversation_id", "key", "content"],
+                    }
+                }
+                artifacts = await run_in_thread_pool(
+                    directus.get_items, "conversation_artifact", artifacts_query
+                )
+                for art in artifacts:
+                    cid = art.get("conversation_id")
+                    if cid:
+                        if cid not in artifacts_by_conv:
+                            artifacts_by_conv[cid] = []
+                        artifacts_by_conv[cid].append(art)
+            except Exception as e:
+                logger.warning(f"Failed to fetch artifacts for conversations: {e}")
+
     try:
         project_query = {
             "query": {
@@ -147,6 +176,7 @@ async def create_system_messages_for_chat(
                     # fake auth to get this fn call
                     DirectusSession(user_id="none", is_admin=True),
                 ),
+                "artifacts": artifacts_by_conv.get(conversation.get("id", ""), []),
             }
         )
 
@@ -207,7 +237,7 @@ async def generate_title(
 
     response = await acompletion(
         messages=[{"role": "user", "content": title_prompt}],
-        **get_completion_kwargs(MODELS.TEXT_FAST),
+        **get_completion_kwargs(MODELS.MULTI_MODAL_PRO),
     )
 
     if response.choices[0].message.content is None:

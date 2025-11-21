@@ -132,50 +132,6 @@ api.interceptors.response.use(
 	},
 );
 
-export const getResourcesByProjectId = async (projectId: string) => {
-	return api.get<unknown, TResource[]>(`/projects/${projectId}/resources`);
-};
-
-export const getResourceById = async (resourceId: string) => {
-	return api.get<unknown, TResource>(`/resources/${resourceId}`);
-};
-
-export const updateResourceById = async (payload: {
-	id: string;
-	update: Partial<TResource>;
-}) => {
-	return api.put<unknown, TResource>(
-		`/resources/${payload.id}`,
-		payload.update,
-	);
-};
-
-export const deleteResourceById = async (resourceId: string) => {
-	return api.delete(`/resources/${resourceId}`);
-};
-
-export const uploadResourceByProjectId = async (payload: {
-	projectId: string;
-	files: File[];
-}) => {
-	const formData = new FormData();
-
-	payload.files.forEach((file) => {
-		formData.append("files", file);
-	});
-
-	return api.post<unknown, TResource[]>(
-		`/projects/${payload.projectId}/resources/upload`,
-		formData,
-		{
-			headers: {
-				"Content-Type": "multipart/form-data",
-			},
-			timeout: 60000,
-		},
-	);
-};
-
 export const getLatestProjectAnalysisRunByProjectId = async (
 	projectId: string,
 ) => {
@@ -997,17 +953,6 @@ export const getChatHistory = async (chatId: string): Promise<ChatHistory> => {
 						},
 					],
 				},
-				{
-					chat_message_metadata: [
-						"type",
-						"conversation",
-						"ratio",
-						"reference_text",
-						{
-							conversation: ["id", "participant_name"],
-						},
-					],
-				},
 			],
 			filter: {
 				project_chat_id: chatId,
@@ -1022,7 +967,7 @@ export const getChatHistory = async (chatId: string): Promise<ChatHistory> => {
 		content: message.text ?? "",
 		createdAt: message.date_created,
 		id: message.id,
-		metadata: message.chat_message_metadata ?? [],
+		// metadata: message.chat_message_metadata ?? [],
 		role: message.message_from as "user" | "assistant",
 	}));
 };
@@ -1096,6 +1041,15 @@ export type VerificationArtifact = {
 	read_aloud_stream_url: string;
 };
 
+export type VerificationArtifactDetail = {
+	id: string;
+	content: string;
+	date_created: string | null;
+	approved_at?: string | null;
+	key: string;
+	read_aloud_stream_url: string;
+};
+
 export const generateVerificationArtefact = async (payload: {
 	conversationId: string;
 	topicList: string[];
@@ -1148,6 +1102,12 @@ export const updateVerificationArtefact = async ({
 export const getVerificationArtefacts = async (conversationId: string) => {
 	return apiNoAuth.get<unknown, VerificationArtifact[]>(
 		`/verify/artifacts/${conversationId}`,
+	);
+};
+
+export const getVerificationArtefactById = async (artifactId: string) => {
+	return apiNoAuth.get<unknown, VerificationArtifactDetail>(
+		`/verify/artifact/${artifactId}`,
 	);
 };
 
