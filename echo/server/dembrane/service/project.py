@@ -2,7 +2,7 @@
 from typing import Any, List, Optional
 from logging import getLogger
 
-from dembrane.directus import DirectusBadRequest, directus_client_context
+from dembrane.directus import DirectusClient, DirectusBadRequest, directus, directus_client_context
 
 PROJECT_ALLOWED_LANGUAGES = ["en", "nl", "de", "fr", "es"]
 
@@ -15,17 +15,18 @@ class ProjectNotFoundException(ProjectServiceException):
     pass
 
 
-logger = getLogger(__name__)
-
-
 class ProjectService:
+    def __init__(self, directus_client: Optional[DirectusClient] = None) -> None:
+        self.logger = getLogger("dembrane.service.project")
+        self.directus_client = directus_client or directus
+
     def get_by_id_or_raise(
         self,
         project_id: str,
         with_tags: bool = False,
     ) -> dict:
         try:
-            with directus_client_context() as client:
+            with directus_client_context(self.directus_client) as client:
                 fields = ["*"]
 
                 if with_tags:
@@ -61,7 +62,7 @@ class ProjectService:
         directus_user_id: str | None = None,
         **kwargs: Any,
     ) -> dict:
-        with directus_client_context() as client:
+        with directus_client_context(self.directus_client) as client:
             project = client.create_item(
                 "project",
                 item_data={
@@ -77,7 +78,7 @@ class ProjectService:
 
     def get_latest_analysis_run(self, project_id: str) -> Optional[dict]:
         try:
-            with directus_client_context() as client:
+            with directus_client_context(self.directus_client) as client:
                 runs: Optional[List[dict]] = client.get_items(
                     "project_analysis_run",
                     {
@@ -89,7 +90,7 @@ class ProjectService:
                     },
                 )
         except DirectusBadRequest as e:
-            logger.error("Failed to fetch analysis run for %s: %s", project_id, e)
+            self.logger.error("Failed to fetch analysis run for %s: %s", project_id, e)
             return None
 
         if not runs:
@@ -115,7 +116,7 @@ class ProjectService:
         if error_code is not None:
             payload["error_code"] = error_code
 
-        with directus_client_context() as client:
+        with directus_client_context(self.directus_client) as client:
             report = client.create_item("project_report", item_data=payload)["data"]
 
         return report
@@ -124,7 +125,7 @@ class ProjectService:
         self,
         project_id: str,
     ) -> None:
-        with directus_client_context() as client:
+        with directus_client_context(self.directus_client) as client:
             client.delete_item("project", project_id)
 
     def create_tags_and_link(
@@ -132,7 +133,10 @@ class ProjectService:
         project_id: str,
         tag_str_list: List[str],
     ) -> List[dict]:
-        with directus_client_context() as client:
+        if len(tag_str_list) == 0:
+            raise ValueError("tag_str_list cannot be empty")
+
+        with directus_client_context(self.directus_client) as client:
             project = self.get_by_id_or_raise(project_id)
 
             create_tag_data = [
@@ -143,14 +147,14 @@ class ProjectService:
                 for tag_str in tag_str_list
             ]
 
-            logger.debug(f"create_tag_data: {create_tag_data}")
+            self.logger.debug(f"create_tag_data: {create_tag_data}")
 
             tags: List[dict] = client.create_item(
                 "project_tag",
                 item_data=create_tag_data,
             )["data"]
 
-            logger.debug(f"tags: {tags}")
+            self.logger.debug(f"tags: {tags}")
 
         return tags
 
@@ -164,7 +168,7 @@ class ProjectService:
         Create a shallow clone of a project
         The clone will NOT include any relational data (conversations, etc.)
         """
-        logger.debug(f"Project clone requested: {project_id}")
+        self.logger.debug(f"Project clone requested: {project_id}")
         current_project = self.get_by_id_or_raise(project_id, with_tags=with_tags)
 
         new_project_data = {
@@ -197,13 +201,11 @@ class ProjectService:
                 "is_project_notification_subscription_allowed"
             ],
             "is_verify_enabled": current_project["is_verify_enabled"],
-            "selected_verification_key_list": current_project.get(
-                "selected_verification_key_list"
-            ),
+            "selected_verification_key_list": current_project.get("selected_verification_key_list"),
         }
 
         if overrides:
-            logger.debug(f"overrides to be applied: {overrides.keys()}")
+            self.logger.debug(f"overrides to be applied: {overrides.keys()}")
 
             if "id" in overrides:
                 raise ValueError("The id field cannot be provided")
@@ -213,7 +215,7 @@ class ProjectService:
         new_project = self.create(**new_project_data)
 
         if with_tags:
-            logger.debug(f"Creating tags and linking to project {new_project['id']}")
+            self.logger.debug(f"Creating tags and linking to project {new_project['id']}")
             tag_str_list: List[str] = []
 
             for tag_dict in current_project.get("tags", []):
@@ -221,7 +223,7 @@ class ProjectService:
                     tag_str_list.append(tag_dict.get("text", ""))
 
             if len(tag_str_list) > 0:
-                logger.debug(
+                self.logger.debug(
                     f"Creating tags and linking to project {new_project['id']}: {tag_str_list}"
                 )
                 self.create_tags_and_link(new_project["id"], tag_str_list)

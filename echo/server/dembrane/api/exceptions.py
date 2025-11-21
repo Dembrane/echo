@@ -27,4 +27,6 @@ ConversationNotOpenForParticipationException = HTTPException(
     detail="This conversation is not open for participation at this time",
 )
 
-NoContentFoundException = HTTPException(status_code=404, detail="No content found")
+class NoContentFoundException(HTTPException):
+    def __init__(self) -> None:
+        super().__init__(status_code=404, detail="No content found")

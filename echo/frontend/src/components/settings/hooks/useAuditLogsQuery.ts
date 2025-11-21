@@ -1,4 +1,8 @@
-import { readActivities, type DirectusActivity, type Query } from "@directus/sdk";
+import {
+	type DirectusActivity,
+	type Query,
+	readActivities,
+} from "@directus/sdk";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { directus } from "@/lib/directus";
 
@@ -7,6 +11,10 @@ export interface AuditLogUser {
 	first_name?: string | null;
 	id?: string | null;
 	last_name?: string | null;
+}
+
+export interface AuditLogRevision {
+	delta?: Record<string, unknown> | null;
 }
 
 export interface AuditLogEntry {
@@ -18,6 +26,7 @@ export interface AuditLogEntry {
 	timestamp: string;
 	user?: AuditLogUser | null;
 	user_agent?: string | null;
+	revisions?: AuditLogRevision[] | null;
 }
 
 export interface AuditLogFilters {
@@ -29,6 +38,7 @@ export interface AuditLogQueryArgs {
 	filters?: AuditLogFilters;
 	page: number;
 	pageSize: number;
+	sortDirection?: "asc" | "desc";
 }
 
 export interface AuditLogQueryResult {
@@ -67,6 +77,9 @@ const AUDIT_LOG_FIELDS = [
 	"timestamp",
 	"ip",
 	"user_agent",
+	{
+		revisions: ["delta"],
+	},
 	{
 		user: ["id", "email", "first_name", "last_name"],
 	},
@@ -125,33 +138,73 @@ const normalizeCount = (value: unknown): number => {
 	return 0;
 };
 
+const fetchAuditLogsTotal = async ({
+	filters,
+}: {
+	filters?: AuditLogFilters;
+}) => {
+	const filter = buildFilter(filters);
+
+	try {
+		const [aggregate] = await directus.request<
+			Array<{
+				count?: unknown;
+			}>
+		>(
+			readActivities<CustomDirectusTypes, ActivitiesQuery>({
+				aggregate: {
+					count: "*",
+				},
+				filter,
+				limit: 1,
+			} as unknown as ActivitiesQuery),
+		);
+
+		return normalizeCount(aggregate?.count);
+	} catch (aggregateError) {
+		console.warn("Failed to aggregate audit log count", aggregateError);
+		return 0;
+	}
+};
+
 const fetchAuditLogsPage = async ({
 	filters,
 	page,
 	pageSize,
+	sortDirection,
 }: AuditLogQueryArgs): Promise<AuditLogQueryResult> => {
 	const filter = buildFilter(filters);
+	const sort = sortDirection === "asc" ? ["timestamp"] : ["-timestamp"];
 
 	const response = await directus.request<ActivityResponse<AuditLogEntry>>(
-		readActivities<CustomDirectusTypes, ActivitiesQuery>(
-			{
-				fields: AUDIT_LOG_FIELDS as unknown as ActivitiesQuery["fields"],
-				filter,
-				limit: pageSize,
-				meta: "filter_count",
-				offset: page * pageSize,
-				sort: ["-timestamp"],
-			} as unknown as ActivitiesQuery,
-		),
+		readActivities<CustomDirectusTypes, ActivitiesQuery>({
+			fields: AUDIT_LOG_FIELDS as unknown as ActivitiesQuery["fields"],
+			filter,
+			limit: pageSize,
+			meta: "filter_count",
+			offset: page * pageSize,
+			sort: sort as ActivitiesQuery["sort"],
+		} as unknown as ActivitiesQuery),
 	);
 
 	const items = [...response];
 	const metaTotal = response.meta?.filter_count;
-	const normalizedTotal = normalizeCount(metaTotal);
+	const normalizedTotal =
+		metaTotal === null || metaTotal === undefined
+			? null
+			: normalizeCount(metaTotal);
+
+	const fallbackTotal = await fetchAuditLogsTotal({ filters });
+	const total =
+		normalizedTotal !== null
+			? normalizedTotal
+			: fallbackTotal > 0
+				? fallbackTotal
+				: page * pageSize + items.length;
 
 	return {
 		items,
-		total: normalizedTotal > 0 ? normalizedTotal : page * pageSize + items.length,
+		total,
 	};
 };
 
@@ -163,15 +216,13 @@ const fetchAuditLogOptions = async (): Promise<AuditLogMetadata> => {
 				count: number;
 			}>
 		>(
-			readActivities<CustomDirectusTypes, ActivitiesQuery>(
-				{
-					aggregate: {
-						count: "*",
-					},
-					groupBy: ["action"],
-					sort: ["action"],
-				} as unknown as ActivitiesQuery,
-			),
+			readActivities<CustomDirectusTypes, ActivitiesQuery>({
+				aggregate: {
+					count: "*",
+				},
+				groupBy: ["action"],
+				sort: ["action"],
+			} as unknown as ActivitiesQuery),
 		),
 		directus.request<
 			Array<{
@@ -179,15 +230,13 @@ const fetchAuditLogOptions = async (): Promise<AuditLogMetadata> => {
 				count: number;
 			}>
 		>(
-			readActivities<CustomDirectusTypes, ActivitiesQuery>(
-				{
-					aggregate: {
-						count: "*",
-					},
-					groupBy: ["collection"],
-					sort: ["collection"],
-				} as unknown as ActivitiesQuery,
-			),
+			readActivities<CustomDirectusTypes, ActivitiesQuery>({
+				aggregate: {
+					count: "*",
+				},
+				groupBy: ["collection"],
+				sort: ["collection"],
+			} as unknown as ActivitiesQuery),
 		),
 	]);
 
@@ -232,15 +281,13 @@ const fetchAuditLogsForExport = async ({
 	// eslint-disable-next-line no-constant-condition
 	while (true) {
 		const batch = await directus.request<ActivityResponse<AuditLogEntry>>(
-			readActivities<CustomDirectusTypes, ActivitiesQuery>(
-				{
-					fields: AUDIT_LOG_FIELDS as unknown as ActivitiesQuery["fields"],
-					filter,
-					limit: AGGREGATE_BATCH_SIZE,
-					offset,
-					sort: ["-timestamp"],
-				} as unknown as ActivitiesQuery,
-			),
+			readActivities<CustomDirectusTypes, ActivitiesQuery>({
+				fields: AUDIT_LOG_FIELDS as unknown as ActivitiesQuery["fields"],
+				filter,
+				limit: AGGREGATE_BATCH_SIZE,
+				offset,
+				sort: ["-timestamp"],
+			} as unknown as ActivitiesQuery),
 		);
 
 		records.push(...batch);
@@ -269,7 +316,11 @@ const toCsv = (rows: AuditLogEntry[]) => {
 	const csvEscape = (value: unknown) => {
 		if (value === null || value === undefined) return "";
 		const stringValue = String(value);
-		if (stringValue.includes('"') || stringValue.includes(",") || stringValue.includes("\n")) {
+		if (
+			stringValue.includes('"') ||
+			stringValue.includes(",") ||
+			stringValue.includes("\n")
+		) {
 			return `"${stringValue.replace(/"/g, '""')}"`;
 		}
 		return stringValue;
@@ -281,7 +332,9 @@ const toCsv = (rows: AuditLogEntry[]) => {
 				[row.user?.first_name, row.user?.last_name]
 					.filter(Boolean)
 					.join(" ")
-					.trim() || row.user?.email || "System";
+					.trim() ||
+				row.user?.email ||
+				"System";
 
 			return [
 				csvEscape(row.action),
@@ -302,7 +355,10 @@ const toJson = (rows: AuditLogEntry[]) => {
 	return JSON.stringify(rows, null, 2);
 };
 
-const createExportBlob = (rows: AuditLogEntry[], format: AuditLogExportFormat) => {
+const createExportBlob = (
+	rows: AuditLogEntry[],
+	format: AuditLogExportFormat,
+) => {
 	if (format === "csv") {
 		return new Blob([toCsv(rows)], { type: "text/csv" });
 	}
@@ -314,12 +370,12 @@ export const useAuditLogsQuery = (args: AuditLogQueryArgs) => {
 	const queryKey = ["settings", "auditLogs", "list", args] as const;
 
 	return useQuery<AuditLogQueryResult>({
-		queryFn: () => fetchAuditLogsPage(args),
-		queryKey,
-		placeholderData: keepPreviousData,
 		meta: {
 			description: "Fetches paginated Directus audit logs",
 		},
+		placeholderData: keepPreviousData,
+		queryFn: () => fetchAuditLogsPage(args),
+		queryKey,
 	});
 };
 
@@ -327,17 +383,21 @@ export const useAuditLogMetadata = () => {
 	const queryKey = ["settings", "auditLogs", "metadata"] as const;
 
 	return useQuery<AuditLogMetadata>({
+		meta: {
+			description:
+				"Fetches available action and collection filters for audit logs",
+		},
 		queryFn: fetchAuditLogOptions,
 		queryKey,
 		staleTime: 5 * 60 * 1000,
-		meta: {
-			description: "Fetches available action and collection filters for audit logs",
-		},
 	});
 };
 
 export const useAuditLogsExport = () => {
 	return useMutation({
+		meta: {
+			description: "Exports filtered audit logs as CSV or JSON",
+		},
 		mutationFn: async ({
 			filters,
 			format,
@@ -350,9 +410,6 @@ export const useAuditLogsExport = () => {
 				blob,
 				filename: `audit-logs-${stamp}.${format}`,
 			};
-		},
-		meta: {
-			description: "Exports filtered audit logs as CSV or JSON",
 		},
 	});
 };

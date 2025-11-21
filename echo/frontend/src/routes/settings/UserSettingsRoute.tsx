@@ -46,8 +46,6 @@ export const UserSettingsRoute = () => {
 					isTwoFactorEnabled={isTwoFactorEnabled}
 				/>
 
-				<Divider />
-
 				<AuditLogsCard />
 			</Stack>
 		</Container>

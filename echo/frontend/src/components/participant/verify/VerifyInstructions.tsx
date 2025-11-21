@@ -7,6 +7,7 @@ type VerifyInstructionsProps = {
 	isLoading?: boolean;
 	onNext: () => void;
 	buttonText?: string;
+	canProceed?: boolean;
 };
 
 const INSTRUCTIONS = [
@@ -58,6 +59,7 @@ export const VerifyInstructions = ({
 	objectLabel,
 	isLoading = false,
 	onNext,
+	canProceed = true,
 }: VerifyInstructionsProps) => {
 	return (
 		<Stack gap="lg" pt="2xl" className="h-full">
@@ -90,11 +92,11 @@ export const VerifyInstructions = ({
 				size="lg"
 				radius="3xl"
 				onClick={onNext}
-				className="w-full"
-				disabled={isLoading}
+				className="w-full disabled:text-gray-600"
+				disabled={isLoading || !canProceed}
 				rightSection={
 					isLoading ? (
-						<Loader size="sm" color="white" className="ml-1" />
+						<Loader size="sm" color="dark" className="ml-1" />
 					) : (
 						<IconArrowRight size={20} className="ml-1" />
 					)

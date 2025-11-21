@@ -23,6 +23,12 @@ import { Announcements } from "../announcement/Announcements";
 import { TopAnnouncementBar } from "../announcement/TopAnnouncementBar";
 import { Logo } from "../common/Logo";
 import { LanguagePicker } from "../language/LanguagePicker";
+import { useTransitionCurtain } from "./TransitionCurtainProvider";
+
+type HeaderViewProps = {
+	isAuthenticated: boolean;
+	loading: boolean;
+};
 
 const User = ({ name, email }: { name: string; email: string }) => (
 	<div
@@ -71,13 +77,13 @@ function CreateFeedbackButton() {
 	);
 }
 
-export const Header = () => {
+const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 	const { language } = useParams();
 
 	const logoutMutation = useLogoutMutation();
-	const { loading, isAuthenticated } = useAuthenticated();
-	const { data: user } = useCurrentUser();
+	const { data: user } = useCurrentUser({ enabled: isAuthenticated });
 	const navigate = useI18nNavigate();
+	const { runTransition } = useTransitionCurtain();
 
 	// maybe useEffect(params) / useState is better here?
 	// but when we change language, we reload the page (check LanguagePicker.tsx)
@@ -92,6 +98,13 @@ export const Header = () => {
 	}
 
 	const handleLogout = async () => {
+		if (logoutMutation.isPending) return;
+
+		await runTransition({
+			description: null,
+			message: t`See you soon`,
+		});
+
 		await logoutMutation.mutateAsync({
 			doRedirect: true,
 		});
@@ -107,9 +120,9 @@ export const Header = () => {
 			)}
 			<Paper
 				component="header"
-				shadow="xs"
 				radius="0"
 				className="z-30 h-full w-full px-4"
+				shadow="xs"
 				bg={{ dark: "dark.8", light: "white" }}
 			>
 				<Group
@@ -120,12 +133,7 @@ export const Header = () => {
 					<Group gap="md">
 						<I18nLink to="/projects">
 							<Group align="center">
-								<Logo
-									hideTitle={false}
-									textAfterLogo={
-										<span className="text-xl font-normal">ECHO</span>
-									}
-								/>
+								<Logo hideTitle={false} />
 							</Group>
 						</I18nLink>
 					</Group>
@@ -200,3 +208,10 @@ export const Header = () => {
 		</>
 	);
 };
+
+export const Header = () => {
+	const { loading, isAuthenticated } = useAuthenticated();
+	return <HeaderView isAuthenticated={isAuthenticated} loading={loading} />;
+};
+
+export { HeaderView };

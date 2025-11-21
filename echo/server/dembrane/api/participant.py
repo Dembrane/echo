@@ -521,6 +521,7 @@ async def subscribe_notifications(data: NotificationSubscriptionRequest) -> dict
     - Creates a fresh record with email_opt_in = true.
     """
     failed_emails = []
+    client = directus
 
     for email in data.emails:
         try:
@@ -529,7 +530,7 @@ async def subscribe_notifications(data: NotificationSubscriptionRequest) -> dict
 
             # Check if user already exists
             existing = await run_in_thread_pool(
-                directus.get_items,
+                client.get_items,
                 "project_report_notification_participants",
                 {
                     "query": {
@@ -551,14 +552,14 @@ async def subscribe_notifications(data: NotificationSubscriptionRequest) -> dict
                 else:
                     # Delete old entry
                     await run_in_thread_pool(
-                        directus.delete_item,
+                        client.delete_item,
                         "project_report_notification_participants",
                         participant["id"],
                     )
 
             # Create new entry with opt-in
             await run_in_thread_pool(
-                directus.create_item,
+                client.create_item,
                 "project_report_notification_participants",
                 {
                     "email": email,
@@ -590,9 +591,10 @@ async def unsubscribe_participant(
     Update email_opt_in for project contacts in Directus securely.
     """
     try:
+        client = directus
         # Fetch relevant IDs
         submissions = await run_in_thread_pool(
-            directus.get_items,
+            client.get_items,
             "project_report_notification_participants",
             {
                 "query": {
@@ -615,7 +617,7 @@ async def unsubscribe_participant(
         # Update email_opt_in status for fetched IDs
         for item_id in ids:
             await run_in_thread_pool(
-                directus.update_item,
+                client.update_item,
                 "project_report_notification_participants",
                 item_id,
                 {"email_opt_in": payload.email_opt_in},
@@ -639,8 +641,9 @@ async def check_unsubscribe_eligibility(
     if not token or not project_id:
         raise HTTPException(status_code=400, detail="Invalid or missing unsubscribe link.")
 
+    client = directus
     submissions = await run_in_thread_pool(
-        directus.get_items,
+        client.get_items,
         "project_report_notification_participants",
         {
             "query": {

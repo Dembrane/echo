@@ -1,7 +1,7 @@
 {
   "collection": "conversation_artifact",
   "field": "approved_at",
-  "type": "dateTime",
+  "type": "timestamp",
   "meta": {
     "collection": "conversation_artifact",
     "conditions": null,
@@ -26,7 +26,7 @@
   "schema": {
     "name": "approved_at",
     "table": "conversation_artifact",
-    "data_type": "timestamp without time zone",
+    "data_type": "timestamp with time zone",
     "default_value": null,
     "max_length": null,
     "numeric_precision": null,

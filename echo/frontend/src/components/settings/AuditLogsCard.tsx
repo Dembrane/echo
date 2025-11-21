@@ -14,11 +14,17 @@ import {
 	ScrollArea,
 	Select,
 	Stack,
+	Switch,
 	Table,
 	Text,
-	Tooltip,
 } from "@mantine/core";
 import {
+	IconArrowDown,
+	IconArrowsSort,
+	IconArrowUp,
+	IconChevronDown,
+	IconChevronUp,
+	IconDatabaseSearch,
 	IconDownload,
 	IconFileTypeCsv,
 	IconFileTypeJs,
@@ -29,9 +35,10 @@ import {
 	type ColumnDef,
 	flexRender,
 	getCoreRowModel,
+	type SortingState,
 	useReactTable,
 } from "@tanstack/react-table";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import {
 	type AuditLogEntry,
@@ -45,6 +52,21 @@ import {
 
 const PAGE_SIZE_OPTIONS = ["10", "25", "50"];
 const DEFAULT_PAGE_SIZE = 25;
+
+const ACTION_BADGE_COLORS: Record<string, string> = {
+	create: "green",
+	delete: "red",
+	login: "grape",
+	update: "blue",
+};
+
+const extractDeltas = (entry: AuditLogEntry) => {
+	return (entry.revisions ?? [])
+		.map((revision) => revision?.delta)
+		.filter((delta): delta is Record<string, unknown> => {
+			return !!delta && Object.keys(delta).length > 0;
+		});
+};
 
 const formatTimestamp = (value: string) => {
 	const date = new Date(value);
@@ -75,8 +97,45 @@ const toSelectData = (options: AuditLogOption[]) =>
 export const AuditLogsCard = () => {
 	const [selectedActions, setSelectedActions] = useState<string[]>([]);
 	const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
-	const [page, setPage] = useState(1);
-	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+	const [pagination, setPagination] = useState({
+		pageIndex: 0,
+		pageSize: DEFAULT_PAGE_SIZE,
+	});
+	const [showIps, setShowIps] = useState(false);
+	const [expandedRows, setExpandedRows] = useState<Set<number>>(
+		() => new Set(),
+	);
+	const [sorting, setSorting] = useState<SortingState>([
+		{
+			desc: true,
+			id: "timestamp",
+		},
+	]);
+
+	const activeSort = sorting[0];
+	const sortDirection: "asc" | "desc" =
+		activeSort?.id === "timestamp" && activeSort?.desc === false
+			? "asc"
+			: "desc";
+
+	const toggleRowExpansion = useCallback((id: number) => {
+		setExpandedRows((prev) => {
+			const next = new Set(prev);
+			if (next.has(id)) {
+				next.delete(id);
+			} else {
+				next.add(id);
+			}
+			return next;
+		});
+	}, []);
+
+	const isRowExpanded = useCallback(
+		(id: number) => {
+			return expandedRows.has(id);
+		},
+		[expandedRows],
+	);
 
 	const filters: AuditLogFilters = useMemo(
 		() => ({
@@ -86,13 +145,12 @@ export const AuditLogsCard = () => {
 		[selectedActions, selectedCollections],
 	);
 
-	const pageIndex = page - 1;
-
 	const { data, error, isError, isFetching, isLoading, refetch } =
 		useAuditLogsQuery({
 			filters,
-			page: pageIndex,
-			pageSize,
+			page: pagination.pageIndex,
+			pageSize: pagination.pageSize,
+			sortDirection,
 		});
 
 	const { data: metadata, isLoading: isMetadataLoading } =
@@ -101,30 +159,35 @@ export const AuditLogsCard = () => {
 	const exportMutation = useAuditLogsExport();
 
 	const totalItems = data?.total ?? 0;
-	const totalPages = Math.max(1, Math.ceil((data?.total ?? 0) / pageSize));
-
 	const tableData = data?.items ?? [];
+	const displayedRows = useMemo(() => {
+		if (tableData.length <= 1) return tableData;
+		return [...tableData].sort((a, b) => {
+			const aTime = new Date(a.timestamp).getTime();
+			const bTime = new Date(b.timestamp).getTime();
+			return sortDirection === "asc" ? aTime - bTime : bTime - aTime;
+		});
+	}, [tableData, sortDirection]);
+	const totalPages = Math.max(1, Math.ceil(totalItems / pagination.pageSize));
 
 	const columns = useMemo<ColumnDef<AuditLogEntry>[]>(
 		() => [
 			{
 				accessorKey: "action",
 				cell: ({ row }) => (
-					<Stack gap={4}>
-						<Badge
-							variant="light"
-							color="blue"
-							size="sm"
-							className="w-fit uppercase"
-						>
-							{row.original.action}
-						</Badge>
-						<Text size="xs" c="dimmed">
-							{formatTimestamp(row.original.timestamp)}
-						</Text>
-					</Stack>
+					<Badge
+						variant="light"
+						color={
+							ACTION_BADGE_COLORS[row.original.action?.toLowerCase() ?? ""] ??
+							"gray"
+						}
+						size="sm"
+						className="w-fit uppercase"
+					>
+						{row.original.action}
+					</Badge>
 				),
-				header: () => t`Action`,
+				header: () => t`Type`,
 			},
 			{
 				accessorKey: "collection",
@@ -137,8 +200,69 @@ export const AuditLogsCard = () => {
 			},
 			{
 				accessorKey: "item",
-				cell: ({ row }) => <Text size="sm">{row.original.item}</Text>,
+				cell: ({ row }) => {
+					const deltas = extractDeltas(row.original);
+					const hasRevisions = deltas.length > 0;
+					const expanded = isRowExpanded(row.original.id);
+
+					return (
+						<Stack gap={4}>
+							<Group
+								gap={8}
+								wrap="nowrap"
+								align="center"
+								justify="space-between"
+							>
+								<div className="min-w-0">
+									<Text
+										size="sm"
+										className="font-medium truncate whitespace-nowrap"
+									>
+										{row.original.item}
+									</Text>
+									<Text
+										size="xs"
+										c="dimmed"
+										className="mt-0.5 whitespace-nowrap"
+									>
+										#{row.original.id}
+									</Text>
+								</div>
+								{hasRevisions ? (
+									<Button
+										variant="light"
+										size="xs"
+										onClick={() => toggleRowExpansion(row.original.id)}
+										leftSection={<IconDatabaseSearch size={14} />}
+										rightSection={
+											expanded ? (
+												<IconChevronUp size={14} />
+											) : (
+												<IconChevronDown size={14} />
+											)
+										}
+										aria-label={
+											expanded ? t`Hide revision data` : t`Show revision data`
+										}
+									>
+										{expanded ? t`Hide data` : t`Show data`}
+									</Button>
+								) : null}
+							</Group>
+						</Stack>
+					);
+				},
 				header: () => t`Action On`,
+			},
+			{
+				accessorKey: "timestamp",
+				cell: ({ row }) => (
+					<Text size="sm" className="whitespace-nowrap">
+						{formatTimestamp(row.original.timestamp)}
+					</Text>
+				),
+				enableSorting: true,
+				header: () => t`Timestamp`,
 			},
 			{
 				accessorKey: "user",
@@ -151,76 +275,84 @@ export const AuditLogsCard = () => {
 			},
 			{
 				accessorKey: "ip",
-				cell: ({ row }) => (
-					<Text size="sm">{row.original.ip ?? t`Unknown`}</Text>
-				),
-				header: () => t`IP Address`,
-			},
-			{
-				accessorKey: "user_agent",
 				cell: ({ row }) => {
-					const agent = row.original.user_agent;
-
-					if (!agent) {
+					if (!row.original.ip) {
 						return <Text size="sm">{t`Unknown`}</Text>;
 					}
 
 					return (
-						<Tooltip
-							label={agent}
-							position="top-start"
-							withArrow
-							multiline
-							maw={360}
-						>
-							<Text size="sm" className="max-w-[240px] truncate">
-								{agent}
-							</Text>
-						</Tooltip>
+						<Text size="sm" className="font-mono">
+							{showIps ? row.original.ip : t`Hidden`}
+						</Text>
 					);
 				},
-				header: () => t`User Agent`,
+				header: () => t`IP Address`,
 			},
 		],
-		[],
+		[isRowExpanded, showIps, toggleRowExpansion],
 	);
 
 	const table = useReactTable({
 		columns,
-		data: tableData,
+		data: displayedRows,
 		getCoreRowModel: getCoreRowModel(),
 		manualPagination: true,
+		manualSorting: true,
+		onPaginationChange: (updater) => {
+			setPagination((prev) => {
+				const next = typeof updater === "function" ? updater(prev) : updater;
+				return next;
+			});
+		},
+		onSortingChange: (updater) => {
+			setSorting((prev) => {
+				const updated = typeof updater === "function" ? updater(prev) : updater;
+				const next = updated.filter((entry) => entry.id === "timestamp");
+				if (next.length === 0) {
+					return [{ desc: true, id: "timestamp" }];
+				}
+				return next;
+			});
+			setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+		},
 		pageCount: totalPages,
 		state: {
-			pagination: {
-				pageIndex,
-				pageSize,
-			},
+			pagination,
+			sorting,
 		},
 	});
 
-	const handlePageSizeChange = (value: string | null) => {
-		if (!value) return;
-		const next = Number(value);
-		setPageSize(next);
-		setPage(1);
-	};
+	const handlePageSizeChange = useCallback(
+		(value: string | null) => {
+			if (!value) return;
+			const next = Number(value);
+			table.setPageSize(next);
+		},
+		[table],
+	);
 
-	const handleActionsChange = (value: string[]) => {
-		setSelectedActions(value);
-		setPage(1);
-	};
+	const handleActionsChange = useCallback(
+		(value: string[]) => {
+			setSelectedActions(value);
+			table.setPageIndex(0);
+		},
+		[table],
+	);
 
-	const handleCollectionsChange = (value: string[]) => {
-		setSelectedCollections(value);
-		setPage(1);
-	};
+	const handleCollectionsChange = useCallback(
+		(value: string[]) => {
+			setSelectedCollections(value);
+			table.setPageIndex(0);
+		},
+		[table],
+	);
 
 	useEffect(() => {
-		if (page > totalPages) {
-			setPage(totalPages);
+		const maxPageIndex = Math.max(0, totalPages - 1);
+		if (pagination.pageIndex > maxPageIndex) {
+			setPagination((prev) => ({ ...prev, pageIndex: maxPageIndex }));
 		}
-	}, [page, totalPages]);
+	}, [pagination.pageIndex, totalPages]);
 
 	const handleExport = async (format: AuditLogExportFormat) => {
 		try {
@@ -249,9 +381,13 @@ export const AuditLogsCard = () => {
 		}
 	};
 
-	const isEmpty = !isLoading && tableData.length === 0;
-	const displayFrom = totalItems === 0 ? 0 : pageIndex * pageSize + 1;
-	const displayTo = Math.min(totalItems, (pageIndex + 1) * pageSize);
+	const isEmpty = !isLoading && displayedRows.length === 0;
+	const displayFrom =
+		totalItems === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1;
+	const displayTo = Math.min(
+		totalItems,
+		(pagination.pageIndex + 1) * pagination.pageSize,
+	);
 
 	return (
 		<Paper
@@ -356,13 +492,12 @@ export const AuditLogsCard = () => {
 							disabled={isMetadataLoading}
 						/>
 
-						<Select
-							label={t`Rows per page`}
-							data={PAGE_SIZE_OPTIONS}
-							value={pageSize.toString()}
-							onChange={handlePageSizeChange}
-							allowDeselect={false}
-							className="w-[140px]"
+						<Switch
+							label={t`Show IP addresses`}
+							checked={showIps}
+							onChange={(event) => setShowIps(event.currentTarget.checked)}
+							labelPosition="left"
+							size="sm"
 						/>
 					</Group>
 				</Stack>
@@ -385,19 +520,45 @@ export const AuditLogsCard = () => {
 						<Table.Thead className="bg-gray-50 dark:bg-dark-7">
 							{table.getHeaderGroups().map((headerGroup) => (
 								<Table.Tr key={headerGroup.id}>
-									{headerGroup.headers.map((header) => (
-										<Table.Th
-											key={header.id}
-											className="uppercase tracking-wide text-xs font-semibold text-gray-600 dark:text-gray-3"
-										>
-											{header.isPlaceholder
-												? null
-												: flexRender(
-														header.column.columnDef.header,
-														header.getContext(),
-													)}
-										</Table.Th>
-									))}
+									{headerGroup.headers.map((header) => {
+										const canSort = header.column.getCanSort();
+										const sortState = header.column.getIsSorted();
+										const sortIcon =
+											sortState === "desc" ? (
+												<IconArrowDown size={14} />
+											) : sortState === "asc" ? (
+												<IconArrowUp size={14} />
+											) : canSort ? (
+												<IconArrowsSort size={14} className="text-gray-400" />
+											) : null;
+
+										return (
+											<Table.Th
+												key={header.id}
+												onClick={
+													canSort
+														? header.column.getToggleSortingHandler()
+														: undefined
+												}
+												className={`uppercase tracking-wide text-xs font-semibold text-gray-600 dark:text-gray-3 ${canSort ? "cursor-pointer select-none" : ""}`}
+												style={
+													header.column.id === "item"
+														? { width: "1%" }
+														: undefined
+												}
+											>
+												{header.isPlaceholder ? null : (
+													<Group gap={6} wrap="nowrap" align="center">
+														{flexRender(
+															header.column.columnDef.header,
+															header.getContext(),
+														)}
+														{sortIcon}
+													</Group>
+												)}
+											</Table.Th>
+										);
+									})}
 								</Table.Tr>
 							))}
 						</Table.Thead>
@@ -417,18 +578,51 @@ export const AuditLogsCard = () => {
 							) : null}
 
 							{!isLoading &&
-								table.getRowModel().rows.map((row) => (
-									<Table.Tr key={row.id}>
-										{row.getVisibleCells().map((cell) => (
-											<Table.Td key={cell.id}>
-												{flexRender(
-													cell.column.columnDef.cell,
-													cell.getContext(),
-												)}
-											</Table.Td>
-										))}
-									</Table.Tr>
-								))}
+								table.getRowModel().rows.map((row) => {
+									const deltas = extractDeltas(row.original);
+									const showDelta =
+										deltas.length > 0 && isRowExpanded(row.original.id);
+
+									return (
+										<Fragment key={row.id}>
+											<Table.Tr>
+												{row.getVisibleCells().map((cell) => (
+													<Table.Td key={cell.id}>
+														{flexRender(
+															cell.column.columnDef.cell,
+															cell.getContext(),
+														)}
+													</Table.Td>
+												))}
+											</Table.Tr>
+											{showDelta ? (
+												<Table.Tr>
+													<Table.Td colSpan={columns.length}>
+														<Stack gap="xs">
+															{deltas.map((delta, index) => {
+																const revisionNumber = index + 1;
+
+																return (
+																	<div
+																		key={revisionNumber}
+																		className="rounded-md border border-gray-200 bg-gray-50 p-3 font-mono text-xs dark:border-dark-4 dark:bg-dark-7"
+																	>
+																		<Text size="xs" c="dimmed" className="mb-2">
+																			<Trans>Revision #{revisionNumber}</Trans>
+																		</Text>
+																		<pre className="whitespace-pre-wrap break-words text-[11px] leading-relaxed">
+																			{JSON.stringify(delta, null, 2)}
+																		</pre>
+																	</div>
+																);
+															})}
+														</Stack>
+													</Table.Td>
+												</Table.Tr>
+											) : null}
+										</Fragment>
+									);
+								})}
 
 							{isEmpty ? (
 								<Table.Tr>
@@ -446,21 +640,32 @@ export const AuditLogsCard = () => {
 				</ScrollArea>
 
 				<Group justify="space-between" align="center">
-					<Text size="sm" c="dimmed">
-						{totalItems === 0 ? (
-							<Trans>No results</Trans>
-						) : (
-							<Trans>
-								Showing {displayFrom}–{displayTo} of {totalItems} entries
-							</Trans>
-						)}
-					</Text>
+					<Group gap="sm" align="center">
+						<Select
+							label={t`Rows per page`}
+							data={PAGE_SIZE_OPTIONS}
+							value={pagination.pageSize.toString()}
+							onChange={handlePageSizeChange}
+							allowDeselect={false}
+							className="w-[140px]"
+						/>
+
+						<Text size="sm" c="dimmed">
+							{displayedRows.length === 0 && pagination.pageIndex === 0 ? (
+								<Trans>No results</Trans>
+							) : (
+								<Trans>
+									Showing {displayFrom}–{displayTo} of {totalItems} entries
+								</Trans>
+							)}
+						</Text>
+					</Group>
 
 					<Pagination
 						total={totalPages}
-						value={page}
-						onChange={setPage}
-						disabled={totalItems === 0}
+						value={pagination.pageIndex + 1}
+						onChange={(pageNumber) => table.setPageIndex(pageNumber - 1)}
+						disabled={totalPages <= 1}
 					/>
 				</Group>
 			</Stack>

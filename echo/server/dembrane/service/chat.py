@@ -1,7 +1,7 @@
-from typing import Any, List, Iterable, Optional
+from typing import Any, List, Iterable, Optional, ContextManager
 from logging import getLogger
 
-from dembrane.directus import DirectusBadRequest, directus_client_context
+from dembrane.directus import DirectusClient, DirectusBadRequest, directus, directus_client_context
 
 logger = getLogger("dembrane.service.chat")
 
@@ -19,6 +19,14 @@ class ChatMessageNotFoundException(ChatServiceException):
 
 
 class ChatService:
+    def __init__(self, directus_client: Optional[DirectusClient] = None) -> None:
+        self._directus_client = directus_client or directus
+
+    def _client_context(
+        self, override_client: Optional[DirectusClient] = None
+    ) -> ContextManager[DirectusClient]:
+        return directus_client_context(override_client or self._directus_client)
+
     def get_by_id_or_raise(
         self,
         chat_id: str,
@@ -45,7 +53,7 @@ class ChatService:
             deep["used_conversations"] = {"_sort": "id"}
 
         try:
-            with directus_client_context() as client:
+            with self._client_context() as client:
                 chat_list: Optional[List[dict]] = client.get_items(
                     "project_chat",
                     {
@@ -106,7 +114,7 @@ class ChatService:
         sort_value = "date_created" if order.lower() != "desc" else "-date_created"
 
         try:
-            with directus_client_context() as client:
+            with self._client_context() as client:
                 messages: Optional[List[dict]] = client.get_items(
                     "project_chat_message",
                     {
@@ -127,7 +135,7 @@ class ChatService:
 
     def set_auto_select(self, chat_id: str, value: bool) -> dict:
         try:
-            with directus_client_context() as client:
+            with self._client_context() as client:
                 return client.update_item(
                     "project_chat",
                     chat_id,
@@ -139,7 +147,7 @@ class ChatService:
 
     def set_chat_name(self, chat_id: str, name: Optional[str]) -> dict:
         try:
-            with directus_client_context() as client:
+            with self._client_context() as client:
                 return client.update_item(
                     "project_chat",
                     chat_id,
@@ -151,15 +159,14 @@ class ChatService:
 
     def attach_conversations(self, chat_id: str, conversation_ids: Iterable[str]) -> None:
         payload_list = [
-            {"conversation_id": conversation_id}
-            for conversation_id in conversation_ids
+            {"conversation_id": conversation_id} for conversation_id in conversation_ids
         ]
 
         if not payload_list:
             return
 
         try:
-            with directus_client_context() as client:
+            with self._client_context() as client:
                 client.update_item(
                     "project_chat",
                     chat_id,
@@ -176,7 +183,7 @@ class ChatService:
 
     def detach_conversation(self, chat_id: str, conversation_id: str) -> None:
         try:
-            with directus_client_context() as client:
+            with self._client_context() as client:
                 links: Optional[List[dict]] = client.get_items(
                     "project_chat_conversation",
                     {
@@ -234,19 +241,17 @@ class ChatService:
         used_ids = list(used_conversation_ids or [])
         if used_ids:
             payload.setdefault("used_conversations", {})["create"] = [
-                {"conversation_id": conversation_id}
-                for conversation_id in used_ids
+                {"conversation_id": conversation_id} for conversation_id in used_ids
             ]
 
         added_ids = list(added_conversation_ids or [])
         if added_ids:
             payload.setdefault("added_conversations", {})["create"] = [
-                {"conversation_id": conversation_id}
-                for conversation_id in added_ids
+                {"conversation_id": conversation_id} for conversation_id in added_ids
             ]
 
         try:
-            with directus_client_context() as client:
+            with self._client_context() as client:
                 message = client.create_item(
                     "project_chat_message",
                     item_data=payload,
@@ -259,7 +264,7 @@ class ChatService:
 
     def update_message(self, message_id: str, update_data: dict[str, Any]) -> dict:
         try:
-            with directus_client_context() as client:
+            with self._client_context() as client:
                 message = client.update_item(
                     "project_chat_message",
                     message_id,
@@ -273,7 +278,7 @@ class ChatService:
 
     def delete_message(self, message_id: str) -> None:
         try:
-            with directus_client_context() as client:
+            with self._client_context() as client:
                 client.delete_item("project_chat_message", message_id)
         except DirectusBadRequest as e:
             logger.error("Failed to delete message %s: %s", message_id, e)

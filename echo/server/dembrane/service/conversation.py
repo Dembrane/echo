@@ -1,5 +1,5 @@
 # conversation.py
-from typing import TYPE_CHECKING, Any, List, Iterable, Optional
+from typing import TYPE_CHECKING, Any, List, Iterable, Optional, ContextManager
 from logging import getLogger
 from datetime import datetime
 from urllib.parse import urlparse
@@ -7,14 +7,18 @@ from urllib.parse import urlparse
 from fastapi import UploadFile
 
 from dembrane.utils import generate_uuid
-from dembrane.directus import DirectusBadRequest, DirectusGenericException, directus_client_context
-from dembrane.service.events import ChunkCreatedEvent
+from dembrane.directus import (
+    DirectusClient,
+    DirectusBadRequest,
+    DirectusGenericException,
+    directus,
+    directus_client_context,
+)
 
 logger = getLogger("dembrane.service.conversation")
 
 if TYPE_CHECKING:
     from dembrane.service.file import FileService
-    from dembrane.service.events import EventService
     from dembrane.service.project import ProjectService
 
 # allows for None to be a sentinel value
@@ -48,11 +52,16 @@ class ConversationService:
         self,
         file_service: Optional["FileService"] = None,
         project_service: Optional["ProjectService"] = None,
-        event_service: Optional["EventService"] = None,
+        directus_client: Optional[DirectusClient] = None,
     ):
         self._file_service = file_service
         self._project_service = project_service
-        self._event_service = event_service
+        self._directus_client = directus_client or directus
+
+    def _client_context(
+        self, override_client: Optional[DirectusClient] = None
+    ) -> ContextManager[DirectusClient]:
+        return directus_client_context(override_client or self._directus_client)
 
     @property
     def file_service(self) -> "FileService":
@@ -67,16 +76,8 @@ class ConversationService:
         if self._project_service is None:
             from dembrane.service.project import ProjectService
 
-            self._project_service = ProjectService()
+            self._project_service = ProjectService(directus_client=self._directus_client)
         return self._project_service
-
-    @property
-    def event_service(self) -> "EventService":
-        if self._event_service is None:
-            from dembrane.service.events import EventService
-
-            self._event_service = EventService()
-        return self._event_service
 
     def get_by_id_or_raise(
         self,
@@ -85,7 +86,7 @@ class ConversationService:
         with_chunks: bool = False,
     ) -> dict:
         try:
-            with directus_client_context() as client:
+            with self._client_context() as client:
                 fields = ["*"]
                 deep = {}
 
@@ -94,7 +95,7 @@ class ConversationService:
 
                 if with_chunks:
                     fields.append("chunks.*")
-                    deep["chunks"] = {"_sort": "-timestamp"}
+                    deep["chunks"] = {"_sort": "-timestamp", "_limit": 1200}
 
                 conversation = client.get_items(
                     "conversation",
@@ -147,7 +148,7 @@ class ConversationService:
 
     def list_chunks(self, conversation_id: str) -> List[dict]:
         try:
-            with directus_client_context() as client:
+            with self._client_context() as client:
                 chunks: Optional[List[dict]] = client.get_items(
                     "conversation_chunk",
                     {
@@ -195,7 +196,7 @@ class ConversationService:
         if project.get("is_conversation_allowed", False) is False:
             raise ConversationNotOpenForParticipationException()
 
-        with directus_client_context() as client:
+        with self._client_context() as client:
             new_conversation = client.create_item(
                 "conversation",
                 item_data={
@@ -246,7 +247,7 @@ class ConversationService:
             update_data["is_all_chunks_transcribed"] = is_all_chunks_transcribed
 
         try:
-            with directus_client_context() as client:
+            with self._client_context() as client:
                 updated_conversation = client.update_item(
                     "conversation",
                     conversation_id,
@@ -261,7 +262,15 @@ class ConversationService:
         self,
         conversation_id: str,
     ) -> None:
-        with directus_client_context() as client:
+        with self._client_context() as client:
+            conversation = self.get_by_id_or_raise(conversation_id, with_chunks=True)
+            for chunk in conversation["chunks"]:
+                try:
+                    if chunk["path"]:
+                        self.file_service.delete(chunk["path"])
+                except Exception as e:
+                    logger.exception(f"Error deleting chunk {chunk['id']} file: {e}")
+
             client.delete_item("conversation", conversation_id)
 
     def get_chunk_by_id_or_raise(
@@ -282,7 +291,7 @@ class ConversationService:
         - DirectusGenericException -> DirectusServerError: If the request to the Directus server fails.
         """
         try:
-            with directus_client_context() as client:
+            with self._client_context() as client:
                 chunk = client.get_items(
                     "conversation_chunk",
                     {
@@ -337,9 +346,6 @@ class ConversationService:
         if project.get("is_conversation_allowed", False) is False:
             raise ConversationNotOpenForParticipationException()
 
-        if conversation.get("is_finished") is True:
-            raise ConversationNotOpenForParticipationException()
-
         chunk_id = generate_uuid()
 
         needs_upload = file_obj is not None and file_url is None
@@ -368,7 +374,7 @@ class ConversationService:
                 "Chunk must have either an audio file (file_obj or file_url) or a transcript."
             )
 
-        with directus_client_context() as client:
+        with self._client_context() as client:
             chunk = client.create_item(
                 "conversation_chunk",
                 item_data={
@@ -380,12 +386,6 @@ class ConversationService:
                     "transcript": transcript,
                 },
             )["data"]
-
-        event = ChunkCreatedEvent(chunk_id=chunk_id, conversation_id=conversation["id"])
-        try:
-            self.event_service.publish(event)
-        except Exception:
-            logger.exception("Failed to publish ChunkCreatedEvent for %s", chunk_id)
 
         # Only trigger background audio processing if there's a file to process
         if has_file:
@@ -444,7 +444,7 @@ class ConversationService:
 
         if update.keys():
             try:
-                with directus_client_context() as client:
+                with self._client_context() as client:
                     chunk = client.update_item(
                         "conversation_chunk",
                         chunk_id,
@@ -461,7 +461,7 @@ class ConversationService:
         self,
         chunk_id: str,
     ) -> None:
-        with directus_client_context() as client:
+        with self._client_context() as client:
             client.delete_item("conversation_chunk", chunk_id)
 
     def get_chunk_counts(
@@ -484,7 +484,7 @@ class ConversationService:
         }
         """
         try:
-            with directus_client_context() as client:
+            with self._client_context() as client:
                 chunks = client.get_items(
                     "conversation_chunk",
                     {
@@ -571,7 +571,7 @@ class ConversationService:
             deep["chunks"] = {"_sort": "timestamp"}
 
         try:
-            with directus_client_context() as client:
+            with self._client_context() as client:
                 conversations: Optional[List[dict]] = client.get_items(
                     "conversation",
                     {
