@@ -658,7 +658,7 @@ export const useConversationsByProjectId = (
 	query?: Partial<Query<CustomDirectusTypes, Conversation>>,
 	filterBySource?: string[],
 ) => {
-	const TIME_INTERVAL_SECONDS = 40;
+	const TIME_INTERVAL_SECONDS = 30;
 
 	return useQuery({
 		queryFn: async () => {
@@ -667,6 +667,7 @@ export const useConversationsByProjectId = (
 					deep: {
 						chunks: {
 							_limit: loadChunks ? 1000 : 1,
+							_sort: ["-timestamp", "-created_at"],
 						},
 					},
 					fields: [
@@ -868,7 +869,7 @@ export const useInfiniteConversationsByProjectId = (
 	},
 ) => {
 	const { initialLimit = 15 } = options ?? {};
-	const TIME_INTERVAL_SECONDS = 40;
+	const TIME_INTERVAL_SECONDS = 30;
 
 	return useInfiniteQuery({
 		getNextPageParam: (lastPage: { nextOffset?: number }) =>
@@ -880,6 +881,7 @@ export const useInfiniteConversationsByProjectId = (
 					deep: {
 						chunks: {
 							_limit: loadChunks ? 1000 : 1,
+							_sort: ["-timestamp", "-created_at"],
 						},
 					},
 					fields: [

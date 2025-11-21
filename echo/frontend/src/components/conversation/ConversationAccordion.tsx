@@ -700,6 +700,7 @@ export const ConversationAccordion = ({
 			deep: {
 				chunks: {
 					_limit: 25,
+					_sort: ["-timestamp", "-created_at"],
 				},
 			},
 			// Override filter to add tag filtering while preserving project scope
