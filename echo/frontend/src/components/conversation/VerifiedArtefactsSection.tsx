@@ -39,8 +39,17 @@ export const VerifiedArtefactsSection = ({
 		queryKey: ["verify", "conversation_artifacts", conversationId],
 	});
 
+	if (isLoading) {
+		return (
+			<Stack gap="sm">
+				<Skeleton height={60} width="50%" radius="md" />
+				<Skeleton height={60} width="50%" radius="md" />
+			</Stack>
+		);
+	}
+
 	// Don't show the section if there are no artefacts
-	if (!isLoading && (!artefacts || artefacts.length === 0)) {
+	if (!artefacts || artefacts.length === 0) {
 		return null;
 	}
 
@@ -60,44 +69,34 @@ export const VerifiedArtefactsSection = ({
 				</ActionIcon>
 			</Group>
 
-			{isLoading && (
-				<Stack gap="sm">
-					<Skeleton height={60} width="50%" radius="md" />
-					<Skeleton height={60} width="50%" radius="md" />
-				</Stack>
-			)}
+			<Accordion variant="unstyled" radius="md">
+				{artefacts.map((artefact) => {
+					const formattedDate = formatArtefactTime(artefact.approved_at);
 
-			{!isLoading && artefacts && artefacts.length > 0 && (
-				<Accordion variant="unstyled" radius="md">
-					{artefacts.map((artefact) => {
-						const formattedDate = formatArtefactTime(artefact.approved_at);
-
-						return (
-							<Accordion.Item key={artefact.id} value={artefact.id}>
-								<Accordion.Control>
-									<Group gap="sm" wrap="nowrap">
-										<Stack gap={2}>
-											{/* <Text fw={500}>{artefact.title ?? artefact.key}</Text> */}
-											<Text fw={500}>{artefact.key || ""}</Text>
-											{formattedDate && (
-												<Text size="xs" c="dimmed">
-													<Trans id="conversation.verified.approved">
-														Approved
-													</Trans>{" "}
-													{formattedDate}
-												</Text>
-											)}
-										</Stack>
-									</Group>
-								</Accordion.Control>
-								<Accordion.Panel>
-									<Markdown content={artefact.content ?? ""} />
-								</Accordion.Panel>
-							</Accordion.Item>
-						);
-					})}
-				</Accordion>
-			)}
+					return (
+						<Accordion.Item key={artefact.id} value={artefact.id}>
+							<Accordion.Control>
+								<Group gap="sm" wrap="nowrap">
+									<Stack gap={2}>
+										<Text fw={500}>{artefact.key || ""}</Text>
+										{formattedDate && (
+											<Text size="xs" c="dimmed">
+												<Trans id="conversation.verified.approved">
+													Approved
+												</Trans>{" "}
+												{formattedDate}
+											</Text>
+										)}
+									</Stack>
+								</Group>
+							</Accordion.Control>
+							<Accordion.Panel>
+								<Markdown content={artefact.content ?? ""} />
+							</Accordion.Panel>
+						</Accordion.Item>
+					);
+				})}
+			</Accordion>
 		</Stack>
 	);
 };
