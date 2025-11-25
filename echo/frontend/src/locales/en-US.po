@@ -338,7 +338,7 @@ msgstr "Already added to this chat"
 
 #. placeholder {0}: participantCount !== undefined ? participantCount : t`loading...`
 #. placeholder {1}: participantCount === 1 ? "" : "s"
-#: src/routes/project/report/ProjectReportRoute.tsx:322
+#: src/routes/project/report/ProjectReportRoute.tsx:321
 msgid "An email notification will be sent to {0} participant{1}. Do you want to proceed?"
 msgstr "An email notification will be sent to {0} participant{1}. Do you want to proceed?"
 
@@ -397,7 +397,7 @@ msgstr "Announcements"
 #~ msgstr "Anonymous Participant"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:444
+#: src/components/participant/verify/VerifyArtefact.tsx:455
 msgid "participant.verify.action.button.approve"
 msgstr "Approve"
 
@@ -451,24 +451,24 @@ msgstr "Are you sure you want to generate the library? This will take a while an
 msgid "Are you sure you want to regenerate the summary? You will lose the current summary."
 msgstr "Are you sure you want to regenerate the summary? You will lose the current summary."
 
-#: src/components/participant/verify/VerifyArtefact.tsx:155
+#: src/components/participant/verify/VerifyArtefact.tsx:156
 msgid "Artefact approved successfully!"
 msgstr "Artefact approved successfully!"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:255
+#: src/components/participant/verify/VerifyArtefact.tsx:266
 msgid "Artefact reloaded successfully!"
 msgstr "Artefact reloaded successfully!"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:197
+#: src/components/participant/verify/VerifyArtefact.tsx:198
 msgid "Artefact revised successfully!"
 msgstr "Artefact revised successfully!"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:225
+#: src/components/participant/verify/VerifyArtefact.tsx:236
 msgid "Artefact updated successfully!"
 msgstr "Artefact updated successfully!"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:331
+#: src/components/participant/verify/VerifyArtefact.tsx:342
 msgid "participant.verify.artefact.title"
 msgstr "Artefact: {selectedOptionLabel}"
 
@@ -569,7 +569,7 @@ msgstr "Back"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantOnboardingCards.tsx:383
-#: src/components/layout/ParticipantHeader.tsx:57
+#: src/components/layout/ParticipantHeader.tsx:67
 msgid "participant.button.back"
 msgstr "Back"
 
@@ -601,7 +601,12 @@ msgstr "Brainstorm Ideas"
 msgid "By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you ABSOLUTELY sure you want to delete this project?"
 msgstr "By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you ABSOLUTELY sure you want to delete this project?"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:333
+#. js-lingui-explicit-id
+#: src/components/layout/ParticipantHeader.tsx:79
+msgid "participant.verify.instructions.button.cancel"
+msgstr "Cancel"
+
+#: src/routes/project/report/ProjectReportRoute.tsx:332
 #: src/components/settings/TwoFactorSettingsCard.tsx:387
 #: src/components/project/ProjectDangerZone.tsx:137
 #: src/components/project/ProjectDangerZone.tsx:163
@@ -618,7 +623,7 @@ msgid "participant.mic.settings.modal.second.confirm.cancel"
 msgstr "Cancel"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:380
+#: src/components/participant/verify/VerifyArtefact.tsx:391
 msgid "participant.verify.action.button.cancel"
 msgstr "Cancel"
 
@@ -730,7 +735,7 @@ msgstr "Confirm New Password"
 msgid "Confirm Password"
 msgstr "Confirm Password"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:319
+#: src/routes/project/report/ProjectReportRoute.tsx:318
 msgid "Confirm Publishing"
 msgstr "Confirm Publishing"
 
@@ -821,7 +826,7 @@ msgstr "Conversation Status Details"
 msgid "conversations"
 msgstr "conversations"
 
-#: src/components/conversation/ConversationAccordion.tsx:865
+#: src/components/conversation/ConversationAccordion.tsx:866
 msgid "Conversations"
 msgstr "Conversations"
 
@@ -856,7 +861,7 @@ msgstr "Copy"
 msgid "Copy link"
 msgstr "Copy link"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:199
+#: src/routes/project/report/ProjectReportRoute.tsx:198
 msgid "Copy link to share this report"
 msgstr "Copy link to share this report"
 
@@ -1112,7 +1117,7 @@ msgstr "Edit Report Content"
 msgid "report.editor.description"
 msgstr "Edit the report content using the rich text editor below. You can format text, add links, images, and more."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:299
+#: src/routes/project/report/ProjectReportRoute.tsx:298
 msgid "Editing mode"
 msgstr "Editing mode"
 
@@ -1330,7 +1335,7 @@ msgstr "Failed to add conversation to chat"
 msgid "Failed to add conversation to chat{0}"
 msgstr "Failed to add conversation to chat{0}"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:159
+#: src/components/participant/verify/VerifyArtefact.tsx:160
 msgid "Failed to approve artefact. Please try again."
 msgstr "Failed to approve artefact. Please try again."
 
@@ -1352,7 +1357,7 @@ msgstr "Failed to enable Auto Select for this chat"
 msgid "Failed to finish conversation. Please try again."
 msgstr "Failed to finish conversation. Please try again."
 
-#: src/components/participant/verify/VerifySelection.tsx:110
+#: src/components/participant/verify/VerifySelection.tsx:129
 msgid "Failed to generate {label}. Please try again."
 msgstr "Failed to generate {label}. Please try again."
 
@@ -1391,7 +1396,7 @@ msgstr "Failed to mark announcement as read"
 msgid "Failed to regenerate the summary. Please try again later."
 msgstr "Failed to regenerate the summary. Please try again later."
 
-#: src/components/participant/verify/VerifyArtefact.tsx:257
+#: src/components/participant/verify/VerifyArtefact.tsx:268
 msgid "Failed to reload. Please try again."
 msgstr "Failed to reload. Please try again."
 
@@ -1408,7 +1413,7 @@ msgstr "Failed to remove conversation from chat{0}"
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Failed to retranscribe conversation. Please try again."
 
-#: src/components/participant/verify/VerifyArtefact.tsx:199
+#: src/components/participant/verify/VerifyArtefact.tsx:209
 msgid "Failed to revise artefact. Please try again."
 msgstr "Failed to revise artefact. Please try again."
 
@@ -1602,7 +1607,7 @@ msgstr "Hi, {0}"
 msgid "Hidden"
 msgstr "Hidden"
 
-#: src/components/participant/verify/VerifySelection.tsx:92
+#: src/components/participant/verify/VerifySelection.tsx:101
 msgid "Hidden gem"
 msgstr "Hidden gem"
 
@@ -1692,7 +1697,7 @@ msgstr "If you are happy with the {objectLabel} click \"Approve\" to show you fe
 msgid "In the meantime, if you want to analyze the conversations that are still processing, you can use the Chat feature"
 msgstr "In the meantime, if you want to analyze the conversations that are still processing, you can use the Chat feature"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:270
+#: src/routes/project/report/ProjectReportRoute.tsx:269
 msgid "Include portal link in report"
 msgstr "Include portal link in report"
 
@@ -1882,7 +1887,7 @@ msgstr "Loading microphones..."
 msgid "Loading verification topics…"
 msgstr "Loading verification topics…"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:326
+#: src/routes/project/report/ProjectReportRoute.tsx:325
 msgid "loading..."
 msgstr "loading..."
 
@@ -1891,7 +1896,7 @@ msgstr "loading..."
 msgid "Loading..."
 msgstr "Loading..."
 
-#: src/components/participant/verify/VerifySelection.tsx:214
+#: src/components/participant/verify/VerifySelection.tsx:235
 msgid "Loading…"
 msgstr "Loading…"
 
@@ -2032,7 +2037,7 @@ msgid "participant.ready.to.begin.button.text"
 msgstr "Next"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifySelection.tsx:216
+#: src/components/participant/verify/VerifySelection.tsx:237
 msgid "participant.verify.selection.button.next"
 msgstr "Next"
 
@@ -2096,7 +2101,7 @@ msgstr "No conversations available to create library. Please add some conversati
 msgid "No conversations found."
 msgstr "No conversations found."
 
-#: src/components/conversation/ConversationAccordion.tsx:1170
+#: src/components/conversation/ConversationAccordion.tsx:1171
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 
@@ -2111,6 +2116,10 @@ msgstr "No conversations yet"
 #: src/components/project/ProjectTranscriptSettings.tsx:143
 #~ msgid "No key terms or proper nouns have been added yet. Add them using the input above to improve transcript accuracy."
 #~ msgstr "No key terms or proper nouns have been added yet. Add them using the input above to improve transcript accuracy."
+
+#: src/components/participant/verify/VerifyArtefact.tsx:206
+msgid "No new feedback detected yet. Please continue your discussion and try again soon."
+msgstr "No new feedback detected yet. Please continue your discussion and try again soon."
 
 #. placeholder {0}: search && `with "${search}"`
 #: src/components/conversation/MoveConversationButton.tsx:159
@@ -2142,7 +2151,7 @@ msgid "No results"
 msgstr "No results"
 
 #: src/components/conversation/ConversationEdit.tsx:167
-#: src/components/conversation/ConversationAccordion.tsx:1117
+#: src/components/conversation/ConversationAccordion.tsx:1118
 msgid "No tags found"
 msgstr "No tags found"
 
@@ -2174,7 +2183,7 @@ msgstr "No tutorial (only Privacy statements)"
 msgid "No valid audio files were selected. Please select audio files only (MP3, WAV, OGG, etc)."
 msgstr "No valid audio files were selected. Please select audio files only (MP3, WAV, OGG, etc)."
 
-#: src/components/participant/verify/VerifySelection.tsx:178
+#: src/components/participant/verify/VerifySelection.tsx:199
 msgid "No verification topics are configured for this project."
 msgstr "No verification topics are configured for this project."
 
@@ -2213,7 +2222,7 @@ msgstr "Ongoing"
 #~ msgid "Ongoing"
 #~ msgstr "Ongoing"
 
-#: src/components/conversation/OngoingConversationsSummaryCard.tsx:61
+#: src/components/conversation/OngoingConversationsSummaryCard.tsx:80
 msgid "Ongoing Conversations"
 msgstr "Ongoing Conversations"
 
@@ -2256,8 +2265,8 @@ msgstr "Open troubleshooting guide"
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Open your authenticator app and enter the current six-digit code."
 
-#: src/components/conversation/ConversationAccordion.tsx:909
-#: src/components/conversation/ConversationAccordion.tsx:916
+#: src/components/conversation/ConversationAccordion.tsx:910
+#: src/components/conversation/ConversationAccordion.tsx:917
 msgid "Options"
 msgstr "Options"
 
@@ -2297,7 +2306,7 @@ msgstr "Participants will be able to select tags when creating conversations"
 msgid "Password"
 msgstr "Password"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:289
+#: src/routes/project/report/ProjectReportRoute.tsx:288
 msgid "Password protect portal (request feature)"
 msgstr "Password protect portal (request feature)"
 
@@ -2310,7 +2319,7 @@ msgstr "Passwords do not match"
 #~ msgid "Pause"
 #~ msgstr "Pause"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:341
+#: src/components/participant/verify/VerifyArtefact.tsx:352
 msgid "Pause reading"
 msgstr "Pause reading"
 
@@ -2441,7 +2450,7 @@ msgstr "Powered by"
 msgid "Preparing your experience"
 msgstr "Preparing your experience"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:206
+#: src/routes/project/report/ProjectReportRoute.tsx:205
 msgid "Print this report"
 msgstr "Print this report"
 
@@ -2449,7 +2458,7 @@ msgstr "Print this report"
 msgid "Privacy Statements"
 msgstr "Privacy Statements"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:336
+#: src/routes/project/report/ProjectReportRoute.tsx:335
 msgid "Proceed"
 msgstr "Proceed"
 
@@ -2534,11 +2543,11 @@ msgstr "Provide an overview of the main topics and recurring themes"
 #~ msgid "Provide specific context to improve transcript quality and accuracy. This may include key terms, specific instructions, or other relevant information."
 #~ msgstr "Provide specific context to improve transcript quality and accuracy. This may include key terms, specific instructions, or other relevant information."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:227
+#: src/routes/project/report/ProjectReportRoute.tsx:226
 msgid "Publish"
 msgstr "Publish"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:227
+#: src/routes/project/report/ProjectReportRoute.tsx:226
 msgid "Published"
 msgstr "Published"
 
@@ -2548,7 +2557,7 @@ msgstr "Published"
 #~ msgid "Quotes"
 #~ msgstr "Quotes"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:341
+#: src/components/participant/verify/VerifyArtefact.tsx:352
 msgid "Read aloud"
 msgstr "Read aloud"
 
@@ -2625,7 +2634,7 @@ msgid "Regenerate Summary"
 msgstr "Regenerate Summary"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:316
+#: src/components/participant/verify/VerifyArtefact.tsx:327
 msgid "participant.verify.regenerating.artefact"
 msgstr "Regenerating the artefact"
 
@@ -2753,8 +2762,8 @@ msgstr "Reset Password"
 msgid "Reset Password | Dembrane"
 msgstr "Reset Password | Dembrane"
 
-#: src/components/conversation/ConversationAccordion.tsx:1138
-#: src/components/conversation/ConversationAccordion.tsx:1143
+#: src/components/conversation/ConversationAccordion.tsx:1139
+#: src/components/conversation/ConversationAccordion.tsx:1144
 msgid "Reset to default"
 msgstr "Reset to default"
 
@@ -2808,7 +2817,7 @@ msgid "Review processing status for every conversation collected in this project
 msgstr "Review processing status for every conversation collected in this project."
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:411
+#: src/components/participant/verify/VerifyArtefact.tsx:422
 msgid "participant.verify.action.button.revise"
 msgstr "Revise"
 
@@ -2821,7 +2830,7 @@ msgid "Rows per page"
 msgstr "Rows per page"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:388
+#: src/components/participant/verify/VerifyArtefact.tsx:399
 msgid "participant.verify.action.button.save"
 msgstr "Save"
 
@@ -2850,7 +2859,7 @@ msgstr "Scroll to bottom"
 msgid "Search"
 msgstr "Search"
 
-#: src/components/conversation/ConversationAccordion.tsx:903
+#: src/components/conversation/ConversationAccordion.tsx:904
 msgid "Search conversations"
 msgstr "Search conversations"
 
@@ -2867,7 +2876,7 @@ msgstr "Search Projects"
 msgid "Search projects..."
 msgstr "Search projects..."
 
-#: src/components/conversation/ConversationAccordion.tsx:1039
+#: src/components/conversation/ConversationAccordion.tsx:1040
 msgid "Search tags"
 msgstr "Search tags"
 
@@ -2969,8 +2978,8 @@ msgid "Setting up your first project"
 msgstr "Setting up your first project"
 
 #: src/routes/settings/UserSettingsRoute.tsx:38
-#: src/components/layout/ParticipantHeader.tsx:69
-#: src/components/layout/ParticipantHeader.tsx:70
+#: src/components/layout/ParticipantHeader.tsx:93
+#: src/components/layout/ParticipantHeader.tsx:94
 #: src/components/layout/Header.tsx:170
 msgid "Settings"
 msgstr "Settings"
@@ -2988,7 +2997,7 @@ msgstr "Settings | Dembrane"
 msgid "Share"
 msgstr "Share"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:176
+#: src/routes/project/report/ProjectReportRoute.tsx:175
 msgid "Share this report"
 msgstr "Share this report"
 
@@ -3049,7 +3058,7 @@ msgstr "Show references"
 msgid "Show revision data"
 msgstr "Show revision data"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:284
+#: src/routes/project/report/ProjectReportRoute.tsx:283
 msgid "Show timeline in report (request feature)"
 msgstr "Show timeline in report (request feature)"
 
@@ -3119,7 +3128,7 @@ msgstr "Something went wrong with the conversation. Please try refreshing the pa
 msgid "participant.echo.generic.error.message"
 msgstr "Something went wrong. Please try again by pressing the <0>ECHO</0> button, or contact support if the issue continues."
 
-#: src/components/participant/verify/VerifyArtefact.tsx:172
+#: src/components/participant/verify/VerifyArtefact.tsx:173
 msgid "Something went wrong. Please try again."
 msgstr "Something went wrong. Please try again."
 
@@ -3128,8 +3137,8 @@ msgstr "Something went wrong. Please try again."
 msgid "participant.echo.content.policy.violation.error.message"
 msgstr "Sorry, we cannot process this request due to an LLM provider's content policy."
 
-#: src/components/conversation/ConversationAccordion.tsx:963
-#: src/components/conversation/ConversationAccordion.tsx:970
+#: src/components/conversation/ConversationAccordion.tsx:964
+#: src/components/conversation/ConversationAccordion.tsx:971
 msgid "Sort"
 msgstr "Sort"
 
@@ -3246,8 +3255,8 @@ msgstr "System"
 #: src/components/project/ProjectTagsInput.tsx:241
 #: src/components/participant/ParticipantInitiateForm.tsx:107
 #: src/components/conversation/ConversationEdit.tsx:139
-#: src/components/conversation/ConversationAccordion.tsx:1029
-#: src/components/conversation/ConversationAccordion.tsx:1032
+#: src/components/conversation/ConversationAccordion.tsx:1030
+#: src/components/conversation/ConversationAccordion.tsx:1033
 msgid "Tags"
 msgstr "Tags"
 
@@ -3482,7 +3491,7 @@ msgid "This will create a new conversation with the same audio but a fresh trans
 msgstr "This will create a new conversation with the same audio but a fresh transcription. The original conversation will remain unchanged."
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:321
+#: src/components/participant/verify/VerifyArtefact.tsx:332
 msgid "participant.verify.regenerating.artefact.description"
 msgstr "This will just take a few moments"
 
@@ -3663,7 +3672,7 @@ msgstr "Unable to Load Artefact"
 msgid "Unable to load audit logs."
 msgstr "Unable to load audit logs."
 
-#: src/components/participant/verify/VerifyArtefact.tsx:112
+#: src/components/participant/verify/VerifyArtefact.tsx:113
 msgid "Unable to load the generated artefact. Please try again."
 msgstr "Unable to load the generated artefact. Please try again."
 
@@ -3778,20 +3787,20 @@ msgstr "Use Shift + Enter to add a new line"
 msgid "Verification Topics"
 msgstr "Verification Topics"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:93
+#: src/components/participant/verify/VerifyArtefact.tsx:94
 msgid "verified"
 msgstr "verified"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:1135
+#: src/components/conversation/ConversationAccordion.tsx:1136
 msgid "conversation.filters.verified.text"
 msgstr "Verified"
 
-#: src/components/conversation/VerifiedArtefactsSection.tsx:56
+#: src/components/conversation/VerifiedArtefactsSection.tsx:65
 msgid "verified artefact"
 msgstr "verified artefact"
 
-#: src/components/conversation/VerifiedArtefactsSection.tsx:51
+#: src/components/conversation/VerifiedArtefactsSection.tsx:60
 msgid "Verified Artefacts"
 msgstr "Verified Artefacts"
 
@@ -3927,7 +3936,7 @@ msgid "Welcome!"
 msgstr "Welcome!"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifySelection.tsx:162
+#: src/components/participant/verify/VerifySelection.tsx:183
 msgid "participant.verify.selection.title"
 msgstr "What do you want to verify?"
 
