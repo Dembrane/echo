@@ -2,7 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Box, Button, Group, Stack, Text, Title } from "@mantine/core";
 import { IconArrowRight } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { Logo } from "@/components/common/Logo";
 import { toast } from "@/components/common/Toaster";
@@ -44,6 +44,7 @@ export const VerifySelection = () => {
 	const [generatedArtefactId, setGeneratedArtefactId] = useState<string | null>(
 		null,
 	);
+	const abortControllerRef = useRef<AbortController | null>(null);
 	const generateArtefactMutation = useGenerateVerificationArtefactMutation();
 	const projectQuery = useParticipantProjectById(projectId ?? "");
 	const topicsQuery = useVerificationTopics(projectId);
@@ -88,6 +89,14 @@ export const VerifySelection = () => {
 		}
 	}, [selectedOption, selectedTopics]);
 
+	useEffect(() => {
+		return () => {
+			if (abortControllerRef.current) {
+				abortControllerRef.current.abort();
+			}
+		};
+	}, []);
+
 	const getOptionLabel = (key: string | null) => {
 		if (!key) return t`Hidden gem`;
 		return availableOptions.find((option) => option.key === key)?.label ?? key;
@@ -95,30 +104,42 @@ export const VerifySelection = () => {
 
 	const handleGenerationFlow = async (topicKey: string) => {
 		if (!conversationId) return;
+
+		abortControllerRef.current = new AbortController();
+
 		setGeneratedArtefactId(null);
 		setInstructionTopicKey(topicKey);
 		setSearchParams({ instructions: "true" });
 		try {
 			const artefact = await generateArtefactMutation.mutateAsync({
 				conversationId,
+				signal: abortControllerRef.current.signal,
 				topicKey,
 			});
 			setGeneratedArtefactId(artefact.id);
+			startCooldown(conversationId, "verify");
 		} catch (error) {
+			// Don't show error toast if request was aborted
+			if (error instanceof Error && error.name === "CanceledError") {
+				return;
+			}
+
 			console.error("error generating verification artefact", error);
 			const label = getOptionLabel(topicKey);
 			toast.error(t`Failed to generate ${label}. Please try again.`);
+
+			setInstructionTopicKey(null);
+			setSelectedOption(null);
 			setSearchParams({});
+		} finally {
+			abortControllerRef.current = null;
 		}
 	};
 
 	const handleNext = () => {
 		if (!selectedOption || !conversationId) return;
 
-		// Start cooldown for verify
-		startCooldown(conversationId, "verify");
-
-		void handleGenerationFlow(selectedOption);
+		handleGenerationFlow(selectedOption);
 	};
 
 	const handleInstructionsNext = () => {

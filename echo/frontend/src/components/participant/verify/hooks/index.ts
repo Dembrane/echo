@@ -23,6 +23,7 @@ export const useVerificationTopics = (projectId: string | undefined) => {
 type GenerateArtefactVariables = {
 	conversationId: string;
 	topicKey: string;
+	signal?: AbortSignal;
 };
 
 export const useGenerateVerificationArtefactMutation = () => {
@@ -32,9 +33,11 @@ export const useGenerateVerificationArtefactMutation = () => {
 		mutationFn: async ({
 			conversationId,
 			topicKey,
+			signal,
 		}: GenerateArtefactVariables): Promise<VerificationArtifact> => {
 			const generatedArtefacts = await generateVerificationArtefact({
 				conversationId,
+				signal,
 				topicList: [topicKey],
 			});
 

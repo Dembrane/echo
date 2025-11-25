@@ -1053,16 +1053,23 @@ export type VerificationArtifactDetail = {
 export const generateVerificationArtefact = async (payload: {
 	conversationId: string;
 	topicList: string[];
+	signal?: AbortSignal;
 }): Promise<VerificationArtifact[]> => {
 	const response = await apiNoAuth.post<
 		unknown,
 		{
 			artifact_list?: VerificationArtifact[];
 		}
-	>("/verify/generate", {
-		conversation_id: payload.conversationId,
-		topic_list: payload.topicList,
-	});
+	>(
+		"/verify/generate",
+		{
+			conversation_id: payload.conversationId,
+			topic_list: payload.topicList,
+		},
+		{
+			signal: payload.signal,
+		},
+	);
 
 	return response?.artifact_list ?? [];
 };

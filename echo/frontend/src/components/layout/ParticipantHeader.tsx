@@ -24,6 +24,10 @@ export const ParticipantHeader = () => {
 		(pathname.includes("/verify") || pathname.includes("/refine")) &&
 		!pathname.includes("/verify/approve") &&
 		!showInstructions;
+	const showCancelButton =
+		pathname.includes("/verify") &&
+		!pathname.includes("/verify/approve") &&
+		showInstructions;
 	const hideSettingsButton =
 		pathname.includes("start") || pathname.includes("finish");
 
@@ -32,6 +36,12 @@ export const ParticipantHeader = () => {
 	}
 
 	const handleBack = () => {
+		if (projectId && conversationId) {
+			navigate(`/${projectId}/conversation/${conversationId}`);
+		}
+	};
+
+	const handleCancel = () => {
 		if (projectId && conversationId) {
 			navigate(`/${projectId}/conversation/${conversationId}`);
 		}
@@ -55,6 +65,20 @@ export const ParticipantHeader = () => {
 							onClick={handleBack}
 						>
 							<Trans id="participant.button.back">Back</Trans>
+						</Button>
+					</Box>
+				)}
+				{showCancelButton && (
+					<Box className="absolute left-4 top-1/2 -translate-y-1/2">
+						<Button
+							size="md"
+							variant="light"
+							className="rounded-full"
+							onClick={handleCancel}
+						>
+							<Trans id="participant.verify.instructions.button.cancel">
+								Cancel
+							</Trans>
 						</Button>
 					</Box>
 				)}
