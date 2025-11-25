@@ -248,6 +248,9 @@ async def list_verification_artifacts(
     await _get_conversation_with_project(conversation_id, client)
     artifacts = await _get_conversation_artifacts(conversation_id, client)
 
+    # Filter out artifacts without approved_at to avoid showing draft artifacts
+    artifacts = [artifact for artifact in artifacts if artifact.get("approved_at")]
+
     def _sort_key(item: dict) -> tuple[bool, str]:
         approved = item.get("approved_at")
         created = item.get("date_created")
@@ -428,6 +431,10 @@ def _build_transcript_text(chunks: List[dict]) -> str:
     return "\n".join(transcripts)
 
 
+def _has_chunks(chunks: List[dict]) -> bool:
+    return len(chunks) > 0
+
+
 def _build_feedback_text(chunks: List[dict], reference_time: datetime) -> str:
     feedback_segments: List[str] = []
     for chunk in chunks:
@@ -569,6 +576,20 @@ async def generate_verification_artifacts(
         last_artifact_time = _parse_directus_datetime(artifacts[-1].get("date_created"))
 
     chunks = await _get_conversation_chunks(body.conversation_id, client)
+    if not _has_chunks(chunks):
+        logger.error(
+            "Verify blocked for conversation %s: %s",
+            body.conversation_id,
+            "Conversation has no chunks yet",
+        )
+
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "NO_CHUNKS",
+                "message": "Conversation has no chunks yet",
+            },
+        )
     transcript_text = _build_transcript_text(chunks)
     audio_chunks = _select_audio_chunks(chunks, last_artifact_time)
     audio_summary = _format_audio_summary(audio_chunks)
@@ -589,7 +610,8 @@ async def generate_verification_artifacts(
         path = chunk.get("path")
         if path:
             try:
-                message_content.append(_get_audio_file_object(path))
+                audio_obj = await run_in_thread_pool(_get_audio_file_object, path)
+                message_content.append(audio_obj)
             except Exception as exc:
                 logger.warning("Failed to attach audio chunk %s: %s", chunk_id, exc)
 
@@ -604,7 +626,7 @@ async def generate_verification_artifacts(
     completion_kwargs = get_completion_kwargs(MODELS.MULTI_MODAL_PRO)
 
     try:
-        response = litellm.completion(
+        response = await litellm.acompletion(
             messages=[
                 {
                     "role": "system",
@@ -688,7 +710,10 @@ async def update_verification_artifact(
         if not feedback_text and not audio_chunks:
             raise HTTPException(
                 status_code=400,
-                detail="No new feedback found since provided timestamp",
+                detail={
+                    "code": "NO_NEW_FEEDBACK",
+                    "message": "No new feedback found since provided timestamp",
+                },
             )
 
         system_prompt = render_prompt(
@@ -721,14 +746,15 @@ async def update_verification_artifact(
             path = chunk.get("path")
             if path:
                 try:
-                    message_content.append(_get_audio_file_object(path))
+                    audio_obj = await run_in_thread_pool(_get_audio_file_object, path)
+                    message_content.append(audio_obj)
                 except Exception as exc:  # pragma: no cover - logging side effect
                     logger.warning("Failed to attach audio chunk %s: %s", chunk_id, exc)
 
         revision_completion_kwargs = get_completion_kwargs(MODELS.MULTI_MODAL_PRO)
 
         try:
-            response = litellm.completion(
+            response = await litellm.acompletion(
                 messages=[
                     {
                         "role": "system",

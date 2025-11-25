@@ -425,7 +425,7 @@ export const ParticipantConversationAudio = () => {
 						)}
 
 						{!isRecording && (
-							<Group className="w-full">
+							<Group className="w-full" wrap="nowrap">
 								<Button
 									size="lg"
 									radius="md"
@@ -451,8 +451,8 @@ export const ParticipantConversationAudio = () => {
 											radius="md"
 											onClick={open}
 											variant="light"
-											rightSection={<IconCheck />}
-											className="w-full md:w-auto"
+											rightSection={<IconCheck className="hidden sm:block" />}
+											className="w-auto"
 											loading={isFinishing}
 											disabled={isFinishing}
 										>

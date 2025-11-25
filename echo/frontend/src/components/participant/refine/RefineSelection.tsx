@@ -56,7 +56,7 @@ export const RefineSelection = () => {
 					<Stack
 						gap="lg"
 						align="center"
-						className="h-full px-6 py-6 justify-center"
+						className="h-full px-2 py-6 justify-center"
 					>
 						<Group gap="sm" align="center">
 							<IconMessageFilled size={32} />

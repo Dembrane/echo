@@ -12,6 +12,7 @@ import {
 } from "@mantine/core";
 import { IconPencil, IconPlayerPause, IconVolume } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { memo, useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
@@ -196,7 +197,17 @@ export const VerifyArtefact = () => {
 
 			toast.success(t`Artefact revised successfully!`);
 		} catch (error) {
-			toast.error(t`Failed to revise artefact. Please try again.`);
+			if (
+				error instanceof AxiosError &&
+				error?.response?.data.detail.code === "NO_NEW_FEEDBACK"
+			) {
+				reviseCooldown.trigger();
+				toast.info(
+					t`No new feedback detected yet. Please continue your discussion and try again soon.`,
+				);
+			} else {
+				toast.error(t`Failed to revise artefact. Please try again.`);
+			}
 			console.error("error revising artefact: ", error);
 		} finally {
 			setIsRevising(false);
