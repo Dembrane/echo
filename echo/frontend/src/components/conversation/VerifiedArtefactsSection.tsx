@@ -13,10 +13,13 @@ import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Markdown } from "@/components/common/Markdown";
+import { useVerificationTopics } from "@/components/participant/verify/hooks";
 import { getVerificationArtefacts } from "@/lib/api";
 
 type VerifiedArtefactsSectionProps = {
 	conversationId: string;
+	projectId: string;
+	projectLanguage?: string | null;
 };
 
 const formatArtefactTime = (timestamp: string | null | undefined): string => {
@@ -29,8 +32,18 @@ const formatArtefactTime = (timestamp: string | null | undefined): string => {
 	}
 };
 
+const LANGUAGE_TO_LOCALE: Record<string, string> = {
+	de: "de-DE",
+	en: "en-US",
+	es: "es-ES",
+	fr: "fr-FR",
+	nl: "nl-NL",
+};
+
 export const VerifiedArtefactsSection = ({
 	conversationId,
+	projectId,
+	projectLanguage,
 }: VerifiedArtefactsSectionProps) => {
 	// Fetch all artefacts with content for display
 	const { data: artefacts, isLoading } = useQuery({
@@ -38,6 +51,20 @@ export const VerifiedArtefactsSection = ({
 		queryFn: () => getVerificationArtefacts(conversationId),
 		queryKey: ["verify", "conversation_artifacts", conversationId],
 	});
+
+	const topicsQuery = useVerificationTopics(projectId);
+	const locale =
+		LANGUAGE_TO_LOCALE[projectLanguage ?? "en"] ?? LANGUAGE_TO_LOCALE.en;
+
+	const availableTopics = topicsQuery.data?.available_topics ?? [];
+	const topicLabelMap = new Map(
+		availableTopics.map((topic) => [
+			topic.key,
+			topic.translations?.[locale]?.label ??
+				topic.translations?.["en-US"]?.label ??
+				topic.key,
+		]),
+	);
 
 	if (isLoading) {
 		return (
@@ -78,7 +105,9 @@ export const VerifiedArtefactsSection = ({
 							<Accordion.Control>
 								<Group gap="sm" wrap="nowrap">
 									<Stack gap={2}>
-										<Text fw={500}>{artefact.key || ""}</Text>
+										<Text fw={500}>
+											{topicLabelMap.get(artefact.key) ?? artefact.key ?? ""}
+										</Text>
 										{formattedDate && (
 											<Text size="xs" c="dimmed">
 												<Trans id="conversation.verified.approved">

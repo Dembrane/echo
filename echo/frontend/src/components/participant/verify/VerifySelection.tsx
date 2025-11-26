@@ -222,7 +222,7 @@ export const VerifySelection = () => {
 
 			{/* Next button */}
 			<Button
-				size="lg"
+				size="xl"
 				radius="3xl"
 				onClick={handleNext}
 				className="w-full"

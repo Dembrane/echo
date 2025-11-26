@@ -89,7 +89,7 @@ export const VerifyInstructions = ({
 
 			{/* Next button */}
 			<Button
-				size="lg"
+				size="xl"
 				radius="3xl"
 				onClick={onNext}
 				className="w-full disabled:text-gray-600"
