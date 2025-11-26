@@ -103,7 +103,7 @@ class ProjectService:
         project_id: str,
         language: str,
         content: str,
-        status: str = "archived",
+        status: str,
         error_code: Optional[str] = None,
     ) -> dict:
         payload = {
@@ -117,6 +117,7 @@ class ProjectService:
             payload["error_code"] = error_code
 
         with directus_client_context(self.directus_client) as client:
+            self.logger.info(f"Creating report for project {project_id} with status: {status}")
             report = client.create_item("project_report", item_data=payload)["data"]
 
         return report
@@ -229,3 +230,37 @@ class ProjectService:
                 self.create_tags_and_link(new_project["id"], tag_str_list)
 
         return new_project["id"]
+
+    def get_context_for_prompt(self, project_id: str) -> str | None:
+        project = self.get_by_id_or_raise(project_id)
+
+        builder = []
+
+        if project["name"]:
+            builder.append("name: " + project["name"])
+
+        if project["context"]:
+            builder.append("context: " + project["context"])
+
+        if project["default_conversation_transcript_prompt"]:
+            builder.append(
+                "hotwords that the user set: " + project["default_conversation_transcript_prompt"]
+            )
+
+        ### Portal details
+        if project["default_conversation_title"]:
+            builder.append(
+                "default title that was shown to the user (not always relevant but might add context): "
+                + project["default_conversation_title"]
+            )
+
+        if project["default_conversation_description"]:
+            builder.append(
+                "default question that was shown to the user (not always relevant but might add context): "
+                + project["default_conversation_description"]
+            )
+
+        if len(builder) > 0:
+            return "project context: " + "\n".join(builder)
+        else:
+            return None

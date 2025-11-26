@@ -588,3 +588,32 @@ class ConversationService:
             raise ConversationServiceException() from e
 
         return conversations or []
+
+    def get_verified_artifacts(self, conversation_id: str, limit: int = 3) -> List[dict]:
+        try:
+            with self._client_context() as client:
+                artifacts = client.get_items(
+                    "conversation_artifact",
+                    {
+                        "query": {
+                            "filter": {
+                                "conversation_id": conversation_id,
+                                "approved_at": {"_nnull": True},
+                            },
+                            "fields": ["id", "key", "content"],
+                            "sort": "-approved_at",
+                            "limit": limit,
+                        }
+                    },
+                )
+        except DirectusBadRequest as e:
+            logger.error(
+                "Failed to get verified artifacts for conversation %s via Directus: %s",
+                conversation_id,
+                e,
+            )
+            raise ConversationServiceException() from e
+        except (KeyError, IndexError) as e:
+            raise ConversationServiceException() from e
+
+        return artifacts or []

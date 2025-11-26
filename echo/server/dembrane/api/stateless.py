@@ -15,13 +15,20 @@ logger = getLogger("api.stateless")
 StatelessRouter = APIRouter(tags=["stateless"])
 
 
-def generate_summary(transcript: str, language: str | None) -> str:
+def generate_summary(
+    transcript: str,
+    language: str | None,
+    project_context: str | None = None,
+    verified_artifacts: list[str] | None = None,
+) -> str:
     """
     Generate a summary of the transcript using LangChain and a custom API endpoint.
 
     Args:
         transcript (str): The conversation transcript to summarize.
         language (str | None): The language of the transcript.
+        project_context (str | None): Optional project context to include.
+        verified_artifacts (list[str] | None): Optional list of verified artifacts.
 
     Returns:
         str: The generated summary.
@@ -30,23 +37,37 @@ def generate_summary(transcript: str, language: str | None) -> str:
     prompt = render_prompt(
         "generate_conversation_summary",
         language if language else "en",
-        {"quote_text_joined": transcript},
+        {
+            "quote_text_joined": transcript,
+            "project_context": project_context,
+            # Pass empty list instead of None for Jinja iteration safety
+            "verified_artifacts": verified_artifacts or [],
+        },
     )
 
-    # Call the model over the provided API endpoint
-    response = completion(
-        messages=[
-            {
-                "content": prompt,
-                "role": "user",
-            }
-        ],
-        **get_completion_kwargs(MODELS.TEXT_FAST),
-    )
+    try:
+        response = completion(
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            **get_completion_kwargs(MODELS.MULTI_MODAL_PRO),
+        )
+    except Exception as e:
+        logger.error(f"LiteLLM completion error: {e}")
+        raise
 
-    response_content = response["choices"][0]["message"]["content"]
-
-    return response_content
+    try:
+        response_content = response.choices[0].message.content
+        if response_content is None:
+            logger.warning("LLM returned None content for summary")
+            return ""
+        return response_content
+    except (IndexError, AttributeError, KeyError) as e:
+        logger.error(f"Error getting response content for summary: {e}")
+        return ""
 
 
 def validate_segment_id(echo_segment_ids: list[str] | None) -> bool:

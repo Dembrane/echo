@@ -362,10 +362,7 @@ async def create_report(
         raise e
 
     report = await run_in_thread_pool(
-        project_service.create_report,
-        project_id,
-        language,
-        report_content_response,
+        project_service.create_report, project_id, language, report_content_response, "archived"
     )
     return report
 
