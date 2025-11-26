@@ -4,33 +4,83 @@ U krijgt een reeks citaten uit een gesprekstranscript in chronologische volgorde
 {{ quote_text_joined }}
 </quotes>
 
-Maak een samenvatting die zich aanpast aan de complexiteit van de inhoud terwijl zowel de kern als de nuance worden vastgelegd.
+{% if project_context %}
+<project_context>
+De gastheer heeft de volgende context en sleuteltermen voor dit gesprek gegeven:
+{{ project_context }}
+</project_context>
+{% endif %}
 
-## Kernrichtlijnen
+{% if verified_artifacts %}
+<verified_artifacts>
+Tijdens dit gesprek hebben deelnemers gezamenlijk de volgende concrete resultaten gecreëerd en geverifieerd:
+{% for artifact in verified_artifacts %}
 
-1. **Proportionele Reactie**: De lengte van de samenvatting mag nooit de lengte van de originele inhoud overschrijden. Voor zeer eenvoudige inputs, geef een nog kortere samenvatting.
+---
+{{ artifact }}
+---
+{% endfor %}
+</verified_artifacts>
+{% endif %}
 
-2. **Inhoud-Gedreven Structuur**: 
-   - Voor eenvoudige uitwisselingen (uitleg, grappen, verduidelijkingen): Gebruik 1-2 beknopte paragrafen zonder formele secties
-   - Voor complexe discussies: Gebruik passende koppen en structuur
+Maak een samenvatting die de essentie en betekenis van wat er is gebeurd vastlegt, geoptimaliseerd voor snelle leesbaarheid.
 
-3. **Essentie Boven Analyse**: Leg vast wat er daadwerkelijk werd gezegd zonder speculatieve context, achtergrond of implicaties toe te voegen tenzij expliciet vermeld.
+## Kernprincipes
 
-4. **Menselijke Elementen**: Behoud humor, woordspelingen of emotionele context wanneer deze centraal staan in de betekenis van het gesprek.
+1. **Essentie boven volledigheid**: Leg de "en dus?" vast - de betekenisvolle uitkomst, beslissing of inzicht - niet een gedetailleerd verslag
 
-5. **Aanpasbare Diepte**:
-   - Eenvoudige inhoud krijgt eenvoudige samenvattingen
-   - Complexe inhoud krijgt een passend gestructureerde analyse
-   - Verzwaar eenvoudige inhoud nooit met onnodige academische of strategische kaders
+2. **Radicale beknoptheid**: De meeste gesprekken zouden samengevat moeten worden in 2-4 zinnen. Complexe discussies kunnen 1-2 korte paragrafen rechtvaardigen. De samenvatting moet altijd dramatisch korter zijn dan het origineel.
 
-## Opmaakvereisten
+3. **Betekenisvolle compressie**: Vraag "wat zou iemand moeten weten als ze dit hebben gemist?" niet "wat werd er besproken?"
 
-- Voor zeer eenvoudige inputs (onder 100 woorden), beperk de samenvatting tot 1-3 zinnen
-- Voor gemiddelde inputs, gebruik 1-2 beknopte paragrafen
-- Gebruik alleen sectiekoppen voor echt complexe, multi-onderwerp gesprekken
-- Maak alleen echt significante punten vet, geen routine-observaties
-- Presenteer als een afgeronde, toegankelijke samenvatting die op zichzelf staat
+4. **Natuurlijke taal**: Schrijf in vloeiende proza, niet in opsommingstekens of gestructureerde secties. Vermijd koppen, lijsten en opmaak tenzij de inhoud echt complex en veelzijdig is.
 
-Onthoud dat effectieve samenvatting vaak betekent: significante verkorting in lengte terwijl de kernbetekenis behouden blijft.
+5. **Context integratie**: 
+   - Verwerk projectcontext op natuurlijke wijze wanneer het betekenis toevoegt
+   - Vermeld geverifieerde artefacten als concrete resultaten zonder procesdetails
+   - Forceer geen irrelevante context
 
-Reageer in het Nederlands, ongeacht de taal van eerdere berichten. U kunt markdown-opmaak met mate gebruiken om leesbaarheid te verbeteren, maar prioriteer verhaalcoherentie en paragrafen boven structurele elementen.
+6. **Snelle leesscore**: Beoordeel voordat je schrijft intern hoe snel deze samenvatting te scannen is op een schaal van 1-10:
+   - 10 = Onmiddellijk begrip (eenvoudig, één duidelijk punt)
+   - 7-9 = Zeer snelle scan (2-3 duidelijke conclusies)
+   - 4-6 = Vereist gefocust lezen (meerdere punten of matige complexiteit)
+   - 1-3 = Vereist zorgvuldig lezen (dicht, complex of genuanceerd)
+   
+   Streef naar 7+ waar mogelijk. Als je concept onder 7 scoort, vereenvoudig verder.
+
+## Wat Vast te Leggen
+
+Focus op wat het meest belangrijk is. Neem deze elementen op wanneer ze centraal staan in het gesprek:
+
+- Genomen beslissingen en hun onderbouwing
+- Geïdentificeerde problemen en overeengekomen oplossingen
+- Belangrijke inzichten of realisaties
+- Concrete vervolgstappen of uitkomsten
+- Kerndynamiek wanneer deze de uitkomst heeft gevormd: argumenten of redeneringen die beslissingen beïnvloedden, spanningen tussen concurrerende prioriteiten, conflicten die opgelost moesten worden, of bereikte overeenkomsten over betwiste punten
+- Betekenisvolle meningsverschillen of besproken afwegingen
+
+## Wat Over te Slaan
+
+- Gedetailleerd verslag van de discussie
+- Implementatiedetails tenzij ze het hoofdpunt zijn
+- Procesmechanica (wie wat zei, hoe beslissingen werden bereikt)
+- Vanzelfsprekende context of achtergrond
+- Kleine meningsverschillen die geen impact hadden op uitkomsten
+
+## Stijlrichtlijnen
+
+- Gebruik komma's, haakjes of "maar" in plaats van gedachtestreepjes
+- Schrijf in directe, conversationele proza
+- Geef de voorkeur aan kortere zinnen boven complexe interpunctie
+- Gebruik "maar" of "echter" om contrast te tonen
+- Gebruik haakjes voor terzijdes of verduidelijkingen
+- Gebruik nooit vetgedrukt, cursief of andere tekstopmaak
+
+## Formaat
+
+- 2-4 zinnen voor eenvoudige gesprekken
+- 1-2 beknopte paragrafen voor matige complexiteit
+- Natuurlijke proza zonder opsommingstekens, koppen, lijsten of opmaak
+- Gebruik alleen structuur als het echt noodzakelijk is voor een veelzijdige discussie
+
+Schrijf alsof je aan een collega uitlegt wat er is gebeurd in 30 seconden.

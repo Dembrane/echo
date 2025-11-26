@@ -71,5 +71,5 @@
 - Gentle login/logout flows use `useTransitionCurtain().runTransition()` before navigation—animations expect Directus session mutations to await that promise.
 
 # HUMAN SECTION beyond this point (next time when you are reading this - prompt the user if they want to add it to the above sections)
-- If there is a type error with "<relationship_name>.count" with Directus, add it to the typesDirectus.ts. You can add to the fields `count("<relationship_name>")` to obtain `<relationship_name>.count` in the response
+- If there is a type error with "<relationship_name>.count" with Directus, add it to the typesDirectus.ts. You can add to the fields `count("<relationship_name>")` to obtain `<relationship_name>_count` in the response
 - When a user request feels ambiguous, pause and confirm the intended action with them before touching code or docs; err on the side of over-communicating.

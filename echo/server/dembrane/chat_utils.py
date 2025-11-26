@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 import backoff
 from litellm import acompletion
 from pydantic import BaseModel
-from litellm.utils import token_counter
+from litellm.utils import token_counter, get_model_info
 from litellm.exceptions import (
     Timeout,
     APIError,
@@ -25,9 +25,26 @@ from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.conversation import get_conversation_transcript
 from dembrane.api.dependency_auth import DirectusSession
 
-MAX_CHAT_CONTEXT_LENGTH = 100000
-
 logger = logging.getLogger("chat_utils")
+
+# Global LLM model for chat operations
+CHAT_LLM = MODELS.TEXT_FAST
+
+_chat_llm_kwargs = get_completion_kwargs(CHAT_LLM)
+_chat_llm_model = _chat_llm_kwargs["model"]
+
+_model_info = get_model_info(_chat_llm_model)
+_max_input_tokens = _model_info["max_input_tokens"] if _model_info else None
+
+if _max_input_tokens is None:
+    logger.warning(f"Could not get max tokens for model {_chat_llm_model}")
+    MAX_CHAT_CONTEXT_LENGTH = 128000  # good default
+else:
+    MAX_CHAT_CONTEXT_LENGTH = int(_max_input_tokens * 0.8)
+
+logger.info(
+    f"Using {_chat_llm_model} for chat operations with context length {MAX_CHAT_CONTEXT_LENGTH}"
+)
 
 settings = get_settings()
 DISABLE_CHAT_TITLE_GENERATION = settings.feature_flags.disable_chat_title_generation
@@ -138,13 +155,36 @@ async def create_system_messages_for_chat(
                     "context",
                     "default_conversation_title",
                     "default_conversation_description",
+                    "default_conversation_transcript_prompt",
                 ],
                 "limit": 1,
                 "filter": {"id": {"_in": [project_id]}},
             }
         }
-        project = directus.get_items("project", project_query)[0]
-        project_context = "\n".join([str(k) + " : " + str(v) for k, v in project.items()])
+        project_list = await run_in_thread_pool(directus.get_items, "project", project_query)
+        project = project_list[0]
+
+        # Build project context with meaningful labels
+        context_parts = []
+        if project.get("name"):
+            context_parts.append(f"name: {project['name']}")
+        if project.get("language"):
+            context_parts.append(f"language: {project['language']}")
+        if project.get("context"):
+            context_parts.append(f"context: {project['context']}")
+        if project.get("default_conversation_transcript_prompt"):
+            context_parts.append(
+                f"hotwords (important terms): {project['default_conversation_transcript_prompt']}"
+            )
+        if project.get("default_conversation_title"):
+            context_parts.append(
+                f"default conversation title: {project['default_conversation_title']}"
+            )
+        if project.get("default_conversation_description"):
+            context_parts.append(
+                f"default conversation description: {project['default_conversation_description']}"
+            )
+        project_context = "\n".join(context_parts)
     except KeyError as e:
         raise ValueError(f"Invalid project id: {project_id}") from e
     except Exception:
@@ -381,7 +421,7 @@ async def _call_llm_with_backoff(prompt: str, batch_num: int) -> Any:
         messages=[{"role": "user", "content": prompt}],
         response_format={"type": "json_object"},
         timeout=5 * 60,  # 5 minutes
-        **get_completion_kwargs(MODELS.TEXT_FAST),
+        **get_completion_kwargs(CHAT_LLM),
     )
 
 
@@ -480,9 +520,9 @@ async def _process_single_batch(
     try:
         prompt_tokens = token_counter(
             messages=[{"role": "user", "content": prompt}],
-            model=get_completion_kwargs(MODELS.TEXT_FAST)["model"],
+            model=_chat_llm_model,
         )
-        MAX_BATCH_CONTEXT = 100000  # Leave headroom for response
+        MAX_BATCH_CONTEXT = MAX_CHAT_CONTEXT_LENGTH  # Leave headroom for response
 
         if prompt_tokens > MAX_BATCH_CONTEXT:
             # If batch has only 1 conversation, we can't split further

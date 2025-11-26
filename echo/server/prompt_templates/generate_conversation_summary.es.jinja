@@ -4,54 +4,83 @@ Se le proporciona una serie de citas de una transcripción de conversación en o
 {{ quote_text_joined }}
 </quotes>
 
-Cree un resumen que se adapte a la complejidad del contenido mientras captura tanto la sustancia como los matices.
+{% if project_context %}
+<project_context>
+El anfitrión ha proporcionado el siguiente contexto y términos clave para esta conversación:
+{{ project_context }}
+</project_context>
+{% endif %}
 
-## Directrices Principales
+{% if verified_artifacts %}
+<verified_artifacts>
+Durante esta conversación, los participantes crearon y verificaron colaborativamente los siguientes resultados concretos:
+{% for artifact in verified_artifacts %}
 
-1. **Respuesta Proporcional**: La longitud del resumen nunca debe exceder la longitud del contenido original. Para entradas muy simples, proporcione un resumen aún más corto.
+---
+{{ artifact }}
+---
+{% endfor %}
+</verified_artifacts>
+{% endif %}
 
-2. **Estructura Basada en Contenido**: 
-   - Para intercambios simples (explicaciones, bromas, aclaraciones): Use 1-2 párrafos concisos sin secciones formales
-   - Para discusiones complejas: Use encabezados y estructura apropiados
+Cree un resumen que capture la esencia y el significado de lo que sucedió, optimizado para una lectura rápida.
 
-3. **Esencia Sobre Análisis**: Capture lo que realmente se dijo sin agregar contexto especulativo, antecedentes o implicaciones a menos que se mencionen explícitamente.
+## Principios Fundamentales
 
-4. **Elementos Humanos**: Preserve el humor, juegos de palabras o contexto emocional cuando sean centrales para el significado de la conversación.
+1. **Esencia sobre exhaustividad**: Capture el "¿y qué?" - el resultado significativo, la decisión o el insight - no un relato detallado
 
-5. **Profundidad Adaptable**:
-   - El contenido simple recibe resúmenes simples
-   - El contenido complejo recibe análisis estructurado apropiado
-   - Nunca infle contenido básico con marcos académicos o estratégicos innecesarios
+2. **Concisión radical**: La mayoría de las conversaciones deberían resumirse en 2-4 oraciones. Las discusiones complejas pueden justificar 1-2 párrafos cortos. El resumen siempre debe ser considerablemente más corto que el original.
 
-## Requisitos de Formato
+3. **Compresión significativa**: Pregunte "¿qué necesitaría saber alguien si se perdió esto?" no "¿qué se discutió?"
 
-- Para entradas muy simples (menos de 100 palabras), limite el resumen a 1-3 oraciones
-- Para entradas moderadas, use 1-2 párrafos concisos
-- Use encabezados de sección solo para conversaciones genuinamente complejas y multi-tema
-- Resalte en negrita solo puntos genuinamente significativos, no observaciones rutinarias
-- Presente como un resumen acabado y accesible que se sostiene por sí mismo
+4. **Lenguaje natural**: Escriba en prosa fluida, no en viñetas o secciones estructuradas. Evite encabezados, listas y formato a menos que el contenido sea genuinamente complejo y multifacético.
 
-Recuerde que la resumificación efectiva a menudo significa una reducción significativa en longitud mientras se preserva el significado central.
+5. **Integración de contexto**: 
+   - Integre naturalmente el contexto del proyecto cuando añada significado
+   - Note los artefactos verificados como resultados concretos sin detalles del proceso
+   - No fuerce contexto irrelevante
 
-## Arquitectura del Resumen
-- **Contexto Estratégico**: Identifique el tipo de conversación, las partes interesadas clave y los objetivos subyacentes más allá de la agenda establecida.
-- **Jerarquía de Perspectivas**: Priorice las perspectivas por su potencial transformador en lugar del tiempo de discusión asignado.
-- **Trayectoria de Decisiones**: Documente no solo las conclusiones sino también el camino de pensamiento crítico que llevó a ellas, especialmente las decisiones que desafían enfoques convencionales.
-- **Implicaciones Estratégicas**: Conecte los puntos de discusión con objetivos organizativos más amplios o tendencias de la industria.
-- **Puente de Perspectiva a Acción**: Transforme conceptos abstractos en pasos concretos con responsabilidad clara.
-- **Puntos de Tensión Creativa**: Destaque los desacuerdos productivos que generaron pensamiento innovador.
+6. **Puntuación de lectura rápida**: Antes de escribir, evalúe internamente qué tan fácil de escanear será este resumen en una escala de 1-10:
+   - 10 = Comprensión instantánea (simple, un punto claro único)
+   - 7-9 = Escaneo muy rápido (2-3 conclusiones claras)
+   - 4-6 = Necesita lectura enfocada (múltiples puntos o complejidad moderada)
+   - 1-3 = Requiere lectura cuidadosa (denso, complejo o matizado)
+   
+   Apunte a 7+ siempre que sea posible. Si su borrador puntúa por debajo de 7, simplifique más.
 
-## Guía de Formato y Estilo
-- Elabore una narrativa cohesiva que fluya lógicamente entre secciones
-- Utilice párrafos para desarrollar ideas complejas en lugar de depender de listas excesivas
-- Reserve las listas solo para elementos de acción o cuando presente múltiples opciones distintas
-- Resalte las perspectivas transformadoras con impacto sistémico potencial en su flujo narrativo
-- Incluya una sección "Implicaciones Estratégicas" orientada al futuro escrita en forma de párrafo
-- Equilibre detalles tácticos con visión estratégica a través de prosa reflexiva
-- Cuando sea apropiado, cree encabezados de sección para organizar el contenido en lugar de usar listas por defecto
-- Varíe la estructura de oraciones y la longitud de párrafos para mantener el compromiso del lector
-- Considere usar ocasionalmente preguntas retóricas para enmarcar perspectivas clave
-- La longitud debe ser proporcional a la complejidad de la conversación (típicamente 10-15% de la longitud original)
-- No exceda 3-4 párrafos
+## Qué Capturar
 
-Responda en español, independientemente del idioma de los mensajes anteriores. Puede usar formato markdown con moderación para mejorar la legibilidad, pero priorice la coherencia narrativa y los párrafos sobre elementos estructurales.
+Enfóquese en lo más importante. Incluya estos elementos cuando sean centrales para la conversación:
+
+- Decisiones tomadas y su justificación
+- Problemas identificados y soluciones acordadas
+- Insights o realizaciones clave
+- Próximos pasos concretos o resultados
+- Dinámicas centrales cuando moldearon el resultado: argumentos o razonamientos que influyeron en las decisiones, tensiones entre prioridades competidoras, conflictos que necesitaban resolución, o acuerdos alcanzados en puntos contenciosos
+- Desacuerdos significativos o compromisos discutidos
+
+## Qué Omitir
+
+- Relato detallado de la discusión
+- Especificidades de implementación a menos que sean el punto principal
+- Mecánicas del proceso (quién dijo qué, cómo se tomaron las decisiones)
+- Contexto o antecedentes obvios
+- Desacuerdos menores que no impactaron los resultados
+
+## Directrices de Estilo
+
+- Use comas, paréntesis o "pero" en lugar de guiones largos
+- Escriba en prosa directa y conversacional
+- Prefiera oraciones más cortas sobre puntuación compleja
+- Use "pero" o "sin embargo" para mostrar contraste
+- Use paréntesis para acotaciones o aclaraciones
+- Nunca use negritas, cursivas u otro formato de texto
+
+## Formato
+
+- 2-4 oraciones para conversaciones simples
+- 1-2 párrafos concisos para complejidad moderada
+- Prosa natural sin viñetas, encabezados, listas o formato
+- Use estructura solo si es genuinamente necesario para una discusión multifacética
+
+Escriba como si estuviera explicando a un colega lo que sucedió en 30 segundos.

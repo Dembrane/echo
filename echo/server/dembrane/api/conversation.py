@@ -13,7 +13,7 @@ from litellm.exceptions import ContentPolicyViolationError
 from dembrane.s3 import get_signed_url
 from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.utils import CacheWithExpiration, generate_uuid, get_utc_timestamp
-from dembrane.service import conversation_service, build_conversation_service
+from dembrane.service import project_service, conversation_service, build_conversation_service
 from dembrane.directus import directus
 from dembrane.audio_utils import (
     get_duration_from_s3,
@@ -362,17 +362,11 @@ async def get_conversation_chunk_content(
 
 
 @ConversationRouter.get("/{conversation_id}/transcript")
-async def get_conversation_transcript(
-    conversation_id: str, auth: DependencyDirectusSession, include_project_data: bool = False
-) -> str:
+async def get_conversation_transcript(conversation_id: str, auth: DependencyDirectusSession) -> str:
     # svc = conversation_service_for_auth(auth)
     active_client = auth.client or directus
 
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
-
-    if include_project_data:
-        # TODO: implement this
-        logger.warning("Not implemented yet")
 
     conversation_chunks = await run_in_thread_pool(
         active_client.get_items,
@@ -393,7 +387,6 @@ async def get_conversation_transcript(
     transcript = []
 
     for chunk in conversation_chunks:
-        logger.debug(f"Chunk transcript: {chunk['transcript']}")
         if chunk["transcript"]:
             transcript.append(chunk["transcript"])
 
@@ -465,6 +458,7 @@ async def get_reply_for_conversation(
     )
 
 
+# this should ideally be in the service. the async functions are a bit messy at the moment.
 @ConversationRouter.post("/{conversation_id}/summarize", response_model=None)
 async def summarize_conversation(
     conversation_id: str,
@@ -474,29 +468,39 @@ async def summarize_conversation(
 
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
 
-    conversation_data = await run_in_thread_pool(
+    conversation_data_result = await run_in_thread_pool(
         active_client.get_items,
         "conversation",
         {
             "query": {
-                "filter": {
-                    "id": {"_eq": conversation_id},
-                },
+                "filter": {"id": {"_eq": conversation_id}},
                 "fields": ["id", "project_id.language"],
             },
         },
     )
 
-    if not conversation_data or len(conversation_data) == 0:
+    awaitable_list = [
+        get_conversation_transcript(conversation_id, auth),
+        run_in_thread_pool(
+            project_service.get_context_for_prompt,
+            conversation_data_result[0]["project_id"],
+        ),
+        run_in_thread_pool(
+            conversation_service.get_verified_artifacts,
+            conversation_id,
+        ),
+    ]
+
+    transcript_str, project_context_str, verified_artifacts = await asyncio.gather(*awaitable_list)
+
+    if not conversation_data_result or len(conversation_data_result) == 0:
         raise HTTPException(status_code=404, detail="Conversation not found")
+
+    conversation_data = conversation_data_result
 
     conversation_data = conversation_data[0]
 
     language = conversation_data["project_id"]["language"]
-
-    transcript_str = await get_conversation_transcript(
-        conversation_id, auth, include_project_data=True
-    )
 
     if transcript_str == "":
         return {
@@ -505,7 +509,11 @@ async def summarize_conversation(
         }
     else:
         summary = await run_in_thread_pool(
-            generate_summary, transcript_str, language if language else "en"
+            generate_summary,
+            transcript_str,
+            language if language else "en",
+            project_context_str,
+            verified_artifacts,
         )
 
         await run_in_thread_pool(

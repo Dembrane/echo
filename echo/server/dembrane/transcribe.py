@@ -13,10 +13,11 @@ import time
 import logging
 import mimetypes
 from base64 import b64encode
-from typing import Any, List, Literal, Optional
+from typing import Any, List, Literal, Callable, Optional
 
 import litellm
 import requests
+import sentry_sdk
 
 from dembrane.s3 import get_signed_url, get_stream_from_s3
 from dembrane.llms import MODELS, get_completion_kwargs
@@ -261,6 +262,9 @@ def transcribe_audio_dembrane_25_09(
     hotwords: Optional[List[str]] = None,
     use_pii_redaction: bool = False,
     custom_guidance_prompt: Optional[str] = None,
+    # the other option was to pass in a conversation_chunk_id and save the transcript there
+    # didn't want to leak conversation_chunk_id implementation details here
+    on_assemblyai_response: Callable[[str, dict[str, Any]], None] = lambda _, __: None,
 ) -> tuple[str, dict[str, Any]]:
     """Transcribe audio through custom Dembrane-25-09 workflow
 
@@ -284,6 +288,14 @@ def transcribe_audio_dembrane_25_09(
             f"Transcription failed with AssemblyAI. So we will continue with the correction workflow with empty transcript: {e}"
         )
         transcript, response = "[Nothing to transcribe]", {}
+
+    try:
+        if not assemblyai_response_failed and bool(on_assemblyai_response):
+            logger.debug("calling on_assemblyai_response")
+            on_assemblyai_response(transcript, response)
+    except Exception as e:
+        logger.error(f"Error in on_assemblyai_response: {e}")
+        sentry_sdk.capture_exception(e)
 
     # use correction workflow to correct keyterms and fix missing segments
     note = None
@@ -425,6 +437,14 @@ def transcribe_conversation_chunk(
                     language=language,
                     hotwords=hotwords,
                     use_pii_redaction=use_pii_redaction,
+                    on_assemblyai_response=lambda transcript, response: _save_transcript(
+                        conversation_chunk_id,
+                        transcript,
+                        diarization={
+                            "schema": "Dembrane-25-09-assemblyai-partial",
+                            "data": response,
+                        },
+                    ),
                 )
                 _save_transcript(
                     conversation_chunk_id,

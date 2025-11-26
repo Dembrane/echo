@@ -129,6 +129,161 @@ msgstr "Welcome back"
 #~ msgstr "Yes"
 
 #. js-lingui-explicit-id
+#: src/components/participant/ParticipantConversationAudio.tsx:282
+#~ msgid "participant.modal.refine.info.title.echo"
+#~ msgstr "\"Go deeper\" available soon"
+
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantConversationAudio.tsx:275
+#~ msgid "participant.modal.refine.info.title.verify"
+#~ msgstr "\"Make it concrete\" available soon"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyArtefact.tsx:455
+#~ msgid "participant.verify.action.button.approve"
+#~ msgstr "Approve"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyArtefact.tsx:342
+#~ msgid "participant.verify.artefact.title"
+#~ msgstr "Artefact: {selectedOptionLabel}"
+
+#. js-lingui-explicit-id
+#: src/components/layout/ParticipantHeader.tsx:79
+#~ msgid "participant.verify.instructions.button.cancel"
+#~ msgstr "Cancel"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyArtefact.tsx:391
+#~ msgid "participant.verify.action.button.cancel"
+#~ msgstr "Cancel"
+
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:705
+#~ msgid "dashboard.dembrane.verify.title"
+#~ msgstr "Dembrane Verify"
+
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:718
+#~ msgid "dashboard.dembrane.verify.description"
+#~ msgstr "Enable this feature to allow participants to create and approve \"verified objects\" from their submissions. This helps crystallize key ideas, concerns, or summaries. After the conversation, you can filter for discussions with verified objects and review them in the overview."
+
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:711
+#~ msgid "dashboard.dembrane.verify.experimental"
+#~ msgstr "Experimental"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyArtefactError.tsx:52
+#~ msgid "participant.verify.artefact.action.button.go.back"
+#~ msgstr "Go back"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:43
+#~ msgid "participant.verify.instructions.approve.artefact"
+#~ msgstr "If you are happy with the {objectLabel} click \"Approve\" to show you feel heard."
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyArtefactError.tsx:24
+#~ msgid "participant.verify.artefact.error.description"
+#~ msgstr "It looks like we couldn't load this artefact. This might be a temporary issue. You can try reloading or go back to select a different topic."
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:106
+#~ msgid "participant.verify.instructions.loading"
+#~ msgstr "Loading"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyArtefactLoading.tsx:13
+#~ msgid "participant.verify.loading.artefact"
+#~ msgstr "Loading artefact"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifySelection.tsx:237
+#~ msgid "participant.verify.selection.button.next"
+#~ msgstr "Next"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:108
+#~ msgid "participant.verify.instructions.button.next"
+#~ msgstr "Next"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:34
+#~ msgid "participant.verify.instructions.revise.artefact"
+#~ msgstr "Once you have discussed, hit \"revise\" to see the {objectLabel} change to reflect your discussion."
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:25
+#~ msgid "participant.verify.instructions.read.aloud"
+#~ msgstr "Once you receive the {objectLabel}, read it aloud and share out loud what you want to change, if anything."
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyArtefact.tsx:327
+#~ msgid "participant.verify.regenerating.artefact"
+#~ msgstr "Regenerating the artefact"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyArtefactError.tsx:40
+#~ msgid "participant.verify.artefact.action.button.reload"
+#~ msgstr "Reload Page"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyArtefact.tsx:422
+#~ msgid "participant.verify.action.button.revise"
+#~ msgstr "Revise"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyArtefact.tsx:399
+#~ msgid "participant.verify.action.button.save"
+#~ msgstr "Save"
+
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:758
+#~ msgid "dashboard.dembrane.verify.topic.select"
+#~ msgstr "Select which topics participants can use for verification."
+
+#. js-lingui-explicit-id
+#: src/components/participant/EchoErrorAlert.tsx:21
+#~ msgid "participant.echo.generic.error.message"
+#~ msgstr "Something went wrong. Please try again by pressing the <0>ECHO</0> button, or contact support if the issue continues."
+
+#. js-lingui-explicit-id
+#: src/components/participant/EchoErrorAlert.tsx:16
+#~ msgid "participant.echo.content.policy.violation.error.message"
+#~ msgstr "Sorry, we cannot process this request due to an LLM provider's content policy."
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyArtefact.tsx:332
+#~ msgid "participant.verify.regenerating.artefact.description"
+#~ msgstr "This will just take a few moments"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyArtefactLoading.tsx:18
+#~ msgid "participant.verify.loading.artefact.description"
+#~ msgstr "This will just take a moment"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyArtefactError.tsx:19
+#~ msgid "participant.verify.artefact.error.title"
+#~ msgstr "Unable to Load Artefact"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifySelection.tsx:183
+#~ msgid "participant.verify.selection.title"
+#~ msgstr "What do you want to verify?"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:17
+#~ msgid "participant.verify.instructions.receive.artefact"
+#~ msgstr "You'll soon get {objectLabel} to verify."
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:52
+#~ msgid "participant.verify.instructions.approval.helps"
+#~ msgstr "Your approval helps us understand what you really think!"
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:238
 msgid "library.generate.duration.message"
 msgstr " Generating library can take up to an hour."
@@ -147,12 +302,12 @@ msgstr " Unsubscribe from Notifications"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:282
-msgid "participant.modal.refine.info.title.echo"
+msgid "participant.modal.refine.info.title.go.deeper"
 msgstr "\"Go deeper\" available soon"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:275
-msgid "participant.modal.refine.info.title.verify"
+msgid "participant.modal.refine.info.title.concrete"
 msgstr "\"Make it concrete\" available soon"
 
 #. js-lingui-explicit-id
@@ -168,16 +323,14 @@ msgstr "\"Refine\" available soon"
 #. placeholder {0}: showPreview ? "Hide Preview" : "Show Preview"
 #. placeholder {0}: citation.reference_text
 #: src/routes/project/chat/ProjectChatRoute.tsx:428
-#: src/components/project/ProjectPortalEditor.tsx:412
+#: src/components/project/ProjectPortalEditor.tsx:417
 #: src/components/chat/References.tsx:29
 msgid "{0}"
 msgstr "{0}"
 
-#. placeholder {0}: conversationCounts.finished
-#. placeholder {1}: conversationCounts.finished === 1 ? t`conversation` : t`conversations`
 #: src/components/report/CreateReportForm.tsx:115
-msgid "{0} {1} ready"
-msgstr "{0} {1} ready"
+#~ msgid "{0} {1} ready"
+#~ msgstr "{0} {1} ready"
 
 #: src/components/project/ProjectCard.tsx:35
 #: src/components/project/ProjectListItem.tsx:34
@@ -268,7 +421,7 @@ msgstr "Add additional context (Optional)"
 msgid "Add all that apply"
 msgstr "Add all that apply"
 
-#: src/components/project/ProjectPortalEditor.tsx:122
+#: src/components/project/ProjectPortalEditor.tsx:120
 msgid "Add key terms or proper nouns to improve transcript quality and accuracy."
 msgstr "Add key terms or proper nouns to improve transcript quality and accuracy."
 
@@ -276,11 +429,11 @@ msgstr "Add key terms or proper nouns to improve transcript quality and accuracy
 msgid "Add new recordings to this project. Files you upload here will be processed and appear in conversations."
 msgstr "Add new recordings to this project. Files you upload here will be processed and appear in conversations."
 
-#: src/components/project/ProjectTagsInput.tsx:260
+#: src/components/project/ProjectTagsInput.tsx:257
 msgid "Add Tag"
 msgstr "Add Tag"
 
-#: src/components/project/ProjectTagsInput.tsx:260
+#: src/components/project/ProjectTagsInput.tsx:257
 msgid "Add Tags"
 msgstr "Add Tags"
 
@@ -296,11 +449,11 @@ msgstr "Added emails"
 msgid "Adding Context:"
 msgstr "Adding Context:"
 
-#: src/components/project/ProjectPortalEditor.tsx:519
+#: src/components/project/ProjectPortalEditor.tsx:524
 msgid "Advanced (Tips and tricks)"
 msgstr "Advanced (Tips and tricks)"
 
-#: src/components/project/ProjectPortalEditor.tsx:983
+#: src/components/project/ProjectPortalEditor.tsx:1017
 msgid "Advanced Settings"
 msgstr "Advanced Settings"
 
@@ -313,8 +466,8 @@ msgid "All collections"
 msgstr "All collections"
 
 #: src/components/report/CreateReportForm.tsx:113
-msgid "All conversations ready"
-msgstr "All conversations ready"
+#~ msgid "All conversations ready"
+#~ msgstr "All conversations ready"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:795
 msgid "All files were uploaded successfully."
@@ -397,12 +550,12 @@ msgstr "Announcements"
 #~ msgstr "Anonymous Participant"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:455
-msgid "participant.verify.action.button.approve"
+#: src/components/participant/verify/VerifyArtefact.tsx:427
+msgid "participant.concrete.action.button.approve"
 msgstr "Approve"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/VerifiedArtefactsSection.tsx:84
+#: src/components/conversation/VerifiedArtefactsSection.tsx:113
 msgid "conversation.verified.approved"
 msgstr "Approved"
 
@@ -426,7 +579,7 @@ msgstr "Are you sure you want to delete this project? This action cannot be undo
 #~ msgid "Are you sure you want to delete this tag?"
 #~ msgstr "Are you sure you want to delete this tag?"
 
-#: src/components/project/ProjectTagsInput.tsx:73
+#: src/components/project/ProjectTagsInput.tsx:74
 msgid "Are you sure you want to delete this tag? This will remove the tag from existing conversations that contain it."
 msgstr "Are you sure you want to delete this tag? This will remove the tag from existing conversations that contain it."
 
@@ -447,40 +600,43 @@ msgstr "Are you sure you want to generate the library? This will take a while an
 #~ msgid "Are you sure you want to generate the library? This will take a while."
 #~ msgstr "Are you sure you want to generate the library? This will take a while."
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:116
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:117
 msgid "Are you sure you want to regenerate the summary? You will lose the current summary."
 msgstr "Are you sure you want to regenerate the summary? You will lose the current summary."
 
-#: src/components/participant/verify/VerifyArtefact.tsx:156
+#: src/components/participant/verify/VerifyArtefact.tsx:132
 msgid "Artefact approved successfully!"
 msgstr "Artefact approved successfully!"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:266
+#: src/components/participant/verify/VerifyArtefact.tsx:242
 msgid "Artefact reloaded successfully!"
 msgstr "Artefact reloaded successfully!"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:198
+#: src/components/participant/verify/VerifyArtefact.tsx:174
 msgid "Artefact revised successfully!"
 msgstr "Artefact revised successfully!"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:236
+#: src/components/participant/verify/VerifyArtefact.tsx:212
 msgid "Artefact updated successfully!"
 msgstr "Artefact updated successfully!"
 
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:342
-msgid "participant.verify.artefact.title"
-msgstr "Artefact: {selectedOptionLabel}"
+#: src/components/conversation/VerifiedArtefactsSection.tsx:92
+msgid "artefacts"
+msgstr "artefacts"
+
+#: src/components/conversation/VerifiedArtefactsSection.tsx:87
+msgid "Artefacts"
+msgstr "Artefacts"
 
 #: src/components/project/ProjectSidebar.tsx:117
 msgid "Ask"
 msgstr "Ask"
 
-#: src/components/project/ProjectPortalEditor.tsx:460
+#: src/components/project/ProjectPortalEditor.tsx:465
 msgid "Ask for Name?"
 msgstr "Ask for Name?"
 
-#: src/components/project/ProjectPortalEditor.tsx:473
+#: src/components/project/ProjectPortalEditor.tsx:478
 msgid "Ask participants to provide their name when they start a conversation"
 msgstr "Ask participants to provide their name when they start a conversation"
 
@@ -499,8 +655,12 @@ msgstr "Aspects"
 #~ msgstr "Assistant is typing..."
 
 #: src/components/project/ProjectPortalEditor.tsx:808
-msgid "At least one topic must be selected to enable Dembrane Verify"
-msgstr "At least one topic must be selected to enable Dembrane Verify"
+#~ msgid "At least one topic must be selected to enable Dembrane Verify"
+#~ msgstr "At least one topic must be selected to enable Dembrane Verify"
+
+#: src/components/project/ProjectPortalEditor.tsx:841
+msgid "At least one topic must be selected to enable Make it concrete"
+msgstr "At least one topic must be selected to enable Make it concrete"
 
 #: src/components/conversation/AutoSelectConversations.tsx:184
 #~ msgid "Audio Processing In Progress"
@@ -581,11 +741,11 @@ msgstr "Back"
 msgid "Back to Selection"
 msgstr "Back to Selection"
 
-#: src/components/project/ProjectPortalEditor.tsx:515
+#: src/components/project/ProjectPortalEditor.tsx:520
 msgid "Basic (Essential tutorial slides)"
 msgstr "Basic (Essential tutorial slides)"
 
-#: src/components/project/ProjectPortalEditor.tsx:426
+#: src/components/project/ProjectPortalEditor.tsx:431
 msgid "Basic Settings"
 msgstr "Basic Settings"
 
@@ -593,7 +753,19 @@ msgstr "Basic Settings"
 #~ msgid "Begin!"
 #~ msgstr "Begin!"
 
-#: src/components/project/ProjectPortalEditor.tsx:639
+#: src/routes/project/report/ProjectReportRoute.tsx:61
+#: src/components/project/ProjectPortalEditor.tsx:549
+#: src/components/conversation/RetranscribeConversation.tsx:111
+#: src/components/conversation/MoveConversationButton.tsx:132
+msgid "Beta"
+msgstr "Beta"
+
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:735
+msgid "dashboard.dembrane.concrete.experimental"
+msgstr "Beta"
+
+#: src/components/project/ProjectPortalEditor.tsx:657
 msgid "Brainstorm Ideas"
 msgstr "Brainstorm Ideas"
 
@@ -602,8 +774,13 @@ msgid "By deleting this project, you will delete all the data associated with it
 msgstr "By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you ABSOLUTELY sure you want to delete this project?"
 
 #. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyArtefact.tsx:361
+msgid "participant.concrete.action.button.cancel"
+msgstr "Cancel"
+
+#. js-lingui-explicit-id
 #: src/components/layout/ParticipantHeader.tsx:79
-msgid "participant.verify.instructions.button.cancel"
+msgid "participant.concrete.instructions.button.cancel"
 msgstr "Cancel"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:332
@@ -620,11 +797,6 @@ msgstr "Cancel"
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:404
 msgid "participant.mic.settings.modal.second.confirm.cancel"
-msgstr "Cancel"
-
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:391
-msgid "participant.verify.action.button.cancel"
 msgstr "Cancel"
 
 #: src/components/conversation/ConversationAccordion.tsx:149
@@ -720,6 +892,10 @@ msgstr "Compare & Contrast"
 msgid "Complete"
 msgstr "Complete"
 
+#: src/components/project/ProjectPortalEditor.tsx:782
+msgid "Concrete Topics"
+msgstr "Concrete Topics"
+
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:409
 msgid "participant.mic.settings.modal.second.confirm.button"
@@ -783,8 +959,8 @@ msgstr "Continue"
 
 #: src/components/report/CreateReportForm.tsx:118
 #: src/components/report/CreateReportForm.tsx:137
-msgid "conversation"
-msgstr "conversation"
+#~ msgid "conversation"
+#~ msgstr "conversation"
 
 #: src/components/conversation/hooks/index.ts:406
 msgid "Conversation added to chat"
@@ -816,17 +992,15 @@ msgstr "Conversation removed from chat"
 msgid "Conversation Status"
 msgstr "Conversation Status"
 
-#: src/components/report/CreateReportForm.tsx:203
+#: src/components/report/CreateReportForm.tsx:127
 msgid "Conversation Status Details"
 msgstr "Conversation Status Details"
 
-#: src/components/report/CreateReportForm.tsx:119
-#: src/components/report/CreateReportForm.tsx:138
-#: src/components/report/CreateReportForm.tsx:185
+#: src/components/report/CreateReportForm.tsx:116
 msgid "conversations"
 msgstr "conversations"
 
-#: src/components/conversation/ConversationAccordion.tsx:866
+#: src/components/conversation/ConversationAccordion.tsx:871
 msgid "Conversations"
 msgstr "Conversations"
 
@@ -870,7 +1044,7 @@ msgstr "Copy link to share this report"
 msgid "Copy secret"
 msgstr "Copy secret"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:107
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:108
 msgid "Copy Summary"
 msgstr "Copy Summary"
 
@@ -909,7 +1083,7 @@ msgstr "Create new view"
 #~ msgstr "Create new view"
 
 #: src/components/report/ReportModalNavigationButton.tsx:45
-#: src/components/report/CreateReportForm.tsx:237
+#: src/components/report/CreateReportForm.tsx:161
 msgid "Create Report"
 msgstr "Create Report"
 
@@ -926,7 +1100,7 @@ msgstr "Create View"
 msgid "Created on"
 msgstr "Created on"
 
-#: src/components/project/ProjectPortalEditor.tsx:661
+#: src/components/project/ProjectPortalEditor.tsx:682
 msgid "Custom"
 msgstr "Custom"
 
@@ -937,6 +1111,10 @@ msgstr "Custom Filename"
 #: src/components/project/ProjectDangerZone.tsx:28
 #~ msgid "Danger Zone"
 #~ msgstr "Danger Zone"
+
+#: src/components/project/ProjectPortalEditor.tsx:630
+msgid "Default"
+msgstr "Default"
 
 #. js-lingui-explicit-id
 #: src/components/chat/ChatAccordion.tsx:87
@@ -966,17 +1144,17 @@ msgstr "Deleted successfully"
 #~ msgstr "Dembrane Echo"
 
 #: src/components/project/ProjectPortalEditor.tsx:536
-msgid "Dembrane ECHO"
-msgstr "Dembrane ECHO"
+#~ msgid "Dembrane ECHO"
+#~ msgstr "Dembrane ECHO"
+
+#: src/routes/project/chat/ProjectChatRoute.tsx:575
+#: src/routes/project/chat/ProjectChatRoute.tsx:605
+msgid "Dembrane is powered by AI. Please double-check responses."
+msgstr "Dembrane is powered by AI. Please double-check responses."
 
 #: src/components/project/ProjectBasicEdit.tsx:156
 #~ msgid "Dembrane Reply"
 #~ msgstr "Dembrane Reply"
-
-#. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:705
-msgid "dashboard.dembrane.verify.title"
-msgstr "Dembrane Verify"
 
 #: src/components/project/ProjectBasicEdit.tsx:82
 #~ msgid "Description"
@@ -1068,7 +1246,7 @@ msgstr "Download Transcript Options"
 msgid "Drag audio files here or click to select files"
 msgstr "Drag audio files here or click to select files"
 
-#: src/components/project/ProjectPortalEditor.tsx:444
+#: src/components/project/ProjectPortalEditor.tsx:449
 msgid "Dutch"
 msgstr "Dutch"
 
@@ -1084,8 +1262,8 @@ msgstr "Dutch"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:575
 #: src/routes/project/chat/ProjectChatRoute.tsx:605
-msgid "ECHO is powered by AI. Please double-check responses."
-msgstr "ECHO is powered by AI. Please double-check responses."
+#~ msgid "ECHO is powered by AI. Please double-check responses."
+#~ msgstr "ECHO is powered by AI. Please double-check responses."
 
 #: src/routes/participant/ParticipantConversation.tsx:549
 #: src/routes/participant/ParticipantConversation.tsx:975
@@ -1155,27 +1333,35 @@ msgstr "Enable 2FA"
 #~ msgstr "Enable Dembrane Echo"
 
 #: src/components/project/ProjectPortalEditor.tsx:562
-msgid "Enable Dembrane ECHO"
-msgstr "Enable Dembrane ECHO"
+#~ msgid "Enable Dembrane ECHO"
+#~ msgstr "Enable Dembrane ECHO"
 
 #: src/components/project/ProjectBasicEdit.tsx:181
 #~ msgid "Enable Dembrane Reply"
 #~ msgstr "Enable Dembrane Reply"
 
 #: src/components/project/ProjectPortalEditor.tsx:734
-msgid "Enable Dembrane Verify"
-msgstr "Enable Dembrane Verify"
+#~ msgid "Enable Dembrane Verify"
+#~ msgstr "Enable Dembrane Verify"
 
-#: src/components/project/ProjectPortalEditor.tsx:955
+#: src/components/project/ProjectPortalEditor.tsx:571
+msgid "Enable Go deeper"
+msgstr "Enable Go deeper"
+
+#: src/components/project/ProjectPortalEditor.tsx:759
+msgid "Enable Make it concrete"
+msgstr "Enable Make it concrete"
+
+#: src/components/project/ProjectPortalEditor.tsx:894
 msgid "Enable Report Notifications"
 msgstr "Enable Report Notifications"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:718
-msgid "dashboard.dembrane.verify.description"
-msgstr "Enable this feature to allow participants to create and approve \"verified objects\" from their submissions. This helps crystallize key ideas, concerns, or summaries. After the conversation, you can filter for discussions with verified objects and review them in the overview."
+#: src/components/project/ProjectPortalEditor.tsx:742
+msgid "dashboard.dembrane.concrete.description"
+msgstr "Enable this feature to allow participants to create and approve \"concrete objects\" from their submissions. This helps crystallize key ideas, concerns, or summaries. After the conversation, you can filter for discussions with concrete objects and review them in the overview."
 
-#: src/components/project/ProjectPortalEditor.tsx:939
+#: src/components/project/ProjectPortalEditor.tsx:878
 msgid "Enable this feature to allow participants to receive notifications when a report is published or updated. Participants can enter their email to subscribe for updates and stay informed."
 msgstr "Enable this feature to allow participants to receive notifications when a report is published or updated. Participants can enter their email to subscribe for updates and stay informed."
 
@@ -1184,12 +1370,16 @@ msgstr "Enable this feature to allow participants to receive notifications when 
 #~ msgstr "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Echo\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 
 #: src/components/project/ProjectPortalEditor.tsx:545
-msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"ECHO\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
-msgstr "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"ECHO\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
+#~ msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"ECHO\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
+#~ msgstr "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"ECHO\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 
 #: src/components/project/ProjectBasicEdit.tsx:165
 #~ msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Get Reply\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 #~ msgstr "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Get Reply\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
+
+#: src/components/project/ProjectPortalEditor.tsx:554
+msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Go deeper\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
+msgstr "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Go deeper\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:342
 msgid "Enable two-factor authentication"
@@ -1204,11 +1394,11 @@ msgstr "Enabled"
 #~ msgid "End of list • All {0} conversations loaded"
 #~ msgstr "End of list • All {0} conversations loaded"
 
-#: src/components/project/ProjectPortalEditor.tsx:443
+#: src/components/project/ProjectPortalEditor.tsx:448
 msgid "English"
 msgstr "English"
 
-#: src/components/project/ProjectPortalEditor.tsx:129
+#: src/components/project/ProjectPortalEditor.tsx:127
 msgid "Enter a key term or proper noun"
 msgstr "Enter a key term or proper noun"
 
@@ -1261,7 +1451,7 @@ msgstr "Error"
 msgid "Error cloning project"
 msgstr "Error cloning project"
 
-#: src/components/report/CreateReportForm.tsx:73
+#: src/components/report/CreateReportForm.tsx:64
 msgid "Error creating report"
 msgstr "Error creating report"
 
@@ -1309,13 +1499,8 @@ msgstr "Everything looks good – you can continue."
 #: src/components/project/ProjectPortalEditor.tsx:540
 #: src/components/conversation/RetranscribeConversation.tsx:111
 #: src/components/conversation/MoveConversationButton.tsx:132
-msgid "Experimental"
-msgstr "Experimental"
-
-#. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:711
-msgid "dashboard.dembrane.verify.experimental"
-msgstr "Experimental"
+#~ msgid "Experimental"
+#~ msgstr "Experimental"
 
 #: src/components/settings/AuditLogsCard.tsx:435
 #: src/components/project/ProjectExportSection.tsx:17
@@ -1335,7 +1520,7 @@ msgstr "Failed to add conversation to chat"
 msgid "Failed to add conversation to chat{0}"
 msgstr "Failed to add conversation to chat{0}"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:160
+#: src/components/participant/verify/VerifyArtefact.tsx:136
 msgid "Failed to approve artefact. Please try again."
 msgstr "Failed to approve artefact. Please try again."
 
@@ -1392,11 +1577,11 @@ msgstr "Failed to mark all announcements as read"
 msgid "Failed to mark announcement as read"
 msgstr "Failed to mark announcement as read"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:69
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:70
 msgid "Failed to regenerate the summary. Please try again later."
 msgstr "Failed to regenerate the summary. Please try again later."
 
-#: src/components/participant/verify/VerifyArtefact.tsx:268
+#: src/components/participant/verify/VerifyArtefact.tsx:244
 msgid "Failed to reload. Please try again."
 msgstr "Failed to reload. Please try again."
 
@@ -1413,7 +1598,7 @@ msgstr "Failed to remove conversation from chat{0}"
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Failed to retranscribe conversation. Please try again."
 
-#: src/components/participant/verify/VerifyArtefact.tsx:209
+#: src/components/participant/verify/VerifyArtefact.tsx:185
 msgid "Failed to revise artefact. Please try again."
 msgstr "Failed to revise artefact. Please try again."
 
@@ -1526,11 +1711,11 @@ msgstr "First Name"
 msgid "Forgot your password?"
 msgstr "Forgot your password?"
 
-#: src/components/project/ProjectPortalEditor.tsx:447
+#: src/components/project/ProjectPortalEditor.tsx:452
 msgid "French"
 msgstr "French"
 
-#: src/components/report/CreateReportForm.tsx:90
+#: src/components/report/CreateReportForm.tsx:80
 msgid "Generate insights from your conversations"
 msgstr "Generate insights from your conversations"
 
@@ -1542,11 +1727,11 @@ msgstr "Generate secret"
 #~ msgid "Generate structured meeting notes based on the following discussion points provided in the context."
 #~ msgstr "Generate structured meeting notes based on the following discussion points provided in the context."
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:152
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:153
 msgid "Generate Summary"
 msgstr "Generate Summary"
 
-#: src/components/project/ProjectPortalEditor.tsx:445
+#: src/components/project/ProjectPortalEditor.tsx:450
 msgid "German"
 msgstr "German"
 
@@ -1563,14 +1748,18 @@ msgstr "Get an immediate reply from Dembrane to help you deepen the conversation
 msgid "Give me a list of 5-10 topics that are being discussed."
 msgstr "Give me a list of 5-10 topics that are being discussed."
 
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyArtefactError.tsx:52
+msgid "participant.concrete.artefact.action.button.go.back"
+msgstr "Go back"
+
 #: src/routes/settings/UserSettingsRoute.tsx:33
 msgid "Go back"
 msgstr "Go back"
 
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefactError.tsx:52
-msgid "participant.verify.artefact.action.button.go.back"
-msgstr "Go back"
+#: src/components/project/ProjectPortalEditor.tsx:545
+msgid "Go deeper"
+msgstr "Go deeper"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:304
@@ -1594,7 +1783,7 @@ msgstr "Go to new conversation"
 #~ msgid "Grid view"
 #~ msgstr "Grid view"
 
-#: src/components/conversation/ConversationAccordion.tsx:523
+#: src/components/conversation/ConversationAccordion.tsx:528
 msgid "Has verified artifacts"
 msgstr "Has verified artifacts"
 
@@ -1686,7 +1875,7 @@ msgstr "Identify recurring themes, topics, and arguments that appear consistentl
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:43
-msgid "participant.verify.instructions.approve.artefact"
+msgid "participant.concrete.instructions.approve.artefact"
 msgstr "If you are happy with the {objectLabel} click \"Approve\" to show you feel heard."
 
 #: src/routes/project/library/ProjectLibrary.tsx:216
@@ -1694,8 +1883,8 @@ msgstr "If you are happy with the {objectLabel} click \"Approve\" to show you fe
 #~ msgstr "In order to better navigate through the quotes, create additional views. The quotes will then be clustered based on your view."
 
 #: src/components/report/CreateReportForm.tsx:192
-msgid "In the meantime, if you want to analyze the conversations that are still processing, you can use the Chat feature"
-msgstr "In the meantime, if you want to analyze the conversations that are still processing, you can use the Chat feature"
+#~ msgid "In the meantime, if you want to analyze the conversations that are still processing, you can use the Chat feature"
+#~ msgstr "In the meantime, if you want to analyze the conversations that are still processing, you can use the Chat feature"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:269
 msgid "Include portal link in report"
@@ -1757,7 +1946,7 @@ msgstr "It looks like the library is not available for your account. Please requ
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefactError.tsx:24
-msgid "participant.verify.artefact.error.description"
+msgid "participant.concrete.artefact.error.description"
 msgstr "It looks like we couldn't load this artefact. This might be a temporary issue. You can try reloading or go back to select a different topic."
 
 #: src/components/participant/hooks/useConversationIssueBanner.ts:17
@@ -1781,7 +1970,7 @@ msgstr "Just a moment"
 msgid "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
 msgstr "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
 
-#: src/components/project/ProjectPortalEditor.tsx:436
+#: src/components/project/ProjectPortalEditor.tsx:441
 msgid "Language"
 msgstr "Language"
 
@@ -1849,13 +2038,13 @@ msgstr "Live audio level:"
 #~ msgid "Live audio level:"
 #~ msgstr "Live audio level:"
 
-#: src/components/project/ProjectPortalEditor.tsx:1054
+#: src/components/project/ProjectPortalEditor.tsx:1088
 msgid "Live Preview"
 msgstr "Live Preview"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:106
-msgid "participant.verify.instructions.loading"
+msgid "participant.concrete.instructions.loading"
 msgstr "Loading"
 
 #: src/components/common/DembraneLoadingSpinner/index.tsx:24
@@ -1868,7 +2057,7 @@ msgstr "Loading actions..."
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefactLoading.tsx:13
-msgid "participant.verify.loading.artefact"
+msgid "participant.concrete.loading.artefact"
 msgstr "Loading artefact"
 
 #: src/components/settings/AuditLogsCard.tsx:573
@@ -1879,13 +2068,17 @@ msgstr "Loading audit logs…"
 msgid "Loading collections..."
 msgstr "Loading collections..."
 
+#: src/components/project/ProjectPortalEditor.tsx:798
+msgid "Loading concrete topics…"
+msgstr "Loading concrete topics…"
+
 #: src/components/participant/MicrophoneTest.tsx:313
 msgid "Loading microphones..."
 msgstr "Loading microphones..."
 
 #: src/components/project/ProjectPortalEditor.tsx:765
-msgid "Loading verification topics…"
-msgstr "Loading verification topics…"
+#~ msgid "Loading verification topics…"
+#~ msgstr "Loading verification topics…"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:325
 msgid "loading..."
@@ -1916,9 +2109,14 @@ msgstr "Login as an existing user"
 msgid "Logout"
 msgstr "Logout"
 
-#: src/components/conversation/ConversationAccordion.tsx:589
+#: src/components/conversation/ConversationAccordion.tsx:594
 msgid "Longest First"
 msgstr "Longest First"
+
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:729
+msgid "dashboard.dembrane.concrete.title"
+msgstr "Make it concrete"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:300
@@ -1953,10 +2151,10 @@ msgid "Microphone access is still denied. Please check your settings and try aga
 msgstr "Microphone access is still denied. Please check your settings and try again."
 
 #: src/components/report/CreateReportForm.tsx:143
-msgid "min"
-msgstr "min"
+#~ msgid "min"
+#~ msgstr "min"
 
-#: src/components/project/ProjectPortalEditor.tsx:583
+#: src/components/project/ProjectPortalEditor.tsx:594
 msgid "Mode"
 msgstr "Mode"
 
@@ -1987,11 +2185,11 @@ msgstr "Move to Project"
 msgid "Name"
 msgstr "Name"
 
-#: src/components/conversation/ConversationAccordion.tsx:587
+#: src/components/conversation/ConversationAccordion.tsx:592
 msgid "Name A-Z"
 msgstr "Name A-Z"
 
-#: src/components/conversation/ConversationAccordion.tsx:588
+#: src/components/conversation/ConversationAccordion.tsx:593
 msgid "Name Z-A"
 msgstr "Name Z-A"
 
@@ -2022,9 +2220,19 @@ msgstr "New Password"
 msgid "New Project"
 msgstr "New Project"
 
-#: src/components/conversation/ConversationAccordion.tsx:585
+#: src/components/conversation/ConversationAccordion.tsx:590
 msgid "Newest First"
 msgstr "Newest First"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifySelection.tsx:237
+msgid "participant.concrete.selection.button.next"
+msgstr "Next"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:108
+msgid "participant.concrete.instructions.button.next"
+msgstr "Next"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantOnboardingCards.tsx:398
@@ -2034,16 +2242,6 @@ msgstr "Next"
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantInitiateForm.tsx:134
 msgid "participant.ready.to.begin.button.text"
-msgstr "Next"
-
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifySelection.tsx:237
-msgid "participant.verify.selection.button.next"
-msgstr "Next"
-
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyInstructions.tsx:108
-msgid "participant.verify.instructions.button.next"
 msgstr "Next"
 
 #: src/components/participant/ParticipantOnboardingCards.tsx:285
@@ -2080,6 +2278,10 @@ msgstr "No chats found. Start a chat using the \"Ask\" button."
 msgid "No collections found"
 msgstr "No collections found"
 
+#: src/components/project/ProjectPortalEditor.tsx:802
+msgid "No concrete topics available."
+msgstr "No concrete topics available."
+
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:355
 #~ msgid "No content"
 #~ msgstr "No content"
@@ -2101,11 +2303,11 @@ msgstr "No conversations available to create library. Please add some conversati
 msgid "No conversations found."
 msgstr "No conversations found."
 
-#: src/components/conversation/ConversationAccordion.tsx:1171
+#: src/components/conversation/ConversationAccordion.tsx:1179
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 
-#: src/components/report/CreateReportForm.tsx:157
+#: src/components/report/CreateReportForm.tsx:88
 msgid "No conversations yet"
 msgstr "No conversations yet"
 
@@ -2117,7 +2319,7 @@ msgstr "No conversations yet"
 #~ msgid "No key terms or proper nouns have been added yet. Add them using the input above to improve transcript accuracy."
 #~ msgstr "No key terms or proper nouns have been added yet. Add them using the input above to improve transcript accuracy."
 
-#: src/components/participant/verify/VerifyArtefact.tsx:206
+#: src/components/participant/verify/VerifyArtefact.tsx:182
 msgid "No new feedback detected yet. Please continue your discussion and try again soon."
 msgstr "No new feedback detected yet. Please continue your discussion and try again soon."
 
@@ -2150,12 +2352,12 @@ msgstr "No report found"
 msgid "No results"
 msgstr "No results"
 
-#: src/components/conversation/ConversationEdit.tsx:167
-#: src/components/conversation/ConversationAccordion.tsx:1118
+#: src/components/conversation/ConversationEdit.tsx:170
+#: src/components/conversation/ConversationAccordion.tsx:1126
 msgid "No tags found"
 msgstr "No tags found"
 
-#: src/components/project/ProjectTagsInput.tsx:267
+#: src/components/project/ProjectTagsInput.tsx:264
 msgid "No tags have been added to this project yet. Add a tag using the text input above to get started."
 msgstr "No tags have been added to this project yet. Add a tag using the text input above to get started."
 
@@ -2175,7 +2377,7 @@ msgstr "No transcript exists for this conversation yet. Please check back later.
 msgid "No transcripts are selected for this chat"
 msgstr "No transcripts are selected for this chat"
 
-#: src/components/project/ProjectPortalEditor.tsx:511
+#: src/components/project/ProjectPortalEditor.tsx:516
 msgid "No tutorial (only Privacy statements)"
 msgstr "No tutorial (only Privacy statements)"
 
@@ -2188,8 +2390,8 @@ msgid "No verification topics are configured for this project."
 msgstr "No verification topics are configured for this project."
 
 #: src/components/project/ProjectPortalEditor.tsx:769
-msgid "No verification topics available."
-msgstr "No verification topics available."
+#~ msgid "No verification topics available."
+#~ msgstr "No verification topics available."
 
 #: src/routes/project/library/ProjectLibrary.tsx:149
 msgid "Not available"
@@ -2199,22 +2401,22 @@ msgstr "Not available"
 #~ msgid "Now"
 #~ msgstr "Now"
 
-#: src/components/conversation/ConversationAccordion.tsx:586
+#: src/components/conversation/ConversationAccordion.tsx:591
 msgid "Oldest First"
 msgstr "Oldest First"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:34
-msgid "participant.verify.instructions.revise.artefact"
+msgid "participant.concrete.instructions.revise.artefact"
 msgstr "Once you have discussed, hit \"revise\" to see the {objectLabel} change to reflect your discussion."
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:25
-msgid "participant.verify.instructions.read.aloud"
+msgid "participant.concrete.instructions.read.aloud"
 msgstr "Once you receive the {objectLabel}, read it aloud and share out loud what you want to change, if anything."
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:557
+#: src/components/conversation/ConversationAccordion.tsx:562
 msgid "conversation.ongoing"
 msgstr "Ongoing"
 
@@ -2265,8 +2467,8 @@ msgstr "Open troubleshooting guide"
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Open your authenticator app and enter the current six-digit code."
 
-#: src/components/conversation/ConversationAccordion.tsx:910
-#: src/components/conversation/ConversationAccordion.tsx:917
+#: src/components/conversation/ConversationAccordion.tsx:915
+#: src/components/conversation/ConversationAccordion.tsx:922
 msgid "Options"
 msgstr "Options"
 
@@ -2278,7 +2480,7 @@ msgstr "Overview"
 #~ msgid "Page"
 #~ msgstr "Page"
 
-#: src/components/project/ProjectPortalEditor.tsx:876
+#: src/components/project/ProjectPortalEditor.tsx:954
 msgid "Page Content"
 msgstr "Page Content"
 
@@ -2286,7 +2488,7 @@ msgstr "Page Content"
 msgid "Page not found"
 msgstr "Page not found"
 
-#: src/components/project/ProjectPortalEditor.tsx:853
+#: src/components/project/ProjectPortalEditor.tsx:931
 msgid "Page Title"
 msgstr "Page Title"
 
@@ -2295,7 +2497,11 @@ msgstr "Page Title"
 msgid "Participant"
 msgstr "Participant"
 
-#: src/components/project/ProjectTagsInput.tsx:245
+#: src/components/project/ProjectPortalEditor.tsx:539
+msgid "Participant Features"
+msgstr "Participant Features"
+
+#: src/components/project/ProjectTagsInput.tsx:242
 msgid "Participants will be able to select tags when creating conversations"
 msgstr "Participants will be able to select tags when creating conversations"
 
@@ -2319,7 +2525,7 @@ msgstr "Passwords do not match"
 #~ msgid "Pause"
 #~ msgstr "Pause"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:352
+#: src/components/participant/verify/VerifyArtefact.tsx:323
 msgid "Pause reading"
 msgstr "Pause reading"
 
@@ -2383,7 +2589,7 @@ msgstr ""
 #~ msgid "Please record your response by clicking the \"Start Recording\" button below. You may also choose to respond in text by clicking the text icon."
 #~ msgstr "Please record your response by clicking the \"Start Recording\" button below. You may also choose to respond in text by clicking the text icon."
 
-#: src/components/report/CreateReportForm.tsx:217
+#: src/components/report/CreateReportForm.tsx:141
 msgid "Please select a language for your report"
 msgstr "Please select a language for your report"
 
@@ -2411,7 +2617,7 @@ msgstr "Please select a language for your updated report"
 #~ msgid "Please wait {timeStr} before requesting another reply."
 #~ msgstr "Please wait {timeStr} before requesting another reply."
 
-#: src/components/report/CreateReportForm.tsx:61
+#: src/components/report/CreateReportForm.tsx:52
 msgid "Please wait while we generate your report. You will automatically be redirected to the report page."
 msgstr "Please wait while we generate your report. You will automatically be redirected to the report page."
 
@@ -2433,11 +2639,11 @@ msgstr "Please wait while we update your report. You will automatically be redir
 msgid "Please wait while we verify your email address."
 msgstr "Please wait while we verify your email address."
 
-#: src/components/project/ProjectPortalEditor.tsx:843
+#: src/components/project/ProjectPortalEditor.tsx:921
 msgid "Portal Content"
 msgstr "Portal Content"
 
-#: src/components/project/ProjectPortalEditor.tsx:395
+#: src/components/project/ProjectPortalEditor.tsx:400
 #: src/components/layout/ProjectOverviewLayout.tsx:43
 msgid "Portal Editor"
 msgstr "Portal Editor"
@@ -2463,8 +2669,8 @@ msgid "Proceed"
 msgstr "Proceed"
 
 #: src/components/report/CreateReportForm.tsx:139
-msgid "processing"
-msgstr "processing"
+#~ msgid "processing"
+#~ msgstr "processing"
 
 #: src/components/conversation/ConversationAccordion.tsx:418
 #~ msgid "Processing"
@@ -2483,7 +2689,7 @@ msgstr "processing"
 #~ msgstr "Processing Transcript"
 
 #: src/components/report/UpdateReportModalButton.tsx:71
-#: src/components/report/CreateReportForm.tsx:60
+#: src/components/report/CreateReportForm.tsx:51
 msgid "Processing your report..."
 msgstr "Processing your report..."
 
@@ -2557,7 +2763,7 @@ msgstr "Published"
 #~ msgid "Quotes"
 #~ msgstr "Quotes"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:352
+#: src/components/participant/verify/VerifyArtefact.tsx:323
 msgid "Read aloud"
 msgstr "Read aloud"
 
@@ -2617,7 +2823,7 @@ msgstr "References"
 msgid "participant.button.refine"
 msgstr "Refine"
 
-#: src/components/project/ProjectPortalEditor.tsx:1062
+#: src/components/project/ProjectPortalEditor.tsx:1096
 msgid "Refresh"
 msgstr "Refresh"
 
@@ -2629,13 +2835,13 @@ msgstr "Refresh audit logs"
 #~ msgid "Regenerate Library"
 #~ msgstr "Regenerate Library"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:111
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:112
 msgid "Regenerate Summary"
 msgstr "Regenerate Summary"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:327
-msgid "participant.verify.regenerating.artefact"
+#: src/components/participant/verify/VerifyArtefact.tsx:303
+msgid "participant.concrete.regenerating.artefact"
 msgstr "Regenerating the artefact"
 
 #: src/routes/auth/Register.tsx:22
@@ -2651,6 +2857,11 @@ msgstr "Register as a new user"
 #~ msgstr "Relevance"
 
 #. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyArtefactError.tsx:40
+msgid "participant.concrete.artefact.action.button.reload"
+msgstr "Reload Page"
+
+#. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationText.tsx:113
 msgid "participant.button.reload.page.text.mode"
 msgstr "Reload Page"
@@ -2658,11 +2869,6 @@ msgstr "Reload Page"
 #. js-lingui-explicit-id
 #: src/components/participant/ConversationErrorView.tsx:49
 msgid "participant.button.reload"
-msgstr "Reload Page"
-
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefactError.tsx:40
-msgid "participant.verify.artefact.action.button.reload"
 msgstr "Reload Page"
 
 #: src/routes/participant/ParticipantConversation.tsx:300
@@ -2691,7 +2897,7 @@ msgstr "Rename"
 #~ msgid "Rename"
 #~ msgstr "Rename"
 
-#: src/components/project/ProjectPortalEditor.tsx:676
+#: src/components/project/ProjectPortalEditor.tsx:697
 msgid "Reply Prompt"
 msgstr "Reply Prompt"
 
@@ -2714,7 +2920,7 @@ msgstr "Report Created - {0}"
 msgid "Report generation is currently in beta and limited to projects with fewer than 10 hours of recording."
 msgstr "Report generation is currently in beta and limited to projects with fewer than 10 hours of recording."
 
-#: src/components/project/ProjectPortalEditor.tsx:936
+#: src/components/project/ProjectPortalEditor.tsx:875
 msgid "Report Notifications"
 msgstr "Report Notifications"
 
@@ -2762,8 +2968,8 @@ msgstr "Reset Password"
 msgid "Reset Password | Dembrane"
 msgstr "Reset Password | Dembrane"
 
-#: src/components/conversation/ConversationAccordion.tsx:1139
-#: src/components/conversation/ConversationAccordion.tsx:1144
+#: src/components/conversation/ConversationAccordion.tsx:1147
+#: src/components/conversation/ConversationAccordion.tsx:1152
 msgid "Reset to default"
 msgstr "Reset to default"
 
@@ -2817,8 +3023,8 @@ msgid "Review processing status for every conversation collected in this project
 msgstr "Review processing status for every conversation collected in this project."
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:422
-msgid "participant.verify.action.button.revise"
+#: src/components/participant/verify/VerifyArtefact.tsx:394
+msgid "participant.concrete.action.button.revise"
 msgstr "Revise"
 
 #: src/components/settings/AuditLogsCard.tsx:611
@@ -2830,8 +3036,8 @@ msgid "Rows per page"
 msgstr "Rows per page"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:399
-msgid "participant.verify.action.button.save"
+#: src/components/participant/verify/VerifyArtefact.tsx:371
+msgid "participant.concrete.action.button.save"
 msgstr "Save"
 
 #: src/routes/project/resource/ProjectResourceOverview.tsx:144
@@ -2859,7 +3065,7 @@ msgstr "Scroll to bottom"
 msgid "Search"
 msgstr "Search"
 
-#: src/components/conversation/ConversationAccordion.tsx:904
+#: src/components/conversation/ConversationAccordion.tsx:909
 msgid "Search conversations"
 msgstr "Search conversations"
 
@@ -2876,7 +3082,7 @@ msgstr "Search Projects"
 msgid "Search projects..."
 msgstr "Search projects..."
 
-#: src/components/conversation/ConversationAccordion.tsx:1040
+#: src/components/conversation/ConversationAccordion.tsx:1045
 msgid "Search tags"
 msgstr "Search tags"
 
@@ -2924,22 +3130,22 @@ msgstr "Select Project"
 msgid "Select tags"
 msgstr "Select tags"
 
-#: src/components/project/ProjectPortalEditor.tsx:504
+#: src/components/project/ProjectPortalEditor.tsx:509
 msgid "Select the instructions that will be shown to participants when they start a conversation"
 msgstr "Select the instructions that will be shown to participants when they start a conversation"
 
-#: src/components/project/ProjectPortalEditor.tsx:588
+#: src/components/project/ProjectPortalEditor.tsx:599
 msgid "Select the type of feedback or engagement you want to encourage."
 msgstr "Select the type of feedback or engagement you want to encourage."
 
-#: src/components/project/ProjectPortalEditor.tsx:492
+#: src/components/project/ProjectPortalEditor.tsx:497
 msgid "Select tutorial"
 msgstr "Select tutorial"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:758
-msgid "dashboard.dembrane.verify.topic.select"
-msgstr "Select which topics participants can use for verification."
+#: src/components/project/ProjectPortalEditor.tsx:791
+msgid "dashboard.dembrane.concrete.topic.select"
+msgstr "Select which topics participants can use for \"Make it concrete\"."
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:306
@@ -3013,7 +3219,7 @@ msgstr "Share your voice"
 msgid "Share your voice by scanning the QR code below."
 msgstr "Share your voice by scanning the QR code below."
 
-#: src/components/conversation/ConversationAccordion.tsx:590
+#: src/components/conversation/ConversationAccordion.tsx:595
 msgid "Shortest First"
 msgstr "Shortest First"
 
@@ -3125,20 +3331,20 @@ msgstr "Something went wrong with the conversation. Please try refreshing the pa
 
 #. js-lingui-explicit-id
 #: src/components/participant/EchoErrorAlert.tsx:21
-msgid "participant.echo.generic.error.message"
-msgstr "Something went wrong. Please try again by pressing the <0>ECHO</0> button, or contact support if the issue continues."
+msgid "participant.go.deeper.generic.error.message"
+msgstr "Something went wrong. Please try again by pressing the <0>Go deeper</0> button, or contact support if the issue continues."
 
-#: src/components/participant/verify/VerifyArtefact.tsx:173
+#: src/components/participant/verify/VerifyArtefact.tsx:149
 msgid "Something went wrong. Please try again."
 msgstr "Something went wrong. Please try again."
 
 #. js-lingui-explicit-id
 #: src/components/participant/EchoErrorAlert.tsx:16
-msgid "participant.echo.content.policy.violation.error.message"
+msgid "participant.go.deeper.content.policy.violation.error.message"
 msgstr "Sorry, we cannot process this request due to an LLM provider's content policy."
 
-#: src/components/conversation/ConversationAccordion.tsx:964
-#: src/components/conversation/ConversationAccordion.tsx:971
+#: src/components/conversation/ConversationAccordion.tsx:969
+#: src/components/conversation/ConversationAccordion.tsx:976
 msgid "Sort"
 msgstr "Sort"
 
@@ -3151,7 +3357,7 @@ msgstr "Source {0}"
 #~ msgid "Sources:"
 #~ msgstr "Sources:"
 
-#: src/components/project/ProjectPortalEditor.tsx:446
+#: src/components/project/ProjectPortalEditor.tsx:451
 msgid "Spanish"
 msgstr "Spanish"
 
@@ -3159,7 +3365,7 @@ msgstr "Spanish"
 #~ msgid "Speaker"
 #~ msgstr "Speaker"
 
-#: src/components/project/ProjectPortalEditor.tsx:120
+#: src/components/project/ProjectPortalEditor.tsx:118
 msgid "Specific Context"
 msgstr "Specific Context"
 
@@ -3226,12 +3432,11 @@ msgstr "Success"
 msgid "Suggested:"
 msgstr "Suggested:"
 
-#: src/components/project/ProjectPortalEditor.tsx:614
 #: src/components/chat/templates.ts:26
 msgid "Summarize"
 msgstr "Summarize"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:97
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:98
 msgid "Summary"
 msgstr "Summary"
 
@@ -3252,11 +3457,11 @@ msgstr "Switch to text input"
 msgid "System"
 msgstr "System"
 
-#: src/components/project/ProjectTagsInput.tsx:241
+#: src/components/project/ProjectTagsInput.tsx:238
 #: src/components/participant/ParticipantInitiateForm.tsx:107
 #: src/components/conversation/ConversationEdit.tsx:139
-#: src/components/conversation/ConversationAccordion.tsx:1030
-#: src/components/conversation/ConversationAccordion.tsx:1033
+#: src/components/conversation/ConversationAccordion.tsx:1035
+#: src/components/conversation/ConversationAccordion.tsx:1038
 msgid "Tags"
 msgstr "Tags"
 
@@ -3289,7 +3494,7 @@ msgstr "Thank you for participating!"
 #~ msgid "Thank You Page"
 #~ msgstr "Thank You Page"
 
-#: src/components/project/ProjectPortalEditor.tsx:906
+#: src/components/project/ProjectPortalEditor.tsx:984
 msgid "Thank You Page Content"
 msgstr "Thank You Page Content"
 
@@ -3328,7 +3533,7 @@ msgstr "The following conversations were automatically added to the context"
 #~ msgid "the project library."
 #~ msgstr "the project library."
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:64
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:65
 msgid "The summary is being regenerated. Please wait for the new summary to be available."
 msgstr "The summary is being regenerated. Please wait for the new summary to be available."
 
@@ -3344,7 +3549,7 @@ msgstr "The summary is being regenerated. Please wait for the new summary to be 
 msgid "There was an error cloning your project. Please try again or contact support."
 msgstr "There was an error cloning your project. Please try again or contact support."
 
-#: src/components/report/CreateReportForm.tsx:74
+#: src/components/report/CreateReportForm.tsx:65
 msgid "There was an error creating your report. Please try again or contact support."
 msgstr "There was an error creating your report. Please try again or contact support."
 
@@ -3407,7 +3612,7 @@ msgstr "This email is already in the list."
 msgid "participant.modal.refine.info.available.in"
 msgstr "This feature will be available in {remainingTime} seconds."
 
-#: src/components/project/ProjectPortalEditor.tsx:1066
+#: src/components/project/ProjectPortalEditor.tsx:1100
 msgid "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
 msgstr "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
 
@@ -3436,15 +3641,15 @@ msgstr "This is your project library. Create views to analyse your entire projec
 #~ msgid "This language will be used for the Participant's Portal, transcription and analysis. To change the language of this application, please use the language picker in the header user menu instead."
 #~ msgstr "This language will be used for the Participant's Portal, transcription and analysis. To change the language of this application, please use the language picker in the header user menu instead."
 
-#: src/components/project/ProjectPortalEditor.tsx:441
+#: src/components/project/ProjectPortalEditor.tsx:446
 msgid "This language will be used for the Participant's Portal."
 msgstr "This language will be used for the Participant's Portal."
 
-#: src/components/project/ProjectPortalEditor.tsx:916
+#: src/components/project/ProjectPortalEditor.tsx:994
 msgid "This page is shown after the participant has completed the conversation."
 msgstr "This page is shown after the participant has completed the conversation."
 
-#: src/components/project/ProjectPortalEditor.tsx:886
+#: src/components/project/ProjectPortalEditor.tsx:964
 msgid "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
 msgstr "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
 
@@ -3456,7 +3661,7 @@ msgstr "This page is shown to participants when they start a conversation after 
 #~ msgid "This project library was generated on {0}."
 #~ msgstr "This project library was generated on {0}."
 
-#: src/components/project/ProjectPortalEditor.tsx:683
+#: src/components/project/ProjectPortalEditor.tsx:708
 msgid "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
 msgstr "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
 
@@ -3473,7 +3678,7 @@ msgstr "This report was opened by {0} people"
 #~ msgid "This summary is AI-generated and brief, for thorough analysis, use the Chat or Library."
 #~ msgstr "This summary is AI-generated and brief, for thorough analysis, use the Chat or Library."
 
-#: src/components/project/ProjectPortalEditor.tsx:864
+#: src/components/project/ProjectPortalEditor.tsx:942
 msgid "This title is shown to participants when they start a conversation"
 msgstr "This title is shown to participants when they start a conversation"
 
@@ -3491,13 +3696,13 @@ msgid "This will create a new conversation with the same audio but a fresh trans
 msgstr "This will create a new conversation with the same audio but a fresh transcription. The original conversation will remain unchanged."
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:332
-msgid "participant.verify.regenerating.artefact.description"
+#: src/components/participant/verify/VerifyArtefact.tsx:308
+msgid "participant.concrete.regenerating.artefact.description"
 msgstr "This will just take a few moments"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefactLoading.tsx:18
-msgid "participant.verify.loading.artefact.description"
+msgid "participant.concrete.loading.artefact.description"
 msgstr "This will just take a moment"
 
 #: src/components/conversation/RetranscribeConversation.tsx:144
@@ -3520,11 +3725,11 @@ msgstr "Tip"
 #~ msgid "Title"
 #~ msgstr "Title"
 
-#: src/components/conversation/ConversationEdit.tsx:160
+#: src/components/conversation/ConversationEdit.tsx:163
 msgid "To assign a new tag, please create it first in the project overview."
 msgstr "To assign a new tag, please create it first in the project overview."
 
-#: src/components/report/CreateReportForm.tsx:160
+#: src/components/report/CreateReportForm.tsx:91
 msgid "To generate a report, please start by adding conversations in your project"
 msgstr "To generate a report, please start by adding conversations in your project"
 
@@ -3533,8 +3738,8 @@ msgid "Topics"
 msgstr "Topics"
 
 #: src/components/report/CreateReportForm.tsx:102
-msgid "total"
-msgstr "total"
+#~ msgid "total"
+#~ msgstr "total"
 
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:71
 msgid "Transcribing..."
@@ -3665,14 +3870,14 @@ msgstr "Type your response here"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefactError.tsx:19
-msgid "participant.verify.artefact.error.title"
+msgid "participant.concrete.artefact.error.title"
 msgstr "Unable to Load Artefact"
 
 #: src/components/settings/AuditLogsCard.tsx:510
 msgid "Unable to load audit logs."
 msgstr "Unable to load audit logs."
 
-#: src/components/participant/verify/VerifyArtefact.tsx:113
+#: src/components/participant/verify/VerifyArtefact.tsx:89
 msgid "Unable to load the generated artefact. Please try again."
 msgstr "Unable to load the generated artefact. Please try again."
 
@@ -3784,27 +3989,27 @@ msgid "Use Shift + Enter to add a new line"
 msgstr "Use Shift + Enter to add a new line"
 
 #: src/components/project/ProjectPortalEditor.tsx:753
-msgid "Verification Topics"
-msgstr "Verification Topics"
+#~ msgid "Verification Topics"
+#~ msgstr "Verification Topics"
 
 #: src/components/participant/verify/VerifyArtefact.tsx:94
-msgid "verified"
-msgstr "verified"
+#~ msgid "verified"
+#~ msgstr "verified"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:1136
+#: src/components/conversation/ConversationAccordion.tsx:1144
 msgid "conversation.filters.verified.text"
 msgstr "Verified"
 
 #: src/components/conversation/VerifiedArtefactsSection.tsx:65
-msgid "verified artefact"
-msgstr "verified artefact"
+#~ msgid "verified artefact"
+#~ msgstr "verified artefact"
 
 #: src/components/conversation/VerifiedArtefactsSection.tsx:60
-msgid "Verified Artefacts"
-msgstr "Verified Artefacts"
+#~ msgid "Verified Artefacts"
+#~ msgstr "Verified Artefacts"
 
-#: src/components/conversation/ConversationAccordion.tsx:527
+#: src/components/conversation/ConversationAccordion.tsx:532
 msgid "verified artifacts"
 msgstr "verified artifacts"
 
@@ -3840,17 +4045,20 @@ msgstr "View your responses"
 #~ msgstr "Wait {0}:{1}"
 
 #: src/components/chat/TemplatesModal.tsx:118
-msgid "Want to add a template to ECHO?"
-msgstr "Want to add a template to ECHO?"
+msgid "Want to add a template to \"Dembrane\"?"
+msgstr "Want to add a template to \"Dembrane\"?"
+
+#: src/components/chat/TemplatesModal.tsx:118
+#~ msgid "Want to add a template to ECHO?"
+#~ msgstr "Want to add a template to ECHO?"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:540
 #~ msgid "Warning"
 #~ msgstr "Warning"
 
-#. placeholder {0}: nouns.length
 #: src/components/project/ProjectPortalEditor.tsx:150
-msgid "Warning: You have added {0} key terms. Only the first {ASSEMBLYAI_MAX_HOTWORDS} will be used by the transcription engine."
-msgstr "Warning: You have added {0} key terms. Only the first {ASSEMBLYAI_MAX_HOTWORDS} will be used by the transcription engine."
+#~ msgid "Warning: You have added {0} key terms. Only the first {ASSEMBLYAI_MAX_HOTWORDS} will be used by the transcription engine."
+#~ msgstr "Warning: You have added {0} key terms. Only the first {ASSEMBLYAI_MAX_HOTWORDS} will be used by the transcription engine."
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:366
@@ -3923,7 +4131,7 @@ msgstr "Welcome to Dembrane Chat! Use the sidebar to select resources and conver
 msgid "Welcome to Dembrane!"
 msgstr "Welcome to Dembrane!"
 
-#: src/components/report/CreateReportForm.tsx:89
+#: src/components/report/CreateReportForm.tsx:79
 msgid "Welcome to Reports!"
 msgstr "Welcome to Reports!"
 
@@ -3937,10 +4145,10 @@ msgstr "Welcome!"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifySelection.tsx:183
-msgid "participant.verify.selection.title"
-msgstr "What do you want to verify?"
+msgid "participant.concrete.selection.title"
+msgstr "What do you want to make concrete?"
 
-#: src/components/report/CreateReportForm.tsx:187
+#: src/components/report/CreateReportForm.tsx:120
 msgid "will be included in your report"
 msgstr "will be included in your report"
 
@@ -3997,12 +4205,12 @@ msgstr "You seem to be offline, please check your internet connection"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:17
-msgid "participant.verify.instructions.receive.artefact"
-msgstr "You'll soon get {objectLabel} to verify."
+msgid "participant.concrete.instructions.receive.artefact"
+msgstr "You'll soon get {objectLabel} to make them concrete."
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:52
-msgid "participant.verify.instructions.approval.helps"
+msgid "participant.concrete.instructions.approval.helps"
 msgstr "Your approval helps us understand what you really think!"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:735
@@ -4010,8 +4218,8 @@ msgstr "Your approval helps us understand what you really think!"
 #~ msgstr "Your conversation is currently being transcribed. Please check back in a few moments."
 
 #: src/components/report/CreateReportForm.tsx:99
-msgid "Your Conversations"
-msgstr "Your Conversations"
+#~ msgid "Your Conversations"
+#~ msgstr "Your Conversations"
 
 #: src/components/form/SaveStatus.tsx:55
 msgid "Your inputs will be saved automatically."

@@ -1070,11 +1070,7 @@
       "_and": [
         {
           "project_chat_id": {
-            "project_id": {
-              "directus_user_id": {
-                "_eq": "$CURRENT_USER_ID"
-              }
-            }
+            "_nnull": true
           }
         }
       ]
@@ -1210,19 +1206,7 @@
     "collection": "project_chat_message_conversation",
     "action": "create",
     "permissions": null,
-    "validation": {
-      "_and": [
-        {
-          "conversation_id": {
-            "project_id": {
-              "directus_user_id": {
-                "_eq": "$CURRENT_USER_ID"
-              }
-            }
-          }
-        }
-      ]
-    },
+    "validation": null,
     "presets": null,
     "fields": [
       "*"
@@ -1548,11 +1532,13 @@
     "validation": {
       "_and": [
         {
-          "project_id": {
-            "directus_user_id": {
-              "_eq": "$CURRENT_USER"
+          "_and": [
+            {
+              "project_id": {
+                "_nnull": true
+              }
             }
-          }
+          ]
         }
       ]
     },
@@ -2185,5 +2171,34 @@
     ],
     "policy": "abf8a154-5b1c-4a46-ac9c-7300570f4f17",
     "_syncId": "8a8e0d56-e394-47af-8473-9c77b6a0870f"
+  },
+  {
+    "collection": "project",
+    "action": "read",
+    "permissions": null,
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "id",
+      "created_at",
+      "updated_at",
+      "language",
+      "conversation_ask_for_participant_name_label",
+      "default_conversation_ask_for_participant_name",
+      "default_conversation_tutorial_slug",
+      "default_conversation_title",
+      "default_conversation_description",
+      "default_conversation_finish_text",
+      "tags",
+      "is_conversation_allowed",
+      "is_get_reply_enabled",
+      "is_project_notification_subscription_allowed",
+      "is_verify_enabled",
+      "custom_verification_topics",
+      "selected_verification_key_list",
+      "is_enhanced_audio_processing_enabled"
+    ],
+    "policy": "abf8a154-5b1c-4a46-ac9c-7300570f4f17",
+    "_syncId": "f7ef008d-dbf6-4af1-8c66-97711f0ccb3f"
   }
 ]

@@ -4,31 +4,83 @@ You are given a series of quotes from a conversation transcript in chronological
 {{ quote_text_joined }}
 </quotes>
 
-Create a summary that adapts to the content's complexity while capturing both substance and nuance.
+{% if project_context %}
+<project_context>
+The host has provided the following context and key terms for this conversation:
+{{ project_context }}
+</project_context>
+{% endif %}
 
-## Core Guidelines
+{% if verified_artifacts %}
+<verified_artifacts>
+During this conversation, participants collaboratively created and verified the following concrete outcomes:
+{% for artifact in verified_artifacts %}
 
-1. **Proportional Response**: The summary length should never exceed the original content length. For very simple inputs, provide an even shorter summary.
+---
+{{ artifact }}
+---
+{% endfor %}
+</verified_artifacts>
+{% endif %}
 
-2. **Content-Driven Structure**: 
-   - For simple exchanges (explanations, jokes, clarifications): Use 1-2 concise paragraphs without formal sections
-   - For complex discussions: Use appropriate headers and structure
+Create a summary that captures the essence and meaning of what happened, optimized for glanceability.
 
-3. **Essence Over Analysis**: Capture what was actually said without adding speculative context, background, or implications unless explicitly mentioned.
+## Core Principles
 
-4. **Human Elements**: Preserve humor, wordplay, or emotional context when central to the conversation's meaning.
+1. **Essence over exhaustiveness**: Capture the "so what?" - the meaningful outcome, decision, or insight - not a blow-by-blow account
 
-5. **Adaptable Depth**:
-   - Simple content receives simple summaries
-   - Complex content receives appropriately structured analysis
-   - Never inflate basic content with unnecessary academic or strategic framing
+2. **Radical conciseness**: Most conversations should summarize to 2-4 sentences. Complex discussions might warrant 1-2 short paragraphs. The summary should always be dramatically shorter than the original.
 
-## Format Requirements
+3. **Meaningful compression**: Ask "what would someone need to know if they missed this?" not "what was discussed?"
 
-- For very simple inputs (under 100 words), limit summary to 1-3 sentences
-- For moderate inputs, use 1-2 concise paragraphs
-- Only use section headers for genuinely complex, multi-topic conversations
-- Bold genuinely significant points, not routine observations
-- Present as a finished, accessible summary that stands on its own
+4. **Natural language**: Write in flowing prose, not bullet points or structured sections. Avoid headers, lists, and formatting unless the content is genuinely complex and multi-faceted.
 
-Remember that effective summarization often means significant reduction in length while preserving core meaning.
+5. **Context integration**: 
+   - Weave in project context naturally when it adds meaning
+   - Note verified artifacts as concrete outcomes without process detail
+   - Don't force irrelevant context
+
+6. **Fast reading score**: Before writing, internally assess how glanceable this summary will be on a scale of 1-10:
+   - 10 = Instant comprehension (simple, single clear point)
+   - 7-9 = Very quick scan (2-3 clear takeaways)
+   - 4-6 = Needs focused reading (multiple points or moderate complexity)
+   - 1-3 = Requires careful reading (dense, complex, or nuanced)
+   
+   Aim for 7+ whenever possible. If your draft scores below 7, simplify further.
+
+## What to Capture
+
+Focus on what matters most. Include these elements when they're central to the conversation:
+
+- Decisions made and their rationale
+- Problems identified and solutions agreed upon  
+- Key insights or realizations
+- Concrete next steps or outcomes
+- Core dynamics when they shaped the outcome: arguments or reasoning that influenced decisions, tensions between competing priorities, conflicts that needed resolution, or agreements reached on contentious points
+- Meaningful disagreements or trade-offs discussed
+
+## What to Skip
+
+- Detailed play-by-play of the discussion
+- Implementation specifics unless they're the main point
+- Process mechanics (who said what, how decisions were reached)
+- Obvious context or background
+- Minor disagreements that didn't impact outcomes
+
+## Style Guidelines
+
+- Use commas, parentheses, or "but" instead of em dashes
+- Write in direct, conversational prose
+- Prefer shorter sentences over complex punctuation
+- Use "but" or "however" to show contrast
+- Use parentheses for asides or clarifications
+- Never use bold, italics, or other text formatting
+
+## Format
+
+- 2-4 sentences for simple conversations
+- 1-2 concise paragraphs for moderate complexity
+- Natural prose without bullets, headers, lists, or formatting
+- Only use structure if genuinely necessary for a multi-faceted discussion
+
+Write as if explaining to a colleague what happened in 30 seconds.
