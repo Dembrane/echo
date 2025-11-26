@@ -62,7 +62,7 @@ export const VerifiedArtefactsSection = ({
 				<ActionIcon
 					variant="subtle"
 					color="blue"
-					aria-label={t`verified artefact`}
+					aria-label={t`concrete artefact`}
 					size={22}
 				>
 					<IconRosetteDiscountCheckFilled />
