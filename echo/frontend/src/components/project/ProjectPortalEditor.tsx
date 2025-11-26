@@ -68,8 +68,6 @@ const normalizeTopicList = (topics: string[]): string[] =>
 		new Set(topics.map((topic) => topic.trim()).filter(Boolean)),
 	).sort();
 
-const ASSEMBLYAI_MAX_HOTWORDS = 40;
-
 const ProperNounInput = ({
 	value,
 	onChange,
@@ -145,14 +143,6 @@ const ProperNounInput = ({
 					</Pill>
 				))}
 			</Group>
-			{nouns.length > ASSEMBLYAI_MAX_HOTWORDS && (
-				<Text size="sm" c="orange">
-					<Trans>
-						Warning: You have added {nouns.length} key terms. Only the first{" "}
-						{ASSEMBLYAI_MAX_HOTWORDS} will be used by the transcription engine.
-					</Trans>
-				</Text>
-			)}
 		</Stack>
 	);
 };
