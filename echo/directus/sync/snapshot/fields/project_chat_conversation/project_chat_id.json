@@ -10,9 +10,12 @@
     "field": "project_chat_id",
     "group": null,
     "hidden": false,
-    "interface": null,
+    "interface": "select-dropdown-m2o",
     "note": null,
-    "options": null,
+    "options": {
+      "enableLink": true,
+      "template": "{{project_id.name}}"
+    },
     "readonly": false,
     "required": false,
     "searchable": true,
