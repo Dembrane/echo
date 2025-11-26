@@ -279,7 +279,7 @@ export const ParticipantConversationAudio = () => {
 		}
 		if (showEcho) {
 			return (
-				<Trans id="participant.modal.refine.info.title.echo">
+				<Trans id="participant.modal.refine.info.title.go.deeper">
 					"Go deeper" available soon
 				</Trans>
 			);

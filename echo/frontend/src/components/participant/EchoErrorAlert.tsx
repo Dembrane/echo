@@ -13,15 +13,15 @@ export const EchoErrorAlert = ({ error }: { error: Error }) => {
 		>
 			<Text size="sm">
 				{error?.message?.includes("CONTENT_POLICY_VIOLATION") ? (
-					<Trans id="participant.echo.content.policy.violation.error.message">
+					<Trans id="participant.go.deeper.content.policy.violation.error.message">
 						Sorry, we cannot process this request due to an LLM provider's
 						content policy.
 					</Trans>
 				) : (
-					<Trans id="participant.echo.generic.error.message">
+					<Trans id="participant.go.deeper.generic.error.message">
 						Something went wrong. Please try again by pressing the{" "}
-						<span className="font-bold">ECHO</span> button, or contact support
-						if the issue continues.
+						<span className="font-bold">Go deeper</span> button, or contact
+						support if the issue continues.
 					</Trans>
 				)}
 			</Text>
