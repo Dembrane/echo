@@ -1,6 +1,6 @@
-import re
-from typing import AsyncGenerator
+from typing import Optional, AsyncGenerator
 from logging import getLogger
+from datetime import datetime
 
 import sentry_sdk
 from litellm import acompletion
@@ -11,14 +11,14 @@ from litellm.exceptions import ContentPolicyViolationError
 from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.prompts import render_prompt
 from dembrane.directus import directus
+from dembrane.transcribe import _get_audio_file_object
+from dembrane.async_helpers import run_in_thread_pool
 
 logger = getLogger("reply_utils")
 
 # Constants for token limits and conversation sizing
 GET_REPLY_TOKEN_LIMIT = 80000
 GET_REPLY_TARGET_TOKENS_PER_CONV = 4000
-GET_REPLY_TAG_BUFFER_MAX_SIZE = 100
-GET_REPLY_TAG_BUFFER_TRIM_SIZE = 20
 
 
 class Conversation(BaseModel):
@@ -81,6 +81,47 @@ def build_conversation_transcript(conversation: dict) -> str:
     return transcript
 
 
+def _parse_directus_datetime(value: Optional[str]) -> Optional[datetime]:
+    if value is None:
+        return None
+    try:
+        # Directus returns ISO strings that may end with 'Z'
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        logger.warning("Unable to parse datetime value '%s'", value)
+        return None
+
+
+def select_audio_chunks_for_reply(
+    chunks: list[dict],
+    last_reply_time: Optional[datetime] = None,
+) -> list[dict]:
+    """
+    Select audio chunks that don't have transcripts and are newer than last_reply_time.
+    Similar to _select_audio_chunks in verify.py.
+    """
+    selected = []
+    for chunk in chunks:
+        transcript = (chunk.get("transcript") or "").strip()
+        # Only include chunks without transcripts
+        if transcript:
+            continue
+
+        timestamp = chunk.get("timestamp")
+        if last_reply_time and timestamp:
+            chunk_time = (
+                _parse_directus_datetime(timestamp) if isinstance(timestamp, str) else timestamp
+            )
+            if isinstance(chunk_time, datetime) and chunk_time <= last_reply_time:
+                continue
+
+        # Only include chunks with audio path
+        if chunk.get("path"):
+            selected.append(chunk)
+
+    return selected
+
+
 async def generate_reply_for_conversation(
     conversation_id: str, language: str
 ) -> AsyncGenerator[str, None]:
@@ -96,6 +137,7 @@ async def generate_reply_for_conversation(
                     "chunks.id",
                     "chunks.timestamp",
                     "chunks.transcript",
+                    "chunks.path",
                     "project_id.id",
                     "project_id.name",
                     "project_id.is_get_reply_enabled",
@@ -141,6 +183,13 @@ async def generate_reply_for_conversation(
             if tag["project_tag_id"]["text"] is not None
         ],
     )
+
+    last_reply_time = None
+    if conversation.get("replies"):
+        last_reply = conversation["replies"][-1]
+        last_reply_time = _parse_directus_datetime(last_reply.get("date_created"))
+
+    audio_chunks = select_audio_chunks_for_reply(conversation["chunks"], last_reply_time)
 
     current_project = {
         "id": conversation["project_id"]["id"],
@@ -356,23 +405,39 @@ async def generate_reply_for_conversation(
         },
     )
 
+    # Build multimodal message content
+    message_content = [{"type": "text", "text": prompt}]
+
+    # Add audio chunks without transcripts
+    for chunk in audio_chunks:
+        chunk_id = chunk.get("id")
+        timestamp = chunk.get("timestamp")
+        message_content.append(
+            {
+                "type": "text",
+                "text": f"Audio chunk {chunk_id} captured at {timestamp}",
+            }
+        )
+        path = chunk.get("path")
+        if path:
+            try:
+                audio_obj = await run_in_thread_pool(_get_audio_file_object, path)
+                message_content.append(audio_obj)
+            except Exception as exc:
+                logger.warning("Failed to attach audio chunk %s: %s", chunk_id, exc)
+
     # Store the complete response
     accumulated_response = ""
-
-    # Buffer to detect <response> tag which may be split across chunks
-    tag_buffer = ""
-    found_response_tag = False
-    # Also track closing tag to properly handle content
-    in_response_section = False
 
     # Stream the response
     try:
         response = await acompletion(
             messages=[
-                {"role": "user", "content": prompt},
+                {"role": "user", "content": message_content},
             ],
             stream=True,
-            **get_completion_kwargs(MODELS.TEXT_FAST),
+            thinking={"type": "enabled", "budget_tokens": 500},
+            **get_completion_kwargs(MODELS.MULTI_MODAL_PRO),
         )
     except ContentPolicyViolationError as e:
         logger.error(
@@ -385,89 +450,19 @@ async def generate_reply_for_conversation(
         sentry_sdk.capture_exception(e)
         raise
 
-    # List of possible partial closing tags
-    partial_closing_patterns = [
-        "</",
-        "</r",
-        "</re",
-        "</res",
-        "</resp",
-        "</respo",
-        "</respon",
-        "</respons",
-        "</response",
-        "</response>",
-    ]
-
     try:
         async for chunk in response:
             if chunk.choices[0].delta.content:
                 content = chunk.choices[0].delta.content
                 accumulated_response += content
-
-                if in_response_section:
-                    # While inside the response section, check for closing tag
-                    if any(
-                        partial in (tag_buffer + content) for partial in partial_closing_patterns
-                    ):
-                        combined = tag_buffer + content
-
-                        for partial in partial_closing_patterns:
-                            partial_index = combined.find(partial)
-                            if partial_index != -1:
-                                to_yield = combined[:partial_index]
-                                if to_yield.strip():
-                                    yield to_yield
-                                break  # Stop checking further once the first match is found
-
-                        # Stop streaming
-                        in_response_section = False
-                        tag_buffer = ""
-                    else:
-                        # No closing tag found, continue yielding content
-                        if (tag_buffer + content).strip():
-                            yield tag_buffer + content
-                        tag_buffer = ""
-                else:
-                    if not found_response_tag:
-                        # Append to buffer to handle split tags
-                        tag_buffer += content
-
-                        # Check if buffer contains <response>
-                        if "<response>" in tag_buffer:
-                            found_response_tag = True
-                            in_response_section = True
-
-                            # Extract content after the opening tag
-                            start_idx = tag_buffer.find("<response>") + len("<response>")
-                            content_after_tag = tag_buffer[start_idx:]
-
-                            # Reset buffer and yield content if any
-                            tag_buffer = ""
-                            if content_after_tag.strip():
-                                yield content_after_tag
-
-                        # If buffer gets too large without finding tag, trim it, keep only the last 20 characters
-                        if len(tag_buffer) > GET_REPLY_TAG_BUFFER_MAX_SIZE:
-                            tag_buffer = tag_buffer[-GET_REPLY_TAG_BUFFER_TRIM_SIZE:]
+                yield content
     except Exception as e:
         logger.error(f"Streaming failed for conversation {current_conversation.id}: {e}")
         sentry_sdk.capture_exception(e)
         raise
 
     try:
-        response_content = accumulated_response
-
-        # Remove everything between <detailed_analysis> and </detailed_analysis> tags
-        response_content = re.sub(
-            r"<detailed_analysis>.*?</detailed_analysis>", "", response_content, flags=re.DOTALL
-        )
-
-        # Replace <response> and </response> tags with empty strings
-        response_content = response_content.replace("<response>", "").replace("</response>", "")
-
-        # Strip whitespace
-        response_content = response_content.strip()
+        response_content = accumulated_response.strip()
 
         directus.create_item(
             "conversation_reply",

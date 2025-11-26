@@ -115,7 +115,7 @@ export const TemplatesModal = ({
 
 				<Group className="mt-3 border-t pt-3">
 					<Text size="sm" c="dimmed">
-						<Trans>Want to add a template to ECHO?</Trans>{" "}
+						<Trans>Want to add a template to "Dembrane"?</Trans>{" "}
 						<Anchor
 							href="https://dembrane.notion.site/Prompt-Bibliotheek-2249cd84270580138d45f0be7a4b4899?source=copy_link "
 							target="_blank"

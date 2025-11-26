@@ -108,7 +108,7 @@ export const RetranscribeConversationModal = ({
 				<Group gap="xs">
 					<Text>{t`Retranscribe Conversation`}</Text>
 					<Badge color="blue" size="sm">
-						<Trans>Experimental</Trans>
+						<Trans>Beta</Trans>
 					</Badge>
 				</Group>
 			}

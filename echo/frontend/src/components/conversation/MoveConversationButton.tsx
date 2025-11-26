@@ -129,7 +129,7 @@ export const MoveConversationButton = ({
 			>
 				<Group>
 					<Badge>
-						<Trans>Experimental</Trans>
+						<Trans>Beta</Trans>
 					</Badge>
 					<Trans>Move to Another Project</Trans>
 				</Group>

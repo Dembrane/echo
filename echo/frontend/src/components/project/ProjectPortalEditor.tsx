@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	ActionIcon,
 	Badge,
 	Box,
 	Button,
@@ -11,7 +12,6 @@ import {
 	InputDescription,
 	NativeSelect,
 	Paper,
-	Pill,
 	Stack,
 	Switch,
 	Text,
@@ -19,7 +19,7 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { IconEye, IconEyeOff, IconRefresh } from "@tabler/icons-react";
+import { IconEye, IconEyeOff, IconRefresh, IconX } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Resizable } from "re-resizable";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -136,13 +136,28 @@ const ProperNounInput = ({
 			/>
 			<Group gap="xs">
 				{nouns.map((noun) => (
-					<Pill
+					<Badge
 						key={noun}
-						withRemoveButton
-						onRemove={() => handleRemoveNoun(noun)}
+						variant="light"
+						c="black"
+						size="lg"
+						style={{
+							fontWeight: 500,
+							textTransform: "none",
+						}}
+						rightSection={
+							<ActionIcon
+								onClick={() => handleRemoveNoun(noun)}
+								size="xs"
+								variant="transparent"
+								c="gray.8"
+							>
+								<IconX size={14} />
+							</ActionIcon>
+						}
 					>
-						{noun}
-					</Pill>
+						<span>{noun}</span>
+					</Badge>
 				))}
 			</Group>
 			{nouns.length > ASSEMBLYAI_MAX_HOTWORDS && (
@@ -529,313 +544,386 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 								</Stack>
 
 								<Divider />
+								<Stack gap="1.5rem">
+									<Title order={3}>
+										<Trans>Participant Features</Trans>
+									</Title>
+									<Stack gap="2.5rem">
+										<Stack gap="md">
+											<Group>
+												<Title order={4}>
+													<Trans>Go deeper</Trans>
+												</Title>
+												<Logo hideTitle />
+												<Badge>
+													<Trans>Beta</Trans>
+												</Badge>
+											</Group>
 
-								<Stack gap="md">
-									<Group>
-										<Title order={4}>
-											<Trans>Dembrane ECHO</Trans>
-										</Title>
-										<Logo hideTitle />
-										<Badge>
-											<Trans>Experimental</Trans>
-										</Badge>
-									</Group>
+											<Text size="sm" c="dimmed">
+												<Trans>
+													Enable this feature to allow participants to request
+													AI-powered responses during their conversation.
+													Participants can click "Go deeper" after recording
+													their thoughts to receive contextual feedback,
+													encouraging deeper reflection and engagement. A
+													cooldown period applies between requests.
+												</Trans>
+											</Text>
 
-									<Text size="sm" c="dimmed">
-										<Trans>
-											Enable this feature to allow participants to request
-											AI-powered responses during their conversation.
-											Participants can click "ECHO" after recording their
-											thoughts to receive contextual feedback, encouraging
-											deeper reflection and engagement. A cooldown period
-											applies between requests.
-										</Trans>
-									</Text>
-
-									<Controller
-										name="is_get_reply_enabled"
-										control={control}
-										render={({ field }) => (
-											<Switch
-												label={
-													<FormLabel
-														label={t`Enable Dembrane ECHO`}
-														isDirty={formState.dirtyFields.is_get_reply_enabled}
-														error={
-															formState.errors.is_get_reply_enabled?.message
+											<Controller
+												name="is_get_reply_enabled"
+												control={control}
+												render={({ field }) => (
+													<Switch
+														label={
+															<FormLabel
+																label={t`Enable Go deeper`}
+																isDirty={
+																	formState.dirtyFields.is_get_reply_enabled
+																}
+																error={
+																	formState.errors.is_get_reply_enabled?.message
+																}
+															/>
+														}
+														checked={field.value}
+														onChange={(e) =>
+															field.onChange(e.currentTarget.checked)
 														}
 													/>
-												}
-												checked={field.value}
-												onChange={(e) =>
-													field.onChange(e.currentTarget.checked)
-												}
+												)}
 											/>
-										)}
-									/>
 
-									<Controller
-										name="get_reply_mode"
-										control={control}
-										render={({ field }) => (
-											<Stack gap="xs">
-												<FormLabel
-													label={t`Mode`}
-													isDirty={formState.dirtyFields.get_reply_mode}
-													error={formState.errors.get_reply_mode?.message}
-												/>
-												<Text size="sm" c="dimmed">
-													<Trans>
-														Select the type of feedback or engagement you want
-														to encourage.
-													</Trans>
-												</Text>
-												<Group gap="xs">
-													<Badge
-														className={
-															watchedReplyEnabled
-																? "cursor-pointer capitalize"
-																: "capitalize"
-														}
-														variant={
-															field.value === "summarize" ? "filled" : "default"
-														}
-														size="lg"
-														style={{
-															cursor: watchedReplyEnabled
-																? "pointer"
-																: "not-allowed",
-															opacity: watchedReplyEnabled ? 1 : 0.6,
-														}}
-														onClick={() =>
-															watchedReplyEnabled && field.onChange("summarize")
-														}
-													>
-														<Trans>Summarize</Trans>
-													</Badge>
-													<Badge
-														className={
-															watchedReplyEnabled
-																? "cursor-pointer capitalize"
-																: "capitalize"
-														}
-														variant={
-															field.value === "brainstorm"
-																? "filled"
-																: "default"
-														}
-														size="lg"
-														style={{
-															cursor: watchedReplyEnabled
-																? "pointer"
-																: "not-allowed",
-															opacity: watchedReplyEnabled ? 1 : 0.6,
-														}}
-														onClick={() =>
-															watchedReplyEnabled &&
-															field.onChange("brainstorm")
-														}
-													>
-														<Trans>Brainstorm Ideas</Trans>
-													</Badge>
-													<Badge
-														className={
-															watchedReplyEnabled
-																? "cursor-pointer capitalize"
-																: "capitalize"
-														}
-														variant={
-															field.value === "custom" ? "filled" : "default"
-														}
-														size="lg"
-														style={{
-															cursor: watchedReplyEnabled
-																? "pointer"
-																: "not-allowed",
-															opacity: watchedReplyEnabled ? 1 : 0.6,
-														}}
-														onClick={() =>
-															watchedReplyEnabled && field.onChange("custom")
-														}
-													>
-														<Trans>Custom</Trans>
-													</Badge>
-												</Group>
-											</Stack>
-										)}
-									/>
-
-									{watchedReplyMode === "custom" && (
-										<Controller
-											name="get_reply_prompt"
-											control={control}
-											render={({ field }) => (
-												<Textarea
-													label={
+											<Controller
+												name="get_reply_mode"
+												control={control}
+												render={({ field }) => (
+													<Stack gap="xs">
 														<FormLabel
-															label={t`Reply Prompt`}
-															isDirty={formState.dirtyFields.get_reply_prompt}
-															error={formState.errors.get_reply_prompt?.message}
+															label={t`Mode`}
+															isDirty={formState.dirtyFields.get_reply_mode}
+															error={formState.errors.get_reply_mode?.message}
 														/>
-													}
-													description={
-														<Box className="pb-2">
+														<Text size="sm" c="dimmed">
 															<Trans>
-																This prompt guides how the AI responds to
-																participants. Customize it to shape the type of
-																feedback or engagement you want to encourage.
+																Select the type of feedback or engagement you
+																want to encourage.
 															</Trans>
-														</Box>
-													}
-													autosize
-													minRows={5}
-													disabled={!watchedReplyEnabled}
-													{...field}
-												/>
-											)}
-										/>
-									)}
-								</Stack>
-
-								<Divider />
-
-								<Stack gap="md">
-									<Group>
-										<Title order={4}>
-											<Trans id="dashboard.dembrane.verify.title">
-												Dembrane Verify
-											</Trans>
-										</Title>
-										<Logo hideTitle />
-										<Badge>
-											<Trans id="dashboard.dembrane.verify.experimental">
-												Experimental
-											</Trans>
-										</Badge>
-									</Group>
-
-									<Text size="sm" c="dimmed">
-										<Trans id="dashboard.dembrane.verify.description">
-											Enable this feature to allow participants to create and
-											approve "verified objects" from their submissions. This
-											helps crystallize key ideas, concerns, or summaries. After
-											the conversation, you can filter for discussions with
-											verified objects and review them in the overview.
-										</Trans>
-									</Text>
-
-									<Controller
-										name="is_verify_enabled"
-										control={control}
-										render={({ field }) => (
-											<Switch
-												label={
-													<FormLabel
-														label={t`Enable Dembrane Verify`}
-														isDirty={formState.dirtyFields.is_verify_enabled}
-														error={formState.errors.is_verify_enabled?.message}
-													/>
-												}
-												checked={field.value}
-												onChange={(e) =>
-													field.onChange(e.currentTarget.checked)
-												}
-											/>
-										)}
-									/>
-
-									<Controller
-										name="verification_topics"
-										control={control}
-										render={({ field }) => (
-											<Stack gap="xs">
-												<FormLabel
-													label={t`Verification Topics`}
-													isDirty={!!formState.dirtyFields.verification_topics}
-													error={formState.errors.verification_topics?.message}
-												/>
-												<Text size="sm" c="dimmed">
-													<Trans id="dashboard.dembrane.verify.topic.select">
-														Select which topics participants can use for
-														verification.
-													</Trans>
-												</Text>
-												{isVerificationTopicsLoading ? (
-													<Text size="sm" c="dimmed">
-														<Trans>Loading verification topics…</Trans>
-													</Text>
-												) : availableVerifyTopics.length === 0 ? (
-													<Text size="sm" c="dimmed">
-														<Trans>No verification topics available.</Trans>
-													</Text>
-												) : (
-													<Group gap="xs">
-														{availableVerifyTopics.map((topic) => (
+														</Text>
+														<Group gap="xs">
 															<Badge
-																key={topic.key}
 																className={
-																	watchedVerifyEnabled
+																	watchedReplyEnabled
 																		? "cursor-pointer capitalize"
 																		: "capitalize"
 																}
 																variant={
-																	field.value.includes(topic.key)
-																		? "filled"
+																	field.value === "summarize"
+																		? "light"
 																		: "default"
 																}
+																c="black"
 																size="lg"
+																fw={500}
 																style={{
-																	cursor: watchedVerifyEnabled
+																	cursor: watchedReplyEnabled
 																		? "pointer"
 																		: "not-allowed",
-																	opacity: watchedVerifyEnabled ? 1 : 0.6,
+																	opacity: watchedReplyEnabled ? 1 : 0.6,
 																}}
-																onClick={() => {
-																	if (!watchedVerifyEnabled) return;
-																	const normalizedCurrent = normalizeTopicList(
-																		field.value ?? [],
-																	);
-																	const isSelected = normalizedCurrent.includes(
-																		topic.key,
-																	);
-
-																	// Prevent deselecting the last topic
-																	if (
-																		isSelected &&
-																		normalizedCurrent.length === 1
-																	) {
-																		toast.error(
-																			t`At least one topic must be selected to enable Dembrane Verify`,
-																		);
-																		return;
-																	}
-
-																	const updated = isSelected
-																		? normalizedCurrent.filter(
-																				(item) => item !== topic.key,
-																			)
-																		: normalizeTopicList([
-																				...normalizedCurrent,
-																				topic.key,
-																			]);
-																	field.onChange(updated);
-																}}
+																onClick={() =>
+																	watchedReplyEnabled &&
+																	field.onChange("summarize")
+																}
 															>
-																<Group gap="xs">
-																	{topic.icon ? (
-																		<span>{topic.icon}</span>
-																	) : null}
-																	<span>{topic.label}</span>
-																</Group>
+																<Trans>Default</Trans>
 															</Badge>
-														))}
-													</Group>
+															<Badge
+																className={
+																	watchedReplyEnabled
+																		? "cursor-pointer capitalize"
+																		: "capitalize"
+																}
+																variant={
+																	field.value === "brainstorm"
+																		? "light"
+																		: "default"
+																}
+																c="black"
+																size="lg"
+																fw={500}
+																style={{
+																	cursor: watchedReplyEnabled
+																		? "pointer"
+																		: "not-allowed",
+																	opacity: watchedReplyEnabled ? 1 : 0.6,
+																}}
+																onClick={() =>
+																	watchedReplyEnabled &&
+																	field.onChange("brainstorm")
+																}
+															>
+																<Trans>Brainstorm Ideas</Trans>
+															</Badge>
+															<Badge
+																className={
+																	watchedReplyEnabled
+																		? "cursor-pointer capitalize"
+																		: "capitalize"
+																}
+																variant={
+																	field.value === "custom" ? "light" : "default"
+																}
+																c="black"
+																size="lg"
+																fw={500}
+																style={{
+																	cursor: watchedReplyEnabled
+																		? "pointer"
+																		: "not-allowed",
+																	opacity: watchedReplyEnabled ? 1 : 0.6,
+																}}
+																onClick={() =>
+																	watchedReplyEnabled &&
+																	field.onChange("custom")
+																}
+															>
+																<Trans>Custom</Trans>
+															</Badge>
+														</Group>
+													</Stack>
 												)}
-											</Stack>
-										)}
-									/>
-								</Stack>
+											/>
 
+											{watchedReplyMode === "custom" && (
+												<Controller
+													name="get_reply_prompt"
+													control={control}
+													render={({ field }) => (
+														<Textarea
+															label={
+																<FormLabel
+																	label={t`Reply Prompt`}
+																	isDirty={
+																		formState.dirtyFields.get_reply_prompt
+																	}
+																	error={
+																		formState.errors.get_reply_prompt?.message
+																	}
+																/>
+															}
+															description={
+																<Box className="pb-2">
+																	<Trans>
+																		This prompt guides how the AI responds to
+																		participants. Customize it to shape the type
+																		of feedback or engagement you want to
+																		encourage.
+																	</Trans>
+																</Box>
+															}
+															autosize
+															minRows={5}
+															disabled={!watchedReplyEnabled}
+															{...field}
+														/>
+													)}
+												/>
+											)}
+										</Stack>
+
+										<Stack gap="md">
+											<Group>
+												<Title order={4}>
+													<Trans id="dashboard.dembrane.concrete.title">
+														Make it concrete
+													</Trans>
+												</Title>
+												<Logo hideTitle />
+												<Badge>
+													<Trans id="dashboard.dembrane.concrete.experimental">
+														Beta
+													</Trans>
+												</Badge>
+											</Group>
+
+											<Text size="sm" c="dimmed">
+												<Trans id="dashboard.dembrane.concrete.description">
+													Enable this feature to allow participants to create
+													and approve "concrete objects" from their submissions.
+													This helps crystallize key ideas, concerns, or
+													summaries. After the conversation, you can filter for
+													discussions with concrete objects and review them in
+													the overview.
+												</Trans>
+											</Text>
+
+											<Controller
+												name="is_verify_enabled"
+												control={control}
+												render={({ field }) => (
+													<Switch
+														label={
+															<FormLabel
+																label={t`Enable Make it concrete`}
+																isDirty={
+																	formState.dirtyFields.is_verify_enabled
+																}
+																error={
+																	formState.errors.is_verify_enabled?.message
+																}
+															/>
+														}
+														checked={field.value}
+														onChange={(e) =>
+															field.onChange(e.currentTarget.checked)
+														}
+													/>
+												)}
+											/>
+
+											<Controller
+												name="verification_topics"
+												control={control}
+												render={({ field }) => (
+													<Stack gap="xs">
+														<FormLabel
+															label={t`Concrete Topics`}
+															isDirty={
+																!!formState.dirtyFields.verification_topics
+															}
+															error={
+																formState.errors.verification_topics?.message
+															}
+														/>
+														<Text size="sm" c="dimmed">
+															<Trans id="dashboard.dembrane.concrete.topic.select">
+																Select which topics participants can use for
+																"Make it concrete".
+															</Trans>
+														</Text>
+														{isVerificationTopicsLoading ? (
+															<Text size="sm" c="dimmed">
+																<Trans>Loading concrete topics…</Trans>
+															</Text>
+														) : availableVerifyTopics.length === 0 ? (
+															<Text size="sm" c="dimmed">
+																<Trans>No concrete topics available.</Trans>
+															</Text>
+														) : (
+															<Group gap="xs">
+																{availableVerifyTopics.map((topic) => (
+																	<Badge
+																		key={topic.key}
+																		className={
+																			watchedVerifyEnabled
+																				? "cursor-pointer capitalize"
+																				: "capitalize"
+																		}
+																		variant={
+																			field.value.includes(topic.key)
+																				? "light"
+																				: "default"
+																		}
+																		c="black"
+																		size="lg"
+																		fw={500}
+																		style={{
+																			cursor: watchedVerifyEnabled
+																				? "pointer"
+																				: "not-allowed",
+																			opacity: watchedVerifyEnabled ? 1 : 0.6,
+																		}}
+																		onClick={() => {
+																			if (!watchedVerifyEnabled) return;
+																			const normalizedCurrent =
+																				normalizeTopicList(field.value ?? []);
+																			const isSelected =
+																				normalizedCurrent.includes(topic.key);
+
+																			// Prevent deselecting the last topic
+																			if (
+																				isSelected &&
+																				normalizedCurrent.length === 1
+																			) {
+																				toast.error(
+																					t`At least one topic must be selected to enable Make it concrete`,
+																				);
+																				return;
+																			}
+
+																			const updated = isSelected
+																				? normalizedCurrent.filter(
+																						(item) => item !== topic.key,
+																					)
+																				: normalizeTopicList([
+																						...normalizedCurrent,
+																						topic.key,
+																					]);
+																			field.onChange(updated);
+																		}}
+																	>
+																		<Group gap="xs">
+																			{topic.icon ? (
+																				<span>{topic.icon}</span>
+																			) : null}
+																			<span>{topic.label}</span>
+																		</Group>
+																	</Badge>
+																))}
+															</Group>
+														)}
+													</Stack>
+												)}
+											/>
+										</Stack>
+
+										<Stack gap="md">
+											<Group>
+												<Title order={4}>
+													<Trans>Report Notifications</Trans>
+												</Title>
+												<Text size="sm" c="dimmed">
+													<Trans>
+														Enable this feature to allow participants to receive
+														notifications when a report is published or updated.
+														Participants can enter their email to subscribe for
+														updates and stay informed.
+													</Trans>
+												</Text>
+											</Group>
+											<Controller
+												name="is_project_notification_subscription_allowed"
+												control={control}
+												render={({ field }) => (
+													<Stack>
+														<Switch
+															label={
+																<FormLabel
+																	label={t`Enable Report Notifications`}
+																	isDirty={
+																		formState.dirtyFields
+																			.is_project_notification_subscription_allowed
+																	}
+																	error={
+																		formState.errors
+																			.is_project_notification_subscription_allowed
+																			?.message
+																	}
+																/>
+															}
+															checked={field.value}
+															onChange={(e) =>
+																field.onChange(e.currentTarget.checked)
+															}
+														/>
+													</Stack>
+												)}
+											/>
+										</Stack>
+									</Stack>
+								</Stack>
 								<Divider />
 
 								<Stack gap="1.5rem">
@@ -926,50 +1014,6 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														markdown={field.value}
 														onChange={field.onChange}
 													/>
-												)}
-											/>
-										</Stack>
-										<Divider />
-										<Stack gap="md">
-											<Group>
-												<Title order={4}>
-													<Trans>Report Notifications</Trans>
-												</Title>
-												<Text size="sm" c="dimmed">
-													<Trans>
-														Enable this feature to allow participants to receive
-														notifications when a report is published or updated.
-														Participants can enter their email to subscribe for
-														updates and stay informed.
-													</Trans>
-												</Text>
-											</Group>
-											<Controller
-												name="is_project_notification_subscription_allowed"
-												control={control}
-												render={({ field }) => (
-													<Stack>
-														<Switch
-															label={
-																<FormLabel
-																	label={t`Enable Report Notifications`}
-																	isDirty={
-																		formState.dirtyFields
-																			.is_project_notification_subscription_allowed
-																	}
-																	error={
-																		formState.errors
-																			.is_project_notification_subscription_allowed
-																			?.message
-																	}
-																/>
-															}
-															checked={field.value}
-															onChange={(e) =>
-																field.onChange(e.currentTarget.checked)
-															}
-														/>
-													</Stack>
 												)}
 											/>
 										</Stack>

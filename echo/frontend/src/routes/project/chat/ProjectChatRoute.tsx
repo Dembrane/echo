@@ -573,7 +573,7 @@ export const ProjectChatRoute = () => {
 									</Text>
 									<Text size="xs" className="italic" c="dimmed">
 										<Trans>
-											ECHO is powered by AI. Please double-check responses.
+											Dembrane is powered by AI. Please double-check responses.
 										</Trans>
 									</Text>
 								</Group>
@@ -603,7 +603,7 @@ export const ProjectChatRoute = () => {
 							</Text>
 							<Text size="xs" className="italic" c="dimmed">
 								<Trans>
-									ECHO is powered by AI. Please double-check responses.
+									Dembrane is powered by AI. Please double-check responses.
 								</Trans>
 							</Text>
 						</Stack>

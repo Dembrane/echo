@@ -10,12 +10,12 @@ export const VerifyArtefactLoading = () => {
 			</div>
 			<Stack gap="sm" align="center">
 				<Text size="xl" fw={600}>
-					<Trans id="participant.verify.loading.artefact">
+					<Trans id="participant.concrete.loading.artefact">
 						Loading artefact
 					</Trans>
 				</Text>
 				<Text size="sm" c="dimmed">
-					<Trans id="participant.verify.loading.artefact.description">
+					<Trans id="participant.concrete.loading.artefact.description">
 						This will just take a moment
 					</Trans>
 				</Text>

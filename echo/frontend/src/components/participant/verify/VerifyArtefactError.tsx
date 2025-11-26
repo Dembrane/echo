@@ -16,12 +16,12 @@ export const VerifyArtefactError = ({
 	return (
 		<Stack align="center" justify="center" gap="lg" className="h-full px-4">
 			<Text size="xl" fw={500} c="red" mb="md">
-				<Trans id="participant.verify.artefact.error.title">
+				<Trans id="participant.concrete.artefact.error.title">
 					Unable to Load Artefact
 				</Trans>
 			</Text>
 			<Text size="md" c="dimmed" mb="lg" ta="center">
-				<Trans id="participant.verify.artefact.error.description">
+				<Trans id="participant.concrete.artefact.error.description">
 					It looks like we couldn't load this artefact. This might be a
 					temporary issue. You can try reloading or go back to select a
 					different topic.
@@ -37,7 +37,7 @@ export const VerifyArtefactError = ({
 					disabled={isReloading}
 					leftSection={!isReloading && <IconReload />}
 				>
-					<Trans id="participant.verify.artefact.action.button.reload">
+					<Trans id="participant.concrete.artefact.action.button.reload">
 						Reload Page
 					</Trans>
 				</Button>
@@ -49,7 +49,7 @@ export const VerifyArtefactError = ({
 					onClick={onGoBack}
 					disabled={isReloading}
 				>
-					<Trans id="participant.verify.artefact.action.button.go.back">
+					<Trans id="participant.concrete.artefact.action.button.go.back">
 						Go back
 					</Trans>
 				</Button>

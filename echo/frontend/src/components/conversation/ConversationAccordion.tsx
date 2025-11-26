@@ -452,7 +452,12 @@ const ConversationProjectTagPill = ({
 	}
 
 	return (
-		<Pill size="sm" className="font-normal">
+		<Pill
+			size="sm"
+			classNames={{
+				root: "!bg-[var(--mantine-primary-color-light)] !font-medium",
+			}}
+		>
 			{text}
 		</Pill>
 	);
@@ -1066,6 +1071,9 @@ export const ConversationAccordion = ({
 															key={tagId}
 															size="sm"
 															withRemoveButton
+															classNames={{
+																root: "!bg-[var(--mantine-primary-color-light)] !font-medium",
+															}}
 															onRemove={() =>
 																setSelectedTagIds((prev) =>
 																	prev.filter((id) => id !== tagId),
