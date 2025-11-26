@@ -1,6 +1,7 @@
 import json
+import asyncio
 import logging
-from typing import Dict, List, Literal, Iterable, Optional, AsyncGenerator
+from typing import Any, Dict, List, Literal, Iterable, Optional, AsyncGenerator
 
 import litellm
 from fastapi import Query, APIRouter, HTTPException
@@ -13,9 +14,7 @@ from dembrane.utils import generate_uuid
 from dembrane.prompts import render_prompt
 from dembrane.service import (
     chat_service,
-    build_chat_service,
     conversation_service,
-    build_conversation_service,
 )
 from dembrane.settings import get_settings
 from dembrane.chat_utils import (
@@ -25,11 +24,10 @@ from dembrane.chat_utils import (
     auto_select_conversations,
     create_system_messages_for_chat,
 )
-from dembrane.service.chat import ChatService, ChatServiceException, ChatNotFoundException
+from dembrane.service.chat import ChatServiceException, ChatNotFoundException
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.conversation import get_conversation_token_count
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
-from dembrane.service.conversation import ConversationService
 
 ChatRouter = APIRouter(tags=["chat"])
 
@@ -37,18 +35,6 @@ logger = logging.getLogger("dembrane.chat")
 
 settings = get_settings()
 ENABLE_CHAT_AUTO_SELECT = settings.feature_flags.enable_chat_auto_select
-
-
-def _chat_service_for_auth(auth_session: DirectusSession) -> ChatService:
-    if auth_session.client is None:
-        return chat_service
-    return build_chat_service(auth_session.client)
-
-
-def _conversation_service_for_auth(auth_session: DirectusSession) -> ConversationService:
-    if auth_session.client is None:
-        return conversation_service
-    return build_conversation_service(auth_session.client)
 
 
 async def is_followup_question(
@@ -128,7 +114,12 @@ async def raise_if_chat_not_found_or_not_authorized(
     *,
     include_used_conversations: bool = False,
 ) -> dict:
-    chat_svc = _chat_service_for_auth(auth_session)
+    # Always use the global (admin) chat_service for reads here.
+    # Authorization is checked manually below (project owner vs user_id).
+    # Using user-scoped Directus client would cause junction table data
+    # (e.g., used_conversations) to be filtered by Directus permissions,
+    # leading to inconsistencies where writes succeed but reads return empty.
+    chat_svc = chat_service
     try:
         chat = await run_in_thread_pool(
             chat_svc.get_by_id_or_raise,
@@ -167,8 +158,7 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
         include_used_conversations=True,
     )
 
-    chat_svc = _chat_service_for_auth(auth)
-    # conversation_svc = _conversation_service_for_auth(auth)
+    chat_svc = chat_service
 
     messages = await run_in_thread_pool(
         chat_svc.list_messages,
@@ -216,6 +206,7 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
                     assistant_message_token_count += tokens_count
 
     used_conversation_links = chat.get("used_conversations") or []
+    logger.debug("Used conversation links: %s", used_conversation_links)
 
     auto_select_value = chat.get("auto_select")
     if auto_select_value is None:
@@ -238,7 +229,12 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
         auto_select_bool=bool(auto_select_value),
     )
 
+    # Extract conversation metadata first
+    conversation_metadata: List[tuple[str, str, bool]] = []  # (id, participant_name, is_locked)
     for link in used_conversation_links:
+        logger.debug(
+            "Processing used conversation link for conversation %s", link.get("conversation_id")
+        )
         conversation_ref = link.get("conversation_id") or {}
         conversation_id = conversation_ref.get("id")
         if not conversation_id:
@@ -246,8 +242,21 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
 
         participant_name = str(conversation_ref.get("participant_name") or "")
         is_locked = conversation_id in locked_conversations
-        token_count = await get_conversation_token_count(conversation_id, auth)
+        conversation_metadata.append((conversation_id, participant_name, is_locked))
 
+    # Fetch all token counts in parallel
+    if conversation_metadata:
+        token_count_tasks = [
+            get_conversation_token_count(conv_id, auth) for conv_id, _, _ in conversation_metadata
+        ]
+        token_counts = await asyncio.gather(*token_count_tasks)
+    else:
+        token_counts = []
+
+    # Build context objects with the fetched data
+    for (conversation_id, participant_name, is_locked), token_count in zip(
+        conversation_metadata, token_counts, strict=True
+    ):
         chat_context_resource = ChatContextConversationSchema(
             conversation_id=conversation_id,
             conversation_participant_name=participant_name,
@@ -279,8 +288,8 @@ async def add_chat_context(
         include_used_conversations=True,
     )
 
-    chat_svc = _chat_service_for_auth(auth)
-    conversation_svc = _conversation_service_for_auth(auth)
+    chat_svc = chat_service
+    conversation_svc = conversation_service
 
     if body.conversation_id is None and body.auto_select_bool is None:
         raise HTTPException(
@@ -353,7 +362,8 @@ async def delete_chat_context(
     body: ChatDeleteContextSchema,
     auth: DependencyDirectusSession,
 ) -> None:
-    chat_svc = _chat_service_for_auth(auth)
+    chat_svc = chat_service
+
     await raise_if_chat_not_found_or_not_authorized(chat_id, auth)
     if body.conversation_id is None and body.auto_select_bool is None:
         raise HTTPException(
@@ -403,8 +413,8 @@ async def lock_conversations(
 ) -> List[dict]:
     await raise_if_chat_not_found_or_not_authorized(chat_id, auth)
 
-    chat_svc = _chat_service_for_auth(auth)
-    conversation_svc = _conversation_service_for_auth(auth)
+    chat_svc = chat_service
+    conversation_svc = conversation_service
 
     messages = await run_in_thread_pool(
         chat_svc.list_messages,
@@ -478,8 +488,8 @@ async def post_chat(
         include_used_conversations=True,
     )
 
-    chat_svc = _chat_service_for_auth(auth)
-    conversation_svc = _conversation_service_for_auth(auth)
+    chat_svc = chat_service
+    conversation_svc = conversation_service
 
     project_info = chat.get("project_id")
     project_id: Optional[str]
@@ -503,23 +513,38 @@ async def post_chat(
     )
 
     try:
-        if not chat.get("name"):
-            generated_title = await generate_title(user_message_content, language)
-            if generated_title:
-                await run_in_thread_pool(chat_svc.set_chat_name, chat_id, generated_title)
+        # Run independent operations in parallel for better latency
+        needs_title = not chat.get("name")
+        parallel_tasks: List[Any] = [
+            get_project_chat_history(chat_id),
+            get_chat_context(chat_id, auth),
+        ]
+        if needs_title:
+            parallel_tasks.append(generate_title(user_message_content, language))
 
-        if body.template_key is not None:
-            await run_in_thread_pool(
-                chat_svc.update_message,
-                user_message_id,
-                {"template_key": body.template_key},
-            )
+        results = await asyncio.gather(*parallel_tasks)
 
-        messages = await get_project_chat_history(chat_id)
+        messages = results[0]
+        chat_context = results[1]
+        generated_title = results[2] if needs_title else None
+
         if len(messages) == 0:
             logger.debug("initializing chat")
 
-        chat_context = await get_chat_context(chat_id, auth)
+        # DB writes can happen in parallel too (fire-and-forget style updates)
+        write_tasks = []
+        if generated_title:
+            write_tasks.append(run_in_thread_pool(chat_svc.set_chat_name, chat_id, generated_title))
+        if body.template_key is not None:
+            write_tasks.append(
+                run_in_thread_pool(
+                    chat_svc.update_message,
+                    user_message_id,
+                    {"template_key": body.template_key},
+                )
+            )
+        if write_tasks:
+            await asyncio.gather(*write_tasks)
         locked_conversation_id_list = chat_context.locked_conversation_id_list
 
         conversation_history = [

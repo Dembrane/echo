@@ -1206,19 +1206,7 @@
     "collection": "project_chat_message_conversation",
     "action": "create",
     "permissions": null,
-    "validation": {
-      "_and": [
-        {
-          "conversation_id": {
-            "project_id": {
-              "directus_user_id": {
-                "_eq": "$CURRENT_USER_ID"
-              }
-            }
-          }
-        }
-      ]
-    },
+    "validation": null,
     "presets": null,
     "fields": [
       "*"
@@ -1544,11 +1532,13 @@
     "validation": {
       "_and": [
         {
-          "project_id": {
-            "directus_user_id": {
-              "_eq": "$CURRENT_USER"
+          "_and": [
+            {
+              "project_id": {
+                "_nnull": true
+              }
             }
-          }
+          ]
         }
       ]
     },

@@ -25,20 +25,23 @@ from dembrane.api.dependency_auth import DirectusSession
 
 logger = logging.getLogger("report_utils")
 
-TEXT_PROVIDER_KWARGS = get_completion_kwargs(MODELS.TEXT_FAST)
-TEXT_PROVIDER_MODEL = TEXT_PROVIDER_KWARGS["model"]
+# Global LLM model for report generation
+REPORT_LLM = MODELS.TEXT_FAST
 
-_model_info = get_model_info(TEXT_PROVIDER_MODEL)
+_report_llm_kwargs = get_completion_kwargs(REPORT_LLM)
+_report_llm_model = _report_llm_kwargs["model"]
+
+_model_info = get_model_info(_report_llm_model)
 _max_input_tokens = _model_info["max_input_tokens"] if _model_info else None
 
 if _max_input_tokens is None:
-    logger.warning(f"Could not get max tokens for model {TEXT_PROVIDER_MODEL}")
+    logger.warning(f"Could not get max tokens for model {_report_llm_model}")
     MAX_REPORT_CONTEXT_LENGTH = 128000  # good default
 else:
     MAX_REPORT_CONTEXT_LENGTH = int(_max_input_tokens * 0.8)
 
 logger.info(
-    f"Using {TEXT_PROVIDER_MODEL} for report generation with context length {MAX_REPORT_CONTEXT_LENGTH}"
+    f"Using {_report_llm_model} for report generation with context length {MAX_REPORT_CONTEXT_LENGTH}"
 )
 
 # Default timeout for LLM report generation (5 minutes)
@@ -74,7 +77,7 @@ async def _call_llm_for_report(prompt: str) -> str:
     response = await acompletion(
         messages=[{"role": "user", "content": prompt}],
         timeout=REPORT_GENERATION_TIMEOUT,
-        **get_completion_kwargs(MODELS.TEXT_FAST),
+        **get_completion_kwargs(REPORT_LLM),
     )
     return response.choices[0].message.content
 
@@ -270,7 +273,7 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
         try:
             summary_tokens = token_counter(
                 messages=[{"role": "user", "content": summary}],
-                model=TEXT_PROVIDER_MODEL,
+                model=_report_llm_model,
             )
         except Exception as e:
             logger.warning(f"Failed to count tokens for conversation {conv_id}: {e}")
@@ -334,7 +337,7 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
         try:
             transcript_tokens = token_counter(
                 messages=[{"role": "user", "content": transcript}],
-                model=TEXT_PROVIDER_MODEL,
+                model=_report_llm_model,
             )
         except Exception as e:
             logger.warning(f"Failed to count transcript tokens for {conv_id}: {e}")

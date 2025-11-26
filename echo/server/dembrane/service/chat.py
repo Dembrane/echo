@@ -158,19 +158,21 @@ class ChatService:
             raise ChatServiceException() from e
 
     def attach_conversations(self, chat_id: str, conversation_ids: Iterable[str]) -> None:
+        logger.debug("Attaching conversations %s to chat %s", conversation_ids, chat_id)
         payload_list = [
             {"conversation_id": conversation_id, "project_chat_id": chat_id}
             for conversation_id in conversation_ids
         ]
 
         if not payload_list:
+            logger.warning("No conversations to attach to chat %s", chat_id)
             return
 
         try:
             with self._client_context() as client:
                 # create items directly in the junction table instead of using
                 # nested create through parent update, which has validation issues
-                client.create_item("project_chat_conversation", payload_list)
+                client.bulk_insert("project_chat_conversation", payload_list)
         except DirectusBadRequest as e:
             logger.error(
                 "Failed to attach conversations %s to chat %s: %s",
