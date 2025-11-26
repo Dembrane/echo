@@ -19,6 +19,7 @@ import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Alert,
+	Badge,
 	Box,
 	Button,
 	Group,
@@ -78,36 +79,32 @@ export const ProjectTagPill = ({ tag }: { tag: ProjectTag }) => {
 	};
 
 	return (
-		<div
+		<Badge
 			ref={setNodeRef}
 			style={{
 				...style,
-				alignItems: "center",
-				background: "var(--mantine-color-primary-1)",
-				borderRadius: "var(--pill-radius, 1000rem)",
-				display: "inline-flex",
-				height: "var(--pill-height)",
-				lineHeight: 1,
-				paddingInline: "0.8em",
-				whiteSpace: "nowrap",
+				fontWeight: 500,
+				textTransform: "none",
 			}}
+			variant="light"
+			c="black"
+			size="lg"
+			rightSection={
+				<ActionIcon
+					onClick={(e) => handleDelete(e)}
+					size="xs"
+					variant="transparent"
+					c="gray.8"
+					onPointerDown={(e) => e.stopPropagation()}
+				>
+					<IconX size={14} />
+				</ActionIcon>
+			}
 			{...attributes}
 			{...listeners}
 		>
-			<Text size="sm" className="font-normal">
-				{tag.text}
-			</Text>
-			<ActionIcon
-				onClick={(e) => handleDelete(e)}
-				size="xs"
-				variant="transparent"
-				c="gray.8"
-				className="ml-2"
-				onPointerDown={(e) => e.stopPropagation()}
-			>
-				<IconX />
-			</ActionIcon>
-		</div>
+			<span>{tag.text}</span>
+		</Badge>
 	);
 };
 

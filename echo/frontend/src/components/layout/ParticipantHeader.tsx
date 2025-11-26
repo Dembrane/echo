@@ -76,7 +76,7 @@ export const ParticipantHeader = () => {
 							className="rounded-full"
 							onClick={handleCancel}
 						>
-							<Trans id="participant.verify.instructions.button.cancel">
+							<Trans id="participant.concrete.instructions.button.cancel">
 								Cancel
 							</Trans>
 						</Button>

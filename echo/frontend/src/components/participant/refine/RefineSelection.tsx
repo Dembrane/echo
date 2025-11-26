@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Box, Group, Progress, Stack, Text, Title } from "@mantine/core";
-import { IconArrowDownToArc, IconMessageFilled } from "@tabler/icons-react";
+import { IconArrowDownToArc, IconMessage } from "@tabler/icons-react";
 import { useParams } from "react-router";
 import { useParticipantProjectById } from "@/components/participant/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -59,7 +59,7 @@ export const RefineSelection = () => {
 						className="h-full px-2 py-6 justify-center"
 					>
 						<Group gap="sm" align="center">
-							<IconMessageFilled size={32} />
+							<IconMessage size={32} />
 							<Title order={2} fw={600}>
 								<Trans id="participant.refine.make.concrete">
 									Make it concrete

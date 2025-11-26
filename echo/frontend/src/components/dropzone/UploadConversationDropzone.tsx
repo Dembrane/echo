@@ -789,7 +789,7 @@ export const UploadConversationDropzone = (
 								<Alert
 									icon={<IconCircleCheck size={16} />}
 									title={t`Success`}
-									color="green.2"
+									color="green"
 									variant="light"
 								>
 									{t`All files were uploaded successfully.`}

@@ -272,14 +272,14 @@ export const ParticipantConversationAudio = () => {
 		}
 		if (showVerify) {
 			return (
-				<Trans id="participant.modal.refine.info.title.verify">
+				<Trans id="participant.modal.refine.info.title.concrete">
 					"Make it concrete" available soon
 				</Trans>
 			);
 		}
 		if (showEcho) {
 			return (
-				<Trans id="participant.modal.refine.info.title.echo">
+				<Trans id="participant.modal.refine.info.title.go.deeper">
 					"Go deeper" available soon
 				</Trans>
 			);

@@ -50,6 +50,7 @@ export const ProjectConversationOverviewRoute = () => {
 			},
 			fields: [
 				"id",
+				"language",
 				{
 					tags: ["id", "created_at", "text", "sort"],
 				},
@@ -160,8 +161,12 @@ export const ProjectConversationOverviewRoute = () => {
 				)}
 
 			{/* Verified artefacts */}
-			{conversationId && (
-				<VerifiedArtefactsSection conversationId={conversationId} />
+			{conversationId && projectId && (
+				<VerifiedArtefactsSection
+					conversationId={conversationId}
+					projectId={projectId}
+					projectLanguage={projectQuery.data?.language}
+				/>
 			)}
 
 			{conversationQuery.data && projectQuery.data && (
