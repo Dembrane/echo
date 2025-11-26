@@ -140,6 +140,9 @@ export const ConversationEdit = ({
 											isDirty={!!formState.dirtyFields.tagIdList}
 										/>
 									}
+									classNames={{
+										pill: "!bg-[var(--mantine-primary-color-light)] text-black font-medium",
+									}}
 									data={projectTags
 										.filter((tag) => tag && tag.id != null && tag.text != null)
 										.map((tag) => ({

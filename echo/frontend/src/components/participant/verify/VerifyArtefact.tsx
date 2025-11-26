@@ -8,7 +8,6 @@ import {
 	ScrollArea,
 	Stack,
 	Text,
-	Title,
 } from "@mantine/core";
 import { IconPencil, IconPlayerPause, IconVolume } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -29,14 +28,6 @@ import {
 } from "./hooks";
 import { VerifyArtefactError } from "./VerifyArtefactError";
 import { VerifyArtefactLoading } from "./VerifyArtefactLoading";
-
-const LANGUAGE_TO_LOCALE: Record<string, string> = {
-	de: "de-DE",
-	en: "en-US",
-	es: "es-ES",
-	fr: "fr-FR",
-	nl: "nl-NL",
-};
 
 const MemoizedMarkdownWYSIWYG = memo(MarkdownWYSIWYG);
 
@@ -76,22 +67,7 @@ export const VerifyArtefact = () => {
 	const artefactDateUpdated = artefactQuery.data?.date_created ?? null;
 	const selectedOptionKey = artefactQuery.data?.key ?? null;
 
-	const projectLanguage = projectQuery.data?.language ?? "en";
-	const languageLocale =
-		LANGUAGE_TO_LOCALE[projectLanguage] ?? LANGUAGE_TO_LOCALE.en;
-
-	const availableTopics = topicsQuery.data?.available_topics ?? [];
 	const selectedTopics = topicsQuery.data?.selected_topics ?? [];
-
-	const selectedTopic = availableTopics.find(
-		(topic) => topic.key === selectedOptionKey,
-	);
-
-	const selectedOptionLabel =
-		selectedTopic?.translations?.[languageLocale]?.label ??
-		selectedTopic?.translations?.["en-US"]?.label ??
-		selectedTopic?.key ??
-		t`verified`;
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: no need for navigate function in dependency
 	useEffect(() => {
@@ -324,12 +300,12 @@ export const VerifyArtefact = () => {
 							</div>
 							<Stack gap="sm" align="center">
 								<Text size="xl" fw={600}>
-									<Trans id="participant.verify.regenerating.artefact">
+									<Trans id="participant.concrete.regenerating.artefact">
 										Regenerating the artefact
 									</Trans>
 								</Text>
 								<Text size="sm" c="dimmed">
-									<Trans id="participant.verify.regenerating.artefact.description">
+									<Trans id="participant.concrete.regenerating.artefact.description">
 										This will just take a few moments
 									</Trans>
 								</Text>
@@ -337,28 +313,22 @@ export const VerifyArtefact = () => {
 						</Stack>
 					) : (
 						<Stack gap="md" className="py-4">
-							<Group justify="space-between" align="center" wrap="nowrap">
-								<Title order={4} className="font-semibold">
-									<Trans id="participant.verify.artefact.title">
-										Artefact: {selectedOptionLabel}
-									</Trans>
-								</Title>
-								{readAloudUrl && (
-									<ActionIcon
-										size="lg"
-										variant="subtle"
-										color="gray"
-										onClick={handleReadAloud}
-										aria-label={isPlaying ? t`Pause reading` : t`Read aloud`}
-									>
-										{isPlaying ? (
-											<IconPlayerPause size={20} />
-										) : (
-											<IconVolume size={20} />
-										)}
-									</ActionIcon>
-								)}
-							</Group>
+							{readAloudUrl && (
+								<ActionIcon
+									size="lg"
+									variant="subtle"
+									color="gray"
+									ml="auto"
+									onClick={handleReadAloud}
+									aria-label={isPlaying ? t`Pause reading` : t`Read aloud`}
+								>
+									{isPlaying ? (
+										<IconPlayerPause size={20} />
+									) : (
+										<IconVolume size={20} />
+									)}
+								</ActionIcon>
+							)}
 
 							{isEditing ? (
 								<MemoizedMarkdownWYSIWYG
@@ -388,7 +358,9 @@ export const VerifyArtefact = () => {
 							className="flex-1 shadow-xl"
 							onClick={handleCancelEdit}
 						>
-							<Trans id="participant.verify.action.button.cancel">Cancel</Trans>
+							<Trans id="participant.concrete.action.button.cancel">
+								Cancel
+							</Trans>
 						</Button>
 						<Button
 							size="lg"
@@ -396,7 +368,7 @@ export const VerifyArtefact = () => {
 							className="flex-1 shadow-xl"
 							onClick={handleSaveEdit}
 						>
-							<Trans id="participant.verify.action.button.save">Save</Trans>
+							<Trans id="participant.concrete.action.button.save">Save</Trans>
 						</Button>
 					</>
 				) : (
@@ -419,7 +391,7 @@ export const VerifyArtefact = () => {
 								{reviseCooldown.isOnCooldown ? (
 									<>{reviseCooldown.timeRemainingSeconds}s</>
 								) : (
-									<Trans id="participant.verify.action.button.revise">
+									<Trans id="participant.concrete.action.button.revise">
 										Revise
 									</Trans>
 								)}
@@ -452,7 +424,7 @@ export const VerifyArtefact = () => {
 								!artefactContent
 							}
 						>
-							<Trans id="participant.verify.action.button.approve">
+							<Trans id="participant.concrete.action.button.approve">
 								Approve
 							</Trans>
 						</Button>

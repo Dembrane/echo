@@ -58,7 +58,7 @@ export const ReportLayout = ({
 										<Trans>Report</Trans>
 									</Title>
 									<Badge>
-										<Trans>Experimental</Trans>
+										<Trans>Beta</Trans>
 									</Badge>
 								</Group>
 							),

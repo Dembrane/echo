@@ -84,7 +84,6 @@ export const ParticipantConversationAudioContent = () => {
 			const newSearchParams = new URLSearchParams(searchParams);
 			newSearchParams.delete("echo");
 			setSearchParams(newSearchParams, { replace: true });
-			console.log("inside echo: ", hasEchoParam);
 		}
 	}, []);
 

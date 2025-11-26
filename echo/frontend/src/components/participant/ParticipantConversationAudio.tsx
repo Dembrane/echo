@@ -272,7 +272,7 @@ export const ParticipantConversationAudio = () => {
 		}
 		if (showVerify) {
 			return (
-				<Trans id="participant.modal.refine.info.title.verify">
+				<Trans id="participant.modal.refine.info.title.concrete">
 					"Make it concrete" available soon
 				</Trans>
 			);

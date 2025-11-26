@@ -57,7 +57,7 @@ export const VerifiedArtefactsSection = ({
 		<Stack gap="1.5rem">
 			<Group>
 				<Title order={2}>
-					<Trans>Verified Artefacts</Trans>
+					<Trans>Concrete Artefacts</Trans>
 				</Title>
 				<ActionIcon
 					variant="subtle"
