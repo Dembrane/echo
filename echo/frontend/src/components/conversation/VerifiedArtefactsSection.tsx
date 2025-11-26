@@ -57,12 +57,12 @@ export const VerifiedArtefactsSection = ({
 		<Stack gap="1.5rem">
 			<Group>
 				<Title order={2}>
-					<Trans>Concrete Artefacts</Trans>
+					<Trans>Artefacts</Trans>
 				</Title>
 				<ActionIcon
 					variant="subtle"
 					color="blue"
-					aria-label={t`concrete artefact`}
+					aria-label={t`artefacts`}
 					size={22}
 				>
 					<IconRosetteDiscountCheckFilled />
