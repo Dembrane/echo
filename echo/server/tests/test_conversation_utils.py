@@ -5,10 +5,7 @@ import pytest
 
 from dembrane.utils import get_utc_timestamp
 from dembrane.directus import directus
-from dembrane.conversation_utils import (
-    collect_unfinished_conversations,
-    collect_unfinished_audio_processing_conversations,
-)
+from dembrane.conversation_utils import collect_unfinished_conversations
 
 from .common import (
     create_project,
@@ -16,8 +13,6 @@ from .common import (
     create_conversation,
     delete_conversation,
     delete_conversation_chunk,
-    create_conversation_segment,
-    delete_conversation_segment,
 )
 
 logger = logging.getLogger("test_conversation_utils")
@@ -172,50 +167,4 @@ def test_collect_unfinished_conversations():
     delete_conversation_chunk(cc2["id"])
     delete_conversation_chunk(cc3["id"])
     delete_conversation(c["id"])
-    delete_project(p["id"])
-
-
-def test_collect_unfinished_audio_processing_conversations():
-    # Setup project with enhanced audio processing enabled
-    p = create_project(
-        "test_p",
-        "en",
-        additional_data={"is_enhanced_audio_processing_enabled": True},
-    )
-
-    # Conversation with audio processing not finished should be returned
-    c1 = create_conversation(
-        p["id"],
-        "c1_test",
-        additional_data={"is_audio_processing_finished": False},
-    )
-
-    # Conversation marked finished but has unprocessed segment
-    c2 = create_conversation(
-        p["id"],
-        "c2_test",
-        additional_data={"is_audio_processing_finished": True},
-    )
-    seg2 = create_conversation_segment(c2["id"], False)
-
-    # Conversation marked finished and all segments processed
-    c3 = create_conversation(
-        p["id"],
-        "c3_test",
-        additional_data={"is_audio_processing_finished": True},
-    )
-    seg3 = create_conversation_segment(c3["id"], True)
-
-    res = collect_unfinished_audio_processing_conversations()
-
-    assert c1["id"] in res, "Conversation with unfinished processing not returned"
-    assert c2["id"] in res, "Conversation with unprocessed segments not returned"
-    assert c3["id"] not in res, "Conversation with all segments processed should not be returned"
-
-    # Cleanup
-    delete_conversation_segment(seg2["id"])
-    delete_conversation_segment(seg3["id"])
-    delete_conversation(c1["id"])
-    delete_conversation(c2["id"])
-    delete_conversation(c3["id"])
     delete_project(p["id"])

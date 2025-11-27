@@ -95,7 +95,7 @@ export const ProjectsHomeRoute = () => {
 			payload: {
 				default_conversation_ask_for_participant_name: true,
 				default_conversation_transcript_prompt: "Dembrane",
-				default_conversation_tutorial_slug: "none",
+				default_conversation_tutorial_slug: "None",
 				image_generation_model: "MODEST",
 			},
 		});

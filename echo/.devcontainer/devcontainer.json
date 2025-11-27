@@ -1,7 +1,7 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/universal
 {
-  "name": "dembrane/pilot",
+  "name": "dembrane/echo",
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
   // "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
   "dockerComposeFile": "docker-compose.yml",
@@ -11,23 +11,25 @@
   "features": {},
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "chmod +x ./setup.sh && ./setup.sh",
+  "postCreateCommand": "chmod +x ./.devcontainer/setup.sh && ./.devcontainer/setup.sh",
   "customizations": {
     "vscode": {
       "extensions": [
+        // ts
         "YoavBls.pretty-ts-errors",
         "bradlc.vscode-tailwindcss",
+        "biomejs.biome",
+        // python
         "ms-python.python",
         "charliermarsh.ruff",
         "matangover.mypy",
+        "anysphere.cursorpyright", // for cursor
+        // general
+        "github.vscode-pull-request-github",
         "ms-azuretools.vscode-docker",
         "mhutchie.git-graph",
         "cweijan.vscode-postgresql-client2",
-        "github.vscode-pull-request-github",
-        "nguyenngoclong.terminal-keeper",
-        "biomejs.biome",
-        // for cursor specifically lol
-        "anysphere.cursorpyright"
+        "nguyenngoclong.terminal-keeper"
       ]
     }
   },

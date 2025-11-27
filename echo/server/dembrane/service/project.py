@@ -1,8 +1,8 @@
 # project.py
-from typing import Any, List
+from typing import Any, List, Optional
 from logging import getLogger
 
-from dembrane.directus import DirectusBadRequest, directus_client_context
+from dembrane.directus import DirectusClient, DirectusBadRequest, directus, directus_client_context
 
 PROJECT_ALLOWED_LANGUAGES = ["en", "nl", "de", "fr", "es"]
 
@@ -15,17 +15,18 @@ class ProjectNotFoundException(ProjectServiceException):
     pass
 
 
-logger = getLogger(__name__)
-
-
 class ProjectService:
+    def __init__(self, directus_client: Optional[DirectusClient] = None) -> None:
+        self.logger = getLogger("dembrane.service.project")
+        self.directus_client = directus_client or directus
+
     def get_by_id_or_raise(
         self,
         project_id: str,
         with_tags: bool = False,
     ) -> dict:
         try:
-            with directus_client_context() as client:
+            with directus_client_context(self.directus_client) as client:
                 fields = ["*"]
 
                 if with_tags:
@@ -61,7 +62,7 @@ class ProjectService:
         directus_user_id: str | None = None,
         **kwargs: Any,
     ) -> dict:
-        with directus_client_context() as client:
+        with directus_client_context(self.directus_client) as client:
             project = client.create_item(
                 "project",
                 item_data={
@@ -75,11 +76,57 @@ class ProjectService:
 
         return project
 
+    def get_latest_analysis_run(self, project_id: str) -> Optional[dict]:
+        try:
+            with directus_client_context(self.directus_client) as client:
+                runs: Optional[List[dict]] = client.get_items(
+                    "project_analysis_run",
+                    {
+                        "query": {
+                            "filter": {"project_id": project_id},
+                            "sort": "-created_at",
+                            "limit": 1,
+                        }
+                    },
+                )
+        except DirectusBadRequest as e:
+            self.logger.error("Failed to fetch analysis run for %s: %s", project_id, e)
+            return None
+
+        if not runs:
+            return None
+
+        return runs[0]
+
+    def create_report(
+        self,
+        project_id: str,
+        language: str,
+        content: str,
+        status: str,
+        error_code: Optional[str] = None,
+    ) -> dict:
+        payload = {
+            "project_id": project_id,
+            "language": language,
+            "content": content,
+            "status": status,
+        }
+
+        if error_code is not None:
+            payload["error_code"] = error_code
+
+        with directus_client_context(self.directus_client) as client:
+            self.logger.info(f"Creating report for project {project_id} with status: {status}")
+            report = client.create_item("project_report", item_data=payload)["data"]
+
+        return report
+
     def delete(
         self,
         project_id: str,
     ) -> None:
-        with directus_client_context() as client:
+        with directus_client_context(self.directus_client) as client:
             client.delete_item("project", project_id)
 
     def create_tags_and_link(
@@ -87,7 +134,10 @@ class ProjectService:
         project_id: str,
         tag_str_list: List[str],
     ) -> List[dict]:
-        with directus_client_context() as client:
+        if len(tag_str_list) == 0:
+            raise ValueError("tag_str_list cannot be empty")
+
+        with directus_client_context(self.directus_client) as client:
             project = self.get_by_id_or_raise(project_id)
 
             create_tag_data = [
@@ -98,14 +148,14 @@ class ProjectService:
                 for tag_str in tag_str_list
             ]
 
-            logger.debug(f"create_tag_data: {create_tag_data}")
+            self.logger.debug(f"create_tag_data: {create_tag_data}")
 
             tags: List[dict] = client.create_item(
                 "project_tag",
                 item_data=create_tag_data,
             )["data"]
 
-            logger.debug(f"tags: {tags}")
+            self.logger.debug(f"tags: {tags}")
 
         return tags
 
@@ -119,7 +169,7 @@ class ProjectService:
         Create a shallow clone of a project
         The clone will NOT include any relational data (conversations, etc.)
         """
-        logger.debug(f"Project clone requested: {project_id}")
+        self.logger.debug(f"Project clone requested: {project_id}")
         current_project = self.get_by_id_or_raise(project_id, with_tags=with_tags)
 
         new_project_data = {
@@ -151,10 +201,12 @@ class ProjectService:
             "is_project_notification_subscription_allowed": current_project[
                 "is_project_notification_subscription_allowed"
             ],
+            "is_verify_enabled": current_project["is_verify_enabled"],
+            "selected_verification_key_list": current_project.get("selected_verification_key_list"),
         }
 
         if overrides:
-            logger.debug(f"overrides to be applied: {overrides.keys()}")
+            self.logger.debug(f"overrides to be applied: {overrides.keys()}")
 
             if "id" in overrides:
                 raise ValueError("The id field cannot be provided")
@@ -164,7 +216,7 @@ class ProjectService:
         new_project = self.create(**new_project_data)
 
         if with_tags:
-            logger.debug(f"Creating tags and linking to project {new_project['id']}")
+            self.logger.debug(f"Creating tags and linking to project {new_project['id']}")
             tag_str_list: List[str] = []
 
             for tag_dict in current_project.get("tags", []):
@@ -172,9 +224,43 @@ class ProjectService:
                     tag_str_list.append(tag_dict.get("text", ""))
 
             if len(tag_str_list) > 0:
-                logger.debug(
+                self.logger.debug(
                     f"Creating tags and linking to project {new_project['id']}: {tag_str_list}"
                 )
                 self.create_tags_and_link(new_project["id"], tag_str_list)
 
         return new_project["id"]
+
+    def get_context_for_prompt(self, project_id: str) -> str | None:
+        project = self.get_by_id_or_raise(project_id)
+
+        builder = []
+
+        if project["name"]:
+            builder.append("name: " + project["name"])
+
+        if project["context"]:
+            builder.append("context: " + project["context"])
+
+        if project["default_conversation_transcript_prompt"]:
+            builder.append(
+                "hotwords that the user set: " + project["default_conversation_transcript_prompt"]
+            )
+
+        ### Portal details
+        if project["default_conversation_title"]:
+            builder.append(
+                "default title that was shown to the user (not always relevant but might add context): "
+                + project["default_conversation_title"]
+            )
+
+        if project["default_conversation_description"]:
+            builder.append(
+                "default question that was shown to the user (not always relevant but might add context): "
+                + project["default_conversation_description"]
+            )
+
+        if len(builder) > 0:
+            return "project context: " + "\n".join(builder)
+        else:
+            return None

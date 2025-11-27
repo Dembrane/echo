@@ -14,6 +14,11 @@ import { ProjectConversationLayout } from "./components/layout/ProjectConversati
 import { ProjectLayout } from "./components/layout/ProjectLayout";
 import { ProjectLibraryLayout } from "./components/layout/ProjectLibraryLayout";
 import { ProjectOverviewLayout } from "./components/layout/ProjectOverviewLayout";
+import { ParticipantConversationAudioContent } from "./components/participant/ParticipantConversationAudioContent";
+import { RefineSelection } from "./components/participant/refine/RefineSelection";
+import { Verify } from "./components/participant/verify/Verify";
+import { VerifyArtefact } from "./components/participant/verify/VerifyArtefact";
+import { VerifySelection } from "./components/participant/verify/VerifySelection";
 import {
 	ParticipantConversationAudioRoute,
 	ParticipantConversationTextRoute,
@@ -89,12 +94,16 @@ const ProjectUnsubscribe = createLazyNamedRoute(
 	"ProjectUnsubscribe",
 );
 const DebugPage = createLazyRoute(() => import("./routes/Debug"));
+const UserSettingsRoute = createLazyNamedRoute(
+	() => import("./routes/settings/UserSettingsRoute"),
+	"UserSettingsRoute",
+);
 
 export const mainRouter = createBrowserRouter([
 	{
 		children: [
 			{
-				element: <Navigate to="/login" />,
+				element: <Navigate to="projects" />,
 				path: "",
 			},
 			{
@@ -245,6 +254,20 @@ export const mainRouter = createBrowserRouter([
 				path: "projects",
 			},
 			{
+				children: [
+					{
+						element: <UserSettingsRoute />,
+						index: true,
+					},
+				],
+				element: (
+					<Protected>
+						<BaseLayout />
+					</Protected>
+				),
+				path: "settings",
+			},
+			{
 				element: <ErrorPage />,
 				path: "*",
 			},
@@ -267,6 +290,30 @@ export const participantRouter = createBrowserRouter([
 				path: "start",
 			},
 			{
+				children: [
+					{
+						element: <ParticipantConversationAudioContent />,
+						index: true,
+					},
+					{
+						element: <RefineSelection />,
+						path: "refine",
+					},
+					{
+						children: [
+							{
+								element: <VerifySelection />,
+								index: true,
+							},
+							{
+								element: <VerifyArtefact />,
+								path: "approve",
+							},
+						],
+						element: <Verify />,
+						path: "verify",
+					},
+				],
 				element: <ParticipantConversationAudioRoute />,
 				path: "conversation/:conversationId",
 			},

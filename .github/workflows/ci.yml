@@ -43,6 +43,14 @@ jobs:
       - name: Install dependencies
         run: pip install -r echo/server/requirements.lock
 
+      - name: Cache mypy
+        uses: actions/cache@v4
+        with:
+          path: echo/server/.mypy_cache
+          key: ${{ runner.os }}-mypy-${{ hashFiles('echo/server/pyproject.toml') }}-${{ hashFiles('echo/server/requirements.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mypy-
+
       - name: Run mypy
         uses: tsuyoshicho/action-mypy@v4
         with:

@@ -24,6 +24,7 @@ import {
 	useConversationById,
 	useConversationChunks,
 } from "@/components/conversation/hooks";
+import { VerifiedArtefactsSection } from "@/components/conversation/VerifiedArtefactsSection";
 import { useProjectById } from "@/components/project/hooks";
 import { ENABLE_DISPLAY_CONVERSATION_LINKS } from "@/config";
 import { generateConversationSummary } from "@/lib/api";
@@ -43,13 +44,13 @@ export const ProjectConversationOverviewRoute = () => {
 		projectId: projectId ?? "",
 		query: {
 			deep: {
-				// @ts-expect-error tags won't be typed
 				tags: {
 					_sort: "sort",
 				},
 			},
 			fields: [
 				"id",
+				"language",
 				{
 					tags: ["id", "created_at", "text", "sort"],
 				},
@@ -159,13 +160,22 @@ export const ProjectConversationOverviewRoute = () => {
 					</Stack>
 				)}
 
+			{/* Verified artefacts */}
+			{conversationId && projectId && (
+				<VerifiedArtefactsSection
+					conversationId={conversationId}
+					projectId={projectId}
+					projectLanguage={projectQuery.data?.language}
+				/>
+			)}
+
 			{conversationQuery.data && projectQuery.data && (
 				<>
 					<Stack gap="1.5rem">
 						<ConversationEdit
 							key={conversationQuery.data.id}
 							conversation={conversationQuery.data}
-							projectTags={projectQuery.data.tags}
+							projectTags={projectQuery.data.tags as ProjectTag[]}
 						/>
 					</Stack>
 

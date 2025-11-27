@@ -30,13 +30,13 @@ export const ParticipantBody = ({
 	viewResponses = false,
 	children,
 	interleaveMessages = true,
-	recordingStarted = false,
+	isRecording = false,
 }: PropsWithChildren<{
 	projectId: string;
 	conversationId: string;
 	viewResponses?: boolean;
 	interleaveMessages?: boolean;
-	recordingStarted?: boolean;
+	isRecording?: boolean;
 }>) => {
 	const [ref] = useAutoAnimate();
 	const [chatRef] = useAutoAnimate();
@@ -119,13 +119,13 @@ export const ParticipantBody = ({
 		<Stack ref={ref} className="max-h-full">
 			<Toaster position="top-center" richColors />
 
-			{!recordingStarted && (
+			{!isRecording && (
 				<h2 className="text-center text-3xl transition-opacity duration-500 ease-in-out">
 					<Trans>Welcome</Trans>
 				</h2>
 			)}
 
-			{recordingStarted && (
+			{isRecording && (
 				<div className="flex min-h-[2.25rem] justify-center transition-opacity duration-500 ease-in-out">
 					{ENABLE_CONVERSATION_HEALTH && (
 						<ConnectionHealthStatus
@@ -198,7 +198,7 @@ export const ParticipantBody = ({
 										<UserChunkMessage chunk={message.data} />
 									) : (
 										<SpikeMessage
-											message={message.data}
+											message={message.data as unknown as ConversationReply}
 											className={
 												index !== combinedMessages.length - 1 ? "border-b" : ""
 											}

@@ -9,7 +9,7 @@ echo "  Processes: $PROCESSES | Threads: $THREADS"
 echo "  Capacity per pod: $((PROCESSES * THREADS)) concurrent tasks"
 echo "Single threaded tasks should use THREADS=1 to avoid LOCK issues caused by LightRag"
 
-exec dramatiq \
+exec uv run dramatiq \
   --queues cpu \
   --processes "$PROCESSES" \
   --threads "$THREADS" \

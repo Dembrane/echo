@@ -2,7 +2,7 @@
 name = "Dembrane"
 version = "0.0.1"
 description = "Python project for the Dembrane API"
-requires-python = "== 3.11"
+requires-python = ">= 3.11, < 3.12"
 dependencies = [
     # API server
     "fastapi==0.109.*",
@@ -13,11 +13,8 @@ dependencies = [
     "langchain==0.1.*",
     "langchain-community==0.0.*",
     "langchain-experimental==0.0.*",
-    "langchain-openai==0.0.*",
     "pypdf==4.0.*",
     # SDKs for Models
-    "openai==1.99.*",
-    "anthropic==0.43.*",
     # Data
     "pandas==2.2.*",
     "numpy==1.26.*",
@@ -26,12 +23,6 @@ dependencies = [
     "jinja2==3.1.*",
     "ffmpeg-python>=0.2.0",
     "flower>=2.0.1",
-    # Database
-    "SQLAlchemy==2.0.*",
-    "alembic==1.13.*",
-    "psycopg[binary,pool]==3.1.*",
-    "pgvector==0.2.*",
-    "directus-py-sdk==1.1.1",
     # Config
     "python-dotenv==1.0.*",
     # Other
@@ -47,11 +38,12 @@ dependencies = [
     "pandas-stubs>=2.2.2.240514",
     "types-requests>=2.32.0.20240602",
     "types-python-jose>=3.3.4.20240106",
-    "litellm==1.76.*",
+    "litellm==1.79.*",
     # Additional Dependencies
     "lightrag-dembrane==1.2.7.8",
     "nest-asyncio==1.6.0",
     "pydantic==2.10.6",
+    "pydantic-settings==2.6.1",
     "pydub==0.25.1",
     "pytest==8.3.4",
     "PyYAML==6.0.2",
@@ -65,8 +57,6 @@ dependencies = [
     "setuptools==75.8.0",
     # LLM Tools
     "tiktoken==0.9.0",
-    "asyncpg==0.30.0",
-    "neo4j==5.28.1",
     "boto3==1.37.*",
     # Uncategorized
     "mypy>=1.16.0",
@@ -94,21 +84,8 @@ dependencies = [
 [tool.setuptools]
 packages = ["dembrane"]
 
-[tool.rye]
-virtual = true
-managed = true
-
-[tool.rye.scripts]
-"format" = { chain = ["format:isort", "format:ruff", "fix:ruff"] }
-"format:ruff" = "ruff format"
-"format:isort" = "isort ."
-"lint" = { chain = ["check:ruff", "typecheck"] }
-"check:ruff" = "ruff ."
-"fix:ruff" = "ruff --fix ."
-typecheck = { chain = ["typecheck:mypy"] }
-"typecheck:mypy" = "mypy ."
-"test" = "pytest"
-"test:cov" = "pytest --cov=dembrane --cov-report=term --cov-report=html"
+[tool.uv]
+package = false
 
 [tool.mypy]
 plugins = 'pydantic.mypy'
@@ -119,11 +96,6 @@ check_untyped_defs = true
 no_implicit_reexport = true
 disallow_untyped_defs = true
 ignore_missing_imports = true
-
-# Removed trankit mypy override since trankit is no longer a dependency
-# [[tool.mypy.overrides]]
-# follow_imports = "skip"
-# module = ["trankit.*"]
 
 [tool.pydantic-mypy]
 init_forbid_extra = true
@@ -234,6 +206,13 @@ ignore = []
 fixable = ["ALL"]
 unfixable = []
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.pyrefly]
+project-excludes = [
+    "**/scripts*",
+    "**/tests*",
+]
+ignore-missing-imports = ["*"]
 
 [tool.ruff.format]
 quote-style = "double"

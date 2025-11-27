@@ -58,7 +58,7 @@ export const ReportLayout = ({
 										<Trans>Report</Trans>
 									</Title>
 									<Badge>
-										<Trans>Experimental</Trans>
+										<Trans>Beta</Trans>
 									</Badge>
 								</Group>
 							),
@@ -118,8 +118,9 @@ export const ProjectReportRoute = () => {
 	};
 
 	const contributionLink = `${PARTICIPANT_BASE_URL}/${language}/${projectId}/start`;
-	const getSharingLink = (data: ProjectReport) =>
-		`${PARTICIPANT_BASE_URL}/${language}/${data.project_id}/report`;
+
+	const getSharingLink = (projectId: string) =>
+		`${PARTICIPANT_BASE_URL}/${language}/${projectId}/report`;
 
 	const { copy, copied } = useCopyToRichText();
 
@@ -167,16 +168,15 @@ export const ProjectReportRoute = () => {
 		<ReportLayout
 			rightSection={
 				<Group>
+					<UpdateReportModalButton reportId={data.id} />
 					<AnimatePresence>
 						{data.status === "published" && (
 							<Group>
-								<UpdateReportModalButton reportId={data.id} />
-
 								<Tooltip label={t`Share this report`}>
 									<ActionIcon
 										onClick={() => {
-											const url = getSharingLink(data);
-											if (navigator.canShare({ url })) {
+											const url = getSharingLink(data.project_id ?? "");
+											if (url && navigator.canShare({ url })) {
 												navigator.share({ url });
 											} else {
 												window.open(url, "_blank");
@@ -193,7 +193,7 @@ export const ProjectReportRoute = () => {
 
 								<CopyIconButton
 									onCopy={() => {
-										copy(getSharingLink(data));
+										copy(getSharingLink(data.project_id ?? ""));
 									}}
 									copyTooltip={t`Copy link to share this report`}
 									copied={copied}
@@ -206,7 +206,7 @@ export const ProjectReportRoute = () => {
 									<ActionIcon
 										onClick={() => {
 											window.open(
-												`${getSharingLink(data)}?print=true`,
+												`${getSharingLink(data.project_id ?? "")}?print=true`,
 												"_blank",
 											);
 										}}

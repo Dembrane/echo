@@ -1,6 +1,6 @@
 [
   {
-    "project_name": "Directus",
+    "project_name": "Dembrane",
     "project_color": "#6644FF",
     "public_note": null,
     "auth_login_attempts": 25,
@@ -40,12 +40,12 @@
       },
       {
         "type": "module",
-        "id": "schema-management-module",
-        "enabled": true
+        "id": "visual",
+        "enabled": false
       },
       {
         "type": "module",
-        "id": "generate-types",
+        "id": "ts-typegen",
         "enabled": true
       }
     ],
@@ -64,6 +64,17 @@
     "public_registration_verify_email": true,
     "public_registration_role": "feebe863-90b1-41d1-a7ef-9694ddee3844",
     "public_registration_email_filter": null,
-    "_syncId": "b6e2bbfa-b958-4062-b100-186514c3e197"
+    "visual_editor_urls": null,
+    "mcp_enabled": true,
+    "mcp_allow_deletes": false,
+    "mcp_prompts_collection": null,
+    "mcp_system_prompt_enabled": true,
+    "mcp_system_prompt": null,
+    "project_owner": null,
+    "project_usage": null,
+    "org_name": null,
+    "product_updates": null,
+    "project_status": null,
+    "_syncId": "_sync_default_settings"
   }
 ]

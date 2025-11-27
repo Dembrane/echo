@@ -482,6 +482,7 @@ export const UploadConversationDropzone = (
 			namePrefix: "",
 			pin: "",
 			projectId: props.projectId,
+			source: "DASHBOARD_UPLOAD",
 			tagIdList: [],
 			timestamps: selectedFiles.map(() => new Date()),
 		});
@@ -788,7 +789,7 @@ export const UploadConversationDropzone = (
 								<Alert
 									icon={<IconCircleCheck size={16} />}
 									title={t`Success`}
-									color="green.2"
+									color="green"
 									variant="light"
 								>
 									{t`All files were uploaded successfully.`}

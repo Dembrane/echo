@@ -11,7 +11,6 @@
                 "icon": "server",
                 "commands": [
                     "cd server",
-                    "source .venv/bin/activate",
                     "./run.sh"
                 ]
             },
@@ -22,7 +21,6 @@
                     "icon": "gear",
                     "commands": [
                         "cd server",
-                        "source .venv/bin/activate",
                         "./run-worker.sh"
                     ]
                 },
@@ -32,7 +30,6 @@
                     "icon": "gear",
                     "commands": [
                         "cd server",
-                        "source .venv/bin/activate",
                         "./run-worker-cpu.sh"
                     ]
                 },
@@ -42,7 +39,6 @@
                     "icon": "clock",
                     "commands": [
                         "cd server",
-                        "source .venv/bin/activate",
                         "./run-scheduler.sh"
                     ]
                 }

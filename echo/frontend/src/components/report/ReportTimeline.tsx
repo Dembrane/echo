@@ -185,8 +185,6 @@ export function ReportTimeline({
 		...data.allReports.map((r) => new Date(r.createdAt!).getTime()),
 	];
 
-	console.log(ticks);
-
 	return (
 		<ResponsiveContainer width="100%" minWidth={300} height={200}>
 			<AreaChart

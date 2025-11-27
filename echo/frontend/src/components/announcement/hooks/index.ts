@@ -22,7 +22,6 @@ export const useLatestAnnouncement = () => {
 				const response = await directus.request(
 					readItems("announcement", {
 						deep: {
-							// @ts-expect-error
 							activity: {
 								_filter: {
 									user_id: {
@@ -47,7 +46,6 @@ export const useLatestAnnouncement = () => {
 							_or: [
 								{
 									expires_at: {
-										// @ts-expect-error
 										_gte: new Date().toISOString(),
 									},
 								},
@@ -104,7 +102,6 @@ export const useInfiniteAnnouncements = ({
 				const response: Announcement[] = await directus.request<Announcement[]>(
 					readItems("announcement", {
 						deep: {
-							// @ts-expect-error
 							activity: {
 								_filter: {
 									user_id: {
@@ -129,7 +126,6 @@ export const useInfiniteAnnouncements = ({
 							_or: [
 								{
 									expires_at: {
-										// @ts-expect-error
 										_gte: new Date().toISOString(),
 									},
 								},
@@ -307,7 +303,6 @@ export const useMarkAllAsReadMutation = () => {
 									_or: [
 										{
 											expires_at: {
-												// @ts-expect-error
 												_gte: new Date().toISOString(),
 											},
 										},

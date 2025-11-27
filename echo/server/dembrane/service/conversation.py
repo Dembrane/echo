@@ -1,5 +1,5 @@
 # conversation.py
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import TYPE_CHECKING, Any, List, Iterable, Optional, ContextManager
 from logging import getLogger
 from datetime import datetime
 from urllib.parse import urlparse
@@ -7,7 +7,13 @@ from urllib.parse import urlparse
 from fastapi import UploadFile
 
 from dembrane.utils import generate_uuid
-from dembrane.directus import DirectusBadRequest, directus_client_context
+from dembrane.directus import (
+    DirectusClient,
+    DirectusBadRequest,
+    DirectusGenericException,
+    directus,
+    directus_client_context,
+)
 
 logger = getLogger("dembrane.service.conversation")
 
@@ -44,11 +50,34 @@ class ConversationChunkNotFoundException(ConversationServiceException):
 class ConversationService:
     def __init__(
         self,
-        file_service: "FileService",
-        project_service: "ProjectService",
+        file_service: Optional["FileService"] = None,
+        project_service: Optional["ProjectService"] = None,
+        directus_client: Optional[DirectusClient] = None,
     ):
-        self.file_service = file_service
-        self.project_service = project_service
+        self._file_service = file_service
+        self._project_service = project_service
+        self._directus_client = directus_client or directus
+
+    def _client_context(
+        self, override_client: Optional[DirectusClient] = None
+    ) -> ContextManager[DirectusClient]:
+        return directus_client_context(override_client or self._directus_client)
+
+    @property
+    def file_service(self) -> "FileService":
+        if self._file_service is None:
+            from dembrane.service.file import get_file_service
+
+            self._file_service = get_file_service()
+        return self._file_service
+
+    @property
+    def project_service(self) -> "ProjectService":
+        if self._project_service is None:
+            from dembrane.service.project import ProjectService
+
+            self._project_service = ProjectService(directus_client=self._directus_client)
+        return self._project_service
 
     def get_by_id_or_raise(
         self,
@@ -57,7 +86,7 @@ class ConversationService:
         with_chunks: bool = False,
     ) -> dict:
         try:
-            with directus_client_context() as client:
+            with self._client_context() as client:
                 fields = ["*"]
                 deep = {}
 
@@ -66,7 +95,7 @@ class ConversationService:
 
                 if with_chunks:
                     fields.append("chunks.*")
-                    deep["chunks"] = {"_sort": "-timestamp"}
+                    deep["chunks"] = {"_sort": "-timestamp", "_limit": 1200}
 
                 conversation = client.get_items(
                     "conversation",
@@ -81,13 +110,73 @@ class ConversationService:
                     },
                 )
 
-        except DirectusBadRequest as e:
+        except (DirectusBadRequest, DirectusGenericException) as e:
             raise ConversationNotFoundException() from e
 
         try:
             return conversation[0]
         except (KeyError, IndexError) as e:
             raise ConversationNotFoundException() from e
+
+    def list_by_project(
+        self,
+        project_id: str,
+        with_chunks: bool = False,
+        with_tags: bool = False,
+    ) -> List[dict]:
+        return self._list_conversations(
+            filter_query={"project_id": {"_eq": project_id}},
+            with_chunks=with_chunks,
+            with_tags=with_tags,
+        )
+
+    def list_by_ids(
+        self,
+        conversation_id_list: Iterable[str],
+        with_chunks: bool = False,
+        with_tags: bool = False,
+    ) -> List[dict]:
+        ids = [conversation_id for conversation_id in conversation_id_list]
+        if not ids:
+            return []
+
+        return self._list_conversations(
+            filter_query={"id": {"_in": ids}},
+            with_chunks=with_chunks,
+            with_tags=with_tags,
+        )
+
+    def list_chunks(self, conversation_id: str) -> List[dict]:
+        try:
+            with self._client_context() as client:
+                chunks: Optional[List[dict]] = client.get_items(
+                    "conversation_chunk",
+                    {
+                        "query": {
+                            "filter": {"conversation_id": {"_eq": conversation_id}},
+                            "fields": [
+                                "id",
+                                "conversation_id",
+                                "timestamp",
+                                "transcript",
+                                "path",
+                                "created_at",
+                                "updated_at",
+                            ],
+                            "sort": "timestamp",
+                            "limit": 2000,
+                        }
+                    },
+                )
+        except DirectusBadRequest as e:
+            logger.error(
+                "Failed to list chunks for conversation %s via Directus: %s",
+                conversation_id,
+                e,
+            )
+            raise ConversationServiceException() from e
+
+        return chunks or []
 
     def create(
         self,
@@ -107,7 +196,7 @@ class ConversationService:
         if project.get("is_conversation_allowed", False) is False:
             raise ConversationNotOpenForParticipationException()
 
-        with directus_client_context() as client:
+        with self._client_context() as client:
             new_conversation = client.create_item(
                 "conversation",
                 item_data={
@@ -158,7 +247,7 @@ class ConversationService:
             update_data["is_all_chunks_transcribed"] = is_all_chunks_transcribed
 
         try:
-            with directus_client_context() as client:
+            with self._client_context() as client:
                 updated_conversation = client.update_item(
                     "conversation",
                     conversation_id,
@@ -166,14 +255,22 @@ class ConversationService:
                 )["data"]
 
             return updated_conversation
-        except DirectusBadRequest as e:
+        except (DirectusBadRequest, DirectusGenericException) as e:
             raise ConversationNotFoundException() from e
 
     def delete(
         self,
         conversation_id: str,
     ) -> None:
-        with directus_client_context() as client:
+        with self._client_context() as client:
+            conversation = self.get_by_id_or_raise(conversation_id, with_chunks=True)
+            for chunk in conversation["chunks"]:
+                try:
+                    if chunk["path"]:
+                        self.file_service.delete(chunk["path"])
+                except Exception as e:
+                    logger.exception(f"Error deleting chunk {chunk['id']} file: {e}")
+
             client.delete_item("conversation", conversation_id)
 
     def get_chunk_by_id_or_raise(
@@ -194,7 +291,7 @@ class ConversationService:
         - DirectusGenericException -> DirectusServerError: If the request to the Directus server fails.
         """
         try:
-            with directus_client_context() as client:
+            with self._client_context() as client:
                 chunk = client.get_items(
                     "conversation_chunk",
                     {
@@ -249,9 +346,6 @@ class ConversationService:
         if project.get("is_conversation_allowed", False) is False:
             raise ConversationNotOpenForParticipationException()
 
-        # if conversation.get("is_finished", False) is True:
-        #     raise ConversationNotOpenForParticipationException()
-
         chunk_id = generate_uuid()
 
         needs_upload = file_obj is not None and file_url is None
@@ -261,12 +355,14 @@ class ConversationService:
             file_url = self.file_service.save(file=file_obj, key=file_name, public=False)
             logger.info(f"File uploaded to S3 via API: {sanitize_url_for_logging(file_url)}")
         elif file_url:
-            logger.info(f"Using pre-uploaded file from presigned URL: {sanitize_url_for_logging(file_url)}")
+            logger.info(
+                f"Using pre-uploaded file from presigned URL: {sanitize_url_for_logging(file_url)}"
+            )
 
         # Validate that we have either a file or a transcript
         has_file = file_url and len(file_url.strip()) > 0
         has_transcript = transcript and len(transcript.strip()) > 0
-        
+
         if not has_file and not has_transcript:
             logger.error(
                 f"Cannot create chunk without content. "
@@ -278,25 +374,18 @@ class ConversationService:
                 "Chunk must have either an audio file (file_obj or file_url) or a transcript."
             )
 
-        with directus_client_context() as client:
+        with self._client_context() as client:
             chunk = client.create_item(
                 "conversation_chunk",
                 item_data={
                     "id": chunk_id,
                     "conversation_id": conversation["id"],
                     "timestamp": timestamp.isoformat(),
-                    "path": file_url,  
+                    "path": file_url,
                     "source": source,
                     "transcript": transcript,
                 },
             )["data"]
-
-        # self.event_service.publish(
-        #     ChunkCreatedEvent(
-        #         chunk_id=chunk_id,
-        #         conversation_id=conversation["id"],
-        #     )
-        # )
 
         # Only trigger background audio processing if there's a file to process
         if has_file:
@@ -314,7 +403,6 @@ class ConversationService:
         diarization: Any = _UNSET,
         transcript: Any = _UNSET,
         raw_transcript: Any = _UNSET,
-        runpod_job_status_link: Any = _UNSET,
         error: Any = _UNSET,
         hallucination_reason: Any = _UNSET,
         hallucination_score: Any = _UNSET,
@@ -336,9 +424,6 @@ class ConversationService:
         if path is not _UNSET:
             update["path"] = path
 
-        if runpod_job_status_link is not _UNSET:
-            update["runpod_job_status_link"] = runpod_job_status_link
-
         if error is not _UNSET:
             update["error"] = error
 
@@ -359,7 +444,7 @@ class ConversationService:
 
         if update.keys():
             try:
-                with directus_client_context() as client:
+                with self._client_context() as client:
                     chunk = client.update_item(
                         "conversation_chunk",
                         chunk_id,
@@ -376,7 +461,7 @@ class ConversationService:
         self,
         chunk_id: str,
     ) -> None:
-        with directus_client_context() as client:
+        with self._client_context() as client:
             client.delete_item("conversation_chunk", chunk_id)
 
     def get_chunk_counts(
@@ -399,7 +484,7 @@ class ConversationService:
         }
         """
         try:
-            with directus_client_context() as client:
+            with self._client_context() as client:
                 chunks = client.get_items(
                     "conversation_chunk",
                     {
@@ -440,3 +525,95 @@ class ConversationService:
             "pending": pending,
             "ok": ok,
         }
+
+    def _list_conversations(
+        self,
+        filter_query: dict[str, Any],
+        with_chunks: bool = False,
+        with_tags: bool = False,
+    ) -> List[dict]:
+        fields: List[str] = [
+            "id",
+            "project_id",
+            "participant_name",
+            "participant_email",
+            "participant_user_agent",
+            "created_at",
+            "updated_at",
+            "duration",
+            "summary",
+            "source",
+            "is_finished",
+            "is_all_chunks_transcribed",
+        ]
+
+        deep: dict[str, Any] = {}
+
+        if with_tags:
+            fields.extend(
+                [
+                    "tags.id",
+                    "tags.project_tag_id.id",
+                    "tags.project_tag_id.text",
+                ]
+            )
+            deep.setdefault("tags", {})
+
+        if with_chunks:
+            fields.extend(
+                [
+                    "chunks.id",
+                    "chunks.timestamp",
+                    "chunks.transcript",
+                    "chunks.path",
+                ]
+            )
+            deep["chunks"] = {"_sort": "timestamp"}
+
+        try:
+            with self._client_context() as client:
+                conversations: Optional[List[dict]] = client.get_items(
+                    "conversation",
+                    {
+                        "query": {
+                            "filter": filter_query,
+                            "fields": fields,
+                            "deep": deep,
+                            "limit": 1000,
+                        }
+                    },
+                )
+        except DirectusBadRequest as e:
+            logger.error("Failed to list conversations via Directus: %s", e)
+            raise ConversationServiceException() from e
+
+        return conversations or []
+
+    def get_verified_artifacts(self, conversation_id: str, limit: int = 3) -> List[dict]:
+        try:
+            with self._client_context() as client:
+                artifacts = client.get_items(
+                    "conversation_artifact",
+                    {
+                        "query": {
+                            "filter": {
+                                "conversation_id": conversation_id,
+                                "approved_at": {"_nnull": True},
+                            },
+                            "fields": ["id", "key", "content"],
+                            "sort": "-approved_at",
+                            "limit": limit,
+                        }
+                    },
+                )
+        except DirectusBadRequest as e:
+            logger.error(
+                "Failed to get verified artifacts for conversation %s via Directus: %s",
+                conversation_id,
+                e,
+            )
+            raise ConversationServiceException() from e
+        except (KeyError, IndexError) as e:
+            raise ConversationServiceException() from e
+
+        return artifacts or []

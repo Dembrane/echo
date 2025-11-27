@@ -51,15 +51,16 @@ from fastapi import UploadFile
 from botocore.response import StreamingBody
 
 from dembrane.utils import generate_uuid
-from dembrane.config import (
-    STORAGE_S3_KEY,
-    STORAGE_S3_BUCKET,
-    STORAGE_S3_REGION,
-    STORAGE_S3_SECRET,
-    STORAGE_S3_ENDPOINT,
-)
+from dembrane.settings import get_settings
 
 logger = logging.getLogger("s3")
+
+settings = get_settings()
+STORAGE_S3_KEY = settings.storage.key
+STORAGE_S3_BUCKET = settings.storage.bucket
+STORAGE_S3_REGION = settings.storage.region
+STORAGE_S3_SECRET = settings.storage.secret
+STORAGE_S3_ENDPOINT = settings.storage.endpoint
 
 session = boto3.session.Session()
 

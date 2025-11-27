@@ -658,16 +658,16 @@ export const useConversationsByProjectId = (
 	query?: Partial<Query<CustomDirectusTypes, Conversation>>,
 	filterBySource?: string[],
 ) => {
-	const TIME_INTERVAL_SECONDS = 40;
+	const TIME_INTERVAL_SECONDS = 30;
 
 	return useQuery({
 		queryFn: async () => {
 			const conversations = await directus.request(
 				readItems("conversation", {
 					deep: {
-						// @ts-expect-error chunks is not typed
 						chunks: {
 							_limit: loadChunks ? 1000 : 1,
+							_sort: ["-timestamp", "-created_at"],
 						},
 					},
 					fields: [
@@ -692,6 +692,7 @@ export const useConversationsByProjectId = (
 							],
 						},
 					],
+					// @ts-expect-error TODO
 					filter: {
 						chunks: {
 							...(loadWhereTranscriptExists && {
@@ -803,6 +804,7 @@ export const useConversationById = ({
 		queryFn: () =>
 			directus.request<Conversation>(
 				readItem("conversation", conversationId, {
+					// @ts-expect-error TODO
 					fields: [
 						...CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS,
 						{
@@ -867,7 +869,7 @@ export const useInfiniteConversationsByProjectId = (
 	},
 ) => {
 	const { initialLimit = 15 } = options ?? {};
-	const TIME_INTERVAL_SECONDS = 40;
+	const TIME_INTERVAL_SECONDS = 30;
 
 	return useInfiniteQuery({
 		getNextPageParam: (lastPage: { nextOffset?: number }) =>
@@ -877,9 +879,9 @@ export const useInfiniteConversationsByProjectId = (
 			const conversations = await directus.request(
 				readItems("conversation", {
 					deep: {
-						// @ts-expect-error chunks is not typed
 						chunks: {
 							_limit: loadChunks ? 1000 : 1,
+							_sort: ["-timestamp", "-created_at"],
 						},
 					},
 					fields: [
@@ -903,7 +905,11 @@ export const useInfiniteConversationsByProjectId = (
 								"error",
 							],
 						},
+						{
+							conversation_artifacts: ["id", "approved_at"],
+						},
 					],
+					// @ts-expect-error TODO
 					filter: {
 						chunks: {
 							...(loadWhereTranscriptExists && {

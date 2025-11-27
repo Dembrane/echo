@@ -157,7 +157,7 @@ export const ChatHistoryMessage = ({
 
 	if (message?._original?.added_conversations?.length > 0) {
 		const conversations = message?._original?.added_conversations
-			.map((ac) => ac.conversation_id)
+			.map((ac) => (ac as unknown as ConversationLink).source_conversation_id)
 			.filter((conv) => conv != null);
 
 		return conversations.length > 0 ? (
@@ -167,7 +167,9 @@ export const ChatHistoryMessage = ({
 					<Text size="xs">
 						<Trans>Context added:</Trans>
 					</Text>
-					<ConversationLinks conversations={conversations} />
+					<ConversationLinks
+						conversations={conversations as unknown as Conversation[]}
+					/>
 				</Group>
 			</ChatMessage>
 		) : null;

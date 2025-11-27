@@ -19,6 +19,7 @@ import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Alert,
+	Badge,
 	Box,
 	Button,
 	Group,
@@ -78,36 +79,32 @@ export const ProjectTagPill = ({ tag }: { tag: ProjectTag }) => {
 	};
 
 	return (
-		<div
+		<Badge
 			ref={setNodeRef}
 			style={{
 				...style,
-				alignItems: "center",
-				background: "var(--mantine-color-primary-1)",
-				borderRadius: "var(--pill-radius, 1000rem)",
-				display: "inline-flex",
-				height: "var(--pill-height)",
-				lineHeight: 1,
-				paddingInline: "0.8em",
-				whiteSpace: "nowrap",
+				fontWeight: 500,
+				textTransform: "none",
 			}}
+			variant="light"
+			c="black"
+			size="lg"
+			rightSection={
+				<ActionIcon
+					onClick={(e) => handleDelete(e)}
+					size="xs"
+					variant="transparent"
+					c="gray.8"
+					onPointerDown={(e) => e.stopPropagation()}
+				>
+					<IconX size={14} />
+				</ActionIcon>
+			}
 			{...attributes}
 			{...listeners}
 		>
-			<Text size="sm" className="font-normal">
-				{tag.text}
-			</Text>
-			<ActionIcon
-				onClick={(e) => handleDelete(e)}
-				size="xs"
-				variant="transparent"
-				c="gray.8"
-				className="ml-2"
-				onPointerDown={(e) => e.stopPropagation()}
-			>
-				<IconX />
-			</ActionIcon>
-		</div>
+			<span>{tag.text}</span>
+		</Badge>
 	);
 };
 
@@ -116,7 +113,6 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 		projectId: props.project.id,
 		query: {
 			deep: {
-				// @ts-expect-error tags won't be typed
 				tags: {
 					_sort: "sort",
 				},
@@ -149,7 +145,8 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 
 		const currentMaxSort = Math.max(
 			0,
-			...(projectQuery.data?.tags?.map((t) => t.sort ?? 0) ?? []),
+			...(projectQuery.data?.tags?.map((t) => (t as ProjectTag).sort ?? 0) ??
+				[]),
 		);
 
 		// Wait for all tag creation mutations to complete
@@ -175,10 +172,10 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 		if (!active || !over || active.id === over.id) return;
 
 		const oldIndex = projectQuery.data?.tags?.findIndex(
-			(tag) => tag.id === active.id,
+			(tag) => (tag as ProjectTag).id === active.id,
 		);
 		const newIndex = projectQuery.data?.tags?.findIndex(
-			(tag) => tag.id === over.id,
+			(tag) => (tag as ProjectTag).id === over.id,
 		);
 
 		if (
@@ -189,7 +186,11 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 			return;
 
 		// Create new array with updated positions
-		const newTags = arrayMove(projectQuery.data.tags, oldIndex, newIndex);
+		const newTags = arrayMove(
+			projectQuery.data.tags as unknown as ProjectTag[],
+			oldIndex,
+			newIndex,
+		);
 
 		// Update sort values for all affected tags
 		newTags.forEach((tag: ProjectTag, index: number) => {
@@ -212,10 +213,12 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 	}
 
 	// Sort tags by sort field before rendering
-	const sortedTags = [...(projectQuery.data?.tags ?? [])].sort(
+	const sortedTags = [
+		...((projectQuery.data?.tags as unknown as ProjectTag[]) ?? []),
+	].sort(
 		(a, b) =>
-			(a.sort ?? Number.POSITIVE_INFINITY) -
-			(b.sort ?? Number.POSITIVE_INFINITY),
+			((a as ProjectTag).sort ?? Number.POSITIVE_INFINITY) -
+			((b as ProjectTag).sort ?? Number.POSITIVE_INFINITY),
 	);
 
 	return (
@@ -271,11 +274,14 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 								onDragEnd={handleDragEnd}
 							>
 								<SortableContext
-									items={sortedTags.map((tag) => tag.id)}
+									items={sortedTags.map((tag) => (tag as ProjectTag).id)}
 									strategy={horizontalListSortingStrategy}
 								>
 									{sortedTags.map((tag) => (
-										<ProjectTagPill key={tag.id} tag={tag} />
+										<ProjectTagPill
+											key={(tag as ProjectTag).id}
+											tag={tag as ProjectTag}
+										/>
 									))}
 								</SortableContext>
 							</DndContext>

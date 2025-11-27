@@ -9,9 +9,9 @@ from pydantic import BaseModel
 
 from dembrane.s3 import get_sanitized_s3_key, get_file_size_bytes_from_s3
 from dembrane.utils import generate_uuid
-from dembrane.config import STORAGE_S3_BUCKET, STORAGE_S3_ENDPOINT
 from dembrane.service import project_service, conversation_service
 from dembrane.directus import directus
+from dembrane.settings import get_settings
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.service.project import ProjectNotFoundException
 from dembrane.service.conversation import (
@@ -23,6 +23,10 @@ from dembrane.service.conversation import (
 logger = getLogger("api.participant")
 
 ParticipantRouter = APIRouter(tags=["participant"])
+
+settings = get_settings()
+STORAGE_S3_BUCKET = settings.storage.bucket
+STORAGE_S3_ENDPOINT = settings.storage.endpoint
 
 
 class PublicProjectTagSchema(BaseModel):
@@ -38,7 +42,9 @@ class PublicProjectSchema(BaseModel):
 
     is_conversation_allowed: bool
     is_get_reply_enabled: bool
+    is_verify_enabled: bool
     is_project_notification_subscription_allowed: bool
+    verification_topics: Optional[List[str]] = []
 
     # onboarding
     default_conversation_tutorial_slug: Optional[str] = None
@@ -98,7 +104,7 @@ class ConfirmUploadRequest(BaseModel):
 # NOTE: This is process-local and won't be shared across workers/pods.
 # With API_WORKERS=2 and horizontal scaling, the effective limit becomes
 # 10 × workers × pods instead of strict 10 req/min.
-# 
+#
 # DECISION (2025-10-03): We accept this risk because:
 # - Users are authenticated municipal employees (paid customers)
 # - Normal usage: 6-10 req/min (well under distributed limit)
@@ -116,20 +122,19 @@ def check_rate_limit(conversation_id: str) -> bool:
     Returns True if within limit, False if exceeded.
     """
     now = time()
-    
+
     # Clean old entries
     if conversation_id in _rate_limit_cache:
         _rate_limit_cache[conversation_id] = [
-            t for t in _rate_limit_cache[conversation_id] 
-            if now - t < _RATE_LIMIT_WINDOW
+            t for t in _rate_limit_cache[conversation_id] if now - t < _RATE_LIMIT_WINDOW
         ]
     else:
         _rate_limit_cache[conversation_id] = []
-    
+
     # Check limit
     if len(_rate_limit_cache[conversation_id]) >= _RATE_LIMIT_MAX_REQUESTS:
         return False
-    
+
     # Add current request
     _rate_limit_cache[conversation_id].append(now)
     return True
@@ -168,9 +173,7 @@ async def get_project(
 ) -> dict:
     try:
         project = await run_in_thread_pool(
-            project_service.get_by_id_or_raise,
-            project_id,
-            with_tags=True
+            project_service.get_by_id_or_raise, project_id, with_tags=True
         )
 
         if project.get("is_conversation_allowed", False) is False:
@@ -191,14 +194,9 @@ async def get_conversation(
     conversation_id: str,
 ) -> dict:
     try:
-        project = await run_in_thread_pool(
-            project_service.get_by_id_or_raise,
-            project_id
-        )
+        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
         conversation = await run_in_thread_pool(
-            conversation_service.get_by_id_or_raise,
-            conversation_id,
-            with_tags=True
+            conversation_service.get_by_id_or_raise, conversation_id, with_tags=True
         )
 
         if project.get("is_conversation_allowed", False) is False:
@@ -218,14 +216,9 @@ async def get_conversation_chunks(
     conversation_id: str,
 ) -> List[dict]:
     try:
-        project = await run_in_thread_pool(
-            project_service.get_by_id_or_raise,
-            project_id
-        )
+        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
         conversation = await run_in_thread_pool(
-            conversation_service.get_by_id_or_raise,
-            conversation_id,
-            with_chunks=True
+            conversation_service.get_by_id_or_raise, conversation_id, with_chunks=True
         )
 
         if project.get("is_conversation_allowed", False) is False:
@@ -246,8 +239,7 @@ async def delete_conversation_chunk(
 ) -> None:
     try:
         conversation = await run_in_thread_pool(
-            conversation_service.get_by_id_or_raise,
-            conversation_id
+            conversation_service.get_by_id_or_raise, conversation_id
         )
     except ConversationNotFoundException as e:
         raise HTTPException(status_code=404, detail="Conversation not found") from e
@@ -255,10 +247,7 @@ async def delete_conversation_chunk(
     if project_id != conversation.get("project_id"):
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    await run_in_thread_pool(
-        conversation_service.delete_chunk,
-        chunk_id
-    )
+    await run_in_thread_pool(conversation_service.delete_chunk, chunk_id)
 
     return
 
@@ -288,9 +277,7 @@ async def upload_conversation_text(
         return chunk
 
     except ConversationServiceException as e:
-        raise HTTPException(
-            status_code=400, detail=str(e)
-        ) from e
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except ConversationNotOpenForParticipationException as e:
         raise HTTPException(
             status_code=403, detail="Conversation not open for participation"
@@ -331,54 +318,51 @@ async def get_chunk_upload_url(
 ) -> dict:
     """
     Generate a presigned URL for direct S3 upload.
-    
+
     This endpoint is fast (<100ms) as it only generates a URL,
     no file transfer happens through the API.
-    
+
     Rate limit: 10 requests per minute per conversation.
     """
-    logger.info(f"Presigned URL requested for conversation {conversation_id}, filename: {body.filename}")
-    
+    logger.info(
+        f"Presigned URL requested for conversation {conversation_id}, filename: {body.filename}"
+    )
+
     try:
         # Rate limiting
         if not check_rate_limit(conversation_id):
             logger.warning(f"Rate limit exceeded for conversation {conversation_id}")
             raise HTTPException(
                 status_code=429,
-                detail="Too many upload requests. Please wait before uploading more files."
+                detail="Too many upload requests. Please wait before uploading more files.",
             )
-        
+
         # Verify conversation exists and is open
         conversation = await run_in_thread_pool(
-            conversation_service.get_by_id_or_raise,
-            conversation_id
+            conversation_service.get_by_id_or_raise, conversation_id
         )
         project = await run_in_thread_pool(
-            project_service.get_by_id_or_raise,
-            conversation["project_id"]
+            project_service.get_by_id_or_raise, conversation["project_id"]
         )
-        
+
         if not project.get("is_conversation_allowed", False):
             logger.warning(f"Conversation {conversation_id} not open for participation")
-            raise HTTPException(
-                status_code=403, 
-                detail="Conversation not open for participation"
-            )
-        
+            raise HTTPException(status_code=403, detail="Conversation not open for participation")
+
         # Generate chunk ID
         chunk_id = generate_uuid()
-        
+
         # Sanitize filename to prevent path traversal
         safe_filename = get_sanitized_s3_key(body.filename)
-        
+
         # Create S3 key with sanitized filename
         file_key = f"conversation/{conversation_id}/chunks/{chunk_id}-{safe_filename}"
-        
+
         logger.info(f"Generated S3 key: {file_key}")
-        
+
         # Generate presigned POST
         from dembrane.s3 import generate_presigned_post
-        
+
         presigned_data = await run_in_thread_pool(
             generate_presigned_post,
             file_name=file_key,
@@ -386,34 +370,30 @@ async def get_chunk_upload_url(
             size_limit_mb=2048,  # 2GB limit
             expires_in_seconds=3600,  # 1 hour
         )
-        
+
         # Construct final file URL
         file_url = f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/{file_key}"
-        
+
         logger.info(f"Presigned URL generated successfully for chunk {chunk_id}")
-        
+
         return {
             "chunk_id": chunk_id,
             "upload_url": presigned_data["url"],
             "fields": presigned_data["fields"],
             "file_url": file_url,
         }
-        
+
     except ConversationNotFoundException as e:
         logger.error(f"Conversation not found: {conversation_id}")
         raise HTTPException(status_code=404, detail="Conversation not found") from e
     except ConversationNotOpenForParticipationException as e:
         logger.error(f"Conversation not open: {conversation_id}")
         raise HTTPException(
-            status_code=403, 
-            detail="Conversation not open for participation"
+            status_code=403, detail="Conversation not open for participation"
         ) from e
     except Exception as e:
         logger.error(f"Error generating presigned URL: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to generate upload URL"
-        ) from e
+        raise HTTPException(status_code=500, detail="Failed to generate upload URL") from e
 
 
 @ParticipantRouter.post(
@@ -426,28 +406,27 @@ async def confirm_chunk_upload(
 ) -> dict:
     """
     Confirm that a file upload completed and create the chunk record.
-    
+
     This should be called after the client successfully uploads to S3
     using the presigned URL.
-    
+
     Includes retry logic for S3 eventual consistency.
     """
     logger.info(f"Confirming upload for chunk {body.chunk_id}, conversation {conversation_id}")
-    
+
     try:
         # Verify file exists in S3 with retry logic (eventual consistency)
         file_key = get_sanitized_s3_key(body.file_url)
         file_size = None
         max_retries = 3
         retry_delays = [0.1, 0.5, 2.0]  # 100ms, 500ms, 2s
-        
+
         for attempt in range(max_retries):
             try:
-                file_size = await run_in_thread_pool(
-                    get_file_size_bytes_from_s3,
-                    file_key
+                file_size = await run_in_thread_pool(get_file_size_bytes_from_s3, file_key)
+                logger.info(
+                    f"File verified in S3: {file_key}, size: {file_size} bytes, attempt: {attempt + 1}"
                 )
-                logger.info(f"File verified in S3: {file_key}, size: {file_size} bytes, attempt: {attempt + 1}")
                 break
             except Exception as e:
                 if attempt < max_retries - 1:
@@ -461,13 +440,13 @@ async def confirm_chunk_upload(
                     logger.error(
                         f"File not found in S3 after {max_retries} attempts: {file_key}. "
                         f"Upload may have failed or S3 is experiencing issues. Error: {e}",
-                        exc_info=True
+                        exc_info=True,
                     )
                     raise HTTPException(
                         status_code=400,
-                        detail="File not found in S3. Upload may have failed. Please try again."
+                        detail="File not found in S3. Upload may have failed. Please try again.",
                     ) from e
-        
+
         # Create chunk record (reuse existing logic)
         chunk = await run_in_thread_pool(
             conversation_service.create_chunk,
@@ -478,38 +457,31 @@ async def confirm_chunk_upload(
             file_url=body.file_url,  # Use the S3 URL directly
             transcript=None,
         )
-        
+
         logger.info(
             f"Chunk created successfully: {body.chunk_id}, "
             f"conversation: {conversation_id}, size: {file_size} bytes"
         )
-        
+
         return chunk
-        
+
     except ConversationNotOpenForParticipationException as e:
         logger.error(f"Conversation not open for participation: {conversation_id}")
         raise HTTPException(
-            status_code=403, 
-            detail="Conversation not open for participation"
+            status_code=403, detail="Conversation not open for participation"
         ) from e
     except ConversationNotFoundException as e:
         logger.error(f"Conversation not found while confirming upload: {conversation_id}")
         raise HTTPException(status_code=404, detail="Conversation not found") from e
     except ConversationServiceException as e:
         logger.error(f"Failed to create chunk: {e}")
-        raise HTTPException(
-            status_code=400,
-            detail=str(e)
-        ) from e
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except HTTPException:
         # Re-raise HTTP exceptions as-is
         raise
     except Exception as e:
         logger.error(f"Error confirming upload: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to confirm upload"
-        ) from e
+        raise HTTPException(status_code=500, detail="Failed to confirm upload") from e
 
 
 @ParticipantRouter.post(
@@ -549,6 +521,7 @@ async def subscribe_notifications(data: NotificationSubscriptionRequest) -> dict
     - Creates a fresh record with email_opt_in = true.
     """
     failed_emails = []
+    client = directus
 
     for email in data.emails:
         try:
@@ -557,7 +530,7 @@ async def subscribe_notifications(data: NotificationSubscriptionRequest) -> dict
 
             # Check if user already exists
             existing = await run_in_thread_pool(
-                directus.get_items,
+                client.get_items,
                 "project_report_notification_participants",
                 {
                     "query": {
@@ -579,14 +552,14 @@ async def subscribe_notifications(data: NotificationSubscriptionRequest) -> dict
                 else:
                     # Delete old entry
                     await run_in_thread_pool(
-                        directus.delete_item,
+                        client.delete_item,
                         "project_report_notification_participants",
-                        participant["id"]
+                        participant["id"],
                     )
 
             # Create new entry with opt-in
             await run_in_thread_pool(
-                directus.create_item,
+                client.create_item,
                 "project_report_notification_participants",
                 {
                     "email": email,
@@ -618,9 +591,10 @@ async def unsubscribe_participant(
     Update email_opt_in for project contacts in Directus securely.
     """
     try:
+        client = directus
         # Fetch relevant IDs
         submissions = await run_in_thread_pool(
-            directus.get_items,
+            client.get_items,
             "project_report_notification_participants",
             {
                 "query": {
@@ -643,7 +617,7 @@ async def unsubscribe_participant(
         # Update email_opt_in status for fetched IDs
         for item_id in ids:
             await run_in_thread_pool(
-                directus.update_item,
+                client.update_item,
                 "project_report_notification_participants",
                 item_id,
                 {"email_opt_in": payload.email_opt_in},
@@ -667,8 +641,9 @@ async def check_unsubscribe_eligibility(
     if not token or not project_id:
         raise HTTPException(status_code=400, detail="Invalid or missing unsubscribe link.")
 
+    client = directus
     submissions = await run_in_thread_pool(
-        directus.get_items,
+        client.get_items,
         "project_report_notification_participants",
         {
             "query": {

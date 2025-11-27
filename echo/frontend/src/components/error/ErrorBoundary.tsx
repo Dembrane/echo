@@ -33,10 +33,10 @@ export class ErrorBoundary extends Component<PropsWithChildren<Props>, State> {
 						<Button
 							onClick={() => {
 								this.setState({ hasError: false });
-								window.location.href = "/";
+								window.location.href = "/projects";
 							}}
 						>
-							Return to Home
+							Return to Projects
 						</Button>
 					</Box>
 				)

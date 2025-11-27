@@ -4,33 +4,83 @@ Ihnen wird eine Reihe von Zitaten aus einem Gesprächstranskript in chronologisc
 {{ quote_text_joined }}
 </quotes>
 
-Erstellen Sie eine Zusammenfassung, die sich an die Komplexität des Inhalts anpasst und dabei sowohl Substanz als auch Nuancen erfasst.
+{% if project_context %}
+<project_context>
+Der Gastgeber hat den folgenden Kontext und Schlüsselbegriffe für dieses Gespräch bereitgestellt:
+{{ project_context }}
+</project_context>
+{% endif %}
 
-## Kernrichtlinien
+{% if verified_artifacts %}
+<verified_artifacts>
+Während dieses Gesprächs haben die Teilnehmer gemeinsam die folgenden konkreten Ergebnisse erstellt und verifiziert:
+{% for artifact in verified_artifacts %}
 
-1. **Proportionale Reaktion**: Die Länge der Zusammenfassung darf die Länge des ursprünglichen Inhalts nie überschreiten. Für sehr einfache Eingaben geben Sie eine noch kürzere Zusammenfassung.
+---
+{{ artifact }}
+---
+{% endfor %}
+</verified_artifacts>
+{% endif %}
 
-2. **Inhaltsgetriebene Struktur**: 
-   - Für einfache Austausche (Erklärungen, Witze, Klärungen): Verwenden Sie 1-2 prägnante Absätze ohne formale Abschnitte
-   - Für komplexe Diskussionen: Verwenden Sie geeignete Überschriften und Struktur
+Erstellen Sie eine Zusammenfassung, die die Essenz und Bedeutung des Geschehenen erfasst, optimiert für schnelle Erfassbarkeit.
 
-3. **Essenz über Analyse**: Erfassen Sie das tatsächlich Gesagte, ohne spekulative Kontexte, Hintergründe oder Implikationen hinzuzufügen, es sei denn, sie werden ausdrücklich erwähnt.
+## Kernprinzipien
 
-4. **Menschliche Elemente**: Bewahren Sie Humor, Wortspiele oder emotionalen Kontext, wenn sie für die Bedeutung des Gesprächs zentral sind.
+1. **Essenz über Vollständigkeit**: Erfassen Sie das "Na und?" - das bedeutungsvolle Ergebnis, die Entscheidung oder Erkenntnis - nicht einen detaillierten Bericht
 
-5. **Anpassbare Tiefe**:
-   - Einfache Inhalte erhalten einfache Zusammenfassungen
-   - Komplexe Inhalte erhalten angemessen strukturierte Analysen
-   - Überfrachten Sie einfache Inhalte nie mit unnötigen akademischen oder strategischen Rahmen
+2. **Radikale Kürze**: Die meisten Gespräche sollten in 2-4 Sätzen zusammengefasst werden. Komplexe Diskussionen können 1-2 kurze Absätze rechtfertigen. Die Zusammenfassung sollte immer dramatisch kürzer sein als das Original.
 
-## Formatierungsanforderungen
+3. **Bedeutungsvolle Kompression**: Fragen Sie "Was müsste jemand wissen, der dies verpasst hat?" nicht "Was wurde besprochen?"
 
-- Für sehr einfache Eingaben (unter 100 Wörtern) beschränken Sie die Zusammenfassung auf 1-3 Sätze
-- Für mittlere Eingaben verwenden Sie 1-2 prägnante Absätze
-- Verwenden Sie Abschnittsüberschriften nur für wirklich komplexe, mehrthematische Gespräche
-- Heben Sie nur wirklich bedeutende Punkte hervor, keine Routinebeobachtungen
-- Präsentieren Sie als eine abgerundete, zugängliche Zusammenfassung, die für sich steht
+4. **Natürliche Sprache**: Schreiben Sie in fließender Prosa, nicht in Aufzählungspunkten oder strukturierten Abschnitten. Vermeiden Sie Überschriften, Listen und Formatierung, es sei denn, der Inhalt ist wirklich komplex und vielschichtig.
 
-Denken Sie daran, dass effektive Zusammenfassung oft bedeutet: signifikante Reduzierung der Länge bei Beibehaltung der Kernbedeutung.
+5. **Kontextintegration**: 
+   - Weben Sie Projektkontext natürlich ein, wenn er Bedeutung hinzufügt
+   - Erwähnen Sie verifizierte Artefakte als konkrete Ergebnisse ohne Prozessdetails
+   - Erzwingen Sie keinen irrelevanten Kontext
 
-Antworten Sie auf Deutsch, unabhängig von der Sprache vorheriger Nachrichten. Sie können Markdown-Formatierung maßvoll zur Verbesserung der Lesbarkeit verwenden, priorisieren Sie aber erzählerische Kohärenz und Absätze über strukturelle Elemente.
+6. **Schnelle Lese-Bewertung**: Bewerten Sie vor dem Schreiben intern, wie schnell diese Zusammenfassung zu erfassen ist, auf einer Skala von 1-10:
+   - 10 = Sofortiges Verständnis (einfach, ein klarer Punkt)
+   - 7-9 = Sehr schneller Überblick (2-3 klare Erkenntnisse)
+   - 4-6 = Erfordert fokussiertes Lesen (mehrere Punkte oder mittlere Komplexität)
+   - 1-3 = Erfordert sorgfältiges Lesen (dicht, komplex oder nuanciert)
+   
+   Streben Sie 7+ an, wann immer möglich. Wenn Ihr Entwurf unter 7 liegt, vereinfachen Sie weiter.
+
+## Was Erfasst Werden Soll
+
+Konzentrieren Sie sich auf das Wichtigste. Schließen Sie diese Elemente ein, wenn sie zentral für das Gespräch sind:
+
+- Getroffene Entscheidungen und ihre Begründung
+- Identifizierte Probleme und vereinbarte Lösungen
+- Wichtige Erkenntnisse oder Realisierungen
+- Konkrete nächste Schritte oder Ergebnisse
+- Kerndynamiken, wenn sie das Ergebnis geprägt haben: Argumente oder Überlegungen, die Entscheidungen beeinflussten, Spannungen zwischen konkurrierenden Prioritäten, Konflikte, die gelöst werden mussten, oder erzielte Einigungen bei strittigen Punkten
+- Bedeutungsvolle Meinungsverschiedenheiten oder besprochene Kompromisse
+
+## Was Übersprungen Werden Soll
+
+- Detaillierter Bericht der Diskussion
+- Implementierungsdetails, es sei denn, sie sind der Hauptpunkt
+- Prozessmechanik (wer was sagte, wie Entscheidungen getroffen wurden)
+- Offensichtlicher Kontext oder Hintergrund
+- Kleinere Meinungsverschiedenheiten, die keine Auswirkungen auf die Ergebnisse hatten
+
+## Stilrichtlinien
+
+- Verwenden Sie Kommas, Klammern oder "aber" anstelle von Gedankenstrichen
+- Schreiben Sie in direkter, gesprächiger Prosa
+- Bevorzugen Sie kürzere Sätze gegenüber komplexer Zeichensetzung
+- Verwenden Sie "aber" oder "jedoch", um Kontraste zu zeigen
+- Verwenden Sie Klammern für Einschübe oder Klarstellungen
+- Verwenden Sie niemals Fettdruck, Kursivschrift oder andere Textformatierung
+
+## Format
+
+- 2-4 Sätze für einfache Gespräche
+- 1-2 prägnante Absätze für mittlere Komplexität
+- Natürliche Prosa ohne Aufzählungspunkte, Überschriften, Listen oder Formatierung
+- Verwenden Sie nur Struktur, wenn sie für eine vielschichtige Diskussion wirklich notwendig ist
+
+Schreiben Sie, als würden Sie einem Kollegen in 30 Sekunden erklären, was passiert ist.

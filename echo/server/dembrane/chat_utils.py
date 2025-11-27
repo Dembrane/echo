@@ -5,10 +5,9 @@ import logging
 from typing import Any, Dict, List, Optional
 
 import backoff
-from litellm import completion, acompletion
+from litellm import acompletion
 from pydantic import BaseModel
-from litellm.utils import token_counter
-from sqlalchemy.orm import Session, selectinload
+from litellm.utils import token_counter, get_model_info
 from litellm.exceptions import (
     Timeout,
     APIError,
@@ -17,31 +16,38 @@ from litellm.exceptions import (
     ContextWindowExceededError,
 )
 
-from dembrane.config import (
-    SMALL_LITELLM_MODEL,
-    SMALL_LITELLM_API_KEY,
-    SMALL_LITELLM_API_BASE,
-    DISABLE_CHAT_TITLE_GENERATION,
-    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL,
-    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY,
-    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE,
-    LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION,
-)
+from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.prompts import render_prompt
-from dembrane.database import ConversationModel, ProjectChatMessageModel
+from dembrane.service import chat_service, conversation_service
 from dembrane.directus import directus
-from dembrane.api.stateless import GetLightragQueryRequest, get_lightrag_prompt
+from dembrane.settings import get_settings
+from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.conversation import get_conversation_transcript
 from dembrane.api.dependency_auth import DirectusSession
-from dembrane.audio_lightrag.utils.lightrag_utils import (
-    run_segment_id_to_conversation_id,
-    get_project_id_from_conversation_id,
-    get_conversation_details_for_rag_query,
-)
-
-MAX_CHAT_CONTEXT_LENGTH = 100000
 
 logger = logging.getLogger("chat_utils")
+
+# Global LLM model for chat operations
+CHAT_LLM = MODELS.TEXT_FAST
+
+_chat_llm_kwargs = get_completion_kwargs(CHAT_LLM)
+_chat_llm_model = _chat_llm_kwargs["model"]
+
+_model_info = get_model_info(_chat_llm_model)
+_max_input_tokens = _model_info["max_input_tokens"] if _model_info else None
+
+if _max_input_tokens is None:
+    logger.warning(f"Could not get max tokens for model {_chat_llm_model}")
+    MAX_CHAT_CONTEXT_LENGTH = 128000  # good default
+else:
+    MAX_CHAT_CONTEXT_LENGTH = int(_max_input_tokens * 0.8)
+
+logger.info(
+    f"Using {_chat_llm_model} for chat operations with context length {MAX_CHAT_CONTEXT_LENGTH}"
+)
+
+settings = get_settings()
+DISABLE_CHAT_TITLE_GENERATION = settings.feature_flags.disable_chat_title_generation
 
 
 class ClientAttachment(BaseModel):
@@ -77,20 +83,25 @@ def convert_to_openai_messages(messages: List[ClientMessage]) -> List[Dict[str, 
     return openai_messages
 
 
-def get_project_chat_history(chat_id: str, db: Session) -> List[Dict[str, Any]]:
-    db_messages = (
-        db.query(ProjectChatMessageModel)
-        .filter(ProjectChatMessageModel.project_chat_id == chat_id)
-        .order_by(ProjectChatMessageModel.date_created.asc())
-        .all()
+async def get_project_chat_history(chat_id: str) -> List[Dict[str, Any]]:
+    messages_raw = await run_in_thread_pool(
+        chat_service.list_messages,
+        chat_id,
+        include_relationships=False,
+        order="asc",
     )
 
-    messages = []
-    for i in db_messages:
+    messages: List[Dict[str, Any]] = []
+    for message in messages_raw:
+        message_from = message.get("message_from")
+        if message_from is None:
+            continue
         messages.append(
             {
-                "role": i.message_from,
-                "content": i.text,
+                "role": message_from,
+                "content": message.get("text", ""),
+                "id": message.get("id"),
+                "tokens_count": message.get("tokens_count"),
             }
         )
 
@@ -98,13 +109,43 @@ def get_project_chat_history(chat_id: str, db: Session) -> List[Dict[str, Any]]:
 
 
 async def create_system_messages_for_chat(
-    locked_conversation_id_list: List[str], db: Session, language: str, project_id: str
+    locked_conversation_id_list: List[str], language: str, project_id: str
 ) -> List[Dict[str, Any]]:
-    conversations = (
-        db.query(ConversationModel)
-        .filter(ConversationModel.id.in_(locked_conversation_id_list))
-        .all()
+    conversations = await run_in_thread_pool(
+        conversation_service.list_by_ids,
+        locked_conversation_id_list,
+        with_chunks=False,
+        with_tags=True,
     )
+
+    artifacts_by_conv: Dict[str, List[Dict[str, Any]]] = {}
+    if conversations:
+        conv_ids = [c["id"] for c in conversations if c.get("id")]
+        if conv_ids:
+            try:
+                artifacts_query = {
+                    "query": {
+                        "filter": {
+                            "_and": [
+                                {"conversation_id": {"_in": conv_ids}},
+                                {"approved_at": {"_nnull": True}},
+                            ]
+                        },
+                        "fields": ["conversation_id", "key", "content"],
+                    }
+                }
+                artifacts = await run_in_thread_pool(
+                    directus.get_items, "conversation_artifact", artifacts_query
+                )
+                for art in artifacts:
+                    cid = art.get("conversation_id")
+                    if cid:
+                        if cid not in artifacts_by_conv:
+                            artifacts_by_conv[cid] = []
+                        artifacts_by_conv[cid].append(art)
+            except Exception as e:
+                logger.warning(f"Failed to fetch artifacts for conversations: {e}")
+
     try:
         project_query = {
             "query": {
@@ -114,13 +155,36 @@ async def create_system_messages_for_chat(
                     "context",
                     "default_conversation_title",
                     "default_conversation_description",
+                    "default_conversation_transcript_prompt",
                 ],
                 "limit": 1,
                 "filter": {"id": {"_in": [project_id]}},
             }
         }
-        project = directus.get_items("project", project_query)[0]
-        project_context = "\n".join([str(k) + " : " + str(v) for k, v in project.items()])
+        project_list = await run_in_thread_pool(directus.get_items, "project", project_query)
+        project = project_list[0]
+
+        # Build project context with meaningful labels
+        context_parts = []
+        if project.get("name"):
+            context_parts.append(f"name: {project['name']}")
+        if project.get("language"):
+            context_parts.append(f"language: {project['language']}")
+        if project.get("context"):
+            context_parts.append(f"context: {project['context']}")
+        if project.get("default_conversation_transcript_prompt"):
+            context_parts.append(
+                f"hotwords (important terms): {project['default_conversation_transcript_prompt']}"
+            )
+        if project.get("default_conversation_title"):
+            context_parts.append(
+                f"default conversation title: {project['default_conversation_title']}"
+            )
+        if project.get("default_conversation_description"):
+            context_parts.append(
+                f"default conversation description: {project['default_conversation_description']}"
+            )
+        project_context = "\n".join(context_parts)
     except KeyError as e:
         raise ValueError(f"Invalid project id: {project_id}") from e
     except Exception:
@@ -133,19 +197,26 @@ async def create_system_messages_for_chat(
 
     conversation_data_list = []
     for conversation in conversations:
+        tag_text_list: List[str] = []
+        for tag_entry in conversation.get("tags", []) or []:
+            if isinstance(tag_entry, dict):
+                project_tag = tag_entry.get("project_tag_id")
+                if isinstance(project_tag, dict):
+                    tag_text = project_tag.get("text")
+                    if tag_text:
+                        tag_text_list.append(str(tag_text))
         conversation_data_list.append(
             {
-                "name": conversation.participant_name,
-                "tags": ", ".join([tag.text for tag in conversation.tags]),
-                "created_at": conversation.created_at.isoformat()
-                if conversation.created_at
-                else None,
-                "duration": conversation.duration,
+                "name": conversation.get("participant_name"),
+                "tags": ", ".join(tag_text_list),
+                "created_at": conversation.get("created_at"),
+                "duration": conversation.get("duration"),
                 "transcript": await get_conversation_transcript(
-                    conversation.id,
+                    conversation.get("id", ""),
                     # fake auth to get this fn call
                     DirectusSession(user_id="none", is_admin=True),
                 ),
+                "artifacts": artifacts_by_conv.get(conversation.get("id", ""), []),
             }
         )
 
@@ -164,41 +235,6 @@ async def create_system_messages_for_chat(
     }
 
     return [prompt_message, project_message, context_message]
-
-
-async def get_lightrag_prompt_by_params(
-    top_k: int,
-    query: str,
-    conversation_history: list[dict[str, str]],
-    echo_conversation_ids: list[str],
-    echo_project_ids: list[str],
-    auto_select_bool: bool,
-    get_transcripts: bool,
-) -> str:
-    payload = GetLightragQueryRequest(
-        query=query,
-        conversation_history=conversation_history,
-        echo_conversation_ids=echo_conversation_ids,
-        echo_project_ids=echo_project_ids,
-        auto_select_bool=auto_select_bool,
-        get_transcripts=get_transcripts,
-        top_k=top_k,
-    )
-    session = DirectusSession(user_id="none", is_admin=True)  # fake session
-    rag_prompt = await get_lightrag_prompt(payload, session)
-    return rag_prompt
-
-
-async def get_conversation_references(
-    rag_prompt: str, project_ids: List[str]
-) -> List[Dict[str, Any]]:
-    try:
-        references = await get_conversation_details_for_rag_query(rag_prompt, project_ids)
-        conversation_references = {"references": references}
-    except Exception as e:
-        logger.warning(f"No references found. Error: {str(e)}")
-        conversation_references = {"references": []}
-    return [conversation_references]
 
 
 class CitationSingleSchema(BaseModel):
@@ -240,10 +276,8 @@ async def generate_title(
     )
 
     response = await acompletion(
-        model=SMALL_LITELLM_MODEL,
         messages=[{"role": "user", "content": title_prompt}],
-        api_base=SMALL_LITELLM_API_BASE,
-        api_key=SMALL_LITELLM_API_KEY,
+        **get_completion_kwargs(MODELS.MULTI_MODAL_PRO),
     )
 
     if response.choices[0].message.content is None:
@@ -256,7 +290,6 @@ async def generate_title(
 async def auto_select_conversations(
     user_query_inputs: List[str],
     project_id_list: List[str],
-    db: Session,
     language: str = "en",
     batch_size: int = 20,
 ) -> Dict[str, Any]:
@@ -295,11 +328,11 @@ async def auto_select_conversations(
 
     for project_id in project_id_list:
         # Get all conversations for this project
-        conversations = (
-            db.query(ConversationModel)
-            .filter(ConversationModel.project_id == project_id)
-            .options(selectinload(ConversationModel.tags))
-            .all()
+        conversations = await run_in_thread_pool(
+            conversation_service.list_by_project,
+            project_id,
+            with_chunks=False,
+            with_tags=True,
         )
 
         if not conversations:
@@ -385,17 +418,15 @@ async def _call_llm_with_backoff(prompt: str, batch_num: int) -> Any:
     """Call LLM with automatic retry for transient errors."""
     logger.debug(f"Calling LLM for batch {batch_num}")
     return await acompletion(
-        model=SMALL_LITELLM_MODEL,
         messages=[{"role": "user", "content": prompt}],
-        api_base=SMALL_LITELLM_API_BASE,
-        api_key=SMALL_LITELLM_API_KEY,
         response_format={"type": "json_object"},
         timeout=5 * 60,  # 5 minutes
+        **get_completion_kwargs(CHAT_LLM),
     )
 
 
 async def _process_single_batch(
-    batch: List[ConversationModel],
+    batch: List[dict],
     batch_num: int,
     user_query_inputs: List[str],
     language: str,
@@ -404,7 +435,7 @@ async def _process_single_batch(
     Process a single batch of conversations and return selected IDs.
 
     Args:
-        batch: List of ConversationModel instances to process
+        batch: List of conversation dictionaries to process
         batch_num: Batch number for logging
         user_query_inputs: User queries to match against
         language: Language code for the prompt template
@@ -418,17 +449,21 @@ async def _process_single_batch(
     logger.info(f"Processing batch {batch_num} ({len(batch)} conversations, parallel execution)")
 
     # Prepare conversation data for the prompt
-    conversation_data = []
+    conversation_data: List[Dict[str, Any]] = []
     for conv in batch:
-        # Get summary or fallback to transcript excerpt
-        summary_text = None
-        if conv.summary and conv.summary.strip():
-            summary_text = conv.summary
+        conv_id = conv.get("id")
+        if not conv_id:
+            continue
+
+        summary_text: Optional[str] = None
+        conv_summary = conv.get("summary")
+        if isinstance(conv_summary, str) and conv_summary.strip():
+            summary_text = conv_summary
         else:
             # Use transcript as fallback
             try:
                 transcript = await get_conversation_transcript(
-                    conv.id,
+                    conv_id,
                     DirectusSession(user_id="none", is_admin=True),
                 )
                 # Limit transcript to first 500 characters for context
@@ -437,23 +472,34 @@ async def _process_single_batch(
                 elif transcript:
                     summary_text = transcript
             except Exception as e:
-                logger.warning(f"Could not get transcript for conversation {conv.id}: {e}")
+                logger.warning(f"Could not get transcript for conversation {conv_id}: {e}")
 
         # Skip conversations with no content at all
         if not summary_text:
-            logger.debug(f"Skipping conversation {conv.id} - no summary or transcript")
+            logger.debug(f"Skipping conversation {conv_id} - no summary or transcript")
             continue
 
-        conv_data = {
-            "id": conv.id,
-            "participant_name": conv.participant_name or "Unknown",
+        tag_values: List[str] = []
+        for tag_entry in conv.get("tags", []) or []:
+            if isinstance(tag_entry, dict):
+                project_tag = tag_entry.get("project_tag_id")
+                if isinstance(project_tag, dict):
+                    tag_text = project_tag.get("text")
+                    if tag_text:
+                        tag_values.append(str(tag_text))
+
+        conversation_entry: Dict[str, Any] = {
+            "id": conv_id,
+            "participant_name": conv.get("participant_name") or "Unknown",
             "summary": summary_text,
         }
-        if conv.tags:
-            conv_data["tags"] = ", ".join([tag.text for tag in conv.tags])
-        if conv.created_at:
-            conv_data["created_at"] = conv.created_at.isoformat()
-        conversation_data.append(conv_data)
+        if tag_values:
+            conversation_entry["tags"] = ", ".join(tag_values)
+        created_at_value = conv.get("created_at")
+        if created_at_value:
+            conversation_entry["created_at"] = created_at_value
+
+        conversation_data.append(conversation_entry)
 
     # Skip batch if no valid conversations
     if not conversation_data:
@@ -472,15 +518,19 @@ async def _process_single_batch(
 
     # Validate prompt size before sending
     try:
-        prompt_tokens = token_counter(model=SMALL_LITELLM_MODEL, text=prompt)
-        MAX_BATCH_CONTEXT = 100000  # Leave headroom for response
+        prompt_tokens = token_counter(
+            messages=[{"role": "user", "content": prompt}],
+            model=_chat_llm_model,
+        )
+        MAX_BATCH_CONTEXT = MAX_CHAT_CONTEXT_LENGTH  # Leave headroom for response
 
         if prompt_tokens > MAX_BATCH_CONTEXT:
             # If batch has only 1 conversation, we can't split further
             if len(batch) == 1:
+                conversation_identifier = batch[0].get("id")
                 logger.error(
                     f"Batch {batch_num} single conversation exceeds context limit: "
-                    f"{prompt_tokens} tokens. Skipping conversation {batch[0].id}."
+                    f"{prompt_tokens} tokens. Skipping conversation {conversation_identifier}."
                 )
                 return {
                     "selected_ids": [],
@@ -526,9 +576,11 @@ async def _process_single_batch(
             raw_selected_ids = result.get("selected_conversation_ids", [])
 
             # Validate LLM response: ensure all returned IDs are from this batch
-            valid_ids = {conv.id for conv in batch}
+            valid_ids = {conv.get("id") for conv in batch if conv.get("id") is not None}
             batch_selected_ids = [
-                id for id in raw_selected_ids if isinstance(id, (int, str)) and id in valid_ids
+                selected_id
+                for selected_id in raw_selected_ids
+                if isinstance(selected_id, (int, str)) and selected_id in valid_ids
             ]
 
             # Log warning if LLM returned invalid IDs
@@ -569,74 +621,3 @@ async def _process_single_batch(
     except Exception as e:
         logger.error(f"Batch {batch_num} unexpected error: {str(e)}")
         return {"selected_ids": [], "batch_num": batch_num, "error": "unknown"}
-
-
-async def get_conversation_citations(
-    rag_prompt: str,
-    accumulated_response: str,
-    project_ids: List[str],
-    language: str = "en",
-) -> List[Dict[str, Any]]:
-    """
-    Extract structured conversation citations from an accumulated assistant response using a text-structuring model, map those citations to conversations, and return only citations that belong to the given project IDs.
-
-    This function:
-    - Renders a text-structuring prompt using `rag_prompt` and `accumulated_response` and sends it to the configured text-structure LLM.
-    - Parses the model's JSON response (expected to follow `CitationsSchema`) to obtain citation entries that include `segment_id` and `verbatim_reference_text_chunk`.
-    - For each citation, resolves `segment_id` to a (conversation_id, conversation_name) pair and derives the citation's project id.
-    - Filters citations to include only those whose project id is present in `project_ids`.
-    - Returns a single-item list containing a dict with the key "citations", where each item is a dict with keys:
-      - "conversation": conversation id (str)
-      - "reference_text": verbatim reference text chunk (str)
-      - "conversation_title": conversation name/title (str)
-
-    If the model output cannot be parsed or a segment-to-conversation mapping fails for an individual citation, that citation is skipped; parsing errors do not raise but are logged and result in an empty citations list in the returned structure.
-    """
-    text_structuring_model_message = render_prompt(
-        "text_structuring_model_message",
-        language,
-        {"accumulated_response": accumulated_response, "rag_prompt": rag_prompt},
-    )
-    text_structuring_model_messages = [
-        {"role": "system", "content": text_structuring_model_message},
-    ]
-    text_structuring_model_generation = completion(
-        model=f"{LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_MODEL}",
-        messages=text_structuring_model_messages,
-        api_base=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_BASE,
-        api_version=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_VERSION,
-        api_key=LIGHTRAG_LITELLM_TEXTSTRUCTUREMODEL_API_KEY,
-        response_format=CitationsSchema,
-    )
-    try:
-        citations_by_segment_dict = json.loads(
-            text_structuring_model_generation.choices[0].message.content
-        )
-        logger.debug(f"Citations by segment dict: {citations_by_segment_dict}")
-        citations_list = citations_by_segment_dict["citations"]
-        logger.debug(f"Citations list: {citations_list}")
-        citations_by_conversation_dict: Dict[str, List[Dict[str, Any]]] = {"citations": []}
-        if len(citations_list) > 0:
-            for _, citation in enumerate(citations_list):
-                try:
-                    (conversation_id, conversation_name) = await run_segment_id_to_conversation_id(
-                        citation["segment_id"]
-                    )
-                    citation_project_id = get_project_id_from_conversation_id(conversation_id)
-                except Exception as e:
-                    logger.warning(
-                        f"WARNING: Error in citation extraction for segment {citation['segment_id']}. Skipping citations: {str(e)}"
-                    )
-                    continue
-                if citation_project_id in project_ids:
-                    current_citation_dict = {
-                        "conversation": conversation_id,
-                        "reference_text": citation["verbatim_reference_text_chunk"],
-                        "conversation_title": conversation_name,
-                    }
-                    citations_by_conversation_dict["citations"].append(current_citation_dict)
-        else:
-            logger.warning("WARNING: No citations found")
-    except Exception as e:
-        logger.warning(f"WARNING: Error in citation extraction. Skipping citations: {str(e)}")
-    return [citations_by_conversation_dict]
