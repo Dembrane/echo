@@ -561,6 +561,7 @@ async def retranscribe_conversation(
     """
     try:
         active_client = auth.client or directus
+        admin_client = directus
 
         # Check if the user owns the conversation
         await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
@@ -611,7 +612,7 @@ async def retranscribe_conversation(
         new_conversation_id = generate_uuid()
 
         await run_in_thread_pool(
-            active_client.create_item,
+            admin_client.create_item,
             "conversation",
             item_data={
                 "id": new_conversation_id,
@@ -637,7 +638,7 @@ async def retranscribe_conversation(
             logger.info(f"Creating links from {conversation_id} to {new_conversation_id}")
             link_id = (
                 await run_in_thread_pool(
-                    active_client.create_item,
+                    admin_client.create_item,
                     "conversation_link",
                     item_data={
                         "source_conversation_id": conversation_id,
@@ -657,7 +658,7 @@ async def retranscribe_conversation(
 
             (
                 await run_in_thread_pool(
-                    active_client.create_item,
+                    admin_client.create_item,
                     "conversation_chunk",
                     item_data={
                         "id": chunk_id,
