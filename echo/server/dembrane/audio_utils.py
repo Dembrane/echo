@@ -222,7 +222,13 @@ def convert_and_save_to_s3(
                     strict="-2",
                     preset="veryfast",
                 )
-                .global_args("-hide_banner", "-loglevel", "warning")
+                .global_args(
+                    "-hide_banner",
+                    "-loglevel",
+                    "warning",
+                    "-err_detect",
+                    "ignore_err",
+                )
                 .overwrite_output()
                 .run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True)
             )
