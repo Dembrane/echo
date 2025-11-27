@@ -9,7 +9,7 @@ echo "  Processes: $PROCESSES | Threads: $THREADS"
 echo "  Capacity per pod: $((PROCESSES * THREADS)) concurrent tasks"
 echo "Network-bound tasks can benefit from multiple threads."
 
-exec dramatiq-gevent \
+exec uv run dramatiq-gevent \
   --queues network \
   --processes "$PROCESSES" \
   --threads "$THREADS" \

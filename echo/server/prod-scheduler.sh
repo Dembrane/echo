@@ -1,2 +1,2 @@
 #!/bin/bash
-python -m dembrane.scheduler
+uv run python -m dembrane.scheduler

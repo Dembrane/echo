@@ -12,9 +12,9 @@ echo "  Timeout: ${TIMEOUT}s"
 echo "  Max Requests: $MAX_REQUESTS"
 echo "📊 Scale with K8s replicas (not workers per pod)"
 
-exec gunicorn dembrane.main:app \
+exec uv run gunicorn dembrane.main:app \
+  --worker-class dembrane.gunicorn_worker.AsyncioUvicornWorker \
   --workers "$WORKERS" \
-  --worker-class dembrane.asyncio_uvicorn_worker.AsyncioUvicornWorker \
   --bind 0.0.0.0:8000 \
   --timeout "$TIMEOUT" \
   --graceful-timeout 30 \
