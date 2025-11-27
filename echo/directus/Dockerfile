@@ -18,13 +18,14 @@
 
 # RUN cd node_modules && find . -maxdepth 1 -type d -name "directus-extension-*" -exec mv {} ../directus \;
 
-FROM tractr/directus-sync:11.13.0
-
-COPY ./directus-sync.config.js ./directus-sync.config.js
-
-# COPY --from=third-party-ext /extensions/directus ./extensions
+FROM tractr/directus-sync:11.13.4
 
 COPY ./templates ./templates/
+COPY ./sync.sh ./sync.sh
+COPY ./directus-sync.config.js ./directus-sync.config.js
+COPY ./sync ./sync
+
+# COPY --from=third-party-ext /extensions/directus ./extensions
 
 # https://github.com/directus/directus/blob/main/Dockerfile
 CMD : \
