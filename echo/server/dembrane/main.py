@@ -13,7 +13,7 @@ from starlette.middleware import Middleware
 from fastapi.openapi.utils import get_openapi
 from starlette.middleware.cors import CORSMiddleware
 
-from dembrane.seed import seed_default_languages, seed_default_verification_topics
+from dembrane.seed import seed_default_languages, reconcile_default_verification_topics
 from dembrane.sentry import init_sentry
 from dembrane.api.api import api
 from dembrane.settings import get_settings
@@ -42,10 +42,10 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
         logger.exception("Failed to seed languages during startup")
 
     try:
-        await seed_default_verification_topics()
-        logger.info("Verification topics seeded")
+        await reconcile_default_verification_topics()
+        logger.info("Verification topics reconciled")
     except Exception:  # pragma: no cover - startup logging only
-        logger.exception("Failed to seed verification topics during startup")
+        logger.exception("Failed to reconcile verification topics during startup")
 
     yield
     # shutdown
