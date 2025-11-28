@@ -26,6 +26,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { useLanguage } from "@/hooks/useLanguage";
 import type { VerificationTopicsResponse } from "@/lib/api";
 import { Logo } from "../common/Logo";
 import { toast } from "../common/Toaster";
@@ -55,13 +56,18 @@ const FormSchema = z.object({
 
 type ProjectPortalFormValues = z.infer<typeof FormSchema>;
 
-const LANGUAGE_TO_LOCALE: Record<string, string> = {
+type LanguageCode = "de" | "en" | "es" | "fr" | "nl";
+
+const LANGUAGE_TO_LOCALE: Record<LanguageCode, string> = {
 	de: "de-DE",
 	en: "en-US",
 	es: "es-ES",
 	fr: "fr-FR",
 	nl: "nl-NL",
 };
+
+const localeFromIso = (iso?: string) =>
+	iso ? LANGUAGE_TO_LOCALE[iso as LanguageCode] : undefined;
 
 const normalizeTopicList = (topics: string[]): string[] =>
 	Array.from(
@@ -193,8 +199,11 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 		| "de"
 		| "fr"
 		| "es";
-	const languageLocale =
-		LANGUAGE_TO_LOCALE[projectLanguageCode] ?? LANGUAGE_TO_LOCALE.en;
+	const { iso639_1: uiLanguageIso } = useLanguage();
+	const translationLocale =
+		localeFromIso(uiLanguageIso) ??
+		localeFromIso(projectLanguageCode) ??
+		LANGUAGE_TO_LOCALE.en;
 
 	const availableVerifyTopics = useMemo(
 		() =>
@@ -204,11 +213,11 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 					(topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined),
 				key: topic.key,
 				label:
-					topic.translations?.[languageLocale]?.label ??
+					topic.translations?.[translationLocale]?.label ??
 					topic.translations?.["en-US"]?.label ??
 					topic.key,
 			})),
-		[verificationTopics, languageLocale],
+		[verificationTopics, translationLocale],
 	);
 
 	const selectedTopicDefaults = useMemo(

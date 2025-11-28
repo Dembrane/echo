@@ -42,7 +42,7 @@ export const PLAUSIBLE_API_HOST =
 
 export const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === "1";
 
-export const ENABLE_CHAT_AUTO_SELECT = true;
+export const ENABLE_CHAT_AUTO_SELECT = false;
 export const ENABLE_CONVERSATION_HEALTH = true;
 export const ENABLE_ANNOUNCEMENTS = true;
 export const ENABLE_DISPLAY_CONVERSATION_LINKS = true;

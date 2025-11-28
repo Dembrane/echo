@@ -154,12 +154,14 @@ export const ChatHistoryMessage = ({
 			);
 		}
 	}
-
 	if (message?._original?.added_conversations?.length > 0) {
 		const conversations = message?._original?.added_conversations
-			.map((ac) => (ac as unknown as ConversationLink).source_conversation_id)
+			.map((conv: string | ProjectChatMessageConversation1) =>
+				typeof conv === "object" && conv !== null
+					? (conv as ProjectChatMessageConversation1).conversation_id
+					: null,
+			)
 			.filter((conv) => conv != null);
-
 		return conversations.length > 0 ? (
 			// biome-ignore lint/a11y/useValidAriaRole: role is a component prop for styling, not an ARIA attribute
 			<ChatMessage key={message.id} role="dembrane" section={section}>
