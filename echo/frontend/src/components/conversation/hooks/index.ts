@@ -1020,3 +1020,47 @@ export const useConversationsCountByProjectId = (
 		queryKey: ["projects", projectId, "conversations", "count", query],
 	});
 };
+
+export const useConversationHasTranscript = (
+	conversationId: string,
+	refetchInterval = 10000,
+	enabled = true,
+) => {
+	return useQuery({
+		enabled: enabled,
+		queryFn: async () => {
+			const response = await directus.request(
+				aggregate("conversation_chunk", {
+					aggregate: {
+						count: "*",
+					},
+					query: {
+						filter: {
+							_and: [
+								{
+									conversation_id: {
+										_eq: conversationId,
+									},
+								},
+								{
+									transcript: {
+										_nnull: true,
+									},
+								},
+								{
+									transcript: {
+										_nempty: true,
+									},
+								},
+							],
+						},
+					},
+				}),
+			);
+			const count = response[0]?.count;
+			return typeof count === "number" ? count : Number(count) || 0;
+		},
+		queryKey: ["conversations", conversationId, "chunks", "transcript-count"],
+		refetchInterval,
+	});
+};
