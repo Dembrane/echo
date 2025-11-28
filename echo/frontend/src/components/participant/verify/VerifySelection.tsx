@@ -7,6 +7,7 @@ import { useParams, useSearchParams } from "react-router";
 import { Logo } from "@/components/common/Logo";
 import { toast } from "@/components/common/Toaster";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useLanguage } from "@/hooks/useLanguage";
 import { useParticipantProjectById } from "../hooks";
 import { startCooldown } from "../refine/hooks/useRefineSelectionCooldown";
 import {
@@ -15,12 +16,20 @@ import {
 } from "./hooks";
 import { VerifyInstructions } from "./VerifyInstructions";
 
-const LANGUAGE_TO_LOCALE: Record<string, string> = {
+type LanguageCode = "de" | "en" | "es" | "fr" | "nl";
+
+const LANGUAGE_TO_LOCALE: Record<LanguageCode, string> = {
 	de: "de-DE",
 	en: "en-US",
 	es: "es-ES",
 	fr: "fr-FR",
 	nl: "nl-NL",
+};
+
+const localeFromLanguage = (language?: string) => {
+	if (!language) return undefined;
+	const iso = language.includes("-") ? language.split("-")[0] : language;
+	return LANGUAGE_TO_LOCALE[iso as LanguageCode];
 };
 
 export const TOPIC_ICON_MAP: Record<string, string> = {
@@ -50,8 +59,11 @@ export const VerifySelection = () => {
 	const topicsQuery = useVerificationTopics(projectId);
 
 	const projectLanguage = projectQuery.data?.language ?? "en";
+	const { iso639_1: uiLanguageIso } = useLanguage();
 	const languageLocale =
-		LANGUAGE_TO_LOCALE[projectLanguage] ?? LANGUAGE_TO_LOCALE.en;
+		localeFromLanguage(uiLanguageIso) ??
+		localeFromLanguage(projectLanguage) ??
+		LANGUAGE_TO_LOCALE.en;
 
 	const selectedTopics = topicsQuery.data?.selected_topics ?? [];
 	const availableTopics = topicsQuery.data?.available_topics ?? [];

@@ -68,6 +68,13 @@ DEFAULT_VERIFICATION_TOPICS: List[Dict[str, Any]] = [
             "of mutual understanding. Output character should be diplomatic but precise, like meeting "
             "minutes with soul."
         ),
+        "translations": {
+            "en-US": {"label": "What we actually agreed on"},
+            "nl-NL": {"label": "Waar we echt overeenkwamen"},
+            "de-DE": {"label": "Worauf wir uns wirklich geeinigt haben"},
+            "es-ES": {"label": "En qué acordamos realmente"},
+            "fr-FR": {"label": "Ce sur quoi nous nous sommes vraiment mis d'accord"},
+        },
     },
     {
         "key": "gems",
@@ -82,6 +89,13 @@ DEFAULT_VERIFICATION_TOPICS: List[Dict[str, Any]] = [
             "worth preserving, explaining why each gem matters. These are the insights people might forget but "
             "shouldn't. Output character should be excited and precise."
         ),
+        "translations": {
+            "en-US": {"label": "Hidden gems"},
+            "nl-NL": {"label": "Verborgen parels"},
+            "de-DE": {"label": "Verborgene Schätze"},
+            "es-ES": {"label": "Joyas ocultas"},
+            "fr-FR": {"label": "Pépites cachées"},
+        },
     },
     {
         "key": "truths",
@@ -96,6 +110,13 @@ DEFAULT_VERIFICATION_TOPICS: List[Dict[str, Any]] = [
             "These truths are painful but necessary for genuine progress. Output character should be gentle but "
             "unflinching."
         ),
+        "translations": {
+            "en-US": {"label": "Painful truths"},
+            "nl-NL": {"label": "Pijnlijke waarheden"},
+            "de-DE": {"label": "Schmerzliche Wahrheiten"},
+            "es-ES": {"label": "Verdades dolorosas"},
+            "fr-FR": {"label": "Vérités douloureuses"},
+        },
     },
     {
         "key": "moments",
@@ -109,6 +130,13 @@ DEFAULT_VERIFICATION_TOPICS: List[Dict[str, Any]] = [
             "made it possible. These are the moments when the conversation transcended its starting point. Output "
             "character should be energetic and forward-looking."
         ),
+        "translations": {
+            "en-US": {"label": "Breakthrough moments"},
+            "nl-NL": {"label": "Doorbraakmomenten"},
+            "de-DE": {"label": "Durchbruchmomente"},
+            "es-ES": {"label": "Momentos decisivos"},
+            "fr-FR": {"label": "Moments décisifs"},
+        },
     },
     {
         "key": "actions",
@@ -122,6 +150,13 @@ DEFAULT_VERIFICATION_TOPICS: List[Dict[str, Any]] = [
             "provisional navigation rather than fixed commands. This is the group's best current thinking about the "
             "path forward. Output character should be pragmatic but inspirational."
         ),
+        "translations": {
+            "en-US": {"label": "What we think should happen"},
+            "nl-NL": {"label": "Wat er volgens ons moet gebeuren"},
+            "de-DE": {"label": "Was unserer Meinung nach passieren sollte"},
+            "es-ES": {"label": "Lo que creemos que debería ocurrir"},
+            "fr-FR": {"label": "Ce que nous pensons devoir se passer"},
+        },
     },
     {
         "key": "disagreements",
@@ -135,6 +170,13 @@ DEFAULT_VERIFICATION_TOPICS: List[Dict[str, Any]] = [
             "each perspective has merit. These disagreements are features, not bugs - they prevent premature convergence "
             "and keep important tensions alive. Output character should be respectful and balanced."
         ),
+        "translations": {
+            "en-US": {"label": "Moments we agreed to disagree"},
+            "nl-NL": {"label": "Momenten waarop we het eens waren om te verschillen"},
+            "de-DE": {"label": "Momente, in denen wir uns auf Uneinigkeit geeinigt haben"},
+            "es-ES": {"label": "Momentos en los que aceptamos discrepar"},
+            "fr-FR": {"label": "Moments où nous sommes convenus d'être en désaccord"},
+        },
     },
 ]
 
@@ -166,6 +208,12 @@ async def seed_default_verification_topics() -> None:
 
         logger.info("Seeding verification topic '%s'", topic["key"])
         translations_payload = [
+            {
+                "languages_code": lang_code,
+                "label": translation["label"],
+            }
+            for lang_code, translation in (topic.get("translations") or {}).items()
+        ] or [
             {
                 "languages_code": DEFAULT_VERIFICATION_LANG,
                 "label": topic["label"],
