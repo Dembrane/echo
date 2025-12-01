@@ -47,4 +47,5 @@ Last updated: 2025-11-07T08:32:55Z
 - CPU Dramatiq worker deliberately single-threaded to dodge LightRAG locking issues—respect `THREADS=1` guidance in prod.
 - Watching directories (`--watch`, `--watch-use-polling`) adds overhead; keep file changes minimal when workers run locally.
 - S3 audio paths used in verification/transcription flows should be loaded via the shared file service (`_get_audio_file_object`) so Gemini always receives fresh bytes—signed URLs may expire mid-request.
+- Verification topics reconcile at startup (see `reconcile_default_verification_topics`) and use a Redis lock `dembrane:verification_topics:reconcile_lock` (5m TTL); if logs say another worker holds the lock, just rerun once it releases or manually delete the key if a crash left it behind.
 - When a Dramatiq actor needs to invoke an async FastAPI handler (e.g., `dembrane.api.conversation.summarize_conversation`), run the coroutine via `run_async_in_new_loop` from `dembrane.async_helpers` instead of calling it directly or with `asyncio.run` to avoid clashing with nested event loops.
