@@ -18,5 +18,5 @@ These are handled through the [directus-sync](https://github.com/tractr/directus
 - default password is dembrane if you're using the dev container
 
 ```bash
-psql > CREATE extension vector;
+CREATE extension vector;
 ```
