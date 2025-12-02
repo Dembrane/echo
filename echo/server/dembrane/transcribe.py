@@ -136,15 +136,39 @@ def transcribe_audio_assemblyai(
 
         # TODO: using webhooks will be ideal, but this is easy to impl and test for ;)
         # we will be blocking some of our cheap "workers" here with time.sleep
+        max_polling_duration = 30 * 60  # 30 minutes max
+        poll_interval = 3  # seconds between polls
+        start_time = time.time()
+        poll_count = 0
+
         while True:
+            elapsed = time.time() - start_time
+            if elapsed > max_polling_duration:
+                raise TranscriptionError(
+                    f"Transcription timed out after {max_polling_duration / 60:.0f} minutes "
+                    f"(transcript_id: {transcript_id})"
+                )
+
             transcript = requests.get(polling_endpoint, headers=headers).json()
+            poll_count += 1
+
             if transcript["status"] == "completed":
-                # return both to add the diarization response later...
+                logger.info(
+                    f"Transcription completed in {elapsed:.1f}s after {poll_count} polls "
+                    f"(transcript_id: {transcript_id})"
+                )
                 return transcript["text"], transcript
             elif transcript["status"] == "error":
                 raise TranscriptionError(f"Transcription failed: {transcript['error']}")
             else:
-                time.sleep(3)
+                # Log progress every 30 seconds
+                if poll_count % 10 == 0:
+                    logger.debug(
+                        f"Transcription in progress: {transcript['status']} "
+                        f"({elapsed:.0f}s elapsed, transcript_id: {transcript_id})"
+                    )
+                time.sleep(poll_interval)
+
     elif response.status_code == 400:
         raise TranscriptionError(f"Transcription failed: {response.json()['error']}")
     else:
@@ -371,6 +395,32 @@ def _save_transcript(
     )
 
 
+def _save_chunk_error(conversation_chunk_id: str, error_message: str) -> None:
+    """Save an error to a chunk's error field."""
+    try:
+        conversation_service.update_chunk(conversation_chunk_id, error=error_message)
+        logger.info(f"Saved error to chunk {conversation_chunk_id}: {error_message[:100]}")
+    except Exception as e:
+        logger.error(f"Failed to save error to chunk {conversation_chunk_id}: {e}")
+
+
+# Errors that indicate the chunk has no usable audio content
+# These should NOT be retried - the chunk is processed, just has no speech
+RECOVERABLE_ERRORS = [
+    "no spoken audio",
+    "language_detection cannot be performed",
+    "audio duration is too short",
+    "file size",  # catches various file size errors
+    "empty file",
+]
+
+
+def _is_recoverable_error(error: Exception) -> bool:
+    """Check if an error is recoverable (chunk should be marked as failed, not retried)."""
+    error_str = str(error).lower()
+    return any(pattern in error_str for pattern in RECOVERABLE_ERRORS)
+
+
 def _build_whisper_prompt(conversation: dict, language: str) -> str:
     """Compose the whisper prompt from defaults and project-specific overrides."""
     default_prompt = render_prompt("default_whisper_prompt", language, {})
@@ -484,7 +534,22 @@ def transcribe_conversation_chunk(
                 )
 
     except Exception as e:
+        error_message = str(e)
         logger.error("Failed to process conversation chunk %s: %s", conversation_chunk_id, e)
+
+        # Always save the error to the chunk for visibility
+        _save_chunk_error(conversation_chunk_id, error_message)
+
+        if _is_recoverable_error(e):
+            # Recoverable errors: chunk has no usable content, but that's okay
+            # Don't raise - let the pipeline continue with other chunks
+            logger.info(
+                f"Recoverable transcription error for chunk {conversation_chunk_id}, "
+                f"marked as failed but not retrying: {error_message[:100]}"
+            )
+            return conversation_chunk_id  # Return normally so task completes
+
+        # Non-recoverable errors: something went wrong that might be worth retrying
         raise TranscriptionError(
             "Failed to process conversation chunk %s: %s" % (conversation_chunk_id, e)
         ) from e

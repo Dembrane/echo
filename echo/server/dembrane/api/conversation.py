@@ -313,11 +313,6 @@ async def get_conversation_content(
         logger.error(f"Error merging audio files: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Failed to merge audio files: {str(e)}") from e
 
-    raise HTTPException(
-        status_code=400,
-        detail="Error merging audio files because no valid paths were found",
-    )
-
 
 @ConversationRouter.get("/{conversation_id}/chunks/{chunk_id}/content", response_model=None)
 async def get_conversation_chunk_content(

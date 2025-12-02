@@ -3,15 +3,16 @@ Seeding helpers for bootstrap tasks that need to run during application startup.
 """
 
 import json
+import asyncio
 from uuid import uuid4
-from typing import Any, Dict, List, Mapping, Iterable, Optional, Tuple
+from typing import Any, Dict, List, Tuple, Mapping, Iterable, Optional
 from logging import getLogger
 
 from redis.asyncio import Redis
 
 from dembrane.directus import DirectusBadRequest, directus
-from dembrane.async_helpers import run_in_thread_pool
 from dembrane.redis_async import get_redis_client
+from dembrane.async_helpers import run_in_thread_pool
 
 logger = getLogger("dembrane.seed")
 
@@ -56,7 +57,10 @@ async def _try_acquire_verification_topic_lock() -> Tuple[Optional[Redis], Optio
     try:
         client = await get_redis_client()
     except Exception:  # pragma: no cover - defensive logging only
-        logger.warning("Unable to connect to Redis for verification topic lock; continuing without lock", exc_info=True)
+        logger.warning(
+            "Unable to connect to Redis for verification topic lock; continuing without lock",
+            exc_info=True,
+        )
         return None, None
 
     token = str(uuid4())
@@ -68,7 +72,10 @@ async def _try_acquire_verification_topic_lock() -> Tuple[Optional[Redis], Optio
             nx=True,
         )
     except Exception:  # pragma: no cover - defensive logging only
-        logger.warning("Failed to set Redis lock for verification topic reconciliation; continuing without lock", exc_info=True)
+        logger.warning(
+            "Failed to set Redis lock for verification topic reconciliation; continuing without lock",
+            exc_info=True,
+        )
         return None, None
 
     if not acquired:
@@ -92,12 +99,15 @@ async def _release_verification_topic_lock(client: Optional[Redis], token: Optio
     end
     """
     try:
-        await client.eval(
+        result = client.eval(
             release_script,
             1,
             VERIFICATION_TOPIC_LOCK_KEY,
             token,
         )
+        # In some redis clients, eval can be sync even though client is async
+        if asyncio.iscoroutine(result):
+            await result
     except Exception:  # pragma: no cover - defensive logging only
         logger.warning("Failed to release Redis lock for verification topics", exc_info=True)
 
@@ -147,7 +157,9 @@ async def _fetch_verification_topic_with_translations(topic_key: str) -> Optiona
     return items[0] if items else None
 
 
-async def _fetch_single_topic_translation(topic_key: str, lang_code: str) -> Optional[Dict[str, Any]]:
+async def _fetch_single_topic_translation(
+    topic_key: str, lang_code: str
+) -> Optional[Dict[str, Any]]:
     """
     Fetch a single translation entry for a verification topic.
     """
@@ -208,7 +220,7 @@ async def _ensure_verification_topic_translations(
                         "label": desired_label,
                     },
                 )
-            except DirectusBadRequest as exc:
+            except DirectusBadRequest:
                 fetched = await _fetch_single_topic_translation(topic_key, lang_code)
                 if fetched is None:
                     raise
@@ -325,10 +337,10 @@ DEFAULT_VERIFICATION_TOPICS: List[Dict[str, Any]] = [
         ),
         "translations": {
             "en-US": {"label": "What we actually agreed on"},
-            "nl-NL": {"label": "Waar we echt overeenkwamen"},
+            "nl-NL": {"label": "Waar we het over eens werden"},
             "de-DE": {"label": "Worauf wir uns wirklich geeinigt haben"},
-            "es-ES": {"label": "En qué acordamos realmente"},
-            "fr-FR": {"label": "Ce sur quoi nous nous sommes vraiment mis d'accord"},
+            "es-ES": {"label": "En qué estuvimos de acuerdo"},
+            "fr-FR": {"label": "Ce qu'on a décidé ensemble"},
         },
     },
     {
@@ -368,9 +380,9 @@ DEFAULT_VERIFICATION_TOPICS: List[Dict[str, Any]] = [
         "translations": {
             "en-US": {"label": "Painful truths"},
             "nl-NL": {"label": "Pijnlijke waarheden"},
-            "de-DE": {"label": "Schmerzliche Wahrheiten"},
-            "es-ES": {"label": "Verdades dolorosas"},
-            "fr-FR": {"label": "Vérités douloureuses"},
+            "de-DE": {"label": "Unbequeme Wahrheiten"},
+            "es-ES": {"label": "Verdades incómodas"},
+            "fr-FR": {"label": "Vérités difficiles"},
         },
     },
     {
@@ -387,8 +399,8 @@ DEFAULT_VERIFICATION_TOPICS: List[Dict[str, Any]] = [
         ),
         "translations": {
             "en-US": {"label": "Breakthrough moments"},
-            "nl-NL": {"label": "Doorbraakmomenten"},
-            "de-DE": {"label": "Durchbruchmomente"},
+            "nl-NL": {"label": "Doorbraken"},
+            "de-DE": {"label": "Durchbrüche"},
             "es-ES": {"label": "Momentos decisivos"},
             "fr-FR": {"label": "Moments décisifs"},
         },
@@ -407,10 +419,10 @@ DEFAULT_VERIFICATION_TOPICS: List[Dict[str, Any]] = [
         ),
         "translations": {
             "en-US": {"label": "What we think should happen"},
-            "nl-NL": {"label": "Wat er volgens ons moet gebeuren"},
-            "de-DE": {"label": "Was unserer Meinung nach passieren sollte"},
-            "es-ES": {"label": "Lo que creemos que debería ocurrir"},
-            "fr-FR": {"label": "Ce que nous pensons devoir se passer"},
+            "nl-NL": {"label": "Wat we denken dat moet gebeuren"},
+            "de-DE": {"label": "Was wir denken, das passieren sollte"},
+            "es-ES": {"label": "Lo que creemos que debe pasar"},
+            "fr-FR": {"label": "Ce qu'on pense qu'il faut faire"},
         },
     },
     {
@@ -427,13 +439,14 @@ DEFAULT_VERIFICATION_TOPICS: List[Dict[str, Any]] = [
         ),
         "translations": {
             "en-US": {"label": "Moments we agreed to disagree"},
-            "nl-NL": {"label": "Momenten waarop we het eens waren om te verschillen"},
-            "de-DE": {"label": "Momente, in denen wir uns auf Uneinigkeit geeinigt haben"},
-            "es-ES": {"label": "Momentos en los que aceptamos discrepar"},
-            "fr-FR": {"label": "Moments où nous sommes convenus d'être en désaccord"},
+            "nl-NL": {"label": "Waar we het oneens bleven"},
+            "de-DE": {"label": "Worüber wir uns nicht einig wurden"},
+            "es-ES": {"label": "Donde no coincidimos"},
+            "fr-FR": {"label": "Là où on n'était pas d'accord"},
         },
     },
 ]
+
 
 async def reconcile_default_verification_topics() -> None:
     """

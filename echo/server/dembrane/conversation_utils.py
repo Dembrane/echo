@@ -29,9 +29,10 @@ def collect_unfinished_conversations() -> List[str]:
                             }
                         }
                     },
-                    # Must not be created in the last 5 minutes
+                    # Must have been created more than 5 minutes ago
+                    # (skip recently created conversations that might still be receiving chunks)
                     "created_at": {
-                        "_gte": (get_utc_timestamp() - timedelta(minutes=5)).isoformat()
+                        "_lte": (get_utc_timestamp() - timedelta(minutes=5)).isoformat()
                     },
                 },
                 "fields": ["id"],
