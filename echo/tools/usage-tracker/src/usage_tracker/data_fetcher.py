@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, date
-from typing import Any, Callable, Dict, List, Optional, Protocol
+from typing import Any, Callable, Dict, List, Optional, Protocol, Tuple
 from dataclasses import dataclass, field
+from collections import defaultdict
 
 from .directus_client import DirectusClient, DirectusError
 
@@ -92,6 +93,7 @@ class ConversationInfo:
     participant_name: Optional[str] = None
     source: Optional[str] = None
     merged_transcript: Optional[str] = None
+    has_content: bool = False  # Set via aggregate query - True if any chunk has transcript
 
 
 @dataclass
@@ -129,6 +131,18 @@ class ReportInfo:
 
 
 @dataclass
+class LoginActivityInfo:
+    """Directus activity entry representing a login."""
+
+    id: int
+    user_id: str
+    timestamp: Optional[datetime] = None
+    ip: Optional[str] = None
+    user_agent: Optional[str] = None
+    origin: Optional[str] = None
+
+
+@dataclass
 class UserUsageData:
     """Aggregated usage data for a user."""
 
@@ -138,6 +152,7 @@ class UserUsageData:
     chats: List[ChatInfo] = field(default_factory=list)
     chat_messages: List[ChatMessageInfo] = field(default_factory=list)
     reports: List[ReportInfo] = field(default_factory=list)
+    login_events: List[LoginActivityInfo] = field(default_factory=list)
 
     # Activity tracking
     first_activity: Optional[datetime] = None
@@ -622,6 +637,119 @@ class DataFetcher:
             logger.error(f"Failed to fetch reports: {e}")
             return []
 
+    def _build_timestamp_filter(
+        self,
+        date_range: Optional[DateRange],
+        field_name: str,
+    ) -> Dict[str, Any]:
+        if not date_range:
+            return {}
+        return date_range.to_filter(field_name)
+
+    def get_login_activity_events(
+        self,
+        user_ids: Optional[List[str]] = None,
+        date_range: Optional[DateRange] = None,
+        batch_size: int = DEFAULT_BATCH_SIZE,
+        progress: Optional[Callable[[int, int, str], None]] = None,
+    ) -> List[LoginActivityInfo]:
+        """Fetch login activity entries, optionally filtered by users/date."""
+
+        filter_query: Dict[str, Any] = {"action": {"_eq": "login"}}
+        if user_ids:
+            filter_query["user"] = {"_in": user_ids}
+        if date_range:
+            filter_query.update(self._build_timestamp_filter(date_range, "timestamp"))
+
+        events: List[LoginActivityInfo] = []
+        offset = 0
+        batch_num = 0
+
+        try:
+            while True:
+                if progress:
+                    progress(0, 1, f"🔐 Loading logins (batch {batch_num + 1}, {len(events)} so far)...")
+
+                batch = self.client.get_activity(
+                    fields=["id", "user", "timestamp", "ip", "user_agent", "origin"],
+                    filter_query=filter_query,
+                    sort=["-timestamp"],
+                    limit=batch_size,
+                    offset=offset,
+                )
+
+                if not batch:
+                    break
+
+                for entry in batch:
+                    user_value = entry.get("user")
+                    if isinstance(user_value, dict):
+                        user_value = user_value.get("id", "")
+
+                    events.append(
+                        LoginActivityInfo(
+                            id=int(entry.get("id", 0)),
+                            user_id=str(user_value) if user_value else "",
+                            timestamp=_parse_datetime(entry.get("timestamp")),
+                            ip=entry.get("ip"),
+                            user_agent=entry.get("user_agent"),
+                            origin=entry.get("origin"),
+                        )
+                    )
+
+                if len(batch) < batch_size:
+                    break
+                offset += batch_size
+                batch_num += 1
+
+            return [event for event in events if event.user_id]
+        except DirectusError as e:
+            logger.error(f"Failed to fetch login activity: {e}")
+            return []
+
+    def get_user_login_activity(
+        self,
+        user_id: str,
+        date_range: Optional[DateRange] = None,
+        batch_size: int = DEFAULT_BATCH_SIZE,
+        progress: Optional[Callable[[int, int, str], None]] = None,
+    ) -> List[LoginActivityInfo]:
+        events = self.get_login_activity_events(
+            user_ids=[user_id],
+            date_range=date_range,
+            batch_size=batch_size,
+            progress=progress,
+        )
+        return [event for event in events if event.user_id == user_id]
+
+    def get_login_activity_summary(
+        self,
+        date_range: Optional[DateRange] = None,
+        batch_size: int = DEFAULT_BATCH_SIZE,
+    ) -> Dict[str, Dict[str, Any]]:
+        events = self.get_login_activity_events(
+            user_ids=None,
+            date_range=date_range,
+            batch_size=batch_size,
+        )
+
+        summary: Dict[str, Dict[str, Any]] = {}
+        for event in events:
+            if not event.user_id:
+                continue
+            entry = summary.setdefault(event.user_id, {"count": 0, "last": None, "first": None})
+            entry["count"] += 1
+            if event.timestamp and (
+                entry["last"] is None or event.timestamp > entry["last"]
+            ):
+                entry["last"] = event.timestamp
+            if event.timestamp and (
+                entry["first"] is None or event.timestamp < entry["first"]
+            ):
+                entry["first"] = event.timestamp
+
+        return summary
+
     def get_user_usage_data(
         self,
         user_id: str,
@@ -633,7 +761,7 @@ class DataFetcher:
 
         Fetches all related data in an optimized order.
         """
-        total_steps = 6
+        total_steps = 7
         current_step = 0
 
         def report(msg: str) -> None:
@@ -674,6 +802,13 @@ class DataFetcher:
         # Step 3: Get conversations
         report(f"🎤 Fetching conversations ({len(project_ids)} projects)...")
         conversations = self.get_project_conversations(project_ids, date_range)
+        # Check which conversations have content (at least one chunk with transcript)
+        if conversations:
+            report(f"🔍 Checking content ({len(conversations)} conversations)...")
+            conversation_ids = [c.id for c in conversations]
+            ids_with_content = self.get_conversation_ids_with_content(conversation_ids)
+            for conv in conversations:
+                conv.has_content = conv.id in ids_with_content
         current_step = 3
 
         # Step 4: Get chats
@@ -692,6 +827,11 @@ class DataFetcher:
         messages = self.get_chat_messages(chat_ids, date_range)
         current_step = 6
 
+        # Step 7: Login activity
+        report(f"🔐 Fetching login activity for {user.display_name}...")
+        login_events = self.get_user_login_activity(user_id, date_range)
+        current_step = 7
+
         # Calculate activity range
         all_dates = []
         for p in projects:
@@ -703,6 +843,9 @@ class DataFetcher:
         for ch in chats:
             if ch.created_at:
                 all_dates.append(ch.created_at)
+        for login in login_events:
+            if login.timestamp:
+                all_dates.append(login.timestamp)
 
         first_activity = min(all_dates) if all_dates else None
         last_activity = max(all_dates) if all_dates else None
@@ -716,6 +859,7 @@ class DataFetcher:
             chats=chats,
             chat_messages=messages,
             reports=reports,
+            login_events=login_events,
             first_activity=first_activity,
             last_activity=last_activity,
         )
@@ -742,3 +886,236 @@ class DataFetcher:
             progress(total, total, f"✓ Loaded data for {len(results)} users")
 
         return results
+
+    def _fetch_projects_metadata(self, project_ids: List[str]) -> Dict[str, Dict[str, Optional[str]]]:
+        if not project_ids:
+            return {}
+
+        unique_ids = list({pid for pid in project_ids if pid})
+        metadata: Dict[str, Dict[str, Optional[str]]] = {}
+        batch_size = 200
+
+        for i in range(0, len(unique_ids), batch_size):
+            chunk = unique_ids[i : i + batch_size]
+            try:
+                records = self.client.get_items(
+                    "project",
+                    fields=["id", "directus_user_id", "name"],
+                    filter_query={"id": {"_in": chunk}},
+                    limit=len(chunk),
+                )
+            except DirectusError as e:
+                logger.error(f"Failed to fetch project metadata: {e}")
+                continue
+
+            for record in records:
+                proj_id = str(record.get("id"))
+                owner = record.get("directus_user_id")
+                if isinstance(owner, dict):
+                    owner = owner.get("id")
+                metadata[proj_id] = {
+                    "owner_id": str(owner) if owner else None,
+                    "name": record.get("name") or "Unnamed Project",
+                }
+
+        return metadata
+
+    def get_project_chat_activity_summary(
+        self,
+        date_range: Optional[DateRange] = None,
+        batch_size: int = DEFAULT_BATCH_SIZE,
+    ) -> Dict[str, Dict[str, Any]]:
+        filter_query: Dict[str, Any] = {}
+        if date_range:
+            filter_query.update(date_range.to_filter("date_created"))
+
+        summary: Dict[str, Dict[str, Any]] = {}
+        project_ids: List[str] = []
+        offset = 0
+
+        try:
+            while True:
+                batch = self.client.get_items(
+                    "project_chat",
+                    fields=["id", "project_id", "date_created"],
+                    filter_query=filter_query,
+                    sort=["-date_created"],
+                    limit=batch_size,
+                    offset=offset,
+                )
+
+                if not batch:
+                    break
+
+                for chat in batch:
+                    proj = chat.get("project_id")
+                    proj_id = proj.get("id") if isinstance(proj, dict) else proj
+                    if not proj_id:
+                        continue
+
+                    project_ids.append(str(proj_id))
+                    entry = summary.setdefault(str(proj_id), {"count": 0, "last": None})
+                    entry["count"] += 1
+                    ts = _parse_datetime(chat.get("date_created"))
+                    if ts and (entry["last"] is None or ts > entry["last"]):
+                        entry["last"] = ts
+
+                if len(batch) < batch_size:
+                    break
+                offset += batch_size
+
+        except DirectusError as e:
+            logger.error(f"Failed to fetch chat activity summary: {e}")
+            return {}
+
+        metadata = self._fetch_projects_metadata(project_ids)
+        for proj_id, meta in metadata.items():
+            entry = summary.setdefault(proj_id, {"count": 0, "last": None})
+            entry["name"] = meta.get("name")
+            entry["owner_id"] = meta.get("owner_id")
+
+        return summary
+
+    def get_conversation_activity_snapshot(
+        self,
+        date_range: Optional[DateRange] = None,
+        batch_size: int = DEFAULT_BATCH_SIZE,
+    ) -> Dict[str, Any]:
+        filter_query: Dict[str, Any] = {}
+        if date_range:
+            filter_query.update(date_range.to_filter("created_at"))
+
+        conv_records: List[Tuple[str, Optional[datetime]]] = []
+        project_ids: List[str] = []
+        offset = 0
+
+        try:
+            while True:
+                batch = self.client.get_items(
+                    "conversation",
+                    fields=["id", "project_id", "created_at"],
+                    filter_query=filter_query,
+                    sort=["-created_at"],
+                    limit=batch_size,
+                    offset=offset,
+                )
+
+                if not batch:
+                    break
+
+                for conv in batch:
+                    proj = conv.get("project_id")
+                    proj_id = proj.get("id") if isinstance(proj, dict) else proj
+                    if not proj_id:
+                        continue
+
+                    project_ids.append(str(proj_id))
+                    conv_records.append((str(proj_id), _parse_datetime(conv.get("created_at"))))
+
+                if len(batch) < batch_size:
+                    break
+                offset += batch_size
+
+        except DirectusError as e:
+            logger.error(f"Failed to fetch conversations for snapshot: {e}")
+            return {
+                "per_user": {},
+                "per_project": {},
+                "daily_conversations": {},
+                "daily_projects": {},
+            }
+
+        metadata = self._fetch_projects_metadata(project_ids)
+        per_user: Dict[str, Dict[str, Any]] = {}
+        per_project: Dict[str, Dict[str, Any]] = {}
+        daily_conversations: Dict[date, int] = defaultdict(int)
+        daily_project_sets: Dict[date, set] = defaultdict(set)
+
+        for proj_id, created_at in conv_records:
+            meta = metadata.get(proj_id, {})
+            owner_id = meta.get("owner_id")
+            project_name = meta.get("name") or f"Project {proj_id}"
+
+            proj_entry = per_project.setdefault(
+                proj_id,
+                {
+                    "project_id": proj_id,
+                    "project_name": project_name,
+                    "owner_id": owner_id,
+                    "conversations": 0,
+                    "last_conversation": None,
+                    "chat_sessions": 0,
+                    "last_chat": None,
+                },
+            )
+            proj_entry["conversations"] += 1
+            if created_at and (
+                proj_entry["last_conversation"] is None or created_at > proj_entry["last_conversation"]
+            ):
+                proj_entry["last_conversation"] = created_at
+
+            if owner_id:
+                user_entry = per_user.setdefault(owner_id, {"count": 0, "last": None})
+                user_entry["count"] += 1
+                if created_at and (
+                    user_entry["last"] is None or created_at > user_entry["last"]
+                ):
+                    user_entry["last"] = created_at
+
+            if created_at:
+                day = created_at.date()
+                daily_conversations[day] += 1
+                daily_project_sets[day].add(proj_id)
+
+        daily_projects = {day: len(projects) for day, projects in daily_project_sets.items()}
+
+        return {
+            "per_user": per_user,
+            "per_project": per_project,
+            "daily_conversations": dict(daily_conversations),
+            "daily_projects": daily_projects,
+        }
+
+    def get_conversation_summary_by_user(
+        self,
+        date_range: Optional[DateRange] = None,
+        batch_size: int = DEFAULT_BATCH_SIZE,
+    ) -> Dict[str, Dict[str, Any]]:
+        snapshot = self.get_conversation_activity_snapshot(date_range, batch_size)
+        return snapshot.get("per_user", {})
+
+    def get_conversation_ids_with_content(
+        self,
+        conversation_ids: List[str],
+    ) -> set:
+        if not conversation_ids:
+            return set()
+
+        try:
+            result = self.client.get_aggregate(
+                "conversation_chunk",
+                aggregate={"countDistinct": "conversation_id"},
+                filter_query={
+                    "conversation_id": {"_in": conversation_ids},
+                    "transcript": {
+                        "_nnull": True,
+                        "_nempty": True,
+                    },
+                },
+                group_by=["conversation_id"],
+            )
+
+            conversation_ids_with_content = set()
+            for item in result:
+                if isinstance(item, dict):
+                    conv_id = item.get("conversation_id")
+                    if isinstance(conv_id, dict):
+                        conv_id = conv_id.get("id", "")
+                    if conv_id:
+                        conversation_ids_with_content.add(str(conv_id))
+
+            return conversation_ids_with_content
+
+        except DirectusError as e:
+            logger.error(f"Failed to get conversation IDs with content: {e}")
+            return set()

@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import json
 import logging
+import re
+from collections import Counter
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 from .settings import get_settings
@@ -81,6 +84,19 @@ def _build_metrics_context(
         f"- Uses Reports: {'Yes' if metrics.adoption.uses_reports else 'No'}",
     ]
 
+    login_last = metrics.logins.last_login.strftime("%Y-%m-%d %H:%M") if metrics.logins.last_login else "n/a"
+    context_parts.extend(
+        [
+            "",
+            "## Login Activity",
+            f"- Total Logins: {metrics.logins.total_logins}",
+            f"- Active Login Days: {metrics.logins.unique_days}",
+            f"- Unique Login Users: {metrics.logins.unique_users}",
+            f"- Avg Logins / Active Day: {metrics.logins.avg_logins_per_active_day:.1f}",
+            f"- Last Login Recorded: {login_last}",
+        ]
+    )
+
     if metrics.first_activity:
         context_parts.append("")
         context_parts.append("## Activity Timeline")
@@ -109,21 +125,39 @@ def _build_metrics_context(
     return "\n".join(context_parts)
 
 
-INSIGHTS_SYSTEM_PROMPT = """Sales analyst for Dembrane ECHO (qualitative research platform). Give actionable insights. Be brief, use bullets. Focus on non-obvious patterns, growth signals, churn risks."""
+INSIGHTS_SYSTEM_PROMPT = """You are an impartial product-usage analyst for Dembrane ECHO. Report observations with data citations, keep marketing language out, separate facts from interpretations, flag uncertainty, and always acknowledge at least one alternative explanation."""
 
 
-INSIGHTS_USER_PROMPT = """Analyze this usage data. Give 4-5 key insights + 2-3 actions.
+INSIGHTS_USER_PROMPT = """Analyze this usage data. Produce:
 
+**Observations**
+- Start with the metric (e.g., "Conversations↑ 42% vs prior period") and cite the exact value.
+- Keep each observation to one sentence grounded in the supplied data.
+
+**Hypotheses & Ambiguities**
+- 2-3 bullets that begin with "Hypothesis:" or "Alternative:" explaining what the observations might mean.
+- Explicitly note when more context is required.
+
+**Next Experiments**
+- 2 bullets describing user-centric follow-ups (not sales goals) tied to the metrics above.
+
+Use hedging phrases ("may indicate", "one explanation is") for the hypothesis bullets. Reference any data-quality caveats if relevant.
+
+Context:
 {context}
+"""
 
-Format:
-**Insights**
-- [title]: [1 sentence with data]
-...
 
-**Actions**
-- [action]
-..."""
+@dataclass
+class DashboardStats:
+    range_label: str
+    mau: int
+    dau: int
+    avg_daily_conversations: float
+    avg_daily_projects: float
+    top_users: List[tuple]
+    top_projects: List[tuple]
+    ignored_accounts: List[str] = field(default_factory=list)
 
 
 def generate_insights(
@@ -154,7 +188,6 @@ def generate_insights(
                 {"role": "user", "content": INSIGHTS_USER_PROMPT.format(context=context)},
             ],
             temperature=0.7,
-            max_tokens=1500,
             **kwargs,
         )
 
@@ -163,6 +196,13 @@ def generate_insights(
     except Exception as e:
         logger.error(f"Failed to generate insights: {e}")
         return f"⚠️ Failed to generate insights: {str(e)}"
+
+
+EXEC_SUMMARY_SYSTEM_PROMPT = (
+    "Compose two short paragraphs for an executive summary. "
+    "Paragraph 1 = factual highlights with numbers; Paragraph 2 = cautious interpretation with uncertainty markers. "
+    "Keep tone analytical, avoid prescriptions, and separate observations from hypotheses."
+)
 
 
 def generate_executive_summary(
@@ -188,11 +228,10 @@ def generate_executive_summary(
 
         response = litellm.completion(
             messages=[
-                {"role": "system", "content": "Write a 2-paragraph executive summary. Be concise."},
+                {"role": "system", "content": EXEC_SUMMARY_SYSTEM_PROMPT},
                 {"role": "user", "content": f"Summarize:\n{context}"},
             ],
             temperature=0.5,
-            max_tokens=300,
             **kwargs,
         )
 
@@ -201,6 +240,82 @@ def generate_executive_summary(
     except Exception as e:
         logger.error(f"Failed to generate summary: {e}")
         return _generate_fallback_summary(users, metrics)
+
+
+DASHBOARD_SYSTEM_PROMPT = (
+    "You are a sales-oriented product analyst. Summarize usage for executives with" \
+    " one paragraph of highlights and one paragraph of suggested follow-ups. Keep it factual, cite" \
+    " the provided metrics (MAU, DAU, daily conversations/projects, top users/projects)."
+)
+
+
+def _format_dashboard_context(stats: DashboardStats) -> str:
+    lines = [
+        f"Range: {stats.range_label}",
+        f"MAU: {stats.mau}",
+        f"DAU: {stats.dau}",
+        f"Avg Daily Conversations: {stats.avg_daily_conversations:.1f}",
+        f"Avg Daily Projects: {stats.avg_daily_projects:.1f}",
+        "Top Users:",
+    ]
+    if stats.top_users:
+        for name, count in stats.top_users:
+            lines.append(f"- {name}: {count} logins")
+    else:
+        lines.append("- None")
+    lines.append("Top Projects:")
+    if stats.top_projects:
+        for project, convs, chats in stats.top_projects:
+            lines.append(f"- {project}: {convs} convs / {chats} chats")
+    else:
+        lines.append("- None")
+    if stats.ignored_accounts:
+        lines.append("Ignore Accounts:")
+        for account in stats.ignored_accounts:
+            lines.append(f"- {account}")
+    return "\n".join(lines)
+
+
+def _fallback_dashboard_summary(stats: DashboardStats) -> str:
+    return (
+        f"**Sales Snapshot ({stats.range_label})**\n"
+        f"- MAU {stats.mau}, DAU {stats.dau}\n"
+        f"- Avg daily conversations {stats.avg_daily_conversations:.1f}; "
+        f"avg daily projects {stats.avg_daily_projects:.1f}\n"
+    )
+
+
+def generate_dashboard_overview(stats: DashboardStats) -> str:
+    """Generate a dashboard-level LLM summary for the sales team."""
+    litellm = _get_litellm()
+    if litellm is None:
+        return _fallback_dashboard_summary(stats)
+
+    settings = get_settings()
+    if not settings.llm.is_configured:
+        return _fallback_dashboard_summary(stats)
+
+    try:
+        kwargs = _get_completion_kwargs()
+        context = _format_dashboard_context(stats)
+        response = litellm.completion(
+            messages=[
+                {"role": "system", "content": DASHBOARD_SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": (
+                        "Summarize this dashboard for sales leadership with clear takeaways\n"
+                        f"{context}"
+                    ),
+                },
+            ],
+            temperature=0.4,
+            **kwargs,
+        )
+        return response.choices[0].message.content
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to generate dashboard overview: {exc}")
+        return _fallback_dashboard_summary(stats)
 
 
 def _generate_fallback_summary(
@@ -273,7 +388,6 @@ def analyze_chat_messages(messages_text: List[str]) -> str:
                 {"role": "user", "content": f"User messages ({len(sample)} total):\n{messages_str}"},
             ],
             temperature=0.5,
-            max_tokens=500,
             **kwargs,
         )
 
@@ -282,6 +396,88 @@ def analyze_chat_messages(messages_text: List[str]) -> str:
     except Exception as e:
         logger.error(f"Failed to analyze chat: {e}")
         return f"⚠️ Analysis failed: {str(e)}"
+
+
+STRATIFIED_CHAT_SYSTEM_PROMPT = (
+    "You are a qualitative researcher reviewing user chat transcripts. "
+    "Compare cohorts, surface emerging intents, highlight anomalies, and note any risks. "
+    "Cite concrete behaviors (volumes, intent shifts) and flag uncertainties."
+)
+
+
+def _fallback_stratified_chat_summary(segment_samples: Dict[str, List[str]]) -> str:
+    lines = ["Chat cohort snapshot (LLM offline):"]
+    for segment, messages in segment_samples.items():
+        tokens = Counter()
+        for message in messages:
+            extracted = re.findall(r"[A-Za-zÀ-ÖØ-öø-ÿ]{3,}", message.lower())
+            tokens.update(extracted)
+        top_terms = ", ".join(word for word, _ in tokens.most_common(5))
+        if top_terms:
+            lines.append(f"- {segment}: {top_terms}")
+        else:
+            lines.append(f"- {segment}: insufficient signal")
+    return "\n".join(lines)
+
+
+def analyze_stratified_chat_segments(
+    segment_samples: Dict[str, List[str]],
+    ignored_accounts: Optional[List[str]] = None,
+) -> str:
+    """
+    Analyze segment-specific chat samples to uncover emerging trends.
+    """
+    if not segment_samples:
+        return "No chat cohorts available for analysis."
+
+    litellm = _get_litellm()
+    if litellm is None:
+        return _fallback_stratified_chat_summary(segment_samples)
+
+    settings = get_settings()
+    if not settings.llm.is_configured:
+        return _fallback_stratified_chat_summary(segment_samples)
+
+    try:
+        kwargs = _get_completion_kwargs()
+        segment_blocks = []
+        for segment, messages in segment_samples.items():
+            trimmed = []
+            for msg in messages[:80]:
+                sanitized = " ".join(msg.split())
+                trimmed.append(f"- {sanitized[:280]}")
+            block = f"Segment: {segment} ({len(messages)} samples)\n" + "\n".join(trimmed)
+            segment_blocks.append(block)
+
+        ignore_clause = ""
+        if ignored_accounts:
+            ignore_clause = (
+                "Ignore these service/automation accounts entirely: "
+                + ", ".join(sorted(set(ignored_accounts)))
+            )
+
+        payload = "\n\n".join(segment_blocks)
+        response = litellm.completion(
+            messages=[
+                {"role": "system", "content": STRATIFIED_CHAT_SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": (
+                        "Analyze intent differences and emerging topics across cohorts. "
+                        "Call out unusual spikes or risks and back them with the samples.\n"
+                        f"{ignore_clause}\n\n"
+                        f"{payload}"
+                    ),
+                },
+            ],
+            temperature=0.4,
+            **kwargs,
+        )
+
+        return response.choices[0].message.content
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to analyze stratified chat segments: {exc}")
+        return _fallback_stratified_chat_summary(segment_samples)
 
 
 def generate_timeline_insights(metrics: UsageMetrics) -> str:
@@ -378,7 +574,6 @@ def generate_timeline_insights(metrics: UsageMetrics) -> str:
                 {"role": "user", "content": f"Timeline data:\n{context}"},
             ],
             temperature=0.7,
-            max_tokens=500,
             **kwargs,
         )
 

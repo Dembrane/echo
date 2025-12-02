@@ -8,6 +8,7 @@ Last updated: 2025-12-01
 - Rely on git history for timing; no manual timestamps necessary.
 - Auto-correct typos and formatting without asking; escalate only for new patterns or major warnings.
 - Ensure instructions stay aligned with repo reality—if something drifts, repair it and note the fix in context.
+- Confirm with the team/user before doing anything destructive (e.g., resets, checkouts that drop work) and prefer non-destructive edits when possible.
 
 ## When to Ask
 
@@ -195,4 +196,3 @@ Key dependencies from `pyproject.toml`:
 ---
 
 _End of AGENTS.md. Update this file when patterns emerge, bugs are fixed, or workflows are established._
-

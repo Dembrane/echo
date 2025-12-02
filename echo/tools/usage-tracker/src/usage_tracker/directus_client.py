@@ -269,6 +269,29 @@ class DirectusClient:
         result = self.search(f"/items/{collection}", query)
         return result if isinstance(result, list) else []
 
+    def get_activity(
+        self,
+        fields: Optional[List[str]] = None,
+        filter_query: Optional[Dict[str, Any]] = None,
+        sort: Optional[List[str]] = None,
+        limit: int = -1,
+        offset: int = 0,
+    ) -> List[Dict[str, Any]]:
+        """Fetch rows from the Directus /activity endpoint."""
+        query: Dict[str, Any] = {"query": {"limit": limit}}
+
+        if fields:
+            query["query"]["fields"] = fields
+        if filter_query:
+            query["query"]["filter"] = filter_query
+        if sort:
+            query["query"]["sort"] = sort
+        if offset > 0:
+            query["query"]["offset"] = offset
+
+        result = self.search("/activity", query)
+        return result if isinstance(result, list) else []
+
     def get_item_count(
         self,
         collection: str,

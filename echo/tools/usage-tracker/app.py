@@ -8,7 +8,12 @@ from __future__ import annotations
 
 import logging
 from datetime import date, datetime, timedelta
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import math
+import random
+import statistics
 
 import streamlit as st
 import pandas as pd
@@ -19,6 +24,11 @@ from plotly.subplots import make_subplots
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+IGNORED_LLM_EMAILS = {
+    "reach.usamazafar@gmail.com",
+    "runpod_views@dembrane.com",
+}
 
 # Import our modules
 try:
@@ -107,6 +117,392 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+
+def _is_ignored_email(email: Optional[str]) -> bool:
+    return bool(email and email.lower() in IGNORED_LLM_EMAILS)
+
+
+def _percentile(sorted_values: List[float], percentile: float) -> float:
+    """Calculate percentile (0-1) for a sorted list."""
+    if not sorted_values:
+        return 0.0
+    if len(sorted_values) == 1:
+        return float(sorted_values[0])
+    k = (len(sorted_values) - 1) * percentile
+    f = math.floor(k)
+    c = math.ceil(k)
+    if f == c:
+        return float(sorted_values[int(k)])
+    d0 = sorted_values[f] * (c - k)
+    d1 = sorted_values[c] * (k - f)
+    return float(d0 + d1)
+
+
+def _build_conversation_spread_insight(project_activity: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+    """Summarize how conversations are distributed across projects."""
+    counts = [
+        entry.get("conversations", 0)
+        for entry in project_activity.values()
+        if entry.get("conversations", 0) > 0
+    ]
+    if not counts:
+        return {
+            "summary": "No conversation activity recorded for this window.",
+            "bullets": [],
+        }
+
+    counts.sort()
+    median_val = statistics.median(counts)
+    p90_val = _percentile(counts, 0.9)
+    total = sum(counts)
+    top3 = sum(sorted(counts, reverse=True)[:3])
+    share = (top3 / total) if total else 0.0
+    heaviest = counts[-1]
+    spread = heaviest / median_val if median_val else heaviest
+
+    bullets = [
+        f"P90 sits at {p90_val:.1f} conversations which is {p90_val / median_val:.1f}× the median.",
+        f"Top 3 projects absorb {share:.0%} of conversations ({top3} of {total}).",
+        f"Heaviest single project logs {heaviest} convs ({spread:.1f}× the median throughput).",
+    ]
+
+    return {
+        "summary": f"{len(counts)} projects were active · median {median_val:.1f} convs/project.",
+        "bullets": bullets,
+    }
+
+
+def _build_login_baseline_insight(
+    login_summary: Dict[str, Dict[str, Any]],
+    range_days: int,
+) -> Dict[str, Any]:
+    """Estimate baseline login expectations."""
+    if not login_summary:
+        return {
+            "summary": "No login activity captured for this window.",
+            "bullets": [],
+        }
+
+    total_logins = sum(entry.get("count", 0) for entry in login_summary.values())
+    unique_users = len(login_summary)
+    avg_per_user = total_logins / unique_users if unique_users else 0.0
+    median_logins = statistics.median([entry.get("count", 0) for entry in login_summary.values()])
+    weeks = max(range_days / 7, 1)
+    avg_per_week = total_logins / weeks
+
+    heavy_users = sum(
+        1
+        for entry in login_summary.values()
+        if (entry.get("count", 0) / weeks) > 8
+    )
+
+    bullets = [
+        f"Mean logins/user: {avg_per_user:.1f} · median: {median_logins:.1f}.",
+        f"Team averages {avg_per_week:.1f} total logins/week across the cohort.",
+        f"{heavy_users} user(s) exceed the power-user bar (>8 logins/week).",
+    ]
+
+    return {
+        "summary": f"{unique_users} users generated {total_logins} logins ({avg_per_user:.1f} each).",
+        "bullets": bullets,
+    }
+
+
+def _build_shared_account_insight(
+    login_summary: Dict[str, Dict[str, Any]],
+    login_daily_by_user: Dict[str, Dict[date, int]],
+    user_lookup: Dict[str, "UserInfo"],
+) -> Dict[str, Any]:
+    """Identify accounts averaging more than one login per active day."""
+    flagged = []
+    for user_id, stats in login_summary.items():
+        if not user_id:
+            continue
+        daily_counts = login_daily_by_user.get(user_id, {})
+        if not daily_counts:
+            continue
+        active_days = len(daily_counts)
+        if active_days == 0:
+            continue
+        total_logins = stats.get("count", 0)
+        avg_per_day = total_logins / active_days
+        multi_days = sum(1 for count in daily_counts.values() if count > 1)
+        peak = max(daily_counts.values())
+        if avg_per_day <= 1.0 and peak <= 1:
+            continue
+        info = user_lookup.get(user_id)
+        flagged.append(
+            {
+                "name": info.display_name if info else user_id,
+                "email": (info.email or "—") if info else "—",
+                "avg_per_day": avg_per_day,
+                "peak": peak,
+                "multi_ratio": multi_days / active_days,
+            }
+        )
+
+    if not flagged:
+        return {
+            "summary": "No accounts averaged more than 1 login/day.",
+            "bullets": [],
+        }
+
+    flagged.sort(key=lambda item: item["avg_per_day"], reverse=True)
+    bullets = []
+    for entry in flagged[:3]:
+        bullets.append(
+            f"{entry['name']} ({entry['email']}) averages {entry['avg_per_day']:.1f} logins/day; "
+            f"peak day = {entry['peak']} sessions."
+        )
+    if len(flagged) > 3:
+        bullets.append(f"{len(flagged) - 3} additional account(s) also sit above 1 login/day.")
+
+    return {
+        "summary": f"{len(flagged)} account(s) routinely exceed 1 login/day.",
+        "bullets": bullets,
+    }
+
+
+@st.cache_data(ttl=300)
+def fetch_dashboard_usage_samples(
+    _client: DirectusClient,
+    user_ids: Tuple[str, ...],
+    date_range_start: Optional[date],
+    date_range_end: Optional[date],
+) -> List[UserUsageData]:
+    """Fetch a limited set of usage records for dashboard-wide sampling."""
+    if not user_ids:
+        return []
+    fetcher = DataFetcher(_client)
+    date_range = None
+    if date_range_start and date_range_end:
+        date_range = DateRange(date_range_start, date_range_end)
+    return fetcher.get_multi_user_usage_data(list(user_ids), date_range)
+
+
+def _select_chat_segments(login_summary: Dict[str, Dict[str, Any]]) -> Dict[str, List[str]]:
+    """Group users into cohorts for stratified chat sampling."""
+    ordered_ids = [
+        user_id
+        for user_id, entry in sorted(
+            login_summary.items(),
+            key=lambda item: item[1].get("count", 0),
+            reverse=True,
+        )
+        if user_id
+    ]
+    if not ordered_ids:
+        return {}
+
+    segments: Dict[str, List[str]] = {}
+    if ordered_ids:
+        segments["Power researchers"] = ordered_ids[:4]
+    if len(ordered_ids) > 4:
+        segments["Steady operators"] = ordered_ids[4:8]
+    if len(ordered_ids) > 8:
+        segments["Occasional testers"] = ordered_ids[8:12]
+    return {label: ids for label, ids in segments.items() if ids}
+
+
+def _build_chat_segment_samples(
+    client: DirectusClient,
+    segments: Dict[str, List[str]],
+    date_range: Optional[DateRange],
+    user_lookup: Dict[str, "UserInfo"],
+) -> Dict[str, List[str]]:
+    """Load chat text samples per cohort."""
+    if not segments:
+        return {}
+
+    unique_ids = tuple(sorted({uid for ids in segments.values() for uid in ids}))
+    if not unique_ids:
+        return {}
+
+    date_start = date_range.start if date_range else None
+    date_end = date_range.end if date_range else None
+    usage_samples = fetch_dashboard_usage_samples(client, unique_ids, date_start, date_end)
+    usage_lookup = {ud.user.id: ud for ud in usage_samples}
+
+    segment_samples: Dict[str, List[str]] = {}
+    for segment_name, user_ids in segments.items():
+        bucket: List[str] = []
+        for user_id in user_ids:
+            usage = usage_lookup.get(user_id)
+            if not usage:
+                continue
+            info = user_lookup.get(user_id)
+            if info and _is_ignored_email(info.email):
+                continue
+            user_texts = [
+                (msg.text or "").strip()
+                for msg in usage.chat_messages
+                if msg.message_from and msg.message_from.lower() == "user" and msg.text
+            ]
+            if not user_texts:
+                continue
+            sample_size = min(len(user_texts), 40)
+            if len(user_texts) > sample_size:
+                bucket.extend(random.sample(user_texts, sample_size))
+            else:
+                bucket.extend(user_texts)
+        if bucket:
+            segment_samples[segment_name] = bucket
+    return segment_samples
+
+
+def _chat_trend_pipeline(
+    client: DirectusClient,
+    login_summary: Dict[str, Dict[str, Any]],
+    user_lookup: Dict[str, "UserInfo"],
+    date_range: Optional[DateRange],
+) -> Dict[str, Any]:
+    """Run stratified chat sampling and call the LLM for emerging trends."""
+    from src.usage_tracker.llm_insights import analyze_stratified_chat_segments
+
+    segments = _select_chat_segments(login_summary)
+    segment_samples = _build_chat_segment_samples(client, segments, date_range, user_lookup)
+
+    if not segment_samples:
+        return {
+            "summary": "Not enough chat depth to analyze cohort trends.",
+            "details_markdown": None,
+        }
+
+    insight = analyze_stratified_chat_segments(
+        segment_samples,
+        ignored_accounts=sorted(IGNORED_LLM_EMAILS),
+    )
+    return {
+        "summary": f"Analyzed chat cohorts: {', '.join(segment_samples.keys())}.",
+        "details_markdown": insight,
+    }
+
+
+def _execute_insight_pipelines(pipelines: List[Tuple[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    """Run multiple insight builders concurrently and report progress."""
+    if not pipelines:
+        return {}
+
+    status_box = st.empty()
+    progress_bar = st.progress(
+        0.0,
+        text=f"Running {len(pipelines)} insight pipelines in parallel...",
+    )
+
+    statuses = {name: "queued" for name, _ in pipelines}
+
+    def render_status() -> None:
+        lines = [f"- **{name}** · {statuses[name]}" for name in statuses]
+        status_box.markdown("\n".join(lines))
+
+    render_status()
+
+    results: Dict[str, Dict[str, Any]] = {}
+    with ThreadPoolExecutor(max_workers=len(pipelines)) as executor:
+        future_to_name = {}
+        for name, func in pipelines:
+            statuses[name] = "running"
+            render_status()
+            future = executor.submit(func)
+            future_to_name[future] = name
+
+        completed = 0
+        for future in as_completed(future_to_name):
+            name = future_to_name[future]
+            try:
+                results[name] = future.result()
+                statuses[name] = "✅ done"
+            except Exception as exc:  # noqa: BLE001
+                logger.exception("Pipeline %s failed", name)
+                results[name] = {
+                    "summary": f"⚠️ Failed to compute: {exc}",
+                    "bullets": [],
+                }
+                statuses[name] = "⚠️ failed"
+            completed += 1
+            pending = [n for n, status in statuses.items() if status == "running"]
+            progress_bar.progress(
+                completed / len(pipelines),
+                text=(
+                    f"Finished {completed}/{len(pipelines)} pipelines · "
+                    f"Pending: {', '.join(pending) if pending else '—'}"
+                ),
+            )
+            render_status()
+
+    progress_bar.progress(1.0, text="Insight pipelines complete")
+
+    ordered_results: Dict[str, Dict[str, Any]] = {}
+    for name, _ in pipelines:
+        ordered_results[name] = results.get(
+            name,
+            {"summary": "No data", "bullets": []},
+        )
+    return ordered_results
+
+
+def render_dashboard_insight_pipelines(
+    client: DirectusClient,
+    login_summary: Dict[str, Dict[str, Any]],
+    project_activity: Dict[str, Dict[str, Any]],
+    login_daily_by_user: Dict[str, Dict[date, int]],
+    user_lookup: Dict[str, "UserInfo"],
+    selected_range: Optional[DateRange],
+    range_days: int,
+):
+    """Display asynchronous insight pipelines on the dashboard."""
+    st.subheader("Insight Pipelines")
+    cache_key = f"dashboard_pipelines_{_dashboard_cache_key(selected_range)}"
+
+    rerun = st.button(
+        "Re-run insight pipelines",
+        key=f"rerun_pipelines_{cache_key}",
+        help="Refresh derived trends using the latest data.",
+    )
+    if rerun and cache_key in st.session_state:
+        del st.session_state[cache_key]
+
+    if cache_key not in st.session_state:
+        pipelines = [
+            (
+                "Conversation spread",
+                lambda: _build_conversation_spread_insight(project_activity),
+            ),
+            (
+                "Login baseline",
+                lambda: _build_login_baseline_insight(login_summary, range_days),
+            ),
+            (
+                "Shared account checks",
+                lambda: _build_shared_account_insight(
+                    login_summary,
+                    login_daily_by_user,
+                    user_lookup,
+                ),
+            ),
+            (
+                "Chat trend scan",
+                lambda: _chat_trend_pipeline(
+                    client,
+                    login_summary,
+                    user_lookup,
+                    selected_range,
+                ),
+            ),
+        ]
+        st.session_state[cache_key] = _execute_insight_pipelines(pipelines)
+
+    results = st.session_state.get(cache_key, {})
+    for name, result in results.items():
+        summary_text = result.get("summary") or "No summary available."
+        st.markdown(f"**{name}** — {summary_text}")
+        for bullet in result.get("bullets", []):
+            st.write(f"- {bullet}")
+        details = result.get("details_markdown")
+        if details:
+            st.markdown(details)
+        st.divider()
 
 
 def get_date_ranges() -> dict:
@@ -236,9 +632,22 @@ def _format_delta(trend: tuple) -> Optional[str]:
 
 def render_metric_cards(metrics: UsageMetrics, trends: dict):
     """Render the main metric cards - stock dashboard style."""
-    cols = st.columns(4)
+    cols = st.columns(5)
 
     with cols[0]:
+        st.metric(
+            "Projects",
+            metrics.projects.total_projects,
+            delta=_format_delta(trends.get("projects", (0, "flat"))),
+        )
+        if metrics.projects.total_projects > 0:
+            avg_conv = metrics.projects.avg_conversations_per_project
+            p90_conv = metrics.projects.p90_conversations_per_project
+            st.caption(
+                f"Avg {avg_conv:.1f} conv/project · P90 {p90_conv:.0f} conv"
+            )
+
+    with cols[1]:
         st.metric(
             "Conversations",
             metrics.audio.total_conversations,
@@ -246,7 +655,7 @@ def render_metric_cards(metrics: UsageMetrics, trends: dict):
         )
         st.caption(f"⏱ Avg {metrics.audio.avg_duration_formatted} each")
 
-    with cols[1]:
+    with cols[2]:
         st.metric(
             "Total Duration",
             metrics.audio.total_duration_formatted,
@@ -254,7 +663,7 @@ def render_metric_cards(metrics: UsageMetrics, trends: dict):
         )
         st.caption(f"P50 {metrics.audio.p50_duration_formatted} · P90 {metrics.audio.p90_duration_formatted}")
 
-    with cols[2]:
+    with cols[3]:
         st.metric(
             "Chat Sessions",
             metrics.chat.total_chats,
@@ -264,7 +673,7 @@ def render_metric_cards(metrics: UsageMetrics, trends: dict):
             avg_msgs = metrics.chat.total_messages / metrics.chat.total_chats
             st.caption(f"💬 {metrics.chat.user_messages} queries · {avg_msgs:.0f} msg/session")
 
-    with cols[3]:
+    with cols[4]:
         st.metric(
             "Reports",
             metrics.reports.total_reports,
@@ -273,6 +682,534 @@ def render_metric_cards(metrics: UsageMetrics, trends: dict):
         if metrics.reports.total_reports > 0:
             st.caption(f"✓ {metrics.reports.published_reports} published")
 
+
+def render_login_tier_banner(metrics: UsageMetrics):
+    """Show login usage tier beneath the main metric cards."""
+    login_metrics = metrics.logins
+    legend = "Power >8/wk · High 5-8 · Medium 1-5 · Low <1"
+
+    if login_metrics.total_logins == 0:
+        st.caption(f"Login tier: no recorded logins · {legend}")
+        return
+
+    tier = login_metrics.usage_band.title() if login_metrics.usage_band else "Unknown"
+    avg_week = login_metrics.avg_logins_per_week
+    st.caption(
+        f"Login tier: **{tier}** ({avg_week:.1f} logins/week) · {legend}"
+    )
+
+
+def render_login_activity(metrics: UsageMetrics, users: List[UserInfo]):
+    """Render login activity summary and chart."""
+    login_metrics = metrics.logins
+
+    st.subheader("🔐 Login Activity")
+
+    if login_metrics.total_logins == 0:
+        st.info("No login events recorded for this selection.")
+        return
+
+    cols = st.columns(4)
+    with cols[0]:
+        st.metric("Total Logins", login_metrics.total_logins)
+    with cols[1]:
+        st.metric("Active Days", login_metrics.unique_days)
+    with cols[2]:
+        st.metric("Unique Users", login_metrics.unique_users)
+    with cols[3]:
+        if login_metrics.last_login:
+            st.metric("Last Login", login_metrics.last_login.strftime("%b %d, %Y %H:%M"))
+        else:
+            st.metric("Last Login", "—")
+
+    st.caption(
+        f"Avg {login_metrics.avg_logins_per_active_day:.1f} logins per active day · "
+        f"Avg {login_metrics.avg_logins_per_user:.1f} per user · "
+        f"{login_metrics.avg_logins_per_week:.1f} per week"
+    )
+
+    # Daily login chart
+    if login_metrics.daily_logins:
+        dates = sorted(login_metrics.daily_logins.keys())
+        df = pd.DataFrame(
+            {
+                "date": dates,
+                "logins": [login_metrics.daily_logins[d] for d in dates],
+            }
+        )
+
+        user_lookup = {u.id: u.display_name for u in users}
+
+        if len(users) > 1 and login_metrics.daily_logins_by_user:
+            rows = []
+            for user_id, counts in login_metrics.daily_logins_by_user.items():
+                label = user_lookup.get(user_id, user_id)
+                for day, count in counts.items():
+                    rows.append({"date": day, "user": label, "logins": count})
+            if rows:
+                multi_df = pd.DataFrame(rows)
+                multi_df.sort_values("date", inplace=True)
+                fig = px.area(
+                    multi_df,
+                    x="date",
+                    y="logins",
+                    color="user",
+                    line_group="user",
+                    title="Logins per Day by User",
+                )
+                fig.update_layout(margin=dict(t=60, b=40))
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                fig = px.bar(df, x="date", y="logins", title="Logins per Day")
+                fig.update_layout(margin=dict(t=40, b=40))
+                st.plotly_chart(fig, use_container_width=True)
+        else:
+            fig = px.bar(df, x="date", y="logins", title="Logins per Day")
+            fig.update_layout(margin=dict(t=40, b=40))
+            st.plotly_chart(fig, use_container_width=True)
+
+    per_user = sorted(
+        login_metrics.logins_by_user.items(), key=lambda item: item[1], reverse=True
+    )
+    if per_user:
+        lookup = {u.id: u.display_name for u in users}
+        summary_df = pd.DataFrame(
+            [
+                {"User": lookup.get(user_id, user_id), "Logins": count}
+                for user_id, count in per_user
+            ]
+        )
+        st.dataframe(summary_df, use_container_width=True, hide_index=True)
+
+
+def _dashboard_cache_key(date_range: Optional[DateRange]) -> str:
+    if date_range:
+        return f"dashboard_summary_{date_range.start}_{date_range.end}"
+    return "dashboard_summary_all_time"
+
+
+def _get_dashboard_summary(
+    client: DirectusClient, date_range: Optional[DateRange]
+) -> Dict[str, Any]:
+    """Fetch and cache leaderboard summaries for the dashboard view."""
+    cache_key = _dashboard_cache_key(date_range)
+    if cache_key in st.session_state:
+        return st.session_state[cache_key]
+
+    fetcher = DataFetcher(client)
+    with st.status("Loading leaderboard data...", expanded=True) as status:
+        try:
+            status.update(label="Fetching login activity", state="running")
+            login_events = fetcher.get_login_activity_events(
+                user_ids=None,
+                date_range=date_range,
+            )
+            login_per_user: Dict[str, Dict[str, Any]] = {}
+            login_daily_by_user: Dict[str, Dict[date, int]] = defaultdict(lambda: defaultdict(int))
+            daily_login_sets: Dict[date, set] = defaultdict(set)
+            for event in login_events:
+                if not event.user_id:
+                    continue
+                entry = login_per_user.setdefault(
+                    event.user_id, {"count": 0, "last": None, "first": None}
+                )
+                entry["count"] += 1
+                if event.timestamp:
+                    if entry["last"] is None or event.timestamp > entry["last"]:
+                        entry["last"] = event.timestamp
+                    if entry["first"] is None or event.timestamp < entry["first"]:
+                        entry["first"] = event.timestamp
+                    day = event.timestamp.date()
+                    login_daily_by_user[event.user_id][day] += 1
+                    daily_login_sets[event.timestamp.date()].add(event.user_id)
+
+            daily_login_counts = {day: len(users) for day, users in daily_login_sets.items()}
+            status.write("✔ Login events aggregated")
+
+            status.update(label="Aggregating conversations", state="running")
+            conversation_snapshot = fetcher.get_conversation_activity_snapshot(date_range)
+            project_activity = conversation_snapshot.get("per_project", {})
+
+            status.update(label="Aggregating chat sessions", state="running")
+            chat_summary = fetcher.get_project_chat_activity_summary(date_range)
+            for proj_id, chat_data in chat_summary.items():
+                entry = project_activity.setdefault(
+                    proj_id,
+                    {
+                        "project_id": proj_id,
+                        "project_name": chat_data.get("name") or f"Project {proj_id}",
+                        "owner_id": chat_data.get("owner_id"),
+                        "conversations": 0,
+                        "last_conversation": None,
+                        "chat_sessions": 0,
+                        "last_chat": None,
+                    },
+                )
+                entry["project_name"] = entry.get("project_name") or chat_data.get("name")
+                if not entry.get("owner_id"):
+                    entry["owner_id"] = chat_data.get("owner_id")
+                entry["chat_sessions"] = chat_data.get("count", 0)
+                last_chat = chat_data.get("last")
+                if last_chat and (
+                    entry["last_chat"] is None or last_chat > entry["last_chat"]
+                ):
+                    entry["last_chat"] = last_chat
+
+            summary = {
+                "logins": {
+                    "per_user": login_per_user,
+                    "daily": daily_login_counts,
+                    "per_user_daily": login_daily_by_user,
+                },
+                "conversations": conversation_snapshot.get("per_user", {}),
+                "projects": project_activity,
+                "daily_conversations": conversation_snapshot.get("daily_conversations", {}),
+                "daily_projects": conversation_snapshot.get("daily_projects", {}),
+            }
+            st.session_state[cache_key] = summary
+            status.update(label="Leaderboard data ready", state="complete")
+            return summary
+        except Exception as exc:  # noqa: BLE001
+            status.update(label="Failed to load leaderboard data", state="error")
+            logger.exception("Failed to load dashboard summary")
+            raise RuntimeError("Dashboard summary fetch failed") from exc
+
+
+def _format_ts(ts: Optional[datetime]) -> str:
+    if not ts:
+        return "—"
+    return ts.strftime("%b %d, %Y %H:%M")
+
+
+def render_power_user_dashboard(
+    client: DirectusClient,
+    all_users: List[UserInfo],
+    selected_range: Optional[DateRange],
+):
+    """Render default view showing leaderboards when no users are selected."""
+    today = date.today()
+    dashboard_range = selected_range
+
+    try:
+        summary = _get_dashboard_summary(client, dashboard_range)
+    except RuntimeError as exc:
+        st.error(f"Unable to load leaderboard data: {exc}")
+        return
+
+    login_section = summary.get("logins", {})
+    login_summary = login_section.get("per_user", {})
+    daily_logins = login_section.get("daily", {})
+    login_daily_by_user = login_section.get("per_user_daily", {})
+    conversation_summary = summary.get("conversations", {})
+    project_activity = summary.get("projects", {})
+    daily_conversations = summary.get("daily_conversations", {})
+    daily_projects = summary.get("daily_projects", {})
+    user_lookup = {u.id: u for u in all_users}
+
+    st.info(
+        "Pick users from the leaderboards below or use the sidebar to analyze a specific cohort."
+    )
+    if dashboard_range:
+        range_label = (
+            f"{dashboard_range.start.strftime('%b %d, %Y')} – "
+            f"{dashboard_range.end.strftime('%b %d, %Y')}"
+        )
+        range_days = (dashboard_range.end - dashboard_range.start).days + 1
+        latest_day = dashboard_range.end
+    else:
+        range_label = "All Time"
+        timestamps = []
+        for data in login_summary.values():
+            if data.get("first"):
+                timestamps.append(data["first"])
+            if data.get("last"):
+                timestamps.append(data["last"])
+        if timestamps:
+            range_days = max((max(timestamps) - min(timestamps)).days + 1, 1)
+            latest_day = max(timestamps).date()
+        else:
+            range_days = 30
+            latest_day = date.today()
+
+    st.caption(f"Leaderboard window: {range_label}")
+
+    if not login_summary and not conversation_summary:
+        st.warning("No login or conversation activity found in this period.")
+        return
+
+    weeks = max(range_days / 7, 1)
+
+    mau = len(login_summary)
+    dau = daily_logins.get(latest_day, 0)
+    avg_daily_conversations = (
+        sum(daily_conversations.values()) / len(daily_conversations)
+        if daily_conversations
+        else 0.0
+    )
+    avg_daily_projects = (
+        sum(daily_projects.values()) / len(daily_projects)
+        if daily_projects
+        else 0.0
+    )
+
+    kpi_cols = st.columns(4)
+    with kpi_cols[0]:
+        st.metric("MAU", mau)
+    with kpi_cols[1]:
+        st.metric("DAU", dau)
+    with kpi_cols[2]:
+        st.metric("Avg Daily Conversations", f"{avg_daily_conversations:.1f}")
+    with kpi_cols[3]:
+        st.metric("Avg Daily Projects", f"{avg_daily_projects:.1f}")
+
+    stats_key = f"dashboard_llm_{_dashboard_cache_key(dashboard_range)}"
+    if stats_key not in st.session_state:
+        from src.usage_tracker.llm_insights import DashboardStats, generate_dashboard_overview
+
+        top_users_for_llm = []
+        for user_id, data in sorted(
+            login_summary.items(), key=lambda item: item[1]["count"], reverse=True
+        )[:5]:
+            info = user_lookup.get(user_id)
+            if info and _is_ignored_email(info.email):
+                continue
+            label = info.display_name if info else user_id
+            top_users_for_llm.append((label, data.get("count", 0)))
+
+        top_project_entries = sorted(
+            project_activity.values(),
+            key=lambda entry: (entry.get("conversations", 0), entry.get("chat_sessions", 0)),
+            reverse=True,
+        )[:5]
+        top_projects_for_llm = [
+            (
+                entry.get("project_name"),
+                entry.get("conversations", 0),
+                entry.get("chat_sessions", 0),
+            )
+            for entry in top_project_entries
+        ]
+
+        stats_payload = DashboardStats(
+            range_label=range_label,
+            mau=mau,
+            dau=dau,
+            avg_daily_conversations=avg_daily_conversations,
+            avg_daily_projects=avg_daily_projects,
+            top_users=top_users_for_llm,
+            top_projects=top_projects_for_llm,
+            ignored_accounts=sorted(IGNORED_LLM_EMAILS),
+        )
+        st.session_state[stats_key] = generate_dashboard_overview(stats_payload)
+
+    st.markdown(st.session_state[stats_key])
+
+    render_dashboard_insight_pipelines(
+        client=client,
+        login_summary=login_summary,
+        project_activity=project_activity,
+        login_daily_by_user=login_daily_by_user,
+        user_lookup=user_lookup,
+        selected_range=selected_range,
+        range_days=range_days,
+    )
+
+    power_rows = []
+    for user_id, data in login_summary.items():
+        info = user_lookup.get(user_id)
+        email = info.email if info else ""
+        domain = "—"
+        if email and "@" in email:
+            domain = email.split("@")[-1].lower()
+        conv_stats = conversation_summary.get(user_id, {})
+        power_rows.append(
+            {
+                "user_id": user_id,
+                "name": info.display_name if info else f"User {user_id}",
+                "email": email,
+                "domain": domain,
+                "logins": data.get("count", 0),
+                "avg_week": data.get("count", 0) / weeks,
+                "last_login": data.get("last"),
+                "conversations": conv_stats.get("count", 0),
+            }
+        )
+
+    power_rows.sort(key=lambda row: (row["avg_week"], row["logins"]), reverse=True)
+
+    st.subheader("Top Power Users")
+    show_more = st.checkbox("Show 40 users", value=False, key="show_top40_power")
+    display_count = 40 if show_more else 20
+    displayed_power = power_rows[:display_count]
+
+    power_selection: List[str] = []
+    if displayed_power:
+        power_table = pd.DataFrame(
+            [
+                {
+                    "Name": row["name"],
+                    "Email": row["email"] or "—",
+                    "Logins": row["logins"],
+                    "Avg / Week": round(row["avg_week"], 1),
+                    "Conversations": row["conversations"],
+                    "Last Login": _format_ts(row["last_login"]),
+                    "Analyze?": False,
+                }
+                for row in displayed_power
+            ]
+        )
+        st.caption("Tick rows to analyze directly from this table")
+        edited_power = st.data_editor(
+            power_table,
+            hide_index=True,
+            key="power_table_editor",
+            column_config={
+                "Analyze?": st.column_config.CheckboxColumn(
+                    "Analyze?", help="Select users to drill into"
+                )
+            },
+        )
+        if "Analyze?" in edited_power:
+            power_selection = [
+                displayed_power[idx]["user_id"]
+                for idx, checked in enumerate(edited_power["Analyze?"])
+                if checked and displayed_power[idx]["user_id"]
+            ]
+    else:
+        st.info("No login activity to rank power users.")
+
+    st.divider()
+
+    # Top orgs (dedupe by domain)
+    st.subheader("Top Orgs by Activity (deduped by email domain)")
+    org_rows = []
+    seen_domains = set()
+    combined_sorted = sorted(
+        power_rows,
+        key=lambda row: (row["logins"] + row["conversations"]),
+        reverse=True,
+    )
+    for row in combined_sorted:
+        domain = row["domain"] or "—"
+        if domain in seen_domains:
+            continue
+        seen_domains.add(domain)
+        org_rows.append(
+            {
+                "Domain": domain,
+                "Representative": row["name"],
+                "Logins": row["logins"],
+                "Conversations": row["conversations"],
+            }
+        )
+        if len(org_rows) >= 10:
+            break
+
+    if org_rows:
+        org_df = pd.DataFrame(org_rows)
+        st.dataframe(org_df, use_container_width=True, hide_index=True)
+    else:
+        st.info("No organization-level activity detected.")
+
+    st.divider()
+
+    # Top projects table
+    st.subheader("Top Projects (Conversations & Chats)")
+    project_rows = sorted(
+        project_activity.values(),
+        key=lambda entry: (entry.get("conversations", 0), entry.get("chat_sessions", 0)),
+        reverse=True,
+    )[:10]
+
+    if project_rows:
+        project_table = pd.DataFrame(
+            [
+                {
+                    "Project": entry.get("project_name"),
+                    "Owner": user_lookup.get(entry.get("owner_id")).display_name
+                    if user_lookup.get(entry.get("owner_id"))
+                    else entry.get("owner_id")
+                    or "—",
+                    "Conversations": entry.get("conversations", 0),
+                    "Chats": entry.get("chat_sessions", 0),
+                    "Last Conversation": _format_ts(entry.get("last_conversation")),
+                    "Last Chat": _format_ts(entry.get("last_chat")),
+                }
+                for entry in project_rows
+            ]
+        )
+        st.data_editor(
+            project_table,
+            hide_index=True,
+            use_container_width=True,
+            disabled=True,
+            column_config={
+                "Project": st.column_config.Column(width="large"),
+                "Owner": st.column_config.Column(width="medium"),
+            },
+            key="top_projects_editor",
+        )
+    else:
+        st.info("No project-level activity detected.")
+
+    st.divider()
+
+    # Top conversation users (may include users without recent logins)
+    st.subheader("Top Conversation Drivers")
+    conv_rows = []
+    for user_id, stats in conversation_summary.items():
+        info = user_lookup.get(user_id)
+        conv_rows.append(
+            {
+                "user_id": user_id,
+                "name": info.display_name if info else f"User {user_id}",
+                "email": info.email if info else "—",
+                "conversations": stats.get("count", 0),
+                "last_conversation": _format_ts(stats.get("last")),
+                "logins": login_summary.get(user_id, {}).get("count", 0),
+            }
+        )
+
+    conv_rows.sort(key=lambda row: row["conversations"], reverse=True)
+    top_conv = conv_rows[:10]
+    conv_selection: List[str] = []
+    if top_conv:
+        conv_table = pd.DataFrame(
+            [
+                {
+                    "Name": row["name"],
+                    "Email": row["email"],
+                    "Conversations": row["conversations"],
+                    "Recent Conversation": row["last_conversation"],
+                    "Logins": row["logins"],
+                    "Analyze?": False,
+                }
+                for row in top_conv
+            ]
+        )
+        edited_conv = st.data_editor(
+            conv_table,
+            hide_index=True,
+            key="conversation_table_editor",
+            column_config={
+                "Analyze?": st.column_config.CheckboxColumn("Analyze?"),
+            },
+        )
+        if "Analyze?" in edited_conv:
+            conv_selection = [
+                top_conv[idx]["user_id"]
+                for idx, checked in enumerate(edited_conv["Analyze?"])
+                if checked and top_conv[idx]["user_id"]
+            ]
+    else:
+        st.info("No conversations recorded during this period.")
+    # Selection helper
+    selected_candidates = sorted(set(power_selection + conv_selection))
+    if selected_candidates:
+        st.success(f"Selected {len(selected_candidates)} user(s) from tables.")
+    if st.button("Analyze selected users", type="primary", disabled=not selected_candidates):
+        st.session_state.selected_user_ids = selected_candidates
+        st.experimental_rerun()
 
 def render_timeline_chart(metrics: UsageMetrics):
     """Render the activity timeline chart with conversations and duration."""
@@ -368,6 +1305,101 @@ def render_timeline_chart(metrics: UsageMetrics):
     fig.update_yaxes(title="Duration (mins) / Messages", secondary_y=True)
 
     st.plotly_chart(fig, use_container_width=True)
+
+
+def render_monthly_summary(metrics: UsageMetrics):
+    """Render monthly summary chart with trends."""
+    monthly_stats = metrics.timeline.monthly_stats
+    if not monthly_stats or len(monthly_stats) < 2:
+        st.info("Not enough monthly data available (need at least 2 months)")
+        return
+
+    chart_data = []
+    for month in monthly_stats:
+        chart_data.append({
+            "month": month.month_label,
+            "month_key": month.month_key,
+            "conversations_valid": month.conversations_valid,
+            "conversations_empty": month.conversations_empty,
+            "duration_hours": month.duration_seconds / 3600,
+            "chats": month.chats,
+        })
+
+    chart_df = pd.DataFrame(chart_data)
+
+    # Create dual-axis chart
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+    # Stacked bar: valid conversations (blue) at bottom
+    fig.add_trace(
+        go.Bar(
+            x=chart_df["month"],
+            y=chart_df["conversations_valid"],
+            name="Conversations (with content)",
+            marker_color="#667eea",
+            opacity=0.9,
+            hovertemplate="<b>%{x}</b><br>Valid: %{y}<extra></extra>",
+        ),
+        secondary_y=False,
+    )
+
+    # Stacked bar: empty conversations (red) on top
+    fig.add_trace(
+        go.Bar(
+            x=chart_df["month"],
+            y=chart_df["conversations_empty"],
+            name="Conversations (empty/no transcript)",
+            marker_color="#ef4444",
+            opacity=0.9,
+            hovertemplate="<b>%{x}</b><br>Empty: %{y}<extra></extra>",
+        ),
+        secondary_y=False,
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=chart_df["month"],
+            y=chart_df["duration_hours"],
+            name="Duration (hours)",
+            line=dict(color="#f5576c", width=3),
+            mode="lines+markers",
+            marker=dict(size=8),
+        ),
+        secondary_y=True,
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=chart_df["month"],
+            y=chart_df["chats"],
+            name="Chats",
+            line=dict(color="#4ecdc4", width=2, dash="dash"),
+            mode="lines+markers",
+            marker=dict(size=6, symbol="square"),
+        ),
+        secondary_y=False,
+    )
+
+    fig.update_layout(
+        barmode="stack",
+        hovermode="x unified",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        height=400,
+        margin=dict(t=30, b=10),
+    )
+
+    fig.update_yaxes(title="Conversations / Chats", secondary_y=False)
+    fig.update_yaxes(title="Duration (hours)", secondary_y=True)
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Add legend explanation
+    st.caption(
+        "**Blue bars** = conversations with audio content · "
+        "**Red bars** = empty conversations (no chunks/transcript) · "
+        "**Red line** = duration in hours · "
+        "**Teal dashed** = chat sessions"
+    )
 
 
 def render_word_cloud(metrics: UsageMetrics):
@@ -544,7 +1576,30 @@ DIRECTUS_TOKEN=your-admin-token
         """)
         st.stop()
 
+    # Sidebar - Date Range first
+    st.sidebar.header("📅 Date Range")
+
+    date_ranges = get_date_ranges()
+    selected_range_name = st.sidebar.selectbox(
+        "Time period",
+        options=list(date_ranges.keys()),
+        index=0,
+    )
+
+    if selected_range_name == "All Time":
+        date_range = None  # No date filtering
+    elif selected_range_name == "Custom Range":
+        col1, col2 = st.sidebar.columns(2)
+        with col1:
+            custom_start = st.date_input("Start", value=date.today() - timedelta(days=30))
+        with col2:
+            custom_end = st.date_input("End", value=date.today())
+        date_range = DateRange(custom_start, custom_end)
+    else:
+        date_range = date_ranges[selected_range_name]
+
     # Sidebar - User Selection
+    st.sidebar.divider()
     st.sidebar.header("🔍 User Selection")
 
     # Initialize session state for persisting selections
@@ -615,28 +1670,6 @@ DIRECTUS_TOKEN=your-admin-token
     # Save selection to session state
     st.session_state.selected_user_ids = selected_user_ids
 
-    # Date range selection
-    st.sidebar.header("📅 Date Range")
-
-    date_ranges = get_date_ranges()
-    selected_range_name = st.sidebar.selectbox(
-        "Time period",
-        options=list(date_ranges.keys()),
-        index=0,
-    )
-
-    if selected_range_name == "All Time":
-        date_range = None  # No date filtering
-    elif selected_range_name == "Custom Range":
-        col1, col2 = st.sidebar.columns(2)
-        with col1:
-            custom_start = st.date_input("Start", value=date.today() - timedelta(days=30))
-        with col2:
-            custom_end = st.date_input("End", value=date.today())
-        date_range = DateRange(custom_start, custom_end)
-    else:
-        date_range = date_ranges[selected_range_name]
-
     # Refresh button
     st.sidebar.divider()
     if st.sidebar.button("🔄 Refresh Data", help="Clear cache and reload data"):
@@ -650,12 +1683,7 @@ DIRECTUS_TOKEN=your-admin-token
 
     # Main content
     if not selected_user_ids:
-        st.info("👈 Select one or more users from the sidebar to view their usage data")
-
-        # Show summary stats
-        st.subheader("📈 Quick Stats")
-        st.write(f"**Total users in system:** {len(all_users)}")
-
+        render_power_user_dashboard(client, all_users, date_range)
         return
 
     # Fetch data
@@ -709,20 +1737,33 @@ DIRECTUS_TOKEN=your-admin-token
 
     # Metric cards
     render_metric_cards(metrics, trends)
+    render_login_tier_banner(metrics)
 
     st.divider()
 
     # Tabs for different views
-    tab1, tab2, tab3, tab4 = st.tabs(
+    (
+        tab_monthly,
+        tab_timeline,
+        tab_logins,
+        tab_chat,
+        tab_projects,
+        tab_export,
+    ) = st.tabs(
         [
+            "📅 Monthly",
             "📈 Timeline",
+            "🔐 Login Activity",
             "💬 Chat Analysis",
             "📁 Projects",
             "📄 Export",
         ]
     )
 
-    with tab1:
+    with tab_monthly:
+        render_monthly_summary(metrics)
+
+    with tab_timeline:
         render_timeline_chart(metrics)
 
         # Timeline AI Insights
@@ -739,7 +1780,10 @@ DIRECTUS_TOKEN=your-admin-token
         except Exception as e:
             st.error(f"Failed: {e}")
 
-    with tab2:
+    with tab_logins:
+        render_login_activity(metrics, selected_users)
+
+    with tab_chat:
         if metrics.chat.total_chats == 0:
             st.info("No chat data available for analysis")
         else:
@@ -776,7 +1820,7 @@ DIRECTUS_TOKEN=your-admin-token
                     if "chat_analysis" in st.session_state:
                         st.markdown(st.session_state["chat_analysis"])
 
-    with tab3:
+    with tab_projects:
         col1, col2, col3 = st.columns(3)
         with col1:
             st.metric("Total Projects", metrics.projects.total_projects)
@@ -787,7 +1831,7 @@ DIRECTUS_TOKEN=your-admin-token
 
         render_projects_table(usage_data)
 
-    with tab4:
+    with tab_export:
         include_insights = st.checkbox("Include AI insights", value=True)
 
         if st.button("Generate PDF Report", type="primary"):
@@ -813,6 +1857,7 @@ DIRECTUS_TOKEN=your-admin-token
                         date_range=date_range,
                         executive_summary=exec_summary,
                         insights=insights,
+                        usage_data=usage_data,
                     )
 
                     # Download button
