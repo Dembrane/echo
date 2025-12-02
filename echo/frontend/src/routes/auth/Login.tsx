@@ -102,10 +102,6 @@ export const LoginRoute = () => {
 				password: data.password,
 			});
 
-			setOtpRequired(false);
-			setValue("otp", "");
-			setOtpValue("");
-
 			const isNewUser = searchParams.get("new") === "true";
 			const next = searchParams.get("next");
 			const transitionPromise = runTransition({
