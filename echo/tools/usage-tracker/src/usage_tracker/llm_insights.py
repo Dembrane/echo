@@ -336,7 +336,10 @@ def _fallback_monthly_overview(payload: MonthlyOverviewPayload) -> str:
     )
 
 
-def generate_monthly_overview(payload: MonthlyOverviewPayload) -> str:
+def generate_monthly_overview(
+    payload: MonthlyOverviewPayload,
+    user_profile_context: Optional[str] = None,
+) -> str:
     """Generate a concise two-paragraph monthly overview."""
     litellm = _get_litellm()
     if litellm is None:
@@ -350,7 +353,11 @@ def generate_monthly_overview(payload: MonthlyOverviewPayload) -> str:
         kwargs = _get_completion_kwargs()
         context = _format_monthly_overview_context(payload)
         system_prompt = render_prompt("monthly_overview_system.j2")
-        user_prompt = render_prompt("monthly_overview_user.j2", context=context)
+        user_prompt = render_prompt(
+            "monthly_overview_user.j2",
+            context=context,
+            user_profile=user_profile_context or "",
+        )
 
         response = litellm.completion(
             messages=[
@@ -400,11 +407,15 @@ def _generate_fallback_summary(
     return " ".join(summary_parts)
 
 
-def analyze_chat_messages(messages_text: List[str]) -> str:
+def analyze_chat_messages(
+    messages_text: List[str],
+    user_profile_context: Optional[str] = None,
+) -> str:
     """
     Analyze chat messages using LLM.
 
     Works best with <1000 messages. Returns themes, patterns, and what users are asking about.
+    If user_profile_context is provided, uses it to inform the analysis.
     """
     if not messages_text:
         return "No messages to analyze."
@@ -436,6 +447,7 @@ def analyze_chat_messages(messages_text: List[str]) -> str:
             "chat_analysis_user.j2",
             message_count=len(sample),
             messages_blob=messages_str,
+            user_profile=user_profile_context or "",
         )
 
         response = litellm.completion(

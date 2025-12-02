@@ -1280,6 +1280,7 @@ def render_monthly_summary(
     selected_range: Optional[DateRange],
     monthly_stats_override: Optional[List[MonthlyStats]] = None,
     note: Optional[str] = None,
+    user_selection_key: str = "",
 ):
     """Render monthly summary chart with trends, distributions, and ratios."""
     monthly_stats = monthly_stats_override or metrics.timeline.monthly_stats
@@ -1364,7 +1365,7 @@ def render_monthly_summary(
     months_label = f"{monthly_stats[0].month_label} – {monthly_stats[-1].month_label}"
     range_start_key = selected_range.start.isoformat() if selected_range else "all"
     range_end_key = selected_range.end.isoformat() if selected_range else "all"
-    llm_cache_key = f"monthly_overview_{months_label}_{range_start_key}_{range_end_key}"
+    llm_cache_key = f"monthly_overview_{user_selection_key}_{months_label}_{range_start_key}_{range_end_key}"
     if llm_cache_key not in st.session_state:
         payload = MonthlyOverviewPayload(
             range_label=months_label,
@@ -1381,7 +1382,11 @@ def render_monthly_summary(
                 else 0.0
             ),
         )
-        st.session_state[llm_cache_key] = generate_monthly_overview(payload)
+        profile_context = st.session_state.get("current_user_profile", "")
+        st.session_state[llm_cache_key] = generate_monthly_overview(
+            payload,
+            user_profile_context=profile_context,
+        )
     st.info(st.session_state[llm_cache_key])
 
     # Create dual-axis chart
@@ -1487,7 +1492,11 @@ def render_monthly_summary(
         st.caption(f"Most active day: **{peak_day}**")
 
 
-def render_user_profile(usage_data: List[UserUsageData], metrics: UsageMetrics):
+def render_user_profile(
+    usage_data: List[UserUsageData],
+    metrics: UsageMetrics,
+    user_selection_key: str = "",
+):
     """Render the User Profile section showing typical workflow patterns."""
     import random
     from collections import Counter
@@ -1608,7 +1617,7 @@ def render_user_profile(usage_data: List[UserUsageData], metrics: UsageMetrics):
         sampled_queries = []
 
     # === PROFILE SUMMARY (TOP - AUTO-GENERATED) ===
-    profile_cache_key = f"user_profile_{hash(tuple(p.id for p in all_projects[:10]))}"
+    profile_cache_key = f"user_profile_{user_selection_key}_{hash(tuple(p.id for p in all_projects[:10]))}"
 
     # Auto-generate if not cached
     if profile_cache_key not in st.session_state:
@@ -1630,6 +1639,9 @@ def render_user_profile(usage_data: List[UserUsageData], metrics: UsageMetrics):
         )
         with st.spinner("Generating profile..."):
             st.session_state[profile_cache_key] = generate_user_profile(payload)
+
+    # Store in known key for other tabs to use
+    st.session_state["current_user_profile"] = st.session_state[profile_cache_key]
 
     # Display profile summary
     st.markdown(st.session_state[profile_cache_key])
@@ -2107,24 +2119,31 @@ DIRECTUS_TOKEN=your-admin-token
 
     st.divider()
 
-    # Tabs for different views
+    # Tabs for different views - User Profile first to generate context
     (
-        tab_monthly,
         tab_profile,
+        tab_monthly,
         tab_logins,
         tab_chat,
         tab_projects,
         tab_export,
     ) = st.tabs(
         [
-            "📅 Monthly",
             "👤 User Profile",
+            "📅 Monthly",
             "🔐 Login Activity",
             "💬 Chat Analysis",
             "📁 Projects",
             "📄 Export",
         ]
     )
+
+    # === USER PROFILE FIRST (generates context for other tabs) ===
+    # Create a stable cache key based on selected users
+    user_selection_key = "_".join(sorted(u.id for u in selected_users)[:5])  # First 5 user IDs
+
+    with tab_profile:
+        render_user_profile(usage_data, metrics, user_selection_key)
 
     with tab_monthly:
         render_monthly_summary(
@@ -2133,10 +2152,8 @@ DIRECTUS_TOKEN=your-admin-token
             selected_range=date_range,
             monthly_stats_override=monthly_stats_override,
             note=monthly_note,
+            user_selection_key=user_selection_key,
         )
-
-    with tab_profile:
-        render_user_profile(usage_data, metrics)
 
     with tab_logins:
         render_login_activity(metrics, selected_users)
@@ -2145,38 +2162,52 @@ DIRECTUS_TOKEN=your-admin-token
         if metrics.chat.total_chats == 0:
             st.info("No chat data available for analysis")
         else:
-            # Compact metrics bar
+            # Collect user queries
+            user_texts = [
+                m.text for ud in usage_data for m in ud.chat_messages
+                if m.message_from and m.message_from.lower() == "user" and m.text
+            ]
+
+            # Quick stats
             queries_per_session = metrics.chat.user_messages / metrics.chat.total_chats if metrics.chat.total_chats > 0 else 0
             st.caption(
                 f"**{metrics.chat.total_chats}** sessions · "
-                f"**{metrics.chat.total_messages}** msgs · "
                 f"**{metrics.chat.user_messages}** queries · "
-                f"**{queries_per_session:.1f}** q/session · "
-                f"P50: **{metrics.chat.p50_messages_per_chat:.0f}** · "
-                f"P90: **{metrics.chat.p90_messages_per_chat:.0f}** msg/session"
+                f"**{queries_per_session:.1f}** per session"
             )
 
-            col1, col2 = st.columns([1, 1])
+            # Auto-generate chat analysis (use profile context if available)
+            profile_context = st.session_state.get("current_user_profile", "")
+            chat_cache_key = f"chat_analysis_{user_selection_key}_{hash(tuple(user_texts[:20]))}"
+            if user_texts and chat_cache_key not in st.session_state:
+                with st.spinner("Analyzing chat patterns..."):
+                    st.session_state[chat_cache_key] = analyze_chat_messages(
+                        user_texts, 
+                        user_profile_context=profile_context
+                    )
 
-            with col1:
-                render_word_cloud(metrics)
+            if chat_cache_key in st.session_state:
+                st.markdown(st.session_state[chat_cache_key])
+                
+                col_regen, _ = st.columns([1, 4])
+                with col_regen:
+                    if st.button("🔄 Regenerate", key="chat_regen_btn", type="secondary"):
+                        del st.session_state[chat_cache_key]
+                        st.rerun()
 
-            with col2:
-                # LLM Analysis
-                if metrics.chat.user_messages > 0:
-                    sample_note = f" ({metrics.chat.user_messages})" if metrics.chat.user_messages > 500 else ""
-                    
-                    if st.button(f"🤖 Analyze{sample_note}", key="chat_analysis_btn"):
-                        user_texts = [
-                            m.text for ud in usage_data for m in ud.chat_messages
-                            if m.message_from and m.message_from.lower() == "user" and m.text
-                        ]
-                        with st.spinner("Analyzing..."):
-                            analysis = analyze_chat_messages(user_texts)
-                            st.session_state["chat_analysis"] = analysis
+            st.divider()
 
-                    if "chat_analysis" in st.session_state:
-                        st.markdown(st.session_state["chat_analysis"])
+            # Sample queries - more useful than word cloud
+            with st.expander(f"📝 Sample Queries ({len(user_texts)} total)", expanded=False):
+                if user_texts:
+                    import random
+                    sampled = random.sample(user_texts, min(20, len(user_texts)))
+                    for q in sampled:
+                        # Truncate long queries
+                        display_q = q[:200] + "..." if len(q) > 200 else q
+                        st.markdown(f"• {display_q}")
+                else:
+                    st.caption("No queries recorded")
 
     with tab_projects:
         col1, col2, col3 = st.columns(3)

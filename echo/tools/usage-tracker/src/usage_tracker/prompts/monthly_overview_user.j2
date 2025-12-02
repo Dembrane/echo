@@ -1,9 +1,14 @@
-Summarize this user's monthly activity. Write for a salesperson or CTO who wants to understand how this customer is using ECHO.
+{% if user_profile %}
+## USER CONTEXT
+{{ user_profile }}
 
+---
+{% endif %}
+
+## MONTHLY DATA
 {{ context }}
 
-Key context:
-- Conversations = data collected from participants (via QR scan or upload). Independent of host logins.
-- Logins = when the host comes to analyze. They might analyze many conversations in one session.
-- Recording length = how long the original conversations were (longer = more substantial discussions).
-- Conversations per project = how they organize their work. Low numbers might mean early setup or using projects as containers.
+Key reminders:
+- Conversations = data from participants (QR scan or upload). Independent of logins.
+- Logins = when host analyzes. One session might cover many conversations.
+- Interpret trends in context of what you know about this user's workflow.
