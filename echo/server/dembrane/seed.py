@@ -2,13 +2,253 @@
 Seeding helpers for bootstrap tasks that need to run during application startup.
 """
 
-from typing import Any, Dict, List, Mapping, Iterable
+import json
+from uuid import uuid4
+from typing import Any, Dict, List, Mapping, Iterable, Optional, Tuple
 from logging import getLogger
 
-from dembrane.directus import directus
+from redis.asyncio import Redis
+
+from dembrane.directus import DirectusBadRequest, directus
 from dembrane.async_helpers import run_in_thread_pool
+from dembrane.redis_async import get_redis_client
 
 logger = getLogger("dembrane.seed")
+
+DEFAULT_VERIFICATION_LANG = "en-US"
+VERIFICATION_TOPIC_LOCK_KEY = "dembrane:verification_topics:reconcile_lock"
+VERIFICATION_TOPIC_LOCK_TTL_SECONDS = 300
+
+
+def _is_unique_constraint_error(
+    exc: DirectusBadRequest,
+    *,
+    collection: str,
+    field: str,
+    value: Any,
+) -> bool:
+    """
+    Check whether a Directus error represents a uniqueness violation for the
+    provided collection/field/value combination.
+    """
+    try:
+        payload = str(exc)
+        data = json.loads(payload)
+    except (json.JSONDecodeError, TypeError):
+        return False
+
+    for error in data.get("errors") or []:
+        extensions = error.get("extensions") or {}
+        if (
+            extensions.get("collection") == collection
+            and extensions.get("field") == field
+            and extensions.get("code") == "RECORD_NOT_UNIQUE"
+            and str(extensions.get("value")) == str(value)
+        ):
+            return True
+    return False
+
+
+async def _try_acquire_verification_topic_lock() -> Tuple[Optional[Redis], Optional[str]]:
+    """
+    Attempt to acquire a Redis-backed lock that serializes verification topic reconciliation.
+    """
+    try:
+        client = await get_redis_client()
+    except Exception:  # pragma: no cover - defensive logging only
+        logger.warning("Unable to connect to Redis for verification topic lock; continuing without lock", exc_info=True)
+        return None, None
+
+    token = str(uuid4())
+    try:
+        acquired = await client.set(
+            VERIFICATION_TOPIC_LOCK_KEY,
+            token,
+            ex=VERIFICATION_TOPIC_LOCK_TTL_SECONDS,
+            nx=True,
+        )
+    except Exception:  # pragma: no cover - defensive logging only
+        logger.warning("Failed to set Redis lock for verification topic reconciliation; continuing without lock", exc_info=True)
+        return None, None
+
+    if not acquired:
+        return client, None
+
+    return client, token
+
+
+async def _release_verification_topic_lock(client: Optional[Redis], token: Optional[str]) -> None:
+    """
+    Release the Redis lock if we successfully acquired it.
+    """
+    if client is None or token is None:
+        return
+
+    release_script = """
+    if redis.call("get", KEYS[1]) == ARGV[1] then
+        return redis.call("del", KEYS[1])
+    else
+        return 0
+    end
+    """
+    try:
+        await client.eval(
+            release_script,
+            1,
+            VERIFICATION_TOPIC_LOCK_KEY,
+            token,
+        )
+    except Exception:  # pragma: no cover - defensive logging only
+        logger.warning("Failed to release Redis lock for verification topics", exc_info=True)
+
+
+def _build_desired_topic_translations(topic: Mapping[str, Any]) -> Dict[str, Mapping[str, Any]]:
+    """
+    Normalize the desired translation payload for a verification topic.
+    """
+    translations = topic.get("translations") or {}
+    normalized = {
+        lang_code: value
+        for lang_code, value in translations.items()
+        if isinstance(value, Mapping) and value.get("label")
+    }
+
+    if not normalized and topic.get("label"):
+        normalized = {
+            DEFAULT_VERIFICATION_LANG: {"label": topic["label"]},
+        }
+
+    return normalized
+
+
+async def _fetch_verification_topic_with_translations(topic_key: str) -> Optional[Dict[str, Any]]:
+    """
+    Retrieve a verification topic (restricted to the default/global topics) including translations.
+    """
+    items = await run_in_thread_pool(
+        directus.get_items,
+        "verification_topic",
+        {
+            "query": {
+                "filter": {
+                    "key": {"_eq": topic_key},
+                    "project_id": {"_null": True},
+                },
+                "fields": [
+                    "key",
+                    "translations.id",
+                    "translations.languages_code",
+                    "translations.label",
+                ],
+                "limit": 1,
+            }
+        },
+    )
+    return items[0] if items else None
+
+
+async def _fetch_single_topic_translation(topic_key: str, lang_code: str) -> Optional[Dict[str, Any]]:
+    """
+    Fetch a single translation entry for a verification topic.
+    """
+    items = await run_in_thread_pool(
+        directus.get_items,
+        "verification_topic_translations",
+        {
+            "query": {
+                "filter": {
+                    "verification_topic_key": {"_eq": topic_key},
+                    "languages_code": {"_eq": lang_code},
+                },
+                "fields": ["id", "languages_code", "label"],
+                "limit": 1,
+            }
+        },
+    )
+    return items[0] if items else None
+
+
+async def _ensure_verification_topic_translations(
+    *,
+    topic_key: str,
+    desired_translations: Mapping[str, Mapping[str, Any]],
+    existing_translations: Optional[List[Mapping[str, Any]]] = None,
+) -> None:
+    """
+    Ensure that each desired translation exists (and matches the desired label) for a topic.
+    """
+    if not desired_translations:
+        return
+
+    existing_by_lang = {}
+    for translation in existing_translations or []:
+        lang_code = translation.get("languages_code")
+        if lang_code:
+            existing_by_lang[lang_code] = translation
+
+    for lang_code, translation in desired_translations.items():
+        desired_label = translation.get("label")
+        if not desired_label:
+            continue
+
+        existing = existing_by_lang.get(lang_code)
+        if existing is None:
+            logger.info(
+                "Adding translation '%s' for verification topic '%s'",
+                lang_code,
+                topic_key,
+            )
+            try:
+                await run_in_thread_pool(
+                    directus.create_item,
+                    "verification_topic_translations",
+                    {
+                        "verification_topic_key": topic_key,
+                        "languages_code": lang_code,
+                        "label": desired_label,
+                    },
+                )
+            except DirectusBadRequest as exc:
+                fetched = await _fetch_single_topic_translation(topic_key, lang_code)
+                if fetched is None:
+                    raise
+
+                if fetched.get("label") != desired_label:
+                    await run_in_thread_pool(
+                        directus.update_item,
+                        "verification_topic_translations",
+                        fetched["id"],
+                        {"label": desired_label},
+                    )
+            continue
+
+        if existing.get("label") == desired_label:
+            continue
+
+        translation_id = existing.get("id")
+        if translation_id is None:
+            fetched = await _fetch_single_topic_translation(topic_key, lang_code)
+            translation_id = fetched.get("id") if fetched else None
+
+        if translation_id is None:
+            logger.warning(
+                "Unable to update translation '%s' for verification topic '%s' (missing ID)",
+                lang_code,
+                topic_key,
+            )
+            continue
+
+        logger.info(
+            "Updating translation '%s' for verification topic '%s'",
+            lang_code,
+            topic_key,
+        )
+        await run_in_thread_pool(
+            directus.update_item,
+            "verification_topic_translations",
+            translation_id,
+            {"label": desired_label},
+        )
 
 
 DEFAULT_DIRECTUS_LANGUAGES: Iterable[Mapping[str, Any]] = [
@@ -38,18 +278,33 @@ async def seed_default_languages() -> None:
         )
 
         if existing:
+            logger.info("Language %s already exists; skipping", language["code"])
             continue
 
         logger.info("Seeding language %s", language["code"])
-        await run_in_thread_pool(
-            directus.create_item,
-            "languages",
-            {
-                "code": language["code"],
-                "name": language["name"],
-                "direction": language["direction"],
-            },
-        )
+        try:
+            await run_in_thread_pool(
+                directus.create_item,
+                "languages",
+                {
+                    "code": language["code"],
+                    "name": language["name"],
+                    "direction": language["direction"],
+                },
+            )
+        except DirectusBadRequest as exc:
+            if _is_unique_constraint_error(
+                exc,
+                collection="languages",
+                field="code",
+                value=language["code"],
+            ):
+                logger.info(
+                    "Language %s already exists (likely seeded concurrently); skipping",
+                    language["code"],
+                )
+                continue
+            raise
 
 
 DEFAULT_VERIFICATION_TOPICS: List[Dict[str, Any]] = [
@@ -180,56 +435,81 @@ DEFAULT_VERIFICATION_TOPICS: List[Dict[str, Any]] = [
     },
 ]
 
-DEFAULT_VERIFICATION_LANG = "en-US"
-
-
-async def seed_default_verification_topics() -> None:
+async def reconcile_default_verification_topics() -> None:
     """
-    Ensure that the canonical verification topics exist in Directus.
+    Reconcile the canonical verification topics and their translations in Directus.
     """
-    for topic in DEFAULT_VERIFICATION_TOPICS:
-        existing = await run_in_thread_pool(
-            directus.get_items,
-            "verification_topic",
-            {
-                "query": {
-                    "filter": {
-                        "key": {"_eq": topic["key"]},
-                        "project_id": {"_null": True},
-                    },
-                    "fields": ["key"],
-                    "limit": 1,
+    lock_client, lock_token = await _try_acquire_verification_topic_lock()
+    if lock_client is not None and lock_token is None:
+        logger.info("Another worker is already reconciling verification topics; skipping this run")
+        return
+
+    try:
+        for topic in DEFAULT_VERIFICATION_TOPICS:
+            desired_translations = _build_desired_topic_translations(topic)
+            existing_topic = await _fetch_verification_topic_with_translations(topic["key"])
+
+            if existing_topic:
+                logger.info(
+                    "Verification topic '%s' already exists; reconciling translations",
+                    topic["key"],
+                )
+                await _ensure_verification_topic_translations(
+                    topic_key=topic["key"],
+                    desired_translations=desired_translations,
+                    existing_translations=existing_topic.get("translations") or [],
+                )
+                continue
+
+            logger.info("Reconciling verification topic '%s' (creating)", topic["key"])
+            translations_payload = [
+                {
+                    "languages_code": lang_code,
+                    "label": translation["label"],
                 }
-            },
-        )
+                for lang_code, translation in desired_translations.items()
+            ]
 
-        if existing:
-            continue
+            if not translations_payload and topic.get("label"):
+                translations_payload = [
+                    {
+                        "languages_code": DEFAULT_VERIFICATION_LANG,
+                        "label": topic["label"],
+                    }
+                ]
 
-        logger.info("Seeding verification topic '%s'", topic["key"])
-        translations_payload = [
-            {
-                "languages_code": lang_code,
-                "label": translation["label"],
-            }
-            for lang_code, translation in (topic.get("translations") or {}).items()
-        ] or [
-            {
-                "languages_code": DEFAULT_VERIFICATION_LANG,
-                "label": topic["label"],
-            }
-        ]
-
-        await run_in_thread_pool(
-            directus.create_item,
-            "verification_topic",
-            item_data={
-                "key": topic["key"],
-                "prompt": topic["prompt"],
-                "icon": topic["icon"],
-                "sort": topic["sort"],
-                "translations": {
-                    "create": translations_payload,
-                },
-            },
-        )
+            try:
+                await run_in_thread_pool(
+                    directus.create_item,
+                    "verification_topic",
+                    item_data={
+                        "key": topic["key"],
+                        "prompt": topic["prompt"],
+                        "icon": topic["icon"],
+                        "sort": topic["sort"],
+                        "translations": {
+                            "create": translations_payload,
+                        },
+                    },
+                )
+            except DirectusBadRequest as exc:
+                if _is_unique_constraint_error(
+                    exc,
+                    collection="verification_topic",
+                    field="key",
+                    value=topic["key"],
+                ):
+                    logger.info(
+                        "Verification topic '%s' already exists (likely reconciled concurrently); ensuring translations",
+                        topic["key"],
+                    )
+                    existing_topic = await _fetch_verification_topic_with_translations(topic["key"])
+                    await _ensure_verification_topic_translations(
+                        topic_key=topic["key"],
+                        desired_translations=desired_translations,
+                        existing_translations=(existing_topic or {}).get("translations") or [],
+                    )
+                    continue
+                raise
+    finally:
+        await _release_verification_topic_lock(lock_client, lock_token)
