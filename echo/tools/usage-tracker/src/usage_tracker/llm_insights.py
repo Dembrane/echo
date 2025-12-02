@@ -47,6 +47,56 @@ def _get_completion_kwargs() -> Dict[str, Any]:
     return kwargs
 
 
+PLATFORM_SUMMARY = """Dembrane ECHO: Platform Summary
+
+What It Is
+----------
+A conversation intelligence platform that transforms group discussions into actionable insights, built for democratic stakeholder engagement at scale.
+
+How It Works
+------------
+For Hosts (Dashboard):
+- Create projects and generate QR codes
+- Participants scan codes to record conversations instantly (no app needed)
+- Use AI chat interface to analyze incoming conversation data
+- Generate reports showing themes, tensions, and key insights grounded in actual quotes
+
+For Participants (Portal):
+- Scan QR → record in 2 clicks
+- Works on any device, 50+ languages
+- WCAG compliant, no downloads required
+
+Core Technology:
+- Auto-transcription with WhisperX
+- AI clustering to identify themes and patterns
+- Quote-based analysis (community voices, not AI summaries)
+- Scales from single meetings to thousands of async conversations
+- ISO27001 compliant, GDPR-ready
+
+Key Features:
+- Speed: room-to-report in hours
+- Multilingual: 50+ languages
+- Inclusive: reaches voices excluded from traditional engagement
+- Transparent: insights traceable to source quotes
+- Scalable: from single conversations to thousands in parallel
+
+Use Cases:
+- Civic consultations and participatory budgeting
+- Employee workshops and strategy sessions
+- Community engagement and stakeholder feedback
+- Policy development with public input
+
+Scale & Vision:
+- Small team in Eindhoven, ISO27001 compliant, partners with platforms like Go Vocal
+- Open source components
+- Vision: build democratic infrastructure so communities can self-organize and decide at scale—“Mentimeter for conversations,” capturing why people think what they think, not just what they think.
+"""
+
+
+def _with_platform_summary(content: str) -> str:
+    return f"{PLATFORM_SUMMARY}\n\n{content}"
+
+
 def _build_metrics_context(
     users: List[UserInfo],
     metrics: UsageMetrics,
@@ -84,7 +134,9 @@ def _build_metrics_context(
         f"- Uses Reports: {'Yes' if metrics.adoption.uses_reports else 'No'}",
     ]
 
-    login_last = metrics.logins.last_login.strftime("%Y-%m-%d %H:%M") if metrics.logins.last_login else "n/a"
+    login_last = (
+        metrics.logins.last_login.strftime("%Y-%m-%d %H:%M") if metrics.logins.last_login else "n/a"
+    )
     context_parts.extend(
         [
             "",
@@ -160,6 +212,34 @@ class DashboardStats:
     ignored_accounts: List[str] = field(default_factory=list)
 
 
+@dataclass
+class MonthlyOverviewPayload:
+    range_label: str
+    avg_conversations: float
+    median_conversations: float
+    p90_conversations: float
+    avg_chats: float
+    avg_logins: float
+    content_ratio: float
+    duration_per_conversation: float
+    conversations_per_project: float
+    notes: List[str] = field(default_factory=list)
+
+
+@dataclass
+class MonthlyOverviewPayload:
+    range_label: str
+    avg_conversations: float
+    median_conversations: float
+    p90_conversations: float
+    avg_chats: float
+    avg_logins: float
+    content_ratio: float
+    duration_per_conversation: float
+    conversations_per_project: float
+    notes: List[str] = field(default_factory=list)
+
+
 def generate_insights(
     users: List[UserInfo],
     metrics: UsageMetrics,
@@ -185,7 +265,12 @@ def generate_insights(
         response = litellm.completion(
             messages=[
                 {"role": "system", "content": INSIGHTS_SYSTEM_PROMPT},
-                {"role": "user", "content": INSIGHTS_USER_PROMPT.format(context=context)},
+                {
+                    "role": "user",
+                    "content": _with_platform_summary(
+                        INSIGHTS_USER_PROMPT.format(context=context)
+                    ),
+                },
             ],
             temperature=0.7,
             **kwargs,
@@ -229,7 +314,10 @@ def generate_executive_summary(
         response = litellm.completion(
             messages=[
                 {"role": "system", "content": EXEC_SUMMARY_SYSTEM_PROMPT},
-                {"role": "user", "content": f"Summarize:\n{context}"},
+                {
+                    "role": "user",
+                    "content": _with_platform_summary(f"Summarize:\n{context}"),
+                },
             ],
             temperature=0.5,
             **kwargs,
@@ -243,8 +331,8 @@ def generate_executive_summary(
 
 
 DASHBOARD_SYSTEM_PROMPT = (
-    "You are a sales-oriented product analyst. Summarize usage for executives with" \
-    " one paragraph of highlights and one paragraph of suggested follow-ups. Keep it factual, cite" \
+    "You are a sales-oriented product analyst. Summarize usage for executives with"
+    " one paragraph of highlights and one paragraph of suggested follow-ups. Keep it factual, cite"
     " the provided metrics (MAU, DAU, daily conversations/projects, top users/projects)."
 )
 
@@ -303,7 +391,7 @@ def generate_dashboard_overview(stats: DashboardStats) -> str:
                 {"role": "system", "content": DASHBOARD_SYSTEM_PROMPT},
                 {
                     "role": "user",
-                    "content": (
+                    "content": _with_platform_summary(
                         "Summarize this dashboard for sales leadership with clear takeaways\n"
                         f"{context}"
                     ),
@@ -316,6 +404,126 @@ def generate_dashboard_overview(stats: DashboardStats) -> str:
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to generate dashboard overview: {exc}")
         return _fallback_dashboard_summary(stats)
+
+
+MONTHLY_OVERVIEW_SYSTEM_PROMPT = (
+    "Summarize monthly engagement trends for a product analytics audience. "
+    "Keep to two short paragraphs: (1) factual metrics with comparisons, "
+    "(2) interpretation with risks/opportunities. Avoid hype; cite the provided numbers."
+)
+
+
+def _format_monthly_overview_context(payload: MonthlyOverviewPayload) -> str:
+    lines = [
+        f"Range: {payload.range_label}",
+        f"Avg conversations/month: {payload.avg_conversations:.1f}",
+        f"Median conversations/month: {payload.median_conversations:.1f}",
+        f"P90 conversations/month: {payload.p90_conversations:.1f}",
+        f"Avg chats/month: {payload.avg_chats:.1f}",
+        f"Avg logins/month: {payload.avg_logins:.1f}",
+        f"Content ratio: {payload.content_ratio:.2%}",
+        f"Duration per conversation: {payload.duration_per_conversation:.1f} seconds",
+        f"Conversations per project: {payload.conversations_per_project:.1f}",
+    ]
+    if payload.notes:
+        lines.append("Notes:")
+        lines.extend(f"- {note}" for note in payload.notes)
+    return "\n".join(lines)
+
+
+def _fallback_monthly_overview(payload: MonthlyOverviewPayload) -> str:
+    return (
+        f"{payload.range_label}: {payload.avg_conversations:.1f} avg conversations/mo "
+        f"(median {payload.median_conversations:.1f}, p90 {payload.p90_conversations:.1f}). "
+        f"Chat sessions average {payload.avg_chats:.1f} and logins {payload.avg_logins:.1f}."
+    )
+
+
+def generate_monthly_overview(payload: MonthlyOverviewPayload) -> str:
+    """Generate a concise two-paragraph monthly overview."""
+    litellm = _get_litellm()
+    if litellm is None:
+        return _fallback_monthly_overview(payload)
+
+    settings = get_settings()
+    if not settings.llm.is_configured:
+        return _fallback_monthly_overview(payload)
+
+    try:
+        kwargs = _get_completion_kwargs()
+        context = _format_monthly_overview_context(payload)
+        response = litellm.completion(
+            messages=[
+                {"role": "system", "content": MONTHLY_OVERVIEW_SYSTEM_PROMPT},
+                {"role": "user", "content": _with_platform_summary(context)},
+            ],
+            temperature=0.4,
+            **kwargs,
+        )
+        return response.choices[0].message.content
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to generate monthly overview: {exc}")
+        return _fallback_monthly_overview(payload)
+
+
+MONTHLY_OVERVIEW_SYSTEM_PROMPT = (
+    "Summarize monthly engagement trends for a product analytics audience. "
+    "Keep to two short paragraphs: (1) factual metrics with comparisons, "
+    "(2) interpretation with risks/opportunities. Avoid hype; cite the provided numbers."
+)
+
+
+def _format_monthly_overview_context(payload: MonthlyOverviewPayload) -> str:
+    lines = [
+        f"Range: {payload.range_label}",
+        f"Avg conversations/month: {payload.avg_conversations:.1f}",
+        f"Median conversations/month: {payload.median_conversations:.1f}",
+        f"P90 conversations/month: {payload.p90_conversations:.1f}",
+        f"Avg chats/month: {payload.avg_chats:.1f}",
+        f"Avg logins/month: {payload.avg_logins:.1f}",
+        f"Content ratio: {payload.content_ratio:.2%}",
+        f"Duration per conversation: {payload.duration_per_conversation:.1f} seconds",
+        f"Conversations per project: {payload.conversations_per_project:.1f}",
+    ]
+    if payload.notes:
+        lines.append("Notes:")
+        lines.extend(f"- {note}" for note in payload.notes)
+    return "\n".join(lines)
+
+
+def _fallback_monthly_overview(payload: MonthlyOverviewPayload) -> str:
+    return (
+        f"{payload.range_label}: {payload.avg_conversations:.1f} avg conversations/mo "
+        f"(median {payload.median_conversations:.1f}, p90 {payload.p90_conversations:.1f}). "
+        f"Chat sessions average {payload.avg_chats:.1f} and logins {payload.avg_logins:.1f}."
+    )
+
+
+def generate_monthly_overview(payload: MonthlyOverviewPayload) -> str:
+    """Generate a concise two-paragraph monthly overview."""
+    litellm = _get_litellm()
+    if litellm is None:
+        return _fallback_monthly_overview(payload)
+
+    settings = get_settings()
+    if not settings.llm.is_configured:
+        return _fallback_monthly_overview(payload)
+
+    try:
+        kwargs = _get_completion_kwargs()
+        context = _format_monthly_overview_context(payload)
+        response = litellm.completion(
+            messages=[
+                {"role": "system", "content": MONTHLY_OVERVIEW_SYSTEM_PROMPT},
+                {"role": "user", "content": context},
+            ],
+            temperature=0.4,
+            **kwargs,
+        )
+        return response.choices[0].message.content
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to generate monthly overview: {exc}")
+        return _fallback_monthly_overview(payload)
 
 
 def _generate_fallback_summary(
@@ -374,6 +582,7 @@ def analyze_chat_messages(messages_text: List[str]) -> str:
 
         # Use all messages if under 500, otherwise random sample
         import random
+
         if len(messages_text) <= 500:
             sample = messages_text
         else:
@@ -384,8 +593,16 @@ def analyze_chat_messages(messages_text: List[str]) -> str:
 
         response = litellm.completion(
             messages=[
-                {"role": "system", "content": "Analyze user chat queries. Identify: main topics, common question types, what they're researching. Use bullets. Be specific."},
-                {"role": "user", "content": f"User messages ({len(sample)} total):\n{messages_str}"},
+                {
+                    "role": "system",
+                    "content": "Analyze user chat queries. Identify: main topics, common question types, what they're researching. Use bullets. Be specific.",
+                },
+                {
+                    "role": "user",
+                    "content": _with_platform_summary(
+                        f"User messages ({len(sample)} total):\n{messages_str}"
+                    ),
+                },
             ],
             temperature=0.5,
             **kwargs,
@@ -451,9 +668,8 @@ def analyze_stratified_chat_segments(
 
         ignore_clause = ""
         if ignored_accounts:
-            ignore_clause = (
-                "Ignore these service/automation accounts entirely: "
-                + ", ".join(sorted(set(ignored_accounts)))
+            ignore_clause = "Ignore these service/automation accounts entirely: " + ", ".join(
+                sorted(set(ignored_accounts))
             )
 
         payload = "\n\n".join(segment_blocks)
@@ -462,7 +678,7 @@ def analyze_stratified_chat_segments(
                 {"role": "system", "content": STRATIFIED_CHAT_SYSTEM_PROMPT},
                 {
                     "role": "user",
-                    "content": (
+                    "content": _with_platform_summary(
                         "Analyze intent differences and emerging topics across cohorts. "
                         "Call out unusual spikes or risks and back them with the samples.\n"
                         f"{ignore_clause}\n\n"
@@ -571,7 +787,10 @@ def generate_timeline_insights(metrics: UsageMetrics) -> str:
                     "role": "system",
                     "content": "Analyze timeline for sales. Find peak days (events?), active projects, patterns. Be specific with dates. Use bullets.",
                 },
-                {"role": "user", "content": f"Timeline data:\n{context}"},
+                {
+                    "role": "user",
+                    "content": _with_platform_summary(f"Timeline data:\n{context}"),
+                },
             ],
             temperature=0.7,
             **kwargs,

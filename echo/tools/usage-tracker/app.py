@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 from datetime import date, datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
-from collections import defaultdict
+from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import math
 import random
@@ -50,13 +50,16 @@ try:
         calculate_trends,
         get_period_comparison,
         UsageMetrics,
+        MonthlyStats,
         format_duration,
+        estimate_conversation_duration,
     )
     from src.usage_tracker.llm_insights import (
         generate_insights,
         generate_executive_summary,
-        generate_timeline_insights,
         analyze_chat_messages,
+        generate_monthly_overview,
+        MonthlyOverviewPayload,
     )
     from src.usage_tracker.pdf_export import generate_pdf_report
 except ImportError as e:
@@ -1211,121 +1214,114 @@ def render_power_user_dashboard(
         st.session_state.selected_user_ids = selected_candidates
         st.experimental_rerun()
 
-def render_timeline_chart(metrics: UsageMetrics):
-    """Render the activity timeline chart with conversations and duration."""
-    from src.usage_tracker.metrics import format_duration
-
-    if not metrics.timeline.daily_conversations:
-        st.info("No activity data available for timeline")
-        return
-
-    # Convert to dataframe
-    dates = sorted(metrics.timeline.daily_conversations.keys())
-    if not dates:
-        return
-
-    # Fill in missing dates
-    all_dates = pd.date_range(start=min(dates), end=max(dates), freq="D")
-
-    data = []
-    for d in all_dates:
-        day = d.date()
-        duration_secs = metrics.timeline.daily_duration.get(day, 0)
-        data.append(
-            {
-                "date": day,
-                "conversations": metrics.timeline.daily_conversations.get(day, 0),
-                "duration_mins": duration_secs / 60,  # Convert to minutes for chart
-                "duration_formatted": format_duration(duration_secs),
-                "chats": metrics.timeline.daily_chats.get(day, 0),
-                "messages": metrics.timeline.daily_messages.get(day, 0),
-            }
-        )
-
-    df = pd.DataFrame(data)
-
-    # Create figure with secondary y-axis
-    fig = make_subplots(specs=[[{"secondary_y": True}]])
-
-    # Conversations bar
-    fig.add_trace(
-        go.Bar(
-            x=df["date"],
-            y=df["conversations"],
-            name="Conversations",
-            marker_color="#667eea",
-            opacity=0.8,
-            hovertemplate="<b>%{x}</b><br>Conversations: %{y}<extra></extra>",
-        ),
-        secondary_y=False,
-    )
-
-    # Duration line
-    fig.add_trace(
-        go.Scatter(
-            x=df["date"],
-            y=df["duration_mins"],
-            name="Duration (mins)",
-            line=dict(color="#f5576c", width=3),
-            mode="lines+markers",
-            marker=dict(size=6),
-            customdata=df["duration_formatted"],
-            hovertemplate="<b>%{x}</b><br>Duration: %{customdata}<extra></extra>",
-        ),
-        secondary_y=True,
-    )
-
-    # Chat messages line
-    fig.add_trace(
-        go.Scatter(
-            x=df["date"],
-            y=df["messages"],
-            name="Chat Messages",
-            line=dict(color="#4ecdc4", width=2, dash="dot"),
-            mode="lines+markers",
-            marker=dict(size=4, symbol="diamond"),
-            hovertemplate="<b>%{x}</b><br>Chat Messages: %{y}<extra></extra>",
-        ),
-        secondary_y=True,
-    )
-
-    fig.update_layout(
-        hovermode="x unified",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        height=400,
-        margin=dict(t=30, b=10),
-    )
-
-    fig.update_xaxes(
-        title="Date",
-        rangeslider=dict(visible=True),  # Enable zoom slider
-        type="date",
-    )
-    fig.update_yaxes(title="Conversations", secondary_y=False)
-    fig.update_yaxes(title="Duration (mins) / Messages", secondary_y=True)
-
-    st.plotly_chart(fig, use_container_width=True)
-
-
-def render_monthly_summary(metrics: UsageMetrics):
-    """Render monthly summary chart with trends."""
-    monthly_stats = metrics.timeline.monthly_stats
+def render_monthly_summary(
+    metrics: UsageMetrics,
+    usage_data: List[UserUsageData],
+    selected_range: Optional[DateRange],
+    monthly_stats_override: Optional[List[MonthlyStats]] = None,
+    note: Optional[str] = None,
+):
+    """Render monthly summary chart with trends, distributions, and ratios."""
+    monthly_stats = monthly_stats_override or metrics.timeline.monthly_stats
     if not monthly_stats or len(monthly_stats) < 2:
         st.info("Not enough monthly data available (need at least 2 months)")
         return
 
-    chart_data = []
-    for month in monthly_stats:
-        chart_data.append({
+    chart_data = [
+        {
             "month": month.month_label,
             "month_key": month.month_key,
             "conversations_valid": month.conversations_valid,
             "conversations_empty": month.conversations_empty,
             "duration_hours": month.duration_seconds / 3600,
             "chats": month.chats,
-        })
+        }
+        for month in monthly_stats
+    ]
 
     chart_df = pd.DataFrame(chart_data)
+    conversation_counts = [m.conversations for m in monthly_stats]
+    chat_counts = [m.chats for m in monthly_stats]
+    valid_counts = [m.conversations_valid for m in monthly_stats]
+
+    monthly_login_counts: Dict[str, int] = defaultdict(int)
+    for day, count in metrics.logins.daily_logins.items():
+        key = f"{day.year}-{day.month:02d}"
+        monthly_login_counts[key] += count
+    login_counts_ordered = [monthly_login_counts.get(m.month_key, 0) for m in monthly_stats]
+
+    def _safe_mean(values: List[int]) -> float:
+        return sum(values) / len(values) if values else 0.0
+
+    summary_metrics = {
+        "avg_conversations": _safe_mean(conversation_counts),
+        "median_conversations": statistics.median(conversation_counts) if conversation_counts else 0.0,
+        "p90_conversations": _percentile(sorted(conversation_counts), 0.9) if conversation_counts else 0.0,
+        "avg_chats": _safe_mean(chat_counts),
+        "median_chats": statistics.median(chat_counts) if chat_counts else 0.0,
+        "p90_chats": _percentile(sorted(chat_counts), 0.9) if chat_counts else 0.0,
+        "avg_logins": _safe_mean(login_counts_ordered),
+        "median_logins": statistics.median(login_counts_ordered) if login_counts_ordered else 0.0,
+        "p90_logins": _percentile(sorted(login_counts_ordered), 0.9) if login_counts_ordered else 0.0,
+    }
+
+    ratio_valid = (
+        sum(valid_counts) / sum(conversation_counts) if conversation_counts and sum(conversation_counts) else 0.0
+    )
+    avg_duration_per_conversation = (
+        sum(m.duration_seconds for m in monthly_stats) / sum(conversation_counts)
+        if conversation_counts and sum(conversation_counts)
+        else 0.0
+    )
+
+    st.subheader("Monthly Overview")
+    metric_cols = st.columns(3)
+    with metric_cols[0]:
+        st.metric(
+            "Avg Conversations / Mo",
+            f"{summary_metrics['avg_conversations']:.1f}",
+            help="Mean monthly conversation count",
+        )
+        st.caption(
+            f"Median {summary_metrics['median_conversations']:.1f} · P90 {summary_metrics['p90_conversations']:.1f}"
+        )
+    with metric_cols[1]:
+        st.metric(
+            "Avg Chat Sessions / Mo",
+            f"{summary_metrics['avg_chats']:.1f}",
+            help="Mean monthly chat sessions",
+        )
+        st.caption(f"Median {summary_metrics['median_chats']:.1f} · P90 {summary_metrics['p90_chats']:.1f}")
+    with metric_cols[2]:
+        st.metric(
+            "Avg Logins / Mo",
+            f"{summary_metrics['avg_logins']:.1f}",
+            help="Mean monthly Directus logins",
+        )
+        st.caption(f"Median {summary_metrics['median_logins']:.1f} · P90 {summary_metrics['p90_logins']:.1f}")
+
+    months_label = f"{monthly_stats[0].month_label} – {monthly_stats[-1].month_label}"
+    range_start_key = selected_range.start.isoformat() if selected_range else "all"
+    range_end_key = selected_range.end.isoformat() if selected_range else "all"
+    llm_cache_key = f"monthly_overview_{months_label}_{range_start_key}_{range_end_key}"
+    if llm_cache_key not in st.session_state:
+        payload = MonthlyOverviewPayload(
+            range_label=months_label,
+            avg_conversations=summary_metrics["avg_conversations"],
+            median_conversations=summary_metrics["median_conversations"],
+            p90_conversations=summary_metrics["p90_conversations"],
+            avg_chats=summary_metrics["avg_chats"],
+            avg_logins=summary_metrics["avg_logins"],
+            content_ratio=ratio_valid,
+            duration_per_conversation=avg_duration_per_conversation,
+            conversations_per_project=(
+                summary_metrics["avg_conversations"] / metrics.projects.total_projects
+                if metrics.projects.total_projects
+                else 0.0
+            ),
+        )
+        st.session_state[llm_cache_key] = generate_monthly_overview(payload)
+    st.info(st.session_state[llm_cache_key])
 
     # Create dual-axis chart
     fig = make_subplots(specs=[[{"secondary_y": True}]])
@@ -1393,6 +1389,9 @@ def render_monthly_summary(metrics: UsageMetrics):
 
     st.plotly_chart(fig, use_container_width=True)
 
+    if note:
+        st.caption(note)
+
     # Add legend explanation
     st.caption(
         "**Blue bars** = conversations with audio content · "
@@ -1400,6 +1399,133 @@ def render_monthly_summary(metrics: UsageMetrics):
         "**Red line** = duration in hours · "
         "**Teal dashed** = chat sessions"
     )
+
+    st.subheader("Distribution Metrics")
+    conversation_durations: List[int] = []
+    conversation_lengths: List[int] = []
+    for ud in usage_data:
+        for conv in ud.conversations:
+            if not conv.created_at:
+                continue
+            conv_day = conv.created_at.date()
+            if selected_range and (conv_day < selected_range.start or conv_day > selected_range.end):
+                continue
+            conversation_durations.append(estimate_conversation_duration(conv))
+            conversation_lengths.append(conv.chunk_count or 0)
+
+    def describe_distribution(values: List[int]) -> Dict[str, float]:
+        if not values:
+            return {"p25": 0.0, "median": 0.0, "p75": 0.0}
+        sorted_vals = sorted(values)
+        return {
+            "p25": _percentile(sorted_vals, 0.25),
+            "median": _percentile(sorted_vals, 0.5),
+            "p75": _percentile(sorted_vals, 0.75),
+        }
+
+    duration_stats = describe_distribution(conversation_durations)
+    length_stats = describe_distribution(conversation_lengths)
+    daily_conv_values = list(metrics.timeline.daily_conversations.values())
+    mode_daily = max(set(daily_conv_values), key=daily_conv_values.count) if daily_conv_values else 0
+
+    weekly_totals: List[int] = []
+    if metrics.timeline.daily_conversations:
+        sorted_days = sorted(metrics.timeline.daily_conversations.keys())
+        buffer = []
+        for day in sorted_days:
+            buffer.append(metrics.timeline.daily_conversations[day])
+            if len(buffer) == 7:
+                weekly_totals.append(sum(buffer))
+                buffer = []
+        if buffer:
+            weekly_totals.append(sum(buffer))
+    mode_weekly = max(set(weekly_totals), key=weekly_totals.count) if weekly_totals else 0
+
+    dist_cols = st.columns(3)
+    dist_cols[0].metric(
+        "Duration P25 / P50 / P75",
+        f"{duration_stats['p25'] / 60:.1f}m / {duration_stats['median'] / 60:.1f}m / {duration_stats['p75'] / 60:.1f}m",
+    )
+    dist_cols[1].metric(
+        "Chunks P25 / P50 / P75",
+        f"{length_stats['p25']:.0f} / {length_stats['median']:.0f} / {length_stats['p75']:.0f}",
+    )
+    dist_cols[2].metric("Mode conversations (day/week)", f"{mode_daily} per day · {mode_weekly} per week")
+
+    st.subheader("Trend Indicators")
+    month_over_month = 0.0
+    if len(conversation_counts) >= 2 and conversation_counts[-2]:
+        month_over_month = ((conversation_counts[-1] - conversation_counts[-2]) / conversation_counts[-2]) * 100
+    daily_counts_list = [
+        metrics.timeline.daily_conversations[d]
+        for d in sorted(metrics.timeline.daily_conversations.keys())
+    ]
+    if daily_counts_list:
+        daily_counts_series = pd.Series(daily_counts_list)
+        ma_7 = (
+            daily_counts_series.rolling(window=7).mean().iloc[-1]
+            if len(daily_counts_series) >= 7
+            else daily_counts_series.mean()
+        )
+        ma_30 = (
+            daily_counts_series.rolling(window=30).mean().iloc[-1]
+            if len(daily_counts_series) >= 30
+            else daily_counts_series.mean()
+        )
+        variance = statistics.pvariance(daily_counts_list) if len(daily_counts_list) > 1 else 0.0
+    else:
+        ma_7 = ma_30 = variance = 0.0
+
+    trend_cols = st.columns(3)
+    trend_cols[0].metric("MoM conversation growth", f"{month_over_month:.1f}%")
+    trend_cols[1].metric("7-day / 30-day MA", f"{ma_7:.1f} / {ma_30:.1f} convs")
+    trend_cols[2].metric("Daily variance", f"{variance:.1f}")
+
+    st.subheader("Segmentation")
+    new_users = returning_users = heavy_users = light_users = 0
+    range_start = selected_range.start if selected_range else None
+    for ud in usage_data:
+        conv_count = len(ud.conversations)
+        if conv_count >= 10:
+            heavy_users += 1
+        elif conv_count > 0:
+            light_users += 1
+        if range_start and ud.first_activity and ud.first_activity.date() >= range_start:
+            new_users += 1
+        elif conv_count > 0:
+            returning_users += 1
+
+    seg_cols = st.columns(4)
+    seg_cols[0].metric("New users", new_users)
+    seg_cols[1].metric("Returning users", returning_users)
+    seg_cols[2].metric("Heavy users (≥10 convs)", heavy_users)
+    seg_cols[3].metric("Light users", light_users)
+
+    weekday_counter = Counter()
+    hour_counter = Counter()
+    for ud in usage_data:
+        for conv in ud.conversations:
+            if not conv.created_at:
+                continue
+            weekday_counter[conv.created_at.strftime("%A")] += 1
+            hour_counter[conv.created_at.hour] += 1
+    peak_day = max(weekday_counter, key=weekday_counter.get) if weekday_counter else None
+    peak_hour = max(hour_counter, key=hour_counter.get) if hour_counter else None
+    if peak_day or peak_hour is not None:
+        hour_text = f"{peak_hour}:00" if peak_hour is not None else "n/a"
+        st.caption(f"Peak day: **{peak_day or 'n/a'}** · Peak hour: **{hour_text}**")
+    else:
+        st.caption("Peak usage data unavailable")
+
+    st.subheader("Quality & Efficiency Ratios")
+    total_conversations = sum(conversation_counts)
+    conversations_per_project = (
+        total_conversations / metrics.projects.total_projects if metrics.projects.total_projects else 0.0
+    )
+    ratio_cols = st.columns(3)
+    ratio_cols[0].metric("Content-to-empty ratio", f"{ratio_valid:.0%}")
+    ratio_cols[1].metric("Avg duration per conversation", format_duration(int(avg_duration_per_conversation)))
+    ratio_cols[2].metric("Conversations per project", f"{conversations_per_project:.1f}")
 
 
 def render_word_cloud(metrics: UsageMetrics):
@@ -1473,8 +1599,6 @@ def render_feature_adoption(metrics: UsageMetrics):
 
 def render_projects_table(usage_data: List[UserUsageData]):
     """Render projects summary table with per-project metrics."""
-    from src.usage_tracker.metrics import estimate_conversation_duration, format_duration
-
     # Build lookup maps for conversations, chats, messages by project
     conversations_by_project: dict = {}
     chats_by_project: dict = {}
@@ -1580,10 +1704,17 @@ DIRECTUS_TOKEN=your-admin-token
     st.sidebar.header("📅 Date Range")
 
     date_ranges = get_date_ranges()
+    date_range_options = list(date_ranges.keys())
+    default_range_label = "Last 30 Days"
+    default_index = (
+        date_range_options.index(default_range_label)
+        if default_range_label in date_range_options
+        else 0
+    )
     selected_range_name = st.sidebar.selectbox(
         "Time period",
-        options=list(date_ranges.keys()),
-        index=0,
+        options=date_range_options,
+        index=default_index,
     )
 
     if selected_range_name == "All Time":
@@ -1709,6 +1840,28 @@ DIRECTUS_TOKEN=your-admin-token
     # Calculate metrics
     metrics = calculate_metrics(usage_data)
 
+    monthly_stats_override = None
+    monthly_note = None
+    if date_range:
+        monthly_note = "Monthly summary shows full history (ignores selected date range)."
+        cache_suffix = "_".join(sorted(selected_user_ids)) or "none"
+        monthly_cache_key = f"monthly_stats_all_time_{cache_suffix}"
+        if monthly_cache_key in st.session_state:
+            monthly_stats_override = st.session_state[monthly_cache_key]
+        else:
+            with st.spinner("Loading all-time history for monthly summary..."):
+                all_time_usage = fetch_user_data_cached(
+                    client,
+                    tuple(sorted(selected_user_ids)),
+                    None,
+                    None,
+                )
+            if all_time_usage:
+                monthly_stats_override = calculate_metrics(all_time_usage).timeline.monthly_stats
+                st.session_state[monthly_cache_key] = monthly_stats_override
+            else:
+                monthly_note = "Monthly summary limited to selected range (unable to load all-time data)."
+
     # Calculate trends (compare to previous period) - use cached version (no progress)
     trends = {}
     if date_range:
@@ -1744,7 +1897,6 @@ DIRECTUS_TOKEN=your-admin-token
     # Tabs for different views
     (
         tab_monthly,
-        tab_timeline,
         tab_logins,
         tab_chat,
         tab_projects,
@@ -1752,7 +1904,6 @@ DIRECTUS_TOKEN=your-admin-token
     ) = st.tabs(
         [
             "📅 Monthly",
-            "📈 Timeline",
             "🔐 Login Activity",
             "💬 Chat Analysis",
             "📁 Projects",
@@ -1761,24 +1912,13 @@ DIRECTUS_TOKEN=your-admin-token
     )
 
     with tab_monthly:
-        render_monthly_summary(metrics)
-
-    with tab_timeline:
-        render_timeline_chart(metrics)
-
-        # Timeline AI Insights
-        try:
-            settings = get_settings()
-            if settings.llm.is_configured:
-                if st.button("🤖 Analyze Timeline", key="timeline_insights_btn"):
-                    with st.spinner("Analyzing patterns..."):
-                        timeline_insights = generate_timeline_insights(metrics)
-                        st.session_state["timeline_insights"] = timeline_insights
-
-                if "timeline_insights" in st.session_state:
-                    st.markdown(st.session_state["timeline_insights"])
-        except Exception as e:
-            st.error(f"Failed: {e}")
+        render_monthly_summary(
+            metrics,
+            usage_data=usage_data,
+            selected_range=date_range,
+            monthly_stats_override=monthly_stats_override,
+            note=monthly_note,
+        )
 
     with tab_logins:
         render_login_activity(metrics, selected_users)
