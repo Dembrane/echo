@@ -214,7 +214,7 @@ async def get_conversation_content(
             "query": {
                 "filter": {"conversation_id": {"_eq": conversation_id}},
                 "sort": "timestamp",
-                "fields": ["id", "path", "timestamp"],
+                "fields": ["id", "path", "timestamp", "error"],
                 "limit": 1000,
             },
         },
@@ -223,6 +223,14 @@ async def get_conversation_content(
     if not chunks:
         logger.error(f"No chunks found for conversation {conversation_id}")
         raise ConversationNotFoundException
+
+    # Count chunks with errors for logging
+    errored_chunks = [c for c in chunks if c.get("error")]
+    if errored_chunks:
+        logger.info(
+            f"Conversation {conversation_id} has {len(errored_chunks)} chunks with errors "
+            f"(will be skipped in merge)"
+        )
 
     logger.debug(f"Found {len(chunks)} total chunks for conversation {conversation_id}")
 
@@ -369,7 +377,7 @@ async def get_conversation_transcript(conversation_id: str, auth: DependencyDire
         {
             "query": {
                 "filter": {"conversation_id": {"_eq": conversation_id}},
-                "fields": ["transcript"],
+                "fields": ["id", "transcript", "error"],
                 "sort": "timestamp",
                 "limit": 1500,
             },
@@ -380,10 +388,25 @@ async def get_conversation_transcript(conversation_id: str, auth: DependencyDire
         return ""
 
     transcript = []
+    skipped_count = 0
+    errored_count = 0
 
     for chunk in conversation_chunks:
-        if chunk["transcript"]:
+        if chunk.get("transcript"):
             transcript.append(chunk["transcript"])
+        else:
+            skipped_count += 1
+            if chunk.get("error"):
+                errored_count += 1
+                logger.debug(
+                    f"Skipping chunk {chunk.get('id')} with error: {chunk.get('error')[:100]}"
+                )
+
+    if skipped_count > 0:
+        logger.info(
+            f"Transcript for {conversation_id}: included {len(transcript)}/{len(conversation_chunks)} chunks, "
+            f"skipped {skipped_count} ({errored_count} with errors)"
+        )
 
     return "\n".join(transcript)
 

@@ -18,7 +18,7 @@ from dembrane.sentry import init_sentry
 from dembrane.api.api import api
 from dembrane.settings import get_settings
 
-# LightRAG requires nest_asyncio for nested event loops
+# Enable nested event loops for Dramatiq workers calling async handlers
 nest_asyncio.apply()
 
 logger = getLogger("server")
