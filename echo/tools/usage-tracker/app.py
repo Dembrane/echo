@@ -60,6 +60,9 @@ try:
         analyze_chat_messages,
         generate_monthly_overview,
         MonthlyOverviewPayload,
+        generate_user_profile,
+        UserProfilePayload,
+        ProjectStructureSample,
     )
     from src.usage_tracker.pdf_export import generate_pdf_report
 except ImportError as e:
@@ -884,6 +887,63 @@ def _format_ts(ts: Optional[datetime]) -> str:
     return ts.strftime("%b %d, %Y %H:%M")
 
 
+def _parse_iso_date(value: Optional[str]) -> Optional[date]:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value).date()
+    except ValueError:
+        return None
+
+
+def _get_query_params() -> Dict[str, Optional[str]]:
+    """Return current query parameters as a simple dict[str, str]."""
+    query_dict: Dict[str, Optional[str]] = {}
+    qp = getattr(st, "query_params", None)
+    if qp is not None:
+        try:
+            return {k: v for k, v in qp.items()}
+        except Exception:
+            pass
+    legacy = getattr(st, "experimental_get_query_params", lambda: {})()
+    for key, value in legacy.items():
+        if isinstance(value, list):
+            query_dict[key] = value[-1] if value else None
+        else:
+            query_dict[key] = value
+    return query_dict
+
+
+def _set_query_params(params: Dict[str, str]) -> None:
+    """Update query parameters via new API with legacy fallback."""
+    if hasattr(st, "query_params"):
+        st.query_params = params
+    elif hasattr(st, "experimental_set_query_params"):
+        st.experimental_set_query_params(**params)
+
+
+def _sync_query_params(
+    selected_range_label: str,
+    date_range: Optional[DateRange],
+    selected_user_ids: List[str],
+) -> None:
+    """Update the browser query parameters to reflect current selections."""
+    new_params: Dict[str, str] = {}
+    if selected_range_label == "Custom Range" and date_range:
+        new_params["range"] = "Custom Range"
+        new_params["start"] = date_range.start.isoformat()
+        new_params["end"] = date_range.end.isoformat()
+    else:
+        new_params["range"] = selected_range_label
+
+    if selected_user_ids:
+        new_params["users"] = ",".join(sorted(selected_user_ids))
+
+    current_params = {key: value for key, value in _get_query_params().items() if value}
+    if current_params != new_params:
+        _set_query_params(new_params)
+
+
 def render_power_user_dashboard(
     client: DirectusClient,
     all_users: List[UserInfo],
@@ -1231,8 +1291,9 @@ def render_monthly_summary(
         {
             "month": month.month_label,
             "month_key": month.month_key,
-            "conversations_valid": month.conversations_valid,
-            "conversations_empty": month.conversations_empty,
+            "conversations_qr": month.conversations_qr,  # QR scans (blue)
+            "conversations_uploaded": month.conversations_uploaded,  # Uploads (yellow)
+            "conversations_empty": month.conversations_empty,  # Empty (red)
             "duration_hours": month.duration_seconds / 3600,
             "chats": month.chats,
         }
@@ -1326,15 +1387,28 @@ def render_monthly_summary(
     # Create dual-axis chart
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
-    # Stacked bar: valid conversations (blue) at bottom
+    # Stacked bar: QR scan conversations (blue) at bottom
     fig.add_trace(
         go.Bar(
             x=chart_df["month"],
-            y=chart_df["conversations_valid"],
-            name="Conversations (with content)",
+            y=chart_df["conversations_qr"],
+            name="QR scans",
             marker_color="#667eea",
             opacity=0.9,
-            hovertemplate="<b>%{x}</b><br>Valid: %{y}<extra></extra>",
+            hovertemplate="<b>%{x}</b><br>QR scans: %{y}<extra></extra>",
+        ),
+        secondary_y=False,
+    )
+
+    # Stacked bar: uploaded conversations (yellow) in middle
+    fig.add_trace(
+        go.Bar(
+            x=chart_df["month"],
+            y=chart_df["conversations_uploaded"],
+            name="Uploads",
+            marker_color="#f59e0b",
+            opacity=0.9,
+            hovertemplate="<b>%{x}</b><br>Uploads: %{y}<extra></extra>",
         ),
         secondary_y=False,
     )
@@ -1344,7 +1418,7 @@ def render_monthly_summary(
         go.Bar(
             x=chart_df["month"],
             y=chart_df["conversations_empty"],
-            name="Conversations (empty/no transcript)",
+            name="Empty (no transcript)",
             marker_color="#ef4444",
             opacity=0.9,
             hovertemplate="<b>%{x}</b><br>Empty: %{y}<extra></extra>",
@@ -1394,138 +1468,252 @@ def render_monthly_summary(
 
     # Add legend explanation
     st.caption(
-        "**Blue bars** = conversations with audio content · "
-        "**Red bars** = empty conversations (no chunks/transcript) · "
+        "**Blue bars** = QR scan conversations · "
+        "**Yellow bars** = uploaded conversations · "
+        "**Red bars** = empty (no transcript) · "
         "**Red line** = duration in hours · "
         "**Teal dashed** = chat sessions"
     )
 
-    st.subheader("Distribution Metrics")
-    conversation_durations: List[int] = []
-    conversation_lengths: List[int] = []
+    # Peak activity - just a simple caption
+    weekday_counter: Counter = Counter()
     for ud in usage_data:
         for conv in ud.conversations:
-            if not conv.created_at:
-                continue
-            conv_day = conv.created_at.date()
-            if selected_range and (conv_day < selected_range.start or conv_day > selected_range.end):
-                continue
-            conversation_durations.append(estimate_conversation_duration(conv))
-            conversation_lengths.append(conv.chunk_count or 0)
-
-    def describe_distribution(values: List[int]) -> Dict[str, float]:
-        if not values:
-            return {"p25": 0.0, "median": 0.0, "p75": 0.0}
-        sorted_vals = sorted(values)
-        return {
-            "p25": _percentile(sorted_vals, 0.25),
-            "median": _percentile(sorted_vals, 0.5),
-            "p75": _percentile(sorted_vals, 0.75),
-        }
-
-    duration_stats = describe_distribution(conversation_durations)
-    length_stats = describe_distribution(conversation_lengths)
-    daily_conv_values = list(metrics.timeline.daily_conversations.values())
-    mode_daily = max(set(daily_conv_values), key=daily_conv_values.count) if daily_conv_values else 0
-
-    weekly_totals: List[int] = []
-    if metrics.timeline.daily_conversations:
-        sorted_days = sorted(metrics.timeline.daily_conversations.keys())
-        buffer = []
-        for day in sorted_days:
-            buffer.append(metrics.timeline.daily_conversations[day])
-            if len(buffer) == 7:
-                weekly_totals.append(sum(buffer))
-                buffer = []
-        if buffer:
-            weekly_totals.append(sum(buffer))
-    mode_weekly = max(set(weekly_totals), key=weekly_totals.count) if weekly_totals else 0
-
-    dist_cols = st.columns(3)
-    dist_cols[0].metric(
-        "Duration P25 / P50 / P75",
-        f"{duration_stats['p25'] / 60:.1f}m / {duration_stats['median'] / 60:.1f}m / {duration_stats['p75'] / 60:.1f}m",
-    )
-    dist_cols[1].metric(
-        "Chunks P25 / P50 / P75",
-        f"{length_stats['p25']:.0f} / {length_stats['median']:.0f} / {length_stats['p75']:.0f}",
-    )
-    dist_cols[2].metric("Mode conversations (day/week)", f"{mode_daily} per day · {mode_weekly} per week")
-
-    st.subheader("Trend Indicators")
-    month_over_month = 0.0
-    if len(conversation_counts) >= 2 and conversation_counts[-2]:
-        month_over_month = ((conversation_counts[-1] - conversation_counts[-2]) / conversation_counts[-2]) * 100
-    daily_counts_list = [
-        metrics.timeline.daily_conversations[d]
-        for d in sorted(metrics.timeline.daily_conversations.keys())
-    ]
-    if daily_counts_list:
-        daily_counts_series = pd.Series(daily_counts_list)
-        ma_7 = (
-            daily_counts_series.rolling(window=7).mean().iloc[-1]
-            if len(daily_counts_series) >= 7
-            else daily_counts_series.mean()
-        )
-        ma_30 = (
-            daily_counts_series.rolling(window=30).mean().iloc[-1]
-            if len(daily_counts_series) >= 30
-            else daily_counts_series.mean()
-        )
-        variance = statistics.pvariance(daily_counts_list) if len(daily_counts_list) > 1 else 0.0
-    else:
-        ma_7 = ma_30 = variance = 0.0
-
-    trend_cols = st.columns(3)
-    trend_cols[0].metric("MoM conversation growth", f"{month_over_month:.1f}%")
-    trend_cols[1].metric("7-day / 30-day MA", f"{ma_7:.1f} / {ma_30:.1f} convs")
-    trend_cols[2].metric("Daily variance", f"{variance:.1f}")
-
-    st.subheader("Segmentation")
-    new_users = returning_users = heavy_users = light_users = 0
-    range_start = selected_range.start if selected_range else None
-    for ud in usage_data:
-        conv_count = len(ud.conversations)
-        if conv_count >= 10:
-            heavy_users += 1
-        elif conv_count > 0:
-            light_users += 1
-        if range_start and ud.first_activity and ud.first_activity.date() >= range_start:
-            new_users += 1
-        elif conv_count > 0:
-            returning_users += 1
-
-    seg_cols = st.columns(4)
-    seg_cols[0].metric("New users", new_users)
-    seg_cols[1].metric("Returning users", returning_users)
-    seg_cols[2].metric("Heavy users (≥10 convs)", heavy_users)
-    seg_cols[3].metric("Light users", light_users)
-
-    weekday_counter = Counter()
-    hour_counter = Counter()
-    for ud in usage_data:
-        for conv in ud.conversations:
-            if not conv.created_at:
-                continue
-            weekday_counter[conv.created_at.strftime("%A")] += 1
-            hour_counter[conv.created_at.hour] += 1
+            if conv.created_at:
+                weekday_counter[conv.created_at.strftime("%A")] += 1
     peak_day = max(weekday_counter, key=weekday_counter.get) if weekday_counter else None
-    peak_hour = max(hour_counter, key=hour_counter.get) if hour_counter else None
-    if peak_day or peak_hour is not None:
-        hour_text = f"{peak_hour}:00" if peak_hour is not None else "n/a"
-        st.caption(f"Peak day: **{peak_day or 'n/a'}** · Peak hour: **{hour_text}**")
-    else:
-        st.caption("Peak usage data unavailable")
 
-    st.subheader("Quality & Efficiency Ratios")
-    total_conversations = sum(conversation_counts)
-    conversations_per_project = (
-        total_conversations / metrics.projects.total_projects if metrics.projects.total_projects else 0.0
-    )
-    ratio_cols = st.columns(3)
-    ratio_cols[0].metric("Content-to-empty ratio", f"{ratio_valid:.0%}")
-    ratio_cols[1].metric("Avg duration per conversation", format_duration(int(avg_duration_per_conversation)))
-    ratio_cols[2].metric("Conversations per project", f"{conversations_per_project:.1f}")
+    if peak_day:
+        st.caption(f"Most active day: **{peak_day}**")
+
+
+def render_user_profile(usage_data: List[UserUsageData], metrics: UsageMetrics):
+    """Render the User Profile section showing typical workflow patterns."""
+    import random
+    from collections import Counter
+
+    # Collect all projects, conversations, and chat messages
+    all_projects = []
+    all_conversations = []
+    all_user_queries = []
+
+    for ud in usage_data:
+        all_projects.extend(ud.projects)
+        all_conversations.extend(ud.conversations)
+        for msg in ud.chat_messages:
+            if msg.message_from and msg.message_from.lower() == "user" and msg.text:
+                all_user_queries.append(msg.text.strip())
+
+    if not all_projects:
+        st.info("No project data available for profile analysis.")
+        return
+
+    # Calculate project customization rates
+    total_projects = len(all_projects)
+    portal_title_count = sum(1 for p in all_projects if p.default_conversation_title)
+    portal_desc_count = sum(1 for p in all_projects if p.default_conversation_description)
+    transcript_prompt_count = sum(1 for p in all_projects if p.default_conversation_transcript_prompt)
+    proj_context_count = sum(1 for p in all_projects if p.context)
+
+    portal_title_pct = (portal_title_count / total_projects * 100) if total_projects else 0
+    portal_desc_pct = (portal_desc_count / total_projects * 100) if total_projects else 0
+    transcript_prompt_pct = (transcript_prompt_count / total_projects * 100) if total_projects else 0
+    proj_context_pct = (proj_context_count / total_projects * 100) if total_projects else 0
+
+    # Tag analysis
+    all_tags = []
+    projects_with_tags = 0
+    for p in all_projects:
+        if p.tags and len(p.tags) > 0:
+            projects_with_tags += 1
+            for tag in p.tags:
+                if tag.text:
+                    all_tags.append(tag.text)
+
+    projects_with_tags_pct = (projects_with_tags / total_projects * 100) if total_projects else 0
+    avg_tags_per_project = len(all_tags) / total_projects if total_projects else 0
+
+    # Get most common tags
+    tag_counter = Counter(all_tags)
+    top_tags = [tag for tag, _ in tag_counter.most_common(15)]
+
+    # Sample project contexts
+    sample_contexts = []
+    for p in all_projects:
+        if p.context and len(p.context.strip()) > 20:
+            ctx = p.context.strip()[:200]
+            if len(p.context.strip()) > 200:
+                ctx += "..."
+            sample_contexts.append(ctx)
+
+    # Build project structure samples (with participant names per project)
+    project_conversations: Dict[str, List] = {}
+    for conv in all_conversations:
+        if conv.project_id not in project_conversations:
+            project_conversations[conv.project_id] = []
+        project_conversations[conv.project_id].append(conv)
+
+    project_samples = []
+    for p in all_projects:
+        convs = project_conversations.get(p.id, [])
+        # Get unique participant names (filter out None/empty)
+        participant_names = list(set(
+            c.participant_name for c in convs
+            if c.participant_name and c.participant_name.strip()
+        ))
+        # Sample up to 10 participant names
+        participant_names = participant_names[:10]
+
+        # Get context snippet
+        context_snippet = ""
+        if p.context and len(p.context.strip()) > 10:
+            context_snippet = p.context.strip()[:150]
+            if len(p.context.strip()) > 150:
+                context_snippet += "..."
+
+        project_samples.append(
+            ProjectStructureSample(
+                name=p.name or "Unnamed",
+                tags=[t.text for t in p.tags if t.text] if p.tags else [],
+                participant_names=participant_names,
+                conversation_count=len(convs),
+                has_context=bool(p.context and len(p.context.strip()) > 10),
+                has_portal_customization=bool(
+                    p.default_conversation_title or p.default_conversation_description
+                ),
+                context_snippet=context_snippet,
+            )
+        )
+
+    # Sort by conversation count and take top projects
+    project_samples.sort(key=lambda x: x.conversation_count, reverse=True)
+    project_samples = project_samples[:12]  # Top 12 projects for LLM context
+
+    # Sample conversation summaries
+    summaries_with_content = [c.summary for c in all_conversations if c.summary and len(c.summary.strip()) > 20]
+    summary_count = len(summaries_with_content)
+
+    if summaries_with_content:
+        random.shuffle(summaries_with_content)
+        sampled_summaries = summaries_with_content[:50]
+    else:
+        sampled_summaries = []
+
+    # Sample chat queries
+    query_count = len(all_user_queries)
+    if all_user_queries:
+        random.shuffle(all_user_queries)
+        sampled_queries = [q[:150] for q in all_user_queries[:200]]
+    else:
+        sampled_queries = []
+
+    # === PROFILE SUMMARY (TOP - AUTO-GENERATED) ===
+    profile_cache_key = f"user_profile_{hash(tuple(p.id for p in all_projects[:10]))}"
+
+    # Auto-generate if not cached
+    if profile_cache_key not in st.session_state:
+        payload = UserProfilePayload(
+            project_count=total_projects,
+            portal_title_pct=portal_title_pct,
+            portal_desc_pct=portal_desc_pct,
+            transcript_prompt_pct=transcript_prompt_pct,
+            proj_context_pct=proj_context_pct,
+            projects_with_tags_pct=projects_with_tags_pct,
+            avg_tags_per_project=avg_tags_per_project,
+            sample_tags=top_tags,
+            project_samples=project_samples,
+            sample_project_contexts=sample_contexts[:10],
+            conversation_summaries=sampled_summaries,
+            summary_count=summary_count,
+            chat_queries=sampled_queries,
+            query_count=query_count,
+        )
+        with st.spinner("Generating profile..."):
+            st.session_state[profile_cache_key] = generate_user_profile(payload)
+
+    # Display profile summary
+    st.markdown(st.session_state[profile_cache_key])
+
+    col_regen, _ = st.columns([1, 4])
+    with col_regen:
+        if st.button("🔄 Regenerate", key="profile_regen_btn", type="secondary"):
+            del st.session_state[profile_cache_key]
+            st.rerun()
+
+    st.divider()
+
+    # === PROJECT SETUP PATTERNS ===
+    st.markdown("#### Project Setup")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown("**Portal Customization**")
+        customization_score = (portal_title_pct + portal_desc_pct + transcript_prompt_pct) / 3
+        if customization_score > 50:
+            st.success(f"✓ Well configured ({customization_score:.0f}% avg)")
+        elif customization_score > 20:
+            st.warning(f"◐ Partial ({customization_score:.0f}% avg)")
+        else:
+            st.caption(f"○ Minimal customization")
+
+    with col2:
+        st.markdown("**Project Context**")
+        if proj_context_pct > 50:
+            st.success(f"✓ {proj_context_pct:.0f}% have context")
+        elif proj_context_pct > 20:
+            st.warning(f"◐ {proj_context_pct:.0f}% have context")
+        else:
+            st.caption(f"○ {proj_context_pct:.0f}% have context")
+
+    with col3:
+        st.markdown("**Tag Usage**")
+        if projects_with_tags_pct > 50:
+            st.success(f"✓ {projects_with_tags_pct:.0f}% tagged ({avg_tags_per_project:.1f} avg)")
+        elif projects_with_tags_pct > 20:
+            st.warning(f"◐ {projects_with_tags_pct:.0f}% tagged")
+        else:
+            st.caption(f"○ Rarely use tags")
+
+    if top_tags:
+        st.caption(f"Common tags: {', '.join(top_tags[:8])}")
+
+    st.divider()
+
+    # === RAW DATA (BOTTOM - EXPANDABLE) ===
+    with st.expander("📋 Raw Data Samples", expanded=False):
+        tab_summaries, tab_queries, tab_context = st.tabs([
+            f"Conversations ({summary_count})",
+            f"Chat Questions ({query_count})",
+            f"Project Context ({len(sample_contexts)})"
+        ])
+
+        with tab_summaries:
+            if sampled_summaries:
+                for i, summary in enumerate(sampled_summaries[:12], 1):
+                    # Clean up summary display
+                    clean_summary = summary.strip()
+                    if len(clean_summary) > 300:
+                        clean_summary = clean_summary[:300] + "..."
+                    st.markdown(f"**{i}.** {clean_summary}")
+                    st.caption("---")
+            else:
+                st.info("No conversation summaries available yet. Summaries are generated after conversations are processed.")
+
+        with tab_queries:
+            if sampled_queries:
+                # Group queries in columns for better readability
+                for query in sampled_queries[:20]:
+                    st.markdown(f"• {query}")
+            else:
+                st.info("No chat queries recorded yet.")
+
+        with tab_context:
+            if sample_contexts:
+                for i, ctx in enumerate(sample_contexts[:8], 1):
+                    st.markdown(f"**Project {i}:** {ctx}")
+            else:
+                st.info("No project context has been added yet.")
 
 
 def render_word_cloud(metrics: UsageMetrics):
@@ -1706,15 +1894,25 @@ DIRECTUS_TOKEN=your-admin-token
     date_ranges = get_date_ranges()
     date_range_options = list(date_ranges.keys())
     default_range_label = "Last 30 Days"
-    default_index = (
-        date_range_options.index(default_range_label)
-        if default_range_label in date_range_options
-        else 0
-    )
+
+    query_params = _get_query_params()
+    range_param = query_params.get("range", default_range_label)
+    initial_range_label = default_range_label
+    if range_param:
+        normalized = range_param.strip()
+        if normalized.lower() == "custom":
+            initial_range_label = "Custom Range"
+        elif normalized in date_range_options:
+            initial_range_label = normalized
+        elif normalized == "All Time":
+            initial_range_label = "All Time"
+
     selected_range_name = st.sidebar.selectbox(
         "Time period",
         options=date_range_options,
-        index=default_index,
+        index=date_range_options.index(initial_range_label)
+        if initial_range_label in date_range_options
+        else date_range_options.index(default_range_label),
     )
 
     if selected_range_name == "All Time":
@@ -1722,9 +1920,14 @@ DIRECTUS_TOKEN=your-admin-token
     elif selected_range_name == "Custom Range":
         col1, col2 = st.sidebar.columns(2)
         with col1:
-            custom_start = st.date_input("Start", value=date.today() - timedelta(days=30))
+            default_custom_start = _parse_iso_date(query_params.get("start"))
+            custom_start = st.date_input(
+                "Start",
+                value=default_custom_start or (date.today() - timedelta(days=30)),
+            )
         with col2:
-            custom_end = st.date_input("End", value=date.today())
+            default_custom_end = _parse_iso_date(query_params.get("end"))
+            custom_end = st.date_input("End", value=default_custom_end or date.today())
         date_range = DateRange(custom_start, custom_end)
     else:
         date_range = date_ranges[selected_range_name]
@@ -1749,6 +1952,12 @@ DIRECTUS_TOKEN=your-admin-token
 
     # Create a lookup for all users by ID
     all_users_by_id = {u.id: u for u in all_users}
+    query_user_ids: List[str] = []
+    users_param = query_params.get("users")
+    if users_param:
+        query_user_ids = [
+            uid for uid in users_param.split(",") if uid and uid in all_users_by_id
+        ]
 
     # Search box
     search_query = st.sidebar.text_input(
@@ -1784,11 +1993,14 @@ DIRECTUS_TOKEN=your-admin-token
     
     user_options = {u.id: f"{u.display_name} ({u.email})" for u in display_users}
 
-    # Restore previously selected users that still exist
-    default_selection = [
-        uid for uid in st.session_state.selected_user_ids
-        if uid in all_users_by_id
-    ]
+    # Restore previously selected users that still exist (query param overrides state)
+    default_selection = (
+        query_user_ids
+        or [
+            uid for uid in st.session_state.selected_user_ids
+            if uid in all_users_by_id
+        ]
+    )
 
     selected_user_ids = st.sidebar.multiselect(
         "Select users",
@@ -1800,6 +2012,7 @@ DIRECTUS_TOKEN=your-admin-token
     
     # Save selection to session state
     st.session_state.selected_user_ids = selected_user_ids
+    _sync_query_params(selected_range_name, date_range, selected_user_ids)
 
     # Refresh button
     st.sidebar.divider()
@@ -1897,6 +2110,7 @@ DIRECTUS_TOKEN=your-admin-token
     # Tabs for different views
     (
         tab_monthly,
+        tab_profile,
         tab_logins,
         tab_chat,
         tab_projects,
@@ -1904,6 +2118,7 @@ DIRECTUS_TOKEN=your-admin-token
     ) = st.tabs(
         [
             "📅 Monthly",
+            "👤 User Profile",
             "🔐 Login Activity",
             "💬 Chat Analysis",
             "📁 Projects",
@@ -1919,6 +2134,9 @@ DIRECTUS_TOKEN=your-admin-token
             monthly_stats_override=monthly_stats_override,
             note=monthly_note,
         )
+
+    with tab_profile:
+        render_user_profile(usage_data, metrics)
 
     with tab_logins:
         render_login_activity(metrics, selected_users)

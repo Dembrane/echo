@@ -2489,6 +2489,7 @@ source = { editable = "." }
 dependencies = [
     { name = "backoff" },
     { name = "boto3" },
+    { name = "jinja2" },
     { name = "litellm" },
     { name = "matplotlib" },
     { name = "pandas" },
@@ -2506,6 +2507,7 @@ dependencies = [
 requires-dist = [
     { name = "backoff", specifier = ">=2.2.0" },
     { name = "boto3", specifier = ">=1.28.57" },
+    { name = "jinja2", specifier = ">=3.1.4" },
     { name = "litellm", specifier = ">=1.50.0" },
     { name = "matplotlib", specifier = ">=3.8.0" },
     { name = "pandas", specifier = ">=2.2.0" },

@@ -69,6 +69,15 @@ class UserInfo:
 
 
 @dataclass
+class ProjectTagInfo:
+    """Project tag information."""
+
+    id: str
+    text: str
+    created_at: Optional[datetime] = None
+
+
+@dataclass
 class ProjectInfo:
     """Project information with counts."""
 
@@ -78,6 +87,13 @@ class ProjectInfo:
     updated_at: Optional[datetime] = None
     conversation_count: int = 0
     is_conversation_allowed: bool = True
+    # Portal customization fields
+    context: Optional[str] = None
+    default_conversation_title: Optional[str] = None
+    default_conversation_description: Optional[str] = None
+    default_conversation_transcript_prompt: Optional[str] = None
+    # Tags for organization
+    tags: List["ProjectTagInfo"] = field(default_factory=list)
 
 
 @dataclass
@@ -94,6 +110,7 @@ class ConversationInfo:
     source: Optional[str] = None
     merged_transcript: Optional[str] = None
     has_content: bool = False  # Set via aggregate query - True if any chunk has transcript
+    summary: Optional[str] = None  # AI-generated conversation summary
 
 
 @dataclass
@@ -287,6 +304,15 @@ class DataFetcher:
                         "updated_at",
                         "is_conversation_allowed",
                         "count(conversations)",
+                        # Portal customization fields
+                        "context",
+                        "default_conversation_title",
+                        "default_conversation_description",
+                        "default_conversation_transcript_prompt",
+                        # Tags for organization
+                        "tags.id",
+                        "tags.text",
+                        "tags.created_at",
                     ],
                     filter_query=filter_query,
                     sort=["-created_at"],
@@ -305,6 +331,19 @@ class DataFetcher:
                     if conv_count is None:
                         conv_count = 0
 
+                    # Parse tags
+                    tags_data = p.get("tags") or []
+                    parsed_tags = []
+                    for tag in tags_data:
+                        if isinstance(tag, dict):
+                            parsed_tags.append(
+                                ProjectTagInfo(
+                                    id=tag.get("id", ""),
+                                    text=tag.get("text", ""),
+                                    created_at=_parse_datetime(tag.get("created_at")),
+                                )
+                            )
+
                     result.append(
                         ProjectInfo(
                             id=p["id"],
@@ -313,6 +352,11 @@ class DataFetcher:
                             updated_at=_parse_datetime(p.get("updated_at")),
                             conversation_count=int(conv_count),
                             is_conversation_allowed=bool(p.get("is_conversation_allowed", True)),
+                            context=p.get("context"),
+                            default_conversation_title=p.get("default_conversation_title"),
+                            default_conversation_description=p.get("default_conversation_description"),
+                            default_conversation_transcript_prompt=p.get("default_conversation_transcript_prompt"),
+                            tags=parsed_tags,
                         )
                     )
 
@@ -366,6 +410,7 @@ class DataFetcher:
                         "participant_name",
                         "source",
                         "merged_transcript",
+                        "summary",
                         "count(chunks)",
                     ],
                     filter_query=filter_query,
@@ -401,6 +446,7 @@ class DataFetcher:
                             participant_name=c.get("participant_name"),
                             source=c.get("source"),
                             merged_transcript=c.get("merged_transcript"),
+                            summary=c.get("summary"),
                         )
                     )
 

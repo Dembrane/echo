@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-import json
 import logging
 import re
 from collections import Counter
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from .settings import get_settings
-from .data_fetcher import UserUsageData, UserInfo
+from .data_fetcher import UserInfo
 from .metrics import UsageMetrics, format_duration
+from .prompts import render_prompt
+from .settings import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -45,56 +45,6 @@ def _get_completion_kwargs() -> Dict[str, Any]:
         kwargs["api_version"] = llm.api_version
 
     return kwargs
-
-
-PLATFORM_SUMMARY = """Dembrane ECHO: Platform Summary
-
-What It Is
-----------
-A conversation intelligence platform that transforms group discussions into actionable insights, built for democratic stakeholder engagement at scale.
-
-How It Works
-------------
-For Hosts (Dashboard):
-- Create projects and generate QR codes
-- Participants scan codes to record conversations instantly (no app needed)
-- Use AI chat interface to analyze incoming conversation data
-- Generate reports showing themes, tensions, and key insights grounded in actual quotes
-
-For Participants (Portal):
-- Scan QR → record in 2 clicks
-- Works on any device, 50+ languages
-- WCAG compliant, no downloads required
-
-Core Technology:
-- Auto-transcription with WhisperX
-- AI clustering to identify themes and patterns
-- Quote-based analysis (community voices, not AI summaries)
-- Scales from single meetings to thousands of async conversations
-- ISO27001 compliant, GDPR-ready
-
-Key Features:
-- Speed: room-to-report in hours
-- Multilingual: 50+ languages
-- Inclusive: reaches voices excluded from traditional engagement
-- Transparent: insights traceable to source quotes
-- Scalable: from single conversations to thousands in parallel
-
-Use Cases:
-- Civic consultations and participatory budgeting
-- Employee workshops and strategy sessions
-- Community engagement and stakeholder feedback
-- Policy development with public input
-
-Scale & Vision:
-- Small team in Eindhoven, ISO27001 compliant, partners with platforms like Go Vocal
-- Open source components
-- Vision: build democratic infrastructure so communities can self-organize and decide at scale—“Mentimeter for conversations,” capturing why people think what they think, not just what they think.
-"""
-
-
-def _with_platform_summary(content: str) -> str:
-    return f"{PLATFORM_SUMMARY}\n\n{content}"
 
 
 def _build_metrics_context(
@@ -177,29 +127,6 @@ def _build_metrics_context(
     return "\n".join(context_parts)
 
 
-INSIGHTS_SYSTEM_PROMPT = """You are an impartial product-usage analyst for Dembrane ECHO. Report observations with data citations, keep marketing language out, separate facts from interpretations, flag uncertainty, and always acknowledge at least one alternative explanation."""
-
-
-INSIGHTS_USER_PROMPT = """Analyze this usage data. Produce:
-
-**Observations**
-- Start with the metric (e.g., "Conversations↑ 42% vs prior period") and cite the exact value.
-- Keep each observation to one sentence grounded in the supplied data.
-
-**Hypotheses & Ambiguities**
-- 2-3 bullets that begin with "Hypothesis:" or "Alternative:" explaining what the observations might mean.
-- Explicitly note when more context is required.
-
-**Next Experiments**
-- 2 bullets describing user-centric follow-ups (not sales goals) tied to the metrics above.
-
-Use hedging phrases ("may indicate", "one explanation is") for the hypothesis bullets. Reference any data-quality caveats if relevant.
-
-Context:
-{context}
-"""
-
-
 @dataclass
 class DashboardStats:
     range_label: str
@@ -210,20 +137,6 @@ class DashboardStats:
     top_users: List[tuple]
     top_projects: List[tuple]
     ignored_accounts: List[str] = field(default_factory=list)
-
-
-@dataclass
-class MonthlyOverviewPayload:
-    range_label: str
-    avg_conversations: float
-    median_conversations: float
-    p90_conversations: float
-    avg_chats: float
-    avg_logins: float
-    content_ratio: float
-    duration_per_conversation: float
-    conversations_per_project: float
-    notes: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -262,15 +175,13 @@ def generate_insights(
         kwargs = _get_completion_kwargs()
         context = _build_metrics_context(users, metrics, trends)
 
+        system_prompt = render_prompt("insights_system.j2")
+        user_prompt = render_prompt("insights_user.j2", context=context)
+
         response = litellm.completion(
             messages=[
-                {"role": "system", "content": INSIGHTS_SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": _with_platform_summary(
-                        INSIGHTS_USER_PROMPT.format(context=context)
-                    ),
-                },
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
             ],
             temperature=0.7,
             **kwargs,
@@ -281,13 +192,6 @@ def generate_insights(
     except Exception as e:
         logger.error(f"Failed to generate insights: {e}")
         return f"⚠️ Failed to generate insights: {str(e)}"
-
-
-EXEC_SUMMARY_SYSTEM_PROMPT = (
-    "Compose two short paragraphs for an executive summary. "
-    "Paragraph 1 = factual highlights with numbers; Paragraph 2 = cautious interpretation with uncertainty markers. "
-    "Keep tone analytical, avoid prescriptions, and separate observations from hypotheses."
-)
 
 
 def generate_executive_summary(
@@ -311,13 +215,13 @@ def generate_executive_summary(
         kwargs = _get_completion_kwargs()
         context = _build_metrics_context(users, metrics)
 
+        system_prompt = render_prompt("executive_summary_system.j2")
+        user_prompt = render_prompt("executive_summary_user.j2", context=context)
+
         response = litellm.completion(
             messages=[
-                {"role": "system", "content": EXEC_SUMMARY_SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": _with_platform_summary(f"Summarize:\n{context}"),
-                },
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
             ],
             temperature=0.5,
             **kwargs,
@@ -328,13 +232,6 @@ def generate_executive_summary(
     except Exception as e:
         logger.error(f"Failed to generate summary: {e}")
         return _generate_fallback_summary(users, metrics)
-
-
-DASHBOARD_SYSTEM_PROMPT = (
-    "You are a sales-oriented product analyst. Summarize usage for executives with"
-    " one paragraph of highlights and one paragraph of suggested follow-ups. Keep it factual, cite"
-    " the provided metrics (MAU, DAU, daily conversations/projects, top users/projects)."
-)
 
 
 def _format_dashboard_context(stats: DashboardStats) -> str:
@@ -386,16 +283,13 @@ def generate_dashboard_overview(stats: DashboardStats) -> str:
     try:
         kwargs = _get_completion_kwargs()
         context = _format_dashboard_context(stats)
+        system_prompt = render_prompt("dashboard_system.j2")
+        user_prompt = render_prompt("dashboard_user.j2", context=context)
+
         response = litellm.completion(
             messages=[
-                {"role": "system", "content": DASHBOARD_SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": _with_platform_summary(
-                        "Summarize this dashboard for sales leadership with clear takeaways\n"
-                        f"{context}"
-                    ),
-                },
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
             ],
             temperature=0.4,
             **kwargs,
@@ -406,26 +300,29 @@ def generate_dashboard_overview(stats: DashboardStats) -> str:
         return _fallback_dashboard_summary(stats)
 
 
-MONTHLY_OVERVIEW_SYSTEM_PROMPT = (
-    "Summarize monthly engagement trends for a product analytics audience. "
-    "Keep to two short paragraphs: (1) factual metrics with comparisons, "
-    "(2) interpretation with risks/opportunities. Avoid hype; cite the provided numbers."
-)
-
-
 def _format_monthly_overview_context(payload: MonthlyOverviewPayload) -> str:
+    duration_minutes = payload.duration_per_conversation / 60
     lines = [
-        f"Range: {payload.range_label}",
-        f"Avg conversations/month: {payload.avg_conversations:.1f}",
-        f"Median conversations/month: {payload.median_conversations:.1f}",
-        f"P90 conversations/month: {payload.p90_conversations:.1f}",
-        f"Avg chats/month: {payload.avg_chats:.1f}",
-        f"Avg logins/month: {payload.avg_logins:.1f}",
-        f"Content ratio: {payload.content_ratio:.2%}",
-        f"Duration per conversation: {payload.duration_per_conversation:.1f} seconds",
-        f"Conversations per project: {payload.conversations_per_project:.1f}",
+        f"Time period: {payload.range_label}",
+        "",
+        "CONVERSATIONS (data from participants - via QR scan or upload):",
+        f"- Average per month: {payload.avg_conversations:.1f}",
+        f"- Median per month: {payload.median_conversations:.1f}",
+        f"- Top users (P90): {payload.p90_conversations:.1f}",
+        f"- Content ratio: {payload.content_ratio:.0%} have actual transcripts",
+        "",
+        "HOST ANALYSIS ACTIVITY (when they log in to work with the data):",
+        f"- Logins per month: {payload.avg_logins:.1f}",
+        f"- Chat sessions per month: {payload.avg_chats:.1f}",
+        "",
+        "CONVERSATION CHARACTERISTICS:",
+        f"- Average recording length: {duration_minutes:.0f} minutes",
+        "",
+        "PROJECT ORGANIZATION:",
+        f"- Conversations per project: {payload.conversations_per_project:.1f}",
     ]
     if payload.notes:
+        lines.append("")
         lines.append("Notes:")
         lines.extend(f"- {note}" for note in payload.notes)
     return "\n".join(lines)
@@ -452,70 +349,13 @@ def generate_monthly_overview(payload: MonthlyOverviewPayload) -> str:
     try:
         kwargs = _get_completion_kwargs()
         context = _format_monthly_overview_context(payload)
+        system_prompt = render_prompt("monthly_overview_system.j2")
+        user_prompt = render_prompt("monthly_overview_user.j2", context=context)
+
         response = litellm.completion(
             messages=[
-                {"role": "system", "content": MONTHLY_OVERVIEW_SYSTEM_PROMPT},
-                {"role": "user", "content": _with_platform_summary(context)},
-            ],
-            temperature=0.4,
-            **kwargs,
-        )
-        return response.choices[0].message.content
-    except Exception as exc:  # noqa: BLE001
-        logger.error(f"Failed to generate monthly overview: {exc}")
-        return _fallback_monthly_overview(payload)
-
-
-MONTHLY_OVERVIEW_SYSTEM_PROMPT = (
-    "Summarize monthly engagement trends for a product analytics audience. "
-    "Keep to two short paragraphs: (1) factual metrics with comparisons, "
-    "(2) interpretation with risks/opportunities. Avoid hype; cite the provided numbers."
-)
-
-
-def _format_monthly_overview_context(payload: MonthlyOverviewPayload) -> str:
-    lines = [
-        f"Range: {payload.range_label}",
-        f"Avg conversations/month: {payload.avg_conversations:.1f}",
-        f"Median conversations/month: {payload.median_conversations:.1f}",
-        f"P90 conversations/month: {payload.p90_conversations:.1f}",
-        f"Avg chats/month: {payload.avg_chats:.1f}",
-        f"Avg logins/month: {payload.avg_logins:.1f}",
-        f"Content ratio: {payload.content_ratio:.2%}",
-        f"Duration per conversation: {payload.duration_per_conversation:.1f} seconds",
-        f"Conversations per project: {payload.conversations_per_project:.1f}",
-    ]
-    if payload.notes:
-        lines.append("Notes:")
-        lines.extend(f"- {note}" for note in payload.notes)
-    return "\n".join(lines)
-
-
-def _fallback_monthly_overview(payload: MonthlyOverviewPayload) -> str:
-    return (
-        f"{payload.range_label}: {payload.avg_conversations:.1f} avg conversations/mo "
-        f"(median {payload.median_conversations:.1f}, p90 {payload.p90_conversations:.1f}). "
-        f"Chat sessions average {payload.avg_chats:.1f} and logins {payload.avg_logins:.1f}."
-    )
-
-
-def generate_monthly_overview(payload: MonthlyOverviewPayload) -> str:
-    """Generate a concise two-paragraph monthly overview."""
-    litellm = _get_litellm()
-    if litellm is None:
-        return _fallback_monthly_overview(payload)
-
-    settings = get_settings()
-    if not settings.llm.is_configured:
-        return _fallback_monthly_overview(payload)
-
-    try:
-        kwargs = _get_completion_kwargs()
-        context = _format_monthly_overview_context(payload)
-        response = litellm.completion(
-            messages=[
-                {"role": "system", "content": MONTHLY_OVERVIEW_SYSTEM_PROMPT},
-                {"role": "user", "content": context},
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
             ],
             temperature=0.4,
             **kwargs,
@@ -591,18 +431,17 @@ def analyze_chat_messages(messages_text: List[str]) -> str:
         # Truncate each message to keep context reasonable
         messages_str = "\n".join(f"- {m[:300]}" for m in sample)
 
+        system_prompt = render_prompt("chat_analysis_system.j2")
+        user_prompt = render_prompt(
+            "chat_analysis_user.j2",
+            message_count=len(sample),
+            messages_blob=messages_str,
+        )
+
         response = litellm.completion(
             messages=[
-                {
-                    "role": "system",
-                    "content": "Analyze user chat queries. Identify: main topics, common question types, what they're researching. Use bullets. Be specific.",
-                },
-                {
-                    "role": "user",
-                    "content": _with_platform_summary(
-                        f"User messages ({len(sample)} total):\n{messages_str}"
-                    ),
-                },
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
             ],
             temperature=0.5,
             **kwargs,
@@ -613,13 +452,6 @@ def analyze_chat_messages(messages_text: List[str]) -> str:
     except Exception as e:
         logger.error(f"Failed to analyze chat: {e}")
         return f"⚠️ Analysis failed: {str(e)}"
-
-
-STRATIFIED_CHAT_SYSTEM_PROMPT = (
-    "You are a qualitative researcher reviewing user chat transcripts. "
-    "Compare cohorts, surface emerging intents, highlight anomalies, and note any risks. "
-    "Cite concrete behaviors (volumes, intent shifts) and flag uncertainties."
-)
 
 
 def _fallback_stratified_chat_summary(segment_samples: Dict[str, List[str]]) -> str:
@@ -673,18 +505,17 @@ def analyze_stratified_chat_segments(
             )
 
         payload = "\n\n".join(segment_blocks)
+        system_prompt = render_prompt("stratified_chat_system.j2")
+        user_prompt = render_prompt(
+            "stratified_chat_user.j2",
+            ignore_clause=ignore_clause,
+            payload=payload,
+        )
+
         response = litellm.completion(
             messages=[
-                {"role": "system", "content": STRATIFIED_CHAT_SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": _with_platform_summary(
-                        "Analyze intent differences and emerging topics across cohorts. "
-                        "Call out unusual spikes or risks and back them with the samples.\n"
-                        f"{ignore_clause}\n\n"
-                        f"{payload}"
-                    ),
-                },
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
             ],
             temperature=0.4,
             **kwargs,
@@ -781,16 +612,13 @@ def generate_timeline_insights(metrics: UsageMetrics) -> str:
     try:
         kwargs = _get_completion_kwargs()
 
+        system_prompt = render_prompt("timeline_system.j2")
+        user_prompt = render_prompt("timeline_user.j2", context=context)
+
         response = litellm.completion(
             messages=[
-                {
-                    "role": "system",
-                    "content": "Analyze timeline for sales. Find peak days (events?), active projects, patterns. Be specific with dates. Use bullets.",
-                },
-                {
-                    "role": "user",
-                    "content": _with_platform_summary(f"Timeline data:\n{context}"),
-                },
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
             ],
             temperature=0.7,
             **kwargs,
@@ -801,3 +629,135 @@ def generate_timeline_insights(metrics: UsageMetrics) -> str:
     except Exception as e:
         logger.error(f"Failed to generate timeline insights: {e}")
         return f"⚠️ Failed to generate timeline insights: {str(e)}"
+
+
+@dataclass
+class ProjectStructureSample:
+    """Detailed sample of a single project's structure."""
+
+    name: str
+    tags: List[str]
+    participant_names: List[str]  # Sample of conversation.participant_name values
+    conversation_count: int
+    has_context: bool
+    has_portal_customization: bool
+    context_snippet: str = ""  # First 150 chars of context
+
+
+@dataclass
+class UserProfilePayload:
+    """Payload for user profile analysis."""
+
+    project_count: int
+    portal_title_pct: float
+    portal_desc_pct: float
+    transcript_prompt_pct: float
+    proj_context_pct: float
+    # Tag usage
+    projects_with_tags_pct: float = 0.0
+    avg_tags_per_project: float = 0.0
+    sample_tags: List[str] = field(default_factory=list)
+    # Detailed project samples
+    project_samples: List[ProjectStructureSample] = field(default_factory=list)
+    # Content samples
+    sample_project_contexts: List[str] = field(default_factory=list)
+    conversation_summaries: List[str] = field(default_factory=list)
+    summary_count: int = 0
+    chat_queries: List[str] = field(default_factory=list)
+    query_count: int = 0
+
+
+def _anonymize_text(text: str) -> str:
+    """Basic anonymization - remove emails, phone numbers, specific names patterns."""
+    import re
+
+    # Remove emails
+    text = re.sub(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "[email]", text)
+    # Remove phone numbers (various formats)
+    text = re.sub(r"\b\d{3}[-.]?\d{3}[-.]?\d{4}\b", "[phone]", text)
+    # Remove URLs
+    text = re.sub(r"https?://\S+", "[url]", text)
+    return text
+
+
+def _truncate_for_context(items: List[str], max_chars: int = 15000) -> List[str]:
+    """Truncate list of strings to fit within character limit."""
+    result = []
+    total_chars = 0
+    for item in items:
+        if total_chars + len(item) > max_chars:
+            break
+        result.append(item)
+        total_chars += len(item) + 10  # Account for formatting
+    return result
+
+
+def generate_user_profile(payload: UserProfilePayload) -> str:
+    """Generate a user profile analysis."""
+    litellm = _get_litellm()
+    if litellm is None:
+        return _fallback_user_profile(payload)
+
+    settings = get_settings()
+    if not settings.llm.is_configured:
+        return _fallback_user_profile(payload)
+
+    try:
+        kwargs = _get_completion_kwargs()
+
+        # Truncate samples to fit context
+        summaries = _truncate_for_context(payload.conversation_summaries, max_chars=8000)
+        queries = _truncate_for_context(payload.chat_queries, max_chars=6000)
+        contexts = _truncate_for_context(payload.sample_project_contexts, max_chars=2000)
+
+        system_prompt = render_prompt("user_profile_system.j2")
+        user_prompt = render_prompt(
+            "user_profile_user.j2",
+            project_count=payload.project_count,
+            portal_title_pct=payload.portal_title_pct,
+            portal_desc_pct=payload.portal_desc_pct,
+            transcript_prompt_pct=payload.transcript_prompt_pct,
+            proj_context_pct=payload.proj_context_pct,
+            projects_with_tags_pct=payload.projects_with_tags_pct,
+            avg_tags_per_project=payload.avg_tags_per_project,
+            sample_tags=payload.sample_tags,
+            project_samples=payload.project_samples,
+            sample_project_contexts=contexts,
+            conversation_summaries=summaries,
+            summary_count=payload.summary_count,
+            chat_queries=queries,
+            query_count=payload.query_count,
+        )
+
+        response = litellm.completion(
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            temperature=0.5,
+            **kwargs,
+        )
+
+        return response.choices[0].message.content
+
+    except Exception as e:
+        logger.error(f"Failed to generate user profile: {e}")
+        return _fallback_user_profile(payload)
+
+
+def _fallback_user_profile(payload: UserProfilePayload) -> str:
+    """Fallback when LLM is unavailable."""
+    lines = [
+        "**How They Use ECHO**",
+        f"{payload.project_count} projects with {payload.summary_count} conversations analyzed.",
+        "",
+        "**Project Setup Style**",
+        f"Portal customization: {payload.portal_title_pct:.0f}% titles, {payload.portal_desc_pct:.0f}% descriptions. ",
+        f"Tags: {payload.projects_with_tags_pct:.0f}% of projects tagged ({payload.avg_tags_per_project:.1f} avg).",
+        "",
+        "**What They're Exploring**",
+        f"{payload.query_count} questions asked in chat sessions.",
+    ]
+    if payload.sample_tags:
+        lines.append(f"Common tags: {', '.join(payload.sample_tags[:5])}")
+    return "\n".join(lines)

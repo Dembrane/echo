@@ -183,6 +183,7 @@ class MonthlyStats:
     month: int
     conversations: int = 0
     conversations_empty: int = 0  # Conversations with zero chunks or no transcript
+    conversations_uploaded: int = 0  # Conversations from DASHBOARD_UPLOAD source
     duration_seconds: int = 0
     chats: int = 0
     messages: int = 0
@@ -190,8 +191,13 @@ class MonthlyStats:
 
     @property
     def conversations_valid(self) -> int:
-        """Conversations with actual content."""
+        """Conversations with actual content (excludes empty, includes uploads)."""
         return self.conversations - self.conversations_empty
+
+    @property
+    def conversations_qr(self) -> int:
+        """Conversations from QR scans (total valid minus uploads)."""
+        return self.conversations_valid - self.conversations_uploaded
 
     @property
     def month_label(self) -> str:
@@ -638,6 +644,10 @@ def calculate_metrics(usage_data: List[UserUsageData]) -> UsageMetrics:
             # (same logic as frontend: chunks?.some(c => transcript?.trim().length > 0))
             if not conv.has_content:
                 monthly_data[key].conversations_empty += 1
+
+            # Track uploaded conversations (source = "DASHBOARD_UPLOAD")
+            if conv.source == "DASHBOARD_UPLOAD":
+                monthly_data[key].conversations_uploaded += 1
 
     # Aggregate chats by month
     for chat_info in all_chats:
