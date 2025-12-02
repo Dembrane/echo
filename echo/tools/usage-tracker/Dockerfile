@@ -27,6 +27,10 @@ FROM base AS runner
 COPY app.py ./
 COPY src/ ./src/
 
+# Add virtual environment to PATH so we can run streamlit directly
+# This avoids 'uv run' which tries to re-build the project
+ENV PATH="/app/.venv/bin:$PATH"
+
 # Streamlit configuration for container environments
 ENV STREAMLIT_SERVER_HEADLESS=true
 ENV STREAMLIT_SERVER_ADDRESS=0.0.0.0
@@ -39,5 +43,5 @@ EXPOSE 8501
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8501/_stcore/health || exit 1
 
-CMD ["uv", "run", "streamlit", "run", "app.py"]
+CMD ["streamlit", "run", "app.py"]
 
