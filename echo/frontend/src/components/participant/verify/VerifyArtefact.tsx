@@ -401,7 +401,7 @@ export const VerifyArtefact = () => {
 								radius="md"
 								variant="default"
 								onClick={handleEdit}
-								px="sm"
+								px="lg"
 								disabled={
 									isRevising || isApproving || isLoading || !generatedArtifactId
 								}
