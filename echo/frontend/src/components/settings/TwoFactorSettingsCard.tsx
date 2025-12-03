@@ -20,13 +20,8 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-	IconCheck,
-	IconCopy,
-	IconInfoCircle,
-	IconLock,
-} from "@tabler/icons-react";
-import { useEffect, useMemo, useState } from "react";
+import { IconCheck, IconCopy, IconLock } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 import { QRCode } from "@/components/common/QRCode";
 import {
 	type GenerateTwoFactorResponse,
@@ -207,8 +202,9 @@ export const TwoFactorSettingsCard = ({
 			<Stack gap="lg">
 				{enableTwoFactorMutation.isError && (
 					<Alert color="red" variant="light">
-						{enableTwoFactorMutation.error?.message ??
-							t`We couldn’t enable two-factor authentication. Double-check your code and try again.`}
+						{getEnableTwoFactorErrorMessage(
+							enableTwoFactorMutation.error?.message,
+						)}
 					</Alert>
 				)}
 
@@ -274,6 +270,17 @@ export const TwoFactorSettingsCard = ({
 		);
 	};
 
+	const getEnableTwoFactorErrorMessage = (message?: string) => {
+		if (!message) {
+			return t`We couldn’t enable two-factor authentication. Double-check your code and try again.`;
+		}
+
+		if (message.includes('Invalid payload. "otp" is invalid')) {
+			return t`The code didn't work, please try again.`;
+		}
+
+		return message;
+	};
 	return (
 		<>
 			<Paper withBorder p="lg" radius="lg">
