@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { throwWithMessage } from "@/components/auth/utils/errorUtils";
 import { toast } from "@/components/common/Toaster";
@@ -49,13 +50,17 @@ export const useEnableTwoFactorMutation = () => {
 			await postDirectus("/users/me/tfa/enable", { otp, secret });
 		},
 		onError: (error: Error) => {
-			toast.error(error.message);
+			if (error.message.includes('Invalid payload. "otp" is invalid')) {
+				toast.error(t`The code didn't work, please try again.`);
+			} else {
+				toast.error(error.message);
+			}
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["users", "me"],
 			});
-			toast.success("Two-factor authentication enabled");
+			toast.success(t`Two-factor authentication enabled`);
 		},
 	});
 };
@@ -74,7 +79,7 @@ export const useDisableTwoFactorMutation = () => {
 			queryClient.invalidateQueries({
 				queryKey: ["users", "me"],
 			});
-			toast.success("Two-factor authentication disabled");
+			toast.success(t`Two-factor authentication disabled`);
 		},
 	});
 };
