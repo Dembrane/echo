@@ -466,7 +466,6 @@ dependencies = [
     { name = "langchain" },
     { name = "langchain-community" },
     { name = "langchain-experimental" },
-    { name = "lightrag-dembrane" },
     { name = "litellm" },
     { name = "lz4" },
     { name = "mypy" },
@@ -526,7 +525,6 @@ requires-dist = [
     { name = "langchain", specifier = "==0.1.*" },
     { name = "langchain-community", specifier = "==0.0.*" },
     { name = "langchain-experimental", specifier = "==0.0.*" },
-    { name = "lightrag-dembrane", specifier = "==1.2.7.8" },
     { name = "litellm", specifier = "==1.79.*" },
     { name = "lz4", specifier = "==4.4.*" },
     { name = "mypy", specifier = ">=1.16.0" },
@@ -1392,15 +1390,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/6c/56/201dd94d492ae47c1bf9b50cacc1985113dc2288d8f15857e1f4a6818376/langsmith-0.1.147.tar.gz", hash = "sha256:2e933220318a4e73034657103b3b1a3a6109cc5db3566a7e8e03be8d6d7def7a", size = 300453, upload-time = "2024-11-27T17:32:41.297Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/de/f0/63b06b99b730b9954f8709f6f7d9b8d076fa0a973e472efe278089bde42b/langsmith-0.1.147-py3-none-any.whl", hash = "sha256:7166fc23b965ccf839d64945a78e9f1157757add228b086141eb03a60d699a15", size = 311812, upload-time = "2024-11-27T17:32:39.569Z" },
-]
-
-[[package]]
-name = "lightrag-dembrane"
-version = "1.2.7.8"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/8f/61/856d3f89dd0f87d39d0f5bfc716b6e2ef58eaf11a7bfe3d04bc0b229d2c7/lightrag_dembrane-1.2.7.8.tar.gz", hash = "sha256:5836ae15f6968acc6cd5c772bc59581820fcef1dcc323ae2d0248957cb1651f6", size = 1002398, upload-time = "2025-05-15T13:08:53.319Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a8/ea/e8d9f8e9a097f2dfd0cf82816ea2e932f51015d68137a4f27804ddd6b3eb/lightrag_dembrane-1.2.7.8-py3-none-any.whl", hash = "sha256:8e713cc438bda3522137044229dbccf866b48c865c4927b9a5ce8345cc32f432", size = 989173, upload-time = "2025-05-15T13:08:50.331Z" },
 ]
 
 [[package]]

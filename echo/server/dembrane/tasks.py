@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 from logging import getLogger
 
@@ -97,9 +98,15 @@ def task_transcribe_chunk(
     conversation_chunk_id: str, conversation_id: str, use_pii_redaction: bool = False
 ) -> None:
     """
-    Transcribe a conversation chunk. The results are not returned.
+    Transcribe a conversation chunk.
+    
+    After transcription (success or recoverable error), decrements the pending
+    chunk counter. If counter reaches 0 and conversation is_finished, triggers
+    finalization.
     """
     logger = getLogger("dembrane.tasks.task_transcribe_chunk")
+    
+    
     try:
         with ProcessingStatusContext(
             conversation_id=conversation_id,
@@ -108,10 +115,164 @@ def task_transcribe_chunk(
         ):
             transcribe_conversation_chunk(conversation_chunk_id, use_pii_redaction)
 
+        # Transcription succeeded - decrement counter and check for finalization
+        _on_chunk_transcription_done(conversation_id, conversation_chunk_id, logger)
         return
+        
     except Exception as e:
-        logger.error(f"Error: {e}")
-        raise e from e
+        logger.error(f"Error transcribing chunk {conversation_chunk_id}: {e}")
+        
+        # Check if this was a recoverable error (chunk was marked as failed but
+        # didn't raise). If transcribe_conversation_chunk raised, we need to
+        # still decrement if it's a recoverable error type.
+        from dembrane.transcribe import _is_recoverable_error
+        
+        if _is_recoverable_error(e):
+            # Recoverable error - chunk is done (just with an error), decrement counter
+            logger.info(
+                f"Recoverable error for chunk {conversation_chunk_id}, "
+                f"marking as done and checking finalization"
+            )
+            _on_chunk_transcription_done(conversation_id, conversation_chunk_id, logger)
+            return  # Don't re-raise for recoverable errors
+        
+        # Non-recoverable error - still decrement counter but also raise
+        # so Dramatiq can retry
+        _on_chunk_transcription_done(conversation_id, conversation_chunk_id, logger)
+        raise
+
+
+def _on_chunk_transcription_done(
+    conversation_id: str, 
+    chunk_id: str, 
+    logger: "logging.Logger"
+) -> None:
+    """
+    Called when a chunk transcription is done (success or error).
+    Decrements pending counter and triggers finalization if ready.
+    
+    Uses mark_chunk_decremented to prevent double-decrement on Dramatiq retry.
+    """
+    from dembrane.service import conversation_service
+    from dembrane.coordination import mark_chunk_decremented, decrement_pending_chunks
+    
+    # Prevent double-decrement on retry
+    if not mark_chunk_decremented(conversation_id, chunk_id):
+        logger.info(
+            f"Chunk {chunk_id} already decremented (likely a retry), skipping decrement"
+        )
+        return
+    
+    # Decrement the pending counter
+    remaining = decrement_pending_chunks(conversation_id)
+    logger.info(
+        f"Chunk {chunk_id} done. Remaining pending chunks for {conversation_id}: {remaining}"
+    )
+    
+    if remaining == 0:
+        # All chunks done - check if conversation is finished (user clicked finish)
+        try:
+            conversation = conversation_service.get_by_id_or_raise(conversation_id)
+            
+            if conversation.get("is_finished"):
+                logger.info(
+                    f"All chunks done and conversation {conversation_id} is_finished=True, "
+                    f"triggering finalization"
+                )
+                task_finalize_conversation.send(conversation_id)
+            else:
+                logger.info(
+                    f"All chunks done for {conversation_id} but is_finished=False, "
+                    f"waiting for user to finish conversation"
+                )
+        except Exception as e:
+            logger.error(f"Error checking conversation state for {conversation_id}: {e}")
+
+
+@dramatiq.actor(queue_name="network", priority=20)
+def task_finalize_conversation(conversation_id: str) -> None:
+    """
+    Finalize a conversation after all chunks are transcribed.
+    
+    This task is triggered when:
+    1. All pending chunks have been transcribed (counter == 0)
+    2. The conversation is_finished (user clicked finish or scheduler triggered)
+    
+    It performs:
+    1. Sets is_all_chunks_transcribed = True
+    2. Triggers merge task
+    3. Triggers summary task
+    4. Cleans up coordination data
+    """
+    logger = getLogger("dembrane.tasks.task_finalize_conversation")
+    
+    from dembrane.service import conversation_service
+    from dembrane.coordination import (
+        get_pending_chunks,
+        mark_finalize_in_progress,
+        cleanup_conversation_coordination,
+    )
+    
+    try:
+        logger.info(f"Finalizing conversation: {conversation_id}")
+        
+        # Double-check conditions (idempotency)
+        conversation = conversation_service.get_by_id_or_raise(conversation_id)
+        
+        if conversation.get("is_all_chunks_transcribed"):
+            logger.info(f"Conversation {conversation_id} already finalized, skipping")
+            return
+        
+        # Atomic lock - only one finalization task proceeds
+        if not mark_finalize_in_progress(conversation_id):
+            logger.info(
+                f"Conversation {conversation_id} finalization already in progress, skipping"
+            )
+            return
+        
+        pending = get_pending_chunks(conversation_id)
+        if pending > 0:
+            logger.warning(
+                f"Finalization triggered but {pending} chunks still pending for {conversation_id}, "
+                f"skipping (will be triggered again when chunks complete)"
+            )
+            # Clear lock so next attempt can proceed
+            from dembrane.coordination import clear_finalize_in_progress
+            clear_finalize_in_progress(conversation_id)
+            return
+        
+        if not conversation.get("is_finished"):
+            logger.warning(
+                f"Finalization triggered but conversation {conversation_id} is_finished=False, "
+                f"skipping (will be triggered when user finishes)"
+            )
+            # Clear lock so next attempt can proceed
+            from dembrane.coordination import clear_finalize_in_progress
+            clear_finalize_in_progress(conversation_id)
+            return
+        
+        # All conditions met - finalize
+        logger.info(f"All conditions met, finalizing conversation {conversation_id}")
+        
+        # Set the flag
+        conversation_service.update(
+            conversation_id=conversation_id,
+            is_all_chunks_transcribed=True,
+        )
+        
+        # Trigger downstream tasks
+        task_merge_conversation_chunks.send(conversation_id)
+        task_summarize_conversation.send(conversation_id)
+        
+        # Clean up coordination data
+        cleanup_conversation_coordination(conversation_id)
+        
+        logger.info(f"Conversation {conversation_id} finalization complete")
+        return
+        
+    except Exception as e:
+        logger.error(f"Error finalizing conversation {conversation_id}: {e}")
+        raise
 
 
 @dramatiq.actor(queue_name="network", priority=30)
@@ -119,6 +280,9 @@ def task_summarize_conversation(conversation_id: str) -> None:
     """
     Summarize a conversation. The results are not returned. You can find it in
     conversation["summary"] after the task is finished.
+    
+    This task is resilient to partial data - it will generate a summary from
+    whatever transcripts are available, logging any chunks that were skipped.
     """
     logger = getLogger("dembrane.tasks.task_summarize_conversation")
 
@@ -132,6 +296,23 @@ def task_summarize_conversation(conversation_id: str) -> None:
         if conversation["is_finished"] and conversation["summary"] is not None:
             logger.info(f"Conversation {conversation_id} already summarized, skipping")
             return
+
+        # Log chunk status before summarizing
+        try:
+            counts = conversation_service.get_chunk_counts(conversation_id)
+            if counts["error"] > 0:
+                logger.info(
+                    f"Summarizing conversation {conversation_id} with partial data: "
+                    f"{counts['ok']}/{counts['total']} chunks have transcripts, "
+                    f"{counts['error']} chunks have errors"
+                )
+            else:
+                logger.info(
+                    f"Summarizing conversation {conversation_id}: "
+                    f"{counts['ok']}/{counts['total']} chunks with transcripts"
+                )
+        except Exception as e:
+            logger.warning(f"Could not get chunk counts for logging: {e}")
 
         from dembrane.api.conversation import summarize_conversation
 
@@ -220,14 +401,22 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
 @dramatiq.actor(queue_name="network", priority=30)
 def task_finish_conversation_hook(conversation_id: str) -> None:
     """
-    Finalize processing of a conversation and invoke follow-up tasks.
-    1. Set status
-    3. Merge chunks into merged_audio_path
-    4. Run ETL pipeline (if enabled)
+    Handle user/scheduler signal that a conversation is finished.
+    
+    This task:
+    1. Sets is_finished = True
+    2. Checks if all chunks are already transcribed
+    3. If yes, triggers finalization immediately
+    4. If no, finalization will be triggered by the last transcription task
+    
+    This ensures merge/summary only run after ALL transcriptions complete.
+    
+    Uses mark_finish_in_progress to prevent duplicate processing from scheduler.
     """
     logger = getLogger("dembrane.tasks.task_finish_conversation_hook")
 
     from dembrane.service import conversation_service
+    from dembrane.coordination import get_pending_chunks, mark_finish_in_progress
     from dembrane.service.conversation import ConversationNotFoundException
 
     try:
@@ -239,36 +428,71 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
             logger.info(f"Conversation {conversation_id} already finished, skipping")
             return
 
-        conversation_service.update(conversation_id=conversation_id, is_finished=True)
+        # Prevent duplicate processing - only first task proceeds
+        if not mark_finish_in_progress(conversation_id):
+            logger.info(
+                f"Conversation {conversation_id} finish already in progress by another task, skipping"
+            )
+            return
 
+        # Mark as finished (user intent)
+        conversation_service.update(conversation_id=conversation_id, is_finished=True)
+        logger.info(f"Marked conversation {conversation_id} as is_finished=True")
+
+        # Check if all chunks are already transcribed
+        pending = get_pending_chunks(conversation_id)
+        counts = conversation_service.get_chunk_counts(conversation_id)
+        
         logger.info(
-            f"Conversation {conversation_id} has not finished processing, running all follow-up tasks"
+            f"Conversation {conversation_id} state: "
+            f"pending_redis={pending}, "
+            f"db_counts={{total={counts['total']}, ok={counts['ok']}, "
+            f"error={counts['error']}, pending={counts['pending']}}}"
         )
 
-        task_merge_conversation_chunks.send(conversation_id)
-        task_summarize_conversation.send(conversation_id)
-
-        counts = conversation_service.get_chunk_counts(conversation_id)
-
-        if counts["processed"] == counts["total"]:
-            logger.debug("allez c'est fini")
-            conversation_service.update(
-                conversation_id=conversation_id,
-                is_all_chunks_transcribed=True,
+        if pending == 0 and counts["total"] > 0:
+            # All chunks done (or no chunks uploaded via new flow yet)
+            # Trigger finalization
+            logger.info(
+                f"All chunks already transcribed for {conversation_id}, "
+                f"triggering finalization"
             )
+            task_finalize_conversation.send(conversation_id)
+        elif counts["total"] == 0:
+            # No chunks at all - still trigger finalization to set flags
+            # (handles edge case of empty conversations)
+            logger.info(
+                f"No chunks for conversation {conversation_id}, "
+                f"triggering finalization for empty conversation"
+            )
+            task_finalize_conversation.send(conversation_id)
         else:
-            logger.debug(
-                f"waiting for pending chunks {counts['pending']} ok({counts['ok']}) error({counts['error']}) total({counts['total']})"
+            # Chunks still pending - finalization will be triggered by
+            # the last task_transcribe_chunk when it completes
+            logger.info(
+                f"Waiting for {pending} pending chunks to complete for {conversation_id}, "
+                f"finalization will be triggered automatically"
             )
 
+        # Clear finish lock - we're done processing
+        from dembrane.coordination import clear_finish_in_progress
+        clear_finish_in_progress(conversation_id)
         return
 
     except ConversationNotFoundException:
         logger.error(f"NO RETRY: Conversation not found: {conversation_id}")
+        # Clear lock on non-retriable error
+        try:
+            from dembrane.coordination import clear_finish_in_progress
+            clear_finish_in_progress(conversation_id)
+        except Exception:
+            pass
         return
 
     except Exception as e:
         logger.error(f"Error: {e}")
+        # Don't clear lock on retriable error - let retry proceed
+        # Lock has 5 min TTL as safety net
         raise e from e
 
 
@@ -282,18 +506,25 @@ def task_process_conversation_chunk(
 ) -> None:
     """
     Process a conversation chunk.
+    
+    Flow:
+    1. Split large audio files into smaller chunks
+    2. Register pending chunk count with coordination module
+    3. Spawn transcription tasks for each split chunk
     """
 
     logger = getLogger("dembrane.tasks.task_process_conversation_chunk")
     try:
         from dembrane.service import conversation_service
+        from dembrane.coordination import increment_pending_chunks
 
         chunk = conversation_service.get_chunk_by_id_or_raise(chunk_id)
-        logger.debug(f"Chunk {chunk_id} found in conversation: {chunk['conversation_id']}")
+        conversation_id = chunk["conversation_id"]
+        logger.debug(f"Chunk {chunk_id} found in conversation: {conversation_id}")
 
         # critical section
         with ProcessingStatusContext(
-            conversation_id=chunk["conversation_id"],
+            conversation_id=conversation_id,
             event_prefix="task_process_conversation_chunk.split_audio_chunk",
             message=f"for chunk {chunk_id}",
         ):
@@ -305,13 +536,27 @@ def task_process_conversation_chunk(
             logger.error(f"Split audio chunk result is None for chunk: {chunk_id}")
             raise ValueError(f"Split audio chunk result is None for chunk: {chunk_id}")
 
-        logger.info(f"Split audio chunk result: {split_chunk_ids}")
+        # Filter out None values
+        valid_chunk_ids = [cid for cid in split_chunk_ids if cid is not None]
+        
+        if not valid_chunk_ids:
+            logger.warning(f"No valid chunks after splitting for chunk: {chunk_id}")
+            return
+
+        logger.info(f"Split audio chunk result: {len(valid_chunk_ids)} chunks: {valid_chunk_ids}")
+
+        # Register pending chunks BEFORE spawning transcription tasks
+        # This ensures the counter is set before any transcription can complete
+        pending_count = increment_pending_chunks(conversation_id, len(valid_chunk_ids))
+        logger.info(
+            f"Registered {len(valid_chunk_ids)} pending chunks for conversation {conversation_id}, "
+            f"total pending: {pending_count}"
+        )
 
         group(
             [
-                task_transcribe_chunk.message(cid, chunk["conversation_id"], use_pii_redaction)
-                for cid in split_chunk_ids
-                if cid is not None
+                task_transcribe_chunk.message(cid, conversation_id, use_pii_redaction)
+                for cid in valid_chunk_ids
             ]
         ).run()
 

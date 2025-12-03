@@ -7,7 +7,7 @@ HTTP requests) in a thread pool, preventing them from blocking the main event lo
 Key features:
 - Configurable thread pool size via THREAD_POOL_SIZE environment variable (default: 64)
 - Clean API for wrapping blocking calls
-- Safe for use with LightRAG (keeps RAG operations on main loop)
+- Persistent event loops per thread for Dramatiq workers
 
 Usage:
     from dembrane.async_helpers import run_in_thread_pool
@@ -112,7 +112,6 @@ async def run_in_thread_pool(func: Callable[..., T], *args: Any, **kwargs: Any) 
         )
 
     Important:
-        - DO NOT use this for LightRAG operations (rag.aquery, rag.ainsert, etc.)
         - Only use for truly blocking I/O (DB queries, S3 calls, HTTP with requests library)
         - Already-async functions should be awaited directly, not wrapped
         - This helper only accepts synchronous functions
@@ -142,7 +141,7 @@ async def run_in_thread_pool(func: Callable[..., T], *args: Any, **kwargs: Any) 
     return await loop.run_in_executor(get_thread_pool_executor(), func, *args)
 
 
-# Persistent event loops per worker thread for LightRAG compatibility
+# Persistent event loops per worker thread for Dramatiq actors
 _thread_loops: dict[int, asyncio.AbstractEventLoop] = {}
 _thread_loops_lock = threading.Lock()
 
@@ -150,8 +149,7 @@ _thread_loops_lock = threading.Lock()
 def _get_thread_event_loop() -> asyncio.AbstractEventLoop:
     """
     Fetch or create the persistent event loop for the current thread.
-    Mirrors the previous dembrane.audio_lightrag.utils.async_utils implementation
-    so LightRAG objects tied to an event loop (e.g., RAGManager) continue to work.
+    Used by Dramatiq actors to run async code in sync contexts.
     """
     thread_id = threading.get_ident()
 
@@ -174,8 +172,8 @@ def run_async_in_new_loop(coro: Coroutine[Any, Any, T]) -> T:
     Execute an async coroutine on this thread's persistent event loop.
 
     Use from synchronous contexts such as Dramatiq actors or CLI scripts to
-    invoke async FastAPI handlers / LightRAG routines without hitting
-    "Future attached to a different loop" errors.
+    invoke async FastAPI handlers without hitting "Future attached to a 
+    different loop" errors.
     """
     if not asyncio.iscoroutine(coro) and not asyncio.isfuture(coro):
         raise TypeError("run_async_in_new_loop expects a coroutine or Future.")

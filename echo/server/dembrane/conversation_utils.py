@@ -8,7 +8,19 @@ from dembrane.directus import directus
 logger = logging.getLogger("dembrane.conversation_utils")
 
 
-def collect_unfinished_conversations() -> List[str]:
+def collect_unfinished_conversations(limit: int = 100) -> List[str]:
+    """
+    Collect unfinished conversations that are ready to be finished.
+    
+    Args:
+        limit: Maximum number of conversations to return (default 100).
+               This prevents queue explosion when there are thousands of
+               unfinished conversations. The scheduler runs frequently
+               enough to catch up over multiple runs.
+    
+    Returns:
+        List of conversation IDs ready to be finished.
+    """
     # We want to collect:
     # 1. All unfinished conversations, EXCEPT
     # 2. Those that have at least one chunk in the last 5 minutes
@@ -29,13 +41,15 @@ def collect_unfinished_conversations() -> List[str]:
                             }
                         }
                     },
-                    # Must not be created in the last 5 minutes
+                    # Must have been created more than 5 minutes ago
+                    # (skip recently created conversations that might still be receiving chunks)
                     "created_at": {
-                        "_gte": (get_utc_timestamp() - timedelta(minutes=5)).isoformat()
+                        "_lte": (get_utc_timestamp() - timedelta(minutes=5)).isoformat()
                     },
                 },
                 "fields": ["id"],
-                "limit": -1,
+                "sort": ["created_at"],  # Process oldest first
+                "limit": limit,
             },
         },
     )
