@@ -1,0 +1,11 @@
+{% if user_profile %}
+## USER CONTEXT
+This user's profile (use this to inform your analysis):
+{{ user_profile }}
+
+---
+{% endif %}
+
+## CHAT QUERIES ({{ message_count }} total)
+Analyze what this user is asking:
+{{ messages_blob }}

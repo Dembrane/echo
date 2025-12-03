@@ -1,7 +1,7 @@
 Last updated: 2025-11-07T08:32:55Z
 
 # Project Snapshot
-- Dembrane ECHO server exposes a FastAPI app (`dembrane.main:app`) with async-heavy LightRAG integrations.
+- Dembrane ECHO server exposes a FastAPI app (`dembrane.main:app`).
 - Python 3.11 required; dependencies managed through `pyproject.toml` with `uv` as the package/runtime tool.
 - Background work uses Dramatiq (network + cpu queues) and a scheduler module for periodic tasks.
 
@@ -10,8 +10,8 @@ Last updated: 2025-11-07T08:32:55Z
 - Development scheduler: `uv run python -m dembrane.scheduler`
 - Development workers:
   - Network: `uv run dramatiq-gevent --watch ./dembrane --queues network --processes 2 --threads 1 dembrane.tasks`
-  - CPU: `uv run dramatiq --watch ./dembrane --queues cpu --processes 1 --threads 2 dembrane.tasks`
-- Production API: `gunicorn dembrane.main:app --worker-class dembrane.lightrag_uvicorn_worker.LightRagUvicornWorker ...`
+  - CPU: `uv run dramatiq --watch ./dembrane --queues cpu --processes 1 --threads 1 dembrane.tasks`
+- Production API: `gunicorn dembrane.main:app --worker-class dembrane.asyncio_uvicorn_worker.AsyncioUvicornWorker ...`
   - Uses env vars `API_WORKERS`, `API_WORKER_TIMEOUT`, `API_WORKER_MAX_REQUESTS`
 - Production workers:
   - Network: `dramatiq-gevent --queues network --processes $PROCESSES --threads $THREADS dembrane.tasks`
@@ -43,8 +43,9 @@ Last updated: 2025-11-07T08:32:55Z
 - `dembrane/api/participant.py:76` – Remove unused `pin`.
 
 # Gotchas & Notes
-- Gunicorn uses custom LightRAG uvicorn worker; avoid uvloop to keep LightRAG compatible.
-- CPU Dramatiq worker deliberately single-threaded to dodge LightRAG locking issues—respect `THREADS=1` guidance in prod.
+- Gunicorn uses custom asyncio uvicorn worker (avoid uvloop for nest_asyncio compatibility).
+- CPU Dramatiq worker uses 1 thread per process to limit memory (FFmpeg can be memory-hungry). Scale via processes/replicas instead.
 - Watching directories (`--watch`, `--watch-use-polling`) adds overhead; keep file changes minimal when workers run locally.
 - S3 audio paths used in verification/transcription flows should be loaded via the shared file service (`_get_audio_file_object`) so Gemini always receives fresh bytes—signed URLs may expire mid-request.
+- Verification topics reconcile at startup (see `reconcile_default_verification_topics`) and use a Redis lock `dembrane:verification_topics:reconcile_lock` (5m TTL); if logs say another worker holds the lock, just rerun once it releases or manually delete the key if a crash left it behind.
 - When a Dramatiq actor needs to invoke an async FastAPI handler (e.g., `dembrane.api.conversation.summarize_conversation`), run the coroutine via `run_async_in_new_loop` from `dembrane.async_helpers` instead of calling it directly or with `asyncio.run` to avoid clashing with nested event loops.
