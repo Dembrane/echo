@@ -652,73 +652,106 @@ def split_audio_chunk(
 
     split_chunk_items = []
     new_chunk_ids = []
+    s3_keys_created = []  # Track S3 keys for cleanup on failure
 
-    with tempfile.NamedTemporaryFile(suffix=f".{output_format}") as temp_file:
-        temp_file.write(get_stream_from_s3(updated_chunk_path).read())
-        temp_file.flush()
+    try:
+        with tempfile.NamedTemporaryFile(suffix=f".{output_format}") as temp_file:
+            temp_file.write(get_stream_from_s3(updated_chunk_path).read())
+            temp_file.flush()
 
-        for i in range(number_chunks):
-            start_time = i * chunk_duration
-            chunk_id = generate_uuid()
+            # Phase 1: Split and upload all chunks to S3
+            for i in range(number_chunks):
+                start_time = i * chunk_duration
+                chunk_id = generate_uuid()
 
-            s3_chunk_path = get_sanitized_s3_key(
-                f"chunks/{original_chunk['conversation_id']}/{chunk_id}_{i}-of-{number_chunks}."
-                + output_format
-            )
-            logger.debug(f"Extracting chunk {i + 1}/{number_chunks} starting at {start_time}s")
-
-            process = (
-                ffmpeg.input(temp_file.name)
-                .output(
-                    "pipe:1",
-                    ss=start_time,
-                    t=chunk_duration,
-                    f=output_format,
-                    preset="veryfast",
+                s3_chunk_path = get_sanitized_s3_key(
+                    f"chunks/{original_chunk['conversation_id']}/{chunk_id}_{i}-of-{number_chunks}."
+                    + output_format
                 )
-                .overwrite_output()
-                .run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True)
+                logger.debug(f"Extracting chunk {i + 1}/{number_chunks} starting at {start_time}s")
+
+                process = (
+                    ffmpeg.input(temp_file.name)
+                    .output(
+                        "pipe:1",
+                        ss=start_time,
+                        t=chunk_duration,
+                        f=output_format,
+                        preset="veryfast",
+                    )
+                    .overwrite_output()
+                    .run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True)
+                )
+
+                chunk_output, err = process.communicate(input=None)
+
+                if process.returncode != 0:
+                    raise FFmpegError(f"ffmpeg splitting failed: {err.decode().strip()}")
+
+                s3_client.put_object(
+                    Bucket=STORAGE_S3_BUCKET,
+                    Key=s3_chunk_path,
+                    Body=chunk_output,
+                    ACL="private",
+                )
+                s3_keys_created.append(s3_chunk_path)
+
+                new_item = {
+                    "conversation_id": original_chunk["conversation_id"],
+                    "created_at": (
+                        datetime.datetime.fromisoformat(original_chunk["created_at"])
+                        + timedelta(seconds=start_time)
+                    ).isoformat(),
+                    "timestamp": (
+                        datetime.datetime.fromisoformat(original_chunk["timestamp"])
+                        + timedelta(seconds=start_time)
+                    ).isoformat(),
+                    "path": f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/{s3_chunk_path}",
+                    "source": original_chunk["source"],
+                    "id": chunk_id,
+                }
+                split_chunk_items.append(new_item)
+                new_chunk_ids.append(chunk_id)
+
+        # Phase 2: Verify all S3 uploads succeeded
+        logger.debug(f"Verifying {len(s3_keys_created)} S3 uploads...")
+        for s3_key in s3_keys_created:
+            try:
+                s3_client.head_object(Bucket=STORAGE_S3_BUCKET, Key=s3_key)
+            except Exception as e:
+                raise RuntimeError(f"S3 upload verification failed for {s3_key}: {e}") from e
+
+        # Phase 3: Create all Directus records
+        new_ids = []
+        for item in split_chunk_items:
+            c = directus.create_item("conversation_chunk", item_data=item)
+            new_ids.append(c["data"]["id"])
+
+        logger.debug(f"Created {len(new_ids)} split chunks in Directus.")
+
+        # Phase 4: Verify all chunks were created before deleting original
+        if len(new_ids) != number_chunks:
+            raise ValueError(
+                f"Expected {number_chunks} chunks but only created {len(new_ids)} in Directus"
             )
 
-            chunk_output, err = process.communicate(input=None)
+        # Phase 5: Only delete original after everything succeeded
+        if delete_original:
+            directus.delete_item("conversation_chunk", original_chunk["id"])
+            logger.debug("Deleted original chunk from Directus after splitting.")
 
-            if process.returncode != 0:
-                raise FFmpegError(f"ffmpeg splitting failed: {err.decode().strip()}")
+        logger.info(f"Successfully split file into {number_chunks} chunks.")
+        return new_ids
 
-            s3_client.put_object(
-                Bucket=STORAGE_S3_BUCKET,
-                Key=s3_chunk_path,
-                Body=chunk_output,
-                ACL="private",
-            )
+    except Exception as e:
+        # Cleanup: try to remove any S3 files we created
+        logger.error(f"Split failed, attempting cleanup of {len(s3_keys_created)} S3 files: {e}")
+        for s3_key in s3_keys_created:
+            try:
+                s3_client.delete_object(Bucket=STORAGE_S3_BUCKET, Key=s3_key)
+                logger.debug(f"Cleaned up S3 file: {s3_key}")
+            except Exception as cleanup_error:
+                logger.warning(f"Failed to cleanup S3 file {s3_key}: {cleanup_error}")
 
-            new_item = {
-                "conversation_id": original_chunk["conversation_id"],
-                "created_at": (
-                    datetime.datetime.fromisoformat(original_chunk["created_at"])
-                    + timedelta(seconds=start_time)
-                ).isoformat(),
-                "timestamp": (
-                    datetime.datetime.fromisoformat(original_chunk["timestamp"])
-                    + timedelta(seconds=start_time)
-                ).isoformat(),
-                "path": f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/{s3_chunk_path}",
-                "source": original_chunk["source"],
-                "id": chunk_id,
-            }
-            split_chunk_items.append(new_item)
-            new_chunk_ids.append(chunk_id)
-
-    new_ids = []
-    for item in split_chunk_items:
-        c = directus.create_item("conversation_chunk", item_data=item)
-        new_ids.append(c["data"]["id"])
-
-    logger.debug("Created split chunks in Directus.")
-
-    if delete_original:
-        directus.delete_item("conversation_chunk", original_chunk["id"])
-        logger.debug("Deleted original chunk from Directus after splitting.")
-
-    logger.debug(f"Successfully split file into {number_chunks} chunks.")
-    return new_ids
+        # Re-raise the original error
+        raise

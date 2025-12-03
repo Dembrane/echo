@@ -9,7 +9,7 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { CloseableAlert } from "../common/ClosableAlert";
@@ -32,9 +32,19 @@ export const ConversationEdit = ({
 	conversation: Conversation;
 	projectTags: ProjectTag[];
 }) => {
-	const defaultValues: ConversationEditFormValues = {
-		participant_name: conversation.participant_name ?? "",
-		tagIdList:
+	const projectTagOptions = useMemo(
+		() =>
+			projectTags
+				.filter((tag) => tag && tag.id != null && tag.text != null)
+				.map((tag) => ({
+					label: tag.text ?? "",
+					value: tag.id ?? "",
+				})),
+		[projectTags],
+	);
+
+	const conversationTagIds = useMemo(
+		() =>
 			conversation.tags
 				?.filter(
 					(tag) => (tag as ConversationProjectTag).project_tag_id != null,
@@ -42,10 +52,25 @@ export const ConversationEdit = ({
 				.map(
 					(tag) =>
 						((tag as ConversationProjectTag).project_tag_id as ProjectTag).id,
-				) ?? [],
+				)
+				.filter((id): id is string => id != null) ?? [],
+		[conversation.tags],
+	);
+
+	const sanitizedConversationTagIds = useMemo(
+		() =>
+			conversationTagIds.filter((id) =>
+				projectTagOptions.some((tag) => tag.value === id),
+			),
+		[conversationTagIds, projectTagOptions],
+	);
+
+	const defaultValues: ConversationEditFormValues = {
+		participant_name: conversation.participant_name ?? "",
+		tagIdList: sanitizedConversationTagIds,
 	};
 
-	const { register, formState, reset, setValue, control, watch } =
+	const { register, formState, reset, setValue, control, watch, getValues } =
 		useForm<ConversationEditFormValues>({
 			defaultValues,
 		});
@@ -71,6 +96,20 @@ export const ConversationEdit = ({
 				reset(data, { keepDirty: false, keepValues: true });
 			},
 		});
+
+	useEffect(() => {
+		const currentValues = getValues("tagIdList") ?? [];
+		const filteredValues = currentValues.filter((id) =>
+			projectTagOptions.some((tag) => tag.value === id),
+		);
+
+		if (filteredValues.length !== currentValues.length) {
+			setValue("tagIdList", filteredValues, {
+				shouldDirty: false,
+				shouldTouch: false,
+			});
+		}
+	}, [projectTagOptions, getValues, setValue]);
 
 	useEffect(() => {
 		const subscription = watch((values, { type }) => {
@@ -143,12 +182,7 @@ export const ConversationEdit = ({
 									classNames={{
 										pill: "!bg-[var(--mantine-primary-color-light)] text-black font-medium",
 									}}
-									data={projectTags
-										.filter((tag) => tag && tag.id != null && tag.text != null)
-										.map((tag) => ({
-											label: tag.text ?? "",
-											value: tag.id ?? "",
-										}))}
+									data={projectTagOptions}
 									onChange={(value) => {
 										field.onChange(value);
 										setValue("tagIdList", value, { shouldDirty: true });

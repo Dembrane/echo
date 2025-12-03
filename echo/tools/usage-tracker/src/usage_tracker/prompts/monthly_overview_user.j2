@@ -1,0 +1,14 @@
+{% if user_profile %}
+## USER CONTEXT
+{{ user_profile }}
+
+---
+{% endif %}
+
+## MONTHLY DATA
+{{ context }}
+
+Key reminders:
+- Conversations = data from participants (QR scan or upload). Independent of logins.
+- Logins = when host analyzes. One session might cover many conversations.
+- Interpret trends in context of what you know about this user's workflow.
