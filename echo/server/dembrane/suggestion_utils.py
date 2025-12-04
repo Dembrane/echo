@@ -6,6 +6,7 @@ based on project context, chat mode, and recent conversation history.
 """
 
 import json
+import hashlib
 import logging
 import traceback
 from typing import Any, Dict, List, Optional
@@ -20,12 +21,74 @@ from dembrane.service import (
     build_project_service,
     build_conversation_service,
 )
+from dembrane.redis_async import get_redis_client
 from dembrane.async_helpers import run_in_thread_pool
 
 logger = logging.getLogger(__name__)
 
+# Cache TTL for suggestions (3 minutes)
+# Short enough to pick up changes, long enough to avoid redundant LLM calls
+SUGGESTIONS_CACHE_TTL_SECONDS = 180
+
 # Use high-quality model for better, more relevant suggestions
 SUGGESTION_LLM = MODELS.MULTI_MODAL_PRO
+
+
+def _generate_cache_key(
+    chat_mode: str,
+    language: str,
+    conversation_ids: List[str],
+    has_chat_history: bool,
+) -> str:
+    """
+    Generate a cache key for suggestions based on inputs.
+    
+    For deep_dive mode: key is based on sorted conversation IDs + language + has_history
+    For overview mode: key is based on project conversations which change less frequently
+    
+    The has_chat_history flag differentiates between fresh chats (no messages)
+    and chats with history (where last_response and recent_queries matter).
+    """
+    # Sort conversation IDs for consistent hashing
+    sorted_ids = sorted(conversation_ids)
+    key_parts = [
+        chat_mode,
+        language,
+        str(has_chat_history),
+        ",".join(sorted_ids),
+    ]
+    key_string = "|".join(key_parts)
+    # Use SHA256 hash for a compact, consistent key
+    key_hash = hashlib.sha256(key_string.encode()).hexdigest()[:32]
+    return f"suggestions:{chat_mode}:{key_hash}"
+
+
+async def _get_cached_suggestions(cache_key: str) -> Optional[List[Dict[str, str]]]:
+    """Try to get cached suggestions from Redis."""
+    try:
+        redis = await get_redis_client()
+        cached = await redis.get(cache_key)
+        if cached:
+            data = json.loads(cached)
+            logger.debug(f"[suggestions] Cache hit for key {cache_key}")
+            return data
+    except Exception as e:
+        logger.warning(f"[suggestions] Cache read error: {e}")
+    return None
+
+
+async def _set_cached_suggestions(cache_key: str, suggestions: List[Dict[str, str]]) -> None:
+    """Store suggestions in Redis cache."""
+    try:
+        redis = await get_redis_client()
+        await redis.setex(
+            cache_key,
+            SUGGESTIONS_CACHE_TTL_SECONDS,
+            json.dumps(suggestions),
+        )
+        logger.debug(f"[suggestions] Cached suggestions with key {cache_key}")
+    except Exception as e:
+        logger.warning(f"[suggestions] Cache write error: {e}")
 
 
 class Suggestion(BaseModel):
@@ -119,6 +182,28 @@ async def generate_suggestions(
             f"[suggestions] conversations type={type(conversations)}, count={len(conversations) if conversations else 0}"
         )
 
+        # Check cache for suggestions
+        # Cache is most effective for fresh chats (no history) where inputs are stable
+        has_chat_history = bool(last_response or (recent_queries and len(recent_queries) > 0))
+        conversation_ids = [
+            conv.get("id", "") for conv in (conversations or [])
+            if isinstance(conv, dict)
+        ]
+        
+        cache_key = _generate_cache_key(
+            chat_mode=chat_mode,
+            language=language,
+            conversation_ids=conversation_ids,
+            has_chat_history=has_chat_history,
+        )
+        
+        # Only use cache for fresh chats (no history) - these have stable inputs
+        # Chats with history have dynamic inputs (last_response, recent_queries)
+        if not has_chat_history:
+            cached = await _get_cached_suggestions(cache_key)
+            if cached:
+                return [Suggestion(**s) for s in cached]
+
         # Log first conversation structure for debugging
         if conversations and len(conversations) > 0:
             first_conv = conversations[0]
@@ -186,6 +271,14 @@ async def generate_suggestions(
 
         suggestions = _parse_suggestions(content)
         logger.info(f"Generated {len(suggestions)} suggestions for chat {chat_id}")
+        
+        # Cache suggestions for fresh chats (no history)
+        if not has_chat_history and suggestions:
+            await _set_cached_suggestions(
+                cache_key,
+                [s.model_dump() for s in suggestions],
+            )
+        
         return suggestions
 
     except Exception as e:

@@ -41,9 +41,11 @@ export const NewChatRoute = () => {
 				projectId,
 			});
 
-			// Step 3: Prefetch suggestions (wait up to 8s for better UX)
-			// This ensures suggestions are ready when user lands on the chat
-			await prefetchSuggestions(chat.id, language, 8000);
+			// Step 3: For overview mode, prefetch suggestions (wait up to 5s for better UX)
+			// For deep_dive mode, navigate immediately - suggestions will be fetched when context changes
+			if (mode === "overview") {
+				await prefetchSuggestions(chat.id, language, 5000);
+			}
 
 			// Step 4: Navigate to the new chat
 			navigate(`/projects/${projectId}/chats/${chat.id}`);

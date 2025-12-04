@@ -81,7 +81,7 @@ msgstr "\"Refine\" available soon"
 #. "Thinking..."
 #. placeholder {0}: showPreview ? "Hide Preview" : "Show Preview"
 #. placeholder {0}: citation.reference_text
-#: src/routes/project/chat/ProjectChatRoute.tsx:511
+#: src/routes/project/chat/ProjectChatRoute.tsx:554
 #: src/components/project/ProjectPortalEditor.tsx:426
 #: src/components/chat/References.tsx:29
 msgid "{0}"
@@ -186,7 +186,7 @@ msgstr "Zu diesem Chat hinzufügen"
 msgid "Added emails"
 msgstr "Hinzugefügte E-Mails"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:607
+#: src/routes/project/chat/ProjectChatRoute.tsx:650
 msgid "Adding Context:"
 msgstr "Kontext wird hinzugefügt:"
 
@@ -240,7 +240,7 @@ msgstr ""
 "Beim Laden des Portals ist ein Fehler aufgetreten. Bitte kontaktieren Sie "
 "das Support-Team."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:549
+#: src/routes/project/chat/ProjectChatRoute.tsx:592
 msgid "An error occurred."
 msgstr "Ein Fehler ist aufgetreten."
 
@@ -457,6 +457,7 @@ msgstr "Grundlegende Einstellungen"
 #: src/components/project/ProjectPortalEditor.tsx:558
 #: src/components/conversation/RetranscribeConversation.tsx:111
 #: src/components/conversation/MoveConversationButton.tsx:132
+#: src/components/chat/ChatModeSelector.tsx:136
 msgid "Beta"
 msgstr "Beta"
 
@@ -465,6 +466,7 @@ msgstr "Beta"
 msgid "dashboard.dembrane.concrete.experimental"
 msgstr "dashboard.dembrane.concrete.experimental"
 
+#: src/components/chat/ChatModeSelector.tsx:242
 #: src/components/chat/ChatModeBanner.tsx:39
 msgid "Big Picture"
 msgstr "Big Picture"
@@ -532,12 +534,12 @@ msgstr ""
 "nachdem die Sprache geändert wurde. Sind Sie sicher, dass Sie fortfahren "
 "möchten?"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:423
-#: src/routes/project/chat/ProjectChatRoute.tsx:426
+#: src/routes/project/chat/ProjectChatRoute.tsx:466
+#: src/routes/project/chat/ProjectChatRoute.tsx:469
 msgid "Chat"
 msgstr "Chat"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:274
+#: src/routes/project/chat/ProjectChatRoute.tsx:275
 msgid "Chat | Dembrane"
 msgstr "Chat | Dembrane"
 
@@ -688,7 +690,7 @@ msgstr "Cooling down. Available in {0}"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:419
 #: src/components/project/ProjectQRCode.tsx:121
-#: src/components/conversation/CopyConversationTranscript.tsx:28
+#: src/components/conversation/CopyConversationTranscript.tsx:47
 #: src/components/common/CopyIconButton.tsx:17
 msgid "Copied"
 msgstr "Kopiert"
@@ -714,7 +716,7 @@ msgstr "Copy secret"
 msgid "Copy Summary"
 msgstr "Zusammenfassung kopieren"
 
-#: src/components/conversation/CopyConversationTranscript.tsx:28
+#: src/components/conversation/CopyConversationTranscript.tsx:48
 msgid "Copy to clipboard"
 msgstr "In die Zwischenablage kopieren"
 
@@ -785,8 +787,8 @@ msgstr "Projekt löschen"
 msgid "Deleted successfully"
 msgstr "Erfolgreich gelöscht"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:665
-#: src/routes/project/chat/ProjectChatRoute.tsx:695
+#: src/routes/project/chat/ProjectChatRoute.tsx:708
+#: src/routes/project/chat/ProjectChatRoute.tsx:738
 msgid "Dembrane is powered by AI. Please double-check responses."
 msgstr "Dembrane läuft mit KI. Prüf die Antworten noch mal gegen."
 
@@ -1069,6 +1071,10 @@ msgstr "Fehler beim Hochladen von \"{0}\": {1}"
 msgid "participant.alert.microphone.access.success"
 msgstr "Alles sieht gut aus – Sie können fortfahren."
 
+#: src/components/chat/ChatModeSelector.tsx:243
+msgid "Explore themes & patterns across all conversations"
+msgstr "Entdecke Themen und Muster über alle Gespräche hinweg"
+
 #: src/components/chat/ChatModeBanner.tsx:60
 msgid "Exploring {conversationCount} conversations"
 msgstr "{conversationCount} Gespräche werden analysiert"
@@ -1095,6 +1101,10 @@ msgstr "Fehler beim Hinzufügen des Gesprächs zum Chat{0}"
 #: src/components/participant/verify/VerifyArtefact.tsx:136
 msgid "Failed to approve artefact. Please try again."
 msgstr "Failed to approve artefact. Please try again."
+
+#: src/components/conversation/CopyConversationTranscript.tsx:25
+msgid "Failed to copy transcript. Please try again."
+msgstr "Transkript konnte nicht kopiert werden. Versuch es noch mal."
 
 #: src/components/participant/UserChunkMessage.tsx:45
 msgid "Failed to delete response"
@@ -1549,6 +1559,11 @@ msgstr "Konkrete Themen werden geladen…"
 msgid "Loading microphones..."
 msgstr "Mikrofone werden geladen..."
 
+#: src/components/conversation/CopyConversationTranscript.tsx:26
+#: src/components/conversation/CopyConversationTranscript.tsx:45
+msgid "Loading transcript..."
+msgstr "Transkript wird geladen ..."
+
 #: src/routes/project/report/ProjectReportRoute.tsx:325
 msgid "loading..."
 msgstr "wird geladen..."
@@ -1938,7 +1953,7 @@ msgstr "Pause reading"
 msgid "Pending"
 msgstr "Ausstehend"
 
-#: src/components/chat/ChatModeSelector.tsx:222
+#: src/components/chat/ChatModeSelector.tsx:223
 msgid "Pick the approach that fits your question"
 msgstr "Wähl den Ansatz, der zu deiner Frage passt"
 
@@ -1989,7 +2004,7 @@ msgstr "Bitte wählen Sie eine Sprache für Ihren Bericht"
 msgid "Please select a language for your updated report"
 msgstr "Bitte wählen Sie eine Sprache für Ihren aktualisierten Bericht"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:596
+#: src/routes/project/chat/ProjectChatRoute.tsx:639
 msgid "Please select conversations from the sidebar to proceed"
 msgstr "Wähl Gespräche in der Seitenleiste aus, um weiterzumachen"
 
@@ -2041,7 +2056,7 @@ msgstr "Portal Editor"
 msgid "Powered by"
 msgstr "Powered by"
 
-#: src/components/chat/ChatModeSelector.tsx:255
+#: src/components/chat/ChatModeSelector.tsx:256
 msgid "Preparing your conversations... This may take a moment."
 msgstr "Deine Gespräche werden vorbereitet … kann einen Moment dauern."
 
@@ -2086,7 +2101,7 @@ msgstr "Projektname"
 msgid "Project name must be at least 4 characters long"
 msgstr "Der Projektname muss mindestens 4 Zeichen lang sein"
 
-#: src/routes/project/chat/NewChatRoute.tsx:60
+#: src/routes/project/chat/NewChatRoute.tsx:62
 msgid "Project not found"
 msgstr "Projekt nicht gefunden"
 
@@ -2122,6 +2137,10 @@ msgstr "Veröffentlichen"
 #: src/routes/project/report/ProjectReportRoute.tsx:226
 msgid "Published"
 msgstr "Veröffentlicht"
+
+#: src/components/chat/ChatModeSelector.tsx:51
+msgid "Pull out the most impactful quotes from this session"
+msgstr "Hol dir die wichtigsten Zitate aus dieser Session"
 
 #: src/components/participant/verify/VerifyArtefact.tsx:323
 msgid "Read aloud"
@@ -2330,7 +2349,7 @@ msgid "Retranscription started. New conversation will be available soon."
 msgstr ""
 "Hertranskription gestartet. Das neue Gespräch wird bald verfügbar sein."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:557
+#: src/routes/project/chat/ProjectChatRoute.tsx:600
 msgid "Retry"
 msgstr "Erneut versuchen"
 
@@ -2445,6 +2464,10 @@ msgstr "Mikrofon auswählen"
 msgid "Select Audio Files to Upload"
 msgstr "Audio-Dateien auswählen"
 
+#: src/components/chat/ChatModeSelector.tsx:232
+msgid "Select conversations and find exact quotes"
+msgstr "Wähle Gespräche aus und finde genaue Zitate"
+
 #: src/components/chat/ChatModeBanner.tsx:66
 msgid "Select conversations from sidebar"
 msgstr "Gespräche in der Seitenleiste auswählen"
@@ -2495,7 +2518,7 @@ msgstr "Ausgewählte Dateien ({0}/{MAX_FILES})"
 msgid "participant.selected.microphone"
 msgstr "Ausgewähltes Mikrofon"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:685
+#: src/routes/project/chat/ProjectChatRoute.tsx:728
 msgid "Send"
 msgstr "Senden"
 
@@ -2662,6 +2685,7 @@ msgstr "Spanisch"
 msgid "Specific Context"
 msgstr "Spezifischer Kontext"
 
+#: src/components/chat/ChatModeSelector.tsx:231
 #: src/components/chat/ChatModeBanner.tsx:41
 msgid "Specific Details"
 msgstr "Konkrete Details"
@@ -2688,7 +2712,7 @@ msgstr "Start over"
 msgid "Status"
 msgstr "Status"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:522
+#: src/routes/project/chat/ProjectChatRoute.tsx:565
 msgid "Stop"
 msgstr "Stopp"
 
@@ -2722,6 +2746,14 @@ msgstr "Vorgeschlagen:"
 #: src/components/chat/templates.ts:26
 msgid "Summarize"
 msgstr "Zusammenfassen"
+
+#: src/components/chat/ChatModeSelector.tsx:45
+msgid "Summarize key insights from my interviews"
+msgstr "Fass die wichtigsten Erkenntnisse aus meinen Interviews zusammen"
+
+#: src/components/chat/ChatModeSelector.tsx:50
+msgid "Summarize this interview into a shareable article"
+msgstr "Fass dieses Interview als teilbaren Artikel zusammen"
 
 #: src/routes/project/conversation/ProjectConversationOverview.tsx:125
 msgid "Summary"
@@ -2966,7 +2998,7 @@ msgid "This title is shown to participants when they start a conversation"
 msgstr ""
 "Dieser Titel wird den Teilnehmern angezeigt, wenn sie ein Gespräch beginnen"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:357
+#: src/routes/project/chat/ProjectChatRoute.tsx:399
 #: src/components/view/CreateViewForm.tsx:78
 msgid "This will clear your current input. Are you sure?"
 msgstr "Dies wird Ihre aktuelle Eingabe löschen. Sind Sie sicher?"
@@ -3040,6 +3072,10 @@ msgstr "Transcribieren..."
 msgid "Transcript"
 msgstr "Transkript"
 
+#: src/components/conversation/CopyConversationTranscript.tsx:27
+msgid "Transcript copied to clipboard"
+msgstr "Transkript in die Zwischenablage kopiert"
+
 #: src/components/chat/templates.ts:13
 msgid ""
 "Transform this content into insights that actually matter. Please:\n"
@@ -3094,7 +3130,7 @@ msgstr ""
 msgid "Try Again"
 msgstr "Erneut versuchen"
 
-#: src/components/chat/ChatModeSelector.tsx:149
+#: src/components/chat/ChatModeSelector.tsx:150
 msgid "Try asking"
 msgstr "Frag mal"
 
@@ -3120,7 +3156,7 @@ msgstr "Zwei-Faktor-Authentifizierung aktiviert"
 msgid "Type"
 msgstr "Type"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:640
+#: src/routes/project/chat/ProjectChatRoute.tsx:683
 msgid "Type a message..."
 msgstr "Nachricht eingeben..."
 
@@ -3232,8 +3268,8 @@ msgstr "Audio-Dateien werden hochgeladen..."
 msgid "Use PII Redaction"
 msgstr "PII Redaction verwenden"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:662
-#: src/routes/project/chat/ProjectChatRoute.tsx:692
+#: src/routes/project/chat/ProjectChatRoute.tsx:705
+#: src/routes/project/chat/ProjectChatRoute.tsx:735
 msgid "Use Shift + Enter to add a new line"
 msgstr "Verwenden Sie Shift + Enter, um eine neue Zeile hinzuzufügen"
 
@@ -3338,7 +3374,7 @@ msgstr "Willkommen"
 msgid "Welcome back"
 msgstr "Welcome back"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:458
+#: src/routes/project/chat/ProjectChatRoute.tsx:501
 msgid ""
 "Welcome to Dembrane Chat! Use the sidebar to select resources and "
 "conversations that you want to analyse. Then, you can ask questions about "
@@ -3370,12 +3406,24 @@ msgstr ""
 msgid "Welcome!"
 msgstr "Willkommen!"
 
+#: src/components/chat/ChatModeSelector.tsx:44
+msgid "What are the main themes across all conversations?"
+msgstr "Was sind die Hauptthemen über alle Gespräche hinweg?"
+
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifySelection.tsx:195
 msgid "participant.concrete.selection.title"
 msgstr "participant.concrete.selection.title"
 
-#: src/components/chat/ChatModeSelector.tsx:219
+#: src/components/chat/ChatModeSelector.tsx:46
+msgid "What patterns emerge from the data?"
+msgstr "Welche Muster ergeben sich aus den Daten?"
+
+#: src/components/chat/ChatModeSelector.tsx:52
+msgid "What were the key moments in this conversation?"
+msgstr "Was waren die Schlüsselmomente in diesem Gespräch?"
+
+#: src/components/chat/ChatModeSelector.tsx:220
 msgid "What would you like to explore?"
 msgstr "Was willst du dir anschauen?"
 

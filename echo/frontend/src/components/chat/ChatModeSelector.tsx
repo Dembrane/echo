@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Badge,
@@ -38,17 +39,17 @@ export const MODE_COLORS = {
 	graphite: "#2d2d2c",
 };
 
-// Sample questions for each mode
-const OVERVIEW_EXAMPLES = [
-	"What are the main themes across all conversations?",
-	"Summarize key insights from my interviews",
-	"What patterns emerge from the data?",
+// Sample questions for each mode - wrapped in function to enable translation
+const getOverviewExamples = () => [
+	t`What are the main themes across all conversations?`,
+	t`Summarize key insights from my interviews`,
+	t`What patterns emerge from the data?`,
 ];
 
-const DEEP_DIVE_EXAMPLES = [
-	"Summarize this interview into a shareable article",
-	"Pull out the most impactful quotes from this session",
-	"What were the key moments in this conversation?",
+const getDeepDiveExamples = () => [
+	t`Summarize this interview into a shareable article`,
+	t`Pull out the most impactful quotes from this session`,
+	t`What were the key moments in this conversation?`,
 ];
 
 type ModeCardProps = {
@@ -132,7 +133,7 @@ const ModeCard = ({
 											tt="uppercase"
 											style={{ fontSize: 10 }}
 										>
-											Beta
+											<Trans>Beta</Trans>
 										</Badge>
 									)}
 								</Group>
@@ -227,9 +228,9 @@ export const ChatModeSelector = ({
 				<Stack gap="lg">
 					<ModeCard
 						mode="deep_dive"
-						title="Specific Details"
-						subtitle="Select conversations and find exact quotes"
-						examples={DEEP_DIVE_EXAMPLES}
+						title={t`Specific Details`}
+						subtitle={t`Select conversations and find exact quotes`}
+						examples={getDeepDiveExamples()}
 						icon={IconMessageCircle}
 						selectedMode={selectedMode}
 						isLoading={isLoading}
@@ -238,9 +239,9 @@ export const ChatModeSelector = ({
 
 					<ModeCard
 						mode="overview"
-						title="Big Picture"
-						subtitle="Explore themes & patterns across all conversations"
-						examples={OVERVIEW_EXAMPLES}
+						title={t`Big Picture`}
+						subtitle={t`Explore themes & patterns across all conversations`}
+						examples={getOverviewExamples()}
 						icon={IconSparkles}
 						isBeta
 						selectedMode={selectedMode}

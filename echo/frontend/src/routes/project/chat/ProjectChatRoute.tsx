@@ -21,6 +21,7 @@ import {
 	IconSend,
 	IconSquare,
 } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { ChatAccordionItemMenu } from "@/components/chat/ChatAccordion";
@@ -274,6 +275,7 @@ export const ProjectChatRoute = () => {
 	useDocumentTitle(t`Chat | Dembrane`);
 
 	const { chatId, projectId } = useParams();
+	const queryClient = useQueryClient();
 	const chatQuery = useProjectChat(chatId ?? "");
 	const chatContextQuery = useProjectChatContext(chatId ?? "");
 	const [referenceIds, setReferenceIds] = useState<string[]>([]);
@@ -287,6 +289,7 @@ export const ProjectChatRoute = () => {
 	const isLegacyChat = rawChatMode == null && hasLockedConversations;
 	const chatMode = isLegacyChat ? "deep_dive" : rawChatMode;
 	const isModeSelected = chatMode !== null && chatMode !== undefined;
+	const isDeepDiveMode = chatMode === "deep_dive";
 
 	// Get total conversations count for overview mode
 	const totalConversationsQuery = useConversationsCountByProjectId(
@@ -297,11 +300,50 @@ export const ProjectChatRoute = () => {
 	const { language } = useLanguage();
 	const prefetchSuggestions = usePrefetchSuggestions();
 
-	// Fetch suggestions - only when mode is selected
+	// Track conversation count for deep_dive mode to trigger suggestions refetch
+	const conversationCount =
+		chatContextQuery.data?.conversations?.length ?? 0;
+	const prevConversationCountRef = useRef<number | null>(null);
+
+	// Fetch suggestions:
+	// - Overview mode: Fetch immediately when mode is selected
+	// - Deep dive mode: Only fetch after conversations are added (not on initial load)
+	const shouldFetchSuggestions = isModeSelected && (
+		!isDeepDiveMode || // overview mode: always fetch
+		conversationCount > 0 // deep_dive mode: only when conversations exist
+	);
+
 	const suggestionsQuery = useChatSuggestions(chatId ?? "", {
-		enabled: isModeSelected,
+		enabled: shouldFetchSuggestions,
 		language,
 	});
+
+	// Refetch suggestions when conversation context changes in deep_dive mode
+	// Cancel previous query and start a new one
+	useEffect(() => {
+		if (!isDeepDiveMode || !chatId) return;
+
+		// Skip on initial mount
+		if (prevConversationCountRef.current === null) {
+			prevConversationCountRef.current = conversationCount;
+			return;
+		}
+
+		// Only refetch if count actually changed
+		if (prevConversationCountRef.current !== conversationCount) {
+			prevConversationCountRef.current = conversationCount;
+
+			// Cancel any in-flight suggestions query
+			queryClient.cancelQueries({
+				queryKey: ["chats", chatId, "suggestions", language],
+			});
+
+			// Refetch suggestions if we have conversations
+			if (conversationCount > 0) {
+				suggestionsQuery.refetch();
+			}
+		}
+	}, [conversationCount, isDeepDiveMode, chatId, language, queryClient, suggestionsQuery]);
 
 	const {
 		isInitializing,
@@ -403,10 +445,11 @@ export const ProjectChatRoute = () => {
 				<ChatModeSelector
 					chatId={chatId ?? ""}
 					projectId={projectId ?? ""}
-					onModeSelected={async () => {
-						// Prefetch suggestions while refetching context
-						if (chatId) {
-							prefetchSuggestions(chatId, language, 8000);
+					onModeSelected={async (mode) => {
+						// Only prefetch suggestions for overview mode
+						// Deep dive mode will fetch suggestions when conversations are added
+						if (chatId && mode === "overview") {
+							prefetchSuggestions(chatId, language, 5000);
 						}
 						chatContextQuery.refetch();
 					}}
