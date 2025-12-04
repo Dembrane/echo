@@ -1,34 +1,66 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const useWakeLock = ({ obtainWakeLockOnMount = true }) => {
 	const wakeLock = useRef<null | WakeLockSentinel>(null);
+	const [isSupported, setIsSupported] = useState<boolean>(false);
+	const [isActive, setIsActive] = useState<boolean>(false);
+	const releaseHandlerRef = useRef<(() => void) | null>(null);
 
 	const releaseWakeLock = () => {
 		if (wakeLock.current) {
+			if (releaseHandlerRef.current) {
+				wakeLock.current.removeEventListener(
+					"release",
+					releaseHandlerRef.current,
+				);
+				releaseHandlerRef.current = null;
+			}
 			wakeLock.current.release();
-		} else {
-			//   console.log("no active wakelock to release");
+			wakeLock.current = null;
+			setIsActive(false);
 		}
 	};
 
 	const obtainWakeLock = async () => {
 		if ("wakeLock" in navigator) {
+			setIsSupported(true);
 			try {
+				// Release old wakelock BEFORE requesting a new one
+				if (wakeLock.current) {
+					// Remove old listener first
+					if (releaseHandlerRef.current) {
+						wakeLock.current.removeEventListener(
+							"release",
+							releaseHandlerRef.current,
+						);
+						releaseHandlerRef.current = null;
+					}
+					await wakeLock.current.release();
+					wakeLock.current = null;
+				}
+
+				// Now request the new wakelock
 				const wakelock = await navigator.wakeLock.request("screen");
-				releaseWakeLock();
 				if (wakelock) {
-					// console.log("wakelock obtained")
 					wakeLock.current = wakelock;
+					setIsActive(true);
+
+					const handleRelease = () => {
+						setIsActive(false);
+					};
+					releaseHandlerRef.current = handleRelease;
+					wakelock.addEventListener("release", handleRelease);
 				}
 			} catch (_err) {
-				// console.error("obtaining wakelock failed:", err);
+				setIsActive(false);
 			}
 		} else {
-			// console.log("wakeLock not supported");
+			setIsSupported(false);
+			setIsActive(false);
 		}
 	};
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be fixed
+	// biome-ignore lint/correctness/useExhaustiveDependencies: no dependency needed
 	useEffect(() => {
 		if (obtainWakeLockOnMount) {
 			obtainWakeLock();
@@ -47,9 +79,11 @@ export const useWakeLock = ({ obtainWakeLockOnMount = true }) => {
 			document.removeEventListener("visibilitychange", handleVisibilityChange);
 			releaseWakeLock();
 		};
-	}, [wakeLock]);
+	}, []);
 
 	return {
+		isActive,
+		isSupported,
 		obtainWakeLock,
 		releaseWakeLock,
 		wakeLock,
