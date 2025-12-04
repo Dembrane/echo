@@ -941,6 +941,41 @@ export const lockConversations = async (chatId: string) => {
 	);
 };
 
+export type ChatMode = "overview" | "deep_dive";
+
+export type InitializeChatModeResponse = {
+	chat_mode: ChatMode;
+	conversations_added: number;
+	conversations_summarized: number;
+	message: string;
+};
+
+export const initializeChatMode = async (
+	chatId: string,
+	mode: ChatMode,
+	projectId: string,
+) => {
+	return api.post<unknown, InitializeChatModeResponse>(
+		`/chats/${chatId}/initialize-mode`,
+		{
+			mode,
+			project_id: projectId,
+		},
+	);
+};
+
+export const getChatSuggestions = async (
+	chatId: string,
+	language = "en",
+): Promise<TSuggestionsResponse> => {
+	return api.get<unknown, TSuggestionsResponse>(
+		`/chats/${chatId}/suggestions`,
+		{
+			params: { language },
+		},
+	);
+};
+
 export const getChatHistory = async (chatId: string): Promise<ChatHistory> => {
 	const data = await directus.request<ProjectChatMessage[]>(
 		readItems("project_chat_message", {

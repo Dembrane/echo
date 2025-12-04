@@ -36,6 +36,7 @@ class ChatService:
             "id",
             "name",
             "auto_select",
+            "chat_mode",
             "project_id.id",
             "project_id.directus_user_id",
         ]
@@ -143,6 +144,21 @@ class ChatService:
                 )["data"]
         except DirectusBadRequest as e:
             logger.error("Failed to update auto_select for chat %s: %s", chat_id, e)
+            raise ChatServiceException() from e
+
+    def set_chat_mode(self, chat_id: str, mode: str) -> dict:
+        """Set the chat mode (overview or deep_dive)."""
+        if mode not in ("overview", "deep_dive"):
+            raise ChatServiceException(f"Invalid chat mode: {mode}")
+        try:
+            with self._client_context() as client:
+                return client.update_item(
+                    "project_chat",
+                    chat_id,
+                    {"chat_mode": mode},
+                )["data"]
+        except DirectusBadRequest as e:
+            logger.error("Failed to update chat_mode for chat %s: %s", chat_id, e)
             raise ChatServiceException() from e
 
     def set_chat_name(self, chat_id: str, name: Optional[str]) -> dict:
@@ -284,3 +300,187 @@ class ChatService:
         except DirectusBadRequest as e:
             logger.error("Failed to delete message %s: %s", message_id, e)
             raise ChatServiceException() from e
+
+    def get_last_assistant_message(self, chat_id: str) -> Optional[str]:
+        """Get the most recent assistant response text for a chat."""
+        try:
+            with self._client_context() as client:
+                messages: Optional[List[dict]] = client.get_items(
+                    "project_chat_message",
+                    {
+                        "query": {
+                            "filter": {
+                                "project_chat_id": {"_eq": chat_id},
+                                "message_from": {"_eq": "assistant"},
+                            },
+                            "fields": ["text"],
+                            "sort": "-date_created",
+                            "limit": 1,
+                        }
+                    },
+                )
+                if messages and len(messages) > 0:
+                    msg = messages[0]
+                    # Handle case where msg might not be a dict
+                    if isinstance(msg, dict):
+                        return msg.get("text")
+                    elif isinstance(msg, str):
+                        return msg
+                    logger.debug(f"Unexpected message type: {type(msg)}")
+                return None
+        except DirectusBadRequest as e:
+            logger.error("Failed to get last assistant message for chat %s: %s", chat_id, e)
+            return None
+
+    def list_recent_user_queries(
+        self,
+        project_id: str,
+        current_chat_id: Optional[str] = None,
+        limit: int = 5,
+    ) -> List[str]:
+        """
+        Get recent user queries from chats in the project.
+        Prioritizes queries from current_chat_id first, then other chats.
+        """
+        queries: List[str] = []
+
+        try:
+            with self._client_context() as client:
+                # First, get queries from current chat if provided
+                if current_chat_id:
+                    current_messages: Optional[List[dict]] = client.get_items(
+                        "project_chat_message",
+                        {
+                            "query": {
+                                "filter": {
+                                    "project_chat_id": {"_eq": current_chat_id},
+                                    "message_from": {"_eq": "user"},
+                                },
+                                "fields": ["text"],
+                                "sort": "-date_created",
+                                "limit": limit,
+                            }
+                        },
+                    )
+                    for msg in current_messages or []:
+                        # Handle case where msg might not be a dict
+                        if not isinstance(msg, dict):
+                            logger.debug(f"Skipping non-dict message: {type(msg)}")
+                            continue
+                        text = (msg.get("text") or "").strip()
+                        if text and text not in queries:
+                            queries.append(text)
+
+                # If we need more, get from other project chats
+                if len(queries) < limit:
+                    # Get all chats for the project
+                    chats: Optional[List[dict]] = client.get_items(
+                        "project_chat",
+                        {
+                            "query": {
+                                "filter": {"project_id": {"_eq": project_id}},
+                                "fields": ["id"],
+                                "sort": "-date_created",
+                                "limit": 10,
+                            }
+                        },
+                    )
+
+                    other_chat_ids = []
+                    for c in chats or []:
+                        if not isinstance(c, dict):
+                            continue
+                        chat_id = c.get("id")
+                        if chat_id and chat_id != current_chat_id:
+                            other_chat_ids.append(chat_id)
+
+                    if other_chat_ids:
+                        other_messages: Optional[List[dict]] = client.get_items(
+                            "project_chat_message",
+                            {
+                                "query": {
+                                    "filter": {
+                                        "project_chat_id": {"_in": other_chat_ids},
+                                        "message_from": {"_eq": "user"},
+                                    },
+                                    "fields": ["text"],
+                                    "sort": "-date_created",
+                                    "limit": limit - len(queries),
+                                }
+                            },
+                        )
+                        for msg in other_messages or []:
+                            # Handle case where msg might not be a dict
+                            if not isinstance(msg, dict):
+                                logger.debug(f"Skipping non-dict message: {type(msg)}")
+                                continue
+                            text = (msg.get("text") or "").strip()
+                            if text and text not in queries:
+                                queries.append(text)
+                                if len(queries) >= limit:
+                                    break
+
+        except DirectusBadRequest as e:
+            logger.error("Failed to list recent user queries for project %s: %s", project_id, e)
+
+        return queries[:limit]
+
+    def get_locked_conversations_with_summaries(
+        self,
+        chat_id: str,
+    ) -> List[dict]:
+        """
+        Get locked conversations for a chat with their summaries.
+        Returns list of dicts with id, name, and summary fields.
+        """
+        try:
+            with self._client_context() as client:
+                # Fetch locked conversations with nested fields using dot notation
+                # This ensures Directus returns the full nested object, not just ID
+                links: Optional[List[dict]] = client.get_items(
+                    "project_chat_conversation",
+                    {
+                        "query": {
+                            "filter": {
+                                "project_chat_id": {"_eq": chat_id},
+                                "locked": {"_eq": True},
+                            },
+                            "fields": [
+                                "id",
+                                "conversation_id.id",
+                                "conversation_id.participant_name",
+                                "conversation_id.summary",
+                            ],
+                            "limit": 50,
+                        }
+                    },
+                )
+
+                logger.debug(f"Locked conversation links for chat {chat_id}: {links}")
+
+                if not links:
+                    return []
+
+                result = []
+                for link in links:
+                    if not isinstance(link, dict):
+                        logger.debug(f"Skipping non-dict link: {type(link)}")
+                        continue
+                    
+                    conv = link.get("conversation_id")
+                    if not isinstance(conv, dict):
+                        logger.debug(f"Skipping link with non-dict conversation_id: {type(conv)}")
+                        continue
+                    
+                    result.append({
+                        "id": conv.get("id"),
+                        "name": conv.get("participant_name", "Unknown"),
+                        "summary": conv.get("summary"),
+                    })
+                
+                logger.debug(f"Returning {len(result)} conversations with summaries for chat {chat_id}")
+                return result
+
+        except DirectusBadRequest as e:
+            logger.error("Failed to get locked conversations for chat %s: %s", chat_id, e)
+            return []

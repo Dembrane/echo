@@ -16,16 +16,20 @@ import { References } from "./References";
 import { Sources } from "./Sources";
 import SourcesSearched from "./SourcesSearched";
 
+type ChatMode = "overview" | "deep_dive" | null;
+
 export const ChatHistoryMessage = ({
 	message,
 	section,
 	referenceIds,
 	setReferenceIds,
+	chatMode,
 }: {
 	message: ChatHistory[number];
 	section?: React.ReactNode;
 	referenceIds?: string[];
 	setReferenceIds?: (ids: string[]) => void;
+	chatMode?: ChatMode;
 }) => {
 	const [metadata, setMetadata] = useState<ChatHistoryMessage["metadata"]>([]);
 	const { projectId } = useParams();
@@ -63,6 +67,7 @@ export const ChatHistoryMessage = ({
 					<ChatMessage
 						key={message.id}
 						role={message.role}
+						chatMode={chatMode}
 						section={
 							<Group w="100%" gap="lg">
 								<Text className={cn("italic")} size="xs" c="gray.7">

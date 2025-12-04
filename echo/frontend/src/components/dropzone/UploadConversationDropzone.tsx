@@ -501,7 +501,7 @@ export const UploadConversationDropzone = (
 					onClick={open}
 					variant="outline"
 				>
-					{t`Upload Audio`}
+					{t`Upload`}
 				</Button>
 			</Tooltip>
 

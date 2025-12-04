@@ -81,6 +81,11 @@ const ProjectChatRoute = createLazyNamedRoute(
 	"ProjectChatRoute",
 );
 
+const NewChatRoute = createLazyNamedRoute(
+	() => import("./routes/project/chat/NewChatRoute"),
+	"NewChatRoute",
+);
+
 const ProjectReportRoute = createLazyNamedRoute(
 	() => import("./routes/project/report/ProjectReportRoute"),
 	"ProjectReportRoute",
@@ -181,6 +186,10 @@ export const mainRouter = createBrowserRouter([
 										],
 										element: <ProjectOverviewLayout />,
 										path: "",
+									},
+									{
+										element: <NewChatRoute />,
+										path: "chats/new",
 									},
 									{
 										element: <ProjectChatRoute />,

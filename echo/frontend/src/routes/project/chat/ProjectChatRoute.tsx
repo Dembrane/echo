@@ -27,6 +27,8 @@ import { ChatAccordionItemMenu } from "@/components/chat/ChatAccordion";
 import { ChatContextProgress } from "@/components/chat/ChatContextProgress";
 import { ChatHistoryMessage } from "@/components/chat/ChatHistoryMessage";
 import { ChatMessage } from "@/components/chat/ChatMessage";
+import { ChatModeBanner } from "@/components/chat/ChatModeBanner";
+import { ChatModeSelector } from "@/components/chat/ChatModeSelector";
 import { ChatTemplatesMenu } from "@/components/chat/ChatTemplatesMenu";
 import {
 	extractMessageMetadata,
@@ -35,7 +37,9 @@ import {
 import {
 	useAddChatMessageMutation,
 	useChatHistory,
+	useChatSuggestions,
 	useLockConversationsMutation,
+	usePrefetchSuggestions,
 	useChat as useProjectChat,
 	useProjectChatContext,
 } from "@/components/chat/hooks";
@@ -44,6 +48,7 @@ import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButt
 import { Logo } from "@/components/common/Logo";
 import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
 import { ConversationLinks } from "@/components/conversation/ConversationLinks";
+import { useConversationsCountByProjectId } from "@/components/conversation/hooks";
 import { API_BASE_URL, ENABLE_CHAT_AUTO_SELECT } from "@/config";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -268,9 +273,35 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 export const ProjectChatRoute = () => {
 	useDocumentTitle(t`Chat | Dembrane`);
 
-	const { chatId } = useParams();
+	const { chatId, projectId } = useParams();
 	const chatQuery = useProjectChat(chatId ?? "");
+	const chatContextQuery = useProjectChatContext(chatId ?? "");
 	const [referenceIds, setReferenceIds] = useState<string[]>([]);
+
+	// Chat mode state
+	// Legacy chats (chat_mode = null but has locked conversations) are treated as deep_dive
+	// New chats (chat_mode = null, no locked conversations) should show mode selector
+	const rawChatMode = chatContextQuery.data?.chat_mode;
+	const hasLockedConversations =
+		(chatContextQuery.data?.locked_conversation_id_list?.length ?? 0) > 0;
+	const isLegacyChat = rawChatMode == null && hasLockedConversations;
+	const chatMode = isLegacyChat ? "deep_dive" : rawChatMode;
+	const isModeSelected = chatMode !== null && chatMode !== undefined;
+
+	// Get total conversations count for overview mode
+	const totalConversationsQuery = useConversationsCountByProjectId(
+		projectId ?? "",
+	);
+
+	// Language for suggestions
+	const { language } = useLanguage();
+	const prefetchSuggestions = usePrefetchSuggestions();
+
+	// Fetch suggestions - only when mode is selected
+	const suggestionsQuery = useChatSuggestions(chatId ?? "", {
+		enabled: isModeSelected,
+		language,
+	});
 
 	const {
 		isInitializing,
@@ -339,11 +370,48 @@ export const ProjectChatRoute = () => {
 		}
 	}, [input, templateKey, setTemplateKey]);
 
-	if (isInitializing || chatQuery.isLoading) {
+	// Track if we need to refetch suggestions after assistant response
+	const prevIsLoadingRef = useRef(isLoading);
+	const lastMessageRole = messages?.[messages.length - 1]?.role;
+
+	// Refetch suggestions when assistant finishes responding
+	useEffect(() => {
+		// Detect transition from loading to not loading with assistant message
+		if (
+			prevIsLoadingRef.current &&
+			!isLoading &&
+			lastMessageRole === "assistant"
+		) {
+			// Refetch suggestions after assistant response completes
+			suggestionsQuery.refetch();
+		}
+		prevIsLoadingRef.current = isLoading;
+	}, [isLoading, lastMessageRole, suggestionsQuery]);
+
+	if (isInitializing || chatQuery.isLoading || chatContextQuery.isLoading) {
 		return (
 			<div className="flex h-full items-center justify-center">
 				<LoadingOverlay visible={true} />
 			</div>
+		);
+	}
+
+	// Show mode selector if mode not yet selected
+	if (!isModeSelected) {
+		return (
+			<Box className="flex min-h-full items-center justify-center px-2 pr-4">
+				<ChatModeSelector
+					chatId={chatId ?? ""}
+					projectId={projectId ?? ""}
+					onModeSelected={async () => {
+						// Prefetch suggestions while refetching context
+						if (chatId) {
+							prefetchSuggestions(chatId, language, 8000);
+						}
+						chatContextQuery.refetch();
+					}}
+				/>
+			</Box>
 		);
 	}
 
@@ -368,6 +436,18 @@ export const ProjectChatRoute = () => {
 					</Group>
 				</Group>
 				<Divider />
+
+				{/* Mode Banner */}
+				{chatMode && (
+					<ChatModeBanner
+						mode={chatMode}
+						conversationCount={
+							chatMode === "overview"
+								? Number(totalConversationsQuery.data) || 0
+								: (chatContextQuery.data?.conversations?.length ?? 0)
+						}
+					/>
+				)}
 			</Stack>
 			{/* Body */}
 			<Box className="flex-grow">
@@ -381,6 +461,7 @@ export const ProjectChatRoute = () => {
 						}}
 						referenceIds={referenceIds}
 						setReferenceIds={setReferenceIds}
+						chatMode={chatMode}
 					/>
 
 					{/* get everything except the last message */}
@@ -393,6 +474,7 @@ export const ProjectChatRoute = () => {
 									message={message}
 									referenceIds={referenceIds}
 									setReferenceIds={setReferenceIds}
+									chatMode={chatMode}
 								/>
 							</div>
 						))}
@@ -411,6 +493,7 @@ export const ProjectChatRoute = () => {
 									}
 									referenceIds={referenceIds}
 									setReferenceIds={setReferenceIds}
+									chatMode={chatMode}
 								/>
 							</div>
 						)}
@@ -450,6 +533,7 @@ export const ProjectChatRoute = () => {
 									message={messages[messages.length - 1]}
 									referenceIds={referenceIds}
 									setReferenceIds={setReferenceIds}
+									chatMode={chatMode}
 								/>
 							</div>
 						)}
@@ -497,20 +581,23 @@ export const ProjectChatRoute = () => {
 					<ChatTemplatesMenu
 						onTemplateSelect={handleTemplateSelect}
 						selectedTemplateKey={templateKey}
+						suggestions={suggestionsQuery.data?.suggestions}
+						chatMode={chatMode}
 					/>
 
 					<Divider />
-					{(!ENABLE_CHAT_AUTO_SELECT
-						? noConversationsSelected
-						: noConversationsSelected &&
-							!contextToBeAdded?.auto_select_bool) && (
-						<Alert
-							icon={<IconAlertCircle size="1rem" />}
-							title={t`No transcripts are selected for this chat`}
-							color="orange"
-							variant="light"
-						/>
-					)}
+					{chatMode !== "overview" &&
+						(!ENABLE_CHAT_AUTO_SELECT
+							? noConversationsSelected
+							: noConversationsSelected &&
+								!contextToBeAdded?.auto_select_bool) && (
+							<Alert
+								icon={<IconAlertCircle size="1rem" />}
+								title={t`Please select conversations from the sidebar to proceed`}
+								color="orange"
+								variant="light"
+							/>
+						)}
 
 					{contextToBeAdded && contextToBeAdded.conversations.length > 0 && (
 						// biome-ignore lint/a11y/useValidAriaRole: this is not an ARIA attribute
@@ -535,9 +622,12 @@ export const ProjectChatRoute = () => {
 						</ChatMessage>
 					)}
 
-					<Box className="flex-grow">
-						<ChatContextProgress chatId={chatId ?? ""} />
-					</Box>
+					{/* Only show context progress in deep dive mode - Big Picture uses dynamic summaries */}
+					{chatMode !== "overview" && (
+						<Box className="flex-grow">
+							<ChatContextProgress chatId={chatId ?? ""} />
+						</Box>
+					)}
 					<form
 						onSubmit={(e) => {
 							e.preventDefault();

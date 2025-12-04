@@ -1,17 +1,31 @@
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Group, Paper, Stack, Text, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconDots } from "@tabler/icons-react";
+import {
+	IconBulb,
+	IconDots,
+	IconList,
+	IconQuote,
+	IconSearch,
+	IconSparkles,
+} from "@tabler/icons-react";
+import type { ChatMode } from "@/lib/api";
+import { MODE_COLORS } from "./ChatModeSelector";
 import { TemplatesModal } from "./TemplatesModal";
 import { quickAccessTemplates, Templates } from "./templates";
 
-// all this function does is that if someone clicks on a template, it will set the input to the template content
-// we need input to check if there is something in the chat box already
-export const ChatTemplatesMenu = ({
-	onTemplateSelect,
-	selectedTemplateKey,
-}: {
+// Map icon names from API to Tabler icons
+const SUGGESTION_ICONS: Record<string, typeof IconSparkles> = {
+	lightbulb: IconBulb,
+	list: IconList,
+	quote: IconQuote,
+	search: IconSearch,
+	sparkles: IconSparkles,
+};
+
+type ChatTemplatesMenuProps = {
 	onTemplateSelect: ({
 		content,
 		key,
@@ -20,13 +34,75 @@ export const ChatTemplatesMenu = ({
 		key: string;
 	}) => void;
 	selectedTemplateKey?: string | null;
+	suggestions?: TSuggestion[];
+	chatMode?: ChatMode | null;
+};
+
+// Suggestion pill component with subtle styling and colored icon
+const SuggestionPill = ({
+	suggestion,
+	chatMode,
+	isSelected,
+	onClick,
+}: {
+	suggestion: TSuggestion;
+	chatMode?: ChatMode | null;
+	isSelected: boolean;
+	onClick: () => void;
 }) => {
+	const Icon = SUGGESTION_ICONS[suggestion.icon] || IconSparkles;
+	const colors = chatMode ? MODE_COLORS[chatMode] : null;
+
+	// Subtle styling: light tint background, colored icon
+	const isOverview = chatMode === "overview";
+	const isDeepDive = chatMode === "deep_dive";
+
+	return (
+		<Paper
+			withBorder
+			className={`cursor-pointer rounded-full px-3 py-1 transition-all hover:scale-[1.02] ${
+				isSelected
+					? isOverview
+						? "border-amber-200/80 bg-amber-50/80"
+						: isDeepDive
+							? "border-purple-200/80 bg-purple-50/80"
+							: "border-gray-400 bg-gray-100"
+					: isOverview
+						? "border-amber-100 bg-amber-50/30 hover:border-amber-200/60 hover:bg-amber-50/50"
+						: isDeepDive
+							? "border-purple-100 bg-purple-50/30 hover:border-purple-200/60 hover:bg-purple-50/50"
+							: "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+			}`}
+			onClick={onClick}
+		>
+			<Group gap={6} wrap="nowrap">
+				<Icon
+					size={14}
+					stroke={1.8}
+					color={colors?.primary ?? (isSelected ? "#6b7280" : "#9ca3af")}
+				/>
+				<Text size="sm" fw={500} c={colors ? MODE_COLORS.graphite : undefined}>
+					{suggestion.label}
+				</Text>
+			</Group>
+		</Paper>
+	);
+};
+
+export const ChatTemplatesMenu = ({
+	onTemplateSelect,
+	selectedTemplateKey,
+	suggestions = [],
+	chatMode,
+}: ChatTemplatesMenuProps) => {
 	const [opened, { open, close }] = useDisclosure(false);
+	const [animateRef] = useAutoAnimate();
 
 	// Check if selected template is from modal (not in quick access)
 	const isModalTemplateSelected =
 		selectedTemplateKey &&
-		!quickAccessTemplates.some((t) => t.title === selectedTemplateKey);
+		!quickAccessTemplates.some((t) => t.title === selectedTemplateKey) &&
+		!suggestions.some((s) => s.label === selectedTemplateKey);
 
 	const selectedModalTemplate = isModalTemplateSelected
 		? Templates.find((t) => t.title === selectedTemplateKey)
@@ -34,36 +110,60 @@ export const ChatTemplatesMenu = ({
 
 	return (
 		<>
-			<Stack>
-				<Group>
-					<Text c="gray.7">
+			<Stack gap="xs">
+				{/* Single "Suggested" row with AI suggestions (colored) + static templates (gray) */}
+				<Group gap="xs" ref={animateRef}>
+					<Text size="sm" c="gray.6" fw={500}>
 						<Trans>Suggested:</Trans>
 					</Text>
-					{quickAccessTemplates.map((t) => {
-						const isSelected = selectedTemplateKey === t.title;
+
+					{/* AI Suggestions - colored based on mode, animated in/out */}
+					{suggestions.map((suggestion, idx) => (
+						<SuggestionPill
+							key={`suggestion-${idx}-${suggestion.label}`}
+							suggestion={suggestion}
+							chatMode={chatMode}
+							isSelected={selectedTemplateKey === suggestion.label}
+							onClick={() =>
+								onTemplateSelect({
+									content: suggestion.prompt,
+									key: suggestion.label,
+								})
+							}
+						/>
+					))}
+
+					{/* Static Templates - gray (fill remaining slots up to 5 total) */}
+					{quickAccessTemplates.slice(0, Math.max(0, 5 - suggestions.length)).map((template) => {
+						const isSelected = selectedTemplateKey === template.title;
 						return (
-							// no translations for now
 							<Paper
-								key={t.title}
+								key={template.title}
 								withBorder
-								className={`cursor-pointer rounded-full px-2 transition-all ${
+								className={`cursor-pointer rounded-full px-3 py-1 transition-all ${
 									isSelected
-										? "border-blue-500 bg-blue-50"
-										: "hover:border-gray-300 hover:bg-gray-50"
+										? "border-gray-400 bg-gray-100"
+										: "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
 								}`}
 								onClick={() =>
-									onTemplateSelect({ content: t.content, key: t.title })
+									onTemplateSelect({
+										content: template.content,
+										key: template.title,
+									})
 								}
 							>
-								<Text>{t.title}</Text>
+								<Text size="sm" c="gray.7">
+									{template.title}
+								</Text>
 							</Paper>
 						);
 					})}
+
 					{/* Show selected modal template */}
 					{selectedModalTemplate && (
 						<Paper
 							withBorder
-							className="cursor-pointer rounded-full border-blue-500 bg-blue-50 px-2"
+							className="cursor-pointer rounded-full border-gray-400 bg-gray-100 px-3 py-1"
 							onClick={() =>
 								onTemplateSelect({
 									content: selectedModalTemplate.content,
@@ -71,18 +171,21 @@ export const ChatTemplatesMenu = ({
 								})
 							}
 						>
-							<Text>{selectedModalTemplate.title}</Text>
+							<Text size="sm" c="gray.7">
+								{selectedModalTemplate.title}
+							</Text>
 						</Paper>
 					)}
+
 					<Tooltip label={t`More templates`}>
 						<ActionIcon
 							variant="default"
-							size="lg"
+							size="md"
 							radius="xl"
 							onClick={open}
-							className="border-none"
+							className="border-gray-200"
 						>
-							<IconDots size={22} />
+							<IconDots size={18} />
 						</ActionIcon>
 					</Tooltip>
 				</Group>
