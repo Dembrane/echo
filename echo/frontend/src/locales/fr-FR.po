@@ -81,7 +81,7 @@ msgstr "\"Refine\" available soon"
 #. "Thinking..."
 #. placeholder {0}: showPreview ? "Hide Preview" : "Show Preview"
 #. placeholder {0}: citation.reference_text
-#: src/routes/project/chat/ProjectChatRoute.tsx:428
+#: src/routes/project/chat/ProjectChatRoute.tsx:511
 #: src/components/project/ProjectPortalEditor.tsx:426
 #: src/components/chat/References.tsx:29
 msgid "{0}"
@@ -98,6 +98,10 @@ msgstr "{0}"
 #: src/components/project/ProjectCard.tsx:34
 msgid "{0} Conversations • Edited {1}"
 msgstr "{0} Conversations • Modifié le {1}"
+
+#: src/components/chat/ChatModeBanner.tsx:64
+msgid "{conversationCount} selected"
+msgstr "{conversationCount} sélectionné(s)"
 
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:229
@@ -124,7 +128,7 @@ msgstr "*Transcription en cours.*"
 msgid "0 Aspects"
 msgstr "0 Aspects"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:181
+#: src/components/settings/TwoFactorSettingsCard.tsx:176
 msgid "Account password"
 msgstr "Account password"
 
@@ -183,7 +187,7 @@ msgstr "Ajouter à cette conversation"
 msgid "Added emails"
 msgstr "E-mails ajoutés"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:520
+#: src/routes/project/chat/ProjectChatRoute.tsx:607
 msgid "Adding Context:"
 msgstr "Ajout du contexte :"
 
@@ -239,7 +243,7 @@ msgstr ""
 "Une erreur s'est produite lors du chargement du Portail. Veuillez contacter "
 "l'équipe de support."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:465
+#: src/routes/project/chat/ProjectChatRoute.tsx:549
 msgid "An error occurred."
 msgstr "Une erreur s'est produite."
 
@@ -355,7 +359,7 @@ msgstr "Artefacts"
 msgid "Artefacts"
 msgstr "Artefacts"
 
-#: src/components/project/ProjectSidebar.tsx:117
+#: src/components/project/ProjectSidebar.tsx:141
 msgid "Ask"
 msgstr "Demander"
 
@@ -400,9 +404,9 @@ msgstr "Audit logs exported to CSV"
 msgid "Audit logs exported to JSON"
 msgstr "Audit logs exported to JSON"
 
-#: src/routes/auth/Login.tsx:213
-#: src/components/settings/TwoFactorSettingsCard.tsx:235
-#: src/components/settings/TwoFactorSettingsCard.tsx:363
+#: src/routes/auth/Login.tsx:209
+#: src/components/settings/TwoFactorSettingsCard.tsx:231
+#: src/components/settings/TwoFactorSettingsCard.tsx:370
 msgid "Authenticator code"
 msgstr "Authenticator code"
 
@@ -431,12 +435,12 @@ msgid "Available"
 msgstr "Disponible"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:362
+#: src/components/participant/ParticipantOnboardingCards.tsx:370
 msgid "participant.button.back.microphone"
 msgstr "Retour"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:383
+#: src/components/participant/ParticipantOnboardingCards.tsx:391
 #: src/components/layout/ParticipantHeader.tsx:67
 msgid "participant.button.back"
 msgstr "Retour"
@@ -465,6 +469,14 @@ msgstr "Bêta"
 msgid "dashboard.dembrane.concrete.experimental"
 msgstr "dashboard.dembrane.concrete.experimental"
 
+#: src/components/chat/ChatModeBanner.tsx:39
+msgid "Big Picture"
+msgstr "Vue d’ensemble"
+
+#: src/components/chat/ChatAccordion.tsx:56
+msgid "Big Picture - Themes & patterns"
+msgstr "Vue d’ensemble - Thèmes et tendances"
+
 #: src/components/project/ProjectPortalEditor.tsx:666
 msgid "Brainstorm Ideas"
 msgstr "Idées de brainstorming"
@@ -480,7 +492,7 @@ msgstr ""
 "de vouloir supprimer ce projet ?"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:332
-#: src/components/settings/TwoFactorSettingsCard.tsx:387
+#: src/components/settings/TwoFactorSettingsCard.tsx:394
 #: src/components/project/ProjectDangerZone.tsx:137
 #: src/components/project/ProjectDangerZone.tsx:163
 #: src/components/dropzone/UploadConversationDropzone.tsx:686
@@ -524,12 +536,12 @@ msgstr ""
 "conversation après avoir changé la langue. Êtes-vous sûr de vouloir "
 "continuer ?"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:355
-#: src/routes/project/chat/ProjectChatRoute.tsx:358
+#: src/routes/project/chat/ProjectChatRoute.tsx:423
+#: src/routes/project/chat/ProjectChatRoute.tsx:426
 msgid "Chat"
 msgstr "Discussion"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:269
+#: src/routes/project/chat/ProjectChatRoute.tsx:274
 msgid "Chat | Dembrane"
 msgstr "Discussion | Dembrane"
 
@@ -539,7 +551,7 @@ msgid "chat.accordion.skeleton.title"
 msgstr "Discussions"
 
 #. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:185
+#: src/components/chat/ChatAccordion.tsx:241
 msgid "project.sidebar.chat.title"
 msgstr "Discussions"
 
@@ -608,7 +620,7 @@ msgstr "Confirmer le mot de passe"
 msgid "Confirm Publishing"
 msgstr "Publier"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:174
+#: src/components/settings/TwoFactorSettingsCard.tsx:169
 msgid ""
 "Confirm your password to generate a new secret for your authenticator app."
 msgstr ""
@@ -630,12 +642,12 @@ msgstr "Connexion défectueuse"
 msgid "Context"
 msgstr "Contexte"
 
-#: src/components/chat/ChatHistoryMessage.tsx:170
+#: src/components/chat/ChatHistoryMessage.tsx:175
 msgid "Context added:"
 msgstr "Contexte ajouté :"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:370
+#: src/components/participant/ParticipantOnboardingCards.tsx:378
 #: src/components/participant/MicrophoneTest.tsx:383
 msgid "participant.button.continue"
 msgstr "Continuer"
@@ -666,7 +678,7 @@ msgstr "Détails du statut de la conversation"
 msgid "conversations"
 msgstr "conversations"
 
-#: src/components/conversation/ConversationAccordion.tsx:871
+#: src/components/conversation/ConversationAccordion.tsx:900
 msgid "Conversations"
 msgstr "Conversations"
 
@@ -678,7 +690,7 @@ msgstr "Conversations"
 msgid "participant.refine.cooling.down"
 msgstr "Cooling down. Available in {0}"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:412
+#: src/components/settings/TwoFactorSettingsCard.tsx:419
 #: src/components/project/ProjectQRCode.tsx:121
 #: src/components/conversation/CopyConversationTranscript.tsx:28
 #: src/components/common/CopyIconButton.tsx:17
@@ -697,8 +709,8 @@ msgstr "Copier le lien"
 msgid "Copy link to share this report"
 msgstr "Copier le lien pour partager ce rapport"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:412
-#: src/components/settings/TwoFactorSettingsCard.tsx:417
+#: src/components/settings/TwoFactorSettingsCard.tsx:419
+#: src/components/settings/TwoFactorSettingsCard.tsx:424
 msgid "Copy secret"
 msgstr "Copy secret"
 
@@ -742,7 +754,7 @@ msgstr "Créer une vue"
 msgid "Create View"
 msgstr "Créer une vue"
 
-#: src/components/conversation/ConversationEdit.tsx:112
+#: src/components/conversation/ConversationEdit.tsx:151
 msgid "Created on"
 msgstr "Créé le"
 
@@ -759,7 +771,7 @@ msgid "Default"
 msgstr "Par défaut"
 
 #. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:87
+#: src/components/chat/ChatAccordion.tsx:143
 msgid "project.sidebar.chat.delete"
 msgstr "Supprimer la discussion"
 
@@ -777,8 +789,8 @@ msgstr "Supprimer le projet"
 msgid "Deleted successfully"
 msgstr "Supprimé avec succès"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:575
-#: src/routes/project/chat/ProjectChatRoute.tsx:605
+#: src/routes/project/chat/ProjectChatRoute.tsx:665
+#: src/routes/project/chat/ProjectChatRoute.tsx:695
 msgid "Dembrane is powered by AI. Please double-check responses."
 msgstr "Dembrane est propulsé par l’IA. Vérifie bien les réponses."
 
@@ -808,15 +820,15 @@ msgstr ""
 "\n"
 "Note : Concentrez-vous sur les stratégies qui créent des avantages compétitifs durables, pas seulement des améliorations incrémentales."
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:395
+#: src/components/settings/TwoFactorSettingsCard.tsx:402
 msgid "Disable 2FA"
 msgstr "Disable 2FA"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:351
+#: src/components/settings/TwoFactorSettingsCard.tsx:358
 msgid "Disable two-factor authentication"
 msgstr "Disable two-factor authentication"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:305
+#: src/components/settings/TwoFactorSettingsCard.tsx:312
 msgid "Disabled"
 msgstr "Disabled"
 
@@ -871,7 +883,7 @@ msgstr ""
 msgid "Dutch"
 msgstr "Néerlandais"
 
-#: src/components/conversation/ConversationEdit.tsx:89
+#: src/components/conversation/ConversationEdit.tsx:128
 msgid "Edit Conversation"
 msgstr "Modifier la conversation"
 
@@ -899,7 +911,7 @@ msgstr ""
 msgid "Editing mode"
 msgstr "Mode d'édition"
 
-#: src/routes/auth/Login.tsx:254 src/routes/auth/Login.tsx:257
+#: src/routes/auth/Login.tsx:250 src/routes/auth/Login.tsx:253
 msgid "Email"
 msgstr "E-mail"
 
@@ -927,7 +939,7 @@ msgstr "email@travail.com"
 msgid "Empty"
 msgstr "Vide"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:270
+#: src/components/settings/TwoFactorSettingsCard.tsx:266
 msgid "Enable 2FA"
 msgstr "Enable 2FA"
 
@@ -972,11 +984,11 @@ msgstr ""
 "feedback contextuel qui les aide à aller plus loin dans leur réflexion et "
 "leur engagement. Un délai s’applique entre deux demandes."
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:342
+#: src/components/settings/TwoFactorSettingsCard.tsx:349
 msgid "Enable two-factor authentication"
 msgstr "Enable two-factor authentication"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:305
+#: src/components/settings/TwoFactorSettingsCard.tsx:312
 #: src/components/conversation/AutoSelectConversations.tsx:86
 msgid "Enabled"
 msgstr "Activé"
@@ -997,7 +1009,7 @@ msgstr "Entrez un nom pour le nouveau conversation"
 msgid "Enter a name for your cloned project"
 msgstr "Entrez un nom pour votre projet cloné"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:356
+#: src/components/settings/TwoFactorSettingsCard.tsx:363
 msgid "Enter a valid code to turn off two-factor authentication."
 msgstr "Enter a valid code to turn off two-factor authentication."
 
@@ -1005,7 +1017,7 @@ msgstr "Enter a valid code to turn off two-factor authentication."
 msgid "Enter filename (without extension)"
 msgstr "Entrez le nom du fichier (sans extension)"
 
-#: src/components/chat/ChatAccordion.tsx:60
+#: src/components/chat/ChatAccordion.tsx:116
 msgid "Enter new name for the chat:"
 msgstr "Entrez un nouveau nom pour la discussion :"
 
@@ -1013,11 +1025,11 @@ msgstr "Entrez un nouveau nom pour la discussion :"
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "Enter the 6-digit code from your authenticator app."
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:249
+#: src/components/settings/TwoFactorSettingsCard.tsx:245
 msgid "Enter the current six-digit code from your authenticator app."
 msgstr "Enter the current six-digit code from your authenticator app."
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:182
+#: src/components/settings/TwoFactorSettingsCard.tsx:177
 msgid "Enter your password"
 msgstr "Enter your password"
 
@@ -1061,6 +1073,10 @@ msgstr "Erreur lors du téléchargement de \"{0}\": {1}"
 #: src/components/participant/MicrophoneTest.tsx:360
 msgid "participant.alert.microphone.access.success"
 msgstr "Tout semble bon – vous pouvez continuer."
+
+#: src/components/chat/ChatModeBanner.tsx:60
+msgid "Exploring {conversationCount} conversations"
+msgstr "Exploration de {conversationCount} conversations"
 
 #: src/components/settings/AuditLogsCard.tsx:435
 #: src/components/project/ProjectExportSection.tsx:17
@@ -1242,7 +1258,7 @@ msgstr "Terminé"
 msgid "First Name"
 msgstr "Prénom"
 
-#: src/routes/auth/Login.tsx:274
+#: src/routes/auth/Login.tsx:270
 msgid "Forgot your password?"
 msgstr "Mot de passe oublié ?"
 
@@ -1254,7 +1270,7 @@ msgstr "Français"
 msgid "Generate insights from your conversations"
 msgstr "Générer des perspectives à partir de vos conversations"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:195
+#: src/components/settings/TwoFactorSettingsCard.tsx:190
 msgid "Generate secret"
 msgstr "Generate secret"
 
@@ -1317,7 +1333,7 @@ msgstr "Retour à l'accueil"
 msgid "Go to new conversation"
 msgstr "Aller à la nouvelle conversation"
 
-#: src/components/conversation/ConversationAccordion.tsx:528
+#: src/components/conversation/ConversationAccordion.tsx:552
 msgid "Has verified artifacts"
 msgstr "Has verified artifacts"
 
@@ -1393,7 +1409,7 @@ msgstr "Perspectives"
 msgid "Invalid code. Please request a new one."
 msgstr "Code invalide. Veuillez en demander un nouveau."
 
-#: src/routes/auth/Login.tsx:171
+#: src/routes/auth/Login.tsx:167
 msgid "Invalid credentials."
 msgstr "Identifiants invalides."
 
@@ -1442,7 +1458,7 @@ msgstr "Rejoindre {0} sur Dembrane"
 msgid "Just a moment"
 msgstr "Un instant"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:290
+#: src/components/settings/TwoFactorSettingsCard.tsx:297
 msgid ""
 "Keep access secure with a one-time code from your authenticator app. Toggle "
 "two-factor authentication for this account."
@@ -1476,7 +1492,7 @@ msgstr "Laissez-nous savoir!"
 
 #: src/routes/project/library/ProjectLibraryView.tsx:32
 #: src/routes/project/library/ProjectLibraryAspect.tsx:43
-#: src/components/project/ProjectSidebar.tsx:126
+#: src/components/project/ProjectSidebar.tsx:150
 msgid "Library"
 msgstr "Bibliothèque"
 
@@ -1549,7 +1565,7 @@ msgstr "Chargement..."
 msgid "Loading…"
 msgstr "Loading…"
 
-#: src/routes/auth/Login.tsx:283
+#: src/routes/auth/Login.tsx:279
 msgid "Login"
 msgstr "Connexion"
 
@@ -1565,7 +1581,7 @@ msgstr "Se connecter en tant qu'utilisateur existant"
 msgid "Logout"
 msgstr "Déconnexion"
 
-#: src/components/conversation/ConversationAccordion.tsx:594
+#: src/components/conversation/ConversationAccordion.tsx:618
 msgid "Longest First"
 msgstr "Plus long en premier"
 
@@ -1613,7 +1629,7 @@ msgstr ""
 msgid "Mode"
 msgstr "Mode"
 
-#: src/components/chat/ChatTemplatesMenu.tsx:77
+#: src/components/chat/ChatTemplatesMenu.tsx:180
 msgid "More templates"
 msgstr "Plus de templates"
 
@@ -1636,15 +1652,15 @@ msgid "Move to Project"
 msgstr "Déplacer vers un projet"
 
 #: src/components/project/ProjectBasicEdit.tsx:103
-#: src/components/conversation/ConversationEdit.tsx:122
+#: src/components/conversation/ConversationEdit.tsx:161
 msgid "Name"
 msgstr "Nom"
 
-#: src/components/conversation/ConversationAccordion.tsx:592
+#: src/components/conversation/ConversationAccordion.tsx:616
 msgid "Name A-Z"
 msgstr "Nom A-Z"
 
-#: src/components/conversation/ConversationAccordion.tsx:593
+#: src/components/conversation/ConversationAccordion.tsx:617
 msgid "Name Z-A"
 msgstr "Nom Z-A"
 
@@ -1667,16 +1683,16 @@ msgstr ""
 msgid "New Password"
 msgstr "Nouveau mot de passe"
 
-#: src/routes/project/ProjectsHome.tsx:90 src/routes/auth/Login.tsx:118
+#: src/routes/project/ProjectsHome.tsx:90 src/routes/auth/Login.tsx:114
 msgid "New Project"
 msgstr "Nouveau projet"
 
-#: src/components/conversation/ConversationAccordion.tsx:590
+#: src/components/conversation/ConversationAccordion.tsx:614
 msgid "Newest First"
 msgstr "Plus récent en premier"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:398
+#: src/components/participant/ParticipantOnboardingCards.tsx:406
 msgid "participant.button.next"
 msgstr "Suivant"
 
@@ -1713,7 +1729,7 @@ msgid "No audit logs match the current filters."
 msgstr "No audit logs match the current filters."
 
 #. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:194
+#: src/components/chat/ChatAccordion.tsx:250
 msgid "project.sidebar.chat.empty.description"
 msgstr ""
 "Aucune discussion trouvée. Commencez une discussion en utilisant le bouton "
@@ -1740,7 +1756,7 @@ msgstr "Aucune conversation disponible pour créer la bibliothèque"
 msgid "No conversations found."
 msgstr "Aucune conversation trouvée."
 
-#: src/components/conversation/ConversationAccordion.tsx:1179
+#: src/components/conversation/ConversationAccordion.tsx:1212
 msgid ""
 "No conversations found. Start a conversation using the participation invite "
 "link from the <0><1>project overview.</1></0>"
@@ -1777,8 +1793,8 @@ msgstr "Aucun rapport trouvé"
 msgid "No results"
 msgstr "No results"
 
-#: src/components/conversation/ConversationEdit.tsx:170
-#: src/components/conversation/ConversationAccordion.tsx:1126
+#: src/components/conversation/ConversationEdit.tsx:204
+#: src/components/conversation/ConversationAccordion.tsx:1159
 msgid "No tags found"
 msgstr "Aucune étiquette trouvée"
 
@@ -1801,10 +1817,6 @@ msgstr ""
 "Aucune transcription n'existe pour cette conversation. Veuillez vérifier "
 "plus tard."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:509
-msgid "No transcripts are selected for this chat"
-msgstr "Aucune transcription n'est sélectionnée pour cette conversation"
-
 #: src/components/project/ProjectPortalEditor.tsx:525
 msgid "No tutorial (only Privacy statements)"
 msgstr "Pas de tutoriel (uniquement les déclarations de confidentialité)"
@@ -1825,7 +1837,7 @@ msgstr "No verification topics are configured for this project."
 msgid "Not available"
 msgstr "Non disponible"
 
-#: src/components/conversation/ConversationAccordion.tsx:591
+#: src/components/conversation/ConversationAccordion.tsx:615
 msgid "Oldest First"
 msgstr "Plus ancien en premier"
 
@@ -1840,7 +1852,7 @@ msgid "participant.concrete.instructions.read.aloud"
 msgstr "participant.concrete.instructions.read.aloud"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:562
+#: src/components/conversation/ConversationAccordion.tsx:586
 msgid "conversation.ongoing"
 msgstr "En cours"
 
@@ -1871,12 +1883,12 @@ msgstr "Ouvert à la participation ?"
 msgid "participant.button.open.troubleshooting.guide"
 msgstr "Ouvrir le guide de dépannage"
 
-#: src/routes/auth/Login.tsx:245
+#: src/routes/auth/Login.tsx:241
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Open your authenticator app and enter the current six-digit code."
 
-#: src/components/conversation/ConversationAccordion.tsx:915
-#: src/components/conversation/ConversationAccordion.tsx:922
+#: src/components/conversation/ConversationAccordion.tsx:948
+#: src/components/conversation/ConversationAccordion.tsx:955
 msgid "Options"
 msgstr "Options"
 
@@ -1912,7 +1924,7 @@ msgstr ""
 " conversations"
 
 #: src/routes/auth/Register.tsx:97 src/routes/auth/Register.tsx:100
-#: src/routes/auth/Login.tsx:262 src/routes/auth/Login.tsx:265
+#: src/routes/auth/Login.tsx:258 src/routes/auth/Login.tsx:261
 msgid "Password"
 msgstr "Mot de passe"
 
@@ -1931,6 +1943,10 @@ msgstr "Pause reading"
 #: src/components/report/ConversationStatusTable.tsx:85
 msgid "Pending"
 msgstr "En attente"
+
+#: src/components/chat/ChatModeSelector.tsx:222
+msgid "Pick the approach that fits your question"
+msgstr "Choisis l’approche qui correspond à ta question"
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:337
@@ -1957,7 +1973,7 @@ msgstr "Veuillez activer la participation pour activer le partage"
 msgid "Please enter a valid email."
 msgstr "Veuillez entrer une adresse e-mail valide."
 
-#: src/routes/auth/Login.tsx:201
+#: src/routes/auth/Login.tsx:197
 msgid "Please login to continue."
 msgstr "Veuillez vous connecter pour continuer."
 
@@ -1978,6 +1994,10 @@ msgstr "Veuillez sélectionner une langue pour votre rapport"
 #: src/components/report/UpdateReportModalButton.tsx:97
 msgid "Please select a language for your updated report"
 msgstr "Veuillez sélectionner une langue pour votre rapport mis à jour"
+
+#: src/routes/project/chat/ProjectChatRoute.tsx:596
+msgid "Please select conversations from the sidebar to proceed"
+msgstr "Sélectionne des conversations dans la barre latérale pour continuer"
 
 #: src/components/report/CreateReportForm.tsx:52
 msgid ""
@@ -2024,9 +2044,13 @@ msgstr "Contenu du Portail"
 msgid "Portal Editor"
 msgstr "Éditeur de Portail"
 
-#: src/components/project/ProjectSidebar.tsx:148
+#: src/components/project/ProjectSidebar.tsx:172
 msgid "Powered by"
 msgstr "Propulsé par"
+
+#: src/components/chat/ChatModeSelector.tsx:255
+msgid "Preparing your conversations... This may take a moment."
+msgstr "Préparation de tes conversations... Ça peut prendre un moment."
 
 #: src/components/common/DembraneLoadingSpinner/index.tsx:25
 msgid "Preparing your experience"
@@ -2069,6 +2093,10 @@ msgstr "Nom du projet"
 msgid "Project name must be at least 4 characters long"
 msgstr "Le nom du projet doit comporter au moins 4 caractères"
 
+#: src/routes/project/chat/NewChatRoute.tsx:60
+msgid "Project not found"
+msgstr "Projet introuvable"
+
 #: src/components/layout/ProjectOverviewLayout.tsx:25
 msgid "Project Overview | Dembrane"
 msgstr "Aperçu du projet | Dembrane"
@@ -2085,7 +2113,7 @@ msgstr "Projets"
 msgid "Projects | Dembrane"
 msgstr "Projets | Dembrane"
 
-#: src/components/project/ProjectSidebar.tsx:67
+#: src/components/project/ProjectSidebar.tsx:91
 msgid "Projects Home"
 msgstr "Accueil des projets"
 
@@ -2106,11 +2134,11 @@ msgid "Read aloud"
 msgstr "Read aloud"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:261
+#: src/components/participant/ParticipantOnboardingCards.tsx:269
 msgid "participant.ready.to.begin"
 msgstr "Prêt à commencer"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:320
+#: src/components/settings/TwoFactorSettingsCard.tsx:327
 msgid "Recommended apps"
 msgstr "Recommended apps"
 
@@ -2178,7 +2206,7 @@ msgstr "Régénération du résumé. Patiente un peu..."
 msgid "Register | Dembrane"
 msgstr "S'enregistrer | Dembrane"
 
-#: src/routes/auth/Login.tsx:293
+#: src/routes/auth/Login.tsx:289
 msgid "Register as a new user"
 msgstr "S'enregistrer en tant qu'utilisateur nouveau"
 
@@ -2210,7 +2238,7 @@ msgid "Remove from this chat"
 msgstr "Supprimer de cette conversation"
 
 #. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:72
+#: src/components/chat/ChatAccordion.tsx:128
 msgid "project.sidebar.chat.rename"
 msgstr "Renommer"
 
@@ -2281,8 +2309,8 @@ msgstr "Réinitialiser le Mot de Passe"
 msgid "Reset Password | Dembrane"
 msgstr "Réinitialiser le Mot de Passe | Dembrane"
 
-#: src/components/conversation/ConversationAccordion.tsx:1147
-#: src/components/conversation/ConversationAccordion.tsx:1152
+#: src/components/conversation/ConversationAccordion.tsx:1180
+#: src/components/conversation/ConversationAccordion.tsx:1185
 msgid "Reset to default"
 msgstr "Réinitialiser aux paramètres par défaut"
 
@@ -2309,7 +2337,7 @@ msgstr ""
 "La rétranscrire a commencé. La nouvelle conversation sera disponible "
 "bientôt."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:473
+#: src/routes/project/chat/ProjectChatRoute.tsx:557
 msgid "Retry"
 msgstr "Réessayer"
 
@@ -2362,7 +2390,7 @@ msgstr "Erreur lors de l'enregistrement !"
 msgid "Saving..."
 msgstr "Enregistrement..."
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:216
+#: src/components/settings/TwoFactorSettingsCard.tsx:212
 msgid "Scan the QR code or copy the secret into your app."
 msgstr "Scan the QR code or copy the secret into your app."
 
@@ -2375,7 +2403,7 @@ msgstr "Défiler vers le bas"
 msgid "Search"
 msgstr "Rechercher"
 
-#: src/components/conversation/ConversationAccordion.tsx:909
+#: src/components/conversation/ConversationAccordion.tsx:942
 msgid "Search conversations"
 msgstr "Rechercher des conversations"
 
@@ -2392,7 +2420,7 @@ msgstr "Rechercher des projets"
 msgid "Search projects..."
 msgstr "Rechercher des projets..."
 
-#: src/components/conversation/ConversationAccordion.tsx:1045
+#: src/components/conversation/ConversationAccordion.tsx:1078
 msgid "Search tags"
 msgstr "Rechercher des tags"
 
@@ -2408,7 +2436,7 @@ msgstr "Recherché parmi les sources les plus pertinentes"
 msgid "Searching through the most relevant sources"
 msgstr "Recherche parmi les sources les plus pertinentes"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:417
+#: src/components/settings/TwoFactorSettingsCard.tsx:424
 msgid "Secret copied"
 msgstr "Secret copied"
 
@@ -2424,11 +2452,15 @@ msgstr "Sélectionner un microphone"
 msgid "Select Audio Files to Upload"
 msgstr "Sélectionner les fichiers audio à télécharger"
 
+#: src/components/chat/ChatModeBanner.tsx:66
+msgid "Select conversations from sidebar"
+msgstr "Sélectionne des conversations dans la barre latérale"
+
 #: src/components/conversation/ConversationAccordion.tsx:292
 msgid "Select Project"
 msgstr "Sélectionner un projet"
 
-#: src/components/conversation/ConversationEdit.tsx:136
+#: src/components/conversation/ConversationEdit.tsx:175
 msgid "Select tags"
 msgstr "Sélectionner les étiquettes"
 
@@ -2470,7 +2502,7 @@ msgstr "Fichiers sélectionnés ({0}/{MAX_FILES})"
 msgid "participant.selected.microphone"
 msgstr "Microphone sélectionné"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:595
+#: src/routes/project/chat/ProjectChatRoute.tsx:685
 msgid "Send"
 msgstr "Envoyer"
 
@@ -2478,7 +2510,7 @@ msgstr "Envoyer"
 msgid "Session Name"
 msgstr "Nom de la Séance"
 
-#: src/routes/auth/Login.tsx:112 src/routes/auth/Login.tsx:116
+#: src/routes/auth/Login.tsx:108 src/routes/auth/Login.tsx:112
 msgid "Setting up your first project"
 msgstr "Configuration de votre premier projet"
 
@@ -2518,7 +2550,7 @@ msgstr "Partager votre voix"
 msgid "Share your voice by scanning the QR code below."
 msgstr "Partager votre voix en scanant le code QR ci-dessous."
 
-#: src/components/conversation/ConversationAccordion.tsx:595
+#: src/components/conversation/ConversationAccordion.tsx:619
 msgid "Shortest First"
 msgstr "Plus court en premier"
 
@@ -2560,7 +2592,7 @@ msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 msgstr "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:283
+#: src/components/participant/ParticipantOnboardingCards.tsx:291
 msgid "participant.mic.check.button.skip"
 msgstr "Passer"
 
@@ -2570,9 +2602,9 @@ msgstr ""
 "Certains fichiers ont déjà été sélectionnés et ne seront pas ajoutés deux "
 "fois."
 
-#: src/routes/auth/Login.tsx:162
+#: src/routes/auth/Login.tsx:158
 #: src/components/participant/ParticipantInitiateForm.tsx:84
-#: src/components/conversation/ConversationEdit.tsx:105
+#: src/components/conversation/ConversationEdit.tsx:144
 msgid "Something went wrong"
 msgstr "Une erreur s'est produite"
 
@@ -2596,7 +2628,7 @@ msgstr ""
 msgid "Something went wrong while exporting audit logs."
 msgstr "Something went wrong while exporting audit logs."
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:169
+#: src/components/settings/TwoFactorSettingsCard.tsx:164
 msgid "Something went wrong while generating the secret."
 msgstr "Something went wrong while generating the secret."
 
@@ -2622,8 +2654,8 @@ msgstr "Une erreur s'est produite. Veuillez réessayer."
 msgid "participant.go.deeper.content.policy.violation.error.message"
 msgstr "participant.go.deeper.content.policy.violation.error.message"
 
-#: src/components/conversation/ConversationAccordion.tsx:969
-#: src/components/conversation/ConversationAccordion.tsx:976
+#: src/components/conversation/ConversationAccordion.tsx:1002
+#: src/components/conversation/ConversationAccordion.tsx:1009
 msgid "Sort"
 msgstr "Trier"
 
@@ -2640,6 +2672,14 @@ msgstr "Espagnol"
 msgid "Specific Context"
 msgstr "Contexte spécifique"
 
+#: src/components/chat/ChatModeBanner.tsx:41
+msgid "Specific Details"
+msgstr "Détails précis"
+
+#: src/components/chat/ChatAccordion.tsx:58
+msgid "Specific Details - Selected conversations"
+msgstr "Détails précis - Conversations sélectionnées"
+
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationText.tsx:125
 msgid "participant.button.start.new.conversation.text.mode"
@@ -2650,7 +2690,7 @@ msgstr "Commencer une nouvelle conversation"
 msgid "participant.button.start.new.conversation"
 msgstr "Commencer une nouvelle conversation"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:263
+#: src/components/settings/TwoFactorSettingsCard.tsx:259
 msgid "Start over"
 msgstr "Start over"
 
@@ -2658,7 +2698,7 @@ msgstr "Start over"
 msgid "Status"
 msgstr "Statut"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:439
+#: src/routes/project/chat/ProjectChatRoute.tsx:522
 msgid "Stop"
 msgstr "Arrêter"
 
@@ -2685,7 +2725,7 @@ msgid "Success"
 msgstr "Succès"
 
 #: src/components/library/LibraryTemplatesMenu.tsx:33
-#: src/components/chat/ChatTemplatesMenu.tsx:40
+#: src/components/chat/ChatTemplatesMenu.tsx:117
 msgid "Suggested:"
 msgstr "Suggéré:"
 
@@ -2724,9 +2764,9 @@ msgstr "System"
 
 #: src/components/project/ProjectTagsInput.tsx:238
 #: src/components/participant/ParticipantInitiateForm.tsx:107
-#: src/components/conversation/ConversationEdit.tsx:139
-#: src/components/conversation/ConversationAccordion.tsx:1035
-#: src/components/conversation/ConversationAccordion.tsx:1038
+#: src/components/conversation/ConversationEdit.tsx:178
+#: src/components/conversation/ConversationAccordion.tsx:1068
+#: src/components/conversation/ConversationAccordion.tsx:1071
 msgid "Tags"
 msgstr "Étiquettes"
 
@@ -2770,13 +2810,18 @@ msgstr "Contenu de la page Merci"
 msgid "Thank you! We'll notify you when the report is ready."
 msgstr "Merci ! Nous vous informerons lorsque le rapport sera prêt."
 
-#: src/routes/auth/Login.tsx:145
+#: src/routes/auth/Login.tsx:141
 msgid ""
 "That code didn't work. Try again with a fresh code from your authenticator "
 "app."
 msgstr ""
 "That code didn't work. Try again with a fresh code from your authenticator "
 "app."
+
+#: src/components/settings/TwoFactorSettingsCard.tsx:279
+#: src/components/settings/hooks/index.ts:54
+msgid "The code didn't work, please try again."
+msgstr "Le code ne marche pas, réessaie."
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationText.tsx:101
@@ -2932,7 +2977,7 @@ msgid "This title is shown to participants when they start a conversation"
 msgstr ""
 "Ce titre est affiché aux participants lorsqu'ils commencent une conversation"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:326
+#: src/routes/project/chat/ProjectChatRoute.tsx:357
 #: src/components/view/CreateViewForm.tsx:78
 msgid "This will clear your current input. Are you sure?"
 msgstr "Cela effacera votre entrée actuelle. Êtes-vous sûr ?"
@@ -2979,7 +3024,7 @@ msgstr "Timestamp"
 msgid "Tip"
 msgstr "Conseil"
 
-#: src/components/conversation/ConversationEdit.tsx:163
+#: src/components/conversation/ConversationEdit.tsx:197
 msgid "To assign a new tag, please create it first in the project overview."
 msgstr ""
 "Pour assigner une nouvelle étiquette, veuillez la créer d'abord dans "
@@ -3058,21 +3103,33 @@ msgstr ""
 msgid "Try Again"
 msgstr "Réessayer"
 
+#: src/components/chat/ChatModeSelector.tsx:149
+msgid "Try asking"
+msgstr "Tu peux demander"
+
 #: src/components/participant/hooks/useConversationIssueBanner.ts:24
 msgid "Try moving a bit closer to your microphone for better sound quality."
 msgstr ""
 "Essayez de vous rapprocher un peu plus de votre microphone pour une "
 "meilleure qualité audio."
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:286
+#: src/components/settings/TwoFactorSettingsCard.tsx:293
 msgid "Two-factor authentication"
 msgstr "Two-factor authentication"
+
+#: src/components/settings/hooks/index.ts:82
+msgid "Two-factor authentication disabled"
+msgstr "Authentification à deux facteurs désactivée"
+
+#: src/components/settings/hooks/index.ts:63
+msgid "Two-factor authentication enabled"
+msgstr "Authentification à deux facteurs activée"
 
 #: src/components/settings/AuditLogsCard.tsx:190
 msgid "Type"
 msgstr "Type"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:550
+#: src/routes/project/chat/ProjectChatRoute.tsx:640
 msgid "Type a message..."
 msgstr "Tapez un message..."
 
@@ -3156,13 +3213,10 @@ msgstr ""
 " des insights plus profonds instantanément."
 
 #: src/components/project/ProjectUploadSection.tsx:15
+#: src/components/dropzone/UploadConversationDropzone.tsx:504
 #: src/components/conversation/ConversationAccordion.tsx:402
 msgid "Upload"
 msgstr "Télécharger"
-
-#: src/components/dropzone/UploadConversationDropzone.tsx:504
-msgid "Upload Audio"
-msgstr "Télécharger l'audio"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:517
 msgid "Upload Complete"
@@ -3188,21 +3242,21 @@ msgstr "Téléchargement des fichiers audio..."
 msgid "Use PII Redaction"
 msgstr "Utiliser la rédaction PII"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:572
-#: src/routes/project/chat/ProjectChatRoute.tsx:602
+#: src/routes/project/chat/ProjectChatRoute.tsx:662
+#: src/routes/project/chat/ProjectChatRoute.tsx:692
 msgid "Use Shift + Enter to add a new line"
 msgstr "Utilisez Shift + Entrée pour ajouter une nouvelle ligne"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:1144
+#: src/components/conversation/ConversationAccordion.tsx:1177
 msgid "conversation.filters.verified.text"
 msgstr "Verified"
 
-#: src/components/conversation/ConversationAccordion.tsx:532
+#: src/components/conversation/ConversationAccordion.tsx:556
 msgid "verified artifacts"
 msgstr "verified artifacts"
 
-#: src/routes/auth/Login.tsx:281
+#: src/routes/auth/Login.tsx:277
 msgid "Verify code"
 msgstr "Verify code"
 
@@ -3232,13 +3286,13 @@ msgstr ""
 "Nous ne pouvons pas vous entendre. Veuillez essayer de changer de microphone"
 " ou de vous rapprocher un peu plus de l'appareil."
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:381
+#: src/components/settings/TwoFactorSettingsCard.tsx:388
 msgid ""
 "We couldn’t disable two-factor authentication. Try again with a fresh code."
 msgstr ""
 "We couldn’t disable two-factor authentication. Try again with a fresh code."
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:211
+#: src/components/settings/TwoFactorSettingsCard.tsx:275
 msgid ""
 "We couldn’t enable two-factor authentication. Double-check your code and try"
 " again."
@@ -3291,11 +3345,11 @@ msgstr ""
 msgid "Welcome"
 msgstr "Bienvenue"
 
-#: src/routes/auth/Login.tsx:112
+#: src/routes/auth/Login.tsx:108
 msgid "Welcome back"
 msgstr "Welcome back"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:378
+#: src/routes/project/chat/ProjectChatRoute.tsx:458
 msgid ""
 "Welcome to Dembrane Chat! Use the sidebar to select resources and "
 "conversations that you want to analyse. Then, you can ask questions about "
@@ -3324,7 +3378,7 @@ msgstr ""
 "accéder aux ressources de tutoriel. Actuellement, vous n'avez aucun projet. "
 "Cliquez sur \"Créer\" pour configurer pour commencer !"
 
-#: src/routes/auth/Login.tsx:195
+#: src/routes/auth/Login.tsx:191
 msgid "Welcome!"
 msgstr "Bienvenue !"
 
@@ -3332,6 +3386,10 @@ msgstr "Bienvenue !"
 #: src/components/participant/verify/VerifySelection.tsx:195
 msgid "participant.concrete.selection.title"
 msgstr "participant.concrete.selection.title"
+
+#: src/components/chat/ChatModeSelector.tsx:219
+msgid "What would you like to explore?"
+msgstr "Qu’est-ce que tu veux explorer ?"
 
 #: src/components/report/CreateReportForm.tsx:120
 msgid "will be included in your report"
@@ -3374,7 +3432,7 @@ msgstr "Vous avez été désinscrit avec succès."
 msgid "You may also choose to record another conversation."
 msgstr "Vous pouvez également choisir d'enregistrer une autre conversation."
 
-#: src/routes/auth/Login.tsx:176
+#: src/routes/auth/Login.tsx:172
 msgid ""
 "You must login with the same provider you used to sign up. If you face any "
 "issues, please contact support."
@@ -3877,6 +3935,9 @@ msgstr "Vos vues"
 #~ msgid "No transcript available for this conversation."
 #~ msgstr "Aucune transcription disponible pour cette conversation."
 
+#~ msgid "No transcripts are selected for this chat"
+#~ msgstr "Aucune transcription n'est sélectionnée pour cette conversation"
+
 #~ msgid "No verification topics available."
 #~ msgstr "No verification topics available."
 
@@ -4328,6 +4389,9 @@ msgstr "Vos vues"
 #~ "Faites un ton qui suggère à la fois une expertise profonde et une expérience pratique\n"
 #~ "\n"
 #~ "Note : Si le contenu ne contient aucun insight substantiel, veuillez me le signaler, nous avons besoin de matériel de source plus fort."
+
+#~ msgid "Upload Audio"
+#~ msgstr "Télécharger l'audio"
 
 #~ msgid "Upload in progress"
 #~ msgstr "Téléchargement en cours"
