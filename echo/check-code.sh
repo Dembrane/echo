@@ -8,8 +8,8 @@ frontend() {
 
 server() {
   cd server
-  mypy .
-  ruff check .
+  uv run mypy .
+  uv run ruff check .
 }
 
 parse_args() {
