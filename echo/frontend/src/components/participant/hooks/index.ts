@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { toast } from "@/components/common/Toaster";
 import {
+	confirmConversationChunkUpload,
 	getParticipantConversationById,
 	getParticipantConversationChunks,
 	getParticipantProjectById,
@@ -48,8 +49,44 @@ export const useCreateProjectReportMetricOncePerDayMutation = () => {
 	});
 };
 
+export const useConfirmConversationChunkUpload = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: confirmConversationChunkUpload,
+		onError: (error, variables) => {
+			console.error(
+				`[Confirm Upload] Failed to confirm chunk ${variables.chunk_id}:`,
+				error,
+			);
+		},
+		onSuccess: (_data, variables) => {
+			console.log(
+				`[Confirm Upload] Successfully confirmed chunk ${variables.chunk_id}`,
+			);
+			// Invalidate queries after successful confirmation
+			queryClient.invalidateQueries({
+				queryKey: ["conversations", variables.conversationId],
+			});
+			queryClient.invalidateQueries({
+				queryKey: [
+					"participant",
+					"conversation_chunks",
+					variables.conversationId,
+				],
+			});
+		},
+		retry: 5,
+		retryDelay: (attemptIndex) => {
+			// Exponential backoff: 2s, 4s, 8s, 16s, 32s (capped at 30s)
+			return Math.min(2000 * 2 ** attemptIndex, 30000);
+		},
+	});
+};
+
 export const useUploadConversationChunk = () => {
 	const queryClient = useQueryClient();
+	const confirmUpload = useConfirmConversationChunkUpload();
 
 	return useMutation({
 		mutationFn: uploadConversationChunk,
@@ -128,16 +165,29 @@ export const useUploadConversationChunk = () => {
 		},
 		// Always refetch after error or success:
 		onSettled: (_data, _error, variables) => {
-			queryClient.invalidateQueries({
-				queryKey: ["conversations", variables.conversationId],
-			});
+			// Only invalidate if there was an error during S3 upload
+			if (_error) {
+				queryClient.invalidateQueries({
+					queryKey: ["conversations", variables.conversationId],
+				});
 
-			queryClient.invalidateQueries({
-				queryKey: [
-					"participant",
-					"conversation_chunks",
-					variables.conversationId,
-				],
+				queryClient.invalidateQueries({
+					queryKey: [
+						"participant",
+						"conversation_chunks",
+						variables.conversationId,
+					],
+				});
+			}
+		},
+		// After successful S3 upload, confirm with API
+		onSuccess: (data, variables) => {
+			console.log(
+				`[Upload] S3 upload successful, triggering confirmation for chunk ${data.chunk_id}`,
+			);
+			confirmUpload.mutate({
+				...data,
+				onProgress: variables.onProgress,
 			});
 		},
 		retry: 20,
