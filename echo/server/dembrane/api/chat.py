@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from litellm.utils import token_counter
 from fastapi.responses import StreamingResponse
 
-from dembrane.llms import MODELS, get_completion_kwargs
+from dembrane.llms import get_completion_kwargs
 from dembrane.utils import generate_uuid
 from dembrane.prompts import render_prompt
 from dembrane.service import (
@@ -18,6 +18,7 @@ from dembrane.service import (
 )
 from dembrane.settings import get_settings
 from dembrane.chat_utils import (
+    CHAT_LLM,
     MAX_CHAT_CONTEXT_LENGTH,
     generate_title,
     get_project_chat_history,
@@ -74,7 +75,7 @@ async def is_followup_question(
             messages=[{"role": "user", "content": prompt}],
             temperature=0,  # Deterministic
             timeout=60,  # 1 minute timeout for quick decision
-            **get_completion_kwargs(MODELS.TEXT_FAST),
+            **get_completion_kwargs(CHAT_LLM),
         )
 
         result_text = response.choices[0].message.content.strip()
@@ -185,7 +186,7 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
             if tokens_count is None:
                 tokens_count = token_counter(
                     messages=[{"role": message_from, "content": message_text}],
-                    model=get_completion_kwargs(MODELS.TEXT_FAST)["model"],
+                    model=get_completion_kwargs(CHAT_LLM)["model"],
                 )
                 try:
                     await run_in_thread_pool(
@@ -625,7 +626,7 @@ async def post_chat(
                 candidate_messages = await build_formatted_messages(temp_ids)
                 prompt_len = token_counter(
                     messages=candidate_messages,
-                    model=get_completion_kwargs(MODELS.MULTI_MODAL_PRO)["model"],
+                    model=get_completion_kwargs(CHAT_LLM)["model"],
                 )
 
                 if prompt_len > max_context_threshold:
@@ -662,7 +663,7 @@ async def post_chat(
 
             prompt_len = token_counter(
                 messages=formatted_messages,
-                model=get_completion_kwargs(MODELS.MULTI_MODAL_PRO)["model"],
+                model=get_completion_kwargs(CHAT_LLM)["model"],
             )
             if prompt_len > MAX_CHAT_CONTEXT_LENGTH:
                 raise HTTPException(
@@ -701,7 +702,7 @@ async def post_chat(
                     stream=True,
                     timeout=300,
                     stream_timeout=180,
-                    **get_completion_kwargs(MODELS.MULTI_MODAL_PRO),
+                    **get_completion_kwargs(CHAT_LLM),
                 )
                 async for chunk in response:
                     delta = chunk.choices[0].delta.content
