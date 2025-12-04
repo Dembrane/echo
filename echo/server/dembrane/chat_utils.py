@@ -135,8 +135,7 @@ async def create_system_messages_for_chat(
 
         # Filter to conversations with content
         conversations = [
-            conv for conv in conversations
-            if int(conv.get("chunks_count", 0) or 0) > 0
+            conv for conv in conversations if int(conv.get("chunks_count", 0) or 0) > 0
         ]
 
         if conversations:
@@ -147,8 +146,7 @@ async def create_system_messages_for_chat(
             # Re-fetch to get updated summaries
             conversations = await get_all_conversations_for_overview(project_id)
             conversations = [
-                conv for conv in conversations
-                if int(conv.get("chunks_count", 0) or 0) > 0
+                conv for conv in conversations if int(conv.get("chunks_count", 0) or 0) > 0
             ]
     else:
         # Deep dive mode: Use the selected conversations
@@ -257,9 +255,7 @@ async def create_system_messages_for_chat(
             # Use summary for overview mode
             content = conversation.get("summary", "")
             if not content or len(content.strip()) == 0:
-                logger.warning(
-                    f"Conversation {conversation.get('id')} has no summary, skipping"
-                )
+                logger.warning(f"Conversation {conversation.get('id')} has no summary, skipping")
                 continue
 
             # Check if adding this summary would exceed context limit
@@ -285,7 +281,7 @@ async def create_system_messages_for_chat(
                     "tags": ", ".join(tag_text_list),
                     "created_at": conversation.get("created_at"),
                     "duration": conversation.get("duration"),
-                    "transcript": f"[SUMMARY]\n{content}",  # Mark as summary
+                    "summary": content,  # Use summary key for overview mode
                     "artifacts": [],  # No artifacts in overview mode
                 }
             )
@@ -305,7 +301,10 @@ async def create_system_messages_for_chat(
                 }
             )
 
-    prompt_message = {"type": "text", "text": render_prompt("system_chat", language, {})}
+    prompt_message = {
+        "type": "text",
+        "text": render_prompt("system_chat", language, {"is_overview_mode": is_overview_mode}),
+    }
 
     if is_overview_mode:
         logger.info(
@@ -321,7 +320,9 @@ async def create_system_messages_for_chat(
     context_message = {
         "type": "text",
         "text": render_prompt(
-            "context_conversations", language, {"conversations": conversation_data_list}
+            "context_conversations",
+            language,
+            {"conversations": conversation_data_list, "is_overview_mode": is_overview_mode},
         ),
         # Anthropic/Claude Prompt Caching
         "cache_control": {"type": "ephemeral"},

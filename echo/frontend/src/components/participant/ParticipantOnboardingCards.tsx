@@ -283,7 +283,7 @@ const ParticipantOnboardingCards = ({
 							<Button
 								onClick={nextSlide}
 								variant="subtle"
-								color="blue"
+								color="primary"
 								size="md"
 								p="sm"
 								className="absolute right-4 top-4"

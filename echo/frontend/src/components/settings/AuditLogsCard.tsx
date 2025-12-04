@@ -394,7 +394,8 @@ export const AuditLogsCard = () => {
 			withBorder
 			radius="md"
 			p="lg"
-			className="shadow-sm bg-white dark:bg-dark-6"
+			className="shadow-sm dark:bg-dark-6"
+		style={{ backgroundColor: "var(--app-background)" }}
 		>
 			<Stack gap="xl">
 				<Group justify="space-between" align="flex-start">

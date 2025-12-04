@@ -38,7 +38,7 @@ export const VerifiedArtefactItem = ({
 				<Group gap="sm" wrap="nowrap">
 					<ActionIcon
 						variant="subtle"
-						color="blue"
+						color="primary"
 						aria-label="concrete artefact"
 						size={22}
 					>

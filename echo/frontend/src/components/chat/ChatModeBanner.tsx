@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Badge, Box, Group, Text } from "@mantine/core";
-import { IconSparkles, IconMessageCircle } from "@tabler/icons-react";
+import { IconMessageCircle, IconSparkles } from "@tabler/icons-react";
 import { MODE_COLORS } from "./ChatModeSelector";
 
 type ChatModeBannerProps = {
@@ -19,7 +19,7 @@ export const ChatModeBanner = ({
 		<Box
 			className="rounded-lg px-4 py-2.5"
 			style={{
-				backgroundColor: colors.light,
+				backgroundColor: colors.lighter,
 				border: `1px solid ${colors.border}`,
 			}}
 		>
@@ -28,15 +28,11 @@ export const ChatModeBanner = ({
 					{isOverview ? (
 						<IconSparkles size={16} stroke={1.8} color={colors.primary} />
 					) : (
-						<IconMessageCircle
-							size={16}
-							stroke={1.8}
-							color={colors.primary}
-						/>
+						<IconMessageCircle size={16} stroke={1.8} color={colors.primary} />
 					)}
 					<Text size="sm" fw={500} c={MODE_COLORS.graphite}>
 						{isOverview ? (
-							<Trans>Big Picture</Trans>
+							<Trans>Overview</Trans>
 						) : (
 							<Trans>Specific Details</Trans>
 						)}
@@ -44,22 +40,23 @@ export const ChatModeBanner = ({
 					{isOverview && (
 						<Badge
 							size="xs"
-							color={colors.badge}
-							variant="light"
-							radius="sm"
-							tt="uppercase"
-							style={{ fontSize: 9 }}
+							variant="outline"
+							styles={{
+								root: {
+									backgroundColor: "transparent",
+									borderColor: "var(--app-text)",
+									color: "var(--app-text)",
+								},
+							}}
 						>
-							Beta
+							<Trans>Beta</Trans>
 						</Badge>
 					)}
 				</Group>
 
 				<Text size="xs" c="dimmed">
 					{isOverview ? (
-						<Trans>
-							Exploring {conversationCount} conversations
-						</Trans>
+						<Trans>Exploring {conversationCount} conversations</Trans>
 					) : conversationCount > 0 ? (
 						<Trans>{conversationCount} selected</Trans>
 					) : (
@@ -70,4 +67,3 @@ export const ChatModeBanner = ({
 		</Box>
 	);
 };
-

@@ -90,7 +90,7 @@ export const ProjectSidebar = () => {
 							label: (
 								<Tooltip label={t`Projects Home`}>
 									<ActionIcon variant="transparent">
-										<Icons.Home color="black" />
+										<Icons.Home color="var(--app-text)" />
 									</ActionIcon>
 								</Tooltip>
 							),
@@ -120,7 +120,7 @@ export const ProjectSidebar = () => {
               variant="transparent"
               aria-label={t`Project Overview and Edit`}
             >
-              <Icons.Gear color="black" />
+              <Icons.Gear color="var(--app-text)" />
             </ActionIcon>
           </I18nLink>
         </Tooltip> */}

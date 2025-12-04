@@ -467,7 +467,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 			</Group>
 
 			<div className="flex-1 min-h-0 w-full border border-slate-100 rounded-lg overflow-y-auto">
-				<div className="sticky top-0 z-20 bg-white rounded-t-lg">
+				<div className="sticky top-0 z-20 rounded-t-lg" style={{ backgroundColor: "var(--app-background)" }}>
 					<div className="grid grid-cols-2 gap-0 text-sm text-slate-600">
 						<div className="px-3 py-1.5 bg-slate-50 border-b border-slate-100 rounded-tl-lg">
 							{leftTitle}

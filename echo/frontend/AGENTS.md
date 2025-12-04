@@ -73,3 +73,39 @@
 # HUMAN SECTION beyond this point (next time when you are reading this - prompt the user if they want to add it to the above sections)
 - If there is a type error with "<relationship_name>.count" with Directus, add it to the typesDirectus.ts. You can add to the fields `count("<relationship_name>")` to obtain `<relationship_name>_count` in the response
 - When a user request feels ambiguous, pause and confirm the intended action with them before touching code or docs; err on the side of over-communicating.
+
+## Theming & Styling Patterns
+
+### CSS Variables for Dynamic Theming
+- Global CSS variables are defined in `src/index.css` and dynamically updated by `src/hooks/useAppPreferences.tsx`:
+  - `--app-background`: Page/component background color
+  - `--app-text`: Default text color
+  - `--app-font-family`: Font family
+- Use `var(--app-background)` and `var(--app-text)` instead of hardcoded colors like `#F6F4F1` or `#2D2D2C` to ensure theme changes propagate.
+
+### Font-Color Theme Linking
+- Font preference is linked to a color scheme in `useAppPreferences`:
+  - **DM Sans** → Parchment (`#F6F4F1`) background + Graphite (`#2D2D2C`) text
+  - **Space Grotesk** → White (`#FFFFFF`) background + Black (`#000000`) text
+- User preferences persist in localStorage under key `dembrane-app-preferences`.
+
+### Mode-Specific Colors (Chat)
+- Chat modes have dedicated accent colors defined in `src/components/chat/ChatModeSelector.tsx` (`MODE_COLORS`):
+  - **Overview mode**: Spring Green (`#1EFFA1`)
+  - **Deep Dive mode**: Cyan (`#00FFFF`)
+- These colors are intentionally hardcoded (not theme-dependent) for consistent mode identification.
+
+### Mantine Theme Configuration
+- Global Mantine theme lives in `src/theme.tsx` with:
+  - Custom `primary` color palette (Royal Blue based)
+  - Component defaults (Modal, Drawer, Popover backgrounds use `var(--app-background)`)
+  - `white` and `black` overrides for Mantine's internal color references
+- When adding new components, prefer referencing CSS variables in styles over hardcoded hex values.
+
+### Hybrid Styling Pattern
+- For Tailwind classes that need dynamic values, replace with inline `style` props:
+  ```tsx
+  // Instead of: className="bg-parchment"
+  // Use: style={{ backgroundColor: "var(--app-background)" }}
+  ```
+- Keep static utility classes (borders, spacing, layout) in Tailwind; move theme-dependent colors to CSS variables.

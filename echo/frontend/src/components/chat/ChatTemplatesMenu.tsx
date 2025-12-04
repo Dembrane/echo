@@ -53,7 +53,6 @@ const SuggestionPill = ({
 	const Icon = SUGGESTION_ICONS[suggestion.icon] || IconSparkles;
 	const colors = chatMode ? MODE_COLORS[chatMode] : null;
 
-	// Subtle styling: light tint background, colored icon
 	const isOverview = chatMode === "overview";
 	const isDeepDive = chatMode === "deep_dive";
 
@@ -61,18 +60,17 @@ const SuggestionPill = ({
 		<Paper
 			withBorder
 			className={`cursor-pointer rounded-full px-3 py-1 transition-all hover:scale-[1.02] ${
-				isSelected
-					? isOverview
-						? "border-amber-200/80 bg-amber-50/80"
-						: isDeepDive
-							? "border-purple-200/80 bg-purple-50/80"
-							: "border-gray-400 bg-gray-100"
-					: isOverview
-						? "border-amber-100 bg-amber-50/30 hover:border-amber-200/60 hover:bg-amber-50/50"
-						: isDeepDive
-							? "border-purple-100 bg-purple-50/30 hover:border-purple-200/60 hover:bg-purple-50/50"
-							: "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+				isSelected ? "border-gray-400" : "hover:border-gray-300"
 			}`}
+			style={{
+				backgroundColor: "var(--app-background)",
+				borderColor: isOverview
+					? MODE_COLORS.overview.primary
+					: isDeepDive
+						? MODE_COLORS.deep_dive.primary
+						: undefined,
+				borderWidth: isOverview || isDeepDive ? 1 : undefined,
+			}}
 			onClick={onClick}
 		>
 			<Group gap={6} wrap="nowrap">
@@ -134,30 +132,32 @@ export const ChatTemplatesMenu = ({
 					))}
 
 					{/* Static Templates - gray (fill remaining slots up to 5 total) */}
-					{quickAccessTemplates.slice(0, Math.max(0, 5 - suggestions.length)).map((template) => {
-						const isSelected = selectedTemplateKey === template.title;
-						return (
-							<Paper
-								key={template.title}
-								withBorder
-								className={`cursor-pointer rounded-full px-3 py-1 transition-all ${
-									isSelected
-										? "border-gray-400 bg-gray-100"
-										: "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-								}`}
-								onClick={() =>
-									onTemplateSelect({
-										content: template.content,
-										key: template.title,
-									})
-								}
-							>
-								<Text size="sm" c="gray.7">
-									{template.title}
-								</Text>
-							</Paper>
-						);
-					})}
+					{quickAccessTemplates
+						.slice(0, Math.max(0, 5 - suggestions.length))
+						.map((template) => {
+							const isSelected = selectedTemplateKey === template.title;
+							return (
+								<Paper
+									key={template.title}
+									withBorder
+									className={`cursor-pointer rounded-full px-3 py-1 transition-all ${
+										isSelected
+											? "border-gray-400 bg-gray-100"
+											: "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+									}`}
+									onClick={() =>
+										onTemplateSelect({
+											content: template.content,
+											key: template.title,
+										})
+									}
+								>
+									<Text size="sm" c="gray.7">
+										{template.title}
+									</Text>
+								</Paper>
+							);
+						})}
 
 					{/* Show selected modal template */}
 					{selectedModalTemplate && (

@@ -123,7 +123,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 				radius="0"
 				className="z-30 h-full w-full px-4"
 				shadow="xs"
-				bg={{ dark: "dark.8", light: "white" }}
+				style={{ backgroundColor: "var(--app-background)" }}
 			>
 				<Group
 					justify="space-between"

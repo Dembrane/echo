@@ -180,7 +180,10 @@ export const ConversationEdit = ({
 										/>
 									}
 									classNames={{
-										pill: "!bg-[var(--mantine-primary-color-light)] text-black font-medium",
+										pill: "!bg-[var(--mantine-primary-color-light)] font-medium",
+									}}
+									styles={{
+										pill: { color: "var(--app-text)" },
 									}}
 									data={projectTagOptions}
 									onChange={(value) => {
@@ -192,7 +195,7 @@ export const ConversationEdit = ({
 						/>
 					) : (
 						<>
-							<CloseableAlert color="blue">
+							<CloseableAlert color="primary">
 								<Text size="sm">
 									<Trans>
 										To assign a new tag, please create it first in the project

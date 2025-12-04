@@ -25,7 +25,7 @@ export const ProjectOverviewLayout = () => {
 	useDocumentTitle(t`Project Overview | Dembrane`);
 
 	return (
-		<Stack className="relative px-2 py-4">
+		<Stack className="relative px-2 py-4" style={{ backgroundColor: "var(--app-background)" }}>
 			<LoadingOverlay visible={projectQuery.isLoading} />
 			<div className="grid grid-cols-12 place-content-stretch gap-3">
 				<Box visibleFrom="lg" className="col-span-6 h-full">

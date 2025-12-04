@@ -87,7 +87,7 @@ export const ProjectTagPill = ({ tag }: { tag: ProjectTag }) => {
 				textTransform: "none",
 			}}
 			variant="light"
-			c="black"
+			c="var(--app-text)"
 			size="lg"
 			rightSection={
 				<ActionIcon

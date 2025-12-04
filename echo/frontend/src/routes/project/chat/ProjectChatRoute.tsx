@@ -24,11 +24,11 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
-import { ChatAccordionItemMenu } from "@/components/chat/ChatAccordion";
+import { ChatAccordionItemMenu, ChatModeIndicator } from "@/components/chat/ChatAccordion";
+import { MODE_COLORS } from "@/components/chat/ChatModeSelector";
 import { ChatContextProgress } from "@/components/chat/ChatContextProgress";
 import { ChatHistoryMessage } from "@/components/chat/ChatHistoryMessage";
 import { ChatMessage } from "@/components/chat/ChatMessage";
-import { ChatModeBanner } from "@/components/chat/ChatModeBanner";
 import { ChatModeSelector } from "@/components/chat/ChatModeSelector";
 import { ChatTemplatesMenu } from "@/components/chat/ChatTemplatesMenu";
 import {
@@ -48,6 +48,7 @@ import SourcesSearch from "@/components/chat/SourcesSearch";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
 import { Logo } from "@/components/common/Logo";
 import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
+import { toast } from "@/components/common/Toaster";
 import { ConversationLinks } from "@/components/conversation/ConversationLinks";
 import { useConversationsCountByProjectId } from "@/components/conversation/hooks";
 import { API_BASE_URL, ENABLE_CHAT_AUTO_SELECT } from "@/config";
@@ -292,7 +293,7 @@ export const ProjectChatRoute = () => {
 	const isDeepDiveMode = chatMode === "deep_dive";
 
 	// Get total conversations count for overview mode
-	const totalConversationsQuery = useConversationsCountByProjectId(
+	const _totalConversationsQuery = useConversationsCountByProjectId(
 		projectId ?? "",
 	);
 
@@ -394,15 +395,25 @@ export const ProjectChatRoute = () => {
 		content: string;
 		key: string;
 	}) => {
-		if (
-			input.trim() !== "" &&
-			!window.confirm(t`This will clear your current input. Are you sure?`)
-		) {
-			return;
-		}
+		const previousInput = input.trim();
+		const previousTemplateKey = templateKey;
 
 		setInput(content);
 		setTemplateKey(key);
+
+		// Show undo toast if there was existing input
+		if (previousInput !== "") {
+			toast(t`Template applied`, {
+				action: {
+					label: t`Undo`,
+					onClick: () => {
+						setInput(previousInput);
+						setTemplateKey(previousTemplateKey);
+					},
+				},
+				duration: 5000,
+			});
+		}
 	};
 
 	// Clear template selection when input becomes empty
@@ -461,9 +472,12 @@ export const ProjectChatRoute = () => {
 	return (
 		<Stack className="relative flex min-h-full flex-col px-2 pr-4">
 			{/* Header */}
-			<Stack className="top-0 w-full bg-white pt-6">
+			<Stack className="top-0 w-full pt-6">
 				<Group justify="space-between">
-					<Title order={1}>{chatQuery.data?.name ?? t`Chat`}</Title>
+					<Group gap="sm">
+						<Title order={1}>{chatQuery.data?.name ?? t`Chat`}</Title>
+						{chatMode && <ChatModeIndicator mode={chatMode} size="sm" />}
+					</Group>
 					<Group>
 						<CopyRichTextIconButton
 							markdown={`# ${chatQuery.data?.name ?? t`Chat`}\n\n${computedChatForCopy}`}
@@ -479,18 +493,6 @@ export const ProjectChatRoute = () => {
 					</Group>
 				</Group>
 				<Divider />
-
-				{/* Mode Banner */}
-				{chatMode && (
-					<ChatModeBanner
-						mode={chatMode}
-						conversationCount={
-							chatMode === "overview"
-								? Number(totalConversationsQuery.data) || 0
-								: (chatContextQuery.data?.conversations?.length ?? 0)
-						}
-					/>
-				)}
 			</Stack>
 			{/* Body */}
 			<Box className="flex-grow">
@@ -498,7 +500,7 @@ export const ProjectChatRoute = () => {
 					<ChatHistoryMessage
 						// @ts-expect-error chatHistoryQuery.data is not typed
 						message={{
-							content: t`Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations.`,
+							content: t`Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Deep Dive mode.`,
 							id: "init",
 							role: "assistant",
 						}}
@@ -608,7 +610,7 @@ export const ProjectChatRoute = () => {
 			<div ref={scrollTargetRef} aria-hidden="true" />
 
 			{/* Footer */}
-			<Box className="bottom-0 w-full bg-white pb-2 pt-4 md:sticky">
+			<Box className="bottom-0 w-full pb-2 pt-4 md:sticky" style={{ backgroundColor: "var(--app-background)" }}>
 				<Stack className="pb-2">
 					{/* Scroll to bottom button */}
 					<Group
@@ -658,7 +660,12 @@ export const ProjectChatRoute = () => {
 									color={
 										ENABLE_CHAT_AUTO_SELECT && contextToBeAdded.auto_select_bool
 											? "green"
-											: undefined
+											: "var(--app-text)"
+									}
+									hoverUnderlineColor={
+										ENABLE_CHAT_AUTO_SELECT && contextToBeAdded.auto_select_bool
+											? undefined
+											: MODE_COLORS.deep_dive.primary
 									}
 								/>
 							</Group>

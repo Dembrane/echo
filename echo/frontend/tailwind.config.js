@@ -20,18 +20,33 @@ export default {
 				// "#0069ce",
 				// "#005ab7",
 				// ]
+				// Royal blue based palette (matching Mantine theme)
 				primary: {
-					50: "#e2f6ff",
-					100: "#cbe9ff",
-					200: "#99cfff",
-					300: "#62b5ff",
-					400: "#369eff",
-					500: "#1890ff",
-					600: "#0089ff",
-					700: "#0076e5",
-					800: "#0069ce",
-					900: "#005ab7",
+					50: "#eef2fc",
+					100: "#dce4f9",
+					200: "#b9c9f3",
+					300: "#96aeec",
+					400: "#6d8be5",
+					500: "#4169E1", // royal blue
+					600: "#3a5eca",
+					700: "#3354b3",
+					800: "#2c499c",
+					900: "#253f85",
 				},
+				blue: {
+					50: "#eef2fc",
+					100: "#dce4f9",
+					200: "#b9c9f3",
+					300: "#96aeec",
+					400: "#6d8be5",
+					500: "#4169E1", // royal blue
+					600: "#3a5eca",
+					700: "#3354b3",
+					800: "#2c499c",
+					900: "#253f85",
+				},
+				parchment: "#F6F4F1",
+				graphite: "#2D2D2C",
 			},
 			fontFamily: "'Space Grotesk', sans-serif",
 			height: {

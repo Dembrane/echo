@@ -5,6 +5,7 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { ChatMessage } from "@/components/chat/ChatMessage";
+import { MODE_COLORS } from "@/components/chat/ChatModeSelector";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
 import { Markdown } from "@/components/common/Markdown";
 import { ConversationLinks } from "@/components/conversation/ConversationLinks";
@@ -176,6 +177,8 @@ export const ChatHistoryMessage = ({
 					</Text>
 					<ConversationLinks
 						conversations={conversations as unknown as Conversation[]}
+						color="var(--app-text)"
+						hoverUnderlineColor={MODE_COLORS.deep_dive.primary}
 					/>
 				</Group>
 			</ChatMessage>

@@ -37,7 +37,7 @@ export const AnnouncementIcon = () => {
 				<Indicator
 					inline
 					offset={4}
-					color="blue"
+					color="primary"
 					label={
 						<Box px={2} className="text-xs">
 							{unreadCount || 0}

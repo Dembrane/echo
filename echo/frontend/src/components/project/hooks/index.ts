@@ -146,13 +146,13 @@ export const useCreateChatMutation = () => {
 
 			const chat = await directus.request(
 				createItem("project_chat", {
-					project_id: payload.project_id,
 					// Don't set chat_mode here - use initialize-mode endpoint instead
 					auto_select:
 						payload.conversationId &&
 						project.is_enhanced_audio_processing_enabled
 							? false
 							: !!project.is_enhanced_audio_processing_enabled,
+					project_id: payload.project_id,
 				}),
 			);
 

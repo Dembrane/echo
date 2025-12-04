@@ -12,6 +12,7 @@ import { useDocumentTitle } from "@mantine/hooks";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { AuditLogsCard } from "@/components/settings/AuditLogsCard";
+import { FontSettingsCard } from "@/components/settings/FontSettingsCard";
 import { TwoFactorSettingsCard } from "@/components/settings/TwoFactorSettingsCard";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
@@ -40,6 +41,8 @@ export const UserSettingsRoute = () => {
 				</Group>
 
 				<Divider />
+
+				<FontSettingsCard />
 
 				<TwoFactorSettingsCard
 					isLoading={isLoading}

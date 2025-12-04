@@ -20,23 +20,23 @@ import type { ChatMode } from "@/lib/api";
 import { useInitializeChatModeMutation } from "./hooks";
 
 // Color palette from design spec - shared across chat components
-// Uses Tailwind color values for consistency
 export const MODE_COLORS = {
 	overview: {
-		primary: "#f59e0b", // amber-500
-		light: "#fffbeb", // amber-50
-		lighter: "#fef3c7", // amber-100
-		border: "rgba(245, 158, 11, 0.25)", // amber with opacity
-		badge: "yellow",
+		primary: "#1EFFA1", // spring green
+		border: "#1EFFA1", // spring green border
+		lighter: "rgba(30, 255, 161, 0.1)", // very subtle green bg
+		shadow: "rgba(30, 255, 161, 0.12)", // subtle green shadow
+		badge: "teal",
 	},
 	deep_dive: {
-		primary: "#a855f7", // purple-500
-		light: "#faf5ff", // purple-50
-		lighter: "#f3e8ff", // purple-100
-		border: "rgba(168, 85, 247, 0.25)", // purple with opacity
-		badge: "grape",
+		primary: "#00FFFF", // cyan
+		border: "#00FFFF", // cyan border
+		lighter: "rgba(0, 255, 255, 0.1)", // very subtle cyan bg
+		shadow: "rgba(0, 255, 255, 0.1)", // subtle cyan shadow
+		badge: "cyan",
 	},
-	graphite: "#2d2d2c",
+	// Use CSS variable for theme-aware text color
+	graphite: "var(--app-text)",
 };
 
 // Sample questions for each mode - wrapped in function to enable translation
@@ -78,7 +78,6 @@ const ModeCard = ({
 	const colors = MODE_COLORS[mode];
 	const isSelected = selectedMode === mode;
 	const isThisLoading = isLoading && isSelected;
-	const isOverview = mode === "overview";
 
 	return (
 		<UnstyledButton
@@ -88,54 +87,66 @@ const ModeCard = ({
 		>
 			<Box
 				className={`
-					relative overflow-hidden rounded-2xl border-2 p-6
+					relative overflow-hidden rounded border p-6
 					transition-all duration-200 ease-out
-					hover:scale-[1.01]
-					${
-						isSelected
-							? isOverview
-								? "border-amber-500 bg-amber-500/10 shadow-[0_8px_24px_rgba(245,158,11,0.15)]"
-								: "border-purple-500 bg-purple-500/10 shadow-[0_8px_24px_rgba(168,85,247,0.15)]"
-							: isOverview
-								? "border-gray-200 bg-neutral-50 hover:border-amber-500 hover:bg-amber-500/10 hover:shadow-[0_8px_24px_rgba(245,158,11,0.15)]"
-								: "border-gray-200 bg-neutral-50 hover:border-purple-500 hover:bg-purple-500/10 hover:shadow-[0_8px_24px_rgba(168,85,247,0.15)]"
-					}
+					hover:scale-[1.005]
 				`}
+				style={{
+					backgroundColor: "var(--app-background)",
+					borderColor: isSelected ? colors.primary : "var(--mantine-color-gray-3)",
+					boxShadow: isSelected ? `0 4px 16px ${colors.shadow}` : undefined,
+				}}
+				onMouseEnter={(e) => {
+					if (!isSelected) {
+						e.currentTarget.style.borderColor = colors.primary;
+						e.currentTarget.style.boxShadow = `0 4px 16px ${colors.shadow}`;
+					}
+				}}
+				onMouseLeave={(e) => {
+					if (!isSelected) {
+						e.currentTarget.style.borderColor = "var(--mantine-color-gray-3)";
+						e.currentTarget.style.boxShadow = "none";
+					}
+				}}
 			>
 				<Stack gap="lg">
 					{/* Header */}
 					<Group justify="space-between" align="flex-start">
 						<Group gap="md">
 							<Box
-								className="flex items-center justify-center rounded-xl"
+								className="flex items-center justify-center rounded-full"
 								style={{
-									backgroundColor: colors.lighter,
-									padding: 14,
+									backgroundColor: "var(--app-background)",
+									border: `1.5px solid ${colors.border}`,
+									padding: 10,
 								}}
 							>
 								{isThisLoading ? (
-									<Loader size={28} color={colors.primary} />
+									<Loader size={24} color={colors.primary} />
 								) : (
-									<Icon size={28} stroke={1.8} color={colors.primary} />
+									<Icon size={24} stroke={2} color={colors.primary} />
 								)}
 							</Box>
 							<Stack gap={4}>
 								<Group gap="sm">
-									<Text fw={600} size="lg" c={MODE_COLORS.graphite}>
+									<Text fw={600} size="lg" style={{ color: "var(--app-text)" }}>
 										{title}
 									</Text>
-									{isBeta && (
-										<Badge
-											size="sm"
-											color={colors.badge}
-											variant="light"
-											radius="sm"
-											tt="uppercase"
-											style={{ fontSize: 10 }}
-										>
-											<Trans>Beta</Trans>
-										</Badge>
-									)}
+								{isBeta && (
+									<Badge
+										size="sm"
+										variant="outline"
+										styles={{
+											root: {
+												backgroundColor: "transparent",
+												borderColor: "var(--app-text)",
+												color: "var(--app-text)",
+											},
+										}}
+									>
+										<Trans>Beta</Trans>
+									</Badge>
+								)}
 								</Group>
 								<Text size="sm" c="dimmed">
 									{subtitle}
@@ -156,7 +167,7 @@ const ModeCard = ({
 									color={colors.primary}
 									style={{ marginTop: 2, flexShrink: 0 }}
 								/>
-								<Text size="sm" c="gray.7" lh={1.5}>
+								<Text size="sm" c="dimmed" lh={1.5}>
 									{example}
 								</Text>
 							</Group>
@@ -216,7 +227,7 @@ export const ChatModeSelector = ({
 			<Stack gap="xl">
 				{/* Header */}
 				<Stack gap={6} align="center">
-					<Title order={2} ta="center" c={MODE_COLORS.graphite} fw={600}>
+					<Title order={2} ta="center" style={{ color: "var(--app-text)" }} fw={600}>
 						<Trans>What would you like to explore?</Trans>
 					</Title>
 					<Text size="md" c="dimmed" ta="center">
@@ -237,17 +248,17 @@ export const ChatModeSelector = ({
 						onSelectMode={handleSelectMode}
 					/>
 
-					<ModeCard
-						mode="overview"
-						title={t`Big Picture`}
-						subtitle={t`Explore themes & patterns across all conversations`}
-						examples={getOverviewExamples()}
-						icon={IconSparkles}
-						isBeta
-						selectedMode={selectedMode}
-						isLoading={isLoading}
-						onSelectMode={handleSelectMode}
-					/>
+				<ModeCard
+					mode="overview"
+					title={t`Overview`}
+					subtitle={t`Explore themes & patterns across all conversations`}
+					examples={getOverviewExamples()}
+					icon={IconSparkles}
+					isBeta
+					selectedMode={selectedMode}
+					isLoading={isLoading}
+					onSelectMode={handleSelectMode}
+				/>
 				</Stack>
 
 				{/* Loading message */}

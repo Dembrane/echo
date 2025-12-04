@@ -304,8 +304,8 @@ export const usePrefetchSuggestions = () => {
 
 		// Start the prefetch
 		const prefetchPromise = queryClient.prefetchQuery({
-			queryKey,
 			queryFn: () => getChatSuggestions(chatId, language),
+			queryKey,
 			staleTime: 30_000,
 		});
 

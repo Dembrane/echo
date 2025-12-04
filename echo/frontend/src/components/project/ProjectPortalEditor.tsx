@@ -143,7 +143,7 @@ const ProperNounInput = ({
 					<Badge
 						key={noun}
 						variant="light"
-						c="black"
+						c="var(--app-text)"
 						size="lg"
 						style={{
 							fontWeight: 500,
@@ -622,7 +622,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																		? "light"
 																		: "default"
 																}
-																c="black"
+																c="var(--app-text)"
 																size="lg"
 																fw={500}
 																style={{
@@ -649,7 +649,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																		? "light"
 																		: "default"
 																}
-																c="black"
+																c="var(--app-text)"
 																size="lg"
 																fw={500}
 																style={{
@@ -674,7 +674,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																variant={
 																	field.value === "custom" ? "light" : "default"
 																}
-																c="black"
+																c="var(--app-text)"
 																size="lg"
 																fw={500}
 																style={{
@@ -825,7 +825,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																				? "light"
 																				: "default"
 																		}
-																		c="black"
+																		c="var(--app-text)"
 																		size="lg"
 																		fw={500}
 																		style={{

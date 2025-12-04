@@ -1,4 +1,4 @@
-CONVERSATION TRANSCRIPTS:
+{% if is_overview_mode %}CONVERSATION SUMMARIES:{% else %}CONVERSATION TRANSCRIPTS:{% endif %}
 {% if conversations|length == 0 %}
 No conversations added by the user yet. Gently nudge them to add some by selecting conversations from the sidebar.
 {% else %}
@@ -8,9 +8,15 @@ No conversations added by the user yet. Gently nudge them to add some by selecti
    <tags>{{ conversation.tags }}</tags>
    <date>{{ conversation.created_at }}</date>
    <duration>{{ conversation.duration }}</duration>
+   {% if conversation.summary %}
+   <summary>
+   {{ conversation.summary }}
+   </summary>
+   {% else %}
    <transcript>
    {{ conversation.transcript }}
    </transcript>
+   {% endif %}
    {% if conversation.artifacts %}
    <artifacts>
       {% for artifact in conversation.artifacts %}

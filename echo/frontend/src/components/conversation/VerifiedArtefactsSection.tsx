@@ -88,7 +88,7 @@ export const VerifiedArtefactsSection = ({
 				</Title>
 				<ActionIcon
 					variant="subtle"
-					color="blue"
+					color="primary"
 					aria-label={t`artefacts`}
 					size={22}
 				>

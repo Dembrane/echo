@@ -34,13 +34,12 @@ export const ChatContextProgress = ({ chatId }: { chatId: string }) => {
 		.filter((c) => !c.locked)
 		.sort((a, b) => b.token_usage - a.token_usage);
 
-	const getColor = (baseColor: string) => {
-		if (ENABLE_CHAT_AUTO_SELECT && chatContextQuery.data?.auto_select_bool) {
-			return "green.6";
-		}
+	const isAutoSelect =
+		ENABLE_CHAT_AUTO_SELECT && chatContextQuery.data?.auto_select_bool;
 
-		return baseColor;
-	};
+	// Dark teal for locked conversations, lighter for new/to be added
+	const lockedColor = isAutoSelect ? "green.6" : "primary.5";
+	const newColor = isAutoSelect ? "green.3" : "primary.3";
 
 	return (
 		<Box>
@@ -54,7 +53,7 @@ export const ChatContextProgress = ({ chatId }: { chatId: string }) => {
 					>
 						<Progress.Section
 							value={m.token_usage * 100}
-							color={getColor("blue.6")}
+							color={lockedColor}
 							mr="1px"
 						/>
 					</Tooltip>
@@ -69,7 +68,7 @@ export const ChatContextProgress = ({ chatId }: { chatId: string }) => {
 					>
 						<Progress.Section
 							value={m.token_usage * 100}
-							color={getColor("blue.3")}
+							color={newColor}
 							mr="1px"
 						/>
 					</Tooltip>

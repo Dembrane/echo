@@ -89,7 +89,7 @@ export const AutoSelectConversations = () => {
 		} else if (isAvailableButNotEnabled) {
 			return (
 				<Badge
-					color="blue"
+					color="primary"
 					variant="light"
 					leftSection={<IconBulb size={14} />}
 				>

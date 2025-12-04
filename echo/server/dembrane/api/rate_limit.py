@@ -40,7 +40,9 @@ class RedisUserRateLimiter:
             )
 
 
-def create_user_rate_limiter(*, name: str, capacity: int, window_seconds: float) -> RedisUserRateLimiter:
+def create_user_rate_limiter(
+    *, name: str, capacity: int, window_seconds: float
+) -> RedisUserRateLimiter:
     return RedisUserRateLimiter(key=name, capacity=capacity, window_seconds=window_seconds)
 
 

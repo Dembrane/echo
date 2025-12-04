@@ -1,3 +1,4 @@
+import "@fontsource-variable/dm-sans";
 import "@fontsource-variable/space-grotesk";
 import "@mantine/core/styles.css";
 import "@mantine/dropzone/styles.css";
@@ -9,6 +10,7 @@ import { useEffect } from "react";
 import { RouterProvider } from "react-router/dom";
 import { I18nProvider } from "./components/layout/I18nProvider";
 import { USE_PARTICIPANT_ROUTER } from "./config";
+import { AppPreferencesProvider } from "./hooks/useAppPreferences";
 import { analytics } from "./lib/analytics";
 import { mainRouter, participantRouter } from "./Router";
 import { theme } from "./theme";
@@ -79,9 +81,11 @@ export const App = () => {
 		<QueryClientProvider client={queryClient}>
 			<ReactQueryDevtools initialIsOpen={false} />
 			<MantineProvider theme={theme}>
-				<I18nProvider>
-					<RouterProvider router={router} />
-				</I18nProvider>
+				<AppPreferencesProvider>
+					<I18nProvider>
+						<RouterProvider router={router} />
+					</I18nProvider>
+				</AppPreferencesProvider>
 			</MantineProvider>
 		</QueryClientProvider>
 	);

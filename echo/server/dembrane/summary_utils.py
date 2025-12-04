@@ -131,9 +131,7 @@ async def ensure_conversation_summaries(
                     for conv in conversations
                     if conv.get("summary") and len(str(conv["summary"]).strip()) > 0
                 }
-                ids_to_summarize = [
-                    cid for cid in conversation_ids if cid not in ids_with_summary
-                ]
+                ids_to_summarize = [cid for cid in conversation_ids if cid not in ids_with_summary]
 
                 # Mark existing summaries as succeeded
                 result.succeeded.extend(list(ids_with_summary))
@@ -272,6 +270,3 @@ async def get_all_conversations_for_overview(
     except Exception as e:
         logger.error(f"Failed to fetch conversations for project {project_id}: {e}")
         return []
-
-
-

@@ -1,6 +1,7 @@
 import { Paper, Stack, Text } from "@mantine/core";
 import type React from "react";
 import { cn } from "@/lib/utils";
+import { MODE_COLORS } from "./ChatModeSelector";
 
 type ChatMode = "overview" | "deep_dive" | null;
 
@@ -11,16 +12,15 @@ type Props = {
 	chatMode?: ChatMode;
 };
 
-// Mode-specific colors for user messages (consistent with MODE_COLORS)
-const USER_MESSAGE_STYLES: Record<string, string> = {
-	overview: "!bg-amber-50 border-amber-200/60",
-	deep_dive: "!bg-purple-50 border-purple-200/60",
-	default: "!bg-primary-100 border-slate-200",
+// Get border color based on chat mode
+const getBorderColor = (chatMode: ChatMode | undefined): string | undefined => {
+	if (chatMode === "deep_dive") return MODE_COLORS.deep_dive.border;
+	if (chatMode === "overview") return MODE_COLORS.overview.border;
+	return undefined;
 };
 
 export const ChatMessage = ({ children, section, role, chatMode }: Props) => {
-	const userStyle =
-		USER_MESSAGE_STYLES[chatMode ?? "default"] ?? USER_MESSAGE_STYLES.default;
+	const borderColor = getBorderColor(chatMode);
 
 	return (
 		<div
@@ -37,11 +37,12 @@ export const ChatMessage = ({ children, section, role, chatMode }: Props) => {
 			{["user", "assistant"].includes(role) && (
 				<Paper
 					className={cn(
-						"max-w-full rounded-t-xl border p-4 shadow-sm md:max-w-[80%]",
+						"max-w-full rounded-t-md border p-4 shadow-sm md:max-w-[80%]",
 						role === "user"
-							? `rounded-bl-xl rounded-br-none ${userStyle}`
-							: "rounded-bl-none rounded-br-xl border-slate-200",
+							? "rounded-bl-md rounded-br-none"
+							: "rounded-bl-none rounded-br-md border-slate-200",
 					)}
+					style={role === "user" && borderColor ? { borderColor } : undefined}
 				>
 					<Stack gap="xs">
 						<div>{children}</div>

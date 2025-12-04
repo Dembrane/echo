@@ -466,19 +466,23 @@ class ChatService:
                     if not isinstance(link, dict):
                         logger.debug(f"Skipping non-dict link: {type(link)}")
                         continue
-                    
+
                     conv = link.get("conversation_id")
                     if not isinstance(conv, dict):
                         logger.debug(f"Skipping link with non-dict conversation_id: {type(conv)}")
                         continue
-                    
-                    result.append({
-                        "id": conv.get("id"),
-                        "name": conv.get("participant_name", "Unknown"),
-                        "summary": conv.get("summary"),
-                    })
-                
-                logger.debug(f"Returning {len(result)} conversations with summaries for chat {chat_id}")
+
+                    result.append(
+                        {
+                            "id": conv.get("id"),
+                            "name": conv.get("participant_name", "Unknown"),
+                            "summary": conv.get("summary"),
+                        }
+                    )
+
+                logger.debug(
+                    f"Returning {len(result)} conversations with summaries for chat {chat_id}"
+                )
                 return result
 
         except DirectusBadRequest as e:

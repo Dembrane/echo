@@ -44,7 +44,7 @@ import {
 	IconX,
 } from "@tabler/icons-react";
 import { formatRelative, intervalToDuration } from "date-fns";
-import {
+import React, {
 	type RefObject,
 	useCallback,
 	useEffect,
@@ -56,6 +56,7 @@ import { Controller, useForm } from "react-hook-form";
 import { useInView } from "react-intersection-observer";
 import { useLocation, useParams } from "react-router";
 import { useProjectChatContext } from "@/components/chat/hooks";
+import { MODE_COLORS } from "@/components/chat/ChatModeSelector";
 import { I18nLink } from "@/components/common/i18nLink";
 import { FormLabel } from "@/components/form/FormLabel";
 import {
@@ -104,7 +105,7 @@ const ConversationAccordionLabelChatSelection = ({
 	) {
 		return (
 			<Tooltip label={t`Loading...`}>
-				<Loader size="xs" />
+				<Loader size="xs" color={MODE_COLORS.deep_dive.primary} />
 			</Tooltip>
 		);
 	}
@@ -249,7 +250,7 @@ export const MoveConversationButton = ({
 			<Button
 				onClick={open}
 				variant="outline"
-				color="blue"
+				color="primary"
 				rightSection={<IconArrowsExchange size={16} />}
 			>
 				<Trans>Move to Project</Trans>
@@ -398,22 +399,22 @@ export const ConversationStatusIndicators = ({
 	return (
 		<Group gap="sm">
 			{isUpload && (
-				<Badge size="xs" color="blue" variant="light">
+				<Badge size="xs" color="primary" variant="light">
 					{t`Upload`}
 				</Badge>
 			)}
 
 			{hasOnlyTextContent && (
-				<Badge size="xs" color="blue" variant="light">
+				<Badge size="xs" color="primary" variant="light">
 					<Trans>Text</Trans>
 				</Badge>
 			)}
 
-			{conversation.duration && conversation.duration > 0 && showDuration && (
-				<Badge size="xs" color="violet" variant="light">
-					{fDuration(conversation.duration)}
-				</Badge>
-			)}
+		{conversation.duration && conversation.duration > 0 && showDuration && (
+			<Badge size="xs" color="primary" variant="light">
+				{fDuration(conversation.duration)}
+			</Badge>
+		)}
 
 			{/* {!hasContent &&
 				conversation.is_finished === true &&
@@ -523,17 +524,14 @@ const ConversationAccordionItem = ({
 			active={highlight}
 			borderColor={
 				isOverviewMode
-					? "#f59e0b" // amber for overview mode
+					? MODE_COLORS.overview.primary
 					: isDeepDiveWithSelection
-						? "#a855f7" // purple for deep_dive selected
+						? MODE_COLORS.deep_dive.primary
 						: ENABLE_CHAT_AUTO_SELECT && isAutoSelectEnabled
 							? "green"
 							: undefined
 			}
-			className={cn("w-full", {
-				"!bg-purple-50/60": isDeepDiveWithSelection,
-				"!bg-amber-50/60": inChatMode && isOverviewMode && !isNewChatRoute,
-			})}
+			className="w-full"
 			rightSection={
 				shouldShowCheckboxes ? (
 					<ConversationAccordionLabelChatSelection
@@ -552,7 +550,7 @@ const ConversationAccordionItem = ({
 							<Tooltip label={t`Has verified artifacts`}>
 								<ActionIcon
 									variant="subtle"
-									color="blue"
+									color="primary"
 									aria-label={t`verified artifacts`}
 									size={18}
 									style={{ cursor: "default" }}
@@ -964,7 +962,7 @@ export const ConversationAccordion = ({
 										<Badge
 											size="xs"
 											variant="filled"
-											color="blue"
+											color="primary"
 											className="absolute -right-1 -top-1 px-1"
 										>
 											{appliedFiltersCount}
@@ -1060,7 +1058,7 @@ export const ConversationAccordion = ({
 												<Badge
 													size="sm"
 													variant="light"
-													color="blue"
+													color="primary"
 													className="text-xs"
 												>
 													{selectedTagIds.length}
@@ -1253,11 +1251,11 @@ export const ConversationAccordion = ({
 								/>
 							</div>
 						))}
-						{conversationsQuery.isFetchingNextPage && (
-							<Center py="md">
-								<Loader size="sm" />
-							</Center>
-						)}
+					{conversationsQuery.isFetchingNextPage && (
+						<Center py="md">
+							<Loader size="sm" color={MODE_COLORS.deep_dive.primary} />
+						</Center>
+					)}
 						{/* {!conversationsQuery.hasNextPage &&
               allConversations.length > 0 &&
               debouncedConversationSearchValue === "" && (

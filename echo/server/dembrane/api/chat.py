@@ -480,6 +480,7 @@ async def lock_conversations(
 
 class SuggestionSchema(BaseModel):
     """A single suggestion for the user."""
+
     icon: str  # "sparkles", "search", "quote", "lightbulb", "list"
     label: str  # Short 2-4 word label
     prompt: str  # Full question text
@@ -487,6 +488,7 @@ class SuggestionSchema(BaseModel):
 
 class SuggestionsResponseSchema(BaseModel):
     """Response from the suggestions endpoint."""
+
     suggestions: List[SuggestionSchema]
 
 

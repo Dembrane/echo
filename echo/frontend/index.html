@@ -7,6 +7,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://tally.so/widgets/embed.js"></script>
     <title>Dembrane</title>
+    <!-- Prevent flash of wrong theme by applying preferences before React mounts -->
+    <script>
+      (function() {
+        try {
+          var prefs = JSON.parse(localStorage.getItem('dembrane-app-preferences') || '{}');
+          var isDmSans = prefs.fontFamily === 'dm-sans';
+          var bg = isDmSans ? '#F6F4F1' : '#FFFFFF';
+          var text = isDmSans ? '#2D2D2C' : '#000000';
+          var font = isDmSans ? "'DM Sans Variable', sans-serif" : "'Space Grotesk Variable', sans-serif";
+          var style = document.documentElement.style;
+          style.setProperty('--app-background', bg);
+          style.setProperty('--app-text', text);
+          style.setProperty('--app-font-family', font);
+          style.setProperty('--mantine-color-white', bg);
+          style.setProperty('--mantine-color-black', text);
+          style.setProperty('--mantine-color-text', text);
+          style.setProperty('--mantine-color-body', bg);
+          document.documentElement.setAttribute('data-theme', isDmSans ? 'parchment' : 'clean');
+        } catch(e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

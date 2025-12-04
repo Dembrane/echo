@@ -42,10 +42,10 @@ def _generate_cache_key(
 ) -> str:
     """
     Generate a cache key for suggestions based on inputs.
-    
+
     For deep_dive mode: key is based on sorted conversation IDs + language + has_history
     For overview mode: key is based on project conversations which change less frequently
-    
+
     The has_chat_history flag differentiates between fresh chats (no messages)
     and chats with history (where last_response and recent_queries matter).
     """
@@ -186,17 +186,16 @@ async def generate_suggestions(
         # Cache is most effective for fresh chats (no history) where inputs are stable
         has_chat_history = bool(last_response or (recent_queries and len(recent_queries) > 0))
         conversation_ids = [
-            conv.get("id", "") for conv in (conversations or [])
-            if isinstance(conv, dict)
+            conv.get("id", "") for conv in (conversations or []) if isinstance(conv, dict)
         ]
-        
+
         cache_key = _generate_cache_key(
             chat_mode=chat_mode,
             language=language,
             conversation_ids=conversation_ids,
             has_chat_history=has_chat_history,
         )
-        
+
         # Only use cache for fresh chats (no history) - these have stable inputs
         # Chats with history have dynamic inputs (last_response, recent_queries)
         if not has_chat_history:
@@ -271,14 +270,14 @@ async def generate_suggestions(
 
         suggestions = _parse_suggestions(content)
         logger.info(f"Generated {len(suggestions)} suggestions for chat {chat_id}")
-        
+
         # Cache suggestions for fresh chats (no history)
         if not has_chat_history and suggestions:
             await _set_cached_suggestions(
                 cache_key,
                 [s.model_dump() for s in suggestions],
             )
-        
+
         return suggestions
 
     except Exception as e:

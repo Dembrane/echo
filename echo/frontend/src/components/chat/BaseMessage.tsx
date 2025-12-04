@@ -32,7 +32,7 @@ export const BaseMessage = (
 			<Stack>
 				<Group align="start" wrap="nowrap">
 					{/* <div className="pt-1">
-            <Icons.Diamond color="black" />
+            <Icons.Diamond color="var(--app-text)" />
           </div> */}
 					<Box flex={1}>
 						<Group align="center" justify="space-between">
