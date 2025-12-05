@@ -500,7 +500,10 @@ export const ProjectChatRoute = () => {
 					<ChatHistoryMessage
 						// @ts-expect-error chatHistoryQuery.data is not typed
 						message={{
-							content: t`Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Deep Dive mode.`,
+							content:
+								chatMode === "overview"
+									? t`Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode.`
+									: t`Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations.`,
 							id: "init",
 							role: "assistant",
 						}}

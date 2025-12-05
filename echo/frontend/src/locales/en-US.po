@@ -327,7 +327,7 @@ msgstr "\"Refine\" available soon"
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: selectedOption.transitionMessage
 #. placeholder {0}: selectedOption.transitionDescription
-#: src/routes/project/chat/ProjectChatRoute.tsx:556
+#: src/routes/project/chat/ProjectChatRoute.tsx:559
 #: src/components/settings/FontSettingsCard.tsx:49
 #: src/components/settings/FontSettingsCard.tsx:50
 #: src/components/project/ProjectPortalEditor.tsx:426
@@ -456,7 +456,7 @@ msgstr "Add to this chat"
 msgid "Added emails"
 msgstr "Added emails"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:652
+#: src/routes/project/chat/ProjectChatRoute.tsx:655
 msgid "Adding Context:"
 msgstr "Adding Context:"
 
@@ -514,7 +514,7 @@ msgstr "An email notification will be sent to {0} participant{1}. Do you want to
 msgid "An error occurred while loading the Portal. Please contact the support team."
 msgstr "An error occurred while loading the Portal. Please contact the support team."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:594
+#: src/routes/project/chat/ProjectChatRoute.tsx:597
 msgid "An error occurred."
 msgstr "An error occurred."
 
@@ -1173,8 +1173,8 @@ msgstr "Deleted successfully"
 #~ msgid "Dembrane ECHO"
 #~ msgstr "Dembrane ECHO"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:715
-#: src/routes/project/chat/ProjectChatRoute.tsx:745
+#: src/routes/project/chat/ProjectChatRoute.tsx:718
+#: src/routes/project/chat/ProjectChatRoute.tsx:748
 msgid "Dembrane is powered by AI. Please double-check responses."
 msgstr "Dembrane is powered by AI. Please double-check responses."
 
@@ -2662,7 +2662,7 @@ msgstr "Please select a language for your updated report"
 #~ msgid "Please select at least one source"
 #~ msgstr "Please select at least one source"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:641
+#: src/routes/project/chat/ProjectChatRoute.tsx:644
 msgid "Please select conversations from the sidebar to proceed"
 msgstr "Please select conversations from the sidebar to proceed"
 
@@ -3083,7 +3083,7 @@ msgstr "Retranscribe Conversation"
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "Retranscription started. New conversation will be available soon."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:602
+#: src/routes/project/chat/ProjectChatRoute.tsx:605
 msgid "Retry"
 msgstr "Retry"
 
@@ -3255,7 +3255,7 @@ msgstr "Selected Files ({0}/{MAX_FILES})"
 msgid "participant.selected.microphone"
 msgstr "Selected microphone:"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:735
+#: src/routes/project/chat/ProjectChatRoute.tsx:738
 msgid "Send"
 msgstr "Send"
 
@@ -3494,7 +3494,7 @@ msgstr "Start over"
 msgid "Status"
 msgstr "Status"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:567
+#: src/routes/project/chat/ProjectChatRoute.tsx:570
 msgid "Stop"
 msgstr "Stop"
 
@@ -4014,7 +4014,7 @@ msgstr "Two-factor authentication enabled"
 msgid "Type"
 msgstr "Type"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:690
+#: src/routes/project/chat/ProjectChatRoute.tsx:693
 msgid "Type a message..."
 msgstr "Type a message..."
 
@@ -4142,8 +4142,8 @@ msgstr "Uploading Audio Files..."
 msgid "Use PII Redaction"
 msgstr "Use PII Redaction"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:712
-#: src/routes/project/chat/ProjectChatRoute.tsx:742
+#: src/routes/project/chat/ProjectChatRoute.tsx:715
+#: src/routes/project/chat/ProjectChatRoute.tsx:745
 msgid "Use Shift + Enter to add a new line"
 msgstr "Use Shift + Enter to add a new line"
 
@@ -4286,17 +4286,21 @@ msgstr "Welcome back"
 #~ msgid "Welcome to Big Picture Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Details mode."
 #~ msgstr "Welcome to Big Picture Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Details mode."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:501
-#~ msgid "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
-#~ msgstr "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
+#: src/routes/project/chat/ProjectChatRoute.tsx:506
+msgid "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
+msgstr "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
 
 #: src/components/common/DembraneLoadingSpinner/index.tsx:23
 msgid "Welcome to Dembrane!"
 msgstr "Welcome to Dembrane!"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:503
-msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Deep Dive mode."
-msgstr "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Deep Dive mode."
+#~ msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Deep Dive mode."
+#~ msgstr "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Deep Dive mode."
+
+#: src/routes/project/chat/ProjectChatRoute.tsx:505
+msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
+msgstr "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 
 #: src/components/report/CreateReportForm.tsx:79
 msgid "Welcome to Reports!"
