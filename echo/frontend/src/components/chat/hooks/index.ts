@@ -16,8 +16,11 @@ import {
 } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
 import {
+	type ChatMode,
 	getChatHistory,
+	getChatSuggestions,
 	getProjectChatContext,
+	initializeChatMode,
 	lockConversations,
 } from "@/lib/api";
 import { directus } from "@/lib/directus";
@@ -117,6 +120,30 @@ export const useProjectChatContext = (chatId: string) => {
 	});
 };
 
+export const useInitializeChatModeMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (payload: {
+			chatId: string;
+			mode: ChatMode;
+			projectId: string;
+		}) => initializeChatMode(payload.chatId, payload.mode, payload.projectId),
+		onError: (error) => {
+			console.error("Failed to initialize chat mode:", error);
+			toast.error("Failed to initialize chat mode. Please try again.");
+		},
+		onSuccess: (_data, vars) => {
+			queryClient.invalidateQueries({
+				queryKey: ["chats", "context", vars.chatId],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["chats", vars.chatId],
+			});
+			// Don't show toast here - let the component handle messaging
+		},
+	});
+};
+
 export const useChat = (chatId: string) => {
 	return useQuery({
 		queryFn: () =>
@@ -138,7 +165,14 @@ export const useProjectChats = (
 		queryFn: () =>
 			directus.request(
 				readItems("project_chat", {
-					fields: ["id", "project_id", "date_created", "date_updated", "name"],
+					fields: [
+						"id",
+						"project_id",
+						"date_created",
+						"date_updated",
+						"name",
+						"chat_mode",
+					],
 					filter: {
 						project_id: {
 							_eq: projectId,
@@ -168,7 +202,14 @@ export const useInfiniteProjectChats = (
 		queryFn: async ({ pageParam = 0 }) => {
 			const response = await directus.request(
 				readItems("project_chat", {
-					fields: ["id", "project_id", "date_created", "date_updated", "name"],
+					fields: [
+						"id",
+						"project_id",
+						"date_created",
+						"date_updated",
+						"name",
+						"chat_mode",
+					],
 					filter: {
 						project_id: {
 							_eq: projectId,
@@ -218,4 +259,61 @@ export const useProjectChatsCount = (
 		},
 		queryKey: ["projects", projectId, "chats", "count", query],
 	});
+};
+
+/**
+ * Hook to fetch contextual suggestions for a chat.
+ *
+ * Lifecycle:
+ * - Initial fetch: When chat route mounts AND chat_mode is set
+ * - Refetch triggers:
+ *   - After assistant response completes (via refetch())
+ *   - When conversation selection changes (deep_dive mode)
+ * - Stale time: 30 seconds to avoid rapid re-fetches
+ * - Error handling: Silent fallback to empty suggestions
+ */
+export const useChatSuggestions = (
+	chatId: string,
+	options?: {
+		enabled?: boolean;
+		language?: string;
+	},
+) => {
+	const { enabled = true, language = "en" } = options ?? {};
+
+	return useQuery({
+		enabled: enabled && chatId !== "",
+		queryFn: () => getChatSuggestions(chatId, language),
+		queryKey: ["chats", chatId, "suggestions", language],
+		refetchOnWindowFocus: false,
+		retry: 1, // Retry once on failure, then give up gracefully
+		staleTime: 30_000, // 30 seconds - avoid rapid re-fetches
+	});
+};
+
+/**
+ * Prefetch suggestions for a chat and wait for them (with timeout).
+ * Returns early if suggestions arrive, or after maxWaitMs.
+ * Used when navigating to a chat to ensure suggestions are ready.
+ */
+export const usePrefetchSuggestions = () => {
+	const queryClient = useQueryClient();
+
+	return async (chatId: string, language = "en", maxWaitMs = 8000) => {
+		const queryKey = ["chats", chatId, "suggestions", language];
+
+		// Start the prefetch
+		const prefetchPromise = queryClient.prefetchQuery({
+			queryFn: () => getChatSuggestions(chatId, language),
+			queryKey,
+			staleTime: 30_000,
+		});
+
+		// Race between prefetch completing and timeout
+		const timeoutPromise = new Promise<void>((resolve) => {
+			setTimeout(resolve, maxWaitMs);
+		});
+
+		await Promise.race([prefetchPromise, timeoutPromise]);
+	};
 };

@@ -43,7 +43,12 @@ def get_completion_kwargs(model: MODELS, **overrides: Any) -> Dict[str, Any]:
         kwargs["api_base"] = resolved.api_base
     if resolved.api_version:
         kwargs["api_version"] = resolved.api_version
-    vertex_credentials = resolved.vertex_credentials or settings.transcription.gcp_sa_json
+    # Vertex AI models are prefixed with "vertex_ai/"
+    # We don't want to pass the transcription GCP SA JSON to these models.
+    if kwargs["model"].startswith("vertex_ai/"):
+        vertex_credentials = resolved.vertex_credentials or settings.transcription.gcp_sa_json
+    else:
+        vertex_credentials = None
     if vertex_credentials:
         kwargs["vertex_credentials"] = json.dumps(vertex_credentials)
     if resolved.vertex_project:

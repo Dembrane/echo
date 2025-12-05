@@ -229,7 +229,7 @@ export function ReportTimeline({
 						if (active && payload && payload.length) {
 							const data = payload[0].payload;
 							return (
-								<div className="rounded border border-gray-200 bg-white p-2 shadow">
+								<div className="rounded border border-gray-200 p-2 shadow" style={{ backgroundColor: "var(--app-background)" }}>
 									<p className="space-y-[2px] text-sm">
 										{data.conversations != null && (
 											<div>Conversations: {data.conversations}</div>

@@ -360,11 +360,20 @@ const getExtensionFromMimeType = (mimeType: string): string => {
 	return "webm"; // Default fallback
 };
 
+export type UploadResult = {
+	chunk_id: string;
+	conversationId: string;
+	file_url: string;
+	source: string;
+	timestamp: string;
+};
+
 /**
  * Upload a conversation chunk using presigned URL (direct to S3)
  *
  * This is the new, preferred method as it doesn't block the API server.
  * Includes retry logic and comprehensive error handling.
+ * Returns data needed for confirmation step.
  */
 export const uploadConversationChunkWithPresignedUrl = async (payload: {
 	conversationId: string;
@@ -373,7 +382,7 @@ export const uploadConversationChunkWithPresignedUrl = async (payload: {
 	source: string;
 	onProgress?: (progress: number) => void;
 	runFinishHook?: boolean; // Ignored - kept for backward compatibility
-}) => {
+}): Promise<UploadResult> => {
 	if (!payload.chunk) {
 		throw new Error("No chunk provided");
 	}
@@ -479,41 +488,54 @@ export const uploadConversationChunkWithPresignedUrl = async (payload: {
 		}
 	}
 
-	// Step 3: Confirm upload with API (fast, just creates DB record)
+	// Step 3: Return data needed for confirmation
+	// The confirmation will be handled separately in the mutation hook
 	// Report 90% progress before confirmation
 	payload.onProgress?.(90);
 
-	console.log(`[Upload] Confirming upload with API for chunk ${chunk_id}`);
-
-	try {
-		const confirmResponse = await apiNoAuth.post<unknown, TConversationChunk>(
-			`/participant/conversations/${payload.conversationId}/confirm-upload`,
-			{
-				chunk_id,
-				file_url,
-				source: payload.source,
-				timestamp: payload.timestamp.toISOString(),
-			},
-		);
-
-		// Report 100% after successful confirmation
-		payload.onProgress?.(100);
-		console.log(`[Upload] Upload confirmed successfully for chunk ${chunk_id}`);
-
-		return confirmResponse;
-	} catch (error) {
-		console.error("[Upload] Failed to confirm upload:", error);
-		// File is in S3 but not in database - this is an orphaned file
-		// Log error for monitoring/cleanup
-		throw new Error(
-			"File uploaded to storage but failed to register in system. " +
-				"Please contact support if this persists.",
-		);
-	}
+	return {
+		chunk_id,
+		conversationId: payload.conversationId,
+		file_url,
+		source: payload.source,
+		timestamp: payload.timestamp.toISOString(),
+	};
 };
 
 // Export the new presigned URL method as the default uploadConversationChunk
 export const uploadConversationChunk = uploadConversationChunkWithPresignedUrl;
+
+// Confirms the upload with the API after S3 upload is complete
+export const confirmConversationChunkUpload = async (payload: {
+	conversationId: string;
+	chunk_id: string;
+	file_url: string;
+	source: string;
+	timestamp: string;
+	onProgress?: (progress: number) => void;
+}) => {
+	console.log(
+		`[Upload] Confirming upload with API for chunk ${payload.chunk_id}`,
+	);
+
+	const confirmResponse = await apiNoAuth.post<unknown, TConversationChunk>(
+		`/participant/conversations/${payload.conversationId}/confirm-upload`,
+		{
+			chunk_id: payload.chunk_id,
+			file_url: payload.file_url,
+			source: payload.source,
+			timestamp: payload.timestamp,
+		},
+	);
+
+	// Report 100% after successful confirmation
+	payload.onProgress?.(100);
+	console.log(
+		`[Upload] Upload confirmed successfully for chunk ${payload.chunk_id}`,
+	);
+
+	return confirmResponse;
+};
 
 /**
  * Legacy upload method (through API server)
@@ -730,7 +752,7 @@ export const initiateAndUploadConversationChunk = async (payload: {
 			}
 
 			// Upload using new presigned URL method
-			const result = await uploadConversationChunkWithPresignedUrl({
+			const uploadResult = await uploadConversationChunkWithPresignedUrl({
 				chunk,
 				conversationId: conversation.id,
 				onProgress: (progress) => {
@@ -738,6 +760,14 @@ export const initiateAndUploadConversationChunk = async (payload: {
 				},
 				source,
 				timestamp: payload.timestamps[i] ?? new Date(),
+			});
+
+			// Confirm the upload to complete the process
+			const result = await confirmConversationChunkUpload({
+				...uploadResult,
+				onProgress: (progress) => {
+					payload.onProgress?.(fileName, progress);
+				},
 			});
 
 			results[i] = result;
@@ -938,6 +968,41 @@ export const deleteChatContext = async (
 export const lockConversations = async (chatId: string) => {
 	return api.post<unknown, TProjectChatContext>(
 		`/chats/${chatId}/lock-conversations`,
+	);
+};
+
+export type ChatMode = "overview" | "deep_dive";
+
+export type InitializeChatModeResponse = {
+	chat_mode: ChatMode;
+	conversations_added: number;
+	conversations_summarized: number;
+	message: string;
+};
+
+export const initializeChatMode = async (
+	chatId: string,
+	mode: ChatMode,
+	projectId: string,
+) => {
+	return api.post<unknown, InitializeChatModeResponse>(
+		`/chats/${chatId}/initialize-mode`,
+		{
+			mode,
+			project_id: projectId,
+		},
+	);
+};
+
+export const getChatSuggestions = async (
+	chatId: string,
+	language = "en",
+): Promise<TSuggestionsResponse> => {
+	return api.get<unknown, TSuggestionsResponse>(
+		`/chats/${chatId}/suggestions`,
+		{
+			params: { language },
+		},
 	);
 };
 

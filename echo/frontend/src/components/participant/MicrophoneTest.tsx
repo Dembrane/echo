@@ -346,7 +346,7 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
 						</Alert>
 					)}
 					{isLoadingDevices && (
-						<Alert color="blue" className="w-full text-start">
+						<Alert color="primary" className="w-full text-start">
 							<Trans id="participant.alert.microphone.access.loading">
 								Requesting microphone access to detect available devices...
 							</Trans>
@@ -375,7 +375,7 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
 						<div className="mt-4 flex w-full justify-end">
 							<Button
 								onClick={handleContinue}
-								color="blue"
+								color="primary"
 								radius="md"
 								disabled={!isMicTestSuccessful}
 								className="basis-1/2"

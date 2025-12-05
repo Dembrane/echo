@@ -113,7 +113,7 @@ class ConfirmUploadRequest(BaseModel):
 
 _rate_limit_cache: dict[str, list[float]] = {}
 _RATE_LIMIT_WINDOW = 60  # 1 minute
-_RATE_LIMIT_MAX_REQUESTS = 10  # 10 requests per minute per conversation
+_RATE_LIMIT_MAX_REQUESTS = 40  # 40 requests per minute per conversation
 
 
 def check_rate_limit(conversation_id: str) -> bool:

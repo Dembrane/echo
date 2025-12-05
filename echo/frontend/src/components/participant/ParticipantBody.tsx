@@ -141,7 +141,7 @@ export const ParticipantBody = ({
 					icon={IconWifiOff}
 					message={t`You seem to be offline, please check your internet connection`}
 					tipLabel={t`Tip`}
-					color="blue"
+					color="yellow"
 				/>
 			)}
 
@@ -149,7 +149,7 @@ export const ParticipantBody = ({
 				<TipBanner
 					icon={IconExclamationCircle}
 					message={t`Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists`}
-					color="blue"
+					color="yellow"
 				/>
 			)}
 

@@ -1,4 +1,4 @@
-GESPRÄCHSTRANSKRIPTE:
+{% if is_overview_mode %}GESPRÄCHSZUSAMMENFASSUNGEN:{% else %}GESPRÄCHSTRANSKRIPTE:{% endif %}
 {% if conversations|length == 0 %}
 Noch keine Gespräche vom Benutzer hinzugefügt. Ermutigen Sie sie vorsichtig, einige auszuwählen, indem Sie Gespräche aus der Seitenleiste auswählen.
 {% else %}
@@ -8,9 +8,15 @@ Noch keine Gespräche vom Benutzer hinzugefügt. Ermutigen Sie sie vorsichtig, e
    <tags>{{ conversation.tags }}</tags>
    <date>{{ conversation.created_at }}</date>
    <duration>{{ conversation.duration }}</duration>
+   {% if conversation.summary %}
+   <summary>
+   {{ conversation.summary }}
+   </summary>
+   {% else %}
    <transcript>
    {{ conversation.transcript }}
    </transcript>
+   {% endif %}
    {% if conversation.artifacts %}
    <artifacts>
       {% for artifact in conversation.artifacts %}

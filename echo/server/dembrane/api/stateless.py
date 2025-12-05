@@ -7,7 +7,7 @@ from litellm import completion
 from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.prompts import render_prompt
 
-# LightRAG requires nest_asyncio for nested event loops
+# Enable nested event loops for sync-to-async bridges
 nest_asyncio.apply()
 
 logger = getLogger("api.stateless")

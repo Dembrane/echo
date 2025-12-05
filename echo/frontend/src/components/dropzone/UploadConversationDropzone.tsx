@@ -501,7 +501,7 @@ export const UploadConversationDropzone = (
 					onClick={open}
 					variant="outline"
 				>
-					{t`Upload Audio`}
+					{t`Upload`}
 				</Button>
 			</Tooltip>
 
@@ -629,7 +629,7 @@ export const UploadConversationDropzone = (
 															{fileEditor.editingIndex !== index && (
 																<Tooltip label={t`Edit file name`}>
 																	<ActionIcon
-																		color="blue"
+																		color="primary"
 																		variant="subtle"
 																		onClick={() =>
 																			fileEditor.startEditing(index)

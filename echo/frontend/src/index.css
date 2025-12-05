@@ -10,20 +10,35 @@
 /* biome-ignore lint/suspicious/noUnknownAtRules: <explanation> */
 @tailwind utilities;
 
-.space-grotesk {
-	font-family: "Space Grotesk", sans-serif !important;
+/* Global default colors and fonts */
+/* Space Grotesk (default) → White + Black */
+/* DM Sans → Parchment + Graphite */
+:root {
+	--app-background: #FFFFFF;
+	--app-text: #000000;
+	--app-font-family: 'Space Grotesk Variable', sans-serif;
 }
 
-/* Override Tailwind's prose with a more specific selector */
-.prose.space-grotesk {
-	font-family: "Space Grotesk", sans-serif !important;
+body {
+	background-color: var(--app-background);
+	color: var(--app-text);
+	font-family: var(--app-font-family);
+}
+
+.app-font {
+	font-family: var(--app-font-family) !important;
+}
+
+/* Override Tailwind's prose to use app font */
+.prose {
+	font-family: var(--app-font-family) !important;
 }
 
 /* Ensure all elements within also use the font */
-.prose.space-grotesk * {
-	font-family: "Space Grotesk", sans-serif !important;
+.prose * {
+	font-family: var(--app-font-family) !important;
 }
 
 [aria-label="editable markdown"] {
-	font-family: "Space Grotesk", sans-serif !important;
+	font-family: var(--app-font-family) !important;
 }

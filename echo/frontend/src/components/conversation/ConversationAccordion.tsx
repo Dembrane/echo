@@ -44,7 +44,7 @@ import {
 	IconX,
 } from "@tabler/icons-react";
 import { formatRelative, intervalToDuration } from "date-fns";
-import {
+import React, {
 	type RefObject,
 	useCallback,
 	useEffect,
@@ -56,6 +56,7 @@ import { Controller, useForm } from "react-hook-form";
 import { useInView } from "react-intersection-observer";
 import { useLocation, useParams } from "react-router";
 import { useProjectChatContext } from "@/components/chat/hooks";
+import { MODE_COLORS } from "@/components/chat/ChatModeSelector";
 import { I18nLink } from "@/components/common/i18nLink";
 import { FormLabel } from "@/components/form/FormLabel";
 import {
@@ -104,7 +105,7 @@ const ConversationAccordionLabelChatSelection = ({
 	) {
 		return (
 			<Tooltip label={t`Loading...`}>
-				<Loader size="xs" />
+				<Loader size="xs" color={MODE_COLORS.deep_dive.primary} />
 			</Tooltip>
 		);
 	}
@@ -249,7 +250,7 @@ export const MoveConversationButton = ({
 			<Button
 				onClick={open}
 				variant="outline"
-				color="blue"
+				color="primary"
 				rightSection={<IconArrowsExchange size={16} />}
 			>
 				<Trans>Move to Project</Trans>
@@ -398,22 +399,22 @@ export const ConversationStatusIndicators = ({
 	return (
 		<Group gap="sm">
 			{isUpload && (
-				<Badge size="xs" color="blue" variant="light">
+				<Badge size="xs" color="primary" variant="light">
 					{t`Upload`}
 				</Badge>
 			)}
 
 			{hasOnlyTextContent && (
-				<Badge size="xs" color="blue" variant="light">
+				<Badge size="xs" color="primary" variant="light">
 					<Trans>Text</Trans>
 				</Badge>
 			)}
 
-			{conversation.duration && conversation.duration > 0 && showDuration && (
-				<Badge size="xs" color="violet" variant="light">
-					{fDuration(conversation.duration)}
-				</Badge>
-			)}
+		{conversation.duration && conversation.duration > 0 && showDuration && (
+			<Badge size="xs" color="primary" variant="light">
+				{fDuration(conversation.duration)}
+			</Badge>
+		)}
 
 			{/* {!hasContent &&
 				conversation.is_finished === true &&
@@ -474,11 +475,13 @@ const ConversationAccordionItem = ({
 }) => {
 	const location = useLocation();
 	const inChatMode = location.pathname.includes("/chats/");
+	const isNewChatRoute = location.pathname.includes("/chats/new");
 
 	const { chatId } = useParams();
 	const chatContextQuery = useProjectChatContext(chatId ?? "");
 
-	if (inChatMode && chatContextQuery.isLoading) {
+	// Don't show loading skeleton for new chat route (no chat exists yet)
+	if (inChatMode && !isNewChatRoute && chatContextQuery.isLoading) {
 		return <Skeleton height={60} />;
 	}
 
@@ -491,6 +494,14 @@ const ConversationAccordionItem = ({
 	);
 
 	const isAutoSelectEnabled = chatContextQuery.data?.auto_select_bool ?? false;
+	const chatMode = chatContextQuery.data?.chat_mode;
+
+	// Hide checkboxes when:
+	// - In /chats/new (mode not yet selected)
+	// - In overview mode (summaries, no manual selection)
+	// - Chat mode is null/undefined for backward compatibility with legacy chats, still show checkboxes
+	const shouldShowCheckboxes =
+		inChatMode && !isNewChatRoute && chatMode !== "overview";
 
 	// Check if conversation has approved artefacts
 	const hasVerifiedArtefacts =
@@ -500,22 +511,33 @@ const ConversationAccordionItem = ({
 			(artefact) => (artefact as ConversationArtifact).approved_at,
 		);
 
+	// In overview mode, show a subtle "included" indicator
+	const isOverviewMode = chatMode === "overview";
+
+	// Mode-based styling
+	const isDeepDiveWithSelection =
+		inChatMode && !isNewChatRoute && chatMode === "deep_dive" && isLocked;
+
 	return (
 		<NavigationButton
 			to={`/projects/${conversation.project_id}/conversation/${conversation.id}/overview`}
 			active={highlight}
 			borderColor={
-				ENABLE_CHAT_AUTO_SELECT && isAutoSelectEnabled ? "green" : undefined
+				isOverviewMode
+					? MODE_COLORS.overview.primary
+					: isDeepDiveWithSelection
+						? MODE_COLORS.deep_dive.primary
+						: ENABLE_CHAT_AUTO_SELECT && isAutoSelectEnabled
+							? "green"
+							: undefined
 			}
-			className={cn("w-full", {
-				"!bg-primary-50": isLocked,
-			})}
+			className="w-full"
 			rightSection={
-				inChatMode && (
+				shouldShowCheckboxes ? (
 					<ConversationAccordionLabelChatSelection
 						conversation={conversation}
 					/>
-				)
+				) : null
 			}
 		>
 			<Stack gap="4" className="pb-[3px]">
@@ -528,7 +550,7 @@ const ConversationAccordionItem = ({
 							<Tooltip label={t`Has verified artifacts`}>
 								<ActionIcon
 									variant="subtle"
-									color="blue"
+									color="primary"
 									aria-label={t`verified artifacts`}
 									size={18}
 									style={{ cursor: "default" }}
@@ -598,8 +620,13 @@ export const ConversationAccordion = ({
 	const location = useLocation();
 	const inChatMode = location.pathname.includes("/chats/");
 	const isMobile = useMediaQuery("(max-width: 768px)");
-	const { conversationId: activeConversationId } = useParams();
+	const { conversationId: activeConversationId, chatId } = useParams();
 	const { ref: loadMoreRef, inView } = useInView();
+
+	// Get chat context to check mode
+	const chatContextQuery = useProjectChatContext(chatId ?? "");
+	const chatMode = chatContextQuery.data?.chat_mode;
+	const isOverviewMode = chatMode === "overview";
 
 	// Temporarily disabled source filters
 	// const FILTER_OPTIONS = [
@@ -881,7 +908,11 @@ export const ConversationAccordion = ({
 
 			<Accordion.Panel>
 				<Stack gap="sm" ref={parent2} className="relative">
-					{inChatMode && ENABLE_CHAT_AUTO_SELECT && totalConversations > 0 && (
+				{/* Only show auto-select in deep dive mode */}
+				{inChatMode &&
+					!isOverviewMode &&
+					ENABLE_CHAT_AUTO_SELECT &&
+					totalConversations > 0 && (
 						<Stack gap="xs" className="relative">
 							<LoadingOverlay visible={conversationsQuery.isLoading} />
 							<AutoSelectConversations />
@@ -931,7 +962,7 @@ export const ConversationAccordion = ({
 										<Badge
 											size="xs"
 											variant="filled"
-											color="blue"
+											color="primary"
 											className="absolute -right-1 -top-1 px-1"
 										>
 											{appliedFiltersCount}
@@ -1027,7 +1058,7 @@ export const ConversationAccordion = ({
 												<Badge
 													size="sm"
 													variant="light"
-													color="blue"
+													color="primary"
 													className="text-xs"
 												>
 													{selectedTagIds.length}
@@ -1220,11 +1251,11 @@ export const ConversationAccordion = ({
 								/>
 							</div>
 						))}
-						{conversationsQuery.isFetchingNextPage && (
-							<Center py="md">
-								<Loader size="sm" />
-							</Center>
-						)}
+					{conversationsQuery.isFetchingNextPage && (
+						<Center py="md">
+							<Loader size="sm" color={MODE_COLORS.deep_dive.primary} />
+						</Center>
+					)}
 						{/* {!conversationsQuery.hasNextPage &&
               allConversations.length > 0 &&
               debouncedConversationSearchValue === "" && (

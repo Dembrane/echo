@@ -10,6 +10,7 @@ import { Play } from "lucide-react";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
 import { cn } from "@/lib/utils";
+import { useOnboardingCards } from "./hooks/useOnboardingCards";
 import MicrophoneTest from "./MicrophoneTest";
 import { ParticipantInitiateForm } from "./ParticipantInitiateForm";
 
@@ -76,10 +77,13 @@ const ParticipantOnboardingCards = ({
 		[setMicTestSuccess],
 	);
 
+	const { getSystemCards } = useOnboardingCards();
+
 	const cards: LanguageCards = {
 		...initialCards,
 		"de-DE": [
 			...initialCards["de-DE"],
+			...getSystemCards("de-DE", initialCards["de-DE"].length > 0),
 			{
 				section: "Mikrofon-Check",
 				slides: [
@@ -105,6 +109,7 @@ const ParticipantOnboardingCards = ({
 		],
 		"en-US": [
 			...initialCards["en-US"],
+			...getSystemCards("en-US", initialCards["en-US"].length > 0),
 			{
 				section: "Microphone Check",
 				slides: [
@@ -130,6 +135,7 @@ const ParticipantOnboardingCards = ({
 		],
 		"es-ES": [
 			...initialCards["es-ES"],
+			...getSystemCards("es-ES", initialCards["es-ES"].length > 0),
 			{
 				section: "Verificación del Micrófono",
 				slides: [
@@ -155,6 +161,7 @@ const ParticipantOnboardingCards = ({
 		],
 		"fr-FR": [
 			...initialCards["fr-FR"],
+			...getSystemCards("fr-FR", initialCards["fr-FR"].length > 0),
 			{
 				section: "Vérification du Microphone",
 				slides: [
@@ -180,6 +187,7 @@ const ParticipantOnboardingCards = ({
 		],
 		"nl-NL": [
 			...initialCards["nl-NL"],
+			...getSystemCards("nl-NL", initialCards["nl-NL"].length > 0),
 			{
 				section: "Microfoon Controle",
 				slides: [
@@ -275,7 +283,7 @@ const ParticipantOnboardingCards = ({
 							<Button
 								onClick={nextSlide}
 								variant="subtle"
-								color="blue"
+								color="primary"
 								size="md"
 								p="sm"
 								className="absolute right-4 top-4"

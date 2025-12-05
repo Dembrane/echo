@@ -50,15 +50,21 @@ export const NavigationButton = ({
 	const content = (
 		<Paper
 			className={cn(
-				"w-full border border-gray-200 bg-white transition-colors",
-				active ? "border-primary-500" : "",
+				"w-full border border-gray-200 transition-colors",
+				active && !borderColor ? "border-primary-500" : "",
 				disabled || loading
 					? "opacity-60 hover:border-gray-300"
 					: borderColor === "green"
 						? "hover:border-green-500"
-						: "hover:border-primary-500",
+						: borderColor
+							? "" // custom borderColor handled via style
+							: "hover:border-primary-500",
 				props.className,
 			)}
+			style={{
+				backgroundColor: "var(--app-background)",
+				...(borderColor && borderColor !== "green" ? { borderColor } : {}),
+			}}
 		>
 			<Group align="center" wrap="nowrap">
 				{to ? (

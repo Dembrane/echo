@@ -3,6 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import {
 	Accordion,
 	ActionIcon,
+	Box,
 	Center,
 	Group,
 	Loader,
@@ -10,14 +11,22 @@ import {
 	Stack,
 	Text,
 	Title,
+	Tooltip,
 } from "@mantine/core";
-import { IconDotsVertical, IconPencil, IconTrash } from "@tabler/icons-react";
+import {
+	IconDotsVertical,
+	IconMessageCircle,
+	IconPencil,
+	IconSparkles,
+	IconTrash,
+} from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
 import { Suspense, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import { useParams } from "react-router";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { NavigationButton } from "../common/NavigationButton";
+import { MODE_COLORS } from "./ChatModeSelector";
 import { ChatSkeleton } from "./ChatSkeleton";
 import {
 	useDeleteChatMutation,
@@ -25,6 +34,47 @@ import {
 	useProjectChatsCount,
 	useUpdateChatMutation,
 } from "./hooks";
+
+export const ChatModeIndicator = ({
+	mode,
+	size = "sm",
+}: {
+	mode: "overview" | "deep_dive" | null | undefined;
+	size?: "xs" | "sm";
+}) => {
+	// Default to deep_dive if mode not set
+	const effectiveMode = mode ?? "deep_dive";
+	const isOverview = effectiveMode === "overview";
+	const colors = MODE_COLORS[effectiveMode];
+
+	const iconSize = size === "xs" ? 14 : 16;
+
+	return (
+		<Tooltip
+			label={
+				isOverview ? (
+					<Trans>Overview - Themes & patterns</Trans>
+				) : (
+					<Trans>Specific Details - Selected conversations</Trans>
+				)
+			}
+			position="top"
+			withArrow
+		>
+			<Box className="flex items-center justify-center">
+				{isOverview ? (
+					<IconSparkles size={iconSize} color={colors.primary} stroke={2} />
+				) : (
+					<IconMessageCircle
+						size={iconSize}
+						color={colors.primary}
+						stroke={2}
+					/>
+				)}
+			</Box>
+		</Tooltip>
+	);
+};
 
 export const ChatAccordionItemMenu = ({
 	chat,
@@ -196,40 +246,58 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
 							</Trans>
 						</Text>
 					)}
-					{allChats.map((item, index) => (
-						<NavigationButton
-							key={item.id}
-							to={`/projects/${projectId}/chats/${item.id}`}
-							active={item.id === activeChatId}
-							rightSection={
-								<ChatAccordionItemMenu chat={item as ProjectChat} />
-							}
-							ref={index === allChats.length - 1 ? loadMoreRef : undefined}
-						>
-							<Stack gap="xs">
-								<Text size="sm">
-									{item.name
-										? item.name
-										: formatRelative(
-												new Date(item.date_created ?? new Date()),
-												new Date(),
-											)}
-								</Text>
+					{allChats.map((item, index) => {
+						const chatMode = (item as ProjectChat & { chat_mode?: string })
+							.chat_mode as "overview" | "deep_dive" | null | undefined;
+						const isActive = item.id === activeChatId;
+						const effectiveMode = chatMode ?? "deep_dive";
+						const activeBorderColor = isActive
+							? MODE_COLORS[effectiveMode].border
+							: undefined;
 
-								{item.name && (
-									<Text size="xs" c="gray.6">
-										{formatRelative(
-											new Date(item.date_created ?? new Date()),
-											new Date(),
+						return (
+							<NavigationButton
+								key={item.id}
+								to={`/projects/${projectId}/chats/${item.id}`}
+								active={isActive}
+								borderColor={activeBorderColor}
+								rightSection={
+									<Group gap="xs" wrap="nowrap">
+										<ChatModeIndicator mode={chatMode} size="xs" />
+										<ChatAccordionItemMenu chat={item as ProjectChat} />
+									</Group>
+								}
+								ref={index === allChats.length - 1 ? loadMoreRef : undefined}
+							>
+								<Stack gap="xs">
+									<Group gap="xs" wrap="nowrap">
+										<Text size="sm" lineClamp={1}>
+											{item.name
+												? item.name
+												: formatRelative(
+														new Date(item.date_created ?? new Date()),
+														new Date(),
+													)}
+										</Text>
+									</Group>
+
+									<Group gap="xs">
+										{item.name && (
+											<Text size="xs" c="gray.6">
+												{formatRelative(
+													new Date(item.date_created ?? new Date()),
+													new Date(),
+												)}
+											</Text>
 										)}
-									</Text>
-								)}
-							</Stack>
-						</NavigationButton>
-					))}
+									</Group>
+								</Stack>
+							</NavigationButton>
+						);
+					})}
 					{chatsQuery.isFetchingNextPage && (
 						<Center py="md">
-							<Loader size="sm" />
+							<Loader size="sm" color={MODE_COLORS.deep_dive.primary} />
 						</Center>
 					)}
 					{/* {!chatsQuery.hasNextPage && allChats.length > 0 && (

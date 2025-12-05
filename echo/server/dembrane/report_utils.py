@@ -20,7 +20,8 @@ from dembrane.llms import MODELS, get_completion_kwargs
 from dembrane.prompts import render_prompt
 from dembrane.directus import DirectusGenericException, directus
 from dembrane.async_helpers import run_in_thread_pool
-from dembrane.api.conversation import summarize_conversation, get_conversation_transcript
+from dembrane.summary_utils import safe_summarize_conversation
+from dembrane.api.conversation import get_conversation_transcript
 from dembrane.api.dependency_auth import DirectusSession
 
 logger = logging.getLogger("report_utils")
@@ -86,17 +87,16 @@ async def _safe_summarize_conversation(conversation_id: str) -> dict:
     """
     Safely summarize a single conversation, catching and logging errors.
     Returns a dict with 'success' and optionally 'error' fields.
+
+    Note: This is a wrapper around the shared safe_summarize_conversation
+    from summary_utils to maintain backward compatibility with existing code.
     """
-    try:
-        await summarize_conversation(
-            conversation_id, auth=DirectusSession(user_id="none", is_admin=True)
-        )
-        return {"success": True, "conversation_id": conversation_id}
-    except Exception as e:
-        logger.warning(
-            f"Failed to summarize conversation {conversation_id}: {type(e).__name__}: {e}"
-        )
-        return {"success": False, "conversation_id": conversation_id, "error": str(e)}
+    result = await safe_summarize_conversation(conversation_id)
+    return {
+        "success": result.success,
+        "conversation_id": result.conversation_id,
+        **({"error": result.error} if result.error else {}),
+    }
 
 
 async def _safe_get_transcript(conversation_id: str) -> Optional[str]:

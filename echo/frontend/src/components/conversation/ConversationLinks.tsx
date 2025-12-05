@@ -5,9 +5,11 @@ import { I18nLink } from "@/components/common/i18nLink";
 export const ConversationLinks = ({
 	conversations,
 	color,
+	hoverUnderlineColor,
 }: {
 	conversations: Conversation[];
 	color?: string;
+	hoverUnderlineColor?: string;
 }) => {
 	const { projectId } = useParams();
 
@@ -19,7 +21,23 @@ export const ConversationLinks = ({
 					key={conversation.id}
 					to={`/projects/${projectId}/conversation/${conversation.id}/overview`}
 				>
-					<Anchor size="xs" c={color}>
+					<Anchor
+						size="xs"
+						c={color}
+						underline="never"
+						styles={
+							hoverUnderlineColor
+								? {
+										root: {
+											"&:hover": {
+												textDecoration: "underline",
+												textDecorationColor: hoverUnderlineColor,
+											},
+										},
+									}
+								: undefined
+						}
+					>
 						{conversation.participant_name}
 					</Anchor>
 				</I18nLink>

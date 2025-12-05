@@ -1,4 +1,4 @@
-GESPREKSVERSLAGEN:
+{% if is_overview_mode %}GESPREKSAMENVATTINGEN:{% else %}GESPREKSVERSLAGEN:{% endif %}
 {% if conversations|length == 0 %}
 Nog geen gesprekken door de gebruiker toegevoegd. Moedig hen voorzichtig aan om enkele gesprekken uit de zijbalk te selecteren.
 {% else %}
@@ -8,9 +8,15 @@ Nog geen gesprekken door de gebruiker toegevoegd. Moedig hen voorzichtig aan om 
    <tags>{{ conversation.tags }}</tags>
    <date>{{ conversation.created_at }}</date>
    <duration>{{ conversation.duration }}</duration>
+   {% if conversation.summary %}
+   <summary>
+   {{ conversation.summary }}
+   </summary>
+   {% else %}
    <transcript>
    {{ conversation.transcript }}
    </transcript>
+   {% endif %}
    {% if conversation.artifacts %}
    <artifacts>
       {% for artifact in conversation.artifacts %}

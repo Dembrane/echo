@@ -29,7 +29,7 @@ export const AspectCard = ({
 				to={`/projects/${projectId}/library/views/${data.view_id}/aspects/${data.id}`}
 			>
 				<Paper
-					bg="white"
+					bg="var(--app-background)"
 					shadow="sm"
 					className={cn(
 						"group my-1 flex h-full w-[320px] flex-col overflow-hidden rounded-md text-left transition hover:-translate-y-1",

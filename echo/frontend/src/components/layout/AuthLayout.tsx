@@ -32,10 +32,10 @@ const AuthLayoutInner = (props: PropsWithChildren) => {
 
 	return (
 		<>
-			<div className="relative flex min-h-dvh flex-col overflow-hidden bg-white lg:h-screen lg:flex lg:flex-row lg:items-stretch">
+			<div className="relative flex min-h-dvh flex-col overflow-hidden lg:h-screen lg:flex lg:flex-row lg:items-stretch" style={{ backgroundColor: "var(--app-background)" }}>
 				<LoadingOverlay visible={auth.loading} zIndex={2000} />
 				<div className="flex w-full flex-1 flex-col lg:w-1/2 lg:min-h-screen lg:overflow-y-auto">
-					<div className="border-b border-slate-200/60 bg-white">
+					<div className="border-b border-slate-200/60" style={{ backgroundColor: "var(--app-background)" }}>
 						<HeaderView
 							isAuthenticated={auth.isAuthenticated}
 							loading={auth.loading}

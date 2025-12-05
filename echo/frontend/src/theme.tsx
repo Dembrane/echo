@@ -3,6 +3,7 @@ import { IconChevronRight, IconInfoCircle } from "@tabler/icons-react";
 import accordionClasses from "./styles/accordion.module.css";
 
 export const theme = createTheme({
+	black: "#000000", // default for Space Grotesk theme, dynamically updated via CSS vars
 	// Updated to match Tailwind breakpoints
 	breakpoints: {
 		"2xl": "1536px",
@@ -26,16 +27,16 @@ export const theme = createTheme({
 			"#030712",
 		],
 		primary: [
-			"#e2f6ff",
-			"#cbe9ff",
-			"#99cfff",
-			"#62b5ff",
-			"#369eff",
-			"#1890ff",
-			"#0089ff",
-			"#0076e5",
-			"#0069ce",
-			"#005ab7",
+			"#eef2fc", // 0 - lightest
+			"#dce4f9", // 1
+			"#b9c9f3", // 2
+			"#96aeec", // 3
+			"#6d8be5", // 4
+			"#4169E1", // 5 - royal blue (base)
+			"#3a5eca", // 6
+			"#3354b3", // 7
+			"#2c499c", // 8
+			"#253f85", // 9 - darkest
 		],
 	},
 	components: {
@@ -79,6 +80,25 @@ export const theme = createTheme({
 				variant: "light",
 			},
 		},
+		Autocomplete: {
+			defaultProps: {
+				styles: {
+					dropdown: {
+						backgroundColor: "var(--app-background)",
+					},
+					input: {
+						backgroundColor: "var(--app-background)",
+					},
+				},
+			},
+			styles: {
+				option: {
+					"&[data-combobox-selected]": {
+						backgroundColor: "var(--mantine-color-primary-light)",
+					},
+				},
+			},
+		},
 		Breadcrumbs: {
 			defaultProps: {
 				separator: <IconChevronRight />,
@@ -90,22 +110,127 @@ export const theme = createTheme({
 				variant: "filled",
 			},
 		},
+		Card: {
+			defaultProps: {
+				styles: {
+					root: {
+						backgroundColor: "var(--app-background)",
+					},
+				},
+			},
+		},
+		Chip: {
+			defaultProps: {
+				styles: {
+					label: {
+						backgroundColor: "var(--app-background)",
+					},
+				},
+			},
+		},
+		Combobox: {
+			defaultProps: {
+				styles: {
+					dropdown: {
+						backgroundColor: "var(--app-background)",
+					},
+				},
+			},
+			styles: {
+				option: {
+					"&:hover": {
+						backgroundColor: "var(--mantine-color-gray-1)",
+					},
+					"&[data-combobox-selected]": {
+						backgroundColor: "var(--mantine-color-primary-light)",
+					},
+				},
+			},
+		},
 		Container: {
 			defaultProps: {
 				py: "lg",
 			},
 		},
-		LoadingOverlay: {},
+		Drawer: {
+			defaultProps: {
+				styles: {
+					content: {
+						backgroundColor: "var(--app-background)",
+					},
+				},
+			},
+		},
+		LoadingOverlay: {
+			defaultProps: {
+				overlayProps: {
+					color: "var(--app-background)",
+				},
+			},
+		},
 		Menu: {
 			defaultProps: {
 				shadow: "md",
+				styles: {
+					dropdown: {
+						backgroundColor: "var(--app-background)",
+					},
+				},
 				withArrow: true,
+			},
+			styles: {
+				item: {
+					"&:hover": {
+						backgroundColor: "var(--mantine-color-gray-1)",
+					},
+				},
+			},
+		},
+		Modal: {
+			defaultProps: {
+				styles: {
+					content: {
+						backgroundColor: "var(--app-background)",
+					},
+				},
+			},
+		},
+		MultiSelect: {
+			defaultProps: {
+				styles: {
+					dropdown: {
+						backgroundColor: "var(--app-background)",
+					},
+					input: {
+						backgroundColor: "var(--app-background)",
+					},
+				},
+			},
+			styles: {
+				option: {
+					"&[data-combobox-selected]": {
+						backgroundColor: "var(--mantine-color-primary-light)",
+					},
+				},
+			},
+		},
+		NativeSelect: {
+			defaultProps: {
+				styles: {
+					input: {
+						backgroundColor: "var(--app-background)",
+					},
+				},
 			},
 		},
 		Paper: {
 			defaultProps: {
-				bg: { dark: "dark.8", light: "white" },
 				border: { dark: "dark.8", light: "gray.1" },
+				styles: {
+					root: {
+						backgroundColor: "var(--app-background)",
+					},
+				},
 				withBorder: true,
 			},
 		},
@@ -113,6 +238,34 @@ export const theme = createTheme({
 			defaultProps: {
 				bg: "primary.1",
 				color: "primary.8",
+			},
+		},
+		Popover: {
+			defaultProps: {
+				styles: {
+					dropdown: {
+						backgroundColor: "var(--app-background)",
+					},
+				},
+			},
+		},
+		Select: {
+			defaultProps: {
+				styles: {
+					dropdown: {
+						backgroundColor: "var(--app-background)",
+					},
+					input: {
+						backgroundColor: "var(--app-background)",
+					},
+				},
+			},
+			styles: {
+				option: {
+					"&[data-combobox-selected]": {
+						backgroundColor: "var(--mantine-color-primary-light)",
+					},
+				},
 			},
 		},
 		SimpleGrid: {
@@ -126,18 +279,39 @@ export const theme = createTheme({
 					tabLabel: "py-1",
 				},
 			},
+			styles: {
+				tab: {
+					"&:hover": {
+						backgroundColor: "var(--app-background)",
+					},
+					"&[data-active]": {
+						backgroundColor: "var(--app-background)",
+					},
+				},
+			},
 		},
 		Textarea: {
 			defaultProps: {
 				resize: "vertical",
+				styles: {
+					input: {
+						backgroundColor: "var(--app-background)",
+					},
+				},
+			},
+		},
+		TextInput: {
+			defaultProps: {
+				styles: {
+					input: {
+						backgroundColor: "var(--app-background)",
+					},
+				},
 			},
 		},
 		Title: {
 			defaultProps: {
-				color: {
-					dark: "white",
-					light: "black",
-				},
+				c: "var(--app-text)",
 			},
 		},
 		Tooltip: {
@@ -146,9 +320,9 @@ export const theme = createTheme({
 			},
 		},
 	},
-	fontFamily: "'Space Grotesk Variable', sans-serif",
+	fontFamily: "var(--app-font-family, 'Space Grotesk Variable', sans-serif)",
 	headings: {
-		fontFamily: "'Space Grotesk Variable', sans-serif",
+		fontFamily: "var(--app-font-family, 'Space Grotesk Variable', sans-serif)",
 		fontWeight: "500",
 		sizes: {
 			h1: {
@@ -248,4 +422,5 @@ export const theme = createTheme({
 		// Fallback Mantine items
 		xs: "0.25rem",
 	},
+	white: "#FFFFFF", // default for Space Grotesk theme, dynamically updated via CSS vars
 });

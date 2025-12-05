@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from litellm.utils import token_counter
 from fastapi.responses import StreamingResponse
 
-from dembrane.llms import MODELS, get_completion_kwargs
+from dembrane.llms import get_completion_kwargs
 from dembrane.utils import generate_uuid
 from dembrane.prompts import render_prompt
 from dembrane.service import (
@@ -18,6 +18,7 @@ from dembrane.service import (
 )
 from dembrane.settings import get_settings
 from dembrane.chat_utils import (
+    CHAT_LLM,
     MAX_CHAT_CONTEXT_LENGTH,
     generate_title,
     get_project_chat_history,
@@ -26,10 +27,18 @@ from dembrane.chat_utils import (
 )
 from dembrane.service.chat import ChatServiceException, ChatNotFoundException
 from dembrane.async_helpers import run_in_thread_pool
+from dembrane.api.rate_limit import create_rate_limiter
 from dembrane.api.conversation import get_conversation_token_count
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
 
 ChatRouter = APIRouter(tags=["chat"])
+
+# Rate limiter for suggestions: 10 per minute per project
+suggestions_rate_limiter = create_rate_limiter(
+    name="chat_suggestions",
+    capacity=10,
+    window_seconds=60,
+)
 
 logger = logging.getLogger("dembrane.chat")
 
@@ -74,7 +83,7 @@ async def is_followup_question(
             messages=[{"role": "user", "content": prompt}],
             temperature=0,  # Deterministic
             timeout=60,  # 1 minute timeout for quick decision
-            **get_completion_kwargs(MODELS.TEXT_FAST),
+            **get_completion_kwargs(CHAT_LLM),
         )
 
         result_text = response.choices[0].message.content.strip()
@@ -106,6 +115,7 @@ class ChatContextSchema(BaseModel):
     conversation_id_list: List[str]
     locked_conversation_id_list: List[str]
     auto_select_bool: bool
+    chat_mode: Optional[Literal["overview", "deep_dive"]] = None  # None = not yet selected
 
 
 async def raise_if_chat_not_found_or_not_authorized(
@@ -185,7 +195,7 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
             if tokens_count is None:
                 tokens_count = token_counter(
                     messages=[{"role": message_from, "content": message_text}],
-                    model=get_completion_kwargs(MODELS.TEXT_FAST)["model"],
+                    model=get_completion_kwargs(CHAT_LLM)["model"],
                 )
                 try:
                     await run_in_thread_pool(
@@ -212,6 +222,9 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
     if auto_select_value is None:
         raise HTTPException(status_code=400, detail="Auto select is not boolean")
 
+    # Get chat mode (may be None if not yet selected)
+    chat_mode = chat.get("chat_mode")
+
     context = ChatContextSchema(
         conversations=[],
         conversation_id_list=[],
@@ -227,6 +240,7 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
             ),
         ],
         auto_select_bool=bool(auto_select_value),
+        chat_mode=chat_mode,
     )
 
     # Extract conversation metadata first
@@ -464,6 +478,181 @@ async def lock_conversations(
     return used_conversations
 
 
+class SuggestionSchema(BaseModel):
+    """A single suggestion for the user."""
+
+    icon: str  # "sparkles", "search", "quote", "lightbulb", "list"
+    label: str  # Short 2-4 word label
+    prompt: str  # Full question text
+
+
+class SuggestionsResponseSchema(BaseModel):
+    """Response from the suggestions endpoint."""
+
+    suggestions: List[SuggestionSchema]
+
+
+@ChatRouter.get("/{chat_id}/suggestions", response_model=SuggestionsResponseSchema)
+async def get_chat_suggestions(
+    chat_id: str,
+    auth: DependencyDirectusSession,
+    language: str = Query("en"),
+) -> SuggestionsResponseSchema:
+    """
+    Get contextual question suggestions for a chat.
+
+    Generates up to 3 suggestions based on:
+    - Project context
+    - Chat mode (overview vs deep_dive)
+    - Recent conversation history
+    - Last AI response (for follow-up suggestions)
+
+    This endpoint is separate from /context since LLM calls may be slow.
+    """
+    from dembrane.suggestion_utils import Suggestion, generate_suggestions
+
+    chat = await raise_if_chat_not_found_or_not_authorized(
+        chat_id,
+        auth,
+        include_used_conversations=False,
+    )
+
+    chat_mode = chat.get("chat_mode")
+
+    # Get project_id from nested object
+    project_id_obj = chat.get("project_id")
+    if isinstance(project_id_obj, dict):
+        project_id = project_id_obj.get("id")
+    else:
+        project_id = project_id_obj
+
+    if not project_id:
+        logger.warning(f"No project_id found for chat {chat_id}")
+        return SuggestionsResponseSchema(suggestions=[])
+
+    # Rate limit by project_id: 10 requests per minute
+    await suggestions_rate_limiter.check(project_id)
+
+    try:
+        suggestions: List[Suggestion] = await generate_suggestions(
+            project_id=project_id,
+            chat_id=chat_id,
+            chat_mode=chat_mode,
+            language=language,
+        )
+
+        return SuggestionsResponseSchema(
+            suggestions=[
+                SuggestionSchema(
+                    icon=s.icon,
+                    label=s.label,
+                    prompt=s.prompt,
+                )
+                for s in suggestions
+            ]
+        )
+    except Exception as e:
+        logger.error(f"Failed to get suggestions for chat {chat_id}: {e}")
+        return SuggestionsResponseSchema(suggestions=[])
+
+
+class InitializeChatModeSchema(BaseModel):
+    mode: Literal["overview", "deep_dive"]
+    project_id: str
+
+
+class InitializeChatModeResponseSchema(BaseModel):
+    chat_mode: Literal["overview", "deep_dive"]
+    conversations_added: int
+    conversations_summarized: int
+    message: str
+
+
+@ChatRouter.post("/{chat_id}/initialize-mode", response_model=InitializeChatModeResponseSchema)
+async def initialize_chat_mode(
+    chat_id: str,
+    body: InitializeChatModeSchema,
+    auth: DependencyDirectusSession,
+) -> InitializeChatModeResponseSchema:
+    """
+    Initialize the chat mode for a new chat.
+
+    - overview: Auto-loads summaries for all conversations (most recent first)
+    - deep_dive: Manual selection mode (default behavior)
+
+    This can only be called once per chat. Mode cannot be changed after initialization.
+    """
+    from dembrane.summary_utils import (
+        ensure_conversation_summaries,
+        get_all_conversations_for_overview,
+    )
+
+    chat = await raise_if_chat_not_found_or_not_authorized(
+        chat_id,
+        auth,
+        include_used_conversations=True,
+    )
+
+    # Check if mode is already set
+    existing_mode = chat.get("chat_mode")
+    if existing_mode is not None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Chat mode is already set to '{existing_mode}'. Start a new chat to use a different mode.",
+        )
+
+    chat_svc = chat_service
+
+    if body.mode == "deep_dive":
+        # Deep dive mode: just set the mode, user will manually select conversations
+        await run_in_thread_pool(chat_svc.set_chat_mode, chat_id, "deep_dive")
+        return InitializeChatModeResponseSchema(
+            chat_mode="deep_dive",
+            conversations_added=0,
+            conversations_summarized=0,
+            message="Deep dive mode enabled. Select the conversations you want to analyze.",
+        )
+
+    # Overview mode: Just set the mode - conversations will be fetched dynamically
+    # when building the chat context (using summaries).
+    # Pre-generate summaries for conversations that don't have them.
+    conversations = await get_all_conversations_for_overview(body.project_id)
+
+    # Filter to conversations with content (chunks)
+    conversations_with_content = [
+        conv for conv in conversations if int(conv.get("chunks_count", 0) or 0) > 0
+    ]
+
+    total_conversations = len(conversations_with_content)
+    newly_summarized = 0
+
+    if conversations_with_content:
+        # Pre-generate summaries for conversations that don't have them
+        conversation_ids = [conv["id"] for conv in conversations_with_content]
+        summarization_result = await ensure_conversation_summaries(conversation_ids)
+        newly_summarized = len(summarization_result.succeeded) - len(
+            [c for c in conversations_with_content if c.get("summary")]
+        )
+
+    # Set chat mode
+    await run_in_thread_pool(chat_svc.set_chat_mode, chat_id, "overview")
+
+    if total_conversations == 0:
+        return InitializeChatModeResponseSchema(
+            chat_mode="overview",
+            conversations_added=0,
+            conversations_summarized=0,
+            message="Overview mode enabled. No conversations found yet.",
+        )
+
+    return InitializeChatModeResponseSchema(
+        chat_mode="overview",
+        conversations_added=total_conversations,  # All conversations are included dynamically
+        conversations_summarized=max(0, newly_summarized),
+        message=f"Overview mode enabled with {total_conversations} conversations.",
+    )
+
+
 class ChatBodyMessageSchema(BaseModel):
     role: Literal["user", "assistant", "dembrane"]
     content: str
@@ -561,11 +750,15 @@ async def post_chat(
         ):
             conversation_history = conversation_history[:-1]
 
+        # Get chat mode for determining how to build context
+        chat_mode = chat_context.chat_mode
+
         async def build_formatted_messages(conversation_ids: Iterable[str]) -> List[Dict[str, str]]:
             system_messages_result = await create_system_messages_for_chat(
                 list(conversation_ids),
                 language,
                 project_id,
+                chat_mode=chat_mode,  # Pass mode to determine summary vs transcript
             )
             formatted: List[Dict[str, str]] = []
             if isinstance(system_messages_result, list):
@@ -625,7 +818,7 @@ async def post_chat(
                 candidate_messages = await build_formatted_messages(temp_ids)
                 prompt_len = token_counter(
                     messages=candidate_messages,
-                    model=get_completion_kwargs(MODELS.MULTI_MODAL_PRO)["model"],
+                    model=get_completion_kwargs(CHAT_LLM)["model"],
                 )
 
                 if prompt_len > max_context_threshold:
@@ -662,7 +855,7 @@ async def post_chat(
 
             prompt_len = token_counter(
                 messages=formatted_messages,
-                model=get_completion_kwargs(MODELS.MULTI_MODAL_PRO)["model"],
+                model=get_completion_kwargs(CHAT_LLM)["model"],
             )
             if prompt_len > MAX_CHAT_CONTEXT_LENGTH:
                 raise HTTPException(
@@ -701,7 +894,7 @@ async def post_chat(
                     stream=True,
                     timeout=300,
                     stream_timeout=180,
-                    **get_completion_kwargs(MODELS.MULTI_MODAL_PRO),
+                    **get_completion_kwargs(CHAT_LLM),
                 )
                 async for chunk in response:
                     delta = chunk.choices[0].delta.content

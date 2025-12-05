@@ -1,0 +1,49 @@
+Build a profile of how this user works with ECHO. Focus on patterns and non-obvious behaviors.
+
+## SETUP STATS ({{ project_count }} projects)
+
+Portal customization: {{ portal_title_pct|round|int }}% custom titles, {{ portal_desc_pct|round|int }}% custom questions, {{ transcript_prompt_pct|round|int }}% hotwords
+Project context: {{ proj_context_pct|round|int }}% have context added
+Tags: {{ projects_with_tags_pct|round|int }}% use tags ({{ avg_tags_per_project|round(1) }} avg per project)
+{% if sample_tags %}
+Common tags: {{ sample_tags|join(", ") }}
+{% endif %}
+
+## PROJECT STRUCTURE SAMPLES
+{% if project_samples %}
+{% for p in project_samples %}
+**{{ p.name }}** ({{ p.conversation_count }} conversations)
+- Tags: {{ p.tags|join(", ") if p.tags else "none" }}
+- Participant names: {{ p.participant_names|join(", ") if p.participant_names else "none recorded" }}
+- Context: {{ "yes" if p.has_context else "no" }} | Portal customized: {{ "yes" if p.has_portal_customization else "no" }}
+{% if p.context_snippet %}- Context snippet: "{{ p.context_snippet }}"{% endif %}
+
+{% endfor %}
+{% else %}
+No project samples available.
+{% endif %}
+
+## CONVERSATION SUMMARIES ({{ summary_count }} total)
+{% if conversation_summaries %}
+{% for summary in conversation_summaries %}
+- {{ summary }}
+{% endfor %}
+{% else %}
+No summaries available.
+{% endif %}
+
+## CHAT QUESTIONS ({{ query_count }} total)
+{% if chat_queries %}
+{% for query in chat_queries %}
+- {{ query }}
+{% endfor %}
+{% else %}
+No queries recorded.
+{% endif %}
+
+---
+Analyze the above and identify:
+1. How do they NAME participants? (real names, codes, table numbers, roles, anonymous?)
+2. How do they USE TAGS? (session types, dates, groups, themes?)
+3. What's their PROJECT STRUCTURE? (one big project vs many small ones, how they organize)
+4. What STANDS OUT as unusual or sophisticated compared to typical ECHO usage?

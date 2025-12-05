@@ -168,7 +168,10 @@ type TProjectChatContext = {
 		role: "user" | "assistant";
 		token_usage: number; // between 0 and 1
 	}>;
+	conversation_id_list: string[];
+	locked_conversation_id_list: string[];
 	auto_select_bool: boolean;
+	chat_mode: "overview" | "deep_dive" | null; // null = not yet selected
 };
 
 type ChatHistoryMessage = {
@@ -180,3 +183,13 @@ type ChatHistoryMessage = {
 };
 
 type ChatHistory = Array<ChatHistoryMessage>;
+
+type TSuggestion = {
+	icon: "sparkles" | "search" | "quote" | "lightbulb" | "list";
+	label: string;
+	prompt: string;
+};
+
+type TSuggestionsResponse = {
+	suggestions: TSuggestion[];
+};

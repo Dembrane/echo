@@ -11,7 +11,9 @@ import {
 } from "@mantine/core";
 import { useRef } from "react";
 import { useLocation, useParams } from "react-router";
+import { useInitializeChatModeMutation } from "@/components/chat/hooks";
 import { useProjectById } from "@/components/project/hooks";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { Icons } from "@/icons";
 import { Breadcrumbs } from "../common/Breadcrumbs";
 import { I18nLink } from "../common/i18nLink";
@@ -25,6 +27,7 @@ import { ProjectQRCode } from "./ProjectQRCode";
 export const ProjectSidebar = () => {
 	const { projectId, conversationId } = useParams();
 	const qrCodeRef = useRef<HTMLDivElement>(null);
+	const navigate = useI18nNavigate();
 
 	const projectQuery = useProjectById({
 		projectId: projectId ?? "",
@@ -43,13 +46,34 @@ export const ProjectSidebar = () => {
 	// const { isCollapsed, toggleSidebar } = useSidebarCollapsed();
 
 	const createChatMutation = useCreateChatMutation();
+	const initializeModeMutation = useInitializeChatModeMutation();
 
-	const handleAsk = () => {
-		createChatMutation.mutate({
-			conversationId: conversationId,
-			navigateToNewChat: true,
-			project_id: { id: projectId ?? "" },
-		});
+	const handleAsk = async () => {
+		if (conversationId) {
+			// When clicking Ask from a conversation, create chat and go to deep_dive mode
+			try {
+				const chat = await createChatMutation.mutateAsync({
+					conversationId: conversationId,
+					navigateToNewChat: false,
+					project_id: { id: projectId ?? "" },
+				});
+
+				if (chat?.id) {
+					// Initialize deep_dive mode
+					await initializeModeMutation.mutateAsync({
+						chatId: chat.id,
+						mode: "deep_dive",
+						projectId: projectId ?? "",
+					});
+					navigate(`/projects/${projectId}/chats/${chat.id}`);
+				}
+			} catch (error) {
+				console.error("Failed to create chat:", error);
+			}
+		} else {
+			// Otherwise, navigate to mode selection
+			navigate(`/projects/${projectId}/chats/new`);
+		}
 	};
 
 	if (!projectId) {
@@ -66,7 +90,7 @@ export const ProjectSidebar = () => {
 							label: (
 								<Tooltip label={t`Projects Home`}>
 									<ActionIcon variant="transparent">
-										<Icons.Home color="black" />
+										<Icons.Home color="var(--app-text)" />
 									</ActionIcon>
 								</Tooltip>
 							),
@@ -96,7 +120,7 @@ export const ProjectSidebar = () => {
               variant="transparent"
               aria-label={t`Project Overview and Edit`}
             >
-              <Icons.Gear color="black" />
+              <Icons.Gear color="var(--app-text)" />
             </ActionIcon>
           </I18nLink>
         </Tooltip> */}

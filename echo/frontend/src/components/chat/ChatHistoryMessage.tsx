@@ -5,6 +5,7 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { ChatMessage } from "@/components/chat/ChatMessage";
+import { MODE_COLORS } from "@/components/chat/ChatModeSelector";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
 import { Markdown } from "@/components/common/Markdown";
 import { ConversationLinks } from "@/components/conversation/ConversationLinks";
@@ -16,16 +17,20 @@ import { References } from "./References";
 import { Sources } from "./Sources";
 import SourcesSearched from "./SourcesSearched";
 
+type ChatMode = "overview" | "deep_dive" | null;
+
 export const ChatHistoryMessage = ({
 	message,
 	section,
 	referenceIds,
 	setReferenceIds,
+	chatMode,
 }: {
 	message: ChatHistory[number];
 	section?: React.ReactNode;
 	referenceIds?: string[];
 	setReferenceIds?: (ids: string[]) => void;
+	chatMode?: ChatMode;
 }) => {
 	const [metadata, setMetadata] = useState<ChatHistoryMessage["metadata"]>([]);
 	const { projectId } = useParams();
@@ -63,6 +68,7 @@ export const ChatHistoryMessage = ({
 					<ChatMessage
 						key={message.id}
 						role={message.role}
+						chatMode={chatMode}
 						section={
 							<Group w="100%" gap="lg">
 								<Text className={cn("italic")} size="xs" c="gray.7">
@@ -171,6 +177,8 @@ export const ChatHistoryMessage = ({
 					</Text>
 					<ConversationLinks
 						conversations={conversations as unknown as Conversation[]}
+						color="var(--app-text)"
+						hoverUnderlineColor={MODE_COLORS.deep_dive.primary}
 					/>
 				</Group>
 			</ChatMessage>

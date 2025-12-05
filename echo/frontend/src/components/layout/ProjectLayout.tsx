@@ -72,7 +72,7 @@ export const ProjectLayout = () => {
 				</ActionIcon>
 			)}
 
-			<section className={"flex-grow overflow-y-auto px-2"}>
+			<section className={"flex-grow overflow-y-auto px-2"} style={{ backgroundColor: "var(--app-background)" }}>
 				<Outlet />
 			</section>
 		</Box>

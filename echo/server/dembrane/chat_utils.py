@@ -109,17 +109,57 @@ async def get_project_chat_history(chat_id: str) -> List[Dict[str, Any]]:
 
 
 async def create_system_messages_for_chat(
-    locked_conversation_id_list: List[str], language: str, project_id: str
+    locked_conversation_id_list: List[str],
+    language: str,
+    project_id: str,
+    chat_mode: Optional[str] = None,  # "overview" | "deep_dive" | None
 ) -> List[Dict[str, Any]]:
-    conversations = await run_in_thread_pool(
-        conversation_service.list_by_ids,
-        locked_conversation_id_list,
-        with_chunks=False,
-        with_tags=True,
+    """
+    Create system messages for chat context.
+
+    In overview mode: Uses summaries for ALL project conversations (dynamically fetched).
+    In deep_dive mode: Uses full transcripts for selected conversations only.
+    """
+    from dembrane.summary_utils import (
+        ensure_conversation_summaries,
+        get_all_conversations_for_overview,
     )
 
+    is_overview_mode = chat_mode == "overview"
+
+    # Fetch conversations based on mode
+    if is_overview_mode:
+        # Overview mode: Get ALL conversations for the project, use summaries
+        logger.info(f"Overview mode: Fetching all conversations for project {project_id}")
+        conversations = await get_all_conversations_for_overview(project_id)
+
+        # Filter to conversations with content
+        conversations = [
+            conv for conv in conversations if int(conv.get("chunks_count", 0) or 0) > 0
+        ]
+
+        if conversations:
+            # Ensure all conversations have summaries (generate if missing)
+            conv_ids = [c["id"] for c in conversations]
+            await ensure_conversation_summaries(conv_ids)
+
+            # Re-fetch to get updated summaries
+            conversations = await get_all_conversations_for_overview(project_id)
+            conversations = [
+                conv for conv in conversations if int(conv.get("chunks_count", 0) or 0) > 0
+            ]
+    else:
+        # Deep dive mode: Use the selected conversations
+        conversations = await run_in_thread_pool(
+            conversation_service.list_by_ids,
+            locked_conversation_id_list,
+            with_chunks=False,
+            with_tags=True,
+        )
+
+    # Fetch artifacts for deep dive mode (not needed for overview)
     artifacts_by_conv: Dict[str, List[Dict[str, Any]]] = {}
-    if conversations:
+    if not is_overview_mode and conversations:
         conv_ids = [c["id"] for c in conversations if c.get("id")]
         if conv_ids:
             try:
@@ -146,6 +186,7 @@ async def create_system_messages_for_chat(
             except Exception as e:
                 logger.warning(f"Failed to fetch artifacts for conversations: {e}")
 
+    # Fetch project info
     try:
         project_query = {
             "query": {
@@ -195,7 +236,11 @@ async def create_system_messages_for_chat(
         "text": render_prompt("context_project", language, {"project_context": project_context}),
     }
 
-    conversation_data_list = []
+    # Build conversation data based on mode
+    conversation_data_list: list[dict[str, Any]] = []
+    total_summary_tokens = 0
+    max_summary_tokens = int(MAX_CHAT_CONTEXT_LENGTH * 0.7)  # Reserve 30% for messages
+
     for conversation in conversations:
         tag_text_list: List[str] = []
         for tag_entry in conversation.get("tags", []) or []:
@@ -205,30 +250,79 @@ async def create_system_messages_for_chat(
                     tag_text = project_tag.get("text")
                     if tag_text:
                         tag_text_list.append(str(tag_text))
-        conversation_data_list.append(
-            {
-                "name": conversation.get("participant_name"),
-                "tags": ", ".join(tag_text_list),
-                "created_at": conversation.get("created_at"),
-                "duration": conversation.get("duration"),
-                "transcript": await get_conversation_transcript(
-                    conversation.get("id", ""),
-                    # fake auth to get this fn call
-                    DirectusSession(user_id="none", is_admin=True),
-                ),
-                "artifacts": artifacts_by_conv.get(conversation.get("id", ""), []),
-            }
+
+        if is_overview_mode:
+            # Use summary for overview mode
+            content = conversation.get("summary", "")
+            if not content or len(content.strip()) == 0:
+                logger.warning(f"Conversation {conversation.get('id')} has no summary, skipping")
+                continue
+
+            # Check if adding this summary would exceed context limit
+            try:
+                summary_tokens = token_counter(
+                    messages=[{"role": "user", "content": content}],
+                    model=get_completion_kwargs(CHAT_LLM)["model"],
+                )
+            except Exception:
+                summary_tokens = len(content) // 4  # Rough estimate
+
+            if total_summary_tokens + summary_tokens > max_summary_tokens:
+                logger.info(
+                    f"Overview mode: Stopping at {len(conversation_data_list)} conversations "
+                    f"({total_summary_tokens}/{max_summary_tokens} tokens)"
+                )
+                break
+
+            total_summary_tokens += summary_tokens
+            conversation_data_list.append(
+                {
+                    "name": conversation.get("participant_name"),
+                    "tags": ", ".join(tag_text_list),
+                    "created_at": conversation.get("created_at"),
+                    "duration": conversation.get("duration"),
+                    "summary": content,  # Use summary key for overview mode
+                    "artifacts": [],  # No artifacts in overview mode
+                }
+            )
+        else:
+            # Use full transcript for deep dive mode
+            conversation_data_list.append(
+                {
+                    "name": conversation.get("participant_name"),
+                    "tags": ", ".join(tag_text_list),
+                    "created_at": conversation.get("created_at"),
+                    "duration": conversation.get("duration"),
+                    "transcript": await get_conversation_transcript(
+                        conversation.get("id", ""),
+                        DirectusSession(user_id="none", is_admin=True),
+                    ),
+                    "artifacts": artifacts_by_conv.get(conversation.get("id", ""), []),
+                }
+            )
+
+    prompt_message = {
+        "type": "text",
+        "text": render_prompt("system_chat", language, {"is_overview_mode": is_overview_mode}),
+    }
+
+    if is_overview_mode:
+        logger.info(
+            f"Overview mode: Using {len(conversation_data_list)} conversation summaries "
+            f"({total_summary_tokens} tokens) in {language}"
         )
-
-    prompt_message = {"type": "text", "text": render_prompt("system_chat", language, {})}
-
-    logger.info(f"using system prompt in language: {language}")
-    logger.info(f"prompt: {prompt_message['text'][:20]}...{prompt_message['text'][-20:]}")
+    else:
+        logger.info(
+            f"Deep dive mode: Using {len(conversation_data_list)} conversations "
+            f"with full transcripts in {language}"
+        )
 
     context_message = {
         "type": "text",
         "text": render_prompt(
-            "context_conversations", language, {"conversations": conversation_data_list}
+            "context_conversations",
+            language,
+            {"conversations": conversation_data_list, "is_overview_mode": is_overview_mode},
         ),
         # Anthropic/Claude Prompt Caching
         "cache_control": {"type": "ephemeral"},

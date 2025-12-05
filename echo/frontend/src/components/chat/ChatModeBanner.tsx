@@ -1,0 +1,69 @@
+import { Trans } from "@lingui/react/macro";
+import { Badge, Box, Group, Text } from "@mantine/core";
+import { IconMessageCircle, IconSparkles } from "@tabler/icons-react";
+import { MODE_COLORS } from "./ChatModeSelector";
+
+type ChatModeBannerProps = {
+	mode: "overview" | "deep_dive";
+	conversationCount: number;
+};
+
+export const ChatModeBanner = ({
+	mode,
+	conversationCount,
+}: ChatModeBannerProps) => {
+	const isOverview = mode === "overview";
+	const colors = MODE_COLORS[mode];
+
+	return (
+		<Box
+			className="rounded-lg px-4 py-2.5"
+			style={{
+				backgroundColor: colors.lighter,
+				border: `1px solid ${colors.border}`,
+			}}
+		>
+			<Group justify="space-between" wrap="nowrap">
+				<Group gap="sm" wrap="nowrap">
+					{isOverview ? (
+						<IconSparkles size={16} stroke={1.8} color={colors.primary} />
+					) : (
+						<IconMessageCircle size={16} stroke={1.8} color={colors.primary} />
+					)}
+					<Text size="sm" fw={500} c={MODE_COLORS.graphite}>
+						{isOverview ? (
+							<Trans>Overview</Trans>
+						) : (
+							<Trans>Specific Details</Trans>
+						)}
+					</Text>
+					{isOverview && (
+						<Badge
+							size="xs"
+							variant="outline"
+							styles={{
+								root: {
+									backgroundColor: "transparent",
+									borderColor: "var(--app-text)",
+									color: "var(--app-text)",
+								},
+							}}
+						>
+							<Trans>Beta</Trans>
+						</Badge>
+					)}
+				</Group>
+
+				<Text size="xs" c="dimmed">
+					{isOverview ? (
+						<Trans>Exploring {conversationCount} conversations</Trans>
+					) : conversationCount > 0 ? (
+						<Trans>{conversationCount} selected</Trans>
+					) : (
+						<Trans>Select conversations from sidebar</Trans>
+					)}
+				</Text>
+			</Group>
+		</Box>
+	);
+};

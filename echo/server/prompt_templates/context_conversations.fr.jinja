@@ -1,4 +1,4 @@
-TRANSCRIPTIONS DES CONVERSATIONS:
+{% if is_overview_mode %}RÉSUMÉS DES CONVERSATIONS:{% else %}TRANSCRIPTIONS DES CONVERSATIONS:{% endif %}
 {% if conversations|length == 0 %}
 Aucune conversation n'a encore été ajoutée par l'utilisateur. Encouragez-les doucement à en ajouter en sélectionnant des conversations dans la barre latérale.
 {% else %}
@@ -8,9 +8,15 @@ Aucune conversation n'a encore été ajoutée par l'utilisateur. Encouragez-les 
    <tags>{{ conversation.tags }}</tags>
    <date>{{ conversation.created_at }}</date>
    <duration>{{ conversation.duration }}</duration>
+   {% if conversation.summary %}
+   <summary>
+   {{ conversation.summary }}
+   </summary>
+   {% else %}
    <transcript>
    {{ conversation.transcript }}
    </transcript>
+   {% endif %}
    {% if conversation.artifacts %}
    <artifacts>
       {% for artifact in conversation.artifacts %}

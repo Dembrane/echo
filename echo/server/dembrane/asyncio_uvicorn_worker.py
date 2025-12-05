@@ -1,4 +1,4 @@
-"use asyncio loop instead of uvloop. historically used for LightRAG compatibility"
+"Use asyncio loop instead of uvloop for compatibility with nest_asyncio"
 
 from uvicorn.workers import UvicornWorker
 

@@ -284,6 +284,7 @@ interface ProjectAnalysisRun {
 
 interface ProjectChat {
 	auto_select: boolean | null;
+	chat_mode: "overview" | "deep_dive" | null;
 	date_created: string | null;
 	date_updated: string | null;
 	id: string;

@@ -24,7 +24,7 @@ import { useCopyView } from "./hooks/useCopyView";
 
 export const ViewCard = ({ data }: { data: View }) => {
 	return (
-		<Paper bg="white" p="md">
+		<Paper p="md">
 			<Stack gap="sm">
 				<Text size="xl">{data.name}</Text>
 				<Group>

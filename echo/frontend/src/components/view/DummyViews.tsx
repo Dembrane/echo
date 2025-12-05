@@ -12,7 +12,7 @@ export const DummyViews = () => {
 			</Text>
 			<Paper p="md">
 				<SimpleGrid cols={3}>
-					<Paper bg="white" p="md">
+					<Paper p="md">
 						<Text className="font-xl pb-2 font-semibold">
 							<Trans>Recurring Themes</Trans>
 						</Text>

@@ -124,7 +124,7 @@ export const MoveConversationButton = ({
 			<Button
 				onClick={open}
 				variant="outline"
-				color="blue"
+				color="primary"
 				rightSection={<IconArrowsExchange size={16} />}
 			>
 				<Group>

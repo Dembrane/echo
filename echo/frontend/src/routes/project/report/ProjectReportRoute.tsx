@@ -331,7 +331,7 @@ export const ProjectReportRoute = () => {
 						<Button onClick={close} variant="outline">
 							<Trans>Cancel</Trans>
 						</Button>
-						<Button onClick={handleConfirmPublish} color="blue">
+						<Button onClick={handleConfirmPublish} color="primary">
 							<Trans>Proceed</Trans>
 						</Button>
 					</Group>
