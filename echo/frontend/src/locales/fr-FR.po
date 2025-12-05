@@ -86,7 +86,7 @@ msgstr "\"Refine\" available soon"
 #. "Thinking..."
 #. placeholder {0}: selectedOption.transitionMessage
 #. placeholder {0}: selectedOption.transitionDescription
-#: src/routes/project/chat/ProjectChatRoute.tsx:556
+#: src/routes/project/chat/ProjectChatRoute.tsx:559
 #: src/components/settings/FontSettingsCard.tsx:49
 #: src/components/settings/FontSettingsCard.tsx:50
 #: src/components/project/ProjectPortalEditor.tsx:426
@@ -194,7 +194,7 @@ msgstr "Ajouter à cette conversation"
 msgid "Added emails"
 msgstr "E-mails ajoutés"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:652
+#: src/routes/project/chat/ProjectChatRoute.tsx:655
 msgid "Adding Context:"
 msgstr "Ajout du contexte :"
 
@@ -250,7 +250,7 @@ msgstr ""
 "Une erreur s'est produite lors du chargement du Portail. Veuillez contacter "
 "l'équipe de support."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:594
+#: src/routes/project/chat/ProjectChatRoute.tsx:597
 msgid "An error occurred."
 msgstr "Une erreur s'est produite."
 
@@ -794,8 +794,8 @@ msgstr "Supprimer le projet"
 msgid "Deleted successfully"
 msgstr "Supprimé avec succès"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:715
-#: src/routes/project/chat/ProjectChatRoute.tsx:745
+#: src/routes/project/chat/ProjectChatRoute.tsx:718
+#: src/routes/project/chat/ProjectChatRoute.tsx:748
 msgid "Dembrane is powered by AI. Please double-check responses."
 msgstr "Dembrane est propulsé par l’IA. Vérifie bien les réponses."
 
@@ -2019,7 +2019,7 @@ msgstr "Veuillez sélectionner une langue pour votre rapport"
 msgid "Please select a language for your updated report"
 msgstr "Veuillez sélectionner une langue pour votre rapport mis à jour"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:641
+#: src/routes/project/chat/ProjectChatRoute.tsx:644
 msgid "Please select conversations from the sidebar to proceed"
 msgstr "Sélectionne des conversations dans la barre latérale pour continuer"
 
@@ -2365,7 +2365,7 @@ msgstr ""
 "La rétranscrire a commencé. La nouvelle conversation sera disponible "
 "bientôt."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:602
+#: src/routes/project/chat/ProjectChatRoute.tsx:605
 msgid "Retry"
 msgstr "Réessayer"
 
@@ -2534,7 +2534,7 @@ msgstr "Fichiers sélectionnés ({0}/{MAX_FILES})"
 msgid "participant.selected.microphone"
 msgstr "Microphone sélectionné"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:735
+#: src/routes/project/chat/ProjectChatRoute.tsx:738
 msgid "Send"
 msgstr "Envoyer"
 
@@ -2731,7 +2731,7 @@ msgstr "Start over"
 msgid "Status"
 msgstr "Statut"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:567
+#: src/routes/project/chat/ProjectChatRoute.tsx:570
 msgid "Stop"
 msgstr "Arrêter"
 
@@ -3181,7 +3181,7 @@ msgstr "Authentification à deux facteurs activée"
 msgid "Type"
 msgstr "Type"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:690
+#: src/routes/project/chat/ProjectChatRoute.tsx:693
 msgid "Type a message..."
 msgstr "Tapez un message..."
 
@@ -3298,8 +3298,8 @@ msgstr "Téléchargement des fichiers audio..."
 msgid "Use PII Redaction"
 msgstr "Utiliser la rédaction PII"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:712
-#: src/routes/project/chat/ProjectChatRoute.tsx:742
+#: src/routes/project/chat/ProjectChatRoute.tsx:715
+#: src/routes/project/chat/ProjectChatRoute.tsx:745
 msgid "Use Shift + Enter to add a new line"
 msgstr "Utilisez Shift + Entrée pour ajouter une nouvelle ligne"
 
@@ -3405,20 +3405,31 @@ msgstr "Bienvenue"
 msgid "Welcome back"
 msgstr "Welcome back"
 
+#: src/routes/project/chat/ProjectChatRoute.tsx:506
+msgid ""
+"Welcome to Dembrane Chat! Use the sidebar to select resources and "
+"conversations that you want to analyse. Then, you can ask questions about "
+"the selected resources and conversations."
+msgstr ""
+"Bienvenue sur Dembrane Chat ! Utilisez la barre latérale pour sélectionner "
+"les ressources et les conversations que vous souhaitez analyser. Ensuite, "
+"vous pouvez poser des questions sur les ressources et les conversations "
+"sélectionnées."
+
 #: src/components/common/DembraneLoadingSpinner/index.tsx:23
 msgid "Welcome to Dembrane!"
 msgstr "Bienvenue sur Dembrane!"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:503
+#: src/routes/project/chat/ProjectChatRoute.tsx:505
 msgid ""
 "Welcome to Overview Mode! I have summaries of all your conversations loaded."
 " Ask me about patterns, themes, and insights across your data. For exact "
-"quotes, start a new chat in Deep Dive mode."
+"quotes, start a new chat in Specific Context mode."
 msgstr ""
-"Bienvenue dans le mode Overview ! J’ai les résumés de toutes tes "
-"conversations. Pose-moi des questions sur les patterns, les thèmes et les "
-"insights dans tes données. Pour des citations exactes, démarre un nouveau "
-"chat en mode Deep Dive."
+"Bienvenue en mode Vue d’ensemble ! J’ai chargé les résumés de toutes tes "
+"conversations. Pose-moi des questions sur les tendances, thèmes et insights "
+"de tes données. Pour des citations exactes, démarre un nouveau chat en mode "
+"Contexte précis."
 
 #: src/components/report/CreateReportForm.tsx:79
 msgid "Welcome to Reports!"
@@ -4552,14 +4563,14 @@ msgstr "Vos vues"
 #~ msgstr ""
 
 #~ msgid ""
-#~ "Welcome to Dembrane Chat! Use the sidebar to select resources and "
-#~ "conversations that you want to analyse. Then, you can ask questions about "
-#~ "the selected resources and conversations."
+#~ "Welcome to Overview Mode! I have summaries of all your conversations loaded."
+#~ " Ask me about patterns, themes, and insights across your data. For exact "
+#~ "quotes, start a new chat in Deep Dive mode."
 #~ msgstr ""
-#~ "Bienvenue sur Dembrane Chat ! Utilisez la barre latérale pour sélectionner "
-#~ "les ressources et les conversations que vous souhaitez analyser. Ensuite, "
-#~ "vous pouvez poser des questions sur les ressources et les conversations "
-#~ "sélectionnées."
+#~ "Bienvenue dans le mode Overview ! J’ai les résumés de toutes tes "
+#~ "conversations. Pose-moi des questions sur les patterns, les thèmes et les "
+#~ "insights dans tes données. Pour des citations exactes, démarre un nouveau "
+#~ "chat en mode Deep Dive."
 
 #~ msgid "You can still use the Ask feature to chat with any conversation"
 #~ msgstr ""
