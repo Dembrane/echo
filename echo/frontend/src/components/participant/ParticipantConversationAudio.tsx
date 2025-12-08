@@ -25,6 +25,7 @@ import { Outlet, useLocation, useParams } from "react-router";
 
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { finishConversation } from "@/lib/api";
 import { I18nLink } from "../common/i18nLink";
@@ -100,7 +101,7 @@ export const ParticipantConversationAudio = () => {
 	const cooldown = useRefineSelectionCooldown(conversationId);
 
 	const audioRecorder = useChunkedAudioRecorder({ deviceId, onChunk });
-	useWakeLock({ obtainWakeLockOnMount: true });
+	const wakeLock = useWakeLock({ obtainWakeLockOnMount: true });
 
 	const {
 		startRecording,
@@ -113,6 +114,12 @@ export const ParticipantConversationAudio = () => {
 		errored,
 		permissionError,
 	} = audioRecorder;
+
+	// iOS low battery mode fallback: play silent 1-pixel video only when wakelock fails
+	useVideoWakeLockFallback({
+		isRecording,
+		isWakeLockActive: wakeLock.isActive,
+	});
 
 	const handleMicrophoneDeviceChanged = async () => {
 		try {
