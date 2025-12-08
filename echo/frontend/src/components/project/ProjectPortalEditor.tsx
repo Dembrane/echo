@@ -555,7 +555,9 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												</Title>
 												<Logo hideTitle />
 												<Badge>
-													<Trans>Beta</Trans>
+													<Trans id="dashboard.dembrane.concrete.beta">
+														Beta
+													</Trans>
 												</Badge>
 											</Group>
 
@@ -741,7 +743,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												</Title>
 												<Logo hideTitle />
 												<Badge>
-													<Trans id="dashboard.dembrane.concrete.experimental">
+													<Trans id="dashboard.dembrane.concrete.beta">
 														Beta
 													</Trans>
 												</Badge>
