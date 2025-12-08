@@ -60,6 +60,16 @@ msgstr "Welkom terug"
 #~ msgstr "Experimentele functie"
 
 #. js-lingui-explicit-id
+#: src/components/participant/ParticipantConversationAudio.tsx:311
+#~ msgid "participant.button.go.deeper"
+#~ msgstr "Ga dieper"
+
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantConversationAudio.tsx:307
+#~ msgid "participant.button.make.concrete"
+#~ msgstr "Maak het concreet"
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:238
 msgid "library.generate.duration.message"
 msgstr "Het genereren van een bibliotheek kan tot een uur duren"
@@ -76,17 +86,17 @@ msgstr " Afmelden voor meldingen"
 #~ msgstr "-5s"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:289
+#: src/components/participant/ParticipantConversationAudio.tsx:280
 msgid "participant.modal.refine.info.title.go.deeper"
 msgstr "Ga dieper"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:282
+#: src/components/participant/ParticipantConversationAudio.tsx:273
 msgid "participant.modal.refine.info.title.concrete"
 msgstr "Maak het concreet"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:275
+#: src/components/participant/ParticipantConversationAudio.tsx:266
 msgid "participant.modal.refine.info.title.generic"
 msgstr "\"Verfijnen\" is binnenkort beschikbaar"
 
@@ -547,18 +557,18 @@ msgstr "Basis instellingen"
 #~ msgid "Begin!"
 #~ msgstr "Begin!"
 
-#. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:558
-#: src/components/project/ProjectPortalEditor.tsx:746
-msgid "dashboard.dembrane.concrete.beta"
-msgstr "Bèta"
-
 #: src/routes/project/report/ProjectReportRoute.tsx:61
 #: src/components/conversation/RetranscribeConversation.tsx:111
 #: src/components/conversation/MoveConversationButton.tsx:132
 #: src/components/chat/ChatModeSelector.tsx:147
 #: src/components/chat/ChatModeBanner.tsx:52
 msgid "Beta"
+msgstr "Bèta"
+
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:558
+#: src/components/project/ProjectPortalEditor.tsx:746
+msgid "dashboard.dembrane.concrete.beta"
 msgstr "Bèta"
 
 #~ msgid "Big Picture"
@@ -812,8 +822,8 @@ msgstr "Gesprekken"
 #. js-lingui-explicit-id
 #. placeholder {0}: cooldown.verify.formattedTime
 #. placeholder {0}: cooldown.echo.formattedTime
-#: src/components/participant/refine/RefineSelection.tsx:79
-#: src/components/participant/refine/RefineSelection.tsx:130
+#: src/components/participant/refine/RefineSelection.tsx:86
+#: src/components/participant/refine/RefineSelection.tsx:137
 msgid "participant.refine.cooling.down"
 msgstr "Even afkoelen. Beschikbaar over {0}"
 
@@ -1347,7 +1357,7 @@ msgstr "Fout bij het uitschakelen van het automatisch selecteren voor deze chat"
 msgid "Failed to enable Auto Select for this chat"
 msgstr "Fout bij het inschakelen van het automatisch selecteren voor deze chat"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:202
+#: src/components/participant/ParticipantConversationAudio.tsx:204
 msgid "Failed to finish conversation. Please try again."
 msgstr "Fout bij het voltooien van het gesprek. Probeer het opnieuw."
 
@@ -1407,7 +1417,7 @@ msgstr "Fout bij het hertranscriptie van het gesprek. Probeer het opnieuw."
 msgid "Failed to revise artefact. Please try again."
 msgstr "Artefact kon niet worden herzien. Probeer het opnieuw."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:129
+#: src/components/participant/ParticipantConversationAudio.tsx:131
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Fout bij het stoppen van de opname bij wijziging van het apparaat. Probeer het opnieuw."
 
@@ -1415,7 +1425,7 @@ msgstr "Fout bij het stoppen van de opname bij wijziging van het apparaat. Probe
 #~ msgstr "Fout bij het verifiëren van de e-mailstatus. Probeer het opnieuw."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:295
+#: src/components/participant/ParticipantConversationAudio.tsx:286
 msgid "participant.modal.refine.info.title"
 msgstr "Functie binnenkort beschikbaar"
 
@@ -1478,7 +1488,7 @@ msgid "participant.button.finish.text.mode"
 msgstr "Voltooien"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:466
+#: src/components/participant/ParticipantConversationAudio.tsx:442
 msgid "participant.button.finish"
 msgstr "Voltooien"
 
@@ -1539,12 +1549,12 @@ msgstr "Samenvatting wordt gemaakt. Even wachten..."
 msgid "German"
 msgstr "Duits"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:267
+#: src/components/participant/ParticipantConversationAudio.tsx:258
 msgid "Get an immediate reply from Dembrane to help you deepen the conversation."
 msgstr "Krijg direct een reactie van Dembrane om het gesprek te verdiepen."
 
 #. js-lingui-explicit-id
-#: src/components/participant/refine/RefineSelection.tsx:121
+#: src/components/participant/refine/RefineSelection.tsx:128
 msgid "participant.refine.go.deeper.description"
 msgstr "Krijg direct een reactie van Dembrane om het gesprek te verdiepen."
 
@@ -1569,12 +1579,7 @@ msgid "Go deeper"
 msgstr "Go deeper"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:311
-msgid "participant.button.go.deeper"
-msgstr "Ga dieper"
-
-#. js-lingui-explicit-id
-#: src/components/participant/refine/RefineSelection.tsx:117
+#: src/components/participant/refine/RefineSelection.tsx:124
 msgid "participant.refine.go.deeper"
 msgstr "Ga dieper"
 
@@ -1650,7 +1655,7 @@ msgstr ""
 "* Hoe ziet succes eruit"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:375
+#: src/components/participant/ParticipantConversationAudio.tsx:351
 msgid "participant.button.i.understand"
 msgstr "Ik begrijp het"
 
@@ -1934,12 +1939,7 @@ msgid "dashboard.dembrane.concrete.title"
 msgstr "Concrete onderwerpen"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:307
-msgid "participant.button.make.concrete"
-msgstr "Maak het concreet"
-
-#. js-lingui-explicit-id
-#: src/components/participant/refine/RefineSelection.tsx:64
+#: src/components/participant/refine/RefineSelection.tsx:71
 msgid "participant.refine.make.concrete"
 msgstr "Maak het concreet"
 
@@ -2710,7 +2710,7 @@ msgid "Recommended apps"
 msgstr "Aanbevolen apps"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:443
+#: src/components/participant/ParticipantConversationAudio.tsx:419
 msgid "participant.button.record"
 msgstr "Opname starten"
 
@@ -2746,8 +2746,7 @@ msgid "References"
 msgstr "Referenties"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:303
-#: src/components/participant/ParticipantConversationAudio.tsx:313
+#: src/components/participant/ParticipantConversationAudio.tsx:473
 msgid "participant.button.refine"
 msgstr "Verfijnen"
 
@@ -3329,7 +3328,7 @@ msgid "Stop"
 msgstr "Stop"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:516
+#: src/components/participant/ParticipantConversationAudio.tsx:492
 msgid "participant.button.stop"
 msgstr "Stop"
 
@@ -3410,16 +3409,16 @@ msgstr "Systeem"
 msgid "Tags"
 msgstr "Trefwoorden"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:261
+#: src/components/participant/ParticipantConversationAudio.tsx:252
 msgid "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from Dembrane to help you deepen the conversation."
 msgstr "Neem even de tijd om een resultaat te creëren dat je bijdrage concreet maakt of krijg direct een reactie van Dembrane om het gesprek te verdiepen."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:264
+#: src/components/participant/ParticipantConversationAudio.tsx:255
 msgid "Take some time to create an outcome that makes your contribution concrete."
 msgstr "Neem even de tijd om een resultaat te creëren dat je bijdrage concreet maakt."
 
 #. js-lingui-explicit-id
-#: src/components/participant/refine/RefineSelection.tsx:70
+#: src/components/participant/refine/RefineSelection.tsx:77
 msgid "participant.refine.make.concrete.description"
 msgstr "Neem even de tijd om een resultaat te creëren dat je bijdrage concreet maakt."
 
@@ -3564,7 +3563,7 @@ msgstr "Deze e-mail is al in de lijst."
 #~ msgstr "Deze e-mail is al geabonneerd op meldingen."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:365
+#: src/components/participant/ParticipantConversationAudio.tsx:341
 msgid "participant.modal.refine.info.available.in"
 msgstr "Deze functie is beschikbaar over {remainingTime} seconden."
 
@@ -4047,7 +4046,7 @@ msgstr "We hebben u een e-mail gestuurd met de volgende stappen. Als u het niet 
 #~ msgstr "We hebben u een e-mail gestuurd met de volgende stappen. Als u het niet ziet, checkt u uw spammap. Als u het nog steeds niet ziet, neem dan contact op met jules@dembrane.com"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:318
+#: src/components/participant/ParticipantConversationAudio.tsx:294
 msgid "participant.modal.refine.info.reason"
 msgstr "We hebben iets meer context nodig om je effectief te helpen verfijnen. Ga alsjeblieft door met opnemen, zodat we betere suggesties kunnen geven."
 

@@ -1,4 +1,5 @@
 import { useChat } from "@ai-sdk/react";
+import { useLocalStorage } from "@mantine/hooks";
 import { useEffect, useRef } from "react";
 import { useOutletContext, useParams, useSearchParams } from "react-router";
 import { API_BASE_URL } from "@/config";
@@ -26,6 +27,11 @@ export const ParticipantConversationAudioContent = () => {
 	const { isRecording } = useOutletContext<OutletContextType>();
 	const projectQuery = useParticipantProjectById(projectId ?? "");
 	const conversationQuery = useConversationQuery(projectId, conversationId);
+	const [_isRefineDisabled, _setIsRefineDisabled, removeValue] =
+		useLocalStorage({
+			defaultValue: false,
+			key: `refine_disabled_${conversationId}`,
+		});
 
 	const hasEchoParam = searchParams.get("echo") === "1";
 
@@ -53,6 +59,10 @@ export const ParticipantConversationAudioContent = () => {
 			})) ?? [],
 		onError: (error) => {
 			console.error("onError", error);
+			removeValue();
+		},
+		onFinish: () => {
+			removeValue();
 		},
 	});
 	const handleReply = async (e: React.MouseEvent<HTMLButtonElement>) => {

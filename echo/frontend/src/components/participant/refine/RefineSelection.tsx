@@ -1,5 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Box, Group, Progress, Stack, Text, Title } from "@mantine/core";
+import { useLocalStorage } from "@mantine/hooks";
 import { IconArrowDownToArc, IconMessage } from "@tabler/icons-react";
 import { useParams } from "react-router";
 import { useParticipantProjectById } from "@/components/participant/hooks";
@@ -11,6 +12,10 @@ export const RefineSelection = () => {
 	const navigate = useI18nNavigate();
 	const cooldown = useRefineSelectionCooldown(conversationId);
 	const projectQuery = useParticipantProjectById(projectId ?? "");
+	const [_isRefineDisabled, setIsRefineDisabled] = useLocalStorage({
+		defaultValue: false,
+		key: `refine_disabled_${conversationId}`,
+	});
 
 	const handleVerifyClick = () => {
 		if (cooldown.verify.isActive) return;
@@ -20,6 +25,8 @@ export const RefineSelection = () => {
 	const handleEchoClick = () => {
 		if (cooldown.echo.isActive) return;
 		cooldown.startEchoCooldown();
+		// Disable refine button while echo is generating
+		setIsRefineDisabled(true);
 		navigate(`/${projectId}/conversation/${conversationId}?echo=1`);
 	};
 
