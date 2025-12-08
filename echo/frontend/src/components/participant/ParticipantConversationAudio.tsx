@@ -10,7 +10,7 @@ import {
 	Stack,
 	Text,
 } from "@mantine/core";
-import { useDisclosure, useWindowEvent } from "@mantine/hooks";
+import { useDisclosure, useLocalStorage, useWindowEvent } from "@mantine/hooks";
 import {
 	IconCheck,
 	IconMicrophone,
@@ -42,7 +42,6 @@ import {
 } from "./hooks";
 import useChunkedAudioRecorder from "./hooks/useChunkedAudioRecorder";
 import { PermissionErrorModal } from "./PermissionErrorModal";
-import { useRefineSelectionCooldown } from "./refine/hooks/useRefineSelectionCooldown";
 import { StopRecordingConfirmationModal } from "./StopRecordingConfirmationModal";
 
 const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
@@ -51,6 +50,10 @@ const REFINE_BUTTON_THRESHOLD_SECONDS = 60;
 export const ParticipantConversationAudio = () => {
 	const { projectId, conversationId } = useParams();
 	const location = useLocation();
+	const [isRefineDisabled, _setIsRefineDisabled] = useLocalStorage({
+		defaultValue: false,
+		key: `refine_disabled_${conversationId}`,
+	});
 	const textModeUrl = `/${projectId}/conversation/${conversationId}/text`;
 	const finishUrl = `/${projectId}/conversation/${conversationId}/finish`;
 
@@ -98,7 +101,6 @@ export const ParticipantConversationAudio = () => {
 	// Navigation and language
 	const navigate = useI18nNavigate();
 	const newConversationLink = useProjectSharingLink(projectQuery.data);
-	const cooldown = useRefineSelectionCooldown(conversationId);
 
 	const audioRecorder = useChunkedAudioRecorder({ deviceId, onChunk });
 	const wakeLock = useWakeLock({ obtainWakeLockOnMount: true });
@@ -219,17 +221,6 @@ export const ParticipantConversationAudio = () => {
 			return;
 		}
 
-		if (showVerify && !showEcho) {
-			navigate(`/${projectId}/conversation/${conversationId}/verify`);
-			return;
-		}
-
-		if (showEcho && !showVerify) {
-			cooldown.startEchoCooldown();
-			navigate(`/${projectId}/conversation/${conversationId}?echo=1`);
-			return;
-		}
-
 		navigate(`/${projectId}/conversation/${conversationId}/refine`);
 	};
 
@@ -296,21 +287,6 @@ export const ParticipantConversationAudio = () => {
 				Feature available soon
 			</Trans>
 		);
-	};
-
-	const getRefineButtonText = () => {
-		if (showVerify && showEcho) {
-			return <Trans id="participant.button.refine">Refine</Trans>;
-		}
-		if (showVerify) {
-			return (
-				<Trans id="participant.button.make.concrete">Make it concrete</Trans>
-			);
-		}
-		if (showEcho) {
-			return <Trans id="participant.button.go.deeper">Go deeper</Trans>;
-		}
-		return <Trans id="participant.button.refine">Refine</Trans>;
 	};
 
 	const getRefineInfoReason = () => {
@@ -479,7 +455,7 @@ export const ParticipantConversationAudio = () => {
 											size="lg"
 											radius="md"
 											onClick={handleRefineClick}
-											disabled={isStopping}
+											disabled={isStopping || isRefineDisabled}
 											className="relative overflow-hidden"
 											variant={
 												recordingTime < REFINE_BUTTON_THRESHOLD_SECONDS
@@ -494,7 +470,7 @@ export const ParticipantConversationAudio = () => {
 												/>
 											)}
 											<span className="relative z-10">
-												{getRefineButtonText()}
+												<Trans id="participant.button.refine">Refine</Trans>
 											</span>
 										</Button>
 									)}
