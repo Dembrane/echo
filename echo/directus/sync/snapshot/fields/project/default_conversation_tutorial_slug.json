@@ -11,12 +11,16 @@
     "group": null,
     "hidden": false,
     "interface": "select-dropdown",
-    "note": "Manually syncronize this with https://admin-dembrane.azurewebsites.net/admin/content/echo__portal_tutorial",
+    "note": null,
     "options": {
       "choices": [
         {
+          "text": "Skip Consent",
+          "value": "skip-consent"
+        },
+        {
           "text": "None",
-          "value": "None"
+          "value": "none"
         },
         {
           "text": "Basic",
