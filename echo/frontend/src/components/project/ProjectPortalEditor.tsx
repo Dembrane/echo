@@ -227,6 +227,13 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: just a dependency issue biome catches, not an issue though
 	const defaultValues = useMemo(() => {
+		const rawTutorialSlug =
+			project.default_conversation_tutorial_slug?.toLowerCase();
+		const validSlugs = ["skip-consent", "none", "basic", "advanced"];
+		const normalizedTutorialSlug = validSlugs.includes(rawTutorialSlug || "")
+			? rawTutorialSlug
+			: "none";
+
 		return {
 			default_conversation_ask_for_participant_name:
 				project.default_conversation_ask_for_participant_name ?? false,
@@ -237,8 +244,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 			default_conversation_title: project.default_conversation_title ?? "",
 			default_conversation_transcript_prompt:
 				project.default_conversation_transcript_prompt ?? "",
-			default_conversation_tutorial_slug:
-				project.default_conversation_tutorial_slug ?? "none",
+			default_conversation_tutorial_slug: normalizedTutorialSlug ?? "none",
 			get_reply_mode: project.get_reply_mode ?? "summarize",
 			get_reply_prompt: project.get_reply_prompt ?? "",
 			is_get_reply_enabled: project.is_get_reply_enabled ?? false,
@@ -522,7 +528,11 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													}
 													data={[
 														{
-															label: t`No tutorial (only Privacy statements)`,
+															label: t`Skip data privacy slide (Host manages consent)`,
+															value: "skip-consent",
+														},
+														{
+															label: t`Default - No tutorial (Only privacy statements)`,
 															value: "none",
 														},
 														{
@@ -530,7 +540,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 															value: "basic",
 														},
 														{
-															label: t`Advanced (Tips and tricks)`,
+															label: t`Advanced (Tips and best practices)`,
 															value: "advanced",
 														},
 													]}
