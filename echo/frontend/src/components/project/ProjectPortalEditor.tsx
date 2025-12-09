@@ -522,16 +522,12 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													}
 													data={[
 														{
-															label: t`No tutorial (only Privacy statements)`,
+															label: t`No tutorial (only mic check)`,
 															value: "none",
 														},
 														{
-															label: t`Basic (Essential tutorial slides)`,
+															label: t`Basic (Data privacy + mic check)`,
 															value: "basic",
-														},
-														{
-															label: t`Advanced (Tips and tricks)`,
-															value: "advanced",
 														},
 													]}
 													{...field}

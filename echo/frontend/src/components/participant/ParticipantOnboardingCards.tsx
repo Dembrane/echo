@@ -42,13 +42,7 @@ export interface LanguageCards {
 	[language: string]: Section[];
 }
 
-const ParticipantOnboardingCards = ({
-	project,
-	initialCards,
-}: {
-	project: Project;
-	initialCards: LanguageCards;
-}) => {
+const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 	const [searchParams] = useSearchParams();
 	const skipOnboarding = searchParams.get("skipOnboarding");
 
@@ -79,11 +73,11 @@ const ParticipantOnboardingCards = ({
 
 	const { getSystemCards } = useOnboardingCards();
 
+	const tutorialSlug = project.default_conversation_tutorial_slug ?? "none";
+
 	const cards: LanguageCards = {
-		...initialCards,
 		"de-DE": [
-			...initialCards["de-DE"],
-			...getSystemCards("de-DE", initialCards["de-DE"].length > 0),
+			...getSystemCards("de-DE", tutorialSlug),
 			{
 				section: "Mikrofon-Check",
 				slides: [
@@ -108,8 +102,7 @@ const ParticipantOnboardingCards = ({
 			},
 		],
 		"en-US": [
-			...initialCards["en-US"],
-			...getSystemCards("en-US", initialCards["en-US"].length > 0),
+			...getSystemCards("en-US", tutorialSlug),
 			{
 				section: "Microphone Check",
 				slides: [
@@ -134,8 +127,7 @@ const ParticipantOnboardingCards = ({
 			},
 		],
 		"es-ES": [
-			...initialCards["es-ES"],
-			...getSystemCards("es-ES", initialCards["es-ES"].length > 0),
+			...getSystemCards("es-ES", tutorialSlug),
 			{
 				section: "Verificación del Micrófono",
 				slides: [
@@ -160,8 +152,7 @@ const ParticipantOnboardingCards = ({
 			},
 		],
 		"fr-FR": [
-			...initialCards["fr-FR"],
-			...getSystemCards("fr-FR", initialCards["fr-FR"].length > 0),
+			...getSystemCards("fr-FR", tutorialSlug),
 			{
 				section: "Vérification du Microphone",
 				slides: [
@@ -186,8 +177,7 @@ const ParticipantOnboardingCards = ({
 			},
 		],
 		"nl-NL": [
-			...initialCards["nl-NL"],
-			...getSystemCards("nl-NL", initialCards["nl-NL"].length > 0),
+			...getSystemCards("nl-NL", tutorialSlug),
 			{
 				section: "Microfoon Controle",
 				slides: [

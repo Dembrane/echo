@@ -4,14 +4,16 @@ import type { LanguageCards } from "../ParticipantOnboardingCards";
 export const useOnboardingCards = () => {
 	const getSystemCards = (
 		lang: string,
-		hasDirectusCards: boolean,
+		tutorialSlug?: string,
 	): LanguageCards[string] => {
 		const cards: LanguageCards[string] = [];
 
-		if (hasDirectusCards) {
+		const normalizedSlug = tutorialSlug?.toLowerCase();
+		if (normalizedSlug === "none") {
 			return cards;
 		}
 
+		// For 'basic' mode, show the privacy card
 		const privacyCard = getPrivacyCard(lang);
 		if (privacyCard) {
 			cards.push(privacyCard);
