@@ -73,7 +73,11 @@ export const useDisableTwoFactorMutation = () => {
 			await postDirectus("/users/me/tfa/disable", { otp });
 		},
 		onError: (error: Error) => {
-			toast.error(error.message);
+			if (error.message.includes('Invalid payload. "otp" is invalid')) {
+				toast.error(t`The code didn't work, please try again.`);
+			} else {
+				toast.error(error.message);
+			}
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
