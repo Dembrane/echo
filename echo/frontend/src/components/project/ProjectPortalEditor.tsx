@@ -528,7 +528,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													}
 													data={[
 														{
-															label: t`Skip data privacy slide (Host manages consent)`,
+															label: t`Skip data privacy slide (Host manages legal base)`,
 															value: "skip-consent",
 														},
 														{
