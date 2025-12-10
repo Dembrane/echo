@@ -15,7 +15,7 @@ export const formatMessage = (
 		console.error(e);
 	}
 
-	if (!["user", "dembrane"].includes(message.role)) {
+	if (!["user", "assistant", "dembrane"].includes(message.role)) {
 		return "";
 	}
 
