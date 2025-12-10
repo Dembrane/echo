@@ -834,10 +834,12 @@ msgstr "Even afkoelen. Beschikbaar over {0}"
 #: src/components/settings/TwoFactorSettingsCard.tsx:431
 #: src/components/project/ProjectQRCode.tsx:121
 #: src/components/conversation/CopyConversationTranscript.tsx:47
+#: src/components/common/CopyRichTextIconButton.tsx:29
 #: src/components/common/CopyIconButton.tsx:17
 msgid "Copied"
 msgstr "Gekopieerd"
 
+#: src/components/common/CopyRichTextIconButton.tsx:29
 #: src/components/common/CopyIconButton.tsx:8
 msgid "Copy"
 msgstr "Kopieer"
@@ -865,6 +867,10 @@ msgstr "Kopieer naar clipboard"
 
 #~ msgid "Copy transcript"
 #~ msgstr "Kopieer transcript"
+
+#: src/components/common/CopyRichTextIconButton.tsx:29
+msgid "Copying..."
+msgstr "Kopieren..."
 
 #: src/routes/project/ProjectsHome.tsx:137
 msgid "Create"
@@ -1346,6 +1352,10 @@ msgstr "Fout bij het toevoegen van het gesprek aan de chat{0}"
 #: src/components/participant/verify/VerifyArtefact.tsx:136
 msgid "Failed to approve artefact. Please try again."
 msgstr "Artefact kon niet worden goedgekeurd. Probeer het opnieuw."
+
+#: src/components/common/CopyRichTextIconButton.tsx:20
+msgid "Failed to copy chat. Please try again."
+msgstr "Fout bij het kopiëren van de chat. Probeer het opnieuw."
 
 #: src/components/conversation/CopyConversationTranscript.tsx:25
 msgid "Failed to copy transcript. Please try again."

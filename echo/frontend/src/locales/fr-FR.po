@@ -780,10 +780,12 @@ msgstr "Période de repos. Disponible dans {0}"
 #: src/components/settings/TwoFactorSettingsCard.tsx:431
 #: src/components/project/ProjectQRCode.tsx:121
 #: src/components/conversation/CopyConversationTranscript.tsx:47
+#: src/components/common/CopyRichTextIconButton.tsx:29
 #: src/components/common/CopyIconButton.tsx:17
 msgid "Copied"
 msgstr "Copié"
 
+#: src/components/common/CopyRichTextIconButton.tsx:29
 #: src/components/common/CopyIconButton.tsx:8
 msgid "Copy"
 msgstr "Copier"
@@ -811,6 +813,10 @@ msgstr "Copier dans le presse-papiers"
 
 #~ msgid "Copy transcript"
 #~ msgstr "Copier la transcription"
+
+#: src/components/common/CopyRichTextIconButton.tsx:29
+msgid "Copying..."
+msgstr "Copie en cours..."
 
 #: src/routes/project/ProjectsHome.tsx:137
 msgid "Create"
@@ -1256,6 +1262,10 @@ msgstr "Échec de l'ajout de la conversation à la discussion{0}"
 #: src/components/participant/verify/VerifyArtefact.tsx:136
 msgid "Failed to approve artefact. Please try again."
 msgstr "Échec de l'approbation de l'artefact. Veuillez réessayer."
+
+#: src/components/common/CopyRichTextIconButton.tsx:20
+msgid "Failed to copy chat. Please try again."
+msgstr "Échec de la copie du chat. Veuillez réessayer."
 
 #: src/components/conversation/CopyConversationTranscript.tsx:25
 msgid "Failed to copy transcript. Please try again."

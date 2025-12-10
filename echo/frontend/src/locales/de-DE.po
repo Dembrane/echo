@@ -777,10 +777,12 @@ msgstr "Abkühlung läuft. Verfügbar in {0}"
 #: src/components/settings/TwoFactorSettingsCard.tsx:431
 #: src/components/project/ProjectQRCode.tsx:121
 #: src/components/conversation/CopyConversationTranscript.tsx:47
+#: src/components/common/CopyRichTextIconButton.tsx:29
 #: src/components/common/CopyIconButton.tsx:17
 msgid "Copied"
 msgstr "Kopiert"
 
+#: src/components/common/CopyRichTextIconButton.tsx:29
 #: src/components/common/CopyIconButton.tsx:8
 msgid "Copy"
 msgstr "Kopieren"
@@ -808,6 +810,10 @@ msgstr "In die Zwischenablage kopieren"
 
 #~ msgid "Copy transcript"
 #~ msgstr "Transkript kopieren"
+
+#: src/components/common/CopyRichTextIconButton.tsx:29
+msgid "Copying..."
+msgstr "Kopieren..."
 
 #: src/routes/project/ProjectsHome.tsx:137
 msgid "Create"
@@ -1253,6 +1259,10 @@ msgstr "Fehler beim Hinzufügen des Gesprächs zum Chat{0}"
 #: src/components/participant/verify/VerifyArtefact.tsx:136
 msgid "Failed to approve artefact. Please try again."
 msgstr "Artefakt konnte nicht freigegeben werden. Bitte versuchen Sie es erneut."
+
+#: src/components/common/CopyRichTextIconButton.tsx:20
+msgid "Failed to copy chat. Please try again."
+msgstr "Fehler beim Kopieren des Chats. Bitte versuchen Sie es erneut."
 
 #: src/components/conversation/CopyConversationTranscript.tsx:25
 msgid "Failed to copy transcript. Please try again."
