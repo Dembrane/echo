@@ -42,7 +42,7 @@ msgstr "Algo salió mal"
 #. js-lingui-explicit-id
 #: src/components/layout/TransitionCurtainProvider.tsx:143
 msgid "We're preparing your workspace."
-msgstr "We're preparing your workspace."
+msgstr "Estamos preparando tu espacio de trabajo."
 
 #. js-lingui-explicit-id
 #: src/components/layout/TransitionCurtainProvider.tsx:173
@@ -52,7 +52,7 @@ msgstr "Preparando tu dashboard"
 #. js-lingui-explicit-id
 #: src/components/layout/TransitionCurtainProvider.tsx:181
 msgid "Welcome back"
-msgstr "Welcome back"
+msgstr "Bienvenido de nuevo"
 
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:744
@@ -62,12 +62,12 @@ msgstr "Welcome back"
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:311
 #~ msgid "participant.button.go.deeper"
-#~ msgstr "Go deeper"
+#~ msgstr "Profundizar"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:307
 #~ msgid "participant.button.make.concrete"
-#~ msgstr "Make it concrete"
+#~ msgstr "Concretar"
 
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:238
@@ -98,7 +98,7 @@ msgstr "concretar"
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:266
 msgid "participant.modal.refine.info.title.generic"
-msgstr "\"Refine\" available soon"
+msgstr "\"Refinar\" Disponible pronto"
 
 #~ msgid "(for enhanced audio processing)"
 #~ msgstr "(para procesamiento de audio mejorado)"
@@ -172,15 +172,15 @@ msgstr "0 Aspectos"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:176
 msgid "Account password"
-msgstr "Account password"
+msgstr "Contraseña de la cuenta"
 
 #: src/components/settings/AuditLogsCard.tsx:274
 msgid "Action By"
-msgstr "Action By"
+msgstr "Acción de"
 
 #: src/components/settings/AuditLogsCard.tsx:255
 msgid "Action On"
-msgstr "Action On"
+msgstr "Acción sobre"
 
 #: src/components/project/ProjectDangerZone.tsx:69
 msgid "Actions"
@@ -240,11 +240,11 @@ msgstr "Configuración Avanzada"
 
 #: src/components/settings/AuditLogsCard.tsx:465
 msgid "All actions"
-msgstr "All actions"
+msgstr "Todas las acciones"
 
 #: src/components/settings/AuditLogsCard.tsx:483
 msgid "All collections"
-msgstr "All collections"
+msgstr "Todas las colecciones"
 
 #~ msgid "All conversations ready"
 #~ msgstr "Todas las conversaciones están listas"
@@ -330,7 +330,7 @@ msgstr "aprobar"
 #. js-lingui-explicit-id
 #: src/components/conversation/VerifiedArtefactsSection.tsx:113
 msgid "conversation.verified.approved"
-msgstr "Approved"
+msgstr "Aprobado"
 
 #: src/components/conversation/ConversationDangerZone.tsx:23
 msgid "Are you sure you want to delete this conversation? This action cannot be undone."
@@ -371,19 +371,19 @@ msgstr "¿Estás seguro de que quieres regenerar el resumen? Perderás el resume
 
 #: src/components/participant/verify/VerifyArtefact.tsx:132
 msgid "Artefact approved successfully!"
-msgstr "Artefact approved successfully!"
+msgstr "¡Artefacto aprobado exitosamente!"
 
 #: src/components/participant/verify/VerifyArtefact.tsx:242
 msgid "Artefact reloaded successfully!"
-msgstr "Artefact reloaded successfully!"
+msgstr "¡Artefacto recargado exitosamente!"
 
 #: src/components/participant/verify/VerifyArtefact.tsx:174
 msgid "Artefact revised successfully!"
-msgstr "Artefact revised successfully!"
+msgstr "¡Artefacto revisado exitosamente!"
 
 #: src/components/participant/verify/VerifyArtefact.tsx:212
 msgid "Artefact updated successfully!"
-msgstr "Artefact updated successfully!"
+msgstr "¡Artefacto actualizado exitosamente!"
 
 #: src/components/conversation/VerifiedArtefactsSection.tsx:92
 msgid "artefacts"
@@ -439,21 +439,21 @@ msgstr "Consejo de audio"
 
 #: src/components/settings/AuditLogsCard.tsx:406
 msgid "Audit logs"
-msgstr "Audit logs"
+msgstr "Registros de auditoría"
 
 #: src/components/settings/AuditLogsCard.tsx:372
 msgid "Audit logs exported to CSV"
-msgstr "Audit logs exported to CSV"
+msgstr "Registros de auditoría exportados a CSV"
 
 #: src/components/settings/AuditLogsCard.tsx:373
 msgid "Audit logs exported to JSON"
-msgstr "Audit logs exported to JSON"
+msgstr "Registros de auditoría exportados a JSON"
 
 #: src/routes/auth/Login.tsx:209
 #: src/components/settings/TwoFactorSettingsCard.tsx:231
 #: src/components/settings/TwoFactorSettingsCard.tsx:370
 msgid "Authenticator code"
-msgstr "Authenticator code"
+msgstr "Código de autenticación"
 
 #: src/components/conversation/AutoSelectConversations.tsx:131
 msgid "Auto-select"
@@ -640,7 +640,7 @@ msgstr "Cerrar"
 
 #: src/components/settings/AuditLogsCard.tsx:199
 msgid "Collection"
-msgstr "Collection"
+msgstr "Colección"
 
 #: src/components/chat/templates.ts:42
 msgid "Compare & Contrast"
@@ -678,7 +678,7 @@ msgstr "Publicar"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:169
 msgid "Confirm your password to generate a new secret for your authenticator app."
-msgstr "Confirm your password to generate a new secret for your authenticator app."
+msgstr "Confirma tu contraseña para generar un nuevo secreto para tu aplicación de autenticación."
 
 #: src/components/report/ReportModalNavigationButton.tsx:60
 msgid "Connecting to report services..."
@@ -775,7 +775,7 @@ msgstr "Conversaciones"
 #: src/components/participant/refine/RefineSelection.tsx:86
 #: src/components/participant/refine/RefineSelection.tsx:137
 msgid "participant.refine.cooling.down"
-msgstr "Cooling down. Available in {0}"
+msgstr "Enfriándose. Disponible en {0}"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:419
 #: src/components/project/ProjectQRCode.tsx:121
@@ -949,15 +949,15 @@ msgstr ""
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:402
 msgid "Disable 2FA"
-msgstr "Disable 2FA"
+msgstr "Desactivar 2FA"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:358
 msgid "Disable two-factor authentication"
-msgstr "Disable two-factor authentication"
+msgstr "Desactivar autenticación de dos factores"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:312
 msgid "Disabled"
-msgstr "Disabled"
+msgstr "Desactivado"
 
 #: src/components/report/ReportRenderer.tsx:14
 msgid "Do you want to contribute to this project?"
@@ -985,7 +985,7 @@ msgstr "Descargar Todas las Transcripciones"
 
 #: src/components/settings/AuditLogsCard.tsx:441
 msgid "Download as"
-msgstr "Download as"
+msgstr "Descargar como"
 
 #: src/components/conversation/ConversationDangerZone.tsx:46
 msgid "Download Audio"
@@ -1074,7 +1074,7 @@ msgstr "Vacío"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:266
 msgid "Enable 2FA"
-msgstr "Enable 2FA"
+msgstr "Activar 2FA"
 
 #~ msgid "Enable Dembrane Echo"
 #~ msgstr "Habilitar Dembrane Echo"
@@ -1086,7 +1086,7 @@ msgstr "Enable 2FA"
 #~ msgstr "Habilitar Dembrane Respuesta"
 
 #~ msgid "Enable Dembrane Verify"
-#~ msgstr "Enable Dembrane Verify"
+#~ msgstr "Activar Dembrane Verify"
 
 #: src/components/project/ProjectPortalEditor.tsx:592
 msgid "Enable Go deeper"
@@ -1103,7 +1103,7 @@ msgstr "Habilitar Notificaciones de Reportes"
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:763
 msgid "dashboard.dembrane.concrete.description"
-msgstr "dashboard.dembrane.concrete.description"
+msgstr "Activa esta función para permitir a los participantes crear y verificar resultados concretos durante sus conversaciones."
 
 #: src/components/project/ProjectPortalEditor.tsx:899
 msgid "Enable this feature to allow participants to receive notifications when a report is published or updated. Participants can enter their email to subscribe for updates and stay informed."
@@ -1124,7 +1124,7 @@ msgstr "Activa esta función para que los participantes puedan pedir respuestas 
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:349
 msgid "Enable two-factor authentication"
-msgstr "Enable two-factor authentication"
+msgstr "Activar autenticación de dos factores"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:312
 #: src/components/conversation/AutoSelectConversations.tsx:86
@@ -1152,7 +1152,7 @@ msgstr "Ingresa un nombre para tu proyecto clonado"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:363
 msgid "Enter a valid code to turn off two-factor authentication."
-msgstr "Enter a valid code to turn off two-factor authentication."
+msgstr "Ingresa un código válido para desactivar la autenticación de dos factores."
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:599
 msgid "Enter filename (without extension)"
@@ -1164,15 +1164,15 @@ msgstr "Ingresa un nuevo nombre para el chat:"
 
 #: src/routes/auth/Login.tsx:95
 msgid "Enter the 6-digit code from your authenticator app."
-msgstr "Enter the 6-digit code from your authenticator app."
+msgstr "Ingresa el código de 6 dígitos de tu aplicación de autenticación."
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:245
 msgid "Enter the current six-digit code from your authenticator app."
-msgstr "Enter the current six-digit code from your authenticator app."
+msgstr "Ingresa el código actual de seis dígitos de tu aplicación de autenticación."
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:177
 msgid "Enter your password"
-msgstr "Enter your password"
+msgstr "Ingresa tu contraseña"
 
 #: src/components/view/CreateViewForm.tsx:121
 msgid "Enter your query"
@@ -1255,7 +1255,7 @@ msgstr "Error al añadir la conversación al chat{0}"
 
 #: src/components/participant/verify/VerifyArtefact.tsx:136
 msgid "Failed to approve artefact. Please try again."
-msgstr "Failed to approve artefact. Please try again."
+msgstr "Error al aprobar el artefacto. Por favor, inténtalo de nuevo."
 
 #: src/components/conversation/CopyConversationTranscript.tsx:25
 msgid "Failed to copy transcript. Please try again."
@@ -1316,7 +1316,7 @@ msgstr "Error al regenerar el resumen. Por favor, inténtalo de nuevo más tarde
 
 #: src/components/participant/verify/VerifyArtefact.tsx:244
 msgid "Failed to reload. Please try again."
-msgstr "Failed to reload. Please try again."
+msgstr "Error al recargar. Por favor, inténtalo de nuevo."
 
 #: src/components/conversation/hooks/index.ts:479
 msgid "Failed to remove conversation from chat"
@@ -1333,7 +1333,7 @@ msgstr "Error al retranscribir la conversación. Por favor, inténtalo de nuevo.
 
 #: src/components/participant/verify/VerifyArtefact.tsx:185
 msgid "Failed to revise artefact. Please try again."
-msgstr "Failed to revise artefact. Please try again."
+msgstr "Error al revisar el artefacto. Por favor, inténtalo de nuevo."
 
 #: src/components/participant/ParticipantConversationAudio.tsx:131
 msgid "Failed to stop recording on device change. Please try again."
@@ -1345,7 +1345,7 @@ msgstr "Error al detener la grabación al cambiar el dispositivo. Por favor, int
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:286
 msgid "participant.modal.refine.info.title"
-msgstr "Feature available soon"
+msgstr "Función disponible pronto"
 
 #. placeholder {0}: errorFile.file.name
 #. placeholder {1}: formatFileSize(MAX_FILE_SIZE)
@@ -1381,24 +1381,24 @@ msgstr "Tamaño del archivo: Mínimo {0}, Máximo {1}, hasta {MAX_FILES} archivo
 
 #: src/components/settings/AuditLogsCard.tsx:474
 msgid "Filter audit logs by action"
-msgstr "Filter audit logs by action"
+msgstr "Filtrar registros de auditoría por acción"
 
 #: src/components/settings/AuditLogsCard.tsx:492
 msgid "Filter audit logs by collection"
-msgstr "Filter audit logs by collection"
+msgstr "Filtrar registros de auditoría por colección"
 
 #: src/components/settings/AuditLogsCard.tsx:463
 msgid "Filter by action"
-msgstr "Filter by action"
+msgstr "Filtrar por acción"
 
 #: src/components/settings/AuditLogsCard.tsx:479
 msgid "Filter by collection"
-msgstr "Filter by collection"
+msgstr "Filtrar por colección"
 
 #. js-lingui-explicit-id
 #: src/components/participant/StopRecordingConfirmationModal.tsx:61
 msgid "participant.button.stop.finish"
-msgstr "Finish"
+msgstr "Finalizar"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationText.tsx:236
@@ -1447,7 +1447,7 @@ msgstr "Generar perspectivas a partir de tus conversaciones"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:190
 msgid "Generate secret"
-msgstr "Generate secret"
+msgstr "Generar secreto"
 
 #~ msgid "Generate structured meeting notes based on the following discussion points provided in the context."
 #~ msgstr "Generar notas estructuradas de la reunión basadas en los siguientes puntos de discusión proporcionados en el contexto."
@@ -1466,12 +1466,12 @@ msgstr "Alemán"
 
 #: src/components/participant/ParticipantConversationAudio.tsx:258
 msgid "Get an immediate reply from Dembrane to help you deepen the conversation."
-msgstr "Get an immediate reply from Dembrane to help you deepen the conversation."
+msgstr "Obtén una respuesta inmediata de Dembrane para ayudarte a profundizar en la conversación."
 
 #. js-lingui-explicit-id
 #: src/components/participant/refine/RefineSelection.tsx:128
 msgid "participant.refine.go.deeper.description"
-msgstr "Get an immediate reply from Dembrane to help you deepen the conversation."
+msgstr "Obtén una respuesta inmediata de Dembrane para ayudarte a profundizar en la conversación."
 
 #: src/components/view/CreateViewForm.tsx:129
 msgid "Give me a list of 5-10 topics that are being discussed."
@@ -1479,12 +1479,12 @@ msgstr "Dame una lista de 5-10 temas que se están discutiendo."
 
 #: src/routes/settings/UserSettingsRoute.tsx:34
 msgid "Go back"
-msgstr "Go back"
+msgstr "Volver"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefactError.tsx:52
 msgid "participant.concrete.artefact.action.button.go.back"
-msgstr "participant.concrete.artefact.action.button.go.back"
+msgstr "Volver"
 
 #: src/components/project/ProjectPortalEditor.tsx:564
 msgid "Go deeper"
@@ -1493,7 +1493,7 @@ msgstr "Profundizar"
 #. js-lingui-explicit-id
 #: src/components/participant/refine/RefineSelection.tsx:124
 msgid "participant.refine.go.deeper"
-msgstr "Go deeper"
+msgstr "Profundizar"
 
 #: src/routes/404.tsx:17
 msgid "Go home"
@@ -1508,7 +1508,7 @@ msgstr "Ir a la nueva conversación"
 
 #: src/components/conversation/ConversationAccordion.tsx:550
 msgid "Has verified artifacts"
-msgstr "Has verified artifacts"
+msgstr "Tiene artefactos verificados"
 
 #. placeholder {0}: user.first_name ?? "User"
 #: src/components/layout/Header.tsx:159
@@ -1517,11 +1517,11 @@ msgstr "Hola, {0}"
 
 #: src/components/settings/AuditLogsCard.tsx:285
 msgid "Hidden"
-msgstr "Hidden"
+msgstr "Oculto"
 
 #: src/components/participant/verify/VerifySelection.tsx:113
 msgid "Hidden gem"
-msgstr "Hidden gem"
+msgstr "Joya oculta"
 
 #~ msgid "Hide {0}"
 #~ msgstr "Ocultar {0}"
@@ -1537,11 +1537,11 @@ msgstr "Hidden gem"
 
 #: src/components/settings/AuditLogsCard.tsx:248
 msgid "Hide data"
-msgstr "Hide data"
+msgstr "Ocultar datos"
 
 #: src/components/settings/AuditLogsCard.tsx:245
 msgid "Hide revision data"
-msgstr "Hide revision data"
+msgstr "Ocultar datos de revisión"
 
 #: src/routes/project/ProjectsHome.tsx:122
 msgid "Home"
@@ -1560,7 +1560,7 @@ msgstr ""
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:351
 msgid "participant.button.i.understand"
-msgstr "I understand"
+msgstr "Entiendo"
 
 #~ msgid ""
 #~ "Identify and analyze the recurring themes in this content. Please:\n"
@@ -1585,7 +1585,7 @@ msgstr "Identifica temas recurrentes, temas y argumentos que aparecen consistent
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:43
 msgid "participant.concrete.instructions.approve.artefact"
-msgstr "participant.concrete.instructions.approve.artefact"
+msgstr "Si estás satisfecho con el {objectLabel}, haz clic en \"Aprobar\" para mostrar que te sientes escuchado."
 
 #~ msgid "In order to better navigate through the quotes, create additional views. The quotes will then be clustered based on your view."
 #~ msgstr "Para navegar mejor por las citas, crea vistas adicionales. Las citas se agruparán según tu vista."
@@ -1630,7 +1630,7 @@ msgstr "Token inválido. Por favor intenta de nuevo."
 
 #: src/components/settings/AuditLogsCard.tsx:289
 msgid "IP Address"
-msgstr "IP Address"
+msgstr "Dirección IP"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ConversationErrorView.tsx:30
@@ -1648,7 +1648,7 @@ msgstr "Parece que la biblioteca no está disponible para tu cuenta. Por favor, 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefactError.tsx:24
 msgid "participant.concrete.artefact.error.description"
-msgstr "participant.concrete.artefact.error.description"
+msgstr "Parece que no pudimos cargar este artefacto. Esto podría ser un problema temporal. Puedes intentar recargar o volver para seleccionar un tema diferente."
 
 #: src/components/participant/hooks/useConversationIssueBanner.ts:17
 msgid "It sounds like more than one person is speaking. Taking turns will help us hear everyone clearly."
@@ -1668,7 +1668,7 @@ msgstr "Un momento"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:297
 msgid "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
-msgstr "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
+msgstr "Mantén el acceso seguro con un código de un solo uso de tu aplicación de autenticación. Activa o desactiva la autenticación de dos factores para esta cuenta."
 
 #: src/components/project/ProjectPortalEditor.tsx:456
 msgid "Language"
@@ -1752,7 +1752,7 @@ msgstr "Vista Previa en Vivo"
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:106
 msgid "participant.concrete.instructions.loading"
-msgstr "participant.concrete.instructions.loading"
+msgstr "Cargando"
 
 #: src/components/common/DembraneLoadingSpinner/index.tsx:24
 msgid "Loading"
@@ -1760,20 +1760,20 @@ msgstr "Cargando"
 
 #: src/components/settings/AuditLogsCard.tsx:465
 msgid "Loading actions..."
-msgstr "Loading actions..."
+msgstr "Cargando acciones..."
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefactLoading.tsx:13
 msgid "participant.concrete.loading.artefact"
-msgstr "participant.concrete.loading.artefact"
+msgstr "Cargando artefacto"
 
 #: src/components/settings/AuditLogsCard.tsx:574
 msgid "Loading audit logs…"
-msgstr "Loading audit logs…"
+msgstr "Cargando registros de auditoría…"
 
 #: src/components/settings/AuditLogsCard.tsx:482
 msgid "Loading collections..."
-msgstr "Loading collections..."
+msgstr "Cargando colecciones..."
 
 #: src/components/project/ProjectPortalEditor.tsx:819
 msgid "Loading concrete topics…"
@@ -1802,7 +1802,7 @@ msgstr "Cargando..."
 
 #: src/components/participant/verify/VerifySelection.tsx:247
 msgid "Loading…"
-msgstr "Loading…"
+msgstr "Cargando…"
 
 #: src/routes/auth/Login.tsx:279
 msgid "Login"
@@ -1827,12 +1827,12 @@ msgstr "Más largo primero"
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:750
 msgid "dashboard.dembrane.concrete.title"
-msgstr "dashboard.dembrane.concrete.title"
+msgstr "Hacerlo concreto"
 
 #. js-lingui-explicit-id
 #: src/components/participant/refine/RefineSelection.tsx:71
 msgid "participant.refine.make.concrete"
-msgstr "Make it concrete"
+msgstr "Hacerlo concreto"
 
 #: src/components/announcement/AnnouncementDrawerHeader.tsx:51
 msgid "Mark all read"
@@ -1941,12 +1941,12 @@ msgstr "¿Listo para comenzar?"
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifySelection.tsx:249
 msgid "participant.concrete.selection.button.next"
-msgstr "participant.concrete.selection.button.next"
+msgstr "Siguiente"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:108
 msgid "participant.concrete.instructions.button.next"
-msgstr "participant.concrete.instructions.button.next"
+msgstr "Siguiente"
 
 #~ msgid "Next"
 #~ msgstr "Siguiente"
@@ -1958,7 +1958,7 @@ msgstr "No"
 
 #: src/components/settings/AuditLogsCard.tsx:472
 msgid "No actions found"
-msgstr "No actions found"
+msgstr "No se encontraron acciones"
 
 #: src/components/announcement/Announcements.tsx:121
 msgid "No announcements available"
@@ -1966,7 +1966,7 @@ msgstr "No hay anuncios disponibles"
 
 #: src/components/settings/AuditLogsCard.tsx:633
 msgid "No audit logs match the current filters."
-msgstr "No audit logs match the current filters."
+msgstr "No hay registros de auditoría que coincidan con los filtros actuales."
 
 #. js-lingui-explicit-id
 #: src/components/chat/ChatAccordion.tsx:244
@@ -1978,7 +1978,7 @@ msgstr "No se encontraron chats. Inicia un chat usando el botón \"Preguntar\"."
 
 #: src/components/settings/AuditLogsCard.tsx:490
 msgid "No collections found"
-msgstr "No collections found"
+msgstr "No se encontraron colecciones"
 
 #: src/components/project/ProjectPortalEditor.tsx:823
 msgid "No concrete topics available."
@@ -2045,7 +2045,7 @@ msgstr "No se encontró ningún informe"
 
 #: src/components/settings/AuditLogsCard.tsx:656
 msgid "No results"
-msgstr "No results"
+msgstr "Sin resultados"
 
 #: src/components/conversation/ConversationEdit.tsx:207
 #: src/components/conversation/ConversationAccordion.tsx:1157
@@ -2080,7 +2080,7 @@ msgstr "No se seleccionaron archivos de audio válidos. Por favor, selecciona so
 
 #: src/components/participant/verify/VerifySelection.tsx:211
 msgid "No verification topics are configured for this project."
-msgstr "No verification topics are configured for this project."
+msgstr "No hay temas de verificación configurados para este proyecto."
 
 #~ msgid "No verification topics available."
 #~ msgstr "No verification topics available."
@@ -2099,12 +2099,12 @@ msgstr "Más antiguos primero"
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:34
 msgid "participant.concrete.instructions.revise.artefact"
-msgstr "participant.concrete.instructions.revise.artefact"
+msgstr "Una vez que hayas discutido, presiona \"revisar\" para ver cómo el {objectLabel} cambia para reflejar tu discusión."
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:25
 msgid "participant.concrete.instructions.read.aloud"
-msgstr "participant.concrete.instructions.read.aloud"
+msgstr "Una vez que recibas el {objectLabel}, léelo en voz alta y comparte en voz alta lo que deseas cambiar, si es necesario."
 
 #. js-lingui-explicit-id
 #: src/components/conversation/ConversationAccordion.tsx:584
@@ -2151,7 +2151,7 @@ msgstr "Abrir guía de solución de problemas"
 
 #: src/routes/auth/Login.tsx:241
 msgid "Open your authenticator app and enter the current six-digit code."
-msgstr "Open your authenticator app and enter the current six-digit code."
+msgstr "Abre tu aplicación de autenticación e ingresa el código actual de seis dígitos."
 
 #: src/components/conversation/ConversationAccordion.tsx:946
 #: src/components/conversation/ConversationAccordion.tsx:953
@@ -2217,10 +2217,10 @@ msgstr "Funciones para participantes"
 #~ msgstr "Algo salió mal. Por favor, inténtalo de nuevo."
 
 #~ msgid "participant.modal.refine.info.title.echo"
-#~ msgstr "\"Go deeper\" available soon"
+#~ msgstr "\"Profundizar\" Disponible pronto"
 
 #~ msgid "participant.modal.refine.info.title.verify"
-#~ msgstr "\"Make it concrete\" available soon"
+#~ msgstr "\"Concretar\" Disponible pronto"
 
 #~ msgid "participant.modal.stop.message"
 #~ msgstr "¿Estás seguro de que quieres detener la conversación?"
@@ -2322,7 +2322,7 @@ msgstr "Las contraseñas no coinciden"
 
 #: src/components/participant/verify/VerifyArtefact.tsx:323
 msgid "Pause reading"
-msgstr "Pause reading"
+msgstr "Pausar lectura"
 
 #: src/components/report/ConversationStatusTable.tsx:85
 msgid "Pending"
@@ -2553,7 +2553,7 @@ msgstr "Saca las citas más potentes de esta sesión"
 
 #: src/components/participant/verify/VerifyArtefact.tsx:323
 msgid "Read aloud"
-msgstr "Read aloud"
+msgstr "Leer en voz alta"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantOnboardingCards.tsx:259
@@ -2565,7 +2565,7 @@ msgstr "¿Listo para comenzar?"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:327
 msgid "Recommended apps"
-msgstr "Recommended apps"
+msgstr "Aplicaciones recomendadas"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:419
@@ -2582,7 +2582,7 @@ msgstr "Registrar otra conversación"
 #. js-lingui-explicit-id
 #: src/components/participant/StopRecordingConfirmationModal.tsx:35
 msgid "participant.modal.pause.title"
-msgstr "Recording Paused"
+msgstr "Grabación pausada"
 
 #. js-lingui-explicit-id
 #: src/components/view/View.tsx:82
@@ -2606,7 +2606,7 @@ msgstr "Referencias"
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:473
 msgid "participant.button.refine"
-msgstr "Refine"
+msgstr "Refinar"
 
 #: src/components/project/ProjectPortalEditor.tsx:1117
 msgid "Refresh"
@@ -2614,7 +2614,7 @@ msgstr "Actualizar"
 
 #: src/components/settings/AuditLogsCard.tsx:419
 msgid "Refresh audit logs"
-msgstr "Refresh audit logs"
+msgstr "Actualizar registros de auditoría"
 
 #~ msgid "Regenerate Library"
 #~ msgstr "Regenerar Biblioteca"
@@ -2626,7 +2626,7 @@ msgstr "Regenerar Resumen"
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefact.tsx:303
 msgid "participant.concrete.regenerating.artefact"
-msgstr "participant.concrete.regenerating.artefact"
+msgstr "Regenerando el artefacto"
 
 #: src/routes/project/conversation/ProjectConversationOverview.tsx:79
 msgid "Regenerating the summary. Please wait..."
@@ -2656,7 +2656,7 @@ msgstr "Recargar"
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefactError.tsx:40
 msgid "participant.concrete.artefact.action.button.reload"
-msgstr "participant.concrete.artefact.action.button.reload"
+msgstr "Recargar página"
 
 #~ msgid "Reload Page"
 #~ msgstr "Recargar Página"
@@ -2761,7 +2761,7 @@ msgstr "Restablecer a valores predeterminados"
 #. js-lingui-explicit-id
 #: src/components/participant/StopRecordingConfirmationModal.tsx:51
 msgid "participant.button.stop.resume"
-msgstr "Resume"
+msgstr "Reanudar"
 
 #~ msgid "Resume"
 #~ msgstr "Reanudar"
@@ -2792,7 +2792,7 @@ msgstr "Reintentar subida"
 
 #: src/components/settings/AuditLogsCard.tsx:410
 msgid "Review activity for your workspace. Filter by collection or action, and export the current view for further investigation."
-msgstr "Review activity for your workspace. Filter by collection or action, and export the current view for further investigation."
+msgstr "Revisa la actividad de tu espacio de trabajo. Filtra por colección o acción, y exporta la vista actual para una investigación más detallada."
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:581
 msgid "Review files before uploading"
@@ -2805,20 +2805,20 @@ msgstr "Revisar el estado de procesamiento para cada conversación recopilada en
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefact.tsx:394
 msgid "participant.concrete.action.button.revise"
-msgstr "participant.concrete.action.button.revise"
+msgstr "revisar"
 
 #: src/components/settings/AuditLogsCard.tsx:612
 msgid "Revision #{revisionNumber}"
-msgstr "Revision #{revisionNumber}"
+msgstr "Revisión #{revisionNumber}"
 
 #: src/components/settings/AuditLogsCard.tsx:646
 msgid "Rows per page"
-msgstr "Rows per page"
+msgstr "Filas por página"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefact.tsx:371
 msgid "participant.concrete.action.button.save"
-msgstr "participant.concrete.action.button.save"
+msgstr "guardar"
 
 #~ msgid "Save"
 #~ msgstr "Guardar"
@@ -2833,7 +2833,7 @@ msgstr "Guardando..."
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:212
 msgid "Scan the QR code or copy the secret into your app."
-msgstr "Scan the QR code or copy the secret into your app."
+msgstr "Escanea el código QR o copia el secreto en tu aplicación."
 
 #: src/components/common/ScrollToBottom.tsx:21
 #: src/components/common/ScrollToBottom.tsx:26
@@ -2879,14 +2879,14 @@ msgstr "Buscando en las fuentes más relevantes"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:424
 msgid "Secret copied"
-msgstr "Secret copied"
+msgstr "Secreto copiado"
 
 #~ msgid "See conversation status details"
 #~ msgstr "Ver detalles del estado de la conversación"
 
 #: src/components/layout/Header.tsx:105
 msgid "See you soon"
-msgstr "See you soon"
+msgstr "Hasta pronto"
 
 #~ msgid "Segments"
 #~ msgstr "Segmentos"
@@ -2930,7 +2930,7 @@ msgstr "Seleccionar tutorial"
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:812
 msgid "dashboard.dembrane.concrete.topic.select"
-msgstr "dashboard.dembrane.concrete.topic.select"
+msgstr "Selecciona qué temas pueden usar los participantes para verificación."
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:306
@@ -2980,7 +2980,7 @@ msgstr "Configuración"
 
 #: src/routes/settings/UserSettingsRoute.tsx:20
 msgid "Settings | Dembrane"
-msgstr "Settings | Dembrane"
+msgstr "Configuración | Dembrane"
 
 #: src/components/project/ProjectQRCode.tsx:104
 msgid "Share"
@@ -3018,14 +3018,14 @@ msgstr "Mostrar reproductor de audio"
 
 #: src/components/settings/AuditLogsCard.tsx:248
 msgid "Show data"
-msgstr "Show data"
+msgstr "Mostrar datos"
 
 #~ msgid "Show duration"
 #~ msgstr "Mostrar duración"
 
 #: src/components/settings/AuditLogsCard.tsx:497
 msgid "Show IP addresses"
-msgstr "Show IP addresses"
+msgstr "Mostrar direcciones IP"
 
 #: src/components/announcement/AnnouncementItem.tsx:125
 msgid "Show less"
@@ -3042,7 +3042,7 @@ msgstr "Mostrar referencias"
 
 #: src/components/settings/AuditLogsCard.tsx:245
 msgid "Show revision data"
-msgstr "Show revision data"
+msgstr "Mostrar datos de revisión"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:283
 msgid "Show timeline in report (request feature)"
@@ -3053,7 +3053,7 @@ msgstr "Mostrar línea de tiempo en el informe (solicitar función)"
 
 #: src/components/settings/AuditLogsCard.tsx:658
 msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
-msgstr "Showing {displayFrom}–{displayTo} of {totalItems} entries"
+msgstr "Mostrando {displayFrom}–{displayTo} de {totalItems} entradas"
 
 #~ msgid "Sign in with Google"
 #~ msgstr "Iniciar sesión con Google"
@@ -3095,11 +3095,11 @@ msgstr "Algo salió mal con la conversación. Por favor, inténtalo de nuevo o c
 
 #: src/components/settings/AuditLogsCard.tsx:379
 msgid "Something went wrong while exporting audit logs."
-msgstr "Something went wrong while exporting audit logs."
+msgstr "Algo salió mal al exportar los registros de auditoría."
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:164
 msgid "Something went wrong while generating the secret."
-msgstr "Something went wrong while generating the secret."
+msgstr "Algo salió mal al generar el secreto."
 
 #~ msgid "Something went wrong while uploading the file: {0}"
 #~ msgstr "Algo salió mal al subir el archivo: {0}"
@@ -3111,7 +3111,7 @@ msgstr "Algo salió mal con la conversación. Por favor, inténtalo de nuevo o c
 #. js-lingui-explicit-id
 #: src/components/participant/EchoErrorAlert.tsx:21
 msgid "participant.go.deeper.generic.error.message"
-msgstr "participant.go.deeper.generic.error.message"
+msgstr "Algo salió mal. Por favor, inténtalo de nuevo."
 
 #: src/components/participant/verify/VerifyArtefact.tsx:149
 msgid "Something went wrong. Please try again."
@@ -3120,7 +3120,7 @@ msgstr "Algo salió mal. Por favor, inténtalo de nuevo."
 #. js-lingui-explicit-id
 #: src/components/participant/EchoErrorAlert.tsx:16
 msgid "participant.go.deeper.content.policy.violation.error.message"
-msgstr "participant.go.deeper.content.policy.violation.error.message"
+msgstr "Lo sentimos, no podemos procesar esta solicitud debido a la política de contenido del proveedor de LLM."
 
 #: src/components/conversation/ConversationAccordion.tsx:1000
 #: src/components/conversation/ConversationAccordion.tsx:1007
@@ -3170,7 +3170,7 @@ msgstr "Iniciar nueva conversación"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:259
 msgid "Start over"
-msgstr "Start over"
+msgstr "Empezar de nuevo"
 
 #~ msgid "Start Recording"
 #~ msgstr "Iniciar Grabación"
@@ -3251,11 +3251,11 @@ msgstr "Formatos soportados: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 #. js-lingui-explicit-id
 #: src/components/participant/StopRecordingConfirmationModal.tsx:73
 msgid "participant.link.switch.text"
-msgstr "Switch to text input"
+msgstr "Cambiar a entrada de texto"
 
 #: src/components/settings/AuditLogsCard.tsx:88
 msgid "System"
-msgstr "System"
+msgstr "Sistema"
 
 #: src/components/project/ProjectTagsInput.tsx:238
 #: src/components/participant/ParticipantInitiateForm.tsx:107
@@ -3267,16 +3267,16 @@ msgstr "Etiquetas"
 
 #: src/components/participant/ParticipantConversationAudio.tsx:252
 msgid "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from Dembrane to help you deepen the conversation."
-msgstr "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from Dembrane to help you deepen the conversation."
+msgstr "Tómate un tiempo para crear un resultado que haga tu contribución concreta u obtén una respuesta inmediata de Dembrane para ayudarte a profundizar en la conversación."
 
 #: src/components/participant/ParticipantConversationAudio.tsx:255
 msgid "Take some time to create an outcome that makes your contribution concrete."
-msgstr "Take some time to create an outcome that makes your contribution concrete."
+msgstr "Tómate un tiempo para crear un resultado que haga tu contribución concreta."
 
 #. js-lingui-explicit-id
 #: src/components/participant/refine/RefineSelection.tsx:77
 msgid "participant.refine.make.concrete.description"
-msgstr "Take some time to create an outcome that makes your contribution concrete."
+msgstr "Tómate un tiempo para crear un resultado que haga tu contribución concreta."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:406
 msgid "Template applied"
@@ -3304,7 +3304,7 @@ msgstr "¡Gracias! Te notificaremos cuando el informe esté listo."
 
 #: src/routes/auth/Login.tsx:141
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
-msgstr "That code didn't work. Try again with a fresh code from your authenticator app."
+msgstr "Ese código no funcionó. Inténtalo de nuevo con un código nuevo de tu aplicación de autenticación."
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:279
 #: src/components/settings/hooks/index.ts:54
@@ -3415,7 +3415,7 @@ msgstr "Este correo electrónico ya está en la lista."
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:341
 msgid "participant.modal.refine.info.available.in"
-msgstr "This feature will be available in {remainingTime} seconds."
+msgstr "Esta función estará disponible en {remainingTime} segundos."
 
 #: src/components/project/ProjectPortalEditor.tsx:1121
 msgid "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
@@ -3485,12 +3485,12 @@ msgstr "Esto creará una nueva conversación con el mismo audio pero una transcr
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefact.tsx:308
 msgid "participant.concrete.regenerating.artefact.description"
-msgstr "participant.concrete.regenerating.artefact.description"
+msgstr "Esto solo tomará unos momentos"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefactLoading.tsx:18
 msgid "participant.concrete.loading.artefact.description"
-msgstr "participant.concrete.loading.artefact.description"
+msgstr "Esto solo tomará un momento"
 
 #: src/components/conversation/RetranscribeConversation.tsx:144
 msgid "This will replace personally identifiable information with <redacted>."
@@ -3501,7 +3501,7 @@ msgstr "Esto reemplazará la información personal identificable con <redacted>.
 
 #: src/components/settings/AuditLogsCard.tsx:265
 msgid "Timestamp"
-msgstr "Timestamp"
+msgstr "Marca de tiempo"
 
 #: src/components/participant/ParticipantBody.tsx:143
 msgid "Tip"
@@ -3635,7 +3635,7 @@ msgstr "Intenta moverte un poco más cerca de tu micrófono para mejorar la cali
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:293
 msgid "Two-factor authentication"
-msgstr "Two-factor authentication"
+msgstr "Autenticación de dos factores"
 
 #: src/components/settings/hooks/index.ts:82
 msgid "Two-factor authentication disabled"
@@ -3647,7 +3647,7 @@ msgstr "Autenticación en dos pasos activada"
 
 #: src/components/settings/AuditLogsCard.tsx:190
 msgid "Type"
-msgstr "Type"
+msgstr "Tipo"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:693
 msgid "Type a message..."
@@ -3660,15 +3660,15 @@ msgstr "Escribe tu respuesta aquí"
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefactError.tsx:19
 msgid "participant.concrete.artefact.error.title"
-msgstr "participant.concrete.artefact.error.title"
+msgstr "No se pudo cargar el artefacto"
 
 #: src/components/settings/AuditLogsCard.tsx:511
 msgid "Unable to load audit logs."
-msgstr "Unable to load audit logs."
+msgstr "No se pudieron cargar los registros de auditoría."
 
 #: src/components/participant/verify/VerifyArtefact.tsx:89
 msgid "Unable to load the generated artefact. Please try again."
-msgstr "Unable to load the generated artefact. Please try again."
+msgstr "No se pudo cargar el artefacto generado. Por favor, inténtalo de nuevo."
 
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:69
 msgid "Unable to process this chunk"
@@ -3680,7 +3680,7 @@ msgstr "Deshacer"
 
 #: src/components/settings/AuditLogsCard.tsx:280
 msgid "Unknown"
-msgstr "Unknown"
+msgstr "Desconocido"
 
 #: src/components/announcement/AnnouncementDrawerHeader.tsx:39
 msgid "unread announcement"
@@ -3800,7 +3800,7 @@ msgstr "verified artifacts"
 
 #: src/routes/auth/Login.tsx:277
 msgid "Verify code"
-msgstr "Verify code"
+msgstr "Verificar código"
 
 #: src/routes/project/library/ProjectLibraryView.tsx:36
 #: src/routes/project/library/ProjectLibraryAspect.tsx:47
@@ -3837,7 +3837,7 @@ msgstr "¿Quieres añadir una plantilla a \"Dembrane\"?"
 #~ msgstr "Advertencia"
 
 #~ msgid "Warning: You have added {0} key terms. Only the first {ASSEMBLYAI_MAX_HOTWORDS} will be used by the transcription engine."
-#~ msgstr "Warning: You have added {0} key terms. Only the first {ASSEMBLYAI_MAX_HOTWORDS} will be used by the transcription engine."
+#~ msgstr "Advertencia: Has añadido {0} términos clave. Solo los primeros {ASSEMBLYAI_MAX_HOTWORDS} serán utilizados por el motor de transcripción."
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:366
@@ -3849,11 +3849,11 @@ msgstr "No podemos escucharte. Por favor, intenta cambiar tu micrófono o acerca
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:388
 msgid "We couldn’t disable two-factor authentication. Try again with a fresh code."
-msgstr "We couldn’t disable two-factor authentication. Try again with a fresh code."
+msgstr "No pudimos desactivar la autenticación de dos factores. Inténtalo de nuevo con un código nuevo."
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:275
 msgid "We couldn’t enable two-factor authentication. Double-check your code and try again."
-msgstr "We couldn’t enable two-factor authentication. Double-check your code and try again."
+msgstr "No pudimos activar la autenticación de dos factores. Verifica tu código e inténtalo de nuevo."
 
 #~ msgid "We couldn't load the audio. Please try again later."
 #~ msgstr "No pudimos cargar el audio. Por favor, inténtalo de nuevo más tarde."
@@ -3895,7 +3895,7 @@ msgstr "Bienvenido"
 
 #: src/routes/auth/Login.tsx:108
 msgid "Welcome back"
-msgstr "Welcome back"
+msgstr "Bienvenido de nuevo"
 
 #~ msgid "Welcome to Big Picture Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Details mode."
 #~ msgstr "Bienvenido al modo Big Picture! Tengo resúmenes de todas tus conversaciones cargados. Pregúntame sobre patrones, temas e insights en tus datos. Para citas exactas, inicia un nuevo chat en el modo Específico."
@@ -3934,7 +3934,7 @@ msgstr "¿Cuáles son los temas principales en todas las conversaciones?"
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifySelection.tsx:195
 msgid "participant.concrete.selection.title"
-msgstr "participant.concrete.selection.title"
+msgstr "¿Qué quieres verificar?"
 
 #: src/components/chat/ChatModeSelector.tsx:46
 msgid "What patterns emerge from the data?"
@@ -3997,12 +3997,12 @@ msgstr "Pareces estar desconectado, por favor verifica tu conexión a internet"
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:17
 msgid "participant.concrete.instructions.receive.artefact"
-msgstr "participant.concrete.instructions.receive.artefact"
+msgstr "Pronto recibirás {objectLabel} para verificar."
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:52
 msgid "participant.concrete.instructions.approval.helps"
-msgstr "participant.concrete.instructions.approval.helps"
+msgstr "¡Tu aprobación nos ayuda a entender lo que realmente piensas!"
 
 #~ msgid "Your conversation is currently being transcribed. Please check back in a few moments."
 #~ msgstr "Tu conversación está siendo transcribida. Por favor, revisa más tarde."
