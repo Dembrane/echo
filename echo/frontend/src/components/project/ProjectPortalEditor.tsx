@@ -638,6 +638,10 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																size="lg"
 																fw={500}
 																style={{
+																	border:
+																		field.value === "summarize"
+																			? "1px solid var(--mantine-color-primary-5)"
+																			: "",
 																	cursor: watchedReplyEnabled
 																		? "pointer"
 																		: "not-allowed",
@@ -665,6 +669,10 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																size="lg"
 																fw={500}
 																style={{
+																	border:
+																		field.value === "brainstorm"
+																			? "1px solid var(--mantine-color-primary-5)"
+																			: "",
 																	cursor: watchedReplyEnabled
 																		? "pointer"
 																		: "not-allowed",
@@ -690,6 +698,10 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																size="lg"
 																fw={500}
 																style={{
+																	border:
+																		field.value === "custom"
+																			? "1px solid var(--mantine-color-primary-5)"
+																			: "",
 																	cursor: watchedReplyEnabled
 																		? "pointer"
 																		: "not-allowed",
@@ -841,6 +853,9 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																		size="lg"
 																		fw={500}
 																		style={{
+																			border: field.value.includes(topic.key)
+																				? "1px solid var(--mantine-color-primary-5)"
+																				: "",
 																			cursor: watchedVerifyEnabled
 																				? "pointer"
 																				: "not-allowed",

@@ -281,6 +281,17 @@ export const TwoFactorSettingsCard = ({
 
 		return message;
 	};
+	const getDisableTwoFactorErrorMessage = (message?: string) => {
+		if (!message) {
+			return t`We couldn’t disable two-factor authentication. Try again with a fresh code.`;
+		}
+
+		if (message.includes('Invalid payload. "otp" is invalid')) {
+			return t`The code didn't work, please try again.`;
+		}
+
+		return message;
+	};
 	return (
 		<>
 			<Paper withBorder p="lg" radius="lg">
@@ -384,8 +395,9 @@ export const TwoFactorSettingsCard = ({
 
 					{disableTwoFactorMutation.isError && (
 						<Alert color="red" variant="light">
-							{disableTwoFactorMutation.error?.message ??
-								t`We couldn’t disable two-factor authentication. Try again with a fresh code.`}
+							{getDisableTwoFactorErrorMessage(
+								disableTwoFactorMutation.error?.message,
+							)}
 						</Alert>
 					)}
 

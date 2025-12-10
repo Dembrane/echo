@@ -505,7 +505,7 @@ msgstr "Auditlogboeken geëxporteerd naar JSON"
 
 #: src/routes/auth/Login.tsx:209
 #: src/components/settings/TwoFactorSettingsCard.tsx:231
-#: src/components/settings/TwoFactorSettingsCard.tsx:370
+#: src/components/settings/TwoFactorSettingsCard.tsx:381
 msgid "Authenticator code"
 msgstr "Authenticator-code"
 
@@ -590,7 +590,7 @@ msgid "By deleting this project, you will delete all the data associated with it
 msgstr "Door dit project te verwijderen, verwijder je alle gegevens die eraan gerelateerd zijn. Dit kan niet ongedaan worden gemaakt. Weet je zeker dat je dit project wilt verwijderen?"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:332
-#: src/components/settings/TwoFactorSettingsCard.tsx:394
+#: src/components/settings/TwoFactorSettingsCard.tsx:406
 #: src/components/project/ProjectDangerZone.tsx:137
 #: src/components/project/ProjectDangerZone.tsx:163
 #: src/components/dropzone/UploadConversationDropzone.tsx:686
@@ -831,13 +831,15 @@ msgstr "Gesprekken"
 msgid "participant.refine.cooling.down"
 msgstr "Even afkoelen. Beschikbaar over {0}"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:419
+#: src/components/settings/TwoFactorSettingsCard.tsx:431
 #: src/components/project/ProjectQRCode.tsx:121
 #: src/components/conversation/CopyConversationTranscript.tsx:47
+#: src/components/common/CopyRichTextIconButton.tsx:29
 #: src/components/common/CopyIconButton.tsx:17
 msgid "Copied"
 msgstr "Gekopieerd"
 
+#: src/components/common/CopyRichTextIconButton.tsx:29
 #: src/components/common/CopyIconButton.tsx:8
 msgid "Copy"
 msgstr "Kopieer"
@@ -850,8 +852,8 @@ msgstr "Kopieer link"
 msgid "Copy link to share this report"
 msgstr "Kopieer link om dit rapport te delen"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:419
-#: src/components/settings/TwoFactorSettingsCard.tsx:424
+#: src/components/settings/TwoFactorSettingsCard.tsx:431
+#: src/components/settings/TwoFactorSettingsCard.tsx:436
 msgid "Copy secret"
 msgstr "Geheim kopiëren"
 
@@ -865,6 +867,10 @@ msgstr "Kopieer naar clipboard"
 
 #~ msgid "Copy transcript"
 #~ msgstr "Kopieer transcript"
+
+#: src/components/common/CopyRichTextIconButton.tsx:29
+msgid "Copying..."
+msgstr "Kopieren..."
 
 #: src/routes/project/ProjectsHome.tsx:137
 msgid "Create"
@@ -1013,15 +1019,15 @@ msgstr ""
 "\n"
 "Let op: Focus op strategieën die duurzame competitieve voordelen creëren, niet alleen incrementele verbeteringen."
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:402
+#: src/components/settings/TwoFactorSettingsCard.tsx:414
 msgid "Disable 2FA"
 msgstr "2FA uitschakelen"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:358
+#: src/components/settings/TwoFactorSettingsCard.tsx:369
 msgid "Disable two-factor authentication"
 msgstr "Tweestapsverificatie uitschakelen"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:312
+#: src/components/settings/TwoFactorSettingsCard.tsx:323
 msgid "Disabled"
 msgstr "Uitgeschakeld"
 
@@ -1174,7 +1180,7 @@ msgstr "2FA inschakelen"
 
 #: src/components/project/ProjectPortalEditor.tsx:592
 msgid "Enable Go deeper"
-msgstr "Go deeper aanzetten"
+msgstr "Ga dieper aanzetten"
 
 #: src/components/project/ProjectPortalEditor.tsx:780
 msgid "Enable Make it concrete"
@@ -1206,11 +1212,11 @@ msgstr "Schakel deze functie in zodat deelnemers meldingen kunnen ontvangen wann
 msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Go deeper\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 msgstr "Zet deze functie aan zodat deelnemers AI-antwoorden kunnen vragen tijdens hun gesprek. Na het inspreken van hun gedachten kunnen ze op \"Go deeper\" klikken voor contextuele feedback, zodat ze dieper gaan nadenken en meer betrokken raken. Er zit een wachttijd tussen verzoeken."
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:349
+#: src/components/settings/TwoFactorSettingsCard.tsx:360
 msgid "Enable two-factor authentication"
 msgstr "Tweestapsverificatie inschakelen"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:312
+#: src/components/settings/TwoFactorSettingsCard.tsx:323
 #: src/components/conversation/AutoSelectConversations.tsx:86
 msgid "Enabled"
 msgstr "Ingeschakeld"
@@ -1234,7 +1240,7 @@ msgstr "Voer een naam in voor het nieuwe gesprek"
 msgid "Enter a name for your cloned project"
 msgstr "Voer een naam in voor je nieuwe project"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:363
+#: src/components/settings/TwoFactorSettingsCard.tsx:374
 msgid "Enter a valid code to turn off two-factor authentication."
 msgstr "Voer een geldige code in om tweestapsverificatie uit te schakelen."
 
@@ -1346,6 +1352,10 @@ msgstr "Fout bij het toevoegen van het gesprek aan de chat{0}"
 #: src/components/participant/verify/VerifyArtefact.tsx:136
 msgid "Failed to approve artefact. Please try again."
 msgstr "Artefact kon niet worden goedgekeurd. Probeer het opnieuw."
+
+#: src/components/common/CopyRichTextIconButton.tsx:20
+msgid "Failed to copy chat. Please try again."
+msgstr "Fout bij het kopiëren van de chat. Probeer het opnieuw."
 
 #: src/components/conversation/CopyConversationTranscript.tsx:25
 msgid "Failed to copy transcript. Please try again."
@@ -1584,7 +1594,7 @@ msgstr "Terug"
 
 #: src/components/project/ProjectPortalEditor.tsx:564
 msgid "Go deeper"
-msgstr "Go deeper"
+msgstr "Ga dieper"
 
 #. js-lingui-explicit-id
 #: src/components/participant/refine/RefineSelection.tsx:124
@@ -1783,7 +1793,7 @@ msgstr "Gewoon een momentje"
 #~ msgid "Just now"
 #~ msgstr "Net zojuist"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:297
+#: src/components/settings/TwoFactorSettingsCard.tsx:308
 msgid "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
 msgstr "Houd de toegang veilig met een eenmalige code uit je authenticator-app. Gebruik deze schakelaar om tweestapsverificatie voor dit account te beheren."
 
@@ -1944,7 +1954,7 @@ msgstr "Langste eerst"
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:750
 msgid "dashboard.dembrane.concrete.title"
-msgstr "Concrete onderwerpen"
+msgstr "Maak het concreet"
 
 #. js-lingui-explicit-id
 #: src/components/participant/refine/RefineSelection.tsx:71
@@ -2713,7 +2723,7 @@ msgstr "Klaar om te beginnen"
 #~ msgid "Ready!"
 #~ msgstr "Klaar om te beginnen"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:327
+#: src/components/settings/TwoFactorSettingsCard.tsx:338
 msgid "Recommended apps"
 msgstr "Aanbevolen apps"
 
@@ -3027,7 +3037,7 @@ msgstr "Doorzocht de meest relevante bronnen"
 msgid "Searching through the most relevant sources"
 msgstr "Zoeken door de meest relevante bronnen"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:424
+#: src/components/settings/TwoFactorSettingsCard.tsx:436
 msgid "Secret copied"
 msgstr "Geheim gekopieerd"
 
@@ -3469,7 +3479,9 @@ msgid "That code didn't work. Try again with a fresh code from your authenticato
 msgstr "Die code werkte niet. Probeer het opnieuw met een verse code uit je authenticator-app."
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:279
+#: src/components/settings/TwoFactorSettingsCard.tsx:290
 #: src/components/settings/hooks/index.ts:54
+#: src/components/settings/hooks/index.ts:77
 msgid "The code didn't work, please try again."
 msgstr "Code werkt niet, probeer het nog een keer."
 
@@ -3706,7 +3718,7 @@ msgstr "Transcriptie wordt uitgevoerd..."
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:83
 #: src/components/layout/ProjectConversationLayout.tsx:47
 msgid "Transcript"
-msgstr "Transcript"
+msgstr "Transcriptie"
 
 #: src/components/conversation/CopyConversationTranscript.tsx:27
 msgid "Transcript copied to clipboard"
@@ -3813,17 +3825,17 @@ msgstr "Vraag bijvoorbeeld"
 msgid "Try moving a bit closer to your microphone for better sound quality."
 msgstr "Probeer een beetje dichter bij je microfoon te komen voor betere geluidskwaliteit."
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:293
+#: src/components/settings/TwoFactorSettingsCard.tsx:304
 msgid "Two-factor authentication"
 msgstr "Tweestapsverificatie"
 
-#: src/components/settings/hooks/index.ts:82
+#: src/components/settings/hooks/index.ts:86
 msgid "Two-factor authentication disabled"
-msgstr "Two-factor-authenticatie uitgezet"
+msgstr "Tweestapsverificatie uitgezet"
 
 #: src/components/settings/hooks/index.ts:63
 msgid "Two-factor authentication enabled"
-msgstr "Two-factor-authenticatie aangezet"
+msgstr "Tweestapsverificatie aangezet"
 
 #: src/components/settings/AuditLogsCard.tsx:190
 msgid "Type"
@@ -3858,7 +3870,7 @@ msgstr "Het gegenereerde artefact kan niet worden geladen. Probeer het opnieuw."
 
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:69
 msgid "Unable to process this chunk"
-msgstr "Niet verwerken"
+msgstr "Kan dit fragment niet verwerken"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:408
 msgid "Undo"
@@ -3911,7 +3923,7 @@ msgstr "Upgraden"
 
 #: src/components/conversation/AutoSelectConversations.tsx:157
 msgid "Upgrade to unlock Auto-select and analyze 10x more conversations in half the time—no more manual selection, just deeper insights instantly."
-msgstr "Upgrade naar Auto-select en analyseer 10x meer gesprekken in de helft van de tijd - geen handmatige selectie meer, gewoon diepere inzichten direct."
+msgstr "Upgrade om automatisch selecteren te ontgrendelen en analyseer 10x meer gesprekken in de helft van de tijd - geen handmatige selectie meer, gewoon diepere inzichten direct."
 
 #: src/components/project/ProjectUploadSection.tsx:15
 #: src/components/dropzone/UploadConversationDropzone.tsx:504
@@ -4036,7 +4048,7 @@ msgstr "We kunnen je niet horen. Probeer je microfoon te wisselen of een beetje 
 #~ msgid "We cannot hear you. Please try changing your microphone or get a little closer to the device."
 #~ msgstr "We kunnen je niet horen. Probeer je microfoon te wisselen of een beetje dichter bij het apparaat te komen."
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:388
+#: src/components/settings/TwoFactorSettingsCard.tsx:286
 msgid "We couldn’t disable two-factor authentication. Try again with a fresh code."
 msgstr "We konden tweestapsverificatie niet uitschakelen. Probeer het opnieuw met een nieuwe code."
 
