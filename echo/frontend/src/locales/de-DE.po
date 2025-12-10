@@ -448,7 +448,7 @@ msgstr "Audit-Protokolle als JSON exportiert"
 
 #: src/routes/auth/Login.tsx:209
 #: src/components/settings/TwoFactorSettingsCard.tsx:231
-#: src/components/settings/TwoFactorSettingsCard.tsx:370
+#: src/components/settings/TwoFactorSettingsCard.tsx:381
 msgid "Authenticator code"
 msgstr "Authentifizierungscode"
 
@@ -533,7 +533,7 @@ msgid "By deleting this project, you will delete all the data associated with it
 msgstr "Durch das Löschen dieses Projekts werden alle damit verbundenen Daten gelöscht. Diese Aktion kann nicht rückgängig gemacht werden. Sind Sie ABSOLUT sicher, dass Sie dieses Projekt löschen möchten?"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:332
-#: src/components/settings/TwoFactorSettingsCard.tsx:394
+#: src/components/settings/TwoFactorSettingsCard.tsx:406
 #: src/components/project/ProjectDangerZone.tsx:137
 #: src/components/project/ProjectDangerZone.tsx:163
 #: src/components/dropzone/UploadConversationDropzone.tsx:686
@@ -774,7 +774,7 @@ msgstr "Gespräche"
 msgid "participant.refine.cooling.down"
 msgstr "Abkühlung läuft. Verfügbar in {0}"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:419
+#: src/components/settings/TwoFactorSettingsCard.tsx:431
 #: src/components/project/ProjectQRCode.tsx:121
 #: src/components/conversation/CopyConversationTranscript.tsx:47
 #: src/components/common/CopyIconButton.tsx:17
@@ -793,8 +793,8 @@ msgstr "Link kopieren"
 msgid "Copy link to share this report"
 msgstr "Link zum Teilen dieses Berichts kopieren"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:419
-#: src/components/settings/TwoFactorSettingsCard.tsx:424
+#: src/components/settings/TwoFactorSettingsCard.tsx:431
+#: src/components/settings/TwoFactorSettingsCard.tsx:436
 msgid "Copy secret"
 msgstr "Geheimnis kopieren"
 
@@ -944,15 +944,15 @@ msgstr ""
 "\n"
 "Hinweis: Focus on strategies that create sustainable competitive advantages, not just incremental improvements."
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:402
+#: src/components/settings/TwoFactorSettingsCard.tsx:414
 msgid "Disable 2FA"
 msgstr "2FA deaktivieren"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:358
+#: src/components/settings/TwoFactorSettingsCard.tsx:369
 msgid "Disable two-factor authentication"
 msgstr "Zwei-Faktor-Authentifizierung deaktivieren"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:312
+#: src/components/settings/TwoFactorSettingsCard.tsx:323
 msgid "Disabled"
 msgstr "Deaktiviert"
 
@@ -1119,11 +1119,11 @@ msgstr "Aktivieren Sie diese Funktion, um Teilnehmern zu ermöglichen, Benachric
 msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Go deeper\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 msgstr "Aktiviere das, damit Teilnehmende in ihrem Gespräch KI-Antworten anfordern können. Nach ihrer Aufnahme können sie auf „Tiefer eintauchen“ klicken und bekommen Feedback im Kontext, das zu mehr Reflexion und Beteiligung anregt. Zwischen den Anfragen gibt es eine kurze Wartezeit."
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:349
+#: src/components/settings/TwoFactorSettingsCard.tsx:360
 msgid "Enable two-factor authentication"
 msgstr "Zwei-Faktor-Authentifizierung aktivieren"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:312
+#: src/components/settings/TwoFactorSettingsCard.tsx:323
 #: src/components/conversation/AutoSelectConversations.tsx:86
 msgid "Enabled"
 msgstr "Aktiviert"
@@ -1147,7 +1147,7 @@ msgstr "Geben Sie einen Namen für das neue Gespräch ein"
 msgid "Enter a name for your cloned project"
 msgstr "Geben Sie einen Namen für Ihr geklontes Projekt ein"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:363
+#: src/components/settings/TwoFactorSettingsCard.tsx:374
 msgid "Enter a valid code to turn off two-factor authentication."
 msgstr "Geben Sie einen gültigen Code ein, um die Zwei-Faktor-Authentifizierung zu deaktivieren."
 
@@ -1663,7 +1663,7 @@ msgstr "Einen Moment bitte"
 #~ msgid "Just now"
 #~ msgstr "Gerade eben"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:297
+#: src/components/settings/TwoFactorSettingsCard.tsx:308
 msgid "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
 msgstr "Halten Sie den Zugriff sicher mit einem Einmalcode aus Ihrer Authentifizierungs-App. Aktivieren oder deaktivieren Sie die Zwei-Faktor-Authentifizierung für dieses Konto."
 
@@ -2557,7 +2557,7 @@ msgstr "Bereit zum Beginn"
 #~ msgid "Ready to Begin?"
 #~ msgstr "Bereit zum Beginn?"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:327
+#: src/components/settings/TwoFactorSettingsCard.tsx:338
 msgid "Recommended apps"
 msgstr "Empfohlene Apps"
 
@@ -2871,7 +2871,7 @@ msgstr "Durchsucht die relevantesten Quellen"
 msgid "Searching through the most relevant sources"
 msgstr "Durchsucht die relevantesten Quellen"
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:424
+#: src/components/settings/TwoFactorSettingsCard.tsx:436
 msgid "Secret copied"
 msgstr "Geheimnis kopiert"
 
@@ -3301,7 +3301,9 @@ msgid "That code didn't work. Try again with a fresh code from your authenticato
 msgstr "Der Code hat nicht funktioniert. Versuchen Sie es erneut mit einem neuen Code aus Ihrer Authentifizierungs-App."
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:279
+#: src/components/settings/TwoFactorSettingsCard.tsx:290
 #: src/components/settings/hooks/index.ts:54
+#: src/components/settings/hooks/index.ts:77
 msgid "The code didn't work, please try again."
 msgstr "Der Code hat nicht funktioniert, versuch’s nochmal."
 
@@ -3629,11 +3631,11 @@ msgstr "Frag mal"
 msgid "Try moving a bit closer to your microphone for better sound quality."
 msgstr "Versuchen Sie, etwas näher an Ihren Mikrofon zu sein, um bessere Audio-Qualität zu erhalten."
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:293
+#: src/components/settings/TwoFactorSettingsCard.tsx:304
 msgid "Two-factor authentication"
 msgstr "Zwei-Faktor-Authentifizierung"
 
-#: src/components/settings/hooks/index.ts:82
+#: src/components/settings/hooks/index.ts:86
 msgid "Two-factor authentication disabled"
 msgstr "Zwei-Faktor-Authentifizierung deaktiviert"
 
@@ -3843,7 +3845,7 @@ msgstr "Wir können Sie nicht hören. Bitte versuchen Sie, Ihr Mikrofon zu ände
 #~ msgid "We cannot hear you. Please try changing your microphone or get a little closer to the device."
 #~ msgstr "Wir können Sie nicht hören. Bitte versuchen Sie, Ihr Mikrofon zu ändern oder ein wenig näher an das Gerät zu kommen."
 
-#: src/components/settings/TwoFactorSettingsCard.tsx:388
+#: src/components/settings/TwoFactorSettingsCard.tsx:286
 msgid "We couldn’t disable two-factor authentication. Try again with a fresh code."
 msgstr "Wir konnten die Zwei-Faktor-Authentifizierung nicht deaktivieren. Versuchen Sie es erneut mit einem neuen Code."
 
