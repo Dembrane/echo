@@ -23,6 +23,7 @@ import {
 	Stack,
 	Text,
 	TextInput,
+	ThemeIcon,
 	Title,
 	Tooltip,
 } from "@mantine/core";
@@ -55,8 +56,8 @@ import React, {
 import { Controller, useForm } from "react-hook-form";
 import { useInView } from "react-intersection-observer";
 import { useLocation, useParams } from "react-router";
-import { useProjectChatContext } from "@/components/chat/hooks";
 import { MODE_COLORS } from "@/components/chat/ChatModeSelector";
+import { useProjectChatContext } from "@/components/chat/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
 import { FormLabel } from "@/components/form/FormLabel";
 import {
@@ -410,11 +411,11 @@ export const ConversationStatusIndicators = ({
 				</Badge>
 			)}
 
-		{conversation.duration && conversation.duration > 0 && showDuration && (
-			<Badge size="xs" color="primary" variant="light">
-				{fDuration(conversation.duration)}
-			</Badge>
-		)}
+			{conversation.duration && conversation.duration > 0 && showDuration && (
+				<Badge size="xs" color="primary" variant="light">
+					{fDuration(conversation.duration)}
+				</Badge>
+			)}
 
 			{/* {!hasContent &&
 				conversation.is_finished === true &&
@@ -548,7 +549,7 @@ const ConversationAccordionItem = ({
 						</Text>
 						{hasVerifiedArtefacts && (
 							<Tooltip label={t`Has verified artifacts`}>
-								<ActionIcon
+								<ThemeIcon
 									variant="subtle"
 									color="primary"
 									aria-label={t`verified artifacts`}
@@ -556,7 +557,7 @@ const ConversationAccordionItem = ({
 									style={{ cursor: "default" }}
 								>
 									<IconRosetteDiscountCheckFilled />
-								</ActionIcon>
+								</ThemeIcon>
 							</Tooltip>
 						)}
 					</Group>
@@ -908,16 +909,16 @@ export const ConversationAccordion = ({
 
 			<Accordion.Panel>
 				<Stack gap="sm" ref={parent2} className="relative">
-				{/* Only show auto-select in deep dive mode */}
-				{inChatMode &&
-					!isOverviewMode &&
-					ENABLE_CHAT_AUTO_SELECT &&
-					totalConversations > 0 && (
-						<Stack gap="xs" className="relative">
-							<LoadingOverlay visible={conversationsQuery.isLoading} />
-							<AutoSelectConversations />
-						</Stack>
-					)}
+					{/* Only show auto-select in deep dive mode */}
+					{inChatMode &&
+						!isOverviewMode &&
+						ENABLE_CHAT_AUTO_SELECT &&
+						totalConversations > 0 && (
+							<Stack gap="xs" className="relative">
+								<LoadingOverlay visible={conversationsQuery.isLoading} />
+								<AutoSelectConversations />
+							</Stack>
+						)}
 
 					{!(
 						totalConversations === 0 && debouncedConversationSearchValue === ""
@@ -1251,11 +1252,11 @@ export const ConversationAccordion = ({
 								/>
 							</div>
 						))}
-					{conversationsQuery.isFetchingNextPage && (
-						<Center py="md">
-							<Loader size="sm" color={MODE_COLORS.deep_dive.primary} />
-						</Center>
-					)}
+						{conversationsQuery.isFetchingNextPage && (
+							<Center py="md">
+								<Loader size="sm" color={MODE_COLORS.deep_dive.primary} />
+							</Center>
+						)}
 						{/* {!conversationsQuery.hasNextPage &&
               allConversations.length > 0 &&
               debouncedConversationSearchValue === "" && (

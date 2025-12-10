@@ -2,11 +2,11 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Accordion,
-	ActionIcon,
 	Group,
 	Skeleton,
 	Stack,
 	Text,
+	ThemeIcon,
 	Title,
 } from "@mantine/core";
 import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
@@ -86,14 +86,14 @@ export const VerifiedArtefactsSection = ({
 				<Title order={2}>
 					<Trans>Artefacts</Trans>
 				</Title>
-				<ActionIcon
+				<ThemeIcon
 					variant="subtle"
 					color="primary"
 					aria-label={t`artefacts`}
 					size={22}
 				>
 					<IconRosetteDiscountCheckFilled />
-				</ActionIcon>
+				</ThemeIcon>
 			</Group>
 
 			<Accordion variant="unstyled" radius="md">
