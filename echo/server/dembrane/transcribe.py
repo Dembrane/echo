@@ -25,6 +25,7 @@ from dembrane.prompts import render_prompt
 from dembrane.service import file_service, conversation_service
 from dembrane.directus import directus
 from dembrane.settings import get_settings
+from dembrane.service.project import get_allowed_languages
 
 logger = logging.getLogger("transcribe")
 
@@ -105,15 +106,7 @@ def transcribe_audio_assemblyai(
         "speech_model": "universal",
         "language_detection": True,
         "language_detection_options": {
-            "expected_languages": [
-                "nl",
-                "fr",
-                "es",
-                "de",
-                "it",
-                "pt",
-                "en",
-            ],
+            "expected_languages": list(set(get_allowed_languages()) | {"pt"}),
         },
     }
 

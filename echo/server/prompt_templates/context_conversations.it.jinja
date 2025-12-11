@@ -1,0 +1,33 @@
+{% if is_overview_mode %}RIASSUNTI DELLE CONVERSAZIONI:{% else %}TRASCRIZIONI DELLE CONVERSAZIONI:{% endif %}
+{% if conversations|length == 0 %}
+Nessuna conversazione aggiunta dall'utente ancora. Invitalo gentilmente ad aggiungerne alcune selezionando le conversazioni dalla barra laterale.
+{% else %}
+   {% for conversation in conversations %}
+<conversation>
+   <name>{{ conversation.name }}</name>
+   <tags>{{ conversation.tags }}</tags>
+   <date>{{ conversation.created_at }}</date>
+   <duration>{{ conversation.duration }}</duration>
+   {% if conversation.summary %}
+   <summary>
+   {{ conversation.summary }}
+   </summary>
+   {% else %}
+   <transcript>
+   {{ conversation.transcript }}
+   </transcript>
+   {% endif %}
+   {% if conversation.artifacts %}
+   <artifacts>
+      {% for artifact in conversation.artifacts %}
+      <artifact>
+         <key>{{ artifact.key }}</key>
+         <content>{{ artifact.content }}</content>
+      </artifact>
+      {% endfor %}
+   </artifacts>
+   {% endif %}
+</conversation>
+   {% endfor %}
+{% endif %}
+

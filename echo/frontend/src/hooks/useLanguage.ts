@@ -9,6 +9,7 @@ import { messages as deMessages } from "../locales/de-DE";
 import { messages as enMessages } from "../locales/en-US";
 import { messages as esMessages } from "../locales/es-ES";
 import { messages as frMessages } from "../locales/fr-FR";
+import { messages as itMessages } from "../locales/it-IT";
 import { messages as nlMessages } from "../locales/nl-NL";
 
 i18n.load({
@@ -16,6 +17,7 @@ i18n.load({
 	"en-US": enMessages,
 	"es-ES": esMessages,
 	"fr-FR": frMessages,
+	"it-IT": itMessages,
 	"nl-NL": nlMessages,
 });
 

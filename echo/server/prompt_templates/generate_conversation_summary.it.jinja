@@ -1,0 +1,87 @@
+Ti viene fornita una serie di citazioni da una trascrizione di conversazione in ordine cronologico.
+
+<quotes>
+{{ quote_text_joined }}
+</quotes>
+
+{% if project_context %}
+<project_context>
+L'organizzatore ha fornito il seguente contesto e termini chiave per questa conversazione:
+{{ project_context }}
+</project_context>
+{% endif %}
+
+{% if verified_artifacts %}
+<verified_artifacts>
+Durante questa conversazione, i partecipanti hanno creato e verificato collaborativamente i seguenti risultati concreti:
+{% for artifact in verified_artifacts %}
+
+---
+{{ artifact }}
+---
+{% endfor %}
+</verified_artifacts>
+{% endif %}
+
+Crea un riassunto che catturi l'essenza e il significato di ciò che è accaduto, ottimizzato per una lettura rapida.
+
+## Principi Fondamentali
+
+1. **Essenza prima dell'esaustività**: Cattura il "e quindi?" - il risultato significativo, la decisione o l'intuizione - non un resoconto dettagliato
+
+2. **Concisione radicale**: La maggior parte delle conversazioni dovrebbe essere riassunta in 2-4 frasi. Discussioni complesse potrebbero giustificare 1-2 brevi paragrafi. Il riassunto dovrebbe essere sempre drasticamente più breve dell'originale.
+
+3. **Compressione significativa**: Chiediti "cosa dovrebbe sapere qualcuno se ha perso questo?" non "cosa è stato discusso?"
+
+4. **Linguaggio naturale**: Scrivi in prosa scorrevole, non punti elenco o sezioni strutturate. Evita intestazioni, liste e formattazione a meno che il contenuto non sia genuinamente complesso e sfaccettato.
+
+5. **Integrazione del contesto**: 
+   - Integra naturalmente il contesto del progetto quando aggiunge significato
+   - Nota gli artefatti verificati come risultati concreti senza dettagli di processo
+   - Non forzare contesto irrilevante
+
+6. **Punteggio di lettura rapida**: Prima di scrivere, valuta internamente quanto sarà scorrevole questo riassunto su una scala da 1 a 10:
+   - 10 = Comprensione istantanea (semplice, un singolo punto chiaro)
+   - 7-9 = Scansione molto rapida (2-3 conclusioni chiare)
+   - 4-6 = Richiede lettura concentrata (più punti o complessità moderata)
+   - 1-3 = Richiede lettura attenta (denso, complesso o sfumato)
+   
+   Punta a 7+ quando possibile. Se la tua bozza ottiene meno di 7, semplifica ulteriormente.
+
+## Cosa Catturare
+
+Concentrati su ciò che conta di più. Includi questi elementi quando sono centrali nella conversazione:
+
+- Decisioni prese e la loro motivazione
+- Problemi identificati e soluzioni concordate
+- Intuizioni o realizzazioni chiave
+- Passi successivi concreti o risultati
+- Dinamiche fondamentali quando hanno plasmato il risultato: argomenti o ragionamenti che hanno influenzato le decisioni, tensioni tra priorità concorrenti, conflitti che necessitavano risoluzione, o accordi raggiunti su punti controversi
+- Disaccordi significativi o compromessi discussi
+
+## Cosa Tralasciare
+
+- Resoconto dettagliato della discussione
+- Specifiche di implementazione a meno che non siano il punto principale
+- Meccanica del processo (chi ha detto cosa, come sono state raggiunte le decisioni)
+- Contesto o background ovvio
+- Disaccordi minori che non hanno impattato i risultati
+
+## Linee Guida di Stile
+
+- Usa virgole, parentesi o "ma" invece di trattini lunghi
+- Scrivi in prosa diretta e conversazionale
+- Preferisci frasi più brevi rispetto a punteggiatura complessa
+- Usa "ma" o "tuttavia" per mostrare contrasto
+- Usa le parentesi per incisi o chiarimenti
+- Non usare mai grassetto, corsivo o altra formattazione del testo
+
+## Formato
+
+- 2-4 frasi per conversazioni semplici
+- 1-2 paragrafi concisi per complessità moderata
+- Prosa naturale senza punti elenco, intestazioni, liste o formattazione
+- Usa struttura solo se genuinamente necessario per una discussione sfaccettata
+
+Scrivi come se stessi spiegando a un collega cosa è successo in 30 secondi.
+

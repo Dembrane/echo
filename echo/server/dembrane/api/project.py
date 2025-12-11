@@ -23,6 +23,7 @@ from dembrane.service.project import (
     ProjectService,
     ProjectServiceException,
     ProjectNotFoundException,
+    get_allowed_languages,
 )
 from dembrane.api.dependency_auth import DependencyDirectusSession, require_directus_client
 
@@ -32,7 +33,6 @@ ProjectRouter = APIRouter(
     tags=["project"],
     dependencies=[Depends(require_directus_client)],
 )
-PROJECT_ALLOWED_LANGUAGES = ["en", "nl", "de", "fr", "es"]
 settings = get_settings()
 BASE_DIR = settings.base_dir
 
@@ -52,7 +52,7 @@ async def create_project(
     body: CreateProjectRequestSchema,
     auth: DependencyDirectusSession,
 ) -> dict:
-    if body.language is not None and body.language not in PROJECT_ALLOWED_LANGUAGES:
+    if body.language is not None and body.language not in get_allowed_languages():
         raise ProjectLanguageNotSupportedException
     name = body.name or "New Project"
     context = body.context or None

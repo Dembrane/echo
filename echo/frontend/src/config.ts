@@ -32,6 +32,7 @@ export const SUPPORTED_LANGUAGES = [
 	"de-DE",
 	"fr-FR",
 	"es-ES",
+	"it-IT",
 ] as const;
 
 export const PRIVACY_POLICY_URL =

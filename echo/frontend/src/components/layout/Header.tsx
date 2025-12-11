@@ -8,6 +8,7 @@ import {
 	IconNotes,
 	IconSettings,
 	IconShieldLock,
+	IconWorld,
 } from "@tabler/icons-react";
 import { useParams } from "react-router";
 import {
@@ -183,6 +184,15 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 										</Menu.Item>
 
 										<CreateFeedbackButton />
+
+										<Menu.Item
+											rightSection={<IconWorld />}
+											component="a"
+											href="https://tally.so/r/PdprZV"
+											target="_blank"
+										>
+											<Trans>Help us translate</Trans>
+										</Menu.Item>
 
 										<Menu.Item
 											rightSection={<IconLogout />}

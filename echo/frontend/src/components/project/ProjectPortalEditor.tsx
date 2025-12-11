@@ -50,19 +50,20 @@ const FormSchema = z.object({
 	is_get_reply_enabled: z.boolean(),
 	is_project_notification_subscription_allowed: z.boolean(),
 	is_verify_enabled: z.boolean(),
-	language: z.enum(["en", "nl", "de", "fr", "es"]),
+	language: z.enum(["en", "nl", "de", "fr", "es", "it"]),
 	verification_topics: z.array(z.string()),
 });
 
 type ProjectPortalFormValues = z.infer<typeof FormSchema>;
 
-type LanguageCode = "de" | "en" | "es" | "fr" | "nl";
+type LanguageCode = "de" | "en" | "es" | "fr" | "nl" | "it";
 
 const LANGUAGE_TO_LOCALE: Record<LanguageCode, string> = {
 	de: "de-DE",
 	en: "en-US",
 	es: "es-ES",
 	fr: "fr-FR",
+	it: "it-IT",
 	nl: "nl-NL",
 };
 
@@ -465,6 +466,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														{ label: t`German`, value: "de" },
 														{ label: t`Spanish`, value: "es" },
 														{ label: t`French`, value: "fr" },
+														{ label: t`Italian`, value: "it" },
 													]}
 													{...field}
 												/>
