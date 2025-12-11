@@ -37,6 +37,7 @@ const LANGUAGE_TO_LOCALE: Record<string, string> = {
 	en: "en-US",
 	es: "es-ES",
 	fr: "fr-FR",
+	it: "it-IT",
 	nl: "nl-NL",
 };
 

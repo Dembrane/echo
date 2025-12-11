@@ -31,6 +31,7 @@ export const VerifiedArtefactsList = ({
 		en: "en-US",
 		es: "es-ES",
 		fr: "fr-FR",
+		it: "it-IT",
 		nl: "nl-NL",
 	};
 

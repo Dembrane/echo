@@ -36,6 +36,12 @@ const data: Array<{
 		language: "fr-FR",
 	},
 	{
+		flag: "🇮🇹",
+		iso639_1: "it",
+		label: "Italiano",
+		language: "it-IT",
+	},
+	{
 		flag: "🇪🇸",
 		iso639_1: "es",
 		label: "Español",

@@ -176,6 +176,31 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 				],
 			},
 		],
+		"it-IT": [
+			...getSystemCards("it-IT", tutorialSlug),
+			{
+				section: "Controllo Microfono",
+				slides: [
+					{
+						component: MicrophoneTestComponent,
+						content: "Assicuriamoci di poterti sentire.",
+						icon: IconMicrophone,
+						title: "Controllo Microfono",
+						type: "microphone",
+					},
+				],
+			},
+			{
+				section: "Pronti a iniziare?",
+				slides: [
+					{
+						component: InitiateFormComponent,
+						icon: Play,
+						title: "Pronti a iniziare?",
+					},
+				],
+			},
+		],
 		"nl-NL": [
 			...getSystemCards("nl-NL", tutorialSlug),
 			{

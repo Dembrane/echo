@@ -37,6 +37,8 @@ export const useProjectSharingLink = (project?: Project) => {
 			"es-ES": "es-ES",
 			fr: "fr-FR",
 			"fr-FR": "fr-FR",
+			it: "it-IT",
+			"it-IT": "it-IT",
 			nl: "nl-NL",
 			"nl-NL": "nl-NL",
 		}[
@@ -46,11 +48,13 @@ export const useProjectSharingLink = (project?: Project) => {
 				| "de"
 				| "fr"
 				| "es"
+				| "it"
 				| "en-US"
 				| "nl-NL"
 				| "de-DE"
 				| "fr-FR"
 				| "es-ES"
+				| "it-IT"
 		];
 
 		const link = `${PARTICIPANT_BASE_URL}/${languageCode}/${project.id}/start`;

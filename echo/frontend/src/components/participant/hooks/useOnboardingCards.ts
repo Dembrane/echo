@@ -330,6 +330,75 @@ export const useOnboardingCards = () => {
 					],
 				},
 			],
+			"it-IT": [
+				{
+					section: "Benvenuto",
+					slides: [
+						{
+							content:
+								"Registra la tua voce per rispondere alle domande e avere un impatto.",
+							cta: "Andiamo!",
+							extraHelp:
+								"Questo è un mini-tutorial. Usa i pulsanti precedente e successivo per navigare. Al termine entrerai nel portale di registrazione.",
+							icon: PartyPopper,
+							title: "Benvenuto su Dembrane!",
+						},
+						{
+							content:
+								"Dembrane aiuta a raccogliere facilmente contributi da grandi gruppi.",
+							cta: "Dimmi di più",
+							extraHelp:
+								"Che si tratti di feedback per un comune, di input sul lavoro o di partecipazione a una ricerca, la tua voce conta!",
+							icon: Orbit,
+							title: "Cos'è Dembrane?",
+						},
+						{
+							content:
+								"Rispondi alle domande a tuo ritmo parlando o scrivendo.",
+							cta: "Avanti",
+							extraHelp:
+								"La voce è la modalità principale perché permette risposte più naturali e ricche. Scrivere è sempre disponibile come alternativa.",
+							icon: Speech,
+							title: "Dì semplicemente ciò che pensi",
+						},
+						{
+							content: "Dembrane è più divertente in gruppo!",
+							cta: "Avanti",
+							extraHelp:
+								"È ancora meglio se trovi qualcuno con cui discutere le domande e registrare la conversazione. Non possiamo sapere chi ha detto cosa, solo quali idee sono state condivise.",
+							icon: MessagesSquare,
+							title: "Da soli o in gruppo",
+						},
+					],
+				},
+				{
+					section: "Come funziona",
+					slides: [
+						{
+							content:
+								"Riceverai le domande quando sarai nel portale di registrazione.",
+							cta: "Capito",
+							extraHelp:
+								"Le domande variano in base alle esigenze dell'host. Possono riguardare temi della comunità, esperienze di lavoro o ricerca. Se non ci sono domande specifiche, puoi condividere qualsiasi pensiero o preoccupazione.",
+							icon: HelpCircle,
+							title: "È il momento delle domande",
+						},
+					],
+				},
+				{
+					section: "Privacy",
+					slides: [
+						{
+							content: "Come registratore, controlli tu ciò che condividi.",
+							cta: "Dimmi di più",
+							extraHelp:
+								"Evita di condividere dettagli che non vuoi rendere noti all'host. Chiedi sempre il consenso prima di registrare altre persone.",
+							icon: Lock,
+							title: "La privacy conta",
+						},
+					],
+				},
+			],
 			"nl-NL": [
 				{
 					section: "Welkom",
@@ -816,6 +885,108 @@ export const useOnboardingCards = () => {
 					],
 				},
 			],
+			"it-IT": [
+				{
+					section: "Benvenuto",
+					slides: [
+						{
+							content:
+								"Registra la tua voce per rispondere alle domande e avere un impatto.",
+							cta: "Andiamo!",
+							extraHelp:
+								"Questo è un mini-tutorial. Usa i pulsanti precedente e successivo per navigare. Al termine entrerai nel portale di registrazione.",
+							icon: PartyPopper,
+							title: "Benvenuto su Dembrane!",
+						},
+						{
+							content:
+								"Dembrane aiuta a raccogliere facilmente contributi da grandi gruppi.",
+							cta: "Dimmi di più",
+							extraHelp:
+								"Che si tratti di feedback per un comune, di input sul lavoro o di partecipazione a una ricerca, la tua voce conta!",
+							icon: Orbit,
+							title: "Cos'è Dembrane?",
+						},
+						{
+							content:
+								"Rispondi alle domande a tuo ritmo parlando o scrivendo.",
+							cta: "Avanti",
+							extraHelp:
+								"La voce è la modalità principale perché permette risposte più naturali e ricche. Scrivere è sempre disponibile come alternativa.",
+							icon: Speech,
+							title: "Dì semplicemente ciò che pensi",
+						},
+						{
+							content: "Dembrane è più divertente in gruppo!",
+							cta: "Avanti",
+							extraHelp:
+								"È ancora meglio se trovi qualcuno con cui discutere le domande e registrare la conversazione. Non possiamo sapere chi ha detto cosa, solo quali idee sono state condivise.",
+							icon: MessagesSquare,
+							title: "Da soli o in gruppo",
+						},
+					],
+				},
+				{
+					section: "Come funziona",
+					slides: [
+						{
+							content:
+								"Riceverai le domande quando sarai nel portale di registrazione.",
+							cta: "Capito",
+							extraHelp:
+								"Le domande variano in base alle esigenze dell'host. Possono riguardare temi della comunità, esperienze di lavoro o ricerca. Se non ci sono domande specifiche, puoi condividere qualsiasi pensiero o preoccupazione.",
+							icon: HelpCircle,
+							title: "È il momento delle domande",
+						},
+					],
+				},
+				{
+					section: "Privacy",
+					slides: [
+						{
+							content: "Come registratore, controlli tu ciò che condividi.",
+							cta: "Dimmi di più",
+							extraHelp:
+								"Evita di condividere dettagli che non vuoi rendere noti all'host. Chiedi sempre il consenso prima di registrare altre persone.",
+							icon: Lock,
+							title: "La privacy conta",
+						},
+						...(getPrivacyCard("it-IT")?.slides || []),
+					],
+				},
+				{
+					section: "Migliori Pratiche",
+					slides: [
+						{
+							content:
+								"Immagina che Dembrane sia in vivavoce con te. Se riesci a sentirti, sei a posto.",
+							cta: "Capito",
+							extraHelp:
+								"Un po' di rumore di fondo va bene, purché sia chiaro chi sta parlando.",
+							icon: Volume2,
+							title: "Riduci il Rumore di Fondo",
+						},
+						{
+							content:
+								"Assicurati di avere una connessione stabile per una registrazione fluida.",
+							cta: "Pronto!",
+							extraHelp:
+								"Wi-Fi o buoni dati mobili funzionano meglio. Se la connessione cade, non preoccuparti. Puoi sempre riprendere da dove avevi interrotto.",
+							icon: Wifi,
+							title: "Connessione Internet Forte",
+						},
+						{
+							content:
+								"Evita interruzioni mantenendo il dispositivo sbloccato. Se si blocca, sbloccalo semplicemente e continua.",
+							cta: "Okay",
+							extraHelp:
+								"Dembrane cerca di mantenere il dispositivo attivo, ma a volte i dispositivi possono sovrascrivere questa impostazione. Puoi regolare le impostazioni del dispositivo per rimanere sbloccato più a lungo se necessario.",
+							icon: Smartphone,
+							title: "Non bloccare il dispositivo!",
+						},
+					],
+				},
+			],
 			"nl-NL": [
 				{
 					section: "Welkom",
@@ -1013,6 +1184,28 @@ export const useOnboardingCards = () => {
 							url: "https://dembrane.notion.site/Privacy-Statement-Dembrane-1439cd84270580748046cc589861d115",
 						},
 						title: "Utilisation des Données et Sécurité",
+					},
+				],
+			},
+			"it-IT": {
+				section: "Privacy",
+				slides: [
+					{
+						checkbox: {
+							label: "Accetto l'informativa sulla privacy",
+							required: true,
+						},
+						content:
+							"I tuoi dati sono archiviati in modo sicuro, analizzati e mai condivisi con terze parti.",
+						cta: "Ho capito",
+						extraHelp:
+							"Le registrazioni vengono trascritte e analizzate per ottenere insight, poi eliminate dopo 30 giorni. Per dettagli specifici, contatta l'host che ti ha fornito il QR code.",
+						icon: Server,
+						link: {
+							label: "Leggi l'informativa completa sulla privacy",
+							url: "https://dembrane.notion.site/Privacy-Statement-Dembrane-1439cd84270580748046cc589861d115",
+						},
+						title: "Uso dei dati e sicurezza",
 					},
 				],
 			},

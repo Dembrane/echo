@@ -1,5 +1,5 @@
 import { formatRelative } from "date-fns";
-import { de, enUS, es, fr, nl } from "date-fns/locale";
+import { de, enUS, es, fr, it, nl } from "date-fns/locale";
 import { useLanguage } from "@/hooks/useLanguage";
 
 // Map of supported locales to date-fns locales
@@ -8,6 +8,7 @@ const localeMap = {
 	"en-US": enUS,
 	"es-ES": es,
 	"fr-FR": fr,
+	"it-IT": it,
 	"nl-NL": nl,
 } as const;
 

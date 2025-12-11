@@ -16,13 +16,14 @@ import {
 } from "./hooks";
 import { VerifyInstructions } from "./VerifyInstructions";
 
-type LanguageCode = "de" | "en" | "es" | "fr" | "nl";
+type LanguageCode = "de" | "en" | "es" | "fr" | "nl" | "it";
 
 const LANGUAGE_TO_LOCALE: Record<LanguageCode, string> = {
 	de: "de-DE",
 	en: "en-US",
 	es: "es-ES",
 	fr: "fr-FR",
+	it: "it-IT",
 	nl: "nl-NL",
 };
 
