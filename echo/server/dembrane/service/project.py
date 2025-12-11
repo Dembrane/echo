@@ -4,7 +4,12 @@ from logging import getLogger
 
 from dembrane.directus import DirectusClient, DirectusBadRequest, directus, directus_client_context
 
-PROJECT_ALLOWED_LANGUAGES = ["en", "nl", "de", "fr", "es"]
+ALLOWED_LANGUAGES = ["en", "nl", "de", "fr", "es", "it"]
+
+
+def get_allowed_languages() -> List[str]:
+    """Return the list of supported language codes for projects."""
+    return ALLOWED_LANGUAGES
 
 
 class ProjectServiceException(Exception):

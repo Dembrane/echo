@@ -1,0 +1,54 @@
+<transcripts>
+{% if conversations|length == 0 %}
+Nessuna trascrizione di conversazione trovata.
+{% else %}
+   {% for conversation in conversations %}
+			<transcript>
+				<name>{{ conversation.name }}</name>
+				<tags>{{ conversation.tags }}</tags>
+				<content>
+				{{ conversation.transcript }}
+				</content>
+			</transcript>
+   {% endfor %}
+{% endif %}
+</transcripts>
+
+Hai il compito di creare un articolo dinamico in stile intervista Q&A basato su un insieme di trascrizioni di conversazioni fornite sopra. Questo articolo dovrebbe analizzare criticamente il contenuto mantenendo un chiaro collegamento al materiale sorgente. Il risultato finale dovrebbe essere un documento professionale e leggibile, adatto alla condivisione online immediata.
+
+Prima, leggi e analizza attentamente le trascrizioni e il loro contesto.
+
+Inizia analizzando criticamente le trascrizioni. Considera quanto segue:
+1. Temi e idee chiave presentati
+2. Prospettive o intuizioni uniche
+3. Potenziali controversie o punti di vista contrastanti
+4. Rilevanza rispetto all'argomento principale
+
+Struttura il tuo articolo Q&A come segue:
+1. Introduzione: Spiega brevemente il contesto e l'importanza dell'argomento.
+2. Corpo principale: Crea un numero adeguato (tra 2 e 15) di coppie domanda-risposta che coprano gli aspetti più significativi delle trascrizioni.
+3. Conclusione: Riassumi i punti chiave e le loro implicazioni.
+
+Quando formuli le tue domande e risposte:
+* Assicurati che ogni domanda sia chiara, concisa e stimolante.
+* Fornisci risposte complete che attingano direttamente dalle trascrizioni.
+* Mantieni una prospettiva critica, affrontando eventuali contraddizioni o incertezze nel materiale sorgente.
+* Usa citazioni dirette con parsimonia e, quando lo fai, attribuiscile correttamente.
+
+Per mantenere l'integrità del materiale sorgente:
+* Rappresenta accuratamente le opinioni e le informazioni presentate nelle trascrizioni.
+* Non introdurre informazioni o opinioni non presenti nel contenuto originale.
+* Se ci sono lacune nelle informazioni, riconoscile piuttosto che speculare.
+* Fai riferimento ai nomi propri quando rilevante. Ignora i nomi condivisi durante le trascrizioni a meno che non sia ovvio che la persona sia una figura pubblica.
+
+Formatta il tuo output finale come segue:
+* Titolo: Crea un titolo accattivante che catturi l'essenza del Q&A.
+* Introduzione: 2-3 frasi che impostano il contesto.
+* Coppie Q&A: Presenta ogni coppia con la domanda in grassetto, seguita da una risposta completa, separate da due interruzioni di riga.
+* Conclusione: 2-3 frasi che riassumono i punti chiave e il loro significato.
+
+Ricorda di mantenere un tono professionale e giornalistico in tutto l'articolo. Il linguaggio dovrebbe essere chiaro, conciso e facilmente comprensibile per un pubblico generale. Evita linguaggio informale, gergo o termini eccessivamente tecnici a meno che non siano essenziali e spiegati.
+
+Non inserire tag <br> nell'output. Usa invece le interruzioni di riga.
+
+Presenta il tuo articolo finale all'interno dei tag <article> con testo formattato in markdown.
