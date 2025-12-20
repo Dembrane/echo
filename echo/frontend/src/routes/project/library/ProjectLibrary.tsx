@@ -135,7 +135,11 @@ export const ProjectLibraryRoute = () => {
 				/>
 				<Group gap="xl">
 					{!isLibraryEnabled && (
-						<Button onClick={contactSales} leftSection={<IconCalendarEvent />}>
+						<Button
+							onClick={contactSales}
+							leftSection={<IconCalendarEvent />}
+							radius={100}
+						>
 							<Trans id="library.request.access">Request Access</Trans>
 						</Button>
 					)}
@@ -181,6 +185,7 @@ export const ProjectLibraryRoute = () => {
 									// ||
 									// latestRun?.processing_status === "PROCESSING"
 								}
+								radius={100}
 							>
 								<Trans id="library.create">Create Library</Trans>
 							</Button>
@@ -271,6 +276,7 @@ export const ProjectLibraryRoute = () => {
 								// && latestRun.processing_status === "DONE"
 							)
 						}
+						radius={100}
 					>
 						<Trans id="library.create.view">Create View</Trans>
 					</Button>

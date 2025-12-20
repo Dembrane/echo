@@ -74,6 +74,9 @@ importers:
       '@mdxeditor/editor':
         specifier: ^3.40.0
         version: 3.40.0(@codemirror/language@6.11.2)(@lezer/highlight@1.2.1)(@types/react-dom@19.0.4(@types/react@19.0.12))(@types/react@19.0.12)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(yjs@13.6.22)
+      '@phosphor-icons/react':
+        specifier: ^2.1.10
+        version: 2.1.10(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@react-pdf/renderer':
         specifier: ^4.3.0
         version: 4.3.0(react@19.0.0)
@@ -160,6 +163,9 @@ importers:
           link:@mantine/notifications
         version: |
           link:@mantine/notifications
+      phosphor-react:
+        specifier: ^1.4.1
+        version: 1.4.1(react@19.0.0)
       plausible-tracker:
         specifier: ^0.3.9
         version: 0.3.9
@@ -1576,6 +1582,13 @@ packages:
   '@opentelemetry/api@1.9.0':
     resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
     engines: {node: '>=8.0.0'}
+
+  '@phosphor-icons/react@2.1.10':
+    resolution: {integrity: sha512-vt8Tvq8GLjheAZZYa+YG/pW7HDbov8El/MANW8pOAz4eGxrwhnbfrQZq0Cp4q8zBEu8NIhHdnr+r8thnfRSNYA==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      react: '>= 16.8'
+      react-dom: '>= 16.8'
 
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -3880,6 +3893,12 @@ packages:
   pdfjs-dist@4.8.69:
     resolution: {integrity: sha512-IHZsA4T7YElCKNNXtiLgqScw4zPd3pG9do8UrznC757gMd7UPeHSL2qwNNMJo4r79fl8oj1Xx+1nh2YkzdMpLQ==}
     engines: {node: '>=18'}
+
+  phosphor-react@1.4.1:
+    resolution: {integrity: sha512-gO5j7U0xZrdglTAYDYPACU4xDOFBTJmptrrB/GeR+tHhCZF3nUMyGmV/0hnloKjuTrOmpSFlbfOY78H39rgjUQ==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      react: '>=16'
 
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
@@ -6272,6 +6291,11 @@ snapshots:
   '@open-draft/deferred-promise@2.2.0': {}
 
   '@opentelemetry/api@1.9.0': {}
+
+  '@phosphor-icons/react@2.1.10(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
+    dependencies:
+      react: 19.0.0
+      react-dom: 19.0.0(react@19.0.0)
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
@@ -8915,6 +8939,10 @@ snapshots:
     optionalDependencies:
       canvas: 3.1.0
       path2d: 0.2.2
+
+  phosphor-react@1.4.1(react@19.0.0):
+    dependencies:
+      react: 19.0.0
 
   picocolors@1.1.1: {}
 

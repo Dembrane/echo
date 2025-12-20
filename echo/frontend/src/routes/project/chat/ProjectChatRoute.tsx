@@ -24,12 +24,18 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
-import { ChatAccordionItemMenu, ChatModeIndicator } from "@/components/chat/ChatAccordion";
-import { MODE_COLORS } from "@/components/chat/ChatModeSelector";
+import dembranelogo from "@/assets/dembrane-logo-hq.png";
+import {
+	ChatAccordionItemMenu,
+	ChatModeIndicator,
+} from "@/components/chat/ChatAccordion";
 import { ChatContextProgress } from "@/components/chat/ChatContextProgress";
 import { ChatHistoryMessage } from "@/components/chat/ChatHistoryMessage";
 import { ChatMessage } from "@/components/chat/ChatMessage";
-import { ChatModeSelector } from "@/components/chat/ChatModeSelector";
+import {
+	ChatModeSelector,
+	MODE_COLORS,
+} from "@/components/chat/ChatModeSelector";
 import { ChatTemplatesMenu } from "@/components/chat/ChatTemplatesMenu";
 import {
 	extractMessageMetadata,
@@ -302,17 +308,16 @@ export const ProjectChatRoute = () => {
 	const prefetchSuggestions = usePrefetchSuggestions();
 
 	// Track conversation count for deep_dive mode to trigger suggestions refetch
-	const conversationCount =
-		chatContextQuery.data?.conversations?.length ?? 0;
+	const conversationCount = chatContextQuery.data?.conversations?.length ?? 0;
 	const prevConversationCountRef = useRef<number | null>(null);
 
 	// Fetch suggestions:
 	// - Overview mode: Fetch immediately when mode is selected
 	// - Deep dive mode: Only fetch after conversations are added (not on initial load)
-	const shouldFetchSuggestions = isModeSelected && (
-		!isDeepDiveMode || // overview mode: always fetch
-		conversationCount > 0 // deep_dive mode: only when conversations exist
-	);
+	const shouldFetchSuggestions =
+		isModeSelected &&
+		(!isDeepDiveMode || // overview mode: always fetch
+			conversationCount > 0); // deep_dive mode: only when conversations exist
 
 	const suggestionsQuery = useChatSuggestions(chatId ?? "", {
 		enabled: shouldFetchSuggestions,
@@ -344,7 +349,14 @@ export const ProjectChatRoute = () => {
 				suggestionsQuery.refetch();
 			}
 		}
-	}, [conversationCount, isDeepDiveMode, chatId, language, queryClient, suggestionsQuery]);
+	}, [
+		conversationCount,
+		isDeepDiveMode,
+		chatId,
+		language,
+		queryClient,
+		suggestionsQuery,
+	]);
 
 	const {
 		isInitializing,
@@ -553,7 +565,13 @@ export const ProjectChatRoute = () => {
 					{isLoading && !showProgress && (
 						<Group>
 							<Box className="animate-spin">
-								<Logo hideTitle h="20px" my={4} />
+								<img
+									src={dembranelogo}
+									alt="Dembrane Logo"
+									width={20}
+									className="my-4"
+								/>
+								{/* <Logo hideTitle h="20px" my={4} /> */}
 							</Box>
 							<Text size="sm" className="italic">
 								<Trans>
@@ -613,7 +631,10 @@ export const ProjectChatRoute = () => {
 			<div ref={scrollTargetRef} aria-hidden="true" />
 
 			{/* Footer */}
-			<Box className="bottom-0 w-full pb-2 pt-4 md:sticky" style={{ backgroundColor: "var(--app-background)" }}>
+			<Box
+				className="bottom-0 w-full pb-2 pt-4 md:sticky"
+				style={{ backgroundColor: "var(--app-background)" }}
+			>
 				<Stack className="pb-2">
 					{/* Scroll to bottom button */}
 					<Group
@@ -721,7 +742,7 @@ export const ProjectChatRoute = () => {
 									</Text>
 								</Group>
 							</Box>
-							<Stack className="h-full" gap="xs">
+							<Stack className="h-full self-start" gap="xs">
 								<Box>
 									<Button
 										size="lg"
@@ -734,6 +755,7 @@ export const ProjectChatRoute = () => {
 										}}
 										rightSection={<IconSend size={24} />}
 										disabled={input.trim() === "" || isLoading || isSubmitting}
+										radius={100}
 									>
 										<Trans>Send</Trans>
 									</Button>

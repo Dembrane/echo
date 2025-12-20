@@ -10,7 +10,12 @@ import {
 	Skeleton,
 	Text,
 } from "@mantine/core";
-import { IconCheck, IconCopy, IconShare } from "@tabler/icons-react";
+import {
+	IconCheck,
+	IconCopy,
+	IconExternalLink,
+	IconShare,
+} from "@tabler/icons-react";
 import { useMemo } from "react";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import { QRCode } from "../common/QRCode";
@@ -126,6 +131,14 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 								</Button>
 							)}
 						</CopyButton>
+						<Button
+							size="sm"
+							variant="outline"
+							onClick={() => window.open(link, "_blank")}
+							rightSection={<IconExternalLink style={{ width: rem(16) }} />}
+						>
+							<Trans>Go to portal</Trans>
+						</Button>
 					</div>
 				</Group>
 			) : (

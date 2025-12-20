@@ -523,15 +523,15 @@ const ConversationAccordionItem = ({
 		<NavigationButton
 			to={`/projects/${conversation.project_id}/conversation/${conversation.id}/overview`}
 			active={highlight}
-			borderColor={
-				isOverviewMode
-					? MODE_COLORS.overview.primary
-					: isDeepDiveWithSelection
-						? MODE_COLORS.deep_dive.primary
-						: ENABLE_CHAT_AUTO_SELECT && isAutoSelectEnabled
-							? "green"
-							: undefined
-			}
+			// borderColor={
+			// 	isOverviewMode
+			// 		? "#4169e1"
+			// 		: isDeepDiveWithSelection
+			// 			? MODE_COLORS.deep_dive.primary
+			// 			: ENABLE_CHAT_AUTO_SELECT && isAutoSelectEnabled
+			// 				? "green"
+			// 				: undefined
+			// }
 			className="w-full"
 			rightSection={
 				shouldShowCheckboxes ? (

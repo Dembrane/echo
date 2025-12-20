@@ -63,13 +63,30 @@ export const ChatModeIndicator = ({
 		>
 			<Box className="flex items-center justify-center">
 				{isOverview ? (
-					<IconSparkles size={iconSize} color={colors.primary} stroke={2} />
-				) : (
-					<IconMessageCircle
-						size={iconSize}
+					<ActionIcon
+						radius={100}
+						size={size === "xs" ? 20 : 32}
 						color={colors.primary}
-						stroke={2}
-					/>
+					>
+						<IconSparkles
+							size={size === "xs" ? 12 : 20}
+							// color={colors.primary}
+							color="#2D2D2C"
+							stroke={2}
+						/>
+					</ActionIcon>
+				) : (
+					<ActionIcon
+						radius={100}
+						size={size === "xs" ? 20 : 32}
+						color={colors.primary}
+					>
+						<IconMessageCircle
+							size={size === "xs" ? 12 : 20}
+							color="#2D2D2C"
+							stroke={2}
+						/>
+					</ActionIcon>
 				)}
 			</Box>
 		</Tooltip>
@@ -251,16 +268,16 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
 							.chat_mode as "overview" | "deep_dive" | null | undefined;
 						const isActive = item.id === activeChatId;
 						const effectiveMode = chatMode ?? "deep_dive";
-						const activeBorderColor = isActive
-							? MODE_COLORS[effectiveMode].border
-							: undefined;
+						// const activeBorderColor = isActive
+						// 	? MODE_COLORS[effectiveMode].border
+						// 	: undefined;
 
 						return (
 							<NavigationButton
 								key={item.id}
 								to={`/projects/${projectId}/chats/${item.id}`}
 								active={isActive}
-								borderColor={activeBorderColor}
+								// borderColor={activeBorderColor}
 								rightSection={
 									<Group gap="xs" wrap="nowrap">
 										<ChatModeIndicator mode={chatMode} size="xs" />

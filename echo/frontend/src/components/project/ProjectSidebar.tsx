@@ -9,12 +9,13 @@ import {
 	Title,
 	Tooltip,
 } from "@mantine/core";
+import { GraphIcon, HouseIcon, QuestionIcon } from "@phosphor-icons/react";
 import { useRef } from "react";
 import { useLocation, useParams } from "react-router";
 import { useInitializeChatModeMutation } from "@/components/chat/hooks";
 import { useProjectById } from "@/components/project/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { Icons } from "@/icons";
+
 import { Breadcrumbs } from "../common/Breadcrumbs";
 import { I18nLink } from "../common/i18nLink";
 import { LogoDembrane } from "../common/Logo";
@@ -90,7 +91,7 @@ export const ProjectSidebar = () => {
 							label: (
 								<Tooltip label={t`Projects Home`}>
 									<ActionIcon variant="transparent">
-										<Icons.Home color="var(--app-text)" />
+										<HouseIcon size={28} color="var(--app-text)" />
 									</ActionIcon>
 								</Tooltip>
 							),
@@ -135,7 +136,7 @@ export const ProjectSidebar = () => {
 			<NavigationButton
 				onClick={handleAsk}
 				component="button"
-				rightIcon={<Icons.Stars />}
+				rightIcon={<QuestionIcon size={24} color="var(--app-text)" />}
 				active={pathname.includes("chat")}
 			>
 				<Trans>Ask</Trans>
@@ -144,7 +145,7 @@ export const ProjectSidebar = () => {
 			<NavigationButton
 				to={`/projects/${projectId}/library`}
 				component="a"
-				rightIcon={<Icons.LightBulb />}
+				rightIcon={<GraphIcon size={24} color="var(--app-text)" />}
 				active={pathname.includes("library")}
 			>
 				<Trans>Library</Trans>

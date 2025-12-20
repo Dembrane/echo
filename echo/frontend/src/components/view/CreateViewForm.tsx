@@ -133,6 +133,7 @@ export const CreateView = ({
 								onClick={handleSubmit(onSubmit)}
 								loading={createViewMutation.isPending}
 								disabled={createViewMutation.isPending}
+								radius={100}
 							>
 								<Trans>Create View</Trans>
 							</Button>

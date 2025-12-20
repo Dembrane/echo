@@ -2,8 +2,8 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Card, Group, Radio, Stack, Text, Title } from "@mantine/core";
 import { IconTypography } from "@tabler/icons-react";
-import { type FontFamily, useAppPreferences } from "@/hooks/useAppPreferences";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
+import { type FontFamily, useAppPreferences } from "@/hooks/useAppPreferences";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
 const FONT_OPTIONS: {
@@ -15,20 +15,20 @@ const FONT_OPTIONS: {
 	transitionDescription: string;
 }[] = [
 	{
-		value: "space-grotesk",
+		colors: { bg: "#FFFFFF", label: "White & Black", text: "#000000" },
 		label: "Space Grotesk",
 		preview: "The quick brown fox jumps over the lazy dog",
-		colors: { bg: "#FFFFFF", text: "#000000", label: "White & Black" },
-		transitionMessage: "Switching to Clean Mode",
 		transitionDescription: "Crisp whites and sharp contrasts ahead...",
+		transitionMessage: "Switching to Clean Mode",
+		value: "space-grotesk",
 	},
 	{
-		value: "dm-sans",
+		colors: { bg: "#F6F4F1", label: "Parchment & Graphite", text: "#2D2D2C" },
 		label: "DM Sans",
 		preview: "The quick brown fox jumps over the lazy dog",
-		colors: { bg: "#F6F4F1", text: "#2D2D2C", label: "Parchment & Graphite" },
-		transitionMessage: "Embracing Warmth",
 		transitionDescription: "Soft parchment tones for a gentler experience...",
+		transitionMessage: "Embracing Warmth",
+		value: "dm-sans",
 	},
 ];
 
@@ -46,9 +46,9 @@ export const FontSettingsCard = () => {
 
 		// Start the dramatic transition
 		const transitionPromise = runTransition({
-			message: t`${selectedOption.transitionMessage}`,
 			description: t`${selectedOption.transitionDescription}`,
 			dramatic: true, // Enable dramatic mode for theme changes
+			message: t`${selectedOption.transitionMessage}`,
 		});
 
 		// Apply the theme change after a brief moment so it happens during the blur
@@ -92,8 +92,7 @@ export const FontSettingsCard = () => {
 										preferences.fontFamily === option.value
 											? option.colors.text
 											: undefined,
-									borderWidth:
-										preferences.fontFamily === option.value ? 2 : 1,
+									borderWidth: preferences.fontFamily === option.value ? 2 : 1,
 								}}
 							>
 								<Group justify="space-between" align="center">
@@ -110,16 +109,16 @@ export const FontSettingsCard = () => {
 									<div
 										style={{
 											backgroundColor: option.colors.bg,
-											color: option.colors.text,
-											padding: "12px 16px",
+											border: `1px solid ${option.colors.text}20`,
 											borderRadius: 6,
+											color: option.colors.text,
 											fontFamily:
 												option.value === "dm-sans"
 													? "'DM Sans Variable', sans-serif"
 													: "'Space Grotesk Variable', sans-serif",
 											fontSize: 13,
-											border: `1px solid ${option.colors.text}20`,
 											minWidth: 200,
+											padding: "12px 16px",
 										}}
 									>
 										{option.preview}
@@ -133,4 +132,3 @@ export const FontSettingsCard = () => {
 		</Card>
 	);
 };
-

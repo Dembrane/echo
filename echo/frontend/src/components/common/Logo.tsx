@@ -2,6 +2,8 @@ import { Group, type GroupProps, Title } from "@mantine/core";
 import aiconlLogo from "@/assets/aiconl-logo.png";
 import aiconlLogoHQ from "@/assets/aiconl-logo-hq.png";
 import dembranelogo from "@/assets/dembrane-logo-hq.png";
+import logomark from "@/assets/Logomark-no-bg.svg";
+import wordmark from "@/assets/Wordmark-no-padding.svg";
 import { cn } from "@/lib/utils";
 
 type LogoProps = {
@@ -16,21 +18,19 @@ export const LogoDembrane = ({
 	textAfterLogo,
 	...props
 }: LogoProps) => (
-	<Group gap="sm" h="30px" align="center" {...props}>
+	<Group gap="sm" h="36px" align="center" {...props}>
 		{!hideLogo && (
 			<img
-				src={dembranelogo}
+				src={logomark}
 				alt="Dembrane Logo"
-				className="h-full object-contain"
+				className="h-[36px] object-contain"
 			/>
 		)}
 		{!hideTitle && (
-			<Title order={1} className="text-xl">
-				<span className={cn("font-medium", textAfterLogo && "mr-1")}>
-					Dembrane
-				</span>
-				{textAfterLogo && <span>{textAfterLogo}</span>}
-			</Title>
+			<img src={wordmark} alt="Dembrane" className="h-[36px] object-contain" />
+		)}
+		{textAfterLogo && (
+			<span className="text-xl font-medium">{textAfterLogo}</span>
 		)}
 	</Group>
 );

@@ -33,7 +33,7 @@ export const theme = createTheme({
 			"#96aeec", // 3
 			"#6d8be5", // 4
 			"#4169E1", // 5 - royal blue (base)
-			"#3a5eca", // 6
+			"#4169E1", // 6
 			"#3354b3", // 7
 			"#2c499c", // 8
 			"#253f85", // 9 - darkest

@@ -122,15 +122,14 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 			<Paper
 				component="header"
 				radius="0"
-				className="z-30 h-full w-full px-4"
+				className="z-30 h-[60px] w-full"
 				shadow="xs"
-				style={{ backgroundColor: "var(--app-background)" }}
+				style={{
+					backgroundColor: "var(--app-background)",
+					padding: "12px",
+				}}
 			>
-				<Group
-					justify="space-between"
-					align="center"
-					className="h-full min-h-[58px] w-full"
-				>
+				<Group justify="space-between" align="center" className="h-full w-full">
 					<Group gap="md">
 						<I18nLink to="/projects">
 							<Group align="center">
@@ -140,7 +139,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 					</Group>
 
 					{!loading && isAuthenticated && user ? (
-						<Group>
+						<Group align="baseline">
 							{ENABLE_ANNOUNCEMENTS && (
 								<>
 									<AnnouncementIcon />

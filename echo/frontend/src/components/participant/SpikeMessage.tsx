@@ -1,6 +1,6 @@
 import { Group } from "@mantine/core";
 import clsx from "clsx";
-import { Logo } from "@/components/common/Logo";
+import dembranelogo from "@/assets/dembrane-logo-hq.png";
 import SystemMessage from "./SystemMessage";
 
 const SpikeMessage = ({
@@ -19,7 +19,12 @@ const SpikeMessage = ({
 				title={
 					<Group>
 						<div className={loading ? "animate-spin" : ""}>
-							<Logo className="min-w-[20px]" hideTitle h="20px" my={4} />
+							<img
+								src={dembranelogo}
+								alt="Dembrane Logo"
+								width={20}
+								className="my-4"
+							/>
 						</div>
 					</Group>
 				}
