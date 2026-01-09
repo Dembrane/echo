@@ -41,11 +41,12 @@ import {
 	IconChevronUp,
 	IconRosetteDiscountCheckFilled,
 	IconSearch,
+	IconSelectAll,
 	IconTags,
 	IconX,
 } from "@tabler/icons-react";
 import { formatRelative, intervalToDuration } from "date-fns";
-import React, {
+import {
 	type RefObject,
 	useCallback,
 	useEffect,
@@ -59,13 +60,13 @@ import { useLocation, useParams } from "react-router";
 import { MODE_COLORS } from "@/components/chat/ChatModeSelector";
 import { useProjectChatContext } from "@/components/chat/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
+import { toast } from "@/components/common/Toaster";
 import { FormLabel } from "@/components/form/FormLabel";
 import {
 	useInfiniteProjects,
 	useProjectById,
 } from "@/components/project/hooks";
 import { ENABLE_CHAT_AUTO_SELECT } from "@/config";
-import { cn } from "@/lib/utils";
 import { BaseSkeleton } from "../common/BaseSkeleton";
 import { NavigationButton } from "../common/NavigationButton";
 import { UploadConversationDropzone } from "../dropzone/UploadConversationDropzone";
@@ -74,9 +75,13 @@ import {
 	useAddChatContextMutation,
 	useConversationsCountByProjectId,
 	useDeleteChatContextMutation,
+	useDeselectAllContextMutation,
 	useInfiniteConversationsByProjectId,
 	useMoveConversationMutation,
+	useSelectAllContextMutation,
+	useSelectedAllState,
 } from "./hooks";
+import { SkippedConversationsModal } from "./SkippedConversationsModal";
 
 type SortOption = {
 	label: string;
@@ -813,6 +818,12 @@ export const ConversationAccordion = ({
 		],
 	);
 
+	// Check if restrictive filters (tags or verified) are applied
+	const hasRestrictiveFilters = useMemo(
+		() => selectedTagIds.length > 0 || showOnlyVerified,
+		[selectedTagIds.length, showOnlyVerified],
+	);
+
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <should update when sortBy or selectedTagIds.length changes>
 	const appliedFiltersCount = useMemo(() => {
 		return selectedTagIds.length + (showOnlyVerified ? 1 : 0);
@@ -821,6 +832,68 @@ export const ConversationAccordion = ({
 	const [showFilterActions, setShowFilterActions] = useState(false);
 	const [sortMenuOpened, setSortMenuOpened] = useState(false);
 	const [tagsMenuOpened, setTagsMenuOpened] = useState(false);
+
+	// Select All state
+	const [skippedModalOpened, setSkippedModalOpened] = useState(false);
+	const [selectAllResult, setSelectAllResult] =
+		useState<SelectAllContextResponse | null>(null);
+	const selectAllMutation = useSelectAllContextMutation();
+	const deselectAllMutation = useDeselectAllContextMutation();
+	const selectedAllQuery = useSelectedAllState(chatId ?? "");
+	const selectedAll = selectedAllQuery.data ?? false;
+
+	// Handle select all
+	const handleSelectAll = () => {
+		if (!chatId || !projectId) return;
+
+		const promise = selectAllMutation.mutateAsync({
+			chatId,
+			projectId,
+		});
+
+		toast.promise(promise, {
+			error: t`Failed to select all conversations`,
+			loading: t`Adding all conversations to context...`,
+			success: (data) => {
+				setSelectAllResult(data);
+
+				// Show modal if there are skipped conversations (excluding already_in_context)
+				const reallySkipped = data.skipped.filter(
+					(c) => c.reason !== "already_in_context",
+				);
+				if (reallySkipped.length > 0) {
+					setSkippedModalOpened(true);
+				}
+
+				const addedCount = data.added.length;
+				if (addedCount > 0) {
+					return t`Added ${addedCount} conversation${addedCount > 1 ? "s" : ""} to context`;
+				}
+				return t`All conversations are already in context`;
+			},
+		});
+	};
+
+	// Handle deselect all
+	const handleDeselectAll = () => {
+		if (!chatId) return;
+
+		const promise = deselectAllMutation.mutateAsync({
+			chatId,
+		});
+
+		toast.promise(promise, {
+			error: t`Failed to deselect all conversations`,
+			loading: t`Removing conversations from context...`,
+			success: (data) => {
+				const removedCount = data.removed.length;
+				if (removedCount > 0) {
+					return t`Removed ${removedCount} conversation${removedCount > 1 ? "s" : ""} from context`;
+				}
+				return t`No conversations were removed`;
+			},
+		});
+	};
 
 	const resetEverything = useCallback(() => {
 		setConversationSearch("");
@@ -1193,6 +1266,47 @@ export const ConversationAccordion = ({
 						</Group>
 					)}
 
+					{/* Select All - only show in deep dive mode when no restrictive filters are applied and conversations exist */}
+					{inChatMode &&
+						chatMode === "deep_dive" &&
+						totalConversations > 0 &&
+						!hasRestrictiveFilters &&
+						allConversations.length > 0 && (
+							<Group justify="space-between" align="center" gap="xs" mt="sm">
+								<Group gap="xs" align="center">
+									{selectAllMutation.isPending ||
+									deselectAllMutation.isPending ? (
+										<Loader size={16} />
+									) : (
+										<IconSelectAll size={16} className="text-gray-500" />
+									)}
+									<Text size="sm" c="dimmed">
+										<Trans>Select all</Trans>
+									</Text>
+								</Group>
+								<Tooltip
+									label={
+										selectAllMutation.isPending
+											? t`Adding conversations...`
+											: deselectAllMutation.isPending
+												? t`Removing conversations...`
+												: selectedAll
+													? t`Deselect all conversations`
+													: t`Add all conversations to context (up to limit)`
+									}
+								>
+									<Checkbox
+										size="sm"
+										checked={selectedAll}
+										disabled={
+											selectAllMutation.isPending ||
+											deselectAllMutation.isPending
+										}
+										onChange={selectedAll ? handleDeselectAll : handleSelectAll}
+									/>
+								</Tooltip>
+							</Group>
+						)}
 					{/* Filter icons that always appear under the search bar */}
 					{/* Temporarily disabled source filters */}
 					{/* {totalConversationsQuery.data?.length !== 0 && (
@@ -1279,6 +1393,15 @@ export const ConversationAccordion = ({
               )} */}
 					</Stack>
 				</Stack>
+
+				{/* Skipped Conversations Modal */}
+				<SkippedConversationsModal
+					opened={skippedModalOpened}
+					onClose={() => setSkippedModalOpened(false)}
+					addedConversations={selectAllResult?.added ?? []}
+					skippedConversations={selectAllResult?.skipped ?? []}
+					contextLimitReached={selectAllResult?.context_limit_reached ?? false}
+				/>
 			</Accordion.Panel>
 		</Accordion.Item>
 	);

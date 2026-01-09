@@ -938,28 +938,35 @@ export const getProjectChatContext = async (chatId: string) => {
 
 export const addChatContext = async (
 	chatId: string,
-	conversationId?: string,
-	auto_select_bool?: boolean,
+	options?: {
+		conversationId?: string;
+		auto_select_bool?: boolean;
+		select_all?: boolean;
+		project_id?: string;
+	},
 ) => {
-	return api.post<unknown, TProjectChatContext>(
-		`/chats/${chatId}/add-context`,
-		{
-			auto_select_bool: auto_select_bool,
-			conversation_id: conversationId,
-		},
-	);
+	return api.post<unknown, AddContextResponse>(`/chats/${chatId}/add-context`, {
+		auto_select_bool: options?.auto_select_bool,
+		conversation_id: options?.conversationId,
+		project_id: options?.project_id,
+		select_all: options?.select_all,
+	});
 };
 
 export const deleteChatContext = async (
 	chatId: string,
-	conversationId?: string,
-	auto_select_bool?: boolean,
+	options?: {
+		conversationId?: string;
+		auto_select_bool?: boolean;
+		deselect_all?: boolean;
+	},
 ) => {
-	return api.post<unknown, TProjectChatContext>(
+	return api.post<unknown, DeleteContextResponse>(
 		`/chats/${chatId}/delete-context`,
 		{
-			auto_select_bool: auto_select_bool,
-			conversation_id: conversationId,
+			auto_select_bool: options?.auto_select_bool,
+			conversation_id: options?.conversationId,
+			deselect_all: options?.deselect_all,
 		},
 	);
 };
@@ -969,6 +976,37 @@ export const lockConversations = async (chatId: string) => {
 	return api.post<unknown, TProjectChatContext>(
 		`/chats/${chatId}/lock-conversations`,
 	);
+};
+
+export const selectAllContext = async (chatId: string, projectId: string) => {
+	// Uses addChatContext with select_all=true
+	const response = await addChatContext(chatId, {
+		project_id: projectId,
+		select_all: true,
+	});
+	// Map to SelectAllContextResponse for backward compatibility
+	return {
+		added: response.added ?? [],
+		context_limit_reached: response.context_limit_reached ?? false,
+		selected_all: response.selected_all,
+		skipped: response.skipped ?? [],
+		total_processed: response.total_processed ?? 0,
+	} satisfies SelectAllContextResponse;
+};
+
+// Remove all unlocked conversations from the chat context
+export const deselectAllContext = async (chatId: string) => {
+	// Uses deleteChatContext with deselect_all=true
+	const response = await deleteChatContext(chatId, {
+		deselect_all: true,
+	});
+	// Map to DeselectAllContextResponse
+	return {
+		removed: response.removed ?? [],
+		selected_all: response.selected_all,
+		skipped: response.skipped ?? [],
+		total_processed: response.total_processed ?? 0,
+	} satisfies DeselectAllContextResponse;
 };
 
 export type ChatMode = "overview" | "deep_dive";

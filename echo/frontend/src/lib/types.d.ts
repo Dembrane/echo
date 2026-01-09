@@ -193,3 +193,55 @@ type TSuggestion = {
 type TSuggestionsResponse = {
 	suggestions: TSuggestion[];
 };
+
+type SelectAllConversationResult = {
+	conversation_id: string;
+	participant_name: string;
+	success: boolean;
+	reason?:
+		| "added"
+		| "already_in_context"
+		| "context_limit_reached"
+		| "empty"
+		| "too_long"
+		| "error";
+};
+
+type AddContextResponse = {
+	selected_all: boolean;
+	// Optional fields populated when select_all is used
+	added?: SelectAllConversationResult[];
+	skipped?: SelectAllConversationResult[];
+	total_processed?: number;
+	context_limit_reached?: boolean;
+};
+
+type SelectAllContextResponse = {
+	added: SelectAllConversationResult[];
+	skipped: SelectAllConversationResult[];
+	total_processed: number;
+	context_limit_reached: boolean;
+	selected_all: boolean;
+};
+
+type DeselectConversationResult = {
+	conversation_id: string;
+	participant_name: string;
+	success: boolean;
+	reason?: "removed" | "locked" | "error";
+};
+
+type DeleteContextResponse = {
+	selected_all: boolean;
+	// Optional fields populated when deselect_all is used
+	removed?: DeselectConversationResult[];
+	skipped?: DeselectConversationResult[];
+	total_processed?: number;
+};
+
+type DeselectAllContextResponse = {
+	removed: DeselectConversationResult[];
+	skipped: DeselectConversationResult[];
+	total_processed: number;
+	selected_all: boolean;
+};

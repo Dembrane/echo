@@ -24,10 +24,12 @@ import {
 	apiNoAuth,
 	deleteChatContext,
 	deleteConversationById,
+	deselectAllContext,
 	getConversationChunkContentLink,
 	getConversationContentLink,
 	getConversationTranscriptString,
 	retranscribeConversation,
+	selectAllContext,
 } from "@/lib/api";
 import { directus } from "@/lib/directus";
 
@@ -285,11 +287,10 @@ export const useAddChatContextMutation = () => {
 			conversationId?: string;
 			auto_select_bool?: boolean;
 		}) =>
-			addChatContext(
-				payload.chatId,
-				payload.conversationId,
-				payload.auto_select_bool,
-			),
+			addChatContext(payload.chatId, {
+				auto_select_bool: payload.auto_select_bool,
+				conversationId: payload.conversationId,
+			}),
 		onError: (error, variables, context) => {
 			Sentry.captureException(error);
 
@@ -400,12 +401,28 @@ export const useAddChatContextMutation = () => {
 				queryKey: ["chats", "context", variables.chatId],
 			});
 		},
-		onSuccess: (_, variables) => {
+		onSuccess: (data: AddContextResponse, variables) => {
+			// Update selected_all state in query cache
+			queryClient.setQueryData(
+				["chats", "selectedAll", variables.chatId],
+				data.selected_all,
+			);
+
 			const message = variables.auto_select_bool
 				? t`Auto-select enabled`
 				: t`Conversation added to chat`;
 			toast.success(message);
 		},
+	});
+};
+
+// Hook to get the selected_all state for a chat
+export const useSelectedAllState = (chatId: string) => {
+	return useQuery({
+		enabled: !!chatId,
+		queryFn: () => false, // Default to false, will be updated by mutations
+		queryKey: ["chats", "selectedAll", chatId],
+		staleTime: Number.POSITIVE_INFINITY, // Never stale, only updated by mutations
 	});
 };
 
@@ -417,11 +434,10 @@ export const useDeleteChatContextMutation = () => {
 			conversationId?: string;
 			auto_select_bool?: boolean;
 		}) =>
-			deleteChatContext(
-				payload.chatId,
-				payload.conversationId,
-				payload.auto_select_bool,
-			),
+			deleteChatContext(payload.chatId, {
+				auto_select_bool: payload.auto_select_bool,
+				conversationId: payload.conversationId,
+			}),
 		onError: (error, variables, context) => {
 			Sentry.captureException(error);
 
@@ -541,12 +557,64 @@ export const useDeleteChatContextMutation = () => {
 				queryKey: ["chats", "context", variables.chatId],
 			});
 		},
-		onSuccess: (_, variables) => {
+		onSuccess: (data: DeleteContextResponse, variables) => {
+			// Update selected_all state in query cache (will be false after removing a conversation)
+			queryClient.setQueryData(
+				["chats", "selectedAll", variables.chatId],
+				data.selected_all,
+			);
+
 			const message =
 				variables.auto_select_bool === false
 					? t`Auto-select disabled`
 					: t`Conversation removed from chat`;
 			toast.success(message);
+		},
+	});
+};
+
+export const useSelectAllContextMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (payload: { chatId: string; projectId: string }) =>
+			selectAllContext(payload.chatId, payload.projectId),
+		onError: (error) => {
+			Sentry.captureException(error);
+		},
+		onSettled: (_, __, variables) => {
+			queryClient.invalidateQueries({
+				queryKey: ["chats", "context", variables.chatId],
+			});
+		},
+		onSuccess: (data: SelectAllContextResponse, variables) => {
+			// Update selected_all state in query cache
+			queryClient.setQueryData(
+				["chats", "selectedAll", variables.chatId],
+				data.selected_all,
+			);
+		},
+	});
+};
+
+export const useDeselectAllContextMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (payload: { chatId: string }) =>
+			deselectAllContext(payload.chatId),
+		onError: (error) => {
+			Sentry.captureException(error);
+		},
+		onSettled: (_, __, variables) => {
+			queryClient.invalidateQueries({
+				queryKey: ["chats", "context", variables.chatId],
+			});
+		},
+		onSuccess: (data: DeselectAllContextResponse, variables) => {
+			// Update selected_all state in query cache
+			queryClient.setQueryData(
+				["chats", "selectedAll", variables.chatId],
+				data.selected_all,
+			);
 		},
 	});
 };

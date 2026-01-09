@@ -288,14 +288,63 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
 class ChatAddContextSchema(BaseModel):
     conversation_id: Optional[str] = None
     auto_select_bool: Optional[bool] = None
+    select_all: Optional[bool] = None  # When True, add all conversations from project
+    project_id: Optional[str] = None  # Required when select_all is True
 
 
-@ChatRouter.post("/{chat_id}/add-context")
+class SelectAllConversationResult(BaseModel):
+    conversation_id: str
+    participant_name: str
+    success: bool
+    reason: Optional[str] = (
+        None  # "added", "already_in_context", "context_limit_reached", "empty", "too_long"
+    )
+
+
+class AddContextResponseSchema(BaseModel):
+    selected_all: bool  # True if all addable conversations are now in context
+    # Optional fields populated when select_all is used
+    added: Optional[List[SelectAllConversationResult]] = None
+    skipped: Optional[List[SelectAllConversationResult]] = None
+    total_processed: Optional[int] = None
+    context_limit_reached: Optional[bool] = None
+
+
+async def check_all_conversations_selected(
+    chat_id: str,
+    project_id: str,
+    auth: DirectusSession,
+) -> bool:
+    """
+    Check if all conversations from a project are in the chat context.
+    Returns True if the number of conversations in context equals the total number in the project.
+    """
+    conversation_svc = conversation_service
+
+    # Get all conversations for the project
+    all_conversations = await run_in_thread_pool(
+        conversation_svc.list_by_project,
+        project_id,
+        False,  # no need for chunks
+        False,
+    )
+
+    # Get current chat context
+    chat_context = await get_chat_context(chat_id, auth)
+
+    total_in_project = len(all_conversations)
+    total_in_context = len(chat_context.conversation_id_list)
+
+    # All conversations are selected if counts match
+    return total_in_project > 0 and total_in_project == total_in_context
+
+
+@ChatRouter.post("/{chat_id}/add-context", response_model=AddContextResponseSchema)
 async def add_chat_context(
     chat_id: str,
     body: ChatAddContextSchema,
     auth: DependencyDirectusSession,
-) -> None:
+) -> AddContextResponseSchema:
     chat = await raise_if_chat_not_found_or_not_authorized(
         chat_id,
         auth,
@@ -305,14 +354,194 @@ async def add_chat_context(
     chat_svc = chat_service
     conversation_svc = conversation_service
 
-    if body.conversation_id is None and body.auto_select_bool is None:
+    # Get project_id from chat for selected_all check (use body.project_id if provided)
+    project_info = chat.get("project_id")
+    project_id: Optional[str] = body.project_id
+    if project_id is None:
+        if isinstance(project_info, dict):
+            project_id = project_info.get("id")
+        else:
+            project_id = project_info
+
+    # Count how many options are provided
+    options_provided = sum(
+        [
+            body.conversation_id is not None,
+            body.auto_select_bool is not None,
+            body.select_all is not None,
+        ]
+    )
+
+    if options_provided == 0:
         raise HTTPException(
-            status_code=400, detail="conversation_id or auto_select_bool is required"
+            status_code=400,
+            detail="conversation_id, auto_select_bool, or select_all is required",
         )
 
-    if body.conversation_id is not None and body.auto_select_bool is not None:
+    if options_provided > 1:
         raise HTTPException(
-            status_code=400, detail="conversation_id and auto_select_bool cannot both be provided"
+            status_code=400,
+            detail="Only one of conversation_id, auto_select_bool, or select_all can be provided",
+        )
+
+    # Handle select_all
+    if body.select_all is True:
+        if not project_id:
+            raise HTTPException(
+                status_code=400,
+                detail="project_id is required when select_all is True",
+            )
+
+        # Get all conversations for the project, sorted by most recent first
+        all_conversations = await run_in_thread_pool(
+            conversation_svc.list_by_project,
+            project_id,
+            True,  # with_chunks to check if conversation has content
+            False,
+        )
+
+        # Sort by created_at descending (most recent first)
+        all_conversations.sort(key=lambda c: c.get("created_at", ""), reverse=True)
+
+        # Get existing conversation IDs in the chat
+        existing_ids = {
+            (link.get("conversation_id") or {}).get("id")
+            for link in (chat.get("used_conversations") or [])
+        }
+
+        # Get current chat context to track token usage
+        chat_context = await get_chat_context(chat_id, auth)
+        current_token_usage = sum(
+            conversation_entry.token_usage for conversation_entry in chat_context.conversations
+        )
+
+        added: List[SelectAllConversationResult] = []
+        skipped: List[SelectAllConversationResult] = []
+        context_limit_reached = False
+
+        for conversation in all_conversations:
+            conv_id = conversation.get("id")
+            participant_name = str(conversation.get("participant_name") or "Unknown")
+
+            if not conv_id:
+                continue
+
+            # Skip if already in context
+            if conv_id in existing_ids:
+                skipped.append(
+                    SelectAllConversationResult(
+                        conversation_id=conv_id,
+                        participant_name=participant_name,
+                        success=False,
+                        reason="already_in_context",
+                    )
+                )
+                continue
+
+            # Check if conversation has content
+            chunks = conversation.get("chunks") or []
+            has_content = any(
+                chunk.get("transcript") and str(chunk.get("transcript")).strip() for chunk in chunks
+            )
+
+            if not has_content:
+                skipped.append(
+                    SelectAllConversationResult(
+                        conversation_id=conv_id,
+                        participant_name=participant_name,
+                        success=False,
+                        reason="empty",
+                    )
+                )
+                continue
+
+            # If context limit already reached, skip remaining conversations
+            if context_limit_reached:
+                skipped.append(
+                    SelectAllConversationResult(
+                        conversation_id=conv_id,
+                        participant_name=participant_name,
+                        success=False,
+                        reason="context_limit_reached",
+                    )
+                )
+                continue
+
+            try:
+                # Get token count for this conversation
+                token_count = await get_conversation_token_count(conv_id, auth)
+
+                # Check if single conversation is too long
+                if token_count > MAX_CHAT_CONTEXT_LENGTH:
+                    skipped.append(
+                        SelectAllConversationResult(
+                            conversation_id=conv_id,
+                            participant_name=participant_name,
+                            success=False,
+                            reason="too_long",
+                        )
+                    )
+                    continue
+
+                # Check if adding this conversation would exceed the context limit
+                conversation_usage = token_count / MAX_CHAT_CONTEXT_LENGTH
+                if current_token_usage + conversation_usage > 1:
+                    context_limit_reached = True
+                    skipped.append(
+                        SelectAllConversationResult(
+                            conversation_id=conv_id,
+                            participant_name=participant_name,
+                            success=False,
+                            reason="context_limit_reached",
+                        )
+                    )
+                    continue
+
+                # Add the conversation to context
+                await run_in_thread_pool(
+                    chat_svc.attach_conversations,
+                    chat_id,
+                    [conv_id],
+                )
+
+                # Update tracking
+                current_token_usage += conversation_usage
+                existing_ids.add(conv_id)
+
+                added.append(
+                    SelectAllConversationResult(
+                        conversation_id=conv_id,
+                        participant_name=participant_name,
+                        success=True,
+                        reason="added",
+                    )
+                )
+
+            except Exception as exc:
+                logger.warning(
+                    "Failed to add conversation %s to chat %s: %s",
+                    conv_id,
+                    chat_id,
+                    exc,
+                )
+                skipped.append(
+                    SelectAllConversationResult(
+                        conversation_id=conv_id,
+                        participant_name=participant_name,
+                        success=False,
+                        reason="error",
+                    )
+                )
+
+        # Check if all addable conversations are now in context
+        selected_all = await check_all_conversations_selected(chat_id, project_id, auth)
+
+        return AddContextResponseSchema(
+            selected_all=selected_all,
+            added=added,
+            skipped=skipped,
+            total_processed=len(all_conversations),
+            context_limit_reached=context_limit_reached,
         )
 
     if body.conversation_id is not None:
@@ -364,33 +593,147 @@ async def add_chat_context(
     if body.auto_select_bool is not None:
         await run_in_thread_pool(chat_svc.set_auto_select, chat_id, body.auto_select_bool)
 
+    # Check if all addable conversations are now in context
+    selected_all = False
+    if project_id:
+        selected_all = await check_all_conversations_selected(chat_id, project_id, auth)
+
+    return AddContextResponseSchema(selected_all=selected_all)
+
+
+class DeselectConversationResult(BaseModel):
+    conversation_id: str
+    participant_name: str
+    success: bool
+    reason: Optional[str] = None  # "removed", "locked", "error"
+
 
 class ChatDeleteContextSchema(BaseModel):
     conversation_id: Optional[str] = None
     auto_select_bool: Optional[bool] = None
+    deselect_all: Optional[bool] = None  # When True, remove all unlocked conversations
 
 
-@ChatRouter.post("/{chat_id}/delete-context")
+class DeleteContextResponseSchema(BaseModel):
+    selected_all: (
+        bool  # True if all addable conversations are still in context (will be False after delete)
+    )
+    # Optional fields populated when deselect_all is used
+    removed: Optional[List[DeselectConversationResult]] = None
+    skipped: Optional[List[DeselectConversationResult]] = None
+    total_processed: Optional[int] = None
+
+
+@ChatRouter.post("/{chat_id}/delete-context", response_model=DeleteContextResponseSchema)
 async def delete_chat_context(
     chat_id: str,
     body: ChatDeleteContextSchema,
     auth: DependencyDirectusSession,
-) -> None:
+) -> DeleteContextResponseSchema:
     chat_svc = chat_service
 
-    await raise_if_chat_not_found_or_not_authorized(chat_id, auth)
-    if body.conversation_id is None and body.auto_select_bool is None:
+    chat = await raise_if_chat_not_found_or_not_authorized(
+        chat_id,
+        auth,
+        include_used_conversations=True,
+    )
+
+    # Get project_id from chat for selected_all check
+    project_info = chat.get("project_id")
+    project_id: Optional[str] = None
+    if isinstance(project_info, dict):
+        project_id = project_info.get("id")
+    else:
+        project_id = project_info
+
+    # Count how many options are provided
+    options_provided = sum(
+        [
+            body.conversation_id is not None,
+            body.auto_select_bool is not None,
+            body.deselect_all is not None,
+        ]
+    )
+
+    if options_provided == 0:
         raise HTTPException(
-            status_code=400, detail="conversation_id or auto_select_bool is required"
+            status_code=400,
+            detail="conversation_id, auto_select_bool, or deselect_all is required",
         )
 
-    if body.conversation_id is not None and body.auto_select_bool is not None:
+    if options_provided > 1:
         raise HTTPException(
-            status_code=400, detail="conversation_id and auto_select_bool cannot both be provided"
+            status_code=400,
+            detail="Only one of conversation_id, auto_select_bool, or deselect_all can be provided",
         )
 
     if body.auto_select_bool is True:
         raise HTTPException(status_code=400, detail="auto_select_bool cannot be True")
+
+    # Handle deselect_all
+    if body.deselect_all is True:
+        chat_context = await get_chat_context(chat_id, auth)
+
+        removed: List[DeselectConversationResult] = []
+        skipped: List[DeselectConversationResult] = []
+
+        for ctx_conversation in chat_context.conversations:
+            conv_id = ctx_conversation.conversation_id
+            participant_name = ctx_conversation.conversation_participant_name or "Unknown"
+
+            # Skip locked conversations
+            if ctx_conversation.locked:
+                skipped.append(
+                    DeselectConversationResult(
+                        conversation_id=conv_id,
+                        participant_name=participant_name,
+                        success=False,
+                        reason="locked",
+                    )
+                )
+                continue
+
+            try:
+                await run_in_thread_pool(
+                    chat_svc.detach_conversation,
+                    chat_id,
+                    conv_id,
+                )
+                removed.append(
+                    DeselectConversationResult(
+                        conversation_id=conv_id,
+                        participant_name=participant_name,
+                        success=True,
+                        reason="removed",
+                    )
+                )
+            except Exception as exc:
+                logger.warning(
+                    "Failed to remove conversation %s from chat %s: %s",
+                    conv_id,
+                    chat_id,
+                    exc,
+                )
+                skipped.append(
+                    DeselectConversationResult(
+                        conversation_id=conv_id,
+                        participant_name=participant_name,
+                        success=False,
+                        reason="error",
+                    )
+                )
+
+        # After deselect all, selected_all will be False (unless no conversations exist)
+        selected_all = False
+        if project_id:
+            selected_all = await check_all_conversations_selected(chat_id, project_id, auth)
+
+        return DeleteContextResponseSchema(
+            selected_all=selected_all,
+            removed=removed,
+            skipped=skipped,
+            total_processed=len(chat_context.conversations),
+        )
 
     if body.conversation_id is not None:
         chat_context = await get_chat_context(chat_id, auth)
@@ -418,6 +761,13 @@ async def delete_chat_context(
 
     if body.auto_select_bool is not None:
         await run_in_thread_pool(chat_svc.set_auto_select, chat_id, body.auto_select_bool)
+
+    # Check if all addable conversations are still in context (will be False after removing one)
+    selected_all = False
+    if project_id:
+        selected_all = await check_all_conversations_selected(chat_id, project_id, auth)
+
+    return DeleteContextResponseSchema(selected_all=selected_all)
 
 
 @ChatRouter.post("/{chat_id}/lock-conversations", response_model=None)
