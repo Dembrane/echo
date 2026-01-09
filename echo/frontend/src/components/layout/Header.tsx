@@ -10,6 +10,7 @@ import {
 	IconShieldLock,
 	IconWorld,
 } from "@tabler/icons-react";
+import { useState } from "react";
 import { useParams } from "react-router";
 import {
 	useAuthenticated,
@@ -24,6 +25,8 @@ import { Announcements } from "../announcement/Announcements";
 import { TopAnnouncementBar } from "../announcement/TopAnnouncementBar";
 import { Logo } from "../common/Logo";
 import { LanguagePicker } from "../language/LanguagePicker";
+import { Wrapped } from "../wrapped/Wrapped";
+import { WrappedButton } from "../wrapped/WrappedButton";
 import { useTransitionCurtain } from "./TransitionCurtainProvider";
 
 type HeaderViewProps = {
@@ -80,6 +83,7 @@ function CreateFeedbackButton() {
 
 const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 	const { language } = useParams();
+	const [isWrappedOpen, setIsWrappedOpen] = useState(false);
 
 	const logoutMutation = useLogoutMutation();
 	const { data: user } = useCurrentUser({ enabled: isAuthenticated });
@@ -138,6 +142,13 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 							</Group>
 						</I18nLink>
 					</Group>
+
+					{/* Centered Wrapped Button */}
+					{!loading && isAuthenticated && user && (
+						<div className="absolute left-1/2 -translate-x-1/2">
+							<WrappedButton onClick={() => setIsWrappedOpen(true)} />
+						</div>
+					)}
 
 					{!loading && isAuthenticated && user ? (
 						<Group>
@@ -215,6 +226,9 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 					)}
 				</Group>
 			</Paper>
+
+			{/* Wrapped Full-screen Experience */}
+			<Wrapped isOpen={isWrappedOpen} onClose={() => setIsWrappedOpen(false)} />
 		</>
 	);
 };

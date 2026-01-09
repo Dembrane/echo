@@ -1,0 +1,58 @@
+/* Wrapped Button Styles */
+.wrapped-button-container {
+	position: relative;
+}
+
+.wrapped-button {
+	position: relative;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	border: none;
+	box-shadow:
+		0 0 20px rgba(65, 105, 225, 0.3),
+		0 0 40px rgba(0, 255, 255, 0.2);
+	transition: all 0.3s ease;
+}
+
+.wrapped-button::before {
+	content: "";
+	position: absolute;
+	inset: -2px;
+	border-radius: inherit;
+	background: linear-gradient(
+		135deg,
+		#4169E1,
+		#00FFFF,
+		#1EFFA1,
+		#FFC2FF,
+		#4169E1
+	);
+	background-size: 300% 300%;
+	z-index: -1;
+	animation: shimmer 3s ease infinite;
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+
+.wrapped-button:hover::before {
+	opacity: 1;
+}
+
+.wrapped-button:hover {
+	box-shadow:
+		0 0 30px rgba(65, 105, 225, 0.5),
+		0 0 60px rgba(0, 255, 255, 0.3);
+}
+
+@keyframes shimmer {
+	0% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+	100% {
+		background-position: 0% 50%;
+	}
+}
+
