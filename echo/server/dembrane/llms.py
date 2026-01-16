@@ -3,9 +3,12 @@ from __future__ import annotations
 import json
 import logging
 from enum import Enum
-from typing import Any, Dict
+from typing import Any, Dict, Optional, TYPE_CHECKING
 
 from dembrane.settings import get_settings
+
+if TYPE_CHECKING:
+    from litellm import Router
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +24,9 @@ MODEL_REGISTRY: Dict[MODELS, Dict[str, str]] = {
     MODELS.MULTI_MODAL_FAST: {"settings_attr": "multi_modal_fast"},
     MODELS.TEXT_FAST: {"settings_attr": "text_fast"},
 }
+
+# Cached router instance
+_cached_router: Optional["Router"] = None
 
 
 def get_completion_kwargs(model: MODELS, **overrides: Any) -> Dict[str, Any]:
@@ -61,4 +67,63 @@ def get_completion_kwargs(model: MODELS, **overrides: Any) -> Dict[str, Any]:
     return kwargs
 
 
-__all__ = ["MODELS", "get_completion_kwargs"]
+def _get_router() -> "Router":
+    """
+    Get the LiteLLM Router instance (lazy import to avoid circular deps).
+    """
+    global _cached_router
+    if _cached_router is None:
+        from dembrane.llm_router import get_router
+        _cached_router = get_router()
+    return _cached_router
+
+
+async def arouter_completion(model: MODELS, **kwargs: Any) -> Any:
+    """
+    Async completion via LiteLLM Router with automatic load balancing and failover.
+
+    The router will:
+    - Distribute requests across configured deployments
+    - Automatically retry on failures
+    - Cooldown failing deployments
+    - Fall back to alternate model groups if configured
+
+    Args:
+        model: The model group to use (MODELS.TEXT_FAST, MODELS.MULTI_MODAL_PRO, etc.)
+        **kwargs: Arguments passed to litellm.acompletion (messages, temperature, etc.)
+
+    Returns:
+        LiteLLM completion response
+
+    Example:
+        response = await arouter_completion(
+            MODELS.TEXT_FAST,
+            messages=[{"role": "user", "content": "Hello!"}],
+            temperature=0.7,
+        )
+    """
+    router = _get_router()
+    model_name = MODEL_REGISTRY[model]["settings_attr"]
+    return await router.acompletion(model=model_name, **kwargs)
+
+
+def router_completion(model: MODELS, **kwargs: Any) -> Any:
+    """
+    Sync completion via LiteLLM Router with automatic load balancing and failover.
+
+    Use this for synchronous code paths (e.g., Dramatiq tasks).
+    For async code, prefer arouter_completion().
+
+    Args:
+        model: The model group to use (MODELS.TEXT_FAST, MODELS.MULTI_MODAL_PRO, etc.)
+        **kwargs: Arguments passed to litellm.completion (messages, temperature, etc.)
+
+    Returns:
+        LiteLLM completion response
+    """
+    router = _get_router()
+    model_name = MODEL_REGISTRY[model]["settings_attr"]
+    return router.completion(model=model_name, **kwargs)
+
+
+__all__ = ["MODELS", "get_completion_kwargs", "arouter_completion", "router_completion"]

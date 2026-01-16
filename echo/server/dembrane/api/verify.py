@@ -4,11 +4,10 @@ import logging
 from typing import Any, Dict, List, Optional
 from datetime import datetime
 
-import litellm
 from fastapi import APIRouter, HTTPException
 from pydantic import Field, BaseModel
 
-from dembrane.llms import MODELS, get_completion_kwargs
+from dembrane.llms import MODELS, arouter_completion
 from dembrane.utils import generate_uuid
 from dembrane.prompts import render_prompt
 from dembrane.directus import DirectusClient, directus
@@ -623,10 +622,10 @@ async def generate_verification_artifacts(
         },
     )
 
-    completion_kwargs = get_completion_kwargs(MODELS.MULTI_MODAL_PRO)
-
     try:
-        response = await litellm.acompletion(
+        # Use router for load balancing and failover across Gemini regions
+        response = await arouter_completion(
+            MODELS.MULTI_MODAL_PRO,
             messages=[
                 {
                     "role": "system",
@@ -642,7 +641,6 @@ async def generate_verification_artifacts(
                     "content": message_content,
                 },
             ],
-            **completion_kwargs,
         )
     except Exception as exc:
         logger.error("Gemini completion failed: %s", exc, exc_info=True)
@@ -751,10 +749,10 @@ async def update_verification_artifact(
                 except Exception as exc:  # pragma: no cover - logging side effect
                     logger.warning("Failed to attach audio chunk %s: %s", chunk_id, exc)
 
-        revision_completion_kwargs = get_completion_kwargs(MODELS.MULTI_MODAL_PRO)
-
         try:
-            response = await litellm.acompletion(
+            # Use router for load balancing and failover across Gemini regions
+            response = await arouter_completion(
+                MODELS.MULTI_MODAL_PRO,
                 messages=[
                     {
                         "role": "system",
@@ -770,7 +768,6 @@ async def update_verification_artifact(
                         "content": message_content,
                     },
                 ],
-                **revision_completion_kwargs,
             )
         except Exception as exc:  # pragma: no cover - external failure
             logger.error("Gemini revision failed: %s", exc, exc_info=True)

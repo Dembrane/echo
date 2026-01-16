@@ -2,9 +2,8 @@ from logging import getLogger
 
 import nest_asyncio
 from fastapi import APIRouter
-from litellm import completion
 
-from dembrane.llms import MODELS, get_completion_kwargs
+from dembrane.llms import MODELS, router_completion
 from dembrane.prompts import render_prompt
 
 # Enable nested event loops for sync-to-async bridges
@@ -46,14 +45,15 @@ def generate_summary(
     )
 
     try:
-        response = completion(
+        # Use router for load balancing and failover
+        response = router_completion(
+            MODELS.MULTI_MODAL_PRO,
             messages=[
                 {
                     "role": "user",
                     "content": prompt,
                 }
             ],
-            **get_completion_kwargs(MODELS.MULTI_MODAL_PRO),
         )
     except Exception as e:
         logger.error(f"LiteLLM completion error: {e}")

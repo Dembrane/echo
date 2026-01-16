@@ -54,6 +54,7 @@ import { useConversationsCountByProjectId } from "@/components/conversation/hook
 import { API_BASE_URL, ENABLE_CHAT_AUTO_SELECT } from "@/config";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useLoadNotification } from "@/hooks/useLoadNotification";
 
 const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	const chatHistoryQuery = useChatHistory(chatId);
@@ -106,6 +107,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 		error,
 		stop,
 		reload,
+		data,
 	} = useChat({
 		api: `${API_BASE_URL}/chats/${chatId}?language=${iso639_1 ?? "en"}`,
 		credentials: "include",
@@ -162,6 +164,14 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 			}
 		},
 		streamProtocol: "data",
+	});
+
+	// Handle load status notifications (shows toast when backend reports high load)
+	const hasContent = messages.length > 0 && messages[messages.length - 1]?.content?.length > 0;
+	useLoadNotification({
+		data,
+		isLoading,
+		hasContent,
 	});
 
 	const customHandleStop = () => {

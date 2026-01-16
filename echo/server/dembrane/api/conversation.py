@@ -29,6 +29,7 @@ from dembrane.api.exceptions import (
 )
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
 from dembrane.service.conversation import ConversationService
+from dembrane.stream_status import stream_with_status
 
 logger = getLogger("api.conversation")
 ConversationRouter = APIRouter(tags=["conversation"])
@@ -464,8 +465,11 @@ async def get_reply_for_conversation(
             logger.error(f"Error generating reply for conversation {conversation_id}: {str(e)}")
             yield "3:" + json.dumps("Something went wrong.") + "\n"
 
+    # Wrap with status notifications for high load scenarios
+    stream = stream_with_status(generate(), delay_threshold_seconds=5.0, protocol="data")
+
     return StreamingResponse(
-        generate(),
+        stream,
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

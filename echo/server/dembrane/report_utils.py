@@ -5,8 +5,7 @@ from typing import Optional
 
 import backoff
 import sentry_sdk
-from litellm import acompletion
-from litellm.utils import token_counter, get_model_info
+from litellm.utils import token_counter
 from litellm.exceptions import (
     Timeout,
     APIError,
@@ -16,34 +15,23 @@ from litellm.exceptions import (
     ContentPolicyViolationError,
 )
 
-from dembrane.llms import MODELS, get_completion_kwargs
+from dembrane.llms import MODELS, arouter_completion
 from dembrane.prompts import render_prompt
 from dembrane.directus import DirectusGenericException, directus
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.summary_utils import safe_summarize_conversation
 from dembrane.api.conversation import get_conversation_transcript
 from dembrane.api.dependency_auth import DirectusSession
+from dembrane.llm_router import get_min_context_length
 
 logger = logging.getLogger("report_utils")
 
 # Global LLM model for report generation
 REPORT_LLM = MODELS.TEXT_FAST
 
-_report_llm_kwargs = get_completion_kwargs(REPORT_LLM)
-_report_llm_model = _report_llm_kwargs["model"]
-
-_model_info = get_model_info(_report_llm_model)
-_max_input_tokens = _model_info["max_input_tokens"] if _model_info else None
-
-if _max_input_tokens is None:
-    logger.warning(f"Could not get max tokens for model {_report_llm_model}")
-    MAX_REPORT_CONTEXT_LENGTH = 128000  # good default
-else:
-    MAX_REPORT_CONTEXT_LENGTH = int(_max_input_tokens * 0.8)
-
-logger.info(
-    f"Using {_report_llm_model} for report generation with context length {MAX_REPORT_CONTEXT_LENGTH}"
-)
+# Get the minimum context length across all TEXT_FAST deployments
+# This ensures we don't exceed limits when router picks any deployment
+MAX_REPORT_CONTEXT_LENGTH = get_min_context_length("text_fast")
 
 # Default timeout for LLM report generation (5 minutes)
 REPORT_GENERATION_TIMEOUT = 5 * 60
@@ -75,10 +63,11 @@ class ReportGenerationError(Exception):
 async def _call_llm_for_report(prompt: str) -> str:
     """Call LLM with automatic retry for transient errors."""
     logger.debug("Calling LLM for report generation")
-    response = await acompletion(
+    # Router handles load balancing and failover; backoff provides additional safety
+    response = await arouter_completion(
+        MODELS.TEXT_FAST,
         messages=[{"role": "user", "content": prompt}],
         timeout=REPORT_GENERATION_TIMEOUT,
-        **get_completion_kwargs(REPORT_LLM),
     )
     return response.choices[0].message.content
 

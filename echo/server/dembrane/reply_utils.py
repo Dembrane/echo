@@ -3,12 +3,11 @@ from logging import getLogger
 from datetime import datetime
 
 import sentry_sdk
-from litellm import acompletion
 from pydantic import BaseModel
 from litellm.utils import token_counter
 from litellm.exceptions import ContentPolicyViolationError
 
-from dembrane.llms import MODELS, get_completion_kwargs
+from dembrane.llms import MODELS, get_completion_kwargs, arouter_completion
 from dembrane.prompts import render_prompt
 from dembrane.directus import directus
 from dembrane.transcribe import _get_audio_file_object
@@ -429,15 +428,15 @@ async def generate_reply_for_conversation(
     # Store the complete response
     accumulated_response = ""
 
-    # Stream the response
+    # Stream the response via router for load balancing and failover
     try:
-        response = await acompletion(
+        response = await arouter_completion(
+            MODELS.MULTI_MODAL_PRO,
             messages=[
                 {"role": "user", "content": message_content},
             ],
             stream=True,
             thinking={"type": "enabled", "budget_tokens": 500},
-            **get_completion_kwargs(MODELS.MULTI_MODAL_PRO),
         )
     except ContentPolicyViolationError as e:
         logger.error(

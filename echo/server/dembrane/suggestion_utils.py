@@ -11,10 +11,9 @@ import logging
 import traceback
 from typing import Any, Dict, List, Optional
 
-from litellm import acompletion
 from pydantic import BaseModel
 
-from dembrane.llms import MODELS, get_completion_kwargs
+from dembrane.llms import MODELS, arouter_completion
 from dembrane.prompts import render_prompt
 from dembrane.service import (
     build_chat_service,
@@ -251,15 +250,15 @@ async def generate_suggestions(
 
         logger.debug(f"[suggestions] Calling LLM for chat {chat_id} in {chat_mode} mode")
 
-        # Call LLM
-        response = await acompletion(
+        # Call LLM via router for load balancing and failover
+        response = await arouter_completion(
+            SUGGESTION_LLM,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
             response_format={"type": "json_object"},
-            timeout=30,  # 15 seconds - suggestions should be fast
-            **get_completion_kwargs(SUGGESTION_LLM),
+            timeout=30,  # 30 seconds - suggestions should be fast
         )
 
         # Parse response
