@@ -41,11 +41,12 @@ import {
 	IconChevronUp,
 	IconRosetteDiscountCheckFilled,
 	IconSearch,
+	IconSelectAll,
 	IconTags,
 	IconX,
 } from "@tabler/icons-react";
 import { formatRelative, intervalToDuration } from "date-fns";
-import React, {
+import {
 	type RefObject,
 	useCallback,
 	useEffect,
@@ -59,13 +60,13 @@ import { useLocation, useParams } from "react-router";
 import { MODE_COLORS } from "@/components/chat/ChatModeSelector";
 import { useProjectChatContext } from "@/components/chat/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
+import { toast } from "@/components/common/Toaster";
 import { FormLabel } from "@/components/form/FormLabel";
 import {
 	useInfiniteProjects,
 	useProjectById,
 } from "@/components/project/hooks";
-import { ENABLE_CHAT_AUTO_SELECT } from "@/config";
-import { cn } from "@/lib/utils";
+import { ENABLE_CHAT_AUTO_SELECT, ENABLE_CHAT_SELECT_ALL } from "@/config";
 import { BaseSkeleton } from "../common/BaseSkeleton";
 import { NavigationButton } from "../common/NavigationButton";
 import { UploadConversationDropzone } from "../dropzone/UploadConversationDropzone";
@@ -76,7 +77,10 @@ import {
 	useDeleteChatContextMutation,
 	useInfiniteConversationsByProjectId,
 	useMoveConversationMutation,
+	useRemainingConversationsCount,
+	useSelectAllContextMutation,
 } from "./hooks";
+import { SelectAllConfirmationModal } from "./SelectAllConfirmationModal";
 
 type SortOption = {
 	label: string;
@@ -769,7 +773,7 @@ export const ConversationAccordion = ({
 		},
 	);
 
-	// Get total conversations count for display
+	// Get total conversations count for display (unfiltered)
 	const conversationsCountQuery = useConversationsCountByProjectId(projectId);
 	const totalConversations = Number(conversationsCountQuery.data) ?? 0;
 
@@ -793,7 +797,7 @@ export const ConversationAccordion = ({
 	const allConversations =
 		conversationsQuery.data?.pages.flatMap((page) => page.conversations) ?? [];
 
-	const [parent2] = useAutoAnimate();
+	const [filterActionsParent] = useAutoAnimate();
 
 	const filterApplied = useMemo(
 		() =>
@@ -813,6 +817,47 @@ export const ConversationAccordion = ({
 		],
 	);
 
+	// Calculate remaining conversations (not yet in context)
+	const conversationsInContext = useMemo(() => {
+		const contextConversations = chatContextQuery.data?.conversations ?? [];
+		return new Set(contextConversations.map((c) => c.conversation_id));
+	}, [chatContextQuery.data?.conversations]);
+
+	// Check if we have any filters applied (used for modal text wording)
+	const hasActiveFilters =
+		selectedTagIds.length > 0 ||
+		showOnlyVerified ||
+		debouncedConversationSearchValue !== "";
+
+	// Check if we should show count in button (filters OR existing context)
+	const shouldShowConversationCount =
+		hasActiveFilters || conversationsInContext.size > 0;
+
+	const remainingConversations = useMemo(() => {
+		return allConversations.filter(
+			(conv) => !conversationsInContext.has(conv.id),
+		);
+	}, [allConversations, conversationsInContext]);
+
+	// Use the new hook to get accurate count independent of pagination
+	// Only query when the feature is enabled and we're in deep dive mode
+	const remainingCountQuery = useRemainingConversationsCount(
+		projectId,
+		chatId,
+		{
+			searchText: debouncedConversationSearchValue || undefined,
+			tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+			verifiedOnly: showOnlyVerified || undefined,
+		},
+		{
+			enabled: ENABLE_CHAT_SELECT_ALL && inChatMode && chatMode === "deep_dive",
+		},
+	);
+
+	// Use the accurate count from the query, fallback to paginated count for display
+	const remainingCount =
+		remainingCountQuery.data ?? remainingConversations.length;
+
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <should update when sortBy or selectedTagIds.length changes>
 	const appliedFiltersCount = useMemo(() => {
 		return selectedTagIds.length + (showOnlyVerified ? 1 : 0);
@@ -821,6 +866,66 @@ export const ConversationAccordion = ({
 	const [showFilterActions, setShowFilterActions] = useState(false);
 	const [sortMenuOpened, setSortMenuOpened] = useState(false);
 	const [tagsMenuOpened, setTagsMenuOpened] = useState(false);
+
+	// Select All state
+	const [selectAllModalOpened, setSelectAllModalOpened] = useState(false);
+	const [selectAllResult, setSelectAllResult] =
+		useState<SelectAllContextResponse | null>(null);
+	const [selectAllLoading, setSelectAllLoading] = useState(false);
+	const selectAllMutation = useSelectAllContextMutation();
+
+	// Handle select all
+	const handleSelectAllClick = () => {
+		setSelectAllModalOpened(true);
+		setSelectAllResult(null);
+	};
+
+	const handleSelectAllConfirm = async () => {
+		if (!chatId || !projectId) {
+			toast.error(t`Failed to add conversations to context`);
+			console.error("Missing required parameters for select all");
+			return;
+		}
+
+		setSelectAllLoading(true);
+		try {
+			const result = await selectAllMutation.mutateAsync({
+				chatId,
+				projectId,
+				searchText: debouncedConversationSearchValue || undefined,
+				tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+				verifiedOnly: showOnlyVerified || undefined,
+			});
+			setSelectAllResult(result);
+		} catch (_error) {
+			toast.error(t`Failed to add conversations to context`);
+			setSelectAllModalOpened(false);
+		} finally {
+			setSelectAllLoading(false);
+		}
+	};
+
+	const handleSelectAllModalClose = () => {
+		setSelectAllModalOpened(false);
+	};
+
+	const handleModalExitTransitionEnd = () => {
+		// Clear data after modal has fully closed
+		setSelectAllResult(null);
+		setSelectAllLoading(false);
+	};
+
+	// Get selected tag names for display (excluding verified outcomes)
+	const selectedTagNames = useMemo(() => {
+		const names: string[] = [];
+		for (const tagId of selectedTagIds) {
+			const tag = allProjectTags.find((t) => t.id === tagId);
+			if (tag?.text) {
+				names.push(tag.text);
+			}
+		}
+		return names;
+	}, [selectedTagIds, allProjectTags]);
 
 	const resetEverything = useCallback(() => {
 		setConversationSearch("");
@@ -908,7 +1013,7 @@ export const ConversationAccordion = ({
 			</Accordion.Control>
 
 			<Accordion.Panel>
-				<Stack gap="sm" ref={parent2} className="relative">
+				<Stack gap="sm" className="relative">
 					{/* Only show auto-select in deep dive mode */}
 					{inChatMode &&
 						!isOverviewMode &&
@@ -974,225 +1079,262 @@ export const ConversationAccordion = ({
 						</Group>
 					)}
 
-					{showFilterActions && (
-						<Group gap="xs">
-							<Menu
-								withArrow
-								position="bottom-start"
-								shadow="md"
-								opened={sortMenuOpened}
-								onChange={setSortMenuOpened}
-							>
-								<Menu.Target>
-									<Button
-										variant="outline"
-										size="xs"
-										color="gray"
-										fw={500}
-										leftSection={<IconArrowsUpDown size={16} />}
-										rightSection={
-											sortMenuOpened ? (
-												<IconChevronUp size={16} />
-											) : (
-												<IconChevronDown size={16} />
-											)
-										}
-									>
-										<Trans>Sort</Trans>
-									</Button>
-								</Menu.Target>
-								<Menu.Dropdown>
-									<Stack py="md" px="lg" gap="md">
-										<Stack gap="xs">
-											<Text size="lg">
-												<Trans>Sort</Trans>
-											</Text>
-											<Stack gap="xs">
-												<Radio.Group
-													value={sortBy}
-													onChange={(value) =>
-														setSortBy(value as SortOption["value"])
-													}
-													name="sortOptions"
-												>
-													<Stack gap="xs">
-														{SORT_OPTIONS.map((option) => (
-															<Radio
-																key={option.value}
-																value={option.value}
-																label={option.label}
-																size="sm"
-															/>
-														))}
-													</Stack>
-												</Radio.Group>
-											</Stack>
-										</Stack>
-									</Stack>
-								</Menu.Dropdown>
-							</Menu>
-
-							<Menu
-								withArrow
-								position="bottom-start"
-								shadow="md"
-								opened={tagsMenuOpened}
-								onChange={setTagsMenuOpened}
-							>
-								<Menu.Target>
-									<Button
-										variant="outline"
-										color="gray"
-										size="xs"
-										fw={500}
-										leftSection={<IconTags size={16} />}
-										rightSection={
-											tagsMenuOpened ? (
-												<IconChevronUp size={16} />
-											) : (
-												<IconChevronDown size={16} />
-											)
-										}
-									>
-										{selectedTagIds.length > 0 ? (
-											<Group gap={6}>
-												<Badge
-													size="sm"
-													variant="light"
-													color="primary"
-													className="text-xs"
-												>
-													{selectedTagIds.length}
-												</Badge>
-												<Trans>Tags</Trans>
-											</Group>
-										) : (
-											<Trans>Tags</Trans>
-										)}
-									</Button>
-								</Menu.Target>
-								<Menu.Dropdown>
-									<Stack py="md" px="lg" gap="sm" w={280}>
-										<TextInput
-											placeholder={t`Search tags`}
-											value={tagSearch}
-											onChange={(e) => setTagSearch(e.currentTarget.value)}
-											size="sm"
+					<Box ref={filterActionsParent}>
+						{showFilterActions && (
+							<Group gap="xs" align="center" mb="sm">
+								<Menu
+									withArrow
+									position="bottom-start"
+									shadow="md"
+									opened={sortMenuOpened}
+									onChange={setSortMenuOpened}
+								>
+									<Menu.Target>
+										<Button
+											variant="outline"
+											size="xs"
+											color="gray"
+											fw={500}
+											leftSection={<IconArrowsUpDown size={16} />}
 											rightSection={
-												!!tagSearch && (
-													<ActionIcon
-														variant="transparent"
-														onClick={() => setTagSearch("")}
-														size="sm"
-													>
-														<IconX size={16} />
-													</ActionIcon>
+												sortMenuOpened ? (
+													<IconChevronUp size={16} />
+												) : (
+													<IconChevronDown size={16} />
 												)
 											}
-										/>
+											style={{ flexShrink: 0 }}
+										>
+											<Trans>Sort</Trans>
+										</Button>
+									</Menu.Target>
+									<Menu.Dropdown>
+										<Stack py="md" px="lg" gap="md">
+											<Stack gap="xs">
+												<Text size="lg">
+													<Trans>Sort</Trans>
+												</Text>
+												<Stack gap="xs">
+													<Radio.Group
+														value={sortBy}
+														onChange={(value) =>
+															setSortBy(value as SortOption["value"])
+														}
+														name="sortOptions"
+													>
+														<Stack gap="xs">
+															{SORT_OPTIONS.map((option) => (
+																<Radio
+																	key={option.value}
+																	value={option.value}
+																	label={option.label}
+																	size="sm"
+																/>
+															))}
+														</Stack>
+													</Radio.Group>
+												</Stack>
+											</Stack>
+										</Stack>
+									</Menu.Dropdown>
+								</Menu>
 
-										{selectedTagIds.length > 0 && (
-											<Group gap="xs" wrap="wrap" mt="sm">
-												{selectedTagIds.map((tagId) => {
-													const tag = allProjectTags.find(
-														(t) => t.id === tagId,
-													);
-													if (!tag) return null;
-													return (
-														<Pill
-															key={tagId}
+								<Menu
+									withArrow
+									position="bottom-start"
+									shadow="md"
+									opened={tagsMenuOpened}
+									onChange={setTagsMenuOpened}
+								>
+									<Menu.Target>
+										<Button
+											variant="outline"
+											color="gray"
+											size="xs"
+											fw={500}
+											leftSection={<IconTags size={16} />}
+											rightSection={
+												tagsMenuOpened ? (
+													<IconChevronUp size={16} />
+												) : (
+													<IconChevronDown size={16} />
+												)
+											}
+											style={{ flexShrink: 0 }}
+										>
+											{selectedTagIds.length > 0 ? (
+												<Group gap={6} wrap="nowrap">
+													<Badge
+														size="sm"
+														variant="light"
+														color="primary"
+														className="text-xs"
+													>
+														{selectedTagIds.length}
+													</Badge>
+													<Trans>Tags</Trans>
+												</Group>
+											) : (
+												<Trans>Tags</Trans>
+											)}
+										</Button>
+									</Menu.Target>
+									<Menu.Dropdown>
+										<Stack py="md" px="lg" gap="sm" w={280}>
+											<TextInput
+												placeholder={t`Search tags`}
+												value={tagSearch}
+												onChange={(e) => setTagSearch(e.currentTarget.value)}
+												size="sm"
+												rightSection={
+													!!tagSearch && (
+														<ActionIcon
+															variant="transparent"
+															onClick={() => setTagSearch("")}
 															size="sm"
-															withRemoveButton
-															classNames={{
-																root: "!bg-[var(--mantine-primary-color-light)] !font-medium",
-															}}
-															onRemove={() =>
-																setSelectedTagIds((prev) =>
-																	prev.filter((id) => id !== tagId),
-																)
-															}
 														>
-															{tag.text}
-														</Pill>
-													);
-												})}
-											</Group>
-										)}
+															<IconX size={16} />
+														</ActionIcon>
+													)
+												}
+											/>
 
-										<Divider my="sm" />
-
-										{projectTagsLoading ? (
-											<Center h={220}>
-												<Loader size="sm" />
-											</Center>
-										) : (
-											<ScrollArea h={220} type="always" scrollbars="y">
-												<Stack gap="sm">
-													{filteredProjectTags.map((tag) => {
-														const checked = selectedTagIds.includes(tag.id);
+											{selectedTagIds.length > 0 && (
+												<Group gap="xs" wrap="wrap" mt="sm">
+													{selectedTagIds.map((tagId) => {
+														const tag = allProjectTags.find(
+															(t) => t.id === tagId,
+														);
+														if (!tag) return null;
 														return (
-															<Checkbox
-																key={tag.id}
-																checked={checked}
-																label={tag.text}
-																onChange={(e) => {
-																	const isChecked = e.currentTarget.checked;
-																	setSelectedTagIds((prev) => {
-																		if (isChecked) {
-																			if (prev.includes(tag.id)) return prev;
-																			return [...prev, tag.id];
-																		}
-																		return prev.filter((id) => id !== tag.id);
-																	});
+															<Pill
+																key={tagId}
+																size="sm"
+																withRemoveButton
+																classNames={{
+																	root: "!bg-[var(--mantine-primary-color-light)] !font-medium",
 																}}
-																styles={{
-																	labelWrapper: {
-																		width: "100%",
-																	},
-																}}
-															/>
+																onRemove={() =>
+																	setSelectedTagIds((prev) =>
+																		prev.filter((id) => id !== tagId),
+																	)
+																}
+															>
+																{tag.text}
+															</Pill>
 														);
 													})}
-													{filteredProjectTags.length === 0 && (
-														<Text size="sm" ta="center" c="dimmed">
-															<Trans>No tags found</Trans>
-														</Text>
-													)}
-												</Stack>
-											</ScrollArea>
-										)}
-									</Stack>
-								</Menu.Dropdown>
-							</Menu>
+												</Group>
+											)}
 
-							<Button
-								variant={showOnlyVerified ? "filled" : "outline"}
-								color={showOnlyVerified ? "blue" : "gray"}
-								size="xs"
-								fw={500}
-								leftSection={<IconRosetteDiscountCheckFilled size={16} />}
-								onClick={() => setShowOnlyVerified((prev) => !prev)}
-							>
-								<Trans id="conversation.filters.verified.text">Verified</Trans>
-							</Button>
+											<Divider my="sm" />
 
-							<Tooltip label={t`Reset to default`}>
-								<ActionIcon
-									variant="outline"
-									color="gray"
-									onClick={resetEverything}
-									aria-label={t`Reset to default`}
-									disabled={!filterApplied}
-									size="md"
-									py={14}
-									ml="auto"
+											{projectTagsLoading ? (
+												<Center h={220}>
+													<Loader size="sm" />
+												</Center>
+											) : (
+												<ScrollArea h={220} type="always" scrollbars="y">
+													<Stack gap="sm">
+														{filteredProjectTags.map((tag) => {
+															const checked = selectedTagIds.includes(tag.id);
+															return (
+																<Checkbox
+																	key={tag.id}
+																	checked={checked}
+																	label={tag.text}
+																	onChange={(e) => {
+																		const isChecked = e.currentTarget.checked;
+																		setSelectedTagIds((prev) => {
+																			if (isChecked) {
+																				if (prev.includes(tag.id)) return prev;
+																				return [...prev, tag.id];
+																			}
+																			return prev.filter((id) => id !== tag.id);
+																		});
+																	}}
+																	styles={{
+																		labelWrapper: {
+																			width: "100%",
+																		},
+																	}}
+																/>
+															);
+														})}
+														{filteredProjectTags.length === 0 && (
+															<Text size="sm" ta="center" c="dimmed">
+																<Trans>No tags found</Trans>
+															</Text>
+														)}
+													</Stack>
+												</ScrollArea>
+											)}
+										</Stack>
+									</Menu.Dropdown>
+								</Menu>
+
+								<Button
+									variant={showOnlyVerified ? "filled" : "outline"}
+									color={showOnlyVerified ? "blue" : "gray"}
+									size="xs"
+									fw={500}
+									leftSection={<IconRosetteDiscountCheckFilled size={16} />}
+									onClick={() => setShowOnlyVerified((prev) => !prev)}
+									style={{ flexShrink: 0 }}
 								>
-									<IconX size={16} />
-								</ActionIcon>
-							</Tooltip>
-						</Group>
-					)}
+									<Trans id="conversation.filters.verified.text">
+										Verified
+									</Trans>
+								</Button>
 
+								<Tooltip label={t`Reset to default`}>
+									<ActionIcon
+										variant="outline"
+										color="gray"
+										onClick={resetEverything}
+										aria-label={t`Reset to default`}
+										disabled={!filterApplied}
+										size="md"
+										py={14}
+										style={{ flexShrink: 0, marginLeft: "auto" }}
+									>
+										<IconX size={16} />
+									</ActionIcon>
+								</Tooltip>
+							</Group>
+						)}
+					</Box>
+
+					{/* Select All - show in deep dive mode, disable when all relevant conversations are in context */}
+					{ENABLE_CHAT_SELECT_ALL &&
+						inChatMode &&
+						chatMode === "deep_dive" &&
+						allConversations.length > 0 && (
+							<Tooltip
+								label={
+									remainingCount === 0
+										? t`You have already added all the conversations related to this`
+										: ""
+								}
+								disabled={remainingCount > 0}
+							>
+								<Button
+									variant="light"
+									size="sm"
+									fullWidth
+									leftSection={<IconSelectAll size={16} />}
+									onClick={handleSelectAllClick}
+									disabled={selectAllMutation.isPending || remainingCount === 0}
+									loading={selectAllMutation.isPending}
+								>
+									{shouldShowConversationCount ? (
+										<Trans>Select all ({remainingCount})</Trans>
+									) : (
+										<Trans>Select all</Trans>
+									)}
+								</Button>
+							</Tooltip>
+						)}
 					{/* Filter icons that always appear under the search bar */}
 					{/* Temporarily disabled source filters */}
 					{/* {totalConversationsQuery.data?.length !== 0 && (
@@ -1279,6 +1421,32 @@ export const ConversationAccordion = ({
               )} */}
 					</Stack>
 				</Stack>
+
+				{/* Select All Confirmation Modal */}
+				{ENABLE_CHAT_SELECT_ALL && (
+					<SelectAllConfirmationModal
+						opened={selectAllModalOpened}
+						onClose={handleSelectAllModalClose}
+						onExitTransitionEnd={handleModalExitTransitionEnd}
+						onConfirm={handleSelectAllConfirm}
+						totalCount={remainingCount}
+						hasFilters={hasActiveFilters}
+						isLoading={selectAllLoading}
+						existingContextCount={conversationsInContext.size}
+						filterNames={selectedTagNames}
+						hasVerifiedOutcomesFilter={showOnlyVerified}
+						searchText={debouncedConversationSearchValue || undefined}
+						result={
+							selectAllResult
+								? {
+										added: selectAllResult.added,
+										contextLimitReached: selectAllResult.context_limit_reached,
+										skipped: selectAllResult.skipped,
+									}
+								: null
+						}
+					/>
+				)}
 			</Accordion.Panel>
 		</Accordion.Item>
 	);

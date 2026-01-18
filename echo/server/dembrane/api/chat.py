@@ -44,6 +44,7 @@ logger = logging.getLogger("dembrane.chat")
 
 settings = get_settings()
 ENABLE_CHAT_AUTO_SELECT = settings.feature_flags.enable_chat_auto_select
+ENABLE_CHAT_SELECT_ALL = settings.feature_flags.enable_chat_select_all
 
 
 async def is_followup_question(
@@ -288,14 +289,35 @@ async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> Cha
 class ChatAddContextSchema(BaseModel):
     conversation_id: Optional[str] = None
     auto_select_bool: Optional[bool] = None
+    select_all: Optional[bool] = None
+    project_id: Optional[str] = None
+    tag_ids: Optional[List[str]] = None
+    verified_only: Optional[bool] = None
+    search_text: Optional[str] = None
 
 
-@ChatRouter.post("/{chat_id}/add-context")
+class SelectAllConversationResult(BaseModel):
+    conversation_id: str
+    participant_name: str
+    success: bool
+    reason: Optional[str] = (
+        None  # "added", "already_in_context", "context_limit_reached", "empty", "too_long"
+    )
+
+
+class AddContextResponseSchema(BaseModel):
+    added: Optional[List[SelectAllConversationResult]] = None
+    skipped: Optional[List[SelectAllConversationResult]] = None
+    total_processed: Optional[int] = None
+    context_limit_reached: Optional[bool] = None
+
+
+@ChatRouter.post("/{chat_id}/add-context", response_model=AddContextResponseSchema)
 async def add_chat_context(
     chat_id: str,
     body: ChatAddContextSchema,
     auth: DependencyDirectusSession,
-) -> None:
+) -> AddContextResponseSchema:
     chat = await raise_if_chat_not_found_or_not_authorized(
         chat_id,
         auth,
@@ -305,14 +327,204 @@ async def add_chat_context(
     chat_svc = chat_service
     conversation_svc = conversation_service
 
-    if body.conversation_id is None and body.auto_select_bool is None:
+    project_info = chat.get("project_id")
+    project_id: Optional[str] = body.project_id
+    if project_id is None:
+        if isinstance(project_info, dict):
+            project_id = project_info.get("id")
+        else:
+            project_id = project_info
+
+    options_provided = sum(
+        [
+            body.conversation_id is not None,
+            body.auto_select_bool is not None,
+            body.select_all is not None,
+        ]
+    )
+
+    if options_provided == 0:
         raise HTTPException(
-            status_code=400, detail="conversation_id or auto_select_bool is required"
+            status_code=400,
+            detail="conversation_id or select_all is required",
         )
 
-    if body.conversation_id is not None and body.auto_select_bool is not None:
+    if options_provided > 1:
         raise HTTPException(
-            status_code=400, detail="conversation_id and auto_select_bool cannot both be provided"
+            status_code=400,
+            detail="Only one of conversation_id or select_all can be provided",
+        )
+
+    # Handle select_all
+    if body.select_all is True:
+        if not ENABLE_CHAT_SELECT_ALL:
+            raise HTTPException(
+                status_code=403,
+                detail="Chat select all feature is not enabled",
+            )
+
+        if not project_id:
+            raise HTTPException(
+                status_code=400,
+                detail="project_id is required when select_all is True",
+            )
+
+        try:
+            logger.info(
+                f"Select All: Fetching conversations - "
+                f"project_id={project_id}, tags={body.tag_ids}, verified={body.verified_only}, search='{body.search_text}'"
+            )
+
+            all_conversations = await run_in_thread_pool(
+                conversation_svc.list_by_project_with_filters,
+                project_id=project_id,
+                tag_ids=body.tag_ids,
+                verified_only=body.verified_only or False,
+                search_text=body.search_text,
+                sort="-created_at",
+                limit=1000,
+            )
+
+            logger.info(f"Select All: Fetched {len(all_conversations)} conversations")
+        except Exception as e:
+            logger.error(f"Failed to fetch conversations with filters: {e}")
+            raise
+
+        # Get existing conversation IDs in the chat
+        existing_ids = {
+            (link.get("conversation_id") or {}).get("id")
+            for link in (chat.get("used_conversations") or [])
+        }
+
+        # Get current chat context to track token usage
+        chat_context = await get_chat_context(chat_id, auth)
+        current_token_usage = sum(
+            conversation_entry.token_usage for conversation_entry in chat_context.conversations
+        )
+
+        added: List[SelectAllConversationResult] = []
+        skipped: List[SelectAllConversationResult] = []
+        context_limit_reached = False
+
+        for conversation in all_conversations:
+            conv_id = conversation.get("id")
+            participant_name = str(conversation.get("participant_name") or "Unknown")
+
+            if not conv_id:
+                continue
+
+            # Skip if already in context
+            if conv_id in existing_ids:
+                skipped.append(
+                    SelectAllConversationResult(
+                        conversation_id=conv_id,
+                        participant_name=participant_name,
+                        success=False,
+                        reason="already_in_context",
+                    )
+                )
+                continue
+
+            # Check if conversation has content
+            chunks = conversation.get("chunks") or []
+            has_content = any(
+                chunk.get("transcript") and str(chunk.get("transcript")).strip() for chunk in chunks
+            )
+
+            if not has_content:
+                skipped.append(
+                    SelectAllConversationResult(
+                        conversation_id=conv_id,
+                        participant_name=participant_name,
+                        success=False,
+                        reason="empty",
+                    )
+                )
+                continue
+
+            # If context limit already reached, skip remaining conversations
+            if context_limit_reached:
+                skipped.append(
+                    SelectAllConversationResult(
+                        conversation_id=conv_id,
+                        participant_name=participant_name,
+                        success=False,
+                        reason="context_limit_reached",
+                    )
+                )
+                continue
+
+            try:
+                # Get token count for this conversation
+                token_count = await get_conversation_token_count(conv_id, auth)
+
+                # Check if single conversation is too long
+                if token_count > MAX_CHAT_CONTEXT_LENGTH:
+                    skipped.append(
+                        SelectAllConversationResult(
+                            conversation_id=conv_id,
+                            participant_name=participant_name,
+                            success=False,
+                            reason="too_long",
+                        )
+                    )
+                    continue
+
+                # Check if adding this conversation would exceed the context limit
+                conversation_usage = token_count / MAX_CHAT_CONTEXT_LENGTH
+                if current_token_usage + conversation_usage > 1:
+                    context_limit_reached = True
+                    skipped.append(
+                        SelectAllConversationResult(
+                            conversation_id=conv_id,
+                            participant_name=participant_name,
+                            success=False,
+                            reason="context_limit_reached",
+                        )
+                    )
+                    continue
+
+                # Add the conversation to context
+                await run_in_thread_pool(
+                    chat_svc.attach_conversations,
+                    chat_id,
+                    [conv_id],
+                )
+
+                # Update tracking
+                current_token_usage += conversation_usage
+                existing_ids.add(conv_id)
+
+                added.append(
+                    SelectAllConversationResult(
+                        conversation_id=conv_id,
+                        participant_name=participant_name,
+                        success=True,
+                        reason="added",
+                    )
+                )
+
+            except Exception as exc:
+                logger.warning(
+                    "Failed to add conversation %s to chat %s: %s",
+                    conv_id,
+                    chat_id,
+                    exc,
+                )
+                skipped.append(
+                    SelectAllConversationResult(
+                        conversation_id=conv_id,
+                        participant_name=participant_name,
+                        success=False,
+                        reason="error",
+                    )
+                )
+
+        return AddContextResponseSchema(
+            added=added,
+            skipped=skipped,
+            total_processed=len(all_conversations),
+            context_limit_reached=context_limit_reached,
         )
 
     if body.conversation_id is not None:
@@ -363,6 +575,8 @@ async def add_chat_context(
 
     if body.auto_select_bool is not None:
         await run_in_thread_pool(chat_svc.set_auto_select, chat_id, body.auto_select_bool)
+
+    return AddContextResponseSchema()
 
 
 class ChatDeleteContextSchema(BaseModel):
