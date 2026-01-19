@@ -59,7 +59,7 @@ const FilterDisplay = ({
 	if (!hasAnyFilters) return null;
 
 	return (
-		<Stack gap="xs" mt="xs">
+		<Stack gap="sm" mt="sm">
 			{searchText && (
 				<Group gap="xs" align="center">
 					<Text size="sm" fw={700}>
@@ -230,17 +230,13 @@ export const SelectAllConfirmationModal = ({
 				{!result && !isLoading && (
 					<Stack gap="md" justify="space-between" flex="1">
 						<Box className="py-4">
-							<Stack gap="sm">
+							<Stack gap="lg">
 								{/* Show existing context count if any */}
 								{existingContextCount > 0 && (
 									<Text size="sm">
 										<Trans id="select.all.modal.already.added">
 											You have already added{" "}
-											<Text
-												component="span"
-												fw={600}
-												style={{ color: "var(--app-text)" }}
-											>
+											<Text component="span" fw={600}>
 												<Plural
 													value={existingContextCount}
 													one="# conversation"
@@ -289,11 +285,11 @@ export const SelectAllConfirmationModal = ({
 													<Text component="span" fw={700}>
 														<Plural
 															value={totalCount}
-															one="# more filtered conversation"
-															other="# more filtered conversations"
+															one="# more conversation"
+															other="# more conversations"
 														/>
 													</Text>{" "}
-													with:
+													with the following filters:
 												</Trans>
 											) : (
 												<Trans id="select.all.modal.add.without.filters.more">
@@ -317,7 +313,7 @@ export const SelectAllConfirmationModal = ({
 									/>
 
 									{/* Warning about potential skips */}
-									<Alert variant="light" color="orange" mt="sm">
+									<Alert variant="light" color="orange" mt={24}>
 										<Trans id="select.all.modal.skip.reason">
 											some might skip due to empty transcript or context limit
 										</Trans>
@@ -338,14 +334,110 @@ export const SelectAllConfirmationModal = ({
 
 				{/* Loading view */}
 				{isLoading && (
-					<Box className="flex flex-col items-center justify-center py-8">
-						<Loader size="lg" />
-						<Text size="sm" c="dimmed" mt="md">
-							<Trans id="select.all.modal.loading">
-								Adding conversations to context...
-							</Trans>
-						</Text>
-					</Box>
+					<Stack
+						gap="xl"
+						align="center"
+						justify="center"
+						className="py-12"
+						style={{ minHeight: 300 }}
+					>
+						{/* Animated loader section */}
+						<Box className="relative">
+							<Loader size={60} type="dots" />
+							<Box
+								className="absolute inset-0 flex items-center justify-center"
+								style={{
+									animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+								}}
+							>
+								<IconCheck
+									size={28}
+									className="opacity-20"
+									style={{ color: "var(--mantine-primary-color-6)" }}
+								/>
+							</Box>
+						</Box>
+
+						{/* Main message */}
+						<Stack gap="sm" align="center">
+							<Text size="lg" fw={600} style={{ color: "var(--app-text)" }}>
+								<Trans id="select.all.modal.loading.title">
+									Adding Conversations
+								</Trans>
+							</Text>
+							<Text
+								size="sm"
+								c="dimmed"
+								ta="center"
+								maw={400}
+								className="leading-relaxed"
+							>
+								<Trans id="select.all.modal.loading.description">
+									Processing{" "}
+									<Text component="span" fw={600} c="primary">
+										<Plural
+											value={totalCount}
+											one="# conversation"
+											other="# conversations"
+										/>
+									</Text>{" "}
+									and adding them to your chat
+								</Trans>
+							</Text>
+						</Stack>
+
+						{/* Filter indicator if filters are active */}
+						{hasFilters && (
+							<Box
+								className="rounded-lg border px-4 py-3"
+								style={{
+									backgroundColor: "var(--mantine-color-gray-0)",
+									borderColor: "var(--mantine-color-gray-3)",
+									maxWidth: 400,
+								}}
+							>
+								<Text size="xs" c="dimmed" ta="center">
+									<Trans id="select.all.modal.loading.filters">
+										Active filters
+									</Trans>
+								</Text>
+								{(searchText || filterNames.length > 0) && (
+									<Group justify="center" gap="xs" mt="xs" wrap="wrap">
+										{searchText && (
+											<Badge size="sm" variant="light" color="gray">
+												<Trans id="select.all.modal.loading.search">
+													Search
+												</Trans>
+											</Badge>
+										)}
+										{filterNames.length > 0 && (
+											<Badge size="sm" variant="light" color="primary">
+												<Plural
+													value={filterNames.length}
+													one="# tag"
+													other="# tags"
+												/>
+											</Badge>
+										)}
+										{hasVerifiedOutcomesFilter && (
+											<Badge
+												size="sm"
+												variant="light"
+												color="blue"
+												leftSection={
+													<IconRosetteDiscountCheckFilled size={12} />
+												}
+											>
+												<Trans id="select.all.modal.loading.verified">
+													Verified
+												</Trans>
+											</Badge>
+										)}
+									</Group>
+								)}
+							</Box>
+						)}
+					</Stack>
 				)}
 
 				{/* Results view */}
