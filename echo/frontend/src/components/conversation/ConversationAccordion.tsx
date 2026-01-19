@@ -70,6 +70,7 @@ import { ENABLE_CHAT_AUTO_SELECT, ENABLE_CHAT_SELECT_ALL } from "@/config";
 import { BaseSkeleton } from "../common/BaseSkeleton";
 import { NavigationButton } from "../common/NavigationButton";
 import { UploadConversationDropzone } from "../dropzone/UploadConversationDropzone";
+import { AddTagFilterModal } from "./AddTagFilterModal";
 import { AutoSelectConversations } from "./AutoSelectConversations";
 import {
 	useAddChatContextMutation,
@@ -448,8 +449,10 @@ export const ConversationStatusIndicators = ({
 
 const ConversationProjectTagPill = ({
 	tag,
+	onClick,
 }: {
 	tag: ConversationProjectTag;
+	onClick?: (tag: ConversationProjectTag) => void;
 }) => {
 	const text = (tag?.project_tag_id as ProjectTag)?.text ?? "";
 
@@ -457,12 +460,27 @@ const ConversationProjectTagPill = ({
 		return null;
 	}
 
+	const isClickable = ENABLE_CHAT_SELECT_ALL && onClick;
+
 	return (
 		<Pill
 			size="sm"
 			classNames={{
-				root: "!bg-[var(--mantine-primary-color-light)] !font-medium",
+				root: `!bg-[var(--mantine-primary-color-light)] !font-medium ${
+					isClickable
+						? "cursor-pointer hover:opacity-80 transition-opacity"
+						: ""
+				}`,
 			}}
+			onClick={
+				isClickable
+					? (e) => {
+							e.stopPropagation();
+							e.preventDefault();
+							onClick(tag);
+						}
+					: undefined
+			}
 		>
 			{text}
 		</Pill>
@@ -473,10 +491,12 @@ const ConversationAccordionItem = ({
 	conversation,
 	highlight = false,
 	showDuration = false,
+	onTagClick,
 }: {
 	conversation?: Conversation & { live: boolean };
 	highlight?: boolean;
 	showDuration?: boolean;
+	onTagClick?: (tag: ConversationProjectTag) => void;
 }) => {
 	const location = useLocation();
 	const inChatMode = location.pathname.includes("/chats/");
@@ -597,6 +617,7 @@ const ConversationAccordionItem = ({
 						<ConversationProjectTagPill
 							key={(tag as ConversationProjectTag).id}
 							tag={tag as ConversationProjectTag}
+							onClick={onTagClick}
 						/>
 					))}
 				</Group>
@@ -873,6 +894,33 @@ export const ConversationAccordion = ({
 		useState<SelectAllContextResponse | null>(null);
 	const [selectAllLoading, setSelectAllLoading] = useState(false);
 	const selectAllMutation = useSelectAllContextMutation();
+
+	// Add Tag Filter Modal state
+	const [addTagFilterModalOpened, addTagFilterModalHandlers] =
+		useDisclosure(false);
+	const [selectedTagForFilter, setSelectedTagForFilter] =
+		useState<ConversationProjectTag | null>(null);
+
+	// Handle tag click
+	const handleTagClick = (tag: ConversationProjectTag) => {
+		setSelectedTagForFilter(tag);
+		addTagFilterModalHandlers.open();
+	};
+
+	// Handle tag filter confirmation
+	const handleAddTagFilter = () => {
+		if (!selectedTagForFilter) return;
+
+		const tagId = (selectedTagForFilter.project_tag_id as ProjectTag)?.id;
+		if (tagId && !selectedTagIds.includes(tagId)) {
+			setSelectedTagIds((prev) => [...prev, tagId]);
+		}
+	};
+
+	const handleTagFilterModalExitTransitionEnd = () => {
+		// Clear data after modal has fully closed
+		setSelectedTagForFilter(null);
+	};
 
 	// Handle select all
 	const handleSelectAllClick = () => {
@@ -1391,6 +1439,7 @@ export const ConversationAccordion = ({
 										(item as Conversation & { live: boolean }) ?? null
 									}
 									showDuration={showDuration}
+									onTagClick={handleTagClick}
 								/>
 							</div>
 						))}
@@ -1444,6 +1493,19 @@ export const ConversationAccordion = ({
 										skipped: selectAllResult.skipped,
 									}
 								: null
+						}
+					/>
+				)}
+
+				{/* Add Tag Filter Modal */}
+				{ENABLE_CHAT_SELECT_ALL && (
+					<AddTagFilterModal
+						opened={addTagFilterModalOpened}
+						onClose={addTagFilterModalHandlers.close}
+						onExitTransitionEnd={handleTagFilterModalExitTransitionEnd}
+						onConfirm={handleAddTagFilter}
+						tagName={
+							(selectedTagForFilter?.project_tag_id as ProjectTag)?.text ?? ""
 						}
 					/>
 				)}
