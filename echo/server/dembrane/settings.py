@@ -200,6 +200,11 @@ class FeatureFlagSettings(BaseSettings):
         alias="DISABLE_SENTRY",
         validation_alias=AliasChoices("DISABLE_SENTRY", "FEATURE_FLAGS__DISABLE_SENTRY"),
     )
+    webhooks_enabled: bool = Field(
+        default=False,
+        alias="WEBHOOKS_ENABLED",
+        validation_alias=AliasChoices("WEBHOOKS_ENABLED", "FEATURE_FLAGS__WEBHOOKS_ENABLED"),
+    )
 
 
 class DirectusSettings(BaseSettings):

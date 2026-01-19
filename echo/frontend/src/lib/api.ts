@@ -1241,3 +1241,87 @@ export const checkUnsubscribeStatus = async (
 		throw new Error("No matching subscription found.");
 	}
 };
+
+// =============================================================================
+// Webhook API
+// =============================================================================
+
+export type WebhookEvent =
+	| "conversation.created"
+	| "conversation.transcribed"
+	| "conversation.summarized";
+
+export type WebhookStatus = "published" | "draft" | "archived";
+
+export interface Webhook {
+	id: string;
+	name: string | null;
+	url: string | null;
+	events: WebhookEvent[] | null;
+	status: WebhookStatus | null;
+	date_created: string | null;
+	date_updated: string | null;
+}
+
+export interface WebhookCreatePayload {
+	name: string;
+	url: string;
+	secret?: string;
+	events: WebhookEvent[];
+}
+
+export interface WebhookUpdatePayload {
+	name?: string;
+	url?: string;
+	secret?: string;
+	events?: WebhookEvent[];
+	status?: WebhookStatus;
+}
+
+export interface WebhookTestResult {
+	success: boolean;
+	status_code: number | null;
+	message: string;
+}
+
+export const getProjectWebhooks = async (projectId: string): Promise<Webhook[]> => {
+	const response = await api.get<unknown, Webhook[]>(`/projects/${projectId}/webhooks`);
+	return response;
+};
+
+export const createProjectWebhook = async (
+	projectId: string,
+	payload: WebhookCreatePayload,
+): Promise<Webhook> => {
+	const response = await api.post<unknown, Webhook>(`/projects/${projectId}/webhooks`, payload);
+	return response;
+};
+
+export const updateProjectWebhook = async (
+	projectId: string,
+	webhookId: string,
+	payload: WebhookUpdatePayload,
+): Promise<Webhook> => {
+	const response = await api.patch<unknown, Webhook>(
+		`/projects/${projectId}/webhooks/${webhookId}`,
+		payload,
+	);
+	return response;
+};
+
+export const deleteProjectWebhook = async (
+	projectId: string,
+	webhookId: string,
+): Promise<void> => {
+	await api.delete(`/projects/${projectId}/webhooks/${webhookId}`);
+};
+
+export const testProjectWebhook = async (
+	projectId: string,
+	webhookId: string,
+): Promise<WebhookTestResult> => {
+	const response = await api.post<unknown, WebhookTestResult>(
+		`/projects/${projectId}/webhooks/${webhookId}/test`,
+	);
+	return response;
+};

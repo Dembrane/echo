@@ -217,6 +217,19 @@ class ConversationService:
                 },
             )["data"]
 
+        # Dispatch webhook for conversation.created event
+        try:
+            from dembrane.service.webhook import dispatch_webhooks_for_event
+
+            dispatch_webhooks_for_event(
+                project_id=project_id,
+                conversation_id=new_conversation["id"],
+                event="conversation.created",
+            )
+        except Exception as e:
+            # Don't fail conversation creation if webhook dispatch fails
+            logger.warning(f"Failed to dispatch conversation.created webhook: {e}")
+
         return new_conversation
 
     def update(

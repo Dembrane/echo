@@ -8,6 +8,7 @@ from dembrane.api.chat import ChatRouter
 from dembrane.api.search import SearchRouter
 from dembrane.api.verify import VerifyRouter
 from dembrane.api.project import ProjectRouter
+from dembrane.api.project_webhook import ProjectWebhookRouter
 from dembrane.api.stateless import StatelessRouter
 from dembrane.api.participant import ParticipantRouter
 from dembrane.api.conversation import ConversationRouter
@@ -24,6 +25,7 @@ async def health() -> dict:
 
 api.include_router(ChatRouter, prefix="/chats")
 api.include_router(ProjectRouter, prefix="/projects")
+api.include_router(ProjectWebhookRouter, prefix="/projects")
 api.include_router(ParticipantRouter, prefix="/participant")
 api.include_router(ConversationRouter, prefix="/conversations")
 api.include_router(StatelessRouter, prefix="/stateless")

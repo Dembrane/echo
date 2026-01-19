@@ -14,10 +14,10 @@
         }
       }
     },
-    "resolve": "ea78ec02-364d-4f18-80f8-ea5ac4c787ed",
-    "reject": "eb6f8253-647f-4fb1-9010-e93594ba065e",
+    "resolve": "34fb6ee5-2813-484a-a1cc-f97de097509b",
+    "reject": "8d8d787a-dbc4-44f9-9ab4-28e3f3d5f31c",
     "flow": "17703446-fef0-49e9-bdc4-385db1311137",
-    "_syncId": "4795cc24-3f3c-4be9-9844-24552da522fa"
+    "_syncId": "eaeb2c39-32e0-428d-ad03-ff0e6052adcc"
   },
   {
     "name": "Dutch",
@@ -34,10 +34,10 @@
         }
       }
     },
-    "resolve": "34fb6ee5-2813-484a-a1cc-f97de097509b",
-    "reject": "8d8d787a-dbc4-44f9-9ab4-28e3f3d5f31c",
+    "resolve": "ea78ec02-364d-4f18-80f8-ea5ac4c787ed",
+    "reject": "eb6f8253-647f-4fb1-9010-e93594ba065e",
     "flow": "17703446-fef0-49e9-bdc4-385db1311137",
-    "_syncId": "eaeb2c39-32e0-428d-ad03-ff0e6052adcc"
+    "_syncId": "4795cc24-3f3c-4be9-9844-24552da522fa"
   },
   {
     "name": "Email Send Operation Failed",
@@ -79,7 +79,7 @@
     "resolve": null,
     "reject": null,
     "flow": "17703446-fef0-49e9-bdc4-385db1311137",
-    "_syncId": "84c38ea6-5d15-429f-8c24-9485d54ba7be"
+    "_syncId": "615a54cd-a72e-41ad-9403-9577c80280d6"
   },
   {
     "name": "Email Send Operation Failed Dutch",
@@ -93,21 +93,7 @@
     "resolve": null,
     "reject": null,
     "flow": "17703446-fef0-49e9-bdc4-385db1311137",
-    "_syncId": "615a54cd-a72e-41ad-9403-9577c80280d6"
-  },
-  {
-    "name": "failed",
-    "key": "failed",
-    "type": "log",
-    "position_x": 20,
-    "position_y": 39,
-    "options": {
-      "message": "language detection failed"
-    },
-    "resolve": null,
-    "reject": null,
-    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
-    "_syncId": "eb6f8253-647f-4fb1-9010-e93594ba065e"
+    "_syncId": "84c38ea6-5d15-429f-8c24-9485d54ba7be"
   },
   {
     "name": "failed",
@@ -124,18 +110,18 @@
     "_syncId": "8d8d787a-dbc4-44f9-9ab4-28e3f3d5f31c"
   },
   {
-    "name": "Filter Emails",
-    "key": "filter_emails",
-    "type": "exec",
-    "position_x": 91,
-    "position_y": 1,
+    "name": "failed",
+    "key": "failed",
+    "type": "log",
+    "position_x": 20,
+    "position_y": 39,
     "options": {
-      "code": "module.exports = async function(data) {\n\n    const submissions = data.get_all_participants;\n    \n    // Filter submissions to only include those where email_opt_in is true\n    const filteredSubmissions = submissions.filter(sub => sub.email_opt_in === true);\n\n    // Create an array with email, project_id and an email_opt_out token for each submission\n    const result = filteredSubmissions.map(sub => ({\n        project_name: data.project_data[0].name || '',\n\t\tdefault_conversation_title: data.project_data[0].default_conversation_title || '',\n\t\tconversation_name: sub.conversation_id.participant_name || '',\n        email: sub.email,\n        project_id: sub.project_id || '',\n        token: sub.email_opt_out_token,\n        language: data.check_report_language[0].language || 'empty',\n        ADMIN_BASE_URL: \"{{ $env.ADMIN_BASE_URL }}\" || \"http://localhost:5173\",\n        PARTICIPANT_BASE_URL: \"{{ $env.PARTICIPANT_BASE_URL }}\" || \"http://localhost:5174\",        \n    }));\n    \n    return result;\n};"
+      "message": "language detection failed"
     },
-    "resolve": "e101f00d-2fb8-4f40-9e0e-4d24da5bb1e9",
+    "resolve": null,
     "reject": null,
-    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
-    "_syncId": "efb3982e-5703-4c07-8982-a6e1b5218e4a"
+    "flow": "17703446-fef0-49e9-bdc4-385db1311137",
+    "_syncId": "eb6f8253-647f-4fb1-9010-e93594ba065e"
   },
   {
     "name": "Filter Emails",
@@ -152,18 +138,18 @@
     "_syncId": "ca1ffbc5-cfce-4fb4-8f15-c128ea407d41"
   },
   {
-    "name": "log environment vars",
-    "key": "log_environment_vars",
-    "type": "log",
-    "position_x": 127,
+    "name": "Filter Emails",
+    "key": "filter_emails",
+    "type": "exec",
+    "position_x": 91,
     "position_y": 1,
     "options": {
-      "message": "{{data['$env']}}  {{data.$env}} {{process.env}} {{$env}} {{$env.PARTICIPANT_BASE_URL}}"
+      "code": "module.exports = async function(data) {\n\n    const submissions = data.get_all_participants;\n    \n    // Filter submissions to only include those where email_opt_in is true\n    const filteredSubmissions = submissions.filter(sub => sub.email_opt_in === true);\n\n    // Create an array with email, project_id and an email_opt_out token for each submission\n    const result = filteredSubmissions.map(sub => ({\n        project_name: data.project_data[0].name || '',\n\t\tdefault_conversation_title: data.project_data[0].default_conversation_title || '',\n\t\tconversation_name: sub.conversation_id.participant_name || '',\n        email: sub.email,\n        project_id: sub.project_id || '',\n        token: sub.email_opt_out_token,\n        language: data.check_report_language[0].language || 'empty',\n        ADMIN_BASE_URL: \"{{ $env.ADMIN_BASE_URL }}\" || \"http://localhost:5173\",\n        PARTICIPANT_BASE_URL: \"{{ $env.PARTICIPANT_BASE_URL }}\" || \"http://localhost:5174\",        \n    }));\n    \n    return result;\n};"
     },
-    "resolve": null,
+    "resolve": "e101f00d-2fb8-4f40-9e0e-4d24da5bb1e9",
     "reject": null,
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
-    "_syncId": "da5f4cce-eff0-426d-a207-d61366899d1f"
+    "_syncId": "efb3982e-5703-4c07-8982-a6e1b5218e4a"
   },
   {
     "name": "log environment vars",
@@ -178,6 +164,20 @@
     "reject": null,
     "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
     "_syncId": "7161e52e-b1cc-4c13-bedd-a9d64527026f"
+  },
+  {
+    "name": "log environment vars",
+    "key": "log_environment_vars",
+    "type": "log",
+    "position_x": 127,
+    "position_y": 1,
+    "options": {
+      "message": "{{data['$env']}}  {{data.$env}} {{process.env}} {{$env}} {{$env.PARTICIPANT_BASE_URL}}"
+    },
+    "resolve": null,
+    "reject": null,
+    "flow": "ec4e7ea5-72de-4365-b66f-d8f11b549495",
+    "_syncId": "da5f4cce-eff0-426d-a207-d61366899d1f"
   },
   {
     "name": "Send Email",
@@ -318,9 +318,9 @@
       ]
     },
     "resolve": null,
-    "reject": "920bd181-b2a2-4f0d-94dc-3b1a08c3f4ef",
+    "reject": "2b24450b-6a2e-4452-aba1-9814d17fef42",
     "flow": "17703446-fef0-49e9-bdc4-385db1311137",
-    "_syncId": "3dbf2ea1-17f8-4bde-aa89-43278fe9a00f"
+    "_syncId": "9390ed2f-7dc6-4a6a-83da-2d87d478261d"
   },
   {
     "name": "Send Email English",
@@ -349,9 +349,9 @@
       ]
     },
     "resolve": null,
-    "reject": "2b24450b-6a2e-4452-aba1-9814d17fef42",
+    "reject": "920bd181-b2a2-4f0d-94dc-3b1a08c3f4ef",
     "flow": "17703446-fef0-49e9-bdc4-385db1311137",
-    "_syncId": "9390ed2f-7dc6-4a6a-83da-2d87d478261d"
+    "_syncId": "3dbf2ea1-17f8-4bde-aa89-43278fe9a00f"
   },
   {
     "name": "Trigger Email Flow",
