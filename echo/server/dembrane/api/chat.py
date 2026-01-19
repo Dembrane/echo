@@ -471,8 +471,10 @@ async def add_chat_context(
                     continue
 
                 # Check if adding this conversation would exceed the context limit
+                # Use 85% threshold to leave headroom for LLM responses
+                max_context_usage = 0.85
                 conversation_usage = token_count / MAX_CHAT_CONTEXT_LENGTH
-                if current_token_usage + conversation_usage > 1:
+                if current_token_usage + conversation_usage > max_context_usage:
                     context_limit_reached = True
                     skipped.append(
                         SelectAllConversationResult(

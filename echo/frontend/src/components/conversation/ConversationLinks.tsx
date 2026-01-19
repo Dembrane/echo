@@ -138,17 +138,16 @@ export const ConversationLinks = ({
 		<>
 			<Group gap="sm" align="center" wrap="wrap">
 				{visibleConversations.map((conversation) => (
-					<>
-						<I18nLink
-							to={`/projects/${projectId}/conversation/${conversation.id}/overview`}
-						>
-							<Box maw={300} className="cursor-pointer hover:underline">
-								<Text size="xs" truncate="end" c="gray.7" pr={3}>
-									{conversation.participant_name}
-								</Text>
-							</Box>
-						</I18nLink>
-					</>
+					<I18nLink
+						key={conversation.id}
+						to={`/projects/${projectId}/conversation/${conversation.id}/overview`}
+					>
+						<Box maw={300} className="cursor-pointer hover:underline">
+							<Text size="xs" truncate="end" c="gray.7" pr={3}>
+								{conversation.participant_name}
+							</Text>
+						</Box>
+					</I18nLink>
 				))}
 
 				{shouldCondense && (

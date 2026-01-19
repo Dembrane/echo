@@ -70,6 +70,11 @@ msgstr "Welkom terug"
 #~ msgstr "Maak het concreet"
 
 #. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:317
+#~ msgid "select.all.modal.skip.reason"
+#~ msgstr "sommige kunnen worden overgeslagen vanwege lege transcriptie of contextlimiet"
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:238
 msgid "library.generate.duration.message"
 msgstr "Het genereren van een bibliotheek kan tot een uur duren"
@@ -104,7 +109,7 @@ msgstr "\"Verfijnen\" is binnenkort beschikbaar"
 #~ msgstr "(voor verbeterde audioverwerking)"
 
 #. placeholder {0}: filterNames.length
-#: src/components/conversation/SelectAllConfirmationModal.tsx:415
+#: src/components/conversation/SelectAllConfirmationModal.tsx:418
 msgid "{0, plural, one {# tag} other {# tags}}"
 msgstr "{0, plural, one {# tag} other {# tags}}"
 
@@ -130,7 +135,7 @@ msgstr "{0}"
 
 #. js-lingui-explicit-id
 #. placeholder {0}: result.added.length
-#: src/components/conversation/SelectAllConfirmationModal.tsx:449
+#: src/components/conversation/SelectAllConfirmationModal.tsx:452
 msgid "select.all.modal.added.count"
 msgstr "{0} toegevoegd"
 
@@ -145,7 +150,7 @@ msgstr "{0} Gesprekken • Bewerkt {1}"
 
 #. js-lingui-explicit-id
 #. placeholder {0}: reallySkipped.length
-#: src/components/conversation/SelectAllConfirmationModal.tsx:455
+#: src/components/conversation/SelectAllConfirmationModal.tsx:458
 msgid "select.all.modal.not.added.count"
 msgstr "{0} niet toegevoegd"
 
@@ -192,7 +197,7 @@ msgstr "*Een moment a.u.b.*"
 #~ msgid "*We make sure nothing can be traced back to you, and even if you accidentally say your name, we remove it before analysing everything. By using this tool, you agree to our privacy terms. Want to know more? Then read our [privacy statement]"
 #~ msgstr "*We zorgen dat niks terug te leiden is naar jou als persoon, ook al zeg je per ongeluk je naam, verwijderen wij deze voordat we alles analyseren. Door deze tool te gebruiken, ga je akkoord met onze privacy voorwaarden. Wil je meer weten? Lees dan onze [privacy verklaring]"
 
-#: src/components/conversation/ConversationLinks.tsx:167
+#: src/components/conversation/ConversationLinks.tsx:166
 msgid "+{hiddenCount} conversations"
 msgstr "+{hiddenCount} gesprekken"
 
@@ -223,7 +228,7 @@ msgid "Actions"
 msgstr "Acties"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:400
+#: src/components/conversation/SelectAllConfirmationModal.tsx:401
 msgid "select.all.modal.loading.filters"
 msgstr "Actieve filters"
 
@@ -278,7 +283,7 @@ msgid "Add to this chat"
 msgstr "Voeg toe aan dit gesprek"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:495
+#: src/components/conversation/SelectAllConfirmationModal.tsx:498
 msgid "select.all.modal.added"
 msgstr "Toegevoegd"
 
@@ -314,7 +319,7 @@ msgid "Adding Context:"
 msgstr "Context toevoegen:"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:364
+#: src/components/conversation/SelectAllConfirmationModal.tsx:365
 msgid "select.all.modal.loading.title"
 msgstr "Gesprekken toevoegen"
 
@@ -674,16 +679,6 @@ msgstr "Brainstorm ideeën"
 msgid "By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you ABSOLUTELY sure you want to delete this project?"
 msgstr "Door dit project te verwijderen, verwijder je alle gegevens die eraan gerelateerd zijn. Dit kan niet ongedaan worden gemaakt. Weet je zeker dat je dit project wilt verwijderen?"
 
-#. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:326
-msgid "select.all.modal.cancel"
-msgstr "Annuleren"
-
-#. js-lingui-explicit-id
-#: src/components/conversation/AddTagFilterModal.tsx:81
-msgid "add.tag.filter.modal.cancel"
-msgstr "Annuleren"
-
 #: src/routes/project/report/ProjectReportRoute.tsx:332
 #: src/components/settings/TwoFactorSettingsCard.tsx:406
 #: src/components/project/ProjectDangerZone.tsx:137
@@ -708,6 +703,16 @@ msgstr "Annuleren"
 #. js-lingui-explicit-id
 #: src/components/layout/ParticipantHeader.tsx:79
 msgid "participant.concrete.instructions.button.cancel"
+msgstr "Annuleren"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:327
+msgid "select.all.modal.cancel"
+msgstr "Annuleren"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/AddTagFilterModal.tsx:81
+msgid "add.tag.filter.modal.cancel"
 msgstr "Annuleren"
 
 #: src/components/conversation/ConversationAccordion.tsx:156
@@ -774,7 +779,7 @@ msgstr "Kies je favoriete thema voor de interface"
 msgid "Click \"Upload Files\" when you're ready to start the upload process."
 msgstr "Klik op \"Upload bestanden\" wanneer je klaar bent om de upload te starten."
 
-#: src/components/conversation/ConversationLinks.tsx:156
+#: src/components/conversation/ConversationLinks.tsx:155
 msgid "Click to see all {totalCount} conversations"
 msgstr "Klik om alle {totalCount} gesprekken te zien"
 
@@ -787,14 +792,14 @@ msgstr "Project klonen"
 msgid "Clone Project"
 msgstr "Project klonen"
 
-#. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:660
-msgid "select.all.modal.close"
-msgstr "Sluiten"
-
 #: src/components/dropzone/UploadConversationDropzone.tsx:806
 #: src/components/conversation/ConversationLinks.tsx:107
 msgid "Close"
+msgstr "Sluiten"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:663
+msgid "select.all.modal.close"
 msgstr "Sluiten"
 
 #: src/components/settings/AuditLogsCard.tsx:199
@@ -866,7 +871,7 @@ msgid "Context added:"
 msgstr "Context toegevoegd:"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:533
+#: src/components/conversation/SelectAllConfirmationModal.tsx:536
 msgid "select.all.modal.context.limit"
 msgstr "Contextlimiet"
 
@@ -875,7 +880,7 @@ msgid "Context limit reached"
 msgstr "Contextlimiet bereikt"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:467
+#: src/components/conversation/SelectAllConfirmationModal.tsx:470
 msgid "select.all.modal.context.limit.reached"
 msgstr "Contextlimiet is bereikt. Sommige gesprekken konden niet worden toegevoegd."
 
@@ -2272,7 +2277,7 @@ msgid "No conversations found. Start a conversation using the participation invi
 msgstr "Geen gesprekken gevonden. Start een gesprek met behulp van de deelname-uitnodigingslink uit het <0><1>projectoverzicht.</1></0>"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:649
+#: src/components/conversation/SelectAllConfirmationModal.tsx:652
 msgid "select.all.modal.no.conversations"
 msgstr "Er zijn geen gesprekken verwerkt. Dit kan gebeuren als alle gesprekken al in de context zijn of niet overeenkomen met de geselecteerde filters."
 
@@ -2361,7 +2366,7 @@ msgstr "Er zijn geen verificatie-onderwerpen voor dit project geconfigureerd."
 #~ msgstr "Geen verificatie-onderwerpen beschikbaar."
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:514
+#: src/components/conversation/SelectAllConfirmationModal.tsx:517
 msgid "select.all.modal.not.added"
 msgstr "Niet toegevoegd"
 
@@ -2756,13 +2761,13 @@ msgstr "Dit rapport afdrukken"
 msgid "Privacy Statements"
 msgstr "Privacy verklaring"
 
-#. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:329
-msgid "select.all.modal.proceed"
-msgstr "Doorgaan"
-
 #: src/routes/project/report/ProjectReportRoute.tsx:335
 msgid "Proceed"
+msgstr "Doorgaan"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:330
+msgid "select.all.modal.proceed"
 msgstr "Doorgaan"
 
 #~ msgid "processing"
@@ -2772,7 +2777,7 @@ msgstr "Doorgaan"
 #~ msgstr "Bezig met verwerken"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:375
+#: src/components/conversation/SelectAllConfirmationModal.tsx:376
 msgid "select.all.modal.loading.description"
 msgstr "<0>{totalCount, plural, one {# gesprek} other {# gesprekken}}</0> verwerken en toevoegen aan je chat"
 
@@ -3158,7 +3163,7 @@ msgid "Scroll to bottom"
 msgstr "Scroll naar beneden"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:408
+#: src/components/conversation/SelectAllConfirmationModal.tsx:411
 msgid "select.all.modal.loading.search"
 msgstr "Zoeken"
 
@@ -3419,14 +3424,14 @@ msgstr "Gegevensprivacy slides (Host beheert rechtsgrondslag)"
 #~ msgid "Some conversations are still being processed. Auto-select will work optimally once audio processing is complete."
 #~ msgstr "Sommige gesprekken worden nog verwerkt. Automatische selectie zal optimaal werken zodra de audioverwerking is voltooid."
 
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:317
+msgid "select.all.modal.skip.disclaimer"
+msgstr "Sommige gesprekken kunnen worden overgeslagen vanwege een leeg transcript of contextlimiet"
+
 #: src/components/dropzone/UploadConversationDropzone.tsx:430
 msgid "Some files were already selected and won't be added twice."
 msgstr "Sommige bestanden werden al geselecteerd en worden niet dubbel toegevoegd."
-
-#. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:317
-msgid "select.all.modal.skip.reason"
-msgstr "sommige kunnen worden overgeslagen vanwege lege transcriptie of contextlimiet"
 
 #: src/routes/auth/Login.tsx:158
 #: src/components/participant/ParticipantInitiateForm.tsx:84
@@ -3741,12 +3746,12 @@ msgstr "Er is een fout opgetreden bij het verifiëren van uw e-mail. Probeer het
 #~ msgstr "Dit zijn uw standaard weergave sjablonen. Zodra u uw bibliotheek hebt gemaakt, zullen deze uw eerste twee weergaven zijn."
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:611
+#: src/components/conversation/SelectAllConfirmationModal.tsx:614
 msgid "select.all.modal.other.reason.description"
 msgstr "Deze gesprekken werden uitgesloten vanwege ontbrekende transcripties."
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:571
+#: src/components/conversation/SelectAllConfirmationModal.tsx:574
 msgid "select.all.modal.context.limit.reached.description"
 msgstr "Deze conversaties zijn overgeslagen omdat de contextlimiet is bereikt."
 
@@ -4198,7 +4203,7 @@ msgid "select.all.modal.verified"
 msgstr "Geverifieerd"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:431
+#: src/components/conversation/SelectAllConfirmationModal.tsx:434
 msgid "select.all.modal.loading.verified"
 msgstr "Geverifieerd"
 

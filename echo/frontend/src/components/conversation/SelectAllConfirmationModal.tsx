@@ -314,8 +314,9 @@ export const SelectAllConfirmationModal = ({
 
 									{/* Warning about potential skips */}
 									<Alert variant="light" color="orange" mt={24}>
-										<Trans id="select.all.modal.skip.reason">
-											some might skip due to empty transcript or context limit
+										<Trans id="select.all.modal.skip.disclaimer">
+											Some conversations might skip due to empty transcript or
+											context limit
 										</Trans>
 									</Alert>
 								</Box>
@@ -401,7 +402,9 @@ export const SelectAllConfirmationModal = ({
 										Active filters
 									</Trans>
 								</Text>
-								{(searchText || filterNames.length > 0) && (
+								{(searchText ||
+									filterNames.length > 0 ||
+									hasVerifiedOutcomesFilter) && (
 									<Group justify="center" gap="xs" mt="xs" wrap="wrap">
 										{searchText && (
 											<Badge size="sm" variant="light" color="gray">

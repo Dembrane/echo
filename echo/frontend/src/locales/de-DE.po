@@ -70,6 +70,11 @@ msgstr "Willkommen zurück"
 #~ msgstr "Konkret machen"
 
 #. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:317
+#~ msgid "select.all.modal.skip.reason"
+#~ msgstr "einige könnten aufgrund von leerem Transkript oder Kontextlimit übersprungen werden"
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:238
 msgid "library.generate.duration.message"
 msgstr "Die Bibliothek wird {duration} dauern."
@@ -104,7 +109,7 @@ msgstr "\"Verfeinern\" bald verfügbar"
 #~ msgstr "(für verbesserte Audioverarbeitung)"
 
 #. placeholder {0}: filterNames.length
-#: src/components/conversation/SelectAllConfirmationModal.tsx:415
+#: src/components/conversation/SelectAllConfirmationModal.tsx:418
 msgid "{0, plural, one {# tag} other {# tags}}"
 msgstr "{0, plural, one {# Tag} other {# Tags}}"
 
@@ -130,7 +135,7 @@ msgstr "{0}"
 
 #. js-lingui-explicit-id
 #. placeholder {0}: result.added.length
-#: src/components/conversation/SelectAllConfirmationModal.tsx:449
+#: src/components/conversation/SelectAllConfirmationModal.tsx:452
 msgid "select.all.modal.added.count"
 msgstr "{0} hinzugefügt"
 
@@ -145,7 +150,7 @@ msgstr "{0} Gespräche • Bearbeitet {1}"
 
 #. js-lingui-explicit-id
 #. placeholder {0}: reallySkipped.length
-#: src/components/conversation/SelectAllConfirmationModal.tsx:455
+#: src/components/conversation/SelectAllConfirmationModal.tsx:458
 msgid "select.all.modal.not.added.count"
 msgstr "{0} nicht hinzugefügt"
 
@@ -183,7 +188,7 @@ msgstr "{0} werden noch verarbeitet."
 msgid "*Transcription in progress.*"
 msgstr "*Transkription wird durchgeführt.*"
 
-#: src/components/conversation/ConversationLinks.tsx:167
+#: src/components/conversation/ConversationLinks.tsx:166
 msgid "+{hiddenCount} conversations"
 msgstr "+{hiddenCount} Unterhaltungen"
 
@@ -214,7 +219,7 @@ msgid "Actions"
 msgstr "Aktionen"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:400
+#: src/components/conversation/SelectAllConfirmationModal.tsx:401
 msgid "select.all.modal.loading.filters"
 msgstr "Aktive Filter"
 
@@ -266,7 +271,7 @@ msgid "Add to this chat"
 msgstr "Zu diesem Chat hinzufügen"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:495
+#: src/components/conversation/SelectAllConfirmationModal.tsx:498
 msgid "select.all.modal.added"
 msgstr "Hinzugefügt"
 
@@ -299,7 +304,7 @@ msgid "Adding Context:"
 msgstr "Kontext wird hinzugefügt:"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:364
+#: src/components/conversation/SelectAllConfirmationModal.tsx:365
 msgid "select.all.modal.loading.title"
 msgstr "Unterhaltungen werden hinzugefügt"
 
@@ -617,16 +622,6 @@ msgstr "Ideen brainstormen"
 msgid "By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you ABSOLUTELY sure you want to delete this project?"
 msgstr "Durch das Löschen dieses Projekts werden alle damit verbundenen Daten gelöscht. Diese Aktion kann nicht rückgängig gemacht werden. Sind Sie ABSOLUT sicher, dass Sie dieses Projekt löschen möchten?"
 
-#. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:326
-msgid "select.all.modal.cancel"
-msgstr "Abbrechen"
-
-#. js-lingui-explicit-id
-#: src/components/conversation/AddTagFilterModal.tsx:81
-msgid "add.tag.filter.modal.cancel"
-msgstr "Abbrechen"
-
 #: src/routes/project/report/ProjectReportRoute.tsx:332
 #: src/components/settings/TwoFactorSettingsCard.tsx:406
 #: src/components/project/ProjectDangerZone.tsx:137
@@ -651,6 +646,16 @@ msgstr "Abbrechen"
 #. js-lingui-explicit-id
 #: src/components/layout/ParticipantHeader.tsx:79
 msgid "participant.concrete.instructions.button.cancel"
+msgstr "Abbrechen"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:327
+msgid "select.all.modal.cancel"
+msgstr "Abbrechen"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/AddTagFilterModal.tsx:81
+msgid "add.tag.filter.modal.cancel"
 msgstr "Abbrechen"
 
 #: src/components/conversation/ConversationAccordion.tsx:156
@@ -717,7 +722,7 @@ msgstr "Wähl dein Theme für das Interface"
 msgid "Click \"Upload Files\" when you're ready to start the upload process."
 msgstr "Klicken Sie auf \"Dateien hochladen\", wenn Sie bereit sind, den Upload-Prozess zu starten."
 
-#: src/components/conversation/ConversationLinks.tsx:156
+#: src/components/conversation/ConversationLinks.tsx:155
 msgid "Click to see all {totalCount} conversations"
 msgstr "Klicken, um alle {totalCount} Unterhaltungen anzuzeigen"
 
@@ -730,14 +735,14 @@ msgstr "Projekt klonen"
 msgid "Clone Project"
 msgstr "Projekt klonen"
 
-#. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:660
-msgid "select.all.modal.close"
-msgstr "Schließen"
-
 #: src/components/dropzone/UploadConversationDropzone.tsx:806
 #: src/components/conversation/ConversationLinks.tsx:107
 msgid "Close"
+msgstr "Schließen"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:663
+msgid "select.all.modal.close"
 msgstr "Schließen"
 
 #: src/components/settings/AuditLogsCard.tsx:199
@@ -809,7 +814,7 @@ msgid "Context added:"
 msgstr "Kontext hinzugefügt:"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:533
+#: src/components/conversation/SelectAllConfirmationModal.tsx:536
 msgid "select.all.modal.context.limit"
 msgstr "Kontextlimit"
 
@@ -818,7 +823,7 @@ msgid "Context limit reached"
 msgstr "Kontextlimit erreicht"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:467
+#: src/components/conversation/SelectAllConfirmationModal.tsx:470
 msgid "select.all.modal.context.limit.reached"
 msgstr "Kontextlimit wurde erreicht. Einige Unterhaltungen konnten nicht hinzugefügt werden."
 
@@ -2152,7 +2157,7 @@ msgid "No conversations found. Start a conversation using the participation invi
 msgstr "Keine Gespräche gefunden. Starten Sie ein Gespräch über den Teilnahme-Einladungslink aus der <0><1>Projektübersicht.</1></0>"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:649
+#: src/components/conversation/SelectAllConfirmationModal.tsx:652
 msgid "select.all.modal.no.conversations"
 msgstr "Es wurden keine Unterhaltungen verarbeitet. Dies kann passieren, wenn alle Unterhaltungen bereits im Kontext sind oder nicht den ausgewählten Filtern entsprechen."
 
@@ -2235,7 +2240,7 @@ msgstr "Für dieses Projekt sind keine Verifizierungsthemen konfiguriert."
 #~ msgstr "No verification topics available."
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:514
+#: src/components/conversation/SelectAllConfirmationModal.tsx:517
 msgid "select.all.modal.not.added"
 msgstr "Nicht hinzugefügt"
 
@@ -2612,13 +2617,13 @@ msgstr "Diesen Bericht drucken"
 msgid "Privacy Statements"
 msgstr "Datenschutzerklärungen"
 
-#. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:329
-msgid "select.all.modal.proceed"
-msgstr "Fortfahren"
-
 #: src/routes/project/report/ProjectReportRoute.tsx:335
 msgid "Proceed"
+msgstr "Fortfahren"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:330
+msgid "select.all.modal.proceed"
 msgstr "Fortfahren"
 
 #~ msgid "processing"
@@ -2628,7 +2633,7 @@ msgstr "Fortfahren"
 #~ msgstr "Verarbeitet"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:375
+#: src/components/conversation/SelectAllConfirmationModal.tsx:376
 msgid "select.all.modal.loading.description"
 msgstr "<0>{totalCount, plural, one {# Unterhaltung} other {# Unterhaltungen}}</0> werden verarbeitet und zu Ihrem Chat hinzugefügt"
 
@@ -3002,7 +3007,7 @@ msgid "Scroll to bottom"
 msgstr "Nach unten scrollen"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:408
+#: src/components/conversation/SelectAllConfirmationModal.tsx:411
 msgid "select.all.modal.loading.search"
 msgstr "Suchen"
 
@@ -3261,14 +3266,14 @@ msgstr "Datenschutzkarte überspringen (Organisation verwaltet Zustimmung)"
 #~ msgid "Some conversations are still being processed. Auto-select will work optimally once audio processing is complete."
 #~ msgstr "Einige Gespräche werden noch verarbeitet. Die automatische Auswahl wird optimal funktionieren, sobald die Audioverarbeitung abgeschlossen ist."
 
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:317
+msgid "select.all.modal.skip.disclaimer"
+msgstr "Einige Gespräche können ausgelassen werden, weil sie kein Transkript haben oder der Kontext-Limit erreicht ist."
+
 #: src/components/dropzone/UploadConversationDropzone.tsx:430
 msgid "Some files were already selected and won't be added twice."
 msgstr "Einige Dateien wurden bereits ausgewählt und werden nicht erneut hinzugefügt."
-
-#. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:317
-msgid "select.all.modal.skip.reason"
-msgstr "einige könnten aufgrund von leerem Transkript oder Kontextlimit übersprungen werden"
 
 #: src/routes/auth/Login.tsx:158
 #: src/components/participant/ParticipantInitiateForm.tsx:84
@@ -3577,12 +3582,12 @@ msgstr "Bei der Verifizierung Ihrer E-Mail ist ein Fehler aufgetreten. Bitte ver
 #~ msgstr "Diese sind Ihre Standard-Ansichtsvorlagen. Sobald Sie Ihre Bibliothek erstellen, werden dies Ihre ersten beiden Ansichten sein."
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:611
+#: src/components/conversation/SelectAllConfirmationModal.tsx:614
 msgid "select.all.modal.other.reason.description"
 msgstr "Diese Unterhaltungen wurden aufgrund fehlender Transkripte ausgeschlossen."
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:571
+#: src/components/conversation/SelectAllConfirmationModal.tsx:574
 msgid "select.all.modal.context.limit.reached.description"
 msgstr "Diese Unterhaltungen wurden übersprungen, da das Kontextlimit erreicht wurde."
 
@@ -4009,7 +4014,7 @@ msgid "select.all.modal.verified"
 msgstr "Verifiziert"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:431
+#: src/components/conversation/SelectAllConfirmationModal.tsx:434
 msgid "select.all.modal.loading.verified"
 msgstr "Verifiziert"
 
