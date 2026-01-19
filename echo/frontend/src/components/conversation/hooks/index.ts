@@ -18,6 +18,7 @@ import {
 	useQueryClient,
 } from "@tanstack/react-query";
 import { AxiosError } from "axios";
+import { useProjectChatContext } from "@/components/chat/hooks";
 import { toast } from "@/components/common/Toaster";
 import {
 	addChatContext,
@@ -28,6 +29,7 @@ import {
 	getConversationContentLink,
 	getConversationTranscriptString,
 	retranscribeConversation,
+	selectAllContext,
 } from "@/lib/api";
 import { directus } from "@/lib/directus";
 
@@ -285,11 +287,10 @@ export const useAddChatContextMutation = () => {
 			conversationId?: string;
 			auto_select_bool?: boolean;
 		}) =>
-			addChatContext(
-				payload.chatId,
-				payload.conversationId,
-				payload.auto_select_bool,
-			),
+			addChatContext(payload.chatId, {
+				auto_select_bool: payload.auto_select_bool,
+				conversationId: payload.conversationId,
+			}),
 		onError: (error, variables, context) => {
 			Sentry.captureException(error);
 
@@ -547,6 +548,42 @@ export const useDeleteChatContextMutation = () => {
 					? t`Auto-select disabled`
 					: t`Conversation removed from chat`;
 			toast.success(message);
+		},
+	});
+};
+
+export const useSelectAllContextMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (payload: {
+			chatId: string;
+			projectId: string;
+			tagIds?: string[];
+			verifiedOnly?: boolean;
+			searchText?: string;
+		}) =>
+			selectAllContext(payload.chatId, payload.projectId, {
+				searchText: payload.searchText,
+				tagIds: payload.tagIds,
+				verifiedOnly: payload.verifiedOnly,
+			}),
+		onError: (error) => {
+			Sentry.captureException(error);
+		},
+		onSettled: (_, __, variables) => {
+			queryClient.invalidateQueries({
+				queryKey: ["chats", "context", variables.chatId],
+			});
+			// Also invalidate the remaining conversations count query
+			queryClient.invalidateQueries({
+				queryKey: [
+					"projects",
+					variables.projectId,
+					"chats",
+					variables.chatId,
+					"remaining-conversations-count",
+				],
+			});
 		},
 	});
 };
@@ -1018,6 +1055,102 @@ export const useConversationsCountByProjectId = (
 			return response[0].count;
 		},
 		queryKey: ["projects", projectId, "conversations", "count", query],
+	});
+};
+
+export const useRemainingConversationsCount = (
+	projectId: string,
+	chatId: string | undefined,
+	filters?: {
+		tagIds?: string[];
+		verifiedOnly?: boolean;
+		searchText?: string;
+	},
+	options?: {
+		enabled?: boolean;
+	},
+) => {
+	const chatContextQuery = useProjectChatContext(chatId ?? "");
+
+	return useQuery({
+		// Wait for chat context to be loaded before running this query
+		enabled:
+			!!chatId &&
+			!!projectId &&
+			!chatContextQuery.isLoading &&
+			chatContextQuery.data !== undefined &&
+			options?.enabled !== false,
+		queryFn: async () => {
+			// Build filter for conversations matching current filters
+			const filterQuery: any = {
+				project_id: {
+					_eq: projectId,
+				},
+			};
+
+			// Apply tag filter if provided
+			if (filters?.tagIds && filters.tagIds.length > 0) {
+				filterQuery.tags = {
+					_some: {
+						project_tag_id: {
+							id: { _in: filters.tagIds },
+						},
+					},
+				};
+			}
+
+			// Apply verified filter if requested
+			if (filters?.verifiedOnly) {
+				filterQuery.conversation_artifacts = {
+					_some: {
+						approved_at: {
+							_nnull: true,
+						},
+					},
+				};
+			}
+
+			// Get count of conversations already in context
+			const conversationsInContext = chatContextQuery.data?.conversations ?? [];
+			const conversationIdsInContext = new Set(
+				conversationsInContext.map((c) => c.conversation_id),
+			);
+
+			// If we have conversations in context, exclude them from the filter
+			if (conversationIdsInContext.size > 0) {
+				filterQuery.id = {
+					_nin: Array.from(conversationIdsInContext),
+				};
+			}
+
+			const response = await directus.request(
+				aggregate("conversation", {
+					aggregate: {
+						countDistinct: ["id"],
+					},
+					query: {
+						filter: filterQuery,
+						...(filters?.searchText?.trim() && {
+							search: filters.searchText.trim(),
+						}),
+					},
+				}),
+			);
+
+			return Number(response[0]?.countDistinct?.id) || 0;
+		},
+		queryKey: [
+			"projects",
+			projectId,
+			"chats",
+			chatId,
+			"remaining-conversations-count",
+			filters,
+			// Include the conversation IDs in context in the query key so it refetches when context changes
+			chatContextQuery.data?.conversations
+				?.map((c) => c.conversation_id)
+				.sort(),
+		],
 	});
 };
 
