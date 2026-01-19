@@ -59,11 +59,11 @@ const FilterDisplay = ({
 	if (!hasAnyFilters) return null;
 
 	return (
-		<Stack gap="sm" mt="sm">
+		<Stack gap="sm" mt="sm" pl="md">
 			{searchText && (
 				<Group gap="xs" align="center">
 					<Text size="sm" fw={700}>
-						-
+						•
 					</Text>
 					<Text size="sm" fw={600}>
 						<Trans id="select.all.modal.search.text">Search text:</Trans>
@@ -76,7 +76,7 @@ const FilterDisplay = ({
 			{filterNames.length > 0 && (
 				<Group gap="xs" align="center">
 					<Text size="sm" fw={700}>
-						-
+						•
 					</Text>
 					<Text size="sm" fw={600}>
 						<Trans id="select.all.modal.tags">
@@ -99,7 +99,7 @@ const FilterDisplay = ({
 			{hasVerifiedOutcomesFilter && (
 				<Group gap="xs" align="center">
 					<Text size="sm" fw={700}>
-						-
+						•
 					</Text>
 					<Badge
 						color="blue"
