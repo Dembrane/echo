@@ -23,7 +23,11 @@ from dembrane.directus import (
 from dembrane.settings import get_settings
 from dembrane.transcribe import transcribe_conversation_chunk
 from dembrane.async_helpers import run_async_in_new_loop
-from dembrane.conversation_utils import collect_unfinished_conversations
+from dembrane.conversation_utils import (
+    collect_unfinished_conversations,
+    collect_unsummarized_conversations,
+    collect_conversations_needing_transcribed_flag,
+)
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.processing_status_utils import (
     ProcessingStatusContext,
@@ -99,14 +103,13 @@ def task_transcribe_chunk(
 ) -> None:
     """
     Transcribe a conversation chunk.
-    
+
     After transcription (success or recoverable error), decrements the pending
     chunk counter. If counter reaches 0 and conversation is_finished, triggers
     finalization.
     """
     logger = getLogger("dembrane.tasks.task_transcribe_chunk")
-    
-    
+
     try:
         with ProcessingStatusContext(
             conversation_id=conversation_id,
@@ -118,15 +121,15 @@ def task_transcribe_chunk(
         # Transcription succeeded - decrement counter and check for finalization
         _on_chunk_transcription_done(conversation_id, conversation_chunk_id, logger)
         return
-        
+
     except Exception as e:
         logger.error(f"Error transcribing chunk {conversation_chunk_id}: {e}")
-        
+
         # Check if this was a recoverable error (chunk was marked as failed but
         # didn't raise). If transcribe_conversation_chunk raised, we need to
         # still decrement if it's a recoverable error type.
         from dembrane.transcribe import _is_recoverable_error
-        
+
         if _is_recoverable_error(e):
             # Recoverable error - chunk is done (just with an error), decrement counter
             logger.info(
@@ -135,7 +138,7 @@ def task_transcribe_chunk(
             )
             _on_chunk_transcription_done(conversation_id, conversation_chunk_id, logger)
             return  # Don't re-raise for recoverable errors
-        
+
         # Non-recoverable error - still decrement counter but also raise
         # so Dramatiq can retry
         _on_chunk_transcription_done(conversation_id, conversation_chunk_id, logger)
@@ -143,37 +146,33 @@ def task_transcribe_chunk(
 
 
 def _on_chunk_transcription_done(
-    conversation_id: str, 
-    chunk_id: str, 
-    logger: "logging.Logger"
+    conversation_id: str, chunk_id: str, logger: "logging.Logger"
 ) -> None:
     """
     Called when a chunk transcription is done (success or error).
     Decrements pending counter and triggers finalization if ready.
-    
+
     Uses mark_chunk_decremented to prevent double-decrement on Dramatiq retry.
     """
     from dembrane.service import conversation_service
     from dembrane.coordination import mark_chunk_decremented, decrement_pending_chunks
-    
+
     # Prevent double-decrement on retry
     if not mark_chunk_decremented(conversation_id, chunk_id):
-        logger.info(
-            f"Chunk {chunk_id} already decremented (likely a retry), skipping decrement"
-        )
+        logger.info(f"Chunk {chunk_id} already decremented (likely a retry), skipping decrement")
         return
-    
+
     # Decrement the pending counter
     remaining = decrement_pending_chunks(conversation_id)
     logger.info(
         f"Chunk {chunk_id} done. Remaining pending chunks for {conversation_id}: {remaining}"
     )
-    
+
     if remaining == 0:
         # All chunks done - check if conversation is finished (user clicked finish)
         try:
             conversation = conversation_service.get_by_id_or_raise(conversation_id)
-            
+
             if conversation.get("is_finished"):
                 logger.info(
                     f"All chunks done and conversation {conversation_id} is_finished=True, "
@@ -193,11 +192,11 @@ def _on_chunk_transcription_done(
 def task_finalize_conversation(conversation_id: str) -> None:
     """
     Finalize a conversation after all chunks are transcribed.
-    
+
     This task is triggered when:
     1. All pending chunks have been transcribed (counter == 0)
     2. The conversation is_finished (user clicked finish or scheduler triggered)
-    
+
     It performs:
     1. Sets is_all_chunks_transcribed = True
     2. Triggers merge task
@@ -205,42 +204,46 @@ def task_finalize_conversation(conversation_id: str) -> None:
     4. Cleans up coordination data
     """
     logger = getLogger("dembrane.tasks.task_finalize_conversation")
-    
+
     from dembrane.service import conversation_service
     from dembrane.coordination import (
         get_pending_chunks,
         mark_finalize_in_progress,
         cleanup_conversation_coordination,
     )
-    
+
     try:
         logger.info(f"Finalizing conversation: {conversation_id}")
-        
+
         # Double-check conditions (idempotency)
         conversation = conversation_service.get_by_id_or_raise(conversation_id)
-        
+
         if conversation.get("is_all_chunks_transcribed"):
             logger.info(f"Conversation {conversation_id} already finalized, skipping")
             return
-        
+
         # Atomic lock - only one finalization task proceeds
         if not mark_finalize_in_progress(conversation_id):
             logger.info(
                 f"Conversation {conversation_id} finalization already in progress, skipping"
             )
             return
-        
+
         pending = get_pending_chunks(conversation_id)
-        if pending > 0:
+        counts = conversation_service.get_chunk_counts(conversation_id)
+
+        if pending > 0 or counts["pending"] > 0:
             logger.warning(
-                f"Finalization triggered but {pending} chunks still pending for {conversation_id}, "
+                f"Finalization triggered but chunks still pending for {conversation_id}: "
+                f"redis_pending={pending}, db_pending={counts['pending']}, "
                 f"skipping (will be triggered again when chunks complete)"
             )
             # Clear lock so next attempt can proceed
             from dembrane.coordination import clear_finalize_in_progress
+
             clear_finalize_in_progress(conversation_id)
             return
-        
+
         if not conversation.get("is_finished"):
             logger.warning(
                 f"Finalization triggered but conversation {conversation_id} is_finished=False, "
@@ -248,28 +251,43 @@ def task_finalize_conversation(conversation_id: str) -> None:
             )
             # Clear lock so next attempt can proceed
             from dembrane.coordination import clear_finalize_in_progress
+
             clear_finalize_in_progress(conversation_id)
             return
-        
+
         # All conditions met - finalize
         logger.info(f"All conditions met, finalizing conversation {conversation_id}")
-        
+
         # Set the flag
         conversation_service.update(
             conversation_id=conversation_id,
             is_all_chunks_transcribed=True,
         )
-        
+
+        # Dispatch webhook for conversation.transcribed event
+        try:
+            from dembrane.service.webhook import dispatch_webhooks_for_event
+
+            project_id = conversation.get("project_id")
+            if project_id:
+                dispatch_webhooks_for_event(
+                    project_id=project_id,
+                    conversation_id=conversation_id,
+                    event="conversation.transcribed",
+                )
+        except Exception as e:
+            logger.warning(f"Failed to dispatch conversation.transcribed webhook: {e}")
+
         # Trigger downstream tasks
         task_merge_conversation_chunks.send(conversation_id)
         task_summarize_conversation.send(conversation_id)
-        
+
         # Clean up coordination data
         cleanup_conversation_coordination(conversation_id)
-        
+
         logger.info(f"Conversation {conversation_id} finalization complete")
         return
-        
+
     except Exception as e:
         logger.error(f"Error finalizing conversation {conversation_id}: {e}")
         raise
@@ -280,12 +298,16 @@ def task_summarize_conversation(conversation_id: str) -> None:
     """
     Summarize a conversation. The results are not returned. You can find it in
     conversation["summary"] after the task is finished.
-    
+
     This task is resilient to partial data - it will generate a summary from
     whatever transcripts are available, logging any chunks that were skipped.
+
+    Uses mark_summarize_in_progress to prevent duplicate LLM calls when multiple
+    triggers (finalization + catch-up scheduler) fire concurrently.
     """
     logger = getLogger("dembrane.tasks.task_summarize_conversation")
 
+    from dembrane.coordination import mark_summarize_in_progress, clear_summarize_in_progress
     from dembrane.service.conversation import ConversationNotFoundException
 
     try:
@@ -295,6 +317,13 @@ def task_summarize_conversation(conversation_id: str) -> None:
 
         if conversation["is_finished"] and conversation["summary"] is not None:
             logger.info(f"Conversation {conversation_id} already summarized, skipping")
+            return
+
+        # Atomic lock - prevent duplicate summarization (expensive LLM calls)
+        if not mark_summarize_in_progress(conversation_id):
+            logger.info(
+                f"Conversation {conversation_id} summarization already in progress, skipping"
+            )
             return
 
         # Log chunk status before summarizing
@@ -327,12 +356,32 @@ def task_summarize_conversation(conversation_id: str) -> None:
                 )
             )
 
+        # Dispatch webhook for conversation.summarized event
+        try:
+            from dembrane.service.webhook import dispatch_webhooks_for_event
+
+            project_id = conversation.get("project_id")
+            if project_id:
+                dispatch_webhooks_for_event(
+                    project_id=project_id,
+                    conversation_id=conversation_id,
+                    event="conversation.summarized",
+                )
+        except Exception as e:
+            logger.warning(f"Failed to dispatch conversation.summarized webhook: {e}")
+
+        # Success - clear the lock
+        clear_summarize_in_progress(conversation_id)
         return
     except ConversationNotFoundException:
         logger.error(f"Conversation not found: {conversation_id}")
+        # Non-retriable error - clear lock
+        clear_summarize_in_progress(conversation_id)
         return
     except Exception as e:
         logger.error(f"Error: {e}")
+        # Retriable error - don't clear lock, let TTL handle it
+        # This prevents catch-up task from starting duplicate work during retry window
         raise e from e
 
 
@@ -402,15 +451,15 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
 def task_finish_conversation_hook(conversation_id: str) -> None:
     """
     Handle user/scheduler signal that a conversation is finished.
-    
+
     This task:
     1. Sets is_finished = True
     2. Checks if all chunks are already transcribed
     3. If yes, triggers finalization immediately
     4. If no, finalization will be triggered by the last transcription task
-    
+
     This ensures merge/summary only run after ALL transcriptions complete.
-    
+
     Uses mark_finish_in_progress to prevent duplicate processing from scheduler.
     """
     logger = getLogger("dembrane.tasks.task_finish_conversation_hook")
@@ -442,7 +491,7 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
         # Check if all chunks are already transcribed
         pending = get_pending_chunks(conversation_id)
         counts = conversation_service.get_chunk_counts(conversation_id)
-        
+
         logger.info(
             f"Conversation {conversation_id} state: "
             f"pending_redis={pending}, "
@@ -450,12 +499,12 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
             f"error={counts['error']}, pending={counts['pending']}}}"
         )
 
-        if pending == 0 and counts["total"] > 0:
-            # All chunks done (or no chunks uploaded via new flow yet)
+        if pending == 0 and counts["pending"] == 0 and counts["total"] > 0:
+            # All chunks are fully processed (have transcript or error)
+            # AND no chunks are actively being transcribed in Redis
             # Trigger finalization
             logger.info(
-                f"All chunks already transcribed for {conversation_id}, "
-                f"triggering finalization"
+                f"All chunks already transcribed for {conversation_id}, triggering finalization"
             )
             task_finalize_conversation.send(conversation_id)
         elif counts["total"] == 0:
@@ -476,6 +525,7 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
 
         # Clear finish lock - we're done processing
         from dembrane.coordination import clear_finish_in_progress
+
         clear_finish_in_progress(conversation_id)
         return
 
@@ -484,6 +534,7 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
         # Clear lock on non-retriable error
         try:
             from dembrane.coordination import clear_finish_in_progress
+
             clear_finish_in_progress(conversation_id)
         except Exception:
             pass
@@ -506,7 +557,7 @@ def task_process_conversation_chunk(
 ) -> None:
     """
     Process a conversation chunk.
-    
+
     Flow:
     1. Split large audio files into smaller chunks
     2. Register pending chunk count with coordination module
@@ -538,7 +589,7 @@ def task_process_conversation_chunk(
 
         # Filter out None values
         valid_chunk_ids = [cid for cid in split_chunk_ids if cid is not None]
-        
+
         if not valid_chunk_ids:
             logger.warning(f"No valid chunks after splitting for chunk: {chunk_id}")
             return
@@ -593,6 +644,92 @@ def task_collect_and_finish_unfinished_conversations() -> None:
         raise e from e
 
 
+@dramatiq.actor(queue_name="network")
+def task_reconcile_transcribed_flag() -> None:
+    """
+    Reconcile the is_all_chunks_transcribed flag for conversations that should have it set.
+
+    This catches conversations where the normal finalization flow failed:
+    - Audio conversations where task_finalize_conversation didn't run
+    - TEXT conversations where chunks have transcripts from direct input
+
+    For each conversation found, triggers task_finalize_conversation which will:
+    1. Set is_all_chunks_transcribed = True
+    2. Trigger merge and summarization tasks
+
+    Runs periodically via the scheduler (every 3 minutes).
+    """
+    logger = getLogger("dembrane.tasks.task_reconcile_transcribed_flag")
+
+    try:
+        logger.info("running task_reconcile_transcribed_flag @ %s", get_utc_timestamp())
+
+        conversation_ids = collect_conversations_needing_transcribed_flag()
+
+        if not conversation_ids:
+            logger.debug("No conversations need transcribed flag reconciliation")
+            return
+
+        logger.info(
+            f"Found {len(conversation_ids)} conversations needing transcribed flag: "
+            f"{conversation_ids}"
+        )
+
+        # Trigger finalization for each - it will set the flag and downstream tasks
+        group(
+            [
+                task_finalize_conversation.message(conversation_id)
+                for conversation_id in conversation_ids
+                if conversation_id is not None
+            ]
+        ).run()
+
+        return
+    except Exception as e:
+        logger.error(f"Error reconciling transcribed flags: {e}")
+        raise e from e
+
+
+@dramatiq.actor(queue_name="network")
+def task_catch_up_unsummarized_conversations() -> None:
+    """
+    Catch-up task for conversations that are transcribed but missing summaries.
+
+    Simple check: is_all_chunks_transcribed = True AND summary = null.
+    The transcribed flag is the source of truth - set by task_reconcile_transcribed_flag
+    or the normal finalization flow.
+
+    Runs periodically via the scheduler as a safety net.
+    """
+    logger = getLogger("dembrane.tasks.task_catch_up_unsummarized_conversations")
+
+    try:
+        logger.info("running task_catch_up_unsummarized_conversations @ %s", get_utc_timestamp())
+
+        unsummarized_conversation_ids = collect_unsummarized_conversations()
+
+        if not unsummarized_conversation_ids:
+            logger.debug("No unsummarized conversations found")
+            return
+
+        logger.info(
+            f"Found {len(unsummarized_conversation_ids)} unsummarized conversations: {unsummarized_conversation_ids}"
+        )
+
+        group(
+            [
+                task_summarize_conversation.message(conversation_id)
+                for conversation_id in unsummarized_conversation_ids
+                if conversation_id is not None
+            ]
+        ).run()
+
+        return
+    except Exception as e:
+        logger.error(f"Error catching up unsummarized conversations: {e}")
+        raise e from e
+
+
 @dramatiq.actor(queue_name="network", priority=50)
 def task_create_view(
     project_analysis_run_id: str,
@@ -611,9 +748,7 @@ def task_create_view(
 
     logger.info(f"User query: {user_query}")
     if user_query_context:
-        logger.info(
-            "User query context provided (%d characters).", len(user_query_context)
-        )
+        logger.info("User query context provided (%d characters).", len(user_query_context))
     else:
         logger.info("No additional user query context provided.")
     logger.info("Requested language for view generation: %s", language or "unspecified")
@@ -709,3 +844,80 @@ def task_create_project_library(project_id: str, language: str) -> None:
             project_id,
         )
         return
+
+
+@dramatiq.actor(
+    queue_name="network",
+    priority=40,
+    max_retries=3,
+    min_backoff=5000,
+    max_backoff=60000,
+)
+def task_dispatch_webhook(webhook_id: str, payload: dict) -> None:
+    """
+    Dispatch a single webhook HTTP request.
+
+    Uses Dramatiq's built-in retry mechanism for failures.
+    Retries up to 3 times with exponential backoff (5s to 60s).
+
+    Args:
+        webhook_id: The webhook ID to dispatch
+        payload: The pre-built payload to send
+    """
+    logger = getLogger("dembrane.tasks.task_dispatch_webhook")
+
+    from dembrane.service.webhook import WebhookService, WebhookServiceException
+
+    service = WebhookService()
+
+    # Fetch webhook configuration
+    try:
+        with directus_client_context() as client:
+            webhooks = client.get_items(
+                "project_webhook",
+                {
+                    "query": {
+                        "filter": {"id": {"_eq": webhook_id}},
+                        "fields": ["id", "name", "url", "secret", "status"],
+                    }
+                },
+            )
+    except Exception as e:
+        logger.error(f"Failed to fetch webhook {webhook_id}: {e}")
+        raise  # Retry
+
+    if not webhooks:
+        logger.warning(f"Webhook {webhook_id} not found, skipping")
+        return
+
+    webhook = webhooks[0]
+
+    # Check if webhook is still enabled
+    if webhook.get("status") != "published":
+        logger.info(f"Webhook {webhook_id} is not published, skipping")
+        return
+
+    # Dispatch the webhook
+    try:
+        status_code, response_text = service.dispatch_webhook_sync(webhook, payload)
+
+        # Consider 2xx as success
+        if 200 <= status_code < 300:
+            logger.info(f"Webhook {webhook_id} dispatched successfully (status: {status_code})")
+            return
+        elif 400 <= status_code < 500:
+            # Client errors (4xx) - don't retry, log and exit
+            logger.warning(
+                f"Webhook {webhook_id} returned client error {status_code}: {response_text[:200]}"
+            )
+            return
+        else:
+            # Server errors (5xx) or other - retry
+            logger.warning(f"Webhook {webhook_id} returned error {status_code}, will retry")
+            raise WebhookServiceException(f"Webhook returned status {status_code}")
+
+    except WebhookServiceException:
+        raise  # Re-raise for Dramatiq retry
+    except Exception as e:
+        logger.error(f"Webhook {webhook_id} dispatch failed: {e}")
+        raise  # Retry on network errors etc.

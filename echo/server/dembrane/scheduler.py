@@ -26,6 +26,22 @@ scheduler.add_job(
     replace_existing=True,
 )
 
+scheduler.add_job(
+    func="dembrane.tasks:task_reconcile_transcribed_flag.send",
+    trigger=CronTrigger(minute="*/3"),
+    id="task_reconcile_transcribed_flag",
+    name="Reconcile is_all_chunks_transcribed flag",
+    replace_existing=True,
+)
+
+scheduler.add_job(
+    func="dembrane.tasks:task_catch_up_unsummarized_conversations.send",
+    trigger=CronTrigger(minute="*/5"),
+    id="task_catch_up_unsummarized_conversations",
+    name="Catch up on unsummarized conversations",
+    replace_existing=True,
+)
+
 logger = getLogger("dembrane.scheduler")
 
 # Start the scheduler when this module is run directly

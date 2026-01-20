@@ -1,28 +1,28 @@
 {
-  "collection": "chat",
+  "collection": "project_webhook",
   "meta": {
     "accountability": "all",
     "archive_app_filter": true,
-    "archive_field": null,
-    "archive_value": null,
+    "archive_field": "status",
+    "archive_value": "archived",
     "collapse": "open",
-    "collection": "chat",
+    "collection": "project_webhook",
     "color": null,
     "display_template": null,
-    "group": null,
+    "group": "project",
     "hidden": false,
     "icon": null,
     "item_duplication_fields": null,
     "note": null,
     "preview_url": null,
     "singleton": false,
-    "sort": 15,
+    "sort": 1,
     "sort_field": null,
     "translations": null,
-    "unarchive_value": null,
+    "unarchive_value": "draft",
     "versioning": false
   },
   "schema": {
-    "name": "chat"
+    "name": "project_webhook"
   }
 }
