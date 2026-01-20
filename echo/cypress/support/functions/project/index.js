@@ -57,21 +57,28 @@ export const verifyProjectPage = (expectedName = 'New Project') => {
 export const navigateToHome = () => {
     cy.log('Navigating Back to Home');
 
-    // Click Home Icon in Breadcrumb
-    // Selector matching browser finding: a[href*="/projects"] inside breadcrumbs works, 
-    // or specifically the Home icon.
-    // Browser used: a.mantine-Breadcrumbs-breadcrumb[href='/en-US/projects']
-    // Let's use a robust XPath for the home icon or breadcrumb link "Projects" or "Home"
-    // The image showed a Home Icon.
-    // XPath: Target the visible breadcrumb on desktop (hidden on mobile vs block on md)
-    // The browser check confirmed the visible one is inside <div class="hidden md:block">
-    cy.xpath('//div[contains(@class, "md:block")]//a[contains(@class, "mantine-Breadcrumbs-breadcrumb") and contains(@href, "/projects")]')
-        .should('be.visible')
-        .click();
+    // Check viewport width to determine navigation method
+    cy.window().then((win) => {
+        const isMobile = win.innerWidth < 768;
 
-    // Verify we are back on the list page
-    cy.url().should('match', /\/projects$/);
-    cy.wait(2000); // Stability wait after navigation
+        if (isMobile) {
+            // On mobile, breadcrumb is hidden (display: none), so use direct navigation
+            cy.url().then((currentUrl) => {
+                const locale = currentUrl.includes('/en-US/') ? 'en-US' :
+                    currentUrl.includes('/nl-NL/') ? 'nl-NL' : 'en-US';
+                cy.visit(`/${locale}/projects`);
+            });
+        } else {
+            // On desktop, click the breadcrumb as before
+            cy.xpath('//div[contains(@class, "md:block")]//a[contains(@class, "mantine-Breadcrumbs-breadcrumb") and contains(@href, "/projects")]')
+                .should('be.visible')
+                .click();
+        }
+
+        // Verify we are back on the list page
+        cy.url().should('match', /\/projects$/);
+        cy.wait(2000); // Stability wait after navigation
+    });
 };
 
 export const deleteProject = (projectId) => {

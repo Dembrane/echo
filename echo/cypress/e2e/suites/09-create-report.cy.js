@@ -73,9 +73,9 @@ describe('Report Creation Flow', () => {
         cy.get('section[role="dialog"]').should('be.visible');
         cy.xpath("//button[contains(., 'Create Report')]").filter(':visible').click();
 
-        // 9. Wait 20 seconds for processing
-        cy.log('Step 9: Waiting 20 seconds for report processing');
-        cy.wait(20000);
+        // 9. Wait 40 seconds for processing
+        cy.log('Step 9: Waiting 40 seconds for report processing');
+        cy.wait(40000);
 
         // 10. Click on the Report button again to view report
         cy.log('Step 10: Clicking Report button again');

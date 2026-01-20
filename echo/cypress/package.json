@@ -4,7 +4,10 @@
   "main": "index.js",
   "devDependencies": {
     "cypress": "^15.9.0",
-    "cypress-xpath": "^2.0.1"
+    "cypress-xpath": "^2.0.1",
+    "mochawesome": "^7.1.4",
+    "mochawesome-merge": "^4.4.1",
+    "mochawesome-report-generator": "^6.3.2"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

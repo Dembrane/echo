@@ -76,11 +76,22 @@ module.exports = defineConfig({
             return config;
         },
         defaultCommandTimeout: 10000,
-        viewportWidth: 1280,
-        viewportHeight: 720,
+        // viewportWidth and viewportHeight are set via CLI --config flag
+        // Default fallbacks if not provided via CLI
+        viewportWidth: process.env.CYPRESS_viewportWidth ? parseInt(process.env.CYPRESS_viewportWidth) : 1280,
+        viewportHeight: process.env.CYPRESS_viewportHeight ? parseInt(process.env.CYPRESS_viewportHeight) : 720,
         specPattern: "e2e/suites/**/*.cy.{js,jsx,ts,tsx}",
         supportFile: "support/e2e.js",
         // Enable experimental features for cross-origin testing
         experimentalModifyObstructiveThirdPartyCode: true,
+        // Mochawesome reporter for HTML test reports
+        reporter: 'mochawesome',
+        reporterOptions: {
+            reportDir: 'reports',
+            overwrite: false,
+            html: false,
+            json: true,
+            timestamp: 'mmddyyyy_HHMMss'
+        },
     },
 });

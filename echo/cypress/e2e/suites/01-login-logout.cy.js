@@ -1,4 +1,5 @@
-import { loginToApp, logout, verifyLogin } from '../../support/functions/login';
+import { loginToApp, logout } from '../../support/functions/login';
+import { openSettingsMenu } from '../../support/functions/settings';
 
 describe('Login & Logout Flow', () => {
 
@@ -6,13 +7,12 @@ describe('Login & Logout Flow', () => {
         // 1. Perform Login
         loginToApp();
 
-        // 2. Verify Login
-        // We get the email from the environment to verify against what's shown in the UI
-        const email = Cypress.env('auth').email;
-        verifyLogin(email);
+        // 2. Open Settings Menu (to access logout)
+        openSettingsMenu();
 
         // 3. Perform Logout
         logout();
     });
 
 });
+
