@@ -23,7 +23,11 @@ from dembrane.directus import (
 from dembrane.settings import get_settings
 from dembrane.transcribe import transcribe_conversation_chunk
 from dembrane.async_helpers import run_async_in_new_loop
-from dembrane.conversation_utils import collect_unfinished_conversations
+from dembrane.conversation_utils import (
+    collect_unfinished_conversations,
+    collect_unsummarized_conversations,
+    collect_conversations_needing_transcribed_flag,
+)
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.processing_status_utils import (
     ProcessingStatusContext,
@@ -297,9 +301,13 @@ def task_summarize_conversation(conversation_id: str) -> None:
 
     This task is resilient to partial data - it will generate a summary from
     whatever transcripts are available, logging any chunks that were skipped.
+
+    Uses mark_summarize_in_progress to prevent duplicate LLM calls when multiple
+    triggers (finalization + catch-up scheduler) fire concurrently.
     """
     logger = getLogger("dembrane.tasks.task_summarize_conversation")
 
+    from dembrane.coordination import mark_summarize_in_progress, clear_summarize_in_progress
     from dembrane.service.conversation import ConversationNotFoundException
 
     try:
@@ -309,6 +317,13 @@ def task_summarize_conversation(conversation_id: str) -> None:
 
         if conversation["is_finished"] and conversation["summary"] is not None:
             logger.info(f"Conversation {conversation_id} already summarized, skipping")
+            return
+
+        # Atomic lock - prevent duplicate summarization (expensive LLM calls)
+        if not mark_summarize_in_progress(conversation_id):
+            logger.info(
+                f"Conversation {conversation_id} summarization already in progress, skipping"
+            )
             return
 
         # Log chunk status before summarizing
@@ -355,12 +370,18 @@ def task_summarize_conversation(conversation_id: str) -> None:
         except Exception as e:
             logger.warning(f"Failed to dispatch conversation.summarized webhook: {e}")
 
+        # Success - clear the lock
+        clear_summarize_in_progress(conversation_id)
         return
     except ConversationNotFoundException:
         logger.error(f"Conversation not found: {conversation_id}")
+        # Non-retriable error - clear lock
+        clear_summarize_in_progress(conversation_id)
         return
     except Exception as e:
         logger.error(f"Error: {e}")
+        # Retriable error - don't clear lock, let TTL handle it
+        # This prevents catch-up task from starting duplicate work during retry window
         raise e from e
 
 
@@ -620,6 +641,92 @@ def task_collect_and_finish_unfinished_conversations() -> None:
         return
     except Exception as e:
         logger.error(f"Error collecting and finishing unfinished conversations: {e}")
+        raise e from e
+
+
+@dramatiq.actor(queue_name="network")
+def task_reconcile_transcribed_flag() -> None:
+    """
+    Reconcile the is_all_chunks_transcribed flag for conversations that should have it set.
+
+    This catches conversations where the normal finalization flow failed:
+    - Audio conversations where task_finalize_conversation didn't run
+    - TEXT conversations where chunks have transcripts from direct input
+
+    For each conversation found, triggers task_finalize_conversation which will:
+    1. Set is_all_chunks_transcribed = True
+    2. Trigger merge and summarization tasks
+
+    Runs periodically via the scheduler (every 3 minutes).
+    """
+    logger = getLogger("dembrane.tasks.task_reconcile_transcribed_flag")
+
+    try:
+        logger.info("running task_reconcile_transcribed_flag @ %s", get_utc_timestamp())
+
+        conversation_ids = collect_conversations_needing_transcribed_flag()
+
+        if not conversation_ids:
+            logger.debug("No conversations need transcribed flag reconciliation")
+            return
+
+        logger.info(
+            f"Found {len(conversation_ids)} conversations needing transcribed flag: "
+            f"{conversation_ids}"
+        )
+
+        # Trigger finalization for each - it will set the flag and downstream tasks
+        group(
+            [
+                task_finalize_conversation.message(conversation_id)
+                for conversation_id in conversation_ids
+                if conversation_id is not None
+            ]
+        ).run()
+
+        return
+    except Exception as e:
+        logger.error(f"Error reconciling transcribed flags: {e}")
+        raise e from e
+
+
+@dramatiq.actor(queue_name="network")
+def task_catch_up_unsummarized_conversations() -> None:
+    """
+    Catch-up task for conversations that are transcribed but missing summaries.
+
+    Simple check: is_all_chunks_transcribed = True AND summary = null.
+    The transcribed flag is the source of truth - set by task_reconcile_transcribed_flag
+    or the normal finalization flow.
+
+    Runs periodically via the scheduler as a safety net.
+    """
+    logger = getLogger("dembrane.tasks.task_catch_up_unsummarized_conversations")
+
+    try:
+        logger.info("running task_catch_up_unsummarized_conversations @ %s", get_utc_timestamp())
+
+        unsummarized_conversation_ids = collect_unsummarized_conversations()
+
+        if not unsummarized_conversation_ids:
+            logger.debug("No unsummarized conversations found")
+            return
+
+        logger.info(
+            f"Found {len(unsummarized_conversation_ids)} unsummarized conversations: {unsummarized_conversation_ids}"
+        )
+
+        group(
+            [
+                task_summarize_conversation.message(conversation_id)
+                for conversation_id in unsummarized_conversation_ids
+                if conversation_id is not None
+            ]
+        ).run()
+
+        return
+    except Exception as e:
+        logger.error(f"Error catching up unsummarized conversations: {e}")
         raise e from e
 
 

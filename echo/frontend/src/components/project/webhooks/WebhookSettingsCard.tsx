@@ -7,6 +7,7 @@ import {
 	Badge,
 	Button,
 	Checkbox,
+	Code,
 	Group,
 	Loader,
 	Modal,
@@ -21,6 +22,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
+	IconCopy,
 	IconEdit,
 	IconExternalLink,
 	IconHelpCircle,
@@ -29,7 +31,7 @@ import {
 	IconTrash,
 	IconWebhook,
 } from "@tabler/icons-react";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import type { Webhook, WebhookCreatePayload, WebhookEvent } from "@/lib/api";
 import {
@@ -41,21 +43,25 @@ import {
 } from "../hooks";
 import { ProjectSettingsSection } from "../ProjectSettingsSection";
 
-const WEBHOOK_EVENTS: { value: WebhookEvent; label: string; description: string }[] = [
-	{ 
-		value: "conversation.created", 
-		label: "Conversation Created",
+const WEBHOOK_EVENTS: {
+	value: WebhookEvent;
+	label: string;
+	description: string;
+}[] = [
+	{
 		description: "When a participant starts a new conversation",
+		label: "Conversation Created",
+		value: "conversation.created",
 	},
-	{ 
-		value: "conversation.transcribed", 
-		label: "Conversation Transcribed",
+	{
 		description: "When all audio has been converted to text",
+		label: "Conversation Transcribed",
+		value: "conversation.transcribed",
 	},
-	{ 
-		value: "conversation.summarized", 
-		label: "Conversation Summarized",
+	{
 		description: "When the summary is generated",
+		label: "Conversation Summarized",
+		value: "conversation.summarized",
 	},
 ];
 
@@ -85,10 +91,14 @@ const WebhookFormModal = ({
 
 	const { control, handleSubmit, reset } = useForm<WebhookFormData>({
 		defaultValues: {
+			events: [
+				"conversation.created",
+				"conversation.transcribed",
+				"conversation.summarized",
+			],
 			name: "",
-			url: "",
 			secret: "",
-			events: ["conversation.created", "conversation.transcribed", "conversation.summarized"],
+			url: "",
 		},
 	});
 
@@ -96,10 +106,14 @@ const WebhookFormModal = ({
 	useEffect(() => {
 		if (opened) {
 			reset({
+				events: webhook?.events || [
+					"conversation.created",
+					"conversation.transcribed",
+					"conversation.summarized",
+				],
 				name: webhook?.name || "",
-				url: webhook?.url || "",
 				secret: "",
-				events: webhook?.events || ["conversation.created", "conversation.transcribed", "conversation.summarized"],
+				url: webhook?.url || "",
 			});
 		}
 	}, [opened, webhook, reset]);
@@ -108,29 +122,29 @@ const WebhookFormModal = ({
 		try {
 			if (isEditing && webhook) {
 				await updateMutation.mutateAsync({
-					projectId,
-					webhookId: webhook.id,
 					payload: {
 						name: data.name,
 						url: data.url,
 						...(data.secret ? { secret: data.secret } : {}),
 						events: data.events,
 					},
+					projectId,
+					webhookId: webhook.id,
 				});
 			} else {
 				await createMutation.mutateAsync({
-					projectId,
 					payload: {
 						name: data.name,
 						url: data.url,
 						...(data.secret ? { secret: data.secret } : {}),
 						events: data.events,
 					} as WebhookCreatePayload,
+					projectId,
 				});
 			}
 			reset();
 			onClose();
-		} catch (error) {
+		} catch (_error) {
 			// Error handling is done in the mutation
 		}
 	};
@@ -145,7 +159,11 @@ const WebhookFormModal = ({
 				<Group gap="xs">
 					<IconWebhook size={20} />
 					<Text fw={600}>
-						{isEditing ? <Trans>Edit Webhook</Trans> : <Trans>Add Webhook</Trans>}
+						{isEditing ? (
+							<Trans>Edit Webhook</Trans>
+						) : (
+							<Trans>Add Webhook</Trans>
+						)}
 					</Text>
 				</Group>
 			}
@@ -186,11 +204,11 @@ const WebhookFormModal = ({
 						name="url"
 						control={control}
 						rules={{
-							required: t`URL is required`,
 							pattern: {
-								value: /^https?:\/\/.+/,
 								message: t`URL must start with http:// or https://`,
+								value: /^https?:\/\/.+/,
 							},
+							required: t`URL is required`,
 						}}
 						render={({ field, fieldState }) => (
 							<Stack gap={4}>
@@ -198,7 +216,10 @@ const WebhookFormModal = ({
 									<Trans>Webhook URL</Trans>
 								</Text>
 								<Text size="xs" c="dimmed">
-									<Trans>The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server).</Trans>
+									<Trans>
+										The endpoint where we'll send the data. Get this from your
+										receiving service (e.g., Zapier, Make, or your own server).
+									</Trans>
 								</Text>
 								<input
 									type="text"
@@ -231,12 +252,17 @@ const WebhookFormModal = ({
 								</Group>
 								<Text size="xs" c="dimmed">
 									<Trans>
-										For advanced users: A secret key to verify webhook authenticity. 
-										Only needed if your receiving service requires signature verification.
+										For advanced users: A secret key to verify webhook
+										authenticity. Only needed if your receiving service requires
+										signature verification.
 									</Trans>
 								</Text>
 								<PasswordInput
-									placeholder={isEditing ? t`Leave empty to keep existing` : t`Enter a secret key`}
+									placeholder={
+										isEditing
+											? t`Leave empty to keep existing`
+											: t`Enter a secret key`
+									}
 									{...field}
 								/>
 							</Stack>
@@ -264,8 +290,12 @@ const WebhookFormModal = ({
 											<Checkbox
 												label={
 													<Stack gap={2}>
-														<Text size="sm" fw={500}>{event.label}</Text>
-														<Text size="xs" c="dimmed">{event.description}</Text>
+														<Text size="sm" fw={500}>
+															{event.label}
+														</Text>
+														<Text size="xs" c="dimmed">
+															{event.description}
+														</Text>
 													</Stack>
 												}
 												checked={field.value.includes(event.value)}
@@ -300,7 +330,11 @@ const WebhookFormModal = ({
 							<Trans>Cancel</Trans>
 						</Button>
 						<Button type="submit" loading={isPending}>
-							{isEditing ? <Trans>Save Changes</Trans> : <Trans>Create Webhook</Trans>}
+							{isEditing ? (
+								<Trans>Save Changes</Trans>
+							) : (
+								<Trans>Create Webhook</Trans>
+							)}
 						</Button>
 					</Group>
 				</Stack>
@@ -320,28 +354,30 @@ const WebhookRow = ({ webhook, projectId, onEdit }: WebhookRowProps) => {
 	const deleteMutation = useDeleteWebhookMutation();
 	const testMutation = useTestWebhookMutation();
 	const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-	
+
 	// Use local state for optimistic toggle updates
-	const [optimisticEnabled, setOptimisticEnabled] = useState<boolean | null>(null);
-	const isEnabled = optimisticEnabled ?? (webhook.status === "published");
-	
+	const [optimisticEnabled, setOptimisticEnabled] = useState<boolean | null>(
+		null,
+	);
+	const isEnabled = optimisticEnabled ?? webhook.status === "published";
+
 	// Reset optimistic state when webhook data changes from server
 	useEffect(() => {
 		setOptimisticEnabled(null);
-	}, [webhook.status]);
+	}, []);
 
 	const handleToggle = async () => {
 		const newStatus = isEnabled ? "draft" : "published";
 		// Optimistically update UI
 		setOptimisticEnabled(newStatus === "published");
-		
+
 		try {
 			await updateMutation.mutateAsync({
-				projectId,
-				webhookId: webhook.id,
 				payload: {
 					status: newStatus,
 				},
+				projectId,
+				webhookId: webhook.id,
 			});
 			// Reset optimistic state after successful mutation (query will refresh)
 			setOptimisticEnabled(null);
@@ -408,10 +444,7 @@ const WebhookRow = ({ webhook, projectId, onEdit }: WebhookRowProps) => {
 							</ActionIcon>
 						</Tooltip>
 						<Tooltip label={t`Edit`}>
-							<ActionIcon
-								variant="subtle"
-								onClick={() => onEdit(webhook)}
-							>
+							<ActionIcon variant="subtle" onClick={() => onEdit(webhook)}>
 								<IconEdit size={16} />
 							</ActionIcon>
 						</Tooltip>
@@ -467,7 +500,35 @@ interface WebhookSectionProps {
 	projectId: string;
 }
 
-const WebhookHelpAccordion = () => (
+const EXAMPLE_WEBHOOK_PAYLOAD = `{
+  "event": "conversation.summarized",
+  "timestamp": "2026-01-20T12:00:00.000Z",
+  "conversation": {
+    "id": "abc123-def456",
+    "created_at": "2026-01-20T11:30:00.000Z",
+    "updated_at": "2026-01-20T12:00:00.000Z",
+    "participant_name": "Jane Smith",
+    "participant_email": "jane@example.com",
+    "duration": 245,
+    "source": "PORTAL_AUDIO",
+    "is_finished": true,
+    "is_all_chunks_transcribed": true,
+    "tags": ["feedback", "product"],
+    "transcript": "Hello, I wanted to share my thoughts on...",
+    "summary": "The participant shared positive feedback about..."
+  },
+  "project": {
+    "id": "proj-789",
+    "name": "Customer Interviews",
+    "language": "en"
+  }
+}`;
+
+interface WebhookHelpAccordionProps {
+	onViewPayload: () => void;
+}
+
+const WebhookHelpAccordion = ({ onViewPayload }: WebhookHelpAccordionProps) => (
 	<Accordion variant="contained" radius="md">
 		<Accordion.Item value="what-are-webhooks">
 			<Accordion.Control>
@@ -482,23 +543,32 @@ const WebhookHelpAccordion = () => (
 				<Stack gap="md">
 					<Text size="sm">
 						<Trans>
-							Webhooks are automated messages sent from one app to another when something happens. 
-							Think of them as a "notification system" for your other tools.
+							Webhooks are automated messages sent from one app to another when
+							something happens. Think of them as a "notification system" for
+							your other tools.
 						</Trans>
 					</Text>
-					
+
 					<Text size="sm" fw={500}>
 						<Trans>How it works:</Trans>
 					</Text>
 					<Stack gap="xs" pl="md">
 						<Text size="sm">
-							<Trans>1. You provide a URL where you want to receive notifications</Trans>
+							<Trans>
+								1. You provide a URL where you want to receive notifications
+							</Trans>
 						</Text>
 						<Text size="sm">
-							<Trans>2. When a conversation event happens, we automatically send the conversation data to your URL</Trans>
+							<Trans>
+								2. When a conversation event happens, we automatically send the
+								conversation data to your URL
+							</Trans>
 						</Text>
 						<Text size="sm">
-							<Trans>3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)</Trans>
+							<Trans>
+								3. Your system receives the data and can act on it (e.g., save
+								to a database, send an email, update a spreadsheet)
+							</Trans>
 						</Text>
 					</Stack>
 
@@ -506,22 +576,61 @@ const WebhookHelpAccordion = () => (
 						<Trans>What data is sent?</Trans>
 					</Text>
 					<Stack gap="xs" pl="md">
-						<Text size="sm">• <Trans>Participant name and email</Trans></Text>
-						<Text size="sm">• <Trans>Conversation tags</Trans></Text>
-						<Text size="sm">• <Trans>Full transcript (when available)</Trans></Text>
-						<Text size="sm">• <Trans>Summary (when available)</Trans></Text>
-						<Text size="sm">• <Trans>Timestamps and duration</Trans></Text>
-						<Text size="sm">• <Trans>Project name and ID</Trans></Text>
+						<Text size="sm">
+							• <Trans>Participant name and email</Trans>
+						</Text>
+						<Text size="sm">
+							• <Trans>Conversation tags</Trans>
+						</Text>
+						<Text size="sm">
+							• <Trans>Full transcript (when available)</Trans>
+						</Text>
+						<Text size="sm">
+							• <Trans>Summary (when available)</Trans>
+						</Text>
+						<Text size="sm">
+							• <Trans>Timestamps and duration</Trans>
+						</Text>
+						<Text size="sm">
+							• <Trans>Project name and ID</Trans>
+						</Text>
 					</Stack>
+					<Anchor component="button" size="sm" onClick={onViewPayload}>
+						<Group gap={4}>
+							<IconCopy size={14} />
+							<Trans>View example payload</Trans>
+						</Group>
+					</Anchor>
 
 					<Text size="sm" fw={500}>
 						<Trans>Common use cases:</Trans>
 					</Text>
 					<Stack gap="xs" pl="md">
-						<Text size="sm">• <Trans>Automatically save transcripts to your CRM or database</Trans></Text>
-						<Text size="sm">• <Trans>Send Slack/Teams notifications when new conversations are completed</Trans></Text>
-						<Text size="sm">• <Trans>Trigger automated workflows in tools like Zapier, Make, or n8n</Trans></Text>
-						<Text size="sm">• <Trans>Build custom dashboards with real-time conversation data</Trans></Text>
+						<Text size="sm">
+							•{" "}
+							<Trans>
+								Automatically save transcripts to your CRM or database
+							</Trans>
+						</Text>
+						<Text size="sm">
+							•{" "}
+							<Trans>
+								Send Slack/Teams notifications when new conversations are
+								completed
+							</Trans>
+						</Text>
+						<Text size="sm">
+							•{" "}
+							<Trans>
+								Trigger automated workflows in tools like Zapier, Make, or n8n
+							</Trans>
+						</Text>
+						<Text size="sm">
+							•{" "}
+							<Trans>
+								Build custom dashboards with real-time conversation data
+							</Trans>
+						</Text>
 					</Stack>
 
 					<Text size="sm" fw={500}>
@@ -529,8 +638,9 @@ const WebhookHelpAccordion = () => (
 					</Text>
 					<Text size="sm">
 						<Trans>
-							If you're not sure, you probably don't need it yet. Webhooks are an advanced feature 
-							typically used by developers or teams with custom integrations. You can always set them up later.
+							If you're not sure, you probably don't need it yet. Webhooks are
+							an advanced feature typically used by developers or teams with
+							custom integrations. You can always set them up later.
 						</Trans>
 					</Text>
 
@@ -554,7 +664,18 @@ export const WebhookSection = ({ projectId }: WebhookSectionProps) => {
 	const { data: webhooks, isLoading, error } = useProjectWebhooks(projectId);
 	const [formModalOpened, { open: openFormModal, close: closeFormModal }] =
 		useDisclosure(false);
+	const [
+		payloadModalOpened,
+		{ open: openPayloadModal, close: closePayloadModal },
+	] = useDisclosure(false);
 	const [editingWebhook, setEditingWebhook] = useState<Webhook | null>(null);
+	const [copied, setCopied] = useState(false);
+
+	const handleCopyPayload = () => {
+		navigator.clipboard.writeText(EXAMPLE_WEBHOOK_PAYLOAD);
+		setCopied(true);
+		setTimeout(() => setCopied(false), 2000);
+	};
 
 	const handleAddWebhook = () => {
 		setEditingWebhook(null);
@@ -585,7 +706,8 @@ export const WebhookSection = ({ projectId }: WebhookSectionProps) => {
 			}
 			description={
 				<Trans>
-					Automatically send conversation data to your other tools and services when events occur.
+					Automatically send conversation data to your other tools and services
+					when events occur.
 				</Trans>
 			}
 			headerRight={
@@ -601,7 +723,7 @@ export const WebhookSection = ({ projectId }: WebhookSectionProps) => {
 			}
 		>
 			<Stack gap="lg">
-				<WebhookHelpAccordion />
+				<WebhookHelpAccordion onViewPayload={openPayloadModal} />
 
 				{isLoading ? (
 					<Group justify="center" py="xl">
@@ -647,12 +769,18 @@ export const WebhookSection = ({ projectId }: WebhookSectionProps) => {
 						</Paper>
 						<Text size="xs" c="dimmed">
 							<Trans>
-								Tip: Use the play button (▶) to send a test payload to your webhook and verify it's working correctly.
+								Tip: Use the play button (▶) to send a test payload to your
+								webhook and verify it's working correctly.
 							</Trans>
 						</Text>
 					</Stack>
 				) : (
-					<Paper p="xl" withBorder radius="md" style={{ backgroundColor: "var(--mantine-color-gray-0)" }}>
+					<Paper
+						p="xl"
+						withBorder
+						radius="md"
+						style={{ backgroundColor: "var(--mantine-color-gray-0)" }}
+					>
 						<Stack align="center" gap="md">
 							<ThemeIcon size={60} radius="xl" variant="light" color="gray">
 								<IconWebhook size={32} stroke={1.5} />
@@ -663,8 +791,8 @@ export const WebhookSection = ({ projectId }: WebhookSectionProps) => {
 								</Text>
 								<Text size="sm" c="dimmed" ta="center" maw={400}>
 									<Trans>
-										Ready to connect your tools? Add a webhook to automatically receive 
-										conversation data when events happen.
+										Ready to connect your tools? Add a webhook to automatically
+										receive conversation data when events happen.
 									</Trans>
 								</Text>
 							</Stack>
@@ -685,6 +813,70 @@ export const WebhookSection = ({ projectId }: WebhookSectionProps) => {
 					projectId={projectId}
 					webhook={editingWebhook}
 				/>
+
+				<Paper p="sm" withBorder radius="md" bg="blue.0">
+					<Stack gap="xs">
+						<Text size="sm" fw={500}>
+							<Trans>Using webhooks? We'd love to hear from you</Trans>
+						</Text>
+						<Text size="sm">
+							<Trans>
+								If you're an advanced user setting up webhook integrations, we'd
+								love to learn about your use case. We're also building
+								observability features including audit logs and delivery
+								tracking.
+							</Trans>
+						</Text>
+						<Group gap="md">
+							<Anchor href="mailto:sameer@dembrane.com" size="sm">
+								sameer@dembrane.com
+							</Anchor>
+							<Anchor
+								href="https://cal.com/sameer-dembrane"
+								target="_blank"
+								size="sm"
+							>
+								<Group gap={4}>
+									<Trans>Book a call</Trans>
+									<IconExternalLink size={14} />
+								</Group>
+							</Anchor>
+						</Group>
+					</Stack>
+				</Paper>
+
+				<Modal
+					opened={payloadModalOpened}
+					onClose={closePayloadModal}
+					title={t`Example Webhook Payload`}
+					size="lg"
+				>
+					<Stack gap="md">
+						<Text size="sm" c="dimmed">
+							<Trans>
+								This is an example of the JSON data sent to your webhook URL
+								when a conversation is summarized.
+							</Trans>
+						</Text>
+						<Code
+							block
+							style={{ fontSize: 12, maxHeight: 400, overflow: "auto" }}
+						>
+							{EXAMPLE_WEBHOOK_PAYLOAD}
+						</Code>
+						<Button
+							leftSection={<IconCopy size={16} />}
+							onClick={handleCopyPayload}
+							color={copied ? "green" : "blue"}
+						>
+							{copied ? (
+								<Trans>Copied!</Trans>
+							) : (
+								<Trans>Copy to Clipboard</Trans>
+							)}
+						</Button>
+					</Stack>
+				</Modal>
 			</Stack>
 		</ProjectSettingsSection>
 	);

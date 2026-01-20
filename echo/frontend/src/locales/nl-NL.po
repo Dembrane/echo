@@ -179,6 +179,22 @@ msgstr "*Een moment a.u.b.*"
 msgid "0 Aspects"
 msgstr "0 Aspecten"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:557
+msgid "1. You provide a URL where you want to receive notifications"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:562
+msgid "2. When a conversation event happens, we automatically send the conversation data to your URL"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:568
+msgid "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:185
+msgid "A friendly name to identify this webhook"
+msgstr ""
+
 #: src/components/settings/TwoFactorSettingsCard.tsx:176
 msgid "Account password"
 msgstr "Accountwachtwoord"
@@ -192,6 +208,7 @@ msgid "Action On"
 msgstr "Actie op"
 
 #: src/components/project/ProjectDangerZone.tsx:69
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:754
 msgid "Actions"
 msgstr "Acties"
 
@@ -230,6 +247,15 @@ msgstr "Trefwoorden toevoegen"
 msgid "Add to this chat"
 msgstr "Voeg toe aan dit gesprek"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:165
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:720
+msgid "Add Webhook"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:804
+msgid "Add Your First Webhook"
+msgstr ""
+
 #~ msgid "Added context"
 #~ msgstr "Context toegevoegd"
 
@@ -240,6 +266,10 @@ msgstr "Toegevoegde e-mails"
 #: src/routes/project/chat/ProjectChatRoute.tsx:655
 msgid "Adding Context:"
 msgstr "Context toevoegen:"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:703
+msgid "Advanced"
+msgstr ""
 
 #: src/components/project/ProjectPortalEditor.tsx:545
 msgid "Advanced (Tips and best practices)"
@@ -358,6 +388,11 @@ msgstr "Goedgekeurd"
 
 #~ msgid "Are you ready? Then press \"Ready!\""
 #~ msgstr "Ben je er klaar voor? Druk dan op \"Klaar om te beginnen\"."
+
+#. placeholder {0}: webhook.name
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:473
+msgid "Are you sure you want to delete the webhook \"{0}\"? This action cannot be undone."
+msgstr ""
 
 #: src/components/conversation/ConversationDangerZone.tsx:23
 msgid "Are you sure you want to delete this conversation? This action cannot be undone."
@@ -528,6 +563,14 @@ msgstr "Automatisch selecteren ingeschakeld"
 msgid "Automatically includes relevant conversations for analysis without manual selection"
 msgstr "Automatisch relevante gesprekken voor analyse zonder handmatige selectie"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:611
+msgid "Automatically save transcripts to your CRM or database"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:708
+msgid "Automatically send conversation data to your other tools and services when events occur."
+msgstr ""
+
 #: src/components/conversation/AutoSelectConversations.tsx:96
 msgid "Available"
 msgstr "Beschikbaar"
@@ -581,9 +624,17 @@ msgstr "Bèta"
 #~ msgid "Big Picture - Themes & patterns"
 #~ msgstr "Big Picture - Thema’s & patronen"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:840
+msgid "Book a call"
+msgstr ""
+
 #: src/components/project/ProjectPortalEditor.tsx:688
 msgid "Brainstorm Ideas"
 msgstr "Brainstorm ideeën"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:630
+msgid "Build custom dashboards with real-time conversation data"
+msgstr ""
 
 #: src/components/project/ProjectDangerZone.tsx:59
 msgid "By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you ABSOLUTELY sure you want to delete this project?"
@@ -593,6 +644,8 @@ msgstr "Door dit project te verwijderen, verwijder je alle gegevens die eraan ge
 #: src/components/settings/TwoFactorSettingsCard.tsx:406
 #: src/components/project/ProjectDangerZone.tsx:137
 #: src/components/project/ProjectDangerZone.tsx:163
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:330
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:483
 #: src/components/dropzone/UploadConversationDropzone.tsx:686
 #: src/components/dropzone/UploadConversationDropzone.tsx:806
 #: src/components/conversation/MoveConversationButton.tsx:208
@@ -668,6 +721,10 @@ msgstr "Controleer je email"
 msgid "Checking..."
 msgstr "Controleren..."
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:277
+msgid "Choose when you want to receive notifications"
+msgstr ""
+
 #: src/components/settings/FontSettingsCard.tsx:74
 msgid "Choose your preferred theme for the interface"
 msgstr "Kies je favoriete thema voor de interface"
@@ -695,6 +752,10 @@ msgstr "Sluiten"
 #: src/components/settings/AuditLogsCard.tsx:199
 msgid "Collection"
 msgstr "Collectie"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:606
+msgid "Common use cases:"
+msgstr ""
 
 #: src/components/chat/templates.ts:42
 msgid "Compare & Contrast"
@@ -803,6 +864,10 @@ msgstr "Gespreksstatus"
 msgid "Conversation Status Details"
 msgstr "Gespreksstatusdetails"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:583
+msgid "Conversation tags"
+msgstr ""
+
 #~ msgid "conversation.accordion.skeleton.title"
 #~ msgstr "Gesprekken"
 
@@ -839,6 +904,10 @@ msgstr "Even afkoelen. Beschikbaar over {0}"
 msgid "Copied"
 msgstr "Gekopieerd"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:873
+msgid "Copied!"
+msgstr ""
+
 #: src/components/common/CopyRichTextIconButton.tsx:29
 #: src/components/common/CopyIconButton.tsx:8
 msgid "Copy"
@@ -864,6 +933,10 @@ msgstr "Kopieer samenvatting"
 #: src/components/conversation/CopyConversationTranscript.tsx:48
 msgid "Copy to clipboard"
 msgstr "Kopieer naar clipboard"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:875
+msgid "Copy to Clipboard"
+msgstr ""
 
 #~ msgid "Copy transcript"
 #~ msgstr "Kopieer transcript"
@@ -916,6 +989,10 @@ msgstr "Maak view aan"
 msgid "Create View"
 msgstr "Maak view aan"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:336
+msgid "Create Webhook"
+msgstr ""
+
 #: src/components/conversation/ConversationEdit.tsx:151
 msgid "Created on"
 msgstr "Gemaakt op"
@@ -951,13 +1028,15 @@ msgstr "Standaard"
 msgid "Default - No tutorial (Only privacy statements)"
 msgstr "Standaard - Geen tutorial (Alleen privacy verklaringen)"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:451
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:490
+msgid "Delete"
+msgstr "Verwijder"
+
 #. js-lingui-explicit-id
 #: src/components/chat/ChatAccordion.tsx:137
 msgid "project.sidebar.chat.delete"
 msgstr "Chat verwijderen"
-
-#~ msgid "Delete"
-#~ msgstr "Verwijder"
 
 #: src/components/conversation/ConversationDangerZone.tsx:56
 msgid "Delete Conversation"
@@ -971,6 +1050,10 @@ msgstr "Verwijder gesprek"
 #: src/components/project/ProjectDangerZone.tsx:169
 msgid "Delete Project"
 msgstr "Verwijder project"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:467
+msgid "Delete Webhook"
+msgstr ""
 
 #: src/components/participant/UserChunkMessage.tsx:68
 msgid "Deleted successfully"
@@ -1030,6 +1113,10 @@ msgstr "Tweestapsverificatie uitschakelen"
 #: src/components/settings/TwoFactorSettingsCard.tsx:323
 msgid "Disabled"
 msgstr "Uitgeschakeld"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:637
+msgid "Do I need this?"
+msgstr ""
 
 #: src/components/report/ReportRenderer.tsx:14
 msgid "Do you want to contribute to this project?"
@@ -1097,6 +1184,10 @@ msgstr "Sleep audio bestanden hierheen of klik om bestanden te selecteren"
 msgid "Dutch"
 msgstr "Nederlands"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:189
+msgid "e.g., Slack Notifications, Make Workflow"
+msgstr ""
+
 #~ msgid "ECHO"
 #~ msgstr "ECHO"
 
@@ -1108,6 +1199,10 @@ msgstr "Nederlands"
 
 #~ msgid "ECHO!"
 #~ msgstr "ECHO!"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:446
+msgid "Edit"
+msgstr ""
 
 #: src/components/conversation/ConversationEdit.tsx:128
 msgid "Edit Conversation"
@@ -1132,6 +1227,10 @@ msgstr "Rapport inhoud bewerken"
 #: src/components/report/ReportEditor.tsx:126
 msgid "report.editor.description"
 msgstr "Bewerk de rapport inhoud met de rich text editor hieronder. Je kunt tekst formatteren, links, afbeeldingen en meer toevoegen."
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:163
+msgid "Edit Webhook"
+msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:298
 msgid "Editing mode"
@@ -1217,6 +1316,7 @@ msgid "Enable two-factor authentication"
 msgstr "Tweestapsverificatie inschakelen"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:323
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:751
 #: src/components/conversation/AutoSelectConversations.tsx:86
 msgid "Enabled"
 msgstr "Ingeschakeld"
@@ -1239,6 +1339,10 @@ msgstr "Voer een naam in voor het nieuwe gesprek"
 #: src/components/project/ProjectDangerZone.tsx:131
 msgid "Enter a name for your cloned project"
 msgstr "Voer een naam in voor je nieuwe project"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:264
+msgid "Enter a secret key"
+msgstr ""
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:374
 msgid "Enter a valid code to turn off two-factor authentication."
@@ -1291,8 +1395,8 @@ msgstr "Fout bij laden van meldingen"
 #~ msgid "Error loading insights"
 #~ msgstr "Fout bij laden van inzichten"
 
-#: src/routes/project/ProjectRoutes.tsx:39
-#: src/routes/project/ProjectRoutes.tsx:131
+#: src/routes/project/ProjectRoutes.tsx:40
+#: src/routes/project/ProjectRoutes.tsx:135
 msgid "Error loading project"
 msgstr "Fout bij laden van project"
 
@@ -1309,6 +1413,14 @@ msgstr "Fout bij het bijwerken van het rapport"
 msgid "Error uploading \"{0}\": {1}"
 msgstr "Fout bij het uploaden van \"{0}\": {1}"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:748
+msgid "Events"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:274
+msgid "Events to Listen For"
+msgstr ""
+
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:360
 msgid "participant.alert.microphone.access.success"
@@ -1316,6 +1428,10 @@ msgstr "Alles lijkt goed – je kunt doorgaan."
 
 #~ msgid "Everything looks good – you can continue."
 #~ msgstr "Alles lijkt goed – je kunt doorgaan."
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:851
+msgid "Example Webhook Payload"
+msgstr ""
 
 #~ msgid "Example: This conversation is about [topic]. Key terms include [term1], [term2]. Please pay special attention to [specific aspect]."
 #~ msgstr "Voorbeeld: Dit gesprek gaat over [onderwerp]. Belangrijke termen zijn [term1], [term2]. Let speciaal op [specifieke aspect]."
@@ -1399,6 +1515,10 @@ msgstr "Fout bij het ophalen van meldingen"
 
 #~ msgid "Failed to load audio or the audio is not available"
 #~ msgstr "Het laden van de audio is mislukt of de audio is niet beschikbaar"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:735
+msgid "Failed to load webhooks"
+msgstr ""
 
 #: src/components/announcement/hooks/index.ts:338
 #: src/components/announcement/hooks/index.ts:351
@@ -1536,6 +1656,10 @@ msgstr "Voornaam"
 #~ msgid "Follow playback"
 #~ msgstr "Volgen van afspelen"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:254
+msgid "For advanced users: A secret key to verify webhook authenticity. Only needed if your receiving service requires signature verification."
+msgstr ""
+
 #: src/routes/auth/Login.tsx:270
 msgid "Forgot your password?"
 msgstr "Wachtwoord vergeten?"
@@ -1543,6 +1667,10 @@ msgstr "Wachtwoord vergeten?"
 #: src/components/project/ProjectPortalEditor.tsx:468
 msgid "French"
 msgstr "Frans"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:586
+msgid "Full transcript (when available)"
+msgstr ""
 
 #: src/components/report/CreateReportForm.tsx:80
 msgid "Generate insights from your conversations"
@@ -1666,6 +1794,10 @@ msgstr "Revisiegegevens verbergen"
 msgid "Home"
 msgstr "Home"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:553
+msgid "How it works:"
+msgstr ""
+
 #: src/components/project/ProjectBasicEdit.tsx:127
 msgid ""
 "How would you describe to a colleague what are you trying to accomplish with this project?\n"
@@ -1705,6 +1837,14 @@ msgstr "Identificeer herhalende thema's, onderwerpen en argumenten die consisten
 #: src/components/participant/verify/VerifyInstructions.tsx:43
 msgid "participant.concrete.instructions.approve.artefact"
 msgstr "Keur het artefact goed of pas het aan voordat je doorgaat."
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:823
+msgid "If you're an advanced user setting up webhook integrations, we'd love to learn about your use case. We're also building observability features including audit logs and delivery tracking."
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:640
+msgid "If you're not sure, you probably don't need it yet. Webhooks are an advanced feature typically used by developers or teams with custom integrations. You can always set them up later."
+msgstr ""
 
 #~ msgid "In order to better navigate through the quotes, create additional views. The quotes will then be clustered based on your view."
 #~ msgstr "Om beter door de quotes te navigeren, maak aanvullende views aan. De quotes worden dan op basis van uw view geclusterd."
@@ -1824,6 +1964,14 @@ msgstr "Laatst opgeslagen {0}"
 #: src/components/report/ConversationStatusTable.tsx:58
 msgid "Last Updated"
 msgstr "Laatst bijgewerkt"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:653
+msgid "Learn more about webhooks"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:263
+msgid "Leave empty to keep existing"
+msgstr ""
 
 #: src/components/chat/TemplatesModal.tsx:127
 msgid "Let us know!"
@@ -2021,6 +2169,7 @@ msgid "Move to Project"
 msgstr "Verplaats naar project"
 
 #: src/components/project/ProjectBasicEdit.tsx:103
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:182
 #: src/components/conversation/ConversationEdit.tsx:161
 msgid "Name"
 msgstr "Naam"
@@ -2028,6 +2177,10 @@ msgstr "Naam"
 #: src/components/conversation/ConversationAccordion.tsx:615
 msgid "Name A-Z"
 msgstr "Naam A-Z"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:178
+msgid "Name is required"
+msgstr ""
 
 #: src/components/conversation/ConversationAccordion.tsx:616
 msgid "Name Z-A"
@@ -2226,6 +2379,10 @@ msgstr "Er zijn geen verificatie-onderwerpen voor dit project geconfigureerd."
 #~ msgid "No verification topics available."
 #~ msgstr "Geen verificatie-onderwerpen beschikbaar."
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:790
+msgid "No webhooks configured"
+msgstr ""
+
 #: src/routes/project/library/ProjectLibrary.tsx:149
 msgid "Not available"
 msgstr "Niet beschikbaar"
@@ -2297,6 +2454,10 @@ msgstr "Open de probleemoplossingsgids"
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Open je authenticator-app en voer de huidige zescijferige code in."
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:250
+msgid "Optional"
+msgstr ""
+
 #: src/components/conversation/ConversationAccordion.tsx:947
 #: src/components/conversation/ConversationAccordion.tsx:954
 msgid "Options"
@@ -2338,6 +2499,10 @@ msgstr "Deelnemer"
 #: src/components/project/ProjectPortalEditor.tsx:560
 msgid "Participant Features"
 msgstr "Deelnemer features"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:580
+msgid "Participant name and email"
+msgstr ""
 
 #~ msgid "participant.button.echo"
 #~ msgstr "Echo"
@@ -2657,6 +2822,10 @@ msgstr "Inzichtenbibliotheek | Dembrane"
 msgid "Project name"
 msgstr "Projectnaam"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:595
+msgid "Project name and ID"
+msgstr ""
+
 #: src/components/project/ProjectBasicEdit.tsx:24
 msgid "Project name must be at least 4 characters long"
 msgstr "Projectnaam moet minstens 4 tekens lang zijn"
@@ -2727,6 +2896,10 @@ msgstr "Klaar om te beginnen"
 
 #~ msgid "Ready to Begin?"
 #~ msgstr "Klaar om te beginnen?"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:793
+msgid "Ready to connect your tools? Add a webhook to automatically receive conversation data when events happen."
+msgstr ""
 
 #~ msgid "Ready!"
 #~ msgstr "Klaar om te beginnen"
@@ -2991,6 +3164,10 @@ msgstr "Opslaan"
 #~ msgid "Save"
 #~ msgstr "Opslaan"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:334
+msgid "Save Changes"
+msgstr ""
+
 #: src/components/form/SaveStatus.tsx:31
 msgid "Save Error!"
 msgstr "Opslaan fout!"
@@ -3045,6 +3222,10 @@ msgstr "Doorzocht de meest relevante bronnen"
 msgid "Searching through the most relevant sources"
 msgstr "Zoeken door de meest relevante bronnen"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:247
+msgid "Secret"
+msgstr ""
+
 #: src/components/settings/TwoFactorSettingsCard.tsx:436
 msgid "Secret copied"
 msgstr "Geheim gekopieerd"
@@ -3062,6 +3243,10 @@ msgstr "Tot snel"
 #: src/components/participant/MicrophoneTest.tsx:314
 msgid "Select a microphone"
 msgstr "Selecteer een microfoon"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:284
+msgid "Select at least one event"
+msgstr ""
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:519
 msgid "Select Audio Files to Upload"
@@ -3127,6 +3312,10 @@ msgstr "Geselecteerde microfoon"
 #: src/routes/project/chat/ProjectChatRoute.tsx:738
 msgid "Send"
 msgstr "Verzenden"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:617
+msgid "Send Slack/Teams notifications when new conversations are completed"
+msgstr ""
 
 #~ msgid "Sentiment"
 #~ msgstr "Gevoel"
@@ -3403,6 +3592,10 @@ msgstr "Vat dit interview samen in een artikel dat je kunt delen"
 msgid "Summary"
 msgstr "Samenvatting"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:589
+msgid "Summary (when available)"
+msgstr ""
+
 #: src/routes/project/conversation/ProjectConversationOverview.tsx:90
 msgid "Summary generated successfully."
 msgstr "Samenvatting gemaakt."
@@ -3460,6 +3653,10 @@ msgstr "Template toegepast"
 msgid "Templates"
 msgstr "Sjablonen"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:436
+msgid "Test Webhook"
+msgstr ""
+
 #: src/components/conversation/ConversationAccordion.tsx:410
 msgid "Text"
 msgstr "Tekst"
@@ -3505,6 +3702,10 @@ msgstr "Er is iets misgegaan met het gesprek. Probeer het alstublieft opnieuw of
 
 #~ msgid "The conversation could not be loaded. Please try again or contact support."
 #~ msgstr "Het gesprek kon niet worden geladen. Probeer het alstublieft opnieuw of neem contact op met de ondersteuning."
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:219
+msgid "The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server)."
+msgstr ""
 
 #: src/components/chat/Sources.tsx:22
 msgid "The following conversations were automatically added to the context"
@@ -3606,6 +3807,10 @@ msgstr "Dit is een live voorbeeld van het portaal van de deelnemer. U moet de pa
 #~ msgid "This is a very simple tool where you can record conversations or stories to make your voice heard."
 #~ msgstr "Met deze tool kan je gesprekken of verhalen opnemen om je stem te laten horen."
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:856
+msgid "This is an example of the JSON data sent to your webhook URL when a conversation is summarized."
+msgstr ""
+
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:209
 msgid "library.description"
@@ -3697,9 +3902,17 @@ msgstr "Dit zal persoonlijk herkenbare informatie vervangen door <redacted>."
 msgid "Timestamp"
 msgstr "Tijdstempel"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:592
+msgid "Timestamps and duration"
+msgstr ""
+
 #: src/components/participant/ParticipantBody.tsx:143
 msgid "Tip"
 msgstr "Tip"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:771
+msgid "Tip: Use the play button (▶) to send a test payload to your webhook and verify it's working correctly."
+msgstr ""
 
 #~ msgid "Title"
 #~ msgstr "Titel"
@@ -3820,6 +4033,10 @@ msgstr ""
 "Balans tactische details met strategische visie\n"
 "\n"
 "Opmerking: Als de discussie geen substantiële besluitpunten of inzichten bevat, flag het voor een diepere exploratie de volgende keer."
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:624
+msgid "Trigger automated workflows in tools like Zapier, Make, or n8n"
+msgstr ""
 
 #: src/components/announcement/AnnouncementErrorState.tsx:34
 msgid "Try Again"
@@ -3974,6 +4191,14 @@ msgstr "Bestanden uploaden"
 msgid "Uploading Audio Files..."
 msgstr "Audio bestanden uploaden..."
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:211
+msgid "URL is required"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:208
+msgid "URL must start with http:// or https://"
+msgstr ""
+
 #~ msgid "Use experimental features"
 #~ msgstr "Experimentele functies gebruiken"
 
@@ -3985,6 +4210,10 @@ msgstr "PII redaction gebruiken"
 #: src/routes/project/chat/ProjectChatRoute.tsx:745
 msgid "Use Shift + Enter to add a new line"
 msgstr "Gebruik Shift + Enter om een nieuwe regel toe te voegen"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:820
+msgid "Using webhooks? We'd love to hear from you"
+msgstr ""
 
 #~ msgid "Verification Topics"
 #~ msgstr "Verificatie-onderwerpen"
@@ -4027,6 +4256,10 @@ msgstr "Weergave"
 #: src/components/project/ProjectConversationStatusSection.tsx:27
 msgid "View Details"
 msgstr "Bekijk details"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:601
+msgid "View example payload"
+msgstr ""
 
 #: src/components/participant/ParticipantBody.tsx:229
 msgid "View your responses"
@@ -4098,6 +4331,22 @@ msgstr "We testen je microfoon om de beste ervaring voor iedereen in de sessie t
 msgid "We’re picking up some silence. Try speaking up so your voice comes through clearly."
 msgstr "We horen wat stilte. Probeer harder te spreken zodat je stem duidelijk blijft."
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:745
+msgid "Webhook"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:216
+msgid "Webhook URL"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:701
+msgid "Webhooks"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:545
+msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
+msgstr ""
+
 #: src/components/participant/ParticipantBody.tsx:124
 msgid "Welcome"
 msgstr "Welkom"
@@ -4139,6 +4388,14 @@ msgstr "Welkom!"
 #: src/components/chat/ChatModeSelector.tsx:44
 msgid "What are the main themes across all conversations?"
 msgstr "Wat zijn de belangrijkste thema's in alle gesprekken?"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:538
+msgid "What are webhooks? (2 min read)"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:576
+msgid "What data is sent?"
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifySelection.tsx:196
