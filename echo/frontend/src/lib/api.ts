@@ -938,16 +938,25 @@ export const getProjectChatContext = async (chatId: string) => {
 
 export const addChatContext = async (
 	chatId: string,
-	conversationId?: string,
-	auto_select_bool?: boolean,
+	options?: {
+		conversationId?: string;
+		auto_select_bool?: boolean;
+		select_all?: boolean;
+		project_id?: string;
+		tag_ids?: string[];
+		verified_only?: boolean;
+		search_text?: string;
+	},
 ) => {
-	return api.post<unknown, TProjectChatContext>(
-		`/chats/${chatId}/add-context`,
-		{
-			auto_select_bool: auto_select_bool,
-			conversation_id: conversationId,
-		},
-	);
+	return api.post<unknown, AddContextResponse>(`/chats/${chatId}/add-context`, {
+		auto_select_bool: options?.auto_select_bool,
+		conversation_id: options?.conversationId,
+		project_id: options?.project_id,
+		search_text: options?.search_text,
+		select_all: options?.select_all,
+		tag_ids: options?.tag_ids,
+		verified_only: options?.verified_only,
+	});
 };
 
 export const deleteChatContext = async (
@@ -969,6 +978,32 @@ export const lockConversations = async (chatId: string) => {
 	return api.post<unknown, TProjectChatContext>(
 		`/chats/${chatId}/lock-conversations`,
 	);
+};
+
+export const selectAllContext = async (
+	chatId: string,
+	projectId: string,
+	options?: {
+		tagIds?: string[];
+		verifiedOnly?: boolean;
+		searchText?: string;
+	},
+) => {
+	// Uses addChatContext with select_all=true
+	const response = await addChatContext(chatId, {
+		project_id: projectId,
+		search_text: options?.searchText,
+		select_all: true,
+		tag_ids: options?.tagIds,
+		verified_only: options?.verifiedOnly,
+	});
+	// Map to SelectAllContextResponse for backward compatibility
+	return {
+		added: response?.added ?? [],
+		context_limit_reached: response?.context_limit_reached ?? false,
+		skipped: response?.skipped ?? [],
+		total_processed: response?.total_processed ?? 0,
+	} satisfies SelectAllContextResponse;
 };
 
 export type ChatMode = "overview" | "deep_dive";

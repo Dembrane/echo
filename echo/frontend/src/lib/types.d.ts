@@ -193,3 +193,31 @@ type TSuggestion = {
 type TSuggestionsResponse = {
 	suggestions: TSuggestion[];
 };
+
+type SelectAllConversationResult = {
+	conversation_id: string;
+	participant_name: string;
+	success: boolean;
+	reason?:
+		| "added"
+		| "already_in_context"
+		| "context_limit_reached"
+		| "empty" // No transcript content
+		| "too_long" // Single conversation exceeds context
+		| "error"; // Processing error occurred
+};
+
+type AddContextResponse = {
+	// Optional fields populated when select_all is used
+	added?: SelectAllConversationResult[];
+	skipped?: SelectAllConversationResult[];
+	total_processed?: number;
+	context_limit_reached?: boolean;
+};
+
+type SelectAllContextResponse = {
+	added: SelectAllConversationResult[];
+	skipped: SelectAllConversationResult[];
+	total_processed: number;
+	context_limit_reached: boolean;
+};
