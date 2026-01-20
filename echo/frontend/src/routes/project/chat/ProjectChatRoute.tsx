@@ -24,12 +24,17 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
-import { ChatAccordionItemMenu, ChatModeIndicator } from "@/components/chat/ChatAccordion";
-import { MODE_COLORS } from "@/components/chat/ChatModeSelector";
+import {
+	ChatAccordionItemMenu,
+	ChatModeIndicator,
+} from "@/components/chat/ChatAccordion";
 import { ChatContextProgress } from "@/components/chat/ChatContextProgress";
 import { ChatHistoryMessage } from "@/components/chat/ChatHistoryMessage";
 import { ChatMessage } from "@/components/chat/ChatMessage";
-import { ChatModeSelector } from "@/components/chat/ChatModeSelector";
+import {
+	ChatModeSelector,
+	MODE_COLORS,
+} from "@/components/chat/ChatModeSelector";
 import { ChatTemplatesMenu } from "@/components/chat/ChatTemplatesMenu";
 import {
 	extractMessageMetadata,
@@ -302,17 +307,16 @@ export const ProjectChatRoute = () => {
 	const prefetchSuggestions = usePrefetchSuggestions();
 
 	// Track conversation count for deep_dive mode to trigger suggestions refetch
-	const conversationCount =
-		chatContextQuery.data?.conversations?.length ?? 0;
+	const conversationCount = chatContextQuery.data?.conversations?.length ?? 0;
 	const prevConversationCountRef = useRef<number | null>(null);
 
 	// Fetch suggestions:
 	// - Overview mode: Fetch immediately when mode is selected
 	// - Deep dive mode: Only fetch after conversations are added (not on initial load)
-	const shouldFetchSuggestions = isModeSelected && (
-		!isDeepDiveMode || // overview mode: always fetch
-		conversationCount > 0 // deep_dive mode: only when conversations exist
-	);
+	const shouldFetchSuggestions =
+		isModeSelected &&
+		(!isDeepDiveMode || // overview mode: always fetch
+			conversationCount > 0); // deep_dive mode: only when conversations exist
 
 	const suggestionsQuery = useChatSuggestions(chatId ?? "", {
 		enabled: shouldFetchSuggestions,
@@ -344,7 +348,14 @@ export const ProjectChatRoute = () => {
 				suggestionsQuery.refetch();
 			}
 		}
-	}, [conversationCount, isDeepDiveMode, chatId, language, queryClient, suggestionsQuery]);
+	}, [
+		conversationCount,
+		isDeepDiveMode,
+		chatId,
+		language,
+		queryClient,
+		suggestionsQuery,
+	]);
 
 	const {
 		isInitializing,
@@ -613,7 +624,10 @@ export const ProjectChatRoute = () => {
 			<div ref={scrollTargetRef} aria-hidden="true" />
 
 			{/* Footer */}
-			<Box className="bottom-0 w-full pb-2 pt-4 md:sticky" style={{ backgroundColor: "var(--app-background)" }}>
+			<Box
+				className="bottom-0 w-full pb-2 pt-4 md:sticky"
+				style={{ backgroundColor: "var(--app-background)" }}
+			>
 				<Stack className="pb-2">
 					{/* Scroll to bottom button */}
 					<Group
@@ -651,7 +665,7 @@ export const ProjectChatRoute = () => {
 						// biome-ignore lint/a11y/useValidAriaRole: this is not an ARIA attribute
 						<ChatMessage role="dembrane">
 							<Group gap="xs" align="baseline">
-								<Text size="xs">
+								<Text size="xs" c="dimmed" fw={500} px="sm">
 									<Trans>Adding Context:</Trans>
 								</Text>
 								<ConversationLinks

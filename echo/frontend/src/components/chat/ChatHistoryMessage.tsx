@@ -172,7 +172,7 @@ export const ChatHistoryMessage = ({
 			// biome-ignore lint/a11y/useValidAriaRole: role is a component prop for styling, not an ARIA attribute
 			<ChatMessage key={message.id} role="dembrane" section={section}>
 				<Group gap="xs" align="baseline">
-					<Text size="xs">
+					<Text size="xs" c="dimmed" fw={500}>
 						<Trans>Context added:</Trans>
 					</Text>
 					<ConversationLinks

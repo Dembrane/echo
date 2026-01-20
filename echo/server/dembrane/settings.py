@@ -89,9 +89,7 @@ class LLMProviderConfig(BaseModel):
 
     @field_validator("vertex_credentials", mode="before")
     @classmethod
-    def parse_vertex_credentials(
-        cls, value: Optional[Any]
-    ) -> Optional[Dict[str, Any]]:
+    def parse_vertex_credentials(cls, value: Optional[Any]) -> Optional[Dict[str, Any]]:
         return _coerce_service_account(value)
 
     @field_validator("gcp_sa_json", mode="before")
@@ -188,6 +186,13 @@ class FeatureFlagSettings(BaseSettings):
         alias="ENABLE_CHAT_AUTO_SELECT",
         validation_alias=AliasChoices(
             "ENABLE_CHAT_AUTO_SELECT", "FEATURE_FLAGS__ENABLE_CHAT_AUTO_SELECT"
+        ),
+    )
+    enable_chat_select_all: bool = Field(
+        default=False,
+        alias="ENABLE_CHAT_SELECT_ALL",
+        validation_alias=AliasChoices(
+            "ENABLE_CHAT_SELECT_ALL", "FEATURE_FLAGS__ENABLE_CHAT_SELECT_ALL"
         ),
     )
     serve_api_docs: bool = Field(
