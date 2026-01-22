@@ -3,7 +3,10 @@ import { Box, Stack, Text } from "@mantine/core";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { ChatModeSelector } from "@/components/chat/ChatModeSelector";
-import { useInitializeChatModeMutation, usePrefetchSuggestions } from "@/components/chat/hooks";
+import {
+	useInitializeChatModeMutation,
+	usePrefetchSuggestions,
+} from "@/components/chat/hooks";
 import { useCreateChatMutation } from "@/components/project/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -83,4 +86,3 @@ export const NewChatRoute = () => {
 };
 
 export default NewChatRoute;
-

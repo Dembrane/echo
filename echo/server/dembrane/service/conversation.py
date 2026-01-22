@@ -146,6 +146,90 @@ class ConversationService:
             with_tags=with_tags,
         )
 
+    def list_by_project_with_filters(
+        self,
+        project_id: str,
+        tag_ids: Optional[List[str]] = None,
+        verified_only: bool = False,
+        search_text: Optional[str] = None,
+        sort: str = "-created_at",
+        limit: int = 1000,
+    ) -> List[dict]:
+        """
+        List conversations for a project with advanced filtering options.
+
+        Optimized for the chat select_all feature - only fetches minimal required fields:
+        - id: to identify conversations
+        - participant_name: for display in UI
+        - chunks.transcript: to check if conversation has content
+
+        Args:
+            project_id: The project ID to filter by
+            tag_ids: Optional list of tag IDs to filter by
+            verified_only: If True, only return conversations with approved artifacts
+            search_text: Optional search text (uses Directus search)
+            sort: Sort order (default: most recent first "-created_at")
+            limit: Maximum number of conversations to return
+
+        Returns:
+            List of conversation dicts with minimal fields for efficiency
+        """
+        # Build filter query
+        filter_query: dict[str, Any] = {
+            "project_id": {"_eq": project_id},
+        }
+
+        if tag_ids and len(tag_ids) > 0:
+            filter_query["tags"] = {
+                "_some": {
+                    "project_tag_id": {
+                        "id": {"_in": tag_ids},
+                    },
+                },
+            }
+
+        if verified_only:
+            filter_query["conversation_artifacts"] = {
+                "_some": {
+                    "approved_at": {
+                        "_nnull": True,
+                    },
+                },
+            }
+
+        # Minimal fields - only what's actually used in select_all
+        fields: List[str] = [
+            "id",
+            "participant_name",
+            "chunks.transcript",  # Only transcript needed to check if conversation has content
+        ]
+
+        deep: dict[str, Any] = {"chunks": {"_sort": "timestamp"}}
+
+        # Build query dict
+        query_dict: dict[str, Any] = {
+            "filter": filter_query,
+            "fields": fields,
+            "deep": deep,
+            "limit": limit,
+            "sort": sort,
+        }
+
+        if search_text and search_text.strip():
+            query_dict["search"] = search_text
+
+        try:
+            with self._client_context() as client:
+                conversations: Optional[List[dict]] = client.get_items(
+                    "conversation",
+                    {"query": query_dict},
+                )
+        except DirectusBadRequest as e:
+            logger.error("Failed to list conversations with filters via Directus: %s", e)
+            raise ConversationServiceException() from e
+
+        return conversations or []
+
     def list_chunks(self, conversation_id: str) -> List[dict]:
         try:
             with self._client_context() as client:
@@ -216,6 +300,19 @@ class ConversationService:
                     },
                 },
             )["data"]
+
+        # Dispatch webhook for conversation.created event
+        try:
+            from dembrane.service.webhook import dispatch_webhooks_for_event
+
+            dispatch_webhooks_for_event(
+                project_id=project_id,
+                conversation_id=new_conversation["id"],
+                event="conversation.created",
+            )
+        except Exception as e:
+            # Don't fail conversation creation if webhook dispatch fails
+            logger.warning(f"Failed to dispatch conversation.created webhook: {e}")
 
         return new_conversation
 

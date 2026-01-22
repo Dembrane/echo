@@ -1,4 +1,4 @@
-Last updated: 2025-11-07T08:32:55Z
+Last updated: 2026-01-20
 
 # Project Snapshot
 - Dembrane ECHO server exposes a FastAPI app (`dembrane.main:app`).
@@ -41,6 +41,34 @@ Last updated: 2025-11-07T08:32:55Z
 - `dembrane/transcribe.py:179` – Replace polling with webhook approach.
 - `dembrane/api/chat.py` – Multiple TODOs: fill module stub, add RAG shortcut when quotes exist, implement Directus project fetch, conversation endpoint completion, admin auth checks.
 - `dembrane/api/participant.py:76` – Remove unused `pin`.
+
+# Background Task Design Patterns
+When fixing or extending Dramatiq task flows, follow these principles:
+
+1. **Fix root causes, not symptoms**: If a flag isn't being set correctly, fix the flag-setting logic rather than adding complex workarounds in catch-up tasks.
+
+2. **Single source of truth**: Each state flag should be THE authoritative indicator for its purpose:
+   - `is_finished` = user/system marked conversation as done
+   - `is_all_chunks_transcribed` = ready for summarization (works for BOTH audio and text conversations)
+   - `summary != null` = summarization complete
+
+3. **Layered reconciliation with simple catch-up tasks**: Build eventually-consistent systems where each layer has:
+   - A normal flow (task triggered by events)
+   - A catch-up flow (scheduler finds stuck items)
+   
+   Each catch-up task should check ONE flag, not complex compound conditions:
+   ```
+   Layer 1: task_collect_and_finish_unfinished_conversations (2 min)
+            → Sets is_finished=True for abandoned conversations
+   
+   Layer 2: task_reconcile_transcribed_flag (3 min)
+            → Sets is_all_chunks_transcribed=True for finished conversations with no pending chunks
+   
+   Layer 3: task_catch_up_unsummarized_conversations (5 min)
+            → Simple: is_all_chunks_transcribed=True AND summary=null → summarize
+   ```
+
+4. **Handle all conversation types**: TEXT conversations (portal input) and AUDIO conversations (uploads) must follow the same state machine. The reconciliation tasks ensure both paths converge to the same flags.
 
 # Gotchas & Notes
 - Gunicorn uses custom asyncio uvicorn worker (avoid uvloop for nest_asyncio compatibility).

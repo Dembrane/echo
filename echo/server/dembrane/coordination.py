@@ -381,6 +381,58 @@ def mark_chunk_decremented(conversation_id: str, chunk_id: str) -> bool:
 
 
 # ------------------------------------------------------------------------------
+# Summarization In Progress Flag (prevents duplicate summarization)
+# ------------------------------------------------------------------------------
+
+
+def _summarize_in_progress_key(conversation_id: str) -> str:
+    """Redis key for tracking if summarization is in progress."""
+    return f"{_KEY_PREFIX}:summarize_in_progress:{conversation_id}"
+
+
+# 10 minute TTL - summarization can take a while with LLM calls
+_SUMMARIZE_LOCK_TTL_SECONDS = 60 * 10
+
+
+def mark_summarize_in_progress(conversation_id: str) -> bool:
+    """
+    Mark that summarization is in progress for a conversation.
+
+    Prevents duplicate task_summarize_conversation from running concurrently,
+    which would cause duplicate LLM calls.
+
+    Args:
+        conversation_id: The conversation ID
+
+    Returns:
+        True if this is the first call (lock acquired), False if already in progress
+    """
+    client = _get_sync_redis_client()
+    key = _summarize_in_progress_key(conversation_id)
+
+    try:
+        was_set = client.setnx(key, "1")
+        if was_set:
+            client.expire(key, _SUMMARIZE_LOCK_TTL_SECONDS)
+            logger.debug(f"Acquired summarize lock for {conversation_id}")
+        return bool(was_set)
+    finally:
+        client.close()
+
+
+def clear_summarize_in_progress(conversation_id: str) -> None:
+    """Clear the summarize-in-progress flag."""
+    client = _get_sync_redis_client()
+    key = _summarize_in_progress_key(conversation_id)
+
+    try:
+        client.delete(key)
+        logger.debug(f"Cleared summarize lock for {conversation_id}")
+    finally:
+        client.close()
+
+
+# ------------------------------------------------------------------------------
 # Cleanup
 # ------------------------------------------------------------------------------
 
@@ -402,6 +454,7 @@ def cleanup_conversation_coordination(conversation_id: str) -> None:
             _processing_started_key(conversation_id),
             _finish_in_progress_key(conversation_id),
             _finalize_in_progress_key(conversation_id),
+            _summarize_in_progress_key(conversation_id),
         ]
         deleted = client.delete(*keys)
 

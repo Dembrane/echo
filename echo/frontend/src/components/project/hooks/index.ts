@@ -288,3 +288,120 @@ export const useVerificationTopicsQuery = (projectId: string | undefined) => {
 		queryKey: ["verify", "topics", projectId],
 	});
 };
+
+// =============================================================================
+// Webhook Hooks
+// =============================================================================
+
+import {
+	getProjectWebhooks,
+	createProjectWebhook,
+	updateProjectWebhook,
+	deleteProjectWebhook,
+	testProjectWebhook,
+	type Webhook,
+	type WebhookCreatePayload,
+	type WebhookUpdatePayload,
+} from "@/lib/api";
+
+export const useProjectWebhooks = (projectId: string | undefined) => {
+	return useQuery({
+		enabled: !!projectId,
+		queryFn: () => getProjectWebhooks(projectId!),
+		queryKey: ["projects", projectId, "webhooks"],
+	});
+};
+
+export const useCreateWebhookMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({
+			projectId,
+			payload,
+		}: {
+			projectId: string;
+			payload: WebhookCreatePayload;
+		}) => createProjectWebhook(projectId, payload),
+		onSuccess: (_, variables) => {
+			queryClient.invalidateQueries({
+				queryKey: ["projects", variables.projectId, "webhooks"],
+			});
+			toast.success("Webhook created successfully");
+		},
+		onError: (error: any) => {
+			const message = error?.response?.data?.detail || "Failed to create webhook";
+			toast.error(message);
+		},
+	});
+};
+
+export const useUpdateWebhookMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({
+			projectId,
+			webhookId,
+			payload,
+		}: {
+			projectId: string;
+			webhookId: string;
+			payload: WebhookUpdatePayload;
+		}) => updateProjectWebhook(projectId, webhookId, payload),
+		onSuccess: (_, variables) => {
+			queryClient.invalidateQueries({
+				queryKey: ["projects", variables.projectId, "webhooks"],
+			});
+			toast.success("Webhook updated successfully");
+		},
+		onError: (error: any) => {
+			const message = error?.response?.data?.detail || "Failed to update webhook";
+			toast.error(message);
+		},
+	});
+};
+
+export const useDeleteWebhookMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({
+			projectId,
+			webhookId,
+		}: {
+			projectId: string;
+			webhookId: string;
+		}) => deleteProjectWebhook(projectId, webhookId),
+		onSuccess: (_, variables) => {
+			queryClient.invalidateQueries({
+				queryKey: ["projects", variables.projectId, "webhooks"],
+			});
+			toast.success("Webhook deleted successfully");
+		},
+		onError: (error: any) => {
+			const message = error?.response?.data?.detail || "Failed to delete webhook";
+			toast.error(message);
+		},
+	});
+};
+
+export const useTestWebhookMutation = () => {
+	return useMutation({
+		mutationFn: ({
+			projectId,
+			webhookId,
+		}: {
+			projectId: string;
+			webhookId: string;
+		}) => testProjectWebhook(projectId, webhookId),
+		onSuccess: (result) => {
+			if (result.success) {
+				toast.success(result.message);
+			} else {
+				toast.error(result.message);
+			}
+		},
+		onError: (error: any) => {
+			const message = error?.response?.data?.detail || "Failed to test webhook";
+			toast.error(message);
+		},
+	});
+};

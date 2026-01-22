@@ -70,6 +70,11 @@ msgstr "Bienvenido de nuevo"
 #~ msgstr "Concretar"
 
 #. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:317
+#~ msgid "select.all.modal.skip.reason"
+#~ msgstr "algunas pueden omitirse debido a transcripción vacía o límite de contexto"
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:238
 msgid "library.generate.duration.message"
 msgstr "La biblioteca tardará {duration}"
@@ -103,10 +108,21 @@ msgstr "\"Refinar\" Disponible pronto"
 #~ msgid "(for enhanced audio processing)"
 #~ msgstr "(para procesamiento de audio mejorado)"
 
+#. placeholder {0}: filterNames.length
+#: src/components/conversation/SelectAllConfirmationModal.tsx:418
+msgid "{0, plural, one {# tag} other {# tags}}"
+msgstr "{0, plural, one {# etiqueta} other {# etiquetas}}"
+
+#. js-lingui-explicit-id
+#. placeholder {0}: filterNames.length
+#: src/components/conversation/SelectAllConfirmationModal.tsx:82
+msgid "select.all.modal.tags"
+msgstr "{0, plural, one {Etiqueta:} other {Etiquetas:}}"
+
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: selectedOption.transitionMessage
 #. placeholder {0}: selectedOption.transitionDescription
-#: src/routes/project/chat/ProjectChatRoute.tsx:559
+#: src/routes/project/chat/ProjectChatRoute.tsx:570
 #: src/components/settings/FontSettingsCard.tsx:49
 #: src/components/settings/FontSettingsCard.tsx:50
 #: src/components/project/ProjectPortalEditor.tsx:433
@@ -117,6 +133,12 @@ msgstr "{0}"
 #~ msgid "{0} {1} ready"
 #~ msgstr "{0} {1} listo"
 
+#. js-lingui-explicit-id
+#. placeholder {0}: result.added.length
+#: src/components/conversation/SelectAllConfirmationModal.tsx:452
+msgid "select.all.modal.added.count"
+msgstr "{0} añadidas"
+
 #. placeholder {0}: project.conversations_count ?? project?.conversations?.length ?? 0
 #. placeholder {0}: project.conversations?.length ?? 0
 #. placeholder {1}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
@@ -125,6 +147,12 @@ msgstr "{0}"
 #: src/components/project/ProjectCard.tsx:34
 msgid "{0} Conversations • Edited {1}"
 msgstr "{0} Conversaciones • Editado {1}"
+
+#. js-lingui-explicit-id
+#. placeholder {0}: reallySkipped.length
+#: src/components/conversation/SelectAllConfirmationModal.tsx:458
+msgid "select.all.modal.not.added.count"
+msgstr "{0} no añadidas"
 
 #: src/components/chat/ChatModeBanner.tsx:61
 msgid "{conversationCount} selected"
@@ -160,6 +188,10 @@ msgstr "{0} aún en proceso."
 msgid "*Transcription in progress.*"
 msgstr "*Transcripción en progreso.*"
 
+#: src/components/conversation/ConversationLinks.tsx:166
+msgid "+{hiddenCount} conversations"
+msgstr "+{hiddenCount} conversaciones"
+
 #~ msgid "+5s"
 #~ msgstr "+5s"
 
@@ -169,6 +201,22 @@ msgstr "*Transcripción en progreso.*"
 #: src/components/view/DummyViews.tsx:21
 msgid "0 Aspects"
 msgstr "0 Aspectos"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:557
+msgid "1. You provide a URL where you want to receive notifications"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:562
+msgid "2. When a conversation event happens, we automatically send the conversation data to your URL"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:568
+msgid "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:185
+msgid "A friendly name to identify this webhook"
+msgstr ""
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:176
 msgid "Account password"
@@ -183,8 +231,14 @@ msgid "Action On"
 msgstr "Acción sobre"
 
 #: src/components/project/ProjectDangerZone.tsx:69
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:754
 msgid "Actions"
 msgstr "Acciones"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:401
+msgid "select.all.modal.loading.filters"
+msgstr "Filtros activos"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:179
 msgid "Add"
@@ -198,6 +252,11 @@ msgstr "Añadir contexto adicional (Opcional)"
 msgid "Add all that apply"
 msgstr "Añade todos los que correspondan"
 
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:215
+msgid "select.all.modal.title.add"
+msgstr "Añadir conversaciones al contexto"
+
 #: src/components/project/ProjectPortalEditor.tsx:127
 msgid "Add key terms or proper nouns to improve transcript quality and accuracy."
 msgstr "Añade términos clave o nombres propios para mejorar la calidad y precisión de la transcripción."
@@ -210,21 +269,74 @@ msgstr "Añade nuevas grabaciones a este proyecto. Los archivos que subas aquí 
 msgid "Add Tag"
 msgstr "Añadir Etiqueta"
 
+#. js-lingui-explicit-id
+#: src/components/conversation/AddTagFilterModal.tsx:40
+msgid "add.tag.filter.modal.title"
+msgstr "Añadir etiqueta a los filtros"
+
 #: src/components/project/ProjectTagsInput.tsx:257
 msgid "Add Tags"
 msgstr "Añadir Etiquetas"
 
-#: src/components/conversation/ConversationAccordion.tsx:154
+#. js-lingui-explicit-id
+#: src/components/conversation/AddTagFilterModal.tsx:84
+msgid "add.tag.filter.modal.add"
+msgstr "Añadir a los filtros"
+
+#: src/components/conversation/ConversationAccordion.tsx:159
 msgid "Add to this chat"
 msgstr "Añadir a este chat"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:165
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:720
+msgid "Add Webhook"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:804
+msgid "Add Your First Webhook"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:498
+msgid "select.all.modal.added"
+msgstr "Añadidas"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:187
 msgid "Added emails"
 msgstr "E-mails añadidos"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:655
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:268
+msgid "select.all.modal.add.without.filters"
+msgstr "Añadiendo <0>{totalCount, plural, one {# conversación} other {# conversaciones}}</0> al chat"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:256
+msgid "select.all.modal.add.with.filters"
+msgstr "Añadiendo <0>{totalCount, plural, one {# conversación} other {# conversaciones}}</0> con los siguientes filtros:"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:295
+msgid "select.all.modal.add.without.filters.more"
+msgstr "Añadiendo <0>{totalCount, plural, one {# conversación más} other {# conversaciones más}}</0>"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:283
+msgid "select.all.modal.add.with.filters.more"
+msgstr "Añadiendo <0>{totalCount, plural, one {# conversación más} other {# conversaciones más}}</0> con los siguientes filtros:"
+
+#: src/routes/project/chat/ProjectChatRoute.tsx:669
 msgid "Adding Context:"
 msgstr "Añadiendo Contexto:"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:365
+msgid "select.all.modal.loading.title"
+msgstr "Añadiendo conversaciones"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:703
+msgid "Advanced"
+msgstr ""
 
 #: src/components/project/ProjectPortalEditor.tsx:545
 msgid "Advanced (Tips and best practices)"
@@ -246,6 +358,10 @@ msgstr "Todas las acciones"
 msgid "All collections"
 msgstr "Todas las colecciones"
 
+#: src/components/conversation/ConversationLinks.tsx:81
+msgid "All Conversations"
+msgstr "Todas las conversaciones"
+
 #~ msgid "All conversations ready"
 #~ msgstr "Todas las conversaciones están listas"
 
@@ -264,9 +380,13 @@ msgstr "Permitir a los participantes usar el enlace para iniciar nuevas conversa
 msgid "Almost there"
 msgstr "Casi listo"
 
-#: src/components/conversation/ConversationAccordion.tsx:149
+#: src/components/conversation/ConversationAccordion.tsx:154
 msgid "Already added to this chat"
 msgstr "Ya añadido a este chat"
+
+#: src/components/conversation/SelectAllConfirmationModal.tsx:122
+msgid "Already in context"
+msgstr "Ya en el contexto"
 
 #. placeholder {0}: participantCount !== undefined ? participantCount : t`loading...`
 #. placeholder {1}: participantCount === 1 ? "" : "s"
@@ -281,7 +401,7 @@ msgstr "Se enviará una notificación por correo electrónico a {0} participante
 msgid "An error occurred while loading the Portal. Please contact the support team."
 msgstr "Ocurrió un error al cargar el Portal. Por favor, contacta al equipo de soporte."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:597
+#: src/routes/project/chat/ProjectChatRoute.tsx:608
 msgid "An error occurred."
 msgstr "Ocurrió un error."
 
@@ -331,6 +451,11 @@ msgstr "aprobar"
 #: src/components/conversation/VerifiedArtefactsSection.tsx:114
 msgid "conversation.verified.approved"
 msgstr "Aprobado"
+
+#. placeholder {0}: webhook.name
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:473
+msgid "Are you sure you want to delete the webhook \"{0}\"? This action cannot be undone."
+msgstr ""
 
 #: src/components/conversation/ConversationDangerZone.tsx:23
 msgid "Are you sure you want to delete this conversation? This action cannot be undone."
@@ -459,11 +584,11 @@ msgstr "Código de autenticación"
 msgid "Auto-select"
 msgstr "Seleccionar automáticamente"
 
-#: src/components/conversation/hooks/index.ts:547
+#: src/components/conversation/hooks/index.ts:548
 msgid "Auto-select disabled"
 msgstr "Seleccionar automáticamente desactivado"
 
-#: src/components/conversation/hooks/index.ts:405
+#: src/components/conversation/hooks/index.ts:406
 msgid "Auto-select enabled"
 msgstr "Seleccionar automáticamente activado"
 
@@ -473,6 +598,14 @@ msgstr "Seleccionar automáticamente activado"
 #: src/components/conversation/AutoSelectConversations.tsx:137
 msgid "Automatically includes relevant conversations for analysis without manual selection"
 msgstr "Incluye automáticamente conversaciones relevantes para el análisis sin selección manual"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:611
+msgid "Automatically save transcripts to your CRM or database"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:708
+msgid "Automatically send conversation data to your other tools and services when events occur."
+msgstr ""
 
 #: src/components/conversation/AutoSelectConversations.tsx:96
 msgid "Available"
@@ -527,9 +660,17 @@ msgstr "Beta"
 #~ msgid "Big Picture - Themes & patterns"
 #~ msgstr "Visión general - Temas y patrones"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:840
+msgid "Book a call"
+msgstr ""
+
 #: src/components/project/ProjectPortalEditor.tsx:688
 msgid "Brainstorm Ideas"
 msgstr "Ideas de brainstorming"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:630
+msgid "Build custom dashboards with real-time conversation data"
+msgstr ""
 
 #: src/components/project/ProjectDangerZone.tsx:59
 msgid "By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you ABSOLUTELY sure you want to delete this project?"
@@ -539,10 +680,12 @@ msgstr "Al eliminar este proyecto, eliminarás todos los datos asociados con él
 #: src/components/settings/TwoFactorSettingsCard.tsx:406
 #: src/components/project/ProjectDangerZone.tsx:137
 #: src/components/project/ProjectDangerZone.tsx:163
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:330
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:483
 #: src/components/dropzone/UploadConversationDropzone.tsx:686
 #: src/components/dropzone/UploadConversationDropzone.tsx:806
 #: src/components/conversation/MoveConversationButton.tsx:208
-#: src/components/conversation/ConversationAccordion.tsx:329
+#: src/components/conversation/ConversationAccordion.tsx:334
 msgid "Cancel"
 msgstr "Cancelar"
 
@@ -561,7 +704,17 @@ msgstr "cancelar"
 msgid "participant.concrete.instructions.button.cancel"
 msgstr "cancelar"
 
-#: src/components/conversation/ConversationAccordion.tsx:151
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:327
+msgid "select.all.modal.cancel"
+msgstr "Cancelar"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/AddTagFilterModal.tsx:81
+msgid "add.tag.filter.modal.cancel"
+msgstr "Cancelar"
+
+#: src/components/conversation/ConversationAccordion.tsx:156
 msgid "Cannot add empty conversation"
 msgstr "No se puede añadir una conversación vacía"
 
@@ -576,12 +729,12 @@ msgstr "Los cambios se guardarán automáticamente"
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Cambiar el idioma durante una conversación activa puede provocar resultados inesperados. Se recomienda iniciar una nueva conversación después de cambiar el idioma. ¿Estás seguro de que quieres continuar?"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:478
-#: src/routes/project/chat/ProjectChatRoute.tsx:483
+#: src/routes/project/chat/ProjectChatRoute.tsx:489
+#: src/routes/project/chat/ProjectChatRoute.tsx:494
 msgid "Chat"
 msgstr "Chat"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:276
+#: src/routes/project/chat/ProjectChatRoute.tsx:281
 msgid "Chat | Dembrane"
 msgstr "Chat | Dembrane"
 
@@ -614,6 +767,10 @@ msgstr "Revisa tu correo electrónico"
 msgid "Checking..."
 msgstr "Comprobando..."
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:277
+msgid "Choose when you want to receive notifications"
+msgstr ""
+
 #: src/components/settings/FontSettingsCard.tsx:74
 msgid "Choose your preferred theme for the interface"
 msgstr "Elige el tema que prefieras para la interfaz"
@@ -625,6 +782,10 @@ msgstr "Elige el tema que prefieras para la interfaz"
 msgid "Click \"Upload Files\" when you're ready to start the upload process."
 msgstr "Haz clic en \"Subir archivos\" cuando estés listo para iniciar el proceso de subida."
 
+#: src/components/conversation/ConversationLinks.tsx:155
+msgid "Click to see all {totalCount} conversations"
+msgstr "Haz clic para ver las {totalCount} conversaciones"
+
 #: src/components/project/ProjectDangerZone.tsx:143
 msgid "Clone project"
 msgstr "Clonar proyecto"
@@ -635,12 +796,22 @@ msgid "Clone Project"
 msgstr "Clonar proyecto"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:806
+#: src/components/conversation/ConversationLinks.tsx:107
 msgid "Close"
+msgstr "Cerrar"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:663
+msgid "select.all.modal.close"
 msgstr "Cerrar"
 
 #: src/components/settings/AuditLogsCard.tsx:199
 msgid "Collection"
 msgstr "Colección"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:606
+msgid "Common use cases:"
+msgstr ""
 
 #: src/components/chat/templates.ts:42
 msgid "Compare & Contrast"
@@ -707,6 +878,20 @@ msgid "Context added:"
 msgstr "Contexto añadido:"
 
 #. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:536
+msgid "select.all.modal.context.limit"
+msgstr "Límite de contexto"
+
+#: src/components/conversation/SelectAllConfirmationModal.tsx:124
+msgid "Context limit reached"
+msgstr "Límite de contexto alcanzado"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:470
+msgid "select.all.modal.context.limit.reached"
+msgstr "Se alcanzó el límite de contexto. Algunas conversaciones no pudieron ser añadidas."
+
+#. js-lingui-explicit-id
 #: src/components/participant/ParticipantOnboardingCards.tsx:393
 #: src/components/participant/MicrophoneTest.tsx:383
 msgid "participant.button.continue"
@@ -718,7 +903,7 @@ msgstr "Continuar"
 #~ msgid "conversation"
 #~ msgstr "conversación"
 
-#: src/components/conversation/hooks/index.ts:406
+#: src/components/conversation/hooks/index.ts:407
 msgid "Conversation added to chat"
 msgstr "Conversación añadida al chat"
 
@@ -736,7 +921,7 @@ msgstr "Conversación terminada"
 #~ msgid "Conversation processing"
 #~ msgstr "Procesando conversación"
 
-#: src/components/conversation/hooks/index.ts:548
+#: src/components/conversation/hooks/index.ts:549
 msgid "Conversation removed from chat"
 msgstr "Conversación eliminada del chat"
 
@@ -749,6 +934,10 @@ msgstr "Estado de la conversación"
 msgid "Conversation Status Details"
 msgstr "Detalles del estado de la conversación"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:583
+msgid "Conversation tags"
+msgstr ""
+
 #~ msgid "conversation.accordion.skeleton.title"
 #~ msgstr "Conversaciones"
 
@@ -759,7 +948,7 @@ msgstr "Detalles del estado de la conversación"
 msgid "conversations"
 msgstr "conversaciones"
 
-#: src/components/conversation/ConversationAccordion.tsx:899
+#: src/components/conversation/ConversationAccordion.tsx:1052
 msgid "Conversations"
 msgstr "Conversaciones"
 
@@ -784,6 +973,10 @@ msgstr "Enfriándose. Disponible en {0}"
 #: src/components/common/CopyIconButton.tsx:17
 msgid "Copied"
 msgstr "Copiado"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:873
+msgid "Copied!"
+msgstr ""
 
 #: src/components/common/CopyRichTextIconButton.tsx:29
 #: src/components/common/CopyIconButton.tsx:8
@@ -810,6 +1003,10 @@ msgstr "Copiar Resumen"
 #: src/components/conversation/CopyConversationTranscript.tsx:48
 msgid "Copy to clipboard"
 msgstr "Copiar al portapapeles"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:875
+msgid "Copy to Clipboard"
+msgstr ""
 
 #~ msgid "Copy transcript"
 #~ msgstr "Copiar transcripción"
@@ -856,6 +1053,10 @@ msgstr "Crear vista"
 msgid "Create View"
 msgstr "Crear Vista"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:336
+msgid "Create Webhook"
+msgstr ""
+
 #: src/components/conversation/ConversationEdit.tsx:151
 msgid "Created on"
 msgstr "Creado el"
@@ -891,13 +1092,15 @@ msgstr "Predeterminado"
 msgid "Default - No tutorial (Only privacy statements)"
 msgstr "Predeterminado - Sin tutorial (Solo declaraciones de privacidad)"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:451
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:490
+msgid "Delete"
+msgstr "Eliminar"
+
 #. js-lingui-explicit-id
 #: src/components/chat/ChatAccordion.tsx:137
 msgid "project.sidebar.chat.delete"
 msgstr "Eliminar chat"
-
-#~ msgid "Delete"
-#~ msgstr "Eliminar"
 
 #: src/components/conversation/ConversationDangerZone.tsx:56
 msgid "Delete Conversation"
@@ -909,6 +1112,10 @@ msgstr "Eliminar Conversación"
 msgid "Delete Project"
 msgstr "Eliminar Proyecto"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:467
+msgid "Delete Webhook"
+msgstr ""
+
 #: src/components/participant/UserChunkMessage.tsx:68
 msgid "Deleted successfully"
 msgstr "Eliminado con éxito"
@@ -919,8 +1126,8 @@ msgstr "Eliminado con éxito"
 #~ msgid "Dembrane ECHO"
 #~ msgstr "Dembrane ECHO"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:718
-#: src/routes/project/chat/ProjectChatRoute.tsx:748
+#: src/routes/project/chat/ProjectChatRoute.tsx:732
+#: src/routes/project/chat/ProjectChatRoute.tsx:762
 msgid "Dembrane is powered by AI. Please double-check responses."
 msgstr "Dembrane funciona con IA. Revisa bien las respuestas."
 
@@ -964,6 +1171,10 @@ msgstr "Desactivar autenticación de dos factores"
 #: src/components/settings/TwoFactorSettingsCard.tsx:323
 msgid "Disabled"
 msgstr "Desactivado"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:637
+msgid "Do I need this?"
+msgstr ""
 
 #: src/components/report/ReportRenderer.tsx:14
 msgid "Do you want to contribute to this project?"
@@ -1013,6 +1224,10 @@ msgstr "Arrastra archivos de audio aquí o haz clic para seleccionar archivos"
 msgid "Dutch"
 msgstr "Holandés"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:189
+msgid "e.g., Slack Notifications, Make Workflow"
+msgstr ""
+
 #~ msgid "ECHO"
 #~ msgstr "Echo"
 
@@ -1024,6 +1239,10 @@ msgstr "Holandés"
 
 #~ msgid "ECHO!"
 #~ msgstr "¡ECHO!"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:446
+msgid "Edit"
+msgstr ""
 
 #: src/components/conversation/ConversationEdit.tsx:128
 msgid "Edit Conversation"
@@ -1048,6 +1267,10 @@ msgstr "Editar Contenido del Informe"
 #: src/components/report/ReportEditor.tsx:126
 msgid "report.editor.description"
 msgstr "Edita el contenido del informe usando el editor de texto enriquecido a continuación. Puede formatear texto, agregar enlaces, imágenes y más."
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:163
+msgid "Edit Webhook"
+msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:298
 msgid "Editing mode"
@@ -1133,6 +1356,7 @@ msgid "Enable two-factor authentication"
 msgstr "Activar autenticación de dos factores"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:323
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:751
 #: src/components/conversation/AutoSelectConversations.tsx:86
 msgid "Enabled"
 msgstr "Habilitado"
@@ -1155,6 +1379,10 @@ msgstr "Ingresa un nombre para el nuevo conversation"
 #: src/components/project/ProjectDangerZone.tsx:131
 msgid "Enter a name for your cloned project"
 msgstr "Ingresa un nombre para tu proyecto clonado"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:264
+msgid "Enter a secret key"
+msgstr ""
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:374
 msgid "Enter a valid code to turn off two-factor authentication."
@@ -1204,13 +1432,17 @@ msgstr "Error al cargar los anuncios"
 #~ msgid "Error loading insights"
 #~ msgstr "Error al cargar los insights"
 
-#: src/routes/project/ProjectRoutes.tsx:39
-#: src/routes/project/ProjectRoutes.tsx:131
+#: src/routes/project/ProjectRoutes.tsx:40
+#: src/routes/project/ProjectRoutes.tsx:135
 msgid "Error loading project"
 msgstr "Error al cargar el proyecto"
 
 #~ msgid "Error loading quotes"
 #~ msgstr "Error al cargar las citas"
+
+#: src/components/conversation/SelectAllConfirmationModal.tsx:130
+msgid "Error occurred"
+msgstr "Ocurrió un error"
 
 #: src/components/report/UpdateReportModalButton.tsx:80
 msgid "Error updating report"
@@ -1222,6 +1454,14 @@ msgstr "Error al actualizar el informe"
 msgid "Error uploading \"{0}\": {1}"
 msgstr "Error al subir \"{0}\": {1}"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:748
+msgid "Events"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:274
+msgid "Events to Listen For"
+msgstr ""
+
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:360
 msgid "participant.alert.microphone.access.success"
@@ -1229,6 +1469,10 @@ msgstr "Acceso al micrófono verificado con éxito"
 
 #~ msgid "Everything looks good – you can continue."
 #~ msgstr "Todo parece bien – puedes continuar."
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:851
+msgid "Example Webhook Payload"
+msgstr ""
 
 #~ msgid "Experimental"
 #~ msgstr "Experimental"
@@ -1250,14 +1494,19 @@ msgstr "Exportar"
 msgid "Failed"
 msgstr "Error"
 
-#: src/components/conversation/hooks/index.ts:328
+#: src/components/conversation/hooks/index.ts:329
 msgid "Failed to add conversation to chat"
 msgstr "Error al añadir la conversación al chat"
 
 #. placeholder {0}: error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
-#: src/components/conversation/hooks/index.ts:320
+#: src/components/conversation/hooks/index.ts:321
 msgid "Failed to add conversation to chat{0}"
 msgstr "Error al añadir la conversación al chat{0}"
+
+#: src/components/conversation/ConversationAccordion.tsx:933
+#: src/components/conversation/ConversationAccordion.tsx:949
+msgid "Failed to add conversations to context"
+msgstr "Error al añadir conversaciones al contexto"
 
 #: src/components/participant/verify/VerifyArtefact.tsx:136
 msgid "Failed to approve artefact. Please try again."
@@ -1275,13 +1524,13 @@ msgstr "No se pudo copiar la transcripción. Inténtalo de nuevo."
 msgid "Failed to delete response"
 msgstr "Error al eliminar la respuesta"
 
-#: src/components/conversation/hooks/index.ts:475
-#: src/components/conversation/hooks/index.ts:481
+#: src/components/conversation/hooks/index.ts:476
+#: src/components/conversation/hooks/index.ts:482
 msgid "Failed to disable Auto Select for this chat"
 msgstr "Error al desactivar la selección automática para este chat"
 
-#: src/components/conversation/hooks/index.ts:324
-#: src/components/conversation/hooks/index.ts:330
+#: src/components/conversation/hooks/index.ts:325
+#: src/components/conversation/hooks/index.ts:331
 msgid "Failed to enable Auto Select for this chat"
 msgstr "Error al activar la selección automática para este chat"
 
@@ -1310,6 +1559,10 @@ msgstr "Error al obtener los anuncios"
 #~ msgid "Failed to load audio or the audio is not available"
 #~ msgstr "Error al cargar el audio o el audio no está disponible"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:735
+msgid "Failed to load webhooks"
+msgstr ""
+
 #: src/components/announcement/hooks/index.ts:338
 #: src/components/announcement/hooks/index.ts:351
 msgid "Failed to mark all announcements as read"
@@ -1328,16 +1581,16 @@ msgstr "Error al regenerar el resumen. Por favor, inténtalo de nuevo más tarde
 msgid "Failed to reload. Please try again."
 msgstr "Error al recargar. Por favor, inténtalo de nuevo."
 
-#: src/components/conversation/hooks/index.ts:479
+#: src/components/conversation/hooks/index.ts:480
 msgid "Failed to remove conversation from chat"
 msgstr "Error al eliminar la conversación del chat"
 
 #. placeholder {0}: error.response?.data?.detail ? `: ${error.response.data.detail}` : ""
-#: src/components/conversation/hooks/index.ts:471
+#: src/components/conversation/hooks/index.ts:472
 msgid "Failed to remove conversation from chat{0}"
 msgstr "Error al eliminar la conversación del chat{0}"
 
-#: src/components/conversation/hooks/index.ts:610
+#: src/components/conversation/hooks/index.ts:647
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Error al retranscribir la conversación. Por favor, inténtalo de nuevo."
 
@@ -1443,6 +1696,10 @@ msgstr "Nombre"
 #~ msgid "Follow playback"
 #~ msgstr "Seguir reproducción"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:254
+msgid "For advanced users: A secret key to verify webhook authenticity. Only needed if your receiving service requires signature verification."
+msgstr ""
+
 #: src/routes/auth/Login.tsx:270
 msgid "Forgot your password?"
 msgstr "¿Olvidaste tu contraseña?"
@@ -1450,6 +1707,10 @@ msgstr "¿Olvidaste tu contraseña?"
 #: src/components/project/ProjectPortalEditor.tsx:468
 msgid "French"
 msgstr "Francés"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:586
+msgid "Full transcript (when available)"
+msgstr ""
 
 #: src/components/report/CreateReportForm.tsx:80
 msgid "Generate insights from your conversations"
@@ -1516,7 +1777,7 @@ msgstr "Ir a la nueva conversación"
 #~ msgid "Grid view"
 #~ msgstr "Vista de cuadrícula"
 
-#: src/components/conversation/ConversationAccordion.tsx:551
+#: src/components/conversation/ConversationAccordion.tsx:575
 msgid "Has verified artifacts"
 msgstr "Tiene artefactos verificados"
 
@@ -1561,6 +1822,10 @@ msgstr "Ocultar datos de revisión"
 msgid "Home"
 msgstr "Inicio"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:553
+msgid "How it works:"
+msgstr ""
+
 #: src/components/project/ProjectBasicEdit.tsx:127
 msgid ""
 "How would you describe to a colleague what are you trying to accomplish with this project?\n"
@@ -1600,6 +1865,14 @@ msgstr "Identifica temas recurrentes, temas y argumentos que aparecen consistent
 #: src/components/participant/verify/VerifyInstructions.tsx:43
 msgid "participant.concrete.instructions.approve.artefact"
 msgstr "Si estás satisfecho con el {objectLabel}, haz clic en \"Aprobar\" para mostrar que te sientes escuchado."
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:823
+msgid "If you're an advanced user setting up webhook integrations, we'd love to learn about your use case. We're also building observability features including audit logs and delivery tracking."
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:640
+msgid "If you're not sure, you probably don't need it yet. Webhooks are an advanced feature typically used by developers or teams with custom integrations. You can always set them up later."
+msgstr ""
 
 #~ msgid "In order to better navigate through the quotes, create additional views. The quotes will then be clustered based on your view."
 #~ msgstr "Para navegar mejor por las citas, crea vistas adicionales. Las citas se agruparán según tu vista."
@@ -1708,6 +1981,14 @@ msgstr "Última vez guardado el {0}"
 msgid "Last Updated"
 msgstr "Última actualización"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:653
+msgid "Learn more about webhooks"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:263
+msgid "Leave empty to keep existing"
+msgstr ""
+
 #: src/components/chat/TemplatesModal.tsx:127
 msgid "Let us know!"
 msgstr "Háganos saber!"
@@ -1813,8 +2094,8 @@ msgstr "Cargando transcripción..."
 msgid "loading..."
 msgstr "cargando..."
 
-#: src/components/conversation/ConversationAccordion.tsx:108
-#: src/components/conversation/hooks/index.ts:369
+#: src/components/conversation/ConversationAccordion.tsx:113
+#: src/components/conversation/hooks/index.ts:370
 msgid "Loading..."
 msgstr "Cargando..."
 
@@ -1838,7 +2119,7 @@ msgstr "Iniciar sesión como usuario existente"
 msgid "Logout"
 msgstr "Cerrar sesión"
 
-#: src/components/conversation/ConversationAccordion.tsx:617
+#: src/components/conversation/ConversationAccordion.tsx:642
 msgid "Longest First"
 msgstr "Más largo primero"
 
@@ -1886,12 +2167,12 @@ msgid "More templates"
 msgstr "Más templates"
 
 #: src/components/conversation/MoveConversationButton.tsx:218
-#: src/components/conversation/ConversationAccordion.tsx:339
+#: src/components/conversation/ConversationAccordion.tsx:344
 msgid "Move"
 msgstr "Mover"
 
 #: src/components/conversation/MoveConversationButton.tsx:138
-#: src/components/conversation/ConversationAccordion.tsx:260
+#: src/components/conversation/ConversationAccordion.tsx:265
 msgid "Move Conversation"
 msgstr "Mover Conversación"
 
@@ -1899,20 +2180,25 @@ msgstr "Mover Conversación"
 msgid "Move to Another Project"
 msgstr "Mover a otro Proyecto"
 
-#: src/components/conversation/ConversationAccordion.tsx:257
+#: src/components/conversation/ConversationAccordion.tsx:262
 msgid "Move to Project"
 msgstr "Mover a Proyecto"
 
 #: src/components/project/ProjectBasicEdit.tsx:103
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:182
 #: src/components/conversation/ConversationEdit.tsx:161
 msgid "Name"
 msgstr "Nombre"
 
-#: src/components/conversation/ConversationAccordion.tsx:615
+#: src/components/conversation/ConversationAccordion.tsx:640
 msgid "Name A-Z"
 msgstr "Nombre A-Z"
 
-#: src/components/conversation/ConversationAccordion.tsx:616
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:178
+msgid "Name is required"
+msgstr ""
+
+#: src/components/conversation/ConversationAccordion.tsx:641
 msgid "Name Z-A"
 msgstr "Nombre Z-A"
 
@@ -1942,7 +2228,7 @@ msgstr "Nueva Contraseña"
 msgid "New Project"
 msgstr "Nuevo Proyecto"
 
-#: src/components/conversation/ConversationAccordion.tsx:613
+#: src/components/conversation/ConversationAccordion.tsx:638
 msgid "Newest First"
 msgstr "Más nuevos primero"
 
@@ -2002,8 +2288,9 @@ msgstr "No se encontraron colecciones"
 msgid "No concrete topics available."
 msgstr "No hay temas concretos disponibles."
 
-#~ msgid "No content"
-#~ msgstr "No hay contenido"
+#: src/components/conversation/SelectAllConfirmationModal.tsx:126
+msgid "No content"
+msgstr "No hay contenido"
 
 #: src/routes/project/library/ProjectLibrary.tsx:151
 msgid "No conversations available to create library"
@@ -2021,9 +2308,14 @@ msgstr "No hay conversaciones disponibles para crear la biblioteca"
 msgid "No conversations found."
 msgstr "No se encontraron conversaciones."
 
-#: src/components/conversation/ConversationAccordion.tsx:1211
+#: src/components/conversation/ConversationAccordion.tsx:1401
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "No se encontraron conversaciones. Inicia una conversación usando el enlace de invitación de participación desde la <0><1>vista general del proyecto.</1></0>"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:652
+msgid "select.all.modal.no.conversations"
+msgstr "No se procesaron conversaciones. Esto puede ocurrir si todas las conversaciones ya están en el contexto o no coinciden con los filtros seleccionados."
 
 #: src/components/report/CreateReportForm.tsx:88
 msgid "No conversations yet"
@@ -2066,7 +2358,7 @@ msgid "No results"
 msgstr "Sin resultados"
 
 #: src/components/conversation/ConversationEdit.tsx:207
-#: src/components/conversation/ConversationAccordion.tsx:1158
+#: src/components/conversation/ConversationAccordion.tsx:1314
 msgid "No tags found"
 msgstr "No se encontraron etiquetas"
 
@@ -2103,6 +2395,15 @@ msgstr "No hay temas de verificación configurados para este proyecto."
 #~ msgid "No verification topics available."
 #~ msgstr "No verification topics available."
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:790
+msgid "No webhooks configured"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:517
+msgid "select.all.modal.not.added"
+msgstr "No añadidas"
+
 #: src/routes/project/library/ProjectLibrary.tsx:149
 msgid "Not available"
 msgstr "No disponible"
@@ -2110,7 +2411,7 @@ msgstr "No disponible"
 #~ msgid "Now"
 #~ msgstr "Ahora"
 
-#: src/components/conversation/ConversationAccordion.tsx:614
+#: src/components/conversation/ConversationAccordion.tsx:639
 msgid "Oldest First"
 msgstr "Más antiguos primero"
 
@@ -2125,7 +2426,7 @@ msgid "participant.concrete.instructions.read.aloud"
 msgstr "Una vez que recibas el {objectLabel}, léelo en voz alta y comparte en voz alta lo que deseas cambiar, si es necesario."
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:585
+#: src/components/conversation/ConversationAccordion.tsx:609
 msgid "conversation.ongoing"
 msgstr "En curso"
 
@@ -2171,8 +2472,12 @@ msgstr "Abrir guía de solución de problemas"
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Abre tu aplicación de autenticación e ingresa el código actual de seis dígitos."
 
-#: src/components/conversation/ConversationAccordion.tsx:947
-#: src/components/conversation/ConversationAccordion.tsx:954
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:250
+msgid "Optional"
+msgstr ""
+
+#: src/components/conversation/ConversationAccordion.tsx:1100
+#: src/components/conversation/ConversationAccordion.tsx:1107
 msgid "Options"
 msgstr "Opciones"
 
@@ -2206,6 +2511,10 @@ msgstr "Participante"
 #: src/components/project/ProjectPortalEditor.tsx:560
 msgid "Participant Features"
 msgstr "Funciones para participantes"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:580
+msgid "Participant name and email"
+msgstr ""
 
 #~ msgid "participant.button.echo"
 #~ msgstr "Echo"
@@ -2412,7 +2721,7 @@ msgstr "Por favor, selecciona un idioma para tu informe actualizado"
 #~ msgid "Please select at least one source"
 #~ msgstr "Por favor, selecciona al menos una fuente"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:644
+#: src/routes/project/chat/ProjectChatRoute.tsx:658
 msgid "Please select conversations from the sidebar to proceed"
 msgstr "Selecciona conversaciones en la barra lateral para continuar"
 
@@ -2483,11 +2792,21 @@ msgstr "Declaraciones de Privacidad"
 msgid "Proceed"
 msgstr "Continuar"
 
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:330
+msgid "select.all.modal.proceed"
+msgstr "Continuar"
+
 #~ msgid "processing"
 #~ msgstr "procesando"
 
 #~ msgid "Processing"
 #~ msgstr "Procesando"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:376
+msgid "select.all.modal.loading.description"
+msgstr "Procesando <0>{totalCount, plural, one {# conversación} other {# conversaciones}}</0> y añadiéndolas a tu chat"
 
 #~ msgid "Processing failed for this conversation. This conversation will not be available for analysis and chat."
 #~ msgstr "El procesamiento de esta conversación ha fallado. Esta conversación no estará disponible para análisis y chat."
@@ -2519,11 +2838,15 @@ msgstr "Biblioteca del Proyecto | Dembrane"
 msgid "Project name"
 msgstr "Nombre del proyecto"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:595
+msgid "Project name and ID"
+msgstr ""
+
 #: src/components/project/ProjectBasicEdit.tsx:24
 msgid "Project name must be at least 4 characters long"
 msgstr "El nombre del proyecto debe tener al menos 4 caracteres"
 
-#: src/routes/project/chat/NewChatRoute.tsx:62
+#: src/routes/project/chat/NewChatRoute.tsx:65
 msgid "Project not found"
 msgstr "Proyecto no encontrado"
 
@@ -2580,6 +2903,10 @@ msgstr "¿Listo para comenzar?"
 
 #~ msgid "Ready to Begin?"
 #~ msgstr "¿Listo para comenzar?"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:793
+msgid "Ready to connect your tools? Add a webhook to automatically receive conversation data when events happen."
+msgstr ""
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:338
 msgid "Recommended apps"
@@ -2687,7 +3014,7 @@ msgstr "Eliminar Correo Electrónico"
 msgid "Remove file"
 msgstr "Eliminar archivo"
 
-#: src/components/conversation/ConversationAccordion.tsx:153
+#: src/components/conversation/ConversationAccordion.tsx:158
 msgid "Remove from this chat"
 msgstr "Eliminar de este chat"
 
@@ -2768,8 +3095,8 @@ msgstr "Restablecer Contraseña"
 msgid "Reset Password | Dembrane"
 msgstr "Restablecer Contraseña | Dembrane"
 
-#: src/components/conversation/ConversationAccordion.tsx:1179
-#: src/components/conversation/ConversationAccordion.tsx:1184
+#: src/components/conversation/ConversationAccordion.tsx:1338
+#: src/components/conversation/ConversationAccordion.tsx:1343
 msgid "Reset to default"
 msgstr "Restablecer a valores predeterminados"
 
@@ -2800,7 +3127,7 @@ msgstr "Retranscribir conversación"
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "La retranscripción ha comenzado. La nueva conversación estará disponible pronto."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:605
+#: src/routes/project/chat/ProjectChatRoute.tsx:616
 msgid "Retry"
 msgstr "Reintentar"
 
@@ -2841,6 +3168,10 @@ msgstr "guardar"
 #~ msgid "Save"
 #~ msgstr "Guardar"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:334
+msgid "Save Changes"
+msgstr ""
+
 #: src/components/form/SaveStatus.tsx:31
 msgid "Save Error!"
 msgstr "¡Error al guardar!"
@@ -2858,11 +3189,16 @@ msgstr "Escanea el código QR o copia el secreto en tu aplicación."
 msgid "Scroll to bottom"
 msgstr "Desplazarse al final"
 
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:411
+msgid "select.all.modal.loading.search"
+msgstr "Buscar"
+
 #: src/components/conversation/MoveConversationButton.tsx:143
 msgid "Search"
 msgstr "Buscar"
 
-#: src/components/conversation/ConversationAccordion.tsx:941
+#: src/components/conversation/ConversationAccordion.tsx:1094
 msgid "Search conversations"
 msgstr "Buscar conversaciones"
 
@@ -2870,22 +3206,27 @@ msgstr "Buscar conversaciones"
 msgid "Search projects"
 msgstr "Buscar proyectos"
 
-#: src/components/conversation/ConversationAccordion.tsx:270
+#: src/components/conversation/ConversationAccordion.tsx:275
 msgid "Search Projects"
 msgstr "Buscar Proyectos"
 
 #: src/components/conversation/MoveConversationButton.tsx:144
-#: src/components/conversation/ConversationAccordion.tsx:274
+#: src/components/conversation/ConversationAccordion.tsx:279
 msgid "Search projects..."
 msgstr "Buscar proyectos..."
 
-#: src/components/conversation/ConversationAccordion.tsx:1077
+#: src/components/conversation/ConversationAccordion.tsx:1233
 msgid "Search tags"
 msgstr "Buscar etiquetas"
 
 #: src/components/chat/TemplatesModal.tsx:62
 msgid "Search templates..."
 msgstr "Buscar templates..."
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:69
+msgid "select.all.modal.search.text"
+msgstr "Texto de búsqueda:"
 
 #: src/components/chat/SourcesSearched.tsx:13
 msgid "Searched through the most relevant sources"
@@ -2894,6 +3235,10 @@ msgstr "Buscó en las fuentes más relevantes"
 #: src/components/chat/SourcesSearch.tsx:12
 msgid "Searching through the most relevant sources"
 msgstr "Buscando en las fuentes más relevantes"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:247
+msgid "Secret"
+msgstr ""
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:436
 msgid "Secret copied"
@@ -2913,6 +3258,23 @@ msgstr "Hasta pronto"
 msgid "Select a microphone"
 msgstr "Seleccionar un micrófono"
 
+#: src/components/conversation/ConversationAccordion.tsx:1381
+msgid "Select all"
+msgstr "Seleccionar todo"
+
+#: src/components/conversation/ConversationAccordion.tsx:1379
+msgid "Select all ({remainingCount})"
+msgstr "Seleccionar todo ({remainingCount})"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:211
+msgid "select.all.modal.title.results"
+msgstr "Seleccionar todos los resultados"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:284
+msgid "Select at least one event"
+msgstr ""
+
 #: src/components/dropzone/UploadConversationDropzone.tsx:519
 msgid "Select Audio Files to Upload"
 msgstr "Seleccionar archivos de audio para subir"
@@ -2925,7 +3287,7 @@ msgstr "Selecciona conversaciones y encuentra citas exactas"
 msgid "Select conversations from sidebar"
 msgstr "Selecciona conversaciones en la barra lateral"
 
-#: src/components/conversation/ConversationAccordion.tsx:294
+#: src/components/conversation/ConversationAccordion.tsx:299
 msgid "Select Project"
 msgstr "Seleccionar Proyecto"
 
@@ -2968,9 +3330,13 @@ msgstr "Archivos seleccionados ({0}/{MAX_FILES})"
 msgid "participant.selected.microphone"
 msgstr "Micrófono seleccionado"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:738
+#: src/routes/project/chat/ProjectChatRoute.tsx:752
 msgid "Send"
 msgstr "Enviar"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:617
+msgid "Send Slack/Teams notifications when new conversations are completed"
+msgstr ""
 
 #~ msgid "Sentiment"
 #~ msgstr "Sentimiento"
@@ -3020,7 +3386,7 @@ msgstr "Compartir tu voz"
 msgid "Share your voice by scanning the QR code below."
 msgstr "Comparte tu voz escaneando el código QR de abajo."
 
-#: src/components/conversation/ConversationAccordion.tsx:618
+#: src/components/conversation/ConversationAccordion.tsx:643
 msgid "Shortest First"
 msgstr "Más corto primero"
 
@@ -3095,6 +3461,11 @@ msgstr "Omitir diapositiva de privacidad (El anfitrión gestiona la base legal)"
 #~ msgid "Some conversations are still being processed. Auto-select will work optimally once audio processing is complete."
 #~ msgstr "Algunas conversaciones aún están siendo procesadas. La selección automática funcionará de manera óptima una vez que se complete el procesamiento de audio."
 
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:317
+msgid "select.all.modal.skip.disclaimer"
+msgstr "Algunas conversaciones pueden omitirse debido a un transcripto vacío o un límite de contexto"
+
 #: src/components/dropzone/UploadConversationDropzone.tsx:430
 msgid "Some files were already selected and won't be added twice."
 msgstr "Algunos archivos ya estaban seleccionados y no se agregarán dos veces."
@@ -3144,8 +3515,8 @@ msgstr "Algo salió mal. Por favor, inténtalo de nuevo."
 msgid "participant.go.deeper.content.policy.violation.error.message"
 msgstr "Lo sentimos, no podemos procesar esta solicitud debido a la política de contenido del proveedor de LLM."
 
-#: src/components/conversation/ConversationAccordion.tsx:1001
-#: src/components/conversation/ConversationAccordion.tsx:1008
+#: src/components/conversation/ConversationAccordion.tsx:1156
+#: src/components/conversation/ConversationAccordion.tsx:1163
 msgid "Sort"
 msgstr "Ordenar"
 
@@ -3201,7 +3572,7 @@ msgstr "Empezar de nuevo"
 msgid "Status"
 msgstr "Estado"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:570
+#: src/routes/project/chat/ProjectChatRoute.tsx:581
 msgid "Stop"
 msgstr "Detener"
 
@@ -3251,6 +3622,10 @@ msgstr "Resume esta entrevista en un artículo para compartir"
 msgid "Summary"
 msgstr "Resumen"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:589
+msgid "Summary (when available)"
+msgstr ""
+
 #: src/routes/project/conversation/ProjectConversationOverview.tsx:90
 msgid "Summary generated successfully."
 msgstr "Resumen generado."
@@ -3282,8 +3657,8 @@ msgstr "Sistema"
 #: src/components/project/ProjectTagsInput.tsx:238
 #: src/components/participant/ParticipantInitiateForm.tsx:107
 #: src/components/conversation/ConversationEdit.tsx:178
-#: src/components/conversation/ConversationAccordion.tsx:1067
-#: src/components/conversation/ConversationAccordion.tsx:1070
+#: src/components/conversation/ConversationAccordion.tsx:1223
+#: src/components/conversation/ConversationAccordion.tsx:1226
 msgid "Tags"
 msgstr "Etiquetas"
 
@@ -3300,7 +3675,7 @@ msgstr "Tómate un tiempo para crear un resultado que haga tu contribución conc
 msgid "participant.refine.make.concrete.description"
 msgstr "Tómate un tiempo para crear un resultado que haga tu contribución concreta."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:406
+#: src/routes/project/chat/ProjectChatRoute.tsx:417
 msgid "Template applied"
 msgstr "Plantilla aplicada"
 
@@ -3308,7 +3683,11 @@ msgstr "Plantilla aplicada"
 msgid "Templates"
 msgstr "Plantillas"
 
-#: src/components/conversation/ConversationAccordion.tsx:410
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:436
+msgid "Test Webhook"
+msgstr ""
+
+#: src/components/conversation/ConversationAccordion.tsx:415
 msgid "Text"
 msgstr "Texto"
 
@@ -3347,6 +3726,10 @@ msgstr "Algo salió mal con la conversación. Por favor, inténtalo de nuevo o c
 
 #~ msgid "The conversation could not be loaded. Please try again or contact support."
 #~ msgstr "La conversación no pudo ser cargada. Por favor, inténtalo de nuevo o contacta al soporte."
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:219
+msgid "The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server)."
+msgstr ""
 
 #: src/components/chat/Sources.tsx:22
 msgid "The following conversations were automatically added to the context"
@@ -3405,6 +3788,16 @@ msgstr "Hubo un error al verificar tu correo electrónico. Por favor, inténtalo
 #~ msgid "These are your default view templates. Once you create your library these will be your first two views."
 #~ msgstr "Estas son tus plantillas de vista predeterminadas. Una vez que crees tu biblioteca, estas serán tus primeras dos vistas."
 
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:614
+msgid "select.all.modal.other.reason.description"
+msgstr "Estas conversaciones fueron excluidas debido a la falta de transcripciones."
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:574
+msgid "select.all.modal.context.limit.reached.description"
+msgstr "Estas conversaciones se omitieron porque se alcanzó el límite de contexto."
+
 #: src/components/view/DummyViews.tsx:8
 msgid "These default view templates will be generated when you create your first library."
 msgstr "Estas plantillas de vista predeterminadas se generarán cuando crees tu primera biblioteca."
@@ -3444,6 +3837,10 @@ msgstr "Esta función estará disponible en {remainingTime} segundos."
 #: src/components/project/ProjectPortalEditor.tsx:1138
 msgid "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
 msgstr "Esta es una vista previa en vivo del portal del participante. Necesitarás actualizar la página para ver los cambios más recientes."
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:856
+msgid "This is an example of the JSON data sent to your webhook URL when a conversation is summarized."
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:209
@@ -3507,6 +3904,11 @@ msgid "This will create a new conversation with the same audio but a fresh trans
 msgstr "Esto creará una nueva conversación con el mismo audio pero una transcripción fresca. La conversación original permanecerá sin cambios."
 
 #. js-lingui-explicit-id
+#: src/components/conversation/AddTagFilterModal.tsx:72
+msgid "add.tag.filter.modal.info"
+msgstr "Esto filtrará la lista de conversaciones para mostrar conversaciones con esta etiqueta."
+
+#. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefact.tsx:308
 msgid "participant.concrete.regenerating.artefact.description"
 msgstr "Esto solo tomará unos momentos"
@@ -3527,9 +3929,17 @@ msgstr "Esto reemplazará la información personal identificable con <redacted>.
 msgid "Timestamp"
 msgstr "Marca de tiempo"
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:592
+msgid "Timestamps and duration"
+msgstr ""
+
 #: src/components/participant/ParticipantBody.tsx:143
 msgid "Tip"
 msgstr "Consejo"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:771
+msgid "Tip: Use the play button (▶) to send a test payload to your webhook and verify it's working correctly."
+msgstr ""
 
 #: src/components/conversation/ConversationEdit.tsx:200
 msgid "To assign a new tag, please create it first in the project overview."
@@ -3538,6 +3948,10 @@ msgstr "Para asignar una nueva etiqueta, primero crea una en la vista general de
 #: src/components/report/CreateReportForm.tsx:91
 msgid "To generate a report, please start by adding conversations in your project"
 msgstr "Para generar un informe, por favor comienza agregando conversaciones en tu proyecto"
+
+#: src/components/conversation/SelectAllConfirmationModal.tsx:128
+msgid "Too long"
+msgstr "Demasiado largo"
 
 #: src/components/view/CreateViewForm.tsx:123
 msgid "Topics"
@@ -3645,6 +4059,10 @@ msgstr ""
 "\n"
 "Nota: Si la discusión carece de puntos de decisión sustanciales o insights, marca para una exploración más profunda la próxima vez."
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:624
+msgid "Trigger automated workflows in tools like Zapier, Make, or n8n"
+msgstr ""
+
 #: src/components/announcement/AnnouncementErrorState.tsx:34
 msgid "Try Again"
 msgstr "Intentar de nuevo"
@@ -3673,7 +4091,7 @@ msgstr "Autenticación en dos pasos activada"
 msgid "Type"
 msgstr "Tipo"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:693
+#: src/routes/project/chat/ProjectChatRoute.tsx:707
 msgid "Type a message..."
 msgstr "Escribe un mensaje..."
 
@@ -3698,13 +4116,17 @@ msgstr "No se pudo cargar el artefacto generado. Por favor, inténtalo de nuevo.
 msgid "Unable to process this chunk"
 msgstr "No se puede procesar este fragmento"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:408
+#: src/routes/project/chat/ProjectChatRoute.tsx:419
 msgid "Undo"
 msgstr "Deshacer"
 
 #: src/components/settings/AuditLogsCard.tsx:280
 msgid "Unknown"
 msgstr "Desconocido"
+
+#: src/components/conversation/SelectAllConfirmationModal.tsx:132
+msgid "Unknown reason"
+msgstr "Razón desconocida"
 
 #: src/components/announcement/AnnouncementDrawerHeader.tsx:39
 msgid "unread announcement"
@@ -3753,7 +4175,7 @@ msgstr "Actualiza para desbloquear la selección automática y analizar 10 veces
 
 #: src/components/project/ProjectUploadSection.tsx:15
 #: src/components/dropzone/UploadConversationDropzone.tsx:504
-#: src/components/conversation/ConversationAccordion.tsx:404
+#: src/components/conversation/ConversationAccordion.tsx:409
 msgid "Upload"
 msgstr "Subir"
 
@@ -3789,6 +4211,14 @@ msgstr "Subir Archivos"
 msgid "Uploading Audio Files..."
 msgstr "Subiendo archivos de audio..."
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:211
+msgid "URL is required"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:208
+msgid "URL must start with http:// or https://"
+msgstr ""
+
 #~ msgid "Use experimental features"
 #~ msgstr "Usar funciones experimentales"
 
@@ -3796,10 +4226,14 @@ msgstr "Subiendo archivos de audio..."
 msgid "Use PII Redaction"
 msgstr "Usar redaction de PII"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:715
-#: src/routes/project/chat/ProjectChatRoute.tsx:745
+#: src/routes/project/chat/ProjectChatRoute.tsx:729
+#: src/routes/project/chat/ProjectChatRoute.tsx:759
 msgid "Use Shift + Enter to add a new line"
 msgstr "Usa Shift + Enter para agregar una nueva línea"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:820
+msgid "Using webhooks? We'd love to hear from you"
+msgstr ""
 
 #~ msgid "Verification Topics"
 #~ msgstr "Verification Topics"
@@ -3808,9 +4242,19 @@ msgstr "Usa Shift + Enter para agregar una nueva línea"
 #~ msgstr "verified"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:1176
+#: src/components/conversation/SelectAllConfirmationModal.tsx:111
+msgid "select.all.modal.verified"
+msgstr "Verificado"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:434
+msgid "select.all.modal.loading.verified"
+msgstr "Verificado"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/ConversationAccordion.tsx:1333
 msgid "conversation.filters.verified.text"
-msgstr "Verified"
+msgstr "Verificado"
 
 #~ msgid "verified artefact"
 #~ msgstr "verified artefact"
@@ -3818,7 +4262,7 @@ msgstr "Verified"
 #~ msgid "Verified Artefacts"
 #~ msgstr "Verified Artefacts"
 
-#: src/components/conversation/ConversationAccordion.tsx:555
+#: src/components/conversation/ConversationAccordion.tsx:579
 msgid "verified artifacts"
 msgstr "verified artifacts"
 
@@ -3842,6 +4286,10 @@ msgstr "Vista"
 #: src/components/project/ProjectConversationStatusSection.tsx:27
 msgid "View Details"
 msgstr "Ver detalles"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:601
+msgid "View example payload"
+msgstr ""
 
 #: src/components/participant/ParticipantBody.tsx:229
 msgid "View your responses"
@@ -3913,6 +4361,22 @@ msgstr "Vamos a probar tu micrófono para asegurarnos de que todos tengan la mej
 msgid "We’re picking up some silence. Try speaking up so your voice comes through clearly."
 msgstr "Estamos escuchando algo de silencio. Intenta hablar más fuerte para que tu voz salga claramente."
 
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:745
+msgid "Webhook"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:216
+msgid "Webhook URL"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:701
+msgid "Webhooks"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:545
+msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
+msgstr ""
+
 #: src/components/participant/ParticipantBody.tsx:124
 msgid "Welcome"
 msgstr "Bienvenido"
@@ -3924,7 +4388,7 @@ msgstr "Bienvenido de nuevo"
 #~ msgid "Welcome to Big Picture Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Details mode."
 #~ msgstr "Bienvenido al modo Big Picture! Tengo resúmenes de todas tus conversaciones cargados. Pregúntame sobre patrones, temas e insights en tus datos. Para citas exactas, inicia un nuevo chat en el modo Específico."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:506
+#: src/routes/project/chat/ProjectChatRoute.tsx:517
 msgid "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
 msgstr "¡Bienvenido a Dembrane Chat! Usa la barra lateral para seleccionar recursos y conversaciones que quieras analizar. Luego, puedes hacer preguntas sobre los recursos y conversaciones seleccionados."
 
@@ -3935,7 +4399,7 @@ msgstr "¡Bienvenido a Dembrane!"
 #~ msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Deep Dive mode."
 #~ msgstr "Bienvenido al modo Overview. Tengo cargados resúmenes de todas tus conversaciones. Pregúntame por patrones, temas e insights en tus datos. Para citas exactas, empieza un chat nuevo en el modo Deep Dive."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:505
+#: src/routes/project/chat/ProjectChatRoute.tsx:516
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Bienvenido al modo Resumen. Tengo cargados los resúmenes de todas tus conversaciones. Pregúntame por patrones, temas e insights en tus datos. Para citas exactas, inicia un nuevo chat en el modo Contexto Específico."
 
@@ -3954,6 +4418,14 @@ msgstr "¡Bienvenido!"
 #: src/components/chat/ChatModeSelector.tsx:44
 msgid "What are the main themes across all conversations?"
 msgstr "¿Cuáles son los temas principales en todas las conversaciones?"
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:538
+msgid "What are webhooks? (2 min read)"
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:576
+msgid "What data is sent?"
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifySelection.tsx:196
@@ -3977,6 +4449,11 @@ msgid "will be included in your report"
 msgstr "se incluirá en tu informe"
 
 #. js-lingui-explicit-id
+#: src/components/conversation/AddTagFilterModal.tsx:52
+msgid "add.tag.filter.modal.description"
+msgstr "¿Te gustaría añadir esta etiqueta a tus filtros actuales?"
+
+#. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationText.tsx:177
 msgid "participant.button.finish.yes.text.mode"
 msgstr "Sí"
@@ -3996,6 +4473,15 @@ msgstr "Solo puedes subir hasta {MAX_FILES} archivos a la vez. Solo los primeros
 
 #~ msgid "You can still use the Ask feature to chat with any conversation"
 #~ msgstr "Aún puedes usar la función Preguntar para chatear con cualquier conversación"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:237
+msgid "select.all.modal.already.added"
+msgstr "Ya has añadido <0>{existingContextCount, plural, one {# conversación} other {# conversaciones}}</0> a este chat."
+
+#: src/components/conversation/ConversationAccordion.tsx:1364
+msgid "You have already added all the conversations related to this"
+msgstr "Ya has añadido todas las conversaciones relacionadas con esto"
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:391
