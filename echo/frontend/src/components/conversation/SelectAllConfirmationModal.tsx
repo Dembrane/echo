@@ -231,6 +231,15 @@ export const SelectAllConfirmationModal = ({
 					<Stack gap="md" justify="space-between" flex="1">
 						<Box className="py-4">
 							<Stack gap="lg">
+								{/* Warning about potential skips - show at top if many conversations or there might be empty ones */}
+								{totalCount > 10 && (
+									<Alert variant="light" color="orange">
+										<Trans id="select.all.modal.skip.disclaimer">
+											Some may be skipped (no transcript or selection too large).
+										</Trans>
+									</Alert>
+								)}
+
 								{/* Show existing context count if any */}
 								{existingContextCount > 0 && (
 									<Text size="sm">
@@ -311,13 +320,6 @@ export const SelectAllConfirmationModal = ({
 										filterNames={filterNames}
 										hasVerifiedOutcomesFilter={hasVerifiedOutcomesFilter}
 									/>
-
-									{/* Warning about potential skips */}
-									<Alert variant="light" color="orange" mt={24}>
-										<Trans id="select.all.modal.skip.disclaimer">
-											Some may be skipped (no transcript or selection too large).
-										</Trans>
-									</Alert>
 								</Box>
 							</Stack>
 						</Box>
