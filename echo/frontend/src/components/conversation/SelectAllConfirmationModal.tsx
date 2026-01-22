@@ -235,7 +235,8 @@ export const SelectAllConfirmationModal = ({
 								{totalCount > 10 && (
 									<Alert variant="light" color="orange">
 										<Trans id="select.all.modal.skip.disclaimer">
-											Some may be skipped (no transcript or selection too large).
+											Some may be skipped (no transcript or selection too
+											large).
 										</Trans>
 									</Alert>
 								)}
@@ -533,9 +534,7 @@ export const SelectAllConfirmationModal = ({
 											</Badge>
 										}
 									>
-										<Trans id="select.all.modal.context.limit">
-											Too large
-										</Trans>
+										<Trans id="select.all.modal.context.limit">Too large</Trans>
 									</Tabs.Tab>
 								)}
 							</Tabs.List>

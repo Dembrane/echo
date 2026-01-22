@@ -98,11 +98,16 @@ export const ChatTemplatesMenu = ({
 	const [opened, { open, close }] = useDisclosure(false);
 	const [animateRef] = useAutoAnimate();
 
-	const handleTemplateSelect = (template: { content: string; key: string }) => {
-		try {
-			analytics.trackEvent(events.DYNAMIC_TEMPLATE_USED);
-		} catch (error) {
-			console.warn("Analytics tracking failed:", error);
+	const handleTemplateSelect = (
+		template: { content: string; key: string },
+		isDynamic = false,
+	) => {
+		if (isDynamic) {
+			try {
+				analytics.trackEvent(events.DYNAMIC_TEMPLATE_USED);
+			} catch (error) {
+				console.warn("Analytics tracking failed:", error);
+			}
 		}
 		onTemplateSelect(template);
 	};
@@ -134,10 +139,13 @@ export const ChatTemplatesMenu = ({
 							chatMode={chatMode}
 							isSelected={selectedTemplateKey === suggestion.label}
 							onClick={() =>
-								handleTemplateSelect({
-									content: suggestion.prompt,
-									key: suggestion.label,
-								})
+								handleTemplateSelect(
+									{
+										content: suggestion.prompt,
+										key: suggestion.label,
+									},
+									true, // isDynamic - track analytics for AI suggestions
+								)
 							}
 						/>
 					))}
