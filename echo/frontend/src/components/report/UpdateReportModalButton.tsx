@@ -12,6 +12,8 @@ import { useDisclosure } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { useLanguage } from "@/hooks/useLanguage";
+import { analytics } from "@/lib/analytics";
+import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { CloseableAlert } from "../common/ClosableAlert";
 import { ExponentialProgress } from "../common/ExponentialProgress";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
@@ -100,15 +102,20 @@ export const UpdateReportModalButton = ({
 						/>
 
 						<Button
-							onClick={async () =>
+							onClick={async () => {
+								try {
+									analytics.trackEvent(events.UPDATE_REPORT);
+								} catch (error) {
+									console.warn("Analytics tracking failed:", error);
+								}
 								await mutateAsync({
 									language: language,
 									otherPayload: {
 										show_portal_link: currentReport.show_portal_link,
 									},
 									projectId: projectId ?? "",
-								})
-							}
+								});
+							}}
 							loading={isPending}
 							disabled={isPending}
 						>

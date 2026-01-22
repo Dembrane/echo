@@ -19,6 +19,8 @@ import { useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "sonner";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { analytics } from "@/lib/analytics";
+import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { ExponentialProgress } from "../common/ExponentialProgress";
 import { useRetranscribeConversationMutation } from "./hooks";
 
@@ -74,6 +76,13 @@ export const RetranscribeConversationModal = ({
 
 	const handleRetranscribe = async () => {
 		if (!conversationId || !newConversationName.trim()) return;
+
+		try {
+			analytics.trackEvent(events.RETRANSCRIBE_CONVERSATION);
+		} catch (error) {
+			console.warn("Analytics tracking failed:", error);
+		}
+
 		const { new_conversation_id } = await retranscribeMutation.mutateAsync({
 			conversationId,
 			newConversationName: newConversationName.trim(),

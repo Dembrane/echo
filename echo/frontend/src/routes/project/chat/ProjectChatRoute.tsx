@@ -171,9 +171,9 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 		streamProtocol: "data",
 	});
 
-	// Handle load status notifications (shows toast when backend reports high load)
+	// Handle load status (shows inline message when backend reports high load)
 	const hasContent = messages.length > 0 && messages[messages.length - 1]?.content?.length > 0;
-	useLoadNotification({
+	const { statusMessage } = useLoadNotification({
 		data,
 		isLoading,
 		hasContent,
@@ -282,6 +282,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 		setTemplateKey,
 		showProgress,
 		status,
+		statusMessage,
 		stop: customHandleStop,
 		templateKey,
 	};
@@ -387,6 +388,7 @@ export const ProjectChatRoute = () => {
 		progressValue,
 		templateKey,
 		setTemplateKey,
+		statusMessage,
 	} = useDembraneChat({ chatId: chatId ?? "" });
 
 	// check if assistant is typing by determining if the last message is an assistant message and has a text part
@@ -572,25 +574,32 @@ export const ProjectChatRoute = () => {
 					)}
 
 					{isLoading && !showProgress && (
-						<Group>
-							<Box className="animate-spin">
-								<Logo hideTitle h="20px" my={4} />
-							</Box>
-							<Text size="sm" className="italic">
-								<Trans>
-									{isAssistantTyping ? "Assistant is typing..." : "Thinking..."}
-								</Trans>
-							</Text>
-							<Button
-								onClick={() => stop()}
-								variant="outline"
-								color="gray"
-								size="sm"
-								rightSection={<IconSquare size={14} />}
-							>
-								<Trans>Stop</Trans>
-							</Button>
-						</Group>
+						<Stack gap="xs">
+							<Group>
+								<Box className="animate-spin">
+									<Logo hideTitle h="20px" my={4} />
+								</Box>
+								<Text size="sm" className="italic">
+									<Trans>
+										{isAssistantTyping ? "Assistant is typing..." : "Thinking..."}
+									</Trans>
+								</Text>
+								<Button
+									onClick={() => stop()}
+									variant="outline"
+									color="gray"
+									size="sm"
+									rightSection={<IconSquare size={14} />}
+								>
+									<Trans>Stop</Trans>
+								</Button>
+							</Group>
+							{statusMessage && (
+								<Text size="sm" c="dimmed">
+									{statusMessage}
+								</Text>
+							)}
+						</Stack>
 					)}
 
 					{messages &&

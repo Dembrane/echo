@@ -29,8 +29,40 @@ logger = logging.getLogger(__name__)
 # Short enough to pick up changes, long enough to avoid redundant LLM calls
 SUGGESTIONS_CACHE_TTL_SECONDS = 180
 
-# Use high-quality model for better, more relevant suggestions
-SUGGESTION_LLM = MODELS.MULTI_MODAL_PRO
+# Use fast model for suggestions - generates simple follow-up questions
+SUGGESTION_LLM = MODELS.TEXT_FAST
+
+# JSON schema for structured outputs - guarantees consistent format
+SUGGESTIONS_RESPONSE_SCHEMA = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "suggestions_response",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "suggestions": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "icon": {
+                                "type": "string",
+                                "enum": ["sparkles", "search", "quote", "lightbulb", "list"],
+                            },
+                            "label": {"type": "string"},
+                            "prompt": {"type": "string"},
+                        },
+                        "required": ["icon", "label", "prompt"],
+                        "additionalProperties": False,
+                    },
+                }
+            },
+            "required": ["suggestions"],
+            "additionalProperties": False,
+        },
+    },
+}
 
 
 def _generate_cache_key(
@@ -251,23 +283,32 @@ async def generate_suggestions(
         logger.debug(f"[suggestions] Calling LLM for chat {chat_id} in {chat_mode} mode")
 
         # Call LLM via router for load balancing and failover
+        # Using structured outputs for guaranteed format
         response = await arouter_completion(
             SUGGESTION_LLM,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            response_format={"type": "json_object"},
+            response_format=SUGGESTIONS_RESPONSE_SCHEMA,
             timeout=30,  # 30 seconds - suggestions should be fast
         )
 
-        # Parse response
+        # Parse response - format guaranteed by structured outputs
         content = response.choices[0].message.content
         if not content:
             logger.warning("Empty response from LLM for suggestions")
             return []
 
-        suggestions = _parse_suggestions(content)
+        data = json.loads(content)
+        suggestions = [
+            Suggestion(
+                icon=item["icon"],
+                label=item["label"][:50],
+                prompt=item["prompt"],
+            )
+            for item in data.get("suggestions", [])[:3]
+        ]
         logger.info(f"Generated {len(suggestions)} suggestions for chat {chat_id}")
 
         # Cache suggestions for fresh chats (no history)
@@ -285,73 +326,3 @@ async def generate_suggestions(
         return []
 
 
-def _parse_suggestions(content: str) -> List[Suggestion]:
-    """
-    Parse LLM response into Suggestion objects.
-
-    Handles various JSON formats from the LLM.
-    """
-    try:
-        data = json.loads(content)
-        logger.debug(
-            f"[suggestions] Parsed JSON type={type(data).__name__}, keys={list(data.keys()) if isinstance(data, dict) else 'N/A'}"
-        )
-
-        # Handle different formats
-        suggestions_data: List[dict] = []
-
-        if isinstance(data, list):
-            # Direct array: [{...}, {...}, {...}]
-            suggestions_data = data
-        elif isinstance(data, dict):
-            # Check if this is a single suggestion object (has icon/label/prompt keys)
-            if "prompt" in data and ("label" in data or "icon" in data):
-                logger.debug("[suggestions] Found single suggestion object, wrapping in list")
-                suggestions_data = [data]
-            else:
-                # Try various common keys the LLM might use
-                for key in ("suggestions", "questions", "prompts", "items", "results", "data"):
-                    if key in data and isinstance(data[key], list):
-                        suggestions_data = data[key]
-                        logger.debug(f"[suggestions] Found suggestions under key '{key}'")
-                        break
-                else:
-                    # If no known key, check if dict values contain a list
-                    for key, value in data.items():
-                        if isinstance(value, list) and len(value) > 0:
-                            suggestions_data = value
-                            logger.debug(
-                                f"[suggestions] Found suggestions under fallback key '{key}'"
-                            )
-                            break
-
-                    if not suggestions_data:
-                        logger.warning(
-                            f"[suggestions] Could not find suggestions array in dict with keys: {list(data.keys())}"
-                        )
-                        return []
-
-        suggestions = []
-        for item in suggestions_data[:3]:  # Max 3 suggestions
-            if isinstance(item, dict):
-                # Validate icon
-                icon = item.get("icon", "sparkles")
-                if icon not in ("sparkles", "search", "quote", "lightbulb", "list"):
-                    icon = "sparkles"
-
-                suggestions.append(
-                    Suggestion(
-                        icon=icon,
-                        label=str(item.get("label", ""))[:50],  # Truncate long labels
-                        prompt=str(item.get("prompt", "")),
-                    )
-                )
-
-        return suggestions
-
-    except json.JSONDecodeError as e:
-        logger.error(f"[suggestions] Failed to parse JSON: {e}, content: {content[:200]}...")
-        return []
-    except Exception as e:
-        logger.error(f"[suggestions] Error parsing: {e}")
-        return []

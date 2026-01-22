@@ -28,6 +28,8 @@ import {
 import { VerifiedArtefactsSection } from "@/components/conversation/VerifiedArtefactsSection";
 import { useProjectById } from "@/components/project/hooks";
 import { ENABLE_DISPLAY_CONVERSATION_LINKS } from "@/config";
+import { analytics } from "@/lib/analytics";
+import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { generateConversationSummary } from "@/lib/api";
 
 export const ProjectConversationOverviewRoute = () => {
@@ -69,6 +71,14 @@ export const ProjectConversationOverviewRoute = () => {
 
 	const useHandleGenerateSummaryManually = useMutation({
 		mutationFn: async (isRegeneration: boolean) => {
+			if (isRegeneration) {
+				try {
+					analytics.trackEvent(events.REGENERATE_SUMMARY);
+				} catch (error) {
+					console.warn("Analytics tracking failed:", error);
+				}
+			}
+
 			const promise = generateConversationSummary(conversationId ?? "");
 
 			toast.promise(promise, {

@@ -121,7 +121,7 @@ const getReasonLabel = (reason: SelectAllConversationResult["reason"]) => {
 		case "already_in_context":
 			return t`Already in context`;
 		case "context_limit_reached":
-			return t`Context limit reached`;
+			return t`Selection too large`;
 		case "empty":
 			return t`No content`;
 		case "too_long":
@@ -315,8 +315,7 @@ export const SelectAllConfirmationModal = ({
 									{/* Warning about potential skips */}
 									<Alert variant="light" color="orange" mt={24}>
 										<Trans id="select.all.modal.skip.disclaimer">
-											Some conversations might skip due to empty transcript or
-											context limit
+											Some may be skipped (no transcript or selection too large).
 										</Trans>
 									</Alert>
 								</Box>
@@ -468,8 +467,7 @@ export const SelectAllConfirmationModal = ({
 									<IconScale size={18} className="text-orange-600" />
 									<Text size="sm" fw={500} c="orange.7">
 										<Trans id="select.all.modal.context.limit.reached">
-											Context limit was reached. Some conversations could not be
-											added.
+											Selection too large. Some conversations weren't added.
 										</Trans>
 									</Text>
 								</Group>
@@ -534,7 +532,7 @@ export const SelectAllConfirmationModal = ({
 										}
 									>
 										<Trans id="select.all.modal.context.limit">
-											Context limit
+											Too large
 										</Trans>
 									</Tabs.Tab>
 								)}
@@ -566,14 +564,13 @@ export const SelectAllConfirmationModal = ({
 								</Tabs.Panel>
 							)}
 
-							{/* Skipped due to context limit tab */}
+							{/* Skipped because selection too large */}
 							{skippedDueToLimit.length > 0 && (
 								<Tabs.Panel value="limit" pt="md">
 									<Stack gap="sm">
 										<Text size="xs" c="dimmed">
 											<Trans id="select.all.modal.context.limit.reached.description">
-												These conversations were skipped because the context
-												limit was reached.
+												Skipped because the selection was too large.
 											</Trans>
 										</Text>
 										<ScrollArea.Autosize h={400}>

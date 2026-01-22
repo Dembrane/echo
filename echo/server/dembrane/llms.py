@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 from enum import Enum
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from dembrane.settings import get_settings
 

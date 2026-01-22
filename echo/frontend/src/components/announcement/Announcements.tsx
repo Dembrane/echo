@@ -5,6 +5,8 @@ import { useInView } from "react-intersection-observer";
 import { useAnnouncementDrawer } from "@/components/announcement/hooks";
 import { useProcessedAnnouncements } from "@/components/announcement/hooks/useProcessedAnnouncements";
 import { useLanguage } from "@/hooks/useLanguage";
+import { analytics } from "@/lib/analytics";
+import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { Drawer } from "../common/Drawer";
 import { AnnouncementDrawerHeader } from "./AnnouncementDrawerHeader";
 import { AnnouncementErrorState } from "./AnnouncementErrorState";
@@ -29,6 +31,11 @@ export const Announcements = () => {
 	useEffect(() => {
 		if (isOpen && !openedOnce) {
 			setOpenedOnce(true);
+			try {
+				analytics.trackEvent(events.ANNOUNCEMENT_CREATED);
+			} catch (error) {
+				console.warn("Analytics tracking failed:", error);
+			}
 		}
 	}, [isOpen, openedOnce]);
 

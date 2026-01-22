@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from litellm.utils import token_counter
 from fastapi.responses import StreamingResponse
 
-from dembrane.llms import MODELS, get_completion_kwargs, arouter_completion
+from dembrane.llms import MODELS, arouter_completion, get_completion_kwargs
 from dembrane.utils import generate_uuid
 from dembrane.prompts import render_prompt
 from dembrane.service import (
@@ -26,10 +26,10 @@ from dembrane.chat_utils import (
 )
 from dembrane.service.chat import ChatServiceException, ChatNotFoundException
 from dembrane.async_helpers import run_in_thread_pool
+from dembrane.stream_status import stream_with_status
 from dembrane.api.rate_limit import create_rate_limiter
 from dembrane.api.conversation import get_conversation_token_count
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
-from dembrane.stream_status import stream_with_status
 
 ChatRouter = APIRouter(tags=["chat"])
 
@@ -1135,7 +1135,7 @@ async def post_chat(
             raw_stream = stream_response_async(formatted_messages)
 
         # Wrap with status notifications for high load scenarios
-        stream = stream_with_status(raw_stream, delay_threshold_seconds=5.0, protocol=protocol)
+        stream = stream_with_status(raw_stream, protocol=protocol)
 
         return StreamingResponse(stream, headers=headers)
 

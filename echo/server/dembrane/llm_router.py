@@ -23,7 +23,7 @@ from typing import Any, Dict, List, Optional
 from litellm import Router
 from litellm.utils import get_model_info
 
-from dembrane.settings import get_settings, LLMProviderConfig
+from dembrane.settings import LLMProviderConfig, get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -96,10 +96,12 @@ def _build_model_list() -> List[Dict[str, Any]]:
             # Add weight to litellm_params for weighted routing
             litellm_params["weight"] = weight
 
-            model_list.append({
-                "model_name": group,  # e.g., "text_fast", "multi_modal_pro"
-                "litellm_params": litellm_params,
-            })
+            model_list.append(
+                {
+                    "model_name": group,  # e.g., "text_fast", "multi_modal_pro"
+                    "litellm_params": litellm_params,
+                }
+            )
 
     return model_list
 
@@ -263,16 +265,12 @@ def get_min_context_length(model_group: str) -> int:
                 max_tokens = model_info["max_input_tokens"]
                 if min_tokens is None or max_tokens < min_tokens:
                     min_tokens = max_tokens
-                    logger.debug(
-                        f"  {model_group}[{suffix}] {resolved.model}: {max_tokens} tokens"
-                    )
+                    logger.debug(f"  {model_group}[{suffix}] {resolved.model}: {max_tokens} tokens")
         except Exception as e:
             logger.warning(f"Could not get model info for {config.model}: {e}")
 
     if min_tokens is None:
-        logger.warning(
-            f"Could not determine context length for {model_group}, using default"
-        )
+        logger.warning(f"Could not determine context length for {model_group}, using default")
         min_tokens = DEFAULT_CONTEXT_LENGTH
 
     # Use 80% to leave headroom for response
@@ -288,4 +286,3 @@ def get_min_context_length(model_group: str) -> int:
 
 
 __all__ = ["get_router", "is_router_available", "get_min_context_length"]
-

@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
-import { toast } from "@/components/common/Toaster";
+import { useEffect, useRef, useState } from "react";
 
 // JSON value type for stream data (matches @ai-sdk/ui-utils JSONValue)
 type JSONValue = string | number | boolean | null | JSONValue[] | { [key: string]: JSONValue };
@@ -46,45 +45,6 @@ function parseStatusEvents(data: JSONValue[] | undefined): StreamStatusEvent[] {
 	return events;
 }
 
-/**
- * Request browser notification permission.
- */
-async function requestNotificationPermission(): Promise<boolean> {
-	if (!("Notification" in window)) {
-		return false;
-	}
-
-	if (Notification.permission === "granted") {
-		return true;
-	}
-
-	if (Notification.permission !== "denied") {
-		const permission = await Notification.requestPermission();
-		return permission === "granted";
-	}
-
-	return false;
-}
-
-/**
- * Show a browser notification.
- */
-function showBrowserNotification(title: string, body: string) {
-	if (Notification.permission === "granted") {
-		const notification = new Notification(title, {
-			body,
-			icon: "/logo.svg",
-			tag: "dembrane-response-ready",
-		});
-
-		// Focus window when clicked
-		notification.onclick = () => {
-			window.focus();
-			notification.close();
-		};
-	}
-}
-
 export interface UseLoadNotificationOptions {
 	/** useChat's data array */
 	data: JSONValue[] | undefined;
@@ -95,19 +55,16 @@ export interface UseLoadNotificationOptions {
 }
 
 export interface UseLoadNotificationReturn {
-	/** Whether we're showing a high load notification */
+	/** Whether we're experiencing high load */
 	isHighLoad: boolean;
-	/** Request to be notified when response is ready */
-	requestNotification: () => Promise<void>;
-	/** Whether notification was requested */
-	notificationRequested: boolean;
+	/** Status message to display inline */
+	statusMessage: string | null;
 }
 
 /**
- * Hook to handle load status notifications from the chat stream.
+ * Hook to handle load status from the chat stream.
  *
- * Shows a toast when the backend reports high load, and optionally
- * sends a browser notification when the response is ready.
+ * Returns state for inline display when the backend reports high load.
  */
 export function useLoadNotification({
 	data,
@@ -115,8 +72,7 @@ export function useLoadNotification({
 	hasContent,
 }: UseLoadNotificationOptions): UseLoadNotificationReturn {
 	const [isHighLoad, setIsHighLoad] = useState(false);
-	const [notificationRequested, setNotificationRequested] = useState(false);
-	const toastIdRef = useRef<string | number | null>(null);
+	const [statusMessage, setStatusMessage] = useState<string | null>(null);
 	const prevDataLengthRef = useRef(0);
 
 	// Parse status events from data
@@ -134,76 +90,30 @@ export function useLoadNotification({
 		const latestEvent = statusEvents[statusEvents.length - 1];
 		if (latestEvent?.type === "high_load") {
 			setIsHighLoad(true);
-
-			// Show persistent toast with notify button
-			if (!toastIdRef.current) {
-				toastIdRef.current = toast(latestEvent.message, {
-					duration: Number.POSITIVE_INFINITY,
-					action: {
-						label: "Notify me",
-						onClick: () => {
-							handleRequestNotification();
-						},
-					},
-				});
-			}
+			setStatusMessage(latestEvent.message);
 		}
 	}, [statusEvents]);
 
 	// Handle response completion
 	useEffect(() => {
 		if (!isLoading && hasContent) {
-			// Response finished
+			// Response finished - reset state
 			setIsHighLoad(false);
-
-			// Dismiss the load toast
-			if (toastIdRef.current) {
-				toast.dismiss(toastIdRef.current);
-				toastIdRef.current = null;
-			}
-
-			// Send browser notification if requested
-			if (notificationRequested) {
-				showBrowserNotification(
-					"Response ready",
-					"Your chat response is ready to view.",
-				);
-				setNotificationRequested(false);
-			}
+			setStatusMessage(null);
 		}
-	}, [isLoading, hasContent, notificationRequested]);
+	}, [isLoading, hasContent]);
 
 	// Reset state when loading starts
 	useEffect(() => {
 		if (isLoading) {
 			prevDataLengthRef.current = 0;
+			setIsHighLoad(false);
+			setStatusMessage(null);
 		}
 	}, [isLoading]);
 
-	const handleRequestNotification = useCallback(async () => {
-		const granted = await requestNotificationPermission();
-		if (granted) {
-			setNotificationRequested(true);
-			toast.success("We'll notify you when the response is ready.", {
-				duration: 3000,
-			});
-
-			// Dismiss the high load toast
-			if (toastIdRef.current) {
-				toast.dismiss(toastIdRef.current);
-				toastIdRef.current = null;
-			}
-		} else {
-			toast.error("Notification permission denied. Please enable notifications in your browser settings.", {
-				duration: 5000,
-			});
-		}
-	}, []);
-
 	return {
 		isHighLoad,
-		requestNotification: handleRequestNotification,
-		notificationRequested,
+		statusMessage,
 	};
 }
-

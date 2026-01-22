@@ -2,6 +2,24 @@
 
 We use **Lingui** with **React JS** for handling translations. This document outlines the steps to add and manage translations within our project.
 
+## Writing Good Copy
+
+Before writing translatable strings, review the [COPY_GUIDE.md](../frontend/COPY_GUIDE.md) for tone and style guidelines. Key principles:
+
+- **Shortest possible, highest clarity** — say it in fewer words
+- **No jargon** — avoid technical terms users won't understand (e.g., "context limit" → "selection too large")
+- **No corporate speak** — write like you're explaining to a colleague
+- **Never say "successfully"** — just state what happened ("Saved" not "Successfully saved")
+
+### Examples
+
+| Bad | Good |
+|-----|------|
+| "Context limit reached" | "Selection too large" |
+| "File has been successfully uploaded" | "File uploaded" |
+| "Please wait while we process your request" | "Processing..." |
+| "An error occurred while saving" | "Couldn't save. Try again." |
+
 ## Using Translations in JSX
 
 To add translations within JSX, use the `<Trans>` component from Lingui. For example:

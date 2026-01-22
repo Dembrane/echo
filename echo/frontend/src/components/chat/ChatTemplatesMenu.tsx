@@ -11,6 +11,8 @@ import {
 	IconSearch,
 	IconSparkles,
 } from "@tabler/icons-react";
+import { analytics } from "@/lib/analytics";
+import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import type { ChatMode } from "@/lib/api";
 import { MODE_COLORS } from "./ChatModeSelector";
 import { TemplatesModal } from "./TemplatesModal";
@@ -96,6 +98,15 @@ export const ChatTemplatesMenu = ({
 	const [opened, { open, close }] = useDisclosure(false);
 	const [animateRef] = useAutoAnimate();
 
+	const handleTemplateSelect = (template: { content: string; key: string }) => {
+		try {
+			analytics.trackEvent(events.DYNAMIC_TEMPLATE_USED);
+		} catch (error) {
+			console.warn("Analytics tracking failed:", error);
+		}
+		onTemplateSelect(template);
+	};
+
 	// Check if selected template is from modal (not in quick access)
 	const isModalTemplateSelected =
 		selectedTemplateKey &&
@@ -123,7 +134,7 @@ export const ChatTemplatesMenu = ({
 							chatMode={chatMode}
 							isSelected={selectedTemplateKey === suggestion.label}
 							onClick={() =>
-								onTemplateSelect({
+								handleTemplateSelect({
 									content: suggestion.prompt,
 									key: suggestion.label,
 								})
@@ -146,7 +157,7 @@ export const ChatTemplatesMenu = ({
 											: "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
 									}`}
 									onClick={() =>
-										onTemplateSelect({
+										handleTemplateSelect({
 											content: template.content,
 											key: template.title,
 										})
@@ -165,7 +176,7 @@ export const ChatTemplatesMenu = ({
 							withBorder
 							className="cursor-pointer rounded-full border-gray-400 bg-gray-100 px-3 py-1"
 							onClick={() =>
-								onTemplateSelect({
+								handleTemplateSelect({
 									content: selectedModalTemplate.content,
 									key: selectedModalTemplate.title,
 								})

@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from litellm.utils import token_counter
 from litellm.exceptions import ContentPolicyViolationError
 
-from dembrane.llms import MODELS, get_completion_kwargs, arouter_completion
+from dembrane.llms import MODELS, arouter_completion, get_completion_kwargs
 from dembrane.prompts import render_prompt
 from dembrane.directus import directus
 from dembrane.transcribe import _get_audio_file_object

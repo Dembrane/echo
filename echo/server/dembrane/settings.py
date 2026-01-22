@@ -18,7 +18,7 @@ import re
 import json
 import base64
 import logging
-from typing import Any, Dict, List, Literal, Optional, Tuple
+from typing import Any, Dict, List, Tuple, Literal, Optional
 from pathlib import Path
 from functools import lru_cache
 
@@ -127,7 +127,9 @@ class LLMSettings(BaseSettings):
     multi_modal_fast: LLMProviderConfig = Field(default_factory=LLMProviderConfig)
     text_fast: LLMProviderConfig = Field(default_factory=LLMProviderConfig)
 
-    def get_deployments_for_group(self, group: str) -> List[Tuple[Optional[int], LLMProviderConfig]]:
+    def get_deployments_for_group(
+        self, group: str
+    ) -> List[Tuple[Optional[int], LLMProviderConfig]]:
         """
         Discover all deployments for a model group (e.g., 'text_fast').
 
@@ -145,9 +147,7 @@ class LLMSettings(BaseSettings):
 
         # Collect all suffixes found in environment
         # Pattern: LLM__TEXT_FAST__* or LLM__TEXT_FAST_N__*
-        suffix_pattern = re.compile(
-            rf"^LLM__{group_upper}(?:_(\d+))?__(\w+)$", re.IGNORECASE
-        )
+        suffix_pattern = re.compile(rf"^LLM__{group_upper}(?:_(\d+))?__(\w+)$", re.IGNORECASE)
 
         # Group env vars by suffix
         suffix_vars: Dict[Optional[int], Dict[str, str]] = {}
@@ -281,9 +281,7 @@ class FeatureFlagSettings(BaseSettings):
     webhooks_enabled: bool = Field(
         default=False,
         alias="ENABLE_WEBHOOKS",
-        validation_alias=AliasChoices(
-            "ENABLE_WEBHOOKS", "FEATURE_FLAGS__ENABLE_WEBHOOKS"
-        ),
+        validation_alias=AliasChoices("ENABLE_WEBHOOKS", "FEATURE_FLAGS__ENABLE_WEBHOOKS"),
     )
 
 

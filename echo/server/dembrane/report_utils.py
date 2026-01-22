@@ -15,14 +15,14 @@ from litellm.exceptions import (
     ContentPolicyViolationError,
 )
 
-from dembrane.llms import MODELS, arouter_completion
+from dembrane.llms import MODELS, arouter_completion, get_completion_kwargs
 from dembrane.prompts import render_prompt
 from dembrane.directus import DirectusGenericException, directus
+from dembrane.llm_router import get_min_context_length
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.summary_utils import safe_summarize_conversation
 from dembrane.api.conversation import get_conversation_transcript
 from dembrane.api.dependency_auth import DirectusSession
-from dembrane.llm_router import get_min_context_length
 
 logger = logging.getLogger("report_utils")
 
@@ -262,7 +262,7 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
         try:
             summary_tokens = token_counter(
                 messages=[{"role": "user", "content": summary}],
-                model=_report_llm_model,
+                model=get_completion_kwargs(REPORT_LLM)["model"],
             )
         except Exception as e:
             logger.warning(f"Failed to count tokens for conversation {conv_id}: {e}")
@@ -326,7 +326,7 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
         try:
             transcript_tokens = token_counter(
                 messages=[{"role": "user", "content": transcript}],
-                model=_report_llm_model,
+                model=get_completion_kwargs(REPORT_LLM)["model"],
             )
         except Exception as e:
             logger.warning(f"Failed to count transcript tokens for {conv_id}: {e}")

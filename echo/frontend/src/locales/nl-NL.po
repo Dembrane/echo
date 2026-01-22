@@ -15,27 +15,27 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 
 #. js-lingui-explicit-id
-#: src/lib/directus.ts:39
+#: src/lib/directus.ts:35
 msgid "You are not authenticated"
 msgstr "Je bent niet ingelogd"
 
 #. js-lingui-explicit-id
-#: src/lib/directus.ts:45
+#: src/lib/directus.ts:41
 msgid "You don't have permission to access this."
 msgstr "Je hebt geen toegang tot deze pagina."
 
 #. js-lingui-explicit-id
-#: src/lib/directus.ts:50
+#: src/lib/directus.ts:46
 msgid "Resource not found"
 msgstr "Resource niet gevonden"
 
 #. js-lingui-explicit-id
-#: src/lib/directus.ts:54
+#: src/lib/directus.ts:50
 msgid "Server error"
 msgstr "Serverfout"
 
 #. js-lingui-explicit-id
-#: src/lib/directus.ts:57
+#: src/lib/directus.ts:53
 msgid "Something went wrong"
 msgstr "Er is iets fout gegaan"
 
@@ -109,7 +109,7 @@ msgstr "\"Verfijnen\" is binnenkort beschikbaar"
 #~ msgstr "(voor verbeterde audioverwerking)"
 
 #. placeholder {0}: filterNames.length
-#: src/components/conversation/SelectAllConfirmationModal.tsx:418
+#: src/components/conversation/SelectAllConfirmationModal.tsx:417
 msgid "{0, plural, one {# tag} other {# tags}}"
 msgstr "{0, plural, one {# tag} other {# tags}}"
 
@@ -122,7 +122,7 @@ msgstr "{0, plural, one {Tag:} other {Tags:}}"
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: selectedOption.transitionMessage
 #. placeholder {0}: selectedOption.transitionDescription
-#: src/routes/project/chat/ProjectChatRoute.tsx:570
+#: src/routes/project/chat/ProjectChatRoute.tsx:580
 #: src/components/settings/FontSettingsCard.tsx:49
 #: src/components/settings/FontSettingsCard.tsx:50
 #: src/components/project/ProjectPortalEditor.tsx:433
@@ -135,7 +135,7 @@ msgstr "{0}"
 
 #. js-lingui-explicit-id
 #. placeholder {0}: result.added.length
-#: src/components/conversation/SelectAllConfirmationModal.tsx:452
+#: src/components/conversation/SelectAllConfirmationModal.tsx:451
 msgid "select.all.modal.added.count"
 msgstr "{0} toegevoegd"
 
@@ -150,7 +150,7 @@ msgstr "{0} Gesprekken • Bewerkt {1}"
 
 #. js-lingui-explicit-id
 #. placeholder {0}: reallySkipped.length
-#: src/components/conversation/SelectAllConfirmationModal.tsx:458
+#: src/components/conversation/SelectAllConfirmationModal.tsx:457
 msgid "select.all.modal.not.added.count"
 msgstr "{0} niet toegevoegd"
 
@@ -245,7 +245,7 @@ msgid "Actions"
 msgstr "Acties"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:401
+#: src/components/conversation/SelectAllConfirmationModal.tsx:400
 msgid "select.all.modal.loading.filters"
 msgstr "Actieve filters"
 
@@ -309,7 +309,7 @@ msgid "Add Your First Webhook"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:498
+#: src/components/conversation/SelectAllConfirmationModal.tsx:496
 msgid "select.all.modal.added"
 msgstr "Toegevoegd"
 
@@ -340,12 +340,12 @@ msgstr "<0>{totalCount, plural, one {# extra gesprek} other {# extra gesprekken}
 msgid "select.all.modal.add.with.filters.more"
 msgstr "<0>{totalCount, plural, one {# extra gesprek} other {# extra gesprekken}}</0> toevoegen met de volgende filters:"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:669
+#: src/routes/project/chat/ProjectChatRoute.tsx:679
 msgid "Adding Context:"
 msgstr "Context toevoegen:"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:365
+#: src/components/conversation/SelectAllConfirmationModal.tsx:364
 msgid "select.all.modal.loading.title"
 msgstr "Gesprekken toevoegen"
 
@@ -422,7 +422,7 @@ msgstr "Een e-mail melding wordt naar {0} deelnemer{1} verstuurd. Wilt u doorgaa
 msgid "An error occurred while loading the Portal. Please contact the support team."
 msgstr "Er is een fout opgetreden bij het laden van de Portal. Neem contact op met de ondersteuningsteam."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:608
+#: src/routes/project/chat/ProjectChatRoute.tsx:618
 msgid "An error occurred."
 msgstr "Er is een fout opgetreden."
 
@@ -714,7 +714,7 @@ msgstr "Bèta"
 #~ msgid "Big Picture - Themes & patterns"
 #~ msgstr "Big Picture - Thema’s & patronen"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:840
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:836
 msgid "Book a call"
 msgstr ""
 
@@ -759,7 +759,7 @@ msgid "participant.concrete.instructions.button.cancel"
 msgstr "Annuleren"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:327
+#: src/components/conversation/SelectAllConfirmationModal.tsx:326
 msgid "select.all.modal.cancel"
 msgstr "Annuleren"
 
@@ -783,12 +783,12 @@ msgstr "Wijzigingen worden automatisch opgeslagen"
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Wijziging van de taal tijdens een actief gesprek kan onverwachte resultaten opleveren. Het wordt aanbevolen om een nieuw gesprek te starten na het wijzigen van de taal. Weet je zeker dat je wilt doorgaan?"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:489
-#: src/routes/project/chat/ProjectChatRoute.tsx:494
+#: src/routes/project/chat/ProjectChatRoute.tsx:499
+#: src/routes/project/chat/ProjectChatRoute.tsx:504
 msgid "Chat"
 msgstr "Chat"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:281
+#: src/routes/project/chat/ProjectChatRoute.tsx:291
 msgid "Chat | Dembrane"
 msgstr "Chat | Dembrane"
 
@@ -855,7 +855,7 @@ msgid "Close"
 msgstr "Sluiten"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:663
+#: src/components/conversation/SelectAllConfirmationModal.tsx:660
 msgid "select.all.modal.close"
 msgstr "Sluiten"
 
@@ -931,19 +931,9 @@ msgstr "Context"
 msgid "Context added:"
 msgstr "Context toegevoegd:"
 
-#. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:536
-msgid "select.all.modal.context.limit"
-msgstr "Contextlimiet"
-
 #: src/components/conversation/SelectAllConfirmationModal.tsx:124
-msgid "Context limit reached"
-msgstr "Contextlimiet bereikt"
-
-#. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:470
-msgid "select.all.modal.context.limit.reached"
-msgstr "Contextlimiet is bereikt. Sommige gesprekken konden niet worden toegevoegd."
+#~ msgid "Context limit reached"
+#~ msgstr "Contextlimiet bereikt"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantOnboardingCards.tsx:393
@@ -1028,7 +1018,7 @@ msgstr "Even afkoelen. Beschikbaar over {0}"
 msgid "Copied"
 msgstr "Gekopieerd"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:873
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:869
 msgid "Copied!"
 msgstr ""
 
@@ -1058,7 +1048,7 @@ msgstr "Kopieer samenvatting"
 msgid "Copy to clipboard"
 msgstr "Kopieer naar clipboard"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:875
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:871
 msgid "Copy to Clipboard"
 msgstr ""
 
@@ -1189,8 +1179,8 @@ msgstr "Verwijderd succesvol"
 #~ msgid "Dembrane ECHO"
 #~ msgstr "Dembrane ECHO"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:732
-#: src/routes/project/chat/ProjectChatRoute.tsx:762
+#: src/routes/project/chat/ProjectChatRoute.tsx:742
+#: src/routes/project/chat/ProjectChatRoute.tsx:772
 msgid "Dembrane is powered by AI. Please double-check responses."
 msgstr "Dembrane draait op AI. Check de antwoorden extra goed."
 
@@ -1519,8 +1509,8 @@ msgstr "Fout bij laden van meldingen"
 #~ msgid "Error loading insights"
 #~ msgstr "Fout bij laden van inzichten"
 
-#: src/routes/project/ProjectRoutes.tsx:40
-#: src/routes/project/ProjectRoutes.tsx:135
+#: src/routes/project/ProjectRoutes.tsx:41
+#: src/routes/project/ProjectRoutes.tsx:140
 msgid "Error loading project"
 msgstr "Fout bij laden van project"
 
@@ -1557,7 +1547,7 @@ msgstr "Alles lijkt goed – je kunt doorgaan."
 #~ msgid "Everything looks good – you can continue."
 #~ msgstr "Alles lijkt goed – je kunt doorgaan."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:851
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:847
 msgid "Example Webhook Payload"
 msgstr ""
 
@@ -1972,11 +1962,15 @@ msgid "participant.concrete.instructions.approve.artefact"
 msgstr "Keur het artefact goed of pas het aan voordat je doorgaat."
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:823
-msgid "If you're an advanced user setting up webhook integrations, we'd love to learn about your use case. We're also building observability features including audit logs and delivery tracking."
-msgstr ""
+#~ msgid "If you're an advanced user setting up webhook integrations, we'd love to learn about your use case. We're also building observability features including audit logs and delivery tracking."
+#~ msgstr ""
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:640
 msgid "If you're not sure, you probably don't need it yet. Webhooks are an advanced feature typically used by developers or teams with custom integrations. You can always set them up later."
+msgstr ""
+
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:823
+msgid "If you're setting up webhook integrations, we'd love to learn about your use case. We're also building observability features including audit logs and delivery tracking."
 msgstr ""
 
 #~ msgid "In order to better navigate through the quotes, create additional views. The quotes will then be clustered based on your view."
@@ -2430,7 +2424,7 @@ msgid "No conversations found. Start a conversation using the participation invi
 msgstr "Geen gesprekken gevonden. Start een gesprek met behulp van de deelname-uitnodigingslink uit het <0><1>projectoverzicht.</1></0>"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:652
+#: src/components/conversation/SelectAllConfirmationModal.tsx:649
 msgid "select.all.modal.no.conversations"
 msgstr "Er zijn geen gesprekken verwerkt. Dit kan gebeuren als alle gesprekken al in de context zijn of niet overeenkomen met de geselecteerde filters."
 
@@ -2523,7 +2517,7 @@ msgid "No webhooks configured"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:517
+#: src/components/conversation/SelectAllConfirmationModal.tsx:515
 msgid "select.all.modal.not.added"
 msgstr "Niet toegevoegd"
 
@@ -2859,7 +2853,7 @@ msgstr "Kies een taal voor je bijgewerkte rapport"
 #~ msgid "Please select at least one source"
 #~ msgstr "Kies minstens één bron"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:658
+#: src/routes/project/chat/ProjectChatRoute.tsx:668
 msgid "Please select conversations from the sidebar to proceed"
 msgstr "Selecteer gesprekken in de sidebar om verder te gaan"
 
@@ -2931,7 +2925,7 @@ msgid "Proceed"
 msgstr "Doorgaan"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:330
+#: src/components/conversation/SelectAllConfirmationModal.tsx:329
 msgid "select.all.modal.proceed"
 msgstr "Doorgaan"
 
@@ -2942,7 +2936,7 @@ msgstr "Doorgaan"
 #~ msgstr "Bezig met verwerken"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:376
+#: src/components/conversation/SelectAllConfirmationModal.tsx:375
 msgid "select.all.modal.loading.description"
 msgstr "<0>{totalCount, plural, one {# gesprek} other {# gesprekken}}</0> verwerken en toevoegen aan je chat"
 
@@ -3277,7 +3271,7 @@ msgstr "Hertranscriptie gesprek"
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "Hertranscriptie gestart. Nieuw gesprek wordt binnenkort beschikbaar."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:616
+#: src/routes/project/chat/ProjectChatRoute.tsx:626
 msgid "Retry"
 msgstr "Opnieuw proberen"
 
@@ -3340,7 +3334,7 @@ msgid "Scroll to bottom"
 msgstr "Scroll naar beneden"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:411
+#: src/components/conversation/SelectAllConfirmationModal.tsx:410
 msgid "select.all.modal.loading.search"
 msgstr "Zoeken"
 
@@ -3486,7 +3480,16 @@ msgstr "Geselecteerde bestanden ({0}/{MAX_FILES})"
 msgid "participant.selected.microphone"
 msgstr "Geselecteerde microfoon"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:752
+#: src/components/conversation/SelectAllConfirmationModal.tsx:124
+msgid "Selection too large"
+msgstr "Selectie te groot"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:469
+msgid "select.all.modal.context.limit.reached"
+msgstr "Selectie te groot. Sommige gesprekken zijn niet toegevoegd."
+
+#: src/routes/project/chat/ProjectChatRoute.tsx:762
 msgid "Send"
 msgstr "Verzenden"
 
@@ -3610,17 +3613,22 @@ msgstr "Overslaan"
 msgid "Skip data privacy slide (Host manages legal base)"
 msgstr "Gegevensprivacy slides (Host beheert rechtsgrondslag)"
 
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:572
+msgid "select.all.modal.context.limit.reached.description"
+msgstr "Overgeslagen omdat de selectie te groot was."
+
 #~ msgid "Some conversations are still being processed. Auto-select will work optimally once audio processing is complete."
 #~ msgstr "Sommige gesprekken worden nog verwerkt. Automatische selectie zal optimaal werken zodra de audioverwerking is voltooid."
-
-#. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:317
-msgid "select.all.modal.skip.disclaimer"
-msgstr "Sommige gesprekken kunnen worden overgeslagen vanwege een leeg transcript of contextlimiet"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:430
 msgid "Some files were already selected and won't be added twice."
 msgstr "Sommige bestanden werden al geselecteerd en worden niet dubbel toegevoegd."
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:317
+msgid "select.all.modal.skip.disclaimer"
+msgstr "Sommige kunnen worden overgeslagen (geen transcript of selectie te groot)."
 
 #: src/routes/auth/Login.tsx:158
 #: src/components/participant/ParticipantInitiateForm.tsx:84
@@ -3724,7 +3732,7 @@ msgstr "Opnieuw beginnen"
 msgid "Status"
 msgstr "Status"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:581
+#: src/routes/project/chat/ProjectChatRoute.tsx:591
 msgid "Stop"
 msgstr "Stop"
 
@@ -3827,7 +3835,7 @@ msgstr "Neem even de tijd om een resultaat te creëren dat je bijdrage concreet 
 msgid "participant.refine.make.concrete.description"
 msgstr "Neem even de tijd om een resultaat te creëren dat je bijdrage concreet maakt."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:417
+#: src/routes/project/chat/ProjectChatRoute.tsx:427
 msgid "Template applied"
 msgstr "Template toegepast"
 
@@ -3947,14 +3955,9 @@ msgstr "Er is een fout opgetreden bij het verifiëren van uw e-mail. Probeer het
 #~ msgstr "Dit zijn uw standaard weergave sjablonen. Zodra u uw bibliotheek hebt gemaakt, zullen deze uw eerste twee weergaven zijn."
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:614
+#: src/components/conversation/SelectAllConfirmationModal.tsx:611
 msgid "select.all.modal.other.reason.description"
 msgstr "Deze gesprekken werden uitgesloten vanwege ontbrekende transcripties."
-
-#. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:574
-msgid "select.all.modal.context.limit.reached.description"
-msgstr "Deze conversaties zijn overgeslagen omdat de contextlimiet is bereikt."
 
 #: src/components/view/DummyViews.tsx:8
 msgid "These default view templates will be generated when you create your first library."
@@ -3999,7 +4002,7 @@ msgstr "Dit is een live voorbeeld van het portaal van de deelnemer. U moet de pa
 #~ msgid "This is a very simple tool where you can record conversations or stories to make your voice heard."
 #~ msgstr "Met deze tool kan je gesprekken of verhalen opnemen om je stem te laten horen."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:856
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:852
 msgid "This is an example of the JSON data sent to your webhook URL when a conversation is summarized."
 msgstr ""
 
@@ -4121,6 +4124,11 @@ msgstr "Om een nieuw trefwoord toe te wijzen, maak het eerst in het projectoverz
 #: src/components/report/CreateReportForm.tsx:91
 msgid "To generate a report, please start by adding conversations in your project"
 msgstr "Om een rapport te genereren, voeg eerst gesprekken toe aan uw project"
+
+#. js-lingui-explicit-id
+#: src/components/conversation/SelectAllConfirmationModal.tsx:534
+msgid "select.all.modal.context.limit"
+msgstr "Te groot"
 
 #: src/components/conversation/SelectAllConfirmationModal.tsx:128
 msgid "Too long"
@@ -4267,7 +4275,7 @@ msgstr "Tweestapsverificatie aangezet"
 msgid "Type"
 msgstr "Type"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:707
+#: src/routes/project/chat/ProjectChatRoute.tsx:717
 msgid "Type a message..."
 msgstr "Typ een bericht..."
 
@@ -4298,7 +4306,7 @@ msgstr "Het gegenereerde artefact kan niet worden geladen. Probeer het opnieuw."
 msgid "Unable to process this chunk"
 msgstr "Kan dit fragment niet verwerken"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:419
+#: src/routes/project/chat/ProjectChatRoute.tsx:429
 msgid "Undo"
 msgstr "Ongedaan maken"
 
@@ -4411,8 +4419,8 @@ msgstr ""
 msgid "Use PII Redaction"
 msgstr "PII redaction gebruiken"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:729
-#: src/routes/project/chat/ProjectChatRoute.tsx:759
+#: src/routes/project/chat/ProjectChatRoute.tsx:739
+#: src/routes/project/chat/ProjectChatRoute.tsx:769
 msgid "Use Shift + Enter to add a new line"
 msgstr "Gebruik Shift + Enter om een nieuwe regel toe te voegen"
 
@@ -4432,7 +4440,7 @@ msgid "select.all.modal.verified"
 msgstr "Geverifieerd"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:434
+#: src/components/conversation/SelectAllConfirmationModal.tsx:433
 msgid "select.all.modal.loading.verified"
 msgstr "Geverifieerd"
 
@@ -4573,7 +4581,7 @@ msgstr "Welkom terug"
 #~ msgid "Welcome to Big Picture Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Details mode."
 #~ msgstr "Welkom in Big Picture Mode! Ik heb samenvattingen van al je gesprekken klaarstaan. Vraag me naar patronen, thema’s en inzichten in je data. Voor exacte quotes start je een nieuwe chat in Specific Details mode."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:517
+#: src/routes/project/chat/ProjectChatRoute.tsx:527
 msgid "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
 msgstr "Welkom bij Dembrane Chat! Gebruik de zijbalk om bronnen en gesprekken te selecteren die je wilt analyseren. Daarna kun je vragen stellen over de geselecteerde inhoud."
 
@@ -4584,7 +4592,7 @@ msgstr "Welkom bij Dembrane!"
 #~ msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Deep Dive mode."
 #~ msgstr "Welkom in Overview Mode! Ik heb samenvattingen van al je gesprekken klaarstaan. Vraag me naar patronen, thema’s en inzichten in je data. Voor exacte quotes start je een nieuwe chat in Deep Dive Mode."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:516
+#: src/routes/project/chat/ProjectChatRoute.tsx:526
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Welkom in Overview Mode! Ik heb samenvattingen van al je gesprekken klaarstaan. Vraag me naar patronen, thema’s en inzichten in je data. Voor exacte quotes start je een nieuwe chat in Specific Context mode."
 

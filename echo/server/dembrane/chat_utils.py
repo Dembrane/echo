@@ -15,15 +15,15 @@ from litellm.exceptions import (
     ContextWindowExceededError,
 )
 
-from dembrane.llms import MODELS, get_completion_kwargs, arouter_completion
+from dembrane.llms import MODELS, arouter_completion, get_completion_kwargs
 from dembrane.prompts import render_prompt
 from dembrane.service import chat_service, conversation_service
 from dembrane.directus import directus
 from dembrane.settings import get_settings
+from dembrane.llm_router import get_min_context_length
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.conversation import get_conversation_transcript
 from dembrane.api.dependency_auth import DirectusSession
-from dembrane.llm_router import get_min_context_length
 
 logger = logging.getLogger("chat_utils")
 

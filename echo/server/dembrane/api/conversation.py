@@ -23,13 +23,13 @@ from dembrane.audio_utils import (
 from dembrane.reply_utils import generate_reply_for_conversation
 from dembrane.api.stateless import generate_summary
 from dembrane.async_helpers import run_in_thread_pool
+from dembrane.stream_status import stream_with_status
 from dembrane.api.exceptions import (
     NoContentFoundException,
     ConversationNotFoundException,
 )
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
 from dembrane.service.conversation import ConversationService
-from dembrane.stream_status import stream_with_status
 
 logger = getLogger("api.conversation")
 ConversationRouter = APIRouter(tags=["conversation"])
@@ -466,7 +466,7 @@ async def get_reply_for_conversation(
             yield "3:" + json.dumps("Something went wrong.") + "\n"
 
     # Wrap with status notifications for high load scenarios
-    stream = stream_with_status(generate(), delay_threshold_seconds=5.0, protocol="data")
+    stream = stream_with_status(generate(), protocol="data")
 
     return StreamingResponse(
         stream,

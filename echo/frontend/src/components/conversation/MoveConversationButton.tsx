@@ -22,6 +22,8 @@ import { useParams } from "react-router";
 import { FormLabel } from "@/components/form/FormLabel";
 import { useInfiniteProjects } from "@/components/project/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { analytics } from "@/lib/analytics";
+import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { useMoveConversationMutation } from "./hooks";
 
 export const MoveConversationButton = ({
@@ -73,6 +75,12 @@ export const MoveConversationButton = ({
 
 	const handleMove = handleSubmit((data) => {
 		if (!data.targetProjectId) return;
+
+		try {
+			analytics.trackEvent(events.MOVE_TO_ANOTHER_PROJECT);
+		} catch (error) {
+			console.warn("Analytics tracking failed:", error);
+		}
 
 		moveConversationMutation.mutate(
 			{
