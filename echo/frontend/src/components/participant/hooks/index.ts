@@ -7,7 +7,6 @@ import {
 	getParticipantConversationById,
 	getParticipantConversationChunks,
 	getParticipantProjectById,
-	getParticipantTutorialCardsBySlug,
 	initiateConversation,
 	submitNotificationParticipant,
 	uploadConversationChunk,
@@ -330,15 +329,6 @@ export const useParticipantProjectById = (projectId: string) => {
 	return useQuery({
 		queryFn: () => getParticipantProjectById(projectId),
 		queryKey: ["participantProject", projectId],
-	});
-};
-
-export const useParticipantTutorialCardBySlug = (slug: string) => {
-	return useQuery({
-		enabled: slug !== "",
-		queryFn: () => getParticipantTutorialCardsBySlug(slug),
-		queryKey: ["participantTutorialCard", slug],
-		select: (data) => (data.length > 0 ? data[0] : null),
 	});
 };
 

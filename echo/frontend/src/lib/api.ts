@@ -8,8 +8,7 @@ import axios, {
 } from "axios";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL, USE_PARTICIPANT_ROUTER } from "@/config";
-import { directus, directusContent } from "./directus";
-import type { EchoPortalTutorial } from "./typesDirectusContent";
+import { directus } from "./directus";
 
 export const apiCommonConfig: CreateAxiosDefaults = {
 	baseURL: API_BASE_URL,
@@ -42,45 +41,6 @@ export const getParticipantConversationById = async (
 ) => {
 	return apiNoAuth.get<unknown, Conversation>(
 		`/participant/projects/${projectId}/conversations/${conversationId}`,
-	);
-};
-
-export const getParticipantTutorialCardsBySlug = async (slug: string) => {
-	return directusContent.request<EchoPortalTutorial[]>(
-		readItems("echo__portal_tutorial", {
-			deep: {
-				cards: {
-					_sort: "sort",
-				} as any,
-			},
-			fields: [
-				"id",
-				"slug",
-				"count(cards)",
-				{
-					cards: [
-						"id",
-						"sort",
-						{
-							echo__portal_tutorial_card_id: [
-								"id",
-								"user_confirmation_required",
-								"icon",
-								"link",
-								{
-									translations: ["*"],
-								},
-							],
-						},
-					],
-				},
-			],
-			filter: {
-				slug: {
-					_eq: slug,
-				},
-			},
-		}),
 	);
 };
 
@@ -1319,8 +1279,12 @@ export interface WebhookTestResult {
 	message: string;
 }
 
-export const getProjectWebhooks = async (projectId: string): Promise<Webhook[]> => {
-	const response = await api.get<unknown, Webhook[]>(`/projects/${projectId}/webhooks`);
+export const getProjectWebhooks = async (
+	projectId: string,
+): Promise<Webhook[]> => {
+	const response = await api.get<unknown, Webhook[]>(
+		`/projects/${projectId}/webhooks`,
+	);
 	return response;
 };
 
@@ -1328,7 +1292,10 @@ export const createProjectWebhook = async (
 	projectId: string,
 	payload: WebhookCreatePayload,
 ): Promise<Webhook> => {
-	const response = await api.post<unknown, Webhook>(`/projects/${projectId}/webhooks`, payload);
+	const response = await api.post<unknown, Webhook>(
+		`/projects/${projectId}/webhooks`,
+		payload,
+	);
 	return response;
 };
 
