@@ -67,7 +67,7 @@ middleware = [
         CORSMiddleware,
         allow_origins=origins,
         allow_credentials=True,
-        allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
+        allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE", "PATCH"],
         allow_headers=["*"],
         expose_headers=["*"],
         max_age=86400,
