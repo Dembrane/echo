@@ -280,8 +280,10 @@ class FeatureFlagSettings(BaseSettings):
     )
     webhooks_enabled: bool = Field(
         default=False,
-        alias="WEBHOOKS_ENABLED",
-        validation_alias=AliasChoices("WEBHOOKS_ENABLED", "FEATURE_FLAGS__WEBHOOKS_ENABLED"),
+        alias="ENABLE_WEBHOOKS",
+        validation_alias=AliasChoices(
+            "ENABLE_WEBHOOKS", "FEATURE_FLAGS__ENABLE_WEBHOOKS"
+        ),
     )
 
 

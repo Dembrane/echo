@@ -67,9 +67,7 @@ class WebhookTestResponseSchema(BaseModel):
 # =============================================================================
 
 
-async def _check_project_access(
-    project_id: str, auth: DependencyDirectusSession
-) -> dict:
+async def _check_project_access(project_id: str, auth: DependencyDirectusSession) -> dict:
     """Helper to verify project access and return the project."""
     project_service = ProjectService(directus_client=auth.client)
     try:
@@ -174,7 +172,9 @@ async def create_webhook(
         with directus_client_context(auth.client) as client:
             webhook_data = {
                 "id": generate_uuid(),
-                "project_id": project_id,
+                "project_id": {
+                    "id": project_id,
+                },
                 "name": body.name,
                 "url": body.url,
                 "events": json.dumps(body.events),
@@ -264,7 +264,7 @@ async def update_webhook(
 
             if update_data:
                 client.update_item("project_webhook", webhook_id, update_data)
-            
+
             # Re-fetch the complete webhook to ensure we return all fields
             updated_webhooks = client.get_items(
                 "project_webhook",
@@ -302,7 +302,9 @@ async def update_webhook(
     )
 
 
-@ProjectWebhookRouter.delete("/{project_id}/webhooks/{webhook_id}", status_code=HTTPStatus.NO_CONTENT)
+@ProjectWebhookRouter.delete(
+    "/{project_id}/webhooks/{webhook_id}", status_code=HTTPStatus.NO_CONTENT
+)
 async def delete_webhook(
     project_id: str,
     webhook_id: str,
@@ -384,7 +386,7 @@ async def test_webhook(
     # Build test payload using the same structure as real webhooks
     # Create a mock conversation that matches the real payload structure
     service = WebhookService(directus_client=auth.client)
-    
+
     mock_conversation = {
         "id": "test-conversation-id",
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -398,8 +400,8 @@ async def test_webhook(
         "tags": [],  # Empty tags like a real conversation without tags
         "summary": "This is a test summary for webhook testing.",
     }
-    
-    # Use the service's build_payload method with "conversation.summarized" 
+
+    # Use the service's build_payload method with "conversation.summarized"
     # to get all fields (including transcript and summary), then override event
     test_payload = service.build_payload(
         event="conversation.summarized",  # Use this to include all fields
@@ -407,7 +409,7 @@ async def test_webhook(
         project=project,
         transcript="This is a test transcript for webhook testing.",
     )
-    
+
     # Override the event to indicate this is a test
     test_payload["event"] = "webhook.test"
 
@@ -438,4 +440,3 @@ async def test_webhook(
             status_code=None,
             message=f"Failed to connect to webhook: {str(e)}",
         )
-

@@ -45,3 +45,4 @@ export const ENABLE_CHAT_SELECT_ALL = true;
 export const ENABLE_CONVERSATION_HEALTH = true;
 export const ENABLE_ANNOUNCEMENTS = true;
 export const ENABLE_DISPLAY_CONVERSATION_LINKS = true;
+export const ENABLE_WEBHOOKS = true;

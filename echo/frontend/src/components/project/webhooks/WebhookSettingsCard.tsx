@@ -821,16 +821,12 @@ export const WebhookSection = ({ projectId }: WebhookSectionProps) => {
 						</Text>
 						<Text size="sm">
 							<Trans>
-								If you're an advanced user setting up webhook integrations, we'd
-								love to learn about your use case. We're also building
-								observability features including audit logs and delivery
-								tracking.
+								If you're setting up webhook integrations, we'd love to learn
+								about your use case. We're also building observability features
+								including audit logs and delivery tracking.
 							</Trans>
 						</Text>
 						<Group gap="md">
-							<Anchor href="mailto:sameer@dembrane.com" size="sm">
-								sameer@dembrane.com
-							</Anchor>
 							<Anchor
 								href="https://cal.com/sameer-dembrane"
 								target="_blank"
