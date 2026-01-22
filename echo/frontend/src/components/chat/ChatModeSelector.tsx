@@ -16,6 +16,8 @@ import {
 	IconQuote,
 } from "@tabler/icons-react";
 import { useState } from "react";
+import { analytics } from "@/lib/analytics";
+import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import type { ChatMode } from "@/lib/api";
 import { useInitializeChatModeMutation } from "./hooks";
 
@@ -201,6 +203,15 @@ export const ChatModeSelector = ({
 
 	const handleSelectMode = async (mode: ChatMode) => {
 		setSelectedMode(mode);
+
+		// Track overview mode selection
+		if (mode === "overview") {
+			try {
+				analytics.trackEvent(events.OVERVIEW_MODE_CHAT_CLICK);
+			} catch (error) {
+				console.warn("Analytics tracking failed:", error);
+			}
+		}
 
 		if (isNewChat) {
 			// For new chat, just call the callback - parent will create the chat

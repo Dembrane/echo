@@ -3,13 +3,12 @@ import asyncio
 import logging
 from typing import Any, Dict, List, Literal, Iterable, Optional, AsyncGenerator
 
-import litellm
 from fastapi import Query, APIRouter, HTTPException
 from pydantic import BaseModel
 from litellm.utils import token_counter
 from fastapi.responses import StreamingResponse
 
-from dembrane.llms import get_completion_kwargs
+from dembrane.llms import MODELS, arouter_completion, get_completion_kwargs
 from dembrane.utils import generate_uuid
 from dembrane.prompts import render_prompt
 from dembrane.service import (
@@ -27,6 +26,7 @@ from dembrane.chat_utils import (
 )
 from dembrane.service.chat import ChatServiceException, ChatNotFoundException
 from dembrane.async_helpers import run_in_thread_pool
+from dembrane.stream_status import stream_with_status
 from dembrane.api.rate_limit import create_rate_limiter
 from dembrane.api.conversation import get_conversation_token_count
 from dembrane.api.dependency_auth import DirectusSession, DependencyDirectusSession
@@ -80,11 +80,11 @@ async def is_followup_question(
     )
 
     try:
-        response = await litellm.acompletion(
+        response = await arouter_completion(
+            MODELS.TEXT_FAST,
             messages=[{"role": "user", "content": prompt}],
             temperature=0,  # Deterministic
             timeout=60,  # 1 minute timeout for quick decision
-            **get_completion_kwargs(CHAT_LLM),
         )
 
         result_text = response.choices[0].message.content.strip()
@@ -1103,12 +1103,12 @@ async def post_chat(
                 yield header_payload
 
             try:
-                response = await litellm.acompletion(
+                response = await arouter_completion(
+                    MODELS.TEXT_FAST,
                     messages=formatted,
                     stream=True,
                     timeout=300,
                     stream_timeout=180,
-                    **get_completion_kwargs(CHAT_LLM),
                 )
                 async for chunk in response:
                     delta = chunk.choices[0].delta.content
@@ -1130,9 +1130,12 @@ async def post_chat(
             headers["x-vercel-ai-data-stream"] = "v1"
 
         if conversations_added_ids and conversation_references["references"]:
-            stream = stream_response_async(formatted_messages, conversation_references)
+            raw_stream = stream_response_async(formatted_messages, conversation_references)
         else:
-            stream = stream_response_async(formatted_messages)
+            raw_stream = stream_response_async(formatted_messages)
+
+        # Wrap with status notifications for high load scenarios
+        stream = stream_with_status(raw_stream, protocol=protocol)
 
         return StreamingResponse(stream, headers=headers)
 

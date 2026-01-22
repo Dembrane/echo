@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useOutletContext, useParams, useSearchParams } from "react-router";
 import { API_BASE_URL } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useLoadNotification } from "@/hooks/useLoadNotification";
 import {
 	useConversationQuery,
 	useConversationRepliesQuery,
@@ -43,6 +44,7 @@ export const ParticipantConversationAudioContent = () => {
 		status: echoStatus,
 		error: echoError,
 		handleSubmit,
+		data: echoData,
 	} = useChat({
 		api: `${API_BASE_URL}/conversations/${conversationId}/get-reply`,
 		body: { language: iso639_1 },
@@ -65,6 +67,15 @@ export const ParticipantConversationAudioContent = () => {
 			removeValue();
 		},
 	});
+
+	// Handle load status notifications (shows toast when backend reports high load)
+	const hasEchoContent = echoMessages.length > 0 && echoMessages[echoMessages.length - 1]?.content?.length > 0;
+	useLoadNotification({
+		data: echoData,
+		isLoading: echoIsLoading,
+		hasContent: hasEchoContent,
+	});
+
 	const handleReply = async (e: React.MouseEvent<HTMLButtonElement>) => {
 		try {
 			setTimeout(() => {

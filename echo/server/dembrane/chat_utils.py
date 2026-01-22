@@ -5,9 +5,8 @@ import logging
 from typing import Any, Dict, List, Optional
 
 import backoff
-from litellm import acompletion
 from pydantic import BaseModel
-from litellm.utils import token_counter, get_model_info
+from litellm.utils import token_counter
 from litellm.exceptions import (
     Timeout,
     APIError,
@@ -16,11 +15,12 @@ from litellm.exceptions import (
     ContextWindowExceededError,
 )
 
-from dembrane.llms import MODELS, get_completion_kwargs
+from dembrane.llms import MODELS, arouter_completion, get_completion_kwargs
 from dembrane.prompts import render_prompt
 from dembrane.service import chat_service, conversation_service
 from dembrane.directus import directus
 from dembrane.settings import get_settings
+from dembrane.llm_router import get_min_context_length
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.conversation import get_conversation_transcript
 from dembrane.api.dependency_auth import DirectusSession
@@ -30,21 +30,9 @@ logger = logging.getLogger("chat_utils")
 # Global LLM model for chat operations
 CHAT_LLM = MODELS.TEXT_FAST
 
-_chat_llm_kwargs = get_completion_kwargs(CHAT_LLM)
-_chat_llm_model = _chat_llm_kwargs["model"]
-
-_model_info = get_model_info(_chat_llm_model)
-_max_input_tokens = _model_info["max_input_tokens"] if _model_info else None
-
-if _max_input_tokens is None:
-    logger.warning(f"Could not get max tokens for model {_chat_llm_model}")
-    MAX_CHAT_CONTEXT_LENGTH = 128000  # good default
-else:
-    MAX_CHAT_CONTEXT_LENGTH = int(_max_input_tokens * 0.8)
-
-logger.info(
-    f"Using {_chat_llm_model} for chat operations with context length {MAX_CHAT_CONTEXT_LENGTH}"
-)
+# Get the minimum context length across all TEXT_FAST deployments
+# This ensures we don't exceed limits when router picks any deployment
+MAX_CHAT_CONTEXT_LENGTH = get_min_context_length("text_fast")
 
 settings = get_settings()
 DISABLE_CHAT_TITLE_GENERATION = settings.feature_flags.disable_chat_title_generation
@@ -369,9 +357,9 @@ async def generate_title(
         "generate_chat_title", "en", {"user_query": user_query, "language": language}
     )
 
-    response = await acompletion(
+    response = await arouter_completion(
+        MODELS.MULTI_MODAL_PRO,
         messages=[{"role": "user", "content": title_prompt}],
-        **get_completion_kwargs(MODELS.MULTI_MODAL_PRO),
     )
 
     if response.choices[0].message.content is None:
@@ -511,11 +499,12 @@ async def auto_select_conversations(
 async def _call_llm_with_backoff(prompt: str, batch_num: int) -> Any:
     """Call LLM with automatic retry for transient errors."""
     logger.debug(f"Calling LLM for batch {batch_num}")
-    return await acompletion(
+    # Router handles load balancing and failover; backoff provides additional safety
+    return await arouter_completion(
+        MODELS.TEXT_FAST,
         messages=[{"role": "user", "content": prompt}],
         response_format={"type": "json_object"},
         timeout=5 * 60,  # 5 minutes
-        **get_completion_kwargs(CHAT_LLM),
     )
 
 
@@ -614,7 +603,7 @@ async def _process_single_batch(
     try:
         prompt_tokens = token_counter(
             messages=[{"role": "user", "content": prompt}],
-            model=_chat_llm_model,
+            model=get_completion_kwargs(CHAT_LLM)["model"],
         )
         MAX_BATCH_CONTEXT = MAX_CHAT_CONTEXT_LENGTH  # Leave headroom for response
 

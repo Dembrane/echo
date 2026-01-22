@@ -11,6 +11,8 @@ import { ProjectDangerZone } from "@/components/project/ProjectDangerZone";
 import { ProjectExportSection } from "@/components/project/ProjectExportSection";
 import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
 import { ProjectUploadSection } from "@/components/project/ProjectUploadSection";
+import { WebhookSection } from "@/components/project/webhooks/WebhookSettingsCard";
+import { ENABLE_WEBHOOKS } from "@/config";
 import { getProjectTranscriptsLink } from "@/lib/api";
 
 export const ProjectSettingsRoute = () => {
@@ -53,7 +55,14 @@ export const ProjectSettingsRoute = () => {
 						projectName={projectQuery.data.name}
 					/>
 
-					{/* 
+					{ENABLE_WEBHOOKS && (
+						<>
+							<Divider />
+							<WebhookSection projectId={projectId ?? ""} />
+						</>
+					)}
+
+					{/*
           {projectId && (
             <>
               <Divider />

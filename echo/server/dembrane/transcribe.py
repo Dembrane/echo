@@ -20,7 +20,7 @@ import requests
 import sentry_sdk
 
 from dembrane.s3 import get_signed_url, get_stream_from_s3
-from dembrane.llms import MODELS, get_completion_kwargs
+from dembrane.llms import MODELS, router_completion
 from dembrane.prompts import render_prompt
 from dembrane.service import file_service, conversation_service
 from dembrane.directus import directus
@@ -232,8 +232,9 @@ def _transcript_correction_workflow(
 
     assert GCP_SA_JSON, "GCP_SA_JSON is not set"
 
-    completion_kwargs = get_completion_kwargs(MODELS.MULTI_MODAL_PRO)
-    response = litellm.completion(
+    # Use router for load balancing and failover across Gemini regions
+    response = router_completion(
+        MODELS.MULTI_MODAL_PRO,
         messages=[
             {
                 "role": "system",
@@ -259,7 +260,6 @@ def _transcript_correction_workflow(
             "type": "json_object",
             "response_schema": response_schema,
         },
-        **completion_kwargs,
     )
 
     json_response = json.loads(response.choices[0].message.content)

@@ -13,10 +13,12 @@ sections and exposes a friendly, typed surface area for the rest of the app.
 
 from __future__ import annotations
 
+import os
+import re
 import json
 import base64
 import logging
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Dict, List, Tuple, Literal, Optional
 from pathlib import Path
 from functools import lru_cache
 
@@ -125,6 +127,77 @@ class LLMSettings(BaseSettings):
     multi_modal_fast: LLMProviderConfig = Field(default_factory=LLMProviderConfig)
     text_fast: LLMProviderConfig = Field(default_factory=LLMProviderConfig)
 
+    def get_deployments_for_group(
+        self, group: str
+    ) -> List[Tuple[Optional[int], LLMProviderConfig]]:
+        """
+        Discover all deployments for a model group (e.g., 'text_fast').
+
+        Looks for environment variables matching:
+        - LLM__TEXT_FAST__* (primary, suffix=None)
+        - LLM__TEXT_FAST_1__* (fallback 1, suffix=1)
+        - LLM__TEXT_FAST_2__* (fallback 2, suffix=2)
+        - etc.
+
+        Returns a list of (suffix, LLMProviderConfig) tuples sorted by suffix.
+        suffix=None for primary, 1 for _1, 2 for _2, etc.
+        """
+        deployments: List[Tuple[Optional[int], LLMProviderConfig]] = []
+        group_upper = group.upper()
+
+        # Collect all suffixes found in environment
+        # Pattern: LLM__TEXT_FAST__* or LLM__TEXT_FAST_N__*
+        suffix_pattern = re.compile(rf"^LLM__{group_upper}(?:_(\d+))?__(\w+)$", re.IGNORECASE)
+
+        # Group env vars by suffix
+        suffix_vars: Dict[Optional[int], Dict[str, str]] = {}
+        for key, value in os.environ.items():
+            match = suffix_pattern.match(key)
+            if match:
+                suffix_str = match.group(1)
+                field_name = match.group(2).lower()
+                suffix = int(suffix_str) if suffix_str else None
+
+                if suffix not in suffix_vars:
+                    suffix_vars[suffix] = {}
+                suffix_vars[suffix][field_name] = value
+
+        # Build LLMProviderConfig for each suffix
+        for suffix, vars_dict in sorted(
+            suffix_vars.items(), key=lambda x: (x[0] is not None, x[0] or 0)
+        ):
+            # Map env var field names to LLMProviderConfig fields
+            config_data: Dict[str, Any] = {}
+            field_mapping = {
+                "model": "model",
+                "api_key": "api_key",
+                "api_base": "api_base",
+                "api_version": "api_version",
+                "vertex_credentials": "vertex_credentials",
+                "gcp_sa_json": "gcp_sa_json",
+                "vertex_project": "vertex_project",
+                "vertex_location": "vertex_location",
+            }
+
+            for env_field, config_field in field_mapping.items():
+                if env_field in vars_dict:
+                    value = vars_dict[env_field]
+                    # Handle JSON fields
+                    if config_field in ("vertex_credentials", "gcp_sa_json"):
+                        value = _coerce_service_account(value)
+                    config_data[config_field] = value
+
+            # Only add if model is configured
+            if config_data.get("model"):
+                config = LLMProviderConfig(**config_data)
+                deployments.append((suffix, config))
+
+        return deployments
+
+    def get_all_model_groups(self) -> List[str]:
+        """Return all known model group names."""
+        return ["multi_modal_pro", "multi_modal_fast", "text_fast"]
+
 
 class BuildSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
@@ -204,6 +277,11 @@ class FeatureFlagSettings(BaseSettings):
         default=False,
         alias="DISABLE_SENTRY",
         validation_alias=AliasChoices("DISABLE_SENTRY", "FEATURE_FLAGS__DISABLE_SENTRY"),
+    )
+    webhooks_enabled: bool = Field(
+        default=False,
+        alias="ENABLE_WEBHOOKS",
+        validation_alias=AliasChoices("ENABLE_WEBHOOKS", "FEATURE_FLAGS__ENABLE_WEBHOOKS"),
     )
 
 

@@ -139,6 +139,17 @@ install_codex() {
     log_info "codex installed"
 }
 
+install_claude_code() {
+    if command_exists claude; then
+        log_info "claude already installed: $(claude --version)"
+        return
+    fi
+    
+    log_info "Installing claude globally..."
+    curl -fsSL https://claude.ai/install.sh | bash
+    log_info "claude installed"
+}
+
 install_uv() {
     if command_exists uv; then
         log_info "uv already installed: $(uv --version)"
@@ -273,6 +284,7 @@ Options:
   -h, --help          Show this help message
   --skip-node         Skip fnm/Node.js/pnpm installation
   --skip-codex        Skip codex installation
+  --skip-claude       Skip claude installation
   --skip-frontend     Skip frontend dependency installation
   --skip-server       Skip server dependency installation
   --skip-python       Skip managed Python setup for uv
@@ -288,6 +300,7 @@ EOF
 parse_args() {
     SKIP_NODE="false"
     SKIP_CODEX="false"
+    SKIP_CLAUDE="false"
     SKIP_FRONTEND="false"
     SKIP_SERVER="false"
     SKIP_PYTHON="false"
@@ -305,6 +318,10 @@ parse_args() {
                 ;;
             --skip-codex)
                 SKIP_CODEX="true"
+                shift
+                ;;
+            --skip-claude)
+                SKIP_CLAUDE="true"
                 shift
                 ;;
             --skip-frontend)
@@ -373,6 +390,12 @@ main() {
         fi
     else
         log_info "Skipping Node.js tooling setup"
+    fi
+
+    if [ "$SKIP_CLAUDE" = "false" ]; then
+        install_claude_code
+    else
+        log_info "Skipping claude installation"
     fi
 
     install_uv

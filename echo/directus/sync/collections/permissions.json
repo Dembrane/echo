@@ -1720,6 +1720,94 @@
     "_syncId": "462f9a07-ae2f-4070-b91e-f12ed7eaff89"
   },
   {
+    "collection": "project_webhook",
+    "action": "create",
+    "permissions": null,
+    "validation": {
+      "_and": [
+        {
+          "project_id": {
+            "directus_user_id": {
+              "_eq": "$CURRENT_USER"
+            }
+          }
+        }
+      ]
+    },
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
+    "_syncId": "11dc0f41-5db8-4172-9487-2611923f205b"
+  },
+  {
+    "collection": "project_webhook",
+    "action": "delete",
+    "permissions": {
+      "_and": [
+        {
+          "project_id": {
+            "directus_user_id": {
+              "_eq": "$CURRENT_USER"
+            }
+          }
+        }
+      ]
+    },
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
+    "_syncId": "650d75b3-90bc-4e90-b744-2b432db60829"
+  },
+  {
+    "collection": "project_webhook",
+    "action": "read",
+    "permissions": {
+      "_and": [
+        {
+          "project_id": {
+            "directus_user_id": {
+              "_eq": "$CURRENT_USER"
+            }
+          }
+        }
+      ]
+    },
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
+    "_syncId": "7587cc08-f56d-4177-9f0a-b3708c775c50"
+  },
+  {
+    "collection": "project_webhook",
+    "action": "update",
+    "permissions": {
+      "_and": [
+        {
+          "project_id": {
+            "directus_user_id": {
+              "_eq": "$CURRENT_USER"
+            }
+          }
+        }
+      ]
+    },
+    "validation": null,
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
+    "_syncId": "410aab1d-8bd6-4e85-9142-cda007d2a185"
+  },
+  {
     "collection": "project",
     "action": "create",
     "permissions": null,

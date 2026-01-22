@@ -13,6 +13,8 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconCopy, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { analytics } from "@/lib/analytics";
+import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { ExponentialProgress } from "../common/ExponentialProgress";
 import {
 	useCloneProjectByIdMutation,
@@ -37,6 +39,12 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 
 	const handleClone = async () => {
 		try {
+			analytics.trackEvent(events.CLONE_PROJECT);
+		} catch (error) {
+			console.warn("Analytics tracking failed:", error);
+		}
+
+		try {
 			const newProjectId = await cloneProjectByIdMutation.mutateAsync({
 				id: project.id,
 				payload: {
@@ -59,6 +67,11 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 				t`By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you ABSOLUTELY sure you want to delete this project?`,
 			)
 		) {
+			try {
+				analytics.trackEvent(events.DELETE_PROJECT);
+			} catch (error) {
+				console.warn("Analytics tracking failed:", error);
+			}
 			deleteProjectByIdMutation.mutate(project.id);
 			navigate("/projects");
 		}

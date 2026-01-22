@@ -6,6 +6,8 @@ import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { analytics } from "@/lib/analytics";
+import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { FormLabel } from "../form/FormLabel";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
 import { SaveStatus } from "../form/SaveStatus";
@@ -47,6 +49,12 @@ const ReportEditorComponent: React.FC<{
 
 	const onSave = useCallback(
 		async (values: ReportEditorFormValues) => {
+			try {
+				analytics.trackEvent(events.EDIT_REPORT);
+			} catch (error) {
+				console.warn("Analytics tracking failed:", error);
+			}
+
 			const projectId =
 				typeof report.project_id === "object" && report.project_id?.id
 					? report.project_id.id

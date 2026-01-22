@@ -23,6 +23,7 @@ from dembrane.audio_utils import (
 from dembrane.reply_utils import generate_reply_for_conversation
 from dembrane.api.stateless import generate_summary
 from dembrane.async_helpers import run_in_thread_pool
+from dembrane.stream_status import stream_with_status
 from dembrane.api.exceptions import (
     NoContentFoundException,
     ConversationNotFoundException,
@@ -464,8 +465,11 @@ async def get_reply_for_conversation(
             logger.error(f"Error generating reply for conversation {conversation_id}: {str(e)}")
             yield "3:" + json.dumps("Something went wrong.") + "\n"
 
+    # Wrap with status notifications for high load scenarios
+    stream = stream_with_status(generate(), protocol="data")
+
     return StreamingResponse(
-        generate(),
+        stream,
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

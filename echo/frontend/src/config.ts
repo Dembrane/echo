@@ -1,5 +1,6 @@
 export const USE_PARTICIPANT_ROUTER =
 	import.meta.env.VITE_USE_PARTICIPANT_ROUTER === "1";
+
 export const ADMIN_BASE_URL =
 	import.meta.env.VITE_ADMIN_BASE_URL ?? window.location.origin;
 export const PARTICIPANT_BASE_URL =
@@ -17,10 +18,6 @@ export const DIRECTUS_PUBLIC_URL = (() => {
 	// Default fallback
 	return "http://localhost:8055";
 })();
-
-export const DIRECTUS_CONTENT_PUBLIC_URL =
-	import.meta.env.VITE_DIRECTUS_CONTENT_PUBLIC_URL ??
-	"https://dembrane.directus.app";
 
 export const DISABLE_SENTRY = import.meta.env.VITE_DISABLE_SENTRY === "1";
 
@@ -43,10 +40,9 @@ export const PLAUSIBLE_API_HOST =
 
 export const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === "1";
 
-export const ENABLE_CHAT_SELECT_ALL =
-	import.meta.env.VITE_ENABLE_CHAT_SELECT_ALL === "1";
-
 export const ENABLE_CHAT_AUTO_SELECT = false;
+export const ENABLE_CHAT_SELECT_ALL = true;
 export const ENABLE_CONVERSATION_HEALTH = true;
 export const ENABLE_ANNOUNCEMENTS = true;
 export const ENABLE_DISPLAY_CONVERSATION_LINKS = true;
+export const ENABLE_WEBHOOKS = true;
