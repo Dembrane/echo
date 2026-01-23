@@ -20,7 +20,7 @@ import {
 } from "@tabler/icons-react";
 import clsx from "clsx";
 import Cookies from "js-cookie";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, useParams } from "react-router";
 
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
@@ -69,14 +69,24 @@ export const ParticipantConversationAudio = () => {
 	const conversationQuery = useConversationQuery(projectId, conversationId);
 	const chunks = useConversationChunksQuery(projectId, conversationId);
 	const uploadChunkMutation = useUploadConversationChunk();
+	const pendingUploadsRef = useRef<Promise<unknown>[]>([]);
 
 	const onChunk = (chunk: Blob) => {
-		uploadChunkMutation.mutate({
+		const uploadPromise = uploadChunkMutation.mutateAsync({
 			chunk,
 			conversationId: conversationId ?? "",
 			runFinishHook: false,
 			source: "PORTAL_AUDIO",
 			timestamp: new Date(),
+		});
+
+		pendingUploadsRef.current.push(uploadPromise);
+
+		// Clean up promise from array when done (success or error)
+		uploadPromise.finally(() => {
+			pendingUploadsRef.current = pendingUploadsRef.current.filter(
+				(p) => p !== uploadPromise,
+			);
 		});
 	};
 
@@ -93,6 +103,7 @@ export const ParticipantConversationAudio = () => {
 
 	const [isFinishing, _setIsFinishing] = useState(false);
 	const [isStopping, setIsStopping] = useState(false);
+	const [stoppedRecordingTime, setStoppedRecordingTime] = useState<number | null>(null);
 	const [opened, { open, close }] = useDisclosure(false);
 	const [
 		refineInfoModalOpened,
@@ -109,9 +120,6 @@ export const ParticipantConversationAudio = () => {
 		startRecording,
 		stopRecording,
 		isRecording,
-		isPaused,
-		pauseRecording,
-		resumeRecording,
 		recordingTime,
 		errored,
 		permissionError,
@@ -187,7 +195,8 @@ export const ParticipantConversationAudio = () => {
 	// Handlers
 	const handleStopRecording = () => {
 		if (isRecording) {
-			pauseRecording();
+			setStoppedRecordingTime(recordingTime); // Capture time before stopping
+			stopRecording(); // Actually stop to trigger final chunk upload immediately
 			open();
 		}
 	};
@@ -196,6 +205,26 @@ export const ParticipantConversationAudio = () => {
 		setIsStopping(true);
 		try {
 			stopRecording();
+
+			// Small delay to ensure final chunk's upload promise is added to the array
+			await new Promise((resolve) => setTimeout(resolve, 100));
+
+			// Wait for all pending uploads to complete (with timeout)
+			if (pendingUploadsRef.current.length > 0) {
+				const timeoutPromise = new Promise<"timeout">((resolve) =>
+					setTimeout(() => resolve("timeout"), 30000),
+				);
+
+				const result = await Promise.race([
+					Promise.allSettled(pendingUploadsRef.current).then(() => "done"),
+					timeoutPromise,
+				]);
+
+				if (result === "timeout") {
+					console.warn("Upload wait timeout reached, proceeding anyway");
+				}
+			}
+
 			await finishConversation(conversationId ?? "");
 			close();
 			navigate(finishUrl);
@@ -207,10 +236,23 @@ export const ParticipantConversationAudio = () => {
 	};
 
 	const handleSwitchToText = () => {
-		stopRecording();
+		setStoppedRecordingTime(null);
 		close();
 		navigate(textModeUrl);
 	};
+
+	const handleResumeRecording = () => {
+		const timeToResume = stoppedRecordingTime ?? 0;
+		// Don't clear stoppedRecordingTime here - let the useEffect do it when recording starts
+		startRecording(timeToResume);
+	};
+
+	// Clear stoppedRecordingTime when recording actually starts (avoids UI flash)
+	useEffect(() => {
+		if (isRecording && stoppedRecordingTime !== null) {
+			setStoppedRecordingTime(null);
+		}
+	}, [isRecording, stoppedRecordingTime]);
 
 	const showVerify = projectQuery.data?.is_verify_enabled;
 	const showEcho = projectQuery.data?.is_get_reply_enabled;
@@ -313,8 +355,9 @@ export const ParticipantConversationAudio = () => {
 				opened={opened}
 				close={close}
 				isStopping={isStopping}
+				isUploading={uploadChunkMutation.isPending}
 				handleConfirmFinish={handleConfirmFinish}
-				handleResume={resumeRecording}
+				handleResume={handleResumeRecording}
 				handleSwitchToText={handleSwitchToText}
 			/>
 
@@ -365,7 +408,7 @@ export const ParticipantConversationAudio = () => {
 			{!errored && (
 				<Stack
 					gap="lg"
-					className="sticky bottom-0 z-10 w-full border-t border-slate-300 bg-white p-4"
+					className="sticky bottom-0 z-10 w-full min-h-[84px] border-t border-slate-300 bg-white p-4"
 				>
 					<Group
 						justify="center"
@@ -380,40 +423,50 @@ export const ParticipantConversationAudio = () => {
 					</Group>
 
 					<Group justify="space-between">
-						{/* Recording time indicator */}
-						{isRecording && (
+						{/* Recording time indicator - show when recording OR when stop modal is open OR resuming */}
+						{(isRecording || opened || stoppedRecordingTime !== null) && (
 							<div className="border-slate-300 bg-white">
 								<Group justify="center" align="center" gap="xs">
-									{isPaused ? (
+									{opened || stoppedRecordingTime !== null ? (
 										<IconPlayerPause />
 									) : (
 										<div className="h-4 w-4 animate-pulse rounded-full bg-red-500" />
 									)}
 									<Text className="text-2xl">
-										{Math.floor(recordingTime / 3600) > 0 && (
-											<>
-												{Math.floor(recordingTime / 3600)
-													.toString()
-													.padStart(2, "0")}
-												:
-											</>
-										)}
-										{Math.floor((recordingTime % 3600) / 60)
-											.toString()
-											.padStart(2, "0")}
-										:{(recordingTime % 60).toString().padStart(2, "0")}
+										{(() => {
+											const displayTime =
+												stoppedRecordingTime !== null
+													? stoppedRecordingTime
+													: recordingTime;
+											return (
+												<>
+													{Math.floor(displayTime / 3600) > 0 && (
+														<>
+															{Math.floor(displayTime / 3600)
+																.toString()
+																.padStart(2, "0")}
+															:
+														</>
+													)}
+													{Math.floor((displayTime % 3600) / 60)
+														.toString()
+														.padStart(2, "0")}
+													:{(displayTime % 60).toString().padStart(2, "0")}
+												</>
+											);
+										})()}
 									</Text>
 								</Group>
 							</div>
 						)}
 
-						{!isRecording && (
+						{!isRecording && !opened && stoppedRecordingTime === null && (
 							<Group className="w-full" wrap="nowrap">
 								<Button
 									size="lg"
 									radius="md"
 									rightSection={<IconMicrophone />}
-									onClick={startRecording}
+									onClick={() => startRecording()}
 									className="flex-grow"
 								>
 									<Trans id="participant.button.record">Record</Trans>
@@ -425,8 +478,7 @@ export const ParticipantConversationAudio = () => {
 									</ActionIcon>
 								</I18nLink>
 
-								{!isRecording &&
-									!isStopping &&
+								{!isStopping &&
 									chunks?.data &&
 									chunks.data.length > 0 && (
 										<Button

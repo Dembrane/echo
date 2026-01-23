@@ -9,7 +9,7 @@ interface UseAudioRecorderOptions {
 }
 
 interface UseAudioRecorderResult {
-	startRecording: () => void;
+	startRecording: (initialTime?: number) => void;
 	stopRecording: () => void;
 	pauseRecording: () => void;
 	resumeRecording: () => void;
@@ -143,7 +143,7 @@ const useChunkedAudioRecorder = ({
 		recorder.start(timeslice * 2);
 	}, [isRecording]);
 
-	const startRecording = async () => {
+	const startRecording = async (initialTime = 0) => {
 		try {
 			log("Requesting access to the microphone...");
 			const audioConstraint = deviceId
@@ -179,6 +179,7 @@ const useChunkedAudioRecorder = ({
 			setIsRecording(true);
 			setIsPaused(false);
 			setUserPaused(false);
+			setRecordingTime(initialTime);
 			startRecordingChunk();
 
 			// allow to restart recording chunk
