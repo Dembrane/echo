@@ -526,6 +526,9 @@ def get_settings() -> AppSettings:
         "httpx",
         "httpcore",
         "LiteLLM",
+        "LiteLLM Router",
+        "LiteLLM Proxy",
+        "litellm",
         "requests",
         "psycopg",
         "s3transfer",
@@ -533,5 +536,44 @@ def get_settings() -> AppSettings:
         "multipart",
     ]:
         logging.getLogger(noisy).setLevel(logging.WARNING)
+
+    # Add a filter to redact sensitive credentials from any logs that slip through
+    class CredentialRedactingFilter(logging.Filter):
+        """Filter to redact sensitive credentials from log messages."""
+
+        import re
+
+        # Patterns for sensitive data
+        PATTERNS = [
+            # Redact entire vertex_credentials JSON blob (contains private key)
+            (re.compile(r"'vertex_credentials':\s*'[^']*'"), "'vertex_credentials': '[REDACTED]'"),
+            (re.compile(r'"vertex_credentials":\s*"[^"]*"'), '"vertex_credentials": "[REDACTED]"'),
+            # Individual sensitive fields
+            (re.compile(r'"private_key":\s*"[^"]*"'), '"private_key": "[REDACTED]"'),
+            (re.compile(r'"api_key":\s*"[^"]*"'), '"api_key": "[REDACTED]"'),
+            (re.compile(r'"password":\s*"[^"]*"'), '"password": "[REDACTED]"'),
+            (re.compile(r"'private_key':\s*'[^']*'"), "'private_key': '[REDACTED]'"),
+            (re.compile(r"'api_key':\s*'[^']*'"), "'api_key': '[REDACTED]'"),
+            (re.compile(r"-----BEGIN PRIVATE KEY-----.*?-----END PRIVATE KEY-----", re.DOTALL), "[REDACTED_PRIVATE_KEY]"),
+        ]
+
+        def filter(self, record: logging.LogRecord) -> bool:
+            if record.msg:
+                msg = str(record.msg)
+                for pattern, replacement in self.PATTERNS:
+                    msg = pattern.sub(replacement, msg)
+                record.msg = msg
+            if record.args:
+                args = []
+                for arg in record.args:
+                    if isinstance(arg, str):
+                        for pattern, replacement in self.PATTERNS:
+                            arg = pattern.sub(replacement, arg)
+                    args.append(arg)
+                record.args = tuple(args)
+            return True
+
+    # Apply the filter to the root logger to catch all logs
+    logging.getLogger().addFilter(CredentialRedactingFilter())
 
     return settings

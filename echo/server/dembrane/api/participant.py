@@ -447,6 +447,16 @@ async def confirm_chunk_upload(
                         detail="File not found in S3. Upload may have failed. Please try again.",
                     ) from e
 
+        # Check if file is too small to be valid audio (< 1KB)
+        # This can happen if recording was stopped too quickly
+        is_audio_too_small = file_size is not None and file_size < 1024
+
+        if is_audio_too_small:
+            logger.warning(
+                f"Audio file too small ({file_size} bytes) for chunk {body.chunk_id}. "
+                "Will mark as error instead of processing."
+            )
+
         # Create chunk record (reuse existing logic)
         chunk = await run_in_thread_pool(
             conversation_service.create_chunk,
@@ -458,9 +468,25 @@ async def confirm_chunk_upload(
             transcript=None,
         )
 
+        # If file is too small, mark chunk with error immediately
+        # This prevents the processing task from failing repeatedly
+        if is_audio_too_small:
+            await run_in_thread_pool(
+                conversation_service.update_chunk,
+                chunk["id"],
+                error="Audio not playable",
+            )
+            logger.info(
+                f"Chunk {body.chunk_id} marked with error 'Audio not playable' "
+                f"due to small file size ({file_size} bytes)"
+            )
+            # Update the returned chunk to include the error
+            chunk["error"] = "Audio not playable"
+
         logger.info(
             f"Chunk created successfully: {body.chunk_id}, "
             f"conversation: {conversation_id}, size: {file_size} bytes"
+            f"{', marked as error' if is_audio_too_small else ''}"
         )
 
         return chunk

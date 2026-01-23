@@ -1,8 +1,16 @@
+# ruff: noqa: E402
 import logging
 from typing import Optional
 from logging import getLogger
 
 import dramatiq
+import nest_asyncio
+
+# Apply nest_asyncio to allow nested event loops in Dramatiq workers.
+# This is required because workers run async code via run_async_in_new_loop(),
+# which may contain nested async operations like run_in_thread_pool().
+nest_asyncio.apply()
+
 import lz4.frame
 from dramatiq import group
 from dramatiq.encoder import JSONEncoder, MessageData
@@ -614,6 +622,24 @@ def task_process_conversation_chunk(
         return
 
     except Exception as e:
+        from dembrane.audio_utils import FileTooSmallError
+
+        # Handle FileTooSmallError gracefully - mark chunk with error, don't retry
+        if isinstance(e, FileTooSmallError):
+            logger.warning(
+                f"Chunk {chunk_id} has audio file too small to process. "
+                f"Marking with error instead of retrying. Error: {e}"
+            )
+            try:
+                from dembrane.service import conversation_service
+
+                conversation_service.update_chunk(chunk_id, error="Audio not playable")
+                logger.info(f"Chunk {chunk_id} marked with error 'Audio not playable'")
+            except Exception as update_error:
+                logger.error(f"Failed to update chunk {chunk_id} with error: {update_error}")
+            # Don't re-raise - this is a non-retriable error
+            return
+
         logger.error(f"Error processing conversation chunk@[{chunk_id}]: {e}")
         raise e from e
 
