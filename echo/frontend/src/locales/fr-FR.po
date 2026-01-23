@@ -91,17 +91,17 @@ msgstr " Se désabonner des notifications"
 #~ msgstr "-5s"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:280
+#: src/components/participant/ParticipantConversationAudio.tsx:322
 msgid "participant.modal.refine.info.title.go.deeper"
 msgstr "Approfondir"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:273
+#: src/components/participant/ParticipantConversationAudio.tsx:315
 msgid "participant.modal.refine.info.title.concrete"
 msgstr "Concrétiser"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:266
+#: src/components/participant/ParticipantConversationAudio.tsx:308
 msgid "participant.modal.refine.info.title.generic"
 msgstr "\"Refine\" Bientôt disponible"
 
@@ -109,7 +109,7 @@ msgstr "\"Refine\" Bientôt disponible"
 #~ msgstr "(pour un traitement audio amélioré)"
 
 #. placeholder {0}: filterNames.length
-#: src/components/conversation/SelectAllConfirmationModal.tsx:417
+#: src/components/conversation/SelectAllConfirmationModal.tsx:420
 msgid "{0, plural, one {# tag} other {# tags}}"
 msgstr "{0, plural, one {# étiquette} other {# étiquettes}}"
 
@@ -122,7 +122,7 @@ msgstr "{0, plural, one {Étiquette :} other {Étiquettes :}}"
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: selectedOption.transitionMessage
 #. placeholder {0}: selectedOption.transitionDescription
-#: src/routes/project/chat/ProjectChatRoute.tsx:580
+#: src/routes/project/chat/ProjectChatRoute.tsx:583
 #: src/components/settings/FontSettingsCard.tsx:49
 #: src/components/settings/FontSettingsCard.tsx:50
 #: src/components/project/ProjectPortalEditor.tsx:433
@@ -135,7 +135,7 @@ msgstr "{0}"
 
 #. js-lingui-explicit-id
 #. placeholder {0}: result.added.length
-#: src/components/conversation/SelectAllConfirmationModal.tsx:451
+#: src/components/conversation/SelectAllConfirmationModal.tsx:454
 msgid "select.all.modal.added.count"
 msgstr "{0} ajoutées"
 
@@ -150,7 +150,7 @@ msgstr "{0} Conversations • Modifié le {1}"
 
 #. js-lingui-explicit-id
 #. placeholder {0}: reallySkipped.length
-#: src/components/conversation/SelectAllConfirmationModal.tsx:457
+#: src/components/conversation/SelectAllConfirmationModal.tsx:460
 msgid "select.all.modal.not.added.count"
 msgstr "{0} non ajoutées"
 
@@ -230,13 +230,13 @@ msgstr "Action par"
 msgid "Action On"
 msgstr "Action sur"
 
-#: src/components/project/ProjectDangerZone.tsx:69
+#: src/components/project/ProjectDangerZone.tsx:82
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:754
 msgid "Actions"
 msgstr "Actions"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:400
+#: src/components/conversation/SelectAllConfirmationModal.tsx:403
 msgid "select.all.modal.loading.filters"
 msgstr "Filtres actifs"
 
@@ -297,7 +297,7 @@ msgid "Add Your First Webhook"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:496
+#: src/components/conversation/SelectAllConfirmationModal.tsx:499
 msgid "select.all.modal.added"
 msgstr "Ajoutées"
 
@@ -306,31 +306,31 @@ msgid "Added emails"
 msgstr "E-mails ajoutés"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:268
+#: src/components/conversation/SelectAllConfirmationModal.tsx:278
 msgid "select.all.modal.add.without.filters"
 msgstr "Ajout de <0>{totalCount, plural, one {# conversation} other {# conversations}}</0> au chat"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:256
+#: src/components/conversation/SelectAllConfirmationModal.tsx:266
 msgid "select.all.modal.add.with.filters"
 msgstr "Ajout de <0>{totalCount, plural, one {# conversation} other {# conversations}}</0> avec les filtres suivants :"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:295
+#: src/components/conversation/SelectAllConfirmationModal.tsx:305
 msgid "select.all.modal.add.without.filters.more"
 msgstr "Ajout de <0>{totalCount, plural, one {# conversation supplémentaire} other {# conversations supplémentaires}}</0>"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:283
+#: src/components/conversation/SelectAllConfirmationModal.tsx:293
 msgid "select.all.modal.add.with.filters.more"
 msgstr "Ajout de <0>{totalCount, plural, one {# conversation supplémentaire} other {# conversations supplémentaires}}</0> avec les filtres suivants :"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:679
+#: src/routes/project/chat/ProjectChatRoute.tsx:688
 msgid "Adding Context:"
 msgstr "Ajout du contexte :"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:364
+#: src/components/conversation/SelectAllConfirmationModal.tsx:367
 msgid "select.all.modal.loading.title"
 msgstr "Ajout de conversations"
 
@@ -401,7 +401,7 @@ msgstr "Une notification par e-mail sera envoyée à {0} participant{1}. Voulez-
 msgid "An error occurred while loading the Portal. Please contact the support team."
 msgstr "Une erreur s'est produite lors du chargement du Portail. Veuillez contacter l'équipe de support."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:618
+#: src/routes/project/chat/ProjectChatRoute.tsx:627
 msgid "An error occurred."
 msgstr "Une erreur s'est produite."
 
@@ -457,14 +457,14 @@ msgstr "Approuvé"
 msgid "Are you sure you want to delete the webhook \"{0}\"? This action cannot be undone."
 msgstr ""
 
-#: src/components/conversation/ConversationDangerZone.tsx:23
+#: src/components/conversation/ConversationDangerZone.tsx:25
 msgid "Are you sure you want to delete this conversation? This action cannot be undone."
 msgstr "Êtes-vous sûr de vouloir supprimer cette conversation ? Cette action ne peut pas être annulée."
 
 #~ msgid "Are you sure you want to delete this project?"
 #~ msgstr "Êtes-vous sûr de vouloir supprimer ce projet ?"
 
-#: src/components/project/ProjectDangerZone.tsx:155
+#: src/components/project/ProjectDangerZone.tsx:168
 msgid "Are you sure you want to delete this project? This action cannot be undone."
 msgstr "Êtes-vous sûr de vouloir supprimer ce projet ? Cette action est irréversible."
 
@@ -490,7 +490,7 @@ msgstr "Êtes-vous sûr de vouloir terminer la conversation ?"
 msgid "Are you sure you want to generate the library? This will take a while and overwrite your current views and insights."
 msgstr "Êtes-vous sûr de vouloir générer la bibliothèque ? Cela prendra du temps et écrasera vos vues et perspectives actuelles."
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:145
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:155
 msgid "Are you sure you want to regenerate the summary? You will lose the current summary."
 msgstr "Êtes-vous sûr de vouloir régénérer le résumé ? Vous perdrez le résumé actuel."
 
@@ -641,9 +641,9 @@ msgstr "Paramètres de base"
 #~ msgstr "Commencer !"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:61
-#: src/components/conversation/RetranscribeConversation.tsx:111
-#: src/components/conversation/MoveConversationButton.tsx:132
-#: src/components/chat/ChatModeSelector.tsx:147
+#: src/components/conversation/RetranscribeConversation.tsx:120
+#: src/components/conversation/MoveConversationButton.tsx:140
+#: src/components/chat/ChatModeSelector.tsx:149
 #: src/components/chat/ChatModeBanner.tsx:52
 msgid "Beta"
 msgstr "Bêta"
@@ -672,19 +672,19 @@ msgstr "Idées de brainstorming"
 msgid "Build custom dashboards with real-time conversation data"
 msgstr ""
 
-#: src/components/project/ProjectDangerZone.tsx:59
+#: src/components/project/ProjectDangerZone.tsx:67
 msgid "By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you ABSOLUTELY sure you want to delete this project?"
 msgstr "En supprimant ce projet, vous supprimerez toutes les données qui y sont associées. Cette action ne peut pas être annulée. Êtes-vous ABSOLUMENT sûr de vouloir supprimer ce projet ?"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:332
 #: src/components/settings/TwoFactorSettingsCard.tsx:406
-#: src/components/project/ProjectDangerZone.tsx:137
-#: src/components/project/ProjectDangerZone.tsx:163
+#: src/components/project/ProjectDangerZone.tsx:150
+#: src/components/project/ProjectDangerZone.tsx:176
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:330
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:483
 #: src/components/dropzone/UploadConversationDropzone.tsx:686
 #: src/components/dropzone/UploadConversationDropzone.tsx:806
-#: src/components/conversation/MoveConversationButton.tsx:208
+#: src/components/conversation/MoveConversationButton.tsx:216
 #: src/components/conversation/ConversationAccordion.tsx:334
 msgid "Cancel"
 msgstr "Annuler"
@@ -705,7 +705,7 @@ msgid "participant.concrete.instructions.button.cancel"
 msgstr "Annuler"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:326
+#: src/components/conversation/SelectAllConfirmationModal.tsx:329
 msgid "select.all.modal.cancel"
 msgstr "Annuler"
 
@@ -729,12 +729,12 @@ msgstr "Les modifications seront enregistrées automatiquement"
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Changer de langue pendant une conversation active peut provoquer des résultats inattendus. Il est recommandé de commencer une nouvelle conversation après avoir changé la langue. Êtes-vous sûr de vouloir continuer ?"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:499
-#: src/routes/project/chat/ProjectChatRoute.tsx:504
+#: src/routes/project/chat/ProjectChatRoute.tsx:501
+#: src/routes/project/chat/ProjectChatRoute.tsx:506
 msgid "Chat"
 msgstr "Discussion"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:291
+#: src/routes/project/chat/ProjectChatRoute.tsx:292
 msgid "Chat | Dembrane"
 msgstr "Discussion | Dembrane"
 
@@ -786,12 +786,12 @@ msgstr "Cliquez sur \"Télécharger les fichiers\" lorsque vous êtes prêt à c
 msgid "Click to see all {totalCount} conversations"
 msgstr "Cliquez pour voir les {totalCount} conversations"
 
-#: src/components/project/ProjectDangerZone.tsx:143
+#: src/components/project/ProjectDangerZone.tsx:156
 msgid "Clone project"
 msgstr "Cloner le projet"
 
-#: src/components/project/ProjectDangerZone.tsx:82
-#: src/components/project/ProjectDangerZone.tsx:97
+#: src/components/project/ProjectDangerZone.tsx:95
+#: src/components/project/ProjectDangerZone.tsx:110
 msgid "Clone Project"
 msgstr "Cloner le projet"
 
@@ -801,7 +801,7 @@ msgid "Close"
 msgstr "Fermer"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:660
+#: src/components/conversation/SelectAllConfirmationModal.tsx:661
 msgid "select.all.modal.close"
 msgstr "Fermer"
 
@@ -986,7 +986,7 @@ msgstr "Copier le lien pour partager ce rapport"
 msgid "Copy secret"
 msgstr "Copier le secret"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:135
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:145
 msgid "Copy Summary"
 msgstr "Copier le résumé"
 
@@ -1092,13 +1092,13 @@ msgstr "Supprimer"
 msgid "project.sidebar.chat.delete"
 msgstr "Supprimer la discussion"
 
-#: src/components/conversation/ConversationDangerZone.tsx:56
+#: src/components/conversation/ConversationDangerZone.tsx:72
 msgid "Delete Conversation"
 msgstr "Supprimer la conversation"
 
-#: src/components/project/ProjectDangerZone.tsx:91
-#: src/components/project/ProjectDangerZone.tsx:151
-#: src/components/project/ProjectDangerZone.tsx:169
+#: src/components/project/ProjectDangerZone.tsx:104
+#: src/components/project/ProjectDangerZone.tsx:164
+#: src/components/project/ProjectDangerZone.tsx:182
 msgid "Delete Project"
 msgstr "Supprimer le projet"
 
@@ -1116,8 +1116,8 @@ msgstr "Supprimé avec succès"
 #~ msgid "Dembrane ECHO"
 #~ msgstr "Dembrane ECHO"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:742
-#: src/routes/project/chat/ProjectChatRoute.tsx:772
+#: src/routes/project/chat/ProjectChatRoute.tsx:751
+#: src/routes/project/chat/ProjectChatRoute.tsx:781
 msgid "Dembrane is powered by AI. Please double-check responses."
 msgstr "Dembrane est propulsé par l’IA. Vérifie bien les réponses."
 
@@ -1194,7 +1194,7 @@ msgstr "Télécharger toutes les transcriptions"
 msgid "Download as"
 msgstr "Download as"
 
-#: src/components/conversation/ConversationDangerZone.tsx:46
+#: src/components/conversation/ConversationDangerZone.tsx:62
 msgid "Download Audio"
 msgstr "Télécharger l'audio"
 
@@ -1246,7 +1246,7 @@ msgstr "Modifier le nom du fichier"
 msgid "Edit Project"
 msgstr "Modifier le projet"
 
-#: src/components/report/ReportEditor.tsx:113
+#: src/components/report/ReportEditor.tsx:121
 msgid "Edit Report Content"
 msgstr "Modifier le contenu du rapport"
 
@@ -1254,7 +1254,7 @@ msgstr "Modifier le contenu du rapport"
 #~ msgstr "Modifier la ressource"
 
 #. js-lingui-explicit-id
-#: src/components/report/ReportEditor.tsx:126
+#: src/components/report/ReportEditor.tsx:134
 msgid "report.editor.description"
 msgstr "Modifier le contenu du rapport en utilisant l'éditeur de texte enrichi ci-dessous. Vous pouvez formater le texte, ajouter des liens, des images et plus encore."
 
@@ -1362,11 +1362,11 @@ msgstr "Anglais"
 msgid "Enter a key term or proper noun"
 msgstr "Entrez un terme clé ou un nom propre"
 
-#: src/components/conversation/RetranscribeConversation.tsx:137
+#: src/components/conversation/RetranscribeConversation.tsx:146
 msgid "Enter a name for the new conversation"
 msgstr "Entrez un nom pour le nouveau conversation"
 
-#: src/components/project/ProjectDangerZone.tsx:131
+#: src/components/project/ProjectDangerZone.tsx:144
 msgid "Enter a name for your cloned project"
 msgstr "Entrez un nom pour votre projet cloné"
 
@@ -1407,7 +1407,7 @@ msgstr "Entrez votre requête"
 msgid "Error"
 msgstr "Erreur"
 
-#: src/components/project/ProjectDangerZone.tsx:117
+#: src/components/project/ProjectDangerZone.tsx:130
 msgid "Error cloning project"
 msgstr "Erreur lors du clonage du projet"
 
@@ -1434,7 +1434,7 @@ msgstr "Erreur lors du chargement du projet"
 msgid "Error occurred"
 msgstr "Une erreur s'est produite"
 
-#: src/components/report/UpdateReportModalButton.tsx:80
+#: src/components/report/UpdateReportModalButton.tsx:82
 msgid "Error updating report"
 msgstr "Erreur lors de la mise à jour du rapport"
 
@@ -1467,7 +1467,7 @@ msgstr ""
 #~ msgid "Experimental"
 #~ msgstr "Expérimental"
 
-#: src/components/chat/ChatModeSelector.tsx:254
+#: src/components/chat/ChatModeSelector.tsx:265
 msgid "Explore themes & patterns across all conversations"
 msgstr "Explore les thèmes et les tendances de toutes les conversations"
 
@@ -1524,7 +1524,7 @@ msgstr "Échec de la désactivation de la sélection automatique pour cette disc
 msgid "Failed to enable Auto Select for this chat"
 msgstr "Échec de l'activation de la sélection automatique pour cette discussion"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:204
+#: src/components/participant/ParticipantConversationAudio.tsx:233
 msgid "Failed to finish conversation. Please try again."
 msgstr "Échec de la fin de la conversation. Veuillez réessayer."
 
@@ -1532,7 +1532,7 @@ msgstr "Échec de la fin de la conversation. Veuillez réessayer."
 msgid "Failed to generate {label}. Please try again."
 msgstr "Échec de la génération de {label}. Veuillez réessayer."
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:77
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:87
 msgid "Failed to generate the summary. Please try again later."
 msgstr "Impossible de générer le résumé. Réessaie plus tard."
 
@@ -1563,7 +1563,7 @@ msgstr "Échec du marquage de toutes les annonces comme lues"
 msgid "Failed to mark announcement as read"
 msgstr "Échec du marquage de l'annonce comme lue"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:76
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:86
 msgid "Failed to regenerate the summary. Please try again later."
 msgstr "Échec de la régénération du résumé. Veuillez réessayer plus tard."
 
@@ -1588,7 +1588,7 @@ msgstr "Échec de la transcription de la conversation. Veuillez réessayer."
 msgid "Failed to revise artefact. Please try again."
 msgstr "Échec de la révision de l'artefact. Veuillez réessayer."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:131
+#: src/components/participant/ParticipantConversationAudio.tsx:139
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Échec de l'arrêt de l'enregistrement lors du changement de périphérique. Veuillez réessayer."
 
@@ -1596,7 +1596,7 @@ msgstr "Échec de l'arrêt de l'enregistrement lors du changement de périphéri
 #~ msgstr "Échec de la vérification de l'état de l'e-mail. Veuillez réessayer."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:286
+#: src/components/participant/ParticipantConversationAudio.tsx:328
 msgid "participant.modal.refine.info.title"
 msgstr "Feature Bientôt disponible"
 
@@ -1649,7 +1649,7 @@ msgid "Filter by collection"
 msgstr "Filtrer par collection"
 
 #. js-lingui-explicit-id
-#: src/components/participant/StopRecordingConfirmationModal.tsx:61
+#: src/components/participant/StopRecordingConfirmationModal.tsx:86
 msgid "participant.button.stop.finish"
 msgstr "Terminer"
 
@@ -1659,7 +1659,7 @@ msgid "participant.button.finish.text.mode"
 msgstr "Terminer"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:442
+#: src/components/participant/ParticipantConversationAudio.tsx:494
 msgid "participant.button.finish"
 msgstr "Terminer"
 
@@ -1713,11 +1713,11 @@ msgstr "Générer un secret"
 #~ msgid "Generate structured meeting notes based on the following discussion points provided in the context."
 #~ msgstr "Générer des notes de réunion structurées basées sur les points de discussion suivants fournis dans le contexte."
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:188
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:198
 msgid "Generate Summary"
 msgstr "Générer un résumé"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:80
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:90
 msgid "Generating the summary. Please wait..."
 msgstr "Génération du résumé. Patiente un peu..."
 
@@ -1725,7 +1725,7 @@ msgstr "Génération du résumé. Patiente un peu..."
 msgid "German"
 msgstr "Allemand"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:258
+#: src/components/participant/ParticipantConversationAudio.tsx:300
 msgid "Get an immediate reply from Dembrane to help you deepen the conversation."
 msgstr "Get an immediate reply from Dembrane to help you deepen the conversation."
 
@@ -1760,7 +1760,7 @@ msgstr "Va plus profond"
 msgid "Go home"
 msgstr "Retour à l'accueil"
 
-#: src/components/conversation/RetranscribeConversation.tsx:91
+#: src/components/conversation/RetranscribeConversation.tsx:100
 msgid "Go to new conversation"
 msgstr "Aller à la nouvelle conversation"
 
@@ -1827,7 +1827,7 @@ msgstr ""
 "* À quoi ressemble le succès"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:351
+#: src/components/participant/ParticipantConversationAudio.tsx:394
 msgid "participant.button.i.understand"
 msgstr "Je comprends"
 
@@ -2156,21 +2156,21 @@ msgstr "L'accès au microphone est toujours refusé. Veuillez vérifier vos para
 msgid "Mode"
 msgstr "Mode"
 
-#: src/components/chat/ChatTemplatesMenu.tsx:180
+#: src/components/chat/ChatTemplatesMenu.tsx:199
 msgid "More templates"
 msgstr "Plus de templates"
 
-#: src/components/conversation/MoveConversationButton.tsx:218
+#: src/components/conversation/MoveConversationButton.tsx:226
 #: src/components/conversation/ConversationAccordion.tsx:344
 msgid "Move"
 msgstr "Déplacer"
 
-#: src/components/conversation/MoveConversationButton.tsx:138
+#: src/components/conversation/MoveConversationButton.tsx:146
 #: src/components/conversation/ConversationAccordion.tsx:265
 msgid "Move Conversation"
 msgstr "Déplacer"
 
-#: src/components/conversation/MoveConversationButton.tsx:134
+#: src/components/conversation/MoveConversationButton.tsx:142
 msgid "Move to Another Project"
 msgstr "Déplacer vers un autre projet"
 
@@ -2200,7 +2200,7 @@ msgstr "Nom Z-A"
 msgid "New"
 msgstr "Nouveau"
 
-#: src/components/conversation/RetranscribeConversation.tsx:136
+#: src/components/conversation/RetranscribeConversation.tsx:145
 msgid "New Conversation Name"
 msgstr "Nom du nouveau conversation"
 
@@ -2258,7 +2258,7 @@ msgstr "Non"
 msgid "No actions found"
 msgstr "Aucune action trouvée"
 
-#: src/components/announcement/Announcements.tsx:121
+#: src/components/announcement/Announcements.tsx:128
 msgid "No announcements available"
 msgstr "Aucune annonce disponible"
 
@@ -2307,7 +2307,7 @@ msgid "No conversations found. Start a conversation using the participation invi
 msgstr "Aucune conversation trouvée. Commencez une conversation en utilisant le lien d'invitation à participer depuis la <0><1>vue d'ensemble du projet.</1></0>"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:649
+#: src/components/conversation/SelectAllConfirmationModal.tsx:650
 msgid "select.all.modal.no.conversations"
 msgstr "Aucune conversation n'a été traitée. Cela peut se produire si toutes les conversations sont déjà dans le contexte ou ne correspondent pas aux filtres sélectionnés."
 
@@ -2326,7 +2326,7 @@ msgid "No new feedback detected yet. Please continue your discussion and try aga
 msgstr "Aucun nouveau feedback détecté encore. Veuillez continuer votre discussion et réessayer bientôt."
 
 #. placeholder {0}: search && `with "${search}"`
-#: src/components/conversation/MoveConversationButton.tsx:159
+#: src/components/conversation/MoveConversationButton.tsx:167
 msgid "No projects found {0}"
 msgstr "Aucun projet trouvé {0}"
 
@@ -2394,7 +2394,7 @@ msgid "No webhooks configured"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:515
+#: src/components/conversation/SelectAllConfirmationModal.tsx:518
 msgid "select.all.modal.not.added"
 msgstr "Non ajoutées"
 
@@ -2476,7 +2476,7 @@ msgid "Options"
 msgstr "Options"
 
 #: src/components/layout/ProjectConversationLayout.tsx:46
-#: src/components/chat/ChatModeSelector.tsx:253
+#: src/components/chat/ChatModeSelector.tsx:264
 #: src/components/chat/ChatModeBanner.tsx:35
 msgid "Overview"
 msgstr "Aperçu"
@@ -2649,7 +2649,7 @@ msgstr "Mettre en pause la lecture"
 msgid "Pending"
 msgstr "En attente"
 
-#: src/components/chat/ChatModeSelector.tsx:234
+#: src/components/chat/ChatModeSelector.tsx:245
 msgid "Pick the approach that fits your question"
 msgstr "Choisis l’approche qui correspond à ta question"
 
@@ -2708,14 +2708,14 @@ msgstr ""
 msgid "Please select a language for your report"
 msgstr "Veuillez sélectionner une langue pour votre rapport"
 
-#: src/components/report/UpdateReportModalButton.tsx:97
+#: src/components/report/UpdateReportModalButton.tsx:99
 msgid "Please select a language for your updated report"
 msgstr "Veuillez sélectionner une langue pour votre rapport mis à jour"
 
 #~ msgid "Please select at least one source"
 #~ msgstr "Veuillez sélectionner au moins une source"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:668
+#: src/routes/project/chat/ProjectChatRoute.tsx:677
 msgid "Please select conversations from the sidebar to proceed"
 msgstr "Sélectionne des conversations dans la barre latérale pour continuer"
 
@@ -2741,11 +2741,11 @@ msgstr "Veuillez patienter pendant que nous générons votre rapport. Vous serez
 msgid "library.processing.request"
 msgstr "Bibliothèque en cours de traitement"
 
-#: src/components/conversation/RetranscribeConversation.tsx:119
+#: src/components/conversation/RetranscribeConversation.tsx:128
 msgid "Please wait while we process your retranscription request. You will be redirected to the new conversation when ready."
 msgstr "Veuillez patienter pendant que nous traitons votre demande de retranscription. Vous serez redirigé vers la nouvelle conversation lorsque prêt."
 
-#: src/components/report/UpdateReportModalButton.tsx:72
+#: src/components/report/UpdateReportModalButton.tsx:74
 msgid "Please wait while we update your report. You will automatically be redirected to the report page."
 msgstr "Veuillez patienter pendant que nous mettons à jour votre rapport. Vous serez automatiquement redirigé vers la page du rapport."
 
@@ -2766,7 +2766,7 @@ msgstr "Éditeur de Portail"
 msgid "Powered by"
 msgstr "Propulsé par"
 
-#: src/components/chat/ChatModeSelector.tsx:267
+#: src/components/chat/ChatModeSelector.tsx:278
 msgid "Preparing your conversations... This may take a moment."
 msgstr "Préparation de tes conversations... Ça peut prendre un moment."
 
@@ -2787,7 +2787,7 @@ msgid "Proceed"
 msgstr "Continuer"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:329
+#: src/components/conversation/SelectAllConfirmationModal.tsx:332
 msgid "select.all.modal.proceed"
 msgstr "Continuer"
 
@@ -2798,7 +2798,7 @@ msgstr "Continuer"
 #~ msgstr "Traitement"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:375
+#: src/components/conversation/SelectAllConfirmationModal.tsx:378
 msgid "select.all.modal.loading.description"
 msgstr "Traitement de <0>{totalCount, plural, one {# conversation} other {# conversations}}</0> et ajout à votre chat"
 
@@ -2811,12 +2811,12 @@ msgstr "Traitement de <0>{totalCount, plural, one {# conversation} other {# conv
 #~ msgid "Processing Transcript"
 #~ msgstr "Traitement de la transcription"
 
-#: src/components/report/UpdateReportModalButton.tsx:71
+#: src/components/report/UpdateReportModalButton.tsx:73
 #: src/components/report/CreateReportForm.tsx:51
 msgid "Processing your report..."
 msgstr "Traitement de votre rapport..."
 
-#: src/components/conversation/RetranscribeConversation.tsx:118
+#: src/components/conversation/RetranscribeConversation.tsx:127
 msgid "Processing your retranscription request..."
 msgstr "Traitement de votre demande de retranscription..."
 
@@ -2828,7 +2828,7 @@ msgstr "Projet créé"
 msgid "Project Library | Dembrane"
 msgstr "Bibliothèque de projet | Dembrane"
 
-#: src/components/project/ProjectDangerZone.tsx:130
+#: src/components/project/ProjectDangerZone.tsx:143
 msgid "Project name"
 msgstr "Nom du projet"
 
@@ -2879,7 +2879,7 @@ msgstr "Publier"
 msgid "Published"
 msgstr "Publié"
 
-#: src/components/chat/ChatModeSelector.tsx:51
+#: src/components/chat/ChatModeSelector.tsx:53
 msgid "Pull out the most impactful quotes from this session"
 msgstr "Récupère les citations les plus marquantes de cette session"
 
@@ -2907,7 +2907,7 @@ msgid "Recommended apps"
 msgstr "Applications recommandées"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:419
+#: src/components/participant/ParticipantConversationAudio.tsx:472
 msgid "participant.button.record"
 msgstr "Enregistrer"
 
@@ -2919,7 +2919,7 @@ msgid "Record another conversation"
 msgstr "Enregistrer une autre conversation"
 
 #. js-lingui-explicit-id
-#: src/components/participant/StopRecordingConfirmationModal.tsx:35
+#: src/components/participant/StopRecordingConfirmationModal.tsx:47
 msgid "participant.modal.pause.title"
 msgstr "Enregistrement en pause"
 
@@ -2943,7 +2943,7 @@ msgid "References"
 msgstr "Références"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:473
+#: src/components/participant/ParticipantConversationAudio.tsx:525
 msgid "participant.button.refine"
 msgstr "Refine"
 
@@ -2958,7 +2958,7 @@ msgstr "Actualiser les journaux d'audit"
 #~ msgid "Regenerate Library"
 #~ msgstr "Régénérer la bibliothèque"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:139
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:149
 msgid "Regenerate Summary"
 msgstr "Régénérer le résumé"
 
@@ -2967,7 +2967,7 @@ msgstr "Régénérer le résumé"
 msgid "participant.concrete.regenerating.artefact"
 msgstr "Régénération de l'artefact"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:79
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:89
 msgid "Regenerating the summary. Please wait..."
 msgstr "Régénération du résumé. Patiente un peu..."
 
@@ -3098,30 +3098,30 @@ msgstr "Réinitialiser aux paramètres par défaut"
 #~ msgstr "Ressources"
 
 #. js-lingui-explicit-id
-#: src/components/participant/StopRecordingConfirmationModal.tsx:51
+#: src/components/participant/StopRecordingConfirmationModal.tsx:75
 msgid "participant.button.stop.resume"
 msgstr "Reprendre"
 
 #~ msgid "Resume"
 #~ msgstr "Reprendre"
 
-#: src/components/conversation/RetranscribeConversation.tsx:153
+#: src/components/conversation/RetranscribeConversation.tsx:162
 msgid "Retranscribe"
 msgstr "Rétranscrire"
 
-#: src/components/conversation/RetranscribeConversation.tsx:36
+#: src/components/conversation/RetranscribeConversation.tsx:38
 msgid "Retranscribe conversation"
 msgstr "Rétranscrire la conversation"
 
-#: src/components/conversation/RetranscribeConversation.tsx:109
+#: src/components/conversation/RetranscribeConversation.tsx:118
 msgid "Retranscribe Conversation"
 msgstr "Rétranscrire la conversation"
 
-#: src/components/conversation/RetranscribeConversation.tsx:85
+#: src/components/conversation/RetranscribeConversation.tsx:94
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "La rétranscrire a commencé. La nouvelle conversation sera disponible bientôt."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:626
+#: src/routes/project/chat/ProjectChatRoute.tsx:635
 msgid "Retry"
 msgstr "Réessayer"
 
@@ -3184,11 +3184,11 @@ msgid "Scroll to bottom"
 msgstr "Défiler vers le bas"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:410
+#: src/components/conversation/SelectAllConfirmationModal.tsx:413
 msgid "select.all.modal.loading.search"
 msgstr "Rechercher"
 
-#: src/components/conversation/MoveConversationButton.tsx:143
+#: src/components/conversation/MoveConversationButton.tsx:151
 msgid "Search"
 msgstr "Rechercher"
 
@@ -3204,7 +3204,7 @@ msgstr "Rechercher des projets"
 msgid "Search Projects"
 msgstr "Rechercher des projets"
 
-#: src/components/conversation/MoveConversationButton.tsx:144
+#: src/components/conversation/MoveConversationButton.tsx:152
 #: src/components/conversation/ConversationAccordion.tsx:279
 msgid "Search projects..."
 msgstr "Rechercher des projets..."
@@ -3273,7 +3273,7 @@ msgstr ""
 msgid "Select Audio Files to Upload"
 msgstr "Sélectionner les fichiers audio à télécharger"
 
-#: src/components/chat/ChatModeSelector.tsx:243
+#: src/components/chat/ChatModeSelector.tsx:254
 msgid "Select conversations and find exact quotes"
 msgstr "Sélectionne des conversations et trouve des citations précises"
 
@@ -3329,11 +3329,11 @@ msgid "Selection too large"
 msgstr "Sélection trop grande"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:469
+#: src/components/conversation/SelectAllConfirmationModal.tsx:472
 msgid "select.all.modal.context.limit.reached"
 msgstr "Sélection trop grande. Certaines conversations n'ont pas été ajoutées."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:762
+#: src/routes/project/chat/ProjectChatRoute.tsx:771
 msgid "Send"
 msgstr "Envoyer"
 
@@ -3462,7 +3462,7 @@ msgid "Skip data privacy slide (Host manages legal base)"
 msgstr "Passer la carte de confidentialité (L'hôte gère la base légale)"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:572
+#: src/components/conversation/SelectAllConfirmationModal.tsx:573
 msgid "select.all.modal.context.limit.reached.description"
 msgstr "Ignorées car la sélection était trop grande."
 
@@ -3474,7 +3474,7 @@ msgid "Some files were already selected and won't be added twice."
 msgstr "Certains fichiers ont déjà été sélectionnés et ne seront pas ajoutés deux fois."
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:317
+#: src/components/conversation/SelectAllConfirmationModal.tsx:237
 msgid "select.all.modal.skip.disclaimer"
 msgstr "Certaines peuvent être ignorées (pas de transcription ou sélection trop grande)."
 
@@ -3547,7 +3547,7 @@ msgstr "Espagnol"
 msgid "Specific Context"
 msgstr "Contexte spécifique"
 
-#: src/components/chat/ChatModeSelector.tsx:242
+#: src/components/chat/ChatModeSelector.tsx:253
 #: src/components/chat/ChatModeBanner.tsx:37
 msgid "Specific Details"
 msgstr "Détails précis"
@@ -3580,12 +3580,12 @@ msgstr "Recommencer"
 msgid "Status"
 msgstr "Statut"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:591
+#: src/routes/project/chat/ProjectChatRoute.tsx:594
 msgid "Stop"
 msgstr "Arrêter"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:492
+#: src/components/participant/ParticipantConversationAudio.tsx:544
 msgid "participant.button.stop"
 msgstr "Arrêter"
 
@@ -3610,7 +3610,7 @@ msgid "Success"
 msgstr "Succès"
 
 #: src/components/library/LibraryTemplatesMenu.tsx:33
-#: src/components/chat/ChatTemplatesMenu.tsx:115
+#: src/components/chat/ChatTemplatesMenu.tsx:131
 msgid "Suggested:"
 msgstr "Suggéré:"
 
@@ -3618,15 +3618,15 @@ msgstr "Suggéré:"
 msgid "Summarize"
 msgstr "Résumer"
 
-#: src/components/chat/ChatModeSelector.tsx:45
+#: src/components/chat/ChatModeSelector.tsx:47
 msgid "Summarize key insights from my interviews"
 msgstr "Résume les principaux enseignements de mes entretiens"
 
-#: src/components/chat/ChatModeSelector.tsx:50
+#: src/components/chat/ChatModeSelector.tsx:52
 msgid "Summarize this interview into a shareable article"
 msgstr "Résume cet entretien en un article partageable"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:125
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:135
 msgid "Summary"
 msgstr "Résumé"
 
@@ -3634,18 +3634,18 @@ msgstr "Résumé"
 msgid "Summary (when available)"
 msgstr ""
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:90
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:100
 msgid "Summary generated successfully."
 msgstr "Résumé généré."
 
 #~ msgid "Summary not available yet"
 #~ msgstr "Résumé non disponible pour le moment"
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:89
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:99
 msgid "Summary regenerated successfully."
 msgstr "Résumé régénéré."
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:174
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:184
 msgid "Summary will be available once the conversation is transcribed"
 msgstr "Le résumé sera disponible une fois la conversation transcrite."
 
@@ -3654,7 +3654,7 @@ msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 msgstr "Formats supportés: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 
 #. js-lingui-explicit-id
-#: src/components/participant/StopRecordingConfirmationModal.tsx:73
+#: src/components/participant/StopRecordingConfirmationModal.tsx:98
 msgid "participant.link.switch.text"
 msgstr "Passer à la saisie de texte"
 
@@ -3670,11 +3670,11 @@ msgstr "Système"
 msgid "Tags"
 msgstr "Étiquettes"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:252
+#: src/components/participant/ParticipantConversationAudio.tsx:294
 msgid "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from Dembrane to help you deepen the conversation."
 msgstr "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from Dembrane to help you deepen the conversation."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:255
+#: src/components/participant/ParticipantConversationAudio.tsx:297
 msgid "Take some time to create an outcome that makes your contribution concrete."
 msgstr "Take some time to create an outcome that makes your contribution concrete."
 
@@ -3683,7 +3683,7 @@ msgstr "Take some time to create an outcome that makes your contribution concret
 msgid "participant.refine.make.concrete.description"
 msgstr "Take some time to create an outcome that makes your contribution concrete."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:427
+#: src/routes/project/chat/ProjectChatRoute.tsx:429
 msgid "Template applied"
 msgstr "Template appliqué"
 
@@ -3749,11 +3749,11 @@ msgstr "Les conversations suivantes ont été automatiquement ajoutées au conte
 #~ msgid "the project library."
 #~ msgstr "la bibliothèque du projet."
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:94
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:104
 msgid "The summary is being generated. Please wait for it to be available."
 msgstr "Le résumé est en cours de génération. Attends qu’il soit disponible."
 
-#: src/routes/project/conversation/ProjectConversationOverview.tsx:93
+#: src/routes/project/conversation/ProjectConversationOverview.tsx:103
 msgid "The summary is being regenerated. Please wait for it to be available."
 msgstr "Le résumé est en cours de régénération. Attends qu’il soit disponible."
 
@@ -3770,7 +3770,7 @@ msgstr "Le résumé est en cours de régénération. Attends qu’il soit dispon
 msgid "Theme"
 msgstr "Thème"
 
-#: src/components/project/ProjectDangerZone.tsx:121
+#: src/components/project/ProjectDangerZone.tsx:134
 msgid "There was an error cloning your project. Please try again or contact support."
 msgstr "Il y avait une erreur lors du clonage de votre projet. Veuillez réessayer ou contacter le support."
 
@@ -3782,7 +3782,7 @@ msgstr "Il y avait une erreur lors de la création de votre rapport. Veuillez r�
 msgid "There was an error generating your report. In the meantime, you can analyze all your data using the library or select specific conversations to chat with."
 msgstr "Il y avait une erreur lors de la génération de votre rapport. En attendant, vous pouvez analyser tous vos données à l'aide de la bibliothèque ou sélectionner des conversations spécifiques pour discuter."
 
-#: src/components/report/UpdateReportModalButton.tsx:81
+#: src/components/report/UpdateReportModalButton.tsx:83
 msgid "There was an error updating your report. Please try again or contact support."
 msgstr "Il y avait une erreur lors de la mise à jour de votre rapport. Veuillez réessayer ou contacter le support."
 
@@ -3797,7 +3797,7 @@ msgstr "Il y avait une erreur lors de la vérification de votre e-mail. Veuillez
 #~ msgstr "Voici vos modèles de vue par défaut. Une fois que vous avez créé votre bibliothèque, ces deux vues seront vos premières."
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:611
+#: src/components/conversation/SelectAllConfirmationModal.tsx:612
 msgid "select.all.modal.other.reason.description"
 msgstr "Ces conversations ont été exclues en raison de transcriptions manquantes."
 
@@ -3833,7 +3833,7 @@ msgstr "Cette e-mail est déjà dans la liste."
 #~ msgstr "Cette e-mail est déjà abonnée aux notifications."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:341
+#: src/components/participant/ParticipantConversationAudio.tsx:384
 msgid "participant.modal.refine.info.available.in"
 msgstr "Cette fonctionnalité sera disponible dans {remainingTime} secondes."
 
@@ -3898,11 +3898,11 @@ msgstr "Ce titre est affiché aux participants lorsqu'ils commencent une convers
 msgid "This will clear your current input. Are you sure?"
 msgstr "Cela effacera votre entrée actuelle. Êtes-vous sûr ?"
 
-#: src/components/project/ProjectDangerZone.tsx:101
+#: src/components/project/ProjectDangerZone.tsx:114
 msgid "This will create a copy of the current project. Only settings and tags are copied. Reports, chats and conversations are not included in the clone. You will be redirected to the new project after cloning."
 msgstr "Cela créera une copie du projet actuel. Seuls les paramètres et les étiquettes sont copiés. Les rapports, les chats et les conversations ne sont pas inclus dans le clonage. Vous serez redirigé vers le nouveau projet après le clonage."
 
-#: src/components/conversation/RetranscribeConversation.tsx:129
+#: src/components/conversation/RetranscribeConversation.tsx:138
 msgid "This will create a new conversation with the same audio but a fresh transcription. The original conversation will remain unchanged."
 msgstr "Cela créera une nouvelle conversation avec la même audio mais une transcription fraîche. La conversation d'origine restera inchangée."
 
@@ -3921,7 +3921,7 @@ msgstr "Cela ne prendra que quelques instants"
 msgid "participant.concrete.loading.artefact.description"
 msgstr "Cela ne prendra qu'un instant"
 
-#: src/components/conversation/RetranscribeConversation.tsx:144
+#: src/components/conversation/RetranscribeConversation.tsx:153
 msgid "This will replace personally identifiable information with <redacted>."
 msgstr "Cela remplacera les informations personnelles identifiables avec <redacted>."
 
@@ -3953,7 +3953,7 @@ msgid "To generate a report, please start by adding conversations in your projec
 msgstr "Pour générer un rapport, veuillez commencer par ajouter des conversations dans votre projet"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:534
+#: src/components/conversation/SelectAllConfirmationModal.tsx:537
 msgid "select.all.modal.context.limit"
 msgstr "Trop grande"
 
@@ -4075,7 +4075,7 @@ msgstr ""
 msgid "Try Again"
 msgstr "Réessayer"
 
-#: src/components/chat/ChatModeSelector.tsx:161
+#: src/components/chat/ChatModeSelector.tsx:163
 msgid "Try asking"
 msgstr "Tu peux demander"
 
@@ -4099,7 +4099,7 @@ msgstr "Authentification à deux facteurs activée"
 msgid "Type"
 msgstr "Type"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:717
+#: src/routes/project/chat/ProjectChatRoute.tsx:726
 msgid "Type a message..."
 msgstr "Tapez un message..."
 
@@ -4124,7 +4124,7 @@ msgstr "Impossible de charger l'artefact généré. Veuillez réessayer."
 msgid "Unable to process this chunk"
 msgstr "Impossible de traiter ce fragment"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:429
+#: src/routes/project/chat/ProjectChatRoute.tsx:431
 msgid "Undo"
 msgstr "Annuler"
 
@@ -4156,20 +4156,20 @@ msgstr "Se désabonner"
 msgid "Untitled Conversation"
 msgstr "Conversation sans titre"
 
-#: src/components/report/UpdateReportModalButton.tsx:64
+#: src/components/report/UpdateReportModalButton.tsx:66
 msgid "Update"
 msgstr "Mettre à jour"
 
-#: src/components/report/UpdateReportModalButton.tsx:68
-#: src/components/report/UpdateReportModalButton.tsx:115
+#: src/components/report/UpdateReportModalButton.tsx:70
+#: src/components/report/UpdateReportModalButton.tsx:122
 msgid "Update Report"
 msgstr "Mettre à jour le rapport"
 
-#: src/components/report/UpdateReportModalButton.tsx:62
+#: src/components/report/UpdateReportModalButton.tsx:64
 msgid "Update the report to include the latest data"
 msgstr "Mettre à jour le rapport pour inclure les données les plus récentes"
 
-#: src/components/report/UpdateReportModalButton.tsx:89
+#: src/components/report/UpdateReportModalButton.tsx:91
 msgid "Update your report to include the latest changes in your project. The link to share the report would remain the same."
 msgstr "Mettre à jour votre rapport pour inclure les dernières modifications de votre projet. Le lien pour partager le rapport restera le même."
 
@@ -4219,6 +4219,11 @@ msgstr "Télécharger les fichiers"
 msgid "Uploading Audio Files..."
 msgstr "Téléchargement des fichiers audio..."
 
+#. js-lingui-explicit-id
+#: src/components/participant/StopRecordingConfirmationModal.tsx:60
+msgid "participant.modal.uploading"
+msgstr "Envoi de l'audio..."
+
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:211
 msgid "URL is required"
 msgstr ""
@@ -4230,12 +4235,12 @@ msgstr ""
 #~ msgid "Use experimental features"
 #~ msgstr "Utiliser les fonctionnalités expérimentales"
 
-#: src/components/conversation/RetranscribeConversation.tsx:143
+#: src/components/conversation/RetranscribeConversation.tsx:152
 msgid "Use PII Redaction"
 msgstr "Utiliser la rédaction PII"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:739
-#: src/routes/project/chat/ProjectChatRoute.tsx:769
+#: src/routes/project/chat/ProjectChatRoute.tsx:748
+#: src/routes/project/chat/ProjectChatRoute.tsx:778
 msgid "Use Shift + Enter to add a new line"
 msgstr "Utilisez Shift + Entrée pour ajouter une nouvelle ligne"
 
@@ -4255,7 +4260,7 @@ msgid "select.all.modal.verified"
 msgstr "Vérifié"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:433
+#: src/components/conversation/SelectAllConfirmationModal.tsx:436
 msgid "select.all.modal.loading.verified"
 msgstr "Vérifié"
 
@@ -4353,7 +4358,7 @@ msgstr "Nous vous avons envoyé un e-mail avec les étapes suivantes. Si vous ne
 #~ msgstr "Nous vous avons envoyé un e-mail avec les étapes suivantes. Si vous ne le voyez pas, vérifiez votre dossier de spam. Si vous ne le voyez toujours pas, veuillez contacter jules@dembrane.com"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:294
+#: src/components/participant/ParticipantConversationAudio.tsx:336
 msgid "participant.modal.refine.info.reason"
 msgstr "Nous avons besoin d'un peu plus de contexte pour t'aider à affiner efficacement. Continue d'enregistrer pour que nous puissions formuler de meilleures suggestions."
 
@@ -4400,7 +4405,7 @@ msgstr "Bon retour"
 #~ msgid "Welcome to Big Picture Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Details mode."
 #~ msgstr "Bienvenue en mode Vue d’ensemble ! J’ai chargé les résumés de toutes tes conversations. Pose-moi des questions sur les tendances, thèmes et insights de tes données. Pour des citations exactes, démarre un nouveau chat en mode Contexte précis."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:527
+#: src/routes/project/chat/ProjectChatRoute.tsx:529
 msgid "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
 msgstr "Bienvenue sur Dembrane Chat ! Utilisez la barre latérale pour sélectionner les ressources et les conversations que vous souhaitez analyser. Ensuite, vous pouvez poser des questions sur les ressources et les conversations sélectionnées."
 
@@ -4411,7 +4416,7 @@ msgstr "Bienvenue sur Dembrane!"
 #~ msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Deep Dive mode."
 #~ msgstr "Bienvenue dans le mode Overview ! J’ai les résumés de toutes tes conversations. Pose-moi des questions sur les patterns, les thèmes et les insights dans tes données. Pour des citations exactes, démarre un nouveau chat en mode Deep Dive."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:526
+#: src/routes/project/chat/ProjectChatRoute.tsx:528
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Bienvenue en mode Vue d’ensemble ! J’ai chargé les résumés de toutes tes conversations. Pose-moi des questions sur les tendances, thèmes et insights de tes données. Pour des citations exactes, démarre un nouveau chat en mode Contexte précis."
 
@@ -4427,7 +4432,7 @@ msgstr "Bienvenue sur votre Accueil! Ici, vous pouvez voir tous vos projets et a
 msgid "Welcome!"
 msgstr "Bienvenue !"
 
-#: src/components/chat/ChatModeSelector.tsx:44
+#: src/components/chat/ChatModeSelector.tsx:46
 msgid "What are the main themes across all conversations?"
 msgstr "Quels sont les principaux thèmes de toutes les conversations ?"
 
@@ -4444,15 +4449,15 @@ msgstr ""
 msgid "participant.concrete.selection.title"
 msgstr "Qu'est-ce que tu veux rendre concret ?"
 
-#: src/components/chat/ChatModeSelector.tsx:46
+#: src/components/chat/ChatModeSelector.tsx:48
 msgid "What patterns emerge from the data?"
 msgstr "Quelles tendances se dégagent des données ?"
 
-#: src/components/chat/ChatModeSelector.tsx:52
+#: src/components/chat/ChatModeSelector.tsx:54
 msgid "What were the key moments in this conversation?"
 msgstr "Quels ont été les moments clés de cette conversation ?"
 
-#: src/components/chat/ChatModeSelector.tsx:231
+#: src/components/chat/ChatModeSelector.tsx:242
 msgid "What would you like to explore?"
 msgstr "Qu’est-ce que tu veux explorer ?"
 
@@ -4487,7 +4492,7 @@ msgstr "Vous ne pouvez télécharger que jusqu'à {MAX_FILES} fichiers à la foi
 #~ msgstr "Vous pouvez toujours utiliser la fonction Dembrane Ask pour discuter avec n'importe quelle conversation"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/SelectAllConfirmationModal.tsx:237
+#: src/components/conversation/SelectAllConfirmationModal.tsx:247
 msgid "select.all.modal.already.added"
 msgstr "Vous avez déjà ajouté <0>{existingContextCount, plural, one {# conversation} other {# conversations}}</0> à ce chat."
 
