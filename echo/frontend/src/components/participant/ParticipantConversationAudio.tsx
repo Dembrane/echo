@@ -103,7 +103,9 @@ export const ParticipantConversationAudio = () => {
 
 	const [isFinishing, _setIsFinishing] = useState(false);
 	const [isStopping, setIsStopping] = useState(false);
-	const [stoppedRecordingTime, setStoppedRecordingTime] = useState<number | null>(null);
+	const [stoppedRecordingTime, setStoppedRecordingTime] = useState<
+		number | null
+	>(null);
 	const [opened, { open, close }] = useDisclosure(false);
 	const [
 		refineInfoModalOpened,
@@ -114,7 +116,7 @@ export const ParticipantConversationAudio = () => {
 	const newConversationLink = useProjectSharingLink(projectQuery.data);
 
 	const audioRecorder = useChunkedAudioRecorder({ deviceId, onChunk });
-	const wakeLock = useWakeLock({ obtainWakeLockOnMount: true });
+	const wakeLock = useWakeLock();
 
 	const {
 		startRecording,
@@ -128,7 +130,7 @@ export const ParticipantConversationAudio = () => {
 	// iOS low battery mode fallback: play silent 1-pixel video only when wakelock fails
 	useVideoWakeLockFallback({
 		isRecording,
-		isWakeLockActive: wakeLock.isActive,
+		isWakeLockSupported: wakeLock.isSupported,
 	});
 
 	const handleMicrophoneDeviceChanged = async () => {
@@ -197,6 +199,9 @@ export const ParticipantConversationAudio = () => {
 		if (isRecording) {
 			setStoppedRecordingTime(recordingTime); // Capture time before stopping
 			stopRecording(); // Actually stop to trigger final chunk upload immediately
+			// Release wakelock and disable auto-reacquire when stopping
+			wakeLock.releaseWakeLock();
+			wakeLock.disableAutoReacquire();
 			open();
 		}
 	};
@@ -205,6 +210,9 @@ export const ParticipantConversationAudio = () => {
 		setIsStopping(true);
 		try {
 			stopRecording();
+			// Release wakelock when finishing
+			wakeLock.releaseWakeLock();
+			wakeLock.disableAutoReacquire();
 
 			// Small delay to ensure final chunk's upload promise is added to the array
 			await new Promise((resolve) => setTimeout(resolve, 100));
@@ -245,6 +253,11 @@ export const ParticipantConversationAudio = () => {
 		const timeToResume = stoppedRecordingTime ?? 0;
 		// Don't clear stoppedRecordingTime here - let the useEffect do it when recording starts
 		startRecording(timeToResume);
+		// Obtain wakelock on user interaction
+		if (wakeLock.isSupported) {
+			wakeLock.obtainWakeLock();
+			wakeLock.enableAutoReacquire();
+		}
 	};
 
 	// Clear stoppedRecordingTime when recording actually starts (avoids UI flash)
@@ -466,7 +479,14 @@ export const ParticipantConversationAudio = () => {
 									size="lg"
 									radius="md"
 									rightSection={<IconMicrophone />}
-									onClick={() => startRecording()}
+									onClick={() => {
+										startRecording();
+										// Obtain wakelock on user interaction
+										if (wakeLock.isSupported) {
+											wakeLock.obtainWakeLock();
+											wakeLock.enableAutoReacquire();
+										}
+									}}
 									className="flex-grow"
 								>
 									<Trans id="participant.button.record">Record</Trans>
@@ -478,22 +498,20 @@ export const ParticipantConversationAudio = () => {
 									</ActionIcon>
 								</I18nLink>
 
-								{!isStopping &&
-									chunks?.data &&
-									chunks.data.length > 0 && (
-										<Button
-											size="lg"
-											radius="md"
-											onClick={open}
-											variant="light"
-											rightSection={<IconCheck className="hidden sm:block" />}
-											className="w-auto"
-											loading={isFinishing}
-											disabled={isFinishing}
-										>
-											<Trans id="participant.button.finish">Finish</Trans>
-										</Button>
-									)}
+								{!isStopping && chunks?.data && chunks.data.length > 0 && (
+									<Button
+										size="lg"
+										radius="md"
+										onClick={open}
+										variant="light"
+										rightSection={<IconCheck className="hidden sm:block" />}
+										className="w-auto"
+										loading={isFinishing}
+										disabled={isFinishing}
+									>
+										<Trans id="participant.button.finish">Finish</Trans>
+									</Button>
+								)}
 							</Group>
 						)}
 
