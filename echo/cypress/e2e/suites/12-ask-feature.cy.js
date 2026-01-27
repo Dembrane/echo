@@ -47,6 +47,8 @@ describe('Ask Feature Flow', () => {
         cy.log('Step 2: Opening upload modal');
         openUploadModal();
 
+        cy.wait(5000);
+
         // 3. Upload the audio file from cypress assets
         cy.log('Step 3: Uploading audio file');
         uploadAudioFile('assets/videoplayback.mp3');

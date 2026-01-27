@@ -20,6 +20,10 @@ module.exports = defineConfig({
                     // Auto-accept permission prompts
                     launchOptions.args.push('--disable-features=WebRtcHideLocalIpsWithMdns');
 
+                    // Use a specific file for fake audio capture (fake microphone input)
+                    // Note: This requires a .wav file.
+                    launchOptions.args.push('--use-file-for-fake-audio-capture=c:/Users/charu/OneDrive/Desktop/echo/echo/cypress/fixtures/test-audio.wav');
+
                     // Grant clipboard permissions
                     // Ensure preferences object exists
                     if (!launchOptions.preferences) {

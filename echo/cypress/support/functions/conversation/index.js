@@ -33,9 +33,13 @@ export const openUploadModal = () => {
  */
 export const uploadAudioFile = (filePath) => {
     cy.log('Uploading Audio File:', filePath);
+    // Ensure the Modal content is visible before trying to find the input
+    cy.xpath('//section[contains(@class, "mantine-Modal-content")] | //div[contains(@class, "mantine-Modal-content")]')
+        .should('be.visible');
+
     // The file input is hidden inside the Mantine Dropzone
     // Using force: true because the input is typically hidden
-    cy.get('input[type="file"]').selectFile(filePath, { force: true });
+    cy.xpath('//input[@type="file"]').selectFile(filePath, { force: true });
     cy.wait(1000); // Wait for file to be processed by the UI
 };
 
@@ -57,7 +61,7 @@ export const clickUploadFilesButton = () => {
 export const closeUploadModal = () => {
     cy.log('Closing Upload Modal');
     // The close button has the Mantine modal close class
-    cy.get('button.mantine-Modal-close').should('be.visible').click();
+    cy.xpath('//button[contains(@class, "mantine-Modal-close")]').should('be.visible').click();
     cy.wait(500); // Brief wait for modal to close
 };
 
