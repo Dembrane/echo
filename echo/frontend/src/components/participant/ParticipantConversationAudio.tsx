@@ -527,7 +527,7 @@ export const ParticipantConversationAudio = () => {
 				</Stack>
 			</Modal>
 
-			{/* Modal for recording interruption (iOS phone call/screen lock) */}
+			{/* Modal for recording interruption */}
 			<Modal
 				opened={interruptionModalOpened}
 				onClose={() => {}}
@@ -557,7 +557,7 @@ export const ParticipantConversationAudio = () => {
 						<Group gap="xs" justify="flex-start" py="xs">
 							<Loader size="sm" />
 							<Text size="sm" c="dimmed">
-								<Trans id="participant.modal.uploading">
+								<Trans id="participant.modal.interruption.uploading">
 									Uploading audio...
 								</Trans>
 							</Text>
@@ -576,7 +576,7 @@ export const ParticipantConversationAudio = () => {
 						radius="md"
 						size="md"
 					>
-						<Trans id="participant.button.finish">Finish</Trans>
+						<Trans id="participant.button.interruption.finish">Finish</Trans>
 					</Button>
 					<Button
 						variant="outline"
@@ -592,7 +592,7 @@ export const ParticipantConversationAudio = () => {
 						radius="md"
 						size="md"
 					>
-						<Trans id="participant.button.start.new.conversation">
+						<Trans id="participant.button.interruption.start.new.conversation">
 							Start a new conversation
 						</Trans>
 					</Button>
