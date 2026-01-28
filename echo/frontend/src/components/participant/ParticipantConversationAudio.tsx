@@ -5,12 +5,14 @@ import {
 	Box,
 	Button,
 	Group,
+	Loader,
 	LoadingOverlay,
 	Modal,
 	Stack,
 	Text,
 } from "@mantine/core";
 import { useDisclosure, useLocalStorage, useWindowEvent } from "@mantine/hooks";
+import * as Sentry from "@sentry/react";
 import {
 	IconCheck,
 	IconMicrophone,
@@ -27,6 +29,8 @@ import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
 import { useWakeLock } from "@/hooks/useWakeLock";
+import { analytics } from "@/lib/analytics";
+import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { finishConversation } from "@/lib/api";
 import { I18nLink } from "../common/i18nLink";
 import { ScrollToBottomButton } from "../common/ScrollToBottom";
@@ -103,18 +107,46 @@ export const ParticipantConversationAudio = () => {
 
 	const [isFinishing, _setIsFinishing] = useState(false);
 	const [isStopping, setIsStopping] = useState(false);
-	const [stoppedRecordingTime, setStoppedRecordingTime] = useState<number | null>(null);
+	const [stoppedRecordingTime, setStoppedRecordingTime] = useState<
+		number | null
+	>(null);
 	const [opened, { open, close }] = useDisclosure(false);
 	const [
 		refineInfoModalOpened,
 		{ open: openRefineInfoModal, close: closeRefineInfoModal },
 	] = useDisclosure(false);
+
+	const [interruptionModalOpened, { open: openInterruptionModal }] =
+		useDisclosure(false);
+	const [isReconnecting, setIsReconnecting] = useState(false);
+	const interruptionRecordingTimeRef = useRef<number>(0);
 	// Navigation and language
 	const navigate = useI18nNavigate();
 	const newConversationLink = useProjectSharingLink(projectQuery.data);
+	const wakeLock = useWakeLock();
 
-	const audioRecorder = useChunkedAudioRecorder({ deviceId, onChunk });
-	const wakeLock = useWakeLock({ obtainWakeLockOnMount: true });
+	// Ref to store callback that will be set after audioRecorder is created
+	const onRecordingInterruptedRef = useRef<(() => void) | null>(null);
+
+	const audioRecorder = useChunkedAudioRecorder({
+		deviceId,
+		onChunk,
+		onRecordingInterrupted: () => onRecordingInterruptedRef.current?.(),
+	});
+
+	// Set up the interruption callback after audioRecorder is available
+	onRecordingInterruptedRef.current = () => {
+		// Capture the recording time before stopping
+		interruptionRecordingTimeRef.current = audioRecorder.recordingTime;
+
+		// Stop recording and release wake lock
+		audioRecorder.stopRecording();
+		wakeLock.releaseWakeLock();
+		wakeLock.disableAutoReacquire();
+
+		// Show the interruption modal
+		openInterruptionModal();
+	};
 
 	const {
 		startRecording,
@@ -128,7 +160,7 @@ export const ParticipantConversationAudio = () => {
 	// iOS low battery mode fallback: play silent 1-pixel video only when wakelock fails
 	useVideoWakeLockFallback({
 		isRecording,
-		isWakeLockActive: wakeLock.isActive,
+		isWakeLockSupported: wakeLock.isSupported,
 	});
 
 	const handleMicrophoneDeviceChanged = async () => {
@@ -197,6 +229,9 @@ export const ParticipantConversationAudio = () => {
 		if (isRecording) {
 			setStoppedRecordingTime(recordingTime); // Capture time before stopping
 			stopRecording(); // Actually stop to trigger final chunk upload immediately
+			// Release wakelock and disable auto-reacquire when stopping
+			wakeLock.releaseWakeLock();
+			wakeLock.disableAutoReacquire();
 			open();
 		}
 	};
@@ -205,6 +240,9 @@ export const ParticipantConversationAudio = () => {
 		setIsStopping(true);
 		try {
 			stopRecording();
+			// Release wakelock when finishing
+			wakeLock.releaseWakeLock();
+			wakeLock.disableAutoReacquire();
 
 			// Small delay to ensure final chunk's upload promise is added to the array
 			await new Promise((resolve) => setTimeout(resolve, 100));
@@ -245,6 +283,11 @@ export const ParticipantConversationAudio = () => {
 		const timeToResume = stoppedRecordingTime ?? 0;
 		// Don't clear stoppedRecordingTime here - let the useEffect do it when recording starts
 		startRecording(timeToResume);
+		// Obtain wakelock on user interaction
+		if (wakeLock.isSupported) {
+			wakeLock.obtainWakeLock();
+			wakeLock.enableAutoReacquire();
+		}
 	};
 
 	// Clear stoppedRecordingTime when recording actually starts (avoids UI flash)
@@ -253,6 +296,76 @@ export const ParticipantConversationAudio = () => {
 			setStoppedRecordingTime(null);
 		}
 	}, [isRecording, stoppedRecordingTime]);
+
+	// Report interruption to Sentry and Plausible
+	const reportInterruption = () => {
+		if (!audioRecorder.hadInterruption) return;
+
+		const chunkHistory = audioRecorder.getChunkHistory();
+
+		// Send to Sentry
+		Sentry.captureMessage(
+			"Recording interrupted by consecutive suspicious chunks",
+			{
+				extra: {
+					chunkSizes: chunkHistory.map((c) => c.size),
+					conversationId,
+					deviceInfo: navigator.userAgent,
+					projectId,
+					recordingDurationSeconds: interruptionRecordingTimeRef.current,
+					suspiciousChunkIndices: chunkHistory
+						.map((c, i) => (c.size < 1024 ? i : -1))
+						.filter((i) => i >= 0),
+					timestamp: new Date().toISOString(),
+					totalChunks: chunkHistory.length,
+				},
+				level: "warning",
+				tags: {
+					issue_type: "audio_interruption",
+					platform: "participant_portal",
+				},
+			},
+		);
+
+		// Send to Plausible
+		try {
+			analytics.trackEvent(events.AUDIO_CHUNK_INTERRUPTION_ERROR);
+		} catch (error) {
+			console.warn("Analytics tracking failed:", error);
+		}
+	};
+
+	// Handler for reconnect button - waits for uploads, reports error, then reloads
+	const handleReconnect = async () => {
+		setIsReconnecting(true);
+		try {
+			// Small delay to ensure final chunk's upload promise is added to the array
+			await new Promise((resolve) => setTimeout(resolve, 100));
+
+			// Wait for all pending uploads to complete (with timeout)
+			if (pendingUploadsRef.current.length > 0) {
+				const timeoutPromise = new Promise<"timeout">((resolve) =>
+					setTimeout(() => resolve("timeout"), 30000),
+				);
+
+				const result = await Promise.race([
+					Promise.allSettled(pendingUploadsRef.current).then(() => "done"),
+					timeoutPromise,
+				]);
+
+				if (result === "timeout") {
+					console.warn("Upload wait timeout reached, proceeding anyway");
+				}
+			}
+
+			reportInterruption();
+
+			window.location.reload();
+		} catch (_error) {
+			toast.error(t`Failed to reconnect. Please try reloading the page.`);
+			setIsReconnecting(false);
+		}
+	};
 
 	const showVerify = projectQuery.data?.is_verify_enabled;
 	const showEcho = projectQuery.data?.is_get_reply_enabled;
@@ -396,6 +509,78 @@ export const ParticipantConversationAudio = () => {
 				</Stack>
 			</Modal>
 
+			{/* Modal for recording interruption */}
+			<Modal
+				opened={interruptionModalOpened}
+				onClose={() => {}}
+				withCloseButton={false}
+				centered
+				size="sm"
+				radius="md"
+				padding="xl"
+				closeOnClickOutside={false}
+				closeOnEscape={false}
+				overlayProps={{
+					color: "#FF9AA2",
+				}}
+			>
+				<Stack gap="md">
+					<Text fw={600} size="lg">
+						<Trans id="participant.modal.interruption.title">
+							Recording interrupted
+						</Trans>
+					</Text>
+					<Text>
+						{(() => {
+							const savedDuration = Math.max(
+								0,
+								interruptionRecordingTimeRef.current - 60,
+							);
+							const hours = Math.floor(savedDuration / 3600);
+							const minutes = Math.floor((savedDuration % 3600) / 60);
+							const seconds = savedDuration % 60;
+							const formattedDuration =
+								hours > 0
+									? `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
+									: `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+							return (
+								<Trans id="participant.modal.interruption.issue.description">
+									We saved your recording up to{" "}
+									<strong>{formattedDuration}</strong> but lost the last 60
+									seconds or so. <br /> Press below to reconnect, then hit the
+									record button to continue.
+								</Trans>
+							);
+						})()}
+					</Text>
+
+					{/* Uploading indicator - same pattern as StopRecordingConfirmationModal */}
+					{uploadChunkMutation.isPending && (
+						<Group gap="xs" justify="flex-start" py="xs">
+							<Loader size="sm" />
+							<Text size="sm" c="dimmed">
+								<Trans id="participant.modal.interruption.uploading">
+									Uploading audio...
+								</Trans>
+							</Text>
+						</Group>
+					)}
+
+					<Button
+						onClick={handleReconnect}
+						loading={isReconnecting}
+						disabled={isReconnecting || uploadChunkMutation.isPending}
+						fullWidth
+						radius="md"
+						size="md"
+					>
+						<Trans id="participant.button.interruption.reconnect">
+							Reconnect
+						</Trans>
+					</Button>
+				</Stack>
+			</Modal>
+
 			<Box className={clsx("relative flex-grow p-4 transition-all")}>
 				<Outlet
 					context={{
@@ -423,19 +608,25 @@ export const ParticipantConversationAudio = () => {
 					</Group>
 
 					<Group justify="space-between">
-						{/* Recording time indicator - show when recording OR when stop modal is open OR resuming */}
-						{(isRecording || opened || stoppedRecordingTime !== null) && (
+						{/* Recording time indicator - show when recording OR when stop modal is open OR when interruption modal is open OR resuming */}
+						{(isRecording ||
+							opened ||
+							interruptionModalOpened ||
+							stoppedRecordingTime !== null) && (
 							<div className="border-slate-300 bg-white">
 								<Group justify="center" align="center" gap="xs">
-									{opened || stoppedRecordingTime !== null ? (
+									{opened ||
+									interruptionModalOpened ||
+									stoppedRecordingTime !== null ? (
 										<IconPlayerPause />
 									) : (
 										<div className="h-4 w-4 animate-pulse rounded-full bg-red-500" />
 									)}
 									<Text className="text-2xl">
 										{(() => {
-											const displayTime =
-												stoppedRecordingTime !== null
+											const displayTime = interruptionModalOpened
+												? interruptionRecordingTimeRef.current
+												: stoppedRecordingTime !== null
 													? stoppedRecordingTime
 													: recordingTime;
 											return (
@@ -460,27 +651,35 @@ export const ParticipantConversationAudio = () => {
 							</div>
 						)}
 
-						{!isRecording && !opened && stoppedRecordingTime === null && (
-							<Group className="w-full" wrap="nowrap">
-								<Button
-									size="lg"
-									radius="md"
-									rightSection={<IconMicrophone />}
-									onClick={() => startRecording()}
-									className="flex-grow"
-								>
-									<Trans id="participant.button.record">Record</Trans>
-								</Button>
+						{!isRecording &&
+							!opened &&
+							!interruptionModalOpened &&
+							stoppedRecordingTime === null && (
+								<Group className="w-full" wrap="nowrap">
+									<Button
+										size="lg"
+										radius="md"
+										rightSection={<IconMicrophone />}
+										onClick={() => {
+											startRecording();
+											// Obtain wakelock on user interaction
+											if (wakeLock.isSupported) {
+												wakeLock.obtainWakeLock();
+												wakeLock.enableAutoReacquire();
+											}
+										}}
+										className="flex-grow"
+									>
+										<Trans id="participant.button.record">Record</Trans>
+									</Button>
 
-								<I18nLink to={textModeUrl}>
-									<ActionIcon size="50" variant="default" radius="md">
-										<IconTextCaption />
-									</ActionIcon>
-								</I18nLink>
+									<I18nLink to={textModeUrl}>
+										<ActionIcon size="50" variant="default" radius="md">
+											<IconTextCaption />
+										</ActionIcon>
+									</I18nLink>
 
-								{!isStopping &&
-									chunks?.data &&
-									chunks.data.length > 0 && (
+									{!isStopping && chunks?.data && chunks.data.length > 0 && (
 										<Button
 											size="lg"
 											radius="md"
@@ -494,8 +693,8 @@ export const ParticipantConversationAudio = () => {
 											<Trans id="participant.button.finish">Finish</Trans>
 										</Button>
 									)}
-							</Group>
-						)}
+								</Group>
+							)}
 
 						{isRecording && (
 							<Group gap="lg">
