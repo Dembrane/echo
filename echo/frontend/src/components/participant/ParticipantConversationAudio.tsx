@@ -14,6 +14,7 @@ import {
 import { useDisclosure, useLocalStorage, useWindowEvent } from "@mantine/hooks";
 import * as Sentry from "@sentry/react";
 import {
+	IconAlertTriangle,
 	IconCheck,
 	IconMicrophone,
 	IconPlayerPause,
@@ -523,35 +524,25 @@ export const ParticipantConversationAudio = () => {
 				overlayProps={{
 					color: "#FF9AA2",
 				}}
+				role="alertdialog"
+				aria-live="assertive"
+				aria-atomic="true"
 			>
 				<Stack gap="md">
-					<Text fw={600} size="lg">
-						<Trans id="participant.modal.interruption.title">
-							Recording interrupted
-						</Trans>
-					</Text>
+					<Group gap="xs">
+						<IconAlertTriangle size={24} color="#FF9AA2" />
+						<Text fw={600} size="lg">
+							<Trans id="participant.modal.interruption.title">
+								Recording interrupted
+							</Trans>
+						</Text>
+						<IconAlertTriangle size={24} color="#FF9AA2" />
+					</Group>
 					<Text>
-						{(() => {
-							const savedDuration = Math.max(
-								0,
-								interruptionRecordingTimeRef.current - 60,
-							);
-							const hours = Math.floor(savedDuration / 3600);
-							const minutes = Math.floor((savedDuration % 3600) / 60);
-							const seconds = savedDuration % 60;
-							const formattedDuration =
-								hours > 0
-									? `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
-									: `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-							return (
-								<Trans id="participant.modal.interruption.issue.description">
-									We saved your recording up to{" "}
-									<strong>{formattedDuration}</strong> but lost the last 60
-									seconds or so. <br /> Press below to reconnect, then hit the
-									record button to continue.
-								</Trans>
-							);
-						})()}
+						<Trans id="participant.modal.interruption.issue.message">
+							Attention! We lost the last 60 seconds or so of your recording due
+							to some interruption. Please press the button below to reconnect.
+						</Trans>
 					</Text>
 
 					{/* Uploading indicator - same pattern as StopRecordingConfirmationModal */}
@@ -572,7 +563,7 @@ export const ParticipantConversationAudio = () => {
 						disabled={isReconnecting || uploadChunkMutation.isPending}
 						fullWidth
 						radius="md"
-						size="md"
+						size="xl"
 					>
 						<Trans id="participant.button.interruption.reconnect">
 							Reconnect
