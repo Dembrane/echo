@@ -182,6 +182,7 @@ const useChunkedAudioRecorder = ({
 
 					// Play notification sound for interruption using pre-unlocked audio
 					if (audioAlertRef.current) {
+						audioAlertRef.current.muted = false;
 						audioAlertRef.current.currentTime = 0;
 						audioAlertRef.current.play().catch((error) => {
 							console.error("Failed to play notification sound:", error);
@@ -229,12 +230,9 @@ const useChunkedAudioRecorder = ({
 					.then(() => {
 						audio.pause();
 						audio.currentTime = 0;
-						// Unmute for actual playback later
-						audio.muted = false;
 					})
 					.catch(() => {
 						// Ignore errors - audio will still work on desktop
-						audio.muted = false;
 					});
 				audioAlertRef.current = audio;
 			}
