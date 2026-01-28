@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import audioAlertSound from "@/assets/audio-alert.opus";
+import audioAlertSound from "@/assets/audio-alert.mp3";
 
 // Minimum chunk size in bytes - chunks smaller than this are considered suspicious
 const MIN_CHUNK_SIZE_BYTES = 1024; // 1KB
@@ -74,6 +74,10 @@ const useChunkedAudioRecorder = ({
 	const audioContextRef = useRef<AudioContext | null>(null);
 	const audioProcessorRef = useRef<AudioWorkletNode | null>(null);
 
+	// We create and "unlock" the Audio element during user gesture (startRecording),
+	// then reuse it for playback later when interruption is detected.
+	const audioAlertRef = useRef<HTMLAudioElement | null>(null);
+
 	const [permissionError, setPermissionError] = useState<string | null>(null);
 
 	// Suspicious chunk tracking for iOS interruption detection
@@ -105,6 +109,11 @@ const useChunkedAudioRecorder = ({
 			if (audioContextRef.current) {
 				audioContextRef.current.close();
 				audioContextRef.current = null;
+			}
+			// Clean up audio alert element
+			if (audioAlertRef.current) {
+				audioAlertRef.current.pause();
+				audioAlertRef.current = null;
 			}
 		};
 	}, []);
@@ -171,15 +180,12 @@ const useChunkedAudioRecorder = ({
 					hadConsecutiveSuspiciousChunksRef.current = true;
 					hasCalledInterruptionCallbackRef.current = true;
 
-					// Play notification sound for interruption
-					try {
-						const audio = new Audio(audioAlertSound);
-						audio.volume = 1.0;
-						audio.play().catch((error) => {
+					// Play notification sound for interruption using pre-unlocked audio
+					if (audioAlertRef.current) {
+						audioAlertRef.current.currentTime = 0;
+						audioAlertRef.current.play().catch((error) => {
 							console.error("Failed to play notification sound:", error);
 						});
-					} catch (error) {
-						console.error("Failed to play notification sound:", error);
 					}
 
 					// Don't upload suspicious chunk, don't restart recording
@@ -210,6 +216,25 @@ const useChunkedAudioRecorder = ({
 	const startRecording = async (initialTime = 0) => {
 		try {
 			log("Requesting access to the microphone...");
+
+			// We create the Audio element, load it, and play+pause silently to unlock it.
+			// This allows programmatic playback later when interruption is detected.
+			if (!audioAlertRef.current) {
+				const audio = new Audio(audioAlertSound);
+				audio.load();
+				// Play silently and pause immediately to unlock audio on iOS
+				audio
+					.play()
+					.then(() => {
+						audio.pause();
+						audio.currentTime = 0;
+					})
+					.catch(() => {
+						// Ignore errors - audio will still work on desktop
+					});
+				audioAlertRef.current = audio;
+			}
+
 			const audioConstraint = deviceId
 				? { deviceId: { exact: deviceId } }
 				: true;
