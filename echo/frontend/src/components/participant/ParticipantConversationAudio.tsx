@@ -29,6 +29,8 @@ import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
 import { useWakeLock } from "@/hooks/useWakeLock";
+import { analytics } from "@/lib/analytics";
+import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { finishConversation } from "@/lib/api";
 import { I18nLink } from "../common/i18nLink";
 import { ScrollToBottomButton } from "../common/ScrollToBottom";
@@ -116,9 +118,7 @@ export const ParticipantConversationAudio = () => {
 
 	const [interruptionModalOpened, { open: openInterruptionModal }] =
 		useDisclosure(false);
-	const [isFinishingConversation, setIsFinishingConversation] = useState(false);
-	const [isStartingNewConversation, setIsStartingNewConversation] =
-		useState(false);
+	const [isReconnecting, setIsReconnecting] = useState(false);
 	const interruptionRecordingTimeRef = useRef<number>(0);
 	// Navigation and language
 	const navigate = useI18nNavigate();
@@ -297,12 +297,13 @@ export const ParticipantConversationAudio = () => {
 		}
 	}, [isRecording, stoppedRecordingTime]);
 
-	// Report interruption to Sentry with chunk data
-	const reportInterruptionToSentry = () => {
+	// Report interruption to Sentry and Plausible
+	const reportInterruption = () => {
 		if (!audioRecorder.hadInterruption) return;
 
 		const chunkHistory = audioRecorder.getChunkHistory();
 
+		// Send to Sentry
 		Sentry.captureMessage(
 			"Recording interrupted by consecutive suspicious chunks",
 			{
@@ -325,15 +326,18 @@ export const ParticipantConversationAudio = () => {
 				},
 			},
 		);
+
+		// Send to Plausible
+		try {
+			analytics.trackEvent(events.AUDIO_CHUNK_INTERRUPTION_ERROR);
+		} catch (error) {
+			console.warn("Analytics tracking failed:", error);
+		}
 	};
 
-	// Common handler for interruption modal actions
-	const handleInterruptionAction = async (
-		navigateTo: string,
-		errorMessage: string,
-		setLoading: (loading: boolean) => void,
-	) => {
-		setLoading(true);
+	// Handler for reconnect button - waits for uploads, reports error, then reloads
+	const handleReconnect = async () => {
+		setIsReconnecting(true);
 		try {
 			// Small delay to ensure final chunk's upload promise is added to the array
 			await new Promise((resolve) => setTimeout(resolve, 100));
@@ -354,36 +358,14 @@ export const ParticipantConversationAudio = () => {
 				}
 			}
 
-			reportInterruptionToSentry();
-			await finishConversation(conversationId ?? "");
+			reportInterruption();
 
-			if (
-				navigateTo.startsWith("http://") ||
-				navigateTo.startsWith("https://")
-			) {
-				window.location.href = navigateTo;
-			} else {
-				navigate(navigateTo);
-			}
+			window.location.reload();
 		} catch (_error) {
-			toast.error(errorMessage);
-			setLoading(false);
+			toast.error(t`Failed to reconnect. Please try reloading the page.`);
+			setIsReconnecting(false);
 		}
 	};
-
-	const handleInterruptionFinish = () =>
-		handleInterruptionAction(
-			finishUrl,
-			t`Failed to finish conversation. Please try again or start a new conversation.`,
-			setIsFinishingConversation,
-		);
-
-	const handleInterruptionNewConversation = () =>
-		handleInterruptionAction(
-			newConversationLink ?? "",
-			t`Failed to start new conversation. Please try again.`,
-			setIsStartingNewConversation,
-		);
 
 	const showVerify = projectQuery.data?.is_verify_enabled;
 	const showEcho = projectQuery.data?.is_get_reply_enabled;
@@ -538,6 +520,9 @@ export const ParticipantConversationAudio = () => {
 				padding="xl"
 				closeOnClickOutside={false}
 				closeOnEscape={false}
+				overlayProps={{
+					color: "#FF9AA2",
+				}}
 			>
 				<Stack gap="md">
 					<Text fw={600} size="lg">
@@ -546,10 +531,27 @@ export const ParticipantConversationAudio = () => {
 						</Trans>
 					</Text>
 					<Text>
-						<Trans id="participant.modal.interruption.description">
-							Don't worry, we've saved everything you recorded so far. You can
-							either finish the conversation or start a new one.
-						</Trans>
+						{(() => {
+							const savedDuration = Math.max(
+								0,
+								interruptionRecordingTimeRef.current - 60,
+							);
+							const hours = Math.floor(savedDuration / 3600);
+							const minutes = Math.floor((savedDuration % 3600) / 60);
+							const seconds = savedDuration % 60;
+							const formattedDuration =
+								hours > 0
+									? `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
+									: `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+							return (
+								<Trans id="participant.modal.interruption.issue.description">
+									We saved your recording up to{" "}
+									<strong>{formattedDuration}</strong> but lost the last 60
+									seconds or so. <br /> Press below to reconnect, then hit the
+									record button to continue.
+								</Trans>
+							);
+						})()}
 					</Text>
 
 					{/* Uploading indicator - same pattern as StopRecordingConfirmationModal */}
@@ -565,35 +567,15 @@ export const ParticipantConversationAudio = () => {
 					)}
 
 					<Button
-						onClick={handleInterruptionFinish}
-						loading={isFinishingConversation}
-						disabled={
-							isFinishingConversation ||
-							isStartingNewConversation ||
-							uploadChunkMutation.isPending
-						}
+						onClick={handleReconnect}
+						loading={isReconnecting}
+						disabled={isReconnecting || uploadChunkMutation.isPending}
 						fullWidth
 						radius="md"
 						size="md"
 					>
-						<Trans id="participant.button.interruption.finish">Finish</Trans>
-					</Button>
-					<Button
-						variant="outline"
-						onClick={handleInterruptionNewConversation}
-						loading={isStartingNewConversation}
-						disabled={
-							!newConversationLink ||
-							isFinishingConversation ||
-							isStartingNewConversation ||
-							uploadChunkMutation.isPending
-						}
-						fullWidth
-						radius="md"
-						size="md"
-					>
-						<Trans id="participant.button.interruption.start.new.conversation">
-							Start a new conversation
+						<Trans id="participant.button.interruption.reconnect">
+							Reconnect
 						</Trans>
 					</Button>
 				</Stack>
