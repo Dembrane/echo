@@ -222,15 +222,19 @@ const useChunkedAudioRecorder = ({
 			if (!audioAlertRef.current) {
 				const audio = new Audio(audioAlertSound);
 				audio.load();
-				// Play silently and pause immediately to unlock audio on iOS
+				// Mute before playing to unlock silently on iOS
+				audio.muted = true;
 				audio
 					.play()
 					.then(() => {
 						audio.pause();
 						audio.currentTime = 0;
+						// Unmute for actual playback later
+						audio.muted = false;
 					})
 					.catch(() => {
 						// Ignore errors - audio will still work on desktop
+						audio.muted = false;
 					});
 				audioAlertRef.current = audio;
 			}
