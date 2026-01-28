@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import audioAlertSound from "@/assets/audio-alert.opus";
 
 // Minimum chunk size in bytes - chunks smaller than this are considered suspicious
 const MIN_CHUNK_SIZE_BYTES = 1024; // 1KB
@@ -170,52 +171,13 @@ const useChunkedAudioRecorder = ({
 					hadConsecutiveSuspiciousChunksRef.current = true;
 					hasCalledInterruptionCallbackRef.current = true;
 
-					// notification sound for interruption
+					// Play notification sound for interruption
 					try {
-						const audioContext = new (
-							window.AudioContext || (window as any).webkitAudioContext
-						)();
-
-						// First tone - louder and longer
-						const oscillator1 = audioContext.createOscillator();
-						const gainNode1 = audioContext.createGain();
-						oscillator1.connect(gainNode1);
-						gainNode1.connect(audioContext.destination);
-
-						oscillator1.frequency.value = 800;
-						gainNode1.gain.value = 0.6; // Much louder
-
-						oscillator1.start(audioContext.currentTime);
-						oscillator1.stop(audioContext.currentTime + 0.35);
-
-						// Second tone
-						const oscillator2 = audioContext.createOscillator();
-						const gainNode2 = audioContext.createGain();
-						oscillator2.connect(gainNode2);
-						gainNode2.connect(audioContext.destination);
-
-						oscillator2.frequency.value = 600;
-						gainNode2.gain.value = 0.6; // Much louder
-
-						oscillator2.start(audioContext.currentTime + 0.35);
-						oscillator2.stop(audioContext.currentTime + 0.7);
-
-						// Third tone for emphasis
-						const oscillator3 = audioContext.createOscillator();
-						const gainNode3 = audioContext.createGain();
-						oscillator3.connect(gainNode3);
-						gainNode3.connect(audioContext.destination);
-
-						oscillator3.frequency.value = 700;
-						gainNode3.gain.value = 0.6;
-
-						oscillator3.start(audioContext.currentTime + 0.7);
-						oscillator3.stop(audioContext.currentTime + 1.05);
-
-						// Clean up after sound completes
-						setTimeout(() => {
-							audioContext.close();
-						}, 1200);
+						const audio = new Audio(audioAlertSound);
+						audio.volume = 1.0;
+						audio.play().catch((error) => {
+							console.error("Failed to play notification sound:", error);
+						});
 					} catch (error) {
 						console.error("Failed to play notification sound:", error);
 					}
