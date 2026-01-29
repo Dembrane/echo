@@ -24,6 +24,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
+import dembranelogo from "@/assets/dembrane-logo-hq.png";
 import {
 	ChatAccordionItemMenu,
 	ChatModeIndicator,
@@ -172,11 +173,12 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	});
 
 	// Handle load status (shows inline message when backend reports high load)
-	const hasContent = messages.length > 0 && messages[messages.length - 1]?.content?.length > 0;
+	const hasContent =
+		messages.length > 0 && messages[messages.length - 1]?.content?.length > 0;
 	const { statusMessage } = useLoadNotification({
 		data,
-		isLoading,
 		hasContent,
+		isLoading,
 	});
 
 	const customHandleStop = () => {
@@ -577,11 +579,18 @@ export const ProjectChatRoute = () => {
 						<Stack gap="xs">
 							<Group>
 								<Box className="animate-spin">
-									<Logo hideTitle h="20px" my={4} />
+									<img
+										src={dembranelogo}
+										alt="Dembrane Logo"
+										width={20}
+										className="my-4"
+									/>
 								</Box>
 								<Text size="sm" className="italic">
 									<Trans>
-										{isAssistantTyping ? "Assistant is typing..." : "Thinking..."}
+										{isAssistantTyping
+											? "Assistant is typing..."
+											: "Thinking..."}
 									</Trans>
 								</Text>
 								<Button
@@ -754,7 +763,7 @@ export const ProjectChatRoute = () => {
 									</Text>
 								</Group>
 							</Box>
-							<Stack className="h-full" gap="xs">
+							<Stack className="h-full self-start" gap="xs">
 								<Box>
 									<Button
 										size="lg"
@@ -767,6 +776,7 @@ export const ProjectChatRoute = () => {
 										}}
 										rightSection={<IconSend size={24} />}
 										disabled={input.trim() === "" || isLoading || isSubmitting}
+										radius={100}
 									>
 										<Trans>Send</Trans>
 									</Button>

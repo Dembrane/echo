@@ -135,7 +135,11 @@ export const ProjectLibraryRoute = () => {
 				/>
 				<Group gap="xl">
 					{!isLibraryEnabled && (
-						<Button onClick={contactSales} leftSection={<IconCalendarEvent />}>
+						<Button
+							onClick={contactSales}
+							leftSection={<IconCalendarEvent />}
+							radius={100}
+						>
 							<Trans id="library.request.access">Request Access</Trans>
 						</Button>
 					)}
@@ -181,6 +185,7 @@ export const ProjectLibraryRoute = () => {
 									// ||
 									// latestRun?.processing_status === "PROCESSING"
 								}
+								radius={100}
 							>
 								<Trans id="library.create">Create Library</Trans>
 							</Button>
@@ -225,21 +230,19 @@ export const ProjectLibraryRoute = () => {
 				conversationsQuery.data?.length &&
 				conversationsQuery.data?.length > 0 && (
 					<CloseableAlert>
-						<>
-							<Plural
-								id="library.conversations.to.be.analyzed"
-								value={finishedConversationsCount}
-								one="Currently # conversation is ready to be analyzed."
-								other="Currently # conversations are ready to be analyzed."
-							/>{" "}
-							<Trans id="library.conversations.still.processing">
-								{unfinishedConversationsCount} still processing.
-							</Trans>
-							<Trans id="library.generate.duration.message">
-								{" "}
-								Generating library can take up to an hour.
-							</Trans>
-						</>
+						<Plural
+							id="library.conversations.to.be.analyzed"
+							value={finishedConversationsCount}
+							one="Currently # conversation is ready to be analyzed."
+							other="Currently # conversations are ready to be analyzed."
+						/>{" "}
+						<Trans id="library.conversations.still.processing">
+							{unfinishedConversationsCount} still processing.
+						</Trans>
+						<Trans id="library.generate.duration.message">
+							{" "}
+							Generating library can take up to an hour.
+						</Trans>
 					</CloseableAlert>
 				)}
 
@@ -271,6 +274,7 @@ export const ProjectLibraryRoute = () => {
 								// && latestRun.processing_status === "DONE"
 							)
 						}
+						radius={100}
 					>
 						<Trans id="library.create.view">Create View</Trans>
 					</Button>

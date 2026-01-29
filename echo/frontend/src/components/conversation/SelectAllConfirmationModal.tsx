@@ -328,7 +328,7 @@ export const SelectAllConfirmationModal = ({
 							<Button variant="subtle" onClick={onClose}>
 								<Trans id="select.all.modal.cancel">Cancel</Trans>
 							</Button>
-							<Button onClick={onConfirm}>
+							<Button onClick={onConfirm} radius={100}>
 								<Trans id="select.all.modal.proceed">Proceed</Trans>
 							</Button>
 						</Group>
@@ -657,7 +657,7 @@ export const SelectAllConfirmationModal = ({
 						<Divider />
 
 						<Group justify="flex-end" mt="auto">
-							<Button variant="light" onClick={onClose}>
+							<Button variant="subtle" onClick={onClose}>
 								<Trans id="select.all.modal.close">Close</Trans>
 							</Button>
 						</Group>

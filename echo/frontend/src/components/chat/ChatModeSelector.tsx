@@ -12,8 +12,8 @@ import {
 } from "@mantine/core";
 import {
 	IconMessageCircle,
-	IconSparkles,
 	IconQuote,
+	IconSparkles,
 } from "@tabler/icons-react";
 import { useState } from "react";
 import { analytics } from "@/lib/analytics";
@@ -23,22 +23,22 @@ import { useInitializeChatModeMutation } from "./hooks";
 
 // Color palette from design spec - shared across chat components
 export const MODE_COLORS = {
-	overview: {
-		primary: "#1EFFA1", // spring green
-		border: "#1EFFA1", // spring green border
-		lighter: "rgba(30, 255, 161, 0.1)", // very subtle green bg
-		shadow: "rgba(30, 255, 161, 0.12)", // subtle green shadow
-		badge: "teal",
-	},
 	deep_dive: {
-		primary: "#00FFFF", // cyan
+		badge: "cyan",
 		border: "#00FFFF", // cyan border
 		lighter: "rgba(0, 255, 255, 0.1)", // very subtle cyan bg
+		primary: "#00FFFF", // cyan
 		shadow: "rgba(0, 255, 255, 0.1)", // subtle cyan shadow
-		badge: "cyan",
 	},
 	// Use CSS variable for theme-aware text color
 	graphite: "var(--app-text)",
+	overview: {
+		badge: "teal",
+		border: "#1EFFA1", // spring green border
+		lighter: "rgba(30, 255, 161, 0.1)", // very subtle green bg
+		primary: "#1EFFA1", // spring green
+		shadow: "rgba(30, 255, 161, 0.12)", // subtle green shadow
+	},
 };
 
 // Sample questions for each mode - wrapped in function to enable translation
@@ -95,7 +95,9 @@ const ModeCard = ({
 				`}
 				style={{
 					backgroundColor: "var(--app-background)",
-					borderColor: isSelected ? colors.primary : "var(--mantine-color-gray-3)",
+					borderColor: isSelected
+						? colors.primary
+						: "var(--mantine-color-gray-3)",
 					boxShadow: isSelected ? `0 4px 16px ${colors.shadow}` : undefined,
 				}}
 				onMouseEnter={(e) => {
@@ -118,15 +120,14 @@ const ModeCard = ({
 							<Box
 								className="flex items-center justify-center rounded-full"
 								style={{
-									backgroundColor: "var(--app-background)",
-									border: `1.5px solid ${colors.border}`,
 									padding: 10,
 								}}
+								bg={colors.primary}
 							>
 								{isThisLoading ? (
-									<Loader size={24} color={colors.primary} />
+									<Loader size={24} color="#2D2D2C" />
 								) : (
-									<Icon size={24} stroke={2} color={colors.primary} />
+									<Icon size={24} stroke={2} color="#2D2D2C" />
 								)}
 							</Box>
 							<Stack gap={4}>
@@ -134,21 +135,21 @@ const ModeCard = ({
 									<Text fw={600} size="lg" style={{ color: "var(--app-text)" }}>
 										{title}
 									</Text>
-								{isBeta && (
-									<Badge
-										size="sm"
-										variant="outline"
-										styles={{
-											root: {
-												backgroundColor: "transparent",
-												borderColor: "var(--app-text)",
-												color: "var(--app-text)",
-											},
-										}}
-									>
-										<Trans>Beta</Trans>
-									</Badge>
-								)}
+									{isBeta && (
+										<Badge
+											size="sm"
+											variant="outline"
+											styles={{
+												root: {
+													backgroundColor: "transparent",
+													borderColor: "var(--app-text)",
+													color: "var(--app-text)",
+												},
+											}}
+										>
+											<Trans>Beta</Trans>
+										</Badge>
+									)}
 								</Group>
 								<Text size="sm" c="dimmed">
 									{subtitle}
@@ -159,15 +160,21 @@ const ModeCard = ({
 
 					{/* Example questions */}
 					<Stack gap="sm">
-						<Text size="xs" c="dimmed" fw={600} tt="uppercase" style={{ letterSpacing: 0.5 }}>
+						<Text
+							size="xs"
+							c="dimmed"
+							fw={600}
+							tt="uppercase"
+							style={{ letterSpacing: 0.5 }}
+						>
 							<Trans>Try asking</Trans>
 						</Text>
 						{examples.map((example) => (
 							<Group key={example} gap="sm" wrap="nowrap" align="flex-start">
 								<IconQuote
 									size={14}
-									color={colors.primary}
-									style={{ marginTop: 2, flexShrink: 0 }}
+									color="#2d2d2c"
+									style={{ flexShrink: 0, marginTop: 2 }}
 								/>
 								<Text size="sm" c="dimmed" lh={1.5}>
 									{example}
@@ -238,7 +245,12 @@ export const ChatModeSelector = ({
 			<Stack gap="xl">
 				{/* Header */}
 				<Stack gap={6} align="center">
-					<Title order={2} ta="center" style={{ color: "var(--app-text)" }} fw={600}>
+					<Title
+						order={2}
+						ta="center"
+						style={{ color: "var(--app-text)" }}
+						fw={600}
+					>
 						<Trans>What would you like to explore?</Trans>
 					</Title>
 					<Text size="md" c="dimmed" ta="center">
@@ -259,17 +271,17 @@ export const ChatModeSelector = ({
 						onSelectMode={handleSelectMode}
 					/>
 
-				<ModeCard
-					mode="overview"
-					title={t`Overview`}
-					subtitle={t`Explore themes & patterns across all conversations`}
-					examples={getOverviewExamples()}
-					icon={IconSparkles}
-					isBeta
-					selectedMode={selectedMode}
-					isLoading={isLoading}
-					onSelectMode={handleSelectMode}
-				/>
+					<ModeCard
+						mode="overview"
+						title={t`Overview`}
+						subtitle={t`Explore themes & patterns across all conversations`}
+						examples={getOverviewExamples()}
+						icon={IconSparkles}
+						isBeta
+						selectedMode={selectedMode}
+						isLoading={isLoading}
+						onSelectMode={handleSelectMode}
+					/>
 				</Stack>
 
 				{/* Loading message */}
@@ -284,4 +296,3 @@ export const ChatModeSelector = ({
 		</Box>
 	);
 };
-

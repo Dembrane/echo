@@ -157,6 +157,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 				disabled={isPending || !hasConversations || !hasFinishedConversations}
 				size="md"
 				mt="xs"
+				radius={100}
 			>
 				<Trans>Create Report</Trans>
 			</Button>

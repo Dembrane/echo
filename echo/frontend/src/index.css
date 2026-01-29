@@ -1,6 +1,9 @@
 /* Import the Space Grotesk variable font */
 @import "@fontsource-variable/space-grotesk";
 
+/* Import custom DM Sans font with stylistic sets */
+@import "./fonts/dm-sans.css";
+
 @layer tailwind {
 	/* biome-ignore lint/suspicious/noUnknownAtRules: <explanation> */
 	@tailwind base;
@@ -14,31 +17,37 @@
 /* Space Grotesk (default) → White + Black */
 /* DM Sans → Parchment + Graphite */
 :root {
-	--app-background: #FFFFFF;
-	--app-text: #000000;
-	--app-font-family: 'Space Grotesk Variable', sans-serif;
+	--app-background: #F6F4F1;
+	--app-text: #2D2D2C;
+	--app-font-family: 'DM Sans Variable', sans-serif;
+	--app-font-feature-settings: 'ss01' on, 'ss02' on, 'ss03' on, 'ss04' on, 'ss05' on, 'ss06' on, 'ss08' on;
 }
 
 body {
 	background-color: var(--app-background);
 	color: var(--app-text);
 	font-family: var(--app-font-family);
+	font-feature-settings: var(--app-font-feature-settings);
 }
 
 .app-font {
 	font-family: var(--app-font-family) !important;
+	font-feature-settings: var(--app-font-feature-settings) !important;
 }
 
 /* Override Tailwind's prose to use app font */
 .prose {
 	font-family: var(--app-font-family) !important;
+	font-feature-settings: var(--app-font-feature-settings) !important;
 }
 
 /* Ensure all elements within also use the font */
 .prose * {
 	font-family: var(--app-font-family) !important;
+	font-feature-settings: var(--app-font-feature-settings) !important;
 }
 
 [aria-label="editable markdown"] {
 	font-family: var(--app-font-family) !important;
+	font-feature-settings: var(--app-font-feature-settings) !important;
 }

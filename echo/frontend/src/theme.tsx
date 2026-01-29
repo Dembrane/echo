@@ -33,7 +33,7 @@ export const theme = createTheme({
 			"#96aeec", // 3
 			"#6d8be5", // 4
 			"#4169E1", // 5 - royal blue (base)
-			"#3a5eca", // 6
+			"#4169E1", // 6
 			"#3354b3", // 7
 			"#2c499c", // 8
 			"#253f85", // 9 - darkest
@@ -320,9 +320,9 @@ export const theme = createTheme({
 			},
 		},
 	},
-	fontFamily: "var(--app-font-family, 'Space Grotesk Variable', sans-serif)",
+	fontFamily: "var(--app-font-family, 'DM Sans Variable', sans-serif)",
 	headings: {
-		fontFamily: "var(--app-font-family, 'Space Grotesk Variable', sans-serif)",
+		fontFamily: "var(--app-font-family, 'DM Sans Variable', sans-serif)",
 		fontWeight: "500",
 		sizes: {
 			h1: {
