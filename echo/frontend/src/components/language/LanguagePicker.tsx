@@ -4,6 +4,7 @@ import type { ChangeEvent } from "react";
 import { useLocation } from "react-router";
 import { SUPPORTED_LANGUAGES } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
+import { testId } from "@/lib/testUtils";
 
 const data: Array<{
 	language: (typeof SUPPORTED_LANGUAGES)[number];
@@ -99,9 +100,19 @@ export const LanguagePicker = () => {
 
 	return (
 		<NativeSelect
-			data={languageOptions}
 			value={currentLanguage}
 			onChange={handleChange}
-		/>
+			{...testId("header-language-picker")}
+		>
+			{languageOptions.map((option) => (
+				<option
+					key={option.value}
+					value={option.value}
+					data-testid={`header-language-option-${option.value}`}
+				>
+					{option.label}
+				</option>
+			))}
+		</NativeSelect>
 	);
 };

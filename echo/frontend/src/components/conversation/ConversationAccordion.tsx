@@ -67,6 +67,7 @@ import {
 	useProjectById,
 } from "@/components/project/hooks";
 import { ENABLE_CHAT_AUTO_SELECT, ENABLE_CHAT_SELECT_ALL } from "@/config";
+import { testId } from "@/lib/testUtils";
 import { BaseSkeleton } from "../common/BaseSkeleton";
 import { NavigationButton } from "../common/NavigationButton";
 import { UploadConversationDropzone } from "../dropzone/UploadConversationDropzone";
@@ -168,6 +169,7 @@ const ConversationAccordionLabelChatSelection = ({
 				color={
 					ENABLE_CHAT_AUTO_SELECT && isAutoSelectEnabled ? "green" : undefined
 				}
+				{...testId(`conversation-chat-selection-checkbox-${conversation.id}`)}
 			/>
 		</Tooltip>
 	);
@@ -564,6 +566,7 @@ const ConversationAccordionItem = ({
 					/>
 				) : null
 			}
+			{...testId(`conversation-item-${conversation.id}`)}
 		>
 			<Stack gap="4" className="pb-[3px]">
 				<Stack gap="xs">
@@ -1086,6 +1089,7 @@ export const ConversationAccordion = ({
 											onClick={() => {
 												setConversationSearch("");
 											}}
+											{...testId("conversation-search-clear-button")}
 										>
 											<IconX />
 										</ActionIcon>
@@ -1096,6 +1100,7 @@ export const ConversationAccordion = ({
 								size="sm"
 								onChange={(e) => setConversationSearch(e.currentTarget.value)}
 								className="flex-grow"
+								{...testId("conversation-search-input")}
 							/>
 							<Tooltip label={t`Options`}>
 								<Box className="relative">
@@ -1105,6 +1110,7 @@ export const ConversationAccordion = ({
 										c={filterApplied ? "primary" : "gray"}
 										onClick={() => setShowFilterActions((prev) => !prev)}
 										aria-label={t`Options`}
+										{...testId("conversation-filter-options-toggle")}
 									>
 										{showFilterActions ? (
 											<IconChevronUp size={16} />
@@ -1118,6 +1124,7 @@ export const ConversationAccordion = ({
 											variant="filled"
 											color="primary"
 											className="absolute -right-1 -top-1 px-1"
+											{...testId("conversation-filter-applied-count-badge")}
 										>
 											{appliedFiltersCount}
 										</Badge>
@@ -1152,6 +1159,7 @@ export const ConversationAccordion = ({
 												)
 											}
 											style={{ flexShrink: 0 }}
+											{...testId("conversation-filter-sort-button")}
 										>
 											<Trans>Sort</Trans>
 										</Button>
@@ -1177,6 +1185,9 @@ export const ConversationAccordion = ({
 																	value={option.value}
 																	label={option.label}
 																	size="sm"
+																	{...testId(
+																		`conversation-filter-sort-option-${option.value}`,
+																	)}
 																/>
 															))}
 														</Stack>
@@ -1209,6 +1220,7 @@ export const ConversationAccordion = ({
 												)
 											}
 											style={{ flexShrink: 0 }}
+											{...testId("conversation-filter-tags-button")}
 										>
 											{selectedTagIds.length > 0 ? (
 												<Group gap={6} wrap="nowrap">
@@ -1240,11 +1252,15 @@ export const ConversationAccordion = ({
 															variant="transparent"
 															onClick={() => setTagSearch("")}
 															size="sm"
+															{...testId(
+																"conversation-filter-tags-search-clear-button",
+															)}
 														>
 															<IconX size={16} />
 														</ActionIcon>
 													)
 												}
+												{...testId("conversation-filter-tags-search-input")}
 											/>
 
 											{selectedTagIds.length > 0 && (
@@ -1267,6 +1283,9 @@ export const ConversationAccordion = ({
 																		prev.filter((id) => id !== tagId),
 																	)
 																}
+																{...testId(
+																	`conversation-filter-selected-tag-pill-${tagId}`,
+																)}
 															>
 																{tag.text}
 															</Pill>
@@ -1306,6 +1325,9 @@ export const ConversationAccordion = ({
 																			width: "100%",
 																		},
 																	}}
+																	{...testId(
+																		`conversation-filter-tag-checkbox-${tag.id}`,
+																	)}
 																/>
 															);
 														})}
@@ -1329,6 +1351,7 @@ export const ConversationAccordion = ({
 									leftSection={<IconRosetteDiscountCheckFilled size={16} />}
 									onClick={() => setShowOnlyVerified((prev) => !prev)}
 									style={{ flexShrink: 0 }}
+									{...testId("conversation-filter-verified-button")}
 								>
 									<Trans id="conversation.filters.verified.text">
 										Verified
@@ -1345,6 +1368,7 @@ export const ConversationAccordion = ({
 										size="md"
 										py={14}
 										style={{ flexShrink: 0, marginLeft: "auto" }}
+										{...testId("conversation-filter-reset-button")}
 									>
 										<IconX size={16} />
 									</ActionIcon>
@@ -1374,6 +1398,7 @@ export const ConversationAccordion = ({
 									onClick={handleSelectAllClick}
 									disabled={selectAllMutation.isPending || remainingCount === 0}
 									loading={selectAllMutation.isPending}
+									{...testId("conversation-select-all-button")}
 								>
 									{shouldShowConversationCount ? (
 										<Trans>Select all ({remainingCount})</Trans>

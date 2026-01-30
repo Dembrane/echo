@@ -7,10 +7,12 @@ const SpikeMessage = ({
 	message,
 	loading,
 	className,
+	dataTestId,
 }: {
 	message: ConversationReply;
 	loading?: boolean;
 	className?: string;
+	dataTestId?: string;
 }) => {
 	if (message?.type === "assistant_reply") {
 		return (
@@ -27,6 +29,7 @@ const SpikeMessage = ({
 					"border-0 !rounded-br-none py-5 px-0 md:py-7",
 					className,
 				)}
+				dataTestId={dataTestId}
 			/>
 		);
 	}

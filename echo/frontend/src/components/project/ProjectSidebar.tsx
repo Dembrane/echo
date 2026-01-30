@@ -15,6 +15,7 @@ import { useInitializeChatModeMutation } from "@/components/chat/hooks";
 import { useProjectById } from "@/components/project/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { Icons } from "@/icons";
+import { testId } from "@/lib/testUtils";
 import { Breadcrumbs } from "../common/Breadcrumbs";
 import { I18nLink } from "../common/i18nLink";
 import { LogoDembrane } from "../common/Logo";
@@ -89,7 +90,10 @@ export const ProjectSidebar = () => {
 						{
 							label: (
 								<Tooltip label={t`Projects Home`}>
-									<ActionIcon variant="transparent">
+									<ActionIcon
+										variant="transparent"
+										{...testId("project-breadcrumb-home")}
+									>
 										<Icons.Home color="var(--app-text)" />
 									</ActionIcon>
 								</Tooltip>
@@ -104,6 +108,7 @@ export const ProjectSidebar = () => {
 										order={2}
 										size="lg"
 										className="whitespace-break-spaces hover:underline"
+										{...testId("project-breadcrumb-name")}
 									>
 										{projectQuery.data?.name}
 									</Title>
@@ -137,6 +142,7 @@ export const ProjectSidebar = () => {
 				component="button"
 				rightIcon={<Icons.Stars />}
 				active={pathname.includes("chat")}
+				{...testId("sidebar-ask-button")}
 			>
 				<Trans>Ask</Trans>
 			</NavigationButton>
@@ -146,6 +152,7 @@ export const ProjectSidebar = () => {
 				component="a"
 				rightIcon={<Icons.LightBulb />}
 				active={pathname.includes("library")}
+				{...testId("sidebar-library-button")}
 			>
 				<Trans>Library</Trans>
 			</NavigationButton>

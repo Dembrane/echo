@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { analytics } from "@/lib/analytics";
 import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
+import { testId } from "@/lib/testUtils";
 import { ExponentialProgress } from "../common/ExponentialProgress";
 import { useRetranscribeConversationMutation } from "./hooks";
 
@@ -36,7 +37,13 @@ export const RetranscribeConversationModalActionIcon = ({
 	return (
 		<>
 			<Tooltip label={t`Retranscribe conversation`}>
-				<ActionIcon onClick={open} size="md" variant="subtle" color="gray">
+				<ActionIcon
+					onClick={open}
+					size="md"
+					variant="subtle"
+					color="gray"
+					{...testId("transcript-retranscribe-button")}
+				>
 					<IconRefresh size={20} />
 				</ActionIcon>
 			</Tooltip>
@@ -121,6 +128,7 @@ export const RetranscribeConversationModal = ({
 					</Badge>
 				</Group>
 			}
+			{...testId("transcript-retranscribe-modal")}
 		>
 			{retranscribeMutation.isPending ? (
 				<Stack>
@@ -147,17 +155,20 @@ export const RetranscribeConversationModal = ({
 						value={newConversationName}
 						onChange={(e) => setNewConversationName(e.currentTarget.value)}
 						required
+						{...testId("transcript-retranscribe-name-input")}
 					/>
 					<Switch
 						label={t`Use PII Redaction`}
 						description={t`This will replace personally identifiable information with <redacted>.`}
 						checked={usePiiRedaction}
 						onChange={(e) => setUsePiiRedaction(e.currentTarget.checked)}
+						{...testId("transcript-retranscribe-pii-toggle")}
 					/>
 					<Button
 						onClick={handleRetranscribe}
 						rightSection={<IconRefresh size="1rem" />}
 						disabled={!newConversationName.trim()}
+						{...testId("transcript-retranscribe-confirm-button")}
 					>
 						<Trans>Retranscribe</Trans>
 					</Button>

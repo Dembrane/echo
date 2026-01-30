@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { Markdown } from "@/components/common/Markdown";
 import { useVerificationTopics } from "@/components/participant/verify/hooks";
 import { getVerificationArtefacts } from "@/lib/api";
+import { testId } from "@/lib/testUtils";
 
 type VerifiedArtefactsSectionProps = {
 	conversationId: string;
@@ -97,12 +98,20 @@ export const VerifiedArtefactsSection = ({
 				</ThemeIcon>
 			</Group>
 
-			<Accordion variant="unstyled" radius="md">
+			<Accordion
+				variant="unstyled"
+				radius="md"
+				{...testId("conversation-artefacts-accordion")}
+			>
 				{artefacts.map((artefact) => {
 					const formattedDate = formatArtefactTime(artefact.approved_at);
 
 					return (
-						<Accordion.Item key={artefact.id} value={artefact.id}>
+						<Accordion.Item
+							key={artefact.id}
+							value={artefact.id}
+							{...testId(`conversation-artefact-item-${artefact.id}`)}
+						>
 							<Accordion.Control>
 								<Group gap="sm" wrap="nowrap">
 									<Stack gap={2}>

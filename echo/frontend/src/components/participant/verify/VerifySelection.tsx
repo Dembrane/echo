@@ -8,6 +8,7 @@ import { Logo } from "@/components/common/Logo";
 import { toast } from "@/components/common/Toaster";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
+import { testId } from "@/lib/testUtils";
 import { useParticipantProjectById } from "../hooks";
 import { startCooldown } from "../refine/hooks/useRefineSelectionCooldown";
 import {
@@ -189,7 +190,11 @@ export const VerifySelection = () => {
 	}
 
 	return (
-		<Stack gap="lg" className="h-full pt-10">
+		<Stack
+			gap="lg"
+			className="h-full pt-10"
+			{...testId("portal-verify-selection-container")}
+		>
 			{/* Main content */}
 			<Stack gap="xl" className="flex-grow">
 				<Title order={2} className="font-semibold">
@@ -223,6 +228,7 @@ export const VerifySelection = () => {
 									? "border-blue-500 bg-blue-50"
 									: "border-gray-300 bg-white hover:border-gray-400"
 							}`}
+							{...testId(`portal-verify-topic-${option.key}`)}
 						>
 							<Group gap="sm" align="center">
 								<span className="text-xl">{option.icon}</span>
@@ -243,6 +249,7 @@ export const VerifySelection = () => {
 					isLoading ? null : <IconArrowRight size={20} className="ml-1" />
 				}
 				disabled={!selectedOption || isLoading}
+				{...testId("portal-verify-selection-next-button")}
 			>
 				{isLoading ? (
 					<Trans>Loading…</Trans>

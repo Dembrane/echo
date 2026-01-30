@@ -33,6 +33,7 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Icons } from "@/icons";
 import { getDirectusErrorString } from "@/lib/directus";
+import { testId } from "@/lib/testUtils";
 
 export const ProjectsHomeRoute = () => {
 	useDocumentTitle(t`Projects | Dembrane`);
@@ -133,6 +134,7 @@ export const ProjectsHomeRoute = () => {
 							rightSection={<Icons.Plus stroke="white" fill="white" />}
 							loading={createProjectMutation.isPending}
 							onClick={handleCreateProject}
+							{...testId("project-home-create-button")}
 						>
 							<Trans>Create</Trans>
 						</Button>
@@ -159,7 +161,7 @@ export const ProjectsHomeRoute = () => {
 
 				{!(allProjects.length === 0 && debouncedSearchValue === "") && (
 					<TextInput
-						leftSection={<IconSearch />}
+						leftSection={<IconSearch {...testId("project-search-icon")} />}
 						rightSection={
 							!!search && (
 								<ActionIcon
@@ -168,6 +170,7 @@ export const ProjectsHomeRoute = () => {
 									onClick={() => {
 										setSearch("");
 									}}
+									{...testId("project-search-clear-button")}
 								>
 									<IconX />
 								</ActionIcon>
@@ -178,6 +181,7 @@ export const ProjectsHomeRoute = () => {
 						size="md"
 						onChange={(e) => setSearch(e.currentTarget.value)}
 						className="w-full"
+						{...testId("project-search-input")}
 					/>
 				)}
 

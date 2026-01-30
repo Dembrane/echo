@@ -9,6 +9,7 @@ import {
 	useProjectReportViews,
 } from "@/components/report/hooks";
 import { ReportRenderer } from "@/components/report/ReportRenderer";
+import { testId } from "@/lib/testUtils";
 
 export const ParticipantReport = () => {
 	const [searchParams] = useSearchParams();
@@ -47,7 +48,11 @@ export const ParticipantReport = () => {
 
 	if (!report || report.status !== "published") {
 		return (
-			<Stack gap="2rem" className="container mx-auto max-w-2xl p-8">
+			<Stack
+				gap="2rem"
+				className="container mx-auto max-w-2xl p-8"
+				{...testId("public-report-not-available")}
+			>
 				<a href="https://dembrane.com">
 					<Logo />
 				</a>
@@ -67,12 +72,14 @@ export const ParticipantReport = () => {
 	}
 
 	return (
-		<ReportRenderer
-			reportId={Number(report.id)}
-			opts={{
-				contributeLink: report.show_portal_link ? contributeLink : undefined,
-				readingNow: views?.recent ?? 0,
-			}}
-		/>
+		<div {...testId("public-report-view")}>
+			<ReportRenderer
+				reportId={Number(report.id)}
+				opts={{
+					contributeLink: report.show_portal_link ? contributeLink : undefined,
+					readingNow: views?.recent ?? 0,
+				}}
+			/>
+		</div>
 	);
 };

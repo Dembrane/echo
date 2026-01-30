@@ -11,6 +11,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconDownload } from "@tabler/icons-react";
 import { useState } from "react";
+import { testId } from "@/lib/testUtils";
 import { useGetConversationTranscriptStringMutation } from "./hooks";
 
 export const DownloadConversationTranscriptModalActionIcon = ({
@@ -23,7 +24,13 @@ export const DownloadConversationTranscriptModalActionIcon = ({
 	return (
 		<>
 			<Tooltip label={t`Download transcript`}>
-				<ActionIcon onClick={open} size="md" variant="subtle" color="gray">
+				<ActionIcon
+					onClick={open}
+					size="md"
+					variant="subtle"
+					color="gray"
+					{...testId("transcript-download-button")}
+				>
 					<IconDownload size={20} />
 				</ActionIcon>
 			</Tooltip>
@@ -76,6 +83,7 @@ export const DownloadConversationTranscriptModal = (props: {
 			opened={opened}
 			onClose={onClose}
 			title={t`Download Transcript Options`}
+			{...testId("transcript-download-modal")}
 		>
 			<Stack>
 				<TextInput
@@ -83,6 +91,7 @@ export const DownloadConversationTranscriptModal = (props: {
 					label={t`Custom Filename`}
 					value={filenameDownload}
 					onChange={(e) => setFilenameDownload(e.currentTarget.value)}
+					{...testId("transcript-download-filename-input")}
 				/>
 				<Button
 					loading={getConversationTranscriptStringMutation.isPending}
@@ -92,6 +101,7 @@ export const DownloadConversationTranscriptModal = (props: {
 						onClose();
 					}}
 					rightSection={<IconDownload />}
+					{...testId("transcript-download-confirm-button")}
 				>
 					<Trans>Download</Trans>
 				</Button>

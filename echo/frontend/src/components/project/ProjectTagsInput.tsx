@@ -32,6 +32,7 @@ import {
 import { IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { useProjectById } from "@/components/project/hooks";
+import { testId } from "@/lib/testUtils";
 import { FormLabel } from "../form/FormLabel";
 import {
 	useCreateProjectTagMutation,
@@ -247,12 +248,14 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 								}
 							}}
 							onChange={(e) => setTagInput(e.currentTarget.value)}
+							{...testId("portal-editor-tags-input")}
 						/>
 						<Button
 							loading={createTagMutation.isPending}
 							onClick={handleSubmit}
 							variant="outline"
 							disabled={!tagInput.trim() || createTagMutation.isPending}
+							{...testId("portal-editor-add-tag-button")}
 						>
 							{tagInput.includes(",") ? t`Add Tags` : t`Add Tag`}
 						</Button>

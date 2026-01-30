@@ -33,6 +33,7 @@ import { useWakeLock } from "@/hooks/useWakeLock";
 import { analytics } from "@/lib/analytics";
 import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { finishConversation } from "@/lib/api";
+import { testId } from "@/lib/testUtils";
 import { I18nLink } from "../common/i18nLink";
 import { ScrollToBottomButton } from "../common/ScrollToBottom";
 import { toast } from "../common/Toaster";
@@ -488,6 +489,7 @@ export const ParticipantConversationAudio = () => {
 						{getRefineModalTitle()}
 					</Text>
 				}
+				{...testId("portal-audio-echo-info-modal")}
 			>
 				<Stack gap="lg">
 					<Text>{getRefineInfoText()}</Text>
@@ -504,6 +506,7 @@ export const ParticipantConversationAudio = () => {
 						fullWidth
 						radius="md"
 						size="md"
+						{...testId("portal-audio-echo-info-close-button")}
 					>
 						<Trans id="participant.button.i.understand">I understand</Trans>
 					</Button>
@@ -527,6 +530,7 @@ export const ParticipantConversationAudio = () => {
 				role="alertdialog"
 				aria-live="assertive"
 				aria-atomic="true"
+				{...testId("portal-audio-interruption-modal")}
 			>
 				<Stack gap="md">
 					<Group gap="xs">
@@ -564,6 +568,7 @@ export const ParticipantConversationAudio = () => {
 						fullWidth
 						radius="md"
 						size="xl"
+						{...testId("portal-audio-interruption-reconnect-button")}
 					>
 						<Trans id="participant.button.interruption.reconnect">
 							Reconnect
@@ -604,7 +609,10 @@ export const ParticipantConversationAudio = () => {
 							opened ||
 							interruptionModalOpened ||
 							stoppedRecordingTime !== null) && (
-							<div className="border-slate-300 bg-white">
+							<div
+								className="border-slate-300 bg-white"
+								{...testId("portal-audio-recording-timer")}
+							>
 								<Group justify="center" align="center" gap="xs">
 									{opened ||
 									interruptionModalOpened ||
@@ -660,12 +668,18 @@ export const ParticipantConversationAudio = () => {
 											}
 										}}
 										className="flex-grow"
+										{...testId("portal-audio-record-button")}
 									>
 										<Trans id="participant.button.record">Record</Trans>
 									</Button>
 
 									<I18nLink to={textModeUrl}>
-										<ActionIcon size="50" variant="default" radius="md">
+										<ActionIcon
+											size="50"
+											variant="default"
+											radius="md"
+											{...testId("portal-audio-switch-to-text-button")}
+										>
 											<IconTextCaption />
 										</ActionIcon>
 									</I18nLink>
@@ -680,6 +694,7 @@ export const ParticipantConversationAudio = () => {
 											className="w-auto"
 											loading={isFinishing}
 											disabled={isFinishing}
+											{...testId("portal-audio-finish-button")}
 										>
 											<Trans id="participant.button.finish">Finish</Trans>
 										</Button>
@@ -704,6 +719,7 @@ export const ParticipantConversationAudio = () => {
 													? "light"
 													: "filled"
 											}
+											{...testId("portal-audio-echo-button")}
 										>
 											{recordingTime < REFINE_BUTTON_THRESHOLD_SECONDS && (
 												<div
@@ -730,6 +746,7 @@ export const ParticipantConversationAudio = () => {
 											? "px-7 md:px-10"
 											: ""
 									}
+									{...testId("portal-audio-stop-button")}
 								>
 									<Trans id="participant.button.stop">Stop</Trans>
 									<IconPlayerStopFilled

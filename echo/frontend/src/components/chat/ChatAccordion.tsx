@@ -25,6 +25,7 @@ import { Suspense, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import { useParams } from "react-router";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { testId } from "@/lib/testUtils";
 import { NavigationButton } from "../common/NavigationButton";
 import { MODE_COLORS } from "./ChatModeSelector";
 import { ChatSkeleton } from "./ChatSkeleton";
@@ -88,13 +89,14 @@ export const ChatAccordionItemMenu = ({
 	const navigate = useI18nNavigate();
 
 	return (
-		<Menu shadow="md" position="right">
+		<Menu shadow="md" position="right" {...testId("chat-item-menu")}>
 			<Menu.Target>
 				<ActionIcon
 					variant="transparent"
 					c="gray"
 					size={size}
 					className="flex items-center justify-center"
+					{...testId("chat-item-menu-button")}
 				>
 					<IconDotsVertical />
 				</ActionIcon>
@@ -118,6 +120,7 @@ export const ChatAccordionItemMenu = ({
 								});
 							}
 						}}
+						{...testId("chat-item-menu-rename")}
 					>
 						<Trans id="project.sidebar.chat.rename">Rename</Trans>
 					</Menu.Item>
@@ -133,6 +136,7 @@ export const ChatAccordionItemMenu = ({
 								navigate(`/projects/${chat.project_id}/overview`);
 							}
 						}}
+						{...testId("chat-item-menu-delete")}
 					>
 						<Trans id="project.sidebar.chat.delete">Delete</Trans>
 					</Menu.Item>
@@ -225,7 +229,7 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
 	const totalChats = Number(chatsCountQuery.data) ?? 0;
 
 	return (
-		<Accordion.Item value="chat">
+		<Accordion.Item value="chat" {...testId("chat-accordion")}>
 			<Accordion.Control>
 				<Group justify="space-between">
 					<Title order={3}>
@@ -240,7 +244,7 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
 			<Accordion.Panel>
 				<Stack gap="xs">
 					{totalChats === 0 && (
-						<Text size="sm">
+						<Text size="sm" {...testId("chat-accordion-empty-text")}>
 							<Trans id="project.sidebar.chat.empty.description">
 								No chats found. Start a chat using the "Ask" button.
 							</Trans>
@@ -268,6 +272,7 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
 									</Group>
 								}
 								ref={index === allChats.length - 1 ? loadMoreRef : undefined}
+								{...testId(`chat-item-${item.id}`)}
 							>
 								<Stack gap="xs">
 									<Group gap="xs" wrap="nowrap">

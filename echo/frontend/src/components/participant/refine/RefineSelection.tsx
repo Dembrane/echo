@@ -5,6 +5,7 @@ import { IconArrowDownToArc, IconMessage } from "@tabler/icons-react";
 import { useParams } from "react-router";
 import { useParticipantProjectById } from "@/components/participant/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { testId } from "@/lib/testUtils";
 import { useRefineSelectionCooldown } from "./hooks/useRefineSelectionCooldown";
 
 export const RefineSelection = () => {
@@ -59,6 +60,7 @@ export const RefineSelection = () => {
 						cursor: cooldown.verify.isActive ? "not-allowed" : "pointer",
 						opacity: cooldown.verify.isActive ? 0.6 : 1,
 					}}
+					{...testId("portal-echo-verify-card")}
 				>
 					<Stack
 						gap="lg"
@@ -112,6 +114,7 @@ export const RefineSelection = () => {
 						cursor: cooldown.echo.isActive ? "not-allowed" : "pointer",
 						opacity: cooldown.echo.isActive ? 0.6 : 1,
 					}}
+					{...testId("portal-echo-explore-card")}
 				>
 					<Stack
 						gap="lg"

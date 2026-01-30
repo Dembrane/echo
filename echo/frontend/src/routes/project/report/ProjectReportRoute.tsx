@@ -34,6 +34,7 @@ import { ReportTimeline } from "@/components/report/ReportTimeline";
 import { UpdateReportModalButton } from "@/components/report/UpdateReportModalButton";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import useCopyToRichText from "@/hooks/useCopyToRichText";
+import { testId } from "@/lib/testUtils";
 
 export const ReportLayout = ({
 	children,
@@ -186,6 +187,7 @@ export const ProjectReportRoute = () => {
 										color="gray.9"
 										size={24}
 										className="lg:hidden"
+										{...testId("report-share-button")}
 									>
 										<IconShare2 />
 									</ActionIcon>
@@ -200,6 +202,7 @@ export const ProjectReportRoute = () => {
 									variant="transparent"
 									color="gray.9"
 									size={20}
+									{...testId("report-copy-link-button")}
 								/>
 
 								<Tooltip label={t`Print this report`}>
@@ -213,6 +216,7 @@ export const ProjectReportRoute = () => {
 										variant="transparent"
 										color="gray.9"
 										size={24}
+										{...testId("report-print-button")}
 									>
 										<IconPrinter />
 									</ActionIcon>
@@ -254,6 +258,7 @@ export const ProjectReportRoute = () => {
 							}
 						}}
 						disabled={isUpdatingReport}
+						{...testId("report-publish-toggle")}
 					/>
 				</Group>
 			}
@@ -278,6 +283,7 @@ export const ProjectReportRoute = () => {
 								});
 							}}
 							disabled={isUpdatingReport}
+							{...testId("report-include-portal-link-checkbox")}
 						/>
 						<Checkbox
 							label={t`Show timeline in report (request feature)`}
@@ -299,6 +305,7 @@ export const ProjectReportRoute = () => {
 						checked={isEditing}
 						onChange={() => setIsEditing(!isEditing)}
 						size="md"
+						{...testId("report-editing-mode-toggle")}
 					/>
 				</div>
 				<ReportRenderer
@@ -316,6 +323,7 @@ export const ProjectReportRoute = () => {
 					opened={modalOpened}
 					onClose={close}
 					title={t`Confirm Publishing`}
+					{...testId("report-publish-confirmation-modal")}
 				>
 					<Text size="sm">
 						<Trans>
@@ -328,10 +336,18 @@ export const ProjectReportRoute = () => {
 						</Trans>
 					</Text>
 					<Group mt="md" justify="end">
-						<Button onClick={close} variant="outline">
+						<Button
+							onClick={close}
+							variant="outline"
+							{...testId("report-publish-cancel-button")}
+						>
 							<Trans>Cancel</Trans>
 						</Button>
-						<Button onClick={handleConfirmPublish} color="primary">
+						<Button
+							onClick={handleConfirmPublish}
+							color="primary"
+							{...testId("report-publish-proceed-button")}
+						>
 							<Trans>Proceed</Trans>
 						</Button>
 					</Group>

@@ -31,6 +31,7 @@ import { ENABLE_DISPLAY_CONVERSATION_LINKS } from "@/config";
 import { analytics } from "@/lib/analytics";
 import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { generateConversationSummary } from "@/lib/api";
+import { testId } from "@/lib/testUtils";
 
 export const ProjectConversationOverviewRoute = () => {
 	const { conversationId, projectId } = useParams();
@@ -143,6 +144,7 @@ export const ProjectConversationOverviewRoute = () => {
 										}}
 										copied={clipboard.copied}
 										copyTooltip={t`Copy Summary`}
+										{...testId("conversation-overview-copy-summary-button")}
 									/>
 								)}
 								{conversationQuery.data?.summary && (
@@ -155,6 +157,7 @@ export const ProjectConversationOverviewRoute = () => {
 													t`Are you sure you want to regenerate the summary? You will lose the current summary.`,
 												) && useHandleGenerateSummaryManually.mutate(true)
 											}
+											{...testId("conversation-overview-regenerate-summary-button")}
 										>
 											<IconRefresh size={23} color="gray" />
 										</ActionIcon>
@@ -186,17 +189,18 @@ export const ProjectConversationOverviewRoute = () => {
 										}
 										disabled={hasTranscript}
 									>
-										<Button
-											variant="outline"
-											className="-mt-[2rem]"
-											loading={isMutationPending}
-											disabled={!hasTranscript}
-											onClick={() => {
-												useHandleGenerateSummaryManually.mutate(false);
-											}}
-										>
-											{t`Generate Summary`}
-										</Button>
+									<Button
+										variant="outline"
+										className="-mt-[2rem]"
+										loading={isMutationPending}
+										disabled={!hasTranscript}
+										onClick={() => {
+											useHandleGenerateSummaryManually.mutate(false);
+										}}
+										{...testId("conversation-overview-generate-summary-button")}
+									>
+										{t`Generate Summary`}
+									</Button>
 									</Tooltip>
 								</div>
 							)}
