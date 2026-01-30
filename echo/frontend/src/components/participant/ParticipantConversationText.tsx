@@ -32,6 +32,7 @@ import { ParticipantBody } from "@/components/participant/ParticipantBody";
 import { useProjectSharingLink } from "@/components/project/ProjectQRCode";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { testId } from "@/lib/testUtils";
 
 export const ParticipantConversationText = () => {
 	const { projectId, conversationId } = useParams();
@@ -150,6 +151,7 @@ export const ParticipantConversationText = () => {
 				size="sm"
 				radius="md"
 				padding="xl"
+				{...testId("portal-text-finish-modal")}
 			>
 				<Stack gap="lg">
 					<Text>
@@ -165,6 +167,7 @@ export const ParticipantConversationText = () => {
 							miw={100}
 							radius="md"
 							size="md"
+							{...testId("portal-text-finish-cancel-button")}
 						>
 							<Trans id="participant.button.finish.no.text.mode">No</Trans>
 						</Button>
@@ -173,6 +176,7 @@ export const ParticipantConversationText = () => {
 							miw={100}
 							radius="md"
 							size="md"
+							{...testId("portal-text-finish-confirm-button")}
 						>
 							<Trans id="participant.button.finish.yes.text.mode">Yes</Trans>
 						</Button>
@@ -207,6 +211,7 @@ export const ParticipantConversationText = () => {
 					placeholder={t`Type your response here`}
 					value={text}
 					onChange={(e) => setText(e.target.value)}
+					{...testId("portal-text-input-textarea")}
 				/>
 				<Group className="w-full">
 					<Button
@@ -216,12 +221,19 @@ export const ParticipantConversationText = () => {
 						onClick={onChunk}
 						loading={uploadChunkMutation.isPending}
 						className="flex-grow"
+						{...testId("portal-text-submit-button")}
 					>
 						<Trans id="participant.button.submit.text.mode">Submit</Trans>
 					</Button>
 
 					<I18nLink to={audioModeUrl}>
-						<ActionIcon component="a" variant="default" size="50" radius="md">
+						<ActionIcon
+							component="a"
+							variant="default"
+							size="50"
+							radius="md"
+							{...testId("portal-text-switch-to-audio-button")}
+						>
 							<IconMicrophone />
 						</ActionIcon>
 					</I18nLink>
@@ -232,6 +244,7 @@ export const ParticipantConversationText = () => {
 							onClick={openFinishModal}
 							variant="light"
 							rightSection={<IconCheck />}
+							{...testId("portal-text-finish-button")}
 						>
 							<Trans id="participant.button.finish.text.mode">Finish</Trans>
 						</Button>

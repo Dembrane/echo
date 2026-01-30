@@ -1,10 +1,11 @@
 import { t } from "@lingui/core/macro";
-import { Checkbox, Switch, Tooltip } from "@mantine/core";
+import { Switch, Tooltip } from "@mantine/core";
 import {
 	useProjectById,
 	useUpdateProjectByIdMutation,
 } from "@/components/project/hooks";
 import { Icons } from "@/icons";
+import { testId } from "@/lib/testUtils";
 import { SummaryCard } from "../common/SummaryCard";
 
 interface OpenForParticipationSummaryCardProps {
@@ -48,9 +49,11 @@ export const OpenForParticipationSummaryCard = ({
 						checked={projectQuery.data?.is_conversation_allowed}
 						disabled={updateProjectMutation.isPending}
 						onChange={handleOpenForParticipationCheckboxChange}
+						{...testId("dashboard-open-for-participation-toggle")}
 					/>
 				</Tooltip>
 			}
+			{...testId("dashboard-open-for-participation-card")}
 		/>
 	);
 };

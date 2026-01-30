@@ -1,5 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Button, Group, Paper, Skeleton, Stack, Text } from "@mantine/core";
+import { testId } from "@/lib/testUtils";
 import { cn } from "@/lib/utils";
 import { Logo } from "../common/Logo";
 import { Markdown } from "../common/Markdown";
@@ -98,25 +99,29 @@ export const ReportRenderer = ({
 
 	if (isLoading) {
 		return (
-			<ReportLayout {...opts}>
-				<Skeleton height="100px" />
-				<Skeleton height="200px" />
-			</ReportLayout>
+			<div {...testId("report-renderer-loading")}>
+				<ReportLayout {...opts}>
+					<Skeleton height="100px" />
+					<Skeleton height="200px" />
+				</ReportLayout>
+			</div>
 		);
 	}
 
 	if (!data) {
 		return (
-			<ReportLayout {...opts}>
-				<Text>
-					<Trans>No report found</Trans>
-				</Text>
-			</ReportLayout>
+			<div {...testId("report-renderer-not-found")}>
+				<ReportLayout {...opts}>
+					<Text>
+						<Trans>No report found</Trans>
+					</Text>
+				</ReportLayout>
+			</div>
 		);
 	}
 
 	return (
-		<div className="py-8">
+		<div className="py-8" {...testId("report-renderer-container")}>
 			<ReportLayout
 				{...opts}
 				showBorder={true}

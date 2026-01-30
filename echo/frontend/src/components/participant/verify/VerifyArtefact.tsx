@@ -17,6 +17,7 @@ import { useParams, useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { useCooldown } from "@/hooks/useCooldown";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { testId } from "@/lib/testUtils";
 import { Logo } from "../../common/Logo";
 import { Markdown } from "../../common/Markdown";
 import { MarkdownWYSIWYG } from "../../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
@@ -285,16 +286,27 @@ export const VerifyArtefact = () => {
 	}
 
 	return (
-		<Stack gap="lg" className="h-full mt-10">
+		<Stack
+			gap="lg"
+			className="h-full mt-10"
+			{...testId("portal-verify-artefact-container")}
+		>
 			<ScrollArea className="flex-grow">
 				<Paper
 					withBorder
 					p="xl"
 					radius="lg"
 					className="border-2 border-gray-200"
+					{...testId("portal-verify-artefact-content")}
 				>
 					{isRevising ? (
-						<Stack gap="xl" align="center" justify="center" className="py-12">
+						<Stack
+							gap="xl"
+							align="center"
+							justify="center"
+							className="py-12"
+							{...testId("portal-verify-artefact-revising")}
+						>
 							<div className="animate-spin">
 								<Logo hideTitle h="48px" />
 							</div>
@@ -321,6 +333,7 @@ export const VerifyArtefact = () => {
 									ml="auto"
 									onClick={handleReadAloud}
 									aria-label={isPlaying ? t`Pause reading` : t`Read aloud`}
+									{...testId("portal-verify-artefact-read-aloud-button")}
 								>
 									{isPlaying ? (
 										<IconPlayerPause size={20} />
@@ -331,12 +344,14 @@ export const VerifyArtefact = () => {
 							)}
 
 							{isEditing ? (
-								<MemoizedMarkdownWYSIWYG
-									markdown={editedContent}
-									onChange={setEditedContent}
-								/>
+								<div {...testId("portal-verify-artefact-editor")}>
+									<MemoizedMarkdownWYSIWYG
+										markdown={editedContent}
+										onChange={setEditedContent}
+									/>
+								</div>
 							) : (
-								<div>
+								<div {...testId("portal-verify-artefact-markdown")}>
 									<Markdown className="prose-md" content={artefactContent} />
 								</div>
 							)}
@@ -357,6 +372,7 @@ export const VerifyArtefact = () => {
 							variant="default"
 							className="flex-1 shadow-xl"
 							onClick={handleCancelEdit}
+							{...testId("portal-verify-artefact-cancel-edit-button")}
 						>
 							<Trans id="participant.concrete.action.button.cancel">
 								Cancel
@@ -367,6 +383,7 @@ export const VerifyArtefact = () => {
 							radius="md"
 							className="flex-1 shadow-xl"
 							onClick={handleSaveEdit}
+							{...testId("portal-verify-artefact-save-edit-button")}
 						>
 							<Trans id="participant.concrete.action.button.save">Save</Trans>
 						</Button>
@@ -387,6 +404,7 @@ export const VerifyArtefact = () => {
 									reviseCooldown.isOnCooldown ||
 									!generatedArtifactId
 								}
+								{...testId("portal-verify-artefact-revise-button")}
 							>
 								{reviseCooldown.isOnCooldown ? (
 									<>{reviseCooldown.timeRemainingSeconds}s</>
@@ -405,6 +423,7 @@ export const VerifyArtefact = () => {
 								disabled={
 									isRevising || isApproving || isLoading || !generatedArtifactId
 								}
+								{...testId("portal-verify-artefact-edit-button")}
 							>
 								<IconPencil size={20} />
 							</Button>
@@ -423,6 +442,7 @@ export const VerifyArtefact = () => {
 								!generatedArtifactId ||
 								!artefactContent
 							}
+							{...testId("portal-verify-artefact-approve-button")}
 						>
 							<Trans id="participant.concrete.action.button.approve">
 								Approve

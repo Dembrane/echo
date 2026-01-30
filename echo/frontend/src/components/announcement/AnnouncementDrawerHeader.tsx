@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Button, Group, Stack, Text } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
+import { testId } from "@/lib/testUtils";
 import { useUnreadAnnouncements } from "./hooks";
 
 export const AnnouncementDrawerHeader = ({
@@ -27,13 +28,14 @@ export const AnnouncementDrawerHeader = ({
 					onClick={onClose}
 					aria-label="Close drawer"
 					className="focus:outline-none"
+					{...testId("announcement-close-drawer-button")}
 				>
 					<IconX color="gray" />
 				</ActionIcon>
 			</Group>
 			<Group gap="xs" justify="space-between" w="100%">
 				{hasUnreadAnnouncements && (
-					<Text size="sm" c="dimmed">
+					<Text size="sm" c="dimmed" {...testId("announcement-unread-count")}>
 						{unreadCount}{" "}
 						{unreadCount === 1
 							? t`unread announcement`
@@ -47,6 +49,7 @@ export const AnnouncementDrawerHeader = ({
 						onClick={onMarkAllAsRead}
 						disabled={isPending}
 						loading={isPending}
+						{...testId("announcement-mark-all-read-button")}
 					>
 						<Trans>Mark all read</Trans>
 					</Button>

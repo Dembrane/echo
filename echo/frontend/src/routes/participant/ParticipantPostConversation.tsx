@@ -23,6 +23,7 @@ import {
 	useParticipantProjectById,
 	useSubmitNotificationParticipant,
 } from "@/components/participant/hooks";
+import { testId } from "@/lib/testUtils";
 
 export const ParticipantPostConversation = () => {
 	const { projectId, conversationId } = useParams();
@@ -117,11 +118,16 @@ export const ParticipantPostConversation = () => {
 	};
 
 	return (
-		<div className="container mx-auto h-full max-w-2xl">
+		<div
+			className="container mx-auto h-full max-w-2xl"
+			{...testId("portal-finish-container")}
+		>
 			<Stack className="mt-[64px] px-4 py-8">
 				{!!text && text !== "" ? (
 					<>
-						<Markdown content={text} />
+						<div {...testId("portal-finish-custom-message")}>
+							<Markdown content={text} />
+						</div>
 						<Divider />
 					</>
 				) : (
@@ -138,12 +144,20 @@ export const ParticipantPostConversation = () => {
 				<Box className="relative">
 					<LoadingOverlay visible={project.isLoading} />
 					<I18nLink to={initiateLink}>
-						<Button component="a" size="md" variant="outline">
+						<Button
+							component="a"
+							size="md"
+							variant="outline"
+							{...testId("portal-finish-record-another-button")}
+						>
 							<Trans>Record another conversation</Trans>
 						</Button>
 					</I18nLink>
 					{project.data?.is_project_notification_subscription_allowed && (
-						<Stack className="mt-20 md:mt-32">
+						<Stack
+							className="mt-20 md:mt-32"
+							{...testId("portal-finish-notification-section")}
+						>
 							{!isSubmitted ? (
 								<>
 									<Stack gap="xs">
@@ -175,21 +189,29 @@ export const ParticipantPostConversation = () => {
 													}
 													className="me-[2px] hover:bg-blue-50"
 													loading={isCheckingEmail}
+													{...testId("portal-finish-email-add-button")}
 												>
 													{isCheckingEmail ? t`Checking...` : t`Add`}
 												</Button>
 											}
 											rightSectionWidth="auto"
+											{...testId("portal-finish-email-input")}
 										/>
 										{emails.length > 0 && (
-											<Paper shadow="sm" radius="sm" p="md" withBorder>
+											<Paper
+												shadow="sm"
+												radius="sm"
+												p="md"
+												withBorder
+												{...testId("portal-finish-email-list")}
+											>
 												<Text size="sm" fw={500} className="mb-2">
 													<Trans>Added emails</Trans> ({emails.length}):
 												</Text>
 												<Group>
-													{emails.map((email) => (
+													{emails.map((emailItem, index) => (
 														<Tooltip
-															key={`${email}`}
+															key={`${emailItem}`}
 															label={t`Remove Email`}
 															transitionProps={{
 																duration: 100,
@@ -199,14 +221,15 @@ export const ParticipantPostConversation = () => {
 														>
 															<Chip
 																disabled={isPending}
-																value={email}
+																value={emailItem}
 																variant="outline"
-																onClick={() => removeEmail(email)}
+																onClick={() => removeEmail(emailItem)}
 																styles={{
 																	iconWrapper: { display: "none" },
 																}}
+																{...testId(`portal-finish-email-chip-${index}`)}
 															>
-																{email}
+																{emailItem}
 															</Chip>
 														</Tooltip>
 													))}
@@ -220,6 +243,7 @@ export const ParticipantPostConversation = () => {
 												onClick={handleSubscribe}
 												loading={isPending}
 												className="mt-4"
+												{...testId("portal-finish-email-submit-button")}
 											>
 												{isPending ? (
 													<IconLoader2 className="animate-spin" />
@@ -233,7 +257,7 @@ export const ParticipantPostConversation = () => {
 									</Stack>
 								</>
 							) : (
-								<Box p="md">
+								<Box p="md" {...testId("portal-finish-email-success")}>
 									<Text
 										c="green"
 										size="md"
@@ -248,7 +272,12 @@ export const ParticipantPostConversation = () => {
 									</Text>
 								</Box>
 							)}
-							<Text size="sm" c="gray.6" className="mt-4">
+							<Text
+								size="sm"
+								c="gray.6"
+								className="mt-4"
+								{...testId("portal-finish-email-disclaimer")}
+							>
 								<Trans>
 									We will only send you a message if your host generates a
 									report, we never share your details with anyone. You can opt

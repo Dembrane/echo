@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { testId } from "@/lib/testUtils";
 import { FormLabel } from "../form/FormLabel";
 import { SaveStatus } from "../form/SaveStatus";
 import { useUpdateProjectByIdMutation } from "./hooks";
@@ -106,6 +107,7 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
 									/>
 								}
 								{...field}
+								{...testId("project-settings-name-input")}
 							/>
 						)}
 					/>

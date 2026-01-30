@@ -1,5 +1,6 @@
 import { LoadingOverlay, Modal } from "@mantine/core";
 import type { VerificationArtifact } from "@/lib/api";
+import { testId } from "@/lib/testUtils";
 import { Markdown } from "../../common/Markdown";
 
 type ArtefactModalProps = {
@@ -26,12 +27,15 @@ export const ArtefactModal = ({
 			radius="md"
 			yOffset="10vh"
 			padding="xl"
+			{...testId("portal-verified-artefact-modal")}
 		>
 			<LoadingOverlay visible={isLoading} />
-			<Markdown
-				className="prose-sm max-w-none"
-				content={artefact?.content || ""}
-			/>
+			<div {...testId("portal-verified-artefact-modal-content")}>
+				<Markdown
+					className="prose-sm max-w-none"
+					content={artefact?.content || ""}
+				/>
+			</div>
 		</Modal>
 	);
 };

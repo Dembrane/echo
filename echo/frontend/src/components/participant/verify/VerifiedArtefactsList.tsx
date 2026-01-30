@@ -2,6 +2,7 @@ import { Box, Skeleton, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useState } from "react";
 import type { VerificationArtifact } from "@/lib/api";
+import { testId } from "@/lib/testUtils";
 import { ArtefactModal } from "./ArtefactModal";
 import { useConversationArtefacts, useVerificationTopics } from "./hooks";
 import { VerifiedArtefactItem } from "./VerifiedArtefactItem";
@@ -71,7 +72,11 @@ export const VerifiedArtefactsList = ({
 
 	if (isLoading) {
 		return (
-			<Stack gap="sm" align="flex-end">
+			<Stack
+				gap="sm"
+				align="flex-end"
+				{...testId("portal-verified-artefacts-loading")}
+			>
 				<Skeleton my={7} height={54} width="80%" radius="md" />
 			</Stack>
 		);
@@ -83,14 +88,15 @@ export const VerifiedArtefactsList = ({
 
 	return (
 		<>
-			<Box>
-				{artefactList.map((artefact) => (
+			<Box {...testId("portal-verified-artefacts-list")}>
+				{artefactList.map((artefact, index) => (
 					<VerifiedArtefactItem
 						key={artefact.id}
 						artefact={artefact}
 						label={topicMetadataMap.get(artefact.key)?.label ?? artefact.key}
 						icon={topicMetadataMap.get(artefact.key)?.icon}
 						onViewArtefact={handleViewArtefact}
+						dataTestId={`portal-verified-artefact-item-${index}`}
 					/>
 				))}
 			</Box>

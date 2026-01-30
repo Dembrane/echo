@@ -9,6 +9,7 @@ import { IconMicrophone } from "@tabler/icons-react";
 import { Play } from "lucide-react";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
+import { testId } from "@/lib/testUtils";
 import { cn } from "@/lib/utils";
 import { useOnboardingCards } from "./hooks/useOnboardingCards";
 import MicrophoneTest from "./MicrophoneTest";
@@ -279,7 +280,10 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 	return (
 		<div className="flex h-full flex-col items-center justify-center p-4 text-center">
 			{skipOnboarding === "1" ? (
-				<Stack className="w-full max-w-[400px] text-left">
+				<Stack
+					className="w-full max-w-[400px] text-left"
+					{...testId("portal-onboarding-skip")}
+				>
 					<Title order={2}>
 						<Trans id="participant.ready.to.begin">Ready to Begin?</Trans>
 					</Title>
@@ -293,6 +297,7 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 							"relative flex w-full max-w-[400px] flex-grow flex-col items-center justify-center gap-4 rounded-xl bg-white p-4 text-center shadow",
 							`${animationDirection}`,
 						)}
+						{...testId(`portal-onboarding-slide-${currentSlideIndex}`)}
 					>
 						{currentCard?.type === "microphone" && (
 							<Button
@@ -302,6 +307,7 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 								size="md"
 								p="sm"
 								className="absolute right-4 top-4"
+								{...testId("portal-onboarding-mic-skip-button")}
 							>
 								<Trans id="participant.mic.check.button.skip">Skip</Trans>
 							</Button>
@@ -348,6 +354,7 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 								className=""
 								size={currentCard.cta ? "md" : "lg"}
 								variant={currentCard.cta ? "transparent" : "filled"}
+								{...testId("portal-onboarding-link-button")}
 							>
 								{currentCard.link.label}
 							</Button>
@@ -361,6 +368,7 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 									checked={checkboxStates[`${currentSlideIndex}`] || false}
 									onChange={handleCheckboxChange}
 									className="mr-2 h-5 w-5 text-blue-500"
+									{...testId("portal-onboarding-checkbox")}
 								/>
 								<label
 									htmlFor={`checkbox-${currentSlideIndex}`}
@@ -381,6 +389,7 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 									color="gray"
 									size="md"
 									className="basis-1/2"
+									{...testId("portal-onboarding-mic-back-button")}
 								>
 									<Trans id="participant.button.back.microphone">Back</Trans>
 								</Button>
@@ -389,6 +398,7 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 									size="md"
 									disabled={!micTestSuccess}
 									className="basis-1/2"
+									{...testId("portal-onboarding-mic-continue-button")}
 								>
 									<Trans id="participant.button.continue">Continue</Trans>
 								</Button>
@@ -402,6 +412,7 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 									size="md"
 									disabled={currentSlideIndex === 0}
 									className={!isLastSlide ? "basis-1/2" : "w-full"}
+									{...testId("portal-onboarding-back-button")}
 								>
 									<Trans id="participant.button.back">Back</Trans>
 								</Button>
@@ -414,6 +425,7 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 											!checkboxStates[`${currentSlideIndex}`]
 										}
 										className="basis-1/2"
+										{...testId("portal-onboarding-next-button")}
 									>
 										{currentCard.cta ? (
 											currentCard.cta

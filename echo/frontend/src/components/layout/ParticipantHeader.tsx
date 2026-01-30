@@ -6,6 +6,7 @@ import { IconArrowLeft, IconSettings } from "@tabler/icons-react";
 import { useLocation, useParams, useSearchParams } from "react-router";
 import useSessionStorageState from "use-session-storage-state";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { testId } from "@/lib/testUtils";
 import { Logo } from "../common/Logo";
 import { ParticipantSettingsModal } from "../participant/ParticipantSettingsModal";
 
@@ -54,6 +55,7 @@ export const ParticipantHeader = () => {
 				component="header"
 				justify="center"
 				className="relative py-2 shadow-sm"
+				{...testId("portal-header")}
 			>
 				{showBackButton && (
 					<Box className="absolute left-4 top-1/2 -translate-y-1/2">
@@ -63,6 +65,7 @@ export const ParticipantHeader = () => {
 							leftSection={<IconArrowLeft size={16} />}
 							className="rounded-full"
 							onClick={handleBack}
+							{...testId("portal-header-back-button")}
 						>
 							<Trans id="participant.button.back">Back</Trans>
 						</Button>
@@ -75,6 +78,7 @@ export const ParticipantHeader = () => {
 							variant="light"
 							className="rounded-full"
 							onClick={handleCancel}
+							{...testId("portal-header-cancel-button")}
 						>
 							<Trans id="participant.concrete.instructions.button.cancel">
 								Cancel
@@ -92,6 +96,7 @@ export const ParticipantHeader = () => {
 						onClick={open}
 						title={t`Settings`}
 						aria-label={t`Settings`}
+						{...testId("portal-header-settings-button")}
 					>
 						<IconSettings size={24} color="gray" />
 					</ActionIcon>

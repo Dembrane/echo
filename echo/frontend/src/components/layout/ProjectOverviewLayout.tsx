@@ -3,6 +3,7 @@ import { Box, Divider, LoadingOverlay, Stack } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { useParams } from "react-router";
 import { useProjectById } from "@/components/project/hooks";
+import { testId } from "@/lib/testUtils";
 import { OngoingConversationsSummaryCard } from "../conversation/OngoingConversationsSummaryCard";
 import { OpenForParticipationSummaryCard } from "../conversation/OpenForParticipationSummaryCard";
 import { ProjectQRCode } from "../project/ProjectQRCode";
@@ -25,7 +26,10 @@ export const ProjectOverviewLayout = () => {
 	useDocumentTitle(t`Project Overview | Dembrane`);
 
 	return (
-		<Stack className="relative px-2 py-4" style={{ backgroundColor: "var(--app-background)" }}>
+		<Stack
+			className="relative px-2 py-4"
+			style={{ backgroundColor: "var(--app-background)" }}
+		>
 			<LoadingOverlay visible={projectQuery.isLoading} />
 			<div className="grid grid-cols-12 place-content-stretch gap-3">
 				<Box visibleFrom="lg" className="col-span-6 h-full">
@@ -44,6 +48,7 @@ export const ProjectOverviewLayout = () => {
 					{ label: t`Project Settings`, value: "overview" },
 				]}
 				loading={projectQuery.isLoading}
+				{...testId("project-overview-tabs")}
 			/>
 		</Stack>
 	);

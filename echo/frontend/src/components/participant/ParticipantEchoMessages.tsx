@@ -1,6 +1,7 @@
 import type { Message } from "@ai-sdk/react";
 import { t } from "@lingui/core/macro";
 import { Stack } from "@mantine/core";
+import { testId } from "@/lib/testUtils";
 import { EchoErrorAlert } from "./EchoErrorAlert";
 import SpikeMessage from "./SpikeMessage";
 
@@ -18,7 +19,7 @@ export const ParticipantEchoMessages = ({
 	error,
 }: ParticipantEchoMessagesProps) => {
 	return (
-		<Stack gap="sm">
+		<Stack gap="sm" {...testId("portal-explore-messages-container")}>
 			{echoMessages && echoMessages.length > 0 && (
 				<>
 					{echoMessages.map((message, index) => (
@@ -33,6 +34,7 @@ export const ParticipantEchoMessages = ({
 							}}
 							loading={index === echoMessages.length - 1 && isLoading}
 							className={`min-h-[180px] md:min-h-[169px] ${index !== echoMessages.length - 1 ? "border-b" : ""}`}
+							dataTestId={`portal-explore-message-${index}`}
 						/>
 					))}
 					{status !== "streaming" && status !== "ready" && !error && (
@@ -47,6 +49,7 @@ export const ParticipantEchoMessages = ({
 							}}
 							loading={true}
 							className="min-h-[180px] md:min-h-[169px]"
+							dataTestId="portal-explore-thinking"
 						/>
 					)}
 				</>

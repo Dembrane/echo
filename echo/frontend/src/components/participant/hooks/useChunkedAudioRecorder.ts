@@ -1,14 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import audioAlertSound from "@/assets/audio-alert.mp3";
 
-interface UseAudioRecorderOptions {
+// Minimum chunk size in bytes - chunks smaller than this are considered suspicious
+const MIN_CHUNK_SIZE_BYTES = 1024; // 1KB
+
+type ChunkInfo = {
+	size: number;
+	timestamp: number;
+};
+
+type UseAudioRecorderOptions = {
 	onChunk: (chunk: Blob) => void;
+	onRecordingInterrupted?: () => void;
 	deviceId?: string;
 	mimeType?: string;
 	timeslice?: number;
 	debug?: boolean;
-}
+};
 
-interface UseAudioRecorderResult {
+type UseAudioRecorderResult = {
 	startRecording: (initialTime?: number) => void;
 	stopRecording: () => void;
 	pauseRecording: () => void;
@@ -23,7 +33,9 @@ interface UseAudioRecorderResult {
 		  };
 	loading: boolean;
 	permissionError: string | null;
-}
+	hadInterruption: boolean;
+	getChunkHistory: () => ChunkInfo[];
+};
 
 const preferredMimeTypes = ["audio/webm", "audio/wav", "video/mp4"];
 
@@ -39,6 +51,7 @@ export const getSupportedMimeType = () => {
 const defaultMimeType = getSupportedMimeType();
 const useChunkedAudioRecorder = ({
 	onChunk,
+	onRecordingInterrupted,
 	deviceId,
 	mimeType = defaultMimeType,
 	timeslice = 30000, // 30 sec
@@ -61,7 +74,17 @@ const useChunkedAudioRecorder = ({
 	const audioContextRef = useRef<AudioContext | null>(null);
 	const audioProcessorRef = useRef<AudioWorkletNode | null>(null);
 
+	// We create and "unlock" the Audio element during user gesture (startRecording),
+	// then reuse it for playback later when interruption is detected.
+	const audioAlertRef = useRef<HTMLAudioElement | null>(null);
+
 	const [permissionError, setPermissionError] = useState<string | null>(null);
+
+	// Suspicious chunk tracking for iOS interruption detection
+	const suspiciousChunkCountRef = useRef(0);
+	const hadConsecutiveSuspiciousChunksRef = useRef(false);
+	const chunkHistoryRef = useRef<ChunkInfo[]>([]);
+	const hasCalledInterruptionCallbackRef = useRef(false);
 
 	const log = (...args: any[]) => {
 		if (debug) {
@@ -86,6 +109,11 @@ const useChunkedAudioRecorder = ({
 			if (audioContextRef.current) {
 				audioContextRef.current.close();
 				audioContextRef.current = null;
+			}
+			// Clean up audio alert element
+			if (audioAlertRef.current) {
+				audioAlertRef.current.pause();
+				audioAlertRef.current = null;
 			}
 		};
 	}, []);
@@ -131,12 +159,55 @@ const useChunkedAudioRecorder = ({
 
 		recorder.onstop = () => {
 			log("MediaRecorder stopped");
-			onChunk(new Blob(chunkBufferRef.current, { type: mimeType }));
+			const chunkBlob = new Blob(chunkBufferRef.current, { type: mimeType });
+			const chunkSize = chunkBlob.size;
 
-			startRecordingChunk();
+			// Track chunk history for Sentry reporting
+			chunkHistoryRef.current.push({
+				size: chunkSize,
+				timestamp: Date.now(),
+			});
 
-			// flush the buffer
+			// Check if this is a suspicious chunk (< 1KB)
+			if (chunkSize < MIN_CHUNK_SIZE_BYTES) {
+				suspiciousChunkCountRef.current++;
+
+				// If 2 consecutive suspicious chunks, recording has failed
+				if (
+					suspiciousChunkCountRef.current >= 2 &&
+					!hasCalledInterruptionCallbackRef.current
+				) {
+					hadConsecutiveSuspiciousChunksRef.current = true;
+					hasCalledInterruptionCallbackRef.current = true;
+
+					// Play notification sound for interruption using pre-unlocked audio
+					if (audioAlertRef.current) {
+						audioAlertRef.current.muted = false;
+						audioAlertRef.current.currentTime = 0;
+						audioAlertRef.current.play().catch((error) => {
+							console.error("Failed to play notification sound:", error);
+						});
+					}
+
+					// Don't upload suspicious chunk, don't restart recording
+					chunkBufferRef.current = [];
+					onRecordingInterrupted?.();
+					return;
+				}
+
+				// First suspicious chunk - don't upload it, but continue recording
+				chunkBufferRef.current = [];
+				startRecordingChunk();
+				return;
+			}
+
+			// Good chunk - reset suspicious counter and upload
+			suspiciousChunkCountRef.current = 0;
+			onChunk(chunkBlob);
+
+			// flush the buffer and restart
 			chunkBufferRef.current = [];
+			startRecordingChunk();
 		};
 
 		// allow for some room to restart so all is just one chunk as per mediarec
@@ -146,6 +217,26 @@ const useChunkedAudioRecorder = ({
 	const startRecording = async (initialTime = 0) => {
 		try {
 			log("Requesting access to the microphone...");
+
+			// We create the Audio element, load it, and play+pause silently to unlock it.
+			// This allows programmatic playback later when interruption is detected.
+			if (!audioAlertRef.current) {
+				const audio = new Audio(audioAlertSound);
+				audio.load();
+				// Mute before playing to unlock silently on iOS
+				audio.muted = true;
+				audio
+					.play()
+					.then(() => {
+						audio.pause();
+						audio.currentTime = 0;
+					})
+					.catch(() => {
+						// Ignore errors - audio will still work on desktop
+					});
+				audioAlertRef.current = audio;
+			}
+
 			const audioConstraint = deviceId
 				? { deviceId: { exact: deviceId } }
 				: true;
@@ -175,6 +266,12 @@ const useChunkedAudioRecorder = ({
 			log("Access to microphone granted.", { stream });
 
 			log("Creating MediaRecorder instance");
+
+			// Reset suspicious chunk tracking for new recording session
+			suspiciousChunkCountRef.current = 0;
+			hadConsecutiveSuspiciousChunksRef.current = false;
+			chunkHistoryRef.current = [];
+			hasCalledInterruptionCallbackRef.current = false;
 
 			setIsRecording(true);
 			setIsPaused(false);
@@ -280,6 +377,8 @@ const useChunkedAudioRecorder = ({
 
 	return {
 		errored: false,
+		getChunkHistory: () => chunkHistoryRef.current,
+		hadInterruption: hadConsecutiveSuspiciousChunksRef.current,
 		isPaused,
 		isRecording,
 		loading: false,

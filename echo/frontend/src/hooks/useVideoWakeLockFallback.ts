@@ -1,21 +1,25 @@
 import { useEffect, useRef } from "react";
 
 const MINIMAL_VIDEO_BASE64 =
-	"data:video/mp4;base64,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";
+	"data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAMQbW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAA+gAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAjp0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAA+gAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAIAAAACAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAPoAAAAAAABAAAAAAGybWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAABAAAAAQABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABXW1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAR1zdGJsAAAAuXN0c2QAAAAAAAAAAQAAAKlhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAIAAgBIAAAASAAAAAAAAAABFUxhdmM2MC4zMS4xMDIgbGlieDI2NAAAAAAAAAAAAAAAGP//AAAAL2F2Y0MBQsAK/+EAF2dCwArafiIjARAAAAMAEAAAAwAg8SJqAQAFaM4BlyAAAAAQcGFzcAAAAAEAAAABAAAAFGJ0cnQAAAAAAAATMAAAEzAAAAAYc3R0cwAAAAAAAAABAAAAAQAAQAAAAAAcc3RzYwAAAAAAAAABAAAAAQAAAAEAAAABAAAAFHN0c3oAAAAAAAACZgAAAAEAAAAUc3RjbwAAAAAAAAABAAADQAAAAGJ1ZHRhAAAAWm1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNjAuMTYuMTAwAAAACGZyZWUAAAJubWRhdAAAAlUGBf//UdxF6b3m2Ui3lizYINkj7u94MjY0IC0gY29yZSAxNjQgcjMxMDggMzFlMTlmOSAtIEguMjY0L01QRUctNCBBVkMgY29kZWMgLSBDb3B5bGVmdCAyMDAzLTIwMjMgLSBodHRwOi8vd3d3LnZpZGVvbGFuLm9yZy94MjY0Lmh0bWwgLSBvcHRpb25zOiBjYWJhYz0wIHJlZj0xIGRlYmxvY2s9MDotMzotMyBhbmFseXNlPTA6MCBtZT1kaWEgc3VibWU9MCBwc3k9MSBwc3lfcmQ9Mi4wMDowLjcwIG1peGVkX3JlZj0wIG1lX3JhbmdlPTE2IGNocm9tYV9tZT0xIHRyZWxsaXM9MCA4eDhkY3Q9MCBjcW09MCBkZWFkem9uZT0yMSwxMSBmYXN0X3Bza2lwPTEgY2hyb21hX3FwX29mZnNldD0wIHRocmVhZHM9MSBsb29rYWhlYWRfdGhyZWFkcz0xIHNsaWNlZF90aHJlYWRzPTAgbnI9MCBkZWNpbWF0ZT0xIGludGVybGFjZWQ9MCBibHVyYXlfY29tcGF0PTAgY29uc3RyYWluZWRfaW50cmE9MCBiZnJhbWVzPTAgd2VpZ2h0cD0wIGtleWludD0yNTAga2V5aW50X21pbj0xIHNjZW5lY3V0PTAgaW50cmFfcmVmcmVzaD0wIHJjPWNyZiBtYnRyZWU9MCBjcmY9NTEuMCBxY29tcD0wLjYwIHFwbWluPTAgcXBtYXg9NjkgcXBzdGVwPTQgaXBfcmF0aW89MS40MCBhcT0wAIAAAAAJZYiEOiYoABXA";
 
 export const useVideoWakeLockFallback = ({
 	isRecording,
-	isWakeLockActive,
+	isWakeLockSupported,
 }: {
 	isRecording: boolean;
-	isWakeLockActive: boolean;
+	isWakeLockSupported: boolean;
 }) => {
 	const videoRef = useRef<HTMLVideoElement | null>(null);
-	const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
+	const checkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+	const visibilityHandlerRef = useRef<(() => void) | null>(null);
 
 	useEffect(() => {
-		// Only activate fallback if recording AND wakelock is not active
-		const shouldActivateFallback = isRecording && !isWakeLockActive;
+		// Only activate fallback if:
+		// 1. User is recording, AND
+		// 2. Wakelock is not supported at all
+		// (Auto-reacquire handles temporary wakelock losses)
+		const shouldActivateFallback = isRecording && !isWakeLockSupported;
 
 		if (!shouldActivateFallback) {
 			// Clean up video element if it exists
@@ -24,19 +28,23 @@ export const useVideoWakeLockFallback = ({
 				videoRef.current.src = "";
 				videoRef.current.remove();
 				videoRef.current = null;
-				console.log(
-					"[VideoWakeLockFallback] Cleaned up video - wakelock is working",
-				);
+				console.log("[VideoWakeLockFallback] Cleaned up video - not needed");
 			}
 			if (checkIntervalRef.current) {
 				clearInterval(checkIntervalRef.current);
 				checkIntervalRef.current = null;
 			}
+			if (visibilityHandlerRef.current) {
+				document.removeEventListener(
+					"visibilitychange",
+					visibilityHandlerRef.current,
+				);
+				visibilityHandlerRef.current = null;
+			}
 			return;
 		}
 
 		// If video already exists, don't create a new one
-		// The cleanup function at the end of this effect will handle cleanup when needed
 		if (videoRef.current) {
 			console.log(
 				"[VideoWakeLockFallback] Video already active, skipping creation",
@@ -47,7 +55,7 @@ export const useVideoWakeLockFallback = ({
 		// Create a minimal 1x1 pixel video element
 		try {
 			console.log(
-				"[VideoWakeLockFallback] Activating video fallback - wakelock not active",
+				"[VideoWakeLockFallback] Activating video fallback - wakelock not available",
 			);
 
 			// Create video element
@@ -69,14 +77,21 @@ export const useVideoWakeLockFallback = ({
 
 			// Append to DOM (required for iOS)
 			document.body.appendChild(video);
+			video.load();
 
 			// Play the video
 			const playVideo = async () => {
 				try {
-					await video.play();
-					console.log(
-						"[VideoWakeLockFallback] Silent 1-pixel video playing as fallback for wakelock",
-					);
+					await video.play().catch(() => {
+						console.log(
+							"[VideoWakeLockFallback] First play failed, retrying in 1s...",
+						);
+						setTimeout(() => {
+							video.play().catch(() => {
+								console.warn("[VideoWakeLockFallback] Retry also failed");
+							});
+						}, 4000);
+					});
 				} catch (error) {
 					console.warn(
 						"[VideoWakeLockFallback] Failed to play fallback video:",
@@ -97,6 +112,22 @@ export const useVideoWakeLockFallback = ({
 					playVideo();
 				}
 			}, 5000); // Check every 5 seconds
+
+			// Handle visibility change - restart video when tab becomes visible
+			const handleVisibilityChange = () => {
+				if (
+					document.visibilityState === "visible" &&
+					videoRef.current?.paused
+				) {
+					console.log(
+						"[VideoWakeLockFallback] Tab visible again, restarting video...",
+					);
+					playVideo();
+				}
+			};
+
+			visibilityHandlerRef.current = handleVisibilityChange;
+			document.addEventListener("visibilitychange", handleVisibilityChange);
 		} catch (error) {
 			console.error(
 				"[VideoWakeLockFallback] Failed to create fallback video:",
@@ -116,11 +147,18 @@ export const useVideoWakeLockFallback = ({
 				clearInterval(checkIntervalRef.current);
 				checkIntervalRef.current = null;
 			}
+			if (visibilityHandlerRef.current) {
+				document.removeEventListener(
+					"visibilitychange",
+					visibilityHandlerRef.current,
+				);
+				visibilityHandlerRef.current = null;
+			}
 		};
-	}, [isRecording, isWakeLockActive]);
+	}, [isRecording, isWakeLockSupported]);
 
 	return {
-		isActive: isRecording && !isWakeLockActive,
+		isActive: isRecording && !isWakeLockSupported,
 		videoElement: videoRef.current,
 	};
 };

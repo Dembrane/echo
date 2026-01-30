@@ -8,6 +8,7 @@ import {
 	Stack,
 	Text,
 } from "@mantine/core";
+import { testId } from "@/lib/testUtils";
 
 type StopRecordingConfirmationModalProps = {
 	opened: boolean;
@@ -50,6 +51,7 @@ export const StopRecordingConfirmationModal = ({
 			size="sm"
 			radius="md"
 			padding="xl"
+			{...testId("portal-audio-stop-modal")}
 		>
 			<Stack gap="lg">
 				{/* Uploading indicator */}
@@ -57,9 +59,7 @@ export const StopRecordingConfirmationModal = ({
 					<Group gap="xs" justify="flex-start" py="xs">
 						<Loader size="sm" />
 						<Text size="sm" c="dimmed">
-							<Trans id="participant.modal.uploading">
-								Uploading audio...
-							</Trans>
+							<Trans id="participant.modal.uploading">Uploading audio...</Trans>
 						</Text>
 					</Group>
 				)}
@@ -71,6 +71,7 @@ export const StopRecordingConfirmationModal = ({
 						miw={100}
 						radius="md"
 						size="md"
+						{...testId("portal-audio-stop-resume-button")}
 					>
 						<Trans id="participant.button.stop.resume">Resume</Trans>
 					</Button>
@@ -82,6 +83,7 @@ export const StopRecordingConfirmationModal = ({
 						miw={100}
 						radius="md"
 						size="md"
+						{...testId("portal-audio-stop-finish-button")}
 					>
 						<Trans id="participant.button.stop.finish">Finish</Trans>
 					</Button>
@@ -94,6 +96,7 @@ export const StopRecordingConfirmationModal = ({
 					pt="sm"
 					ta="left"
 					disabled={isStopping}
+					{...testId("portal-audio-stop-switch-to-text-link")}
 				>
 					<Trans id="participant.link.switch.text">Switch to text input</Trans>
 				</Anchor>

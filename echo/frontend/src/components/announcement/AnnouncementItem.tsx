@@ -16,6 +16,7 @@ import {
 } from "@tabler/icons-react";
 import { forwardRef, useEffect, useRef, useState } from "react";
 import { Markdown } from "@/components/common/Markdown";
+import { testId } from "@/lib/testUtils";
 import { useFormatDate } from "./utils/dateUtils";
 
 type Announcement = {
@@ -60,6 +61,7 @@ export const AnnouncementItem = forwardRef<
 					? "border-l-4 border-l-blue-500"
 					: "border-l-4 border-l-gray-50/50 bg-gray-50/50"
 			}`}
+			{...testId(`announcement-item-${announcement.id}`)}
 		>
 			<Stack gap="xs">
 				<Group gap="sm" align="flex-start">
@@ -97,6 +99,7 @@ export const AnnouncementItem = forwardRef<
 											height: 8,
 											width: 8,
 										}}
+										{...testId("announcement-unread-indicator")}
 									/>
 								)}
 								{/* this part needs a second look */}
@@ -119,6 +122,7 @@ export const AnnouncementItem = forwardRef<
 									className="hover:underline"
 									p={0}
 									onClick={() => setShowMore(!showMore)}
+									{...testId("announcement-show-more-button")}
 								>
 									{showMore ? (
 										<Group gap="xs">
@@ -144,6 +148,7 @@ export const AnnouncementItem = forwardRef<
 										onClick={() => {
 											onMarkAsRead(announcement.id);
 										}}
+										{...testId("announcement-mark-as-read-button")}
 									>
 										<Trans>Mark as read</Trans>
 									</Button>

@@ -17,6 +17,7 @@ import { useForm } from "react-hook-form";
 import { useRegisterMutation } from "@/components/auth/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
 import { ADMIN_BASE_URL } from "@/config";
+import { testId } from "@/lib/testUtils";
 
 export const RegisterRoute = () => {
 	useDocumentTitle(t`Register | Dembrane`);
@@ -74,6 +75,7 @@ export const RegisterRoute = () => {
 									size="lg"
 									label={<Trans>First Name</Trans>}
 									{...register("first_name")}
+									{...testId("auth-register-first-name-input")}
 									placeholder={t`First Name`}
 									required
 								/>
@@ -81,6 +83,7 @@ export const RegisterRoute = () => {
 									size="lg"
 									label={<Trans>Last Name</Trans>}
 									{...register("last_name")}
+									{...testId("auth-register-last-name-input")}
 									placeholder={t`Last Name`}
 									required
 								/>
@@ -89,6 +92,7 @@ export const RegisterRoute = () => {
 								size="lg"
 								label="Email"
 								{...register("email")}
+								{...testId("auth-register-email-input")}
 								placeholder="Email"
 								required
 								type="email"
@@ -97,6 +101,7 @@ export const RegisterRoute = () => {
 								label={<Trans>Password</Trans>}
 								size="lg"
 								{...register("password")}
+								{...testId("auth-register-password-input")}
 								placeholder={t`Password`}
 								required
 							/>
@@ -104,6 +109,7 @@ export const RegisterRoute = () => {
 								label={<Trans>Confirm Password</Trans>}
 								size="lg"
 								{...register("confirmPassword")}
+								{...testId("auth-register-confirm-password-input")}
 								placeholder={t`Confirm Password`}
 								required
 							/>
@@ -111,6 +117,7 @@ export const RegisterRoute = () => {
 								size="lg"
 								type="submit"
 								loading={registerMutation.isPending}
+								{...testId("auth-register-submit-button")}
 							>
 								Register
 							</Button>
@@ -120,7 +127,12 @@ export const RegisterRoute = () => {
 					<Divider variant="dashed" label="or" labelPosition="center" />
 
 					<I18nLink to="/login">
-						<Button size="lg" variant="outline" fullWidth>
+						<Button
+							size="lg"
+							variant="outline"
+							fullWidth
+							{...testId("auth-register-switch-to-login-button")}
+						>
 							<Trans>Login as an existing user</Trans>
 						</Button>
 					</I18nLink>

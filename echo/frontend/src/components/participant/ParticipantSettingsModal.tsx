@@ -1,5 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Modal, Text } from "@mantine/core";
+import { testId } from "@/lib/testUtils";
 import MicrophoneTest from "./MicrophoneTest";
 
 interface ParticipantSettingsModalProps {
@@ -26,6 +27,7 @@ export function ParticipantSettingsModal({
 			radius="md"
 			padding="xl"
 			centered
+			{...testId("portal-settings-modal")}
 		>
 			<MicrophoneTest
 				onContinue={(_id: string) => {

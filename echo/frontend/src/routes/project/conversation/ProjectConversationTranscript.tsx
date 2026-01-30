@@ -22,6 +22,7 @@ import {
 	useInfiniteConversationChunks,
 } from "@/components/conversation/hooks";
 import { RetranscribeConversationModalActionIcon } from "@/components/conversation/RetranscribeConversation";
+import { testId } from "@/lib/testUtils";
 
 export const ProjectConversationTranscript = () => {
 	const { conversationId } = useParams();
@@ -79,12 +80,16 @@ export const ProjectConversationTranscript = () => {
 			<Stack>
 				<Group justify="space-between">
 					<Group>
-						<Title order={2}>
+						<Title order={2} {...testId("transcript-title")}>
 							<Trans>Transcript</Trans>
 						</Title>
 						{/* TODO: (@ussaama) what u think about extracting into reusable flags? - useConversationFlags(conversationId) */}
 						{isEmptyConversation && (
-							<Badge color="red" variant="light">
+							<Badge
+								color="red"
+								variant="light"
+								{...testId("transcript-empty-badge")}
+							>
 								<Trans>Empty</Trans>
 							</Badge>
 						)}
@@ -108,6 +113,7 @@ export const ProjectConversationTranscript = () => {
 								setShowAudioPlayer(event.currentTarget.checked)
 							}
 							label={t`Show audio player`}
+							{...testId("transcript-show-audio-player-toggle")}
 						/>
 					</Group>
 				</Group>
@@ -118,6 +124,7 @@ export const ProjectConversationTranscript = () => {
 							icon={<IconAlertCircle size={16} />}
 							title={t`No Transcript Available`}
 							color="gray"
+							{...testId("transcript-empty-alert")}
 						>
 							<Trans>
 								No transcript exists for this conversation yet. Please check
@@ -128,7 +135,11 @@ export const ProjectConversationTranscript = () => {
 						allChunks.map((chunk, index, array) => {
 							const isLastChunk = index === array.length - 1;
 							return (
-								<div key={chunk.id} ref={isLastChunk ? loadMoreRef : undefined}>
+								<div
+									key={chunk.id}
+									ref={isLastChunk ? loadMoreRef : undefined}
+									{...testId(`transcript-chunk-${index}`)}
+								>
 									<ConversationChunkAudioTranscript
 										chunk={{
 											conversation_id: chunk.conversation_id as string,

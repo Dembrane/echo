@@ -75,6 +75,11 @@ msgstr "Willkommen zurück"
 #~ msgstr "einige könnten aufgrund von leerem Transkript oder Kontextlimit übersprungen werden"
 
 #. js-lingui-explicit-id
+#: src/components/participant/ParticipantConversationAudio.tsx:547
+#~ msgid "participant.modal.interruption.issue.description"
+#~ msgstr "Wir haben deine Aufnahme bis <0>{formattedDuration}</0> gespeichert, aber den Rest leider verloren. <1/> Drücke unten, um dich erneut zu verbinden, und dann auf Aufnahme, um fortzufahren."
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:238
 msgid "library.generate.duration.message"
 msgstr "Die Bibliothek wird {duration} dauern."
@@ -91,17 +96,17 @@ msgstr " Von Benachrichtigungen abmelden"
 #~ msgstr "-5s"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:322
+#: src/components/participant/ParticipantConversationAudio.tsx:436
 msgid "participant.modal.refine.info.title.go.deeper"
 msgstr "Tiefer eintauchen"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:315
+#: src/components/participant/ParticipantConversationAudio.tsx:429
 msgid "participant.modal.refine.info.title.concrete"
 msgstr "Konkret machen"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:308
+#: src/components/participant/ParticipantConversationAudio.tsx:422
 msgid "participant.modal.refine.info.title.generic"
 msgstr "\"Verfeinern\" bald verfügbar"
 
@@ -546,6 +551,11 @@ msgstr "Aspekte"
 #: src/components/project/ProjectPortalEditor.tsx:879
 msgid "At least one topic must be selected to enable Make it concrete"
 msgstr "Wähle mindestens ein Thema, um Konkret machen zu aktivieren"
+
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantConversationAudio.tsx:539
+msgid "participant.modal.interruption.issue.message"
+msgstr "Achtung! Wir haben die letzten 60 Sekunden Ihrer Aufnahme aufgrund einer Unterbrechung verloren. Bitte drücken Sie die Schaltfläche unten, um die Verbindung wiederherzustellen."
 
 #~ msgid "Audio Processing In Progress"
 #~ msgstr "Audioverarbeitung wird durchgeführt"
@@ -1521,7 +1531,11 @@ msgstr "Fehler beim Deaktivieren des Automatischen Auswählens für diesen Chat"
 msgid "Failed to enable Auto Select for this chat"
 msgstr "Fehler beim Aktivieren des Automatischen Auswählens für diesen Chat"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:233
+#: src/components/participant/ParticipantConversationAudio.tsx:377
+#~ msgid "Failed to finish conversation. Please try again or start a new conversation."
+#~ msgstr "Fehler beim Beenden des Gesprächs. Bitte versuchen Sie es erneut oder starten Sie ein neues Gespräch."
+
+#: src/components/participant/ParticipantConversationAudio.tsx:272
 msgid "Failed to finish conversation. Please try again."
 msgstr "Fehler beim Beenden des Gesprächs. Bitte versuchen Sie es erneut."
 
@@ -1560,6 +1574,10 @@ msgstr "Fehler beim Markieren aller Ankündigungen als gelesen"
 msgid "Failed to mark announcement as read"
 msgstr "Fehler beim Markieren der Ankündigung als gelesen"
 
+#: src/components/participant/ParticipantConversationAudio.tsx:366
+msgid "Failed to reconnect. Please try reloading the page."
+msgstr "Verbindung fehlgeschlagen. Bitte versuche, die Seite neu zu laden."
+
 #: src/routes/project/conversation/ProjectConversationOverview.tsx:86
 msgid "Failed to regenerate the summary. Please try again later."
 msgstr "Fehler beim erneuten Generieren der Zusammenfassung. Bitte versuchen Sie es erneut."
@@ -1585,7 +1603,11 @@ msgstr "Fehler beim Hertranskribieren des Gesprächs. Bitte versuchen Sie es ern
 msgid "Failed to revise artefact. Please try again."
 msgstr "Artefakt konnte nicht überarbeitet werden. Bitte versuchen Sie es erneut."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:139
+#: src/components/participant/ParticipantConversationAudio.tsx:384
+#~ msgid "Failed to start new conversation. Please try again."
+#~ msgstr "Fehler beim Starten eines neuen Gesprächs. Bitte versuchen Sie es erneut."
+
+#: src/components/participant/ParticipantConversationAudio.tsx:172
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Fehler beim Beenden der Aufnahme bei Änderung des Mikrofons. Bitte versuchen Sie es erneut."
 
@@ -1593,7 +1615,7 @@ msgstr "Fehler beim Beenden der Aufnahme bei Änderung des Mikrofons. Bitte vers
 #~ msgstr "E-Mail-Status konnte nicht überprüft werden. Bitte versuchen Sie es erneut."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:328
+#: src/components/participant/ParticipantConversationAudio.tsx:442
 msgid "participant.modal.refine.info.title"
 msgstr "Funktion bald verfügbar"
 
@@ -1656,7 +1678,7 @@ msgid "participant.button.finish.text.mode"
 msgstr "Beenden"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:494
+#: src/components/participant/ParticipantConversationAudio.tsx:681
 msgid "participant.button.finish"
 msgstr "Beenden"
 
@@ -1722,7 +1744,7 @@ msgstr "Zusammenfassung wird erstellt. Kurz warten ..."
 msgid "German"
 msgstr "Deutsch"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:300
+#: src/components/participant/ParticipantConversationAudio.tsx:414
 msgid "Get an immediate reply from Dembrane to help you deepen the conversation."
 msgstr "Erhalte eine sofortige Antwort von Dembrane, um das Gespräch zu vertiefen."
 
@@ -1824,7 +1846,7 @@ msgstr ""
 "* Wie sieht Erfolg aus"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:394
+#: src/components/participant/ParticipantConversationAudio.tsx:508
 msgid "participant.button.i.understand"
 msgstr "Ich verstehe"
 
@@ -2901,7 +2923,12 @@ msgid "Recommended apps"
 msgstr "Empfohlene Apps"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:472
+#: src/components/participant/ParticipantConversationAudio.tsx:565
+msgid "participant.button.interruption.reconnect"
+msgstr "Erneut verbinden"
+
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantConversationAudio.tsx:661
 msgid "participant.button.record"
 msgstr "Aufnehmen"
 
@@ -2911,6 +2938,11 @@ msgstr "Aufnehmen"
 #: src/routes/participant/ParticipantPostConversation.tsx:142
 msgid "Record another conversation"
 msgstr "Ein weiteres Gespräch aufnehmen"
+
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantConversationAudio.tsx:532
+msgid "participant.modal.interruption.title"
+msgstr "Aufnahme unterbrochen"
 
 #. js-lingui-explicit-id
 #: src/components/participant/StopRecordingConfirmationModal.tsx:47
@@ -2937,7 +2969,7 @@ msgid "References"
 msgstr "Referenzen"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:525
+#: src/components/participant/ParticipantConversationAudio.tsx:712
 msgid "participant.button.refine"
 msgstr "Verfeinern"
 
@@ -3579,7 +3611,7 @@ msgid "Stop"
 msgstr "Stopp"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:544
+#: src/components/participant/ParticipantConversationAudio.tsx:731
 msgid "participant.button.stop"
 msgstr "Beenden"
 
@@ -3664,11 +3696,11 @@ msgstr "System"
 msgid "Tags"
 msgstr "Tags"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:294
+#: src/components/participant/ParticipantConversationAudio.tsx:408
 msgid "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from Dembrane to help you deepen the conversation."
 msgstr "Nimm dir Zeit, ein konkretes Ergebnis zu erstellen, das deinen Beitrag festhält, oder erhalte eine sofortige Antwort von Dembrane, um das Gespräch zu vertiefen."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:297
+#: src/components/participant/ParticipantConversationAudio.tsx:411
 msgid "Take some time to create an outcome that makes your contribution concrete."
 msgstr "Nimm dir Zeit, ein konkretes Ergebnis zu erstellen, das deinen Beitrag festhält."
 
@@ -3827,7 +3859,7 @@ msgstr "Diese E-Mail ist bereits in der Liste."
 #~ msgstr "Diese E-Mail ist bereits für Benachrichtigungen angemeldet."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:384
+#: src/components/participant/ParticipantConversationAudio.tsx:498
 msgid "participant.modal.refine.info.available.in"
 msgstr "Diese Funktion wird in {remainingTime} Sekunden verfügbar sein."
 
@@ -4220,6 +4252,11 @@ msgstr "Audio-Dateien werden hochgeladen..."
 msgid "participant.modal.uploading"
 msgstr "Audio wird hochgeladen..."
 
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantConversationAudio.tsx:550
+msgid "participant.modal.interruption.uploading"
+msgstr "Audio wird hochgeladen..."
+
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:211
 msgid "URL is required"
 msgstr ""
@@ -4350,7 +4387,7 @@ msgstr "Wir haben Ihnen eine E-Mail mit den nächsten Schritten gesendet. Wenn S
 #~ msgstr "Wir haben Ihnen eine E-Mail mit den nächsten Schritten gesendet. Wenn Sie sie nicht sehen, überprüfen Sie Ihren Spam-Ordner. Wenn Sie sie immer noch nicht sehen, kontaktieren Sie bitte jules@dembrane.com"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:336
+#: src/components/participant/ParticipantConversationAudio.tsx:450
 msgid "participant.modal.refine.info.reason"
 msgstr "Wir brauchen etwas mehr Kontext, um dir effektiv beim Verfeinern zu helfen. Bitte nimm weiter auf, damit wir dir bessere Vorschläge geben können."
 

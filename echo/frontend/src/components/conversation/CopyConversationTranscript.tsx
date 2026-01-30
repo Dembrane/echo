@@ -3,6 +3,7 @@ import { ActionIcon, Loader, Tooltip } from "@mantine/core";
 import { useClipboard } from "@mantine/hooks";
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { toast } from "@/components/common/Toaster";
+import { testId } from "@/lib/testUtils";
 import { useGetConversationTranscriptStringMutation } from "./hooks";
 
 export const CopyConversationTranscriptActionIcon = (props: {
@@ -52,6 +53,7 @@ export const CopyConversationTranscriptActionIcon = (props: {
 				variant="transparent"
 				color={clipboard.copied ? "blue" : "gray"}
 				onClick={handleCopy}
+				{...testId("transcript-copy-button")}
 			>
 				{isLoading ? (
 					<Loader size={20} />

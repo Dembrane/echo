@@ -18,6 +18,7 @@ import { useConversationIssueBanner } from "@/components/participant/hooks/useCo
 import { useConversationsHealthStream } from "@/components/participant/hooks/useConversationsHealthStream";
 import { ENABLE_CONVERSATION_HEALTH } from "@/config";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { testId } from "@/lib/testUtils";
 import { ConnectionHealthStatus } from "../common/ConnectionHealthStatus";
 import { TipBanner } from "../common/TipBanner";
 import SpikeMessage from "./SpikeMessage";
@@ -208,7 +209,10 @@ export const ParticipantBody = ({
 							))}
 						</Stack>
 					) : viewResponses ? (
-						<div className="flex justify-end">
+						<div
+							className="flex justify-end"
+							{...testId("portal-view-responses-inline")}
+						>
 							<Stack gap="sm">
 								{chunksQuery.data
 									?.sort(
@@ -216,8 +220,13 @@ export const ParticipantBody = ({
 											new Date(a.timestamp).getTime() -
 											new Date(b.timestamp).getTime(),
 									)
-									.map((chunk) => (
-										<UserChunkMessage key={chunk.id} chunk={chunk} />
+									.map((chunk, index) => (
+										<div
+											key={chunk.id}
+											{...testId(`portal-view-responses-chunk-${index}`)}
+										>
+											<UserChunkMessage chunk={chunk} />
+										</div>
 									))}
 							</Stack>
 						</div>
@@ -225,7 +234,11 @@ export const ParticipantBody = ({
 						<>
 							{chunksQuery.data && chunksQuery.data.length > 0 && (
 								<div className="flex justify-end">
-									<Button variant="transparent" onClick={open}>
+									<Button
+										variant="transparent"
+										onClick={open}
+										{...testId("portal-view-responses-button")}
+									>
 										<Trans>View your responses</Trans>
 									</Button>
 								</div>
@@ -237,8 +250,9 @@ export const ParticipantBody = ({
 								padding="xl"
 								radius="md"
 								title={t`Your responses`}
+								{...testId("portal-view-responses-modal")}
 							>
-								<div>
+								<div {...testId("portal-view-responses-modal-content")}>
 									<Stack gap="sm">
 										{chunksQuery.data
 											?.sort(
@@ -246,8 +260,15 @@ export const ParticipantBody = ({
 													new Date(a.timestamp).getTime() -
 													new Date(b.timestamp).getTime(),
 											)
-											.map((chunk) => (
-												<UserChunkMessage key={chunk.id} chunk={chunk} />
+											.map((chunk, index) => (
+												<div
+													key={chunk.id}
+													{...testId(
+														`portal-view-responses-modal-chunk-${index}`,
+													)}
+												>
+													<UserChunkMessage chunk={chunk} />
+												</div>
 											))}
 									</Stack>
 								</div>

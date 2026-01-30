@@ -60,6 +60,7 @@ import { API_BASE_URL, ENABLE_CHAT_AUTO_SELECT } from "@/config";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLoadNotification } from "@/hooks/useLoadNotification";
+import { testId } from "@/lib/testUtils";
 
 const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	const chatHistoryQuery = useChatHistory(chatId);
@@ -172,11 +173,12 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	});
 
 	// Handle load status (shows inline message when backend reports high load)
-	const hasContent = messages.length > 0 && messages[messages.length - 1]?.content?.length > 0;
+	const hasContent =
+		messages.length > 0 && messages[messages.length - 1]?.content?.length > 0;
 	const { statusMessage } = useLoadNotification({
 		data,
-		isLoading,
 		hasContent,
+		isLoading,
 	});
 
 	const customHandleStop = () => {
@@ -493,12 +495,17 @@ export const ProjectChatRoute = () => {
 	}
 
 	return (
-		<Stack className="relative flex min-h-full flex-col px-2 pr-4">
+		<Stack
+			className="relative flex min-h-full flex-col px-2 pr-4"
+			{...testId("chat-interface")}
+		>
 			{/* Header */}
 			<Stack className="top-0 w-full pt-6">
 				<Group justify="space-between">
 					<Group gap="sm">
-						<Title order={1}>{chatQuery.data?.name ?? t`Chat`}</Title>
+						<Title order={1} {...testId("chat-title")}>
+							{chatQuery.data?.name ?? t`Chat`}
+						</Title>
 						{chatMode && <ChatModeIndicator mode={chatMode} size="sm" />}
 					</Group>
 					<Group>
@@ -579,9 +586,15 @@ export const ProjectChatRoute = () => {
 								<Box className="animate-spin">
 									<Logo hideTitle h="20px" my={4} />
 								</Box>
-								<Text size="sm" className="italic">
+								<Text
+									size="sm"
+									className="italic"
+									{...testId("chat-thinking-text")}
+								>
 									<Trans>
-										{isAssistantTyping ? "Assistant is typing..." : "Thinking..."}
+										{isAssistantTyping
+											? "Assistant is typing..."
+											: "Thinking..."}
 									</Trans>
 								</Text>
 								<Button
@@ -590,6 +603,7 @@ export const ProjectChatRoute = () => {
 									color="gray"
 									size="sm"
 									rightSection={<IconSquare size={14} />}
+									{...testId("chat-stop-button")}
 								>
 									<Trans>Stop</Trans>
 								</Button>
@@ -622,6 +636,7 @@ export const ProjectChatRoute = () => {
 							title="Error"
 							color="red"
 							variant="outline"
+							{...testId("chat-error-alert")}
 						>
 							<Text>
 								<Trans>An error occurred.</Trans>
@@ -631,6 +646,7 @@ export const ProjectChatRoute = () => {
 								onClick={() => reload()}
 								leftSection={<IconRefresh size="1rem" />}
 								mt="md"
+								{...testId("chat-retry-button")}
 							>
 								<Trans>Retry</Trans>
 							</Button>
@@ -677,6 +693,7 @@ export const ProjectChatRoute = () => {
 								title={t`Please select conversations from the sidebar to proceed`}
 								color="orange"
 								variant="light"
+								{...testId("chat-no-conversations-alert")}
 							/>
 						)}
 
@@ -738,6 +755,7 @@ export const ProjectChatRoute = () => {
 										}
 									}}
 									color="gray"
+									{...testId("chat-input-textarea")}
 								/>
 								<Group
 									justify="space-between"
@@ -767,6 +785,7 @@ export const ProjectChatRoute = () => {
 										}}
 										rightSection={<IconSend size={24} />}
 										disabled={input.trim() === "" || isLoading || isSubmitting}
+										{...testId("chat-send-button")}
 									>
 										<Trans>Send</Trans>
 									</Button>

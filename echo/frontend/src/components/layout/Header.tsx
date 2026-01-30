@@ -19,6 +19,7 @@ import {
 import { I18nLink } from "@/components/common/i18nLink";
 import { ENABLE_ANNOUNCEMENTS } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { testId } from "@/lib/testUtils";
 import { AnnouncementIcon } from "../announcement/AnnouncementIcon";
 import { Announcements } from "../announcement/Announcements";
 import { TopAnnouncementBar } from "../announcement/TopAnnouncementBar";
@@ -149,7 +150,11 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 							)}
 							<Menu withArrow arrowPosition="center">
 								<Menu.Target>
-									<ActionIcon color="gray" variant="transparent">
+									<ActionIcon
+										color="gray"
+										variant="transparent"
+										{...testId("header-settings-gear-button")}
+									>
 										<IconSettings />
 									</ActionIcon>
 								</Menu.Target>
@@ -166,6 +171,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 										<Menu.Item
 											rightSection={<IconShieldLock />}
 											onClick={handleSettingsClick}
+											{...testId("header-settings-menu-item")}
 										>
 											<Group>
 												<Trans>Settings</Trans>
@@ -177,6 +183,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 											component="a"
 											href={docUrl}
 											target="_blank"
+											{...testId("header-documentation-menu-item")}
 										>
 											<Group>
 												<Trans>Documentation</Trans>
@@ -190,6 +197,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 											component="a"
 											href="https://tally.so/r/PdprZV"
 											target="_blank"
+											{...testId("header-help-translate-menu-item")}
 										>
 											<Trans>Help us translate</Trans>
 										</Menu.Item>
@@ -197,6 +205,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 										<Menu.Item
 											rightSection={<IconLogout />}
 											onClick={handleLogout}
+											{...testId("header-logout-menu-item")}
 										>
 											<Trans>Logout</Trans>
 										</Menu.Item>

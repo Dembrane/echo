@@ -6,6 +6,7 @@ import useSessionStorageState from "use-session-storage-state";
 import DembraneLoadingSpinner from "@/components/common/DembraneLoadingSpinner";
 import { useParticipantProjectById } from "@/components/participant/hooks";
 import ParticipantOnboardingCards from "@/components/participant/ParticipantOnboardingCards";
+import { testId } from "@/lib/testUtils";
 
 export const ParticipantStartRoute = () => {
 	const { projectId } = useParams<{ projectId: string }>();
@@ -31,8 +32,11 @@ export const ParticipantStartRoute = () => {
 
 	if (loadingFinished && projectError) {
 		return (
-			<div className="flex flex-col items-center justify-center">
-				<Alert color="info">
+			<div
+				className="flex flex-col items-center justify-center"
+				{...testId("portal-loading-error")}
+			>
+				<Alert color="info" {...testId("portal-error-alert")}>
 					{t`An error occurred while loading the Portal. Please contact the support team.`}
 				</Alert>
 			</div>
@@ -42,7 +46,9 @@ export const ParticipantStartRoute = () => {
 	return (
 		<div className="h-full grow">
 			{isLoadingProject ? (
-				<DembraneLoadingSpinner isLoading />
+				<div {...testId("portal-loading-spinner")}>
+					<DembraneLoadingSpinner isLoading />
+				</div>
 			) : (
 				<ParticipantOnboardingCards project={project as Project} />
 			)}

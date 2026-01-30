@@ -15,6 +15,7 @@ import { useState } from "react";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { analytics } from "@/lib/analytics";
 import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
+import { testId } from "@/lib/testUtils";
 import { ExponentialProgress } from "../common/ExponentialProgress";
 import {
 	useCloneProjectByIdMutation,
@@ -82,108 +83,112 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 			title={<Trans>Actions</Trans>}
 			variant="danger"
 			align="start"
+			{...testId("project-actions-section")}
 		>
-			<>
-				<Stack maw="300px">
-					<Button
-						onClick={openCloneModal}
-						color="gray"
-						variant="outline"
-						rightSection={<IconCopy />}
-						loading={cloneProjectByIdMutation.isPending}
-					>
-						<Trans>Clone Project</Trans>
-					</Button>
-
-					<Button
-						onClick={openDeleteModal}
-						color="red"
-						variant="outline"
-						rightSection={<IconTrash />}
-					>
-						<Trans>Delete Project</Trans>
-					</Button>
-				</Stack>
-				<Modal
-					opened={isCloneModalOpen}
-					onClose={closeCloneModal}
-					title={<Trans>Clone Project</Trans>}
+			<Stack maw="300px">
+				<Button
+					onClick={openCloneModal}
+					color="gray"
+					variant="outline"
+					rightSection={<IconCopy />}
+					loading={cloneProjectByIdMutation.isPending}
+					{...testId("project-actions-clone-button")}
 				>
-					<Stack gap="md">
-						<Text size="sm">
-							<Trans>
-								This will create a copy of the current project. Only settings
-								and tags are copied. Reports, chats and conversations are not
-								included in the clone. You will be redirected to the new project
-								after cloning.
-							</Trans>
-						</Text>
+					<Trans>Clone Project</Trans>
+				</Button>
 
-						{cloneProjectByIdMutation.isPending && (
-							<ExponentialProgress expectedDuration={30} isLoading={true} />
+				<Button
+					onClick={openDeleteModal}
+					color="red"
+					variant="outline"
+					rightSection={<IconTrash />}
+					{...testId("project-actions-delete-button")}
+				>
+					<Trans>Delete Project</Trans>
+				</Button>
+			</Stack>
+			<Modal
+				opened={isCloneModalOpen}
+				onClose={closeCloneModal}
+				title={<Trans>Clone Project</Trans>}
+				{...testId("project-clone-modal")}
+			>
+				<Stack gap="md">
+					<Text size="sm">
+						<Trans>
+							This will create a copy of the current project. Only settings and
+							tags are copied. Reports, chats and conversations are not included
+							in the clone. You will be redirected to the new project after
+							cloning.
+						</Trans>
+					</Text>
+
+					{cloneProjectByIdMutation.isPending && (
+						<ExponentialProgress expectedDuration={30} isLoading={true} />
+					)}
+
+					{!cloneProjectByIdMutation.isPending &&
+						cloneProjectByIdMutation.error && (
+							<Alert
+								title={t`Error cloning project`}
+								color="red"
+								variant="light"
+							>
+								<Trans>
+									There was an error cloning your project. Please try again or
+									contact support.
+								</Trans>
+							</Alert>
 						)}
 
-						{!cloneProjectByIdMutation.isPending &&
-							cloneProjectByIdMutation.error && (
-								<>
-									<Alert
-										title={t`Error cloning project`}
-										color="red"
-										variant="light"
-									>
-										<Trans>
-											There was an error cloning your project. Please try again
-											or contact support.
-										</Trans>
-									</Alert>
-								</>
-							)}
-
-						<TextInput
-							label={<Trans>Project name</Trans>}
-							placeholder={t`Enter a name for your cloned project`}
-							value={cloneName}
-							onChange={(event) => setCloneName(event.currentTarget.value)}
-						/>
-						<Group justify="flex-end">
-							<Button variant="default" onClick={closeCloneModal}>
-								<Trans>Cancel</Trans>
-							</Button>
-							<Button
-								onClick={handleClone}
-								loading={cloneProjectByIdMutation.isPending}
-							>
-								<Trans>Clone project</Trans>
-							</Button>
-						</Group>
-					</Stack>
-				</Modal>
-				<Modal
-					opened={isDeleteModalOpen}
-					onClose={closeDeleteModal}
-					title={<Trans>Delete Project</Trans>}
-				>
-					<Stack gap="md">
-						<Text size="sm">
-							<Trans>
-								Are you sure you want to delete this project? This action cannot
-								be undone.
-							</Trans>
-						</Text>
-					</Stack>
+					<TextInput
+						label={<Trans>Project name</Trans>}
+						placeholder={t`Enter a name for your cloned project`}
+						value={cloneName}
+						onChange={(event) => setCloneName(event.currentTarget.value)}
+						{...testId("project-clone-name-input")}
+					/>
 					<Group justify="flex-end">
-						<Button variant="default" onClick={closeDeleteModal}>
+						<Button variant="default" onClick={closeCloneModal}>
 							<Trans>Cancel</Trans>
 						</Button>
 						<Button
-							onClick={handleDelete}
-							loading={deleteProjectByIdMutation.isPending}
+							onClick={handleClone}
+							loading={cloneProjectByIdMutation.isPending}
+							{...testId("project-clone-confirm-button")}
 						>
-							<Trans>Delete Project</Trans>
+							<Trans>Clone project</Trans>
 						</Button>
 					</Group>
-				</Modal>
-			</>
+				</Stack>
+			</Modal>
+			<Modal
+				opened={isDeleteModalOpen}
+				onClose={closeDeleteModal}
+				title={<Trans>Delete Project</Trans>}
+				{...testId("project-delete-modal")}
+			>
+				<Stack gap="md">
+					<Text size="sm">
+						<Trans>
+							Are you sure you want to delete this project? This action cannot
+							be undone.
+						</Trans>
+					</Text>
+				</Stack>
+				<Group justify="flex-end">
+					<Button variant="default" onClick={closeDeleteModal}>
+						<Trans>Cancel</Trans>
+					</Button>
+					<Button
+						onClick={handleDelete}
+						loading={deleteProjectByIdMutation.isPending}
+						{...testId("project-delete-confirm-button")}
+					>
+						<Trans>Delete Project</Trans>
+					</Button>
+				</Group>
+			</Modal>
 		</ProjectSettingsSection>
 	);
 };
