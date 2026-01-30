@@ -13,6 +13,7 @@ import {
 import { IconCheck, IconCopy, IconShare } from "@tabler/icons-react";
 import { useMemo } from "react";
 import { PARTICIPANT_BASE_URL } from "@/config";
+import { testId } from "@/lib/testUtils";
 import { QRCode } from "../common/QRCode";
 
 interface ProjectQRCodeProps {
@@ -88,7 +89,10 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 		>
 			{project?.is_conversation_allowed ? (
 				<Group align="center" justify="center" gap="lg">
-					<Box className="h-auto w-full min-w-[80px] max-w-[128px] rounded-lg bg-white">
+					<Box
+						className="h-auto w-full min-w-[80px] max-w-[128px] rounded-lg bg-white"
+						{...testId("project-qr-code")}
+					>
 						<QRCode value={link} />
 					</Box>
 					<div className="flex flex-col flex-wrap gap-2">
@@ -104,6 +108,7 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 										url: link,
 									});
 								}}
+								{...testId("project-share-button")}
 							>
 								<Trans>Share</Trans>
 							</Button>
@@ -121,6 +126,7 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 											<IconCopy style={{ width: rem(16) }} />
 										)
 									}
+									{...testId("project-copy-link-button")}
 								>
 									{copied ? t`Copied` : t`Copy link`}
 								</Button>

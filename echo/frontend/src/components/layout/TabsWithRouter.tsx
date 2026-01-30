@@ -2,6 +2,7 @@ import { Box, LoadingOverlay, Stack, Tabs } from "@mantine/core";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { Outlet, useLocation, useParams } from "react-router";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { testId } from "@/lib/testUtils";
 
 const TabLoadingFallback = () => (
 	<Box pos="relative" h="100%">
@@ -25,11 +26,12 @@ export const TabsWithRouter = ({
 	basePath,
 	tabs,
 	loading = false,
+	...rest
 }: {
 	basePath: string;
 	tabs: { value: string; label: string }[];
 	loading?: boolean;
-}) => {
+} & Record<string, unknown>) => {
 	const navigate = useI18nNavigate();
 	const location = useLocation();
 	const params = useParams();
@@ -57,11 +59,16 @@ export const TabsWithRouter = ({
 	};
 
 	return (
-		<Stack className="relative">
+		<Stack className="relative" {...rest}>
 			<Tabs value={activeTab} onChange={handleTabChange} variant="default">
 				<Tabs.List grow justify="space-between">
 					{tabs.map((tab) => (
-						<Tabs.Tab disabled={loading} key={tab.value} value={tab.value}>
+						<Tabs.Tab
+							disabled={loading}
+							key={tab.value}
+							value={tab.value}
+							{...testId(`project-overview-tab-${tab.value}`)}
+						>
 							{tab.label}
 						</Tabs.Tab>
 					))}

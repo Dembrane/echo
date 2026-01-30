@@ -23,6 +23,7 @@ import {
 	IconScale,
 	IconX,
 } from "@tabler/icons-react";
+import { testId } from "@/lib/testUtils";
 
 type SelectAllConfirmationModalProps = {
 	opened: boolean;
@@ -224,6 +225,7 @@ export const SelectAllConfirmationModal = ({
 				body: "flex flex-col justify-between min-h-[300px]",
 				header: "border-b",
 			}}
+			{...testId("select-all-confirmation-modal")}
 		>
 			<Stack flex="1">
 				{/* Initial confirmation view */}
@@ -325,10 +327,17 @@ export const SelectAllConfirmationModal = ({
 							</Stack>
 						</Box>
 						<Group justify="flex-end" gap="sm">
-							<Button variant="subtle" onClick={onClose}>
+							<Button
+								variant="subtle"
+								onClick={onClose}
+								{...testId("select-all-cancel-button")}
+							>
 								<Trans id="select.all.modal.cancel">Cancel</Trans>
 							</Button>
-							<Button onClick={onConfirm}>
+							<Button
+								onClick={onConfirm}
+								{...testId("select-all-proceed-button")}
+							>
 								<Trans id="select.all.modal.proceed">Proceed</Trans>
 							</Button>
 						</Group>
@@ -343,6 +352,7 @@ export const SelectAllConfirmationModal = ({
 						justify="center"
 						className="py-12"
 						style={{ minHeight: 300 }}
+						{...testId("select-all-loading-state")}
 					>
 						{/* Animated loader section */}
 						<Box className="relative">
@@ -450,13 +460,23 @@ export const SelectAllConfirmationModal = ({
 					<>
 						{/* Summary badges */}
 						<Group gap="md" mt="md">
-							<Badge color="primary" size="lg" variant="light">
+							<Badge
+								color="primary"
+								size="lg"
+								variant="light"
+								{...testId("select-all-added-count-badge")}
+							>
 								<Trans id="select.all.modal.added.count">
 									{result.added.length} added
 								</Trans>
 							</Badge>
 							{reallySkipped.length > 0 && (
-								<Badge color="orange" size="lg" variant="light">
+								<Badge
+									color="orange"
+									size="lg"
+									variant="light"
+									{...testId("select-all-skipped-count-badge")}
+								>
 									<Trans id="select.all.modal.not.added.count">
 										{reallySkipped.length} not added
 									</Trans>
@@ -465,7 +485,10 @@ export const SelectAllConfirmationModal = ({
 						</Group>
 
 						{result.contextLimitReached && (
-							<Box className="rounded-md border border-orange-200 bg-orange-50 p-3">
+							<Box
+								className="rounded-md border border-orange-200 bg-orange-50 p-3"
+								{...testId("select-all-context-limit-warning")}
+							>
 								<Group gap="xs">
 									<IconScale size={18} className="text-orange-600" />
 									<Text size="sm" fw={500} c="orange.7">
@@ -478,7 +501,11 @@ export const SelectAllConfirmationModal = ({
 						)}
 
 						{/* Tabs for conversation lists */}
-						<Tabs defaultValue={getDefaultTab()} variant="default">
+						<Tabs
+							defaultValue={getDefaultTab()}
+							variant="default"
+							{...testId("select-all-results-tabs")}
+						>
 							<Tabs.List grow>
 								{result.added.length > 0 && (
 									<Tabs.Tab
@@ -495,6 +522,7 @@ export const SelectAllConfirmationModal = ({
 												{result.added.length}
 											</Badge>
 										}
+										{...testId("select-all-tab-added")}
 									>
 										<Trans id="select.all.modal.added">Added</Trans>
 									</Tabs.Tab>
@@ -514,6 +542,7 @@ export const SelectAllConfirmationModal = ({
 												{skippedDueToOther.length}
 											</Badge>
 										}
+										{...testId("select-all-tab-not-added")}
 									>
 										<Trans id="select.all.modal.not.added">Not Added</Trans>
 									</Tabs.Tab>
@@ -533,6 +562,7 @@ export const SelectAllConfirmationModal = ({
 												{skippedDueToLimit.length}
 											</Badge>
 										}
+										{...testId("select-all-tab-too-large")}
 									>
 										<Trans id="select.all.modal.context.limit">Too large</Trans>
 									</Tabs.Tab>
@@ -646,7 +676,12 @@ export const SelectAllConfirmationModal = ({
 						</Tabs>
 						{/* Empty state - no conversations processed */}
 						{result?.added?.length === 0 && reallySkipped.length === 0 && (
-							<Alert variant="light" color="blue" mt="md">
+							<Alert
+								variant="light"
+								color="blue"
+								mt="md"
+								{...testId("select-all-no-conversations-alert")}
+							>
 								<Trans id="select.all.modal.no.conversations">
 									No conversations were processed. This may happen if all
 									conversations are already in context or don't match the
@@ -657,7 +692,11 @@ export const SelectAllConfirmationModal = ({
 						<Divider />
 
 						<Group justify="flex-end" mt="auto">
-							<Button variant="light" onClick={onClose}>
+							<Button
+								variant="light"
+								onClick={onClose}
+								{...testId("select-all-close-button")}
+							>
 								<Trans id="select.all.modal.close">Close</Trans>
 							</Button>
 						</Group>

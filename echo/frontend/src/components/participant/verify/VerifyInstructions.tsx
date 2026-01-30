@@ -1,6 +1,7 @@
 import { Trans } from "@lingui/react/macro";
 import { Box, Button, Group, Loader, Stack, Text } from "@mantine/core";
 import { IconArrowRight } from "@tabler/icons-react";
+import { testId } from "@/lib/testUtils";
 
 type VerifyInstructionsProps = {
 	objectLabel: string;
@@ -62,7 +63,12 @@ export const VerifyInstructions = ({
 	canProceed = true,
 }: VerifyInstructionsProps) => {
 	return (
-		<Stack gap="lg" pt="2xl" className="h-full">
+		<Stack
+			gap="lg"
+			pt="2xl"
+			className="h-full"
+			{...testId("portal-verify-instructions-container")}
+		>
 			<Stack gap="2xl" className="flex-grow">
 				{INSTRUCTIONS.map((instruction, index) => (
 					<Group
@@ -101,6 +107,7 @@ export const VerifyInstructions = ({
 						<IconArrowRight size={20} className="ml-1" />
 					)
 				}
+				{...testId("portal-verify-instructions-next-button")}
 			>
 				{isLoading ? (
 					<Trans id="participant.concrete.instructions.loading">Loading</Trans>

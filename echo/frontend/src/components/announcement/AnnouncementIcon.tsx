@@ -4,6 +4,7 @@ import { useAnnouncementDrawer } from "@/components/announcement/hooks";
 import { getTranslatedContent } from "@/components/announcement/hooks/useProcessedAnnouncements";
 import { Markdown } from "@/components/common/Markdown";
 import { useLanguage } from "@/hooks/useLanguage";
+import { testId } from "@/lib/testUtils";
 import { useLatestAnnouncement, useUnreadAnnouncements } from "./hooks";
 
 export const AnnouncementIcon = () => {
@@ -32,7 +33,13 @@ export const AnnouncementIcon = () => {
 	const isLoading = isLoadingLatest || isLoadingUnread;
 
 	return (
-		<Group onClick={open} gap="sm" align="center" className="cursor-pointer">
+		<Group
+			onClick={open}
+			gap="sm"
+			align="center"
+			className="cursor-pointer"
+			{...testId("announcement-icon-button")}
+		>
 			<Box>
 				<Indicator
 					inline
@@ -51,7 +58,10 @@ export const AnnouncementIcon = () => {
 						{isLoading ? (
 							<Loader size="xs" />
 						) : (
-							<IconSpeakerphone className="me-1 rotate-[330deg]" />
+							<IconSpeakerphone
+								className="me-1 rotate-[330deg]"
+								{...testId("announcement-speakerphone-icon")}
+							/>
 						)}
 					</ActionIcon>
 				</Indicator>
@@ -61,6 +71,7 @@ export const AnnouncementIcon = () => {
 				<Box
 					className="hidden max-w-xs [mask-image:linear-gradient(to_right,black_80%,transparent)] md:block"
 					style={{ maxWidth: "400px" }}
+					{...testId("announcement-preview-message")}
 				>
 					<Markdown content={message} className="line-clamp-1" />
 				</Box>

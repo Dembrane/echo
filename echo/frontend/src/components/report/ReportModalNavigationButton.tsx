@@ -4,9 +4,9 @@ import { Modal, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconEdit } from "@tabler/icons-react";
 import { useCallback } from "react";
-
 import { useLocation, useParams } from "react-router";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { testId } from "@/lib/testUtils";
 import { NavigationButton } from "../common/NavigationButton";
 import { CreateReportForm } from "./CreateReportForm";
 import { useLatestProjectReport } from "./hooks";
@@ -49,6 +49,7 @@ export const ReportModalNavigationButton = () => {
 				classNames={{
 					header: "border-b",
 				}}
+				{...testId("report-create-modal")}
 			>
 				<Stack>
 					<CreateReportForm onSuccess={handleSuccess} />
@@ -61,6 +62,7 @@ export const ReportModalNavigationButton = () => {
 				onClick={handleClick}
 				rightIcon={<IconEdit />}
 				active={pathname.includes("report")}
+				{...testId("sidebar-report-button")}
 			>
 				<Trans>Report</Trans>
 			</NavigationButton>

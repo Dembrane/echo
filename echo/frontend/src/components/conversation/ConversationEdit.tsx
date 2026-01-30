@@ -12,6 +12,7 @@ import {
 import { useEffect, useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { testId } from "@/lib/testUtils";
 import { CloseableAlert } from "../common/ClosableAlert";
 import { FormLabel } from "../form/FormLabel";
 import { SaveStatus } from "../form/SaveStatus";
@@ -163,6 +164,7 @@ export const ConversationEdit = ({
 							/>
 						}
 						{...register("participant_name")}
+						{...testId("conversation-edit-name-input")}
 					/>
 
 					{projectTags && projectTags.length > 0 ? (
@@ -190,6 +192,7 @@ export const ConversationEdit = ({
 										field.onChange(value);
 										setValue("tagIdList", value, { shouldDirty: true });
 									}}
+									{...testId("conversation-edit-tags-select")}
 								/>
 							)}
 						/>

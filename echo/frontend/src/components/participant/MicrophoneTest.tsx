@@ -14,6 +14,7 @@ import Cookies from "js-cookie";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
+import { testId } from "@/lib/testUtils";
 
 interface MicrophoneTestProps {
 	onContinue: (deviceId: string) => void;
@@ -283,7 +284,7 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
 		setShowSecondModal(false);
 	};
 	return (
-		<Box className="w-full">
+		<Box className="w-full" {...testId("portal-settings-mic-test")}>
 			{!showSecondModal ? (
 				<Stack gap="md" className="items-center">
 					{!isInModal && (
@@ -320,6 +321,7 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
 						}))}
 						value={displayDeviceId}
 						onChange={handleMicChange}
+						{...testId("portal-settings-mic-select")}
 					/>
 
 					<Text size="sm" className="w-full text-start">
@@ -329,11 +331,16 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
 						value={displayLevel}
 						color={level < SILENCE_THRESHOLD ? "yellow" : "blue"}
 						className="-mt-2 mb-4 w-full"
+						{...testId("portal-settings-mic-level-progress")}
 					/>
 
 					{/* Show error or permission prompt */}
 					{!micAccessGranted && !isLoadingDevices && !micAccessDenied && (
-						<Alert color="yellow" className="w-full text-start">
+						<Alert
+							color="yellow"
+							className="w-full text-start"
+							{...testId("portal-settings-mic-permission-alert")}
+						>
 							<Trans id="participant.alert.microphone.access">
 								Please allow microphone access to start the test.
 							</Trans>
@@ -341,12 +348,20 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
 					)}
 
 					{errorMessage && (
-						<Alert color="red" className="w-full text-start">
+						<Alert
+							color="red"
+							className="w-full text-start"
+							{...testId("portal-settings-mic-error-alert")}
+						>
 							{errorMessage}
 						</Alert>
 					)}
 					{isLoadingDevices && (
-						<Alert color="primary" className="w-full text-start">
+						<Alert
+							color="primary"
+							className="w-full text-start"
+							{...testId("portal-settings-mic-loading-alert")}
+						>
 							<Trans id="participant.alert.microphone.access.loading">
 								Requesting microphone access to detect available devices...
 							</Trans>
@@ -356,13 +371,21 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
 					{/* Real-time feedback alerts - only show after mic access granted */}
 					{micAccessGranted &&
 						(isMicTestSuccessful ? (
-							<Alert color="green" className="w-full text-start">
+							<Alert
+								color="green"
+								className="w-full text-start"
+								{...testId("portal-settings-mic-success-alert")}
+							>
 								<Trans id="participant.alert.microphone.access.success">
 									Everything looks good – you can continue.
 								</Trans>
 							</Alert>
 						) : (
-							<Alert color="yellow" className="w-full text-start">
+							<Alert
+								color="yellow"
+								className="w-full text-start"
+								{...testId("portal-settings-mic-issue-alert")}
+							>
 								<Trans id="participant.alert.microphone.access.issue">
 									We cannot hear you. Please try changing your microphone or get
 									a little closer to the device.
@@ -379,6 +402,7 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
 								radius="md"
 								disabled={!isMicTestSuccessful}
 								className="basis-1/2"
+								{...testId("portal-settings-mic-continue-button")}
 							>
 								<Trans id="participant.button.continue">Continue</Trans>
 							</Button>
@@ -386,7 +410,7 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
 					)}
 				</Stack>
 			) : (
-				<Stack gap="lg">
+				<Stack gap="lg" {...testId("portal-settings-mic-change-confirm")}>
 					<Text>
 						<Trans id="participant.modal.change.mic.confirmation.text">
 							You have changed the mic. Doing this will save your audio till
@@ -400,12 +424,18 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
 							onClick={handleCancelMicChange}
 							miw={100}
 							radius="md"
+							{...testId("portal-settings-mic-change-cancel-button")}
 						>
 							<Trans id="participant.mic.settings.modal.second.confirm.cancel">
 								Cancel
 							</Trans>
 						</Button>
-						<Button onClick={handleConfirmMicChange} miw={100} radius="md">
+						<Button
+							onClick={handleConfirmMicChange}
+							miw={100}
+							radius="md"
+							{...testId("portal-settings-mic-change-confirm-button")}
+						>
 							<Trans id="participant.mic.settings.modal.second.confirm.button">
 								Confirm
 							</Trans>

@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { useProjectConversationCounts } from "@/components/report/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
+import { testId } from "@/lib/testUtils";
 import { CloseableAlert } from "../common/ClosableAlert";
 import { ExponentialProgress } from "../common/ExponentialProgress";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
@@ -127,6 +128,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 						title={<Trans>Conversation Status Details</Trans>}
 						size="lg"
 						centered
+						{...testId("report-conversation-status-modal")}
 					>
 						<ConversationStatusTable projectId={projectId ?? ""} />
 					</Modal>
@@ -143,6 +145,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 					}
 					onChange={(e) => setLanguage(e.target.value)}
 					data={languageOptionsByIso639_1}
+					{...testId("report-language-select")}
 				/>
 			)}
 
@@ -157,6 +160,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 				disabled={isPending || !hasConversations || !hasFinishedConversations}
 				size="md"
 				mt="xs"
+				{...testId("report-create-button")}
 			>
 				<Trans>Create Report</Trans>
 			</Button>

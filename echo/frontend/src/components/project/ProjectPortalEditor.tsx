@@ -28,6 +28,7 @@ import { z } from "zod";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useLanguage } from "@/hooks/useLanguage";
 import type { VerificationTopicsResponse } from "@/lib/api";
+import { testId } from "@/lib/testUtils";
 import { Logo } from "../common/Logo";
 import { toast } from "../common/Toaster";
 import { FormLabel } from "../form/FormLabel";
@@ -138,6 +139,7 @@ const ProperNounInput = ({
 						handleAddNoun();
 					}
 				}}
+				{...testId("portal-editor-specific-context-input")}
 			/>
 			<Group gap="xs">
 				{nouns.map((noun) => (
@@ -429,6 +431,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 						leftSection={
 							showPreview ? <IconEyeOff size={16} /> : <IconEye size={16} />
 						}
+						{...testId("portal-editor-preview-toggle")}
 					>
 						<Trans>{showPreview ? "Hide Preview" : "Show Preview"}</Trans>
 					</Button>
@@ -469,6 +472,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														{ label: t`Italian`, value: "it" },
 													]}
 													{...field}
+													{...testId("portal-editor-language-select")}
 												/>
 											)}
 										/>
@@ -501,6 +505,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													onChange={(e) =>
 														field.onChange(e.currentTarget.checked)
 													}
+													{...testId("portal-editor-ask-name-checkbox")}
 												/>
 											)}
 										/>
@@ -547,6 +552,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														},
 													]}
 													{...field}
+													{...testId("portal-editor-tutorial-select")}
 												/>
 											)}
 										/>
@@ -604,6 +610,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														onChange={(e) =>
 															field.onChange(e.currentTarget.checked)
 														}
+														{...testId("portal-editor-go-deeper-switch")}
 													/>
 												)}
 											/>
@@ -653,6 +660,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																	watchedReplyEnabled &&
 																	field.onChange("summarize")
 																}
+																{...testId("portal-editor-reply-mode-default")}
 															>
 																<Trans>Default</Trans>
 															</Badge>
@@ -684,6 +692,9 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																	watchedReplyEnabled &&
 																	field.onChange("brainstorm")
 																}
+																{...testId(
+																	"portal-editor-reply-mode-brainstorm",
+																)}
 															>
 																<Trans>Brainstorm Ideas</Trans>
 															</Badge>
@@ -713,6 +724,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																	watchedReplyEnabled &&
 																	field.onChange("custom")
 																}
+																{...testId("portal-editor-reply-mode-custom")}
 															>
 																<Trans>Custom</Trans>
 															</Badge>
@@ -752,6 +764,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 															minRows={5}
 															disabled={!watchedReplyEnabled}
 															{...field}
+															{...testId("portal-editor-reply-prompt-textarea")}
 														/>
 													)}
 												/>
@@ -804,6 +817,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														onChange={(e) =>
 															field.onChange(e.currentTarget.checked)
 														}
+														{...testId("portal-editor-make-concrete-switch")}
 													/>
 												)}
 											/>
@@ -945,6 +959,9 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 															onChange={(e) =>
 																field.onChange(e.currentTarget.checked)
 															}
+															{...testId(
+																"portal-editor-report-notifications-switch",
+															)}
 														/>
 													</Stack>
 												)}
@@ -983,6 +1000,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														</Trans>
 													}
 													{...field}
+													{...testId("portal-editor-page-title-input")}
 												/>
 											)}
 										/>
@@ -1009,10 +1027,12 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												name="default_conversation_description"
 												control={control}
 												render={({ field }) => (
-													<MemoizedMarkdownWYSIWYG
-														markdown={field.value}
-														onChange={field.onChange}
-													/>
+													<Box {...testId("portal-editor-page-content-editor")}>
+														<MemoizedMarkdownWYSIWYG
+															markdown={field.value}
+															onChange={field.onChange}
+														/>
+													</Box>
 												)}
 											/>
 										</Stack>
@@ -1038,10 +1058,16 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												name="default_conversation_finish_text"
 												control={control}
 												render={({ field }) => (
-													<MemoizedMarkdownWYSIWYG
-														markdown={field.value}
-														onChange={field.onChange}
-													/>
+													<Box
+														{...testId(
+															"portal-editor-thank-you-content-editor",
+														)}
+													>
+														<MemoizedMarkdownWYSIWYG
+															markdown={field.value}
+															onChange={field.onChange}
+														/>
+													</Box>
 												)}
 											/>
 										</Stack>

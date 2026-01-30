@@ -24,6 +24,7 @@ import { toast } from "@/components/common/Toaster";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
 import { useCreateProjectMutation } from "@/components/project/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { testId } from "@/lib/testUtils";
 
 // const LoginWithProvider = ({
 // 	provider,
@@ -250,6 +251,7 @@ export const LoginRoute = () => {
 										label={<Trans>Email</Trans>}
 										size="lg"
 										{...register("email")}
+										{...testId("auth-login-email-input")}
 										placeholder={t`Email`}
 										required
 										type="email"
@@ -258,6 +260,7 @@ export const LoginRoute = () => {
 										label={<Trans>Password</Trans>}
 										size="lg"
 										{...register("password")}
+										{...testId("auth-login-password-input")}
 										placeholder={t`Password`}
 										required
 									/>
@@ -266,13 +269,21 @@ export const LoginRoute = () => {
 							{!otpRequired && (
 								<div className="w-full text-right">
 									<I18nLink to="/request-password-reset">
-										<Anchor variant="outline">
+										<Anchor
+											variant="outline"
+											{...testId("auth-login-forgot-password-link")}
+										>
 											<Trans>Forgot your password?</Trans>
 										</Anchor>
 									</I18nLink>
 								</div>
 							)}
-							<Button size="lg" type="submit" loading={loginMutation.isPending}>
+							<Button
+								size="lg"
+								type="submit"
+								loading={loginMutation.isPending}
+								{...testId("auth-login-submit-button")}
+							>
 								{otpRequired ? (
 									<Trans>Verify code</Trans>
 								) : (
@@ -285,7 +296,12 @@ export const LoginRoute = () => {
 					<Divider variant="dashed" label="or" labelPosition="center" />
 
 					<I18nLink to="/register">
-						<Button size="lg" variant="outline" fullWidth>
+						<Button
+							size="lg"
+							variant="outline"
+							fullWidth
+							{...testId("auth-login-register-button")}
+						>
 							<Trans>Register as a new user</Trans>
 						</Button>
 					</I18nLink>

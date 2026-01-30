@@ -14,6 +14,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { testId } from "@/lib/testUtils";
 import { useInitiateConversationMutation } from "./hooks";
 
 const FormSchema = z.object({
@@ -74,11 +75,19 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 	}, [isError, reset]);
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="w-full">
+		<form
+			onSubmit={handleSubmit(onSubmit)}
+			className="w-full"
+			{...testId("portal-initiate-form")}
+		>
 			<Stack className="relative">
 				{initiateConversationMutation.error && (
 					<Box>
-						<Alert color="red" variant="light">
+						<Alert
+							color="red"
+							variant="light"
+							{...testId("portal-initiate-error-alert")}
+						>
 							{(initiateConversationMutation.error instanceof AxiosError &&
 								initiateConversationMutation.error.response?.data.detail) ??
 								t`Something went wrong`}
@@ -100,6 +109,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 						{...register("name")}
 						error={errors.name?.message}
 						className="w-full"
+						{...testId("portal-initiate-name-input")}
 					/>
 				)}
 				{project.tags.length > 0 && (
@@ -123,6 +133,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 							setValue("tagIdList", value);
 						}}
 						className="w-full"
+						{...testId("portal-initiate-tags-select")}
 					/>
 				)}
 				<Button
@@ -130,6 +141,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 					size="lg"
 					loading={initiateConversationMutation.isPending}
 					fullWidth
+					{...testId("portal-initiate-next-button")}
 				>
 					<Trans id="participant.ready.to.begin.button.text">Next</Trans>
 				</Button>

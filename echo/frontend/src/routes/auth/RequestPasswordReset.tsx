@@ -4,6 +4,7 @@ import { Button, Container, Stack, TextInput, Title } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { useForm } from "react-hook-form";
 import { useRequestPasswordResetMutation } from "@/components/auth/hooks";
+import { testId } from "@/lib/testUtils";
 
 export const RequestPasswordResetRoute = () => {
 	useDocumentTitle(t`Request Password Reset | Dembrane`);
@@ -29,6 +30,7 @@ export const RequestPasswordResetRoute = () => {
 								size="lg"
 								label="Email"
 								{...register("email")}
+								{...testId("auth-password-reset-email-input")}
 								placeholder="Email"
 								required
 								type="email"
@@ -37,6 +39,7 @@ export const RequestPasswordResetRoute = () => {
 								size="lg"
 								type="submit"
 								loading={requestPasswordResetMutation.isPending}
+								{...testId("auth-password-reset-submit-button")}
 							>
 								<Trans>Submit</Trans>
 							</Button>
