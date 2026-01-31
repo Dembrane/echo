@@ -291,8 +291,18 @@ npx cypress run --spec "e2e/suites/01-login-logout.cy.js" --env version=staging 
 ### All Tests with HTML Report
 ```powershell
 .\run-viewport-tests.ps1   # Mobile, Tablet, Desktop viewports
-.\run-browser-tests.ps1    # Chrome, Firefox, Edge browsers
+.\run-browser-tests.ps1    # Chrome, Firefox, Edge, WebKit browsers
 ```
+
+### Safari (WebKit Experimental)
+```powershell
+npx cypress run --spec "e2e/suites/01-login-logout.cy.js" --env version=staging --browser webkit
+```
+
+Notes:
+- WebKit support in Cypress is experimental.
+- `cy.origin()` is not supported in WebKit; cross-origin flows will fail.
+- On Linux, install WebKit system dependencies with `npx playwright install-deps webkit`.
 
 ### Reports
 HTML reports are generated at: `cypress/reports/test-report.html`

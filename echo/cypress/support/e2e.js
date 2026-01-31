@@ -4,7 +4,40 @@
 import './commands'
 require('cypress-xpath')
 
+const AudioRecorderPolyfill = require('audio-recorder-polyfill');
+
 beforeEach(() => {
+    if (Cypress.browser && Cypress.browser.name === 'webkit') {
+        cy.on('window:before:load', (win) => {
+            if (win.MediaRecorder) {
+                return;
+            }
+
+            class CypressMediaRecorder extends AudioRecorderPolyfill {
+                constructor(stream, options = {}) {
+                    const normalizedOptions = { ...options };
+                    if (
+                        normalizedOptions.mimeType &&
+                        typeof AudioRecorderPolyfill.isTypeSupported === 'function' &&
+                        !AudioRecorderPolyfill.isTypeSupported(normalizedOptions.mimeType)
+                    ) {
+                        normalizedOptions.mimeType = 'audio/wav';
+                    }
+                    super(stream, normalizedOptions);
+                }
+            }
+
+            CypressMediaRecorder.isTypeSupported = (mimeType) => {
+                if (typeof AudioRecorderPolyfill.isTypeSupported === 'function') {
+                    return AudioRecorderPolyfill.isTypeSupported(mimeType);
+                }
+                return true;
+            };
+
+            win.MediaRecorder = CypressMediaRecorder;
+        });
+    }
+
     // Check for CLI viewport overrides first (--config viewportWidth=X,viewportHeight=Y)
     const cliWidth = Cypress.config('viewportWidth');
     const cliHeight = Cypress.config('viewportHeight');

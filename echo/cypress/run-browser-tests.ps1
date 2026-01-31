@@ -1,6 +1,6 @@
 # Run All Tests - Multiple Browsers with HTML Reports
 # Generates Mochawesome HTML reports for each browser
-# Browsers: Chrome, Firefox, Edge
+# Browsers: Chrome, Firefox, Edge, WebKit (Safari)
 
 $ErrorActionPreference = "Continue"
 
@@ -14,7 +14,7 @@ $viewportWidth = 1440
 $viewportHeight = 900
 
 # Browsers to test
-$browsers = @("chrome", "firefox", "edge")
+$browsers = @("chrome", "firefox", "edge", "webkit")
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host " CYPRESS MULTI-BROWSER TEST RUNNER" -ForegroundColor Cyan

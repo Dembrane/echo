@@ -1,6 +1,7 @@
 const { defineConfig } = require("cypress");
 
 module.exports = defineConfig({
+    experimentalWebKitSupport: true,
     e2e: {
         setupNodeEvents(on, config) {
             on('task', {
@@ -80,6 +81,7 @@ module.exports = defineConfig({
             return config;
         },
         defaultCommandTimeout: 10000,
+        fixturesFolder: 'fixtures',
         // viewportWidth and viewportHeight are set via CLI --config flag
         // Default fallbacks if not provided via CLI
         viewportWidth: process.env.CYPRESS_viewportWidth ? parseInt(process.env.CYPRESS_viewportWidth) : 1280,

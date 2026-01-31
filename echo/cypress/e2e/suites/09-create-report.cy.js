@@ -56,8 +56,8 @@ describe('Report Creation Flow', () => {
         clickUploadFilesButton();
 
         // 5. Wait 15 seconds for processing
-        cy.log('Step 5: Waiting 15 seconds for file processing');
-        cy.wait(15000);
+        cy.log('Step 5: Waiting 20 seconds for file processing');
+        cy.wait(20000);
 
         // 6. Close the upload modal
         cy.log('Step 6: Closing upload modal');

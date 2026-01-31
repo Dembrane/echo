@@ -66,9 +66,9 @@ describe('Publish Report Flow', () => {
         cy.log('Step 4: Clicking Upload Files button');
         clickUploadFilesButton();
 
-        // 5. Wait 15 seconds for processing
-        cy.log('Step 5: Waiting 15 seconds for file processing');
-        cy.wait(15000);
+        // 5. Wait 20 seconds for processing
+        cy.log('Step 5: Waiting 20 seconds for file processing');
+        cy.wait(20000);
 
         // 6. Close the upload modal
         cy.log('Step 6: Closing upload modal');
@@ -83,9 +83,9 @@ describe('Publish Report Flow', () => {
         cy.get('section[role="dialog"]').should('be.visible');
         cy.xpath("//button[contains(., 'Create Report')]").filter(':visible').click();
 
-        // 9. Wait 20 seconds for processing
-        cy.log('Step 9: Waiting 20 seconds for report processing');
-        cy.wait(20000);
+        // 9. Wait 30 seconds for processing
+        cy.log('Step 9: Waiting 30 seconds for report processing');
+        cy.wait(30000);
 
         // 10. Click on the Report button again to verify/publish
         cy.log('Step 10: Clicking Report button again to open report');
