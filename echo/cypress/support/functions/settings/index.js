@@ -2,17 +2,16 @@ export const openSettingsMenu = () => {
     cy.log('Opening Settings Menu');
     // Wait for stability (handling detached DOM / hydration re-render issues)
     cy.wait(2000);
-    // Using the robust selector found during login debugging
-    cy.xpath('//button[descendant::*[local-name()="svg" and contains(@class, "tabler-icon-settings")]]').click();
+    // Using data-testid for robust selection - filter visible for mobile/desktop duplicates
+    cy.get('[data-testid="header-settings-gear-button"]').filter(':visible').first().click();
     cy.wait(1000); // Wait for menu animation
 };
 
 export const changeLanguage = (langCode) => {
     cy.log('Changing language to:', langCode);
 
-    // The language selector is a native select inside the settings menu
-    // Selector: select.mantine-NativeSelect-input
-    cy.get('select.mantine-NativeSelect-input').should('be.visible').select(langCode);
+    // The language selector uses data-testid="header-language-picker"
+    cy.get('[data-testid="header-language-picker"]').filter(':visible').first().select(langCode);
 
     // Wait for page reload/navigation if it occurs
     cy.wait(2000);
@@ -26,7 +25,7 @@ export const verifyLanguage = (expectedLogoutText, expectedUrlLocale) => {
         cy.url().should('include', `/${expectedUrlLocale}/`);
     }
 
-    // 2. Verify Logout button text
+    // 2. Verify Logout button is visible using data-testid
     // The menu should be open to check this.
     cy.get('body').then(($body) => {
         // If the dropdown isn't visible, re-open the menu
@@ -34,7 +33,9 @@ export const verifyLanguage = (expectedLogoutText, expectedUrlLocale) => {
             openSettingsMenu();
         }
 
-        // Check Logout button text, robustly finding the div inside the button
-        cy.xpath(`//button[descendant::div[contains(text(), "${expectedLogoutText}")]]`).should('be.visible');
+        // Check Logout button text using data-testid - filter visible for mobile/desktop duplicates
+        cy.get('[data-testid="header-logout-menu-item"]').filter(':visible').first()
+            .contains(expectedLogoutText);
     });
 };
+

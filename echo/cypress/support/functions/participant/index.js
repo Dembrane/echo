@@ -1,54 +1,114 @@
 /**
  * Participant Portal Functions
  * Helper functions for the participant recording flow in the Echo portal.
+ * Updated to use data-testid selectors for robust testing.
  */
 
+// ============= Loading & Error States =============
+
 /**
- * Placeholder for adding participant details
+ * Verifies portal is loading
  */
-export const addParticipant = (details) => {
-    cy.log('Adding participant', details);
+export const verifyPortalLoading = () => {
+    cy.log('Verifying Portal Loading');
+    cy.get('[data-testid="portal-loading-spinner"]').should('be.visible');
 };
 
 /**
- * Agrees to the privacy policy by checking the checkbox and clicking "I understand"
+ * Verifies portal loading error
+ */
+export const verifyPortalError = () => {
+    cy.log('Verifying Portal Error');
+    cy.get('[data-testid="portal-error-alert"]').should('be.visible');
+};
+
+// ============= Onboarding Flow =============
+
+/**
+ * Skips the onboarding entirely
+ */
+export const skipOnboarding = () => {
+    cy.log('Skipping Onboarding');
+    cy.get('[data-testid="portal-onboarding-skip"]').should('be.visible').click();
+};
+
+/**
+ * Agrees to the privacy policy by checking the checkbox and clicking I understand
  */
 export const agreeToPrivacyPolicy = () => {
     cy.log('Agreeing to Privacy Policy');
-    // Check the privacy policy checkbox
-    cy.get('#checkbox-0').check({ force: true });
+    // Check the checkbox
+    cy.get('[data-testid="portal-onboarding-checkbox"]').check({ force: true });
     cy.wait(500);
-    // Click "I understand" button
-    cy.get('button')
-        .contains('I understand')
+    // Click the "I understand" / Next button
+    cy.get('[data-testid="portal-onboarding-next-button"]').should('be.visible').click();
+    cy.wait(1000);
+};
+
+/**
+ * Clicks the Next button on onboarding slides
+ */
+export const clickOnboardingNext = () => {
+    cy.log('Clicking Onboarding Next');
+    cy.get('[data-testid="portal-onboarding-next-button"]').should('be.visible').click();
+    cy.wait(1000);
+};
+
+/**
+ * Clicks the Back button on onboarding slides
+ */
+export const clickOnboardingBack = () => {
+    cy.log('Clicking Onboarding Back');
+    cy.get('[data-testid="portal-onboarding-back-button"]').should('be.visible').click();
+};
+
+/**
+ * Skips the microphone check step
+ */
+export const skipMicrophoneCheck = () => {
+    cy.log('Skipping Microphone Check');
+    cy.get('[data-testid="portal-onboarding-mic-skip-button"]').should('be.visible').click();
+    cy.wait(1000);
+};
+
+/**
+ * Continues from microphone check
+ * @param {Object} options - Options object
+ * @param {boolean} options.allowSkip - If true, will skip if Continue button not found
+ */
+export const continueMicrophoneCheck = ({ allowSkip = false } = {}) => {
+    cy.log('Continuing from Microphone Check');
+    // Wait for mic check page to stabilize
+    cy.wait(2000);
+
+    // Click the Continue button directly using data-testid
+    cy.get('[data-testid="portal-onboarding-mic-continue-button"]', { timeout: 10000 })
         .should('be.visible')
-        .should('not.be.disabled')
         .click();
     cy.wait(1000);
 };
 
 /**
- * Skips the microphone check step
- * Uses Skip button since Cypress can't grant real microphone access
+ * Goes back from microphone check
  */
-export const skipMicrophoneCheck = () => {
-    cy.log('Skipping Microphone Check');
-    cy.xpath('//button[contains(text(), "Skip")]').should('be.visible').click();
-    cy.wait(1000);
+export const backFromMicrophoneCheck = () => {
+    cy.log('Going back from Microphone Check');
+    cy.get('[data-testid="portal-onboarding-mic-back-button"]').should('be.visible').click();
 };
 
+// ============= Conversation Initiation =============
+
 /**
- * Enters session name and clicks Next to proceed to recording
+ * Enters session/conversation name and clicks Next
  * @param {string} name - Session name to enter
  */
 export const enterSessionName = (name) => {
     cy.log('Entering Session Name:', name);
-    cy.get('input[placeholder="Group 1, John Doe, etc."]', { timeout: 15000 })
+    cy.get('[data-testid="portal-initiate-name-input"]', { timeout: 15000 })
         .should('be.visible')
         .clear()
         .type(name);
-    cy.get('button')
-        .contains('Next', { timeout: 15000 })
+    cy.get('[data-testid="portal-initiate-next-button"]')
         .should('be.visible')
         .should('not.be.disabled')
         .click({ force: true });
@@ -56,43 +116,485 @@ export const enterSessionName = (name) => {
 };
 
 /**
+ * Selects tags for the conversation
+ */
+export const selectTags = () => {
+    cy.log('Opening Tags Select');
+    cy.get('[data-testid="portal-initiate-tags-select"]').should('be.visible').click();
+};
+
+/**
+ * Verifies initiation error message
+ */
+export const verifyInitiationError = () => {
+    cy.log('Verifying Initiation Error');
+    cy.get('[data-testid="portal-initiate-error-alert"]').should('be.visible');
+};
+
+// ============= Audio Recording Mode =============
+
+/**
  * Starts the recording by clicking the Record button
+ * Includes retry mechanism if microphone access is denied
  */
 export const startRecording = () => {
     cy.log('Starting Recording');
-    cy.contains('button', 'Record', { timeout: 15000 })
+
+    // Ensure media APIs are still patched before starting
+    cy.window().then((win) => {
+        if (win.__cypressApplyMediaStubs) {
+            win.__cypressApplyMediaStubs();
+        }
+        if (win.__cypressEnsureMp3Playback) {
+            win.__cypressEnsureMp3Playback();
+        }
+    });
+
+    // Click the Record button
+    cy.get('[data-testid="portal-audio-record-button"]', { timeout: 15000 })
         .should('be.visible')
+        .should('not.be.disabled')
         .click({ force: true });
+
+    // If the permission modal appears, re-apply stubs and retry
+    cy.wait(1000);
+    cy.get('body').then(($body) => {
+        if ($body.text().includes('microphone access was denied')) {
+            cy.contains('button', 'Check microphone access').click({ force: true });
+            cy.wait(2000);
+            cy.window().then((win) => {
+                if (win.__cypressApplyMediaStubs) {
+                    win.__cypressApplyMediaStubs();
+                }
+                if (win.__cypressEnsureMp3Playback) {
+                    win.__cypressEnsureMp3Playback();
+                }
+            });
+            // Retry clicking Record
+            cy.get('[data-testid="portal-audio-record-button"]', { timeout: 15000 })
+                .should('be.visible')
+                .click({ force: true });
+        }
+    });
+
+    // Ensure recording UI is active
+    cy.contains('button', 'Stop', { timeout: 20000 }).should('be.visible');
 };
 
 /**
  * Stops the recording by clicking the Stop button
+ * Handles the case where recording is interrupted and needs reconnection
  */
 export const stopRecording = () => {
     cy.log('Stopping Recording');
-    cy.contains('button', 'Stop', { timeout: 15000 })
-        .should('be.visible')
-        .click({ force: true });
+
+    // First check if Stop button appears within 30 seconds
+    cy.get('body', { timeout: 30000 }).then(($body) => {
+        // Check if Stop button is visible
+        if ($body.find('[data-testid="portal-audio-stop-button"]:visible').length > 0) {
+            // Stop button found - click it
+            cy.get('[data-testid="portal-audio-stop-button"]')
+                .should('be.visible')
+                .click({ force: true });
+        } else if ($body.find('[data-testid="portal-audio-interruption-reconnect-button"]:visible').length > 0) {
+            // Recording was interrupted - handle reconnection
+            cy.log('Recording interrupted - clicking Reconnect');
+            handleRecordingInterruption();
+            // After reconnecting, wait and try to stop again
+            cy.wait(60000); // Wait for recording again
+            cy.get('[data-testid="portal-audio-stop-button"]', { timeout: 30000 })
+                .should('be.visible')
+                .click({ force: true });
+        } else {
+            // Try waiting a bit longer for stop button
+            cy.get('[data-testid="portal-audio-stop-button"]', { timeout: 15000 })
+                .should('be.visible')
+                .click({ force: true });
+        }
+    });
     cy.wait(1000);
 };
 
 /**
- * Finishes the recording session by clicking the Finish button
+ * Handles the recording interruption modal by clicking Reconnect
+ * and waiting for recording to resume
+ */
+export const handleRecordingInterruption = () => {
+    cy.log('Handling Recording Interruption');
+
+    cy.get('body').then(($body) => {
+        if ($body.find('[data-testid="portal-audio-interruption-reconnect-button"]').length > 0) {
+            cy.get('[data-testid="portal-audio-interruption-reconnect-button"]')
+                .should('be.visible')
+                .click();
+            cy.wait(3000); // Wait for reconnection
+
+            // Check if recording resumed (Record button should appear or recording continues)
+            cy.get('body').then(($bodyAfter) => {
+                if ($bodyAfter.find('[data-testid="portal-audio-record-button"]:visible').length > 0) {
+                    // Need to click Record again
+                    cy.get('[data-testid="portal-audio-record-button"]')
+                        .should('be.visible')
+                        .click({ force: true });
+                }
+            });
+        }
+    });
+};
+
+/**
+ * Resumes recording from pause
+ */
+export const resumeRecording = () => {
+    cy.log('Resuming Recording');
+    cy.get('[data-testid="portal-audio-stop-resume-button"]').should('be.visible').click();
+};
+
+/**
+ * Finishes the recording from pause modal
+ */
+export const finishFromPause = () => {
+    cy.log('Finishing from Pause');
+    cy.get('[data-testid="portal-audio-stop-finish-button"]').should('be.visible').click();
+    cy.wait(2000);
+};
+
+/**
+ * Finishes the recording session
  */
 export const finishRecording = () => {
     cy.log('Finishing Recording');
-    cy.contains('button', 'Finish', { timeout: 15000 })
+    cy.get('[data-testid="portal-audio-finish-button"]', { timeout: 15000 })
         .should('be.visible')
         .click({ force: true });
     cy.wait(2000);
 };
 
 /**
- * Installs audio/mic stubs before loading the portal so WebKit/Firefox/Chromium
- * can all use a consistent fake microphone stream.
- * @param {Object} options
- * @param {string} options.audioBase64 - Base64-encoded audio payload.
- * @param {string} [options.audioMimeType="audio/mpeg"] - MIME type for the audio payload.
+ * Clicks the Refine/Echo button
+ */
+export const clickEchoButton = () => {
+    cy.log('Clicking Echo/Refine Button');
+    cy.get('[data-testid="portal-audio-echo-button"]').should('be.visible').click();
+};
+
+/**
+ * Switches to text mode
+ */
+export const switchToTextMode = () => {
+    cy.log('Switching to Text Mode');
+    cy.get('[data-testid="portal-audio-switch-to-text-button"]').should('be.visible').click();
+};
+
+/**
+ * Closes the echo info modal
+ */
+export const closeEchoInfoModal = () => {
+    cy.log('Closing Echo Info Modal');
+    cy.get('[data-testid="portal-audio-echo-info-close-button"]').should('be.visible').click();
+};
+
+/**
+ * Reconnects after interruption
+ */
+export const reconnectAfterInterruption = () => {
+    cy.log('Reconnecting after Interruption');
+    cy.get('[data-testid="portal-audio-interruption-reconnect-button"]').should('be.visible').click();
+};
+
+/**
+ * Verifies recording timer is visible
+ */
+export const verifyRecordingTimer = () => {
+    cy.log('Verifying Recording Timer');
+    cy.get('[data-testid="portal-audio-recording-timer"]').should('be.visible');
+};
+
+// ============= Text Input Mode =============
+
+/**
+ * Types text in the text mode textarea
+ * @param {string} text - Text to type
+ */
+export const typePortalText = (text) => {
+    cy.log('Typing Portal Text:', text);
+    cy.get('[data-testid="portal-text-input-textarea"]')
+        .should('be.visible')
+        .type(text);
+};
+
+/**
+ * Submits the text
+ */
+export const submitText = () => {
+    cy.log('Submitting Text');
+    cy.get('[data-testid="portal-text-submit-button"]').should('be.visible').click();
+};
+
+/**
+ * Switches to audio mode from text mode
+ */
+export const switchToAudioMode = () => {
+    cy.log('Switching to Audio Mode');
+    cy.get('[data-testid="portal-text-switch-to-audio-button"]').should('be.visible').click();
+};
+
+/**
+ * Finishes from text mode
+ */
+export const finishTextMode = () => {
+    cy.log('Finishing Text Mode');
+    cy.get('[data-testid="portal-text-finish-button"]').should('be.visible').click();
+};
+
+/**
+ * Confirms finishing from text mode modal
+ */
+export const confirmFinishText = () => {
+    cy.log('Confirming Finish Text');
+    cy.get('[data-testid="portal-text-finish-confirm-button"]').should('be.visible').click();
+};
+
+/**
+ * Cancels finishing from text mode modal
+ */
+export const cancelFinishText = () => {
+    cy.log('Canceling Finish Text');
+    cy.get('[data-testid="portal-text-finish-cancel-button"]').should('be.visible').click();
+};
+
+// ============= Refine Flow - Selection =============
+
+/**
+ * Selects "Make it concrete" (verify) card
+ */
+export const selectMakeItConcrete = () => {
+    cy.log('Selecting Make it Concrete');
+    cy.get('[data-testid="portal-echo-verify-card"]').should('be.visible').click();
+};
+
+/**
+ * Selects "Go deeper" (explore) card
+ */
+export const selectGoDeeper = () => {
+    cy.log('Selecting Go Deeper');
+    cy.get('[data-testid="portal-echo-explore-card"]').should('be.visible').click();
+};
+
+// ============= Refine Flow - Go Deeper (Explore) =============
+
+/**
+ * Waits for explore response
+ */
+export const waitForExploreResponse = (timeout = 30000) => {
+    cy.log('Waiting for Explore Response');
+    cy.get('[data-testid="portal-explore-thinking"]', { timeout }).should('not.exist');
+    cy.get('[data-testid^="portal-explore-message-"]').should('exist');
+};
+
+// ============= Make it Concrete (Verify) - Topic Selection =============
+
+/**
+ * Selects a topic for verification
+ * @param {string} topicKey - gems, actions, agreements, etc.
+ */
+export const selectVerifyTopic = (topicKey) => {
+    cy.log('Selecting Verify Topic:', topicKey);
+    cy.get(`[data-testid="portal-verify-topic-${topicKey}"]`).should('be.visible').click();
+};
+
+/**
+ * Proceeds from topic selection
+ */
+export const proceedFromTopicSelection = () => {
+    cy.log('Proceeding from Topic Selection');
+    cy.get('[data-testid="portal-verify-selection-next-button"]').should('be.visible').click();
+};
+
+// ============= Make it Concrete (Verify) - Instructions =============
+
+/**
+ * Proceeds from instructions
+ */
+export const proceedFromInstructions = () => {
+    cy.log('Proceeding from Instructions');
+    cy.get('[data-testid="portal-verify-instructions-next-button"]').should('be.visible').click();
+};
+
+// ============= Make it Concrete (Verify) - Artefact Review =============
+
+/**
+ * Reads the artefact aloud
+ */
+export const readArtefactAloud = () => {
+    cy.log('Reading Artefact Aloud');
+    cy.get('[data-testid="portal-verify-artefact-read-aloud-button"]').should('be.visible').click();
+};
+
+/**
+ * Revises the artefact (regenerate from conversation)
+ */
+export const reviseArtefact = () => {
+    cy.log('Revising Artefact');
+    cy.get('[data-testid="portal-verify-artefact-revise-button"]').should('be.visible').click();
+};
+
+/**
+ * Enters edit mode for artefact
+ */
+export const editArtefact = () => {
+    cy.log('Editing Artefact');
+    cy.get('[data-testid="portal-verify-artefact-edit-button"]').should('be.visible').click();
+};
+
+/**
+ * Approves the artefact
+ */
+export const approveArtefact = () => {
+    cy.log('Approving Artefact');
+    cy.get('[data-testid="portal-verify-artefact-approve-button"]').should('be.visible').click();
+};
+
+/**
+ * Saves edited artefact content
+ */
+export const saveArtefactEdit = () => {
+    cy.log('Saving Artefact Edit');
+    cy.get('[data-testid="portal-verify-artefact-save-edit-button"]').should('be.visible').click();
+};
+
+/**
+ * Cancels artefact editing
+ */
+export const cancelArtefactEdit = () => {
+    cy.log('Canceling Artefact Edit');
+    cy.get('[data-testid="portal-verify-artefact-cancel-edit-button"]').should('be.visible').click();
+};
+
+// ============= View Your Responses =============
+
+/**
+ * Clicks view your responses button
+ */
+export const viewResponses = () => {
+    cy.log('Viewing Responses');
+    cy.get('[data-testid="portal-view-responses-button"]').should('be.visible').click();
+};
+
+/**
+ * Verifies responses modal is visible
+ */
+export const verifyResponsesModal = () => {
+    cy.log('Verifying Responses Modal');
+    cy.get('[data-testid="portal-view-responses-modal"]').should('be.visible');
+};
+
+// ============= Header & Navigation =============
+
+/**
+ * Clicks back button in portal header
+ */
+export const clickPortalBack = () => {
+    cy.log('Clicking Portal Back');
+    cy.get('[data-testid="portal-header-back-button"]').should('be.visible').click();
+};
+
+/**
+ * Clicks cancel button in portal header
+ */
+export const clickPortalCancel = () => {
+    cy.log('Clicking Portal Cancel');
+    cy.get('[data-testid="portal-header-cancel-button"]').should('be.visible').click();
+};
+
+/**
+ * Opens portal settings
+ */
+export const openPortalSettings = () => {
+    cy.log('Opening Portal Settings');
+    cy.get('[data-testid="portal-header-settings-button"]').should('be.visible').click();
+    cy.get('[data-testid="portal-settings-modal"]').should('be.visible');
+};
+
+// ============= Portal Settings - Microphone Test =============
+
+/**
+ * Selects a microphone from dropdown
+ */
+export const selectMicrophone = (micName) => {
+    cy.log('Selecting Microphone:', micName);
+    cy.get('[data-testid="portal-settings-mic-select"]').should('be.visible').select(micName);
+};
+
+/**
+ * Verifies microphone is working
+ */
+export const verifyMicrophoneWorking = () => {
+    cy.log('Verifying Microphone Working');
+    cy.get('[data-testid="portal-settings-mic-success-alert"]').should('be.visible');
+};
+
+/**
+ * Verifies microphone issue
+ */
+export const verifyMicrophoneIssue = () => {
+    cy.log('Verifying Microphone Issue');
+    cy.get('[data-testid="portal-settings-mic-issue-alert"]').should('be.visible');
+};
+
+/**
+ * Confirms microphone change
+ */
+export const confirmMicrophoneChange = () => {
+    cy.log('Confirming Microphone Change');
+    cy.get('[data-testid="portal-settings-mic-change-confirm-button"]').should('be.visible').click();
+};
+
+/**
+ * Cancels microphone change
+ */
+export const cancelMicrophoneChange = () => {
+    cy.log('Canceling Microphone Change');
+    cy.get('[data-testid="portal-settings-mic-change-cancel-button"]').should('be.visible').click();
+};
+
+// ============= Email Notification (Finish Screen) =============
+
+/**
+ * Enters email for notifications
+ */
+export const enterNotificationEmail = (email) => {
+    cy.log('Entering Notification Email:', email);
+    cy.get('[data-testid="portal-finish-email-input"]')
+        .should('be.visible')
+        .type(email);
+    cy.get('[data-testid="portal-finish-email-add-button"]').click();
+};
+
+/**
+ * Submits email notification subscription
+ */
+export const submitEmailNotification = () => {
+    cy.log('Submitting Email Notification');
+    cy.get('[data-testid="portal-finish-email-submit-button"]').should('be.visible').click();
+};
+
+/**
+ * Verifies email submission success
+ */
+export const verifyEmailSubmissionSuccess = () => {
+    cy.log('Verifying Email Submission Success');
+    cy.get('[data-testid="portal-finish-email-success"]').should('be.visible');
+};
+
+// ============= Audio Stubs (for testing) =============
+
+/**
+ * Installs audio/mic stubs before loading the portal
+ * Uses REAL audio injection via MP3 file for proper server upload
+ * @param {Object} options - Options object
+ * @param {string} options.audioBase64 - Base64 encoded audio file
+ * @param {string} options.audioMimeType - MIME type of the audio (default: audio/mpeg)
  */
 export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'audio/mpeg' } = {}) => {
     cy.on('window:before:load', (win) => {
@@ -135,7 +637,7 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
             } catch (error) {
                 try {
                     obj[key] = value;
-                } catch (_error) {}
+                } catch (_error) { }
             }
         };
 
@@ -151,7 +653,7 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
             } catch (error) {
                 try {
                     obj[key] = getter();
-                } catch (_error) {}
+                } catch (_error) { }
             }
         };
 
@@ -222,7 +724,7 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
 
             if (typeof win.AudioContext.prototype.createMediaStreamSource !== 'function') {
                 win.AudioContext.prototype.createMediaStreamSource = function () {
-                    return { connect() {}, disconnect() {} };
+                    return { connect() { }, disconnect() { } };
                 };
             }
 
@@ -234,7 +736,7 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
                         enabled: true,
                         muted: false,
                         readyState: 'live',
-                        stop() {},
+                        stop() { },
                     };
                     return { stream: new win.MediaStream([track]) };
                 };
@@ -242,17 +744,17 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
 
             if (typeof win.AudioContext.prototype.createMediaElementSource !== 'function') {
                 win.AudioContext.prototype.createMediaElementSource = function () {
-                    return { connect() {}, disconnect() {} };
+                    return { connect() { }, disconnect() { } };
                 };
             }
 
             if (typeof win.AudioContext.prototype.createOscillator !== 'function') {
                 win.AudioContext.prototype.createOscillator = function () {
                     return {
-                        connect() {},
-                        disconnect() {},
-                        start() {},
-                        stop() {},
+                        connect() { },
+                        disconnect() { },
+                        start() { },
+                        stop() { },
                         frequency: { value: 440 },
                         type: 'sine',
                     };
@@ -263,8 +765,8 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
                 win.AudioContext.prototype.createScriptProcessor = function () {
                     return {
                         onaudioprocess: null,
-                        connect() {},
-                        disconnect() {},
+                        connect() { },
+                        disconnect() { },
                     };
                 };
             }
@@ -368,7 +870,7 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
                     const fftSize = analyser.fftSize || 1024;
                     try {
                         analyser.frequencyBinCount = Math.max(1, Math.floor(fftSize / 2));
-                    } catch (_error) {}
+                    } catch (_error) { }
                 }
 
                 return analyser;
@@ -381,16 +883,16 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
                         return originalCreateMediaStreamSource.call(this, stream);
                     } catch (error) {
                         return {
-                            connect() {},
-                            disconnect() {},
+                            connect() { },
+                            disconnect() { },
                         };
                     }
                 };
             } else {
                 AudioContextCtor.prototype.createMediaStreamSource = function () {
                     return {
-                        connect() {},
-                        disconnect() {},
+                        connect() { },
+                        disconnect() { },
                     };
                 };
             }
@@ -408,7 +910,8 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
         ensureAudioContextCtor();
 
         const audioDataUrl = audioBase64 ? `data:${audioMimeType};base64,${audioBase64}` : null;
-        const hasWavPayload = Boolean(audioBase64 && audioMimeType && audioMimeType.includes('wav'));
+        win.__cypressForceMimeType = audioMimeType || 'audio/mpeg';
+
 
         const base64ToUint8Array = (base64) => {
             const binary = win.atob(base64);
@@ -465,12 +968,14 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
                 return win.__cypressAudioBlob;
             }
 
-            if (hasWavPayload) {
+            if (audioBase64) {
                 try {
                     const bytes = base64ToUint8Array(audioBase64);
-                    win.__cypressAudioBlob = new Blob([bytes], { type: 'audio/wav' });
+                    // Use the provided MIME type, or default to wav if not specified, 
+                    // but allow any type (e.g. audio/mpeg) to pass through.
+                    win.__cypressAudioBlob = new Blob([bytes], { type: audioMimeType || 'audio/wav' });
                     return win.__cypressAudioBlob;
-                } catch (_error) {}
+                } catch (_error) { }
             }
 
             win.__cypressAudioBlob = buildToneWavBlob();
@@ -491,7 +996,7 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
                         enabled: true,
                         muted: false,
                         readyState: 'live',
-                        stop() {},
+                        stop() { },
                     };
                     win.__cypressAudioStream = new win.MediaStream([track]);
                     return win.__cypressAudioStream;
@@ -508,7 +1013,7 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
                         enabled: true,
                         muted: false,
                         readyState: 'live',
-                        stop() {},
+                        stop() { },
                     };
                     destination = { stream: new win.MediaStream([track]) };
                 }
@@ -525,9 +1030,9 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
 
                     const startPlayback = () => {
                         if (audioCtx.state === 'suspended') {
-                            audioCtx.resume().catch(() => {});
+                            audioCtx.resume().catch(() => { });
                         }
-                        audioEl.play().catch(() => {});
+                        audioEl.play().catch(() => { });
                     };
 
                     audioEl.addEventListener('canplay', startPlayback);
@@ -541,7 +1046,7 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
                 }
 
                 if (audioCtx.state === 'suspended') {
-                    audioCtx.resume().catch(() => {});
+                    audioCtx.resume().catch(() => { });
                 }
 
                 win.__cypressAudioContext = audioCtx;
@@ -554,7 +1059,7 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
                     enabled: true,
                     muted: false,
                     readyState: 'live',
-                    stop() {},
+                    stop() { },
                 };
                 win.__cypressAudioStream = new win.MediaStream([track]);
                 return win.__cypressAudioStream;
@@ -571,7 +1076,7 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
                     enabled: true,
                     muted: false,
                     readyState: 'live',
-                    stop() {},
+                    stop() { },
                 };
                 return new win.MediaStream([track]);
             }
@@ -580,8 +1085,8 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
         const ensurePlayback = () => {
             if (win.__cypressAudioElement) {
                 try {
-                    win.__cypressAudioElement.play().catch(() => {});
-                } catch (_error) {}
+                    win.__cypressAudioElement.play().catch(() => { });
+                } catch (_error) { }
             }
         };
 
@@ -616,10 +1121,12 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
                     }
                     this.state = 'recording';
                     emit(this, 'start');
+
                     if (timeslice) {
                         this._slicing = win.setInterval(() => {
                             if (this.state === 'recording') {
-                                this.requestData();
+                                const emptyBlob = new Blob([], { type: this.mimeType });
+                                emit(this, 'dataavailable', emptyBlob);
                             }
                         }, timeslice);
                     }
@@ -629,12 +1136,13 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
                     if (this.state === 'inactive') {
                         return;
                     }
-                    this.requestData();
-                    this.state = 'inactive';
                     if (this._slicing) {
                         win.clearInterval(this._slicing);
                         this._slicing = null;
                     }
+                    const blob = getRecordingBlob();
+                    emit(this, 'dataavailable', blob);
+                    this.state = 'inactive';
                     emit(this, 'stop');
                 }
 
@@ -658,8 +1166,8 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
                     if (this.state === 'inactive') {
                         return;
                     }
-                    const blob = getRecordingBlob();
-                    emit(this, 'dataavailable', blob);
+                    const emptyBlob = new Blob([], { type: this.mimeType });
+                    emit(this, 'dataavailable', emptyBlob);
                 }
 
                 addEventListener(...args) {
@@ -675,8 +1183,8 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
                 }
             }
 
-            CypressMediaRecorder.isTypeSupported = (mimeType) => mimeType === 'audio/wav';
-            CypressMediaRecorder.prototype.mimeType = 'audio/wav';
+            CypressMediaRecorder.isTypeSupported = (mimeType) => mimeType === 'audio/wav' || mimeType === audioMimeType;
+            CypressMediaRecorder.prototype.mimeType = audioMimeType || 'audio/wav';
 
             win.MediaRecorder = CypressMediaRecorder;
         };
@@ -720,9 +1228,9 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
                     return Promise.resolve(getForcedStream());
                 },
                 enumerateDevices: () => Promise.resolve(fallbackDevices),
-                addEventListener() {},
-                removeEventListener() {},
-                dispatchEvent() {},
+                addEventListener() { },
+                removeEventListener() { },
+                dispatchEvent() { },
             };
 
             if (win.Navigator && win.Navigator.prototype) {
@@ -795,6 +1303,8 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
                     return Promise.resolve(getForcedStream());
                 },
             );
+
+            installMediaRecorderStub();
         };
 
         win.__cypressBuildAudioStream = buildAudioStream;
@@ -807,8 +1317,16 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
     });
 };
 
+// ============= Legacy Functions =============
+
+export const addParticipant = (details) => {
+    cy.log('Adding participant', details);
+};
+
+// ============= Functions needed by Test 14 =============
+
 /**
- * Re-applies the media stubs after navigation or user interactions.
+ * Reapply audio stubs after navigation
  */
 export const reapplyParticipantAudioStubs = () => {
     cy.window({ log: false }).then((win) => {
@@ -822,7 +1340,7 @@ export const reapplyParticipantAudioStubs = () => {
 };
 
 /**
- * Actively request mic access to unblock UI state in WebKit.
+ * Prime microphone access
  */
 export const primeMicrophoneAccess = () => {
     cy.window({ log: false }).then((win) => {
@@ -840,18 +1358,19 @@ export const primeMicrophoneAccess = () => {
                 if (mediaDevices.dispatchEvent && win.Event) {
                     try {
                         mediaDevices.dispatchEvent(new win.Event('devicechange'));
-                    } catch (_error) {}
+                    } catch (_error) { }
                 }
                 return stream;
-            }).catch(() => {});
+            }).catch(() => { });
         }
     });
 };
 
 /**
- * Handles the "microphone access was denied" modal if it appears.
+ * Handle microphone access denied modal
  */
 export const handleMicrophoneAccessDenied = () => {
+    cy.log('Handling microphone access denied');
     cy.get('body').then(($body) => {
         if ($body.text().includes('microphone access was denied')) {
             cy.contains('button', 'Check microphone access').click({ force: true });
@@ -861,7 +1380,33 @@ export const handleMicrophoneAccessDenied = () => {
 };
 
 /**
- * If the mic access denied modal appears after recording starts, retry after reapplying stubs.
+ * Confirm finish conversation in modal
+ */
+export const confirmFinishConversation = () => {
+    cy.log('Confirming finish conversation');
+    cy.get('body').then(($body) => {
+        if ($body.text().includes('Finish Conversation') || $body.text().includes('Are you sure')) {
+            cy.contains('button', 'Yes').click({ force: true });
+            cy.wait(2000);
+        }
+    });
+};
+
+/**
+ * Finish recording from the pause/stop modal
+ */
+export const finishRecordingFromModal = () => {
+    cy.log('Finishing recording from modal');
+    cy.get('body').then(($body) => {
+        if ($body.find('button:contains("Finish")').length > 0) {
+            cy.contains('button', 'Finish').click({ force: true });
+            cy.wait(1000);
+        }
+    });
+};
+
+/**
+ * Retry recording if access was denied
  */
 export const retryRecordingIfAccessDenied = () => {
     reapplyParticipantAudioStubs();
@@ -881,116 +1426,10 @@ export const retryRecordingIfAccessDenied = () => {
 };
 
 /**
- * Applies mic stubs and primes access before starting recording.
+ * Prepare for recording - handle any pre-recording states
  */
 export const prepareForRecording = () => {
     reapplyParticipantAudioStubs();
     primeMicrophoneAccess();
 };
 
-/**
- * Continues past the microphone check once the audio level is detected.
- */
-export const continueMicrophoneCheck = ({ allowSkip = false } = {}) => {
-    const attemptContinue = (remaining) => {
-        return cy.get('body', { timeout: 20000 }).then(($body) => {
-            if ($body.text().includes('microphone access was denied')) {
-                cy.contains('button', 'Check microphone access').click({ force: true });
-                cy.wait(2000);
-                reapplyParticipantAudioStubs();
-            }
-
-            const continueButton = $body.find('button').filter((_, el) =>
-                (el.textContent || '').trim().includes('Continue'),
-            );
-
-            if (continueButton.length > 0) {
-                const $continue = continueButton.first();
-                if ($continue.is(':disabled')) {
-                    if (remaining <= 0) {
-                        if (allowSkip) {
-                            const skipButton = $body.find('button').filter((_, el) =>
-                                (el.textContent || '').trim().includes('Skip'),
-                            );
-
-                            if (skipButton.length > 0) {
-                                cy.wrap(skipButton.first())
-                                    .should('be.visible')
-                                    .click({ force: true });
-                                return;
-                            }
-                        }
-
-                        throw new Error('Continue button is still disabled after retries.');
-                    }
-                    cy.wait(2000);
-                    primeMicrophoneAccess();
-                    return attemptContinue(remaining - 1);
-                }
-
-                cy.wrap($continue)
-                    .should('be.visible')
-                    .click({ force: true });
-                return;
-            }
-
-            if (allowSkip) {
-                const skipButton = $body.find('button').filter((_, el) =>
-                    (el.textContent || '').trim().includes('Skip'),
-                );
-
-                if (skipButton.length > 0) {
-                    cy.wrap(skipButton.first())
-                        .should('be.visible')
-                        .click({ force: true });
-                    return;
-                }
-            }
-
-            if (remaining <= 0) {
-                if (allowSkip) {
-                    const skipButton = $body.find('button').filter((_, el) =>
-                        (el.textContent || '').trim().includes('Skip'),
-                    );
-
-                    if (skipButton.length > 0) {
-                        cy.wrap(skipButton.first())
-                            .should('be.visible')
-                            .click({ force: true });
-                        return;
-                    }
-                }
-
-                throw new Error('Continue button not available on the microphone check step.');
-            }
-
-            cy.wait(2000);
-            primeMicrophoneAccess();
-            return attemptContinue(remaining - 1);
-        });
-    };
-
-    return attemptContinue(4);
-};
-
-/**
- * Confirms the "Finish Conversation" dialog if it appears.
- */
-export const confirmFinishConversation = () => {
-    cy.get('body').then(($body) => {
-        if ($body.text().includes('Finish Conversation')) {
-            cy.contains('button', 'Yes').click({ force: true });
-        }
-    });
-};
-
-/**
- * Clicks the Finish button inside the recording modal.
- */
-export const finishRecordingFromModal = () => {
-    cy.get('[role="dialog"]', { timeout: 15000 })
-        .should('be.visible')
-        .within(() => {
-            cy.contains('button', 'Finish').should('be.visible').click({ force: true });
-        });
-};

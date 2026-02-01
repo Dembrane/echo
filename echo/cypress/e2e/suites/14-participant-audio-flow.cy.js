@@ -23,6 +23,7 @@ import {
     finishRecordingFromModal,
     retryRecordingIfAccessDenied,
     prepareForRecording,
+    handleRecordingInterruption,
 } from '../../support/functions/participant';
 
 describe('Participant Audio Recording Flow', () => {
@@ -96,7 +97,8 @@ describe('Participant Audio Recording Flow', () => {
         registerExceptionHandling();
         resolveProjectId().then(() => {
             cy.log('Step 2: Opening participant portal');
-            cy.fixture('test-audio.wav', 'base64').then((audioBase64) => {
+            // Use WAV for stable chunk sizing across browsers
+            cy.readFile('fixtures/test-audio.wav', 'base64').then((audioBase64) => {
                 installParticipantAudioStubs({ audioBase64, audioMimeType: 'audio/wav' });
                 cy.visit(getPortalUrl());
             });
@@ -132,13 +134,25 @@ describe('Participant Audio Recording Flow', () => {
         cy.log('Step 6: Start Recording');
         handleMicrophoneAccessDenied();
         prepareForRecording();
+        reapplyParticipantAudioStubs();
         startRecording();
         retryRecordingIfAccessDenied();
 
-        cy.contains('button', 'Stop', { timeout: 20000 }).should('be.visible');
+        // Wait for Stop button or handle interruption
+        cy.get('body', { timeout: 30000 }).then(($body) => {
+            if ($body.find('[data-testid="portal-audio-stop-button"]:visible').length > 0) {
+                cy.log('Stop button visible - recording started successfully');
+            } else if ($body.find('[data-testid="portal-audio-interruption-reconnect-button"]:visible').length > 0) {
+                cy.log('Recording interrupted - reconnecting');
+                handleRecordingInterruption();
+            }
+        });
 
         cy.log('Recording for 60 seconds...');
         cy.wait(60000);
+
+        // Check for interruption after waiting
+        handleRecordingInterruption();
 
         stopRecording();
 

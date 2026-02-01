@@ -1,36 +1,91 @@
 /**
- * Ask Feature Functions
+ * Chat/Ask Feature Functions
  * Helper functions for the Ask/Chat feature in the Echo application.
+ * Updated to use data-testid selectors for robust testing.
  */
+
+// ============= Navigation Functions =============
 
 /**
  * Clicks the Ask button in the project sidebar
  */
 export const clickAskButton = () => {
     cy.log('Clicking Ask button');
-    cy.xpath("//button[.//p[text()='Ask']]").filter(':visible').click();
+    cy.get('[data-testid="sidebar-ask-button"]').filter(':visible').first().click();
 };
 
 /**
- * Clicks the Specific Details option in the Ask modal
+ * Clicks the Library button in the sidebar
+ */
+export const clickLibraryButton = () => {
+    cy.log('Clicking Library button');
+    cy.get('[data-testid="sidebar-library-button"]').filter(':visible').first().click();
+};
+
+/**
+ * Clicks the Report button in the sidebar
+ */
+export const clickReportButton = () => {
+    cy.log('Clicking Report button');
+    cy.get('[data-testid="sidebar-report-button"]').filter(':visible').first().click();
+};
+
+// ============= Mode Selection =============
+
+/**
+ * Selects Specific Details (Deep Dive) mode
  */
 export const clickSpecificDetails = () => {
-    cy.log('Clicking Specific Details');
-    cy.xpath("//button[.//p[text()='Specific Details']]").filter(':visible').click();
+    cy.log('Clicking Specific Details mode');
+    cy.get('[data-testid="chat-mode-card-deep_dive"]').filter(':visible').click();
 };
 
 /**
- * Selects a conversation from the sidebar checkbox for context
+ * Selects Overview mode
  */
-export const selectConversationContext = () => {
-    cy.log('Selecting conversation for context');
-    // Click on the checkbox next to the uploaded conversation in the sidebar
-    cy.xpath("//div[contains(@class, 'mantine-Checkbox')]//input[@type='checkbox']")
+export const clickOverviewMode = () => {
+    cy.log('Clicking Overview mode');
+    cy.get('[data-testid="chat-mode-card-overview"]').filter(':visible').click();
+};
+
+// ============= Conversation Context Selection =============
+
+/**
+ * Selects a conversation for context by ID
+ */
+export const selectConversationContextById = (conversationId) => {
+    cy.log('Selecting conversation context:', conversationId);
+    cy.get(`[data-testid="conversation-chat-selection-checkbox-${conversationId}"]`)
         .filter(':visible')
         .first()
         .click({ force: true });
-    cy.wait(3000); // Wait for context loading
+    cy.wait(3000);
 };
+
+/**
+ * Selects a conversation from the sidebar checkbox for context (first available)
+ */
+export const selectConversationContext = () => {
+    cy.log('Selecting first conversation for context');
+    cy.get('[data-testid^="conversation-chat-selection-checkbox-"]')
+        .filter(':visible')
+        .first()
+        .click({ force: true });
+    cy.wait(3000);
+};
+
+/**
+ * Selects all conversations for context
+ */
+export const selectAllConversationsForContext = () => {
+    cy.log('Selecting all conversations for context');
+    cy.get('[data-testid="conversation-select-all-button"]').filter(':visible').click();
+    cy.get('[data-testid="select-all-confirmation-modal"]').should('be.visible');
+    cy.get('[data-testid="select-all-proceed-button"]').click();
+    cy.wait(5000);
+};
+
+// ============= Chat Interface =============
 
 /**
  * Types a message in the chat message box
@@ -38,7 +93,7 @@ export const selectConversationContext = () => {
  */
 export const typeMessage = (message) => {
     cy.log('Typing message:', message);
-    cy.xpath("//textarea[@placeholder='Type a message...']")
+    cy.get('[data-testid="chat-input-textarea"]')
         .should('be.visible')
         .type(message);
 };
@@ -48,40 +103,121 @@ export const typeMessage = (message) => {
  */
 export const clickSendButton = () => {
     cy.log('Clicking Send button');
-    cy.xpath("//button[contains(@class, 'mantine-Button-root') and .//span[text()='Send']]")
+    cy.get('[data-testid="chat-send-button"]')
         .filter(':visible')
         .click();
 };
 
 /**
- * Waits for and verifies that an AI response has been received
- * Uses the XPath for the AI response message container
+ * Stops the AI generation
  */
-export const verifyAIResponse = () => {
-    cy.log('Waiting for AI response');
-    // Wait for AI response message to appear at div[4] position
-    cy.xpath("//main//section//div[2]/div/div[4]/div")
-        .filter(':visible')
-        .should('exist');
-
-    cy.log('Verifying AI response received');
-    cy.xpath("//main//section//div[2]/div/div[4]/div")
-        .filter(':visible')
-        .invoke('text')
-        .should('have.length.greaterThan', 10); // AI response should have text
+export const stopGeneration = () => {
+    cy.log('Stopping AI generation');
+    cy.get('[data-testid="chat-stop-button"]').should('be.visible').click();
 };
 
 /**
+ * Retries after an error
+ */
+export const retryChat = () => {
+    cy.log('Retrying chat');
+    cy.get('[data-testid="chat-retry-button"]').should('be.visible').click();
+};
+
+/**
+ * Waits for and verifies that an AI response has been received
+ */
+export const verifyAIResponse = () => {
+    cy.log('Waiting for AI response');
+    // Wait for thinking text to disappear
+    cy.get('[data-testid="chat-thinking-text"]', { timeout: 60000 }).should('not.exist');
+
+    cy.log('Verifying AI response received');
+    cy.get('[data-testid="chat-interface"]')
+        .should('be.visible')
+        .invoke('text')
+        .should('have.length.greaterThan', 50);
+};
+
+/**
+ * Waits for AI to finish typing
+ */
+export const waitForAITyping = (timeout = 60000) => {
+    cy.log('Waiting for AI to finish typing');
+    cy.get('[data-testid="chat-thinking-text"]', { timeout }).should('not.exist');
+};
+
+// ============= Chat Templates =============
+
+/**
+ * Clicks the more templates button
+ */
+export const clickMoreTemplates = () => {
+    cy.log('Clicking more templates');
+    cy.get('[data-testid="chat-templates-more-button"]').should('be.visible').click();
+};
+
+/**
+ * Clicks a static template by name
+ */
+export const clickStaticTemplate = (templateName) => {
+    cy.log('Clicking static template:', templateName);
+    cy.get(`[data-testid="chat-template-static-${templateName}"]`).should('be.visible').click();
+};
+
+/**
+ * Clicks an AI suggestion template
+ */
+export const clickSuggestionTemplate = (suggestionName) => {
+    cy.log('Clicking suggestion template:', suggestionName);
+    cy.get(`[data-testid="chat-template-suggestion-${suggestionName}"]`).should('be.visible').click();
+};
+
+// ============= Chat Item Management =============
+
+/**
+ * Clicks on a specific chat item by ID
+ */
+export const selectChatById = (chatId) => {
+    cy.log('Selecting chat:', chatId);
+    cy.get(`[data-testid="chat-item-${chatId}"]`).filter(':visible').click();
+};
+
+/**
+ * Opens the chat item menu (3 dots)
+ */
+export const openChatItemMenu = () => {
+    cy.log('Opening chat item menu');
+    cy.get('[data-testid="chat-item-menu-button"]').filter(':visible').first().click();
+};
+
+/**
+ * Renames a chat
+ */
+export const renameChat = () => {
+    cy.log('Renaming chat');
+    cy.get('[data-testid="chat-item-menu-rename"]').should('be.visible').click();
+};
+
+/**
+ * Deletes a chat
+ */
+export const deleteChat = () => {
+    cy.log('Deleting chat');
+    cy.get('[data-testid="chat-item-menu-delete"]').should('be.visible').click();
+};
+
+// ============= Complete Ask Flows =============
+
+/**
  * Complete Ask flow with context selection
- * Clicks Ask -> Specific Details -> Selects context -> Types message -> Sends -> Verifies response
- * @param {string} message - The message to send (default: 'hello')
  */
 export const askWithContext = (message = 'hello') => {
     clickAskButton();
     cy.wait(4000);
 
     clickSpecificDetails();
-    cy.wait(30000);
+    cy.wait(10000);
 
     selectConversationContext();
 
@@ -93,16 +229,34 @@ export const askWithContext = (message = 'hello') => {
 };
 
 /**
- * Complete Ask flow without context selection
- * Clicks Ask -> Specific Details -> Types message -> Sends -> Verifies response
- * @param {string} message - The message to send (default: 'hello')
+ * Complete Ask flow without context selection (Overview mode)
  */
 export const askWithoutContext = (message = 'hello') => {
     clickAskButton();
     cy.wait(4000);
 
+    clickOverviewMode();
+    cy.wait(10000);
+
+    typeMessage(message);
+    clickSendButton();
+
+    cy.wait(50000);
+    verifyAIResponse();
+};
+
+/**
+ * Ask with specific details but no conversation selected
+ */
+export const askSpecificNoContext = (message = 'hello') => {
+    clickAskButton();
+    cy.wait(4000);
+
     clickSpecificDetails();
-    cy.wait(30000);
+    cy.wait(10000);
+
+    // Verify the no conversations alert shows
+    cy.get('[data-testid="chat-no-conversations-alert"]').should('be.visible');
 
     typeMessage(message);
     clickSendButton();

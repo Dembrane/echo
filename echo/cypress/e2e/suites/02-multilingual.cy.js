@@ -24,12 +24,12 @@ describe('Multilingual Support Flow', () => {
 
         // 4. Verification Check: Page Header
         // Also check that the "Projects" header changed to "Proyectos"
-        cy.xpath('//h2[text()="Proyectos"]').should('be.visible');
+        cy.contains('h2', 'Proyectos').should('be.visible');
 
         // 5. Switch back to English (Cleanup)
         // Ensure menu is open (verifyLanguage ensures it's open, but let's be safe)
         cy.get('body').then(($body) => {
-            if ($body.find('select.mantine-NativeSelect-input').length === 0) {
+            if ($body.find('[data-testid="header-language-picker"]').length === 0) {
                 openSettingsMenu();
             }
         });
@@ -38,10 +38,11 @@ describe('Multilingual Support Flow', () => {
 
         // 6. Verify back to English
         verifyLanguage('Logout', 'en-US');
-        cy.xpath('//h2[text()="Projects"]').should('be.visible');
+        cy.contains('h2', 'Projects').should('be.visible');
 
         // 7. Logout
         // The menu should be open from the previous step (verifyLanguage ensures it).
         logout();
     });
 });
+
