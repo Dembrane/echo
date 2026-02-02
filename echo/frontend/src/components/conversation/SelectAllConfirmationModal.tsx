@@ -336,6 +336,7 @@ export const SelectAllConfirmationModal = ({
 							</Button>
 							<Button
 								onClick={onConfirm}
+								radius={100}
 								{...testId("select-all-proceed-button")}
 							>
 								<Trans id="select.all.modal.proceed">Proceed</Trans>
@@ -693,7 +694,7 @@ export const SelectAllConfirmationModal = ({
 
 						<Group justify="flex-end" mt="auto">
 							<Button
-								variant="light"
+								variant="subtle"
 								onClick={onClose}
 								{...testId("select-all-close-button")}
 							>

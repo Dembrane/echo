@@ -772,7 +772,7 @@ export const ProjectChatRoute = () => {
 									</Text>
 								</Group>
 							</Box>
-							<Stack className="h-full" gap="xs">
+							<Stack className="h-full self-start" gap="xs">
 								<Box>
 									<Button
 										size="lg"
@@ -785,6 +785,7 @@ export const ProjectChatRoute = () => {
 										}}
 										rightSection={<IconSend size={24} />}
 										disabled={input.trim() === "" || isLoading || isSubmitting}
+										radius={100}
 										{...testId("chat-send-button")}
 									>
 										<Trans>Send</Trans>

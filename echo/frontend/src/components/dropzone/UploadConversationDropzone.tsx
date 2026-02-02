@@ -709,7 +709,7 @@ export const UploadConversationDropzone = (
 
 							<Group justify="flex-end" mt="md">
 								<Button
-									variant="outline"
+									variant="subtle"
 									onClick={close}
 									{...testId("conversation-upload-cancel-button")}
 								>
@@ -720,6 +720,7 @@ export const UploadConversationDropzone = (
 										onClick={handleUpload}
 										rightSection={<IconArrowRight size={16} />}
 										disabled={fileEditor.editingIndex !== null}
+										radius={100}
 										{...testId("conversation-upload-files-button")}
 									>
 										{t`Upload Files`}

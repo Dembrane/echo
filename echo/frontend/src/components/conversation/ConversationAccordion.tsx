@@ -516,11 +516,6 @@ const ConversationAccordionItem = ({
 		return null;
 	}
 
-	const isLocked = chatContextQuery.data?.conversations?.find(
-		(c) => c.conversation_id === conversation.id && c.locked,
-	);
-
-	const isAutoSelectEnabled = chatContextQuery.data?.auto_select_bool ?? false;
 	const chatMode = chatContextQuery.data?.chat_mode;
 
 	// Hide checkboxes when:
@@ -538,26 +533,10 @@ const ConversationAccordionItem = ({
 			(artefact) => (artefact as ConversationArtifact).approved_at,
 		);
 
-	// In overview mode, show a subtle "included" indicator
-	const isOverviewMode = chatMode === "overview";
-
-	// Mode-based styling
-	const isDeepDiveWithSelection =
-		inChatMode && !isNewChatRoute && chatMode === "deep_dive" && isLocked;
-
 	return (
 		<NavigationButton
 			to={`/projects/${conversation.project_id}/conversation/${conversation.id}/overview`}
 			active={highlight}
-			borderColor={
-				isOverviewMode
-					? MODE_COLORS.overview.primary
-					: isDeepDiveWithSelection
-						? MODE_COLORS.deep_dive.primary
-						: ENABLE_CHAT_AUTO_SELECT && isAutoSelectEnabled
-							? "green"
-							: undefined
-			}
 			className="w-full"
 			rightSection={
 				shouldShowCheckboxes ? (
