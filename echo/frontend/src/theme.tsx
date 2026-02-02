@@ -320,9 +320,9 @@ export const theme = createTheme({
 			},
 		},
 	},
-	fontFamily: "var(--app-font-family, 'Space Grotesk Variable', sans-serif)",
+	fontFamily: "var(--app-font-family, 'DM Sans Variable', sans-serif)",
 	headings: {
-		fontFamily: "var(--app-font-family, 'Space Grotesk Variable', sans-serif)",
+		fontFamily: "var(--app-font-family, 'DM Sans Variable', sans-serif)",
 		fontWeight: "500",
 		sizes: {
 			h1: {

@@ -18,10 +18,11 @@ type AppPreferencesContextType = {
 };
 
 const defaultPreferences: AppPreferences = {
-	fontFamily: "space-grotesk",
+	fontFamily: "dm-sans",
 };
 
-const STORAGE_KEY = "dembrane-app-preferences";
+// Changed key to reset existing users to new DM Sans default
+const STORAGE_KEY = "dembrane-app-preferences-v2";
 
 const AppPreferencesContext = createContext<AppPreferencesContextType | null>(
 	null,
@@ -72,6 +73,11 @@ export const AppPreferencesProvider = ({
 			? "'DM Sans Variable', sans-serif"
 			: "'Space Grotesk Variable', sans-serif";
 
+		// Font feature settings for stylistic sets (ss01-ss06, ss08)
+		const fontFeatureSettings = isDmSans
+			? "'ss01' on, 'ss02' on, 'ss03' on, 'ss04' on, 'ss05' on, 'ss06' on, 'ss08' on"
+			: "normal";
+
 		// Colors linked to font choice
 		// DM Sans → Parchment + Graphite
 		// Space Grotesk → White + Black
@@ -108,6 +114,13 @@ export const AppPreferencesProvider = ({
 		document.body.style.fontFamily = fontValue;
 		document.body.style.backgroundColor = backgroundColor;
 		document.body.style.color = textColor;
+		document.body.style.fontFeatureSettings = fontFeatureSettings;
+
+		// Set CSS variable for font feature settings
+		document.documentElement.style.setProperty(
+			"--app-font-feature-settings",
+			fontFeatureSettings,
+		);
 
 		// Set data attribute for potential CSS selectors
 		document.documentElement.setAttribute(
