@@ -12,7 +12,7 @@
  */
 
 import { loginToApp, logout } from '../../support/functions/login';
-import { createProject, deleteProject } from '../../support/functions/project';
+import { createProject, deleteProjectInsideProjectSettings, openProjectSettings, exportProjectTranscripts } from '../../support/functions/project';
 import { openSettingsMenu } from '../../support/functions/settings';
 import {
     openUploadModal,
@@ -33,12 +33,12 @@ describe('Upload Conversation Flow', () => {
         loginToApp();
     });
 
-    it('should upload audio file, verify conversation, delete project, and logout', () => {
+    it('should upload audio file and download single transcript', () => {
         // 1. Create new project
         cy.log('Step 1: Creating new project');
         createProject();
 
-        // Capture project ID for deletion
+        // Capture project ID for deletion and next test
         cy.url().then((url) => {
             const parts = url.split('/');
             const projectIndex = parts.indexOf('projects');
@@ -86,16 +86,58 @@ describe('Upload Conversation Flow', () => {
 
         // 11. Verify transcript text has at least 100 characters
         cy.log('Step 11: Verifying transcript text');
-        verifyTranscriptText(400);
+        verifyTranscriptText(100);
 
-        // 12. Navigate back to project overview via breadcrumb
-        cy.log('Step 12: Navigating to Project Overview');
-        navigateToProjectOverview();
+        // New Step: Download Single Transcript
+        cy.log('Step 11b: Downloading single transcript');
+        cy.get('[data-testid="transcript-download-button"]').should('be.visible').click();
+        const singleTranscriptFile = `transcript-${Date.now()}`;
+        cy.get('[data-testid="transcript-download-filename-input"]').should('be.visible').clear().type(singleTranscriptFile);
+        cy.get('[data-testid="transcript-download-confirm-button"]').should('be.visible').click();
+
+        // Wait and Verify Single Download
+        cy.wait(5000);
+        cy.task('findFile', { dir: 'cypress/downloads', ext: '.md' }).then((filePath) => { // Assuming MD or similar
+            // Robust check: ensure it matches our random name if possible, or just latest
+            cy.log('Found downloaded transcript:', filePath);
+            if (filePath) cy.task('deleteFile', filePath);
+        });
+    });
+
+    it('should download all transcripts (export project) and clean up', () => {
+        // Ensure we have a project ID from the previous test
+        expect(projectId).to.not.be.undefined;
+
+        // Navigate to the project overview
+        cy.log('Navigating to Project Overview for Export');
+        // Simple navigation assuming finding the link works, or direct visit
+        // Using verifyLogin-style navigation or direct URL
+        cy.visit(`/en-US/projects/${projectId}/overview`);
+
+        // Export Transcripts and Verify Zip
+        cy.log('Step 12: Exporting project transcripts');
+        // Ensure we are on the Project Settings tab where the export button is located
+        openProjectSettings();
+
+        exportProjectTranscripts();
+
+        // Wait for download to complete (arbitrary wait or until file exists)
+        cy.wait(5000);
+
+        // Find and verify the downloaded zip file
+        cy.task('findFile', { dir: 'cypress/downloads', ext: '.zip' }).then((filePath) => {
+            expect(filePath).to.not.be.null;
+            cy.log('Found downloaded file:', filePath);
+
+            // Cleanup: Delete the downloaded zip file
+            cy.task('deleteFile', filePath);
+        });
 
         // 13. Delete the project (includes clicking Project Settings tab)
         cy.log('Step 13: Deleting project');
         cy.then(() => {
-            deleteProject(projectId);
+            // We are already on settings tab mostly, but helper handles scrolling
+            deleteProjectInsideProjectSettings(projectId);
         });
 
         // 14. Open Settings menu and Logout

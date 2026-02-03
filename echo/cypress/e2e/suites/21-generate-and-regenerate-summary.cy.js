@@ -12,7 +12,7 @@
  */
 
 import { loginToApp, logout } from '../../support/functions/login';
-import { createProject, deleteProject } from '../../support/functions/project';
+import { createProject, deleteProject, openProjectSettings, exportProjectTranscripts } from '../../support/functions/project';
 import { openSettingsMenu } from '../../support/functions/settings';
 import {
     openUploadModal,
@@ -21,7 +21,7 @@ import {
     closeUploadModal,
     selectConversation,
     verifyConversationName,
-    clickTranscriptTab,
+    clickOverviewTab,
     verifyTranscriptText,
     navigateToProjectOverview
 } from '../../support/functions/conversation';
@@ -82,26 +82,63 @@ describe('Upload Conversation Flow', () => {
 
         // 10. Click on Transcript tab
         cy.log('Step 10: Clicking Transcript tab');
-        clickTranscriptTab();
+        clickOverviewTab();
 
-        // 11. Verify transcript text has at least 100 characters
-        cy.log('Step 11: Verifying transcript text');
-        verifyTranscriptText(400);
+        // 11. Generate/Check Summary
+        cy.log('Step 11: Checking/Generating Summary');
+        cy.wait(5000); // Initial wait as requested
 
-        // 12. Navigate back to project overview via breadcrumb
-        cy.log('Step 12: Navigating to Project Overview');
+        cy.get('body').then(($body) => {
+            const generateBtnSelector = '[data-testid="conversation-overview-generate-summary-button"]';
+            if ($body.find(generateBtnSelector).length > 0 && $body.find(generateBtnSelector).is(':visible')) {
+                cy.log('Generate button found, clicking...');
+                cy.get(generateBtnSelector).click();
+                cy.wait(40000); // Wait 1 min for generation
+            } else {
+                cy.log('Generate button not found or not visible, waiting...');
+                cy.wait(40000); // Wait 1 min
+            }
+        });
+
+        // Check summary length and copy
+        let initialSummary = '';
+        // Using .prose p selector as per HTML structure
+        cy.get('.prose p', { timeout: 10000 }).should('exist').invoke('text').then((text) => {
+            expect(text.length).to.be.gt(200);
+            initialSummary = text;
+            cy.log('Initial Summary Length:', text.length);
+            cy.log('Initial Summary:', text);
+        });
+
+        // 12. Regenerate Summary
+        cy.log('Step 12: Regenerating Summary');
+        cy.get('[data-testid="conversation-overview-regenerate-summary-button"]').should('be.visible').click();
+
+        cy.log('Waiting 40 seconds for regeneration...');
+        cy.wait(40000);
+
+        // Check new summary
+        cy.get('.prose p').invoke('text').then((newText) => {
+            expect(newText.length).to.be.gt(200);
+            cy.log('New Summary Length:', newText.length);
+            cy.log('New Summary:', newText);
+            expect(newText).to.not.equal(initialSummary);
+            cy.log('Regeneration Successful: Summaries are different.');
+        });
+
+        // 13. Navigate to Project Overview
+        cy.log('Step 13: Navigating to Project Overview');
         navigateToProjectOverview();
 
-        // 13. Delete the project (includes clicking Project Settings tab)
-        cy.log('Step 13: Deleting project');
+        // 14. Delete the project
+        cy.log('Step 14: Deleting project');
         cy.then(() => {
             deleteProject(projectId);
         });
 
-        // 14. Open Settings menu and Logout
-        cy.log('Step 14: Opening settings and logging out');
+        // 15. Open Settings menu and Logout
+        cy.log('Step 15: Opening settings and logging out');
         openSettingsMenu();
         logout();
     });
 });
-

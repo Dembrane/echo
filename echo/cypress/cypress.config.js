@@ -1,4 +1,6 @@
 const { defineConfig } = require("cypress");
+const fs = require('fs');
+const path = require('path');
 
 module.exports = defineConfig({
     experimentalWebKitSupport: true,
@@ -8,6 +10,27 @@ module.exports = defineConfig({
                 log(message) {
                     console.log(message);
                     return null;
+                },
+                deleteFile(filePath) {
+                    if (fs.existsSync(filePath)) {
+                        fs.unlinkSync(filePath);
+                        return true;
+                    }
+                    return null;
+                },
+                findFile({ dir, ext }) {
+                    if (!fs.existsSync(dir)) return null;
+                    const files = fs.readdirSync(dir);
+                    const foundFiles = files.filter(file => file.endsWith(ext));
+                    if (foundFiles.length === 0) return null;
+
+                    // Return the most recently modified file
+                    const recentFile = foundFiles.map(file => {
+                        const filePath = path.join(dir, file);
+                        return { file, mtime: fs.statSync(filePath).mtime };
+                    }).sort((a, b) => b.mtime - a.mtime)[0].file;
+
+                    return path.join(dir, recentFile);
                 },
             });
 

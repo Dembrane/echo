@@ -103,6 +103,36 @@ export const deleteProject = (projectId) => {
         }
     });
 };
+export const deleteProjectInsideProjectSettings = (projectId) => {
+    cy.log(`Deleting Project: ${projectId}`);
+
+    // Click "Delete Project" button using data-testid
+    cy.get('[data-testid="project-actions-delete-button"]').scrollIntoView().should('be.visible').click();
+
+    // Wait for modal to appear and confirm deletion
+    cy.get('[data-testid="project-delete-confirm-button"]', { timeout: 10000 })
+        .should('be.visible')
+        .click();
+
+    // Wait for Deletion and Redirect
+    cy.wait(5000);
+
+    // Verify Redirect to Projects Dashboard
+    cy.url().should('match', /\/projects$/);
+
+    // Verify Project ID is NOT present in the list
+    cy.get(`a[href*="${projectId}"]`).should('not.exist');
+
+    // Remove from JSON fixture
+    const filePath = 'fixtures/createdProjects.json';
+    cy.readFile(filePath).then((projects) => {
+        if (projects && projects.length > 0) {
+            const updatedProjects = projects.filter(p => p.id !== projectId);
+            cy.writeFile(filePath, updatedProjects);
+            cy.log(`Removed project ${projectId} from fixture.`);
+        }
+    });
+};
 
 export const updateProjectName = (newName) => {
     cy.log(`Updating Project Name to: ${newName}`);
@@ -123,4 +153,15 @@ export const updateProjectName = (newName) => {
 
     // Verify "saved" indication exists
     cy.contains(/saved/i).should('exist');
+};
+
+export const openProjectSettings = () => {
+    cy.log('Opening Project Settings Tab');
+    cy.get('[data-testid="project-overview-tab-overview"]').scrollIntoView().click({ force: true });
+    cy.wait(1000);
+};
+
+export const exportProjectTranscripts = () => {
+    cy.log('Exporting Project Transcripts');
+    cy.get('[data-testid="project-export-transcripts-button"]').scrollIntoView().click({ force: true });
 };

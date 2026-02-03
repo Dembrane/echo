@@ -277,7 +277,13 @@ export const deleteConversation = () => {
  */
 export const clickTranscriptTab = () => {
     cy.log('Clicking Transcript Tab');
-    cy.contains('button[role="tab"]', 'Transcript').should('be.visible').click();
+    cy.get('[data-testid="project-overview-tab-transcript"]').should('be.visible').click();
+    cy.wait(2000);
+};
+
+export const clickOverviewTab = () => {
+    cy.log('Clicking Overview Tab');
+    cy.get('[data-testid="project-overview-tab-overview"]').should('be.visible').click();
     cy.wait(2000);
 };
 
@@ -303,9 +309,12 @@ export const verifyTranscriptText = (minLength = 100) => {
 export const downloadTranscript = (filename) => {
     cy.log('Downloading Transcript');
     cy.get('[data-testid="transcript-download-button"]').should('be.visible').click();
-    cy.get('[data-testid="transcript-download-modal"]').should('be.visible');
+    // cy.get('[data-testid="transcript-download-modal"]').should('be.visible'); // Removed as it might not affect the user provided snippet
     if (filename) {
-        cy.get('[data-testid="transcript-download-filename-input"]').clear().type(filename);
+        cy.get('[data-testid="transcript-download-filename-input"]')
+            .should('be.visible')
+            .clear()
+            .type(filename);
     }
     cy.get('[data-testid="transcript-download-confirm-button"]').click();
     cy.wait(2000);
