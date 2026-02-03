@@ -89,31 +89,77 @@ export const toggleAskForName = (enable = true) => {
     cy.get('[data-testid="portal-editor-ask-name-checkbox"]').then(($checkbox) => {
         const isChecked = $checkbox.is(':checked');
         if ((enable && !isChecked) || (!enable && isChecked)) {
-            cy.wrap($checkbox).click();
+            cy.wrap($checkbox).click({ force: true });
         }
     });
 };
 
-// Toggle "Go Deeper" feature
-export const toggleGoDeeper = (enable = true) => {
-    cy.log(`Toggling Go Deeper: ${enable}`);
-    cy.get('[data-testid="portal-editor-go-deeper-switch"]').then(($switch) => {
-        const isChecked = $switch.is(':checked');
-        if ((enable && !isChecked) || (!enable && isChecked)) {
-            cy.wrap($switch).click();
-        }
-    });
-};
+
 
 // Toggle "Make it Concrete" feature
 export const toggleMakeItConcrete = (enable = true) => {
     cy.log(`Toggling Make it Concrete: ${enable}`);
-    cy.get('[data-testid="portal-editor-make-concrete-switch"]').then(($switch) => {
-        const isChecked = $switch.is(':checked');
-        if ((enable && !isChecked) || (!enable && isChecked)) {
-            cy.wrap($switch).click();
-        }
-    });
+
+    // 1. Get input (it might be hidden due to Mantine styling)
+    cy.get('[data-testid="portal-editor-make-concrete-switch"]')
+        .should('exist')
+        .then(($input) => {
+            // Find the visible label/wrapper
+            const $label = $input.closest('label');
+            cy.wrap($label).scrollIntoView().should('be.visible');
+
+            const isChecked = $input.is(':checked');
+            if ((enable && !isChecked) || (!enable && isChecked)) {
+                // Click the label for robust interaction
+                cy.wrap($label).click({ force: true });
+
+                // Wait for potential auto-save or UI update
+                cy.wait(1000);
+            }
+        });
+
+    // 2. Hard check as requested
+    if (enable) {
+        cy.get('[data-testid="portal-editor-make-concrete-switch"]').should('be.checked');
+    } else {
+        cy.get('[data-testid="portal-editor-make-concrete-switch"]').should('not.be.checked');
+    }
+
+    // 3. Verify 'Saved' state to ensure persistence
+    cy.contains(/saved/i).should('exist');
+};
+
+
+export const toggleGoDeeper = (enable = true) => {
+    cy.log(`Toggling Go Deeper: ${enable}`);
+
+    // 1. Get input (it might be hidden due to Mantine styling)
+    cy.get('[data-testid="portal-editor-go-deeper-switch"]')
+        .should('exist')
+        .then(($input) => {
+            // Find the visible label/wrapper
+            const $label = $input.closest('label');
+            cy.wrap($label).scrollIntoView().should('be.visible');
+
+            const isChecked = $input.is(':checked');
+            if ((enable && !isChecked) || (!enable && isChecked)) {
+                // Click the label for robust interaction
+                cy.wrap($label).click({ force: true });
+
+                // Wait for potential auto-save or UI update
+                cy.wait(1000);
+            }
+        });
+
+    // 2. Hard check as requested
+    if (enable) {
+        cy.get('[data-testid="portal-editor-go-deeper-switch"]').should('be.checked');
+    } else {
+        cy.get('[data-testid="portal-editor-go-deeper-switch"]').should('not.be.checked');
+    }
+
+    // 3. Verify 'Saved' state to ensure persistence
+    cy.contains(/saved/i).should('exist');
 };
 
 // Toggle "Report Notifications" feature
@@ -122,7 +168,7 @@ export const toggleReportNotifications = (enable = true) => {
     cy.get('[data-testid="portal-editor-report-notifications-switch"]').then(($switch) => {
         const isChecked = $switch.is(':checked');
         if ((enable && !isChecked) || (!enable && isChecked)) {
-            cy.wrap($switch).click();
+            cy.wrap($switch).click({ force: true });
         }
     });
 };

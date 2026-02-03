@@ -45,26 +45,26 @@ describe('Project Create, Edit, and Delete Flow', () => {
                 // Check if the project list contains the new name
                 // Target the main content area (not the mobile sidebar) using the visible desktop sidebar
                 cy.get('main').within(() => {
-                    cy.xpath(`//a[contains(@href, "${createdProjectId}")]`).first().should('contain.text', newProjectName);
+                    cy.get(`a[href*="${createdProjectId}"]`).first().should('contain.text', newProjectName);
                 });
 
                 // 5. Enter Project and Verify Changes
                 cy.get('main').within(() => {
-                    cy.xpath(`//a[contains(@href, "${createdProjectId}")]`).first().click();
+                    cy.get(`a[href*="${createdProjectId}"]`).first().click();
                 });
                 cy.wait(3000); // Wait for dashboard load
 
                 // Check Name on Dashboard - verify in the breadcrumb title
-                cy.xpath('//span[contains(@class, "mantine-Title-root")]').should('contain.text', newProjectName);
+                cy.get('[data-testid="project-breadcrumb-name"]').should('contain.text', newProjectName);
 
                 // Check Portal Settings Persistence
                 openPortalEditor();
                 // Verify Tag - inside mantine-Badge-label span
-                cy.xpath(`//span[contains(@class, "mantine-Badge-label")]//span[contains(text(), "${tagName}")]`).should('be.visible');
+                cy.get('.mantine-Badge-label').contains(tagName).should('be.visible');
                 // Verify Title Input Value
-                cy.xpath('//input[@name="default_conversation_title"]').first().should('have.value', portalTitle);
+                cy.get('[data-testid="portal-editor-page-title-input"]').should('have.value', portalTitle);
                 // Verify Language is set to Italian
-                cy.xpath('//select[@name="language"]').should('have.value', portalLanguage);
+                cy.get('[data-testid="portal-editor-language-select"]').should('have.value', portalLanguage);
 
                 // 6. Delete Project
                 deleteProject(createdProjectId);

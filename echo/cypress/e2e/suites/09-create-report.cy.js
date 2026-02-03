@@ -21,6 +21,8 @@ import {
     navigateToProjectOverview
 } from '../../support/functions/conversation';
 
+import { verifyReportRendered } from '../../support/functions/report';
+
 describe('Report Creation Flow', () => {
     let projectId;
 
@@ -65,13 +67,13 @@ describe('Report Creation Flow', () => {
 
         // 7. Click on the Report button
         cy.log('Step 7: Clicking Report button');
-        cy.xpath("//button[contains(., 'Report')]").filter(':visible').click();
+        cy.get('[data-testid="project-overview-tab-report"]').should('be.visible').click();
 
         // 8. Click Create Report in the modal
         cy.log('Step 8: Clicking Create Report in modal');
         // Wait for modal and click the "Create Report" button (filled variant)
         cy.get('section[role="dialog"]').should('be.visible');
-        cy.xpath("//button[contains(., 'Create Report')]").filter(':visible').click();
+        cy.get('[data-testid="report-create-button"]').should('be.visible').click();
 
         // 9. Wait 40 seconds for processing
         cy.log('Step 9: Waiting 40 seconds for report processing');
@@ -79,15 +81,12 @@ describe('Report Creation Flow', () => {
 
         // 10. Click on the Report button again to view report
         cy.log('Step 10: Clicking Report button again');
-        cy.xpath("//button[contains(., 'Report')]").filter(':visible').click();
+        cy.get('[data-testid="project-overview-tab-report"]').should('be.visible').click();
         cy.wait(5000); // Wait for report content to load
 
         // 11. Verify report existence
         cy.log('Step 11: Verifying report existence');
-        // Check for Dembrane logo and Report text as per user request
-        cy.xpath("//img[@alt='Dembrane Logo']").filter(':visible').should('be.visible');
-        cy.xpath("//h1[contains(., 'Dembrane')]").filter(':visible').should('be.visible');
-        cy.xpath("//p[contains(., 'Report')]").filter(':visible').should('be.visible');
+        verifyReportRendered();
         cy.log('Report successfully verified');
 
         // 12. Navigate back to Project Overview

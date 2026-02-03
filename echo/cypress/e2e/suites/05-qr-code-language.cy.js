@@ -7,8 +7,12 @@ import { openSettingsMenu } from '../../support/functions/settings';
  * Helper to click a button that may have duplicate elements (mobile/desktop)
  * Iterates through matching elements to find the first one that's actually visible
  */
-const clickVisibleButton = (buttonText) => {
-    cy.xpath(`//button[contains(., "${buttonText}")]`).then($buttons => {
+
+/**
+ * Helper to click the copy link button handling potential multiple elements (mobile/desktop)
+ */
+const clickVisibleCopyLinkButton = () => {
+    cy.get('[data-testid="project-copy-link-button"]').then($buttons => {
         // Find the first button that is visible (not hidden by CSS)
         const $visibleButton = $buttons.filter((index, el) => {
             return Cypress.$(el).is(':visible');
@@ -44,7 +48,7 @@ describe('QR Code Language Change Test', () => {
                 cy.log(`Working with Project ID: ${createdProjectId}`);
 
                 // 2. Copy the initial QR code link
-                clickVisibleButton('Copy link');
+                clickVisibleCopyLinkButton();
 
                 // Wait for copy action
                 cy.wait(1000);
@@ -72,7 +76,7 @@ describe('QR Code Language Change Test', () => {
                 cy.wait(2000);
 
                 // 5. Copy the updated QR code link
-                clickVisibleButton('Copy link');
+                clickVisibleCopyLinkButton();
 
                 cy.wait(1000);
 
@@ -102,7 +106,7 @@ describe('QR Code Language Change Test', () => {
                 });
 
                 // 7. Click Project Settings tab first (scrollIntoView + force to handle clipped content)
-                cy.xpath('//button[contains(descendant-or-self::text(), "Project Settings")]')
+                cy.get('[data-testid="project-overview-tab-overview"]')
                     .first()
                     .scrollIntoView()
                     .click({ force: true });

@@ -373,13 +373,11 @@ export const selectMakeItConcrete = () => {
     cy.get('[data-testid="portal-echo-verify-card"]').should('be.visible').click();
 };
 
-/**
- * Selects "Go deeper" (explore) card
- */
-export const selectGoDeeper = () => {
-    cy.log('Selecting Go Deeper');
+export const selectMakeItDeeper = () => {
+    cy.log('Selecting Make it Concrete');
     cy.get('[data-testid="portal-echo-explore-card"]').should('be.visible').click();
 };
+
 
 // ============= Refine Flow - Go Deeper (Explore) =============
 
@@ -1091,7 +1089,9 @@ export const installParticipantAudioStubs = ({ audioBase64, audioMimeType = 'aud
         };
 
         const installMediaRecorderStub = () => {
-            if (!(Cypress.browser && Cypress.browser.name === 'webkit')) {
+            // Stub if missing or if specifically in WebKit where we know it can be flaky
+            // Removing strict browser check allows this to run in other environments if needed
+            if (typeof win.MediaRecorder !== 'undefined' && !(Cypress.browser && Cypress.browser.name === 'webkit')) {
                 return;
             }
 

@@ -165,6 +165,43 @@ export const selectConversationTags = (tags) => {
     });
 };
 
+/**
+ * Verifies that the specified tags are selected and visible
+ * @param {string[]} tags - Array of tag names to verify
+ */
+export const verifySelectedTags = (tags) => {
+    cy.log('Verifying Selected Tags:', tags);
+    tags.forEach(tag => {
+        // Verify tag appears in the pill group within the multiselect
+        // Using a more robust selector strategy that looks for the pill label text
+        cy.contains('.mantine-Pill-label', tag).should('be.visible');
+    });
+};
+
+
+/**
+ * Verifies that a conversation with the given name exists and is visible in the list
+ * @param {string} name - Name/filename of the conversation
+ */
+export const verifyConversationInList = (name) => {
+    cy.log('Verifying Conversation in List:', name);
+    cy.get('body').then(($body) => {
+        // Check if data-testid conversation items exist (Preferred)
+        if ($body.find('[data-testid^="conversation-item-"]').length > 0) {
+            cy.get('[data-testid^="conversation-item-"]')
+                .filter(':visible')
+                .contains(name)
+                .should('be.visible');
+        } else {
+            // Fallback to XPath
+            cy.xpath(`//a[contains(@href, "/conversation/") and .//*[contains(text(), "${name}")]]`)
+                .filter(':visible')
+                .should('be.visible');
+        }
+    });
+};
+
+
 // ============= Summary Functions =============
 
 /**
