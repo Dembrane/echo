@@ -1,5 +1,4 @@
 const { defineConfig } = require("cypress");
-const path = require("path");
 
 module.exports = defineConfig({
     experimentalWebKitSupport: true,
@@ -24,7 +23,7 @@ module.exports = defineConfig({
 
                     // Use a specific file for fake audio capture (fake microphone input)
                     // Note: This requires a .wav file.
-                    launchOptions.args.push(`--use-file-for-fake-audio-capture=${path.join(__dirname, 'fixtures', 'test-audio.wav')}`);
+                    launchOptions.args.push('--use-file-for-fake-audio-capture=c:/Users/charu/OneDrive/Desktop/echo/echo/cypress/fixtures/test-audio.wav');
 
                     // Grant clipboard permissions
                     // Ensure preferences object exists
