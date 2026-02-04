@@ -600,7 +600,6 @@ export const ProjectChatRoute = () => {
 								<Button
 									onClick={() => stop()}
 									variant="outline"
-									color="gray"
 									size="sm"
 									rightSection={<IconSquare size={14} />}
 									{...testId("chat-stop-button")}
@@ -777,7 +776,6 @@ export const ProjectChatRoute = () => {
 									<Button
 										size="lg"
 										type="submit"
-										variant="primary"
 										onClick={(e) => {
 											e.preventDefault();
 											e.stopPropagation();
@@ -785,7 +783,6 @@ export const ProjectChatRoute = () => {
 										}}
 										rightSection={<IconSend size={24} />}
 										disabled={input.trim() === "" || isLoading || isSubmitting}
-										radius={100}
 										{...testId("chat-send-button")}
 									>
 										<Trans>Send</Trans>

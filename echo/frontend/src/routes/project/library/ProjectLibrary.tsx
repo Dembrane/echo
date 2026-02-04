@@ -135,11 +135,7 @@ export const ProjectLibraryRoute = () => {
 				/>
 				<Group gap="xl">
 					{!isLibraryEnabled && (
-						<Button
-							onClick={contactSales}
-							leftSection={<IconCalendarEvent />}
-							radius={100}
-						>
+						<Button onClick={contactSales} rightSection={<IconCalendarEvent />}>
 							<Trans id="library.request.access">Request Access</Trans>
 						</Button>
 					)}
@@ -170,7 +166,7 @@ export const ProjectLibraryRoute = () => {
 							}
 						>
 							<Button
-								leftSection={!isLibraryEnabled ? <IconLock /> : <IconPlus />}
+								rightSection={!isLibraryEnabled ? <IconLock /> : <IconPlus />}
 								onClick={handleCreateLibrary}
 								loading={
 									requestProjectLibraryMutation.isPending ||
@@ -185,7 +181,6 @@ export const ProjectLibraryRoute = () => {
 									// ||
 									// latestRun?.processing_status === "PROCESSING"
 								}
-								radius={100}
 							>
 								<Trans id="library.create">Create Library</Trans>
 							</Button>
@@ -266,7 +261,7 @@ export const ProjectLibraryRoute = () => {
 				</Title>
 				{isLibraryEnabled && (
 					<Button
-						leftSection={<IconPlus />}
+						rightSection={<IconPlus />}
 						onClick={toggle}
 						disabled={
 							!(
@@ -274,7 +269,6 @@ export const ProjectLibraryRoute = () => {
 								// && latestRun.processing_status === "DONE"
 							)
 						}
-						radius={100}
 					>
 						<Trans id="library.create.view">Create View</Trans>
 					</Button>

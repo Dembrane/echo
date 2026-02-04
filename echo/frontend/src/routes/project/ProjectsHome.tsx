@@ -134,7 +134,6 @@ export const ProjectsHomeRoute = () => {
 							rightSection={<Icons.Plus stroke="white" fill="white" />}
 							loading={createProjectMutation.isPending}
 							onClick={handleCreateProject}
-							radius={100}
 							{...testId("project-home-create-button")}
 						>
 							<Trans>Create</Trans>

@@ -498,7 +498,7 @@ export const UploadConversationDropzone = (
 			{/* Upload button */}
 			<Tooltip label={t`Upload conversations`}>
 				<Button
-					leftSection={<IconPlus size={16} />}
+					rightSection={<IconPlus size={16} />}
 					onClick={open}
 					variant="outline"
 					{...testId("conversation-upload-button")}
@@ -720,7 +720,6 @@ export const UploadConversationDropzone = (
 										onClick={handleUpload}
 										rightSection={<IconArrowRight size={16} />}
 										disabled={fileEditor.editingIndex !== null}
-										radius={100}
 										{...testId("conversation-upload-files-button")}
 									>
 										{t`Upload Files`}

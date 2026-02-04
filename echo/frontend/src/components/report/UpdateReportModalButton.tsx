@@ -63,7 +63,7 @@ export const UpdateReportModalButton = ({
 	return (
 		<>
 			<Tooltip label={t`Update the report to include the latest data`}>
-				<Button variant="outline" color="gray.9" onClick={open}>
+				<Button variant="outline" onClick={open}>
 					<Trans>Update</Trans>
 				</Button>
 			</Tooltip>
@@ -129,7 +129,6 @@ export const UpdateReportModalButton = ({
 							disabled={isPending}
 							size="md"
 							mt="xs"
-							radius={100}
 						>
 							<Trans>Update Report</Trans>
 						</Button>

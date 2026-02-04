@@ -395,7 +395,7 @@ export const AuditLogsCard = () => {
 			radius="md"
 			p="lg"
 			className="shadow-sm dark:bg-dark-6"
-		style={{ backgroundColor: "var(--app-background)" }}
+			style={{ backgroundColor: "var(--app-background)" }}
 		>
 			<Stack gap="xl">
 				<Group justify="space-between" align="flex-start">
@@ -430,7 +430,7 @@ export const AuditLogsCard = () => {
 						<Menu withinPortal position="bottom-end">
 							<Menu.Target>
 								<Button
-									leftSection={<IconDownload size={16} />}
+									rightSection={<IconDownload size={16} />}
 									loading={exportMutation.isPending}
 								>
 									<Trans>Export</Trans>

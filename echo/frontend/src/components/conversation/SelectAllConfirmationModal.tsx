@@ -19,7 +19,7 @@ import {
 	IconAlertTriangle,
 	IconCheck,
 	IconFileOff,
-	IconRosetteDiscountCheckFilled,
+	IconRosetteDiscountCheck,
 	IconScale,
 	IconX,
 } from "@tabler/icons-react";
@@ -106,7 +106,7 @@ const FilterDisplay = ({
 						color="blue"
 						variant="light"
 						size="md"
-						leftSection={<IconRosetteDiscountCheckFilled size={14} />}
+						rightSection={<IconRosetteDiscountCheck size={14} />}
 						style={{ width: "fit-content" }}
 					>
 						<Trans id="select.all.modal.verified">Verified</Trans>
@@ -336,7 +336,6 @@ export const SelectAllConfirmationModal = ({
 							</Button>
 							<Button
 								onClick={onConfirm}
-								radius={100}
 								{...testId("select-all-proceed-button")}
 							>
 								<Trans id="select.all.modal.proceed">Proceed</Trans>
@@ -440,9 +439,7 @@ export const SelectAllConfirmationModal = ({
 												size="sm"
 												variant="light"
 												color="blue"
-												leftSection={
-													<IconRosetteDiscountCheckFilled size={12} />
-												}
+												rightSection={<IconRosetteDiscountCheck size={12} />}
 											>
 												<Trans id="select.all.modal.loading.verified">
 													Verified
@@ -511,8 +508,8 @@ export const SelectAllConfirmationModal = ({
 								{result.added.length > 0 && (
 									<Tabs.Tab
 										value="added"
-										leftSection={<IconCheck size={16} />}
-										rightSection={
+										rightSection={<IconCheck size={16} />}
+										leftSection={
 											<Badge
 												size="md"
 												miw={30}
@@ -531,8 +528,8 @@ export const SelectAllConfirmationModal = ({
 								{skippedDueToOther.length > 0 && (
 									<Tabs.Tab
 										value="other"
-										leftSection={<IconAlertTriangle size={16} />}
-										rightSection={
+										rightSection={<IconAlertTriangle size={16} />}
+										leftSection={
 											<Badge
 												size="md"
 												miw={30}
@@ -551,8 +548,8 @@ export const SelectAllConfirmationModal = ({
 								{skippedDueToLimit.length > 0 && (
 									<Tabs.Tab
 										value="limit"
-										leftSection={<IconScale size={16} />}
-										rightSection={
+										rightSection={<IconScale size={16} />}
+										leftSection={
 											<Badge
 												size="md"
 												miw={30}
@@ -622,7 +619,7 @@ export const SelectAllConfirmationModal = ({
 															color={getReasonColor(conv.reason)}
 															size="sm"
 															variant="light"
-															leftSection={getReasonIcon(conv.reason)}
+															rightSection={getReasonIcon(conv.reason)}
 															className="flex-shrink-0"
 														>
 															{getReasonLabel(conv.reason)}
@@ -662,7 +659,7 @@ export const SelectAllConfirmationModal = ({
 															color={getReasonColor(conv.reason)}
 															size="sm"
 															variant="light"
-															leftSection={getReasonIcon(conv.reason)}
+															rightSection={getReasonIcon(conv.reason)}
 															className="flex-shrink-0"
 														>
 															{getReasonLabel(conv.reason)}
