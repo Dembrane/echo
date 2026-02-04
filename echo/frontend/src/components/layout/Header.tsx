@@ -123,14 +123,20 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 			<Paper
 				component="header"
 				radius="0"
-				className="z-30 h-[60px] w-full"
+				className="z-30 w-full"
 				shadow="xs"
+				withBorder={false}
 				style={{
 					backgroundColor: "var(--app-background)",
-					padding: "12px",
 				}}
 			>
-				<Group justify="space-between" align="center" className="h-full w-full">
+				<Group
+					justify="space-between"
+					align="center"
+					className="w-full"
+					h={60}
+					px="md"
+				>
 					<Group gap="md">
 						<I18nLink to="/projects">
 							<Group align="center">

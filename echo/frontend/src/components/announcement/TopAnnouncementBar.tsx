@@ -85,7 +85,7 @@ export function TopAnnouncementBar() {
 
 	return (
 		<Box
-			className="relative flex w-full cursor-pointer items-center justify-center px-4 py-3 text-center"
+			className="relative flex w-full cursor-pointer items-center justify-center px-4 py-3 text-center border-b"
 			bg={theme.colors.blue[0]}
 			onClick={handleBarClick}
 		>

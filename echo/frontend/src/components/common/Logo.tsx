@@ -2,34 +2,22 @@ import { Group, type GroupProps } from "@mantine/core";
 import aiconlLogo from "@/assets/aiconl-logo.png";
 import aiconlLogoHQ from "@/assets/aiconl-logo-hq.png";
 
-import logomark from "@/assets/logomark-no-bg.svg";
-import wordmark from "@/assets/wordmark-no-padding.svg";
+import dembraneLogoFull from "@/assets/dembrane-logo-new.png";
+import dembraneLogomark from "@/assets/logomark-no-bg.svg";
 
 type LogoProps = {
 	hideLogo?: boolean;
 	hideTitle?: boolean;
-	textAfterLogo?: string | React.ReactNode;
 } & GroupProps;
 
-export const LogoDembrane = ({
-	hideLogo,
-	hideTitle,
-	textAfterLogo,
-	...props
-}: LogoProps) => (
+export const LogoDembrane = ({ hideLogo, hideTitle, ...props }: LogoProps) => (
 	<Group gap="sm" h="36px" align="center" {...props}>
 		{!hideLogo && (
 			<img
-				src={logomark}
+				src={hideTitle ? dembraneLogomark : dembraneLogoFull}
 				alt="Dembrane Logo"
 				className="h-full object-contain"
 			/>
-		)}
-		{!hideTitle && (
-			<img src={wordmark} alt="dembrane" className="h-[36px] object-contain" />
-		)}
-		{textAfterLogo && (
-			<span className="text-xl font-medium">{textAfterLogo}</span>
 		)}
 	</Group>
 );
@@ -60,3 +48,6 @@ export const Logo = (props: LogoProps) => {
 		<LogoAiCoNL {...props} />
 	);
 };
+
+// Export logomark for use in spinners and loading indicators
+export const DembraneLogomark = dembraneLogomark;

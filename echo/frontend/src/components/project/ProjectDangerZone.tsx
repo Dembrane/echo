@@ -88,7 +88,6 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 			<Stack maw="300px">
 				<Button
 					onClick={openCloneModal}
-					color="gray"
 					variant="outline"
 					rightSection={<IconCopy />}
 					loading={cloneProjectByIdMutation.isPending}
