@@ -128,6 +128,8 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 				withBorder={false}
 				style={{
 					backgroundColor: "var(--app-background)",
+					borderLeft: "1px solid var(--mantine-color-default-border)",
+					borderRight: "1px solid var(--mantine-color-default-border)",
 				}}
 			>
 				<Group

@@ -19,8 +19,13 @@
 :root {
 	--app-background: #F6F4F1;
 	--app-text: #2D2D2C;
+	--app-scrollbar-thumb: #8b8b8b;
+	--app-scrollbar-thumb-hover: #636363;
 	--app-font-family: 'DM Sans Variable', sans-serif;
 	--app-font-feature-settings: 'ss01' on, 'ss02' on, 'ss03' on, 'ss04' on, 'ss05' on, 'ss06' on, 'ss08' on;
+	--scrollbar-track: var(--app-background);
+	--scrollbar-thumb: var(--app-scrollbar-thumb);
+	--scrollbar-thumb-hover: var(--app-scrollbar-thumb-hover);
 }
 
 body {
@@ -51,3 +56,22 @@ body {
 	font-family: var(--app-font-family) !important;
 	font-feature-settings: var(--app-font-feature-settings) !important;
 }
+
+/* Scrollbar styling to match theme */
+/* Firefox */
+* {
+	scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+/* Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar-track {
+	background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+	background-color: var(--scrollbar-thumb);
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background-color: var(--scrollbar-thumb-hover);
+}
+
