@@ -1,6 +1,8 @@
 import { createTheme } from "@mantine/core";
 import { IconChevronRight, IconInfoCircle } from "@tabler/icons-react";
+import { mantineColors } from "./colors";
 import accordionClasses from "./styles/accordion.module.css";
+import buttonClasses from "./styles/button.module.css";
 
 export const theme = createTheme({
 	black: "#000000", // default for Space Grotesk theme, dynamically updated via CSS vars
@@ -14,6 +16,7 @@ export const theme = createTheme({
 		xs: "320px",
 	},
 	colors: {
+		...mantineColors,
 		dark: [
 			"#f9fafb",
 			"#f3f4f6",
@@ -25,18 +28,6 @@ export const theme = createTheme({
 			"#1f2937",
 			"#111827",
 			"#030712",
-		],
-		primary: [
-			"#eef2fc", // 0 - lightest
-			"#dce4f9", // 1
-			"#b9c9f3", // 2
-			"#96aeec", // 3
-			"#6d8be5", // 4
-			"#4169E1", // 5 - royal blue (base)
-			"#4169E1", // 6
-			"#3354b3", // 7
-			"#2c499c", // 8
-			"#253f85", // 9 - darkest
 		],
 	},
 	components: {
@@ -105,6 +96,9 @@ export const theme = createTheme({
 			},
 		},
 		Button: {
+			classNames: {
+				root: buttonClasses.root,
+			},
 			defaultProps: {
 				color: "primary",
 				variant: "filled",
