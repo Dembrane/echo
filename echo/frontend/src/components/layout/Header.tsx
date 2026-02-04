@@ -1,12 +1,12 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Group, Menu, Paper, Stack, Text } from "@mantine/core";
+import { GearSixIcon } from "@phosphor-icons/react";
 import * as Sentry from "@sentry/react";
 import {
 	IconBug,
 	IconLogout,
 	IconNotes,
-	IconSettings,
 	IconShieldLock,
 	IconWorld,
 } from "@tabler/icons-react";
@@ -154,7 +154,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 										variant="transparent"
 										{...testId("header-settings-gear-button")}
 									>
-										<IconSettings />
+										<GearSixIcon size={24} color="var(--app-text)" />
 									</ActionIcon>
 								</Menu.Target>
 								<Menu.Dropdown className="py-4">

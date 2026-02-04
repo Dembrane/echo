@@ -1,7 +1,8 @@
 import { aggregate } from "@directus/sdk";
 import { t } from "@lingui/core/macro";
 import { ActionIcon, Group, Stack, Text } from "@mantine/core";
-import { IconRefresh, IconUsersGroup } from "@tabler/icons-react";
+import { UsersThreeIcon } from "@phosphor-icons/react";
+import { IconRefresh } from "@tabler/icons-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { directus } from "@/lib/directus";
@@ -68,7 +69,7 @@ export const OngoingConversationsSummaryCard = ({
 
 	return (
 		<SummaryCard
-			icon={<IconUsersGroup size={24} />}
+			icon={<UsersThreeIcon size={24} />}
 			label={
 				<Group
 					gap="xs"

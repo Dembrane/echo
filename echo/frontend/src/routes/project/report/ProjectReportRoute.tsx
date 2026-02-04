@@ -16,7 +16,8 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconPrinter, IconSettings, IconShare2 } from "@tabler/icons-react";
+import { GearSixIcon } from "@phosphor-icons/react";
+import { IconPrinter, IconShare2 } from "@tabler/icons-react";
 import { AnimatePresence } from "motion/react";
 import { useState } from "react";
 import { useParams } from "react-router";
@@ -83,7 +84,7 @@ const ProjectReportAnalytics = ({ reportId }: { reportId: number }) => {
 			<Group>
 				<Title order={4}>Analytics</Title>
 				<ActionIcon onClick={toggle} variant="transparent" color="gray.9">
-					<IconSettings />
+					<GearSixIcon size={24} />
 				</ActionIcon>
 			</Group>
 			<Stack gap="1rem">
