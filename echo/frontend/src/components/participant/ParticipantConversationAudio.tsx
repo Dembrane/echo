@@ -419,27 +419,27 @@ export const ParticipantConversationAudio = () => {
 	const getRefineModalTitle = () => {
 		if (showVerify && showEcho) {
 			return (
-				<Trans id="participant.modal.refine.info.title.generic">
-					"Refine" available soon
+				<Trans id="participant.modal.echo.info.title.generic">
+					"ECHO" available soon
 				</Trans>
 			);
 		}
 		if (showVerify) {
 			return (
-				<Trans id="participant.modal.refine.info.title.concrete">
-					"Make it concrete" available soon
+				<Trans id="participant.modal.echo.info.title.concrete">
+					"Verify" available soon
 				</Trans>
 			);
 		}
 		if (showEcho) {
 			return (
-				<Trans id="participant.modal.refine.info.title.go.deeper">
-					"Go deeper" available soon
+				<Trans id="participant.modal.echo.info.title.go.deeper">
+					"Explore" available soon
 				</Trans>
 			);
 		}
 		return (
-			<Trans id="participant.modal.refine.info.title">
+			<Trans id="participant.modal.echo.info.title">
 				Feature available soon
 			</Trans>
 		);
@@ -447,8 +447,8 @@ export const ParticipantConversationAudio = () => {
 
 	const getRefineInfoReason = () => {
 		return (
-			<Trans id="participant.modal.refine.info.reason">
-				We need a bit more context to help you refine effectively. Please
+			<Trans id="participant.modal.echo.info.reason">
+				We need a bit more context to help you use ECHO effectively. Please
 				continue recording so we can provide better suggestions.
 			</Trans>
 		);
@@ -727,7 +727,7 @@ export const ParticipantConversationAudio = () => {
 												/>
 											)}
 											<span className="relative z-10">
-												<Trans id="participant.button.refine">Refine</Trans>
+												<Trans id="participant.button.echo">ECHO</Trans>
 											</span>
 										</Button>
 									)}

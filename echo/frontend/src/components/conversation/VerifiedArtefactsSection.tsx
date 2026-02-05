@@ -86,12 +86,12 @@ export const VerifiedArtefactsSection = ({
 		<Stack gap="1.5rem">
 			<Group>
 				<Title order={2}>
-					<Trans>Artefacts</Trans>
+					<Trans>Outcomes</Trans>
 				</Title>
 				<ThemeIcon
 					variant="subtle"
 					color="primary"
-					aria-label={t`artefacts`}
+					aria-label={t`outcomes`}
 					size={22}
 				>
 					<IconRosetteDiscountCheck />
