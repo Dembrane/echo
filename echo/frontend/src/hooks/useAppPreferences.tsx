@@ -28,7 +28,31 @@ const AppPreferencesContext = createContext<AppPreferencesContextType | null>(
 	null,
 );
 
+const isValidFontFamily = (value: string): value is FontFamily => {
+	return value === "dm-sans" || value === "space-grotesk";
+};
+
+const getThemeFromUrl = (): FontFamily | null => {
+	try {
+		const params = new URLSearchParams(window.location.search);
+		const theme = params.get("theme");
+		if (theme && isValidFontFamily(theme)) {
+			return theme;
+		}
+	} catch {
+		// Ignore URL parsing errors
+	}
+	return null;
+};
+
 const loadPreferences = (): AppPreferences => {
+	// First check URL for theme parameter (used in participant portal links)
+	const urlTheme = getThemeFromUrl();
+	if (urlTheme) {
+		return { ...defaultPreferences, fontFamily: urlTheme };
+	}
+
+	// Fall back to localStorage
 	try {
 		const stored = localStorage.getItem(STORAGE_KEY);
 		if (stored) {
