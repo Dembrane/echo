@@ -1,5 +1,5 @@
 import { ActionIcon, Box, Group, Paper, Text } from "@mantine/core";
-import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
+import { IconRosetteDiscountCheck } from "@tabler/icons-react";
 import { format } from "date-fns";
 import type { VerificationArtifact } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
@@ -46,7 +46,7 @@ export const VerifiedArtefactItem = ({
 						aria-label="concrete artefact"
 						size={22}
 					>
-						<IconRosetteDiscountCheckFilled />
+						<IconRosetteDiscountCheck />
 					</ActionIcon>
 					<Group align="baseline">
 						<Text className="prose text-sm">

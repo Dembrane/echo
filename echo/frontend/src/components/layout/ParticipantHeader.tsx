@@ -2,7 +2,8 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Box, Button, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconArrowLeft, IconSettings } from "@tabler/icons-react";
+import { GearSixIcon } from "@phosphor-icons/react";
+import { IconArrowLeft } from "@tabler/icons-react";
 import { useLocation, useParams, useSearchParams } from "react-router";
 import useSessionStorageState from "use-session-storage-state";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -61,9 +62,8 @@ export const ParticipantHeader = () => {
 					<Box className="absolute left-4 top-1/2 -translate-y-1/2">
 						<Button
 							size="md"
-							variant="light"
+							variant="subtle"
 							leftSection={<IconArrowLeft size={16} />}
-							className="rounded-full"
 							onClick={handleBack}
 							{...testId("portal-header-back-button")}
 						>
@@ -75,8 +75,7 @@ export const ParticipantHeader = () => {
 					<Box className="absolute left-4 top-1/2 -translate-y-1/2">
 						<Button
 							size="md"
-							variant="light"
-							className="rounded-full"
+							variant="subtle"
 							onClick={handleCancel}
 							{...testId("portal-header-cancel-button")}
 						>
@@ -98,7 +97,7 @@ export const ParticipantHeader = () => {
 						aria-label={t`Settings`}
 						{...testId("portal-header-settings-button")}
 					>
-						<IconSettings size={24} color="gray" />
+						<GearSixIcon size={24} color="gray" />
 					</ActionIcon>
 				</Box>
 			)}

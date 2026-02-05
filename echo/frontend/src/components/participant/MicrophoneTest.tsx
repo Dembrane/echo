@@ -419,8 +419,7 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
 					</Text>
 					<Group grow gap="md" mt="xl">
 						<Button
-							variant="outline"
-							color="gray"
+							variant="subtle"
 							onClick={handleCancelMicChange}
 							miw={100}
 							radius="md"

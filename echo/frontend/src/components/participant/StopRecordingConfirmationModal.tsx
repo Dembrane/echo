@@ -69,19 +69,17 @@ export const StopRecordingConfirmationModal = ({
 						onClick={handleClose}
 						disabled={isStopping}
 						miw={100}
-						radius="md"
 						size="md"
 						{...testId("portal-audio-stop-resume-button")}
 					>
 						<Trans id="participant.button.stop.resume">Resume</Trans>
 					</Button>
 					<Button
-						variant="default"
+						variant="outline"
 						onClick={handleConfirmFinish}
 						loading={isStopping}
 						disabled={isFinishDisabled}
 						miw={100}
-						radius="md"
 						size="md"
 						{...testId("portal-audio-stop-finish-button")}
 					>
@@ -91,7 +89,6 @@ export const StopRecordingConfirmationModal = ({
 				<Anchor
 					component="button"
 					onClick={handleSwitchToText}
-					c="blue"
 					size="sm"
 					pt="sm"
 					ta="left"

@@ -161,11 +161,9 @@ export const ParticipantConversationText = () => {
 					</Text>
 					<Group grow gap="md">
 						<Button
-							variant="outline"
-							color="gray"
+							variant="subtle"
 							onClick={closeFinishModal}
 							miw={100}
-							radius="md"
 							size="md"
 							{...testId("portal-text-finish-cancel-button")}
 						>
@@ -184,7 +182,9 @@ export const ParticipantConversationText = () => {
 				</Stack>
 			</Modal>
 
-			<Box className={clsx("relative flex-grow px-4 py-12 transition-all")}>
+			<Box
+				className={clsx("relative flex-grow px-4 pt-4 pb-12 transition-all")}
+			>
 				{projectQuery.data && conversationQuery.data && (
 					<ParticipantBody
 						viewResponses
@@ -196,7 +196,10 @@ export const ParticipantConversationText = () => {
 				<div ref={scrollTargetRef} className="h-0" />
 			</Box>
 
-			<Stack className="sticky bottom-0 z-10 w-full border-slate-300 bg-white p-4">
+			<Stack
+				bg="var(--app-background)"
+				className="sticky bottom-0 z-10 w-full border-slate-300 p-4"
+			>
 				<Group
 					justify="center"
 					className={"absolute bottom-[110%] left-1/2 z-50 translate-x-[-50%]"}
@@ -227,22 +230,20 @@ export const ParticipantConversationText = () => {
 					</Button>
 
 					<I18nLink to={audioModeUrl}>
-						<ActionIcon
-							component="a"
-							variant="default"
-							size="50"
-							radius="md"
+						<Button
+							size="lg"
+							variant="outline"
+							px="lg"
 							{...testId("portal-text-switch-to-audio-button")}
 						>
 							<IconMicrophone />
-						</ActionIcon>
+						</Button>
 					</I18nLink>
 					{text.trim() === "" && chunks.data && chunks.data.length > 0 && (
 						<Button
 							size="lg"
-							radius="md"
 							onClick={openFinishModal}
-							variant="light"
+							variant="outline"
 							rightSection={<IconCheck />}
 							{...testId("portal-text-finish-button")}
 						>

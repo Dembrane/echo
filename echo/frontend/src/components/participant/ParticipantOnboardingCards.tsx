@@ -351,7 +351,6 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 										: "_blank"
 								}
 								href={currentCard.link.url}
-								className=""
 								size={currentCard.cta ? "md" : "lg"}
 								variant={currentCard.cta ? "transparent" : "filled"}
 								{...testId("portal-onboarding-link-button")}
@@ -386,7 +385,6 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 								<Button
 									onClick={prevSlide}
 									variant="outline"
-									color="gray"
 									size="md"
 									className="basis-1/2"
 									{...testId("portal-onboarding-mic-back-button")}
@@ -408,7 +406,6 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 								<Button
 									onClick={prevSlide}
 									variant="outline"
-									color="gray"
 									size="md"
 									disabled={currentSlideIndex === 0}
 									className={!isLastSlide ? "basis-1/2" : "w-full"}
