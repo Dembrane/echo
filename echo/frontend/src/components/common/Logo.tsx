@@ -2,7 +2,7 @@ import { Group, type GroupProps } from "@mantine/core";
 import aiconlLogo from "@/assets/aiconl-logo.png";
 import aiconlLogoHQ from "@/assets/aiconl-logo-hq.png";
 
-import dembraneLogoFull from "@/assets/dembrane-logo-new.png";
+import dembraneLogoFull from "@/assets/dembrane-logo-new.svg";
 import dembraneLogomark from "@/assets/logomark-no-bg.svg";
 
 type LogoProps = {
