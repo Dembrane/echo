@@ -32,8 +32,9 @@ export const ParticipantHeader = () => {
 		showInstructions;
 	const hideSettingsButton =
 		pathname.includes("start") || pathname.includes("finish");
+	const hideHeader = pathname.includes("start");
 
-	if (!loadingFinished) {
+	if (!loadingFinished || hideHeader) {
 		return null;
 	}
 

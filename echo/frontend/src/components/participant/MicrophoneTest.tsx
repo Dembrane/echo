@@ -288,7 +288,7 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
 			{!showSecondModal ? (
 				<Stack gap="md" className="items-center">
 					{!isInModal && (
-						<Text c="dimmed" size="sm" ta="center">
+						<Text c="dimmed" size="sm" ta="left">
 							<Trans id="participant.test.microphone.description">
 								We'll test your microphone to ensure the best experience for
 								everyone in the session.
