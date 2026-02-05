@@ -119,7 +119,7 @@ export const ParticipantPostConversation = () => {
 
 	return (
 		<div
-			className="container mx-auto h-full max-w-2xl"
+			className="container mx-auto max-w-2xl"
 			{...testId("portal-finish-container")}
 		>
 			<Stack className="mt-[64px] px-4 py-8">

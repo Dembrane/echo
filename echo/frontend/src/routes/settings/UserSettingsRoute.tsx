@@ -35,7 +35,7 @@ export const UserSettingsRoute = () => {
 					>
 						<IconArrowLeft size={18} />
 					</ActionIcon>
-					<Title order={1}>
+					<Title order={2}>
 						<Trans>Settings</Trans>
 					</Title>
 				</Group>

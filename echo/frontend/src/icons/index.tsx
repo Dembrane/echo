@@ -49,6 +49,7 @@ const Plus: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 	</svg>
 );
 
+import { HouseIcon } from "@phosphor-icons/react";
 import type { SVGProps } from "react";
 import refresh from "../assets/refresh.png";
 
@@ -99,21 +100,20 @@ const Diamond = ({
 	);
 };
 
-const Home = (props: SVGProps<SVGSVGElement>) => (
-	<svg
-		xmlns="http://www.w3.org/2000/svg"
-		width={30}
-		height={30}
-		fill="none"
-		role="graphics-symbol img"
-		{...props}
-	>
-		<path
-			fill="currentColor"
-			d="M12.5 25v-7.5h5V25h6.25V15h3.75L15 3.75 2.5 15h3.75v10z"
+// Home icon uses Phosphor HouseIcon, size controlled by CSS variable for theme
+const Home = () => {
+	// Import is at top of file
+	return (
+		<HouseIcon
+			size="var(--app-home-icon-size, 30)"
+			color="currentColor"
+			style={{
+				height: "var(--app-home-icon-size, 30px)",
+				width: "var(--app-home-icon-size, 30px)",
+			}}
 		/>
-	</svg>
-);
+	);
+};
 
 const Calendar = (props: SVGProps<SVGSVGElement>) => (
 	<svg
