@@ -797,7 +797,7 @@ export const WebhookSection = ({ projectId }: WebhookSectionProps) => {
 								</Text>
 							</Stack>
 							<Button
-								leftSection={<IconPlus size={16} />}
+								rightSection={<IconPlus size={16} />}
 								variant="filled"
 								onClick={handleAddWebhook}
 							>

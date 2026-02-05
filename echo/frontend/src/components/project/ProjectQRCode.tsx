@@ -13,6 +13,7 @@ import {
 import { IconCheck, IconCopy, IconShare } from "@tabler/icons-react";
 import { useMemo } from "react";
 import { PARTICIPANT_BASE_URL } from "@/config";
+import { useAppPreferences } from "@/hooks/useAppPreferences";
 import { testId } from "@/lib/testUtils";
 import { QRCode } from "../common/QRCode";
 
@@ -22,6 +23,8 @@ interface ProjectQRCodeProps {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useProjectSharingLink = (project?: Project) => {
+	const { preferences } = useAppPreferences();
+
 	// biome-ignore lint/correctness/useExhaustiveDependencies: not an issue
 	return useMemo(() => {
 		if (!project) {
@@ -58,9 +61,12 @@ export const useProjectSharingLink = (project?: Project) => {
 				| "it-IT"
 		];
 
-		const link = `${PARTICIPANT_BASE_URL}/${languageCode}/${project.id}/start`;
+		// Include theme in URL so participant portal uses the same theme
+		const baseLink = `${PARTICIPANT_BASE_URL}/${languageCode}/${project.id}/start`;
+		const theme = preferences.fontFamily;
+		const link = `${baseLink}?theme=${theme}`;
 		return link;
-	}, [project?.language, project?.id]);
+	}, [project?.language, project?.id, preferences.fontFamily]);
 };
 
 export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {

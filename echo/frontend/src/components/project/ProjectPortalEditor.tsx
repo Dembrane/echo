@@ -428,7 +428,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 					<Button
 						variant="subtle"
 						onClick={() => setShowPreview(!showPreview)}
-						leftSection={
+						rightSection={
 							showPreview ? <IconEyeOff size={16} /> : <IconEye size={16} />
 						}
 						{...testId("portal-editor-preview-toggle")}
@@ -1155,7 +1155,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													variant="subtle"
 													size="compact-sm"
 													onClick={refreshPreview}
-													leftSection={<IconRefresh size={16} />}
+													rightSection={<IconRefresh size={16} />}
 												>
 													<Trans>Refresh</Trans>
 												</Button>

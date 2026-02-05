@@ -39,7 +39,7 @@ import {
 	IconArrowsUpDown,
 	IconChevronDown,
 	IconChevronUp,
-	IconRosetteDiscountCheckFilled,
+	IconRosetteDiscountCheck,
 	IconSearch,
 	IconSelectAll,
 	IconTags,
@@ -516,11 +516,6 @@ const ConversationAccordionItem = ({
 		return null;
 	}
 
-	const isLocked = chatContextQuery.data?.conversations?.find(
-		(c) => c.conversation_id === conversation.id && c.locked,
-	);
-
-	const isAutoSelectEnabled = chatContextQuery.data?.auto_select_bool ?? false;
 	const chatMode = chatContextQuery.data?.chat_mode;
 
 	// Hide checkboxes when:
@@ -538,26 +533,10 @@ const ConversationAccordionItem = ({
 			(artefact) => (artefact as ConversationArtifact).approved_at,
 		);
 
-	// In overview mode, show a subtle "included" indicator
-	const isOverviewMode = chatMode === "overview";
-
-	// Mode-based styling
-	const isDeepDiveWithSelection =
-		inChatMode && !isNewChatRoute && chatMode === "deep_dive" && isLocked;
-
 	return (
 		<NavigationButton
 			to={`/projects/${conversation.project_id}/conversation/${conversation.id}/overview`}
 			active={highlight}
-			borderColor={
-				isOverviewMode
-					? MODE_COLORS.overview.primary
-					: isDeepDiveWithSelection
-						? MODE_COLORS.deep_dive.primary
-						: ENABLE_CHAT_AUTO_SELECT && isAutoSelectEnabled
-							? "green"
-							: undefined
-			}
 			className="w-full"
 			rightSection={
 				shouldShowCheckboxes ? (
@@ -583,7 +562,7 @@ const ConversationAccordionItem = ({
 									size={18}
 									style={{ cursor: "default" }}
 								>
-									<IconRosetteDiscountCheckFilled />
+									<IconRosetteDiscountCheck />
 								</ThemeIcon>
 							</Tooltip>
 						)}
@@ -1091,7 +1070,7 @@ export const ConversationAccordion = ({
 											}}
 											{...testId("conversation-search-clear-button")}
 										>
-											<IconX />
+											<IconX size={16} />
 										</ActionIcon>
 									)
 								}
@@ -1106,8 +1085,6 @@ export const ConversationAccordion = ({
 								<Box className="relative">
 									<ActionIcon
 										variant="outline"
-										color={filterApplied ? "primary" : "gray"}
-										c={filterApplied ? "primary" : "gray"}
 										onClick={() => setShowFilterActions((prev) => !prev)}
 										aria-label={t`Options`}
 										{...testId("conversation-filter-options-toggle")}
@@ -1146,9 +1123,8 @@ export const ConversationAccordion = ({
 								>
 									<Menu.Target>
 										<Button
-											variant="outline"
+											variant="subtle"
 											size="xs"
-											color="gray"
 											fw={500}
 											leftSection={<IconArrowsUpDown size={16} />}
 											rightSection={
@@ -1207,8 +1183,7 @@ export const ConversationAccordion = ({
 								>
 									<Menu.Target>
 										<Button
-											variant="outline"
-											color="gray"
+											variant="subtle"
 											size="xs"
 											fw={500}
 											leftSection={<IconTags size={16} />}
@@ -1344,11 +1319,10 @@ export const ConversationAccordion = ({
 								</Menu>
 
 								<Button
-									variant={showOnlyVerified ? "filled" : "outline"}
-									color={showOnlyVerified ? "blue" : "gray"}
+									variant={showOnlyVerified ? "light" : "subtle"}
 									size="xs"
 									fw={500}
-									leftSection={<IconRosetteDiscountCheckFilled size={16} />}
+									rightSection={<IconRosetteDiscountCheck size={16} />}
 									onClick={() => setShowOnlyVerified((prev) => !prev)}
 									style={{ flexShrink: 0 }}
 									{...testId("conversation-filter-verified-button")}
@@ -1359,19 +1333,18 @@ export const ConversationAccordion = ({
 								</Button>
 
 								<Tooltip label={t`Reset to default`}>
-									<ActionIcon
-										variant="outline"
-										color="gray"
+									<Button
+										variant="subtle"
+										size="xs"
 										onClick={resetEverything}
 										aria-label={t`Reset to default`}
 										disabled={!filterApplied}
-										size="md"
-										py={14}
+										px={6}
 										style={{ flexShrink: 0, marginLeft: "auto" }}
 										{...testId("conversation-filter-reset-button")}
 									>
 										<IconX size={16} />
-									</ActionIcon>
+									</Button>
 								</Tooltip>
 							</Group>
 						)}
@@ -1391,7 +1364,7 @@ export const ConversationAccordion = ({
 								disabled={remainingCount > 0}
 							>
 								<Button
-									variant="light"
+									variant="outline"
 									size="sm"
 									fullWidth
 									leftSection={<IconSelectAll size={16} />}

@@ -369,7 +369,7 @@ export const VerifyArtefact = () => {
 						<Button
 							size="lg"
 							radius="md"
-							variant="default"
+							variant="outline"
 							className="flex-1 shadow-xl"
 							onClick={handleCancelEdit}
 							{...testId("portal-verify-artefact-cancel-edit-button")}
@@ -394,7 +394,7 @@ export const VerifyArtefact = () => {
 							<Button
 								size="lg"
 								radius="md"
-								variant="default"
+								variant="outline"
 								className="flex-1"
 								onClick={handleRevise}
 								disabled={
@@ -417,7 +417,7 @@ export const VerifyArtefact = () => {
 							<Button
 								size="lg"
 								radius="md"
-								variant="default"
+								variant="outline"
 								onClick={handleEdit}
 								px="lg"
 								disabled={

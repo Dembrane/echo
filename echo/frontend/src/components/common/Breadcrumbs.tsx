@@ -30,7 +30,7 @@ export const Breadcrumbs = ({ items }: BreadcrumbsProps) => {
 				}
 
 				return (
-					<Text key={key} className="text-2xl font-semibold">
+					<Text key={key} className="text-2xl font-semibold pb-1">
 						{item.label}
 					</Text>
 				);

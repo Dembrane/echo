@@ -182,7 +182,7 @@ export const ParticipantPostConversation = () => {
 											rightSection={
 												<Button
 													size="sm"
-													variant="light"
+													variant="outline"
 													onClick={() => addEmail(inputRef.current)}
 													disabled={
 														!email.trim() || isCheckingEmail || isPending
@@ -248,9 +248,7 @@ export const ParticipantPostConversation = () => {
 												{isPending ? (
 													<IconLoader2 className="animate-spin" />
 												) : (
-													<>
-														<Trans> Submit</Trans>
-													</>
+													<Trans> Submit</Trans>
 												)}
 											</Button>
 										)}

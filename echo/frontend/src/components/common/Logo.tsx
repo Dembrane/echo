@@ -1,36 +1,23 @@
-import { Group, type GroupProps, Title } from "@mantine/core";
+import { Group, type GroupProps } from "@mantine/core";
 import aiconlLogo from "@/assets/aiconl-logo.png";
 import aiconlLogoHQ from "@/assets/aiconl-logo-hq.png";
-import dembranelogo from "@/assets/dembrane-logo-hq.png";
-import { cn } from "@/lib/utils";
+
+import dembraneLogoFull from "@/assets/dembrane-logo-new.svg";
+import dembraneLogomark from "@/assets/logomark-no-bg.svg";
 
 type LogoProps = {
 	hideLogo?: boolean;
 	hideTitle?: boolean;
-	textAfterLogo?: string | React.ReactNode;
 } & GroupProps;
 
-export const LogoDembrane = ({
-	hideLogo,
-	hideTitle,
-	textAfterLogo,
-	...props
-}: LogoProps) => (
-	<Group gap="sm" h="30px" align="center" {...props}>
+export const LogoDembrane = ({ hideLogo, hideTitle, ...props }: LogoProps) => (
+	<Group gap="sm" h="36px" align="center" {...props}>
 		{!hideLogo && (
 			<img
-				src={dembranelogo}
+				src={hideTitle ? dembraneLogomark : dembraneLogoFull}
 				alt="Dembrane Logo"
 				className="h-full object-contain"
 			/>
-		)}
-		{!hideTitle && (
-			<Title order={1} className="text-xl">
-				<span className={cn("font-medium", textAfterLogo && "mr-1")}>
-					Dembrane
-				</span>
-				{textAfterLogo && <span>{textAfterLogo}</span>}
-			</Title>
 		)}
 	</Group>
 );
@@ -61,3 +48,6 @@ export const Logo = (props: LogoProps) => {
 		<LogoAiCoNL {...props} />
 	);
 };
+
+// Export logomark for use in spinners and loading indicators
+export const DembraneLogomark = dembraneLogomark;

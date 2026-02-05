@@ -163,7 +163,7 @@ export const AutoSelectConversations = () => {
 						<Button
 							size="xs"
 							onClick={enableAutoSelect}
-							leftSection={<IconLock size={14} />}
+							rightSection={<IconLock size={14} />}
 						>
 							<Trans>Request Access</Trans>
 						</Button>

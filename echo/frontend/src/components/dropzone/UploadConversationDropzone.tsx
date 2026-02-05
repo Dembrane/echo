@@ -498,7 +498,7 @@ export const UploadConversationDropzone = (
 			{/* Upload button */}
 			<Tooltip label={t`Upload conversations`}>
 				<Button
-					leftSection={<IconPlus size={16} />}
+					rightSection={<IconPlus size={16} />}
 					onClick={open}
 					variant="outline"
 					{...testId("conversation-upload-button")}
@@ -709,7 +709,7 @@ export const UploadConversationDropzone = (
 
 							<Group justify="flex-end" mt="md">
 								<Button
-									variant="outline"
+									variant="subtle"
 									onClick={close}
 									{...testId("conversation-upload-cancel-button")}
 								>

@@ -1,10 +1,10 @@
 import { t } from "@lingui/core/macro";
 import { Switch, Tooltip } from "@mantine/core";
+import { DeviceMobileIcon } from "@phosphor-icons/react";
 import {
 	useProjectById,
 	useUpdateProjectByIdMutation,
 } from "@/components/project/hooks";
-import { Icons } from "@/icons";
 import { testId } from "@/lib/testUtils";
 import { SummaryCard } from "../common/SummaryCard";
 
@@ -37,7 +37,7 @@ export const OpenForParticipationSummaryCard = ({
 	return (
 		<SummaryCard
 			loading={projectQuery.isLoading}
-			icon={<Icons.Phone width="24px" />}
+			icon={<DeviceMobileIcon size={24} />}
 			label={t`Open for Participation?`}
 			value={
 				<Tooltip

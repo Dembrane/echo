@@ -1,4 +1,3 @@
-import "@fontsource-variable/dm-sans";
 import "@fontsource-variable/space-grotesk";
 import "@mantine/core/styles.css";
 import "@mantine/dropzone/styles.css";

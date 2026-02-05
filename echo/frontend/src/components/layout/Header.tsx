@@ -1,12 +1,12 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Group, Menu, Paper, Stack, Text } from "@mantine/core";
+import { GearSixIcon } from "@phosphor-icons/react";
 import * as Sentry from "@sentry/react";
 import {
 	IconBug,
 	IconLogout,
 	IconNotes,
-	IconSettings,
 	IconShieldLock,
 	IconWorld,
 } from "@tabler/icons-react";
@@ -123,14 +123,21 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 			<Paper
 				component="header"
 				radius="0"
-				className="z-30 h-full w-full px-4"
+				className="z-30 w-full"
 				shadow="xs"
-				style={{ backgroundColor: "var(--app-background)" }}
+				withBorder={false}
+				style={{
+					backgroundColor: "var(--app-background)",
+					borderLeft: "1px solid var(--mantine-color-default-border)",
+					borderRight: "1px solid var(--mantine-color-default-border)",
+				}}
 			>
 				<Group
 					justify="space-between"
 					align="center"
-					className="h-full min-h-[58px] w-full"
+					className="w-full"
+					h={60}
+					px="md"
 				>
 					<Group gap="md">
 						<I18nLink to="/projects">
@@ -141,7 +148,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 					</Group>
 
 					{!loading && isAuthenticated && user ? (
-						<Group>
+						<Group align="baseline">
 							{ENABLE_ANNOUNCEMENTS && (
 								<>
 									<AnnouncementIcon />
@@ -155,7 +162,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 										variant="transparent"
 										{...testId("header-settings-gear-button")}
 									>
-										<IconSettings />
+										<GearSixIcon size={24} color="var(--app-text)" />
 									</ActionIcon>
 								</Menu.Target>
 								<Menu.Dropdown className="py-4">
