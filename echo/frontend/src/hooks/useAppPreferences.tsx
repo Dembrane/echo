@@ -172,6 +172,9 @@ export const AppPreferencesProvider = ({
 					lineHeightXs: "1.4",
 				};
 
+		// Icon sizes: DM Sans uses larger icons to match the bolder typography
+		const homeIconSize = isDmSans ? "40px" : "30px";
+
 		// Set base font size
 		root.style.setProperty("--app-base-font-size", baseFontSize);
 
@@ -181,6 +184,9 @@ export const AppPreferencesProvider = ({
 		// Set colors
 		root.style.setProperty("--app-background", backgroundColor);
 		root.style.setProperty("--app-text", textColor);
+
+		// Set icon sizes
+		root.style.setProperty("--app-home-icon-size", homeIconSize);
 
 		// Set typography - font sizes
 		root.style.setProperty("--app-font-size-xs", typography.fontSizeXs);

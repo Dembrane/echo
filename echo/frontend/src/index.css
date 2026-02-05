@@ -60,6 +60,10 @@
 	--app-heading-h6-size: 0.875rem;
 	--app-heading-h6-line-height: 1.5;
 	
+	/* Icon sizes */
+	/* DM Sans (default) uses 50px, Space Grotesk uses 30px */
+	--app-home-icon-size: 40px;
+	
 	/* Scrollbar */
 	--scrollbar-track: var(--app-background);
 	--scrollbar-thumb: var(--app-scrollbar-thumb);
