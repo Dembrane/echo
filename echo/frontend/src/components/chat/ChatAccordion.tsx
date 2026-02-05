@@ -69,7 +69,7 @@ export const ChatModeIndicator = ({
 					>
 						<IconSparkles
 							size={size === "xs" ? 12 : 20}
-							color="#2D2D2C"
+							color="var(--app-text)"
 							stroke={2}
 						/>
 					</ActionIcon>
@@ -81,7 +81,7 @@ export const ChatModeIndicator = ({
 					>
 						<IconMessageCircle
 							size={size === "xs" ? 12 : 20}
-							color="#2D2D2C"
+							color="var(--app-text)"
 							stroke={2}
 						/>
 					</ActionIcon>

@@ -127,9 +127,9 @@ const ModeCard = ({
 								bg={colors.primary}
 							>
 								{isThisLoading ? (
-									<Loader size={24} color="#2D2D2C" />
+									<Loader size={24} color="var(--app-text)" />
 								) : (
-									<Icon size={24} stroke={2} color="#2D2D2C" />
+									<Icon size={24} stroke={2} color="var(--app-text)" />
 								)}
 							</Box>
 							<Stack gap={4}>
@@ -175,7 +175,7 @@ const ModeCard = ({
 							<Group key={example} gap="sm" wrap="nowrap" align="flex-start">
 								<IconQuote
 									size={14}
-									color="#2D2D2C"
+									color="var(--app-text)"
 									style={{ flexShrink: 0, marginTop: 2 }}
 								/>
 								<Text size="sm" c="dimmed" lh={1.5}>
