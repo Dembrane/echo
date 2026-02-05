@@ -1,0 +1,26 @@
+You are generating a short title for a conversation that just finished.
+
+<summary>
+{{ summary }}
+</summary>
+
+{% if existing_titles %}
+<existing_conversation_titles_in_project>
+These are titles of other conversations in this project - try to match the style:
+{% for title in existing_titles %}
+- {{ title }}
+{% endfor %}
+</existing_conversation_titles_in_project>
+{% endif %}
+
+{% if custom_prompt %}
+<custom_instructions>
+{{ custom_prompt }}
+</custom_instructions>
+{% endif %}
+
+Generate a 1-3 word title that captures the essence of this conversation.
+- The title should be in {{ language_name }} language
+- Match the style of existing titles if provided
+- Be specific, not generic (avoid "Discussion" or "Meeting")
+- Output ONLY the title, nothing else

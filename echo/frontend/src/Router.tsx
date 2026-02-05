@@ -103,6 +103,10 @@ const UserSettingsRoute = createLazyNamedRoute(
 	() => import("./routes/settings/UserSettingsRoute"),
 	"UserSettingsRoute",
 );
+const HostGuidePage = createLazyNamedRoute(
+	() => import("./routes/project/HostGuidePage"),
+	"HostGuidePage",
+);
 
 export const mainRouter = createBrowserRouter([
 	{
@@ -158,6 +162,15 @@ export const mainRouter = createBrowserRouter([
 					</AuthLayout>
 				),
 				path: "verify-email",
+			},
+			{
+				// Host Guide - standalone page, protected but no header/layout
+				element: (
+					<Protected>
+						<HostGuidePage />
+					</Protected>
+				),
+				path: "projects/:projectId/host-guide",
 			},
 			{
 				children: [

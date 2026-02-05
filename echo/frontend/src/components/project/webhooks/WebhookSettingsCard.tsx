@@ -8,11 +8,13 @@ import {
 	Button,
 	Checkbox,
 	Code,
+	Divider,
 	Group,
 	Loader,
 	Modal,
 	Paper,
 	PasswordInput,
+	Select,
 	Stack,
 	Switch,
 	Table,
@@ -22,6 +24,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
+	IconArrowLeft,
 	IconCopy,
 	IconEdit,
 	IconExternalLink,
@@ -31,10 +34,11 @@ import {
 	IconTrash,
 	IconWebhook,
 } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import type { Webhook, WebhookCreatePayload, WebhookEvent } from "@/lib/api";
 import {
+	useCopyableWebhooks,
 	useCreateWebhookMutation,
 	useDeleteWebhookMutation,
 	useProjectWebhooks,
@@ -50,8 +54,8 @@ const WEBHOOK_EVENTS: {
 }[] = [
 	{
 		description: "When a participant starts a new conversation",
-		label: "Conversation Created",
-		value: "conversation.created",
+		label: "Conversation Started",
+		value: "conversation.started",
 	},
 	{
 		description: "When all audio has been converted to text",
@@ -79,6 +83,8 @@ interface WebhookFormModalProps {
 	webhook?: Webhook | null;
 }
 
+type ModalStep = "choose" | "copy" | "form";
+
 const WebhookFormModal = ({
 	opened,
 	onClose,
@@ -88,11 +94,15 @@ const WebhookFormModal = ({
 	const isEditing = !!webhook;
 	const createMutation = useCreateWebhookMutation();
 	const updateMutation = useUpdateWebhookMutation();
+	const { data: copyableWebhooks, isLoading: isLoadingCopyable } =
+		useCopyableWebhooks(!isEditing ? projectId : undefined);
+
+	const [step, setStep] = useState<ModalStep>("choose");
 
 	const { control, handleSubmit, reset } = useForm<WebhookFormData>({
 		defaultValues: {
 			events: [
-				"conversation.created",
+				"conversation.started",
 				"conversation.transcribed",
 				"conversation.summarized",
 			],
@@ -102,12 +112,69 @@ const WebhookFormModal = ({
 		},
 	});
 
-	// Reset form when webhook changes (editing) or modal opens
+	// Build select options grouped by project
+	const copyFromOptions = useMemo(() => {
+		if (!copyableWebhooks?.length) return [];
+
+		// Group webhooks by project
+		const byProject = new Map<string, typeof copyableWebhooks>();
+		for (const wh of copyableWebhooks) {
+			const existing = byProject.get(wh.project_id) || [];
+			existing.push(wh);
+			byProject.set(wh.project_id, existing);
+		}
+
+		// Convert to grouped select options
+		return Array.from(byProject.entries()).map(([_, webhooks]) => ({
+			group: webhooks[0].project_name,
+			items: webhooks.map((wh) => ({
+				label: wh.name || wh.url || "Unnamed webhook",
+				value: wh.id,
+			})),
+		}));
+	}, [copyableWebhooks]);
+
+	const hasCopyableWebhooks = copyFromOptions.length > 0;
+
+	const handleCopyFrom = (webhookId: string | null) => {
+		if (!webhookId || !copyableWebhooks) return;
+
+		const source = copyableWebhooks.find((w) => w.id === webhookId);
+		if (!source) return;
+
+		reset({
+			name: source.name || "",
+			url: source.url || "",
+			secret: "", // Never copy secrets
+			events: source.events || [
+				"conversation.started",
+				"conversation.transcribed",
+				"conversation.summarized",
+			],
+		});
+		setStep("form");
+	};
+
+	const handleStartFresh = () => {
+		reset({
+			events: [
+				"conversation.started",
+				"conversation.transcribed",
+				"conversation.summarized",
+			],
+			name: "",
+			secret: "",
+			url: "",
+		});
+		setStep("form");
+	};
+
+	// Reset form and step when modal opens/closes
 	useEffect(() => {
 		if (opened) {
 			reset({
 				events: webhook?.events || [
-					"conversation.created",
+					"conversation.started",
 					"conversation.transcribed",
 					"conversation.summarized",
 				],
@@ -115,8 +182,26 @@ const WebhookFormModal = ({
 				secret: "",
 				url: webhook?.url || "",
 			});
+			// When editing, go straight to form
+			if (isEditing) {
+				setStep("form");
+			} else {
+				setStep("choose");
+			}
 		}
-	}, [opened, webhook, reset]);
+	}, [opened, webhook, reset, isEditing]);
+
+	// Redirect to form when on choose step but no copyable webhooks available
+	useEffect(() => {
+		if (
+			step === "choose" &&
+			!isEditing &&
+			!isLoadingCopyable &&
+			!hasCopyableWebhooks
+		) {
+			setStep("form");
+		}
+	}, [step, isEditing, isLoadingCopyable, hasCopyableWebhooks]);
 
 	const onSubmit = async (data: WebhookFormData) => {
 		try {
@@ -151,6 +236,13 @@ const WebhookFormModal = ({
 
 	const isPending = createMutation.isPending || updateMutation.isPending;
 
+	// Determine modal title based on step
+	const getModalTitle = () => {
+		if (isEditing) return <Trans>Edit Webhook</Trans>;
+		if (step === "copy") return <Trans>Clone from Project</Trans>;
+		return <Trans>Add Webhook</Trans>;
+	};
+
 	return (
 		<Modal
 			opened={opened}
@@ -158,21 +250,124 @@ const WebhookFormModal = ({
 			title={
 				<Group gap="xs">
 					<IconWebhook size={20} />
-					<Text fw={600}>
-						{isEditing ? (
-							<Trans>Edit Webhook</Trans>
-						) : (
-							<Trans>Add Webhook</Trans>
-						)}
-					</Text>
+					<Text fw={600}>{getModalTitle()}</Text>
 				</Group>
 			}
 			size="md"
 			centered
 		>
-			<form onSubmit={handleSubmit(onSubmit)}>
-				<Stack gap="lg">
-					<Controller
+			{/* Step: Choose between copy or fresh */}
+			{step === "choose" && !isEditing && (
+				<Stack gap="md">
+					{isLoadingCopyable ? (
+						<Group justify="center" py="xl">
+							<Loader size="sm" />
+						</Group>
+					) : hasCopyableWebhooks ? (
+						<>
+							<Paper
+								p="lg"
+								withBorder
+								radius="md"
+								className="hover:border-gray-400 transition-colors"
+								style={{ cursor: "pointer" }}
+								onClick={() => setStep("copy")}
+							>
+								<Group>
+									<ThemeIcon size={48} radius="md" variant="light" color="gray">
+										<IconCopy size={24} />
+									</ThemeIcon>
+									<Stack gap={2} style={{ flex: 1 }}>
+										<Text fw={500}>
+											<Trans>Clone from another project</Trans>
+										</Text>
+										<Text size="sm" c="dimmed">
+											<Trans>Re-use settings from an existing webhook</Trans>
+										</Text>
+									</Stack>
+								</Group>
+							</Paper>
+
+							<Paper
+								p="lg"
+								withBorder
+								radius="md"
+								className="hover:border-gray-400 transition-colors"
+								style={{ cursor: "pointer" }}
+								onClick={handleStartFresh}
+							>
+								<Group>
+									<ThemeIcon size={48} radius="md" variant="light" color="gray">
+										<IconPlus size={24} />
+									</ThemeIcon>
+									<Stack gap={2} style={{ flex: 1 }}>
+										<Text fw={500}>
+											<Trans>Start fresh</Trans>
+										</Text>
+										<Text size="sm" c="dimmed">
+											<Trans>Create a new webhook from scratch</Trans>
+										</Text>
+									</Stack>
+								</Group>
+							</Paper>
+						</>
+					) : null}
+				</Stack>
+			)}
+
+			{/* Step: Select webhook to clone */}
+			{step === "copy" && (
+				<Stack gap="md">
+					<div>
+						<Button
+							variant="subtle"
+							leftSection={<IconArrowLeft size={16} />}
+							onClick={() => setStep("choose")}
+							size="compact-sm"
+							px={0}
+						>
+							<Trans>Back</Trans>
+						</Button>
+					</div>
+
+					<Select
+						label={t`Select a webhook to clone`}
+						description={t`Choose from your other projects`}
+						placeholder={t`Search webhooks...`}
+						data={copyFromOptions}
+						onChange={handleCopyFrom}
+						searchable
+						maxDropdownHeight={300}
+						nothingFoundMessage={t`No webhooks found`}
+					/>
+
+					<Text size="xs" c="dimmed">
+						<Trans>
+							The webhook URL and events will be cloned. You'll need to re-enter
+							the secret if one was configured.
+						</Trans>
+					</Text>
+				</Stack>
+			)}
+
+			{/* Step: Form */}
+			{step === "form" && (
+				<form onSubmit={handleSubmit(onSubmit)}>
+					<Stack gap="lg">
+						{!isEditing && hasCopyableWebhooks && (
+							<div>
+								<Button
+									variant="subtle"
+									leftSection={<IconArrowLeft size={16} />}
+									onClick={() => setStep("choose")}
+									size="compact-sm"
+									px={0}
+								>
+									<Trans>Back</Trans>
+								</Button>
+							</div>
+						)}
+						<Controller
 						name="name"
 						control={control}
 						rules={{ required: t`Name is required` }}
@@ -339,6 +534,7 @@ const WebhookFormModal = ({
 					</Group>
 				</Stack>
 			</form>
+			)}
 		</Modal>
 	);
 };
@@ -508,20 +704,21 @@ const EXAMPLE_WEBHOOK_PAYLOAD = `{
     "created_at": "2026-01-20T11:30:00.000Z",
     "updated_at": "2026-01-20T12:00:00.000Z",
     "participant_name": "Jane Smith",
-    "participant_email": "jane@example.com",
     "duration": 245,
     "source": "PORTAL_AUDIO",
     "is_finished": true,
     "is_all_chunks_transcribed": true,
     "tags": ["feedback", "product"],
     "transcript": "Hello, I wanted to share my thoughts on...",
-    "summary": "The participant shared positive feedback about..."
+    "summary": "The participant shared positive feedback about...",
+    "emails_csv": "jane@example.com,team@example.com"
   },
   "project": {
     "id": "proj-789",
     "name": "Customer Interviews",
     "language": "en"
-  }
+  },
+  "dashboardUrl": "https://app.example.com/en-US/projects/proj-789/conversation/abc123-def456/overview"
 }`;
 
 interface WebhookHelpAccordionProps {
@@ -573,6 +770,32 @@ const WebhookHelpAccordion = ({ onViewPayload }: WebhookHelpAccordionProps) => (
 					</Stack>
 
 					<Text size="sm" fw={500}>
+						<Trans>When are webhooks triggered?</Trans>
+					</Text>
+					<Stack gap="xs" pl="md">
+						<Text size="sm">
+							<strong>conversation.started</strong> —{" "}
+							<Trans>
+								When a participant opens the portal, enters their details, and
+								begins a conversation
+							</Trans>
+						</Text>
+						<Text size="sm">
+							<strong>conversation.transcribed</strong> —{" "}
+							<Trans>
+								When all audio has been converted to text and the full
+								transcript is available
+							</Trans>
+						</Text>
+						<Text size="sm">
+							<strong>conversation.summarized</strong> —{" "}
+							<Trans>
+								When the summary is ready (includes both transcript and summary)
+							</Trans>
+						</Text>
+					</Stack>
+
+					<Text size="sm" fw={500}>
 						<Trans>What data is sent?</Trans>
 					</Text>
 					<Stack gap="xs" pl="md">
@@ -593,6 +816,9 @@ const WebhookHelpAccordion = ({ onViewPayload }: WebhookHelpAccordionProps) => (
 						</Text>
 						<Text size="sm">
 							• <Trans>Project name and ID</Trans>
+						</Text>
+						<Text size="sm">
+							• <Trans>Dashboard URL (direct link to conversation overview)</Trans>
 						</Text>
 					</Stack>
 					<Anchor component="button" size="sm" onClick={onViewPayload}>

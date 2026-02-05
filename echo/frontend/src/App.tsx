@@ -78,7 +78,7 @@ export const App = () => {
 
 	return (
 		<QueryClientProvider client={queryClient}>
-			<ReactQueryDevtools initialIsOpen={false} />
+			{/* <ReactQueryDevtools initialIsOpen={false} /> */}
 			<MantineProvider theme={theme}>
 				<AppPreferencesProvider>
 					<I18nProvider>

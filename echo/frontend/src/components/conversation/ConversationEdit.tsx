@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	ActionIcon,
 	Box,
 	Group,
 	MultiSelect,
@@ -8,8 +9,11 @@ import {
 	Text,
 	TextInput,
 	Title,
+	Tooltip,
 } from "@mantine/core";
-import { useEffect, useMemo } from "react";
+import { useClipboard } from "@mantine/hooks";
+import { IconCheck, IconCopy } from "@tabler/icons-react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { testId } from "@/lib/testUtils";
@@ -17,6 +21,7 @@ import { CloseableAlert } from "../common/ClosableAlert";
 import { FormLabel } from "../form/FormLabel";
 import { SaveStatus } from "../form/SaveStatus";
 import {
+	useConversationEmails,
 	useUpdateConversationByIdMutation,
 	useUpdateConversationTagsMutation,
 } from "./hooks";
@@ -26,6 +31,26 @@ type ConversationEditFormValues = {
 	tagIdList: string[];
 };
 
+const EmailItem = ({ email }: { email: string }) => {
+	const clipboard = useClipboard({ timeout: 1500 });
+
+	return (
+		<Group gap="xs">
+			<Text size="sm">{email}</Text>
+			<Tooltip label={clipboard.copied ? t`Copied` : t`Copy`}>
+				<ActionIcon
+					variant="subtle"
+					size="sm"
+					color={clipboard.copied ? "green" : "gray"}
+					onClick={() => clipboard.copy(email)}
+				>
+					{clipboard.copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
+				</ActionIcon>
+			</Tooltip>
+		</Group>
+	);
+};
+
 export const ConversationEdit = ({
 	conversation,
 	projectTags,
@@ -33,6 +58,12 @@ export const ConversationEdit = ({
 	conversation: Conversation;
 	projectTags: ProjectTag[];
 }) => {
+	const emailsQuery = useConversationEmails(conversation.id);
+	const emails = emailsQuery.data?.emails_csv
+		? emailsQuery.data.emails_csv.split(",").filter(Boolean)
+		: [];
+	const [showEmails, setShowEmails] = useState(false);
+
 	const projectTagOptions = useMemo(
 		() =>
 			projectTags
@@ -138,7 +169,7 @@ export const ConversationEdit = ({
 			</Group>
 
 			<form>
-				<Stack gap="2rem">
+				<Stack gap="1.5rem">
 					{isError && (
 						<CloseableAlert color="red">
 							<Text size="sm">
@@ -148,13 +179,42 @@ export const ConversationEdit = ({
 					)}
 
 					<Box>
-						<Text size="md">
+						<Text size="sm" c="dimmed">
 							<Trans>Created on</Trans>
 						</Text>
 						<Text size="sm">
 							{new Date(conversation.created_at ?? new Date()).toLocaleString()}
 						</Text>
 					</Box>
+
+					{emails.length > 0 && (
+						<Box>
+							<Group gap="xs" mb="xs">
+								<Text size="sm" c="dimmed">
+									{emails.length === 1 ? (
+										<Trans>Participant Email</Trans>
+									) : (
+										<Trans>Participant Emails</Trans>
+									)}
+								</Text>
+								<Text
+									size="sm"
+									c="primary"
+									className="cursor-pointer"
+									onClick={() => setShowEmails(!showEmails)}
+								>
+									{showEmails ? <Trans>Hide</Trans> : <Trans>Show</Trans>}
+								</Text>
+							</Group>
+							{showEmails && (
+								<Stack gap="xs">
+									{emails.map((email) => (
+										<EmailItem key={email} email={email} />
+									))}
+								</Stack>
+							)}
+						</Box>
+					)}
 
 					<TextInput
 						label={
@@ -197,7 +257,7 @@ export const ConversationEdit = ({
 							)}
 						/>
 					) : (
-						<>
+						<Box>
 							<CloseableAlert color="primary">
 								<Text size="sm">
 									<Trans>
@@ -206,10 +266,7 @@ export const ConversationEdit = ({
 									</Trans>
 								</Text>
 							</CloseableAlert>
-							<Text>
-								<Trans>No tags found</Trans>
-							</Text>
-						</>
+						</Box>
 					)}
 				</Stack>
 			</form>

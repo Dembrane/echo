@@ -50,6 +50,7 @@ class PublicProjectSchema(BaseModel):
     default_conversation_tutorial_slug: Optional[str] = None
     conversation_ask_for_participant_name_label: Optional[str] = None
     default_conversation_ask_for_participant_name: Optional[bool] = True
+    default_conversation_ask_for_participant_email: Optional[bool] = False
 
     # portal content
     default_conversation_title: Optional[str] = None

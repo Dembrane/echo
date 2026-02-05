@@ -21,7 +21,7 @@ from dembrane.audio_utils import (
     merge_multiple_audio_files_and_save_to_s3,
 )
 from dembrane.reply_utils import generate_reply_for_conversation
-from dembrane.api.stateless import generate_summary
+from dembrane.api.stateless import generate_summary, generate_conversation_title
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.stream_status import stream_with_status
 from dembrane.api.exceptions import (
@@ -412,6 +412,43 @@ async def get_conversation_transcript(conversation_id: str, auth: DependencyDire
     return "\n".join(transcript)
 
 
+class ConversationEmailsResponse(BaseModel):
+    emails_csv: str
+    count: int
+
+
+@ConversationRouter.get("/{conversation_id}/emails")
+async def get_conversation_emails(
+    conversation_id: str,
+    auth: DependencyDirectusSession,
+) -> ConversationEmailsResponse:
+    """Get comma-separated list of emails captured for a conversation."""
+    await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
+
+    active_client = auth.client or directus
+
+    participants = await run_in_thread_pool(
+        active_client.get_items,
+        "project_report_notification_participants",
+        {
+            "query": {
+                "filter": {"conversation_id": {"_eq": conversation_id}},
+                "fields": ["email"],
+                "limit": 1000,
+            }
+        },
+    )
+
+    if not participants:
+        return ConversationEmailsResponse(emails_csv="", count=0)
+
+    emails = [p.get("email") for p in participants if p.get("email")]
+    return ConversationEmailsResponse(
+        emails_csv=",".join(emails),
+        count=len(emails),
+    )
+
+
 # Initialize the cache
 token_count_cache = CacheWithExpiration(ttl=500)
 
@@ -496,7 +533,13 @@ async def summarize_conversation(
         {
             "query": {
                 "filter": {"id": {"_eq": conversation_id}},
-                "fields": ["id", "project_id.language"],
+                "fields": [
+                    "id",
+                    "project_id.id",
+                    "project_id.language",
+                    "project_id.enable_ai_title_and_tags",
+                    "project_id.conversation_title_prompt",
+                ],
             },
         },
     )
@@ -538,20 +581,55 @@ async def summarize_conversation(
             verified_artifacts,
         )
 
+        # Prepare update data with summary
+        update_data: dict = {"summary": summary}
+        title = None
+
+        # Generate title if AI title generation is enabled for this project
+        project_data = conversation_data["project_id"]
+        enable_ai_title = project_data.get("enable_ai_title_and_tags", False)
+
+        if enable_ai_title and summary:
+            try:
+                # Fetch recent titles for style matching
+                existing_titles = await run_in_thread_pool(
+                    conversation_service.get_recent_titles_for_project,
+                    project_data["id"],
+                    10,
+                )
+
+                custom_prompt = project_data.get("conversation_title_prompt")
+
+                title = await run_in_thread_pool(
+                    generate_conversation_title,
+                    summary,
+                    language if language else "en",
+                    existing_titles,
+                    custom_prompt,
+                )
+
+                if title:
+                    update_data["title"] = title
+                    logger.info(f"Generated title for conversation {conversation_id}: {title}")
+            except Exception as e:
+                logger.error(f"Error generating title for conversation {conversation_id}: {e}")
+                # Continue without title if generation fails
+
         await run_in_thread_pool(
             active_client.update_item,
             "conversation",
             conversation_id,
-            {
-                "summary": summary,
-            },
+            update_data,
         )
 
-        return {
+        response = {
             "status": "success",
             "message": "Summary generated",
             "summary": summary,
         }
+        if title:
+            response["title"] = title
+        return response
 
 
 class RetranscribeConversationBodySchema(BaseModel):

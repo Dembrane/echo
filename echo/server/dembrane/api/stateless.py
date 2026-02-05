@@ -13,6 +13,16 @@ logger = getLogger("api.stateless")
 
 StatelessRouter = APIRouter(tags=["stateless"])
 
+# Language code to full name mapping for prompt generation
+LANGUAGE_NAMES: dict[str, str] = {
+    "en": "English",
+    "nl": "Dutch",
+    "de": "German",
+    "fr": "French",
+    "es": "Spanish",
+    "it": "Italian",
+}
+
 
 def generate_summary(
     transcript: str,
@@ -67,6 +77,62 @@ def generate_summary(
         return response_content
     except (IndexError, AttributeError, KeyError) as e:
         logger.error(f"Error getting response content for summary: {e}")
+        return ""
+
+
+def generate_conversation_title(
+    summary: str,
+    language: str | None,
+    existing_titles: list[str] | None = None,
+    custom_prompt: str | None = None,
+) -> str:
+    """
+    Generate a 1-3 word title for a conversation based on its summary.
+
+    Args:
+        summary (str): The conversation summary to generate a title from.
+        language (str | None): The language code (e.g., "en", "nl", "de").
+        existing_titles (list[str] | None): Optional list of existing titles for style matching.
+        custom_prompt (str | None): Optional custom instructions for title generation.
+
+    Returns:
+        str: The generated title.
+    """
+    language_name = LANGUAGE_NAMES.get(language if language else "en", "English")
+
+    prompt = render_prompt(
+        "generate_conversation_title",
+        "en",  # Single English prompt that handles multiple languages
+        {
+            "summary": summary,
+            "language_name": language_name,
+            "existing_titles": existing_titles or [],
+            "custom_prompt": custom_prompt,
+        },
+    )
+
+    try:
+        response = router_completion(
+            MODELS.TEXT_FAST,
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+        )
+    except Exception as e:
+        logger.error(f"LiteLLM completion error for title generation: {e}")
+        raise
+
+    try:
+        response_content = response.choices[0].message.content
+        if response_content is None:
+            logger.warning("LLM returned None content for title")
+            return ""
+        return response_content.strip()
+    except (IndexError, AttributeError, KeyError) as e:
+        logger.error(f"Error getting response content for title: {e}")
         return ""
 
 

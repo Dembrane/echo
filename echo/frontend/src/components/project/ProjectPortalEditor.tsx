@@ -41,6 +41,7 @@ import { ProjectTagsInput } from "./ProjectTagsInput";
 
 const FormSchema = z.object({
 	default_conversation_ask_for_participant_name: z.boolean(),
+	default_conversation_ask_for_participant_email: z.boolean(),
 	default_conversation_description: z.string(),
 	default_conversation_finish_text: z.string(),
 	default_conversation_title: z.string(),
@@ -240,6 +241,8 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 		return {
 			default_conversation_ask_for_participant_name:
 				project.default_conversation_ask_for_participant_name ?? false,
+			default_conversation_ask_for_participant_email:
+				project.default_conversation_ask_for_participant_email ?? false,
 			default_conversation_description:
 				project.default_conversation_description ?? "",
 			default_conversation_finish_text:
@@ -290,6 +293,11 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	const watchedVerifyEnabled = useWatch({
 		control,
 		name: "is_verify_enabled",
+	});
+
+	const watchedAskForEmail = useWatch({
+		control,
+		name: "default_conversation_ask_for_participant_email",
 	});
 
 	const updateProjectMutation = useUpdateProjectByIdMutation();
@@ -405,6 +413,13 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 		};
 	}, [watch]); // Only depend on watch
 
+	// Auto-disable report notifications when ask_for_email is turned off
+	useEffect(() => {
+		if (!watchedAskForEmail) {
+			setValue("is_project_notification_subscription_allowed", false);
+		}
+	}, [watchedAskForEmail, setValue]);
+
 	const refreshPreview = useCallback(() => {
 		setPreviewKey((prev) => prev + 1);
 	}, []);
@@ -497,8 +512,38 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													}
 													description={
 														<Trans>
-															Ask participants to provide their name when they
-															start a conversation
+															Optional field on the start page
+														</Trans>
+													}
+													checked={field.value}
+													onChange={(e) =>
+														field.onChange(e.currentTarget.checked)
+													}
+												/>
+											)}
+										/>
+										<Controller
+											name="default_conversation_ask_for_participant_email"
+											control={control}
+											render={({ field }) => (
+												<Checkbox
+													label={
+														<FormLabel
+															label={t`Ask for Email?`}
+															isDirty={
+																formState.dirtyFields
+																	.default_conversation_ask_for_participant_email
+															}
+															error={
+																formState.errors
+																	.default_conversation_ask_for_participant_email
+																	?.message
+															}
+														/>
+													}
+													description={
+														<Trans>
+															Optional field on the thank you page
 														</Trans>
 													}
 													checked={field.value}
@@ -926,15 +971,14 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												<Title order={4}>
 													<Trans>Report Notifications</Trans>
 												</Title>
-												<Text size="sm" c="dimmed">
-													<Trans>
-														Enable this feature to allow participants to receive
-														notifications when a report is published or updated.
-														Participants can enter their email to subscribe for
-														updates and stay informed.
-													</Trans>
-												</Text>
 											</Group>
+
+											<Text size="sm" c="dimmed">
+												<Trans>
+													Notify participants when a report is published.
+												</Trans>
+											</Text>
+
 											<Controller
 												name="is_project_notification_subscription_allowed"
 												control={control}
@@ -955,6 +999,12 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																	}
 																/>
 															}
+															description={
+																!watchedAskForEmail
+																	? t`Requires "Ask for Email?" to be enabled`
+																	: undefined
+															}
+															disabled={!watchedAskForEmail}
 															checked={field.value}
 															onChange={(e) =>
 																field.onChange(e.currentTarget.checked)

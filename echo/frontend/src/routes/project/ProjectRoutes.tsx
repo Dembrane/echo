@@ -19,7 +19,15 @@ export const ProjectSettingsRoute = () => {
 	const { projectId } = useParams();
 	const query = useMemo(
 		() => ({
-			fields: ["id", "name", "context", "updated_at", "language"],
+			fields: [
+				"id",
+				"name",
+				"context",
+				"updated_at",
+				"language",
+				"is_conversation_allowed",
+				"default_conversation_ask_for_participant_name",
+			],
 		}),
 		[],
 	);
@@ -53,6 +61,7 @@ export const ProjectSettingsRoute = () => {
 					<ProjectExportSection
 						exportLink={getProjectTranscriptsLink(projectId ?? "")}
 						projectName={projectQuery.data.name}
+						project={projectQuery.data}
 					/>
 
 					{ENABLE_WEBHOOKS && (
@@ -92,6 +101,7 @@ export const ProjectPortalSettingsRoute = () => {
 				"updated_at",
 				"language",
 				"default_conversation_ask_for_participant_name",
+				"default_conversation_ask_for_participant_email",
 				"default_conversation_description",
 				"default_conversation_finish_text",
 				"default_conversation_title",

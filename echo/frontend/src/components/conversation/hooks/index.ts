@@ -27,6 +27,7 @@ import {
 	deleteConversationById,
 	getConversationChunkContentLink,
 	getConversationContentLink,
+	getConversationEmails,
 	getConversationTranscriptString,
 	retranscribeConversation,
 	selectAllContext,
@@ -684,6 +685,17 @@ export const useConversationChunks = (
 			),
 		queryKey: ["conversations", conversationId, "chunks"],
 		refetchInterval,
+	});
+};
+
+export const useConversationEmails = (
+	conversationId: string,
+	enabled = true,
+) => {
+	return useQuery({
+		queryFn: () => getConversationEmails(conversationId),
+		queryKey: ["conversations", conversationId, "emails"],
+		enabled: enabled && !!conversationId,
 	});
 };
 

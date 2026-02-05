@@ -3,7 +3,7 @@
 Webhook service for dispatching HTTP callbacks on conversation events.
 
 Events:
-- conversation.created: Fired when a new conversation is created
+- conversation.started: Fired when a new conversation is started
 - conversation.transcribed: Fired when all chunks are transcribed
 - conversation.summarized: Fired when summary is generated
 """
@@ -24,7 +24,7 @@ logger = getLogger("dembrane.service.webhook")
 
 # Valid webhook event types
 WEBHOOK_EVENTS = [
-    "conversation.created",
+    "conversation.started",
     "conversation.transcribed",
     "conversation.summarized",
 ]
@@ -59,7 +59,7 @@ class WebhookService:
 
         Args:
             project_id: The project ID
-            event: Optional event type to filter by (e.g., "conversation.created")
+            event: Optional event type to filter by (e.g., "conversation.started")
 
         Returns:
             List of webhook configurations
@@ -108,6 +108,7 @@ class WebhookService:
         conversation: Dict[str, Any],
         project: Dict[str, Any],
         transcript: Optional[str] = None,
+        emails_csv: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Build the webhook payload for an event.
@@ -117,6 +118,7 @@ class WebhookService:
             conversation: The conversation data
             project: The project data
             transcript: Optional pre-built transcript string
+            emails_csv: Optional comma-separated list of notification emails
 
         Returns:
             The webhook payload dictionary
@@ -136,17 +138,19 @@ class WebhookService:
                     tags.append(project_tag)
 
         # Build conversation data
+        conversation_id = conversation.get("id")
+        project_id = project.get("id")
         conversation_data: Dict[str, Any] = {
-            "id": conversation.get("id"),
+            "id": conversation_id,
             "created_at": conversation.get("created_at"),
             "updated_at": conversation.get("updated_at"),
             "participant_name": conversation.get("participant_name"),
-            "participant_email": conversation.get("participant_email"),
             "duration": conversation.get("duration"),
             "source": conversation.get("source"),
             "is_finished": conversation.get("is_finished"),
             "is_all_chunks_transcribed": conversation.get("is_all_chunks_transcribed"),
             "tags": tags,
+            "emails_csv": emails_csv or "",
         }
 
         # Include transcript for transcribed and summarized events
@@ -159,16 +163,32 @@ class WebhookService:
 
         # Build project data
         project_data: Dict[str, Any] = {
-            "id": project.get("id"),
+            "id": project_id,
             "name": project.get("name"),
             "language": project.get("language"),
         }
+
+        # Build dashboard URL with locale
+        admin_base_url = self.settings.urls.admin_base_url.rstrip("/")
+        # Map short language code to full locale
+        language_to_locale = {
+            "en": "en-US",
+            "nl": "nl-NL",
+            "de": "de-DE",
+            "fr": "fr-FR",
+            "es": "es-ES",
+            "it": "it-IT",
+        }
+        project_language = project.get("language") or "en"
+        locale = language_to_locale.get(project_language, "en-US")
+        dashboard_url = f"{admin_base_url}/{locale}/projects/{project_id}/conversation/{conversation_id}/overview"
 
         return {
             "event": event,
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "conversation": conversation_data,
             "project": project_data,
+            "dashboardUrl": dashboard_url,
         }
 
     def build_transcript(self, conversation_id: str) -> str:
@@ -208,6 +228,38 @@ class WebhookService:
                 transcripts.append(transcript.strip())
 
         return "\n".join(transcripts)
+
+    def get_emails_csv(self, conversation_id: str) -> str:
+        """
+        Get comma-separated list of emails captured for a conversation.
+
+        Args:
+            conversation_id: The conversation ID
+
+        Returns:
+            Comma-separated string of emails, or empty string if none
+        """
+        try:
+            with directus_client_context(self.directus_client) as client:
+                participants = client.get_items(
+                    "project_report_notification_participants",
+                    {
+                        "query": {
+                            "filter": {"conversation_id": {"_eq": conversation_id}},
+                            "fields": ["email"],
+                            "limit": 1000,
+                        }
+                    },
+                )
+        except DirectusBadRequest as e:
+            logger.error(f"Failed to fetch emails for conversation: {e}")
+            return ""
+
+        if not participants:
+            return ""
+
+        emails = [p.get("email") for p in participants if p.get("email")]
+        return ",".join(emails)
 
     def compute_signature(self, payload: Dict[str, Any], secret: str) -> str:
         """
@@ -342,8 +394,11 @@ class WebhookService:
         if event in ("conversation.transcribed", "conversation.summarized"):
             transcript = self.build_transcript(conversation_id)
 
+        # Get notification emails for this conversation
+        emails_csv = self.get_emails_csv(conversation_id)
+
         # Build payload
-        payload = self.build_payload(event, conversation, project, transcript)
+        payload = self.build_payload(event, conversation, project, transcript, emails_csv)
 
         # Enqueue dispatch tasks
         from dembrane.tasks import task_dispatch_webhook
@@ -390,7 +445,7 @@ def dispatch_webhooks_for_event(
     Args:
         project_id: The project ID
         conversation_id: The conversation ID
-        event: The event type (conversation.created, conversation.transcribed, conversation.summarized)
+        event: The event type (conversation.started, conversation.transcribed, conversation.summarized)
 
     Returns:
         Number of webhooks enqueued

@@ -32,8 +32,6 @@ export const ParticipantPostConversation = () => {
 	const [email, setEmail] = useState("");
 	const [error, setError] = useState("");
 	const [isSubmitted, setIsSubmitted] = useState(false);
-	const [isCheckingEmail, _setIsCheckingEmail] = useState(false);
-	const [debounceTimeout, setDebounceTimeout] = useState<number | null>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const { mutate, isPending } = useSubmitNotificationParticipant();
 
@@ -71,20 +69,8 @@ export const ParticipantPostConversation = () => {
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const newEmail = e.target.value;
 		setEmail(newEmail);
-
-		// Clear the previous timeout
-		if (debounceTimeout) clearTimeout(debounceTimeout);
-
-		// Set a new timeout to validate after 500ms
-		const newTimeout = window.setTimeout(() => {
-			if (!validateEmail(newEmail) && newEmail.trim() !== "") {
-				setError(t`Please enter a valid email.`);
-			} else {
-				setError("");
-			}
-		}, 300);
-
-		setDebounceTimeout(newTimeout);
+		// Clear error while typing - validate only on add/submit
+		if (error) setError("");
 	};
 
 	const addEmail = (inputElement?: HTMLInputElement | null) => {
@@ -153,123 +139,121 @@ export const ParticipantPostConversation = () => {
 							<Trans>Record another conversation</Trans>
 						</Button>
 					</I18nLink>
-					{project.data?.is_project_notification_subscription_allowed && (
-						<Stack
-							className="mt-20 md:mt-32"
-							{...testId("portal-finish-notification-section")}
-						>
-							{!isSubmitted ? (
-								<>
-									<Stack gap="xs">
-										<Text size="lg" fw={700}>
-											<Trans>Do you want to stay in the loop?</Trans>
-										</Text>
-										<Text size="sm" c="gray.6">
-											<Trans>Share your details here</Trans>
-										</Text>
-									</Stack>
-									<Stack gap="md">
-										<TextInput
-											ref={inputRef}
-											placeholder={t`email@work.com`}
-											value={email}
-											size="md"
-											leftSection={<IconMail size={20} />}
-											onChange={handleInputChange}
-											onKeyDown={handleKeyDown}
-											error={error}
-											disabled={isCheckingEmail || isPending}
-											rightSection={
-												<Button
-													size="sm"
-													variant="outline"
-													onClick={() => addEmail(inputRef.current)}
-													disabled={
-														!email.trim() || isCheckingEmail || isPending
-													}
-													className="me-[2px] hover:bg-blue-50"
-													loading={isCheckingEmail}
-													{...testId("portal-finish-email-add-button")}
-												>
-													{isCheckingEmail ? t`Checking...` : t`Add`}
-												</Button>
-											}
-											rightSectionWidth="auto"
-											{...testId("portal-finish-email-input")}
-										/>
-										{emails.length > 0 && (
-											<Paper
-												shadow="sm"
-												radius="sm"
-												p="md"
-												withBorder
-												{...testId("portal-finish-email-list")}
-											>
-												<Text size="sm" fw={500} className="mb-2">
-													<Trans>Added emails</Trans> ({emails.length}):
-												</Text>
-												<Group>
-													{emails.map((emailItem, index) => (
-														<Tooltip
-															key={`${emailItem}`}
-															label={t`Remove Email`}
-															transitionProps={{
-																duration: 100,
-																transition: "pop",
-															}}
-															refProp="rootRef"
-														>
-															<Chip
-																disabled={isPending}
-																value={emailItem}
-																variant="outline"
-																onClick={() => removeEmail(emailItem)}
-																styles={{
-																	iconWrapper: { display: "none" },
-																}}
-																{...testId(`portal-finish-email-chip-${index}`)}
-															>
-																{emailItem}
-															</Chip>
-														</Tooltip>
-													))}
-												</Group>
-											</Paper>
-										)}
-										{emails.length > 0 && (
-											<Button
-												size="lg"
-												fullWidth
-												onClick={handleSubscribe}
-												loading={isPending}
-												className="mt-4"
-												{...testId("portal-finish-email-submit-button")}
-											>
-												{isPending ? (
-													<IconLoader2 className="animate-spin" />
-												) : (
-													<Trans> Submit</Trans>
-												)}
-											</Button>
-										)}
-									</Stack>
-								</>
-							) : (
-								<Box p="md" {...testId("portal-finish-email-success")}>
-									<Text
-										c="green"
-										size="md"
-										className="flex items-center gap-4 md:gap-2"
-									>
-										<span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-green-500 text-white">
-											<IconCheck size={16} strokeWidth={3} />
-										</span>
-										<Trans>
-											Thank you! We'll notify you when the report is ready.
-										</Trans>
+				{project.data?.default_conversation_ask_for_participant_email && (
+					<Stack
+						className="mt-20 md:mt-32"
+						{...testId("portal-finish-notification-section")}
+					>
+						{!isSubmitted ? (
+							<>
+								<Stack gap="xs">
+									<Text size="lg" fw={700}>
+										<Trans>Do you want to stay in the loop?</Trans>
 									</Text>
-								</Box>
-							)}
+									<Text size="sm" c="gray.6">
+										<Trans>Share your details here</Trans>
+									</Text>
+								</Stack>
+								<Stack gap="md">
+									<TextInput
+										ref={inputRef}
+										placeholder={t`email@work.com`}
+										value={email}
+										size="md"
+										leftSection={<IconMail size={20} />}
+										onChange={handleInputChange}
+										onKeyDown={handleKeyDown}
+										error={error}
+										disabled={isPending}
+										rightSection={
+											<Button
+												size="sm"
+												variant="outline"
+												onClick={() => addEmail(inputRef.current)}
+												disabled={!email.trim() || isPending}
+												className="me-[2px] hover:bg-blue-50"
+												{...testId("portal-finish-email-add-button")}
+											>
+												{t`Add`}
+											</Button>
+										}
+										rightSectionWidth="auto"
+										{...testId("portal-finish-email-input")}
+									/>
+									{emails.length > 0 && (
+										<Paper
+											shadow="sm"
+											radius="sm"
+											p="md"
+											withBorder
+											{...testId("portal-finish-email-list")}
+										>
+											<Text size="sm" fw={500} className="mb-2">
+												<Trans>Added emails</Trans> ({emails.length}):
+											</Text>
+											<Group>
+												{emails.map((emailItem, index) => (
+													<Tooltip
+														key={`${emailItem}`}
+														label={t`Remove Email`}
+														transitionProps={{
+															duration: 100,
+															transition: "pop",
+														}}
+														refProp="rootRef"
+													>
+														<Chip
+															disabled={isPending}
+															value={emailItem}
+															variant="outline"
+															onClick={() => removeEmail(emailItem)}
+															styles={{
+																iconWrapper: { display: "none" },
+															}}
+															{...testId(`portal-finish-email-chip-${index}`)}
+														>
+															{emailItem}
+														</Chip>
+													</Tooltip>
+												))}
+											</Group>
+										</Paper>
+									)}
+									{emails.length > 0 && (
+										<Button
+											size="lg"
+											fullWidth
+											onClick={handleSubscribe}
+											loading={isPending}
+											className="mt-4"
+											{...testId("portal-finish-email-submit-button")}
+										>
+											{isPending ? (
+												<IconLoader2 className="animate-spin" />
+											) : (
+												<Trans> Submit</Trans>
+											)}
+										</Button>
+									)}
+								</Stack>
+							</>
+						) : (
+							<Box p="md" {...testId("portal-finish-email-success")}>
+								<Text
+									c="green"
+									size="md"
+									className="flex items-center gap-4 md:gap-2"
+								>
+									<span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-green-500 text-white">
+										<IconCheck size={16} strokeWidth={3} />
+									</span>
+									<Trans>
+										Thank you! We'll notify you when the report is ready.
+									</Trans>
+								</Text>
+							</Box>
+						)}
+						{project.data?.is_project_notification_subscription_allowed && (
 							<Text
 								size="sm"
 								c="gray.6"
@@ -282,8 +266,9 @@ export const ParticipantPostConversation = () => {
 									out at any time.
 								</Trans>
 							</Text>
-						</Stack>
-					)}
+						)}
+					</Stack>
+				)}
 				</Box>
 			</Stack>
 		</div>
