@@ -87,7 +87,7 @@ export const VerifyArtefact = () => {
 
 		// Redirect if artifact failed to load
 		if (!artefactQuery.data) {
-			toast.error(t`Unable to load the generated artefact. Please try again.`);
+			toast.error(t`Unable to load the generated outcome. Please try again.`);
 			navigate(`/${projectId}/conversation/${conversationId}`, {
 				replace: true,
 			});
@@ -130,11 +130,11 @@ export const VerifyArtefact = () => {
 
 			// Show toast after navigation so it appears in the destination route's Toaster
 			setTimeout(() => {
-				toast.success(t`Artefact approved successfully!`);
+				toast.success(t`Outcome approved successfully!`);
 				setIsApproving(false);
 			}, 100);
 		} catch (error) {
-			toast.error(t`Failed to approve artefact. Please try again.`);
+			toast.error(t`Failed to approve outcome. Please try again.`);
 			console.error("error approving artefact: ", error);
 		} finally {
 			setIsApproving(false);
@@ -172,7 +172,7 @@ export const VerifyArtefact = () => {
 				updatedArtefact,
 			);
 
-			toast.success(t`Artefact revised successfully!`);
+			toast.success(t`Outcome revised successfully!`);
 		} catch (error) {
 			if (
 				error instanceof AxiosError &&
@@ -183,7 +183,7 @@ export const VerifyArtefact = () => {
 					t`No new feedback detected yet. Please continue your discussion and try again soon.`,
 				);
 			} else {
-				toast.error(t`Failed to revise artefact. Please try again.`);
+				toast.error(t`Failed to revise outcome. Please try again.`);
 			}
 			console.error("error revising artefact: ", error);
 		} finally {
@@ -210,7 +210,7 @@ export const VerifyArtefact = () => {
 		setLocalArtefactContent(editedContent);
 		setIsEditing(false);
 		setEditedContent("");
-		toast.success(t`Artefact updated successfully!`);
+		toast.success(t`Outcome updated!`);
 	};
 
 	const handleReadAloud = () => {
@@ -240,7 +240,7 @@ export const VerifyArtefact = () => {
 				topicsQuery.refetch(),
 				artefactQuery.refetch(),
 			]);
-			toast.success(t`Artefact reloaded successfully!`);
+			toast.success(t`Outcome reloaded successfully!`);
 		} catch (error) {
 			toast.error(t`Failed to reload. Please try again.`);
 			console.error("error reloading artefact: ", error);
@@ -312,8 +312,8 @@ export const VerifyArtefact = () => {
 							</div>
 							<Stack gap="sm" align="center">
 								<Text size="xl" fw={600}>
-									<Trans id="participant.concrete.regenerating.artefact">
-										Regenerating the artefact
+									<Trans id="participant.regenerating.outcome">
+										Regenerating the outcome
 									</Trans>
 								</Text>
 								<Text size="sm" c="dimmed">

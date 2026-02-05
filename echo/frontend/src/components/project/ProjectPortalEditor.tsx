@@ -569,7 +569,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 										<Stack gap="md">
 											<Group>
 												<Title order={4}>
-													<Trans>Go deeper</Trans>
+													<Trans>Explore</Trans>
 												</Title>
 												<Logo hideTitle />
 												<Badge>
@@ -583,10 +583,10 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												<Trans>
 													Enable this feature to allow participants to request
 													AI-powered responses during their conversation.
-													Participants can click "Go deeper" after recording
-													their thoughts to receive contextual feedback,
-													encouraging deeper reflection and engagement. A
-													cooldown period applies between requests.
+													Participants can click "Explore" after recording their
+													thoughts to receive contextual feedback, encouraging
+													deeper reflection and engagement. A cooldown period
+													applies between requests.
 												</Trans>
 											</Text>
 
@@ -597,7 +597,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													<Switch
 														label={
 															<FormLabel
-																label={t`Enable Go deeper`}
+																label={t`Enable Explore`}
 																isDirty={
 																	formState.dirtyFields.is_get_reply_enabled
 																}
@@ -774,8 +774,8 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 										<Stack gap="md">
 											<Group>
 												<Title order={4}>
-													<Trans id="dashboard.dembrane.concrete.title">
-														Make it concrete
+													<Trans id="dashboard.dembrane.verify.title">
+														Verify
 													</Trans>
 												</Title>
 												<Logo hideTitle />
@@ -804,7 +804,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													<Switch
 														label={
 															<FormLabel
-																label={t`Enable Make it concrete`}
+																label={t`Enable Verify`}
 																isDirty={
 																	formState.dirtyFields.is_verify_enabled
 																}
@@ -837,9 +837,9 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 															}
 														/>
 														<Text size="sm" c="dimmed">
-															<Trans id="dashboard.dembrane.concrete.topic.select">
+															<Trans id="dashboard.dembrane.verify.topic.select">
 																Select which topics participants can use for
-																"Make it concrete".
+																"Verify".
 															</Trans>
 														</Text>
 														{isVerificationTopicsLoading ? (
@@ -890,7 +890,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																				normalizedCurrent.length === 1
 																			) {
 																				toast.error(
-																					t`At least one topic must be selected to enable Make it concrete`,
+																					t`At least one topic must be selected to enable Verify`,
 																				);
 																				return;
 																			}
