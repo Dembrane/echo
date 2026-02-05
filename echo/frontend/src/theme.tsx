@@ -315,35 +315,51 @@ export const theme = createTheme({
 		},
 	},
 	fontFamily: "var(--app-font-family, 'DM Sans Variable', sans-serif)",
+	// Space Grotesk: Original Mantine-based sizes
+	// Variables are set dynamically by useAppPreferences
+	fontSizes: {
+		lg: "var(--app-font-size-lg)",
+		md: "var(--app-font-size-md)",
+		sm: "var(--app-font-size-sm)",
+		xl: "var(--app-font-size-xl)",
+		xs: "var(--app-font-size-xs)",
+	},
 	headings: {
 		fontFamily: "var(--app-font-family, 'DM Sans Variable', sans-serif)",
-		fontWeight: "500",
+		fontWeight: "var(--app-heading-font-weight, 300)",
 		sizes: {
 			h1: {
-				fontSize: "calc(2.125rem * var(--mantine-scale))",
-				lineHeight: "1.3",
+				fontSize: "var(--app-heading-h1-size)",
+				lineHeight: "var(--app-heading-h1-line-height)",
 			},
 			h2: {
-				fontSize: "calc(1.875rem * var(--mantine-scale))",
-				lineHeight: "1.35",
+				fontSize: "var(--app-heading-h2-size)",
+				lineHeight: "var(--app-heading-h2-line-height)",
 			},
 			h3: {
-				fontSize: "calc(1.5rem * var(--mantine-scale))",
-				lineHeight: "1.4",
+				fontSize: "var(--app-heading-h3-size)",
+				lineHeight: "var(--app-heading-h3-line-height)",
 			},
 			h4: {
-				fontSize: "calc(1.25rem * var(--mantine-scale))",
-				lineHeight: "1.45",
+				fontSize: "var(--app-heading-h4-size)",
+				lineHeight: "var(--app-heading-h4-line-height)",
 			},
 			h5: {
-				fontSize: "calc(1rem * var(--mantine-scale))",
-				lineHeight: "1.5",
+				fontSize: "var(--app-heading-h5-size)",
+				lineHeight: "var(--app-heading-h5-line-height)",
 			},
 			h6: {
-				fontSize: "calc(0.875rem * var(--mantine-scale))",
-				lineHeight: "1.5",
+				fontSize: "var(--app-heading-h6-size)",
+				lineHeight: "var(--app-heading-h6-line-height)",
 			},
 		},
+	},
+	lineHeights: {
+		lg: "var(--app-line-height-lg)",
+		md: "var(--app-line-height-md)",
+		sm: "var(--app-line-height-sm)",
+		xl: "var(--app-line-height-xl)",
+		xs: "var(--app-line-height-xs)",
 	},
 	primaryColor: "primary",
 	// Updated to match Tailwind radius

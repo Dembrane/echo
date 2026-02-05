@@ -17,15 +17,58 @@
 /* Space Grotesk (default) → White + Black */
 /* DM Sans → Parchment + Graphite */
 :root {
+	/* DM Sans (default) uses 18px, Space Grotesk uses 16px */
+	/* Dynamically updated by useAppPreferences based on font selection */
+	--app-base-font-size: 16px;
+	
+	/* Theme colors */
 	--app-background: #F6F4F1;
 	--app-text: #2D2D2C;
 	--app-scrollbar-thumb: #8b8b8b;
 	--app-scrollbar-thumb-hover: #636363;
+	
+	/* Font settings */
 	--app-font-family: 'DM Sans Variable', sans-serif;
 	--app-font-feature-settings: 'ss01' on, 'ss02' on, 'ss03' on, 'ss04' on, 'ss05' on, 'ss06' on, 'ss08' on;
+	
+	/* Typography - Font sizes (DM Sans defaults, 1.333 ratio scale) */
+	--app-font-size-xs: 0.75rem;
+	--app-font-size-sm: 0.875rem;
+	--app-font-size-md: 1rem;
+	--app-font-size-lg: 1.125rem;
+	--app-font-size-xl: 1.333rem;
+	
+	/* Typography - Line heights */
+	--app-line-height-xs: 1.4;
+	--app-line-height-sm: 1.45;
+	--app-line-height-md: 1.55;
+	--app-line-height-lg: 1.6;
+	--app-line-height-xl: 1.65;
+	
+	/* Typography - Heading sizes (DM Sans defaults, 1.333 ratio scale) */
+	--app-heading-font-weight: 300;
+	--app-heading-h1-size: 2.778rem;
+	--app-heading-h1-line-height: 1.2;
+	--app-heading-h2-size: 2.369rem;
+	--app-heading-h2-line-height: 1.25;
+	--app-heading-h3-size: 1.777rem;
+	--app-heading-h3-line-height: 1.3;
+	--app-heading-h4-size: 1.333rem;
+	--app-heading-h4-line-height: 1.4;
+	--app-heading-h5-size: 1rem;
+	--app-heading-h5-line-height: 1.5;
+	--app-heading-h6-size: 0.875rem;
+	--app-heading-h6-line-height: 1.5;
+	
+	/* Scrollbar */
 	--scrollbar-track: var(--app-background);
 	--scrollbar-thumb: var(--app-scrollbar-thumb);
 	--scrollbar-thumb-hover: var(--app-scrollbar-thumb-hover);
+}
+
+/* Set base font size on html element for rem calculations */
+html {
+	font-size: var(--app-base-font-size);
 }
 
 body {
