@@ -39,6 +39,7 @@ import {
 	IconArrowsUpDown,
 	IconChevronDown,
 	IconChevronUp,
+	IconInfoCircle,
 	IconRosetteDiscountCheck,
 	IconSearch,
 	IconSelectAll,
@@ -67,6 +68,8 @@ import {
 	useProjectById,
 } from "@/components/project/hooks";
 import { ENABLE_CHAT_AUTO_SELECT, ENABLE_CHAT_SELECT_ALL } from "@/config";
+import { analytics } from "@/lib/analytics";
+import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { testId } from "@/lib/testUtils";
 import { BaseSkeleton } from "../common/BaseSkeleton";
 import { NavigationButton } from "../common/NavigationButton";
@@ -551,8 +554,13 @@ const ConversationAccordionItem = ({
 				<Stack gap="xs">
 					<Group gap="sm">
 						<Text className="pl-[4px] text-sm font-normal">
-							{conversation.participant_email ?? conversation.participant_name}
+							{conversation.participant_name || conversation.title}
 						</Text>
+						{conversation.title && conversation.participant_name && (
+							<Tooltip label={conversation.title}>
+								<IconInfoCircle size={14} className="text-gray-400" />
+							</Tooltip>
+						)}
 						{hasVerifiedArtefacts && (
 							<Tooltip label={t`Has verified artifacts`}>
 								<ThemeIcon
@@ -906,6 +914,8 @@ export const ConversationAccordion = ({
 
 	// Handle select all
 	const handleSelectAllClick = () => {
+		try { analytics.trackEvent(events.SELECT_ALL_CLICK); }
+		catch (error) { console.warn("Analytics tracking failed:", error); }
 		setSelectAllModalOpened(true);
 		setSelectAllResult(null);
 	};
@@ -917,6 +927,9 @@ export const ConversationAccordion = ({
 			return;
 		}
 
+		try { analytics.trackEvent(events.SELECT_ALL_CONFIRM); }
+		catch (error) { console.warn("Analytics tracking failed:", error); }
+
 		setSelectAllLoading(true);
 		try {
 			const result = await selectAllMutation.mutateAsync({
@@ -927,7 +940,11 @@ export const ConversationAccordion = ({
 				verifiedOnly: showOnlyVerified || undefined,
 			});
 			setSelectAllResult(result);
+			try { analytics.trackEvent(events.SELECT_ALL_SUCCESS); }
+			catch (error) { console.warn("Analytics tracking failed:", error); }
 		} catch (_error) {
+			try { analytics.trackEvent(events.SELECT_ALL_ERROR); }
+			catch (error) { console.warn("Analytics tracking failed:", error); }
 			toast.error(t`Failed to add conversations to context`);
 			setSelectAllModalOpened(false);
 		} finally {

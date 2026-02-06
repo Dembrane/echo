@@ -104,7 +104,7 @@ interface Conversation {
 	participant_name: string | null;
 	participant_user_agent: string | null;
 	project_id: string | Project;
-	source: "DASHBOARD_UPLOAD" | "CLONE" | null;
+	source: "DASHBOARD_UPLOAD" | "CLONE" | "PORTAL_AUDIO" | "PORTAL_TEXT" | "SPLIT" | null;
 	summary: string | null;
 	title: string | null;
 	updated_at: string | null;
@@ -240,6 +240,7 @@ interface ProcessingStatus {
 }
 
 interface Project {
+	anonymize_transcripts: boolean | null;
 	context: string | null;
 	conversation_ask_for_participant_name_label: string | null;
 	conversation_title_prompt: string | null;
@@ -421,6 +422,7 @@ interface View {
 
 interface CustomDirectusUser {
 	disable_create_project: boolean | null;
+	whitelabel_logo: string | null;
 	projects: string[] | Project[];
 }
 

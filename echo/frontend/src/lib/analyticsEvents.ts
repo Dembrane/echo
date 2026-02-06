@@ -27,6 +27,12 @@ export const AnalyticsEvents = {
 	// Summary & Report
 	REGENERATE_SUMMARY: "Regenerate Summary",
 
+	// Select All
+	SELECT_ALL_CLICK: "Select All Click",
+	SELECT_ALL_CONFIRM: "Select All Confirm",
+	SELECT_ALL_ERROR: "Select All Error",
+	SELECT_ALL_SUCCESS: "Select All Success",
+
 	// Transcription
 	RETRANSCRIBE_CONVERSATION: "Retranscribe Conversation",
 	UPDATE_REPORT: "Update Report",

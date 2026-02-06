@@ -113,6 +113,9 @@ export const ProjectPortalSettingsRoute = () => {
 				"is_verify_enabled",
 				"selected_verification_key_list",
 				"is_project_notification_subscription_allowed",
+				"anonymize_transcripts",
+				"enable_ai_title_and_tags",
+				"conversation_title_prompt",
 				{
 					tags: ["id", "created_at", "text", "sort"],
 				},

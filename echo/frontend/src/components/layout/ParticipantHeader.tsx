@@ -4,10 +4,14 @@ import { ActionIcon, Box, Button, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { GearSixIcon } from "@phosphor-icons/react";
 import { IconArrowLeft } from "@tabler/icons-react";
+import { useEffect } from "react";
 import { useLocation, useParams, useSearchParams } from "react-router";
 import useSessionStorageState from "use-session-storage-state";
+import { DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
 import { testId } from "@/lib/testUtils";
+import { useParticipantProjectById } from "../participant/hooks";
 import { Logo } from "../common/Logo";
 import { ParticipantSettingsModal } from "../participant/ParticipantSettingsModal";
 
@@ -20,6 +24,17 @@ export const ParticipantHeader = () => {
 	const navigate = useI18nNavigate();
 	const [opened, { open, close }] = useDisclosure(false);
 	const [searchParams] = useSearchParams();
+	const { setLogoUrl } = useWhitelabelLogo();
+	const projectQuery = useParticipantProjectById(projectId ?? "");
+
+	useEffect(() => {
+		const logoFileId = (projectQuery.data as any)?.whitelabel_logo_url;
+		if (logoFileId) {
+			setLogoUrl(`${DIRECTUS_PUBLIC_URL}/assets/${logoFileId}`);
+		} else {
+			setLogoUrl(null);
+		}
+	}, [projectQuery.data, setLogoUrl]);
 
 	const showInstructions = searchParams.get("instructions") === "true";
 	const showBackButton =

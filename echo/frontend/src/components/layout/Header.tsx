@@ -10,6 +10,7 @@ import {
 	IconShieldLock,
 	IconWorld,
 } from "@tabler/icons-react";
+import { useEffect } from "react";
 import { useParams } from "react-router";
 import {
 	useAuthenticated,
@@ -17,8 +18,9 @@ import {
 	useLogoutMutation,
 } from "@/components/auth/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
-import { ENABLE_ANNOUNCEMENTS } from "@/config";
+import { DIRECTUS_PUBLIC_URL, ENABLE_ANNOUNCEMENTS } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
 import { testId } from "@/lib/testUtils";
 import { AnnouncementIcon } from "../announcement/AnnouncementIcon";
 import { Announcements } from "../announcement/Announcements";
@@ -86,6 +88,15 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 	const { data: user } = useCurrentUser({ enabled: isAuthenticated });
 	const navigate = useI18nNavigate();
 	const { runTransition } = useTransitionCurtain();
+	const { setLogoUrl } = useWhitelabelLogo();
+
+	useEffect(() => {
+		if (user?.whitelabel_logo) {
+			setLogoUrl(`${DIRECTUS_PUBLIC_URL}/assets/${user.whitelabel_logo}`);
+		} else {
+			setLogoUrl(null);
+		}
+	}, [user?.whitelabel_logo, setLogoUrl]);
 
 	// maybe useEffect(params) / useState is better here?
 	// but when we change language, we reload the page (check LanguagePicker.tsx)

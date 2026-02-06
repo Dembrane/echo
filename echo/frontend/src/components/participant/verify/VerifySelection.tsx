@@ -208,7 +208,7 @@ export const VerifySelection = () => {
 					{isLoading && (
 						<Stack align="center" justify="center" className="w-full py-8">
 							<div className="animate-spin">
-								<Logo hideTitle h="48px" />
+								<Logo hideTitle alwaysDembrane h="48px" />
 							</div>
 						</Stack>
 					)}

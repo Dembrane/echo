@@ -15,13 +15,14 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconRefresh } from "@tabler/icons-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "sonner";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { analytics } from "@/lib/analytics";
 import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { testId } from "@/lib/testUtils";
+import { useProjectById } from "../project/hooks";
 import { ExponentialProgress } from "../common/ExponentialProgress";
 import { useRetranscribeConversationMutation } from "./hooks";
 
@@ -72,12 +73,19 @@ export const RetranscribeConversationModal = ({
 	// this should rly be a prop im lazy
 	const { projectId } = useParams();
 
+	const projectQuery = useProjectById({ projectId: projectId ?? "" });
+	const projectAnonymize = projectQuery.data?.anonymize_transcripts ?? false;
+
 	const retranscribeMutation = useRetranscribeConversationMutation();
 
 	const [newConversationName, setNewConversationName] = useState(
 		conversationName ?? "",
 	);
 	const [usePiiRedaction, setUsePiiRedaction] = useState(false);
+
+	useEffect(() => {
+		setUsePiiRedaction(projectAnonymize);
+	}, [projectAnonymize]);
 
 	const navigate = useI18nNavigate();
 
@@ -159,7 +167,11 @@ export const RetranscribeConversationModal = ({
 					/>
 					<Switch
 						label={t`Use PII Redaction`}
-						description={t`This will replace personally identifiable information with <redacted>.`}
+						description={
+							projectAnonymize
+								? t`Project default: enabled. This will replace personally identifiable information with <redacted>.`
+								: t`This will replace personally identifiable information with <redacted>.`
+						}
 						checked={usePiiRedaction}
 						onChange={(e) => setUsePiiRedaction(e.currentTarget.checked)}
 						{...testId("transcript-retranscribe-pii-toggle")}

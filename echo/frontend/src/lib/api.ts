@@ -1081,6 +1081,12 @@ export const generateConversationSummary = async (conversationId: string) => {
 	>(`/conversations/${conversationId}/summarize`);
 };
 
+export const generateConversationTitle = async (conversationId: string) => {
+	return api.post<unknown, { title: string }>(
+		`/conversations/${conversationId}/generate-title`,
+	);
+};
+
 export type VerificationTopicTranslation = {
 	label: string;
 };

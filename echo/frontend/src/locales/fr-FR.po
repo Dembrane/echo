@@ -458,9 +458,14 @@ msgstr ""
 "\n"
 "Note : Si les similitudes/différences sont trop superficielles, veuillez me le signaler, nous avons besoin de matériel plus complexe à analyser."
 
+#. js-lingui-explicit-id
 #: src/components/announcement/AnnouncementDrawerHeader.tsx:23
-msgid "Announcements"
-msgstr "Annonces"
+msgid "announcements"
+msgstr ""
+
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:23
+#~ msgid "Announcements"
+#~ msgstr "Annonces"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefact.tsx:427
@@ -806,6 +811,10 @@ msgstr "Choisis le thème que tu préfères pour l’interface"
 #: src/components/dropzone/UploadConversationDropzone.tsx:665
 msgid "Click \"Upload Files\" when you're ready to start the upload process."
 msgstr "Cliquez sur \"Télécharger les fichiers\" lorsque vous êtes prêt à commencer le processus de téléchargement."
+
+#: src/routes/project/HostGuidePage.tsx:1385
+msgid "Click to edit"
+msgstr ""
 
 #: src/components/conversation/ConversationLinks.tsx:155
 msgid "Click to see all {totalCount} conversations"
@@ -1235,6 +1244,10 @@ msgstr "Options de téléchargement de la transcription"
 msgid "Drag audio files here or click to select files"
 msgstr "Glissez les fichiers audio ici ou cliquez pour sélectionner des fichiers"
 
+#: src/routes/project/HostGuidePage.tsx:1397
+msgid "Drag to reorder"
+msgstr ""
+
 #: src/components/project/ProjectPortalEditor.tsx:465
 msgid "Dutch"
 msgstr "Néerlandais"
@@ -1339,6 +1352,10 @@ msgstr "Activer Va plus profond"
 #: src/components/project/ProjectPortalEditor.tsx:794
 msgid "Enable Make it concrete"
 msgstr "Activer Rends-le concret"
+
+#: src/routes/project/HostGuidePage.tsx:1563
+msgid "Enable participation"
+msgstr ""
 
 #: src/components/project/ProjectPortalEditor.tsx:932
 msgid "Enable Report Notifications"
@@ -2491,6 +2508,10 @@ msgstr "Ouvrir"
 msgid "Open for Participation?"
 msgstr "Ouvert à la participation ?"
 
+#: src/components/project/HostGuideDownload.tsx:28
+msgid "Open Host Guide"
+msgstr ""
+
 #. js-lingui-explicit-id
 #: src/components/participant/PermissionErrorModal.tsx:59
 msgid "participant.button.open.troubleshooting.guide"
@@ -2811,6 +2832,10 @@ msgstr "Préparation de tes conversations... Ça peut prendre un moment."
 msgid "Preparing your experience"
 msgstr "Préparation de votre expérience"
 
+#: src/routes/project/HostGuidePage.tsx:1426
+msgid "Print / Save PDF"
+msgstr ""
+
 #: src/routes/project/report/ProjectReportRoute.tsx:205
 msgid "Print this report"
 msgstr "Imprimer ce rapport"
@@ -3124,6 +3149,10 @@ msgstr "Accès au microphone en cours..."
 #~ msgid "Requesting microphone access to detect available devices..."
 #~ msgstr "Demande d'accès au microphone pour détecter les appareils disponibles..."
 
+#: src/routes/project/HostGuidePage.tsx:1419
+msgid "Reset"
+msgstr ""
+
 #~ msgid "Reset All Options"
 #~ msgstr "Réinitialiser toutes les options"
 
@@ -3196,6 +3225,10 @@ msgstr "Réviser"
 #: src/components/settings/AuditLogsCard.tsx:612
 msgid "Revision #{revisionNumber}"
 msgstr "Révision #{revisionNumber}"
+
+#: src/routes/project/HostGuidePage.tsx:1391
+msgid "Right-click to highlight"
+msgstr ""
 
 #: src/components/settings/AuditLogsCard.tsx:646
 msgid "Rows per page"
@@ -3755,8 +3788,8 @@ msgid "Thank You Page Content"
 msgstr "Contenu de la page Merci"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:245
-msgid "Thank you! We'll notify you when the report is ready."
-msgstr "Merci ! Nous vous informerons lorsque le rapport sera prêt."
+msgid "Thank you!"
+msgstr "Merci !"
 
 #: src/routes/auth/Login.tsx:141
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."

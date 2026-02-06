@@ -824,6 +824,7 @@ export const CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS: QueryFields<
 	"project_id",
 	"participant_name",
 	"participant_email",
+	"title",
 	"tags",
 	"summary",
 	"source",

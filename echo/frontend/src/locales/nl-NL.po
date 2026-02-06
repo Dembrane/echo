@@ -464,9 +464,14 @@ msgstr ""
 #~ msgid "Analyze!"
 #~ msgstr "Analyseer!"
 
+#. js-lingui-explicit-id
 #: src/components/announcement/AnnouncementDrawerHeader.tsx:23
-msgid "Announcements"
-msgstr "Meldingen"
+msgid "announcements"
+msgstr ""
+
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:23
+#~ msgid "Announcements"
+#~ msgstr "Meldingen"
 
 #~ msgid "Anonymous Participant"
 #~ msgstr "Anonieme deelnemer"
@@ -845,6 +850,10 @@ msgstr "Kies je favoriete thema voor de interface"
 #: src/components/dropzone/UploadConversationDropzone.tsx:665
 msgid "Click \"Upload Files\" when you're ready to start the upload process."
 msgstr "Klik op \"Upload bestanden\" wanneer je klaar bent om de upload te starten."
+
+#: src/routes/project/HostGuidePage.tsx:1385
+msgid "Click to edit"
+msgstr ""
 
 #: src/components/conversation/ConversationLinks.tsx:155
 msgid "Click to see all {totalCount} conversations"
@@ -1304,6 +1313,10 @@ msgstr "Sleep audio bestanden hierheen of klik om bestanden te selecteren"
 #~ msgid "Drag documents here or select files"
 #~ msgstr "Sleep documenten hierheen of selecteer bestanden"
 
+#: src/routes/project/HostGuidePage.tsx:1397
+msgid "Drag to reorder"
+msgstr ""
+
 #: src/components/project/ProjectPortalEditor.tsx:465
 msgid "Dutch"
 msgstr "Nederlands"
@@ -1408,6 +1421,10 @@ msgstr "Ga dieper aanzetten"
 #: src/components/project/ProjectPortalEditor.tsx:794
 msgid "Enable Make it concrete"
 msgstr "Maak het concreet aanzetten"
+
+#: src/routes/project/HostGuidePage.tsx:1563
+msgid "Enable participation"
+msgstr ""
 
 #: src/components/project/ProjectPortalEditor.tsx:932
 msgid "Enable Report Notifications"
@@ -2602,6 +2619,10 @@ msgstr "Openen"
 msgid "Open for Participation?"
 msgstr "Open voor deelname?"
 
+#: src/components/project/HostGuideDownload.tsx:28
+msgid "Open Host Guide"
+msgstr ""
+
 #. js-lingui-explicit-id
 #: src/components/participant/PermissionErrorModal.tsx:59
 msgid "participant.button.open.troubleshooting.guide"
@@ -2934,6 +2955,10 @@ msgstr "Je gesprekken worden klaargezet... Dit kan even duren."
 msgid "Preparing your experience"
 msgstr "Uw ervaring voorbereiden"
 
+#: src/routes/project/HostGuidePage.tsx:1426
+msgid "Print / Save PDF"
+msgstr ""
+
 #: src/routes/project/report/ProjectReportRoute.tsx:205
 msgid "Print this report"
 msgstr "Dit rapport afdrukken"
@@ -3259,6 +3284,10 @@ msgstr "Microfoontoegang aanvragen om beschikbare apparaten te detecteren..."
 #~ msgid "Requesting microphone access to detect available devices..."
 #~ msgstr "Microfoontoegang aanvragen om beschikbare apparaten te detecteren..."
 
+#: src/routes/project/HostGuidePage.tsx:1419
+msgid "Reset"
+msgstr ""
+
 #~ msgid "Reset All Options"
 #~ msgstr "Alle opties resetten"
 
@@ -3331,6 +3360,10 @@ msgstr "Aanpassen"
 #: src/components/settings/AuditLogsCard.tsx:612
 msgid "Revision #{revisionNumber}"
 msgstr "Revisie #{revisionNumber}"
+
+#: src/routes/project/HostGuidePage.tsx:1391
+msgid "Right-click to highlight"
+msgstr ""
 
 #: src/components/settings/AuditLogsCard.tsx:646
 msgid "Rows per page"
@@ -3898,8 +3931,8 @@ msgstr "Bedankt pagina inhoud"
 #~ msgstr "Bedankt! Klik ondertussen op individuele documenten om context toe te voegen aan elk bestand dat ik zal meenemen voor verdere analyse."
 
 #: src/routes/participant/ParticipantPostConversation.tsx:245
-msgid "Thank you! We'll notify you when the report is ready."
-msgstr "Bedankt! We zullen u waarschuwen wanneer het rapport klaar is."
+msgid "Thank you!"
+msgstr "Bedankt!"
 
 #: src/routes/auth/Login.tsx:141
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."

@@ -248,7 +248,7 @@ export const ParticipantPostConversation = () => {
 										<IconCheck size={16} strokeWidth={3} />
 									</span>
 									<Trans>
-										Thank you! We'll notify you when the report is ready.
+										Thank you!
 									</Trans>
 								</Text>
 							</Box>

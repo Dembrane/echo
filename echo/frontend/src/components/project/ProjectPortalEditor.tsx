@@ -40,6 +40,7 @@ import { useProjectSharingLink } from "./ProjectQRCode";
 import { ProjectTagsInput } from "./ProjectTagsInput";
 
 const FormSchema = z.object({
+	conversation_title_prompt: z.string(),
 	default_conversation_ask_for_participant_name: z.boolean(),
 	default_conversation_ask_for_participant_email: z.boolean(),
 	default_conversation_description: z.string(),
@@ -47,6 +48,8 @@ const FormSchema = z.object({
 	default_conversation_title: z.string(),
 	default_conversation_transcript_prompt: z.string(),
 	default_conversation_tutorial_slug: z.string(),
+	anonymize_transcripts: z.boolean(),
+	enable_ai_title_and_tags: z.boolean(),
 	get_reply_mode: z.string(),
 	get_reply_prompt: z.string(),
 	is_get_reply_enabled: z.boolean(),
@@ -122,15 +125,25 @@ const ProperNounInput = ({
 
 	return (
 		<Stack gap="md">
+			<Group gap="xs" align="center">
+				<Title order={4}>
+					<Trans>Specific Context</Trans>
+				</Title>
+				{isDirty && (
+					<div
+						className="h-1.5 w-1.5 rounded-full bg-blue-500"
+						role="presentation"
+					/>
+				)}
+			</Group>
+			<Text size="sm" c="dimmed">
+				<Trans>
+					Add key terms or proper nouns to improve transcript quality and
+					accuracy.
+				</Trans>
+			</Text>
 			<TextInput
 				className={isDirty ? "border-blue-500" : ""}
-				label={<FormLabel label={t`Specific Context`} isDirty={isDirty} />}
-				description={
-					<Trans>
-						Add key terms or proper nouns to improve transcript quality and
-						accuracy.
-					</Trans>
-				}
 				value={nounInput}
 				onChange={(e) => setNounInput(e.currentTarget.value)}
 				placeholder={t`Enter a key term or proper noun`}
@@ -239,6 +252,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 			: "none";
 
 		return {
+			conversation_title_prompt: project.conversation_title_prompt ?? "",
 			default_conversation_ask_for_participant_name:
 				project.default_conversation_ask_for_participant_name ?? false,
 			default_conversation_ask_for_participant_email:
@@ -251,6 +265,8 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 			default_conversation_transcript_prompt:
 				project.default_conversation_transcript_prompt ?? "",
 			default_conversation_tutorial_slug: normalizedTutorialSlug ?? "none",
+			anonymize_transcripts: project.anonymize_transcripts ?? false,
+			enable_ai_title_and_tags: project.enable_ai_title_and_tags ?? false,
 			get_reply_mode: project.get_reply_mode ?? "summarize",
 			get_reply_prompt: project.get_reply_prompt ?? "",
 			is_get_reply_enabled: project.is_get_reply_enabled ?? false,
@@ -298,6 +314,11 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	const watchedAskForEmail = useWatch({
 		control,
 		name: "default_conversation_ask_for_participant_email",
+	});
+
+	const watchedAiTitleEnabled = useWatch({
+		control,
+		name: "enable_ai_title_and_tags",
 	});
 
 	const updateProjectMutation = useUpdateProjectByIdMutation();
@@ -616,7 +637,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												<Title order={4}>
 													<Trans>Explore</Trans>
 												</Title>
-												<Logo hideTitle />
+												<Logo hideTitle alwaysDembrane />
 												<Badge>
 													<Trans id="dashboard.dembrane.concrete.beta">
 														Beta
@@ -823,7 +844,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														Verify
 													</Trans>
 												</Title>
-												<Logo hideTitle />
+												<Logo hideTitle alwaysDembrane />
 												<Badge>
 													<Trans id="dashboard.dembrane.concrete.beta">
 														Beta
@@ -1126,24 +1147,115 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 
 								<Divider />
 
-								<Stack gap="1.5rem">
+								<Stack gap="2.5rem">
 									<Title order={3}>
 										<Trans>Advanced Settings</Trans>
 									</Title>
-									<Controller
-										name="default_conversation_transcript_prompt"
-										control={control}
-										render={({ field }) => (
-											<ProperNounInput
-												isDirty={
-													formState.dirtyFields
-														.default_conversation_transcript_prompt ?? false
-												}
-												value={field.value}
-												onChange={field.onChange}
+
+									<Stack gap="md">
+										<Controller
+											name="default_conversation_transcript_prompt"
+											control={control}
+											render={({ field }) => (
+												<ProperNounInput
+													isDirty={
+														formState.dirtyFields
+															.default_conversation_transcript_prompt ?? false
+													}
+													value={field.value}
+													onChange={field.onChange}
+												/>
+											)}
+										/>
+									</Stack>
+
+									<Stack gap="md">
+										<Group>
+											<Title order={4}>
+												<Trans>Anonymize Transcripts</Trans>
+											</Title>
+											<Badge>
+												<Trans>Beta</Trans>
+											</Badge>
+										</Group>
+										<Text size="sm" c="dimmed">
+											<Trans>
+												When enabled, all new transcripts will have personal information (names, emails, phone numbers, addresses) replaced with placeholders. This cannot be undone for already-processed conversations.
+											</Trans>
+										</Text>
+										<Controller
+											name="anonymize_transcripts"
+											control={control}
+											render={({ field }) => (
+												<Switch
+													label={
+														<FormLabel
+															label={t`Enable transcript anonymization`}
+															isDirty={formState.dirtyFields.anonymize_transcripts}
+															error={formState.errors.anonymize_transcripts?.message}
+														/>
+													}
+													checked={field.value}
+													onChange={(e) => field.onChange(e.currentTarget.checked)}
+												/>
+											)}
+										/>
+									</Stack>
+
+									<Stack gap="md">
+										<Group>
+											<Title order={4}>
+												<Trans>Auto-generate Titles</Trans>
+											</Title>
+											<Badge>
+												<Trans>Beta</Trans>
+											</Badge>
+										</Group>
+										<Text size="sm" c="dimmed">
+											<Trans>
+												Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one.
+											</Trans>
+										</Text>
+										<Controller
+											name="enable_ai_title_and_tags"
+											control={control}
+											render={({ field }) => (
+												<Switch
+													label={
+														<FormLabel
+															label={t`Auto-generate titles`}
+															isDirty={formState.dirtyFields.enable_ai_title_and_tags}
+															error={formState.errors.enable_ai_title_and_tags?.message}
+														/>
+													}
+													checked={field.value}
+													onChange={(e) => field.onChange(e.currentTarget.checked)}
+												/>
+											)}
+										/>
+										{watchedAiTitleEnabled && (
+											<Controller
+												name="conversation_title_prompt"
+												control={control}
+												render={({ field }) => (
+													<Textarea
+														label={
+															<FormLabel
+																label={t`Custom title prompt`}
+																isDirty={formState.dirtyFields.conversation_title_prompt}
+																error={formState.errors.conversation_title_prompt?.message}
+															/>
+														}
+														description={<Trans>Guide how titles are generated. Titles describe the topic of the conversation, not the participant.</Trans>}
+														placeholder={t`e.g. "Use short noun phrases like 'Urban Green Spaces' or 'Youth Employment'. Avoid generic titles."`}
+														autosize
+														minRows={2}
+														{...field}
+													/>
+												)}
 											/>
 										)}
-									/>
+									</Stack>
 								</Stack>
 
 								<Divider />

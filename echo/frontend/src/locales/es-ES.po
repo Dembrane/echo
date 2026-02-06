@@ -443,9 +443,14 @@ msgstr ""
 "\n"
 "Nota: Si las similitudes/diferencias son demasiado superficiales, por favor házmelo saber, necesitamos material más complejo para analizar."
 
+#. js-lingui-explicit-id
 #: src/components/announcement/AnnouncementDrawerHeader.tsx:23
-msgid "Announcements"
-msgstr "Anuncios"
+msgid "announcements"
+msgstr ""
+
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:23
+#~ msgid "Announcements"
+#~ msgstr "Anuncios"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefact.tsx:427
@@ -791,6 +796,10 @@ msgstr "Elige el tema que prefieras para la interfaz"
 #: src/components/dropzone/UploadConversationDropzone.tsx:665
 msgid "Click \"Upload Files\" when you're ready to start the upload process."
 msgstr "Haz clic en \"Subir archivos\" cuando estés listo para iniciar el proceso de subida."
+
+#: src/routes/project/HostGuidePage.tsx:1385
+msgid "Click to edit"
+msgstr ""
 
 #: src/components/conversation/ConversationLinks.tsx:155
 msgid "Click to see all {totalCount} conversations"
@@ -1220,6 +1229,10 @@ msgstr "Opciones de Descarga de Transcripción"
 msgid "Drag audio files here or click to select files"
 msgstr "Arrastra archivos de audio aquí o haz clic para seleccionar archivos"
 
+#: src/routes/project/HostGuidePage.tsx:1397
+msgid "Drag to reorder"
+msgstr ""
+
 #: src/components/project/ProjectPortalEditor.tsx:465
 msgid "Dutch"
 msgstr "Holandés"
@@ -1324,6 +1337,10 @@ msgstr "Activar Profundizar"
 #: src/components/project/ProjectPortalEditor.tsx:794
 msgid "Enable Make it concrete"
 msgstr "Activar Hacerlo concreto"
+
+#: src/routes/project/HostGuidePage.tsx:1563
+msgid "Enable participation"
+msgstr ""
 
 #: src/components/project/ProjectPortalEditor.tsx:932
 msgid "Enable Report Notifications"
@@ -2476,6 +2493,10 @@ msgstr "Abrir"
 msgid "Open for Participation?"
 msgstr "¿Abierto para Participación?"
 
+#: src/components/project/HostGuideDownload.tsx:28
+msgid "Open Host Guide"
+msgstr ""
+
 #. js-lingui-explicit-id
 #: src/components/participant/PermissionErrorModal.tsx:59
 msgid "participant.button.open.troubleshooting.guide"
@@ -2796,6 +2817,10 @@ msgstr "Preparando tus conversaciones... Esto puede tardar un momento."
 msgid "Preparing your experience"
 msgstr "Preparando tu experiencia"
 
+#: src/routes/project/HostGuidePage.tsx:1426
+msgid "Print / Save PDF"
+msgstr ""
+
 #: src/routes/project/report/ProjectReportRoute.tsx:205
 msgid "Print this report"
 msgstr "Imprimir este informe"
@@ -3109,6 +3134,10 @@ msgstr "Por favor, espera mientras verificamos el acceso al micrófono."
 #~ msgid "Requesting microphone access to detect available devices..."
 #~ msgstr "Solicitando acceso al micrófono para detectar dispositivos disponibles..."
 
+#: src/routes/project/HostGuidePage.tsx:1419
+msgid "Reset"
+msgstr ""
+
 #~ msgid "Reset All Options"
 #~ msgstr "Restablecer todas las opciones"
 
@@ -3181,6 +3210,10 @@ msgstr "revisar"
 #: src/components/settings/AuditLogsCard.tsx:612
 msgid "Revision #{revisionNumber}"
 msgstr "Revisión #{revisionNumber}"
+
+#: src/routes/project/HostGuidePage.tsx:1391
+msgid "Right-click to highlight"
+msgstr ""
 
 #: src/components/settings/AuditLogsCard.tsx:646
 msgid "Rows per page"
@@ -3740,8 +3773,8 @@ msgid "Thank You Page Content"
 msgstr "Contenido de la Página de Gracias"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:245
-msgid "Thank you! We'll notify you when the report is ready."
-msgstr "¡Gracias! Te notificaremos cuando el informe esté listo."
+msgid "Thank you!"
+msgstr "¡Gracias!"
 
 #: src/routes/auth/Login.tsx:141
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."

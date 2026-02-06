@@ -7,18 +7,22 @@ import {
 } from "react";
 
 export type FontFamily = "dm-sans" | "space-grotesk";
+export type FontSizeScale = "xs" | "small" | "normal" | "large" | "xl";
 
 type AppPreferences = {
 	fontFamily: FontFamily;
+	fontSizeScale: FontSizeScale;
 };
 
 type AppPreferencesContextType = {
 	preferences: AppPreferences;
 	setFontFamily: (font: FontFamily) => void;
+	setFontSizeScale: (scale: FontSizeScale) => void;
 };
 
 const defaultPreferences: AppPreferences = {
 	fontFamily: "dm-sans",
+	fontSizeScale: "normal",
 };
 
 // Changed key to reset existing users to new DM Sans default
@@ -88,9 +92,18 @@ export const AppPreferencesProvider = ({
 		});
 	};
 
+	const setFontSizeScale = (scale: FontSizeScale) => {
+		setPreferences((prev) => {
+			const updated = { ...prev, fontSizeScale: scale };
+			savePreferences(updated);
+			return updated;
+		});
+	};
+
 	// Apply font and linked color scheme to document
 	useEffect(() => {
 		const isDmSans = preferences.fontFamily === "dm-sans";
+		const scale = preferences.fontSizeScale || "normal";
 		const root = document.documentElement;
 
 		// Font
@@ -109,7 +122,11 @@ export const AppPreferencesProvider = ({
 		const backgroundColor = isDmSans ? "#F6F4F1" : "#FFFFFF";
 		const textColor = isDmSans ? "#2D2D2C" : "#000000";
 
-		const baseFontSize = isDmSans ? "18px" : "16px";
+		// Base font size depends on both font family and scale
+		const fontSizeMap = isDmSans
+			? { xs: "14px", small: "16px", normal: "18px", large: "20px", xl: "22px" }
+			: { xs: "12px", small: "14px", normal: "16px", large: "18px", xl: "20px" };
+		const baseFontSize = fontSizeMap[scale];
 
 		// Space Grotesk: Original Mantine-based sizes with medium weight
 		const typography = isDmSans
@@ -255,10 +272,10 @@ export const AppPreferencesProvider = ({
 
 		// Set data attribute for potential CSS selectors
 		root.setAttribute("data-theme", isDmSans ? "parchment" : "clean");
-	}, [preferences.fontFamily]);
+	}, [preferences.fontFamily, preferences.fontSizeScale]);
 
 	return (
-		<AppPreferencesContext.Provider value={{ preferences, setFontFamily }}>
+		<AppPreferencesContext.Provider value={{ preferences, setFontFamily, setFontSizeScale }}>
 			{children}
 		</AppPreferencesContext.Provider>
 	);

@@ -179,7 +179,7 @@ export const ProjectSidebar = () => {
 					<div className="text-xs">
 						<Trans>Powered by</Trans>
 					</div>
-					<LogoDembrane />
+					<LogoDembrane className="!h-6" alwaysDembrane />
 				</Group>
 			</Stack>
 		</Stack>

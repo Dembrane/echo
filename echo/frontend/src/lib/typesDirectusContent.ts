@@ -723,6 +723,7 @@ export type DirectusUsers = {
 	theme_light_overrides?: unknown | null;
 	title?: string | null;
 	token?: string | null;
+	whitelabel_logo?: string | DirectusFiles | null;
 };
 
 export type DirectusVersions = {

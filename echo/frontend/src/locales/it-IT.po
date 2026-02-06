@@ -696,9 +696,14 @@ msgstr ""
 "\n"
 "Note: If the similarities/differences are too superficial, let me know we need more complex material to analyze."
 
+#. js-lingui-explicit-id
 #: src/components/announcement/AnnouncementDrawerHeader.tsx:23
-msgid "Announcements"
-msgstr "Announcements"
+msgid "announcements"
+msgstr ""
+
+#: src/components/announcement/AnnouncementDrawerHeader.tsx:23
+#~ msgid "Announcements"
+#~ msgstr "Announcements"
 
 #: src/components/participant/ParticipantInitiateForm.tsx:49
 #~ msgid "Anonymous Participant"
@@ -1074,6 +1079,10 @@ msgstr "Choose your preferred theme for the interface"
 #: src/components/dropzone/UploadConversationDropzone.tsx:665
 msgid "Click \"Upload Files\" when you're ready to start the upload process."
 msgstr "Click \"Upload Files\" when you're ready to start the upload process."
+
+#: src/routes/project/HostGuidePage.tsx:1385
+msgid "Click to edit"
+msgstr ""
 
 #: src/components/conversation/ConversationLinks.tsx:155
 msgid "Click to see all {totalCount} conversations"
@@ -1511,6 +1520,10 @@ msgstr "Download Transcript Options"
 msgid "Drag audio files here or click to select files"
 msgstr "Drag audio files here or click to select files"
 
+#: src/routes/project/HostGuidePage.tsx:1397
+msgid "Drag to reorder"
+msgstr ""
+
 #: src/components/project/ProjectPortalEditor.tsx:465
 msgid "Dutch"
 msgstr "Dutch"
@@ -1628,6 +1641,10 @@ msgstr "Enable Go deeper"
 #: src/components/project/ProjectPortalEditor.tsx:794
 msgid "Enable Make it concrete"
 msgstr "Enable Make it concrete"
+
+#: src/routes/project/HostGuidePage.tsx:1563
+msgid "Enable participation"
+msgstr ""
 
 #: src/components/project/ProjectPortalEditor.tsx:932
 msgid "Enable Report Notifications"
@@ -2851,6 +2868,10 @@ msgstr "Open"
 msgid "Open for Participation?"
 msgstr "Open for Participation?"
 
+#: src/components/project/HostGuideDownload.tsx:28
+msgid "Open Host Guide"
+msgstr ""
+
 #. js-lingui-explicit-id
 #: src/components/participant/PermissionErrorModal.tsx:59
 msgid "participant.button.open.troubleshooting.guide"
@@ -3078,6 +3099,10 @@ msgstr "Preparing your conversations... This may take a moment."
 #: src/components/common/DembraneLoadingSpinner/index.tsx:25
 msgid "Preparing your experience"
 msgstr "Preparing your experience"
+
+#: src/routes/project/HostGuidePage.tsx:1426
+msgid "Print / Save PDF"
+msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:205
 msgid "Print this report"
@@ -3417,6 +3442,10 @@ msgstr "Requesting microphone access to detect available devices..."
 #~ msgid "Requesting microphone access to detect available devices..."
 #~ msgstr "Requesting microphone access to detect available devices..."
 
+#: src/routes/project/HostGuidePage.tsx:1419
+msgid "Reset"
+msgstr ""
+
 #: src/components/conversation/ConversationAccordion.tsx:968
 #~ msgid "Reset All Options"
 #~ msgstr "Reset All Options"
@@ -3492,6 +3521,10 @@ msgstr "Revise"
 #: src/components/settings/AuditLogsCard.tsx:612
 msgid "Revision #{revisionNumber}"
 msgstr "Revision #{revisionNumber}"
+
+#: src/routes/project/HostGuidePage.tsx:1391
+msgid "Right-click to highlight"
+msgstr ""
 
 #: src/components/settings/AuditLogsCard.tsx:646
 msgid "Rows per page"
@@ -4076,8 +4109,8 @@ msgid "Thank You Page Content"
 msgstr "Thank You Page Content"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:245
-msgid "Thank you! We'll notify you when the report is ready."
-msgstr "Thank you! We'll notify you when the report is ready."
+msgid "Thank you!"
+msgstr "Grazie!"
 
 #: src/routes/auth/Login.tsx:141
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
