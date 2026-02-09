@@ -196,7 +196,7 @@ export const AppPreferencesProvider = ({
 				};
 
 		// Icon sizes: DM Sans uses larger icons to match the bolder typography
-		const homeIconSize = isDmSans ? "40px" : "30px";
+		const homeIconSize = typography?.h2Size ?? "2.369rem";
 
 		// Set base font size
 		root.style.setProperty("--app-base-font-size", baseFontSize);
