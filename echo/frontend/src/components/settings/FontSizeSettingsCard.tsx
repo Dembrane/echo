@@ -1,5 +1,12 @@
 import { Trans } from "@lingui/react/macro";
-import { Card, Group, SegmentedControl, Stack, Text, Title } from "@mantine/core";
+import {
+	Card,
+	Group,
+	SegmentedControl,
+	Stack,
+	Text,
+	Title,
+} from "@mantine/core";
 import { IconTextSize } from "@tabler/icons-react";
 import {
 	type FontSizeScale,
@@ -12,11 +19,36 @@ const FONT_SIZE_OPTIONS: {
 	px: { "dm-sans": number; "space-grotesk": number };
 	visualSize: number;
 }[] = [
-	{ value: "xs", label: "A", px: { "dm-sans": 14, "space-grotesk": 12 }, visualSize: 10 },
-	{ value: "small", label: "A", px: { "dm-sans": 16, "space-grotesk": 14 }, visualSize: 13 },
-	{ value: "normal", label: "A", px: { "dm-sans": 18, "space-grotesk": 16 }, visualSize: 16 },
-	{ value: "large", label: "A", px: { "dm-sans": 20, "space-grotesk": 18 }, visualSize: 19 },
-	{ value: "xl", label: "A", px: { "dm-sans": 22, "space-grotesk": 20 }, visualSize: 22 },
+	{
+		label: "A",
+		px: { "dm-sans": 12, "space-grotesk": 12 },
+		value: "xs",
+		visualSize: 10,
+	},
+	{
+		label: "A",
+		px: { "dm-sans": 14, "space-grotesk": 14 },
+		value: "small",
+		visualSize: 13,
+	},
+	{
+		label: "A",
+		px: { "dm-sans": 16, "space-grotesk": 16 },
+		value: "normal",
+		visualSize: 16,
+	},
+	{
+		label: "A",
+		px: { "dm-sans": 18, "space-grotesk": 18 },
+		value: "large",
+		visualSize: 19,
+	},
+	{
+		label: "A",
+		px: { "dm-sans": 20, "space-grotesk": 20 },
+		value: "xl",
+		visualSize: 22,
+	},
 ];
 
 export const FontSizeSettingsCard = () => {
@@ -44,7 +76,6 @@ export const FontSizeSettingsCard = () => {
 					value={preferences.fontSizeScale}
 					onChange={(value) => setFontSizeScale(value as FontSizeScale)}
 					data={FONT_SIZE_OPTIONS.map((opt) => ({
-						value: opt.value,
 						label: (
 							<Text
 								fw={preferences.fontSizeScale === opt.value ? 700 : 400}
@@ -55,6 +86,7 @@ export const FontSizeSettingsCard = () => {
 								{opt.label}
 							</Text>
 						),
+						value: opt.value,
 					}))}
 				/>
 
@@ -63,9 +95,7 @@ export const FontSizeSettingsCard = () => {
 				</Text>
 
 				<Text size="sm" c="dimmed" style={{ fontStyle: "italic" }}>
-					<Trans>
-						Preview: The quick brown fox jumps over the lazy dog.
-					</Trans>
+					<Trans>Preview: The quick brown fox jumps over the lazy dog.</Trans>
 				</Text>
 			</Stack>
 		</Card>
