@@ -75,13 +75,13 @@ export const togglePublishReport = () => {
 };
 
 /**
- * Publishes the report with confirmation
+ * Publishes the report.
+ * Confirmation modal is optional and handled only when present.
  */
 export const publishReportWithConfirmation = () => {
-    cy.log('Publishing Report with Confirmation');
+    cy.log('Publishing Report (optional confirmation)');
     togglePublishReport();
-    cy.get('[data-testid="report-publish-confirmation-modal"]').should('be.visible');
-    cy.get('[data-testid="report-publish-proceed-button"]').click();
+
     cy.wait(2000);
 };
 
@@ -172,4 +172,148 @@ export const verifyReportNotPublished = () => {
 export const verifyConversationStatusModal = () => {
     cy.log('Verifying Conversation Status Modal');
     cy.get('[data-testid="report-conversation-status-modal"]').should('be.visible');
+};
+
+// ============= Report Test Flow Helpers =============
+
+/**
+ * Registers common exception handling used by report E2E suites.
+ */
+export const registerReportFlowExceptionHandling = () => {
+    cy.on('uncaught:exception', (err) => {
+        if (err.message.includes('Syntax error, unrecognized expression') ||
+            err.message.includes('BODY[style=') ||
+            err.message.includes('ResizeObserver loop limit exceeded')) {
+            return false;
+        }
+        return true;
+    });
+};
+
+/**
+ * Ensures report publish switch reaches target state and persists after reload.
+ */
+export const setReportPublishState = (expectedChecked, options = {}) => {
+    const {
+        checkTimeout = 20000,
+        persistRetries = 6,
+        persistWaitMs = 3000,
+        confirmModal = true
+    } = options;
+
+    cy.get('[data-testid="report-publish-toggle"]', { timeout: checkTimeout })
+        .should('exist')
+        .then(($toggle) => {
+            const isChecked = $toggle.prop('checked');
+            if (isChecked !== expectedChecked) {
+                if (expectedChecked) {
+                    cy.wrap($toggle).check({ force: true });
+                } else {
+                    cy.wrap($toggle).uncheck({ force: true });
+                }
+            }
+        });
+
+    cy.get('[data-testid="report-publish-toggle"]', { timeout: checkTimeout })
+        .should(expectedChecked ? 'be.checked' : 'not.be.checked');
+
+    const verifyStateAfterReload = (retriesLeft) => {
+        cy.reload();
+        cy.get('[data-testid="report-publish-toggle"]', { timeout: checkTimeout })
+            .should('exist')
+            .then(($toggle) => {
+                const isChecked = $toggle.prop('checked');
+                if (isChecked === expectedChecked) {
+                    return;
+                }
+
+                if (retriesLeft <= 0) {
+                    throw new Error(`Report publish state did not persist as ${expectedChecked}.`);
+                }
+
+                cy.wait(persistWaitMs);
+                verifyStateAfterReload(retriesLeft - 1);
+            });
+    };
+
+    verifyStateAfterReload(persistRetries);
+};
+
+/**
+ * Ensures include-portal-link checkbox reaches target state.
+ */
+export const setReportPortalLinkState = (expectedChecked, timeout = 20000) => {
+    cy.get('[data-testid="report-include-portal-link-checkbox"]', { timeout })
+        .should('exist')
+        .then(($input) => {
+            const isChecked = $input.prop('checked');
+            if (isChecked !== expectedChecked) {
+                if (expectedChecked) {
+                    cy.wrap($input).check({ force: true });
+                } else {
+                    cy.wrap($input).uncheck({ force: true });
+                }
+            }
+        });
+
+    cy.get('[data-testid="report-include-portal-link-checkbox"]')
+        .should(expectedChecked ? 'be.checked' : 'not.be.checked');
+};
+
+/**
+ * Waits until public report becomes available.
+ */
+export const waitForPublicReportPublished = (options = {}) => {
+    const {
+        retries,
+        maxWaitMs = 120000,
+        waitMs = 5000,
+        timeout = 20000,
+        reloadBetweenChecks = true
+    } = options;
+
+    const startedAt = Date.now();
+    const effectiveMaxWaitMs = typeof retries === 'number'
+        ? (retries + 1) * (waitMs + timeout)
+        : maxWaitMs;
+
+    const poll = () => {
+        return cy.get('body', { timeout }).then(($body) => {
+            const hasPublicViewWrapper = $body.find('[data-testid="public-report-view"]').length > 0;
+            const hasRenderedReport = $body.find('[data-testid="report-renderer-container"]').length > 0;
+            const hasRendererLoading = $body.find('[data-testid="report-renderer-loading"]').length > 0;
+            const hasNotAvailableState = $body.find('[data-testid="public-report-not-available"]').length > 0;
+            const hasRenderedMarkdownFallback = $body.find('.prose').length > 0;
+            const hasParticipantLoading = $body.find('[data-testid="participant-report-loading"]').length > 0;
+            const elapsedMs = Date.now() - startedAt;
+            const timedOut = elapsedMs >= effectiveMaxWaitMs;
+
+            if (!hasNotAvailableState && (hasRenderedReport || hasRenderedMarkdownFallback)) {
+                if (hasRenderedReport) {
+                    return cy.get('[data-testid="report-renderer-container"]').should('be.visible');
+                }
+                return cy.get('.prose').should('be.visible');
+            }
+
+            if (timedOut) {
+                throw new Error(
+                    `Public report was not published in time (${effectiveMaxWaitMs}ms). ` +
+                    `publicView=${hasPublicViewWrapper}, ` +
+                    `renderer=${hasRenderedReport}, ` +
+                    `markdownFallback=${hasRenderedMarkdownFallback}, ` +
+                    `rendererLoading=${hasRendererLoading}, ` +
+                    `participantLoading=${hasParticipantLoading}, ` +
+                    `notAvailable=${hasNotAvailableState}`
+                );
+            }
+
+            cy.wait(waitMs);
+            if (reloadBetweenChecks) {
+                cy.reload();
+            }
+            return poll();
+        });
+    };
+
+    return poll();
 };

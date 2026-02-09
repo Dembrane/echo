@@ -48,6 +48,28 @@ export const clickOverviewMode = () => {
     cy.get('[data-testid="chat-mode-card-overview"]').filter(':visible').click();
 };
 
+/**
+ * Opens Ask and selects Overview mode without sending a message
+ */
+export const openAskWithoutSending = () => {
+    clickAskButton();
+    cy.wait(4000);
+
+    clickOverviewMode();
+    cy.wait(10000);
+};
+
+/**
+ * Opens Ask and selects Specific Details mode without sending a message
+ */
+export const openAskSpecificDetailsWithoutSending = () => {
+    clickAskButton();
+    cy.wait(4000);
+
+    clickSpecificDetails();
+    cy.wait(10000);
+};
+
 // ============= Conversation Context Selection =============
 
 /**
@@ -173,6 +195,89 @@ export const clickSuggestionTemplate = (suggestionName) => {
     cy.get(`[data-testid="chat-template-suggestion-${suggestionName}"]`).should('be.visible').click();
 };
 
+/**
+ * Verifies initial template state before first user message
+ * - Three static templates are visible
+ * - No dynamic AI suggestions are shown yet
+ */
+export const verifyInitialSuggestionState = () => {
+    cy.log('Verifying initial suggestion state');
+    cy.get('[data-testid="chat-templates-menu"]').should('be.visible');
+
+    const expectedStaticTemplateIds = [
+        'chat-template-static-summarize',
+        'chat-template-static-compare-&-contrast',
+        'chat-template-static-meeting-notes'
+    ];
+
+    cy.get('[data-testid^="chat-template-static-"]')
+        .filter(':visible')
+        .then(($staticTemplates) => {
+            const staticIds = [...$staticTemplates]
+                .map((el) => el.getAttribute('data-testid'))
+                .filter(Boolean);
+
+            expect(staticIds.length, 'visible static templates before first message').to.equal(3);
+            expect(staticIds, 'expected static templates before first message')
+                .to.have.members(expectedStaticTemplateIds);
+        });
+
+    cy.get('body').then(($body) => {
+        const dynamicSuggestionCount = $body.find(
+            '[data-testid="chat-templates-menu"] [data-testid^="chat-template-suggestion-"]'
+        ).length;
+
+        expect(dynamicSuggestionCount, 'dynamic suggestions before first message').to.equal(0);
+    });
+};
+
+/**
+ * Returns dynamic suggestion test IDs currently shown
+ */
+export const getDynamicSuggestionIds = () => {
+    return cy.get('body').then(($body) => {
+        const suggestions = $body.find(
+            '[data-testid="chat-templates-menu"] [data-testid^="chat-template-suggestion-"]'
+        );
+
+        return [...suggestions]
+            .map((el) => el.getAttribute('data-testid'))
+            .filter(Boolean);
+    });
+};
+
+/**
+ * Verifies dynamic suggestions appear after sending a message
+ */
+export const verifyDynamicSuggestionsAfterMessage = (
+    beforeIds = [],
+    minimumCount = 1,
+    timeoutMs = 90000,
+    minimumNewCount = 0
+) => {
+    cy.log('Verifying dynamic suggestions after message');
+    cy.get('[data-testid="chat-templates-menu"] [data-testid^="chat-template-suggestion-"]', { timeout: timeoutMs })
+        .should(($suggestions) => {
+            expect($suggestions.length).to.be.gte(minimumCount);
+        })
+        .then(($suggestions) => {
+            const afterIds = [...$suggestions]
+                .map((el) => el.getAttribute('data-testid'))
+                .filter(Boolean);
+            const uniqueAfterIds = [...new Set(afterIds)];
+
+            expect(uniqueAfterIds.length, 'unique dynamic suggestion IDs').to.be.gte(minimumCount);
+            const newIds = uniqueAfterIds.filter((id) => !beforeIds.includes(id));
+
+            if (minimumNewCount > 0) {
+                expect(newIds.length, 'new dynamic suggestion IDs after first message').to.be.gte(minimumNewCount);
+            } else {
+                expect(uniqueAfterIds.length, 'dynamic suggestions should remain available after first message')
+                    .to.be.gte(beforeIds.length);
+            }
+        });
+};
+
 // ============= Chat Item Management =============
 
 /**
@@ -188,7 +293,7 @@ export const selectChatById = (chatId) => {
  */
 export const openChatItemMenu = () => {
     cy.log('Opening chat item menu');
-    cy.get('[data-testid="chat-item-menu-button"]').filter(':visible').first().click();
+    cy.get('[data-testid="chat-item-menu"]').filter(':visible').first().click();
 };
 
 /**
@@ -202,9 +307,18 @@ export const renameChat = () => {
 /**
  * Deletes a chat
  */
-export const deleteChat = () => {
+export const deleteChat = (acceptConfirm = true) => {
     cy.log('Deleting chat');
-    cy.get('[data-testid="chat-item-menu-delete"]').should('be.visible').click();
+    if (acceptConfirm) {
+        cy.on('window:confirm', () => {
+            return true;
+        });
+    }
+
+    cy.get('[data-testid="chat-item-menu-delete"]')
+        .filter(':visible')
+        .first()
+        .click({ force: true });
 };
 
 // ============= Complete Ask Flows =============
@@ -219,6 +333,11 @@ export const askWithContext = (message = 'hello') => {
     clickSpecificDetails();
     cy.wait(10000);
 
+    selectConversationContext();
+    // Deselect
+    selectConversationContext();
+    cy.log('able to deslet a conversation');
+    // Select again
     selectConversationContext();
 
     typeMessage(message);

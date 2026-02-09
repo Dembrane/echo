@@ -254,6 +254,31 @@ export const moveConversation = (projectSearchTerm) => {
 };
 
 /**
+ * Moves conversation to a specific project by exact target project ID
+ */
+export const moveConversationToProjectById = (projectSearchTerm, targetProjectId) => {
+    cy.log(`Moving conversation to project ID: ${targetProjectId} (search: ${projectSearchTerm})`);
+    cy.get('[data-testid="conversation-move-button"]')
+        .scrollIntoView()
+        .should('be.visible')
+        .click();
+
+    cy.get('[data-testid="conversation-move-modal"]').should('be.visible');
+    cy.get('[data-testid="conversation-move-search-input"]')
+        .should('be.visible')
+        .clear()
+        .type(projectSearchTerm);
+
+    cy.get(`[data-testid="conversation-move-project-radio-${targetProjectId}"]`, { timeout: 10000 })
+        .should('exist')
+        .check({ force: true });
+
+    cy.get('[data-testid="conversation-move-submit-button"]')
+        .should('not.be.disabled')
+        .click();
+};
+
+/**
  * Downloads the conversation audio
  */
 export const downloadAudio = () => {
@@ -264,9 +289,18 @@ export const downloadAudio = () => {
 /**
  * Deletes the conversation
  */
-export const deleteConversation = () => {
+export const deleteConversation = (acceptConfirm = true) => {
     cy.log('Deleting Conversation');
-    cy.get('[data-testid="conversation-delete-button"]').should('be.visible').click();
+    if (acceptConfirm) {
+        cy.on('window:confirm', () => {
+            return true;
+        });
+    }
+
+    cy.get('[data-testid="conversation-delete-button"]')
+        .scrollIntoView()
+        .should('be.visible')
+        .click({ force: true });
     cy.wait(2000);
 };
 
@@ -361,6 +395,8 @@ export const toggleTranscriptAudioPlayer = () => {
 export const searchConversation = (searchTerm) => {
     cy.log('Searching for conversation:', searchTerm);
     cy.get('[data-testid="conversation-search-input"]')
+        .filter(':visible')
+        .first()
         .should('be.visible')
         .clear()
         .type(searchTerm);
@@ -379,7 +415,10 @@ export const clearConversationSearch = () => {
  */
 export const toggleFilterOptions = () => {
     cy.log('Toggling filter options');
-    cy.get('[data-testid="conversation-filter-options-toggle"]').click();
+    cy.get('[data-testid="conversation-filter-options-toggle"]')
+        .filter(':visible')
+        .first()
+        .click();
 };
 
 /**

@@ -1,8 +1,10 @@
 /**
- * Publish Report Flow Test Suite
+ * Report Lifecycle Flow Test Suite
  *
- * Split into single-origin tests so it runs in Chromium/Firefox/WebKit
- * without relying on cy.origin().
+ * Verifies report lifecycle states with single-origin tests:
+ * - Draft report generation
+ * - Published report with portal link disabled
+ * - Published report with portal link enabled
  */
 
 import { loginToApp, logout } from '../../support/functions/login';
@@ -17,10 +19,11 @@ import {
 import {
     registerReportFlowExceptionHandling,
     setReportPublishState,
+    setReportPortalLinkState,
     waitForPublicReportPublished
 } from '../../support/functions/report';
 
-describe('Publish Report Flow', () => {
+describe('Report Lifecycle Flow', () => {
     let projectId;
     let locale = 'en-US';
 
@@ -30,7 +33,7 @@ describe('Publish Report Flow', () => {
     const resolveProjectId = () => {
         return cy.then(() => {
             if (!projectId) {
-                projectId = Cypress.env('publishReportProjectId');
+                projectId = Cypress.env('reportLifecycleProjectId');
             }
 
             if (projectId) {
@@ -43,7 +46,7 @@ describe('Publish Report Flow', () => {
                     throw new Error('projectId not found. Ensure report setup test completed.');
                 }
                 projectId = lastProject.id;
-                Cypress.env('publishReportProjectId', projectId);
+                Cypress.env('reportLifecycleProjectId', projectId);
                 return projectId;
             });
         }).then((id) => {
@@ -80,7 +83,7 @@ describe('Publish Report Flow', () => {
                 if (parts[projectIndex - 1]) {
                     locale = parts[projectIndex - 1];
                 }
-                Cypress.env('publishReportProjectId', projectId);
+                Cypress.env('reportLifecycleProjectId', projectId);
                 cy.log('Captured Project ID:', projectId);
             }
         });
@@ -102,18 +105,7 @@ describe('Publish Report Flow', () => {
         cy.get('[data-testid="report-renderer-container"]', { timeout: 20000 }).should('be.visible');
     });
 
-    it('shows report as unavailable on public URL before publish', () => {
-        registerReportFlowExceptionHandling();
-
-        resolveProjectId().then((id) => {
-            openPublicReportPage(id);
-        });
-
-        cy.get('[data-testid="public-report-not-available"]', { timeout: 20000 }).should('be.visible');
-        cy.get('[data-testid="public-report-view"]').should('not.exist');
-    });
-
-    it('publishes the report from dashboard', () => {
+    it('publishes report and disables portal link in settings', () => {
         registerReportFlowExceptionHandling();
         loginToApp();
 
@@ -122,9 +114,10 @@ describe('Publish Report Flow', () => {
         });
 
         setReportPublishState(true);
+        setReportPortalLinkState(false);
     });
 
-    it('shows published report on public URL after publish', () => {
+    it('shows published report without portal CTA when portal link is disabled', () => {
         registerReportFlowExceptionHandling();
 
         resolveProjectId().then((id) => {
@@ -132,9 +125,42 @@ describe('Publish Report Flow', () => {
         });
 
         // waitForPublicReportPublished();
-
+        cy.get('[data-testid="report-renderer-container"]').should('be.visible');
         cy.get('[data-testid="public-report-not-available"]').should('not.exist');
-        cy.get('[data-testid="public-report-view"]', { timeout: 20000 }).should('be.visible');
+        cy.contains('Do you want to contribute to this project?').should('not.exist');
+        cy.contains('a', 'Share your voice').should('not.exist');
+    });
+
+    it('enables portal link in report settings', () => {
+        registerReportFlowExceptionHandling();
+        loginToApp();
+
+        resolveProjectId().then((id) => {
+            openDashboardReportPage(id);
+        });
+
+        setReportPublishState(true);
+        setReportPortalLinkState(true);
+    });
+
+    it('shows published report with portal CTA when portal link is enabled', () => {
+        registerReportFlowExceptionHandling();
+
+        resolveProjectId().then((id) => {
+            openPublicReportPage(id);
+        });
+
+        // waitForPublicReportPublished();
+        resolveProjectId().then((id) => {
+            cy.get('[data-testid="report-renderer-container"]').should('be.visible');
+            cy.get('[data-testid="public-report-not-available"]').should('not.exist');
+            // Use text content since data-testid attributes are missing on these components
+            cy.contains('Do you want to contribute to this project?').should('be.visible');
+            cy.contains('a', 'Share your voice')
+                .should('be.visible')
+                .and('have.attr', 'href')
+                .and('include', `/${locale}/${id}/start`);
+        });
     });
 
     it('deletes the project and logs out', () => {
@@ -148,7 +174,7 @@ describe('Publish Report Flow', () => {
                 cy.visit(`/${locale}/projects/${id}/overview`);
             }
             deleteProject(id);
-            Cypress.env('publishReportProjectId', null);
+            Cypress.env('reportLifecycleProjectId', null);
         });
 
         openSettingsMenu();

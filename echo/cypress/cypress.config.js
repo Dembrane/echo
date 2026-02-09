@@ -32,6 +32,21 @@ module.exports = defineConfig({
 
                     return path.join(dir, recentFile);
                 },
+                findFileByPattern({ dir, startsWith = '', endsWith = '' }) {
+                    if (!fs.existsSync(dir)) return null;
+                    const files = fs.readdirSync(dir);
+                    const foundFiles = files.filter(file =>
+                        file.startsWith(startsWith) && file.endsWith(endsWith)
+                    );
+                    if (foundFiles.length === 0) return null;
+
+                    const recentFile = foundFiles.map(file => {
+                        const filePath = path.join(dir, file);
+                        return { file, mtime: fs.statSync(filePath).mtime };
+                    }).sort((a, b) => b.mtime - a.mtime)[0].file;
+
+                    return path.join(dir, recentFile);
+                },
             });
 
             // Add browser launch arguments for fake media devices (cross-browser support)

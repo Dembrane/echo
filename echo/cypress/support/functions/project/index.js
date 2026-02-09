@@ -74,11 +74,11 @@ export const deleteProject = (projectId) => {
 
     // 1. Navigate to Project Settings using data-testid
     cy.get('[data-testid="project-overview-tab-overview"]').should('be.visible').click();
-    cy.wait(2000);
+    cy.wait(5000);
 
     // 2. Click "Delete Project" button using data-testid
     cy.get('[data-testid="project-actions-delete-button"]').scrollIntoView().should('be.visible').click();
-
+    cy.wait(5000);
     // 3. Wait for modal to appear and confirm deletion
     cy.get('[data-testid="project-delete-confirm-button"]', { timeout: 10000 })
         .should('be.visible')

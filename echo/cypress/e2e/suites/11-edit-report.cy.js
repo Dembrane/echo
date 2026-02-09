@@ -71,12 +71,12 @@ describe('Edit Report Flow', () => {
 
         // 7. Click on the Report button
         cy.log('Step 7: Clicking Report button');
-        cy.xpath("//button[contains(., 'Report')]").filter(':visible').click();
+        cy.get('[data-testid="sidebar-report-button"]').filter(':visible').click();
 
         // 8. Click Create Report in the modal
         cy.log('Step 8: Clicking Create Report in modal');
         cy.get('section[role="dialog"]').should('be.visible');
-        cy.xpath("//button[contains(., 'Create Report')]").filter(':visible').click();
+        cy.get('[data-testid="report-create-button"]').filter(':visible').click();
 
         // 9. Wait 20 seconds for processing
         cy.log('Step 9: Waiting 20 seconds for report processing');
@@ -84,13 +84,13 @@ describe('Edit Report Flow', () => {
 
         // 10. Click on the Report button again to view report
         cy.log('Step 10: Clicking Report button again');
-        cy.xpath("//button[contains(., 'Report')]").filter(':visible').click();
+        cy.get('[data-testid="sidebar-report-button"]').filter(':visible').click();
         cy.wait(5000); // Wait for report content to load
 
         // 11. Toggle Editing Mode ON
         cy.log('Step 11: Toggling Editing Mode ON');
         // Use robust xpath for the switch containing 'Editing mode'
-        cy.xpath("//label[.//span[contains(text(), 'Editing mode')]]").filter(':visible').click();
+        cy.get('[data-testid="report-editing-mode-toggle"]').click({ force: true });
         cy.wait(1000); // Wait for editor to initialize
 
         // 12. Modify Report Content
@@ -114,7 +114,7 @@ describe('Edit Report Flow', () => {
 
         // 13. Toggle Editing Mode OFF
         cy.log('Step 13: Toggling Editing Mode OFF');
-        cy.xpath("//label[.//span[contains(text(), 'Editing mode')]]").filter(':visible').click();
+        cy.get('[data-testid="report-editing-mode-toggle"]').click({ force: true });
         cy.wait(1000); // Wait for read-only view validation
 
         // 14. Verify New Content Persists
