@@ -634,7 +634,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													<Trans>Explore</Trans>
 												</Title>
 												<Logo hideTitle alwaysDembrane />
-												<Badge color="mauve" c="graphite">
+												<Badge color="mauve" c="graphite" size="sm">
 													<Trans id="dashboard.dembrane.concrete.beta">
 														Beta
 													</Trans>
@@ -841,7 +841,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													</Trans>
 												</Title>
 												<Logo hideTitle alwaysDembrane />
-												<Badge color="mauve" c="graphite">
+												<Badge color="mauve" c="graphite" size="sm">
 													<Trans id="dashboard.dembrane.concrete.beta">
 														Beta
 													</Trans>
@@ -1170,7 +1170,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 											<Title order={4}>
 												<Trans>Anonymize Transcripts</Trans>
 											</Title>
-											<Badge color="mauve" c="graphite">
+											<Badge color="mauve" c="graphite" size="sm">
 												<Trans>Beta</Trans>
 											</Badge>
 										</Group>
@@ -1212,7 +1212,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 											<Title order={4}>
 												<Trans>Auto-generate Titles</Trans>
 											</Title>
-											<Badge color="mauve" c="graphite">
+											<Badge color="mauve" c="graphite" size="sm">
 												<Trans>Beta</Trans>
 											</Badge>
 										</Group>

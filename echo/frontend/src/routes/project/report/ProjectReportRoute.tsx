@@ -59,7 +59,7 @@ export const ReportLayout = ({
 									<Title order={1}>
 										<Trans>Report</Trans>
 									</Title>
-									<Badge color="mauve" c="graphite">
+									<Badge color="mauve" c="graphite" size="sm">
 										<Trans>Beta</Trans>
 									</Badge>
 								</Group>
