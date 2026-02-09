@@ -513,10 +513,7 @@ export const AuditLogsCard = () => {
 					</Alert>
 				) : null}
 
-				<ScrollArea
-					offsetScrollbars
-					className="rounded-md border border-gray-200 dark:border-dark-4"
-				>
+				<ScrollArea className="rounded-md border">
 					<Table striped highlightOnHover>
 						<Table.Thead className="bg-gray-50 dark:bg-dark-7">
 							{table.getHeaderGroups().map((headerGroup) => (
