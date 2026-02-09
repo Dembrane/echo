@@ -40,15 +40,15 @@ import { useProjectSharingLink } from "./ProjectQRCode";
 import { ProjectTagsInput } from "./ProjectTagsInput";
 
 const FormSchema = z.object({
+	anonymize_transcripts: z.boolean(),
 	conversation_title_prompt: z.string(),
-	default_conversation_ask_for_participant_name: z.boolean(),
 	default_conversation_ask_for_participant_email: z.boolean(),
+	default_conversation_ask_for_participant_name: z.boolean(),
 	default_conversation_description: z.string(),
 	default_conversation_finish_text: z.string(),
 	default_conversation_title: z.string(),
 	default_conversation_transcript_prompt: z.string(),
 	default_conversation_tutorial_slug: z.string(),
-	anonymize_transcripts: z.boolean(),
 	enable_ai_title_and_tags: z.boolean(),
 	get_reply_mode: z.string(),
 	get_reply_prompt: z.string(),
@@ -252,11 +252,12 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 			: "none";
 
 		return {
+			anonymize_transcripts: project.anonymize_transcripts ?? false,
 			conversation_title_prompt: project.conversation_title_prompt ?? "",
-			default_conversation_ask_for_participant_name:
-				project.default_conversation_ask_for_participant_name ?? false,
 			default_conversation_ask_for_participant_email:
 				project.default_conversation_ask_for_participant_email ?? false,
+			default_conversation_ask_for_participant_name:
+				project.default_conversation_ask_for_participant_name ?? false,
 			default_conversation_description:
 				project.default_conversation_description ?? "",
 			default_conversation_finish_text:
@@ -265,7 +266,6 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 			default_conversation_transcript_prompt:
 				project.default_conversation_transcript_prompt ?? "",
 			default_conversation_tutorial_slug: normalizedTutorialSlug ?? "none",
-			anonymize_transcripts: project.anonymize_transcripts ?? false,
 			enable_ai_title_and_tags: project.enable_ai_title_and_tags ?? false,
 			get_reply_mode: project.get_reply_mode ?? "summarize",
 			get_reply_prompt: project.get_reply_prompt ?? "",
@@ -532,9 +532,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														/>
 													}
 													description={
-														<Trans>
-															Optional field on the start page
-														</Trans>
+														<Trans>Optional field on the start page</Trans>
 													}
 													checked={field.value}
 													onChange={(e) =>
@@ -563,9 +561,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														/>
 													}
 													description={
-														<Trans>
-															Optional field on the thank you page
-														</Trans>
+														<Trans>Optional field on the thank you page</Trans>
 													}
 													checked={field.value}
 													onChange={(e) =>
@@ -638,7 +634,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													<Trans>Explore</Trans>
 												</Title>
 												<Logo hideTitle alwaysDembrane />
-												<Badge>
+												<Badge color="mauve" c="graphite">
 													<Trans id="dashboard.dembrane.concrete.beta">
 														Beta
 													</Trans>
@@ -845,7 +841,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													</Trans>
 												</Title>
 												<Logo hideTitle alwaysDembrane />
-												<Badge>
+												<Badge color="mauve" c="graphite">
 													<Trans id="dashboard.dembrane.concrete.beta">
 														Beta
 													</Trans>
@@ -1174,13 +1170,16 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 											<Title order={4}>
 												<Trans>Anonymize Transcripts</Trans>
 											</Title>
-											<Badge>
+											<Badge color="mauve" c="graphite">
 												<Trans>Beta</Trans>
 											</Badge>
 										</Group>
 										<Text size="sm" c="dimmed">
 											<Trans>
-												When enabled, all new transcripts will have personal information (names, emails, phone numbers, addresses) replaced with placeholders. This cannot be undone for already-processed conversations.
+												When enabled, all new transcripts will have personal
+												information (names, emails, phone numbers, addresses)
+												replaced with placeholders. This cannot be undone for
+												already-processed conversations.
 											</Trans>
 										</Text>
 										<Controller
@@ -1191,12 +1190,18 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													label={
 														<FormLabel
 															label={t`Enable transcript anonymization`}
-															isDirty={formState.dirtyFields.anonymize_transcripts}
-															error={formState.errors.anonymize_transcripts?.message}
+															isDirty={
+																formState.dirtyFields.anonymize_transcripts
+															}
+															error={
+																formState.errors.anonymize_transcripts?.message
+															}
 														/>
 													}
 													checked={field.value}
-													onChange={(e) => field.onChange(e.currentTarget.checked)}
+													onChange={(e) =>
+														field.onChange(e.currentTarget.checked)
+													}
 												/>
 											)}
 										/>
@@ -1207,13 +1212,17 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 											<Title order={4}>
 												<Trans>Auto-generate Titles</Trans>
 											</Title>
-											<Badge>
+											<Badge color="mauve" c="graphite">
 												<Trans>Beta</Trans>
 											</Badge>
 										</Group>
 										<Text size="sm" c="dimmed">
 											<Trans>
-												Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one.
+												Automatically generate a short topic-based title for
+												each conversation after summarization. The title
+												describes what was discussed, not who participated. The
+												participant's original name is preserved separately, if
+												they provided one.
 											</Trans>
 										</Text>
 										<Controller
@@ -1224,12 +1233,19 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													label={
 														<FormLabel
 															label={t`Auto-generate titles`}
-															isDirty={formState.dirtyFields.enable_ai_title_and_tags}
-															error={formState.errors.enable_ai_title_and_tags?.message}
+															isDirty={
+																formState.dirtyFields.enable_ai_title_and_tags
+															}
+															error={
+																formState.errors.enable_ai_title_and_tags
+																	?.message
+															}
 														/>
 													}
 													checked={field.value}
-													onChange={(e) => field.onChange(e.currentTarget.checked)}
+													onChange={(e) =>
+														field.onChange(e.currentTarget.checked)
+													}
 												/>
 											)}
 										/>
@@ -1242,11 +1258,23 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														label={
 															<FormLabel
 																label={t`Custom title prompt`}
-																isDirty={formState.dirtyFields.conversation_title_prompt}
-																error={formState.errors.conversation_title_prompt?.message}
+																isDirty={
+																	formState.dirtyFields
+																		.conversation_title_prompt
+																}
+																error={
+																	formState.errors.conversation_title_prompt
+																		?.message
+																}
 															/>
 														}
-														description={<Trans>Guide how titles are generated. Titles describe the topic of the conversation, not the participant.</Trans>}
+														description={
+															<Trans>
+																Guide how titles are generated. Titles describe
+																the topic of the conversation, not the
+																participant.
+															</Trans>
+														}
 														placeholder={t`e.g. "Use short noun phrases like 'Urban Green Spaces' or 'Youth Employment'. Avoid generic titles."`}
 														autosize
 														minRows={2}

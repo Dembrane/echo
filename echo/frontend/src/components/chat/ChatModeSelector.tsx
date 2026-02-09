@@ -138,17 +138,7 @@ const ModeCard = ({
 										{title}
 									</Text>
 									{isBeta && (
-										<Badge
-											size="sm"
-											variant="outline"
-											styles={{
-												root: {
-													backgroundColor: "transparent",
-													borderColor: "var(--app-text)",
-													color: "var(--app-text)",
-												},
-											}}
-										>
+										<Badge size="sm" color="mauve" c="graphite">
 											<Trans>Beta</Trans>
 										</Badge>
 									)}
