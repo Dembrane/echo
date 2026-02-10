@@ -18,7 +18,9 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Box, Button, Group, Text } from "@mantine/core";
+import { useWindowEvent } from "@mantine/hooks";
 import {
+	IconArrowsMaximize,
 	IconGripVertical,
 	IconPlus,
 	IconPrinter,
@@ -147,10 +149,13 @@ const highlightKeywords = (
 	const pattern = new RegExp(`\\b(${escaped.join("|")})\\b`, "g");
 	const parts = text.split(pattern);
 
-	return parts.map((part, i) => {
+	return parts.map((part) => {
 		if (allKeywords.includes(part)) {
 			return (
-				<span key={i} style={{ color: colors.royalBlue, fontStyle: "italic" }}>
+				<span
+					key={part}
+					style={{ color: colors.royalBlue, fontStyle: "italic" }}
+				>
 					{part}
 				</span>
 			);
@@ -974,7 +979,7 @@ type ContextMenuState = {
 
 export const HostGuidePage = () => {
 	const { projectId } = useParams();
-	const [toolbarVisible, setToolbarVisible] = useState(false);
+	const [isFullscreen, setIsFullscreen] = useState(false);
 	const [showLiveRecordings, setShowLiveRecordings] = useState(() => {
 		try {
 			const saved = localStorage.getItem("host-guide-live-toggle");
@@ -1267,21 +1272,18 @@ export const HostGuidePage = () => {
 		setContextMenu(null);
 	};
 
-	// Close context menu on click outside or escape
-	useEffect(() => {
-		const handleClick = () => setContextMenu(null);
-		const handleKeyDown = (e: KeyboardEvent) => {
-			if (e.key === "Escape") setContextMenu(null);
-		};
-		if (contextMenu) {
-			document.addEventListener("click", handleClick);
-			document.addEventListener("keydown", handleKeyDown);
+	// Close context menu on click outside
+	useWindowEvent("click", () => {
+		if (contextMenu) setContextMenu(null);
+	});
+
+	// Close context menu on Escape, exit fullscreen on Escape
+	useWindowEvent("keydown", (event) => {
+		if (event.key === "Escape") {
+			if (contextMenu) setContextMenu(null);
+			if (isFullscreen) setIsFullscreen(false);
 		}
-		return () => {
-			document.removeEventListener("click", handleClick);
-			document.removeEventListener("keydown", handleKeyDown);
-		};
-	}, [contextMenu]);
+	});
 
 	// DnD Kit setup
 	const sensors = useSensors(
@@ -1354,19 +1356,36 @@ export const HostGuidePage = () => {
 				flexDirection: "column",
 				minHeight: "100vh",
 				padding: space.page,
+				paddingTop: isFullscreen ? space.page : `calc(${space.page} + 48px)`,
+				transition: "padding-top 0.2s",
 			}}
 		>
-			{/* Floating toolbar */}
+			{/* Fullscreen exit zone — thin invisible strip at top edge */}
+			{isFullscreen && (
+				<div
+					className="no-print"
+					onMouseEnter={() => setIsFullscreen(false)}
+					style={{
+						height: "6px",
+						left: 0,
+						position: "fixed",
+						right: 0,
+						top: 0,
+						zIndex: 1001,
+					}}
+				/>
+			)}
+
+			{/* Permanent header toolbar */}
 			<Box
 				className="no-print"
-				onMouseEnter={() => setToolbarVisible(true)}
-				onMouseLeave={() => setToolbarVisible(false)}
 				style={{
-					height: toolbarVisible ? "auto" : "32px",
 					left: 0,
 					position: "fixed",
 					right: 0,
 					top: 0,
+					transform: isFullscreen ? "translateY(-100%)" : "translateY(0)",
+					transition: "transform 0.2s",
 					zIndex: 1000,
 				}}
 			>
@@ -1377,8 +1396,6 @@ export const HostGuidePage = () => {
 						backgroundColor: "white",
 						boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
 						padding: "10px 16px",
-						transform: toolbarVisible ? "translateY(0)" : "translateY(-100%)",
-						transition: "transform 0.2s",
 					}}
 				>
 					<Text size="sm" c="dimmed">
@@ -1424,6 +1441,14 @@ export const HostGuidePage = () => {
 						onClick={() => window.print()}
 					>
 						<Trans>Print / Save PDF</Trans>
+					</Button>
+					<Button
+						size="xs"
+						variant="outline"
+						leftSection={<IconArrowsMaximize size={14} />}
+						onClick={() => setIsFullscreen(true)}
+					>
+						<Trans>Go Fullscreen</Trans>
 					</Button>
 				</Group>
 			</Box>

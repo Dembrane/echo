@@ -17,7 +17,6 @@
 /* Space Grotesk (default) → White + Black */
 /* DM Sans → Parchment + Graphite */
 :root {
-	/* DM Sans (default) uses 18px, Space Grotesk uses 16px */
 	/* Dynamically updated by useAppPreferences based on font selection */
 	--app-base-font-size: 16px;
 	

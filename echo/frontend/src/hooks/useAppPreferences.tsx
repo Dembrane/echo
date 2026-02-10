@@ -124,8 +124,14 @@ export const AppPreferencesProvider = ({
 
 		// Base font size depends on both font family and scale
 		const fontSizeMap = isDmSans
-			? { xs: "14px", small: "16px", normal: "18px", large: "20px", xl: "22px" }
-			: { xs: "12px", small: "14px", normal: "16px", large: "18px", xl: "20px" };
+			? { large: "18px", normal: "16px", small: "14px", xl: "20px", xs: "12px" }
+			: {
+					large: "18px",
+					normal: "16px",
+					small: "14px",
+					xl: "20px",
+					xs: "12px",
+				};
 		const baseFontSize = fontSizeMap[scale];
 
 		// Space Grotesk: Original Mantine-based sizes with medium weight
@@ -190,7 +196,7 @@ export const AppPreferencesProvider = ({
 				};
 
 		// Icon sizes: DM Sans uses larger icons to match the bolder typography
-		const homeIconSize = isDmSans ? "40px" : "30px";
+		const homeIconSize = typography?.h2Size ?? "2.369rem";
 
 		// Set base font size
 		root.style.setProperty("--app-base-font-size", baseFontSize);
@@ -275,7 +281,9 @@ export const AppPreferencesProvider = ({
 	}, [preferences.fontFamily, preferences.fontSizeScale]);
 
 	return (
-		<AppPreferencesContext.Provider value={{ preferences, setFontFamily, setFontSizeScale }}>
+		<AppPreferencesContext.Provider
+			value={{ preferences, setFontFamily, setFontSizeScale }}
+		>
 			{children}
 		</AppPreferencesContext.Provider>
 	);
