@@ -198,8 +198,8 @@ export const VerifySelection = () => {
 			{/* Main content */}
 			<Stack gap="xl" className="flex-grow">
 				<Title order={3} className="font-semibold">
-					<Trans id="participant.concrete.selection.title">
-						What do you want to make concrete?
+					<Trans id="participant.verify.selection.title">
+						What do you want to verify?
 					</Trans>
 				</Title>
 
@@ -254,7 +254,7 @@ export const VerifySelection = () => {
 				{isLoading ? (
 					<Trans>Loading…</Trans>
 				) : (
-					<Trans id="participant.concrete.selection.button.next">Next</Trans>
+					<Trans id="participant.verify.selection.button.next">Next</Trans>
 				)}
 			</Button>
 		</Stack>

@@ -842,20 +842,20 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												</Title>
 												<Logo hideTitle alwaysDembrane />
 												<Badge color="mauve" c="graphite" size="sm">
-													<Trans id="dashboard.dembrane.concrete.beta">
+													<Trans id="dashboard.dembrane.verify.beta">
 														Beta
 													</Trans>
 												</Badge>
 											</Group>
 
 											<Text size="sm" c="dimmed">
-												<Trans id="dashboard.dembrane.concrete.description">
-													Enable this feature to allow participants to create
-													and approve "concrete objects" from their submissions.
-													This helps crystallize key ideas, concerns, or
-													summaries. After the conversation, you can filter for
-													discussions with concrete objects and review them in
-													the overview.
+												<Trans id="dashboard.dembrane.feature.verify.description">
+													Enable this feature to allow participants to verify
+													and approve "outcomes" from their submissions. This
+													helps crystallize key ideas, concerns, or summaries.
+													After the conversation, you can filter for discussions
+													with verified outcomes and review them in the
+													overview.
 												</Trans>
 											</Text>
 
@@ -890,7 +890,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												render={({ field }) => (
 													<Stack gap="xs">
 														<FormLabel
-															label={t`Concrete Topics`}
+															label={t`Verify Topics`}
 															isDirty={
 																!!formState.dirtyFields.verification_topics
 															}
@@ -899,18 +899,18 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 															}
 														/>
 														<Text size="sm" c="dimmed">
-															<Trans id="dashboard.dembrane.verify.topic.select">
+															<Trans id="dashboard.dembrane.feature.verify.topic.select">
 																Select which topics participants can use for
 																"Verify".
 															</Trans>
 														</Text>
 														{isVerificationTopicsLoading ? (
 															<Text size="sm" c="dimmed">
-																<Trans>Loading concrete topics…</Trans>
+																<Trans>Loading verify topics…</Trans>
 															</Text>
 														) : availableVerifyTopics.length === 0 ? (
 															<Text size="sm" c="dimmed">
-																<Trans>No concrete topics available.</Trans>
+																<Trans>No verify topics available.</Trans>
 															</Text>
 														) : (
 															<Group gap="xs">

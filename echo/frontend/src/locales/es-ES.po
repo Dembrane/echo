@@ -150,6 +150,61 @@ msgstr "Bienvenido de nuevo"
 #~ msgstr "Necesitamos un poco más de contexto para ayudarte a refinar de forma efectiva. Continúa grabando para que podamos darte mejores sugerencias."
 
 #. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:852
+#~ msgid "dashboard.dembrane.concrete.description"
+#~ msgstr "Activa esta función para permitir a los participantes crear y verificar resultados concretos durante sus conversaciones."
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:44
+#~ msgid "participant.concrete.instructions.approve.artefact"
+#~ msgstr "Si estás satisfecho con el {objectLabel}, haz clic en \"Aprobar\" para mostrar que te sientes escuchado."
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:113
+#~ msgid "participant.concrete.instructions.loading"
+#~ msgstr "Cargando"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifySelection.tsx:257
+#~ msgid "participant.concrete.selection.button.next"
+#~ msgstr "Siguiente"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:115
+#~ msgid "participant.concrete.instructions.button.next"
+#~ msgstr "Siguiente"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:35
+#~ msgid "participant.concrete.instructions.revise.artefact"
+#~ msgstr "Una vez que hayas discutido, presiona \"revisar\" para ver cómo el {objectLabel} cambia para reflejar tu discusión."
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:26
+#~ msgid "participant.concrete.instructions.read.aloud"
+#~ msgstr "Una vez que recibas el {objectLabel}, léelo en voz alta y comparte en voz alta lo que deseas cambiar, si es necesario."
+
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:902
+#~ msgid "dashboard.dembrane.verify.topic.select"
+#~ msgstr "Seleccione qué temas pueden usar los participantes para la verificación."
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifySelection.tsx:201
+#~ msgid "participant.concrete.selection.title"
+#~ msgstr "¿Qué quieres verificar?"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:18
+#~ msgid "participant.concrete.instructions.receive.artefact"
+#~ msgstr "Pronto recibirás {objectLabel} para verificar."
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:53
+#~ msgid "participant.concrete.instructions.approval.helps"
+#~ msgstr "¡Tu aprobación nos ayuda a entender lo que realmente piensas!"
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:237
 msgid "library.generate.duration.message"
 msgstr "La biblioteca tardará {duration}"
@@ -759,6 +814,11 @@ msgstr "Configuración Básica"
 #~ msgid "Begin!"
 #~ msgstr "¡Comenzar!"
 
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:845
+msgid "dashboard.dembrane.verify.beta"
+msgstr "Beta"
+
 #: src/routes/project/report/ProjectReportRoute.tsx:63
 #: src/components/project/ProjectPortalEditor.tsx:1174
 #: src/components/project/ProjectPortalEditor.tsx:1216
@@ -771,7 +831,6 @@ msgstr "Beta"
 
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:638
-#: src/components/project/ProjectPortalEditor.tsx:845
 msgid "dashboard.dembrane.concrete.beta"
 msgstr "Beta"
 
@@ -966,8 +1025,8 @@ msgid "Complete"
 msgstr "Completar"
 
 #: src/components/project/ProjectPortalEditor.tsx:893
-msgid "Concrete Topics"
-msgstr "Temas concretos"
+#~ msgid "Concrete Topics"
+#~ msgstr "Temas concretos"
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:438
@@ -1515,11 +1574,6 @@ msgstr "Habilitar participación"
 msgid "Enable Report Notifications"
 msgstr "Habilitar Notificaciones de Reportes"
 
-#. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:852
-msgid "dashboard.dembrane.concrete.description"
-msgstr "Activa esta función para permitir a los participantes crear y verificar resultados concretos durante sus conversaciones."
-
 #: src/components/project/ProjectPortalEditor.tsx:916
 #~ msgid "Enable this feature to allow participants to receive notifications when a report is published or updated. Participants can enter their email to subscribe for updates and stay informed."
 #~ msgstr "Habilita esta función para permitir a los participantes recibir notificaciones cuando se publica o actualiza un informe. Los participantes pueden ingresar su correo electrónico para suscribirse a actualizaciones y permanecer informados."
@@ -1540,6 +1594,11 @@ msgstr "Habilita esta función para permitir a los participantes solicitar respu
 #: src/components/project/ProjectPortalEditor.tsx:577
 #~ msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Go deeper\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 #~ msgstr "Activa esta función para que los participantes puedan pedir respuestas con IA durante su conversación. Después de grabar lo que piensan, pueden hacer clic en \"Profundizar\" para recibir feedback contextual que invita a reflexionar más y a implicarse más. Hay un tiempo de espera entre peticiones."
+
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:852
+msgid "dashboard.dembrane.feature.verify.description"
+msgstr "Active esta función para permitir que los participantes verifiquen y aprueben \"resultados\" de sus envíos. Esto ayuda a cristalizar ideas clave, preocupaciones o resúmenes. Después de la conversación, puede filtrar las discusiones con resultados verificados y revisarlas en la descripción general."
 
 #: src/components/project/ProjectPortalEditor.tsx:1192
 msgid "Enable transcript anonymization"
@@ -2121,8 +2180,8 @@ msgstr "Identifica temas recurrentes, temas y argumentos que aparecen consistent
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:44
-msgid "participant.concrete.instructions.approve.artefact"
-msgstr "Si estás satisfecho con el {objectLabel}, haz clic en \"Aprobar\" para mostrar que te sientes escuchado."
+msgid "participant.verify.instructions.approve.artefact"
+msgstr "Si está satisfecho con {objectLabel}, haga clic en \"Aprobar\" para mostrar que se siente escuchado."
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:823
 #~ msgid "If you're an advanced user setting up webhook integrations, we'd love to learn about your use case. We're also building observability features including audit logs and delivery tracking."
@@ -2311,7 +2370,7 @@ msgstr "Vista Previa en Vivo"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:113
-msgid "participant.concrete.instructions.loading"
+msgid "participant.verify.instructions.loading"
 msgstr "Cargando"
 
 #: src/components/common/DembraneLoadingSpinner/index.tsx:24
@@ -2336,8 +2395,8 @@ msgid "Loading collections..."
 msgstr "Cargando colecciones..."
 
 #: src/components/project/ProjectPortalEditor.tsx:909
-msgid "Loading concrete topics…"
-msgstr "Cargando temas concretos…"
+#~ msgid "Loading concrete topics…"
+#~ msgstr "Cargando temas concretos…"
 
 #: src/components/participant/MicrophoneTest.tsx:314
 msgid "Loading microphones..."
@@ -2350,6 +2409,10 @@ msgstr "Cargando transcripción..."
 
 #~ msgid "Loading verification topics…"
 #~ msgstr "Loading verification topics…"
+
+#: src/components/project/ProjectPortalEditor.tsx:909
+msgid "Loading verify topics…"
+msgstr "Cargando temas de verificación…"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:334
 msgid "loading..."
@@ -2492,6 +2555,16 @@ msgid "Newest First"
 msgstr "Más nuevos primero"
 
 #. js-lingui-explicit-id
+#: src/components/participant/verify/VerifySelection.tsx:257
+msgid "participant.verify.selection.button.next"
+msgstr "Siguiente"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:115
+msgid "participant.verify.instructions.button.next"
+msgstr "Siguiente"
+
+#. js-lingui-explicit-id
 #: src/components/participant/ParticipantOnboardingCards.tsx:430
 msgid "participant.button.next"
 msgstr "Siguiente"
@@ -2500,16 +2573,6 @@ msgstr "Siguiente"
 #: src/components/participant/ParticipantInitiateForm.tsx:146
 msgid "participant.ready.to.begin.button.text"
 msgstr "¿Listo para comenzar?"
-
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifySelection.tsx:257
-msgid "participant.concrete.selection.button.next"
-msgstr "Siguiente"
-
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyInstructions.tsx:115
-msgid "participant.concrete.instructions.button.next"
-msgstr "Siguiente"
 
 #~ msgid "Next"
 #~ msgstr "Siguiente"
@@ -2544,8 +2607,8 @@ msgid "No collections found"
 msgstr "No se encontraron colecciones"
 
 #: src/components/project/ProjectPortalEditor.tsx:913
-msgid "No concrete topics available."
-msgstr "No hay temas concretos disponibles."
+#~ msgid "No concrete topics available."
+#~ msgstr "No hay temas concretos disponibles."
 
 #: src/components/conversation/SelectAllConfirmationModal.tsx:127
 msgid "No content"
@@ -2653,6 +2716,10 @@ msgstr "No hay temas de verificación configurados para este proyecto."
 #~ msgid "No verification topics available."
 #~ msgstr "No verification topics available."
 
+#: src/components/project/ProjectPortalEditor.tsx:913
+msgid "No verify topics available."
+msgstr "No hay temas de verificación disponibles."
+
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:1016
 msgid "No webhooks configured"
 msgstr "No hay webhooks configurados"
@@ -2683,13 +2750,13 @@ msgstr "Más antiguos primero"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:35
-msgid "participant.concrete.instructions.revise.artefact"
-msgstr "Una vez que hayas discutido, presiona \"revisar\" para ver cómo el {objectLabel} cambia para reflejar tu discusión."
+msgid "participant.verify.instructions.revise.artefact"
+msgstr "Una vez que haya discutido, presione \"revisar\" para que {objectLabel} cambie y refleje su discusión."
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:26
-msgid "participant.concrete.instructions.read.aloud"
-msgstr "Una vez que recibas el {objectLabel}, léelo en voz alta y comparte en voz alta lo que deseas cambiar, si es necesario."
+msgid "participant.verify.instructions.read.aloud"
+msgstr "Una vez que reciba {objectLabel}, léalo en voz alta y comparta en voz alta lo que desea cambiar, si es necesario."
 
 #. js-lingui-explicit-id
 #: src/components/conversation/ConversationAccordion.tsx:599
@@ -3667,8 +3734,8 @@ msgstr "Seleccionar tutorial"
 
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:902
-msgid "dashboard.dembrane.verify.topic.select"
-msgstr "Seleccione qué temas pueden usar los participantes para la verificación."
+msgid "dashboard.dembrane.feature.verify.topic.select"
+msgstr "Seleccione qué temas pueden usar los participantes para \"Verificar\"."
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:307
@@ -4695,6 +4762,10 @@ msgstr "Verificar"
 msgid "Verify code"
 msgstr "Verificar código"
 
+#: src/components/project/ProjectPortalEditor.tsx:893
+msgid "Verify Topics"
+msgstr "Temas de verificación"
+
 #: src/routes/project/library/ProjectLibraryView.tsx:36
 #: src/routes/project/library/ProjectLibraryAspect.tsx:47
 #: src/components/view/View.tsx:62
@@ -4854,8 +4925,8 @@ msgstr "¿Qué datos se envían?"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifySelection.tsx:201
-msgid "participant.concrete.selection.title"
-msgstr "¿Qué quieres verificar?"
+msgid "participant.verify.selection.title"
+msgstr "¿Qué desea verificar?"
 
 #: src/components/chat/ChatModeSelector.tsx:49
 msgid "What patterns emerge from the data?"
@@ -4951,13 +5022,13 @@ msgstr "Pareces estar desconectado, por favor verifica tu conexión a internet"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:18
-msgid "participant.concrete.instructions.receive.artefact"
-msgstr "Pronto recibirás {objectLabel} para verificar."
+msgid "participant.verify.instructions.receive.artefact"
+msgstr "Pronto recibirá {objectLabel} para verificar."
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:53
-msgid "participant.concrete.instructions.approval.helps"
-msgstr "¡Tu aprobación nos ayuda a entender lo que realmente piensas!"
+msgid "participant.verify.instructions.approval.helps"
+msgstr "¡Su aprobación nos ayuda a comprender lo que realmente piensa!"
 
 #~ msgid "Your conversation is currently being transcribed. Please check back in a few moments."
 #~ msgstr "Tu conversación está siendo transcribida. Por favor, revisa más tarde."

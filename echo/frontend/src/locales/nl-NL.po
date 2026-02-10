@@ -150,6 +150,61 @@ msgstr "Welkom terug"
 #~ msgstr "We hebben iets meer context nodig om je effectief te helpen verfijnen. Ga alsjeblieft door met opnemen, zodat we betere suggesties kunnen geven."
 
 #. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:852
+#~ msgid "dashboard.dembrane.concrete.description"
+#~ msgstr "Laat deelnemers AI-ondersteunde feedback krijgen op hun gesprekken met Maak het concreet."
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:44
+#~ msgid "participant.concrete.instructions.approve.artefact"
+#~ msgstr "Keur het artefact goed of pas het aan voordat je doorgaat."
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:113
+#~ msgid "participant.concrete.instructions.loading"
+#~ msgstr "Instructies aan het laden…"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifySelection.tsx:257
+#~ msgid "participant.concrete.selection.button.next"
+#~ msgstr "Volgende"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:115
+#~ msgid "participant.concrete.instructions.button.next"
+#~ msgstr "Aan de slag"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:35
+#~ msgid "participant.concrete.instructions.revise.artefact"
+#~ msgstr "Pas de tekst aan zodat hij echt bij jou past. Je mag alles veranderen."
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:26
+#~ msgid "participant.concrete.instructions.read.aloud"
+#~ msgstr "Lees de tekst hardop voor en check of het goed voelt."
+
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:902
+#~ msgid "dashboard.dembrane.verify.topic.select"
+#~ msgstr "Selecteer welke onderwerpen deelnemers kunnen gebruiken voor verificatie."
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifySelection.tsx:201
+#~ msgid "participant.concrete.selection.title"
+#~ msgstr "Kies een concreet voorbeeld"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:18
+#~ msgid "participant.concrete.instructions.receive.artefact"
+#~ msgstr "Je krijgt zo een concreet voorbeeld (artefact) om mee te werken"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:53
+#~ msgid "participant.concrete.instructions.approval.helps"
+#~ msgstr "Als je dit goedkeurt, helpt dat om het proces te verbeteren"
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:237
 msgid "library.generate.duration.message"
 msgstr "Het genereren van een bibliotheek kan tot een uur duren"
@@ -813,6 +868,11 @@ msgstr "Basis instellingen"
 #~ msgid "Begin!"
 #~ msgstr "Begin!"
 
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:845
+msgid "dashboard.dembrane.verify.beta"
+msgstr "Bèta"
+
 #: src/routes/project/report/ProjectReportRoute.tsx:63
 #: src/components/project/ProjectPortalEditor.tsx:1174
 #: src/components/project/ProjectPortalEditor.tsx:1216
@@ -825,7 +885,6 @@ msgstr "Bèta"
 
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:638
-#: src/components/project/ProjectPortalEditor.tsx:845
 msgid "dashboard.dembrane.concrete.beta"
 msgstr "Bèta"
 
@@ -1020,8 +1079,8 @@ msgid "Complete"
 msgstr "Voltooid"
 
 #: src/components/project/ProjectPortalEditor.tsx:893
-msgid "Concrete Topics"
-msgstr "Concreet maken"
+#~ msgid "Concrete Topics"
+#~ msgstr "Concreet maken"
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:438
@@ -1599,11 +1658,6 @@ msgstr "Deelnemen inschakelen"
 msgid "Enable Report Notifications"
 msgstr "Rapportmeldingen inschakelen"
 
-#. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:852
-msgid "dashboard.dembrane.concrete.description"
-msgstr "Laat deelnemers AI-ondersteunde feedback krijgen op hun gesprekken met Maak het concreet."
-
 #: src/components/project/ProjectPortalEditor.tsx:916
 #~ msgid "Enable this feature to allow participants to receive notifications when a report is published or updated. Participants can enter their email to subscribe for updates and stay informed."
 #~ msgstr "Schakel deze functie in zodat deelnemers meldingen kunnen ontvangen wanneer een rapport wordt gepubliceerd of bijgewerkt. Deelnemers kunnen hun e-mailadres invoeren om zich te abonneren op updates."
@@ -1624,6 +1678,11 @@ msgstr "Schakel deze functie in zodat deelnemers AI-antwoorden kunnen vragen tij
 #: src/components/project/ProjectPortalEditor.tsx:577
 #~ msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Go deeper\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 #~ msgstr "Zet deze functie aan zodat deelnemers AI-antwoorden kunnen vragen tijdens hun gesprek. Na het inspreken van hun gedachten kunnen ze op \"Go deeper\" klikken voor contextuele feedback, zodat ze dieper gaan nadenken en meer betrokken raken. Er zit een wachttijd tussen verzoeken."
+
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:852
+msgid "dashboard.dembrane.feature.verify.description"
+msgstr "Schakel deze functie in om deelnemers \"resultaten\" van hun inzendingen te laten verifiëren en goedkeuren. Dit helpt om belangrijke ideeën, zorgen of samenvattingen concreet te maken. Na het gesprek kun je filteren op discussies met geverifieerde resultaten en deze bekijken in het overzicht."
 
 #: src/components/project/ProjectPortalEditor.tsx:1192
 msgid "Enable transcript anonymization"
@@ -2226,8 +2285,8 @@ msgstr "Identificeer herhalende thema's, onderwerpen en argumenten die consisten
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:44
-msgid "participant.concrete.instructions.approve.artefact"
-msgstr "Keur het artefact goed of pas het aan voordat je doorgaat."
+msgid "participant.verify.instructions.approve.artefact"
+msgstr "Als je tevreden bent met {objectLabel}, klik dan op \"Goedkeuren\" om te laten zien dat je je gehoord voelt."
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:823
 #~ msgid "If you're an advanced user setting up webhook integrations, we'd love to learn about your use case. We're also building observability features including audit logs and delivery tracking."
@@ -2428,8 +2487,8 @@ msgstr "Live Voorbeeld"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:113
-msgid "participant.concrete.instructions.loading"
-msgstr "Instructies aan het laden…"
+msgid "participant.verify.instructions.loading"
+msgstr "Bezig met laden"
 
 #: src/components/common/DembraneLoadingSpinner/index.tsx:24
 msgid "Loading"
@@ -2453,8 +2512,8 @@ msgid "Loading collections..."
 msgstr "Collecties worden geladen..."
 
 #: src/components/project/ProjectPortalEditor.tsx:909
-msgid "Loading concrete topics…"
-msgstr "Concrete onderwerpen aan het laden…"
+#~ msgid "Loading concrete topics…"
+#~ msgstr "Concrete onderwerpen aan het laden…"
 
 #: src/components/participant/MicrophoneTest.tsx:314
 msgid "Loading microphones..."
@@ -2467,6 +2526,10 @@ msgstr "Transcript aan het laden..."
 
 #~ msgid "Loading verification topics…"
 #~ msgstr "Verificatie-onderwerpen worden geladen…"
+
+#: src/components/project/ProjectPortalEditor.tsx:909
+msgid "Loading verify topics…"
+msgstr "Verify onderwerpen aan het laden…"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:334
 msgid "loading..."
@@ -2609,6 +2672,16 @@ msgid "Newest First"
 msgstr "Nieuwste eerst"
 
 #. js-lingui-explicit-id
+#: src/components/participant/verify/VerifySelection.tsx:257
+msgid "participant.verify.selection.button.next"
+msgstr "Volgende"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:115
+msgid "participant.verify.instructions.button.next"
+msgstr "Volgende"
+
+#. js-lingui-explicit-id
 #: src/components/participant/ParticipantOnboardingCards.tsx:430
 msgid "participant.button.next"
 msgstr "Volgende"
@@ -2617,16 +2690,6 @@ msgstr "Volgende"
 #: src/components/participant/ParticipantInitiateForm.tsx:146
 msgid "participant.ready.to.begin.button.text"
 msgstr "Klaar om te beginnen"
-
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifySelection.tsx:257
-msgid "participant.concrete.selection.button.next"
-msgstr "Volgende"
-
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyInstructions.tsx:115
-msgid "participant.concrete.instructions.button.next"
-msgstr "Aan de slag"
 
 #~ msgid "Next"
 #~ msgstr "Volgende"
@@ -2661,8 +2724,8 @@ msgid "No collections found"
 msgstr "Geen collecties gevonden"
 
 #: src/components/project/ProjectPortalEditor.tsx:913
-msgid "No concrete topics available."
-msgstr "Geen concrete onderwerpen beschikbaar."
+#~ msgid "No concrete topics available."
+#~ msgstr "Geen concrete onderwerpen beschikbaar."
 
 #: src/components/conversation/SelectAllConfirmationModal.tsx:127
 msgid "No content"
@@ -2776,6 +2839,10 @@ msgstr "Er zijn geen verificatie-onderwerpen voor dit project geconfigureerd."
 #~ msgid "No verification topics available."
 #~ msgstr "Geen verificatie-onderwerpen beschikbaar."
 
+#: src/components/project/ProjectPortalEditor.tsx:913
+msgid "No verify topics available."
+msgstr "Geen verify topics beschikbaar."
+
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:1016
 msgid "No webhooks configured"
 msgstr "Geen webhooks geconfigureerd"
@@ -2806,13 +2873,13 @@ msgstr "Oudste eerst"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:35
-msgid "participant.concrete.instructions.revise.artefact"
-msgstr "Pas de tekst aan zodat hij echt bij jou past. Je mag alles veranderen."
+msgid "participant.verify.instructions.revise.artefact"
+msgstr "Heb je het besproken? Klik op \"Herzien\" om {objectLabel} aan te passen aan jullie gesprek."
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:26
-msgid "participant.concrete.instructions.read.aloud"
-msgstr "Lees de tekst hardop voor en check of het goed voelt."
+msgid "participant.verify.instructions.read.aloud"
+msgstr "Lees {objectLabel} hardop voor en vertel wat je eventueel wilt aanpassen."
 
 #. js-lingui-explicit-id
 #: src/components/conversation/ConversationAccordion.tsx:599
@@ -3820,8 +3887,8 @@ msgstr "Selecteer tutorial"
 
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:902
-msgid "dashboard.dembrane.verify.topic.select"
-msgstr "Selecteer welke onderwerpen deelnemers kunnen gebruiken voor verificatie."
+msgid "dashboard.dembrane.feature.verify.topic.select"
+msgstr "Selecteer welke onderwerpen deelnemers kunnen gebruiken voor \"Verifiëren\"."
 
 #~ msgid "Select your group"
 #~ msgstr "Selecteer je groep"
@@ -4877,6 +4944,10 @@ msgstr "Verifiëren"
 msgid "Verify code"
 msgstr "Code verifiëren"
 
+#: src/components/project/ProjectPortalEditor.tsx:893
+msgid "Verify Topics"
+msgstr "Verifiëren Themen"
+
 #: src/routes/project/library/ProjectLibraryView.tsx:36
 #: src/routes/project/library/ProjectLibraryAspect.tsx:47
 #: src/components/view/View.tsx:62
@@ -5036,8 +5107,8 @@ msgstr "Wat gegevens worden verzonden?"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifySelection.tsx:201
-msgid "participant.concrete.selection.title"
-msgstr "Kies een concreet voorbeeld"
+msgid "participant.verify.selection.title"
+msgstr "Wat wil je verifiëren?"
 
 #~ msgid "What kind of question do you want to ask for this document?"
 #~ msgstr "Wat voor soort vraag wil je stellen voor dit document?"
@@ -5148,13 +5219,13 @@ msgstr "Je lijkt offline te zijn, controleer je internetverbinding"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:18
-msgid "participant.concrete.instructions.receive.artefact"
-msgstr "Je krijgt zo een concreet voorbeeld (artefact) om mee te werken"
+msgid "participant.verify.instructions.receive.artefact"
+msgstr "Je ontvangt zo meteen {objectLabel} om te verifiëren."
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:53
-msgid "participant.concrete.instructions.approval.helps"
-msgstr "Als je dit goedkeurt, helpt dat om het proces te verbeteren"
+msgid "participant.verify.instructions.approval.helps"
+msgstr "Jouw goedkeuring helpt ons begrijpen wat je echt denkt!"
 
 #~ msgid "Your conversation is currently being transcribed. Please check back in a few moments."
 #~ msgstr "Uw gesprek wordt momenteel getranscribeerd. Controleer later opnieuw."

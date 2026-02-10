@@ -174,44 +174,14 @@ msgstr "Welcome back"
 #~ msgstr "Go back"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyInstructions.tsx:43
-#~ msgid "participant.verify.instructions.approve.artefact"
-#~ msgstr "If you are happy with the {objectLabel} click \"Approve\" to show you feel heard."
-
-#. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefactError.tsx:24
 #~ msgid "participant.verify.artefact.error.description"
 #~ msgstr "It looks like we couldn't load this artefact. This might be a temporary issue. You can try reloading or go back to select a different topic."
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyInstructions.tsx:106
-#~ msgid "participant.verify.instructions.loading"
-#~ msgstr "Loading"
-
-#. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefactLoading.tsx:13
 #~ msgid "participant.verify.loading.artefact"
 #~ msgstr "Loading artefact"
-
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifySelection.tsx:237
-#~ msgid "participant.verify.selection.button.next"
-#~ msgstr "Next"
-
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyInstructions.tsx:108
-#~ msgid "participant.verify.instructions.button.next"
-#~ msgstr "Next"
-
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyInstructions.tsx:34
-#~ msgid "participant.verify.instructions.revise.artefact"
-#~ msgstr "Once you have discussed, hit \"revise\" to see the {objectLabel} change to reflect your discussion."
-
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyInstructions.tsx:25
-#~ msgid "participant.verify.instructions.read.aloud"
-#~ msgstr "Once you receive the {objectLabel}, read it aloud and share out loud what you want to change, if anything."
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefact.tsx:327
@@ -257,21 +227,6 @@ msgstr "Welcome back"
 #: src/components/participant/verify/VerifyArtefactError.tsx:19
 #~ msgid "participant.verify.artefact.error.title"
 #~ msgstr "Unable to Load Artefact"
-
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifySelection.tsx:183
-#~ msgid "participant.verify.selection.title"
-#~ msgstr "What do you want to verify?"
-
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyInstructions.tsx:17
-#~ msgid "participant.verify.instructions.receive.artefact"
-#~ msgstr "You'll soon get {objectLabel} to verify."
-
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyInstructions.tsx:52
-#~ msgid "participant.verify.instructions.approval.helps"
-#~ msgstr "Your approval helps us understand what you really think!"
 
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:744
@@ -367,6 +322,61 @@ msgstr "Welcome back"
 #: src/components/participant/ParticipantConversationAudio.tsx:450
 #~ msgid "participant.modal.refine.info.reason"
 #~ msgstr "We need a bit more context to help you refine effectively. Please continue recording so we can provide better suggestions."
+
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:852
+#~ msgid "dashboard.dembrane.concrete.description"
+#~ msgstr "Enable this feature to allow participants to create and approve \"concrete objects\" from their submissions. This helps crystallize key ideas, concerns, or summaries. After the conversation, you can filter for discussions with concrete objects and review them in the overview."
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:44
+#~ msgid "participant.concrete.instructions.approve.artefact"
+#~ msgstr "If you are happy with the {objectLabel} click \"Approve\" to show you feel heard."
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:113
+#~ msgid "participant.concrete.instructions.loading"
+#~ msgstr "Loading"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifySelection.tsx:257
+#~ msgid "participant.concrete.selection.button.next"
+#~ msgstr "Next"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:115
+#~ msgid "participant.concrete.instructions.button.next"
+#~ msgstr "Next"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:35
+#~ msgid "participant.concrete.instructions.revise.artefact"
+#~ msgstr "Once you have discussed, hit \"revise\" to see the {objectLabel} change to reflect your discussion."
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:26
+#~ msgid "participant.concrete.instructions.read.aloud"
+#~ msgstr "Once you receive the {objectLabel}, read it aloud and share out loud what you want to change, if anything."
+
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:902
+#~ msgid "dashboard.dembrane.verify.topic.select"
+#~ msgstr "Select which topics participants can use for verification."
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifySelection.tsx:201
+#~ msgid "participant.concrete.selection.title"
+#~ msgstr "What do you want to make concrete?"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:18
+#~ msgid "participant.concrete.instructions.receive.artefact"
+#~ msgstr "You'll soon get {objectLabel} to make them concrete."
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:53
+#~ msgid "participant.concrete.instructions.approval.helps"
+#~ msgstr "Your approval helps us understand what you really think!"
 
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:237
@@ -1015,6 +1025,11 @@ msgstr "Basic Settings"
 #~ msgid "Begin!"
 #~ msgstr "Begin!"
 
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:845
+msgid "dashboard.dembrane.verify.beta"
+msgstr ""
+
 #: src/routes/project/report/ProjectReportRoute.tsx:63
 #: src/components/project/ProjectPortalEditor.tsx:1174
 #: src/components/project/ProjectPortalEditor.tsx:1216
@@ -1027,7 +1042,6 @@ msgstr "Beta"
 
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:638
-#: src/components/project/ProjectPortalEditor.tsx:845
 msgid "dashboard.dembrane.concrete.beta"
 msgstr "Beta"
 
@@ -1230,8 +1244,8 @@ msgid "Complete"
 msgstr "Complete"
 
 #: src/components/project/ProjectPortalEditor.tsx:893
-msgid "Concrete Topics"
-msgstr "Concrete Topics"
+#~ msgid "Concrete Topics"
+#~ msgstr "Concrete Topics"
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:438
@@ -1795,11 +1809,6 @@ msgstr "Enable participation"
 msgid "Enable Report Notifications"
 msgstr "Enable Report Notifications"
 
-#. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:852
-msgid "dashboard.dembrane.concrete.description"
-msgstr "Enable this feature to allow participants to create and approve \"concrete objects\" from their submissions. This helps crystallize key ideas, concerns, or summaries. After the conversation, you can filter for discussions with concrete objects and review them in the overview."
-
 #: src/components/project/ProjectPortalEditor.tsx:916
 #~ msgid "Enable this feature to allow participants to receive notifications when a report is published or updated. Participants can enter their email to subscribe for updates and stay informed."
 #~ msgstr "Enable this feature to allow participants to receive notifications when a report is published or updated. Participants can enter their email to subscribe for updates and stay informed."
@@ -1823,6 +1832,11 @@ msgstr "Enable this feature to allow participants to request AI-powered response
 #: src/components/project/ProjectPortalEditor.tsx:577
 #~ msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Go deeper\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 #~ msgstr "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Go deeper\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
+
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:852
+msgid "dashboard.dembrane.feature.verify.description"
+msgstr ""
 
 #: src/components/project/ProjectPortalEditor.tsx:1192
 msgid "Enable transcript anonymization"
@@ -2451,7 +2465,7 @@ msgstr "Identify recurring themes, topics, and arguments that appear consistentl
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:44
-msgid "participant.concrete.instructions.approve.artefact"
+msgid "participant.verify.instructions.approve.artefact"
 msgstr "If you are happy with the {objectLabel} click \"Approve\" to show you feel heard."
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:823
@@ -2643,7 +2657,7 @@ msgstr "Live Preview"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:113
-msgid "participant.concrete.instructions.loading"
+msgid "participant.verify.instructions.loading"
 msgstr "Loading"
 
 #: src/components/common/DembraneLoadingSpinner/index.tsx:24
@@ -2668,8 +2682,8 @@ msgid "Loading collections..."
 msgstr "Loading collections..."
 
 #: src/components/project/ProjectPortalEditor.tsx:909
-msgid "Loading concrete topics…"
-msgstr "Loading concrete topics…"
+#~ msgid "Loading concrete topics…"
+#~ msgstr "Loading concrete topics…"
 
 #: src/components/participant/MicrophoneTest.tsx:314
 msgid "Loading microphones..."
@@ -2683,6 +2697,10 @@ msgstr "Loading transcript..."
 #: src/components/project/ProjectPortalEditor.tsx:765
 #~ msgid "Loading verification topics…"
 #~ msgstr "Loading verification topics…"
+
+#: src/components/project/ProjectPortalEditor.tsx:909
+msgid "Loading verify topics…"
+msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:334
 msgid "loading..."
@@ -2838,12 +2856,12 @@ msgstr "Next"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifySelection.tsx:257
-msgid "participant.concrete.selection.button.next"
+msgid "participant.verify.selection.button.next"
 msgstr "Next"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:115
-msgid "participant.concrete.instructions.button.next"
+msgid "participant.verify.instructions.button.next"
 msgstr "Next"
 
 #: src/components/participant/ParticipantOnboardingCards.tsx:285
@@ -2881,8 +2899,8 @@ msgid "No collections found"
 msgstr "No collections found"
 
 #: src/components/project/ProjectPortalEditor.tsx:913
-msgid "No concrete topics available."
-msgstr "No concrete topics available."
+#~ msgid "No concrete topics available."
+#~ msgstr "No concrete topics available."
 
 #: src/components/conversation/SelectAllConfirmationModal.tsx:127
 msgid "No content"
@@ -2999,6 +3017,10 @@ msgstr "No verification topics are configured for this project."
 #~ msgid "No verification topics available."
 #~ msgstr "No verification topics available."
 
+#: src/components/project/ProjectPortalEditor.tsx:913
+msgid "No verify topics available."
+msgstr ""
+
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:1016
 msgid "No webhooks configured"
 msgstr "No webhooks configured"
@@ -3030,12 +3052,12 @@ msgstr "Oldest First"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:35
-msgid "participant.concrete.instructions.revise.artefact"
+msgid "participant.verify.instructions.revise.artefact"
 msgstr "Once you have discussed, hit \"revise\" to see the {objectLabel} change to reflect your discussion."
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:26
-msgid "participant.concrete.instructions.read.aloud"
+msgid "participant.verify.instructions.read.aloud"
 msgstr "Once you receive the {objectLabel}, read it aloud and share out loud what you want to change, if anything."
 
 #. js-lingui-explicit-id
@@ -3957,8 +3979,8 @@ msgstr "Select tutorial"
 
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:902
-msgid "dashboard.dembrane.verify.topic.select"
-msgstr "Select which topics participants can use for verification."
+msgid "dashboard.dembrane.feature.verify.topic.select"
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:307
@@ -5055,6 +5077,10 @@ msgstr "Verify"
 msgid "Verify code"
 msgstr "Verify code"
 
+#: src/components/project/ProjectPortalEditor.tsx:893
+msgid "Verify Topics"
+msgstr ""
+
 #: src/routes/project/library/ProjectLibraryView.tsx:36
 #: src/routes/project/library/ProjectLibraryAspect.tsx:47
 #: src/components/view/View.tsx:62
@@ -5227,8 +5253,8 @@ msgstr "What data is sent?"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifySelection.tsx:201
-msgid "participant.concrete.selection.title"
-msgstr "What do you want to make concrete?"
+msgid "participant.verify.selection.title"
+msgstr "What do you want to verify?"
 
 #: src/components/chat/ChatModeSelector.tsx:49
 msgid "What patterns emerge from the data?"
@@ -5333,12 +5359,12 @@ msgstr "You seem to be offline, please check your internet connection"
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:18
-msgid "participant.concrete.instructions.receive.artefact"
-msgstr "You'll soon get {objectLabel} to make them concrete."
+msgid "participant.verify.instructions.receive.artefact"
+msgstr "You'll soon get {objectLabel} to verify."
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:53
-msgid "participant.concrete.instructions.approval.helps"
+msgid "participant.verify.instructions.approval.helps"
 msgstr "Your approval helps us understand what you really think!"
 
 #: src/routes/project/conversation/ProjectConversationTranscript.tsx:735

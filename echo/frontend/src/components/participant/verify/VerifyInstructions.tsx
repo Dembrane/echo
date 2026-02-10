@@ -15,15 +15,15 @@ const INSTRUCTIONS = [
 	{
 		key: "receive-artefact",
 		render: (objectLabel: string) => (
-			<Trans id="participant.concrete.instructions.receive.artefact">
-				You'll soon get {objectLabel} to make them concrete.
+			<Trans id="participant.verify.instructions.receive.artefact">
+				You'll soon get {objectLabel} to verify.
 			</Trans>
 		),
 	},
 	{
 		key: "read-aloud",
 		render: (objectLabel: string) => (
-			<Trans id="participant.concrete.instructions.read.aloud">
+			<Trans id="participant.verify.instructions.read.aloud">
 				Once you receive the {objectLabel}, read it aloud and share out loud
 				what you want to change, if anything.
 			</Trans>
@@ -32,7 +32,7 @@ const INSTRUCTIONS = [
 	{
 		key: "revise-artefact",
 		render: (objectLabel: string) => (
-			<Trans id="participant.concrete.instructions.revise.artefact">
+			<Trans id="participant.verify.instructions.revise.artefact">
 				Once you have discussed, hit "revise" to see the {objectLabel} change to
 				reflect your discussion.
 			</Trans>
@@ -41,7 +41,7 @@ const INSTRUCTIONS = [
 	{
 		key: "approve-artefact",
 		render: (objectLabel: string) => (
-			<Trans id="participant.concrete.instructions.approve.artefact">
+			<Trans id="participant.verify.instructions.approve.artefact">
 				If you are happy with the {objectLabel} click "Approve" to show you feel
 				heard.
 			</Trans>
@@ -50,7 +50,7 @@ const INSTRUCTIONS = [
 	{
 		key: "approval-helps",
 		render: (_objectLabel: string) => (
-			<Trans id="participant.concrete.instructions.approval.helps">
+			<Trans id="participant.verify.instructions.approval.helps">
 				Your approval helps us understand what you really think!
 			</Trans>
 		),
@@ -110,9 +110,9 @@ export const VerifyInstructions = ({
 				{...testId("portal-verify-instructions-next-button")}
 			>
 				{isLoading ? (
-					<Trans id="participant.concrete.instructions.loading">Loading</Trans>
+					<Trans id="participant.verify.instructions.loading">Loading</Trans>
 				) : (
-					<Trans id="participant.concrete.instructions.button.next">Next</Trans>
+					<Trans id="participant.verify.instructions.button.next">Next</Trans>
 				)}
 			</Button>
 		</Stack>
