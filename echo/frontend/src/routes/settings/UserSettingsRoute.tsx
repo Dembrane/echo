@@ -13,6 +13,8 @@ import { IconArrowLeft } from "@tabler/icons-react";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { AuditLogsCard } from "@/components/settings/AuditLogsCard";
 import { FontSettingsCard } from "@/components/settings/FontSettingsCard";
+import { FontSizeSettingsCard } from "@/components/settings/FontSizeSettingsCard";
+import { WhitelabelLogoCard } from "@/components/settings/WhitelabelLogoCard";
 import { TwoFactorSettingsCard } from "@/components/settings/TwoFactorSettingsCard";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
@@ -35,7 +37,7 @@ export const UserSettingsRoute = () => {
 					>
 						<IconArrowLeft size={18} />
 					</ActionIcon>
-					<Title order={1}>
+					<Title order={2}>
 						<Trans>Settings</Trans>
 					</Title>
 				</Group>
@@ -43,6 +45,10 @@ export const UserSettingsRoute = () => {
 				<Divider />
 
 				<FontSettingsCard />
+
+				<FontSizeSettingsCard />
+
+				<WhitelabelLogoCard />
 
 				<TwoFactorSettingsCard
 					isLoading={isLoading}

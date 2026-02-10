@@ -21,7 +21,7 @@ from dembrane.audio_utils import (
     merge_multiple_audio_files_and_save_to_s3,
 )
 from dembrane.reply_utils import generate_reply_for_conversation
-from dembrane.api.stateless import generate_summary
+from dembrane.api.stateless import generate_summary, generate_conversation_title
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.stream_status import stream_with_status
 from dembrane.api.exceptions import (
@@ -412,6 +412,43 @@ async def get_conversation_transcript(conversation_id: str, auth: DependencyDire
     return "\n".join(transcript)
 
 
+class ConversationEmailsResponse(BaseModel):
+    emails_csv: str
+    count: int
+
+
+@ConversationRouter.get("/{conversation_id}/emails")
+async def get_conversation_emails(
+    conversation_id: str,
+    auth: DependencyDirectusSession,
+) -> ConversationEmailsResponse:
+    """Get comma-separated list of emails captured for a conversation."""
+    await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
+
+    active_client = auth.client or directus
+
+    participants = await run_in_thread_pool(
+        active_client.get_items,
+        "project_report_notification_participants",
+        {
+            "query": {
+                "filter": {"conversation_id": {"_eq": conversation_id}},
+                "fields": ["email"],
+                "limit": 1000,
+            }
+        },
+    )
+
+    if not participants:
+        return ConversationEmailsResponse(emails_csv="", count=0)
+
+    emails = [p.get("email") for p in participants if p.get("email")]
+    return ConversationEmailsResponse(
+        emails_csv=",".join(emails),
+        count=len(emails),
+    )
+
+
 # Initialize the cache
 token_count_cache = CacheWithExpiration(ttl=500)
 
@@ -496,7 +533,13 @@ async def summarize_conversation(
         {
             "query": {
                 "filter": {"id": {"_eq": conversation_id}},
-                "fields": ["id", "project_id.language"],
+                "fields": [
+                    "id",
+                    "project_id.id",
+                    "project_id.language",
+                    "project_id.enable_ai_title_and_tags",
+                    "project_id.conversation_title_prompt",
+                ],
             },
         },
     )
@@ -505,7 +548,7 @@ async def summarize_conversation(
         get_conversation_transcript(conversation_id, auth),
         run_in_thread_pool(
             project_service.get_context_for_prompt,
-            conversation_data_result[0]["project_id"],
+            conversation_data_result[0]["project_id"]["id"],
         ),
         run_in_thread_pool(
             conversation_service.get_verified_artifacts,
@@ -538,25 +581,128 @@ async def summarize_conversation(
             verified_artifacts,
         )
 
+        # Prepare update data with summary
+        update_data: dict = {"summary": summary}
+        title = None
+
+        # Generate title if AI title generation is enabled for this project
+        project_data = conversation_data["project_id"]
+        enable_ai_title = project_data.get("enable_ai_title_and_tags", False)
+
+        if enable_ai_title and summary:
+            try:
+                # Fetch recent titles for style matching
+                existing_titles = await run_in_thread_pool(
+                    conversation_service.get_recent_titles_for_project,
+                    project_data["id"],
+                    10,
+                )
+
+                custom_prompt = project_data.get("conversation_title_prompt")
+
+                title = await run_in_thread_pool(
+                    generate_conversation_title,
+                    summary,
+                    language if language else "en",
+                    existing_titles,
+                    custom_prompt,
+                )
+
+                if title:
+                    update_data["title"] = title
+                    logger.info(f"Generated title for conversation {conversation_id}: {title}")
+            except Exception as e:
+                logger.error(f"Error generating title for conversation {conversation_id}: {e}")
+                # Continue without title if generation fails
+
         await run_in_thread_pool(
             active_client.update_item,
             "conversation",
             conversation_id,
-            {
-                "summary": summary,
-            },
+            update_data,
         )
 
-        return {
+        response = {
             "status": "success",
             "message": "Summary generated",
             "summary": summary,
         }
+        if title:
+            response["title"] = title
+        return response
+
+
+@ConversationRouter.post("/{conversation_id}/generate-title", response_model=None)
+async def generate_title_for_conversation(
+    conversation_id: str,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """
+    Generate a title for a conversation based on its summary.
+    Requires the conversation to have a summary.
+    """
+    active_client = auth.client or directus
+
+    await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
+
+    conversation_data_result = await run_in_thread_pool(
+        active_client.get_items,
+        "conversation",
+        {
+            "query": {
+                "filter": {"id": {"_eq": conversation_id}},
+                "fields": [
+                    "id",
+                    "summary",
+                    "project_id.id",
+                    "project_id.language",
+                    "project_id.conversation_title_prompt",
+                ],
+            },
+        },
+    )
+
+    if not conversation_data_result or len(conversation_data_result) == 0:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    conversation_data = conversation_data_result[0]
+    summary = conversation_data.get("summary")
+
+    if not summary:
+        raise HTTPException(status_code=400, detail="Conversation has no summary. Generate a summary first.")
+
+    project_data = conversation_data["project_id"]
+    language = project_data.get("language", "en")
+    custom_prompt = project_data.get("conversation_title_prompt")
+
+    existing_titles = await run_in_thread_pool(
+        conversation_service.get_recent_titles_for_project,
+        project_data["id"],
+        10,
+    )
+
+    title = await run_in_thread_pool(
+        generate_conversation_title,
+        summary,
+        language if language else "en",
+        existing_titles,
+        custom_prompt,
+    )
+
+    if title:
+        await run_in_thread_pool(
+            active_client.update_item,
+            "conversation",
+            conversation_id,
+            {"title": title},
+        )
+
+    return {"title": title or ""}
 
 
 class RetranscribeConversationBodySchema(BaseModel):
     new_conversation_name: str
-    use_pii_redaction: bool = False
+    use_pii_redaction: bool | None = None
 
 
 @ConversationRouter.post("/{conversation_id}/retranscribe")
@@ -612,6 +758,22 @@ async def retranscribe_conversation(
 
         original_conversation = conversation[0]
         project_id = original_conversation["project_id"]
+
+        # Resolve use_pii_redaction: use explicit value if provided, else fall back to project setting
+        use_pii_redaction = body.use_pii_redaction
+        if use_pii_redaction is None:
+            try:
+                project_data = await run_in_thread_pool(
+                    admin_client.get_items,
+                    "project",
+                    {"query": {"filter": {"id": {"_eq": project_id}}, "fields": ["anonymize_transcripts"]}},
+                )
+                if project_data and len(project_data) > 0:
+                    use_pii_redaction = bool(project_data[0].get("anonymize_transcripts", False))
+                else:
+                    use_pii_redaction = False
+            except Exception:
+                use_pii_redaction = False
 
         merged_audio_path = await get_conversation_content(
             conversation_id=conversation_id,
@@ -696,7 +858,7 @@ async def retranscribe_conversation(
             # Import task locally to avoid circular imports
             from dembrane.tasks import task_process_conversation_chunk
 
-            task_process_conversation_chunk.send(chunk_id, use_pii_redaction=body.use_pii_redaction)
+            task_process_conversation_chunk.send(chunk_id, use_pii_redaction=use_pii_redaction)
 
             return {
                 "status": "success",

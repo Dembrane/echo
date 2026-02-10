@@ -50,11 +50,15 @@ class PublicProjectSchema(BaseModel):
     default_conversation_tutorial_slug: Optional[str] = None
     conversation_ask_for_participant_name_label: Optional[str] = None
     default_conversation_ask_for_participant_name: Optional[bool] = True
+    default_conversation_ask_for_participant_email: Optional[bool] = False
 
     # portal content
     default_conversation_title: Optional[str] = None
     default_conversation_description: Optional[str] = None
     default_conversation_finish_text: Optional[str] = None
+
+    # whitelabel
+    whitelabel_logo_url: Optional[str] = None
 
 
 class PublicConversationChunkSchema(BaseModel):
@@ -178,6 +182,26 @@ async def get_project(
 
         if project.get("is_conversation_allowed", False) is False:
             raise HTTPException(status_code=403, detail="Conversation not open for participation")
+
+        # Resolve whitelabel logo from project owner
+        directus_user_id = project.get("directus_user_id")
+        if directus_user_id:
+            try:
+                user_data = await run_in_thread_pool(
+                    directus.get_users,
+                    {
+                        "query": {
+                            "filter": {"id": {"_eq": directus_user_id}},
+                            "fields": ["whitelabel_logo"],
+                        }
+                    },
+                )
+                if user_data and len(user_data) > 0:
+                    logo_file_id = user_data[0].get("whitelabel_logo")
+                    if logo_file_id:
+                        project["whitelabel_logo_url"] = logo_file_id
+            except Exception as e:
+                logger.warning(f"Failed to resolve whitelabel logo for project {project_id}: {e}")
 
         return project
 

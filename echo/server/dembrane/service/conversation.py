@@ -301,18 +301,18 @@ class ConversationService:
                 },
             )["data"]
 
-        # Dispatch webhook for conversation.created event
+        # Dispatch webhook for conversation.started event
         try:
             from dembrane.service.webhook import dispatch_webhooks_for_event
 
             dispatch_webhooks_for_event(
                 project_id=project_id,
                 conversation_id=new_conversation["id"],
-                event="conversation.created",
+                event="conversation.started",
             )
         except Exception as e:
             # Don't fail conversation creation if webhook dispatch fails
-            logger.warning(f"Failed to dispatch conversation.created webhook: {e}")
+            logger.warning(f"Failed to dispatch conversation.started webhook: {e}")
 
         return new_conversation
 
@@ -714,3 +714,40 @@ class ConversationService:
             raise ConversationServiceException() from e
 
         return artifacts or []
+
+    def get_recent_titles_for_project(self, project_id: str, limit: int = 10) -> List[str]:
+        """
+        Fetch recent conversation titles from the same project for style matching.
+
+        Args:
+            project_id: The project ID to filter by.
+            limit: Maximum number of titles to return.
+
+        Returns:
+            List of title strings.
+        """
+        try:
+            with self._client_context() as client:
+                conversations = client.get_items(
+                    "conversation",
+                    {
+                        "query": {
+                            "filter": {
+                                "project_id": {"_eq": project_id},
+                                "title": {"_nnull": True},
+                            },
+                            "fields": ["title"],
+                            "sort": "-created_at",
+                            "limit": limit,
+                        }
+                    },
+                )
+        except DirectusBadRequest as e:
+            logger.error(
+                "Failed to get recent titles for project %s via Directus: %s",
+                project_id,
+                e,
+            )
+            return []
+
+        return [c["title"] for c in (conversations or []) if c.get("title")]

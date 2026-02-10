@@ -16,15 +16,14 @@ export const VerifyArtefactError = ({
 	return (
 		<Stack align="center" justify="center" gap="lg" className="h-full px-4">
 			<Text size="xl" fw={500} c="red" mb="md">
-				<Trans id="participant.concrete.artefact.error.title">
-					Unable to Load Artefact
+				<Trans id="participant.outcome.error.title">
+					Unable to Load Outcome
 				</Trans>
 			</Text>
 			<Text size="md" c="dimmed" mb="lg" ta="center">
-				<Trans id="participant.concrete.artefact.error.description">
-					It looks like we couldn't load this artefact. This might be a
-					temporary issue. You can try reloading or go back to select a
-					different topic.
+				<Trans id="participant.outcome.error.description">
+					It looks like we couldn't load this outcome. This might be a temporary
+					issue. You can try reloading or go back to select a different topic.
 				</Trans>
 			</Text>
 			<Stack gap="xl" className="w-full max-w-xs">

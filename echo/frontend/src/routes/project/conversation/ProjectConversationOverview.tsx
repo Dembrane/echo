@@ -205,7 +205,7 @@ export const ProjectConversationOverviewRoute = () => {
 								</div>
 							)}
 
-						{conversationQuery.data?.summary &&
+			{conversationQuery.data?.summary &&
 							conversationQuery.data?.is_finished && <Divider />}
 					</Stack>
 				)}

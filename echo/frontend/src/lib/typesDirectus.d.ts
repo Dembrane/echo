@@ -104,8 +104,9 @@ interface Conversation {
 	participant_name: string | null;
 	participant_user_agent: string | null;
 	project_id: string | Project;
-	source: "DASHBOARD_UPLOAD" | "CLONE" | null;
+	source: "DASHBOARD_UPLOAD" | "CLONE" | "PORTAL_AUDIO" | "PORTAL_TEXT" | "SPLIT" | null;
 	summary: string | null;
+	title: string | null;
 	updated_at: string | null;
 	chunks: string[] | ConversationChunk[];
 	conversation_segments: string[] | ConversationSegment[];
@@ -239,16 +240,20 @@ interface ProcessingStatus {
 }
 
 interface Project {
+	anonymize_transcripts: boolean | null;
 	context: string | null;
 	conversation_ask_for_participant_name_label: string | null;
+	conversation_title_prompt: string | null;
 	created_at: string | null;
 	default_conversation_ask_for_participant_name: boolean | null;
+	default_conversation_ask_for_participant_email: boolean | null;
 	default_conversation_description: string | null;
 	default_conversation_finish_text: string | null;
 	default_conversation_title: string | null;
 	default_conversation_transcript_prompt: string | null;
 	default_conversation_tutorial_slug: "None" | "basic" | "advanced" | null;
 	directus_user_id: string | DirectusUser<Schema> | null;
+	enable_ai_title_and_tags: boolean | null;
 	get_reply_mode: "summarize" | "brainstorm" | "custom" | null;
 	get_reply_prompt: string | null;
 	id: string;
@@ -417,6 +422,7 @@ interface View {
 
 interface CustomDirectusUser {
 	disable_create_project: boolean | null;
+	whitelabel_logo: string | null;
 	projects: string[] | Project[];
 }
 

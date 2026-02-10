@@ -1,29 +1,89 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	ActionIcon,
+	Badge,
 	Box,
+	Button,
 	Group,
 	MultiSelect,
 	Stack,
 	Text,
 	TextInput,
 	Title,
+	Tooltip,
 } from "@mantine/core";
-import { useEffect, useMemo } from "react";
+import { useClipboard } from "@mantine/hooks";
+import { IconCheck, IconCopy } from "@tabler/icons-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { generateConversationTitle } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { CloseableAlert } from "../common/ClosableAlert";
 import { FormLabel } from "../form/FormLabel";
 import { SaveStatus } from "../form/SaveStatus";
 import {
+	useConversationEmails,
 	useUpdateConversationByIdMutation,
 	useUpdateConversationTagsMutation,
 } from "./hooks";
 
 type ConversationEditFormValues = {
+	title: string;
 	participant_name: string;
 	tagIdList: string[];
+};
+
+const EmailItem = ({ email }: { email: string }) => {
+	const clipboard = useClipboard({ timeout: 1500 });
+
+	return (
+		<Group gap="xs">
+			<Text size="sm">{email}</Text>
+			<Tooltip label={clipboard.copied ? t`Copied` : t`Copy`}>
+				<ActionIcon
+					variant="subtle"
+					size="sm"
+					color={clipboard.copied ? "green" : "gray"}
+					onClick={() => clipboard.copy(email)}
+				>
+					{clipboard.copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
+				</ActionIcon>
+			</Tooltip>
+		</Group>
+	);
+};
+
+const formatDuration = (seconds: number): string => {
+	const h = Math.floor(seconds / 3600);
+	const m = Math.floor((seconds % 3600) / 60);
+	const s = Math.floor(seconds % 60);
+
+	if (h > 0) {
+		return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+	}
+	return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+};
+
+const getSourceLabel = (source: string | null): string | null => {
+	if (!source) return null;
+	const lower = source.toLowerCase();
+	if (lower.includes("upload")) return "Upload";
+	if (lower.includes("portal")) return "Portal";
+	if (lower.includes("clone")) return "Clone";
+	if (lower.includes("split")) return "Split";
+	return null;
+};
+
+const getNameDescription = (source: string | null): string => {
+	if (!source) return "";
+	const lower = source.toLowerCase();
+	if (lower.includes("portal")) return t`Entered by the participant on the portal`;
+	if (lower.includes("upload")) return t`Filename from uploaded file`;
+	if (lower.includes("clone")) return t`Copied from original conversation`;
+	return "";
 };
 
 export const ConversationEdit = ({
@@ -33,6 +93,16 @@ export const ConversationEdit = ({
 	conversation: Conversation;
 	projectTags: ProjectTag[];
 }) => {
+	const queryClient = useQueryClient();
+	const emailsQuery = useConversationEmails(conversation.id);
+	const emails = emailsQuery.data?.emails_csv
+		? emailsQuery.data.emails_csv.split(",").filter(Boolean)
+		: [];
+	const [showEmails, setShowEmails] = useState(false);
+
+	const sourceLabel = getSourceLabel(conversation.source);
+	const nameDescription = getNameDescription(conversation.source);
+
 	const projectTagOptions = useMemo(
 		() =>
 			projectTags
@@ -67,6 +137,7 @@ export const ConversationEdit = ({
 	);
 
 	const defaultValues: ConversationEditFormValues = {
+		title: conversation.title ?? "",
 		participant_name: conversation.participant_name ?? "",
 		tagIdList: sanitizedConversationTagIds,
 	};
@@ -85,7 +156,10 @@ export const ConversationEdit = ({
 			onSave: async (data: ConversationEditFormValues) => {
 				await updateConversationMutation.mutateAsync({
 					id: conversation.id,
-					payload: { participant_name: data.participant_name },
+					payload: {
+						title: data.title || null,
+						participant_name: data.participant_name,
+					},
 				});
 
 				await updateConversationTagsMutation.mutateAsync({
@@ -97,6 +171,28 @@ export const ConversationEdit = ({
 				reset(data, { keepDirty: false, keepValues: true });
 			},
 		});
+
+	const generateTitleMutation = useMutation({
+		mutationFn: async () => {
+			const result = await generateConversationTitle(conversation.id);
+			return result;
+		},
+		mutationKey: ["generateTitle", conversation.id],
+		onSuccess: (data) => {
+			if (data?.title) {
+				setValue("title", data.title, { shouldDirty: false });
+			}
+			queryClient.invalidateQueries({
+				queryKey: ["conversations", conversation.id],
+			});
+		},
+	});
+
+	const hasSummary = !!conversation.summary;
+	const hasTitle = !!watch("title");
+	const showGenerateTitle = !hasTitle;
+	const canGenerateTitle = hasSummary;
+	const isGeneratingTitle = generateTitleMutation.isPending;
 
 	useEffect(() => {
 		const currentValues = getValues("tagIdList") ?? [];
@@ -138,7 +234,7 @@ export const ConversationEdit = ({
 			</Group>
 
 			<form>
-				<Stack gap="2rem">
+				<Stack gap="1.5rem">
 					{isError && (
 						<CloseableAlert color="red">
 							<Text size="sm">
@@ -148,7 +244,7 @@ export const ConversationEdit = ({
 					)}
 
 					<Box>
-						<Text size="md">
+						<Text size="sm" c="dimmed">
 							<Trans>Created on</Trans>
 						</Text>
 						<Text size="sm">
@@ -156,16 +252,98 @@ export const ConversationEdit = ({
 						</Text>
 					</Box>
 
+					{conversation.duration != null && conversation.duration > 0 && (
+						<Box>
+							<Text size="sm" c="dimmed">
+								<Trans>Duration</Trans>
+							</Text>
+							<Text size="sm">
+								{formatDuration(conversation.duration)}
+							</Text>
+						</Box>
+					)}
+
+					{emails.length > 0 && (
+						<Box>
+							<Group gap="xs" mb="xs">
+								<Text size="sm" c="dimmed">
+									{emails.length === 1 ? (
+										<Trans>Participant Email</Trans>
+									) : (
+										<Trans>Participant Emails</Trans>
+									)}
+								</Text>
+								<Text
+									size="sm"
+									c="primary"
+									className="cursor-pointer"
+									onClick={() => setShowEmails(!showEmails)}
+								>
+									{showEmails ? <Trans>Hide</Trans> : <Trans>Show</Trans>}
+								</Text>
+							</Group>
+							{showEmails && (
+								<Stack gap="xs">
+									{emails.map((email) => (
+										<EmailItem key={email} email={email} />
+									))}
+								</Stack>
+							)}
+						</Box>
+					)}
+
 					<TextInput
 						label={
-							<FormLabel
-								label={t`Name`}
-								isDirty={formState.dirtyFields.participant_name}
-							/>
+							<Group gap="xs">
+								<FormLabel
+									label={t`Name`}
+									isDirty={formState.dirtyFields.participant_name}
+								/>
+								{sourceLabel && (
+									<Badge size="xs" color="primary" variant="light">
+										{sourceLabel}
+									</Badge>
+								)}
+							</Group>
 						}
+						description={nameDescription}
 						{...register("participant_name")}
 						{...testId("conversation-edit-name-input")}
 					/>
+
+					<Box>
+						<TextInput
+							label={
+								<Group gap="xs" justify="space-between" className="w-full">
+									<FormLabel
+										label={t`Title`}
+										isDirty={formState.dirtyFields.title}
+									/>
+									{showGenerateTitle && (
+										<Tooltip
+											label={t`Generate a summary first`}
+											disabled={canGenerateTitle}
+										>
+											<Button
+												variant="subtle"
+												size="compact-xs"
+												loading={isGeneratingTitle}
+												disabled={!canGenerateTitle}
+												onClick={() => generateTitleMutation.mutate()}
+											>
+												{t`Generate`}
+											</Button>
+										</Tooltip>
+									)}
+								</Group>
+							}
+							description={t`Topic-based title describing what was discussed`}
+							placeholder={t`Auto-generated or enter manually`}
+							disabled={isGeneratingTitle}
+							{...register("title")}
+							{...testId("conversation-edit-title-input")}
+						/>
+					</Box>
 
 					{projectTags && projectTags.length > 0 ? (
 						<Controller
@@ -197,7 +375,7 @@ export const ConversationEdit = ({
 							)}
 						/>
 					) : (
-						<>
+						<Box>
 							<CloseableAlert color="primary">
 								<Text size="sm">
 									<Trans>
@@ -206,10 +384,7 @@ export const ConversationEdit = ({
 									</Trans>
 								</Text>
 							</CloseableAlert>
-							<Text>
-								<Trans>No tags found</Trans>
-							</Text>
-						</>
+						</Box>
 					)}
 				</Stack>
 			</form>

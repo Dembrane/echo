@@ -4,9 +4,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 
 import "./ParticipantOnboardingCards.css";
-import { Button, Stack, Title } from "@mantine/core";
-import { IconMicrophone } from "@tabler/icons-react";
-import { Play } from "lucide-react";
+import { Button, Checkbox, Stack, Text, Title } from "@mantine/core";
+import { Logo } from "@/components/common/Logo";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
 import { testId } from "@/lib/testUtils";
@@ -19,7 +18,7 @@ interface Slide {
 	type?: string;
 	title: string;
 	content?: string;
-	icon: React.ElementType;
+	icon?: React.ElementType;
 	cta?: string;
 	extraHelp?: string;
 	checkbox?: {
@@ -85,7 +84,6 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 					{
 						component: MicrophoneTestComponent,
 						content: "Lass uns sichergehen, dass wir dich hören können.",
-						icon: IconMicrophone,
 						title: "Mikrofon-Check",
 						type: "microphone",
 					},
@@ -96,7 +94,6 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 				slides: [
 					{
 						component: InitiateFormComponent,
-						icon: Play,
 						title: "Bereit zum Start?",
 					},
 				],
@@ -110,7 +107,6 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 					{
 						component: MicrophoneTestComponent,
 						content: "Let's Make Sure We Can Hear You.",
-						icon: IconMicrophone,
 						title: "Microphone Check",
 						type: "microphone",
 					},
@@ -121,7 +117,6 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 				slides: [
 					{
 						component: InitiateFormComponent,
-						icon: Play,
 						title: "Ready to Begin?",
 					},
 				],
@@ -135,7 +130,6 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 					{
 						component: MicrophoneTestComponent,
 						content: "Verifiquemos que podamos escucharte.",
-						icon: IconMicrophone,
 						title: "Verificación del Micrófono",
 						type: "microphone",
 					},
@@ -146,7 +140,6 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 				slides: [
 					{
 						component: InitiateFormComponent,
-						icon: Play,
 						title: "¿Listo para empezar?",
 					},
 				],
@@ -160,7 +153,6 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 					{
 						component: MicrophoneTestComponent,
 						content: "Vérifions que nous puissions vous entendre.",
-						icon: IconMicrophone,
 						title: "Vérification du Microphone",
 						type: "microphone",
 					},
@@ -171,7 +163,6 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 				slides: [
 					{
 						component: InitiateFormComponent,
-						icon: Play,
 						title: "Prêt à commencer?",
 					},
 				],
@@ -185,7 +176,6 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 					{
 						component: MicrophoneTestComponent,
 						content: "Assicuriamoci di poterti sentire.",
-						icon: IconMicrophone,
 						title: "Controllo Microfono",
 						type: "microphone",
 					},
@@ -196,7 +186,6 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 				slides: [
 					{
 						component: InitiateFormComponent,
-						icon: Play,
 						title: "Pronti a iniziare?",
 					},
 				],
@@ -210,7 +199,6 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 					{
 						component: MicrophoneTestComponent,
 						content: "Laten we zorgen dat we je kunnen horen.",
-						icon: IconMicrophone,
 						title: "Microfoon Controle",
 						type: "microphone",
 					},
@@ -221,7 +209,6 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 				slides: [
 					{
 						component: InitiateFormComponent,
-						icon: Play,
 						title: "Klaar om te beginnen?",
 					},
 				],
@@ -278,182 +265,193 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 	};
 
 	return (
-		<div className="flex h-full flex-col items-center justify-center p-4 text-center">
-			{skipOnboarding === "1" ? (
-				<Stack
-					className="w-full max-w-[400px] text-left"
-					{...testId("portal-onboarding-skip")}
-				>
-					<Title order={2}>
-						<Trans id="participant.ready.to.begin">Ready to Begin?</Trans>
-					</Title>
-					<ParticipantInitiateForm project={project} />
-				</Stack>
-			) : (
-				<>
-					<div
-						key={currentSlideIndex}
-						className={cn(
-							"relative flex w-full max-w-[400px] flex-grow flex-col items-center justify-center gap-4 rounded-xl bg-white p-4 text-center shadow",
-							`${animationDirection}`,
-						)}
-						{...testId(`portal-onboarding-slide-${currentSlideIndex}`)}
+		<div className="flex h-full flex-col">
+			{/* Header with logo and border */}
+			<div className="w-full border-b border-gray-800 px-4 py-3">
+				<Logo />
+			</div>
+
+			{/* Content area */}
+			<div className="flex flex-grow flex-col items-center justify-center p-4 text-center">
+				{skipOnboarding === "1" ? (
+					<Stack
+						className="w-full max-w-[400px] text-left"
+						{...testId("portal-onboarding-skip")}
 					>
-						{currentCard?.type === "microphone" && (
-							<Button
-								onClick={nextSlide}
-								variant="subtle"
-								color="primary"
-								size="md"
-								p="sm"
-								className="absolute right-4 top-4"
-								{...testId("portal-onboarding-mic-skip-button")}
-							>
-								<Trans id="participant.mic.check.button.skip">Skip</Trans>
-							</Button>
-						)}
+						<Title order={2}>
+							<Trans id="participant.ready.to.begin">Ready to Begin?</Trans>
+						</Title>
+						<ParticipantInitiateForm project={project} />
+					</Stack>
+				) : (
+					<>
 						<div
+							key={currentSlideIndex}
 							className={cn(
-								"transform transition-all duration-300 ease-in-out hover:scale-110",
+								"relative flex w-full max-w-[400px] flex-grow flex-col items-start justify-center gap-4",
+								`${animationDirection}`,
 							)}
+							{...testId(`portal-onboarding-slide-${currentSlideIndex}`)}
 						>
-							{React.createElement(currentCard.icon, {
-								className: "text-blue-500",
-								size: 64,
-							})}
-						</div>
+							{currentCard?.type === "microphone" && (
+								<Button
+									onClick={nextSlide}
+									variant="subtle"
+									color="primary"
+									size="md"
+									p="sm"
+									className="absolute right-0 top-0"
+									{...testId("portal-onboarding-mic-skip-button")}
+								>
+									<Trans id="participant.mic.check.button.skip">Skip</Trans>
+								</Button>
+							)}
+							{currentCard.icon && (
+								<div
+									className={cn(
+										"transform transition-all duration-300 ease-in-out hover:scale-110",
+									)}
+								>
+									{React.createElement(currentCard.icon, {
+										className: "text-blue-500",
+										size: 64,
+									})}
+								</div>
+							)}
 
-						<h2 className={cn("text-3xl text-gray-800")}>
-							{currentCard.title}
-						</h2>
+							<Text className={cn("text-4xl")} ta="left">
+								{currentCard.title}
+							</Text>
 
-						{currentCard.content && (
-							<p className="text-xl text-gray-600">{currentCard.content}</p>
-						)}
+							{currentCard.content && (
+								<Text className="text-xl" ta="left">
+									{currentCard.content}
+								</Text>
+							)}
 
-						{currentCard.extraHelp && (
-							<p className="text-sm text-gray-500">{currentCard.extraHelp}</p>
-						)}
+							{currentCard.extraHelp && (
+								<Text className="text-sm" ta="left">
+									{currentCard.extraHelp}
+								</Text>
+							)}
 
-						{currentCard.component && (
-							<div className="mt-4 w-full text-left">
-								<currentCard.component />
-							</div>
-						)}
+							{currentCard.component && (
+								<div className="mt-4 w-full text-left">
+									<currentCard.component />
+								</div>
+							)}
 
-						{currentCard.link && (
-							<Button
-								component="a"
-								target={
-									currentCard.link.url.startsWith(PARTICIPANT_BASE_URL) ||
-									currentCard.link.url.startsWith("/")
-										? "_self"
-										: "_blank"
-								}
-								href={currentCard.link.url}
-								className=""
-								size={currentCard.cta ? "md" : "lg"}
-								variant={currentCard.cta ? "transparent" : "filled"}
-								{...testId("portal-onboarding-link-button")}
-							>
-								{currentCard.link.label}
-							</Button>
-						)}
+							{currentCard.link && (
+								<a
+									target={
+										currentCard.link.url.startsWith(PARTICIPANT_BASE_URL) ||
+										currentCard.link.url.startsWith("/")
+											? "_self"
+											: "_blank"
+									}
+									href={currentCard.link.url}
+									className="text-blue-600 underline"
+									rel={
+										currentCard.link.url.startsWith(PARTICIPANT_BASE_URL) ||
+										currentCard.link.url.startsWith("/")
+											? undefined
+											: "noopener noreferrer"
+									}
+									{...testId("portal-onboarding-link-button")}
+								>
+									{currentCard.link.label}
+								</a>
+							)}
 
-						{currentCard.checkbox && (
-							<div className="flex items-center justify-center">
-								<input
-									type="checkbox"
+							{currentCard.checkbox && (
+								<Checkbox
 									id={`checkbox-${currentSlideIndex}`}
 									checked={checkboxStates[`${currentSlideIndex}`] || false}
 									onChange={handleCheckboxChange}
-									className="mr-2 h-5 w-5 text-blue-500"
+									label={currentCard.checkbox.label}
+									classNames={{
+										body: "items-center",
+										label: "text-lg text-gray-700",
+										root: "items-start",
+									}}
 									{...testId("portal-onboarding-checkbox")}
 								/>
-								<label
-									htmlFor={`checkbox-${currentSlideIndex}`}
-									className="text-md text-gray-700"
-								>
-									{currentCard.checkbox.label}
-								</label>
-							</div>
-						)}
-					</div>
+							)}
+						</div>
 
-					<div className="mt-8 flex w-full items-center justify-between gap-4">
-						{currentCard?.type === "microphone" ? (
-							<>
-								<Button
-									onClick={prevSlide}
-									variant="outline"
-									color="gray"
-									size="md"
-									className="basis-1/2"
-									{...testId("portal-onboarding-mic-back-button")}
-								>
-									<Trans id="participant.button.back.microphone">Back</Trans>
-								</Button>
-								<Button
-									onClick={nextSlide}
-									size="md"
-									disabled={!micTestSuccess}
-									className="basis-1/2"
-									{...testId("portal-onboarding-mic-continue-button")}
-								>
-									<Trans id="participant.button.continue">Continue</Trans>
-								</Button>
-							</>
-						) : (
-							<>
-								<Button
-									onClick={prevSlide}
-									variant="outline"
-									color="gray"
-									size="md"
-									disabled={currentSlideIndex === 0}
-									className={!isLastSlide ? "basis-1/2" : "w-full"}
-									{...testId("portal-onboarding-back-button")}
-								>
-									<Trans id="participant.button.back">Back</Trans>
-								</Button>
-								{!isLastSlide && (
+						<div className="mt-8 flex w-full items-center justify-between gap-4">
+							{currentCard?.type === "microphone" ? (
+								<>
+									<Button
+										onClick={prevSlide}
+										variant="outline"
+										size="lg"
+										className="basis-1/2"
+										{...testId("portal-onboarding-mic-back-button")}
+									>
+										<Trans id="participant.button.back.microphone">Back</Trans>
+									</Button>
 									<Button
 										onClick={nextSlide}
-										size="md"
-										disabled={
-											currentCard.checkbox?.required &&
-											!checkboxStates[`${currentSlideIndex}`]
-										}
+										size="lg"
+										disabled={!micTestSuccess}
 										className="basis-1/2"
-										{...testId("portal-onboarding-next-button")}
+										{...testId("portal-onboarding-mic-continue-button")}
 									>
-										{currentCard.cta ? (
-											currentCard.cta
-										) : (
-											<Trans id="participant.button.next">Next</Trans>
-										)}
+										<Trans id="participant.button.continue">Continue</Trans>
 									</Button>
-								)}
-							</>
-						)}
-					</div>
-
-					<div className="mt-4 flex items-center justify-between">
-						<div className="flex space-x-2">
-							{allSlides.map((slide, index) => (
-								<div
-									key={slide.title}
-									className={`h-2 w-2 rounded-full transition-all duration-200 ${
-										index === currentSlideIndex
-											? "w-4 bg-blue-500"
-											: "bg-gray-300"
-									}`}
-								/>
-							))}
+								</>
+							) : (
+								<>
+									<Button
+										onClick={prevSlide}
+										variant="outline"
+										size="lg"
+										disabled={currentSlideIndex === 0}
+										className={!isLastSlide ? "basis-1/2" : "w-full"}
+										{...testId("portal-onboarding-back-button")}
+									>
+										<Trans id="participant.button.back">Back</Trans>
+									</Button>
+									{!isLastSlide && (
+										<Button
+											onClick={nextSlide}
+											size="lg"
+											disabled={
+												currentCard.checkbox?.required &&
+												!checkboxStates[`${currentSlideIndex}`]
+											}
+											className="basis-1/2"
+											{...testId("portal-onboarding-next-button")}
+										>
+											{currentCard.cta ? (
+												currentCard.cta
+											) : (
+												<Trans id="participant.button.next">Next</Trans>
+											)}
+										</Button>
+									)}
+								</>
+							)}
 						</div>
-					</div>
-				</>
-			)}
+
+						<div className="mt-4 flex items-center justify-between">
+							<div className="flex space-x-2">
+								{allSlides.map((slide, index) => (
+									<div
+										key={slide.title}
+										className={`h-3 w-3 rounded-full transition-all duration-200 ${
+											index === currentSlideIndex
+												? "w-6 bg-blue-500"
+												: "border border-blue-500 bg-transparent"
+										}`}
+									/>
+								))}
+							</div>
+						</div>
+					</>
+				)}
+			</div>
 		</div>
 	);
 };

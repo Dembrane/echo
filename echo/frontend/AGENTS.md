@@ -74,6 +74,20 @@
 - If there is a type error with "<relationship_name>.count" with Directus, add it to the typesDirectus.ts. You can add to the fields `count("<relationship_name>")` to obtain `<relationship_name>_count` in the response
 - When a user request feels ambiguous, pause and confirm the intended action with them before touching code or docs; err on the side of over-communicating.
 
+## Brand Guidelines
+
+All UI copy, colors, and visual decisions should follow `../brand/STYLE_GUIDE.md`:
+
+- Shortest possible, highest clarity
+- "dembrane" always lowercase
+- Say "language model" not "AI" for platform features
+- Never use bold for emphasis (use Royal Blue `#4169e1` or italics)
+- Colors: Parchment `#f6f4f1` (background), Graphite `#2d2d2c` (text), Royal Blue `#4169e1` (action)
+- Typography: DM Sans with stylistic alternates (ss01-ss06)
+- Dutch localization: use "je/jij" not "u/uw"
+
+Machine-readable tokens in `../brand/colors.json`. Logo files in `../brand/logos/`.
+
 ## Theming & Styling Patterns
 
 ### CSS Variables for Dynamic Theming

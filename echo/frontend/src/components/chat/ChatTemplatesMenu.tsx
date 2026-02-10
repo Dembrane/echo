@@ -80,11 +80,7 @@ const SuggestionPill = ({
 			)}
 		>
 			<Group gap={6} wrap="nowrap">
-				<Icon
-					size={14}
-					stroke={1.8}
-					color={colors?.primary ?? (isSelected ? "#6b7280" : "#9ca3af")}
-				/>
+				<Icon size={14} stroke={1.8} color="var(--app-text)" />
 				<Text size="sm" fw={500} c={colors ? MODE_COLORS.graphite : undefined}>
 					{suggestion.label}
 				</Text>

@@ -56,6 +56,15 @@ class WebhookResponseSchema(BaseModel):
     date_updated: Optional[str] = None
 
 
+class CopyableWebhookSchema(BaseModel):
+    id: str
+    name: Optional[str] = None
+    url: Optional[str] = None
+    events: Optional[List[str]] = None
+    project_id: str
+    project_name: str
+
+
 class WebhookTestResponseSchema(BaseModel):
     success: bool
     status_code: Optional[int] = None
@@ -142,6 +151,68 @@ async def list_webhooks(
         )
         for webhook in (webhooks or [])
     ]
+
+
+@ProjectWebhookRouter.get("/{project_id}/webhooks/copyable")
+async def list_copyable_webhooks(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> List[CopyableWebhookSchema]:
+    """
+    List webhooks from other projects that can be copied to this project.
+
+    Returns webhooks from all projects the user has access to, excluding
+    the current project. Useful for quickly setting up similar webhooks
+    across multiple projects.
+    """
+    # Verify access to the target project
+    await _check_project_access(project_id, auth)
+
+    from dembrane.directus import directus_client_context
+
+    try:
+        with directus_client_context(auth.client) as client:
+            # Get all webhooks the user has access to, with project info
+            webhooks = client.get_items(
+                "project_webhook",
+                {
+                    "query": {
+                        "filter": {
+                            "project_id": {"_neq": project_id},
+                            "status": {"_eq": "published"},
+                        },
+                        "fields": [
+                            "id",
+                            "name",
+                            "url",
+                            "events",
+                            "project_id.id",
+                            "project_id.name",
+                        ],
+                        "sort": ["project_id.name", "name"],
+                    }
+                },
+            )
+    except Exception as e:
+        logger.error(f"Failed to list copyable webhooks: {e}")
+        raise HTTPException(status_code=500, detail="Failed to list webhooks") from e
+
+    result = []
+    for webhook in webhooks or []:
+        project_info = webhook.get("project_id", {})
+        if isinstance(project_info, dict):
+            result.append(
+                CopyableWebhookSchema(
+                    id=webhook.get("id"),
+                    name=webhook.get("name"),
+                    url=webhook.get("url"),
+                    events=_parse_webhook_events(webhook.get("events")),
+                    project_id=project_info.get("id", ""),
+                    project_name=project_info.get("name", "Unknown Project"),
+                )
+            )
+
+    return result
 
 
 @ProjectWebhookRouter.post("/{project_id}/webhooks", status_code=HTTPStatus.CREATED)
@@ -392,7 +463,6 @@ async def test_webhook(
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "participant_name": "Test Participant",
-        "participant_email": "test@example.com",
         "duration": 120,
         "source": "PORTAL_AUDIO",
         "is_finished": True,
@@ -408,6 +478,7 @@ async def test_webhook(
         conversation=mock_conversation,
         project=project,
         transcript="This is a test transcript for webhook testing.",
+        emails_csv="test@example.com,another@example.com",
     )
 
     # Override the event to indicate this is a test

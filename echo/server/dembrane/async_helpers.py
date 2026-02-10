@@ -160,8 +160,11 @@ def _get_thread_event_loop() -> asyncio.AbstractEventLoop:
         if thread_id in _thread_loops:
             return _thread_loops[thread_id]
 
+        import nest_asyncio
+
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
+        nest_asyncio.apply(loop)
         _thread_loops[thread_id] = loop
         logger.info("Created persistent event loop for thread %s", thread_id)
         return loop

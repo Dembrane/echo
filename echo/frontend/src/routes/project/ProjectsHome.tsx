@@ -119,7 +119,7 @@ export const ProjectsHomeRoute = () => {
 									label: (
 										<Group>
 											<Icons.Home />
-											<Title order={1}>
+											<Title order={2}>
 												<Trans>Home</Trans>
 											</Title>
 										</Group>
@@ -142,7 +142,7 @@ export const ProjectsHomeRoute = () => {
 				</Group>
 				<Divider />
 				<Group justify="space-between" className="relative">
-					<Title order={2}>
+					<Title order={3}>
 						<Trans>Projects</Trans>
 					</Title>
 				</Group>

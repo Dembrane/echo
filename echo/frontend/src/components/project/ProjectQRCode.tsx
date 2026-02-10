@@ -10,9 +10,16 @@ import {
 	Skeleton,
 	Text,
 } from "@mantine/core";
-import { IconCheck, IconCopy, IconShare } from "@tabler/icons-react";
-import { useMemo } from "react";
+import {
+	IconCheck,
+	IconCopy,
+	IconDownload,
+	IconExternalLink,
+	IconPresentation,
+} from "@tabler/icons-react";
+import { useMemo, useRef, useState } from "react";
 import { PARTICIPANT_BASE_URL } from "@/config";
+import { useAppPreferences } from "@/hooks/useAppPreferences";
 import { testId } from "@/lib/testUtils";
 import { QRCode } from "../common/QRCode";
 
@@ -22,6 +29,8 @@ interface ProjectQRCodeProps {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useProjectSharingLink = (project?: Project) => {
+	const { preferences } = useAppPreferences();
+
 	// biome-ignore lint/correctness/useExhaustiveDependencies: not an issue
 	return useMemo(() => {
 		if (!project) {
@@ -58,29 +67,58 @@ export const useProjectSharingLink = (project?: Project) => {
 				| "it-IT"
 		];
 
-		const link = `${PARTICIPANT_BASE_URL}/${languageCode}/${project.id}/start`;
+		// Include theme in URL so participant portal uses the same theme
+		const baseLink = `${PARTICIPANT_BASE_URL}/${languageCode}/${project.id}/start`;
+		const theme = preferences.fontFamily;
+		const link = `${baseLink}?theme=${theme}`;
 		return link;
-	}, [project?.language, project?.id]);
+	}, [project?.language, project?.id, preferences.fontFamily]);
 };
 
 export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 	const link = useProjectSharingLink(project);
+	const [qrHovered, setQrHovered] = useState(false);
+	const qrRef = useRef<HTMLDivElement>(null);
+
+	const handleOpenHostGuide = () => {
+		if (!project) return;
+		// Open quick start page in new tab
+		const hostGuideUrl = `/projects/${project.id}/host-guide`;
+		window.open(hostGuideUrl, "_blank");
+	};
+
+	const handleDownloadQR = () => {
+		if (!qrRef.current) return;
+		const canvas = qrRef.current.querySelector("canvas");
+		if (!canvas) return;
+
+		const downloadLink = document.createElement("a");
+		downloadLink.download = `qr-${project?.name || "code"}.png`;
+		downloadLink.href = canvas.toDataURL("image/png");
+		downloadLink.click();
+	};
 
 	if (!link) {
 		return <Skeleton height={200} />;
 	}
 
-	let canShare = false;
-	try {
-		if (navigator.canShare) {
-			canShare = navigator.canShare({
-				title: "Join the conversation on Dembrane",
-				url: link,
-			});
-		}
-	} catch (e) {
-		console.error(e);
-	}
+	// Quick start is only available for supported languages
+	const supportedLanguages = [
+		"en",
+		"nl",
+		"de",
+		"fr",
+		"es",
+		"it",
+		"en-US",
+		"nl-NL",
+		"de-DE",
+		"fr-FR",
+		"es-ES",
+		"it-IT",
+	];
+	const showQuickStart =
+		project?.language && supportedLanguages.includes(project.language);
 
 	return (
 		<Paper
@@ -89,28 +127,42 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 		>
 			{project?.is_conversation_allowed ? (
 				<Group align="center" justify="center" gap="lg">
+					{/* Interactive QR Code */}
 					<Box
-						className="h-auto w-full min-w-[80px] max-w-[128px] rounded-lg bg-white"
+						ref={qrRef}
+						className="relative h-auto w-full min-w-[80px] max-w-[128px] cursor-pointer overflow-hidden rounded-lg bg-white transition-all"
+						onMouseEnter={() => setQrHovered(true)}
+						onMouseLeave={() => setQrHovered(false)}
+						onClick={() => window.open(link, "_blank")}
 						{...testId("project-qr-code")}
 					>
 						<QRCode value={link} />
+						{/* Hover overlay */}
+						<div
+							className="absolute inset-0 flex items-center justify-center rounded-lg transition-all"
+							style={{
+								backgroundColor: qrHovered
+									? "rgba(65, 105, 225, 0.85)"
+									: "transparent",
+								opacity: qrHovered ? 1 : 0,
+							}}
+						>
+							<IconExternalLink
+								style={{ height: rem(32), width: rem(32) }}
+								color="white"
+							/>
+						</div>
 					</Box>
 					<div className="flex flex-col flex-wrap gap-2">
-						{canShare && (
+						{showQuickStart && (
 							<Button
-								className="lg:hidden"
 								size="sm"
-								rightSection={<IconShare style={{ width: rem(16) }} />}
 								variant="outline"
-								onClick={async () => {
-									await navigator.share({
-										title: t`Join ${project?.default_conversation_title ?? "the conversation"} on Dembrane`,
-										url: link,
-									});
-								}}
+								onClick={handleOpenHostGuide}
+								rightSection={<IconPresentation style={{ width: rem(16) }} />}
 								{...testId("project-share-button")}
 							>
-								<Trans>Share</Trans>
+								<Trans>Open guide</Trans>
 							</Button>
 						)}
 						<CopyButton value={link} timeout={2000}>
@@ -132,6 +184,33 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 								</Button>
 							)}
 						</CopyButton>
+						<Button
+							size="sm"
+							variant="outline"
+							onClick={handleDownloadQR}
+							rightSection={<IconDownload style={{ width: rem(16) }} />}
+							{...testId("project-download-qr-button")}
+						>
+							<Trans>Download QR code</Trans>
+						</Button>
+						{/* Share button - commented out
+						{canShare && (
+							<Button
+								className="lg:hidden"
+								size="sm"
+								rightSection={<IconShare style={{ width: rem(16) }} />}
+								variant="outline"
+								onClick={async () => {
+									await navigator.share({
+										title: t`Join ${project?.default_conversation_title ?? "the conversation"} on Dembrane`,
+										url: link,
+									});
+								}}
+							>
+								<Trans>Share</Trans>
+							</Button>
+						)}
+						*/}
 					</div>
 				</Group>
 			) : (

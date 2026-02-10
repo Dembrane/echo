@@ -128,6 +128,19 @@ export const TransitionCurtainProvider = ({ children }: PropsWithChildren) => {
 		};
 	}, []);
 
+	// Prevent page scrolling while transition curtain is visible
+	useEffect(() => {
+		if (isActive) {
+			document.body.style.overflow = "hidden";
+		} else {
+			document.body.style.overflow = "";
+		}
+
+		return () => {
+			document.body.style.overflow = "";
+		};
+	}, [isActive]);
+
 	const contextValue = useMemo(
 		(): TransitionCurtainContextValue => ({
 			isActive,
@@ -160,7 +173,10 @@ export const TransitionCurtainProvider = ({ children }: PropsWithChildren) => {
 					/>
 					<div
 						className={`absolute inset-0 backdrop-blur-3xl transition-all ${isDramatic ? "duration-1000" : "duration-700"} ease-out ${hasEntered ? "opacity-100" : "opacity-40"}`}
-						style={{ backgroundColor: "color-mix(in srgb, var(--app-background) 55%, transparent)" }}
+						style={{
+							backgroundColor:
+								"color-mix(in srgb, var(--app-background) 55%, transparent)",
+						}}
 					/>
 					<div
 						className={`relative z-10 flex h-full w-full flex-col items-center justify-center px-6 text-center transition-all ${isDramatic ? "duration-1000" : "duration-700"} ease-out ${hasEntered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}

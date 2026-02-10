@@ -27,6 +27,7 @@ import {
 	deleteConversationById,
 	getConversationChunkContentLink,
 	getConversationContentLink,
+	getConversationEmails,
 	getConversationTranscriptString,
 	retranscribeConversation,
 	selectAllContext,
@@ -687,6 +688,17 @@ export const useConversationChunks = (
 	});
 };
 
+export const useConversationEmails = (
+	conversationId: string,
+	enabled = true,
+) => {
+	return useQuery({
+		queryFn: () => getConversationEmails(conversationId),
+		queryKey: ["conversations", conversationId, "emails"],
+		enabled: enabled && !!conversationId,
+	});
+};
+
 export const useConversationsByProjectId = (
 	projectId: string,
 	loadChunks?: boolean,
@@ -812,6 +824,7 @@ export const CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS: QueryFields<
 	"project_id",
 	"participant_name",
 	"participant_email",
+	"title",
 	"tags",
 	"summary",
 	"source",

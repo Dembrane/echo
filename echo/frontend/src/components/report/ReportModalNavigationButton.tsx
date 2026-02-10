@@ -2,7 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Modal, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconEdit } from "@tabler/icons-react";
+import { NotePencilIcon } from "@phosphor-icons/react";
 import { useCallback } from "react";
 import { useLocation, useParams } from "react-router";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -60,7 +60,7 @@ export const ReportModalNavigationButton = () => {
 				loading={isLoadingProjectReport}
 				loadingTooltip={t`Connecting to report services...`}
 				onClick={handleClick}
-				rightIcon={<IconEdit />}
+				rightIcon={<NotePencilIcon size={24} color="var(--app-text)" />}
 				active={pathname.includes("report")}
 				{...testId("sidebar-report-button")}
 			>

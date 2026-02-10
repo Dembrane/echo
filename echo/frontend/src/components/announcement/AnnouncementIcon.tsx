@@ -1,5 +1,5 @@
 import { ActionIcon, Box, Group, Indicator, Loader } from "@mantine/core";
-import { IconSpeakerphone } from "@tabler/icons-react";
+import { FlagBannerIcon } from "@phosphor-icons/react";
 import { useAnnouncementDrawer } from "@/components/announcement/hooks";
 import { getTranslatedContent } from "@/components/announcement/hooks/useProcessedAnnouncements";
 import { Markdown } from "@/components/common/Markdown";
@@ -54,12 +54,14 @@ export const AnnouncementIcon = () => {
 					disabled={(unreadCount || 0) === 0}
 					withBorder
 				>
-					<ActionIcon color="gray" variant="transparent">
+					<ActionIcon variant="transparent">
 						{isLoading ? (
 							<Loader size="xs" />
 						) : (
-							<IconSpeakerphone
-								className="me-1 rotate-[330deg]"
+							<FlagBannerIcon
+								size={24}
+								className="me-1"
+								color="var(--app-text)"
 								{...testId("announcement-speakerphone-icon")}
 							/>
 						)}

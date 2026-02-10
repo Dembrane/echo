@@ -1,7 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	ActionIcon,
 	Box,
 	Button,
 	Group,
@@ -420,27 +419,27 @@ export const ParticipantConversationAudio = () => {
 	const getRefineModalTitle = () => {
 		if (showVerify && showEcho) {
 			return (
-				<Trans id="participant.modal.refine.info.title.generic">
-					"Refine" available soon
+				<Trans id="participant.modal.echo.info.title.generic">
+					"ECHO" available soon
 				</Trans>
 			);
 		}
 		if (showVerify) {
 			return (
-				<Trans id="participant.modal.refine.info.title.concrete">
-					"Make it concrete" available soon
+				<Trans id="participant.modal.echo.info.title.concrete">
+					"Verify" available soon
 				</Trans>
 			);
 		}
 		if (showEcho) {
 			return (
-				<Trans id="participant.modal.refine.info.title.go.deeper">
-					"Go deeper" available soon
+				<Trans id="participant.modal.echo.info.title.go.deeper">
+					"Explore" available soon
 				</Trans>
 			);
 		}
 		return (
-			<Trans id="participant.modal.refine.info.title">
+			<Trans id="participant.modal.echo.info.title">
 				Feature available soon
 			</Trans>
 		);
@@ -448,8 +447,8 @@ export const ParticipantConversationAudio = () => {
 
 	const getRefineInfoReason = () => {
 		return (
-			<Trans id="participant.modal.refine.info.reason">
-				We need a bit more context to help you refine effectively. Please
+			<Trans id="participant.modal.echo.info.reason">
+				We need a bit more context to help you use ECHO effectively. Please
 				continue recording so we can provide better suggestions.
 			</Trans>
 		);
@@ -588,8 +587,9 @@ export const ParticipantConversationAudio = () => {
 
 			{!errored && (
 				<Stack
+					bg="var(--app-background)"
 					gap="lg"
-					className="sticky bottom-0 z-10 w-full min-h-[84px] border-t border-slate-300 bg-white p-4"
+					className="sticky bottom-0 z-10 w-full min-h-[84px] border-t border-slate-300 p-4"
 				>
 					<Group
 						justify="center"
@@ -610,10 +610,10 @@ export const ParticipantConversationAudio = () => {
 							interruptionModalOpened ||
 							stoppedRecordingTime !== null) && (
 							<div
-								className="border-slate-300 bg-white"
+								className="border-slate-300"
 								{...testId("portal-audio-recording-timer")}
 							>
-								<Group justify="center" align="center" gap="xs">
+								<Group justify="center" align="center" gap="xs" mih={50}>
 									{opened ||
 									interruptionModalOpened ||
 									stoppedRecordingTime !== null ? (
@@ -674,22 +674,21 @@ export const ParticipantConversationAudio = () => {
 									</Button>
 
 									<I18nLink to={textModeUrl}>
-										<ActionIcon
-											size="50"
-											variant="default"
-											radius="md"
+										<Button
+											size="lg"
+											variant="outline"
+											px="lg"
 											{...testId("portal-audio-switch-to-text-button")}
 										>
 											<IconTextCaption />
-										</ActionIcon>
+										</Button>
 									</I18nLink>
 
 									{!isStopping && chunks?.data && chunks.data.length > 0 && (
 										<Button
 											size="lg"
-											radius="md"
 											onClick={open}
-											variant="light"
+											variant="outline"
 											rightSection={<IconCheck className="hidden sm:block" />}
 											className="w-auto"
 											loading={isFinishing}
@@ -710,7 +709,7 @@ export const ParticipantConversationAudio = () => {
 										projectQuery.data?.is_get_reply_enabled) && (
 										<Button
 											size="lg"
-											radius="md"
+											radius={100}
 											onClick={handleRefineClick}
 											disabled={isStopping || isRefineDisabled}
 											className="relative overflow-hidden"
@@ -723,12 +722,12 @@ export const ParticipantConversationAudio = () => {
 										>
 											{recordingTime < REFINE_BUTTON_THRESHOLD_SECONDS && (
 												<div
-													className="absolute bottom-0 left-0 top-0 bg-blue-200/50 transition-all duration-1000 ease-linear"
+													className="absolute bottom-0 left-0 top-0 bg-primary-600/20 transition-all duration-1000 ease-linear"
 													style={{ width: `${refineProgress}%` }}
 												/>
 											)}
 											<span className="relative z-10">
-												<Trans id="participant.button.refine">Refine</Trans>
+												<Trans id="participant.button.echo">ECHO</Trans>
 											</span>
 										</Button>
 									)}
