@@ -985,7 +985,7 @@ msgstr "Choisis le thème que tu préfères pour l’interface"
 msgid "Click \"Upload Files\" when you're ready to start the upload process."
 msgstr "Cliquez sur \"Télécharger les fichiers\" lorsque vous êtes prêt à commencer le processus de téléchargement."
 
-#: src/routes/project/HostGuidePage.tsx:1385
+#: src/routes/project/HostGuidePage.tsx:1402
 msgid "Click to edit"
 msgstr "Cliquer pour modifier"
 
@@ -1455,7 +1455,7 @@ msgstr "Options de téléchargement de la transcription"
 msgid "Drag audio files here or click to select files"
 msgstr "Glissez les fichiers audio ici ou cliquez pour sélectionner des fichiers"
 
-#: src/routes/project/HostGuidePage.tsx:1397
+#: src/routes/project/HostGuidePage.tsx:1414
 msgid "Drag to reorder"
 msgstr "Glisser pour réorganiser"
 
@@ -1581,7 +1581,7 @@ msgstr "Activer Explorer"
 #~ msgid "Enable Make it concrete"
 #~ msgstr "Activer Rends-le concret"
 
-#: src/routes/project/HostGuidePage.tsx:1563
+#: src/routes/project/HostGuidePage.tsx:1588
 msgid "Enable participation"
 msgstr "Activer la participation"
 
@@ -2089,6 +2089,10 @@ msgstr "Retour"
 #: src/components/project/ProjectPortalEditor.tsx:566
 #~ msgid "Go deeper"
 #~ msgstr "Va plus profond"
+
+#: src/routes/project/HostGuidePage.tsx:1451
+msgid "Go Fullscreen"
+msgstr "Plein écran"
 
 #: src/routes/404.tsx:17
 msgid "Go home"
@@ -3179,7 +3183,7 @@ msgstr "Préparation de votre expérience"
 msgid "Preview: The quick brown fox jumps over the lazy dog."
 msgstr "Aperçu : Le rapide brun fox saute sur le chien paresseux."
 
-#: src/routes/project/HostGuidePage.tsx:1426
+#: src/routes/project/HostGuidePage.tsx:1443
 msgid "Print / Save PDF"
 msgstr "Imprimer / Enregistrer PDF"
 
@@ -3507,7 +3511,7 @@ msgstr "Accès au microphone en cours..."
 msgid "Requires \"Ask for Email?\" to be enabled"
 msgstr "Requiert \"Demander l'email ?\" pour être activé"
 
-#: src/routes/project/HostGuidePage.tsx:1419
+#: src/routes/project/HostGuidePage.tsx:1436
 msgid "Reset"
 msgstr "Réinitialiser"
 
@@ -3584,7 +3588,7 @@ msgstr "Réviser"
 msgid "Revision #{revisionNumber}"
 msgstr "Révision #{revisionNumber}"
 
-#: src/routes/project/HostGuidePage.tsx:1391
+#: src/routes/project/HostGuidePage.tsx:1408
 msgid "Right-click to highlight"
 msgstr "Cliquez avec le bouton droit pour mettre en évidence"
 
