@@ -633,7 +633,7 @@ msgstr "Aspekte"
 #~ msgstr "Assistent schreibt..."
 
 #~ msgid "At least one topic must be selected to enable Dembrane Verify"
-#~ msgstr "At least one topic must be selected to enable Dembrane Verify"
+#~ msgstr "At least one topic must be selected to enable Verify"
 
 #: src/components/project/ProjectPortalEditor.tsx:879
 #~ msgid "At least one topic must be selected to enable Make it concrete"
@@ -1233,7 +1233,7 @@ msgstr "Dashboard-URL (direkter Link zur Gesprächsübersicht)"
 #~ msgstr "Experimental"
 
 #~ msgid "dashboard.dembrane.verify.title"
-#~ msgstr "Dembrane Verify"
+#~ msgstr "Verify"
 
 #~ msgid "dashboard.dembrane.verify.topic.select"
 #~ msgstr "Select which topics participants can use for verification."
@@ -1275,18 +1275,18 @@ msgid "Deleted successfully"
 msgstr "Erfolgreich gelöscht"
 
 #~ msgid "Dembrane Echo"
-#~ msgstr "Dembrane Echo"
+#~ msgstr "Echo"
 
 #~ msgid "Dembrane ECHO"
-#~ msgstr "Dembrane ECHO"
+#~ msgstr "ECHO"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:768
 #: src/routes/project/chat/ProjectChatRoute.tsx:798
 msgid "Dembrane is powered by AI. Please double-check responses."
-msgstr "Dembrane läuft mit KI. Prüf die Antworten noch mal gegen."
+msgstr "dembrane läuft mit KI. Prüf die Antworten noch mal gegen."
 
 #~ msgid "Dembrane Reply"
-#~ msgstr "Dembrane Antwort"
+#~ msgstr "Antwort"
 
 #: src/components/chat/templates.ts:61
 msgid ""
@@ -1481,16 +1481,16 @@ msgid "Enable 2FA"
 msgstr "2FA aktivieren"
 
 #~ msgid "Enable Dembrane Echo"
-#~ msgstr "Dembrane Echo aktivieren"
+#~ msgstr "Echo aktivieren"
 
 #~ msgid "Enable Dembrane ECHO"
-#~ msgstr "Dembrane ECHO aktivieren"
+#~ msgstr "ECHO aktivieren"
 
 #~ msgid "Enable Dembrane Reply"
-#~ msgstr "Dembrane Antwort aktivieren"
+#~ msgstr "Antwort aktivieren"
 
 #~ msgid "Enable Dembrane Verify"
-#~ msgstr "Enable Dembrane Verify"
+#~ msgstr "Enable Verify"
 
 #: src/components/project/ProjectPortalEditor.tsx:662
 msgid "Enable Explore"
@@ -1532,7 +1532,7 @@ msgid "Enable this feature to allow participants to request AI-powered responses
 msgstr "Aktivieren Sie diese Funktion, um Teilnehmern die Möglichkeit zu geben, KI-gesteuerte Antworten während ihres Gesprächs anzufordern. Teilnehmer können nach Aufnahme ihrer Gedanken auf \"Explore\" klicken, um kontextbezogene Rückmeldungen zu erhalten, die tiefere Reflexion und Engagement fördern. Ein Abkühlungszeitraum gilt zwischen Anfragen."
 
 #~ msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Get Reply\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
-#~ msgstr "Aktivieren Sie diese Funktion, um Teilnehmern die Möglichkeit zu geben, AI-gesteuerte Antworten während ihres Gesprächs anzufordern. Teilnehmer können nach Aufnahme ihrer Gedanken auf \"Dembrane Antwort\" klicken, um kontextbezogene Rückmeldungen zu erhalten, die tiefere Reflexion und Engagement fördern. Ein Abkühlungszeitraum gilt zwischen Anfragen."
+#~ msgstr "Aktivieren Sie diese Funktion, um Teilnehmern die Möglichkeit zu geben, AI-gesteuerte Antworten während ihres Gesprächs anzufordern. Teilnehmer können nach Aufnahme ihrer Gedanken auf \"Antwort\" klicken, um kontextbezogene Rückmeldungen zu erhalten, die tiefere Reflexion und Engagement fördern. Ein Abkühlungszeitraum gilt zwischen Anfragen."
 
 #: src/components/project/ProjectPortalEditor.tsx:577
 #~ msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Go deeper\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
@@ -1989,12 +1989,12 @@ msgstr "Deutsch"
 
 #: src/components/participant/ParticipantConversationAudio.tsx:414
 msgid "Get an immediate reply from Dembrane to help you deepen the conversation."
-msgstr "Erhalte eine sofortige Antwort von Dembrane, um das Gespräch zu vertiefen."
+msgstr "Erhalte eine sofortige Antwort von dembrane, um das Gespräch zu vertiefen."
 
 #. js-lingui-explicit-id
 #: src/components/participant/refine/RefineSelection.tsx:129
 msgid "participant.refine.go.deeper.description"
-msgstr "Erhalte eine sofortige Antwort von Dembrane, um das Gespräch zu vertiefen."
+msgstr "Erhalte eine sofortige Antwort von dembrane, um das Gespräch zu vertiefen."
 
 #: src/components/view/CreateViewForm.tsx:129
 msgid "Give me a list of 5-10 topics that are being discussed."
@@ -2206,7 +2206,7 @@ msgstr "Italienisch"
 
 #: src/components/project/ProjectQRCode.tsx:103
 #~ msgid "Join {0} on Dembrane"
-#~ msgstr "Treten Sie {0} auf Dembrane bei"
+#~ msgstr "Treten Sie {0} auf dembrane bei"
 
 #: src/components/common/DembraneLoadingSpinner/index.tsx:27
 msgid "Just a moment"
@@ -4038,7 +4038,7 @@ msgstr "Tags"
 
 #: src/components/participant/ParticipantConversationAudio.tsx:408
 msgid "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from Dembrane to help you deepen the conversation."
-msgstr "Nimm dir Zeit, ein konkretes Ergebnis zu erstellen, das deinen Beitrag festhält, oder erhalte eine sofortige Antwort von Dembrane, um das Gespräch zu vertiefen."
+msgstr "Nimm dir Zeit, ein konkretes Ergebnis zu erstellen, das deinen Beitrag festhält, oder erhalte eine sofortige Antwort von dembrane, um das Gespräch zu vertiefen."
 
 #: src/components/participant/ParticipantConversationAudio.tsx:411
 msgid "Take some time to create an outcome that makes your contribution concrete."
@@ -4574,7 +4574,7 @@ msgstr "Hochladen"
 
 #: src/components/settings/WhitelabelLogoCard.tsx:100
 msgid "Upload a custom logo to replace the Dembrane logo across the portal, dashboard, reports, and host guide."
-msgstr "Ein benutzerdefiniertes Logo hochladen, um das Dembrane-Logo auf der Portal-Seite, im Dashboard, in Berichten und im Host-Guide zu ersetzen."
+msgstr "Ein benutzerdefiniertes Logo hochladen, um das dembrane-Logo auf der Portal-Seite, im Dashboard, in Berichten und im Host-Guide zu ersetzen."
 
 #~ msgid "Upload Audio"
 #~ msgstr "Audio hochladen"
@@ -4640,7 +4640,7 @@ msgstr "Verwenden Sie Shift + Enter, um eine neue Zeile hinzuzufügen"
 
 #: src/components/settings/WhitelabelLogoCard.tsx:134
 msgid "Using default Dembrane logo"
-msgstr "Standard-Dembrane-Logo verwendet"
+msgstr "Standard-dembrane-Logo verwendet"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:1046
 msgid "Using webhooks? We'd love to hear from you"
@@ -4680,7 +4680,7 @@ msgstr "verifizierte Artefakte"
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:839
 msgid "dashboard.dembrane.verify.title"
-msgstr "dembrane Verifizieren"
+msgstr "Verifizieren"
 
 #. js-lingui-explicit-id
 #: src/components/participant/refine/RefineSelection.tsx:73
@@ -4811,7 +4811,7 @@ msgstr "Welcome back"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:536
 msgid "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
-msgstr "Willkommen beim Dembrane Chat! Verwenden Sie die Seitenleiste, um Ressourcen und Gespräche auszuwählen, die Sie analysieren möchten. Dann können Sie Fragen zu den ausgewählten Ressourcen und Gesprächen stellen."
+msgstr "Willkommen beim dembrane Chat! Verwenden Sie die Seitenleiste, um Ressourcen und Gespräche auszuwählen, die Sie analysieren möchten. Dann können Sie Fragen zu den ausgewählten Ressourcen und Gesprächen stellen."
 
 #: src/components/common/DembraneLoadingSpinner/index.tsx:23
 msgid "Welcome to Dembrane!"

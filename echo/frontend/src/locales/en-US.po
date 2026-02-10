@@ -886,10 +886,6 @@ msgstr "Aspects"
 #~ msgid "Assistant is typing..."
 #~ msgstr "Assistant is typing..."
 
-#: src/components/project/ProjectPortalEditor.tsx:808
-#~ msgid "At least one topic must be selected to enable Verify"
-#~ msgstr "At least one topic must be selected to enable Verify"
-
 #: src/components/project/ProjectPortalEditor.tsx:879
 #~ msgid "At least one topic must be selected to enable Make it concrete"
 #~ msgstr "At least one topic must be selected to enable Make it concrete"
@@ -1775,14 +1771,6 @@ msgstr "Enable 2FA"
 #~ msgid "Enable ECHO"
 #~ msgstr "Enable ECHO"
 
-#: src/components/project/ProjectBasicEdit.tsx:181
-#~ msgid "Enable Reply"
-#~ msgstr "Enable Reply"
-
-#: src/components/project/ProjectPortalEditor.tsx:734
-#~ msgid "Enable Verify"
-#~ msgstr "Enable Verify"
-
 #: src/components/project/ProjectPortalEditor.tsx:662
 msgid "Enable Explore"
 msgstr "Enable Explore"
@@ -1798,6 +1786,10 @@ msgstr "Enable Explore"
 #: src/routes/project/HostGuidePage.tsx:1563
 msgid "Enable participation"
 msgstr "Enable participation"
+
+#: src/components/project/ProjectBasicEdit.tsx:181
+#~ msgid "Enable Reply"
+#~ msgstr "Enable Reply"
 
 #: src/components/project/ProjectPortalEditor.tsx:1007
 msgid "Enable Report Notifications"

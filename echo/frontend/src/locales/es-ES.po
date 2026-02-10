@@ -636,7 +636,7 @@ msgstr "Aspectos"
 #~ msgstr "El asistente está escribiendo..."
 
 #~ msgid "At least one topic must be selected to enable Dembrane Verify"
-#~ msgstr "At least one topic must be selected to enable Dembrane Verify"
+#~ msgstr "At least one topic must be selected to enable Verify"
 
 #: src/components/project/ProjectPortalEditor.tsx:879
 #~ msgid "At least one topic must be selected to enable Make it concrete"
@@ -1236,7 +1236,7 @@ msgstr "URL del panel de control (enlace directo a la vista de conversaciones)"
 #~ msgstr "Experimental"
 
 #~ msgid "dashboard.dembrane.verify.title"
-#~ msgstr "Dembrane Verify"
+#~ msgstr "Verify"
 
 #~ msgid "dashboard.dembrane.verify.topic.select"
 #~ msgstr "Select which topics participants can use for verification."
@@ -1278,18 +1278,18 @@ msgid "Deleted successfully"
 msgstr "Eliminado con éxito"
 
 #~ msgid "Dembrane Echo"
-#~ msgstr "Dembrane Echo"
+#~ msgstr "Echo"
 
 #~ msgid "Dembrane ECHO"
-#~ msgstr "Dembrane ECHO"
+#~ msgstr "ECHO"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:768
 #: src/routes/project/chat/ProjectChatRoute.tsx:798
 msgid "Dembrane is powered by AI. Please double-check responses."
-msgstr "Dembrane funciona con IA. Revisa bien las respuestas."
+msgstr "dembrane funciona con IA. Revisa bien las respuestas."
 
 #~ msgid "Dembrane Reply"
-#~ msgstr "Dembrane Respuesta"
+#~ msgstr "Respuesta"
 
 #: src/components/chat/templates.ts:61
 msgid ""
@@ -1484,16 +1484,16 @@ msgid "Enable 2FA"
 msgstr "Activar 2FA"
 
 #~ msgid "Enable Dembrane Echo"
-#~ msgstr "Habilitar Dembrane Echo"
+#~ msgstr "Habilitar Echo"
 
 #~ msgid "Enable Dembrane ECHO"
-#~ msgstr "Habilitar Dembrane ECHO"
+#~ msgstr "Habilitar ECHO"
 
 #~ msgid "Enable Dembrane Reply"
-#~ msgstr "Habilitar Dembrane Respuesta"
+#~ msgstr "Habilitar Respuesta"
 
 #~ msgid "Enable Dembrane Verify"
-#~ msgstr "Activar Dembrane Verify"
+#~ msgstr "Activar Verify"
 
 #: src/components/project/ProjectPortalEditor.tsx:662
 msgid "Enable Explore"
@@ -1992,12 +1992,12 @@ msgstr "Alemán"
 
 #: src/components/participant/ParticipantConversationAudio.tsx:414
 msgid "Get an immediate reply from Dembrane to help you deepen the conversation."
-msgstr "Obtén una respuesta inmediata de Dembrane para ayudarte a profundizar en la conversación."
+msgstr "Obtén una respuesta inmediata de dembrane para ayudarte a profundizar en la conversación."
 
 #. js-lingui-explicit-id
 #: src/components/participant/refine/RefineSelection.tsx:129
 msgid "participant.refine.go.deeper.description"
-msgstr "Obtén una respuesta inmediata de Dembrane para ayudarte a profundizar en la conversación."
+msgstr "Obtén una respuesta inmediata de dembrane para ayudarte a profundizar en la conversación."
 
 #: src/components/view/CreateViewForm.tsx:129
 msgid "Give me a list of 5-10 topics that are being discussed."
@@ -4044,7 +4044,7 @@ msgstr "Etiquetas"
 
 #: src/components/participant/ParticipantConversationAudio.tsx:408
 msgid "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from Dembrane to help you deepen the conversation."
-msgstr "Tómate un tiempo para crear un resultado que haga tu contribución concreta u obtén una respuesta inmediata de Dembrane para ayudarte a profundizar en la conversación."
+msgstr "Tómate un tiempo para crear un resultado que haga tu contribución concreta u obtén una respuesta inmediata de dembrane para ayudarte a profundizar en la conversación."
 
 #: src/components/participant/ParticipantConversationAudio.tsx:411
 msgid "Take some time to create an outcome that makes your contribution concrete."
@@ -4578,7 +4578,7 @@ msgstr "Subir"
 
 #: src/components/settings/WhitelabelLogoCard.tsx:100
 msgid "Upload a custom logo to replace the Dembrane logo across the portal, dashboard, reports, and host guide."
-msgstr "Sube un logo personalizado para reemplazar el logo de Dembrane en el portal, panel de control, informes y guía de host."
+msgstr "Sube un logo personalizado para reemplazar el logo de dembrane en el portal, panel de control, informes y guía de host."
 
 #~ msgid "Upload Audio"
 #~ msgstr "Subir Audio"
@@ -4644,7 +4644,7 @@ msgstr "Usa Shift + Enter para agregar una nueva línea"
 
 #: src/components/settings/WhitelabelLogoCard.tsx:134
 msgid "Using default Dembrane logo"
-msgstr "Usando el logo de Dembrane por defecto"
+msgstr "Usando el logo de dembrane por defecto"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:1046
 msgid "Using webhooks? We'd love to hear from you"
@@ -4684,7 +4684,7 @@ msgstr "verified artifacts"
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:839
 msgid "dashboard.dembrane.verify.title"
-msgstr "dembrane Verificar"
+msgstr "Verificar"
 
 #. js-lingui-explicit-id
 #: src/components/participant/refine/RefineSelection.tsx:73
@@ -4815,7 +4815,7 @@ msgstr "Bienvenido de nuevo"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:536
 msgid "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
-msgstr "¡Bienvenido a Dembrane Chat! Usa la barra lateral para seleccionar recursos y conversaciones que quieras analizar. Luego, puedes hacer preguntas sobre los recursos y conversaciones seleccionados."
+msgstr "¡Bienvenido a dembrane Chat! Usa la barra lateral para seleccionar recursos y conversaciones que quieras analizar. Luego, puedes hacer preguntas sobre los recursos y conversaciones seleccionados."
 
 #: src/components/common/DembraneLoadingSpinner/index.tsx:23
 msgid "Welcome to Dembrane!"

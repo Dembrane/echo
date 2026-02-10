@@ -651,7 +651,7 @@ msgstr "Aspects"
 #~ msgstr "L'assistant écrit..."
 
 #~ msgid "At least one topic must be selected to enable Dembrane Verify"
-#~ msgstr "At least one topic must be selected to enable Dembrane Verify"
+#~ msgstr "At least one topic must be selected to enable Verify"
 
 #: src/components/project/ProjectPortalEditor.tsx:879
 #~ msgid "At least one topic must be selected to enable Make it concrete"
@@ -1251,7 +1251,7 @@ msgstr "URL du tableau de bord (lien direct vers l'aperçu de la conversation)"
 #~ msgstr "Experimental"
 
 #~ msgid "dashboard.dembrane.verify.title"
-#~ msgstr "Dembrane Verify"
+#~ msgstr "Verify"
 
 #~ msgid "dashboard.dembrane.verify.topic.select"
 #~ msgstr "Select which topics participants can use for verification."
@@ -1293,18 +1293,18 @@ msgid "Deleted successfully"
 msgstr "Supprimé avec succès"
 
 #~ msgid "Dembrane Echo"
-#~ msgstr "Echo Dembrane"
+#~ msgstr "Echo"
 
 #~ msgid "Dembrane ECHO"
-#~ msgstr "Dembrane ECHO"
+#~ msgstr "ECHO"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:768
 #: src/routes/project/chat/ProjectChatRoute.tsx:798
 msgid "Dembrane is powered by AI. Please double-check responses."
-msgstr "Dembrane est propulsé par l’IA. Vérifie bien les réponses."
+msgstr "dembrane est propulsé par l’IA. Vérifie bien les réponses."
 
 #~ msgid "Dembrane Reply"
-#~ msgstr "Dembrane Réponse"
+#~ msgstr "Réponse"
 
 #: src/components/chat/templates.ts:61
 msgid ""
@@ -1499,16 +1499,16 @@ msgid "Enable 2FA"
 msgstr "Activer 2FA"
 
 #~ msgid "Enable Dembrane Echo"
-#~ msgstr "Activer Dembrane Echo"
+#~ msgstr "Activer Echo"
 
 #~ msgid "Enable Dembrane ECHO"
-#~ msgstr "Activer Dembrane ECHO"
+#~ msgstr "Activer ECHO"
 
 #~ msgid "Enable Dembrane Reply"
-#~ msgstr "Activer la réponse Dembrane"
+#~ msgstr "Activer la réponse"
 
 #~ msgid "Enable Dembrane Verify"
-#~ msgstr "Enable Dembrane Verify"
+#~ msgstr "Activer Verify"
 
 #: src/components/project/ProjectPortalEditor.tsx:662
 msgid "Enable Explore"
@@ -1550,7 +1550,7 @@ msgid "Enable this feature to allow participants to request AI-powered responses
 msgstr "Activez cette fonctionnalité pour permettre aux participants de demander des réponses alimentées par l'IA pendant leur conversation. Les participants peuvent cliquer sur \"Explorer\" après avoir enregistré leurs pensées pour recevoir un retour contextuel, encourageant une réflexion plus profonde et un engagement accru. Une période de récupération s'applique entre les demandes."
 
 #~ msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Get Reply\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
-#~ msgstr "Activez cette fonctionnalité pour permettre aux participants de demander des réponses AI pendant leur conversation. Les participants peuvent cliquer sur \"Dembrane Réponse\" après avoir enregistre leurs pensées pour recevoir un feedback contextuel, encourager une réflexion plus profonde et une engagement plus élevé. Une période de cooldown s'applique entre les demandes."
+#~ msgstr "Activez cette fonctionnalité pour permettre aux participants de demander des réponses AI pendant leur conversation. Les participants peuvent cliquer sur \"dembrane Réponse\" après avoir enregistre leurs pensées pour recevoir un feedback contextuel, encourager une réflexion plus profonde et une engagement plus élevé. Une période de cooldown s'applique entre les demandes."
 
 #: src/components/project/ProjectPortalEditor.tsx:577
 #~ msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Go deeper\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
@@ -2007,12 +2007,12 @@ msgstr "Allemand"
 
 #: src/components/participant/ParticipantConversationAudio.tsx:414
 msgid "Get an immediate reply from Dembrane to help you deepen the conversation."
-msgstr "Obtenez une réponse immédiate de Dembrane pour vous aider à approfondir la conversation."
+msgstr "Obtenez une réponse immédiate de dembrane pour vous aider à approfondir la conversation."
 
 #. js-lingui-explicit-id
 #: src/components/participant/refine/RefineSelection.tsx:129
 msgid "participant.refine.go.deeper.description"
-msgstr "Obtenez une réponse immédiate de Dembrane pour vous aider à approfondir la conversation."
+msgstr "Obtenez une réponse immédiate de dembrane pour vous aider à approfondir la conversation."
 
 #: src/components/view/CreateViewForm.tsx:129
 msgid "Give me a list of 5-10 topics that are being discussed."
@@ -4059,7 +4059,7 @@ msgstr "Étiquettes"
 
 #: src/components/participant/ParticipantConversationAudio.tsx:408
 msgid "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from Dembrane to help you deepen the conversation."
-msgstr "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from Dembrane to help you deepen the conversation."
+msgstr "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from dembrane to help you deepen the conversation."
 
 #: src/components/participant/ParticipantConversationAudio.tsx:411
 msgid "Take some time to create an outcome that makes your contribution concrete."
@@ -4593,7 +4593,7 @@ msgstr "Télécharger"
 
 #: src/components/settings/WhitelabelLogoCard.tsx:100
 msgid "Upload a custom logo to replace the Dembrane logo across the portal, dashboard, reports, and host guide."
-msgstr "Téléchargez un logo personnalisé pour remplacer le logo Dembrane sur le portail, le tableau de bord, les rapports et le guide de l'hôte."
+msgstr "Téléchargez un logo personnalisé pour remplacer le logo dembrane sur le portail, le tableau de bord, les rapports et le guide de l'hôte."
 
 #~ msgid "Upload Audio"
 #~ msgstr "Télécharger l'audio"
@@ -4659,7 +4659,7 @@ msgstr "Utilisez Shift + Entrée pour ajouter une nouvelle ligne"
 
 #: src/components/settings/WhitelabelLogoCard.tsx:134
 msgid "Using default Dembrane logo"
-msgstr "Utilisation du logo Dembrane par défaut"
+msgstr "Utilisation du logo dembrane par défaut"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:1046
 msgid "Using webhooks? We'd love to hear from you"
@@ -4699,7 +4699,7 @@ msgstr "artefacts vérifiés"
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:839
 msgid "dashboard.dembrane.verify.title"
-msgstr "dembrane Vérifier"
+msgstr "Vérifier"
 
 #. js-lingui-explicit-id
 #: src/components/participant/refine/RefineSelection.tsx:73
@@ -4740,7 +4740,7 @@ msgstr "Voir vos réponses"
 
 #: src/components/chat/TemplatesModal.tsx:118
 msgid "Want to add a template to \"Dembrane\"?"
-msgstr "Tu veux ajouter un template à « Dembrane » ?"
+msgstr "Tu veux ajouter un template à « dembrane » ?"
 
 #~ msgid "Want to add a template to ECHO?"
 #~ msgstr "Voulez-vous ajouter un modèle à ECHO?"
@@ -4834,11 +4834,11 @@ msgstr "Bon retour"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:536
 msgid "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
-msgstr "Bienvenue sur Dembrane Chat ! Utilisez la barre latérale pour sélectionner les ressources et les conversations que vous souhaitez analyser. Ensuite, vous pouvez poser des questions sur les ressources et les conversations sélectionnées."
+msgstr "Bienvenue sur dembrane Chat ! Utilisez la barre latérale pour sélectionner les ressources et les conversations que vous souhaitez analyser. Ensuite, vous pouvez poser des questions sur les ressources et les conversations sélectionnées."
 
 #: src/components/common/DembraneLoadingSpinner/index.tsx:23
 msgid "Welcome to Dembrane!"
-msgstr "Bienvenue sur Dembrane!"
+msgstr "Bienvenue sur dembrane!"
 
 #~ msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Deep Dive mode."
 #~ msgstr "Bienvenue dans le mode Overview ! J’ai les résumés de toutes tes conversations. Pose-moi des questions sur les patterns, les thèmes et les insights dans tes données. Pour des citations exactes, démarre un nouveau chat en mode Deep Dive."
@@ -4936,7 +4936,7 @@ msgid "You can only upload up to {MAX_FILES} files at a time. Only the first {0}
 msgstr "Vous ne pouvez télécharger que jusqu'à {MAX_FILES} fichiers à la fois. Seuls les premiers {0} fichiers seront ajoutés."
 
 #~ msgid "You can still use the Ask feature to chat with any conversation"
-#~ msgstr "Vous pouvez toujours utiliser la fonction Dembrane Ask pour discuter avec n'importe quelle conversation"
+#~ msgstr "Vous pouvez toujours utiliser la fonction dembrane Ask pour discuter avec n'importe quelle conversation"
 
 #. js-lingui-explicit-id
 #: src/components/conversation/SelectAllConfirmationModal.tsx:249
