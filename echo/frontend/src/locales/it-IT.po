@@ -1025,11 +1025,6 @@ msgstr "Basic Settings"
 #~ msgid "Begin!"
 #~ msgstr "Begin!"
 
-#. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:845
-msgid "dashboard.dembrane.verify.beta"
-msgstr ""
-
 #: src/routes/project/report/ProjectReportRoute.tsx:63
 #: src/components/project/ProjectPortalEditor.tsx:1174
 #: src/components/project/ProjectPortalEditor.tsx:1216
@@ -1043,6 +1038,11 @@ msgstr "Beta"
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:638
 msgid "dashboard.dembrane.concrete.beta"
+msgstr "Beta"
+
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:845
+msgid "dashboard.dembrane.verify.beta"
 msgstr "Beta"
 
 #: src/components/chat/ChatModeSelector.tsx:242
@@ -1836,7 +1836,7 @@ msgstr "Enable this feature to allow participants to request AI-powered response
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:852
 msgid "dashboard.dembrane.feature.verify.description"
-msgstr ""
+msgstr "Enable this feature to allow participants to verify and approve \"outcomes\" from their submissions. This helps crystallize key ideas, concerns, or summaries. After the conversation, you can filter for discussions with verified outcomes and review them in the overview."
 
 #: src/components/project/ProjectPortalEditor.tsx:1192
 msgid "Enable transcript anonymization"
@@ -2700,7 +2700,7 @@ msgstr "Loading transcript..."
 
 #: src/components/project/ProjectPortalEditor.tsx:909
 msgid "Loading verify topics…"
-msgstr ""
+msgstr "Loading verify topics…"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:334
 msgid "loading..."
@@ -3019,7 +3019,7 @@ msgstr "No verification topics are configured for this project."
 
 #: src/components/project/ProjectPortalEditor.tsx:913
 msgid "No verify topics available."
-msgstr ""
+msgstr "No verify topics available."
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:1016
 msgid "No webhooks configured"
@@ -3980,7 +3980,7 @@ msgstr "Select tutorial"
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:902
 msgid "dashboard.dembrane.feature.verify.topic.select"
-msgstr ""
+msgstr "Select which topics participants can use for \"Verify\"."
 
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:307
@@ -5079,7 +5079,7 @@ msgstr "Verify code"
 
 #: src/components/project/ProjectPortalEditor.tsx:893
 msgid "Verify Topics"
-msgstr ""
+msgstr "Verify Topics"
 
 #: src/routes/project/library/ProjectLibraryView.tsx:36
 #: src/routes/project/library/ProjectLibraryAspect.tsx:47

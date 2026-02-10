@@ -814,11 +814,6 @@ msgstr "Configuración Básica"
 #~ msgid "Begin!"
 #~ msgstr "¡Comenzar!"
 
-#. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:845
-msgid "dashboard.dembrane.verify.beta"
-msgstr "Beta"
-
 #: src/routes/project/report/ProjectReportRoute.tsx:63
 #: src/components/project/ProjectPortalEditor.tsx:1174
 #: src/components/project/ProjectPortalEditor.tsx:1216
@@ -832,6 +827,11 @@ msgstr "Beta"
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:638
 msgid "dashboard.dembrane.concrete.beta"
+msgstr "Beta"
+
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:845
+msgid "dashboard.dembrane.verify.beta"
 msgstr "Beta"
 
 #~ msgid "Big Picture"
@@ -2555,16 +2555,6 @@ msgid "Newest First"
 msgstr "Más nuevos primero"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifySelection.tsx:257
-msgid "participant.verify.selection.button.next"
-msgstr "Siguiente"
-
-#. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyInstructions.tsx:115
-msgid "participant.verify.instructions.button.next"
-msgstr "Siguiente"
-
-#. js-lingui-explicit-id
 #: src/components/participant/ParticipantOnboardingCards.tsx:430
 msgid "participant.button.next"
 msgstr "Siguiente"
@@ -2573,6 +2563,16 @@ msgstr "Siguiente"
 #: src/components/participant/ParticipantInitiateForm.tsx:146
 msgid "participant.ready.to.begin.button.text"
 msgstr "¿Listo para comenzar?"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifySelection.tsx:257
+msgid "participant.verify.selection.button.next"
+msgstr "Siguiente"
+
+#. js-lingui-explicit-id
+#: src/components/participant/verify/VerifyInstructions.tsx:115
+msgid "participant.verify.instructions.button.next"
+msgstr "Siguiente"
 
 #~ msgid "Next"
 #~ msgstr "Siguiente"
