@@ -1,0 +1,19 @@
+[project]
+name = "echo-agent"
+version = "0.1.0"
+description = "Isolated CopilotKit runtime for Echo Agentic Chat"
+requires-python = ">=3.11"
+dependencies = [
+    "copilotkit>=0.1.77",
+    "langgraph>=0.2",
+    "langchain-google-genai>=2.0",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "httpx>=0.27",
+    "python-dotenv>=1.0",
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+]
+
+[tool.uv]
+package = false
