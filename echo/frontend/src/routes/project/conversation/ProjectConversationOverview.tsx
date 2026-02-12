@@ -70,6 +70,8 @@ export const ProjectConversationOverviewRoute = () => {
 	);
 	const hasTranscript = (chunksWithTranscriptQuery.data ?? 0) > 0;
 
+	const isAnonymized = conversationQuery.data?.is_anonymized ?? false;
+
 	const useHandleGenerateSummaryManually = useMutation({
 		mutationFn: async (isRegeneration: boolean) => {
 			if (isRegeneration) {
@@ -157,7 +159,9 @@ export const ProjectConversationOverviewRoute = () => {
 													t`Are you sure you want to regenerate the summary? You will lose the current summary.`,
 												) && useHandleGenerateSummaryManually.mutate(true)
 											}
-											{...testId("conversation-overview-regenerate-summary-button")}
+											{...testId(
+												"conversation-overview-regenerate-summary-button",
+											)}
 										>
 											<IconRefresh size={23} color="gray" />
 										</ActionIcon>
@@ -189,23 +193,25 @@ export const ProjectConversationOverviewRoute = () => {
 										}
 										disabled={hasTranscript}
 									>
-									<Button
-										variant="outline"
-										className="-mt-[2rem]"
-										loading={isMutationPending}
-										disabled={!hasTranscript}
-										onClick={() => {
-											useHandleGenerateSummaryManually.mutate(false);
-										}}
-										{...testId("conversation-overview-generate-summary-button")}
-									>
-										{t`Generate Summary`}
-									</Button>
+										<Button
+											variant="outline"
+											className="-mt-[2rem]"
+											loading={isMutationPending}
+											disabled={!hasTranscript}
+											onClick={() => {
+												useHandleGenerateSummaryManually.mutate(false);
+											}}
+											{...testId(
+												"conversation-overview-generate-summary-button",
+											)}
+										>
+											{t`Generate Summary`}
+										</Button>
 									</Tooltip>
 								</div>
 							)}
 
-			{conversationQuery.data?.summary &&
+						{conversationQuery.data?.summary &&
 							conversationQuery.data?.is_finished && <Divider />}
 					</Stack>
 				)}
@@ -257,7 +263,10 @@ export const ProjectConversationOverviewRoute = () => {
           ) : null} */}
 
 					<Stack gap="1.5rem">
-						<ConversationDangerZone conversation={conversationQuery.data} />
+						<ConversationDangerZone
+							conversation={conversationQuery.data}
+							disableDownloadAudio={isAnonymized}
+						/>
 					</Stack>
 				</>
 			)}

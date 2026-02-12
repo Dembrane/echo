@@ -8,6 +8,7 @@ import {
 	Stack,
 	Switch,
 	Title,
+	Tooltip,
 } from "@mantine/core";
 import { IconAlertCircle } from "@tabler/icons-react";
 import { useEffect } from "react";
@@ -30,7 +31,7 @@ export const ProjectConversationTranscript = () => {
 		conversationId: conversationId ?? "",
 		loadConversationChunks: false,
 		query: {
-			fields: ["id", "participant_name", "is_finished"],
+			fields: ["id", "participant_name", "is_finished", "is_anonymized"],
 		},
 	});
 	const { ref: loadMoreRef, inView } = useInView();
@@ -57,6 +58,8 @@ export const ProjectConversationTranscript = () => {
 	);
 
 	const allChunks = (chunksData?.pages ?? []).flatMap((page) => page.chunks);
+
+	const isAnonymized = conversationQuery.data?.is_anonymized ?? false;
 
 	const hasValidTranscripts = allChunks.some(
 		(chunk) => chunk.transcript && chunk.transcript.trim().length > 0,
@@ -103,18 +106,26 @@ export const ProjectConversationTranscript = () => {
 						<RetranscribeConversationModalActionIcon
 							conversationId={conversationId ?? ""}
 							conversationName={conversationQuery.data?.participant_name ?? ""}
+							disabled={isAnonymized}
 						/>
 					</Group>
 
 					<Group>
-						<Switch
-							checked={showAudioPlayer}
-							onChange={(event) =>
-								setShowAudioPlayer(event.currentTarget.checked)
-							}
-							label={t`Show audio player`}
-							{...testId("transcript-show-audio-player-toggle")}
-						/>
+						<Tooltip
+							label={t`Audio playback not available for anonymized conversations`}
+							disabled={!isAnonymized}
+							refProp="rootRef"
+						>
+							<Switch
+								checked={isAnonymized ? false : showAudioPlayer}
+								onChange={(event) =>
+									setShowAudioPlayer(event.currentTarget.checked)
+								}
+								disabled={isAnonymized}
+								label={t`Show audio player`}
+								{...testId("transcript-show-audio-player-toggle")}
+							/>
+						</Tooltip>
 					</Group>
 				</Group>
 
@@ -149,7 +160,7 @@ export const ProjectConversationTranscript = () => {
 											timestamp: chunk.timestamp ?? "",
 											transcript: chunk.transcript ?? "",
 										}}
-										showAudioPlayer={showAudioPlayer}
+										showAudioPlayer={isAnonymized ? false : showAudioPlayer}
 									/>
 								</div>
 							);

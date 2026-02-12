@@ -34,6 +34,7 @@ import {
 	useMediaQuery,
 	useSessionStorage,
 } from "@mantine/hooks";
+import { EyeClosedIcon } from "@phosphor-icons/react";
 import {
 	IconArrowsExchange,
 	IconArrowsUpDown,
@@ -425,6 +426,20 @@ export const ConversationStatusIndicators = ({
 				<Badge size="xs" color="primary" variant="light">
 					{fDuration(conversation.duration)}
 				</Badge>
+			)}
+
+			{conversation.is_anonymized && (
+				<Tooltip label={t`Anonymized conversation`}>
+					<ThemeIcon
+						variant="subtle"
+						color="primary"
+						aria-label={t`anonymized conversation`}
+						size={18}
+						style={{ cursor: "default" }}
+					>
+						<EyeClosedIcon />
+					</ThemeIcon>
+				</Tooltip>
 			)}
 
 			{/* {!hasContent &&
@@ -914,8 +929,11 @@ export const ConversationAccordion = ({
 
 	// Handle select all
 	const handleSelectAllClick = () => {
-		try { analytics.trackEvent(events.SELECT_ALL_CLICK); }
-		catch (error) { console.warn("Analytics tracking failed:", error); }
+		try {
+			analytics.trackEvent(events.SELECT_ALL_CLICK);
+		} catch (error) {
+			console.warn("Analytics tracking failed:", error);
+		}
 		setSelectAllModalOpened(true);
 		setSelectAllResult(null);
 	};
@@ -927,8 +945,11 @@ export const ConversationAccordion = ({
 			return;
 		}
 
-		try { analytics.trackEvent(events.SELECT_ALL_CONFIRM); }
-		catch (error) { console.warn("Analytics tracking failed:", error); }
+		try {
+			analytics.trackEvent(events.SELECT_ALL_CONFIRM);
+		} catch (error) {
+			console.warn("Analytics tracking failed:", error);
+		}
 
 		setSelectAllLoading(true);
 		try {
@@ -940,11 +961,17 @@ export const ConversationAccordion = ({
 				verifiedOnly: showOnlyVerified || undefined,
 			});
 			setSelectAllResult(result);
-			try { analytics.trackEvent(events.SELECT_ALL_SUCCESS); }
-			catch (error) { console.warn("Analytics tracking failed:", error); }
+			try {
+				analytics.trackEvent(events.SELECT_ALL_SUCCESS);
+			} catch (error) {
+				console.warn("Analytics tracking failed:", error);
+			}
 		} catch (_error) {
-			try { analytics.trackEvent(events.SELECT_ALL_ERROR); }
-			catch (error) { console.warn("Analytics tracking failed:", error); }
+			try {
+				analytics.trackEvent(events.SELECT_ALL_ERROR);
+			} catch (error) {
+				console.warn("Analytics tracking failed:", error);
+			}
 			toast.error(t`Failed to add conversations to context`);
 			setSelectAllModalOpened(false);
 		} finally {

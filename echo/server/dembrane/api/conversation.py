@@ -669,7 +669,9 @@ async def generate_title_for_conversation(
     summary = conversation_data.get("summary")
 
     if not summary:
-        raise HTTPException(status_code=400, detail="Conversation has no summary. Generate a summary first.")
+        raise HTTPException(
+            status_code=400, detail="Conversation has no summary. Generate a summary first."
+        )
 
     project_data = conversation_data["project_id"]
     language = project_data.get("language", "en")
@@ -766,7 +768,12 @@ async def retranscribe_conversation(
                 project_data = await run_in_thread_pool(
                     admin_client.get_items,
                     "project",
-                    {"query": {"filter": {"id": {"_eq": project_id}}, "fields": ["anonymize_transcripts"]}},
+                    {
+                        "query": {
+                            "filter": {"id": {"_eq": project_id}},
+                            "fields": ["anonymize_transcripts"],
+                        }
+                    },
                 )
                 if project_data and len(project_data) > 0:
                     use_pii_redaction = bool(project_data[0].get("anonymize_transcripts", False))
@@ -815,6 +822,7 @@ async def retranscribe_conversation(
                 if original_conversation["participant_user_agent"]
                 else None,
                 "merged_audio_path": merged_audio_path,
+                "is_anonymized": use_pii_redaction,
             },
         )
 
