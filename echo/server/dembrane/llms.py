@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from dembrane.settings import get_settings
 
 if TYPE_CHECKING:
-    from litellm import Router
+    from litellm import Router  # type: ignore[attr-defined]
 
 logger = logging.getLogger(__name__)
 

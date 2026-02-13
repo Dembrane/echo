@@ -272,7 +272,7 @@ export const HostGuidePDF = ({
 				<View style={styles.mainContent}>
 					<View style={styles.stepsContainer}>
 						{steps.map((step, index) => (
-							<View key={index} style={styles.stepRow}>
+							<View key={`step-${step}`} style={styles.stepRow}>
 								<Text style={styles.stepNumber}>{index + 1}.</Text>
 								<Text style={styles.stepText}>{step}</Text>
 							</View>

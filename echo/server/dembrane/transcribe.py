@@ -368,7 +368,7 @@ def transcribe_audio_dembrane_26_01_redaction(
         logger.info(
             f"Transcription failed with AssemblyAI. Continuing with empty transcript: {e}"
         )
-        transcript, response = "[Nothing to transcribe]", {}
+        transcript = "[Nothing to transcribe]"
 
     # Apply regex PII redaction BEFORE the correction workflow
     if not assemblyai_response_failed:
