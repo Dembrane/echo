@@ -34,7 +34,7 @@ import {
 	useMediaQuery,
 	useSessionStorage,
 } from "@mantine/hooks";
-import { EyeClosedIcon } from "@phosphor-icons/react";
+import { ShieldCheckIcon } from "@phosphor-icons/react";
 import {
 	IconArrowsExchange,
 	IconArrowsUpDown,
@@ -428,20 +428,6 @@ export const ConversationStatusIndicators = ({
 				</Badge>
 			)}
 
-			{conversation.is_anonymized && (
-				<Tooltip label={t`Anonymized conversation`}>
-					<ThemeIcon
-						variant="subtle"
-						color="primary"
-						aria-label={t`anonymized conversation`}
-						size={18}
-						style={{ cursor: "default" }}
-					>
-						<EyeClosedIcon />
-					</ThemeIcon>
-				</Tooltip>
-			)}
-
 			{/* {!hasContent &&
 				conversation.is_finished === true &&
 				conversation.is_all_chunks_transcribed === true && (
@@ -571,11 +557,13 @@ const ConversationAccordionItem = ({
 						<Text className="pl-[4px] text-sm font-normal">
 							{conversation.participant_name || conversation.title}
 						</Text>
+
 						{conversation.title && conversation.participant_name && (
 							<Tooltip label={conversation.title}>
 								<IconInfoCircle size={14} className="text-gray-400" />
 							</Tooltip>
 						)}
+
 						{hasVerifiedArtefacts && (
 							<Tooltip label={t`Has verified artifacts`}>
 								<ThemeIcon
@@ -589,7 +577,22 @@ const ConversationAccordionItem = ({
 								</ThemeIcon>
 							</Tooltip>
 						)}
+
+						{conversation.is_anonymized && (
+							<Tooltip label={t`Anonymized conversation`}>
+								<ThemeIcon
+									variant="subtle"
+									color="primary"
+									aria-label={t`anonymized conversation`}
+									size={18}
+									style={{ cursor: "default" }}
+								>
+									<ShieldCheckIcon />
+								</ThemeIcon>
+							</Tooltip>
+						)}
 					</Group>
+
 					<ConversationStatusIndicators
 						conversation={conversation}
 						showDuration={showDuration}
