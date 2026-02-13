@@ -1,7 +1,7 @@
 from logging import getLogger
 
 import requests
-from fastapi import APIRouter, HTTPException, UploadFile
+from fastapi import APIRouter, UploadFile, HTTPException
 
 from dembrane.directus import directus
 from dembrane.api.dependency_auth import DependencyDirectusSession

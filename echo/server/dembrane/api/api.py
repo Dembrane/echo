@@ -11,8 +11,8 @@ from dembrane.api.project import ProjectRouter
 from dembrane.api.stateless import StatelessRouter
 from dembrane.api.participant import ParticipantRouter
 from dembrane.api.conversation import ConversationRouter
-from dembrane.api.project_webhook import ProjectWebhookRouter
 from dembrane.api.user_settings import UserSettingsRouter
+from dembrane.api.project_webhook import ProjectWebhookRouter
 
 logger = getLogger("api")
 
