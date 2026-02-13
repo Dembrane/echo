@@ -18,9 +18,9 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
-from litellm import Router
+from litellm import Router  # type: ignore[attr-defined]
 from litellm.utils import get_model_info
 
 from dembrane.settings import LLMProviderConfig, get_settings
@@ -34,7 +34,7 @@ DEFAULT_CONTEXT_LENGTH = 128000
 ROUTER_NUM_RETRIES = 3
 ROUTER_ALLOWED_FAILS = 3  # Failures per minute before cooldown
 ROUTER_COOLDOWN_TIME = 60  # Seconds to cooldown a failed deployment
-ROUTER_ROUTING_STRATEGY = "simple-shuffle"  # Recommended for production
+ROUTER_ROUTING_STRATEGY: Literal["simple-shuffle"] = "simple-shuffle"  # Recommended for production
 
 # Global router instance (lazy initialized)
 _router: Optional[Router] = None
@@ -261,9 +261,11 @@ def get_min_context_length(model_group: str) -> int:
         try:
             resolved = config.resolve()
             model_info = get_model_info(resolved.model)
-            if model_info and model_info.get("max_input_tokens"):
-                max_tokens = model_info["max_input_tokens"]
-                if min_tokens is None or max_tokens < min_tokens:
+            max_tokens = model_info.get("max_input_tokens") if model_info else None
+            if isinstance(max_tokens, int) and max_tokens > 0:
+                if min_tokens is None:
+                    min_tokens = max_tokens
+                elif max_tokens < min_tokens:
                     min_tokens = max_tokens
                     logger.debug(f"  {model_group}[{suffix}] {resolved.model}: {max_tokens} tokens")
         except Exception as e:
