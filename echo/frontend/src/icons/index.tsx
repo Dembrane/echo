@@ -105,7 +105,7 @@ const Home = () => {
 	// Import is at top of file
 	return (
 		<HouseIcon
-			size="var(--app-home-icon-size, 30)"
+			size={30}
 			color="currentColor"
 			style={{
 				height: "var(--app-home-icon-size, 30px)",
