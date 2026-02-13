@@ -4,6 +4,8 @@ from typing import Any
 from langchain_core.messages import SystemMessage
 from langchain_core.tools import tool
 from langchain_google_genai import ChatGoogleGenerativeAI
+from copilotkit.langgraph import CopilotKitState
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode
 
@@ -32,15 +34,18 @@ def _build_llm() -> ChatGoogleGenerativeAI:
     )
 
 
-def create_agent_graph(project_id: str):
+def create_agent_graph(project_id: str, bearer_token: str, llm: Any | None = None):
+    if not bearer_token:
+        raise ValueError("bearer_token is required")
+
     @tool
     async def get_project_scope() -> dict[str, Any]:
         """Return the current project scope for this agent run."""
         return {"project_id": project_id}
 
     tools = [get_project_scope]
-    llm = _build_llm()
-    llm_with_tools = llm.bind_tools(tools)
+    configured_llm = llm or _build_llm()
+    llm_with_tools = configured_llm.bind_tools(tools)
 
     def should_continue(state: dict) -> str:
         messages = state.get("messages", [])
@@ -58,11 +63,11 @@ def create_agent_graph(project_id: str):
         response = await llm_with_tools.ainvoke(messages)
         return {"messages": messages + [response]}
 
-    workflow = StateGraph(dict)
+    workflow = StateGraph(CopilotKitState)
     workflow.add_node("agent", call_model)
     workflow.add_node("tools", ToolNode(tools))
 
     workflow.set_entry_point("agent")
     workflow.add_conditional_edges("agent", should_continue, {"tools": "tools", END: END})
     workflow.add_edge("tools", "agent")
-    return workflow.compile()
+    return workflow.compile(checkpointer=MemorySaver())

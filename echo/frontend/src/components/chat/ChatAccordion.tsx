@@ -40,12 +40,13 @@ export const ChatModeIndicator = ({
 	mode,
 	size = "sm",
 }: {
-	mode: "overview" | "deep_dive" | null | undefined;
+	mode: "overview" | "deep_dive" | "agentic" | null | undefined;
 	size?: "xs" | "sm";
 }) => {
 	// Default to deep_dive if mode not set
 	const effectiveMode = mode ?? "deep_dive";
 	const isOverview = effectiveMode === "overview";
+	const isAgentic = effectiveMode === "agentic";
 	const colors = MODE_COLORS[effectiveMode];
 
 	const iconSize = size === "xs" ? 14 : 16;
@@ -55,6 +56,8 @@ export const ChatModeIndicator = ({
 			label={
 				isOverview ? (
 					<Trans>Overview - Themes & patterns</Trans>
+				) : isAgentic ? (
+					<Trans>Agentic - Tool-driven execution</Trans>
 				) : (
 					<Trans>Specific Details - Selected conversations</Trans>
 				)
@@ -63,7 +66,7 @@ export const ChatModeIndicator = ({
 			withArrow
 		>
 			<Box className="flex items-center justify-center">
-				{isOverview ? (
+				{isOverview || isAgentic ? (
 					<IconSparkles size={iconSize} color={colors.primary} stroke={2} />
 				) : (
 					<IconMessageCircle
@@ -252,7 +255,12 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
 					)}
 					{allChats.map((item, index) => {
 						const chatMode = (item as ProjectChat & { chat_mode?: string })
-							.chat_mode as "overview" | "deep_dive" | null | undefined;
+							.chat_mode as
+								| "overview"
+								| "deep_dive"
+								| "agentic"
+								| null
+								| undefined;
 						const isActive = item.id === activeChatId;
 						const effectiveMode = chatMode ?? "deep_dive";
 						const activeBorderColor = isActive

@@ -966,7 +966,7 @@ export const selectAllContext = async (
 	} satisfies SelectAllContextResponse;
 };
 
-export type ChatMode = "overview" | "deep_dive";
+export type ChatMode = "overview" | "deep_dive" | "agentic";
 
 export type InitializeChatModeResponse = {
 	chat_mode: ChatMode;
@@ -985,6 +985,79 @@ export const initializeChatMode = async (
 		{
 			mode,
 			project_id: projectId,
+		},
+	);
+};
+
+export type AgenticRunStatus =
+	| "queued"
+	| "running"
+	| "completed"
+	| "failed"
+	| "timeout";
+
+export type AgenticRun = {
+	id: string;
+	project_id: string;
+	project_chat_id?: string | null;
+	directus_user_id: string;
+	status: AgenticRunStatus;
+	last_event_seq: number;
+	latest_output?: string | null;
+	latest_error?: string | null;
+	latest_error_code?: string | null;
+	started_at?: string | null;
+	completed_at?: string | null;
+};
+
+export type AgenticRunEvent = {
+	id: number;
+	project_agentic_run_id: string;
+	seq: number;
+	event_type: string;
+	payload: Record<string, unknown> | null;
+	timestamp: string;
+};
+
+export type AgenticRunEventsResponse = {
+	run_id: string;
+	status: AgenticRunStatus;
+	events: AgenticRunEvent[];
+	next_seq: number;
+	done: boolean;
+};
+
+export const createAgenticRun = async (payload: {
+	project_id: string;
+	project_chat_id?: string;
+	message: string;
+}) => {
+	return api.post<unknown, AgenticRun>("/agentic/runs", payload);
+};
+
+export const appendAgenticRunMessage = async (
+	runId: string,
+	message: string,
+) => {
+	return api.post<unknown, AgenticRun>(`/agentic/runs/${runId}/messages`, {
+		message,
+	});
+};
+
+export const getAgenticRun = async (runId: string) => {
+	return api.get<unknown, AgenticRun>(`/agentic/runs/${runId}`);
+};
+
+export const getAgenticRunEvents = async (
+	runId: string,
+	afterSeq = 0,
+) => {
+	return api.get<unknown, AgenticRunEventsResponse>(
+		`/agentic/runs/${runId}/events`,
+		{
+			params: {
+				after_seq: afterSeq,
+			},
 		},
 	);
 };

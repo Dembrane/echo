@@ -100,7 +100,7 @@ async def create_system_messages_for_chat(
     locked_conversation_id_list: List[str],
     language: str,
     project_id: str,
-    chat_mode: Optional[str] = None,  # "overview" | "deep_dive" | None
+    chat_mode: Optional[str] = None,  # "overview" | "deep_dive" | "agentic" | None
 ) -> List[Dict[str, Any]]:
     """
     Create system messages for chat context.

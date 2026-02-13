@@ -19,6 +19,8 @@ interface CustomDirectusTypes {
 	languages: Language[];
 	processing_status: ProcessingStatus[];
 	project: Project[];
+	project_agentic_run: ProjectAgenticRun[];
+	project_agentic_run_event: ProjectAgenticRunEvent[];
 	project_analysis_run: ProjectAnalysisRun[];
 	project_chat: ProjectChat[];
 	project_chat_conversation: ProjectChatConversation[];
@@ -282,9 +284,36 @@ interface ProjectAnalysisRun {
 	views: string[] | View[];
 }
 
+interface ProjectAgenticRun {
+	agent_thread_id: string | null;
+	completed_at: string | null;
+	created_at: string | null;
+	directus_user_id: string | null;
+	id: string;
+	last_event_seq: number | null;
+	latest_error: string | null;
+	latest_error_code: string | null;
+	latest_output: string | null;
+	project_chat_id: string | ProjectChat | null;
+	project_id: string | Project | null;
+	started_at: string | null;
+	status: "queued" | "running" | "completed" | "failed" | "timeout" | null;
+	updated_at: string | null;
+	events: number[] | ProjectAgenticRunEvent[];
+}
+
+interface ProjectAgenticRunEvent {
+	event_type: string | null;
+	id: number;
+	payload: unknown | null;
+	project_agentic_run_id: string | ProjectAgenticRun | null;
+	seq: number | null;
+	timestamp: string | null;
+}
+
 interface ProjectChat {
 	auto_select: boolean | null;
-	chat_mode: "overview" | "deep_dive" | null;
+	chat_mode: "overview" | "deep_dive" | "agentic" | null;
 	date_created: string | null;
 	date_updated: string | null;
 	id: string;

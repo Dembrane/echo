@@ -947,3 +947,31 @@ def task_dispatch_webhook(webhook_id: str, payload: dict) -> None:
     except Exception as e:
         logger.error(f"Webhook {webhook_id} dispatch failed: {e}")
         raise  # Retry on network errors etc.
+
+
+@dramatiq.actor(
+    queue_name="network",
+    priority=10,
+    max_retries=2,
+    min_backoff=3000,
+    max_backoff=30000,
+)
+def task_execute_agentic_run(
+    run_id: str,
+    project_id: str,
+    user_message: str,
+    bearer_token: str,
+) -> None:
+    logger = getLogger("dembrane.tasks.task_execute_agentic_run")
+    logger.info("Executing agentic run %s for project %s", run_id, project_id)
+
+    from dembrane.agentic_worker import process_agentic_run
+
+    run_async_in_new_loop(
+        process_agentic_run(
+            run_id=run_id,
+            project_id=project_id,
+            user_message=user_message,
+            bearer_token=bearer_token,
+        )
+    )

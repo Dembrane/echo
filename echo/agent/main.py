@@ -9,6 +9,7 @@ from copilotkit import CopilotKitRemoteEndpoint, LangGraphAgent
 from copilotkit.integrations.fastapi import handler as copilotkit_handler
 
 from agent import create_agent_graph
+from auth import extract_bearer_token
 from settings import get_settings
 
 load_dotenv()
@@ -46,6 +47,7 @@ async def copilotkit_endpoint(request: Request, project_id: str, path: Optional[
         project_id,
         path,
     )
+    bearer_token = extract_bearer_token(request)
 
     # CopilotKit fastapi handler routes by request.scope["path_params"]["path"].
     # Rewrite root chat posts to default agent execution path.
@@ -58,9 +60,11 @@ async def copilotkit_endpoint(request: Request, project_id: str, path: Optional[
     agent = LangGraphAgent(
         name="default",
         description="Echo Agentic Chat default agent",
-        graph=create_agent_graph(project_id),
+        graph=create_agent_graph(project_id=project_id, bearer_token=bearer_token),
     )
-    endpoint = CopilotKitRemoteEndpoint(agents=[agent])
+    # CopilotKit currently rejects LangGraphAgent only for literal list inputs.
+    # Supplying a callable preserves expected runtime behavior in this SDK version.
+    endpoint = CopilotKitRemoteEndpoint(agents=lambda _context: [agent])
     return await copilotkit_handler(request, endpoint)
 
 

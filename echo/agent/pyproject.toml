@@ -13,6 +13,8 @@ dependencies = [
     "python-dotenv>=1.0",
     "pydantic>=2.0",
     "pydantic-settings>=2.0",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.23",
 ]
 
 [tool.uv]
