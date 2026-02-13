@@ -109,7 +109,7 @@ export const ProjectsHomeRoute = () => {
 		)?.flatMap((page) => page.projects) ?? [];
 
 	return (
-		<Container>
+		<Container pt="8rem">
 			<Stack>
 				<Group justify="space-between">
 					<Group align="center">

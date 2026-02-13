@@ -113,6 +113,10 @@ Standard page padding should be responsive:
    </Stack>
    ```
 
+## Default Boldness
+
+When making spacing changes, prefer bold, visually obvious values over subtle ones. For example, when adding top padding to a page container, use a large value like `pt="8rem"` rather than a subtle `pt="md"`. Spacing should feel intentional and impactful — not barely noticeable. When in doubt, go bigger.
+
 ## Notes
 
 - Use fixed gap values as they don't support responsive parameters
