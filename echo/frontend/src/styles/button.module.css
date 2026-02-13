@@ -60,19 +60,24 @@
 
 /* Disabled - gray bg, graphite text, interactive borders (Peach on hover, Salmon on click) */
 /* Note: Loading buttons are disabled but styled differently (see above) */
-.root:disabled:not([data-loading="true"]) {
+/* Note: [data-disabled] is needed for anchor-based buttons (component="a") which lack :disabled */
+.root:disabled:not([data-loading="true"]),
+.root[data-disabled]:not([data-loading="true"]) {
 	background-color: var(--mantine-color-gray-3);
 	color: var(--mantine-color-graphite-6); /* Graphite */
 	opacity: 1; /* Override Mantine's default opacity reduction to keep text readable */
 	cursor: not-allowed;
+	pointer-events: all; /* Allow hover/active on disabled anchor buttons */
 }
 
-.root:disabled:not([data-loading="true"]):hover {
+.root:disabled:not([data-loading="true"]):hover,
+.root[data-disabled]:not([data-loading="true"]):hover {
 	border: 1px solid var(--mantine-color-peach-6); /* Peach border on hover */
 	background-color: var(--mantine-color-gray-3); /* Keep gray background */
 }
 
-.root:disabled:not([data-loading="true"]):active {
+.root:disabled:not([data-loading="true"]):active,
+.root[data-disabled]:not([data-loading="true"]):active {
 	border: 1px solid var(--mantine-color-salmon-6); /* Salmon border on click */
 	background-color: var(--mantine-color-gray-3); /* Keep gray background */
 }

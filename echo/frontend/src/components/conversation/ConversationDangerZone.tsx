@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Button, Group, Stack } from "@mantine/core";
+import { Button, Group, Stack, Tooltip } from "@mantine/core";
 import { IconDownload, IconTrash } from "@tabler/icons-react";
 import { useParams } from "react-router";
 import { MoveConversationButton } from "@/components/conversation/MoveConversationButton";
@@ -13,8 +13,10 @@ import { useDeleteConversationByIdMutation } from "./hooks";
 
 export const ConversationDangerZone = ({
 	conversation,
+	disableDownloadAudio = false,
 }: {
 	conversation: Conversation;
+	disableDownloadAudio?: boolean;
 }) => {
 	const deleteConversationByIdMutation = useDeleteConversationByIdMutation();
 	const navigate = useI18nNavigate();
@@ -51,19 +53,29 @@ export const ConversationDangerZone = ({
 					<Stack gap="1rem">
 						<MoveConversationButton conversation={conversation} />
 
-						<Button
-							variant="outline"
-							rightSection={<IconDownload size={16} />}
-							component="a"
-							target="_blank"
-							href={getConversationContentLink(conversation.id)}
-							onClick={handleDownloadAudio}
-							{...testId("conversation-download-audio-button")}
+						<Tooltip
+							label={t`Audio download not available for anonymized conversations`}
+							disabled={!disableDownloadAudio}
 						>
-							<Group>
-								<Trans>Download Audio</Trans>
-							</Group>
-						</Button>
+							<Button
+								variant="outline"
+								rightSection={<IconDownload size={16} />}
+								component="a"
+								target="_blank"
+								href={
+									disableDownloadAudio
+										? undefined
+										: getConversationContentLink(conversation.id)
+								}
+								onClick={disableDownloadAudio ? undefined : handleDownloadAudio}
+								disabled={disableDownloadAudio}
+								{...testId("conversation-download-audio-button")}
+							>
+								<Group>
+									<Trans>Download Audio</Trans>
+								</Group>
+							</Button>
+						</Tooltip>
 
 						<Button
 							onClick={handleDelete}

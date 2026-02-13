@@ -29,20 +29,29 @@ import { useRetranscribeConversationMutation } from "./hooks";
 export const RetranscribeConversationModalActionIcon = ({
 	conversationId,
 	conversationName,
+	disabled = false,
 }: {
 	conversationId: string;
 	conversationName: string;
+	disabled?: boolean;
 }) => {
 	const [opened, { open, close }] = useDisclosure(false);
 
 	return (
 		<>
-			<Tooltip label={t`Retranscribe conversation`}>
+			<Tooltip
+				label={
+					disabled
+						? t`Retranscription not available for anonymized conversations`
+						: t`Retranscribe conversation`
+				}
+			>
 				<ActionIcon
 					onClick={open}
 					size="md"
 					variant="subtle"
 					color="gray"
+					disabled={disabled}
 					{...testId("transcript-retranscribe-button")}
 				>
 					<IconRefresh size={20} />
