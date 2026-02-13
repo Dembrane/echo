@@ -579,22 +579,10 @@ def task_process_conversation_chunk(
         conversation_id = chunk["conversation_id"]
         logger.debug(f"Chunk {chunk_id} found in conversation: {conversation_id}")
 
-        # Fetch anonymize_transcripts flag from the project
-        anonymize_transcripts = False
-        try:
-            from dembrane.directus import directus as _directus
-            conversation_data = _directus.get_items("conversation", {
-                "query": {
-                    "filter": {"id": {"_eq": conversation_id}},
-                    "fields": ["project_id.anonymize_transcripts"],
-                }
-            })
-            if conversation_data and len(conversation_data) > 0:
-                project_data = conversation_data[0].get("project_id")
-                if isinstance(project_data, dict):
-                    anonymize_transcripts = bool(project_data.get("anonymize_transcripts", False))
-        except Exception as e:
-            logger.warning(f"Failed to fetch anonymize_transcripts for chunk {chunk_id}: {e}")
+        # Read is_anonymized from the conversation itself
+        conversation = conversation_service.get_by_id_or_raise(conversation_id)
+        anonymize_transcripts = bool(conversation.get("is_anonymized", False))
+        logger.debug(f"Conversation {conversation_id} is_anonymized: {anonymize_transcripts}")
 
         # critical section
         with ProcessingStatusContext(

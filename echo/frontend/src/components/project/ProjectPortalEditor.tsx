@@ -19,6 +19,7 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
+import { ShieldCheckIcon } from "@phosphor-icons/react";
 import { IconEye, IconEyeOff, IconRefresh, IconX } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Resizable } from "re-resizable";
@@ -1170,6 +1171,10 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 											<Title order={4}>
 												<Trans>Anonymize Transcripts</Trans>
 											</Title>
+											<ShieldCheckIcon
+												size={20}
+												color="var(--mantine-color-primary-filled)"
+											/>
 											<Badge color="mauve" c="graphite" size="sm">
 												<Trans>Beta</Trans>
 											</Badge>
@@ -1178,8 +1183,10 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 											<Trans>
 												When enabled, all new transcripts will have personal
 												information (names, emails, phone numbers, addresses)
-												replaced with placeholders. This cannot be undone for
-												already-processed conversations.
+												replaced with placeholders. Anonymized conversations
+												also disable audio playback, audio download, and
+												retranscription to protect participant privacy. This
+												cannot be undone for already-processed conversations.
 											</Trans>
 										</Text>
 										<Controller

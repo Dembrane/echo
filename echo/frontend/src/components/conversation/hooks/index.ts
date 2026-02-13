@@ -62,7 +62,6 @@ export const useInfiniteConversationChunks = (
 						"path",
 						"timestamp",
 						"error",
-						"diarization",
 					],
 					filter: {
 						conversation_id: {
@@ -693,9 +692,9 @@ export const useConversationEmails = (
 	enabled = true,
 ) => {
 	return useQuery({
+		enabled: enabled && !!conversationId,
 		queryFn: () => getConversationEmails(conversationId),
 		queryKey: ["conversations", conversationId, "emails"],
-		enabled: enabled && !!conversationId,
 	});
 };
 
@@ -832,6 +831,7 @@ export const CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS: QueryFields<
 	"duration",
 	"is_finished",
 	"is_audio_processing_finished",
+	"is_anonymized",
 	"linked_conversations",
 	"linking_conversations",
 ];

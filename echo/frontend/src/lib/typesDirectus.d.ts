@@ -98,13 +98,20 @@ interface Conversation {
 	is_all_chunks_transcribed: boolean | null;
 	is_audio_processing_finished: boolean | null;
 	is_finished: boolean | null;
+	is_anonymized: boolean | null;
 	merged_audio_path: string | null;
 	merged_transcript: string | null;
 	participant_email: string | null;
 	participant_name: string | null;
 	participant_user_agent: string | null;
 	project_id: string | Project;
-	source: "DASHBOARD_UPLOAD" | "CLONE" | "PORTAL_AUDIO" | "PORTAL_TEXT" | "SPLIT" | null;
+	source:
+		| "DASHBOARD_UPLOAD"
+		| "CLONE"
+		| "PORTAL_AUDIO"
+		| "PORTAL_TEXT"
+		| "SPLIT"
+		| null;
 	summary: string | null;
 	title: string | null;
 	updated_at: string | null;

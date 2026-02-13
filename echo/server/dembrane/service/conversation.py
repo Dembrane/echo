@@ -290,6 +290,7 @@ class ConversationService:
                     "participant_email": participant_email,
                     "participant_user_agent": participant_user_agent,
                     "source": source,
+                    "is_anonymized": bool(project.get("anonymize_transcripts", False)),
                     "tags": {
                         "create": [
                             {
