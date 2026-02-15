@@ -424,6 +424,22 @@ class AgenticSettings(BaseSettings):
             "AGENTIC__SSE_HEARTBEAT_SECONDS",
         ),
     )
+    run_lock_ttl_seconds: int = Field(
+        default=30,
+        alias="AGENTIC_RUN_LOCK_TTL_SECONDS",
+        validation_alias=AliasChoices(
+            "AGENTIC_RUN_LOCK_TTL_SECONDS",
+            "AGENTIC__RUN_LOCK_TTL_SECONDS",
+        ),
+    )
+    run_lock_refresh_seconds: int = Field(
+        default=10,
+        alias="AGENTIC_RUN_LOCK_REFRESH_SECONDS",
+        validation_alias=AliasChoices(
+            "AGENTIC_RUN_LOCK_REFRESH_SECONDS",
+            "AGENTIC__RUN_LOCK_REFRESH_SECONDS",
+        ),
+    )
 
 
 class TranscriptionSettings(BaseSettings):

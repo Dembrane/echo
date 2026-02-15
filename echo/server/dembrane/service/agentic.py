@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-from contextlib import AbstractContextManager
+from typing import Any, Literal, Optional
 from logging import getLogger
-from typing import Any, Optional, Literal
+from contextlib import AbstractContextManager
 
+from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.directus import (
-    DirectusBadRequest,
     DirectusClient,
+    DirectusBadRequest,
     directus,
     directus_client_context,
 )
-from dembrane.utils import generate_uuid, get_utc_timestamp
 
 logger = getLogger("dembrane.service.agentic")
 
@@ -175,6 +175,36 @@ class AgenticRunService:
             raise AgenticRunServiceException("Failed to list run events") from exc
 
         return events or []
+
+    def get_latest_event(
+        self,
+        run_id: str,
+        *,
+        event_type: Optional[str] = None,
+    ) -> Optional[dict[str, Any]]:
+        filter_data: dict[str, Any] = {"project_agentic_run_id": {"_eq": run_id}}
+        if event_type is not None:
+            filter_data["event_type"] = {"_eq": event_type}
+
+        try:
+            with self._client_context() as client:
+                rows = client.get_items(
+                    RUN_EVENT_COLLECTION,
+                    {
+                        "query": {
+                            "filter": filter_data,
+                            "sort": "-seq",
+                            "limit": 1,
+                        }
+                    },
+                )
+        except DirectusBadRequest as exc:
+            logger.error("Failed to read latest event for run %s: %s", run_id, exc)
+            raise AgenticRunServiceException("Failed to read latest run event") from exc
+
+        if not rows:
+            return None
+        return rows[0]
 
     def _next_seq(self, run_id: str) -> int:
         try:

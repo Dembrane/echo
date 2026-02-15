@@ -1027,6 +1027,12 @@ export type AgenticRunEventsResponse = {
 	done: boolean;
 };
 
+export type AgenticRunStopResponse = {
+	run_id: string;
+	turn_seq: number;
+	status: "stopping";
+};
+
 export const createAgenticRun = async (payload: {
 	project_id: string;
 	project_chat_id?: string;
@@ -1060,6 +1066,105 @@ export const getAgenticRunEvents = async (
 			},
 		},
 	);
+};
+
+type StreamAgenticRunOptions = {
+	afterSeq?: number;
+	signal?: AbortSignal;
+	onEvent: (event: AgenticRunEvent) => void;
+	onHeartbeat?: () => void;
+};
+
+const parseSseFrame = (
+	frame: string,
+): { eventType: string; data: string | null } | null => {
+	const trimmed = frame.trim();
+	if (!trimmed) return null;
+
+	const lines = trimmed.split("\n");
+	let eventType = "message";
+	const dataLines: string[] = [];
+
+	for (const line of lines) {
+		if (line.startsWith("event:")) {
+			eventType = line.slice("event:".length).trim();
+			continue;
+		}
+		if (line.startsWith("data:")) {
+			dataLines.push(line.slice("data:".length).trimStart());
+		}
+	}
+
+	return {
+		eventType,
+		data: dataLines.length > 0 ? dataLines.join("\n") : null,
+	};
+};
+
+export const streamAgenticRun = async (
+	runId: string,
+	options: StreamAgenticRunOptions,
+) => {
+	const afterSeq = options.afterSeq ?? 0;
+	const response = await fetch(
+		`${API_BASE_URL}/agentic/runs/${runId}/stream?after_seq=${afterSeq}`,
+		{
+			method: "POST",
+			credentials: "include",
+			headers: {
+				Accept: "text/event-stream",
+			},
+			signal: options.signal,
+		},
+	);
+
+	if (!response.ok) {
+		throw new Error(`Failed to stream run (${response.status})`);
+	}
+
+	if (!response.body) {
+		throw new Error("Streaming response body is missing");
+	}
+
+	const reader = response.body.getReader();
+	const decoder = new TextDecoder();
+	let buffer = "";
+
+	try {
+		while (true) {
+			const { done, value } = await reader.read();
+			if (done) break;
+			buffer += decoder.decode(value, { stream: true });
+
+			let separatorIndex = buffer.indexOf("\n\n");
+			while (separatorIndex !== -1) {
+				const frame = buffer.slice(0, separatorIndex);
+				buffer = buffer.slice(separatorIndex + 2);
+
+				const parsed = parseSseFrame(frame);
+				if (parsed) {
+					if (parsed.eventType === "heartbeat") {
+						options.onHeartbeat?.();
+					} else if (parsed.data) {
+						try {
+							const event = JSON.parse(parsed.data) as AgenticRunEvent;
+							options.onEvent(event);
+						} catch {
+							// Ignore malformed frames and continue streaming.
+						}
+					}
+				}
+
+				separatorIndex = buffer.indexOf("\n\n");
+			}
+		}
+	} finally {
+		reader.releaseLock();
+	}
+};
+
+export const stopAgenticRun = async (runId: string) => {
+	return api.post<unknown, AgenticRunStopResponse>(`/agentic/runs/${runId}/stop`);
 };
 
 export const getChatSuggestions = async (

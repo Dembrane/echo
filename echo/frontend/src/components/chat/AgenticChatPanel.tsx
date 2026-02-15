@@ -10,14 +10,20 @@ import {
 	Textarea,
 	Title,
 } from "@mantine/core";
-import { IconAlertCircle, IconSend } from "@tabler/icons-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { AgenticRunEvent, AgenticRunStatus } from "@/lib/api";
+import { IconAlertCircle, IconPlayerStop, IconSend } from "@tabler/icons-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type {
+	AgenticRunEvent,
+	AgenticRunEventsResponse,
+	AgenticRunStatus,
+} from "@/lib/api";
 import {
-	appendAgenticRunMessage,
 	createAgenticRun,
 	getAgenticRun,
 	getAgenticRunEvents,
+	stopAgenticRun,
+	streamAgenticRun,
+	appendAgenticRunMessage,
 } from "@/lib/api";
 import { Markdown } from "../common/Markdown";
 import { ChatMessage } from "./ChatMessage";
@@ -43,6 +49,9 @@ const storageKeyForChat = (chatId: string) => `agentic-run:${chatId}`;
 
 const isTerminalStatus = (status: AgenticRunStatus | null) =>
 	status === "completed" || status === "failed" || status === "timeout";
+
+const isInFlightStatus = (status: AgenticRunStatus | null) =>
+	status === "queued" || status === "running";
 
 const MAX_ACTIVITY_DETAILS_LENGTH = 1200;
 
@@ -262,7 +271,11 @@ export const AgenticChatPanel = ({
 	const [events, setEvents] = useState<AgenticRunEvent[]>([]);
 	const [input, setInput] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [isStopping, setIsStopping] = useState(false);
+	const [isStreaming, setIsStreaming] = useState(false);
+	const [streamFailureCount, setStreamFailureCount] = useState(0);
 	const [error, setError] = useState<string | null>(null);
+	const streamAbortRef = useRef<AbortController | null>(null);
 
 	const messages = useMemo(() => {
 		const sorted = [...events].sort((a, b) => a.seq - b.seq);
@@ -308,12 +321,92 @@ export const AgenticChatPanel = ({
 		});
 	}, []);
 
-	const refreshEvents = useCallback(async (targetRunId: string, fromSeq: number) => {
-		const payload = await getAgenticRunEvents(targetRunId, fromSeq);
-		mergeEvents(payload.events);
-		setAfterSeq(payload.next_seq);
-		setRunStatus(payload.status);
-	}, [mergeEvents]);
+	const refreshEvents = useCallback(
+		async (targetRunId: string, fromSeq: number): Promise<AgenticRunEventsResponse> => {
+			const payload = await getAgenticRunEvents(targetRunId, fromSeq);
+			mergeEvents(payload.events);
+			setAfterSeq(payload.next_seq);
+			setRunStatus(payload.status);
+			return payload;
+		},
+		[mergeEvents],
+	);
+
+	const stopStream = useCallback(() => {
+		if (streamAbortRef.current) {
+			streamAbortRef.current.abort();
+			streamAbortRef.current = null;
+		}
+		setIsStreaming(false);
+	}, []);
+
+	const startStream = useCallback(
+		async (targetRunId: string, fromSeq: number) => {
+			stopStream();
+
+			const abortController = new AbortController();
+			streamAbortRef.current = abortController;
+			setIsStreaming(true);
+
+			try {
+				await streamAgenticRun(targetRunId, {
+					afterSeq: fromSeq,
+					signal: abortController.signal,
+					onEvent: (event) => {
+						mergeEvents([event]);
+						setAfterSeq((previous) => Math.max(previous, event.seq));
+						setStreamFailureCount(0);
+						if (event.event_type === "run.failed") {
+							setRunStatus("failed");
+						}
+						if (event.event_type === "run.timeout") {
+							setRunStatus("timeout");
+						}
+					},
+				});
+			} catch (streamError) {
+				if (abortController.signal.aborted) {
+					return;
+				}
+
+				setStreamFailureCount((count) => {
+					const next = count + 1;
+					if (next >= 2) {
+						setError("Live stream interrupted. Falling back to polling.");
+					}
+					return next;
+				});
+
+				if (streamError instanceof Error) {
+					console.warn("Agentic stream failed", streamError);
+				}
+			} finally {
+				if (streamAbortRef.current === abortController) {
+					streamAbortRef.current = null;
+					setIsStreaming(false);
+				}
+				try {
+					const run = await getAgenticRun(targetRunId);
+					setRunStatus(run.status);
+				} catch {
+					// Ignore status refresh failures; polling fallback will retry.
+				}
+			}
+		},
+		[mergeEvents, stopStream],
+	);
+
+	useEffect(() => {
+		stopStream();
+		setRunId(null);
+		setRunStatus(null);
+		setAfterSeq(0);
+		setEvents([]);
+		setError(null);
+		setIsStopping(false);
+		setIsSubmitting(false);
+		setStreamFailureCount(0);
+	}, [chatId, stopStream]);
 
 	useEffect(() => {
 		if (!chatId) return;
@@ -328,7 +421,11 @@ export const AgenticChatPanel = ({
 				if (!active) return;
 				setRunId(storedRunId);
 				setRunStatus(run.status);
-				await refreshEvents(storedRunId, 0);
+				const payload = await refreshEvents(storedRunId, 0);
+				if (!active) return;
+				if (!isTerminalStatus(payload.status)) {
+					void startStream(storedRunId, payload.next_seq);
+				}
 			} catch {
 				window.localStorage.removeItem(key);
 			}
@@ -337,10 +434,11 @@ export const AgenticChatPanel = ({
 		return () => {
 			active = false;
 		};
-	}, [chatId, refreshEvents]);
+	}, [chatId, refreshEvents, startStream]);
 
 	useEffect(() => {
 		if (!runId || !runStatus || isTerminalStatus(runStatus)) return;
+		if (isStreaming || streamFailureCount < 2) return;
 
 		let active = true;
 		const interval = window.setInterval(async () => {
@@ -348,7 +446,7 @@ export const AgenticChatPanel = ({
 			try {
 				await refreshEvents(runId, afterSeq);
 			} catch {
-				// Keep polling retries lightweight; surfaced errors occur on submit path.
+				// Keep fallback polling retries lightweight.
 			}
 		}, 1500);
 
@@ -356,11 +454,24 @@ export const AgenticChatPanel = ({
 			active = false;
 			window.clearInterval(interval);
 		};
-	}, [runId, runStatus, afterSeq, refreshEvents]);
+	}, [runId, runStatus, afterSeq, isStreaming, streamFailureCount, refreshEvents]);
+
+	useEffect(() => {
+		if (runStatus && isTerminalStatus(runStatus)) {
+			stopStream();
+		}
+	}, [runStatus, stopStream]);
+
+	useEffect(() => {
+		return () => {
+			stopStream();
+		};
+	}, [stopStream]);
 
 	const handleSubmit = async () => {
 		const message = input.trim();
 		if (!message || !projectId || !chatId) return;
+		if (isInFlightStatus(runStatus)) return;
 
 		setError(null);
 		setIsSubmitting(true);
@@ -379,11 +490,17 @@ export const AgenticChatPanel = ({
 				setRunId(targetRunId);
 				setRunStatus(created.status);
 				window.localStorage.setItem(storageKeyForChat(chatId), targetRunId);
-				await refreshEvents(targetRunId, 0);
+				const payload = await refreshEvents(targetRunId, 0);
+				if (!isTerminalStatus(payload.status)) {
+					void startStream(targetRunId, payload.next_seq);
+				}
 			} else {
 				const updated = await appendAgenticRunMessage(targetRunId, message);
 				setRunStatus(updated.status);
-				await refreshEvents(targetRunId, afterSeq);
+				const payload = await refreshEvents(targetRunId, afterSeq);
+				if (!isTerminalStatus(payload.status)) {
+					void startStream(targetRunId, payload.next_seq);
+				}
 			}
 		} catch (submitError) {
 			const message =
@@ -396,17 +513,49 @@ export const AgenticChatPanel = ({
 		}
 	};
 
+	const handleStop = async () => {
+		if (!runId || !isInFlightStatus(runStatus)) return;
+		setIsStopping(true);
+		setError(null);
+		try {
+			await stopAgenticRun(runId);
+		} catch (stopError) {
+			const message =
+				stopError instanceof Error
+					? stopError.message
+					: "Failed to stop run";
+			setError(message);
+		} finally {
+			setIsStopping(false);
+		}
+	};
+
+	const isRunInFlight = isInFlightStatus(runStatus);
+
 	return (
 		<Stack className="h-full min-h-0 px-2 pr-4" gap="sm">
 			<Group justify="space-between" align="center">
 				<Title order={4}>
 					<Trans>Agentic Chat</Trans>
 				</Title>
-				{runStatus && (
-					<Text size="sm" c="dimmed">
-						<Trans>Run status:</Trans> {runStatus}
-					</Text>
-				)}
+				<Group gap="xs">
+					{runStatus && (
+						<Text size="sm" c="dimmed">
+							<Trans>Run status:</Trans> {runStatus}
+						</Text>
+					)}
+					{isRunInFlight && (
+						<Button
+							variant="light"
+							size="xs"
+							leftSection={isStopping ? <Loader size={12} /> : <IconPlayerStop size={12} />}
+							onClick={() => void handleStop()}
+							disabled={isStopping}
+						>
+							<Trans>Stop</Trans>
+						</Button>
+					)}
+				</Group>
 			</Group>
 
 			{error && (
@@ -485,7 +634,11 @@ export const AgenticChatPanel = ({
 						isSubmitting ? <Loader size={14} /> : <IconSend size={14} />
 					}
 					onClick={() => void handleSubmit()}
-					disabled={isSubmitting || input.trim().length === 0}
+					disabled={
+						isSubmitting ||
+						isRunInFlight ||
+						input.trim().length === 0
+					}
 				>
 					<Trans>Send</Trans>
 				</Button>
