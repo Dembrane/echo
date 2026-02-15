@@ -118,6 +118,28 @@ uv run dramatiq --watch ./dembrane --queues cpu --processes 1 --threads 1 dembra
 
 Agentic chat execution is stream-first through `POST /api/agentic/runs/{run_id}/stream` and no longer enqueues an agentic Dramatiq actor.
 
+### Future Agent Tool Development
+
+- Add tool definitions in `agent/agent.py` (`@tool` functions in `create_agent_graph`).
+- Add shared API client calls for tools in `agent/echo_client.py`.
+- If a tool needs new data, expose it via `server/dembrane/api/agentic.py` and/or `server/dembrane/service/`.
+- Add tests in `agent/tests/test_agent_tools.py` and `server/tests/test_agentic_api.py`.
+
+### Inspect Local Agentic Conversations
+
+Use the local script from repo root:
+
+```bash
+bash echo/server/scripts/agentic/latest_runs.sh --chat-id <chat_uuid> --limit 3 --events 80
+```
+
+Common variants:
+
+```bash
+bash echo/server/scripts/agentic/latest_runs.sh --run-id <run_uuid> --events 120
+bash echo/server/scripts/agentic/latest_runs.sh --chat-id <chat_uuid> --limit 1 --events 200 --json
+```
+
 ## Important Files
 
 | File | Purpose |
