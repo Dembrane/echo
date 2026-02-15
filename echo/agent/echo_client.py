@@ -1,14 +1,34 @@
-"""
-Echo API client placeholder for future tool expansion.
-
-Use this from agent tools once server gateway contracts are finalized.
-"""
-
-from typing import Any, Optional
+from typing import Any, Optional, TypedDict, cast
 
 import httpx
 
 from settings import get_settings
+
+
+class SearchConversationResult(TypedDict, total=False):
+    id: str
+    projectId: str
+    projectName: Optional[str]
+    displayLabel: str
+    status: str
+    startedAt: Optional[str]
+    lastChunkAt: Optional[str]
+    summary: Optional[str]
+
+
+class SearchTranscriptResult(TypedDict, total=False):
+    id: str
+    conversationId: Optional[str]
+    conversationLabel: Optional[str]
+    excerpt: Optional[str]
+    timestamp: Optional[str]
+
+
+class HomeSearchResponse(TypedDict, total=False):
+    projects: list[dict[str, Any]]
+    conversations: list[SearchConversationResult]
+    transcripts: list[SearchTranscriptResult]
+    chats: list[dict[str, Any]]
 
 
 class EchoClient:
@@ -30,3 +50,24 @@ class EchoClient:
         response = await self._client.get(path)
         response.raise_for_status()
         return response.json()
+
+    async def search_home(self, query: str, limit: int = 5) -> HomeSearchResponse:
+        response = await self._client.get(
+            "/home/search",
+            params={"query": query, "limit": limit},
+        )
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, dict):
+            raise ValueError("Unexpected search response shape")
+        return cast(HomeSearchResponse, payload)
+
+    async def get_conversation_transcript(self, conversation_id: str) -> str:
+        response = await self._client.get(f"/conversations/{conversation_id}/transcript")
+        response.raise_for_status()
+        payload = response.json()
+        if isinstance(payload, str):
+            return payload
+        if isinstance(payload, dict) and isinstance(payload.get("transcript"), str):
+            return payload["transcript"]
+        return str(payload)

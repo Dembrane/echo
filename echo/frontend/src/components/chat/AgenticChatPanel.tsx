@@ -11,7 +11,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { IconAlertCircle, IconSend } from "@tabler/icons-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AgenticRunEvent, AgenticRunStatus } from "@/lib/api";
 import {
 	appendAgenticRunMessage,
@@ -33,16 +33,59 @@ type RenderMessage = {
 	content: string;
 };
 
+type ToolActivity = {
+	id: string;
+	title: string;
+	details: string | null;
+};
+
 const storageKeyForChat = (chatId: string) => `agentic-run:${chatId}`;
 
 const isTerminalStatus = (status: AgenticRunStatus | null) =>
 	status === "completed" || status === "failed" || status === "timeout";
 
+const MAX_ACTIVITY_DETAILS_LENGTH = 1200;
+
+const truncate = (value: string, maxLength = MAX_ACTIVITY_DETAILS_LENGTH) => {
+	if (value.length <= maxLength) return value;
+	return `${value.slice(0, maxLength)}...`;
+};
+
+const asObject = (value: unknown): Record<string, unknown> | null => {
+	if (value && typeof value === "object") return value as Record<string, unknown>;
+	return null;
+};
+
+const formatDetails = (value: unknown): string | null => {
+	if (value === null || value === undefined) return null;
+
+	if (typeof value === "string") {
+		const trimmed = value.trim();
+		if (!trimmed) return null;
+		try {
+			const parsed = JSON.parse(trimmed) as unknown;
+			if (parsed && typeof parsed === "object") {
+				return truncate(JSON.stringify(parsed, null, 2));
+			}
+		} catch {
+			// Keep raw string details.
+		}
+		return truncate(trimmed);
+	}
+
+	if (typeof value === "object") {
+		try {
+			return truncate(JSON.stringify(value, null, 2));
+		} catch {
+			return truncate(String(value));
+		}
+	}
+
+	return truncate(String(value));
+};
+
 const toMessage = (event: AgenticRunEvent): RenderMessage | null => {
-	const payload =
-		event.payload && typeof event.payload === "object"
-			? (event.payload as Record<string, unknown>)
-			: null;
+	const payload = asObject(event.payload);
 
 	const content =
 		typeof payload?.content === "string"
@@ -99,14 +142,8 @@ const extractAssistantMessagesFromStateSync = (
 		return [];
 	}
 
-	const payload =
-		event.payload && typeof event.payload === "object"
-			? (event.payload as Record<string, unknown>)
-			: null;
-	const state =
-		payload?.state && typeof payload.state === "object"
-			? (payload.state as Record<string, unknown>)
-			: null;
+	const payload = asObject(event.payload);
+	const state = asObject(payload?.state);
 	const rawMessages = Array.isArray(state?.messages) ? state.messages : [];
 
 	const results: RenderMessage[] = [];
@@ -129,6 +166,90 @@ const extractAssistantMessagesFromStateSync = (
 	}
 
 	return results;
+};
+
+const extractToolActivityFromStateSync = (event: AgenticRunEvent): ToolActivity[] => {
+	if (event.event_type !== "on_copilotkit_state_sync") {
+		return [];
+	}
+
+	const payload = asObject(event.payload);
+	const state = asObject(payload?.state);
+	const rawMessages = Array.isArray(state?.messages) ? state.messages : [];
+	const activities: ToolActivity[] = [];
+
+	rawMessages.forEach((rawMessage, messageIndex) => {
+		const message = asObject(rawMessage);
+		if (!message) return;
+
+		if (message.role === "assistant") {
+			const toolCalls = Array.isArray(message.tool_calls) ? message.tool_calls : [];
+			toolCalls.forEach((rawCall, callIndex) => {
+				const call = asObject(rawCall);
+				if (!call) return;
+
+				const functionPayload = asObject(call.function);
+				const callId =
+					(typeof call.id === "string" && call.id) ||
+					`${event.seq}-${messageIndex}-${callIndex}`;
+				const name =
+					(typeof call.name === "string" && call.name) ||
+					(typeof functionPayload?.name === "string" && functionPayload.name) ||
+					"unknown_tool";
+				const args = call.args ?? call.arguments ?? functionPayload?.arguments ?? null;
+
+				activities.push({
+					id: `tool-call-${callId}`,
+					title: `Tool call: ${name}`,
+					details: formatDetails(args),
+				});
+			});
+		}
+
+		if (message.role === "tool") {
+			const toolName =
+				(typeof message.name === "string" && message.name) ||
+				(typeof message.tool_name === "string" && message.tool_name) ||
+				"tool";
+			const rawId =
+				(typeof message.id === "string" && message.id) ||
+				(typeof message.tool_call_id === "string" && message.tool_call_id) ||
+				`${event.seq}-${messageIndex}`;
+
+			activities.push({
+				id: `tool-result-${rawId}`,
+				title: `Tool result: ${toolName}`,
+				details: formatDetails(message.content),
+			});
+		}
+	});
+
+	return activities;
+};
+
+const extractTopLevelToolActivity = (event: AgenticRunEvent): ToolActivity[] => {
+	const eventType = event.event_type.toLowerCase();
+	if (!eventType.includes("tool")) {
+		return [];
+	}
+
+	const payload = asObject(event.payload);
+	const maybeName =
+		(typeof payload?.name === "string" && payload.name) ||
+		(typeof payload?.tool_name === "string" && payload.tool_name) ||
+		(typeof payload?.toolName === "string" && payload.toolName) ||
+		null;
+	const details =
+		formatDetails(payload?.input ?? payload?.args ?? payload?.content ?? payload) ??
+		formatDetails(event.payload);
+
+	return [
+		{
+			id: `tool-event-${event.seq}`,
+			title: maybeName ? `${event.event_type}: ${maybeName}` : event.event_type,
+			details,
+		},
+	];
 };
 
 export const AgenticChatPanel = ({
@@ -161,7 +282,23 @@ export const AgenticChatPanel = ({
 		return Array.from(byId.values());
 	}, [events]);
 
-	const mergeEvents = (incoming: AgenticRunEvent[]) => {
+	const toolActivity = useMemo(() => {
+		const sorted = [...events].sort((a, b) => a.seq - b.seq);
+		const byId = new Map<string, ToolActivity>();
+
+		for (const event of sorted) {
+			for (const activity of extractTopLevelToolActivity(event)) {
+				byId.set(activity.id, activity);
+			}
+			for (const activity of extractToolActivityFromStateSync(event)) {
+				byId.set(activity.id, activity);
+			}
+		}
+
+		return Array.from(byId.values());
+	}, [events]);
+
+	const mergeEvents = useCallback((incoming: AgenticRunEvent[]) => {
 		if (incoming.length === 0) return;
 		setEvents((previous) => {
 			const bySeq = new Map<number, AgenticRunEvent>();
@@ -169,14 +306,14 @@ export const AgenticChatPanel = ({
 			for (const event of incoming) bySeq.set(event.seq, event);
 			return Array.from(bySeq.values()).sort((a, b) => a.seq - b.seq);
 		});
-	};
+	}, []);
 
-	const refreshEvents = async (targetRunId: string, fromSeq: number) => {
+	const refreshEvents = useCallback(async (targetRunId: string, fromSeq: number) => {
 		const payload = await getAgenticRunEvents(targetRunId, fromSeq);
 		mergeEvents(payload.events);
 		setAfterSeq(payload.next_seq);
 		setRunStatus(payload.status);
-	};
+	}, [mergeEvents]);
 
 	useEffect(() => {
 		if (!chatId) return;
@@ -200,7 +337,7 @@ export const AgenticChatPanel = ({
 		return () => {
 			active = false;
 		};
-	}, [chatId]);
+	}, [chatId, refreshEvents]);
 
 	useEffect(() => {
 		if (!runId || !runStatus || isTerminalStatus(runStatus)) return;
@@ -219,7 +356,7 @@ export const AgenticChatPanel = ({
 			active = false;
 			window.clearInterval(interval);
 		};
-	}, [runId, runStatus, afterSeq]);
+	}, [runId, runStatus, afterSeq, refreshEvents]);
 
 	const handleSubmit = async () => {
 		const message = input.trim();
@@ -298,6 +435,33 @@ export const AgenticChatPanel = ({
 							<Markdown className="prose-sm" content={message.content} />
 						</ChatMessage>
 					))}
+
+					{toolActivity.length > 0 && (
+						<Stack gap={6}>
+							<Text size="xs" c="dimmed" fw={600}>
+								Tool activity
+							</Text>
+							{toolActivity.map((activity) => (
+								<Box
+									key={activity.id}
+									className="rounded border border-gray-200 bg-gray-50 px-2 py-1"
+								>
+									<Text size="xs" fw={600}>
+										{activity.title}
+									</Text>
+									{activity.details && (
+										<Text
+											size="xs"
+											component="pre"
+											className="mt-1 whitespace-pre-wrap break-words font-mono"
+										>
+											{activity.details}
+										</Text>
+									)}
+								</Box>
+							))}
+						</Stack>
+					)}
 				</Stack>
 			</Box>
 
