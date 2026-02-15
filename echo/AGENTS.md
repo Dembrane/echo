@@ -101,9 +101,22 @@ Convention: Use `ENABLE_*` naming pattern for feature flags.
 # Frontend
 cd frontend && pnpm i && pnpm dev
 
-# Backend
-cd server && uv sync && uv run uvicorn dembrane.main:app --reload
+# Backend API
+cd server && uv sync && uv run uvicorn dembrane.main:app --port 8000 --reload --loop asyncio
+
+# Agent service (required for agentic chat)
+cd ../agent && uv sync && uv run uvicorn main:app --host 0.0.0.0 --port 8001 --reload
 ```
+
+For full background processing (transcription/audio and non-agentic jobs), also run:
+
+```bash
+cd server
+uv run dramatiq-gevent --watch ./dembrane --queues network --processes 2 --threads 1 dembrane.tasks
+uv run dramatiq --watch ./dembrane --queues cpu --processes 1 --threads 1 dembrane.tasks
+```
+
+Agentic chat execution is stream-first through `POST /api/agentic/runs/{run_id}/stream` and no longer enqueues an agentic Dramatiq actor.
 
 ## Important Files
 

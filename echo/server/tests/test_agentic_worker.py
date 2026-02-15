@@ -227,3 +227,162 @@ async def test_process_agentic_run_handles_cancel_request(monkeypatch) -> None:
     assert stored_run["latest_error_code"] == AGENT_CANCELLED_ERROR_CODE
     assert events[-1]["event_type"] == "run.failed"
     assert events[-1]["payload"]["error_code"] == AGENT_CANCELLED_ERROR_CODE
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_splits_planning_and_final_synthesis(monkeypatch) -> None:
+    service = _build_service()
+    run = service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+    )
+    fake_chat_service = _FakeChatService()
+
+    planning_content = (
+        "I will investigate halftime discussions and gather evidence.\n\n"
+        "### Summary of Perspectives\nThis part should not be emitted in the planning message."
+    )
+
+    async def _fake_stream(
+        *, project_id: str, user_message: str, bearer_token: str, thread_id: str
+    ):
+        _ = (project_id, user_message, bearer_token)
+        assert thread_id == run["id"]
+        yield {
+            "type": "on_chat_model_end",
+            "data": {
+                "output": {
+                    "kwargs": {
+                        "content": [{"type": "text", "text": planning_content}],
+                        "additional_kwargs": {
+                            "function_call": {
+                                "name": "findConvosByKeywords",
+                                "arguments": "{\"keywords\":\"half time show\"}",
+                            }
+                        },
+                    }
+                }
+            },
+        }
+        yield {"type": "on_tool_start", "name": "findConvosByKeywords"}
+        yield {"type": "on_tool_end", "name": "findConvosByKeywords", "data": {"output": {}}}
+        yield {
+            "type": "on_chat_model_end",
+            "data": {
+                "output": {
+                    "kwargs": {
+                        "content": [{"type": "text", "text": "Final synthesis message."}],
+                        "additional_kwargs": {},
+                    }
+                }
+            },
+        }
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.chat_service", fake_chat_service)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    stored_run = service.get_by_id_or_raise(run["id"])
+    events = service.list_events(run["id"])
+    assistant_events = [event for event in events if event["event_type"] == "assistant.message"]
+
+    assert stored_run["status"] == "completed"
+    assert stored_run["latest_output"] == "Final synthesis message."
+    assert len(assistant_events) == 2
+    assert assistant_events[0]["payload"]["content"] == "I will investigate halftime discussions and gather evidence."
+    assert "Summary of Perspectives" not in assistant_events[0]["payload"]["content"]
+    assert assistant_events[1]["payload"]["content"] == "Final synthesis message."
+    assert fake_chat_service.created_messages == [
+        {
+            "id": "msg-1",
+            "project_chat_id": "chat-1",
+            "message_from": "assistant",
+            "text": "I will investigate halftime discussions and gather evidence.",
+        },
+        {
+            "id": "msg-2",
+            "project_chat_id": "chat-1",
+            "message_from": "assistant",
+            "text": "Final synthesis message.",
+        },
+    ]
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_falls_back_to_default_intro_when_model_has_no_plan(
+    monkeypatch,
+) -> None:
+    service = _build_service()
+    run = service.create_run(project_id="project-1", directus_user_id="user-1")
+
+    async def _fake_stream(
+        *, project_id: str, user_message: str, bearer_token: str, thread_id: str
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id)
+        yield {"type": "on_tool_start", "name": "listProjectConversations"}
+        yield {"type": "on_tool_end", "name": "listProjectConversations", "data": {"output": {}}}
+        yield {
+            "type": "on_chat_model_end",
+            "data": {
+                "output": {
+                    "kwargs": {
+                        "content": [{"type": "text", "text": "Final answer only."}],
+                        "additional_kwargs": {},
+                    }
+                }
+            },
+        }
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    events = service.list_events(run["id"])
+    assistant_events = [event for event in events if event["event_type"] == "assistant.message"]
+
+    assert assistant_events[0]["payload"]["content"] == (
+        "I'll first gather evidence before answering. Starting with `listProjectConversations`."
+    )
+    assert assistant_events[1]["payload"]["content"] == "Final answer only."

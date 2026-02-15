@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import time
 import asyncio
+import re
 from uuid import uuid4
 from typing import Any, Optional
 from logging import getLogger
@@ -12,6 +13,7 @@ from fastapi import Query, Request, APIRouter, HTTPException
 from pydantic import Field, BaseModel
 from fastapi.responses import JSONResponse, StreamingResponse
 
+from dembrane.directus import directus
 from dembrane.service import chat_service, project_service, agentic_run_service
 from dembrane.settings import get_settings
 from dembrane.async_helpers import run_in_thread_pool
@@ -126,6 +128,242 @@ def _payload_to_dict(payload: Any) -> dict[str, Any]:
     return {}
 
 
+def _to_non_empty_string(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    if isinstance(value, (dict, list, tuple, set)):
+        return None
+    if isinstance(value, str):
+        normalized = value.strip()
+    else:
+        normalized = str(value).strip()
+    if not normalized:
+        return None
+    return normalized
+
+
+def _build_initial_agent_prompt_content(
+    *,
+    project_name: Optional[str],
+    project_context: Optional[str],
+    user_message: str,
+) -> str:
+    normalized_name = _to_non_empty_string(project_name) or "(none)"
+    normalized_context = _to_non_empty_string(project_context) or "(none)"
+    normalized_message = user_message.strip()
+
+    return (
+        f"Project Name: {normalized_name}\n"
+        f"Project Context: {normalized_context}\n\n"
+        f"User Message: {normalized_message}"
+    )
+
+
+def _conversation_status(payload: dict[str, Any]) -> str:
+    if not payload.get("is_finished"):
+        return "live"
+    if not payload.get("is_all_chunks_transcribed"):
+        return "processing"
+    return "done"
+
+
+def _extract_last_chunk_at(payload: dict[str, Any]) -> Optional[str]:
+    direct_value = _to_non_empty_string(payload.get("last_chunk_at"))
+    if direct_value is not None:
+        return direct_value
+
+    updated_value = _to_non_empty_string(payload.get("updated_at"))
+    if updated_value is not None:
+        return updated_value
+
+    chunks = payload.get("chunks")
+    if not isinstance(chunks, list) or not chunks:
+        return None
+
+    latest = chunks[0]
+    if not isinstance(latest, dict):
+        return None
+
+    timestamp = latest.get("timestamp") or latest.get("created_at")
+    return _to_non_empty_string(timestamp)
+
+
+def _to_related_id(value: Any) -> Optional[str]:
+    if isinstance(value, dict):
+        return _to_non_empty_string(value.get("id"))
+    return _to_non_empty_string(value)
+
+
+def _normalize_transcript_query_tokens(query: str, *, max_tokens: int = 4) -> list[str]:
+    raw_tokens = re.findall(r"[a-z0-9]+", query.lower())
+    normalized_tokens: list[str] = []
+    seen: set[str] = set()
+    for token in raw_tokens:
+        if len(token) < 4 or token in seen:
+            continue
+        seen.add(token)
+        normalized_tokens.append(token)
+        if len(normalized_tokens) >= max_tokens:
+            break
+    return normalized_tokens
+
+
+def _to_agent_conversation_card(
+    row: dict[str, Any],
+    *,
+    project_id: str,
+    fallback_project_id: Optional[str] = None,
+) -> Optional[dict[str, Any]]:
+    normalized_conversation_id = _to_non_empty_string(row.get("id"))
+    if normalized_conversation_id is None:
+        return None
+
+    row_project_id = _to_related_id(row.get("project_id")) or fallback_project_id
+    if row_project_id != project_id:
+        return None
+
+    return {
+        "conversation_id": normalized_conversation_id,
+        "participant_name": _to_non_empty_string(row.get("participant_name")),
+        "status": _conversation_status(row),
+        "summary": row.get("summary") if isinstance(row.get("summary"), str) else None,
+        "started_at": _to_non_empty_string(row.get("created_at")),
+        "last_chunk_at": _extract_last_chunk_at(row),
+    }
+
+
+def _list_project_conversations_for_agent(
+    *,
+    project_id: str,
+    limit: int,
+    conversation_id: Optional[str] = None,
+    transcript_query: Optional[str] = None,
+    directus_client: Any,
+) -> dict[str, Any]:
+    normalized_limit = max(1, min(limit, 100))
+    normalized_conversation_id = _to_non_empty_string(conversation_id)
+    normalized_transcript_query = _to_non_empty_string(transcript_query)
+
+    if normalized_transcript_query is not None:
+        tokens = _normalize_transcript_query_tokens(normalized_transcript_query)
+        if not tokens:
+            return {
+                "project_id": project_id,
+                "count": 0,
+                "conversations": [],
+            }
+
+        transcript_or_filters: list[dict[str, Any]] = []
+        for token in tokens:
+            transcript_or_filters.append({"transcript": {"_icontains": token}})
+            transcript_or_filters.append({"raw_transcript": {"_icontains": token}})
+
+        transcript_and_filters: list[dict[str, Any]] = [
+            {"conversation_id": {"project_id": {"_eq": project_id}}},
+            {"_or": transcript_or_filters},
+        ]
+        if normalized_conversation_id:
+            transcript_and_filters.append({"conversation_id": {"id": {"_eq": normalized_conversation_id}}})
+
+        chunk_limit = min(max(normalized_limit * 25, 25), 250)
+        chunk_rows = directus_client.get_items(
+            "conversation_chunk",
+            {
+                "query": {
+                    "filter": {"_and": transcript_and_filters},
+                    "fields": [
+                        "id",
+                        "timestamp",
+                        "created_at",
+                        "conversation_id.id",
+                        "conversation_id.project_id",
+                        "conversation_id.participant_name",
+                        "conversation_id.summary",
+                        "conversation_id.is_finished",
+                        "conversation_id.is_all_chunks_transcribed",
+                        "conversation_id.created_at",
+                        "conversation_id.updated_at",
+                    ],
+                    "sort": ["-timestamp", "-created_at"],
+                    "limit": chunk_limit,
+                }
+            },
+        )
+
+        conversations_by_id: dict[str, dict[str, Any]] = {}
+        if isinstance(chunk_rows, list):
+            for row in chunk_rows:
+                if not isinstance(row, dict):
+                    continue
+                conversation_ref = row.get("conversation_id")
+                if not isinstance(conversation_ref, dict):
+                    continue
+                card = _to_agent_conversation_card(
+                    conversation_ref,
+                    project_id=project_id,
+                    fallback_project_id=project_id,
+                )
+                if card is None:
+                    continue
+                conversation_identifier = card["conversation_id"]
+                if conversation_identifier in conversations_by_id:
+                    continue
+                conversations_by_id[conversation_identifier] = card
+                if len(conversations_by_id) >= normalized_limit:
+                    break
+
+        conversations = list(conversations_by_id.values())
+        return {
+            "project_id": project_id,
+            "count": len(conversations),
+            "conversations": conversations,
+        }
+
+    conversation_filter: dict[str, Any] = {"project_id": {"_eq": project_id}}
+    if normalized_conversation_id:
+        conversation_filter["id"] = {"_eq": normalized_conversation_id}
+
+    rows = directus_client.get_items(
+        "conversation",
+        {
+            "query": {
+                "filter": conversation_filter,
+                "fields": [
+                    "id",
+                    "project_id",
+                    "participant_name",
+                    "summary",
+                    "is_finished",
+                    "is_all_chunks_transcribed",
+                    "created_at",
+                    "updated_at",
+                ],
+                "sort": "-updated_at",
+                "limit": normalized_limit,
+            }
+        },
+    )
+
+    conversations: list[dict[str, Any]] = []
+    if isinstance(rows, list):
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            card = _to_agent_conversation_card(
+                row,
+                project_id=project_id,
+                fallback_project_id=project_id,
+            )
+            if card is not None:
+                conversations.append(card)
+
+    return {
+        "project_id": project_id,
+        "count": len(conversations),
+        "conversations": conversations,
+    }
+
+
 def _persist_chat_user_message(project_chat_id: Optional[str], message: str) -> None:
     if not project_chat_id:
         return
@@ -159,7 +397,9 @@ async def _latest_user_turn(run_id: str) -> Optional[tuple[int, str]]:
         return None
 
     payload = _payload_to_dict(event.get("payload"))
-    content = payload.get("content")
+    content = payload.get("agent_prompt_content")
+    if not isinstance(content, str) or not content.strip():
+        content = payload.get("content")
     if not isinstance(content, str) or not content.strip():
         return None
 
@@ -274,11 +514,22 @@ async def create_run(
         project_chat_id=body.project_chat_id,
         directus_user_id=auth.user_id,
     )
+    project_name = _to_non_empty_string(project.get("name"))
+    project_context = _to_non_empty_string(project.get("context"))
+    agent_prompt_content = _build_initial_agent_prompt_content(
+        project_name=project_name,
+        project_context=project_context,
+        user_message=body.message,
+    )
+
     await run_in_thread_pool(
         agentic_run_service.append_event,
         run["id"],
         "user.message",
-        {"content": body.message},
+        {
+            "content": body.message,
+            "agent_prompt_content": agent_prompt_content,
+        },
     )
     await run_in_thread_pool(_persist_chat_user_message, body.project_chat_id, body.message)
 
@@ -311,6 +562,33 @@ async def append_message(
         body.message,
     )
     return await run_in_thread_pool(agentic_run_service.set_status, run_id, "queued")
+
+
+@AgenticRouter.get("/projects/{project_id}/conversations")
+async def list_project_conversations(
+    project_id: str,
+    auth: DependencyDirectusSession,
+    limit: int = Query(default=20, ge=1, le=100),
+    conversation_id: Optional[str] = Query(default=None),
+    transcript_query: Optional[str] = Query(default=None),
+) -> dict[str, Any]:
+    _require_agent_token(auth)
+
+    try:
+        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Project %s not found while listing project conversations", project_id)
+        raise HTTPException(status_code=404, detail="Project not found") from exc
+
+    _assert_project_authorized(project, auth)
+    return await run_in_thread_pool(
+        _list_project_conversations_for_agent,
+        project_id=project_id,
+        limit=limit,
+        conversation_id=conversation_id,
+        transcript_query=transcript_query,
+        directus_client=directus,
+    )
 
 
 @AgenticRouter.post("/runs/{run_id}/stream")

@@ -18,14 +18,18 @@ import type {
 	AgenticRunStatus,
 } from "@/lib/api";
 import {
+	appendAgenticRunMessage,
 	createAgenticRun,
 	getAgenticRun,
 	getAgenticRunEvents,
 	stopAgenticRun,
 	streamAgenticRun,
-	appendAgenticRunMessage,
 } from "@/lib/api";
 import { Markdown } from "../common/Markdown";
+import {
+	extractTopLevelToolActivity,
+	type ToolActivity,
+} from "./agenticToolActivity";
 import { ChatMessage } from "./ChatMessage";
 
 type AgenticChatPanelProps = {
@@ -39,11 +43,13 @@ type RenderMessage = {
 	content: string;
 };
 
-type ToolActivity = {
-	id: string;
-	title: string;
-	details: string | null;
-};
+type TimelineItem =
+	| (RenderMessage & {
+			kind: "message";
+	  })
+	| (ToolActivity & {
+			kind: "tool";
+	  });
 
 const storageKeyForChat = (chatId: string) => `agentic-run:${chatId}`;
 
@@ -53,44 +59,10 @@ const isTerminalStatus = (status: AgenticRunStatus | null) =>
 const isInFlightStatus = (status: AgenticRunStatus | null) =>
 	status === "queued" || status === "running";
 
-const MAX_ACTIVITY_DETAILS_LENGTH = 1200;
-
-const truncate = (value: string, maxLength = MAX_ACTIVITY_DETAILS_LENGTH) => {
-	if (value.length <= maxLength) return value;
-	return `${value.slice(0, maxLength)}...`;
-};
-
 const asObject = (value: unknown): Record<string, unknown> | null => {
-	if (value && typeof value === "object") return value as Record<string, unknown>;
+	if (value && typeof value === "object")
+		return value as Record<string, unknown>;
 	return null;
-};
-
-const formatDetails = (value: unknown): string | null => {
-	if (value === null || value === undefined) return null;
-
-	if (typeof value === "string") {
-		const trimmed = value.trim();
-		if (!trimmed) return null;
-		try {
-			const parsed = JSON.parse(trimmed) as unknown;
-			if (parsed && typeof parsed === "object") {
-				return truncate(JSON.stringify(parsed, null, 2));
-			}
-		} catch {
-			// Keep raw string details.
-		}
-		return truncate(trimmed);
-	}
-
-	if (typeof value === "object") {
-		try {
-			return truncate(JSON.stringify(value, null, 2));
-		} catch {
-			return truncate(String(value));
-		}
-	}
-
-	return truncate(String(value));
 };
 
 const toMessage = (event: AgenticRunEvent): RenderMessage | null => {
@@ -104,18 +76,18 @@ const toMessage = (event: AgenticRunEvent): RenderMessage | null => {
 				: null;
 
 	if (event.event_type === "user.message" && content) {
-		return { id: `u-${event.seq}`, role: "user", content };
+		return { content, id: `u-${event.seq}`, role: "user" };
 	}
 
 	if (event.event_type === "assistant.message" && content) {
-		return { id: `a-${event.seq}`, role: "assistant", content };
+		return { content, id: `a-${event.seq}`, role: "assistant" };
 	}
 
 	if (event.event_type === "run.failed" || event.event_type === "run.timeout") {
 		return {
+			content: content ?? "Agent run failed",
 			id: `s-${event.seq}`,
 			role: "dembrane",
-			content: content ?? "Agent run failed",
 		};
 	}
 
@@ -135,130 +107,31 @@ const toMessage = (event: AgenticRunEvent): RenderMessage | null => {
 					? data.message
 					: "Agent run failed";
 		return {
+			content: errorMessage,
 			id: `e-${event.seq}`,
 			role: "dembrane",
-			content: errorMessage,
 		};
 	}
 
 	return null;
 };
 
-const extractAssistantMessagesFromStateSync = (
-	event: AgenticRunEvent,
-): RenderMessage[] => {
-	if (event.event_type !== "on_copilotkit_state_sync") {
-		return [];
-	}
-
-	const payload = asObject(event.payload);
-	const state = asObject(payload?.state);
-	const rawMessages = Array.isArray(state?.messages) ? state.messages : [];
-
-	const results: RenderMessage[] = [];
-	for (const rawMessage of rawMessages) {
-		if (!rawMessage || typeof rawMessage !== "object") continue;
-		const message = rawMessage as Record<string, unknown>;
-		if (message.role !== "assistant") continue;
-		if (
-			typeof message.content !== "string" ||
-			message.content.trim().length === 0
-		)
-			continue;
-
-		const rawId = typeof message.id === "string" ? message.id : `${event.seq}`;
-		results.push({
-			id: `a-sync-${rawId}`,
-			role: "assistant",
-			content: message.content,
-		});
-	}
-
-	return results;
-};
-
-const extractToolActivityFromStateSync = (event: AgenticRunEvent): ToolActivity[] => {
-	if (event.event_type !== "on_copilotkit_state_sync") {
-		return [];
-	}
-
-	const payload = asObject(event.payload);
-	const state = asObject(payload?.state);
-	const rawMessages = Array.isArray(state?.messages) ? state.messages : [];
-	const activities: ToolActivity[] = [];
-
-	rawMessages.forEach((rawMessage, messageIndex) => {
-		const message = asObject(rawMessage);
-		if (!message) return;
-
-		if (message.role === "assistant") {
-			const toolCalls = Array.isArray(message.tool_calls) ? message.tool_calls : [];
-			toolCalls.forEach((rawCall, callIndex) => {
-				const call = asObject(rawCall);
-				if (!call) return;
-
-				const functionPayload = asObject(call.function);
-				const callId =
-					(typeof call.id === "string" && call.id) ||
-					`${event.seq}-${messageIndex}-${callIndex}`;
-				const name =
-					(typeof call.name === "string" && call.name) ||
-					(typeof functionPayload?.name === "string" && functionPayload.name) ||
-					"unknown_tool";
-				const args = call.args ?? call.arguments ?? functionPayload?.arguments ?? null;
-
-				activities.push({
-					id: `tool-call-${callId}`,
-					title: `Tool call: ${name}`,
-					details: formatDetails(args),
-				});
-			});
-		}
-
-		if (message.role === "tool") {
-			const toolName =
-				(typeof message.name === "string" && message.name) ||
-				(typeof message.tool_name === "string" && message.tool_name) ||
-				"tool";
-			const rawId =
-				(typeof message.id === "string" && message.id) ||
-				(typeof message.tool_call_id === "string" && message.tool_call_id) ||
-				`${event.seq}-${messageIndex}`;
-
-			activities.push({
-				id: `tool-result-${rawId}`,
-				title: `Tool result: ${toolName}`,
-				details: formatDetails(message.content),
-			});
-		}
-	});
-
-	return activities;
-};
-
-const extractTopLevelToolActivity = (event: AgenticRunEvent): ToolActivity[] => {
-	const eventType = event.event_type.toLowerCase();
-	if (!eventType.includes("tool")) {
-		return [];
-	}
-
-	const payload = asObject(event.payload);
-	const maybeName =
-		(typeof payload?.name === "string" && payload.name) ||
-		(typeof payload?.tool_name === "string" && payload.tool_name) ||
-		(typeof payload?.toolName === "string" && payload.toolName) ||
-		null;
-	const details =
-		formatDetails(payload?.input ?? payload?.args ?? payload?.content ?? payload) ??
-		formatDetails(event.payload);
-
-	return [
-		{
-			id: `tool-event-${event.seq}`,
-			title: maybeName ? `${event.event_type}: ${maybeName}` : event.event_type,
-			details,
-		},
-	];
+const TOOL_STATUS_META: Record<
+	ToolActivity["status"],
+	{ badgeClass: string; label: string }
+> = {
+	completed: {
+		badgeClass: "border-emerald-300 bg-emerald-100 text-emerald-800",
+		label: "✓",
+	},
+	error: {
+		badgeClass: "border-red-300 bg-red-100 text-red-800",
+		label: "Error",
+	},
+	running: {
+		badgeClass: "border-amber-300 bg-amber-100 text-amber-800",
+		label: "Running",
+	},
 };
 
 export const AgenticChatPanel = ({
@@ -277,38 +150,38 @@ export const AgenticChatPanel = ({
 	const [error, setError] = useState<string | null>(null);
 	const streamAbortRef = useRef<AbortController | null>(null);
 
-	const messages = useMemo(() => {
+	const timeline = useMemo(() => {
 		const sorted = [...events].sort((a, b) => a.seq - b.seq);
-		const byId = new Map<string, RenderMessage>();
+		const byId = new Map<string, TimelineItem>();
+		const orderedIds: string[] = [];
+
+		const upsertItem = (item: TimelineItem) => {
+			if (!byId.has(item.id)) {
+				orderedIds.push(item.id);
+			}
+			byId.set(item.id, item);
+		};
 
 		for (const event of sorted) {
 			const topLevelMessage = toMessage(event);
 			if (topLevelMessage) {
-				byId.set(topLevelMessage.id, topLevelMessage);
+				upsertItem({
+					...topLevelMessage,
+					kind: "message",
+				});
 			}
 
-			for (const message of extractAssistantMessagesFromStateSync(event)) {
-				byId.set(message.id, message);
-			}
-		}
-
-		return Array.from(byId.values());
-	}, [events]);
-
-	const toolActivity = useMemo(() => {
-		const sorted = [...events].sort((a, b) => a.seq - b.seq);
-		const byId = new Map<string, ToolActivity>();
-
-		for (const event of sorted) {
 			for (const activity of extractTopLevelToolActivity(event)) {
-				byId.set(activity.id, activity);
-			}
-			for (const activity of extractToolActivityFromStateSync(event)) {
-				byId.set(activity.id, activity);
+				upsertItem({
+					...activity,
+					kind: "tool",
+				});
 			}
 		}
 
-		return Array.from(byId.values());
+		return orderedIds
+			.map((id) => byId.get(id))
+			.filter((item): item is TimelineItem => item !== undefined);
 	}, [events]);
 
 	const mergeEvents = useCallback((incoming: AgenticRunEvent[]) => {
@@ -322,7 +195,10 @@ export const AgenticChatPanel = ({
 	}, []);
 
 	const refreshEvents = useCallback(
-		async (targetRunId: string, fromSeq: number): Promise<AgenticRunEventsResponse> => {
+		async (
+			targetRunId: string,
+			fromSeq: number,
+		): Promise<AgenticRunEventsResponse> => {
 			const payload = await getAgenticRunEvents(targetRunId, fromSeq);
 			mergeEvents(payload.events);
 			setAfterSeq(payload.next_seq);
@@ -351,7 +227,6 @@ export const AgenticChatPanel = ({
 			try {
 				await streamAgenticRun(targetRunId, {
 					afterSeq: fromSeq,
-					signal: abortController.signal,
 					onEvent: (event) => {
 						mergeEvents([event]);
 						setAfterSeq((previous) => Math.max(previous, event.seq));
@@ -363,6 +238,7 @@ export const AgenticChatPanel = ({
 							setRunStatus("timeout");
 						}
 					},
+					signal: abortController.signal,
 				});
 			} catch (streamError) {
 				if (abortController.signal.aborted) {
@@ -396,6 +272,7 @@ export const AgenticChatPanel = ({
 		[mergeEvents, stopStream],
 	);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: Reset panel state whenever chatId changes.
 	useEffect(() => {
 		stopStream();
 		setRunId(null);
@@ -454,7 +331,14 @@ export const AgenticChatPanel = ({
 			active = false;
 			window.clearInterval(interval);
 		};
-	}, [runId, runStatus, afterSeq, isStreaming, streamFailureCount, refreshEvents]);
+	}, [
+		runId,
+		runStatus,
+		afterSeq,
+		isStreaming,
+		streamFailureCount,
+		refreshEvents,
+	]);
 
 	useEffect(() => {
 		if (runStatus && isTerminalStatus(runStatus)) {
@@ -482,9 +366,9 @@ export const AgenticChatPanel = ({
 
 			if (!targetRunId) {
 				const created = await createAgenticRun({
-					project_id: projectId,
-					project_chat_id: chatId,
 					message,
+					project_chat_id: chatId,
+					project_id: projectId,
 				});
 				targetRunId = created.id;
 				setRunId(targetRunId);
@@ -521,9 +405,7 @@ export const AgenticChatPanel = ({
 			await stopAgenticRun(runId);
 		} catch (stopError) {
 			const message =
-				stopError instanceof Error
-					? stopError.message
-					: "Failed to stop run";
+				stopError instanceof Error ? stopError.message : "Failed to stop run";
 			setError(message);
 		} finally {
 			setIsStopping(false);
@@ -548,7 +430,9 @@ export const AgenticChatPanel = ({
 						<Button
 							variant="light"
 							size="xs"
-							leftSection={isStopping ? <Loader size={12} /> : <IconPlayerStop size={12} />}
+							leftSection={
+								isStopping ? <Loader size={12} /> : <IconPlayerStop size={12} />
+							}
 							onClick={() => void handleStop()}
 							disabled={isStopping}
 						>
@@ -570,47 +454,112 @@ export const AgenticChatPanel = ({
 
 			<Box className="min-h-0 flex-1 overflow-y-auto rounded border border-gray-200 p-3">
 				<Stack gap="sm">
-					{messages.length === 0 && (
+					{timeline.length === 0 && (
 						<Text c="dimmed" size="sm">
 							<Trans>Send a message to start an agentic run.</Trans>
 						</Text>
 					)}
-					{messages.map((message) => (
-						<ChatMessage
-							key={message.id}
-							role={message.role}
-							chatMode="agentic"
-						>
-							<Markdown className="prose-sm" content={message.content} />
-						</ChatMessage>
-					))}
+					{timeline.map((item) => {
+						if (item.kind === "message") {
+							return (
+								<ChatMessage key={item.id} role={item.role} chatMode="agentic">
+									<Markdown className="prose-sm" content={item.content} />
+								</ChatMessage>
+							);
+						}
 
-					{toolActivity.length > 0 && (
-						<Stack gap={6}>
-							<Text size="xs" c="dimmed" fw={600}>
-								Tool activity
-							</Text>
-							{toolActivity.map((activity) => (
-								<Box
-									key={activity.id}
-									className="rounded border border-gray-200 bg-gray-50 px-2 py-1"
-								>
-									<Text size="xs" fw={600}>
-										{activity.title}
-									</Text>
-									{activity.details && (
-										<Text
-											size="xs"
-											component="pre"
-											className="mt-1 whitespace-pre-wrap break-words font-mono"
-										>
-											{activity.details}
-										</Text>
-									)}
+						const statusMeta = TOOL_STATUS_META[item.status];
+						const hasRawData =
+							item.rawInput || item.rawOutput || item.rawError;
+						const showStatusBadge = item.status !== "running";
+
+						return (
+							<Box key={item.id} className="flex justify-start">
+								<Box className="w-full rounded border border-cyan-200 bg-cyan-50/50 px-3 py-2 md:max-w-[85%]">
+									<details>
+										<summary className="cursor-pointer list-none">
+											<Group justify="space-between" gap="xs" wrap="nowrap">
+												<Text size="xs" fw={700} c="dark">
+													{item.headline}
+												</Text>
+												{showStatusBadge && (
+													<Box
+														className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${statusMeta.badgeClass}`}
+													>
+														{statusMeta.label}
+													</Box>
+												)}
+											</Group>
+										</summary>
+										{(item.summaryLines.length > 0 || hasRawData) && (
+											<Stack gap={4} className="mt-2">
+												{item.summaryLines.map((line) => (
+													<Text
+														key={`${item.id}:${line}`}
+														size="xs"
+														c="dark"
+													>
+														{line}
+													</Text>
+												))}
+												{hasRawData && (
+													<details className="rounded border border-cyan-100 bg-white">
+														<summary className="cursor-pointer list-none px-2 py-1 text-xs font-semibold text-gray-700">
+															Raw data
+														</summary>
+														<Stack gap={6} className="px-2 pb-2">
+															{item.rawInput && (
+																<Box>
+																	<Text size="xs" c="dimmed" fw={700}>
+																		Input
+																	</Text>
+																	<Text
+																		size="xs"
+																		component="pre"
+																		className="mt-1 whitespace-pre-wrap break-words rounded border border-cyan-100 bg-white p-2 font-mono"
+																	>
+																		{item.rawInput}
+																	</Text>
+																</Box>
+															)}
+															{item.rawOutput && (
+																<Box>
+																	<Text size="xs" c="dimmed" fw={700}>
+																		Output
+																	</Text>
+																	<Text
+																		size="xs"
+																		component="pre"
+																		className="mt-1 whitespace-pre-wrap break-words rounded border border-cyan-100 bg-white p-2 font-mono"
+																	>
+																		{item.rawOutput}
+																	</Text>
+																</Box>
+															)}
+															{item.rawError && (
+																<Box>
+																	<Text size="xs" c="dimmed" fw={700}>
+																		Error
+																	</Text>
+																	<Text
+																		size="xs"
+																		component="pre"
+																		className="mt-1 whitespace-pre-wrap break-words rounded border border-red-100 bg-red-50 p-2 font-mono"
+																	>
+																		{item.rawError}
+																	</Text>
+																</Box>
+															)}
+														</Stack>
+													</details>
+												)}
+											</Stack>
+										)}
+									</details>
 								</Box>
-							))}
-						</Stack>
-					)}
+							</Box>
+						);
+					})}
 				</Stack>
 			</Box>
 
@@ -634,11 +583,7 @@ export const AgenticChatPanel = ({
 						isSubmitting ? <Loader size={14} /> : <IconSend size={14} />
 					}
 					onClick={() => void handleSubmit()}
-					disabled={
-						isSubmitting ||
-						isRunInFlight ||
-						input.trim().length === 0
-					}
+					disabled={isSubmitting || isRunInFlight || input.trim().length === 0}
 				>
 					<Trans>Send</Trans>
 				</Button>

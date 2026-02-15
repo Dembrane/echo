@@ -31,6 +31,21 @@ class HomeSearchResponse(TypedDict, total=False):
     chats: list[dict[str, Any]]
 
 
+class AgentProjectConversation(TypedDict, total=False):
+    conversation_id: str
+    participant_name: Optional[str]
+    status: str
+    summary: Optional[str]
+    started_at: Optional[str]
+    last_chunk_at: Optional[str]
+
+
+class AgentProjectConversationsResponse(TypedDict, total=False):
+    project_id: str
+    count: int
+    conversations: list[AgentProjectConversation]
+
+
 class EchoClient:
     def __init__(self, bearer_token: Optional[str] = None) -> None:
         settings = get_settings()
@@ -71,3 +86,26 @@ class EchoClient:
         if isinstance(payload, dict) and isinstance(payload.get("transcript"), str):
             return payload["transcript"]
         return str(payload)
+
+    async def list_project_conversations(
+        self,
+        project_id: str,
+        limit: int = 20,
+        conversation_id: str | None = None,
+        transcript_query: str | None = None,
+    ) -> AgentProjectConversationsResponse:
+        params: dict[str, object] = {"limit": limit}
+        if conversation_id:
+            params["conversation_id"] = conversation_id
+        if transcript_query:
+            params["transcript_query"] = transcript_query
+
+        response = await self._client.get(
+            f"/agentic/projects/{project_id}/conversations",
+            params=params,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, dict):
+            raise ValueError("Unexpected list project conversations response shape")
+        return cast(AgentProjectConversationsResponse, payload)

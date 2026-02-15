@@ -25,8 +25,9 @@ async def test_create_agent_graph_uses_mocked_llm_deterministically():
         config={"configurable": {"thread_id": "thread-test-1"}},
     )
 
-    assert any(isinstance(message, SystemMessage) for message in result["messages"])
+    # System message is used for LLM invocation but not persisted in state to avoid duplication
     assert result["messages"][-1].content == "mocked-response"
+    assert any(msg.content == "mocked-response" for msg in result["messages"])
 
 
 def test_create_agent_graph_requires_bearer_token():
