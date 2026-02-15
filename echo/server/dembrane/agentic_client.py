@@ -25,12 +25,55 @@ class AgenticUpstreamError(AgenticClientError):
         super().__init__(message)
 
 
+MessageHistoryEntry = dict[str, str]
+
+
+def _build_payload_messages(
+    *,
+    user_message: str,
+    message_history: Optional[list[MessageHistoryEntry]],
+) -> list[dict[str, str]]:
+    if isinstance(message_history, list):
+        payload_messages: list[dict[str, str]] = []
+        for message in message_history:
+            if not isinstance(message, dict):
+                continue
+            role = message.get("role")
+            content = message.get("content")
+            if role not in {"user", "assistant"}:
+                continue
+            if not isinstance(content, str) or not content.strip():
+                continue
+
+            payload_messages.append(
+                {
+                    "id": str(uuid4()),
+                    "type": "TextMessage",
+                    "role": role,
+                    "content": content,
+                }
+            )
+
+        if payload_messages:
+            return payload_messages
+
+    return [
+        {
+            "id": str(uuid4()),
+            "type": "TextMessage",
+            "role": "user",
+            "content": user_message,
+        }
+    ]
+
+
 async def stream_agent_events(
     *,
     project_id: str,
     user_message: str,
     bearer_token: str,
     thread_id: Optional[str] = None,
+    message_history: Optional[list[MessageHistoryEntry]] = None,
     agent_service_url: Optional[str] = None,
     timeout_seconds: Optional[float] = None,
 ) -> AsyncGenerator[dict[str, Any], None]:
@@ -47,14 +90,10 @@ async def stream_agent_events(
         "threadId": thread_id,
         "state": {},
         "actions": [],
-        "messages": [
-            {
-                "id": str(uuid4()),
-                "type": "TextMessage",
-                "role": "user",
-                "content": user_message,
-            }
-        ],
+        "messages": _build_payload_messages(
+            user_message=user_message,
+            message_history=message_history,
+        ),
     }
 
     try:

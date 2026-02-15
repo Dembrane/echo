@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import asyncio
-from typing import Any, Optional
+from typing import Any, AsyncGenerator, Optional
 from logging import getLogger
 
 from dembrane.service import chat_service, agentic_run_service
@@ -21,10 +21,34 @@ AGENT_CANCELLED_ERROR_CODE = "AGENT_CANCELLED"
 AGENT_CANCELLED_MESSAGE = "Run cancelled by user"
 MAX_TOOL_CALLS_PER_RUN = 12
 PLANNING_MESSAGE_MAX_CHARS = 280
+HISTORY_PAGE_SIZE = 500
+OVERFLOW_RETRY_WINDOW_SIZE = 24
 
 
 class AgenticRunCancelledError(Exception):
     pass
+
+
+def _payload_to_dict(payload: Any) -> dict[str, Any]:
+    if isinstance(payload, dict):
+        return payload
+    if isinstance(payload, str):
+        try:
+            value = json.loads(payload)
+        except json.JSONDecodeError:
+            return {}
+        if isinstance(value, dict):
+            return value
+    return {}
+
+
+def _coerce_non_empty_text(value: Any) -> Optional[str]:
+    if not isinstance(value, str):
+        return None
+    normalized = value.strip()
+    if not normalized:
+        return None
+    return normalized
 
 
 def _coerce_text(value: Any) -> str:
@@ -90,6 +114,122 @@ def _condense_planning_message(content: str) -> str:
     if " " in shortened:
         shortened = shortened.rsplit(" ", 1)[0]
     return f"{shortened}..."
+
+
+def _is_context_overflow_error(exc: AgenticUpstreamError) -> bool:
+    if exc.status_code == 413:
+        return True
+
+    haystack = f"{exc.error_code} {exc.message}".lower()
+    if "prompt too long" in haystack:
+        return True
+    if "context" in haystack and any(
+        marker in haystack for marker in ("length", "window", "limit", "too long", "maximum")
+    ):
+        return True
+    if "token" in haystack and any(
+        marker in haystack for marker in ("limit", "maximum", "too many", "context", "length")
+    ):
+        return True
+    if "maximum" in haystack and ("context" in haystack or "token" in haystack):
+        return True
+    return False
+
+
+async def _build_message_history(
+    *,
+    svc: AgenticRunService,
+    run_id: str,
+) -> list[dict[str, str]]:
+    history: list[dict[str, str]] = []
+    after_seq = 0
+
+    while True:
+        events = await run_in_thread_pool(
+            svc.list_events,
+            run_id,
+            after_seq=after_seq,
+            limit=HISTORY_PAGE_SIZE,
+        )
+        if not events:
+            break
+
+        for event in events:
+            event_type = str(event.get("event_type") or "")
+            if event_type not in {"user.message", "assistant.message"}:
+                continue
+
+            payload = _payload_to_dict(event.get("payload"))
+            role = "user" if event_type == "user.message" else "assistant"
+
+            if role == "user":
+                content = _coerce_non_empty_text(payload.get("agent_prompt_content"))
+                if content is None:
+                    content = _coerce_non_empty_text(payload.get("content"))
+            else:
+                content = _coerce_non_empty_text(payload.get("content"))
+
+            if content is None:
+                continue
+            history.append({"role": role, "content": content})
+
+        try:
+            last_seq = int(events[-1].get("seq") or 0)
+        except (TypeError, ValueError):
+            logger.warning("Failed to parse event sequence while building history for run %s", run_id)
+            break
+
+        if last_seq <= after_seq:
+            break
+        after_seq = last_seq
+
+        if len(events) < HISTORY_PAGE_SIZE:
+            break
+
+    return history
+
+
+async def _stream_with_overflow_retry(
+    *,
+    project_id: str,
+    user_message: str,
+    bearer_token: str,
+    thread_id: str,
+    message_history: list[dict[str, str]],
+) -> AsyncGenerator[dict[str, Any], None]:
+    attempts: list[list[dict[str, str]]] = [message_history]
+    if len(message_history) > OVERFLOW_RETRY_WINDOW_SIZE:
+        attempts.append(message_history[-OVERFLOW_RETRY_WINDOW_SIZE:])
+
+    for index, attempt_history in enumerate(attempts):
+        emitted_events = False
+        try:
+            async for event in stream_agent_events(
+                project_id=project_id,
+                user_message=user_message,
+                bearer_token=bearer_token,
+                thread_id=thread_id,
+                message_history=attempt_history,
+            ):
+                emitted_events = True
+                yield event
+            return
+        except AgenticUpstreamError as exc:
+            should_retry = (
+                index == 0
+                and len(attempts) > 1
+                and not emitted_events
+                and _is_context_overflow_error(exc)
+            )
+            if not should_retry:
+                raise
+
+            logger.warning(
+                "Run %s overflowed context with %s messages; retrying with last %s messages",
+                thread_id,
+                len(attempt_history),
+                OVERFLOW_RETRY_WINDOW_SIZE,
+            )
 
 
 async def _append_event_and_publish(
@@ -163,12 +303,17 @@ async def process_agentic_run(
 
     try:
         await _raise_if_cancelled(run_id, turn_seq)
+        message_history = await _build_message_history(
+            svc=svc,
+            run_id=run_id,
+        )
 
-        async for event in stream_agent_events(
+        async for event in _stream_with_overflow_retry(
             project_id=project_id,
             user_message=user_message,
             bearer_token=bearer_token,
             thread_id=run_id,
+            message_history=message_history,
         ):
             await _raise_if_cancelled(run_id, turn_seq)
             event_type = str(event.get("type") or event.get("event") or "agent.event")

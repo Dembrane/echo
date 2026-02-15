@@ -37,9 +37,14 @@ async def test_process_agentic_run_completes_persists_and_publishes(monkeypatch)
     published_events: list[str] = []
 
     async def _fake_stream(
-        *, project_id: str, user_message: str, bearer_token: str, thread_id: str
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
     ):
-        _ = (project_id, user_message, bearer_token)
+        _ = (project_id, user_message, bearer_token, message_history)
         assert thread_id == run["id"]
         yield {"type": "assistant.delta", "content": "hel"}
         yield {"type": "assistant.message", "content": "hello"}
@@ -93,9 +98,14 @@ async def test_process_agentic_run_handles_timeout(monkeypatch) -> None:
     run = service.create_run(project_id="project-1", directus_user_id="user-1")
 
     async def _fake_stream(
-        *, project_id: str, user_message: str, bearer_token: str, thread_id: str
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
     ):
-        _ = (project_id, user_message, bearer_token, thread_id)
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
         raise AgenticTimeoutError("timed out")
         yield  # pragma: no cover
 
@@ -139,15 +149,21 @@ async def test_process_agentic_run_persists_partial_stream_before_upstream_failu
     run = service.create_run(project_id="project-1", directus_user_id="user-1")
 
     async def _fake_stream(
-        *, project_id: str, user_message: str, bearer_token: str, thread_id: str
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
     ):
-        _ = (project_id, user_message, bearer_token, thread_id)
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
         yield {"type": "assistant.delta", "content": "hel"}
         raise AgenticUpstreamError(
             status_code=401,
             error_code="AGENT_UPSTREAM_401",
             message="token expired",
         )
+        yield  # pragma: no cover
 
     async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
         return None
@@ -187,9 +203,14 @@ async def test_process_agentic_run_handles_cancel_request(monkeypatch) -> None:
     run = service.create_run(project_id="project-1", directus_user_id="user-1")
 
     async def _fake_stream(
-        *, project_id: str, user_message: str, bearer_token: str, thread_id: str
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
     ):
-        _ = (project_id, user_message, bearer_token, thread_id)
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
         yield {"type": "assistant.delta", "content": "hel"}
         yield {"type": "assistant.message", "content": "hello"}
 
@@ -245,9 +266,14 @@ async def test_process_agentic_run_splits_planning_and_final_synthesis(monkeypat
     )
 
     async def _fake_stream(
-        *, project_id: str, user_message: str, bearer_token: str, thread_id: str
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
     ):
-        _ = (project_id, user_message, bearer_token)
+        _ = (project_id, user_message, bearer_token, message_history)
         assert thread_id == run["id"]
         yield {
             "type": "on_chat_model_end",
@@ -338,9 +364,14 @@ async def test_process_agentic_run_falls_back_to_default_intro_when_model_has_no
     run = service.create_run(project_id="project-1", directus_user_id="user-1")
 
     async def _fake_stream(
-        *, project_id: str, user_message: str, bearer_token: str, thread_id: str
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
     ):
-        _ = (project_id, user_message, bearer_token, thread_id)
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
         yield {"type": "on_tool_start", "name": "listProjectConversations"}
         yield {"type": "on_tool_end", "name": "listProjectConversations", "data": {"output": {}}}
         yield {
@@ -386,3 +417,245 @@ async def test_process_agentic_run_falls_back_to_default_intro_when_model_has_no
         "I'll first gather evidence before answering. Starting with `listProjectConversations`."
     )
     assert assistant_events[1]["payload"]["content"] == "Final answer only."
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_passes_persisted_message_history(monkeypatch) -> None:
+    service = _build_service()
+    run = service.create_run(project_id="project-1", directus_user_id="user-1")
+    service.append_event(
+        run["id"],
+        "user.message",
+        {
+            "content": "hello raw",
+            "agent_prompt_content": (
+                "Project Name: Helix\nProject Context: politics\n\nUser Message: hello"
+            ),
+        },
+    )
+    service.append_event(run["id"], "assistant.message", {"content": "hello back"})
+    service.append_event(run["id"], "user.message", {"content": "follow up"})
+
+    captured: dict[str, list[dict[str, str]] | None] = {"message_history": None}
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+    ):
+        _ = (project_id, user_message, bearer_token)
+        assert thread_id == run["id"]
+        captured["message_history"] = message_history
+        yield {"type": "assistant.message", "content": "final answer"}
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="follow up",
+        bearer_token="token-1",
+        turn_seq=3,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    assert captured["message_history"] == [
+        {"role": "user", "content": "Project Name: Helix\nProject Context: politics\n\nUser Message: hello"},
+        {"role": "assistant", "content": "hello back"},
+        {"role": "user", "content": "follow up"},
+    ]
+    stored_run = service.get_by_id_or_raise(run["id"])
+    assert stored_run["status"] == "completed"
+    assert stored_run["latest_output"] == "final answer"
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_retries_once_on_context_overflow(monkeypatch) -> None:
+    service = _build_service()
+    run = service.create_run(project_id="project-1", directus_user_id="user-1")
+    for index in range(15):
+        service.append_event(run["id"], "user.message", {"content": f"user-{index}"})
+        service.append_event(run["id"], "assistant.message", {"content": f"assistant-{index}"})
+    service.append_event(run["id"], "user.message", {"content": "latest-user"})
+
+    histories: list[list[dict[str, str]]] = []
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id)
+        assert message_history is not None
+        histories.append([dict(item) for item in message_history])
+
+        if len(histories) == 1:
+            raise AgenticUpstreamError(
+                status_code=400,
+                error_code="AGENT_UPSTREAM_400",
+                message="maximum context length exceeded",
+            )
+
+        yield {"type": "assistant.message", "content": "retry success"}
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="latest-user",
+        bearer_token="token-1",
+        turn_seq=31,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    assert len(histories) == 2
+    assert len(histories[1]) == 24
+    assert histories[1] == histories[0][-24:]
+    stored_run = service.get_by_id_or_raise(run["id"])
+    assert stored_run["status"] == "completed"
+    assert stored_run["latest_output"] == "retry success"
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_does_not_retry_non_overflow_upstream_errors(monkeypatch) -> None:
+    service = _build_service()
+    run = service.create_run(project_id="project-1", directus_user_id="user-1")
+    service.append_event(run["id"], "user.message", {"content": "hello"})
+
+    state = {"calls": 0}
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
+        state["calls"] += 1
+        raise AgenticUpstreamError(
+            status_code=401,
+            error_code="AGENT_UPSTREAM_401",
+            message="token expired",
+        )
+        yield  # pragma: no cover
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    assert state["calls"] == 1
+    stored_run = service.get_by_id_or_raise(run["id"])
+    assert stored_run["status"] == "failed"
+    assert stored_run["latest_error_code"] == "AGENT_UPSTREAM_401"
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_does_not_retry_after_stream_events(monkeypatch) -> None:
+    service = _build_service()
+    run = service.create_run(project_id="project-1", directus_user_id="user-1")
+    service.append_event(run["id"], "user.message", {"content": "hello"})
+
+    state = {"calls": 0}
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
+        state["calls"] += 1
+        yield {"type": "assistant.delta", "content": "partial"}
+        raise AgenticUpstreamError(
+            status_code=400,
+            error_code="AGENT_UPSTREAM_400",
+            message="maximum context length exceeded",
+        )
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    assert state["calls"] == 1
+    stored_run = service.get_by_id_or_raise(run["id"])
+    events = service.list_events(run["id"])
+    assert stored_run["status"] == "failed"
+    assert stored_run["latest_error_code"] == "AGENT_UPSTREAM_400"
+    assert [event["event_type"] for event in events] == ["user.message", "assistant.delta", "run.failed"]

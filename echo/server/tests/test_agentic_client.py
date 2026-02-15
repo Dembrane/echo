@@ -116,6 +116,52 @@ async def test_stream_agent_events_forwards_headers_body_and_path(monkeypatch) -
 
 
 @pytest.mark.asyncio
+async def test_stream_agent_events_serializes_message_history_in_order(monkeypatch) -> None:
+    capture: dict[str, Any] = {}
+    response = _FakeStreamResponse(status_code=200, chunks=['{"type":"assistant.message","content":"done"}\n'])
+
+    def _build_client(*, base_url: str, timeout: float) -> _FakeAsyncClient:
+        return _FakeAsyncClient(
+            base_url=base_url,
+            timeout=timeout,
+            capture=capture,
+            response=response,
+        )
+
+    monkeypatch.setattr("dembrane.agentic_client.httpx.AsyncClient", _build_client)
+
+    events = [
+        event
+        async for event in stream_agent_events(
+            project_id="project-1",
+            user_message="ignored-when-history-present",
+            bearer_token="token-1",
+            thread_id="run-1",
+            message_history=[
+                {"role": "user", "content": "first-user"},
+                {"role": "assistant", "content": "first-assistant"},
+                {"role": "user", "content": "second-user"},
+            ],
+            agent_service_url="http://agent.test",
+            timeout_seconds=42,
+        )
+    ]
+
+    assert [message["role"] for message in capture["json"]["messages"]] == [
+        "user",
+        "assistant",
+        "user",
+    ]
+    assert [message["content"] for message in capture["json"]["messages"]] == [
+        "first-user",
+        "first-assistant",
+        "second-user",
+    ]
+    assert all(message["id"] for message in capture["json"]["messages"])
+    assert events == [{"type": "assistant.message", "content": "done"}]
+
+
+@pytest.mark.asyncio
 async def test_stream_agent_events_raises_upstream_error(monkeypatch) -> None:
     capture: dict[str, Any] = {}
     response = _FakeStreamResponse(status_code=503, body=b"service unavailable")
