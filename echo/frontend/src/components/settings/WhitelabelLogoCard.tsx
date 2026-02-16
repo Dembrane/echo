@@ -81,9 +81,10 @@ export const WhitelabelLogoCard = () => {
 		},
 	});
 
-	const handleUpload = () => {
-		if (file) {
-			uploadMutation.mutate(file);
+	const handleFileChange = (selectedFile: File | null) => {
+		setFile(selectedFile);
+		if (selectedFile) {
+			uploadMutation.mutate(selectedFile);
 		}
 	};
 
@@ -135,23 +136,14 @@ export const WhitelabelLogoCard = () => {
 					</Text>
 				)}
 
-				<Stack gap="xs">
-					<FileInput
-						accept="image/png,image/jpeg,image/svg+xml,image/webp"
-						placeholder={t`Choose a logo file`}
-						value={file}
-						onChange={setFile}
-						leftSection={<IconUpload size={16} />}
-					/>
-					<Button
-						size="compact-sm"
-						disabled={!file}
-						loading={uploadMutation.isPending}
-						onClick={handleUpload}
-					>
-						<Trans>Upload</Trans>
-					</Button>
-				</Stack>
+				<FileInput
+					accept="image/png,image/jpeg,image/svg+xml,image/webp"
+					placeholder={t`Choose a logo file`}
+					value={file}
+					onChange={handleFileChange}
+					leftSection={<IconUpload size={16} />}
+					disabled={uploadMutation.isPending}
+				/>
 			</Stack>
 		</Card>
 	);
