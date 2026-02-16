@@ -19,8 +19,8 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { ShieldCheckIcon } from "@phosphor-icons/react";
-import { IconEye, IconEyeOff, IconRefresh, IconX } from "@tabler/icons-react";
+import { DetectiveIcon } from "@phosphor-icons/react";
+import { IconEye, IconEyeOff, IconInfoCircle, IconRefresh, IconRosetteDiscountCheck, IconX } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Resizable } from "re-resizable";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -30,7 +30,6 @@ import { useAutoSave } from "@/hooks/useAutoSave";
 import { useLanguage } from "@/hooks/useLanguage";
 import type { VerificationTopicsResponse } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
-import { Logo } from "../common/Logo";
 import { toast } from "../common/Toaster";
 import { FormLabel } from "../form/FormLabel";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
@@ -634,7 +633,6 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												<Title order={4}>
 													<Trans>Explore</Trans>
 												</Title>
-												<Logo hideTitle alwaysDembrane />
 												<Badge color="mauve" c="graphite" size="sm">
 													<Trans id="dashboard.dembrane.concrete.beta">
 														Beta
@@ -841,7 +839,10 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														Verify
 													</Trans>
 												</Title>
-												<Logo hideTitle alwaysDembrane />
+												<IconRosetteDiscountCheck
+													size={20}
+													color="var(--mantine-color-primary-filled)"
+												/>
 												<Badge color="mauve" c="graphite" size="sm">
 													<Trans id="dashboard.dembrane.verify.beta">
 														Beta
@@ -1171,7 +1172,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 											<Title order={4}>
 												<Trans>Anonymize Transcripts</Trans>
 											</Title>
-											<ShieldCheckIcon
+											<DetectiveIcon
 												size={20}
 												color="var(--mantine-color-primary-filled)"
 											/>
@@ -1219,6 +1220,10 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 											<Title order={4}>
 												<Trans>Auto-generate Titles</Trans>
 											</Title>
+											<IconInfoCircle
+												size={20}
+												className="text-gray-400"
+											/>
 											<Badge color="mauve" c="graphite" size="sm">
 												<Trans>Beta</Trans>
 											</Badge>

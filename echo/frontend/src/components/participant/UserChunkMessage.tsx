@@ -4,6 +4,7 @@ import { IconDotsVertical, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router";
 import { Markdown } from "@/components/common/Markdown";
+import { RedactedText } from "@/components/common/RedactedText";
 import { toast } from "@/components/common/Toaster";
 import { deleteParticipantConversationChunk } from "@/lib/api";
 
@@ -101,14 +102,18 @@ const UserChunkMessage = ({
 					</Menu.Dropdown>
 				</Menu>
 			</div>
-			<Paper className="my-2 rounded-t-xl rounded-bl-xl border-0 bg-gray-100 p-4">
-				<Text className="prose text-sm">
-					{chunk.transcript == null && (
-						<Markdown content={t`*Transcription in progress.*`} />
-					)}
+		<Paper className="my-2 rounded-t-xl rounded-bl-xl border-0 bg-gray-100 p-4">
+			<Text className="prose text-sm">
+				{chunk.transcript == null && (
+					<Markdown content={t`*Transcription in progress.*`} />
+				)}
+				{chunk.transcript?.includes("<redacted_") ? (
+					<RedactedText>{chunk.transcript}</RedactedText>
+				) : (
 					<Markdown content={chunk.transcript ?? ""} />
-				</Text>
-			</Paper>
+				)}
+			</Text>
+		</Paper>
 		</div>
 	);
 };
