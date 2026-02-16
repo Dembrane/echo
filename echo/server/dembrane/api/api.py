@@ -5,6 +5,7 @@ from fastapi import (
 )
 
 from dembrane.api.chat import ChatRouter
+from dembrane.api.stats import StatsRouter
 from dembrane.api.search import SearchRouter
 from dembrane.api.verify import VerifyRouter
 from dembrane.api.project import ProjectRouter
@@ -33,3 +34,4 @@ api.include_router(StatelessRouter, prefix="/stateless")
 api.include_router(VerifyRouter, prefix="/verify")
 api.include_router(SearchRouter)
 api.include_router(UserSettingsRouter, prefix="/user-settings")
+api.include_router(StatsRouter, prefix="/stats")
