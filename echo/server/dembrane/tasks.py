@@ -1,6 +1,6 @@
 # ruff: noqa: E402
 import logging
-from typing import Optional
+from typing import Any, Optional
 from logging import getLogger
 
 import dramatiq
@@ -107,7 +107,10 @@ dramatiq.set_broker(broker)
 # Transcription Task
 @dramatiq.actor(queue_name="network", priority=0)
 def task_transcribe_chunk(
-    conversation_chunk_id: str, conversation_id: str, use_pii_redaction: bool = False, anonymize_transcripts: bool = False
+    conversation_chunk_id: str,
+    conversation_id: str,
+    use_pii_redaction: bool = False,
+    anonymize_transcripts: bool = False,
 ) -> None:
     """
     Transcribe a conversation chunk.
@@ -124,6 +127,61 @@ def task_transcribe_chunk(
             event_prefix="task_transcribe_chunk",
             message=f"for chunk {conversation_chunk_id}",
         ):
+            from dembrane.s3 import get_signed_url
+            from dembrane.transcribe import (
+                ASSEMBLYAI_WEBHOOK_URL,
+                TRANSCRIPTION_PROVIDER,
+                ASSEMBLYAI_WEBHOOK_SECRET,
+                _fetch_chunk,
+                _build_hotwords,
+                _fetch_conversation,
+                transcribe_audio_assemblyai,
+            )
+            from dembrane.coordination import store_assemblyai_webhook_metadata
+
+            if TRANSCRIPTION_PROVIDER == "Dembrane-25-09" and ASSEMBLYAI_WEBHOOK_URL:
+                chunk = _fetch_chunk(conversation_chunk_id)
+                conversation = _fetch_conversation(chunk["conversation_id"])
+                language = conversation["project_id"]["language"] or "en"
+                hotwords = _build_hotwords(conversation)
+                custom_guidance_prompt = conversation["project_id"].get(
+                    "default_conversation_transcript_prompt"
+                )
+                signed_url = get_signed_url(chunk["path"], expires_in_seconds=3 * 24 * 60 * 60)
+
+                _, response = transcribe_audio_assemblyai(
+                    signed_url,
+                    language=language,
+                    hotwords=hotwords,
+                    webhook_url=ASSEMBLYAI_WEBHOOK_URL,
+                    webhook_secret=ASSEMBLYAI_WEBHOOK_SECRET,
+                )
+
+                transcript_id = response.get("transcript_id")
+                if not transcript_id:
+                    raise ValueError(
+                        "AssemblyAI webhook submission succeeded but transcript_id was missing."
+                    )
+
+                store_assemblyai_webhook_metadata(
+                    transcript_id=transcript_id,
+                    chunk_id=conversation_chunk_id,
+                    conversation_id=conversation_id,
+                    audio_file_uri=signed_url,
+                    language=language,
+                    hotwords=hotwords,
+                    use_pii_redaction=use_pii_redaction,
+                    custom_guidance_prompt=custom_guidance_prompt,
+                    anonymize_transcripts=anonymize_transcripts,
+                )
+
+                logger.info(
+                    "Webhook mode: submitted transcript %s for chunk %s and freed worker",
+                    transcript_id,
+                    conversation_chunk_id,
+                )
+                return
+
             transcribe_conversation_chunk(conversation_chunk_id, use_pii_redaction, anonymize_transcripts)
 
         # Transcription succeeded - decrement counter and check for finalization
@@ -194,6 +252,108 @@ def _on_chunk_transcription_done(
                 )
         except Exception as e:
             logger.error(f"Error checking conversation state for {conversation_id}: {e}")
+
+
+@dramatiq.actor(queue_name="network", priority=0)
+def task_correct_transcript(
+    chunk_id: str,
+    conversation_id: str,
+    audio_file_uri: str,
+    candidate_transcript: str,
+    hotwords: list[str] | None,
+    use_pii_redaction: bool,
+    custom_guidance_prompt: str | None,
+    assemblyai_response: dict[str, Any],
+    anonymize_transcripts: bool = False,
+) -> None:
+    """Run transcript correction and persist the final transcript for webhook mode."""
+    task_logger = getLogger("dembrane.tasks.task_correct_transcript")
+
+    from dembrane.transcribe import (
+        _save_transcript,
+        _save_chunk_error,
+        _transcript_correction_workflow,
+    )
+
+    fallback_transcript = candidate_transcript or "[Nothing to transcribe]"
+
+    try:
+        if anonymize_transcripts:
+            from dembrane.pii_regex import regex_redact_pii
+
+            fallback_transcript = regex_redact_pii(fallback_transcript) or "[Nothing to transcribe]"
+
+        with ProcessingStatusContext(
+            conversation_id=conversation_id,
+            event_prefix="task_correct_transcript",
+            message=f"for chunk {chunk_id}",
+        ):
+            corrected_transcript, note = _transcript_correction_workflow(
+                audio_file_uri=audio_file_uri,
+                candidate_transcript=fallback_transcript,
+                hotwords=hotwords,
+                use_pii_redaction=True if anonymize_transcripts else use_pii_redaction,
+                custom_guidance_prompt=custom_guidance_prompt,
+            )
+
+        final_transcript = corrected_transcript or "[Nothing to transcribe]"
+        if anonymize_transcripts:
+            diarization = {
+                "schema": "Dembrane-26-01-redaction",
+                "data": {
+                    "note": note,
+                    "raw": {},
+                    "error": None,
+                },
+            }
+        else:
+            diarization = {
+                "schema": "Dembrane-25-09",
+                "data": {
+                    "note": note,
+                    "raw": assemblyai_response,
+                    "error": None,
+                },
+            }
+
+        _save_transcript(chunk_id, final_transcript, diarization=diarization)
+    except Exception as e:
+        task_logger.error("Gemini correction failed for chunk %s: %s", chunk_id, e)
+
+        try:
+            if anonymize_transcripts:
+                fallback_diarization = {
+                    "schema": "Dembrane-26-01-redaction",
+                    "data": {
+                        "note": None,
+                        "raw": {},
+                        "error": str(e),
+                    },
+                }
+            else:
+                fallback_diarization = {
+                    "schema": "Dembrane-25-09",
+                    "data": {
+                        "note": None,
+                        "raw": assemblyai_response,
+                        "error": str(e),
+                    },
+                }
+
+            _save_transcript(
+                chunk_id,
+                fallback_transcript or "[Nothing to transcribe]",
+                diarization=fallback_diarization,
+            )
+        except Exception as save_error:
+            task_logger.error(
+                "Failed to save fallback transcript for chunk %s: %s",
+                chunk_id,
+                save_error,
+            )
+            _save_chunk_error(chunk_id, f"Failed to save fallback transcript: {save_error}")
+    finally:
+        _on_chunk_transcription_done(conversation_id, chunk_id, task_logger)
 
 
 @dramatiq.actor(queue_name="network", priority=20)
@@ -950,4 +1110,3 @@ def task_dispatch_webhook(webhook_id: str, payload: dict) -> None:
     except Exception as e:
         logger.error(f"Webhook {webhook_id} dispatch failed: {e}")
         raise  # Retry on network errors etc.
-

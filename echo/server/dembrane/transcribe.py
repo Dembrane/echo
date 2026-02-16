@@ -34,6 +34,8 @@ transcription_cfg = settings.transcription
 GCP_SA_JSON = transcription_cfg.gcp_sa_json
 ASSEMBLYAI_API_KEY = transcription_cfg.assemblyai_api_key
 ASSEMBLYAI_BASE_URL = transcription_cfg.assemblyai_base_url
+ASSEMBLYAI_WEBHOOK_URL = transcription_cfg.assemblyai_webhook_url
+ASSEMBLYAI_WEBHOOK_SECRET = transcription_cfg.assemblyai_webhook_secret
 TRANSCRIPTION_PROVIDER = transcription_cfg.provider
 LITELLM_TRANSCRIPTION_MODEL = transcription_cfg.litellm_model
 LITELLM_TRANSCRIPTION_API_KEY = transcription_cfg.litellm_api_key
@@ -91,7 +93,9 @@ def transcribe_audio_assemblyai(
     audio_file_uri: str,
     language: Optional[str],  # pyright: ignore[reportUnusedParameter]
     hotwords: Optional[List[str]],
-) -> tuple[str, dict[str, Any]]:
+    webhook_url: Optional[str] = None,
+    webhook_secret: Optional[str] = None,
+) -> tuple[Optional[str], dict[str, Any]]:
     """Transcribe audio through AssemblyAI"""
     logger = logging.getLogger("transcribe.transcribe_audio_assemblyai")
     logger.info("Submitting AssemblyAI transcription request for %s", audio_file_uri)
@@ -103,7 +107,7 @@ def transcribe_audio_assemblyai(
 
     data: dict[str, Any] = {
         "audio_url": audio_file_uri,
-        "speech_model": "universal",
+        "speech_models": ["universal-3-pro"],
         "language_detection": True,
         "language_detection_options": {
             "expected_languages": list(set(get_allowed_languages()) | {"pt"}),
@@ -121,6 +125,27 @@ def transcribe_audio_assemblyai(
         # We slice to ensure we don't exceed the limit
         data["keyterms_prompt"] = hotwords[:ASSEMBLYAI_MAX_HOTWORDS]
 
+    # Webhook mode: submit and return immediately.
+    if webhook_url:
+        logger.info("AssemblyAI submit payload uses speech_models=%s", data["speech_models"])
+        data["webhook_url"] = webhook_url
+        if webhook_secret:
+            data["webhook_auth_header_name"] = "X-AssemblyAI-Webhook-Secret"
+            data["webhook_auth_header_value"] = webhook_secret
+
+        response = requests.post(f"{ASSEMBLYAI_BASE_URL}/v2/transcript", headers=headers, json=data)
+        if response.status_code == 200:
+            transcript_id = response.json()["id"]
+            logger.info(
+                "AssemblyAI job submitted in webhook mode (transcript_id=%s)",
+                transcript_id,
+            )
+            return None, {"transcript_id": transcript_id}
+        if response.status_code == 400:
+            raise TranscriptionError(f"Transcription failed: {response.json()['error']}")
+        raise Exception(f"Transcription failed: {response.json()['error']}")
+
+    logger.info("AssemblyAI submit payload uses speech_models=%s", data["speech_models"])
     response = requests.post(f"{ASSEMBLYAI_BASE_URL}/v2/transcript", headers=headers, json=data)
 
     if response.status_code == 200:
@@ -166,6 +191,32 @@ def transcribe_audio_assemblyai(
         raise TranscriptionError(f"Transcription failed: {response.json()['error']}")
     else:
         raise Exception(f"Transcription failed: {response.json()['error']}")
+
+
+def fetch_assemblyai_result(transcript_id: str) -> tuple[str, dict[str, Any]]:
+    """Fetch a completed AssemblyAI transcript by ID."""
+    fetch_logger = logging.getLogger("transcribe.fetch_assemblyai_result")
+    headers = {"Authorization": f"Bearer {ASSEMBLYAI_API_KEY}"}
+    url = f"{ASSEMBLYAI_BASE_URL}/v2/transcript/{transcript_id}"
+    response = requests.get(url, headers=headers)
+
+    if response.status_code != 200:
+        raise TranscriptionError(
+            f"Failed to fetch transcript {transcript_id}: HTTP {response.status_code}"
+        )
+
+    data = response.json()
+    status = data.get("status")
+    if status == "error":
+        raise TranscriptionError(f"Transcript {transcript_id} failed: {data.get('error')}")
+    if status != "completed":
+        raise TranscriptionError(
+            f"Transcript {transcript_id} not completed: status={status}"
+        )
+
+    text = data.get("text", "")
+    fetch_logger.info("Fetched transcript %s (%d chars)", transcript_id, len(text))
+    return text, data
 
 
 def _get_audio_file_object(audio_file_uri: str) -> Any:
@@ -298,6 +349,10 @@ def transcribe_audio_dembrane_25_09(
     assemblyai_response_failed = False
     try:
         transcript, response = transcribe_audio_assemblyai(audio_file_uri, language, hotwords)
+        if transcript is None:
+            raise TranscriptionError(
+                "AssemblyAI returned webhook-mode response without transcript text in sync workflow."
+            )
         logger.debug(f"transcript from assemblyai: {transcript}")
     except TranscriptionError as e:
         assemblyai_response_failed = True
@@ -361,7 +416,11 @@ def transcribe_audio_dembrane_26_01_redaction(
 
     assemblyai_response_failed = False
     try:
-        transcript, response = transcribe_audio_assemblyai(audio_file_uri, language, hotwords)
+        transcript, _ = transcribe_audio_assemblyai(audio_file_uri, language, hotwords)
+        if transcript is None:
+            raise TranscriptionError(
+                "AssemblyAI returned webhook-mode response without transcript text in sync workflow."
+            )
         logger.debug(f"transcript from assemblyai: {transcript}")
     except TranscriptionError as e:
         assemblyai_response_failed = True
@@ -588,6 +647,10 @@ def transcribe_conversation_chunk(
                 transcript, assemblyai_response = transcribe_audio_assemblyai(
                     signed_url, language=language, hotwords=hotwords
                 )
+                if transcript is None:
+                    raise TranscriptionError(
+                        "AssemblyAI returned webhook-mode response without transcript text in sync workflow."
+                    )
                 _save_transcript(
                     conversation_chunk_id,
                     transcript,
