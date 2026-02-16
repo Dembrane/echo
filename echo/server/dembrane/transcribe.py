@@ -644,16 +644,16 @@ def transcribe_conversation_chunk(
                 logger.info("Using AssemblyAI for transcription")
                 hotwords = _build_hotwords(conversation)
                 signed_url = get_signed_url(chunk["path"], expires_in_seconds=3 * 24 * 60 * 60)
-                transcript, assemblyai_response = transcribe_audio_assemblyai(
+                assemblyai_transcript, assemblyai_response = transcribe_audio_assemblyai(
                     signed_url, language=language, hotwords=hotwords
                 )
-                if transcript is None:
+                if assemblyai_transcript is None:
                     raise TranscriptionError(
                         "AssemblyAI returned webhook-mode response without transcript text in sync workflow."
                     )
                 _save_transcript(
                     conversation_chunk_id,
-                    transcript,
+                    assemblyai_transcript,
                     diarization={
                         "schema": "ASSEMBLYAI",
                         "data": assemblyai_response.get("words", {}),
