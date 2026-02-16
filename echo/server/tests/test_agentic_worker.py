@@ -926,6 +926,60 @@ async def test_process_agentic_run_keeps_tool_call_limit_safety(monkeypatch) -> 
 
 
 @pytest.mark.asyncio
+async def test_process_agentic_run_allows_19_non_exempt_tool_calls(monkeypatch) -> None:
+    service = _build_service()
+    run = service.create_run(project_id="project-1", directus_user_id="user-1")
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
+        for index in range(19):
+            yield {"type": "on_tool_start", "name": f"tool-{index + 1}"}
+            yield {"type": "on_tool_end", "name": f"tool-{index + 1}", "data": {"output": {}}}
+        yield {"type": "assistant.message", "content": "final answer"}
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    stored_run = service.get_by_id_or_raise(run["id"])
+    events = service.list_events(run["id"])
+    assistant_events = [event for event in events if event["event_type"] == "assistant.message"]
+    assistant_texts = [event["payload"]["content"] for event in assistant_events]
+
+    assert stored_run["status"] == "completed"
+    assert stored_run["latest_output"] == "final answer"
+    assert "final answer" in assistant_texts
+    assert not any("tool-call limit for this turn" in text for text in assistant_texts)
+
+
+@pytest.mark.asyncio
 async def test_process_agentic_run_excludes_send_progress_update_from_tool_limit(monkeypatch) -> None:
     service = _build_service()
     run = service.create_run(project_id="project-1", directus_user_id="user-1")
@@ -1175,6 +1229,63 @@ async def test_process_agentic_run_retries_once_on_context_overflow(monkeypatch)
     assert len(histories) == 2
     assert len(histories[1]) == 24
     assert histories[1] == histories[0][-24:]
+    stored_run = service.get_by_id_or_raise(run["id"])
+    assert stored_run["status"] == "completed"
+    assert stored_run["latest_output"] == "retry success"
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_retries_once_on_transient_upstream_error(monkeypatch) -> None:
+    service = _build_service()
+    run = service.create_run(project_id="project-1", directus_user_id="user-1")
+    service.append_event(run["id"], "user.message", {"content": "hello"})
+
+    state = {"calls": 0}
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
+        state["calls"] += 1
+        if state["calls"] == 1:
+            raise AgenticUpstreamError(
+                status_code=502,
+                error_code="AGENT_UPSTREAM_TRANSPORT",
+                message="peer closed connection without sending complete message body (incomplete chunked read)",
+            )
+
+        yield {"type": "assistant.message", "content": "retry success"}
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    assert state["calls"] == 2
     stored_run = service.get_by_id_or_raise(run["id"])
     assert stored_run["status"] == "completed"
     assert stored_run["latest_output"] == "retry success"

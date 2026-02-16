@@ -123,9 +123,14 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "conversational" in prompt
     assert "greetings" in prompt
     assert "do not use tools for greetings" in prompt
-    # Research guidelines still present
-    assert "2-5 short verbatim quotes" in prompt
+    # Writing/analysis guidance should be present
+    assert "writing style" in prompt
+    assert "analysis guidelines" in prompt
+    # Citation policy still anchors output quality
+    assert '"[participant name]: quoted text"' in prompt
     assert "[conversation_id:<id>]" in SYSTEM_PROMPT
+    assert "working from summaries only" in prompt
+    assert "retrieve the full transcript" in prompt
     assert "never fabricate quotes" in prompt
     # Project context awareness
     assert "project context" in prompt

@@ -13,10 +13,17 @@ from dembrane.agentic_client import (
 
 
 class _FakeStreamResponse:
-    def __init__(self, status_code: int, chunks: list[str] | None = None, body: bytes = b"") -> None:
+    def __init__(
+        self,
+        status_code: int,
+        chunks: list[str] | None = None,
+        body: bytes = b"",
+        stream_error: Exception | None = None,
+    ) -> None:
         self.status_code = status_code
         self._chunks = chunks or []
         self._body = body
+        self._stream_error = stream_error
 
     async def __aenter__(self) -> "_FakeStreamResponse":
         return self
@@ -27,6 +34,8 @@ class _FakeStreamResponse:
     async def aiter_text(self):  # noqa: ANN201
         for chunk in self._chunks:
             yield chunk
+        if self._stream_error is not None:
+            raise self._stream_error
 
     async def aread(self) -> bytes:
         return self._body
@@ -263,3 +272,39 @@ async def test_stream_agent_events_converts_timeout(monkeypatch) -> None:
         )
         async for _ in events:
             pass
+
+
+@pytest.mark.asyncio
+async def test_stream_agent_events_converts_transport_errors_to_upstream_error(monkeypatch) -> None:
+    capture: dict[str, Any] = {}
+    response = _FakeStreamResponse(
+        status_code=200,
+        stream_error=httpx.RemoteProtocolError(
+            "peer closed connection without sending complete message body (incomplete chunked read)"
+        ),
+    )
+
+    def _build_client(*, base_url: str, timeout: float) -> _FakeAsyncClient:
+        return _FakeAsyncClient(
+            base_url=base_url,
+            timeout=timeout,
+            capture=capture,
+            response=response,
+        )
+
+    monkeypatch.setattr("dembrane.agentic_client.httpx.AsyncClient", _build_client)
+
+    with pytest.raises(AgenticUpstreamError) as exc:
+        events = stream_agent_events(
+            project_id="project-1",
+            user_message="hello",
+            bearer_token="token-1",
+            agent_service_url="http://agent.test",
+            timeout_seconds=42,
+        )
+        async for _ in events:
+            pass
+
+    assert exc.value.status_code == 502
+    assert exc.value.error_code == "AGENT_UPSTREAM_TRANSPORT"
+    assert "incomplete chunked read" in exc.value.message.lower()

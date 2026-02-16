@@ -19,7 +19,7 @@ logger = getLogger("dembrane.agentic_worker")
 
 AGENT_CANCELLED_ERROR_CODE = "AGENT_CANCELLED"
 AGENT_CANCELLED_MESSAGE = "Run cancelled by user"
-MAX_TOOL_CALLS_PER_RUN = 12
+MAX_TOOL_CALLS_PER_RUN = 20
 TOOL_LIMIT_EXEMPT_TOOL_NAMES = {"sendProgressUpdate"}
 TOOL_LIMIT_SAFETY_MESSAGE = (
     "I've reached my tool-call limit for this turn. "
@@ -175,6 +175,24 @@ def _is_context_overflow_error(exc: AgenticUpstreamError) -> bool:
     return False
 
 
+def _is_transient_upstream_error(exc: AgenticUpstreamError) -> bool:
+    if exc.error_code == "AGENT_UPSTREAM_TRANSPORT":
+        return True
+
+    if exc.status_code in {502, 503, 504}:
+        return True
+
+    haystack = f"{exc.error_code} {exc.message}".lower()
+    transient_markers = (
+        "incomplete chunked read",
+        "peer closed connection",
+        "connection reset",
+        "connection closed",
+        "broken pipe",
+    )
+    return any(marker in haystack for marker in transient_markers)
+
+
 def _build_automatic_nudge_content(*, tool_calls_without_assistant_message: int) -> str:
     milestone = (
         tool_calls_without_assistant_message // AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL
@@ -312,34 +330,52 @@ async def _stream_with_overflow_retry(
         attempts.append(message_history[-OVERFLOW_RETRY_WINDOW_SIZE:])
 
     for index, attempt_history in enumerate(attempts):
-        emitted_events = False
-        try:
-            async for event in stream_agent_events(
-                project_id=project_id,
-                user_message=user_message,
-                bearer_token=bearer_token,
-                thread_id=thread_id,
-                message_history=attempt_history,
-            ):
-                emitted_events = True
-                yield event
-            return
-        except AgenticUpstreamError as exc:
-            should_retry = (
-                index == 0
-                and len(attempts) > 1
-                and not emitted_events
-                and _is_context_overflow_error(exc)
-            )
-            if not should_retry:
-                raise
+        transient_retries_remaining = 1
 
-            logger.warning(
-                "Run %s overflowed context with %s messages; retrying with last %s messages",
-                thread_id,
-                len(attempt_history),
-                OVERFLOW_RETRY_WINDOW_SIZE,
-            )
+        while True:
+            emitted_events = False
+            try:
+                async for event in stream_agent_events(
+                    project_id=project_id,
+                    user_message=user_message,
+                    bearer_token=bearer_token,
+                    thread_id=thread_id,
+                    message_history=attempt_history,
+                ):
+                    emitted_events = True
+                    yield event
+                return
+            except AgenticUpstreamError as exc:
+                should_retry_transient = (
+                    transient_retries_remaining > 0
+                    and not emitted_events
+                    and _is_transient_upstream_error(exc)
+                )
+                if should_retry_transient:
+                    transient_retries_remaining -= 1
+                    logger.warning(
+                        "Run %s hit transient upstream error (%s); retrying stream once",
+                        thread_id,
+                        exc.error_code,
+                    )
+                    continue
+
+                should_retry_overflow = (
+                    index == 0
+                    and len(attempts) > 1
+                    and not emitted_events
+                    and _is_context_overflow_error(exc)
+                )
+                if should_retry_overflow:
+                    logger.warning(
+                        "Run %s overflowed context with %s messages; retrying with last %s messages",
+                        thread_id,
+                        len(attempt_history),
+                        OVERFLOW_RETRY_WINDOW_SIZE,
+                    )
+                    break
+
+                raise
 
 
 async def _append_event_and_publish(

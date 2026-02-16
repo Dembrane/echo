@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Alert,
@@ -26,11 +27,13 @@ import {
 	streamAgenticRun,
 } from "@/lib/api";
 import { Markdown } from "../common/Markdown";
+import { toast } from "../common/Toaster";
 import {
 	extractTopLevelToolActivity,
 	type ToolActivity,
 } from "./agenticToolActivity";
 import { ChatMessage } from "./ChatMessage";
+import { ChatTemplatesMenu } from "./ChatTemplatesMenu";
 
 type AgenticChatPanelProps = {
 	chatId: string;
@@ -147,6 +150,7 @@ export const AgenticChatPanel = ({
 	const [afterSeq, setAfterSeq] = useState(0);
 	const [events, setEvents] = useState<AgenticRunEvent[]>([]);
 	const [input, setInput] = useState("");
+	const [templateKey, setTemplateKey] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isStopping, setIsStopping] = useState(false);
 	const [isStreaming, setIsStreaming] = useState(false);
@@ -284,6 +288,7 @@ export const AgenticChatPanel = ({
 		setAfterSeq(0);
 		setEvents([]);
 		setError(null);
+		setTemplateKey(null);
 		setIsStopping(false);
 		setIsSubmitting(false);
 		setStreamFailureCount(0);
@@ -355,6 +360,39 @@ export const AgenticChatPanel = ({
 			stopStream();
 		};
 	}, [stopStream]);
+
+	const handleTemplateSelect = ({
+		content,
+		key,
+	}: {
+		content: string;
+		key: string;
+	}) => {
+		const previousInput = input.trim();
+		const previousTemplateKey = templateKey;
+
+		setInput(content);
+		setTemplateKey(key);
+
+		if (previousInput !== "") {
+			toast(t`Template applied`, {
+				action: {
+					label: t`Undo`,
+					onClick: () => {
+						setInput(previousInput);
+						setTemplateKey(previousTemplateKey);
+					},
+				},
+				duration: 5000,
+			});
+		}
+	};
+
+	useEffect(() => {
+		if (input.trim() === "" && templateKey) {
+			setTemplateKey(null);
+		}
+	}, [input, templateKey]);
 
 	const handleSubmit = async () => {
 		const message = input.trim();
@@ -473,8 +511,7 @@ export const AgenticChatPanel = ({
 						}
 
 						const statusMeta = TOOL_STATUS_META[item.status];
-						const hasRawData =
-							item.rawInput || item.rawOutput || item.rawError;
+						const hasRawData = item.rawInput || item.rawOutput || item.rawError;
 						const showStatusBadge = item.status !== "running";
 
 						return (
@@ -498,11 +535,7 @@ export const AgenticChatPanel = ({
 										{(item.summaryLines.length > 0 || hasRawData) && (
 											<Stack gap={4} className="mt-2">
 												{item.summaryLines.map((line) => (
-													<Text
-														key={`${item.id}:${line}`}
-														size="xs"
-														c="dark"
-													>
+													<Text key={`${item.id}:${line}`} size="xs" c="dark">
 														{line}
 													</Text>
 												))}
@@ -567,31 +600,40 @@ export const AgenticChatPanel = ({
 				</Stack>
 			</Box>
 
-			<Group align="end" wrap="nowrap">
-				<Textarea
-					className="flex-1"
-					minRows={2}
-					maxRows={6}
-					value={input}
-					onChange={(event) => setInput(event.currentTarget.value)}
-					placeholder="Ask the agent..."
-					onKeyDown={(event) => {
-						if (event.key === "Enter" && !event.shiftKey) {
-							event.preventDefault();
-							void handleSubmit();
-						}
-					}}
+			<Stack gap="xs">
+				<ChatTemplatesMenu
+					onTemplateSelect={handleTemplateSelect}
+					selectedTemplateKey={templateKey}
+					chatMode="agentic"
 				/>
-				<Button
-					leftSection={
-						isSubmitting ? <Loader size={14} /> : <IconSend size={14} />
-					}
-					onClick={() => void handleSubmit()}
-					disabled={isSubmitting || isRunInFlight || input.trim().length === 0}
-				>
-					<Trans>Send</Trans>
-				</Button>
-			</Group>
+				<Group align="end" wrap="nowrap">
+					<Textarea
+						className="flex-1"
+						minRows={2}
+						maxRows={6}
+						value={input}
+						onChange={(event) => setInput(event.currentTarget.value)}
+						placeholder="Ask the agent..."
+						onKeyDown={(event) => {
+							if (event.key === "Enter" && !event.shiftKey) {
+								event.preventDefault();
+								void handleSubmit();
+							}
+						}}
+					/>
+					<Button
+						leftSection={
+							isSubmitting ? <Loader size={14} /> : <IconSend size={14} />
+						}
+						onClick={() => void handleSubmit()}
+						disabled={
+							isSubmitting || isRunInFlight || input.trim().length === 0
+						}
+					>
+						<Trans>Send</Trans>
+					</Button>
+				</Group>
+			</Stack>
 		</Stack>
 	);
 };

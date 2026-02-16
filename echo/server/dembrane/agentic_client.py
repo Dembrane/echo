@@ -158,6 +158,12 @@ async def stream_agent_events(
                         yield event
     except httpx.TimeoutException as exc:
         raise AgenticTimeoutError("Agent request timed out") from exc
+    except httpx.TransportError as exc:
+        raise AgenticUpstreamError(
+            status_code=502,
+            error_code="AGENT_UPSTREAM_TRANSPORT",
+            message=f"Agent upstream transport error: {exc}",
+        ) from exc
 
 
 def _safe_parse_json(value: str) -> dict[str, Any] | None:
