@@ -466,6 +466,22 @@ class TranscriptionSettings(BaseSettings):
         alias="ASSEMBLYAI_BASE_URL",
         validation_alias=AliasChoices("ASSEMBLYAI_BASE_URL", "TRANSCRIPTION__ASSEMBLYAI__BASE_URL"),
     )
+    assemblyai_webhook_url: Optional[str] = Field(
+        default=None,
+        alias="ASSEMBLYAI_WEBHOOK_URL",
+        validation_alias=AliasChoices(
+            "ASSEMBLYAI_WEBHOOK_URL",
+            "TRANSCRIPTION__ASSEMBLYAI__WEBHOOK_URL",
+        ),
+    )
+    assemblyai_webhook_secret: Optional[str] = Field(
+        default=None,
+        alias="ASSEMBLYAI_WEBHOOK_SECRET",
+        validation_alias=AliasChoices(
+            "ASSEMBLYAI_WEBHOOK_SECRET",
+            "TRANSCRIPTION__ASSEMBLYAI__WEBHOOK_SECRET",
+        ),
+    )
     litellm_model: Optional[str] = Field(
         default=None,
         alias="LITELLM_TRANSCRIPTION_MODEL",
@@ -523,6 +539,11 @@ class TranscriptionSettings(BaseSettings):
             if self.gcp_sa_json is None:
                 raise ValueError(
                     "GCP_SA_JSON must be provided when TRANSCRIPTION_PROVIDER=Dembrane-25-09"
+                )
+            if self.assemblyai_webhook_url and not self.assemblyai_webhook_secret:
+                raise ValueError(
+                    "ASSEMBLYAI_WEBHOOK_SECRET must be set when "
+                    "ASSEMBLYAI_WEBHOOK_URL is configured for TRANSCRIPTION_PROVIDER=Dembrane-25-09"
                 )
 
 
