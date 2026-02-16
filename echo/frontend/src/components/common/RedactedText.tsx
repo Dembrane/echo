@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Text, Tooltip } from "@mantine/core";
 import { type ReactNode, useMemo } from "react";
 
@@ -28,7 +29,7 @@ const formatLabel = (key: string): string => {
 const RedactedBadge = ({ type }: { type: string }) => {
 	const label = formatLabel(type);
 	return (
-		<Tooltip label={`Redacted ${label.toLowerCase()}`} withArrow>
+		<Tooltip label={t`This information is anonymized`} withArrow>
 			<Text
 				component="span"
 				size="sm"
