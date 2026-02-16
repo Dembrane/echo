@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import json
-from typing import Any, AsyncGenerator, Optional
 from uuid import uuid4
+from typing import Any, Optional, AsyncGenerator
 
 import httpx
 
@@ -107,7 +107,7 @@ async def stream_agent_events(
         "Accept": "application/x-ndjson",
     }
 
-    payload = {
+    payload: dict[str, Any] = {
         "threadId": thread_id,
         "state": {},
         "actions": [],

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+import re
 import json
 import time
 import asyncio
-import re
 from uuid import uuid4
-from typing import Any, Optional
+from typing import Any, Optional, AsyncIterator
 from logging import getLogger
 from contextlib import suppress
 
@@ -13,8 +13,8 @@ from fastapi import Query, Request, APIRouter, HTTPException
 from pydantic import Field, BaseModel
 from fastapi.responses import JSONResponse, StreamingResponse
 
-from dembrane.directus import directus
 from dembrane.service import chat_service, project_service, agentic_run_service
+from dembrane.directus import directus
 from dembrane.settings import get_settings
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.agentic_worker import process_agentic_run
@@ -344,7 +344,7 @@ def _list_project_conversations_for_agent(
         },
     )
 
-    conversations: list[dict[str, Any]] = []
+    conversation_cards: list[dict[str, Any]] = []
     if isinstance(rows, list):
         for row in rows:
             if not isinstance(row, dict):
@@ -355,12 +355,12 @@ def _list_project_conversations_for_agent(
                 fallback_project_id=project_id,
             )
             if card is not None:
-                conversations.append(card)
+                conversation_cards.append(card)
 
     return {
         "project_id": project_id,
-        "count": len(conversations),
-        "conversations": conversations,
+        "count": len(conversation_cards),
+        "conversations": conversation_cards,
     }
 
 
@@ -701,11 +701,11 @@ async def get_run_events(
     }
 
 
-async def _stream_live_events(run_id: str, after_seq: int):
+async def _stream_live_events(run_id: str, after_seq: int) -> AsyncIterator[str]:
     cursor = after_seq
     last_heartbeat = time.monotonic()
 
-    async def _emit_db_delta():
+    async def _emit_db_delta() -> AsyncIterator[str]:
         nonlocal cursor
         events = await _list_events_after(run_id, cursor)
         for event in events:
@@ -757,7 +757,7 @@ async def _stream_live_events(run_id: str, after_seq: int):
             yield line
 
 
-async def _event_stream(run_id: str, after_seq: int):
+async def _event_stream(run_id: str, after_seq: int) -> AsyncIterator[str]:
     cursor = after_seq
     while True:
         events = await _list_events_after(run_id, cursor)

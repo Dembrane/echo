@@ -8,8 +8,8 @@ from dembrane.api.chat import ChatRouter
 from dembrane.api.stats import StatsRouter
 from dembrane.api.search import SearchRouter
 from dembrane.api.verify import VerifyRouter
-from dembrane.api.project import ProjectRouter
 from dembrane.api.agentic import AgenticRouter
+from dembrane.api.project import ProjectRouter
 from dembrane.api.stateless import StatelessRouter
 from dembrane.api.participant import ParticipantRouter
 from dembrane.api.conversation import ConversationRouter

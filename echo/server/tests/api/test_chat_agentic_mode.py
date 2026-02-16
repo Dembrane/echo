@@ -15,7 +15,7 @@ def _auth() -> DirectusSession:
 
 @pytest.mark.asyncio
 async def test_initialize_chat_mode_supports_agentic(monkeypatch) -> None:
-    async def _fake_raise_if_chat_not_found_or_not_authorized(*args, **kwargs):  # noqa: ANN002, ANN003
+    async def _fake_raise_if_chat_not_found_or_not_authorized(*_args, **_kwargs):  # noqa: ANN002, ANN003
         return {"chat_mode": None}
 
     async def _fake_run_in_thread_pool(func, *args, **kwargs):  # noqa: ANN001, ANN002, ANN003
@@ -46,7 +46,7 @@ async def test_initialize_chat_mode_supports_agentic(monkeypatch) -> None:
 
 @pytest.mark.asyncio
 async def test_post_chat_rejects_agentic_mode(monkeypatch) -> None:
-    async def _fake_raise_if_chat_not_found_or_not_authorized(*args, **kwargs):  # noqa: ANN002, ANN003
+    async def _fake_raise_if_chat_not_found_or_not_authorized(*_args, **_kwargs):  # noqa: ANN002, ANN003
         return {"chat_mode": "agentic"}
 
     monkeypatch.setattr(

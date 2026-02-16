@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, AsyncIterator
+from typing import Any, Optional, Awaitable, AsyncIterator, cast
 from contextlib import asynccontextmanager
 
 from redis.asyncio.client import PubSub
@@ -58,24 +58,26 @@ async def acquire_turn_lease(run_id: str, turn_seq: int, owner: str, ttl_seconds
 
 async def refresh_turn_lease(run_id: str, turn_seq: int, owner: str, ttl_seconds: int) -> bool:
     client = await get_redis_client()
-    result = await client.eval(
+    raw_result = cast(Any, client).eval(
         _REFRESH_LEASE_SCRIPT,
         1,
         turn_lease_key(run_id, turn_seq),
         _as_bytes(owner),
         max(1, int(ttl_seconds)),
     )
+    result = await cast(Awaitable[Any], raw_result)
     return bool(result)
 
 
 async def release_turn_lease(run_id: str, turn_seq: int, owner: str) -> bool:
     client = await get_redis_client()
-    result = await client.eval(
+    raw_result = cast(Any, client).eval(
         _RELEASE_LEASE_SCRIPT,
         1,
         turn_lease_key(run_id, turn_seq),
         _as_bytes(owner),
     )
+    result = await cast(Awaitable[Any], raw_result)
     return bool(result)
 
 

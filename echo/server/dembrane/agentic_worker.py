@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import asyncio
-from typing import Any, AsyncGenerator, Optional
+from typing import Any, Optional, AsyncGenerator
 from logging import getLogger
 
 from dembrane.service import chat_service, agentic_run_service
@@ -508,14 +508,14 @@ async def process_agentic_run(
 
                 if not has_sent_progress_intro:
                     has_sent_progress_intro = True
-                    progress_message = (
+                    progress_intro_message = (
                         f"I'll first gather evidence before answering. "
                         f"Starting with `{tool_name}`."
                     )
                     await _append_assistant_message(
                         svc=svc,
                         run_id=run_id,
-                        content=progress_message,
+                        content=progress_intro_message,
                         project_chat_id=project_chat_id,
                     )
                     tool_calls_without_assistant_message = 0
