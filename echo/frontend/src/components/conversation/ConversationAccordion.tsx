@@ -34,7 +34,7 @@ import {
 	useMediaQuery,
 	useSessionStorage,
 } from "@mantine/hooks";
-import { ShieldCheckIcon } from "@phosphor-icons/react";
+import { DetectiveIcon } from "@phosphor-icons/react";
 import {
 	IconArrowsExchange,
 	IconArrowsUpDown,
@@ -587,7 +587,7 @@ const ConversationAccordionItem = ({
 									size={18}
 									style={{ cursor: "default" }}
 								>
-									<ShieldCheckIcon />
+									<DetectiveIcon />
 								</ThemeIcon>
 							</Tooltip>
 						)}
