@@ -9,7 +9,7 @@ import {
 	ThemeIcon,
 	Title,
 } from "@mantine/core";
-import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
+import { IconRosetteDiscountCheck } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Markdown } from "@/components/common/Markdown";
@@ -86,15 +86,15 @@ export const VerifiedArtefactsSection = ({
 		<Stack gap="1.5rem">
 			<Group>
 				<Title order={2}>
-					<Trans>Artefacts</Trans>
+					<Trans>Outcomes</Trans>
 				</Title>
 				<ThemeIcon
 					variant="subtle"
 					color="primary"
-					aria-label={t`artefacts`}
+					aria-label={t`outcomes`}
 					size={22}
 				>
-					<IconRosetteDiscountCheckFilled />
+					<IconRosetteDiscountCheck />
 				</ThemeIcon>
 			</Group>
 

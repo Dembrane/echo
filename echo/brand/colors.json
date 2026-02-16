@@ -1,0 +1,62 @@
+{
+	"categories": {
+		"admin": "limeCream",
+		"design": "springGreen",
+		"engine": "mauve",
+		"value": "cyan"
+	},
+	"palette": {
+		"cottonCandy": {
+			"hex": "#ff9aa2",
+			"rgb": [255, 154, 162],
+			"usage": "Error states"
+		},
+		"cyan": {
+			"hex": "#00ffff",
+			"rgb": [0, 255, 255],
+			"usage": "Accent, VALUE category"
+		},
+		"goldenPollen": {
+			"hex": "#ffd166",
+			"rgb": [255, 209, 102],
+			"usage": "Warning states"
+		},
+		"graphite": {
+			"hex": "#2d2d2c",
+			"rgb": [45, 45, 44],
+			"usage": "Primary text, mood, button hover"
+		},
+		"limeCream": {
+			"hex": "#f4ff81",
+			"rgb": [244, 255, 129],
+			"usage": "Accent, ADMIN category"
+		},
+		"mauve": {
+			"hex": "#ffc2ff",
+			"rgb": [255, 194, 255],
+			"usage": "Accent, ENGINE category"
+		},
+		"parchment": {
+			"hex": "#f6f4f1",
+			"rgb": [246, 244, 241],
+			"usage": "Default background, canvas"
+		},
+		"royalBlue": {
+			"hex": "#4169e1",
+			"rgb": [65, 105, 225],
+			"usage": "Primary action, links, emphasis"
+		},
+		"springGreen": {
+			"hex": "#1effa1",
+			"rgb": [30, 255, 161],
+			"usage": "Accent, DESIGN category"
+		}
+	},
+	"semantic": {
+		"action": "royalBlue",
+		"background": "parchment",
+		"error": "cottonCandy",
+		"text": "graphite",
+		"warning": "goldenPollen"
+	}
+}

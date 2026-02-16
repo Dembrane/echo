@@ -878,6 +878,19 @@ export const getConversationTranscriptString = async (
 	);
 };
 
+export interface ConversationEmailsResponse {
+	emails_csv: string;
+	count: number;
+}
+
+export const getConversationEmails = async (
+	conversationId: string,
+): Promise<ConversationEmailsResponse> => {
+	return api.get<unknown, ConversationEmailsResponse>(
+		`/conversations/${conversationId}/emails`,
+	);
+};
+
 export const retranscribeConversation = async (
 	conversationId: string,
 	newConversationName: string,
@@ -1246,6 +1259,12 @@ export const generateConversationSummary = async (conversationId: string) => {
 	>(`/conversations/${conversationId}/summarize`);
 };
 
+export const generateConversationTitle = async (conversationId: string) => {
+	return api.post<unknown, { title: string }>(
+		`/conversations/${conversationId}/generate-title`,
+	);
+};
+
 export type VerificationTopicTranslation = {
 	label: string;
 };
@@ -1420,7 +1439,7 @@ export const checkUnsubscribeStatus = async (
 // =============================================================================
 
 export type WebhookEvent =
-	| "conversation.created"
+	| "conversation.started"
 	| "conversation.transcribed"
 	| "conversation.summarized";
 
@@ -1457,11 +1476,29 @@ export interface WebhookTestResult {
 	message: string;
 }
 
+export interface CopyableWebhook {
+	id: string;
+	name: string | null;
+	url: string | null;
+	events: WebhookEvent[] | null;
+	project_id: string;
+	project_name: string;
+}
+
 export const getProjectWebhooks = async (
 	projectId: string,
 ): Promise<Webhook[]> => {
 	const response = await api.get<unknown, Webhook[]>(
 		`/projects/${projectId}/webhooks`,
+	);
+	return response;
+};
+
+export const getCopyableWebhooks = async (
+	projectId: string,
+): Promise<CopyableWebhook[]> => {
+	const response = await api.get<unknown, CopyableWebhook[]>(
+		`/projects/${projectId}/webhooks/copyable`,
 	);
 	return response;
 };

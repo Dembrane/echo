@@ -21,7 +21,7 @@ export const AnnouncementDrawerHeader = ({
 		<Stack justify="space-between" align="flex-start" gap="xs">
 			<Group justify="space-between" align="center" w="100%">
 				<Text fw={500} size="lg">
-					<Trans>Announcements</Trans>
+					<Trans id="announcements">Announcements</Trans>
 				</Text>
 				<ActionIcon
 					variant="transparent"

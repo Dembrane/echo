@@ -6,6 +6,7 @@ import {
 	Modal,
 	NativeSelect,
 	Stack,
+	Text,
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -62,12 +63,20 @@ export const UpdateReportModalButton = ({
 	return (
 		<>
 			<Tooltip label={t`Update the report to include the latest data`}>
-				<Button variant="outline" color="gray.9" onClick={open}>
+				<Button variant="outline" onClick={open}>
 					<Trans>Update</Trans>
 				</Button>
 			</Tooltip>
 
-			<Modal opened={opened} onClose={close} title={t`Update Report`}>
+			<Modal
+				opened={opened}
+				onClose={close}
+				title={
+					<Text fw={500} size="lg">
+						<Trans>Update Report</Trans>
+					</Text>
+				}
+			>
 				{isPending ? (
 					<Stack>
 						<Alert title={t`Processing your report...`}>
@@ -118,6 +127,8 @@ export const UpdateReportModalButton = ({
 							}}
 							loading={isPending}
 							disabled={isPending}
+							size="md"
+							mt="xs"
 						>
 							<Trans>Update Report</Trans>
 						</Button>

@@ -12,6 +12,7 @@ import { useCopyQuote } from "@/components/aspect/hooks/useCopyQuote";
 import { cn } from "@/lib/utils";
 import { CopyIconButton } from "../common/CopyIconButton";
 import { I18nLink } from "../common/i18nLink";
+import { RedactedText } from "../common/RedactedText";
 
 // replacement for AspectSegment
 export const Quote = ({
@@ -132,12 +133,12 @@ export const Quote = ({
 					>
 						{showTranscript ? (
 							<div className="space-y-3">
-								<Text
-									size="sm"
-									className="whitespace-pre-wrap italic leading-relaxed"
-								>
-									{data.verbatim_transcript}
-								</Text>
+							<Text
+								size="sm"
+								className="whitespace-pre-wrap italic leading-relaxed"
+							>
+								<RedactedText>{data.verbatim_transcript ?? ""}</RedactedText>
+							</Text>
 								{data.relevant_index && (
 									<div className="border-t border-gray-300 pt-2 dark:border-gray-600">
 										<Text size="xs" c="dimmed">
@@ -149,9 +150,9 @@ export const Quote = ({
 							</div>
 						) : (
 							<div>
-								<Text size="sm" className="italic" lineClamp={2}>
-									"{transcriptExcerpt}"
-								</Text>
+							<Text size="sm" className="italic" lineClamp={2}>
+								"<RedactedText>{transcriptExcerpt}</RedactedText>"
+							</Text>
 								{hasTranscript && (
 									<Text size="xs" c="dimmed" mt="xs">
 										Click to see full context

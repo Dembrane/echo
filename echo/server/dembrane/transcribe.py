@@ -338,6 +338,66 @@ def transcribe_audio_dembrane_25_09(
     }
 
 
+def transcribe_audio_dembrane_26_01_redaction(
+    audio_file_uri: str,
+    language: Optional[str] = "en",
+    hotwords: Optional[List[str]] = None,
+    custom_guidance_prompt: Optional[str] = None,
+) -> tuple[str, dict[str, Any]]:
+    """Transcribe audio with full PII redaction pipeline (Dembrane-26-01-redaction).
+
+    Unlike the standard pipeline:
+    - No intermediate transcript save (on_assemblyai_response callback is skipped)
+    - Regex PII redaction is applied to the raw transcript before correction
+    - Only the final fully-redacted transcript is returned/saved
+
+    Returns:
+        0: The corrected and PII-redacted transcript
+        1: Metadata object
+    """
+    from dembrane.pii_regex import regex_redact_pii
+
+    logger = logging.getLogger("transcribe.transcribe_audio_dembrane_26_01_redaction")
+
+    assemblyai_response_failed = False
+    try:
+        transcript, response = transcribe_audio_assemblyai(audio_file_uri, language, hotwords)
+        logger.debug(f"transcript from assemblyai: {transcript}")
+    except TranscriptionError as e:
+        assemblyai_response_failed = True
+        logger.info(
+            f"Transcription failed with AssemblyAI. Continuing with empty transcript: {e}"
+        )
+        transcript = "[Nothing to transcribe]"
+
+    # Apply regex PII redaction BEFORE the correction workflow
+    if not assemblyai_response_failed:
+        transcript = regex_redact_pii(transcript)
+        logger.info("Applied regex PII redaction to raw transcript")
+
+    # Use correction workflow WITH PII redaction enabled
+    note = None
+    try:
+        corrected_transcript, note = _transcript_correction_workflow(
+            audio_file_uri, transcript, hotwords, True, custom_guidance_prompt
+        )
+    except Exception as e:
+        logger.error(f"Error in transcript correction workflow: {e}")
+        if assemblyai_response_failed:
+            raise e from e
+        else:
+            corrected_transcript = transcript
+
+    if corrected_transcript == "":
+        corrected_transcript = "[Nothing to transcribe]"
+
+    return corrected_transcript, {
+        "note": note,
+        "raw": {},  # Don't store raw response to avoid leaking un-redacted data
+        "error": None,
+    }
+
+
 # Helper functions extracted to simplify `transcribe_conversation_chunk`
 # NOTE: These are internal helpers ‑ they should **not** be considered part of the public API.
 
@@ -444,11 +504,17 @@ def _get_transcript_provider() -> Literal["LiteLLM", "AssemblyAI", "Dembrane-25-
 
 
 def transcribe_conversation_chunk(
-    conversation_chunk_id: str, use_pii_redaction: bool = False
+    conversation_chunk_id: str, use_pii_redaction: bool = False, anonymize_transcripts: bool = False
 ) -> str:
     """
     Process conversation chunk for transcription
     matches on _get_transcript_provider()
+
+    Args:
+        conversation_chunk_id: The ID of the chunk to transcribe.
+        use_pii_redaction: Enable PII redaction in the correction workflow.
+        anonymize_transcripts: Enable full anonymization pipeline (regex pre-redaction,
+            no intermediate save, only final redacted transcript stored).
 
     Returns:
         str: The conversation chunk ID if successful
@@ -464,6 +530,24 @@ def transcribe_conversation_chunk(
         language = conversation["project_id"]["language"] or "en"
 
         transcript_provider = _get_transcript_provider()
+
+        # If anonymize_transcripts is enabled, use the redaction pipeline
+        if anonymize_transcripts and transcript_provider == "Dembrane-25-09":
+            logger.info("Using Dembrane-26-01-redaction pipeline (anonymize_transcripts=True)")
+            hotwords = _build_hotwords(conversation)
+            signed_url = get_signed_url(chunk["path"], expires_in_seconds=3 * 24 * 60 * 60)
+            transcript, response = transcribe_audio_dembrane_26_01_redaction(
+                signed_url,
+                language=language,
+                hotwords=hotwords,
+            )
+            # Only one save — the final redacted transcript
+            _save_transcript(
+                conversation_chunk_id,
+                transcript,
+                diarization={"schema": "Dembrane-26-01-redaction", "data": response},
+            )
+            return conversation_chunk_id
 
         if use_pii_redaction and transcript_provider != "Dembrane-25-09":
             logger.warning(

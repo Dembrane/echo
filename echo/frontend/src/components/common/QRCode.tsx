@@ -13,11 +13,13 @@ export const QRCode = (props: { value: string; ref?: any }) => {
 			ref={props.ref}
 			logoImage={
 				CURRENT_BRAND === "dembrane"
-					? "/dembrane-logo-hq.png"
+					? "/dembrane-logomark-cropped.png"
 					: "/aiconl-logo-hq.png"
 			}
+			logoWidth={200}
+			logoHeight={200}
 			eyeColor={"#000000"}
-			logoPadding={2}
+			logoPadding={16}
 			removeQrCodeBehindLogo
 			logoPaddingStyle="circle"
 			size={1024}

@@ -31,6 +31,7 @@ export const useCurrentUser = ({
 							"email",
 							"disable_create_project",
 							"tfa_secret",
+							"whitelabel_logo",
 						],
 					}),
 				);

@@ -138,7 +138,7 @@ export const MoveConversationButton = ({
 				{...testId("conversation-move-button")}
 			>
 				<Group>
-					<Badge>
+					<Badge color="mauve" c="graphite" size="sm">
 						<Trans>Beta</Trans>
 					</Badge>
 					<Trans>Move to Another Project</Trans>

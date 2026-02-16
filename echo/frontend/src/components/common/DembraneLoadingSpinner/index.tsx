@@ -3,7 +3,7 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import "./DembraneLoading.css";
 import { cn } from "@/lib/utils";
-import dembraneLogoHQ from "../../../assets/dembrane-logo-hq.png";
+import { DembraneLogomark } from "../Logo";
 
 interface DembraneLoadingSpinnerProps {
 	isLoading: boolean;
@@ -62,7 +62,7 @@ const DembraneLoadingSpinner: React.FC<DembraneLoadingSpinnerProps> = ({
 			)}
 		>
 			<img
-				src={dembraneLogoHQ}
+				src={DembraneLogomark}
 				alt="Spinning Dembrane Logo to indicate loading"
 				className={cn("loading-image h-12 w-12 animate-spin", className)}
 			/>

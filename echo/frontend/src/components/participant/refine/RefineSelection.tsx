@@ -47,7 +47,7 @@ export const RefineSelection = () => {
 
 	return (
 		<Stack gap="md" className="h-full">
-			{/* Make it concrete option */}
+			{/* Verify option */}
 			{showVerify && (
 				<Box
 					onClick={handleVerifyClick}
@@ -69,13 +69,11 @@ export const RefineSelection = () => {
 					>
 						<Group gap="sm" align="center">
 							<IconMessage size={32} />
-							<Title order={2} fw={600}>
-								<Trans id="participant.refine.make.concrete">
-									Make it concrete
-								</Trans>
+							<Title order={3} fw={600}>
+								<Trans id="participant.echo.verify">Verify</Trans>
 							</Title>
 						</Group>
-						<Text size="lg" c="dimmed" ta="center">
+						<Text c="dimmed" ta="center">
 							<Trans id="participant.refine.make.concrete.description">
 								Take some time to create an outcome that makes your contribution
 								concrete.
@@ -101,7 +99,7 @@ export const RefineSelection = () => {
 				</Box>
 			)}
 
-			{/* Go deeper option */}
+			{/* Explore option */}
 			{showEcho && (
 				<Box
 					onClick={handleEchoClick}
@@ -123,11 +121,11 @@ export const RefineSelection = () => {
 					>
 						<Group gap="sm" align="center">
 							<IconArrowDownToArc size={32} />
-							<Title order={2} fw={600}>
-								<Trans id="participant.refine.go.deeper">Go deeper</Trans>
+							<Title order={3} fw={600}>
+								<Trans id="participant.echo.explore">Explore</Trans>
 							</Title>
 						</Group>
-						<Text size="lg" c="dimmed" ta="center">
+						<Text c="dimmed" ta="center">
 							<Trans id="participant.refine.go.deeper.description">
 								Get an immediate reply from Dembrane to help you deepen the
 								conversation.

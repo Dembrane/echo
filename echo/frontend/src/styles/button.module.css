@@ -1,0 +1,83 @@
+/* 
+ * Button Design System Styles
+ * 
+ * Implements custom hover/active states for Primary, Secondary, Tertiary, and Disabled button variants
+ */
+
+/* Primary (filled) - blue bg default, hover/active becomes graphite, pill-shaped */
+.root[data-variant="filled"] {
+	border-radius: 9999px; /* Pill shape - only for primary buttons */
+}
+
+.root[data-variant="filled"]:not(:disabled):hover {
+	background-color: var(--mantine-color-graphite-6);
+}
+
+.root[data-variant="filled"]:not(:disabled):active {
+	background-color: var(--mantine-color-graphite-6);
+}
+
+/* Loading state for primary buttons - graphite background like hover state */
+.root[data-variant="filled"][data-loading="true"] {
+	background-color: var(--mantine-color-graphite-6); /* Graphite background in loading state */
+	color: white;
+	opacity: 1; /* Override any default opacity */
+}
+
+/* Secondary (outline) - transparent bg, blue border/text, hover/active adds blue background, standard corners */
+.root[data-variant="outline"] {
+	border-radius: var(--mantine-radius-default); /* Standard corners, not pill-shaped */
+}
+
+.root[data-variant="outline"]:not(:disabled) {
+	background-color: transparent;
+}
+
+.root[data-variant="outline"]:not(:disabled):hover {
+	background-color: rgba(65, 105, 225, 0.1); /* 10% Institution Blue */
+}
+
+.root[data-variant="outline"]:not(:disabled):active {
+	background-color: rgba(65, 105, 225, 0.2); /* 20% Institution Blue */
+}
+
+/* Tertiary (subtle) - no border, transparent bg, blue text, same hover/active as outline, standard corners */
+.root[data-variant="subtle"] {
+	border-radius: var(--mantine-radius-default); /* Standard corners, not pill-shaped */
+}
+
+.root[data-variant="subtle"]:not(:disabled) {
+	background-color: transparent;
+}
+
+.root[data-variant="subtle"]:not(:disabled):hover {
+	background-color: rgba(65, 105, 225, 0.1); /* 10% Institution Blue */
+}
+
+.root[data-variant="subtle"]:not(:disabled):active {
+	background-color: rgba(65, 105, 225, 0.2); /* 20% Institution Blue */
+}
+
+/* Disabled - gray bg, graphite text, interactive borders (Peach on hover, Salmon on click) */
+/* Note: Loading buttons are disabled but styled differently (see above) */
+/* Note: [data-disabled] is needed for anchor-based buttons (component="a") which lack :disabled */
+.root:disabled:not([data-loading="true"]),
+.root[data-disabled]:not([data-loading="true"]) {
+	background-color: var(--mantine-color-gray-3);
+	color: var(--mantine-color-graphite-6); /* Graphite */
+	opacity: 1; /* Override Mantine's default opacity reduction to keep text readable */
+	cursor: not-allowed;
+	pointer-events: all; /* Allow hover/active on disabled anchor buttons */
+}
+
+.root:disabled:not([data-loading="true"]):hover,
+.root[data-disabled]:not([data-loading="true"]):hover {
+	border: 1px solid var(--mantine-color-peach-6); /* Peach border on hover */
+	background-color: var(--mantine-color-gray-3); /* Keep gray background */
+}
+
+.root:disabled:not([data-loading="true"]):active,
+.root[data-disabled]:not([data-loading="true"]):active {
+	border: 1px solid var(--mantine-color-salmon-6); /* Salmon border on click */
+	background-color: var(--mantine-color-gray-3); /* Keep gray background */
+}

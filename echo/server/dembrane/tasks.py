@@ -107,7 +107,7 @@ dramatiq.set_broker(broker)
 # Transcription Task
 @dramatiq.actor(queue_name="network", priority=0)
 def task_transcribe_chunk(
-    conversation_chunk_id: str, conversation_id: str, use_pii_redaction: bool = False
+    conversation_chunk_id: str, conversation_id: str, use_pii_redaction: bool = False, anonymize_transcripts: bool = False
 ) -> None:
     """
     Transcribe a conversation chunk.
@@ -124,7 +124,7 @@ def task_transcribe_chunk(
             event_prefix="task_transcribe_chunk",
             message=f"for chunk {conversation_chunk_id}",
         ):
-            transcribe_conversation_chunk(conversation_chunk_id, use_pii_redaction)
+            transcribe_conversation_chunk(conversation_chunk_id, use_pii_redaction, anonymize_transcripts)
 
         # Transcription succeeded - decrement counter and check for finalization
         _on_chunk_transcription_done(conversation_id, conversation_chunk_id, logger)
@@ -559,8 +559,6 @@ def task_finish_conversation_hook(conversation_id: str) -> None:
 @dramatiq.actor(queue_name="cpu", priority=0)
 def task_process_conversation_chunk(
     chunk_id: str,
-    # TODO: here probably later we can fetch the use_pii_redaction flag from the conversation / project
-    # when it is available
     use_pii_redaction: bool = False,
 ) -> None:
     """
@@ -580,6 +578,11 @@ def task_process_conversation_chunk(
         chunk = conversation_service.get_chunk_by_id_or_raise(chunk_id)
         conversation_id = chunk["conversation_id"]
         logger.debug(f"Chunk {chunk_id} found in conversation: {conversation_id}")
+
+        # Read is_anonymized from the conversation itself
+        conversation = conversation_service.get_by_id_or_raise(conversation_id)
+        anonymize_transcripts = bool(conversation.get("is_anonymized", False))
+        logger.debug(f"Conversation {conversation_id} is_anonymized: {anonymize_transcripts}")
 
         # critical section
         with ProcessingStatusContext(
@@ -614,7 +617,7 @@ def task_process_conversation_chunk(
 
         group(
             [
-                task_transcribe_chunk.message(cid, conversation_id, use_pii_redaction)
+                task_transcribe_chunk.message(cid, conversation_id, use_pii_redaction, anonymize_transcripts)
                 for cid in valid_chunk_ids
             ]
         ).run()

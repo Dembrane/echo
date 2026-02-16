@@ -10,13 +10,17 @@ ECHO is an event-driven platform for collective sense-making. Users run discrete
 
 ```
 echo/
+├── brand/             # Brand guidelines and assets
+│   ├── STYLE_GUIDE.md # Comprehensive brand/UI guidelines
+│   ├── colors.json    # Machine-readable color tokens
+│   ├── README.md      # Quick reference + source links
+│   └── logos/         # Logo files (PNG, SVG when available)
 ├── frontend/          # React + Vite frontend
 │   ├── src/
 │   │   ├── components/
 │   │   ├── routes/
 │   │   ├── locales/   # Translation .po files
 │   │   └── config.ts  # Feature flags
-│   └── COPY_GUIDE.md  # UI copy style guide
 ├── server/            # Python FastAPI backend
 │   └── dembrane/
 │       ├── api/       # API endpoints
@@ -27,19 +31,24 @@ echo/
 
 ## Key Conventions
 
-### UI Copy (IMPORTANT)
+### Brand & UI Copy (IMPORTANT)
 
-Always follow [frontend/COPY_GUIDE.md](frontend/COPY_GUIDE.md) when writing user-facing text:
+Always follow [brand/STYLE_GUIDE.md](brand/STYLE_GUIDE.md) when writing user-facing text or making design decisions:
 
-- **Shortest possible, highest clarity**
-- **No jargon** — use plain language users understand
-- **No corporate speak** — write like explaining to a colleague
-- **Never say "successfully"** — just state what happened
+- Shortest possible, highest clarity
+- No jargon, no corporate speak
+- Write like explaining to a colleague
+- Never say "successfully" (just state what happened)
+- Never use bold text for emphasis (use Royal Blue or italics)
+- "dembrane" always lowercase, even at sentence start
+- Say "language model" not "AI" when describing platform features
 
 Examples:
 - "Context limit reached" → "Selection too large"
 - "Successfully saved" → "Saved"
 - "Please wait while we process" → "Processing..."
+
+Color tokens available in `brand/colors.json` for programmatic use.
 
 ### Translations
 
@@ -89,7 +98,7 @@ Convention: Use `ENABLE_*` naming pattern for feature flags.
 
 ### Adding Translations
 
-1. Write copy following COPY_GUIDE.md
+1. Write copy following `brand/STYLE_GUIDE.md`
 2. Use `<Trans>` component or `t` template literal
 3. Run `pnpm messages:extract`
 4. Fill in translations in all `.po` files
@@ -144,7 +153,8 @@ bash echo/server/scripts/agentic/latest_runs.sh --chat-id <chat_uuid> --limit 1 
 
 | File | Purpose |
 |------|---------|
-| `frontend/COPY_GUIDE.md` | UI copy style guide |
+| `brand/STYLE_GUIDE.md` | Brand guidelines, UI copy, colors, typography |
+| `brand/colors.json` | Machine-readable color tokens |
 | `frontend/src/config.ts` | Frontend feature flags |
 | `server/dembrane/settings.py` | Backend configuration |
 | `docs/frontend_translations.md` | Translation workflow |

@@ -19,7 +19,8 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { IconEye, IconEyeOff, IconRefresh, IconX } from "@tabler/icons-react";
+import { DetectiveIcon } from "@phosphor-icons/react";
+import { IconEye, IconEyeOff, IconInfoCircle, IconRefresh, IconRosetteDiscountCheck, IconX } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Resizable } from "re-resizable";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -29,7 +30,6 @@ import { useAutoSave } from "@/hooks/useAutoSave";
 import { useLanguage } from "@/hooks/useLanguage";
 import type { VerificationTopicsResponse } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
-import { Logo } from "../common/Logo";
 import { toast } from "../common/Toaster";
 import { FormLabel } from "../form/FormLabel";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
@@ -40,12 +40,16 @@ import { useProjectSharingLink } from "./ProjectQRCode";
 import { ProjectTagsInput } from "./ProjectTagsInput";
 
 const FormSchema = z.object({
+	anonymize_transcripts: z.boolean(),
+	conversation_title_prompt: z.string(),
+	default_conversation_ask_for_participant_email: z.boolean(),
 	default_conversation_ask_for_participant_name: z.boolean(),
 	default_conversation_description: z.string(),
 	default_conversation_finish_text: z.string(),
 	default_conversation_title: z.string(),
 	default_conversation_transcript_prompt: z.string(),
 	default_conversation_tutorial_slug: z.string(),
+	enable_ai_title_and_tags: z.boolean(),
 	get_reply_mode: z.string(),
 	get_reply_prompt: z.string(),
 	is_get_reply_enabled: z.boolean(),
@@ -121,15 +125,25 @@ const ProperNounInput = ({
 
 	return (
 		<Stack gap="md">
+			<Group gap="xs" align="center">
+				<Title order={4}>
+					<Trans>Specific Context</Trans>
+				</Title>
+				{isDirty && (
+					<div
+						className="h-1.5 w-1.5 rounded-full bg-blue-500"
+						role="presentation"
+					/>
+				)}
+			</Group>
+			<Text size="sm" c="dimmed">
+				<Trans>
+					Add key terms or proper nouns to improve transcript quality and
+					accuracy.
+				</Trans>
+			</Text>
 			<TextInput
 				className={isDirty ? "border-blue-500" : ""}
-				label={<FormLabel label={t`Specific Context`} isDirty={isDirty} />}
-				description={
-					<Trans>
-						Add key terms or proper nouns to improve transcript quality and
-						accuracy.
-					</Trans>
-				}
 				value={nounInput}
 				onChange={(e) => setNounInput(e.currentTarget.value)}
 				placeholder={t`Enter a key term or proper noun`}
@@ -238,6 +252,10 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 			: "none";
 
 		return {
+			anonymize_transcripts: project.anonymize_transcripts ?? false,
+			conversation_title_prompt: project.conversation_title_prompt ?? "",
+			default_conversation_ask_for_participant_email:
+				project.default_conversation_ask_for_participant_email ?? false,
 			default_conversation_ask_for_participant_name:
 				project.default_conversation_ask_for_participant_name ?? false,
 			default_conversation_description:
@@ -248,6 +266,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 			default_conversation_transcript_prompt:
 				project.default_conversation_transcript_prompt ?? "",
 			default_conversation_tutorial_slug: normalizedTutorialSlug ?? "none",
+			enable_ai_title_and_tags: project.enable_ai_title_and_tags ?? false,
 			get_reply_mode: project.get_reply_mode ?? "summarize",
 			get_reply_prompt: project.get_reply_prompt ?? "",
 			is_get_reply_enabled: project.is_get_reply_enabled ?? false,
@@ -290,6 +309,16 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	const watchedVerifyEnabled = useWatch({
 		control,
 		name: "is_verify_enabled",
+	});
+
+	const watchedAskForEmail = useWatch({
+		control,
+		name: "default_conversation_ask_for_participant_email",
+	});
+
+	const watchedAiTitleEnabled = useWatch({
+		control,
+		name: "enable_ai_title_and_tags",
 	});
 
 	const updateProjectMutation = useUpdateProjectByIdMutation();
@@ -405,6 +434,13 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 		};
 	}, [watch]); // Only depend on watch
 
+	// Auto-disable report notifications when ask_for_email is turned off
+	useEffect(() => {
+		if (!watchedAskForEmail) {
+			setValue("is_project_notification_subscription_allowed", false);
+		}
+	}, [watchedAskForEmail, setValue]);
+
 	const refreshPreview = useCallback(() => {
 		setPreviewKey((prev) => prev + 1);
 	}, []);
@@ -428,7 +464,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 					<Button
 						variant="subtle"
 						onClick={() => setShowPreview(!showPreview)}
-						leftSection={
+						rightSection={
 							showPreview ? <IconEyeOff size={16} /> : <IconEye size={16} />
 						}
 						{...testId("portal-editor-preview-toggle")}
@@ -496,10 +532,36 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														/>
 													}
 													description={
-														<Trans>
-															Ask participants to provide their name when they
-															start a conversation
-														</Trans>
+														<Trans>Optional field on the start page</Trans>
+													}
+													checked={field.value}
+													onChange={(e) =>
+														field.onChange(e.currentTarget.checked)
+													}
+												/>
+											)}
+										/>
+										<Controller
+											name="default_conversation_ask_for_participant_email"
+											control={control}
+											render={({ field }) => (
+												<Checkbox
+													label={
+														<FormLabel
+															label={t`Ask for Email?`}
+															isDirty={
+																formState.dirtyFields
+																	.default_conversation_ask_for_participant_email
+															}
+															error={
+																formState.errors
+																	.default_conversation_ask_for_participant_email
+																	?.message
+															}
+														/>
+													}
+													description={
+														<Trans>Optional field on the thank you page</Trans>
 													}
 													checked={field.value}
 													onChange={(e) =>
@@ -569,10 +631,9 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 										<Stack gap="md">
 											<Group>
 												<Title order={4}>
-													<Trans>Go deeper</Trans>
+													<Trans>Explore</Trans>
 												</Title>
-												<Logo hideTitle />
-												<Badge>
+												<Badge color="mauve" c="graphite" size="sm">
 													<Trans id="dashboard.dembrane.concrete.beta">
 														Beta
 													</Trans>
@@ -583,10 +644,10 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												<Trans>
 													Enable this feature to allow participants to request
 													AI-powered responses during their conversation.
-													Participants can click "Go deeper" after recording
-													their thoughts to receive contextual feedback,
-													encouraging deeper reflection and engagement. A
-													cooldown period applies between requests.
+													Participants can click "Explore" after recording their
+													thoughts to receive contextual feedback, encouraging
+													deeper reflection and engagement. A cooldown period
+													applies between requests.
 												</Trans>
 											</Text>
 
@@ -597,7 +658,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													<Switch
 														label={
 															<FormLabel
-																label={t`Enable Go deeper`}
+																label={t`Enable Explore`}
 																isDirty={
 																	formState.dirtyFields.is_get_reply_enabled
 																}
@@ -774,26 +835,29 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 										<Stack gap="md">
 											<Group>
 												<Title order={4}>
-													<Trans id="dashboard.dembrane.concrete.title">
-														Make it concrete
+													<Trans id="dashboard.dembrane.verify.title">
+														Verify
 													</Trans>
 												</Title>
-												<Logo hideTitle />
-												<Badge>
-													<Trans id="dashboard.dembrane.concrete.beta">
+												<IconRosetteDiscountCheck
+													size={20}
+													color="var(--mantine-color-primary-filled)"
+												/>
+												<Badge color="mauve" c="graphite" size="sm">
+													<Trans id="dashboard.dembrane.verify.beta">
 														Beta
 													</Trans>
 												</Badge>
 											</Group>
 
 											<Text size="sm" c="dimmed">
-												<Trans id="dashboard.dembrane.concrete.description">
-													Enable this feature to allow participants to create
-													and approve "concrete objects" from their submissions.
-													This helps crystallize key ideas, concerns, or
-													summaries. After the conversation, you can filter for
-													discussions with concrete objects and review them in
-													the overview.
+												<Trans id="dashboard.dembrane.feature.verify.description">
+													Enable this feature to allow participants to verify
+													and approve "outcomes" from their submissions. This
+													helps crystallize key ideas, concerns, or summaries.
+													After the conversation, you can filter for discussions
+													with verified outcomes and review them in the
+													overview.
 												</Trans>
 											</Text>
 
@@ -804,7 +868,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													<Switch
 														label={
 															<FormLabel
-																label={t`Enable Make it concrete`}
+																label={t`Enable Verify`}
 																isDirty={
 																	formState.dirtyFields.is_verify_enabled
 																}
@@ -828,7 +892,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												render={({ field }) => (
 													<Stack gap="xs">
 														<FormLabel
-															label={t`Concrete Topics`}
+															label={t`Verify Topics`}
 															isDirty={
 																!!formState.dirtyFields.verification_topics
 															}
@@ -837,18 +901,18 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 															}
 														/>
 														<Text size="sm" c="dimmed">
-															<Trans id="dashboard.dembrane.concrete.topic.select">
+															<Trans id="dashboard.dembrane.feature.verify.topic.select">
 																Select which topics participants can use for
-																"Make it concrete".
+																"Verify".
 															</Trans>
 														</Text>
 														{isVerificationTopicsLoading ? (
 															<Text size="sm" c="dimmed">
-																<Trans>Loading concrete topics…</Trans>
+																<Trans>Loading verify topics…</Trans>
 															</Text>
 														) : availableVerifyTopics.length === 0 ? (
 															<Text size="sm" c="dimmed">
-																<Trans>No concrete topics available.</Trans>
+																<Trans>No verify topics available.</Trans>
 															</Text>
 														) : (
 															<Group gap="xs">
@@ -890,7 +954,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																				normalizedCurrent.length === 1
 																			) {
 																				toast.error(
-																					t`At least one topic must be selected to enable Make it concrete`,
+																					t`At least one topic must be selected to enable Verify`,
 																				);
 																				return;
 																			}
@@ -926,15 +990,14 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												<Title order={4}>
 													<Trans>Report Notifications</Trans>
 												</Title>
-												<Text size="sm" c="dimmed">
-													<Trans>
-														Enable this feature to allow participants to receive
-														notifications when a report is published or updated.
-														Participants can enter their email to subscribe for
-														updates and stay informed.
-													</Trans>
-												</Text>
 											</Group>
+
+											<Text size="sm" c="dimmed">
+												<Trans>
+													Notify participants when a report is published.
+												</Trans>
+											</Text>
+
 											<Controller
 												name="is_project_notification_subscription_allowed"
 												control={control}
@@ -955,6 +1018,12 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																	}
 																/>
 															}
+															description={
+																!watchedAskForEmail
+																	? t`Requires "Ask for Email?" to be enabled`
+																	: undefined
+															}
+															disabled={!watchedAskForEmail}
 															checked={field.value}
 															onChange={(e) =>
 																field.onChange(e.currentTarget.checked)
@@ -1076,24 +1145,157 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 
 								<Divider />
 
-								<Stack gap="1.5rem">
+								<Stack gap="2.5rem">
 									<Title order={3}>
 										<Trans>Advanced Settings</Trans>
 									</Title>
-									<Controller
-										name="default_conversation_transcript_prompt"
-										control={control}
-										render={({ field }) => (
-											<ProperNounInput
-												isDirty={
-													formState.dirtyFields
-														.default_conversation_transcript_prompt ?? false
-												}
-												value={field.value}
-												onChange={field.onChange}
+
+									<Stack gap="md">
+										<Controller
+											name="default_conversation_transcript_prompt"
+											control={control}
+											render={({ field }) => (
+												<ProperNounInput
+													isDirty={
+														formState.dirtyFields
+															.default_conversation_transcript_prompt ?? false
+													}
+													value={field.value}
+													onChange={field.onChange}
+												/>
+											)}
+										/>
+									</Stack>
+
+									<Stack gap="md">
+										<Group>
+											<Title order={4}>
+												<Trans>Anonymize Transcripts</Trans>
+											</Title>
+											<DetectiveIcon
+												size={20}
+												color="var(--mantine-color-primary-filled)"
+											/>
+											<Badge color="mauve" c="graphite" size="sm">
+												<Trans>Beta</Trans>
+											</Badge>
+										</Group>
+										<Text size="sm" c="dimmed">
+											<Trans>
+												When enabled, all new transcripts will have personal
+												information (names, emails, phone numbers, addresses)
+												replaced with placeholders. Anonymized conversations
+												also disable audio playback, audio download, and
+												retranscription to protect participant privacy. This
+												cannot be undone for already-processed conversations.
+											</Trans>
+										</Text>
+										<Controller
+											name="anonymize_transcripts"
+											control={control}
+											render={({ field }) => (
+												<Switch
+													label={
+														<FormLabel
+															label={t`Enable transcript anonymization`}
+															isDirty={
+																formState.dirtyFields.anonymize_transcripts
+															}
+															error={
+																formState.errors.anonymize_transcripts?.message
+															}
+														/>
+													}
+													checked={field.value}
+													onChange={(e) =>
+														field.onChange(e.currentTarget.checked)
+													}
+												/>
+											)}
+										/>
+									</Stack>
+
+									<Stack gap="md">
+										<Group>
+											<Title order={4}>
+												<Trans>Auto-generate Titles</Trans>
+											</Title>
+											<IconInfoCircle
+												size={20}
+												className="text-gray-400"
+											/>
+											<Badge color="mauve" c="graphite" size="sm">
+												<Trans>Beta</Trans>
+											</Badge>
+										</Group>
+										<Text size="sm" c="dimmed">
+											<Trans>
+												Automatically generate a short topic-based title for
+												each conversation after summarization. The title
+												describes what was discussed, not who participated. The
+												participant's original name is preserved separately, if
+												they provided one.
+											</Trans>
+										</Text>
+										<Controller
+											name="enable_ai_title_and_tags"
+											control={control}
+											render={({ field }) => (
+												<Switch
+													label={
+														<FormLabel
+															label={t`Auto-generate titles`}
+															isDirty={
+																formState.dirtyFields.enable_ai_title_and_tags
+															}
+															error={
+																formState.errors.enable_ai_title_and_tags
+																	?.message
+															}
+														/>
+													}
+													checked={field.value}
+													onChange={(e) =>
+														field.onChange(e.currentTarget.checked)
+													}
+												/>
+											)}
+										/>
+										{watchedAiTitleEnabled && (
+											<Controller
+												name="conversation_title_prompt"
+												control={control}
+												render={({ field }) => (
+													<Textarea
+														label={
+															<FormLabel
+																label={t`Custom title prompt`}
+																isDirty={
+																	formState.dirtyFields
+																		.conversation_title_prompt
+																}
+																error={
+																	formState.errors.conversation_title_prompt
+																		?.message
+																}
+															/>
+														}
+														description={
+															<Trans>
+																Guide how titles are generated. Titles describe
+																the topic of the conversation, not the
+																participant.
+															</Trans>
+														}
+														placeholder={t`e.g. "Use short noun phrases like 'Urban Green Spaces' or 'Youth Employment'. Avoid generic titles."`}
+														autosize
+														minRows={2}
+														{...field}
+													/>
+												)}
 											/>
 										)}
-									/>
+									</Stack>
 								</Stack>
 
 								<Divider />
@@ -1155,7 +1357,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													variant="subtle"
 													size="compact-sm"
 													onClick={refreshPreview}
-													leftSection={<IconRefresh size={16} />}
+													rightSection={<IconRefresh size={16} />}
 												>
 													<Trans>Refresh</Trans>
 												</Button>

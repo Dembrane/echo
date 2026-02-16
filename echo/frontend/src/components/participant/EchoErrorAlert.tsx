@@ -18,9 +18,9 @@ export const EchoErrorAlert = ({ error }: { error: Error }) => {
 						content policy.
 					</Trans>
 				) : (
-					<Trans id="participant.go.deeper.generic.error.message">
+					<Trans id="participant.explore.generic.error.message">
 						Something went wrong. Please try again by pressing the{" "}
-						<span className="font-bold">Go deeper</span> button, or contact
+						<span className="font-bold">Explore</span> button, or contact
 						support if the issue continues.
 					</Trans>
 				)}

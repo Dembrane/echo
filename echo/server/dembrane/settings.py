@@ -184,8 +184,9 @@ class LLMSettings(BaseSettings):
                     value = vars_dict[env_field]
                     # Handle JSON fields
                     if config_field in ("vertex_credentials", "gcp_sa_json"):
-                        value = _coerce_service_account(value)
-                    config_data[config_field] = value
+                        config_data[config_field] = _coerce_service_account(value)
+                    else:
+                        config_data[config_field] = value
 
             # Only add if model is configured
             if config_data.get("model"):

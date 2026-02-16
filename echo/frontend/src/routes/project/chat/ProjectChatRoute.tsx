@@ -608,7 +608,6 @@ export const ProjectChatRoute = () => {
 								<Button
 									onClick={() => stop()}
 									variant="outline"
-									color="gray"
 									size="sm"
 									rightSection={<IconSquare size={14} />}
 									{...testId("chat-stop-button")}
@@ -780,12 +779,11 @@ export const ProjectChatRoute = () => {
 									</Text>
 								</Group>
 							</Box>
-							<Stack className="h-full" gap="xs">
+							<Stack className="h-full self-start" gap="xs">
 								<Box>
 									<Button
 										size="lg"
 										type="submit"
-										variant="primary"
 										onClick={(e) => {
 											e.preventDefault();
 											e.stopPropagation();

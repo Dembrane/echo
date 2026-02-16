@@ -295,11 +295,13 @@ export const useVerificationTopicsQuery = (projectId: string | undefined) => {
 
 import {
 	getProjectWebhooks,
+	getCopyableWebhooks,
 	createProjectWebhook,
 	updateProjectWebhook,
 	deleteProjectWebhook,
 	testProjectWebhook,
 	type Webhook,
+	type CopyableWebhook,
 	type WebhookCreatePayload,
 	type WebhookUpdatePayload,
 } from "@/lib/api";
@@ -309,6 +311,14 @@ export const useProjectWebhooks = (projectId: string | undefined) => {
 		enabled: !!projectId,
 		queryFn: () => getProjectWebhooks(projectId!),
 		queryKey: ["projects", projectId, "webhooks"],
+	});
+};
+
+export const useCopyableWebhooks = (projectId: string | undefined) => {
+	return useQuery({
+		enabled: !!projectId,
+		queryFn: () => getCopyableWebhooks(projectId!),
+		queryKey: ["projects", projectId, "webhooks", "copyable"],
 	});
 };
 

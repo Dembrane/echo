@@ -395,7 +395,7 @@ export const AuditLogsCard = () => {
 			radius="md"
 			p="lg"
 			className="shadow-sm dark:bg-dark-6"
-		style={{ backgroundColor: "var(--app-background)" }}
+			style={{ backgroundColor: "var(--app-background)" }}
 		>
 			<Stack gap="xl">
 				<Group justify="space-between" align="flex-start">
@@ -430,7 +430,7 @@ export const AuditLogsCard = () => {
 						<Menu withinPortal position="bottom-end">
 							<Menu.Target>
 								<Button
-									leftSection={<IconDownload size={16} />}
+									rightSection={<IconDownload size={16} />}
 									loading={exportMutation.isPending}
 								>
 									<Trans>Export</Trans>
@@ -513,10 +513,7 @@ export const AuditLogsCard = () => {
 					</Alert>
 				) : null}
 
-				<ScrollArea
-					offsetScrollbars
-					className="rounded-md border border-gray-200 dark:border-dark-4"
-				>
+				<ScrollArea className="rounded-md border">
 					<Table striped highlightOnHover>
 						<Table.Thead className="bg-gray-50 dark:bg-dark-7">
 							{table.getHeaderGroups().map((headerGroup) => (
