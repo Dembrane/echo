@@ -4,6 +4,7 @@ import {
 	Alert,
 	Box,
 	Button,
+	Divider,
 	Group,
 	Loader,
 	Stack,
@@ -457,183 +458,209 @@ export const AgenticChatPanel = ({
 	const isRunInFlight = isInFlightStatus(runStatus);
 
 	return (
-		<Stack className="h-full min-h-0 px-2 pr-4" gap="sm">
-			<Group justify="space-between" align="center">
-				<Title order={4}>
-					<Trans>Agentic Chat</Trans>
-				</Title>
-				<Group gap="xs">
-					{runStatus && (
-						<Text size="sm" c="dimmed">
-							<Trans>Run status:</Trans> {runStatus}
-						</Text>
-					)}
-					{isRunInFlight && (
-						<Button
-							variant="light"
-							size="xs"
-							leftSection={
-								isStopping ? <Loader size={12} /> : <IconPlayerStop size={12} />
-							}
-							onClick={() => void handleStop()}
-							disabled={isStopping}
-						>
-							<Trans>Stop</Trans>
-						</Button>
-					)}
+		<Stack className="relative flex min-h-full flex-col px-2 pr-4">
+			<Stack className="top-0 w-full pt-6">
+				<Group justify="space-between" align="center">
+					<Title order={4}>
+						<Trans>Agentic Chat</Trans>
+					</Title>
+					<Group gap="xs">
+						{runStatus && (
+							<Text size="sm" c="dimmed">
+								<Trans>Run status:</Trans> {runStatus}
+							</Text>
+						)}
+						{isRunInFlight && (
+							<Button
+								variant="light"
+								size="xs"
+								leftSection={
+									isStopping ? (
+										<Loader size={12} />
+									) : (
+										<IconPlayerStop size={12} />
+									)
+								}
+								onClick={() => void handleStop()}
+								disabled={isStopping}
+							>
+								<Trans>Stop</Trans>
+							</Button>
+						)}
+					</Group>
 				</Group>
-			</Group>
+				<Divider />
+			</Stack>
 
-			{error && (
-				<Alert
-					color="red"
-					icon={<IconAlertCircle size={16} />}
-					title={<Trans>Error</Trans>}
-				>
-					{error}
-				</Alert>
-			)}
-
-			<Box className="min-h-0 flex-1 overflow-y-auto rounded border border-gray-200 p-3">
-				<Stack gap="sm">
-					{timeline.length === 0 && (
-						<Text c="dimmed" size="sm">
-							<Trans>Send a message to start an agentic run.</Trans>
-						</Text>
+			<Box className="min-h-0 flex-grow">
+				<Stack py="sm" pb="xl" className="relative h-full min-h-0 w-full">
+					{error && (
+						<Alert
+							color="red"
+							icon={<IconAlertCircle size={16} />}
+							title={<Trans>Error</Trans>}
+						>
+							{error}
+						</Alert>
 					)}
-					{timeline.map((item) => {
-						if (item.kind === "message") {
-							return (
-								<ChatMessage key={item.id} role={item.role} chatMode="agentic">
-									<Markdown className="prose-sm" content={item.content} />
-								</ChatMessage>
-							);
-						}
 
-						const statusMeta = TOOL_STATUS_META[item.status];
-						const hasRawData = item.rawInput || item.rawOutput || item.rawError;
-						const showStatusBadge = item.status !== "running";
+					<Box className="min-h-0 flex-1 overflow-y-auto rounded border border-gray-200 px-3 py-2">
+						<Stack gap="sm">
+							{timeline.length === 0 && (
+								<Text c="dimmed" size="sm">
+									<Trans>Send a message to start an agentic run.</Trans>
+								</Text>
+							)}
+							{timeline.map((item) => {
+								if (item.kind === "message") {
+									return (
+										<ChatMessage
+											key={item.id}
+											role={item.role}
+											chatMode="agentic"
+										>
+											<Markdown className="prose-sm" content={item.content} />
+										</ChatMessage>
+									);
+								}
 
-						return (
-							<Box key={item.id} className="flex justify-start">
-								<Box className="w-full rounded border border-cyan-200 bg-cyan-50/50 px-3 py-2 md:max-w-[85%]">
-									<details>
-										<summary className="cursor-pointer list-none">
-											<Group justify="space-between" gap="xs" wrap="nowrap">
-												<Text size="xs" fw={700} c="dark">
-													{item.headline}
-												</Text>
-												{showStatusBadge && (
-													<Box
-														className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${statusMeta.badgeClass}`}
-													>
-														{statusMeta.label}
-													</Box>
+								const statusMeta = TOOL_STATUS_META[item.status];
+								const hasRawData =
+									item.rawInput || item.rawOutput || item.rawError;
+								const showStatusBadge = item.status !== "running";
+
+								return (
+									<Box key={item.id} className="flex justify-start">
+										<Box className="w-full rounded border border-cyan-200 bg-cyan-50/50 px-3 py-2 md:max-w-[80%]">
+											<details>
+												<summary className="cursor-pointer list-none">
+													<Group justify="space-between" gap="xs" wrap="nowrap">
+														<Text size="xs" fw={700} c="dark">
+															{item.headline}
+														</Text>
+														{showStatusBadge && (
+															<Box
+																className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${statusMeta.badgeClass}`}
+															>
+																{statusMeta.label}
+															</Box>
+														)}
+													</Group>
+												</summary>
+												{(item.summaryLines.length > 0 || hasRawData) && (
+													<Stack gap={4} className="mt-2">
+														{item.summaryLines.map((line) => (
+															<Text
+																key={`${item.id}:${line}`}
+																size="xs"
+																c="dark"
+															>
+																{line}
+															</Text>
+														))}
+														{hasRawData && (
+															<details className="rounded border border-cyan-100 bg-white">
+																<summary className="cursor-pointer list-none px-2 py-1 text-xs font-semibold text-gray-700">
+																	Raw data
+																</summary>
+																<Stack gap={6} className="px-2 pb-2">
+																	{item.rawInput && (
+																		<Box>
+																			<Text size="xs" c="dimmed" fw={700}>
+																				Input
+																			</Text>
+																			<Text
+																				size="xs"
+																				component="pre"
+																				className="mt-1 whitespace-pre-wrap break-words rounded border border-cyan-100 bg-white p-2 font-mono"
+																			>
+																				{item.rawInput}
+																			</Text>
+																		</Box>
+																	)}
+																	{item.rawOutput && (
+																		<Box>
+																			<Text size="xs" c="dimmed" fw={700}>
+																				Output
+																			</Text>
+																			<Text
+																				size="xs"
+																				component="pre"
+																				className="mt-1 whitespace-pre-wrap break-words rounded border border-cyan-100 bg-white p-2 font-mono"
+																			>
+																				{item.rawOutput}
+																			</Text>
+																		</Box>
+																	)}
+																	{item.rawError && (
+																		<Box>
+																			<Text size="xs" c="dimmed" fw={700}>
+																				Error
+																			</Text>
+																			<Text
+																				size="xs"
+																				component="pre"
+																				className="mt-1 whitespace-pre-wrap break-words rounded border border-red-100 bg-red-50 p-2 font-mono"
+																			>
+																				{item.rawError}
+																			</Text>
+																		</Box>
+																	)}
+																</Stack>
+															</details>
+														)}
+													</Stack>
 												)}
-											</Group>
-										</summary>
-										{(item.summaryLines.length > 0 || hasRawData) && (
-											<Stack gap={4} className="mt-2">
-												{item.summaryLines.map((line) => (
-													<Text key={`${item.id}:${line}`} size="xs" c="dark">
-														{line}
-													</Text>
-												))}
-												{hasRawData && (
-													<details className="rounded border border-cyan-100 bg-white">
-														<summary className="cursor-pointer list-none px-2 py-1 text-xs font-semibold text-gray-700">
-															Raw data
-														</summary>
-														<Stack gap={6} className="px-2 pb-2">
-															{item.rawInput && (
-																<Box>
-																	<Text size="xs" c="dimmed" fw={700}>
-																		Input
-																	</Text>
-																	<Text
-																		size="xs"
-																		component="pre"
-																		className="mt-1 whitespace-pre-wrap break-words rounded border border-cyan-100 bg-white p-2 font-mono"
-																	>
-																		{item.rawInput}
-																	</Text>
-																</Box>
-															)}
-															{item.rawOutput && (
-																<Box>
-																	<Text size="xs" c="dimmed" fw={700}>
-																		Output
-																	</Text>
-																	<Text
-																		size="xs"
-																		component="pre"
-																		className="mt-1 whitespace-pre-wrap break-words rounded border border-cyan-100 bg-white p-2 font-mono"
-																	>
-																		{item.rawOutput}
-																	</Text>
-																</Box>
-															)}
-															{item.rawError && (
-																<Box>
-																	<Text size="xs" c="dimmed" fw={700}>
-																		Error
-																	</Text>
-																	<Text
-																		size="xs"
-																		component="pre"
-																		className="mt-1 whitespace-pre-wrap break-words rounded border border-red-100 bg-red-50 p-2 font-mono"
-																	>
-																		{item.rawError}
-																	</Text>
-																</Box>
-															)}
-														</Stack>
-													</details>
-												)}
-											</Stack>
-										)}
-									</details>
-								</Box>
-							</Box>
-						);
-					})}
+											</details>
+										</Box>
+									</Box>
+								);
+							})}
+						</Stack>
+					</Box>
 				</Stack>
 			</Box>
 
-			<Stack gap="xs">
-				<ChatTemplatesMenu
-					onTemplateSelect={handleTemplateSelect}
-					selectedTemplateKey={templateKey}
-					chatMode="agentic"
-				/>
-				<Group align="end" wrap="nowrap">
-					<Textarea
-						className="flex-1"
-						minRows={2}
-						maxRows={6}
-						value={input}
-						onChange={(event) => setInput(event.currentTarget.value)}
-						placeholder="Ask the agent..."
-						onKeyDown={(event) => {
-							if (event.key === "Enter" && !event.shiftKey) {
-								event.preventDefault();
-								void handleSubmit();
-							}
-						}}
+			<Box
+				className="bottom-0 w-full pb-2 pt-4 md:sticky"
+				style={{ backgroundColor: "var(--app-background)" }}
+			>
+				<Stack className="pb-2" gap="xs">
+					<ChatTemplatesMenu
+						onTemplateSelect={handleTemplateSelect}
+						selectedTemplateKey={templateKey}
+						chatMode="agentic"
 					/>
-					<Button
-						leftSection={
-							isSubmitting ? <Loader size={14} /> : <IconSend size={14} />
-						}
-						onClick={() => void handleSubmit()}
-						disabled={
-							isSubmitting || isRunInFlight || input.trim().length === 0
-						}
-					>
-						<Trans>Send</Trans>
-					</Button>
-				</Group>
-			</Stack>
+					<Divider />
+					<Group align="end" wrap="nowrap">
+						<Textarea
+							className="flex-1"
+							minRows={2}
+							maxRows={6}
+							value={input}
+							onChange={(event) => setInput(event.currentTarget.value)}
+							placeholder="Ask the agent..."
+							onKeyDown={(event) => {
+								if (event.key === "Enter" && !event.shiftKey) {
+									event.preventDefault();
+									void handleSubmit();
+								}
+							}}
+						/>
+						<Button
+							leftSection={
+								isSubmitting ? <Loader size={14} /> : <IconSend size={14} />
+							}
+							onClick={() => void handleSubmit()}
+							disabled={
+								isSubmitting || isRunInFlight || input.trim().length === 0
+							}
+						>
+							<Trans>Send</Trans>
+						</Button>
+					</Group>
+				</Stack>
+			</Box>
 		</Stack>
 	);
 };
