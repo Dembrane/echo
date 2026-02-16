@@ -4,9 +4,10 @@ from dembrane.settings import TranscriptionSettings
 
 
 def test_dembrane_webhook_url_requires_secret() -> None:
-    settings = TranscriptionSettings()
-    settings.provider = "Dembrane-25-09"
-    settings.gcp_sa_json = {"type": "service_account"}
+    settings = TranscriptionSettings(
+        provider="Dembrane-25-09",
+        gcp_sa_json={"type": "service_account"},
+    )
     settings.assemblyai_webhook_url = "https://api.example.com/api/webhooks/assemblyai"
     settings.assemblyai_webhook_secret = None
 
@@ -18,9 +19,10 @@ def test_dembrane_webhook_url_requires_secret() -> None:
 
 
 def test_dembrane_webhook_url_with_secret_is_valid() -> None:
-    settings = TranscriptionSettings()
-    settings.provider = "Dembrane-25-09"
-    settings.gcp_sa_json = {"type": "service_account"}
+    settings = TranscriptionSettings(
+        provider="Dembrane-25-09",
+        gcp_sa_json={"type": "service_account"},
+    )
     settings.assemblyai_webhook_url = "https://api.example.com/api/webhooks/assemblyai"
     settings.assemblyai_webhook_secret = "secret"
 

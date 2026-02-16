@@ -107,7 +107,7 @@ def transcribe_audio_assemblyai(
 
     data: dict[str, Any] = {
         "audio_url": audio_file_uri,
-        "speech_models": ["universal-3-pro", "universal-2"],
+        "speech_models": ["universal-3-pro"],
         "language_detection": True,
         "language_detection_options": {
             "expected_languages": list(set(get_allowed_languages()) | {"pt"}),
@@ -644,16 +644,16 @@ def transcribe_conversation_chunk(
                 logger.info("Using AssemblyAI for transcription")
                 hotwords = _build_hotwords(conversation)
                 signed_url = get_signed_url(chunk["path"], expires_in_seconds=3 * 24 * 60 * 60)
-                assemblyai_transcript, assemblyai_response = transcribe_audio_assemblyai(
+                transcript, assemblyai_response = transcribe_audio_assemblyai(
                     signed_url, language=language, hotwords=hotwords
                 )
-                if assemblyai_transcript is None:
+                if transcript is None:
                     raise TranscriptionError(
                         "AssemblyAI returned webhook-mode response without transcript text in sync workflow."
                     )
                 _save_transcript(
                     conversation_chunk_id,
-                    assemblyai_transcript,
+                    transcript,
                     diarization={
                         "schema": "ASSEMBLYAI",
                         "data": assemblyai_response.get("words", {}),
