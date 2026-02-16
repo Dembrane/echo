@@ -420,6 +420,637 @@ async def test_process_agentic_run_falls_back_to_default_intro_when_model_has_no
 
 
 @pytest.mark.asyncio
+async def test_process_agentic_run_logs_hidden_nudge_without_midpoint_fallback(monkeypatch) -> None:
+    service = _build_service()
+    run = service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+    )
+    fake_chat_service = _FakeChatService()
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
+        for index in range(5):
+            name = f"tool-{index + 1}"
+            yield {"type": "on_tool_start", "name": name}
+            yield {"type": "on_tool_end", "name": name, "data": {"output": {}}}
+        yield {
+            "type": "on_chat_model_end",
+            "data": {
+                "output": {
+                    "kwargs": {
+                        "content": [{"type": "text", "text": "Final answer only."}],
+                        "additional_kwargs": {},
+                    }
+                }
+            },
+        }
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.chat_service", fake_chat_service)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    events = service.list_events(run["id"])
+    assistant_events = [event for event in events if event["event_type"] == "assistant.message"]
+    nudge_events = [event for event in events if event["event_type"] == "agent.nudge"]
+
+    assert len(nudge_events) == 1
+    nudge_payload = nudge_events[0]["payload"]
+    assert nudge_payload == {
+        "hidden": True,
+        "origin": "automatic_nudge",
+        "role": "user",
+        "content": (
+            "<Automatic Nudge> You have made 4 tool calls without sending an assistant update. "
+            "Call `sendProgressUpdate` now with a concise update and next steps, then continue research "
+            "with another tool call if evidence is still missing. Only return plain text with no tool "
+            "call if you are concluding."
+        ),
+        "tool_calls_without_assistant_message": 4,
+        "total_tool_calls": 5,
+    }
+
+    assert len(assistant_events) == 2
+    assert assistant_events[0]["payload"]["content"] == (
+        "I'll first gather evidence before answering. Starting with `tool-1`."
+    )
+    assert assistant_events[1]["payload"]["content"] == "Final answer only."
+    assert all("rough picture" not in event["payload"]["content"] for event in assistant_events)
+    assert fake_chat_service.created_messages == [
+        {
+            "id": "msg-1",
+            "project_chat_id": "chat-1",
+            "message_from": "assistant",
+            "text": "I'll first gather evidence before answering. Starting with `tool-1`.",
+        },
+        {
+            "id": "msg-2",
+            "project_chat_id": "chat-1",
+            "message_from": "assistant",
+            "text": "Final answer only.",
+        },
+    ]
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_uses_progress_tool_output_as_user_visible_update(monkeypatch) -> None:
+    service = _build_service()
+    run = service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+    )
+    fake_chat_service = _FakeChatService()
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
+        yield {
+            "type": "on_chat_model_end",
+            "data": {
+                "output": {
+                    "kwargs": {
+                        "content": [{"type": "text", "text": "I have a rough picture now."}],
+                        "additional_kwargs": {
+                            "function_call": {
+                                "name": "sendProgressUpdate",
+                                "arguments": (
+                                    '{"update":"I have a rough picture now.",'
+                                    '"next_steps":"I will verify two more conversations."}'
+                                ),
+                            }
+                        },
+                    }
+                }
+            },
+        }
+        yield {"type": "on_tool_start", "name": "sendProgressUpdate"}
+        yield {
+            "type": "on_tool_end",
+            "name": "sendProgressUpdate",
+            "data": {
+                "output": {
+                    "kind": "progress_update",
+                    "update": "I have a rough picture now.",
+                    "next_steps": "I will verify two more conversations.",
+                    "visible_to_user": True,
+                }
+            },
+        }
+        yield {
+            "type": "on_chat_model_end",
+            "data": {
+                "output": {
+                    "kwargs": {
+                        "content": [{"type": "text", "text": "Final answer only."}],
+                        "additional_kwargs": {},
+                    }
+                }
+            },
+        }
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.chat_service", fake_chat_service)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    events = service.list_events(run["id"])
+    assistant_events = [event for event in events if event["event_type"] == "assistant.message"]
+    assistant_texts = [event["payload"]["content"] for event in assistant_events]
+
+    assert assistant_texts == [
+        "I have a rough picture now.\n\nNext steps: I will verify two more conversations.",
+        "Final answer only.",
+    ]
+    assert not any(text.startswith("I'll first gather evidence") for text in assistant_texts)
+    assert fake_chat_service.created_messages == [
+        {
+            "id": "msg-1",
+            "project_chat_id": "chat-1",
+            "message_from": "assistant",
+            "text": "I have a rough picture now.\n\nNext steps: I will verify two more conversations.",
+        },
+        {
+            "id": "msg-2",
+            "project_chat_id": "chat-1",
+            "message_from": "assistant",
+            "text": "Final answer only.",
+        },
+    ]
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_uses_progress_tool_output_from_toolmessage_shape(monkeypatch) -> None:
+    service = _build_service()
+    run = service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+    )
+    fake_chat_service = _FakeChatService()
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
+        yield {"type": "on_tool_start", "name": "sendProgressUpdate"}
+        yield {
+            "type": "on_tool_end",
+            "name": "sendProgressUpdate",
+            "data": {
+                "output": {
+                    "lc": 1,
+                    "type": "constructor",
+                    "id": ["langchain", "schema", "messages", "ToolMessage"],
+                    "kwargs": {
+                        "content": (
+                            '{"kind":"progress_update","update":"I have a rough picture now.",'
+                            '"next_steps":"I will verify two more conversations.","visible_to_user":true}'
+                        )
+                    },
+                }
+            },
+        }
+        yield {
+            "type": "on_chat_model_end",
+            "data": {
+                "output": {
+                    "kwargs": {
+                        "content": [{"type": "text", "text": "Final answer only."}],
+                        "additional_kwargs": {},
+                    }
+                }
+            },
+        }
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.chat_service", fake_chat_service)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    events = service.list_events(run["id"])
+    assistant_events = [event for event in events if event["event_type"] == "assistant.message"]
+    assistant_texts = [event["payload"]["content"] for event in assistant_events]
+
+    assert assistant_texts == [
+        "I'll first gather evidence before answering. Starting with `sendProgressUpdate`.",
+        "I have a rough picture now.\n\nNext steps: I will verify two more conversations.",
+        "Final answer only.",
+    ]
+    assert fake_chat_service.created_messages == [
+        {
+            "id": "msg-1",
+            "project_chat_id": "chat-1",
+            "message_from": "assistant",
+            "text": "I'll first gather evidence before answering. Starting with `sendProgressUpdate`.",
+        },
+        {
+            "id": "msg-2",
+            "project_chat_id": "chat-1",
+            "message_from": "assistant",
+            "text": "I have a rough picture now.\n\nNext steps: I will verify two more conversations.",
+        },
+        {
+            "id": "msg-3",
+            "project_chat_id": "chat-1",
+            "message_from": "assistant",
+            "text": "Final answer only.",
+        },
+    ]
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_forwards_model_midpoint_planning_message(monkeypatch) -> None:
+    service = _build_service()
+    run = service.create_run(
+        project_id="project-1",
+        project_chat_id="chat-1",
+        directus_user_id="user-1",
+    )
+    fake_chat_service = _FakeChatService()
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
+        yield {
+            "type": "on_chat_model_end",
+            "data": {
+                "output": {
+                    "kwargs": {
+                        "content": [{"type": "text", "text": "I will start by scanning project summaries."}],
+                        "additional_kwargs": {
+                            "function_call": {
+                                "name": "listProjectConversations",
+                                "arguments": "{}",
+                            }
+                        },
+                    }
+                }
+            },
+        }
+        yield {"type": "on_tool_start", "name": "listProjectConversations"}
+        yield {"type": "on_tool_end", "name": "listProjectConversations", "data": {"output": {}}}
+        yield {
+            "type": "on_chat_model_end",
+            "data": {
+                "output": {
+                    "kwargs": {
+                        "content": [{"type": "text", "text": "Quick update: I have enough signal to focus on two transcripts."}],
+                        "additional_kwargs": {
+                            "function_call": {
+                                "name": "grepConvoSnippets",
+                                "arguments": "{\"query\":\"policy\"}",
+                            }
+                        },
+                    }
+                }
+            },
+        }
+        yield {"type": "on_tool_start", "name": "grepConvoSnippets"}
+        yield {"type": "on_tool_end", "name": "grepConvoSnippets", "data": {"output": {}}}
+        yield {
+            "type": "on_chat_model_end",
+            "data": {
+                "output": {
+                    "kwargs": {
+                        "content": [{"type": "text", "text": "Final answer only."}],
+                        "additional_kwargs": {},
+                    }
+                }
+            },
+        }
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.chat_service", fake_chat_service)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    events = service.list_events(run["id"])
+    assistant_events = [event for event in events if event["event_type"] == "assistant.message"]
+    assistant_texts = [event["payload"]["content"] for event in assistant_events]
+
+    assert assistant_texts == [
+        "I will start by scanning project summaries.",
+        "Quick update: I have enough signal to focus on two transcripts.",
+        "Final answer only.",
+    ]
+    assert not any(text.startswith("I'll first gather evidence") for text in assistant_texts)
+    assert fake_chat_service.created_messages == [
+        {
+            "id": "msg-1",
+            "project_chat_id": "chat-1",
+            "message_from": "assistant",
+            "text": "I will start by scanning project summaries.",
+        },
+        {
+            "id": "msg-2",
+            "project_chat_id": "chat-1",
+            "message_from": "assistant",
+            "text": "Quick update: I have enough signal to focus on two transcripts.",
+        },
+        {
+            "id": "msg-3",
+            "project_chat_id": "chat-1",
+            "message_from": "assistant",
+            "text": "Final answer only.",
+        },
+    ]
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_keeps_tool_call_limit_safety(monkeypatch) -> None:
+    service = _build_service()
+    run = service.create_run(project_id="project-1", directus_user_id="user-1")
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
+        for index in range(20):
+            yield {"type": "on_tool_start", "name": f"tool-{index + 1}"}
+            yield {"type": "on_tool_end", "name": f"tool-{index + 1}", "data": {"output": {}}}
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    stored_run = service.get_by_id_or_raise(run["id"])
+    events = service.list_events(run["id"])
+    assistant_events = [event for event in events if event["event_type"] == "assistant.message"]
+    assistant_texts = [event["payload"]["content"] for event in assistant_events]
+
+    assert stored_run["status"] == "completed"
+    assert stored_run["latest_output"] == (
+        "I reached the tool-call limit before gathering enough additional evidence for a fuller synthesis. "
+        "If you want, send `go on` and I'll continue from this exact point."
+    )
+    assert (
+        "I've reached my tool-call limit for this turn. "
+        "I'll stop searching here and summarize what I can reliably infer."
+    ) in assistant_texts
+    assert assistant_events[-1]["payload"]["content"] == (
+        "I reached the tool-call limit before gathering enough additional evidence for a fuller synthesis. "
+        "If you want, send `go on` and I'll continue from this exact point."
+    )
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_excludes_send_progress_update_from_tool_limit(monkeypatch) -> None:
+    service = _build_service()
+    run = service.create_run(project_id="project-1", directus_user_id="user-1")
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
+        for _ in range(30):
+            yield {"type": "on_tool_start", "name": "sendProgressUpdate"}
+            yield {"type": "on_tool_end", "name": "sendProgressUpdate", "data": {"output": {}}}
+        for index in range(11):
+            yield {"type": "on_tool_start", "name": f"tool-{index + 1}"}
+            yield {"type": "on_tool_end", "name": f"tool-{index + 1}", "data": {"output": {}}}
+        yield {"type": "assistant.message", "content": "final answer"}
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    stored_run = service.get_by_id_or_raise(run["id"])
+    events = service.list_events(run["id"])
+    assistant_events = [event for event in events if event["event_type"] == "assistant.message"]
+    assistant_texts = [event["payload"]["content"] for event in assistant_events]
+
+    assert stored_run["status"] == "completed"
+    assert stored_run["latest_output"] == "final answer"
+    assert "final answer" in assistant_texts
+    assert not any("tool-call limit for this turn" in text for text in assistant_texts)
+
+
+@pytest.mark.asyncio
+async def test_process_agentic_run_tool_limit_summary_uses_last_substantive_update(monkeypatch) -> None:
+    service = _build_service()
+    run = service.create_run(project_id="project-1", directus_user_id="user-1")
+
+    async def _fake_stream(
+        *,
+        project_id: str,
+        user_message: str,
+        bearer_token: str,
+        thread_id: str,
+        message_history: list[dict[str, str]] | None = None,
+    ):
+        _ = (project_id, user_message, bearer_token, thread_id, message_history)
+        yield {
+            "type": "on_chat_model_end",
+            "data": {
+                "output": {
+                    "kwargs": {
+                        "content": [{"type": "text", "text": "Current synthesis draft."}],
+                        "additional_kwargs": {
+                            "function_call": {"name": "findConvosByKeywords", "arguments": "{\"keywords\":\"show\"}"}
+                        },
+                    }
+                }
+            },
+        }
+        for index in range(20):
+            yield {"type": "on_tool_start", "name": f"tool-{index + 1}"}
+            yield {"type": "on_tool_end", "name": f"tool-{index + 1}", "data": {"output": {}}}
+
+    async def _fake_publish(run_id: str, event_json: str) -> None:  # noqa: ARG001
+        return None
+
+    async def _never_cancel(run_id: str, turn_seq: int) -> bool:  # noqa: ARG001
+        return False
+
+    async def _clear_cancel(run_id: str, turn_seq: int) -> None:  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr("dembrane.agentic_worker.stream_agent_events", _fake_stream)
+    monkeypatch.setattr("dembrane.agentic_worker.publish_live_event", _fake_publish)
+    monkeypatch.setattr("dembrane.agentic_worker.is_cancel_requested", _never_cancel)
+    monkeypatch.setattr("dembrane.agentic_worker.clear_cancel", _clear_cancel)
+
+    await process_agentic_run(
+        run_id=run["id"],
+        project_id="project-1",
+        user_message="hello",
+        bearer_token="token-1",
+        turn_seq=1,
+        owner_token="owner-1",
+        run_service=service,
+    )
+
+    events = service.list_events(run["id"])
+    assistant_events = [event for event in events if event["event_type"] == "assistant.message"]
+    assistant_texts = [event["payload"]["content"] for event in assistant_events]
+
+    assert assistant_texts[-2] == (
+        "I've reached my tool-call limit for this turn. "
+        "I'll stop searching here and summarize what I can reliably infer."
+    )
+    assert assistant_texts[-1] == (
+        "Here is my best synthesis from the evidence gathered so far:\n\nCurrent synthesis draft."
+    )
+
+
+@pytest.mark.asyncio
 async def test_process_agentic_run_passes_persisted_message_history(monkeypatch) -> None:
     service = _build_service()
     run = service.create_run(project_id="project-1", directus_user_id="user-1")

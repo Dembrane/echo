@@ -33,8 +33,8 @@ def _build_payload_messages(
     user_message: str,
     message_history: Optional[list[MessageHistoryEntry]],
 ) -> list[dict[str, str]]:
+    payload_messages: list[dict[str, str]] = []
     if isinstance(message_history, list):
-        payload_messages: list[dict[str, str]] = []
         for message in message_history:
             if not isinstance(message, dict):
                 continue
@@ -42,7 +42,10 @@ def _build_payload_messages(
             content = message.get("content")
             if role not in {"user", "assistant"}:
                 continue
-            if not isinstance(content, str) or not content.strip():
+            if not isinstance(content, str):
+                continue
+            normalized_content = content.strip()
+            if not normalized_content:
                 continue
 
             payload_messages.append(
@@ -50,19 +53,37 @@ def _build_payload_messages(
                     "id": str(uuid4()),
                     "type": "TextMessage",
                     "role": role,
-                    "content": content,
+                    "content": normalized_content,
                 }
             )
 
-        if payload_messages:
-            return payload_messages
+    normalized_user_message = user_message.strip()
+    if normalized_user_message:
+        latest = payload_messages[-1] if payload_messages else None
+        should_append_current_turn = not (
+            isinstance(latest, dict)
+            and latest.get("role") == "user"
+            and latest.get("content") == normalized_user_message
+        )
+        if should_append_current_turn:
+            payload_messages.append(
+                {
+                    "id": str(uuid4()),
+                    "type": "TextMessage",
+                    "role": "user",
+                    "content": normalized_user_message,
+                }
+            )
+
+    if payload_messages:
+        return payload_messages
 
     return [
         {
             "id": str(uuid4()),
             "type": "TextMessage",
             "role": "user",
-            "content": user_message,
+            "content": normalized_user_message or user_message,
         }
     ]
 

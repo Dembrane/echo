@@ -20,6 +20,22 @@ logger = getLogger("dembrane.agentic_worker")
 AGENT_CANCELLED_ERROR_CODE = "AGENT_CANCELLED"
 AGENT_CANCELLED_MESSAGE = "Run cancelled by user"
 MAX_TOOL_CALLS_PER_RUN = 12
+TOOL_LIMIT_EXEMPT_TOOL_NAMES = {"sendProgressUpdate"}
+TOOL_LIMIT_SAFETY_MESSAGE = (
+    "I've reached my tool-call limit for this turn. "
+    "I'll stop searching here and summarize what I can reliably infer."
+)
+TOOL_LIMIT_FALLBACK_SUMMARY_MESSAGE = (
+    "I reached the tool-call limit before gathering enough additional evidence for a fuller synthesis. "
+    "If you want, send `go on` and I'll continue from this exact point."
+)
+AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL = 4
+AUTOMATIC_NUDGE_TEMPLATE = (
+    "<Automatic Nudge> You have made {tool_call_count} tool calls without sending an assistant update. "
+    "Call `sendProgressUpdate` now with a concise update and next steps, then continue research with "
+    "another tool call if evidence is still missing. Only return plain text with no tool call if you "
+    "are concluding."
+)
 PLANNING_MESSAGE_MAX_CHARS = 280
 HISTORY_PAGE_SIZE = 500
 OVERFLOW_RETRY_WINDOW_SIZE = 24
@@ -71,38 +87,61 @@ def _coerce_text(value: Any) -> str:
     return ""
 
 
-def _extract_model_text_and_tool_flag(event: dict[str, Any]) -> tuple[Optional[str], bool]:
+def _extract_tool_call_name(value: Any) -> Optional[str]:
+    if isinstance(value, dict):
+        direct_name = value.get("name")
+        if isinstance(direct_name, str) and direct_name.strip():
+            return direct_name.strip()
+
+        nested_function = value.get("function")
+        if isinstance(nested_function, dict):
+            nested_name = nested_function.get("name")
+            if isinstance(nested_name, str) and nested_name.strip():
+                return nested_name.strip()
+    return None
+
+
+def _extract_model_text_and_tool_calls(event: dict[str, Any]) -> tuple[Optional[str], set[str]]:
     if str(event.get("type") or event.get("event") or "") != "on_chat_model_end":
-        return None, False
+        return None, set()
 
     data = event.get("data")
     if not isinstance(data, dict):
-        return None, False
+        return None, set()
 
     output = data.get("output")
     if not isinstance(output, dict):
-        return None, False
+        return None, set()
 
     kwargs = output.get("kwargs")
     if not isinstance(kwargs, dict):
-        return None, False
+        return None, set()
 
     content = _coerce_text(kwargs.get("content"))
-    has_tool_calls = False
+    tool_call_names: set[str] = set()
 
     tool_calls = kwargs.get("tool_calls")
-    if isinstance(tool_calls, list) and len(tool_calls) > 0:
-        has_tool_calls = True
+    if isinstance(tool_calls, list):
+        for call in tool_calls:
+            tool_name = _extract_tool_call_name(call)
+            if tool_name:
+                tool_call_names.add(tool_name)
 
     additional_kwargs = kwargs.get("additional_kwargs")
     if isinstance(additional_kwargs, dict):
-        if additional_kwargs.get("function_call"):
-            has_tool_calls = True
-        nested_tool_calls = additional_kwargs.get("tool_calls")
-        if isinstance(nested_tool_calls, list) and len(nested_tool_calls) > 0:
-            has_tool_calls = True
+        function_call = additional_kwargs.get("function_call")
+        function_name = _extract_tool_call_name(function_call)
+        if function_name:
+            tool_call_names.add(function_name)
 
-    return (content or None), has_tool_calls
+        nested_tool_calls = additional_kwargs.get("tool_calls")
+        if isinstance(nested_tool_calls, list):
+            for call in nested_tool_calls:
+                tool_name = _extract_tool_call_name(call)
+                if tool_name:
+                    tool_call_names.add(tool_name)
+
+    return (content or None), tool_call_names
 
 
 def _condense_planning_message(content: str) -> str:
@@ -134,6 +173,77 @@ def _is_context_overflow_error(exc: AgenticUpstreamError) -> bool:
     if "maximum" in haystack and ("context" in haystack or "token" in haystack):
         return True
     return False
+
+
+def _build_automatic_nudge_content(*, tool_calls_without_assistant_message: int) -> str:
+    milestone = (
+        tool_calls_without_assistant_message // AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL
+    ) * AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL
+    return AUTOMATIC_NUDGE_TEMPLATE.format(tool_call_count=milestone)
+
+
+def _build_post_limit_summary(*, last_substantive_assistant_message: Optional[str]) -> str:
+    summary_source = _coerce_non_empty_text(last_substantive_assistant_message)
+    if summary_source is None:
+        return TOOL_LIMIT_FALLBACK_SUMMARY_MESSAGE
+    return f"Here is my best synthesis from the evidence gathered so far:\n\n{summary_source}"
+
+
+def _extract_progress_message_from_tool_end(event: dict[str, Any]) -> Optional[str]:
+    if str(event.get("name") or "") != "sendProgressUpdate":
+        return None
+
+    data = event.get("data")
+    if not isinstance(data, dict):
+        return None
+
+    output = data.get("output")
+    output_payloads: list[dict[str, Any]] = []
+    direct_output_payload = _payload_to_dict(output)
+    if direct_output_payload:
+        output_payloads.append(direct_output_payload)
+
+        nested_output = _payload_to_dict(direct_output_payload.get("output"))
+        if nested_output:
+            output_payloads.append(nested_output)
+
+        output_content_payload = _payload_to_dict(direct_output_payload.get("content"))
+        if output_content_payload:
+            output_payloads.append(output_content_payload)
+
+        kwargs_payload = _payload_to_dict(direct_output_payload.get("kwargs"))
+        if kwargs_payload:
+            output_payloads.append(kwargs_payload)
+
+            kwargs_content_payload = _payload_to_dict(kwargs_payload.get("content"))
+            if kwargs_content_payload:
+                output_payloads.append(kwargs_content_payload)
+
+    if not output_payloads:
+        return None
+
+    output_payload = next(
+        (
+            candidate
+            for candidate in output_payloads
+            if candidate.get("kind") == "progress_update"
+            or _coerce_non_empty_text(candidate.get("update")) is not None
+        ),
+        output_payloads[0],
+    )
+
+    visible_to_user = output_payload.get("visible_to_user")
+    if visible_to_user is False:
+        return None
+
+    update_text = _coerce_non_empty_text(output_payload.get("update"))
+    if update_text is None:
+        return None
+
+    next_steps = _coerce_non_empty_text(output_payload.get("next_steps"))
+    if next_steps is None:
+        return update_text
+    return f"{update_text}\n\nNext steps: {next_steps}"
 
 
 async def _build_message_history(
@@ -294,9 +404,12 @@ async def process_agentic_run(
     run = await run_in_thread_pool(svc.get_by_id_or_raise, run_id)
     project_chat_id = str(run.get("project_chat_id") or "")
     latest_output: str | None = None
-    tool_start_count = 0
+    total_tool_start_count = 0
+    counted_tool_start_count = 0
+    tool_calls_without_assistant_message = 0
+    nudged_tool_call_milestones: set[int] = set()
     has_sent_progress_intro = False
-    has_sent_progress_midpoint = False
+    last_substantive_assistant_message: str | None = None
 
     logger.info("Processing run %s turn %s (owner=%s)", run_id, turn_seq, owner_token)
     await run_in_thread_pool(svc.set_status, run_id, "running")
@@ -318,19 +431,26 @@ async def process_agentic_run(
             await _raise_if_cancelled(run_id, turn_seq)
             event_type = str(event.get("type") or event.get("event") or "agent.event")
 
-            model_text, model_has_tool_calls = _extract_model_text_and_tool_flag(event)
+            model_text, model_tool_calls = _extract_model_text_and_tool_calls(event)
+            model_has_tool_calls = len(model_tool_calls) > 0
+            model_has_progress_tool_call = "sendProgressUpdate" in model_tool_calls
             if model_text:
                 if model_has_tool_calls:
-                    if not has_sent_progress_intro:
+                    if model_has_progress_tool_call:
                         has_sent_progress_intro = True
-                        intro_message = _condense_planning_message(model_text)
-                        if intro_message:
+                    else:
+                        planning_message = _condense_planning_message(model_text)
+                        if planning_message:
+                            has_sent_progress_intro = True
                             await _append_assistant_message(
                                 svc=svc,
                                 run_id=run_id,
-                                content=intro_message,
+                                content=planning_message,
                                 project_chat_id=project_chat_id,
                             )
+                            last_substantive_assistant_message = planning_message
+                            tool_calls_without_assistant_message = 0
+                            nudged_tool_call_milestones.clear()
                 else:
                     await _append_assistant_message(
                         svc=svc,
@@ -339,10 +459,16 @@ async def process_agentic_run(
                         project_chat_id=project_chat_id,
                     )
                     latest_output = model_text
+                    last_substantive_assistant_message = model_text
+                    tool_calls_without_assistant_message = 0
+                    nudged_tool_call_milestones.clear()
 
             if event_type == "on_tool_start":
-                tool_start_count += 1
                 tool_name = str(event.get("name") or "tool")
+                total_tool_start_count += 1
+                if tool_name not in TOOL_LIMIT_EXEMPT_TOOL_NAMES:
+                    counted_tool_start_count += 1
+                tool_calls_without_assistant_message += 1
 
                 if not has_sent_progress_intro:
                     has_sent_progress_intro = True
@@ -356,39 +482,79 @@ async def process_agentic_run(
                         content=progress_message,
                         project_chat_id=project_chat_id,
                     )
-
-                elif tool_start_count >= 4 and not has_sent_progress_midpoint:
-                    has_sent_progress_midpoint = True
-                    progress_message = (
-                        "I have a rough picture now. "
-                        "I'll run a couple more checks, then summarize clearly."
+                    tool_calls_without_assistant_message = 0
+                    nudged_tool_call_milestones.clear()
+                else:
+                    nudge_milestone = (
+                        tool_calls_without_assistant_message
+                        // AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL
+                    ) * AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL
+                    should_emit_nudge = (
+                        tool_calls_without_assistant_message >= AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL
+                        and nudge_milestone not in nudged_tool_call_milestones
                     )
+                    if should_emit_nudge:
+                        nudged_tool_call_milestones.add(nudge_milestone)
+                        nudge_content = _build_automatic_nudge_content(
+                            tool_calls_without_assistant_message=tool_calls_without_assistant_message
+                        )
+                        await _append_event_and_publish(
+                            svc,
+                            run_id,
+                            "agent.nudge",
+                            {
+                                "hidden": True,
+                                "origin": "automatic_nudge",
+                                "role": "user",
+                                "content": nudge_content,
+                                "tool_calls_without_assistant_message": tool_calls_without_assistant_message,
+                                "total_tool_calls": total_tool_start_count,
+                            },
+                        )
+
+                if counted_tool_start_count >= MAX_TOOL_CALLS_PER_RUN:
+                    await _append_assistant_message(
+                        svc=svc,
+                        run_id=run_id,
+                        content=TOOL_LIMIT_SAFETY_MESSAGE,
+                        project_chat_id=project_chat_id,
+                    )
+                    post_limit_summary = _build_post_limit_summary(
+                        last_substantive_assistant_message=last_substantive_assistant_message
+                    )
+                    await _append_assistant_message(
+                        svc=svc,
+                        run_id=run_id,
+                        content=post_limit_summary,
+                        project_chat_id=project_chat_id,
+                    )
+                    latest_output = post_limit_summary
+                    tool_calls_without_assistant_message = 0
+                    nudged_tool_call_milestones.clear()
+                    break
+
+            await _append_event_and_publish(svc, run_id, event_type, event)
+
+            if event_type == "on_tool_end":
+                progress_message = _extract_progress_message_from_tool_end(event)
+                if progress_message:
+                    has_sent_progress_intro = True
                     await _append_assistant_message(
                         svc=svc,
                         run_id=run_id,
                         content=progress_message,
                         project_chat_id=project_chat_id,
                     )
-
-                if tool_start_count >= MAX_TOOL_CALLS_PER_RUN:
-                    safety_message = (
-                        "I've reached my tool-call limit for this turn. "
-                        "I’ll stop searching here and summarize what I can reliably infer."
-                    )
-                    await _append_assistant_message(
-                        svc=svc,
-                        run_id=run_id,
-                        content=safety_message,
-                        project_chat_id=project_chat_id,
-                    )
-                    latest_output = safety_message
-                    break
-
-            await _append_event_and_publish(svc, run_id, event_type, event)
+                    last_substantive_assistant_message = progress_message
+                    tool_calls_without_assistant_message = 0
+                    nudged_tool_call_milestones.clear()
 
             content = event.get("content")
             if isinstance(content, str) and event_type == "assistant.message":
                 latest_output = content
+                last_substantive_assistant_message = content
+                tool_calls_without_assistant_message = 0
+                nudged_tool_call_milestones.clear()
                 if project_chat_id:
                     try:
                         await run_in_thread_pool(

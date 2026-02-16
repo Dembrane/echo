@@ -3,7 +3,7 @@ import re
 from typing import Any, Callable
 
 from copilotkit.langgraph import CopilotKitState
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.tools import tool
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.memory import MemorySaver
@@ -43,6 +43,8 @@ research request. Focus on what the user is actually asking in their message.
 
 ## Research guidelines (when doing research)
 - Start by telling the user your plan briefly before making tool calls.
+- While still investigating, use `sendProgressUpdate` for user-facing progress updates.
+- Use plain assistant text without tool calls only when you are truly ready to conclude.
 - Prefer `listProjectConversations` to get an overview before keyword searches.
 - For `findConvosByKeywords`, prefer 2-4 focused keywords over long sentence-style queries.
 - Avoid repetitive low-signal searches. Maximum 6 tool calls per turn.
@@ -55,6 +57,18 @@ tagged as [conversation_id:<id>].
 - If direct quotes are unavailable, say so.
 - Never fabricate quotes, sources, or conversation IDs.
 """
+
+AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL = 4
+AUTOMATIC_NUDGE_TEMPLATE = (
+    "<Automatic Nudge> You have made {tool_call_count} tool calls without sending an assistant update. "
+    "Call `sendProgressUpdate` now with a concise update and next steps, then continue research with another "
+    "tool call if evidence is still missing. Only return plain text with no tool call if you are concluding."
+)
+POST_NUDGE_CONTINUATION_SYSTEM_PROMPT = (
+    "You just produced a text-only response immediately after an automatic nudge. "
+    "If the task is not complete, call `sendProgressUpdate` and then continue with the next tool call. "
+    "Only respond without tool calls when you are actually done."
+)
 
 
 def _build_llm() -> ChatGoogleGenerativeAI:
@@ -80,6 +94,79 @@ def create_agent_graph(
     keyword_search_cache: dict[tuple[str, int], dict[str, Any]] = {}
     consecutive_empty_keyword_searches = 0
     project_conversation_cache: dict[str, dict[str, Any]] = {}
+    automatic_nudge_milestones: set[int] = set()
+    nudge_retry_milestones: set[int] = set()
+    last_tool_calls_without_assistant_update = 0
+
+    def _coerce_message_text(value: Any) -> str:
+        if isinstance(value, str):
+            return value.strip()
+
+        if isinstance(value, list):
+            parts: list[str] = []
+            for item in value:
+                if isinstance(item, str):
+                    normalized = item.strip()
+                    if normalized:
+                        parts.append(normalized)
+                    continue
+                if isinstance(item, dict):
+                    text = item.get("text")
+                    if isinstance(text, str) and text.strip():
+                        parts.append(text.strip())
+            return "\n".join(parts).strip()
+
+        return ""
+
+    def _count_tool_calls_since_assistant_update(messages: list[Any]) -> int:
+        tool_calls_since_assistant_update = 0
+
+        for message in messages:
+            if getattr(message, "type", None) != "ai":
+                continue
+
+            tool_calls = getattr(message, "tool_calls", None)
+            if isinstance(tool_calls, list) and len(tool_calls) > 0:
+                # Some model responses include both progress text and tool calls.
+                # Treat the text as an assistant update before counting new tool calls.
+                if _coerce_message_text(getattr(message, "content", None)):
+                    tool_calls_since_assistant_update = 0
+                tool_calls_since_assistant_update += len(tool_calls)
+                continue
+
+            if _coerce_message_text(getattr(message, "content", None)):
+                tool_calls_since_assistant_update = 0
+
+        return tool_calls_since_assistant_update
+
+    def _build_automatic_nudge(messages: list[Any]) -> tuple[str, int] | None:
+        nonlocal last_tool_calls_without_assistant_update
+
+        tool_calls_without_assistant_update = _count_tool_calls_since_assistant_update(messages)
+        if tool_calls_without_assistant_update < last_tool_calls_without_assistant_update:
+            automatic_nudge_milestones.clear()
+            nudge_retry_milestones.clear()
+
+        if tool_calls_without_assistant_update == 0:
+            automatic_nudge_milestones.clear()
+            nudge_retry_milestones.clear()
+
+        last_tool_calls_without_assistant_update = tool_calls_without_assistant_update
+        if tool_calls_without_assistant_update < AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL:
+            return None
+
+        milestone = (
+            tool_calls_without_assistant_update // AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL
+        ) * AUTOMATIC_NUDGE_TOOL_CALL_INTERVAL
+        if milestone in automatic_nudge_milestones:
+            return None
+
+        automatic_nudge_milestones.add(milestone)
+        return AUTOMATIC_NUDGE_TEMPLATE.format(tool_call_count=milestone), milestone
+
+    def _message_has_tool_calls(message: Any) -> bool:
+        tool_calls = getattr(message, "tool_calls", None)
+        return isinstance(tool_calls, list) and len(tool_calls) > 0
 
     def _keyword_guardrail_result(
         *,
@@ -472,6 +559,20 @@ def create_agent_graph(
             "matches": matches,
         }
 
+    @tool
+    async def sendProgressUpdate(update: str, next_steps: str = "") -> dict[str, Any]:
+        """Emit a user-visible progress update without concluding the run."""
+        normalized_update = update.strip()
+        if not normalized_update:
+            raise ValueError("update is required")
+
+        return {
+            "kind": "progress_update",
+            "update": normalized_update,
+            "next_steps": next_steps.strip(),
+            "visible_to_user": True,
+        }
+
     tools = [
         get_project_scope,
         findConvosByKeywords,
@@ -479,6 +580,7 @@ def create_agent_graph(
         listConvoSummary,
         listConvoFullTranscript,
         grepConvoSnippets,
+        sendProgressUpdate,
     ]
     configured_llm = llm or _build_llm()
     llm_with_tools = configured_llm.bind_tools(tools)
@@ -498,8 +600,28 @@ def create_agent_graph(
         if not messages or not isinstance(messages[0], SystemMessage):
             invocation_messages = [SystemMessage(content=SYSTEM_PROMPT)] + messages
         else:
-            invocation_messages = messages
+            invocation_messages = list(messages)
+
+        automatic_nudge = _build_automatic_nudge(messages)
+        nudge_milestone: int | None = None
+        if automatic_nudge:
+            nudge_content, nudge_milestone = automatic_nudge
+            invocation_messages.append(HumanMessage(content=nudge_content))
+
         response = await llm_with_tools.ainvoke(invocation_messages)
+
+        should_retry_after_nudge = (
+            nudge_milestone is not None
+            and nudge_milestone not in nudge_retry_milestones
+            and not _message_has_tool_calls(response)
+        )
+        if should_retry_after_nudge:
+            nudge_retry_milestones.add(nudge_milestone)
+            retry_messages = list(invocation_messages)
+            retry_messages.append(response)
+            retry_messages.append(SystemMessage(content=POST_NUDGE_CONTINUATION_SYSTEM_PROMPT))
+            response = await llm_with_tools.ainvoke(retry_messages)
+
         # Return only the new response; LangGraph's reducer appends it to state
         return {"messages": [response]}
 

@@ -134,7 +134,7 @@ async def test_stream_agent_events_serializes_message_history_in_order(monkeypat
         event
         async for event in stream_agent_events(
             project_id="project-1",
-            user_message="ignored-when-history-present",
+            user_message="latest-user",
             bearer_token="token-1",
             thread_id="run-1",
             message_history=[
@@ -151,11 +151,59 @@ async def test_stream_agent_events_serializes_message_history_in_order(monkeypat
         "user",
         "assistant",
         "user",
+        "user",
     ]
     assert [message["content"] for message in capture["json"]["messages"]] == [
         "first-user",
         "first-assistant",
         "second-user",
+        "latest-user",
+    ]
+    assert all(message["id"] for message in capture["json"]["messages"])
+    assert events == [{"type": "assistant.message", "content": "done"}]
+
+
+@pytest.mark.asyncio
+async def test_stream_agent_events_dedupes_latest_user_if_already_in_history(monkeypatch) -> None:
+    capture: dict[str, Any] = {}
+    response = _FakeStreamResponse(status_code=200, chunks=['{"type":"assistant.message","content":"done"}\n'])
+
+    def _build_client(*, base_url: str, timeout: float) -> _FakeAsyncClient:
+        return _FakeAsyncClient(
+            base_url=base_url,
+            timeout=timeout,
+            capture=capture,
+            response=response,
+        )
+
+    monkeypatch.setattr("dembrane.agentic_client.httpx.AsyncClient", _build_client)
+
+    events = [
+        event
+        async for event in stream_agent_events(
+            project_id="project-1",
+            user_message="follow up",
+            bearer_token="token-1",
+            thread_id="run-1",
+            message_history=[
+                {"role": "user", "content": "first-user"},
+                {"role": "assistant", "content": "first-assistant"},
+                {"role": "user", "content": "follow up"},
+            ],
+            agent_service_url="http://agent.test",
+            timeout_seconds=42,
+        )
+    ]
+
+    assert [message["role"] for message in capture["json"]["messages"]] == [
+        "user",
+        "assistant",
+        "user",
+    ]
+    assert [message["content"] for message in capture["json"]["messages"]] == [
+        "first-user",
+        "first-assistant",
+        "follow up",
     ]
     assert all(message["id"] for message in capture["json"]["messages"])
     assert events == [{"type": "assistant.message", "content": "done"}]

@@ -75,6 +75,10 @@ const toMessage = (event: AgenticRunEvent): RenderMessage | null => {
 				? payload.message
 				: null;
 
+	if (event.event_type === "agent.nudge") {
+		return null;
+	}
+
 	if (event.event_type === "user.message" && content) {
 		return { content, id: `u-${event.seq}`, role: "user" };
 	}
