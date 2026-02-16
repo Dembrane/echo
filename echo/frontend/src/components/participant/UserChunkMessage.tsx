@@ -104,13 +104,12 @@ const UserChunkMessage = ({
 			</div>
 		<Paper className="my-2 rounded-t-xl rounded-bl-xl border-0 bg-gray-100 p-4">
 			<Text className="prose text-sm">
-				{chunk.transcript == null && (
+				{chunk.transcript == null ? (
 					<Markdown content={t`*Transcription in progress.*`} />
-				)}
-				{chunk.transcript?.includes("<redacted_") ? (
+				) : chunk.transcript.includes("<redacted_") ? (
 					<RedactedText>{chunk.transcript}</RedactedText>
 				) : (
-					<Markdown content={chunk.transcript ?? ""} />
+					<Markdown content={chunk.transcript} />
 				)}
 			</Text>
 		</Paper>
