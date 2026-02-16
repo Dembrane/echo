@@ -102,18 +102,17 @@ const UserChunkMessage = ({
 					</Menu.Dropdown>
 				</Menu>
 			</div>
-		<Paper className="my-2 rounded-t-xl rounded-bl-xl border-0 bg-gray-100 p-4">
-			<Text className="prose text-sm">
-				{chunk.transcript == null && (
-					<Markdown content={t`*Transcription in progress.*`} />
-				)}
-				{chunk.transcript?.includes("<redacted_") ? (
-					<RedactedText>{chunk.transcript}</RedactedText>
-				) : (
-					<Markdown content={chunk.transcript ?? ""} />
-				)}
-			</Text>
-		</Paper>
+			<Paper className="my-2 rounded-t-xl rounded-bl-xl border-0 bg-gray-100 p-4">
+				<Text className="prose text-sm">
+					{chunk.transcript == null ? (
+						<Markdown content={t`*Transcription in progress.*`} />
+					) : chunk.transcript.includes("<redacted_") ? (
+						<RedactedText>{chunk.transcript}</RedactedText>
+					) : (
+						<Markdown content={chunk.transcript} />
+					)}
+				</Text>
+			</Paper>
 		</div>
 	);
 };

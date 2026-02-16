@@ -4,21 +4,22 @@ import { type ReactNode, useMemo } from "react";
 
 const REDACTED_PATTERN = /<redacted_([a-z_]+)>/g;
 
-const REDACTED_LABELS: Record<string, string> = {
-	address: "Address",
-	card: "Card",
-	email: "Email",
-	iban: "IBAN",
-	id: "ID",
-	license_plate: "License Plate",
-	name: "Name",
-	phone: "Phone",
-	username: "Username",
-};
+const getRedactedLabels = (): Record<string, string> => ({
+	address: t`Address`,
+	card: t`Card`,
+	email: t`Email`,
+	iban: t`IBAN`,
+	id: t`ID`,
+	license_plate: t`License Plate`,
+	name: t`Name`,
+	phone: t`Phone`,
+	username: t`Username`,
+});
 
 const formatLabel = (key: string): string => {
-	if (key in REDACTED_LABELS) {
-		return REDACTED_LABELS[key];
+	const labels = getRedactedLabels();
+	if (key in labels) {
+		return labels[key];
 	}
 	return key
 		.split("_")
