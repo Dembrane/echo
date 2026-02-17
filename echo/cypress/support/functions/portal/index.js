@@ -94,7 +94,20 @@ export const toggleAskForName = (enable = true) => {
     });
 };
 
-
+// Toggle "Ask for Email" checkbox
+export const toggleAskForEmail = (enable = true) => {
+    cy.log(`Toggling Ask for Email: ${enable}`);
+    cy.contains('label', 'Ask for Email?')
+        .scrollIntoView()
+        .should('be.visible')
+        .then(($label) => {
+            const $checkbox = $label.closest('.mantine-Checkbox-root').find('input[type="checkbox"]');
+            const isChecked = $checkbox.is(':checked');
+            if ((enable && !isChecked) || (!enable && isChecked)) {
+                cy.wrap($checkbox).click({ force: true });
+            }
+        });
+};
 
 // Toggle "Make it Concrete" feature
 export const toggleMakeItConcrete = (enable = true) => {
@@ -200,12 +213,72 @@ export const clickCopyLinkButton = () => {
 // Toggle Open for Participation
 export const toggleOpenForParticipation = (enable = true) => {
     cy.log(`Toggling Open for Participation: ${enable}`);
-    cy.get('[data-testid="dashboard-open-for-participation-toggle"]').then(($toggle) => {
-        const isChecked = $toggle.is(':checked');
-        if ((enable && !isChecked) || (!enable && isChecked)) {
-            cy.wrap($toggle).click();
-        }
-    });
+
+    // Wait for the toggle to be present and the page to be fully loaded
+    cy.get('[data-testid="dashboard-open-for-participation-toggle"]', { timeout: 30000 })
+        .should('exist');
+
+    cy.wait(2000); // Let React fully render and settle
+
+    cy.get('[data-testid="dashboard-open-for-participation-toggle"]', { timeout: 20000 })
+        .then(($inputs) => {
+            // Find a visible input
+            const $visibleInput = Cypress.$($inputs).filter((_, el) => {
+                return Cypress.$(el).closest('.mantine-Switch-root').is(':visible');
+            }).first();
+
+            const $input = $visibleInput.length > 0 ? $visibleInput : Cypress.$($inputs.first());
+            const currentlyChecked = $input.prop('checked');
+
+            cy.log(`Toggle current state: checked=${currentlyChecked}, desired=${enable}`);
+
+            if (currentlyChecked === enable) {
+                cy.log('Toggle already in desired state, skipping');
+                return;
+            }
+
+            // Use native DOM click - this properly triggers browser checkbox behavior
+            // and React's event delegation (synthetic onChange handler)
+            $input[0].click();
+        });
+
+    cy.wait(3000); // Wait for API mutation to complete
+
+    // Reload and verify persisted state
+    cy.reload();
+    cy.wait(3000);
+
+    // Check state after reload, retry once if needed
+    cy.get('[data-testid="dashboard-open-for-participation-toggle"]', { timeout: 20000 })
+        .then(($inputs) => {
+            const $visibleInput = Cypress.$($inputs).filter((_, el) => {
+                return Cypress.$(el).closest('.mantine-Switch-root').is(':visible');
+            }).first();
+
+            const $input = $visibleInput.length > 0 ? $visibleInput : Cypress.$($inputs.first());
+            const currentlyChecked = $input.prop('checked');
+
+            cy.log(`After reload: checked=${currentlyChecked}, desired=${enable}`);
+
+            if (currentlyChecked !== enable) {
+                // State didn't persist - try clicking again
+                cy.log('State did not persist, retrying click');
+                $input[0].click();
+                cy.wait(3000);
+                cy.reload();
+                cy.wait(3000);
+            }
+        });
+
+    // Final verification
+    cy.get('[data-testid="dashboard-open-for-participation-toggle"]', { timeout: 20000 })
+        .then(($inputs) => {
+            const $visibleInput = Cypress.$($inputs).filter((_, el) => {
+                return Cypress.$(el).closest('.mantine-Switch-root').is(':visible');
+            }).first();
+            const $input = $visibleInput.length > 0 ? $visibleInput : Cypress.$($inputs.first());
+            expect($input.prop('checked'), 'open for participation final state').to.equal(enable);
+        });
 };
 
 // Select Reply Mode (default, brainstorm, custom)

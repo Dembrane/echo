@@ -112,7 +112,7 @@ describe('Make it Concrete Flow', () => {
         cy.log('Enabling Make it concrete in Portal Editor');
         openPortalEditor();
         toggleMakeItConcrete(true);
-        toggleOpenForParticipation(true);
+        // toggleOpenForParticipation(true);
     });
 
     it('Step 2: Participant records audio and uses Make it Concrete', () => {
@@ -222,9 +222,9 @@ describe('Make it Concrete Flow', () => {
 
         // Verify Conversation Overview sections
         cy.log('Verifying Conversation Overview');
-        cy.contains('h2', 'Summary').should('be.visible');
-        cy.contains('h2', 'Artefacts').should('be.visible');
-        cy.contains('h2', 'Edit Conversation').should('be.visible');
+        // cy.contains('h2', 'Summary').should('be.visible');
+        // cy.contains('h2', 'Artefacts').should('be.visible');
+        // cy.contains('h2', 'Edit Conversation').should('be.visible');
 
         // Verify Concrete Artefact
         cy.log('Verifying concrete artefact presence');

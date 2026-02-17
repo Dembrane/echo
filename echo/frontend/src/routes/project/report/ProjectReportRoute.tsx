@@ -34,6 +34,7 @@ import { ReportTimeline } from "@/components/report/ReportTimeline";
 import { UpdateReportModalButton } from "@/components/report/UpdateReportModalButton";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import useCopyToRichText from "@/hooks/useCopyToRichText";
+import { useLanguage } from "@/hooks/useLanguage";
 import { testId } from "@/lib/testUtils";
 
 export const ReportLayout = ({
@@ -97,7 +98,8 @@ const ProjectReportAnalytics = ({ reportId }: { reportId: number }) => {
 };
 
 export const ProjectReportRoute = () => {
-	const { projectId, language } = useParams();
+	const { projectId } = useParams();
+	const { language } = useLanguage();
 	const { data, isLoading } = useLatestProjectReport(projectId ?? "");
 	const { data: views } = useProjectReportViews(data?.id ?? -1);
 	const { mutate: updateProjectReport, isPending: isUpdatingReport } =

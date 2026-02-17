@@ -33,6 +33,29 @@ export const skipOnboarding = () => {
 };
 
 /**
+ * Clicks through onboarding slides until the privacy policy checkbox appears
+ * @param {number} maxAttempts - Maximum number of Next clicks before giving up
+ */
+export const clickThroughOnboardingUntilCheckbox = (maxAttempts = 10) => {
+    const clickNext = (attempt = 0) => {
+        if (attempt >= maxAttempts) {
+            cy.log('Max attempts reached waiting for privacy checkbox');
+            return;
+        }
+        cy.get('body').then(($body) => {
+            if ($body.find('[data-testid="portal-onboarding-checkbox"]').length > 0) {
+                cy.log('Privacy policy checkbox found');
+            } else {
+                cy.get('[data-testid="portal-onboarding-next-button"]').should('be.visible').click();
+                cy.wait(1000);
+                clickNext(attempt + 1);
+            }
+        });
+    };
+    clickNext();
+};
+
+/**
  * Agrees to the privacy policy by checking the checkbox and clicking I understand
  */
 export const agreeToPrivacyPolicy = () => {

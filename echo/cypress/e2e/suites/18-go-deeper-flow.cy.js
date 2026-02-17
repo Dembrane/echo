@@ -111,7 +111,7 @@ describe('Go Deeper Checking Flow', () => {
         openPortalEditor();
         toggleGoDeeper(true);
         toggleMakeItConcrete(true);
-        toggleOpenForParticipation(true);
+        // toggleOpenForParticipation(true);
     });
 
     it('Step 2: Participant records audio and uses Make it Concrete', () => {

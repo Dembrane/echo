@@ -1,6 +1,6 @@
 import { loginToApp, logout } from '../../support/functions/login';
 import { createProject, verifyProjectPage, deleteProject, updateProjectName, navigateToHome } from '../../support/functions/project';
-import { openPortalEditor, selectTutorial, addTag, updatePortalContent, changePortalLanguage } from '../../support/functions/portal';
+import { openPortalEditor, selectTutorial, addTag, updatePortalContent, changePortalLanguage, toggleAskForName, toggleAskForEmail } from '../../support/functions/portal';
 import { openSettingsMenu } from '../../support/functions/settings';
 
 describe('Project Create, Edit, and Delete Flow', () => {
@@ -33,7 +33,9 @@ describe('Project Create, Edit, and Delete Flow', () => {
 
                 // 3. Edit Portal Settings
                 openPortalEditor();
-                selectTutorial('Basic');
+                toggleAskForName(true);
+                toggleAskForEmail(true);
+                selectTutorial('Advanced');
                 addTag(tagName);
                 updatePortalContent(portalTitle, portalContent, thankYouContent);
                 changePortalLanguage(portalLanguage);
