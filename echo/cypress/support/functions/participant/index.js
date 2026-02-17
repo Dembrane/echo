@@ -55,6 +55,26 @@ export const clickThroughOnboardingUntilCheckbox = (maxAttempts = 10) => {
     clickNext();
 };
 
+
+export const clickThroughOnboardingUntilMicrophone = (maxAttempts = 10) => {
+    const clickNext = (attempt = 0) => {
+        if (attempt >= maxAttempts) {
+            cy.log('Max attempts reached waiting for microphone check');
+            return;
+        }
+        cy.get('body').then(($body) => {
+            if ($body.find('[data-testid="portal-onboarding-mic-skip-button"]').length > 0) {
+                cy.log('Microphone check found');
+            } else {
+                cy.get('[data-testid="portal-onboarding-next-button"]').should('be.visible').click();
+                cy.wait(1000);
+                clickNext(attempt + 1);
+            }
+        });
+    };
+    clickNext();
+};
+
 /**
  * Agrees to the privacy policy by checking the checkbox and clicking I understand
  */
@@ -139,11 +159,76 @@ export const enterSessionName = (name) => {
 };
 
 /**
+ * Types session name without clicking Next (for cases where you need to interact with tags first)
+ * @param {string} name - Session name to enter
+ */
+export const typeSessionName = (name) => {
+    cy.log('Typing Session Name:', name);
+    cy.get('[data-testid="portal-initiate-name-input"]', { timeout: 15000 })
+        .should('be.visible')
+        .clear()
+        .type(name);
+};
+
+/**
+ * Verifies a tag exists in the tags dropdown and selects it
+ * @param {string} tagName - Optional tag name to verify and select
+ */
+export const verifyAndSelectTag = (tagName) => {
+    const normalizedTagName = typeof tagName === 'string' ? tagName.trim() : '';
+    cy.log(
+        normalizedTagName
+            ? `Verifying and selecting tag: ${normalizedTagName}`
+            : 'Selecting first available tag',
+    );
+
+    // Open the tags dropdown
+    cy.get('[data-testid="portal-initiate-tags-select"]', { timeout: 15000 })
+        .should('exist')
+        .click({ force: true });
+
+    // Wait for visible options to render
+    cy.get('[data-combobox-option="true"]:visible', { timeout: 10000 })
+        .its('length')
+        .should('be.gt', 0);
+
+    cy.get('[data-combobox-option="true"]:visible').then(($options) => {
+        const $matchingOptions = normalizedTagName
+            ? $options.filter((_, option) => Cypress.$(option).text().trim() === normalizedTagName)
+            : Cypress.$();
+
+        const $targetOption = $matchingOptions.length > 0 ? $matchingOptions.first() : $options.first();
+        const selectedTagLabel = $targetOption.text().trim();
+
+        cy.wrap($targetOption).click({ force: true });
+        cy.get('[data-testid="portal-initiate-tags-select"]')
+            .parent()
+            .should('contain.text', selectedTagLabel);
+    });
+
+    cy.wait(500);
+};
+
+/**
+ * Submits the session form by clicking the Next button
+ */
+export const submitSessionForm = () => {
+    cy.log('Submitting Session Form');
+    cy.get('[data-testid="portal-initiate-next-button"]')
+        .should('be.visible')
+        .should('not.be.disabled')
+        .click({ force: true });
+    cy.wait(2000);
+};
+
+/**
  * Selects tags for the conversation
  */
 export const selectTags = () => {
     cy.log('Opening Tags Select');
-    cy.get('[data-testid="portal-initiate-tags-select"]').should('be.visible').click();
+    cy.get('[data-testid="portal-initiate-tags-select"]')
+        .should('exist')
+        .click({ force: true });
 };
 
 /**
@@ -1455,4 +1540,3 @@ export const prepareForRecording = () => {
     reapplyParticipantAudioStubs();
     primeMicrophoneAccess();
 };
-

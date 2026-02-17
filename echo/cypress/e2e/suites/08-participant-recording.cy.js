@@ -127,7 +127,9 @@ describe('Participant Recording Flow', () => {
 
                 // Skip microphone check directly as requested
                 cy.log('Skipping microphone check via Skip button');
-                cy.contains('button', 'Skip').click({ force: true });
+                cy.get('[data-testid="portal-onboarding-mic-skip-button"]')
+                    .should('be.visible')
+                    .click({ force: true });
                 cy.wait(1000);
 
                 // 5. Enter session name
@@ -236,4 +238,3 @@ describe('Participant Recording Flow', () => {
         logout();
     });
 });
-

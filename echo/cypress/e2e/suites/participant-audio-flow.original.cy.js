@@ -295,7 +295,7 @@ describe('Participant Audio Recording Flow', () => {
                     // We'll try to find the dropdown and assert it has options
 
                     // If "Skip" is visible, it means we are on the check page
-                    cy.contains('button', 'Skip').should('be.visible');
+                    cy.get('[data-testid="portal-onboarding-mic-skip-button"]').should('be.visible');
 
                     // Device selector is optional here; default device should already be selected.
                     // Avoid failing the test if a combobox/select isn't rendered in this UI state.

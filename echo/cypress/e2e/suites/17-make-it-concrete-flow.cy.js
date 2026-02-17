@@ -138,7 +138,7 @@ describe('Make it Concrete Flow', () => {
         handleMicrophoneAccessDenied();
 
         // Check for 'Skip' availability logic from Test 14 (simplified for this flow, but good to have)
-        cy.contains('button', 'Skip').should('be.visible');
+        cy.get('[data-testid="portal-onboarding-mic-skip-button"]').should('be.visible');
 
         cy.wait(2000);
         reapplyParticipantAudioStubs();

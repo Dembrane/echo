@@ -112,7 +112,7 @@ describe('Participant Audio Recording Flow', () => {
         cy.wait(3000);
         handleMicrophoneAccessDenied();
 
-        cy.contains('button', 'Skip').should('be.visible');
+        cy.get('[data-testid="portal-onboarding-mic-skip-button"]').should('be.visible');
 
         cy.get('body').then(($body) => {
             const selector = $body.find('[role="combobox"], select');
