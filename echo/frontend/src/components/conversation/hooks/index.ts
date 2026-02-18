@@ -823,6 +823,7 @@ export const CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS: QueryFields<
 	"project_id",
 	"participant_name",
 	"participant_email",
+	"title",
 	"tags",
 	"summary",
 	"source",
@@ -830,6 +831,7 @@ export const CONVERSATION_FIELDS_WITHOUT_PROCESSING_STATUS: QueryFields<
 	"duration",
 	"is_finished",
 	"is_audio_processing_finished",
+	"is_anonymized",
 	"linked_conversations",
 	"linking_conversations",
 ];
