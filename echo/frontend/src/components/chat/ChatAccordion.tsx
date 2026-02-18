@@ -247,9 +247,9 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
 
 	return (
 		<Accordion.Item value="chat" {...testId("chat-accordion")}>
-			<Accordion.Control>
+			<Accordion.Control {...testId("chat-accordion-control")}>
 				<Group justify="space-between">
-					<Title order={3}>
+					<Title order={3} {...testId("chat-accordion-title")}>
 						<span className="min-w-[48px] pr-2 font-normal text-gray-500">
 							{totalChats}
 						</span>
@@ -270,11 +270,11 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
 					{allChats.map((item, index) => {
 						const chatMode = (item as ProjectChat & { chat_mode?: string })
 							.chat_mode as
-								| "overview"
-								| "deep_dive"
-								| "agentic"
-								| null
-								| undefined;
+							| "overview"
+							| "deep_dive"
+							| "agentic"
+							| null
+							| undefined;
 						const isActive = item.id === activeChatId;
 
 						return (
@@ -293,7 +293,11 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
 							>
 								<Stack gap="xs">
 									<Group gap="xs" wrap="nowrap">
-										<Text size="sm" lineClamp={1}>
+										<Text
+											size="sm"
+											lineClamp={1}
+											{...testId(`chat-item-name-${item.id}`)}
+										>
 											{item.name
 												? item.name
 												: formatRelative(
@@ -305,7 +309,11 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
 
 									<Group gap="xs">
 										{item.name && (
-											<Text size="xs" c="gray.6">
+											<Text
+												size="xs"
+												c="gray.6"
+												{...testId(`chat-item-date-${item.id}`)}
+											>
 												{formatRelative(
 													new Date(item.date_created ?? new Date()),
 													new Date(),

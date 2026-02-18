@@ -170,15 +170,17 @@ export const ProjectConversationOverviewRoute = () => {
 							</Group>
 						</Group>
 
-						<Markdown
-							content={
-								conversationQuery.data?.summary ??
-								(useHandleGenerateSummaryManually.data &&
-								"summary" in useHandleGenerateSummaryManually.data
-									? useHandleGenerateSummaryManually.data.summary
-									: "")
-							}
-						/>
+						<div {...testId("conversation-overview-summary-content")}>
+							<Markdown
+								content={
+									conversationQuery.data?.summary ??
+									(useHandleGenerateSummaryManually.data &&
+									"summary" in useHandleGenerateSummaryManually.data
+										? useHandleGenerateSummaryManually.data.summary
+										: "")
+								}
+							/>
+						</div>
 
 						{!conversationQuery.isFetching &&
 							!conversationQuery.data?.summary && (
