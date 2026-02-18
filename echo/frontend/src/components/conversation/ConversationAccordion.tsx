@@ -555,9 +555,7 @@ const ConversationAccordionItem = ({
 				<Stack gap="xs">
 					<Group gap="sm">
 						<Text className="pl-[4px] text-sm font-normal">
-							{conversation.participant_name ||
-								conversation.title ||
-								conversation.participant_email}
+							{conversation.participant_name || conversation.title}
 						</Text>
 
 						{conversation.title && conversation.participant_name && (

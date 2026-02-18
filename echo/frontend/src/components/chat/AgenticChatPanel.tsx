@@ -472,9 +472,9 @@ export const AgenticChatPanel = ({
 						)}
 						{isRunInFlight && (
 							<Button
-								variant="light"
+								variant="outline"
 								size="xs"
-								leftSection={
+								rightSection={
 									isStopping ? (
 										<Loader size={12} />
 									) : (
