@@ -17,7 +17,7 @@ import { References } from "./References";
 import { Sources } from "./Sources";
 import SourcesSearched from "./SourcesSearched";
 
-type ChatMode = "overview" | "deep_dive" | null;
+type ChatMode = "overview" | "deep_dive" | "agentic" | null;
 
 export const ChatHistoryMessage = ({
 	message,

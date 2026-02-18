@@ -1,4 +1,4 @@
-Last updated: 2026-01-20
+Last updated: 2026-02-15
 
 # Project Snapshot
 - Dembrane ECHO server exposes a FastAPI app (`dembrane.main:app`).
@@ -7,10 +7,12 @@ Last updated: 2026-01-20
 
 # Build & Run
 - Development API: `uv run uvicorn dembrane.main:app --port 8000 --reload --loop asyncio`
+- Agent service (from `echo/agent`): `uv run uvicorn main:app --host 0.0.0.0 --port 8001 --reload`
 - Development scheduler: `uv run python -m dembrane.scheduler`
 - Development workers:
   - Network: `uv run dramatiq-gevent --watch ./dembrane --queues network --processes 2 --threads 1 dembrane.tasks`
   - CPU: `uv run dramatiq --watch ./dembrane --queues cpu --processes 1 --threads 1 dembrane.tasks`
+- Agentic chat runs directly in the API `/api/agentic/runs/{run_id}/stream` flow (no agentic Dramatiq dispatch). Keep workers for non-agentic jobs.
 - Production API: `gunicorn dembrane.main:app --worker-class dembrane.asyncio_uvicorn_worker.AsyncioUvicornWorker ...`
   - Uses env vars `API_WORKERS`, `API_WORKER_TIMEOUT`, `API_WORKER_MAX_REQUESTS`
 - Production workers:
@@ -20,6 +22,7 @@ Last updated: 2026-01-20
 
 # Repeating Patterns
 - `uv run` wraps all local entry points (uvicorn, python modules, dramatiq runners) to ensure env + dependencies stay consistent. Prefer this manager whenever spawning dev services.
+- Agentic runtime is reconnect-driven and lease-based in Redis: create/append persists events, and turn execution starts from `/stream` when a client is attached.
 - For API handlers, favor Directus queries over raw SQLAlchemy sessions when reading project/conversation data to keep behavior consistent with the admin console.
 - Config changes live in `dembrane/settings.py`: add new env vars as fields on `AppSettings`, expose grouped accessors (e.g., `feature_flags`, `directus`) if multiple modules read them, and fetch config at runtime with `settings = get_settings()`—never import env vars directly.
 - Embeddings use `settings.embedding`; populate `EMBEDDING_*` env vars (model, key/base URL/version) before calling `dembrane.embedding.embed_text`.

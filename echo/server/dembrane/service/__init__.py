@@ -26,6 +26,11 @@ from .chat import (
     ChatMessageNotFoundException,
 )
 from .file import FileServiceException, get_file_service
+from .agentic import (
+    AgenticRunService,
+    AgenticRunServiceException,
+    AgenticRunNotFoundException,
+)
 from .project import ProjectService, ProjectServiceException, ProjectNotFoundException
 from .conversation import (
     ConversationService,
@@ -46,6 +51,12 @@ def build_chat_service(directus_client: Optional[DirectusClient] = None) -> Chat
     return ChatService(directus_client=directus_client or directus)
 
 
+def build_agentic_run_service(
+    directus_client: Optional[DirectusClient] = None,
+) -> AgenticRunService:
+    return AgenticRunService(directus_client=directus_client or directus)
+
+
 def build_conversation_service(
     directus_client: Optional[DirectusClient] = None,
 ) -> ConversationService:
@@ -60,6 +71,7 @@ def build_conversation_service(
 project_service = build_project_service()
 conversation_service = build_conversation_service()
 chat_service = build_chat_service()
+agentic_run_service = build_agentic_run_service()
 
 exceptions = {
     "file": {
@@ -75,6 +87,10 @@ exceptions = {
         "ChatServiceException": ChatServiceException,
         "ChatNotFoundException": ChatNotFoundException,
         "ChatMessageNotFoundException": ChatMessageNotFoundException,
+    },
+    "agentic": {
+        "AgenticRunServiceException": AgenticRunServiceException,
+        "AgenticRunNotFoundException": AgenticRunNotFoundException,
     },
     "project": {
         "ProjectNotFoundException": ProjectNotFoundException,

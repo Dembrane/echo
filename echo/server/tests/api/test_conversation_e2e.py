@@ -15,6 +15,8 @@ from dembrane.main import app
 from dembrane.directus import DirectusBadRequest, directus
 from dembrane.api.dependency_auth import DirectusSession, require_directus_session
 
+pytestmark = pytest.mark.integration
+
 
 def _make_test_session() -> DirectusSession:
     """
