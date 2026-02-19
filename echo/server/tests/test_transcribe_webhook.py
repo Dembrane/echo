@@ -51,7 +51,7 @@ def test_transcribe_audio_assemblyai_webhook_mode(monkeypatch: pytest.MonkeyPatc
     assert transcript is None
     assert payload == {"transcript_id": "tx-1"}
     assert captured["url"].endswith("/v2/transcript")
-    assert captured["json"]["speech_models"] == ["universal-3-pro"]
+    assert captured["json"]["speech_models"] == ["universal-3-pro", "universal-2"]
     assert "speech_model" not in captured["json"]
     assert "prompt" not in captured["json"]
     assert captured["json"]["keyterms_prompt"] == ["Dembrane"]
@@ -92,7 +92,7 @@ def test_transcribe_audio_assemblyai_polling_mode(monkeypatch: pytest.MonkeyPatc
     assert response["status"] == "completed"
     assert payloads["polls"] == 2
     post_payload = payloads["posts"][0]
-    assert post_payload["speech_models"] == ["universal-3-pro"]
+    assert post_payload["speech_models"] == ["universal-3-pro", "universal-2"]
     assert "speech_model" not in post_payload
     assert "webhook_url" not in post_payload
 

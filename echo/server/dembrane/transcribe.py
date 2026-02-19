@@ -107,7 +107,7 @@ def transcribe_audio_assemblyai(
 
     data: dict[str, Any] = {
         "audio_url": audio_file_uri,
-        "speech_models": ["universal-3-pro"],
+        "speech_models": ["universal-3-pro", "universal-2"],
         "language_detection": True,
         "language_detection_options": {
             "expected_languages": list(set(get_allowed_languages()) | {"pt"}),
