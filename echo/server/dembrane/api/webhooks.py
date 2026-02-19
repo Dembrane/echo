@@ -73,15 +73,9 @@ async def assemblyai_webhook_callback(
 
         if normalized_status == "error":
             from dembrane.tasks import _on_chunk_transcription_done
-            from dembrane.transcribe import _save_chunk_error, fetch_assemblyai_result
+            from dembrane.transcribe import _save_chunk_error
 
-            error_detail = f"AssemblyAI error for transcript {payload.transcript_id}"
-            try:
-                fetch_assemblyai_result(payload.transcript_id)
-            except Exception as fetch_exc:
-                error_detail = str(fetch_exc)
-
-            _save_chunk_error(chunk_id, error_detail)
+            _save_chunk_error(chunk_id, f"AssemblyAI error for transcript {payload.transcript_id}")
             _on_chunk_transcription_done(conversation_id, chunk_id, logger)
             delete_assemblyai_webhook_metadata(payload.transcript_id)
             return {"status": "error_handled"}
