@@ -7,6 +7,7 @@ from logging import getLogger
 
 from fastapi import Request, APIRouter, HTTPException
 from pydantic import BaseModel
+from fastapi.responses import JSONResponse
 
 from dembrane.directus import directus
 from dembrane.redis_async import get_redis_client
@@ -187,8 +188,22 @@ async def _release_lock() -> None:
         logger.warning("Lock release error: %s", e)
 
 
+_PUBLIC_CORS_HEADERS = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "*",
+    "Access-Control-Max-Age": "86400",
+}
+
+
+@StatsRouter.options("/")
+async def stats_preflight() -> JSONResponse:
+    """Handle CORS preflight for the public stats endpoint."""
+    return JSONResponse(content=None, headers=_PUBLIC_CORS_HEADERS)
+
+
 @StatsRouter.get("/", response_model=StatsResponse)
-async def get_public_stats(request: Request) -> StatsResponse:
+async def get_public_stats(request: Request) -> JSONResponse:
     """
     Public endpoint returning aggregate platform statistics.
     Rate-limited to 10 requests per IP per minute.
@@ -201,7 +216,7 @@ async def get_public_stats(request: Request) -> StatsResponse:
     # Check cache first
     cached = await _get_cached_stats()
     if cached is not None:
-        return cached
+        return JSONResponse(content=cached.model_dump(), headers=_PUBLIC_CORS_HEADERS)
 
     # Cache miss — try to acquire lock to prevent stampede
     if await _acquire_lock():
@@ -209,12 +224,12 @@ async def get_public_stats(request: Request) -> StatsResponse:
             # Double-check cache (another request may have populated it)
             cached = await _get_cached_stats()
             if cached is not None:
-                return cached
+                return JSONResponse(content=cached.model_dump(), headers=_PUBLIC_CORS_HEADERS)
 
             # Compute and cache fresh stats
             stats = await _compute_stats()
             await _set_cached_stats(stats)
-            return stats
+            return JSONResponse(content=stats.model_dump(), headers=_PUBLIC_CORS_HEADERS)
         finally:
             await _release_lock()
     else:
@@ -223,7 +238,7 @@ async def get_public_stats(request: Request) -> StatsResponse:
             await asyncio.sleep(0.5)
             cached = await _get_cached_stats()
             if cached is not None:
-                return cached
+                return JSONResponse(content=cached.model_dump(), headers=_PUBLIC_CORS_HEADERS)
 
         # Lock holder likely failed — return 503 instead of stampeding Directus
         logger.warning("Stats computation timed out waiting for lock holder")
