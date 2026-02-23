@@ -17,14 +17,11 @@ export const ProjectConversationLayout = () => {
 				},
 			},
 			fields: [
-				"id",
 				"participant_name",
+				"title",
 				"duration",
-				"is_finished",
-				"is_audio_processing_finished",
-				"created_at",
-				"updated_at",
-				{ chunks: ["source", "transcript"] },
+				"source",
+				{ chunks: ["source"] },
 			],
 		},
 	});
@@ -32,7 +29,8 @@ export const ProjectConversationLayout = () => {
 	return (
 		<Stack className="relative px-2 py-4">
 			<Title order={1}>
-				{conversationQuery.data?.participant_name ?? "Conversation"}
+				{conversationQuery.data?.participant_name ||
+					conversationQuery.data?.title}
 			</Title>
 			{conversationQuery.data && (
 				<ConversationStatusIndicators
