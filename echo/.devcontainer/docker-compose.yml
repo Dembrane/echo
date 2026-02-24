@@ -80,6 +80,21 @@ services:
       - postgres
       - redis
 
+  agent:
+    build:
+      context: ../agent
+      dockerfile: Dockerfile
+    ports:
+      - 8001:8001
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - ECHO_API_URL=http://devcontainer:8000/api
+      - AGENT_CORS_ORIGINS=http://localhost:5173,http://localhost:5174
+    networks:
+      - dembrane-network
+    depends_on:
+      - devcontainer
+
   devcontainer:
     build:
       context: ../server

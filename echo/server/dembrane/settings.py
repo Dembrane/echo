@@ -401,6 +401,48 @@ class EmbeddingSettings(BaseSettings):
     )
 
 
+class AgenticSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
+
+    agent_service_url: str = Field(
+        default="http://localhost:8001",
+        alias="AGENT_SERVICE_URL",
+        validation_alias=AliasChoices("AGENT_SERVICE_URL", "AGENTIC__AGENT_SERVICE_URL"),
+    )
+    run_timeout_seconds: int = Field(
+        default=600,
+        alias="AGENTIC_RUN_TIMEOUT_SECONDS",
+        validation_alias=AliasChoices(
+            "AGENTIC_RUN_TIMEOUT_SECONDS",
+            "AGENTIC__RUN_TIMEOUT_SECONDS",
+        ),
+    )
+    sse_heartbeat_seconds: int = Field(
+        default=10,
+        alias="AGENTIC_SSE_HEARTBEAT_SECONDS",
+        validation_alias=AliasChoices(
+            "AGENTIC_SSE_HEARTBEAT_SECONDS",
+            "AGENTIC__SSE_HEARTBEAT_SECONDS",
+        ),
+    )
+    run_lock_ttl_seconds: int = Field(
+        default=30,
+        alias="AGENTIC_RUN_LOCK_TTL_SECONDS",
+        validation_alias=AliasChoices(
+            "AGENTIC_RUN_LOCK_TTL_SECONDS",
+            "AGENTIC__RUN_LOCK_TTL_SECONDS",
+        ),
+    )
+    run_lock_refresh_seconds: int = Field(
+        default=10,
+        alias="AGENTIC_RUN_LOCK_REFRESH_SECONDS",
+        validation_alias=AliasChoices(
+            "AGENTIC_RUN_LOCK_REFRESH_SECONDS",
+            "AGENTIC__RUN_LOCK_REFRESH_SECONDS",
+        ),
+    )
+
+
 class TranscriptionSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
 
@@ -423,6 +465,22 @@ class TranscriptionSettings(BaseSettings):
         default="https://api.eu.assemblyai.com",
         alias="ASSEMBLYAI_BASE_URL",
         validation_alias=AliasChoices("ASSEMBLYAI_BASE_URL", "TRANSCRIPTION__ASSEMBLYAI__BASE_URL"),
+    )
+    assemblyai_webhook_url: Optional[str] = Field(
+        default=None,
+        alias="ASSEMBLYAI_WEBHOOK_URL",
+        validation_alias=AliasChoices(
+            "ASSEMBLYAI_WEBHOOK_URL",
+            "TRANSCRIPTION__ASSEMBLYAI__WEBHOOK_URL",
+        ),
+    )
+    assemblyai_webhook_secret: Optional[str] = Field(
+        default=None,
+        alias="ASSEMBLYAI_WEBHOOK_SECRET",
+        validation_alias=AliasChoices(
+            "ASSEMBLYAI_WEBHOOK_SECRET",
+            "TRANSCRIPTION__ASSEMBLYAI__WEBHOOK_SECRET",
+        ),
     )
     litellm_model: Optional[str] = Field(
         default=None,
@@ -482,6 +540,11 @@ class TranscriptionSettings(BaseSettings):
                 raise ValueError(
                     "GCP_SA_JSON must be provided when TRANSCRIPTION_PROVIDER=Dembrane-25-09"
                 )
+            if self.assemblyai_webhook_url and not self.assemblyai_webhook_secret:
+                raise ValueError(
+                    "ASSEMBLYAI_WEBHOOK_SECRET must be set when "
+                    "ASSEMBLYAI_WEBHOOK_URL is configured for TRANSCRIPTION_PROVIDER=Dembrane-25-09"
+                )
 
 
 class AppSettings:
@@ -502,6 +565,7 @@ class AppSettings:
         self.transcription = TranscriptionSettings()
         self.llms = LLMSettings()
         self.embedding = EmbeddingSettings()
+        self.agentic = AgenticSettings()
 
         self.transcription.ensure_valid()
 
