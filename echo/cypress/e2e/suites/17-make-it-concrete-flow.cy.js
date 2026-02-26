@@ -167,7 +167,7 @@ describe('Make it Concrete Flow', () => {
 
         // Record for 60+ seconds as required for Refine button
         cy.log('Recording for 65 seconds to enable Refine...');
-        cy.wait(65000);
+        cy.wait(67000);
 
 
 
@@ -178,6 +178,7 @@ describe('Make it Concrete Flow', () => {
         cy.wait(2000);
 
         clickEchoButton();
+        cy.wait(2000);
         selectMakeItConcrete();
 
         // Select Topic & Next

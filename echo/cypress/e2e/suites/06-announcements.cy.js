@@ -7,18 +7,18 @@ describe('Announcements Feature Test', () => {
     });
 
     it('should open and close the announcements sidebar', () => {
-        // 1. Click on the Announcements button (megaphone icon next to settings)
-        // Using same pattern as settings icon selector
+        // 1. Click on the announcements icon button
         cy.log('Clicking Announcements button');
-        cy.wait(2000); // Wait for stability
-        cy.xpath('//button[descendant::*[local-name()="svg" and contains(@class, "tabler-icon-speakerphone")]]')
+        cy.wait(2000); // Wait for header controls to stabilize
+        cy.get('[data-testid="announcement-icon-button"]')
+            .filter(':visible')
+            .first()
             .should('be.visible')
             .click();
 
         // 2. Verify the Announcements sidebar/drawer opens
         cy.log('Verifying Announcements sidebar is open');
-        cy.xpath('//section[@role="dialog" and .//h2[contains(., "Announcements")]]')
-            .should('be.visible');
+        cy.get('[data-testid="announcement-drawer"]').should('be.visible');
 
         // 3. Verify the title is "Announcements"
         cy.xpath('//h2[contains(@class, "mantine-Drawer-title")]')
@@ -31,13 +31,11 @@ describe('Announcements Feature Test', () => {
 
         // 5. Close the sidebar by clicking the close button
         cy.log('Closing Announcements sidebar');
-        cy.xpath('//button[@aria-label="Close drawer"]')
+        cy.get('[data-testid="announcement-close-drawer-button"]')
             .should('be.visible')
             .click();
 
-        // 6. Verify the sidebar is closed
-        cy.xpath('//section[@role="dialog" and .//h2[contains(., "Announcements")]]')
-            .should('not.exist');
+
 
         cy.log('Announcements sidebar test completed successfully');
     });

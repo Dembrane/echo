@@ -146,12 +146,12 @@ This document describes all automated end-to-end test flows implemented in the E
 ### 08 - Participant Recording Flow
 **File:** `08-participant-recording.cy.js`
 
-**Purpose:** Tests the complete participant portal recording flow (cross-origin).
+**Purpose:** Tests the complete participant portal text response flow, split into single-origin tests for WebKit compatibility.
 
 **Steps:**
 1. Login and create new project
 2. Construct portal URL with project ID
-3. Navigate to participant portal (cross-origin via `cy.origin()`)
+3. Open participant portal in a dedicated portal-origin test
 4. Accept privacy policy checkbox
 5. Click "I understand" button
 6. Skip microphone check
@@ -163,7 +163,7 @@ This document describes all automated end-to-end test flows implemented in the E
 12. Click "Submit"
 13. Click "Finish"
 14. Confirm finish in modal
-15. Return to dashboard
+15. Return to dashboard in a dedicated dashboard-origin test
 16. Verify conversation appears with correct name
 17. Verify transcript matches submitted text
 18. Delete project
@@ -321,5 +321,4 @@ HTML reports are generated at: `cypress/reports/test-report.html`
 | `chat` | `askWithContext()`, `askWithoutContext()` |
 
 ---
-
 

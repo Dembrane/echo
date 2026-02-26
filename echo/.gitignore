@@ -14,6 +14,7 @@ directus/.env
 *.sql
 node_modules
 .next
+cypress/.cypress-cache/
 
 celerybeat-schedule.db
 

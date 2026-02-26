@@ -71,12 +71,12 @@ describe('Edit Report Flow', () => {
 
         // 7. Click on the Report button
         cy.log('Step 7: Clicking Report button');
-        cy.get('[data-testid="sidebar-report-button"]').filter(':visible').click();
+        cy.get('[data-testid="sidebar-report-button"]').filter(':visible').first().click();
 
         // 8. Click Create Report in the modal
         cy.log('Step 8: Clicking Create Report in modal');
         cy.get('section[role="dialog"]').should('be.visible');
-        cy.get('[data-testid="report-create-button"]').filter(':visible').click();
+        cy.get('[data-testid="report-create-button"]').filter(':visible').first().click();
 
         // 9. Wait 20 seconds for processing
         cy.log('Step 9: Waiting 20 seconds for report processing');
@@ -84,7 +84,7 @@ describe('Edit Report Flow', () => {
 
         // 10. Click on the Report button again to view report
         cy.log('Step 10: Clicking Report button again');
-        cy.get('[data-testid="sidebar-report-button"]').filter(':visible').click();
+        cy.get('[data-testid="sidebar-report-button"]').filter(':visible').first().click();
         cy.wait(5000); // Wait for report content to load
 
         // 11. Toggle Editing Mode ON
@@ -96,9 +96,13 @@ describe('Edit Report Flow', () => {
         // 12. Modify Report Content
         cy.log('Step 12: Modifying report content');
 
-        // Locate the contenteditable div within the mdxeditor
-        // Based on user provided HTML: class="_contentEditable_sects_380 ... " contenteditable="true"
-        cy.get('div[contenteditable="true"]').should('be.visible').then(($editor) => {
+        // Locate the editor textbox inside report container. Do not use visibility assertion:
+        // the editor can be inside a scrollable/overflow parent in some layouts.
+        cy.get('[data-testid="report-renderer-container"] [role="textbox"][contenteditable="true"]', { timeout: 20000 })
+            .should('exist')
+            .first()
+            .scrollIntoView()
+            .then(($editor) => {
             // Clear existing content and type new content
             // Using {selectall}{backspace} to clear ensuring we don't break the editor state
             // processing: { force: true } added to bypass "element hidden" errors

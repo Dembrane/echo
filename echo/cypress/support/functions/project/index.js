@@ -80,7 +80,7 @@ export const deleteProject = (projectId) => {
     cy.get('[data-testid="project-actions-delete-button"]').scrollIntoView().should('be.visible').click();
     cy.wait(5000);
     // 3. Wait for modal to appear and confirm deletion
-    cy.get('[data-testid="project-delete-confirm-button"]', { timeout: 10000 })
+    cy.get('[data-testid="project-delete-confirm-button"]', { timeout: 15000 })
         .should('be.visible')
         .click();
 

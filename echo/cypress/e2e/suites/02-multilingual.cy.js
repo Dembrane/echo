@@ -23,8 +23,8 @@ describe('Multilingual Support Flow', () => {
         verifyLanguage('Cerrar sesión', 'es-ES');
 
         // 4. Verification Check: Page Header
-        // Also check that the "Projects" header changed to "Proyectos"
-        cy.contains('h2', 'Proyectos').should('be.visible');
+        // Heading level can vary by UI version (h2/h3), so assert by visible heading text.
+        cy.contains('h1, h2, h3', /^Proyectos$/).should('be.visible');
 
         // 5. Switch back to English (Cleanup)
         // Ensure menu is open (verifyLanguage ensures it's open, but let's be safe)
@@ -38,11 +38,10 @@ describe('Multilingual Support Flow', () => {
 
         // 6. Verify back to English
         verifyLanguage('Logout', 'en-US');
-        cy.contains('h2', 'Projects').should('be.visible');
+        cy.contains('h1, h2, h3', /^Projects$/).should('be.visible');
 
         // 7. Logout
         // The menu should be open from the previous step (verifyLanguage ensures it).
         logout();
     });
 });
-

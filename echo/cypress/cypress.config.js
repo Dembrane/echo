@@ -131,7 +131,7 @@ module.exports = defineConfig({
         // Mochawesome reporter for HTML test reports
         reporter: 'mochawesome',
         reporterOptions: {
-            reportDir: 'reports',
+            reportDir: process.env.CYPRESS_MOCHAWESOME_REPORT_DIR || 'reports',
             overwrite: false,
             html: false,
             json: true,

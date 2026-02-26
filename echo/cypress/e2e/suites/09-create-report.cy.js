@@ -67,13 +67,21 @@ describe('Report Creation Flow', () => {
 
         // 7. Click on the Report button
         cy.log('Step 7: Clicking Report button');
-        cy.get('[data-testid="project-overview-tab-report"]').should('be.visible').click();
+        cy.get('[data-testid="sidebar-report-button"]')
+            .filter(':visible')
+            .first()
+            .should('be.visible')
+            .click();
 
         // 8. Click Create Report in the modal
         cy.log('Step 8: Clicking Create Report in modal');
         // Wait for modal and click the "Create Report" button (filled variant)
         cy.get('section[role="dialog"]').should('be.visible');
-        cy.get('[data-testid="report-create-button"]').should('be.visible').click();
+        cy.get('[data-testid="report-create-button"]')
+            .filter(':visible')
+            .first()
+            .should('be.visible')
+            .click();
 
         // 9. Wait 40 seconds for processing
         cy.log('Step 9: Waiting 40 seconds for report processing');
@@ -81,7 +89,11 @@ describe('Report Creation Flow', () => {
 
         // 10. Click on the Report button again to view report
         cy.log('Step 10: Clicking Report button again');
-        cy.get('[data-testid="project-overview-tab-report"]').should('be.visible').click();
+        cy.get('[data-testid="sidebar-report-button"]')
+            .filter(':visible')
+            .first()
+            .should('be.visible')
+            .click();
         cy.wait(5000); // Wait for report content to load
 
         // 11. Verify report existence

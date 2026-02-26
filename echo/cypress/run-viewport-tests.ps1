@@ -1,16 +1,31 @@
-# Run All Tests - Multiple Viewports with HTML Reports
-# Generates Mochawesome HTML reports for each viewport
-# Viewports: Mobile (375x667), Tablet (768x1024), Desktop (1440x900)
+# Suite 2: Chrome-only run in 3 viewports in parallel
+# - 3 parallel jobs (mobile/tablet/desktop)
+# - Failed runs are retried up to 3 times per viewport job
+
+param(
+    [string]$SpecPattern = "e2e/suites/[0-9]*.cy.js",
+    [string]$Version = "staging",
+    [string]$Browser = "chrome",
+    [int]$MaxRunAttempts = 3
+)
 
 $ErrorActionPreference = "Continue"
 
-# Configuration
-$specPattern = "e2e/suites/[0-9]*.cy.js"
-$browser = "chrome"
-$envVersion = "staging"
-$reportsDir = "reports"
+# Ensure Cypress launches Electron app mode, not Node mode.
+if (Test-Path Env:ELECTRON_RUN_AS_NODE) {
+    Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+}
 
-# Viewport configurations
+# Use project-local Cypress cache for stability in this environment.
+$env:CYPRESS_CACHE_FOLDER = "$PSScriptRoot\.cypress-cache"
+$cypressExe = Get-ChildItem -Path $env:CYPRESS_CACHE_FOLDER -Recurse -Filter "Cypress.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+if (-not $cypressExe) {
+    Write-Host "Cypress binary not found in local cache. Installing..." -ForegroundColor Yellow
+    npx cypress install
+}
+
+$suiteRoot = "reports/suite-2-chrome-viewports"
+$logsDir = "$suiteRoot/logs"
 $viewports = @(
     @{ name = "mobile"; width = 375; height = 667 },
     @{ name = "tablet"; width = 768; height = 1024 },
@@ -18,68 +33,113 @@ $viewports = @(
 )
 
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host " CYPRESS MULTI-VIEWPORT TEST RUNNER" -ForegroundColor Cyan
-Write-Host " (with Mochawesome HTML Reports)" -ForegroundColor Cyan
+Write-Host " SUITE 2: CHROME + 3 VIEWPORTS (PARALLEL=3)" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "Browser: $Browser" -ForegroundColor Yellow
+Write-Host "Viewports: $($viewports.name -join ', ')" -ForegroundColor Yellow
+Write-Host "Spec Pattern: $SpecPattern" -ForegroundColor Yellow
+Write-Host "Run retries: max $MaxRunAttempts attempts per viewport job" -ForegroundColor Yellow
 Write-Host ""
 
-# Clean up old reports
-if (Test-Path $reportsDir) {
-    Remove-Item -Recurse -Force $reportsDir
+if (Test-Path $suiteRoot) {
+    Remove-Item -Recurse -Force $suiteRoot
 }
-New-Item -ItemType Directory -Path $reportsDir -Force | Out-Null
+New-Item -ItemType Directory -Path $logsDir -Force | Out-Null
 
-$exitCodes = @()
+$jobs = @()
+$workDir = (Get-Location).Path
 
 foreach ($viewport in $viewports) {
     $viewportName = $viewport.name
     $width = $viewport.width
     $height = $viewport.height
-    
-    Write-Host "----------------------------------------" -ForegroundColor Yellow
-    Write-Host " Running tests: $viewportName ($width x $height)" -ForegroundColor Yellow
-    Write-Host "----------------------------------------" -ForegroundColor Yellow
-    
-    # Set environment variables for viewport
-    $env:CYPRESS_viewportWidth = $width
-    $env:CYPRESS_viewportHeight = $height
-    
-    # Run Cypress
-    npx cypress run --spec "$specPattern" --env version=$envVersion --browser $browser
-    $exitCodes += $LASTEXITCODE
-    
-    Write-Host ""
+    $runReportDir = "$suiteRoot/$viewportName"
+    $logFile = "$logsDir/$viewportName.log"
+
+    $job = Start-Job -Name "suite2-$viewportName" -ScriptBlock {
+        param($workDir, $browser, $specPattern, $version, $viewportName, $width, $height, $runReportDir, $logFile, $maxRunAttempts)
+
+        Set-Location $workDir
+        if (Test-Path Env:ELECTRON_RUN_AS_NODE) {
+            Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+        }
+        $env:CYPRESS_CACHE_FOLDER = "$workDir\.cypress-cache"
+        $env:CYPRESS_viewportWidth = $width
+        $env:CYPRESS_viewportHeight = $height
+
+        $attempt = 0
+        $exitCode = 1
+        $allOutput = @()
+
+        while ($attempt -lt $maxRunAttempts -and $exitCode -ne 0) {
+            $attempt++
+
+            if (Test-Path $runReportDir) {
+                Remove-Item -Recurse -Force $runReportDir
+            }
+            New-Item -ItemType Directory -Path $runReportDir -Force | Out-Null
+
+            $env:CYPRESS_MOCHAWESOME_REPORT_DIR = $runReportDir
+            $attemptOutput = & npx cypress run --config-file cypress.config.js --spec $specPattern --env "version=$version" --browser $browser --reporter mochawesome 2>&1
+            $exitCode = $LASTEXITCODE
+            Remove-Item Env:CYPRESS_MOCHAWESOME_REPORT_DIR -ErrorAction SilentlyContinue
+
+            $allOutput += "===== Attempt $attempt/$maxRunAttempts ($viewportName) ====="
+            $allOutput += $attemptOutput
+            $allOutput += ""
+        }
+
+        $allOutput | Out-File -FilePath $logFile -Encoding utf8
+
+        Remove-Item Env:CYPRESS_viewportWidth -ErrorAction SilentlyContinue
+        Remove-Item Env:CYPRESS_viewportHeight -ErrorAction SilentlyContinue
+
+        return @{
+            Name = $viewportName
+            ExitCode = $exitCode
+            LogFile = $logFile
+            Attempts = $attempt
+        }
+    } -ArgumentList $workDir, $Browser, $SpecPattern, $Version, $viewportName, $width, $height, $runReportDir, $logFile, $MaxRunAttempts
+
+    $jobs += $job
 }
 
-# Clear environment variables
-Remove-Item Env:CYPRESS_viewportWidth -ErrorAction SilentlyContinue
-Remove-Item Env:CYPRESS_viewportHeight -ErrorAction SilentlyContinue
-
-Write-Host "----------------------------------------" -ForegroundColor Cyan
-Write-Host " Generating Combined HTML Report..." -ForegroundColor Cyan
-Write-Host "----------------------------------------" -ForegroundColor Cyan
-
-# Merge all JSON reports into one
-npx mochawesome-merge "$reportsDir/*.json" -o "$reportsDir/combined-report.json"
-
-# Generate HTML report from merged JSON
-npx marge "$reportsDir/combined-report.json" --reportDir "$reportsDir" --reportFilename "test-report"
-
-Write-Host ""
-Write-Host "========================================" -ForegroundColor Green
-Write-Host " REPORT GENERATED!" -ForegroundColor Green
-Write-Host "========================================" -ForegroundColor Green
-Write-Host ""
-Write-Host " Open: $reportsDir\test-report.html" -ForegroundColor White
+Write-Host "Started $($jobs.Count) jobs in parallel. Waiting..." -ForegroundColor Green
 Write-Host ""
 
-# Open the report in browser
-Start-Process "$reportsDir\test-report.html"
+$jobs | Wait-Job | Out-Null
 
-# Exit with failure if any tests failed
-if ($exitCodes -contains 1) {
+$results = @()
+foreach ($job in $jobs) {
+    $result = Receive-Job -Job $job
+    $results += $result
+    $status = if ($result.ExitCode -eq 0) { "PASS" } else { "FAIL" }
+    $color = if ($result.ExitCode -eq 0) { "Green" } else { "Red" }
+    Write-Host "[$status] $($result.Name) after $($result.Attempts) attempt(s) (log: $($result.LogFile))" -ForegroundColor $color
+}
+
+$jobs | Remove-Job -Force
+
+$jsonFiles = Get-ChildItem -Path $suiteRoot -Recurse -Filter "mochawesome*.json" | Select-Object -ExpandProperty FullName
+$combinedJson = "$suiteRoot/combined-report.json"
+$htmlReportName = "suite-2-report"
+
+if ($jsonFiles.Count -gt 0) {
+    & npx mochawesome-merge @jsonFiles -o $combinedJson
+    & npx marge $combinedJson --reportDir $suiteRoot --reportFilename $htmlReportName
+    Write-Host ""
+    Write-Host "Suite 2 HTML report: $suiteRoot/$htmlReportName.html" -ForegroundColor Cyan
+} else {
+    Write-Host "No mochawesome JSON files found for Suite 2." -ForegroundColor Red
+}
+
+$failed = ($results | Where-Object { $_.ExitCode -ne 0 }).Count
+Write-Host ""
+Write-Host "Suite 2 Summary: Passed=$($results.Count - $failed), Failed=$failed, Total=$($results.Count)" -ForegroundColor White
+
+if ($failed -gt 0) {
     exit 1
 }
-else {
-    exit 0
-}
+
+exit 0

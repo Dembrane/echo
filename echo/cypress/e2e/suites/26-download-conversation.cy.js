@@ -26,8 +26,9 @@ import {
     navigateToProjectOverview
 } from '../../support/functions/conversation';
 
-describe('Upload Conversation Flow', () => {
+describe('Download Conversation Flow', () => {
     let projectId;
+    let audioDownloadHref;
 
     beforeEach(() => {
         loginToApp();
@@ -78,20 +79,25 @@ describe('Upload Conversation Flow', () => {
 
         // 9. Download conversation audio
         cy.log('Step 9: Downloading conversation audio');
+        cy.get('[data-testid="conversation-download-audio-button"]')
+            .should('have.attr', 'href')
+            .then((href) => {
+                expect(href, 'conversation audio href').to.be.a('string').and.not.be.empty;
+                audioDownloadHref = href;
+            });
         downloadAudio();
 
-        // 10. Wait for download and verify merged-*.mp3 exists, then delete it
-        cy.log('Step 10: Verifying downloaded merged mp3 and cleaning it up');
-        cy.wait(20000);
+        // 10. Verify download endpoint returns a valid signed URL
+        // The button opens an anchor target, which may not produce a local file in all runners.
+        cy.log('Step 10: Verifying conversation audio download endpoint');
         cy.then(() => {
-            const downloadsDir = Cypress.config('downloadsFolder');
-            cy.task('findFileByPattern', {
-                dir: downloadsDir,
-                startsWith: 'merged-',
-                endsWith: '.mp3'
-            }).then((downloadedFilePath) => {
-                expect(downloadedFilePath, 'downloaded merged mp3 path').to.be.a('string').and.not.be.empty;
-                cy.task('deleteFile', downloadedFilePath).should('eq', true);
+            const separator = audioDownloadHref.includes('?') ? '&' : '?';
+            const signedUrlEndpoint = `${audioDownloadHref}${separator}return_url=true`;
+            cy.request(signedUrlEndpoint).then((response) => {
+                expect(response.status, 'download endpoint status').to.eq(200);
+                expect(response.body, 'signed merged mp3 url').to.be.a('string').and.not.be.empty;
+                expect(response.body, 'signed merged mp3 url format').to.match(/^https?:\/\//);
+                expect(response.body, 'signed merged mp3 filename').to.include('.mp3');
             });
         });
 
