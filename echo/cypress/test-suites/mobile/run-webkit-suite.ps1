@@ -1,8 +1,8 @@
 $ErrorActionPreference = "Continue"
 
-Push-Location "$PSScriptRoot\.."
+Push-Location "$PSScriptRoot\..\.."
 try {
-    & .\run-core-suite.ps1 -ViewportWidth 375 -ViewportHeight 667 -Browser "webkit" -SuiteId "mobile"
+    & .\test-suites\run-core-suite.ps1 -ViewportWidth 375 -ViewportHeight 667 -Browser "webkit" -SuiteId "mobile"
     exit $LASTEXITCODE
 }
 finally {

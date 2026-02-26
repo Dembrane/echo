@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Continue"
 
-Push-Location "$PSScriptRoot\.."
+Push-Location "$PSScriptRoot\..\.."
 try {
     # Skip recording/audio tests for Edge
     $specFilesToRun = ""
@@ -21,7 +21,7 @@ try {
         exit 0
     }
 
-    & .\run-core-suite.ps1 -ViewportWidth 1440 -ViewportHeight 900 -Browser "edge" -SuiteId "desktop" -SpecPattern $specFilesToRun
+    & .\test-suites\run-core-suite.ps1 -ViewportWidth 1440 -ViewportHeight 900 -Browser "edge" -SuiteId "desktop" -SpecPattern $specFilesToRun
     exit $LASTEXITCODE
 }
 finally {
