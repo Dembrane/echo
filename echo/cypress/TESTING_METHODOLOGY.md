@@ -88,3 +88,52 @@ Or, simple shorthand:
 npx cypress run
 ```
 *(This will run all specs defined in your `cypress.config.js` default spec pattern).*
+
+---
+
+## 5. Running Pre-Configured Test Suites
+
+Beyond running tests individually or through native Cypress commands, the project also has a dedicated `cypress/test-suites/` folder containing custom PowerShell scripts designed to run specific configurations of the test flows across different form factors and browsers.
+
+### The `test-suites` Folder Structure
+
+The tests are categorized into three main form factors within the folder:
+- `desktop/`: For testing on large screens (1440x900).
+- `tablet/`: For testing on mid-sized screens.
+- `mobile/`: For testing on small screens.
+
+Inside each of these folders (e.g., `test-suites/desktop/`), you will find browser-specific scripts:
+- `run-chrome-suite.ps1`
+- `run-edge-suite.ps1`
+- `run-webkit-suite.ps1`
+
+### How It Works
+
+Under the hood, these scripts utilize `test-suites/run-core-suite.ps1`. The `run-core-suite.ps1` script is a powerful test runner that handles:
+- Establishing a local `.cypress-cache` automatically.
+- Dynamically skipping certain specs for specific browsers (e.g., Edge excludes some audio recording flow tests).
+- Implementing a retry mechanism (e.g., running flaky tests up to 3 times before failing).
+- Collecting test results and screenshots in isolated directories.
+
+### Running a Dedicated Suite
+
+To run all tests for the Desktop form factor using the Google Chrome browser, simply execute the corresponding PowerShell script:
+
+```powershell
+# Make sure your terminal is opened in the project root containing the cypress folder
+.\cypress\test-suites\desktop\run-chrome-suite.ps1
+```
+
+### Full Regression and Parallel Scripts
+
+Inside `cypress/test-suites/`, there are also higher-level runner scripts:
+- `run-test-suites.ps1`: Orchestrates running multiple full suites sequentially (such as cross-browser and different viewports) and produces a final merged HTML Mochawesome report in the `reports/final` folder.
+- `run-browser-tests.ps1`: Used to run regressions specifically across different browser engines step-by-step.
+- `run-viewport-tests.ps1`: Used to run regressions against Chrome specifically focused on changing viewport sizes.
+- `run-parallel-tests.ps1`: Runs tasks concurrently.
+
+**Example: Running the Full Regression Suite**
+```powershell
+.\cypress\test-suites\run-test-suites.ps1
+```
+*(This triggers all cross-browser tests and viewport tests, merges the `.json` report output, and generates a single HTML report confirming the health of the application).*
