@@ -32,6 +32,8 @@ export const useCurrentUser = ({
 							"disable_create_project",
 							"tfa_secret",
 							"whitelabel_logo",
+							"legal_basis",
+							"privacy_policy_url",
 						],
 					}),
 				);

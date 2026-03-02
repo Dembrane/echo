@@ -20,7 +20,14 @@ import {
 	Title,
 } from "@mantine/core";
 import { DetectiveIcon } from "@phosphor-icons/react";
-import { IconEye, IconEyeOff, IconInfoCircle, IconRefresh, IconRosetteDiscountCheck, IconX } from "@tabler/icons-react";
+import {
+	IconEye,
+	IconEyeOff,
+	IconInfoCircle,
+	IconRefresh,
+	IconRosetteDiscountCheck,
+	IconX,
+} from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Resizable } from "re-resizable";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -246,7 +253,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	const defaultValues = useMemo(() => {
 		const rawTutorialSlug =
 			project.default_conversation_tutorial_slug?.toLowerCase();
-		const validSlugs = ["skip-consent", "none", "basic", "advanced"];
+		const validSlugs = ["none", "basic", "advanced"];
 		const normalizedTutorialSlug = validSlugs.includes(rawTutorialSlug || "")
 			? rawTutorialSlug
 			: "none";
@@ -596,10 +603,6 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														</Trans>
 													}
 													data={[
-														{
-															label: t`Skip data privacy slide (Host manages legal base)`,
-															value: "skip-consent",
-														},
 														{
 															label: t`Default - No tutorial (Only privacy statements)`,
 															value: "none",
@@ -1220,10 +1223,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 											<Title order={4}>
 												<Trans>Auto-generate Titles</Trans>
 											</Title>
-											<IconInfoCircle
-												size={20}
-												className="text-gray-400"
-											/>
+											<IconInfoCircle size={20} className="text-gray-400" />
 											<Badge color="mauve" c="graphite" size="sm">
 												<Trans>Beta</Trans>
 											</Badge>

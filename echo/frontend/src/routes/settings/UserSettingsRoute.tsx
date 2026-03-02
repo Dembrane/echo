@@ -14,8 +14,9 @@ import { useCurrentUser } from "@/components/auth/hooks";
 import { AuditLogsCard } from "@/components/settings/AuditLogsCard";
 import { FontSettingsCard } from "@/components/settings/FontSettingsCard";
 import { FontSizeSettingsCard } from "@/components/settings/FontSizeSettingsCard";
-import { WhitelabelLogoCard } from "@/components/settings/WhitelabelLogoCard";
+import { LegalBasisSettingsCard } from "@/components/settings/LegalBasisSettingsCard";
 import { TwoFactorSettingsCard } from "@/components/settings/TwoFactorSettingsCard";
+import { WhitelabelLogoCard } from "@/components/settings/WhitelabelLogoCard";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
 export const UserSettingsRoute = () => {
@@ -49,6 +50,8 @@ export const UserSettingsRoute = () => {
 				<FontSizeSettingsCard />
 
 				<WhitelabelLogoCard />
+
+				<LegalBasisSettingsCard />
 
 				<TwoFactorSettingsCard
 					isLoading={isLoading}

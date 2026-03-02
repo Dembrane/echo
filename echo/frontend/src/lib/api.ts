@@ -32,7 +32,9 @@ interface CustomAxiosRequestConfig extends AxiosRequestConfig {
 }
 
 export const getParticipantProjectById = async (projectId: string) => {
-	return apiNoAuth.get<unknown, Project>(`/participant/projects/${projectId}`);
+	return apiNoAuth.get<unknown, ParticipantProject>(
+		`/participant/projects/${projectId}`,
+	);
 };
 
 export const getParticipantConversationById = async (

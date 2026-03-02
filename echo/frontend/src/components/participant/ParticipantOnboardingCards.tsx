@@ -42,7 +42,11 @@ export interface LanguageCards {
 	[language: string]: Section[];
 }
 
-const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
+const ParticipantOnboardingCards = ({
+	project,
+}: {
+	project: ParticipantProject;
+}) => {
 	const [searchParams] = useSearchParams();
 	const skipOnboarding = searchParams.get("skipOnboarding");
 
@@ -74,10 +78,12 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 	const { getSystemCards } = useOnboardingCards();
 
 	const tutorialSlug = project.default_conversation_tutorial_slug ?? "none";
+	const legalBasis = project.legal_basis ?? "client-managed";
+	const privacyPolicyUrl = project.privacy_policy_url;
 
 	const cards: LanguageCards = {
 		"de-DE": [
-			...getSystemCards("de-DE", tutorialSlug),
+			...getSystemCards("de-DE", tutorialSlug, legalBasis, privacyPolicyUrl),
 			{
 				section: "Mikrofon-Check",
 				slides: [
@@ -100,7 +106,7 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 			},
 		],
 		"en-US": [
-			...getSystemCards("en-US", tutorialSlug),
+			...getSystemCards("en-US", tutorialSlug, legalBasis, privacyPolicyUrl),
 			{
 				section: "Microphone Check",
 				slides: [
@@ -123,7 +129,7 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 			},
 		],
 		"es-ES": [
-			...getSystemCards("es-ES", tutorialSlug),
+			...getSystemCards("es-ES", tutorialSlug, legalBasis, privacyPolicyUrl),
 			{
 				section: "Verificación del Micrófono",
 				slides: [
@@ -146,7 +152,7 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 			},
 		],
 		"fr-FR": [
-			...getSystemCards("fr-FR", tutorialSlug),
+			...getSystemCards("fr-FR", tutorialSlug, legalBasis, privacyPolicyUrl),
 			{
 				section: "Vérification du Microphone",
 				slides: [
@@ -169,7 +175,7 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 			},
 		],
 		"it-IT": [
-			...getSystemCards("it-IT", tutorialSlug),
+			...getSystemCards("it-IT", tutorialSlug, legalBasis, privacyPolicyUrl),
 			{
 				section: "Controllo Microfono",
 				slides: [
@@ -192,7 +198,7 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 			},
 		],
 		"nl-NL": [
-			...getSystemCards("nl-NL", tutorialSlug),
+			...getSystemCards("nl-NL", tutorialSlug, legalBasis, privacyPolicyUrl),
 			{
 				section: "Microfoon Controle",
 				slides: [
@@ -330,7 +336,11 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 							)}
 
 							{currentCard.extraHelp && (
-								<Text className="text-sm" ta="left">
+								<Text
+									className="text-sm"
+									ta="left"
+									style={{ whiteSpace: "pre-line" }}
+								>
 									{currentCard.extraHelp}
 								</Text>
 							)}
@@ -371,7 +381,8 @@ const ParticipantOnboardingCards = ({ project }: { project: Project }) => {
 									label={currentCard.checkbox.label}
 									classNames={{
 										body: "items-center",
-										label: "text-lg text-gray-700",
+										label:
+											"text-lg leading-snug pl-4 text-gray-700 text-left pt-0.5",
 										root: "items-start",
 									}}
 									{...testId("portal-onboarding-checkbox")}
