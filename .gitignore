@@ -10,6 +10,16 @@ echo/server/dembrane/audio_lightrag/data/progress_tracker.csv
 echo/server/test.py
 echo/server/wandb*
 
+# Python virtual environments
+.venv/
+.venv-*/
+**/venv/
+**/.venv/
+**/.venv-*/
+
+# Local documentation (not committed)
+CLAUDE.md
+IMPLEMENTATION_PLANS/
 
 *.env
 notes_*.md

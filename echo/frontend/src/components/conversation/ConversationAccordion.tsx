@@ -558,8 +558,14 @@ const ConversationAccordionItem = ({
 							{conversation.participant_name || conversation.title}
 						</Text>
 
-						{conversation.title && conversation.participant_name && (
-							<Tooltip label={conversation.title}>
+						{conversation.title && (
+							<Tooltip
+								label={
+									conversation.participant_name
+										? conversation.title
+										: t`Title auto-generated`
+								}
+							>
 								<IconInfoCircle size={14} className="text-gray-400" />
 							</Tooltip>
 						)}
@@ -1070,7 +1076,7 @@ export const ConversationAccordion = ({
 		<Accordion.Item value="conversations">
 			<Accordion.Control>
 				<Group justify="space-between">
-					<Title order={3}>
+					<Title order={3} {...testId("conversations-accordion-title")}>
 						<span className="min-w-[48px] pr-2 font-normal text-gray-500">
 							{conversationsCountQuery.isLoading ? (
 								<Loader size="xs" />
@@ -1442,7 +1448,7 @@ export const ConversationAccordion = ({
           )} */}
 
 					{allConversations.length === 0 && !conversationsQuery.isLoading && (
-						<Text size="sm">
+						<Text size="sm" {...testId("conversations-accordion-empty-text")}>
 							<Trans>
 								No conversations found. Start a conversation using the
 								participation invite link from the{" "}

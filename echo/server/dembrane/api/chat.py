@@ -116,7 +116,7 @@ class ChatContextSchema(BaseModel):
     conversation_id_list: List[str]
     locked_conversation_id_list: List[str]
     auto_select_bool: bool
-    chat_mode: Optional[Literal["overview", "deep_dive"]] = None  # None = not yet selected
+    chat_mode: Optional[Literal["overview", "deep_dive", "agentic"]] = None  # None = not yet selected
 
 
 async def raise_if_chat_not_found_or_not_authorized(
@@ -771,12 +771,12 @@ async def get_chat_suggestions(
 
 
 class InitializeChatModeSchema(BaseModel):
-    mode: Literal["overview", "deep_dive"]
+    mode: Literal["overview", "deep_dive", "agentic"]
     project_id: str
 
 
 class InitializeChatModeResponseSchema(BaseModel):
-    chat_mode: Literal["overview", "deep_dive"]
+    chat_mode: Literal["overview", "deep_dive", "agentic"]
     conversations_added: int
     conversations_summarized: int
     message: str
@@ -793,6 +793,7 @@ async def initialize_chat_mode(
 
     - overview: Auto-loads summaries for all conversations (most recent first)
     - deep_dive: Manual selection mode (default behavior)
+    - agentic: Routes messaging through /api/agentic run APIs
 
     This can only be called once per chat. Mode cannot be changed after initialization.
     """
@@ -825,6 +826,15 @@ async def initialize_chat_mode(
             conversations_added=0,
             conversations_summarized=0,
             message="Deep dive mode enabled. Select the conversations you want to analyze.",
+        )
+
+    if body.mode == "agentic":
+        await run_in_thread_pool(chat_svc.set_chat_mode, chat_id, "agentic")
+        return InitializeChatModeResponseSchema(
+            chat_mode="agentic",
+            conversations_added=0,
+            conversations_summarized=0,
+            message="Agentic mode enabled. Use the agentic run APIs for messaging.",
         )
 
     # Overview mode: Just set the mode - conversations will be fetched dynamically
@@ -890,6 +900,12 @@ async def post_chat(
         auth,
         include_used_conversations=True,
     )
+
+    if chat.get("chat_mode") == "agentic":
+        raise HTTPException(
+            status_code=400,
+            detail="Agentic chats must use /api/agentic endpoints",
+        )
 
     chat_svc = chat_service
     conversation_svc = conversation_service

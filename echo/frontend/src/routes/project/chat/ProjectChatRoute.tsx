@@ -28,6 +28,7 @@ import {
 	ChatAccordionItemMenu,
 	ChatModeIndicator,
 } from "@/components/chat/ChatAccordion";
+import { AgenticChatPanel } from "@/components/chat/AgenticChatPanel";
 import { ChatContextProgress } from "@/components/chat/ChatContextProgress";
 import { ChatHistoryMessage } from "@/components/chat/ChatHistoryMessage";
 import { ChatMessage } from "@/components/chat/ChatMessage";
@@ -309,6 +310,7 @@ export const ProjectChatRoute = () => {
 	const chatMode = isLegacyChat ? "deep_dive" : rawChatMode;
 	const isModeSelected = chatMode !== null && chatMode !== undefined;
 	const isDeepDiveMode = chatMode === "deep_dive";
+	const isAgenticMode = chatMode === "agentic";
 
 	// Get total conversations count for overview mode
 	const _totalConversationsQuery = useConversationsCountByProjectId(
@@ -328,6 +330,7 @@ export const ProjectChatRoute = () => {
 	// - Deep dive mode: Only fetch after conversations are added (not on initial load)
 	const shouldFetchSuggestions =
 		isModeSelected &&
+		!isAgenticMode &&
 		(!isDeepDiveMode || // overview mode: always fetch
 			conversationCount > 0); // deep_dive mode: only when conversations exist
 
@@ -392,6 +395,7 @@ export const ProjectChatRoute = () => {
 		setTemplateKey,
 		statusMessage,
 	} = useDembraneChat({ chatId: chatId ?? "" });
+	const normalizedInput = typeof input === "string" ? input : "";
 
 	// check if assistant is typing by determining if the last message is an assistant message and has a text part
 	const isAssistantTyping =
@@ -420,7 +424,7 @@ export const ProjectChatRoute = () => {
 		content: string;
 		key: string;
 	}) => {
-		const previousInput = input.trim();
+		const previousInput = normalizedInput.trim();
 		const previousTemplateKey = templateKey;
 
 		setInput(content);
@@ -443,10 +447,10 @@ export const ProjectChatRoute = () => {
 
 	// Clear template selection when input becomes empty
 	useEffect(() => {
-		if (input.trim() === "" && templateKey) {
+		if (normalizedInput.trim() === "" && templateKey) {
 			setTemplateKey(null);
 		}
-	}, [input, templateKey, setTemplateKey]);
+	}, [normalizedInput, templateKey, setTemplateKey]);
 
 	// Track if we need to refetch suggestions after assistant response
 	const prevIsLoadingRef = useRef(isLoading);
@@ -492,6 +496,10 @@ export const ProjectChatRoute = () => {
 				/>
 			</Box>
 		);
+	}
+
+	if (chatMode === "agentic") {
+		return <AgenticChatPanel chatId={chatId ?? ""} projectId={projectId ?? ""} />;
 	}
 
 	return (
@@ -743,7 +751,7 @@ export const ProjectChatRoute = () => {
 									minRows={4}
 									maxRows={10}
 									autosize
-									value={input}
+									value={normalizedInput}
 									onChange={handleInputChange}
 									disabled={isLoading || isSubmitting}
 									onKeyDown={(e) => {
@@ -782,7 +790,11 @@ export const ProjectChatRoute = () => {
 											handleSubmit();
 										}}
 										rightSection={<IconSend size={24} />}
-										disabled={input.trim() === "" || isLoading || isSubmitting}
+										disabled={
+											normalizedInput.trim() === "" ||
+											isLoading ||
+											isSubmitting
+										}
 										{...testId("chat-send-button")}
 									>
 										<Trans>Send</Trans>

@@ -172,17 +172,31 @@ def _get_thread_event_loop() -> asyncio.AbstractEventLoop:
 
 def run_async_in_new_loop(coro: Coroutine[Any, Any, T]) -> T:
     """
-    Execute an async coroutine on this thread's persistent event loop.
+    Execute an async coroutine in a fresh, isolated event loop.
 
     Use from synchronous contexts such as Dramatiq actors or CLI scripts to
-    invoke async FastAPI handlers without hitting "Future attached to a 
-    different loop" errors.
+    invoke async FastAPI handlers.
+
+    A fresh loop is created per call rather than reusing a cached thread loop.
+    This prevents "Future attached to a different loop" errors when multiple
+    concurrent Dramatiq greenlets (dramatiq-gevent uses one OS thread with many
+    greenlets) share the same thread ID and would otherwise share the same loop.
+    The coroutines invoked here (summarize_conversation, get_conversation_content)
+    use only stateless async operations so fresh loops per call is safe.
     """
     if not asyncio.iscoroutine(coro) and not asyncio.isfuture(coro):
         raise TypeError("run_async_in_new_loop expects a coroutine or Future.")
 
-    loop = _get_thread_event_loop()
-    logger.debug("Running async coroutine in thread loop: %s", coro)
-    result = loop.run_until_complete(coro)
-    logger.debug("Completed async coroutine: %s", coro)
-    return result
+    import nest_asyncio
+
+    loop = asyncio.new_event_loop()
+    # Apply nest_asyncio in case dramatiq-gevent has patched asyncio's running
+    # loop detection on this thread.
+    nest_asyncio.apply(loop)
+    logger.debug("Running async coroutine in fresh event loop: %s", coro)
+    try:
+        result = loop.run_until_complete(coro)
+        logger.debug("Completed async coroutine: %s", coro)
+        return result
+    finally:
+        loop.close()
