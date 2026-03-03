@@ -558,8 +558,14 @@ const ConversationAccordionItem = ({
 							{conversation.participant_name || conversation.title}
 						</Text>
 
-						{conversation.title && conversation.participant_name && (
-							<Tooltip label={conversation.title}>
+						{conversation.title && (
+							<Tooltip
+								label={
+									conversation.participant_name
+										? conversation.title
+										: t`Title auto-generated`
+								}
+							>
 								<IconInfoCircle size={14} className="text-gray-400" />
 							</Tooltip>
 						)}
