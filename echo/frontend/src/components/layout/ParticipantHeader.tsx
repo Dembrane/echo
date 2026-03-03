@@ -11,8 +11,8 @@ import { DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
 import { testId } from "@/lib/testUtils";
-import { useParticipantProjectById } from "../participant/hooks";
 import { Logo } from "../common/Logo";
+import { useParticipantProjectById } from "../participant/hooks";
 import { ParticipantSettingsModal } from "../participant/ParticipantSettingsModal";
 
 export const ParticipantHeader = () => {
@@ -28,7 +28,7 @@ export const ParticipantHeader = () => {
 	const projectQuery = useParticipantProjectById(projectId ?? "");
 
 	useEffect(() => {
-		const logoFileId = (projectQuery.data as any)?.whitelabel_logo_url;
+		const logoFileId = projectQuery.data?.whitelabel_logo_url;
 		if (logoFileId) {
 			setLogoUrl(`${DIRECTUS_PUBLIC_URL}/assets/${logoFileId}`);
 		} else {

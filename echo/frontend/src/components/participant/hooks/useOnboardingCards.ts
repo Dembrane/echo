@@ -1,37 +1,43 @@
 import type { LanguageCards } from "../ParticipantOnboardingCards";
 
+type LegalBasis = ParticipantProject["legal_basis"];
+
 export const useOnboardingCards = () => {
 	const getSystemCards = (
 		lang: string,
 		tutorialSlug?: string,
+		legalBasis?: LegalBasis,
+		privacyPolicyUrl?: string | null,
 	): LanguageCards[string] => {
+		const basis = legalBasis ?? "client-managed";
+
 		// Normalize and fallback invalid values to "none"
 		const normalizedSlug = tutorialSlug?.toLowerCase();
-		const validSlugs = ["skip-consent", "none", "basic", "advanced"];
+		const validSlugs = ["none", "basic", "advanced"];
 		const finalSlug = validSlugs.includes(normalizedSlug || "")
 			? normalizedSlug
 			: "none";
 
-		if (finalSlug === "skip-consent") {
-			return [];
-		}
-
 		// none: Only privacy statement
 		if (finalSlug === "none") {
-			const privacyCard = getPrivacyCard(lang);
+			const privacyCard = getPrivacyCard(lang, basis, privacyPolicyUrl);
 			return privacyCard ? [privacyCard] : [];
 		}
 
 		// basic: Tutorial slides + privacy statement
 		if (finalSlug === "basic") {
 			const tutorialCards = getBasicTutorialCards(lang);
-			const privacyCard = getPrivacyCard(lang);
+			const privacyCard = getPrivacyCard(lang, basis, privacyPolicyUrl);
 			return [...tutorialCards, ...(privacyCard ? [privacyCard] : [])];
 		}
 
 		// advanced: Full tutorial + privacy statement + best practices
 		if (finalSlug === "advanced") {
-			const tutorialCards = getAdvancedTutorialCards(lang);
+			const tutorialCards = getAdvancedTutorialCards(
+				lang,
+				basis,
+				privacyPolicyUrl,
+			);
 			return tutorialCards;
 		}
 
@@ -426,7 +432,11 @@ export const useOnboardingCards = () => {
 		return tutorialCards[lang] || tutorialCards["en-US"] || [];
 	};
 
-	const getAdvancedTutorialCards = (lang: string): LanguageCards[string] => {
+	const getAdvancedTutorialCards = (
+		lang: string,
+		legalBasis: LegalBasis = "client-managed",
+		privacyPolicyUrl?: string | null,
+	): LanguageCards[string] => {
 		const tutorialCards: Record<string, LanguageCards[string]> = {
 			"de-DE": [
 				{
@@ -489,7 +499,8 @@ export const useOnboardingCards = () => {
 								"Vermeiden Sie die Weitergabe von Details, die Sie dem Gastgeber nicht mitteilen möchten. Seien Sie achtsam und nehmen Sie andere nicht ohne deren Zustimmung auf.",
 							title: "Datenschutz ist wichtig",
 						},
-						...(getPrivacyCard("de-DE")?.slides || []),
+						...(getPrivacyCard("de-DE", legalBasis, privacyPolicyUrl)?.slides ||
+							[]),
 					],
 				},
 				{
@@ -582,7 +593,8 @@ export const useOnboardingCards = () => {
 								"Avoid sharing details you don't want the host to know. Be mindful and don't record others without their consent.",
 							title: "Privacy Matters",
 						},
-						...(getPrivacyCard("en-US")?.slides || []),
+						...(getPrivacyCard("en-US", legalBasis, privacyPolicyUrl)?.slides ||
+							[]),
 					],
 				},
 				{
@@ -674,7 +686,8 @@ export const useOnboardingCards = () => {
 								"Evita compartir detalles que no quieras que el anfitrión conozca. Sé consciente y no grabes a otros sin su consentimiento.",
 							title: "La Privacidad Importa",
 						},
-						...(getPrivacyCard("es-ES")?.slides || []),
+						...(getPrivacyCard("es-ES", legalBasis, privacyPolicyUrl)?.slides ||
+							[]),
 					],
 				},
 				{
@@ -768,7 +781,8 @@ export const useOnboardingCards = () => {
 								"Évitez de partager des détails que vous ne voulez pas que l'hôte connaisse. Soyez attentif et n'enregistrez pas les autres sans leur consentement.",
 							title: "La Confidentialité Compte",
 						},
-						...(getPrivacyCard("fr-FR")?.slides || []),
+						...(getPrivacyCard("fr-FR", legalBasis, privacyPolicyUrl)?.slides ||
+							[]),
 					],
 				},
 				{
@@ -861,7 +875,8 @@ export const useOnboardingCards = () => {
 								"Evita di condividere dettagli che non vuoi rendere noti all'host. Chiedi sempre il consenso prima di registrare altre persone.",
 							title: "La privacy conta",
 						},
-						...(getPrivacyCard("it-IT")?.slides || []),
+						...(getPrivacyCard("it-IT", legalBasis, privacyPolicyUrl)?.slides ||
+							[]),
 					],
 				},
 				{
@@ -954,7 +969,8 @@ export const useOnboardingCards = () => {
 								"Vermijd het delen van details die je niet met de organisator wilt delen. Wees voorzichtig en neem anderen niet op zonder hun toestemming.",
 							title: "Privacy is belangrijk",
 						},
-						...(getPrivacyCard("nl-NL")?.slides || []),
+						...(getPrivacyCard("nl-NL", legalBasis, privacyPolicyUrl)?.slides ||
+							[]),
 					],
 				},
 				{
@@ -995,26 +1011,135 @@ export const useOnboardingCards = () => {
 
 	const getPrivacyCard = (
 		lang: string,
+		legalBasis: LegalBasis = "client-managed",
+		privacyPolicyUrl?: string | null,
 	): LanguageCards[string][number] | null => {
-		const privacyCards: Record<string, LanguageCards[string][number]> = {
+		if (legalBasis === "client-managed") {
+			return getClientManagedPrivacyCard(lang);
+		}
+		if (legalBasis === "dembrane-events") {
+			return getDembraneEventsPrivacyCard(lang);
+		}
+		return getConsentPrivacyCard(lang, privacyPolicyUrl);
+	};
+
+	const getClientManagedPrivacyCard = (
+		lang: string,
+	): LanguageCards[string][number] | null => {
+		const cards: Record<string, LanguageCards[string][number]> = {
+			"de-DE": {
+				section: "Privatsphäre",
+				slides: [
+					{
+						content:
+							"Der Organisator ist verantwortlich dafür, wie Ihre Daten in dieser Sitzung verwendet werden. dembrane verarbeitet Ihr Gespräch in seinem Auftrag.",
+						cta: "Ich verstehe.",
+						extraHelp:
+							"Aufnahmen werden transkribiert und für Erkenntnisse analysiert. Ihre Daten werden auf gesicherten Servern in Europa gespeichert, nicht zum Trainieren von KI-Modellen verwendet und innerhalb von 30 Tagen nach Projektende gelöscht.\nFragen zu Ihrer Privatsphäre? Wenden Sie sich direkt an den Organisator.",
+						title: "Verantwortlicher, Nutzung und Sicherheit.",
+					},
+				],
+			},
+			"en-US": {
+				section: "Privacy",
+				slides: [
+					{
+						content:
+							"The organiser is responsible for how your data is used in this session. dembrane processes your conversation on their behalf.",
+						cta: "I understand",
+						extraHelp:
+							"Recordings are transcribed and analysed for insights. Your data is stored on secured servers in Europe, is not used to train AI models, and is deleted within 30 days after the project has ended.\nQuestions about your privacy? Contact the organiser directly.",
+						title: "Data controller, usage and security.",
+					},
+				],
+			},
+			"es-ES": {
+				section: "Privacidad",
+				slides: [
+					{
+						content:
+							"El organizador es responsable de cómo se utilizan sus datos en esta sesión. dembrane procesa su conversación en su nombre.",
+						cta: "Entiendo",
+						extraHelp:
+							"Las grabaciones se transcriben y analizan para obtener información. Sus datos se almacenan en servidores seguros en Europa, no se utilizan para entrenar modelos de IA y se eliminan dentro de los 30 días posteriores a la finalización del proyecto.\n¿Preguntas sobre su privacidad? Contacte directamente al organizador.",
+						title: "Responsable del tratamiento, uso y seguridad.",
+					},
+				],
+			},
+			"fr-FR": {
+				section: "Confidentialité",
+				slides: [
+					{
+						content:
+							"L'organisateur est responsable de la manière dont vos données sont utilisées dans cette session. dembrane traite votre conversation en son nom.",
+						cta: "Je comprends",
+						extraHelp:
+							"Les enregistrements sont transcrits et analysés pour en tirer des enseignements. Vos données sont stockées sur des serveurs sécurisés en Europe, ne sont pas utilisées pour entraîner des modèles d'IA et sont supprimées dans les 30 jours suivant la fin du projet.\nDes questions sur votre vie privée ? Contactez directement l'organisateur.",
+						title: "Responsable du traitement, utilisation et sécurité.",
+					},
+				],
+			},
+			"it-IT": {
+				section: "Privacy",
+				slides: [
+					{
+						content:
+							"L'organizzatore è responsabile di come vengono utilizzati i tuoi dati in questa sessione. dembrane elabora la tua conversazione per suo conto.",
+						cta: "Ho capito",
+						extraHelp:
+							"Le registrazioni vengono trascritte e analizzate per ottenere insight. I tuoi dati sono archiviati su server sicuri in Europa, non vengono utilizzati per addestrare modelli di IA e vengono eliminati entro 30 giorni dalla fine del progetto.\nDomande sulla tua privacy? Contatta direttamente l'organizzatore.",
+						title: "Titolare del trattamento, utilizzo e sicurezza.",
+					},
+				],
+			},
+			"nl-NL": {
+				section: "Privacy",
+				slides: [
+					{
+						content:
+							"De organisator is verantwoordelijk voor hoe je gegevens worden gebruikt in deze sessie. dembrane verwerkt je gesprek namens hen.",
+						cta: "Ik begrijp het",
+						extraHelp:
+							"Opnames worden getranscribeerd en geanalyseerd voor inzichten. Je gegevens worden opgeslagen op beveiligde servers in Europa, worden niet gebruikt om AI-modellen te trainen en worden binnen 30 dagen na het einde van het project verwijderd.\nVragen over je privacy? Neem direct contact op met de organisator.",
+						title: "Verwerkingsverantwoordelijke, gebruik en beveiliging.",
+					},
+				],
+			},
+		};
+
+		return cards[lang] || cards["en-US"] || null;
+	};
+
+	const getConsentPrivacyCard = (
+		lang: string,
+		privacyPolicyUrl?: string | null,
+	): LanguageCards[string][number] | null => {
+		const policyUrl = privacyPolicyUrl || undefined;
+
+		const cards: Record<string, LanguageCards[string][number]> = {
 			"de-DE": {
 				section: "Privatsphäre",
 				slides: [
 					{
 						checkbox: {
-							label: "Ich stimme der Datenschutzrichtlinie zu",
+							label:
+								"Ich stimme zu, dass mein Gespräch aufgezeichnet und verarbeitet wird.",
 							required: true,
 						},
 						content:
-							"Ihre Daten werden sicher gespeichert, analysiert und niemals mit Dritten geteilt.",
+							"Der Organisator ist verantwortlich dafür, wie Ihre Daten in dieser Sitzung verwendet werden. dembrane verarbeitet Ihr Gespräch in seinem Auftrag.",
 						cta: "Ich verstehe.",
 						extraHelp:
-							"Aufnahmen werden transkribiert und aufschlussreich analysiert, anschließend nach 30 Tagen gelöscht. Für spezifische Details wenden Sie sich bitte an den Host, der Ihnen den QR-Code zur Verfügung gestellt hat.",
-						link: {
-							label: "Die vollständige Datenschutzrichtlinie lesen",
-							url: "https://dembrane.notion.site/Privacy-Statement-Dembrane-1439cd84270580748046cc589861d115",
-						},
-						title: "Datenverwendung und Sicherheit.",
+							"Aufnahmen werden transkribiert und für Erkenntnisse analysiert. Ihre Daten werden auf gesicherten Servern in Europa gespeichert, nicht zum Trainieren von KI-Modellen verwendet und innerhalb von 30 Tagen nach Projektende gelöscht.\nFragen zu Ihrer Privatsphäre? Wenden Sie sich direkt an den Organisator.",
+						...(policyUrl
+							? {
+									link: {
+										label: "Datenschutzrichtlinie des Organisators lesen",
+										url: policyUrl,
+									},
+								}
+							: {}),
+						title: "Verantwortlicher, Nutzung und Sicherheit.",
 					},
 				],
 			},
@@ -1023,19 +1148,24 @@ export const useOnboardingCards = () => {
 				slides: [
 					{
 						checkbox: {
-							label: "I agree to the privacy policy",
+							label:
+								"I consent to my conversation being recorded and processed.",
 							required: true,
 						},
 						content:
-							"Your data is securely stored, analyzed, and never shared with third parties.",
+							"The organiser is responsible for how your data is used in this session. dembrane processes your conversation on their behalf.",
 						cta: "I understand",
 						extraHelp:
-							"Recordings are transcribed and analyzed for insights, then deleted after 30 days. For specific details, consult the host who provided your QR code.",
-						link: {
-							label: "Read the full privacy policy",
-							url: "https://dembrane.notion.site/Privacy-Statement-Dembrane-1439cd84270580748046cc589861d115",
-						},
-						title: "Data usage and security.",
+							"Recordings are transcribed and analysed for insights. Your data is stored on secured servers in Europe, is not used to train AI models, and is deleted within 30 days after the project has ended.\nQuestions about your privacy? Contact the organiser directly.",
+						...(policyUrl
+							? {
+									link: {
+										label: "Read the organiser's privacy policy",
+										url: policyUrl,
+									},
+								}
+							: {}),
+						title: "Data controller, usage and security.",
 					},
 				],
 			},
@@ -1044,19 +1174,24 @@ export const useOnboardingCards = () => {
 				slides: [
 					{
 						checkbox: {
-							label: "Acepto la política de privacidad",
+							label:
+								"Doy mi consentimiento para que mi conversación sea grabada y procesada.",
 							required: true,
 						},
 						content:
-							"Sus datos se almacenan de forma segura, se analizan y nunca se comparten con terceros.",
+							"El organizador es responsable de cómo se utilizan sus datos en esta sesión. dembrane procesa su conversación en su nombre.",
 						cta: "Entiendo",
 						extraHelp:
-							"Las grabaciones se transcriben y analizan para obtener información, luego se eliminan después de 30 días. Para detalles específicos, consulte al anfitrión que le proporcionó su código QR.",
-						link: {
-							label: "Lea la política de privacidad completa",
-							url: "https://dembrane.notion.site/Privacy-Statement-Dembrane-1439cd84270580748046cc589861d115",
-						},
-						title: "Uso de datos y seguridad.",
+							"Las grabaciones se transcriben y analizan para obtener información. Sus datos se almacenan en servidores seguros en Europa, no se utilizan para entrenar modelos de IA y se eliminan dentro de los 30 días posteriores a la finalización del proyecto.\n¿Preguntas sobre su privacidad? Contacte directamente al organizador.",
+						...(policyUrl
+							? {
+									link: {
+										label: "Lea la política de privacidad del organizador",
+										url: policyUrl,
+									},
+								}
+							: {}),
+						title: "Responsable del tratamiento, uso y seguridad.",
 					},
 				],
 			},
@@ -1065,19 +1200,25 @@ export const useOnboardingCards = () => {
 				slides: [
 					{
 						checkbox: {
-							label: "J'accepte la politique de confidentialité",
+							label:
+								"Je consens à ce que ma conversation soit enregistrée et traitée.",
 							required: true,
 						},
 						content:
-							"Vos données sont stockées en toute sécurité, analysées et jamais partagées avec des tiers.",
+							"L'organisateur est responsable de la manière dont vos données sont utilisées dans cette session. dembrane traite votre conversation en son nom.",
 						cta: "Je comprends",
 						extraHelp:
-							"Les enregistrements sont transcrits et analysés pour obtenir des informations, puis supprimés après 30 jours. Pour des détails spécifiques, consultez l'hôte qui vous a fourni votre code QR.",
-						link: {
-							label: "Lire la politique de confidentialité complète",
-							url: "https://dembrane.notion.site/Privacy-Statement-Dembrane-1439cd84270580748046cc589861d115",
-						},
-						title: "Utilisation des données et sécurité.",
+							"Les enregistrements sont transcrits et analysés pour en tirer des enseignements. Vos données sont stockées sur des serveurs sécurisés en Europe, ne sont pas utilisées pour entraîner des modèles d'IA et sont supprimées dans les 30 jours suivant la fin du projet.\nDes questions sur votre vie privée ? Contactez directement l'organisateur.",
+						...(policyUrl
+							? {
+									link: {
+										label:
+											"Lire la politique de confidentialité de l'organisateur",
+										url: policyUrl,
+									},
+								}
+							: {}),
+						title: "Responsable du traitement, utilisation et sécurité.",
 					},
 				],
 			},
@@ -1086,19 +1227,25 @@ export const useOnboardingCards = () => {
 				slides: [
 					{
 						checkbox: {
-							label: "Accetto l'informativa sulla privacy",
+							label:
+								"Acconsento alla registrazione e al trattamento della mia conversazione.",
 							required: true,
 						},
 						content:
-							"I tuoi dati sono archiviati in modo sicuro, analizzati e mai condivisi con terze parti.",
+							"L'organizzatore è responsabile di come vengono utilizzati i tuoi dati in questa sessione. dembrane elabora la tua conversazione per suo conto.",
 						cta: "Ho capito",
 						extraHelp:
-							"Le registrazioni vengono trascritte e analizzate per ottenere insight, poi eliminate dopo 30 giorni. Per dettagli specifici, contatta l'host che ti ha fornito il QR code.",
-						link: {
-							label: "Leggi l'informativa completa sulla privacy",
-							url: "https://dembrane.notion.site/Privacy-Statement-Dembrane-1439cd84270580748046cc589861d115",
-						},
-						title: "Uso dei dati e sicurezza.",
+							"Le registrazioni vengono trascritte e analizzate per ottenere insight. I tuoi dati sono archiviati su server sicuri in Europa, non vengono utilizzati per addestrare modelli di IA e vengono eliminati entro 30 giorni dalla fine del progetto.\nDomande sulla tua privacy? Contatta direttamente l'organizzatore.",
+						...(policyUrl
+							? {
+									link: {
+										label:
+											"Leggi l'informativa sulla privacy dell'organizzatore",
+										url: policyUrl,
+									},
+								}
+							: {}),
+						title: "Titolare del trattamento, utilizzo e sicurezza.",
 					},
 				],
 			},
@@ -1107,25 +1254,144 @@ export const useOnboardingCards = () => {
 				slides: [
 					{
 						checkbox: {
-							label: "Ik ga akkoord met het privacybeleid",
+							label:
+								"Ik stem in met het opnemen en verwerken van mijn gesprek.",
 							required: true,
 						},
 						content:
-							"Je gegevens worden veilig opgeslagen, geanalyseerd en nooit gedeeld met derden.",
+							"De organisator is verantwoordelijk voor hoe je gegevens worden gebruikt in deze sessie. dembrane verwerkt je gesprek namens hen.",
 						cta: "Ik begrijp het",
 						extraHelp:
-							"Opnames worden getranscribeerd en geanalyseerd voor inzichten, en na 30 dagen verwijderd. Voor specifieke details, raadpleeg de organisator die je de QR-code heeft gegeven.",
-						link: {
-							label: "Lees het privacybeleid",
-							url: "https://dembrane.notion.site/Privacy-Statement-Dembrane-1439cd84270580748046cc589861d115",
-						},
-						title: "Gegevensgebruik en beveiliging.",
+							"Opnames worden getranscribeerd en geanalyseerd voor inzichten. Je gegevens worden opgeslagen op beveiligde servers in Europa, worden niet gebruikt om AI-modellen te trainen en worden binnen 30 dagen na het einde van het project verwijderd.\nVragen over je privacy? Neem direct contact op met de organisator.",
+						...(policyUrl
+							? {
+									link: {
+										label: "Lees het privacybeleid van de organisator",
+										url: policyUrl,
+									},
+								}
+							: {}),
+						title: "Verwerkingsverantwoordelijke, gebruik en beveiliging.",
 					},
 				],
 			},
 		};
 
-		return privacyCards[lang] || null;
+		return cards[lang] || cards["en-US"] || null;
+	};
+
+	const getDembraneEventsPrivacyCard = (
+		lang: string,
+	): LanguageCards[string][number] | null => {
+		const dembranePrivacyUrl =
+			"https://dembrane.notion.site/Privacy-Statement-Dembrane-1439cd84270580748046cc589861d115";
+
+		const cards: Record<string, LanguageCards[string][number]> = {
+			"de-DE": {
+				section: "Privatsphäre",
+				slides: [
+					{
+						content:
+							"dembrane zeichnet dieses Gespräch auf und analysiert es auf Grundlage unseres berechtigten Interesses: Diskussionen genau festzuhalten, zuverlässige Erkenntnisse zu liefern und unsere Plattform weiterzuentwickeln.",
+						cta: "Ich verstehe.",
+						extraHelp:
+							"Aufnahmen und Transkripte werden innerhalb von 30 Tagen nach Schließung der Sitzung gelöscht. Daten werden auf gesicherten Servern in Europa gespeichert und nicht zum Trainieren von KI-Modellen verwendet.\nFragen oder Einwände? Kontaktieren Sie uns unter info@dembrane.com oder lesen Sie unsere Datenschutzrichtlinie.",
+						link: {
+							label: "Vollständige Datenschutzrichtlinie lesen",
+							url: dembranePrivacyUrl,
+						},
+						title: "Datenverwendung und Sicherheit",
+					},
+				],
+			},
+			"en-US": {
+				section: "Privacy",
+				slides: [
+					{
+						content:
+							"dembrane records and analyses this conversation based on our legitimate interest: to capture discussions accurately, deliver reliable insights, and develop our platform.",
+						cta: "I understand",
+						extraHelp:
+							"Recordings and transcripts are deleted within 30 days of the session closing. Data is stored on secured servers in Europe and is not used to train AI models.\nQuestions or want to object? Contact us at info@dembrane.com or see our privacy policy.",
+						link: {
+							label: "Read the full privacy policy",
+							url: dembranePrivacyUrl,
+						},
+						title: "Data usage and security",
+					},
+				],
+			},
+			"es-ES": {
+				section: "Privacidad",
+				slides: [
+					{
+						content:
+							"dembrane graba y analiza esta conversación basándose en nuestro interés legítimo: capturar las discusiones con precisión, ofrecer información fiable y desarrollar nuestra plataforma.",
+						cta: "Entiendo",
+						extraHelp:
+							"Las grabaciones y transcripciones se eliminan dentro de los 30 días posteriores al cierre de la sesión. Los datos se almacenan en servidores seguros en Europa y no se utilizan para entrenar modelos de IA.\n¿Preguntas o desea objetar? Contáctenos en info@dembrane.com o consulte nuestra política de privacidad.",
+						link: {
+							label: "Lea la política de privacidad completa",
+							url: dembranePrivacyUrl,
+						},
+						title: "Uso de datos y seguridad",
+					},
+				],
+			},
+			"fr-FR": {
+				section: "Confidentialité",
+				slides: [
+					{
+						content:
+							"dembrane enregistre et analyse cette conversation sur la base de notre intérêt légitime : capturer les discussions avec précision, fournir des informations fiables et développer notre plateforme.",
+						cta: "Je comprends",
+						extraHelp:
+							"Les enregistrements et les transcriptions sont supprimés dans les 30 jours suivant la clôture de la session. Les données sont stockées sur des serveurs sécurisés en Europe et ne sont pas utilisées pour entraîner des modèles d'IA.\nDes questions ou souhaitez-vous vous opposer ? Contactez-nous à info@dembrane.com ou consultez notre politique de confidentialité.",
+						link: {
+							label: "Lire la politique de confidentialité complète",
+							url: dembranePrivacyUrl,
+						},
+						title: "Utilisation des données et sécurité",
+					},
+				],
+			},
+			"it-IT": {
+				section: "Privacy",
+				slides: [
+					{
+						content:
+							"dembrane registra e analizza questa conversazione sulla base del nostro legittimo interesse: acquisire le discussioni in modo accurato, fornire informazioni affidabili e sviluppare la nostra piattaforma.",
+						cta: "Ho capito",
+						extraHelp:
+							"Le registrazioni e le trascrizioni vengono eliminate entro 30 giorni dalla chiusura della sessione. I dati sono archiviati su server sicuri in Europa e non vengono utilizzati per addestrare modelli di IA.\nDomande o vuoi opporti? Contattaci a info@dembrane.com o consulta la nostra informativa sulla privacy.",
+						link: {
+							label: "Leggi l'informativa sulla privacy completa",
+							url: dembranePrivacyUrl,
+						},
+						title: "Uso dei dati e sicurezza",
+					},
+				],
+			},
+			"nl-NL": {
+				section: "Privacy",
+				slides: [
+					{
+						content:
+							"dembrane neemt dit gesprek op en analyseert het op basis van ons gerechtvaardigd belang: om discussies nauwkeurig vast te leggen, betrouwbare inzichten te leveren en ons platform te ontwikkelen.",
+						cta: "Ik begrijp het",
+						extraHelp:
+							"Opnames en transcripties worden binnen 30 dagen na het sluiten van de sessie verwijderd. Gegevens worden opgeslagen op beveiligde servers in Europa en worden niet gebruikt om AI-modellen te trainen.\nVragen of bezwaar? Neem contact met ons op via info@dembrane.com of bekijk ons privacybeleid.",
+						link: {
+							label: "Lees het volledige privacybeleid",
+							url: dembranePrivacyUrl,
+						},
+						title: "Gegevensgebruik en beveiliging",
+					},
+				],
+			},
+		};
+
+		return cards[lang] || cards["en-US"] || null;
 	};
 
 	return { getSystemCards };

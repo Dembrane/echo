@@ -50,7 +50,7 @@ export const ParticipantStartRoute = () => {
 					<DembraneLoadingSpinner isLoading />
 				</div>
 			) : (
-				<ParticipantOnboardingCards project={project as Project} />
+				<ParticipantOnboardingCards project={project as ParticipantProject} />
 			)}
 		</div>
 	);

@@ -1,14 +1,22 @@
+from typing import Literal, Optional
 from logging import getLogger
 
 import requests
 from fastapi import APIRouter, UploadFile, HTTPException
+from pydantic import BaseModel
 
 from dembrane.directus import directus
+from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
 logger = getLogger("api.user_settings")
 
 UserSettingsRouter = APIRouter()
+
+
+class LegalBasisUpdateSchema(BaseModel):
+    legal_basis: Literal["client-managed", "consent", "dembrane-events"]
+    privacy_policy_url: Optional[str] = None
 
 
 def _get_or_create_custom_logos_folder_id() -> str | None:
@@ -50,7 +58,9 @@ async def upload_whitelabel_logo(
     data = {"folder": folder_id}
 
     try:
-        response = requests.post(url, headers=headers, files=files, data=data, verify=directus.verify)
+        response = requests.post(
+            url, headers=headers, files=files, data=data, verify=directus.verify
+        )
         if response.status_code != 200:
             logger.error(f"Failed to upload file: {response.status_code} {response.text}")
             raise HTTPException(status_code=500, detail="Failed to upload file")
@@ -82,5 +92,49 @@ async def remove_whitelabel_logo(
     except Exception as e:
         logger.error(f"Failed to remove whitelabel logo: {e}")
         raise HTTPException(status_code=500, detail="Failed to remove logo") from e
+
+    return {"status": "ok"}
+
+
+@UserSettingsRouter.patch("/legal-basis")
+async def update_legal_basis(
+    body: LegalBasisUpdateSchema,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Update the user's legal basis setting."""
+    if body.legal_basis == "dembrane-events":
+        try:
+            user_data = await run_in_thread_pool(
+                directus.get_users,
+                {
+                    "query": {
+                        "filter": {"id": {"_eq": auth.user_id}},
+                        "fields": ["email"],
+                    }
+                },
+            )
+            email = user_data[0].get("email", "") if user_data else ""
+            if not email or not email.lower().endswith("@dembrane.com"):
+                raise HTTPException(
+                    status_code=403,
+                    detail="dembrane-events is only available for dembrane accounts",
+                )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to verify user email: {e}")
+            raise HTTPException(status_code=500, detail="Failed to verify user") from e
+
+    update_data: dict = {"legal_basis": body.legal_basis}
+    if body.legal_basis == "consent":
+        update_data["privacy_policy_url"] = body.privacy_policy_url
+    else:
+        update_data["privacy_policy_url"] = None
+
+    try:
+        await run_in_thread_pool(directus.update_user, auth.user_id, update_data)
+    except Exception as e:
+        logger.error(f"Failed to update legal basis: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update legal basis") from e
 
     return {"status": "ok"}

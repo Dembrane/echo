@@ -286,6 +286,12 @@ interface Project {
 	conversations_count?: number | null;
 }
 
+interface ParticipantProject extends Project {
+	whitelabel_logo_url: string | null;
+	legal_basis: "client-managed" | "consent" | "dembrane-events" | null;
+	privacy_policy_url: string | null;
+}
+
 interface ProjectAnalysisRun {
 	created_at: string | null;
 	id: string;
@@ -459,6 +465,8 @@ interface View {
 interface CustomDirectusUser {
 	disable_create_project: boolean | null;
 	whitelabel_logo: string | null;
+	legal_basis: "client-managed" | "consent" | "dembrane-events" | null;
+	privacy_policy_url: string | null;
 	projects: string[] | Project[];
 }
 

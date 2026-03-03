@@ -60,6 +60,10 @@ class PublicProjectSchema(BaseModel):
     # whitelabel
     whitelabel_logo_url: Optional[str] = None
 
+    # legal basis
+    legal_basis: Optional[str] = None
+    privacy_policy_url: Optional[str] = None
+
 
 class PublicConversationChunkSchema(BaseModel):
     id: str
@@ -183,7 +187,7 @@ async def get_project(
         if project.get("is_conversation_allowed", False) is False:
             raise HTTPException(status_code=403, detail="Conversation not open for participation")
 
-        # Resolve whitelabel logo from project owner
+        # Resolve whitelabel logo, legal basis, and privacy policy URL from project owner
         directus_user_id = project.get("directus_user_id")
         if directus_user_id:
             try:
@@ -192,16 +196,19 @@ async def get_project(
                     {
                         "query": {
                             "filter": {"id": {"_eq": directus_user_id}},
-                            "fields": ["whitelabel_logo"],
+                            "fields": ["whitelabel_logo", "legal_basis", "privacy_policy_url"],
                         }
                     },
                 )
                 if user_data and len(user_data) > 0:
-                    logo_file_id = user_data[0].get("whitelabel_logo")
+                    owner = user_data[0]
+                    logo_file_id = owner.get("whitelabel_logo")
                     if logo_file_id:
                         project["whitelabel_logo_url"] = logo_file_id
+                    project["legal_basis"] = owner.get("legal_basis") or "client-managed"
+                    project["privacy_policy_url"] = owner.get("privacy_policy_url")
             except Exception as e:
-                logger.warning(f"Failed to resolve whitelabel logo for project {project_id}: {e}")
+                logger.warning(f"Failed to resolve owner settings for project {project_id}: {e}")
 
         return project
 
