@@ -24,6 +24,13 @@ import { useInitializeChatModeMutation } from "./hooks";
 
 // Color palette from design spec - shared across chat components
 export const MODE_COLORS = {
+	agentic: {
+		badge: "orange",
+		border: "#FF8A4C",
+		lighter: "rgba(255, 138, 76, 0.1)",
+		primary: "#FF8A4C",
+		shadow: "rgba(255, 138, 76, 0.12)",
+	},
 	deep_dive: {
 		badge: "cyan",
 		border: "#00FFFF", // cyan border
@@ -53,6 +60,12 @@ const getDeepDiveExamples = () => [
 	t`Summarize this interview into a shareable article`,
 	t`Pull out the most impactful quotes from this session`,
 	t`What were the key moments in this conversation?`,
+];
+
+const getAgenticExamples = () => [
+	t`Create a research brief from recent conversations`,
+	t`Find contradictions and suggest follow-up questions`,
+	t`Draft next actions and organize them by priority`,
 ];
 
 type ModeCardProps = {
@@ -256,6 +269,18 @@ export const ChatModeSelector = ({
 
 				{/* Mode Cards */}
 				<Stack gap="lg">
+					<ModeCard
+						mode="agentic"
+						title={t`Agentic`}
+						subtitle={t`Delegate multi-step analysis with live tool execution`}
+						examples={getAgenticExamples()}
+						icon={IconSparkles}
+						isBeta
+						selectedMode={selectedMode}
+						isLoading={isLoading}
+						onSelectMode={handleSelectMode}
+					/>
+
 					<ModeCard
 						mode="deep_dive"
 						title={t`Specific Details`}

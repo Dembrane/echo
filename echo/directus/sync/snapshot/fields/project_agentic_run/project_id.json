@@ -1,0 +1,49 @@
+{
+  "collection": "project_agentic_run",
+  "field": "project_id",
+  "type": "uuid",
+  "meta": {
+    "collection": "project_agentic_run",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "project_id",
+    "group": null,
+    "hidden": false,
+    "interface": "select-dropdown-m2o",
+    "note": null,
+    "options": {
+      "enableLink": true,
+      "template": "{{name}}"
+    },
+    "readonly": false,
+    "required": true,
+    "searchable": true,
+    "sort": 4,
+    "special": [
+      "m2o"
+    ],
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  },
+  "schema": {
+    "name": "project_id",
+    "table": "project_agentic_run",
+    "data_type": "uuid",
+    "default_value": null,
+    "max_length": null,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": true,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": "project",
+    "foreign_key_column": "id"
+  }
+}

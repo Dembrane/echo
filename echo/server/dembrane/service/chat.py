@@ -147,8 +147,8 @@ class ChatService:
             raise ChatServiceException() from e
 
     def set_chat_mode(self, chat_id: str, mode: str) -> dict:
-        """Set the chat mode (overview or deep_dive)."""
-        if mode not in ("overview", "deep_dive"):
+        """Set the chat mode (overview, deep_dive, or agentic)."""
+        if mode not in ("overview", "deep_dive", "agentic"):
             raise ChatServiceException(f"Invalid chat mode: {mode}")
         try:
             with self._client_context() as client:

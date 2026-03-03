@@ -41,14 +41,15 @@ const User = ({ name, email }: { name: string; email: string }) => (
 			borderRadius: "var(--mantine-radius-sm)",
 			color: "var(--mantine-color-text)",
 		}}
+		{...testId("header-user-info")}
 	>
 		<Group gap="sm">
 			<div style={{ flex: 1 }} className="hidden md:block">
-				<Text size="sm" fw={500}>
+				<Text size="sm" fw={500} {...testId("header-user-name")}>
 					{name}
 				</Text>
 
-				<Text c="dimmed" size="xs">
+				<Text c="dimmed" size="xs" {...testId("header-user-email")}>
 					{email}
 				</Text>
 			</div>

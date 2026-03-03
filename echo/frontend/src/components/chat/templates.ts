@@ -76,3 +76,51 @@ Note: Focus on strategies that create sustainable competitive advantages, not ju
 ];
 
 export const quickAccessTemplates = Templates.slice(0, 3);
+
+export const agenticQuickAccessTemplates: Template[] = [
+	{
+		content: `Summarize the most important project-wide themes and patterns.
+
+Ask clarifying questions first if the scope, audience, or output format is unclear.
+
+Please:
+- Synthesize across conversations instead of listing one-by-one.
+- Highlight non-obvious patterns, tensions, and implications.
+- Ground each major claim in available evidence and cite conversation IDs when possible.
+- Flag uncertainty and evidence gaps clearly.
+- End with suggested next questions that would deepen the analysis.`,
+		icon: IconNotes,
+		id: "project-meta-summary",
+		title: t`Project Meta Summary`,
+	},
+	{
+		content: `Compare and contrast key perspectives across this project.
+
+Ask clarifying questions first if I have not specified what to compare.
+
+Please:
+- Choose the 2-4 most meaningful dimensions of comparison.
+- Focus on substantive differences, not superficial wording differences.
+- Show where viewpoints converge, diverge, and conflict.
+- Explain why those differences matter for decisions or strategy.
+- Call out missing evidence and what additional data would resolve ambiguity.`,
+		icon: IconCalculator,
+		id: "compare-contrast-insights",
+		title: t`Compare & Contrast Insights`,
+	},
+	{
+		content: `Highlight a specific concept across the project.
+
+Ask clarifying questions first if the concept, scope, or angle is unclear.
+
+Please:
+- Define the concept clearly in this project context.
+- Pull the strongest supporting evidence and relevant counterexamples.
+- Show how different participants frame or contest the concept.
+- Explain practical implications and where this concept affects decisions.
+- Flag unresolved questions and suggest what to examine next.`,
+		icon: IconNotes,
+		id: "highlight-specific-concept",
+		title: t`Highlight specific Concept`,
+	},
+];

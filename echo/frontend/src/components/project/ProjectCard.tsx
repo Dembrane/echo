@@ -4,6 +4,7 @@ import { IconExternalLink } from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
 import type { PropsWithChildren } from "react";
 import { Icons } from "@/icons";
+import { testId } from "@/lib/testUtils";
 import { I18nLink } from "../common/i18nLink";
 
 export const ProjectCard = ({
@@ -14,13 +15,22 @@ export const ProjectCard = ({
 	const link = `/projects/${project.id}/overview`;
 
 	return (
-		<Paper p="md" className="h-full" withBorder>
+		<Paper
+			p="md"
+			className="h-full"
+			withBorder
+			{...testId(`project-card-${project.id}`)}
+		>
 			<Stack className="h-full" justify="space-between">
 				<Stack gap="xs">
 					<Group justify="space-between" wrap="nowrap">
 						<Group align="center">
 							<Icons.Calendar />
-							<Text className="font-semibold" size="lg">
+							<Text
+								className="font-semibold"
+								size="lg"
+								{...testId(`project-card-name-${project.id}`)}
+							>
 								{project.name}
 							</Text>
 						</Group>
@@ -45,6 +55,7 @@ export const ProjectCard = ({
 						rightSection={<IconExternalLink size={20} />}
 						fullWidth
 						variant="light"
+						{...testId(`project-card-open-button-${project.id}`)}
 					>
 						<Trans>Open</Trans>
 					</Button>

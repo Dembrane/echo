@@ -1,0 +1,35 @@
+{
+  "collection": "project_agentic_run",
+  "field": "events",
+  "type": "alias",
+  "meta": {
+    "collection": "project_agentic_run",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "events",
+    "group": null,
+    "hidden": false,
+    "interface": "list-o2m",
+    "note": null,
+    "options": {
+      "fields": [
+        "seq",
+        "event_type",
+        "timestamp"
+      ],
+      "layout": "table"
+    },
+    "readonly": false,
+    "required": false,
+    "searchable": true,
+    "sort": 15,
+    "special": [
+      "o2m"
+    ],
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  }
+}
