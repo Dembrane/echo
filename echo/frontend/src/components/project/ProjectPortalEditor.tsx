@@ -3,6 +3,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
+	Anchor,
 	Badge,
 	Box,
 	Button,
@@ -21,11 +22,13 @@ import {
 } from "@mantine/core";
 import { DetectiveIcon } from "@phosphor-icons/react";
 import {
+	IconExternalLink,
 	IconEye,
 	IconEyeOff,
 	IconInfoCircle,
 	IconRefresh,
 	IconRosetteDiscountCheck,
+	IconScale,
 	IconX,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -34,6 +37,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import type { VerificationTopicsResponse } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
@@ -210,6 +214,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	isVerificationTopicsLoading = false,
 }) => {
 	const queryClient = useQueryClient();
+	const settingsNavigate = useI18nNavigate();
 	const [showPreview, setShowPreview] = useState(false);
 	const link = useProjectSharingLink(project);
 	const [previewKey, setPreviewKey] = useState(0);
@@ -578,6 +583,33 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												/>
 											)}
 										/>
+										<Box>
+											<Group gap="sm" mb={4}>
+												<Text fw={500} size="sm">
+													<Trans>Legal Basis</Trans>
+												</Text>
+												<IconScale size={18} stroke={1.5} />
+											</Group>
+											<Text size="sm" c="dimmed" mb={4}>
+												<Trans>
+													Determines under which GDPR legal basis personal data
+													is processed. This setting applies to all your
+													projects and can be changed in your account settings.
+												</Trans>
+											</Text>
+											<Anchor
+												size="sm"
+												onClick={() =>
+													settingsNavigate("/settings#legal-basis")
+												}
+												style={{ cursor: "pointer" }}
+											>
+												<Group gap={4}>
+													<Trans>Go to Settings</Trans>
+													<IconExternalLink size={14} />
+												</Group>
+											</Anchor>
+										</Box>
 										<Controller
 											name="default_conversation_tutorial_slug"
 											control={control}

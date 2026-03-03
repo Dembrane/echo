@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
+	Box,
 	Container,
 	Divider,
 	Group,
@@ -10,6 +11,8 @@ import {
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { IconArrowLeft } from "@tabler/icons-react";
+import { useEffect, useRef } from "react";
+import { useLocation } from "react-router";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { AuditLogsCard } from "@/components/settings/AuditLogsCard";
 import { FontSettingsCard } from "@/components/settings/FontSettingsCard";
@@ -23,8 +26,19 @@ export const UserSettingsRoute = () => {
 	useDocumentTitle(t`Settings | Dembrane`);
 	const { data: user, isLoading } = useCurrentUser();
 	const navigate = useI18nNavigate();
+	const location = useLocation();
 
 	const isTwoFactorEnabled = Boolean(user?.tfa_secret);
+	const legalBasisRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		if (location.hash === "#legal-basis") {
+			legalBasisRef.current?.scrollIntoView({
+				behavior: "smooth",
+				block: "center",
+			});
+		}
+	}, [location.hash]);
 
 	return (
 		<Container size="lg" py="xl">
@@ -51,7 +65,9 @@ export const UserSettingsRoute = () => {
 
 				<WhitelabelLogoCard />
 
-				<LegalBasisSettingsCard />
+				<Box ref={legalBasisRef}>
+					<LegalBasisSettingsCard />
+				</Box>
 
 				<TwoFactorSettingsCard
 					isLoading={isLoading}
