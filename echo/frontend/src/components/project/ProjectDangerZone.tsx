@@ -148,7 +148,11 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 						{...testId("project-clone-name-input")}
 					/>
 					<Group justify="flex-end">
-						<Button variant="subtle" onClick={closeCloneModal}>
+						<Button
+							variant="subtle"
+							onClick={closeCloneModal}
+							{...testId("project-clone-cancel-button")}
+						>
 							<Trans>Cancel</Trans>
 						</Button>
 						<Button
@@ -176,7 +180,11 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 					</Text>
 				</Stack>
 				<Group justify="flex-end">
-					<Button variant="subtle" onClick={closeDeleteModal}>
+					<Button
+						variant="subtle"
+						onClick={closeDeleteModal}
+						{...testId("project-delete-cancel-button")}
+					>
 						<Trans>Cancel</Trans>
 					</Button>
 					<Button

@@ -1,0 +1,106 @@
+{
+  "collection": "project_agentic_run",
+  "field": "status",
+  "type": "string",
+  "meta": {
+    "collection": "project_agentic_run",
+    "conditions": null,
+    "display": "labels",
+    "display_options": {
+      "choices": [
+        {
+          "background": "var(--theme--background-normal)",
+          "color": "var(--theme--foreground)",
+          "foreground": "var(--theme--foreground)",
+          "text": "queued",
+          "value": "queued"
+        },
+        {
+          "background": "var(--theme--primary-background)",
+          "color": "var(--theme--primary)",
+          "foreground": "var(--theme--primary)",
+          "text": "running",
+          "value": "running"
+        },
+        {
+          "background": "var(--theme--success-background)",
+          "color": "var(--theme--success)",
+          "foreground": "var(--theme--success)",
+          "text": "completed",
+          "value": "completed"
+        },
+        {
+          "background": "var(--theme--danger-background)",
+          "color": "var(--theme--danger)",
+          "foreground": "var(--theme--danger)",
+          "text": "failed",
+          "value": "failed"
+        },
+        {
+          "background": "var(--theme--warning-background)",
+          "color": "var(--theme--warning)",
+          "foreground": "var(--theme--warning)",
+          "text": "timeout",
+          "value": "timeout"
+        }
+      ],
+      "showAsDot": true
+    },
+    "field": "status",
+    "group": null,
+    "hidden": false,
+    "interface": "select-dropdown",
+    "note": null,
+    "options": {
+      "choices": [
+        {
+          "text": "queued",
+          "value": "queued"
+        },
+        {
+          "text": "running",
+          "value": "running"
+        },
+        {
+          "text": "completed",
+          "value": "completed"
+        },
+        {
+          "text": "failed",
+          "value": "failed"
+        },
+        {
+          "text": "timeout",
+          "value": "timeout"
+        }
+      ]
+    },
+    "readonly": false,
+    "required": true,
+    "searchable": true,
+    "sort": 7,
+    "special": null,
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  },
+  "schema": {
+    "name": "status",
+    "table": "project_agentic_run",
+    "data_type": "character varying",
+    "default_value": "queued",
+    "max_length": 255,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": true,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}

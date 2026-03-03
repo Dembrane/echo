@@ -13,6 +13,7 @@ This solves the race condition where summary/merge would start before all
 transcriptions completed.
 """
 
+import json
 from typing import Any
 from logging import getLogger
 
@@ -474,5 +475,108 @@ def cleanup_conversation_coordination(conversation_id: str) -> None:
             deleted += len(chunk_keys)
 
         logger.debug(f"Cleaned up {deleted} coordination keys for {conversation_id}")
+    finally:
+        client.close()
+
+
+# ------------------------------------------------------------------------------
+# AssemblyAI Webhook Coordination
+# ------------------------------------------------------------------------------
+
+_AAI_WEBHOOK_TTL_SECONDS = 60 * 60 * 24  # 24 hours
+_AAI_WEBHOOK_PROCESSING_TTL_SECONDS = 60 * 10  # 10 minutes
+
+
+def _assemblyai_webhook_key(transcript_id: str) -> str:
+    return f"{_KEY_PREFIX}:aai_transcript:{transcript_id}"
+
+
+def _assemblyai_webhook_processing_key(transcript_id: str) -> str:
+    return f"{_KEY_PREFIX}:aai_transcript_processing:{transcript_id}"
+
+
+def store_assemblyai_webhook_metadata(
+    transcript_id: str,
+    chunk_id: str,
+    conversation_id: str,
+    audio_file_uri: str,
+    language: str | None,
+    hotwords: list[str] | None,
+    use_pii_redaction: bool,
+    custom_guidance_prompt: str | None,
+    anonymize_transcripts: bool,
+) -> None:
+    """Store metadata for webhook callback processing."""
+    client = _get_sync_redis_client()
+    key = _assemblyai_webhook_key(transcript_id)
+    payload = {
+        "chunk_id": chunk_id,
+        "conversation_id": conversation_id,
+        "audio_file_uri": audio_file_uri,
+        "language": language,
+        "hotwords": hotwords or [],
+        "use_pii_redaction": use_pii_redaction,
+        "custom_guidance_prompt": custom_guidance_prompt,
+        "anonymize_transcripts": anonymize_transcripts,
+    }
+
+    try:
+        client.set(key, json.dumps(payload))
+        client.expire(key, _AAI_WEBHOOK_TTL_SECONDS)
+        logger.debug(
+            "Stored AssemblyAI webhook metadata for transcript %s chunk %s",
+            transcript_id,
+            chunk_id,
+        )
+    finally:
+        client.close()
+
+
+def get_assemblyai_webhook_metadata(transcript_id: str) -> dict[str, Any] | None:
+    """Fetch AssemblyAI webhook metadata by transcript ID."""
+    client = _get_sync_redis_client()
+    key = _assemblyai_webhook_key(transcript_id)
+
+    try:
+        raw = client.get(key)
+        if not raw:
+            return None
+        return json.loads(raw)
+    finally:
+        client.close()
+
+
+def delete_assemblyai_webhook_metadata(transcript_id: str) -> None:
+    """Delete webhook metadata after terminal handling."""
+    client = _get_sync_redis_client()
+    key = _assemblyai_webhook_key(transcript_id)
+
+    try:
+        client.delete(key)
+    finally:
+        client.close()
+
+
+def mark_assemblyai_webhook_processing(transcript_id: str) -> bool:
+    """Acquire a per-transcript webhook processing lock."""
+    client = _get_sync_redis_client()
+    key = _assemblyai_webhook_processing_key(transcript_id)
+
+    try:
+        was_set = client.setnx(key, "1")
+        if was_set:
+            client.expire(key, _AAI_WEBHOOK_PROCESSING_TTL_SECONDS)
+        return bool(was_set)
+    finally:
+        client.close()
+
+
+def clear_assemblyai_webhook_processing(transcript_id: str) -> None:
+    """Release a per-transcript webhook processing lock."""
+    client = _get_sync_redis_client()
+    key = _assemblyai_webhook_processing_key(transcript_id)
+
+    try:
+        client.delete(key)
     finally:
         client.close()
