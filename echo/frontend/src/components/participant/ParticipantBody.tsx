@@ -121,7 +121,10 @@ export const ParticipantBody = ({
 			<Toaster position="top-center" richColors />
 
 			{!isRecording && (
-				<h2 className="text-center text-3xl transition-opacity duration-500 ease-in-out">
+				<h2
+					className="text-center text-3xl transition-opacity duration-500 ease-in-out"
+					{...testId("portal-welcome-heading")}
+				>
 					<Trans>Welcome</Trans>
 				</h2>
 			)}
@@ -167,19 +170,22 @@ export const ParticipantBody = ({
 				className={`w-full object-contain ${isOnline ? "animate-pulse duration-1000" : "grayscale filter"} ${ENABLE_CONVERSATION_HEALTH && conversationIssueBanner ? "opacity-50" : "saturate-200"}`}
 				src={WelcomeImage}
 				alt="Welcome pattern"
+				{...testId("portal-welcome-image")}
 			/>
 			{projectQuery.data && (
 				<Stack ref={chatRef} py="md" pb={9}>
-					<Title order={3}>
+					<Title order={3} {...testId("portal-conversation-title")}>
 						{projectQuery.data.default_conversation_title}
 					</Title>
 
 					{projectQuery.data.default_conversation_description && (
-						<SystemMessage
-							markdown={
-								projectQuery.data.default_conversation_description ?? ""
-							}
-						/>
+						<div {...testId("portal-conversation-description")}>
+							<SystemMessage
+								markdown={
+									projectQuery.data.default_conversation_description ?? ""
+								}
+							/>
+						</div>
 					)}
 
 					<SystemMessage

@@ -171,7 +171,7 @@ type TProjectChatContext = {
 	conversation_id_list: string[];
 	locked_conversation_id_list: string[];
 	auto_select_bool: boolean;
-	chat_mode: "overview" | "deep_dive" | null; // null = not yet selected
+	chat_mode: "overview" | "deep_dive" | "agentic" | null; // null = not yet selected
 };
 
 type ChatHistoryMessage = {

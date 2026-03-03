@@ -3,7 +3,7 @@ import type React from "react";
 import { cn } from "@/lib/utils";
 import { MODE_COLORS } from "./ChatModeSelector";
 
-type ChatMode = "overview" | "deep_dive" | null;
+type ChatMode = "overview" | "deep_dive" | "agentic" | null;
 
 type Props = {
 	children?: React.ReactNode;
@@ -16,6 +16,7 @@ type Props = {
 const getBorderColor = (chatMode: ChatMode | undefined): string | undefined => {
 	if (chatMode === "deep_dive") return MODE_COLORS.deep_dive.border;
 	if (chatMode === "overview") return MODE_COLORS.overview.border;
+	if (chatMode === "agentic") return MODE_COLORS.agentic.border;
 	return undefined;
 };
 

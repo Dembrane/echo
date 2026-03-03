@@ -10,7 +10,7 @@ import { ReportEditor } from "./ReportEditor";
 
 const ContributeToReportCTA = ({ href }: { href: string }) => {
 	return (
-		<Paper p="xl" className="bg-gray-100">
+		<Paper p="xl" className="bg-gray-100" {...testId("report-contribute-cta")}>
 			<Stack className="text-center text-2xl font-semibold" align="center">
 				<Trans>Do you want to contribute to this project?</Trans>
 
@@ -19,6 +19,7 @@ const ContributeToReportCTA = ({ href }: { href: string }) => {
 					href={href}
 					target="_blank"
 					className="rounded-3xl print:hidden"
+					{...testId("report-contribute-share-button")}
 				>
 					<Trans>Share your voice</Trans>
 				</Button>
