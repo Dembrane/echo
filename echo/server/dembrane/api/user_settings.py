@@ -114,7 +114,7 @@ async def update_legal_basis(
                 },
             )
             email = user_data[0].get("email", "") if user_data else ""
-            if not email or not email.endswith("@dembrane.com"):
+            if not email or not email.lower().endswith("@dembrane.com"):
                 raise HTTPException(
                     status_code=403,
                     detail="dembrane-events is only available for dembrane accounts",
