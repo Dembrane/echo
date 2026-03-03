@@ -14,6 +14,7 @@ directus/.env
 *.sql
 node_modules
 .next
+cypress/test-suites/.cypress-cache/
 
 celerybeat-schedule.db
 
@@ -28,3 +29,5 @@ __queuestorage__echo/server/dembrane/workspace_script.py
 
 tools/translator
 echo-gitops/
+
+cypress/reports/

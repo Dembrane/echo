@@ -252,7 +252,7 @@ msgstr "{0, plural, one {Etiqueta:} other {Etiquetas:}}"
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: selectedOption.transitionDescription
 #. placeholder {0}: selectedOption.transitionMessage
-#: src/routes/project/chat/ProjectChatRoute.tsx:594
+#: src/routes/project/chat/ProjectChatRoute.tsx:602
 #: src/components/settings/FontSettingsCard.tsx:49
 #: src/components/settings/FontSettingsCard.tsx:51
 #: src/components/project/ProjectPortalEditor.tsx:472
@@ -284,7 +284,7 @@ msgstr "{0} Conversaciones • Editado {1}"
 msgid "select.all.modal.not.added.count"
 msgstr "{0} no añadidas"
 
-#: src/components/chat/ChatModeBanner.tsx:51
+#: src/components/chat/ChatModeBanner.tsx:56
 msgid "{conversationCount} selected"
 msgstr "{conversationCount} seleccionadas"
 
@@ -455,7 +455,7 @@ msgstr "Añadiendo <0>{totalCount, plural, one {# conversación más} other {# c
 msgid "select.all.modal.add.with.filters.more"
 msgstr "Añadiendo <0>{totalCount, plural, one {# conversación más} other {# conversaciones más}}</0> con los siguientes filtros:"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:704
+#: src/routes/project/chat/ProjectChatRoute.tsx:712
 msgid "Adding Context:"
 msgstr "Añadiendo Contexto:"
 
@@ -487,6 +487,19 @@ msgstr "Avanzado (Consejos y best practices)"
 #: src/components/project/ProjectPortalEditor.tsx:1150
 msgid "Advanced Settings"
 msgstr "Configuración Avanzada"
+
+#: src/components/chat/ChatModeSelector.tsx:274
+#: src/components/chat/ChatModeBanner.tsx:38
+msgid "Agentic"
+msgstr ""
+
+#: src/components/chat/ChatAccordion.tsx:58
+msgid "Agentic - Tool-driven execution"
+msgstr ""
+
+#: src/components/chat/AgenticChatPanel.tsx:465
+msgid "Agentic Chat"
+msgstr ""
 
 #: src/components/settings/AuditLogsCard.tsx:465
 msgid "All actions"
@@ -539,7 +552,7 @@ msgstr "Se enviará una notificación por correo electrónico a {0} participante
 msgid "An error occurred while loading the Portal. Please contact the support team."
 msgstr "Ocurrió un error al cargar el Portal. Por favor, contacta al equipo de soporte."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:641
+#: src/routes/project/chat/ProjectChatRoute.tsx:649
 msgid "An error occurred."
 msgstr "Ocurrió un error."
 
@@ -589,11 +602,11 @@ msgstr "anuncios"
 msgid "Anonymize Transcripts"
 msgstr "Anonimizar transcripciones"
 
-#: src/components/conversation/ConversationAccordion.tsx:586
+#: src/components/conversation/ConversationAccordion.tsx:588
 msgid "anonymized conversation"
 msgstr "conversación anónima"
 
-#: src/components/conversation/ConversationAccordion.tsx:582
+#: src/components/conversation/ConversationAccordion.tsx:584
 msgid "Anonymized conversation"
 msgstr "Conversación anónima"
 
@@ -839,8 +852,8 @@ msgstr "Configuración Básica"
 #: src/components/project/ProjectPortalEditor.tsx:1228
 #: src/components/conversation/RetranscribeConversation.tsx:144
 #: src/components/conversation/MoveConversationButton.tsx:142
-#: src/components/chat/ChatModeSelector.tsx:142
-#: src/components/chat/ChatModeBanner.tsx:42
+#: src/components/chat/ChatModeSelector.tsx:155
+#: src/components/chat/ChatModeBanner.tsx:45
 msgid "Beta"
 msgstr "Beta"
 
@@ -933,12 +946,12 @@ msgstr "Los cambios se guardarán automáticamente"
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Cambiar el idioma durante una conversación activa puede provocar resultados inesperados. Se recomienda iniciar una nueva conversación después de cambiar el idioma. ¿Estás seguro de que quieres continuar?"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:507
-#: src/routes/project/chat/ProjectChatRoute.tsx:513
+#: src/routes/project/chat/ProjectChatRoute.tsx:515
+#: src/routes/project/chat/ProjectChatRoute.tsx:521
 msgid "Chat"
 msgstr "Chat"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:294
+#: src/routes/project/chat/ProjectChatRoute.tsx:295
 msgid "Chat | Dembrane"
 msgstr "Chat | Dembrane"
 
@@ -948,7 +961,7 @@ msgid "chat.accordion.skeleton.title"
 msgstr "Chats"
 
 #. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:253
+#: src/components/chat/ChatAccordion.tsx:256
 msgid "project.sidebar.chat.title"
 msgstr "Chats"
 
@@ -1040,6 +1053,10 @@ msgstr "Casos de uso comunes:"
 #: src/components/chat/templates.ts:42
 msgid "Compare & Contrast"
 msgstr "Comparar y Contrastar"
+
+#: src/components/chat/templates.ts:109
+msgid "Compare & Contrast Insights"
+msgstr ""
 
 #~ msgid "Compare and contrast the following items provided in the context."
 #~ msgstr "Compara y contrasta los siguientes elementos proporcionados en el contexto."
@@ -1162,7 +1179,7 @@ msgstr "Etiquetas de la conversación"
 msgid "conversations"
 msgstr "conversaciones"
 
-#: src/components/conversation/ConversationAccordion.tsx:1081
+#: src/components/conversation/ConversationAccordion.tsx:1083
 msgid "Conversations"
 msgstr "Conversaciones"
 
@@ -1242,6 +1259,10 @@ msgstr "Crear"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:308
 msgid "Create a new webhook from scratch"
 msgstr "Crear un nuevo webhook desde cero"
+
+#: src/components/chat/ChatModeSelector.tsx:66
+msgid "Create a research brief from recent conversations"
+msgstr ""
 
 #: src/routes/auth/Register.tsx:58
 msgid "Create an Account"
@@ -1332,13 +1353,17 @@ msgstr "Predeterminado"
 msgid "Default - No tutorial (Only privacy statements)"
 msgstr "Predeterminado - Sin tutorial (Solo declaraciones de privacidad)"
 
+#: src/components/chat/ChatModeSelector.tsx:275
+msgid "Delegate multi-step analysis with live tool execution"
+msgstr ""
+
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:647
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:686
 msgid "Delete"
 msgstr "Eliminar"
 
 #. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:155
+#: src/components/chat/ChatAccordion.tsx:158
 msgid "project.sidebar.chat.delete"
 msgstr "Eliminar chat"
 
@@ -1366,8 +1391,8 @@ msgstr "Eliminado con éxito"
 #~ msgid "Dembrane ECHO"
 #~ msgstr "ECHO"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:768
-#: src/routes/project/chat/ProjectChatRoute.tsx:798
+#: src/routes/project/chat/ProjectChatRoute.tsx:776
+#: src/routes/project/chat/ProjectChatRoute.tsx:810
 msgid "Dembrane is powered by AI. Please double-check responses."
 msgstr "dembrane funciona con IA. Revisa bien las respuestas."
 
@@ -1459,6 +1484,10 @@ msgstr "Descargar transcripción"
 #: src/components/conversation/DownloadConversationTranscript.tsx:85
 msgid "Download Transcript Options"
 msgstr "Opciones de Descarga de Transcripción"
+
+#: src/components/chat/ChatModeSelector.tsx:68
+msgid "Draft next actions and organize them by priority"
+msgstr ""
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:564
 msgid "Drag audio files here or click to select files"
@@ -1674,7 +1703,7 @@ msgstr "Ingresa un código válido para desactivar la autenticación de dos fact
 msgid "Enter filename (without extension)"
 msgstr "Ingresa el nombre del archivo (sin extensión)"
 
-#: src/components/chat/ChatAccordion.tsx:126
+#: src/components/chat/ChatAccordion.tsx:129
 msgid "Enter new name for the chat:"
 msgstr "Ingresa un nuevo nombre para el chat:"
 
@@ -1700,6 +1729,7 @@ msgstr "Ingresado por el participante en el portal"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:700
 #: src/components/dropzone/UploadConversationDropzone.tsx:808
+#: src/components/chat/AgenticChatPanel.tsx:501
 msgid "Error"
 msgstr "Error"
 
@@ -1772,11 +1802,11 @@ msgstr "Explorar"
 msgid "participant.echo.explore"
 msgstr "Explorar"
 
-#: src/components/chat/ChatModeSelector.tsx:273
+#: src/components/chat/ChatModeSelector.tsx:298
 msgid "Explore themes & patterns across all conversations"
 msgstr "Explora temas y patrones en todas las conversaciones"
 
-#: src/components/chat/ChatModeBanner.tsx:49
+#: src/components/chat/ChatModeBanner.tsx:52
 msgid "Exploring {conversationCount} conversations"
 msgstr "Explorando {conversationCount} conversaciones"
 
@@ -1798,8 +1828,8 @@ msgstr "Error al añadir la conversación al chat"
 msgid "Failed to add conversation to chat{0}"
 msgstr "Error al añadir la conversación al chat{0}"
 
-#: src/components/conversation/ConversationAccordion.tsx:946
-#: src/components/conversation/ConversationAccordion.tsx:978
+#: src/components/conversation/ConversationAccordion.tsx:948
+#: src/components/conversation/ConversationAccordion.tsx:980
 msgid "Failed to add conversations to context"
 msgstr "Error al añadir conversaciones al contexto"
 
@@ -1985,6 +2015,10 @@ msgstr "Filtrar por acción"
 msgid "Filter by collection"
 msgstr "Filtrar por colección"
 
+#: src/components/chat/ChatModeSelector.tsx:67
+msgid "Find contradictions and suggest follow-up questions"
+msgstr ""
+
 #. js-lingui-explicit-id
 #: src/components/participant/StopRecordingConfirmationModal.tsx:86
 msgid "participant.button.stop.finish"
@@ -2119,7 +2153,7 @@ msgstr "Ir a la nueva conversación"
 msgid "Guide how titles are generated. Titles describe the topic of the conversation, not the participant."
 msgstr "Guía sobre cómo se generan los títulos. Los títulos describen el tema de la conversación, no el participante."
 
-#: src/components/conversation/ConversationAccordion.tsx:568
+#: src/components/conversation/ConversationAccordion.tsx:570
 msgid "Has verified artifacts"
 msgstr "Tiene artefactos verificados"
 
@@ -2163,6 +2197,10 @@ msgstr "Ocultar datos"
 #: src/components/settings/AuditLogsCard.tsx:245
 msgid "Hide revision data"
 msgstr "Ocultar datos de revisión"
+
+#: src/components/chat/templates.ts:124
+msgid "Highlight specific Concept"
+msgstr ""
 
 #: src/routes/project/ProjectsHome.tsx:123
 msgid "Home"
@@ -2397,6 +2435,10 @@ msgstr "Enlace"
 #~ msgid "Live"
 #~ msgstr "Vivo"
 
+#: src/components/chat/ChatModeBanner.tsx:54
+msgid "Live agent execution mode"
+msgstr ""
+
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:328
 msgid "participant.live.audio.level"
@@ -2492,7 +2534,7 @@ msgstr "Logo actualizado correctamente"
 msgid "Logout"
 msgstr "Cerrar sesión"
 
-#: src/components/conversation/ConversationAccordion.tsx:650
+#: src/components/conversation/ConversationAccordion.tsx:652
 msgid "Longest First"
 msgstr "Más largo primero"
 
@@ -2525,7 +2567,7 @@ msgstr "El acceso al micrófono sigue denegado. Por favor verifica tu configurac
 msgid "Mode"
 msgstr "Modo"
 
-#: src/components/chat/ChatTemplatesMenu.tsx:202
+#: src/components/chat/ChatTemplatesMenu.tsx:208
 msgid "More templates"
 msgstr "Más templates"
 
@@ -2554,7 +2596,7 @@ msgstr "Mover a Proyecto"
 msgid "Name"
 msgstr "Nombre"
 
-#: src/components/conversation/ConversationAccordion.tsx:648
+#: src/components/conversation/ConversationAccordion.tsx:650
 msgid "Name A-Z"
 msgstr "Nombre A-Z"
 
@@ -2562,7 +2604,7 @@ msgstr "Nombre A-Z"
 msgid "Name is required"
 msgstr "El nombre es requerido"
 
-#: src/components/conversation/ConversationAccordion.tsx:649
+#: src/components/conversation/ConversationAccordion.tsx:651
 msgid "Name Z-A"
 msgstr "Nombre Z-A"
 
@@ -2592,7 +2634,7 @@ msgstr "Nueva Contraseña"
 msgid "New Project"
 msgstr "Nuevo Proyecto"
 
-#: src/components/conversation/ConversationAccordion.tsx:646
+#: src/components/conversation/ConversationAccordion.tsx:648
 msgid "Newest First"
 msgstr "Más nuevos primero"
 
@@ -2637,7 +2679,7 @@ msgid "No audit logs match the current filters."
 msgstr "No hay registros de auditoría que coincidan con los filtros actuales."
 
 #. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:262
+#: src/components/chat/ChatAccordion.tsx:265
 msgid "project.sidebar.chat.empty.description"
 msgstr "No se encontraron chats. Inicia un chat usando el botón \"Preguntar\"."
 
@@ -2672,7 +2714,7 @@ msgstr "No hay conversaciones disponibles para crear la biblioteca"
 msgid "No conversations found."
 msgstr "No se encontraron conversaciones."
 
-#: src/components/conversation/ConversationAccordion.tsx:1446
+#: src/components/conversation/ConversationAccordion.tsx:1448
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "No se encontraron conversaciones. Inicia una conversación usando el enlace de invitación de participación desde la <0><1>vista general del proyecto.</1></0>"
 
@@ -2721,7 +2763,7 @@ msgstr "No se encontró ningún informe"
 msgid "No results"
 msgstr "Sin resultados"
 
-#: src/components/conversation/ConversationAccordion.tsx:1358
+#: src/components/conversation/ConversationAccordion.tsx:1360
 msgid "No tags found"
 msgstr "No se encontraron etiquetas"
 
@@ -2786,7 +2828,7 @@ msgstr "Notificar a los participantes cuando se publique un informe."
 #~ msgid "Now"
 #~ msgstr "Ahora"
 
-#: src/components/conversation/ConversationAccordion.tsx:647
+#: src/components/conversation/ConversationAccordion.tsx:649
 msgid "Oldest First"
 msgstr "Más antiguos primero"
 
@@ -2801,7 +2843,7 @@ msgid "participant.verify.instructions.read.aloud"
 msgstr "Una vez que reciba {objectLabel}, léalo en voz alta y comparta en voz alta lo que desea cambiar, si es necesario."
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:617
+#: src/components/conversation/ConversationAccordion.tsx:619
 msgid "conversation.ongoing"
 msgstr "En curso"
 
@@ -2867,8 +2909,8 @@ msgstr "Campo opcional en la página de inicio"
 msgid "Optional field on the thank you page"
 msgstr "Campo opcional en la página de agradecimientos"
 
-#: src/components/conversation/ConversationAccordion.tsx:1131
-#: src/components/conversation/ConversationAccordion.tsx:1136
+#: src/components/conversation/ConversationAccordion.tsx:1133
+#: src/components/conversation/ConversationAccordion.tsx:1138
 msgid "Options"
 msgstr "Opciones"
 
@@ -2897,12 +2939,12 @@ msgid "Outcomes"
 msgstr "Resultados"
 
 #: src/components/layout/ProjectConversationLayout.tsx:46
-#: src/components/chat/ChatModeSelector.tsx:272
-#: src/components/chat/ChatModeBanner.tsx:35
+#: src/components/chat/ChatModeSelector.tsx:297
+#: src/components/chat/ChatModeBanner.tsx:36
 msgid "Overview"
 msgstr "Vista General"
 
-#: src/components/chat/ChatAccordion.tsx:55
+#: src/components/chat/ChatAccordion.tsx:56
 msgid "Overview - Themes & patterns"
 msgstr "Overview - Temas y patrones"
 
@@ -3082,7 +3124,7 @@ msgstr "Pendiente"
 msgid "Phone"
 msgstr "Teléfono"
 
-#: src/components/chat/ChatModeSelector.tsx:253
+#: src/components/chat/ChatModeSelector.tsx:266
 msgid "Pick the approach that fits your question"
 msgstr "Elige el enfoque que encaje con tu pregunta"
 
@@ -3147,7 +3189,7 @@ msgstr "Por favor, selecciona un idioma para tu informe actualizado"
 #~ msgid "Please select at least one source"
 #~ msgstr "Por favor, selecciona al menos una fuente"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:692
+#: src/routes/project/chat/ProjectChatRoute.tsx:700
 msgid "Please select conversations from the sidebar to proceed"
 msgstr "Selecciona conversaciones en la barra lateral para continuar"
 
@@ -3198,7 +3240,7 @@ msgstr "Editor del Portal"
 msgid "Powered by"
 msgstr "Propulsado por"
 
-#: src/components/chat/ChatModeSelector.tsx:286
+#: src/components/chat/ChatModeSelector.tsx:311
 msgid "Preparing your conversations... This may take a moment."
 msgstr "Preparando tus conversaciones... Esto puede tardar un momento."
 
@@ -3272,6 +3314,10 @@ msgstr "Predeterminado del proyecto: habilitado. Esto reemplazará la informaci�
 msgid "Project Library | Dembrane"
 msgstr "Biblioteca del Proyecto | Dembrane"
 
+#: src/components/chat/templates.ts:94
+msgid "Project Meta Summary"
+msgstr ""
+
 #: src/components/project/ProjectDangerZone.tsx:144
 msgid "Project name"
 msgstr "Nombre del proyecto"
@@ -3323,7 +3369,7 @@ msgstr "Publicar"
 msgid "Published"
 msgstr "Publicado"
 
-#: src/components/chat/ChatModeSelector.tsx:54
+#: src/components/chat/ChatModeSelector.tsx:61
 msgid "Pull out the most impactful quotes from this session"
 msgstr "Saca las citas más potentes de esta sesión"
 
@@ -3470,7 +3516,7 @@ msgid "Remove from this chat"
 msgstr "Eliminar de este chat"
 
 #. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:139
+#: src/components/chat/ChatAccordion.tsx:142
 msgid "project.sidebar.chat.rename"
 msgstr "Renombrar"
 
@@ -3554,8 +3600,8 @@ msgstr "Restablecer Contraseña"
 msgid "Reset Password | Dembrane"
 msgstr "Restablecer Contraseña | Dembrane"
 
-#: src/components/conversation/ConversationAccordion.tsx:1382
-#: src/components/conversation/ConversationAccordion.tsx:1387
+#: src/components/conversation/ConversationAccordion.tsx:1384
+#: src/components/conversation/ConversationAccordion.tsx:1389
 msgid "Reset to default"
 msgstr "Restablecer a valores predeterminados"
 
@@ -3590,7 +3636,7 @@ msgstr "La retranscripción no está disponible para conversaciones anónimas"
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "La retranscripción ha comenzado. La nueva conversación estará disponible pronto."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:650
+#: src/routes/project/chat/ProjectChatRoute.tsx:658
 msgid "Retry"
 msgstr "Reintentar"
 
@@ -3626,6 +3672,10 @@ msgstr "Haga clic con el botón derecho para resaltar"
 #: src/components/settings/AuditLogsCard.tsx:643
 msgid "Rows per page"
 msgstr "Filas por página"
+
+#: src/components/chat/AgenticChatPanel.tsx:470
+msgid "Run status:"
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyArtefact.tsx:388
@@ -3665,7 +3715,7 @@ msgstr "Buscar"
 msgid "Search"
 msgstr "Buscar"
 
-#: src/components/conversation/ConversationAccordion.tsx:1124
+#: src/components/conversation/ConversationAccordion.tsx:1126
 msgid "Search conversations"
 msgstr "Buscar conversaciones"
 
@@ -3682,7 +3732,7 @@ msgstr "Buscar Proyectos"
 msgid "Search projects..."
 msgstr "Buscar proyectos..."
 
-#: src/components/conversation/ConversationAccordion.tsx:1267
+#: src/components/conversation/ConversationAccordion.tsx:1269
 msgid "Search tags"
 msgstr "Buscar etiquetas"
 
@@ -3733,11 +3783,11 @@ msgstr "Seleccionar un micrófono"
 msgid "Select a webhook to clone"
 msgstr "Selecciona un webhook para clonar"
 
-#: src/components/conversation/ConversationAccordion.tsx:1426
+#: src/components/conversation/ConversationAccordion.tsx:1428
 msgid "Select all"
 msgstr "Seleccionar todo"
 
-#: src/components/conversation/ConversationAccordion.tsx:1424
+#: src/components/conversation/ConversationAccordion.tsx:1426
 msgid "Select all ({remainingCount})"
 msgstr "Seleccionar todo ({remainingCount})"
 
@@ -3754,11 +3804,11 @@ msgstr "Selecciona al menos un evento"
 msgid "Select Audio Files to Upload"
 msgstr "Seleccionar archivos de audio para subir"
 
-#: src/components/chat/ChatModeSelector.tsx:262
+#: src/components/chat/ChatModeSelector.tsx:287
 msgid "Select conversations and find exact quotes"
 msgstr "Selecciona conversaciones y encuentra citas exactas"
 
-#: src/components/chat/ChatModeBanner.tsx:53
+#: src/components/chat/ChatModeBanner.tsx:58
 msgid "Select conversations from sidebar"
 msgstr "Selecciona conversaciones en la barra lateral"
 
@@ -3814,9 +3864,14 @@ msgstr "Selección demasiado grande"
 msgid "select.all.modal.context.limit.reached"
 msgstr "Selección demasiado grande. Algunas conversaciones no se añadieron."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:788
+#: src/routes/project/chat/ProjectChatRoute.tsx:800
+#: src/components/chat/AgenticChatPanel.tsx:659
 msgid "Send"
 msgstr "Enviar"
+
+#: src/components/chat/AgenticChatPanel.tsx:511
+msgid "Send a message to start an agentic run."
+msgstr ""
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:843
 msgid "Send Slack/Teams notifications when new conversations are completed"
@@ -3870,7 +3925,7 @@ msgstr "Compartir tu voz"
 msgid "Share your voice by scanning the QR code below."
 msgstr "Comparte tu voz escaneando el código QR de abajo."
 
-#: src/components/conversation/ConversationAccordion.tsx:651
+#: src/components/conversation/ConversationAccordion.tsx:653
 msgid "Shortest First"
 msgstr "Más corto primero"
 
@@ -4008,8 +4063,8 @@ msgstr "Algo salió mal. Por favor, inténtalo de nuevo."
 msgid "participant.go.deeper.content.policy.violation.error.message"
 msgstr "Lo sentimos, no podemos procesar esta solicitud debido a la política de contenido del proveedor de LLM."
 
-#: src/components/conversation/ConversationAccordion.tsx:1187
-#: src/components/conversation/ConversationAccordion.tsx:1194
+#: src/components/conversation/ConversationAccordion.tsx:1189
+#: src/components/conversation/ConversationAccordion.tsx:1196
 msgid "Sort"
 msgstr "Ordenar"
 
@@ -4032,12 +4087,12 @@ msgstr "Español"
 msgid "Specific Context"
 msgstr "Contexto Específico"
 
-#: src/components/chat/ChatModeSelector.tsx:261
-#: src/components/chat/ChatModeBanner.tsx:37
+#: src/components/chat/ChatModeSelector.tsx:286
+#: src/components/chat/ChatModeBanner.tsx:40
 msgid "Specific Details"
 msgstr "Detalles concretos"
 
-#: src/components/chat/ChatAccordion.tsx:57
+#: src/components/chat/ChatAccordion.tsx:60
 msgid "Specific Details - Selected conversations"
 msgstr "Detalles concretos - Conversaciones seleccionadas"
 
@@ -4069,7 +4124,8 @@ msgstr "Empezar de nuevo"
 msgid "Status"
 msgstr "Estado"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:607
+#: src/routes/project/chat/ProjectChatRoute.tsx:615
+#: src/components/chat/AgenticChatPanel.tsx:487
 msgid "Stop"
 msgstr "Detener"
 
@@ -4099,7 +4155,7 @@ msgid "Success"
 msgstr "Éxito"
 
 #: src/components/library/LibraryTemplatesMenu.tsx:33
-#: src/components/chat/ChatTemplatesMenu.tsx:131
+#: src/components/chat/ChatTemplatesMenu.tsx:137
 msgid "Suggested:"
 msgstr "Sugerido:"
 
@@ -4107,11 +4163,11 @@ msgstr "Sugerido:"
 msgid "Summarize"
 msgstr "Resumir"
 
-#: src/components/chat/ChatModeSelector.tsx:48
+#: src/components/chat/ChatModeSelector.tsx:55
 msgid "Summarize key insights from my interviews"
 msgstr "Resume las ideas clave de mis entrevistas"
 
-#: src/components/chat/ChatModeSelector.tsx:53
+#: src/components/chat/ChatModeSelector.tsx:60
 msgid "Summarize this interview into a shareable article"
 msgstr "Resume esta entrevista en un artículo para compartir"
 
@@ -4154,8 +4210,8 @@ msgstr "Sistema"
 #: src/components/project/ProjectTagsInput.tsx:239
 #: src/components/participant/ParticipantInitiateForm.tsx:117
 #: src/components/conversation/ConversationEdit.tsx:358
-#: src/components/conversation/ConversationAccordion.tsx:1257
-#: src/components/conversation/ConversationAccordion.tsx:1260
+#: src/components/conversation/ConversationAccordion.tsx:1259
+#: src/components/conversation/ConversationAccordion.tsx:1262
 msgid "Tags"
 msgstr "Etiquetas"
 
@@ -4172,7 +4228,8 @@ msgstr "Tómate un tiempo para crear un resultado que haga tu contribución conc
 msgid "participant.refine.make.concrete.description"
 msgstr "Tómate un tiempo para crear un resultado que haga tu contribución concreta."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:431
+#: src/routes/project/chat/ProjectChatRoute.tsx:435
+#: src/components/chat/AgenticChatPanel.tsx:379
 msgid "Template applied"
 msgstr "Plantilla aplicada"
 
@@ -4580,7 +4637,7 @@ msgstr "Activar flujos de trabajo automatizados en herramientas como Zapier, Mak
 msgid "Try Again"
 msgstr "Intentar de nuevo"
 
-#: src/components/chat/ChatModeSelector.tsx:162
+#: src/components/chat/ChatModeSelector.tsx:175
 msgid "Try asking"
 msgstr "Prueba a preguntar"
 
@@ -4604,7 +4661,7 @@ msgstr "Autenticación en dos pasos activada"
 msgid "Type"
 msgstr "Tipo"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:742
+#: src/routes/project/chat/ProjectChatRoute.tsx:750
 msgid "Type a message..."
 msgstr "Escribe un mensaje..."
 
@@ -4633,7 +4690,8 @@ msgstr "No se pudo cargar el resultado generado. Por favor, inténtalo de nuevo.
 msgid "Unable to process this chunk"
 msgstr "No se puede procesar este fragmento"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:433
+#: src/routes/project/chat/ProjectChatRoute.tsx:437
+#: src/components/chat/AgenticChatPanel.tsx:381
 msgid "Undo"
 msgstr "Deshacer"
 
@@ -4757,8 +4815,8 @@ msgstr "La URL debe empezar con http:// o https://"
 msgid "Use PII Redaction"
 msgstr "Usar redaction de PII"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:765
-#: src/routes/project/chat/ProjectChatRoute.tsx:795
+#: src/routes/project/chat/ProjectChatRoute.tsx:773
+#: src/routes/project/chat/ProjectChatRoute.tsx:807
 msgid "Use Shift + Enter to add a new line"
 msgstr "Usa Shift + Enter para agregar una nueva línea"
 
@@ -4791,7 +4849,7 @@ msgid "select.all.modal.loading.verified"
 msgstr "Verificado"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:1377
+#: src/components/conversation/ConversationAccordion.tsx:1379
 msgid "conversation.filters.verified.text"
 msgstr "Verificado"
 
@@ -4801,7 +4859,7 @@ msgstr "Verificado"
 #~ msgid "Verified Artefacts"
 #~ msgstr "Verified Artefacts"
 
-#: src/components/conversation/ConversationAccordion.tsx:572
+#: src/components/conversation/ConversationAccordion.tsx:574
 msgid "verified artifacts"
 msgstr "verified artifacts"
 
@@ -4941,7 +4999,7 @@ msgstr "Bienvenido de nuevo"
 #~ msgid "Welcome to Big Picture Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Details mode."
 #~ msgstr "Bienvenido al modo Big Picture! Tengo resúmenes de todas tus conversaciones cargados. Pregúntame sobre patrones, temas e insights en tus datos. Para citas exactas, inicia un nuevo chat en el modo Específico."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:536
+#: src/routes/project/chat/ProjectChatRoute.tsx:544
 msgid "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
 msgstr "¡Bienvenido a dembrane Chat! Usa la barra lateral para seleccionar recursos y conversaciones que quieras analizar. Luego, puedes hacer preguntas sobre los recursos y conversaciones seleccionados."
 
@@ -4952,7 +5010,7 @@ msgstr "¡Bienvenido a Dembrane!"
 #~ msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Deep Dive mode."
 #~ msgstr "Bienvenido al modo Overview. Tengo cargados resúmenes de todas tus conversaciones. Pregúntame por patrones, temas e insights en tus datos. Para citas exactas, empieza un chat nuevo en el modo Deep Dive."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:535
+#: src/routes/project/chat/ProjectChatRoute.tsx:543
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Bienvenido al modo Resumen. Tengo cargados los resúmenes de todas tus conversaciones. Pregúntame por patrones, temas e insights en tus datos. Para citas exactas, inicia un nuevo chat en el modo Contexto Específico."
 
@@ -4968,7 +5026,7 @@ msgstr "¡Bienvenido a Tu Inicio! Aquí puedes ver todos tus proyectos y acceder
 msgid "Welcome!"
 msgstr "¡Bienvenido!"
 
-#: src/components/chat/ChatModeSelector.tsx:47
+#: src/components/chat/ChatModeSelector.tsx:54
 msgid "What are the main themes across all conversations?"
 msgstr "¿Cuáles son los temas principales en todas las conversaciones?"
 
@@ -4985,15 +5043,15 @@ msgstr "¿Qué datos se envían?"
 msgid "participant.verify.selection.title"
 msgstr "¿Qué desea verificar?"
 
-#: src/components/chat/ChatModeSelector.tsx:49
+#: src/components/chat/ChatModeSelector.tsx:56
 msgid "What patterns emerge from the data?"
 msgstr "¿Qué patrones salen de los datos?"
 
-#: src/components/chat/ChatModeSelector.tsx:55
+#: src/components/chat/ChatModeSelector.tsx:62
 msgid "What were the key moments in this conversation?"
 msgstr "¿Cuáles fueron los momentos clave de esta conversación?"
 
-#: src/components/chat/ChatModeSelector.tsx:250
+#: src/components/chat/ChatModeSelector.tsx:263
 msgid "What would you like to explore?"
 msgstr "¿Qué te gustaría explorar?"
 
@@ -5056,7 +5114,7 @@ msgstr "Solo puedes subir hasta {MAX_FILES} archivos a la vez. Solo los primeros
 msgid "select.all.modal.already.added"
 msgstr "Ya has añadido <0>{existingContextCount, plural, one {# conversación} other {# conversaciones}}</0> a este chat."
 
-#: src/components/conversation/ConversationAccordion.tsx:1408
+#: src/components/conversation/ConversationAccordion.tsx:1410
 msgid "You have already added all the conversations related to this"
 msgstr "Ya has añadido todas las conversaciones relacionadas con esto"
 

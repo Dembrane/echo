@@ -17,7 +17,11 @@ import type { ChatMode } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { MODE_COLORS } from "./ChatModeSelector";
 import { TemplatesModal } from "./TemplatesModal";
-import { quickAccessTemplates, Templates } from "./templates";
+import {
+	agenticQuickAccessTemplates,
+	quickAccessTemplates,
+	Templates,
+} from "./templates";
 
 // Map icon names from API to Tabler icons
 const SUGGESTION_ICONS: Record<string, typeof IconSparkles> = {
@@ -97,6 +101,8 @@ export const ChatTemplatesMenu = ({
 }: ChatTemplatesMenuProps) => {
 	const [opened, { open, close }] = useDisclosure(false);
 	const [animateRef] = useAutoAnimate();
+	const activeQuickAccessTemplates =
+		chatMode === "agentic" ? agenticQuickAccessTemplates : quickAccessTemplates;
 
 	const handleTemplateSelect = (
 		template: { content: string; key: string },
@@ -115,7 +121,7 @@ export const ChatTemplatesMenu = ({
 	// Check if selected template is from modal (not in quick access)
 	const isModalTemplateSelected =
 		selectedTemplateKey &&
-		!quickAccessTemplates.some((t) => t.title === selectedTemplateKey) &&
+		!activeQuickAccessTemplates.some((t) => t.title === selectedTemplateKey) &&
 		!suggestions.some((s) => s.label === selectedTemplateKey);
 
 	const selectedModalTemplate = isModalTemplateSelected
@@ -151,7 +157,7 @@ export const ChatTemplatesMenu = ({
 					))}
 
 					{/* Static Templates - gray (fill remaining slots up to 5 total) */}
-					{quickAccessTemplates
+					{activeQuickAccessTemplates
 						.slice(0, Math.max(0, 5 - suggestions.length))
 						.map((template) => {
 							const isSelected = selectedTemplateKey === template.title;

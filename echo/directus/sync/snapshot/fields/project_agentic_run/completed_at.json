@@ -1,0 +1,46 @@
+{
+  "collection": "project_agentic_run",
+  "field": "completed_at",
+  "type": "timestamp",
+  "meta": {
+    "collection": "project_agentic_run",
+    "conditions": null,
+    "display": "datetime",
+    "display_options": {
+      "relative": true
+    },
+    "field": "completed_at",
+    "group": null,
+    "hidden": false,
+    "interface": "datetime",
+    "note": null,
+    "options": null,
+    "readonly": false,
+    "required": false,
+    "searchable": true,
+    "sort": 14,
+    "special": null,
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "half"
+  },
+  "schema": {
+    "name": "completed_at",
+    "table": "project_agentic_run",
+    "data_type": "timestamp with time zone",
+    "default_value": null,
+    "max_length": null,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": true,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}
