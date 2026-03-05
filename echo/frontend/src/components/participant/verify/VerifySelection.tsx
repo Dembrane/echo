@@ -82,7 +82,7 @@ export const VerifySelection = () => {
 			const icon =
 				TOPIC_ICON_MAP[topic.key] ??
 				(topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined) ??
-				"•";
+				(topic.is_custom ? undefined : "•");
 
 			return {
 				icon,
@@ -231,7 +231,9 @@ export const VerifySelection = () => {
 							{...testId(`portal-verify-topic-${option.key}`)}
 						>
 							<Group gap="sm" align="center">
-								<span className="text-xl">{option.icon}</span>
+								{option.icon ? (
+									<span className="text-xl">{option.icon}</span>
+								) : null}
 								<span className="text-base font-medium">{option.label}</span>
 							</Group>
 						</Box>

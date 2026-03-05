@@ -93,7 +93,11 @@ export const VerifiedArtefactsList = ({
 					<VerifiedArtefactItem
 						key={artefact.id}
 						artefact={artefact}
-						label={topicMetadataMap.get(artefact.key)?.label ?? artefact.key}
+						label={
+							topicMetadataMap.get(artefact.key)?.label ??
+							artefact.topic_label ??
+							artefact.key
+						}
 						icon={topicMetadataMap.get(artefact.key)?.icon}
 						onViewArtefact={handleViewArtefact}
 						dataTestId={`portal-verified-artefact-item-${index}`}

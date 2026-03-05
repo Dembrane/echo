@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import logging
 from typing import Any, Dict, List, Optional
 from datetime import datetime
@@ -15,6 +16,7 @@ from dembrane.settings import get_settings
 from dembrane.transcribe import _get_audio_file_object
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.exceptions import ProjectNotFoundException, ConversationNotFoundException
+from dembrane.api.dependency_auth import DependencyDirectusSession
 
 logger = logging.getLogger("api.verify")
 
@@ -33,7 +35,9 @@ class VerificationTopicMetadata(BaseModel):
     prompt: Optional[str] = None
     icon: Optional[str] = None
     sort: Optional[int] = None
+    is_custom: bool = False
     translations: Dict[str, VerificationTopicTranslation] = Field(default_factory=dict)
+    date_created: Optional[str] = Field(default=None, exclude=True)
 
 
 class GetVerificationTopicsResponse(BaseModel):
@@ -49,6 +53,7 @@ class GenerateArtifactsRequest(BaseModel):
 class ConversationArtifactResponse(BaseModel):
     id: str
     key: Optional[str] = None
+    topic_label: Optional[str] = None
     content: str
     conversation_id: str
     approved_at: Optional[str] = None
@@ -59,6 +64,7 @@ class ConversationArtifactResponse(BaseModel):
 class ConversationArtifactDetailResponse(BaseModel):
     id: str
     key: Optional[str] = None
+    topic_label: Optional[str] = None
     content: str
     date_created: Optional[str] = None
     approved_at: Optional[str] = None
@@ -71,6 +77,20 @@ class GenerateArtifactsResponse(BaseModel):
 
 class UpdateVerificationTopicsRequest(BaseModel):
     topic_list: List[str] = Field(default_factory=list)
+
+
+class CreateCustomTopicRequest(BaseModel):
+    label: str = Field(..., max_length=100)
+    prompt: str = Field(..., max_length=1000)
+    icon: Optional[str] = Field(None, max_length=10)
+    translations: Dict[str, str] = Field(default_factory=dict)
+
+
+class UpdateCustomTopicRequest(BaseModel):
+    label: Optional[str] = Field(None, max_length=100)
+    prompt: Optional[str] = Field(None, max_length=1000)
+    icon: Optional[str] = Field(None, max_length=10)
+    translations: Optional[Dict[str, str]] = None
 
 
 class UseConversationPayload(BaseModel):
@@ -114,6 +134,7 @@ async def _get_project(project_id: str, client: DirectusClient) -> dict:
                     "selected_verification_key_list",
                     "language",
                     "name",
+                    "directus_user_id",
                 ],
             }
         },
@@ -125,6 +146,13 @@ async def _get_project(project_id: str, client: DirectusClient) -> dict:
     project = project_rows[0]
 
     return project
+
+
+def _assert_project_owner(project: dict, auth: DependencyDirectusSession) -> None:
+    if auth.is_admin:
+        return
+    if project.get("directus_user_id", "") != auth.user_id:
+        raise HTTPException(status_code=403, detail="Not authorized for this project")
 
 
 async def _get_verification_topics_for_project(
@@ -147,11 +175,12 @@ async def _get_verification_topics_for_project(
                     "icon",
                     "sort",
                     "project_id",
+                    "date_created",
                     "translations.languages_code",
                     "translations.label",
                 ],
                 "limit": -1,
-                "sort": ["sort", "key"],
+                "sort": ["sort", "date_created"],
             }
         },
     )
@@ -165,18 +194,24 @@ async def _get_verification_topics_for_project(
             if code and label:
                 translations_map[code] = VerificationTopicTranslation(label=label)
 
+        is_custom = raw_topic.get("project_id") is not None
         topics.append(
             VerificationTopicMetadata(
                 key=raw_topic.get("key"),
                 prompt=raw_topic.get("prompt"),
                 icon=raw_topic.get("icon"),
                 sort=raw_topic.get("sort"),
+                is_custom=is_custom,
                 translations=translations_map,
+                date_created=raw_topic.get("date_created") or "",
             )
         )
 
-    topics.sort(key=lambda topic: (topic.sort or 0, topic.key))
-    return topics
+    defaults = [t for t in topics if not t.is_custom]
+    customs = [t for t in topics if t.is_custom]
+    defaults.sort(key=lambda t: (t.sort or 0, t.key))
+    customs.sort(key=lambda t: t.date_created or "")
+    return defaults + customs
 
 
 def _parse_selected_topics(
@@ -239,6 +274,230 @@ async def update_verification_topics(
     )
 
 
+def _slugify(text: str) -> str:
+    text = text.lower().strip()
+    text = re.sub(r"[^\w\s-]", "", text)
+    text = re.sub(r"[\s_]+", "-", text)
+    text = re.sub(r"-+", "-", text).strip("-")
+    return text[:60] if text else "custom"
+
+
+async def _build_topics_response(
+    project_id: str, client: DirectusClient
+) -> GetVerificationTopicsResponse:
+    project = await _get_project(project_id, client)
+    topics = await _get_verification_topics_for_project(project_id, client)
+    selected_topics = _parse_selected_topics(project.get("selected_verification_key_list"), topics)
+    return GetVerificationTopicsResponse(selected_topics=selected_topics, available_topics=topics)
+
+
+@VerifyRouter.post(
+    "/topics/{project_id}/custom",
+    response_model=GetVerificationTopicsResponse,
+    status_code=201,
+)
+async def create_custom_topic(
+    project_id: str,
+    body: CreateCustomTopicRequest,
+    auth: DependencyDirectusSession,
+) -> GetVerificationTopicsResponse:
+    client = directus
+    project = await _get_project(project_id, client)
+    _assert_project_owner(project, auth)
+
+    slug = _slugify(body.label)
+    short_id = generate_uuid()[:8]
+    topic_key = f"{slug}-{short_id}"
+
+    translations_payload = [
+        {"languages_code": "en-US", "label": body.label},
+    ]
+    for lang_code, label_text in body.translations.items():
+        if lang_code != "en-US" and label_text and label_text.strip():
+            translations_payload.append({"languages_code": lang_code, "label": label_text.strip()})
+
+    await run_in_thread_pool(
+        client.create_item,
+        "verification_topic",
+        item_data={
+            "key": topic_key,
+            "prompt": body.prompt,
+            "icon": body.icon or None,
+            "project_id": project_id,
+            "translations": {
+                "create": translations_payload,
+            },
+        },
+    )
+
+    existing_keys = project.get("selected_verification_key_list") or ""
+    if existing_keys:
+        updated_keys = f"{existing_keys},{topic_key}"
+    else:
+        updated_keys = topic_key
+
+    await run_in_thread_pool(
+        client.update_item,
+        "project",
+        project_id,
+        {"selected_verification_key_list": updated_keys},
+    )
+
+    return await _build_topics_response(project_id, client)
+
+
+@VerifyRouter.patch(
+    "/topics/{project_id}/custom/{topic_key}",
+    response_model=GetVerificationTopicsResponse,
+)
+async def update_custom_topic(
+    project_id: str,
+    topic_key: str,
+    body: UpdateCustomTopicRequest,
+    auth: DependencyDirectusSession,
+) -> GetVerificationTopicsResponse:
+    client = directus
+    project = await _get_project(project_id, client)
+    _assert_project_owner(project, auth)
+
+    topic_rows = await run_in_thread_pool(
+        client.get_items,
+        "verification_topic",
+        {
+            "query": {
+                "filter": {
+                    "key": {"_eq": topic_key},
+                    "project_id": {"_eq": project_id},
+                },
+                "fields": [
+                    "key",
+                    "project_id",
+                    "translations.id",
+                    "translations.languages_code",
+                    "translations.label",
+                ],
+                "limit": 1,
+            }
+        },
+    )
+
+    if not topic_rows:
+        raise HTTPException(status_code=404, detail="Custom topic not found for this project")
+
+    topic_updates: Dict[str, Any] = {}
+    if body.prompt is not None:
+        topic_updates["prompt"] = body.prompt
+    if body.icon is not None:
+        topic_updates["icon"] = body.icon or None
+
+    if body.translations is not None:
+        existing_translations = topic_rows[0].get("translations", []) or []
+        existing_by_lang: Dict[str, int] = {}
+        for t in existing_translations:
+            lang = t.get("languages_code")
+            tid = t.get("id")
+            if lang and tid:
+                existing_by_lang[lang] = tid
+
+        if "en-US" in body.translations and body.label is not None:
+            body.translations["en-US"] = body.label
+        elif body.label is not None and "en-US" not in body.translations:
+            body.translations["en-US"] = body.label
+
+        translation_updates = []
+        translation_creates = []
+        for lang_code, label_text in body.translations.items():
+            if lang_code in existing_by_lang:
+                translation_updates.append(
+                    {
+                        "id": existing_by_lang[lang_code],
+                        "label": label_text.strip() if label_text else "",
+                    }
+                )
+            else:
+                if label_text and label_text.strip():
+                    translation_creates.append(
+                        {
+                            "languages_code": lang_code,
+                            "label": label_text.strip(),
+                        }
+                    )
+
+        translations_nested: Dict[str, Any] = {}
+        if translation_updates:
+            translations_nested["update"] = translation_updates
+        if translation_creates:
+            translations_nested["create"] = translation_creates
+        if translations_nested:
+            topic_updates["translations"] = translations_nested
+
+    if topic_updates:
+        await run_in_thread_pool(
+            client.update_item,
+            "verification_topic",
+            topic_key,
+            topic_updates,
+        )
+
+    return await _build_topics_response(project_id, client)
+
+
+@VerifyRouter.delete(
+    "/topics/{project_id}/custom/{topic_key}",
+    response_model=GetVerificationTopicsResponse,
+)
+async def delete_custom_topic(
+    project_id: str,
+    topic_key: str,
+    auth: DependencyDirectusSession,
+) -> GetVerificationTopicsResponse:
+    client = directus
+    project_check = await _get_project(project_id, client)
+    _assert_project_owner(project_check, auth)
+
+    topic_rows = await run_in_thread_pool(
+        client.get_items,
+        "verification_topic",
+        {
+            "query": {
+                "filter": {
+                    "key": {"_eq": topic_key},
+                    "project_id": {"_eq": project_id},
+                },
+                "fields": ["key"],
+                "limit": 1,
+            }
+        },
+    )
+
+    if not topic_rows:
+        raise HTTPException(status_code=404, detail="Custom topic not found for this project")
+
+    await run_in_thread_pool(
+        client.delete_item,
+        "verification_topic",
+        topic_key,
+    )
+
+    existing_keys = project_check.get("selected_verification_key_list") or ""
+    if existing_keys:
+        key_list = [
+            k.strip() for k in existing_keys.split(",") if k.strip() and k.strip() != topic_key
+        ]
+        updated_keys = ",".join(key_list) or None
+    else:
+        updated_keys = None
+
+    await run_in_thread_pool(
+        client.update_item,
+        "project",
+        project_id,
+        {"selected_verification_key_list": updated_keys},
+    )
+
+    return await _build_topics_response(project_id, client)
+
+
 @VerifyRouter.get("/artifacts/{conversation_id}", response_model=List[ConversationArtifactResponse])
 async def list_verification_artifacts(
     conversation_id: str,
@@ -267,6 +526,7 @@ async def list_verification_artifacts(
             ConversationArtifactResponse(
                 id=artifact.get("id") or "",
                 key=artifact.get("key"),
+                topic_label=artifact.get("topic_label"),
                 content=artifact.get("content") or "",
                 conversation_id=artifact.get("conversation_id") or conversation_id,
                 approved_at=artifact.get("approved_at"),
@@ -294,6 +554,7 @@ async def get_verification_artifact(
     return ConversationArtifactDetailResponse(
         id=artifact.get("id") or artifact_id,
         key=artifact.get("key") or "",
+        topic_label=artifact.get("topic_label"),
         content=artifact.get("content") or "",
         date_created=artifact.get("date_created"),
         approved_at=artifact.get("approved_at"),
@@ -313,6 +574,7 @@ async def _get_artifact_or_404(artifact_id: str, client: DirectusClient) -> dict
                     "conversation_id",
                     "content",
                     "key",
+                    "topic_label",
                     "date_created",
                     "approved_at",
                     "read_aloud_stream_url",
@@ -366,6 +628,7 @@ async def _get_conversation_artifacts(conversation_id: str, client: DirectusClie
                 "fields": [
                     "id",
                     "key",
+                    "topic_label",
                     "content",
                     "date_created",
                     "approved_at",
@@ -528,11 +791,13 @@ async def _create_conversation_artifact(
     key: str,
     content: str,
     client: DirectusClient,
+    topic_label: Optional[str] = None,
 ) -> dict:
     artifact_payload = {
         "id": generate_uuid(),
         "conversation_id": conversation_id,
         "key": key,
+        "topic_label": topic_label,
         "content": content,
         "read_aloud_stream_url": "",
     }
@@ -649,13 +914,24 @@ async def generate_verification_artifacts(
         ) from exc
 
     generated_text = _extract_response_text(response)
+
+    resolved_label = (
+        target_topic.translations.get("en-US", VerificationTopicTranslation(label="")).label
+        or target_topic_key
+    )
+
     artifact_record = await _create_conversation_artifact(
-        body.conversation_id, target_topic_key, generated_text, client
+        body.conversation_id,
+        target_topic_key,
+        generated_text,
+        client,
+        topic_label=resolved_label,
     )
 
     artifact_response = ConversationArtifactResponse(
         id=artifact_record.get("id") or "",
         key=artifact_record.get("key"),
+        topic_label=artifact_record.get("topic_label"),
         content=artifact_record.get("content", ""),
         conversation_id=artifact_record.get("conversation_id", body.conversation_id),
         approved_at=artifact_record.get("approved_at"),
@@ -671,7 +947,6 @@ async def update_verification_artifact(
     artifact_id: str,
     body: UpdateArtifactRequest,
 ) -> ConversationArtifactResponse:
-    # raise HTTPException(status_code=400, detail="No updates provided")
     if not (body.use_conversation or body.content is not None):
         raise HTTPException(status_code=400, detail="No updates provided")
 
@@ -795,6 +1070,7 @@ async def update_verification_artifact(
     return ConversationArtifactResponse(
         id=updated_data.get("id", artifact_id),
         key=updated_data.get("key"),
+        topic_label=updated_data.get("topic_label") or artifact.get("topic_label"),
         content=updated_data.get("content")
         or updates.get("content")
         or artifact.get("content")
