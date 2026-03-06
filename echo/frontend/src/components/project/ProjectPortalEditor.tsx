@@ -11,6 +11,7 @@ import {
 	Divider,
 	Group,
 	InputDescription,
+	Modal,
 	NativeSelect,
 	Paper,
 	Stack,
@@ -19,6 +20,7 @@ import {
 	Textarea,
 	TextInput,
 	Title,
+	Tooltip,
 } from "@mantine/core";
 import { DetectiveIcon } from "@phosphor-icons/react";
 import {
@@ -26,9 +28,11 @@ import {
 	IconEye,
 	IconEyeOff,
 	IconInfoCircle,
+	IconPencil,
 	IconRefresh,
 	IconRosetteDiscountCheck,
 	IconScale,
+	IconTrash,
 	IconX,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -39,14 +43,23 @@ import { z } from "zod";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
-import type { VerificationTopicsResponse } from "@/lib/api";
+import type {
+	VerificationTopicMetadata,
+	VerificationTopicsResponse,
+} from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { toast } from "../common/Toaster";
 import { FormLabel } from "../form/FormLabel";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
 import { SaveStatus } from "../form/SaveStatus";
 import { TOPIC_ICON_MAP } from "../participant/verify/VerifySelection";
-import { useUpdateProjectByIdMutation } from "./hooks";
+import { CustomTopicModal } from "./CustomTopicModal";
+import {
+	useCreateCustomTopicMutation,
+	useDeleteCustomTopicMutation,
+	useUpdateCustomTopicMutation,
+	useUpdateProjectByIdMutation,
+} from "./hooks";
 import { useProjectSharingLink } from "./ProjectQRCode";
 import { ProjectTagsInput } from "./ProjectTagsInput";
 
@@ -240,11 +253,13 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 				icon:
 					TOPIC_ICON_MAP[topic.key] ??
 					(topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined),
+				is_custom: !!topic.is_custom,
 				key: topic.key,
 				label:
 					topic.translations?.[translationLocale]?.label ??
 					topic.translations?.["en-US"]?.label ??
 					topic.key,
+				raw: topic,
 			})),
 		[verificationTopics, translationLocale],
 	);
@@ -334,6 +349,106 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	});
 
 	const updateProjectMutation = useUpdateProjectByIdMutation();
+	const createCustomTopicMutation = useCreateCustomTopicMutation();
+	const updateCustomTopicMutation = useUpdateCustomTopicMutation();
+	const deleteCustomTopicMutation = useDeleteCustomTopicMutation();
+
+	const [customTopicModalOpened, setCustomTopicModalOpened] = useState(false);
+	const [customTopicModalMode, setCustomTopicModalMode] = useState<
+		"create" | "edit"
+	>("create");
+	const [editingTopic, setEditingTopic] =
+		useState<VerificationTopicMetadata | null>(null);
+	const [deleteConfirmKey, setDeleteConfirmKey] = useState<string | null>(null);
+
+	const openCreateTopicModal = useCallback(() => {
+		setEditingTopic(null);
+		setCustomTopicModalMode("create");
+		setCustomTopicModalOpened(true);
+	}, []);
+
+	const openEditTopicModal = useCallback((topic: VerificationTopicMetadata) => {
+		setEditingTopic(topic);
+		setCustomTopicModalMode("edit");
+		setCustomTopicModalOpened(true);
+	}, []);
+
+	const handleCustomTopicSubmit = useCallback(
+		async (data: {
+			label: string;
+			prompt: string;
+			icon: string;
+			translations: Record<string, string>;
+		}) => {
+			try {
+				if (customTopicModalMode === "create") {
+					const result = await createCustomTopicMutation.mutateAsync({
+						payload: {
+							icon: data.icon || undefined,
+							label: data.label,
+							prompt: data.prompt,
+							translations: data.translations,
+						},
+						projectId: project.id,
+					});
+
+					if (result?.selected_topics) {
+						setValue("verification_topics", result.selected_topics, {
+							shouldDirty: true,
+						});
+					}
+				} else if (editingTopic) {
+					await updateCustomTopicMutation.mutateAsync({
+						payload: {
+							icon: data.icon || undefined,
+							label: data.label,
+							prompt: data.prompt,
+							translations: data.translations,
+						},
+						projectId: project.id,
+						topicKey: editingTopic.key,
+					});
+				}
+				setCustomTopicModalOpened(false);
+			} catch {
+				// Error toast is handled by the mutation's onError
+			}
+		},
+		[
+			customTopicModalMode,
+			editingTopic,
+			project.id,
+			createCustomTopicMutation,
+			updateCustomTopicMutation,
+			setValue,
+		],
+	);
+
+	const confirmDeleteCustomTopic = useCallback(async () => {
+		if (!deleteConfirmKey) return;
+		const result = await deleteCustomTopicMutation.mutateAsync({
+			projectId: project.id,
+			topicKey: deleteConfirmKey,
+		});
+
+		if (result?.selected_topics) {
+			setValue("verification_topics", result.selected_topics, {
+				shouldDirty: true,
+			});
+		} else {
+			const current = getValues("verification_topics") ?? [];
+			const updated = current.filter((key) => key !== deleteConfirmKey);
+			setValue("verification_topics", updated, { shouldDirty: true });
+		}
+
+		setDeleteConfirmKey(null);
+	}, [
+		project.id,
+		deleteConfirmKey,
+		deleteCustomTopicMutation,
+		setValue,
+		getValues,
+	]);
 
 	const onSave = useCallback(
 		async (values: ProjectPortalFormValues) => {
@@ -952,67 +1067,169 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														) : (
 															<Group gap="xs">
 																{availableVerifyTopics.map((topic) => (
-																	<Badge
+																	<Group
 																		key={topic.key}
-																		className={
-																			watchedVerifyEnabled
-																				? "cursor-pointer capitalize"
-																				: "capitalize"
-																		}
-																		variant={
-																			field.value.includes(topic.key)
-																				? "light"
-																				: "default"
-																		}
-																		c="var(--app-text)"
-																		size="lg"
-																		fw={500}
-																		style={{
-																			border: field.value.includes(topic.key)
-																				? "1px solid var(--mantine-color-primary-5)"
-																				: "",
-																			cursor: watchedVerifyEnabled
-																				? "pointer"
-																				: "not-allowed",
-																			opacity: watchedVerifyEnabled ? 1 : 0.6,
-																		}}
-																		onClick={() => {
-																			if (!watchedVerifyEnabled) return;
-																			const normalizedCurrent =
-																				normalizeTopicList(field.value ?? []);
-																			const isSelected =
-																				normalizedCurrent.includes(topic.key);
-
-																			// Prevent deselecting the last topic
-																			if (
-																				isSelected &&
-																				normalizedCurrent.length === 1
-																			) {
-																				toast.error(
-																					t`At least one topic must be selected to enable Verify`,
-																				);
-																				return;
-																			}
-
-																			const updated = isSelected
-																				? normalizedCurrent.filter(
-																						(item) => item !== topic.key,
-																					)
-																				: normalizeTopicList([
-																						...normalizedCurrent,
-																						topic.key,
-																					]);
-																			field.onChange(updated);
-																		}}
+																		gap={4}
+																		wrap="nowrap"
+																		align="center"
 																	>
-																		<Group gap="xs">
-																			{topic.icon ? (
-																				<span>{topic.icon}</span>
-																			) : null}
-																			<span>{topic.label}</span>
-																		</Group>
-																	</Badge>
+																		<Badge
+																			className={
+																				watchedVerifyEnabled
+																					? "cursor-pointer select-none capitalize"
+																					: "select-none capitalize"
+																			}
+																			variant={
+																				field.value.includes(topic.key)
+																					? "light"
+																					: "default"
+																			}
+																			c="var(--app-text)"
+																			size="lg"
+																			fw={500}
+																			style={{
+																				border: field.value.includes(topic.key)
+																					? "1px solid var(--mantine-color-primary-5)"
+																					: "",
+																				cursor: watchedVerifyEnabled
+																					? "pointer"
+																					: "not-allowed",
+																				opacity: watchedVerifyEnabled ? 1 : 0.6,
+																			}}
+																			onClick={() => {
+																				if (!watchedVerifyEnabled) return;
+																				const normalizedCurrent =
+																					normalizeTopicList(field.value ?? []);
+																				const isSelected =
+																					normalizedCurrent.includes(topic.key);
+
+																				if (
+																					isSelected &&
+																					normalizedCurrent.length === 1
+																				) {
+																					toast.error(
+																						t`At least one topic must be selected to enable Verify`,
+																					);
+																					return;
+																				}
+
+																				const updated = isSelected
+																					? normalizedCurrent.filter(
+																							(item) => item !== topic.key,
+																						)
+																					: normalizeTopicList([
+																							...normalizedCurrent,
+																							topic.key,
+																						]);
+																				field.onChange(updated);
+																			}}
+																		>
+																			<Group gap="xs">
+																				{topic.icon ? (
+																					<span>{topic.icon}</span>
+																				) : null}
+																				<span>{topic.label}</span>
+																			</Group>
+																		</Badge>
+																		{topic.is_custom && (
+																			<Group
+																				gap={2}
+																				wrap="nowrap"
+																				style={{
+																					opacity: watchedVerifyEnabled
+																						? 1
+																						: 0.4,
+																					pointerEvents: watchedVerifyEnabled
+																						? "auto"
+																						: "none",
+																				}}
+																			>
+																				<ActionIcon
+																					size="sm"
+																					variant="transparent"
+																					disabled={!watchedVerifyEnabled}
+																					onClick={(e) => {
+																						e.stopPropagation();
+																						openEditTopicModal(topic.raw);
+																					}}
+																					{...testId(
+																						`custom-topic-edit-${topic.key}`,
+																					)}
+																				>
+																					<IconPencil size={16} />
+																				</ActionIcon>
+																				<Tooltip
+																					label={t`Select at least one other topic before deleting this one`}
+																					disabled={
+																						!watchedVerifyEnabled ||
+																						!field.value.includes(topic.key) ||
+																						field.value.length > 1
+																					}
+																					multiline
+																					w={200}
+																				>
+																					<ActionIcon
+																						size="sm"
+																						variant="transparent"
+																						c={
+																							!watchedVerifyEnabled ||
+																							(field.value.includes(
+																								topic.key,
+																							) &&
+																								field.value.length <= 1)
+																								? "dimmed"
+																								: "red"
+																						}
+																						disabled={
+																							!watchedVerifyEnabled ||
+																							(field.value.includes(
+																								topic.key,
+																							) &&
+																								field.value.length <= 1)
+																						}
+																						onClick={(e) => {
+																							e.stopPropagation();
+																							setDeleteConfirmKey(topic.key);
+																						}}
+																						{...testId(
+																							`custom-topic-delete-${topic.key}`,
+																						)}
+																					>
+																						<IconTrash size={16} />
+																					</ActionIcon>
+																				</Tooltip>
+																			</Group>
+																		)}
+																	</Group>
 																))}
+																<Badge
+																	ml="xs"
+																	className={
+																		watchedVerifyEnabled
+																			? "cursor-pointer select-none"
+																			: "select-none"
+																	}
+																	variant="default"
+																	c="var(--app-text)"
+																	size="lg"
+																	fw={500}
+																	style={{
+																		border:
+																			"1px dashed var(--mantine-color-gray-5)",
+																		cursor: watchedVerifyEnabled
+																			? "pointer"
+																			: "not-allowed",
+																		opacity: watchedVerifyEnabled ? 1 : 0.6,
+																		textTransform: "capitalize",
+																	}}
+																	onClick={() =>
+																		watchedVerifyEnabled &&
+																		openCreateTopicModal()
+																	}
+																	{...testId("portal-editor-add-custom-topic")}
+																>
+																	+ <Trans>Add Topic</Trans>
+																</Badge>
 															</Group>
 														)}
 													</Stack>
@@ -1419,15 +1636,59 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 					)}
 				</div>
 			</Stack>
+			<CustomTopicModal
+				opened={customTopicModalOpened}
+				onClose={() => setCustomTopicModalOpened(false)}
+				mode={customTopicModalMode}
+				topic={editingTopic}
+				onSubmit={handleCustomTopicSubmit}
+				isLoading={
+					createCustomTopicMutation.isPending ||
+					updateCustomTopicMutation.isPending
+				}
+			/>
+			<Modal
+				opened={deleteConfirmKey !== null}
+				onClose={() => setDeleteConfirmKey(null)}
+				title={<Trans>Delete Custom Topic</Trans>}
+				size="sm"
+				radius="md"
+				padding="xl"
+				{...testId("custom-topic-delete-confirm-modal")}
+			>
+				<Stack gap="md">
+					<Text size="sm">
+						<Trans>
+							Are you sure you want to delete this custom topic? This cannot be
+							undone.
+						</Trans>
+					</Text>
+					<Group justify="flex-end">
+						<Button variant="subtle" onClick={() => setDeleteConfirmKey(null)}>
+							<Trans>Cancel</Trans>
+						</Button>
+						<Button
+							loading={deleteCustomTopicMutation.isPending}
+							onClick={confirmDeleteCustomTopic}
+							{...testId("custom-topic-delete-confirm")}
+						>
+							<Trans>Delete</Trans>
+						</Button>
+					</Group>
+				</Stack>
+			</Modal>
 		</Box>
 	);
 };
 
-// Memoize the component to prevent re-renders when project hasn't changed
 export const ProjectPortalEditor = memo(
 	ProjectPortalEditorComponent,
 	(prevProps, nextProps) => {
-		// Only re-render if the project ID has changed
-		return prevProps.project.id === nextProps.project.id;
+		return (
+			prevProps.project.id === nextProps.project.id &&
+			prevProps.verificationTopics === nextProps.verificationTopics &&
+			prevProps.isVerificationTopicsLoading ===
+				nextProps.isVerificationTopicsLoading
+		);
 	},
 );

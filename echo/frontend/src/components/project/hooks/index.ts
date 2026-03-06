@@ -1,5 +1,4 @@
 import {
-	aggregate,
 	createItem,
 	deleteItem,
 	type Query,
@@ -7,6 +6,7 @@ import {
 	readItems,
 	updateItem,
 } from "@directus/sdk";
+import { t } from "@lingui/core/macro";
 import {
 	useInfiniteQuery,
 	useMutation,
@@ -18,9 +18,15 @@ import { useAddChatContextMutation } from "@/components/conversation/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
 	api,
+	type CreateCustomTopicPayload,
 	cloneProjectById,
+	createCustomVerificationTopic,
+	deleteCustomVerificationTopic,
 	getLatestProjectAnalysisRunByProjectId,
 	getVerificationTopics,
+	type UpdateCustomTopicPayload,
+	updateCustomVerificationTopic,
+	type VerificationTopicsResponse,
 } from "@/lib/api";
 import { directus } from "@/lib/directus";
 
@@ -284,8 +290,86 @@ export const useProjectById = ({
 export const useVerificationTopicsQuery = (projectId: string | undefined) => {
 	return useQuery({
 		enabled: !!projectId,
+		// biome-ignore lint/style/noNonNullAssertion: <this is guaranteed to be defined>
 		queryFn: () => getVerificationTopics(projectId!),
 		queryKey: ["verify", "topics", projectId],
+	});
+};
+
+export const useCreateCustomTopicMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({
+			projectId,
+			payload,
+		}: {
+			projectId: string;
+			payload: CreateCustomTopicPayload;
+		}) => createCustomVerificationTopic(projectId, payload),
+		onError: (error: any) => {
+			toast.error(
+				error?.response?.data?.detail || t`Failed to create custom topic`,
+			);
+		},
+		onSuccess: (data: VerificationTopicsResponse, variables) => {
+			queryClient.setQueryData(["verify", "topics", variables.projectId], data);
+			queryClient.invalidateQueries({
+				queryKey: ["verify", "topics", variables.projectId],
+			});
+			toast.success(t`Topic created successfully`);
+		},
+	});
+};
+
+export const useUpdateCustomTopicMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({
+			projectId,
+			topicKey,
+			payload,
+		}: {
+			projectId: string;
+			topicKey: string;
+			payload: UpdateCustomTopicPayload;
+		}) => updateCustomVerificationTopic(projectId, topicKey, payload),
+		onError: (error: any) => {
+			toast.error(
+				error?.response?.data?.detail || t`Failed to update custom topic`,
+			);
+		},
+		onSuccess: (data: VerificationTopicsResponse, variables) => {
+			queryClient.setQueryData(["verify", "topics", variables.projectId], data);
+			queryClient.invalidateQueries({
+				queryKey: ["verify", "topics", variables.projectId],
+			});
+			toast.success(t`Topic updated successfully`);
+		},
+	});
+};
+
+export const useDeleteCustomTopicMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({
+			projectId,
+			topicKey,
+		}: {
+			projectId: string;
+			topicKey: string;
+		}) => deleteCustomVerificationTopic(projectId, topicKey),
+		onError: (error: any) => {
+			toast.error(
+				error?.response?.data?.detail || t`Failed to delete custom topic`,
+			);
+		},
+		onSuccess: (data: VerificationTopicsResponse, variables) => {
+			queryClient.setQueryData(["verify", "topics", variables.projectId], data);
+			queryClient.invalidateQueries({
+				queryKey: ["verify", "topics", variables.projectId],
+			});
+			toast.success(t`Topic deleted successfully`);
+		},
 	});
 };
 
@@ -294,14 +378,12 @@ export const useVerificationTopicsQuery = (projectId: string | undefined) => {
 // =============================================================================
 
 import {
-	getProjectWebhooks,
-	getCopyableWebhooks,
 	createProjectWebhook,
-	updateProjectWebhook,
 	deleteProjectWebhook,
+	getCopyableWebhooks,
+	getProjectWebhooks,
 	testProjectWebhook,
-	type Webhook,
-	type CopyableWebhook,
+	updateProjectWebhook,
 	type WebhookCreatePayload,
 	type WebhookUpdatePayload,
 } from "@/lib/api";
@@ -309,6 +391,7 @@ import {
 export const useProjectWebhooks = (projectId: string | undefined) => {
 	return useQuery({
 		enabled: !!projectId,
+		// biome-ignore lint/style/noNonNullAssertion: <this is guaranteed to be defined>
 		queryFn: () => getProjectWebhooks(projectId!),
 		queryKey: ["projects", projectId, "webhooks"],
 	});
@@ -317,6 +400,7 @@ export const useProjectWebhooks = (projectId: string | undefined) => {
 export const useCopyableWebhooks = (projectId: string | undefined) => {
 	return useQuery({
 		enabled: !!projectId,
+		// biome-ignore lint/style/noNonNullAssertion: <this is guaranteed to be defined>
 		queryFn: () => getCopyableWebhooks(projectId!),
 		queryKey: ["projects", projectId, "webhooks", "copyable"],
 	});
@@ -332,15 +416,16 @@ export const useCreateWebhookMutation = () => {
 			projectId: string;
 			payload: WebhookCreatePayload;
 		}) => createProjectWebhook(projectId, payload),
+		onError: (error: any) => {
+			const message =
+				error?.response?.data?.detail || "Failed to create webhook";
+			toast.error(message);
+		},
 		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects", variables.projectId, "webhooks"],
 			});
 			toast.success("Webhook created successfully");
-		},
-		onError: (error: any) => {
-			const message = error?.response?.data?.detail || "Failed to create webhook";
-			toast.error(message);
 		},
 	});
 };
@@ -357,15 +442,16 @@ export const useUpdateWebhookMutation = () => {
 			webhookId: string;
 			payload: WebhookUpdatePayload;
 		}) => updateProjectWebhook(projectId, webhookId, payload),
+		onError: (error: any) => {
+			const message =
+				error?.response?.data?.detail || "Failed to update webhook";
+			toast.error(message);
+		},
 		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects", variables.projectId, "webhooks"],
 			});
 			toast.success("Webhook updated successfully");
-		},
-		onError: (error: any) => {
-			const message = error?.response?.data?.detail || "Failed to update webhook";
-			toast.error(message);
 		},
 	});
 };
@@ -380,15 +466,16 @@ export const useDeleteWebhookMutation = () => {
 			projectId: string;
 			webhookId: string;
 		}) => deleteProjectWebhook(projectId, webhookId),
+		onError: (error: any) => {
+			const message =
+				error?.response?.data?.detail || "Failed to delete webhook";
+			toast.error(message);
+		},
 		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects", variables.projectId, "webhooks"],
 			});
 			toast.success("Webhook deleted successfully");
-		},
-		onError: (error: any) => {
-			const message = error?.response?.data?.detail || "Failed to delete webhook";
-			toast.error(message);
 		},
 	});
 };
@@ -402,16 +489,16 @@ export const useTestWebhookMutation = () => {
 			projectId: string;
 			webhookId: string;
 		}) => testProjectWebhook(projectId, webhookId),
+		onError: (error: any) => {
+			const message = error?.response?.data?.detail || "Failed to test webhook";
+			toast.error(message);
+		},
 		onSuccess: (result) => {
 			if (result.success) {
 				toast.success(result.message);
 			} else {
 				toast.error(result.message);
 			}
-		},
-		onError: (error: any) => {
-			const message = error?.response?.data?.detail || "Failed to test webhook";
-			toast.error(message);
 		},
 	});
 };

@@ -139,6 +139,7 @@ interface ConversationArtifact {
 	approved_at: string | null;
 	read_aloud_stream_url: string | null;
 	key: string | null;
+	topic_label: string | null;
 	conversation_id: string | Conversation | null;
 }
 

@@ -1069,10 +1069,7 @@ export const getAgenticRun = async (runId: string) => {
 	return api.get<unknown, AgenticRun>(`/agentic/runs/${runId}`);
 };
 
-export const getAgenticRunEvents = async (
-	runId: string,
-	afterSeq = 0,
-) => {
+export const getAgenticRunEvents = async (runId: string, afterSeq = 0) => {
 	return api.get<unknown, AgenticRunEventsResponse>(
 		`/agentic/runs/${runId}/events`,
 		{
@@ -1111,8 +1108,8 @@ const parseSseFrame = (
 	}
 
 	return {
-		eventType,
 		data: dataLines.length > 0 ? dataLines.join("\n") : null,
+		eventType,
 	};
 };
 
@@ -1124,11 +1121,11 @@ export const streamAgenticRun = async (
 	const response = await fetch(
 		`${API_BASE_URL}/agentic/runs/${runId}/stream?after_seq=${afterSeq}`,
 		{
-			method: "POST",
 			credentials: "include",
 			headers: {
 				Accept: "text/event-stream",
 			},
+			method: "POST",
 			signal: options.signal,
 		},
 	);
@@ -1179,7 +1176,9 @@ export const streamAgenticRun = async (
 };
 
 export const stopAgenticRun = async (runId: string) => {
-	return api.post<unknown, AgenticRunStopResponse>(`/agentic/runs/${runId}/stop`);
+	return api.post<unknown, AgenticRunStopResponse>(
+		`/agentic/runs/${runId}/stop`,
+	);
 };
 
 export const getChatSuggestions = async (
@@ -1276,6 +1275,7 @@ export type VerificationTopicMetadata = {
 	prompt?: string | null;
 	icon?: string | null;
 	sort?: number | null;
+	is_custom?: boolean;
 	translations: Record<string, VerificationTopicTranslation>;
 };
 
@@ -1290,6 +1290,50 @@ export const getVerificationTopics = async (projectId: string) => {
 	);
 };
 
+export type CreateCustomTopicPayload = {
+	label: string;
+	prompt: string;
+	icon?: string;
+	translations?: Record<string, string>;
+};
+
+export type UpdateCustomTopicPayload = {
+	label?: string;
+	prompt?: string;
+	icon?: string;
+	translations?: Record<string, string>;
+};
+
+export const createCustomVerificationTopic = async (
+	projectId: string,
+	payload: CreateCustomTopicPayload,
+) => {
+	return api.post<unknown, VerificationTopicsResponse>(
+		`/verify/topics/${projectId}/custom`,
+		payload,
+	);
+};
+
+export const updateCustomVerificationTopic = async (
+	projectId: string,
+	topicKey: string,
+	payload: UpdateCustomTopicPayload,
+) => {
+	return api.patch<unknown, VerificationTopicsResponse>(
+		`/verify/topics/${projectId}/custom/${topicKey}`,
+		payload,
+	);
+};
+
+export const deleteCustomVerificationTopic = async (
+	projectId: string,
+	topicKey: string,
+) => {
+	return api.delete<unknown, VerificationTopicsResponse>(
+		`/verify/topics/${projectId}/custom/${topicKey}`,
+	);
+};
+
 export type VerificationArtifact = {
 	id: string;
 	approved_at?: string | null;
@@ -1297,6 +1341,7 @@ export type VerificationArtifact = {
 	content: string;
 	conversation_id: string;
 	key: string;
+	topic_label?: string | null;
 	read_aloud_stream_url: string;
 };
 
@@ -1306,6 +1351,7 @@ export type VerificationArtifactDetail = {
 	date_created: string | null;
 	approved_at?: string | null;
 	key: string;
+	topic_label?: string | null;
 	read_aloud_stream_url: string;
 };
 

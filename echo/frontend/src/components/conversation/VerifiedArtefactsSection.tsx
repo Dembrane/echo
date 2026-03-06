@@ -116,7 +116,10 @@ export const VerifiedArtefactsSection = ({
 								<Group gap="sm" wrap="nowrap">
 									<Stack gap={2}>
 										<Text fw={500}>
-											{topicLabelMap.get(artefact.key) ?? artefact.key ?? ""}
+											{topicLabelMap.get(artefact.key) ??
+												artefact.topic_label ??
+												artefact.key ??
+												""}
 										</Text>
 										{formattedDate && (
 											<Text size="xs" c="dimmed">
