@@ -330,18 +330,17 @@ async def create_custom_topic(
         },
     )
 
-    existing_keys = project.get("selected_verification_key_list") or ""
+    existing_keys = project.get("selected_verification_key_list")
     if existing_keys:
-        updated_keys = f"{existing_keys},{topic_key}"
-    else:
-        updated_keys = topic_key
-
-    await run_in_thread_pool(
-        client.update_item,
-        "project",
-        project_id,
-        {"selected_verification_key_list": updated_keys},
-    )
+        key_list = [k.strip() for k in existing_keys.split(",") if k.strip()]
+        if topic_key not in key_list:
+            key_list.append(topic_key)
+        await run_in_thread_pool(
+            client.update_item,
+            "project",
+            project_id,
+            {"selected_verification_key_list": ",".join(key_list)},
+        )
 
     return await _build_topics_response(project_id, client)
 
