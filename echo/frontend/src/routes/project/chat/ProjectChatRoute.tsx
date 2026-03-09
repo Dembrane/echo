@@ -24,11 +24,11 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
+import { AgenticChatPanel } from "@/components/chat/AgenticChatPanel";
 import {
 	ChatAccordionItemMenu,
 	ChatModeIndicator,
 } from "@/components/chat/ChatAccordion";
-import { AgenticChatPanel } from "@/components/chat/AgenticChatPanel";
 import { ChatContextProgress } from "@/components/chat/ChatContextProgress";
 import { ChatHistoryMessage } from "@/components/chat/ChatHistoryMessage";
 import { ChatMessage } from "@/components/chat/ChatMessage";
@@ -57,7 +57,11 @@ import { ScrollToBottomButton } from "@/components/common/ScrollToBottom";
 import { toast } from "@/components/common/Toaster";
 import { ConversationLinks } from "@/components/conversation/ConversationLinks";
 import { useConversationsCountByProjectId } from "@/components/conversation/hooks";
-import { API_BASE_URL, ENABLE_CHAT_AUTO_SELECT } from "@/config";
+import {
+	API_BASE_URL,
+	ENABLE_AGENTIC_CHAT,
+	ENABLE_CHAT_AUTO_SELECT,
+} from "@/config";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLoadNotification } from "@/hooks/useLoadNotification";
@@ -498,8 +502,10 @@ export const ProjectChatRoute = () => {
 		);
 	}
 
-	if (chatMode === "agentic") {
-		return <AgenticChatPanel chatId={chatId ?? ""} projectId={projectId ?? ""} />;
+	if (ENABLE_AGENTIC_CHAT && chatMode === "agentic") {
+		return (
+			<AgenticChatPanel chatId={chatId ?? ""} projectId={projectId ?? ""} />
+		);
 	}
 
 	return (
@@ -791,9 +797,7 @@ export const ProjectChatRoute = () => {
 										}}
 										rightSection={<IconSend size={24} />}
 										disabled={
-											normalizedInput.trim() === "" ||
-											isLoading ||
-											isSubmitting
+											normalizedInput.trim() === "" || isLoading || isSubmitting
 										}
 										{...testId("chat-send-button")}
 									>
