@@ -46,3 +46,5 @@ export const ENABLE_CONVERSATION_HEALTH = true;
 export const ENABLE_ANNOUNCEMENTS = true;
 export const ENABLE_DISPLAY_CONVERSATION_LINKS = true;
 export const ENABLE_WEBHOOKS = true;
+export const ENABLE_AGENTIC_CHAT =
+	import.meta.env.VITE_ENABLE_AGENTIC_CHAT === "1";
