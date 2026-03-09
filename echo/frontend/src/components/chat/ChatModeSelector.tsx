@@ -16,6 +16,7 @@ import {
 	IconSparkles,
 } from "@tabler/icons-react";
 import { useState } from "react";
+import { ENABLE_AGENTIC_CHAT } from "@/config";
 import { analytics } from "@/lib/analytics";
 import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import type { ChatMode } from "@/lib/api";
@@ -269,17 +270,19 @@ export const ChatModeSelector = ({
 
 				{/* Mode Cards */}
 				<Stack gap="lg">
-					<ModeCard
-						mode="agentic"
-						title={t`Agentic`}
-						subtitle={t`Delegate multi-step analysis with live tool execution`}
-						examples={getAgenticExamples()}
-						icon={IconSparkles}
-						isBeta
-						selectedMode={selectedMode}
-						isLoading={isLoading}
-						onSelectMode={handleSelectMode}
-					/>
+					{ENABLE_AGENTIC_CHAT && (
+						<ModeCard
+							mode="agentic"
+							title={t`Agentic`}
+							subtitle={t`Delegate multi-step analysis with live tool execution`}
+							examples={getAgenticExamples()}
+							icon={IconSparkles}
+							isBeta
+							selectedMode={selectedMode}
+							isLoading={isLoading}
+							onSelectMode={handleSelectMode}
+						/>
+					)}
 
 					<ModeCard
 						mode="deep_dive"
