@@ -18,6 +18,9 @@ export const AnalyticsEvents = {
 	// Dynamic Templates
 	DYNAMIC_TEMPLATE_USED: "Dynamic Template Used",
 	EDIT_REPORT: "Edit Report",
+
+	// Community
+	JOIN_SLACK_COMMUNITY: "Join Slack Community",
 	LIBRARY_CONTACT_SALES: "Library Contact Sales Click",
 	MOVE_TO_ANOTHER_PROJECT: "Move to Another Project",
 
@@ -27,13 +30,13 @@ export const AnalyticsEvents = {
 	// Summary & Report
 	REGENERATE_SUMMARY: "Regenerate Summary",
 
+	// Transcription
+	RETRANSCRIBE_CONVERSATION: "Retranscribe Conversation",
+
 	// Select All
 	SELECT_ALL_CLICK: "Select All Click",
 	SELECT_ALL_CONFIRM: "Select All Confirm",
 	SELECT_ALL_ERROR: "Select All Error",
 	SELECT_ALL_SUCCESS: "Select All Success",
-
-	// Transcription
-	RETRANSCRIBE_CONVERSATION: "Retranscribe Conversation",
 	UPDATE_REPORT: "Update Report",
 };

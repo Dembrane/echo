@@ -252,7 +252,7 @@ msgstr "{0, plural, one {Tag:} other {Tags:}}"
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: selectedOption.transitionDescription
 #. placeholder {0}: selectedOption.transitionMessage
-#: src/routes/project/chat/ProjectChatRoute.tsx:602
+#: src/routes/project/chat/ProjectChatRoute.tsx:608
 #: src/components/settings/FontSettingsCard.tsx:49
 #: src/components/settings/FontSettingsCard.tsx:51
 #: src/components/project/ProjectPortalEditor.tsx:599
@@ -344,6 +344,10 @@ msgstr "0 Aspecten"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:754
 msgid "1. You provide a URL where you want to receive notifications"
 msgstr "1. Je geeft een URL op waar je meldingen wilt ontvangen"
+
+#: src/components/layout/Header.tsx:257
+msgid "10+ members have joined"
+msgstr "10+ leden zijn lid geworden"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:759
 msgid "2. When a conversation event happens, we automatically send the conversation data to your URL"
@@ -482,7 +486,7 @@ msgstr "<0>{totalCount, plural, one {# extra gesprek} other {# extra gesprekken}
 msgid "select.all.modal.add.with.filters.more"
 msgstr "<0>{totalCount, plural, one {# extra gesprek} other {# extra gesprekken}}</0> toevoegen met de volgende filters:"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:712
+#: src/routes/project/chat/ProjectChatRoute.tsx:718
 msgid "Adding Context:"
 msgstr "Context toevoegen:"
 
@@ -515,7 +519,7 @@ msgstr "Geavanceerd (Tips en best practices)"
 msgid "Advanced Settings"
 msgstr "Geavanceerde instellingen"
 
-#: src/components/chat/ChatModeSelector.tsx:274
+#: src/components/chat/ChatModeSelector.tsx:276
 #: src/components/chat/ChatModeBanner.tsx:38
 msgid "Agentic"
 msgstr "Agentisch"
@@ -585,7 +589,7 @@ msgstr "Een e-mail melding wordt naar {0} deelnemer{1} verstuurd. Wilt u doorgaa
 msgid "An error occurred while loading the Portal. Please contact the support team."
 msgstr "Er is een fout opgetreden bij het laden van de Portal. Neem contact op met de ondersteuningsteam."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:649
+#: src/routes/project/chat/ProjectChatRoute.tsx:655
 msgid "An error occurred."
 msgstr "Er is een fout opgetreden."
 
@@ -922,7 +926,7 @@ msgstr "Basis instellingen"
 #: src/components/project/ProjectPortalEditor.tsx:1477
 #: src/components/conversation/RetranscribeConversation.tsx:144
 #: src/components/conversation/MoveConversationButton.tsx:142
-#: src/components/chat/ChatModeSelector.tsx:155
+#: src/components/chat/ChatModeSelector.tsx:156
 #: src/components/chat/ChatModeBanner.tsx:45
 msgid "Beta"
 msgstr "Bèta"
@@ -1018,12 +1022,12 @@ msgstr "Wijzigingen worden automatisch opgeslagen"
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Wijziging van de taal tijdens een actief gesprek kan onverwachte resultaten opleveren. Het wordt aanbevolen om een nieuw gesprek te starten na het wijzigen van de taal. Weet je zeker dat je wilt doorgaan?"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:515
 #: src/routes/project/chat/ProjectChatRoute.tsx:521
+#: src/routes/project/chat/ProjectChatRoute.tsx:527
 msgid "Chat"
 msgstr "Chat"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:295
+#: src/routes/project/chat/ProjectChatRoute.tsx:299
 msgid "Chat | Dembrane"
 msgstr "Chat | Dembrane"
 
@@ -1347,7 +1351,7 @@ msgstr "Een nieuwe webhook vanaf nul maken"
 #~ msgid "Create a new workspace"
 #~ msgstr "Maak een nieuwe werkruimte aan"
 
-#: src/components/chat/ChatModeSelector.tsx:66
+#: src/components/chat/ChatModeSelector.tsx:67
 msgid "Create a research brief from recent conversations"
 msgstr "Een onderzoeksbrief maken van recente gesprekken"
 
@@ -1440,7 +1444,7 @@ msgstr "Standaard"
 msgid "Default - No tutorial (Only privacy statements)"
 msgstr "Standaard - Geen tutorial (Alleen privacy verklaringen)"
 
-#: src/components/chat/ChatModeSelector.tsx:275
+#: src/components/chat/ChatModeSelector.tsx:277
 msgid "Delegate multi-step analysis with live tool execution"
 msgstr "Multistap analyse delegeren met live tool uitvoering"
 
@@ -1490,8 +1494,8 @@ msgstr "Verwijderd succesvol"
 msgid "dembrane events"
 msgstr "dembrane events"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:776
-#: src/routes/project/chat/ProjectChatRoute.tsx:810
+#: src/routes/project/chat/ProjectChatRoute.tsx:782
+#: src/routes/project/chat/ProjectChatRoute.tsx:814
 msgid "Dembrane is powered by AI. Please double-check responses."
 msgstr "dembrane draait op AI. Check de antwoorden extra goed."
 
@@ -1572,7 +1576,7 @@ msgstr "Wil je op de hoogte blijven?"
 #~ msgid "Document was deleted"
 #~ msgstr "Document is verwijderd"
 
-#: src/components/layout/Header.tsx:208
+#: src/components/layout/Header.tsx:223
 msgid "Documentation"
 msgstr "Documentatie"
 
@@ -1614,7 +1618,7 @@ msgstr "Transcript downloaden"
 msgid "Download Transcript Options"
 msgstr "Download transcript opties"
 
-#: src/components/chat/ChatModeSelector.tsx:68
+#: src/components/chat/ChatModeSelector.tsx:69
 msgid "Draft next actions and organize them by priority"
 msgstr "Ontwerp volgende acties en organiseer ze op basis van prioriteit"
 
@@ -1952,7 +1956,7 @@ msgstr "Verkennen"
 msgid "participant.echo.explore"
 msgstr "Verkennen"
 
-#: src/components/chat/ChatModeSelector.tsx:298
+#: src/components/chat/ChatModeSelector.tsx:301
 msgid "Explore themes & patterns across all conversations"
 msgstr "Ontdek thema's en patronen in al je gesprekken"
 
@@ -2181,7 +2185,7 @@ msgstr "Filter op actie"
 msgid "Filter by collection"
 msgstr "Filter op collectie"
 
-#: src/components/chat/ChatModeSelector.tsx:67
+#: src/components/chat/ChatModeSelector.tsx:68
 msgid "Find contradictions and suggest follow-up questions"
 msgstr "Vind tegenstrijdigheden en voeg volgende vragen voor"
 
@@ -2339,12 +2343,12 @@ msgstr "Bevat geverifieerde artefacten"
 #~ msgid "Hello, I will be your research assistant today. To get started please upload the documents you want to analyse."
 #~ msgstr "Hallo, ik ben vandaag je onderzoeksassistent. Om te beginnen upload je de documenten die je wilt analyseren."
 
-#: src/components/layout/Header.tsx:221
+#: src/components/layout/Header.tsx:236
 msgid "Help us translate"
 msgstr "Help ons te vertalen"
 
 #. placeholder {0}: user.first_name ?? "User"
-#: src/components/layout/Header.tsx:184
+#: src/components/layout/Header.tsx:199
 msgid "Hi, {0}"
 msgstr "Hallo, {0}"
 
@@ -2546,6 +2550,10 @@ msgstr "Italiaans"
 #~ msgid "Join {0} on Dembrane"
 #~ msgstr "Aansluiten {0} op Dembrane"
 
+#: src/components/layout/Header.tsx:255
+msgid "Join the Slack community"
+msgstr "Word lid van de Slack-community"
+
 #: src/components/common/DembraneLoadingSpinner/index.tsx:27
 msgid "Just a moment"
 msgstr "Gewoon een momentje"
@@ -2744,7 +2752,7 @@ msgstr "Logo verwijderd"
 msgid "Logo updated successfully"
 msgstr "Logo succesvol bijgewerkt"
 
-#: src/components/layout/Header.tsx:229
+#: src/components/layout/Header.tsx:267
 msgid "Logout"
 msgstr "Uitloggen"
 
@@ -3178,7 +3186,7 @@ msgid "Outcomes"
 msgstr "Resultaten"
 
 #: src/components/layout/ProjectConversationLayout.tsx:44
-#: src/components/chat/ChatModeSelector.tsx:297
+#: src/components/chat/ChatModeSelector.tsx:300
 #: src/components/chat/ChatModeBanner.tsx:36
 msgid "Overview"
 msgstr "Overzicht"
@@ -3369,7 +3377,7 @@ msgstr "In afwachting"
 msgid "Phone"
 msgstr "Telefoon"
 
-#: src/components/chat/ChatModeSelector.tsx:266
+#: src/components/chat/ChatModeSelector.tsx:267
 msgid "Pick the approach that fits your question"
 msgstr "Kies de aanpak die past bij je vraag"
 
@@ -3437,7 +3445,7 @@ msgstr "Kies een taal voor je bijgewerkte rapport"
 #~ msgid "Please select at least one source"
 #~ msgstr "Kies minstens één bron"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:700
+#: src/routes/project/chat/ProjectChatRoute.tsx:706
 msgid "Please select conversations from the sidebar to proceed"
 msgstr "Selecteer gesprekken in de sidebar om verder te gaan"
 
@@ -3488,7 +3496,7 @@ msgstr "Portaal-editor"
 msgid "Powered by"
 msgstr "Gemaakt met ❤️ door"
 
-#: src/components/chat/ChatModeSelector.tsx:311
+#: src/components/chat/ChatModeSelector.tsx:314
 msgid "Preparing your conversations... This may take a moment."
 msgstr "Je gesprekken worden klaargezet... Dit kan even duren."
 
@@ -3630,7 +3638,7 @@ msgstr "Publiceren"
 msgid "Published"
 msgstr "Gepubliceerd"
 
-#: src/components/chat/ChatModeSelector.tsx:61
+#: src/components/chat/ChatModeSelector.tsx:62
 msgid "Pull out the most impactful quotes from this session"
 msgstr "Haal de meest impactvolle quotes uit deze sessie"
 
@@ -3797,7 +3805,7 @@ msgstr "Reactie prompt"
 msgid "Report"
 msgstr "Rapport"
 
-#: src/components/layout/Header.tsx:80
+#: src/components/layout/Header.tsx:95
 msgid "Report an issue"
 msgstr "Rapporteer een probleem"
 
@@ -3904,7 +3912,7 @@ msgstr "Hertranscriptie niet beschikbaar voor anonieme gesprekken"
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "Hertranscriptie gestart. Nieuw gesprek wordt binnenkort beschikbaar."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:658
+#: src/routes/project/chat/ProjectChatRoute.tsx:664
 msgid "Retry"
 msgstr "Opnieuw proberen"
 
@@ -4038,7 +4046,7 @@ msgstr "Geheim gekopieerd"
 #~ msgid "See conversation status details"
 #~ msgstr "Gespreksstatusdetails bekijken"
 
-#: src/components/layout/Header.tsx:119
+#: src/components/layout/Header.tsx:134
 msgid "See you soon"
 msgstr "Tot snel"
 
@@ -4078,7 +4086,7 @@ msgstr "Selecteer ten minste één ander onderwerp voordat u dit verwijdert"
 msgid "Select Audio Files to Upload"
 msgstr "Selecteer audiobestanden om te uploaden"
 
-#: src/components/chat/ChatModeSelector.tsx:287
+#: src/components/chat/ChatModeSelector.tsx:290
 msgid "Select conversations and find exact quotes"
 msgstr "Selecteer gesprekken en vind exacte quotes"
 
@@ -4144,7 +4152,7 @@ msgstr "Selectie te groot"
 msgid "select.all.modal.context.limit.reached"
 msgstr "Selectie te groot. Sommige gesprekken zijn niet toegevoegd."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:800
+#: src/routes/project/chat/ProjectChatRoute.tsx:804
 #: src/components/chat/AgenticChatPanel.tsx:659
 msgid "Send"
 msgstr "Verzenden"
@@ -4172,7 +4180,7 @@ msgstr "Installeer je eerste project"
 #: src/routes/settings/UserSettingsRoute.tsx:56
 #: src/components/layout/ParticipantHeader.tsx:112
 #: src/components/layout/ParticipantHeader.tsx:113
-#: src/components/layout/Header.tsx:196
+#: src/components/layout/Header.tsx:211
 msgid "Settings"
 msgstr "Instellingen"
 
@@ -4363,7 +4371,7 @@ msgstr "Spaans"
 msgid "Specific Context"
 msgstr "Specifieke context"
 
-#: src/components/chat/ChatModeSelector.tsx:286
+#: src/components/chat/ChatModeSelector.tsx:289
 #: src/components/chat/ChatModeBanner.tsx:40
 msgid "Specific Details"
 msgstr "Specifieke details"
@@ -4400,7 +4408,7 @@ msgstr "Opnieuw beginnen"
 msgid "Status"
 msgstr "Status"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:615
+#: src/routes/project/chat/ProjectChatRoute.tsx:621
 #: src/components/chat/AgenticChatPanel.tsx:487
 msgid "Stop"
 msgstr "Stop"
@@ -4439,11 +4447,11 @@ msgstr "Aanbevelingen:"
 msgid "Summarize"
 msgstr "Samenvatten"
 
-#: src/components/chat/ChatModeSelector.tsx:55
+#: src/components/chat/ChatModeSelector.tsx:56
 msgid "Summarize key insights from my interviews"
 msgstr "Vat de belangrijkste inzichten uit mijn interviews samen"
 
-#: src/components/chat/ChatModeSelector.tsx:60
+#: src/components/chat/ChatModeSelector.tsx:61
 msgid "Summarize this interview into a shareable article"
 msgstr "Vat dit interview samen in een artikel dat je kunt delen"
 
@@ -4504,7 +4512,7 @@ msgstr "Neem even de tijd om een resultaat te creëren dat je bijdrage concreet 
 msgid "participant.refine.make.concrete.description"
 msgstr "Neem even de tijd om een resultaat te creëren dat je bijdrage concreet maakt."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:435
+#: src/routes/project/chat/ProjectChatRoute.tsx:439
 #: src/components/chat/AgenticChatPanel.tsx:379
 msgid "Template applied"
 msgstr "Template toegepast"
@@ -4954,7 +4962,7 @@ msgstr "Trigger automatische workflows in tools like Zapier, Make, or n8n"
 msgid "Try Again"
 msgstr "Opnieuw proberen"
 
-#: src/components/chat/ChatModeSelector.tsx:175
+#: src/components/chat/ChatModeSelector.tsx:176
 msgid "Try asking"
 msgstr "Vraag bijvoorbeeld"
 
@@ -4978,7 +4986,7 @@ msgstr "Tweestapsverificatie aangezet"
 msgid "Type"
 msgstr "Type"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:750
+#: src/routes/project/chat/ProjectChatRoute.tsx:756
 msgid "Type a message..."
 msgstr "Typ een bericht..."
 
@@ -5013,7 +5021,7 @@ msgstr "Kan het gegenereerde resultaat niet laden. Probeer het opnieuw."
 msgid "Unable to process this chunk"
 msgstr "Kan dit fragment niet verwerken"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:437
+#: src/routes/project/chat/ProjectChatRoute.tsx:441
 #: src/components/chat/AgenticChatPanel.tsx:381
 msgid "Undo"
 msgstr "Ongedaan maken"
@@ -5141,8 +5149,8 @@ msgstr "URL moet beginnen met http:// of https://"
 msgid "Use PII Redaction"
 msgstr "PII redaction gebruiken"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:773
-#: src/routes/project/chat/ProjectChatRoute.tsx:807
+#: src/routes/project/chat/ProjectChatRoute.tsx:779
+#: src/routes/project/chat/ProjectChatRoute.tsx:811
 msgid "Use Shift + Enter to add a new line"
 msgstr "Gebruik Shift + Enter om een nieuwe regel toe te voegen"
 
@@ -5325,7 +5333,7 @@ msgstr "Welkom terug"
 #~ msgid "Welcome to Big Picture Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Details mode."
 #~ msgstr "Welkom in Big Picture Mode! Ik heb samenvattingen van al je gesprekken klaarstaan. Vraag me naar patronen, thema’s en inzichten in je data. Voor exacte quotes start je een nieuwe chat in Specific Details mode."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:544
+#: src/routes/project/chat/ProjectChatRoute.tsx:550
 msgid "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
 msgstr "Welkom bij dembrane Chat! Gebruik de zijbalk om bronnen en gesprekken te selecteren die je wilt analyseren. Daarna kun je vragen stellen over de geselecteerde inhoud."
 
@@ -5336,7 +5344,7 @@ msgstr "Welkom bij Dembrane!"
 #~ msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Deep Dive mode."
 #~ msgstr "Welkom in Overview Mode! Ik heb samenvattingen van al je gesprekken klaarstaan. Vraag me naar patronen, thema’s en inzichten in je data. Voor exacte quotes start je een nieuwe chat in Deep Dive Mode."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:543
+#: src/routes/project/chat/ProjectChatRoute.tsx:549
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Welkom in Overview Mode! Ik heb samenvattingen van al je gesprekken klaarstaan. Vraag me naar patronen, thema’s en inzichten in je data. Voor exacte quotes start je een nieuwe chat in Specific Context mode."
 
@@ -5352,7 +5360,7 @@ msgstr "Welkom op je Home! Hier kun je al je projecten bekijken en toegang krijg
 msgid "Welcome!"
 msgstr "Welkom!"
 
-#: src/components/chat/ChatModeSelector.tsx:54
+#: src/components/chat/ChatModeSelector.tsx:55
 msgid "What are the main themes across all conversations?"
 msgstr "Wat zijn de belangrijkste thema's in alle gesprekken?"
 
@@ -5372,15 +5380,15 @@ msgstr "Wat wil je verifiëren?"
 #~ msgid "What kind of question do you want to ask for this document?"
 #~ msgstr "Wat voor soort vraag wil je stellen voor dit document?"
 
-#: src/components/chat/ChatModeSelector.tsx:56
+#: src/components/chat/ChatModeSelector.tsx:57
 msgid "What patterns emerge from the data?"
 msgstr "Welke patronen zie je in de data?"
 
-#: src/components/chat/ChatModeSelector.tsx:62
+#: src/components/chat/ChatModeSelector.tsx:63
 msgid "What were the key moments in this conversation?"
 msgstr "Wat waren de belangrijkste momenten in dit gesprek?"
 
-#: src/components/chat/ChatModeSelector.tsx:263
+#: src/components/chat/ChatModeSelector.tsx:264
 msgid "What would you like to explore?"
 msgstr "Wat wil je verkennen?"
 
