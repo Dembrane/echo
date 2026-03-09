@@ -38,6 +38,10 @@ export const PRIVACY_POLICY_URL =
 export const PLAUSIBLE_API_HOST =
 	import.meta.env.VITE_PLAUSIBLE_API_HOST ?? "https://plausible.io";
 
+export const COMMUNITY_SLACK_URL =
+	import.meta.env.VITE_COMMUNITY_SLACK_URL ??
+	"https://join.slack.com/t/dembranecommunity/shared_invite/zt-3qzvryh8l-M6w3u5BvuM8LssOhMbJGgQ";
+
 export const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === "1";
 
 export const ENABLE_CHAT_AUTO_SELECT = false;

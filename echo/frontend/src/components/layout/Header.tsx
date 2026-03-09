@@ -1,6 +1,14 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { ActionIcon, Group, Menu, Paper, Stack, Text } from "@mantine/core";
+import {
+	ActionIcon,
+	Box,
+	Group,
+	Menu,
+	Paper,
+	Stack,
+	Text,
+} from "@mantine/core";
 import { GearSixIcon } from "@phosphor-icons/react";
 import * as Sentry from "@sentry/react";
 import {
@@ -8,6 +16,7 @@ import {
 	IconLogout,
 	IconNotes,
 	IconShieldLock,
+	IconUsers,
 	IconWorld,
 } from "@tabler/icons-react";
 import { useEffect } from "react";
@@ -18,9 +27,15 @@ import {
 	useLogoutMutation,
 } from "@/components/auth/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
-import { DIRECTUS_PUBLIC_URL, ENABLE_ANNOUNCEMENTS } from "@/config";
+import {
+	COMMUNITY_SLACK_URL,
+	DIRECTUS_PUBLIC_URL,
+	ENABLE_ANNOUNCEMENTS,
+} from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
+import { analytics } from "@/lib/analytics";
+import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { testId } from "@/lib/testUtils";
 import { AnnouncementIcon } from "../announcement/AnnouncementIcon";
 import { Announcements } from "../announcement/Announcements";
@@ -219,6 +234,29 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 											{...testId("header-help-translate-menu-item")}
 										>
 											<Trans>Help us translate</Trans>
+										</Menu.Item>
+
+										<Menu.Item
+											rightSection={<IconUsers />}
+											component="a"
+											href={COMMUNITY_SLACK_URL}
+											target="_blank"
+											onClick={() => {
+												try {
+													analytics.trackEvent(events.JOIN_SLACK_COMMUNITY);
+												} catch (error) {
+													console.warn("Analytics tracking failed:", error);
+												}
+											}}
+											{...testId("header-join-community-menu-item")}
+											className="items-start gap-2"
+										>
+											<Box>
+												<Trans>Join the Slack community</Trans>
+												<Text size="xs" c="dimmed">
+													<Trans>10+ members have joined</Trans>
+												</Text>
+											</Box>
 										</Menu.Item>
 
 										<Menu.Item
