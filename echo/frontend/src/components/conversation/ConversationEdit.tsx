@@ -193,12 +193,9 @@ export const ConversationEdit = ({
 	});
 
 	useEffect(() => {
-		if (
-			conversation.title &&
-			!formState.dirtyFields.title &&
-			getValues("title") !== conversation.title
-		) {
-			setValue("title", conversation.title, { shouldDirty: false });
+		const nextTitle = conversation.title ?? "";
+		if (!formState.dirtyFields.title && getValues("title") !== nextTitle) {
+			setValue("title", nextTitle, { shouldDirty: false });
 		}
 	}, [conversation.title, formState.dirtyFields.title, getValues, setValue]);
 
