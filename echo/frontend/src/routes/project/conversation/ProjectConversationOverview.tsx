@@ -12,7 +12,11 @@ import {
 } from "@mantine/core";
 import { useClipboard } from "@mantine/hooks";
 import { IconRefresh } from "@tabler/icons-react";
-import { useMutation, useMutationState } from "@tanstack/react-query";
+import {
+	useMutation,
+	useMutationState,
+	useQueryClient,
+} from "@tanstack/react-query";
 import { useParams } from "react-router";
 import { CopyIconButton } from "@/components/common/CopyIconButton";
 import { Markdown } from "@/components/common/Markdown";
@@ -35,6 +39,7 @@ import { testId } from "@/lib/testUtils";
 
 export const ProjectConversationOverviewRoute = () => {
 	const { conversationId, projectId } = useParams();
+	const queryClient = useQueryClient();
 
 	const conversationQuery = useConversationById({
 		conversationId: conversationId ?? "",
@@ -112,7 +117,12 @@ export const ProjectConversationOverviewRoute = () => {
 		},
 		mutationKey: ["generateSummary", conversationId],
 		onSuccess: () => {
-			conversationQuery.refetch();
+			queryClient.invalidateQueries({
+				queryKey: ["conversations", conversationId],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["projects", projectId, "conversations"],
+			});
 		},
 	});
 
