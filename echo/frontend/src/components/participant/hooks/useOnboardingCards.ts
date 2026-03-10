@@ -1101,7 +1101,7 @@ export const useOnboardingCards = () => {
 						cta: "Ik begrijp het",
 						extraHelp:
 							"Opnames worden getranscribeerd en geanalyseerd om inzichten te genereren. Jouw gegevens worden opgeslagen op beveiligde servers in Europa, niet gebruikt om AI-modellen te trainen, en verwijderd binnen 30 dagen na afloop van het project.\n\nVragen over jouw privacy? Neem contact op met de organisator.",
-						title: "Verwerkingsverantwoordelijke, gebruik en beveiliging.",
+						title: "Gegevensbeheer, gebruik en beveiliging.",
 					},
 				],
 			},
@@ -1271,7 +1271,7 @@ export const useOnboardingCards = () => {
 									},
 								}
 							: {}),
-						title: "Verwerkingsverantwoordelijke, gebruik en beveiliging.",
+						title: "Gegevensbeheer, gebruik en beveiliging.",
 					},
 				],
 			},
