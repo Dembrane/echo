@@ -1510,7 +1510,11 @@ msgstr "Beschrijf wat de taalmodel moet extraheren of samenvatten uit het gespre
 #~ msgstr "Beschrijving"
 
 #: src/components/settings/LegalBasisSettingsCard.tsx:87
-msgid "Determines under which GDPR legal basis personal data is processed. This affects consent flows, data subject rights, and retention obligations."
+#~ msgid "Determines under which GDPR legal basis personal data is processed. This affects consent flows, data subject rights, and retention obligations."
+#~ msgstr "Bepaalt op welke AVG-grondslag persoonsgegevens worden verwerkt. Dit is van invloed op de informatie die aan deelnemers wordt getoond en de rechten van betrokkenen."
+
+#: src/components/settings/LegalBasisSettingsCard.tsx:87
+msgid "Determines under which GDPR legal basis personal data is processed. This affects the information shown to participants and data subject rights."
 msgstr "Bepaalt op welke AVG-grondslag persoonsgegevens worden verwerkt. Dit is van invloed op de informatie die aan deelnemers wordt getoond en de rechten van betrokkenen."
 
 #: src/components/project/ProjectPortalEditor.tsx:709
