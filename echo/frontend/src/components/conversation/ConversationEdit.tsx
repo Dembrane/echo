@@ -80,7 +80,8 @@ const getSourceLabel = (source: string | null): string | null => {
 const getNameDescription = (source: string | null): string => {
 	if (!source) return "";
 	const lower = source.toLowerCase();
-	if (lower.includes("portal")) return t`Entered by the participant on the portal`;
+	if (lower.includes("portal"))
+		return t`Entered by the participant on the portal`;
 	if (lower.includes("upload")) return t`Filename from uploaded file`;
 	if (lower.includes("clone")) return t`Copied from original conversation`;
 	return "";
@@ -137,9 +138,9 @@ export const ConversationEdit = ({
 	);
 
 	const defaultValues: ConversationEditFormValues = {
-		title: conversation.title ?? "",
 		participant_name: conversation.participant_name ?? "",
 		tagIdList: sanitizedConversationTagIds,
+		title: conversation.title ?? "",
 	};
 
 	const { register, formState, reset, setValue, control, watch, getValues } =
@@ -157,8 +158,8 @@ export const ConversationEdit = ({
 				await updateConversationMutation.mutateAsync({
 					id: conversation.id,
 					payload: {
-						title: data.title || null,
 						participant_name: data.participant_name,
+						title: data.title || null,
 					},
 				});
 
@@ -185,8 +186,18 @@ export const ConversationEdit = ({
 			queryClient.invalidateQueries({
 				queryKey: ["conversations", conversation.id],
 			});
+			queryClient.invalidateQueries({
+				queryKey: ["projects", conversation.project_id, "conversations"],
+			});
 		},
 	});
+
+	useEffect(() => {
+		const nextTitle = conversation.title ?? "";
+		if (!formState.dirtyFields.title && getValues("title") !== nextTitle) {
+			setValue("title", nextTitle, { shouldDirty: false });
+		}
+	}, [conversation.title, formState.dirtyFields.title, getValues, setValue]);
 
 	const hasSummary = !!conversation.summary;
 	const hasTitle = !!watch("title");
@@ -257,9 +268,7 @@ export const ConversationEdit = ({
 							<Text size="sm" c="dimmed">
 								<Trans>Duration</Trans>
 							</Text>
-							<Text size="sm">
-								{formatDuration(conversation.duration)}
-							</Text>
+							<Text size="sm">{formatDuration(conversation.duration)}</Text>
 						</Box>
 					)}
 
