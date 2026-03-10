@@ -86,8 +86,8 @@ export const LegalBasisSettingsCard = () => {
 				<Text size="sm" c="dimmed">
 					<Trans>
 						Determines under which GDPR legal basis personal data is processed.
-						This affects consent flows, data subject rights, and retention
-						obligations.
+						This affects the information shown to participants and data subject
+						rights.
 					</Trans>
 				</Text>
 

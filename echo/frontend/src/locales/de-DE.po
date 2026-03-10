@@ -1441,8 +1441,12 @@ msgid "Describe what the language model should extract or summarize from the con
 msgstr "Beschreiben Sie, was die Sprachmodell aus dem Gespräch extrahieren oder zusammenfassen soll..."
 
 #: src/components/settings/LegalBasisSettingsCard.tsx:87
-msgid "Determines under which GDPR legal basis personal data is processed. This affects consent flows, data subject rights, and retention obligations."
-msgstr "Bestimmt, unter welcher GDPR-Rechtsgrundlage personenbezogene Daten verarbeitet werden. Dies beeinflusst die Einwilligungsflüsse, die Rechte der Betroffenen und die Aufbewahrungspflichten."
+#~ msgid "Determines under which GDPR legal basis personal data is processed. This affects consent flows, data subject rights, and retention obligations."
+#~ msgstr "Bestimmt, unter welcher GDPR-Rechtsgrundlage personenbezogene Daten verarbeitet werden. Dies beeinflusst die Einwilligungsflüsse, die Rechte der Betroffenen und die Aufbewahrungspflichten."
+
+#: src/components/settings/LegalBasisSettingsCard.tsx:87
+msgid "Determines under which GDPR legal basis personal data is processed. This affects the information shown to participants and data subject rights."
+msgstr "Bestimmt, unter welcher GDPR-Rechtsgrundlage personenbezogene Daten verarbeitet werden. Dies beeinflusst die Informationen, die an Teilnehmer und betroffene Personen gezeigt werden und deren Rechte."
 
 #: src/components/project/ProjectPortalEditor.tsx:709
 msgid "Determines under which GDPR legal basis personal data is processed. This setting applies to all your projects and can be changed in your account settings."

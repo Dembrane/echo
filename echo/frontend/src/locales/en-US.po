@@ -1666,8 +1666,12 @@ msgstr "Describe what the language model should extract or summarize from the co
 #~ msgstr "Description"
 
 #: src/components/settings/LegalBasisSettingsCard.tsx:87
-msgid "Determines under which GDPR legal basis personal data is processed. This affects consent flows, data subject rights, and retention obligations."
-msgstr "Determines under which GDPR legal basis personal data is processed. This affects consent flows, data subject rights, and retention obligations."
+#~ msgid "Determines under which GDPR legal basis personal data is processed. This affects consent flows, data subject rights, and retention obligations."
+#~ msgstr "Determines under which GDPR legal basis personal data is processed. This affects consent flows, data subject rights, and retention obligations."
+
+#: src/components/settings/LegalBasisSettingsCard.tsx:87
+msgid "Determines under which GDPR legal basis personal data is processed. This affects the information shown to participants and data subject rights."
+msgstr "Determines under which GDPR legal basis personal data is processed. This affects the information shown to participants and data subject rights."
 
 #: src/components/project/ProjectPortalEditor.tsx:709
 msgid "Determines under which GDPR legal basis personal data is processed. This setting applies to all your projects and can be changed in your account settings."

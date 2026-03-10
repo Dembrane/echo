@@ -1093,7 +1093,7 @@ msgstr "Klik om alle {totalCount} gesprekken te zien"
 
 #: src/components/settings/LegalBasisSettingsCard.tsx:112
 msgid "Client-managed"
-msgstr "Client-beheerd"
+msgstr "Door client beheerd"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:282
 msgid "Clone from another project"
@@ -1186,7 +1186,7 @@ msgstr "Verbinding ongezond"
 
 #: src/components/settings/LegalBasisSettingsCard.tsx:113
 msgid "Consent"
-msgstr "Consent"
+msgstr "Toestemming"
 
 #~ msgid "Contact sales"
 #~ msgstr "Neem contact op met sales"
@@ -1510,8 +1510,12 @@ msgstr "Beschrijf wat de taalmodel moet extraheren of samenvatten uit het gespre
 #~ msgstr "Beschrijving"
 
 #: src/components/settings/LegalBasisSettingsCard.tsx:87
-msgid "Determines under which GDPR legal basis personal data is processed. This affects consent flows, data subject rights, and retention obligations."
-msgstr "Bepaalt onder welke GDPR-rechtsgrondslag personenbezogene gegevens worden verwerkt. Dit heeft invloed op toestemmingsstromen, rechten van betrokkenen en bewaarplichten."
+#~ msgid "Determines under which GDPR legal basis personal data is processed. This affects consent flows, data subject rights, and retention obligations."
+#~ msgstr "Bepaalt op welke AVG-grondslag persoonsgegevens worden verwerkt. Dit is van invloed op de informatie die aan deelnemers wordt getoond en de rechten van betrokkenen."
+
+#: src/components/settings/LegalBasisSettingsCard.tsx:87
+msgid "Determines under which GDPR legal basis personal data is processed. This affects the information shown to participants and data subject rights."
+msgstr "Bepaalt op welke AVG-grondslag persoonsgegevens worden verwerkt. Dit is van invloed op de informatie die aan deelnemers wordt getoond en de rechten van betrokkenen."
 
 #: src/components/project/ProjectPortalEditor.tsx:709
 msgid "Determines under which GDPR legal basis personal data is processed. This setting applies to all your projects and can be changed in your account settings."
