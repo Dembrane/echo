@@ -878,11 +878,14 @@ async def generate_verification_artifacts(
             except Exception as exc:
                 logger.warning("Failed to attach audio chunk %s: %s", chunk_id, exc)
 
+    project_language = (conversation.get("project_id") or {}).get("language") or "en"
+
     system_prompt = render_prompt(
         "generate_artifact",
         "en",
         {
             "prompt": target_topic.prompt,
+            "language": project_language,
         },
     )
 
@@ -973,6 +976,9 @@ async def update_verification_artifact(
         reference_conversation_id = body.use_conversation.conversation_id
         reference_timestamp = body.use_conversation.timestamp
 
+        conversation = await _get_conversation_with_project(reference_conversation_id, client)
+        project_language = (conversation.get("project_id") or {}).get("language") or "en"
+
         chunks = await _get_conversation_chunks(reference_conversation_id, client)
 
         conversation_transcript = _build_transcript_text(chunks)
@@ -995,6 +1001,7 @@ async def update_verification_artifact(
                 "transcript": conversation_transcript or "No transcript available.",
                 "outcome": artifact.get("content") or "",
                 "feedback": feedback_text or "No textual feedback available.",
+                "language": project_language,
             },
         )
 
