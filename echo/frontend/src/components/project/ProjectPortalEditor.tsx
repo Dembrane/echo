@@ -79,6 +79,7 @@ const FormSchema = z.object({
 	is_get_reply_enabled: z.boolean(),
 	is_project_notification_subscription_allowed: z.boolean(),
 	is_verify_enabled: z.boolean(),
+	is_verify_on_finish_enabled: z.boolean(),
 	language: z.enum(["en", "nl", "de", "fr", "es", "it"]),
 	verification_topics: z.array(z.string()),
 });
@@ -300,6 +301,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 			is_project_notification_subscription_allowed:
 				project.is_project_notification_subscription_allowed ?? false,
 			is_verify_enabled: project.is_verify_enabled ?? false,
+			is_verify_on_finish_enabled: project.is_verify_on_finish_enabled ?? false,
 			language: projectLanguageCode,
 			verification_topics: selectedTopicDefaults,
 		};
@@ -1233,6 +1235,39 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 															</Group>
 														)}
 													</Stack>
+												)}
+											/>
+
+											<Controller
+												name="is_verify_on_finish_enabled"
+												control={control}
+												render={({ field }) => (
+													<Switch
+														mt="xl"
+														label={
+															<FormLabel
+																label={t`Remind users to verify before finishing`}
+																isDirty={
+																	formState.dirtyFields
+																		.is_verify_on_finish_enabled
+																}
+																error={
+																	formState.errors.is_verify_on_finish_enabled
+																		?.message
+																}
+															/>
+														}
+														description={t`When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip`}
+														disabled={!watchedVerifyEnabled}
+														checked={field.value}
+														onChange={(e) =>
+															field.onChange(e.currentTarget.checked)
+														}
+														style={{
+															opacity: watchedVerifyEnabled ? 1 : 0.6,
+														}}
+														{...testId("portal-editor-verify-on-finish-switch")}
+													/>
 												)}
 											/>
 										</Stack>

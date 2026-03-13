@@ -1,7 +1,15 @@
 import { useChat } from "@ai-sdk/react";
+import { Trans } from "@lingui/react/macro";
+import { Box, Group, Paper, Text } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
+import { IconRosetteDiscountCheck } from "@tabler/icons-react";
 import { useEffect, useRef } from "react";
-import { useOutletContext, useParams, useSearchParams } from "react-router";
+import {
+	Link,
+	useOutletContext,
+	useParams,
+	useSearchParams,
+} from "react-router";
 import { API_BASE_URL } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLoadNotification } from "@/hooks/useLoadNotification";
@@ -12,10 +20,14 @@ import {
 } from "./hooks";
 import { ParticipantBody } from "./ParticipantBody";
 import { ParticipantEchoMessages } from "./ParticipantEchoMessages";
+import { useConversationArtefacts } from "./verify/hooks";
 import { VerifiedArtefactsList } from "./verify/VerifiedArtefactsList";
+
+const VERIFICATION_BANNER_THRESHOLD_SECONDS = 60;
 
 type OutletContextType = {
 	isRecording: boolean;
+	recordingTime: number;
 };
 
 export const ParticipantConversationAudioContent = () => {
@@ -25,7 +37,7 @@ export const ParticipantConversationAudioContent = () => {
 
 	const { projectId, conversationId } = useParams();
 	const [searchParams, setSearchParams] = useSearchParams();
-	const { isRecording } = useOutletContext<OutletContextType>();
+	const { isRecording, recordingTime } = useOutletContext<OutletContextType>();
 	const projectQuery = useParticipantProjectById(projectId ?? "");
 	const conversationQuery = useConversationQuery(projectId, conversationId);
 	const [_isRefineDisabled, _setIsRefineDisabled, removeValue] =
@@ -33,6 +45,14 @@ export const ParticipantConversationAudioContent = () => {
 			defaultValue: false,
 			key: `refine_disabled_${conversationId}`,
 		});
+
+	const artefactsQuery = useConversationArtefacts(conversationId);
+	const hasApprovedArtefacts = (artefactsQuery.data?.length ?? 0) > 0;
+	const showVerificationBanner =
+		!!projectQuery.data?.is_verify_on_finish_enabled &&
+		!!projectQuery.data?.is_verify_enabled &&
+		!hasApprovedArtefacts &&
+		recordingTime >= VERIFICATION_BANNER_THRESHOLD_SECONDS;
 
 	const hasEchoParam = searchParams.get("echo") === "1";
 
@@ -69,11 +89,13 @@ export const ParticipantConversationAudioContent = () => {
 	});
 
 	// Handle load status notifications (shows toast when backend reports high load)
-	const hasEchoContent = echoMessages.length > 0 && echoMessages[echoMessages.length - 1]?.content?.length > 0;
+	const hasEchoContent =
+		echoMessages.length > 0 &&
+		echoMessages[echoMessages.length - 1]?.content?.length > 0;
 	useLoadNotification({
 		data: echoData,
-		isLoading: echoIsLoading,
 		hasContent: hasEchoContent,
+		isLoading: echoIsLoading,
 	});
 
 	const handleReply = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -124,6 +146,36 @@ export const ParticipantConversationAudioContent = () => {
 				projectId={projectId ?? ""}
 				projectLanguage={projectQuery.data?.language}
 			/>
+
+			{showVerificationBanner && (
+				<Link to="verify" style={{ textDecoration: "none" }}>
+					<Box className="flex justify-end">
+						<Paper
+							radius="md"
+							p="md"
+							my="md"
+							withBorder
+							style={{
+								borderColor: "var(--mantine-color-gray-4)",
+								borderStyle: "dashed",
+								cursor: "pointer",
+							}}
+						>
+							<Group gap="sm" wrap="nowrap">
+								<Text size="lg" fw={500} c="dimmed">
+									<Trans id="participant.banner.verification_required">
+										Verification required
+									</Trans>
+								</Text>
+								<IconRosetteDiscountCheck
+									size={22}
+									color="var(--mantine-color-dimmed)"
+								/>
+							</Group>
+						</Paper>
+					</Box>
+				</Link>
+			)}
 
 			<ParticipantEchoMessages
 				echoMessages={echoMessages}

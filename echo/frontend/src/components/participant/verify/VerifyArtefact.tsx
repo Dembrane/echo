@@ -125,6 +125,10 @@ export const VerifyArtefact = () => {
 				conversationId,
 			});
 
+			queryClient.invalidateQueries({
+				queryKey: ["verify", "conversation_artifacts", conversationId],
+			});
+
 			const conversationUrl = `/${projectId}/conversation/${conversationId}`;
 			navigate(conversationUrl);
 

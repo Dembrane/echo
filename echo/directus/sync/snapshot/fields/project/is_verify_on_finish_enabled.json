@@ -1,13 +1,13 @@
 {
   "collection": "project",
-  "field": "anonymize_transcripts",
+  "field": "is_verify_on_finish_enabled",
   "type": "boolean",
   "meta": {
     "collection": "project",
     "conditions": null,
     "display": null,
     "display_options": null,
-    "field": "anonymize_transcripts",
+    "field": "is_verify_on_finish_enabled",
     "group": null,
     "hidden": false,
     "interface": "boolean",
@@ -16,7 +16,7 @@
     "readonly": false,
     "required": false,
     "searchable": true,
-    "sort": 36,
+    "sort": 32,
     "special": [
       "cast-boolean"
     ],
@@ -26,7 +26,7 @@
     "width": "full"
   },
   "schema": {
-    "name": "anonymize_transcripts",
+    "name": "is_verify_on_finish_enabled",
     "table": "project",
     "data_type": "boolean",
     "default_value": false,
