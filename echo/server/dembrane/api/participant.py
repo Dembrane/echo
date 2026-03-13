@@ -43,6 +43,7 @@ class PublicProjectSchema(BaseModel):
     is_conversation_allowed: bool
     is_get_reply_enabled: bool
     is_verify_enabled: bool
+    is_verify_on_finish_enabled: bool = False
     is_project_notification_subscription_allowed: bool
     verification_topics: Optional[List[str]] = []
 

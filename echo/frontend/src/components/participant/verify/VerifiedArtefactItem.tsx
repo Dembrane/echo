@@ -40,14 +40,6 @@ export const VerifiedArtefactItem = ({
 				{...(dataTestId ? testId(dataTestId) : {})}
 			>
 				<Group gap="sm" wrap="nowrap">
-					<ActionIcon
-						variant="subtle"
-						color="primary"
-						aria-label="concrete artefact"
-						size={22}
-					>
-						<IconRosetteDiscountCheck />
-					</ActionIcon>
 					<Group align="baseline">
 						<Text className="prose text-sm">
 							{icon ? <span className="mr-1">{icon}</span> : null}
@@ -59,6 +51,14 @@ export const VerifiedArtefactItem = ({
 							</Text>
 						)}
 					</Group>
+					<ActionIcon
+						variant="subtle"
+						color="primary"
+						aria-label="concrete artefact"
+						size={22}
+					>
+						<IconRosetteDiscountCheck />
+					</ActionIcon>
 				</Group>
 			</Paper>
 		</Box>
