@@ -48,6 +48,7 @@ import {
 import useChunkedAudioRecorder from "./hooks/useChunkedAudioRecorder";
 import { PermissionErrorModal } from "./PermissionErrorModal";
 import { StopRecordingConfirmationModal } from "./StopRecordingConfirmationModal";
+import { useConversationArtefacts } from "./verify/hooks";
 
 const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
 const REFINE_BUTTON_THRESHOLD_SECONDS = 60;
@@ -74,6 +75,7 @@ export const ParticipantConversationAudio = () => {
 	const conversationQuery = useConversationQuery(projectId, conversationId);
 	const chunks = useConversationChunksQuery(projectId, conversationId);
 	const uploadChunkMutation = useUploadConversationChunk();
+	const artefactsQuery = useConversationArtefacts(conversationId);
 	const pendingUploadsRef = useRef<Promise<unknown>[]>([]);
 
 	const onChunk = (chunk: Blob) => {
@@ -225,6 +227,14 @@ export const ParticipantConversationAudio = () => {
 		}
 	}, [refineInfoModalOpened, recordingTime, closeRefineInfoModal]);
 
+	const hasApprovedArtefacts = (artefactsQuery.data?.length ?? 0) > 0;
+	const effectiveRecordingTime = stoppedRecordingTime ?? recordingTime;
+	const shouldVerifyOnFinish =
+		!!projectQuery.data?.is_verify_on_finish_enabled &&
+		!!projectQuery.data?.is_verify_enabled &&
+		!hasApprovedArtefacts &&
+		effectiveRecordingTime >= REFINE_BUTTON_THRESHOLD_SECONDS;
+
 	// Handlers
 	const handleStopRecording = () => {
 		if (isRecording) {
@@ -274,6 +284,11 @@ export const ParticipantConversationAudio = () => {
 		}
 	};
 
+	const handleSkipVerification = async () => {
+		close();
+		await handleConfirmFinish();
+	};
+
 	const handleSwitchToText = () => {
 		setStoppedRecordingTime(null);
 		close();
@@ -289,6 +304,12 @@ export const ParticipantConversationAudio = () => {
 			wakeLock.obtainWakeLock();
 			wakeLock.enableAutoReacquire();
 		}
+	};
+
+	const handleVerify = () => {
+		close();
+		handleResumeRecording();
+		navigate(`/${projectId}/conversation/${conversationId}/verify`);
 	};
 
 	// Clear stoppedRecordingTime when recording actually starts (avoids UI flash)
@@ -473,6 +494,9 @@ export const ParticipantConversationAudio = () => {
 				handleConfirmFinish={handleConfirmFinish}
 				handleResume={handleResumeRecording}
 				handleSwitchToText={handleSwitchToText}
+				showVerifyOnFinish={shouldVerifyOnFinish}
+				handleSkipVerification={handleSkipVerification}
+				handleVerify={handleVerify}
 			/>
 
 			{/* Modal for refine info */}
@@ -580,6 +604,7 @@ export const ParticipantConversationAudio = () => {
 				<Outlet
 					context={{
 						isRecording,
+						recordingTime,
 					}}
 				/>
 				<div ref={scrollTargetRef} />

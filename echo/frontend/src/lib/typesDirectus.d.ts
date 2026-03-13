@@ -276,6 +276,7 @@ interface Project {
 	name: string | null;
 	updated_at: string | null;
 	is_verify_enabled: boolean | null;
+	is_verify_on_finish_enabled: boolean | null;
 	selected_verification_key_list: string | null;
 	conversations: string[] | Conversation[];
 	tags: string[] | ProjectTag[];

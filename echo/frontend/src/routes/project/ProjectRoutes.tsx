@@ -111,6 +111,7 @@ export const ProjectPortalSettingsRoute = () => {
 				"get_reply_prompt",
 				"is_get_reply_enabled",
 				"is_verify_enabled",
+				"is_verify_on_finish_enabled",
 				"selected_verification_key_list",
 				"is_project_notification_subscription_allowed",
 				"anonymize_transcripts",
