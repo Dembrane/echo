@@ -4,7 +4,12 @@ import { Box, Group, Paper, Text } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import { IconRosetteDiscountCheck } from "@tabler/icons-react";
 import { useEffect, useRef } from "react";
-import { useOutletContext, useParams, useSearchParams } from "react-router";
+import {
+	Link,
+	useOutletContext,
+	useParams,
+	useSearchParams,
+} from "react-router";
 import { API_BASE_URL } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLoadNotification } from "@/hooks/useLoadNotification";
@@ -143,30 +148,33 @@ export const ParticipantConversationAudioContent = () => {
 			/>
 
 			{showVerificationBanner && (
-				<Box className="flex justify-end">
-					<Paper
-						radius="md"
-						p="md"
-						my="md"
-						withBorder
-						style={{
-							borderColor: "var(--mantine-color-gray-4)",
-							borderStyle: "dashed",
-						}}
-					>
-						<Group gap="sm" wrap="nowrap">
-							<Text size="lg" fw={500} c="dimmed">
-								<Trans id="participant.banner.verification_required">
-									Verification required
-								</Trans>
-							</Text>
-							<IconRosetteDiscountCheck
-								size={22}
-								color="var(--mantine-color-dimmed)"
-							/>
-						</Group>
-					</Paper>
-				</Box>
+				<Link to="verify" style={{ textDecoration: "none" }}>
+					<Box className="flex justify-end">
+						<Paper
+							radius="md"
+							p="md"
+							my="md"
+							withBorder
+							style={{
+								borderColor: "var(--mantine-color-gray-4)",
+								borderStyle: "dashed",
+								cursor: "pointer",
+							}}
+						>
+							<Group gap="sm" wrap="nowrap">
+								<Text size="lg" fw={500} c="dimmed">
+									<Trans id="participant.banner.verification_required">
+										Verification required
+									</Trans>
+								</Text>
+								<IconRosetteDiscountCheck
+									size={22}
+									color="var(--mantine-color-dimmed)"
+								/>
+							</Group>
+						</Paper>
+					</Box>
+				</Link>
 			)}
 
 			<ParticipantEchoMessages
