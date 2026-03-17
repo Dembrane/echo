@@ -28,3 +28,24 @@ Votre réponse finale doit être de 1-3 phrases
 Utilisez le langage "nous/notre" pour la propriété collective
 Adaptez-vous à la langue de la transcription
 Reconnaissez l'incertitude lorsqu'elle est présente
+{% if pii_redaction %}
+
+Rédaction PII (OBLIGATOIRE) :
+Cette conversation est anonymisée. Vous DEVEZ supprimer toutes les informations personnellement identifiables de votre réponse.
+- Détectez les PII avec NER/modèles : noms de personnes, e-mails, numéros de téléphone, adresses/codes postaux, noms d'utilisateur, identifiants uniques (passeport/carte d'identité), IBAN, cartes de crédit, plaques d'immatriculation.
+- Indices de locale (exemples) : téléphone NL (+31/0… modèles), IBAN NL (NL##), code postal "1234 AB", BSN 8–9 chiffres.
+- Liste d'autorisation : si un token PII détecté ou une phrase multi-token exacte apparaît dans les keyterms, CONSERVEZ-le tel quel (pas de rédaction).
+- Sinon, remplacez TOUJOURS l'intégralité de la plage PII détectée par le marqueur exact en minuscules entre crochets angulaires :
+    Nom de personne → <redacted_name>
+    E-mail → <redacted_email>
+    Téléphone → <redacted_phone>
+    Adresse/code postal → <redacted_address>
+    Nom d'utilisateur → <redacted_username>
+    Pièce d'identité/passeport → <redacted_id>
+    IBAN → <redacted_iban>
+    Carte de crédit → <redacted_card>
+    Plaque d'immatriculation → <redacted_license_plate>
+- N'inventez pas d'autres balises entre crochets angulaires.
+- Préservez la ponctuation environnante ; après la rédaction, supprimez les espaces superflus et corrigez les virgules/points isolés.
+Ne jamais afficher de vrais noms, e-mails, numéros de téléphone ou autres PII. Si la transcription contient déjà des marqueurs <redacted_*>, conservez-les exactement.
+{% endif %}

@@ -15,3 +15,24 @@ Be concise but complete enough to stand alone
 Include context for future readers
 Acknowledge uncertainty when present
 Make it feel worth signing—true, not perfect
+{% if pii_redaction %}
+
+PII Redaction (MANDATORY):
+This conversation is anonymized. You MUST redact all personally identifiable information from your output.
+- Detect PII with NER/patterns: personal names, emails, phone numbers, addresses/postcodes, usernames/handles, unique IDs (passport/national ID), IBAN, credit cards, license plates.
+- Locale hints (examples): NL phone (+31/0… patterns), NL IBAN (NL##), postcode "1234 AB", BSN 8–9 digits.
+- Allow-list: if a detected PII token or exact multi-token phrase appears in keyterms, KEEP it as spoken (no redaction).
+- Otherwise, ALWAYS replace the entire detected PII span with the exact lowercase angle-bracket placeholder:
+    PERSON → <redacted_name>
+    EMAIL → <redacted_email>
+    PHONE → <redacted_phone>
+    ADDRESS/POSTCODE → <redacted_address>
+    USERNAME/HANDLE → <redacted_username>
+    NATIONAL ID/PASSPORT → <redacted_id>
+    IBAN → <redacted_iban>
+    CREDIT CARD → <redacted_card>
+    LICENSE PLATE → <redacted_license_plate>
+- Do not invent other angle-bracket tags.
+- Preserve surrounding punctuation; after redaction, collapse extra spaces and fix stray commas/periods.
+Never output real names, emails, phone numbers, or other PII. If the transcript already contains <redacted_*> placeholders, preserve them exactly.
+{% endif %}

@@ -1,6 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import type { Components } from "react-markdown";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import {
+	escapeRedactedTokens,
+	REDACTED_CODE_PREFIX,
+	RedactedBadge,
+} from "@/components/common/RedactedText";
 import { cn } from "@/lib/utils";
 
 export const Markdown = ({
@@ -25,6 +31,29 @@ export const Markdown = ({
 		}
 	}, []);
 
+	const processedContent = useMemo(
+		() => escapeRedactedTokens(content),
+		[content],
+	);
+
+	const components = useMemo<Components>(
+		() => ({
+			code({ children, className: codeClassName, ...props }) {
+				const text = String(children).trim();
+				if (!codeClassName && text.startsWith(REDACTED_CODE_PREFIX)) {
+					const type = text.slice(REDACTED_CODE_PREFIX.length);
+					return <RedactedBadge type={type} />;
+				}
+				return (
+					<code className={codeClassName} {...props}>
+						{children}
+					</code>
+				);
+			},
+		}),
+		[],
+	);
+
 	return (
 		<ReactMarkdown
 			className={cn(
@@ -32,8 +61,9 @@ export const Markdown = ({
 				className,
 			)}
 			remarkPlugins={[remarkGfm]}
+			components={components}
 		>
-			{content}
+			{processedContent}
 		</ReactMarkdown>
 	);
 };

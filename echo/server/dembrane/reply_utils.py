@@ -146,6 +146,7 @@ async def generate_reply_for_conversation(
                     "project_id.default_conversation_title",
                     "project_id.default_conversation_description",
                     "project_id.default_conversation_transcript_prompt",
+                    "project_id.anonymize_transcripts",
                     "tags.project_tag_id.text",
                     "participant_name",
                     "replies.id",
@@ -171,6 +172,8 @@ async def generate_reply_for_conversation(
 
     if conversation["project_id"]["is_get_reply_enabled"] is False:
         raise ValueError(f"Echo is not enabled for project {conversation['project_id']['id']}")
+
+    is_anonymized = bool(conversation["project_id"].get("anonymize_transcripts", False))
 
     current_conversation = Conversation(
         id=conversation["id"],
@@ -401,6 +404,7 @@ async def generate_reply_for_conversation(
             "GLOBAL_PROMPT": global_prompt,
             "OTHER_TRANSCRIPTS": formatted_adjacent_conversation,
             "MAIN_USER_TRANSCRIPT": formatted_current_conversation,
+            "pii_redaction": is_anonymized,
         },
     )
 

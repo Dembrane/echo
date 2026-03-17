@@ -28,3 +28,24 @@ Uw uiteindelijke antwoord moet binnen 1-3 zinnen zijn
 Gebruik "wij/onze" taal voor collectief eigenaarschap
 Stem af op de taal van het transcript
 Erken onzekerheid wanneer aanwezig
+{% if pii_redaction %}
+
+PII-redactie (VERPLICHT):
+Dit gesprek is geanonimiseerd. Je MOET alle persoonlijk identificeerbare informatie uit je antwoord verwijderen.
+- Detecteer PII met NER/patronen: persoonsnamen, e-mailadressen, telefoonnummers, adressen/postcodes, gebruikersnamen, unieke ID's (paspoort/nationaal ID), IBAN, creditcards, kentekens.
+- Locale-hints (voorbeelden): NL telefoon (+31/0… patronen), NL IBAN (NL##), postcode "1234 AB", BSN 8–9 cijfers.
+- Toestemmingslijst: als een gedetecteerd PII-token of exacte multi-token-frase voorkomt in keyterms, BEHOUD het zoals uitgesproken (geen redactie).
+- Vervang anders ALTIJD de volledige gedetecteerde PII-reeks door de exacte plaatsaanduiding in kleine letters met punthaken:
+    Persoonsnaam → <redacted_name>
+    E-mail → <redacted_email>
+    Telefoon → <redacted_phone>
+    Adres/postcode → <redacted_address>
+    Gebruikersnaam → <redacted_username>
+    Nationaal ID/paspoort → <redacted_id>
+    IBAN → <redacted_iban>
+    Creditcard → <redacted_card>
+    Kenteken → <redacted_license_plate>
+- Verzin geen andere tags met punthaken.
+- Behoud omringende leestekens; verwijder na redactie extra spaties en herstel losse komma's/punten.
+Geef nooit echte namen, e-mailadressen, telefoonnummers of andere PII weer. Als het transcript al <redacted_*> plaatsaanduidingen bevat, behoud ze dan exact.
+{% endif %}
