@@ -4,7 +4,6 @@ import { IconDotsVertical, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router";
 import { Markdown } from "@/components/common/Markdown";
-import { RedactedText } from "@/components/common/RedactedText";
 import { toast } from "@/components/common/Toaster";
 import { deleteParticipantConversationChunk } from "@/lib/api";
 
@@ -106,8 +105,6 @@ const UserChunkMessage = ({
 				<Text className="prose text-sm">
 					{chunk.transcript == null ? (
 						<Markdown content={t`*Transcription in progress.*`} />
-					) : chunk.transcript.includes("<redacted_") ? (
-						<RedactedText>{chunk.transcript}</RedactedText>
 					) : (
 						<Markdown content={chunk.transcript} />
 					)}
