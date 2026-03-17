@@ -604,6 +604,7 @@ async def _get_conversation_with_project(conversation_id: str, client: DirectusC
                     "project_id.language",
                     "project_id.name",
                     "project_id.is_verify_enabled",
+                    "project_id.anonymize_transcripts",
                 ],
             }
         },
@@ -745,6 +746,7 @@ def _build_user_message_content(
     artifacts: List[dict],
     transcript_text: str,
     audio_summary: str,
+    is_anonymized: bool = False,
 ) -> str:
     project = conversation.get("project_id") or {}
     parts = [
@@ -757,7 +759,9 @@ def _build_user_message_content(
         parts.append(f"Participant name: {participant_name}")
     participant_email = conversation.get("participant_email")
     if participant_email:
-        parts.append(f"Participant email: {participant_email}")
+        parts.append(
+            f"Participant email: {'<redacted_email>' if is_anonymized else participant_email}"
+        )
 
     parts.append("")  # spacer
     parts.append(_format_previous_artifacts(artifacts))
@@ -819,9 +823,11 @@ async def generate_verification_artifacts(
     client = directus
 
     conversation = await _get_conversation_with_project(body.conversation_id, client)
-    project_id = (conversation.get("project_id") or {}).get("id")
+    project = conversation.get("project_id") or {}
+    project_id = project.get("id")
     if not project_id:
         raise HTTPException(status_code=400, detail="Conversation is missing project information")
+    is_anonymized = bool(project.get("anonymize_transcripts", False))
 
     topics = await _get_verification_topics_for_project(project_id, client)
     topic_map = {topic.key: topic for topic in topics if topic.key}
@@ -857,7 +863,9 @@ async def generate_verification_artifacts(
     audio_chunks = _select_audio_chunks(chunks, last_artifact_time)
     audio_summary = _format_audio_summary(audio_chunks)
 
-    user_text = _build_user_message_content(conversation, artifacts, transcript_text, audio_summary)
+    user_text = _build_user_message_content(
+        conversation, artifacts, transcript_text, audio_summary, is_anonymized=is_anonymized
+    )
     message_content = [{"type": "text", "text": user_text}]
 
     for chunk in audio_chunks:
@@ -878,7 +886,7 @@ async def generate_verification_artifacts(
             except Exception as exc:
                 logger.warning("Failed to attach audio chunk %s: %s", chunk_id, exc)
 
-    project_language = (conversation.get("project_id") or {}).get("language") or "en"
+    project_language = project.get("language") or "en"
 
     system_prompt = render_prompt(
         "generate_artifact",
@@ -886,6 +894,7 @@ async def generate_verification_artifacts(
         {
             "prompt": target_topic.prompt,
             "language": project_language,
+            "pii_redaction": is_anonymized,
         },
     )
 
@@ -977,7 +986,9 @@ async def update_verification_artifact(
         reference_timestamp = body.use_conversation.timestamp
 
         conversation = await _get_conversation_with_project(reference_conversation_id, client)
-        project_language = (conversation.get("project_id") or {}).get("language") or "en"
+        project = conversation.get("project_id") or {}
+        project_language = project.get("language") or "en"
+        is_anonymized = bool(project.get("anonymize_transcripts", False))
 
         chunks = await _get_conversation_chunks(reference_conversation_id, client)
 
@@ -1002,6 +1013,7 @@ async def update_verification_artifact(
                 "outcome": artifact.get("content") or "",
                 "feedback": feedback_text or "No textual feedback available.",
                 "language": project_language,
+                "pii_redaction": is_anonymized,
             },
         )
 

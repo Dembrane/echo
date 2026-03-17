@@ -2,9 +2,37 @@ import { t } from "@lingui/core/macro";
 import { Text, Tooltip } from "@mantine/core";
 import { type ReactNode, useMemo } from "react";
 
-const REDACTED_PATTERN = /<redacted_([a-z_]+)>/g;
+export const REDACTED_PATTERN = /<redacted_([a-z_]+)>/g;
+export const REDACTED_CODE_PREFIX = "redacted:";
 
-const getRedactedLabels = (): Record<string, string> => ({
+const SAFE_REDACTED_PATTERN = /`redacted:([a-z_]+)`/g;
+
+/**
+ * Converts `<redacted_*>` tokens to backtick-wrapped inline code
+ * (`` `redacted:type` ``) that MDX/Markdown editors preserve verbatim.
+ */
+export const escapeRedactedTokens = (text: string): string => {
+	if (!text || !text.includes("<redacted_")) {
+		return text;
+	}
+	return text.replace(
+		REDACTED_PATTERN,
+		(_match, type: string) => `\`${REDACTED_CODE_PREFIX}${type}\``,
+	);
+};
+
+/**
+ * Reverses `escapeRedactedTokens`, restoring `` `redacted:type` ``
+ * back to `<redacted_type>` for downstream rendering.
+ */
+export const unescapeRedactedTokens = (text: string): string => {
+	if (!text || !text.includes("`redacted:")) {
+		return text;
+	}
+	return text.replace(SAFE_REDACTED_PATTERN, "<redacted_$1>");
+};
+
+export const getRedactedLabels = (): Record<string, string> => ({
 	address: t`Address`,
 	card: t`Card`,
 	email: t`Email`,
@@ -16,7 +44,7 @@ const getRedactedLabels = (): Record<string, string> => ({
 	username: t`Username`,
 });
 
-const formatLabel = (key: string): string => {
+export const formatLabel = (key: string): string => {
 	const labels = getRedactedLabels();
 	if (key in labels) {
 		return labels[key];
@@ -27,17 +55,11 @@ const formatLabel = (key: string): string => {
 		.join(" ");
 };
 
-const RedactedBadge = ({ type }: { type: string }) => {
+export const RedactedBadge = ({ type }: { type: string }) => {
 	const label = formatLabel(type);
 	return (
 		<Tooltip label={t`This information is anonymized`} withArrow>
-			<Text
-				component="span"
-				size="sm"
-				bg="primary.2"
-				px={6}
-				py={1}
-			>
+			<Text component="span" size="sm" bg="primary.2" px={6} py={1}>
 				{label}
 			</Text>
 		</Tooltip>
@@ -63,7 +85,9 @@ export const parseRedactedText = (text: string): ReactNode[] | string => {
 		if (match.index > lastIndex) {
 			parts.push(text.slice(lastIndex, match.index));
 		}
-		parts.push(<RedactedBadge key={`${match.index}-${match[1]}`} type={match[1]} />);
+		parts.push(
+			<RedactedBadge key={`${match.index}-${match[1]}`} type={match[1]} />,
+		);
 		lastIndex = regex.lastIndex;
 	}
 

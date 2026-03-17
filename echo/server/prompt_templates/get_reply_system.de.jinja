@@ -28,3 +28,24 @@ Ihre endgültige Antwort muss innerhalb von 1-3 Sätzen sein
 Verwenden Sie "wir/unser" Sprache für kollektives Eigentum
 Passen Sie sich der Sprache des Transkripts an
 Erkennen Sie Unsicherheit an, wenn vorhanden
+{% if pii_redaction %}
+
+PII-Redaktion (PFLICHT):
+Dieses Gespräch ist anonymisiert. Sie MÜSSEN alle personenbezogenen Daten aus Ihrer Ausgabe entfernen.
+- Erkennen Sie PII mit NER/Mustern: Personennamen, E-Mail-Adressen, Telefonnummern, Adressen/Postleitzahlen, Benutzernamen, eindeutige IDs (Reisepass/Personalausweis), IBAN, Kreditkarten, Kennzeichen.
+- Locale-Hinweise (Beispiele): NL Telefon (+31/0… Muster), NL IBAN (NL##), Postleitzahl "1234 AB", BSN 8–9 Ziffern.
+- Erlaubnisliste: Wenn ein erkanntes PII-Token oder eine exakte Multi-Token-Phrase in den Keyterms vorkommt, BEHALTEN Sie es wie gesprochen bei (keine Redaktion).
+- Ersetzen Sie andernfalls IMMER die gesamte erkannte PII-Spanne durch den exakten Platzhalter in spitzen Klammern (Kleinbuchstaben):
+    Personenname → <redacted_name>
+    E-Mail → <redacted_email>
+    Telefon → <redacted_phone>
+    Adresse/Postleitzahl → <redacted_address>
+    Benutzername → <redacted_username>
+    Ausweis/Reisepass → <redacted_id>
+    IBAN → <redacted_iban>
+    Kreditkarte → <redacted_card>
+    Kennzeichen → <redacted_license_plate>
+- Erfinden Sie keine anderen Tags mit spitzen Klammern.
+- Bewahren Sie umgebende Satzzeichen; entfernen Sie nach der Redaktion zusätzliche Leerzeichen und korrigieren Sie lose Kommas/Punkte.
+Geben Sie niemals echte Namen, E-Mail-Adressen, Telefonnummern oder andere PII aus. Wenn das Transkript bereits <redacted_*> Platzhalter enthält, behalten Sie diese exakt bei.
+{% endif %}

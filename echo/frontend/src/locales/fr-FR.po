@@ -329,7 +329,7 @@ msgstr "{readingNow} lit actuellement"
 msgid "library.conversations.still.processing"
 msgstr "{0} en cours de traitement."
 
-#: src/components/participant/UserChunkMessage.tsx:108
+#: src/components/participant/UserChunkMessage.tsx:107
 msgid "*Transcription in progress.*"
 msgstr "*Transcription en cours.*"
 
@@ -495,7 +495,7 @@ msgstr "Ajout du contexte :"
 msgid "select.all.modal.loading.title"
 msgstr "Ajout de conversations"
 
-#: src/components/common/RedactedText.tsx:8
+#: src/components/common/RedactedText.tsx:36
 msgid "Address"
 msgstr "Adresse"
 
@@ -968,7 +968,7 @@ msgstr "Annuler"
 msgid "Cannot add empty conversation"
 msgstr "Impossible d'ajouter une conversation vide"
 
-#: src/components/common/RedactedText.tsx:9
+#: src/components/common/RedactedText.tsx:37
 msgid "Card"
 msgstr "Carte"
 
@@ -1432,7 +1432,7 @@ msgstr "Supprimer le projet"
 msgid "Delete Webhook"
 msgstr "Supprimer le webhook"
 
-#: src/components/participant/UserChunkMessage.tsx:69
+#: src/components/participant/UserChunkMessage.tsx:68
 msgid "Deleted successfully"
 msgstr "Supprimé avec succès"
 
@@ -1643,7 +1643,7 @@ msgstr "Mode d'édition"
 
 #: src/routes/auth/Login.tsx:251
 #: src/routes/auth/Login.tsx:255
-#: src/components/common/RedactedText.tsx:10
+#: src/components/common/RedactedText.tsx:38
 msgid "Email"
 msgstr "E-mail"
 
@@ -1940,7 +1940,7 @@ msgstr "Échec de la création du sujet personnalisé"
 msgid "Failed to delete custom topic"
 msgstr "Échec de la suppression du sujet personnalisé"
 
-#: src/components/participant/UserChunkMessage.tsx:46
+#: src/components/participant/UserChunkMessage.tsx:45
 msgid "Failed to delete response"
 msgstr "Échec de la suppression de la réponse"
 
@@ -2328,11 +2328,11 @@ msgstr ""
 msgid "participant.button.i.understand"
 msgstr "Je comprends"
 
-#: src/components/common/RedactedText.tsx:11
+#: src/components/common/RedactedText.tsx:39
 msgid "IBAN"
 msgstr "IBAN"
 
-#: src/components/common/RedactedText.tsx:12
+#: src/components/common/RedactedText.tsx:40
 msgid "ID"
 msgstr "ID"
 
@@ -2541,7 +2541,7 @@ msgstr "Création de la bibliothèque en cours"
 #~ msgid "library.regenerate"
 #~ msgstr "Bibliothèque régénérée"
 
-#: src/components/common/RedactedText.tsx:13
+#: src/components/common/RedactedText.tsx:41
 msgid "License Plate"
 msgstr "Plaque d'immatriculation"
 
@@ -2716,7 +2716,7 @@ msgstr "Déplacer vers un projet"
 #: src/components/project/ProjectBasicEdit.tsx:104
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:377
 #: src/components/conversation/ConversationEdit.tsx:308
-#: src/components/common/RedactedText.tsx:14
+#: src/components/common/RedactedText.tsx:42
 msgid "Name"
 msgstr "Nom"
 
@@ -3257,7 +3257,7 @@ msgstr "Mettre en pause la lecture"
 msgid "Pending"
 msgstr "En attente"
 
-#: src/components/common/RedactedText.tsx:15
+#: src/components/common/RedactedText.tsx:43
 msgid "Phone"
 msgstr "Téléphone"
 
@@ -4547,7 +4547,7 @@ msgstr "Cette e-mail est déjà dans la liste."
 msgid "participant.modal.refine.info.available.in"
 msgstr "Cette fonctionnalité sera disponible dans {remainingTime} secondes."
 
-#: src/components/common/RedactedText.tsx:33
+#: src/components/common/RedactedText.tsx:61
 msgid "This information is anonymized"
 msgstr "Ces informations sont anonymisées"
 
@@ -5000,7 +5000,7 @@ msgstr "Utiliser la rédaction PII"
 msgid "Use Shift + Enter to add a new line"
 msgstr "Utilisez Shift + Entrée pour ajouter une nouvelle ligne"
 
-#: src/components/common/RedactedText.tsx:16
+#: src/components/common/RedactedText.tsx:44
 msgid "Username"
 msgstr "Nom d'utilisateur"
 

@@ -28,3 +28,24 @@ La tua risposta finale deve essere di 1-3 frasi
 Usa il linguaggio "noi/nostro" per la proprietà collettiva
 Adatta la lingua della trascrizione
 Riconosci l'incertezza quando presente
+{% if pii_redaction %}
+
+Redazione PII (OBBLIGATORIO):
+Questa conversazione è anonimizzata. DEVI rimuovere tutte le informazioni di identificazione personale dal tuo output.
+- Rileva PII con NER/modelli: nomi di persone, e-mail, numeri di telefono, indirizzi/codici postali, nomi utente, ID univoci (passaporto/carta d'identità), IBAN, carte di credito, targhe.
+- Indicazioni di locale (esempi): telefono NL (+31/0… modelli), IBAN NL (NL##), codice postale "1234 AB", BSN 8–9 cifre.
+- Lista consentiti: se un token PII rilevato o una frase multi-token esatta appare nei keyterms, MANTIENILO così com'è (nessuna redazione).
+- Altrimenti, sostituisci SEMPRE l'intero intervallo PII rilevato con il segnaposto esatto in minuscolo tra parentesi angolari:
+    Nome persona → <redacted_name>
+    E-mail → <redacted_email>
+    Telefono → <redacted_phone>
+    Indirizzo/codice postale → <redacted_address>
+    Nome utente → <redacted_username>
+    Documento d'identità/passaporto → <redacted_id>
+    IBAN → <redacted_iban>
+    Carta di credito → <redacted_card>
+    Targa → <redacted_license_plate>
+- Non inventare altri tag con parentesi angolari.
+- Preserva la punteggiatura circostante; dopo la redazione, elimina gli spazi extra e correggi virgole/punti isolati.
+Non mostrare mai nomi reali, e-mail, numeri di telefono o altri PII. Se la trascrizione contiene già segnaposto <redacted_*>, conservali esattamente.
+{% endif %}

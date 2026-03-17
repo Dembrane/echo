@@ -320,7 +320,7 @@ msgstr "{0} worden nog verwerkt."
 #~ msgid "*Oh, we don't have a cookie statement because we don't use cookies! We eat them.*"
 #~ msgstr "*Oh, we hebben geen cookievermelding want we gebruiken geen cookies! We eten ze op.*"
 
-#: src/components/participant/UserChunkMessage.tsx:108
+#: src/components/participant/UserChunkMessage.tsx:107
 msgid "*Transcription in progress.*"
 msgstr "*Een moment a.u.b.*"
 
@@ -495,7 +495,7 @@ msgstr "Context toevoegen:"
 msgid "select.all.modal.loading.title"
 msgstr "Gesprekken toevoegen"
 
-#: src/components/common/RedactedText.tsx:8
+#: src/components/common/RedactedText.tsx:36
 msgid "Address"
 msgstr "Adres"
 
@@ -1007,7 +1007,7 @@ msgstr "Annuleren"
 msgid "Cannot add empty conversation"
 msgstr "Kan geen leeg gesprek toevoegen"
 
-#: src/components/common/RedactedText.tsx:9
+#: src/components/common/RedactedText.tsx:37
 msgid "Card"
 msgstr "Kaart"
 
@@ -1480,7 +1480,7 @@ msgstr "Verwijder project"
 msgid "Delete Webhook"
 msgstr "Webhook verwijderen"
 
-#: src/components/participant/UserChunkMessage.tsx:69
+#: src/components/participant/UserChunkMessage.tsx:68
 msgid "Deleted successfully"
 msgstr "Verwijderd succesvol"
 
@@ -1712,7 +1712,7 @@ msgstr "Bewerkmode"
 
 #: src/routes/auth/Login.tsx:251
 #: src/routes/auth/Login.tsx:255
-#: src/components/common/RedactedText.tsx:10
+#: src/components/common/RedactedText.tsx:38
 msgid "Email"
 msgstr "E-mail"
 
@@ -2015,7 +2015,7 @@ msgstr "Fout bij het aanmaken van het aangepaste onderwerp"
 msgid "Failed to delete custom topic"
 msgstr "Fout bij het verwijderen van het aangepaste onderwerp"
 
-#: src/components/participant/UserChunkMessage.tsx:46
+#: src/components/participant/UserChunkMessage.tsx:45
 msgid "Failed to delete response"
 msgstr "Fout bij het verwijderen van de reactie"
 
@@ -2418,11 +2418,11 @@ msgstr ""
 msgid "participant.button.i.understand"
 msgstr "Ik begrijp het"
 
-#: src/components/common/RedactedText.tsx:11
+#: src/components/common/RedactedText.tsx:39
 msgid "IBAN"
 msgstr "IBAN"
 
-#: src/components/common/RedactedText.tsx:12
+#: src/components/common/RedactedText.tsx:40
 msgid "ID"
 msgstr "ID"
 
@@ -2643,7 +2643,7 @@ msgstr "Bibliotheek wordt aangemaakt"
 #~ msgid "library.regenerate"
 #~ msgstr "Bibliotheek opnieuw genereren"
 
-#: src/components/common/RedactedText.tsx:13
+#: src/components/common/RedactedText.tsx:41
 msgid "License Plate"
 msgstr "Kenteken"
 
@@ -2818,7 +2818,7 @@ msgstr "Verplaats naar project"
 #: src/components/project/ProjectBasicEdit.tsx:104
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:377
 #: src/components/conversation/ConversationEdit.tsx:308
-#: src/components/common/RedactedText.tsx:14
+#: src/components/common/RedactedText.tsx:42
 msgid "Name"
 msgstr "Naam"
 
@@ -3377,7 +3377,7 @@ msgstr "Pauzeer het voorlezen"
 msgid "Pending"
 msgstr "In afwachting"
 
-#: src/components/common/RedactedText.tsx:15
+#: src/components/common/RedactedText.tsx:43
 msgid "Phone"
 msgstr "Telefoon"
 
@@ -4690,7 +4690,7 @@ msgstr "Deze e-mail is al in de lijst."
 msgid "participant.modal.refine.info.available.in"
 msgstr "Deze functie is beschikbaar over {remainingTime} seconden."
 
-#: src/components/common/RedactedText.tsx:33
+#: src/components/common/RedactedText.tsx:61
 msgid "This information is anonymized"
 msgstr "Deze informatie is anoniem"
 
@@ -5167,7 +5167,7 @@ msgstr "PII redaction gebruiken"
 msgid "Use Shift + Enter to add a new line"
 msgstr "Gebruik Shift + Enter om een nieuwe regel toe te voegen"
 
-#: src/components/common/RedactedText.tsx:16
+#: src/components/common/RedactedText.tsx:44
 msgid "Username"
 msgstr "Gebruikersnaam"
 
