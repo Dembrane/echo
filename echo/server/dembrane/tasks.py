@@ -182,7 +182,9 @@ def task_transcribe_chunk(
                 )
                 return
 
-            transcribe_conversation_chunk(conversation_chunk_id, use_pii_redaction, anonymize_transcripts)
+            transcribe_conversation_chunk(
+                conversation_chunk_id, use_pii_redaction, anonymize_transcripts
+            )
 
         # Transcription succeeded - decrement counter and check for finalization
         _on_chunk_transcription_done(conversation_id, conversation_chunk_id, logger)
@@ -575,12 +577,7 @@ def task_merge_conversation_chunks(conversation_id: str) -> None:
 
     try:
         try:
-            conversation = conversation_service.get_by_id_or_raise(conversation_id)
-
-            if conversation["is_finished"] and conversation["merged_audio_path"] is not None:
-                logger.info(f"Conversation {conversation_id} already merged, skipping")
-                return
-
+            conversation_service.get_by_id_or_raise(conversation_id)
         except Exception:
             logger.error(f"Conversation not found: {conversation_id}")
             return
@@ -777,7 +774,9 @@ def task_process_conversation_chunk(
 
         group(
             [
-                task_transcribe_chunk.message(cid, conversation_id, use_pii_redaction, anonymize_transcripts)
+                task_transcribe_chunk.message(
+                    cid, conversation_id, use_pii_redaction, anonymize_transcripts
+                )
                 for cid in valid_chunk_ids
             ]
         ).run()
