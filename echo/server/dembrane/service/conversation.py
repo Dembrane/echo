@@ -439,6 +439,27 @@ class ConversationService:
 
         conversation = self.get_by_id_or_raise(conversation_id)
 
+        # If the conversation was already finished+merged (e.g. auto-finished after
+        # a 5-min pause), reset its state so the finalization pipeline will run again
+        # once the user finishes recording. This ensures all segments are merged.
+        if conversation.get("is_finished") and conversation.get("merged_audio_path"):
+            logger.info(
+                f"Conversation {conversation_id} was already finished+merged. "
+                "Resetting state for new chunks."
+            )
+            with self._client_context() as client:
+                client.update_item(
+                    "conversation",
+                    conversation_id,
+                    {
+                        "is_finished": False,
+                        "is_all_chunks_transcribed": False,
+                        "merged_audio_path": None,
+                        "duration": None,
+                        "summary": None,
+                    },
+                )
+
         project = self.project_service.get_by_id_or_raise(conversation["project_id"])
 
         if project.get("is_conversation_allowed", False) is False:
