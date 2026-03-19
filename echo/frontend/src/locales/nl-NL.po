@@ -644,6 +644,10 @@ msgstr "meldingen"
 #~ msgid "Announcements"
 #~ msgstr "Meldingen"
 
+#: src/components/conversation/RetranscribeConversation.tsx:178
+msgid "Anonymize transcript"
+msgstr "Transcript anonimiseren"
+
 #: src/components/project/ProjectPortalEditor.tsx:1460
 msgid "Anonymize Transcripts"
 msgstr "Transcripten anoniem maken"
@@ -3448,6 +3452,10 @@ msgstr "Pauzeer het voorlezen"
 msgid "Pending"
 msgstr "In afwachting"
 
+#: src/components/conversation/RetranscribeConversation.tsx:182
+msgid "Personal information will be replaced with placeholders. Audio playback, download, and retranscription will be disabled for the new conversation."
+msgstr "Persoonlijke informatie wordt vervangen door tijdelijke aanduidingen. Audio afspelen, downloaden en hertranscriptie worden uitgeschakeld voor het nieuwe gesprek."
+
 #: src/components/common/RedactedText.tsx:43
 msgid "Phone"
 msgstr "Telefoon"
@@ -3638,8 +3646,12 @@ msgid "Project Created"
 msgstr "Project aangemaakt"
 
 #: src/components/conversation/RetranscribeConversation.tsx:181
-msgid "Project default: enabled. This will replace personally identifiable information with <redacted>."
-msgstr "Project standaard: ingeschakeld. Dit zal persoonlijke identificeerbare informatie vervangen door <redacted>."
+msgid "Project default: enabled. Personal information will be replaced with placeholders. Audio playback, download, and retranscription will be disabled for the new conversation."
+msgstr "Project standaard: ingeschakeld. Persoonlijke informatie wordt vervangen door tijdelijke aanduidingen. Audio afspelen, downloaden en hertranscriptie worden uitgeschakeld voor het nieuwe gesprek."
+
+#: src/components/conversation/RetranscribeConversation.tsx:181
+#~ msgid "Project default: enabled. This will replace personally identifiable information with <redacted>."
+#~ msgstr "Project standaard: ingeschakeld. Dit zal persoonlijke identificeerbare informatie vervangen door <redacted>."
 
 #: src/components/layout/ProjectLibraryLayout.tsx:6
 msgid "Project Library | Dembrane"
@@ -4886,8 +4898,8 @@ msgid "participant.concrete.loading.artefact.description"
 msgstr "We zijn je tekst aan het ophalen. Even geduld."
 
 #: src/components/conversation/RetranscribeConversation.tsx:182
-msgid "This will replace personally identifiable information with <redacted>."
-msgstr "Dit zal persoonlijk herkenbare informatie vervangen door <redacted>."
+#~ msgid "This will replace personally identifiable information with <redacted>."
+#~ msgstr "Dit zal persoonlijk herkenbare informatie vervangen door <redacted>."
 
 #~ msgid "Time Created"
 #~ msgstr "Tijd gemaakt"
@@ -5268,8 +5280,8 @@ msgstr "URL moet beginnen met http:// of https://"
 #~ msgstr "Experimentele functies gebruiken"
 
 #: src/components/conversation/RetranscribeConversation.tsx:178
-msgid "Use PII Redaction"
-msgstr "PII redaction gebruiken"
+#~ msgid "Use PII Redaction"
+#~ msgstr "PII redaction gebruiken"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:779
 #: src/routes/project/chat/ProjectChatRoute.tsx:811

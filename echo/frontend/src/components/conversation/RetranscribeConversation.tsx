@@ -175,11 +175,11 @@ export const RetranscribeConversationModal = ({
 						{...testId("transcript-retranscribe-name-input")}
 					/>
 					<Switch
-						label={t`Use PII Redaction`}
+						label={t`Anonymize transcript`}
 						description={
 							projectAnonymize
-								? t`Project default: enabled. This will replace personally identifiable information with <redacted>.`
-								: t`This will replace personally identifiable information with <redacted>.`
+								? t`Project default: enabled. Personal information will be replaced with placeholders. Audio playback, download, and retranscription will be disabled for the new conversation.`
+								: t`Personal information will be replaced with placeholders. Audio playback, download, and retranscription will be disabled for the new conversation.`
 						}
 						checked={usePiiRedaction}
 						onChange={(e) => setUsePiiRedaction(e.currentTarget.checked)}

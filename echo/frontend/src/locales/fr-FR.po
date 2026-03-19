@@ -638,6 +638,10 @@ msgstr "annonces"
 #~ msgid "Announcements"
 #~ msgstr "Annonces"
 
+#: src/components/conversation/RetranscribeConversation.tsx:178
+msgid "Anonymize transcript"
+msgstr "Anonymiser la transcription"
+
 #: src/components/project/ProjectPortalEditor.tsx:1460
 msgid "Anonymize Transcripts"
 msgstr "Anonymiser les transcriptions"
@@ -3328,6 +3332,10 @@ msgstr "Mettre en pause la lecture"
 msgid "Pending"
 msgstr "En attente"
 
+#: src/components/conversation/RetranscribeConversation.tsx:182
+msgid "Personal information will be replaced with placeholders. Audio playback, download, and retranscription will be disabled for the new conversation."
+msgstr "Les informations personnelles seront remplacées par des marqueurs. La lecture audio, le téléchargement et la retranscription seront désactivés pour la nouvelle conversation."
+
 #: src/components/common/RedactedText.tsx:43
 msgid "Phone"
 msgstr "Téléphone"
@@ -3515,8 +3523,12 @@ msgid "Project Created"
 msgstr "Projet créé"
 
 #: src/components/conversation/RetranscribeConversation.tsx:181
-msgid "Project default: enabled. This will replace personally identifiable information with <redacted>."
-msgstr "Projet par défaut : activé. Cela remplacera les informations personnelles identifiables avec <redacted>."
+msgid "Project default: enabled. Personal information will be replaced with placeholders. Audio playback, download, and retranscription will be disabled for the new conversation."
+msgstr "Projet par défaut : activé. Les informations personnelles seront remplacées par des marqueurs. La lecture audio, le téléchargement et la retranscription seront désactivés pour la nouvelle conversation."
+
+#: src/components/conversation/RetranscribeConversation.tsx:181
+#~ msgid "Project default: enabled. This will replace personally identifiable information with <redacted>."
+#~ msgstr "Projet par défaut : activé. Cela remplacera les informations personnelles identifiables avec <redacted>."
 
 #: src/components/layout/ProjectLibraryLayout.tsx:6
 msgid "Project Library | Dembrane"
@@ -4731,8 +4743,8 @@ msgid "participant.concrete.loading.artefact.description"
 msgstr "Cela ne prendra qu'un instant"
 
 #: src/components/conversation/RetranscribeConversation.tsx:182
-msgid "This will replace personally identifiable information with <redacted>."
-msgstr "Cela remplacera les informations personnelles identifiables avec <redacted>."
+#~ msgid "This will replace personally identifiable information with <redacted>."
+#~ msgstr "Cela remplacera les informations personnelles identifiables avec <redacted>."
 
 #~ msgid "Time Created"
 #~ msgstr "Date de création"
@@ -5101,8 +5113,8 @@ msgstr "L'URL doit commencer par http:// ou https://"
 #~ msgstr "Utiliser les fonctionnalités expérimentales"
 
 #: src/components/conversation/RetranscribeConversation.tsx:178
-msgid "Use PII Redaction"
-msgstr "Utiliser la rédaction PII"
+#~ msgid "Use PII Redaction"
+#~ msgstr "Utiliser la rédaction PII"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:779
 #: src/routes/project/chat/ProjectChatRoute.tsx:811
