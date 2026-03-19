@@ -128,7 +128,7 @@ const enrichAgenticContent = ({
 		(_match, conversationIdRaw: string, chunkIdRaw?: string) => {
 			const conversationId = conversationIdRaw.trim();
 			const chunkId = chunkIdRaw?.trim();
-			const label = chunkId ? "transcript excerpt" : "transcript";
+			const label = chunkId ? t`transcript excerpt` : t`transcript`;
 			return `[${label}](${buildTranscriptLink({
 				chunkId,
 				conversationId,
@@ -183,7 +183,7 @@ const toMessage = ({
 	if (event.event_type === "run.failed" || event.event_type === "run.timeout") {
 		return {
 			content: enrichAgenticContent({
-				content: content ?? "Agent run failed",
+				content: content ?? t`Agent run failed`,
 				language,
 				projectId,
 			}),
@@ -208,7 +208,7 @@ const toMessage = ({
 				? nestedError.message
 				: typeof data?.message === "string"
 					? data.message
-					: "Agent run failed";
+					: t`Agent run failed`;
 		return {
 			content: errorMessage,
 			id: `e-${event.seq}`,
@@ -227,17 +227,17 @@ const TOOL_STATUS_META: Record<
 > = {
 	completed: {
 		dotClass: "bg-emerald-500",
-		label: "Done",
+		label: t`Done`,
 		textClass: "text-emerald-700",
 	},
 	error: {
 		dotClass: "bg-red-500",
-		label: "Error",
+		label: t`Error`,
 		textClass: "text-red-700",
 	},
 	running: {
 		dotClass: "bg-amber-500",
-		label: "Running",
+		label: t`Running`,
 		textClass: "text-amber-700",
 	},
 };
@@ -451,7 +451,7 @@ export const AgenticChatPanel = ({
 				setStreamFailureCount((count) => {
 					const next = count + 1;
 					if (next >= 2) {
-						setError("Live stream interrupted. Falling back to polling.");
+						setError(t`Live stream interrupted. Falling back to polling.`);
 					}
 					return next;
 				});
@@ -667,7 +667,7 @@ export const AgenticChatPanel = ({
 			const nextError =
 				submitError instanceof Error
 					? submitError.message
-					: "Failed to submit agentic message";
+					: t`Failed to submit agentic message`;
 			setError(nextError);
 		} finally {
 			setIsSubmitting(false);
@@ -682,7 +682,7 @@ export const AgenticChatPanel = ({
 			await stopAgenticRun(runId);
 		} catch (stopError) {
 			const nextError =
-				stopError instanceof Error ? stopError.message : "Failed to stop run";
+				stopError instanceof Error ? stopError.message : t`Failed to stop run`;
 			setError(nextError);
 		} finally {
 			setIsStopping(false);
@@ -894,7 +894,7 @@ export const AgenticChatPanel = ({
 													{item.rawInput && (
 														<Box>
 															<Text className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-																Input
+																<Trans>Input</Trans>
 															</Text>
 															<Text
 																size="xs"
@@ -908,7 +908,7 @@ export const AgenticChatPanel = ({
 													{item.rawOutput && (
 														<Box>
 															<Text className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-																Output
+																<Trans>Output</Trans>
 															</Text>
 															<Text
 																size="xs"
@@ -922,7 +922,7 @@ export const AgenticChatPanel = ({
 													{item.rawError && (
 														<Box>
 															<Text className="text-[10px] font-semibold uppercase tracking-wide text-red-600">
-																Error
+																<Trans>Error</Trans>
 															</Text>
 															<Text
 																size="xs"

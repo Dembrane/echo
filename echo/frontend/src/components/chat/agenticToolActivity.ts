@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import type { AgenticRunEvent } from "@/lib/api";
 
 type AnyObject = Record<string, unknown>;
@@ -76,7 +77,8 @@ const humanizeToolName = (toolName: string) => {
 		.replace(/[_-]+/g, " ")
 		.trim();
 
-	if (!spaced) return "Tool";
+	if (!spaced) return t`Tool`;
+	if (spaced.toLowerCase() === "tool") return t`Tool`;
 	return `${spaced[0]?.toUpperCase() ?? ""}${spaced.slice(1)}`;
 };
 
@@ -87,21 +89,21 @@ type ToolContext = {
 const buildHeadline = (toolName: string, context: ToolContext) => {
 	switch (toolName) {
 		case "get_project_scope":
-			return "Load project context";
+			return t`Load project context`;
 		case "listProjectConversations":
-			return "List project conversations";
+			return t`List project conversations`;
 		case "findConvosByKeywords":
 			return context.query
-				? `Search conversations for "${context.query}"`
-				: "Search conversations";
+				? t`Search conversations for "${context.query}"`
+				: t`Search conversations`;
 		case "listConvoSummary":
-			return "Load conversation summary";
+			return t`Load conversation summary`;
 		case "listConvoFullTranscript":
-			return "Load full transcript";
+			return t`Load full transcript`;
 		case "grepConvoSnippets":
 			return context.query
-				? `Search transcript for "${context.query}"`
-				: "Search transcript";
+				? t`Search transcript for "${context.query}"`
+				: t`Search transcript`;
 		default: {
 			return humanizeToolName(toolName);
 		}
