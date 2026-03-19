@@ -59,7 +59,12 @@ class BffProjectsHomeResponse(BaseModel):
 
 
 _HOME_FIELDS = [
-    "id", "name", "updated_at", "language", "pin_order", "count(conversations)",
+    "id",
+    "name",
+    "updated_at",
+    "language",
+    "pin_order",
+    "count(conversations)",
 ]
 _HOME_FIELDS_WITHOUT_PIN_ORDER = [field for field in _HOME_FIELDS if field != "pin_order"]
 
@@ -132,6 +137,7 @@ async def get_projects_home(
 
     # Parse owner: prefix from search string (admin only)
     import re
+
     owner_term: Optional[str] = None
     text_search: Optional[str] = search
     if search and auth.is_admin:
@@ -178,9 +184,7 @@ async def get_projects_home(
                 {"query": query},
             )
         if not isinstance(projects_raw, list):
-            logger.warning(
-                "fallback get_items returned non-list for projects: %s", projects_raw
-            )
+            logger.warning("fallback get_items returned non-list for projects: %s", projects_raw)
             projects_raw = []
 
     has_more = len(projects_raw) > limit
@@ -628,9 +632,13 @@ async def create_report(
     if not is_scheduled:
         # Dispatch background task immediately
         task_create_report.send(project_id, report["id"], language, body.user_instructions or "")
-        logger.info(f"Report generation task dispatched for project {project_id}, report {report['id']}")
+        logger.info(
+            f"Report generation task dispatched for project {project_id}, report {report['id']}"
+        )
     else:
-        logger.info(f"Report {report['id']} scheduled for {body.scheduled_at} for project {project_id}")
+        logger.info(
+            f"Report {report['id']} scheduled for {body.scheduled_at} for project {project_id}"
+        )
 
     return report
 
@@ -640,6 +648,7 @@ def _extract_report_title(content: Optional[str]) -> Optional[str]:
     if not content:
         return None
     import re
+
     match = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
     return match.group(1).strip() if match else None
 
@@ -661,22 +670,32 @@ async def list_project_reports(
                     "project_id": {"_eq": project_id},
                     "status": {"_in": ["archived", "published", "scheduled", "draft"]},
                 },
-                "fields": ["id", "status", "date_created", "language", "user_instructions", "content", "scheduled_at"],
+                "fields": [
+                    "id",
+                    "status",
+                    "date_created",
+                    "language",
+                    "user_instructions",
+                    "content",
+                    "scheduled_at",
+                ],
                 "sort": ["-date_created"],
             }
         },
     )
     result = []
-    for r in (reports or []):
-        result.append({
-            "id": r["id"],
-            "status": r.get("status"),
-            "date_created": r.get("date_created"),
-            "language": r.get("language"),
-            "user_instructions": r.get("user_instructions"),
-            "scheduled_at": r.get("scheduled_at"),
-            "title": _extract_report_title(r.get("content")),
-        })
+    for r in reports or []:
+        result.append(
+            {
+                "id": r["id"],
+                "status": r.get("status"),
+                "date_created": r.get("date_created"),
+                "language": r.get("language"),
+                "user_instructions": r.get("user_instructions"),
+                "scheduled_at": r.get("scheduled_at"),
+                "title": _extract_report_title(r.get("content")),
+            }
+        )
     return result
 
 
@@ -875,6 +894,7 @@ async def get_report_views(
 
     # Recent views (last 10 minutes)
     from datetime import datetime, timezone, timedelta
+
     ten_mins_ago = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
     recent_metrics = await run_in_thread_pool(
         directus.get_items,
@@ -995,9 +1015,7 @@ async def stream_report_progress(
         # Check if report is already done before subscribing
         from dembrane.directus import directus
 
-        report = await run_in_thread_pool(
-            directus.get_item, "project_report", str(report_id)
-        )
+        report = await run_in_thread_pool(directus.get_item, "project_report", str(report_id))
         if not report or str(report.get("project_id")) != project_id:
             yield f"event: progress\ndata: {json.dumps({'type': 'failed', 'message': 'Report not found'})}\n\n"
             return
