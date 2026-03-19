@@ -493,6 +493,8 @@ export const AgenticChatPanel = ({
 	);
 
 	useEffect(() => {
+		const nextChatStorageKey = storageKeyForChat(chatId);
+		void nextChatStorageKey;
 		stopStream();
 		setRunId(null);
 		setRunStatus(null);
