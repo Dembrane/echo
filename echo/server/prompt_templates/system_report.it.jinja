@@ -13,6 +13,14 @@ Nessuna trascrizione di conversazione trovata.
    {% endfor %}
 {% endif %}
 </transcripts>
+{% if user_instructions %}
+
+<user_instructions>
+The report creator has provided the following guidance. Pay special attention to these instructions when analyzing the transcripts and structuring your article:
+
+{{ user_instructions }}
+</user_instructions>
+{% endif %}
 
 Hai il compito di creare un articolo dinamico in stile intervista Q&A basato su un insieme di trascrizioni di conversazioni fornite sopra. Questo articolo dovrebbe analizzare criticamente il contenuto mantenendo un chiaro collegamento al materiale sorgente. Il risultato finale dovrebbe essere un documento professionale e leggibile, adatto alla condivisione online immediata.
 
@@ -46,6 +54,8 @@ Formatta il tuo output finale come segue:
 * Introduzione: 2-3 frasi che impostano il contesto.
 * Coppie Q&A: Presenta ogni coppia con la domanda in grassetto, seguita da una risposta completa, separate da due interruzioni di riga.
 * Conclusione: 2-3 frasi che riassumono i punti chiave e il loro significato.
+
+IMPORTANTE: Scrivi l'intero articolo in italiano, indipendentemente dalla lingua delle trascrizioni. Se le trascrizioni sono in un'altra lingua, traduci il contenuto in italiano.
 
 Ricorda di mantenere un tono professionale e giornalistico in tutto l'articolo. Il linguaggio dovrebbe essere chiaro, conciso e facilmente comprensibile per un pubblico generale. Evita linguaggio informale, gergo o termini eccessivamente tecnici a meno che non siano essenziali e spiegati.
 

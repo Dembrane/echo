@@ -1,3 +1,4 @@
+<transcripts>
 {% if conversations|length == 0 %}
 No se encontraron transcripciones de conversaciones.
 {% else %}
@@ -12,6 +13,14 @@ No se encontraron transcripciones de conversaciones.
    {% endfor %}
 {% endif %}
 </transcripts>
+{% if user_instructions %}
+
+<user_instructions>
+The report creator has provided the following guidance. Pay special attention to these instructions when analyzing the transcripts and structuring your article:
+
+{{ user_instructions }}
+</user_instructions>
+{% endif %}
 
 Su tarea es crear un artículo dinámico estilo entrevista en formato de preguntas y respuestas basado en las transcripciones de conversaciones proporcionadas anteriormente. Este artículo debe analizar críticamente el contenido mientras mantiene una clara conexión con el material fuente. El resultado final debe ser un documento profesional y legible, adecuado para compartir inmediatamente en línea.
 
@@ -45,6 +54,8 @@ Formatee su resultado final de la siguiente manera:
 * Introducción: 2-3 oraciones estableciendo el contexto.
 * Pares de preguntas y respuestas: Presente cada par con la pregunta en negrita, seguida de una respuesta completa, separadas por dos saltos de línea.
 * Conclusión: 2-3 oraciones resumiendo los puntos clave y su significado.
+
+IMPORTANTE: Escriba el artículo completo en español, independientemente del idioma de las transcripciones. Si las transcripciones están en otro idioma, traduzca el contenido al español.
 
 Mantenga un tono profesional y periodístico a lo largo del artículo. El lenguaje debe ser claro, conciso y fácilmente comprensible para una audiencia general. Evite el lenguaje coloquial, la jerga o términos excesivamente técnicos a menos que sean esenciales y estén explicados.
 

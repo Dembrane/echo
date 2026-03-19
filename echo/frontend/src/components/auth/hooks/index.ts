@@ -1,7 +1,6 @@
 import {
 	passwordRequest,
 	passwordReset,
-	readUser,
 	registerUser,
 	registerUserVerify,
 } from "@directus/sdk";
@@ -9,7 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { useLocation, useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
-import { ADMIN_BASE_URL } from "@/config";
+import { ADMIN_BASE_URL, API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { directus } from "@/lib/directus";
 import { throwWithMessage } from "../utils/errorUtils";
@@ -21,22 +20,14 @@ export const useCurrentUser = ({
 } = {}) =>
 	useQuery({
 		enabled,
-		queryFn: () => {
+		queryFn: async () => {
 			try {
-				return directus.request(
-					readUser("me", {
-						fields: [
-							"id",
-							"first_name",
-							"email",
-							"disable_create_project",
-							"tfa_secret",
-							"whitelabel_logo",
-							"legal_basis",
-							"privacy_policy_url",
-						],
-					}),
+				const response = await fetch(
+					`${API_BASE_URL}/user-settings/me`,
+					{ credentials: "include" },
 				);
+				if (!response.ok) return null;
+				return response.json();
 			} catch (_error) {
 				return null;
 			}

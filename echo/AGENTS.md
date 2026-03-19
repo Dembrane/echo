@@ -158,6 +158,8 @@ bash echo/server/scripts/agentic/latest_runs.sh --chat-id <chat_uuid> --limit 1 
 | `frontend/src/config.ts` | Frontend feature flags |
 | `server/dembrane/settings.py` | Backend configuration |
 | `docs/frontend_translations.md` | Translation workflow |
+| `docs/branching_and_releases.md` | Branching strategy, release process, hotfixes |
+| `docs/database_migrations.md` | Directus data migration steps |
 
 ## Code Style
 
@@ -165,28 +167,85 @@ bash echo/server/scripts/agentic/latest_runs.sh --chat-id <chat_uuid> --limit 1 
 - Backend: Python 3.11+, FastAPI, Pydantic
 - Use existing patterns in the codebase as reference
 
-## Dev Notes
+## Branching Strategy & Deployment
 
-### Recent Changes (testing branch)
-- Copy guide enforcement: "context limit" → "selection too large"
-- Translations updated for all 6 languages
-- Suggestions use faster model (`TEXT_FAST` instead of `MULTI_MODAL_PRO`)
-- Stream status shows inline under "Thinking..." instead of toast
-- Webhooks (conversation-level notifications)
+See [docs/branching_and_releases.md](docs/branching_and_releases.md) for the full guide including hotfix process, release checklist, and ASCII diagrams.
 
-### Tech Debt / Known Issues
+Quick reference:
+- **Feature flow**: branch off `main` → (optional) merge to `testing` → PR to `main` → auto-deploys to Echo Next
+- **Releases**: tagged from `main` every ~2 weeks → auto-deploys to production
+- **Hotfixes**: branch off release tag → fix → new release → cherry-pick into main
+- **Project management**: Linear (`ECHO-xxx` tickets, two-week cycles)
+- **GitOps**: `dembrane/echo-gitops` (Terraform + Helm + Argo CD)
+
+## Architecture Notes
+
+### High-Level Stack
+
+```
+Frontend (React/Vite/Mantine)  →  Backend API (FastAPI)  →  Directus (headless CMS/DB)
+                                       ↕                          ↕
+                               Dramatiq Workers           PostgreSQL
+                               (gevent + standard)
+                                       ↕
+                                    Redis (pub/sub, task broker, caching)
+                                       ↕
+                               Agent Service (LangGraph, port 8001)
+```
+
+- **Directus** is the data layer — all collections (projects, conversations, reports, etc.) live there
+- **FastAPI** handles API routes, SSE streaming, and orchestration
+- **Dramatiq** handles background work: transcription, summarization, report generation
+- **Redis** is used for task brokering, pub/sub (SSE progress), and caching
+- **LiteLLM** routes all LLM calls with automatic failover between deployments
+
+### Report Generation Pipeline
+
+Report generation runs **synchronously** in Dramatiq network-queue workers (no asyncio — this was a deliberate choice after recurring event-loop corruption bugs):
+
+1. Fetch conversations for the project
+2. Fan-out summarization of individual conversations via `dramatiq.group()`
+3. Poll Redis for group completion
+4. Refetch conversations with summaries
+5. Fetch full transcripts via `gevent.pool.Pool` (concurrent I/O)
+6. Build prompt with token budget management
+7. Call LLM via `router_completion()` (sync litellm, uses `MULTI_MODAL_PRO`)
+
+Key files:
+- `server/dembrane/report_generation.py` — main pipeline
+- `server/dembrane/report_events.py` — Redis pub/sub for real-time SSE progress
+- `server/prompt_templates/system_report.{lang}.jinja` — per-language prompt templates (written IN the target language)
+
+### BFF Pattern
+
+Backend For Frontend endpoints under `/bff/` aggregate data the frontend needs in a single call. This is the preferred pattern over having the frontend make multiple Directus SDK calls directly.
+
+Example: `/bff/projects/home` bundles pinned projects, paginated project list, search results, and admin info into one response.
+
+### Transcription Pipeline
+
+Two-step process:
+1. **AssemblyAI** (`universal-3-pro`) for raw speech-to-text — supports en, es, pt, fr, de, it. Dutch ("nl") requires `universal-2` fallback.
+2. **Gemini correction** — fixes transcripts, normalizes hotwords, PII redaction, adds recording feedback
+
+Production uses webhook mode (`ASSEMBLYAI_WEBHOOK_URL`); polling is only a fallback path.
+
+### Agent Service
+
+The `agent/` directory contains the agentic chat service (LangGraph-based). It runs as a separate FastAPI service on port 8001. Agentic chat streams via `POST /api/agentic/runs/{run_id}/stream` — no Dramatiq dispatch. See `agent/README.md`.
+
+## Tech Debt / Known Issues
 - Some mypy errors in `llm_router.py` and `settings.py` (pre-existing, non-blocking)
 
-## Deployment Process
+## Deployment Checklist
 
-### Merging to Main (for echo-next environment)
+### Before Merging to Main
 
-1. **Compare branches**: `git log main..testing --oneline`
-2. **Check for new env vars**: Look for new `Field()` definitions in `settings.py` and new exports in `config.ts`
-3. **Update deployment env vars** if needed (see checklist below)
-4. **Push Directus schema** if there were database changes
-5. **Create PR**: `testing` → `main`
-6. **Deploy** after merge
+1. **Check for new env vars**: Look for new `Field()` definitions in `settings.py` and new exports in `config.ts`
+2. **Update deployment env vars** if needed (see checklist below)
+3. **Push Directus schema** if there were database changes (see `docs/database_migrations.md`)
+4. **Create PR** from feature branch to `main`
+5. After merge → auto-deploys to Echo Next
 
 ### Environment Variables Checklist
 
@@ -225,4 +284,4 @@ LLM__MULTI_MODAL_FAST_2__GCP_SA_JSON=${GCP_SA_JSON}
 LLM__MULTI_MODAL_FAST_2__VERTEX_LOCATION=europe-west1
 ```
 
-Model groups: `TEXT_FAST`, `MULTI_MODAL_PRO`, `MULTI_MODAL_FAST`
+Model groups: `MULTI_MODAL_PRO` (Gemini 2.5 Pro — chat, reports, transcript correction), `MULTI_MODAL_FAST` (Gemini 2.5 Flash — suggestions, verification, lightweight tasks), `TEXT_FAST` (Azure GPT-4.1 — being deprecated)

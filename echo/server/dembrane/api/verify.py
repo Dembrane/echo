@@ -917,6 +917,7 @@ async def generate_verification_artifacts(
                     "content": message_content,
                 },
             ],
+            thinking={"type": "enabled", "budget_tokens": 2048},
         )
     except Exception as exc:
         logger.error("Gemini completion failed: %s", exc, exc_info=True)
@@ -1061,6 +1062,7 @@ async def update_verification_artifact(
                         "content": message_content,
                     },
                 ],
+                thinking={"type": "enabled", "budget_tokens": 2048},
             )
         except Exception as exc:  # pragma: no cover - external failure
             logger.error("Gemini revision failed: %s", exc, exc_info=True)
