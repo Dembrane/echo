@@ -500,11 +500,30 @@ def _fetch_conversation(conversation_id: str) -> dict:
 
 
 def _save_transcript(
-    conversation_chunk_id: str, transcript: str, diarization: Optional[dict] = None
+    conversation_chunk_id: str,
+    transcript: str,
+    diarization: Optional[dict] = None,
+    mark_signpost_ready: bool = False,
 ) -> None:
     conversation_service.update_chunk(
         conversation_chunk_id, transcript=transcript, diarization=diarization
     )
+    if mark_signpost_ready:
+        try:
+            chunk = conversation_service.get_chunk_by_id_or_raise(conversation_chunk_id)
+            conversation_service.mark_chunk_signpost_ready(conversation_chunk_id)
+            conversation = conversation_service.get_signposting_context(chunk["conversation_id"])
+            project = conversation.get("project_id") or {}
+            if project.get("is_signposting_enabled", False):
+                from dembrane.tasks import task_refresh_conversation_signposts
+
+                task_refresh_conversation_signposts.send(chunk["conversation_id"])
+        except Exception as e:
+            logger.warning(
+                "Failed to queue signposting for chunk %s: %s",
+                conversation_chunk_id,
+                e,
+            )
 
 
 def _save_chunk_error(conversation_chunk_id: str, error_message: str) -> None:
@@ -605,6 +624,7 @@ def transcribe_conversation_chunk(
                 conversation_chunk_id,
                 transcript,
                 diarization={"schema": "Dembrane-26-01-redaction", "data": response},
+                mark_signpost_ready=True,
             )
             return conversation_chunk_id
 
@@ -637,6 +657,7 @@ def transcribe_conversation_chunk(
                     transcript,
                     # repurpose of legacy field. It's not a "diarization". This contains the raw transcription response and word lvl timestamps from Assembly
                     diarization={"schema": "Dembrane-25-09", "data": response},
+                    mark_signpost_ready=True,
                 )
                 return conversation_chunk_id
 
@@ -658,6 +679,7 @@ def transcribe_conversation_chunk(
                         "schema": "ASSEMBLYAI",
                         "data": assemblyai_response.get("words", {}),
                     },
+                    mark_signpost_ready=True,
                 )
                 return conversation_chunk_id
             case "LiteLLM":
@@ -666,7 +688,12 @@ def transcribe_conversation_chunk(
                 transcript = transcribe_audio_litellm(
                     chunk["path"], language=language, whisper_prompt=whisper_prompt
                 )
-                _save_transcript(conversation_chunk_id, transcript, diarization=None)
+                _save_transcript(
+                    conversation_chunk_id,
+                    transcript,
+                    diarization=None,
+                    mark_signpost_ready=True,
+                )
                 return conversation_chunk_id
             case _:
                 raise TranscriptionError(
