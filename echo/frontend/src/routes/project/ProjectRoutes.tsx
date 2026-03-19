@@ -117,6 +117,8 @@ export const ProjectPortalSettingsRoute = () => {
 				"anonymize_transcripts",
 				"enable_ai_title_and_tags",
 				"conversation_title_prompt",
+				"is_signposting_enabled",
+				"signposting_focus_terms",
 				{
 					tags: ["id", "created_at", "text", "sort"],
 				},

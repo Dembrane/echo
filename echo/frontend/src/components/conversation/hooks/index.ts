@@ -882,6 +882,20 @@ export const useConversationById = ({
 								},
 							],
 						},
+						{
+							signposts: [
+								"id",
+								"category",
+								"title",
+								"summary",
+								"evidence_quote",
+								"status",
+								"confidence",
+								"created_at",
+								"updated_at",
+								"evidence_chunk_id",
+							],
+						},
 						...(loadConversationChunks
 							? [
 									{

@@ -31,10 +31,15 @@ import { QRCode as QRCodeLogo } from "react-qrcode-logo";
 import { useParams } from "react-router";
 import { useProjectById } from "@/components/project/hooks";
 import { useProjectSharingLink } from "@/components/project/ProjectQRCode";
+import { testId } from "@/lib/testUtils";
 import {
 	type ActiveConversation,
 	useLiveConversations,
 } from "@/hooks/useLiveConversations";
+import {
+	type LiveConversationSignpost,
+	useLiveConversationSignposts,
+} from "@/hooks/useLiveConversationSignposts";
 
 // ============================================================================
 // DESIGN SYSTEM - Based on dembrane brand guidelines
@@ -947,6 +952,165 @@ const LiveRecordingIndicator = ({
 	);
 };
 
+const getSignpostBadgeStyle = (category: LiveConversationSignpost["category"]) => {
+	switch (category) {
+		case "agreement":
+			return {
+				backgroundColor: "rgba(24, 154, 131, 0.14)",
+				color: "#116e5d",
+			};
+		case "disagreement":
+			return {
+				backgroundColor: "rgba(214, 76, 76, 0.14)",
+				color: "#a63434",
+			};
+		case "tension":
+			return {
+				backgroundColor: "rgba(212, 135, 42, 0.14)",
+				color: "#8d5816",
+			};
+		case "theme":
+		default:
+			return {
+				backgroundColor: "rgba(65, 105, 225, 0.12)",
+				color: colors.royalBlue,
+			};
+	}
+};
+
+const LiveConversationSignpostsPanel = ({
+	conversations,
+	signpostsByConversation,
+}: {
+	conversations: ActiveConversation[];
+	signpostsByConversation: Record<string, LiveConversationSignpost[]>;
+}) => {
+	const conversationsWithSignposts = conversations
+		.map((conversation) => ({
+			...conversation,
+			signposts: (signpostsByConversation[conversation.id] ?? []).slice(0, 3),
+		}))
+		.filter((conversation) => conversation.signposts.length > 0);
+
+	if (conversationsWithSignposts.length === 0) {
+		return (
+			<div
+				style={{ marginTop: "16px", paddingLeft: "10px", width: "220px" }}
+				{...testId("host-guide-live-signposts-panel")}
+			>
+				<div
+					style={{
+						color: colors.graphite,
+						fontSize: "13px",
+						fontWeight: 600,
+						marginBottom: "6px",
+					}}
+				>
+					<Trans>Live signposts</Trans>
+				</div>
+				<div
+					style={{
+						color: "rgba(45, 45, 44, 0.6)",
+						fontSize: "13px",
+						lineHeight: 1.45,
+					}}
+				>
+					<Trans>Waiting for signposts from active conversations...</Trans>
+				</div>
+			</div>
+		);
+	}
+
+	return (
+		<div
+			style={{ marginTop: "16px", paddingLeft: "10px", width: "220px" }}
+			{...testId("host-guide-live-signposts-panel")}
+		>
+			<div
+				style={{
+					color: colors.graphite,
+					fontSize: "13px",
+					fontWeight: 600,
+					marginBottom: "8px",
+				}}
+			>
+				<Trans>Live signposts</Trans>
+			</div>
+			<div style={{ display: "grid", gap: "10px" }}>
+				{conversationsWithSignposts.map((conversation) => (
+					<div
+						key={conversation.id}
+						style={{
+							backgroundColor: "rgba(255, 255, 255, 0.55)",
+							border: "1px solid rgba(45, 45, 44, 0.08)",
+							borderRadius: "10px",
+							padding: "10px 12px",
+						}}
+						{...testId(`host-guide-live-signposts-conversation-${conversation.id}`)}
+					>
+						<div
+							style={{
+								color: colors.graphite,
+								fontSize: "13px",
+								fontWeight: 600,
+								marginBottom: "8px",
+							}}
+						>
+							{conversation.participantName ||
+								`Conversation ${conversation.id.slice(-6)}`}
+						</div>
+						<div style={{ display: "grid", gap: "8px" }}>
+							{conversation.signposts.map((signpost) => (
+								<div
+									key={signpost.id}
+									{...testId(`host-guide-live-signpost-${signpost.id}`)}
+								>
+									<span
+										style={{
+											...getSignpostBadgeStyle(signpost.category),
+											borderRadius: "999px",
+											display: "inline-block",
+											fontSize: "11px",
+											fontWeight: 600,
+											marginBottom: "4px",
+											padding: "2px 8px",
+											textTransform: "capitalize",
+										}}
+									>
+										{signpost.category ?? "theme"}
+									</span>
+									<div
+										style={{
+											color: colors.graphite,
+											fontSize: "13px",
+											fontWeight: 500,
+											lineHeight: 1.35,
+										}}
+									>
+										{signpost.title}
+									</div>
+									{signpost.summary && (
+										<div
+											style={{
+												color: "rgba(45, 45, 44, 0.68)",
+												fontSize: "12px",
+												lineHeight: 1.4,
+												marginTop: "2px",
+											}}
+										>
+											{signpost.summary}
+										</div>
+									)}
+								</div>
+							))}
+						</div>
+					</div>
+				))}
+			</div>
+		</div>
+	);
+};
+
 // QR Code component
 const BrandQRCode = ({ value }: { value: string }) => (
 	<QRCodeLogo
@@ -1026,11 +1190,16 @@ export const HostGuidePage = () => {
 				"language",
 				"is_conversation_allowed",
 				"default_conversation_ask_for_participant_name",
+				"is_signposting_enabled",
 			],
 		},
 	});
 
 	const sharingLink = useProjectSharingLink(project);
+	const { signpostsByConversation } = useLiveConversationSignposts(
+		liveConversations.map((conversation) => conversation.id),
+		showLiveRecordings && !!project?.is_signposting_enabled,
+	);
 	const langCode = (project?.language?.slice(0, 2) || "en") as LanguageCode;
 	const defaults = defaultTranslations[langCode] || defaultTranslations.en;
 	const askForName =
@@ -1594,6 +1763,12 @@ export const HostGuidePage = () => {
 						{showLiveRecordings && (
 							<div className="no-print">
 								<LiveRecordingIndicator conversations={liveConversations} />
+								{project?.is_signposting_enabled && (
+									<LiveConversationSignpostsPanel
+										conversations={liveConversations}
+										signpostsByConversation={signpostsByConversation}
+									/>
+								)}
 							</div>
 						)}
 					</div>
