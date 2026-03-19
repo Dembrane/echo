@@ -14,9 +14,9 @@ from pydantic import Field, BaseModel
 from fastapi.responses import JSONResponse, StreamingResponse
 
 from dembrane.service import chat_service, project_service, agentic_run_service
-from dembrane.chat_utils import generate_title
 from dembrane.directus import directus
 from dembrane.settings import get_settings
+from dembrane.chat_utils import generate_title
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.agentic_worker import process_agentic_run
 from dembrane.agentic_runtime import (
