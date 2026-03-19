@@ -61,6 +61,7 @@ class BffProjectsHomeResponse(BaseModel):
 _HOME_FIELDS = [
     "id", "name", "updated_at", "language", "pin_order", "count(conversations)",
 ]
+_HOME_FIELDS_WITHOUT_PIN_ORDER = [field for field in _HOME_FIELDS if field != "pin_order"]
 
 
 def _build_project_summary(raw: dict) -> BffProjectSummary:
@@ -100,6 +101,9 @@ async def get_projects_home(
     fields = list(_HOME_FIELDS)
     if auth.is_admin:
         fields.extend(["directus_user_id.first_name", "directus_user_id.email"])
+    fallback_fields = list(_HOME_FIELDS_WITHOUT_PIN_ORDER)
+    if auth.is_admin:
+        fallback_fields.extend(["directus_user_id.first_name", "directus_user_id.email"])
 
     # Fetch pinned projects (always, regardless of search)
     # Admins see only their own pins; non-admins see all (Directus permissions handle scoping)
@@ -107,6 +111,7 @@ async def get_projects_home(
     if auth.is_admin:
         pin_filter["directus_user_id"] = {"_eq": auth.user_id}
 
+    supports_pin_order = True
     pinned_raw = await run_in_thread_pool(
         client.get_items,
         "project",
@@ -122,6 +127,7 @@ async def get_projects_home(
     if not isinstance(pinned_raw, list):
         logger.warning("get_items returned non-list for pinned projects: %s", pinned_raw)
         pinned_raw = []
+        supports_pin_order = False
     pinned = [_build_project_summary(p) for p in pinned_raw]
 
     # Parse owner: prefix from search string (admin only)
@@ -144,8 +150,9 @@ async def get_projects_home(
         }
 
     # Build query for paginated project list
+    list_fields = fields if supports_pin_order else fallback_fields
     query: dict = {
-        "fields": fields,
+        "fields": list_fields,
         "sort": ["-updated_at"],
         "limit": limit + 1,
         "offset": offset,
@@ -162,7 +169,19 @@ async def get_projects_home(
     )
     if not isinstance(projects_raw, list):
         logger.warning("get_items returned non-list for projects: %s", projects_raw)
-        projects_raw = []
+        if supports_pin_order:
+            supports_pin_order = False
+            query["fields"] = fallback_fields
+            projects_raw = await run_in_thread_pool(
+                client.get_items,
+                "project",
+                {"query": query},
+            )
+        if not isinstance(projects_raw, list):
+            logger.warning(
+                "fallback get_items returned non-list for projects: %s", projects_raw
+            )
+            projects_raw = []
 
     has_more = len(projects_raw) > limit
     projects = [_build_project_summary(p) for p in projects_raw[:limit]]
