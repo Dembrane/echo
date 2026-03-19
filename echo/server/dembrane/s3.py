@@ -160,25 +160,25 @@ def generate_presigned_post(
 ) -> dict:
     """
     Generate a presigned POST URL for direct S3 upload.
-    
+
     Args:
         file_name: Target S3 key for the file
         content_type: MIME type of the file
         size_limit_mb: Maximum file size in MB
         expires_in_seconds: URL expiry time (default 1 hour)
-    
+
     Returns:
         dict with 'url', 'fields', and 'key'
     """
     file_name = get_sanitized_s3_key(file_name)
-    
+
     # Conditions for the upload
     conditions = [
         {"acl": "private"},
         {"Content-Type": content_type},
-        ["content-length-range", 0, size_limit_mb * 1024 * 1024]
+        ["content-length-range", 0, size_limit_mb * 1024 * 1024],
     ]
-    
+
     # Generate presigned POST
     presigned_post = s3_client.generate_presigned_post(
         Bucket=STORAGE_S3_BUCKET,
@@ -190,12 +190,30 @@ def generate_presigned_post(
         Conditions=conditions,
         ExpiresIn=expires_in_seconds,
     )
-    
+
     return {
         "url": presigned_post["url"],
         "fields": presigned_post["fields"],
         "key": file_name,
     }
+
+
+def generate_presigned_put(
+    file_name: str,
+    content_type: str = "text/plain",
+    expires_in_seconds: int = 60,
+) -> str:
+    """Generate a presigned PUT URL for a single-request S3 upload (no multipart)."""
+    file_name = get_sanitized_s3_key(file_name)
+    return s3_client.generate_presigned_url(
+        "put_object",
+        Params={
+            "Bucket": STORAGE_S3_BUCKET,
+            "Key": file_name,
+            "ContentType": content_type,
+        },
+        ExpiresIn=expires_in_seconds,
+    )
 
 
 def get_sanitized_s3_key(file_name: str) -> str:
@@ -233,7 +251,7 @@ def get_sanitized_s3_key(file_name: str) -> str:
     # Security: Prevent path traversal attacks in regular file names
     if ".." in file_name:
         raise ValueError(f"Invalid file name: path traversal detected in {file_name}")
-    
+
     return file_name
 
 

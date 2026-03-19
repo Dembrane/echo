@@ -341,6 +341,56 @@ async def upload_conversation_chunk(
 
 
 @ParticipantRouter.post(
+    "/conversations/{conversation_id}/check-s3",
+    response_model=dict,
+)
+async def check_s3_connectivity(
+    conversation_id: str,
+) -> dict:
+    """
+    Generate a presigned PUT URL so the client can test S3 reachability
+    before starting a recording session.
+    """
+    logger.info(f"S3 connectivity check requested for conversation {conversation_id}")
+
+    try:
+        conversation = await run_in_thread_pool(
+            conversation_service.get_by_id_or_raise, conversation_id
+        )
+        project = await run_in_thread_pool(
+            project_service.get_by_id_or_raise, conversation["project_id"]
+        )
+
+        if not project.get("is_conversation_allowed", False):
+            raise HTTPException(status_code=403, detail="Conversation not open for participation")
+
+        probe_key = f"conversation/{conversation_id}/probe"
+
+        from dembrane.s3 import generate_presigned_put
+
+        probe_url = await run_in_thread_pool(
+            generate_presigned_put,
+            file_name=probe_key,
+            content_type="text/plain",
+            expires_in_seconds=60,
+        )
+
+        return {"probe_url": probe_url}
+
+    except ConversationNotFoundException as e:
+        raise HTTPException(status_code=404, detail="Conversation not found") from e
+    except ConversationNotOpenForParticipationException as e:
+        raise HTTPException(
+            status_code=403, detail="Conversation not open for participation"
+        ) from e
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating S3 probe URL: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to generate S3 probe URL") from e
+
+
+@ParticipantRouter.post(
     "/conversations/{conversation_id}/get-upload-url",
     response_model=dict,
 )
