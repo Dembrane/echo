@@ -18,7 +18,7 @@ export const ParticipantReport = () => {
 	const { language, projectId } = useParams();
 
 	const { data: report, isLoading } = useLatestProjectReport(projectId ?? "");
-	const { data: views } = useProjectReportViews(report?.id ?? -1);
+	const { data: views } = useProjectReportViews(projectId ?? "", report?.id ?? -1);
 
 	const contributeLink = `${window.location.origin}/${language}/${projectId}/start`;
 
@@ -74,6 +74,7 @@ export const ParticipantReport = () => {
 	return (
 		<div {...testId("public-report-view")}>
 			<ReportRenderer
+				projectId={projectId ?? ""}
 				reportId={Number(report.id)}
 				opts={{
 					contributeLink: report.show_portal_link ? contributeLink : undefined,

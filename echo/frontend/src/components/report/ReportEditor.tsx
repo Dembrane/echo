@@ -61,10 +61,8 @@ const ReportEditorComponent: React.FC<{
 					: report.project_id;
 
 			await updateReportMutation.mutateAsync({
-				payload: {
-					...values,
-					project_id: { id: projectId } as Project,
-				},
+				projectId: projectId as string,
+				payload: values,
 				reportId: report.id,
 			});
 

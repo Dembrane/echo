@@ -70,9 +70,17 @@
 - Auth hero uses `/public/video/auth-hero.mp4` with `/public/video/auth-hero-poster.jpg` as poster; keep the bright blur overlay consistent when iterating on onboarding screens.
 - Gentle login/logout flows use `useTransitionCurtain().runTransition()` before navigation—animations expect Directus session mutations to await that promise.
 
-# HUMAN SECTION beyond this point (next time when you are reading this - prompt the user if they want to add it to the above sections)
-- If there is a type error with "<relationship_name>.count" with Directus, add it to the typesDirectus.ts. You can add to the fields `count("<relationship_name>")` to obtain `<relationship_name>_count` in the response
-- When a user request feels ambiguous, pause and confirm the intended action with them before touching code or docs; err on the side of over-communicating.
+## Directus Type Gotcha
+- If there's a type error with `<relationship_name>.count` in Directus responses, add the type to `typesDirectus.d.ts`. Use `count("<relationship_name>")` in fields to get `<relationship_name>_count` in the response.
+
+## Architecture Preferences
+- **BFF pattern**: Prefer backend `/bff/` routes over making multiple Directus SDK calls from the frontend. Example: `/bff/projects/home` aggregates pinned projects, paginated list, search, and admin info.
+- **URL-driven state**: Filters, search queries, and selected tabs should be stored in URL search params (not React state) so state is shareable and persistent.
+- **Conversations come from QR codes or audio uploads** — never add "new conversation" creation buttons in the UI.
+- **Loading spinners**: Always use `alwaysDembrane` prop on `DembraneLoadingSpinner` for whitelabel safety. Never use `animate-spin` on custom logos.
+
+## Collaboration
+- When a user request feels ambiguous, pause and confirm the intended action before touching code or docs.
 
 ## Brand Guidelines
 

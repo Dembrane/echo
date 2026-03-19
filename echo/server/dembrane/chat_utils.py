@@ -28,11 +28,11 @@ from dembrane.api.dependency_auth import DirectusSession
 logger = logging.getLogger("chat_utils")
 
 # Global LLM model for chat operations
-CHAT_LLM = MODELS.TEXT_FAST
+CHAT_LLM = MODELS.MULTI_MODAL_PRO
 
-# Get the minimum context length across all TEXT_FAST deployments
+# Get the minimum context length across all MULTI_MODAL_PRO deployments
 # This ensures we don't exceed limits when router picks any deployment
-MAX_CHAT_CONTEXT_LENGTH = get_min_context_length("text_fast")
+MAX_CHAT_CONTEXT_LENGTH = get_min_context_length("multi_modal_pro")
 
 settings = get_settings()
 DISABLE_CHAT_TITLE_GENERATION = settings.feature_flags.disable_chat_title_generation
@@ -358,7 +358,7 @@ async def generate_title(
     )
 
     response = await arouter_completion(
-        MODELS.MULTI_MODAL_PRO,
+        MODELS.MULTI_MODAL_FAST,
         messages=[{"role": "user", "content": title_prompt}],
     )
 
@@ -501,7 +501,7 @@ async def _call_llm_with_backoff(prompt: str, batch_num: int) -> Any:
     logger.debug(f"Calling LLM for batch {batch_num}")
     # Router handles load balancing and failover; backoff provides additional safety
     return await arouter_completion(
-        MODELS.TEXT_FAST,
+        MODELS.MULTI_MODAL_FAST,
         messages=[{"role": "user", "content": prompt}],
         response_format={"type": "json_object"},
         timeout=5 * 60,  # 5 minutes
