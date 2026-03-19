@@ -32,6 +32,8 @@ export const AnalyticsEvents = {
 
 	// Transcription
 	RETRANSCRIBE_CONVERSATION: "Retranscribe Conversation",
+	S3_CONNECTIVITY_CHECK_FAILED: "S3 Connectivity Check Failed",
+	S3_CONNECTIVITY_RECONNECT_ATTEMPT: "S3 Connectivity Reconnect Attempt",
 
 	// Select All
 	SELECT_ALL_CLICK: "Select All Click",

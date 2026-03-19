@@ -46,6 +46,7 @@ import {
 	useUploadConversationChunk,
 } from "./hooks";
 import useChunkedAudioRecorder from "./hooks/useChunkedAudioRecorder";
+import { useS3ConnectivityCheck } from "./hooks/useS3ConnectivityCheck";
 import { PermissionErrorModal } from "./PermissionErrorModal";
 import { StopRecordingConfirmationModal } from "./StopRecordingConfirmationModal";
 import { useConversationArtefacts } from "./verify/hooks";
@@ -123,6 +124,12 @@ export const ParticipantConversationAudio = () => {
 		useDisclosure(false);
 	const [isReconnecting, setIsReconnecting] = useState(false);
 	const interruptionRecordingTimeRef = useRef<number>(0);
+
+	const { s3Status, retry: handleS3Reconnect } = useS3ConnectivityCheck(
+		conversationId,
+		{ queriesLoading: conversationQuery.isLoading || projectQuery.isLoading },
+	);
+
 	// Navigation and language
 	const navigate = useI18nNavigate();
 	const newConversationLink = useProjectSharingLink(projectQuery.data);
@@ -389,6 +396,18 @@ export const ParticipantConversationAudio = () => {
 		}
 	};
 
+	const handleStartRecording = () => {
+		if (s3Status !== "passed") {
+			return;
+		}
+
+		startRecording();
+		if (wakeLock.isSupported) {
+			wakeLock.obtainWakeLock();
+			wakeLock.enableAutoReacquire();
+		}
+	};
+
 	const showVerify = projectQuery.data?.is_verify_enabled;
 	const showEcho = projectQuery.data?.is_get_reply_enabled;
 
@@ -484,6 +503,62 @@ export const ParticipantConversationAudio = () => {
 		<Box className="container mx-auto flex h-full max-w-2xl flex-col justify-end">
 			{/* modal for permissions error */}
 			<PermissionErrorModal permissionError={permissionError} />
+
+			{/* modal for S3 connectivity error */}
+			<Modal
+				opened={s3Status === "failed"}
+				onClose={() => {}}
+				withCloseButton={false}
+				centered
+				size="sm"
+				radius="md"
+				padding="xl"
+				closeOnClickOutside={false}
+				closeOnEscape={false}
+				overlayProps={{
+					color: "#FF9AA2",
+				}}
+				role="alertdialog"
+				aria-live="assertive"
+				aria-atomic="true"
+				{...testId("portal-audio-s3-check-modal")}
+			>
+				<Stack gap="md">
+					<Group gap="xs">
+						<IconAlertTriangle size={24} color="#FF9AA2" />
+						<Text fw={600} size="lg">
+							<Trans id="participant.modal.s3check.title">
+								Connection issue
+							</Trans>
+						</Text>
+						<IconAlertTriangle size={24} color="#FF9AA2" />
+					</Group>
+					<Text>
+						<Trans id="participant.modal.s3check.message">
+							Something is blocking your connection. Your audio will not be
+							saved unless this is resolved.
+						</Trans>
+					</Text>
+					<Text size="sm" c="dimmed">
+						<Trans id="participant.modal.s3check.suggestions">
+							This can happen when a VPN or firewall is blocking the connection.
+							Try disabling your VPN, switching to a different network (e.g.
+							mobile hotspot), or contact your IT department for help.
+						</Trans>
+					</Text>
+					<Button
+						onClick={handleS3Reconnect}
+						loading={s3Status === "checking"}
+						disabled={s3Status === "checking"}
+						fullWidth
+						radius="md"
+						size="xl"
+						{...testId("portal-audio-s3-check-reconnect-button")}
+					>
+						<Trans id="participant.button.s3check.reconnect">Reconnect</Trans>
+					</Button>
+				</Stack>
+			</Modal>
 
 			{/* modal for stop recording confirmation */}
 			<StopRecordingConfirmationModal
@@ -684,14 +759,9 @@ export const ParticipantConversationAudio = () => {
 										size="lg"
 										radius="md"
 										rightSection={<IconMicrophone />}
-										onClick={() => {
-											startRecording();
-											// Obtain wakelock on user interaction
-											if (wakeLock.isSupported) {
-												wakeLock.obtainWakeLock();
-												wakeLock.enableAutoReacquire();
-											}
-										}}
+										onClick={handleStartRecording}
+										loading={s3Status === "checking" || s3Status === "pending"}
+										disabled={s3Status !== "passed"}
 										className="flex-grow"
 										{...testId("portal-audio-record-button")}
 									>

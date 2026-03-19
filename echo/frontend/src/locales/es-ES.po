@@ -221,17 +221,17 @@ msgstr "Desuscribirse de Notificaciones"
 #~ msgstr "-5s"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:443
+#: src/components/participant/ParticipantConversationAudio.tsx:462
 msgid "participant.modal.echo.info.title.generic"
 msgstr "\"ECHO\" disponible pronto"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:457
+#: src/components/participant/ParticipantConversationAudio.tsx:476
 msgid "participant.modal.echo.info.title.go.deeper"
 msgstr "\"Explorar\" disponible pronto"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:450
+#: src/components/participant/ParticipantConversationAudio.tsx:469
 msgid "participant.modal.echo.info.title.concrete"
 msgstr "\"Verificar\" disponible pronto"
 
@@ -504,12 +504,12 @@ msgstr "Avanzado (Consejos y best practices)"
 msgid "Advanced Settings"
 msgstr "Configuración Avanzada"
 
-#: src/components/chat/AgenticChatPanel.tsx:705
+#: src/components/chat/AgenticChatPanel.tsx:722
 msgid "Agent is working..."
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:186
-#: src/components/chat/AgenticChatPanel.tsx:211
+#: src/components/chat/AgenticChatPanel.tsx:193
+#: src/components/chat/AgenticChatPanel.tsx:218
 msgid "Agent run failed"
 msgstr ""
 
@@ -735,7 +735,7 @@ msgstr "¿Preguntar por el nombre?"
 #~ msgid "Ask participants to provide their name when they start a conversation"
 #~ msgstr "Pedir a los participantes que proporcionen su nombre cuando inicien una conversación"
 
-#: src/components/chat/AgenticChatPanel.tsx:1001
+#: src/components/chat/AgenticChatPanel.tsx:1039
 msgid "Ask the agent..."
 msgstr ""
 
@@ -764,7 +764,7 @@ msgid "At least one topic must be selected to enable Verify"
 msgstr "Tienes que seleccionar al menos un tema para activar Verificar"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:569
+#: src/components/participant/ParticipantConversationAudio.tsx:644
 msgid "participant.modal.interruption.issue.message"
 msgstr "¡Atención! Perdimos los últimos 60 segundos de tu grabación debido a una interrupción. Por favor, presiona el botón de abajo para reconectar."
 
@@ -987,7 +987,7 @@ msgstr "Cambiar el idioma durante una conversación activa puede provocar result
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:521
 #: src/routes/project/chat/ProjectChatRoute.tsx:527
-#: src/components/chat/AgenticChatPanel.tsx:693
+#: src/components/chat/AgenticChatPanel.tsx:710
 msgid "Chat"
 msgstr "Chat"
 
@@ -1143,6 +1143,11 @@ msgstr "Conectando a los servicios de informes..."
 #: src/components/common/ConnectionHealthStatus.tsx:30
 msgid "Connection healthy"
 msgstr "Conexión saludable"
+
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantConversationAudio.tsx:530
+msgid "participant.modal.s3check.title"
+msgstr "Problema de conexión"
 
 #: src/components/common/ConnectionHealthStatus.tsx:30
 msgid "Connection unhealthy"
@@ -1300,7 +1305,7 @@ msgstr "Copiar al portapapeles"
 msgid "Copying..."
 msgstr "Copiando..."
 
-#: src/routes/project/ProjectsHome.tsx:139
+#: src/routes/project/ProjectsHome.tsx:138
 #: src/components/project/CustomTopicModal.tsx:241
 msgid "Create"
 msgstr "Crear"
@@ -1390,9 +1395,6 @@ msgstr "URL del panel de control (enlace directo a la vista de conversaciones)"
 
 #~ msgid "dashboard.dembrane.verify.title"
 #~ msgstr "Verify"
-
-#~ msgid "dashboard.dembrane.verify.topic.select"
-#~ msgstr "Select which topics participants can use for verification."
 
 #: src/components/project/ProjectPortalEditor.tsx:878
 msgid "Default"
@@ -1527,7 +1529,7 @@ msgstr "¿Quieres estar en el bucle?"
 msgid "Documentation"
 msgstr "Documentación"
 
-#: src/components/chat/AgenticChatPanel.tsx:230
+#: src/components/chat/AgenticChatPanel.tsx:237
 msgid "Done"
 msgstr ""
 
@@ -1592,7 +1594,7 @@ msgid "e.g., Slack Notifications, Make Workflow"
 msgstr "por ejemplo, Notificaciones de Slack, Flujo de trabajo de Make"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:755
+#: src/components/participant/ParticipantConversationAudio.tsx:825
 msgid "participant.button.echo"
 msgstr "ECHO"
 
@@ -1819,9 +1821,9 @@ msgstr "Ingresado por el participante en el portal"
 
 #: src/components/dropzone/UploadConversationDropzone.tsx:700
 #: src/components/dropzone/UploadConversationDropzone.tsx:808
-#: src/components/chat/AgenticChatPanel.tsx:235
-#: src/components/chat/AgenticChatPanel.tsx:772
-#: src/components/chat/AgenticChatPanel.tsx:925
+#: src/components/chat/AgenticChatPanel.tsx:242
+#: src/components/chat/AgenticChatPanel.tsx:790
+#: src/components/chat/AgenticChatPanel.tsx:951
 msgid "Error"
 msgstr "Error"
 
@@ -1967,7 +1969,7 @@ msgstr "Error al activar la selección automática para este chat"
 #~ msgid "Failed to finish conversation. Please try again or start a new conversation."
 #~ msgstr "Error al finalizar la conversación. Por favor, inténtalo de nuevo o inicia una nueva conversación."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:282
+#: src/components/participant/ParticipantConversationAudio.tsx:289
 msgid "Failed to finish conversation. Please try again."
 msgstr "Error al finalizar la conversación. Por favor, inténtalo de nuevo."
 
@@ -2006,7 +2008,7 @@ msgstr "Error al marcar todos los anuncios como leídos"
 msgid "Failed to mark announcement as read"
 msgstr "Error al marcar el anuncio como leído"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:387
+#: src/components/participant/ParticipantConversationAudio.tsx:394
 msgid "Failed to reconnect. Please try reloading the page."
 msgstr "Error al reconectar. Por favor, recarga la página."
 
@@ -2047,15 +2049,15 @@ msgstr "Error al revisar el resultado. Por favor, inténtalo de nuevo."
 #~ msgid "Failed to start new conversation. Please try again."
 #~ msgstr "Error al iniciar una nueva conversación. Por favor, inténtalo de nuevo."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:174
+#: src/components/participant/ParticipantConversationAudio.tsx:181
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Error al detener la grabación al cambiar el dispositivo. Por favor, inténtalo de nuevo."
 
-#: src/components/chat/AgenticChatPanel.tsx:685
+#: src/components/chat/AgenticChatPanel.tsx:702
 msgid "Failed to stop run"
 msgstr ""
 
-#: src/components/chat/AgenticChatPanel.tsx:670
+#: src/components/chat/AgenticChatPanel.tsx:687
 msgid "Failed to submit agentic message"
 msgstr ""
 
@@ -2075,7 +2077,7 @@ msgstr "Error al subir el logo"
 #~ msgstr "Error al verificar el estado del correo electrónico. Por favor, inténtalo de nuevo."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:463
+#: src/components/participant/ParticipantConversationAudio.tsx:482
 msgid "participant.modal.echo.info.title"
 msgstr "Función disponible pronto"
 
@@ -2146,7 +2148,7 @@ msgid "participant.button.finish.text.mode"
 msgstr "Finalizar"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:723
+#: src/components/participant/ParticipantConversationAudio.tsx:793
 msgid "participant.button.finish"
 msgstr "Finalizar"
 
@@ -2224,7 +2226,7 @@ msgstr "Generando el resumen. Espera..."
 msgid "German"
 msgstr "Alemán"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:435
+#: src/components/participant/ParticipantConversationAudio.tsx:454
 msgid "Get an immediate reply from Dembrane to help you deepen the conversation."
 msgstr "Obtén una respuesta inmediata de dembrane para ayudarte a profundizar en la conversación."
 
@@ -2314,8 +2316,8 @@ msgstr "Ocultar"
 msgid "Hide data"
 msgstr "Ocultar datos"
 
-#: src/components/chat/AgenticChatPanel.tsx:864
-#: src/components/chat/AgenticChatPanel.tsx:874
+#: src/components/chat/AgenticChatPanel.tsx:884
+#: src/components/chat/AgenticChatPanel.tsx:894
 msgid "Hide raw data"
 msgstr ""
 
@@ -2327,7 +2329,7 @@ msgstr "Ocultar datos de revisión"
 msgid "Highlight specific Concept"
 msgstr "Concepto específico resaltado"
 
-#: src/routes/project/ProjectsHome.tsx:123
+#: src/routes/project/ProjectsHome.tsx:122
 msgid "Home"
 msgstr "Inicio"
 
@@ -2346,7 +2348,7 @@ msgstr ""
 "* ¿Cómo se ve el éxito?"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:534
+#: src/components/participant/ParticipantConversationAudio.tsx:609
 msgid "participant.button.i.understand"
 msgstr "Entiendo"
 
@@ -2411,7 +2413,7 @@ msgstr "Incluir enlace al portal en el informe"
 #~ msgid "Info"
 #~ msgstr "Información"
 
-#: src/components/chat/AgenticChatPanel.tsx:897
+#: src/components/chat/AgenticChatPanel.tsx:917
 msgid "Input"
 msgstr ""
 
@@ -2605,7 +2607,7 @@ msgstr "Nivel de audio en vivo"
 msgid "Live Preview"
 msgstr "Vista Previa en Vivo"
 
-#: src/components/chat/AgenticChatPanel.tsx:454
+#: src/components/chat/AgenticChatPanel.tsx:471
 msgid "Live stream interrupted. Falling back to polling."
 msgstr ""
 
@@ -2655,7 +2657,7 @@ msgstr "Cargando colecciones..."
 msgid "Loading microphones..."
 msgstr "Cargando micrófonos..."
 
-#: src/components/chat/AgenticChatPanel.tsx:783
+#: src/components/chat/AgenticChatPanel.tsx:801
 msgid "Loading this chat..."
 msgstr ""
 
@@ -2916,7 +2918,7 @@ msgstr "No se han detectado nuevos comentarios aún. Por favor, continúa tu dis
 msgid "No projects found {0}"
 msgstr "No se encontraron proyectos {0}"
 
-#: src/routes/project/ProjectsHome.tsx:192
+#: src/routes/project/ProjectsHome.tsx:191
 msgid "No projects found for search term"
 msgstr "No se encontraron proyectos para el término de búsqueda"
 
@@ -3131,7 +3133,7 @@ msgstr "resultados"
 msgid "Outcomes"
 msgstr "Resultados"
 
-#: src/components/chat/AgenticChatPanel.tsx:911
+#: src/components/chat/AgenticChatPanel.tsx:931
 msgid "Output"
 msgstr ""
 
@@ -3177,9 +3179,6 @@ msgstr "Funciones para participantes"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:803
 msgid "Participant name and email"
 msgstr "Nombre y correo electrónico del participante"
-
-#~ msgid "participant.button.echo"
-#~ msgstr "Echo"
 
 #~ msgid "participant.button.is.recording.echo"
 #~ msgstr "ECHO"
@@ -3247,26 +3246,11 @@ msgstr "Nombre y correo electrónico del participante"
 #~ msgid "participant.verify.instructions.approval.helps"
 #~ msgstr "Your approval helps us understand what you really think!"
 
-#~ msgid "participant.verify.instructions.approve.artefact"
-#~ msgstr "If you are happy with the {objectLabel} click \"Approve\" to show you feel heard."
-
 #~ msgid "participant.verify.instructions.button.cancel"
 #~ msgstr "Cancelar"
 
-#~ msgid "participant.verify.instructions.button.next"
-#~ msgstr "Next"
-
-#~ msgid "participant.verify.instructions.loading"
-#~ msgstr "Loading"
-
-#~ msgid "participant.verify.instructions.read.aloud"
-#~ msgstr "Once you receive the {objectLabel}, read it aloud and share out loud what you want to change, if anything."
-
 #~ msgid "participant.verify.instructions.receive.artefact"
 #~ msgstr "You'll soon get {objectLabel} to verify."
-
-#~ msgid "participant.verify.instructions.revise.artefact"
-#~ msgstr "Once you have discussed, hit \"revise\" to see the {objectLabel} change to reflect your discussion."
 
 #~ msgid "participant.verify.loading.artefact"
 #~ msgstr "Loading artefact"
@@ -3279,9 +3263,6 @@ msgstr "Nombre y correo electrónico del participante"
 
 #~ msgid "participant.verify.regenerating.artefact.description"
 #~ msgstr "This will just take a few moments"
-
-#~ msgid "participant.verify.selection.button.next"
-#~ msgstr "Next"
 
 #~ msgid "participant.verify.selection.title"
 #~ msgstr "What do you want to verify?"
@@ -3550,7 +3531,7 @@ msgstr "Configuración del Proyecto"
 #~ msgid "project.sidebar.chat.end.description"
 #~ msgstr "Fin de la lista • Todas las {0} conversaciones cargadas"
 
-#: src/routes/project/ProjectsHome.tsx:146
+#: src/routes/project/ProjectsHome.tsx:145
 msgid "Projects"
 msgstr "Proyectos"
 
@@ -3610,12 +3591,17 @@ msgid "Recommended apps"
 msgstr "Aplicaciones recomendadas"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:596
+#: src/components/participant/ParticipantConversationAudio.tsx:558
+msgid "participant.button.s3check.reconnect"
+msgstr "Reconectar"
+
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantConversationAudio.tsx:671
 msgid "participant.button.interruption.reconnect"
 msgstr "Reconectar"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:698
+#: src/components/participant/ParticipantConversationAudio.tsx:768
 msgid "participant.button.record"
 msgstr "Grabar"
 
@@ -3627,7 +3613,7 @@ msgid "Record another conversation"
 msgstr "Registrar otra conversación"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:562
+#: src/components/participant/ParticipantConversationAudio.tsx:637
 msgid "participant.modal.interruption.title"
 msgstr "Grabación interrumpida"
 
@@ -3890,11 +3876,11 @@ msgstr "Haga clic con el botón derecho para resaltar"
 msgid "Rows per page"
 msgstr "Filas por página"
 
-#: src/components/chat/AgenticChatPanel.tsx:745
+#: src/components/chat/AgenticChatPanel.tsx:763
 msgid "Run status:"
 msgstr "Estado de la ejecución:"
 
-#: src/components/chat/AgenticChatPanel.tsx:240
+#: src/components/chat/AgenticChatPanel.tsx:247
 msgid "Running"
 msgstr ""
 
@@ -3948,7 +3934,7 @@ msgstr "Buscar conversaciones"
 msgid "Search conversations for \"{0}\""
 msgstr ""
 
-#: src/routes/project/ProjectsHome.tsx:179
+#: src/routes/project/ProjectsHome.tsx:178
 msgid "Search projects"
 msgstr "Buscar proyectos"
 
@@ -4107,11 +4093,11 @@ msgid "select.all.modal.context.limit.reached"
 msgstr "Selección demasiado grande. Algunas conversaciones no se añadieron."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:804
-#: src/components/chat/AgenticChatPanel.tsx:1020
+#: src/components/chat/AgenticChatPanel.tsx:1058
 msgid "Send"
 msgstr "Enviar"
 
-#: src/components/chat/AgenticChatPanel.tsx:810
+#: src/components/chat/AgenticChatPanel.tsx:828
 msgid "Send a message to start an agentic run."
 msgstr "Envía un mensaje para iniciar una ejecución agentica."
 
@@ -4204,8 +4190,8 @@ msgstr "Mostrar menos"
 msgid "Show more"
 msgstr "Mostrar más"
 
-#: src/components/chat/AgenticChatPanel.tsx:864
-#: src/components/chat/AgenticChatPanel.tsx:875
+#: src/components/chat/AgenticChatPanel.tsx:884
+#: src/components/chat/AgenticChatPanel.tsx:895
 msgid "Show raw data"
 msgstr ""
 
@@ -4270,11 +4256,16 @@ msgstr "Algunos archivos ya estaban seleccionados y no se agregarán dos veces."
 msgid "select.all.modal.skip.disclaimer"
 msgstr "Algunas pueden omitirse (sin transcripción o selección demasiado grande)."
 
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantConversationAudio.tsx:537
+msgid "participant.modal.s3check.message"
+msgstr "Algo está bloqueando tu conexión. Tu audio no se guardará a menos que se resuelva este problema."
+
 #: src/routes/auth/Login.tsx:159
 #: src/components/participant/ParticipantInitiateForm.tsx:93
 #: src/components/conversation/ConversationEdit.tsx:252
 msgid "Something went wrong"
-msgstr "Algo salió mal"
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationText.tsx:97
@@ -4377,12 +4368,12 @@ msgid "Status"
 msgstr "Estado"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:621
-#: src/components/chat/AgenticChatPanel.tsx:759
+#: src/components/chat/AgenticChatPanel.tsx:777
 msgid "Stop"
 msgstr "Detener"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:775
+#: src/components/participant/ParticipantConversationAudio.tsx:845
 msgid "participant.button.stop"
 msgstr "Detener"
 
@@ -4467,11 +4458,11 @@ msgstr "Sistema"
 msgid "Tags"
 msgstr "Etiquetas"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:429
+#: src/components/participant/ParticipantConversationAudio.tsx:448
 msgid "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from Dembrane to help you deepen the conversation."
 msgstr "Tómate un tiempo para crear un resultado que haga tu contribución concreta u obtén una respuesta inmediata de dembrane para ayudarte a profundizar en la conversación."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:432
+#: src/components/participant/ParticipantConversationAudio.tsx:451
 msgid "Take some time to create an outcome that makes your contribution concrete."
 msgstr "Tómate un tiempo para crear un resultado que haga tu contribución concreta."
 
@@ -4481,7 +4472,7 @@ msgid "participant.refine.make.concrete.description"
 msgstr "Tómate un tiempo para crear un resultado que haga tu contribución concreta."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:439
-#: src/components/chat/AgenticChatPanel.tsx:606
+#: src/components/chat/AgenticChatPanel.tsx:623
 msgid "Template applied"
 msgstr "Plantilla aplicada"
 
@@ -4612,6 +4603,11 @@ msgid "Thinking..."
 msgstr "Pensando..."
 
 #. js-lingui-explicit-id
+#: src/components/participant/ParticipantConversationAudio.tsx:543
+msgid "participant.modal.s3check.suggestions"
+msgstr "Esto puede ocurrir cuando una VPN o un firewall está bloqueando la conexión. Intenta desactivar tu VPN, cambiar a otra red (p. ej., punto de acceso móvil) o contacta con tu departamento de TI para obtener ayuda."
+
+#. js-lingui-explicit-id
 #: src/components/conversation/ConversationLink.tsx:54
 msgid "conversation.linked_conversations.description"
 msgstr "Esta conversación tiene las siguientes copias:"
@@ -4635,7 +4631,7 @@ msgstr "Este correo electrónico ya está en la lista."
 #~ msgstr "Este correo electrónico ya está suscrito a notificaciones."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:523
+#: src/components/participant/ParticipantConversationAudio.tsx:598
 msgid "participant.modal.refine.info.available.in"
 msgstr "Esta función estará disponible en {remainingTime} segundos."
 
@@ -4811,7 +4807,7 @@ msgstr "Temas"
 msgid "Transcribing..."
 msgstr "Transcribiendo..."
 
-#: src/components/chat/AgenticChatPanel.tsx:131
+#: src/components/chat/AgenticChatPanel.tsx:138
 msgid "transcript"
 msgstr ""
 
@@ -4825,7 +4821,7 @@ msgstr "Transcripción"
 msgid "Transcript copied to clipboard"
 msgstr "Transcripción copiada al portapapeles"
 
-#: src/components/chat/AgenticChatPanel.tsx:131
+#: src/components/chat/AgenticChatPanel.tsx:138
 msgid "transcript excerpt"
 msgstr ""
 
@@ -4977,7 +4973,7 @@ msgid "Unable to process this chunk"
 msgstr "No se puede procesar este fragmento"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:441
-#: src/components/chat/AgenticChatPanel.tsx:608
+#: src/components/chat/AgenticChatPanel.tsx:625
 msgid "Undo"
 msgstr "Deshacer"
 
@@ -5082,7 +5078,7 @@ msgid "participant.modal.uploading"
 msgstr "Subiendo audio..."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:580
+#: src/components/participant/ParticipantConversationAudio.tsx:655
 msgid "participant.modal.interruption.uploading"
 msgstr "Subiendo audio..."
 
@@ -5162,7 +5158,7 @@ msgstr "verified artifacts"
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:990
 msgid "dashboard.dembrane.verify.title"
-msgstr "Verificar"
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/components/participant/StopRecordingConfirmationModal.tsx:118
@@ -5253,7 +5249,7 @@ msgstr "Te hemos enviado un correo electrónico con los pasos siguientes. Si no 
 #~ msgstr "Te hemos enviado un correo electrónico con los pasos siguientes. Si no lo ves, revisa tu carpeta de correo no deseado. Si aún no lo ves, por favor contacta a jules@dembrane.com"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:471
+#: src/components/participant/ParticipantConversationAudio.tsx:490
 msgid "participant.modal.echo.info.reason"
 msgstr "Necesitamos un poco más de contexto para ayudarle a usar ECHO de manera efectiva. Por favor, continúe grabando para que podamos proporcionar mejores sugerencias."
 
@@ -5295,7 +5291,7 @@ msgstr "Bienvenido"
 
 #: src/routes/auth/Login.tsx:109
 msgid "Welcome back"
-msgstr "Bienvenido de nuevo"
+msgstr ""
 
 #~ msgid "Welcome to Big Picture Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Details mode."
 #~ msgstr "Bienvenido al modo Big Picture! Tengo resúmenes de todas tus conversaciones cargados. Pregúntame sobre patrones, temas e insights en tus datos. Para citas exactas, inicia un nuevo chat en el modo Específico."
@@ -5319,7 +5315,7 @@ msgstr "Bienvenido al modo Resumen. Tengo cargados los resúmenes de todas tus c
 msgid "Welcome to Reports!"
 msgstr "¡Bienvenido a los informes!"
 
-#: src/routes/project/ProjectsHome.tsx:154
+#: src/routes/project/ProjectsHome.tsx:153
 msgid "Welcome to Your Home! Here you can see all your projects and get access to tutorial resources. Currently, you have no projects. Click \"Create\" to configure to get started!"
 msgstr "¡Bienvenido a Tu Inicio! Aquí puedes ver todos tus proyectos y acceder a recursos de tutorial. Actualmente, no tienes proyectos. Haz clic en \"Crear\" para configurar para comenzar!"
 
@@ -5342,7 +5338,7 @@ msgstr "¿Qué datos se envían?"
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifySelection.tsx:201
 msgid "participant.verify.selection.title"
-msgstr "¿Qué desea verificar?"
+msgstr ""
 
 #: src/components/chat/ChatModeSelector.tsx:57
 msgid "What patterns emerge from the data?"
@@ -5452,12 +5448,12 @@ msgstr "Pareces estar desconectado, por favor verifica tu conexión a internet"
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:18
 msgid "participant.verify.instructions.receive.artefact"
-msgstr "Pronto recibirá {objectLabel} para verificar."
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:53
 msgid "participant.verify.instructions.approval.helps"
-msgstr "¡Su aprobación nos ayuda a comprender lo que realmente piensa!"
+msgstr ""
 
 #~ msgid "Your conversation is currently being transcribed. Please check back in a few moments."
 #~ msgstr "Tu conversación está siendo transcribida. Por favor, revisa más tarde."

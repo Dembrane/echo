@@ -62,6 +62,7 @@ const buildToolStartPayload = (query) => ({
 		},
 	},
 	name: "grepConvoSnippets",
+	run_id: `tool-${query}`,
 });
 
 const buildToolEndPayload = (query) => ({
@@ -89,6 +90,7 @@ const buildToolEndPayload = (query) => ({
 		},
 	},
 	name: "grepConvoSnippets",
+	run_id: `tool-${query}`,
 });
 
 const nextTimestamp = (seq) =>

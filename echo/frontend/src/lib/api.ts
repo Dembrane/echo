@@ -331,6 +331,34 @@ export type UploadResult = {
 };
 
 /**
+ * Pre-flight check: ask the server for a presigned PUT URL and attempt a tiny
+ * upload to S3. Returns true when S3 is reachable, false otherwise.
+ */
+export const checkS3Connectivity = async (
+	conversationId: string,
+): Promise<boolean> => {
+	try {
+		const { probe_url } = await apiNoAuth.post<unknown, { probe_url: string }>(
+			`/participant/conversations/${conversationId}/check-s3`,
+		);
+
+		await fetch(probe_url, {
+			body: "probe",
+			headers: { "Content-Type": "text/plain" },
+			method: "PUT",
+			signal: AbortSignal.timeout(8000),
+		}).then((res) => {
+			if (!res.ok) throw new Error(`S3 probe returned ${res.status}`);
+		});
+
+		return true;
+	} catch (error) {
+		console.error("[S3 Check] Connectivity check failed:", error);
+		return false;
+	}
+};
+
+/**
  * Upload a conversation chunk using presigned URL (direct to S3)
  *
  * This is the new, preferred method as it doesn't block the API server.

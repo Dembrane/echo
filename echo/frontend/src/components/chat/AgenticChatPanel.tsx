@@ -26,7 +26,14 @@ import {
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDate } from "date-fns";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+	type CSSProperties,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useLanguage } from "@/hooks/useLanguage";
 import type {
@@ -223,24 +230,34 @@ const toMessage = ({
 
 const TOOL_STATUS_META: Record<
 	ToolActivity["status"],
-	{ dotClass: string; label: string; textClass: string }
+	{ dotColor: string; label: string; textColor: string }
 > = {
 	completed: {
-		dotClass: "bg-emerald-500",
+		dotColor: "var(--agentic-tool-status-completed-dot)",
 		label: t`Done`,
-		textClass: "text-emerald-700",
+		textColor: "var(--agentic-tool-status-completed-text)",
 	},
 	error: {
-		dotClass: "bg-red-500",
+		dotColor: "var(--agentic-tool-status-error-dot)",
 		label: t`Error`,
-		textClass: "text-red-700",
+		textColor: "var(--agentic-tool-status-error-text)",
 	},
 	running: {
-		dotClass: "bg-amber-500",
+		dotColor: "var(--agentic-tool-status-running-dot)",
 		label: t`Running`,
-		textClass: "text-amber-700",
+		textColor: "var(--agentic-tool-status-running-text)",
 	},
 };
+
+const AGENTIC_TOOL_STATUS_VARS = {
+	"--agentic-tool-status-completed-dot": "var(--mantine-color-green-6)",
+	"--agentic-tool-status-completed-text": "var(--mantine-color-green-8)",
+	"--agentic-tool-status-error-dot": "var(--mantine-color-red-6)",
+	"--agentic-tool-status-error-text": "var(--mantine-color-red-8)",
+	"--agentic-tool-status-running-dot": "var(--mantine-color-yellow-6)",
+	"--agentic-tool-status-running-ping-dot": "var(--mantine-color-yellow-4)",
+	"--agentic-tool-status-running-text": "var(--mantine-color-yellow-8)",
+} as CSSProperties;
 
 const toHistoryMessage = (message: RenderMessage): HistoryLikeMessage =>
 	({
@@ -475,7 +492,6 @@ export const AgenticChatPanel = ({
 		[mergeEvents, stopStream],
 	);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: reset panel state whenever chatId changes.
 	useEffect(() => {
 		stopStream();
 		setRunId(null);
@@ -714,6 +730,7 @@ export const AgenticChatPanel = ({
 	return (
 		<Stack
 			className="relative flex min-h-full flex-col px-2 pr-4"
+			style={AGENTIC_TOOL_STATUS_VARS}
 			{...testId("chat-interface")}
 		>
 			<Stack className="top-0 w-full pt-6">
@@ -839,7 +856,8 @@ export const AgenticChatPanel = ({
 												<Group gap={8} wrap="nowrap" className="min-w-0 flex-1">
 													<Box
 														aria-hidden="true"
-														className={`mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full ${statusMeta.dotClass} ${item.status === "running" ? "animate-pulse" : ""}`}
+														className={`mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full ${item.status === "running" ? "animate-pulse" : ""}`}
+														style={{ backgroundColor: statusMeta.dotColor }}
 													/>
 													<Text className="min-w-0 flex-1 truncate text-[11px] font-medium leading-4 text-slate-700">
 														{item.headline}
@@ -851,7 +869,8 @@ export const AgenticChatPanel = ({
 													className="shrink-0 self-start"
 												>
 													<Text
-														className={`pt-[1px] text-[10px] font-semibold uppercase tracking-wide ${statusMeta.textClass}`}
+														className="pt-[1px] text-[10px] font-semibold uppercase tracking-wide"
+														style={{ color: statusMeta.textColor }}
 													>
 														{statusMeta.label}
 													</Text>
@@ -921,7 +940,13 @@ export const AgenticChatPanel = ({
 													)}
 													{item.rawError && (
 														<Box>
-															<Text className="text-[10px] font-semibold uppercase tracking-wide text-red-600">
+															<Text
+																className="text-[10px] font-semibold uppercase tracking-wide"
+																style={{
+																	color:
+																		"var(--agentic-tool-status-error-text)",
+																}}
+															>
 																<Trans>Error</Trans>
 															</Text>
 															<Text
@@ -968,8 +993,19 @@ export const AgenticChatPanel = ({
 						>
 							<Group gap={8} wrap="nowrap">
 								<Box className="relative h-2 w-2 shrink-0">
-									<Box className="absolute inset-0 rounded-full bg-amber-400/70 animate-ping" />
-									<Box className="relative h-2 w-2 rounded-full bg-amber-500" />
+									<Box
+										className="absolute inset-0 rounded-full animate-ping"
+										style={{
+											backgroundColor:
+												"var(--agentic-tool-status-running-ping-dot)",
+										}}
+									/>
+									<Box
+										className="relative h-2 w-2 rounded-full"
+										style={{
+											backgroundColor: "var(--agentic-tool-status-running-dot)",
+										}}
+									/>
 								</Box>
 								<Text className="max-w-[min(70vw,32rem)] truncate text-[11px] font-medium text-slate-600">
 									{liveRunStatusText}

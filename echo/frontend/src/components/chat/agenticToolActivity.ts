@@ -118,6 +118,7 @@ const toStatus = (eventType: string): ToolActivityStatus | null => {
 };
 
 type ParsedToolEvent = Omit<ToolActivity, "id"> & {
+	callId: string | null;
 	seq: number;
 };
 
@@ -145,6 +146,28 @@ const parseToolEvent = (event: AgenticRunEvent): ParsedToolEvent | null => {
 			data?.name,
 			outputKwargs?.name,
 		) ?? "tool";
+	const callId = firstString(
+		payload?.run_id,
+		payload?.runId,
+		payload?.tool_call_id,
+		payload?.toolCallId,
+		payload?.call_id,
+		payload?.callId,
+		data?.run_id,
+		data?.runId,
+		data?.tool_call_id,
+		data?.toolCallId,
+		data?.call_id,
+		data?.callId,
+		outputKwargs?.run_id,
+		outputKwargs?.runId,
+		outputKwargs?.tool_call_id,
+		outputKwargs?.toolCallId,
+		outputKwargs?.call_id,
+		outputKwargs?.callId,
+		payload?.id,
+		data?.id,
+	);
 
 	const query = firstString(
 		input?.keywords,
@@ -161,6 +184,7 @@ const parseToolEvent = (event: AgenticRunEvent): ParsedToolEvent | null => {
 	const rawError = formatRaw(error ?? data?.error ?? guardrail);
 
 	return {
+		callId,
 		headline,
 		rawError,
 		rawInput,
@@ -173,16 +197,24 @@ const parseToolEvent = (event: AgenticRunEvent): ParsedToolEvent | null => {
 	};
 };
 
+const getToolPairingKey = (parsed: ParsedToolEvent) =>
+	parsed.callId ? `call:${parsed.callId}` : `tool:${parsed.toolName}`;
+
+const getToolActivityId = (parsed: ParsedToolEvent) =>
+	parsed.callId
+		? `tool-${parsed.toolName}-${parsed.callId}`
+		: `tool-${parsed.toolName}-${parsed.seq}`;
+
 const takeLatestOpenIndex = (
 	openToolIndexes: Map<string, number[]>,
-	toolName: string,
+	pairingKey: string,
 ) => {
-	const openIndexes = openToolIndexes.get(toolName);
+	const openIndexes = openToolIndexes.get(pairingKey);
 	if (!openIndexes || openIndexes.length === 0) return null;
 
 	const index = openIndexes.pop() ?? null;
 	if (openIndexes.length === 0) {
-		openToolIndexes.delete(toolName);
+		openToolIndexes.delete(pairingKey);
 	}
 	return index;
 };
@@ -196,25 +228,26 @@ export const extractTopLevelToolActivity = (
 	for (const event of events) {
 		const parsed = parseToolEvent(event);
 		if (!parsed) continue;
+		const pairingKey = getToolPairingKey(parsed);
 
 		if (parsed.status === "running") {
 			const nextIndex = activities.length;
 			activities.push({
 				...parsed,
-				id: `tool-${parsed.toolName}-${parsed.seq}`,
+				id: getToolActivityId(parsed),
 			});
-			openToolIndexes.set(parsed.toolName, [
-				...(openToolIndexes.get(parsed.toolName) ?? []),
+			openToolIndexes.set(pairingKey, [
+				...(openToolIndexes.get(pairingKey) ?? []),
 				nextIndex,
 			]);
 			continue;
 		}
 
-		const openIndex = takeLatestOpenIndex(openToolIndexes, parsed.toolName);
+		const openIndex = takeLatestOpenIndex(openToolIndexes, pairingKey);
 		if (openIndex === null) {
 			activities.push({
 				...parsed,
-				id: `tool-${parsed.toolName}-${parsed.seq}`,
+				id: getToolActivityId(parsed),
 			});
 			continue;
 		}
