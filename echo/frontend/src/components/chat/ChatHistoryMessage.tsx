@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Box, Collapse, Divider, Group, Text, Tooltip } from "@mantine/core";
 import { IconArrowUpRight, IconNotes } from "@tabler/icons-react";
@@ -35,7 +36,7 @@ const getLinkLabel = (children: React.ReactNode) => {
 		.join("")
 		.trim();
 
-	return text || "Transcript";
+	return text || t`Transcript`;
 };
 
 export const ChatHistoryMessage = ({
@@ -87,9 +88,9 @@ export const ChatHistoryMessage = ({
 								"not-prose inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50/90 px-2 py-0.5 text-[11px] font-medium text-sky-700 no-underline transition-all hover:-translate-y-px hover:border-sky-300 hover:bg-white hover:text-sky-800",
 								className,
 							)}
-							aria-label="Open transcript"
+							aria-label={t`Open transcript`}
 							data-testid="agentic-transcript-link"
-							title="Open transcript"
+							title={t`Open transcript`}
 							{...props}
 						>
 							<IconNotes size={12} stroke={1.9} />
