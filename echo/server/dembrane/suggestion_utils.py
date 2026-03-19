@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 SUGGESTIONS_CACHE_TTL_SECONDS = 180
 
 # Use fast model for suggestions - generates simple follow-up questions
-SUGGESTION_LLM = MODELS.TEXT_FAST
+SUGGESTION_LLM = MODELS.MULTI_MODAL_FAST
 
 # JSON schema for structured outputs - guarantees consistent format
 SUGGESTIONS_RESPONSE_SCHEMA = {

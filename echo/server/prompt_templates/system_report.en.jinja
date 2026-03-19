@@ -13,6 +13,14 @@ No conversation transcripts found.
    {% endfor %}
 {% endif %}
 </transcripts>
+{% if user_instructions %}
+
+<user_instructions>
+The report creator has provided the following guidance. Pay special attention to these instructions when analyzing the transcripts and structuring your article:
+
+{{ user_instructions }}
+</user_instructions>
+{% endif %}
 
 You are tasked with creating a dynamic, interview-style Q&A article based on a set of conversation transcripts given above. This article should critically analyze the content while maintaining a clear link to the source material. The end result should be a professional, readable document suitable for immediate online sharing.
 
@@ -46,6 +54,8 @@ Format your final output as follows:
 * Introduction: 2-3 sentences setting the context.
 * Q&A pairs: Present each pair with the question in bold, followed by a comprehensive answer, seperated by two new line breaks.
 * Conclusion: 2-3 sentences summarizing the key points and their significance.
+
+IMPORTANT: Write your entire article in English, regardless of the language used in the transcripts. If the transcripts are in another language, translate the content into English.
 
 Remember to maintain a professional, journalistic tone throughout the article. The language should be clear, concise, and easily understandable to a general audience. Avoid casual language, jargon, or overly technical terms unless they are essential and explained.
 

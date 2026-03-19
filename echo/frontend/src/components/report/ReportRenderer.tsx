@@ -8,9 +8,9 @@ import { QRCode } from "../common/QRCode";
 import { useProjectReport } from "./hooks";
 import { ReportEditor } from "./ReportEditor";
 
-const ContributeToReportCTA = ({ href }: { href: string }) => {
+const ContributeToReportCTA = ({ href, fullscreen }: { href: string; fullscreen?: boolean }) => {
 	return (
-		<Paper p="xl" className="bg-gray-100" {...testId("report-contribute-cta")}>
+		<Paper p="xl" className={fullscreen ? "bg-white" : "bg-gray-100"} {...testId("report-contribute-cta")}>
 			<Stack className="text-center text-2xl font-semibold" align="center">
 				<Trans>Do you want to contribute to this project?</Trans>
 
@@ -24,11 +24,11 @@ const ContributeToReportCTA = ({ href }: { href: string }) => {
 					<Trans>Share your voice</Trans>
 				</Button>
 
-				<div className="hidden print:block">
+				<div className={fullscreen ? "block" : "hidden print:block"}>
 					<Trans>Share your voice by scanning the QR code below.</Trans>
 				</div>
 
-				<div className="hidden h-[200px] w-[200px] print:block">
+				<div className={fullscreen ? "block h-[200px] w-[200px]" : "hidden h-[200px] w-[200px] print:block"}>
 					<QRCode value={href} />
 				</div>
 			</Stack>
@@ -40,6 +40,7 @@ type ReportLayoutOpts = {
 	contributeLink?: string;
 	readingNow?: number;
 	showBorder?: boolean;
+	fullscreen?: boolean;
 	className?: string;
 };
 
@@ -48,6 +49,7 @@ const ReportLayout = ({
 	contributeLink,
 	readingNow,
 	showBorder,
+	fullscreen,
 	className,
 }: {
 	children: React.ReactNode;
@@ -82,21 +84,23 @@ const ReportLayout = ({
 
 			{children}
 
-			{!!contributeLink && <ContributeToReportCTA href={contributeLink} />}
+			{!!contributeLink && <ContributeToReportCTA href={contributeLink} fullscreen={fullscreen} />}
 		</Stack>
 	);
 };
 
 export const ReportRenderer = ({
+	projectId,
 	reportId,
 	opts,
 	isEditing,
 }: {
+	projectId: string;
 	reportId: number;
 	opts?: ReportLayoutOpts;
 	isEditing?: boolean;
 }) => {
-	const { data, isLoading } = useProjectReport(reportId);
+	const { data, isLoading } = useProjectReport(projectId, reportId);
 
 	if (isLoading) {
 		return (

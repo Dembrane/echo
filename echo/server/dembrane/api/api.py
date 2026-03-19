@@ -15,6 +15,7 @@ from dembrane.api.stateless import StatelessRouter
 from dembrane.api.participant import ParticipantRouter
 from dembrane.api.conversation import ConversationRouter
 from dembrane.api.user_settings import UserSettingsRouter
+from dembrane.api.template import TemplateRouter
 from dembrane.api.project_webhook import ProjectWebhookRouter
 
 logger = getLogger("api")
@@ -37,5 +38,6 @@ api.include_router(StatelessRouter, prefix="/stateless")
 api.include_router(VerifyRouter, prefix="/verify")
 api.include_router(SearchRouter)
 api.include_router(UserSettingsRouter, prefix="/user-settings")
+api.include_router(TemplateRouter, prefix="/templates")
 api.include_router(StatsRouter, prefix="/stats")
 api.include_router(WebhooksRouter)
