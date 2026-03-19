@@ -2,15 +2,15 @@ import os
 import asyncio
 import zipfile
 from http import HTTPStatus
-from typing import Any, List, Optional, Generator
+from typing import Any, List, Optional, Generator, AsyncIterator
 from logging import getLogger
 from datetime import datetime
 
-from fastapi import Depends, Query, Request, APIRouter, HTTPException, BackgroundTasks
+from fastapi import Query, Depends, Request, APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 
-from dembrane.tasks import task_create_report, task_create_view, task_create_project_library
+from dembrane.tasks import task_create_view, task_create_report, task_create_project_library
 from dembrane.utils import generate_uuid, get_safe_filename
 from dembrane.service import build_conversation_service
 from dembrane.settings import get_settings
@@ -628,7 +628,7 @@ def _extract_report_title(content: Optional[str]) -> Optional[str]:
 @ProjectRouter.get("/{project_id}/reports")
 async def list_project_reports(
     project_id: str,
-    auth: DependencyDirectusSession,
+    _auth: DependencyDirectusSession,
 ) -> list:
     """List all reports for a project (including generating), newest first."""
     from dembrane.directus import directus
@@ -664,7 +664,7 @@ async def list_project_reports(
 @ProjectRouter.get("/{project_id}/reports/latest")
 async def get_latest_report(
     project_id: str,
-    auth: DependencyDirectusSession,
+    _auth: DependencyDirectusSession,
 ) -> Optional[dict]:
     """Get the most recent report for a project (any status)."""
     from dembrane.directus import directus
@@ -697,7 +697,7 @@ async def update_report(
     project_id: str,
     report_id: int,
     body: UpdateReportRequestBodySchema,
-    auth: DependencyDirectusSession,
+    _auth: DependencyDirectusSession,
 ) -> dict:
     """Update a report's fields."""
     from dembrane.directus import directus
@@ -752,7 +752,7 @@ async def update_report(
 async def delete_report(
     project_id: str,
     report_id: int,
-    auth: DependencyDirectusSession,
+    _auth: DependencyDirectusSession,
 ) -> dict:
     """Delete a report permanently."""
     from dembrane.directus import directus
@@ -778,7 +778,7 @@ async def delete_report(
 async def cancel_scheduled_report(
     project_id: str,
     report_id: int,
-    auth: DependencyDirectusSession,
+    _auth: DependencyDirectusSession,
 ) -> dict:
     """Cancel a scheduled report."""
     from dembrane.directus import directus
@@ -807,7 +807,7 @@ async def cancel_scheduled_report(
 async def get_report_detail(
     project_id: str,
     report_id: int,
-    auth: DependencyDirectusSession,
+    _auth: DependencyDirectusSession,
 ) -> dict:
     """Get full details of a specific report."""
     from dembrane.directus import DirectusBadRequest, directus
@@ -818,8 +818,8 @@ async def get_report_detail(
             "project_report",
             str(report_id),
         )
-    except DirectusBadRequest:
-        raise HTTPException(status_code=404, detail="Report not found")
+    except DirectusBadRequest as err:
+        raise HTTPException(status_code=404, detail="Report not found") from err
     if not report or str(report.get("project_id")) != project_id:
         raise HTTPException(status_code=404, detail="Report not found")
     return report
@@ -829,7 +829,7 @@ async def get_report_detail(
 async def get_report_views(
     project_id: str,
     report_id: int,
-    auth: DependencyDirectusSession,
+    _auth: DependencyDirectusSession,
 ) -> dict:
     """Get view counts for a report."""
     from dembrane.directus import directus
@@ -842,6 +842,7 @@ async def get_report_views(
             "query": {
                 "filter": {
                     "project_report_id": {
+                        "id": {"_eq": report_id},
                         "project_id": {"_eq": project_id},
                     },
                 },
@@ -854,7 +855,7 @@ async def get_report_views(
         total = int(all_metrics[0].get("count", 0))
 
     # Recent views (last 10 minutes)
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timezone, timedelta
     ten_mins_ago = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
     recent_metrics = await run_in_thread_pool(
         directus.get_items,
@@ -864,6 +865,7 @@ async def get_report_views(
                 "filter": {
                     "date_created": {"_gte": ten_mins_ago},
                     "project_report_id": {
+                        "id": {"_eq": report_id},
                         "project_id": {"_eq": project_id},
                     },
                 },
@@ -882,7 +884,7 @@ async def get_report_views(
 async def check_report_needs_update(
     project_id: str,
     report_id: int,
-    auth: DependencyDirectusSession,
+    _auth: DependencyDirectusSession,
 ) -> dict:
     """Check if there are newer conversations than the report."""
     from dembrane.directus import directus
@@ -892,7 +894,10 @@ async def check_report_needs_update(
         "project_report",
         {
             "query": {
-                "filter": {"id": {"_eq": report_id}},
+                "filter": {
+                    "id": {"_eq": report_id},
+                    "project_id": {"_eq": project_id},
+                },
                 "fields": ["id", "date_created", "project_id"],
                 "limit": 1,
             }
@@ -926,7 +931,7 @@ async def check_report_needs_update(
 @ProjectRouter.get("/{project_id}/participants/count")
 async def get_participant_count(
     project_id: str,
-    auth: DependencyDirectusSession,
+    _auth: DependencyDirectusSession,
 ) -> dict:
     """Get count of participants who opted in to email notifications."""
     from dembrane.directus import directus
@@ -957,7 +962,7 @@ async def stream_report_progress(
     project_id: str,
     report_id: int,
     request: Request,
-    auth: DependencyDirectusSession,
+    _auth: DependencyDirectusSession,
 ) -> StreamingResponse:
     """SSE endpoint for real-time report generation progress."""
     import json
@@ -965,7 +970,7 @@ async def stream_report_progress(
 
     from dembrane.report_events import read_report_event, subscribe_report_events
 
-    async def _generate_events():
+    async def _generate_events() -> AsyncIterator[str]:
         last_heartbeat = time.monotonic()
 
         # Check if report is already done before subscribing
@@ -974,6 +979,9 @@ async def stream_report_progress(
         report = await run_in_thread_pool(
             directus.get_item, "project_report", str(report_id)
         )
+        if not report or str(report.get("project_id")) != project_id:
+            yield f"event: progress\ndata: {json.dumps({'type': 'failed', 'message': 'Report not found'})}\n\n"
+            return
         if report and report.get("status") in ("archived", "published"):
             yield f"event: progress\ndata: {json.dumps({'type': 'completed', 'message': 'Report ready'})}\n\n"
             return

@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from dembrane.service import chat_service, project_service, agentic_run_service
 from dembrane.directus import directus
 from dembrane.settings import get_settings
+from dembrane.chat_utils import generate_title
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.agentic_worker import process_agentic_run
 from dembrane.agentic_runtime import (
@@ -48,10 +49,12 @@ class AgenticCreateRunSchema(BaseModel):
     project_id: str = Field(..., min_length=1)
     project_chat_id: Optional[str] = None
     message: str = Field(..., min_length=1)
+    language: str = Field(default="en", min_length=1)
 
 
 class AgenticAppendMessageSchema(BaseModel):
     message: str = Field(..., min_length=1)
+    language: str = Field(default="en", min_length=1)
 
 
 def _run_task_key(run_id: str, turn_seq: int) -> tuple[str, int]:
@@ -208,11 +211,60 @@ def _normalize_transcript_query_tokens(query: str, *, max_tokens: int = 4) -> li
     return normalized_tokens
 
 
+def _build_match_snippet(*, text: str, tokens: list[str], context_window: int = 80) -> str:
+    lowered = text.lower()
+    best_offset = -1
+    best_length = 0
+
+    for token in tokens:
+        offset = lowered.find(token)
+        if offset < 0:
+            continue
+        best_offset = offset
+        best_length = len(token)
+        break
+
+    if best_offset < 0:
+        snippet = text.strip()
+        return snippet[: context_window * 2].strip()
+
+    start = max(0, best_offset - context_window)
+    end = min(len(text), best_offset + best_length + context_window)
+    snippet = text[start:end].strip()
+    if start > 0 and snippet:
+        snippet = f"...{snippet}"
+    if end < len(text) and snippet:
+        snippet = f"{snippet}..."
+    return snippet
+
+
+def _to_chunk_match(row: dict[str, Any], *, tokens: list[str]) -> Optional[dict[str, str]]:
+    chunk_id = _to_non_empty_string(row.get("id"))
+    if chunk_id is None:
+        return None
+
+    transcript = _to_non_empty_string(row.get("transcript")) or _to_non_empty_string(
+        row.get("raw_transcript")
+    )
+    if transcript is None:
+        return None
+
+    timestamp = _to_non_empty_string(row.get("timestamp")) or _to_non_empty_string(
+        row.get("created_at")
+    )
+    return {
+        "chunk_id": chunk_id,
+        "timestamp": timestamp or "",
+        "snippet": _build_match_snippet(text=transcript, tokens=tokens),
+    }
+
+
 def _to_agent_conversation_card(
     row: dict[str, Any],
     *,
     project_id: str,
     fallback_project_id: Optional[str] = None,
+    matches: Optional[list[dict[str, str]]] = None,
 ) -> Optional[dict[str, Any]]:
     normalized_conversation_id = _to_non_empty_string(row.get("id"))
     if normalized_conversation_id is None:
@@ -222,7 +274,7 @@ def _to_agent_conversation_card(
     if row_project_id != project_id:
         return None
 
-    return {
+    payload = {
         "conversation_id": normalized_conversation_id,
         "participant_name": _to_non_empty_string(row.get("participant_name")),
         "status": _conversation_status(row),
@@ -230,6 +282,9 @@ def _to_agent_conversation_card(
         "started_at": _to_non_empty_string(row.get("created_at")),
         "last_chunk_at": _extract_last_chunk_at(row),
     }
+    if matches is not None:
+        payload["matches"] = matches
+    return payload
 
 
 def _list_project_conversations_for_agent(
@@ -275,6 +330,8 @@ def _list_project_conversations_for_agent(
                         "id",
                         "timestamp",
                         "created_at",
+                        "transcript",
+                        "raw_transcript",
                         "conversation_id.id",
                         "conversation_id.project_id",
                         "conversation_id.participant_name",
@@ -298,19 +355,29 @@ def _list_project_conversations_for_agent(
                 conversation_ref = row.get("conversation_id")
                 if not isinstance(conversation_ref, dict):
                     continue
+                conversation_identifier = _to_non_empty_string(conversation_ref.get("id"))
+                if conversation_identifier is None:
+                    continue
+                is_new_conversation = conversation_identifier not in conversations_by_id
+                if is_new_conversation and len(conversations_by_id) >= normalized_limit:
+                    continue
+                existing_matches = conversations_by_id.get(conversation_identifier, {}).get("matches")
+                normalized_existing_matches = (
+                    existing_matches if isinstance(existing_matches, list) else []
+                )
+                match = _to_chunk_match(row, tokens=tokens)
+                next_matches = normalized_existing_matches
+                if match is not None and len(normalized_existing_matches) < 3:
+                    next_matches = [*normalized_existing_matches, match]
                 card = _to_agent_conversation_card(
                     conversation_ref,
                     project_id=project_id,
                     fallback_project_id=project_id,
+                    matches=next_matches,
                 )
                 if card is None:
                     continue
-                conversation_identifier = card["conversation_id"]
-                if conversation_identifier in conversations_by_id:
-                    continue
                 conversations_by_id[conversation_identifier] = card
-                if len(conversations_by_id) >= normalized_limit:
-                    break
 
         conversations = list(conversations_by_id.values())
         return {
@@ -378,6 +445,52 @@ def _persist_chat_user_message(project_chat_id: Optional[str], message: str) -> 
         logger.warning(
             "Failed to persist agentic user message to chat %s: %s",
             project_chat_id,
+            exc,
+        )
+
+
+async def _maybe_generate_chat_title(
+    project_chat_id: Optional[str],
+    user_message: str,
+    language: str,
+) -> None:
+    normalized_chat_id = _to_non_empty_string(project_chat_id)
+    if normalized_chat_id is None:
+        return
+
+    try:
+        chat = await run_in_thread_pool(chat_service.get_by_id_or_raise, normalized_chat_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "Failed to load agentic chat %s before title generation: %s",
+            normalized_chat_id,
+            exc,
+        )
+        return
+
+    existing_name = _to_non_empty_string(chat.get("name"))
+    if existing_name is not None:
+        return
+
+    try:
+        generated_title = await generate_title(user_message, language)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "Failed to generate agentic chat title for %s: %s",
+            normalized_chat_id,
+            exc,
+        )
+        return
+
+    if _to_non_empty_string(generated_title) is None:
+        return
+
+    try:
+        await run_in_thread_pool(chat_service.set_chat_name, normalized_chat_id, generated_title)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "Failed to persist generated agentic chat title for %s: %s",
+            normalized_chat_id,
             exc,
         )
 
@@ -532,6 +645,7 @@ async def create_run(
         },
     )
     await run_in_thread_pool(_persist_chat_user_message, body.project_chat_id, body.message)
+    await _maybe_generate_chat_title(body.project_chat_id, body.message, body.language)
 
     refreshed_run = await run_in_thread_pool(_get_run_or_404, run["id"])
     return JSONResponse(status_code=201, content=refreshed_run)
@@ -560,6 +674,11 @@ async def append_message(
         _persist_chat_user_message,
         str(run.get("project_chat_id") or ""),
         body.message,
+    )
+    await _maybe_generate_chat_title(
+        _to_non_empty_string(run.get("project_chat_id")),
+        body.message,
+        body.language,
     )
     return await run_in_thread_pool(agentic_run_service.set_status, run_id, "queued")
 

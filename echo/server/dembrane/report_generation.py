@@ -26,10 +26,9 @@ from litellm.exceptions import (
     ContentPolicyViolationError,
 )
 
-from dembrane.llms import MODELS, router_completion, get_completion_kwargs
+from dembrane.llms import router_completion, get_completion_kwargs
 from dembrane.prompts import render_prompt
 from dembrane.directus import DirectusGenericException, directus_client_context
-from dembrane.llm_router import get_min_context_length
 from dembrane.report_utils import (
     REPORT_LLM,
     MAX_REPORT_CONTEXT_LENGTH,
@@ -90,6 +89,7 @@ def _fan_out_summarization(
     group are acknowledged (success or failure). That callback sets a Redis key.
     """
     from dramatiq import group
+
     from dembrane.tasks import task_summarize_conversation, task_report_summarization_done
 
     if not conversation_ids:
@@ -127,6 +127,7 @@ def _wait_for_summaries(
     Returns True if summaries completed, False on timeout.
     """
     import gevent
+
     from dembrane.coordination import _get_sync_redis_client
 
     key = _SUMMARIES_DONE_KEY.format(report_id=report_id)

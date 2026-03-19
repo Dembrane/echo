@@ -128,7 +128,15 @@ class SkipRetryOnUnrecoverableError(dramatiq.Middleware):
         NotImplementedError,
     )
 
-    def after_process_message(self, broker, message, *, result=None, exception=None):
+    def after_process_message(
+        self,
+        broker: Any,
+        message: Any,
+        *,
+        result: Any = None,
+        exception: Any = None,
+    ) -> Any:
+        _ = broker, result
         if exception is not None and isinstance(exception, self.UNRECOVERABLE):
             logger.warning(
                 "Unrecoverable %s in %s — skipping retries: %s",

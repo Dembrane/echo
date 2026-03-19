@@ -1052,17 +1052,22 @@ export const createAgenticRun = async (payload: {
 	project_id: string;
 	project_chat_id?: string;
 	message: string;
+	language?: string;
 }) => {
 	return api.post<unknown, AgenticRun>("/agentic/runs", payload);
 };
 
 export const appendAgenticRunMessage = async (
 	runId: string,
-	message: string,
+	payload: {
+		message: string;
+		language?: string;
+	},
 ) => {
-	return api.post<unknown, AgenticRun>(`/agentic/runs/${runId}/messages`, {
-		message,
-	});
+	return api.post<unknown, AgenticRun>(
+		`/agentic/runs/${runId}/messages`,
+		payload,
+	);
 };
 
 export const getAgenticRun = async (runId: string) => {
