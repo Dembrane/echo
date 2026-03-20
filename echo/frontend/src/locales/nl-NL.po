@@ -519,7 +519,7 @@ msgstr "Geavanceerd (Tips en best practices)"
 msgid "Advanced Settings"
 msgstr "Geavanceerde instellingen"
 
-#: src/components/chat/AgenticChatPanel.tsx:722
+#: src/components/chat/AgenticChatPanel.tsx:723
 msgid "Agent is working..."
 msgstr "Agent is bezig..."
 
@@ -1041,7 +1041,7 @@ msgstr "Wijziging van de taal tijdens een actief gesprek kan onverwachte resulta
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:521
 #: src/routes/project/chat/ProjectChatRoute.tsx:527
-#: src/components/chat/AgenticChatPanel.tsx:710
+#: src/components/chat/AgenticChatPanel.tsx:711
 msgid "Chat"
 msgstr "Chat"
 
@@ -1909,8 +1909,8 @@ msgstr "Ingevoerd door de deelnemer op het portaal"
 #: src/components/dropzone/UploadConversationDropzone.tsx:700
 #: src/components/dropzone/UploadConversationDropzone.tsx:808
 #: src/components/chat/AgenticChatPanel.tsx:242
-#: src/components/chat/AgenticChatPanel.tsx:790
-#: src/components/chat/AgenticChatPanel.tsx:951
+#: src/components/chat/AgenticChatPanel.tsx:791
+#: src/components/chat/AgenticChatPanel.tsx:952
 msgid "Error"
 msgstr "Fout"
 
@@ -2143,11 +2143,11 @@ msgstr "Fout bij het herzien van het resultaat. Probeer het opnieuw."
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Fout bij het stoppen van de opname bij wijziging van het apparaat. Probeer het opnieuw."
 
-#: src/components/chat/AgenticChatPanel.tsx:702
+#: src/components/chat/AgenticChatPanel.tsx:703
 msgid "Failed to stop run"
 msgstr "Uitvoering stoppen mislukt"
 
-#: src/components/chat/AgenticChatPanel.tsx:687
+#: src/components/chat/AgenticChatPanel.tsx:688
 msgid "Failed to submit agentic message"
 msgstr "Agentisch bericht verzenden mislukt"
 
@@ -2421,8 +2421,8 @@ msgstr "Verbergen"
 msgid "Hide data"
 msgstr "Gegevens verbergen"
 
-#: src/components/chat/AgenticChatPanel.tsx:884
-#: src/components/chat/AgenticChatPanel.tsx:894
+#: src/components/chat/AgenticChatPanel.tsx:885
+#: src/components/chat/AgenticChatPanel.tsx:895
 msgid "Hide raw data"
 msgstr "Ruwe data verbergen"
 
@@ -2521,7 +2521,7 @@ msgstr "Link naar portal in rapport opnemen"
 #~ msgid "Info"
 #~ msgstr "Info"
 
-#: src/components/chat/AgenticChatPanel.tsx:917
+#: src/components/chat/AgenticChatPanel.tsx:918
 msgid "Input"
 msgstr "Invoer"
 
@@ -2774,7 +2774,7 @@ msgstr "Collecties worden geladen..."
 msgid "Loading microphones..."
 msgstr "Microfoons laden..."
 
-#: src/components/chat/AgenticChatPanel.tsx:801
+#: src/components/chat/AgenticChatPanel.tsx:802
 msgid "Loading this chat..."
 msgstr "Deze chat wordt geladen..."
 
@@ -3262,7 +3262,7 @@ msgstr "resultaten"
 msgid "Outcomes"
 msgstr "Resultaten"
 
-#: src/components/chat/AgenticChatPanel.tsx:931
+#: src/components/chat/AgenticChatPanel.tsx:932
 msgid "Output"
 msgstr "Uitvoer"
 
@@ -4026,7 +4026,7 @@ msgstr "Rechtsklikken om te markeren"
 msgid "Rows per page"
 msgstr "Rijen per pagina"
 
-#: src/components/chat/AgenticChatPanel.tsx:763
+#: src/components/chat/AgenticChatPanel.tsx:764
 msgid "Run status:"
 msgstr "Uitvoeringsstatus:"
 
@@ -4253,7 +4253,7 @@ msgstr "Selectie te groot. Sommige gesprekken zijn niet toegevoegd."
 msgid "Send"
 msgstr "Verzenden"
 
-#: src/components/chat/AgenticChatPanel.tsx:828
+#: src/components/chat/AgenticChatPanel.tsx:829
 msgid "Send a message to start an agentic run."
 msgstr "Stuur een bericht om een agentisch uitvoeringsproces te starten."
 
@@ -4346,8 +4346,8 @@ msgstr "Minder tonen"
 msgid "Show more"
 msgstr "Meer tonen"
 
-#: src/components/chat/AgenticChatPanel.tsx:884
-#: src/components/chat/AgenticChatPanel.tsx:895
+#: src/components/chat/AgenticChatPanel.tsx:885
+#: src/components/chat/AgenticChatPanel.tsx:896
 msgid "Show raw data"
 msgstr "Ruwe data tonen"
 
@@ -4417,7 +4417,7 @@ msgstr "Iets blokkeert je verbinding. Je audio wordt niet opgeslagen tenzij dit 
 #: src/components/participant/ParticipantInitiateForm.tsx:93
 #: src/components/conversation/ConversationEdit.tsx:252
 msgid "Something went wrong"
-msgstr ""
+msgstr "Er ging iets mis"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationText.tsx:97
@@ -4520,7 +4520,7 @@ msgid "Status"
 msgstr "Status"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:621
-#: src/components/chat/AgenticChatPanel.tsx:777
+#: src/components/chat/AgenticChatPanel.tsx:778
 msgid "Stop"
 msgstr "Stop"
 
@@ -4624,7 +4624,7 @@ msgid "participant.refine.make.concrete.description"
 msgstr "Neem even de tijd om een resultaat te creëren dat je bijdrage concreet maakt."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:439
-#: src/components/chat/AgenticChatPanel.tsx:623
+#: src/components/chat/AgenticChatPanel.tsx:624
 msgid "Template applied"
 msgstr "Template toegepast"
 
@@ -5152,7 +5152,7 @@ msgid "Unable to process this chunk"
 msgstr "Kan dit fragment niet verwerken"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:441
-#: src/components/chat/AgenticChatPanel.tsx:625
+#: src/components/chat/AgenticChatPanel.tsx:626
 msgid "Undo"
 msgstr "Ongedaan maken"
 
@@ -5340,7 +5340,7 @@ msgstr "geverifieerde artefacten"
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:990
 msgid "dashboard.dembrane.verify.title"
-msgstr ""
+msgstr "Verifiëren"
 
 #. js-lingui-explicit-id
 #: src/components/participant/StopRecordingConfirmationModal.tsx:118
@@ -5473,7 +5473,7 @@ msgstr "Welkom"
 
 #: src/routes/auth/Login.tsx:109
 msgid "Welcome back"
-msgstr ""
+msgstr "Welkom terug"
 
 #~ msgid "Welcome to Big Picture Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Details mode."
 #~ msgstr "Welkom in Big Picture Mode! Ik heb samenvattingen van al je gesprekken klaarstaan. Vraag me naar patronen, thema’s en inzichten in je data. Voor exacte quotes start je een nieuwe chat in Specific Details mode."
@@ -5520,7 +5520,7 @@ msgstr "Wat gegevens worden verzonden?"
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifySelection.tsx:201
 msgid "participant.verify.selection.title"
-msgstr ""
+msgstr "Wat wil je verifiëren?"
 
 #~ msgid "What kind of question do you want to ask for this document?"
 #~ msgstr "Wat voor soort vraag wil je stellen voor dit document?"
@@ -5645,12 +5645,12 @@ msgstr "Je lijkt offline te zijn, controleer je internetverbinding"
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:18
 msgid "participant.verify.instructions.receive.artefact"
-msgstr ""
+msgstr "Je ontvangt zo meteen de {objectLabel} om te verifiëren."
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:53
 msgid "participant.verify.instructions.approval.helps"
-msgstr ""
+msgstr "Je goedkeuring helpt ons te begrijpen wat je echt denkt!"
 
 #~ msgid "Your conversation is currently being transcribed. Please check back in a few moments."
 #~ msgstr "Uw gesprek wordt momenteel getranscribeerd. Controleer later opnieuw."
