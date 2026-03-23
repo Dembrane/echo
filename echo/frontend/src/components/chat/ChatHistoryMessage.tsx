@@ -1,8 +1,11 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Box, Collapse, Divider, Group, Text } from "@mantine/core";
+import { Box, Collapse, Divider, Group, Text, Tooltip } from "@mantine/core";
+import { IconArrowUpRight, IconNotes } from "@tabler/icons-react";
 import { formatDate } from "date-fns";
 import type React from "react";
-import { useEffect, useState } from "react";
+import { Children, useEffect, useMemo, useState } from "react";
+import type { Components } from "react-markdown";
 import { useParams } from "react-router";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { MODE_COLORS } from "@/components/chat/ChatModeSelector";
@@ -18,6 +21,23 @@ import { Sources } from "./Sources";
 import SourcesSearched from "./SourcesSearched";
 
 type ChatMode = "overview" | "deep_dive" | "agentic" | null;
+
+const isAgenticTranscriptHref = (href?: string) =>
+	typeof href === "string" && href.includes("/transcript");
+
+const getLinkLabel = (children: React.ReactNode) => {
+	const text = Children.toArray(children)
+		.map((child) => {
+			if (typeof child === "string" || typeof child === "number") {
+				return String(child);
+			}
+			return "";
+		})
+		.join("")
+		.trim();
+
+	return text || t`Transcript`;
+};
 
 export const ChatHistoryMessage = ({
 	message,
@@ -39,6 +59,49 @@ export const ChatHistoryMessage = ({
 		const flattenedItems = extractMessageMetadata(message);
 		setMetadata(flattenedItems);
 	}, [message]);
+
+	const markdownComponents = useMemo<Components | undefined>(() => {
+		if (chatMode !== "agentic") return undefined;
+
+		return {
+			a({ children, className, href, ...props }) {
+				if (!isAgenticTranscriptHref(href)) {
+					return (
+						<a
+							href={href}
+							className={cn(
+								"text-[var(--mantine-color-anchor)] underline underline-offset-2 transition-colors hover:text-[var(--mantine-color-blue-7)]",
+								className,
+							)}
+							{...props}
+						>
+							{children}
+						</a>
+					);
+				}
+
+				return (
+					<Tooltip label={<Trans>Open transcript</Trans>}>
+						<a
+							href={href}
+							className={cn(
+								"not-prose inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50/90 px-2 py-0.5 text-[11px] font-medium text-sky-700 no-underline transition-all hover:-translate-y-px hover:border-sky-300 hover:bg-white hover:text-sky-800",
+								className,
+							)}
+							aria-label={t`Open transcript`}
+							data-testid="agentic-transcript-link"
+							title={t`Open transcript`}
+							{...props}
+						>
+							<IconNotes size={12} stroke={1.9} />
+							<span>{getLinkLabel(children)}</span>
+							<IconArrowUpRight size={11} stroke={1.9} />
+						</a>
+					</Tooltip>
+				);
+			},
+		};
+	}, [chatMode]);
 
 	const isSelected = referenceIds?.includes(message.id) ?? false;
 
@@ -123,7 +186,11 @@ export const ChatHistoryMessage = ({
 							</Group>
 						}
 					>
-						<Markdown className="prose-sm" content={message.content} />
+						<Markdown
+							className="prose-sm"
+							content={message.content}
+							components={markdownComponents}
+						/>
 
 						{/* Show citations inside the chat bubble when toggled */}
 						<Collapse in={isSelected} transitionDuration={200}>

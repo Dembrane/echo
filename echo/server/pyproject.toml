@@ -134,8 +134,6 @@ exclude_lines = [
 line-length = 100
 output-format = "grouped"
 target-version = "py311"
-
-select = []
 exclude = [
     ".bzr",
     ".direnv",
@@ -166,16 +164,6 @@ exclude = [
     "alembic",
     'scripts',
 ]
-ignore = [
-    # mutable defaults
-    "B006",
-]
-unfixable = [
-    # disable auto fix for print statements
-    "T201",
-    "T203",
-]
-ignore-init-module-imports = true
 indent-width = 4
 
 [tool.ruff.lint]
@@ -197,13 +185,20 @@ select = [
     # "T201",
     # "T203",
     # misuse of typing.TYPE_CHECKING
-    "TCH004",
+    "TC004",
     # import rules
     "TID251",
 ]
-ignore = []
+ignore = [
+    # mutable defaults
+    "B006",
+]
 fixable = ["ALL"]
-unfixable = []
+unfixable = [
+    # disable auto fix for print statements
+    "T201",
+    "T203",
+]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.pyrefly]
