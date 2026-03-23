@@ -102,6 +102,11 @@ const asObject = (value: unknown): Record<string, unknown> | null => {
 	return null;
 };
 
+const hasResponseStatus = (error: unknown, statusCode: number) => {
+	const response = asObject(asObject(error)?.response);
+	return response?.status === statusCode;
+};
+
 const AGENTIC_REFERENCE_PATTERN =
 	/\[conversation_id:([^;\]\s]+)(?:;chunk_id:([^\]\s]+))?\]/g;
 
@@ -528,8 +533,14 @@ export const AgenticChatPanel = ({
 				if (!isTerminalStatus(payload.status)) {
 					void startStream(storedRunId, payload.next_seq);
 				}
-			} catch {
-				window.localStorage.removeItem(key);
+			} catch (hydrateError) {
+				if (hasResponseStatus(hydrateError, 404)) {
+					window.localStorage.removeItem(key);
+					return;
+				}
+				if (hydrateError instanceof Error) {
+					console.warn("Failed to hydrate stored agentic run", hydrateError);
+				}
 			} finally {
 				if (active) {
 					setIsHydratingStoredRun(false);

@@ -495,6 +495,20 @@ async def _maybe_generate_chat_title(
         )
 
 
+def _schedule_chat_title_generation(
+    project_chat_id: Optional[str],
+    user_message: str,
+    language: str,
+) -> None:
+    async def _runner() -> None:
+        try:
+            await _maybe_generate_chat_title(project_chat_id, user_message, language)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Unexpected agentic chat title generation failure: %s", exc)
+
+    asyncio.create_task(_runner())
+
+
 def _sse_event_payload(event: dict[str, Any], seq: int) -> str:
     payload = json.dumps(event, default=str)
     return f"id: {seq}\nevent: {event.get('event_type')}\ndata: {payload}\n\n"
@@ -645,7 +659,7 @@ async def create_run(
         },
     )
     await run_in_thread_pool(_persist_chat_user_message, body.project_chat_id, body.message)
-    await _maybe_generate_chat_title(body.project_chat_id, body.message, body.language)
+    _schedule_chat_title_generation(body.project_chat_id, body.message, body.language)
 
     refreshed_run = await run_in_thread_pool(_get_run_or_404, run["id"])
     return JSONResponse(status_code=201, content=refreshed_run)
@@ -675,7 +689,7 @@ async def append_message(
         str(run.get("project_chat_id") or ""),
         body.message,
     )
-    await _maybe_generate_chat_title(
+    _schedule_chat_title_generation(
         _to_non_empty_string(run.get("project_chat_id")),
         body.message,
         body.language,

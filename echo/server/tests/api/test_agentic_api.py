@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Any, AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -64,6 +65,18 @@ class _FakeChatService:
         chat["name"] = name
         self.updated_titles.append((chat_id, name))
         return chat
+
+
+async def _wait_for_updated_titles(
+    chat_service: _FakeChatService,
+    expected_count: int,
+) -> None:
+    for _ in range(20):
+        if len(chat_service.updated_titles) >= expected_count:
+            return
+        await asyncio.sleep(0)
+
+    assert len(chat_service.updated_titles) >= expected_count
 
 
 class _FakeDirectusClient:
@@ -343,6 +356,7 @@ async def test_create_run_generates_title_for_untitled_linked_chat(monkeypatch) 
         )
 
     assert response.status_code == 201
+    await _wait_for_updated_titles(fake_chat_service, 1)
     assert fake_chat_service.updated_titles == [("chat-1", "Generated agentic title")]
 
 
@@ -462,6 +476,7 @@ async def test_append_message_generates_title_only_when_chat_is_untitled(monkeyp
         )
 
     assert response.status_code == 200
+    await _wait_for_updated_titles(fake_chat_service, 1)
     assert fake_chat_service.updated_titles == [("chat-1", "Follow-up title")]
 
 
