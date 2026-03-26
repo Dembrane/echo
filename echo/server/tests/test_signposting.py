@@ -166,19 +166,24 @@ def test_refresh_conversation_signposts_processes_batch_and_reports_more(
             self,
             conversation_id: str,
             status: str = "active",
-            _limit: int = 12,
+            limit: int = 12,
         ) -> list[dict[str, Any]]:
             assert conversation_id == "conv-3"
             assert status == "active"
+            del limit
             return [{"id": "sp-4", "category": "theme", "title": "Bike lanes"}]
 
     def apply_operations_stub(
-        _conversation_id: str,
-        _ready_chunks: list[dict[str, Any]],
-        _active_signposts: list[dict[str, Any]],
-        _operations: dict[str, list[dict[str, Any]]],
+        conversation_id: str,
+        ready_chunks: list[dict[str, Any]],
+        active_signposts: list[dict[str, Any]],
+        operations: dict[str, list[dict[str, Any]]],
         service: Any = None,
     ) -> dict[str, int]:
+        del conversation_id
+        del ready_chunks
+        del active_signposts
+        del operations
         del service
         return {
             "created": 1,
