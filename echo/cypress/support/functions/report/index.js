@@ -43,15 +43,23 @@ export const generateReport = (langCode = 'en') => {
 // ============= Report Actions =============
 
 /**
- * Clicks the share button (mobile)
+ * Opens the report actions menu (three-dot menu)
+ */
+const openReportActionsMenu = () => {
+    cy.get('[data-testid="report-actions-menu"]').should('be.visible').click();
+};
+
+/**
+ * Clicks the share button (in actions menu dropdown)
  */
 export const shareReport = () => {
     cy.log('Sharing Report');
+    openReportActionsMenu();
     cy.get('[data-testid="report-share-button"]').should('be.visible').click();
 };
 
 /**
- * Copies the report link
+ * Copies the report link (inline icon button, only when published)
  */
 export const copyReportLink = () => {
     cy.log('Copying Report Link');
@@ -59,10 +67,11 @@ export const copyReportLink = () => {
 };
 
 /**
- * Prints the report
+ * Prints the report (in actions menu dropdown, only when published)
  */
 export const printReport = () => {
     cy.log('Printing Report');
+    openReportActionsMenu();
     cy.get('[data-testid="report-print-button"]').should('be.visible').click();
 };
 

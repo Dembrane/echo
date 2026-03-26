@@ -34,8 +34,8 @@ from dembrane.async_helpers import run_async_in_new_loop
 from dembrane.conversation_utils import (
     collect_unfinished_conversations,
     collect_unsummarized_conversations,
-    collect_conversations_needing_transcribed_flag,
     collect_conversations_needing_signposts,
+    collect_conversations_needing_transcribed_flag,
 )
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.processing_status_utils import (
@@ -103,6 +103,52 @@ broker.add_middleware(GroupCallbacks(workflow_backend))
 broker.add_middleware(WorkflowMiddleware(workflow_backend))
 
 dramatiq.set_broker(broker)
+
+
+# ── Middleware: skip retries for unrecoverable errors ──────────────────
+
+
+class SkipRetryOnUnrecoverableError(dramatiq.Middleware):
+    """
+    Prevents Dramatiq from retrying messages that failed with clearly
+    unrecoverable errors (e.g. TypeError from a signature mismatch,
+    or AttributeError from a missing method).
+
+    Registered after the default Retries middleware. Since
+    after_process_message runs in *reverse* registration order, this
+    middleware's hook fires BEFORE Retries sees the failure. By setting
+    the retry counter above max_retries, the Retries middleware will
+    route the message to the dead-letter queue instead of re-enqueuing.
+    """
+
+    UNRECOVERABLE = (
+        TypeError,
+        SyntaxError,
+        AttributeError,
+        ImportError,
+        NotImplementedError,
+    )
+
+    def after_process_message(
+        self,
+        broker: Any,
+        message: Any,
+        *,
+        result: Any = None,
+        exception: Any = None,
+    ) -> Any:
+        _ = broker, result
+        if exception is not None and isinstance(exception, self.UNRECOVERABLE):
+            logger.warning(
+                "Unrecoverable %s in %s — skipping retries: %s",
+                type(exception).__name__,
+                message.actor_name,
+                exception,
+            )
+            message.options["retries"] = 99999
+
+
+broker.add_middleware(SkipRetryOnUnrecoverableError())
 
 
 # Transcription Task
@@ -569,11 +615,11 @@ def task_refresh_conversation_signposts(conversation_id: str) -> None:
     """
     logger = getLogger("dembrane.tasks.task_refresh_conversation_signposts")
 
+    from dembrane.signposting import refresh_conversation_signposts
     from dembrane.coordination import (
         mark_signposting_in_progress,
         clear_signposting_in_progress,
     )
-    from dembrane.signposting import refresh_conversation_signposts
     from dembrane.service.conversation import ConversationNotFoundException
 
     try:
@@ -1128,6 +1174,140 @@ def task_create_project_library(project_id: str, language: str) -> None:
         return
 
 
+@dramatiq.actor(queue_name="network", priority=50)
+def task_report_summarization_done(report_id: int) -> None:
+    """
+    GroupCallbacks completion callback for report summarization.
+
+    Fired automatically when all task_summarize_conversation messages in a
+    dramatiq.group() are acknowledged. Sets a Redis key so the report
+    generation actor can stop polling and proceed.
+    """
+    logger = getLogger("dembrane.tasks.task_report_summarization_done")
+    from dembrane.coordination import _get_sync_redis_client
+
+    client = _get_sync_redis_client()
+    try:
+        client.set(f"report:{report_id}:summaries_done", "1", ex=3600)
+        logger.info(f"Summaries done signal set for report {report_id}")
+    finally:
+        client.close()
+
+
+@dramatiq.actor(queue_name="network", priority=50)
+def task_create_report(project_id: str, report_id: int, language: str, user_instructions: str = "") -> None:
+    """
+    Generate a report in a Dramatiq worker (fully synchronous).
+
+    Uses generate_report_content() which orchestrates:
+    - dramatiq.group() for summarization fan-out
+    - gevent.pool.Pool for concurrent transcript fetching
+    - router_completion() (sync litellm) for the LLM call
+
+    No asyncio event loops — safe under dramatiq-gevent.
+    """
+    logger = getLogger("dembrane.tasks.task_create_report")
+    logger.info(f"Starting report generation for project {project_id}, report {report_id}")
+
+    from dembrane.report_utils import ReportGenerationError
+    from dembrane.report_events import publish_report_progress
+    from dembrane.report_generation import generate_report_content
+
+    with ProcessingStatusContext(
+        project_id=project_id,
+        event_prefix="task_create_report",
+        message=f"for report {report_id}",
+    ):
+        report_id_str = str(report_id)
+
+        # Idempotency guard: check report is still draft (or transitioning from scheduled)
+        try:
+            with directus_client_context() as client:
+                report = client.get_item("project_report", report_id_str)
+                if not report or report.get("status") not in ("draft", "scheduled"):
+                    logger.info(
+                        f"Report {report_id} is not draft/scheduled (status={report.get('status') if report else 'missing'}), skipping"
+                    )
+                    return
+                # If report was scheduled, transition to draft before generating
+                if report.get("status") == "scheduled":
+                    client.update_item("project_report", report_id_str, {"status": "draft"})
+        except Exception as e:
+            logger.error(f"Failed to check report status: {e}")
+            raise
+
+        def progress_callback(event_type: str, message: str, detail: Optional[dict] = None) -> None:
+            try:
+                publish_report_progress(report_id, event_type, message, detail)
+            except Exception as e:
+                logger.warning(f"Failed to publish progress event: {e}")
+
+        try:
+            content = generate_report_content(
+                project_id,
+                language,
+                report_id=report_id,
+                progress_callback=progress_callback,
+                user_instructions=user_instructions,
+            )
+
+            # Re-check report status before saving (user may have cancelled)
+            with directus_client_context() as client:
+                report_check = client.get_item("project_report", report_id_str)
+                if not report_check or report_check.get("status") != "draft":
+                    logger.info(
+                        f"Report {report_id} status changed to "
+                        f"{report_check.get('status') if report_check else 'missing'} "
+                        f"during generation, skipping save"
+                    )
+                    return
+
+            # Success: update report to archived
+            with directus_client_context() as client:
+                client.update_item("project_report", report_id_str, {
+                    "content": content,
+                    "status": "archived",
+                })
+
+            publish_report_progress(report_id, "completed", "Report ready")
+            logger.info(f"Report {report_id} generated successfully for project {project_id}")
+
+            # Dispatch report.generated webhook
+            try:
+                from dembrane.service.webhook import dispatch_webhooks_for_report_event
+
+                dispatch_webhooks_for_report_event(project_id, report_id_str, "report.generated")
+            except Exception as e:
+                logger.warning(f"Failed to dispatch report.generated webhook: {e}")
+
+        except ReportGenerationError as e:
+            logger.error(f"Report generation failed for report {report_id}: {e}")
+            try:
+                with directus_client_context() as client:
+                    client.update_item("project_report", report_id_str, {
+                        "status": "error",
+                        "error_code": "GENERATION_FAILED",
+                    })
+            except Exception as update_err:
+                logger.error(f"Failed to update report status to error: {update_err}")
+            publish_report_progress(report_id, "failed", f"Report generation failed: {e}")
+            # Non-retriable
+            return
+
+        except Exception as e:
+            logger.error(f"Unexpected error generating report {report_id}: {e}")
+            try:
+                with directus_client_context() as client:
+                    client.update_item("project_report", report_id_str, {
+                        "status": "error",
+                        "error_code": "UNEXPECTED_ERROR",
+                    })
+            except Exception as update_err:
+                logger.error(f"Failed to update report status to error: {update_err}")
+            publish_report_progress(report_id, "failed", f"Report generation failed: {e}")
+            raise
+
+
 @dramatiq.actor(
     queue_name="network",
     priority=40,
@@ -1203,3 +1383,63 @@ def task_dispatch_webhook(webhook_id: str, payload: dict) -> None:
     except Exception as e:
         logger.error(f"Webhook {webhook_id} dispatch failed: {e}")
         raise  # Retry on network errors etc.
+
+
+@dramatiq.actor(queue_name="network", priority=50)
+def task_check_scheduled_reports() -> None:
+    """
+    Poll for scheduled reports whose scheduled_at time has passed.
+
+    For each matching report, transitions status from "scheduled" to "draft"
+    and dispatches task_create_report. Runs every 5 minutes via the scheduler.
+    """
+    logger = getLogger("dembrane.tasks.task_check_scheduled_reports")
+
+    try:
+        logger.info("Checking for scheduled reports ready to generate @ %s", get_utc_timestamp())
+
+        with directus_client_context() as client:
+            now = get_utc_timestamp().isoformat()
+            reports = client.get_items(
+                "project_report",
+                {
+                    "query": {
+                        "filter": {
+                            "status": {"_eq": "scheduled"},
+                            "scheduled_at": {"_lte": now},
+                        },
+                        "fields": ["id", "project_id", "language", "user_instructions", "scheduled_at"],
+                        "limit": 50,
+                    }
+                },
+            )
+
+        if not reports:
+            logger.debug("No scheduled reports ready to generate")
+            return
+
+        logger.info(f"Found {len(reports)} scheduled reports ready to generate")
+
+        for report in reports:
+            report_id = report.get("id")
+            project_id = report.get("project_id")
+            language = report.get("language") or "en"
+            user_instructions = report.get("user_instructions") or ""
+
+            if not report_id or not project_id:
+                continue
+
+            try:
+                # Transition to draft
+                with directus_client_context() as client:
+                    client.update_item("project_report", str(report_id), {"status": "draft"})
+
+                # Dispatch generation task
+                task_create_report.send(project_id, report_id, language, user_instructions)
+                logger.info(f"Dispatched generation for scheduled report {report_id}")
+            except Exception as e:
+                logger.error(f"Failed to dispatch scheduled report {report_id}: {e}")
+
+    except Exception as e:
+        logger.error(f"Error checking scheduled reports: {e}")
+        raise

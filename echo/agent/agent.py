@@ -1,11 +1,11 @@
 from logging import getLogger
+import importlib
 import re
 from typing import Any, Callable
 
 from copilotkit.langgraph import CopilotKitState
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.tools import tool
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode
@@ -14,6 +14,7 @@ from echo_client import EchoClient
 from settings import get_settings
 
 logger = getLogger("agent")
+VERTEX_AUTH_SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
 
 SYSTEM_PROMPT = """You are the Dembrane Echo assistant — a friendly, conversational AI that helps \
 users explore and understand their project's conversation data.
@@ -64,7 +65,9 @@ research request. Focus on what the user is actually asking in their message.
 ## Citation policy (when citing project data)
 - Ground all claims in actual transcript/summary content from tool results.
 - Provide exact quotes when you have transcripts: "[Participant Name]: quoted text" \
-tagged as [conversation_id:<id>].
+tagged as [conversation_id:<id>;chunk_id:<chunk_id>] when chunk ids are available.
+- If you only have conversation-level evidence without an exact transcript chunk, cite as \
+[conversation_id:<id>].
 - Use quotes to support your points, but don't overwhelm with citations.
 - When working from summaries only (no transcript retrieved), say so and suggest \
 you can retrieve the full transcript if they want exact wording.
@@ -92,14 +95,38 @@ POST_NUDGE_CONTINUATION_SYSTEM_PROMPT = (
 )
 
 
-def _build_llm() -> ChatGoogleGenerativeAI:
+def _build_llm() -> Any:
     settings = get_settings()
-    if not settings.gemini_api_key:
-        raise ValueError("GEMINI_API_KEY is required")
+    try:
+        vertex_model_garden_module = importlib.import_module(
+            "langchain_google_vertexai.model_garden"
+        )
+        google_service_account = importlib.import_module("google.oauth2.service_account")
+    except ModuleNotFoundError as exc:
+        raise RuntimeError(
+            "Vertex AI Anthropic dependencies are missing. Install "
+            "langchain-google-vertexai, anthropic[vertex], and google-auth "
+            "in the agent environment."
+        ) from exc
+    chat_anthropic_vertex = getattr(
+        vertex_model_garden_module, "ChatAnthropicVertex"
+    )
+    credentials = None
+    credentials_payload = settings.vertex_credentials or settings.gcp_sa_json
+    project = settings.vertex_project or None
+    if credentials_payload:
+        credentials = google_service_account.Credentials.from_service_account_info(
+            credentials_payload,
+            scopes=VERTEX_AUTH_SCOPES,
+        )
+        if not project:
+            project = credentials_payload.get("project_id")
 
-    return ChatGoogleGenerativeAI(
-        model=settings.llm_model,
-        google_api_key=settings.gemini_api_key,
+    return chat_anthropic_vertex(
+        model_name=settings.llm_model,
+        project=project,
+        location=settings.vertex_location,
+        credentials=credentials,
     )
 
 
@@ -210,66 +237,6 @@ def create_agent_graph(
             },
         }
 
-    def _build_snippet(
-        *,
-        line: str,
-        offset: int,
-        needle_length: int,
-        context_window: int = 80,
-    ) -> str:
-        start = max(0, offset - context_window)
-        end = min(len(line), offset + needle_length + context_window)
-        snippet = line[start:end].strip()
-        if not snippet:
-            snippet = line.strip()
-        if start > 0 and snippet:
-            snippet = f"...{snippet}"
-        if end < len(line) and snippet:
-            snippet = f"{snippet}..."
-        return snippet
-
-    def _grep_transcript_snippets(
-        *,
-        transcript: str,
-        query: str,
-        limit: int,
-    ) -> list[dict[str, Any]]:
-        normalized_query = query.strip().lower()
-        if not normalized_query:
-            return []
-
-        matches: list[dict[str, Any]] = []
-        lines = transcript.splitlines() or [transcript]
-
-        for line_index, line in enumerate(lines):
-            if not isinstance(line, str):
-                continue
-
-            lowered = line.lower()
-            search_offset = 0
-            while True:
-                match_offset = lowered.find(normalized_query, search_offset)
-                if match_offset < 0:
-                    break
-
-                matches.append(
-                    {
-                        "line_index": line_index,
-                        "offset": match_offset,
-                        "snippet": _build_snippet(
-                            line=line,
-                            offset=match_offset,
-                            needle_length=len(normalized_query),
-                        ),
-                    }
-                )
-                if len(matches) >= limit:
-                    return matches
-
-                search_offset = match_offset + max(1, len(normalized_query))
-
-        return matches
-
     def _create_echo_client() -> EchoClient:
         if echo_client_factory:
             return echo_client_factory(bearer_token)
@@ -307,6 +274,7 @@ def create_agent_graph(
             "started_at": raw.get("startedAt") or raw.get("started_at"),
             "last_chunk_at": raw.get("lastChunkAt") or raw.get("last_chunk_at"),
             "summary": raw.get("summary"),
+            "matches": raw.get("matches") if isinstance(raw.get("matches"), list) else [],
         }
 
     def _cache_project_conversations(conversations: list[dict[str, Any]]) -> None:
@@ -562,15 +530,31 @@ def create_agent_graph(
 
         client = _create_echo_client()
         try:
-            transcript = await client.get_conversation_transcript(conversation_id)
+            payload = await client.list_project_conversations(
+                project_id=project_id,
+                limit=1,
+                conversation_id=conversation_id,
+                transcript_query=normalized_query,
+            )
         finally:
             await client.close()
 
-        matches = _grep_transcript_snippets(
-            transcript=transcript,
-            query=normalized_query,
-            limit=normalized_limit,
+        conversations = _extract_project_conversations(
+            payload,
+            fallback_project_id=project_id,
         )
+        if conversations:
+            _cache_project_conversations(conversations)
+
+        matches: list[dict[str, Any]] = []
+        for candidate in conversations:
+            if candidate.get("conversation_id") != conversation_id:
+                continue
+            candidate_matches = candidate.get("matches")
+            if isinstance(candidate_matches, list):
+                matches = candidate_matches[:normalized_limit]
+            break
+
         return {
             "project_id": project_id,
             "conversation_id": conversation_id,

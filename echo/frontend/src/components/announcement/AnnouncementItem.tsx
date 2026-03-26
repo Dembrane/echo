@@ -9,11 +9,11 @@ import {
 	useMantineTheme,
 } from "@mantine/core";
 import {
-	IconAlertTriangle,
-	IconChevronDown,
-	IconChevronUp,
-	IconInfoCircle,
-} from "@tabler/icons-react";
+	CaretDown,
+	CaretUp,
+	Info,
+	WarningCircle,
+} from "@phosphor-icons/react";
 import { forwardRef, useEffect, useRef, useState } from "react";
 import { Markdown } from "@/components/common/Markdown";
 import { testId } from "@/lib/testUtils";
@@ -31,14 +31,13 @@ type Announcement = {
 
 interface AnnouncementItemProps {
 	announcement: Announcement;
-	onMarkAsRead: (id: string) => void;
 	index: number;
 }
 
 export const AnnouncementItem = forwardRef<
 	HTMLDivElement,
 	AnnouncementItemProps
->(({ announcement, onMarkAsRead, index }, ref) => {
+>(({ announcement, index }, ref) => {
 	const theme = useMantineTheme();
 	const [showMore, setShowMore] = useState(false);
 	const [showReadMoreButton, setShowReadMoreButton] = useState(false);
@@ -65,24 +64,24 @@ export const AnnouncementItem = forwardRef<
 		>
 			<Stack gap="xs">
 				<Group gap="sm" align="flex-start">
-					{
-						<ThemeIcon
-							size={25}
-							variant="light"
-							color={announcement.level === "urgent" ? "orange" : "blue"}
-							radius="xl"
-						>
-							{announcement.level === "urgent" ? (
-								<IconAlertTriangle size={17} />
-							) : (
-								<IconInfoCircle size={20} />
-							)}
-						</ThemeIcon>
-					}
+					<ThemeIcon
+						size={25}
+						variant="light"
+						color={announcement.level === "urgent" ? "orange" : "blue"}
+						radius="xl"
+					>
+						{announcement.level === "urgent" ? (
+							<WarningCircle size={17} weight="fill" />
+						) : (
+							<Info size={20} weight="fill" />
+						)}
+					</ThemeIcon>
 					<Stack gap="xs" style={{ flex: 1 }}>
 						<Group justify="space-between" align="center">
 							<div style={{ flex: 1 }}>
-								<Markdown content={announcement.title} />
+								<Text size="sm" fw={500}>
+									{announcement.title}
+								</Text>
 							</div>
 
 							<Group gap="sm" align="center">
@@ -90,7 +89,6 @@ export const AnnouncementItem = forwardRef<
 									{formatDate(announcement.created_at)}
 								</Text>
 
-								{/* this part needs a second look */}
 								{!announcement.read && (
 									<div
 										style={{
@@ -102,7 +100,6 @@ export const AnnouncementItem = forwardRef<
 										{...testId("announcement-unread-indicator")}
 									/>
 								)}
-								{/* this part needs a second look */}
 							</Group>
 						</Group>
 
@@ -113,8 +110,8 @@ export const AnnouncementItem = forwardRef<
 							/>
 						</Text>
 
-						<Group justify="space-between" align="center">
-							{showReadMoreButton && (
+						{showReadMoreButton && (
+							<Group justify="flex-start">
 								<Button
 									variant="transparent"
 									color="gray"
@@ -127,34 +124,17 @@ export const AnnouncementItem = forwardRef<
 									{showMore ? (
 										<Group gap="xs">
 											<Trans>Show less</Trans>
-											<IconChevronUp size={14} />
+											<CaretUp size={14} />
 										</Group>
 									) : (
 										<Group gap="xs">
 											<Trans>Show more</Trans>
-											<IconChevronDown size={14} />
+											<CaretDown size={14} />
 										</Group>
 									)}
 								</Button>
-							)}
-
-							<Box ml="auto">
-								{!announcement.read && (
-									<Button
-										variant="transparent"
-										size="xs"
-										color="gray"
-										className="hover:underline"
-										onClick={() => {
-											onMarkAsRead(announcement.id);
-										}}
-										{...testId("announcement-mark-as-read-button")}
-									>
-										<Trans>Mark as read</Trans>
-									</Button>
-								)}
-							</Box>
-						</Group>
+							</Group>
+						)}
 					</Stack>
 				</Group>
 			</Stack>

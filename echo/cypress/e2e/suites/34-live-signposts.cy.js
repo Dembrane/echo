@@ -8,6 +8,7 @@ describe("Live Signposts", () => {
 		/\/$/,
 		"",
 	);
+	const directusAuth = Cypress.env("directusAuth") || Cypress.env("auth");
 
 	const getFocusTermsTextarea = () =>
 		cy
@@ -40,8 +41,8 @@ describe("Live Signposts", () => {
 		const loginToDirectus = () =>
 			cy
 				.request("POST", `${directusUrl}/auth/login`, {
-					email: Cypress.env("auth").email,
-					password: Cypress.env("auth").password,
+					email: directusAuth.email,
+					password: directusAuth.password,
 				})
 				.its("body.data.access_token");
 

@@ -1,3 +1,4 @@
+<transcripts>
 {% if conversations|length == 0 %}
 Keine Gesprächstranskripte gefunden.
 {% else %}
@@ -12,6 +13,14 @@ Keine Gesprächstranskripte gefunden.
    {% endfor %}
 {% endif %}
 </transcripts>
+{% if user_instructions %}
+
+<user_instructions>
+The report creator has provided the following guidance. Pay special attention to these instructions when analyzing the transcripts and structuring your article:
+
+{{ user_instructions }}
+</user_instructions>
+{% endif %}
 
 Sie haben die Aufgabe, einen dynamischen Interview-Artikel im Frage-Antwort-Format auf Basis der oben genannten Gesprächstranskripte zu erstellen. Dieser Artikel soll die Inhalte kritisch analysieren und dabei einen klaren Bezug zum Quellmaterial behalten. Das Endergebnis soll ein professionelles, gut lesbares Dokument sein, das sich für die sofortige Online-Veröffentlichung eignet.
 
@@ -45,6 +54,8 @@ Formatieren Sie Ihre endgültige Ausgabe wie folgt:
 * Einleitung: 2-3 Sätze zur Einordnung des Kontexts.
 * Q&A-Paare: Präsentieren Sie jedes Paar mit der Frage in Fettdruck, gefolgt von einer umfassenden Antwort, getrennt durch zwei Zeilenumbrüche.
 * Fazit: 2-3 Sätze, die die wichtigsten Punkte und deren Bedeutung zusammenfassen.
+
+WICHTIG: Schreiben Sie den gesamten Artikel auf Deutsch, unabhängig von der Sprache der Transkripte. Falls die Transkripte in einer anderen Sprache verfasst sind, übersetzen Sie die Inhalte ins Deutsche.
 
 Behalten Sie während des gesamten Artikels einen professionellen, journalistischen Ton bei. Die Sprache sollte klar, präzise und für ein allgemeines Publikum leicht verständlich sein. Vermeiden Sie umgangssprachliche Ausdrücke, Fachjargon oder übermäßig technische Begriffe, es sei denn, sie sind wesentlich und werden erklärt.
 

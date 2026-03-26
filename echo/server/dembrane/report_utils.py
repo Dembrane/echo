@@ -1,7 +1,6 @@
 import re
-import asyncio
 import logging
-from typing import Optional
+from typing import Callable, Optional
 
 import backoff
 import sentry_sdk
@@ -19,7 +18,7 @@ from dembrane.llms import MODELS, arouter_completion, get_completion_kwargs
 from dembrane.prompts import render_prompt
 from dembrane.directus import DirectusGenericException, directus
 from dembrane.llm_router import get_min_context_length
-from dembrane.async_helpers import run_in_thread_pool
+from dembrane.async_helpers import safe_gather, run_in_thread_pool
 from dembrane.summary_utils import safe_summarize_conversation
 from dembrane.api.conversation import get_conversation_transcript
 from dembrane.api.dependency_auth import DirectusSession
@@ -27,11 +26,11 @@ from dembrane.api.dependency_auth import DirectusSession
 logger = logging.getLogger("report_utils")
 
 # Global LLM model for report generation
-REPORT_LLM = MODELS.TEXT_FAST
+REPORT_LLM = MODELS.MULTI_MODAL_PRO
 
-# Get the minimum context length across all TEXT_FAST deployments
+# Get the minimum context length across all MULTI_MODAL_PRO deployments
 # This ensures we don't exceed limits when router picks any deployment
-MAX_REPORT_CONTEXT_LENGTH = get_min_context_length("text_fast")
+MAX_REPORT_CONTEXT_LENGTH = get_min_context_length("multi_modal_pro")
 
 # Default timeout for LLM report generation (5 minutes)
 REPORT_GENERATION_TIMEOUT = 5 * 60
@@ -65,9 +64,10 @@ async def _call_llm_for_report(prompt: str) -> str:
     logger.debug("Calling LLM for report generation")
     # Router handles load balancing and failover; backoff provides additional safety
     response = await arouter_completion(
-        MODELS.TEXT_FAST,
+        REPORT_LLM,
         messages=[{"role": "user", "content": prompt}],
         timeout=REPORT_GENERATION_TIMEOUT,
+        thinking={"type": "enabled", "budget_tokens": 2048},
     )
     return response.choices[0].message.content
 
@@ -134,7 +134,11 @@ async def _fetch_conversations(project_id: str, fields: list) -> list:
         raise ReportGenerationError(f"Unexpected error fetching conversations: {e}", cause=e) from e
 
 
-async def get_report_content_for_project(project_id: str, language: str) -> str:
+async def get_report_content_for_project(
+    project_id: str,
+    language: str,
+    progress_callback: Optional[Callable[[str, str, Optional[dict]], None]] = None,
+) -> str:
     """
     Generate a report for a project based on conversation summaries and transcripts.
 
@@ -184,16 +188,26 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
 
     logger.info(f"Generating summaries for {len(conversation_with_chunks)} conversations")
 
+    if progress_callback:
+        progress_callback(
+            "summarizing",
+            "Summarizing conversations...",
+            {"total": len(conversation_with_chunks)},
+        )
+
     # Batch summarization with fault tolerance
     batch_size = 5
     total_summary_failures = 0
+    summarized_count = 0
 
     for i in range(0, len(conversation_with_chunks), batch_size):
         batch = conversation_with_chunks[i : i + batch_size]
         tasks = [_safe_summarize_conversation(conv["id"]) for conv in batch]
 
         # Use return_exceptions=True to prevent one failure from canceling others
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        # Use safe_gather instead of asyncio.gather to avoid "Event loop is closed"
+        # errors under dramatiq-gevent greenlet interleaving
+        results = await safe_gather(*tasks, return_exceptions=True)
 
         for result in results:
             if isinstance(result, Exception):
@@ -201,6 +215,14 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
                 total_summary_failures += 1
             elif isinstance(result, dict) and not result.get("success"):
                 total_summary_failures += 1
+
+        summarized_count = min(i + batch_size, len(conversation_with_chunks))
+        if progress_callback:
+            progress_callback(
+                "summarizing",
+                f"Summarizing conversations ({summarized_count}/{len(conversation_with_chunks)})...",
+                {"current": summarized_count, "total": len(conversation_with_chunks)},
+            )
 
     if total_summary_failures > 0:
         logger.warning(
@@ -303,18 +325,40 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
         token_count += summary_tokens
 
     # Now try to add full transcripts for conversations that have summaries
-    # Process in the same order (most recent first)
+    # Fetch all transcripts in parallel for speed, then add them in order
+    if progress_callback:
+        progress_callback("fetching_transcripts", "Fetching transcripts...", None)
+
     transcripts_added = 0
     transcripts_skipped = 0
 
-    for conversation in conversations:
-        conv_id = conversation.get("id")
-        if not conv_id or conv_id not in conversation_data_dict:
-            continue
+    # Collect conversation IDs that need transcripts (in order)
+    conv_ids_for_transcripts = [
+        conv.get("id")
+        for conv in conversations
+        if conv.get("id") and conv.get("id") in conversation_data_dict
+    ]
 
-        transcript = await _safe_get_transcript(conv_id)
+    # Fetch all transcripts in parallel batches
+    transcript_map: dict[str, Optional[str]] = {}
+    batch_size = 10
+    for i in range(0, len(conv_ids_for_transcripts), batch_size):
+        batch_ids = conv_ids_for_transcripts[i : i + batch_size]
+        batch_results = await safe_gather(
+            *[_safe_get_transcript(cid) for cid in batch_ids],
+            return_exceptions=True,
+        )
+        for cid, result in zip(batch_ids, batch_results, strict=False):
+            if isinstance(result, Exception):
+                logger.warning(f"Exception fetching transcript for {cid}: {result}")
+                transcript_map[cid] = None
+            else:
+                transcript_map[cid] = result
+
+    # Add transcripts in order, respecting token budget
+    for conv_id in conv_ids_for_transcripts:
+        transcript = transcript_map.get(conv_id)
         if transcript is None:
-            # Error already logged in _safe_get_transcript
             transcripts_skipped += 1
             continue
 
@@ -366,6 +410,9 @@ async def get_report_content_for_project(project_id: str, language: str) -> str:
     prompt_message = render_prompt(
         "system_report", language, {"conversations": conversation_data_list}
     )
+
+    if progress_callback:
+        progress_callback("generating", "Generating report...", None)
 
     # Use the configured Litellm provider for report generation with retry
     try:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from contextlib import nullcontext
 from datetime import datetime
+from contextlib import nullcontext
 from unittest.mock import Mock
 
 import dembrane.tasks as tasks

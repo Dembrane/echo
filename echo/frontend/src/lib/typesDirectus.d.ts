@@ -33,6 +33,9 @@ interface CustomDirectusTypes {
 	project_report_metric: ProjectReportMetric[];
 	project_report_notification_participants: ProjectReportNotificationParticipant[];
 	project_tag: ProjectTag[];
+	prompt_template: PromptTemplate[];
+	prompt_template_preference: PromptTemplatePreference[];
+	prompt_template_rating: PromptTemplateRating[];
 	verification_topic: VerificationTopic[];
 	verification_topic_translations: VerificationTopicTranslation[];
 	view: View[];
@@ -306,6 +309,7 @@ interface Project {
 	processing_status: string[] | ProcessingStatus[];
 	custom_verification_topics: string[] | VerificationTopic[];
 	conversations_count?: number | null;
+	pin_order: number | null;
 }
 
 interface ParticipantProject extends Project {
@@ -415,8 +419,10 @@ interface ProjectReport {
 	id: number;
 	language: string | null;
 	project_id: string | Project | null;
+	scheduled_at: string | null;
 	show_portal_link: boolean | null;
-	status: "error" | "archived" | "published";
+	status: "draft" | "error" | "archived" | "published" | "cancelled" | "scheduled";
+	user_instructions: string | null;
 }
 
 interface ProjectReportMetric {
@@ -484,11 +490,51 @@ interface View {
 	aspects: string[] | Aspect[];
 }
 
+interface PromptTemplate {
+	id: string;
+	user_created: string | DirectusUser<Schema> | null;
+	date_created: string | null;
+	date_updated: string | null;
+	title: string;
+	content: string;
+	icon: string | null;
+	sort: number | null;
+	is_public: boolean;
+	description: string | null;
+	tags: string[] | null;
+	language: string | null;
+	is_anonymous: boolean;
+	author_display_name: string | null;
+	use_count: number;
+	star_count: number;
+	copied_from: string | PromptTemplate | null;
+}
+
+interface PromptTemplatePreference {
+	id: string;
+	user_created: string | DirectusUser<Schema> | null;
+	date_created: string | null;
+	template_type: "static" | "user";
+	static_template_id: string | null;
+	prompt_template_id: string | PromptTemplate | null;
+	sort: number;
+}
+
+interface PromptTemplateRating {
+	id: string;
+	user_created: string | DirectusUser<Schema> | null;
+	date_created: string | null;
+	prompt_template_id: string | PromptTemplate | null;
+	rating: number;
+	chat_message_id: string | null;
+}
+
 interface CustomDirectusUser {
 	disable_create_project: boolean | null;
 	whitelabel_logo: string | null;
 	legal_basis: "client-managed" | "consent" | "dembrane-events" | null;
 	privacy_policy_url: string | null;
+	hide_ai_suggestions: boolean | null;
 	projects: string[] | Project[];
 }
 

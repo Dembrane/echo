@@ -53,6 +53,18 @@
           "color": "var(--theme--primary)",
           "text": "$t:published",
           "value": "published"
+        },
+        {
+          "text": "draft",
+          "value": "draft"
+        },
+        {
+          "text": "cancelled",
+          "value": "cancelled"
+        },
+        {
+          "text": "scheduled",
+          "value": "scheduled"
         }
       ]
     },

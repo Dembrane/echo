@@ -130,7 +130,6 @@ def test_apply_signpost_operations_updates_and_resolves_signposts() -> None:
 def test_refresh_conversation_signposts_processes_batch_and_reports_more(
     monkeypatch,
 ) -> None:
-    service = FakeSignpostingService()
     captured: dict[str, Any] = {}
 
     ready_chunks = [
@@ -167,11 +166,25 @@ def test_refresh_conversation_signposts_processes_batch_and_reports_more(
             self,
             conversation_id: str,
             status: str = "active",
-            limit: int = 12,
+            _limit: int = 12,
         ) -> list[dict[str, Any]]:
             assert conversation_id == "conv-3"
             assert status == "active"
             return [{"id": "sp-4", "category": "theme", "title": "Bike lanes"}]
+
+    def apply_operations_stub(
+        _conversation_id: str,
+        _ready_chunks: list[dict[str, Any]],
+        _active_signposts: list[dict[str, Any]],
+        _operations: dict[str, list[dict[str, Any]]],
+        service: Any = None,
+    ) -> dict[str, int]:
+        del service
+        return {
+            "created": 1,
+            "resolved": 0,
+            "updated": 0,
+        }
 
     refresh_service = RefreshService()
 
@@ -191,11 +204,7 @@ def test_refresh_conversation_signposts_processes_batch_and_reports_more(
     monkeypatch.setattr(
         signposting,
         "apply_signpost_operations",
-        lambda conversation_id, ready_chunks, active_signposts, operations, service=None: {
-            "created": 1,
-            "resolved": 0,
-            "updated": 0,
-        },
+        apply_operations_stub,
     )
 
     result = signposting.refresh_conversation_signposts(
@@ -224,11 +233,15 @@ def test_refresh_conversation_signposts_skips_disabled_projects() -> None:
             assert conversation_id == "conv-4"
             return {"project_id": {"is_signposting_enabled": False}}
 
-        def list_ready_chunks_for_signposting(self, *args: Any, **kwargs: Any) -> list[dict[str, Any]]:
+        def list_ready_chunks_for_signposting(
+            self,
+            *_args: Any,
+            **_kwargs: Any,
+        ) -> list[dict[str, Any]]:
             state["listed"] = True
             return []
 
-        def mark_chunks_signpost_processed(self, chunk_ids: list[str]) -> None:
+        def mark_chunks_signpost_processed(self, _chunk_ids: list[str]) -> None:
             state["processed"] = True
 
     result = signposting.refresh_conversation_signposts(

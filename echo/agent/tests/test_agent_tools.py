@@ -128,6 +128,7 @@ def test_system_prompt_contains_conversational_and_research_directives():
     assert "analysis guidelines" in prompt
     # Citation policy still anchors output quality
     assert '"[participant name]: quoted text"' in prompt
+    assert "[conversation_id:<id>;chunk_id:<chunk_id>]" in SYSTEM_PROMPT
     assert "[conversation_id:<id>]" in SYSTEM_PROMPT
     assert "working from summaries only" in prompt
     assert "retrieve the full transcript" in prompt
@@ -522,11 +523,35 @@ async def test_grep_convo_snippets_returns_matches_for_in_scope_conversation():
                 }
             ]
         },
-        transcripts={
-            "conv-1": "Minority representation matters for trust.\n"
-            "Some participants discussed representation gaps in media.\n"
-            "Other topics were unrelated.",
+        project_conversations_payload_by_transcript_query={
+            "representation": {
+                "project_id": "project-1",
+                "count": 1,
+                "conversations": [
+                    {
+                        "conversation_id": "conv-1",
+                        "participant_name": "Alice",
+                        "status": "done",
+                        "summary": "summary one",
+                        "started_at": "2026-01-01T00:00:00Z",
+                        "last_chunk_at": "2026-01-01T01:00:00Z",
+                        "matches": [
+                            {
+                                "chunk_id": "chunk-1",
+                                "timestamp": "2026-01-01T00:10:00Z",
+                                "snippet": "Minority representation matters for trust.",
+                            },
+                            {
+                                "chunk_id": "chunk-2",
+                                "timestamp": "2026-01-01T00:20:00Z",
+                                "snippet": "Some participants discussed representation gaps in media.",
+                            },
+                        ],
+                    }
+                ],
+            }
         },
+        transcripts={},
     )
 
     create_agent_graph(
@@ -544,7 +569,11 @@ async def test_grep_convo_snippets_returns_matches_for_in_scope_conversation():
     assert result["project_id"] == "project-1"
     assert result["conversation_id"] == "conv-1"
     assert result["count"] == 2
-    assert result["matches"][0]["snippet"]
+    assert result["matches"][0] == {
+        "chunk_id": "chunk-1",
+        "timestamp": "2026-01-01T00:10:00Z",
+        "snippet": "Minority representation matters for trust.",
+    }
     assert factory.instances[-1].closed is True
 
 
@@ -562,7 +591,24 @@ async def test_grep_convo_snippets_returns_empty_matches_when_no_hits():
                 }
             ]
         },
-        transcripts={"conv-1": "No relevant term in this transcript."},
+        project_conversations_payload_by_transcript_query={
+            "representation": {
+                "project_id": "project-1",
+                "count": 1,
+                "conversations": [
+                    {
+                        "conversation_id": "conv-1",
+                        "participant_name": "Alice",
+                        "status": "done",
+                        "summary": "summary one",
+                        "started_at": "2026-01-01T00:00:00Z",
+                        "last_chunk_at": "2026-01-01T01:00:00Z",
+                        "matches": [],
+                    }
+                ],
+            }
+        },
+        transcripts={},
     )
 
     create_agent_graph(

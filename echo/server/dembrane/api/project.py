@@ -2,19 +2,18 @@ import os
 import asyncio
 import zipfile
 from http import HTTPStatus
-from typing import Any, List, Optional, Generator
+from typing import Any, List, Optional, Generator, AsyncIterator
 from logging import getLogger
 from datetime import datetime
 
-from fastapi import Depends, APIRouter, HTTPException, BackgroundTasks
+from fastapi import Query, Depends, Request, APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 
-from dembrane.tasks import task_create_view, task_create_project_library
+from dembrane.tasks import task_create_view, task_create_report, task_create_project_library
 from dembrane.utils import generate_uuid, get_safe_filename
 from dembrane.service import build_conversation_service
 from dembrane.settings import get_settings
-from dembrane.report_utils import ContextTooLongException, get_report_content_for_project
 from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.exceptions import (
     ProjectLanguageNotSupportedException,
@@ -35,6 +34,224 @@ ProjectRouter = APIRouter(
 )
 settings = get_settings()
 BASE_DIR = settings.base_dir
+
+
+# ── BFF: Projects Home ──────────────────────────────────────────────────
+
+
+class BffProjectSummary(BaseModel):
+    id: str
+    name: Optional[str] = None
+    updated_at: Optional[str] = None
+    language: Optional[str] = None
+    pin_order: Optional[int] = None
+    conversations_count: int = 0
+    owner_name: Optional[str] = None
+    owner_email: Optional[str] = None
+
+
+class BffProjectsHomeResponse(BaseModel):
+    pinned: list[BffProjectSummary]
+    projects: list[BffProjectSummary]
+    total_count: int
+    has_more: bool
+    is_admin: bool = False
+
+
+_HOME_FIELDS = [
+    "id",
+    "name",
+    "updated_at",
+    "language",
+    "pin_order",
+    "count(conversations)",
+]
+_HOME_FIELDS_WITHOUT_PIN_ORDER = [field for field in _HOME_FIELDS if field != "pin_order"]
+
+
+def _build_project_summary(raw: dict) -> BffProjectSummary:
+    owner_name: Optional[str] = None
+    owner_email: Optional[str] = None
+    user_rel = raw.get("directus_user_id")
+    if isinstance(user_rel, dict):
+        owner_name = user_rel.get("first_name")
+        owner_email = user_rel.get("email")
+
+    return BffProjectSummary(
+        id=raw["id"],
+        name=raw.get("name"),
+        updated_at=raw.get("updated_at"),
+        language=raw.get("language"),
+        pin_order=raw.get("pin_order"),
+        conversations_count=int(raw.get("conversations_count", 0) or 0),
+        owner_name=owner_name,
+        owner_email=owner_email,
+    )
+
+
+@ProjectRouter.get("/home", response_model=BffProjectsHomeResponse)
+async def get_projects_home(
+    auth: DependencyDirectusSession,
+    search: Optional[str] = Query(None, description="Search term, supports owner:<email> prefix"),
+    offset: int = Query(0, ge=0, description="Pagination offset"),
+    limit: int = Query(15, ge=1, le=100, description="Page size"),
+) -> BffProjectsHomeResponse:
+    """
+    Aggregated endpoint for the projects home page.
+    Returns pinned projects and a paginated project list in one call.
+    """
+    client = auth.client
+
+    # Admin users get owner info via relational fields
+    fields = list(_HOME_FIELDS)
+    if auth.is_admin:
+        fields.extend(["directus_user_id.first_name", "directus_user_id.email"])
+    fallback_fields = list(_HOME_FIELDS_WITHOUT_PIN_ORDER)
+    if auth.is_admin:
+        fallback_fields.extend(["directus_user_id.first_name", "directus_user_id.email"])
+
+    # Fetch pinned projects (always, regardless of search)
+    # Admins see only their own pins; non-admins see all (Directus permissions handle scoping)
+    pin_filter: dict[str, Any] = {"pin_order": {"_nnull": True}}
+    if auth.is_admin:
+        pin_filter["directus_user_id"] = {"_eq": auth.user_id}
+
+    supports_pin_order = True
+    pinned_raw = await run_in_thread_pool(
+        client.get_items,
+        "project",
+        {
+            "query": {
+                "fields": fields,
+                "filter": pin_filter,
+                "sort": ["pin_order"],
+                "limit": 3,
+            }
+        },
+    )
+    if not isinstance(pinned_raw, list):
+        logger.warning("get_items returned non-list for pinned projects: %s", pinned_raw)
+        pinned_raw = []
+        supports_pin_order = False
+    pinned = [_build_project_summary(p) for p in pinned_raw]
+
+    # Parse owner: prefix from search string (admin only)
+    import re
+
+    owner_term: Optional[str] = None
+    text_search: Optional[str] = search
+    if search and auth.is_admin:
+        match = re.match(r"^owner:(\S+)\s*(.*)", search)
+        if match:
+            owner_term = match.group(1)
+            text_search = match.group(2).strip() or None
+
+    owner_filter: Optional[dict] = None
+    if owner_term:
+        owner_filter = {
+            "_or": [
+                {"directus_user_id": {"first_name": {"_icontains": owner_term}}},
+                {"directus_user_id": {"email": {"_icontains": owner_term}}},
+            ]
+        }
+
+    # Build query for paginated project list
+    list_fields = fields if supports_pin_order else fallback_fields
+    query: dict = {
+        "fields": list_fields,
+        "sort": ["-updated_at"],
+        "limit": limit + 1,
+        "offset": offset,
+    }
+    if text_search:
+        query["search"] = text_search
+    if owner_filter:
+        query["filter"] = owner_filter
+
+    projects_raw = await run_in_thread_pool(
+        client.get_items,
+        "project",
+        {"query": query},
+    )
+    if not isinstance(projects_raw, list):
+        logger.warning("get_items returned non-list for projects: %s", projects_raw)
+        if supports_pin_order:
+            supports_pin_order = False
+            query["fields"] = fallback_fields
+            projects_raw = await run_in_thread_pool(
+                client.get_items,
+                "project",
+                {"query": query},
+            )
+        if not isinstance(projects_raw, list):
+            logger.warning("fallback get_items returned non-list for projects: %s", projects_raw)
+            projects_raw = []
+
+    has_more = len(projects_raw) > limit
+    projects = [_build_project_summary(p) for p in projects_raw[:limit]]
+
+    # Get total count (only when not searching/filtering, for pinned-section threshold)
+    total_count = 0
+    if not text_search and not owner_filter:
+        count_result = await run_in_thread_pool(
+            client.get_items,
+            "project",
+            {"query": {"aggregate": {"count": ["id"]}}},
+        )
+        if isinstance(count_result, list) and len(count_result) > 0:
+            total_count = int(count_result[0].get("count", {}).get("id", 0))
+    else:
+        total_count = offset + len(projects) + (1 if has_more else 0)
+
+    return BffProjectsHomeResponse(
+        pinned=pinned,
+        projects=projects,
+        total_count=total_count,
+        has_more=has_more,
+        is_admin=auth.is_admin,
+    )
+
+
+class PinProjectRequest(BaseModel):
+    pin_order: Optional[int] = None
+
+
+@ProjectRouter.patch("/{project_id}/pin")
+async def toggle_project_pin(
+    project_id: str,
+    body: PinProjectRequest,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Pin or unpin a project. Admins can only pin projects they own."""
+    if body.pin_order is not None and body.pin_order not in (1, 2, 3):
+        raise HTTPException(status_code=400, detail="pin_order must be 1, 2, or 3")
+
+    client = auth.client
+
+    # Ownership check: admins can only pin/unpin projects they own
+    if auth.is_admin:
+        project_service = ProjectService(directus_client=client)
+        try:
+            project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
+        except ProjectNotFoundException as e:
+            raise HTTPException(status_code=404, detail="Project not found") from e
+
+        if project.get("directus_user_id") != auth.user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Admins can only pin projects they own",
+            )
+
+    await run_in_thread_pool(
+        client.update_item,
+        "project",
+        project_id,
+        {"pin_order": body.pin_order},
+    )
+    return {"success": True, "pin_order": body.pin_order}
+
+
+# ── Project CRUD ────────────────────────────────────────────────────────
 
 
 class CreateProjectRequestSchema(BaseModel):
@@ -336,9 +553,11 @@ async def post_create_view(
 
 class CreateReportRequestBodySchema(BaseModel):
     language: Optional[str] = "en"
+    user_instructions: Optional[str] = None
+    scheduled_at: Optional[str] = None  # ISO 8601 datetime with timezone
 
 
-@ProjectRouter.post("/{project_id}/create-report")
+@ProjectRouter.post("/{project_id}/create-report", status_code=HTTPStatus.ACCEPTED)
 async def create_report(
     project_id: str,
     body: CreateReportRequestBodySchema,
@@ -346,25 +565,504 @@ async def create_report(
 ) -> dict:
     project_service = ProjectService(directus_client=auth.client)
     language = body.language or "en"
+
     try:
-        report_content_response = await get_report_content_for_project(project_id, language)
-    except ContextTooLongException:
-        report = await run_in_thread_pool(
-            project_service.create_report,
-            project_id,
-            language,
-            "",
-            "error",
-            "CONTEXT_TOO_LONG",
+        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
+    except ProjectNotFoundException as e:
+        raise HTTPException(status_code=404, detail="Project not found") from e
+
+    if not auth.is_admin and project.get("directus_user_id", "") != auth.user_id:
+        raise HTTPException(status_code=403, detail="User does not have access to this project")
+
+    from dembrane.directus import directus
+
+    # Determine if this is a scheduled report
+    is_scheduled = False
+    if body.scheduled_at:
+        from datetime import timezone as tz
+
+        scheduled_dt = _parse_iso_datetime(body.scheduled_at)
+        if scheduled_dt.tzinfo is None:
+            scheduled_dt = scheduled_dt.replace(tzinfo=tz.utc)
+        if scheduled_dt > datetime.now(tz.utc):
+            is_scheduled = True
+
+    if not is_scheduled:
+        # Check for existing draft report to prevent duplicate generation
+        existing_drafts = await run_in_thread_pool(
+            directus.get_items,
+            "project_report",
+            {
+                "query": {
+                    "filter": {
+                        "project_id": {"_eq": project_id},
+                        "status": {"_eq": "draft"},
+                    },
+                    "limit": 1,
+                }
+            },
         )
-        return report
-    except Exception as e:
-        raise e
+        if existing_drafts:
+            raise HTTPException(
+                status_code=409,
+                detail="A report is already being generated for this project",
+            )
+
+    # Create report record
+    initial_status = "scheduled" if is_scheduled else "draft"
+    report = await run_in_thread_pool(
+        project_service.create_report, project_id, language, "", initial_status
+    )
+
+    # Store user instructions and scheduled_at if provided
+    update_fields: dict = {}
+    if body.user_instructions:
+        update_fields["user_instructions"] = body.user_instructions
+    if is_scheduled:
+        update_fields["scheduled_at"] = body.scheduled_at
+
+    if update_fields:
+        await run_in_thread_pool(
+            directus.update_item,
+            "project_report",
+            str(report["id"]),
+            update_fields,
+        )
+
+    if not is_scheduled:
+        # Dispatch background task immediately
+        task_create_report.send(project_id, report["id"], language, body.user_instructions or "")
+        logger.info(
+            f"Report generation task dispatched for project {project_id}, report {report['id']}"
+        )
+    else:
+        logger.info(
+            f"Report {report['id']} scheduled for {body.scheduled_at} for project {project_id}"
+        )
+
+    return report
+
+
+def _extract_report_title(content: Optional[str]) -> Optional[str]:
+    """Extract the first markdown heading from report content."""
+    if not content:
+        return None
+    import re
+
+    match = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
+    return match.group(1).strip() if match else None
+
+
+@ProjectRouter.get("/{project_id}/reports")
+async def list_project_reports(
+    project_id: str,
+    _auth: DependencyDirectusSession,
+) -> list:
+    """List all reports for a project (including generating), newest first."""
+    from dembrane.directus import directus
+
+    reports = await run_in_thread_pool(
+        directus.get_items,
+        "project_report",
+        {
+            "query": {
+                "filter": {
+                    "project_id": {"_eq": project_id},
+                    "status": {"_in": ["archived", "published", "scheduled", "draft"]},
+                },
+                "fields": [
+                    "id",
+                    "status",
+                    "date_created",
+                    "language",
+                    "user_instructions",
+                    "content",
+                    "scheduled_at",
+                ],
+                "sort": ["-date_created"],
+            }
+        },
+    )
+    result = []
+    for r in reports or []:
+        result.append(
+            {
+                "id": r["id"],
+                "status": r.get("status"),
+                "date_created": r.get("date_created"),
+                "language": r.get("language"),
+                "user_instructions": r.get("user_instructions"),
+                "scheduled_at": r.get("scheduled_at"),
+                "title": _extract_report_title(r.get("content")),
+            }
+        )
+    return result
+
+
+@ProjectRouter.get("/{project_id}/reports/latest")
+async def get_latest_report(
+    project_id: str,
+    _auth: DependencyDirectusSession,
+) -> Optional[dict]:
+    """Get the most recent report for a project (any status)."""
+    from dembrane.directus import directus
+
+    reports = await run_in_thread_pool(
+        directus.get_items,
+        "project_report",
+        {
+            "query": {
+                "filter": {
+                    "project_id": {"_eq": project_id},
+                },
+                "fields": ["id", "status", "project_id", "show_portal_link", "date_created"],
+                "sort": ["-date_created"],
+                "limit": 1,
+            }
+        },
+    )
+    return reports[0] if reports else None
+
+
+class UpdateReportRequestBodySchema(BaseModel):
+    status: Optional[str] = None
+    show_portal_link: Optional[bool] = None
+    content: Optional[str] = None
+
+
+@ProjectRouter.patch("/{project_id}/reports/{report_id}")
+async def update_report(
+    project_id: str,
+    report_id: int,
+    body: UpdateReportRequestBodySchema,
+    _auth: DependencyDirectusSession,
+) -> dict:
+    """Update a report's fields."""
+    from dembrane.directus import directus
+
+    payload: dict = {}
+    if body.status is not None:
+        payload["status"] = body.status
+    if body.show_portal_link is not None:
+        payload["show_portal_link"] = body.show_portal_link
+    if body.content is not None:
+        payload["content"] = body.content
+
+    if not payload:
+        raise HTTPException(status_code=400, detail="No fields to update")
+
+    # Auto-unpublish other reports when publishing this one
+    if payload.get("status") == "published":
+        other_published = await run_in_thread_pool(
+            directus.get_items,
+            "project_report",
+            {
+                "query": {
+                    "filter": {
+                        "project_id": {"_eq": project_id},
+                        "status": {"_eq": "published"},
+                        "id": {"_neq": report_id},
+                    },
+                    "fields": ["id"],
+                    "limit": -1,
+                }
+            },
+        )
+        if isinstance(other_published, list):
+            for old_report in other_published:
+                await run_in_thread_pool(
+                    directus.update_item,
+                    "project_report",
+                    str(old_report["id"]),
+                    {"status": "archived"},
+                )
+
+    result = await run_in_thread_pool(
+        directus.update_item,
+        "project_report",
+        str(report_id),
+        payload,
+    )
+    return result.get("data", result)
+
+
+@ProjectRouter.delete("/{project_id}/reports/{report_id}")
+async def delete_report(
+    project_id: str,
+    report_id: int,
+    _auth: DependencyDirectusSession,
+) -> dict:
+    """Delete a report permanently."""
+    from dembrane.directus import directus
+
+    # Verify the report exists and belongs to this project
+    report = await run_in_thread_pool(
+        directus.get_item,
+        "project_report",
+        str(report_id),
+    )
+    if not report or str(report.get("project_id")) != project_id:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    await run_in_thread_pool(
+        directus.delete_item,
+        "project_report",
+        str(report_id),
+    )
+    return {"deleted": True}
+
+
+@ProjectRouter.post("/{project_id}/reports/{report_id}/cancel-schedule")
+async def cancel_scheduled_report(
+    project_id: str,
+    report_id: int,
+    _auth: DependencyDirectusSession,
+) -> dict:
+    """Cancel a scheduled report."""
+    from dembrane.directus import directus
 
     report = await run_in_thread_pool(
-        project_service.create_report, project_id, language, report_content_response, "archived"
+        directus.get_item,
+        "project_report",
+        str(report_id),
     )
+    if not report or str(report.get("project_id")) != project_id:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    if report.get("status") != "scheduled":
+        raise HTTPException(status_code=400, detail="Report is not scheduled")
+
+    await run_in_thread_pool(
+        directus.update_item,
+        "project_report",
+        str(report_id),
+        {"status": "cancelled"},
+    )
+    return {"cancelled": True}
+
+
+@ProjectRouter.get("/{project_id}/reports/{report_id}/detail")
+async def get_report_detail(
+    project_id: str,
+    report_id: int,
+    _auth: DependencyDirectusSession,
+) -> dict:
+    """Get full details of a specific report."""
+    from dembrane.directus import DirectusBadRequest, directus
+
+    try:
+        report = await run_in_thread_pool(
+            directus.get_item,
+            "project_report",
+            str(report_id),
+        )
+    except DirectusBadRequest as err:
+        raise HTTPException(status_code=404, detail="Report not found") from err
+    if not report or str(report.get("project_id")) != project_id:
+        raise HTTPException(status_code=404, detail="Report not found")
     return report
+
+
+@ProjectRouter.get("/{project_id}/reports/{report_id}/views")
+async def get_report_views(
+    project_id: str,
+    report_id: int,
+    _auth: DependencyDirectusSession,
+) -> dict:
+    """Get view counts for a report."""
+    from dembrane.directus import directus
+
+    # Total views across all reports for the project
+    all_metrics = await run_in_thread_pool(
+        directus.get_items,
+        "project_report_metric",
+        {
+            "query": {
+                "filter": {
+                    "project_report_id": {
+                        "id": {"_eq": report_id},
+                        "project_id": {"_eq": project_id},
+                    },
+                },
+                "aggregate": {"count": "*"},
+            }
+        },
+    )
+    total = 0
+    if all_metrics and len(all_metrics) > 0:
+        total = int(all_metrics[0].get("count", 0))
+
+    # Recent views (last 10 minutes)
+    from datetime import datetime, timezone, timedelta
+
+    ten_mins_ago = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
+    recent_metrics = await run_in_thread_pool(
+        directus.get_items,
+        "project_report_metric",
+        {
+            "query": {
+                "filter": {
+                    "date_created": {"_gte": ten_mins_ago},
+                    "project_report_id": {
+                        "id": {"_eq": report_id},
+                        "project_id": {"_eq": project_id},
+                    },
+                },
+                "aggregate": {"count": "*"},
+            }
+        },
+    )
+    recent = 0
+    if recent_metrics and len(recent_metrics) > 0:
+        recent = int(recent_metrics[0].get("count", 0))
+
+    return {"total": total, "recent": recent}
+
+
+@ProjectRouter.get("/{project_id}/reports/{report_id}/needs-update")
+async def check_report_needs_update(
+    project_id: str,
+    report_id: int,
+    _auth: DependencyDirectusSession,
+) -> dict:
+    """Check if there are newer conversations than the report."""
+    from dembrane.directus import directus
+
+    reports = await run_in_thread_pool(
+        directus.get_items,
+        "project_report",
+        {
+            "query": {
+                "filter": {
+                    "id": {"_eq": report_id},
+                    "project_id": {"_eq": project_id},
+                },
+                "fields": ["id", "date_created", "project_id"],
+                "limit": 1,
+            }
+        },
+    )
+    if not reports:
+        return {"needs_update": False}
+
+    report = reports[0]
+    conversations = await run_in_thread_pool(
+        directus.get_items,
+        "conversation",
+        {
+            "query": {
+                "filter": {"project_id": {"_eq": report.get("project_id")}},
+                "fields": ["id", "created_at"],
+                "sort": ["-created_at"],
+                "limit": 1,
+            }
+        },
+    )
+    if not conversations:
+        return {"needs_update": False}
+
+    report_date = report.get("date_created", "")
+    conv_date = conversations[0].get("created_at", "")
+    needs_update = conv_date > report_date if report_date and conv_date else False
+    return {"needs_update": needs_update}
+
+
+@ProjectRouter.get("/{project_id}/participants/count")
+async def get_participant_count(
+    project_id: str,
+    _auth: DependencyDirectusSession,
+) -> dict:
+    """Get count of participants who opted in to email notifications."""
+    from dembrane.directus import directus
+
+    participants = await run_in_thread_pool(
+        directus.get_items,
+        "project_report_notification_participants",
+        {
+            "query": {
+                "filter": {
+                    "_and": [
+                        {"project_id": {"_eq": project_id}},
+                        {"email_opt_in": {"_eq": True}},
+                    ],
+                },
+                "aggregate": {"count": "*"},
+            }
+        },
+    )
+    count = 0
+    if participants and len(participants) > 0:
+        count = int(participants[0].get("count", 0))
+    return {"count": count}
+
+
+@ProjectRouter.get("/{project_id}/reports/{report_id}/progress")
+async def stream_report_progress(
+    project_id: str,
+    report_id: int,
+    request: Request,
+    _auth: DependencyDirectusSession,
+) -> StreamingResponse:
+    """SSE endpoint for real-time report generation progress."""
+    import json
+    import time
+
+    from dembrane.report_events import read_report_event, subscribe_report_events
+
+    async def _generate_events() -> AsyncIterator[str]:
+        last_heartbeat = time.monotonic()
+
+        # Check if report is already done before subscribing
+        from dembrane.directus import directus
+
+        report = await run_in_thread_pool(directus.get_item, "project_report", str(report_id))
+        if not report or str(report.get("project_id")) != project_id:
+            yield f"event: progress\ndata: {json.dumps({'type': 'failed', 'message': 'Report not found'})}\n\n"
+            return
+        if report and report.get("status") in ("archived", "published"):
+            yield f"event: progress\ndata: {json.dumps({'type': 'completed', 'message': 'Report ready'})}\n\n"
+            return
+        if report and report.get("status") == "error":
+            yield f"event: progress\ndata: {json.dumps({'type': 'failed', 'message': 'Report generation failed'})}\n\n"
+            return
+
+        try:
+            async with subscribe_report_events(report_id) as pubsub:
+                yield f"event: progress\ndata: {json.dumps({'type': 'connected', 'message': 'Connected'})}\n\n"
+
+                while True:
+                    if await request.is_disconnected():
+                        break
+
+                    payload = await read_report_event(pubsub, timeout_seconds=1.0)
+                    if payload:
+                        yield f"event: progress\ndata: {payload}\n\n"
+
+                        try:
+                            event = json.loads(payload)
+                            if event.get("type") in ("completed", "failed"):
+                                break
+                        except json.JSONDecodeError:
+                            pass
+                        continue
+
+                    now = time.monotonic()
+                    if now - last_heartbeat >= 10.0:
+                        yield "event: heartbeat\ndata: {}\n\n"
+                        last_heartbeat = now
+        except Exception as exc:
+            logger.warning("SSE stream error for report %s: %s", report_id, exc)
+            yield f"event: progress\ndata: {json.dumps({'type': 'failed', 'message': 'Stream error'})}\n\n"
+
+    return StreamingResponse(
+        _generate_events(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 class CloneProjectRequestBodySchema(BaseModel):

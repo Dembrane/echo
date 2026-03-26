@@ -3,9 +3,9 @@ import logging
 from typing import Any, Optional
 
 from dembrane.llms import MODELS, router_completion
+from dembrane.utils import generate_uuid
 from dembrane.prompts import render_prompt
 from dembrane.service import conversation_service
-from dembrane.utils import generate_uuid
 
 logger = logging.getLogger("dembrane.signposting")
 
