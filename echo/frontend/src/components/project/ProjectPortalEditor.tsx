@@ -78,9 +78,11 @@ const FormSchema = z.object({
 	get_reply_prompt: z.string(),
 	is_get_reply_enabled: z.boolean(),
 	is_project_notification_subscription_allowed: z.boolean(),
+	is_signposting_enabled: z.boolean(),
 	is_verify_enabled: z.boolean(),
 	is_verify_on_finish_enabled: z.boolean(),
 	language: z.enum(["en", "nl", "de", "fr", "es", "it"]),
+	signposting_focus_terms: z.string(),
 	verification_topics: z.array(z.string()),
 });
 
@@ -300,9 +302,11 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 			is_get_reply_enabled: project.is_get_reply_enabled ?? false,
 			is_project_notification_subscription_allowed:
 				project.is_project_notification_subscription_allowed ?? false,
+			is_signposting_enabled: project.is_signposting_enabled ?? false,
 			is_verify_enabled: project.is_verify_enabled ?? false,
 			is_verify_on_finish_enabled: project.is_verify_on_finish_enabled ?? false,
 			language: projectLanguageCode,
+			signposting_focus_terms: project.signposting_focus_terms ?? "",
 			verification_topics: selectedTopicDefaults,
 		};
 	}, [project.id, projectLanguageCode, selectedTopicDefaults]);
@@ -338,6 +342,11 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	const watchedVerifyEnabled = useWatch({
 		control,
 		name: "is_verify_enabled",
+	});
+
+	const watchedSignpostingEnabled = useWatch({
+		control,
+		name: "is_signposting_enabled",
 	});
 
 	const watchedAskForEmail = useWatch({
@@ -1449,6 +1458,80 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													}
 													value={field.value}
 													onChange={field.onChange}
+												/>
+											)}
+										/>
+									</Stack>
+
+									<Stack gap="md">
+										<Group>
+											<Title order={4}>
+												<Trans>Signposts</Trans>
+											</Title>
+											<IconInfoCircle size={20} className="text-gray-400" />
+										</Group>
+										<Text size="sm" c="dimmed">
+											<Trans>
+												Generate live host-facing signposts from each
+												conversation as transcripts arrive. In v1, signposts are
+												grouped into agreement, disagreement, tension, and
+												theme.
+											</Trans>
+										</Text>
+										<Controller
+											name="is_signposting_enabled"
+											control={control}
+											render={({ field }) => (
+												<Switch
+													label={
+														<FormLabel
+															label={t`Enable live signposts`}
+															isDirty={
+																formState.dirtyFields.is_signposting_enabled
+															}
+															error={
+																formState.errors.is_signposting_enabled?.message
+															}
+														/>
+													}
+													checked={field.value}
+													onChange={(e) =>
+														field.onChange(e.currentTarget.checked)
+													}
+													{...testId("portal-editor-signposting-switch")}
+												/>
+											)}
+										/>
+										<Controller
+											name="signposting_focus_terms"
+											control={control}
+											render={({ field }) => (
+												<Textarea
+													label={
+														<FormLabel
+															label={t`Focus terms`}
+															isDirty={
+																formState.dirtyFields.signposting_focus_terms
+															}
+															error={
+																formState.errors.signposting_focus_terms?.message
+															}
+														/>
+													}
+													description={
+														<Trans>
+															Optional keywords or themes, one per line, to bias
+															live signpost detection during the session.
+														</Trans>
+													}
+													autosize
+													minRows={4}
+													disabled={!watchedSignpostingEnabled}
+													placeholder={t`Affordability\nTrust\nPublic transport`}
+													{...field}
+													{...testId(
+														"portal-editor-signposting-focus-terms-textarea",
+													)}
 												/>
 											)}
 										/>

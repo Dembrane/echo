@@ -395,6 +395,14 @@ def _summarize_in_progress_key(conversation_id: str) -> str:
 _SUMMARIZE_LOCK_TTL_SECONDS = 60 * 10
 
 
+def _signposting_in_progress_key(conversation_id: str) -> str:
+    """Redis key for tracking if signposting is in progress."""
+    return f"{_KEY_PREFIX}:signposting_in_progress:{conversation_id}"
+
+
+_SIGNPOSTING_LOCK_TTL_SECONDS = 60 * 5
+
+
 def mark_summarize_in_progress(conversation_id: str) -> bool:
     """
     Mark that summarization is in progress for a conversation.
@@ -433,6 +441,37 @@ def clear_summarize_in_progress(conversation_id: str) -> None:
         client.close()
 
 
+def mark_signposting_in_progress(conversation_id: str) -> bool:
+    """
+    Mark that signposting is in progress for a conversation.
+
+    Prevents duplicate task_refresh_conversation_signposts runs.
+    """
+    client = _get_sync_redis_client()
+    key = _signposting_in_progress_key(conversation_id)
+
+    try:
+        was_set = client.setnx(key, "1")
+        if was_set:
+            client.expire(key, _SIGNPOSTING_LOCK_TTL_SECONDS)
+            logger.debug(f"Acquired signposting lock for {conversation_id}")
+        return bool(was_set)
+    finally:
+        client.close()
+
+
+def clear_signposting_in_progress(conversation_id: str) -> None:
+    """Clear the signposting-in-progress flag."""
+    client = _get_sync_redis_client()
+    key = _signposting_in_progress_key(conversation_id)
+
+    try:
+        client.delete(key)
+        logger.debug(f"Cleared signposting lock for {conversation_id}")
+    finally:
+        client.close()
+
+
 # ------------------------------------------------------------------------------
 # Cleanup
 # ------------------------------------------------------------------------------
@@ -456,6 +495,7 @@ def cleanup_conversation_coordination(conversation_id: str) -> None:
             _finish_in_progress_key(conversation_id),
             _finalize_in_progress_key(conversation_id),
             _summarize_in_progress_key(conversation_id),
+            _signposting_in_progress_key(conversation_id),
         ]
         deleted = client.delete(*keys)
 

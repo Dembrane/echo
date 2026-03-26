@@ -10,6 +10,7 @@ interface CustomDirectusTypes {
 	conversation_artifact: ConversationArtifact[];
 	conversation_chunk: ConversationChunk[];
 	conversation_link: ConversationLink[];
+	conversation_signpost: ConversationSignpost[];
 	conversation_project_tag: ConversationProjectTag[];
 	conversation_reply: ConversationReply[];
 	conversation_segment: ConversationSegment[];
@@ -128,6 +129,7 @@ interface Conversation {
 	project_chat_messages: string[] | ProjectChatMessageConversation[];
 	project_chats: string[] | ProjectChatConversation[];
 	replies: string[] | ConversationReply[];
+	signposts: string[] | ConversationSignpost[];
 	tags: string[] | ConversationProjectTag[];
 	conversation_artifacts: string[] | ConversationArtifact[];
 }
@@ -164,6 +166,8 @@ interface ConversationChunk {
 	runpod_job_status_link: string | null;
 	runpod_request_count: number | null;
 	silence_ratio: number | null;
+	signpost_processed_at: string | null;
+	signpost_ready_at: string | null;
 	source: "DASHBOARD_UPLOAD" | "PORTAL_AUDIO" | "PORTAL_TEXT" | "SPLIT" | null;
 	timestamp: string;
 	transcript: string | null;
@@ -180,6 +184,20 @@ interface ConversationLink {
 	link_type: string | null;
 	source_conversation_id: string | Conversation | null;
 	target_conversation_id: string | Conversation | null;
+}
+
+interface ConversationSignpost {
+	category: "agreement" | "disagreement" | "tension" | "theme" | null;
+	confidence: number | null;
+	conversation_id: string | Conversation | null;
+	created_at: string | null;
+	evidence_chunk_id: string | ConversationChunk | null;
+	evidence_quote: string | null;
+	id: string;
+	status: "active" | "resolved" | null;
+	summary: string | null;
+	title: string | null;
+	updated_at: string | null;
 }
 
 interface ConversationProjectTag {
@@ -275,8 +293,10 @@ interface Project {
 	is_enhanced_audio_processing_enabled: boolean | null;
 	is_get_reply_enabled: boolean | null;
 	is_project_notification_subscription_allowed: boolean | null;
+	is_signposting_enabled: boolean | null;
 	language: "en" | "nl" | "multi" | null;
 	name: string | null;
+	signposting_focus_terms: string | null;
 	updated_at: string | null;
 	is_verify_enabled: boolean | null;
 	is_verify_on_finish_enabled: boolean | null;

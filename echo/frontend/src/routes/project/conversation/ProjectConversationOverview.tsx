@@ -24,6 +24,7 @@ import { toast } from "@/components/common/Toaster";
 import { ConversationDangerZone } from "@/components/conversation/ConversationDangerZone";
 import { ConversationEdit } from "@/components/conversation/ConversationEdit";
 import { ConversationLink } from "@/components/conversation/ConversationLink";
+import { ConversationSignpostsSection } from "@/components/conversation/ConversationSignpostsSection";
 import {
 	useConversationById,
 	useConversationChunks,
@@ -140,6 +141,11 @@ export const ProjectConversationOverviewRoute = () => {
 	return (
 		<Stack gap="3rem" className="relative" px="2rem" pt="2rem" pb="2rem">
 			<LoadingOverlay visible={conversationQuery.isLoading} />
+			{conversationQuery.data?.signposts && (
+				<ConversationSignpostsSection
+					signposts={conversationQuery.data.signposts as ConversationSignpost[]}
+				/>
+			)}
 			{conversationChunksQuery.data &&
 				conversationChunksQuery.data?.length > 0 && (
 					<Stack gap="1.5rem">

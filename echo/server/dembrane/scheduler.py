@@ -43,6 +43,14 @@ scheduler.add_job(
 )
 
 scheduler.add_job(
+    func="dembrane.tasks:task_catch_up_pending_signposts.send",
+    trigger=CronTrigger(minute="*/2"),
+    id="task_catch_up_pending_signposts",
+    name="Catch up on pending conversation signposts",
+    replace_existing=True,
+)
+
+scheduler.add_job(
     func="dembrane.tasks:task_check_scheduled_reports.send",
     trigger=CronTrigger(minute="*/5"),
     id="task_check_scheduled_reports",

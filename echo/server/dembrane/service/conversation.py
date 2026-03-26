@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 
 from fastapi import UploadFile
 
-from dembrane.utils import generate_uuid
+from dembrane.utils import generate_uuid, get_utc_timestamp
 from dembrane.directus import (
     DirectusClient,
     DirectusBadRequest,
@@ -505,13 +505,19 @@ class ConversationService:
                     "transcript": transcript,
                 },
             )["data"]
+        persisted_chunk_id = chunk.get("id", chunk_id)
 
         # Only trigger background audio processing if there's a file to process
         if has_file:
-            logger.info(f"Triggering background audio processing for chunk {chunk_id}")
-            task_process_conversation_chunk.send(chunk_id)
+            logger.info(f"Triggering background audio processing for chunk {persisted_chunk_id}")
+            task_process_conversation_chunk.send(persisted_chunk_id)
         else:
-            logger.info(f"Skipping audio processing for text-only chunk {chunk_id}")
+            logger.info(f"Skipping audio processing for text-only chunk {persisted_chunk_id}")
+            self.mark_chunk_signpost_ready(persisted_chunk_id)
+            if project.get("is_signposting_enabled", False):
+                from dembrane.tasks import task_refresh_conversation_signposts
+
+                task_refresh_conversation_signposts.send(conversation_id)
 
         return chunk
 
@@ -528,6 +534,8 @@ class ConversationService:
         desired_language: Any = _UNSET,
         detected_language: Any = _UNSET,
         detected_language_confidence: Any = _UNSET,
+        signpost_ready_at: Any = _UNSET,
+        signpost_processed_at: Any = _UNSET,
     ) -> dict:
         update: dict[str, Any] = {}
 
@@ -561,6 +569,12 @@ class ConversationService:
         if detected_language_confidence is not _UNSET:
             update["detected_language_confidence"] = detected_language_confidence
 
+        if signpost_ready_at is not _UNSET:
+            update["signpost_ready_at"] = signpost_ready_at
+
+        if signpost_processed_at is not _UNSET:
+            update["signpost_processed_at"] = signpost_processed_at
+
         if update.keys():
             try:
                 with self._client_context() as client:
@@ -575,6 +589,153 @@ class ConversationService:
                 raise ConversationServiceException(f"Failed to update chunk {chunk_id}: {e}") from e
         else:
             raise ConversationServiceException(f"No update data provided for chunk {chunk_id}")
+
+    def mark_chunk_signpost_ready(
+        self,
+        chunk_id: str,
+        ready_at: Optional[datetime] = None,
+    ) -> dict:
+        ready_timestamp = (ready_at or get_utc_timestamp()).isoformat()
+        return self.update_chunk(
+            chunk_id,
+            signpost_ready_at=ready_timestamp,
+            signpost_processed_at=None,
+        )
+
+    def mark_chunks_signpost_processed(
+        self,
+        chunk_ids: Iterable[str],
+        processed_at: Optional[datetime] = None,
+    ) -> None:
+        processed_timestamp = (processed_at or get_utc_timestamp()).isoformat()
+        chunk_ids_list = [chunk_id for chunk_id in chunk_ids if chunk_id]
+        if not chunk_ids_list:
+            return
+
+        with self._client_context() as client:
+            for chunk_id in chunk_ids_list:
+                client.update_item(
+                    "conversation_chunk",
+                    chunk_id,
+                    {
+                        "signpost_processed_at": processed_timestamp,
+                    },
+                )
+
+    def get_signposting_context(self, conversation_id: str) -> dict:
+        try:
+            with self._client_context() as client:
+                conversations = client.get_items(
+                    "conversation",
+                    {
+                        "query": {
+                            "filter": {"id": {"_eq": conversation_id}},
+                            "fields": [
+                                "id",
+                                "participant_name",
+                                "project_id.id",
+                                "project_id.context",
+                                "project_id.language",
+                                "project_id.is_signposting_enabled",
+                                "project_id.signposting_focus_terms",
+                            ],
+                            "limit": 1,
+                        }
+                    },
+                )
+        except DirectusBadRequest as e:
+            raise ConversationNotFoundException() from e
+
+        try:
+            return conversations[0]
+        except (IndexError, KeyError) as e:
+            raise ConversationNotFoundException() from e
+
+    def list_ready_chunks_for_signposting(
+        self,
+        conversation_id: str,
+        limit: int = 10,
+    ) -> List[dict]:
+        try:
+            with self._client_context() as client:
+                chunks: Optional[List[dict]] = client.get_items(
+                    "conversation_chunk",
+                    {
+                        "query": {
+                            "filter": {
+                                "conversation_id": {"_eq": conversation_id},
+                                "signpost_ready_at": {"_nnull": True},
+                                "signpost_processed_at": {"_null": True},
+                                "transcript": {"_nempty": True},
+                            },
+                            "fields": [
+                                "id",
+                                "timestamp",
+                                "created_at",
+                                "transcript",
+                                "signpost_ready_at",
+                            ],
+                            "sort": ["timestamp", "created_at"],
+                            "limit": limit,
+                        }
+                    },
+                )
+        except DirectusBadRequest as e:
+            raise ConversationServiceException(
+                f"Failed to list signpost-ready chunks for {conversation_id}: {e}"
+            ) from e
+
+        return chunks or []
+
+    def list_signposts(
+        self,
+        conversation_id: str,
+        status: Optional[str] = "active",
+        limit: int = 12,
+    ) -> List[dict]:
+        filter_query: dict[str, Any] = {"conversation_id": {"_eq": conversation_id}}
+        if status is not None:
+            filter_query["status"] = {"_eq": status}
+
+        try:
+            with self._client_context() as client:
+                signposts: Optional[List[dict]] = client.get_items(
+                    "conversation_signpost",
+                    {
+                        "query": {
+                            "filter": filter_query,
+                            "fields": [
+                                "id",
+                                "conversation_id",
+                                "evidence_chunk_id",
+                                "category",
+                                "title",
+                                "summary",
+                                "evidence_quote",
+                                "status",
+                                "confidence",
+                                "created_at",
+                                "updated_at",
+                            ],
+                            "sort": ["-updated_at"],
+                            "limit": limit,
+                        }
+                    },
+                )
+        except DirectusBadRequest as e:
+            raise ConversationServiceException(
+                f"Failed to list signposts for {conversation_id}: {e}"
+            ) from e
+
+        return signposts or []
+
+    def create_signpost(self, item_data: dict[str, Any]) -> dict:
+        with self._client_context() as client:
+            return client.create_item("conversation_signpost", item_data=item_data)["data"]
+
+    def update_signpost(self, signpost_id: str, update_data: dict[str, Any]) -> dict:
+        with self._client_context() as client:
+            return client.update_item("conversation_signpost", signpost_id, update_data)["data"]
 
     def delete_chunk(
         self,
