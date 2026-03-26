@@ -25,14 +25,20 @@ const getCategoryColor = (category: ConversationSignpost["category"]) => {
 const getCategoryLabel = (category: ConversationSignpost["category"]) => {
 	switch (category) {
 		case "agreement":
-			return t`Agreement`;
+			return (
+				<Trans id="conversation.signposts.category.agreement">Agreement</Trans>
+			);
 		case "disagreement":
-			return t`Disagreement`;
+			return (
+				<Trans id="conversation.signposts.category.disagreement">
+					Disagreement
+				</Trans>
+			);
 		case "tension":
-			return t`Tension`;
+			return <Trans id="conversation.signposts.category.tension">Tension</Trans>;
 		case "theme":
 		default:
-			return t`Theme`;
+			return <Trans id="conversation.signposts.category.theme">Theme</Trans>;
 	}
 };
 
