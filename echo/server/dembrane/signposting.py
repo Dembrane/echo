@@ -230,6 +230,8 @@ def apply_signpost_operations(
         signpost_id = item.get("id")
         category = str(item.get("category") or "").lower()
         evidence_chunk_id = item.get("evidence_chunk_id")
+        if not isinstance(signpost_id, str):
+            continue
         if signpost_id not in active_by_id:
             continue
         if category not in ALLOWED_CATEGORIES or evidence_chunk_id not in chunk_ids:
@@ -302,6 +304,8 @@ def apply_signpost_operations(
 
     for item in operations.get("resolve", []):
         signpost_id = item.get("id")
+        if not isinstance(signpost_id, str):
+            continue
         if signpost_id not in active_by_id:
             continue
         svc.update_signpost(signpost_id, {"status": "resolved"})
