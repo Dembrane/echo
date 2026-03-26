@@ -1,9 +1,9 @@
 export const loginToApp = () => {
     cy.log('Logging in with data-testid selectors');
-    const user = Cypress.env('auth');
+    const user = Cypress.env('auth') || {};
 
-    if (!user || !user.email) {
-        throw new Error('User credentials not found in environment configuration.');
+    if (!user.email || !user.password) {
+        throw new Error('User credentials not found. Set CYPRESS_EMAIL and CYPRESS_PASSWORD.');
     }
 
     cy.visit('/');

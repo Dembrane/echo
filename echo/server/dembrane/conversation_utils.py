@@ -210,7 +210,12 @@ def collect_conversations_needing_signposts(limit: int = 50) -> List[str]:
         try:
             conversation_ids.append(conversation["id"])
         except Exception as e:
-            logger.error(f"Error collecting signposting conversation {conversation['id']}: {e}")
+            conversation_id = (
+                conversation.get("id", "<missing-id>")
+                if isinstance(conversation, dict)
+                else "<invalid-item>"
+            )
+            logger.error(f"Error collecting signposting conversation {conversation_id}: {e}")
 
     logger.info(f"Found {len(conversation_ids)} conversations needing signposts")
 

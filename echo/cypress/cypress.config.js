@@ -132,10 +132,16 @@ module.exports = defineConfig({
 			config.baseUrl = envConfig.dashboardUrl;
 
 			// Merge the specific environment config to the top level of config.env
-			// So in tests we can do Cypress.env('auth') or Cypress.env('portalUrl') directly
+			// So in tests we can do Cypress.env('auth') or Cypress.env('portalUrl') directly.
+			// Credentials come from env vars first so tracked config stays credential-free.
+			const envAuth = envConfig.auth || {};
 			config.env = {
 				...config.env,
 				...envConfig,
+				auth: {
+					email: process.env.CYPRESS_EMAIL || envAuth.email || "",
+					password: process.env.CYPRESS_PASSWORD || envAuth.password || "",
+				},
 			};
 
 			return config;

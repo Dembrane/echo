@@ -885,6 +885,7 @@ export const useConversationById = ({
 						{
 							signposts: [
 								"id",
+								"conversation_id",
 								"category",
 								"title",
 								"summary",

@@ -187,10 +187,13 @@ def mark_processing_started(conversation_id: str) -> bool:
     key = _processing_started_key(conversation_id)
 
     try:
-        # SETNX returns True if key was set, False if it already existed
-        was_set = client.setnx(key, "1")
+        was_set = client.set(
+            key,
+            "1",
+            nx=True,
+            ex=_KEY_TTL_SECONDS,
+        )
         if was_set:
-            client.expire(key, _KEY_TTL_SECONDS)
             logger.debug(f"Marked processing started for {conversation_id}")
         return bool(was_set)
     finally:
@@ -279,10 +282,13 @@ def mark_finish_in_progress(conversation_id: str) -> bool:
     key = _finish_in_progress_key(conversation_id)
 
     try:
-        # SETNX returns True if key was set, False if it already existed
-        was_set = client.setnx(key, "1")
+        was_set = client.set(
+            key,
+            "1",
+            nx=True,
+            ex=_FINISH_LOCK_TTL_SECONDS,
+        )
         if was_set:
-            client.expire(key, _FINISH_LOCK_TTL_SECONDS)
             logger.debug(f"Acquired finish lock for {conversation_id}")
         return bool(was_set)
     finally:
@@ -329,9 +335,13 @@ def mark_finalize_in_progress(conversation_id: str) -> bool:
     key = _finalize_in_progress_key(conversation_id)
 
     try:
-        was_set = client.setnx(key, "1")
+        was_set = client.set(
+            key,
+            "1",
+            nx=True,
+            ex=_FINALIZE_LOCK_TTL_SECONDS,
+        )
         if was_set:
-            client.expire(key, _FINALIZE_LOCK_TTL_SECONDS)
             logger.debug(f"Acquired finalize lock for {conversation_id}")
         return bool(was_set)
     finally:
@@ -372,9 +382,13 @@ def mark_chunk_decremented(conversation_id: str, chunk_id: str) -> bool:
     key = _chunk_decremented_key(conversation_id, chunk_id)
 
     try:
-        was_set = client.setnx(key, "1")
+        was_set = client.set(
+            key,
+            "1",
+            nx=True,
+            ex=_CHUNK_DECREMENT_TTL_SECONDS,
+        )
         if was_set:
-            client.expire(key, _CHUNK_DECREMENT_TTL_SECONDS)
             logger.debug(f"Marked chunk {chunk_id} as decremented for {conversation_id}")
         return bool(was_set)
     finally:
@@ -420,9 +434,13 @@ def mark_summarize_in_progress(conversation_id: str) -> bool:
     key = _summarize_in_progress_key(conversation_id)
 
     try:
-        was_set = client.setnx(key, "1")
+        was_set = client.set(
+            key,
+            "1",
+            nx=True,
+            ex=_SUMMARIZE_LOCK_TTL_SECONDS,
+        )
         if was_set:
-            client.expire(key, _SUMMARIZE_LOCK_TTL_SECONDS)
             logger.debug(f"Acquired summarize lock for {conversation_id}")
         return bool(was_set)
     finally:
@@ -451,9 +469,13 @@ def mark_signposting_in_progress(conversation_id: str) -> bool:
     key = _signposting_in_progress_key(conversation_id)
 
     try:
-        was_set = client.setnx(key, "1")
+        was_set = client.set(
+            key,
+            "1",
+            nx=True,
+            ex=_SIGNPOSTING_LOCK_TTL_SECONDS,
+        )
         if was_set:
-            client.expire(key, _SIGNPOSTING_LOCK_TTL_SECONDS)
             logger.debug(f"Acquired signposting lock for {conversation_id}")
         return bool(was_set)
     finally:
@@ -603,9 +625,12 @@ def mark_assemblyai_webhook_processing(transcript_id: str) -> bool:
     key = _assemblyai_webhook_processing_key(transcript_id)
 
     try:
-        was_set = client.setnx(key, "1")
-        if was_set:
-            client.expire(key, _AAI_WEBHOOK_PROCESSING_TTL_SECONDS)
+        was_set = client.set(
+            key,
+            "1",
+            nx=True,
+            ex=_AAI_WEBHOOK_PROCESSING_TTL_SECONDS,
+        )
         return bool(was_set)
     finally:
         client.close()

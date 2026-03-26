@@ -8,6 +8,18 @@ describe("Live Signposts", () => {
 		/\/$/,
 		"",
 	);
+	let projectId;
+	let locale = "en-US";
+
+	const getAuthCredentials = () => {
+		const auth = Cypress.env("auth") || {};
+		if (!auth.email || !auth.password) {
+			throw new Error(
+				"Missing Directus credentials. Set CYPRESS_EMAIL and CYPRESS_PASSWORD.",
+			);
+		}
+		return auth;
+	};
 
 	const getFocusTermsTextarea = () =>
 		cy
@@ -37,13 +49,39 @@ describe("Live Signposts", () => {
 		);
 	};
 
-		const loginToDirectus = () =>
-			cy
-				.request("POST", `${directusUrl}/auth/login`, {
-					email: Cypress.env("auth").email,
-					password: Cypress.env("auth").password,
-				})
-				.its("body.data.access_token");
+	const loginToDirectus = () => {
+		const auth = getAuthCredentials();
+		return cy
+			.request("POST", `${directusUrl}/auth/login`, {
+				email: auth.email,
+				password: auth.password,
+			})
+			.its("body.data.access_token");
+	};
+
+	afterEach(() => {
+		if (projectId) {
+			cy.visit(`/${locale}/projects/${projectId}/overview`);
+			deleteProject(projectId);
+		}
+
+		cy.get("body").then(($body) => {
+			const hasSettingsButton =
+				$body.find('[data-testid="header-settings-gear-button"]:visible').length > 0;
+			const hasLogoutButton =
+				$body.find('[data-testid="header-logout-menu-item"]:visible').length > 0;
+
+			if (hasSettingsButton) {
+				openSettingsMenu();
+				logout();
+			} else if (hasLogoutButton) {
+				logout();
+			}
+		});
+
+		projectId = undefined;
+		locale = "en-US";
+	});
 
 	const seedConversationWithSignposts = ({ locale, projectId }) => {
 		const suffix = Cypress._.random(1000, 9999);
@@ -122,9 +160,6 @@ describe("Live Signposts", () => {
 	};
 
 	it("shows seeded signposts in portal settings, conversation overview, and host guide", () => {
-		let projectId;
-		let locale = "en-US";
-
 		loginToApp();
 		createProject();
 
@@ -136,11 +171,20 @@ describe("Live Signposts", () => {
 
 		openPortalEditor();
 		toggleLiveSignposting(true);
+		cy.intercept("PATCH", `${directusUrl}/items/project/*`, (req) => {
+			const focusTerms = req.body?.signposting_focus_terms;
+			if (
+				typeof focusTerms === "string" &&
+				focusTerms.includes("public transport")
+			) {
+				req.alias = "saveSignpostingFocusTerms";
+			}
+		});
 		getFocusTermsTextarea()
 			.scrollIntoView()
 			.clear()
 			.type("affordability{enter}public transport");
-		cy.wait(3000);
+		cy.wait("@saveSignpostingFocusTerms");
 
 		cy.reload();
 		openPortalEditor();
@@ -176,13 +220,5 @@ describe("Live Signposts", () => {
 					.and("contain.text", signpostSummary);
 			},
 		);
-
-		cy.then(() => {
-			cy.visit(`/${locale}/projects/${projectId}/overview`);
-			deleteProject(projectId);
-		});
-
-		openSettingsMenu();
-		logout();
 	});
 });
