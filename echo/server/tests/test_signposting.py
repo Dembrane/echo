@@ -130,7 +130,6 @@ def test_apply_signpost_operations_updates_and_resolves_signposts() -> None:
 def test_refresh_conversation_signposts_processes_batch_and_reports_more(
     monkeypatch,
 ) -> None:
-    service = FakeSignpostingService()
     captured: dict[str, Any] = {}
 
     ready_chunks = [

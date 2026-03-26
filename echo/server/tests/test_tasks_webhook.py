@@ -239,8 +239,8 @@ def test_task_refresh_conversation_signposts_skips_when_lock_exists(
 
     monkeypatch.setattr(tasks, "ProcessingStatusContext", lambda **_kwargs: nullcontext())
 
-    import dembrane.coordination as coordination
     import dembrane.signposting as signposting
+    import dembrane.coordination as coordination
 
     monkeypatch.setattr(coordination, "mark_signposting_in_progress", lambda _id: False)
     monkeypatch.setattr(
@@ -267,8 +267,8 @@ def test_task_refresh_conversation_signposts_requeues_when_more_chunks(
 
     monkeypatch.setattr(tasks, "ProcessingStatusContext", lambda **_kwargs: nullcontext())
 
-    import dembrane.coordination as coordination
     import dembrane.signposting as signposting
+    import dembrane.coordination as coordination
 
     monkeypatch.setattr(coordination, "mark_signposting_in_progress", lambda _id: True)
     monkeypatch.setattr(

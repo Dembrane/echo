@@ -34,8 +34,8 @@ from dembrane.async_helpers import run_async_in_new_loop
 from dembrane.conversation_utils import (
     collect_unfinished_conversations,
     collect_unsummarized_conversations,
-    collect_conversations_needing_transcribed_flag,
     collect_conversations_needing_signposts,
+    collect_conversations_needing_transcribed_flag,
 )
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.processing_status_utils import (
@@ -569,11 +569,11 @@ def task_refresh_conversation_signposts(conversation_id: str) -> None:
     """
     logger = getLogger("dembrane.tasks.task_refresh_conversation_signposts")
 
+    from dembrane.signposting import refresh_conversation_signposts
     from dembrane.coordination import (
         mark_signposting_in_progress,
         clear_signposting_in_progress,
     )
-    from dembrane.signposting import refresh_conversation_signposts
     from dembrane.service.conversation import ConversationNotFoundException
 
     try:
