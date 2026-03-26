@@ -505,14 +505,15 @@ class ConversationService:
                     "transcript": transcript,
                 },
             )["data"]
+        persisted_chunk_id = chunk.get("id", chunk_id)
 
         # Only trigger background audio processing if there's a file to process
         if has_file:
-            logger.info(f"Triggering background audio processing for chunk {chunk_id}")
-            task_process_conversation_chunk.send(chunk_id)
+            logger.info(f"Triggering background audio processing for chunk {persisted_chunk_id}")
+            task_process_conversation_chunk.send(persisted_chunk_id)
         else:
-            logger.info(f"Skipping audio processing for text-only chunk {chunk_id}")
-            self.mark_chunk_signpost_ready(chunk_id)
+            logger.info(f"Skipping audio processing for text-only chunk {persisted_chunk_id}")
+            self.mark_chunk_signpost_ready(persisted_chunk_id)
             if project.get("is_signposting_enabled", False):
                 from dembrane.tasks import task_refresh_conversation_signposts
 
