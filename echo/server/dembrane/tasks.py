@@ -34,6 +34,7 @@ from dembrane.async_helpers import run_async_in_new_loop
 from dembrane.conversation_utils import (
     collect_unfinished_conversations,
     collect_unsummarized_conversations,
+    collect_conversations_needing_signposts,
     collect_conversations_needing_transcribed_flag,
 )
 from dembrane.api.dependency_auth import DependencyDirectusSession
@@ -318,7 +319,12 @@ def task_correct_transcript(
                 },
             }
 
-        _save_transcript(chunk_id, final_transcript, diarization=diarization)
+        _save_transcript(
+            chunk_id,
+            final_transcript,
+            diarization=diarization,
+            mark_signpost_ready=True,
+        )
     except Exception as e:
         task_logger.error("Gemini correction failed for chunk %s: %s", chunk_id, e)
 
@@ -346,6 +352,7 @@ def task_correct_transcript(
                 chunk_id,
                 fallback_transcript or "[Nothing to transcribe]",
                 diarization=fallback_diarization,
+                mark_signpost_ready=True,
             )
         except Exception as save_error:
             task_logger.error(
@@ -552,6 +559,61 @@ def task_summarize_conversation(conversation_id: str) -> None:
         logger.error(f"Error: {e}")
         # Retriable error - don't clear lock, let TTL handle it
         # This prevents catch-up task from starting duplicate work during retry window
+        raise e from e
+
+
+@dramatiq.actor(queue_name="network", priority=25)
+def task_refresh_conversation_signposts(conversation_id: str) -> None:
+    """
+    Refresh live conversation signposts from any ready-but-unprocessed transcript chunks.
+    """
+    logger = getLogger("dembrane.tasks.task_refresh_conversation_signposts")
+
+    from dembrane.signposting import refresh_conversation_signposts
+    from dembrane.coordination import (
+        mark_signposting_in_progress,
+        clear_signposting_in_progress,
+    )
+    from dembrane.service.conversation import ConversationNotFoundException
+
+    try:
+        if not mark_signposting_in_progress(conversation_id):
+            logger.info(
+                "Conversation %s signposting already in progress, skipping",
+                conversation_id,
+            )
+            return
+
+        with ProcessingStatusContext(
+            conversation_id=conversation_id,
+            event_prefix="task_refresh_conversation_signposts",
+        ):
+            result = refresh_conversation_signposts(conversation_id)
+
+        logger.info(
+            "Refreshed signposts for %s: processed=%d created=%d updated=%d resolved=%d",
+            conversation_id,
+            len(result["processed_chunk_ids"]),
+            result["operations"]["created"],
+            result["operations"]["updated"],
+            result["operations"]["resolved"],
+        )
+
+        clear_signposting_in_progress(conversation_id)
+
+        if result["has_more"]:
+            logger.info(
+                "Conversation %s still has pending signpost chunks, requeueing",
+                conversation_id,
+            )
+            task_refresh_conversation_signposts.send(conversation_id)
+        return
+    except ConversationNotFoundException:
+        logger.error("Conversation not found for signposting: %s", conversation_id)
+        clear_signposting_in_progress(conversation_id)
+        return
+    except Exception as e:
+        logger.error("Error refreshing signposts for %s: %s", conversation_id, e)
         raise e from e
 
 
@@ -915,6 +977,38 @@ def task_catch_up_unsummarized_conversations() -> None:
         return
     except Exception as e:
         logger.error(f"Error catching up unsummarized conversations: {e}")
+        raise e from e
+
+
+@dramatiq.actor(queue_name="network")
+def task_catch_up_pending_signposts() -> None:
+    """
+    Catch-up task for conversations with ready transcript chunks that have not
+    yet been processed into signposts.
+    """
+    logger = getLogger("dembrane.tasks.task_catch_up_pending_signposts")
+
+    try:
+        logger.info("running task_catch_up_pending_signposts @ %s", get_utc_timestamp())
+
+        conversation_ids = collect_conversations_needing_signposts()
+
+        if not conversation_ids:
+            logger.debug("No conversations need signpost catch-up")
+            return
+
+        logger.info("Found %d conversations needing signposts: %s", len(conversation_ids), conversation_ids)
+
+        group(
+            [
+                task_refresh_conversation_signposts.message(conversation_id)
+                for conversation_id in conversation_ids
+                if conversation_id is not None
+            ]
+        ).run()
+        return
+    except Exception as e:
+        logger.error(f"Error catching up pending signposts: {e}")
         raise e from e
 
 

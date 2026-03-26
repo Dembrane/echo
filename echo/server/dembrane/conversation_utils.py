@@ -170,3 +170,53 @@ def collect_unsummarized_conversations(limit: int = 50) -> List[str]:
     logger.info(f"Found {len(conversation_ids)} unsummarized conversations")
     
     return conversation_ids
+
+
+def collect_conversations_needing_signposts(limit: int = 50) -> List[str]:
+    """
+    Collect conversations with ready transcript chunks that have not yet been signposted.
+
+    This powers the signposting catch-up scheduler and also allows projects to
+    backfill older ready chunks after signposting is enabled.
+    """
+    response = directus.get_items(
+        "conversation",
+        {
+            "query": {
+                "filter": {
+                    "project_id": {
+                        "is_signposting_enabled": {"_eq": True},
+                    },
+                    "chunks": {
+                        "_some": {
+                            "_and": [
+                                {"signpost_ready_at": {"_nnull": True}},
+                                {"signpost_processed_at": {"_null": True}},
+                                {"transcript": {"_nempty": True}},
+                            ]
+                        }
+                    },
+                },
+                "fields": ["id"],
+                "sort": ["created_at"],
+                "limit": limit,
+            },
+        },
+    )
+
+    conversation_ids = []
+
+    for conversation in response:
+        try:
+            conversation_ids.append(conversation["id"])
+        except Exception as e:
+            conversation_id = (
+                conversation.get("id", "<missing-id>")
+                if isinstance(conversation, dict)
+                else "<invalid-item>"
+            )
+            logger.error(f"Error collecting signposting conversation {conversation_id}: {e}")
+
+    logger.info(f"Found {len(conversation_ids)} conversations needing signposts")
+
+    return conversation_ids

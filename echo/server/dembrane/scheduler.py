@@ -42,6 +42,14 @@ scheduler.add_job(
     replace_existing=True,
 )
 
+scheduler.add_job(
+    func="dembrane.tasks:task_catch_up_pending_signposts.send",
+    trigger=CronTrigger(minute="*/2"),
+    id="task_catch_up_pending_signposts",
+    name="Catch up on pending conversation signposts",
+    replace_existing=True,
+)
+
 logger = getLogger("dembrane.scheduler")
 
 # Start the scheduler when this module is run directly
