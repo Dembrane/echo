@@ -128,7 +128,7 @@ class SkipRetryOnUnrecoverableError(dramatiq.Middleware):
         NotImplementedError,
     )
 
-    def after_process_message(self, broker, message, *, result=None, exception=None):
+    def after_process_message(self, broker: Any, message: Any, *, result: Any = None, exception: Any = None) -> None:  # noqa: ARG002
         if exception is not None and isinstance(exception, self.UNRECOVERABLE):
             logger.warning(
                 "Unrecoverable %s in %s — skipping retries: %s",
@@ -1078,16 +1078,36 @@ def task_report_summarization_done(report_id: int) -> None:
     GroupCallbacks completion callback for report summarization.
 
     Fired automatically when all task_summarize_conversation messages in a
-    dramatiq.group() are acknowledged. Sets a Redis key so the report
-    generation actor can stop polling and proceed.
+    dramatiq.group() are acknowledged. Retrieves the stored report parameters
+    from Redis and dispatches task_create_report_continue (phase 2).
     """
     logger = getLogger("dembrane.tasks.task_report_summarization_done")
+    import json
+
     from dembrane.coordination import _get_sync_redis_client
 
     client = _get_sync_redis_client()
     try:
-        client.set(f"report:{report_id}:summaries_done", "1", ex=3600)
-        logger.info(f"Summaries done signal set for report {report_id}")
+        # Retrieve report generation params stored by task_create_report (phase 1)
+        params_key = f"report:{report_id}:params"
+        params_raw = client.get(params_key)
+        if not params_raw:
+            logger.error(
+                f"No stored params found for report {report_id} at key {params_key}. "
+                f"Cannot proceed to phase 2."
+            )
+            return
+
+        params = json.loads(params_raw)
+        client.delete(params_key)
+
+        logger.info(f"Summaries done for report {report_id}, dispatching phase 2")
+        task_create_report_continue.send(
+            params["project_id"],
+            report_id,
+            params["language"],
+            params.get("user_instructions", ""),
+        )
     finally:
         client.close()
 
@@ -1095,21 +1115,24 @@ def task_report_summarization_done(report_id: int) -> None:
 @dramatiq.actor(queue_name="network", priority=50)
 def task_create_report(project_id: str, report_id: int, language: str, user_instructions: str = "") -> None:
     """
-    Generate a report in a Dramatiq worker (fully synchronous).
+    Phase 1 of report generation: validate, dispatch summarization fan-out.
 
-    Uses generate_report_content() which orchestrates:
-    - dramatiq.group() for summarization fan-out
-    - gevent.pool.Pool for concurrent transcript fetching
-    - router_completion() (sync litellm) for the LLM call
+    Does NOT block waiting for summaries. Instead:
+    - If summaries are needed, fans them out via dramatiq.group() with a
+      completion callback that triggers task_create_report_continue.
+    - If all summaries already exist, sends task_create_report_continue
+      immediately.
 
-    No asyncio event loops — safe under dramatiq-gevent.
+    This avoids deadlocking the network queue: the child summarization
+    tasks run on the same queue, so blocking here would starve them of
+    greenlet slots.
     """
     logger = getLogger("dembrane.tasks.task_create_report")
-    logger.info(f"Starting report generation for project {project_id}, report {report_id}")
+    logger.info(f"Starting report generation (phase 1) for project {project_id}, report {report_id}")
 
     from dembrane.report_utils import ReportGenerationError
     from dembrane.report_events import publish_report_progress
-    from dembrane.report_generation import generate_report_content
+    from dembrane.report_generation import dispatch_summarization_if_needed
 
     with ProcessingStatusContext(
         project_id=project_id,
@@ -1141,10 +1164,121 @@ def task_create_report(project_id: str, report_id: int, language: str, user_inst
                 logger.warning(f"Failed to publish progress event: {e}")
 
         try:
-            content = generate_report_content(
+            # Store params in Redis so the completion callback can retrieve
+            # them and dispatch phase 2 (task_create_report_continue).
+            import json
+
+            from dembrane.coordination import _get_sync_redis_client
+
+            redis_client = _get_sync_redis_client()
+            try:
+                redis_client.set(
+                    f"report:{report_id}:params",
+                    json.dumps({
+                        "project_id": project_id,
+                        "language": language,
+                        "user_instructions": user_instructions,
+                    }),
+                    ex=3600,  # 1 hour TTL
+                )
+            finally:
+                redis_client.close()
+
+            summaries_dispatched = dispatch_summarization_if_needed(
+                project_id, report_id, progress_callback,
+            )
+
+            if not summaries_dispatched:
+                # All summaries already exist -- proceed to phase 2 immediately
+                logger.info(f"No summarization needed for report {report_id}, proceeding to phase 2")
+                task_create_report_continue.send(
+                    project_id, report_id, language, user_instructions,
+                )
+            else:
+                # Summaries were dispatched. The completion callback
+                # (task_report_summarization_done) will trigger phase 2.
+                logger.info(
+                    f"Summarization dispatched for report {report_id}, "
+                    f"phase 2 will be triggered by completion callback"
+                )
+
+        except ReportGenerationError as e:
+            logger.error(f"Report generation failed for report {report_id}: {e}")
+            try:
+                with directus_client_context() as client:
+                    client.update_item("project_report", report_id_str, {
+                        "status": "error",
+                        "error_code": "GENERATION_FAILED",
+                        "error_message": str(e),
+                    })
+            except Exception as update_err:
+                logger.error(f"Failed to update report status to error: {update_err}")
+            publish_report_progress(report_id, "failed", str(e))
+            return
+
+        except Exception as e:
+            logger.error(f"Unexpected error in report phase 1 for report {report_id}: {e}")
+            try:
+                with directus_client_context() as client:
+                    client.update_item("project_report", report_id_str, {
+                        "status": "error",
+                        "error_code": "UNEXPECTED_ERROR",
+                        "error_message": str(e),
+                    })
+            except Exception as update_err:
+                logger.error(f"Failed to update report status to error: {update_err}")
+            publish_report_progress(report_id, "failed", str(e))
+            raise
+
+
+@dramatiq.actor(queue_name="network", priority=50)
+def task_create_report_continue(project_id: str, report_id: int, language: str, user_instructions: str = "") -> None:
+    """
+    Phase 2 of report generation: fetch transcripts, build prompt, call LLM, save.
+
+    Triggered either directly by task_create_report (when no summarization was
+    needed) or by task_report_summarization_done (after all summaries complete).
+
+    Runs on the network queue because it uses gevent.pool.Pool for transcript
+    fetching and gevent.sleep-compatible I/O.
+    """
+    logger = getLogger("dembrane.tasks.task_create_report_continue")
+    logger.info(f"Starting report generation (phase 2) for project {project_id}, report {report_id}")
+
+    from dembrane.report_utils import ReportGenerationError
+    from dembrane.report_events import publish_report_progress
+    from dembrane.report_generation import generate_report_after_summaries
+
+    with ProcessingStatusContext(
+        project_id=project_id,
+        event_prefix="task_create_report_continue",
+        message=f"for report {report_id}",
+    ):
+        report_id_str = str(report_id)
+
+        # Idempotency guard: check report is still draft
+        try:
+            with directus_client_context() as client:
+                report = client.get_item("project_report", report_id_str)
+                if not report or report.get("status") != "draft":
+                    logger.info(
+                        f"Report {report_id} is not draft (status={report.get('status') if report else 'missing'}), skipping phase 2"
+                    )
+                    return
+        except Exception as e:
+            logger.error(f"Failed to check report status: {e}")
+            raise
+
+        def progress_callback(event_type: str, message: str, detail: Optional[dict] = None) -> None:
+            try:
+                publish_report_progress(report_id, event_type, message, detail)
+            except Exception as e:
+                logger.warning(f"Failed to publish progress event: {e}")
+
+        try:
+            content = generate_report_after_summaries(
                 project_id,
                 language,
-                report_id=report_id,
                 progress_callback=progress_callback,
                 user_instructions=user_instructions,
             )
@@ -1168,7 +1302,7 @@ def task_create_report(project_id: str, report_id: int, language: str, user_inst
                 })
 
             publish_report_progress(report_id, "completed", "Report ready")
-            logger.info(f"Report {report_id} generated successfully for project {project_id}")
+            logger.info(f"Report {report_id} generated for project {project_id}")
 
             # Dispatch report.generated webhook
             try:
@@ -1185,10 +1319,11 @@ def task_create_report(project_id: str, report_id: int, language: str, user_inst
                     client.update_item("project_report", report_id_str, {
                         "status": "error",
                         "error_code": "GENERATION_FAILED",
+                        "error_message": str(e),
                     })
             except Exception as update_err:
                 logger.error(f"Failed to update report status to error: {update_err}")
-            publish_report_progress(report_id, "failed", f"Report generation failed: {e}")
+            publish_report_progress(report_id, "failed", str(e))
             # Non-retriable
             return
 
@@ -1199,10 +1334,11 @@ def task_create_report(project_id: str, report_id: int, language: str, user_inst
                     client.update_item("project_report", report_id_str, {
                         "status": "error",
                         "error_code": "UNEXPECTED_ERROR",
+                        "error_message": str(e),
                     })
             except Exception as update_err:
                 logger.error(f"Failed to update report status to error: {update_err}")
-            publish_report_progress(report_id, "failed", f"Report generation failed: {e}")
+            publish_report_progress(report_id, "failed", str(e))
             raise
 
 

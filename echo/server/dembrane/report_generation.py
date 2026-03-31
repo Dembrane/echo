@@ -1,13 +1,17 @@
 """
-Synchronous report generation pipeline for Dramatiq workers.
+Two-phase report generation pipeline for Dramatiq workers.
 
-Uses native concurrency primitives for the dramatiq-gevent environment:
-- dramatiq.group() + GroupCallbacks for summarization fan-out
-- gevent.pool.Pool for concurrent transcript I/O
-- router_completion() (sync litellm) for the LLM call
+Phase 1 (dispatch_summarization_if_needed):
+  Check which conversations need summaries and fan them out via
+  dramatiq.group() + GroupCallbacks. Returns immediately so the
+  network queue is not blocked waiting for child tasks.
 
-This makes the entire pipeline synchronous — no asyncio, no event loops,
-no "Event loop is closed" corruption from greenlet interleaving.
+Phase 2 (generate_report_after_summaries):
+  Triggered by the completion callback after all summaries are done
+  (or directly if none were needed). Uses gevent.pool.Pool for
+  concurrent transcript I/O and router_completion() for the LLM call.
+
+No asyncio event loops — safe under dramatiq-gevent.
 """
 
 import re
@@ -26,10 +30,9 @@ from litellm.exceptions import (
     ContentPolicyViolationError,
 )
 
-from dembrane.llms import MODELS, router_completion, get_completion_kwargs
+from dembrane.llms import router_completion, get_completion_kwargs
 from dembrane.prompts import render_prompt
 from dembrane.directus import DirectusGenericException, directus_client_context
-from dembrane.llm_router import get_min_context_length
 from dembrane.report_utils import (
     REPORT_LLM,
     MAX_REPORT_CONTEXT_LENGTH,
@@ -38,15 +41,6 @@ from dembrane.report_utils import (
 )
 
 logger = logging.getLogger("dembrane.report_generation")
-
-# Redis key prefix for summarization completion signals
-_SUMMARIES_DONE_KEY = "report:{report_id}:summaries_done"
-
-# How long to wait for summaries before proceeding without them
-_SUMMARY_WAIT_TIMEOUT = 10 * 60  # 10 minutes
-
-# Poll interval for checking summary completion
-_SUMMARY_POLL_INTERVAL = 3  # seconds
 
 
 def _fetch_conversations_sync(project_id: str, fields: list) -> list:
@@ -90,6 +84,7 @@ def _fan_out_summarization(
     group are acknowledged (success or failure). That callback sets a Redis key.
     """
     from dramatiq import group
+
     from dembrane.tasks import task_summarize_conversation, task_report_summarization_done
 
     if not conversation_ids:
@@ -112,60 +107,6 @@ def _fan_out_summarization(
         f"Dispatched summarization group for {len(conversation_ids)} conversations, "
         f"report {report_id}"
     )
-
-
-def _wait_for_summaries(
-    report_id: int,
-    progress_callback: Optional[Callable] = None,
-    timeout: int = _SUMMARY_WAIT_TIMEOUT,
-) -> bool:
-    """
-    Poll Redis for the summarization completion signal.
-
-    Uses gevent.sleep() to yield to other greenlets while waiting.
-
-    Returns True if summaries completed, False on timeout.
-    """
-    import gevent
-    from dembrane.coordination import _get_sync_redis_client
-
-    key = _SUMMARIES_DONE_KEY.format(report_id=report_id)
-    elapsed = 0
-
-    if progress_callback:
-        progress_callback(
-            "waiting_for_summaries",
-            "Waiting for conversation summaries...",
-            None,
-        )
-
-    while elapsed < timeout:
-        client = _get_sync_redis_client()
-        try:
-            value = client.get(key)
-            if value:
-                # Clean up the signal key
-                client.delete(key)
-                logger.info(f"Summaries done for report {report_id} after {elapsed}s")
-                return True
-        finally:
-            client.close()
-
-        gevent.sleep(_SUMMARY_POLL_INTERVAL)
-        elapsed += _SUMMARY_POLL_INTERVAL
-
-        if progress_callback and elapsed % 15 == 0:
-            progress_callback(
-                "waiting_for_summaries",
-                f"Still waiting for summaries ({elapsed}s)...",
-                None,
-            )
-
-    logger.warning(
-        f"Timed out waiting for summaries for report {report_id} after {timeout}s. "
-        "Proceeding with available summaries."
-    )
-    return False
 
 
 def _fetch_transcript_sync(conversation_id: str) -> Optional[str]:
@@ -253,38 +194,20 @@ def _call_llm_for_report(prompt: str) -> str:
     return response.choices[0].message.content
 
 
-def generate_report_content(
+def dispatch_summarization_if_needed(
     project_id: str,
-    language: str,
     report_id: int,
     progress_callback: Optional[Callable[[str, str, Optional[dict]], None]] = None,
-    user_instructions: str = "",
-) -> str:
+) -> bool:
     """
-    Generate a report for a project. Fully synchronous — safe for dramatiq-gevent workers.
+    Phase 1 of report generation: check conversations and fan out summarization.
 
-    Pipeline:
-    1. Fetch conversations (sync Directus)
-    2. Fan out summarization via dramatiq.group()
-    3. Poll Redis for completion signal (gevent.sleep)
-    4. Refetch conversations with summaries
-    5. Fetch transcripts via gevent.pool.Pool
-    6. Build prompt with token budget
-    7. Call LLM via router_completion() (sync litellm)
+    Returns True if summarization was dispatched (caller must wait for the
+    completion callback before proceeding to phase 2). Returns False if all
+    conversations already have summaries and the caller can proceed immediately.
 
-    Args:
-        project_id: The project to generate a report for
-        language: Language code for the report
-        report_id: The report ID (used for Redis coordination keys)
-        progress_callback: Optional callback for progress events
-
-    Returns:
-        The generated report content as a string
-
-    Raises:
-        ReportGenerationError: If the report cannot be generated
+    Raises ReportGenerationError if there are no usable conversations.
     """
-    # 1. Initial fetch to get conversations with chunk counts
     conversations = _fetch_conversations_sync(
         project_id,
         fields=["id", "summary", "count(chunks)"],
@@ -294,7 +217,7 @@ def generate_report_content(
 
     if not conversations:
         logger.info(f"No conversations found for project {project_id}")
-        return "No conversations found for project"
+        raise ReportGenerationError("No conversations found for project")
 
     # Filter to conversations with chunks
     conversations_with_chunks = []
@@ -308,7 +231,7 @@ def generate_report_content(
 
     if not conversations_with_chunks:
         logger.info(f"No conversations with chunks found for project {project_id}")
-        return "No conversations with content found for project"
+        raise ReportGenerationError("No conversations with content found for project")
 
     # Identify conversations that need summarization
     needs_summary = [
@@ -316,16 +239,13 @@ def generate_report_content(
         if not conv.get("summary")
     ]
 
-    # 2. Fan out summarization if needed
     if needs_summary:
         logger.info(
             f"Dispatching summarization for {len(needs_summary)}/{len(conversations_with_chunks)} "
             f"conversations"
         )
         _fan_out_summarization(needs_summary, report_id, progress_callback)
-
-        # 3. Wait for summaries to complete
-        _wait_for_summaries(report_id, progress_callback)
+        return True
     else:
         logger.info("All conversations already have summaries, skipping summarization fan-out")
         if progress_callback:
@@ -334,8 +254,33 @@ def generate_report_content(
                 "All conversations already summarized.",
                 {"total": len(conversations_with_chunks)},
             )
+        return False
 
-    # 4. Refetch conversations with all needed fields
+
+def generate_report_after_summaries(
+    project_id: str,
+    language: str,
+    progress_callback: Optional[Callable[[str, str, Optional[dict]], None]] = None,
+    user_instructions: str = "",
+) -> str:
+    """
+    Phase 2 of report generation: fetch data, build prompt, call LLM.
+
+    Call this after all conversation summaries are available (either because
+    they already existed or because the summarization fan-out has completed).
+
+    Steps (numbered to match the original pipeline):
+    4. Refetch conversations with summaries
+    5. Fetch transcripts via gevent.pool.Pool
+    6. Build prompt with token budget
+    7. Call LLM via router_completion() (sync litellm)
+
+    Returns:
+        The generated report content as a string.
+
+    Raises:
+        ReportGenerationError: If the report cannot be generated.
+    """
     try:
         conversations = _fetch_conversations_sync(
             project_id,

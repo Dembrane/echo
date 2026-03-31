@@ -645,6 +645,9 @@ export const ProjectReportRoute = () => {
 
 	const latestCompletedId = completedReports[0]?.id ?? -1;
 
+	const isFallbackFromFailure =
+		latestReport?.status === "cancelled" || latestReport?.status === "error";
+
 	// Is the user viewing a generating report?
 	const isViewingGenerating = sidebarReports.find(
 		(r) => r.id === selectedReportId && r.status === "draft",
@@ -738,18 +741,19 @@ export const ProjectReportRoute = () => {
 		setSelectedReportId(id === latestCompletedId ? null : id);
 	};
 
-	// Auto-select generating report when it's the first/only report
+	// Auto-select the first actionable sidebar report (scheduled/generating) when
+	// there are no completed reports and nothing is selected yet.
+	// Errored/cancelled reports are excluded — they're handled by the fallback UI.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: only re-run when sidebar/completed/selection changes
 	useEffect(() => {
-		if (
-			latestReport?.status === "draft" &&
-			completedReports.length === 0 &&
-			selectedReportId === null
-		) {
-			setSelectedReportId(latestReport.id);
+		if (completedReports.length === 0 && selectedReportId === null) {
+			const firstActionable = sidebarReports[0];
+			if (firstActionable) {
+				setSelectedReportId(firstActionable.id);
+			}
 		}
 	}, [
-		latestReport?.status,
-		latestReport?.id,
+		sidebarReports.length,
 		completedReports.length,
 		selectedReportId,
 	]);
@@ -766,82 +770,45 @@ export const ProjectReportRoute = () => {
 	}
 
 	// ── No reports at all — first-time experience ──
-	if (!latestReport) {
+	// Also shown when the only report errored/cancelled and there's nothing else to display
+	if (!latestReport || (isFallbackFromFailure && sidebarReports.length === 0)) {
 		return (
 			<ReportLayout>
 				<Divider />
+				{latestReport && isFallbackFromFailure && (
+					<CloseableAlert
+						color={latestReport.status === "cancelled" ? "yellow" : "red"}
+						title={
+							latestReport.status === "cancelled"
+								? t`Report generation cancelled`
+								: t`Something went wrong`
+						}
+					>
+						{latestReport.status === "cancelled" ? (
+							<Trans>
+								Report generation was cancelled. You can start a new report
+								below.
+							</Trans>
+						) : latestReport.error_message ? (
+							<Text size="sm">{latestReport.error_message}</Text>
+						) : (
+							<Trans>
+								Something went wrong generating your report.
+							</Trans>
+						)}
+					</CloseableAlert>
+				)}
 				<CreateReportForm onSuccess={() => {}} />
 			</ReportLayout>
 		);
 	}
 
-	// ── Currently generating with NO completed reports — show simplified view ──
-	if (latestReport.status === "draft" && completedReports.length === 0) {
-		return (
-			<ReportLayout>
-				<Divider />
-				<ReportProgressView
-					projectId={projectId ?? ""}
-					reportId={latestReport.id}
-					dateCreated={latestReport.date_created}
-				/>
-			</ReportLayout>
-		);
-	}
-
-	// ── Only scheduled reports, no completed ones — show scheduled view ──
-	if (latestReport.status === "scheduled" && completedReports.length === 0) {
-		const scheduledItem = scheduledReports.find(
-			(r) => r.id === latestReport.id,
-		);
-		if (scheduledItem) {
-			return (
-				<ReportLayout>
-					<Divider />
-					<ScheduledReportView
-						report={scheduledItem}
-						projectId={projectId ?? ""}
-						onReset={() => setSelectedReportId(null)}
-					/>
-				</ReportLayout>
-			);
-		}
-	}
-
-	// ── Cancelled or error — no completed reports to fall back to ──
-	if (
-		(latestReport.status === "cancelled" || latestReport.status === "error") &&
-		completedReports.length === 0
-	) {
-		return (
-			<ReportLayout>
-				<Divider />
-				<Alert
-					color={latestReport.status === "cancelled" ? "yellow" : "red"}
-					title={
-						latestReport.status === "cancelled"
-							? t`Report generation cancelled`
-							: t`Something went wrong`
-					}
-				>
-					{latestReport.status === "cancelled" ? (
-						<Trans>
-							Report generation was cancelled. You can start a new report below.
-						</Trans>
-					) : (
-						<Trans>
-							Something went wrong generating your report. You can try again
-							below.
-						</Trans>
-					)}
-				</Alert>
-				<CreateReportForm onSuccess={() => {}} />
-			</ReportLayout>
-		);
-	}
+	// All non-null latestReport cases fall through to the two-column layout below.
+	// The right pane handles: generating (ReportProgressView), scheduled (ScheduledReportView),
+	// completed report (report content), or fallback (error/cancelled/empty → CreateReportForm).
 
 	// ── Waiting for active report to load ──
-	if (!data && !isViewingGenerating) {
+	if (!data && !isViewingGenerating && !isViewingScheduled && !isFallbackFromFailure) {
 		return (
 			<ReportLayout>
 				<Divider />
@@ -850,9 +817,6 @@ export const ProjectReportRoute = () => {
 			</ReportLayout>
 		);
 	}
-
-	const isFallbackFromFailure =
-		latestReport.status === "cancelled" || latestReport.status === "error";
 
 	const activeReportMeta = completedReports.find(
 		(r) => r.id === activeReportId,
@@ -899,10 +863,18 @@ export const ProjectReportRoute = () => {
 								recent completed report.
 							</Trans>
 						) : (
-							<Trans>
-								Something went wrong generating your latest report. Showing your
-								most recent completed report.
-							</Trans>
+							<>
+								{latestReport.error_message ? (
+									<Text size="sm">{latestReport.error_message}</Text>
+								) : (
+									<Trans>
+										Something went wrong generating your latest report.
+									</Trans>
+								)}
+								<Text size="sm" c="dimmed" mt="xs">
+									<Trans>Showing your most recent completed report.</Trans>
+								</Text>
+							</>
 						)}
 					</CloseableAlert>
 				)}
@@ -999,7 +971,7 @@ export const ProjectReportRoute = () => {
 								style={{
 									backgroundColor: "var(--mantine-color-body)",
 									position: "sticky",
-									top: 0,
+									top: "1rem",
 									zIndex: 10,
 								}}
 							>
@@ -1312,6 +1284,35 @@ export const ProjectReportRoute = () => {
 								projectId={projectId ?? ""}
 								reportId={data.id}
 							/>
+						</Stack>
+					) : isFallbackFromFailure ? (
+						<Stack>
+							<Alert
+								color={latestReport.status === "cancelled" ? "yellow" : "red"}
+								title={
+									latestReport.status === "cancelled"
+										? t`Report generation cancelled`
+										: t`Something went wrong`
+								}
+							>
+								{latestReport.status === "cancelled" ? (
+									<Trans>
+										Report generation was cancelled. You can start a new report below.
+									</Trans>
+								) : (
+									<>
+										{latestReport.error_message ? (
+											<Text size="sm">{latestReport.error_message}</Text>
+										) : (
+											<Trans>Something went wrong generating your report.</Trans>
+										)}
+										<Text size="sm" c="dimmed" mt="xs">
+											<Trans>You can try again below.</Trans>
+										</Text>
+									</>
+								)}
+							</Alert>
+							<CreateReportForm onSuccess={() => {}} />
 						</Stack>
 					) : (
 						<Stack>

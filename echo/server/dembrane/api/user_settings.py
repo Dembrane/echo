@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional
+from typing import Literal, Optional
 from logging import getLogger
 
 import requests
@@ -75,7 +75,11 @@ async def get_current_user(
         )
         if not isinstance(users, list) or len(users) == 0:
             raise HTTPException(status_code=404, detail="User not found")
-        return users[0]
+        user = users[0]
+        # Never expose the raw tfa_secret — only expose a boolean flag
+        user["tfa_enabled"] = bool(user.get("tfa_secret"))
+        user.pop("tfa_secret", None)
+        return user
     except HTTPException:
         raise
     except Exception as e:

@@ -59,6 +59,7 @@ export const Announcements = () => {
 	}, [isOpen, openedOnce]);
 
 	// Auto-mark all as read after 1 second when drawer opens
+	// biome-ignore lint/correctness/useExhaustiveDependencies: only trigger on isOpen changes, mutate ref is stable
 	useEffect(() => {
 		if (isOpen) {
 			autoReadTimerRef.current = setTimeout(() => {
@@ -72,8 +73,6 @@ export const Announcements = () => {
 				autoReadTimerRef.current = null;
 			}
 		};
-		// Only trigger on isOpen changes, not on mutation reference changes
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [isOpen]);
 
 	const {

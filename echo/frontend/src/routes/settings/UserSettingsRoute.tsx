@@ -58,7 +58,7 @@ export const UserSettingsRoute = () => {
 	const navigate = useI18nNavigate();
 	const [activeSection, setActiveSection] = useState<SectionId>("account");
 
-	const isTwoFactorEnabled = Boolean(user?.tfa_secret);
+	const isTwoFactorEnabled = Boolean(user?.tfa_enabled);
 
 	return (
 		<Container size="xl" py="xl">

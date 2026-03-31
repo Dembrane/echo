@@ -34,6 +34,10 @@ CHAT_LLM = MODELS.MULTI_MODAL_PRO
 # This ensures we don't exceed limits when router picks any deployment
 MAX_CHAT_CONTEXT_LENGTH = get_min_context_length("multi_modal_pro")
 
+# Model for lightweight tasks: auto-select, title generation, etc.
+AUTO_SELECT_LLM = MODELS.MULTI_MODAL_FAST
+MAX_AUTO_SELECT_CONTEXT_LENGTH = get_min_context_length("multi_modal_fast")
+
 settings = get_settings()
 DISABLE_CHAT_TITLE_GENERATION = settings.feature_flags.disable_chat_title_generation
 
@@ -603,9 +607,9 @@ async def _process_single_batch(
     try:
         prompt_tokens = token_counter(
             messages=[{"role": "user", "content": prompt}],
-            model=get_completion_kwargs(CHAT_LLM)["model"],
+            model=get_completion_kwargs(AUTO_SELECT_LLM)["model"],
         )
-        MAX_BATCH_CONTEXT = MAX_CHAT_CONTEXT_LENGTH  # Leave headroom for response
+        MAX_BATCH_CONTEXT = MAX_AUTO_SELECT_CONTEXT_LENGTH  # Leave headroom for response
 
         if prompt_tokens > MAX_BATCH_CONTEXT:
             # If batch has only 1 conversation, we can't split further

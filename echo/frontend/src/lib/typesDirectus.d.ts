@@ -396,6 +396,7 @@ interface ProjectReport {
 	date_created: string | null;
 	date_updated: string | null;
 	error_code: string | null;
+	error_message: string | null;
 	id: number;
 	language: string | null;
 	project_id: string | Project | null;

@@ -21,7 +21,7 @@ import { useState } from "react";
 import { useParams } from "react-router";
 import { useProjectConversationCounts } from "@/components/report/hooks";
 import { useLanguage } from "@/hooks/useLanguage";
-import { PRODUCT_FEEDBACK_URL } from "@/config";
+import { getProductFeedbackUrl } from "@/config";
 import { testId } from "@/lib/testUtils";
 import focusOptionsData from "@/data/reportFocusOptions.json";
 import { CloseableAlert } from "../common/ClosableAlert";
@@ -69,7 +69,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 	const { data: conversationCounts } = useProjectConversationCounts(
 		projectId ?? "",
 	);
-	const { iso639_1 } = useLanguage();
+	const { iso639_1, language: appLocale } = useLanguage();
 	const [language, setLanguage] = useState(iso639_1);
 	const [userInstructions, setUserInstructions] = useState("");
 	const [detailModalOpened, setDetailModalOpened] = useState(false);
@@ -314,7 +314,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 							<Text size="xs" c="gray.6" mt="sm">
 								<Trans>Report templates are on our roadmap.</Trans>{" "}
 								<Anchor
-									href={PRODUCT_FEEDBACK_URL}
+									href={getProductFeedbackUrl(appLocale)}
 									target="_blank"
 									size="xs"
 									td="underline"

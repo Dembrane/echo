@@ -35,7 +35,7 @@ import {
 	COMMUNITY_SLACK_URL,
 	DIRECTUS_PUBLIC_URL,
 	ENABLE_ANNOUNCEMENTS,
-	PRODUCT_FEEDBACK_URL,
+	getProductFeedbackUrl,
 } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
@@ -357,7 +357,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 						</Button>
 						<Button
 							component="a"
-							href={PRODUCT_FEEDBACK_URL}
+							href={getProductFeedbackUrl(language)}
 							target="_blank"
 							onClick={() => setFeedbackFallbackOpen(false)}
 						>
@@ -418,7 +418,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 						</Button>
 						<Button
 							component="a"
-							href={PRODUCT_FEEDBACK_URL}
+							href={getProductFeedbackUrl(language)}
 							target="_blank"
 							onClick={() => setFeedbackPortalOpen(false)}
 						>

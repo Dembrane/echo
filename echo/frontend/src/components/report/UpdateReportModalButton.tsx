@@ -28,7 +28,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { analytics } from "@/lib/analytics";
 import { testId } from "@/lib/testUtils";
 import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
-import { PRODUCT_FEEDBACK_URL } from "@/config";
+import { getProductFeedbackUrl } from "@/config";
 import focusOptionsData from "@/data/reportFocusOptions.json";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 import { ReportFocusSelector } from "./ReportFocusSelector";
@@ -84,7 +84,7 @@ export const UpdateReportModalButton = ({
 	const { data: currentReport } = useProjectReport(projectId ?? "", currentReportId);
 	const { data: doesReportNeedUpdate } =
 		useDoesProjectReportNeedUpdate(projectId ?? "", currentReportId);
-	const { iso639_1 } = useLanguage();
+	const { iso639_1, language: appLocale } = useLanguage();
 
 	const [language, setLanguage] = useState(
 		currentReport?.language ?? iso639_1 ?? "en",
@@ -331,7 +331,7 @@ export const UpdateReportModalButton = ({
 								<Text size="xs" c="gray.6" mt="sm">
 									<Trans>Report templates are on our roadmap.</Trans>{" "}
 									<Anchor
-										href={PRODUCT_FEEDBACK_URL}
+										href={getProductFeedbackUrl(appLocale)}
 										target="_blank"
 										size="xs"
 										td="underline"

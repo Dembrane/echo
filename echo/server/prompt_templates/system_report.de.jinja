@@ -18,7 +18,7 @@ Keine Gesprächstranskripte gefunden.
 <user_instructions>
 The report creator has provided the following guidance. Pay special attention to these instructions when analyzing the transcripts and structuring your article:
 
-{{ user_instructions }}
+{{ user_instructions | replace("</user_instructions>", "") | replace("<user_instructions>", "") }}
 </user_instructions>
 {% endif %}
 

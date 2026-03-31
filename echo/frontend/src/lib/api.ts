@@ -1293,7 +1293,7 @@ export const listProjectReports = async (projectId: string) => {
 export const getLatestProjectReport = async (projectId: string) => {
 	return api.get<
 		unknown,
-		Pick<ProjectReport, "id" | "status" | "project_id" | "show_portal_link" | "date_created"> | null
+		Pick<ProjectReport, "id" | "status" | "project_id" | "show_portal_link" | "date_created" | "error_message"> | null
 	>(`/projects/${projectId}/reports/latest`);
 };
 

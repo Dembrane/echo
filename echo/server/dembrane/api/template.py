@@ -2,7 +2,7 @@ from typing import List, Literal, Optional
 from logging import getLogger
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import Field, BaseModel
 
 from dembrane.directus import directus
 from dembrane.api.dependency_auth import DependencyDirectusSession

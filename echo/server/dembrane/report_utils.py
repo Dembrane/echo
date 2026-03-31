@@ -1,5 +1,4 @@
 import re
-import asyncio
 import logging
 from typing import Callable, Optional
 
@@ -19,7 +18,7 @@ from dembrane.llms import MODELS, arouter_completion, get_completion_kwargs
 from dembrane.prompts import render_prompt
 from dembrane.directus import DirectusGenericException, directus
 from dembrane.llm_router import get_min_context_length
-from dembrane.async_helpers import run_in_thread_pool, safe_gather
+from dembrane.async_helpers import safe_gather, run_in_thread_pool
 from dembrane.summary_utils import safe_summarize_conversation
 from dembrane.api.conversation import get_conversation_transcript
 from dembrane.api.dependency_auth import DirectusSession
@@ -349,7 +348,7 @@ async def get_report_content_for_project(
             *[_safe_get_transcript(cid) for cid in batch_ids],
             return_exceptions=True,
         )
-        for cid, result in zip(batch_ids, batch_results):
+        for cid, result in zip(batch_ids, batch_results, strict=False):
             if isinstance(result, Exception):
                 logger.warning(f"Exception fetching transcript for {cid}: {result}")
                 transcript_map[cid] = None

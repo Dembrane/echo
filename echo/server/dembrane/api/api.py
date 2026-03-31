@@ -10,12 +10,12 @@ from dembrane.api.search import SearchRouter
 from dembrane.api.verify import VerifyRouter
 from dembrane.api.agentic import AgenticRouter
 from dembrane.api.project import ProjectRouter
+from dembrane.api.template import TemplateRouter
 from dembrane.api.webhooks import WebhooksRouter
 from dembrane.api.stateless import StatelessRouter
 from dembrane.api.participant import ParticipantRouter
 from dembrane.api.conversation import ConversationRouter
 from dembrane.api.user_settings import UserSettingsRouter
-from dembrane.api.template import TemplateRouter
 from dembrane.api.project_webhook import ProjectWebhookRouter
 
 logger = getLogger("api")

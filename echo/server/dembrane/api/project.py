@@ -2,15 +2,15 @@ import os
 import asyncio
 import zipfile
 from http import HTTPStatus
-from typing import Any, List, Optional, Generator
+from typing import Any, List, Optional, Generator, AsyncGenerator
 from logging import getLogger
 from datetime import datetime
 
-from fastapi import Depends, Query, Request, APIRouter, HTTPException, BackgroundTasks
+from fastapi import Query, Depends, Request, APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 
-from dembrane.tasks import task_create_report, task_create_view, task_create_project_library
+from dembrane.tasks import task_create_view, task_create_report, task_create_project_library
 from dembrane.utils import generate_uuid, get_safe_filename
 from dembrane.service import build_conversation_service
 from dembrane.settings import get_settings
@@ -558,11 +558,32 @@ async def create_report(
     if body.scheduled_at:
         from datetime import timezone as tz
 
-        scheduled_dt = _parse_iso_datetime(body.scheduled_at)
+        # Validate scheduled_at is a proper ISO 8601 datetime
+        if not isinstance(body.scheduled_at, (str, datetime)):
+            raise HTTPException(
+                status_code=422,
+                detail="scheduled_at must be a valid ISO 8601 datetime string",
+            )
+        if isinstance(body.scheduled_at, str):
+            normalized = body.scheduled_at.replace("Z", "+00:00")
+            try:
+                scheduled_dt = datetime.fromisoformat(normalized)
+            except (ValueError, TypeError) as e:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"Invalid scheduled_at datetime format: {body.scheduled_at}",
+                ) from e
+        else:
+            scheduled_dt = body.scheduled_at
+
         if scheduled_dt.tzinfo is None:
             scheduled_dt = scheduled_dt.replace(tzinfo=tz.utc)
-        if scheduled_dt > datetime.now(tz.utc):
-            is_scheduled = True
+        if scheduled_dt <= datetime.now(tz.utc):
+            raise HTTPException(
+                status_code=400,
+                detail="scheduled_at must be a future datetime",
+            )
+        is_scheduled = True
 
     if not is_scheduled:
         # Check for existing draft report to prevent duplicate generation
@@ -616,6 +637,18 @@ async def create_report(
     return report
 
 
+async def _verify_project_access(auth: DependencyDirectusSession, project_id: str) -> dict:
+    """Verify the authenticated user has access to the given project. Returns the project dict."""
+    project_service = ProjectService(directus_client=auth.client)
+    try:
+        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
+    except (ProjectNotFoundException, ProjectServiceException) as err:
+        raise HTTPException(status_code=404, detail="Project not found") from err
+    if not auth.is_admin and project.get("directus_user_id", "") != auth.user_id:
+        raise HTTPException(status_code=403, detail="User does not have access to this project")
+    return project
+
+
 def _extract_report_title(content: Optional[str]) -> Optional[str]:
     """Extract the first markdown heading from report content."""
     if not content:
@@ -631,6 +664,7 @@ async def list_project_reports(
     auth: DependencyDirectusSession,
 ) -> list:
     """List all reports for a project (including generating), newest first."""
+    await _verify_project_access(auth, project_id)
     from dembrane.directus import directus
 
     reports = await run_in_thread_pool(
@@ -667,6 +701,7 @@ async def get_latest_report(
     auth: DependencyDirectusSession,
 ) -> Optional[dict]:
     """Get the most recent report for a project (any status)."""
+    await _verify_project_access(auth, project_id)
     from dembrane.directus import directus
 
     reports = await run_in_thread_pool(
@@ -677,7 +712,7 @@ async def get_latest_report(
                 "filter": {
                     "project_id": {"_eq": project_id},
                 },
-                "fields": ["id", "status", "project_id", "show_portal_link", "date_created"],
+                "fields": ["id", "status", "project_id", "show_portal_link", "date_created", "error_message"],
                 "sort": ["-date_created"],
                 "limit": 1,
             }
@@ -700,6 +735,7 @@ async def update_report(
     auth: DependencyDirectusSession,
 ) -> dict:
     """Update a report's fields."""
+    await _verify_project_access(auth, project_id)
     from dembrane.directus import directus
 
     payload: dict = {}
@@ -755,6 +791,7 @@ async def delete_report(
     auth: DependencyDirectusSession,
 ) -> dict:
     """Delete a report permanently."""
+    await _verify_project_access(auth, project_id)
     from dembrane.directus import directus
 
     # Verify the report exists and belongs to this project
@@ -781,6 +818,7 @@ async def cancel_scheduled_report(
     auth: DependencyDirectusSession,
 ) -> dict:
     """Cancel a scheduled report."""
+    await _verify_project_access(auth, project_id)
     from dembrane.directus import directus
 
     report = await run_in_thread_pool(
@@ -810,6 +848,7 @@ async def get_report_detail(
     auth: DependencyDirectusSession,
 ) -> dict:
     """Get full details of a specific report."""
+    await _verify_project_access(auth, project_id)
     from dembrane.directus import DirectusBadRequest, directus
 
     try:
@@ -818,8 +857,8 @@ async def get_report_detail(
             "project_report",
             str(report_id),
         )
-    except DirectusBadRequest:
-        raise HTTPException(status_code=404, detail="Report not found")
+    except DirectusBadRequest as err:
+        raise HTTPException(status_code=404, detail="Report not found") from err
     if not report or str(report.get("project_id")) != project_id:
         raise HTTPException(status_code=404, detail="Report not found")
     return report
@@ -828,10 +867,11 @@ async def get_report_detail(
 @ProjectRouter.get("/{project_id}/reports/{report_id}/views")
 async def get_report_views(
     project_id: str,
-    report_id: int,
+    report_id: int,  # noqa: ARG001
     auth: DependencyDirectusSession,
 ) -> dict:
     """Get view counts for a report."""
+    await _verify_project_access(auth, project_id)
     from dembrane.directus import directus
 
     # Total views across all reports for the project
@@ -854,7 +894,7 @@ async def get_report_views(
         total = int(all_metrics[0].get("count", 0))
 
     # Recent views (last 10 minutes)
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timezone, timedelta
     ten_mins_ago = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
     recent_metrics = await run_in_thread_pool(
         directus.get_items,
@@ -885,6 +925,7 @@ async def check_report_needs_update(
     auth: DependencyDirectusSession,
 ) -> dict:
     """Check if there are newer conversations than the report."""
+    await _verify_project_access(auth, project_id)
     from dembrane.directus import directus
 
     reports = await run_in_thread_pool(
@@ -929,6 +970,7 @@ async def get_participant_count(
     auth: DependencyDirectusSession,
 ) -> dict:
     """Get count of participants who opted in to email notifications."""
+    await _verify_project_access(auth, project_id)
     from dembrane.directus import directus
 
     participants = await run_in_thread_pool(
@@ -960,12 +1002,13 @@ async def stream_report_progress(
     auth: DependencyDirectusSession,
 ) -> StreamingResponse:
     """SSE endpoint for real-time report generation progress."""
+    await _verify_project_access(auth, project_id)
     import json
     import time
 
     from dembrane.report_events import read_report_event, subscribe_report_events
 
-    async def _generate_events():
+    async def _generate_events() -> AsyncGenerator[str, None]:
         last_heartbeat = time.monotonic()
 
         # Check if report is already done before subscribing
