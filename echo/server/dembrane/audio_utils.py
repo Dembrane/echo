@@ -176,17 +176,23 @@ def convert_and_save_to_s3(
         if b"ftypM4A" in input_data[:50] or b"moov" in input_data[:200]:
             logger.info("Detected possible Apple Voice Memo signature")
 
-    # Process through ffmpeg
-    with tempfile.NamedTemporaryFile(suffix=f".{file_format}") as input_temp_file:
-        input_temp_file.write(input_data)
-        input_temp_file.flush()
+    # Write to a temp file (not pipe) so ffmpeg can seek back to write
+    # proper VBR headers (e.g. Xing for MP3), which are required for
+    # accurate duration metadata.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        input_path = os.path.join(tmpdir, f"input.{file_format}")
+        output_path = os.path.join(tmpdir, f"output.{output_format}")
+
+        with open(input_path, "wb") as f:
+            f.write(input_data)
+
         if output_format == "ogg":
             if file_format.lower() in ["m4a", "mp4"]:
                 logger.debug("Special handling for M4A files")
                 process = (
-                    ffmpeg.input(input_temp_file.name, f=file_format)
+                    ffmpeg.input(input_path, f=file_format)
                     .output(
-                        "pipe:1",
+                        output_path,
                         f="ogg",
                         acodec="libvorbis",
                         q="5",
@@ -201,26 +207,25 @@ def convert_and_save_to_s3(
                         "ignore_err",
                     )
                     .overwrite_output()
-                    .run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True)
+                    .run_async(pipe_stdout=True, pipe_stderr=True)
                 )
             else:
                 process = (
-                    ffmpeg.input(input_temp_file.name, f=file_format)
-                    .output("pipe:1", f="ogg", acodec="libvorbis", q="5")
+                    ffmpeg.input(input_path, f=file_format)
+                    .output(output_path, f="ogg", acodec="libvorbis", q="5")
                     .global_args("-hide_banner", "-loglevel", "warning")
                     .overwrite_output()
-                    .run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True)
+                    .run_async(pipe_stdout=True, pipe_stderr=True)
                 )
         elif output_format == "mp3":
             process = (
-                ffmpeg.input(input_temp_file.name, f=file_format)
+                ffmpeg.input(input_path, f=file_format)
                 .output(
-                    "pipe:1",
+                    output_path,
                     f="mp3",
                     acodec="libmp3lame",
                     q="5",
                     strict="-2",
-                    preset="veryfast",
                 )
                 .global_args(
                     "-hide_banner",
@@ -230,33 +235,38 @@ def convert_and_save_to_s3(
                     "ignore_err",
                 )
                 .overwrite_output()
-                .run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True)
+                .run_async(pipe_stdout=True, pipe_stderr=True)
             )
         else:
             raise ValueError(f"Not implemented for file format: {output_format}")
 
-        output, err = process.communicate(input=None)
+        _, err = process.communicate()
 
-    # Log the stderr output for debugging
-    err_text = err.decode() if err else ""
-    if err_text:
-        logger.debug(f"FFmpeg stderr: {err_text}")
+        # Log the stderr output for debugging
+        err_text = err.decode() if err else ""
+        if err_text:
+            logger.debug(f"FFmpeg stderr: {err_text}")
 
-    if process.returncode != 0:
-        error_message = err_text or "Unknown FFmpeg error"
-        if "No such file or directory" in error_message:
-            raise FFmpegError(f"Input file not found: {input_file_name}")
-        elif "Invalid data found when processing input" in error_message:
-            raise FFmpegError("Invalid or corrupted input file")
-        elif "Memory allocation error" in error_message:
-            raise FFmpegError(
-                f"Memory allocation failed - file too large. "
-                f"Required memory: {estimated_memory_mb:.1f}MB"
-            )
-        else:
-            raise FFmpegError(f"FFmpeg processing failed: {error_message}")
+        if process.returncode != 0:
+            error_message = err_text or "Unknown FFmpeg error"
+            if "No such file or directory" in error_message:
+                raise FFmpegError(f"Input file not found: {input_file_name}")
+            elif "Invalid data found when processing input" in error_message:
+                raise FFmpegError("Invalid or corrupted input file")
+            elif "Memory allocation error" in error_message:
+                raise FFmpegError(
+                    f"Memory allocation failed - file too large. "
+                    f"Required memory: {estimated_memory_mb:.1f}MB"
+                )
+            else:
+                raise FFmpegError(f"FFmpeg processing failed: {error_message}")
 
-    # Verify we got valid output
+        if not os.path.exists(output_path):
+            raise ConversionError("FFmpeg produced no output file")
+
+        with open(output_path, "rb") as f:
+            output = f.read()
+
     if not output:
         raise ConversionError("FFmpeg produced empty output")
 
@@ -361,43 +371,53 @@ def merge_multiple_audio_files_and_save_to_s3(
     if not processed_data_streams:
         raise ValueError("No processed data streams")
 
-    with tempfile.NamedTemporaryFile(suffix=f".{output_format}") as temp_file:
-        for data_stream in processed_data_streams:
-            temp_file.write(data_stream.read())
+    with tempfile.TemporaryDirectory() as tmpdir:
+        chunk_paths = []
+        for i, data_stream in enumerate(processed_data_streams):
+            chunk_path = os.path.join(tmpdir, f"chunk_{i}.{output_format}")
+            with open(chunk_path, "wb") as f:
+                f.write(data_stream.read())
+            chunk_paths.append(chunk_path)
 
-        temp_file.flush()
+        concat_list_path = os.path.join(tmpdir, "concat_list.txt")
+        with open(concat_list_path, "w") as f:
+            for p in chunk_paths:
+                f.write(f"file '{p}'\n")
+
+        merged_path = os.path.join(tmpdir, f"merged.{output_format}")
 
         if output_format == "ogg":
-            # Final processing to ensure consistent output
             process = (
-                ffmpeg.input(temp_file.name, format=output_format)
-                .output("pipe:1", f="ogg", acodec="libvorbis", q="5")
+                ffmpeg.input(concat_list_path, f="concat", safe=0)
+                .output(merged_path, f="ogg", acodec="libvorbis", q="5")
                 .global_args("-hide_banner", "-loglevel", "warning")
                 .overwrite_output()
-                .run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True)
+                .run_async(pipe_stdout=True, pipe_stderr=True)
             )
         elif output_format == "mp3":
             process = (
-                ffmpeg.input(temp_file.name, format=output_format)
+                ffmpeg.input(concat_list_path, f="concat", safe=0)
                 .output(
-                    "pipe:1",
+                    merged_path,
                     f="mp3",
                     acodec="libmp3lame",
                     q="5",
-                    preset="veryfast",
                 )
                 .global_args("-hide_banner", "-loglevel", "warning")
                 .overwrite_output()
-                .run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True)
+                .run_async(pipe_stdout=True, pipe_stderr=True)
             )
         else:
             raise ValueError(f"Not implemented for file format: {output_format}")
 
-        output, err = process.communicate(input=None)
+        _, err = process.communicate()
 
-    if process.returncode != 0:
-        error_message = err.decode() if err else "Unknown FFmpeg error"
-        raise FFmpegError(f"FFmpeg final processing failed: {error_message}")
+        if process.returncode != 0:
+            error_message = err.decode() if err else "Unknown FFmpeg error"
+            raise FFmpegError(f"FFmpeg final processing failed: {error_message}")
+
+        with open(merged_path, "rb") as f:
+            output = f.read()
 
     # Save to S3
     logger.info(f"Saving merged audio to S3 as {output_file_name}")
@@ -655,9 +675,10 @@ def split_audio_chunk(
     s3_keys_created = []  # Track S3 keys for cleanup on failure
 
     try:
-        with tempfile.NamedTemporaryFile(suffix=f".{output_format}") as temp_file:
-            temp_file.write(get_stream_from_s3(updated_chunk_path).read())
-            temp_file.flush()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            source_path = os.path.join(tmpdir, f"source.{output_format}")
+            with open(source_path, "wb") as f:
+                f.write(get_stream_from_s3(updated_chunk_path).read())
 
             # Phase 1: Split and upload all chunks to S3
             for i in range(number_chunks):
@@ -670,23 +691,26 @@ def split_audio_chunk(
                 )
                 logger.debug(f"Extracting chunk {i + 1}/{number_chunks} starting at {start_time}s")
 
+                split_out_path = os.path.join(tmpdir, f"split_{i}.{output_format}")
                 process = (
-                    ffmpeg.input(temp_file.name)
+                    ffmpeg.input(source_path)
                     .output(
-                        "pipe:1",
+                        split_out_path,
                         ss=start_time,
                         t=chunk_duration,
                         f=output_format,
-                        preset="veryfast",
                     )
                     .overwrite_output()
-                    .run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True)
+                    .run_async(pipe_stdout=True, pipe_stderr=True)
                 )
 
-                chunk_output, err = process.communicate(input=None)
+                _, err = process.communicate()
 
                 if process.returncode != 0:
                     raise FFmpegError(f"ffmpeg splitting failed: {err.decode().strip()}")
+
+                with open(split_out_path, "rb") as f:
+                    chunk_output = f.read()
 
                 s3_client.put_object(
                     Bucket=STORAGE_S3_BUCKET,
