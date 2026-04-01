@@ -40,7 +40,6 @@ import { getDirectusErrorString } from "@/lib/directus";
 import { testId } from "@/lib/testUtils";
 
 const MAX_PINNED = 3;
-const SHOW_PINNED_THRESHOLD = 5;
 
 export const ProjectsHomeRoute = () => {
 	useDocumentTitle(t`Projects | Dembrane`);
@@ -110,9 +109,7 @@ export const ProjectsHomeRoute = () => {
 	// First page has pinned + total_count; all pages have projects
 	const firstPage = homeData?.pages?.[0];
 	const pinnedProjects = firstPage?.pinned ?? [];
-	const totalCount = firstPage?.total_count ?? 0;
-	const allProjects =
-		homeData?.pages?.flatMap((page) => page.projects) ?? [];
+	const allProjects = homeData?.pages?.flatMap((page) => page.projects) ?? [];
 
 	const isAdmin = firstPage?.is_admin ?? false;
 
@@ -122,10 +119,7 @@ export const ProjectsHomeRoute = () => {
 	);
 
 	const canPin = pinnedProjects.length < MAX_PINNED;
-	const showPinnedSection =
-		totalCount >= SHOW_PINNED_THRESHOLD &&
-		pinnedProjects.length > 0 &&
-		!debouncedSearchValue;
+	const showPinnedSection = pinnedProjects.length > 0 && !debouncedSearchValue;
 
 	const getNextPinOrder = useCallback(() => {
 		const usedOrders = new Set(
@@ -137,24 +131,21 @@ export const ProjectsHomeRoute = () => {
 		return null;
 	}, [pinnedProjects]);
 
-	const handleSearchOwner = useCallback(
-		(term: string) => {
-			setSearch(`owner:${term}`);
-		},
-		[],
-	);
+	const handleSearchOwner = useCallback((term: string) => {
+		setSearch(`owner:${term}`);
+	}, []);
 
 	const handleTogglePin = useCallback(
 		(projectId: string) => {
 			if (pinnedIds.has(projectId)) {
-				togglePinMutation.mutate({ projectId, pin_order: null });
+				togglePinMutation.mutate({ pin_order: null, projectId });
 			} else {
 				const nextOrder = getNextPinOrder();
 				if (nextOrder === null) {
 					toast.error(t`Unpin a project first (max ${MAX_PINNED})`);
 					return;
 				}
-				togglePinMutation.mutate({ projectId, pin_order: nextOrder });
+				togglePinMutation.mutate({ pin_order: nextOrder, projectId });
 			}
 		},
 		[pinnedIds, getNextPinOrder, togglePinMutation],
@@ -197,7 +188,7 @@ export const ProjectsHomeRoute = () => {
 				{/* Pinned Projects Section */}
 				{showPinnedSection && (
 					<>
-						<SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+						<SimpleGrid cols={{ base: 1, md: 3, sm: 2 }} spacing="md">
 							{pinnedProjects.map((project) => (
 								<PinnedProjectCard
 									key={project.id}
