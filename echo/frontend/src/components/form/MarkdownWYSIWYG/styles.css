@@ -489,7 +489,7 @@
 	align-items: center;
 	overflow-x: auto;
 	position: sticky;
-	top: 0;
+	top: var(--mdx-toolbar-top, 135px);
 	background-color: var(--baseBg);
 	width: inherit;
 }
