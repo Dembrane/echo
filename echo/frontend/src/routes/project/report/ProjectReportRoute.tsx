@@ -296,7 +296,9 @@ function VersionItem({
 	// Status badge logic — published/scheduled/generating always show their status.
 	// "custom" only shows for archived reports with instructions. Hide badge for plain older archived.
 	const tagLabel =
-		report.status === "published" || report.status === "scheduled" || report.status === "draft"
+		report.status === "published" ||
+		report.status === "scheduled" ||
+		report.status === "draft"
 			? sc.label
 			: report.status === "archived" && isLatest
 				? t`Latest`
@@ -752,11 +754,7 @@ export const ProjectReportRoute = () => {
 				setSelectedReportId(firstActionable.id);
 			}
 		}
-	}, [
-		sidebarReports.length,
-		completedReports.length,
-		selectedReportId,
-	]);
+	}, [sidebarReports.length, completedReports.length, selectedReportId]);
 
 	// ── Loading ──
 	if (isLoading) {
@@ -792,9 +790,7 @@ export const ProjectReportRoute = () => {
 						) : latestReport.error_message ? (
 							<Text size="sm">{latestReport.error_message}</Text>
 						) : (
-							<Trans>
-								Something went wrong generating your report.
-							</Trans>
+							<Trans>Something went wrong generating your report.</Trans>
 						)}
 					</CloseableAlert>
 				)}
@@ -808,7 +804,12 @@ export const ProjectReportRoute = () => {
 	// completed report (report content), or fallback (error/cancelled/empty → CreateReportForm).
 
 	// ── Waiting for active report to load ──
-	if (!data && !isViewingGenerating && !isViewingScheduled && !isFallbackFromFailure) {
+	if (
+		!data &&
+		!isViewingGenerating &&
+		!isViewingScheduled &&
+		!isFallbackFromFailure
+	) {
 		return (
 			<ReportLayout>
 				<Divider />
@@ -1253,11 +1254,12 @@ export const ProjectReportRoute = () => {
 									ref={fullscreenRef}
 									style={
 										fullscreen
-											? {
+											? ({
+													"--mdx-toolbar-top": "0px",
 													backgroundColor: "white",
 													overflow: "auto",
 													padding: "2rem",
-												}
+												} as React.CSSProperties)
 											: undefined
 									}
 								>
@@ -1297,14 +1299,17 @@ export const ProjectReportRoute = () => {
 							>
 								{latestReport.status === "cancelled" ? (
 									<Trans>
-										Report generation was cancelled. You can start a new report below.
+										Report generation was cancelled. You can start a new report
+										below.
 									</Trans>
 								) : (
 									<>
 										{latestReport.error_message ? (
 											<Text size="sm">{latestReport.error_message}</Text>
 										) : (
-											<Trans>Something went wrong generating your report.</Trans>
+											<Trans>
+												Something went wrong generating your report.
+											</Trans>
 										)}
 										<Text size="sm" c="dimmed" mt="xs">
 											<Trans>You can try again below.</Trans>

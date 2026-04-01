@@ -621,6 +621,150 @@ class NotificationSubscriptionRequest(BaseModel):
     conversation_id: str
 
 
+class ReportMetricCreateSchema(BaseModel):
+    project_report_id: int
+    type: str = "view"
+
+
+class PublicReportLatestResponse(BaseModel):
+    id: int
+    status: str
+    project_id: str
+    show_portal_link: bool
+
+
+class PublicReportDetailResponse(BaseModel):
+    id: int
+    content: str
+    status: str
+    project_id: str
+    show_portal_link: bool
+
+
+class PublicReportViewsResponse(BaseModel):
+    recent: int
+
+
+class PublicReportMetricResponse(BaseModel):
+    status: str
+
+
+@ParticipantRouter.get("/{project_id}/report/latest")
+async def get_public_report_latest(
+    project_id: str,
+) -> Optional[PublicReportLatestResponse]:
+    """Get the latest published report for a project. No auth required."""
+    reports = await run_in_thread_pool(
+        directus.get_items,
+        "project_report",
+        {
+            "query": {
+                "filter": {
+                    "project_id": {"_eq": project_id},
+                    "status": {"_eq": "published"},
+                },
+                "fields": ["id", "status", "project_id", "show_portal_link"],
+                "sort": ["-date_created"],
+                "limit": 1,
+            }
+        },
+    )
+    return PublicReportLatestResponse(**reports[0]) if reports else None
+
+
+@ParticipantRouter.get("/{project_id}/report/{report_id}/detail")
+async def get_public_report_detail(
+    project_id: str,
+    report_id: int,
+) -> PublicReportDetailResponse:
+    """Get full report content. Only returns published reports. No auth required."""
+    reports = await run_in_thread_pool(
+        directus.get_items,
+        "project_report",
+        {
+            "query": {
+                "filter": {
+                    "id": {"_eq": report_id},
+                    "project_id": {"_eq": project_id},
+                    "status": {"_eq": "published"},
+                },
+                "fields": ["id", "content", "status", "project_id", "show_portal_link"],
+                "limit": 1,
+            }
+        },
+    )
+
+    if not reports:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    return PublicReportDetailResponse(**reports[0])
+
+
+@ParticipantRouter.get("/{project_id}/report/views")
+async def get_public_report_views(
+    project_id: str,
+) -> PublicReportViewsResponse:
+    """Get recent view count for a report. No auth required."""
+    from datetime import timezone, timedelta
+
+    ten_mins_ago = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
+    recent_metrics = await run_in_thread_pool(
+        directus.get_items,
+        "project_report_metric",
+        {
+            "query": {
+                "filter": {
+                    "date_created": {"_gte": ten_mins_ago},
+                    "project_report_id": {
+                        "project_id": {"_eq": project_id},
+                    },
+                },
+                "aggregate": {"count": "*"},
+            }
+        },
+    )
+    recent = 0
+    if recent_metrics and len(recent_metrics) > 0:
+        recent = int(recent_metrics[0].get("count", 0))
+
+    return PublicReportViewsResponse(recent=recent)
+
+
+@ParticipantRouter.post("/{project_id}/report/metric")
+async def create_public_report_metric(
+    project_id: str,
+    body: ReportMetricCreateSchema,
+) -> PublicReportMetricResponse:
+    """Record a report view metric. No auth required."""
+    reports = await run_in_thread_pool(
+        directus.get_items,
+        "project_report",
+        {
+            "query": {
+                "filter": {
+                    "id": {"_eq": body.project_report_id},
+                    "project_id": {"_eq": project_id},
+                    "status": {"_eq": "published"},
+                },
+                "fields": ["id"],
+                "limit": 1,
+            }
+        },
+    )
+    if not reports:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    await run_in_thread_pool(
+        directus.create_item,
+        "project_report_metric",
+        {
+            "project_report_id": body.project_report_id,
+            "type": body.type,
+        },
+    )
+    return PublicReportMetricResponse(status="ok")
+
+
 @ParticipantRouter.post("/report/subscribe")
 async def subscribe_notifications(data: NotificationSubscriptionRequest) -> dict:
     """

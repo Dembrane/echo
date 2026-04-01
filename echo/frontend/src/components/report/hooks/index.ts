@@ -10,6 +10,9 @@ import {
 	getProjectParticipantCount,
 	getProjectReportDetail,
 	getProjectReportViews,
+	getPublicLatestProjectReport,
+	getPublicProjectReportDetail,
+	getPublicProjectReportViews,
 	listProjectReports,
 	updateProjectReport,
 } from "@/lib/api";
@@ -119,7 +122,10 @@ export const useGetProjectParticipants = (projectId: string) => {
 	});
 };
 
-export const useDoesProjectReportNeedUpdate = (projectId: string, reportId: number) => {
+export const useDoesProjectReportNeedUpdate = (
+	projectId: string,
+	reportId: number,
+) => {
 	return useQuery({
 		enabled: !!projectId && reportId > 0,
 		queryFn: async () => {
@@ -180,7 +186,11 @@ export const useLatestProjectReport = (projectId: string) => {
 		queryKey: ["projects", projectId, "report"],
 		refetchInterval: (query) => {
 			const report = query.state.data;
-			if (report && (report.status === "draft" || report.status === "scheduled")) return 5000;
+			if (
+				report &&
+				(report.status === "draft" || report.status === "scheduled")
+			)
+				return 5000;
 			return 30000;
 		},
 	});
@@ -226,7 +236,8 @@ export const useProjectReportTimelineData = (projectReportId: string) => {
 				}),
 			);
 
-			let conversationChunkAgg: { conversation_id: string; count: number }[] = [];
+			let conversationChunkAgg: { conversation_id: string; count: number }[] =
+				[];
 			if (conversations.length > 0) {
 				const conversationIds = conversations.map((c) => c.id);
 				const chunkCountsAgg = await directus.request<
@@ -241,7 +252,9 @@ export const useProjectReportTimelineData = (projectReportId: string) => {
 				conversationChunkAgg = chunkCountsAgg;
 			}
 
-			const projectReportMetrics = await directus.request<ProjectReportMetric[]>(
+			const projectReportMetrics = await directus.request<
+				ProjectReportMetric[]
+			>(
 				readItems("project_report_metric", {
 					fields: ["id", "date_created", "project_report_id"],
 					filter: {
@@ -279,5 +292,32 @@ export const useProjectReportTimelineData = (projectReportId: string) => {
 	});
 };
 
-export { useReportProgress } from "./useReportProgress";
+export const usePublicLatestProjectReport = (projectId: string) => {
+	return useQuery({
+		enabled: !!projectId,
+		queryFn: () => getPublicLatestProjectReport(projectId),
+		queryKey: ["public", "projects", projectId, "report"],
+		refetchInterval: 30000,
+	});
+};
+
+export const usePublicProjectReport = (projectId: string, reportId: number) => {
+	return useQuery({
+		enabled: !!projectId && reportId > 0,
+		queryFn: () => getPublicProjectReportDetail(projectId, reportId),
+		queryKey: ["public", "reports", reportId],
+		refetchInterval: 30000,
+	});
+};
+
+export const usePublicProjectReportViews = (projectId: string) => {
+	return useQuery({
+		enabled: !!projectId,
+		queryFn: () => getPublicProjectReportViews(projectId),
+		queryKey: ["public", "projects", projectId, "views"],
+		refetchInterval: 30000,
+	});
+};
+
 export type { ReportProgressEvent } from "./useReportProgress";
+export { useReportProgress } from "./useReportProgress";
