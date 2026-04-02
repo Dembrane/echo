@@ -233,7 +233,7 @@ msgstr "\"Verkennen\" binnenkort beschikbaar"
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:469
 msgid "participant.modal.echo.info.title.concrete"
-msgstr "\"Verifiëren\" binnenkort beschikbaar"
+msgstr "\"Controleren\" binnenkort beschikbaar"
 
 #~ msgid "(for enhanced audio processing)"
 #~ msgstr "(voor verbeterde audioverwerking)"
@@ -898,7 +898,7 @@ msgstr "Aspecten"
 
 #: src/components/project/ProjectPortalEditor.tsx:1113
 msgid "At least one topic must be selected to enable Verify"
-msgstr "Er moet minstens één onderwerp zijn geselecteerd om Verifiëren aan te zetten"
+msgstr "Er moet minstens één onderwerp zijn geselecteerd om Controleren aan te zetten"
 
 #~ msgid "Attach as many documents as you like to analyse"
 #~ msgstr "Voeg zoveel documenten toe als je wilt analyseren"
@@ -2131,7 +2131,7 @@ msgstr "Schakel deze functie in zodat deelnemers AI-antwoorden kunnen vragen tij
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:1006
 msgid "dashboard.dembrane.feature.verify.description"
-msgstr "Schakel deze functie in om deelnemers \"resultaten\" van hun inzendingen te laten verifiëren en goedkeuren. Dit helpt om belangrijke ideeën, zorgen of samenvattingen concreet te maken. Na het gesprek kun je filteren op discussies met geverifieerde resultaten en deze bekijken in het overzicht."
+msgstr "Schakel deze functie in om deelnemers \"resultaten\" van hun inzendingen te laten controleren en goedkeuren. Dit helpt om belangrijke ideeën, zorgen of samenvattingen concreet te maken. Na het gesprek kun je filteren op discussies met geverifieerde resultaten en deze bekijken in het overzicht."
 
 #: src/components/project/ProjectPortalEditor.tsx:1487
 msgid "Enable transcript anonymization"
@@ -2143,7 +2143,7 @@ msgstr "Tweestapsverificatie inschakelen"
 
 #: src/components/project/ProjectPortalEditor.tsx:1023
 msgid "Enable Verify"
-msgstr "Verifiëren inschakelen"
+msgstr "Controleren inschakelen"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:323
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:988
@@ -2488,7 +2488,7 @@ msgid "Failed to upload logo"
 msgstr "Fout bij het uploaden van het logo"
 
 #~ msgid "Failed to verify email status. Please try again."
-#~ msgstr "Fout bij het verifiëren van de e-mailstatus. Probeer het opnieuw."
+#~ msgstr "Fout bij het controleren van de e-mailstatus. Probeer het opnieuw."
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:482
@@ -2612,7 +2612,7 @@ msgstr "Lettergrootte"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:454
 msgid "For advanced users: A secret key to verify webhook authenticity. Only needed if your receiving service requires signature verification."
-msgstr "Voor geavanceerde gebruikers: Een geheime sleutel om de authenticiteit van de webhook te verifiëren. Alleen nodig als je ontvangende service een handtekeningvereist."
+msgstr "Voor geavanceerde gebruikers: Een geheime sleutel om de authenticiteit van de webhook te controleren. Alleen nodig als je ontvangende service een handtekeningvereist."
 
 #: src/routes/auth/Login.tsx:276
 msgid "Forgot your password?"
@@ -3889,7 +3889,7 @@ msgstr "Deelnemer naam en e-mail"
 #~ msgstr "Lees de {objectLabel} hardop voor en vertel wat je eventueel wilt aanpassen."
 
 #~ msgid "participant.verify.instructions.receive.artefact"
-#~ msgstr "Je ontvangt zo meteen de {objectLabel} om te verifiëren."
+#~ msgstr "Je ontvangt zo meteen de {objectLabel} om te controleren."
 
 #~ msgid "participant.verify.instructions.revise.artefact"
 #~ msgstr "Heb je het besproken? Klik op 'Herzien' om de {objectLabel} aan te passen aan jullie gesprek."
@@ -4105,7 +4105,7 @@ msgstr "Wacht aub terwijl we uw hertranscriptieaanvraag verwerken. U wordt autom
 
 #: src/routes/auth/VerifyEmail.tsx:46
 msgid "Please wait while we verify your email address."
-msgstr "Wacht aub terwijl we uw e-mailadres verifiëren."
+msgstr "Wacht aub terwijl we uw e-mailadres controleren."
 
 #: src/components/settings/AccountSettingsCard.tsx:169
 msgid "PNG, JPEG, or WebP. Will be cropped to a circle."
@@ -4488,7 +4488,7 @@ msgstr "Opnieuw laden"
 
 #: src/components/project/ProjectPortalEditor.tsx:1249
 msgid "Remind users to verify before finishing"
-msgstr "Gebruikers herinneren om te verifiëren voordat ze klaar zijn"
+msgstr "Gebruikers herinneren om te controleren voordat ze klaar zijn"
 
 #: src/components/settings/WhitelabelLogoCard.tsx:142
 #: src/components/settings/AccountSettingsCard.tsx:164
@@ -4933,7 +4933,7 @@ msgstr "Selecteer tutorial"
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:1056
 msgid "dashboard.dembrane.feature.verify.topic.select"
-msgstr "Selecteer welke onderwerpen deelnemers kunnen gebruiken voor \"Verifiëren\"."
+msgstr "Selecteer welke onderwerpen deelnemers kunnen gebruiken voor \"Controleren\"."
 
 #~ msgid "Select your group"
 #~ msgstr "Selecteer je groep"
@@ -5393,16 +5393,16 @@ msgstr "Tags (max 3)"
 
 #: src/components/participant/ParticipantConversationAudio.tsx:448
 msgid "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from Dembrane to help you deepen the conversation."
-msgstr "Neem even de tijd om een resultaat te creëren dat je bijdrage concreet maakt of krijg direct een reactie van dembrane om het gesprek te verdiepen."
+msgstr "Kijk of de uitkomst klopt, en pas aan waar nodig of krijg direct een reactie van dembrane om het gesprek te verdiepen."
 
 #: src/components/participant/ParticipantConversationAudio.tsx:451
 msgid "Take some time to create an outcome that makes your contribution concrete."
-msgstr "Neem even de tijd om een resultaat te creëren dat je bijdrage concreet maakt."
+msgstr "Kijk of de uitkomst klopt, en pas aan waar nodig."
 
 #. js-lingui-explicit-id
 #: src/components/participant/refine/RefineSelection.tsx:77
 msgid "participant.refine.make.concrete.description"
-msgstr "Neem even de tijd om een resultaat te creëren dat je bijdrage concreet maakt."
+msgstr "Kijk of de uitkomst klopt, en pas aan waar nodig."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:553
 #: src/components/chat/AgenticChatPanel.tsx:379
@@ -5546,7 +5546,7 @@ msgstr "Er is een fout opgetreden bij het maken van uw rapport. Probeer het alst
 
 #: src/routes/auth/VerifyEmail.tsx:60
 msgid "There was an error verifying your email. Please try again."
-msgstr "Er is een fout opgetreden bij het verifiëren van uw e-mail. Probeer het alstublieft opnieuw."
+msgstr "Er is een fout opgetreden bij het controleren van uw e-mail. Probeer het alstublieft opnieuw."
 
 #~ msgid "These are some helpful preset templates to get you started."
 #~ msgstr "Dit zijn enkele nuttige voorbeeld sjablonen om u te helpen."
@@ -6146,7 +6146,7 @@ msgstr "Gebruik webhooks? We zouden graag van je horen"
 #. js-lingui-explicit-id
 #: src/components/participant/StopRecordingConfirmationModal.tsx:73
 msgid "participant.modal.verify_prompt.title"
-msgstr "Herinnering om te verifiëren"
+msgstr "Herinnering om te controleren"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudioContent.tsx:166
@@ -6187,25 +6187,25 @@ msgstr "geverifieerde artefacten"
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:990
 msgid "dashboard.dembrane.verify.title"
-msgstr "Verifiëren"
+msgstr "Controleren"
 
 #. js-lingui-explicit-id
 #: src/components/participant/StopRecordingConfirmationModal.tsx:118
 msgid "participant.button.verify_prompt.verify"
-msgstr "Verifiëren"
+msgstr "Controleren"
 
 #. js-lingui-explicit-id
 #: src/components/participant/refine/RefineSelection.tsx:73
 msgid "participant.echo.verify"
-msgstr "Verifiëren"
+msgstr "Controleren"
 
 #: src/routes/auth/Login.tsx:288
 msgid "Verify code"
-msgstr "Code verifiëren"
+msgstr "Code controleren"
 
 #: src/components/project/ProjectPortalEditor.tsx:1047
 msgid "Verify Topics"
-msgstr "Verifiëren Themen"
+msgstr "Controleren Themen"
 
 #: src/routes/project/library/ProjectLibraryView.tsx:36
 #: src/routes/project/library/ProjectLibraryAspect.tsx:47
@@ -6398,7 +6398,7 @@ msgstr "Wat gegevens worden verzonden?"
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifySelection.tsx:201
 msgid "participant.verify.selection.title"
-msgstr "Wat wil je verifiëren?"
+msgstr "Wat wil je controleren?"
 
 #~ msgid "What kind of question do you want to ask for this document?"
 #~ msgstr "Wat voor soort vraag wil je stellen voor dit document?"
@@ -6454,7 +6454,7 @@ msgstr "Wanneer ingeschakeld, zullen alle nieuwe transcripties persoonlijke info
 
 #: src/components/project/ProjectPortalEditor.tsx:1260
 msgid "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
-msgstr "Wanneer je het gesprek afmaakt, worden deelnemers die nog niet hebben geverifieerd gevraagd om te verifiëren of over te slaan"
+msgstr "Wanneer je het gesprek afmaakt, worden deelnemers die nog niet hebben geverifieerd gevraagd om te controleren of over te slaan"
 
 #: src/components/report/UpdateReportModalButton.tsx:253
 #: src/components/report/CreateReportForm.tsx:237
@@ -6533,7 +6533,7 @@ msgstr "U hebt succesvol afgemeld."
 #. js-lingui-explicit-id
 #: src/components/participant/StopRecordingConfirmationModal.tsx:90
 msgid "participant.modal.verify_prompt.description"
-msgstr "Je hebt nog geen resultaten geverifieerd. Wil je verifiëren voordat je afsluit?"
+msgstr "Je hebt nog geen resultaten geverifieerd. Wil je controleren voordat je afsluit?"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:128
 msgid "You may also choose to record another conversation."
@@ -6553,7 +6553,7 @@ msgstr "Je lijkt offline te zijn, controleer je internetverbinding"
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:18
 msgid "participant.verify.instructions.receive.artefact"
-msgstr "Je ontvangt zo meteen {objectLabel} om te verifiëren."
+msgstr "Je ontvangt zo meteen {objectLabel} om te controleren."
 
 #. js-lingui-explicit-id
 #: src/components/participant/verify/VerifyInstructions.tsx:53
