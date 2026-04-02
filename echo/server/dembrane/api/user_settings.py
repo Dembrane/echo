@@ -84,7 +84,7 @@ async def get_current_user(
         raise
     except Exception as e:
         logger.error(f"Failed to get current user: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get user profile") from e
+        raise HTTPException(status_code=500, detail="Failed to get user profile") from None
 
 
 # ── Change Password ──
@@ -117,7 +117,7 @@ async def change_password(
         raise
     except Exception as e:
         logger.error(f"Failed to get user email for password change: {e}")
-        raise HTTPException(status_code=500, detail="Failed to change password") from e
+        raise HTTPException(status_code=500, detail="Failed to change password") from None
 
     # Verify current password by attempting login
     try:
@@ -133,7 +133,7 @@ async def change_password(
         raise
     except Exception as e:
         logger.error(f"Failed to verify current password: {e}")
-        raise HTTPException(status_code=500, detail="Failed to change password") from e
+        raise HTTPException(status_code=500, detail="Failed to change password") from None
 
     # Update password via user's session token
     try:
@@ -159,7 +159,7 @@ async def change_password(
         raise
     except Exception as e:
         logger.error(f"Failed to change password: {e}")
-        raise HTTPException(status_code=500, detail="Failed to change password") from e
+        raise HTTPException(status_code=500, detail="Failed to change password") from None
 
 
 # ── Two-Factor Authentication ──
@@ -197,7 +197,7 @@ async def tfa_generate(
         raise
     except Exception as e:
         logger.error(f"Failed to generate 2FA secret: {e}")
-        raise HTTPException(status_code=500, detail="Failed to generate 2FA secret") from e
+        raise HTTPException(status_code=500, detail="Failed to generate 2FA secret") from None
 
 
 @UserSettingsRouter.post("/tfa/enable")
@@ -232,7 +232,7 @@ async def tfa_enable(
         raise
     except Exception as e:
         logger.error(f"Failed to enable 2FA: {e}")
-        raise HTTPException(status_code=500, detail="Failed to enable 2FA") from e
+        raise HTTPException(status_code=500, detail="Failed to enable 2FA") from None
 
 
 @UserSettingsRouter.post("/tfa/disable")
@@ -267,7 +267,7 @@ async def tfa_disable(
         raise
     except Exception as e:
         logger.error(f"Failed to disable 2FA: {e}")
-        raise HTTPException(status_code=500, detail="Failed to disable 2FA") from e
+        raise HTTPException(status_code=500, detail="Failed to disable 2FA") from None
 
 
 def _get_or_create_folder_id(folder_name: str) -> str | None:
@@ -334,21 +334,21 @@ async def upload_whitelabel_logo(
         )
         if response.status_code != 200:
             logger.error(f"Failed to upload file: {response.status_code} {response.text}")
-            raise HTTPException(status_code=500, detail="Failed to upload file")
+            raise HTTPException(status_code=500, detail="Failed to upload file") from None
 
         file_id = response.json()["data"]["id"]
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to upload whitelabel logo: {e}")
-        raise HTTPException(status_code=500, detail="Failed to upload file") from e
+        raise HTTPException(status_code=500, detail="Failed to upload file") from None
 
     # Update user's whitelabel_logo field
     try:
         directus.update_user(auth.user_id, {"whitelabel_logo": file_id})
     except Exception as e:
         logger.error(f"Failed to update user whitelabel_logo: {e}")
-        raise HTTPException(status_code=500, detail="Failed to update user") from e
+        raise HTTPException(status_code=500, detail="Failed to update user") from None
 
     return {"file_id": file_id}
 
@@ -362,7 +362,7 @@ async def remove_whitelabel_logo(
         directus.update_user(auth.user_id, {"whitelabel_logo": None})
     except Exception as e:
         logger.error(f"Failed to remove whitelabel logo: {e}")
-        raise HTTPException(status_code=500, detail="Failed to remove logo") from e
+        raise HTTPException(status_code=500, detail="Failed to remove logo") from None
 
     return {"status": "ok"}
 
@@ -377,7 +377,7 @@ async def update_name(
         directus.update_user(auth.user_id, {"first_name": body.first_name})
     except Exception as e:
         logger.error(f"Failed to update user name: {e}")
-        raise HTTPException(status_code=500, detail="Failed to update name") from e
+        raise HTTPException(status_code=500, detail="Failed to update name") from None
     return {"status": "ok"}
 
 
@@ -403,20 +403,20 @@ async def upload_avatar(
         )
         if response.status_code != 200:
             logger.error(f"Failed to upload avatar: {response.status_code} {response.text}")
-            raise HTTPException(status_code=500, detail="Failed to upload file")
+            raise HTTPException(status_code=500, detail="Failed to upload file") from None
 
         file_id = response.json()["data"]["id"]
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to upload avatar: {e}")
-        raise HTTPException(status_code=500, detail="Failed to upload file") from e
+        raise HTTPException(status_code=500, detail="Failed to upload file") from None
 
     try:
         directus.update_user(auth.user_id, {"avatar": file_id})
     except Exception as e:
         logger.error(f"Failed to update user avatar: {e}")
-        raise HTTPException(status_code=500, detail="Failed to update user") from e
+        raise HTTPException(status_code=500, detail="Failed to update user") from None
 
     return {"file_id": file_id}
 
@@ -430,7 +430,7 @@ async def remove_avatar(
         directus.update_user(auth.user_id, {"avatar": None})
     except Exception as e:
         logger.error(f"Failed to remove avatar: {e}")
-        raise HTTPException(status_code=500, detail="Failed to remove avatar") from e
+        raise HTTPException(status_code=500, detail="Failed to remove avatar") from None
     return {"status": "ok"}
 
 
@@ -461,7 +461,7 @@ async def update_legal_basis(
             raise
         except Exception as e:
             logger.error(f"Failed to verify user email: {e}")
-            raise HTTPException(status_code=500, detail="Failed to verify user") from e
+            raise HTTPException(status_code=500, detail="Failed to verify user") from None
 
     update_data: dict = {"legal_basis": body.legal_basis}
     if body.legal_basis == "consent":
@@ -473,6 +473,6 @@ async def update_legal_basis(
         await run_in_thread_pool(directus.update_user, auth.user_id, update_data)
     except Exception as e:
         logger.error(f"Failed to update legal basis: {e}")
-        raise HTTPException(status_code=500, detail="Failed to update legal basis") from e
+        raise HTTPException(status_code=500, detail="Failed to update legal basis") from None
 
     return {"status": "ok"}

@@ -146,7 +146,7 @@ async def list_prompt_templates(
         return results
     except Exception as e:
         logger.exception(f"Failed to list prompt templates: {e}")
-        raise HTTPException(status_code=500, detail="Failed to list templates") from e
+        raise HTTPException(status_code=500, detail="Failed to list templates") from None
 
 
 @TemplateRouter.post("/prompt-templates")
@@ -169,7 +169,7 @@ async def create_prompt_template(
         return PromptTemplateOut(**result)
     except Exception as e:
         logger.error(f"Failed to create prompt template: {e}")
-        raise HTTPException(status_code=500, detail="Failed to create template") from e
+        raise HTTPException(status_code=500, detail="Failed to create template") from None
 
 
 @TemplateRouter.patch("/prompt-templates/{template_id}")
@@ -187,7 +187,7 @@ async def update_prompt_template(
         raise
     except Exception as e:
         logger.error(f"Failed to verify template ownership: {e}")
-        raise HTTPException(status_code=500, detail="Failed to update template") from e
+        raise HTTPException(status_code=500, detail="Failed to update template") from None
 
     update_data = {k: v for k, v in body.model_dump().items() if v is not None}
     if not update_data:
@@ -198,7 +198,7 @@ async def update_prompt_template(
         return PromptTemplateOut(**result)
     except Exception as e:
         logger.error(f"Failed to update prompt template: {e}")
-        raise HTTPException(status_code=500, detail="Failed to update template") from e
+        raise HTTPException(status_code=500, detail="Failed to update template") from None
 
 
 @TemplateRouter.delete("/prompt-templates/{template_id}")
@@ -215,14 +215,14 @@ async def delete_prompt_template(
         raise
     except Exception as e:
         logger.error(f"Failed to verify template ownership: {e}")
-        raise HTTPException(status_code=500, detail="Failed to delete template") from e
+        raise HTTPException(status_code=500, detail="Failed to delete template") from None
 
     try:
         directus.delete_item("prompt_template", template_id)
         return {"status": "ok"}
     except Exception as e:
         logger.error(f"Failed to delete prompt template: {e}")
-        raise HTTPException(status_code=500, detail="Failed to delete template") from e
+        raise HTTPException(status_code=500, detail="Failed to delete template") from None
 
 
 # ── Community Marketplace ──
@@ -347,7 +347,7 @@ async def publish_template(
         raise
     except Exception as e:
         logger.error(f"Failed to verify template ownership: {e}")
-        raise HTTPException(status_code=500, detail="Failed to publish template") from e
+        raise HTTPException(status_code=500, detail="Failed to publish template") from None
 
     if body.tags:
         if len(body.tags) > 3:
@@ -369,7 +369,7 @@ async def publish_template(
         return PromptTemplateOut(**result)
     except Exception as e:
         logger.error(f"Failed to publish template: {e}")
-        raise HTTPException(status_code=500, detail="Failed to publish template") from e
+        raise HTTPException(status_code=500, detail="Failed to publish template") from None
 
 
 @TemplateRouter.post("/prompt-templates/{template_id}/unpublish")
@@ -385,14 +385,14 @@ async def unpublish_template(
         raise
     except Exception as e:
         logger.error(f"Failed to verify template ownership: {e}")
-        raise HTTPException(status_code=500, detail="Failed to unpublish template") from e
+        raise HTTPException(status_code=500, detail="Failed to unpublish template") from None
 
     try:
         result = directus.update_item("prompt_template", template_id, {"is_public": False})["data"]
         return PromptTemplateOut(**result)
     except Exception as e:
         logger.error(f"Failed to unpublish template: {e}")
-        raise HTTPException(status_code=500, detail="Failed to unpublish template") from e
+        raise HTTPException(status_code=500, detail="Failed to unpublish template") from None
 
 
 @TemplateRouter.post("/prompt-templates/{template_id}/star")
@@ -443,7 +443,7 @@ async def toggle_star(
         raise
     except Exception as e:
         logger.error(f"Failed to toggle star: {e}")
-        raise HTTPException(status_code=500, detail="Failed to toggle star") from e
+        raise HTTPException(status_code=500, detail="Failed to toggle star") from None
 
 
 @TemplateRouter.post("/prompt-templates/{template_id}/copy")
@@ -502,7 +502,7 @@ async def copy_template(
         raise
     except Exception as e:
         logger.error(f"Failed to copy template: {e}")
-        raise HTTPException(status_code=500, detail="Failed to copy template") from e
+        raise HTTPException(status_code=500, detail="Failed to copy template") from None
 
 
 # ── Quick-Access Preferences ──
@@ -534,7 +534,7 @@ async def list_quick_access(
         return [PromptTemplatePreferenceOut(**item) for item in items]
     except Exception as e:
         logger.error(f"Failed to list quick access preferences: {e}")
-        raise HTTPException(status_code=500, detail="Failed to list preferences") from e
+        raise HTTPException(status_code=500, detail="Failed to list preferences") from None
 
 
 @TemplateRouter.put("/quick-access")
@@ -578,7 +578,7 @@ async def save_quick_access(
         return results
     except Exception as e:
         logger.error(f"Failed to save quick access preferences: {e}")
-        raise HTTPException(status_code=500, detail="Failed to save preferences") from e
+        raise HTTPException(status_code=500, detail="Failed to save preferences") from None
 
 
 # ── Ratings ──
@@ -630,7 +630,7 @@ async def rate_prompt_template(
         return PromptTemplateRatingOut(**result)
     except Exception as e:
         logger.error(f"Failed to rate prompt template: {e}")
-        raise HTTPException(status_code=500, detail="Failed to rate template") from e
+        raise HTTPException(status_code=500, detail="Failed to rate template") from None
 
 
 @TemplateRouter.delete("/ratings/{rating_id}")
@@ -648,7 +648,7 @@ async def delete_rating(
         raise
     except Exception as e:
         logger.error(f"Failed to delete rating: {e}")
-        raise HTTPException(status_code=500, detail="Failed to delete rating") from e
+        raise HTTPException(status_code=500, detail="Failed to delete rating") from None
 
 
 @TemplateRouter.get("/ratings")
@@ -678,7 +678,7 @@ async def list_my_ratings(
         return [PromptTemplateRatingOut(**item) for item in items]
     except Exception as e:
         logger.error(f"Failed to list ratings: {e}")
-        raise HTTPException(status_code=500, detail="Failed to list ratings") from e
+        raise HTTPException(status_code=500, detail="Failed to list ratings") from None
 
 
 # ── AI Suggestions Toggle ──
@@ -694,4 +694,4 @@ async def toggle_ai_suggestions(
         return {"status": "ok", "hide_ai_suggestions": body.hide_ai_suggestions}
     except Exception as e:
         logger.error(f"Failed to toggle AI suggestions: {e}")
-        raise HTTPException(status_code=500, detail="Failed to update setting") from e
+        raise HTTPException(status_code=500, detail="Failed to update setting") from None
