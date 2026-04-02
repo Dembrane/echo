@@ -1,3 +1,4 @@
+<transcripts>
 {% if conversations|length == 0 %}
 Geen gespreksprotocollen gevonden.
 {% else %}
@@ -12,6 +13,14 @@ Geen gespreksprotocollen gevonden.
    {% endfor %}
 {% endif %}
 </transcripts>
+{% if user_instructions %}
+
+<user_instructions>
+The report creator has provided the following guidance. Pay special attention to these instructions when analyzing the transcripts and structuring your article:
+
+{{ user_instructions | replace("</user_instructions>", "") | replace("<user_instructions>", "") }}
+</user_instructions>
+{% endif %}
 
 Uw taak is het creëren van een dynamisch interview-stijl artikel in vraag-en-antwoord formaat, gebaseerd op de hierboven gegeven gespreksprotocollen. Dit artikel moet de inhoud kritisch analyseren terwijl er een duidelijke link met het bronmateriaal behouden blijft. Het eindresultaat moet een professioneel, leesbaar document zijn dat geschikt is voor directe online publicatie.
 
@@ -45,6 +54,8 @@ Formatteer uw eindresultaat als volgt:
 * Inleiding: 2-3 zinnen die de context schetsen.
 * Q&A paren: Presenteer elk paar met de vraag in vetgedrukt, gevolgd door een uitgebreid antwoord, gescheiden door twee regelafbrekingen.
 * Conclusie: 2-3 zinnen die de belangrijkste punten en hun betekenis samenvatten.
+
+BELANGRIJK: Schrijf het volledige artikel in het Nederlands, ongeacht de taal van de transcripties. Als de transcripties in een andere taal zijn, vertaal de inhoud dan naar het Nederlands.
 
 Behoud gedurende het hele artikel een professionele, journalistieke toon. De taal moet helder, beknopt en gemakkelijk te begrijpen zijn voor een algemeen publiek. Vermijd informeel taalgebruik, jargon of overmatig technische termen tenzij deze essentieel zijn en worden uitgelegd.
 

@@ -1,8 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { throwWithMessage } from "@/components/auth/utils/errorUtils";
 import { toast } from "@/components/common/Toaster";
-import { directus } from "@/lib/directus";
+import { API_BASE_URL } from "@/config";
 
 export * from "./useAuditLogsQuery";
 
@@ -11,30 +10,34 @@ export interface GenerateTwoFactorResponse {
 	otpauth_url: string;
 }
 
-const postDirectus = async <TResponse>(
+const postApi = async <TResponse>(
 	path: string,
 	body: Record<string, unknown>,
-) => {
-	try {
-		return await directus.request<TResponse>(() => ({
-			body: JSON.stringify(body),
-			method: "POST",
-			path,
-		}));
-	} catch (error) {
-		throwWithMessage(error);
+): Promise<TResponse> => {
+	const response = await fetch(`${API_BASE_URL}${path}`, {
+		body: JSON.stringify(body),
+		credentials: "include",
+		headers: { "Content-Type": "application/json" },
+		method: "POST",
+	});
+
+	if (!response.ok) {
+		const data = await response.json().catch(() => ({}));
+		throw new Error(data.detail || "Request failed");
 	}
+
+	// Some endpoints return 204 No Content
+	const text = await response.text();
+	return text ? JSON.parse(text) : ({} as TResponse);
 };
 
 export const useGenerateTwoFactorMutation = () => {
 	return useMutation({
 		mutationFn: async ({ password }: { password: string }) => {
-			const data = await postDirectus<GenerateTwoFactorResponse>(
-				"/users/me/tfa/generate",
+			return postApi<GenerateTwoFactorResponse>(
+				"/user-settings/tfa/generate",
 				{ password },
 			);
-
-			return data;
 		},
 		onError: (error: Error) => {
 			toast.error(error.message);
@@ -47,7 +50,7 @@ export const useEnableTwoFactorMutation = () => {
 
 	return useMutation({
 		mutationFn: async ({ otp, secret }: { otp: string; secret: string }) => {
-			await postDirectus("/users/me/tfa/enable", { otp, secret });
+			await postApi("/user-settings/tfa/enable", { otp, secret });
 		},
 		onError: (error: Error) => {
 			if (error.message.includes('Invalid payload. "otp" is invalid')) {
@@ -70,7 +73,7 @@ export const useDisableTwoFactorMutation = () => {
 
 	return useMutation({
 		mutationFn: async ({ otp }: { otp: string }) => {
-			await postDirectus("/users/me/tfa/disable", { otp });
+			await postApi("/user-settings/tfa/disable", { otp });
 		},
 		onError: (error: Error) => {
 			if (error.message.includes('Invalid payload. "otp" is invalid')) {

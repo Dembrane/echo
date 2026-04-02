@@ -717,6 +717,7 @@ export type DirectusUsers = {
 	status: string;
 	tags?: unknown | null;
 	tfa_secret?: string | null;
+	tfa_enabled?: boolean;
 	theme_dark?: string | null;
 	theme_dark_overrides?: unknown | null;
 	theme_light?: string | null;

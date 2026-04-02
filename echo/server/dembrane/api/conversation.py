@@ -22,7 +22,7 @@ from dembrane.audio_utils import (
 )
 from dembrane.reply_utils import generate_reply_for_conversation
 from dembrane.api.stateless import generate_summary, generate_conversation_title
-from dembrane.async_helpers import run_in_thread_pool
+from dembrane.async_helpers import safe_gather, run_in_thread_pool
 from dembrane.stream_status import stream_with_status
 from dembrane.api.exceptions import (
     NoContentFoundException,
@@ -556,7 +556,7 @@ async def summarize_conversation(
         ),
     ]
 
-    transcript_str, project_context_str, verified_artifacts = await asyncio.gather(*awaitable_list)
+    transcript_str, project_context_str, verified_artifacts = await safe_gather(*awaitable_list)
 
     if not conversation_data_result or len(conversation_data_result) == 0:
         raise HTTPException(status_code=404, detail="Conversation not found")

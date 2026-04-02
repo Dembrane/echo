@@ -52,3 +52,6 @@ export const ENABLE_DISPLAY_CONVERSATION_LINKS = true;
 export const ENABLE_WEBHOOKS = true;
 export const ENABLE_AGENTIC_CHAT =
 	import.meta.env.VITE_ENABLE_AGENTIC_CHAT === "1";
+
+export const getProductFeedbackUrl = (locale = "en-US") =>
+	`https://portal.dembrane.com/${locale}/a2b7fbeb-af8d-41c8-b70b-9ff1f3c6d51a/start?theme=dm-sans`;

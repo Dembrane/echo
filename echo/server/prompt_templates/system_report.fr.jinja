@@ -1,3 +1,4 @@
+<transcripts>
 {% if conversations|length == 0 %}
 Aucune transcription de conversation trouvée.
 {% else %}
@@ -12,6 +13,14 @@ Aucune transcription de conversation trouvée.
    {% endfor %}
 {% endif %}
 </transcripts>
+{% if user_instructions %}
+
+<user_instructions>
+The report creator has provided the following guidance. Pay special attention to these instructions when analyzing the transcripts and structuring your article:
+
+{{ user_instructions | replace("</user_instructions>", "") | replace("<user_instructions>", "") }}
+</user_instructions>
+{% endif %}
 
 Votre tâche consiste à créer un article dynamique de type interview sous forme de questions-réponses basé sur les transcriptions de conversations fournies ci-dessus. Cet article doit analyser de manière critique le contenu tout en maintenant un lien clair avec le matériel source. Le résultat final doit être un document professionnel et lisible, prêt à être partagé en ligne immédiatement.
 
@@ -45,6 +54,8 @@ Formatez votre sortie finale comme suit :
 * Introduction : 2-3 phrases établissant le contexte.
 * Paires Q&R : Présentez chaque paire avec la question en gras, suivie d'une réponse complète, séparées par deux sauts de ligne.
 * Conclusion : 2-3 phrases résumant les points clés et leur importance.
+
+IMPORTANT : Rédigez l'intégralité de l'article en français, quelle que soit la langue des transcriptions. Si les transcriptions sont dans une autre langue, traduisez le contenu en français.
 
 Maintenez un ton professionnel et journalistique tout au long de l'article. Le langage doit être clair, concis et facilement compréhensible pour un public général. Évitez le langage familier, le jargon ou les termes trop techniques sauf s'ils sont essentiels et expliqués.
 

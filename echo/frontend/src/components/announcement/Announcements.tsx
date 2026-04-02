@@ -1,9 +1,25 @@
 import { Trans } from "@lingui/react/macro";
-import { Box, Center, Loader, ScrollArea, Stack, Text } from "@mantine/core";
-import { useEffect, useState } from "react";
+import {
+	Box,
+	Center,
+	Collapse,
+	Divider,
+	Group,
+	Loader,
+	ScrollArea,
+	Stack,
+	Text,
+	ThemeIcon,
+	UnstyledButton,
+} from "@mantine/core";
+import { CaretDown, CaretUp, Sparkle } from "@phosphor-icons/react";
+import { useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useAnnouncementDrawer } from "@/components/announcement/hooks";
-import { useProcessedAnnouncements } from "@/components/announcement/hooks/useProcessedAnnouncements";
+import {
+	useProcessedAnnouncements,
+	useWhatsNewProcessed,
+} from "@/components/announcement/hooks/useProcessedAnnouncements";
 import { useLanguage } from "@/hooks/useLanguage";
 import { analytics } from "@/lib/analytics";
 import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
@@ -13,18 +29,20 @@ import { AnnouncementDrawerHeader } from "./AnnouncementDrawerHeader";
 import { AnnouncementErrorState } from "./AnnouncementErrorState";
 import { AnnouncementItem } from "./AnnouncementItem";
 import { AnnouncementSkeleton } from "./AnnouncementSkeleton";
+import { WhatsNewItem } from "./WhatsNewItem";
 import {
 	useInfiniteAnnouncements,
 	useMarkAllAsReadMutation,
-	useMarkAsReadMutation,
+	useWhatsNewAnnouncements,
 } from "./hooks";
 
 export const Announcements = () => {
 	const { isOpen, close } = useAnnouncementDrawer();
 	const { language } = useLanguage();
-	const markAsReadMutation = useMarkAsReadMutation();
 	const markAllAsReadMutation = useMarkAllAsReadMutation();
 	const [openedOnce, setOpenedOnce] = useState(false);
+	const [whatsNewExpanded, setWhatsNewExpanded] = useState(false);
+	const autoReadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const { ref: loadMoreRef, inView } = useInView();
 
@@ -39,6 +57,23 @@ export const Announcements = () => {
 			}
 		}
 	}, [isOpen, openedOnce]);
+
+	// Auto-mark all as read after 1 second when drawer opens
+	// biome-ignore lint/correctness/useExhaustiveDependencies: only trigger on isOpen changes, mutate ref is stable
+	useEffect(() => {
+		if (isOpen) {
+			autoReadTimerRef.current = setTimeout(() => {
+				markAllAsReadMutation.mutate();
+			}, 1000);
+		}
+
+		return () => {
+			if (autoReadTimerRef.current) {
+				clearTimeout(autoReadTimerRef.current);
+				autoReadTimerRef.current = null;
+			}
+		};
+	}, [isOpen]);
 
 	const {
 		data: announcementsData,
@@ -55,7 +90,11 @@ export const Announcements = () => {
 		},
 	});
 
-	// Flatten all announcements from all pages, with type safety
+	const { data: whatsNewData } = useWhatsNewAnnouncements({
+		enabled: openedOnce,
+	});
+
+	// Flatten all announcements from all pages
 	const allAnnouncements =
 		announcementsData?.pages.flatMap(
 			(page) => (page as { announcements: Announcement[] }).announcements,
@@ -67,18 +106,21 @@ export const Announcements = () => {
 		language,
 	);
 
+	// Only show unread announcements (read ones are hidden)
+	const unreadAnnouncements = processedAnnouncements.filter((a) => !a.read);
+
+	// Process "What's new" announcements
+	const whatsNewAnnouncements = useWhatsNewProcessed(
+		whatsNewData ?? [],
+		language,
+	);
+
 	// Load more announcements when user scrolls to bottom
 	useEffect(() => {
 		if (inView && hasNextPage && !isFetchingNextPage) {
 			fetchNextPage();
 		}
 	}, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-	const handleMarkAsRead = async (id: string) => {
-		markAsReadMutation.mutate({
-			announcementId: id,
-		});
-	};
 
 	const handleMarkAllAsRead = async () => {
 		markAllAsReadMutation.mutate();
@@ -124,7 +166,8 @@ export const Announcements = () => {
 							/>
 						) : isLoading ? (
 							<AnnouncementSkeleton />
-						) : processedAnnouncements.length === 0 ? (
+						) : unreadAnnouncements.length === 0 &&
+							whatsNewAnnouncements.length === 0 ? (
 							<Box p="md" {...testId("announcement-empty-state")}>
 								<Text c="dimmed" ta="center">
 									<Trans>No announcements available</Trans>
@@ -132,23 +175,73 @@ export const Announcements = () => {
 							</Box>
 						) : (
 							<>
-								{processedAnnouncements.map((announcement, index) => (
+								{/* Unread announcements */}
+								{unreadAnnouncements.map((announcement, index) => (
 									<AnnouncementItem
 										key={announcement.id}
 										announcement={announcement}
-										onMarkAsRead={handleMarkAsRead}
 										index={index}
 										ref={
-											index === processedAnnouncements.length - 1
+											index === unreadAnnouncements.length - 1
 												? loadMoreRef
 												: undefined
 										}
 									/>
 								))}
+
 								{isFetchingNextPage && (
 									<Center py="xl">
 										<Loader size="md" />
 									</Center>
+								)}
+
+								{/* Release notes under "View earlier" */}
+								{whatsNewAnnouncements.length > 0 && (
+									<>
+										<Divider
+											my="md"
+											mx="md"
+											label={
+												<UnstyledButton
+													onClick={() =>
+														setWhatsNewExpanded(!whatsNewExpanded)
+													}
+												>
+													<Group gap="xs" align="center">
+														<Sparkle
+															size={16}
+															weight="fill"
+															color="#4169e1"
+														/>
+														<Text
+															size="sm"
+															fw={500}
+															c="#4169e1"
+														>
+															<Trans>Release notes</Trans>
+														</Text>
+														{whatsNewExpanded ? (
+															<CaretUp size={14} color="#4169e1" />
+														) : (
+															<CaretDown size={14} color="#4169e1" />
+														)}
+													</Group>
+												</UnstyledButton>
+											}
+											labelPosition="left"
+										/>
+
+										<Collapse in={whatsNewExpanded}>
+											<Stack gap="0">
+												{whatsNewAnnouncements.map((announcement) => (
+													<WhatsNewItem
+														key={announcement.id}
+														announcement={announcement}
+													/>
+												))}
+											</Stack>
+										</Collapse>
+									</>
 								)}
 							</>
 						)}

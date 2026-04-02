@@ -1,41 +1,42 @@
 {
-  "files.eol": "\n",
-  "debug.internalConsoleOptions": "neverOpen",
-  // py
-  "cursorpyright.analysis.typeCheckingMode": "off",
-  "python.languageServer": "None",
-  "python.defaultInterpreterPath": "./server/.venv/bin/python",
-  "ruff.lint.enable": true,
-  "ruff.configuration": "./server/pyproject.toml",
-  "mypy.runUsingActiveInterpreter": true,
-  "mypy.targets": ["./server/dembrane"],
-  "mypy.configFile": "./server/pyproject.toml",
-  "[python]": {
-    "editor.defaultFormatter": "charliermarsh.ruff",
-    "editor.useTabStops": true,
-    "editor.tabSize": 4,
-    "editor.formatOnSave": true
-  },
-  "python.testing.pytestArgs": ["server"],
-  "python.testing.unittestEnabled": false,
-  "python.testing.pytestEnabled": true,
-  "python.testing.autoTestDiscoverOnSaveEnabled": true,
-  // ts
-  "[typescript]": {
-    "editor.defaultFormatter": "biomejs.biome",
-    "editor.formatOnSave": true,
-    "editor.useTabStops": true
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "biomejs.biome",
-    "editor.useTabStops": true,
-    "editor.formatOnSave": true
-  },
-  "biome.enabled": true,
-  "biome.lsp.bin": "frontend/node_modules/.bin/biome",
-  "biome.configurationPath": "frontend/biome.json",
-  "editor.codeActionsOnSave": {
-    "source.fixAll.biome": "always",
-    "source.action.organizeImports.biome": "always"
-  }
+	"[python]": {
+		"editor.defaultFormatter": "charliermarsh.ruff",
+		"editor.formatOnSave": true,
+		"editor.tabSize": 4,
+		"editor.useTabStops": true
+	},
+	// ts
+	"[typescript]": {
+		"editor.defaultFormatter": "biomejs.biome",
+		"editor.formatOnSave": true,
+		"editor.useTabStops": true
+	},
+	"[typescriptreact]": {
+		"editor.defaultFormatter": "biomejs.biome",
+		"editor.formatOnSave": true,
+		"editor.useTabStops": true
+	},
+	"biome.configurationPath": "frontend/biome.json",
+	"biome.enabled": true,
+	"biome.lsp.bin": "frontend/node_modules/.bin/biome",
+	// py
+	"cursorpyright.analysis.typeCheckingMode": "off",
+	"debug.internalConsoleOptions": "neverOpen",
+	"editor.codeActionsOnSave": {
+		"source.action.organizeImports.biome": "always",
+		"source.fixAll.biome": "always"
+	},
+	"files.eol": "\n",
+	"mypy.configFile": "./server/pyproject.toml",
+	"mypy.runUsingActiveInterpreter": true,
+	"mypy.targets": ["./server/dembrane"],
+	"python.defaultInterpreterPath": "./server/.venv/bin/python",
+	"python.languageServer": "None",
+	"python.testing.autoTestDiscoverOnSaveEnabled": true,
+	"python.testing.pytestArgs": ["server"],
+	"python.testing.pytestEnabled": true,
+	"python.testing.unittestEnabled": false,
+	"ruff.configuration": "./server/pyproject.toml",
+	"ruff.lint.enable": true,
+	"terminal.integrated.enableVisualBell": true
 }
