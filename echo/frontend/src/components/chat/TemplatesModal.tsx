@@ -49,8 +49,8 @@ import {
 } from "@phosphor-icons/react";
 import { IconPin, IconPinFilled } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
-import type { QuickAccessItem } from "./QuickAccessConfigurator";
 import {
+	type QuickAccessItem,
 	encodeTemplateKey,
 	keyToQuickAccess,
 	quickAccessToKey,

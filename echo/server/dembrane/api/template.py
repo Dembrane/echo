@@ -45,19 +45,9 @@ class PromptTemplateUpdateIn(BaseModel):
     icon: Optional[str] = Field(default=None, max_length=50)
 
 
-class PromptTemplatePreferenceOut(BaseModel):
+class QuickAccessItemIn(BaseModel):
+    type: Literal["static", "user"]
     id: str
-    template_type: str
-    static_template_id: Optional[str] = None
-    prompt_template_id: Optional[str] = None
-    sort: int
-
-
-class QuickAccessPreferenceIn(BaseModel):
-    template_type: Literal["static", "user"]
-    static_template_id: Optional[str] = None
-    prompt_template_id: Optional[str] = None
-    sort: int
 
 
 class AiSuggestionsToggleIn(BaseModel):
@@ -191,73 +181,65 @@ async def delete_prompt_template(
 
 
 @TemplateRouter.get("/quick-access")
-async def list_quick_access(
+async def get_quick_access(
     auth: DependencyDirectusSession,
-) -> List[PromptTemplatePreferenceOut]:
+) -> list:
+    """Get the user's quick access preferences as a JSON array."""
     try:
-        items = directus.get_items(
-            "prompt_template_preference",
+        users = directus.get_users(
             {
                 "query": {
-                    "filter": {"user_created": {"_eq": auth.user_id}},
-                    "sort": ["sort"],
-                    "fields": [
-                        "id",
-                        "template_type",
-                        "static_template_id",
-                        "prompt_template_id",
-                        "sort",
-                    ],
+                    "filter": {"id": {"_eq": auth.user_id}},
+                    "fields": ["quick_access_preferences"],
+                    "limit": 1,
                 }
-            },
+            }
         )
-        if not isinstance(items, list):
-            items = []
-        return [PromptTemplatePreferenceOut(**item) for item in items]
+        if not isinstance(users, list) or len(users) == 0:
+            return []
+        prefs = users[0].get("quick_access_preferences")
+        if not isinstance(prefs, list):
+            return []
+        return prefs
     except Exception as e:
-        logger.error(f"Failed to list quick access preferences: {e}")
-        raise HTTPException(status_code=500, detail="Failed to list preferences") from None
+        logger.error(f"Failed to get quick access preferences: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get preferences") from None
 
 
 @TemplateRouter.put("/quick-access")
 async def save_quick_access(
-    body: List[QuickAccessPreferenceIn],
+    body: List[QuickAccessItemIn],
     auth: DependencyDirectusSession,
-) -> List[PromptTemplatePreferenceOut]:
+) -> list:
+    """Save the user's quick access preferences as a JSON array."""
     if len(body) > 5:
         raise HTTPException(status_code=400, detail="Maximum 5 quick access items")
 
+    # Validate no duplicates
+    seen = set()
+    for item in body:
+        key = (item.type, item.id)
+        if key in seen:
+            raise HTTPException(status_code=400, detail=f"Duplicate item: {item.type}:{item.id}")
+        seen.add(key)
+
+    # Validate user templates exist and belong to user
+    for item in body:
+        if item.type == "user":
+            try:
+                template = directus.get_item("prompt_template", item.id)
+                if not template or template.get("user_created") != auth.user_id:
+                    raise HTTPException(status_code=400, detail=f"Template not found: {item.id}")
+            except HTTPException:
+                raise
+            except Exception:
+                raise HTTPException(status_code=400, detail=f"Template not found: {item.id}") from None
+
+    prefs = [{"type": item.type, "id": item.id} for item in body]
+
     try:
-        # Delete existing preferences
-        existing = directus.get_items(
-            "prompt_template_preference",
-            {
-                "query": {
-                    "filter": {"user_created": {"_eq": auth.user_id}},
-                    "fields": ["id"],
-                }
-            },
-        )
-        if isinstance(existing, list):
-            for pref in existing:
-                directus.delete_item("prompt_template_preference", pref["id"])
-
-        # Create new preferences
-        results = []
-        for pref in body:
-            result = directus.create_item(
-                "prompt_template_preference",
-                {
-                    "template_type": pref.template_type,
-                    "static_template_id": pref.static_template_id,
-                    "prompt_template_id": pref.prompt_template_id,
-                    "sort": pref.sort,
-                },
-            )["data"]
-            directus.update_item("prompt_template_preference", result["id"], {"user_created": auth.user_id})
-            results.append(PromptTemplatePreferenceOut(**result))
-
-        return results
+        directus.update_user(auth.user_id, {"quick_access_preferences": prefs})
+        return prefs
     except Exception as e:
         logger.error(f"Failed to save quick access preferences: {e}")
         raise HTTPException(status_code=500, detail="Failed to save preferences") from None

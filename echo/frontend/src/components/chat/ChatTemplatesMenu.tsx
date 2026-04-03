@@ -18,9 +18,8 @@ import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import type { ChatMode } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { MODE_COLORS } from "./ChatModeSelector";
-import type { QuickAccessItem } from "./QuickAccessConfigurator";
 import { TemplatesModal } from "./TemplatesModal";
-import { decodeTemplateKey, encodeTemplateKey } from "./templateKey";
+import { type QuickAccessItem, decodeTemplateKey, encodeTemplateKey } from "./templateKey";
 import {
 	agenticQuickAccessTemplates,
 	quickAccessTemplates,

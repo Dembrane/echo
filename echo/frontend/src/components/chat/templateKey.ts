@@ -64,6 +64,12 @@ export function quickAccessToKey(
 	return encodeTemplateKey(type === "static" ? "dembrane" : "user", id);
 }
 
+export type QuickAccessItem = {
+	type: "static" | "user";
+	id: string;
+	title: string;
+};
+
 /**
  * Convert a canonical key back to QuickAccessItem-style {type, id}.
  * Returns null if key is not a dembrane or user key.

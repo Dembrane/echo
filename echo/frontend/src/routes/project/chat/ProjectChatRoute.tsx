@@ -63,14 +63,11 @@ import {
 	ENABLE_CHAT_AUTO_SELECT,
 } from "@/config";
 import { useCurrentUser } from "@/components/auth/hooks";
-import type { QuickAccessItem } from "@/components/chat/QuickAccessConfigurator";
-import { TemplateRatingPills } from "@/components/chat/TemplateRatingPills";
+import type { QuickAccessItem } from "@/components/chat/templateKey";
 import {
 	useCreateUserTemplate,
 	useDeleteUserTemplate,
-	useMyRatings,
 	useQuickAccessPreferences,
-	useRatePromptTemplate,
 	useSaveQuickAccessPreferences,
 	useToggleAiSuggestions,
 	useUpdateUserTemplate,
@@ -352,8 +349,6 @@ export const ProjectChatRoute = () => {
 	const quickAccessQuery = useQuickAccessPreferences();
 	const saveQuickAccessMutation = useSaveQuickAccessPreferences();
 	const toggleAiSuggestionsMutation = useToggleAiSuggestions();
-	const ratingsQuery = useMyRatings();
-	const rateTemplateMutation = useRatePromptTemplate();
 
 	const hideAiSuggestions =
 		currentUserQuery.data?.hide_ai_suggestions ?? false;
@@ -368,25 +363,17 @@ export const ProjectChatRoute = () => {
 			}));
 		return quickAccessQuery.data
 			.map((pref) => {
-				if (
-					pref.template_type === "static" &&
-					pref.static_template_id
-				) {
-					const found = Templates.find(
-						(t) => t.id === pref.static_template_id,
-					);
+				if (pref.type === "static") {
+					const found = Templates.find((t) => t.id === pref.id);
 					if (found)
 						return {
 							type: "static" as const,
 							id: found.id,
 							title: found.title,
 						};
-				} else if (
-					pref.template_type === "user" &&
-					pref.prompt_template_id
-				) {
+				} else if (pref.type === "user") {
 					const found = userTemplatesQuery.data?.find(
-						(t) => t.id === pref.prompt_template_id,
+						(t) => t.id === pref.id,
 					);
 					if (found)
 						return {
@@ -402,13 +389,9 @@ export const ProjectChatRoute = () => {
 
 	const handleSaveQuickAccess = (items: QuickAccessItem[]) => {
 		saveQuickAccessMutation.mutate(
-			items.map((item, index) => ({
-				template_type: item.type,
-				static_template_id:
-					item.type === "static" ? item.id : null,
-				prompt_template_id:
-					item.type === "user" ? item.id : null,
-				sort: index + 1,
+			items.map((item) => ({
+				type: item.type,
+				id: item.id,
 			})),
 		);
 	};
@@ -652,7 +635,7 @@ export const ProjectChatRoute = () => {
 					{/* get everything except the last message */}
 					{messages &&
 						messages.length > 0 &&
-						messages.slice(0, -1).map((message, idx) => (
+						messages.slice(0, -1).map((message) => (
 							<div key={message.id}>
 								<ChatHistoryMessage
 									// @ts-expect-error chatHistoryQuery.data is not typed
@@ -662,19 +645,6 @@ export const ProjectChatRoute = () => {
 									chatMode={chatMode}
 									onSaveAsTemplate={handleSaveAsTemplate}
 								/>
-								{message.role === "assistant" &&
-									idx > 0 &&
-									// @ts-expect-error _original is not typed
-									messages[idx - 1]?._original?.template_key && (
-										<TemplateRatingPills
-											// @ts-expect-error _original is not typed
-											templateKey={messages[idx - 1]._original.template_key}
-											messageId={message.id}
-											ratings={ratingsQuery.data ?? []}
-											onRate={(p) => rateTemplateMutation.mutate(p)}
-											isRating={rateTemplateMutation.isPending}
-										/>
-									)}
 							</div>
 						))}
 
@@ -748,18 +718,6 @@ export const ProjectChatRoute = () => {
 									setReferenceIds={setReferenceIds}
 									chatMode={chatMode}
 								/>
-								{messages.length >= 2 &&
-									// @ts-expect-error _original is not typed
-									messages[messages.length - 2]?._original?.template_key && (
-										<TemplateRatingPills
-											// @ts-expect-error _original is not typed
-											templateKey={messages[messages.length - 2]._original.template_key}
-											messageId={messages[messages.length - 1].id}
-											ratings={ratingsQuery.data ?? []}
-											onRate={(p) => rateTemplateMutation.mutate(p)}
-											isRating={rateTemplateMutation.isPending}
-										/>
-									)}
 							</div>
 						)}
 
