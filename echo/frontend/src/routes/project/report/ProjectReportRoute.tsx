@@ -545,7 +545,7 @@ function ScheduledReportView({
 						loading={isRescheduling}
 						disabled={!newDate || isRescheduling}
 						fullWidth
-						color="blue"
+						color="primary"
 					>
 						<Trans>Confirm reschedule</Trans>
 					</Button>
@@ -989,7 +989,7 @@ export const ProjectReportRoute = () => {
 													</Text>
 												}
 												checked={data.status === "published"}
-												color="blue"
+												color="primary"
 												size="sm"
 												onChange={(e) => {
 													const isPublishing = e.target.checked;

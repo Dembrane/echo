@@ -255,7 +255,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 							loading={isPending}
 							disabled={isPending || !scheduledDate}
 							fullWidth
-							color="blue"
+							color="primary"
 							{...testId("report-create-button")}
 						>
 							<Trans>Schedule Report</Trans>
@@ -292,7 +292,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 							onClick={() => handleCreate(false)}
 							loading={isPending}
 							disabled={isPending}
-							color="blue"
+							color="primary"
 							style={{ flex: 7 }}
 							{...testId("report-create-button")}
 						>

@@ -146,7 +146,7 @@ export const UpdateReportModalButton = ({
 			>
 				<Button
 					variant="filled"
-					color="blue"
+					color="primary"
 					onClick={handleOpen}
 					leftSection={<IconPencil size={16} />}
 					rightSection={
@@ -271,7 +271,7 @@ export const UpdateReportModalButton = ({
 								loading={isPending}
 								disabled={isPending || !scheduledDate}
 								fullWidth
-								color="blue"
+								color="primary"
 							>
 								<Trans>Schedule Report</Trans>
 							</Button>
@@ -308,7 +308,7 @@ export const UpdateReportModalButton = ({
 								onClick={() => handleSubmit(false)}
 								loading={isPending}
 								disabled={isPending}
-								color="blue"
+								color="primary"
 								style={{ flex: 7 }}
 								{...testId("report-generate-button")}
 							>
