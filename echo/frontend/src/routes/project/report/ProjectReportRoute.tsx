@@ -347,7 +347,7 @@ function VersionItem({
 							fw={500}
 							c={
 								report.status === "published"
-									? "primary.6"
+									? "green.8"
 									: report.status === "scheduled"
 										? "yellow.7"
 										: report.status === "draft"
