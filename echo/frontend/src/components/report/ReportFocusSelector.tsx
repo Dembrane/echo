@@ -136,10 +136,10 @@ export const ReportFocusSelector = ({
 							style={{
 								borderRadius: 20,
 								border: isActive
-									? "1.5px solid var(--mantine-color-teal-5)"
+									? "1.5px solid var(--mantine-color-primary-5)"
 									: "1.5px solid var(--mantine-color-gray-3)",
 								backgroundColor: isActive
-									? "var(--mantine-color-teal-0)"
+									? "var(--mantine-color-primary-0)"
 									: undefined,
 								transition: "all 0.15s ease",
 							}}
@@ -148,12 +148,12 @@ export const ReportFocusSelector = ({
 								{isActive && (
 									<IconCheck
 										size={12}
-										color="var(--mantine-color-teal-6)"
+										color="var(--mantine-color-primary-6)"
 									/>
 								)}
 								<Text
 									size="xs"
-									c={isActive ? "teal.8" : undefined}
+									c={isActive ? "primary.8" : undefined}
 									fw={isActive ? 500 : 400}
 								>
 									{getLabel(option.labels, language)}
@@ -171,7 +171,7 @@ export const ReportFocusSelector = ({
 					style={{
 						borderRadius: 20,
 						border: showCustom
-							? "1.5px dashed var(--mantine-color-teal-5)"
+							? "1.5px dashed var(--mantine-color-primary-5)"
 							: "1.5px dashed var(--mantine-color-gray-5)",
 						transition: "all 0.15s ease",
 					}}
@@ -181,13 +181,13 @@ export const ReportFocusSelector = ({
 							size={12}
 							color={
 								showCustom
-									? "var(--mantine-color-teal-6)"
+									? "var(--mantine-color-primary-6)"
 									: "var(--mantine-color-gray-6)"
 							}
 						/>
 						<Text
 							size="xs"
-							c={showCustom ? "teal.7" : "gray.7"}
+							c={showCustom ? "primary.7" : "gray.7"}
 							fw={showCustom ? 500 : 400}
 						>
 							<Trans>Or write your own</Trans>

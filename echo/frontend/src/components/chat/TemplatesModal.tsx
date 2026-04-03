@@ -108,7 +108,7 @@ const SourceBadge = ({ source }: { source: "dembrane" }) => (
 	<Badge
 		size="xs"
 		variant="light"
-		color="teal"
+		color="primary"
 		styles={{ root: { textTransform: "lowercase" } }}
 	>
 		{source}
