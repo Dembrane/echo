@@ -136,11 +136,11 @@ class SkipRetryOnUnrecoverableError(dramatiq.Middleware):
     def _load_domain_exceptions(cls) -> None:
         if cls.UNRECOVERABLE_DOMAIN:
             return
-        from dembrane.service.conversation import (
-            ConversationChunkNotFoundException,
-            ConversationNotFoundException,
-        )
         from dembrane.service.project import ProjectNotFoundException
+        from dembrane.service.conversation import (
+            ConversationNotFoundException,
+            ConversationChunkNotFoundException,
+        )
 
         cls.UNRECOVERABLE_DOMAIN = (
             ConversationChunkNotFoundException,
