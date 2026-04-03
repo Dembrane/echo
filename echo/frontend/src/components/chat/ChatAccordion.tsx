@@ -13,6 +13,7 @@ import {
 	Title,
 	Tooltip,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
 	IconDotsVertical,
 	IconMessageCircle,
@@ -26,6 +27,8 @@ import { useInView } from "react-intersection-observer";
 import { useParams } from "react-router";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
+import { ConfirmModal } from "../common/ConfirmModal";
+import { InputModal } from "../common/InputModal";
 import { NavigationButton } from "../common/NavigationButton";
 import { MODE_COLORS } from "./ChatModeSelector";
 import { ChatSkeleton } from "./ChatSkeleton";
@@ -104,62 +107,88 @@ export const ChatAccordionItemMenu = ({
 	const deleteChatMutation = useDeleteChatMutation();
 	const updateChatMutation = useUpdateChatMutation();
 	const navigate = useI18nNavigate();
+	const [
+		deleteConfirmOpened,
+		{ open: openDeleteConfirm, close: closeDeleteConfirm },
+	] = useDisclosure(false);
+	const [renameOpened, { open: openRename, close: closeRename }] =
+		useDisclosure(false);
 
 	return (
-		<Menu shadow="md" position="right" {...testId("chat-item-menu")}>
-			<Menu.Target>
-				<ActionIcon
-					variant="transparent"
-					c="gray"
-					size={size}
-					className="flex items-center justify-center"
-					{...testId("chat-item-menu-button")}
-				>
-					<IconDotsVertical />
-				</ActionIcon>
-			</Menu.Target>
+		<>
+			<Menu shadow="md" position="right" {...testId("chat-item-menu")}>
+				<Menu.Target>
+					<ActionIcon
+						variant="transparent"
+						c="gray"
+						size={size}
+						className="flex items-center justify-center"
+						{...testId("chat-item-menu-button")}
+					>
+						<IconDotsVertical />
+					</ActionIcon>
+				</Menu.Target>
 
-			<Menu.Dropdown>
-				<Stack gap="xs">
-					<Menu.Item
-						leftSection={<IconPencil />}
-						disabled={deleteChatMutation.isPending}
-						onClick={() => {
-							const newName = prompt(
-								t`Enter new name for the chat:`,
-								chat.name ?? "",
-							);
-							if (newName) {
-								updateChatMutation.mutate({
-									chatId: chat.id ?? "",
-									payload: { name: newName },
-									projectId: (chat.project_id as string) ?? "",
-								});
-							}
-						}}
-						{...testId("chat-item-menu-rename")}
-					>
-						<Trans id="project.sidebar.chat.rename">Rename</Trans>
-					</Menu.Item>
-					<Menu.Item
-						leftSection={<IconTrash />}
-						disabled={deleteChatMutation.isPending}
-						onClick={() => {
-							if (confirm("Are you sure you want to delete this chat?")) {
-								deleteChatMutation.mutate({
-									chatId: chat.id ?? "",
-									projectId: (chat.project_id as string) ?? "",
-								});
-								navigate(`/projects/${chat.project_id}/overview`);
-							}
-						}}
-						{...testId("chat-item-menu-delete")}
-					>
-						<Trans id="project.sidebar.chat.delete">Delete</Trans>
-					</Menu.Item>
-				</Stack>
-			</Menu.Dropdown>
-		</Menu>
+				<Menu.Dropdown>
+					<Stack gap="xs">
+						<Menu.Item
+							leftSection={<IconPencil />}
+							disabled={deleteChatMutation.isPending}
+							onClick={openRename}
+							{...testId("chat-item-menu-rename")}
+						>
+							<Trans id="project.sidebar.chat.rename">Rename</Trans>
+						</Menu.Item>
+						<Menu.Item
+							leftSection={<IconTrash />}
+							disabled={deleteChatMutation.isPending}
+							onClick={openDeleteConfirm}
+							{...testId("chat-item-menu-delete")}
+						>
+							<Trans id="project.sidebar.chat.delete">Delete</Trans>
+						</Menu.Item>
+					</Stack>
+				</Menu.Dropdown>
+			</Menu>
+
+			<InputModal
+				opened={renameOpened}
+				onClose={closeRename}
+				title={t`Rename chat`}
+				label={<Trans>Chat name</Trans>}
+				initialValue={chat.name ?? ""}
+				confirmLabel={<Trans>Save</Trans>}
+				loading={updateChatMutation.isPending}
+				onConfirm={(newName) => {
+					updateChatMutation.mutate({
+						chatId: chat.id ?? "",
+						payload: { name: newName },
+						projectId: (chat.project_id as string) ?? "",
+					});
+					closeRename();
+				}}
+				data-testid="chat-rename-modal"
+			/>
+
+			<ConfirmModal
+				opened={deleteConfirmOpened}
+				onClose={closeDeleteConfirm}
+				title={t`Delete chat`}
+				message={t`Are you sure you want to delete this chat? This action cannot be undone.`}
+				confirmLabel={<Trans>Delete</Trans>}
+				confirmColor="red"
+				loading={deleteChatMutation.isPending}
+				onConfirm={() => {
+					deleteChatMutation.mutate({
+						chatId: chat.id ?? "",
+						projectId: (chat.project_id as string) ?? "",
+					});
+					navigate(`/projects/${chat.project_id}/overview`);
+					closeDeleteConfirm();
+				}}
+				data-testid="chat-delete-modal"
+			/>
+		</>
 	);
 };
 

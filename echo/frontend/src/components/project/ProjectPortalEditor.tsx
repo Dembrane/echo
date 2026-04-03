@@ -11,7 +11,6 @@ import {
 	Divider,
 	Group,
 	InputDescription,
-	Modal,
 	NativeSelect,
 	Paper,
 	Stack,
@@ -41,6 +40,7 @@ import { Resizable } from "re-resizable";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -1513,49 +1513,36 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												/>
 											)}
 										/>
-										<Modal
+										<ConfirmModal
 											opened={anonymizeModalOpened}
 											onClose={anonymizeModalHandlers.close}
 											title={t`Turn off anonymization?`}
-											centered
-											size="sm"
-										>
-											<Stack gap="md">
-												<Text size="sm">
-													<Trans id="portal.anonymization.disable.warning">
-														Turning off anonymization while recordings are
-														ongoing may have unintended consequences. Active
-														conversations will also be affected mid-recording.
-														Please use this with caution.
-													</Trans>
-												</Text>
-												<Group justify="flex-end" gap="sm">
-													<Button
-														variant="subtle"
-														onClick={anonymizeModalHandlers.close}
-													>
-														<Trans>Cancel</Trans>
-													</Button>
-													<Button
-														color="red"
-														onClick={() => {
-															setValue("anonymize_transcripts", false, {
-																shouldDirty: true,
-															});
-															anonymizeModalHandlers.close();
-															dispatchAutoSave({
-																...getValues(),
-																anonymize_transcripts: false,
-															} as ProjectPortalFormValues);
-														}}
-													>
-														<Trans id="portal.anonymization.disable.confirm">
-															Turn off
-														</Trans>
-													</Button>
-												</Group>
-											</Stack>
-										</Modal>
+											message={
+												<Trans id="portal.anonymization.disable.warning">
+													Turning off anonymization while recordings are ongoing
+													may have unintended consequences. Active conversations
+													will also be affected mid-recording. Please use this
+													with caution.
+												</Trans>
+											}
+											confirmLabel={
+												<Trans id="portal.anonymization.disable.confirm">
+													Turn off
+												</Trans>
+											}
+											confirmColor="red"
+											onConfirm={() => {
+												setValue("anonymize_transcripts", false, {
+													shouldDirty: true,
+												});
+												anonymizeModalHandlers.close();
+												dispatchAutoSave({
+													...getValues(),
+													anonymize_transcripts: false,
+												} as ProjectPortalFormValues);
+											}}
+											data-testid="anonymize-disable-modal"
+										/>
 									</Stack>
 
 									<Stack gap="md">
@@ -1738,37 +1725,17 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 					updateCustomTopicMutation.isPending
 				}
 			/>
-			<Modal
+			<ConfirmModal
 				opened={deleteConfirmKey !== null}
 				onClose={() => setDeleteConfirmKey(null)}
-				title={<Trans>Delete Custom Topic</Trans>}
-				size="sm"
-				radius="md"
-				padding="xl"
-				{...testId("custom-topic-delete-confirm-modal")}
-			>
-				<Stack gap="md">
-					<Text size="sm">
-						<Trans>
-							Are you sure you want to delete this custom topic? This cannot be
-							undone.
-						</Trans>
-					</Text>
-					<Group justify="flex-end">
-						<Button variant="subtle" onClick={() => setDeleteConfirmKey(null)}>
-							<Trans>Cancel</Trans>
-						</Button>
-						<Button
-							loading={deleteCustomTopicMutation.isPending}
-							onClick={confirmDeleteCustomTopic}
-							color="red"
-							{...testId("custom-topic-delete-confirm")}
-						>
-							<Trans>Delete</Trans>
-						</Button>
-					</Group>
-				</Stack>
-			</Modal>
+				title={t`Delete custom topic`}
+				message={t`Are you sure you want to delete this custom topic? This cannot be undone.`}
+				confirmLabel={<Trans>Delete</Trans>}
+				confirmColor="red"
+				loading={deleteCustomTopicMutation.isPending}
+				onConfirm={confirmDeleteCustomTopic}
+				data-testid="custom-topic-delete-modal"
+			/>
 		</Box>
 	);
 };

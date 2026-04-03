@@ -234,6 +234,16 @@ Production uses webhook mode (`ASSEMBLYAI_WEBHOOK_URL`); polling is only a fallb
 
 The `agent/` directory contains the agentic chat service (LangGraph-based). It runs as a separate FastAPI service on port 8001. Agentic chat streams via `POST /api/agentic/runs/{run_id}/stream` — no Dramatiq dispatch. See `agent/README.md`.
 
+## Directus File Cleanup
+
+When removing a file reference from a user record (e.g. avatar, whitelabel logo), always delete the orphaned Directus file after clearing the reference. Pattern:
+
+1. Fetch the current file ID from the user record
+2. Update the user record to set the field to `None`
+3. Delete the file via `directus.delete_file(file_id)`
+
+Wrap all blocking Directus SDK calls in `run_in_thread_pool` (from `dembrane.async_helpers`) when used in async endpoints. See `server/dembrane/api/user_settings.py` for reference implementations in `remove_avatar` and `remove_whitelabel_logo`.
+
 ## Tech Debt / Known Issues
 - Some mypy errors in `llm_router.py` and `settings.py` (pre-existing, non-blocking)
 

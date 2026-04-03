@@ -15,6 +15,7 @@ import { IconTrash, IconUpload, IconUser } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { ImageCropModal } from "@/components/common/ImageCropModal";
 import { UserAvatar } from "@/components/common/UserAvatar";
 import { API_BASE_URL } from "@/config";
@@ -37,26 +38,27 @@ export const AccountSettingsCard = () => {
 	const [cropSrc, setCropSrc] = useState<string | null>(null);
 	const [cropOpened, { open: openCrop, close: closeCrop }] =
 		useDisclosure(false);
+	const [
+		removeConfirmOpened,
+		{ open: openRemoveConfirm, close: closeRemoveConfirm },
+	] = useDisclosure(false);
 
 	const updateNameMutation = useMutation({
 		mutationFn: async (firstName: string) => {
-			const response = await fetch(
-				`${API_BASE_URL}/user-settings/name`,
-				{
-					body: JSON.stringify({ first_name: firstName }),
-					credentials: "include",
-					headers: { "Content-Type": "application/json" },
-					method: "PATCH",
-				},
-			);
+			const response = await fetch(`${API_BASE_URL}/user-settings/name`, {
+				body: JSON.stringify({ first_name: firstName }),
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				method: "PATCH",
+			});
 			if (!response.ok) throw new Error("Failed to update name");
+		},
+		onError: () => {
+			toast.error(t`Failed to update name`);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["users", "me"] });
 			toast.success(t`Name updated`);
-		},
-		onError: () => {
-			toast.error(t`Failed to update name`);
 		},
 	});
 
@@ -65,43 +67,37 @@ export const AccountSettingsCard = () => {
 			const formData = new FormData();
 			formData.append("file", blob, "avatar.png");
 
-			const response = await fetch(
-				`${API_BASE_URL}/user-settings/avatar`,
-				{
-					body: formData,
-					credentials: "include",
-					method: "POST",
-				},
-			);
+			const response = await fetch(`${API_BASE_URL}/user-settings/avatar`, {
+				body: formData,
+				credentials: "include",
+				method: "POST",
+			});
 			if (!response.ok) throw new Error("Failed to upload avatar");
 			return response.json();
+		},
+		onError: () => {
+			toast.error(t`Failed to upload avatar`);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["users", "me"] });
 			toast.success(t`Avatar updated`);
 		},
-		onError: () => {
-			toast.error(t`Failed to upload avatar`);
-		},
 	});
 
 	const removeAvatarMutation = useMutation({
 		mutationFn: async () => {
-			const response = await fetch(
-				`${API_BASE_URL}/user-settings/avatar`,
-				{
-					credentials: "include",
-					method: "DELETE",
-				},
-			);
+			const response = await fetch(`${API_BASE_URL}/user-settings/avatar`, {
+				credentials: "include",
+				method: "DELETE",
+			});
 			if (!response.ok) throw new Error("Failed to remove avatar");
+		},
+		onError: () => {
+			toast.error(t`Failed to remove avatar`);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["users", "me"] });
 			toast.success(t`Avatar removed`);
-		},
-		onError: () => {
-			toast.error(t`Failed to remove avatar`);
 		},
 	});
 
@@ -159,7 +155,7 @@ export const AccountSettingsCard = () => {
 										size="compact-sm"
 										leftSection={<IconTrash size={14} />}
 										loading={removeAvatarMutation.isPending}
-										onClick={() => removeAvatarMutation.mutate()}
+										onClick={openRemoveConfirm}
 									>
 										<Trans>Remove</Trans>
 									</Button>
@@ -180,18 +176,12 @@ export const AccountSettingsCard = () => {
 					/>
 
 					{/* Email (read-only) */}
-					<TextInput
-						label={t`Email`}
-						value={user?.email ?? ""}
-						disabled
-					/>
+					<TextInput label={t`Email`} value={user?.email ?? ""} disabled />
 
 					{hasNameChanged && (
 						<Group>
 							<Button
-								onClick={() =>
-									updateNameMutation.mutate(name.trim())
-								}
+								onClick={() => updateNameMutation.mutate(name.trim())}
 								loading={updateNameMutation.isPending}
 								disabled={!name.trim()}
 							>
@@ -201,6 +191,21 @@ export const AccountSettingsCard = () => {
 					)}
 				</Stack>
 			</Card>
+
+			<ConfirmModal
+				opened={removeConfirmOpened}
+				onClose={closeRemoveConfirm}
+				title={t`Remove avatar`}
+				data-testid="avatar-remove-modal"
+				message={t`Are you sure you want to remove your avatar?`}
+				confirmLabel={<Trans>Remove</Trans>}
+				confirmColor="red"
+				loading={removeAvatarMutation.isPending}
+				onConfirm={() => {
+					removeAvatarMutation.mutate();
+					closeRemoveConfirm();
+				}}
+			/>
 
 			{cropSrc && (
 				<ImageCropModal
