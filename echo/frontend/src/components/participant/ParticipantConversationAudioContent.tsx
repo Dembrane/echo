@@ -138,6 +138,7 @@ export const ParticipantConversationAudioContent = () => {
 					projectId={projectId ?? ""}
 					conversationId={conversationId ?? ""}
 					isRecording={isRecording}
+					isAnonymized={conversationQuery.data?.is_anonymized ?? false}
 				/>
 			)}
 

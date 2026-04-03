@@ -316,7 +316,7 @@ function VersionItem({
 			style={{
 				backgroundColor: isActive ? "var(--mantine-color-gray-1)" : undefined,
 				borderLeft: isActive
-					? "3px solid var(--mantine-color-teal-5)"
+					? "3px solid var(--mantine-color-primary-6)"
 					: "3px solid transparent",
 				borderRadius: 8,
 			}}
@@ -333,21 +333,16 @@ function VersionItem({
 					{title}
 				</Text>
 
-				{/* Meta row: language first, then status, then time */}
+				{/* Meta row: status, time, language */}
 				<Group gap={6} wrap="nowrap">
 					<StatusDot status={report.status} size={7} />
-					{langTag && (
-						<Text size="10px" c="dimmed" fw={600} style={{ flexShrink: 0 }}>
-							{langTag}
-						</Text>
-					)}
 					{!hideBadge && (
 						<Text
 							size="10px"
 							fw={500}
 							c={
 								report.status === "published"
-									? "teal.6"
+									? "green.8"
 									: report.status === "scheduled"
 										? "yellow.7"
 										: report.status === "draft"
@@ -370,6 +365,16 @@ function VersionItem({
 							</Text>
 							<Text size="10px" c="dimmed" truncate style={{ flexShrink: 1 }}>
 								{timeAgo}
+							</Text>
+						</>
+					)}
+					{langTag && (
+						<>
+							<Text size="10px" c="dimmed">
+								·
+							</Text>
+							<Text size="10px" c="dimmed" fw={600} style={{ flexShrink: 0 }}>
+								{langTag}
 							</Text>
 						</>
 					)}
@@ -545,7 +550,7 @@ function ScheduledReportView({
 						loading={isRescheduling}
 						disabled={!newDate || isRescheduling}
 						fullWidth
-						color="teal"
+						color="primary"
 					>
 						<Trans>Confirm reschedule</Trans>
 					</Button>
@@ -989,7 +994,7 @@ export const ProjectReportRoute = () => {
 													</Text>
 												}
 												checked={data.status === "published"}
-												color="teal"
+												color="primary"
 												size="sm"
 												onChange={(e) => {
 													const isPublishing = e.target.checked;
@@ -1064,7 +1069,7 @@ export const ProjectReportRoute = () => {
 												<Box>
 													<Button
 														variant={copiedLink ? "filled" : "default"}
-														color={copiedLink ? "teal" : undefined}
+														color={copiedLink ? "primary" : undefined}
 														size="compact-sm"
 														leftSection={<IconLink size={14} />}
 														onClick={() => {

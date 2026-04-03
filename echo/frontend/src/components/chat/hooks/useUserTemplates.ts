@@ -2,12 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	createPromptTemplate,
 	deletePromptTemplate,
-	deletePromptTemplateRating,
-	getMyRatings,
 	getQuickAccessPreferences,
 	getPromptTemplates,
 	type PromptTemplateResponse,
-	ratePromptTemplate,
+	type QuickAccessPreference,
 	saveQuickAccessPreferences,
 	toggleAiSuggestions,
 	updatePromptTemplate,
@@ -70,7 +68,7 @@ export const useDeleteUserTemplate = () => {
 				["prompt_templates"],
 				(old) => old?.filter((t) => t.id !== deletedId) ?? [],
 			);
-			queryClient.invalidateQueries({ queryKey: ["prompt_template_preferences"] });
+			queryClient.invalidateQueries({ queryKey: ["quick_access_preferences"] });
 			await queryClient.refetchQueries({ queryKey: ["prompt_templates"] });
 		},
 	});
@@ -81,87 +79,34 @@ export const useDeleteUserTemplate = () => {
 export const useQuickAccessPreferences = () => {
 	return useQuery({
 		queryFn: getQuickAccessPreferences,
-		queryKey: ["prompt_template_preferences"],
+		queryKey: ["quick_access_preferences"],
 	});
 };
 
 export const useSaveQuickAccessPreferences = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (
-			preferences: Array<{
-				template_type: "static" | "user";
-				static_template_id?: string | null;
-				prompt_template_id?: string | null;
-				sort: number;
-			}>,
-		) => saveQuickAccessPreferences(preferences),
+		mutationFn: (preferences: QuickAccessPreference[]) =>
+			saveQuickAccessPreferences(preferences),
 		onMutate: async (newPreferences) => {
 			await queryClient.cancelQueries({
-				queryKey: ["prompt_template_preferences"],
+				queryKey: ["quick_access_preferences"],
 			});
-			const previous = queryClient.getQueryData(["prompt_template_preferences"]);
-			queryClient.setQueryData(
-				["prompt_template_preferences"],
-				newPreferences.map((p, i) => ({
-					id: `optimistic-${i}`,
-					template_type: p.template_type,
-					static_template_id: p.static_template_id ?? null,
-					prompt_template_id: p.prompt_template_id ?? null,
-					sort: p.sort,
-				})),
-			);
+			const previous = queryClient.getQueryData(["quick_access_preferences"]);
+			queryClient.setQueryData(["quick_access_preferences"], newPreferences);
 			return { previous };
 		},
 		onError: (_err, _vars, context) => {
 			if (context?.previous) {
 				queryClient.setQueryData(
-					["prompt_template_preferences"],
+					["quick_access_preferences"],
 					context.previous,
 				);
 			}
 		},
 		onSettled: () => {
 			queryClient.invalidateQueries({
-				queryKey: ["prompt_template_preferences"],
-			});
-		},
-	});
-};
-
-// ── Ratings ──
-
-export const useMyRatings = () => {
-	return useQuery({
-		queryFn: getMyRatings,
-		queryKey: ["prompt_template_ratings"],
-	});
-};
-
-export const useRatePromptTemplate = () => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: (payload: {
-			prompt_template_id: string;
-			rating: 1 | 2;
-			chat_message_id?: string | null;
-		}) => ratePromptTemplate(payload),
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["prompt_template_ratings"],
-			});
-			queryClient.invalidateQueries({ queryKey: ["community_stars"] });
-		},
-	});
-};
-
-export const useDeleteRating = () => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: (ratingId: string) => deletePromptTemplateRating(ratingId),
-		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["prompt_template_ratings"],
+				queryKey: ["quick_access_preferences"],
 			});
 		},
 	});

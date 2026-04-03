@@ -1772,12 +1772,11 @@ export type PromptTemplateResponse = {
 	date_updated: string | null;
 };
 
-export type PromptTemplatePreferenceResponse = {
+// -- Quick-Access Preferences --
+
+export type QuickAccessPreference = {
+	type: "static" | "user";
 	id: string;
-	template_type: "static" | "user";
-	static_template_id: string | null;
-	prompt_template_id: string | null;
-	sort: number;
 };
 
 export const getPromptTemplates = async (): Promise<
@@ -1815,23 +1814,14 @@ export const deletePromptTemplate = async (
 	await api.delete(`/templates/prompt-templates/${templateId}`);
 };
 
-export const getQuickAccessPreferences = async (): Promise<
-	PromptTemplatePreferenceResponse[]
-> => {
-	return api.get<unknown, PromptTemplatePreferenceResponse[]>(
-		"/templates/quick-access",
-	);
+export const getQuickAccessPreferences = async (): Promise<QuickAccessPreference[]> => {
+	return api.get<unknown, QuickAccessPreference[]>("/templates/quick-access");
 };
 
 export const saveQuickAccessPreferences = async (
-	preferences: Array<{
-		template_type: "static" | "user";
-		static_template_id?: string | null;
-		prompt_template_id?: string | null;
-		sort: number;
-	}>,
-): Promise<PromptTemplatePreferenceResponse[]> => {
-	return api.put<unknown, PromptTemplatePreferenceResponse[]>(
+	preferences: QuickAccessPreference[],
+): Promise<QuickAccessPreference[]> => {
+	return api.put<unknown, QuickAccessPreference[]>(
 		"/templates/quick-access",
 		preferences,
 	);
@@ -1844,113 +1834,4 @@ export const toggleAiSuggestions = async (
 		"/templates/ai-suggestions",
 		{ hide_ai_suggestions },
 	);
-};
-
-// ── Community Marketplace ──
-
-export type CommunityTemplateResponse = {
-	id: string;
-	title: string;
-	description: string | null;
-	content: string;
-	tags: string[] | null;
-	language: string | null;
-	author_display_name: string | null;
-	star_count: number;
-	use_count: number;
-	date_created: string | null;
-	is_own: boolean;
-};
-
-export type CommunityTemplateParams = {
-	search?: string;
-	tag?: string;
-	language?: string;
-	sort?: "newest" | "most_starred" | "most_used";
-	page?: number;
-	limit?: number;
-};
-
-export const getCommunityTemplates = async (
-	params: CommunityTemplateParams = {},
-): Promise<CommunityTemplateResponse[]> => {
-	return api.get<unknown, CommunityTemplateResponse[]>("/templates/community", {
-		params,
-	});
-};
-
-export const getMyCommunityStars = async (): Promise<string[]> => {
-	return api.get<unknown, string[]>("/templates/community/my-stars");
-};
-
-export const publishTemplate = async (
-	templateId: string,
-	payload: {
-		description?: string | null;
-		tags?: string[] | null;
-		language?: string | null;
-		is_anonymous?: boolean;
-	},
-): Promise<PromptTemplateResponse> => {
-	return api.post<unknown, PromptTemplateResponse>(
-		`/templates/prompt-templates/${templateId}/publish`,
-		payload,
-	);
-};
-
-export const unpublishTemplate = async (
-	templateId: string,
-): Promise<PromptTemplateResponse> => {
-	return api.post<unknown, PromptTemplateResponse>(
-		`/templates/prompt-templates/${templateId}/unpublish`,
-	);
-};
-
-export const toggleTemplateStar = async (
-	templateId: string,
-): Promise<{ starred: boolean; star_count: number }> => {
-	return api.post<unknown, { starred: boolean; star_count: number }>(
-		`/templates/prompt-templates/${templateId}/star`,
-	);
-};
-
-export const copyTemplate = async (
-	templateId: string,
-): Promise<PromptTemplateResponse> => {
-	return api.post<unknown, PromptTemplateResponse>(
-		`/templates/prompt-templates/${templateId}/copy`,
-	);
-};
-
-// ── Prompt Template Ratings ──
-
-export type PromptTemplateRatingResponse = {
-	id: string;
-	prompt_template_id: string;
-	rating: number; // 1 = thumbs down, 2 = thumbs up
-	chat_message_id: string | null;
-	date_created: string | null;
-};
-
-export const ratePromptTemplate = async (payload: {
-	prompt_template_id: string;
-	rating: 1 | 2;
-	chat_message_id?: string | null;
-}): Promise<PromptTemplateRatingResponse> => {
-	return api.post<unknown, PromptTemplateRatingResponse>(
-		"/templates/ratings",
-		payload,
-	);
-};
-
-export const deletePromptTemplateRating = async (
-	ratingId: string,
-): Promise<void> => {
-	await api.delete(`/templates/ratings/${ratingId}`);
-};
-
-export const getMyRatings = async (): Promise<
-	PromptTemplateRatingResponse[]
-> => {
-	return api.get<unknown, PromptTemplateRatingResponse[]>("/templates/ratings");
 };

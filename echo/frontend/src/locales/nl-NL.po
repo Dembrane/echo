@@ -205,6 +205,11 @@ msgstr "Welkom terug"
 #~ msgstr "Als je dit goedkeurt, helpt dat om het proces te verbeteren"
 
 #. js-lingui-explicit-id
+#: src/components/participant/ParticipantBody.tsx:202
+#~ msgid "participant.anonymization.notice"
+#~ msgstr "Je transcriptie wordt geanonimiseerd en je host kan niet naar je opname luisteren."
+
+#. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:237
 msgid "library.generate.duration.message"
 msgstr "Het genereren van een bibliotheek kan tot een uur duren"
@@ -256,10 +261,10 @@ msgstr "{0, plural, one {Tag:} other {Tags:}}"
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: selectedOption.transitionDescription
 #. placeholder {0}: selectedOption.transitionMessage
-#: src/routes/project/chat/ProjectChatRoute.tsx:737
+#: src/routes/project/chat/ProjectChatRoute.tsx:686
 #: src/components/settings/FontSettingsCard.tsx:49
 #: src/components/settings/FontSettingsCard.tsx:51
-#: src/components/project/ProjectPortalEditor.tsx:601
+#: src/components/project/ProjectPortalEditor.tsx:602
 #: src/components/chat/References.tsx:29
 msgid "{0}"
 msgstr "{0}"
@@ -289,7 +294,7 @@ msgid "select.all.modal.not.added.count"
 msgstr "{0} niet toegevoegd"
 
 #. placeholder {0}: views?.total ?? 0
-#: src/routes/project/report/ProjectReportRoute.tsx:1179
+#: src/routes/project/report/ProjectReportRoute.tsx:1184
 msgid "{0} views"
 msgstr "{0} weergaven"
 
@@ -365,7 +370,7 @@ msgstr "0 Aspecten"
 #~ msgid "1 included"
 #~ msgstr "1 opgenomen"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1177
+#: src/routes/project/report/ProjectReportRoute.tsx:1182
 msgid "1 view"
 msgstr "1 weergave"
 
@@ -393,7 +398,7 @@ msgstr "3. Uw systeem ontvangt de gegevens en kan erop reageren (bijvoorbeeld op
 msgid "A friendly name to identify this webhook"
 msgstr "Een vriendelijke naam om dit webhook te identificeren"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:522
+#: src/routes/project/report/ProjectReportRoute.tsx:527
 msgid "A new report will be automatically generated and published at the scheduled time."
 msgstr "Er wordt automatisch een nieuw rapport gegenereerd en gepubliceerd op het geplande tijdstip."
 
@@ -481,8 +486,8 @@ msgstr "Trefwoorden toevoegen"
 #: src/components/chat/TemplatesModal.tsx:680
 #: src/components/chat/CommunityTemplateCard.tsx:74
 #: src/components/chat/CommunityTemplateCard.tsx:84
-msgid "Add to favorites"
-msgstr "Toevoegen aan favorieten"
+#~ msgid "Add to favorites"
+#~ msgstr "Toevoegen aan favorieten"
 
 #. js-lingui-explicit-id
 #: src/components/conversation/AddTagFilterModal.tsx:84
@@ -497,7 +502,7 @@ msgstr "Toevoegen aan filters"
 msgid "Add to this chat"
 msgstr "Voeg toe aan dit gesprek"
 
-#: src/components/project/ProjectPortalEditor.tsx:1233
+#: src/components/project/ProjectPortalEditor.tsx:1234
 msgid "Add Topic"
 msgstr "Onderwerp toevoegen"
 
@@ -571,7 +576,7 @@ msgstr "Pas de basislettergrootte voor de interface aan"
 msgid "Advanced"
 msgstr "Geavanceerd"
 
-#: src/components/project/ProjectPortalEditor.tsx:764
+#: src/components/project/ProjectPortalEditor.tsx:765
 msgid "Advanced (Tips and best practices)"
 msgstr "Geavanceerd (Tips en best practices)"
 
@@ -579,7 +584,7 @@ msgstr "Geavanceerd (Tips en best practices)"
 #~ msgid "Advanced (Tips and tricks)"
 #~ msgstr "Geavanceerd (Tips en trucs)"
 
-#: src/components/project/ProjectPortalEditor.tsx:1437
+#: src/components/project/ProjectPortalEditor.tsx:1438
 msgid "Advanced Settings"
 msgstr "Geavanceerde instellingen"
 
@@ -600,8 +605,8 @@ msgstr "Agentisch Gesprek"
 #~ msgstr "AI Assistent"
 
 #: src/components/chat/CommunityTab.tsx:76
-msgid "All"
-msgstr "Alles"
+#~ msgid "All"
+#~ msgstr "Alles"
 
 #: src/components/settings/AuditLogsCard.tsx:465
 msgid "All actions"
@@ -632,7 +637,7 @@ msgstr "Alle bestanden zijn succesvol geüpload."
 #~ msgid "All templates"
 #~ msgstr "Alle templates"
 
-#: src/components/chat/TemplatesModal.tsx:990
+#: src/components/chat/TemplatesModal.tsx:797
 msgid "All Templates"
 msgstr "Alle sjablonen"
 
@@ -654,7 +659,7 @@ msgstr "Al in context"
 
 #. placeholder {0}: participantCount !== undefined ? participantCount : t`loading...`
 #. placeholder {1}: participantCount === 1 ? "" : "s"
-#: src/routes/project/report/ProjectReportRoute.tsx:1339
+#: src/routes/project/report/ProjectReportRoute.tsx:1344
 msgid "An email notification will be sent to {0} participant{1}. Do you want to proceed?"
 msgstr "Een e-mail melding wordt naar {0} deelnemer{1} verstuurd. Wilt u doorgaan?"
 
@@ -665,7 +670,7 @@ msgstr "Een e-mail melding wordt naar {0} deelnemer{1} verstuurd. Wilt u doorgaa
 msgid "An error occurred while loading the Portal. Please contact the support team."
 msgstr "Er is een fout opgetreden bij het laden van de Portal. Neem contact op met de ondersteuningsteam."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:796
+#: src/routes/project/chat/ProjectChatRoute.tsx:733
 msgid "An error occurred."
 msgstr "Er is een fout opgetreden."
 
@@ -676,7 +681,7 @@ msgstr "Er is een fout opgetreden."
 msgid "Analysis Language"
 msgstr "Analyse taal"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1191
+#: src/routes/project/report/ProjectReportRoute.tsx:1196
 msgid "Analytics"
 msgstr "Analytics"
 
@@ -719,7 +724,7 @@ msgstr "meldingen"
 msgid "Anonymize transcript"
 msgstr "Transcript anonimiseren"
 
-#: src/components/project/ProjectPortalEditor.tsx:1460
+#: src/components/project/ProjectPortalEditor.tsx:1461
 msgid "Anonymize Transcripts"
 msgstr "Transcripten anoniem maken"
 
@@ -733,8 +738,8 @@ msgstr "Anoniem gesprek"
 
 #: src/components/chat/PublishTemplateForm.tsx:157
 #: src/components/chat/CommunityTemplateCard.tsx:124
-msgid "Anonymous host"
-msgstr "Anonieme host"
+#~ msgid "Anonymous host"
+#~ msgstr "Anonieme host"
 
 #~ msgid "Anonymous Participant"
 #~ msgstr "Anonieme deelnemer"
@@ -770,7 +775,7 @@ msgstr "Weet je zeker dat je de webhook \"{0}\" wilt verwijderen? Dit kan niet o
 msgid "Are you sure you want to delete this conversation? This action cannot be undone."
 msgstr "Weet je zeker dat je dit gesprek wilt verwijderen? Dit kan niet ongedaan worden gemaakt."
 
-#: src/components/project/ProjectPortalEditor.tsx:1696
+#: src/components/project/ProjectPortalEditor.tsx:1734
 msgid "Are you sure you want to delete this custom topic? This cannot be undone."
 msgstr "Weet je zeker dat je dit aangepaste onderwerp wilt verwijderen? Dit kan niet ongedaan worden gemaakt."
 
@@ -787,7 +792,7 @@ msgstr "Weet je zeker dat je dit project wilt verwijderen? Dit kan niet ongedaan
 #~ msgid "Are you sure you want to delete this recording?"
 #~ msgstr "Weet je zeker dat je deze opname wilt verwijderen?"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1372
+#: src/routes/project/report/ProjectReportRoute.tsx:1377
 msgid "Are you sure you want to delete this report? This action cannot be undone."
 msgstr "Weet je zeker dat je dit rapport wilt verwijderen? Dit kan niet ongedaan worden gemaakt."
 
@@ -798,7 +803,7 @@ msgstr "Weet je zeker dat je dit rapport wilt verwijderen? Dit kan niet ongedaan
 msgid "Are you sure you want to delete this tag? This will remove the tag from existing conversations that contain it."
 msgstr "Weet je zeker dat je dit trefwoord wilt verwijderen? Dit zal het trefwoord verwijderen uit bestaande gesprekken die het bevatten."
 
-#: src/components/chat/TemplatesModal.tsx:482
+#: src/components/chat/TemplatesModal.tsx:414
 msgid "Are you sure you want to delete this template? This cannot be undone."
 msgstr "Weet u zeker dat u dit sjabloon wilt verwijderen? Dit kan niet ongedaan worden gemaakt."
 
@@ -861,11 +866,11 @@ msgstr "Stel vraag"
 #~ msgid "Ask AI"
 #~ msgstr "Vraag AI"
 
-#: src/components/project/ProjectPortalEditor.tsx:680
+#: src/components/project/ProjectPortalEditor.tsx:681
 msgid "Ask for Email?"
 msgstr "Vraag om e-mail?"
 
-#: src/components/project/ProjectPortalEditor.tsx:651
+#: src/components/project/ProjectPortalEditor.tsx:652
 msgid "Ask for Name?"
 msgstr "Vraag om naam?"
 
@@ -896,7 +901,7 @@ msgstr "Aspecten"
 #~ msgid "At least one topic must be selected to enable Make it concrete"
 #~ msgstr "Selecteer minimaal één onderwerp om Maak het concreet aan te zetten"
 
-#: src/components/project/ProjectPortalEditor.tsx:1113
+#: src/components/project/ProjectPortalEditor.tsx:1114
 msgid "At least one topic must be selected to enable Verify"
 msgstr "Er moet minstens één onderwerp zijn geselecteerd om Controleren aan te zetten"
 
@@ -949,11 +954,11 @@ msgstr "Auditlogboeken geëxporteerd naar JSON"
 msgid "Authenticator code"
 msgstr "Authenticator-code"
 
-#: src/components/project/ProjectPortalEditor.tsx:1531
+#: src/components/project/ProjectPortalEditor.tsx:1569
 msgid "Auto-generate titles"
 msgstr "Automatisch titels genereren"
 
-#: src/components/project/ProjectPortalEditor.tsx:1508
+#: src/components/project/ProjectPortalEditor.tsx:1546
 msgid "Auto-generate Titles"
 msgstr "Automatisch titels genereren"
 
@@ -976,7 +981,7 @@ msgstr "Automatisch selecteren ingeschakeld"
 #~ msgid "Auto-select sources to add to the chat"
 #~ msgstr "Automatisch selecteren bronnen om toe te voegen aan het gesprek"
 
-#: src/components/project/ProjectPortalEditor.tsx:1516
+#: src/components/project/ProjectPortalEditor.tsx:1554
 msgid "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 msgstr "Automatisch een korte onderwerp-gebaseerde titel genereren voor elk gesprek na samenvatting. De titel beschrijft wat er werd besproken, niet wie deelnemde. De oorspronkelijke naam van de deelnemer wordt apart bewaard, als ze er een had."
 
@@ -1004,7 +1009,7 @@ msgstr "Avatar verwijderd"
 msgid "Avatar updated"
 msgstr "Avatar bijgewerkt"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:557
+#: src/routes/project/report/ProjectReportRoute.tsx:562
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:334
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:371
 msgid "Back"
@@ -1025,16 +1030,15 @@ msgstr "Terug"
 msgid "Back to Selection"
 msgstr "Terug naar selectie"
 
-#: src/components/chat/TemplatesModal.tsx:518
-#: src/components/chat/TemplatesModal.tsx:582
+#: src/components/chat/TemplatesModal.tsx:450
 msgid "Back to templates"
 msgstr "Terug naar templates"
 
-#: src/components/project/ProjectPortalEditor.tsx:760
+#: src/components/project/ProjectPortalEditor.tsx:761
 msgid "Basic (Essential tutorial slides)"
 msgstr "Basis (Alleen essentiële tutorial slides)"
 
-#: src/components/project/ProjectPortalEditor.tsx:615
+#: src/components/project/ProjectPortalEditor.tsx:616
 msgid "Basic Settings"
 msgstr "Basis instellingen"
 
@@ -1042,17 +1046,17 @@ msgstr "Basis instellingen"
 #~ msgstr "Begin!"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:789
+#: src/components/project/ProjectPortalEditor.tsx:790
 msgid "dashboard.dembrane.concrete.beta"
 msgstr "Bèta"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:999
+#: src/components/project/ProjectPortalEditor.tsx:1000
 msgid "dashboard.dembrane.verify.beta"
 msgstr "Bèta"
 
-#: src/components/project/ProjectPortalEditor.tsx:1467
-#: src/components/project/ProjectPortalEditor.tsx:1512
+#: src/components/project/ProjectPortalEditor.tsx:1468
+#: src/components/project/ProjectPortalEditor.tsx:1550
 #: src/components/conversation/RetranscribeConversation.tsx:144
 #: src/components/conversation/MoveConversationButton.tsx:142
 #: src/components/chat/ChatModeSelector.tsx:156
@@ -1075,7 +1079,7 @@ msgstr "Een gesprek boeken"
 #~ msgid "Book a call to share your feedback"
 #~ msgstr "Boek een gesprek om uw feedback te delen"
 
-#: src/components/project/ProjectPortalEditor.tsx:912
+#: src/components/project/ProjectPortalEditor.tsx:913
 msgid "Brainstorm Ideas"
 msgstr "Brainstorm ideeën"
 
@@ -1088,18 +1092,19 @@ msgid "Build custom dashboards with real-time conversation data"
 msgstr "Aangepaste dashboards bouwen met realtime conversatiegegevens"
 
 #: src/components/chat/QuickAccessConfigurator.tsx:98
-msgid "Built-in"
-msgstr "Ingebouwd"
+#~ msgid "Built-in"
+#~ msgstr "Ingebouwd"
 
 #: src/components/project/ProjectDangerZone.tsx:68
 msgid "By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you ABSOLUTELY sure you want to delete this project?"
 msgstr "Door dit project te verwijderen, verwijder je alle gegevens die eraan gerelateerd zijn. Dit kan niet ongedaan worden gemaakt. Weet je zeker dat je dit project wilt verwijderen?"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:256
-#: src/routes/project/report/ProjectReportRoute.tsx:1352
-#: src/routes/project/report/ProjectReportRoute.tsx:1383
+#: src/routes/project/report/ProjectReportRoute.tsx:1357
+#: src/routes/project/report/ProjectReportRoute.tsx:1388
 #: src/components/settings/TwoFactorSettingsCard.tsx:406
-#: src/components/project/ProjectPortalEditor.tsx:1703
+#: src/components/project/ProjectPortalEditor.tsx:1527
+#: src/components/project/ProjectPortalEditor.tsx:1741
 #: src/components/project/ProjectDangerZone.tsx:156
 #: src/components/project/ProjectDangerZone.tsx:188
 #: src/components/project/CustomTopicModal.tsx:233
@@ -1112,8 +1117,7 @@ msgstr "Door dit project te verwijderen, verwijder je alle gegevens die eraan ge
 #: src/components/conversation/MoveConversationButton.tsx:231
 #: src/components/conversation/ConversationAccordion.tsx:340
 #: src/components/common/ImageCropModal.tsx:145
-#: src/components/chat/TemplatesModal.tsx:489
-#: src/components/chat/PublishTemplateForm.tsx:171
+#: src/components/chat/TemplatesModal.tsx:421
 msgid "Cancel"
 msgstr "Annuleren"
 
@@ -1142,7 +1146,7 @@ msgstr "Annuleren"
 msgid "add.tag.filter.modal.cancel"
 msgstr "Annuleren"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:597
+#: src/routes/project/report/ProjectReportRoute.tsx:602
 msgid "Cancel schedule"
 msgstr "Planning annuleren"
 
@@ -1150,7 +1154,7 @@ msgstr "Planning annuleren"
 msgid "Cannot add empty conversation"
 msgstr "Kan geen leeg gesprek toevoegen"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:572
+#: src/routes/project/report/ProjectReportRoute.tsx:577
 msgid "Cannot reschedule within 10 minutes of the scheduled time"
 msgstr "Kan niet opnieuw plannen binnen 10 minuten voor het geplande tijdstip"
 
@@ -1173,12 +1177,12 @@ msgstr "Wijzigingen worden automatisch opgeslagen"
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Wijziging van de taal tijdens een actief gesprek kan onverwachte resultaten opleveren. Het wordt aanbevolen om een nieuw gesprek te starten na het wijzigen van de taal. Weet je zeker dat je wilt doorgaan?"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:635
-#: src/routes/project/chat/ProjectChatRoute.tsx:641
+#: src/routes/project/chat/ProjectChatRoute.tsx:597
+#: src/routes/project/chat/ProjectChatRoute.tsx:603
 msgid "Chat"
 msgstr "Chat"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:314
+#: src/routes/project/chat/ProjectChatRoute.tsx:311
 msgid "Chat | Dembrane"
 msgstr "Chat | Dembrane"
 
@@ -1332,11 +1336,11 @@ msgstr "Bevestig nieuw wachtwoord"
 msgid "Confirm Password"
 msgstr "Bevestig wachtwoord"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1335
+#: src/routes/project/report/ProjectReportRoute.tsx:1340
 msgid "Confirm Publishing"
 msgstr "Publiceren bevestigen"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:550
+#: src/routes/project/report/ProjectReportRoute.tsx:555
 msgid "Confirm reschedule"
 msgstr "Herplanning bevestigen"
 
@@ -1388,7 +1392,7 @@ msgstr "Context toegevoegd:"
 #~ msgid "Context limit reached"
 #~ msgstr "Contextlimiet bereikt"
 
-#: src/components/chat/TemplatesModal.tsx:862
+#: src/components/chat/TemplatesModal.tsx:669
 msgid "Contextual suggestions"
 msgstr "Contextuele suggesties"
 
@@ -1459,7 +1463,7 @@ msgstr "Gesprekken"
 #~ msgid "Conversations from Upload"
 #~ msgstr "Gesprekken van upload"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:906
+#: src/routes/project/chat/ProjectChatRoute.tsx:832
 msgid "Conversations:"
 msgstr "Gesprekken:"
 
@@ -1484,14 +1488,14 @@ msgstr "Gekopieerd"
 msgid "Copied from original conversation"
 msgstr "Gekopieerd van het originele gesprek"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1059
-#: src/routes/project/report/ProjectReportRoute.tsx:1079
-#: src/routes/project/report/ProjectReportRoute.tsx:1110
+#: src/routes/project/report/ProjectReportRoute.tsx:1064
+#: src/routes/project/report/ProjectReportRoute.tsx:1084
+#: src/routes/project/report/ProjectReportRoute.tsx:1115
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:1106
 msgid "Copied!"
 msgstr "Gekopieerd!"
 
-#: src/components/chat/TemplatesModal.tsx:318
+#: src/components/chat/TemplatesModal.tsx:268
 msgid "copy"
 msgstr "kopie"
 
@@ -1501,12 +1505,12 @@ msgstr "kopie"
 msgid "Copy"
 msgstr "Kopieer"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1081
+#: src/routes/project/report/ProjectReportRoute.tsx:1086
 #: src/components/project/ProjectQRCode.tsx:183
 msgid "Copy link"
 msgstr "Kopieer link"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1060
+#: src/routes/project/report/ProjectReportRoute.tsx:1065
 msgid "Copy link to clipboard"
 msgstr "Link naar klembord kopiëren"
 
@@ -1514,7 +1518,7 @@ msgstr "Link naar klembord kopiëren"
 #~ msgid "Copy link to share this report"
 #~ msgstr "Kopieer link om dit rapport te delen"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1112
+#: src/routes/project/report/ProjectReportRoute.tsx:1117
 msgid "Copy report content"
 msgstr "Rapportinhoud kopiëren"
 
@@ -1593,7 +1597,7 @@ msgstr "Maak nieuwe view aan"
 msgid "Create Report"
 msgstr "Maak rapport"
 
-#: src/components/chat/TemplatesModal.tsx:909
+#: src/components/chat/TemplatesModal.tsx:716
 msgid "Create template"
 msgstr "Template aanmaken"
 
@@ -1646,8 +1650,7 @@ msgstr "Huidig wachtwoord"
 msgid "custom"
 msgstr "aangepast"
 
-#: src/components/project/ProjectPortalEditor.tsx:942
-#: src/components/chat/QuickAccessConfigurator.tsx:98
+#: src/components/project/ProjectPortalEditor.tsx:943
 msgid "Custom"
 msgstr "Aangepast"
 
@@ -1659,7 +1662,7 @@ msgstr "Aangepaste bestandsnaam"
 msgid "Custom Logo"
 msgstr "Aangepast logo"
 
-#: src/components/project/ProjectPortalEditor.tsx:1556
+#: src/components/project/ProjectPortalEditor.tsx:1594
 msgid "Custom title prompt"
 msgstr "Aangepaste titelprompt"
 
@@ -1687,11 +1690,11 @@ msgstr "Dashboard URL (directe link naar gespreksoverzicht)"
 #~ msgid "dashboard.dembrane.verify.topic.select"
 #~ msgstr "Selecteer welke onderwerpen deelnemers voor verificatie kunnen gebruiken."
 
-#: src/components/project/ProjectPortalEditor.tsx:878
+#: src/components/project/ProjectPortalEditor.tsx:879
 msgid "Default"
 msgstr "Standaard"
 
-#: src/components/project/ProjectPortalEditor.tsx:756
+#: src/components/project/ProjectPortalEditor.tsx:757
 msgid "Default - No tutorial (Only privacy statements)"
 msgstr "Standaard - Geen tutorial (Alleen privacy verklaringen)"
 
@@ -1699,12 +1702,12 @@ msgstr "Standaard - Geen tutorial (Alleen privacy verklaringen)"
 msgid "Delegate multi-step analysis with live tool execution"
 msgstr "Multistap analyse delegeren met live tool uitvoering"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1391
-#: src/components/project/ProjectPortalEditor.tsx:1710
+#: src/routes/project/report/ProjectReportRoute.tsx:1396
+#: src/components/project/ProjectPortalEditor.tsx:1748
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:652
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:691
-#: src/components/chat/TemplatesModal.tsx:502
-#: src/components/chat/TemplatesModal.tsx:778
+#: src/components/chat/TemplatesModal.tsx:434
+#: src/components/chat/TemplatesModal.tsx:586
 msgid "Delete"
 msgstr "Verwijder"
 
@@ -1717,7 +1720,7 @@ msgstr "Chat verwijderen"
 msgid "Delete Conversation"
 msgstr "Verwijder gesprek"
 
-#: src/components/project/ProjectPortalEditor.tsx:1688
+#: src/components/project/ProjectPortalEditor.tsx:1726
 msgid "Delete Custom Topic"
 msgstr "Aangepast onderwerp verwijderen"
 
@@ -1730,16 +1733,16 @@ msgstr "Aangepast onderwerp verwijderen"
 msgid "Delete Project"
 msgstr "Verwijder project"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1154
+#: src/routes/project/report/ProjectReportRoute.tsx:1159
 msgid "Delete report"
 msgstr "Rapport verwijderen"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1368
+#: src/routes/project/report/ProjectReportRoute.tsx:1373
 msgid "Delete Report"
 msgstr "Rapport verwijderen"
 
-#: src/components/chat/TemplatesModal.tsx:476
-#: src/components/chat/TemplatesModal.tsx:560
+#: src/components/chat/TemplatesModal.tsx:408
+#: src/components/chat/TemplatesModal.tsx:492
 msgid "Delete template"
 msgstr "Template verwijderen"
 
@@ -1761,8 +1764,8 @@ msgstr "Verwijderd succesvol"
 msgid "dembrane events"
 msgstr "dembrane events"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:975
-#: src/routes/project/chat/ProjectChatRoute.tsx:1007
+#: src/routes/project/chat/ProjectChatRoute.tsx:901
+#: src/routes/project/chat/ProjectChatRoute.tsx:933
 msgid "Dembrane is powered by AI. Please double-check responses."
 msgstr "dembrane draait op AI. Check de antwoorden extra goed."
 
@@ -1770,8 +1773,8 @@ msgstr "dembrane draait op AI. Check de antwoorden extra goed."
 #~ msgstr "Reactie"
 
 #: src/components/chat/PublishTemplateForm.tsx:102
-msgid "Describe how this template is useful..."
-msgstr "Beschrijf hoe dit template nuttig is..."
+#~ msgid "Describe how this template is useful..."
+#~ msgstr "Beschrijf hoe dit template nuttig is..."
 
 #: src/components/project/CustomTopicModal.tsx:206
 msgid "Describe what the language model should extract or summarize from the conversation..."
@@ -1788,7 +1791,7 @@ msgstr "Beschrijf wat de taalmodel moet extraheren of samenvatten uit het gespre
 msgid "Determines under which GDPR legal basis personal data is processed. This affects the information shown to participants and data subject rights."
 msgstr "Bepaalt op welke AVG-grondslag persoonsgegevens worden verwerkt. Dit is van invloed op de informatie die aan deelnemers wordt getoond en de rechten van betrokkenen."
 
-#: src/components/project/ProjectPortalEditor.tsx:711
+#: src/components/project/ProjectPortalEditor.tsx:712
 msgid "Determines under which GDPR legal basis personal data is processed. This setting applies to all your projects and can be changed in your account settings."
 msgstr "Bepaalt onder welke GDPR-rechtsgrondslag personenbezogene gegevens worden verwerkt. Deze instelling geldt voor alle projecten en kan worden gewijzigd in uw accountinstellingen."
 
@@ -1917,11 +1920,11 @@ msgstr "Sleep audio bestanden hierheen of klik om bestanden te selecteren"
 #~ msgstr "Sleep documenten hierheen of selecteer bestanden"
 
 #: src/routes/project/HostGuidePage.tsx:1414
-#: src/components/chat/TemplatesModal.tsx:642
+#: src/components/chat/TemplatesModal.tsx:533
 msgid "Drag to reorder"
 msgstr "Sleep om te herordenen"
 
-#: src/components/chat/TemplatesModal.tsx:714
+#: src/components/chat/TemplatesModal.tsx:558
 msgid "Duplicate"
 msgstr "Dupliceren"
 
@@ -1929,7 +1932,7 @@ msgstr "Dupliceren"
 msgid "Duration"
 msgstr "Duur"
 
-#: src/components/project/ProjectPortalEditor.tsx:633
+#: src/components/project/ProjectPortalEditor.tsx:634
 msgid "Dutch"
 msgstr "Nederlands"
 
@@ -1937,7 +1940,7 @@ msgstr "Nederlands"
 msgid "e.g. \"Focus on sustainability themes\" or \"What do participants think about the new policy?\""
 msgstr "bijv. \"Focus op duurzaamheidsthema's\" of \"Wat vinden deelnemers van het nieuwe beleid?\""
 
-#: src/components/project/ProjectPortalEditor.tsx:1574
+#: src/components/project/ProjectPortalEditor.tsx:1612
 msgid "e.g. \"Use short noun phrases like 'Urban Green Spaces' or 'Youth Employment'. Avoid generic titles.\""
 msgstr "bijvoorbeeld \"Gebruik korte zinnen als 'Stedelijke Groene Ruimtes' of 'Jeugdwerkgelegenheid'. Vermijd algemene titels.\""
 
@@ -1946,7 +1949,7 @@ msgstr "bijvoorbeeld \"Gebruik korte zinnen als 'Stedelijke Groene Ruimtes' of '
 msgid "e.g. tomorrow at 9:00"
 msgstr "bijv. morgen om 9:00"
 
-#: src/components/chat/TemplatesModal.tsx:527
+#: src/components/chat/TemplatesModal.tsx:459
 msgid "e.g. Weekly stakeholder digest"
 msgstr "bijv. Wekelijkse samenvatting stakeholders"
 
@@ -1983,7 +1986,7 @@ msgstr "ECHO"
 #~ msgstr "bewerken"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:647
-#: src/components/chat/TemplatesModal.tsx:765
+#: src/components/chat/TemplatesModal.tsx:573
 msgid "Edit"
 msgstr "Bewerken"
 
@@ -1999,7 +2002,7 @@ msgstr "Aangepast onderwerp bewerken"
 msgid "Edit file name"
 msgstr "Bestandsnaam bewerken"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1224
+#: src/routes/project/report/ProjectReportRoute.tsx:1229
 msgid "Edit mode"
 msgstr "Bewerkingsmodus"
 
@@ -2087,7 +2090,7 @@ msgstr "2FA inschakelen"
 #~ msgid "Enable Dembrane Verify"
 #~ msgstr "Verify inschakelen"
 
-#: src/components/project/ProjectPortalEditor.tsx:813
+#: src/components/project/ProjectPortalEditor.tsx:814
 msgid "Enable Explore"
 msgstr "Verkennen inschakelen"
 
@@ -2103,7 +2106,7 @@ msgstr "Verkennen inschakelen"
 msgid "Enable participation"
 msgstr "Deelnemen inschakelen"
 
-#: src/components/project/ProjectPortalEditor.tsx:1296
+#: src/components/project/ProjectPortalEditor.tsx:1297
 msgid "Enable Report Notifications"
 msgstr "Rapportmeldingen inschakelen"
 
@@ -2117,7 +2120,7 @@ msgstr "Rapportmeldingen inschakelen"
 #~ msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"ECHO\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 #~ msgstr "Schakel deze functie in zodat deelnemers AI-suggesties kunnen opvragen tijdens het gesprek. Deelnemers kunnen na het vastleggen van hun gedachten op \"ECHO\" klikken voor contextuele feedback, wat diepere reflectie en betrokkenheid stimuleert. Tussen elke aanvraag zit een korte pauze."
 
-#: src/components/project/ProjectPortalEditor.tsx:796
+#: src/components/project/ProjectPortalEditor.tsx:797
 msgid "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Explore\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 msgstr "Schakel deze functie in zodat deelnemers AI-antwoorden kunnen vragen tijdens hun gesprek. Na het inspreken van hun gedachten kunnen ze op \"Verkennen\" klikken voor contextuele feedback, zodat ze dieper gaan nadenken en meer betrokken raken. Er zit een wachttijd tussen verzoeken."
 
@@ -2129,11 +2132,11 @@ msgstr "Schakel deze functie in zodat deelnemers AI-antwoorden kunnen vragen tij
 #~ msgstr "Zet deze functie aan zodat deelnemers AI-antwoorden kunnen vragen tijdens hun gesprek. Na het inspreken van hun gedachten kunnen ze op \"Go deeper\" klikken voor contextuele feedback, zodat ze dieper gaan nadenken en meer betrokken raken. Er zit een wachttijd tussen verzoeken."
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:1006
+#: src/components/project/ProjectPortalEditor.tsx:1007
 msgid "dashboard.dembrane.feature.verify.description"
 msgstr "Schakel deze functie in om deelnemers \"resultaten\" van hun inzendingen te laten controleren en goedkeuren. Dit helpt om belangrijke ideeën, zorgen of samenvattingen concreet te maken. Na het gesprek kun je filteren op discussies met geverifieerde resultaten en deze bekijken in het overzicht."
 
-#: src/components/project/ProjectPortalEditor.tsx:1487
+#: src/components/project/ProjectPortalEditor.tsx:1488
 msgid "Enable transcript anonymization"
 msgstr "Transcriptanoniem maken inschakelen"
 
@@ -2141,7 +2144,7 @@ msgstr "Transcriptanoniem maken inschakelen"
 msgid "Enable two-factor authentication"
 msgstr "Tweestapsverificatie inschakelen"
 
-#: src/components/project/ProjectPortalEditor.tsx:1023
+#: src/components/project/ProjectPortalEditor.tsx:1024
 msgid "Enable Verify"
 msgstr "Controleren inschakelen"
 
@@ -2154,7 +2157,7 @@ msgstr "Ingeschakeld"
 #~ msgid "End of list • All {0} conversations loaded"
 #~ msgstr "Einde van de lijst • Alle {0} gesprekken geladen"
 
-#: src/components/project/ProjectPortalEditor.tsx:632
+#: src/components/project/ProjectPortalEditor.tsx:633
 msgid "English"
 msgstr "Engels"
 
@@ -2284,7 +2287,7 @@ msgstr "Voorbeeld webhook payload"
 #~ msgid "Example: This conversation is about [topic]. Key terms include [term1], [term2]. Please pay special attention to [specific aspect]."
 #~ msgstr "Voorbeeld: Dit gesprek gaat over [onderwerp]. Belangrijke termen zijn [term1], [term2]. Let speciaal op [specifieke aspect]."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1231
+#: src/routes/project/report/ProjectReportRoute.tsx:1236
 msgid "Exit fullscreen"
 msgstr "Volledig scherm sluiten"
 
@@ -2293,7 +2296,7 @@ msgstr "Volledig scherm sluiten"
 msgid "Experimental"
 msgstr "Experimenteel"
 
-#: src/components/project/ProjectPortalEditor.tsx:786
+#: src/components/project/ProjectPortalEditor.tsx:787
 msgid "Explore"
 msgstr "Verkennen"
 
@@ -2562,7 +2565,7 @@ msgid "participant.button.stop.finish"
 msgstr "Afronden"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:250
+#: src/components/participant/ParticipantConversationText.tsx:251
 msgid "participant.button.finish.text.mode"
 msgstr "Voltooien"
 
@@ -2618,7 +2621,7 @@ msgstr "Voor geavanceerde gebruikers: Een geheime sleutel om de authenticiteit v
 msgid "Forgot your password?"
 msgstr "Wachtwoord vergeten?"
 
-#: src/components/project/ProjectPortalEditor.tsx:636
+#: src/components/project/ProjectPortalEditor.tsx:637
 msgid "French"
 msgstr "Frans"
 
@@ -2630,7 +2633,7 @@ msgstr "Frans"
 msgid "Full transcript (when available)"
 msgstr "Volledig transcript (wanneer beschikbaar)"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1231
+#: src/routes/project/report/ProjectReportRoute.tsx:1236
 msgid "Fullscreen"
 msgstr "Volledig scherm"
 
@@ -2658,7 +2661,7 @@ msgstr "Genereer eerst een samenvatting"
 #~ msgid "Generate insights from your conversations"
 #~ msgstr "Genereer inzichten uit je gesprekken"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:568
+#: src/routes/project/report/ProjectReportRoute.tsx:573
 #: src/components/report/UpdateReportModalButton.tsx:315
 #: src/components/report/CreateReportForm.tsx:299
 msgid "Generate now"
@@ -2692,7 +2695,7 @@ msgstr "Samenvatting wordt gemaakt. Even wachten..."
 msgid "Generating your report..."
 msgstr "Je rapport wordt gegenereerd..."
 
-#: src/components/project/ProjectPortalEditor.tsx:634
+#: src/components/project/ProjectPortalEditor.tsx:635
 msgid "German"
 msgstr "Duits"
 
@@ -2741,7 +2744,7 @@ msgstr "Ga naar feedbackportaal"
 msgid "Go to new conversation"
 msgstr "Ga naar nieuw gesprek"
 
-#: src/components/project/ProjectPortalEditor.tsx:725
+#: src/components/project/ProjectPortalEditor.tsx:726
 msgid "Go to Settings"
 msgstr "Ga naar Instellingen"
 
@@ -2751,7 +2754,7 @@ msgstr "Ga naar Instellingen"
 #~ msgid "Grid view"
 #~ msgstr "Rasterweergave"
 
-#: src/components/project/ProjectPortalEditor.tsx:1568
+#: src/components/project/ProjectPortalEditor.tsx:1606
 msgid "Guide how titles are generated. Titles describe the topic of the conversation, not the participant."
 msgstr "Gids hoe titels worden gegenereerd. Titels beschrijven het onderwerp van het gesprek, niet de deelnemer."
 
@@ -2890,7 +2893,7 @@ msgstr "Als je webhook-integraties instelt, zouden we graag weten wat je voor ge
 #~ msgid "Inactive"
 #~ msgstr "Inactief"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1031
+#: src/routes/project/report/ProjectReportRoute.tsx:1036
 msgid "Include portal link"
 msgstr "Portallink opnemen"
 
@@ -2920,7 +2923,7 @@ msgstr "Portallink opnemen"
 msgid "Insights"
 msgstr "Inzichten"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1214
+#: src/routes/project/report/ProjectReportRoute.tsx:1219
 msgid "Instructions"
 msgstr "Instructies"
 
@@ -2977,7 +2980,7 @@ msgstr "Het lijkt erop dat u nog geen rapport voor dit project heeft. Genereer e
 msgid "It sounds like more than one person is speaking. Taking turns will help us hear everyone clearly."
 msgstr "Het lijkt erop dat meer dan één persoon spreekt. Het afwisselen zal ons helpen iedereen duidelijk te horen."
 
-#: src/components/project/ProjectPortalEditor.tsx:637
+#: src/components/project/ProjectPortalEditor.tsx:638
 msgid "Italian"
 msgstr "Italiaans"
 
@@ -3011,7 +3014,7 @@ msgstr "Houd de toegang veilig met een eenmalige code uit je authenticator-app. 
 #: src/components/report/UpdateReportModalButton.tsx:293
 #: src/components/report/CreateReportForm.tsx:205
 #: src/components/report/CreateReportForm.tsx:277
-#: src/components/project/ProjectPortalEditor.tsx:625
+#: src/components/project/ProjectPortalEditor.tsx:626
 msgid "Language"
 msgstr "Taal"
 
@@ -3044,7 +3047,7 @@ msgid "Leave empty to keep existing"
 msgstr "Laat leeg om bestaande te behouden"
 
 #: src/components/settings/LegalBasisSettingsCard.tsx:82
-#: src/components/project/ProjectPortalEditor.tsx:706
+#: src/components/project/ProjectPortalEditor.tsx:707
 msgid "Legal Basis"
 msgstr "Rechtsgrondslag"
 
@@ -3119,7 +3122,7 @@ msgstr "Live audio niveau:"
 #~ msgid "Live audio level:"
 #~ msgstr "Live audio level:"
 
-#: src/components/project/ProjectPortalEditor.tsx:1638
+#: src/components/project/ProjectPortalEditor.tsx:1676
 msgid "Live Preview"
 msgstr "Live Voorbeeld"
 
@@ -3165,17 +3168,16 @@ msgstr "Transcript aan het laden..."
 #~ msgid "Loading verification topics…"
 #~ msgstr "Verificatie-onderwerpen worden geladen…"
 
-#: src/components/project/ProjectPortalEditor.tsx:1063
+#: src/components/project/ProjectPortalEditor.tsx:1064
 msgid "Loading verify topics…"
 msgstr "Verify onderwerpen aan het laden…"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1341
+#: src/routes/project/report/ProjectReportRoute.tsx:1346
 msgid "loading..."
 msgstr "bezig met laden..."
 
 #: src/components/conversation/ConversationAccordion.tsx:118
 #: src/components/conversation/hooks/index.ts:370
-#: src/components/chat/CommunityTab.tsx:109
 msgid "Loading..."
 msgstr "Bezig met laden..."
 
@@ -3215,7 +3217,7 @@ msgstr "Uitloggen"
 msgid "Longest First"
 msgstr "Langste eerst"
 
-#: src/components/chat/ChatTemplatesMenu.tsx:372
+#: src/components/chat/ChatTemplatesMenu.tsx:353
 msgid "Manage templates"
 msgstr "Templates beheren"
 
@@ -3252,15 +3254,15 @@ msgstr "Toegang tot de microfoon wordt nog steeds geweigerd. Controleer uw inste
 msgid "Minimum 8 characters"
 msgstr "Minimaal 8 tekens"
 
-#: src/components/project/ProjectPortalEditor.tsx:837
+#: src/components/project/ProjectPortalEditor.tsx:838
 msgid "Mode"
 msgstr "Modus"
 
-#: src/components/chat/ChatTemplatesMenu.tsx:367
+#: src/components/chat/ChatTemplatesMenu.tsx:348
 msgid "more"
 msgstr "meer"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1089
+#: src/routes/project/report/ProjectReportRoute.tsx:1094
 msgid "More actions"
 msgstr "Meer acties"
 
@@ -3269,12 +3271,12 @@ msgstr "Meer acties"
 #~ msgstr "Meer templates"
 
 #: src/components/chat/CommunityTab.tsx:34
-msgid "Most popular"
-msgstr "Populairst"
+#~ msgid "Most popular"
+#~ msgstr "Populairst"
 
 #: src/components/chat/CommunityTab.tsx:35
-msgid "Most used"
-msgstr "Meest gebruikt"
+#~ msgid "Most used"
+#~ msgstr "Meest gebruikt"
 
 #: src/components/conversation/MoveConversationButton.tsx:242
 #: src/components/conversation/ConversationAccordion.tsx:350
@@ -3294,7 +3296,7 @@ msgstr "Verplaats naar een ander project"
 msgid "Move to Project"
 msgstr "Verplaats naar project"
 
-#: src/components/chat/TemplatesModal.tsx:1004
+#: src/components/chat/TemplatesModal.tsx:811
 msgid "My templates"
 msgstr "Mijn sjablonen"
 
@@ -3349,7 +3351,7 @@ msgstr "Er zijn nieuwe gesprekken toegevoegd sinds de bibliotheek is gegenereerd
 #~ msgid "New conversations have been added since your last report. Generate an updated report to include them. Your previous report will remain accessible."
 #~ msgstr "Er zijn nieuwe gesprekken toegevoegd sinds je laatste rapport. Genereer een bijgewerkt rapport om ze op te nemen. Je vorige rapport blijft beschikbaar."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:536
+#: src/routes/project/report/ProjectReportRoute.tsx:541
 msgid "New date and time"
 msgstr "Nieuwe datum en tijd"
 
@@ -3373,8 +3375,8 @@ msgid "New Report"
 msgstr "Nieuw rapport"
 
 #: src/components/chat/CommunityTab.tsx:33
-msgid "Newest"
-msgstr "Nieuwste"
+#~ msgid "Newest"
+#~ msgstr "Nieuwste"
 
 #: src/components/conversation/ConversationAccordion.tsx:652
 msgid "Newest First"
@@ -3437,8 +3439,8 @@ msgid "No collections found"
 msgstr "Geen collecties gevonden"
 
 #: src/components/chat/CommunityTab.tsx:115
-msgid "No community templates yet. Share yours to get started."
-msgstr "Nog geen community templates. Deel de jouwe om te beginnen."
+#~ msgid "No community templates yet. Share yours to get started."
+#~ msgstr "Nog geen community templates. Deel de jouwe om te beginnen."
 
 #: src/components/project/ProjectPortalEditor.tsx:913
 #~ msgid "No concrete topics available."
@@ -3513,7 +3515,7 @@ msgstr "Geen projecten gevonden voor de zoekterm"
 msgid "No report found"
 msgstr "Geen rapport gevonden"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:945
+#: src/routes/project/report/ProjectReportRoute.tsx:950
 msgid "No reports yet"
 msgstr "Nog geen rapporten"
 
@@ -3540,7 +3542,7 @@ msgstr "Geen trefwoorden gevonden"
 msgid "No tags have been added to this project yet. Add a tag using the text input above to get started."
 msgstr "Er zijn nog geen trefwoorden toegevoegd aan dit project. Voeg een trefwoord toe met behulp van de tekstinvoer boven aan om te beginnen."
 
-#: src/components/chat/TemplatesModal.tsx:1019
+#: src/components/chat/TemplatesModal.tsx:826
 msgid "No templates match '{searchQuery}'"
 msgstr "Geen templates gevonden voor '{searchQuery}'"
 
@@ -3577,7 +3579,7 @@ msgstr "Er zijn geen verificatie-onderwerpen voor dit project geconfigureerd."
 #~ msgid "No verification topics available."
 #~ msgstr "Geen verificatie-onderwerpen beschikbaar."
 
-#: src/components/project/ProjectPortalEditor.tsx:1067
+#: src/components/project/ProjectPortalEditor.tsx:1068
 msgid "No verify topics available."
 msgstr "Geen verify topics beschikbaar."
 
@@ -3598,7 +3600,7 @@ msgstr "Niet toegevoegd"
 msgid "Not available"
 msgstr "Niet beschikbaar"
 
-#: src/components/project/ProjectPortalEditor.tsx:1283
+#: src/components/project/ProjectPortalEditor.tsx:1284
 msgid "Notify participants when a report is published."
 msgstr "Deelnemers melden wanneer een rapport wordt gepubliceerd."
 
@@ -3699,11 +3701,11 @@ msgstr "Optioneel"
 msgid "Optional (falls back to English)"
 msgstr "Optioneel (valt terug naar Engels)"
 
-#: src/components/project/ProjectPortalEditor.tsx:664
+#: src/components/project/ProjectPortalEditor.tsx:665
 msgid "Optional field on the start page"
 msgstr "Optioneel veld op de startpagina"
 
-#: src/components/project/ProjectPortalEditor.tsx:693
+#: src/components/project/ProjectPortalEditor.tsx:694
 msgid "Optional field on the thank you page"
 msgstr "Optioneel veld op de bedankpagina"
 
@@ -3731,8 +3733,8 @@ msgstr "URL van de privacyverklaring van de organisator"
 #~ msgstr "Originele bestandsnaam"
 
 #: src/components/chat/PublishTemplateForm.tsx:163
-msgid "Other hosts can see and copy your template. You can unpublish at any time."
-msgstr "Andere hosts kunnen je template zien en kopiëren. Je kunt het op elk moment intrekken."
+#~ msgid "Other hosts can see and copy your template. You can unpublish at any time."
+#~ msgstr "Andere hosts kunnen je template zien en kopiëren. Je kunt het op elk moment intrekken."
 
 #: src/components/participant/verify/VerifyArtefact.tsx:137
 msgid "Outcome approved successfully!"
@@ -3771,7 +3773,7 @@ msgstr "Overview - Thema’s & patronen"
 #~ msgid "Page"
 #~ msgstr "Pagina"
 
-#: src/components/project/ProjectPortalEditor.tsx:1366
+#: src/components/project/ProjectPortalEditor.tsx:1367
 msgid "Page Content"
 msgstr "Pagina inhoud"
 
@@ -3779,7 +3781,7 @@ msgstr "Pagina inhoud"
 msgid "Page not found"
 msgstr "Pagina niet gevonden"
 
-#: src/components/project/ProjectPortalEditor.tsx:1342
+#: src/components/project/ProjectPortalEditor.tsx:1343
 msgid "Page Title"
 msgstr "Pagina titel"
 
@@ -3796,7 +3798,7 @@ msgstr "Deelnemer e-mail"
 msgid "Participant Emails"
 msgstr "Deelnemer e-mails"
 
-#: src/components/project/ProjectPortalEditor.tsx:780
+#: src/components/project/ProjectPortalEditor.tsx:781
 msgid "Participant Features"
 msgstr "Deelnemer features"
 
@@ -3959,7 +3961,7 @@ msgstr "Persoonlijke informatie wordt vervangen door tijdelijke aanduidingen. Af
 msgid "Phone"
 msgstr "Telefoon"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:537
+#: src/routes/project/report/ProjectReportRoute.tsx:542
 msgid "Pick date and time"
 msgstr "Kies datum en tijd"
 
@@ -3972,7 +3974,7 @@ msgstr "Kies datum en tijd"
 msgid "Pick the approach that fits your question"
 msgstr "Kies de aanpak die past bij je vraag"
 
-#: src/components/chat/TemplatesModal.tsx:816
+#: src/components/chat/TemplatesModal.tsx:623
 msgid "Pin"
 msgstr "Vastpinnen"
 
@@ -3980,7 +3982,7 @@ msgstr "Vastpinnen"
 msgid "Pin project"
 msgstr "Project vastpinnen"
 
-#: src/components/chat/TemplatesModal.tsx:974
+#: src/components/chat/TemplatesModal.tsx:781
 msgid "Pin templates here for quick access."
 msgstr "Pin sjablonen hier vast voor snelle toegang."
 
@@ -3992,11 +3994,11 @@ msgstr "Pin sjablonen hier vast voor snelle toegang."
 #~ msgid "pinned"
 #~ msgstr "vastgepind"
 
-#: src/components/chat/TemplatesModal.tsx:815
+#: src/components/chat/TemplatesModal.tsx:622
 msgid "Pinned is full (max 5)"
 msgstr "Vastgepind is vol (max 5)"
 
-#: src/components/chat/TemplatesModal.tsx:944
+#: src/components/chat/TemplatesModal.tsx:751
 msgid "Pinned templates"
 msgstr "Vastgepinde sjablonen"
 
@@ -4044,15 +4046,37 @@ msgstr "Log in om door te gaan."
 #~ msgid "Please provide a concise summary of the following provided in the context."
 #~ msgstr "Geef een korte samenvatting van het volgende dat in de context is verstrekt."
 
-#: src/components/participant/ParticipantBody.tsx:192
+#: src/components/participant/ParticipantBody.tsx:200
 msgid ""
-"Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.  \n"
-"**Please keep this screen lit up**  \n"
+"Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
+"**Please keep this screen lit up**\n"
 "(black screen = not recording)"
 msgstr ""
-"Neem uw antwoord op door op de knop \"Opnemen\" hieronder te klikken. U kunt er ook voor kiezen om in tekst te reageren door op het teksticoon te klikken.  \n"
-"**Houd dit scherm aan**  \n"
-"(zwart scherm = geen opname)"
+"Neem je reactie op door op de knop \"Record\" hieronder te klikken. Je kunt ook in tekst reageren door op het teksticoon te klikken.\n"
+"**Houd dit scherm verlicht**\n"
+"(zwart scherm = niet aan het opnemen)"
+
+#: src/components/participant/ParticipantBody.tsx:196
+msgid ""
+"Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
+"**Please keep this screen lit up**\n"
+"(black screen = not recording)\n"
+"This transcript will be anonymized and your host will not be able to listen to your recording."
+msgstr ""
+"Neem je reactie op door op de knop \"Record\" hieronder te klikken. Je kunt ook in tekst reageren door op het teksticoon te klikken.\n"
+"**Houd dit scherm verlicht**\n"
+"(zwart scherm = niet aan het opnemen)\n"
+"Je transcriptie wordt geanonimiseerd en je host kan niet naar je opname luisteren."
+
+#: src/components/participant/ParticipantBody.tsx:194
+#~ msgid ""
+#~ "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.  \n"
+#~ "**Please keep this screen lit up**  \n"
+#~ "(black screen = not recording)"
+#~ msgstr ""
+#~ "Neem uw antwoord op door op de knop \"Opnemen\" hieronder te klikken. U kunt er ook voor kiezen om in tekst te reageren door op het teksticoon te klikken.  \n"
+#~ "**Houd dit scherm aan**  \n"
+#~ "(zwart scherm = geen opname)"
 
 #~ msgid "Please record your response by clicking the \"Start Recording\" button below. You may also choose to respond in text by clicking the text icon."
 #~ msgstr "Neem uw antwoord op door op de knop \"Opname starten\" hieronder te klikken. U kunt er ook voor kiezen om in tekst te reageren door op het teksticoon te klikken."
@@ -4069,7 +4093,7 @@ msgstr ""
 #~ msgid "Please select at least one source"
 #~ msgstr "Kies minstens één bron"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:894
+#: src/routes/project/chat/ProjectChatRoute.tsx:820
 msgid "Please select conversations from the sidebar to proceed"
 msgstr "Selecteer gesprekken in de sidebar om verder te gaan"
 
@@ -4111,11 +4135,11 @@ msgstr "Wacht aub terwijl we uw e-mailadres controleren."
 msgid "PNG, JPEG, or WebP. Will be cropped to a circle."
 msgstr "PNG, JPEG of WebP. Wordt bijgesneden tot een cirkel."
 
-#: src/components/project/ProjectPortalEditor.tsx:1332
+#: src/components/project/ProjectPortalEditor.tsx:1333
 msgid "Portal Content"
 msgstr "Portal inhoud"
 
-#: src/components/project/ProjectPortalEditor.tsx:583
+#: src/components/project/ProjectPortalEditor.tsx:584
 #: src/components/layout/ProjectOverviewLayout.tsx:47
 msgid "Portal Editor"
 msgstr "Portaal-editor"
@@ -4153,7 +4177,7 @@ msgstr "Voorbeeld: De snelle bruine vos springt over de luiende hond."
 msgid "Print / Save PDF"
 msgstr "Afdrukken / PDF opslaan"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1145
+#: src/routes/project/report/ProjectReportRoute.tsx:1150
 msgid "Print report"
 msgstr "Rapport afdrukken"
 
@@ -4170,7 +4194,7 @@ msgstr "Rapport afdrukken"
 msgid "Privacy Statements"
 msgstr "Privacy verklaring"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1359
+#: src/routes/project/report/ProjectReportRoute.tsx:1364
 msgid "Proceed"
 msgstr "Doorgaan"
 
@@ -4279,7 +4303,7 @@ msgid "Projects Home"
 msgstr "Projecten Home"
 
 #: src/components/project/CustomTopicModal.tsx:202
-#: src/components/chat/TemplatesModal.tsx:531
+#: src/components/chat/TemplatesModal.tsx:463
 msgid "Prompt"
 msgstr "Prompt"
 
@@ -4290,12 +4314,11 @@ msgstr "Geef een overzicht van de belangrijkste onderwerpen en herhalende thema'
 #~ msgid "Provide specific context to improve transcript quality and accuracy. This may include key terms, specific instructions, or other relevant information."
 #~ msgstr "Geef specifieke context om de kwaliteit en nauwkeurigheid van de transcriptie te verbeteren. Dit kan bestaan uit belangrijke termen, specifieke instructies of andere relevante informatie."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:988
-#: src/components/chat/PublishTemplateForm.tsx:178
+#: src/routes/project/report/ProjectReportRoute.tsx:993
 msgid "Publish"
 msgstr "Publiceren"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1021
+#: src/routes/project/report/ProjectReportRoute.tsx:1026
 msgid "Publish this report first to show the portal link"
 msgstr "Publiceer dit rapport eerst om de portallink te tonen"
 
@@ -4307,25 +4330,25 @@ msgstr "Publiceer dit rapport eerst om de portallink te tonen"
 #~ msgid "Publish this report to enable sharing"
 #~ msgstr "Publiceer dit rapport om delen mogelijk te maken"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1057
+#: src/routes/project/report/ProjectReportRoute.tsx:1062
 msgid "Publish this report to get a share link"
 msgstr "Publiceer dit rapport om een deellink te krijgen"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:987
+#: src/routes/project/report/ProjectReportRoute.tsx:992
 msgid "Published"
 msgstr "Gepubliceerd"
 
 #: src/components/chat/TemplatesModal.tsx:661
-msgid "Published to community"
-msgstr "Gepubliceerd in community"
+#~ msgid "Published to community"
+#~ msgstr "Gepubliceerd in community"
 
 #: src/components/chat/ChatModeSelector.tsx:62
 msgid "Pull out the most impactful quotes from this session"
 msgstr "Haal de meest impactvolle quotes uit deze sessie"
 
 #: src/components/chat/QuickAccessConfigurator.tsx:78
-msgid "Quick Access (max 5)"
-msgstr "Snelle toegang (max 5)"
+#~ msgid "Quick Access (max 5)"
+#~ msgstr "Snelle toegang (max 5)"
 
 #: src/components/chat/TemplatesModal.tsx:713
 #~ msgid "Quick access is full (max 5)"
@@ -4339,8 +4362,8 @@ msgstr "Snelle toegang (max 5)"
 #~ msgstr "Quotes"
 
 #: src/components/chat/TemplateRatingPills.tsx:61
-msgid "Rate this prompt:"
-msgstr "Beoordeel deze prompt:"
+#~ msgid "Rate this prompt:"
+#~ msgstr "Beoordeel deze prompt:"
 
 #: src/components/settings/ChangePasswordCard.tsx:89
 msgid "Re-enter new password"
@@ -4429,7 +4452,7 @@ msgstr "Terugkerende thema's"
 msgid "References"
 msgstr "Referenties"
 
-#: src/components/project/ProjectPortalEditor.tsx:1646
+#: src/components/project/ProjectPortalEditor.tsx:1684
 msgid "Refresh"
 msgstr "Vernieuwen"
 
@@ -4486,7 +4509,7 @@ msgstr "Opnieuw laden"
 #~ msgid "Reload Page"
 #~ msgstr "Pagina herladen"
 
-#: src/components/project/ProjectPortalEditor.tsx:1249
+#: src/components/project/ProjectPortalEditor.tsx:1250
 msgid "Remind users to verify before finishing"
 msgstr "Gebruikers herinneren om te controleren voordat ze klaar zijn"
 
@@ -4506,8 +4529,8 @@ msgstr "Bestand verwijderen"
 #: src/components/chat/TemplatesModal.tsx:680
 #: src/components/chat/CommunityTemplateCard.tsx:73
 #: src/components/chat/CommunityTemplateCard.tsx:83
-msgid "Remove from favorites"
-msgstr "Verwijderen uit favorieten"
+#~ msgid "Remove from favorites"
+#~ msgstr "Verwijderen uit favorieten"
 
 #: src/components/chat/TemplatesModal.tsx:706
 #~ msgid "Remove from quick access"
@@ -4525,7 +4548,7 @@ msgstr "Naam wijzigen"
 #~ msgid "Rename"
 #~ msgstr "Naam wijzigen"
 
-#: src/components/project/ProjectPortalEditor.tsx:957
+#: src/components/project/ProjectPortalEditor.tsx:958
 msgid "Reply Prompt"
 msgstr "Reactie prompt"
 
@@ -4554,9 +4577,9 @@ msgstr "Rapporteer een probleem"
 msgid "Report Created - {0}"
 msgstr "Rapport aangemaakt - {0}"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:781
-#: src/routes/project/report/ProjectReportRoute.tsx:857
-#: src/routes/project/report/ProjectReportRoute.tsx:1296
+#: src/routes/project/report/ProjectReportRoute.tsx:786
+#: src/routes/project/report/ProjectReportRoute.tsx:862
+#: src/routes/project/report/ProjectReportRoute.tsx:1301
 msgid "Report generation cancelled"
 msgstr "Rapportgeneratie geannuleerd"
 
@@ -4568,16 +4591,16 @@ msgstr "Rapport wordt gegenereerd..."
 #~ msgid "Report generation is currently in beta and limited to projects with fewer than 10 hours of recording."
 #~ msgstr "Rapport generatie is momenteel in beta en beperkt tot projecten met minder dan 10 uur opname."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:786
-#: src/routes/project/report/ProjectReportRoute.tsx:1301
+#: src/routes/project/report/ProjectReportRoute.tsx:791
+#: src/routes/project/report/ProjectReportRoute.tsx:1306
 msgid "Report generation was cancelled. You can start a new report below."
 msgstr "Rapportgeneratie is geannuleerd. Je kunt hieronder een nieuw rapport starten."
 
-#: src/components/project/ProjectPortalEditor.tsx:1278
+#: src/components/project/ProjectPortalEditor.tsx:1279
 msgid "Report Notifications"
 msgstr "Rapportmeldingen"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:519
+#: src/routes/project/report/ProjectReportRoute.tsx:524
 msgid "Report scheduled"
 msgstr "Rapport gepland"
 
@@ -4596,7 +4619,7 @@ msgstr "Report templates staan op onze roadmap."
 msgid "Report Updated - {0}"
 msgstr "Rapport bijgewerkt - {0}"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:906
+#: src/routes/project/report/ProjectReportRoute.tsx:911
 msgid "Reports"
 msgstr "Rapporten"
 
@@ -4629,11 +4652,11 @@ msgstr "Microfoontoegang aanvragen om beschikbare apparaten te detecteren..."
 msgid "Required"
 msgstr "Verplicht"
 
-#: src/components/project/ProjectPortalEditor.tsx:1310
+#: src/components/project/ProjectPortalEditor.tsx:1311
 msgid "Requires \"Ask for Email?\" to be enabled"
 msgstr "Vraagt om e-mailadres? moet zijn ingeschakeld"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:584
+#: src/routes/project/report/ProjectReportRoute.tsx:589
 msgid "Reschedule"
 msgstr "Herplannen"
 
@@ -4689,7 +4712,7 @@ msgstr "Hertranscriptie niet beschikbaar voor anonieme gesprekken"
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "Hertranscriptie gestart. Nieuw gesprek wordt binnenkort beschikbaar."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:805
+#: src/routes/project/chat/ProjectChatRoute.tsx:742
 msgid "Retry"
 msgstr "Opnieuw proberen"
 
@@ -4734,7 +4757,6 @@ msgstr "Uitvoeringsstatus:"
 #: src/components/settings/ChangePasswordCard.tsx:103
 #: src/components/settings/AccountSettingsCard.tsx:198
 #: src/components/project/CustomTopicModal.tsx:241
-#: src/components/chat/CommunityTemplateCard.tsx:151
 msgid "Save"
 msgstr "Opslaan"
 
@@ -4756,16 +4778,16 @@ msgid "Save Error!"
 msgstr "Opslaan fout!"
 
 #: src/components/chat/QuickAccessConfigurator.tsx:140
-msgid "Save Quick Access"
-msgstr "Snelle toegang opslaan"
+#~ msgid "Save Quick Access"
+#~ msgstr "Snelle toegang opslaan"
 
-#: src/components/chat/TemplatesModal.tsx:553
+#: src/components/chat/TemplatesModal.tsx:485
 msgid "Save template"
 msgstr "Template opslaan"
 
 #: src/components/chat/TemplatesModal.tsx:695
-msgid "Save to my templates"
-msgstr "Opslaan in mijn templates"
+#~ msgid "Save to my templates"
+#~ msgstr "Opslaan in mijn templates"
 
 #: src/components/form/SaveStatus.tsx:47
 msgid "Saving..."
@@ -4827,7 +4849,7 @@ msgstr "Zoek projecten..."
 msgid "Search tags"
 msgstr "Zoek tags"
 
-#: src/components/chat/TemplatesModal.tsx:882
+#: src/components/chat/TemplatesModal.tsx:689
 msgid "Search templates..."
 msgstr "Zoek templates..."
 
@@ -4891,7 +4913,7 @@ msgstr "Alle resultaten selecteren"
 msgid "Select at least one event"
 msgstr "Selecteer ten minste één gebeurtenis"
 
-#: src/components/project/ProjectPortalEditor.tsx:1164
+#: src/components/project/ProjectPortalEditor.tsx:1165
 msgid "Select at least one other topic before deleting this one"
 msgstr "Selecteer ten minste één ander onderwerp voordat u dit verwijdert"
 
@@ -4918,20 +4940,20 @@ msgstr "Selecteer Project"
 msgid "Select tags"
 msgstr "Selecteer tags"
 
-#: src/components/project/ProjectPortalEditor.tsx:749
+#: src/components/project/ProjectPortalEditor.tsx:750
 msgid "Select the instructions that will be shown to participants when they start a conversation"
 msgstr "Selecteer de instructies die worden getoond aan deelnemers wanneer ze een gesprek starten"
 
-#: src/components/project/ProjectPortalEditor.tsx:842
+#: src/components/project/ProjectPortalEditor.tsx:843
 msgid "Select the type of feedback or engagement you want to encourage."
 msgstr "Selecteer het type feedback of betrokkenheid dat u wilt stimuleren."
 
-#: src/components/project/ProjectPortalEditor.tsx:737
+#: src/components/project/ProjectPortalEditor.tsx:738
 msgid "Select tutorial"
 msgstr "Selecteer tutorial"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:1056
+#: src/components/project/ProjectPortalEditor.tsx:1057
 msgid "dashboard.dembrane.feature.verify.topic.select"
 msgstr "Selecteer welke onderwerpen deelnemers kunnen gebruiken voor \"Controleren\"."
 
@@ -4965,7 +4987,7 @@ msgstr "Selectie te groot"
 msgid "select.all.modal.context.limit.reached"
 msgstr "Selectie te groot. Sommige gesprekken zijn niet toegevoegd."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:997
+#: src/routes/project/chat/ProjectChatRoute.tsx:923
 #: src/components/chat/AgenticChatPanel.tsx:659
 msgid "Send"
 msgstr "Verzenden"
@@ -5010,7 +5032,7 @@ msgstr "Instellingen | Dembrane"
 #~ msgid "Share"
 #~ msgstr "Delen"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1130
+#: src/routes/project/report/ProjectReportRoute.tsx:1135
 msgid "Share report"
 msgstr "Rapport delen"
 
@@ -5019,12 +5041,12 @@ msgstr "Rapport delen"
 #~ msgstr "Dit rapport delen"
 
 #: src/components/chat/TemplatesModal.tsx:746
-msgid "Share with community"
-msgstr "Delen met community"
+#~ msgid "Share with community"
+#~ msgstr "Delen met community"
 
 #: src/components/chat/PublishTemplateForm.tsx:87
-msgid "Share with the community"
-msgstr "Delen met de community"
+#~ msgid "Share with the community"
+#~ msgstr "Delen met de community"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:154
 msgid "Share your details here"
@@ -5108,7 +5130,7 @@ msgstr "Revisiegegevens tonen"
 msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 msgstr "Toont {displayFrom}–{displayTo} van {totalItems} items"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:876
+#: src/routes/project/report/ProjectReportRoute.tsx:881
 msgid "Showing your most recent completed report."
 msgstr "Uw meest recente voltooide rapport wordt getoond."
 
@@ -5158,9 +5180,9 @@ msgstr "Sommige kunnen worden overgeslagen (geen transcript of selectie te groot
 msgid "participant.modal.s3check.message"
 msgstr "Iets blokkeert je verbinding. Je audio wordt niet opgeslagen tenzij dit wordt opgelost."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:782
-#: src/routes/project/report/ProjectReportRoute.tsx:858
-#: src/routes/project/report/ProjectReportRoute.tsx:1297
+#: src/routes/project/report/ProjectReportRoute.tsx:787
+#: src/routes/project/report/ProjectReportRoute.tsx:863
+#: src/routes/project/report/ProjectReportRoute.tsx:1302
 #: src/routes/auth/Login.tsx:159
 #: src/components/participant/ParticipantInitiateForm.tsx:93
 #: src/components/conversation/ConversationEdit.tsx:252
@@ -5177,7 +5199,7 @@ msgstr "Er is iets misgegaan met het gesprek. Probeer het alstublieft opnieuw of
 msgid "participant.conversation.error"
 msgstr "Er is iets misgegaan met het gesprek. Probeer het alstublieft opnieuw of neem contact op met de ondersteuning als het probleem blijft bestaan"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:871
+#: src/routes/project/report/ProjectReportRoute.tsx:876
 msgid "Something went wrong generating your latest report."
 msgstr "Er is iets misgegaan bij het genereren van uw laatste rapport."
 
@@ -5185,8 +5207,8 @@ msgstr "Er is iets misgegaan bij het genereren van uw laatste rapport."
 #~ msgid "Something went wrong generating your latest report. Showing your most recent completed report."
 #~ msgstr "Er ging iets mis bij het genereren van je laatste rapport. Je meest recente voltooide rapport wordt getoond."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:793
-#: src/routes/project/report/ProjectReportRoute.tsx:1310
+#: src/routes/project/report/ProjectReportRoute.tsx:798
+#: src/routes/project/report/ProjectReportRoute.tsx:1315
 msgid "Something went wrong generating your report."
 msgstr "Er is iets misgegaan bij het genereren van uw rapport."
 
@@ -5205,7 +5227,7 @@ msgstr "Er is iets misgegaan bij het genereren van het geheim."
 #~ msgid "Something went wrong while uploading the file: {0}"
 #~ msgstr "Er ging iets mis tijdens het uploaden van het bestand: {0}"
 
-#: src/components/participant/ParticipantBody.tsx:155
+#: src/components/participant/ParticipantBody.tsx:157
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Er ging iets mis met het gesprek. Probeer het alstublieft opnieuw of neem contact op met de ondersteuning als het probleem blijft bestaan"
 
@@ -5236,7 +5258,7 @@ msgstr "Bron {0}"
 #~ msgid "Sources:"
 #~ msgstr "Bronnen:"
 
-#: src/components/project/ProjectPortalEditor.tsx:635
+#: src/components/project/ProjectPortalEditor.tsx:636
 msgid "Spanish"
 msgstr "Spaans"
 
@@ -5284,7 +5306,7 @@ msgstr "Opnieuw beginnen"
 msgid "Status"
 msgstr "Status"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:750
+#: src/routes/project/chat/ProjectChatRoute.tsx:699
 #: src/components/chat/AgenticChatPanel.tsx:487
 msgid "Stop"
 msgstr "Stop"
@@ -5303,7 +5325,7 @@ msgid "Submit"
 msgstr "Stuur in"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:229
+#: src/components/participant/ParticipantConversationText.tsx:230
 msgid "participant.button.submit.text.mode"
 msgstr "Stuur in"
 
@@ -5314,7 +5336,7 @@ msgstr "Stuur in"
 msgid "Success"
 msgstr "Succes"
 
-#: src/components/chat/TemplatesModal.tsx:872
+#: src/components/chat/TemplatesModal.tsx:679
 msgid "Suggest dynamic suggestions based on your conversation."
 msgstr "Dynamische suggesties voorstellen op basis van uw gesprek."
 
@@ -5327,7 +5349,7 @@ msgstr "Dynamische suggesties voorstellen op basis van uw gesprek."
 #~ msgstr "Suggesties op basis van je gesprekken. Stuur een bericht om het in actie te zien."
 
 #: src/components/library/LibraryTemplatesMenu.tsx:33
-#: src/components/chat/ChatTemplatesMenu.tsx:296
+#: src/components/chat/ChatTemplatesMenu.tsx:277
 msgid "Suggested:"
 msgstr "Aanbevelingen:"
 
@@ -5388,8 +5410,8 @@ msgid "Tags"
 msgstr "Trefwoorden"
 
 #: src/components/chat/PublishTemplateForm.tsx:114
-msgid "Tags (max 3)"
-msgstr "Tags (max 3)"
+#~ msgid "Tags (max 3)"
+#~ msgstr "Tags (max 3)"
 
 #: src/components/participant/ParticipantConversationAudio.tsx:448
 msgid "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from Dembrane to help you deepen the conversation."
@@ -5404,12 +5426,12 @@ msgstr "Kijk of de uitkomst klopt, en pas aan waar nodig."
 msgid "participant.refine.make.concrete.description"
 msgstr "Kijk of de uitkomst klopt, en pas aan waar nodig."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:553
+#: src/routes/project/chat/ProjectChatRoute.tsx:515
 #: src/components/chat/AgenticChatPanel.tsx:379
 msgid "Template applied"
 msgstr "Template toegepast"
 
-#: src/components/chat/TemplatesModal.tsx:524
+#: src/components/chat/TemplatesModal.tsx:456
 msgid "Template name"
 msgstr "Template naam"
 
@@ -5417,7 +5439,7 @@ msgstr "Template naam"
 #~ msgid "Template prompt content..."
 #~ msgstr "Template prompt inhoud..."
 
-#: src/components/chat/TemplatesModal.tsx:464
+#: src/components/chat/TemplatesModal.tsx:396
 msgid "Templates"
 msgstr "Sjablonen"
 
@@ -5436,7 +5458,7 @@ msgstr "Dank je wel voor je deelname!"
 #~ msgid "Thank You Page"
 #~ msgstr "Bedankt Pagina"
 
-#: src/components/project/ProjectPortalEditor.tsx:1398
+#: src/components/project/ProjectPortalEditor.tsx:1399
 msgid "Thank You Page Content"
 msgstr "Bedankt pagina inhoud"
 
@@ -5604,7 +5626,7 @@ msgstr "Deze functie is beschikbaar over {remainingTime} seconden."
 msgid "This information is anonymized"
 msgstr "Deze informatie is anoniem"
 
-#: src/components/project/ProjectPortalEditor.tsx:1650
+#: src/components/project/ProjectPortalEditor.tsx:1688
 msgid "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
 msgstr "Dit is een live voorbeeld van het portaal van de deelnemer. U moet de pagina vernieuwen om de meest recente wijzigingen te bekijken."
 
@@ -5635,15 +5657,15 @@ msgstr "Dit is uw projectbibliotheek. Creëer weergaven om uw hele project tegel
 #~ msgid "This language will be used for the Participant's Portal, transcription and analysis. To change the language of this application, please use the language picker in the header user menu instead."
 #~ msgstr "Deze taal wordt gebruikt voor de Portal van de deelnemer, transcriptie en analyse. Om de taal van deze toepassing te wijzigen, gebruikt u de taalkiezer in het gebruikersmenu in de header."
 
-#: src/components/project/ProjectPortalEditor.tsx:630
+#: src/components/project/ProjectPortalEditor.tsx:631
 msgid "This language will be used for the Participant's Portal."
 msgstr "Deze taal wordt gebruikt voor de Portal van de deelnemer."
 
-#: src/components/project/ProjectPortalEditor.tsx:1408
+#: src/components/project/ProjectPortalEditor.tsx:1409
 msgid "This page is shown after the participant has completed the conversation."
 msgstr "Deze pagina wordt getoond na het voltooien van het gesprek door de deelnemer."
 
-#: src/components/project/ProjectPortalEditor.tsx:1376
+#: src/components/project/ProjectPortalEditor.tsx:1377
 msgid "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
 msgstr "Deze pagina wordt getoond aan deelnemers wanneer ze een gesprek starten na het voltooien van de tutorial."
 
@@ -5653,7 +5675,7 @@ msgstr "Deze pagina wordt getoond aan deelnemers wanneer ze een gesprek starten 
 #~ msgid "This project library was generated on {0}."
 #~ msgstr "Deze projectbibliotheek is op {0} gemaakt."
 
-#: src/components/project/ProjectPortalEditor.tsx:968
+#: src/components/project/ProjectPortalEditor.tsx:969
 msgid "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
 msgstr "Deze prompt bepaalt hoe de AI reageert op deelnemers. Deze prompt stuurt aan hoe de AI reageert"
 
@@ -5669,7 +5691,7 @@ msgstr "Dit rapport werd geopend door {0} mensen"
 #~ msgid "This summary is AI-generated and brief, for thorough analysis, use the Chat or Library."
 #~ msgstr "Deze samenvatting is AI-gegenereerd en kort, voor een uitgebreide analyse, gebruik de Chat of Bibliotheek."
 
-#: src/components/project/ProjectPortalEditor.tsx:1353
+#: src/components/project/ProjectPortalEditor.tsx:1354
 msgid "This title is shown to participants when they start a conversation"
 msgstr "Deze titel wordt getoond aan deelnemers wanneer ze een gesprek starten"
 
@@ -5715,7 +5737,7 @@ msgstr "Tijdstempel"
 msgid "Timestamps and duration"
 msgstr "Tijdstempels en duur"
 
-#: src/components/participant/ParticipantBody.tsx:147
+#: src/components/participant/ParticipantBody.tsx:149
 msgid "Tip"
 msgstr "Tip"
 
@@ -5723,7 +5745,7 @@ msgstr "Tip"
 msgid "Tip: Use the play button (▶) to send a test payload to your webhook and verify it's working correctly."
 msgstr "Tip: Gebruik de afspeelknop (▶) om een testpayload naar je webhook te verzenden en te controleren of het correct werkt."
 
-#: src/components/chat/TemplatesModal.tsx:541
+#: src/components/chat/TemplatesModal.tsx:473
 msgid "Tip: You can also create a template from any chat message you send, or duplicate an existing template."
 msgstr "Tip: U kunt ook een sjabloon maken van elk chatbericht dat u verstuurt, of een bestaand sjabloon dupliceren."
 
@@ -5901,6 +5923,20 @@ msgstr "Vraag bijvoorbeeld"
 msgid "Try moving a bit closer to your microphone for better sound quality."
 msgstr "Probeer een beetje dichter bij je microfoon te komen voor betere geluidskwaliteit."
 
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:1536
+msgid "portal.anonymization.disable.confirm"
+msgstr "Uitschakelen"
+
+#: src/components/project/ProjectPortalEditor.tsx:1513
+msgid "Turn off anonymization?"
+msgstr "Anonimisering uitschakelen?"
+
+#. js-lingui-explicit-id
+#: src/components/project/ProjectPortalEditor.tsx:1519
+msgid "portal.anonymization.disable.warning"
+msgstr "Het uitschakelen van anonimisering terwijl opnames gaande zijn kan onbedoelde gevolgen hebben. Actieve gesprekken worden ook beïnvloed tijdens de opname. Gebruik dit met voorzichtigheid."
+
 #: src/components/settings/TwoFactorSettingsCard.tsx:304
 msgid "Two-factor authentication"
 msgstr "Tweestapsverificatie"
@@ -5917,7 +5953,7 @@ msgstr "Tweestapsverificatie aangezet"
 msgid "Type"
 msgstr "Type"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:944
+#: src/routes/project/chat/ProjectChatRoute.tsx:870
 msgid "Type a message or press / for templates..."
 msgstr "Typ een bericht of druk / voor templates..."
 
@@ -5931,7 +5967,7 @@ msgstr "Typ een bericht of druk / voor templates..."
 #~ msgid "Type context here..."
 #~ msgstr "Typ hier de context..."
 
-#: src/components/participant/ParticipantConversationText.tsx:214
+#: src/components/participant/ParticipantConversationText.tsx:215
 msgid "Type your response here"
 msgstr "Typ hier uw reactie"
 
@@ -5956,7 +5992,7 @@ msgstr "Kan het gegenereerde resultaat niet laden. Probeer het opnieuw."
 msgid "Unable to process this chunk"
 msgstr "Kan dit fragment niet verwerken"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:555
+#: src/routes/project/chat/ProjectChatRoute.tsx:517
 #: src/components/chat/AgenticChatPanel.tsx:381
 msgid "Undo"
 msgstr "Ongedaan maken"
@@ -5969,7 +6005,7 @@ msgstr "Onbekend"
 msgid "Unknown reason"
 msgstr "Onbekende reden"
 
-#: src/components/chat/TemplatesModal.tsx:798
+#: src/components/chat/TemplatesModal.tsx:605
 msgid "Unpin"
 msgstr "Losmaken"
 
@@ -5991,8 +6027,8 @@ msgid "Unpin project"
 msgstr "Project losmaken"
 
 #: src/components/chat/TemplatesModal.tsx:731
-msgid "Unpublish from community"
-msgstr "Intrekken uit community"
+#~ msgid "Unpublish from community"
+#~ msgstr "Intrekken uit community"
 
 #: src/components/announcement/AnnouncementDrawerHeader.tsx:41
 msgid "unread announcement"
@@ -6126,8 +6162,8 @@ msgstr "URL moet beginnen met http:// of https://"
 #~ msgid "Use PII Redaction"
 #~ msgstr "PII redaction gebruiken"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:972
-#: src/routes/project/chat/ProjectChatRoute.tsx:1004
+#: src/routes/project/chat/ProjectChatRoute.tsx:898
+#: src/routes/project/chat/ProjectChatRoute.tsx:930
 msgid "Use Shift + Enter to add a new line"
 msgstr "Gebruik Shift + Enter om een nieuwe regel toe te voegen"
 
@@ -6149,7 +6185,7 @@ msgid "participant.modal.verify_prompt.title"
 msgstr "Herinnering om te controleren"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudioContent.tsx:166
+#: src/components/participant/ParticipantConversationAudioContent.tsx:167
 msgid "participant.banner.verification_required"
 msgstr "Verificatie vereist"
 
@@ -6185,7 +6221,7 @@ msgid "verified artifacts"
 msgstr "geverifieerde artefacten"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:990
+#: src/components/project/ProjectPortalEditor.tsx:991
 msgid "dashboard.dembrane.verify.title"
 msgstr "Controleren"
 
@@ -6203,7 +6239,7 @@ msgstr "Controleren"
 msgid "Verify code"
 msgstr "Code controleren"
 
-#: src/components/project/ProjectPortalEditor.tsx:1047
+#: src/components/project/ProjectPortalEditor.tsx:1048
 msgid "Verify Topics"
 msgstr "Controleren Themen"
 
@@ -6232,7 +6268,7 @@ msgstr "Voorbeeld payload bekijken"
 #~ msgid "View read announcements"
 #~ msgstr "Gelezen meldingen bekijken"
 
-#: src/components/participant/ParticipantBody.tsx:248
+#: src/components/participant/ParticipantBody.tsx:257
 msgid "View your responses"
 msgstr "Bekijk je reacties"
 
@@ -6345,7 +6381,7 @@ msgstr "Webhooks"
 msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 msgstr "Webhooks zijn geautomatiseerde berichten die van een app naar een andere worden verzonden wanneer iets gebeurt. Denk aan ze als een \"notificatiesysteem\" voor uw andere tools."
 
-#: src/components/participant/ParticipantBody.tsx:128
+#: src/components/participant/ParticipantBody.tsx:130
 msgid "Welcome"
 msgstr "Welkom"
 
@@ -6356,7 +6392,7 @@ msgstr "Welkom terug"
 #~ msgid "Welcome to Big Picture Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Details mode."
 #~ msgstr "Welkom in Big Picture Mode! Ik heb samenvattingen van al je gesprekken klaarstaan. Vraag me naar patronen, thema’s en inzichten in je data. Voor exacte quotes start je een nieuwe chat in Specific Details mode."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:664
+#: src/routes/project/chat/ProjectChatRoute.tsx:626
 msgid "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
 msgstr "Welkom bij dembrane Chat! Gebruik de zijbalk om bronnen en gesprekken te selecteren die je wilt analyseren. Daarna kun je vragen stellen over de geselecteerde inhoud."
 
@@ -6367,7 +6403,7 @@ msgstr "Welkom bij Dembrane!"
 #~ msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Deep Dive mode."
 #~ msgstr "Welkom in Overview Mode! Ik heb samenvattingen van al je gesprekken klaarstaan. Vraag me naar patronen, thema’s en inzichten in je data. Voor exacte quotes start je een nieuwe chat in Deep Dive Mode."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:663
+#: src/routes/project/chat/ProjectChatRoute.tsx:625
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Welkom in Overview Mode! Ik heb samenvattingen van al je gesprekken klaarstaan. Vraag me naar patronen, thema’s en inzichten in je data. Voor exacte quotes start je een nieuwe chat in Specific Context mode."
 
@@ -6407,7 +6443,7 @@ msgstr "Wat wil je controleren?"
 msgid "What patterns emerge from the data?"
 msgstr "Welke patronen zie je in de data?"
 
-#: src/components/chat/TemplatesModal.tsx:534
+#: src/components/chat/TemplatesModal.tsx:466
 msgid "What should ECHO analyse or generate from the conversations?"
 msgstr "Wat moet ECHO analyseren of genereren uit de gesprekken?"
 
@@ -6444,7 +6480,7 @@ msgstr "Wanneer alle audio is geconverteerd naar tekst en het volledige transcri
 msgid "When are webhooks triggered?"
 msgstr "Wanneer worden webhooks geactiveerd?"
 
-#: src/components/project/ProjectPortalEditor.tsx:1471
+#: src/components/project/ProjectPortalEditor.tsx:1472
 msgid "When enabled, all new transcripts will have personal information (names, emails, phone numbers, addresses) replaced with placeholders. Anonymized conversations also disable audio playback, audio download, and retranscription to protect participant privacy. This cannot be undone for already-processed conversations."
 msgstr "Wanneer ingeschakeld, zullen alle nieuwe transcripties persoonlijke informatie (namen, e-mails, telefoonnummers, adressen) worden vervangen door placeholders. Anonieme gesprekken deactiveren ook audio-afspelen, audio-download en hertranscriptie om de privacy van deelnemers te beschermen. Dit kan niet ongedaan worden gemaakt voor al bestaande gesprekken."
 
@@ -6452,7 +6488,7 @@ msgstr "Wanneer ingeschakeld, zullen alle nieuwe transcripties persoonlijke info
 #~ msgid "When enabled, all new transcripts will have personal information (names, emails, phone numbers, addresses) replaced with placeholders. This cannot be undone for already-processed conversations."
 #~ msgstr "Wanneer ingeschakeld, zullen alle nieuwe transcripties persoonlijke informatie (namen, e-mails, telefoonnummers, adressen) worden vervangen door placeholders. Dit kan niet ongedaan worden gemaakt voor al bestaande gesprekken."
 
-#: src/components/project/ProjectPortalEditor.tsx:1260
+#: src/components/project/ProjectPortalEditor.tsx:1261
 msgid "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 msgstr "Wanneer je het gesprek afmaakt, worden deelnemers die nog niet hebben geverifieerd gevraagd om te controleren of over te slaan"
 
@@ -6502,7 +6538,7 @@ msgstr "Je kunt maximaal {MAX_FILES} bestanden tegelijk uploaden. Alleen de eers
 #~ msgid "You can still use the Ask feature to chat with any conversation"
 #~ msgstr "Je kunt de vraagfunctie nog steeds gebruiken om met elk gesprek te chatten"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1315
+#: src/routes/project/report/ProjectReportRoute.tsx:1320
 msgid "You can try again below."
 msgstr "U kunt het hieronder opnieuw proberen."
 
@@ -6546,7 +6582,7 @@ msgstr "Je kunt er ook voor kiezen om een ander gesprek op te nemen."
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "Je moet inloggen met dezelfde provider die u gebruikte om u aan te melden. Als u problemen ondervindt, neem dan contact op met de ondersteuning."
 
-#: src/components/participant/ParticipantBody.tsx:146
+#: src/components/participant/ParticipantBody.tsx:148
 msgid "You seem to be offline, please check your internet connection"
 msgstr "Je lijkt offline te zijn, controleer je internetverbinding"
 
@@ -6570,7 +6606,7 @@ msgstr "Jouw goedkeuring helpt ons begrijpen wat je echt denkt!"
 msgid "Your inputs will be saved automatically."
 msgstr "Uw invoer wordt automatisch opgeslagen."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:862
+#: src/routes/project/report/ProjectReportRoute.tsx:867
 msgid "Your latest report generation was cancelled. Showing your most recent completed report."
 msgstr "De generatie van je laatste rapport is geannuleerd. Je meest recente voltooide rapport wordt getoond."
 
@@ -6585,7 +6621,7 @@ msgstr "Uw naam"
 msgid "Your response has been recorded. You may now close this tab."
 msgstr "Je antwoord is opgeslagen. Je kunt dit tabblad sluiten."
 
-#: src/components/participant/ParticipantBody.tsx:258
+#: src/components/participant/ParticipantBody.tsx:267
 msgid "Your responses"
 msgstr "Je reacties"
 
@@ -6602,8 +6638,8 @@ msgstr "Je weergaven"
 #~ msgstr "Je weergaven"
 
 #: src/components/chat/CommunityTemplateCard.tsx:128
-msgid "Yours"
-msgstr "Van jou"
+#~ msgid "Yours"
+#~ msgstr "Van jou"
 
 #: src/components/common/ImageCropModal.tsx:131
 msgid "Zoom"
