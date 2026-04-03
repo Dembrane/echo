@@ -488,7 +488,7 @@
 	padding: var(--spacing-1_5);
 	align-items: center;
 	overflow-x: auto;
-	position: sticky;
+	position: var(--mdx-toolbar-position, static);
 	top: var(--mdx-toolbar-top, 135px);
 	background-color: var(--baseBg);
 	width: inherit;

@@ -37,25 +37,25 @@ import {
 } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import {
-	ArrowLeft,
-	Copy,
-	DotsSixVertical,
-	Globe,
-	MagnifyingGlass,
-	PencilSimple,
-	Plus,
-	Trash,
-	X,
+	ArrowLeftIcon,
+	CopyIcon,
+	DotsSixVerticalIcon,
+	MagnifyingGlassIcon,
+	PencilSimpleIcon,
+	PlusIcon,
+	TrashIcon,
+	XIcon,
 } from "@phosphor-icons/react";
 import { IconPin, IconPinFilled } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import {
-	type QuickAccessItem,
 	encodeTemplateKey,
 	keyToQuickAccess,
+	type QuickAccessItem,
 	quickAccessToKey,
 } from "./templateKey";
-import { type Template, Templates } from "./templates";
+import { Templates } from "./templates";
 
 // ── Types ──
 
@@ -402,40 +402,23 @@ export const TemplatesModal = ({
 	// ── Render: Create / Edit view ──
 
 	const deleteConfirmationModal = (
-		<Modal
+		<ConfirmModal
 			opened={!!deletingTemplateId}
 			onClose={() => setDeletingTemplateId(null)}
 			title={t`Delete template`}
-			size="sm"
-			centered
-		>
-			<Stack gap="md">
-				<Text size="sm">
-					<Trans>
-						Are you sure you want to delete this template? This cannot be
-						undone.
-					</Trans>
-				</Text>
-				<Group justify="flex-end" gap="sm">
-					<Button variant="default" onClick={() => setDeletingTemplateId(null)}>
-						<Trans>Cancel</Trans>
-					</Button>
-					<Button
-						color="red"
-						loading={isDeleting}
-						onClick={() => {
-							if (deletingTemplateId) {
-								onDeleteUserTemplate?.(deletingTemplateId);
-								setDeletingTemplateId(null);
-								setView("browse");
-							}
-						}}
-					>
-						<Trans>Delete</Trans>
-					</Button>
-				</Group>
-			</Stack>
-		</Modal>
+			data-testid="template-delete-modal"
+			message={t`Are you sure you want to delete this template? This cannot be undone.`}
+			confirmLabel={<Trans>Delete</Trans>}
+			loading={isDeleting}
+			confirmColor="red"
+			onConfirm={() => {
+				if (deletingTemplateId) {
+					onDeleteUserTemplate?.(deletingTemplateId);
+					setDeletingTemplateId(null);
+					setView("browse");
+				}
+			}}
+		/>
 	);
 
 	if (view === "create" || view === "edit") {
@@ -445,7 +428,7 @@ export const TemplatesModal = ({
 					<div className="flex h-full flex-col">
 						<UnstyledButton onClick={handleBack} className="mb-4">
 							<Group gap={4}>
-								<ArrowLeft size={16} />
+								<ArrowLeftIcon size={16} />
 								<Text size="sm" c="dimmed">
 									<Trans>Back to templates</Trans>
 								</Text>
@@ -476,23 +459,26 @@ export const TemplatesModal = ({
 									</Trans>
 								</Text>
 							)}
-							<Button
-								onClick={view === "create" ? handleSaveCreate : handleSaveEdit}
-								loading={view === "create" ? isCreating : isUpdating}
-								disabled={!formTitle.trim() || !formContent.trim()}
-								fullWidth
-							>
-								<Trans>Save template</Trans>
-							</Button>
-							{view === "edit" && editingId && (
-								<UnstyledButton
-									onClick={() => setDeletingTemplateId(editingId)}
+							<Group justify="flex-end" gap="sm">
+								{view === "edit" && editingId && (
+									<Button
+										variant="subtle"
+										color="red"
+										onClick={() => setDeletingTemplateId(editingId)}
+									>
+										<Trans>Delete</Trans>
+									</Button>
+								)}
+								<Button
+									onClick={
+										view === "create" ? handleSaveCreate : handleSaveEdit
+									}
+									loading={view === "create" ? isCreating : isUpdating}
+									disabled={!formTitle.trim() || !formContent.trim()}
 								>
-									<Text size="sm" c="red" ta="center">
-										<Trans>Delete template</Trans>
-									</Text>
-								</UnstyledButton>
-							)}
+									<Trans>Save template</Trans>
+								</Button>
+							</Group>
 						</Stack>
 					</div>
 				</Modal>
@@ -538,7 +524,7 @@ export const TemplatesModal = ({
 								className="flex cursor-grab items-center text-gray-400 hover:text-gray-600 active:cursor-grabbing"
 								onClick={(e) => e.stopPropagation()}
 							>
-								<DotsSixVertical size={14} weight="bold" />
+								<DotsSixVerticalIcon size={14} weight="bold" />
 							</div>
 						</Tooltip>
 					)}
@@ -564,7 +550,7 @@ export const TemplatesModal = ({
 										handleDuplicate(tmpl.title, tmpl.content);
 									}}
 								>
-									<Copy size={12} />
+									<CopyIcon size={12} />
 								</ActionIcon>
 							</Tooltip>
 						)}
@@ -580,7 +566,7 @@ export const TemplatesModal = ({
 											if (ut) handleStartEdit(ut);
 										}}
 									>
-										<PencilSimple size={12} />
+										<PencilSimpleIcon size={12} />
 									</ActionIcon>
 								</Tooltip>
 								<Tooltip label={t`Delete`}>
@@ -594,7 +580,7 @@ export const TemplatesModal = ({
 											setDeletingTemplateId(tmpl.id);
 										}}
 									>
-										<Trash size={12} />
+										<TrashIcon size={12} />
 									</ActionIcon>
 								</Tooltip>
 							</>
@@ -687,7 +673,7 @@ export const TemplatesModal = ({
 							{/* Search */}
 							<TextInput
 								placeholder={t`Search templates...`}
-								leftSection={<MagnifyingGlass size={16} />}
+								leftSection={<MagnifyingGlassIcon size={16} />}
 								className="flex-1"
 								size="sm"
 								rightSection={
@@ -698,7 +684,7 @@ export const TemplatesModal = ({
 											aria-label="Clear search"
 											onClick={() => setSearchQuery("")}
 										>
-											<X size={16} />
+											<XIcon size={16} />
 										</ActionIcon>
 									) : null
 								}
@@ -710,7 +696,7 @@ export const TemplatesModal = ({
 							{/* Create template — primary CTA */}
 							<Button
 								variant="filled"
-								leftSection={<Plus size={16} />}
+								rightSection={<PlusIcon size={16} />}
 								onClick={handleStartCreate}
 							>
 								<Trans>Create template</Trans>

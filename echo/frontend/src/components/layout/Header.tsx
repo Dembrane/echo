@@ -55,11 +55,7 @@ type HeaderViewProps = {
 	loading: boolean;
 };
 
-function CreateFeedbackButton({
-	onFallback,
-}: {
-	onFallback: () => void;
-}) {
+function CreateFeedbackButton({ onFallback }: { onFallback: () => void }) {
 	const handleClick = async () => {
 		const feedback = Sentry.getFeedback();
 		if (feedback) {
@@ -74,10 +70,7 @@ function CreateFeedbackButton({
 	};
 
 	return (
-		<Menu.Item
-			leftSection={<IconBug size={14} />}
-			onClick={handleClick}
-		>
+		<Menu.Item leftSection={<IconBug size={14} />} onClick={handleClick}>
 			<Trans>Report an issue</Trans>
 		</Menu.Item>
 	);
@@ -169,20 +162,14 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 									<Announcements />
 								</>
 							)}
-							<Menu
-								withArrow
-								arrowPosition="center"
-								width={240}
-							>
+							<Menu withArrow arrowPosition="center" width={240} keepMounted>
 								<Menu.Target>
 									<ActionIcon
 										color="gray"
 										variant="transparent"
 										radius="xl"
 										size="lg"
-										{...testId(
-											"header-settings-gear-button",
-										)}
+										{...testId("header-settings-gear-button")}
 									>
 										<UserAvatar size={32} />
 									</ActionIcon>
@@ -197,9 +184,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 													size="sm"
 													fw={500}
 													truncate
-													{...testId(
-														"header-user-name",
-													)}
+													{...testId("header-user-name")}
 												>
 													{user.first_name ?? "User"}
 												</Text>
@@ -207,9 +192,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 													size="xs"
 													c="dimmed"
 													truncate
-													{...testId(
-														"header-user-email",
-													)}
+													{...testId("header-user-email")}
 												>
 													{user.email ?? ""}
 												</Text>
@@ -221,33 +204,22 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 
 									{/* Primary */}
 									<Menu.Item
-										leftSection={
-											<IconSettings size={14} />
-										}
+										leftSection={<IconSettings size={14} />}
 										onClick={handleSettingsClick}
-										{...testId(
-											"header-settings-menu-item",
-										)}
+										{...testId("header-settings-menu-item")}
 									>
 										<Trans>Settings</Trans>
 									</Menu.Item>
 
 									<Menu.Item
-										leftSection={
-											<IconNotes size={14} />
-										}
+										leftSection={<IconNotes size={14} />}
 										component="a"
 										href={docUrl}
 										target="_blank"
 										rightSection={
-											<IconExternalLink
-												size={10}
-												className="opacity-30"
-											/>
+											<IconExternalLink size={10} className="opacity-30" />
 										}
-										{...testId(
-											"header-documentation-menu-item",
-										)}
+										{...testId("header-documentation-menu-item")}
 									>
 										<Trans>Documentation</Trans>
 									</Menu.Item>
@@ -256,49 +228,34 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 
 									{/* Community */}
 									<Menu.Item
-										leftSection={
-											<IconMessageCircle size={14} />
-										}
-										onClick={() =>
-											setFeedbackPortalOpen(true)
-										}
+										leftSection={<IconMessageCircle size={14} />}
+										onClick={() => setFeedbackPortalOpen(true)}
 									>
 										<Trans>Feedback portal</Trans>
 									</Menu.Item>
 
-									<CreateFeedbackButton onFallback={() => setFeedbackFallbackOpen(true)} />
+									<CreateFeedbackButton
+										onFallback={() => setFeedbackFallbackOpen(true)}
+									/>
 
 									<Menu.Item
-										leftSection={
-											<IconUsers size={14} />
-										}
+										leftSection={<IconUsers size={14} />}
 										component="a"
 										href={COMMUNITY_SLACK_URL}
 										target="_blank"
 										onClick={() => {
 											try {
-												analytics.trackEvent(
-													events.JOIN_SLACK_COMMUNITY,
-												);
+												analytics.trackEvent(events.JOIN_SLACK_COMMUNITY);
 											} catch (error) {
-												console.warn(
-													"Analytics tracking failed:",
-													error,
-												);
+												console.warn("Analytics tracking failed:", error);
 											}
 										}}
 										rightSection={
-											<Badge
-												size="xs"
-												variant="light"
-												color="blue"
-											>
+											<Badge size="xs" variant="light" color="blue">
 												10+
 											</Badge>
 										}
-										{...testId(
-											"header-join-community-menu-item",
-										)}
+										{...testId("header-join-community-menu-item")}
 									>
 										<Trans>Slack community</Trans>
 									</Menu.Item>
@@ -311,14 +268,10 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 									</Box>
 
 									<Menu.Item
-										leftSection={
-											<IconLogout size={14} />
-										}
+										leftSection={<IconLogout size={14} />}
 										onClick={handleLogout}
 										color="red"
-										{...testId(
-											"header-logout-menu-item",
-										)}
+										{...testId("header-logout-menu-item")}
 									>
 										<Trans>Logout</Trans>
 									</Menu.Item>
@@ -342,10 +295,9 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 				<Stack gap="md">
 					<Text size="sm">
 						<Trans>
-							The built-in issue reporter could not be loaded.
-							You can still let us know what went wrong through
-							our feedback portal. It helps us fix things
-							faster than not submitting a report.
+							The built-in issue reporter could not be loaded. You can still let
+							us know what went wrong through our feedback portal. It helps us
+							fix things faster than not submitting a report.
 						</Trans>
 					</Text>
 					<Group justify="flex-end">
@@ -376,25 +328,23 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 				<Stack gap="md">
 					<Text size="sm">
 						<Trans>
-							We'd love to hear from you. Whether you have an
-							idea for something new, you've hit a bug, spotted
-							a translation that feels off, or just want to
-							share how things have been going.
+							We'd love to hear from you. Whether you have an idea for something
+							new, you've hit a bug, spotted a translation that feels off, or
+							just want to share how things have been going.
 						</Trans>
 					</Text>
 					<Text size="sm">
 						<Trans>
-							To help us act on it, try to include where it
-							happened and what you were trying to do. For bugs,
-							tell us what went wrong. For ideas, tell us what
-							need it would solve for you.
+							To help us act on it, try to include where it happened and what
+							you were trying to do. For bugs, tell us what went wrong. For
+							ideas, tell us what need it would solve for you.
 						</Trans>
 					</Text>
 					<Text size="sm">
 						<Trans>
-							Just talk or type naturally. Your input goes
-							directly to our product team and genuinely helps us
-							make dembrane better. We read everything.
+							Just talk or type naturally. Your input goes directly to our
+							product team and genuinely helps us make dembrane better. We read
+							everything.
 						</Trans>
 					</Text>
 					<Text size="sm" c="dimmed">

@@ -41,6 +41,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { CloseableAlert } from "@/components/common/ClosableAlert";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { ExponentialProgress } from "@/components/common/ExponentialProgress";
 import { CreateReportForm } from "@/components/report/CreateReportForm";
 import {
@@ -978,7 +979,7 @@ export const ProjectReportRoute = () => {
 									backgroundColor: "var(--mantine-color-body)",
 									position: "sticky",
 									top: "1rem",
-									zIndex: 10,
+									zIndex: 5,
 								}}
 							>
 								<Stack gap={0}>
@@ -1260,12 +1261,15 @@ export const ProjectReportRoute = () => {
 									style={
 										fullscreen
 											? ({
+													"--mdx-toolbar-position": "sticky",
 													"--mdx-toolbar-top": "0px",
 													backgroundColor: "white",
 													overflow: "auto",
 													padding: "2rem",
 												} as React.CSSProperties)
-											: undefined
+											: ({
+													"--mdx-toolbar-position": "sticky",
+												} as React.CSSProperties)
 									}
 								>
 									<ReportRenderer
@@ -1367,36 +1371,17 @@ export const ProjectReportRoute = () => {
 			</Modal>
 
 			{/* Delete confirmation modal */}
-			<Modal
+			<ConfirmModal
 				opened={deleteModalOpened}
 				onClose={closeDeleteModal}
-				title={t`Delete Report`}
-				{...testId("report-delete-confirmation-modal")}
-			>
-				<Text size="sm">
-					<Trans>
-						Are you sure you want to delete this report? This action cannot be
-						undone.
-					</Trans>
-				</Text>
-				<Group mt="md" justify="end">
-					<Button
-						onClick={closeDeleteModal}
-						variant="outline"
-						{...testId("report-delete-cancel-button")}
-					>
-						<Trans>Cancel</Trans>
-					</Button>
-					<Button
-						onClick={handleConfirmDelete}
-						color="red"
-						loading={isDeletingReport}
-						{...testId("report-delete-confirm-button")}
-					>
-						<Trans>Delete</Trans>
-					</Button>
-				</Group>
-			</Modal>
+				title={t`Delete report`}
+				message={t`Are you sure you want to delete this report? This action cannot be undone.`}
+				confirmLabel={<Trans>Delete</Trans>}
+				confirmColor="red"
+				loading={isDeletingReport}
+				onConfirm={handleConfirmDelete}
+				data-testid="report-delete-modal"
+			/>
 
 			{/* Responsive CSS for mobile + pulse animation */}
 			<style>{`
