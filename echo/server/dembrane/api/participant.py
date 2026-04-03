@@ -85,6 +85,8 @@ class PublicConversationSchema(BaseModel):
     participant_email: Optional[str] = None
     participant_name: Optional[str] = None
 
+    is_anonymized: Optional[bool] = None
+
 
 class InitiateConversationRequestBodySchema(BaseModel):
     name: str
