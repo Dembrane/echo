@@ -85,19 +85,23 @@ async def list_prompt_templates(
                 if is_anonymous:
                     resolved_name = None
                 else:
-                    resolved_name = user_created.get("first_name") if isinstance(user_created, dict) else None
+                    resolved_name = (
+                        user_created.get("first_name") if isinstance(user_created, dict) else None
+                    )
             else:
                 # Private template: use stored author_display_name (for "from {author}" on copies)
                 resolved_name = item.get("author_display_name")
 
             item_data = {**item}
             item_data["author_display_name"] = resolved_name
-            item_data["user_created"] = user_created.get("id") if isinstance(user_created, dict) else user_created
+            item_data["user_created"] = (
+                user_created.get("id") if isinstance(user_created, dict) else user_created
+            )
             item_data.pop("is_anonymous", None)
             results.append(PromptTemplateOut(**item_data))
         return results
-    except Exception as e:
-        logger.exception(f"Failed to list prompt templates: {e}")
+    except Exception:
+        logger.exception("Failed to list prompt templates")
         raise HTTPException(status_code=500, detail="Failed to list templates") from None
 
 
@@ -119,8 +123,8 @@ async def create_prompt_template(
         directus.update_item("prompt_template", result["id"], {"user_created": auth.user_id})
         result["user_created"] = auth.user_id
         return PromptTemplateOut(**result)
-    except Exception as e:
-        logger.error(f"Failed to create prompt template: {e}")
+    except Exception:
+        logger.exception("Failed to create prompt template")
         raise HTTPException(status_code=500, detail="Failed to create template") from None
 
 
@@ -137,8 +141,8 @@ async def update_prompt_template(
             raise HTTPException(status_code=404, detail="Template not found")
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Failed to verify template ownership: {e}")
+    except Exception:
+        logger.exception("Failed to verify template ownership")
         raise HTTPException(status_code=500, detail="Failed to update template") from None
 
     update_data = {k: v for k, v in body.model_dump().items() if v is not None}
@@ -148,8 +152,8 @@ async def update_prompt_template(
     try:
         result = directus.update_item("prompt_template", template_id, update_data)["data"]
         return PromptTemplateOut(**result)
-    except Exception as e:
-        logger.error(f"Failed to update prompt template: {e}")
+    except Exception:
+        logger.exception("Failed to update prompt template")
         raise HTTPException(status_code=500, detail="Failed to update template") from None
 
 
@@ -165,15 +169,15 @@ async def delete_prompt_template(
             raise HTTPException(status_code=404, detail="Template not found")
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Failed to verify template ownership: {e}")
+    except Exception:
+        logger.exception("Failed to verify template ownership")
         raise HTTPException(status_code=500, detail="Failed to delete template") from None
 
     try:
         directus.delete_item("prompt_template", template_id)
         return {"status": "ok"}
-    except Exception as e:
-        logger.error(f"Failed to delete prompt template: {e}")
+    except Exception:
+        logger.exception("Failed to delete prompt template")
         raise HTTPException(status_code=500, detail="Failed to delete template") from None
 
 
@@ -201,8 +205,8 @@ async def get_quick_access(
         if not isinstance(prefs, list):
             return []
         return prefs
-    except Exception as e:
-        logger.error(f"Failed to get quick access preferences: {e}")
+    except Exception:
+        logger.exception("Failed to get quick access preferences")
         raise HTTPException(status_code=500, detail="Failed to get preferences") from None
 
 
@@ -233,15 +237,17 @@ async def save_quick_access(
             except HTTPException:
                 raise
             except Exception:
-                raise HTTPException(status_code=400, detail=f"Template not found: {item.id}") from None
+                raise HTTPException(
+                    status_code=400, detail=f"Template not found: {item.id}"
+                ) from None
 
     prefs = [{"type": item.type, "id": item.id} for item in body]
 
     try:
         directus.update_user(auth.user_id, {"quick_access_preferences": prefs})
         return prefs
-    except Exception as e:
-        logger.error(f"Failed to save quick access preferences: {e}")
+    except Exception:
+        logger.exception("Failed to save quick access preferences")
         raise HTTPException(status_code=500, detail="Failed to save preferences") from None
 
 
@@ -256,6 +262,6 @@ async def toggle_ai_suggestions(
     try:
         directus.update_user(auth.user_id, {"hide_ai_suggestions": body.hide_ai_suggestions})
         return {"status": "ok", "hide_ai_suggestions": body.hide_ai_suggestions}
-    except Exception as e:
-        logger.error(f"Failed to toggle AI suggestions: {e}")
+    except Exception:
+        logger.exception("Failed to toggle AI suggestions")
         raise HTTPException(status_code=500, detail="Failed to update setting") from None
