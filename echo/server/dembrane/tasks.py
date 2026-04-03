@@ -128,10 +128,45 @@ class SkipRetryOnUnrecoverableError(dramatiq.Middleware):
         NotImplementedError,
     )
 
+    # Domain exceptions that should also skip retries — the missing
+    # resource will not reappear on retry.
+    UNRECOVERABLE_DOMAIN: tuple[type[Exception], ...] = ()
+
+    @classmethod
+    def _load_domain_exceptions(cls) -> None:
+        if cls.UNRECOVERABLE_DOMAIN:
+            return
+        from dembrane.service.conversation import (
+            ConversationChunkNotFoundException,
+            ConversationNotFoundException,
+        )
+        from dembrane.service.project import ProjectNotFoundException
+
+        cls.UNRECOVERABLE_DOMAIN = (
+            ConversationChunkNotFoundException,
+            ConversationNotFoundException,
+            ProjectNotFoundException,
+        )
+
     def after_process_message(self, broker: Any, message: Any, *, result: Any = None, exception: Any = None) -> None:  # noqa: ARG002
-        if exception is not None and isinstance(exception, self.UNRECOVERABLE):
+        if exception is None:
+            return
+        if isinstance(exception, self.UNRECOVERABLE):
             logger.warning(
                 "Unrecoverable %s in %s — skipping retries: %s",
+                type(exception).__name__,
+                message.actor_name,
+                exception,
+            )
+            message.options["retries"] = 99999
+            return
+        try:
+            self._load_domain_exceptions()
+        except ImportError:
+            return
+        if isinstance(exception, self.UNRECOVERABLE_DOMAIN):
+            logger.warning(
+                "Unrecoverable domain error %s in %s — skipping retries: %s",
                 type(exception).__name__,
                 message.actor_name,
                 exception,

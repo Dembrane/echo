@@ -639,11 +639,27 @@ async def create_report(
 
 async def _verify_project_access(auth: DependencyDirectusSession, project_id: str) -> dict:
     """Verify the authenticated user has access to the given project. Returns the project dict."""
-    project_service = ProjectService(directus_client=auth.client)
+    from dembrane.directus import directus_client_context
+
     try:
-        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
-    except (ProjectNotFoundException, ProjectServiceException) as err:
+        with directus_client_context(auth.client) as client:
+            projects = client.get_items(
+                "project",
+                {
+                    "query": {
+                        "filter": {"id": {"_eq": project_id}},
+                        "fields": ["id", "directus_user_id"],
+                        "limit": 1,
+                    }
+                },
+            )
+    except Exception as err:
         raise HTTPException(status_code=404, detail="Project not found") from err
+
+    if not isinstance(projects, list) or not projects:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    project = projects[0]
     if not auth.is_admin and project.get("directus_user_id", "") != auth.user_id:
         raise HTTPException(status_code=403, detail="User does not have access to this project")
     return project
