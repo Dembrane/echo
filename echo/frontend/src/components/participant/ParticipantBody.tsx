@@ -195,7 +195,7 @@ export const ParticipantBody = ({
 							isAnonymized
 								? t`Please record your response by clicking the "Record" button below. You may also choose to respond in text by clicking the text icon.
 **Please keep this screen lit up**
-(black screen = not recording)
+(black screen = not recording).
 This transcript will be anonymized and your host will not be able to listen to your recording.`
 								: t`Please record your response by clicking the "Record" button below. You may also choose to respond in text by clicking the text icon.
 **Please keep this screen lit up**
