@@ -355,6 +355,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	const updateCustomTopicMutation = useUpdateCustomTopicMutation();
 	const deleteCustomTopicMutation = useDeleteCustomTopicMutation();
 
+	const [anonymizeModalOpened, setAnonymizeModalOpened] = useState(false);
 	const [customTopicModalOpened, setCustomTopicModalOpened] = useState(false);
 	const [customTopicModalMode, setCustomTopicModalMode] = useState<
 		"create" | "edit"
@@ -1494,12 +1495,49 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														/>
 													}
 													checked={field.value}
-													onChange={(e) =>
-														field.onChange(e.currentTarget.checked)
-													}
+													onChange={(e) => {
+														const newValue = e.currentTarget.checked;
+														if (!newValue && field.value) {
+															// Turning OFF -- show confirmation modal
+															setAnonymizeModalOpened(true);
+														} else {
+															field.onChange(newValue);
+														}
+													}}
 												/>
 											)}
 										/>
+										<Modal
+											opened={anonymizeModalOpened}
+											onClose={() => setAnonymizeModalOpened(false)}
+											title={t`Turn off anonymization?`}
+											centered
+											size="sm"
+										>
+											<Stack gap="md">
+												<Text size="sm">
+													<Trans id="portal.anonymization.disable.warning">
+														Turning off anonymization while recordings are ongoing may
+														have unintended consequences. Active conversations will also
+														be affected mid-recording. Please use this with caution.
+													</Trans>
+												</Text>
+												<Group justify="flex-end" gap="sm">
+													<Button variant="default" onClick={() => setAnonymizeModalOpened(false)}>
+														<Trans>Cancel</Trans>
+													</Button>
+													<Button
+														color="red"
+														onClick={() => {
+															setValue("anonymize_transcripts", false, { shouldDirty: true });
+															setAnonymizeModalOpened(false);
+														}}
+													>
+														<Trans id="portal.anonymization.disable.confirm">Turn off</Trans>
+													</Button>
+												</Group>
+											</Stack>
+										</Modal>
 									</Stack>
 
 									<Stack gap="md">
