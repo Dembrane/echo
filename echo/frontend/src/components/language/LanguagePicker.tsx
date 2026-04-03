@@ -69,6 +69,11 @@ export const LanguagePicker = () => {
 	const [pendingLanguage, setPendingLanguage] = useState<string | null>(null);
 
 	const applyLanguageChange = (selectedLanguage: string) => {
+		const validLanguage = SUPPORTED_LANGUAGES.find(
+			(lang) => lang === selectedLanguage,
+		);
+		if (!validLanguage) return;
+
 		let newPathname = pathname;
 
 		SUPPORTED_LANGUAGES.forEach((lang) => {
@@ -79,7 +84,7 @@ export const LanguagePicker = () => {
 			}
 		});
 
-		window.location.href = `/${selectedLanguage}${newPathname}`;
+		window.location.href = `/${validLanguage}${newPathname}`;
 	};
 
 	const handleChange = (e: ChangeEvent<HTMLSelectElement>) => {
