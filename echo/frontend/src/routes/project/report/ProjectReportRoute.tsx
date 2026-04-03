@@ -333,14 +333,9 @@ function VersionItem({
 					{title}
 				</Text>
 
-				{/* Meta row: language first, then status, then time */}
+				{/* Meta row: status, time, language */}
 				<Group gap={6} wrap="nowrap">
 					<StatusDot status={report.status} size={7} />
-					{langTag && (
-						<Text size="10px" c="dimmed" fw={600} style={{ flexShrink: 0 }}>
-							{langTag}
-						</Text>
-					)}
 					{!hideBadge && (
 						<Text
 							size="10px"
@@ -370,6 +365,16 @@ function VersionItem({
 							</Text>
 							<Text size="10px" c="dimmed" truncate style={{ flexShrink: 1 }}>
 								{timeAgo}
+							</Text>
+						</>
+					)}
+					{langTag && (
+						<>
+							<Text size="10px" c="dimmed">
+								·
+							</Text>
+							<Text size="10px" c="dimmed" fw={600} style={{ flexShrink: 0 }}>
+								{langTag}
 							</Text>
 						</>
 					)}
