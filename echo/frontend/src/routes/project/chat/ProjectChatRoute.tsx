@@ -358,27 +358,6 @@ export const ProjectChatRoute = () => {
 	const hideAiSuggestions =
 		currentUserQuery.data?.hide_ai_suggestions ?? false;
 
-	// Favorites: template IDs that have a thumbs-up rating without a chat_message_id
-	const favoriteTemplateIds = useMemo(() => {
-		const ids = new Set<string>();
-		for (const r of ratingsQuery.data ?? []) {
-			if (!r.chat_message_id && r.rating === 2) {
-				ids.add(r.prompt_template_id);
-			}
-		}
-		return ids;
-	}, [ratingsQuery.data]);
-
-	const handleToggleFavorite = (
-		promptTemplateId: string,
-		isFavorited: boolean,
-	) => {
-		rateTemplateMutation.mutate({
-			prompt_template_id: promptTemplateId,
-			rating: isFavorited ? 2 : 1,
-		});
-	};
-
 	// Resolve quick access items — default to first 3 built-in templates
 	const quickAccessItems: QuickAccessItem[] = useMemo(() => {
 		if (!quickAccessQuery.data || quickAccessQuery.data.length === 0)
@@ -868,17 +847,6 @@ export const ProjectChatRoute = () => {
 						onToggleAiSuggestions={(hide) =>
 							toggleAiSuggestionsMutation.mutate(hide)
 						}
-						favoriteTemplateIds={favoriteTemplateIds}
-						onToggleFavorite={handleToggleFavorite}
-						userTemplateDetails={(userTemplatesQuery.data ?? []).map((t) => ({
-							id: t.id,
-							is_public: t.is_public ?? false,
-							star_count: t.star_count ?? 0,
-							copied_from: t.copied_from ?? null,
-							author_display_name: t.author_display_name ?? null,
-						}))}
-						defaultLanguage={language}
-						userName={currentUserQuery.data?.first_name ?? null}
 						saveAsTemplateContent={saveAsTemplateContent}
 						onClearSaveAsTemplate={() => setSaveAsTemplateContent(null)}
 					/>

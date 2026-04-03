@@ -150,7 +150,6 @@ export const useRatePromptTemplate = () => {
 			queryClient.invalidateQueries({
 				queryKey: ["prompt_template_ratings"],
 			});
-			queryClient.invalidateQueries({ queryKey: ["community_stars"] });
 		},
 	});
 };

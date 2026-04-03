@@ -44,22 +44,11 @@ import {
 	MagnifyingGlass,
 	PencilSimple,
 	Plus,
-	ShareNetwork,
-	Star,
 	Trash,
 	X,
 } from "@phosphor-icons/react";
 import { IconPin, IconPinFilled } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
-import {
-	useCommunityTemplates,
-	useCopyTemplate,
-	useMyCommunityStars,
-	usePublishTemplate,
-	useToggleStar,
-	useUnpublishTemplate,
-} from "./hooks/useCommunityTemplates";
-import { PublishTemplateForm } from "./PublishTemplateForm";
 import type { QuickAccessItem } from "./QuickAccessConfigurator";
 import {
 	encodeTemplateKey,
@@ -70,7 +59,7 @@ import { type Template, Templates } from "./templates";
 
 // ── Types ──
 
-type ModalView = "browse" | "create" | "edit" | "publish";
+type ModalView = "browse" | "create" | "edit";
 
 type TemplatesModalProps = {
 	opened: boolean;
@@ -101,17 +90,6 @@ type TemplatesModalProps = {
 	isSavingQuickAccess?: boolean;
 	hideAiSuggestions?: boolean;
 	onToggleAiSuggestions?: (hide: boolean) => void;
-	favoriteTemplateIds?: Set<string>;
-	onToggleFavorite?: (promptTemplateId: string, isFavorited: boolean) => void;
-	userTemplateDetails?: Array<{
-		id: string;
-		is_public: boolean;
-		star_count: number;
-		copied_from: string | null;
-		author_display_name: string | null;
-	}>;
-	defaultLanguage?: string;
-	userName?: string | null;
 	saveAsTemplateContent?: string | null;
 	onClearSaveAsTemplate?: () => void;
 };
@@ -120,20 +98,17 @@ type UnifiedTemplate = {
 	id: string;
 	title: string;
 	content: string;
-	source: "dembrane" | "community" | "user";
+	source: "dembrane" | "user";
 	key: string;
-	authorName?: string | null;
-	starCount?: number;
-	useCount?: number;
 };
 
 // ── Badge ──
 
-const SourceBadge = ({ source }: { source: "dembrane" | "community" }) => (
+const SourceBadge = ({ source }: { source: "dembrane" }) => (
 	<Badge
 		size="xs"
 		variant="light"
-		color={source === "dembrane" ? "teal" : "blue"}
+		color="teal"
 		styles={{ root: { textTransform: "lowercase" } }}
 	>
 		{source}
@@ -201,11 +176,6 @@ export const TemplatesModal = ({
 	isSavingQuickAccess: _isSavingQuickAccess = false,
 	hideAiSuggestions = false,
 	onToggleAiSuggestions,
-	favoriteTemplateIds: _favoriteTemplateIds = new Set(),
-	onToggleFavorite: _onToggleFavorite,
-	userTemplateDetails = [],
-	defaultLanguage,
-	userName,
 	saveAsTemplateContent,
 	onClearSaveAsTemplate,
 }: TemplatesModalProps) => {
@@ -216,18 +186,9 @@ export const TemplatesModal = ({
 	const [formTitle, setFormTitle] = useState("");
 	const [formContent, setFormContent] = useState("");
 	const [editingId, setEditingId] = useState<string | null>(null);
-	const [publishingTemplate, setPublishingTemplate] = useState<{
-		id: string;
-		title: string;
-		content: string;
-	} | null>(null);
 	const [deletingTemplateId, setDeletingTemplateId] = useState<string | null>(
 		null,
 	);
-
-	// Community features disabled until Directus fields are created
-	// (author_display_name, use_count, star_count, copied_from)
-	const showCommunity = false;
 
 	const [debouncedSearch] = useDebouncedValue(searchQuery, 300);
 
@@ -240,17 +201,6 @@ export const TemplatesModal = ({
 			onClearSaveAsTemplate?.();
 		}
 	}, [saveAsTemplateContent, opened, onClearSaveAsTemplate]);
-
-	// Community data
-	const communityQuery = useCommunityTemplates({ limit: 100 });
-	const starsQuery = useMyCommunityStars();
-	const toggleStarMutation = useToggleStar();
-	const copyMutation = useCopyTemplate();
-	const publishMutation = usePublishTemplate();
-	const unpublishMutation = useUnpublishTemplate();
-
-	const starredIds = starsQuery.data ?? new Set<string>();
-	const communityTemplates = communityQuery.data ?? [];
 
 	// ── Pin helpers (all use canonical key) ──
 
@@ -361,7 +311,6 @@ export const TemplatesModal = ({
 	const handleBack = () => {
 		setView("browse");
 		setEditingId(null);
-		setPublishingTemplate(null);
 	};
 
 	const resetState = () => {
@@ -371,7 +320,6 @@ export const TemplatesModal = ({
 		setFormTitle("");
 		setFormContent("");
 		setEditingId(null);
-		setPublishingTemplate(null);
 	};
 
 	// ── Merged & sorted template list ──
@@ -387,22 +335,6 @@ export const TemplatesModal = ({
 				title: tmpl.title,
 			});
 		}
-		if (showCommunity) {
-			for (const tmpl of communityTemplates) {
-				if (!tmpl.is_own) {
-					items.push({
-						authorName: tmpl.author_display_name,
-						content: tmpl.content,
-						id: tmpl.id,
-						key: tmpl.id,
-						source: "community",
-						starCount: tmpl.star_count,
-						title: tmpl.title,
-						useCount: tmpl.use_count,
-					});
-				}
-			}
-		}
 		for (const tmpl of userTemplates) {
 			items.push({
 				content: tmpl.content,
@@ -413,11 +345,11 @@ export const TemplatesModal = ({
 			});
 		}
 		return items;
-	}, [communityTemplates, userTemplates]);
+	}, [userTemplates]);
 
-	// Sort: pinned first (in quick-access order) → dembrane → community → user, then alphabetical
+	// Sort: pinned first (in quick-access order) → dembrane → user, then alphabetical
 	const allSorted = useMemo(() => {
-		const sourceOrder = { community: 2, dembrane: 1, user: 3 };
+		const sourceOrder = { dembrane: 1, user: 2 };
 		const getPinIndex = (key: string) =>
 			quickAccessItems.findIndex(
 				(item) => quickAccessToKey(item.type, item.id) === key,
@@ -569,60 +501,19 @@ export const TemplatesModal = ({
 		);
 	}
 
-	// ── Render: Publish view ──
-
-	if (view === "publish" && publishingTemplate) {
-		return (
-			<Modal {...modalProps}>
-				<div className="flex h-full flex-col">
-					<UnstyledButton onClick={handleBack} className="mb-4">
-						<Group gap={4}>
-							<ArrowLeft size={16} />
-							<Text size="sm" c="dimmed">
-								<Trans>Back to templates</Trans>
-							</Text>
-						</Group>
-					</UnstyledButton>
-					<PublishTemplateForm
-						template={publishingTemplate}
-						onPublish={(args) => {
-							publishMutation.mutate(args, {
-								onSuccess: () => {
-									setPublishingTemplate(null);
-									setView("browse");
-								},
-							});
-						}}
-						onCancel={handleBack}
-						isPublishing={publishMutation.isPending}
-						defaultLanguage={defaultLanguage}
-						userName={userName}
-					/>
-				</div>
-			</Modal>
-		);
-	}
-
 	// Settings view removed — contextual suggestions toggle is now inline above the search bar.
 
 	// ── Render: Browse view (single flat list) ──
 
 	// Split templates into quick access (pinned) and rest
-	const quickAccessTemplates = displayTemplates.filter(
-		(tmpl) => tmpl.source !== "community" && isPinnedKey(tmpl.key),
+	const quickAccessTemplates = displayTemplates.filter((tmpl) =>
+		isPinnedKey(tmpl.key),
 	);
 	const otherTemplates = displayTemplates.filter(
-		(tmpl) => tmpl.source === "community" || !isPinnedKey(tmpl.key),
+		(tmpl) => !isPinnedKey(tmpl.key),
 	);
 
 	const renderRow = (tmpl: UnifiedTemplate, showDragHandle: boolean) => {
-		const isStarred = starredIds.has(tmpl.id);
-		const details =
-			tmpl.source === "user"
-				? userTemplateDetails.find((d) => d.id === tmpl.id)
-				: undefined;
-		const isPublished = details?.is_public ?? false;
-
 		const rowContent = (
 			dragHandleProps?: Record<string, unknown>,
 			isDragging?: boolean,
@@ -657,59 +548,12 @@ export const TemplatesModal = ({
 								{tmpl.title}
 							</Text>
 							{tmpl.source !== "user" && <SourceBadge source={tmpl.source} />}
-							{isPublished && (
-								<Tooltip label={t`Published to community`}>
-									<Globe size={12} color="var(--mantine-color-blue-5)" />
-								</Tooltip>
-							)}
 						</Group>
 						<Text size="xs" c="dimmed" lineClamp={2}>
 							{tmpl.content}
 						</Text>
-						{tmpl.source === "community" && tmpl.authorName && (
-							<Text size="xs" c="dimmed">
-								{tmpl.authorName}
-							</Text>
-						)}
 					</Stack>
 					<Group gap={2} wrap="nowrap">
-						{tmpl.source === "community" && (
-							<>
-								<Tooltip
-									label={
-										isStarred ? t`Remove from favorites` : t`Add to favorites`
-									}
-								>
-									<ActionIcon
-										size="xs"
-										variant={isStarred ? "filled" : "subtle"}
-										color={isStarred ? "yellow" : "gray"}
-										onClick={(e) => {
-											e.stopPropagation();
-											toggleStarMutation.mutate(tmpl.id);
-										}}
-									>
-										<Star size={12} weight={isStarred ? "fill" : "regular"} />
-									</ActionIcon>
-								</Tooltip>
-								<Tooltip label={t`Save to my templates`}>
-									<ActionIcon
-										size="xs"
-										variant="subtle"
-										onClick={(e) => {
-											e.stopPropagation();
-											copyMutation.mutate(tmpl.id);
-										}}
-										loading={
-											copyMutation.isPending &&
-											copyMutation.variables === tmpl.id
-										}
-									>
-										<Copy size={12} />
-									</ActionIcon>
-								</Tooltip>
-							</>
-						)}
 						{tmpl.source === "dembrane" && (
 							<Tooltip label={t`Duplicate`}>
 								<ActionIcon
@@ -726,42 +570,6 @@ export const TemplatesModal = ({
 						)}
 						{tmpl.source === "user" && (
 							<>
-								{showCommunity &&
-									(isPublished ? (
-										<Tooltip label={t`Unpublish from community`}>
-											<ActionIcon
-												size="xs"
-												variant="subtle"
-												color="blue"
-												loading={unpublishMutation.isPending}
-												onClick={(e) => {
-													e.stopPropagation();
-													unpublishMutation.mutate(tmpl.id);
-												}}
-											>
-												<Globe size={12} />
-											</ActionIcon>
-										</Tooltip>
-									) : (
-										<Tooltip label={t`Share with community`}>
-											<ActionIcon
-												size="xs"
-												variant="subtle"
-												onClick={(e) => {
-													e.stopPropagation();
-													const ut = userTemplates.find(
-														(u) => u.id === tmpl.id,
-													);
-													if (ut) {
-														setPublishingTemplate(ut);
-														setView("publish");
-													}
-												}}
-											>
-												<ShareNetwork size={12} />
-											</ActionIcon>
-										</Tooltip>
-									))}
 								<Tooltip label={t`Edit`}>
 									<ActionIcon
 										size="xs"
@@ -792,8 +600,7 @@ export const TemplatesModal = ({
 							</>
 						)}
 						{/* Quick access promote/demote */}
-						{tmpl.source !== "community" &&
-							onSaveQuickAccess &&
+						{onSaveQuickAccess &&
 							(showDragHandle ? (
 								<Tooltip label={t`Unpin`}>
 									<ActionIcon
