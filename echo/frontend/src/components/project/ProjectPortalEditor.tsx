@@ -22,6 +22,7 @@ import {
 	Title,
 	Tooltip,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { DetectiveIcon } from "@phosphor-icons/react";
 import {
 	IconExternalLink,
@@ -355,8 +356,9 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	const updateCustomTopicMutation = useUpdateCustomTopicMutation();
 	const deleteCustomTopicMutation = useDeleteCustomTopicMutation();
 
-	const [anonymizeModalOpened, setAnonymizeModalOpened] = useState(false);
-	const [customTopicModalOpened, setCustomTopicModalOpened] = useState(false);
+	const [anonymizeModalOpened, anonymizeModalHandlers] = useDisclosure(false);
+	const [customTopicModalOpened, customTopicModalHandlers] =
+		useDisclosure(false);
 	const [customTopicModalMode, setCustomTopicModalMode] = useState<
 		"create" | "edit"
 	>("create");
@@ -367,14 +369,17 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	const openCreateTopicModal = useCallback(() => {
 		setEditingTopic(null);
 		setCustomTopicModalMode("create");
-		setCustomTopicModalOpened(true);
-	}, []);
+		customTopicModalHandlers.open();
+	}, [customTopicModalHandlers]);
 
-	const openEditTopicModal = useCallback((topic: VerificationTopicMetadata) => {
-		setEditingTopic(topic);
-		setCustomTopicModalMode("edit");
-		setCustomTopicModalOpened(true);
-	}, []);
+	const openEditTopicModal = useCallback(
+		(topic: VerificationTopicMetadata) => {
+			setEditingTopic(topic);
+			setCustomTopicModalMode("edit");
+			customTopicModalHandlers.open();
+		},
+		[customTopicModalHandlers],
+	);
 
 	const handleCustomTopicSubmit = useCallback(
 		async (data: {
@@ -412,7 +417,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 						topicKey: editingTopic.key,
 					});
 				}
-				setCustomTopicModalOpened(false);
+				customTopicModalHandlers.close();
 			} catch {
 				// Error toast is handled by the mutation's onError
 			}
@@ -424,6 +429,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 			createCustomTopicMutation,
 			updateCustomTopicMutation,
 			setValue,
+			customTopicModalHandlers,
 		],
 	);
 
@@ -1499,7 +1505,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														const newValue = e.currentTarget.checked;
 														if (!newValue && field.value) {
 															// Turning OFF -- show confirmation modal
-															setAnonymizeModalOpened(true);
+															anonymizeModalHandlers.open();
 														} else {
 															field.onChange(newValue);
 														}
@@ -1509,7 +1515,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 										/>
 										<Modal
 											opened={anonymizeModalOpened}
-											onClose={() => setAnonymizeModalOpened(false)}
+											onClose={anonymizeModalHandlers.close}
 											title={t`Turn off anonymization?`}
 											centered
 											size="sm"
@@ -1517,23 +1523,35 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 											<Stack gap="md">
 												<Text size="sm">
 													<Trans id="portal.anonymization.disable.warning">
-														Turning off anonymization while recordings are ongoing may
-														have unintended consequences. Active conversations will also
-														be affected mid-recording. Please use this with caution.
+														Turning off anonymization while recordings are
+														ongoing may have unintended consequences. Active
+														conversations will also be affected mid-recording.
+														Please use this with caution.
 													</Trans>
 												</Text>
 												<Group justify="flex-end" gap="sm">
-													<Button variant="default" onClick={() => setAnonymizeModalOpened(false)}>
+													<Button
+														variant="subtle"
+														onClick={anonymizeModalHandlers.close}
+													>
 														<Trans>Cancel</Trans>
 													</Button>
 													<Button
 														color="red"
 														onClick={() => {
-															setValue("anonymize_transcripts", false, { shouldDirty: true });
-															setAnonymizeModalOpened(false);
+															setValue("anonymize_transcripts", false, {
+																shouldDirty: true,
+															});
+															anonymizeModalHandlers.close();
+															dispatchAutoSave({
+																...getValues(),
+																anonymize_transcripts: false,
+															} as ProjectPortalFormValues);
 														}}
 													>
-														<Trans id="portal.anonymization.disable.confirm">Turn off</Trans>
+														<Trans id="portal.anonymization.disable.confirm">
+															Turn off
+														</Trans>
 													</Button>
 												</Group>
 											</Stack>
@@ -1711,7 +1729,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 			</Stack>
 			<CustomTopicModal
 				opened={customTopicModalOpened}
-				onClose={() => setCustomTopicModalOpened(false)}
+				onClose={customTopicModalHandlers.close}
 				mode={customTopicModalMode}
 				topic={editingTopic}
 				onSubmit={handleCustomTopicSubmit}
@@ -1743,6 +1761,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 						<Button
 							loading={deleteCustomTopicMutation.isPending}
 							onClick={confirmDeleteCustomTopic}
+							color="red"
 							{...testId("custom-topic-delete-confirm")}
 						>
 							<Trans>Delete</Trans>
