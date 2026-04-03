@@ -316,7 +316,7 @@ function VersionItem({
 			style={{
 				backgroundColor: isActive ? "var(--mantine-color-gray-1)" : undefined,
 				borderLeft: isActive
-					? "3px solid var(--mantine-color-teal-5)"
+					? "3px solid var(--mantine-color-primary-6)"
 					: "3px solid transparent",
 				borderRadius: 8,
 			}}
@@ -347,7 +347,7 @@ function VersionItem({
 							fw={500}
 							c={
 								report.status === "published"
-									? "teal.6"
+									? "primary.6"
 									: report.status === "scheduled"
 										? "yellow.7"
 										: report.status === "draft"
@@ -1064,7 +1064,7 @@ export const ProjectReportRoute = () => {
 												<Box>
 													<Button
 														variant={copiedLink ? "filled" : "default"}
-														color={copiedLink ? "teal" : undefined}
+														color={copiedLink ? "primary" : undefined}
 														size="compact-sm"
 														leftSection={<IconLink size={14} />}
 														onClick={() => {
