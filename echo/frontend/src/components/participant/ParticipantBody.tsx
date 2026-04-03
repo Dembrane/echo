@@ -1,7 +1,7 @@
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Button, Modal, Stack, Title } from "@mantine/core";
+import { Button, Modal, Stack, Text, Title } from "@mantine/core";
 
 import { useDisclosure } from "@mantine/hooks";
 import { IconExclamationCircle, IconWifiOff } from "@tabler/icons-react";
@@ -32,12 +32,14 @@ export const ParticipantBody = ({
 	children,
 	interleaveMessages = true,
 	isRecording = false,
+	isAnonymized = false,
 }: PropsWithChildren<{
 	projectId: string;
 	conversationId: string;
 	viewResponses?: boolean;
 	interleaveMessages?: boolean;
 	isRecording?: boolean;
+	isAnonymized?: boolean;
 }>) => {
 	const [ref] = useAutoAnimate();
 	const [chatRef] = useAutoAnimate();
@@ -194,6 +196,14 @@ export const ParticipantBody = ({
 (black screen = not recording)`}
 						className="mb-4"
 					/>
+
+					{isAnonymized && (
+						<Text size="sm" c="dimmed">
+							<Trans id="participant.anonymization.notice">
+								Your transcription will be anonymized and your host will not be able to listen to your recording.
+							</Trans>
+						</Text>
+					)}
 
 					{children}
 

@@ -256,7 +256,7 @@ msgstr "{0, plural, one {Etiqueta:} other {Etiquetas:}}"
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: selectedOption.transitionDescription
 #. placeholder {0}: selectedOption.transitionMessage
-#: src/routes/project/chat/ProjectChatRoute.tsx:737
+#: src/routes/project/chat/ProjectChatRoute.tsx:686
 #: src/components/settings/FontSettingsCard.tsx:49
 #: src/components/settings/FontSettingsCard.tsx:51
 #: src/components/project/ProjectPortalEditor.tsx:601
@@ -469,8 +469,8 @@ msgstr "Añadir Etiquetas"
 #: src/components/chat/TemplatesModal.tsx:680
 #: src/components/chat/CommunityTemplateCard.tsx:74
 #: src/components/chat/CommunityTemplateCard.tsx:84
-msgid "Add to favorites"
-msgstr "Añadir a favoritos"
+#~ msgid "Add to favorites"
+#~ msgstr "Añadir a favoritos"
 
 #. js-lingui-explicit-id
 #: src/components/conversation/AddTagFilterModal.tsx:84
@@ -582,8 +582,8 @@ msgid "Agentic Chat"
 msgstr "Chat Agentic"
 
 #: src/components/chat/CommunityTab.tsx:76
-msgid "All"
-msgstr "Todo"
+#~ msgid "All"
+#~ msgstr "Todo"
 
 #: src/components/settings/AuditLogsCard.tsx:465
 msgid "All actions"
@@ -611,7 +611,7 @@ msgstr "Todas las archivos se han subido correctamente."
 #~ msgid "All templates"
 #~ msgstr "Todas las plantillas"
 
-#: src/components/chat/TemplatesModal.tsx:990
+#: src/components/chat/TemplatesModal.tsx:797
 msgid "All Templates"
 msgstr "Todas las plantillas"
 
@@ -644,7 +644,7 @@ msgstr "Se enviará una notificación por correo electrónico a {0} participante
 msgid "An error occurred while loading the Portal. Please contact the support team."
 msgstr "Ocurrió un error al cargar el Portal. Por favor, contacta al equipo de soporte."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:796
+#: src/routes/project/chat/ProjectChatRoute.tsx:733
 msgid "An error occurred."
 msgstr "Ocurrió un error."
 
@@ -712,8 +712,8 @@ msgstr "Conversación anónima"
 
 #: src/components/chat/PublishTemplateForm.tsx:157
 #: src/components/chat/CommunityTemplateCard.tsx:124
-msgid "Anonymous host"
-msgstr "Host anónimo"
+#~ msgid "Anonymous host"
+#~ msgstr "Host anónimo"
 
 #: src/routes/settings/UserSettingsRoute.tsx:47
 #: src/routes/settings/UserSettingsRoute.tsx:154
@@ -768,7 +768,7 @@ msgstr "¿Estás seguro de que quieres eliminar este informe? Esta acción no se
 msgid "Are you sure you want to delete this tag? This will remove the tag from existing conversations that contain it."
 msgstr "¿Estás seguro de que quieres eliminar esta etiqueta? Esto eliminará la etiqueta de las conversaciones existentes que la contienen."
 
-#: src/components/chat/TemplatesModal.tsx:482
+#: src/components/chat/TemplatesModal.tsx:414
 msgid "Are you sure you want to delete this template? This cannot be undone."
 msgstr "¿Está seguro de que desea eliminar esta plantilla? Esta acción no se puede deshacer."
 
@@ -971,8 +971,7 @@ msgstr "Volver"
 msgid "Back to Selection"
 msgstr "Volver a la selección"
 
-#: src/components/chat/TemplatesModal.tsx:518
-#: src/components/chat/TemplatesModal.tsx:582
+#: src/components/chat/TemplatesModal.tsx:450
 msgid "Back to templates"
 msgstr "Volver a plantillas"
 
@@ -1034,8 +1033,8 @@ msgid "Build custom dashboards with real-time conversation data"
 msgstr "Construir paneles personalizados con datos de conversación en tiempo real"
 
 #: src/components/chat/QuickAccessConfigurator.tsx:98
-msgid "Built-in"
-msgstr "Integradas"
+#~ msgid "Built-in"
+#~ msgstr "Integradas"
 
 #: src/components/project/ProjectDangerZone.tsx:68
 msgid "By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you ABSOLUTELY sure you want to delete this project?"
@@ -1058,8 +1057,7 @@ msgstr "Al eliminar este proyecto, eliminarás todos los datos asociados con él
 #: src/components/conversation/MoveConversationButton.tsx:231
 #: src/components/conversation/ConversationAccordion.tsx:340
 #: src/components/common/ImageCropModal.tsx:145
-#: src/components/chat/TemplatesModal.tsx:489
-#: src/components/chat/PublishTemplateForm.tsx:171
+#: src/components/chat/TemplatesModal.tsx:421
 msgid "Cancel"
 msgstr "Cancelar"
 
@@ -1119,12 +1117,12 @@ msgstr "Los cambios se guardarán automáticamente"
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Cambiar el idioma durante una conversación activa puede provocar resultados inesperados. Se recomienda iniciar una nueva conversación después de cambiar el idioma. ¿Estás seguro de que quieres continuar?"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:635
-#: src/routes/project/chat/ProjectChatRoute.tsx:641
+#: src/routes/project/chat/ProjectChatRoute.tsx:597
+#: src/routes/project/chat/ProjectChatRoute.tsx:603
 msgid "Chat"
 msgstr "Chat"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:314
+#: src/routes/project/chat/ProjectChatRoute.tsx:311
 msgid "Chat | Dembrane"
 msgstr "Chat | Dembrane"
 
@@ -1334,7 +1332,7 @@ msgstr "Contexto añadido:"
 #~ msgid "Context limit reached"
 #~ msgstr "Límite de contexto alcanzado"
 
-#: src/components/chat/TemplatesModal.tsx:862
+#: src/components/chat/TemplatesModal.tsx:669
 msgid "Contextual suggestions"
 msgstr "Sugerencias contextuales"
 
@@ -1405,7 +1403,7 @@ msgstr "Conversaciones"
 #~ msgid "Conversations from Upload"
 #~ msgstr "Conversaciones desde subida"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:906
+#: src/routes/project/chat/ProjectChatRoute.tsx:832
 msgid "Conversations:"
 msgstr "Conversaciones:"
 
@@ -1437,7 +1435,7 @@ msgstr "Copiado desde la conversación original"
 msgid "Copied!"
 msgstr "Copiado!"
 
-#: src/components/chat/TemplatesModal.tsx:318
+#: src/components/chat/TemplatesModal.tsx:268
 msgid "copy"
 msgstr "copia"
 
@@ -1533,7 +1531,7 @@ msgstr "Crear nueva vista"
 msgid "Create Report"
 msgstr "Crear informe"
 
-#: src/components/chat/TemplatesModal.tsx:909
+#: src/components/chat/TemplatesModal.tsx:716
 msgid "Create template"
 msgstr "Crear plantilla"
 
@@ -1587,7 +1585,6 @@ msgid "custom"
 msgstr "personalizado"
 
 #: src/components/project/ProjectPortalEditor.tsx:942
-#: src/components/chat/QuickAccessConfigurator.tsx:98
 msgid "Custom"
 msgstr "Personalizado"
 
@@ -1643,8 +1640,8 @@ msgstr "Delegación de análisis multi-paso con ejecución de herramientas en vi
 #: src/components/project/ProjectPortalEditor.tsx:1710
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:652
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:691
-#: src/components/chat/TemplatesModal.tsx:502
-#: src/components/chat/TemplatesModal.tsx:778
+#: src/components/chat/TemplatesModal.tsx:434
+#: src/components/chat/TemplatesModal.tsx:586
 msgid "Delete"
 msgstr "Eliminar"
 
@@ -1675,8 +1672,8 @@ msgstr "Eliminar informe"
 msgid "Delete Report"
 msgstr "Eliminar informe"
 
-#: src/components/chat/TemplatesModal.tsx:476
-#: src/components/chat/TemplatesModal.tsx:560
+#: src/components/chat/TemplatesModal.tsx:408
+#: src/components/chat/TemplatesModal.tsx:492
 msgid "Delete template"
 msgstr "Eliminar plantilla"
 
@@ -1698,8 +1695,8 @@ msgstr "Eliminado con éxito"
 msgid "dembrane events"
 msgstr "dembrane events"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:975
-#: src/routes/project/chat/ProjectChatRoute.tsx:1007
+#: src/routes/project/chat/ProjectChatRoute.tsx:901
+#: src/routes/project/chat/ProjectChatRoute.tsx:933
 msgid "Dembrane is powered by AI. Please double-check responses."
 msgstr "dembrane funciona con IA. Revisa bien las respuestas."
 
@@ -1707,8 +1704,8 @@ msgstr "dembrane funciona con IA. Revisa bien las respuestas."
 #~ msgstr "Respuesta"
 
 #: src/components/chat/PublishTemplateForm.tsx:102
-msgid "Describe how this template is useful..."
-msgstr "Describe cómo es útil esta plantilla..."
+#~ msgid "Describe how this template is useful..."
+#~ msgstr "Describe cómo es útil esta plantilla..."
 
 #: src/components/project/CustomTopicModal.tsx:206
 msgid "Describe what the language model should extract or summarize from the conversation..."
@@ -1833,11 +1830,11 @@ msgid "Drag audio files here or click to select files"
 msgstr "Arrastra archivos de audio aquí o haz clic para seleccionar archivos"
 
 #: src/routes/project/HostGuidePage.tsx:1414
-#: src/components/chat/TemplatesModal.tsx:642
+#: src/components/chat/TemplatesModal.tsx:533
 msgid "Drag to reorder"
 msgstr "Arrastrar para reordenar"
 
-#: src/components/chat/TemplatesModal.tsx:714
+#: src/components/chat/TemplatesModal.tsx:558
 msgid "Duplicate"
 msgstr "Duplicar"
 
@@ -1862,7 +1859,7 @@ msgstr "por ejemplo, \"Usar frases de sustantivos cortas como 'Espacios verdes u
 msgid "e.g. tomorrow at 9:00"
 msgstr "p. ej. mañana a las 9:00"
 
-#: src/components/chat/TemplatesModal.tsx:527
+#: src/components/chat/TemplatesModal.tsx:459
 msgid "e.g. Weekly stakeholder digest"
 msgstr "ej. Resumen semanal de partes interesadas"
 
@@ -1899,7 +1896,7 @@ msgstr "ECHO"
 #~ msgstr "editar"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:647
-#: src/components/chat/TemplatesModal.tsx:765
+#: src/components/chat/TemplatesModal.tsx:573
 msgid "Edit"
 msgstr "Editar"
 
@@ -2472,7 +2469,7 @@ msgid "participant.button.stop.finish"
 msgstr "Finalizar"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:250
+#: src/components/participant/ParticipantConversationText.tsx:251
 msgid "participant.button.finish.text.mode"
 msgstr "Finalizar"
 
@@ -3058,7 +3055,6 @@ msgstr "cargando..."
 
 #: src/components/conversation/ConversationAccordion.tsx:118
 #: src/components/conversation/hooks/index.ts:370
-#: src/components/chat/CommunityTab.tsx:109
 msgid "Loading..."
 msgstr "Cargando..."
 
@@ -3098,7 +3094,7 @@ msgstr "Cerrar sesión"
 msgid "Longest First"
 msgstr "Más largo primero"
 
-#: src/components/chat/ChatTemplatesMenu.tsx:372
+#: src/components/chat/ChatTemplatesMenu.tsx:353
 msgid "Manage templates"
 msgstr "Gestionar plantillas"
 
@@ -3139,7 +3135,7 @@ msgstr "Mínimo 8 caracteres"
 msgid "Mode"
 msgstr "Modo"
 
-#: src/components/chat/ChatTemplatesMenu.tsx:367
+#: src/components/chat/ChatTemplatesMenu.tsx:348
 msgid "more"
 msgstr "más"
 
@@ -3152,12 +3148,12 @@ msgstr "Más acciones"
 #~ msgstr "Más templates"
 
 #: src/components/chat/CommunityTab.tsx:34
-msgid "Most popular"
-msgstr "Más populares"
+#~ msgid "Most popular"
+#~ msgstr "Más populares"
 
 #: src/components/chat/CommunityTab.tsx:35
-msgid "Most used"
-msgstr "Más utilizadas"
+#~ msgid "Most used"
+#~ msgstr "Más utilizadas"
 
 #: src/components/conversation/MoveConversationButton.tsx:242
 #: src/components/conversation/ConversationAccordion.tsx:350
@@ -3177,7 +3173,7 @@ msgstr "Mover a otro Proyecto"
 msgid "Move to Project"
 msgstr "Mover a Proyecto"
 
-#: src/components/chat/TemplatesModal.tsx:1004
+#: src/components/chat/TemplatesModal.tsx:811
 msgid "My templates"
 msgstr "Mis plantillas"
 
@@ -3256,8 +3252,8 @@ msgid "New Report"
 msgstr "Nuevo informe"
 
 #: src/components/chat/CommunityTab.tsx:33
-msgid "Newest"
-msgstr "Más recientes"
+#~ msgid "Newest"
+#~ msgstr "Más recientes"
 
 #: src/components/conversation/ConversationAccordion.tsx:652
 msgid "Newest First"
@@ -3320,8 +3316,8 @@ msgid "No collections found"
 msgstr "No se encontraron colecciones"
 
 #: src/components/chat/CommunityTab.tsx:115
-msgid "No community templates yet. Share yours to get started."
-msgstr "Aún no hay plantillas de la comunidad. Comparte las tuyas para empezar."
+#~ msgid "No community templates yet. Share yours to get started."
+#~ msgstr "Aún no hay plantillas de la comunidad. Comparte las tuyas para empezar."
 
 #: src/components/project/ProjectPortalEditor.tsx:913
 #~ msgid "No concrete topics available."
@@ -3417,7 +3413,7 @@ msgstr "No se encontraron etiquetas"
 msgid "No tags have been added to this project yet. Add a tag using the text input above to get started."
 msgstr "Aún no se han añadido etiquetas a este proyecto. Añade una etiqueta usando el campo de texto de arriba para comenzar."
 
-#: src/components/chat/TemplatesModal.tsx:1019
+#: src/components/chat/TemplatesModal.tsx:826
 msgid "No templates match '{searchQuery}'"
 msgstr "Ninguna plantilla coincide con '{searchQuery}'"
 
@@ -3602,8 +3598,8 @@ msgid "Organiser's Privacy Policy URL"
 msgstr "URL de la política de privacidad del organizador"
 
 #: src/components/chat/PublishTemplateForm.tsx:163
-msgid "Other hosts can see and copy your template. You can unpublish at any time."
-msgstr "Otros hosts pueden ver y copiar tu plantilla. Puedes retirarla en cualquier momento."
+#~ msgid "Other hosts can see and copy your template. You can unpublish at any time."
+#~ msgstr "Otros hosts pueden ver y copiar tu plantilla. Puedes retirarla en cualquier momento."
 
 #: src/components/participant/verify/VerifyArtefact.tsx:137
 msgid "Outcome approved successfully!"
@@ -3837,7 +3833,7 @@ msgstr "Seleccionar fecha y hora"
 msgid "Pick the approach that fits your question"
 msgstr "Elige el enfoque que encaje con tu pregunta"
 
-#: src/components/chat/TemplatesModal.tsx:816
+#: src/components/chat/TemplatesModal.tsx:623
 msgid "Pin"
 msgstr "Fijar"
 
@@ -3845,7 +3841,7 @@ msgstr "Fijar"
 msgid "Pin project"
 msgstr "Fijar proyecto"
 
-#: src/components/chat/TemplatesModal.tsx:974
+#: src/components/chat/TemplatesModal.tsx:781
 msgid "Pin templates here for quick access."
 msgstr "Fije plantillas aquí para acceso rápido."
 
@@ -3857,11 +3853,11 @@ msgstr "Fije plantillas aquí para acceso rápido."
 #~ msgid "pinned"
 #~ msgstr "fijados"
 
-#: src/components/chat/TemplatesModal.tsx:815
+#: src/components/chat/TemplatesModal.tsx:622
 msgid "Pinned is full (max 5)"
 msgstr "Fijados está lleno (máx. 5)"
 
-#: src/components/chat/TemplatesModal.tsx:944
+#: src/components/chat/TemplatesModal.tsx:751
 msgid "Pinned templates"
 msgstr "Plantillas fijadas"
 
@@ -3906,7 +3902,7 @@ msgstr "Por favor, inicia sesión para continuar."
 #~ msgid "Please provide a concise summary of the following provided in the context."
 #~ msgstr "Por favor, proporciona un resumen conciso de los siguientes elementos proporcionados en el contexto."
 
-#: src/components/participant/ParticipantBody.tsx:192
+#: src/components/participant/ParticipantBody.tsx:194
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.  \n"
 "**Please keep this screen lit up**  \n"
@@ -3931,7 +3927,7 @@ msgstr ""
 #~ msgid "Please select at least one source"
 #~ msgstr "Por favor, selecciona al menos una fuente"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:894
+#: src/routes/project/chat/ProjectChatRoute.tsx:820
 msgid "Please select conversations from the sidebar to proceed"
 msgstr "Selecciona conversaciones en la barra lateral para continuar"
 
@@ -4135,7 +4131,7 @@ msgid "Projects Home"
 msgstr "Inicio de Proyectos"
 
 #: src/components/project/CustomTopicModal.tsx:202
-#: src/components/chat/TemplatesModal.tsx:531
+#: src/components/chat/TemplatesModal.tsx:463
 msgid "Prompt"
 msgstr "Prompt"
 
@@ -4144,7 +4140,6 @@ msgid "Provide an overview of the main topics and recurring themes"
 msgstr "Proporciona una visión general de los temas principales y los temas recurrentes"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:988
-#: src/components/chat/PublishTemplateForm.tsx:178
 msgid "Publish"
 msgstr "Publicar"
 
@@ -4169,16 +4164,16 @@ msgid "Published"
 msgstr "Publicado"
 
 #: src/components/chat/TemplatesModal.tsx:661
-msgid "Published to community"
-msgstr "Publicado en la comunidad"
+#~ msgid "Published to community"
+#~ msgstr "Publicado en la comunidad"
 
 #: src/components/chat/ChatModeSelector.tsx:62
 msgid "Pull out the most impactful quotes from this session"
 msgstr "Saca las citas más potentes de esta sesión"
 
 #: src/components/chat/QuickAccessConfigurator.tsx:78
-msgid "Quick Access (max 5)"
-msgstr "Acceso rápido (máx. 5)"
+#~ msgid "Quick Access (max 5)"
+#~ msgstr "Acceso rápido (máx. 5)"
 
 #: src/components/chat/TemplatesModal.tsx:713
 #~ msgid "Quick access is full (max 5)"
@@ -4192,8 +4187,8 @@ msgstr "Acceso rápido (máx. 5)"
 #~ msgstr "Citas"
 
 #: src/components/chat/TemplateRatingPills.tsx:61
-msgid "Rate this prompt:"
-msgstr "Calificar este prompt:"
+#~ msgid "Rate this prompt:"
+#~ msgstr "Calificar este prompt:"
 
 #: src/components/settings/ChangePasswordCard.tsx:89
 msgid "Re-enter new password"
@@ -4356,8 +4351,8 @@ msgstr "Eliminar archivo"
 #: src/components/chat/TemplatesModal.tsx:680
 #: src/components/chat/CommunityTemplateCard.tsx:73
 #: src/components/chat/CommunityTemplateCard.tsx:83
-msgid "Remove from favorites"
-msgstr "Quitar de favoritos"
+#~ msgid "Remove from favorites"
+#~ msgstr "Quitar de favoritos"
 
 #: src/components/chat/TemplatesModal.tsx:706
 #~ msgid "Remove from quick access"
@@ -4539,7 +4534,7 @@ msgstr "La retranscripción no está disponible para conversaciones anónimas"
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "La retranscripción ha comenzado. La nueva conversación estará disponible pronto."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:805
+#: src/routes/project/chat/ProjectChatRoute.tsx:742
 msgid "Retry"
 msgstr "Reintentar"
 
@@ -4584,7 +4579,6 @@ msgstr "Estado de la ejecución:"
 #: src/components/settings/ChangePasswordCard.tsx:103
 #: src/components/settings/AccountSettingsCard.tsx:198
 #: src/components/project/CustomTopicModal.tsx:241
-#: src/components/chat/CommunityTemplateCard.tsx:151
 msgid "Save"
 msgstr "Guardar"
 
@@ -4606,16 +4600,16 @@ msgid "Save Error!"
 msgstr "¡Error al guardar!"
 
 #: src/components/chat/QuickAccessConfigurator.tsx:140
-msgid "Save Quick Access"
-msgstr "Guardar acceso rápido"
+#~ msgid "Save Quick Access"
+#~ msgstr "Guardar acceso rápido"
 
-#: src/components/chat/TemplatesModal.tsx:553
+#: src/components/chat/TemplatesModal.tsx:485
 msgid "Save template"
 msgstr "Guardar plantilla"
 
 #: src/components/chat/TemplatesModal.tsx:695
-msgid "Save to my templates"
-msgstr "Guardar en mis plantillas"
+#~ msgid "Save to my templates"
+#~ msgstr "Guardar en mis plantillas"
 
 #: src/components/form/SaveStatus.tsx:47
 msgid "Saving..."
@@ -4677,7 +4671,7 @@ msgstr "Buscar proyectos..."
 msgid "Search tags"
 msgstr "Buscar etiquetas"
 
-#: src/components/chat/TemplatesModal.tsx:882
+#: src/components/chat/TemplatesModal.tsx:689
 msgid "Search templates..."
 msgstr "Buscar templates..."
 
@@ -4809,7 +4803,7 @@ msgstr "Selección demasiado grande"
 msgid "select.all.modal.context.limit.reached"
 msgstr "Selección demasiado grande. Algunas conversaciones no se añadieron."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:997
+#: src/routes/project/chat/ProjectChatRoute.tsx:923
 #: src/components/chat/AgenticChatPanel.tsx:659
 msgid "Send"
 msgstr "Enviar"
@@ -4863,12 +4857,12 @@ msgstr "Compartir informe"
 #~ msgstr "Compartir este informe"
 
 #: src/components/chat/TemplatesModal.tsx:746
-msgid "Share with community"
-msgstr "Compartir con la comunidad"
+#~ msgid "Share with community"
+#~ msgstr "Compartir con la comunidad"
 
 #: src/components/chat/PublishTemplateForm.tsx:87
-msgid "Share with the community"
-msgstr "Compartir con la comunidad"
+#~ msgid "Share with the community"
+#~ msgstr "Compartir con la comunidad"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:154
 msgid "Share your details here"
@@ -5053,7 +5047,7 @@ msgstr "Algo salió mal al generar el secreto."
 #~ msgid "Something went wrong while uploading the file: {0}"
 #~ msgstr "Algo salió mal al subir el archivo: {0}"
 
-#: src/components/participant/ParticipantBody.tsx:155
+#: src/components/participant/ParticipantBody.tsx:157
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Algo salió mal con la conversación. Por favor, inténtalo de nuevo o contacta al soporte si el problema persiste"
 
@@ -5132,7 +5126,7 @@ msgstr "Empezar de nuevo"
 msgid "Status"
 msgstr "Estado"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:750
+#: src/routes/project/chat/ProjectChatRoute.tsx:699
 #: src/components/chat/AgenticChatPanel.tsx:487
 msgid "Stop"
 msgstr "Detener"
@@ -5151,7 +5145,7 @@ msgid "Submit"
 msgstr "Enviar"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:229
+#: src/components/participant/ParticipantConversationText.tsx:230
 msgid "participant.button.submit.text.mode"
 msgstr "Enviar"
 
@@ -5162,7 +5156,7 @@ msgstr "Enviar"
 msgid "Success"
 msgstr "Éxito"
 
-#: src/components/chat/TemplatesModal.tsx:872
+#: src/components/chat/TemplatesModal.tsx:679
 msgid "Suggest dynamic suggestions based on your conversation."
 msgstr "Sugerir sugerencias dinámicas basadas en su conversación."
 
@@ -5175,7 +5169,7 @@ msgstr "Sugerir sugerencias dinámicas basadas en su conversación."
 #~ msgstr "Sugerencias basadas en tus conversaciones. Envía un mensaje para verlo en acción."
 
 #: src/components/library/LibraryTemplatesMenu.tsx:33
-#: src/components/chat/ChatTemplatesMenu.tsx:296
+#: src/components/chat/ChatTemplatesMenu.tsx:277
 msgid "Suggested:"
 msgstr "Sugerido:"
 
@@ -5236,8 +5230,8 @@ msgid "Tags"
 msgstr "Etiquetas"
 
 #: src/components/chat/PublishTemplateForm.tsx:114
-msgid "Tags (max 3)"
-msgstr "Tags (máx. 3)"
+#~ msgid "Tags (max 3)"
+#~ msgstr "Tags (máx. 3)"
 
 #: src/components/participant/ParticipantConversationAudio.tsx:448
 msgid "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from Dembrane to help you deepen the conversation."
@@ -5252,12 +5246,12 @@ msgstr "Tómate un tiempo para crear un resultado que haga tu contribución conc
 msgid "participant.refine.make.concrete.description"
 msgstr "Tómate un tiempo para crear un resultado que haga tu contribución concreta."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:553
+#: src/routes/project/chat/ProjectChatRoute.tsx:515
 #: src/components/chat/AgenticChatPanel.tsx:379
 msgid "Template applied"
 msgstr "Plantilla aplicada"
 
-#: src/components/chat/TemplatesModal.tsx:524
+#: src/components/chat/TemplatesModal.tsx:456
 msgid "Template name"
 msgstr "Nombre de plantilla"
 
@@ -5265,7 +5259,7 @@ msgstr "Nombre de plantilla"
 #~ msgid "Template prompt content..."
 #~ msgstr "Contenido del prompt..."
 
-#: src/components/chat/TemplatesModal.tsx:464
+#: src/components/chat/TemplatesModal.tsx:396
 msgid "Templates"
 msgstr "Plantillas"
 
@@ -5545,7 +5539,7 @@ msgstr "Marca de tiempo"
 msgid "Timestamps and duration"
 msgstr "Marcas de tiempo y duración"
 
-#: src/components/participant/ParticipantBody.tsx:147
+#: src/components/participant/ParticipantBody.tsx:149
 msgid "Tip"
 msgstr "Consejo"
 
@@ -5553,7 +5547,7 @@ msgstr "Consejo"
 msgid "Tip: Use the play button (▶) to send a test payload to your webhook and verify it's working correctly."
 msgstr "Consejo: Usa el botón de reproducción (▶) para enviar un payload de prueba a tu webhook y verificar que está funcionando correctamente."
 
-#: src/components/chat/TemplatesModal.tsx:541
+#: src/components/chat/TemplatesModal.tsx:473
 msgid "Tip: You can also create a template from any chat message you send, or duplicate an existing template."
 msgstr "Consejo: También puede crear una plantilla desde cualquier mensaje de chat que envíe, o duplicar una plantilla existente."
 
@@ -5744,7 +5738,7 @@ msgstr "Autenticación en dos pasos activada"
 msgid "Type"
 msgstr "Tipo"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:944
+#: src/routes/project/chat/ProjectChatRoute.tsx:870
 msgid "Type a message or press / for templates..."
 msgstr "Escribe un mensaje o pulsa / para plantillas..."
 
@@ -5752,7 +5746,7 @@ msgstr "Escribe un mensaje o pulsa / para plantillas..."
 #~ msgid "Type a message..."
 #~ msgstr "Escribe un mensaje..."
 
-#: src/components/participant/ParticipantConversationText.tsx:214
+#: src/components/participant/ParticipantConversationText.tsx:215
 msgid "Type your response here"
 msgstr "Escribe tu respuesta aquí"
 
@@ -5777,7 +5771,7 @@ msgstr "No se pudo cargar el resultado generado. Por favor, inténtalo de nuevo.
 msgid "Unable to process this chunk"
 msgstr "No se puede procesar este fragmento"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:555
+#: src/routes/project/chat/ProjectChatRoute.tsx:517
 #: src/components/chat/AgenticChatPanel.tsx:381
 msgid "Undo"
 msgstr "Deshacer"
@@ -5790,7 +5784,7 @@ msgstr "Desconocido"
 msgid "Unknown reason"
 msgstr "Razón desconocida"
 
-#: src/components/chat/TemplatesModal.tsx:798
+#: src/components/chat/TemplatesModal.tsx:605
 msgid "Unpin"
 msgstr "Desfijar"
 
@@ -5812,8 +5806,8 @@ msgid "Unpin project"
 msgstr "Desanclar proyecto"
 
 #: src/components/chat/TemplatesModal.tsx:731
-msgid "Unpublish from community"
-msgstr "Retirar de la comunidad"
+#~ msgid "Unpublish from community"
+#~ msgstr "Retirar de la comunidad"
 
 #: src/components/announcement/AnnouncementDrawerHeader.tsx:41
 msgid "unread announcement"
@@ -5944,8 +5938,8 @@ msgstr "La URL debe empezar con http:// o https://"
 #~ msgid "Use PII Redaction"
 #~ msgstr "Usar redaction de PII"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:972
-#: src/routes/project/chat/ProjectChatRoute.tsx:1004
+#: src/routes/project/chat/ProjectChatRoute.tsx:898
+#: src/routes/project/chat/ProjectChatRoute.tsx:930
 msgid "Use Shift + Enter to add a new line"
 msgstr "Usa Shift + Enter para agregar una nueva línea"
 
@@ -5967,7 +5961,7 @@ msgid "participant.modal.verify_prompt.title"
 msgstr "Recordatorio de verificación"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudioContent.tsx:166
+#: src/components/participant/ParticipantConversationAudioContent.tsx:167
 msgid "participant.banner.verification_required"
 msgstr "Verificación requerida"
 
@@ -6050,7 +6044,7 @@ msgstr "Ver ejemplo de payload"
 #~ msgid "View read announcements"
 #~ msgstr "Ver anuncios leídos"
 
-#: src/components/participant/ParticipantBody.tsx:248
+#: src/components/participant/ParticipantBody.tsx:258
 msgid "View your responses"
 msgstr "Ver tus respuestas"
 
@@ -6163,7 +6157,7 @@ msgstr "Webhooks"
 msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 msgstr "Los webhooks son mensajes automatizados enviados de una aplicación a otra cuando ocurre algo. Piénsalos como un \"sistema de notificaciones\" para tus otras herramientas."
 
-#: src/components/participant/ParticipantBody.tsx:128
+#: src/components/participant/ParticipantBody.tsx:130
 msgid "Welcome"
 msgstr "Bienvenido"
 
@@ -6174,7 +6168,7 @@ msgstr "Bienvenido de nuevo"
 #~ msgid "Welcome to Big Picture Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Details mode."
 #~ msgstr "Bienvenido al modo Big Picture! Tengo resúmenes de todas tus conversaciones cargados. Pregúntame sobre patrones, temas e insights en tus datos. Para citas exactas, inicia un nuevo chat en el modo Específico."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:664
+#: src/routes/project/chat/ProjectChatRoute.tsx:626
 msgid "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
 msgstr "¡Bienvenido a dembrane Chat! Usa la barra lateral para seleccionar recursos y conversaciones que quieras analizar. Luego, puedes hacer preguntas sobre los recursos y conversaciones seleccionados."
 
@@ -6185,7 +6179,7 @@ msgstr "¡Bienvenido a Dembrane!"
 #~ msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Deep Dive mode."
 #~ msgstr "Bienvenido al modo Overview. Tengo cargados resúmenes de todas tus conversaciones. Pregúntame por patrones, temas e insights en tus datos. Para citas exactas, empieza un chat nuevo en el modo Deep Dive."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:663
+#: src/routes/project/chat/ProjectChatRoute.tsx:625
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Bienvenido al modo Resumen. Tengo cargados los resúmenes de todas tus conversaciones. Pregúntame por patrones, temas e insights en tus datos. Para citas exactas, inicia un nuevo chat en el modo Contexto Específico."
 
@@ -6222,7 +6216,7 @@ msgstr "¿Qué desea verificar?"
 msgid "What patterns emerge from the data?"
 msgstr "¿Qué patrones salen de los datos?"
 
-#: src/components/chat/TemplatesModal.tsx:534
+#: src/components/chat/TemplatesModal.tsx:466
 msgid "What should ECHO analyse or generate from the conversations?"
 msgstr "¿Qué debe ECHO analizar o generar a partir de las conversaciones?"
 
@@ -6349,7 +6343,7 @@ msgstr "También puedes elegir registrar otra conversación."
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "Debes iniciar sesión con el mismo proveedor con el que te registraste. Si encuentras algún problema, por favor contáctanos."
 
-#: src/components/participant/ParticipantBody.tsx:146
+#: src/components/participant/ParticipantBody.tsx:148
 msgid "You seem to be offline, please check your internet connection"
 msgstr "Pareces estar desconectado, por favor verifica tu conexión a internet"
 
@@ -6388,9 +6382,14 @@ msgstr "Su nombre"
 msgid "Your response has been recorded. You may now close this tab."
 msgstr "Tu respuesta ha sido registrada. Puedes cerrar esta pestaña ahora."
 
-#: src/components/participant/ParticipantBody.tsx:258
+#: src/components/participant/ParticipantBody.tsx:268
 msgid "Your responses"
 msgstr "Tus respuestas"
+
+#. js-lingui-explicit-id
+#: src/components/participant/ParticipantBody.tsx:202
+msgid "participant.anonymization.notice"
+msgstr "Tu transcripción será anonimizada y tu anfitrión no podrá escuchar tu grabación."
 
 #: src/components/view/CreateViewForm.tsx:104
 msgid "Your view has been created. Please wait as we process and analyse the data."
@@ -6405,8 +6404,8 @@ msgstr "Tus Vistas"
 #~ msgstr "Tus Vistas"
 
 #: src/components/chat/CommunityTemplateCard.tsx:128
-msgid "Yours"
-msgstr "Tuya"
+#~ msgid "Yours"
+#~ msgstr "Tuya"
 
 #: src/components/common/ImageCropModal.tsx:131
 msgid "Zoom"
