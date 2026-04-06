@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import time
+import logging
 from typing import Any, Dict, List, Union, Optional, Protocol, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -12,6 +13,8 @@ import requests
 from urllib3.exceptions import InsecureRequestWarning
 
 from dembrane.settings import get_settings
+
+logger = logging.getLogger(__name__)
 
 # HTTP status codes that are typically recoverable
 RECOVERABLE_STATUS_CODES = {
@@ -376,8 +379,9 @@ class DirectusClient(DirectusClientProtocol):
 
             try:
                 return response.json()["data"]
-            except Exception as exc:  # noqa: BLE001 - want best-effort fallback
-                return {"error": f"No data found for this request : {exc}"}
+            except Exception:  # noqa: BLE001 - want best-effort fallback
+                logger.exception("Failed to parse SEARCH response JSON")
+                return {"error": "No data found for this request"}
         except requests.exceptions.ConnectionError as exc:
             raise DirectusServerError(exc) from exc
         except AssertionError as exc:

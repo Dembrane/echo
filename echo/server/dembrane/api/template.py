@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import Field, BaseModel
 
 from dembrane.directus import directus
+from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
 logger = getLogger("api.template")
@@ -190,14 +191,15 @@ async def get_quick_access(
 ) -> list:
     """Get the user's quick access preferences as a JSON array."""
     try:
-        users = directus.get_users(
+        users = await run_in_thread_pool(
+            directus.get_users,
             {
                 "query": {
                     "filter": {"id": {"_eq": auth.user_id}},
                     "fields": ["quick_access_preferences"],
                     "limit": 1,
                 }
-            }
+            },
         )
         if not isinstance(users, list) or len(users) == 0:
             return []
@@ -231,7 +233,7 @@ async def save_quick_access(
     for item in body:
         if item.type == "user":
             try:
-                template = directus.get_item("prompt_template", item.id)
+                template = await run_in_thread_pool(directus.get_item, "prompt_template", item.id)
                 if not template or template.get("user_created") != auth.user_id:
                     raise HTTPException(status_code=400, detail=f"Template not found: {item.id}")
             except HTTPException:
@@ -244,7 +246,9 @@ async def save_quick_access(
     prefs = [{"type": item.type, "id": item.id} for item in body]
 
     try:
-        directus.update_user(auth.user_id, {"quick_access_preferences": prefs})
+        await run_in_thread_pool(
+            directus.update_user, auth.user_id, {"quick_access_preferences": prefs}
+        )
         return prefs
     except Exception:
         logger.exception("Failed to save quick access preferences")
@@ -260,7 +264,9 @@ async def toggle_ai_suggestions(
     auth: DependencyDirectusSession,
 ) -> dict:
     try:
-        directus.update_user(auth.user_id, {"hide_ai_suggestions": body.hide_ai_suggestions})
+        await run_in_thread_pool(
+            directus.update_user, auth.user_id, {"hide_ai_suggestions": body.hide_ai_suggestions}
+        )
         return {"status": "ok", "hide_ai_suggestions": body.hide_ai_suggestions}
     except Exception:
         logger.exception("Failed to toggle AI suggestions")

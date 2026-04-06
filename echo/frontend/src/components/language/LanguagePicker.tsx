@@ -65,7 +65,7 @@ export const languageOptionsByIso639_1 = data.map((d) => ({
 
 export const LanguagePicker = () => {
 	const { language: currentLanguage } = useLanguage();
-	const { pathname } = useLocation();
+	const { pathname, search, hash } = useLocation();
 	const [pendingLanguage, setPendingLanguage] = useState<string | null>(null);
 
 	const applyLanguageChange = (selectedLanguage: string) => {
@@ -84,7 +84,7 @@ export const LanguagePicker = () => {
 			}
 		});
 
-		window.location.href = `/${validLanguage}${newPathname}`;
+		window.location.href = `/${validLanguage}${newPathname}${search}${hash}`;
 	};
 
 	const handleChange = (e: ChangeEvent<HTMLSelectElement>) => {

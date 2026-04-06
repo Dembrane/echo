@@ -59,7 +59,12 @@ class BffProjectsHomeResponse(BaseModel):
 
 
 _HOME_FIELDS = [
-    "id", "name", "updated_at", "language", "pin_order", "count(conversations)",
+    "id",
+    "name",
+    "updated_at",
+    "language",
+    "pin_order",
+    "count(conversations)",
 ]
 
 
@@ -126,6 +131,7 @@ async def get_projects_home(
 
     # Parse owner: prefix from search string (admin only)
     import re
+
     owner_term: Optional[str] = None
     text_search: Optional[str] = search
     if search and auth.is_admin:
@@ -630,30 +636,33 @@ async def create_report(
     if not is_scheduled:
         # Dispatch background task immediately
         task_create_report.send(project_id, report["id"], language, body.user_instructions or "")
-        logger.info(f"Report generation task dispatched for project {project_id}, report {report['id']}")
+        logger.info(
+            f"Report generation task dispatched for project {project_id}, report {report['id']}"
+        )
     else:
-        logger.info(f"Report {report['id']} scheduled for {body.scheduled_at} for project {project_id}")
+        logger.info(
+            f"Report {report['id']} scheduled for {body.scheduled_at} for project {project_id}"
+        )
 
     return report
 
 
 async def _verify_project_access(auth: DependencyDirectusSession, project_id: str) -> dict:
     """Verify the authenticated user has access to the given project. Returns the project dict."""
-    from dembrane.directus import directus_client_context
-
     try:
-        with directus_client_context(auth.client) as client:
-            projects = client.get_items(
-                "project",
-                {
-                    "query": {
-                        "filter": {"id": {"_eq": project_id}},
-                        "fields": ["id", "directus_user_id"],
-                        "limit": 1,
-                    }
-                },
-            )
+        projects = await run_in_thread_pool(
+            auth.client.get_items,
+            "project",
+            {
+                "query": {
+                    "filter": {"id": {"_eq": project_id}},
+                    "fields": ["id", "directus_user_id"],
+                    "limit": 1,
+                }
+            },
+        )
     except Exception as err:
+        logger.warning("Failed to fetch project %s: %s", project_id, err)
         raise HTTPException(status_code=404, detail="Project not found") from err
 
     if not isinstance(projects, list) or not projects:
@@ -670,6 +679,7 @@ def _extract_report_title(content: Optional[str]) -> Optional[str]:
     if not content:
         return None
     import re
+
     match = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
     return match.group(1).strip() if match else None
 
@@ -692,22 +702,32 @@ async def list_project_reports(
                     "project_id": {"_eq": project_id},
                     "status": {"_in": ["archived", "published", "scheduled", "draft"]},
                 },
-                "fields": ["id", "status", "date_created", "language", "user_instructions", "content", "scheduled_at"],
+                "fields": [
+                    "id",
+                    "status",
+                    "date_created",
+                    "language",
+                    "user_instructions",
+                    "content",
+                    "scheduled_at",
+                ],
                 "sort": ["-date_created"],
             }
         },
     )
     result = []
-    for r in (reports or []):
-        result.append({
-            "id": r["id"],
-            "status": r.get("status"),
-            "date_created": r.get("date_created"),
-            "language": r.get("language"),
-            "user_instructions": r.get("user_instructions"),
-            "scheduled_at": r.get("scheduled_at"),
-            "title": _extract_report_title(r.get("content")),
-        })
+    for r in reports or []:
+        result.append(
+            {
+                "id": r["id"],
+                "status": r.get("status"),
+                "date_created": r.get("date_created"),
+                "language": r.get("language"),
+                "user_instructions": r.get("user_instructions"),
+                "scheduled_at": r.get("scheduled_at"),
+                "title": _extract_report_title(r.get("content")),
+            }
+        )
     return result
 
 
@@ -728,7 +748,14 @@ async def get_latest_report(
                 "filter": {
                     "project_id": {"_eq": project_id},
                 },
-                "fields": ["id", "status", "project_id", "show_portal_link", "date_created", "error_message"],
+                "fields": [
+                    "id",
+                    "status",
+                    "project_id",
+                    "show_portal_link",
+                    "date_created",
+                    "error_message",
+                ],
                 "sort": ["-date_created"],
                 "limit": 1,
             }
@@ -911,6 +938,7 @@ async def get_report_views(
 
     # Recent views (last 10 minutes)
     from datetime import datetime, timezone, timedelta
+
     ten_mins_ago = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
     recent_metrics = await run_in_thread_pool(
         directus.get_items,
@@ -1030,9 +1058,7 @@ async def stream_report_progress(
         # Check if report is already done before subscribing
         from dembrane.directus import directus
 
-        report = await run_in_thread_pool(
-            directus.get_item, "project_report", str(report_id)
-        )
+        report = await run_in_thread_pool(directus.get_item, "project_report", str(report_id))
         if report and report.get("status") in ("archived", "published"):
             yield f"event: progress\ndata: {json.dumps({'type': 'completed', 'message': 'Report ready'})}\n\n"
             return
