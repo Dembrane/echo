@@ -151,7 +151,11 @@ async def change_password(
         if response.status_code != 200:
             error_data = response.json() if response.content else {}
             errors = error_data.get("errors", [{}])
-            detail = errors[0].get("message", "Failed to change password") if errors else "Failed to change password"
+            detail = (
+                errors[0].get("message", "Failed to change password")
+                if errors
+                else "Failed to change password"
+            )
             raise HTTPException(status_code=response.status_code, detail=detail)
 
         return {"status": "ok"}
@@ -189,7 +193,11 @@ async def tfa_generate(
         if response.status_code != 200:
             error_data = response.json() if response.content else {}
             errors = error_data.get("errors", [{}])
-            detail = errors[0].get("message", "Failed to generate 2FA secret") if errors else "Failed to generate 2FA secret"
+            detail = (
+                errors[0].get("message", "Failed to generate 2FA secret")
+                if errors
+                else "Failed to generate 2FA secret"
+            )
             raise HTTPException(status_code=response.status_code, detail=detail)
 
         return response.json().get("data", response.json())
@@ -224,7 +232,11 @@ async def tfa_enable(
         if response.status_code != 200 and response.status_code != 204:
             error_data = response.json() if response.content else {}
             errors = error_data.get("errors", [{}])
-            detail = errors[0].get("message", "Failed to enable 2FA") if errors else "Failed to enable 2FA"
+            detail = (
+                errors[0].get("message", "Failed to enable 2FA")
+                if errors
+                else "Failed to enable 2FA"
+            )
             raise HTTPException(status_code=response.status_code, detail=detail)
 
         return {"status": "ok"}
@@ -259,7 +271,11 @@ async def tfa_disable(
         if response.status_code != 200 and response.status_code != 204:
             error_data = response.json() if response.content else {}
             errors = error_data.get("errors", [{}])
-            detail = errors[0].get("message", "Failed to disable 2FA") if errors else "Failed to disable 2FA"
+            detail = (
+                errors[0].get("message", "Failed to disable 2FA")
+                if errors
+                else "Failed to disable 2FA"
+            )
             raise HTTPException(status_code=response.status_code, detail=detail)
 
         return {"status": "ok"}
@@ -359,10 +375,32 @@ async def remove_whitelabel_logo(
 ) -> dict:
     """Remove the whitelabel logo from the user."""
     try:
-        directus.update_user(auth.user_id, {"whitelabel_logo": None})
+        users = await run_in_thread_pool(
+            directus.get_users,
+            {
+                "query": {
+                    "filter": {"id": {"_eq": auth.user_id}},
+                    "fields": ["whitelabel_logo"],
+                    "limit": 1,
+                }
+            },
+        )
+        logo_file_id = users[0].get("whitelabel_logo") if users else None
+    except Exception as e:
+        logger.error(f"Failed to fetch user whitelabel logo: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch user") from None
+
+    try:
+        await run_in_thread_pool(directus.update_user, auth.user_id, {"whitelabel_logo": None})
     except Exception as e:
         logger.error(f"Failed to remove whitelabel logo: {e}")
         raise HTTPException(status_code=500, detail="Failed to remove logo") from None
+
+    if logo_file_id:
+        try:
+            await run_in_thread_pool(directus.delete_file, logo_file_id)
+        except Exception as e:
+            logger.warning(f"Failed to delete whitelabel logo file {logo_file_id}: {e}")
 
     return {"status": "ok"}
 
@@ -427,10 +465,33 @@ async def remove_avatar(
 ) -> dict:
     """Remove the user's avatar."""
     try:
-        directus.update_user(auth.user_id, {"avatar": None})
+        users = await run_in_thread_pool(
+            directus.get_users,
+            {
+                "query": {
+                    "filter": {"id": {"_eq": auth.user_id}},
+                    "fields": ["avatar"],
+                    "limit": 1,
+                }
+            },
+        )
+        avatar_file_id = users[0].get("avatar") if users else None
+    except Exception as e:
+        logger.error(f"Failed to fetch user avatar: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch user") from None
+
+    try:
+        await run_in_thread_pool(directus.update_user, auth.user_id, {"avatar": None})
     except Exception as e:
         logger.error(f"Failed to remove avatar: {e}")
         raise HTTPException(status_code=500, detail="Failed to remove avatar") from None
+
+    if avatar_file_id:
+        try:
+            await run_in_thread_pool(directus.delete_file, avatar_file_id)
+        except Exception as e:
+            logger.warning(f"Failed to delete avatar file {avatar_file_id}: {e}")
+
     return {"status": "ok"}
 
 

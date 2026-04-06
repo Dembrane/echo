@@ -41,6 +41,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { CloseableAlert } from "@/components/common/ClosableAlert";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { ExponentialProgress } from "@/components/common/ExponentialProgress";
 import { CreateReportForm } from "@/components/report/CreateReportForm";
 import {
@@ -316,7 +317,7 @@ function VersionItem({
 			style={{
 				backgroundColor: isActive ? "var(--mantine-color-gray-1)" : undefined,
 				borderLeft: isActive
-					? "3px solid var(--mantine-color-teal-5)"
+					? "3px solid var(--mantine-color-primary-6)"
 					: "3px solid transparent",
 				borderRadius: 8,
 			}}
@@ -333,21 +334,16 @@ function VersionItem({
 					{title}
 				</Text>
 
-				{/* Meta row: language first, then status, then time */}
+				{/* Meta row: status, time, language */}
 				<Group gap={6} wrap="nowrap">
 					<StatusDot status={report.status} size={7} />
-					{langTag && (
-						<Text size="10px" c="dimmed" fw={600} style={{ flexShrink: 0 }}>
-							{langTag}
-						</Text>
-					)}
 					{!hideBadge && (
 						<Text
 							size="10px"
 							fw={500}
 							c={
 								report.status === "published"
-									? "teal.6"
+									? "green.8"
 									: report.status === "scheduled"
 										? "yellow.7"
 										: report.status === "draft"
@@ -370,6 +366,16 @@ function VersionItem({
 							</Text>
 							<Text size="10px" c="dimmed" truncate style={{ flexShrink: 1 }}>
 								{timeAgo}
+							</Text>
+						</>
+					)}
+					{langTag && (
+						<>
+							<Text size="10px" c="dimmed">
+								·
+							</Text>
+							<Text size="10px" c="dimmed" fw={600} style={{ flexShrink: 0 }}>
+								{langTag}
 							</Text>
 						</>
 					)}
@@ -545,7 +551,7 @@ function ScheduledReportView({
 						loading={isRescheduling}
 						disabled={!newDate || isRescheduling}
 						fullWidth
-						color="teal"
+						color="primary"
 					>
 						<Trans>Confirm reschedule</Trans>
 					</Button>
@@ -973,7 +979,7 @@ export const ProjectReportRoute = () => {
 									backgroundColor: "var(--mantine-color-body)",
 									position: "sticky",
 									top: "1rem",
-									zIndex: 10,
+									zIndex: 5,
 								}}
 							>
 								<Stack gap={0}>
@@ -989,7 +995,7 @@ export const ProjectReportRoute = () => {
 													</Text>
 												}
 												checked={data.status === "published"}
-												color="teal"
+												color="primary"
 												size="sm"
 												onChange={(e) => {
 													const isPublishing = e.target.checked;
@@ -1064,7 +1070,7 @@ export const ProjectReportRoute = () => {
 												<Box>
 													<Button
 														variant={copiedLink ? "filled" : "default"}
-														color={copiedLink ? "teal" : undefined}
+														color={copiedLink ? "primary" : undefined}
 														size="compact-sm"
 														leftSection={<IconLink size={14} />}
 														onClick={() => {
@@ -1255,12 +1261,15 @@ export const ProjectReportRoute = () => {
 									style={
 										fullscreen
 											? ({
+													"--mdx-toolbar-position": "sticky",
 													"--mdx-toolbar-top": "0px",
 													backgroundColor: "white",
 													overflow: "auto",
 													padding: "2rem",
 												} as React.CSSProperties)
-											: undefined
+											: ({
+													"--mdx-toolbar-position": "sticky",
+												} as React.CSSProperties)
 									}
 								>
 									<ReportRenderer
@@ -1362,36 +1371,17 @@ export const ProjectReportRoute = () => {
 			</Modal>
 
 			{/* Delete confirmation modal */}
-			<Modal
+			<ConfirmModal
 				opened={deleteModalOpened}
 				onClose={closeDeleteModal}
-				title={t`Delete Report`}
-				{...testId("report-delete-confirmation-modal")}
-			>
-				<Text size="sm">
-					<Trans>
-						Are you sure you want to delete this report? This action cannot be
-						undone.
-					</Trans>
-				</Text>
-				<Group mt="md" justify="end">
-					<Button
-						onClick={closeDeleteModal}
-						variant="outline"
-						{...testId("report-delete-cancel-button")}
-					>
-						<Trans>Cancel</Trans>
-					</Button>
-					<Button
-						onClick={handleConfirmDelete}
-						color="red"
-						loading={isDeletingReport}
-						{...testId("report-delete-confirm-button")}
-					>
-						<Trans>Delete</Trans>
-					</Button>
-				</Group>
-			</Modal>
+				title={t`Delete report`}
+				message={t`Are you sure you want to delete this report? This action cannot be undone.`}
+				confirmLabel={<Trans>Delete</Trans>}
+				confirmColor="red"
+				loading={isDeletingReport}
+				onConfirm={handleConfirmDelete}
+				data-testid="report-delete-modal"
+			/>
 
 			{/* Responsive CSS for mobile + pulse animation */}
 			<style>{`

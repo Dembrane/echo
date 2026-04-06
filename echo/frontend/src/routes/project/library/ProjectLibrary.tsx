@@ -24,6 +24,7 @@ import { formatRelative } from "date-fns";
 import { useParams } from "react-router";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { CloseableAlert } from "@/components/common/ClosableAlert";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { useConversationsByProjectId } from "@/components/conversation/hooks";
 import {
 	useGenerateProjectLibraryMutation,
@@ -68,6 +69,10 @@ export const ProjectLibraryRoute = () => {
 	const latestRun = latestRunQuery.data ?? null;
 
 	const [opened, { toggle, close }] = useDisclosure(false);
+	const [
+		generateConfirmOpened,
+		{ open: openGenerateConfirm, close: closeGenerateConfirm },
+	] = useDisclosure(false);
 
 	const isLibraryEnabled =
 		projectQuery.data?.is_enhanced_audio_processing_enabled ?? false;
@@ -95,17 +100,8 @@ export const ProjectLibraryRoute = () => {
 
 	const viewsExist = viewsQuery?.data && viewsQuery.data.length > 0;
 
-	const handleCreateLibrary = async () => {
-		if (
-			window.confirm(
-				t`Are you sure you want to generate the library? This will take a while and overwrite your current views and insights.`,
-			)
-		) {
-			requestProjectLibraryMutation.mutate({
-				language: iso639_1,
-				projectId: projectId ?? "",
-			});
-		}
+	const handleCreateLibrary = () => {
+		openGenerateConfirm();
 	};
 
 	const contactSales = () => {
@@ -304,6 +300,22 @@ export const ProjectLibraryRoute = () => {
 					/>
 				))}
 			</Stack>
+
+			<ConfirmModal
+				opened={generateConfirmOpened}
+				onClose={closeGenerateConfirm}
+				title={t`Generate library`}
+				data-testid="library-generate-modal"
+				message={t`Are you sure you want to generate the library? This will take a while and overwrite your current views and insights.`}
+				confirmLabel={<Trans>Generate</Trans>}
+				onConfirm={() => {
+					requestProjectLibraryMutation.mutate({
+						language: iso639_1,
+						projectId: projectId ?? "",
+					});
+					closeGenerateConfirm();
+				}}
+			/>
 		</Stack>
 	);
 };

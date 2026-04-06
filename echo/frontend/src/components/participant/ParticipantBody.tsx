@@ -1,7 +1,7 @@
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Button, Modal, Stack, Title } from "@mantine/core";
+import { Button, Modal, Stack, Text, Title } from "@mantine/core";
 
 import { useDisclosure } from "@mantine/hooks";
 import { IconExclamationCircle, IconWifiOff } from "@tabler/icons-react";
@@ -32,12 +32,14 @@ export const ParticipantBody = ({
 	children,
 	interleaveMessages = true,
 	isRecording = false,
+	isAnonymized = false,
 }: PropsWithChildren<{
 	projectId: string;
 	conversationId: string;
 	viewResponses?: boolean;
 	interleaveMessages?: boolean;
 	isRecording?: boolean;
+	isAnonymized?: boolean;
 }>) => {
 	const [ref] = useAutoAnimate();
 	const [chatRef] = useAutoAnimate();
@@ -189,9 +191,16 @@ export const ParticipantBody = ({
 					)}
 
 					<SystemMessage
-						markdown={t`Please record your response by clicking the "Record" button below. You may also choose to respond in text by clicking the text icon.  
-**Please keep this screen lit up**  
-(black screen = not recording)`}
+						markdown={
+							isAnonymized
+								? t`Please record your response by clicking the "Record" button below. You may also choose to respond in text by clicking the text icon.
+**Please keep this screen lit up**
+(black screen = not recording).
+This transcript will be anonymized and your host will not be able to listen to your recording.`
+								: t`Please record your response by clicking the "Record" button below. You may also choose to respond in text by clicking the text icon.
+**Please keep this screen lit up**
+(black screen = not recording)`
+						}
 						className="mb-4"
 					/>
 

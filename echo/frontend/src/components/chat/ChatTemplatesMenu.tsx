@@ -18,9 +18,8 @@ import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import type { ChatMode } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { MODE_COLORS } from "./ChatModeSelector";
-import type { QuickAccessItem } from "./QuickAccessConfigurator";
 import { TemplatesModal } from "./TemplatesModal";
-import { decodeTemplateKey, encodeTemplateKey } from "./templateKey";
+import { type QuickAccessItem, decodeTemplateKey, encodeTemplateKey } from "./templateKey";
 import {
 	agenticQuickAccessTemplates,
 	quickAccessTemplates,
@@ -71,25 +70,12 @@ type ChatTemplatesMenuProps = {
 	// AI suggestions toggle
 	hideAiSuggestions?: boolean;
 	onToggleAiSuggestions?: (hide: boolean) => void;
-	// Favorites
-	favoriteTemplateIds?: Set<string>;
-	onToggleFavorite?: (promptTemplateId: string, isFavorited: boolean) => void;
 	// External open control
 	externalOpen?: boolean;
 	onExternalClose?: () => void;
 	// Save as template prefill
 	saveAsTemplateContent?: string | null;
 	onClearSaveAsTemplate?: () => void;
-	// Community publish context
-	userTemplateDetails?: Array<{
-		id: string;
-		is_public: boolean;
-		star_count: number;
-		copied_from: string | null;
-		author_display_name: string | null;
-	}>;
-	defaultLanguage?: string;
-	userName?: string | null;
 };
 
 // Reusable chip for both dynamic suggestions and pinned templates
@@ -175,13 +161,8 @@ export const ChatTemplatesMenu = ({
 	isSavingQuickAccess = false,
 	hideAiSuggestions = false,
 	onToggleAiSuggestions,
-	favoriteTemplateIds = new Set(),
-	onToggleFavorite,
 	externalOpen = false,
 	onExternalClose,
-	userTemplateDetails = [],
-	defaultLanguage,
-	userName,
 	saveAsTemplateContent,
 	onClearSaveAsTemplate,
 }: ChatTemplatesMenuProps) => {
@@ -398,11 +379,6 @@ export const ChatTemplatesMenu = ({
 				isSavingQuickAccess={isSavingQuickAccess}
 				hideAiSuggestions={hideAiSuggestions}
 				onToggleAiSuggestions={onToggleAiSuggestions}
-				favoriteTemplateIds={favoriteTemplateIds}
-				onToggleFavorite={onToggleFavorite}
-				userTemplateDetails={userTemplateDetails}
-				defaultLanguage={defaultLanguage}
-				userName={userName}
 				saveAsTemplateContent={saveAsTemplateContent}
 				onClearSaveAsTemplate={onClearSaveAsTemplate}
 			/>

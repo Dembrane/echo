@@ -11,7 +11,6 @@ import {
 	Divider,
 	Group,
 	InputDescription,
-	Modal,
 	NativeSelect,
 	Paper,
 	Stack,
@@ -22,6 +21,7 @@ import {
 	Title,
 	Tooltip,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { DetectiveIcon } from "@phosphor-icons/react";
 import {
 	IconExternalLink,
@@ -40,6 +40,7 @@ import { Resizable } from "re-resizable";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -355,7 +356,9 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	const updateCustomTopicMutation = useUpdateCustomTopicMutation();
 	const deleteCustomTopicMutation = useDeleteCustomTopicMutation();
 
-	const [customTopicModalOpened, setCustomTopicModalOpened] = useState(false);
+	const [anonymizeModalOpened, anonymizeModalHandlers] = useDisclosure(false);
+	const [customTopicModalOpened, customTopicModalHandlers] =
+		useDisclosure(false);
 	const [customTopicModalMode, setCustomTopicModalMode] = useState<
 		"create" | "edit"
 	>("create");
@@ -366,14 +369,17 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	const openCreateTopicModal = useCallback(() => {
 		setEditingTopic(null);
 		setCustomTopicModalMode("create");
-		setCustomTopicModalOpened(true);
-	}, []);
+		customTopicModalHandlers.open();
+	}, [customTopicModalHandlers]);
 
-	const openEditTopicModal = useCallback((topic: VerificationTopicMetadata) => {
-		setEditingTopic(topic);
-		setCustomTopicModalMode("edit");
-		setCustomTopicModalOpened(true);
-	}, []);
+	const openEditTopicModal = useCallback(
+		(topic: VerificationTopicMetadata) => {
+			setEditingTopic(topic);
+			setCustomTopicModalMode("edit");
+			customTopicModalHandlers.open();
+		},
+		[customTopicModalHandlers],
+	);
 
 	const handleCustomTopicSubmit = useCallback(
 		async (data: {
@@ -411,7 +417,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 						topicKey: editingTopic.key,
 					});
 				}
-				setCustomTopicModalOpened(false);
+				customTopicModalHandlers.close();
 			} catch {
 				// Error toast is handled by the mutation's onError
 			}
@@ -423,6 +429,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 			createCustomTopicMutation,
 			updateCustomTopicMutation,
 			setValue,
+			customTopicModalHandlers,
 		],
 	);
 
@@ -1494,11 +1501,47 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														/>
 													}
 													checked={field.value}
-													onChange={(e) =>
-														field.onChange(e.currentTarget.checked)
-													}
+													onChange={(e) => {
+														const newValue = e.currentTarget.checked;
+														if (!newValue && field.value) {
+															// Turning OFF -- show confirmation modal
+															anonymizeModalHandlers.open();
+														} else {
+															field.onChange(newValue);
+														}
+													}}
 												/>
 											)}
+										/>
+										<ConfirmModal
+											opened={anonymizeModalOpened}
+											onClose={anonymizeModalHandlers.close}
+											title={t`Turn off anonymization?`}
+											message={
+												<Trans id="portal.anonymization.disable.warning">
+													Turning off anonymization while recordings are ongoing
+													may have unintended consequences. Active conversations
+													will also be affected mid-recording. Please use this
+													with caution.
+												</Trans>
+											}
+											confirmLabel={
+												<Trans id="portal.anonymization.disable.confirm">
+													Turn off
+												</Trans>
+											}
+											confirmColor="red"
+											onConfirm={() => {
+												setValue("anonymize_transcripts", false, {
+													shouldDirty: true,
+												});
+												anonymizeModalHandlers.close();
+												dispatchAutoSave({
+													...getValues(),
+													anonymize_transcripts: false,
+												} as ProjectPortalFormValues);
+											}}
+											data-testid="anonymize-disable-modal"
 										/>
 									</Stack>
 
@@ -1673,7 +1716,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 			</Stack>
 			<CustomTopicModal
 				opened={customTopicModalOpened}
-				onClose={() => setCustomTopicModalOpened(false)}
+				onClose={customTopicModalHandlers.close}
 				mode={customTopicModalMode}
 				topic={editingTopic}
 				onSubmit={handleCustomTopicSubmit}
@@ -1682,36 +1725,17 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 					updateCustomTopicMutation.isPending
 				}
 			/>
-			<Modal
+			<ConfirmModal
 				opened={deleteConfirmKey !== null}
 				onClose={() => setDeleteConfirmKey(null)}
-				title={<Trans>Delete Custom Topic</Trans>}
-				size="sm"
-				radius="md"
-				padding="xl"
-				{...testId("custom-topic-delete-confirm-modal")}
-			>
-				<Stack gap="md">
-					<Text size="sm">
-						<Trans>
-							Are you sure you want to delete this custom topic? This cannot be
-							undone.
-						</Trans>
-					</Text>
-					<Group justify="flex-end">
-						<Button variant="subtle" onClick={() => setDeleteConfirmKey(null)}>
-							<Trans>Cancel</Trans>
-						</Button>
-						<Button
-							loading={deleteCustomTopicMutation.isPending}
-							onClick={confirmDeleteCustomTopic}
-							{...testId("custom-topic-delete-confirm")}
-						>
-							<Trans>Delete</Trans>
-						</Button>
-					</Group>
-				</Stack>
-			</Modal>
+				title={t`Delete custom topic`}
+				message={t`Are you sure you want to delete this custom topic? This cannot be undone.`}
+				confirmLabel={<Trans>Delete</Trans>}
+				confirmColor="red"
+				loading={deleteCustomTopicMutation.isPending}
+				onConfirm={confirmDeleteCustomTopic}
+				data-testid="custom-topic-delete-modal"
+			/>
 		</Box>
 	);
 };

@@ -15,6 +15,7 @@ import { IconPhoto, IconTrash, IconUpload } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { ImageCropModal } from "@/components/common/ImageCropModal";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { toast } from "../common/Toaster";
@@ -31,6 +32,10 @@ export const WhitelabelLogoCard = () => {
 	const [cropSrc, setCropSrc] = useState<string | null>(null);
 	const [cropOpened, { open: openCrop, close: closeCrop }] =
 		useDisclosure(false);
+	const [
+		removeConfirmOpened,
+		{ open: openRemoveConfirm, close: closeRemoveConfirm },
+	] = useDisclosure(false);
 
 	const uploadMutation = useMutation({
 		mutationFn: async (blob: Blob) => {
@@ -53,12 +58,12 @@ export const WhitelabelLogoCard = () => {
 			const data = await response.json();
 			return data.file_id;
 		},
+		onError: () => {
+			toast.error(t`Failed to upload logo`);
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["users", "me"] });
 			toast.success(t`Logo updated`);
-		},
-		onError: () => {
-			toast.error(t`Failed to upload logo`);
 		},
 	});
 
@@ -76,12 +81,12 @@ export const WhitelabelLogoCard = () => {
 				throw new Error("Failed to remove logo");
 			}
 		},
+		onError: () => {
+			toast.error(t`Failed to remove logo`);
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["users", "me"] });
 			toast.success(t`Logo removed`);
-		},
-		onError: () => {
-			toast.error(t`Failed to remove logo`);
 		},
 	});
 
@@ -137,7 +142,7 @@ export const WhitelabelLogoCard = () => {
 									size="compact-sm"
 									leftSection={<IconTrash size={14} />}
 									loading={removeMutation.isPending}
-									onClick={() => removeMutation.mutate()}
+									onClick={openRemoveConfirm}
 								>
 									<Trans>Remove</Trans>
 								</Button>
@@ -166,6 +171,21 @@ export const WhitelabelLogoCard = () => {
 					</FileButton>
 				</Stack>
 			</Card>
+
+			<ConfirmModal
+				opened={removeConfirmOpened}
+				onClose={closeRemoveConfirm}
+				title={t`Remove logo`}
+				data-testid="logo-remove-modal"
+				message={t`Are you sure you want to remove your custom logo? The default dembrane logo will be used instead.`}
+				confirmLabel={<Trans>Remove</Trans>}
+				confirmColor="red"
+				loading={removeMutation.isPending}
+				onConfirm={() => {
+					removeMutation.mutate();
+					closeRemoveConfirm();
+				}}
+			/>
 
 			{cropSrc && (
 				<ImageCropModal
