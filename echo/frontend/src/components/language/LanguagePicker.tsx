@@ -51,6 +51,12 @@ const data: Array<{
 		label: "Español",
 		language: "es-ES",
 	},
+	{
+		flag: "🇺🇦",
+		iso639_1: "uk",
+		label: "Українська",
+		language: "uk-UA",
+	},
 ];
 
 export const languageOptions = data.map((d) => ({

@@ -11,6 +11,7 @@ import { messages as esMessages } from "../locales/es-ES";
 import { messages as frMessages } from "../locales/fr-FR";
 import { messages as itMessages } from "../locales/it-IT";
 import { messages as nlMessages } from "../locales/nl-NL";
+import { messages as ukMessages } from "../locales/uk-UA";
 
 i18n.load({
 	"de-DE": deMessages,
@@ -19,6 +20,7 @@ i18n.load({
 	"fr-FR": frMessages,
 	"it-IT": itMessages,
 	"nl-NL": nlMessages,
+	"uk-UA": ukMessages,
 });
 
 i18n.activate(defaultLanguage);
