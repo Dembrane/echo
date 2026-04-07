@@ -4,7 +4,7 @@ from logging import getLogger
 
 from dembrane.directus import DirectusClient, DirectusBadRequest, directus, directus_client_context
 
-ALLOWED_LANGUAGES = ["en", "nl", "de", "fr", "es", "it"]
+ALLOWED_LANGUAGES = ["en", "nl", "de", "fr", "es", "it", "uk"]
 
 
 def get_allowed_languages() -> List[str]:

@@ -220,6 +220,29 @@ const ParticipantOnboardingCards = ({
 				],
 			},
 		],
+		"uk-UA": [
+			...getSystemCards("uk-UA", tutorialSlug, legalBasis, privacyPolicyUrl),
+			{
+				section: "Перевірка мікрофона",
+				slides: [
+					{
+						component: MicrophoneTestComponent,
+						content: "Переконаймось, що ми вас чуємо.",
+						title: "Перевірка мікрофона",
+						type: "microphone",
+					},
+				],
+			},
+			{
+				section: "Почати",
+				slides: [
+					{
+						component: InitiateFormComponent,
+						title: "Готові розпочати?",
+					},
+				],
+			},
+		],
 	};
 
 	// Add this check to ensure we have valid data
