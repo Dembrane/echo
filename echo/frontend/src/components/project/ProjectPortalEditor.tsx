@@ -81,13 +81,13 @@ const FormSchema = z.object({
 	is_project_notification_subscription_allowed: z.boolean(),
 	is_verify_enabled: z.boolean(),
 	is_verify_on_finish_enabled: z.boolean(),
-	language: z.enum(["en", "nl", "de", "fr", "es", "it"]),
+	language: z.enum(["en", "nl", "de", "fr", "es", "it", "uk"]),
 	verification_topics: z.array(z.string()),
 });
 
 type ProjectPortalFormValues = z.infer<typeof FormSchema>;
 
-type LanguageCode = "de" | "en" | "es" | "fr" | "nl" | "it";
+type LanguageCode = "de" | "en" | "es" | "fr" | "nl" | "it" | "uk";
 
 const LANGUAGE_TO_LOCALE: Record<LanguageCode, string> = {
 	de: "de-DE",
@@ -96,6 +96,7 @@ const LANGUAGE_TO_LOCALE: Record<LanguageCode, string> = {
 	fr: "fr-FR",
 	it: "it-IT",
 	nl: "nl-NL",
+	uk: "uk-UA",
 };
 
 const localeFromIso = (iso?: string) =>
@@ -642,6 +643,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														{ label: t`Spanish`, value: "es" },
 														{ label: t`French`, value: "fr" },
 														{ label: t`Italian`, value: "it" },
+														{ label: t`Ukrainian`, value: "uk" },
 													]}
 													{...field}
 													{...testId("portal-editor-language-select")}

@@ -51,6 +51,8 @@ export const useProjectSharingLink = (project?: Project) => {
 			"it-IT": "it-IT",
 			nl: "nl-NL",
 			"nl-NL": "nl-NL",
+			uk: "uk-UA",
+			"uk-UA": "uk-UA",
 		}[
 			project.language as
 				| "en"
@@ -59,12 +61,14 @@ export const useProjectSharingLink = (project?: Project) => {
 				| "fr"
 				| "es"
 				| "it"
+				| "uk"
 				| "en-US"
 				| "nl-NL"
 				| "de-DE"
 				| "fr-FR"
 				| "es-ES"
 				| "it-IT"
+				| "uk-UA"
 		];
 
 		// Include theme in URL so participant portal uses the same theme
@@ -110,12 +114,14 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 		"fr",
 		"es",
 		"it",
+		"uk",
 		"en-US",
 		"nl-NL",
 		"de-DE",
 		"fr-FR",
 		"es-ES",
 		"it-IT",
+		"uk-UA",
 	];
 	const showQuickStart =
 		project?.language && supportedLanguages.includes(project.language);

@@ -270,6 +270,7 @@ DEFAULT_DIRECTUS_LANGUAGES: Iterable[Mapping[str, Any]] = [
     {"code": "es-ES", "name": "Spanish (Spain)", "direction": "ltr"},
     {"code": "fr-FR", "name": "French (France)", "direction": "ltr"},
     {"code": "it-IT", "name": "Italian (Italy)", "direction": "ltr"},
+    {"code": "uk-UA", "name": "Ukrainian (Ukraine)", "direction": "ltr"},
 ]
 
 
@@ -343,6 +344,7 @@ DEFAULT_VERIFICATION_TOPICS: List[Dict[str, Any]] = [
             "es-ES": {"label": "En qué estuvimos de acuerdo"},
             "fr-FR": {"label": "Ce qu'on a décidé ensemble"},
             "it-IT": {"label": "Su cosa ci siamo accordati"},
+            "uk-UA": {"label": "Про що ми домовились"},
         },
     },
     {
@@ -365,6 +367,7 @@ DEFAULT_VERIFICATION_TOPICS: List[Dict[str, Any]] = [
             "es-ES": {"label": "Joyas ocultas"},
             "fr-FR": {"label": "Pépites cachées"},
             "it-IT": {"label": "Perle nascoste"},
+            "uk-UA": {"label": "Приховані перлини"},
         },
     },
     {
@@ -387,6 +390,7 @@ DEFAULT_VERIFICATION_TOPICS: List[Dict[str, Any]] = [
             "es-ES": {"label": "Verdades incómodas"},
             "fr-FR": {"label": "Vérités difficiles"},
             "it-IT": {"label": "Verità scomode"},
+            "uk-UA": {"label": "Болючі істини"},
         },
     },
     {
@@ -408,6 +412,7 @@ DEFAULT_VERIFICATION_TOPICS: List[Dict[str, Any]] = [
             "es-ES": {"label": "Momentos decisivos"},
             "fr-FR": {"label": "Moments décisifs"},
             "it-IT": {"label": "Momenti di svolta"},
+            "uk-UA": {"label": "Моменти прориву"},
         },
     },
     {
@@ -429,6 +434,7 @@ DEFAULT_VERIFICATION_TOPICS: List[Dict[str, Any]] = [
             "es-ES": {"label": "Lo que creemos que debe pasar"},
             "fr-FR": {"label": "Ce qu'on pense qu'il faut faire"},
             "it-IT": {"label": "Cosa pensiamo debba succedere"},
+            "uk-UA": {"label": "Що, на нашу думку, має статися"},
         },
     },
     {
@@ -450,6 +456,7 @@ DEFAULT_VERIFICATION_TOPICS: List[Dict[str, Any]] = [
             "es-ES": {"label": "Donde no coincidimos"},
             "fr-FR": {"label": "Là où on n'était pas d'accord"},
             "it-IT": {"label": "Dove non eravamo d'accordo"},
+            "uk-UA": {"label": "Де ми погодились не погоджуватись"},
         },
     },
 ]
