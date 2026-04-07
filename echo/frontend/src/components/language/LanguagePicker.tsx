@@ -54,7 +54,7 @@ const data: Array<{
 	{
 		flag: "🇺🇦",
 		iso639_1: "uk",
-		label: "Українська",
+		label: "Ukrainian",
 		language: "uk-UA",
 	},
 ];
