@@ -152,7 +152,7 @@ export const ProjectsHomeRoute = () => {
 	);
 
 	return (
-		<Container>
+		<Container pt="8rem">
 			<Stack>
 				<Group justify="space-between">
 					<Group align="center">
