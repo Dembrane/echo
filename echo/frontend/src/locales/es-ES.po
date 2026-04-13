@@ -299,7 +299,7 @@ msgid "{0} views"
 msgstr "{0} vistas"
 
 #. placeholder {0}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
-#: src/components/project/PinnedProjectCard.tsx:96
+#: src/components/project/PinnedProjectCard.tsx:100
 msgid "{conversationCount} Conversations • Edited {0}"
 msgstr "{conversationCount} conversaciones • Editado {0}"
 
@@ -3597,7 +3597,7 @@ msgstr "¡Ups! Parece que se denegó el acceso al micrófono. ¡No te preocupes!
 #~ msgstr "¡Ups! Parece que se denegó el acceso al micrófono. ¡No te preocupes! Tenemos una guía de solución de problemas para ti. Siéntete libre de consultarla. Una vez que hayas resuelto el problema, vuelve a visitar esta página para verificar si tu micrófono está listo."
 
 #: src/components/project/ProjectCard.tsx:60
-#: src/components/project/PinnedProjectCard.tsx:134
+#: src/components/project/PinnedProjectCard.tsx:138
 #: src/components/aspect/AspectCard.tsx:45
 msgid "Open"
 msgstr "Abrir"
@@ -5950,7 +5950,7 @@ msgstr "Desancla primero un proyecto (máx. 3)"
 #~ msgstr "Desfijar de la barra de chat"
 
 #: src/components/project/ProjectListItem.tsx:104
-#: src/components/project/PinnedProjectCard.tsx:78
+#: src/components/project/PinnedProjectCard.tsx:81
 msgid "Unpin project"
 msgstr "Desanclar proyecto"
 

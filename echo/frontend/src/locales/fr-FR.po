@@ -314,7 +314,7 @@ msgid "{0} views"
 msgstr "{0} vues"
 
 #. placeholder {0}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
-#: src/components/project/PinnedProjectCard.tsx:96
+#: src/components/project/PinnedProjectCard.tsx:100
 msgid "{conversationCount} Conversations • Edited {0}"
 msgstr "{conversationCount} conversations • Modifié {0}"
 
@@ -3612,7 +3612,7 @@ msgstr "Il semble que l'accès au microphone ait été refusé. Pas d'inquiétud
 #~ msgstr "Oups ! Il semble que l'accès au microphone ait été refusé. Pas d'inquiétude ! Nous avons un guide de dépannage pratique pour vous. N'hésitez pas à le consulter. Une fois le problème résolu, revenez sur cette page pour vérifier si votre microphone est prêt."
 
 #: src/components/project/ProjectCard.tsx:60
-#: src/components/project/PinnedProjectCard.tsx:134
+#: src/components/project/PinnedProjectCard.tsx:138
 #: src/components/aspect/AspectCard.tsx:45
 msgid "Open"
 msgstr "Ouvrir"
@@ -5965,7 +5965,7 @@ msgstr "Désépinglez d'abord un projet (max 3)"
 #~ msgstr "Détacher de la barre de chat"
 
 #: src/components/project/ProjectListItem.tsx:104
-#: src/components/project/PinnedProjectCard.tsx:78
+#: src/components/project/PinnedProjectCard.tsx:81
 msgid "Unpin project"
 msgstr "Désépingler le projet"
 

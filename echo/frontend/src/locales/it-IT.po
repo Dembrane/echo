@@ -481,7 +481,7 @@ msgid "{0} views"
 msgstr "{0} views"
 
 #. placeholder {0}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
-#: src/components/project/PinnedProjectCard.tsx:96
+#: src/components/project/PinnedProjectCard.tsx:100
 msgid "{conversationCount} Conversations • Edited {0}"
 msgstr "{conversationCount} Conversations • Edited {0}"
 
@@ -3896,7 +3896,7 @@ msgstr "Oops! It looks like microphone access was denied. No worries, though! We
 #~ msgstr "Oops! It looks like microphone access was denied. No worries, though! We've got a handy troubleshooting guide for you. Feel free to check it out. Once you've resolved the issue, come back and visit this page again to check if your microphone is ready."
 
 #: src/components/project/ProjectCard.tsx:60
-#: src/components/project/PinnedProjectCard.tsx:134
+#: src/components/project/PinnedProjectCard.tsx:138
 #: src/components/aspect/AspectCard.tsx:45
 msgid "Open"
 msgstr "Open"
@@ -6257,7 +6257,7 @@ msgstr "Unpin a project first (max 3)"
 #~ msgstr "Unpin from chat bar"
 
 #: src/components/project/ProjectListItem.tsx:104
-#: src/components/project/PinnedProjectCard.tsx:78
+#: src/components/project/PinnedProjectCard.tsx:81
 msgid "Unpin project"
 msgstr "Unpin project"
 
