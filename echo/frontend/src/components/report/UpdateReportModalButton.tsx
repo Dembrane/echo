@@ -1,8 +1,8 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	Anchor,
 	Alert,
+	Anchor,
 	Badge,
 	Button,
 	Divider,
@@ -24,28 +24,34 @@ import {
 import { AxiosError } from "axios";
 import { useState } from "react";
 import { useParams } from "react-router";
-import { useLanguage } from "@/hooks/useLanguage";
-import { analytics } from "@/lib/analytics";
-import { testId } from "@/lib/testUtils";
-import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { getProductFeedbackUrl } from "@/config";
 import focusOptionsData from "@/data/reportFocusOptions.json";
+import { useLanguage } from "@/hooks/useLanguage";
+import { analytics } from "@/lib/analytics";
+import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
+import { testId } from "@/lib/testUtils";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
-import { ReportFocusSelector } from "./ReportFocusSelector";
 import {
 	useCreateProjectReportMutation,
 	useDoesProjectReportNeedUpdate,
 	useProjectReport,
 } from "./hooks";
+import { ReportFocusSelector } from "./ReportFocusSelector";
 
 function getLanguageLabel(iso: string): string {
 	return languageOptionsByIso639_1.find((o) => o.value === iso)?.label ?? iso;
 }
 
-function getSelectedFocusLabels(instructions: string, language: string): string[] {
+function getSelectedFocusLabels(
+	instructions: string,
+	language: string,
+): string[] {
 	return focusOptionsData.options
 		.filter((opt) => instructions.includes(opt.instruction))
-		.map((opt) => (opt.labels as Record<string, string>)[language] ?? opt.labels.en);
+		.map(
+			(opt) =>
+				(opt.labels as Record<string, string>)[language] ?? opt.labels.en,
+		);
 }
 
 function getCustomFocusText(instructions: string): string {
@@ -71,7 +77,8 @@ function getMaxScheduleDate(): Date {
 }
 
 // Feature flag: show "custom report structure" CTA until 2026-05-11 (8 weeks from 2026-03-16)
-const SHOW_STRUCTURE_CTA = Date.now() < new Date("2026-05-11T00:00:00Z").getTime();
+const SHOW_STRUCTURE_CTA =
+	Date.now() < new Date("2026-05-11T00:00:00Z").getTime();
 
 export const UpdateReportModalButton = ({
 	reportId: currentReportId,
@@ -81,9 +88,14 @@ export const UpdateReportModalButton = ({
 	const [opened, { open, close }] = useDisclosure(false);
 	const { mutateAsync, isPending, error } = useCreateProjectReportMutation();
 	const { projectId } = useParams();
-	const { data: currentReport } = useProjectReport(projectId ?? "", currentReportId);
-	const { data: doesReportNeedUpdate } =
-		useDoesProjectReportNeedUpdate(projectId ?? "", currentReportId);
+	const { data: currentReport } = useProjectReport(
+		projectId ?? "",
+		currentReportId,
+	);
+	const { data: doesReportNeedUpdate } = useDoesProjectReportNeedUpdate(
+		projectId ?? "",
+		currentReportId,
+	);
 	const { iso639_1, language: appLocale } = useLanguage();
 
 	const [language, setLanguage] = useState(
@@ -119,15 +131,13 @@ export const UpdateReportModalButton = ({
 		await mutateAsync(
 			{
 				language,
-				userInstructions: userInstructions || undefined,
 				otherPayload: {
 					show_portal_link: currentReport.show_portal_link,
 				},
-				scheduledAt:
-					schedule && scheduledDate
-						? scheduledDate.toISOString()
-						: undefined,
 				projectId: projectId ?? "",
+				scheduledAt:
+					schedule && scheduledDate ? scheduledDate.toISOString() : undefined,
+				userInstructions: userInstructions || undefined,
 			},
 			{
 				onSuccess: () => close(),
@@ -153,11 +163,11 @@ export const UpdateReportModalButton = ({
 						doesReportNeedUpdate ? (
 							<span
 								style={{
-									display: "inline-block",
-									width: 8,
-									height: 8,
-									borderRadius: "50%",
 									backgroundColor: "var(--mantine-color-red-filled)",
+									borderRadius: "50%",
+									display: "inline-block",
+									height: 8,
+									width: 8,
 								}}
 							/>
 						) : undefined
@@ -187,8 +197,8 @@ export const UpdateReportModalButton = ({
 							)}
 						</Text>
 						{showSchedule && (
-							<Badge size="xs" variant="light" color="yellow">
-								<Trans>Experimental</Trans>
+							<Badge color="mauve" c="graphite" size="sm">
+								<Trans>Beta</Trans>
 							</Badge>
 						)}
 					</Group>
@@ -197,14 +207,16 @@ export const UpdateReportModalButton = ({
 				{error ? (
 					<Alert
 						title={
-							is409Error ? t`Report already generating` : t`Error creating report`
+							is409Error
+								? t`Report already generating`
+								: t`Error creating report`
 						}
 						color={is409Error ? "yellow" : "red"}
 					>
 						{is409Error ? (
 							<Trans>
-								A report is already being generated for this project. Please wait
-								for it to complete.
+								A report is already being generated for this project. Please
+								wait for it to complete.
 							</Trans>
 						) : (
 							<Trans>
@@ -219,20 +231,25 @@ export const UpdateReportModalButton = ({
 						<Stack gap={4}>
 							<Text size="xs" c="dimmed">
 								<Trans>Language</Trans>: {getLanguageLabel(language)}
-								{getSelectedFocusLabels(userInstructions, language).length > 0 && (
+								{getSelectedFocusLabels(userInstructions, language).length >
+									0 && (
 									<>
 										{" · "}
 										<Trans>Focus</Trans>:{" "}
-										{getSelectedFocusLabels(userInstructions, language).join(", ")}
+										{getSelectedFocusLabels(userInstructions, language).join(
+											", ",
+										)}
 									</>
 								)}
 								{getCustomFocusText(userInstructions) && (
 									<>
 										{" · "}
 										<Text span fs="italic" size="xs" c="dimmed">
-											"{getCustomFocusText(userInstructions).length > 60
+											"
+											{getCustomFocusText(userInstructions).length > 60
 												? `${getCustomFocusText(userInstructions).slice(0, 60)}…`
-												: getCustomFocusText(userInstructions)}"
+												: getCustomFocusText(userInstructions)}
+											"
 										</Text>
 									</>
 								)}
