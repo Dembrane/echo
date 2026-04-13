@@ -299,7 +299,7 @@ msgid "{0} views"
 msgstr "{0} weergaven"
 
 #. placeholder {0}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
-#: src/components/project/PinnedProjectCard.tsx:96
+#: src/components/project/PinnedProjectCard.tsx:100
 msgid "{conversationCount} Conversations • Edited {0}"
 msgstr "{conversationCount} gesprekken • Bewerkt {0}"
 
@@ -3720,7 +3720,7 @@ msgstr "Het lijkt erop dat toegang tot de microfoon geweigerd is. Geen zorgen, w
 #~ msgstr "Oeps! Het lijkt erop dat toegang tot de microfoon geweigerd is. Geen zorgen, we hebben een handige probleemoplossingsgids voor je. Voel je vrij om deze te bekijken. Zodra je het probleem hebt opgelost, kom dan terug naar deze pagina om te controleren of je microfoon klaar is voor gebruik."
 
 #: src/components/project/ProjectCard.tsx:60
-#: src/components/project/PinnedProjectCard.tsx:134
+#: src/components/project/PinnedProjectCard.tsx:138
 #: src/components/aspect/AspectCard.tsx:45
 msgid "Open"
 msgstr "Openen"
@@ -6129,7 +6129,7 @@ msgstr "Maak eerst een project los (max 3)"
 #~ msgstr "Losmaken van chatbalk"
 
 #: src/components/project/ProjectListItem.tsx:104
-#: src/components/project/PinnedProjectCard.tsx:78
+#: src/components/project/PinnedProjectCard.tsx:81
 msgid "Unpin project"
 msgstr "Project losmaken"
 
