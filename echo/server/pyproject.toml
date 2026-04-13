@@ -26,6 +26,7 @@ dependencies = [
     # Config
     "python-dotenv==1.0.*",
     # Other
+    "httpx>=0.28",
     "backoff==2.2.*",
     "aiofiles==23.2.*",
     "sentry-sdk==2.2.1",
