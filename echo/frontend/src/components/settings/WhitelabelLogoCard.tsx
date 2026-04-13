@@ -13,7 +13,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconPhoto, IconTrash, IconUpload } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { ImageCropModal } from "@/components/common/ImageCropModal";
@@ -29,6 +29,7 @@ export const WhitelabelLogoCard = () => {
 		? `${DIRECTUS_PUBLIC_URL}/assets/${logoFileId}`
 		: null;
 
+	const resetFileInputRef = useRef<() => void>(null);
 	const [cropSrc, setCropSrc] = useState<string | null>(null);
 	const [cropOpened, { open: openCrop, close: closeCrop }] =
 		useDisclosure(false);
@@ -91,6 +92,7 @@ export const WhitelabelLogoCard = () => {
 	});
 
 	const handleFileSelect = (file: File | null) => {
+		resetFileInputRef.current?.();
 		if (!file) return;
 		const reader = new FileReader();
 		reader.onload = () => {
@@ -155,6 +157,7 @@ export const WhitelabelLogoCard = () => {
 					)}
 
 					<FileButton
+						resetRef={resetFileInputRef}
 						onChange={handleFileSelect}
 						accept="image/png,image/jpeg,image/svg+xml,image/webp"
 					>
