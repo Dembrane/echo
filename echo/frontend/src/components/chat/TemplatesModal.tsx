@@ -785,7 +785,7 @@ export const TemplatesModal = ({
 									<Badge
 										size="sm"
 										variant={filterMine ? "filled" : "outline"}
-										color={userTemplates.length > 0 ? "blue" : "gray"}
+										color={userTemplates.length > 0 ? "primary" : "gray"}
 										style={{
 											cursor: userTemplates.length > 0 ? "pointer" : "default",
 											opacity: userTemplates.length > 0 ? 1 : 0.5,
