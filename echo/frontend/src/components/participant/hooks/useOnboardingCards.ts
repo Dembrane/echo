@@ -91,7 +91,7 @@ export const useOnboardingCards = () => {
 								"Sie erhalten die Fragen, sobald Sie im Aufnahmeportal sind.",
 							cta: "Verstanden",
 							extraHelp:
-								"Die Fragen variieren je nach den Bedürfnissen des Gastgebers. Sie können sich auf kommunale Themen, Arbeitserfahrungen oder Forschungsthemen beziehen. Wenn es keine spezifischen Fragen gibt, können Sie gerne alle Gedanken oder Anliegen teilen.",
+								"Die Fragen variieren je nach Bedürfnissen der Gastgeber*innen. Sie können sich auf kommunale Themen, Arbeitserfahrungen oder Forschungsthemen beziehen. Wenn es keine spezifischen Fragen gibt, können Sie gerne alle Gedanken oder Anliegen teilen.",
 							title: "Fragerunde",
 						},
 					],
@@ -101,7 +101,7 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Als Aufnehmer haben Sie die Kontrolle über das, was Sie teilen.",
+								"Als aufnehmende Person, haben Sie die Kontrolle über das, was Sie teilen.",
 							cta: "Mehr erfahren",
 							extraHelp:
 								"Vermeiden Sie die Weitergabe von Details, die Sie dem Gastgeber nicht mitteilen möchten. Seien Sie achtsam und nehmen Sie andere nicht ohne deren Zustimmung auf.",
@@ -546,7 +546,7 @@ export const useOnboardingCards = () => {
 								"Sie erhalten die Fragen, sobald Sie im Aufnahmeportal sind.",
 							cta: "Verstanden",
 							extraHelp:
-								"Die Fragen variieren je nach den Bedürfnissen des Gastgebers. Sie können sich auf kommunale Themen, Arbeitserfahrungen oder Forschungsthemen beziehen. Wenn es keine spezifischen Fragen gibt, können Sie gerne alle Gedanken oder Anliegen teilen.",
+								"Die Fragen variieren je nach Bedürfnissen der Gastgeber*innen. Sie können sich auf kommunale Themen, Arbeitserfahrungen oder Forschungsthemen beziehen. Wenn es keine spezifischen Fragen gibt, können Sie gerne alle Gedanken oder Anliegen teilen.",
 							title: "Fragerunde",
 						},
 					],
@@ -556,7 +556,7 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Als Aufnehmer haben Sie die Kontrolle über das, was Sie teilen.",
+								"Als aufnehmende Person, haben Sie die Kontrolle über das, was Sie teilen.",
 							cta: "Mehr erfahren",
 							extraHelp:
 								"Vermeiden Sie die Weitergabe von Details, die Sie dem Gastgeber nicht mitteilen möchten. Seien Sie achtsam und nehmen Sie andere nicht ohne deren Zustimmung auf.",
@@ -1189,11 +1189,11 @@ export const useOnboardingCards = () => {
 				slides: [
 					{
 						content:
-							"Der Organisator ist verantwortlich dafür, wie Ihre Daten in dieser Sitzung verwendet werden. dembrane verarbeitet Ihr Gespräch in seinem Auftrag.",
+							"Die Organisator*innen sind dafür verantwortlich, wie Ihre Daten in dieser Sitzung verwendet werden, dembrane verarbeitet Ihr Gespräch im Auftrag dieser.",
 						cta: "Ich verstehe.",
 						extraHelp:
 							"Aufnahmen werden transkribiert und für Erkenntnisse analysiert. Ihre Daten werden auf gesicherten Servern in Europa gespeichert, nicht zum Trainieren von KI-Modellen verwendet und innerhalb von 30 Tagen nach Projektende gelöscht.\n\nFragen zu Ihrer Privatsphäre? Wenden Sie sich direkt an den Organisator.",
-						title: "Verantwortlicher, Nutzung und Sicherheit.",
+						title: "Verantwortung, Nutzung und Sicherheit.",
 					},
 				],
 			},
@@ -1297,7 +1297,7 @@ export const useOnboardingCards = () => {
 							required: true,
 						},
 						content:
-							"Der Organisator ist verantwortlich dafür, wie Ihre Daten in dieser Sitzung verwendet werden. dembrane verarbeitet Ihr Gespräch in seinem Auftrag.",
+							"Die Organisator*innen sind dafür verantwortlich, wie Ihre Daten in dieser Sitzung verwendet werden, dembrane verarbeitet Ihr Gespräch im Auftrag dieser.",
 						cta: "Ich verstehe.",
 						extraHelp:
 							"Aufnahmen werden transkribiert und für Erkenntnisse analysiert. Ihre Daten werden auf gesicherten Servern in Europa gespeichert, nicht zum Trainieren von KI-Modellen verwendet und innerhalb von 30 Tagen nach Projektende gelöscht.\n\nFragen zu Ihrer Privatsphäre? Wenden Sie sich direkt an den Organisator.",
@@ -1309,7 +1309,7 @@ export const useOnboardingCards = () => {
 									},
 								}
 							: {}),
-						title: "Verantwortlicher, Nutzung und Sicherheit.",
+						title: "Verantwortung, Nutzung und Sicherheit.",
 					},
 				],
 			},
