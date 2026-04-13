@@ -1,0 +1,46 @@
+{
+  "collection": "usage_event",
+  "field": "event_data",
+  "type": "json",
+  "meta": {
+    "collection": "usage_event",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "event_data",
+    "group": null,
+    "hidden": false,
+    "interface": "input-code",
+    "note": "Always include \"v\": 1 for schema versioning",
+    "options": {
+      "language": "json"
+    },
+    "readonly": false,
+    "required": false,
+    "searchable": true,
+    "sort": 8,
+    "special": null,
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  },
+  "schema": {
+    "name": "event_data",
+    "table": "usage_event",
+    "data_type": "json",
+    "default_value": {},
+    "max_length": null,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": true,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}
