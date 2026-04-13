@@ -393,8 +393,8 @@ msgstr "Ein freundlicher Name, um diesen Webhook zu identifizieren"
 msgid "A new report will be automatically generated and published at the scheduled time."
 msgstr "Ein neuer Bericht wird automatisch zum geplanten Zeitpunkt erstellt und veröffentlicht."
 
-#: src/components/report/UpdateReportModalButton.tsx:205
-#: src/components/report/CreateReportForm.tsx:114
+#: src/components/report/UpdateReportModalButton.tsx:217
+#: src/components/report/CreateReportForm.tsx:123
 msgid "A report is already being generated for this project. Please wait for it to complete."
 msgstr "Für dieses Projekt wird bereits ein Bericht erstellt. Bitte warte, bis er fertig ist."
 
@@ -446,7 +446,7 @@ msgstr "Alle zutreffenden hinzufügen"
 msgid "select.all.modal.title.add"
 msgstr "Unterhaltungen zum Kontext hinzufügen"
 
-#: src/components/project/CustomTopicModal.tsx:133
+#: src/components/project/CustomTopicModal.tsx:134
 msgid "Add Custom Topic"
 msgstr "Benutzerdefiniertes Thema hinzufügen"
 
@@ -494,7 +494,7 @@ msgstr "Zu diesem Chat hinzufügen"
 msgid "Add Topic"
 msgstr "Thema hinzufügen"
 
-#: src/components/project/CustomTopicModal.tsx:172
+#: src/components/project/CustomTopicModal.tsx:173
 msgid "Add translations"
 msgstr "Übersetzungen hinzufügen"
 
@@ -1005,6 +1005,17 @@ msgstr "Grundlegende Einstellungen"
 #~ msgid "Begin!"
 #~ msgstr "Beginnen!"
 
+#: src/components/report/UpdateReportModalButton.tsx:201
+#: src/components/report/CreateReportForm.tsx:210
+#: src/components/project/ProjectPortalEditor.tsx:1476
+#: src/components/project/ProjectPortalEditor.tsx:1557
+#: src/components/conversation/RetranscribeConversation.tsx:144
+#: src/components/conversation/MoveConversationButton.tsx:142
+#: src/components/chat/ChatModeSelector.tsx:156
+#: src/components/chat/ChatModeBanner.tsx:45
+msgid "Beta"
+msgstr "Beta"
+
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:798
 msgid "dashboard.dembrane.concrete.beta"
@@ -1013,15 +1024,6 @@ msgstr "Beta"
 #. js-lingui-explicit-id
 #: src/components/project/ProjectPortalEditor.tsx:1008
 msgid "dashboard.dembrane.verify.beta"
-msgstr "Beta"
-
-#: src/components/project/ProjectPortalEditor.tsx:1476
-#: src/components/project/ProjectPortalEditor.tsx:1557
-#: src/components/conversation/RetranscribeConversation.tsx:144
-#: src/components/conversation/MoveConversationButton.tsx:142
-#: src/components/chat/ChatModeSelector.tsx:156
-#: src/components/chat/ChatModeBanner.tsx:45
-msgid "Beta"
 msgstr "Beta"
 
 #~ msgid "Big Picture"
@@ -1067,7 +1069,7 @@ msgstr "Durch das Löschen dieses Projekts werden alle damit verbundenen Daten g
 #: src/routes/project/report/ProjectReportRoute.tsx:1361
 #: src/components/settings/TwoFactorSettingsCard.tsx:406
 #: src/components/project/ProjectDangerZone.tsx:156
-#: src/components/project/CustomTopicModal.tsx:233
+#: src/components/project/CustomTopicModal.tsx:234
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:530
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:684
 #: src/components/layout/Header.tsx:308
@@ -1409,7 +1411,7 @@ msgstr "Gespräch aus dem Chat entfernt"
 msgid "Conversation Status"
 msgstr "Gesprächstatus"
 
-#: src/components/report/CreateReportForm.tsx:177
+#: src/components/report/CreateReportForm.tsx:189
 msgid "Conversation Status Details"
 msgstr "Gesprächstatusdetails"
 
@@ -1423,7 +1425,7 @@ msgstr "Gesprächstags"
 #~ msgid "conversation.linking_conversations.deleted"
 #~ msgstr "Die Quelle wurde gelöscht"
 
-#: src/components/report/CreateReportForm.tsx:169
+#: src/components/report/CreateReportForm.tsx:181
 msgid "conversations"
 msgstr "Gespräche"
 
@@ -1529,7 +1531,7 @@ msgid "Could not copy to clipboard. Please try again."
 msgstr "Konnte nicht in die Zwischenablage kopiert werden. Bitte versuchen Sie es erneut."
 
 #: src/routes/project/ProjectsHome.tsx:182
-#: src/components/project/CustomTopicModal.tsx:241
+#: src/components/project/CustomTopicModal.tsx:242
 msgid "Create"
 msgstr "Erstellen"
 
@@ -1770,7 +1772,7 @@ msgstr "dembrane läuft mit KI. Prüf die Antworten noch mal gegen."
 #~ msgid "Describe how this template is useful..."
 #~ msgstr "Beschreibe, wofür diese Vorlage nützlich ist..."
 
-#: src/components/project/CustomTopicModal.tsx:206
+#: src/components/project/CustomTopicModal.tsx:207
 msgid "Describe what the language model should extract or summarize from the conversation..."
 msgstr "Beschreiben Sie, was die Sprachmodell aus dem Gespräch extrahieren oder zusammenfassen soll..."
 
@@ -1917,8 +1919,8 @@ msgstr "z.B. \"Fokus auf Nachhaltigkeitsthemen\" oder \"Was denken die Teilnehme
 msgid "e.g. \"Use short noun phrases like 'Urban Green Spaces' or 'Youth Employment'. Avoid generic titles.\""
 msgstr "z.B. \"Verwenden Sie kurze Nomen-Phrasen wie 'Stadtbäume' oder 'Jugendliche Arbeitsplätze'. Vermeiden Sie generische Titel.\""
 
-#: src/components/report/UpdateReportModalButton.tsx:254
-#: src/components/report/CreateReportForm.tsx:238
+#: src/components/report/UpdateReportModalButton.tsx:271
+#: src/components/report/CreateReportForm.tsx:255
 msgid "e.g. tomorrow at 9:00"
 msgstr "z.B. morgen um 9:00"
 
@@ -1967,7 +1969,7 @@ msgstr "Bearbeiten"
 msgid "Edit Conversation"
 msgstr "Gespräch bearbeiten"
 
-#: src/components/project/CustomTopicModal.tsx:135
+#: src/components/project/CustomTopicModal.tsx:136
 msgid "Edit Custom Topic"
 msgstr "Benutzerdefiniertes Thema bearbeiten"
 
@@ -1979,8 +1981,8 @@ msgstr "Dateiname bearbeiten"
 msgid "Edit mode"
 msgstr "Bearbeitungsmodus"
 
-#: src/components/report/UpdateReportModalButton.tsx:247
-#: src/components/report/CreateReportForm.tsx:231
+#: src/components/report/UpdateReportModalButton.tsx:264
+#: src/components/report/CreateReportForm.tsx:248
 msgid "Edit options"
 msgstr "Optionen bearbeiten"
 
@@ -2035,11 +2037,11 @@ msgstr "E-Mail erfolgreich verifiziert. Sie werden in 5 Sekunden zur Login-Seite
 msgid "email@work.com"
 msgstr "email@work.com"
 
-#: src/components/project/CustomTopicModal.tsx:217
+#: src/components/project/CustomTopicModal.tsx:218
 msgid "Emoji"
 msgstr "Emoji"
 
-#: src/components/project/CustomTopicModal.tsx:219
+#: src/components/project/CustomTopicModal.tsx:220
 msgid "Emoji shown next to the topic e.g. 💡 🔍 📊"
 msgstr "Emoji, das neben dem Thema angezeigt wird, z.B. 💡 🔍 📊"
 
@@ -2200,8 +2202,8 @@ msgstr "Fehler"
 msgid "Error cloning project"
 msgstr "Fehler beim Klonen des Projekts"
 
-#: src/components/report/UpdateReportModalButton.tsx:200
-#: src/components/report/CreateReportForm.tsx:108
+#: src/components/report/UpdateReportModalButton.tsx:212
+#: src/components/report/CreateReportForm.tsx:117
 msgid "Error creating report"
 msgstr "Fehler beim Erstellen des Berichts"
 
@@ -2260,8 +2262,8 @@ msgstr "Vollbild verlassen"
 
 #: src/components/report/UpdateReportModalButton.tsx:191
 #: src/components/report/CreateReportForm.tsx:198
-msgid "Experimental"
-msgstr "Experimentell"
+#~ msgid "Experimental"
+#~ msgstr "Experimentell"
 
 #: src/components/project/ProjectPortalEditor.tsx:795
 msgid "Explore"
@@ -2558,8 +2560,8 @@ msgstr "Beendet"
 msgid "First Name"
 msgstr "Vorname"
 
-#: src/components/report/UpdateReportModalButton.tsx:225
-#: src/components/report/CreateReportForm.tsx:209
+#: src/components/report/UpdateReportModalButton.tsx:238
+#: src/components/report/CreateReportForm.tsx:222
 msgid "Focus"
 msgstr "Fokus"
 
@@ -2606,7 +2608,7 @@ msgstr "Vollbild"
 msgid "Generate"
 msgstr "Generieren"
 
-#: src/components/report/UpdateReportModalButton.tsx:144
+#: src/components/report/UpdateReportModalButton.tsx:154
 msgid "Generate a new report"
 msgstr "Neuen Bericht erstellen"
 
@@ -2614,7 +2616,7 @@ msgstr "Neuen Bericht erstellen"
 #~ msgid "Generate a new report. Previous reports will remain accessible."
 #~ msgstr "Erstelle einen neuen Bericht. Frühere Berichte bleiben verfügbar."
 
-#: src/components/report/CreateReportForm.tsx:149
+#: src/components/report/CreateReportForm.tsx:159
 msgid "Generate a Report"
 msgstr "Bericht erstellen"
 
@@ -2631,13 +2633,13 @@ msgid "Generate library"
 msgstr "Bibliothek generieren"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:574
-#: src/components/report/UpdateReportModalButton.tsx:315
-#: src/components/report/CreateReportForm.tsx:299
+#: src/components/report/UpdateReportModalButton.tsx:332
+#: src/components/report/CreateReportForm.tsx:316
 msgid "Generate now"
 msgstr "Jetzt erstellen"
 
-#: src/components/report/UpdateReportModalButton.tsx:283
-#: src/components/report/CreateReportForm.tsx:268
+#: src/components/report/UpdateReportModalButton.tsx:300
+#: src/components/report/CreateReportForm.tsx:285
 msgid "Generate now instead"
 msgstr "Stattdessen jetzt erstellen"
 
@@ -2878,7 +2880,7 @@ msgstr "Erkenntnisse"
 msgid "Instructions"
 msgstr "Anweisungen"
 
-#: src/components/project/CustomTopicModal.tsx:204
+#: src/components/project/CustomTopicModal.tsx:205
 msgid "Instructions for generating the verification outcome"
 msgstr "Anweisungen für die Generierung des Verifizierungsergebnisses"
 
@@ -2916,7 +2918,7 @@ msgstr "Es scheint, dass die Bibliothek für Ihr Konto nicht verfügbar ist. Bit
 msgid "participant.outcome.error.description"
 msgstr "Wir konnten dieses Ergebnis nicht laden. Dies könnte ein vorübergehendes Problem sein. Sie können versuchen, neu zu laden oder zurückzugehen, um ein anderes Thema auszuwählen."
 
-#: src/components/report/CreateReportForm.tsx:150
+#: src/components/report/CreateReportForm.tsx:162
 msgid "It looks like you don't have a report for this project yet. Generate one to get an overview of your conversations."
 msgstr "Es sieht so aus, als hätten Sie noch keinen Bericht für dieses Projekt. Erstellen Sie einen, um eine Übersicht Ihrer Gespräche zu erhalten."
 
@@ -2955,10 +2957,10 @@ msgstr "Sprechen oder schreiben Sie einfach natürlich. Ihr Beitrag geht direkt 
 msgid "Keep access secure with a one-time code from your authenticator app. Toggle two-factor authentication for this account."
 msgstr "Halten Sie den Zugriff sicher mit einem Einmalcode aus Ihrer Authentifizierungs-App. Aktivieren oder deaktivieren Sie die Zwei-Faktor-Authentifizierung für dieses Konto."
 
-#: src/components/report/UpdateReportModalButton.tsx:221
-#: src/components/report/UpdateReportModalButton.tsx:293
-#: src/components/report/CreateReportForm.tsx:205
-#: src/components/report/CreateReportForm.tsx:277
+#: src/components/report/UpdateReportModalButton.tsx:233
+#: src/components/report/UpdateReportModalButton.tsx:310
+#: src/components/report/CreateReportForm.tsx:217
+#: src/components/report/CreateReportForm.tsx:294
 #: src/components/project/ProjectPortalEditor.tsx:633
 msgid "Language"
 msgstr "Sprache"
@@ -3280,7 +3282,7 @@ msgstr "Neu"
 msgid "New Conversation Name"
 msgstr "Neuer Gespräch Name"
 
-#: src/components/report/UpdateReportModalButton.tsx:143
+#: src/components/report/UpdateReportModalButton.tsx:153
 msgid "New conversations available — update your report"
 msgstr "Neue Gespräche verfügbar — aktualisiere deinen Bericht"
 
@@ -3314,8 +3316,8 @@ msgstr "Neues Passwort"
 msgid "New Project"
 msgstr "Neues Projekt"
 
-#: src/components/report/UpdateReportModalButton.tsx:170
-#: src/components/report/UpdateReportModalButton.tsx:186
+#: src/components/report/UpdateReportModalButton.tsx:180
+#: src/components/report/UpdateReportModalButton.tsx:196
 msgid "New Report"
 msgstr "Neuer Bericht"
 
@@ -3420,7 +3422,7 @@ msgstr "Keine Gespräche gefunden. Starten Sie ein Gespräch über den Teilnahme
 msgid "select.all.modal.no.conversations"
 msgstr "Es wurden keine Unterhaltungen verarbeitet. Dies kann passieren, wenn alle Unterhaltungen bereits im Kontext sind oder nicht den ausgewählten Filtern entsprechen."
 
-#: src/components/report/CreateReportForm.tsx:134
+#: src/components/report/CreateReportForm.tsx:143
 msgid "No conversations yet"
 msgstr "Noch keine Gespräche"
 
@@ -3628,12 +3630,12 @@ msgstr "Fehlerbehebungsleitfaden öffnen"
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Öffnen Sie Ihre Authentifizierungs-App und geben Sie den aktuellen 6-stelligen Code ein."
 
-#: src/components/project/CustomTopicModal.tsx:221
+#: src/components/project/CustomTopicModal.tsx:222
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:450
 msgid "Optional"
 msgstr "Optional"
 
-#: src/components/project/CustomTopicModal.tsx:183
+#: src/components/project/CustomTopicModal.tsx:184
 msgid "Optional (falls back to English)"
 msgstr "Optional (falls auf Englisch zurückgegriffen wird)"
 
@@ -4229,7 +4231,7 @@ msgstr "Projekte | Dembrane"
 msgid "Projects Home"
 msgstr "Projekte Startseite"
 
-#: src/components/project/CustomTopicModal.tsx:202
+#: src/components/project/CustomTopicModal.tsx:203
 #: src/components/chat/TemplatesModal.tsx:446
 msgid "Prompt"
 msgstr "Prompt"
@@ -4505,8 +4507,8 @@ msgstr "Bericht"
 #~ msgid "Report actions"
 #~ msgstr "Berichtsaktionen"
 
-#: src/components/report/UpdateReportModalButton.tsx:200
-#: src/components/report/CreateReportForm.tsx:108
+#: src/components/report/UpdateReportModalButton.tsx:211
+#: src/components/report/CreateReportForm.tsx:117
 msgid "Report already generating"
 msgstr "Bericht wird bereits erstellt"
 
@@ -4552,8 +4554,8 @@ msgstr "Bericht geplant"
 #~ msgid "Report structure"
 #~ msgstr "Berichtsstruktur"
 
-#: src/components/report/UpdateReportModalButton.tsx:332
-#: src/components/report/CreateReportForm.tsx:315
+#: src/components/report/UpdateReportModalButton.tsx:349
+#: src/components/report/CreateReportForm.tsx:332
 msgid "Report templates are on our roadmap."
 msgstr "Report-Vorlagen stehen auf unserer Roadmap."
 
@@ -4591,7 +4593,7 @@ msgstr "Mikrofonzugriff wird angefragt..."
 #~ msgid "Requesting microphone access to detect available devices..."
 #~ msgstr "Mikrofonzugriff anfordern, um verfügbare Geräte zu erkennen..."
 
-#: src/components/project/CustomTopicModal.tsx:146
+#: src/components/project/CustomTopicModal.tsx:147
 msgid "Required"
 msgstr "Erforderlich"
 
@@ -4699,7 +4701,7 @@ msgstr "Ausführungsstatus:"
 #: src/components/settings/LegalBasisSettingsCard.tsx:136
 #: src/components/settings/ChangePasswordCard.tsx:103
 #: src/components/settings/AccountSettingsCard.tsx:188
-#: src/components/project/CustomTopicModal.tsx:241
+#: src/components/project/CustomTopicModal.tsx:242
 #: src/components/common/InputModal.tsx:85
 #: src/components/chat/ChatAccordion.tsx:160
 msgid "Save"
@@ -4742,8 +4744,8 @@ msgstr "Speichern..."
 msgid "Scan the QR code or copy the secret into your app."
 msgstr "Scannen Sie den QR-Code oder kopieren Sie das Geheimnis in Ihre App."
 
-#: src/components/report/UpdateReportModalButton.tsx:323
-#: src/components/report/CreateReportForm.tsx:307
+#: src/components/report/UpdateReportModalButton.tsx:340
+#: src/components/report/CreateReportForm.tsx:324
 msgid "Schedule"
 msgstr "Planen"
 
@@ -4752,10 +4754,10 @@ msgstr "Planen"
 #~ msgid "Schedule for later"
 #~ msgstr "Für später planen"
 
-#: src/components/report/UpdateReportModalButton.tsx:182
-#: src/components/report/UpdateReportModalButton.tsx:276
-#: src/components/report/CreateReportForm.tsx:195
-#: src/components/report/CreateReportForm.tsx:261
+#: src/components/report/UpdateReportModalButton.tsx:192
+#: src/components/report/UpdateReportModalButton.tsx:293
+#: src/components/report/CreateReportForm.tsx:207
+#: src/components/report/CreateReportForm.tsx:278
 msgid "Schedule Report"
 msgstr "Bericht planen"
 
@@ -4991,8 +4993,8 @@ msgstr "Bericht teilen"
 msgid "Share your details here"
 msgstr "Teilen Sie hier Ihre Daten"
 
-#: src/components/report/UpdateReportModalButton.tsx:339
-#: src/components/report/CreateReportForm.tsx:322
+#: src/components/report/UpdateReportModalButton.tsx:356
+#: src/components/report/CreateReportForm.tsx:339
 msgid "Share your ideas with our team"
 msgstr "Teilen Sie Ihre Ideen mit unserem Team"
 
@@ -5456,8 +5458,8 @@ msgstr "Die folgenden Gespräche wurden automatisch zum Kontext hinzugefügt"
 #~ msgid "the project library."
 #~ msgstr "die Projektbibliothek."
 
-#: src/components/report/UpdateReportModalButton.tsx:263
-#: src/components/report/CreateReportForm.tsx:247
+#: src/components/report/UpdateReportModalButton.tsx:280
+#: src/components/report/CreateReportForm.tsx:264
 msgid "The report may start up to 5 minutes after the chosen time."
 msgstr "Der Bericht kann bis zu 5 Minuten nach der gewählten Zeit starten."
 
@@ -5490,8 +5492,8 @@ msgstr "Design"
 msgid "There was an error cloning your project. Please try again or contact support."
 msgstr "Beim Klonen Ihres Projekts ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut oder wenden Sie sich an den Support."
 
-#: src/components/report/UpdateReportModalButton.tsx:210
-#: src/components/report/CreateReportForm.tsx:119
+#: src/components/report/UpdateReportModalButton.tsx:222
+#: src/components/report/CreateReportForm.tsx:128
 msgid "There was an error creating your report. Please try again or contact support."
 msgstr "Beim Erstellen Ihres Berichts ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut oder wenden Sie sich an den Support."
 
@@ -5689,7 +5691,7 @@ msgstr "Titel automatisch generiert"
 msgid "To assign a new tag, please create it first in the project overview."
 msgstr "Um ein neues Tag zuzuweisen, erstellen Sie es bitte zuerst in der Projektübersicht."
 
-#: src/components/report/CreateReportForm.tsx:137
+#: src/components/report/CreateReportForm.tsx:146
 msgid "To generate a report, please start by adding conversations in your project"
 msgstr "Um einen Bericht zu generieren, fügen Sie bitte zuerst Gespräche in Ihr Projekt hinzu"
 
@@ -5714,7 +5716,7 @@ msgstr "Thema erfolgreich erstellt"
 msgid "Topic deleted successfully"
 msgstr "Thema erfolgreich gelöscht"
 
-#: src/components/project/CustomTopicModal.tsx:145
+#: src/components/project/CustomTopicModal.tsx:146
 msgid "Topic label"
 msgstr "Themenbezeichnung"
 
@@ -5980,8 +5982,8 @@ msgstr "Unbenannter Bericht"
 #~ msgid "Update"
 #~ msgstr "Aktualisieren"
 
-#: src/components/report/UpdateReportModalButton.tsx:168
-#: src/components/report/UpdateReportModalButton.tsx:184
+#: src/components/report/UpdateReportModalButton.tsx:178
+#: src/components/report/UpdateReportModalButton.tsx:194
 msgid "Update Report"
 msgstr "Bericht aktualisieren"
 
@@ -6198,7 +6200,7 @@ msgstr "Ihre Antworten anzeigen"
 #~ msgid "Wait {0}:{1}"
 #~ msgstr "Warten Sie {0}:{1}"
 
-#: src/components/report/CreateReportForm.tsx:187
+#: src/components/report/CreateReportForm.tsx:199
 msgid "Waiting for conversations to finish before generating a report."
 msgstr "Warten auf den Abschluss der Gespräche, bevor ein Bericht erstellt wird."
 
@@ -6408,8 +6410,8 @@ msgstr "Wenn aktiviert, werden alle neuen Transkripte persönliche Informationen
 msgid "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 msgstr "Wenn das Gespräch abgeschlossen wird, werden Teilnehmer, die noch nicht verifiziert haben, aufgefordert, zu verifizieren oder zu überspringen"
 
-#: src/components/report/UpdateReportModalButton.tsx:253
-#: src/components/report/CreateReportForm.tsx:237
+#: src/components/report/UpdateReportModalButton.tsx:270
+#: src/components/report/CreateReportForm.tsx:254
 msgid "When should the report be generated?"
 msgstr "Wann soll der Bericht erstellt werden?"
 
@@ -6417,7 +6419,7 @@ msgstr "Wann soll der Bericht erstellt werden?"
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "Wenn die Zusammenfassung bereit ist (beinhaltet Transkript und Zusammenfassung)"
 
-#: src/components/report/CreateReportForm.tsx:171
+#: src/components/report/CreateReportForm.tsx:183
 msgid "will be included in your report"
 msgstr "wird in Ihrem Bericht enthalten sein"
 

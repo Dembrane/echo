@@ -1,8 +1,8 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	Anchor,
 	Alert,
+	Anchor,
 	Badge,
 	Box,
 	Button,
@@ -14,30 +14,40 @@ import {
 	Text,
 } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
-import { IconArrowLeft, IconClock, IconExternalLink } from "@tabler/icons-react";
+import {
+	IconArrowLeft,
+	IconClock,
+	IconExternalLink,
+} from "@tabler/icons-react";
 import { AxiosError } from "axios";
 import { MessageCircleIcon } from "lucide-react";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { useProjectConversationCounts } from "@/components/report/hooks";
-import { useLanguage } from "@/hooks/useLanguage";
 import { getProductFeedbackUrl } from "@/config";
-import { testId } from "@/lib/testUtils";
 import focusOptionsData from "@/data/reportFocusOptions.json";
+import { useLanguage } from "@/hooks/useLanguage";
+import { testId } from "@/lib/testUtils";
 import { CloseableAlert } from "../common/ClosableAlert";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 import { ConversationStatusTable } from "./ConversationStatusTable";
-import { ReportFocusSelector } from "./ReportFocusSelector";
 import { useCreateProjectReportMutation } from "./hooks";
+import { ReportFocusSelector } from "./ReportFocusSelector";
 
 function getLanguageLabel(iso: string): string {
 	return languageOptionsByIso639_1.find((o) => o.value === iso)?.label ?? iso;
 }
 
-function getSelectedFocusLabels(instructions: string, language: string): string[] {
+function getSelectedFocusLabels(
+	instructions: string,
+	language: string,
+): string[] {
 	return focusOptionsData.options
 		.filter((opt) => instructions.includes(opt.instruction))
-		.map((opt) => (opt.labels as Record<string, string>)[language] ?? opt.labels.en);
+		.map(
+			(opt) =>
+				(opt.labels as Record<string, string>)[language] ?? opt.labels.en,
+		);
 }
 
 function getCustomFocusText(instructions: string): string {
@@ -61,7 +71,8 @@ function getMaxScheduleDate(): Date {
 }
 
 // Feature flag: show "custom report structure" CTA until 2026-05-11
-const SHOW_STRUCTURE_CTA = Date.now() < new Date("2026-05-11T00:00:00Z").getTime();
+const SHOW_STRUCTURE_CTA =
+	Date.now() < new Date("2026-05-11T00:00:00Z").getTime();
 
 export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 	const { mutate, isPending, error } = useCreateProjectReportMutation();
@@ -88,12 +99,10 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 		mutate(
 			{
 				language,
-				userInstructions: userInstructions || undefined,
-				scheduledAt:
-					schedule && scheduledDate
-						? scheduledDate.toISOString()
-						: undefined,
 				projectId: projectId ?? "",
+				scheduledAt:
+					schedule && scheduledDate ? scheduledDate.toISOString() : undefined,
+				userInstructions: userInstructions || undefined,
 			},
 			{
 				onSuccess: () => onSuccess(),
@@ -135,8 +144,8 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 					</Text>
 					<Text size="sm" c="gray.6" ta="center">
 						<Trans>
-							To generate a report, please start by adding conversations in
-							your project
+							To generate a report, please start by adding conversations in your
+							project
 						</Trans>
 					</Text>
 				</Stack>
@@ -146,7 +155,10 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
 	return (
 		<Stack maw="540px" className="pt-4">
-			<CloseableAlert title={t`Generate a Report`} storageKey="create-report-info-dismissed">
+			<CloseableAlert
+				title={t`Generate a Report`}
+				storageKey="create-report-info-dismissed"
+			>
 				<Trans>
 					It looks like you don't have a report for this project yet. Generate
 					one to get an overview of your conversations.
@@ -194,8 +206,8 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 						<Text fw={500} size="lg">
 							<Trans>Schedule Report</Trans>
 						</Text>
-						<Badge size="xs" variant="light" color="yellow">
-							<Trans>Experimental</Trans>
+						<Badge color="mauve" c="graphite" size="sm">
+							<Trans>Beta</Trans>
 						</Badge>
 					</Group>
 
@@ -203,20 +215,25 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 					<Stack gap={4}>
 						<Text size="xs" c="dimmed">
 							<Trans>Language</Trans>: {getLanguageLabel(language)}
-							{getSelectedFocusLabels(userInstructions, language).length > 0 && (
+							{getSelectedFocusLabels(userInstructions, language).length >
+								0 && (
 								<>
 									{" · "}
 									<Trans>Focus</Trans>:{" "}
-									{getSelectedFocusLabels(userInstructions, language).join(", ")}
+									{getSelectedFocusLabels(userInstructions, language).join(
+										", ",
+									)}
 								</>
 							)}
 							{getCustomFocusText(userInstructions) && (
 								<>
 									{" · "}
 									<Text span fs="italic" size="xs" c="dimmed">
-										"{getCustomFocusText(userInstructions).length > 60
+										"
+										{getCustomFocusText(userInstructions).length > 60
 											? `${getCustomFocusText(userInstructions).slice(0, 60)}…`
-											: getCustomFocusText(userInstructions)}"
+											: getCustomFocusText(userInstructions)}
+										"
 									</Text>
 								</>
 							)}
