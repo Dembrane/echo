@@ -245,8 +245,7 @@ const ParticipantOnboardingCards = ({
 		],
 	};
 
-	// Add this check to ensure we have valid data
-	const languageCards = cards[language as keyof typeof cards] || [];
+	const languageCards = cards[language as keyof typeof cards] || cards["en-US"];
 
 	// Flatten the slides into a single array
 	const allSlides = languageCards.flatMap((section) => section.slides);
