@@ -642,8 +642,14 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														{ label: t`German`, value: "de" },
 														{ label: t`Spanish`, value: "es" },
 														{ label: t`French`, value: "fr" },
-														{ label: t`Italian`, value: "it" },
-														{ label: t`Ukrainian`, value: "uk" },
+														{
+															label: t`Italian (only ECHO features, Transcription and Summaries)`,
+															value: "it",
+														},
+														{
+															label: t`Ukrainian (only ECHO features, Transcription and Summaries)`,
+															value: "uk",
+														},
 													]}
 													{...field}
 													{...testId("portal-editor-language-select")}
