@@ -407,7 +407,7 @@ msgstr "Er wordt automatisch een nieuw rapport gegenereerd en gepubliceerd op he
 msgid "A report is already being generated for this project. Please wait for it to complete."
 msgstr "Er wordt al een rapport gegenereerd voor dit project. Wacht tot het klaar is."
 
-#: src/components/settings/AccountSettingsCard.tsx:126
+#: src/components/settings/AccountSettingsCard.tsx:128
 msgid "Account"
 msgstr "Account"
 
@@ -637,7 +637,7 @@ msgstr "Alle bestanden zijn succesvol geüpload."
 #~ msgid "All templates"
 #~ msgstr "Alle templates"
 
-#: src/components/chat/TemplatesModal.tsx:783
+#: src/components/chat/TemplatesModal.tsx:795
 msgid "All Templates"
 msgstr "Alle sjablonen"
 
@@ -835,11 +835,11 @@ msgstr "Weet je zeker dat je de bibliotheek wilt genereren? Dit kan een tijdje d
 msgid "Are you sure you want to regenerate the summary? You will lose the current summary."
 msgstr "Weet je zeker dat je het samenvatting wilt hergenereren? Je verliest de huidige samenvatting."
 
-#: src/components/settings/AccountSettingsCard.tsx:200
+#: src/components/settings/AccountSettingsCard.tsx:203
 msgid "Are you sure you want to remove your avatar?"
 msgstr "Weet je zeker dat je je avatar wilt verwijderen?"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:180
+#: src/components/settings/WhitelabelLogoCard.tsx:183
 msgid "Are you sure you want to remove your custom logo? The default dembrane logo will be used instead."
 msgstr "Weet je zeker dat je je aangepaste logo wilt verwijderen? Het standaard dembrane-logo wordt in plaats daarvan gebruikt."
 
@@ -1018,11 +1018,11 @@ msgstr "Conversatiegegevens automatisch verzenden naar je andere tools en servic
 msgid "Available"
 msgstr "Beschikbaar"
 
-#: src/components/settings/AccountSettingsCard.tsx:100
+#: src/components/settings/AccountSettingsCard.tsx:101
 msgid "Avatar removed"
 msgstr "Avatar verwijderd"
 
-#: src/components/settings/AccountSettingsCard.tsx:83
+#: src/components/settings/AccountSettingsCard.tsx:84
 msgid "Avatar updated"
 msgstr "Avatar bijgewerkt"
 
@@ -1033,12 +1033,12 @@ msgid "Back"
 msgstr "Terug"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:426
+#: src/components/participant/ParticipantOnboardingCards.tsx:379
 msgid "participant.button.back.microphone"
 msgstr "Terug naar microfoon"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:448
+#: src/components/participant/ParticipantOnboardingCards.tsx:401
 #: src/components/layout/ParticipantHeader.tsx:86
 msgid "participant.button.back"
 msgstr "Terug"
@@ -1182,7 +1182,7 @@ msgstr "Kan niet opnieuw plannen binnen 10 minuten voor het geplande tijdstip"
 msgid "Card"
 msgstr "Kaart"
 
-#: src/components/language/LanguagePicker.tsx:131
+#: src/components/language/LanguagePicker.tsx:144
 msgid "Change language"
 msgstr "Taal wijzigen"
 
@@ -1197,7 +1197,7 @@ msgstr "Wachtwoord wijzigen"
 msgid "Changes will be saved automatically"
 msgstr "Wijzigingen worden automatisch opgeslagen"
 
-#: src/components/language/LanguagePicker.tsx:133
+#: src/components/language/LanguagePicker.tsx:146
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Wijziging van de taal tijdens een actief gesprek kan onverwachte resultaten opleveren. Het wordt aanbevolen om een nieuw gesprek te starten na het wijzigen van de taal. Weet je zeker dat je wilt doorgaan?"
 
@@ -1243,7 +1243,7 @@ msgstr "Controleer je email"
 #~ msgid "Checking..."
 #~ msgstr "Controleren..."
 
-#: src/components/settings/WhitelabelLogoCard.tsx:168
+#: src/components/settings/WhitelabelLogoCard.tsx:171
 msgid "Choose a logo file"
 msgstr "Een logo-bestand kiezen"
 
@@ -1424,17 +1424,17 @@ msgstr "Context toegevoegd:"
 #~ msgid "Context limit reached"
 #~ msgstr "Contextlimiet bereikt"
 
-#: src/components/chat/TemplatesModal.tsx:655
+#: src/components/chat/TemplatesModal.tsx:667
 msgid "Contextual suggestions"
 msgstr "Contextuele suggesties"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:435
+#: src/components/participant/ParticipantOnboardingCards.tsx:388
 #: src/components/participant/MicrophoneTest.tsx:407
 msgid "participant.button.continue"
 msgstr "Doorgaan"
 
-#: src/components/language/LanguagePicker.tsx:134
+#: src/components/language/LanguagePicker.tsx:147
 msgid "Continue"
 msgstr "Doorgaan"
 
@@ -1634,7 +1634,7 @@ msgstr "Maak nieuwe view aan"
 msgid "Create Report"
 msgstr "Maak rapport"
 
-#: src/components/chat/TemplatesModal.tsx:702
+#: src/components/chat/TemplatesModal.tsx:714
 msgid "Create template"
 msgstr "Template aanmaken"
 
@@ -1663,7 +1663,7 @@ msgstr "Webhook maken"
 msgid "Created on"
 msgstr "Gemaakt op"
 
-#: src/components/settings/AccountSettingsCard.tsx:221
+#: src/components/settings/AccountSettingsCard.tsx:224
 msgid "Crop Avatar"
 msgstr "Avatar bijsnijden"
 
@@ -1671,11 +1671,11 @@ msgstr "Avatar bijsnijden"
 msgid "Crop Image"
 msgstr "Afbeelding bijsnijden"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:200
+#: src/components/settings/WhitelabelLogoCard.tsx:203
 msgid "Crop Logo"
 msgstr "Logo bijsnijden"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:128
+#: src/components/settings/WhitelabelLogoCard.tsx:130
 msgid "Current logo"
 msgstr "Huidige logo"
 
@@ -1695,7 +1695,7 @@ msgstr "Aangepast"
 msgid "Custom Filename"
 msgstr "Aangepaste bestandsnaam"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:115
+#: src/components/settings/WhitelabelLogoCard.tsx:117
 msgid "Custom Logo"
 msgstr "Aangepast logo"
 
@@ -1748,7 +1748,7 @@ msgstr "Multistap analyse delegeren met live tool uitvoering"
 #: src/components/conversation/ConversationDangerZone.tsx:87
 #: src/components/chat/TemplatesModal.tsx:411
 #: src/components/chat/TemplatesModal.tsx:469
-#: src/components/chat/TemplatesModal.tsx:572
+#: src/components/chat/TemplatesModal.tsx:584
 #: src/components/chat/ChatAccordion.tsx:178
 msgid "Delete"
 msgstr "Verwijder"
@@ -1899,7 +1899,7 @@ msgstr "Uitgeschakeld"
 #~ msgid "Display contextual suggestion pills in the chat"
 #~ msgstr "Contextuele suggesties in de chat tonen"
 
-#: src/components/settings/AccountSettingsCard.tsx:172
+#: src/components/settings/AccountSettingsCard.tsx:175
 msgid "Display name"
 msgstr "Weergavenaam"
 
@@ -1987,6 +1987,7 @@ msgid "Drag to reorder"
 msgstr "Sleep om te herordenen"
 
 #: src/components/chat/TemplatesModal.tsx:544
+#: src/components/chat/TemplatesModal.tsx:572
 msgid "Duplicate"
 msgstr "Dupliceren"
 
@@ -2103,7 +2104,7 @@ msgstr "Webhook bewerken"
 
 #: src/routes/auth/Login.tsx:251
 #: src/routes/auth/Login.tsx:255
-#: src/components/settings/AccountSettingsCard.tsx:179
+#: src/components/settings/AccountSettingsCard.tsx:182
 #: src/components/common/RedactedText.tsx:38
 msgid "Email"
 msgstr "E-mail"
@@ -2491,7 +2492,7 @@ msgstr "Fout bij het hergenereren van de samenvatting. Probeer het opnieuw later
 msgid "Failed to reload. Please try again."
 msgstr "Opnieuw laden is mislukt. Probeer het opnieuw."
 
-#: src/components/settings/AccountSettingsCard.tsx:96
+#: src/components/settings/AccountSettingsCard.tsx:97
 msgid "Failed to remove avatar"
 msgstr "Kan avatar niet verwijderen"
 
@@ -2504,7 +2505,7 @@ msgstr "Fout bij het verwijderen van het gesprek uit de chat"
 msgid "Failed to remove conversation from chat{0}"
 msgstr "Fout bij het verwijderen van het gesprek uit de chat{0}"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:85
+#: src/components/settings/WhitelabelLogoCard.tsx:86
 msgid "Failed to remove logo"
 msgstr "Fout bij het verwijderen van het logo"
 
@@ -2536,7 +2537,7 @@ msgstr "Fout bij het bijwerken van het aangepaste onderwerp"
 msgid "Failed to update legal basis"
 msgstr "Fout bij het bijwerken van de rechtsgrondslag"
 
-#: src/components/settings/AccountSettingsCard.tsx:57
+#: src/components/settings/AccountSettingsCard.tsx:58
 msgid "Failed to update name"
 msgstr "Kan naam niet bijwerken"
 
@@ -2544,11 +2545,11 @@ msgstr "Kan naam niet bijwerken"
 msgid "Failed to update pin"
 msgstr "Vastpinnen bijwerken mislukt"
 
-#: src/components/settings/AccountSettingsCard.tsx:79
+#: src/components/settings/AccountSettingsCard.tsx:80
 msgid "Failed to upload avatar"
 msgstr "Kan avatar niet uploaden"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:62
+#: src/components/settings/WhitelabelLogoCard.tsx:63
 msgid "Failed to upload logo"
 msgstr "Fout bij het uploaden van het logo"
 
@@ -3264,11 +3265,11 @@ msgstr "Inloggen | Dembrane"
 msgid "Login as an existing user"
 msgstr "Inloggen als bestaande gebruiker"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:89
+#: src/components/settings/WhitelabelLogoCard.tsx:90
 msgid "Logo removed"
 msgstr "Logo verwijderd"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:66
+#: src/components/settings/WhitelabelLogoCard.tsx:67
 msgid "Logo updated"
 msgstr "Logo bijgewerkt"
 
@@ -3363,7 +3364,7 @@ msgstr "Verplaats naar een ander project"
 msgid "Move to Project"
 msgstr "Verplaats naar project"
 
-#: src/components/chat/TemplatesModal.tsx:797
+#: src/components/chat/TemplatesModal.tsx:809
 msgid "My templates"
 msgstr "Mijn sjablonen"
 
@@ -3386,7 +3387,7 @@ msgstr "Naam A-Z"
 msgid "Name is required"
 msgstr "Naam is verplicht"
 
-#: src/components/settings/AccountSettingsCard.tsx:61
+#: src/components/settings/AccountSettingsCard.tsx:62
 msgid "Name updated"
 msgstr "Naam bijgewerkt"
 
@@ -3450,7 +3451,7 @@ msgid "Newest First"
 msgstr "Nieuwste eerst"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:464
+#: src/components/participant/ParticipantOnboardingCards.tsx:417
 msgid "participant.button.next"
 msgstr "Volgende"
 
@@ -3609,7 +3610,7 @@ msgstr "Geen trefwoorden gevonden"
 msgid "No tags have been added to this project yet. Add a tag using the text input above to get started."
 msgstr "Er zijn nog geen trefwoorden toegevoegd aan dit project. Voeg een trefwoord toe met behulp van de tekstinvoer boven aan om te beginnen."
 
-#: src/components/chat/TemplatesModal.tsx:812
+#: src/components/chat/TemplatesModal.tsx:824
 msgid "No templates match '{searchQuery}'"
 msgstr "Geen templates gevonden voor '{searchQuery}'"
 
@@ -4041,7 +4042,7 @@ msgstr "Kies datum en tijd"
 msgid "Pick the approach that fits your question"
 msgstr "Kies de aanpak die past bij je vraag"
 
-#: src/components/chat/TemplatesModal.tsx:609
+#: src/components/chat/TemplatesModal.tsx:621
 msgid "Pin"
 msgstr "Vastpinnen"
 
@@ -4049,7 +4050,7 @@ msgstr "Vastpinnen"
 msgid "Pin project"
 msgstr "Project vastpinnen"
 
-#: src/components/chat/TemplatesModal.tsx:767
+#: src/components/chat/TemplatesModal.tsx:779
 msgid "Pin templates here for quick access."
 msgstr "Pin sjablonen hier vast voor snelle toegang."
 
@@ -4061,11 +4062,11 @@ msgstr "Pin sjablonen hier vast voor snelle toegang."
 #~ msgid "pinned"
 #~ msgstr "vastgepind"
 
-#: src/components/chat/TemplatesModal.tsx:608
+#: src/components/chat/TemplatesModal.tsx:620
 msgid "Pinned is full (max 5)"
 msgstr "Vastgepind is vol (max 5)"
 
-#: src/components/chat/TemplatesModal.tsx:737
+#: src/components/chat/TemplatesModal.tsx:749
 msgid "Pinned templates"
 msgstr "Vastgepinde sjablonen"
 
@@ -4210,7 +4211,7 @@ msgstr "Wacht aub terwijl we uw hertranscriptieaanvraag verwerken. U wordt autom
 msgid "Please wait while we verify your email address."
 msgstr "Wacht aub terwijl we uw e-mailadres controleren."
 
-#: src/components/settings/AccountSettingsCard.tsx:165
+#: src/components/settings/AccountSettingsCard.tsx:168
 msgid "PNG, JPEG, or WebP. Will be cropped to a circle."
 msgstr "PNG, JPEG of WebP. Wordt bijgesneden tot een cirkel."
 
@@ -4457,7 +4458,7 @@ msgid "Read aloud"
 msgstr "Lees hardop voor"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:311
+#: src/components/participant/ParticipantOnboardingCards.tsx:264
 msgid "participant.ready.to.begin"
 msgstr "Klaar om te beginnen"
 
@@ -4600,14 +4601,14 @@ msgstr "Opnieuw laden"
 msgid "Remind users to verify before finishing"
 msgstr "Gebruikers herinneren om te controleren voordat ze klaar zijn"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:147
-#: src/components/settings/WhitelabelLogoCard.tsx:181
-#: src/components/settings/AccountSettingsCard.tsx:160
-#: src/components/settings/AccountSettingsCard.tsx:201
+#: src/components/settings/WhitelabelLogoCard.tsx:149
+#: src/components/settings/WhitelabelLogoCard.tsx:184
+#: src/components/settings/AccountSettingsCard.tsx:163
+#: src/components/settings/AccountSettingsCard.tsx:204
 msgid "Remove"
 msgstr "Verwijderen"
 
-#: src/components/settings/AccountSettingsCard.tsx:198
+#: src/components/settings/AccountSettingsCard.tsx:201
 msgid "Remove avatar"
 msgstr "Avatar verwijderen"
 
@@ -4633,7 +4634,7 @@ msgstr "Bestand verwijderen"
 msgid "Remove from this chat"
 msgstr "Verwijder van dit gesprek"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:178
+#: src/components/settings/WhitelabelLogoCard.tsx:181
 msgid "Remove logo"
 msgstr "Logo verwijderen"
 
@@ -4856,7 +4857,7 @@ msgstr "Uitvoeringsstatus:"
 
 #: src/components/settings/LegalBasisSettingsCard.tsx:136
 #: src/components/settings/ChangePasswordCard.tsx:103
-#: src/components/settings/AccountSettingsCard.tsx:188
+#: src/components/settings/AccountSettingsCard.tsx:191
 #: src/components/project/CustomTopicModal.tsx:242
 #: src/components/common/InputModal.tsx:85
 #: src/components/chat/ChatAccordion.tsx:160
@@ -4952,7 +4953,7 @@ msgstr "Zoek projecten..."
 msgid "Search tags"
 msgstr "Zoek tags"
 
-#: src/components/chat/TemplatesModal.tsx:675
+#: src/components/chat/TemplatesModal.tsx:687
 msgid "Search templates..."
 msgstr "Zoek templates..."
 
@@ -5246,7 +5247,7 @@ msgid "participant.button.verify_prompt.skip"
 msgstr "Overslaan"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:335
+#: src/components/participant/ParticipantOnboardingCards.tsx:288
 msgid "participant.mic.check.button.skip"
 msgstr "Overslaan"
 
@@ -5439,7 +5440,7 @@ msgstr "Stuur in"
 msgid "Success"
 msgstr "Succes"
 
-#: src/components/chat/TemplatesModal.tsx:665
+#: src/components/chat/TemplatesModal.tsx:677
 msgid "Suggest dynamic suggestions based on your conversation."
 msgstr "Dynamische suggesties voorstellen op basis van uw gesprek."
 
@@ -6112,7 +6113,7 @@ msgstr "Onbekend"
 msgid "Unknown reason"
 msgstr "Onbekende reden"
 
-#: src/components/chat/TemplatesModal.tsx:591
+#: src/components/chat/TemplatesModal.tsx:603
 msgid "Unpin"
 msgstr "Losmaken"
 
@@ -6196,14 +6197,14 @@ msgstr "Upgrade om automatisch selecteren te ontgrendelen en analyseer 10x meer 
 msgid "Upload"
 msgstr "Uploaden"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:119
+#: src/components/settings/WhitelabelLogoCard.tsx:121
 msgid "Upload a custom logo to replace the Dembrane logo across the portal, dashboard, reports, and host guide."
 msgstr "Upload een custom logo om het dembrane logo te vervangen op het portale, dashboard, rapporten, en host gids."
 
 #~ msgid "Upload Audio"
 #~ msgstr "Audio uploaden"
 
-#: src/components/settings/AccountSettingsCard.tsx:147
+#: src/components/settings/AccountSettingsCard.tsx:150
 msgid "Upload avatar"
 msgstr "Avatar uploaden"
 
@@ -6278,7 +6279,7 @@ msgstr "Gebruik Shift + Enter om een nieuwe regel toe te voegen"
 msgid "Username"
 msgstr "Gebruikersnaam"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:153
+#: src/components/settings/WhitelabelLogoCard.tsx:155
 msgid "Using default Dembrane logo"
 msgstr "Gebruik standaard dembrane-logo"
 
@@ -6720,7 +6721,7 @@ msgstr "De generatie van je laatste rapport is geannuleerd. Je meest recente vol
 #~ msgid "Your library is empty. Create a library to see your first insights."
 #~ msgstr "Je bibliotheek is leeg. Maak een bibliotheek om je eerste inzichten te bekijken."
 
-#: src/components/settings/AccountSettingsCard.tsx:175
+#: src/components/settings/AccountSettingsCard.tsx:178
 msgid "Your name"
 msgstr "Uw naam"
 

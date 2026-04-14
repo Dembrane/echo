@@ -398,7 +398,7 @@ msgstr "Ein neuer Bericht wird automatisch zum geplanten Zeitpunkt erstellt und 
 msgid "A report is already being generated for this project. Please wait for it to complete."
 msgstr "Für dieses Projekt wird bereits ein Bericht erstellt. Bitte warte, bis er fertig ist."
 
-#: src/components/settings/AccountSettingsCard.tsx:126
+#: src/components/settings/AccountSettingsCard.tsx:128
 msgid "Account"
 msgstr "Konto"
 
@@ -616,7 +616,7 @@ msgstr "Alle Dateien wurden erfolgreich hochgeladen."
 #~ msgid "All templates"
 #~ msgstr "Alle Vorlagen"
 
-#: src/components/chat/TemplatesModal.tsx:783
+#: src/components/chat/TemplatesModal.tsx:795
 msgid "All Templates"
 msgstr "Alle Vorlagen"
 
@@ -799,11 +799,11 @@ msgstr "Sind Sie sicher, dass Sie die Bibliothek generieren möchten? Dies wird 
 msgid "Are you sure you want to regenerate the summary? You will lose the current summary."
 msgstr "Sind Sie sicher, dass Sie das Zusammenfassung erneut generieren möchten? Sie werden die aktuelle Zusammenfassung verlieren."
 
-#: src/components/settings/AccountSettingsCard.tsx:200
+#: src/components/settings/AccountSettingsCard.tsx:203
 msgid "Are you sure you want to remove your avatar?"
 msgstr "Sind Sie sicher, dass Sie Ihr Profilbild entfernen möchten?"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:180
+#: src/components/settings/WhitelabelLogoCard.tsx:183
 msgid "Are you sure you want to remove your custom logo? The default dembrane logo will be used instead."
 msgstr "Sind Sie sicher, dass Sie Ihr benutzerdefiniertes Logo entfernen möchten? Stattdessen wird das Standard-dembrane-Logo verwendet."
 
@@ -961,11 +961,11 @@ msgstr "Gesprächdaten automatisch an Ihre anderen Tools und Dienste senden, wen
 msgid "Available"
 msgstr "Verfügbar"
 
-#: src/components/settings/AccountSettingsCard.tsx:100
+#: src/components/settings/AccountSettingsCard.tsx:101
 msgid "Avatar removed"
 msgstr "Avatar entfernt"
 
-#: src/components/settings/AccountSettingsCard.tsx:83
+#: src/components/settings/AccountSettingsCard.tsx:84
 msgid "Avatar updated"
 msgstr "Avatar aktualisiert"
 
@@ -976,12 +976,12 @@ msgid "Back"
 msgstr "Zurück"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:426
+#: src/components/participant/ParticipantOnboardingCards.tsx:379
 msgid "participant.button.back.microphone"
 msgstr "Zurück"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:448
+#: src/components/participant/ParticipantOnboardingCards.tsx:401
 #: src/components/layout/ParticipantHeader.tsx:86
 msgid "participant.button.back"
 msgstr "Zurück"
@@ -1125,7 +1125,7 @@ msgstr "Kann nicht innerhalb von 10 Minuten vor dem geplanten Zeitpunkt umgeplan
 msgid "Card"
 msgstr "Karte"
 
-#: src/components/language/LanguagePicker.tsx:131
+#: src/components/language/LanguagePicker.tsx:144
 msgid "Change language"
 msgstr "Sprache ändern"
 
@@ -1140,7 +1140,7 @@ msgstr "Passwort ändern"
 msgid "Changes will be saved automatically"
 msgstr "Änderungen werden automatisch gespeichert"
 
-#: src/components/language/LanguagePicker.tsx:133
+#: src/components/language/LanguagePicker.tsx:146
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Das Ändern der Sprache während eines aktiven Chats kann unerwartete Ergebnisse hervorrufen. Es wird empfohlen, ein neues Gespräch zu beginnen, nachdem die Sprache geändert wurde. Sind Sie sicher, dass Sie fortfahren möchten?"
 
@@ -1186,7 +1186,7 @@ msgstr "Überprüfen Sie Ihre E-Mail"
 #~ msgid "Checking..."
 #~ msgstr "Überprüfe..."
 
-#: src/components/settings/WhitelabelLogoCard.tsx:168
+#: src/components/settings/WhitelabelLogoCard.tsx:171
 msgid "Choose a logo file"
 msgstr "Ein Logo-Datei auswählen"
 
@@ -1367,17 +1367,17 @@ msgstr "Kontext hinzugefügt:"
 #~ msgid "Context limit reached"
 #~ msgstr "Kontextlimit erreicht"
 
-#: src/components/chat/TemplatesModal.tsx:655
+#: src/components/chat/TemplatesModal.tsx:667
 msgid "Contextual suggestions"
 msgstr "Kontextbezogene Vorschläge"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:435
+#: src/components/participant/ParticipantOnboardingCards.tsx:388
 #: src/components/participant/MicrophoneTest.tsx:407
 msgid "participant.button.continue"
 msgstr "Weiter"
 
-#: src/components/language/LanguagePicker.tsx:134
+#: src/components/language/LanguagePicker.tsx:147
 msgid "Continue"
 msgstr "Weiter"
 
@@ -1571,7 +1571,7 @@ msgstr "Neue Ansicht erstellen"
 msgid "Create Report"
 msgstr "Bericht erstellen"
 
-#: src/components/chat/TemplatesModal.tsx:702
+#: src/components/chat/TemplatesModal.tsx:714
 msgid "Create template"
 msgstr "Vorlage erstellen"
 
@@ -1600,7 +1600,7 @@ msgstr "Webhook erstellen"
 msgid "Created on"
 msgstr "Erstellt am"
 
-#: src/components/settings/AccountSettingsCard.tsx:221
+#: src/components/settings/AccountSettingsCard.tsx:224
 msgid "Crop Avatar"
 msgstr "Avatar zuschneiden"
 
@@ -1608,11 +1608,11 @@ msgstr "Avatar zuschneiden"
 msgid "Crop Image"
 msgstr "Bild zuschneiden"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:200
+#: src/components/settings/WhitelabelLogoCard.tsx:203
 msgid "Crop Logo"
 msgstr "Logo zuschneiden"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:128
+#: src/components/settings/WhitelabelLogoCard.tsx:130
 msgid "Current logo"
 msgstr "Aktuelles Logo"
 
@@ -1632,7 +1632,7 @@ msgstr "Benutzerdefiniert"
 msgid "Custom Filename"
 msgstr "Benutzerdefinierter Dateiname"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:115
+#: src/components/settings/WhitelabelLogoCard.tsx:117
 msgid "Custom Logo"
 msgstr "Benutzerdefiniertes Logo"
 
@@ -1685,7 +1685,7 @@ msgstr "Multistufige Analyse mit live Werkzeugausführung delegieren"
 #: src/components/conversation/ConversationDangerZone.tsx:87
 #: src/components/chat/TemplatesModal.tsx:411
 #: src/components/chat/TemplatesModal.tsx:469
-#: src/components/chat/TemplatesModal.tsx:572
+#: src/components/chat/TemplatesModal.tsx:584
 #: src/components/chat/ChatAccordion.tsx:178
 msgid "Delete"
 msgstr "Löschen"
@@ -1830,7 +1830,7 @@ msgstr "Deaktiviert"
 #~ msgid "Display contextual suggestion pills in the chat"
 #~ msgstr "Kontextbezogene Vorschläge im Chat anzeigen"
 
-#: src/components/settings/AccountSettingsCard.tsx:172
+#: src/components/settings/AccountSettingsCard.tsx:175
 msgid "Display name"
 msgstr "Anzeigename"
 
@@ -1900,6 +1900,7 @@ msgid "Drag to reorder"
 msgstr "Ziehen, um umzusortieren"
 
 #: src/components/chat/TemplatesModal.tsx:544
+#: src/components/chat/TemplatesModal.tsx:572
 msgid "Duplicate"
 msgstr "Duplizieren"
 
@@ -2016,7 +2017,7 @@ msgstr "Webhook bearbeiten"
 
 #: src/routes/auth/Login.tsx:251
 #: src/routes/auth/Login.tsx:255
-#: src/components/settings/AccountSettingsCard.tsx:179
+#: src/components/settings/AccountSettingsCard.tsx:182
 #: src/components/common/RedactedText.tsx:38
 msgid "Email"
 msgstr "E-Mail"
@@ -2398,7 +2399,7 @@ msgstr "Fehler beim erneuten Generieren der Zusammenfassung. Bitte versuchen Sie
 msgid "Failed to reload. Please try again."
 msgstr "Neu laden fehlgeschlagen. Bitte versuchen Sie es erneut."
 
-#: src/components/settings/AccountSettingsCard.tsx:96
+#: src/components/settings/AccountSettingsCard.tsx:97
 msgid "Failed to remove avatar"
 msgstr "Avatar konnte nicht entfernt werden"
 
@@ -2411,7 +2412,7 @@ msgstr "Fehler beim Entfernen des Gesprächs aus dem Chat"
 msgid "Failed to remove conversation from chat{0}"
 msgstr "Fehler beim Entfernen des Gesprächs aus dem Chat{0}"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:85
+#: src/components/settings/WhitelabelLogoCard.tsx:86
 msgid "Failed to remove logo"
 msgstr "Logo konnte nicht entfernt werden"
 
@@ -2443,7 +2444,7 @@ msgstr "Benutzerdefiniertes Thema konnte nicht aktualisiert werden"
 msgid "Failed to update legal basis"
 msgstr "Fehler beim Aktualisieren der Rechtsgrundlage"
 
-#: src/components/settings/AccountSettingsCard.tsx:57
+#: src/components/settings/AccountSettingsCard.tsx:58
 msgid "Failed to update name"
 msgstr "Name konnte nicht aktualisiert werden"
 
@@ -2451,11 +2452,11 @@ msgstr "Name konnte nicht aktualisiert werden"
 msgid "Failed to update pin"
 msgstr "Anheften konnte nicht aktualisiert werden"
 
-#: src/components/settings/AccountSettingsCard.tsx:79
+#: src/components/settings/AccountSettingsCard.tsx:80
 msgid "Failed to upload avatar"
 msgstr "Avatar konnte nicht hochgeladen werden"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:62
+#: src/components/settings/WhitelabelLogoCard.tsx:63
 msgid "Failed to upload logo"
 msgstr "Logo konnte nicht hochgeladen werden"
 
@@ -3144,11 +3145,11 @@ msgstr "Anmelden | Dembrane"
 msgid "Login as an existing user"
 msgstr "Als bestehender Benutzer anmelden"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:89
+#: src/components/settings/WhitelabelLogoCard.tsx:90
 msgid "Logo removed"
 msgstr "Logo entfernt"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:66
+#: src/components/settings/WhitelabelLogoCard.tsx:67
 msgid "Logo updated"
 msgstr "Logo aktualisiert"
 
@@ -3243,7 +3244,7 @@ msgstr "Gespräch zu einem anderen Projekt verschieben"
 msgid "Move to Project"
 msgstr "Gespräch zu einem anderen Projekt verschieben"
 
-#: src/components/chat/TemplatesModal.tsx:797
+#: src/components/chat/TemplatesModal.tsx:809
 msgid "My templates"
 msgstr "Meine Vorlagen"
 
@@ -3266,7 +3267,7 @@ msgstr "Name A-Z"
 msgid "Name is required"
 msgstr "Name ist erforderlich"
 
-#: src/components/settings/AccountSettingsCard.tsx:61
+#: src/components/settings/AccountSettingsCard.tsx:62
 msgid "Name updated"
 msgstr "Name aktualisiert"
 
@@ -3330,7 +3331,7 @@ msgid "Newest First"
 msgstr "Neueste zuerst"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:464
+#: src/components/participant/ParticipantOnboardingCards.tsx:417
 msgid "participant.button.next"
 msgstr "Weiter"
 
@@ -3483,7 +3484,7 @@ msgstr "Keine Tags gefunden"
 msgid "No tags have been added to this project yet. Add a tag using the text input above to get started."
 msgstr "Diesem Projekt wurden noch keine Tags hinzugefügt. Fügen Sie ein Tag über die Texteingabe oben hinzu, um zu beginnen."
 
-#: src/components/chat/TemplatesModal.tsx:812
+#: src/components/chat/TemplatesModal.tsx:824
 msgid "No templates match '{searchQuery}'"
 msgstr "Keine Vorlagen für '{searchQuery}' gefunden"
 
@@ -3903,7 +3904,7 @@ msgstr "Datum und Uhrzeit wählen"
 msgid "Pick the approach that fits your question"
 msgstr "Wähl den Ansatz, der zu deiner Frage passt"
 
-#: src/components/chat/TemplatesModal.tsx:609
+#: src/components/chat/TemplatesModal.tsx:621
 msgid "Pin"
 msgstr "Anheften"
 
@@ -3911,7 +3912,7 @@ msgstr "Anheften"
 msgid "Pin project"
 msgstr "Projekt anheften"
 
-#: src/components/chat/TemplatesModal.tsx:767
+#: src/components/chat/TemplatesModal.tsx:779
 msgid "Pin templates here for quick access."
 msgstr "Vorlagen hier für schnellen Zugriff anheften."
 
@@ -3923,11 +3924,11 @@ msgstr "Vorlagen hier für schnellen Zugriff anheften."
 #~ msgid "pinned"
 #~ msgstr "angeheftet"
 
-#: src/components/chat/TemplatesModal.tsx:608
+#: src/components/chat/TemplatesModal.tsx:620
 msgid "Pinned is full (max 5)"
 msgstr "Angeheftet ist voll (max. 5)"
 
-#: src/components/chat/TemplatesModal.tsx:737
+#: src/components/chat/TemplatesModal.tsx:749
 msgid "Pinned templates"
 msgstr "Angeheftete Vorlagen"
 
@@ -4066,7 +4067,7 @@ msgstr "Bitte warten Sie, während wir Ihre Hertranskription anfragen verarbeite
 msgid "Please wait while we verify your email address."
 msgstr "Bitte warten Sie, während wir Ihre E-Mail-Adresse verifizieren."
 
-#: src/components/settings/AccountSettingsCard.tsx:165
+#: src/components/settings/AccountSettingsCard.tsx:168
 msgid "PNG, JPEG, or WebP. Will be cropped to a circle."
 msgstr "PNG, JPEG oder WebP. Wird zu einem Kreis zugeschnitten."
 
@@ -4304,7 +4305,7 @@ msgid "Read aloud"
 msgstr "Vorlesen"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:311
+#: src/components/participant/ParticipantOnboardingCards.tsx:264
 msgid "participant.ready.to.begin"
 msgstr "Bereit zum Beginn"
 
@@ -4444,14 +4445,14 @@ msgstr "Neu laden"
 msgid "Remind users to verify before finishing"
 msgstr "Benutzer daran erinnern, vor dem Abschließen zu überprüfen"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:147
-#: src/components/settings/WhitelabelLogoCard.tsx:181
-#: src/components/settings/AccountSettingsCard.tsx:160
-#: src/components/settings/AccountSettingsCard.tsx:201
+#: src/components/settings/WhitelabelLogoCard.tsx:149
+#: src/components/settings/WhitelabelLogoCard.tsx:184
+#: src/components/settings/AccountSettingsCard.tsx:163
+#: src/components/settings/AccountSettingsCard.tsx:204
 msgid "Remove"
 msgstr "Entfernen"
 
-#: src/components/settings/AccountSettingsCard.tsx:198
+#: src/components/settings/AccountSettingsCard.tsx:201
 msgid "Remove avatar"
 msgstr "Profilbild entfernen"
 
@@ -4477,7 +4478,7 @@ msgstr "Datei entfernen"
 msgid "Remove from this chat"
 msgstr "Aus diesem Chat entfernen"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:178
+#: src/components/settings/WhitelabelLogoCard.tsx:181
 msgid "Remove logo"
 msgstr "Logo entfernen"
 
@@ -4700,7 +4701,7 @@ msgstr "Ausführungsstatus:"
 
 #: src/components/settings/LegalBasisSettingsCard.tsx:136
 #: src/components/settings/ChangePasswordCard.tsx:103
-#: src/components/settings/AccountSettingsCard.tsx:188
+#: src/components/settings/AccountSettingsCard.tsx:191
 #: src/components/project/CustomTopicModal.tsx:242
 #: src/components/common/InputModal.tsx:85
 #: src/components/chat/ChatAccordion.tsx:160
@@ -4796,7 +4797,7 @@ msgstr "Projekte suchen..."
 msgid "Search tags"
 msgstr "Tags suchen"
 
-#: src/components/chat/TemplatesModal.tsx:675
+#: src/components/chat/TemplatesModal.tsx:687
 msgid "Search templates..."
 msgstr "Vorlagen suchen..."
 
@@ -5084,7 +5085,7 @@ msgid "participant.button.verify_prompt.skip"
 msgstr "Überspringen"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:335
+#: src/components/participant/ParticipantOnboardingCards.tsx:288
 msgid "participant.mic.check.button.skip"
 msgstr "Überspringen"
 
@@ -5281,7 +5282,7 @@ msgstr "Absenden"
 msgid "Success"
 msgstr "Erfolg"
 
-#: src/components/chat/TemplatesModal.tsx:665
+#: src/components/chat/TemplatesModal.tsx:677
 msgid "Suggest dynamic suggestions based on your conversation."
 msgstr "Dynamische Vorschläge basierend auf Ihrem Gespräch vorschlagen."
 
@@ -5929,7 +5930,7 @@ msgstr "Unbekannt"
 msgid "Unknown reason"
 msgstr "Unbekannter Grund"
 
-#: src/components/chat/TemplatesModal.tsx:591
+#: src/components/chat/TemplatesModal.tsx:603
 msgid "Unpin"
 msgstr "Loslösen"
 
@@ -6013,14 +6014,14 @@ msgstr "Upgrade auf Auto-select und analysieren Sie 10x mehr Gespräche in der H
 msgid "Upload"
 msgstr "Hochladen"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:119
+#: src/components/settings/WhitelabelLogoCard.tsx:121
 msgid "Upload a custom logo to replace the Dembrane logo across the portal, dashboard, reports, and host guide."
 msgstr "Ein benutzerdefiniertes Logo hochladen, um das dembrane-Logo auf der Portal-Seite, im Dashboard, in Berichten und im Host-Guide zu ersetzen."
 
 #~ msgid "Upload Audio"
 #~ msgstr "Audio hochladen"
 
-#: src/components/settings/AccountSettingsCard.tsx:147
+#: src/components/settings/AccountSettingsCard.tsx:150
 msgid "Upload avatar"
 msgstr "Avatar hochladen"
 
@@ -6092,7 +6093,7 @@ msgstr "Verwenden Sie Shift + Enter, um eine neue Zeile hinzuzufügen"
 msgid "Username"
 msgstr "Benutzername"
 
-#: src/components/settings/WhitelabelLogoCard.tsx:153
+#: src/components/settings/WhitelabelLogoCard.tsx:155
 msgid "Using default Dembrane logo"
 msgstr "Standard-dembrane-Logo verwendet"
 
@@ -6519,7 +6520,7 @@ msgstr "Die Erstellung deines neuesten Berichts wurde abgebrochen. Dein letzter 
 #~ msgid "Your library is empty. Create a library to see your first insights."
 #~ msgstr "Ihre Bibliothek ist leer. Erstellen Sie eine Bibliothek, um Ihre ersten Erkenntnisse zu sehen."
 
-#: src/components/settings/AccountSettingsCard.tsx:175
+#: src/components/settings/AccountSettingsCard.tsx:178
 msgid "Your name"
 msgstr "Ihr Name"
 
