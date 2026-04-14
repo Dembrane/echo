@@ -26,11 +26,12 @@ export const isWhatsNew = (announcement: Announcement): boolean => {
 	);
 	const title =
 		(enTranslation as AnnouncementTranslation)?.title?.toLowerCase() || "";
-	return title.includes("new features") || title.startsWith("new:");
+	return title.includes("new");
 };
 
 export interface ProcessedAnnouncement {
 	id: string;
+	activityIds: string[];
 	created_at: string | Date | null | undefined;
 	expires_at?: string | Date | null | undefined;
 	level: "info" | "urgent";
@@ -45,13 +46,18 @@ function processAnnouncement(
 ): ProcessedAnnouncement {
 	const { title, message } = getTranslatedContent(announcement, language);
 	return {
+		activityIds: ((announcement.activity as AnnouncementActivity[]) || [])
+			.map((a) => a.id)
+			.filter(Boolean) as string[],
 		created_at: announcement.created_at,
 		expires_at: announcement.expires_at,
 		id: announcement.id,
 		level: announcement.level as "info" | "urgent",
 		message,
 		read:
-			(announcement.activity?.[0] as AnnouncementActivity)?.read || false,
+			(announcement.activity as AnnouncementActivity[])?.some(
+				(a) => a.read === true,
+			) ?? false,
 		title,
 	};
 }
@@ -67,9 +73,9 @@ export function useProcessedAnnouncements(
 	language: string,
 ) {
 	return useMemo(() => {
-		const processed = announcements
-			.filter((a) => !isWhatsNew(a))
-			.map((a) => processAnnouncement(a, language));
+		const processed = announcements.map((a) =>
+			processAnnouncement(a, language),
+		);
 
 		// Sort: unread first, then by date descending
 		return processed.sort((a, b) => {

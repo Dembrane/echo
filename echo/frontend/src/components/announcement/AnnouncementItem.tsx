@@ -21,6 +21,7 @@ import { useFormatDate } from "./utils/dateUtils";
 
 type Announcement = {
 	id: string;
+	activityIds: string[];
 	title: string;
 	message: string;
 	created_at: string | Date | null | undefined;
@@ -31,13 +32,15 @@ type Announcement = {
 
 interface AnnouncementItemProps {
 	announcement: Announcement;
+	onMarkAsRead: (id: string) => void;
+	onMarkAsUnread: (id: string, activityIds: string[]) => void;
 	index: number;
 }
 
 export const AnnouncementItem = forwardRef<
 	HTMLDivElement,
 	AnnouncementItemProps
->(({ announcement, index }, ref) => {
+>(({ announcement, onMarkAsRead, onMarkAsUnread, index }, ref) => {
 	const theme = useMantineTheme();
 	const [showMore, setShowMore] = useState(false);
 	const [showReadMoreButton, setShowReadMoreButton] = useState(false);
@@ -52,14 +55,12 @@ export const AnnouncementItem = forwardRef<
 		}
 	}, []);
 
+	const isRead = !!announcement.read;
+
 	return (
 		<Box
 			ref={ref}
-			className={`group border-b border-gray-100 p-4 transition-all duration-200 hover:bg-blue-50 ${index === 0 ? "border-t-0" : ""} ${
-				!announcement.read
-					? "border-l-4 border-l-blue-500"
-					: "border-l-4 border-l-gray-50/50 bg-gray-50/50"
-			}`}
+			className={`group border-b border-gray-100 p-4 transition-all duration-200 ${!isRead ? "hover:bg-blue-50" : ""} ${index === 0 ? "border-t-0" : ""} border-l-4 ${isRead ? "border-l-gray-50/50 bg-gray-50/50" : "border-l-blue-500"}`}
 			{...testId(`announcement-item-${announcement.id}`)}
 		>
 			<Stack gap="xs">
@@ -79,7 +80,7 @@ export const AnnouncementItem = forwardRef<
 					<Stack gap="xs" style={{ flex: 1 }}>
 						<Group justify="space-between" align="center">
 							<div style={{ flex: 1 }}>
-								<Text size="sm" fw={500}>
+								<Text size="sm" fw={isRead ? 400 : 500} c={isRead ? "dimmed" : undefined}>
 									{announcement.title}
 								</Text>
 							</div>
@@ -89,7 +90,7 @@ export const AnnouncementItem = forwardRef<
 									{formatDate(announcement.created_at)}
 								</Text>
 
-								{!announcement.read && (
+								{!isRead && (
 									<div
 										style={{
 											backgroundColor: theme.colors.blue[6],
@@ -110,8 +111,8 @@ export const AnnouncementItem = forwardRef<
 							/>
 						</Text>
 
-						{showReadMoreButton && (
-							<Group justify="flex-start">
+						<Group justify="space-between" align="center">
+							{showReadMoreButton && (
 								<Button
 									variant="transparent"
 									color="gray"
@@ -133,8 +134,34 @@ export const AnnouncementItem = forwardRef<
 										</Group>
 									)}
 								</Button>
-							</Group>
-						)}
+							)}
+
+							{isRead ? (
+								<Button
+									variant="transparent"
+									size="xs"
+									color="gray"
+									className="hover:underline"
+									ml="auto"
+									onClick={() => onMarkAsUnread(announcement.id, announcement.activityIds)}
+									{...testId("announcement-mark-as-unread-button")}
+								>
+									<Trans>Mark as unread</Trans>
+								</Button>
+							) : (
+								<Button
+									variant="transparent"
+									size="xs"
+									color="gray"
+									className="hover:underline"
+									ml="auto"
+									onClick={() => onMarkAsRead(announcement.id)}
+									{...testId("announcement-mark-as-read-button")}
+								>
+									<Trans>Mark as read</Trans>
+								</Button>
+							)}
+						</Group>
 					</Stack>
 				</Group>
 			</Stack>

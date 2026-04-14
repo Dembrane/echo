@@ -1944,9 +1944,9 @@ msgstr "z.B. Wöchentliche Stakeholder-Zusammenfassung"
 msgid "e.g., Slack Notifications, Make Workflow"
 msgstr "z.B. Slack-Benachrichtigungen, Make-Workflow"
 
-#: src/components/announcement/Announcements.tsx:204
-#~ msgid "Earlier"
-#~ msgstr "Früher"
+#: src/components/announcement/Announcements.tsx:234
+msgid "Earlier"
+msgstr "Früher"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:825
@@ -2388,8 +2388,8 @@ msgstr "Fehler beim Laden der Ankündigungen"
 msgid "Failed to load webhooks"
 msgstr "Webhooks konnten nicht geladen werden"
 
-#: src/components/announcement/hooks/index.ts:338
-#: src/components/announcement/hooks/index.ts:351
+#: src/components/announcement/hooks/index.ts:441
+#: src/components/announcement/hooks/index.ts:454
 msgid "Failed to mark all announcements as read"
 msgstr "Fehler beim Markieren aller Ankündigungen als gelesen"
 
@@ -2397,6 +2397,11 @@ msgstr "Fehler beim Markieren aller Ankündigungen als gelesen"
 #: src/components/announcement/hooks/index.ts:200
 msgid "Failed to mark announcement as read"
 msgstr "Fehler beim Markieren der Ankündigung als gelesen"
+
+#: src/components/announcement/hooks/index.ts:307
+#: src/components/announcement/hooks/index.ts:325
+msgid "Failed to mark announcement as unread"
+msgstr ""
 
 #: src/components/participant/ParticipantConversationAudio.tsx:394
 msgid "Failed to reconnect. Please try reloading the page."
@@ -3197,9 +3202,13 @@ msgstr "Vorlagen verwalten"
 msgid "Mark all read"
 msgstr "Alle als gelesen markieren"
 
-#: src/components/announcement/AnnouncementItem.tsx:153
-#~ msgid "Mark as read"
-#~ msgstr "Als gelesen markieren"
+#: src/components/announcement/AnnouncementItem.tsx:160
+msgid "Mark as read"
+msgstr "Als gelesen markieren"
+
+#: src/components/announcement/AnnouncementItem.tsx:148
+msgid "Mark as unread"
+msgstr ""
 
 #: src/components/chat/templates.ts:58
 msgid "Meeting Notes"
@@ -3398,7 +3407,7 @@ msgstr "Nein"
 msgid "No actions found"
 msgstr "Keine Aktionen gefunden"
 
-#: src/components/announcement/Announcements.tsx:173
+#: src/components/announcement/Announcements.tsx:189
 msgid "No announcements available"
 msgstr "Keine Ankündigungen verfügbar"
 
@@ -4460,7 +4469,7 @@ msgstr "Registrieren | Dembrane"
 msgid "Register as a new user"
 msgstr "Als neuer Benutzer registrieren"
 
-#: src/components/announcement/Announcements.tsx:221
+#: src/components/announcement/Announcements.tsx:287
 msgid "Release notes"
 msgstr "Versionshinweise"
 
