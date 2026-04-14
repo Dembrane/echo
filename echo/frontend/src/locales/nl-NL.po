@@ -2031,9 +2031,9 @@ msgstr "bijv. Wekelijkse samenvatting stakeholders"
 msgid "e.g., Slack Notifications, Make Workflow"
 msgstr "bijvoorbeeld, Slack meldingen, Make workflow"
 
-#: src/components/announcement/Announcements.tsx:204
-#~ msgid "Earlier"
-#~ msgstr "Eerder"
+#: src/components/announcement/Announcements.tsx:227
+msgid "Earlier"
+msgstr "Eerder"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:825
@@ -3317,9 +3317,9 @@ msgstr "Templates beheren"
 msgid "Mark all read"
 msgstr "Alle als gelezen markeren"
 
-#: src/components/announcement/AnnouncementItem.tsx:153
-#~ msgid "Mark as read"
-#~ msgstr "Als gelezen markeren"
+#: src/components/announcement/AnnouncementItem.tsx:147
+msgid "Mark as read"
+msgstr "Als gelezen markeren"
 
 #: src/components/chat/templates.ts:58
 msgid "Meeting Notes"
@@ -3518,7 +3518,7 @@ msgstr "Nee"
 msgid "No actions found"
 msgstr "Geen acties gevonden"
 
-#: src/components/announcement/Announcements.tsx:173
+#: src/components/announcement/Announcements.tsx:183
 msgid "No announcements available"
 msgstr "Geen meldingen beschikbaar"
 
@@ -4616,7 +4616,7 @@ msgstr "Registreer | Dembrane"
 msgid "Register as a new user"
 msgstr "Registreer als nieuwe gebruiker"
 
-#: src/components/announcement/Announcements.tsx:221
+#: src/components/announcement/Announcements.tsx:280
 msgid "Release notes"
 msgstr "Release notes"
 
@@ -5265,11 +5265,11 @@ msgstr "Gegevens tonen"
 msgid "Show IP addresses"
 msgstr "IP-adressen tonen"
 
-#: src/components/announcement/AnnouncementItem.tsx:126
+#: src/components/announcement/AnnouncementItem.tsx:125
 msgid "Show less"
 msgstr "Minder tonen"
 
-#: src/components/announcement/AnnouncementItem.tsx:131
+#: src/components/announcement/AnnouncementItem.tsx:130
 msgid "Show more"
 msgstr "Meer tonen"
 

@@ -2172,9 +2172,9 @@ msgstr "e.g. Weekly stakeholder digest"
 msgid "e.g., Slack Notifications, Make Workflow"
 msgstr "e.g., Slack Notifications, Make Workflow"
 
-#: src/components/announcement/Announcements.tsx:204
-#~ msgid "Earlier"
-#~ msgstr "Earlier"
+#: src/components/announcement/Announcements.tsx:227
+msgid "Earlier"
+msgstr "Earlier"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:825
@@ -3483,9 +3483,9 @@ msgstr "Manage templates"
 msgid "Mark all read"
 msgstr "Mark all read"
 
-#: src/components/announcement/AnnouncementItem.tsx:153
-#~ msgid "Mark as read"
-#~ msgstr "Mark as read"
+#: src/components/announcement/AnnouncementItem.tsx:147
+msgid "Mark as read"
+msgstr "Mark as read"
 
 #: src/components/chat/templates.ts:58
 msgid "Meeting Notes"
@@ -3686,7 +3686,7 @@ msgstr "No"
 msgid "No actions found"
 msgstr "No actions found"
 
-#: src/components/announcement/Announcements.tsx:173
+#: src/components/announcement/Announcements.tsx:183
 msgid "No announcements available"
 msgstr "No announcements available"
 
@@ -4698,7 +4698,7 @@ msgstr "Register | Dembrane"
 msgid "Register as a new user"
 msgstr "Register as a new user"
 
-#: src/components/announcement/Announcements.tsx:221
+#: src/components/announcement/Announcements.tsx:280
 msgid "Release notes"
 msgstr "Release notes"
 
@@ -5360,11 +5360,11 @@ msgstr "Show data"
 msgid "Show IP addresses"
 msgstr "Show IP addresses"
 
-#: src/components/announcement/AnnouncementItem.tsx:126
+#: src/components/announcement/AnnouncementItem.tsx:125
 msgid "Show less"
 msgstr "Show less"
 
-#: src/components/announcement/AnnouncementItem.tsx:131
+#: src/components/announcement/AnnouncementItem.tsx:130
 msgid "Show more"
 msgstr "Show more"
 

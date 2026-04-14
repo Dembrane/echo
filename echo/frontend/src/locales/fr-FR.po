@@ -1962,9 +1962,9 @@ msgstr "ex. Résumé hebdomadaire des parties prenantes"
 msgid "e.g., Slack Notifications, Make Workflow"
 msgstr "par exemple : Notifications Slack, Make Workflow"
 
-#: src/components/announcement/Announcements.tsx:204
-#~ msgid "Earlier"
-#~ msgstr "Plus anciennes"
+#: src/components/announcement/Announcements.tsx:227
+msgid "Earlier"
+msgstr "Plus anciennes"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationAudio.tsx:825
@@ -3215,9 +3215,9 @@ msgstr "Gérer les modèles"
 msgid "Mark all read"
 msgstr "Marquer toutes comme lues"
 
-#: src/components/announcement/AnnouncementItem.tsx:153
-#~ msgid "Mark as read"
-#~ msgstr "Marquer comme lue"
+#: src/components/announcement/AnnouncementItem.tsx:147
+msgid "Mark as read"
+msgstr "Marquer comme lue"
 
 #: src/components/chat/templates.ts:58
 msgid "Meeting Notes"
@@ -3416,7 +3416,7 @@ msgstr "Non"
 msgid "No actions found"
 msgstr "Aucune action trouvée"
 
-#: src/components/announcement/Announcements.tsx:173
+#: src/components/announcement/Announcements.tsx:183
 msgid "No announcements available"
 msgstr "Aucune annonce disponible"
 
@@ -4481,7 +4481,7 @@ msgstr "S'enregistrer | Dembrane"
 msgid "Register as a new user"
 msgstr "S'enregistrer en tant qu'utilisateur nouveau"
 
-#: src/components/announcement/Announcements.tsx:221
+#: src/components/announcement/Announcements.tsx:280
 msgid "Release notes"
 msgstr "Notes de version"
 
@@ -5124,11 +5124,11 @@ msgstr "Afficher les données"
 msgid "Show IP addresses"
 msgstr "Afficher les adresses IP"
 
-#: src/components/announcement/AnnouncementItem.tsx:126
+#: src/components/announcement/AnnouncementItem.tsx:125
 msgid "Show less"
 msgstr "Afficher moins"
 
-#: src/components/announcement/AnnouncementItem.tsx:131
+#: src/components/announcement/AnnouncementItem.tsx:130
 msgid "Show more"
 msgstr "Afficher plus"
 

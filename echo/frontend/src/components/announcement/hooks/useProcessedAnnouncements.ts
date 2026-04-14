@@ -26,7 +26,7 @@ export const isWhatsNew = (announcement: Announcement): boolean => {
 	);
 	const title =
 		(enTranslation as AnnouncementTranslation)?.title?.toLowerCase() || "";
-	return title.includes("new features") || title.startsWith("new:");
+	return title.includes("new");
 };
 
 export interface ProcessedAnnouncement {
@@ -67,9 +67,9 @@ export function useProcessedAnnouncements(
 	language: string,
 ) {
 	return useMemo(() => {
-		const processed = announcements
-			.filter((a) => !isWhatsNew(a))
-			.map((a) => processAnnouncement(a, language));
+		const processed = announcements.map((a) =>
+			processAnnouncement(a, language),
+		);
 
 		// Sort: unread first, then by date descending
 		return processed.sort((a, b) => {
