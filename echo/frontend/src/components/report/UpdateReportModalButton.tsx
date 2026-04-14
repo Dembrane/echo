@@ -7,35 +7,30 @@ import {
 	Button,
 	Divider,
 	Group,
+	Indicator,
 	Modal,
 	NativeSelect,
 	Stack,
 	Text,
 	Tooltip,
 } from "@mantine/core";
-import { DateTimePicker } from "@mantine/dates";
-import { useDisclosure } from "@mantine/hooks";
 import {
-	IconArrowLeft,
-	IconClock,
-	IconExternalLink,
-	IconPencil,
-} from "@tabler/icons-react";
+	isDateFarEnough,
+	ScheduleDateTimePicker,
+} from "./ScheduleDateTimePicker";
+import { useDisclosure } from "@mantine/hooks";
+import { IconArrowLeft, IconClock, IconPencil } from "@tabler/icons-react";
 import { AxiosError } from "axios";
 import { useState } from "react";
 import { useParams } from "react-router";
-import { getProductFeedbackUrl } from "@/config";
+import { FeedbackPortalModal } from "@/components/common/FeedbackPortalModal";
 import focusOptionsData from "@/data/reportFocusOptions.json";
 import { useLanguage } from "@/hooks/useLanguage";
 import { analytics } from "@/lib/analytics";
 import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { testId } from "@/lib/testUtils";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
-import {
-	useCreateProjectReportMutation,
-	useDoesProjectReportNeedUpdate,
-	useProjectReport,
-} from "./hooks";
+import { useCreateProjectReportMutation, useProjectReport } from "./hooks";
 import { ReportFocusSelector } from "./ReportFocusSelector";
 
 function getLanguageLabel(iso: string): string {
@@ -62,37 +57,21 @@ function getCustomFocusText(instructions: string): string {
 	return remaining.replace(/\n{2,}/g, "\n").trim();
 }
 
-/** Returns a Date 10 minutes from now (rounded up to next 5-min mark). */
-function getMinScheduleDate(): Date {
-	const d = new Date(Date.now() + 10 * 60_000);
-	const mins = d.getMinutes();
-	const remainder = mins % 5;
-	if (remainder !== 0) d.setMinutes(mins + (5 - remainder), 0, 0);
-	return d;
-}
-
-/** 30 days from now. */
-function getMaxScheduleDate(): Date {
-	return new Date(Date.now() + 30 * 24 * 60 * 60_000);
-}
-
 // Feature flag: show "custom report structure" CTA until 2026-05-11 (8 weeks from 2026-03-16)
 const SHOW_STRUCTURE_CTA =
 	Date.now() < new Date("2026-05-11T00:00:00Z").getTime();
 
 export const UpdateReportModalButton = ({
 	reportId: currentReportId,
+	needsUpdate = false,
 }: {
 	reportId: number;
+	needsUpdate?: boolean;
 }) => {
 	const [opened, { open, close }] = useDisclosure(false);
 	const { mutateAsync, isPending, error } = useCreateProjectReportMutation();
 	const { projectId } = useParams();
 	const { data: currentReport } = useProjectReport(
-		projectId ?? "",
-		currentReportId,
-	);
-	const { data: doesReportNeedUpdate } = useDoesProjectReportNeedUpdate(
 		projectId ?? "",
 		currentReportId,
 	);
@@ -106,6 +85,7 @@ export const UpdateReportModalButton = ({
 	);
 	const [showSchedule, setShowSchedule] = useState(false);
 	const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
+	const [feedbackOpen, setFeedbackOpen] = useState(false);
 
 	if (!currentReport) {
 		return null;
@@ -149,37 +129,22 @@ export const UpdateReportModalButton = ({
 		<>
 			<Tooltip
 				label={
-					doesReportNeedUpdate
-						? t`New conversations available — update your report`
+					needsUpdate
+						? t`New conversations added since this report`
 						: t`Generate a new report`
 				}
 			>
-				<Button
-					variant="filled"
-					color="primary"
-					onClick={handleOpen}
-					leftSection={<IconPencil size={16} />}
-					rightSection={
-						doesReportNeedUpdate ? (
-							<span
-								style={{
-									backgroundColor: "var(--mantine-color-red-filled)",
-									borderRadius: "50%",
-									display: "inline-block",
-									height: 8,
-									width: 8,
-								}}
-							/>
-						) : undefined
-					}
-					{...testId("report-update-button")}
-				>
-					{doesReportNeedUpdate ? (
-						<Trans>Update Report</Trans>
-					) : (
+				<Indicator disabled={!needsUpdate} color="salmon" size={10} offset={4}>
+					<Button
+						variant="filled"
+						color="primary"
+						onClick={handleOpen}
+						leftSection={<IconPencil size={16} />}
+						{...testId("report-update-button")}
+					>
 						<Trans>New Report</Trans>
-					)}
-				</Button>
+					</Button>
+				</Indicator>
 			</Tooltip>
 
 			<Modal
@@ -190,8 +155,6 @@ export const UpdateReportModalButton = ({
 						<Text fw={500} size="lg">
 							{showSchedule ? (
 								<Trans>Schedule Report</Trans>
-							) : doesReportNeedUpdate ? (
-								<Trans>Update Report</Trans>
 							) : (
 								<Trans>New Report</Trans>
 							)}
@@ -266,14 +229,10 @@ export const UpdateReportModalButton = ({
 							</Anchor>
 						</Stack>
 
-						<DateTimePicker
+						<ScheduleDateTimePicker
 							label={t`When should the report be generated?`}
-							placeholder={t`e.g. tomorrow at 9:00`}
 							value={scheduledDate}
 							onChange={setScheduledDate}
-							minDate={getMinScheduleDate()}
-							maxDate={getMaxScheduleDate()}
-							clearable
 						/>
 
 						<Text size="xs" c="dimmed">
@@ -286,7 +245,7 @@ export const UpdateReportModalButton = ({
 							<Button
 								onClick={() => handleSubmit(true)}
 								loading={isPending}
-								disabled={isPending || !scheduledDate}
+								disabled={isPending || !isDateFarEnough(scheduledDate)}
 								fullWidth
 								color="primary"
 							>
@@ -348,16 +307,13 @@ export const UpdateReportModalButton = ({
 								<Text size="xs" c="gray.6" mt="sm">
 									<Trans>Report templates are on our roadmap.</Trans>{" "}
 									<Anchor
-										href={getProductFeedbackUrl(appLocale)}
-										target="_blank"
+										component="button"
+										type="button"
+										onClick={() => setFeedbackOpen(true)}
 										size="xs"
 										td="underline"
 									>
-										<Trans>Share your ideas with our team</Trans>{" "}
-										<IconExternalLink
-											size={11}
-											style={{ display: "inline", verticalAlign: "middle" }}
-										/>
+										<Trans>Share your ideas with our team</Trans>
 									</Anchor>
 								</Text>
 							</>
@@ -365,6 +321,11 @@ export const UpdateReportModalButton = ({
 					</Stack>
 				)}
 			</Modal>
+			<FeedbackPortalModal
+				opened={feedbackOpen}
+				onClose={() => setFeedbackOpen(false)}
+				locale={appLocale}
+			/>
 		</>
 	);
 };
