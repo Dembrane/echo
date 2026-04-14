@@ -281,7 +281,6 @@ export const useMarkAsUnreadMutation = () => {
 
 	return useMutation({
 		mutationFn: async ({
-			announcementId,
 			activityIds,
 		}: {
 			announcementId: string;
