@@ -12,8 +12,12 @@ import {
 	NativeSelect,
 	Stack,
 	Text,
+	Tooltip,
 } from "@mantine/core";
-import { DateTimePicker } from "@mantine/dates";
+import {
+	isDateFarEnough,
+	ScheduleDateTimePicker,
+} from "./ScheduleDateTimePicker";
 import {
 	IconArrowLeft,
 	IconClock,
@@ -56,18 +60,6 @@ function getCustomFocusText(instructions: string): string {
 		remaining = remaining.replace(opt.instruction, "");
 	}
 	return remaining.replace(/\n{2,}/g, "\n").trim();
-}
-
-function getMinScheduleDate(): Date {
-	const d = new Date(Date.now() + 10 * 60_000);
-	const mins = d.getMinutes();
-	const remainder = mins % 5;
-	if (remainder !== 0) d.setMinutes(mins + (5 - remainder), 0, 0);
-	return d;
-}
-
-function getMaxScheduleDate(): Date {
-	return new Date(Date.now() + 30 * 24 * 60 * 60_000);
 }
 
 // Feature flag: show "custom report structure" CTA until 2026-05-11
@@ -134,67 +126,59 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 		);
 	}
 
-	if (!hasConversations) {
-		return (
-			<Box mb="xl" px="sm" mt="xl">
-				<Stack gap={8} align="center">
-					<MessageCircleIcon className="h-10 w-10" color="darkgray" />
-					<Text size="sm" c="gray.9" ta="center" fw={500}>
-						<Trans>No conversations yet</Trans>
-					</Text>
-					<Text size="sm" c="gray.6" ta="center">
-						<Trans>
-							To generate a report, please start by adding conversations in your
-							project
-						</Trans>
-					</Text>
-				</Stack>
-			</Box>
-		);
-	}
-
 	return (
 		<Stack maw="540px" className="pt-4">
 			<CloseableAlert
 				title={t`Generate a Report`}
 				storageKey="create-report-info-dismissed"
 			>
-				<Trans>
-					It looks like you don't have a report for this project yet. Generate
-					one to get an overview of your conversations.
-				</Trans>
+				{hasConversations ? (
+					<Trans>
+						It looks like you don't have a report for this project yet. Generate
+						one to get an overview of your conversations.
+					</Trans>
+				) : (
+					<Trans>
+						No conversations yet. You can schedule a report now and
+						conversations will be included once they are added.
+					</Trans>
+				)}
 			</CloseableAlert>
 
-			<Text size="sm" c="gray.6">
-				<Text
-					span
-					component="a"
-					c="blue.7"
-					href="#"
-					fw={500}
-					onClick={(e) => {
-						e.preventDefault();
-						setDetailModalOpened(true);
-					}}
-					className="cursor-pointer underline-offset-4 hover:underline"
-				>
-					{conversationTotal} <Trans>conversations</Trans>{" "}
-				</Text>
-				<Trans>will be included in your report</Trans>
-			</Text>
+			{hasConversations && (
+				<>
+					<Text size="sm" c="gray.6">
+						<Text
+							span
+							component="a"
+							c="blue.7"
+							href="#"
+							fw={500}
+							onClick={(e) => {
+								e.preventDefault();
+								setDetailModalOpened(true);
+							}}
+							className="cursor-pointer underline-offset-4 hover:underline"
+						>
+							{conversationTotal} <Trans>conversations</Trans>{" "}
+						</Text>
+						<Trans>will be included in your report</Trans>
+					</Text>
 
-			<Modal
-				opened={detailModalOpened}
-				onClose={() => setDetailModalOpened(false)}
-				title={<Trans>Conversation Status Details</Trans>}
-				size="lg"
-				centered
-				{...testId("report-conversation-status-modal")}
-			>
-				<ConversationStatusTable projectId={projectId ?? ""} />
-			</Modal>
+					<Modal
+						opened={detailModalOpened}
+						onClose={() => setDetailModalOpened(false)}
+						title={<Trans>Conversation Status Details</Trans>}
+						size="lg"
+						centered
+						{...testId("report-conversation-status-modal")}
+					>
+						<ConversationStatusTable projectId={projectId ?? ""} />
+					</Modal>
+				</>
+			)}
 
-			{!hasFinishedConversations ? (
+			{hasConversations && !hasFinishedConversations ? (
 				<Text size="sm" c="dimmed">
 					<Trans>
 						Waiting for conversations to finish before generating a report.
@@ -250,14 +234,10 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 						</Anchor>
 					</Stack>
 
-					<DateTimePicker
+					<ScheduleDateTimePicker
 						label={t`When should the report be generated?`}
-						placeholder={t`e.g. tomorrow at 9:00`}
 						value={scheduledDate}
 						onChange={setScheduledDate}
-						minDate={getMinScheduleDate()}
-						maxDate={getMaxScheduleDate()}
-						clearable
 					/>
 
 					<Text size="xs" c="dimmed">
@@ -270,7 +250,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 						<Button
 							onClick={() => handleCreate(true)}
 							loading={isPending}
-							disabled={isPending || !scheduledDate}
+							disabled={isPending || !isDateFarEnough(scheduledDate)}
 							fullWidth
 							color="primary"
 							{...testId("report-create-button")}
@@ -305,16 +285,21 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 					</Stack>
 
 					<Group gap="xs" mt={24} wrap="wrap">
-						<Button
-							onClick={() => handleCreate(false)}
-							loading={isPending}
-							disabled={isPending}
-							color="primary"
-							style={{ flex: 7 }}
-							{...testId("report-create-button")}
+						<Tooltip
+							label={t`Add conversations to your project first`}
+							disabled={!!hasConversations}
 						>
-							<Trans>Generate now</Trans>
-						</Button>
+							<Button
+								onClick={() => handleCreate(false)}
+								loading={isPending}
+								disabled={isPending || !hasConversations}
+								color="primary"
+								style={{ flex: 7 }}
+								{...testId("report-create-button")}
+							>
+								<Trans>Generate now</Trans>
+							</Button>
+						</Tooltip>
 						<Button
 							variant="outline"
 							onClick={() => setShowSchedule(true)}

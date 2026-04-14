@@ -20,7 +20,10 @@ import {
 	Tooltip,
 	UnstyledButton,
 } from "@mantine/core";
-import { DateTimePicker } from "@mantine/dates";
+import {
+	isDateFarEnough,
+	ScheduleDateTimePicker,
+} from "@/components/report/ScheduleDateTimePicker";
 import { useDisclosure, useFullscreen } from "@mantine/hooks";
 import { GearSixIcon } from "@phosphor-icons/react";
 import {
@@ -49,6 +52,7 @@ import {
 	useCancelScheduledReportMutation,
 	useCreateProjectReportMutation,
 	useDeleteProjectReportMutation,
+	useDoesProjectReportNeedUpdate,
 	useGetProjectParticipants,
 	useLatestProjectReport,
 	useProjectReport,
@@ -63,8 +67,34 @@ import { PARTICIPANT_BASE_URL } from "@/config";
 import useCopyToRichText from "@/hooks/useCopyToRichText";
 import { useLanguage } from "@/hooks/useLanguage";
 import { testId } from "@/lib/testUtils";
+import focusOptionsData from "@/data/reportFocusOptions.json";
 
 dayjs.extend(relativeTime);
+
+/** Parse user_instructions into readable labels for the tooltip. */
+function formatGuidedTooltip(instructions: string, language: string): string {
+	const presetLabels = focusOptionsData.options
+		.filter((opt) => instructions.includes(opt.instruction))
+		.map(
+			(opt) =>
+				(opt.labels as Record<string, string>)[language] ?? opt.labels.en,
+		);
+
+	let custom = instructions;
+	for (const opt of focusOptionsData.options) {
+		custom = custom.replace(opt.instruction, "");
+	}
+	custom = custom.replace(/\n{2,}/g, "\n").trim();
+
+	const parts: string[] = [];
+	if (presetLabels.length > 0) {
+		parts.push(presetLabels.map((l) => `• ${l}`).join("\n"));
+	}
+	if (custom) {
+		parts.push(`• "${custom}"`);
+	}
+	return parts.join("\n");
+}
 
 /** Type for report list items returned by the backend. */
 type ReportListItem = Pick<
@@ -304,7 +334,7 @@ function VersionItem({
 			: report.status === "archived" && isLatest
 				? t`Latest`
 				: report.user_instructions
-					? t`custom`
+					? t`Guided`
 					: sc.label;
 	const hideBadge =
 		report.status === "archived" && !isLatest && !report.user_instructions;
@@ -389,12 +419,14 @@ function VersionItem({
 
 function ScrollableSidebar({ children }: { children: React.ReactNode }) {
 	const scrollRef = useRef<HTMLDivElement>(null);
-	const [canScroll, setCanScroll] = useState(false);
+	const [showFade, setShowFade] = useState(false);
 
 	const checkScroll = useCallback(() => {
 		const el = scrollRef.current;
 		if (!el) return;
-		setCanScroll(el.scrollHeight > el.clientHeight + 4);
+		const hasOverflow = el.scrollHeight > el.clientHeight + 4;
+		const isAtBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 4;
+		setShowFade(hasOverflow && !isAtBottom);
 	}, []);
 
 	useEffect(() => {
@@ -415,7 +447,7 @@ function ScrollableSidebar({ children }: { children: React.ReactNode }) {
 			>
 				{children}
 			</Box>
-			{canScroll && (
+			{showFade && (
 				<Box
 					style={{
 						background:
@@ -449,8 +481,11 @@ function ScheduledReportView({
 		useCancelScheduledReportMutation();
 	const { mutate: createReport, isPending: isCreating } =
 		useCreateProjectReportMutation();
-	const { mutate: updateReport, isPending: isRescheduling } =
-		useUpdateProjectReportMutation();
+	const {
+		mutate: updateReport,
+		isPending: isRescheduling,
+		error: rescheduleError,
+	} = useUpdateProjectReportMutation();
 	const [showReschedule, setShowReschedule] = useState(false);
 	const [newDate, setNewDate] = useState<Date | null>(
 		report.scheduled_at ? new Date(report.scheduled_at) : null,
@@ -538,18 +573,23 @@ function ScheduledReportView({
 
 			{showReschedule ? (
 				<Stack gap="xs" w={280}>
-					<DateTimePicker
-						label={t`New date and time`}
-						placeholder={t`Pick date and time`}
+					<ScheduleDateTimePicker
+						label={t`Reschedule to`}
 						value={newDate}
 						onChange={setNewDate}
-						minDate={new Date()}
-						clearable
 					/>
+					{rescheduleError && (
+						<Text size="xs" c="red">
+							<Trans>
+								Failed to reschedule. Please choose a time further in the future
+								and try again.
+							</Trans>
+						</Text>
+					)}
 					<Button
 						onClick={handleReschedule}
 						loading={isRescheduling}
-						disabled={!newDate || isRescheduling}
+						disabled={!newDate || !isDateFarEnough(newDate) || isRescheduling}
 						fullWidth
 						color="primary"
 					>
@@ -667,9 +707,21 @@ export const ProjectReportRoute = () => {
 	);
 	const isViewingScheduled = !!selectedScheduledReport;
 
+	// If the selected report was cancelled/errored (or no longer in the list),
+	// fall through to the latest completed report instead of showing an empty page.
+	const isSelectedStale =
+		selectedReportId !== null &&
+		allReports !== undefined &&
+		!allReports.some((r) => r.id === selectedReportId);
+
 	// Determine which report to display (never load content for a scheduled or draft report)
 	const activeReportId = (() => {
-		if (selectedReportId && !isViewingScheduled && !isViewingGenerating)
+		if (
+			selectedReportId &&
+			!isViewingScheduled &&
+			!isViewingGenerating &&
+			!isSelectedStale
+		)
 			return selectedReportId;
 		if (
 			latestReport &&
@@ -699,6 +751,10 @@ export const ProjectReportRoute = () => {
 			: undefined);
 
 	const { data: views } = useProjectReportViews(
+		projectId ?? "",
+		data?.id ?? -1,
+	);
+	const { data: doesReportNeedUpdate } = useDoesProjectReportNeedUpdate(
 		projectId ?? "",
 		data?.id ?? -1,
 	);
@@ -748,6 +804,13 @@ export const ProjectReportRoute = () => {
 	const handleSelectReport = (id: number) => {
 		setSelectedReportId(id === latestCompletedId ? null : id);
 	};
+
+	// Clear stale selection (e.g. report was cancelled/errored and dropped from the list)
+	useEffect(() => {
+		if (isSelectedStale) {
+			setSelectedReportId(null);
+		}
+	}, [isSelectedStale]);
 
 	// Auto-select the first actionable sidebar report (scheduled/generating) when
 	// there are no completed reports and nothing is selected yet.
@@ -849,7 +912,12 @@ export const ProjectReportRoute = () => {
 				rightSection={
 					<Group gap="xs">
 						{/* Update/New report */}
-						{data && <UpdateReportModalButton reportId={data.id} />}
+						{data && (
+							<UpdateReportModalButton
+								reportId={data.id}
+								needsUpdate={!!doesReportNeedUpdate}
+							/>
+						)}
 					</Group>
 				}
 			>
@@ -934,6 +1002,7 @@ export const ProjectReportRoute = () => {
 													r.status === "archived" && r.id === latestCompletedId
 												}
 												onClick={() => {
+													setIsEditing(false);
 													if (r.status === "scheduled") {
 														setSelectedReportId(r.id);
 													} else if (r.status === "draft") {
@@ -1202,10 +1271,23 @@ export const ProjectReportRoute = () => {
 														·
 													</Text>
 													<Tooltip
-														label={activeReportMeta.user_instructions}
+														label={formatGuidedTooltip(
+															activeReportMeta.user_instructions,
+															language,
+														)}
 														multiline
 														maw={300}
 														position="bottom"
+														color=""
+														styles={{
+															tooltip: {
+																backgroundColor: "var(--mantine-color-white)",
+																border: "1px solid var(--mantine-color-gray-3)",
+																color: "var(--mantine-color-dark-7)",
+																padding: "8px 12px",
+																whiteSpace: "pre-line",
+															},
+														}}
 													>
 														<Text
 															size="xs"
@@ -1217,7 +1299,7 @@ export const ProjectReportRoute = () => {
 															}}
 															{...testId("report-instructions-display")}
 														>
-															<Trans>Instructions</Trans>
+															<Trans>Guided</Trans>
 														</Text>
 													</Tooltip>
 												</>

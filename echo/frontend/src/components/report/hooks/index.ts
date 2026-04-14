@@ -144,7 +144,7 @@ export const useProjectReport = (projectId: string, reportId: number) => {
 		refetchInterval: (query) => {
 			const report = query.state.data;
 			if (report && report.status === "draft") return 5000;
-			return 30000;
+			return 60000;
 		},
 	});
 };
@@ -153,7 +153,7 @@ export const useProjectConversationCounts = (projectId: string) => {
 	return useQuery({
 		queryFn: () => getProjectConversationCounts(projectId),
 		queryKey: ["projects", projectId, "conversation-counts"],
-		refetchInterval: 15000,
+		refetchInterval: 60000,
 	});
 };
 
@@ -162,7 +162,7 @@ export const useProjectReportViews = (projectId: string, reportId: number) => {
 		enabled: !!projectId && reportId > 0,
 		queryFn: () => getProjectReportViews(projectId, reportId),
 		queryKey: ["reports", reportId, "views"],
-		refetchInterval: 30000,
+		refetchInterval: 60000,
 	});
 };
 
@@ -174,7 +174,7 @@ export const useAllProjectReports = (projectId: string) => {
 		refetchInterval: (query) => {
 			const reports = query.state.data;
 			if (reports?.some((r) => r.status === "draft")) return 5000;
-			return 30000;
+			return 60000;
 		},
 	});
 };
@@ -186,12 +186,10 @@ export const useLatestProjectReport = (projectId: string) => {
 		queryKey: ["projects", projectId, "report"],
 		refetchInterval: (query) => {
 			const report = query.state.data;
-			if (
-				report &&
-				(report.status === "draft" || report.status === "scheduled")
-			)
-				return 5000;
-			return 30000;
+			// Scheduled reports poll at 30s to detect when generation starts.
+			// Drafts are covered by useAllProjectReports at 5s, no need to duplicate.
+			if (report && report.status === "scheduled") return 30000;
+			return 60000;
 		},
 	});
 };
@@ -297,7 +295,7 @@ export const usePublicLatestProjectReport = (projectId: string) => {
 		enabled: !!projectId,
 		queryFn: () => getPublicLatestProjectReport(projectId),
 		queryKey: ["public", "projects", projectId, "report"],
-		refetchInterval: 30000,
+		refetchInterval: 60000,
 	});
 };
 
@@ -306,7 +304,7 @@ export const usePublicProjectReport = (projectId: string, reportId: number) => {
 		enabled: !!projectId && reportId > 0,
 		queryFn: () => getPublicProjectReportDetail(projectId, reportId),
 		queryKey: ["public", "reports", reportId],
-		refetchInterval: 30000,
+		refetchInterval: 60000,
 	});
 };
 
@@ -315,7 +313,7 @@ export const usePublicProjectReportViews = (projectId: string) => {
 		enabled: !!projectId,
 		queryFn: () => getPublicProjectReportViews(projectId),
 		queryKey: ["public", "projects", projectId, "views"],
-		refetchInterval: 30000,
+		refetchInterval: 60000,
 	});
 };
 

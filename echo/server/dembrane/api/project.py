@@ -584,10 +584,13 @@ async def create_report(
 
         if scheduled_dt.tzinfo is None:
             scheduled_dt = scheduled_dt.replace(tzinfo=tz.utc)
-        if scheduled_dt <= datetime.now(tz.utc):
+        from datetime import timedelta as td
+
+        min_schedule_time = datetime.now(tz.utc) + td(minutes=10)
+        if scheduled_dt <= min_schedule_time:
             raise HTTPException(
                 status_code=400,
-                detail="scheduled_at must be a future datetime",
+                detail="Scheduled time must be at least 10 minutes in the future",
             )
         is_scheduled = True
 
@@ -768,6 +771,7 @@ class UpdateReportRequestBodySchema(BaseModel):
     status: Optional[str] = None
     show_portal_link: Optional[bool] = None
     content: Optional[str] = None
+    scheduled_at: Optional[str] = None
 
 
 @ProjectRouter.patch("/{project_id}/reports/{report_id}")
@@ -788,6 +792,32 @@ async def update_report(
         payload["show_portal_link"] = body.show_portal_link
     if body.content is not None:
         payload["content"] = body.content
+    if body.scheduled_at is not None:
+        from datetime import timezone as tz, timedelta
+
+        # Validate scheduled_at is a proper future datetime (at least 10 min out)
+        if not isinstance(body.scheduled_at, (str, datetime)):
+            raise HTTPException(
+                status_code=422,
+                detail="scheduled_at must be a valid ISO 8601 datetime string",
+            )
+        normalized = body.scheduled_at.replace("Z", "+00:00") if isinstance(body.scheduled_at, str) else body.scheduled_at.isoformat()
+        try:
+            scheduled_dt = datetime.fromisoformat(normalized) if isinstance(normalized, str) else body.scheduled_at
+        except (ValueError, TypeError) as e:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Invalid scheduled_at datetime format: {body.scheduled_at}",
+            ) from e
+        if isinstance(scheduled_dt, datetime) and scheduled_dt.tzinfo is None:
+            scheduled_dt = scheduled_dt.replace(tzinfo=tz.utc)
+        min_schedule_time = datetime.now(tz.utc) + timedelta(minutes=10)
+        if isinstance(scheduled_dt, datetime) and scheduled_dt <= min_schedule_time:
+            raise HTTPException(
+                status_code=400,
+                detail="Scheduled time must be at least 10 minutes in the future",
+            )
+        payload["scheduled_at"] = body.scheduled_at
 
     if not payload:
         raise HTTPException(status_code=400, detail="No fields to update")
@@ -910,23 +940,21 @@ async def get_report_detail(
 @ProjectRouter.get("/{project_id}/reports/{report_id}/views")
 async def get_report_views(
     project_id: str,
-    report_id: int,  # noqa: ARG001
+    report_id: int,
     auth: DependencyDirectusSession,
 ) -> dict:
     """Get view counts for a report."""
     await _verify_project_access(auth, project_id)
     from dembrane.directus import directus
 
-    # Total views across all reports for the project
+    # Total views for this report
     all_metrics = await run_in_thread_pool(
         directus.get_items,
         "project_report_metric",
         {
             "query": {
                 "filter": {
-                    "project_report_id": {
-                        "project_id": {"_eq": project_id},
-                    },
+                    "project_report_id": {"_eq": report_id},
                 },
                 "aggregate": {"count": "*"},
             }
@@ -947,9 +975,7 @@ async def get_report_views(
             "query": {
                 "filter": {
                     "date_created": {"_gte": ten_mins_ago},
-                    "project_report_id": {
-                        "project_id": {"_eq": project_id},
-                    },
+                    "project_report_id": {"_eq": report_id},
                 },
                 "aggregate": {"count": "*"},
             }
