@@ -39,6 +39,7 @@ import {
 	useInfiniteAnnouncements,
 	useMarkAllAsReadMutation,
 	useMarkAsReadMutation,
+	useMarkAsUnreadMutation,
 	useWhatsNewAnnouncements,
 } from "./hooks";
 
@@ -46,6 +47,7 @@ export const Announcements = () => {
 	const { isOpen, close } = useAnnouncementDrawer();
 	const { language } = useLanguage();
 	const markAsReadMutation = useMarkAsReadMutation();
+	const markAsUnreadMutation = useMarkAsUnreadMutation();
 	const markAllAsReadMutation = useMarkAllAsReadMutation();
 	const [openedOnce, setOpenedOnce] = useState(false);
 	const [readExpanded, setReadExpanded] = useState(false);
@@ -132,6 +134,10 @@ export const Announcements = () => {
 		markAsReadMutation.mutate({ announcementId: id });
 	};
 
+	const handleMarkAsUnread = async (id: string) => {
+		markAsUnreadMutation.mutate({ announcementId: id });
+	};
+
 	const handleMarkAllAsRead = async () => {
 		markAllAsReadMutation.mutate();
 	};
@@ -191,6 +197,7 @@ export const Announcements = () => {
 										key={announcement.id}
 										announcement={announcement}
 										onMarkAsRead={handleMarkAsRead}
+										onMarkAsUnread={handleMarkAsUnread}
 										index={index}
 									/>
 								))}

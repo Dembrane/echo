@@ -2172,7 +2172,7 @@ msgstr "e.g. Weekly stakeholder digest"
 msgid "e.g., Slack Notifications, Make Workflow"
 msgstr "e.g., Slack Notifications, Make Workflow"
 
-#: src/components/announcement/Announcements.tsx:227
+#: src/components/announcement/Announcements.tsx:234
 msgid "Earlier"
 msgstr "Earlier"
 
@@ -2648,8 +2648,8 @@ msgstr "Failed to get announcements"
 msgid "Failed to load webhooks"
 msgstr "Failed to load webhooks"
 
-#: src/components/announcement/hooks/index.ts:338
-#: src/components/announcement/hooks/index.ts:351
+#: src/components/announcement/hooks/index.ts:441
+#: src/components/announcement/hooks/index.ts:454
 msgid "Failed to mark all announcements as read"
 msgstr "Failed to mark all announcements as read"
 
@@ -2657,6 +2657,11 @@ msgstr "Failed to mark all announcements as read"
 #: src/components/announcement/hooks/index.ts:200
 msgid "Failed to mark announcement as read"
 msgstr "Failed to mark announcement as read"
+
+#: src/components/announcement/hooks/index.ts:307
+#: src/components/announcement/hooks/index.ts:325
+msgid "Failed to mark announcement as unread"
+msgstr "Failed to mark announcement as unread"
 
 #: src/components/participant/ParticipantConversationAudio.tsx:394
 msgid "Failed to reconnect. Please try reloading the page."
@@ -3483,9 +3488,13 @@ msgstr "Manage templates"
 msgid "Mark all read"
 msgstr "Mark all read"
 
-#: src/components/announcement/AnnouncementItem.tsx:147
+#: src/components/announcement/AnnouncementItem.tsx:160
 msgid "Mark as read"
 msgstr "Mark as read"
+
+#: src/components/announcement/AnnouncementItem.tsx:148
+msgid "Mark as unread"
+msgstr "Mark as unread"
 
 #: src/components/chat/templates.ts:58
 msgid "Meeting Notes"
@@ -3686,7 +3695,7 @@ msgstr "No"
 msgid "No actions found"
 msgstr "No actions found"
 
-#: src/components/announcement/Announcements.tsx:183
+#: src/components/announcement/Announcements.tsx:189
 msgid "No announcements available"
 msgstr "No announcements available"
 
@@ -4698,7 +4707,7 @@ msgstr "Register | Dembrane"
 msgid "Register as a new user"
 msgstr "Register as a new user"
 
-#: src/components/announcement/Announcements.tsx:280
+#: src/components/announcement/Announcements.tsx:287
 msgid "Release notes"
 msgstr "Release notes"
 
@@ -5360,11 +5369,11 @@ msgstr "Show data"
 msgid "Show IP addresses"
 msgstr "Show IP addresses"
 
-#: src/components/announcement/AnnouncementItem.tsx:125
+#: src/components/announcement/AnnouncementItem.tsx:126
 msgid "Show less"
 msgstr "Show less"
 
-#: src/components/announcement/AnnouncementItem.tsx:130
+#: src/components/announcement/AnnouncementItem.tsx:131
 msgid "Show more"
 msgstr "Show more"
 

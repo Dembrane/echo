@@ -32,13 +32,14 @@ type Announcement = {
 interface AnnouncementItemProps {
 	announcement: Announcement;
 	onMarkAsRead: (id: string) => void;
+	onMarkAsUnread: (id: string) => void;
 	index: number;
 }
 
 export const AnnouncementItem = forwardRef<
 	HTMLDivElement,
 	AnnouncementItemProps
->(({ announcement, onMarkAsRead, index }, ref) => {
+>(({ announcement, onMarkAsRead, onMarkAsUnread, index }, ref) => {
 	const theme = useMantineTheme();
 	const [showMore, setShowMore] = useState(false);
 	const [showReadMoreButton, setShowReadMoreButton] = useState(false);
@@ -134,7 +135,19 @@ export const AnnouncementItem = forwardRef<
 								</Button>
 							)}
 
-							{!isRead && (
+							{isRead ? (
+								<Button
+									variant="transparent"
+									size="xs"
+									color="gray"
+									className="hover:underline"
+									ml="auto"
+									onClick={() => onMarkAsUnread(announcement.id)}
+									{...testId("announcement-mark-as-unread-button")}
+								>
+									<Trans>Mark as unread</Trans>
+								</Button>
+							) : (
 								<Button
 									variant="transparent"
 									size="xs"

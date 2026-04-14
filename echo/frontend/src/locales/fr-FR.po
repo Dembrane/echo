@@ -1962,7 +1962,7 @@ msgstr "ex. Résumé hebdomadaire des parties prenantes"
 msgid "e.g., Slack Notifications, Make Workflow"
 msgstr "par exemple : Notifications Slack, Make Workflow"
 
-#: src/components/announcement/Announcements.tsx:227
+#: src/components/announcement/Announcements.tsx:234
 msgid "Earlier"
 msgstr "Plus anciennes"
 
@@ -2406,8 +2406,8 @@ msgstr "Échec de la récupération des annonces"
 msgid "Failed to load webhooks"
 msgstr "Échec du chargement des webhooks"
 
-#: src/components/announcement/hooks/index.ts:338
-#: src/components/announcement/hooks/index.ts:351
+#: src/components/announcement/hooks/index.ts:441
+#: src/components/announcement/hooks/index.ts:454
 msgid "Failed to mark all announcements as read"
 msgstr "Échec du marquage de toutes les annonces comme lues"
 
@@ -2415,6 +2415,11 @@ msgstr "Échec du marquage de toutes les annonces comme lues"
 #: src/components/announcement/hooks/index.ts:200
 msgid "Failed to mark announcement as read"
 msgstr "Échec du marquage de l'annonce comme lue"
+
+#: src/components/announcement/hooks/index.ts:307
+#: src/components/announcement/hooks/index.ts:325
+msgid "Failed to mark announcement as unread"
+msgstr ""
 
 #: src/components/participant/ParticipantConversationAudio.tsx:394
 msgid "Failed to reconnect. Please try reloading the page."
@@ -3215,9 +3220,13 @@ msgstr "Gérer les modèles"
 msgid "Mark all read"
 msgstr "Marquer toutes comme lues"
 
-#: src/components/announcement/AnnouncementItem.tsx:147
+#: src/components/announcement/AnnouncementItem.tsx:160
 msgid "Mark as read"
 msgstr "Marquer comme lue"
+
+#: src/components/announcement/AnnouncementItem.tsx:148
+msgid "Mark as unread"
+msgstr ""
 
 #: src/components/chat/templates.ts:58
 msgid "Meeting Notes"
@@ -3416,7 +3425,7 @@ msgstr "Non"
 msgid "No actions found"
 msgstr "Aucune action trouvée"
 
-#: src/components/announcement/Announcements.tsx:183
+#: src/components/announcement/Announcements.tsx:189
 msgid "No announcements available"
 msgstr "Aucune annonce disponible"
 
@@ -4481,7 +4490,7 @@ msgstr "S'enregistrer | Dembrane"
 msgid "Register as a new user"
 msgstr "S'enregistrer en tant qu'utilisateur nouveau"
 
-#: src/components/announcement/Announcements.tsx:280
+#: src/components/announcement/Announcements.tsx:287
 msgid "Release notes"
 msgstr "Notes de version"
 
@@ -5124,11 +5133,11 @@ msgstr "Afficher les données"
 msgid "Show IP addresses"
 msgstr "Afficher les adresses IP"
 
-#: src/components/announcement/AnnouncementItem.tsx:125
+#: src/components/announcement/AnnouncementItem.tsx:126
 msgid "Show less"
 msgstr "Afficher moins"
 
-#: src/components/announcement/AnnouncementItem.tsx:130
+#: src/components/announcement/AnnouncementItem.tsx:131
 msgid "Show more"
 msgstr "Afficher plus"
 
