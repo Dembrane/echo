@@ -252,6 +252,7 @@ export const Announcements = () => {
 															key={announcement.id}
 															announcement={announcement}
 															onMarkAsRead={handleMarkAsRead}
+															onMarkAsUnread={handleMarkAsUnread}
 															index={index}
 														/>
 													),
