@@ -1,4 +1,4 @@
-import { createItems, deleteItem, type Query, readItems } from "@directus/sdk";
+import { createItems, type Query, readItems, updateItem } from "@directus/sdk";
 import { t } from "@lingui/core/macro";
 import * as Sentry from "@sentry/react";
 import {
@@ -293,15 +293,17 @@ export const useMarkAsUnreadMutation = () => {
 					}),
 				);
 
-				if (activities.length > 0) {
-					return await directus.request(
-						deleteItem(
+				// Update all matching activity records to read: false
+				const updates = activities.map((activity) =>
+					directus.request(
+						updateItem(
 							"announcement_activity",
-							(activities[0] as { id: string }).id,
+							(activity as { id: string }).id,
+							{ read: false } as any,
 						),
-					);
-				}
-				return null;
+					),
+				);
+				return await Promise.all(updates);
 			} catch (error) {
 				Sentry.captureException(error);
 				toast.error(t`Failed to mark announcement as unread`);
@@ -331,7 +333,7 @@ export const useMarkAsUnreadMutation = () => {
 				queryKey: ["announcements"],
 			});
 
-			// Optimistically update infinite announcements - clear activity
+			// Optimistically update infinite announcements - set read to false
 			queryClient.setQueriesData(
 				{ queryKey: ["announcements", "infinite"] },
 				(old: any) => {
@@ -343,7 +345,12 @@ export const useMarkAsUnreadMutation = () => {
 							announcements: page.announcements.map(
 								(announcement: any) => {
 									if (announcement.id === announcementId) {
-										return { ...announcement, activity: [] };
+										return {
+											...announcement,
+											activity: announcement.activity?.map(
+												(a: any) => ({ ...a, read: false }),
+											) ?? [],
+										};
 									}
 									return announcement;
 								},
@@ -358,7 +365,12 @@ export const useMarkAsUnreadMutation = () => {
 				{ queryKey: ["announcements", "latest"] },
 				(old: any) => {
 					if (!old || old.id !== announcementId) return old;
-					return { ...old, activity: [] };
+					return {
+						...old,
+						activity: old.activity?.map(
+							(a: any) => ({ ...a, read: false }),
+						) ?? [],
+					};
 				},
 			);
 
