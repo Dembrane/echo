@@ -174,29 +174,6 @@ const ParticipantOnboardingCards = ({
 				],
 			},
 		],
-		"it-IT": [
-			...getSystemCards("it-IT", tutorialSlug, legalBasis, privacyPolicyUrl),
-			{
-				section: "Controllo Microfono",
-				slides: [
-					{
-						component: MicrophoneTestComponent,
-						content: "Assicuriamoci di poterti sentire.",
-						title: "Controllo Microfono",
-						type: "microphone",
-					},
-				],
-			},
-			{
-				section: "Pronti a iniziare?",
-				slides: [
-					{
-						component: InitiateFormComponent,
-						title: "Pronti a iniziare?",
-					},
-				],
-			},
-		],
 		"nl-NL": [
 			...getSystemCards("nl-NL", tutorialSlug, legalBasis, privacyPolicyUrl),
 			{
@@ -216,29 +193,6 @@ const ParticipantOnboardingCards = ({
 					{
 						component: InitiateFormComponent,
 						title: "Klaar om te beginnen?",
-					},
-				],
-			},
-		],
-		"uk-UA": [
-			...getSystemCards("uk-UA", tutorialSlug, legalBasis, privacyPolicyUrl),
-			{
-				section: "Перевірка мікрофона",
-				slides: [
-					{
-						component: MicrophoneTestComponent,
-						content: "Переконаймось, що ми вас чуємо.",
-						title: "Перевірка мікрофона",
-						type: "microphone",
-					},
-				],
-			},
-			{
-				section: "Почати",
-				slides: [
-					{
-						component: InitiateFormComponent,
-						title: "Готові розпочати?",
 					},
 				],
 			},
