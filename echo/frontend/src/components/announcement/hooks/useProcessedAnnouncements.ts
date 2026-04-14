@@ -31,6 +31,7 @@ export const isWhatsNew = (announcement: Announcement): boolean => {
 
 export interface ProcessedAnnouncement {
 	id: string;
+	activityIds: string[];
 	created_at: string | Date | null | undefined;
 	expires_at?: string | Date | null | undefined;
 	level: "info" | "urgent";
@@ -45,6 +46,9 @@ function processAnnouncement(
 ): ProcessedAnnouncement {
 	const { title, message } = getTranslatedContent(announcement, language);
 	return {
+		activityIds: ((announcement.activity as AnnouncementActivity[]) || [])
+			.map((a) => a.id)
+			.filter(Boolean) as string[],
 		created_at: announcement.created_at,
 		expires_at: announcement.expires_at,
 		id: announcement.id,

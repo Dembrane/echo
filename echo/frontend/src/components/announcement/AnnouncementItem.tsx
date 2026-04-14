@@ -21,6 +21,7 @@ import { useFormatDate } from "./utils/dateUtils";
 
 type Announcement = {
 	id: string;
+	activityIds: string[];
 	title: string;
 	message: string;
 	created_at: string | Date | null | undefined;
@@ -32,7 +33,7 @@ type Announcement = {
 interface AnnouncementItemProps {
 	announcement: Announcement;
 	onMarkAsRead: (id: string) => void;
-	onMarkAsUnread: (id: string) => void;
+	onMarkAsUnread: (id: string, activityIds: string[]) => void;
 	index: number;
 }
 
@@ -142,7 +143,7 @@ export const AnnouncementItem = forwardRef<
 									color="gray"
 									className="hover:underline"
 									ml="auto"
-									onClick={() => onMarkAsUnread(announcement.id)}
+									onClick={() => onMarkAsUnread(announcement.id, announcement.activityIds)}
 									{...testId("announcement-mark-as-unread-button")}
 								>
 									<Trans>Mark as unread</Trans>

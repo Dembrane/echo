@@ -278,27 +278,21 @@ export const useMarkAsReadMutation = () => {
 
 export const useMarkAsUnreadMutation = () => {
 	const queryClient = useQueryClient();
-	const { data: currentUser } = useCurrentUser();
 
 	return useMutation({
-		mutationFn: async ({ announcementId }: { announcementId: string }) => {
+		mutationFn: async ({
+			announcementId,
+			activityIds,
+		}: {
+			announcementId: string;
+			activityIds: string[];
+		}) => {
 			try {
-				const activities = await directus.request(
-					readItems("announcement_activity", {
-						filter: {
-							announcement_activity: { _eq: announcementId },
-							user_id: { _eq: currentUser?.id },
-						},
-						fields: ["id"],
-					}),
-				);
-
-				// Update all matching activity records to read: false
-				const updates = activities.map((activity) =>
+				const updates = activityIds.map((id) =>
 					directus.request(
 						updateItem(
 							"announcement_activity",
-							(activity as { id: string }).id,
+							id,
 							{ read: false } as any,
 						),
 					),

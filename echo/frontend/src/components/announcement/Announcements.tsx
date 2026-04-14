@@ -134,8 +134,8 @@ export const Announcements = () => {
 		markAsReadMutation.mutate({ announcementId: id });
 	};
 
-	const handleMarkAsUnread = async (id: string) => {
-		markAsUnreadMutation.mutate({ announcementId: id });
+	const handleMarkAsUnread = async (id: string, activityIds: string[]) => {
+		markAsUnreadMutation.mutate({ announcementId: id, activityIds });
 	};
 
 	const handleMarkAllAsRead = async () => {
