@@ -55,7 +55,9 @@ function processAnnouncement(
 		level: announcement.level as "info" | "urgent",
 		message,
 		read:
-			(announcement.activity?.[0] as AnnouncementActivity)?.read || false,
+			(announcement.activity as AnnouncementActivity[])?.some(
+				(a) => a.read === true,
+			) ?? false,
 		title,
 	};
 }
