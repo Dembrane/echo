@@ -569,6 +569,18 @@ export const TemplatesModal = ({
 										<PencilSimpleIcon size={12} />
 									</ActionIcon>
 								</Tooltip>
+								<Tooltip label={t`Duplicate`}>
+									<ActionIcon
+										size="xs"
+										variant="subtle"
+										onClick={(e) => {
+											e.stopPropagation();
+											handleDuplicate(tmpl.title, tmpl.content);
+										}}
+									>
+										<CopyIcon size={12} />
+									</ActionIcon>
+								</Tooltip>
 								<Tooltip label={t`Delete`}>
 									<ActionIcon
 										size="xs"

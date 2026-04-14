@@ -811,7 +811,7 @@ msgstr "All files were uploaded successfully."
 #~ msgid "All templates"
 #~ msgstr "All templates"
 
-#: src/components/chat/TemplatesModal.tsx:783
+#: src/components/chat/TemplatesModal.tsx:795
 msgid "All Templates"
 msgstr "All Templates"
 
@@ -1193,12 +1193,12 @@ msgid "Back"
 msgstr "Back"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:426
+#: src/components/participant/ParticipantOnboardingCards.tsx:379
 msgid "participant.button.back.microphone"
 msgstr "Back"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:448
+#: src/components/participant/ParticipantOnboardingCards.tsx:401
 #: src/components/layout/ParticipantHeader.tsx:86
 msgid "participant.button.back"
 msgstr "Back"
@@ -1349,7 +1349,7 @@ msgstr "Cannot reschedule within 10 minutes of the scheduled time"
 msgid "Card"
 msgstr "Card"
 
-#: src/components/language/LanguagePicker.tsx:131
+#: src/components/language/LanguagePicker.tsx:144
 msgid "Change language"
 msgstr "Change language"
 
@@ -1365,7 +1365,7 @@ msgstr "Change password"
 msgid "Changes will be saved automatically"
 msgstr "Changes will be saved automatically"
 
-#: src/components/language/LanguagePicker.tsx:133
+#: src/components/language/LanguagePicker.tsx:146
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 
@@ -1598,17 +1598,17 @@ msgstr "Context added:"
 #~ msgid "Context limit reached"
 #~ msgstr "Context limit reached"
 
-#: src/components/chat/TemplatesModal.tsx:655
+#: src/components/chat/TemplatesModal.tsx:667
 msgid "Contextual suggestions"
 msgstr "Contextual suggestions"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:435
+#: src/components/participant/ParticipantOnboardingCards.tsx:388
 #: src/components/participant/MicrophoneTest.tsx:407
 msgid "participant.button.continue"
 msgstr "Continue"
 
-#: src/components/language/LanguagePicker.tsx:134
+#: src/components/language/LanguagePicker.tsx:147
 msgid "Continue"
 msgstr "Continue"
 
@@ -1806,7 +1806,7 @@ msgstr "Create new view"
 msgid "Create Report"
 msgstr "Create Report"
 
-#: src/components/chat/TemplatesModal.tsx:702
+#: src/components/chat/TemplatesModal.tsx:714
 msgid "Create template"
 msgstr "Create template"
 
@@ -1913,7 +1913,7 @@ msgstr "Delegate multi-step analysis with live tool execution"
 #: src/components/conversation/ConversationDangerZone.tsx:87
 #: src/components/chat/TemplatesModal.tsx:411
 #: src/components/chat/TemplatesModal.tsx:469
-#: src/components/chat/TemplatesModal.tsx:572
+#: src/components/chat/TemplatesModal.tsx:584
 #: src/components/chat/ChatAccordion.tsx:178
 msgid "Delete"
 msgstr "Delete"
@@ -2139,6 +2139,7 @@ msgid "Drag to reorder"
 msgstr "Drag to reorder"
 
 #: src/components/chat/TemplatesModal.tsx:544
+#: src/components/chat/TemplatesModal.tsx:572
 msgid "Duplicate"
 msgstr "Duplicate"
 
@@ -3554,7 +3555,7 @@ msgstr "Move to Project"
 msgid "Must be at least 10 minutes in the future"
 msgstr "Має бути щонайменше через 10 хвилин"
 
-#: src/components/chat/TemplatesModal.tsx:797
+#: src/components/chat/TemplatesModal.tsx:809
 msgid "My templates"
 msgstr "My templates"
 
@@ -3646,7 +3647,7 @@ msgid "Newest First"
 msgstr "Newest First"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:464
+#: src/components/participant/ParticipantOnboardingCards.tsx:417
 msgid "participant.button.next"
 msgstr "Next"
 
@@ -3740,7 +3741,7 @@ msgstr "No conversations found. Start a conversation using the participation inv
 msgid "select.all.modal.no.conversations"
 msgstr "No conversations were processed. This may happen if all conversations are already in context or don't match the selected filters."
 
-#: src/components/report/CreateReportForm.tsx:134
+#: src/components/report/CreateReportForm.tsx:143
 #~ msgid "No conversations yet"
 #~ msgstr "No conversations yet"
 
@@ -3810,7 +3811,7 @@ msgstr "No tags found"
 msgid "No tags have been added to this project yet. Add a tag using the text input above to get started."
 msgstr "No tags have been added to this project yet. Add a tag using the text input above to get started."
 
-#: src/components/chat/TemplatesModal.tsx:812
+#: src/components/chat/TemplatesModal.tsx:824
 msgid "No templates match '{searchQuery}'"
 msgstr "No templates match '{searchQuery}'"
 
@@ -4144,7 +4145,7 @@ msgstr "Оберiть дату"
 msgid "Pick the approach that fits your question"
 msgstr "Pick the approach that fits your question"
 
-#: src/components/chat/TemplatesModal.tsx:609
+#: src/components/chat/TemplatesModal.tsx:621
 msgid "Pin"
 msgstr "Pin"
 
@@ -4152,7 +4153,7 @@ msgstr "Pin"
 msgid "Pin project"
 msgstr "Pin project"
 
-#: src/components/chat/TemplatesModal.tsx:767
+#: src/components/chat/TemplatesModal.tsx:779
 msgid "Pin templates here for quick access."
 msgstr "Pin templates here for quick access."
 
@@ -4164,11 +4165,11 @@ msgstr "Pin templates here for quick access."
 #~ msgid "pinned"
 #~ msgstr "pinned"
 
-#: src/components/chat/TemplatesModal.tsx:608
+#: src/components/chat/TemplatesModal.tsx:620
 msgid "Pinned is full (max 5)"
 msgstr "Pinned is full (max 5)"
 
-#: src/components/chat/TemplatesModal.tsx:737
+#: src/components/chat/TemplatesModal.tsx:749
 msgid "Pinned templates"
 msgstr "Pinned templates"
 
@@ -4579,7 +4580,7 @@ msgid "Read aloud"
 msgstr "Read aloud"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:311
+#: src/components/participant/ParticipantOnboardingCards.tsx:264
 msgid "participant.ready.to.begin"
 msgstr "Ready to Begin?"
 
@@ -5093,7 +5094,7 @@ msgstr "Search projects..."
 msgid "Search tags"
 msgstr "Search tags"
 
-#: src/components/chat/TemplatesModal.tsx:675
+#: src/components/chat/TemplatesModal.tsx:687
 msgid "Search templates..."
 msgstr "Search templates..."
 
@@ -5398,7 +5399,7 @@ msgid "participant.button.verify_prompt.skip"
 msgstr "Skip"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:335
+#: src/components/participant/ParticipantOnboardingCards.tsx:288
 msgid "participant.mic.check.button.skip"
 msgstr "Skip"
 
@@ -5605,7 +5606,7 @@ msgstr "Submit"
 msgid "Success"
 msgstr "Success"
 
-#: src/components/chat/TemplatesModal.tsx:665
+#: src/components/chat/TemplatesModal.tsx:677
 msgid "Suggest dynamic suggestions based on your conversation."
 msgstr "Suggest dynamic suggestions based on your conversation."
 
@@ -6051,7 +6052,7 @@ msgstr "Title auto-generated"
 msgid "To assign a new tag, please create it first in the project overview."
 msgstr "To assign a new tag, please create it first in the project overview."
 
-#: src/components/report/CreateReportForm.tsx:137
+#: src/components/report/CreateReportForm.tsx:146
 #~ msgid "To generate a report, please start by adding conversations in your project"
 #~ msgstr "To generate a report, please start by adding conversations in your project"
 
@@ -6299,7 +6300,7 @@ msgstr "Unknown"
 msgid "Unknown reason"
 msgstr "Unknown reason"
 
-#: src/components/chat/TemplatesModal.tsx:591
+#: src/components/chat/TemplatesModal.tsx:603
 msgid "Unpin"
 msgstr "Unpin"
 
@@ -6706,7 +6707,7 @@ msgstr "Welcome back"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:626
 msgid "Welcome to Dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
-msgstr "Welcome to dembrane Chat! Use the sidebar to select resources and conversations that you want to analyse. Then, you can ask questions about the selected resources and conversations."
+msgstr "Ласкаво просимо до dembrane Chat! Використовуйте бічну панель, щоб обрати ресурси та розмови, які ви хочете проаналізувати. Потім ви зможете ставити запитання щодо обраних ресурсів і розмов."
 
 #: src/components/common/DembraneLoadingSpinner/index.tsx:23
 msgid "Welcome to Dembrane!"
@@ -6718,7 +6719,7 @@ msgstr "Welcome to Dembrane!"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:625
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
-msgstr "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
+msgstr "Ласкаво просимо в режим Огляду! Я завантажив підсумки всіх ваших розмов. Запитуйте мене про закономірності, теми та висновки у ваших даних. Для точних цитат розпочніть нову бесіду в режимі Конкретного Контексту."
 
 #: src/components/report/CreateReportForm.tsx:80
 #~ msgid "Welcome to Reports!"

@@ -620,7 +620,7 @@ msgstr "Alle Dateien wurden erfolgreich hochgeladen."
 #~ msgid "All templates"
 #~ msgstr "Alle Vorlagen"
 
-#: src/components/chat/TemplatesModal.tsx:783
+#: src/components/chat/TemplatesModal.tsx:795
 msgid "All Templates"
 msgstr "Alle Vorlagen"
 
@@ -980,12 +980,12 @@ msgid "Back"
 msgstr "Zurück"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:426
+#: src/components/participant/ParticipantOnboardingCards.tsx:379
 msgid "participant.button.back.microphone"
 msgstr "Zurück"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:448
+#: src/components/participant/ParticipantOnboardingCards.tsx:401
 #: src/components/layout/ParticipantHeader.tsx:86
 msgid "participant.button.back"
 msgstr "Zurück"
@@ -1132,7 +1132,7 @@ msgstr "Kann nicht innerhalb von 10 Minuten vor dem geplanten Zeitpunkt umgeplan
 msgid "Card"
 msgstr "Karte"
 
-#: src/components/language/LanguagePicker.tsx:131
+#: src/components/language/LanguagePicker.tsx:144
 msgid "Change language"
 msgstr "Sprache ändern"
 
@@ -1147,7 +1147,7 @@ msgstr "Passwort ändern"
 msgid "Changes will be saved automatically"
 msgstr "Änderungen werden automatisch gespeichert"
 
-#: src/components/language/LanguagePicker.tsx:133
+#: src/components/language/LanguagePicker.tsx:146
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Das Ändern der Sprache während eines aktiven Chats kann unerwartete Ergebnisse hervorrufen. Es wird empfohlen, ein neues Gespräch zu beginnen, nachdem die Sprache geändert wurde. Sind Sie sicher, dass Sie fortfahren möchten?"
 
@@ -1374,17 +1374,17 @@ msgstr "Kontext hinzugefügt:"
 #~ msgid "Context limit reached"
 #~ msgstr "Kontextlimit erreicht"
 
-#: src/components/chat/TemplatesModal.tsx:655
+#: src/components/chat/TemplatesModal.tsx:667
 msgid "Contextual suggestions"
 msgstr "Kontextbezogene Vorschläge"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:435
+#: src/components/participant/ParticipantOnboardingCards.tsx:388
 #: src/components/participant/MicrophoneTest.tsx:407
 msgid "participant.button.continue"
 msgstr "Weiter"
 
-#: src/components/language/LanguagePicker.tsx:134
+#: src/components/language/LanguagePicker.tsx:147
 msgid "Continue"
 msgstr "Weiter"
 
@@ -1578,7 +1578,7 @@ msgstr "Neue Ansicht erstellen"
 msgid "Create Report"
 msgstr "Bericht erstellen"
 
-#: src/components/chat/TemplatesModal.tsx:702
+#: src/components/chat/TemplatesModal.tsx:714
 msgid "Create template"
 msgstr "Vorlage erstellen"
 
@@ -1696,7 +1696,7 @@ msgstr "Multistufige Analyse mit live Werkzeugausführung delegieren"
 #: src/components/conversation/ConversationDangerZone.tsx:87
 #: src/components/chat/TemplatesModal.tsx:411
 #: src/components/chat/TemplatesModal.tsx:469
-#: src/components/chat/TemplatesModal.tsx:572
+#: src/components/chat/TemplatesModal.tsx:584
 #: src/components/chat/ChatAccordion.tsx:178
 msgid "Delete"
 msgstr "Löschen"
@@ -1911,6 +1911,7 @@ msgid "Drag to reorder"
 msgstr "Ziehen, um umzusortieren"
 
 #: src/components/chat/TemplatesModal.tsx:544
+#: src/components/chat/TemplatesModal.tsx:572
 msgid "Duplicate"
 msgstr "Duplizieren"
 
@@ -3267,7 +3268,7 @@ msgstr "Gespräch zu einem anderen Projekt verschieben"
 msgid "Must be at least 10 minutes in the future"
 msgstr "Muss mindestens 10 Minuten in der Zukunft liegen"
 
-#: src/components/chat/TemplatesModal.tsx:797
+#: src/components/chat/TemplatesModal.tsx:809
 msgid "My templates"
 msgstr "Meine Vorlagen"
 
@@ -3358,7 +3359,7 @@ msgid "Newest First"
 msgstr "Neueste zuerst"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:464
+#: src/components/participant/ParticipantOnboardingCards.tsx:417
 msgid "participant.button.next"
 msgstr "Weiter"
 
@@ -3450,7 +3451,7 @@ msgstr "Keine Gespräche gefunden. Starten Sie ein Gespräch über den Teilnahme
 msgid "select.all.modal.no.conversations"
 msgstr "Es wurden keine Unterhaltungen verarbeitet. Dies kann passieren, wenn alle Unterhaltungen bereits im Kontext sind oder nicht den ausgewählten Filtern entsprechen."
 
-#: src/components/report/CreateReportForm.tsx:134
+#: src/components/report/CreateReportForm.tsx:143
 #~ msgid "No conversations yet"
 #~ msgstr "Noch keine Gespräche"
 
@@ -3515,7 +3516,7 @@ msgstr "Keine Tags gefunden"
 msgid "No tags have been added to this project yet. Add a tag using the text input above to get started."
 msgstr "Diesem Projekt wurden noch keine Tags hinzugefügt. Fügen Sie ein Tag über die Texteingabe oben hinzu, um zu beginnen."
 
-#: src/components/chat/TemplatesModal.tsx:812
+#: src/components/chat/TemplatesModal.tsx:824
 msgid "No templates match '{searchQuery}'"
 msgstr "Keine Vorlagen für '{searchQuery}' gefunden"
 
@@ -3943,7 +3944,7 @@ msgstr "Wahlen Sie ein Datum"
 msgid "Pick the approach that fits your question"
 msgstr "Wähl den Ansatz, der zu deiner Frage passt"
 
-#: src/components/chat/TemplatesModal.tsx:609
+#: src/components/chat/TemplatesModal.tsx:621
 msgid "Pin"
 msgstr "Anheften"
 
@@ -3951,7 +3952,7 @@ msgstr "Anheften"
 msgid "Pin project"
 msgstr "Projekt anheften"
 
-#: src/components/chat/TemplatesModal.tsx:767
+#: src/components/chat/TemplatesModal.tsx:779
 msgid "Pin templates here for quick access."
 msgstr "Vorlagen hier für schnellen Zugriff anheften."
 
@@ -3963,11 +3964,11 @@ msgstr "Vorlagen hier für schnellen Zugriff anheften."
 #~ msgid "pinned"
 #~ msgstr "angeheftet"
 
-#: src/components/chat/TemplatesModal.tsx:608
+#: src/components/chat/TemplatesModal.tsx:620
 msgid "Pinned is full (max 5)"
 msgstr "Angeheftet ist voll (max. 5)"
 
-#: src/components/chat/TemplatesModal.tsx:737
+#: src/components/chat/TemplatesModal.tsx:749
 msgid "Pinned templates"
 msgstr "Angeheftete Vorlagen"
 
@@ -4344,7 +4345,7 @@ msgid "Read aloud"
 msgstr "Vorlesen"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:311
+#: src/components/participant/ParticipantOnboardingCards.tsx:264
 msgid "participant.ready.to.begin"
 msgstr "Bereit zum Beginn"
 
@@ -4843,7 +4844,7 @@ msgstr "Projekte suchen..."
 msgid "Search tags"
 msgstr "Tags suchen"
 
-#: src/components/chat/TemplatesModal.tsx:675
+#: src/components/chat/TemplatesModal.tsx:687
 msgid "Search templates..."
 msgstr "Vorlagen suchen..."
 
@@ -5139,7 +5140,7 @@ msgid "participant.button.verify_prompt.skip"
 msgstr "Überspringen"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:335
+#: src/components/participant/ParticipantOnboardingCards.tsx:288
 msgid "participant.mic.check.button.skip"
 msgstr "Überspringen"
 
@@ -5336,7 +5337,7 @@ msgstr "Absenden"
 msgid "Success"
 msgstr "Erfolg"
 
-#: src/components/chat/TemplatesModal.tsx:665
+#: src/components/chat/TemplatesModal.tsx:677
 msgid "Suggest dynamic suggestions based on your conversation."
 msgstr "Dynamische Vorschläge basierend auf Ihrem Gespräch vorschlagen."
 
@@ -5750,7 +5751,7 @@ msgstr "Titel automatisch generiert"
 msgid "To assign a new tag, please create it first in the project overview."
 msgstr "Um ein neues Tag zuzuweisen, erstellen Sie es bitte zuerst in der Projektübersicht."
 
-#: src/components/report/CreateReportForm.tsx:137
+#: src/components/report/CreateReportForm.tsx:146
 #~ msgid "To generate a report, please start by adding conversations in your project"
 #~ msgstr "Um einen Bericht zu generieren, fügen Sie bitte zuerst Gespräche in Ihr Projekt hinzu"
 
@@ -5988,7 +5989,7 @@ msgstr "Unbekannt"
 msgid "Unknown reason"
 msgstr "Unbekannter Grund"
 
-#: src/components/chat/TemplatesModal.tsx:591
+#: src/components/chat/TemplatesModal.tsx:603
 msgid "Unpin"
 msgstr "Loslösen"
 
