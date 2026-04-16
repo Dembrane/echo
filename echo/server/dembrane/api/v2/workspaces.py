@@ -1,5 +1,6 @@
 """V2 workspace endpoints — list, create, manage workspaces."""
 
+from datetime import datetime, timezone
 from logging import getLogger
 from typing import Optional
 
@@ -24,7 +25,7 @@ logger = getLogger("api.v2.workspaces")
 
 
 async def _get_workspace_usage(ws_id: str) -> WorkspaceUsage:
-    """Get audio hours + conversation count for a workspace."""
+    """Get audio hours + conversation count for a workspace (all-time and current month)."""
     # Get all projects in this workspace
     projects = await async_directus.get_items(
         "project",
@@ -44,7 +45,7 @@ async def _get_workspace_usage(ws_id: str) -> WorkspaceUsage:
 
     project_ids = [p["id"] for p in projects]
 
-    # Get all conversations across those projects
+    # Get all conversations across those projects (include created_at for monthly filtering)
     conversations = await async_directus.get_items(
         "conversation",
         {
@@ -53,7 +54,7 @@ async def _get_workspace_usage(ws_id: str) -> WorkspaceUsage:
                     "project_id": {"_in": project_ids},
                     "deleted_at": {"_null": True},
                 },
-                "fields": ["duration"],
+                "fields": ["duration", "created_at"],
                 "limit": -1,
             }
         },
@@ -61,11 +62,25 @@ async def _get_workspace_usage(ws_id: str) -> WorkspaceUsage:
     if not isinstance(conversations, list):
         return WorkspaceUsage()
 
+    # All-time totals
     total_seconds = sum(c.get("duration") or 0 for c in conversations)
+
+    # Current month totals
+    now = datetime.now(timezone.utc)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+    monthly_seconds = 0
+    monthly_count = 0
+    for c in conversations:
+        created_at = c.get("created_at")
+        if created_at and created_at >= month_start:
+            monthly_seconds += c.get("duration") or 0
+            monthly_count += 1
 
     return WorkspaceUsage(
         audio_hours=round(total_seconds / 3600, 1),
         conversation_count=len(conversations),
+        audio_hours_this_month=round(monthly_seconds / 3600, 1),
+        conversations_this_month=monthly_count,
     )
 
 
@@ -265,6 +280,8 @@ async def list_workspaces(
                 total_audio_hours=round(sum(w.usage.audio_hours for w in team_workspaces), 1),
                 total_conversations=sum(w.usage.conversation_count for w in team_workspaces),
                 workspace_count=len(team_workspaces),
+                total_audio_hours_this_month=round(sum(w.usage.audio_hours_this_month for w in team_workspaces), 1),
+                total_conversations_this_month=sum(w.usage.conversations_this_month for w in team_workspaces),
             ))
 
     return WorkspaceListResponse(workspaces=results, teams=teams)

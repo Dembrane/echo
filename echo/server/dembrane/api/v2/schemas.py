@@ -55,10 +55,13 @@ class MemberPreview(BaseModel):
 
 
 class WorkspaceUsage(BaseModel):
-    """Usage stats for a workspace."""
+    """Usage stats for a workspace (all-time + current month)."""
 
     audio_hours: float = 0.0
     conversation_count: int = 0
+    # Current calendar month
+    audio_hours_this_month: float = 0.0
+    conversations_this_month: int = 0
 
 
 class WorkspaceSummary(BaseModel):
@@ -87,6 +90,9 @@ class TeamRollup(BaseModel):
     total_audio_hours: float = 0.0
     total_conversations: int = 0
     workspace_count: int = 0
+    # Current calendar month
+    total_audio_hours_this_month: float = 0.0
+    total_conversations_this_month: int = 0
 
 
 class WorkspaceListResponse(BaseModel):
