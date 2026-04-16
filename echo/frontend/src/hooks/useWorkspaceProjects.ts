@@ -14,9 +14,11 @@ interface V2ProjectSummary {
 }
 
 interface V2ProjectsResponse {
+	pinned: V2ProjectSummary[];
 	projects: V2ProjectSummary[];
 	total_count: number;
 	has_more: boolean;
+	is_admin: boolean;
 }
 
 async function fetchWorkspaceProjects(
@@ -35,7 +37,7 @@ async function fetchWorkspaceProjects(
 		{ credentials: "include" },
 	);
 	if (!res.ok) {
-		return { projects: [], total_count: 0, has_more: false };
+		return { pinned: [], projects: [], total_count: 0, has_more: false, is_admin: false };
 	}
 	return res.json();
 }
@@ -77,7 +79,7 @@ export const useWorkspaceProjects = ({
 		getNextPageParam: (lastPage: V2ProjectsResponse, _allPages, lastPageParam) =>
 			lastPage.has_more ? lastPageParam + 1 : undefined,
 		queryFn: async ({ pageParam = 0 }) => {
-			if (!workspaceId) return { projects: [], total_count: 0, has_more: false };
+			if (!workspaceId) return { pinned: [], projects: [], total_count: 0, has_more: false, is_admin: false };
 			return fetchWorkspaceProjects(workspaceId, pageParam * limit, limit, search);
 		},
 	});

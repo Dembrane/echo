@@ -52,12 +52,18 @@ async def complete_onboarding(
         if not profile:
             raise HTTPException(status_code=404, detail="Directus user not found")
 
-        app_user = await create_app_user(
-            directus_user_id=directus_user_id,
-            email=profile.get("email", ""),
-            display_name=profile.get("display_name", ""),
-        )
-        logger.info(f"Created app_user {app_user['id']} for directus user {directus_user_id}")
+        try:
+            app_user = await create_app_user(
+                directus_user_id=directus_user_id,
+                email=profile.get("email", ""),
+                display_name=profile.get("display_name", ""),
+            )
+            logger.info(f"Created app_user {app_user['id']} for directus user {directus_user_id}")
+        except Exception:
+            # Race condition: another request created it first. Retry resolve.
+            app_user = await resolve_app_user(directus_user_id)
+            if not app_user:
+                raise HTTPException(status_code=500, detail="Failed to create user profile")
 
     app_user_id = app_user["id"]
     app_user_email = app_user.get("email", "")

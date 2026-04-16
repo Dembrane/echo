@@ -119,6 +119,10 @@ const CreateWorkspaceRoute = createLazyNamedRoute(
 	() => import("./routes/workspaces/CreateWorkspaceRoute"),
 	"CreateWorkspaceRoute",
 );
+const WorkspaceSettingsRoute = createLazyNamedRoute(
+	() => import("./routes/workspaces/WorkspaceSettingsRoute"),
+	"WorkspaceSettingsRoute",
+);
 
 export const mainRouter = createBrowserRouter([
 	{
@@ -194,6 +198,10 @@ export const mainRouter = createBrowserRouter([
 					{
 						element: <CreateWorkspaceRoute />,
 						path: "new",
+					},
+					{
+						element: <WorkspaceSettingsRoute />,
+						path: ":workspaceId/settings",
 					},
 				],
 				element: (

@@ -25,9 +25,11 @@ class V2ProjectSummary(BaseModel):
 
 
 class V2ProjectsListResponse(BaseModel):
+    pinned: list[V2ProjectSummary] = []
     projects: list[V2ProjectSummary]
     total_count: int
     has_more: bool
+    is_admin: bool = False
 
 
 @router.get("/{workspace_id}/projects", response_model=V2ProjectsListResponse)
@@ -81,10 +83,31 @@ async def list_workspace_projects(
     else:
         total_count = offset + len(projects) + (1 if has_more else 0)
 
+    # Fetch pinned projects (separate query, always shown regardless of search)
+    pinned_raw = await async_directus.get_items("project", {"query": {
+        "fields": ["id", "name", "updated_at", "language", "pin_order", "count(conversations)"],
+        "filter": {**base_filter, "pin_order": {"_nnull": True}},
+        "sort": ["pin_order"],
+        "limit": 3,
+    }})
+    pinned = [
+        V2ProjectSummary(
+            id=p["id"],
+            name=p.get("name"),
+            updated_at=p.get("updated_at"),
+            language=p.get("language"),
+            pin_order=p.get("pin_order"),
+            conversations_count=int(p.get("conversations_count", 0) or 0),
+        )
+        for p in (pinned_raw if isinstance(pinned_raw, list) else [])
+    ]
+
     return V2ProjectsListResponse(
+        pinned=pinned,
         projects=projects,
         total_count=total_count,
         has_more=has_more,
+        is_admin=ctx.role in ("admin", "owner"),
     )
 
 

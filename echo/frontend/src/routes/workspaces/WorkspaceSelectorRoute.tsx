@@ -265,6 +265,10 @@ export const WorkspaceSelectorRoute = () => {
 											size="xs"
 											color="gray"
 											leftSection={<IconSettings size={14} />}
+											onClick={() => {
+												const firstWs = group.workspaces[0];
+												if (firstWs) navigate(`/workspaces/${firstWs.id}/settings`);
+											}}
 										>
 											<Trans>Manage</Trans>
 										</Button>
