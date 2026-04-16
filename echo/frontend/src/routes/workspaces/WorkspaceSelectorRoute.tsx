@@ -147,7 +147,7 @@ function WorkspaceCard({
 						members={workspace.members_preview}
 						count={workspace.member_count}
 					/>
-					<Text size="xs" c="dimmed">
+					<Text size="xs" c="dimmed" style={{ textTransform: "capitalize" }}>
 						{workspace.role}
 					</Text>
 				</Group>

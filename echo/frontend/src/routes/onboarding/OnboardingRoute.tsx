@@ -61,6 +61,7 @@ export const OnboardingRoute = () => {
 	const { setWorkspace } = useWorkspace();
 
 	const displayName = (user.data as Record<string, string>)?.first_name || "";
+	const hasInvites = meV2?.has_pending_invites === true;
 	const defaultOrgName = displayName ? `${displayName}'s Team` : "";
 
 	const [orgName, setOrgName] = useState(defaultOrgName);
@@ -95,8 +96,16 @@ export const OnboardingRoute = () => {
 		},
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "me"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
 			setWorkspaceId(data.workspace_id);
 			setWorkspace(data.workspace_id);
+
+			// Invited users skip the invite step — they don't have a team to invite
+			if (hasInvites) {
+				navigate("/projects");
+				return;
+			}
+
 			setReady(false);
 			setTimeout(() => {
 				setStep("invite");
@@ -328,21 +337,32 @@ export const OnboardingRoute = () => {
 				>
 					<Stack gap={24}>
 						<Stack gap={6}>
-							<Title order={3} fw={500}>
-								{displayName ? (
+							<Title order={3} fw={400}>
+								{hasInvites ? (
+									displayName ? (
+										<Trans>Welcome, {displayName}</Trans>
+									) : (
+										<Trans>Welcome to dembrane</Trans>
+									)
+								) : displayName ? (
 									<Trans>
-										{displayName}, your projects just got a new home
+										Welcome back, {displayName}
 									</Trans>
 								) : (
-									<Trans>Your projects just got a new home</Trans>
+									<Trans>Set up your workspace</Trans>
 								)}
 							</Title>
 							<Text size="sm" c="dimmed" lh={1.6}>
-								<Trans>
-									Everything is right where you left it. Now, with teams and
-									workspaces, you can also invite your colleagues, share reports
-									across projects, and organize work into dedicated spaces.
-								</Trans>
+								{hasInvites ? (
+									<Trans>
+										Your team is waiting for you. Just one quick step to get set up.
+									</Trans>
+								) : (
+									<Trans>
+										We added workspaces so you can organize projects and share
+										them with colleagues. Everything you had before is still here.
+									</Trans>
+								)}
 							</Text>
 						</Stack>
 

@@ -7,6 +7,7 @@ from logging import getLogger
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
+from dembrane.api.rate_limit import create_user_rate_limiter
 
 from dembrane.utils import generate_uuid
 from dembrane.email import send_email
@@ -21,6 +22,7 @@ router = APIRouter()
 logger = getLogger("api.v2.invites")
 
 settings = get_settings()
+_invite_rate_limiter = create_user_rate_limiter(name="workspace_invite", capacity=20, window_seconds=3600)
 
 
 @router.post("/{workspace_id}/invite", response_model=WorkspaceInviteResponse)
@@ -40,6 +42,8 @@ async def invite_to_workspace(
       → When they register + onboard, the invite is auto-accepted (status: "invited")
     """
     ctx.require_policy("member:invite")
+
+    await _invite_rate_limiter.check(ctx.app_user_id)
 
     email = body.email.strip().lower()
     role = body.role

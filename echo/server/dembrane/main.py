@@ -50,6 +50,11 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     yield
     # shutdown
     logger.info("shutting down server")
+    try:
+        from dembrane.directus_async import async_directus
+        await async_directus.close()
+    except Exception:
+        logger.exception("Failed to close async Directus client")
 
 
 docs_url = None

@@ -21,7 +21,7 @@ import { ADMIN_BASE_URL } from "@/config";
 import { testId } from "@/lib/testUtils";
 
 export const RegisterRoute = () => {
-	useDocumentTitle(t`Register | Dembrane`);
+	useDocumentTitle(t`Register | dembrane`);
 	const { register, handleSubmit } = useForm<{
 		email: string;
 		password: string;
@@ -133,7 +133,7 @@ export const RegisterRoute = () => {
 						</Stack>
 					</form>
 
-					<Divider variant="dashed" label="or" labelPosition="center" />
+					<Divider variant="dashed" label={t`or`} labelPosition="center" />
 
 					<I18nLink to="/login">
 						<Button
@@ -142,7 +142,7 @@ export const RegisterRoute = () => {
 							fullWidth
 							{...testId("auth-register-switch-to-login-button")}
 						>
-							<Trans>Login as an existing user</Trans>
+							<Trans>Already have an account? Log in</Trans>
 						</Button>
 					</I18nLink>
 				</Stack>

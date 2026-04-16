@@ -57,7 +57,7 @@ import { testId } from "@/lib/testUtils";
 // };
 
 export const LoginRoute = () => {
-	useDocumentTitle(t`Login | Dembrane`);
+	useDocumentTitle(t`Login | dembrane`);
 	const { register, handleSubmit, setValue, getValues } = useForm<{
 		email: string;
 		password: string;
@@ -159,15 +159,6 @@ export const LoginRoute = () => {
 			// Deep link takes priority
 			if (!!next && next !== "/login") {
 				navigate(next);
-				return;
-			}
-
-			if (isNewUser) {
-				toast(t`Setting up your first project`);
-				const project = await createProjectMutation.mutateAsync({
-					name: t`New Project`,
-				});
-				navigate(`/projects/${project.id}`);
 				return;
 			}
 
@@ -351,7 +342,7 @@ export const LoginRoute = () => {
 						</Stack>
 					</form>
 
-					<Divider variant="dashed" label="or" labelPosition="center" />
+					<Divider variant="dashed" label={t`or`} labelPosition="center" />
 
 					<I18nLink to="/register">
 						<Button
@@ -360,7 +351,7 @@ export const LoginRoute = () => {
 							fullWidth
 							{...testId("auth-login-register-button")}
 						>
-							<Trans>Register as a new user</Trans>
+							<Trans>Create an account</Trans>
 						</Button>
 					</I18nLink>
 

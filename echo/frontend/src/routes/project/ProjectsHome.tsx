@@ -48,7 +48,7 @@ import { testId } from "@/lib/testUtils";
 const MAX_PINNED = 3;
 
 export const ProjectsHomeRoute = () => {
-	useDocumentTitle(t`Projects | Dembrane`);
+	useDocumentTitle(t`Projects | dembrane`);
 
 	const [listParent] = useAutoAnimate();
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -247,9 +247,7 @@ export const ProjectsHomeRoute = () => {
 					status === "success" && (
 						<CloseableAlert icon={<IconInfoCircle />}>
 							<Trans>
-								Welcome to Your Home! Here you can see all your projects and get
-								access to tutorial resources. Currently, you have no projects.
-								Click "Create" to configure to get started!
+								No projects yet. Create your first one to get started.
 							</Trans>
 						</CloseableAlert>
 					)}

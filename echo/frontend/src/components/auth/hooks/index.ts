@@ -61,7 +61,7 @@ export const useResetPasswordMutation = () => {
 		},
 		onSuccess: () => {
 			toast.success(
-				"Password reset successfully. Please login with new password.",
+				"Password reset. Log in with your new password.",
 			);
 			navigate("/login");
 		},
@@ -85,7 +85,7 @@ export const useRequestPasswordResetMutation = () => {
 			toast.error(e.message);
 		},
 		onSuccess: () => {
-			toast.success("Password reset email sent successfully");
+			toast.success("Check your email for reset instructions.");
 			navigate("/check-your-email");
 		},
 	});
@@ -107,7 +107,7 @@ export const useVerifyMutation = (doRedirect = true) => {
 			toast.error(e.message);
 		},
 		onSuccess: () => {
-			toast.success("Email verified successfully.");
+			toast.success("Email verified.");
 			if (doRedirect) {
 				setTimeout(() => {
 					// window.location.href = `/login?new=true`;

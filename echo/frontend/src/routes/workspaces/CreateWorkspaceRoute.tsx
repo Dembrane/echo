@@ -89,13 +89,14 @@ export const CreateWorkspaceRoute = () => {
 
 							<Select
 								data={[
-									{ label: "Pilot", value: "pilot" },
-									{ label: "Pioneer", value: "pioneer" },
-									{ label: "Innovator", value: "innovator" },
-									{ label: "Changemaker", value: "changemaker" },
-									{ label: "Guardian", value: "guardian" },
+									{ label: t`Pilot — one-time projects`, value: "pilot" },
+									{ label: t`Pioneer — ongoing work, 25h audio/month`, value: "pioneer" },
+									{ label: t`Innovator — private sharing, data export`, value: "innovator" },
+									{ label: t`Changemaker — whitelabel, API access`, value: "changemaker" },
+									{ label: t`Guardian — dedicated support, custom setup`, value: "guardian" },
 								]}
 								label={t`Plan`}
+								description={t`Choose based on what this workspace needs. You can change this later.`}
 								size="sm"
 								value={tier}
 								onChange={(v) => v && setTier(v)}
