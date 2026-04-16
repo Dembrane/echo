@@ -46,6 +46,8 @@ interface WorkspaceDetail {
 	is_default: boolean;
 	members: WorkspaceMember[];
 	pending_invite_count: number;
+	my_role: string;
+	my_policies: string[];
 }
 
 async function fetchSettings(workspaceId: string): Promise<WorkspaceDetail | null> {
@@ -264,6 +266,28 @@ export const WorkspaceSettingsRoute = () => {
 							</Paper>
 						))}
 					</Stack>
+				</Stack>
+
+				{/* Your access */}
+				<Divider />
+				<Stack gap={12}>
+					<Title order={5} fw={400}>
+						<Trans>Your access</Trans>
+					</Title>
+					<Group gap={8}>
+						<Badge size="sm" variant="light" color="blue" style={{ textTransform: "capitalize" }}>
+							{settings.my_role}
+						</Badge>
+					</Group>
+					{settings.my_policies && settings.my_policies.length > 0 && (
+						<Group gap={6}>
+							{settings.my_policies.map((policy) => (
+								<Badge key={policy} size="xs" variant="outline" color="gray">
+									{policy}
+								</Badge>
+							))}
+						</Group>
+					)}
 				</Stack>
 			</Stack>
 		</Container>

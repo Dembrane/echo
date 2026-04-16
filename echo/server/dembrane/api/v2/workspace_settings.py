@@ -40,6 +40,9 @@ class WorkspaceDetailResponse(BaseModel):
     description: Optional[str] = None
     members: list[WorkspaceMember] = []
     pending_invite_count: int = 0
+    # Current user's access
+    my_role: str = ""
+    my_policies: list[str] = []
 
 
 @router.get("/{workspace_id}/settings", response_model=WorkspaceDetailResponse)
@@ -111,6 +114,10 @@ async def get_workspace_settings(
     if isinstance(pending, list) and len(pending) > 0:
         pending_count = int(pending[0].get("count", {}).get("id", 0))
 
+    # Current user's effective policies
+    from dembrane.policies import get_effective_policies, WORKSPACE_ROLE_PRESETS
+    effective = get_effective_policies(ctx.role, ctx.custom_policies, WORKSPACE_ROLE_PRESETS)
+
     return WorkspaceDetailResponse(
         id=ws["id"],
         name=ws.get("name", ""),
@@ -123,6 +130,8 @@ async def get_workspace_settings(
         description=ws.get("description"),
         members=members,
         pending_invite_count=pending_count,
+        my_role=ctx.role,
+        my_policies=effective,
     )
 
 
