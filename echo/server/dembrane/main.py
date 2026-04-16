@@ -47,6 +47,17 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception:  # pragma: no cover - startup logging only
         logger.exception("Failed to reconcile verification topics during startup")
 
+    # Warn loudly if email is not configured — workspace invites depend on it
+    try:
+        from dembrane.settings import get_settings
+        if not get_settings().email.sendgrid_api_key:
+            logger.error(
+                "SENDGRID_API_KEY is not configured — workspace invite emails "
+                "will silently fail. Set SENDGRID_API_KEY in server/.env"
+            )
+    except Exception:
+        pass
+
     yield
     # shutdown
     logger.info("shutting down server")

@@ -157,7 +157,7 @@ async def invite_to_workspace(
             except Exception:
                 pass
 
-            await send_email(
+            email_sent = await send_email(
                 to=email,
                 subject=f"You've been added to {ctx.workspace.get('name', 'a workspace')}",
                 template="workspace_added",
@@ -167,11 +167,24 @@ async def invite_to_workspace(
                     "invite_url": f"{settings.urls.admin_base_url}/workspaces",
                 },
             )
+            if not email_sent:
+                logger.error(
+                    f"Failed to send workspace_added email to {email} for workspace {workspace_id}"
+                )
+                try:
+                    import sentry_sdk
+                    sentry_sdk.capture_message(
+                        f"Workspace add email failed: {email} / workspace {workspace_id}",
+                        level="error",
+                    )
+                except Exception:
+                    pass
 
             return WorkspaceInviteResponse(
                 status="added",
                 email=email,
                 user_existed=True,
+                email_sent=email_sent,
             )
 
     # User doesn't exist or doesn't have app_user — create an invite
@@ -220,7 +233,7 @@ async def invite_to_workspace(
     # Send invite email
     invite_url = f"{settings.urls.admin_base_url}/register?next=/onboarding"
 
-    await send_email(
+    email_sent = await send_email(
         to=email,
         subject=f"{inviter_name} invited you to collaborate on dembrane",
         template="workspace_invite",
@@ -230,14 +243,27 @@ async def invite_to_workspace(
             "invite_url": invite_url,
         },
     )
+    if not email_sent:
+        logger.error(
+            f"Failed to send workspace_invite email to {email} for workspace {workspace_id}"
+        )
+        try:
+            import sentry_sdk
+            sentry_sdk.capture_message(
+                f"Workspace invite email failed: {email} / workspace {workspace_id}",
+                level="error",
+            )
+        except Exception:
+            pass
 
     logger.info(
         f"Invited {email} to workspace {workspace_id} as {role} by {ctx.app_user_id} "
-        f"(user_existed: {user_existed})"
+        f"(user_existed: {user_existed}, email_sent: {email_sent})"
     )
 
     return WorkspaceInviteResponse(
         status="invited",
         email=email,
         user_existed=user_existed,
+        email_sent=email_sent,
     )
