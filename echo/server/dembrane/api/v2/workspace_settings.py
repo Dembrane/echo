@@ -289,6 +289,59 @@ async def change_member_role(
 # ── Cancel pending invite ──
 
 
+@router.post("/{workspace_id}/invites/{invite_id}/resend")
+async def resend_workspace_invite(
+    invite_id: str,
+    ctx: WorkspaceContext = Depends(get_workspace_context),
+) -> dict:
+    """Resend a pending invite email. Extends expiration by 7 days."""
+    ctx.require_policy("member:invite")
+
+    from datetime import timedelta
+    from dembrane.email import send_email
+    from dembrane.settings import get_settings
+    settings = get_settings()
+
+    invite = await async_directus.get_item("workspace_invite", invite_id)
+    if not invite or invite.get("workspace_id") != ctx.workspace_id:
+        raise HTTPException(status_code=404, detail="Invite not found in this workspace")
+    if invite.get("accepted_at"):
+        raise HTTPException(status_code=400, detail="Invite has already been accepted")
+
+    # Extend expiration by 7 days
+    new_expires = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
+    await async_directus.update_item(
+        "workspace_invite",
+        invite_id,
+        {"expires_at": new_expires},
+    )
+
+    # Get inviter name
+    inviter_name = "Your team"
+    try:
+        inviter = await async_directus.get_item("app_user", ctx.app_user_id)
+        if inviter and inviter.get("display_name"):
+            inviter_name = inviter["display_name"]
+    except Exception:
+        pass
+
+    invite_url = f"{settings.urls.admin_base_url}/register?next=/onboarding"
+    email_sent = await send_email(
+        to=invite["email"],
+        subject=f"{inviter_name} invited you to collaborate on dembrane",
+        template="workspace_invite",
+        template_data={
+            "inviter_name": inviter_name,
+            "workspace_name": ctx.workspace.get("name", "a workspace"),
+            "invite_url": invite_url,
+        },
+    )
+    if not email_sent:
+        logger.error(f"Failed to resend invite email to {invite['email']}")
+
+    return {"status": "success", "email_sent": email_sent}
+
+
 @router.delete("/{workspace_id}/invites/{invite_id}")
 async def cancel_workspace_invite(
     invite_id: str,

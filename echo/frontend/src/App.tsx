@@ -4,7 +4,9 @@ import "@mantine/dates/styles.css";
 import "@mantine/dropzone/styles.css";
 
 import { MantineProvider } from "@mantine/core";
+import "@mantine/core/styles.css";
 import { DatesProvider } from "@mantine/dates";
+import { ModalsProvider } from "@mantine/modals";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useEffect } from "react";
@@ -97,6 +99,7 @@ export const App = () => {
 		<QueryClientProvider client={queryClient}>
 			{/* <ReactQueryDevtools initialIsOpen={false} /> */}
 			<MantineProvider theme={theme}>
+				<ModalsProvider>
 				<DatesProvider settings={{ consistentWeeks: true }}>
 					<AppPreferencesProvider>
 						<WhitelabelLogoProvider>
@@ -108,6 +111,7 @@ export const App = () => {
 						</WhitelabelLogoProvider>
 					</AppPreferencesProvider>
 				</DatesProvider>
+				</ModalsProvider>
 			</MantineProvider>
 		</QueryClientProvider>
 	);

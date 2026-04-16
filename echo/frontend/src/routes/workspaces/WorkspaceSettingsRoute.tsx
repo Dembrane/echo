@@ -10,7 +10,9 @@ import {
 	Divider,
 	Group,
 	Loader,
+	Modal,
 	Paper,
+	Radio,
 	Select,
 	Stack,
 	Text,
@@ -18,8 +20,9 @@ import {
 	Title,
 	Tooltip,
 } from "@mantine/core";
-import { useDocumentTitle } from "@mantine/hooks";
-import { IconPlus, IconTrash, IconX } from "@tabler/icons-react";
+import { modals } from "@mantine/modals";
+import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
+import { IconPlus, IconRefresh, IconTrash, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useParams } from "react-router";
@@ -116,6 +119,18 @@ async function updateWorkspace(workspaceId: string, payload: { name?: string; de
 	}
 }
 
+async function resendInvite(workspaceId: string, inviteId: string): Promise<{ email_sent: boolean }> {
+	const res = await fetch(
+		`${API_BASE_URL}/v2/workspaces/${workspaceId}/invites/${inviteId}/resend`,
+		{ credentials: "include", method: "POST" },
+	);
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(data.detail || "Failed to resend invite");
+	}
+	return res.json();
+}
+
 async function cancelInvite(workspaceId: string, inviteId: string) {
 	const res = await fetch(
 		`${API_BASE_URL}/v2/workspaces/${workspaceId}/invites/${inviteId}`,
@@ -134,6 +149,7 @@ export const WorkspaceSettingsRoute = () => {
 	const [inviteEmail, setInviteEmail] = useState("");
 	const [inviteRole, setInviteRole] = useState("member");
 	const [editingName, setEditingName] = useState<string | null>(null);
+	const [inviteModalOpened, { open: openInviteModal, close: closeInviteModal }] = useDisclosure(false);
 
 	useDocumentTitle(t`Workspace settings | dembrane`);
 
@@ -151,7 +167,31 @@ export const WorkspaceSettingsRoute = () => {
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			setInviteEmail("");
-			toast.success(data.status === "added" ? t`Member added` : t`Invite sent`);
+			setInviteRole("member");
+			closeInviteModal();
+			if (!data.email_sent) {
+				toast.error(t`Invite created, but the email could not be sent. Share the link directly.`);
+			} else if (data.status === "added") {
+				toast.success(t`Member added`);
+			} else {
+				toast.success(t`Invite sent`);
+			}
+		},
+		onError: (err: Error) => toast.error(err.message),
+	});
+
+	const resendInviteMutation = useMutation({
+		mutationFn: (inviteId: string) => {
+			if (!workspaceId) throw new Error("No workspace");
+			return resendInvite(workspaceId, inviteId);
+		},
+		onSuccess: (data) => {
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			if (data.email_sent) {
+				toast.success(t`Invite resent`);
+			} else {
+				toast.error(t`Could not send the invite email. Check email configuration.`);
+			}
 		},
 		onError: (err: Error) => toast.error(err.message),
 	});
@@ -221,6 +261,7 @@ export const WorkspaceSettingsRoute = () => {
 	const canEditSettings = settings.my_policies?.includes("settings:manage") ?? false;
 
 	return (
+		<>
 		<Container size="sm" py="xl" px="lg" pb={80}>
 			<Stack gap={32}>
 				{/* Header */}
@@ -291,51 +332,17 @@ export const WorkspaceSettingsRoute = () => {
 						</Text>
 					</Group>
 
-					{/* Invite */}
-					<form
-						onSubmit={(e) => {
-							e.preventDefault();
-							const trimmed = inviteEmail.trim();
-							if (!trimmed) {
-								toast.error(t`Enter an email address`);
-								return;
-							}
-							if (!trimmed.includes("@")) {
-								toast.error(t`Enter a valid email address`);
-								return;
-							}
-							inviteMutation.mutate();
-						}}
-					>
-						<Group gap={8} wrap="nowrap">
-							<TextInput
-								flex={1}
-								placeholder={t`Invite by email`}
-								size="sm"
-								value={inviteEmail}
-								onChange={(e) => setInviteEmail(e.currentTarget.value)}
-							/>
-							<Select
-								data={[
-									{ label: t`Viewer`, value: "viewer" },
-									{ label: t`Member`, value: "member" },
-									{ label: t`Admin`, value: "admin" },
-								]}
-								size="sm"
-								value={inviteRole}
-								w={110}
-								onChange={(v) => v && setInviteRole(v)}
-							/>
-							<Button
-								size="sm"
-								leftSection={<IconPlus size={14} />}
-								loading={inviteMutation.isPending}
-								type="submit"
-							>
-								<Trans>Invite</Trans>
-							</Button>
-						</Group>
-					</form>
+					{/* Invite button */}
+					{canManage && (
+						<Button
+							size="sm"
+							leftSection={<IconPlus size={14} />}
+							variant="default"
+							onClick={openInviteModal}
+						>
+							<Trans>Invite member</Trans>
+						</Button>
+					)}
 
 					{/* Member list */}
 					<Stack gap={0}>
@@ -407,9 +414,20 @@ export const WorkspaceSettingsRoute = () => {
 													variant="subtle"
 													loading={removeMutation.isPending}
 													onClick={() => {
-														if (confirm(`Remove ${member.display_name} from this workspace?`)) {
-															removeMutation.mutate(member.id);
-														}
+														modals.openConfirmModal({
+															title: t`Remove member`,
+															children: (
+																<Text size="sm">
+																	<Trans>
+																		Remove {member.display_name} from this workspace?
+																		They'll lose access to all projects inside it.
+																	</Trans>
+																</Text>
+															),
+															labels: { confirm: t`Remove`, cancel: t`Cancel` },
+															confirmProps: { color: "red" },
+															onConfirm: () => removeMutation.mutate(member.id),
+														});
 													}}
 													aria-label={t`Remove member`}
 												>
@@ -446,13 +464,39 @@ export const WorkspaceSettingsRoute = () => {
 												<Badge size="xs" variant="light" color="yellow">
 													<Trans>Pending</Trans>
 												</Badge>
+												<Tooltip label={t`Resend invite email`}>
+													<ActionIcon
+														color="blue"
+														size="sm"
+														variant="subtle"
+														loading={resendInviteMutation.isPending}
+														onClick={() => resendInviteMutation.mutate(inv.id)}
+														aria-label={t`Resend invite`}
+													>
+														<IconRefresh size={14} />
+													</ActionIcon>
+												</Tooltip>
 												<Tooltip label={t`Cancel invite`}>
 													<ActionIcon
 														color="gray"
 														size="sm"
 														variant="subtle"
 														loading={cancelInviteMutation.isPending}
-														onClick={() => cancelInviteMutation.mutate(inv.id)}
+														onClick={() => {
+															modals.openConfirmModal({
+																title: t`Cancel invite`,
+																children: (
+																	<Text size="sm">
+																		<Trans>
+																			Cancel the invite sent to {inv.email}? You can invite them again later.
+																		</Trans>
+																	</Text>
+																),
+																labels: { confirm: t`Cancel invite`, cancel: t`Keep it` },
+																confirmProps: { color: "red" },
+																onConfirm: () => cancelInviteMutation.mutate(inv.id),
+															});
+														}}
 														aria-label={t`Cancel invite`}
 													>
 														<IconX size={14} />
@@ -490,5 +534,96 @@ export const WorkspaceSettingsRoute = () => {
 				</Stack>
 			</Stack>
 		</Container>
+
+			<Modal
+				opened={inviteModalOpened}
+				onClose={closeInviteModal}
+				title={t`Invite a member`}
+				centered
+				size="md"
+			>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						const trimmed = inviteEmail.trim();
+						if (!trimmed) {
+							toast.error(t`Enter an email address`);
+							return;
+						}
+						if (!trimmed.includes("@")) {
+							toast.error(t`Enter a valid email address`);
+							return;
+						}
+						inviteMutation.mutate();
+					}}
+				>
+					<Stack gap={16}>
+						<TextInput
+							autoFocus
+							label={t`Email address`}
+							placeholder={t`name@example.com`}
+							size="sm"
+							value={inviteEmail}
+							onChange={(e) => setInviteEmail(e.currentTarget.value)}
+						/>
+
+						<Radio.Group
+							label={t`Role`}
+							value={inviteRole}
+							onChange={setInviteRole}
+						>
+							<Stack gap={10} mt={8}>
+								<Radio
+									value="viewer"
+									label={
+										<Box>
+											<Text size="sm">{t`Viewer`}</Text>
+											<Text size="xs" c="dimmed">
+												<Trans>Can view projects and conversations. Cannot edit anything.</Trans>
+											</Text>
+										</Box>
+									}
+								/>
+								<Radio
+									value="member"
+									label={
+										<Box>
+											<Text size="sm">{t`Member`}</Text>
+											<Text size="xs" c="dimmed">
+												<Trans>Can create projects, run conversations, and generate reports.</Trans>
+											</Text>
+										</Box>
+									}
+								/>
+								<Radio
+									value="admin"
+									label={
+										<Box>
+											<Text size="sm">{t`Admin`}</Text>
+											<Text size="xs" c="dimmed">
+												<Trans>Everything a member can do, plus invite others and manage workspace settings.</Trans>
+											</Text>
+										</Box>
+									}
+								/>
+							</Stack>
+						</Radio.Group>
+
+						<Group justify="flex-end" gap={8} mt={8}>
+							<Button variant="default" size="sm" onClick={closeInviteModal}>
+								<Trans>Cancel</Trans>
+							</Button>
+							<Button
+								size="sm"
+								type="submit"
+								loading={inviteMutation.isPending}
+							>
+								<Trans>Send invite</Trans>
+							</Button>
+						</Group>
+					</Stack>
+				</form>
+			</Modal>
+		</>
 	);
 };
