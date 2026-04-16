@@ -356,10 +356,6 @@ async def cancel_workspace_invite(
     if invite.get("accepted_at"):
         raise HTTPException(status_code=400, detail="Invite has already been accepted")
 
-    # Mark as expired to effectively cancel (Directus doesn't have a delete permission)
-    await async_directus.update_item(
-        "workspace_invite",
-        invite_id,
-        {"expires_at": datetime.now(timezone.utc).isoformat()},
-    )
+    # Hard delete — there's no reason to keep canceled invites around
+    await async_directus.delete_item("workspace_invite", invite_id)
     return {"status": "success"}
