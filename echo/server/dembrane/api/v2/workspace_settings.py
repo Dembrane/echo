@@ -205,14 +205,12 @@ async def remove_workspace_member(
     """Soft-delete a workspace membership. Requires member:manage."""
     ctx.require_policy("member:manage")
 
-    # Verify the membership belongs to THIS workspace
     membership = await async_directus.get_item("workspace_membership", membership_id)
     if not membership or membership.get("workspace_id") != ctx.workspace_id:
         raise HTTPException(status_code=404, detail="Membership not found in this workspace")
     if membership.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Membership already removed")
 
-    # Prevent removing the last owner
     if membership.get("role") == "owner":
         owners = await async_directus.get_items(
             "workspace_membership",
@@ -225,10 +223,90 @@ async def remove_workspace_member(
         if isinstance(owners, list) and len(owners) <= 1:
             raise HTTPException(status_code=400, detail="Cannot remove the last owner. Transfer ownership first.")
 
-    from datetime import datetime, timezone
     await async_directus.update_item(
         "workspace_membership",
         membership_id,
         {"deleted_at": datetime.now(timezone.utc).isoformat()},
+    )
+    return {"status": "success"}
+
+
+# ── Change member role ──
+
+
+ROLE_HIERARCHY = {"viewer": 0, "member": 1, "admin": 2, "owner": 3}
+
+
+class ChangeRoleRequest(BaseModel):
+    role: str
+
+
+@router.patch("/{workspace_id}/members/{membership_id}")
+async def change_member_role(
+    membership_id: str,
+    body: ChangeRoleRequest,
+    ctx: WorkspaceContext = Depends(get_workspace_context),
+) -> dict:
+    """Change a member's role. Requires member:manage."""
+    ctx.require_policy("member:manage")
+
+    if body.role not in ("viewer", "member", "admin", "owner"):
+        raise HTTPException(status_code=400, detail="Invalid role")
+
+    # Prevent escalation — can only set roles at or below your own level
+    caller_level = ROLE_HIERARCHY.get(ctx.role, 0)
+    requested_level = ROLE_HIERARCHY.get(body.role, 0)
+    if requested_level > caller_level:
+        raise HTTPException(status_code=403, detail="Cannot grant a role higher than your own")
+
+    membership = await async_directus.get_item("workspace_membership", membership_id)
+    if not membership or membership.get("workspace_id") != ctx.workspace_id:
+        raise HTTPException(status_code=404, detail="Membership not found in this workspace")
+    if membership.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Membership already removed")
+
+    # Prevent demoting the last owner
+    if membership.get("role") == "owner" and body.role != "owner":
+        owners = await async_directus.get_items(
+            "workspace_membership",
+            {"query": {"filter": {
+                "workspace_id": {"_eq": ctx.workspace_id},
+                "role": {"_eq": "owner"},
+                "deleted_at": {"_null": True},
+            }, "fields": ["id"], "limit": 2}},
+        )
+        if isinstance(owners, list) and len(owners) <= 1:
+            raise HTTPException(status_code=400, detail="Cannot demote the last owner. Promote someone else first.")
+
+    await async_directus.update_item(
+        "workspace_membership",
+        membership_id,
+        {"role": body.role},
+    )
+    return {"status": "success"}
+
+
+# ── Cancel pending invite ──
+
+
+@router.delete("/{workspace_id}/invites/{invite_id}")
+async def cancel_workspace_invite(
+    invite_id: str,
+    ctx: WorkspaceContext = Depends(get_workspace_context),
+) -> dict:
+    """Cancel a pending invite. Requires member:invite."""
+    ctx.require_policy("member:invite")
+
+    invite = await async_directus.get_item("workspace_invite", invite_id)
+    if not invite or invite.get("workspace_id") != ctx.workspace_id:
+        raise HTTPException(status_code=404, detail="Invite not found in this workspace")
+    if invite.get("accepted_at"):
+        raise HTTPException(status_code=400, detail="Invite has already been accepted")
+
+    # Mark as expired to effectively cancel (Directus doesn't have a delete permission)
+    await async_directus.update_item(
+        "workspace_invite",
+        invite_id,
+        {"expires_at": datetime.now(timezone.utc).isoformat()},
     )
     return {"status": "success"}

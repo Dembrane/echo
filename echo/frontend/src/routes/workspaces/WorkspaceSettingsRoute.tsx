@@ -11,6 +11,7 @@ import {
 	Group,
 	Loader,
 	Paper,
+	Select,
 	Stack,
 	Text,
 	TextInput,
@@ -58,9 +59,9 @@ async function fetchSettings(workspaceId: string): Promise<WorkspaceDetail | nul
 	return res.json();
 }
 
-async function sendInvite(workspaceId: string, email: string, isOrgMember: boolean) {
+async function sendInvite(workspaceId: string, email: string, role: string, isOrgMember: boolean) {
 	const res = await fetch(`${API_BASE_URL}/v2/workspaces/${workspaceId}/invite`, {
-		body: JSON.stringify({ email, is_org_member: isOrgMember, role: "member" }),
+		body: JSON.stringify({ email, is_org_member: isOrgMember, role }),
 		credentials: "include",
 		headers: { "Content-Type": "application/json" },
 		method: "POST",
@@ -83,11 +84,39 @@ async function removeMember(workspaceId: string, membershipId: string) {
 	}
 }
 
+async function changeRole(workspaceId: string, membershipId: string, role: string) {
+	const res = await fetch(
+		`${API_BASE_URL}/v2/workspaces/${workspaceId}/members/${membershipId}`,
+		{
+			body: JSON.stringify({ role }),
+			credentials: "include",
+			headers: { "Content-Type": "application/json" },
+			method: "PATCH",
+		},
+	);
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(data.detail || "Failed to change role");
+	}
+}
+
+async function cancelInvite(workspaceId: string, inviteId: string) {
+	const res = await fetch(
+		`${API_BASE_URL}/v2/workspaces/${workspaceId}/invites/${inviteId}`,
+		{ credentials: "include", method: "DELETE" },
+	);
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(data.detail || "Failed to cancel invite");
+	}
+}
+
 export const WorkspaceSettingsRoute = () => {
 	const { workspaceId } = useParams<{ workspaceId: string }>();
 	const navigate = useI18nNavigate();
 	const queryClient = useQueryClient();
 	const [inviteEmail, setInviteEmail] = useState("");
+	const [inviteRole, setInviteRole] = useState("member");
 
 	useDocumentTitle(t`Workspace settings | dembrane`);
 
@@ -100,12 +129,36 @@ export const WorkspaceSettingsRoute = () => {
 	const inviteMutation = useMutation({
 		mutationFn: () => {
 			if (!workspaceId) throw new Error("No workspace");
-			return sendInvite(workspaceId, inviteEmail.trim(), true);
+			return sendInvite(workspaceId, inviteEmail.trim(), inviteRole, true);
 		},
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			setInviteEmail("");
 			toast.success(data.status === "added" ? t`Member added` : t`Invite sent`);
+		},
+		onError: (err: Error) => toast.error(err.message),
+	});
+
+	const changeRoleMutation = useMutation({
+		mutationFn: ({ membershipId, role }: { membershipId: string; role: string }) => {
+			if (!workspaceId) throw new Error("No workspace");
+			return changeRole(workspaceId, membershipId, role);
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			toast.success(t`Role updated`);
+		},
+		onError: (err: Error) => toast.error(err.message),
+	});
+
+	const cancelInviteMutation = useMutation({
+		mutationFn: (inviteId: string) => {
+			if (!workspaceId) throw new Error("No workspace");
+			return cancelInvite(workspaceId, inviteId);
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			toast.success(t`Invite canceled`);
 		},
 		onError: (err: Error) => toast.error(err.message),
 	});
@@ -131,6 +184,8 @@ export const WorkspaceSettingsRoute = () => {
 			</Container>
 		);
 	}
+
+	const canManage = settings.my_policies?.includes("member:manage") ?? false;
 
 	return (
 		<Container size="sm" py="xl" px="lg" pb={80}>
@@ -191,13 +246,24 @@ export const WorkspaceSettingsRoute = () => {
 							inviteMutation.mutate();
 						}}
 					>
-						<Group gap={8}>
+						<Group gap={8} wrap="nowrap">
 							<TextInput
 								flex={1}
 								placeholder={t`Invite by email`}
 								size="sm"
 								value={inviteEmail}
 								onChange={(e) => setInviteEmail(e.currentTarget.value)}
+							/>
+							<Select
+								data={[
+									{ label: t`Viewer`, value: "viewer" },
+									{ label: t`Member`, value: "member" },
+									{ label: t`Admin`, value: "admin" },
+								]}
+								size="sm"
+								value={inviteRole}
+								w={110}
+								onChange={(v) => v && setInviteRole(v)}
 							/>
 							<Button
 								size="sm"
@@ -243,24 +309,54 @@ export const WorkspaceSettingsRoute = () => {
 													</Badge>
 												)}
 											</Group>
-											<Text size="xs" c="dimmed">
-												{member.role} · {member.source}
+											<Text size="xs" c="dimmed" style={{ textTransform: "capitalize" }}>
+												{member.source === "inherited" ? t`inherited from team` : member.source}
 											</Text>
 										</Box>
 									</Group>
 
-									<Tooltip label={t`Remove member`}>
-										<ActionIcon
-											color="red"
-											size="sm"
-											variant="subtle"
-											loading={removeMutation.isPending}
-											onClick={() => removeMutation.mutate(member.id)}
-											aria-label={t`Remove member`}
-										>
-											<IconTrash size={14} />
-										</ActionIcon>
-									</Tooltip>
+									<Group gap={8}>
+										{canManage ? (
+											<Select
+												data={[
+													{ label: t`Viewer`, value: "viewer" },
+													{ label: t`Member`, value: "member" },
+													{ label: t`Admin`, value: "admin" },
+													{ label: t`Owner`, value: "owner" },
+												]}
+												size="xs"
+												value={member.role}
+												w={100}
+												onChange={(v) => {
+													if (v && v !== member.role) {
+														changeRoleMutation.mutate({ membershipId: member.id, role: v });
+													}
+												}}
+											/>
+										) : (
+											<Badge size="sm" variant="light" color="gray" style={{ textTransform: "capitalize" }}>
+												{member.role}
+											</Badge>
+										)}
+										{canManage && (
+											<Tooltip label={t`Remove member`}>
+												<ActionIcon
+													color="red"
+													size="sm"
+													variant="subtle"
+													loading={removeMutation.isPending}
+													onClick={() => {
+														if (confirm(`Remove ${member.display_name} from this workspace?`)) {
+															removeMutation.mutate(member.id);
+														}
+													}}
+													aria-label={t`Remove member`}
+												>
+													<IconTrash size={14} />
+												</ActionIcon>
+											</Tooltip>
+										)}
+									</Group>
 								</Group>
 							</Paper>
 						))}
@@ -285,9 +381,23 @@ export const WorkspaceSettingsRoute = () => {
 													{inv.role}
 												</Text>
 											</Box>
-											<Badge size="xs" variant="light" color="yellow">
-												<Trans>Pending</Trans>
-											</Badge>
+											<Group gap={8}>
+												<Badge size="xs" variant="light" color="yellow">
+													<Trans>Pending</Trans>
+												</Badge>
+												<Tooltip label={t`Cancel invite`}>
+													<ActionIcon
+														color="gray"
+														size="sm"
+														variant="subtle"
+														loading={cancelInviteMutation.isPending}
+														onClick={() => cancelInviteMutation.mutate(inv.id)}
+														aria-label={t`Cancel invite`}
+													>
+														<IconX size={14} />
+													</ActionIcon>
+												</Tooltip>
+											</Group>
 										</Group>
 									</Paper>
 								))}
