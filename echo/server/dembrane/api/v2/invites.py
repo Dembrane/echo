@@ -191,7 +191,8 @@ async def invite_to_workspace(
     token = secrets.token_urlsafe(32)
     expires_at = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
 
-    # Check for existing pending invite
+    # Check for existing pending invite (not accepted AND not expired)
+    now_iso = datetime.now(timezone.utc).isoformat()
     existing_invites = await async_directus.get_items(
         "workspace_invite",
         {
@@ -200,6 +201,7 @@ async def invite_to_workspace(
                     "workspace_id": {"_eq": workspace_id},
                     "email": {"_eq": email},
                     "accepted_at": {"_null": True},
+                    "expires_at": {"_gt": now_iso},
                 },
                 "fields": ["id"],
                 "limit": 1,
