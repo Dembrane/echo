@@ -131,7 +131,7 @@ export const WorkspaceSettingsRoute = () => {
 	}
 
 	return (
-		<Container size="sm" py="xl" px="lg">
+		<Container size="sm" py="xl" px="lg" pb={80}>
 			<Stack gap={32}>
 				{/* Header */}
 				<Group justify="space-between" align="flex-start">
@@ -177,9 +177,16 @@ export const WorkspaceSettingsRoute = () => {
 					<form
 						onSubmit={(e) => {
 							e.preventDefault();
-							if (inviteEmail.trim() && inviteEmail.includes("@")) {
-								inviteMutation.mutate();
+							const trimmed = inviteEmail.trim();
+							if (!trimmed) {
+								toast.error(t`Enter an email address`);
+								return;
 							}
+							if (!trimmed.includes("@")) {
+								toast.error(t`Enter a valid email address`);
+								return;
+							}
+							inviteMutation.mutate();
 						}}
 					>
 						<Group gap={8}>

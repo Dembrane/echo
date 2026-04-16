@@ -155,9 +155,9 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 							</Group>
 						</I18nLink>
 						{workspaceName && isAuthenticated && (
-							<Group gap={6} style={{ cursor: "pointer" }} onClick={() => navigate("/workspaces")}>
-								<Text size="xs" c="dimmed">/</Text>
-								<Text size="sm" c="dimmed" lineClamp={1} maw={160}>
+							<Group gap={6} align="center" style={{ cursor: "pointer" }} onClick={() => navigate("/workspaces")}>
+								<Text size="xs" c="dimmed" lh={1}>/</Text>
+								<Text size="sm" c="dimmed" lineClamp={1} maw={160} lh={1}>
 									{workspaceName}
 								</Text>
 							</Group>

@@ -1,5 +1,5 @@
-import { createContext, useCallback, useContext, useMemo } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/config";
 
 // ── Types ──
@@ -18,19 +18,12 @@ interface WorkspaceSummary {
 }
 
 export interface WorkspaceContextValue {
-	/** Currently selected workspace ID. Null if not onboarded or no workspaces. */
 	workspaceId: string | null;
-	/** Currently selected workspace name. */
 	workspaceName: string | null;
-	/** Full workspace object if available. */
 	workspace: WorkspaceSummary | null;
-	/** All workspaces the user has access to. */
 	workspaces: WorkspaceSummary[];
-	/** Whether workspace data is still loading. */
 	isLoading: boolean;
-	/** Select a workspace by ID. */
 	setWorkspace: (id: string) => void;
-	/** Clear selection (go back to selector). */
 	clearWorkspace: () => void;
 }
 
@@ -63,15 +56,13 @@ async function fetchWorkspaces(): Promise<WorkspaceSummary[]> {
 	}
 }
 
-/**
- * Selection is stored in sessionStorage (survives refresh, clears on tab close).
- * This is intentional — it's a UI preference, not persistent state.
- * If the user opens a new tab, they get the default workspace.
- */
 const SESSION_KEY = "dembrane_ws_selected";
 
 export function useWorkspaceProvider(enabled: boolean): WorkspaceContextValue {
-	const queryClient = useQueryClient();
+	// Selection state — drives re-renders when user switches
+	const [selectedId, setSelectedId] = useState<string | null>(
+		() => typeof window !== "undefined" ? sessionStorage.getItem(SESSION_KEY) : null,
+	);
 
 	const { data: workspaces = [], isLoading } = useQuery({
 		queryKey: ["v2", "workspaces-context"],
@@ -81,21 +72,12 @@ export function useWorkspaceProvider(enabled: boolean): WorkspaceContextValue {
 		retry: false,
 	});
 
-	// Read selection from sessionStorage
-	const storedId = typeof window !== "undefined"
-		? sessionStorage.getItem(SESSION_KEY)
-		: null;
-
-	// Resolve current workspace:
-	// 1. If user selected one → use it (if still valid)
-	// 2. If only 1 workspace → auto-select
-	// 3. Otherwise → null (show selector)
 	const resolved = useMemo(() => {
 		if (workspaces.length === 0) return null;
 
-		// Check if stored selection is still valid
-		if (storedId) {
-			const found = workspaces.find((w) => w.id === storedId);
+		// Check if selection is still valid
+		if (selectedId) {
+			const found = workspaces.find((w) => w.id === selectedId);
 			if (found) return found;
 		}
 
@@ -107,21 +89,17 @@ export function useWorkspaceProvider(enabled: boolean): WorkspaceContextValue {
 		if (defaultWs) return defaultWs;
 
 		return null;
-	}, [workspaces, storedId]);
+	}, [workspaces, selectedId]);
 
-	const setWorkspace = useCallback(
-		(id: string) => {
-			sessionStorage.setItem(SESSION_KEY, id);
-			// Force re-render by invalidating the query
-			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
-		},
-		[queryClient],
-	);
+	const setWorkspace = useCallback((id: string) => {
+		sessionStorage.setItem(SESSION_KEY, id);
+		setSelectedId(id); // triggers re-render
+	}, []);
 
 	const clearWorkspace = useCallback(() => {
 		sessionStorage.removeItem(SESSION_KEY);
-		queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
-	}, [queryClient]);
+		setSelectedId(null);
+	}, []);
 
 	return {
 		workspaceId: resolved?.id ?? null,
