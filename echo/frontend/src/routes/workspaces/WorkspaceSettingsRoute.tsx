@@ -100,6 +100,22 @@ async function changeRole(workspaceId: string, membershipId: string, role: strin
 	}
 }
 
+async function updateWorkspace(workspaceId: string, payload: { name?: string; description?: string }) {
+	const res = await fetch(
+		`${API_BASE_URL}/v2/workspaces/${workspaceId}/settings`,
+		{
+			body: JSON.stringify(payload),
+			credentials: "include",
+			headers: { "Content-Type": "application/json" },
+			method: "PATCH",
+		},
+	);
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(data.detail || "Failed to update workspace");
+	}
+}
+
 async function cancelInvite(workspaceId: string, inviteId: string) {
 	const res = await fetch(
 		`${API_BASE_URL}/v2/workspaces/${workspaceId}/invites/${inviteId}`,
@@ -117,6 +133,7 @@ export const WorkspaceSettingsRoute = () => {
 	const queryClient = useQueryClient();
 	const [inviteEmail, setInviteEmail] = useState("");
 	const [inviteRole, setInviteRole] = useState("member");
+	const [editingName, setEditingName] = useState<string | null>(null);
 
 	useDocumentTitle(t`Workspace settings | dembrane`);
 
@@ -147,6 +164,21 @@ export const WorkspaceSettingsRoute = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			toast.success(t`Role updated`);
+		},
+		onError: (err: Error) => toast.error(err.message),
+	});
+
+	const renameMutation = useMutation({
+		mutationFn: (name: string) => {
+			if (!workspaceId) throw new Error("No workspace");
+			return updateWorkspace(workspaceId, { name });
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+			setEditingName(null);
+			toast.success(t`Workspace renamed`);
 		},
 		onError: (err: Error) => toast.error(err.message),
 	});
@@ -186,16 +218,45 @@ export const WorkspaceSettingsRoute = () => {
 	}
 
 	const canManage = settings.my_policies?.includes("member:manage") ?? false;
+	const canEditSettings = settings.my_policies?.includes("settings:manage") ?? false;
 
 	return (
 		<Container size="sm" py="xl" px="lg" pb={80}>
 			<Stack gap={32}>
 				{/* Header */}
 				<Group justify="space-between" align="flex-start">
-					<Stack gap={4}>
-						<Title order={3} fw={400}>
-							{settings.name}
-						</Title>
+					<Stack gap={4} flex={1} maw={400}>
+						{editingName !== null ? (
+							<TextInput
+								autoFocus
+								size="md"
+								value={editingName}
+								onChange={(e) => setEditingName(e.currentTarget.value)}
+								onBlur={() => {
+									const trimmed = editingName.trim();
+									if (trimmed && trimmed !== settings.name) {
+										renameMutation.mutate(trimmed);
+									} else {
+										setEditingName(null);
+									}
+								}}
+								onKeyDown={(e) => {
+									if (e.key === "Enter") e.currentTarget.blur();
+									if (e.key === "Escape") setEditingName(null);
+								}}
+								disabled={renameMutation.isPending}
+								styles={{ input: { fontSize: 20, fontWeight: 400 } }}
+							/>
+						) : (
+							<Title
+								order={3}
+								fw={400}
+								style={{ cursor: canEditSettings ? "pointer" : "default" }}
+								onClick={() => canEditSettings && setEditingName(settings.name)}
+							>
+								{settings.name}
+							</Title>
+						)}
 						<Group gap={8}>
 							<Badge size="xs" variant="light" color="blue">
 								{settings.tier}

@@ -84,7 +84,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 	const { data: user } = useCurrentUser({ enabled: isAuthenticated });
 	const { data: meV2 } = useV2Me({ enabled: isAuthenticated });
 	const needsOnboarding = meV2?.onboarding_completed === false;
-	const { workspaceName } = useWorkspace();
+	const { workspaceId, workspaceName } = useWorkspace();
 	const navigate = useI18nNavigate();
 	const { runTransition } = useTransitionCurtain();
 	const { setLogoUrl } = useWhitelabelLogo();
@@ -149,7 +149,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 					px="md"
 				>
 					<Group gap="md">
-						<I18nLink to="/projects">
+						<I18nLink to={workspaceId ? `/w/${workspaceId}/projects` : "/projects"}>
 							<Group align="center">
 								<Logo hideTitle={false} />
 							</Group>
