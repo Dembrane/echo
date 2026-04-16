@@ -20,6 +20,7 @@ import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
 async function completeOnboarding(orgName: string) {
 	const response = await fetch(`${API_BASE_URL}/v2/onboarding/complete`, {
@@ -57,6 +58,7 @@ export const OnboardingRoute = () => {
 	const queryClient = useQueryClient();
 	const user = useCurrentUser();
 	const { data: meV2, isLoading: meLoading } = useV2Me();
+	const { setWorkspace } = useWorkspace();
 
 	const displayName = (user.data as Record<string, string>)?.first_name || "";
 	const defaultOrgName = displayName ? `${displayName}'s Team` : "";
@@ -94,6 +96,7 @@ export const OnboardingRoute = () => {
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "me"] });
 			setWorkspaceId(data.workspace_id);
+			setWorkspace(data.workspace_id, "Default");
 			setReady(false);
 			setTimeout(() => {
 				setStep("invite");
@@ -366,10 +369,11 @@ export const OnboardingRoute = () => {
 										variant="default"
 										onClick={() => {
 											completeOnboarding(defaultOrgName || "My Team")
-												.then(() => {
+												.then((data) => {
 													queryClient.invalidateQueries({
 														queryKey: ["v2", "me"],
 													});
+													setWorkspace(data.workspace_id, "Default");
 													navigate("/projects");
 												})
 												.catch(() => navigate("/projects"));
