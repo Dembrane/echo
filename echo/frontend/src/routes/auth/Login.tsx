@@ -24,6 +24,7 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
 import { useCreateProjectMutation } from "@/components/project/hooks";
+import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
 
@@ -110,21 +111,44 @@ export const LoginRoute = () => {
 
 			const isNewUser = searchParams.get("new") === "true";
 			const next = searchParams.get("next");
+
+			// Start transition immediately — user sees smooth curtain right away
 			const transitionPromise = runTransition({
-				message: isNewUser ? t`Setting up your first project` : t`Welcome back`,
+				message: isNewUser ? t`Welcome to dembrane` : t`Welcome back`,
 			});
+
+			// Check onboarding in parallel with the transition animation.
+			// Small delay ensures the session cookie from login is available.
+			let needsOnboarding = false;
+			try {
+				await new Promise((r) => setTimeout(r, 300));
+				const meResponse = await fetch(`${API_BASE_URL}/v2/me`, {
+					credentials: "include",
+				});
+				if (meResponse.ok) {
+					const meData = await meResponse.json();
+					needsOnboarding = meData.onboarding_completed === false;
+				}
+			} catch {
+				// Swallow — never block login for onboarding check
+			}
+
+			await transitionPromise;
+
+			if (needsOnboarding) {
+				navigate("/onboarding");
+				return;
+			}
 
 			if (isNewUser) {
 				toast(t`Setting up your first project`);
 				const project = await createProjectMutation.mutateAsync({
 					name: t`New Project`,
 				});
-				await transitionPromise;
 				navigate(`/projects/${project.id}`);
 				return;
 			}
 
-			await transitionPromise;
 			if (!!next && next !== "/login") {
 				navigate(next);
 			} else {

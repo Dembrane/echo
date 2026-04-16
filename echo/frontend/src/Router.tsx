@@ -107,6 +107,10 @@ const HostGuidePage = createLazyNamedRoute(
 	() => import("./routes/project/HostGuidePage"),
 	"HostGuidePage",
 );
+const OnboardingRoute = createLazyNamedRoute(
+	() => import("./routes/onboarding/OnboardingRoute"),
+	"OnboardingRoute",
+);
 
 export const mainRouter = createBrowserRouter([
 	{
@@ -162,6 +166,15 @@ export const mainRouter = createBrowserRouter([
 					</AuthLayout>
 				),
 				path: "verify-email",
+			},
+			{
+				// Onboarding - one-time setup after first login
+				element: (
+					<Protected>
+						<OnboardingRoute />
+					</Protected>
+				),
+				path: "onboarding",
 			},
 			{
 				// Host Guide - standalone page, protected but no header/layout

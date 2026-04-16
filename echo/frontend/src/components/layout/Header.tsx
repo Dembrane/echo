@@ -17,6 +17,7 @@ import {
 	IconMessageCircle,
 	IconNotes,
 	IconSettings,
+	IconSparkles,
 	IconUsers,
 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
@@ -26,6 +27,7 @@ import {
 	useCurrentUser,
 	useLogoutMutation,
 } from "@/components/auth/hooks";
+import { useV2Me } from "@/hooks/useV2Me";
 import { I18nLink } from "@/components/common/i18nLink";
 import {
 	COMMUNITY_SLACK_URL,
@@ -79,6 +81,8 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 
 	const logoutMutation = useLogoutMutation();
 	const { data: user } = useCurrentUser({ enabled: isAuthenticated });
+	const { data: meV2 } = useV2Me({ enabled: isAuthenticated });
+	const needsOnboarding = meV2?.onboarding_completed === false;
 	const navigate = useI18nNavigate();
 	const { runTransition } = useTransitionCurtain();
 	const { setLogoUrl } = useWhitelabelLogo();
@@ -199,6 +203,15 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 									<Menu.Divider my={6} />
 
 									{/* Primary */}
+									{needsOnboarding && (
+										<Menu.Item
+											leftSection={<IconSparkles size={14} />}
+											onClick={() => navigate("/onboarding")}
+											color="blue"
+										>
+											<Trans>Set up workspace</Trans>
+										</Menu.Item>
+									)}
 									<Menu.Item
 										leftSection={<IconSettings size={14} />}
 										onClick={handleSettingsClick}
