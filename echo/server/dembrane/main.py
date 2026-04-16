@@ -92,6 +92,11 @@ async def add_process_time_header(
 logger.info("mounting api on /api")
 app.include_router(api, prefix="/api")
 
+from dembrane.api.v2 import v2_router
+
+logger.info("mounting v2 api on /api/v2")
+app.include_router(v2_router, prefix="/api/v2")
+
 
 class SPAStaticFiles(StaticFiles):
     async def get_response(self, path: str, scope: Scope) -> Response:
