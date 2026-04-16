@@ -360,16 +360,19 @@ class ConversationService:
         self,
         conversation_id: str,
     ) -> None:
-        with self._client_context() as client:
-            conversation = self.get_by_id_or_raise(conversation_id, with_chunks=True)
-            for chunk in conversation["chunks"]:
-                try:
-                    if chunk["path"]:
-                        self.file_service.delete(chunk["path"])
-                except Exception as e:
-                    logger.exception(f"Error deleting chunk {chunk['id']} file: {e}")
+        """Soft-delete a conversation by setting deleted_at.
 
-            client.delete_item("conversation", conversation_id)
+        S3 audio files are preserved for the grace period.
+        The conversation and all its data remain in the database
+        but are excluded from read queries via deleted_at IS NULL filter.
+        """
+        with self._client_context() as client:
+            self.get_by_id_or_raise(conversation_id)
+            client.update_item(
+                "conversation",
+                conversation_id,
+                {"deleted_at": datetime.utcnow().isoformat()},
+            )
 
     def get_chunk_by_id_or_raise(
         self,

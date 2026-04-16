@@ -905,14 +905,10 @@ async def delete_conversation(
     auth: DependencyDirectusSession,
 ) -> dict:
     """
-    Delete a conversation and its associated documents from RAG, Postgres, and Directus.
+    Soft-delete a conversation by setting deleted_at.
 
-    Args:
-        conversation_id: ID of the conversation to delete
-        auth: Authentication session to verify ownership
-
-    Returns:
-        Dictionary with status info from Directus deletion
+    S3 audio files are preserved. The conversation data remains in the
+    database but is excluded from read queries via deleted_at IS NULL.
     """
     await raise_if_conversation_not_found_or_not_authorized(conversation_id, auth)
     try:
