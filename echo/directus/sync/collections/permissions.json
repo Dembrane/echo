@@ -417,30 +417,6 @@
   },
   {
     "collection": "conversation_artifact",
-    "action": "delete",
-    "permissions": {
-      "_and": [
-        {
-          "conversation_id": {
-            "project_id": {
-              "directus_user_id": {
-                "_eq": "$CURRENT_USER"
-              }
-            }
-          }
-        }
-      ]
-    },
-    "validation": null,
-    "presets": null,
-    "fields": [
-      "*"
-    ],
-    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
-    "_syncId": "98f115f3-a7ac-40b4-8c2f-b4a5aa517c58"
-  },
-  {
-    "collection": "conversation_artifact",
     "action": "read",
     "permissions": {
       "_and": [
@@ -510,30 +486,6 @@
     ],
     "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
     "_syncId": "3539ba7c-1070-4e91-9e29-d9ac9b1eeb3e"
-  },
-  {
-    "collection": "conversation_chunk",
-    "action": "delete",
-    "permissions": {
-      "_and": [
-        {
-          "conversation_id": {
-            "project_id": {
-              "directus_user_id": {
-                "_eq": "$CURRENT_USER"
-              }
-            }
-          }
-        }
-      ]
-    },
-    "validation": null,
-    "presets": null,
-    "fields": [
-      "*"
-    ],
-    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
-    "_syncId": "b61ba7ee-1075-42ed-aaf4-a9e979ceeb36"
   },
   {
     "collection": "conversation_chunk",
@@ -639,30 +591,6 @@
     ],
     "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
     "_syncId": "562a8ec3-2134-41f8-bfaf-2d298d28b228"
-  },
-  {
-    "collection": "conversation_project_tag",
-    "action": "delete",
-    "permissions": {
-      "_and": [
-        {
-          "conversation_id": {
-            "project_id": {
-              "directus_user_id": {
-                "_eq": "$CURRENT_USER"
-              }
-            }
-          }
-        }
-      ]
-    },
-    "validation": null,
-    "presets": null,
-    "fields": [
-      "*"
-    ],
-    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
-    "_syncId": "8ed5e576-d46a-4a76-8935-0f710e4e6c25"
   },
   {
     "collection": "conversation_project_tag",
@@ -806,28 +734,6 @@
     ],
     "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
     "_syncId": "743b9372-711a-47cd-8d93-d3783bc0fae8"
-  },
-  {
-    "collection": "conversation",
-    "action": "delete",
-    "permissions": {
-      "_and": [
-        {
-          "project_id": {
-            "directus_user_id": {
-              "_eq": "$CURRENT_USER"
-            }
-          }
-        }
-      ]
-    },
-    "validation": null,
-    "presets": null,
-    "fields": [
-      "*"
-    ],
-    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
-    "_syncId": "5331eb25-dc93-4529-9c31-46444f2652e9"
   },
   {
     "collection": "conversation",
@@ -1176,32 +1082,6 @@
   },
   {
     "collection": "project_chat_conversation",
-    "action": "delete",
-    "permissions": {
-      "_and": [
-        {
-          "project_chat_id": {
-            "project_id": {
-              "directus_user_id": {
-                "id": {
-                  "_eq": "$CURRENT_USER"
-                }
-              }
-            }
-          }
-        }
-      ]
-    },
-    "validation": null,
-    "presets": null,
-    "fields": [
-      "*"
-    ],
-    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
-    "_syncId": "8d2becb9-aa42-4c8b-9e25-39b8d99d20fc"
-  },
-  {
-    "collection": "project_chat_conversation",
     "action": "read",
     "permissions": {
       "_and": [
@@ -1376,32 +1256,6 @@
   },
   {
     "collection": "project_chat_message",
-    "action": "delete",
-    "permissions": {
-      "_and": [
-        {
-          "project_chat_id": {
-            "project_id": {
-              "directus_user_id": {
-                "id": {
-                  "_eq": "$CURRENT_USER"
-                }
-              }
-            }
-          }
-        }
-      ]
-    },
-    "validation": null,
-    "presets": null,
-    "fields": [
-      "*"
-    ],
-    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
-    "_syncId": "a429339c-08bf-47b0-8fb5-1076d1ab42d0"
-  },
-  {
-    "collection": "project_chat_message",
     "action": "read",
     "permissions": {
       "_and": [
@@ -1473,28 +1327,6 @@
     ],
     "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
     "_syncId": "7902af81-50fe-4e50-bacc-c78409088eec"
-  },
-  {
-    "collection": "project_chat",
-    "action": "delete",
-    "permissions": {
-      "_and": [
-        {
-          "project_id": {
-            "directus_user_id": {
-              "_eq": "$CURRENT_USER"
-            }
-          }
-        }
-      ]
-    },
-    "validation": null,
-    "presets": null,
-    "fields": [
-      "*"
-    ],
-    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
-    "_syncId": "fb7c57f6-129f-4803-8f02-5deb6818bf46"
   },
   {
     "collection": "project_chat",
@@ -1747,28 +1579,6 @@
   },
   {
     "collection": "project_tag",
-    "action": "delete",
-    "permissions": {
-      "_and": [
-        {
-          "project_id": {
-            "directus_user_id": {
-              "_eq": "$CURRENT_USER"
-            }
-          }
-        }
-      ]
-    },
-    "validation": null,
-    "presets": null,
-    "fields": [
-      "*"
-    ],
-    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
-    "_syncId": "a52b787f-707e-407e-b343-558656405d04"
-  },
-  {
-    "collection": "project_tag",
     "action": "read",
     "permissions": {
       "_and": [
@@ -1918,26 +1728,6 @@
     ],
     "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
     "_syncId": "822be74a-a55d-4745-8bb5-f0030bd62f41"
-  },
-  {
-    "collection": "project",
-    "action": "delete",
-    "permissions": {
-      "_and": [
-        {
-          "directus_user_id": {
-            "_eq": "$CURRENT_USER"
-          }
-        }
-      ]
-    },
-    "validation": null,
-    "presets": null,
-    "fields": [
-      "*"
-    ],
-    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
-    "_syncId": "96f78d3f-ae30-4268-beb1-ea8d7ea277f9"
   },
   {
     "collection": "project",
