@@ -21,6 +21,7 @@ import { useInView } from "react-intersection-observer";
 import { useParams } from "react-router";
 import { FormLabel } from "@/components/form/FormLabel";
 import { useInfiniteProjects } from "@/components/project/hooks";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { analytics } from "@/lib/analytics";
 import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
@@ -51,6 +52,8 @@ export const MoveConversationButton = ({
 		mode: "onChange",
 	});
 
+	const { workspaceId } = useWorkspace();
+
 	const projectsQuery = useInfiniteProjects({
 		options: {
 			initialLimit: 10,
@@ -60,6 +63,10 @@ export const MoveConversationButton = ({
 				id: {
 					_neq: projectId as string,
 				},
+				// Scope to current workspace to prevent cross-workspace moves
+				...(workspaceId && {
+					workspace_id: { _eq: workspaceId },
+				}),
 				...(debouncedSearchValue && {
 					name: {
 						_icontains: debouncedSearchValue,
@@ -92,7 +99,9 @@ export const MoveConversationButton = ({
 				onSuccess: () => {
 					close();
 					navigate(
-						`/projects/${data.targetProjectId}/conversation/${conversation.id}/overview`,
+						workspaceId
+							? `/w/${workspaceId}/projects/${data.targetProjectId}/conversation/${conversation.id}/overview`
+							: `/projects/${data.targetProjectId}/conversation/${conversation.id}/overview`,
 					);
 				},
 			},

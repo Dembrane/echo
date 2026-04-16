@@ -2,10 +2,12 @@
 
 from logging import getLogger
 from datetime import datetime, timezone
+from typing import Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
 
-from dembrane.app_user import resolve_app_user, get_directus_user_profile
+from dembrane.app_user import resolve_app_user, get_directus_user_profile, get_app_user_or_raise
 from dembrane.directus_async import async_directus
 from dembrane.api.v2.schemas import MeResponse, OrgSummary
 from dembrane.api.dependency_auth import DependencyDirectusSession
@@ -109,3 +111,26 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
         orgs=orgs,
         has_pending_invites=has_pending_invites,
     )
+
+
+class UpdateMeRequest(BaseModel):
+    display_name: Optional[str] = Field(default=None, min_length=1, max_length=80)
+
+
+@router.patch("")
+async def update_me(
+    body: UpdateMeRequest,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Update the current user's profile (display_name only for now)."""
+    app_user = await get_app_user_or_raise(auth.user_id)
+
+    payload = {}
+    if body.display_name is not None:
+        payload["display_name"] = body.display_name.strip()
+
+    if not payload:
+        raise HTTPException(status_code=400, detail="Nothing to update")
+
+    await async_directus.update_item("app_user", app_user["id"], payload)
+    return {"status": "success"}
