@@ -12,46 +12,96 @@ Enforcement code always calls has_policy(), never checks role directly.
 from __future__ import annotations
 
 
-# ── Workspace role presets ──
+# ── Tier ordering (lowest to highest) ──
 
-WORKSPACE_ROLE_PRESETS: dict[str, list[str]] = {
-    "viewer": [],
-    "member": [
-        "project:create",
-        "project:update",
-    ],
-    "admin": [
-        "project:create",
-        "project:update",
-        "project:delete",
-        "project:share",
-        "member:invite",
-        "member:manage",
-        "settings:manage",
-    ],
-    "owner": ["*"],
+TIER_ORDER: list[str] = ["pilot", "pioneer", "innovator", "changemaker", "guardian"]
+
+# Policies that require a minimum workspace tier.
+TIER_REQUIRED_FOR_POLICY: dict[str, str] = {
+    "workspace:export": "innovator",
+    "project:share": "innovator",
+    "workspace:whitelabel": "changemaker",
+    "workspace:api_access": "changemaker",
 }
+
 
 # ── Org role presets ──
 
 ORG_ROLE_PRESETS: dict[str, list[str]] = {
-    "member": [],
+    "member": [
+        "org:view",
+    ],
     "admin": [
+        "org:view",
         "org:manage_users",
+        "org:manage_settings",
         "org:manage_billing",
+        "org:create_workspace",
         "org:view_all_workspaces",
+        "org:view_usage",
     ],
     "owner": ["*"],
 }
 
-# ── Project role presets ──
 
-PROJECT_ROLE_PRESETS: dict[str, list[str]] = {
-    "viewer": [],
-    "editor": [
+# ── Workspace role presets ──
+
+WORKSPACE_ROLE_PRESETS: dict[str, list[str]] = {
+    "viewer": [
+        "project:read",
+        "conversation:read",
+        "report:view",
+    ],
+    "member": [
+        "project:read",
+        "project:create",
         "project:update",
         "conversation:read",
+        "conversation:delete",
         "chat:use",
+        "report:view",
+        "report:generate",
+    ],
+    "admin": [
+        "project:read",
+        "project:create",
+        "project:update",
+        "project:delete",
+        "project:share",
+        "project:move",
+        "conversation:read",
+        "conversation:delete",
+        "chat:use",
+        "report:view",
+        "report:generate",
+        "report:delete",
+        "member:invite",
+        "member:manage",
+        "settings:manage",
+        "workspace:view_usage",
+        "workspace:export",
+    ],
+    "owner": ["*"],
+}
+
+
+# ── Project role presets (for project_user sharing, innovator+ tier) ──
+
+PROJECT_ROLE_PRESETS: dict[str, list[str]] = {
+    "viewer": [
+        "project:read",
+        "conversation:read",
+        "report:view",
+    ],
+    "editor": [
+        "project:read",
+        "project:update",
+        "conversation:read",
+        "conversation:delete",
+        "chat:use",
+        "report:view",
+        "report:generate",
+        "export:data",
     ],
 }
 
@@ -76,3 +126,11 @@ def has_policy(
     """Check if a role + custom_policies grants a required policy."""
     effective = get_effective_policies(role, custom_policies, presets)
     return "*" in effective or required in effective
+
+
+def meets_tier(current_tier: str, minimum_tier: str) -> bool:
+    """Check if a workspace tier meets the minimum requirement."""
+    try:
+        return TIER_ORDER.index(current_tier) >= TIER_ORDER.index(minimum_tier)
+    except ValueError:
+        return False

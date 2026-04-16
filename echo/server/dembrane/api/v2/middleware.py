@@ -7,7 +7,7 @@ from typing import Optional
 
 from fastapi import Depends, HTTPException
 
-from dembrane.policies import has_policy
+from dembrane.policies import has_policy, meets_tier
 from dembrane.app_user import resolve_app_user
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.directus_async import async_directus
@@ -45,7 +45,15 @@ class WorkspaceContext:
 
     def require_policy(self, required: str) -> None:
         if not self.has_policy(required):
-            raise HTTPException(status_code=403, detail=f"Missing policy: {required}")
+            raise HTTPException(status_code=403, detail="Access denied")
+
+    def require_tier(self, minimum_tier: str) -> None:
+        current = self.workspace.get("tier", "pioneer")
+        if not meets_tier(current, minimum_tier):
+            raise HTTPException(
+                status_code=403,
+                detail=f"This feature requires the {minimum_tier} plan or above",
+            )
 
 
 async def get_workspace_context(

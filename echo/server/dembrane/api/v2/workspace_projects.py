@@ -39,7 +39,8 @@ async def list_workspace_projects(
     offset: int = Query(0, ge=0),
     limit: int = Query(15, ge=1, le=100),
 ) -> V2ProjectsListResponse:
-    """List projects in a workspace. Requires workspace membership."""
+    """List projects in a workspace. Requires project:read policy."""
+    ctx.require_policy("project:read")
     base_filter: dict = {
         "workspace_id": {"_eq": ctx.workspace_id},
         "deleted_at": {"_null": True},
@@ -107,7 +108,7 @@ async def list_workspace_projects(
         projects=projects,
         total_count=total_count,
         has_more=has_more,
-        is_admin=ctx.role in ("admin", "owner"),
+        is_admin=ctx.has_policy("settings:manage"),
     )
 
 

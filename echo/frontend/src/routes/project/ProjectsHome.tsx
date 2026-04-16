@@ -247,7 +247,7 @@ export const ProjectsHomeRoute = () => {
 					status === "success" && (
 						<CloseableAlert icon={<IconInfoCircle />}>
 							<Trans>
-								No projects yet. Create your first one to get started.
+								No projects in this workspace yet. Create your first one to get started.
 							</Trans>
 						</CloseableAlert>
 					)}
