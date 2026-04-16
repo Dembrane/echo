@@ -45,7 +45,7 @@ interface WorkspaceDetail {
 	org_name: string;
 	is_default: boolean;
 	members: WorkspaceMember[];
-	pending_invite_count: number;
+	pending_invites: Array<{ id: string; email: string; role: string; created_at: string | null }>;
 	my_role: string;
 	my_policies: string[];
 }
@@ -170,8 +170,8 @@ export const WorkspaceSettingsRoute = () => {
 						</Title>
 						<Text size="xs" c="dimmed">
 							{settings.members.length} {settings.members.length === 1 ? t`member` : t`members`}
-							{settings.pending_invite_count > 0 &&
-								` · ${settings.pending_invite_count} ${t`pending`}`}
+							{settings.pending_invites.length > 0 &&
+								` · ${settings.pending_invites.length} ${t`pending`}`}
 						</Text>
 					</Group>
 
@@ -212,15 +212,14 @@ export const WorkspaceSettingsRoute = () => {
 
 					{/* Member list */}
 					<Stack gap={0}>
-						{settings.members.map((member) => (
+						{settings.members.map((member, idx) => (
 							<Paper
 								key={member.id}
 								p="sm"
 								withBorder
 								radius={0}
 								style={{
-									borderBottom: "none",
-									"&:last-child": { borderBottom: "1px solid" },
+									marginTop: idx > 0 ? -1 : 0,
 								}}
 							>
 								<Group justify="space-between" wrap="nowrap">
@@ -267,6 +266,35 @@ export const WorkspaceSettingsRoute = () => {
 						))}
 					</Stack>
 				</Stack>
+
+				{/* Pending invites */}
+				{settings.pending_invites.length > 0 && (
+					<>
+						<Divider />
+						<Stack gap={12}>
+							<Title order={5} fw={400}>
+								<Trans>Pending invites</Trans>
+							</Title>
+							<Stack gap={0}>
+								{settings.pending_invites.map((inv) => (
+									<Paper key={inv.id} p="sm" withBorder radius={0}>
+										<Group justify="space-between">
+											<Box>
+												<Text size="sm">{inv.email}</Text>
+												<Text size="xs" c="dimmed" style={{ textTransform: "capitalize" }}>
+													{inv.role}
+												</Text>
+											</Box>
+											<Badge size="xs" variant="light" color="yellow">
+												<Trans>Pending</Trans>
+											</Badge>
+										</Group>
+									</Paper>
+								))}
+							</Stack>
+						</Stack>
+					</>
+				)}
 
 				{/* Your access */}
 				<Divider />

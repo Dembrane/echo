@@ -28,6 +28,13 @@ class WorkspaceMember(BaseModel):
     is_external: bool
 
 
+class PendingInvite(BaseModel):
+    id: str
+    email: str
+    role: str
+    created_at: Optional[str] = None
+
+
 class WorkspaceDetailResponse(BaseModel):
     id: str
     name: str
@@ -39,7 +46,7 @@ class WorkspaceDetailResponse(BaseModel):
     privacy_policy_url: Optional[str] = None
     description: Optional[str] = None
     members: list[WorkspaceMember] = []
-    pending_invite_count: int = 0
+    pending_invites: list[PendingInvite] = []
     # Current user's access
     my_role: str = ""
     my_policies: list[str] = []
@@ -102,21 +109,39 @@ async def get_workspace_settings(
                 is_external=m.get("is_external", False),
             ))
 
-    # Pending invites count
-    pending = await async_directus.get_items(
+    # Pending invites
+    pending_invites_raw = await async_directus.get_items(
         "workspace_invite",
         {"query": {
             "filter": {"workspace_id": {"_eq": ctx.workspace_id}, "accepted_at": {"_null": True}},
-            "aggregate": {"count": ["id"]},
+            "fields": ["id", "email", "role", "created_at"],
+            "sort": ["-created_at"],
+            "limit": 50,
         }},
     )
-    pending_count = 0
-    if isinstance(pending, list) and len(pending) > 0:
-        pending_count = int(pending[0].get("count", {}).get("id", 0))
+    pending_invites: list[PendingInvite] = []
+    if isinstance(pending_invites_raw, list):
+        pending_invites = [
+            PendingInvite(
+                id=inv["id"],
+                email=inv.get("email", ""),
+                role=inv.get("role", ""),
+                created_at=inv.get("created_at"),
+            )
+            for inv in pending_invites_raw
+        ]
 
-    # Current user's effective policies
+    # Current user's effective policies — expand "*" into all known policies
     from dembrane.policies import get_effective_policies, WORKSPACE_ROLE_PRESETS
     effective = get_effective_policies(ctx.role, ctx.custom_policies, WORKSPACE_ROLE_PRESETS)
+    if "*" in effective:
+        # Owner gets all policies — show them explicitly instead of "*"
+        all_policies = set()
+        for preset_policies in WORKSPACE_ROLE_PRESETS.values():
+            for p in preset_policies:
+                if p != "*":
+                    all_policies.add(p)
+        effective = sorted(all_policies)
 
     return WorkspaceDetailResponse(
         id=ws["id"],
@@ -129,7 +154,7 @@ async def get_workspace_settings(
         privacy_policy_url=ws.get("privacy_policy_url"),
         description=ws.get("description"),
         members=members,
-        pending_invite_count=pending_count,
+        pending_invites=pending_invites,
         my_role=ctx.role,
         my_policies=effective,
     )
