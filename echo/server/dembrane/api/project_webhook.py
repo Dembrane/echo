@@ -387,7 +387,7 @@ async def delete_webhook(
     webhook_id: str,
     auth: DependencyDirectusSession,
 ) -> None:
-    """Delete a webhook."""
+    """Soft-delete a webhook by setting deleted_at."""
     await _check_project_access(project_id, auth)
 
     from dembrane.directus import directus_client_context
@@ -409,7 +409,11 @@ async def delete_webhook(
             if not existing:
                 raise HTTPException(status_code=404, detail="Webhook not found")
 
-            client.delete_item("project_webhook", webhook_id)
+            client.update_item(
+                "project_webhook",
+                webhook_id,
+                {"deleted_at": datetime.utcnow().isoformat()},
+            )
 
     except HTTPException:
         raise
