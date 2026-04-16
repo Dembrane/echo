@@ -46,7 +46,7 @@ def load_config(path: str) -> dict:
         return yaml.safe_load(f)
 
 
-async def find_directus_user_by_email(client, email: str) -> dict | None:
+def find_directus_user_by_email(client, email: str) -> dict | None:
     """Find a Directus user by email. Returns None if not found."""
     users = client.get_users(
         {"query": {"filter": {"email": {"_eq": email}}, "fields": ["id", "email", "first_name", "last_name"], "limit": 1}}
@@ -56,9 +56,9 @@ async def find_directus_user_by_email(client, email: str) -> dict | None:
     return None
 
 
-async def find_or_create_directus_user(client, email: str, role_id: str, dry_run: bool) -> dict | None:
+def find_or_create_directus_user(client, email: str, role_id: str, dry_run: bool) -> dict | None:
     """Find existing Directus user or create one with invite."""
-    existing = await find_directus_user_by_email(client, email)
+    existing = find_directus_user_by_email(client, email)
     if existing:
         logger.info(f"  Found existing Directus user: {email} (id: {existing['id']})")
         return existing
@@ -78,7 +78,7 @@ async def find_or_create_directus_user(client, email: str, role_id: str, dry_run
     return user
 
 
-async def find_or_create_app_user(client, directus_user_id: str, email: str, display_name: str, dry_run: bool) -> dict | None:
+def find_or_create_app_user(client, directus_user_id: str, email: str, display_name: str, dry_run: bool) -> dict | None:
     """Find existing app_user or create one."""
     items = client.get_items("app_user", {"query": {"filter": {"directus_user_id": {"_eq": directus_user_id}}, "limit": 1}})
     if isinstance(items, list) and len(items) > 0:
@@ -102,7 +102,7 @@ async def find_or_create_app_user(client, directus_user_id: str, email: str, dis
     return app_user
 
 
-async def run_preseed(config: dict, dry_run: bool = True):
+def run_preseed(config: dict, dry_run: bool = True):
     from dembrane.directus import create_directus_client
     from dembrane.utils import generate_uuid
     from dembrane.settings import get_settings
@@ -152,7 +152,7 @@ async def run_preseed(config: dict, dry_run: bool = True):
     for email, role in all_emails.items():
         logger.info(f"\nProcessing user: {email} (org role: {role})")
 
-        directus_user = await find_or_create_directus_user(client, email, basic_user_role_id, dry_run)
+        directus_user = find_or_create_directus_user(client, email, basic_user_role_id, dry_run)
         if not directus_user:
             if dry_run:
                 app_users[email] = {"id": f"<dry-run-{email}>", "email": email}
@@ -162,7 +162,7 @@ async def run_preseed(config: dict, dry_run: bool = True):
         last = directus_user.get("last_name") or ""
         display_name = f"{first} {last}".strip() or email
 
-        app_user = await find_or_create_app_user(
+        app_user = find_or_create_app_user(
             client, directus_user["id"], email, display_name, dry_run
         )
         if app_user:
@@ -353,8 +353,7 @@ def main():
 
     config = load_config(args.config)
 
-    import asyncio
-    asyncio.run(run_preseed(config, dry_run=args.dry_run))
+    run_preseed(config, dry_run=args.dry_run)
 
 
 if __name__ == "__main__":

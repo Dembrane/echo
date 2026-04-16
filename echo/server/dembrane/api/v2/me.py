@@ -1,7 +1,7 @@
 """GET /v2/me — lightweight user profile with onboarding status."""
 
 from logging import getLogger
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter
 
@@ -43,7 +43,7 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
                     "filter": {
                         "email": {"_eq": email},
                         "accepted_at": {"_null": True},
-                        "expires_at": {"_gt": datetime.utcnow().isoformat()},
+                        "expires_at": {"_gt": datetime.now(timezone.utc).isoformat()},
                     },
                     "fields": ["id"],
                     "limit": 1,

@@ -1,5 +1,6 @@
 """V2 workspace endpoints — list, create, manage workspaces."""
 
+import asyncio
 from datetime import datetime, timezone
 from logging import getLogger
 from typing import Optional
@@ -199,35 +200,43 @@ async def list_workspaces(
         if isinstance(orgs, list):
             org_map = {o["id"]: o.get("name", "") for o in orgs}
 
-    # Build workspace summaries with usage
-    results: list[WorkspaceSummary] = []
-    for membership in memberships:
-        ws_id = membership.get("workspace_id")
-        ws = ws_map.get(ws_id)
-        if not ws:
-            continue
+    # Build workspace summaries with usage — parallelize per-workspace queries
+    # Filter to valid memberships first
+    valid_memberships = [(m, ws_map[m["workspace_id"]]) for m in memberships if ws_map.get(m.get("workspace_id"))]
 
-        # Project count
-        proj_count_result = await async_directus.get_items(
+    async def _get_workspace_aggregates(ws_id: str) -> tuple[int, int, WorkspaceUsage, list[MemberPreview]]:
+        """Fetch project count, member count, usage, and member previews in parallel."""
+        proj_task = async_directus.get_items(
             "project",
             {"query": {"filter": {"workspace_id": {"_eq": ws_id}, "deleted_at": {"_null": True}}, "aggregate": {"count": ["id"]}}},
         )
-        project_count = 0
-        if isinstance(proj_count_result, list) and len(proj_count_result) > 0:
-            project_count = int(proj_count_result[0].get("count", {}).get("id", 0))
-
-        # Member count
-        mem_count_result = await async_directus.get_items(
+        mem_task = async_directus.get_items(
             "workspace_membership",
             {"query": {"filter": {"workspace_id": {"_eq": ws_id}, "deleted_at": {"_null": True}}, "aggregate": {"count": ["id"]}}},
         )
+        usage_task = _get_workspace_usage(ws_id)
+        previews_task = _get_member_previews(ws_id)
+
+        proj_count_result, mem_count_result, usage, previews = await asyncio.gather(
+            proj_task, mem_task, usage_task, previews_task
+        )
+
+        project_count = 0
+        if isinstance(proj_count_result, list) and len(proj_count_result) > 0:
+            project_count = int(proj_count_result[0].get("count", {}).get("id", 0))
         member_count = 0
         if isinstance(mem_count_result, list) and len(mem_count_result) > 0:
             member_count = int(mem_count_result[0].get("count", {}).get("id", 0))
 
-        usage = await _get_workspace_usage(ws_id)
-        previews = await _get_member_previews(ws_id)
+        return project_count, member_count, usage, previews
 
+    # Run all workspace aggregate queries in parallel across all workspaces
+    all_aggregates = await asyncio.gather(
+        *[_get_workspace_aggregates(ws["id"]) for _, ws in valid_memberships]
+    )
+
+    results: list[WorkspaceSummary] = []
+    for (membership, ws), (project_count, member_count, usage, previews) in zip(valid_memberships, all_aggregates):
         results.append(WorkspaceSummary(
             id=ws["id"],
             name=ws.get("name", ""),
@@ -256,20 +265,44 @@ async def list_workspaces(
         },
     )
     if isinstance(org_membership_data, list):
+        # Build org-to-workspaces map and collect all workspace IDs for member queries
+        org_team_workspaces: dict[str, list[WorkspaceSummary]] = {}
+        all_team_ws_ids: list[str] = []
+        valid_org_memberships = []
         for om in org_membership_data:
             oid = om.get("org_id")
             if not oid:
                 continue
-            team_workspaces = [w for w in results if w.org_id == oid]
-            # Unique members across all workspaces in this team
+            team_ws = [w for w in results if w.org_id == oid]
+            org_team_workspaces[oid] = team_ws
+            all_team_ws_ids.extend(tw.id for tw in team_ws)
+            valid_org_memberships.append(om)
+
+        # Fetch all workspace memberships for team rollups in parallel
+        all_team_mems = await asyncio.gather(
+            *[
+                async_directus.get_items(
+                    "workspace_membership",
+                    {"query": {"filter": {"workspace_id": {"_eq": ws_id}, "deleted_at": {"_null": True}}, "fields": ["user_id"], "limit": -1}},
+                )
+                for ws_id in all_team_ws_ids
+            ]
+        ) if all_team_ws_ids else []
+
+        # Build ws_id -> member user_ids map
+        ws_member_map: dict[str, set[str]] = {}
+        for ws_id, mems in zip(all_team_ws_ids, all_team_mems):
+            member_ids: set[str] = set()
+            if isinstance(mems, list):
+                member_ids = {m["user_id"] for m in mems if m.get("user_id")}
+            ws_member_map[ws_id] = member_ids
+
+        for om in valid_org_memberships:
+            oid = om["org_id"]
+            team_workspaces = org_team_workspaces[oid]
             all_member_ids: set[str] = set()
             for tw in team_workspaces:
-                mems = await async_directus.get_items(
-                    "workspace_membership",
-                    {"query": {"filter": {"workspace_id": {"_eq": tw.id}, "deleted_at": {"_null": True}}, "fields": ["user_id"], "limit": -1}},
-                )
-                if isinstance(mems, list):
-                    all_member_ids.update(m["user_id"] for m in mems if m.get("user_id"))
+                all_member_ids.update(ws_member_map.get(tw.id, set()))
 
             teams.append(TeamRollup(
                 id=oid,

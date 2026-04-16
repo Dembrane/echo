@@ -17,7 +17,7 @@ Decision tree:
 from __future__ import annotations
 
 from logging import getLogger
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 
@@ -70,7 +70,7 @@ async def complete_onboarding(
 
     # ── Step 2: Auto-accept pending workspace invites ──
 
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(timezone.utc).isoformat()
     joined_an_org = False
     first_workspace_id = None
 
