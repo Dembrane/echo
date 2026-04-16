@@ -6,7 +6,7 @@ Usage:
     python scripts/create_schema.py --step 2        # org + org_membership
     python scripts/create_schema.py --step 3        # workspace + workspace_membership
     python scripts/create_schema.py --step 4        # workspace_invite + project_membership
-    python scripts/create_schema.py --step 5        # usage_event
+    python scripts/create_schema.py --step 5        # (removed — usage_event dropped)
     python scripts/create_schema.py --step 6        # add fields to project
     python scripts/create_schema.py --step 7        # add deleted_at to existing collections
     python scripts/create_schema.py --step 8        # remove legacy chat collection
