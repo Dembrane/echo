@@ -31,6 +31,7 @@ import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { I18nLink } from "@/components/common/i18nLink";
 import {
+	API_BASE_URL,
 	COMMUNITY_SLACK_URL,
 	DIRECTUS_PUBLIC_URL,
 	ENABLE_ANNOUNCEMENTS,
@@ -84,8 +85,21 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 	const { data: user } = useCurrentUser({ enabled: isAuthenticated });
 	const { data: meV2 } = useV2Me({ enabled: isAuthenticated });
 	const needsOnboarding = meV2?.onboarding_completed === false;
-	const { workspaceName } = useWorkspace();
+	const { workspaceId, workspaceName, setWorkspace } = useWorkspace();
 	const navigate = useI18nNavigate();
+
+	// Auto-set workspace if onboarded but none selected (e.g. onboarded before context existed)
+	useEffect(() => {
+		if (!isAuthenticated || !meV2?.onboarding_completed || workspaceId) return;
+
+		fetch(`${API_BASE_URL}/v2/workspaces`, { credentials: "include" })
+			.then((r) => r.ok ? r.json() : null)
+			.then((data) => {
+				const ws = data?.workspaces?.[0];
+				if (ws) setWorkspace(ws.id, ws.name);
+			})
+			.catch(() => {});
+	}, [isAuthenticated, meV2?.onboarding_completed, workspaceId, setWorkspace]);
 	const { runTransition } = useTransitionCurtain();
 	const { setLogoUrl } = useWhitelabelLogo();
 
