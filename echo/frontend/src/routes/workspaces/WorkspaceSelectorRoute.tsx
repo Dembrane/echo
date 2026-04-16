@@ -201,7 +201,7 @@ export const WorkspaceSelectorRoute = () => {
 	}
 
 	const handleSelect = (ws: Workspace) => {
-		setWorkspace(ws.id, ws.name);
+		setWorkspace(ws.id);
 		navigate("/projects");
 	};
 

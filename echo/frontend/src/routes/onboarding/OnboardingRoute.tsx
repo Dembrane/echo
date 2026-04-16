@@ -96,7 +96,7 @@ export const OnboardingRoute = () => {
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "me"] });
 			setWorkspaceId(data.workspace_id);
-			setWorkspace(data.workspace_id, "Default");
+			setWorkspace(data.workspace_id);
 			setReady(false);
 			setTimeout(() => {
 				setStep("invite");
@@ -373,7 +373,7 @@ export const OnboardingRoute = () => {
 													queryClient.invalidateQueries({
 														queryKey: ["v2", "me"],
 													});
-													setWorkspace(data.workspace_id, "Default");
+													setWorkspace(data.workspace_id);
 													navigate("/projects");
 												})
 												.catch(() => navigate("/projects"));

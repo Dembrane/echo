@@ -45,7 +45,8 @@ export const CreateWorkspaceRoute = () => {
 		mutationFn: () => createWorkspace(name.trim(), tier),
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
-			setWorkspace(data.id, data.name);
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
+			setWorkspace(data.id);
 			toast.success(t`Workspace created`);
 			navigate("/projects");
 		},
