@@ -306,7 +306,7 @@ def merge_multiple_audio_files_and_save_to_s3(
     input_file_names: List[str],
     output_file_name: str,
     output_format: str,
-) -> str:
+) -> tuple[str, float]:
     """Merge multiple audio files and save the result back to S3.
 
     Args:
@@ -315,7 +315,7 @@ def merge_multiple_audio_files_and_save_to_s3(
         output_format: Format to convert to
 
     Returns:
-        str: Public URL of the processed file
+        tuple of (public_url, duration_seconds). Duration is -1.0 if probing fails.
 
     Raises:
         FFmpegError: For FFmpeg-specific errors
@@ -416,32 +416,41 @@ def merge_multiple_audio_files_and_save_to_s3(
             error_message = err.decode() if err else "Unknown FFmpeg error"
             raise FFmpegError(f"FFmpeg final processing failed: {error_message}")
 
-        with open(merged_path, "rb") as f:
-            output = f.read()
+        # Probe duration from the local temp file before cleanup (no S3 round-trip)
+        audio_duration = -1.0
+        try:
+            probe_data = probe_from_file(merged_path)
+            if "format" in probe_data and "duration" in probe_data["format"]:
+                audio_duration = float(probe_data["format"]["duration"])
+            else:
+                logger.error("Duration not found in ffprobe output for merged file")
+        except Exception as e:
+            logger.error(f"Error probing duration from local merged file: {str(e)}")
 
-    # Save to S3
-    logger.info(f"Saving merged audio to S3 as {output_file_name}")
-    s3_client.put_object(
-        Bucket=STORAGE_S3_BUCKET,
-        Key=get_sanitized_s3_key(output_file_name),
-        Body=output,
-        ACL="private",
-    )
+        # Stream-upload to S3 from disk (never loads full file into memory)
+        s3_key = get_sanitized_s3_key(output_file_name)
+        logger.info(f"Saving merged audio to S3 as {output_file_name}")
+        s3_client.upload_file(
+            merged_path,
+            STORAGE_S3_BUCKET,
+            s3_key,
+            ExtraArgs={"ACL": "private"},
+        )
 
     info = s3_client.head_object(
         Bucket=STORAGE_S3_BUCKET, Key=get_sanitized_s3_key(output_file_name)
     )
     logger.debug(f"Head object from S3: {info}")
 
-    duration = time.time() - start_time
+    elapsed = time.time() - start_time
 
     logger.info(
-        f"Completed merging {len(input_file_names)} files in {duration:.2f}s. "
-        f"Total input size: {total_size_mb:.1f}MB"
+        f"Completed merging {len(input_file_names)} files in {elapsed:.2f}s. "
+        f"Total input size: {total_size_mb:.1f}MB, duration: {audio_duration:.1f}s"
     )
 
     public_url = f"{STORAGE_S3_ENDPOINT}/{STORAGE_S3_BUCKET}/{output_file_name}"
-    return public_url
+    return public_url, audio_duration
 
 
 def probe_from_bytes(file_bytes: bytes, input_format: str) -> dict:
@@ -577,6 +586,39 @@ def probe_from_bytes(file_bytes: bytes, input_format: str) -> dict:
                     os.unlink(temp_file_path)
                 except Exception as e:
                     logger.warning(f"Failed to delete temporary file {temp_file_path}: {e}")
+
+
+def probe_from_file(file_path: str) -> dict:
+    """Run ffprobe directly on a local file path. Avoids loading the file into memory."""
+    if not os.path.exists(file_path):
+        raise ValueError(f"File not found: {file_path}")
+
+    cmd = [
+        "ffprobe",
+        "-hide_banner",
+        "-loglevel",
+        "warning",
+        "-print_format",
+        "json",
+        "-show_format",
+        "-show_streams",
+        file_path,
+    ]
+
+    process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    stderr_output = process.stderr.decode().strip()
+    if stderr_output:
+        logger.debug(f"ffprobe stderr: {stderr_output}")
+
+    if process.returncode != 0:
+        raise ValueError(f"ffprobe failed on {file_path}: {stderr_output or 'Unknown error'}")
+
+    output = process.stdout.decode()
+    if not output:
+        raise ValueError("ffprobe returned empty output")
+
+    return json.loads(output)
 
 
 def probe_from_s3(file_name: str, input_format: str) -> dict:
