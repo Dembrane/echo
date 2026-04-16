@@ -49,7 +49,14 @@ interface WorkspaceDetail {
 	org_name: string;
 	is_default: boolean;
 	members: WorkspaceMember[];
-	pending_invites: Array<{ id: string; email: string; role: string; created_at: string | null }>;
+	pending_invites: Array<{
+		id: string;
+		email: string;
+		role: string;
+		created_at: string | null;
+		invited_by_name: string | null;
+		expires_at: string | null;
+	}>;
 	my_role: string;
 	my_policies: string[];
 }
@@ -456,8 +463,9 @@ export const WorkspaceSettingsRoute = () => {
 										<Group justify="space-between">
 											<Box>
 												<Text size="sm">{inv.email}</Text>
-												<Text size="xs" c="dimmed" style={{ textTransform: "capitalize" }}>
-													{inv.role}
+												<Text size="xs" c="dimmed">
+													<span style={{ textTransform: "capitalize" }}>{inv.role}</span>
+													{inv.invited_by_name && ` · invited by ${inv.invited_by_name}`}
 												</Text>
 											</Box>
 											<Group gap={8}>
