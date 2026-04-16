@@ -4,10 +4,12 @@ import {
 	createLazyRoute,
 } from "./components/common/LazyRoute";
 import { Protected } from "./components/common/Protected";
+import { WorkspaceRedirect } from "./components/common/WorkspaceRedirect";
 import { ErrorPage } from "./components/error/ErrorPage";
 import { AuthLayout } from "./components/layout/AuthLayout";
 // Layout components - keep as regular imports since they're used frequently
 import { BaseLayout } from "./components/layout/BaseLayout";
+import { WorkspaceLayout } from "./components/layout/WorkspaceLayout";
 import { LanguageLayout } from "./components/layout/LanguageLayout";
 import { ParticipantLayout } from "./components/layout/ParticipantLayout";
 import { ProjectConversationLayout } from "./components/layout/ProjectConversationLayout";
@@ -124,6 +126,103 @@ const WorkspaceSettingsRoute = createLazyNamedRoute(
 	"WorkspaceSettingsRoute",
 );
 
+// Project route children — shared between /projects and /w/:workspaceId/projects
+const projectRouteChildren = [
+	{
+		element: <ProjectsHomeRoute />,
+		index: true,
+	},
+	{
+		children: [
+			{
+				children: [
+					{
+						children: [
+							{
+								element: <Navigate to="portal-editor" replace />,
+								index: true,
+							},
+							{
+								element: <ProjectSettingsRoute />,
+								path: "overview",
+							},
+							{
+								element: <ProjectPortalSettingsRoute />,
+								path: "portal-editor",
+							},
+						],
+						element: <ProjectOverviewLayout />,
+						path: "",
+					},
+					{
+						element: <NewChatRoute />,
+						path: "chats/new",
+					},
+					{
+						element: <ProjectChatRoute />,
+						path: "chats/:chatId",
+					},
+					{
+						element: <DebugPage />,
+						path: "chats/:chatId/debug",
+					},
+					{
+						children: [
+							{
+								element: <Navigate to="overview" replace />,
+								index: true,
+							},
+							{
+								element: <ProjectConversationOverviewRoute />,
+								path: "overview",
+							},
+							{
+								element: <ProjectConversationTranscript />,
+								path: "transcript",
+							},
+							{
+								element: <DebugPage />,
+								path: "debug",
+							},
+						],
+						element: <ProjectConversationLayout />,
+						path: "conversation/:conversationId",
+					},
+
+					{
+						children: [
+							{
+								element: <ProjectLibraryAspect />,
+								path: "views/:viewId/aspects/:aspectId",
+							},
+							{
+								element: <ProjectLibraryView />,
+								path: "views/:viewId",
+							},
+							{
+								element: <ProjectLibraryRoute />,
+								index: true,
+							},
+						],
+						element: <ProjectLibraryLayout />,
+						path: "library",
+					},
+					{
+						element: <ProjectReportRoute />,
+						path: "report",
+					},
+					{
+						element: <DebugPage />,
+						path: "debug",
+					},
+				],
+				element: <ProjectLayout />,
+			},
+		],
+		path: ":projectId",
+	},
+];
+
 export const mainRouter = createBrowserRouter([
 	{
 		children: [
@@ -225,100 +324,32 @@ export const mainRouter = createBrowserRouter([
 				path: "projects/:projectId/host-guide",
 			},
 			{
+				// Workspace-scoped projects: /w/:workspaceId/projects/...
+				// This is the PRIMARY route — workspace ID in URL makes it shareable
 				children: [
 					{
-						element: <ProjectsHomeRoute />,
+						children: projectRouteChildren,
+						element: <BaseLayout />,
+						path: "projects",
+					},
+				],
+				element: (
+					<Protected>
+						<WorkspaceLayout />
+					</Protected>
+				),
+				path: "w/:workspaceId",
+			},
+			{
+				// Legacy /projects — redirects to /w/:workspaceId/projects
+				// Kept for backward compat (bookmarks, existing links)
+				children: [
+					{
+						element: <WorkspaceRedirect />,
 						index: true,
 					},
-					{
-						children: [
-							{
-								children: [
-									{
-										children: [
-											{
-												element: <Navigate to="portal-editor" replace />,
-												index: true,
-											},
-											{
-												element: <ProjectSettingsRoute />,
-												path: "overview",
-											},
-											{
-												element: <ProjectPortalSettingsRoute />,
-												path: "portal-editor",
-											},
-										],
-										element: <ProjectOverviewLayout />,
-										path: "",
-									},
-									{
-										element: <NewChatRoute />,
-										path: "chats/new",
-									},
-									{
-										element: <ProjectChatRoute />,
-										path: "chats/:chatId",
-									},
-									{
-										element: <DebugPage />,
-										path: "chats/:chatId/debug",
-									},
-									{
-										children: [
-											{
-												element: <Navigate to="overview" replace />,
-												index: true,
-											},
-											{
-												element: <ProjectConversationOverviewRoute />,
-												path: "overview",
-											},
-											{
-												element: <ProjectConversationTranscript />,
-												path: "transcript",
-											},
-											{
-												element: <DebugPage />,
-												path: "debug",
-											},
-										],
-										element: <ProjectConversationLayout />,
-										path: "conversation/:conversationId",
-									},
-
-									{
-										children: [
-											{
-												element: <ProjectLibraryAspect />,
-												path: "views/:viewId/aspects/:aspectId",
-											},
-											{
-												element: <ProjectLibraryView />,
-												path: "views/:viewId",
-											},
-											{
-												element: <ProjectLibraryRoute />,
-												index: true,
-											},
-										],
-										element: <ProjectLibraryLayout />,
-										path: "library",
-									},
-									{
-										element: <ProjectReportRoute />,
-										path: "report",
-									},
-									{
-										element: <DebugPage />,
-										path: "debug",
-									},
-								],
-								element: <ProjectLayout />,
-							},
-						],
-						path: ":projectId",
-					},
+					// Direct project access still works (falls through to v1)
+					...projectRouteChildren.slice(1),
 				],
 				element: (
 					<Protected>

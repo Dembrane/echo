@@ -71,13 +71,21 @@ export const OnboardingRoute = () => {
 	const [sendingInvites, setSendingInvites] = useState(false);
 	const [ready, setReady] = useState(false);
 
+	const goToProjects = () => {
+		if (workspaceId) {
+			navigate(`/w/${workspaceId}/projects`);
+		} else {
+			goToProjects();
+		}
+	};
+
 	useDocumentTitle(t`Set up your workspace | dembrane`);
 
 	useEffect(() => {
 		if (meLoading) return;
 
 		if (meV2?.onboarding_completed === true) {
-			navigate("/projects");
+			goToProjects();
 			return;
 		}
 
@@ -102,7 +110,7 @@ export const OnboardingRoute = () => {
 
 			// Invited users skip the invite step — they don't have a team to invite
 			if (hasInvites) {
-				navigate("/projects");
+				goToProjects();
 				return;
 			}
 
@@ -120,7 +128,7 @@ export const OnboardingRoute = () => {
 		const validEmails = inviteEmails.filter((e) => e.trim() && e.includes("@"));
 
 		if (validEmails.length === 0) {
-			navigate("/projects");
+			goToProjects();
 			return;
 		}
 
@@ -140,7 +148,7 @@ export const OnboardingRoute = () => {
 		if (sent > 0) {
 			toast.success(sent === 1 ? t`Invite sent` : t`${sent} invites sent`);
 		}
-		navigate("/projects");
+		goToProjects();
 	};
 
 	const addEmailField = () => setInviteEmails([...inviteEmails, ""]);
@@ -255,7 +263,7 @@ export const OnboardingRoute = () => {
 							<Button
 								size="sm"
 								variant="default"
-								onClick={() => navigate("/projects")}
+								onClick={() => goToProjects()}
 							>
 								<Trans>Skip</Trans>
 							</Button>
@@ -394,9 +402,9 @@ export const OnboardingRoute = () => {
 														queryKey: ["v2", "me"],
 													});
 													setWorkspace(data.workspace_id);
-													navigate("/projects");
+													goToProjects();
 												})
-												.catch(() => navigate("/projects"));
+												.catch(() => goToProjects());
 										}}
 									>
 										<Trans>Use default</Trans>

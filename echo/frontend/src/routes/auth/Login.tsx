@@ -121,6 +121,7 @@ export const LoginRoute = () => {
 			// Small delay ensures the session cookie from login is available.
 			let needsOnboarding = false;
 			let workspaceCount = 0;
+			let firstWorkspaceId: string | null = null;
 			let isTeamAdmin = false;
 			try {
 				await new Promise((r) => setTimeout(r, 300));
@@ -142,7 +143,11 @@ export const LoginRoute = () => {
 					});
 					if (wsResponse.ok) {
 						const wsData = await wsResponse.json();
-						workspaceCount = wsData.workspaces?.length ?? 0;
+						const wsList = wsData.workspaces ?? [];
+						workspaceCount = wsList.length;
+						if (wsList.length > 0) {
+							firstWorkspaceId = wsList[0].id;
+						}
 					}
 				}
 			} catch {
@@ -163,9 +168,11 @@ export const LoginRoute = () => {
 			}
 
 			// Multi-workspace or team admin → workspace selector
-			// Solo user → straight to projects
+			// Solo user → straight to workspace-scoped projects
 			if (workspaceCount > 1 || isTeamAdmin) {
 				navigate("/workspaces");
+			} else if (firstWorkspaceId) {
+				navigate(`/w/${firstWorkspaceId}/projects`);
 			} else {
 				navigate("/projects");
 			}

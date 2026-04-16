@@ -220,7 +220,7 @@ export const WorkspaceSelectorRoute = () => {
 
 	const handleSelect = (ws: Workspace) => {
 		setWorkspace(ws.id);
-		navigate("/projects");
+		navigate(`/w/${ws.id}/projects`);
 	};
 
 	if (isLoading) {

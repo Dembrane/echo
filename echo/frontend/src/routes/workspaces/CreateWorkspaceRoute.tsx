@@ -48,7 +48,7 @@ export const CreateWorkspaceRoute = () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
 			setWorkspace(data.id);
 			toast.success(t`Workspace created`);
-			navigate("/projects");
+			navigate(`/w/${data.id}/projects`);
 		},
 		onError: (error: Error) => {
 			toast.error(error.message);
