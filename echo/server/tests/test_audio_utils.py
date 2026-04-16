@@ -67,13 +67,13 @@ def test_convert_and_save_to_s3(file_name, output_format):
         output_url = convert_and_save_to_s3(input_file_key, output_file_key, output_format)
 
         assert output_url is not None, "output_url is None"
-        assert output_url.startswith(
-            STORAGE_S3_ENDPOINT
-        ), "output_url does not start with STORAGE_S3_ENDPOINT"
+        assert output_url.startswith(STORAGE_S3_ENDPOINT), (
+            "output_url does not start with STORAGE_S3_ENDPOINT"
+        )
         assert output_url.startswith("http"), "output_url does not start with http"
-        assert output_url.endswith(
-            f".{output_format}"
-        ), f"output_url does not end with .{output_format}"
+        assert output_url.endswith(f".{output_format}"), (
+            f"output_url does not end with .{output_format}"
+        )
 
         # Verify the file exists and has content
         head_response = s3_client.head_object(
@@ -135,17 +135,18 @@ def test_merge_multiple_audio_files_and_save_to_s3(output_format):
 
     # merge files
     merged_file_key = "tests/" + generate_uuid() + "." + output_format
-    merged_file_url = merge_multiple_audio_files_and_save_to_s3(
+    merged_file_url, duration = merge_multiple_audio_files_and_save_to_s3(
         new_file_names, merged_file_key, output_format
     )
 
     assert merged_file_url is not None, "merged_file_url is None"
-    assert merged_file_url.startswith(
-        STORAGE_S3_ENDPOINT
-    ), "merged_file_url does not start with STORAGE_S3_ENDPOINT"
-    assert merged_file_url.endswith(
-        f".{output_format}"
-    ), f"merged_file_url does not end with .{output_format}"
+    assert merged_file_url.startswith(STORAGE_S3_ENDPOINT), (
+        "merged_file_url does not start with STORAGE_S3_ENDPOINT"
+    )
+    assert merged_file_url.endswith(f".{output_format}"), (
+        f"merged_file_url does not end with .{output_format}"
+    )
+    assert duration > 0, f"Duration should be positive, got {duration}"
 
     response = s3_client.get_object(
         Bucket=STORAGE_S3_BUCKET, Key=get_sanitized_s3_key(merged_file_key)
@@ -245,12 +246,12 @@ def test_split_audio_chunk(file_name, output_format):
             split_chunk,
         )
         assert item is not None, f"Failed to get split chunk {item['id']}"
-        assert item["path"].startswith(
-            "http"
-        ), f"Split chunk {item['path']} does not start with http"
-        assert item["path"].startswith(
-            STORAGE_S3_ENDPOINT
-        ), f"Split chunk {item['path']} does not start with STORAGE_S3_ENDPOINT"
+        assert item["path"].startswith("http"), (
+            f"Split chunk {item['path']} does not start with http"
+        )
+        assert item["path"].startswith(STORAGE_S3_ENDPOINT), (
+            f"Split chunk {item['path']} does not start with STORAGE_S3_ENDPOINT"
+        )
 
         data = s3_client.get_object(
             Bucket=STORAGE_S3_BUCKET,
@@ -263,12 +264,12 @@ def test_split_audio_chunk(file_name, output_format):
         assert probe is not None, f"Failed to probe split chunk {item['path']}"
         assert probe["streams"] is not None, f"Probe result for {item['path']} has no streams"
         assert len(probe["streams"]) > 0, f"Probe result for {item['path']} has no streams"
-        assert (
-            probe["streams"][0]["codec_type"] == "audio"
-        ), f"Probe result for {item['path']} is not an audio stream"
-        assert (
-            float(probe["streams"][0]["duration"]) > 0
-        ), f"Probe result for {item['path']} has no duration"
+        assert probe["streams"][0]["codec_type"] == "audio", (
+            f"Probe result for {item['path']} is not an audio stream"
+        )
+        assert float(probe["streams"][0]["duration"]) > 0, (
+            f"Probe result for {item['path']} has no duration"
+        )
 
     # delete the conversation chunk
     directus.delete_item("conversation_chunk", chunk_id)
@@ -326,14 +327,14 @@ def test_probe_from_bytes(file_name: str):
         assert probe_result is not None, f"Failed to probe {file_name}"
         assert "streams" in probe_result, f"No streams in probe result for {file_name}"
         assert len(probe_result["streams"]) > 0, f"No streams in probe result for {file_name}"
-        assert (
-            probe_result["streams"][0]["codec_type"] == "audio"
-        ), f"Not an audio stream for {file_name}"
+        assert probe_result["streams"][0]["codec_type"] == "audio", (
+            f"Not an audio stream for {file_name}"
+        )
         assert "format" in probe_result, f"No format information in probe result for {file_name}"
         assert "duration" in probe_result["format"], f"No duration in probe result for {file_name}"
-        assert (
-            float(probe_result["format"]["duration"]) > 0
-        ), f"Duration not positive for {file_name}"
+        assert float(probe_result["format"]["duration"]) > 0, (
+            f"Duration not positive for {file_name}"
+        )
 
         logger.info(f"Successfully probed {file_name}")
 
@@ -367,14 +368,14 @@ def test_probe_from_s3(file_name: str):
             assert probe_result is not None, f"Failed to probe {s3_key}"
             assert "streams" in probe_result, f"No streams in probe result for {s3_key}"
             assert len(probe_result["streams"]) > 0, f"No streams in probe result for {s3_key}"
-            assert (
-                probe_result["streams"][0]["codec_type"] == "audio"
-            ), f"Not an audio stream for {s3_key}"
+            assert probe_result["streams"][0]["codec_type"] == "audio", (
+                f"Not an audio stream for {s3_key}"
+            )
             assert "format" in probe_result, f"No format information in probe result for {s3_key}"
             assert "duration" in probe_result["format"], f"No duration in probe result for {s3_key}"
-            assert (
-                float(probe_result["format"]["duration"]) > 0
-            ), f"Duration not positive for {s3_key}"
+            assert float(probe_result["format"]["duration"]) > 0, (
+                f"Duration not positive for {s3_key}"
+            )
 
             logger.info(f"Successfully probed {s3_key} from S3")
 
@@ -452,17 +453,18 @@ def test_merge_specific_format_pairs(file_formats, output_format):
     merged_file_key = (
         f"tests/{generate_uuid()}-{format1}_{format2}_to_{output_format}.{output_format}"
     )
-    merged_file_url = merge_multiple_audio_files_and_save_to_s3(
+    merged_file_url, duration = merge_multiple_audio_files_and_save_to_s3(
         new_file_names, merged_file_key, output_format
     )
 
     assert merged_file_url is not None, "merged_file_url is None"
-    assert merged_file_url.startswith(
-        STORAGE_S3_ENDPOINT
-    ), "merged_file_url does not start with STORAGE_S3_ENDPOINT"
-    assert merged_file_url.endswith(
-        f".{output_format}"
-    ), f"merged_file_url does not end with .{output_format}"
+    assert merged_file_url.startswith(STORAGE_S3_ENDPOINT), (
+        "merged_file_url does not start with STORAGE_S3_ENDPOINT"
+    )
+    assert merged_file_url.endswith(f".{output_format}"), (
+        f"merged_file_url does not end with .{output_format}"
+    )
+    assert duration > 0, f"Duration should be positive, got {duration}"
 
     # Verify the merged file
     response = s3_client.get_object(

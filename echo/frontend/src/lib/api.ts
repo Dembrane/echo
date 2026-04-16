@@ -708,10 +708,12 @@ export const initiateAndUploadConversationChunk = async (payload: {
 	const fileQueue = [...Array(payload.chunks.length).keys()];
 	const inProgress = new Set<number>();
 
-	// Track conversation ID for finish hook
-	let conversationId: string | null = null;
+	// Each uploaded file creates its own conversation.
+	// We need to remember every conversation ID so we can call finishConversation()
+	// on each one after uploads complete. Without this, only the first conversation
+	// would enter the processing pipeline (transcription, merging, duration, etc.).
+	const conversationIdByFileIndex = new Map<number, string>();
 
-	// Process a single file
 	const processFile = async (i: number) => {
 		const chunk = payload.chunks[i];
 		let fileName = "";
@@ -726,7 +728,6 @@ export const initiateAndUploadConversationChunk = async (payload: {
 		const source = payload.source || "PORTAL_AUDIO";
 
 		try {
-			// Create the conversation first (one per file in this implementation)
 			const conversation = await initiateConversation({
 				email: payload.email,
 				name: `${payload.namePrefix} - ${fileName}`,
@@ -736,10 +737,7 @@ export const initiateAndUploadConversationChunk = async (payload: {
 				tagIdList: payload.tagIdList,
 			});
 
-			// Store conversation ID for finish hook
-			if (!conversationId) {
-				conversationId = conversation.id;
-			}
+			conversationIdByFileIndex.set(i, conversation.id);
 
 			// Upload using new presigned URL method
 			const uploadResult = await uploadConversationChunkWithPresignedUrl({
@@ -811,20 +809,33 @@ export const initiateAndUploadConversationChunk = async (payload: {
 		toast.success(`All ${payload.chunks.length} file(s) uploaded successfully`);
 	}
 
-	// IMPORTANT: Trigger finish hook after all uploads complete
-	// This triggers: audio merging, ETL pipeline, summarization
-	if (conversationId && failures.length === 0) {
-		console.log(
-			`[Upload] Triggering finish hook for conversation ${conversationId}`,
-		);
-		try {
-			await finishConversation(conversationId);
-			console.log("[Upload] Finish hook triggered successfully");
-		} catch (error) {
-			console.error("[Upload] Failed to trigger finish hook:", error);
-			// Don't throw - uploads succeeded, this is just post-processing
+	// Collect conversation IDs for files that uploaded successfully.
+	// Failed uploads are skipped — they have no conversation to finish.
+	const succeededConversationIds = results.reduce<string[]>((ids, result, i) => {
+		const isFailure = result && "error" in result;
+		const conversationId = conversationIdByFileIndex.get(i);
+		if (!isFailure && conversationId) {
+			ids.push(conversationId);
 		}
-	}
+		return ids;
+	}, []);
+
+	// Call finishConversation() for every successful upload, concurrently.
+	// This triggers the backend pipeline: transcription → merging → duration → summary.
+	// Each call is independent, so one failure won't block the others.
+	await Promise.all(
+		succeededConversationIds.map(async (conversationId) => {
+			try {
+				await finishConversation(conversationId);
+				console.log(`[Upload] Finish hook triggered for conversation ${conversationId}`);
+			} catch (error) {
+				console.error(
+					`[Upload] Failed to finish conversation ${conversationId}:`,
+					error,
+				);
+			}
+		}),
+	);
 
 	return results;
 };
