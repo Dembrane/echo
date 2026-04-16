@@ -198,6 +198,7 @@ async def get_conversations_with_summaries(
                     {"project_id": {"_eq": project_id}},
                     {"summary": {"_nnull": True}},
                     {"summary": {"_nempty": True}},
+                    {"deleted_at": {"_null": True}},
                 ]
             },
             "fields": [
@@ -249,7 +250,10 @@ async def get_all_conversations_for_overview(
             "conversation",
             {
                 "query": {
-                    "filter": {"project_id": {"_eq": project_id}},
+                    "filter": {
+                        "project_id": {"_eq": project_id},
+                        "deleted_at": {"_null": True},
+                    },
                     "fields": [
                         "id",
                         "participant_name",

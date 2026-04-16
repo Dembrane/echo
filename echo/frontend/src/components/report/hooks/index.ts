@@ -212,6 +212,7 @@ export const useProjectReportTimelineData = (projectReportId: string) => {
 					fields: ["id", "date_created"],
 					filter: {
 						project_id: { _eq: projectReport.project_id },
+						deleted_at: { _null: true },
 					},
 					limit: 1000,
 					sort: "date_created",
@@ -229,6 +230,7 @@ export const useProjectReportTimelineData = (projectReportId: string) => {
 					fields: ["id", "created_at"],
 					filter: {
 						project_id: { _eq: projectReport.project_id },
+						deleted_at: { _null: true },
 					},
 					limit: 1000,
 				}),

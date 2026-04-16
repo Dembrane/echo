@@ -319,7 +319,10 @@ def _list_project_conversations_for_agent(
             "conversations": conversations,
         }
 
-    conversation_filter: dict[str, Any] = {"project_id": {"_eq": project_id}}
+    conversation_filter: dict[str, Any] = {
+        "project_id": {"_eq": project_id},
+        "deleted_at": {"_null": True},
+    }
     if normalized_conversation_id:
         conversation_filter["id"] = {"_eq": normalized_conversation_id}
 

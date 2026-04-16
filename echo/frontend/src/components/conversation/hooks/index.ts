@@ -752,6 +752,9 @@ export const useConversationsByProjectId = (
 						project_id: {
 							_eq: projectId,
 						},
+						deleted_at: {
+							_null: true,
+						},
 						...(filterBySource && {
 							source: {
 								_in: filterBySource,
@@ -970,6 +973,9 @@ export const useInfiniteConversationsByProjectId = (
 						},
 						project_id: {
 							_eq: projectId,
+						},
+						deleted_at: {
+							_null: true,
 						},
 						...(filterBySource && {
 							source: {

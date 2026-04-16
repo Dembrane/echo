@@ -182,6 +182,9 @@ export const useProjectChats = (
 						project_id: {
 							_eq: projectId,
 						},
+						deleted_at: {
+							_null: true,
+						},
 					},
 					sort: "-date_created",
 					...query,
@@ -218,6 +221,9 @@ export const useInfiniteProjectChats = (
 					filter: {
 						project_id: {
 							_eq: projectId,
+						},
+						deleted_at: {
+							_null: true,
 						},
 						...(query?.filter && query.filter),
 					},

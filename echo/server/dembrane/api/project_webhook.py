@@ -121,7 +121,10 @@ async def list_webhooks(
                 "project_webhook",
                 {
                     "query": {
-                        "filter": {"project_id": {"_eq": project_id}},
+                        "filter": {
+                            "project_id": {"_eq": project_id},
+                            "deleted_at": {"_null": True},
+                        },
                         "fields": [
                             "id",
                             "name",
@@ -183,6 +186,7 @@ async def list_copyable_webhooks(
                         "filter": {
                             "project_id": {"_neq": project_id},
                             "status": {"_eq": "published"},
+                            "deleted_at": {"_null": True},
                         },
                         "fields": [
                             "id",

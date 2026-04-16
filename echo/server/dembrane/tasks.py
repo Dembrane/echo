@@ -1477,6 +1477,7 @@ def task_check_scheduled_reports() -> None:
                         "filter": {
                             "status": {"_eq": "scheduled"},
                             "scheduled_at": {"_lte": now},
+                            "deleted_at": {"_null": True},
                         },
                         "fields": ["id", "project_id", "language", "user_instructions", "scheduled_at"],
                         "limit": 50,

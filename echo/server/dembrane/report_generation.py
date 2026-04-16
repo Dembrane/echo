@@ -51,7 +51,10 @@ def _fetch_conversations_sync(project_id: str, fields: list) -> list:
                 "conversation",
                 {
                     "query": {
-                        "filter": {"project_id": {"_eq": project_id}},
+                        "filter": {
+                            "project_id": {"_eq": project_id},
+                            "deleted_at": {"_null": True},
+                        },
                         "fields": fields,
                         "sort": "-updated_at",
                     },

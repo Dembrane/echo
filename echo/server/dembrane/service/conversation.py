@@ -177,6 +177,7 @@ class ConversationService:
         # Build filter query
         filter_query: dict[str, Any] = {
             "project_id": {"_eq": project_id},
+            "deleted_at": {"_null": True},
         }
 
         if tag_ids and len(tag_ids) > 0:
@@ -692,6 +693,9 @@ class ConversationService:
             )
             deep["chunks"] = {"_sort": "timestamp"}
 
+        # Ensure soft-deleted conversations are excluded from list queries
+        filter_query["deleted_at"] = {"_null": True}
+
         try:
             with self._client_context() as client:
                 conversations: Optional[List[dict]] = client.get_items(
@@ -760,6 +764,7 @@ class ConversationService:
                             "filter": {
                                 "project_id": {"_eq": project_id},
                                 "title": {"_nnull": True},
+                                "deleted_at": {"_null": True},
                             },
                             "fields": ["title"],
                             "sort": "-created_at",

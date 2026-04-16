@@ -319,6 +319,10 @@ export const useInfiniteProjects = ({
 			const response = await directus.request(
 				readItems("project", {
 					...query,
+					filter: {
+						...((query as any)?.filter ?? {}),
+						deleted_at: { _null: true },
+					},
 					limit: initialLimit,
 					offset: pageParam * initialLimit,
 				}),

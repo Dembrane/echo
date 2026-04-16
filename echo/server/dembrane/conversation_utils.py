@@ -33,6 +33,7 @@ def collect_unfinished_conversations(limit: int = 100) -> List[str]:
                 "filter": {
                     # Must be unfinished
                     "is_finished": False,
+                    "deleted_at": {"_null": True},
                     # Must not have a chunk in the last 5 minutes :)
                     "chunks": {
                         "_none": {
@@ -95,6 +96,7 @@ def collect_conversations_needing_transcribed_flag(limit: int = 50) -> List[str]
                 "filter": {
                     "is_finished": True,
                     "is_all_chunks_transcribed": False,
+                    "deleted_at": {"_null": True},
                     "created_at": {
                         "_lte": (get_utc_timestamp() - timedelta(minutes=5)).isoformat()
                     },
@@ -148,6 +150,7 @@ def collect_unsummarized_conversations(limit: int = 50) -> List[str]:
                 "filter": {
                     "is_all_chunks_transcribed": True,
                     "summary": {"_null": True},
+                    "deleted_at": {"_null": True},
                     "created_at": {
                         "_lte": (get_utc_timestamp() - timedelta(minutes=5)).isoformat()
                     },

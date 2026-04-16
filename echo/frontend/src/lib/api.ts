@@ -843,6 +843,9 @@ export const getProjectConversationCounts = async (projectId: string) => {
 				project_id: {
 					_eq: projectId,
 				},
+				deleted_at: {
+					_null: true,
+				},
 			},
 		}),
 	);

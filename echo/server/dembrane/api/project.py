@@ -108,7 +108,7 @@ async def get_projects_home(
 
     # Fetch pinned projects (always, regardless of search)
     # Admins see only their own pins; non-admins see all (Directus permissions handle scoping)
-    pin_filter: dict[str, Any] = {"pin_order": {"_nnull": True}}
+    pin_filter: dict[str, Any] = {"pin_order": {"_nnull": True}, "deleted_at": {"_null": True}}
     if auth.is_admin:
         pin_filter["directus_user_id"] = {"_eq": auth.user_id}
 
@@ -150,16 +150,19 @@ async def get_projects_home(
         }
 
     # Build query for paginated project list
+    base_filter: dict[str, Any] = {"deleted_at": {"_null": True}}
+    if owner_filter:
+        base_filter.update(owner_filter)
+
     query: dict = {
         "fields": fields,
         "sort": ["-updated_at"],
         "limit": limit + 1,
         "offset": offset,
+        "filter": base_filter,
     }
     if text_search:
         query["search"] = text_search
-    if owner_filter:
-        query["filter"] = owner_filter
 
     projects_raw = await run_in_thread_pool(
         client.get_items,
@@ -179,7 +182,7 @@ async def get_projects_home(
         count_result = await run_in_thread_pool(
             client.get_items,
             "project",
-            {"query": {"aggregate": {"count": ["id"]}}},
+            {"query": {"aggregate": {"count": ["id"]}, "filter": {"deleted_at": {"_null": True}}}},
         )
         if isinstance(count_result, list) and len(count_result) > 0:
             total_count = int(count_result[0].get("count", {}).get("id", 0))
@@ -668,6 +671,7 @@ async def create_report(
                     "filter": {
                         "project_id": {"_eq": project_id},
                         "status": {"_eq": "draft"},
+                        "deleted_at": {"_null": True},
                     },
                     "limit": 1,
                 }
@@ -768,6 +772,7 @@ async def list_project_reports(
                 "filter": {
                     "project_id": {"_eq": project_id},
                     "status": {"_in": ["archived", "published", "scheduled", "draft"]},
+                    "deleted_at": {"_null": True},
                 },
                 "fields": [
                     "id",
@@ -814,6 +819,7 @@ async def get_latest_report(
             "query": {
                 "filter": {
                     "project_id": {"_eq": project_id},
+                    "deleted_at": {"_null": True},
                 },
                 "fields": [
                     "id",
@@ -897,6 +903,7 @@ async def update_report(
                         "project_id": {"_eq": project_id},
                         "status": {"_eq": "published"},
                         "id": {"_neq": report_id},
+                        "deleted_at": {"_null": True},
                     },
                     "fields": ["id"],
                     "limit": -1,
@@ -1083,7 +1090,10 @@ async def check_report_needs_update(
         "conversation",
         {
             "query": {
-                "filter": {"project_id": {"_eq": report.get("project_id")}},
+                "filter": {
+                    "project_id": {"_eq": report.get("project_id")},
+                    "deleted_at": {"_null": True},
+                },
                 "fields": ["id", "created_at"],
                 "sort": ["-created_at"],
                 "limit": 1,
