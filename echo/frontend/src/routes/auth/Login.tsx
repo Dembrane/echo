@@ -117,9 +117,11 @@ export const LoginRoute = () => {
 				message: isNewUser ? t`Welcome to dembrane` : t`Welcome back`,
 			});
 
-			// Check onboarding in parallel with the transition animation.
+			// Check onboarding + workspace count in parallel with transition.
 			// Small delay ensures the session cookie from login is available.
 			let needsOnboarding = false;
+			let workspaceCount = 0;
+			let isTeamAdmin = false;
 			try {
 				await new Promise((r) => setTimeout(r, 300));
 				const meResponse = await fetch(`${API_BASE_URL}/v2/me`, {
@@ -128,6 +130,20 @@ export const LoginRoute = () => {
 				if (meResponse.ok) {
 					const meData = await meResponse.json();
 					needsOnboarding = meData.onboarding_completed === false;
+					isTeamAdmin = (meData.orgs ?? []).some(
+						(o: { role: string }) => o.role === "owner" || o.role === "admin",
+					);
+				}
+
+				// If onboarded, check workspace count for routing
+				if (!needsOnboarding) {
+					const wsResponse = await fetch(`${API_BASE_URL}/v2/workspaces`, {
+						credentials: "include",
+					});
+					if (wsResponse.ok) {
+						const wsData = await wsResponse.json();
+						workspaceCount = wsData.workspaces?.length ?? 0;
+					}
 				}
 			} catch {
 				// Swallow — never block login for onboarding check
@@ -140,6 +156,12 @@ export const LoginRoute = () => {
 				return;
 			}
 
+			// Deep link takes priority
+			if (!!next && next !== "/login") {
+				navigate(next);
+				return;
+			}
+
 			if (isNewUser) {
 				toast(t`Setting up your first project`);
 				const project = await createProjectMutation.mutateAsync({
@@ -149,8 +171,10 @@ export const LoginRoute = () => {
 				return;
 			}
 
-			if (!!next && next !== "/login") {
-				navigate(next);
+			// Multi-workspace or team admin → workspace selector
+			// Solo user → straight to projects
+			if (workspaceCount > 1 || isTeamAdmin) {
+				navigate("/workspaces");
 			} else {
 				navigate("/projects");
 			}

@@ -28,6 +28,7 @@ import {
 	useLogoutMutation,
 } from "@/components/auth/hooks";
 import { useV2Me } from "@/hooks/useV2Me";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { I18nLink } from "@/components/common/i18nLink";
 import {
 	COMMUNITY_SLACK_URL,
@@ -83,6 +84,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 	const { data: user } = useCurrentUser({ enabled: isAuthenticated });
 	const { data: meV2 } = useV2Me({ enabled: isAuthenticated });
 	const needsOnboarding = meV2?.onboarding_completed === false;
+	const { workspaceName } = useWorkspace();
 	const navigate = useI18nNavigate();
 	const { runTransition } = useTransitionCurtain();
 	const { setLogoUrl } = useWhitelabelLogo();
@@ -152,6 +154,14 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 								<Logo hideTitle={false} />
 							</Group>
 						</I18nLink>
+						{workspaceName && isAuthenticated && (
+							<Group gap={6} style={{ cursor: "pointer" }} onClick={() => navigate("/workspaces")}>
+								<Text size="xs" c="dimmed">/</Text>
+								<Text size="sm" c="dimmed" lineClamp={1} maw={160}>
+									{workspaceName}
+								</Text>
+							</Group>
+						)}
 					</Group>
 
 					{!loading && isAuthenticated && user ? (

@@ -36,6 +36,11 @@ async def move_project(
 
     source_workspace_id = project.get("workspace_id")
 
+    # If project is orphaned (no workspace), verify ownership via directus_user_id
+    if not source_workspace_id:
+        if project.get("directus_user_id") != auth.user_id:
+            raise HTTPException(status_code=403, detail="Not the owner of this project")
+
     # Check access to source workspace (if project is in one)
     if source_workspace_id:
         source_membership = await async_directus.get_items(

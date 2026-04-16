@@ -13,6 +13,10 @@ import { I18nProvider } from "./components/layout/I18nProvider";
 import { USE_PARTICIPANT_ROUTER } from "./config";
 import { AppPreferencesProvider } from "./hooks/useAppPreferences";
 import { WhitelabelLogoProvider } from "./hooks/useWhitelabelLogo";
+import {
+	WorkspaceContext,
+	useWorkspaceProvider,
+} from "./hooks/useWorkspace";
 import { analytics } from "./lib/analytics";
 import { mainRouter, participantRouter } from "./Router";
 import { theme } from "./theme";
@@ -79,6 +83,8 @@ export const App = () => {
 		};
 	}, []);
 
+	const workspaceValue = useWorkspaceProvider();
+
 	return (
 		<QueryClientProvider client={queryClient}>
 			{/* <ReactQueryDevtools initialIsOpen={false} /> */}
@@ -86,9 +92,11 @@ export const App = () => {
 				<DatesProvider settings={{ consistentWeeks: true }}>
 					<AppPreferencesProvider>
 						<WhitelabelLogoProvider>
-							<I18nProvider>
-								<RouterProvider router={router} />
-							</I18nProvider>
+							<WorkspaceContext.Provider value={workspaceValue}>
+								<I18nProvider>
+									<RouterProvider router={router} />
+								</I18nProvider>
+							</WorkspaceContext.Provider>
 						</WhitelabelLogoProvider>
 					</AppPreferencesProvider>
 				</DatesProvider>

@@ -111,6 +111,14 @@ const OnboardingRoute = createLazyNamedRoute(
 	() => import("./routes/onboarding/OnboardingRoute"),
 	"OnboardingRoute",
 );
+const WorkspaceSelectorRoute = createLazyNamedRoute(
+	() => import("./routes/workspaces/WorkspaceSelectorRoute"),
+	"WorkspaceSelectorRoute",
+);
+const CreateWorkspaceRoute = createLazyNamedRoute(
+	() => import("./routes/workspaces/CreateWorkspaceRoute"),
+	"CreateWorkspaceRoute",
+);
 
 export const mainRouter = createBrowserRouter([
 	{
@@ -175,6 +183,24 @@ export const mainRouter = createBrowserRouter([
 					</Protected>
 				),
 				path: "onboarding",
+			},
+			{
+				// Workspace selector
+				element: (
+					<Protected>
+						<WorkspaceSelectorRoute />
+					</Protected>
+				),
+				path: "workspaces",
+			},
+			{
+				// Create workspace
+				element: (
+					<Protected>
+						<CreateWorkspaceRoute />
+					</Protected>
+				),
+				path: "workspaces/new",
 			},
 			{
 				// Host Guide - standalone page, protected but no header/layout
