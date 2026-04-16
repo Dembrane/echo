@@ -55,9 +55,8 @@ export const CreateWorkspaceRoute = () => {
 	});
 
 	return (
-		<div style={{ background: "var(--app-background, #f6f4f1)", minHeight: "100dvh" }}>
 			<Container size="xs" py="xl" px="lg">
-				<Stack gap={32} mt="10vh">
+				<Stack gap={32}>
 					<Stack gap={8}>
 						<Title order={3} fw={400}>
 							<Trans>New workspace</Trans>
@@ -122,6 +121,5 @@ export const CreateWorkspaceRoute = () => {
 					</form>
 				</Stack>
 			</Container>
-		</div>
 	);
 };

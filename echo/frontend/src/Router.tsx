@@ -185,22 +185,23 @@ export const mainRouter = createBrowserRouter([
 				path: "onboarding",
 			},
 			{
-				// Workspace selector
+				// Workspace selector + create — with header
+				children: [
+					{
+						element: <WorkspaceSelectorRoute />,
+						index: true,
+					},
+					{
+						element: <CreateWorkspaceRoute />,
+						path: "new",
+					},
+				],
 				element: (
 					<Protected>
-						<WorkspaceSelectorRoute />
+						<BaseLayout />
 					</Protected>
 				),
 				path: "workspaces",
-			},
-			{
-				// Create workspace
-				element: (
-					<Protected>
-						<CreateWorkspaceRoute />
-					</Protected>
-				),
-				path: "workspaces/new",
 			},
 			{
 				// Host Guide - standalone page, protected but no header/layout

@@ -36,6 +36,11 @@ import { ProjectListItem } from "@/components/project/ProjectListItem";
 import { ProjectListSkeleton } from "@/components/project/ProjectListSkeleton";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import {
+	useWorkspaceProjects,
+	useCreateWorkspaceProject,
+} from "@/hooks/useWorkspaceProjects";
 import { Icons } from "@/icons";
 import { getDirectusErrorString } from "@/lib/directus";
 import { testId } from "@/lib/testUtils";
@@ -54,6 +59,17 @@ export const ProjectsHomeRoute = () => {
 
 	const { ref: loadMoreRef, inView } = useInView();
 
+	const { workspaceId } = useWorkspace();
+
+	// Use v2 (workspace-scoped) when workspace context exists, v1 otherwise
+	const v1Query = useProjectsHome({
+		search: debouncedSearchValue,
+	});
+	const v2Query = useWorkspaceProjects({
+		search: debouncedSearchValue,
+	});
+
+	const activeQuery = workspaceId ? v2Query : v1Query;
 	const {
 		data: homeData,
 		fetchNextPage,
@@ -62,9 +78,7 @@ export const ProjectsHomeRoute = () => {
 		status,
 		isError,
 		error,
-	} = useProjectsHome({
-		search: debouncedSearchValue,
-	});
+	} = activeQuery;
 
 	const togglePinMutation = useTogglePinMutation();
 
@@ -84,6 +98,7 @@ export const ProjectsHomeRoute = () => {
 
 	const navigate = useI18nNavigate();
 	const createProjectMutation = useCreateProjectMutation();
+	const createWorkspaceProjectMutation = useCreateWorkspaceProject();
 	const updateProjectMutation = useUpdateProjectByIdMutation();
 	const user = useCurrentUser();
 	const posthog = usePostHog();
@@ -91,14 +106,28 @@ export const ProjectsHomeRoute = () => {
 	const { language } = useLanguage();
 
 	const handleCreateProject = async () => {
-		const project = await createProjectMutation.mutateAsync({
-			language:
-				language === "en-US" ? "en" : language === "nl-NL" ? "nl" : "en",
-			name: t`New Project`,
-		});
+		const lang = language === "en-US" ? "en" : language === "nl-NL" ? "nl" : "en";
+
+		let projectId: string;
+
+		if (workspaceId) {
+			// v2: creates with workspace_id already set
+			const project = await createWorkspaceProjectMutation.mutateAsync({
+				name: t`New Project`,
+				language: lang,
+			});
+			projectId = project.id;
+		} else {
+			// v1 fallback: legacy create
+			const project = await createProjectMutation.mutateAsync({
+				language: lang,
+				name: t`New Project`,
+			});
+			projectId = project.id;
+		}
 
 		await updateProjectMutation.mutateAsync({
-			id: project.id,
+			id: projectId,
 			payload: {
 				default_conversation_ask_for_participant_name: true,
 				default_conversation_tutorial_slug: "None",
@@ -106,8 +135,8 @@ export const ProjectsHomeRoute = () => {
 			},
 		});
 
-		posthog?.capture("project_created", { project_id: project.id });
-		navigate(`/projects/${project.id}/overview`);
+		posthog?.capture("project_created", { project_id: projectId });
+		navigate(`/projects/${projectId}/overview`);
 	};
 
 	// First page has pinned + total_count; all pages have projects

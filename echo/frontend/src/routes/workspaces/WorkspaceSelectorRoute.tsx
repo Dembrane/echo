@@ -216,8 +216,7 @@ export const WorkspaceSelectorRoute = () => {
 	}
 
 	return (
-		<div style={{ background: "var(--app-background, #f6f4f1)", minHeight: "100dvh" }}>
-			<Container size="md" py="xl" px="lg">
+		<Container size="md" py="xl" px="lg">
 				<Stack gap={32}>
 					{/* Header */}
 					<Group justify="space-between" align="flex-end">
@@ -313,6 +312,5 @@ export const WorkspaceSelectorRoute = () => {
 					)}
 				</Stack>
 			</Container>
-		</div>
 	);
 };
