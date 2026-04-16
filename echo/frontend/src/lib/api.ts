@@ -1611,6 +1611,17 @@ export const submitNotificationParticipant = async (
 	}
 };
 
+export const deleteChatById = async (chatId: string) => {
+	try {
+		const response = await api.delete(`/chats/${chatId}`);
+		return response;
+	} catch (error: any) {
+		const message =
+			error?.response?.data?.detail || "Failed to delete chat";
+		throw new Error(message);
+	}
+};
+
 export const deleteProjectById = async (projectId: string) => {
 	try {
 		const response = await api.delete(`/projects/${projectId}`);

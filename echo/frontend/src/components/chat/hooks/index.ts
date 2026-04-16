@@ -7,6 +7,7 @@ import {
 	readItems,
 	updateItem,
 } from "@directus/sdk";
+import { t } from "@lingui/core/macro";
 import {
 	useMutation,
 	useQuery,
@@ -17,6 +18,7 @@ import {
 import { toast } from "@/components/common/Toaster";
 import {
 	type ChatMode,
+	deleteChatById,
 	getChatHistory,
 	getChatSuggestions,
 	getProjectChatContext,
@@ -69,7 +71,7 @@ export const useDeleteChatMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: (payload: { chatId: string; projectId: string }) =>
-			directus.request(deleteItem("project_chat", payload.chatId)),
+			deleteChatById(payload.chatId),
 		onSuccess: (_, vars) => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects", vars.projectId, "chats"],
@@ -77,7 +79,10 @@ export const useDeleteChatMutation = () => {
 			queryClient.invalidateQueries({
 				queryKey: ["chats", vars.chatId],
 			});
-			toast.success("Chat deleted successfully");
+			toast.success(t`Chat deleted`);
+		},
+		onError: (error: Error) => {
+			toast.error(error.message || t`Failed to delete chat`);
 		},
 	});
 };

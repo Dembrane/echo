@@ -161,6 +161,24 @@ async def raise_if_chat_not_found_or_not_authorized(
     return chat
 
 
+@ChatRouter.delete("/{chat_id}")
+async def delete_chat(chat_id: str, auth: DependencyDirectusSession) -> dict:
+    """Soft-delete a chat by setting deleted_at."""
+    await raise_if_chat_not_found_or_not_authorized(chat_id, auth)
+
+    from datetime import datetime
+    from dembrane.directus import directus
+
+    await run_in_thread_pool(
+        directus.update_item,
+        "project_chat",
+        chat_id,
+        {"deleted_at": datetime.utcnow().isoformat()},
+    )
+
+    return {"status": "success"}
+
+
 @ChatRouter.get("/{chat_id}/context", response_model=ChatContextSchema)
 async def get_chat_context(chat_id: str, auth: DependencyDirectusSession) -> ChatContextSchema:
     chat = await raise_if_chat_not_found_or_not_authorized(
