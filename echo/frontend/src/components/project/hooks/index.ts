@@ -23,6 +23,7 @@ import {
 	createCustomVerificationTopic,
 	deleteCustomVerificationTopic,
 	deleteProjectById,
+	deleteTagById,
 	getLatestProjectAnalysisRunByProjectId,
 	getVerificationTopics,
 	type UpdateCustomTopicPayload,
@@ -192,13 +193,16 @@ export const useDeleteTagByIdMutation = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: (tagId: string) =>
-			directus.request(deleteItem("project_tag", tagId)),
+		mutationFn: (payload: { tagId: string; projectId: string }) =>
+			deleteTagById(payload.projectId, payload.tagId),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects"],
 			});
-			toast.success("Tag deleted successfully");
+			toast.success(t`Tag deleted`);
+		},
+		onError: (error: Error) => {
+			toast.error(error.message || t`Failed to delete tag`);
 		},
 	});
 };

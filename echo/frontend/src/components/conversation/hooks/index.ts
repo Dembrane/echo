@@ -1,7 +1,6 @@
 import {
 	aggregate,
 	createItems,
-	deleteItems,
 	type Query,
 	type QueryFields,
 	readItem,
@@ -26,6 +25,7 @@ import {
 	deleteChatContext,
 	deleteConversationById,
 	getConversationChunkContentLink,
+	deleteConversationTags,
 	getConversationContentLink,
 	getConversationEmails,
 	getConversationTranscriptString,
@@ -179,15 +179,13 @@ export const useUpdateConversationTagsMutation = () => {
 					),
 			);
 
-			// slightly esoteric, but basically we only want to delete if there are any tags to delete
-			// otherwise, directus doesn't accept an empty array
+			// Delete removed tags via BFF endpoint
 			const deletePromise =
 				needToDelete.length > 0
-					? directus.request(
-							deleteItems(
-								"conversation_project_tag",
-								needToDelete.map((tag) => tag.id),
-							),
+					? deleteConversationTags(
+							projectId,
+							conversationId,
+							needToDelete.map((tag) => tag.id),
 						)
 					: Promise.resolve();
 

@@ -314,6 +314,44 @@ async def delete_project(
     return {"status": "success"}
 
 
+@ProjectRouter.delete("/{project_id}/tags/{tag_id}")
+async def delete_tag(
+    project_id: str,
+    tag_id: str,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Delete a project tag (hard delete — no billing relevance)."""
+    await _verify_project_access(auth, project_id)
+
+    from dembrane.directus import directus
+
+    await run_in_thread_pool(directus.delete_item, "project_tag", tag_id)
+    return {"status": "success"}
+
+
+class DeleteConversationTagsRequest(BaseModel):
+    tag_ids: List[int]
+
+
+@ProjectRouter.post("/{project_id}/conversations/{conversation_id}/tags/delete")
+async def delete_conversation_tags(
+    project_id: str,
+    conversation_id: str,
+    body: DeleteConversationTagsRequest,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Delete conversation-tag junction records (hard delete)."""
+    await _verify_project_access(auth, project_id)
+
+    from dembrane.directus import directus
+
+    for tag_id in body.tag_ids:
+        await run_in_thread_pool(
+            directus.delete_item, "conversation_project_tag", str(tag_id)
+        )
+    return {"status": "success", "deleted": len(body.tag_ids)}
+
+
 def _parse_iso_datetime(value: Any) -> datetime:
     if isinstance(value, datetime):
         return value

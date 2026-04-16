@@ -1611,6 +1611,24 @@ export const submitNotificationParticipant = async (
 	}
 };
 
+export const deleteTagById = async (
+	projectId: string,
+	tagId: string,
+) => {
+	return api.delete(`/projects/${projectId}/tags/${tagId}`);
+};
+
+export const deleteConversationTags = async (
+	projectId: string,
+	conversationId: string,
+	tagIds: number[],
+) => {
+	return api.post(
+		`/projects/${projectId}/conversations/${conversationId}/tags/delete`,
+		{ tag_ids: tagIds },
+	);
+};
+
 export const deleteChatById = async (chatId: string) => {
 	try {
 		const response = await api.delete(`/chats/${chatId}`);
