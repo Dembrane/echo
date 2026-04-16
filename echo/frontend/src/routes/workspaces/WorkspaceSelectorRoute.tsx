@@ -102,7 +102,10 @@ function AvatarBubbles({ members, count }: { members: MemberPreview[]; count: nu
 function WorkspaceCard({
 	workspace,
 	onSelect,
-}: { workspace: Workspace; onSelect: () => void }) {
+	onManage,
+}: { workspace: Workspace; onSelect: () => void; onManage?: () => void }) {
+	const isAdminOrOwner = workspace.role === "admin" || workspace.role === "owner";
+
 	return (
 		<Paper
 			p="lg"
@@ -147,9 +150,24 @@ function WorkspaceCard({
 						members={workspace.members_preview}
 						count={workspace.member_count}
 					/>
-					<Text size="xs" c="dimmed" style={{ textTransform: "capitalize" }}>
-						{workspace.role}
-					</Text>
+					<Group gap={8}>
+						{isAdminOrOwner && onManage && (
+							<Button
+								size="compact-xs"
+								variant="subtle"
+								color="gray"
+								onClick={(e) => {
+									e.stopPropagation();
+									onManage();
+								}}
+							>
+								<Trans>Manage</Trans>
+							</Button>
+						)}
+						<Text size="xs" c="dimmed" style={{ textTransform: "capitalize" }}>
+							{workspace.role}
+						</Text>
+					</Group>
 				</Group>
 			</Stack>
 		</Paper>
@@ -281,6 +299,7 @@ export const WorkspaceSelectorRoute = () => {
 											key={ws.id}
 											workspace={ws}
 											onSelect={() => handleSelect(ws)}
+											onManage={() => navigate(`/workspaces/${ws.id}/settings`)}
 										/>
 									))}
 								</SimpleGrid>
@@ -300,6 +319,7 @@ export const WorkspaceSelectorRoute = () => {
 										key={ws.id}
 										workspace={ws}
 										onSelect={() => handleSelect(ws)}
+										onManage={() => navigate(`/workspaces/${ws.id}/settings`)}
 									/>
 								))}
 							</SimpleGrid>
