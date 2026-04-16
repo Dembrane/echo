@@ -313,6 +313,28 @@ class DirectusSettings(BaseSettings):
     )
 
 
+class EmailSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
+
+    sendgrid_api_key: str = Field(
+        default="",
+        alias="SENDGRID_API_KEY",
+        validation_alias=AliasChoices(
+            "SENDGRID_API_KEY", "EMAIL__SENDGRID_API_KEY", "EMAIL_SMTP_PASSWORD"
+        ),
+    )
+    from_email: str = Field(
+        default="do-not-reply@dembrane.com",
+        alias="EMAIL_FROM",
+        validation_alias=AliasChoices("EMAIL_FROM", "EMAIL__FROM"),
+    )
+    from_name: str = Field(
+        default="dembrane",
+        alias="EMAIL_FROM_NAME",
+        validation_alias=AliasChoices("EMAIL_FROM_NAME", "EMAIL__FROM_NAME"),
+    )
+
+
 class DatabaseSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
 
@@ -559,6 +581,7 @@ class AppSettings:
         self.urls = URLSettings()
         self.feature_flags = FeatureFlagSettings()
         self.directus = DirectusSettings()
+        self.email = EmailSettings()
         self.database = DatabaseSettings()
         self.cache = CacheSettings()
         self.storage = StorageSettings()

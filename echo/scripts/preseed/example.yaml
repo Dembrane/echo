@@ -1,0 +1,29 @@
+# Example pre-seed configuration for a partner org.
+#
+# Usage:
+#   python scripts/preseed_workspace.py --config scripts/preseed/example.yaml --dry-run
+#   python scripts/preseed_workspace.py --config scripts/preseed/example.yaml
+#
+# - owner: gets org ownership + workspace ownership
+# - admins: get org admin + inherited workspace admin
+# - members: get org member + direct workspace member
+#
+# Users who don't exist in Directus will be created with an invite email.
+
+org:
+  name: "Example Consultancy"
+  owner: owner@example.com
+  admins:
+    - admin1@example.com
+    - admin2@example.com
+  members:
+    - member1@example.com
+
+workspaces:
+  - name: "Client Alpha"
+    tier: pioneer
+    include_projects: true    # move owner+admin+member projects here
+
+  - name: "Client Beta"
+    tier: pioneer
+    include_projects: false   # empty workspace, projects added manually

@@ -1,10 +1,23 @@
 """POST /v2/onboarding/complete — one-time user onboarding.
 
-Creates app_user + org + default workspace + moves all user's projects.
-Idempotent: if already onboarded, returns existing IDs without creating anything.
+Creates app_user, auto-accepts pending workspace invites, and conditionally
+creates a personal org + default workspace based on invite context.
+
+Decision tree:
+  1. Create app_user (always)
+  2. Auto-accept pending workspace invites (if any)
+     - include_org_membership=true → also add to that org (skip personal org)
+     - include_org_membership=false → external access only
+  3. Has own projects OR no internal invites?
+     → Create personal org + default workspace + move projects
+  4. Only has internal invites (no projects)?
+     → Skip personal org (they belong to the inviter's org)
 """
 
+from __future__ import annotations
+
 from logging import getLogger
+from datetime import datetime
 
 from fastapi import APIRouter, HTTPException
 
@@ -23,12 +36,7 @@ async def complete_onboarding(
     body: OnboardingCompleteRequest,
     auth: DependencyDirectusSession,
 ) -> OnboardingCompleteResponse:
-    """Complete user onboarding. Creates org + workspace + moves projects.
-
-    Idempotent: safe to call multiple times. If already onboarded, returns
-    existing IDs. If partially completed (e.g., app_user exists but no org),
-    picks up where it left off.
-    """
+    """Complete user onboarding. Idempotent — safe to call multiple times."""
     directus_user_id = auth.user_id
     org_name = body.org_name.strip()
 
@@ -52,84 +60,101 @@ async def complete_onboarding(
         logger.info(f"Created app_user {app_user['id']} for directus user {directus_user_id}")
 
     app_user_id = app_user["id"]
+    app_user_email = app_user.get("email", "")
 
-    # ── Step 2: Get or create org ──
+    # ── Step 2: Auto-accept pending workspace invites ──
 
-    existing_orgs = await async_directus.get_items(
-        "org_membership",
+    now = datetime.utcnow().isoformat()
+    joined_an_org = False
+    first_workspace_id = None
+
+    pending_invites = await async_directus.get_items(
+        "workspace_invite",
         {
             "query": {
                 "filter": {
+                    "email": {"_eq": app_user_email},
+                    "accepted_at": {"_null": True},
+                    "expires_at": {"_gt": now},
+                },
+                "fields": [
+                    "id", "workspace_id", "role",
+                    "include_org_membership", "expires_at",
+                ],
+                "limit": -1,
+            }
+        },
+    )
+
+    if isinstance(pending_invites, list):
+        for invite in pending_invites:
+            ws_id = invite.get("workspace_id")
+            if not ws_id:
+                continue
+
+            # Check workspace exists and get its org
+            ws = await async_directus.get_item("workspace", ws_id)
+            if not ws or ws.get("deleted_at"):
+                continue
+
+            is_org_invite = invite.get("include_org_membership", False)
+            is_external = not is_org_invite
+
+            # If org member invite, add to that org
+            if is_org_invite and ws.get("org_id"):
+                org_id = ws["org_id"]
+                existing_org_mem = await async_directus.get_items(
+                    "org_membership",
+                    {"query": {"filter": {
+                        "org_id": {"_eq": org_id},
+                        "user_id": {"_eq": app_user_id},
+                        "deleted_at": {"_null": True},
+                    }, "limit": 1}},
+                )
+                if not (isinstance(existing_org_mem, list) and len(existing_org_mem) > 0):
+                    await async_directus.create_item("org_membership", {
+                        "id": generate_uuid(),
+                        "org_id": org_id,
+                        "user_id": app_user_id,
+                        "role": "member",
+                    })
+                    logger.info(f"Auto-added {app_user_email} to org {org_id} via invite")
+                joined_an_org = True
+
+            # Create workspace membership
+            existing_ws_mem = await async_directus.get_items(
+                "workspace_membership",
+                {"query": {"filter": {
+                    "workspace_id": {"_eq": ws_id},
                     "user_id": {"_eq": app_user_id},
-                    "role": {"_eq": "owner"},
                     "deleted_at": {"_null": True},
-                },
-                "fields": ["org_id"],
-                "limit": 1,
-            }
-        },
-    )
+                }, "limit": 1}},
+            )
+            if not (isinstance(existing_ws_mem, list) and len(existing_ws_mem) > 0):
+                await async_directus.create_item("workspace_membership", {
+                    "id": generate_uuid(),
+                    "workspace_id": ws_id,
+                    "user_id": app_user_id,
+                    "role": invite.get("role", "member"),
+                    "source": "direct",
+                    "is_external": is_external,
+                })
+                logger.info(
+                    f"Auto-accepted invite: {app_user_email} → workspace {ws_id} "
+                    f"(role: {invite.get('role')}, external: {is_external})"
+                )
 
-    if isinstance(existing_orgs, list) and len(existing_orgs) > 0:
-        org_id = existing_orgs[0]["org_id"]
-        logger.info(f"User {app_user_id} already owns org {org_id}, skipping org creation")
-    else:
-        org_id = generate_uuid()
-        await async_directus.create_item("org", {
-            "id": org_id,
-            "name": org_name,
-            "created_by": app_user_id,
-        })
-        await async_directus.create_item("org_membership", {
-            "id": generate_uuid(),
-            "org_id": org_id,
-            "user_id": app_user_id,
-            "role": "owner",
-        })
-        logger.info(f"Created org {org_id} '{org_name}' for user {app_user_id}")
+            if not first_workspace_id:
+                first_workspace_id = ws_id
 
-    # ── Step 3: Get or create default workspace ──
+            # Mark invite as accepted
+            await async_directus.update_item("workspace_invite", invite["id"], {
+                "accepted_at": now,
+            })
 
-    existing_workspaces = await async_directus.get_items(
-        "workspace",
-        {
-            "query": {
-                "filter": {
-                    "org_id": {"_eq": org_id},
-                    "is_default": {"_eq": True},
-                    "deleted_at": {"_null": True},
-                },
-                "fields": ["id"],
-                "limit": 1,
-            }
-        },
-    )
+    # ── Step 3: Check if user has their own projects ──
 
-    if isinstance(existing_workspaces, list) and len(existing_workspaces) > 0:
-        workspace_id = existing_workspaces[0]["id"]
-        logger.info(f"Default workspace {workspace_id} already exists for org {org_id}")
-    else:
-        workspace_id = generate_uuid()
-        await async_directus.create_item("workspace", {
-            "id": workspace_id,
-            "org_id": org_id,
-            "name": "Default",
-            "is_default": True,
-            "tier": "pioneer",
-            "created_by": app_user_id,
-        })
-        await async_directus.create_item("workspace_membership", {
-            "id": generate_uuid(),
-            "workspace_id": workspace_id,
-            "user_id": app_user_id,
-            "role": "owner",
-            "source": "inherited",
-        })
-        logger.info(f"Created default workspace {workspace_id} for org {org_id}")
-
-    # ── Step 4: Move user's projects into the workspace ──
-
-    projects = await async_directus.get_items(
+    user_projects = await async_directus.get_items(
         "project",
         {
             "query": {
@@ -138,26 +163,125 @@ async def complete_onboarding(
                     "workspace_id": {"_null": True},
                 },
                 "fields": ["id"],
-                "limit": -1,
+                "limit": 1,
             }
         },
     )
+    has_own_projects = isinstance(user_projects, list) and len(user_projects) > 0
 
-    moved_count = 0
-    if isinstance(projects, list):
-        for project in projects:
-            await async_directus.update_item(
+    # ── Step 4: Decide whether to create personal org + workspace ──
+    #
+    # Create personal org if:
+    #   - User has their own projects (need somewhere to put them)
+    #   - User has NO internal org invites (they need their own org)
+    # Skip personal org if:
+    #   - User joined an org via invite AND has no projects of their own
+
+    org_id = None
+    workspace_id = first_workspace_id  # default to first invited workspace
+
+    needs_personal_org = has_own_projects or not joined_an_org
+
+    if needs_personal_org:
+        # Check if already has a personal org
+        existing_orgs = await async_directus.get_items(
+            "org_membership",
+            {
+                "query": {
+                    "filter": {
+                        "user_id": {"_eq": app_user_id},
+                        "role": {"_eq": "owner"},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["org_id"],
+                    "limit": 1,
+                }
+            },
+        )
+
+        if isinstance(existing_orgs, list) and len(existing_orgs) > 0:
+            org_id = existing_orgs[0]["org_id"]
+        else:
+            org_id = generate_uuid()
+            await async_directus.create_item("org", {
+                "id": org_id,
+                "name": org_name,
+                "created_by": app_user_id,
+            })
+            await async_directus.create_item("org_membership", {
+                "id": generate_uuid(),
+                "org_id": org_id,
+                "user_id": app_user_id,
+                "role": "owner",
+            })
+            logger.info(f"Created personal org {org_id} '{org_name}' for {app_user_email}")
+
+        # Create default workspace in personal org
+        existing_ws = await async_directus.get_items(
+            "workspace",
+            {
+                "query": {
+                    "filter": {
+                        "org_id": {"_eq": org_id},
+                        "is_default": {"_eq": True},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id"],
+                    "limit": 1,
+                }
+            },
+        )
+
+        if isinstance(existing_ws, list) and len(existing_ws) > 0:
+            personal_ws_id = existing_ws[0]["id"]
+        else:
+            personal_ws_id = generate_uuid()
+            await async_directus.create_item("workspace", {
+                "id": personal_ws_id,
+                "org_id": org_id,
+                "name": "Default",
+                "is_default": True,
+                "tier": "pioneer",
+                "created_by": app_user_id,
+            })
+            await async_directus.create_item("workspace_membership", {
+                "id": generate_uuid(),
+                "workspace_id": personal_ws_id,
+                "user_id": app_user_id,
+                "role": "owner",
+                "source": "inherited",
+            })
+            logger.info(f"Created default workspace {personal_ws_id} for org {org_id}")
+
+        # Move user's orphaned projects into the personal workspace
+        if has_own_projects:
+            all_projects = await async_directus.get_items(
                 "project",
-                project["id"],
-                {"workspace_id": workspace_id},
+                {
+                    "query": {
+                        "filter": {
+                            "directus_user_id": {"_eq": directus_user_id},
+                            "workspace_id": {"_null": True},
+                        },
+                        "fields": ["id"],
+                        "limit": -1,
+                    }
+                },
             )
-            moved_count += 1
+            moved = 0
+            if isinstance(all_projects, list):
+                for p in all_projects:
+                    await async_directus.update_item("project", p["id"], {
+                        "workspace_id": personal_ws_id,
+                    })
+                    moved += 1
+            if moved > 0:
+                logger.info(f"Moved {moved} projects into workspace {personal_ws_id}")
 
-    if moved_count > 0:
-        logger.info(f"Moved {moved_count} projects into workspace {workspace_id}")
+        workspace_id = personal_ws_id
 
     return OnboardingCompleteResponse(
         app_user_id=app_user_id,
-        org_id=org_id,
-        workspace_id=workspace_id,
+        org_id=org_id or "",
+        workspace_id=workspace_id or "",
     )

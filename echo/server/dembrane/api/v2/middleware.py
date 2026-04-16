@@ -50,7 +50,7 @@ class WorkspaceContext:
 
 async def get_workspace_context(
     workspace_id: str,
-    auth: DependencyDirectusSession = Depends(),
+    auth: DependencyDirectusSession,
 ) -> WorkspaceContext:
     """FastAPI dependency that validates workspace access.
 

@@ -4,10 +4,18 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 
 # ── /v2/me ──
+
+
+class OrgSummary(BaseModel):
+    """Org membership info for the current user."""
+
+    id: str
+    name: str
+    role: str  # owner / admin / member
 
 
 class MeResponse(BaseModel):
@@ -19,6 +27,8 @@ class MeResponse(BaseModel):
     display_name: str
     avatar: Optional[str] = None
     onboarding_completed: bool
+    orgs: list[OrgSummary] = []
+    has_pending_invites: bool = False
 
 
 # ── /v2/onboarding ──
@@ -37,6 +47,13 @@ class OnboardingCompleteResponse(BaseModel):
 # ── /v2/workspaces ──
 
 
+class MemberPreview(BaseModel):
+    """Minimal member info for avatar bubbles."""
+
+    display_name: str
+    avatar: Optional[str] = None
+
+
 class WorkspaceSummary(BaseModel):
     id: str
     name: str
@@ -48,6 +65,7 @@ class WorkspaceSummary(BaseModel):
     project_count: int
     member_count: int
     is_external: bool
+    members_preview: list[MemberPreview] = []
 
 
 class WorkspaceListResponse(BaseModel):
@@ -58,8 +76,9 @@ class WorkspaceListResponse(BaseModel):
 
 
 class WorkspaceInviteRequest(BaseModel):
-    email: str
+    email: EmailStr
     role: str = "member"
+    is_org_member: bool = False  # True = add to org, False = external
 
 
 class WorkspaceInviteResponse(BaseModel):

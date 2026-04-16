@@ -26,7 +26,6 @@ dependencies = [
     # Config
     "python-dotenv==1.0.*",
     # Other
-    "httpx>=0.28",
     "backoff==2.2.*",
     "aiofiles==23.2.*",
     "sentry-sdk==2.2.1",
@@ -79,6 +78,8 @@ dependencies = [
     "gevent>=25.4.2",
     "pylance>=0.30.0",
     "google-cloud-aiplatform==1.120.*",
+    "sendgrid>=6.12.5",
+    "email-validator>=2.3.0",
 ]
 
 [tool.setuptools]

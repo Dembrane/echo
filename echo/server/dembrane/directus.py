@@ -8,7 +8,9 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from urllib.parse import urljoin
 
-import httpx
+import urllib3
+import requests
+from urllib3.exceptions import InsecureRequestWarning
 
 from dembrane.settings import get_settings
 
@@ -54,7 +56,7 @@ class DirectusBadRequest(DirectusGenericException):
     """Exception raised for bad requests to Directus API (e.g., assertion errors)."""
 
 
-def is_recoverable_error(response: httpx.Response) -> bool:
+def is_recoverable_error(response: requests.Response) -> bool:
     """
     Check if the response status code indicates a recoverable error.
 
@@ -75,7 +77,7 @@ def make_request_with_retry(
     max_retries: int = 3,
     retry_delay: float = 1.0,
     **kwargs: Any,
-) -> httpx.Response:
+) -> requests.Response:
     """
     Make an HTTP request with retry logic for recoverable errors.
 
@@ -85,15 +87,14 @@ def make_request_with_retry(
         url: URL to make the request to
         max_retries: Maximum number of retry attempts
         retry_delay: Initial delay between retries in seconds
-        **kwargs: Additional arguments to pass to httpx
+        **kwargs: Additional arguments to pass to requests
 
     Returns:
-        httpx.Response: The response from the server
+        requests.Response: The response from the server
 
     Raises:
-        httpx.HTTPError: If the request fails after all retries
+        requests.exceptions.RequestException: If the request fails after all retries
     """
-    kwargs.setdefault("timeout", 30.0)
     retries = 0
     while retries < max_retries:
         try:
@@ -104,7 +105,7 @@ def make_request_with_retry(
                     if client.email and client.password:
                         client.login(client.email, client.password)
 
-            response = httpx.request(method, url, **kwargs)
+            response = requests.request(method, url, **kwargs)
 
             if is_recoverable_error(response):
                 retries += 1
@@ -126,7 +127,7 @@ def make_request_with_retry(
 
             return response
 
-        except httpx.HTTPError as exc:
+        except requests.exceptions.RequestException as exc:
             if getattr(exc, "response", None) is not None:
                 if exc.response is not None and not is_recoverable_error(exc.response):
                     raise
@@ -139,7 +140,7 @@ def make_request_with_retry(
             time.sleep(wait_time)
             continue
 
-    return httpx.request(method, url, **kwargs)
+    return requests.request(method, url, **kwargs)
 
 
 class DirectusClientProtocol(Protocol):
@@ -180,6 +181,9 @@ class DirectusClient(DirectusClientProtocol):
             verify (bool): Whether to verify SSL certificates (default: False).
         """
         self.verify = verify
+        if not self.verify:
+            urllib3.disable_warnings(category=InsecureRequestWarning)
+
         self.url = url
         self.static_token: Optional[str] = None
         self.temporary_token: Optional[str] = None
@@ -215,11 +219,10 @@ class DirectusClient(DirectusClientProtocol):
             self.email = email
             self.password = password
 
-        response = httpx.post(
+        response = requests.post(
             f"{self.url}/auth/login",
             json={"email": email, "password": password},
             verify=self.verify,
-            timeout=30.0,
         )
         auth_data = self._get_validated_auth_data(response)
         self.static_token = None
@@ -238,17 +241,16 @@ class DirectusClient(DirectusClientProtocol):
         try:
             if refresh_token is None:
                 refresh_token = self.refresh_token
-            response = httpx.post(
+            response = requests.post(
                 f"{self.url}/auth/logout",
                 headers={"Authorization": f"Bearer {self.get_token()}"},
                 json={"refresh_token": refresh_token},
                 verify=self.verify,
-                timeout=30.0,
             )
             response.raise_for_status()
             self.temporary_token = None
             self.refresh_token = None
-        except httpx.HTTPStatusError as exc:
+        except requests.exceptions.HTTPError as exc:
             raise DirectusAuthError(f"Failed to logout from Directus API: {exc}") from exc
 
     def refresh(self, refresh_token: Optional[str] = None) -> dict:
@@ -260,11 +262,10 @@ class DirectusClient(DirectusClientProtocol):
         """
         if refresh_token is None:
             refresh_token = self.refresh_token
-        response = httpx.post(
+        response = requests.post(
             f"{self.url}/auth/refresh",
             json={"refresh_token": refresh_token, "mode": "json"},
             verify=self.verify,
-            timeout=30.0,
         )
         auth_data = self._get_validated_auth_data(response)
         self.temporary_token = auth_data["access_token"]
@@ -329,7 +330,7 @@ class DirectusClient(DirectusClientProtocol):
             if output_type == "csv":
                 return data.text
             return data_json["data"]
-        except httpx.ConnectError as exc:
+        except requests.exceptions.ConnectionError as exc:
             raise DirectusServerError(exc) from exc
         except AssertionError as exc:
             raise DirectusBadRequest(exc) from exc
@@ -354,7 +355,7 @@ class DirectusClient(DirectusClientProtocol):
                 raise AssertionError(response.text)
 
             return response.json()
-        except httpx.ConnectError as exc:
+        except requests.exceptions.ConnectionError as exc:
             raise DirectusServerError(exc) from exc
         except AssertionError as exc:
             raise DirectusBadRequest(exc) from exc
@@ -377,11 +378,15 @@ class DirectusClient(DirectusClientProtocol):
             )
 
             try:
-                return response.json()["data"]
+                resp_json = response.json()
+                if "errors" in resp_json:
+                    logger.warning("Directus SEARCH returned errors: %s", resp_json["errors"])
+                    return []
+                return resp_json["data"]
             except Exception:  # noqa: BLE001 - want best-effort fallback
                 logger.exception("Failed to parse SEARCH response JSON")
-                return {"error": "No data found for this request"}
-        except httpx.ConnectError as exc:
+                return []
+        except requests.exceptions.ConnectionError as exc:
             raise DirectusServerError(exc) from exc
         except AssertionError as exc:
             raise DirectusBadRequest(exc) from exc
@@ -404,7 +409,7 @@ class DirectusClient(DirectusClientProtocol):
             )
             if response.status_code != 204:
                 raise AssertionError(response.text)
-        except httpx.ConnectError as exc:
+        except requests.exceptions.ConnectionError as exc:
             raise DirectusServerError(exc) from exc
         except AssertionError as exc:
             raise DirectusBadRequest(exc) from exc
@@ -430,7 +435,7 @@ class DirectusClient(DirectusClientProtocol):
                 raise AssertionError(response.text)
 
             return response.json()
-        except httpx.ConnectError as exc:
+        except requests.exceptions.ConnectionError as exc:
             raise DirectusServerError(exc) from exc
         except AssertionError as exc:
             raise DirectusBadRequest(exc) from exc
@@ -491,7 +496,7 @@ class DirectusClient(DirectusClientProtocol):
             if response.status_code != 200:
                 raise AssertionError(response.text)
             return response.content
-        except httpx.ConnectError as exc:
+        except requests.exceptions.ConnectionError as exc:
             raise DirectusServerError(exc) from exc
         except AssertionError as exc:
             raise DirectusBadRequest(exc) from exc
@@ -516,7 +521,7 @@ class DirectusClient(DirectusClientProtocol):
                 raise AssertionError(response.text)
             with open(file_path, "wb") as file:
                 file.write(response.content)
-        except httpx.ConnectError as exc:
+        except requests.exceptions.ConnectionError as exc:
             raise DirectusServerError(exc) from exc
         except AssertionError as exc:
             raise DirectusBadRequest(exc) from exc
@@ -554,7 +559,7 @@ class DirectusClient(DirectusClientProtocol):
                 raise AssertionError(response.text)
             with open(file_path, "wb") as file:
                 file.write(response.content)
-        except httpx.ConnectError as exc:
+        except requests.exceptions.ConnectionError as exc:
             raise DirectusServerError(exc) from exc
         except AssertionError as exc:
             raise DirectusBadRequest(exc) from exc
@@ -631,7 +636,7 @@ class DirectusClient(DirectusClientProtocol):
                 result = patched["data"]
 
             return result
-        except httpx.ConnectError as exc:
+        except requests.exceptions.ConnectionError as exc:
             raise DirectusServerError(exc) from exc
         except AssertionError as exc:
             raise DirectusBadRequest(exc) from exc
@@ -841,7 +846,7 @@ class DirectusClient(DirectusClientProtocol):
             words = [query]
         return {"query": {"search": words}}
 
-    def _validate_auth_response(self, response: httpx.Response) -> httpx.Response:
+    def _validate_auth_response(self, response: requests.Response) -> requests.Response:
         """
         Validate the authentication response from the Directus API.
         """
@@ -871,11 +876,11 @@ class DirectusClient(DirectusClientProtocol):
             KeyError,
             ValueError,
             json.JSONDecodeError,
-            httpx.HTTPStatusError,
+            requests.exceptions.HTTPError,
         ) as exc:
             raise DirectusAuthError(f"Invalid response format from API: {exc}") from exc
 
-    def _get_validated_auth_data(self, response: httpx.Response) -> dict:
+    def _get_validated_auth_data(self, response: requests.Response) -> dict:
         """
         Get the validated authentication data from the Directus API.
         """
@@ -952,7 +957,7 @@ def directus_client_context(
         yield active_client
     except DirectusGenericException:
         raise
-    except httpx.ConnectError as exc:
+    except requests.exceptions.ConnectionError as exc:
         raise DirectusServerError(exc) from exc
     except AssertionError as exc:
         raise DirectusBadRequest(exc) from exc

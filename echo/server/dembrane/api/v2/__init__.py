@@ -11,8 +11,14 @@ from fastapi import APIRouter
 
 from dembrane.api.v2.me import router as me_router
 from dembrane.api.v2.onboarding import router as onboarding_router
+from dembrane.api.v2.invites import router as invites_router
+from dembrane.api.v2.projects import router as projects_router
+from dembrane.api.v2.workspaces import router as workspaces_router
 
 v2_router = APIRouter()
 
 v2_router.include_router(me_router, prefix="/me", tags=["v2:me"])
 v2_router.include_router(onboarding_router, prefix="/onboarding", tags=["v2:onboarding"])
+v2_router.include_router(invites_router, prefix="/workspaces", tags=["v2:invites"])
+v2_router.include_router(projects_router, prefix="/projects", tags=["v2:projects"])
+v2_router.include_router(workspaces_router, prefix="/workspaces", tags=["v2:workspaces"])
