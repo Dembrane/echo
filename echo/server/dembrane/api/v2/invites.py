@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import secrets
 from logging import getLogger
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from dembrane.api.rate_limit import create_user_rate_limiter
@@ -143,21 +143,21 @@ async def invite_to_workspace(
 
             # Send a notification email
             inviter_name = "Your team"
-            inviter_app_user = await resolve_app_user(
-                # ctx has app_user_id but we need display name from directus
-                ctx.app_user_id
-            )
-            if inviter_app_user:
-                inviter_name = inviter_app_user.get("display_name", "Your team")
+            try:
+                inviter_data = await async_directus.get_item("app_user", ctx.app_user_id)
+                if inviter_data:
+                    inviter_name = inviter_data.get("display_name") or "Your team"
+            except Exception:
+                pass
 
             await send_email(
                 to=email,
                 subject=f"You've been added to {ctx.workspace.get('name', 'a workspace')}",
-                template="workspace_invite",
+                template="workspace_added",
                 template_data={
                     "inviter_name": inviter_name,
                     "workspace_name": ctx.workspace.get("name", "a workspace"),
-                    "invite_url": f"{settings.urls.admin_base_url}/projects",
+                    "invite_url": f"{settings.urls.admin_base_url}/workspaces",
                 },
             )
 
@@ -169,7 +169,7 @@ async def invite_to_workspace(
 
     # User doesn't exist or doesn't have app_user — create an invite
     token = secrets.token_urlsafe(32)
-    expires_at = (datetime.utcnow() + timedelta(days=7)).isoformat()
+    expires_at = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
 
     # Check for existing pending invite
     existing_invites = await async_directus.get_items(
