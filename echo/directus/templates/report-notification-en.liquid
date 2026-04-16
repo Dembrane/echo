@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dembrane Report Notification</title>
-    
+    <title>dembrane Report Notification</title>
+
     <style>
       a {
         text-decoration: none !important;
-        color: #007bff;
+        color: #4169e1;
       }
       a:hover {
         text-decoration: underline !important;
@@ -30,42 +30,46 @@
                 <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-top: 15px;">
                   <tr>
                     <td style="vertical-align: middle;">
-                      <img src="https://dembrane.blob.core.windows.net/pilot/dembrane-logo-hq.png" alt="Dembrane Logo" width="40" height="40" style="display: block; margin-right: 10px;" />
+                      <img src="https://dembrane.blob.core.windows.net/pilot/dembrane-logo-hq.png" alt="dembrane logo" width="40" height="40" style="display: block; margin-right: 10px;" />
                     </td>
                     <td style="vertical-align: middle;">
-                      <h1 style="margin: 0; font-size: 24px; font-family: Arial, sans-serif;">Dembrane</h1>
+                      <h1 style="margin: 0; font-size: 24px; font-family: Arial, sans-serif; font-weight: 400;">dembrane</h1>
                     </td>
                   </tr>
                 </table>
 
                 <p style="margin-top: 30px;"></p>
 
-                <h3 style="font-size: 18px; font-weight: 500;">
+                <h3 style="font-size: 18px; font-weight: 400;">
                   {% if conversation_name and conversation_name != "" %}
-                    A report has been created for the conversation <strong>"{{ conversation_name }}"</strong> that you have contributed to.
+                    A report has been created for the conversation "{{ conversation_name }}" that you contributed to.
                   {% else %}
-                    A report has been created that you have contributed to.
+                    A report has been created that you contributed to.
                   {% endif %}
                 </h3>
 
                 <p style="font-size: 16px;">
-                  Take a look here: <strong><a href="{{PARTICIPANT_BASE_URL}}/en-US/{{project_id}}/report" target="_blank" rel="noopener" style="color: #007bff;">View Report</a></strong>
+                  Take a look here: <a href="{{PARTICIPANT_BASE_URL}}/en-US/{{project_id}}/report" target="_blank" rel="noopener" style="color: #4169e1;">View Report</a>
                 </p>
 
-                <p style="font-size: 16px; margin-top: 100px; margin-bottom: 0;">We believe in you!</p>
-                <p style="font-size: 16px; margin-top: 0;">The Dembrane Team</p>
+                <p style="font-size: 16px; margin-top: 100px; margin-bottom: 0;">Thanks for being part of this.</p>
+                <p style="font-size: 16px; margin-top: 0;">The dembrane team</p>
 
                 <p style="font-size: 12px; color: #70757A; margin-top: 30px;">
-                  Please do not reply to this email. This is an automated message and replies will not be monitored.  
-                  For any questions or assistance, contact us at  
-                  <a href="mailto:info@dembrane.com" style="color: #1a73e8;">info@dembrane.com</a>.
+                  Please do not reply to this email. This is an automated message and replies are not monitored.
+                  For questions, reach out to us at
+                  <a href="mailto:info@dembrane.com" style="color: #4169e1;">info@dembrane.com</a>.
                 </p>
 
                 <hr style="margin: 30px 0;" />
 
                 <p style="font-size: 12px; color: #70757A;">
-                  If you no longer wish to receive these notifications, please click on 
-                  <a href="{{PARTICIPANT_BASE_URL}}/en-US/unsubscribe?token={{token}}&amp;project_id={{project_id}}" target="_blank" rel="noopener" style="color: #1a73e8;">Unsubscribe</a>
+                  If you no longer wish to receive these notifications, click
+                  <a href="{{PARTICIPANT_BASE_URL}}/en-US/unsubscribe?token={{token}}&amp;project_id={{project_id}}" target="_blank" rel="noopener" style="color: #4169e1;">Unsubscribe</a>
+                </p>
+
+                <p style="font-size: 12px; color: #aaa; text-align: center; margin-top: 20px;">
+                  dembrane - conversations that matter
                 </p>
               </td>
             </tr>

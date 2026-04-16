@@ -15,6 +15,7 @@
           <!-- Header -->
           <tr>
             <td style="padding: 32px 32px 24px; text-align: center;">
+              <!-- NOTE: Absolute URL required for HTML emails. Must match the deployment URL. -->
               <img src="https://app.dembrane.com/logo.png" alt="dembrane" height="28" style="height: 28px;">
             </td>
           </tr>
@@ -22,12 +23,12 @@
           <!-- Body -->
           <tr>
             <td style="padding: 0 32px 32px;">
-              <h2 style="margin: 0 0 8px; font-size: 20px; font-weight: 600; color: #1a1a1a;">
+              <h2 style="margin: 0 0 8px; font-size: 20px; font-weight: 400; color: #1a1a1a;">
                 You've been invited to collaborate
               </h2>
               <p style="margin: 0 0 24px; font-size: 15px; line-height: 1.5; color: #4a4a4a;">
-                <strong>{{ inviter_name }}</strong> invited you to join
-                <strong>{{ workspace_name }}</strong> on dembrane.
+                {{ inviter_name }} invited you to join
+                {{ workspace_name }} on dembrane.
               </p>
 
               <!-- CTA Button -->
