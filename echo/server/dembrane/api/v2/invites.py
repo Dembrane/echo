@@ -51,6 +51,13 @@ async def invite_to_workspace(
     if role not in ("admin", "member", "viewer"):
         raise HTTPException(status_code=400, detail="Role must be admin, member, or viewer")
 
+    # Prevent role escalation — can only grant roles at or below your own level
+    ROLE_HIERARCHY = {"viewer": 0, "member": 1, "admin": 2, "owner": 3}
+    inviter_level = ROLE_HIERARCHY.get(ctx.role, 0)
+    requested_level = ROLE_HIERARCHY.get(role, 0)
+    if requested_level > inviter_level:
+        raise HTTPException(status_code=403, detail="Cannot grant a role higher than your own")
+
     # Prevent self-invite
     inviter_app_user = await async_directus.get_items(
         "app_user",

@@ -349,12 +349,13 @@ async def create_workspace(
     if not isinstance(org_access, list) or len(org_access) == 0:
         raise HTTPException(status_code=403, detail="Must be team admin or owner to create workspaces")
 
+    # Tier is always "pioneer" on creation — plan changes happen via admin/billing
     ws_id = generate_uuid()
     await async_directus.create_item("workspace", {
         "id": ws_id,
         "org_id": org_id,
         "name": body.name.strip(),
-        "tier": body.tier,
+        "tier": "pioneer",
         "is_default": False,
         "created_by": app_user_id,
     })

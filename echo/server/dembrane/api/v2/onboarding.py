@@ -26,9 +26,11 @@ from dembrane.app_user import resolve_app_user, create_app_user, get_directus_us
 from dembrane.directus_async import async_directus
 from dembrane.api.v2.schemas import OnboardingCompleteRequest, OnboardingCompleteResponse
 from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.api.rate_limit import create_user_rate_limiter
 
 router = APIRouter()
 logger = getLogger("api.v2.onboarding")
+_onboarding_rate_limiter = create_user_rate_limiter(name="onboarding", capacity=5, window_seconds=3600)
 
 
 @router.post("/complete", response_model=OnboardingCompleteResponse)
@@ -37,6 +39,7 @@ async def complete_onboarding(
     auth: DependencyDirectusSession,
 ) -> OnboardingCompleteResponse:
     """Complete user onboarding. Idempotent — safe to call multiple times."""
+    await _onboarding_rate_limiter.check(auth.user_id)
     directus_user_id = auth.user_id
     org_name = body.org_name.strip()
 

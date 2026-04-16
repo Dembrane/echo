@@ -2,6 +2,7 @@
 
 from logging import getLogger
 from typing import Optional
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -113,7 +114,11 @@ async def get_workspace_settings(
     pending_invites_raw = await async_directus.get_items(
         "workspace_invite",
         {"query": {
-            "filter": {"workspace_id": {"_eq": ctx.workspace_id}, "accepted_at": {"_null": True}},
+            "filter": {
+                "workspace_id": {"_eq": ctx.workspace_id},
+                "accepted_at": {"_null": True},
+                "expires_at": {"_gt": datetime.now(timezone.utc).isoformat()},
+            },
             "fields": ["id", "email", "role", "created_at"],
             "sort": ["-created_at"],
             "limit": 50,
