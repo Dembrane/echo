@@ -54,6 +54,13 @@ class MemberPreview(BaseModel):
     avatar: Optional[str] = None
 
 
+class WorkspaceUsage(BaseModel):
+    """Usage stats for a workspace."""
+
+    audio_hours: float = 0.0
+    conversation_count: int = 0
+
+
 class WorkspaceSummary(BaseModel):
     id: str
     name: str
@@ -66,10 +73,41 @@ class WorkspaceSummary(BaseModel):
     member_count: int
     is_external: bool
     members_preview: list[MemberPreview] = []
+    usage: WorkspaceUsage = WorkspaceUsage()
+
+
+class TeamRollup(BaseModel):
+    """Aggregated stats across all workspaces in a team."""
+
+    id: str
+    name: str
+    role: str
+    total_projects: int = 0
+    total_members: int = 0  # unique across workspaces
+    total_audio_hours: float = 0.0
+    total_conversations: int = 0
+    workspace_count: int = 0
 
 
 class WorkspaceListResponse(BaseModel):
     workspaces: list[WorkspaceSummary]
+    teams: list[TeamRollup] = []
+
+
+# ── /v2/workspaces CRUD ──
+
+
+class CreateWorkspaceRequest(BaseModel):
+    name: str
+    tier: str = "pioneer"
+    org_id: Optional[str] = None  # defaults to user's primary org
+
+
+class CreateWorkspaceResponse(BaseModel):
+    id: str
+    name: str
+    org_id: str
+    tier: str
 
 
 # ── /v2/workspaces/:id/invite ──
