@@ -288,6 +288,32 @@ async def create_project(
     return project
 
 
+@ProjectRouter.delete("/{project_id}")
+async def delete_project(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Soft-delete a project by setting deleted_at.
+
+    The project and all its data (conversations, chats, etc.) are preserved
+    in the database. Read queries filter deleted_at IS NULL so the project
+    disappears from all views. S3 audio files are kept for the grace period.
+    """
+    await _verify_project_access(auth, project_id)
+
+    from dembrane.directus import directus
+
+    await run_in_thread_pool(
+        directus.update_item,
+        "project",
+        project_id,
+        {"deleted_at": datetime.utcnow().isoformat()},
+    )
+
+    logger.info(f"Soft-deleted project {project_id} by user {auth.user_id}")
+    return {"status": "success"}
+
+
 def _parse_iso_datetime(value: Any) -> datetime:
     if isinstance(value, datetime):
         return value

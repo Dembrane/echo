@@ -22,6 +22,7 @@ import {
 	cloneProjectById,
 	createCustomVerificationTopic,
 	deleteCustomVerificationTopic,
+	deleteProjectById,
 	getLatestProjectAnalysisRunByProjectId,
 	getVerificationTopics,
 	type UpdateCustomTopicPayload,
@@ -101,14 +102,16 @@ export const useTogglePinMutation = () => {
 export const useDeleteProjectByIdMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (projectId: string) =>
-			directus.request(deleteItem("project", projectId)),
+		mutationFn: (projectId: string) => deleteProjectById(projectId),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects"],
 			});
 			queryClient.resetQueries();
-			toast.success("Project deleted successfully");
+			toast.success(t`Project deleted`);
+		},
+		onError: (error: Error) => {
+			toast.error(error.message || t`Failed to delete project`);
 		},
 	});
 };

@@ -1611,6 +1611,17 @@ export const submitNotificationParticipant = async (
 	}
 };
 
+export const deleteProjectById = async (projectId: string) => {
+	try {
+		const response = await api.delete(`/projects/${projectId}`);
+		return response;
+	} catch (error: any) {
+		const message =
+			error?.response?.data?.detail || "Failed to delete project";
+		throw new Error(message);
+	}
+};
+
 export const deleteConversationById = async (conversationId: string) => {
 	try {
 		const response = await api.delete(`/conversations/${conversationId}`);
