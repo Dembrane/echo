@@ -17,6 +17,7 @@ import {
 	IconMessageCircle,
 	IconNotes,
 	IconSettings,
+	IconMail,
 	IconSparkles,
 	IconUsers,
 } from "@tabler/icons-react";
@@ -84,6 +85,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 	const { data: user } = useCurrentUser({ enabled: isAuthenticated });
 	const { data: meV2 } = useV2Me({ enabled: isAuthenticated });
 	const needsOnboarding = meV2?.onboarding_completed === false;
+	const hasPendingInvites = meV2?.has_pending_invites === true;
 	const { workspaceId, workspaceName } = useWorkspace();
 	const navigate = useI18nNavigate();
 	const { runTransition } = useTransitionCurtain();
@@ -220,6 +222,15 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 											color="blue"
 										>
 											<Trans>Set up workspace</Trans>
+										</Menu.Item>
+									)}
+									{hasPendingInvites && (
+										<Menu.Item
+											leftSection={<IconMail size={14} />}
+											onClick={() => navigate("/invites")}
+											color="blue"
+										>
+											<Trans>You have a pending invite</Trans>
 										</Menu.Item>
 									)}
 									<Menu.Item

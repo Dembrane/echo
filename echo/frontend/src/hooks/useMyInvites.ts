@@ -1,0 +1,99 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { API_BASE_URL } from "@/config";
+
+export interface MyPendingInvite {
+	id: string;
+	workspace_id: string;
+	workspace_name: string;
+	org_name: string;
+	role: string;
+	invited_by_name: string | null;
+	created_at: string | null;
+	expires_at: string | null;
+}
+
+async function fetchMyInvites(): Promise<MyPendingInvite[]> {
+	const res = await fetch(`${API_BASE_URL}/v2/me/invites`, {
+		credentials: "include",
+	});
+	if (!res.ok) return [];
+	return res.json();
+}
+
+export const useMyInvites = ({ enabled = true }: { enabled?: boolean } = {}) =>
+	useQuery({
+		queryKey: ["v2", "me", "invites"],
+		queryFn: fetchMyInvites,
+		enabled,
+		staleTime: 30_000,
+	});
+
+export const useAcceptInvite = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async (inviteId: string) => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/me/invites/${inviteId}/accept`,
+				{ credentials: "include", method: "POST" },
+			);
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.detail || "Failed to accept invite");
+			}
+			return res.json() as Promise<{ workspace_id: string }>;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["v2", "me"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+		},
+	});
+};
+
+export const useDeclineInvite = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async (inviteId: string) => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/me/invites/${inviteId}/decline`,
+				{ credentials: "include", method: "POST" },
+			);
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.detail || "Failed to decline invite");
+			}
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["v2", "me"] });
+		},
+	});
+};
+
+export const useAcceptInviteByToken = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async ({ token, claimedRole }: { token: string; claimedRole?: string | null }) => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/me/invites/by-token/${token}/accept`,
+				{
+					body: JSON.stringify({ claimed_role: claimedRole ?? null }),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "POST",
+				},
+			);
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				const err = new Error(data.detail || "Failed to accept invite");
+				(err as Error & { status?: number }).status = res.status;
+				throw err;
+			}
+			return res.json() as Promise<{ workspace_id: string; workspace_name: string }>;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["v2", "me"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+		},
+	});
+};

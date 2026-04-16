@@ -232,8 +232,18 @@ async def invite_to_workspace(
         "include_org_membership": body.is_org_member,
     })
 
-    # Send invite email
-    invite_url = f"{settings.urls.admin_base_url}/register?next=/onboarding"
+    # Send invite email — link to /invite/accept page which handles both
+    # logged-in and logged-out states. Context encoded so the banner renders
+    # immediately without an API call.
+    from urllib.parse import urlencode
+    ctx_params = urlencode({
+        "token": token,
+        "email": email,
+        "iss": inviter_name,
+        "ws": ctx.workspace.get("name", ""),
+        "role": role,
+    })
+    invite_url = f"{settings.urls.admin_base_url}/invite/accept?{ctx_params}"
 
     email_sent = await send_email(
         to=email,

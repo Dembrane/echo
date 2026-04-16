@@ -125,6 +125,14 @@ const WorkspaceSettingsRoute = createLazyNamedRoute(
 	() => import("./routes/workspaces/WorkspaceSettingsRoute"),
 	"WorkspaceSettingsRoute",
 );
+const AcceptInviteRoute = createLazyNamedRoute(
+	() => import("./routes/invite/AcceptInviteRoute"),
+	"AcceptInviteRoute",
+);
+const MyInvitesRoute = createLazyNamedRoute(
+	() => import("./routes/invite/MyInvitesRoute"),
+	"MyInvitesRoute",
+);
 
 // Project route children — shared between /projects and /w/:workspaceId/projects
 const projectRouteChildren = [
@@ -286,6 +294,21 @@ export const mainRouter = createBrowserRouter([
 					</Protected>
 				),
 				path: "onboarding",
+			},
+			{
+				// Accept invite — public (email link target). Handles logged-out,
+				// logged-in-wrong-email, and logged-in-matching-email states.
+				element: <AcceptInviteRoute />,
+				path: "invite/accept",
+			},
+			{
+				// My pending invites (authenticated list view with accept/decline)
+				element: (
+					<Protected>
+						<MyInvitesRoute />
+					</Protected>
+				),
+				path: "invites",
 			},
 			{
 				// Workspace selector + create — with header
