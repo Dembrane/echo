@@ -34,6 +34,8 @@ class PendingInvite(BaseModel):
     email: str
     role: str
     created_at: Optional[str] = None
+    invited_by_name: Optional[str] = None
+    expires_at: Optional[str] = None
 
 
 class WorkspaceDetailResponse(BaseModel):
@@ -119,19 +121,36 @@ async def get_workspace_settings(
                 "accepted_at": {"_null": True},
                 "expires_at": {"_gt": datetime.now(timezone.utc).isoformat()},
             },
-            "fields": ["id", "email", "role", "created_at"],
+            "fields": ["id", "email", "role", "created_at", "invited_by", "expires_at"],
             "sort": ["-created_at"],
             "limit": 50,
         }},
     )
     pending_invites: list[PendingInvite] = []
-    if isinstance(pending_invites_raw, list):
+    if isinstance(pending_invites_raw, list) and len(pending_invites_raw) > 0:
+        # Resolve inviter names
+        inviter_ids = list({inv.get("invited_by") for inv in pending_invites_raw if inv.get("invited_by")})
+        inviter_name_map: dict[str, str] = {}
+        if inviter_ids:
+            inviters = await async_directus.get_items(
+                "app_user",
+                {"query": {
+                    "filter": {"id": {"_in": inviter_ids}},
+                    "fields": ["id", "display_name"],
+                    "limit": -1,
+                }},
+            )
+            if isinstance(inviters, list):
+                inviter_name_map = {u["id"]: u.get("display_name") or "" for u in inviters}
+
         pending_invites = [
             PendingInvite(
                 id=inv["id"],
                 email=inv.get("email", ""),
                 role=inv.get("role", ""),
                 created_at=inv.get("created_at"),
+                invited_by_name=inviter_name_map.get(inv.get("invited_by", "")) or None,
+                expires_at=inv.get("expires_at"),
             )
             for inv in pending_invites_raw
         ]
