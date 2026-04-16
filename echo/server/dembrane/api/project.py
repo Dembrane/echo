@@ -889,7 +889,7 @@ async def delete_report(
     report_id: int,
     auth: DependencyDirectusSession,
 ) -> dict:
-    """Delete a report permanently."""
+    """Soft-delete a report by setting deleted_at."""
     await _verify_project_access(auth, project_id)
     from dembrane.directus import directus
 
@@ -903,9 +903,10 @@ async def delete_report(
         raise HTTPException(status_code=404, detail="Report not found")
 
     await run_in_thread_pool(
-        directus.delete_item,
+        directus.update_item,
         "project_report",
         str(report_id),
+        {"deleted_at": datetime.utcnow().isoformat()},
     )
     return {"deleted": True}
 
