@@ -3,12 +3,19 @@ import ReactDOM from "react-dom/client";
 import { App } from "./App";
 import "./index.css";
 
+import { PostHogProvider } from "@posthog/react";
 import * as Sentry from "@sentry/react";
+import posthog from "posthog-js";
 import {
 	BUILD_VERSION,
 	DISABLE_SENTRY,
 	USE_PARTICIPANT_ROUTER,
 } from "./config";
+
+posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN, {
+	api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+	defaults: "2026-01-30",
+});
 
 const sentryCommonOpts: Partial<Sentry.BrowserOptions> = {
 	integrations: [
@@ -64,6 +71,8 @@ if (root === null) {
 
 ReactDOM.createRoot(root).render(
 	<React.StrictMode>
-		<App />
+		<PostHogProvider client={posthog}>
+			<App />
+		</PostHogProvider>
 	</React.StrictMode>,
 );

@@ -12,6 +12,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
+import { usePostHog } from "@posthog/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRegisterMutation } from "@/components/auth/hooks";
@@ -32,12 +33,20 @@ export const RegisterRoute = () => {
 	const [error, setError] = useState("");
 
 	const registerMutation = useRegisterMutation();
+	const posthog = usePostHog();
 
 	const onSubmit = handleSubmit(async (data) => {
 		if (data.password !== data.confirmPassword) {
 			setError(t`Passwords do not match`);
 			return;
 		}
+
+		posthog?.identify(data.email);
+		posthog?.capture("user_registered", {
+			email: data.email,
+			first_name: data.first_name,
+			last_name: data.last_name,
+		});
 
 		registerMutation.mutate([
 			data.email,

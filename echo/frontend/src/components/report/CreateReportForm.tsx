@@ -14,10 +14,7 @@ import {
 	Text,
 	Tooltip,
 } from "@mantine/core";
-import {
-	isDateFarEnough,
-	ScheduleDateTimePicker,
-} from "./ScheduleDateTimePicker";
+import { usePostHog } from "@posthog/react";
 import {
 	IconArrowLeft,
 	IconClock,
@@ -37,6 +34,10 @@ import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 import { ConversationStatusTable } from "./ConversationStatusTable";
 import { useCreateProjectReportMutation } from "./hooks";
 import { ReportFocusSelector } from "./ReportFocusSelector";
+import {
+	isDateFarEnough,
+	ScheduleDateTimePicker,
+} from "./ScheduleDateTimePicker";
 
 function getLanguageLabel(iso: string): string {
 	return languageOptionsByIso639_1.find((o) => o.value === iso)?.label ?? iso;
@@ -78,6 +79,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 	const [detailModalOpened, setDetailModalOpened] = useState(false);
 	const [showSchedule, setShowSchedule] = useState(false);
 	const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
+	const posthog = usePostHog();
 
 	const hasConversations = conversationCounts && conversationCounts.total > 0;
 	const hasFinishedConversations =
@@ -88,6 +90,12 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 		error instanceof AxiosError && error.response?.status === 409;
 
 	const handleCreate = (schedule?: boolean) => {
+		posthog?.capture("report_generated", {
+			has_user_instructions: !!userInstructions,
+			language,
+			project_id: projectId,
+			scheduled: !!schedule,
+		});
 		mutate(
 			{
 				language,

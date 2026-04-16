@@ -15,6 +15,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
+import { usePostHog } from "@posthog/react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router";
@@ -79,6 +80,7 @@ export const LoginRoute = () => {
 	const [formParent] = useAutoAnimate();
 	const pinInputRef = useRef<HTMLDivElement | null>(null);
 	const loginMutation = useLoginMutation();
+	const posthog = usePostHog();
 
 	const submitLogin = async (data: {
 		email: string;
@@ -102,6 +104,9 @@ export const LoginRoute = () => {
 				otp: otpRequired ? trimmedOtp || undefined : undefined,
 				password: data.password,
 			});
+
+			posthog?.identify(data.email);
+			posthog?.capture("user_logged_in", { email: data.email });
 
 			const isNewUser = searchParams.get("new") === "true";
 			const next = searchParams.get("next");
@@ -134,6 +139,11 @@ export const LoginRoute = () => {
 				firstError?.message && firstError.message !== ""
 					? firstError.message
 					: undefined;
+
+			posthog?.capture("user_login_failed", {
+				email: data.email,
+				error_code: code,
+			});
 
 			if (code === "INVALID_OTP") {
 				setOtpRequired(true);

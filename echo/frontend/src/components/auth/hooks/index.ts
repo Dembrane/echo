@@ -4,6 +4,7 @@ import {
 	registerUser,
 	registerUserVerify,
 } from "@directus/sdk";
+import { usePostHog } from "@posthog/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { useLocation, useSearchParams } from "react-router";
@@ -22,10 +23,9 @@ export const useCurrentUser = ({
 		enabled,
 		queryFn: async () => {
 			try {
-				const response = await fetch(
-					`${API_BASE_URL}/user-settings/me`,
-					{ credentials: "include" },
-				);
+				const response = await fetch(`${API_BASE_URL}/user-settings/me`, {
+					credentials: "include",
+				});
 				if (!response.ok) return null;
 				return response.json();
 			} catch (_error) {
@@ -181,6 +181,7 @@ export const useLoginMutation = () => {
 export const useLogoutMutation = () => {
 	const queryClient = useQueryClient();
 	const navigate = useI18nNavigate();
+	const posthog = usePostHog();
 
 	return useMutation({
 		mutationFn: async ({
@@ -219,6 +220,8 @@ export const useLogoutMutation = () => {
 			queryClient.invalidateQueries({ queryKey: ["auth", "session"] });
 		},
 		onSuccess: (_data, { next, reason, doRedirect }) => {
+			posthog?.capture("user_logged_out");
+			posthog?.reset();
 			if (doRedirect) {
 				navigate(
 					"/login" +

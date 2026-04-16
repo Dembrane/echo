@@ -16,6 +16,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDebouncedValue, useDocumentTitle } from "@mantine/hooks";
+import { usePostHog } from "@posthog/react";
 import { IconInfoCircle, IconSearch, IconX } from "@tabler/icons-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
@@ -85,6 +86,7 @@ export const ProjectsHomeRoute = () => {
 	const createProjectMutation = useCreateProjectMutation();
 	const updateProjectMutation = useUpdateProjectByIdMutation();
 	const user = useCurrentUser();
+	const posthog = usePostHog();
 
 	const { language } = useLanguage();
 
@@ -103,6 +105,8 @@ export const ProjectsHomeRoute = () => {
 				image_generation_model: "MODEST",
 			},
 		});
+
+		posthog?.capture("project_created", { project_id: project.id });
 		navigate(`/projects/${project.id}/overview`);
 	};
 
