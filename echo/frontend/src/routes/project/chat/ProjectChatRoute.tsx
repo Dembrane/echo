@@ -62,6 +62,18 @@ import {
 	ENABLE_AGENTIC_CHAT,
 	ENABLE_CHAT_AUTO_SELECT,
 } from "@/config";
+import { useCurrentUser } from "@/components/auth/hooks";
+import type { QuickAccessItem } from "@/components/chat/templateKey";
+import {
+	useCreateUserTemplate,
+	useDeleteUserTemplate,
+	useQuickAccessPreferences,
+	useSaveQuickAccessPreferences,
+	useToggleAiSuggestions,
+	useUpdateUserTemplate,
+	useUserTemplates,
+} from "@/components/chat/hooks/useUserTemplates";
+import { Templates } from "@/components/chat/templates";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLoadNotification } from "@/hooks/useLoadNotification";
@@ -303,6 +315,13 @@ export const ProjectChatRoute = () => {
 	const chatQuery = useProjectChat(chatId ?? "");
 	const chatContextQuery = useProjectChatContext(chatId ?? "");
 	const [referenceIds, setReferenceIds] = useState<string[]>([]);
+	const [templatesModalOpen, setTemplatesModalOpen] = useState(false);
+	const [saveAsTemplateContent, setSaveAsTemplateContent] = useState<string | null>(null);
+
+	const handleSaveAsTemplate = (content: string) => {
+		setSaveAsTemplateContent(content);
+		setTemplatesModalOpen(true);
+	};
 
 	// Chat mode state
 	// Legacy chats (chat_mode = null but has locked conversations) are treated as deep_dive
@@ -321,6 +340,62 @@ export const ProjectChatRoute = () => {
 		projectId ?? "",
 	);
 
+	// User templates & preferences
+	const currentUserQuery = useCurrentUser();
+	const userTemplatesQuery = useUserTemplates();
+	const createUserTemplateMutation = useCreateUserTemplate();
+	const updateUserTemplateMutation = useUpdateUserTemplate();
+	const deleteUserTemplateMutation = useDeleteUserTemplate();
+	const quickAccessQuery = useQuickAccessPreferences();
+	const saveQuickAccessMutation = useSaveQuickAccessPreferences();
+	const toggleAiSuggestionsMutation = useToggleAiSuggestions();
+
+	const hideAiSuggestions =
+		currentUserQuery.data?.hide_ai_suggestions ?? false;
+
+	// Resolve quick access items — default to first 3 built-in templates
+	const quickAccessItems: QuickAccessItem[] = useMemo(() => {
+		if (!quickAccessQuery.data || quickAccessQuery.data.length === 0)
+			return Templates.slice(0, 3).map((t) => ({
+				type: "static" as const,
+				id: t.id,
+				title: t.title,
+			}));
+		return quickAccessQuery.data
+			.map((pref) => {
+				if (pref.type === "static") {
+					const found = Templates.find((t) => t.id === pref.id);
+					if (found)
+						return {
+							type: "static" as const,
+							id: found.id,
+							title: found.title,
+						};
+				} else if (pref.type === "user") {
+					const found = userTemplatesQuery.data?.find(
+						(t) => t.id === pref.id,
+					);
+					if (found)
+						return {
+							type: "user" as const,
+							id: found.id,
+							title: found.title,
+						};
+				}
+				return null;
+			})
+			.filter(Boolean) as QuickAccessItem[];
+	}, [quickAccessQuery.data, userTemplatesQuery.data]);
+
+	const handleSaveQuickAccess = (items: QuickAccessItem[]) => {
+		saveQuickAccessMutation.mutate(
+			items.map((item) => ({
+				type: item.type,
+				id: item.id,
+			})),
+		);
+	};
+
 	// Language for suggestions
 	const { language } = useLanguage();
 	const prefetchSuggestions = usePrefetchSuggestions();
@@ -335,6 +410,7 @@ export const ProjectChatRoute = () => {
 	const shouldFetchSuggestions =
 		isModeSelected &&
 		!isAgenticMode &&
+		!hideAiSuggestions &&
 		(!isDeepDiveMode || // overview mode: always fetch
 			conversationCount > 0); // deep_dive mode: only when conversations exist
 
@@ -567,6 +643,7 @@ export const ProjectChatRoute = () => {
 									referenceIds={referenceIds}
 									setReferenceIds={setReferenceIds}
 									chatMode={chatMode}
+									onSaveAsTemplate={handleSaveAsTemplate}
 								/>
 							</div>
 						))}
@@ -586,6 +663,7 @@ export const ProjectChatRoute = () => {
 									referenceIds={referenceIds}
 									setReferenceIds={setReferenceIds}
 									chatMode={chatMode}
+									onSaveAsTemplate={handleSaveAsTemplate}
 								/>
 							</div>
 						)}
@@ -598,7 +676,7 @@ export const ProjectChatRoute = () => {
 						<Stack gap="xs">
 							<Group>
 								<Box className="animate-spin">
-									<Logo hideTitle h="20px" my={4} />
+									<Logo hideTitle alwaysDembrane h="20px" my={4} />
 								</Box>
 								<Text
 									size="sm"
@@ -689,10 +767,46 @@ export const ProjectChatRoute = () => {
 					</Group>
 
 					<ChatTemplatesMenu
+						externalOpen={templatesModalOpen}
+						onExternalClose={() => setTemplatesModalOpen(false)}
 						onTemplateSelect={handleTemplateSelect}
 						selectedTemplateKey={templateKey}
-						suggestions={suggestionsQuery.data?.suggestions}
+						suggestions={
+							hideAiSuggestions
+								? []
+								: suggestionsQuery.data?.suggestions
+						}
 						chatMode={chatMode}
+						userTemplates={userTemplatesQuery.data ?? []}
+						onCreateUserTemplate={(payload) =>
+							createUserTemplateMutation.mutateAsync(payload)
+						}
+						onUpdateUserTemplate={(payload) =>
+							updateUserTemplateMutation.mutateAsync(payload)
+						}
+						onDeleteUserTemplate={(id) =>
+							deleteUserTemplateMutation.mutateAsync(id)
+						}
+						isCreatingTemplate={
+							createUserTemplateMutation.isPending
+						}
+						isUpdatingTemplate={
+							updateUserTemplateMutation.isPending
+						}
+						isDeletingTemplate={
+							deleteUserTemplateMutation.isPending
+						}
+						quickAccessItems={quickAccessItems}
+						onSaveQuickAccess={handleSaveQuickAccess}
+						isSavingQuickAccess={
+							saveQuickAccessMutation.isPending
+						}
+						hideAiSuggestions={hideAiSuggestions}
+						onToggleAiSuggestions={(hide) =>
+							toggleAiSuggestionsMutation.mutate(hide)
+						}
+						saveAsTemplateContent={saveAsTemplateContent}
+						onClearSaveAsTemplate={() => setSaveAsTemplateContent(null)}
 					/>
 
 					<Divider />
@@ -715,7 +829,7 @@ export const ProjectChatRoute = () => {
 						<ChatMessage role="dembrane">
 							<Group gap="xs" align="baseline">
 								<Text size="xs" c="dimmed" fw={500} px="sm">
-									<Trans>Adding Context:</Trans>
+									<Trans>Conversations:</Trans>
 								</Text>
 								<ConversationLinks
 									// @ts-expect-error conversation_id is not typed
@@ -753,7 +867,7 @@ export const ProjectChatRoute = () => {
 						<Group className="flex-nowrap">
 							<Box className="grow">
 								<Textarea
-									placeholder={t`Type a message...`}
+									placeholder={t`Type a message or press / for templates...`}
 									minRows={4}
 									maxRows={10}
 									autosize
@@ -761,6 +875,11 @@ export const ProjectChatRoute = () => {
 									onChange={handleInputChange}
 									disabled={isLoading || isSubmitting}
 									onKeyDown={(e) => {
+										if (e.key === "/" && normalizedInput.trim() === "") {
+											e.preventDefault();
+											setTemplatesModalOpen(true);
+											return;
+										}
 										if (e.key === "Enter" && !e.shiftKey) {
 											e.preventDefault();
 											e.stopPropagation();

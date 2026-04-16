@@ -29,8 +29,10 @@ import {
 	Text,
 	TextInput,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { IconX } from "@tabler/icons-react";
 import { useState } from "react";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { useProjectById } from "@/components/project/hooks";
 import { testId } from "@/lib/testUtils";
 import { FormLabel } from "../form/FormLabel";
@@ -42,6 +44,8 @@ import {
 
 export const ProjectTagPill = ({ tag }: { tag: ProjectTag }) => {
 	const deleteTagMutation = useDeleteTagByIdMutation();
+	const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
+		useDisclosure(false);
 	const {
 		attributes,
 		listeners,
@@ -69,43 +73,53 @@ export const ProjectTagPill = ({ tag }: { tag: ProjectTag }) => {
 
 	const handleDelete = (e: React.MouseEvent<HTMLButtonElement>) => {
 		e.stopPropagation();
-		if (
-			!isDragging &&
-			window.confirm(
-				t`Are you sure you want to delete this tag? This will remove the tag from existing conversations that contain it.`,
-			)
-		) {
-			deleteTagMutation.mutate(tag.id);
+		if (!isDragging) {
+			openConfirm();
 		}
 	};
 
 	return (
-		<Badge
-			ref={setNodeRef}
-			style={{
-				...style,
-				fontWeight: 500,
-				textTransform: "none",
-			}}
-			variant="light"
-			c="var(--app-text)"
-			size="lg"
-			rightSection={
-				<ActionIcon
-					onClick={(e) => handleDelete(e)}
-					size="xs"
-					variant="transparent"
-					c="gray.8"
-					onPointerDown={(e) => e.stopPropagation()}
-				>
-					<IconX size={14} />
-				</ActionIcon>
-			}
-			{...attributes}
-			{...listeners}
-		>
-			<span>{tag.text}</span>
-		</Badge>
+		<>
+			<Badge
+				ref={setNodeRef}
+				style={{
+					...style,
+					fontWeight: 500,
+					textTransform: "none",
+				}}
+				variant="light"
+				c="var(--app-text)"
+				size="lg"
+				rightSection={
+					<ActionIcon
+						onClick={(e) => handleDelete(e)}
+						size="xs"
+						variant="transparent"
+						c="gray.8"
+						onPointerDown={(e) => e.stopPropagation()}
+					>
+						<IconX size={14} />
+					</ActionIcon>
+				}
+				{...attributes}
+				{...listeners}
+			>
+				<span>{tag.text}</span>
+			</Badge>
+			<ConfirmModal
+				opened={confirmOpened}
+				onClose={closeConfirm}
+				title={t`Delete tag`}
+				data-testid="tag-delete-modal"
+				message={t`Are you sure you want to delete this tag? This will remove the tag from existing conversations that contain it.`}
+				confirmLabel={<Trans>Delete</Trans>}
+				confirmColor="red"
+				onConfirm={() => {
+					deleteTagMutation.mutate(tag.id);
+					closeConfirm();
+				}}
+			/>
+		</>
 	);
 };
 

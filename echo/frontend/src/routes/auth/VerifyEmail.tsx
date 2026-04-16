@@ -5,6 +5,7 @@ import { useDocumentTitle } from "@mantine/hooks";
 import { useEffect, useRef } from "react";
 import { useSearchParams } from "react-router";
 import { useVerifyMutation } from "@/components/auth/hooks";
+import { toast } from "@/components/common/Toaster";
 
 export const VerifyEmailRoute = () => {
 	useDocumentTitle(t`Email Verification | Dembrane`);
@@ -15,10 +16,11 @@ export const VerifyEmailRoute = () => {
 	const handleVerify = () => {
 		const token = search.get("token");
 		if (!token) {
-			window.alert(t`Invalid token. Please try again.`);
+			toast.error(t`Invalid token. Please try again.`);
+			return;
 		}
 
-		verifyMutation.mutate({ token: token ?? "" });
+		verifyMutation.mutate({ token });
 	};
 
 	const runOnlyOnce = useRef(true);

@@ -113,7 +113,7 @@ def generate_conversation_title(
 
     try:
         response = router_completion(
-            MODELS.TEXT_FAST,
+            MODELS.MULTI_MODAL_FAST,
             messages=[
                 {
                     "role": "user",

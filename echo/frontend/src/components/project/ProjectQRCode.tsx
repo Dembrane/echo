@@ -1,7 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	Box,
 	Button,
 	CopyButton,
 	Group,
@@ -14,10 +13,9 @@ import {
 	IconCheck,
 	IconCopy,
 	IconDownload,
-	IconExternalLink,
 	IconPresentation,
 } from "@tabler/icons-react";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import { useAppPreferences } from "@/hooks/useAppPreferences";
 import { testId } from "@/lib/testUtils";
@@ -51,6 +49,8 @@ export const useProjectSharingLink = (project?: Project) => {
 			"it-IT": "it-IT",
 			nl: "nl-NL",
 			"nl-NL": "nl-NL",
+			uk: "uk-UA",
+			"uk-UA": "uk-UA",
 		}[
 			project.language as
 				| "en"
@@ -59,12 +59,14 @@ export const useProjectSharingLink = (project?: Project) => {
 				| "fr"
 				| "es"
 				| "it"
+				| "uk"
 				| "en-US"
 				| "nl-NL"
 				| "de-DE"
 				| "fr-FR"
 				| "es-ES"
 				| "it-IT"
+				| "uk-UA"
 		];
 
 		// Include theme in URL so participant portal uses the same theme
@@ -77,7 +79,6 @@ export const useProjectSharingLink = (project?: Project) => {
 
 export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 	const link = useProjectSharingLink(project);
-	const [qrHovered, setQrHovered] = useState(false);
 	const qrRef = useRef<HTMLDivElement>(null);
 
 	const handleOpenHostGuide = () => {
@@ -110,12 +111,14 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 		"fr",
 		"es",
 		"it",
+		"uk",
 		"en-US",
 		"nl-NL",
 		"de-DE",
 		"fr-FR",
 		"es-ES",
 		"it-IT",
+		"uk-UA",
 	];
 	const showQuickStart =
 		project?.language && supportedLanguages.includes(project.language);
@@ -127,32 +130,13 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 		>
 			{project?.is_conversation_allowed ? (
 				<Group align="center" justify="center" gap="lg">
-					{/* Interactive QR Code */}
-					<Box
+					<QRCode
+						value={link}
+						href={link}
 						ref={qrRef}
-						className="relative h-auto w-full min-w-[80px] max-w-[128px] cursor-pointer overflow-hidden rounded-lg bg-white transition-all"
-						onMouseEnter={() => setQrHovered(true)}
-						onMouseLeave={() => setQrHovered(false)}
-						onClick={() => window.open(link, "_blank")}
+						className="h-auto w-full min-w-[80px] max-w-[128px]"
 						{...testId("project-qr-code")}
-					>
-						<QRCode value={link} />
-						{/* Hover overlay */}
-						<div
-							className="absolute inset-0 flex items-center justify-center rounded-lg transition-all"
-							style={{
-								backgroundColor: qrHovered
-									? "rgba(65, 105, 225, 0.85)"
-									: "transparent",
-								opacity: qrHovered ? 1 : 0,
-							}}
-						>
-							<IconExternalLink
-								style={{ height: rem(32), width: rem(32) }}
-								color="white"
-							/>
-						</div>
-					</Box>
+					/>
 					<div className="flex flex-col flex-wrap gap-2">
 						{showQuickStart && (
 							<Button

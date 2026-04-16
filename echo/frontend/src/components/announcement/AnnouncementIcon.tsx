@@ -1,8 +1,7 @@
-import { ActionIcon, Box, Group, Indicator, Loader } from "@mantine/core";
+import { ActionIcon, Box, Group, Indicator, Loader, Text } from "@mantine/core";
 import { FlagBannerIcon } from "@phosphor-icons/react";
 import { useAnnouncementDrawer } from "@/components/announcement/hooks";
 import { getTranslatedContent } from "@/components/announcement/hooks/useProcessedAnnouncements";
-import { Markdown } from "@/components/common/Markdown";
 import { useLanguage } from "@/hooks/useLanguage";
 import { testId } from "@/lib/testUtils";
 import { useLatestAnnouncement, useUnreadAnnouncements } from "./hooks";
@@ -15,20 +14,18 @@ export const AnnouncementIcon = () => {
 	const { data: unreadCount, isLoading: isLoadingUnread } =
 		useUnreadAnnouncements();
 
-	// Get latest urgent announcement message
-	const message = latestAnnouncement
-		? getTranslatedContent(latestAnnouncement as Announcement, language).message
+	const title = latestAnnouncement
+		? getTranslatedContent(latestAnnouncement as Announcement, language).title
 		: "";
 
-	// Check if the latest announcement is unread
 	const isUnread = latestAnnouncement
 		? !latestAnnouncement.activity?.some(
 				(activity: AnnouncementActivity) => activity.read === true,
 			)
 		: false;
 
-	const showMessage =
-		isUnread && message && latestAnnouncement?.level === "info";
+	const showPreview =
+		isUnread && title && latestAnnouncement?.level === "info";
 
 	const isLoading = isLoadingLatest || isLoadingUnread;
 
@@ -69,13 +66,15 @@ export const AnnouncementIcon = () => {
 				</Indicator>
 			</Box>
 
-			{showMessage && (
+			{showPreview && (
 				<Box
 					className="hidden max-w-xs [mask-image:linear-gradient(to_right,black_80%,transparent)] md:block"
 					style={{ maxWidth: "400px" }}
 					{...testId("announcement-preview-message")}
 				>
-					<Markdown content={message} className="line-clamp-1" />
+					<Text size="sm" className="line-clamp-1">
+						{title}
+					</Text>
 				</Box>
 			)}
 		</Group>

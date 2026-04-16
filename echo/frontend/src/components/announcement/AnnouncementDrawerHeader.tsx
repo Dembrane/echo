@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Button, Group, Stack, Text } from "@mantine/core";
-import { IconX } from "@tabler/icons-react";
+import { X } from "@phosphor-icons/react";
 import { testId } from "@/lib/testUtils";
 import { useUnreadAnnouncements } from "./hooks";
 
@@ -30,7 +30,7 @@ export const AnnouncementDrawerHeader = ({
 					className="focus:outline-none"
 					{...testId("announcement-close-drawer-button")}
 				>
-					<IconX color="gray" />
+					<X size={20} color="gray" />
 				</ActionIcon>
 			</Group>
 			<Group gap="xs" justify="space-between" w="100%">

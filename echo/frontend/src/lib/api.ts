@@ -1266,24 +1266,155 @@ export const getChatHistory = async (chatId: string): Promise<ChatHistory> => {
 export const createProjectReport = async (payload: {
 	projectId: string;
 	language: string;
+	userInstructions?: string;
+	scheduledAt?: string;
 	otherPayload?: Partial<ProjectReport>;
 }) => {
 	const response = await api.post<unknown, ProjectReport>(
 		`/projects/${payload.projectId}/create-report`,
 		{
 			language: payload.language,
+			scheduled_at: payload.scheduledAt || undefined,
+			user_instructions: payload.userInstructions || undefined,
 		},
 	);
 
-	const reportId = response.id;
-
 	if (payload.otherPayload) {
-		await directus.request(
-			updateItem("project_report", reportId, payload.otherPayload),
+		await updateProjectReport(
+			payload.projectId,
+			response.id,
+			payload.otherPayload,
 		);
 	}
 
 	return response;
+};
+
+export const cancelScheduledReport = async (
+	projectId: string,
+	reportId: number,
+) => {
+	return api.post<unknown, { cancelled: boolean }>(
+		`/projects/${projectId}/reports/${reportId}/cancel-schedule`,
+	);
+};
+
+export const listProjectReports = async (projectId: string) => {
+	return api.get<
+		unknown,
+		(Pick<
+			ProjectReport,
+			| "id"
+			| "status"
+			| "date_created"
+			| "language"
+			| "user_instructions"
+			| "scheduled_at"
+		> & { title?: string | null })[]
+	>(`/projects/${projectId}/reports`);
+};
+
+export const getLatestProjectReport = async (projectId: string) => {
+	return api.get<
+		unknown,
+		Pick<
+			ProjectReport,
+			| "id"
+			| "status"
+			| "project_id"
+			| "show_portal_link"
+			| "date_created"
+			| "error_message"
+		> | null
+	>(`/projects/${projectId}/reports/latest`);
+};
+
+export const getProjectReportDetail = async (
+	projectId: string,
+	reportId: number,
+) => {
+	return api.get<unknown, ProjectReport>(
+		`/projects/${projectId}/reports/${reportId}/detail`,
+	);
+};
+
+export const updateProjectReport = async (
+	projectId: string,
+	reportId: number,
+	payload: Partial<ProjectReport>,
+) => {
+	return api.patch<unknown, ProjectReport>(
+		`/projects/${projectId}/reports/${reportId}`,
+		payload,
+	);
+};
+
+export const deleteProjectReport = async (
+	projectId: string,
+	reportId: number,
+) => {
+	return api.delete<unknown, { deleted: boolean }>(
+		`/projects/${projectId}/reports/${reportId}`,
+	);
+};
+
+export const getProjectReportViews = async (
+	projectId: string,
+	reportId: number,
+) => {
+	return api.get<unknown, { total: number; recent: number }>(
+		`/projects/${projectId}/reports/${reportId}/views`,
+	);
+};
+
+export const getPublicLatestProjectReport = async (projectId: string) => {
+	return apiNoAuth.get<
+		unknown,
+		Pick<
+			ProjectReport,
+			"id" | "status" | "project_id" | "show_portal_link"
+		> | null
+	>(`/participant/${projectId}/report/latest`);
+};
+
+export const getPublicProjectReportDetail = async (
+	projectId: string,
+	reportId: number,
+) => {
+	return apiNoAuth.get<unknown, ProjectReport>(
+		`/participant/${projectId}/report/${reportId}/detail`,
+	);
+};
+
+export const getPublicProjectReportViews = async (projectId: string) => {
+	return apiNoAuth.get<unknown, { recent: number }>(
+		`/participant/${projectId}/report/views`,
+	);
+};
+
+export const createPublicReportMetric = async (
+	projectId: string,
+	payload: { project_report_id: number; type: string },
+) => {
+	return apiNoAuth.post<unknown, { status: string }>(
+		`/participant/${projectId}/report/metric`,
+		payload,
+	);
+};
+
+export const checkReportNeedsUpdate = async (
+	projectId: string,
+	reportId: number,
+) => {
+	return api.get<unknown, { needs_update: boolean }>(
+		`/projects/${projectId}/reports/${reportId}/needs-update`,
+	);
+};
+
+export const getProjectParticipantCount = async (projectId: string) => {
+	return api.get<unknown, { count: number }>(
+		`/projects/${projectId}/participants/count`,
+	);
 };
 
 export const finishConversation = async (conversationId: string) => {
@@ -1528,7 +1659,8 @@ export const checkUnsubscribeStatus = async (
 export type WebhookEvent =
 	| "conversation.started"
 	| "conversation.transcribed"
-	| "conversation.summarized";
+	| "conversation.summarized"
+	| "report.generated";
 
 export type WebhookStatus = "published" | "draft" | "archived";
 
@@ -1628,4 +1760,89 @@ export const testProjectWebhook = async (
 		`/projects/${projectId}/webhooks/${webhookId}/test`,
 	);
 	return response;
+};
+
+// ── User Templates ──
+
+export type PromptTemplateResponse = {
+	id: string;
+	title: string;
+	content: string;
+	icon: string | null;
+	sort: number | null;
+	is_public: boolean;
+	description: string | null;
+	tags: string[] | null;
+	language: string | null;
+	author_display_name: string | null;
+	is_anonymous: boolean;
+	use_count: number;
+	star_count: number;
+	copied_from: string | null;
+	date_created: string | null;
+	date_updated: string | null;
+};
+
+// -- Quick-Access Preferences --
+
+export type QuickAccessPreference = {
+	type: "static" | "user";
+	id: string;
+};
+
+export const getPromptTemplates = async (): Promise<
+	PromptTemplateResponse[]
+> => {
+	return api.get<unknown, PromptTemplateResponse[]>(
+		"/templates/prompt-templates",
+	);
+};
+
+export const createPromptTemplate = async (payload: {
+	title: string;
+	content: string;
+	icon?: string | null;
+}): Promise<PromptTemplateResponse> => {
+	return api.post<unknown, PromptTemplateResponse>(
+		"/templates/prompt-templates",
+		payload,
+	);
+};
+
+export const updatePromptTemplate = async (
+	templateId: string,
+	payload: { title?: string; content?: string; icon?: string | null },
+): Promise<PromptTemplateResponse> => {
+	return api.patch<unknown, PromptTemplateResponse>(
+		`/templates/prompt-templates/${templateId}`,
+		payload,
+	);
+};
+
+export const deletePromptTemplate = async (
+	templateId: string,
+): Promise<void> => {
+	await api.delete(`/templates/prompt-templates/${templateId}`);
+};
+
+export const getQuickAccessPreferences = async (): Promise<QuickAccessPreference[]> => {
+	return api.get<unknown, QuickAccessPreference[]>("/templates/quick-access");
+};
+
+export const saveQuickAccessPreferences = async (
+	preferences: QuickAccessPreference[],
+): Promise<QuickAccessPreference[]> => {
+	return api.put<unknown, QuickAccessPreference[]>(
+		"/templates/quick-access",
+		preferences,
+	);
+};
+
+export const toggleAiSuggestions = async (
+	hide_ai_suggestions: boolean,
+): Promise<{ status: string; hide_ai_suggestions: boolean }> => {
+	return api.patch<unknown, { status: string; hide_ai_suggestions: boolean }>(
+		"/templates/ai-suggestions",
+		{ hide_ai_suggestions },
+	);
 };

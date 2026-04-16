@@ -2,27 +2,23 @@ import {
 	ActionIcon,
 	Box,
 	Group,
+	Text,
 	ThemeIcon,
-	useMantineTheme,
 } from "@mantine/core";
-import { IconAlertTriangle, IconX } from "@tabler/icons-react";
+import { WarningCircle, X } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { useAnnouncementDrawer } from "@/components/announcement/hooks";
 import { getTranslatedContent } from "@/components/announcement/hooks/useProcessedAnnouncements";
-import { Markdown } from "@/components/common/Markdown";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLatestAnnouncement, useMarkAsReadMutation } from "./hooks";
 
 export function TopAnnouncementBar() {
-	const theme = useMantineTheme();
 	const { data: announcement, isLoading } = useLatestAnnouncement();
 	const markAsReadMutation = useMarkAsReadMutation();
 	const [isClosed, setIsClosed] = useState(false);
 	const { open } = useAnnouncementDrawer();
 	const { language } = useLanguage();
 
-	// Check if the announcement has been read by the current user
-	// Directus already filters activity data for the current user
 	const isRead = announcement?.activity?.some(
 		(activity: AnnouncementActivity) => activity.read === true,
 	);
@@ -51,7 +47,6 @@ export function TopAnnouncementBar() {
 		);
 	}, [isLoading, announcement, isClosed, isRead]);
 
-	// Only show if we have an urgent announcement, it's not closed, and it's not read
 	if (
 		isLoading ||
 		!announcement ||
@@ -71,7 +66,6 @@ export function TopAnnouncementBar() {
 		e.stopPropagation();
 		setIsClosed(true);
 
-		// Mark announcement as read
 		if (announcement.id) {
 			markAsReadMutation.mutate({
 				announcementId: announcement.id,
@@ -83,10 +77,15 @@ export function TopAnnouncementBar() {
 		open();
 	};
 
+	const bgColor =
+		announcement.level === "urgent"
+			? "rgba(255, 209, 102, 0.15)"
+			: "var(--mantine-color-blue-0)";
+
 	return (
 		<Box
 			className="relative flex w-full cursor-pointer items-center justify-center px-4 py-3 text-center border-b"
-			bg={theme.colors.blue[0]}
+			bg={bgColor}
 			onClick={handleBarClick}
 		>
 			<Group justify="center" gap="md" wrap="nowrap" className="pr-9">
@@ -96,9 +95,11 @@ export function TopAnnouncementBar() {
 					color={announcement.level === "urgent" ? "orange" : "blue"}
 					radius="xl"
 				>
-					<IconAlertTriangle size={20} />
+					<WarningCircle size={20} weight="fill" />
 				</ThemeIcon>
-				<Markdown content={title} className="line-clamp-1" />
+				<Text size="sm" className="line-clamp-1">
+					{title}
+				</Text>
 			</Group>
 
 			<ActionIcon
@@ -107,7 +108,7 @@ export function TopAnnouncementBar() {
 				onClick={handleClose}
 				className="absolute right-6"
 			>
-				<IconX size={16} />
+				<X size={16} />
 			</ActionIcon>
 		</Box>
 	);

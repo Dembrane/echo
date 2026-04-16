@@ -1,68 +1,68 @@
 {
     "$schema": "https://cdn.statically.io/gh/nguyenngoclongdev/cdn/main/schema/v11/terminal-keeper.json",
-    "theme": "tribe",
     "active": "default",
     "keepExistingTerminals": false,
     "sessions": {
         "default": [
             {
                 "autoExecuteCommands": true,
-                "name": "server",
-                "icon": "server",
                 "commands": [
                     "cd server",
                     "./run.sh"
-                ]
+                ],
+                "icon": "server",
+                "name": "server"
             },
             [
                 {
                     "autoExecuteCommands": true,
-                    "name": "workers",
-                    "icon": "gear",
                     "commands": [
                         "cd server",
                         "./run-worker.sh"
-                    ]
+                    ],
+                    "icon": "gear",
+                    "name": "workers"
                 },
                 {
                     "autoExecuteCommands": true,
-                    "name": "workers-cpu",
-                    "icon": "gear",
                     "commands": [
                         "cd server",
                         "./run-worker-cpu.sh"
-                    ]
+                    ],
+                    "icon": "gear",
+                    "name": "workers-cpu"
                 },
                 {
                     "autoExecuteCommands": true,
-                    "name": "scheduler",
-                    "icon": "clock",
                     "commands": [
                         "cd server",
                         "./run-scheduler.sh"
-                    ]
+                    ],
+                    "icon": "clock",
+                    "name": "scheduler"
                 }
             ],
             [
                 {
                     "autoExecuteCommands": true,
-                    "name": "admin-dashboard",
-                    "icon": "browser",
                     "commands": [
                         "cd frontend",
                         "pnpm run dev"
-                    ]
+                    ],
+                    "icon": "browser",
+                    "name": "admin-dashboard"
                 },
                 {
                     "autoExecuteCommands": true,
-                    "name": "participant-portal",
-                    "icon": "browser",
                     "commands": [
                         "cd frontend",
                         "pnpm run participant:dev"
-                    ]
+                    ],
+                    "icon": "browser",
+                    "name": "participant-portal"
                 }
             ]
         ]
-    }
+    },
+    "theme": "tribe"
 }

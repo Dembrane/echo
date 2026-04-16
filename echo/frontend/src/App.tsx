@@ -1,8 +1,10 @@
 import "@fontsource-variable/space-grotesk";
 import "@mantine/core/styles.css";
+import "@mantine/dates/styles.css";
 import "@mantine/dropzone/styles.css";
 
 import { MantineProvider } from "@mantine/core";
+import { DatesProvider } from "@mantine/dates";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useEffect } from "react";
@@ -81,13 +83,15 @@ export const App = () => {
 		<QueryClientProvider client={queryClient}>
 			{/* <ReactQueryDevtools initialIsOpen={false} /> */}
 			<MantineProvider theme={theme}>
-				<AppPreferencesProvider>
-					<WhitelabelLogoProvider>
-						<I18nProvider>
-							<RouterProvider router={router} />
-						</I18nProvider>
-					</WhitelabelLogoProvider>
-				</AppPreferencesProvider>
+				<DatesProvider settings={{ consistentWeeks: true }}>
+					<AppPreferencesProvider>
+						<WhitelabelLogoProvider>
+							<I18nProvider>
+								<RouterProvider router={router} />
+							</I18nProvider>
+						</WhitelabelLogoProvider>
+					</AppPreferencesProvider>
+				</DatesProvider>
 			</MantineProvider>
 		</QueryClientProvider>
 	);

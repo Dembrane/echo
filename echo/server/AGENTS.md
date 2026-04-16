@@ -1,4 +1,4 @@
-Last updated: 2026-02-15
+Last updated: 2026-03-16
 
 # Project Snapshot
 - Dembrane ECHO server exposes a FastAPI app (`dembrane.main:app`).
@@ -78,5 +78,22 @@ When fixing or extending Dramatiq task flows, follow these principles:
 - CPU Dramatiq worker uses 1 thread per process to limit memory (FFmpeg can be memory-hungry). Scale via processes/replicas instead.
 - Watching directories (`--watch`, `--watch-use-polling`) adds overhead; keep file changes minimal when workers run locally.
 - S3 audio paths used in verification/transcription flows should be loaded via the shared file service (`_get_audio_file_object`) so Gemini always receives fresh bytes—signed URLs may expire mid-request.
+- AssemblyAI `universal-3-pro` supports: en, es, pt, fr, de, it. Dutch ("nl") requires `universal-2` fallback. Production uses webhook mode (`ASSEMBLYAI_WEBHOOK_URL`); polling is only a fallback path.
 - Verification topics reconcile at startup (see `reconcile_default_verification_topics`) and use a Redis lock `dembrane:verification_topics:reconcile_lock` (5m TTL); if logs say another worker holds the lock, just rerun once it releases or manually delete the key if a crash left it behind.
 - When a Dramatiq actor needs to invoke an async FastAPI handler (e.g., `dembrane.api.conversation.summarize_conversation`), run the coroutine via `run_async_in_new_loop` from `dembrane.async_helpers` instead of calling it directly or with `asyncio.run` to avoid clashing with nested event loops.
+- **gevent.pool.Pool** is only safe in actors on `queue_name="network"` (which uses `dramatiq-gevent`). The CPU queue runs standard dramatiq without gevent. Use gevent pools for concurrent sync I/O within a single actor when results are needed immediately. Use `dramatiq.group()` to distribute work across workers. Use `gevent.sleep()` (not `time.sleep()`) when polling inside network-queue actors.
+
+# Report Generation Pipeline
+
+Report generation is fully synchronous (no asyncio) and runs in Dramatiq network-queue workers:
+
+- `dembrane/report_generation.py` — Main pipeline: fetch conversations → fan-out summarization via `dramatiq.group()` → poll Redis for group completion → refetch conversations with summaries → fetch transcripts via `gevent.pool.Pool` → build prompt with token budget → call LLM via `router_completion()` (sync litellm)
+- `dembrane/report_events.py` — Redis pub/sub helpers for real-time SSE progress (publish_report_progress, subscribe_report_events)
+- Prompt templates per language: `prompt_templates/system_report.{lang}.jinja` — prompts are written IN the target language, not English with a "write in X" instruction
+- LLM model: `MULTI_MODAL_PRO` (Gemini 2.5 Pro). Do not downgrade to Flash.
+
+# BFF Endpoints
+
+Backend For Frontend endpoints under `/bff/` aggregate data the frontend needs in a single call:
+- Example: `/bff/projects/home` bundles pinned projects, paginated list, search results, and admin info
+- Prefer creating BFF routes over having the frontend make multiple Directus SDK calls

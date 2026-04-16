@@ -12,8 +12,9 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { IconCircleCheck } from "@tabler/icons-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { LibraryTemplatesMenu } from "@/components/library/LibraryTemplatesMenu";
 import { useLanguage } from "@/hooks/useLanguage";
 import { CloseableAlert } from "../common/ClosableAlert";
@@ -51,6 +52,11 @@ export const CreateView = ({
 	const queryValue = watch("query");
 	const additionalContextValue = watch("additionalContext");
 
+	const [pendingTemplate, setPendingTemplate] = useState<{
+		query: string;
+		additionalContext: string;
+	} | null>(null);
+
 	const onSubmit = (data: CreateViewForm) => {
 		createViewMutation.mutate({
 			additionalContext: data.additionalContext,
@@ -73,10 +79,8 @@ export const CreateView = ({
 		query: string;
 		additionalContext: string;
 	}) => {
-		if (
-			(queryValue?.trim() !== "" || additionalContextValue?.trim() !== "") &&
-			!window.confirm(t`This will clear your current input. Are you sure?`)
-		) {
+		if (queryValue?.trim() !== "" || additionalContextValue?.trim() !== "") {
+			setPendingTemplate({ additionalContext, query });
 			return;
 		}
 
@@ -139,6 +143,22 @@ export const CreateView = ({
 						</Group>
 					</Stack>
 				</form>
+
+				<ConfirmModal
+					opened={!!pendingTemplate}
+					onClose={() => setPendingTemplate(null)}
+					title={t`Apply template`}
+					data-testid="view-apply-template-modal"
+					message={t`This will clear your current input. Are you sure?`}
+					confirmLabel={<Trans>Apply</Trans>}
+					onConfirm={() => {
+						if (pendingTemplate) {
+							setValue("query", pendingTemplate.query);
+							setValue("additionalContext", pendingTemplate.additionalContext);
+							setPendingTemplate(null);
+						}
+					}}
+				/>
 			</Stack>
 		</Paper>
 	);

@@ -8,6 +8,11 @@ interface ExponentialProgressProps {
 	 * @default 5
 	 */
 	expectedDuration?: number;
+	/**
+	 * Initial progress value (0-100) to start from instead of 0.
+	 * Useful when resuming progress after navigation.
+	 */
+	startFrom?: number;
 	size?: string | number;
 	radius?: string | number;
 	/**
@@ -30,13 +35,14 @@ interface ExponentialProgressProps {
 export const ExponentialProgress = ({
 	isLoading,
 	expectedDuration = 5,
+	startFrom = 0,
 	size = "md",
 	radius = "md",
 	primaryColor = "blue",
 	warningColor = "yellow",
 	warningThreshold = 90,
 }: ExponentialProgressProps) => {
-	const [progress, setProgress] = useState(0);
+	const [progress, setProgress] = useState(startFrom);
 
 	useEffect(() => {
 		if (!isLoading) {

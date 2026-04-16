@@ -67,6 +67,11 @@ const WEBHOOK_EVENTS: {
 		label: "Conversation Summarized",
 		value: "conversation.summarized",
 	},
+	{
+		description: "When a report has been generated",
+		label: "Report Generated",
+		value: "report.generated",
+	},
 ];
 
 interface WebhookFormData {
@@ -757,8 +762,8 @@ const WebhookHelpAccordion = ({ onViewPayload }: WebhookHelpAccordionProps) => (
 						</Text>
 						<Text size="sm">
 							<Trans>
-								2. When a conversation event happens, we automatically send the
-								conversation data to your URL
+								2. When a conversation or report event happens, we automatically send the
+								data to your URL
 							</Trans>
 						</Text>
 						<Text size="sm">
@@ -791,6 +796,12 @@ const WebhookHelpAccordion = ({ onViewPayload }: WebhookHelpAccordionProps) => (
 							<strong>conversation.summarized</strong> —{" "}
 							<Trans>
 								When the summary is ready (includes both transcript and summary)
+							</Trans>
+						</Text>
+						<Text size="sm">
+							<strong>report.generated</strong> —{" "}
+							<Trans>
+								When a report has been generated for the project
 							</Trans>
 						</Text>
 					</Stack>
