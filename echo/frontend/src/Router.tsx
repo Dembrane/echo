@@ -200,6 +200,10 @@ export const mainRouter = createBrowserRouter([
 						path: "new",
 					},
 					{
+						element: <Navigate to="settings" replace />,
+						path: ":workspaceId",
+					},
+					{
 						element: <WorkspaceSettingsRoute />,
 						path: ":workspaceId/settings",
 					},
