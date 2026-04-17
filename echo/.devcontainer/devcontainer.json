@@ -51,8 +51,14 @@
     },
     "9001": {
       "label": "minio-ui"
+    },
+    "2222": {
+      "label": "ssh",
+      "protocol": "tcp",
+      "onAutoForward": "silent"
     }
   },
+  "forwardPorts": [2222],
   // Configure tool-specific properties.
   // "customizations": {},
   // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.

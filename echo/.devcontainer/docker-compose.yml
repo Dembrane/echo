@@ -21,22 +21,6 @@ services:
     networks:
       - dembrane-network
 
-  neo4j:
-    image: neo4j:5.26.16-community
-    restart: unless-stopped
-    volumes:
-      - ./neo4j_data/logs:/logs
-      - ./neo4j_data/config:/config
-      - ./neo4j_data/data:/data
-      - ./neo4j_data/plugins:/plugins
-    ports:
-      - 7474:7474 # Neo4j Browser
-      - 7687:7687 # Neo4j Bolt protocol
-    environment:
-      - NEO4J_AUTH=neo4j/admin@dembrane
-    networks:
-      - dembrane-network
-
   directus:
     build:
       context: ../directus
@@ -104,6 +88,7 @@ services:
       - 8000:8000
       - 5173:5173
       - 5174:5174
+      - 2222:22  # SSH into the devcontainer (default: root/dembrane, switch to key auth after first login)
     environment:
       - DIRECTUS_SECRET=secret
       - DIRECTUS_TOKEN=admin
