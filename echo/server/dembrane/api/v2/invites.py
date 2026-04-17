@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hmac
 import hashlib
-import secrets
 from logging import getLogger
 from datetime import datetime, timedelta, timezone
 
@@ -200,11 +199,8 @@ async def invite_to_workspace(
                 email_sent=email_sent,
             )
 
-    # User doesn't exist or doesn't have app_user — create an invite
-    # Legacy token is still required by the Directus schema (NOT NULL).
-    # It's unused by the new HMAC flow but we generate it to satisfy the constraint.
-    # TODO: make workspace_invite.token nullable in a future schema change.
-    legacy_token = secrets.token_urlsafe(32)
+    # User doesn't exist or doesn't have app_user — create an invite.
+    # Security via HMAC hash derived from invite_id — no stored token needed.
     expires_at = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
 
     # Check for existing pending invite (not accepted AND not expired)
@@ -244,7 +240,6 @@ async def invite_to_workspace(
         "email": email,
         "role": role,
         "invited_by": ctx.app_user_id,
-        "token": legacy_token,  # NOT NULL in schema, unused by HMAC flow
         "expires_at": expires_at,
         "include_org_membership": body.is_org_member,
     })
