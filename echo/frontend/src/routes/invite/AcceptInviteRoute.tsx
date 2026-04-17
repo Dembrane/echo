@@ -20,8 +20,7 @@ import { useSearchParams } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
 import { toast } from "@/components/common/Toaster";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { useAcceptInviteByToken } from "@/hooks/useMyInvites";
-import { useV2Me } from "@/hooks/useV2Me";
+import { useAcceptInviteByHash } from "@/hooks/useMyInvites";
 
 /**
  * Email link target: /invite/accept?token=...&iss=...&ws=...&email=...&role=...
@@ -35,15 +34,13 @@ export const AcceptInviteRoute = () => {
 	const [searchParams] = useSearchParams();
 	const navigate = useI18nNavigate();
 	const { isAuthenticated, loading: authLoading } = useAuthenticated();
-	const { data: meV2, isLoading: meLoading } = useV2Me({ enabled: isAuthenticated });
-	const acceptMutation = useAcceptInviteByToken();
+	const acceptMutation = useAcceptInviteByHash();
 	const [result, setResult] = useState<"idle" | "accepted" | "error">("idle");
 	const [errorMsg, setErrorMsg] = useState<string>("");
 
-	const token = searchParams.get("token") || "";
+	const hash = searchParams.get("h") || "";
 	const inviterName = searchParams.get("iss") || t`Someone`;
 	const workspaceName = searchParams.get("ws") || t`a workspace`;
-	const inviteEmail = searchParams.get("email") || "";
 	const role = searchParams.get("role") || "member";
 
 	useDocumentTitle(t`Join ${workspaceName} | dembrane`);
@@ -51,18 +48,15 @@ export const AcceptInviteRoute = () => {
 	// Preserve invite URL through login/register
 	const currentUrl = window.location.pathname + window.location.search;
 	const loginUrl = `/login?next=${encodeURIComponent(currentUrl)}`;
-	const registerUrl = `/register?next=${encodeURIComponent(currentUrl)}&email=${encodeURIComponent(inviteEmail)}`;
-
-	const myEmail = (meV2?.email || "").toLowerCase();
-	const emailMatches = !inviteEmail || myEmail === inviteEmail.toLowerCase();
+	const registerUrl = `/register?next=${encodeURIComponent(currentUrl)}`;
 
 	const handleAccept = async () => {
-		if (!token) {
-			toast.error(t`Missing invite token`);
+		if (!hash) {
+			toast.error(t`Invalid invite link`);
 			return;
 		}
 		try {
-			const data = await acceptMutation.mutateAsync({ token, claimedRole: role });
+			const data = await acceptMutation.mutateAsync({ hash, claimedRole: role });
 			setResult("accepted");
 			toast.success(t`You're in`);
 			setTimeout(() => {
@@ -75,7 +69,7 @@ export const AcceptInviteRoute = () => {
 		}
 	};
 
-	if (authLoading || (isAuthenticated && meLoading)) {
+	if (authLoading) {
 		return (
 			<Container size="sm" py="xl">
 				<Stack align="center" mt="20vh">
@@ -136,20 +130,8 @@ export const AcceptInviteRoute = () => {
 							</Stack>
 						)}
 
-						{/* Logged in but wrong email */}
-						{isAuthenticated && !emailMatches && (
-							<Alert color="yellow" variant="light">
-								<Text size="sm">
-									<Trans>
-										This invite is for {inviteEmail}, but you're logged in as{" "}
-										{myEmail}. Log out and sign in with the invited email to accept.
-									</Trans>
-								</Text>
-							</Alert>
-						)}
-
-						{/* Logged in with matching email */}
-						{isAuthenticated && emailMatches && result === "idle" && (
+						{/* Logged in */}
+						{isAuthenticated && result === "idle" && (
 							<Stack gap={8}>
 								<Button
 									size="md"

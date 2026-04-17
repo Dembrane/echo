@@ -344,7 +344,17 @@ async def resend_workspace_invite(
     except Exception:
         pass
 
-    invite_url = f"{settings.urls.admin_base_url}/register?next=/onboarding"
+    # Build invite URL with HMAC hash + display context
+    from dembrane.api.v2.invites import compute_invite_hash
+    from urllib.parse import urlencode
+    invite_hash = compute_invite_hash(invite_id)
+    ctx_params = urlencode({
+        "iss": inviter_name,
+        "ws": ctx.workspace.get("name", ""),
+        "role": invite.get("role", "member"),
+        "h": invite_hash,
+    })
+    invite_url = f"{settings.urls.admin_base_url}/invite/accept?{ctx_params}"
     email_sent = await send_email(
         to=invite["email"],
         subject=f"{inviter_name} invited you to collaborate on dembrane",

@@ -10,10 +10,16 @@ from pydantic import BaseModel, Field
 from dembrane.app_user import resolve_app_user, get_directus_user_profile, get_app_user_or_raise
 from dembrane.directus_async import async_directus
 from dembrane.api.v2.schemas import MeResponse, OrgSummary
+from dembrane.api.v2.invites import compute_invite_hash
 from dembrane.api.dependency_auth import DependencyDirectusSession
+from dembrane.api.rate_limit import create_user_rate_limiter
 
 router = APIRouter()
 logger = getLogger("api.v2.me")
+
+_accept_rate_limiter = create_user_rate_limiter(name="invite_accept", capacity=30, window_seconds=3600)
+
+_ROLE_LEVEL = {"viewer": 0, "member": 1, "admin": 2, "owner": 3}
 
 
 @router.get("", response_model=MeResponse)
@@ -239,10 +245,11 @@ async def get_my_invites(auth: DependencyDirectusSession) -> list[MyPendingInvit
 
 @router.post("/invites/{invite_id}/accept")
 async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> dict:
-    """Accept a pending workspace invite by ID."""
+    """Accept a pending workspace invite by ID (used by /invites page)."""
     from dembrane.utils import generate_uuid
     app_user = await get_app_user_or_raise(auth.user_id)
     app_user_id = app_user["id"]
+    await _accept_rate_limiter.check(app_user_id)
     email = (app_user.get("email") or "").lower()
 
     invite = await async_directus.get_item("workspace_invite", invite_id)
@@ -325,81 +332,92 @@ async def decline_my_invite(invite_id: str, auth: DependencyDirectusSession) -> 
     return {"status": "success"}
 
 
-class AcceptByTokenRequest(BaseModel):
-    claimed_role: Optional[str] = None  # what the email URL said the role was (honeypot)
 
 
-_ROLE_LEVEL = {"viewer": 0, "member": 1, "admin": 2, "owner": 3}
+class AcceptByHashRequest(BaseModel):
+    hash: str
+    claimed_role: Optional[str] = None  # honeypot — URL-claimed role
 
 
-@router.post("/invites/by-token/{token}/accept")
-async def accept_invite_by_token(
-    token: str,
+@router.post("/invites/accept-by-hash")
+async def accept_invite_by_hash(
+    body: AcceptByHashRequest,
     auth: DependencyDirectusSession,
-    body: Optional[AcceptByTokenRequest] = None,
 ) -> dict:
-    """Accept a pending invite by token (for email link flow).
+    """Accept a pending invite whose HMAC hash matches.
 
-    Requires auth — if the user isn't logged in, the frontend should route them
-    through login/register first, preserving the token in the URL.
+    Flow:
+      1. Fetch all pending invites for the logged-in user's email.
+      2. For each, compute HMAC hash and compare (constant-time) to body.hash.
+      3. Accept the matching one.
+
+    Security layers:
+      - Email ownership (Directus verification + login)
+      - HMAC of invite_id (unforgeable without server secret)
+      - Honeypot: if URL-claimed role > actual role, return 418
     """
     from dembrane.utils import generate_uuid
+    import hmac as _hmac
     app_user = await get_app_user_or_raise(auth.user_id)
     app_user_id = app_user["id"]
+    await _accept_rate_limiter.check(app_user_id)
     my_email = (app_user.get("email") or "").lower()
+    if not my_email:
+        raise HTTPException(status_code=400, detail="User has no email")
 
     now_iso = datetime.now(timezone.utc).isoformat()
     invites = await async_directus.get_items(
         "workspace_invite",
         {"query": {
             "filter": {
-                "token": {"_eq": token},
+                "email": {"_eq": my_email},
                 "accepted_at": {"_null": True},
                 "expires_at": {"_gt": now_iso},
             },
             "fields": ["id", "email", "workspace_id", "role", "include_org_membership"],
-            "limit": 1,
+            "limit": -1,
         }},
     )
     if not isinstance(invites, list) or not invites:
-        raise HTTPException(status_code=404, detail="Invite not found or expired")
+        raise HTTPException(status_code=404, detail="No pending invites for your email")
 
-    invite = invites[0]
-    invite_email = (invite.get("email") or "").lower()
-    actual_role = invite.get("role", "member")
+    # Constant-time comparison to prevent timing attacks
+    target_invite = None
+    for inv in invites:
+        expected = compute_invite_hash(inv["id"])
+        if _hmac.compare_digest(expected, body.hash):
+            target_invite = inv
+            break
 
-    # Honeypot: if the URL-claimed role is higher than the actual role, they
-    # tried to escalate via URL tampering. Log it and send them a fun 418.
-    if body and body.claimed_role:
-        claimed_level = _ROLE_LEVEL.get(body.claimed_role, -1)
-        actual_level = _ROLE_LEVEL.get(actual_role, 0)
-        if claimed_level > actual_level:
+    if target_invite is None:
+        raise HTTPException(status_code=404, detail="Invite not found")
+
+    actual_role = target_invite.get("role", "member")
+
+    # Honeypot
+    if body.claimed_role:
+        claimed = _ROLE_LEVEL.get(body.claimed_role, -1)
+        actual = _ROLE_LEVEL.get(actual_role, 0)
+        if claimed > actual:
             logger.warning(
-                f"HONEYPOT: user {my_email} tried to accept invite with claimed_role="
-                f"{body.claimed_role} but actual role is {actual_role}"
+                f"HONEYPOT: {my_email} tried accept with claimed_role={body.claimed_role} "
+                f"but actual role is {actual_role}"
             )
             raise HTTPException(
                 status_code=418,
                 detail=(
-                    "Nice try — we noticed the URL tampering. "
+                    "Nice try \u2014 we noticed the URL tampering. "
                     "If you enjoy finding edge cases, come work with us: "
                     "sameer@dembrane.com"
                 ),
             )
 
-    # Verify the invite is for this user's email
-    if invite_email != my_email:
-        raise HTTPException(
-            status_code=403,
-            detail=f"This invite is for {invite_email}. You're logged in as {my_email}.",
-        )
-
-    ws = await async_directus.get_item("workspace", invite["workspace_id"])
+    ws = await async_directus.get_item("workspace", target_invite["workspace_id"])
     if not ws or ws.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Workspace no longer exists")
 
     # Add to org if requested
-    if invite.get("include_org_membership") and ws.get("org_id"):
+    if target_invite.get("include_org_membership") and ws.get("org_id"):
         existing_org_mem = await async_directus.get_items(
             "org_membership",
             {"query": {"filter": {
@@ -420,7 +438,7 @@ async def accept_invite_by_token(
     existing_ws_mem = await async_directus.get_items(
         "workspace_membership",
         {"query": {"filter": {
-            "workspace_id": {"_eq": invite["workspace_id"]},
+            "workspace_id": {"_eq": target_invite["workspace_id"]},
             "user_id": {"_eq": app_user_id},
             "deleted_at": {"_null": True},
         }, "limit": 1}},
@@ -428,19 +446,19 @@ async def accept_invite_by_token(
     if not (isinstance(existing_ws_mem, list) and len(existing_ws_mem) > 0):
         await async_directus.create_item("workspace_membership", {
             "id": generate_uuid(),
-            "workspace_id": invite["workspace_id"],
+            "workspace_id": target_invite["workspace_id"],
             "user_id": app_user_id,
-            "role": invite.get("role", "member"),
+            "role": actual_role,
             "source": "direct",
-            "is_external": not invite.get("include_org_membership", False),
+            "is_external": not target_invite.get("include_org_membership", False),
         })
 
-    await async_directus.update_item("workspace_invite", invite["id"], {
+    await async_directus.update_item("workspace_invite", target_invite["id"], {
         "accepted_at": now_iso,
     })
 
     return {
         "status": "success",
-        "workspace_id": invite["workspace_id"],
+        "workspace_id": target_invite["workspace_id"],
         "workspace_name": ws.get("name", ""),
     }

@@ -69,19 +69,16 @@ export const useDeclineInvite = () => {
 	});
 };
 
-export const useAcceptInviteByToken = () => {
+export const useAcceptInviteByHash = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: async ({ token, claimedRole }: { token: string; claimedRole?: string | null }) => {
-			const res = await fetch(
-				`${API_BASE_URL}/v2/me/invites/by-token/${token}/accept`,
-				{
-					body: JSON.stringify({ claimed_role: claimedRole ?? null }),
-					credentials: "include",
-					headers: { "Content-Type": "application/json" },
-					method: "POST",
-				},
-			);
+		mutationFn: async ({ hash, claimedRole }: { hash: string; claimedRole?: string | null }) => {
+			const res = await fetch(`${API_BASE_URL}/v2/me/invites/accept-by-hash`, {
+				body: JSON.stringify({ hash, claimed_role: claimedRole ?? null }),
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				method: "POST",
+			});
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
 				const err = new Error(data.detail || "Failed to accept invite");

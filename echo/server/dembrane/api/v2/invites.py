@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hmac
+import hashlib
 import secrets
 from logging import getLogger
 from datetime import datetime, timedelta, timezone
@@ -23,6 +25,17 @@ logger = getLogger("api.v2.invites")
 
 settings = get_settings()
 _invite_rate_limiter = create_user_rate_limiter(name="workspace_invite", capacity=20, window_seconds=3600)
+
+
+def compute_invite_hash(invite_id: str) -> str:
+    """HMAC-SHA256(invite_id, directus_secret) truncated to 16 bytes / 32 hex chars.
+
+    Used in email URLs as an opaque pointer — unforgeable without the server
+    secret, can't be reversed to find the invite_id, safe to log.
+    """
+    secret = settings.directus.secret.encode()
+    full = hmac.new(secret, invite_id.encode(), hashlib.sha256).hexdigest()
+    return full[:32]
 
 
 @router.post("/{workspace_id}/invite", response_model=WorkspaceInviteResponse)
@@ -188,7 +201,7 @@ async def invite_to_workspace(
             )
 
     # User doesn't exist or doesn't have app_user — create an invite
-    token = secrets.token_urlsafe(32)
+    # Legacy token kept nullable for backward compat but no longer generated/used
     expires_at = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
 
     # Check for existing pending invite (not accepted AND not expired)
@@ -221,27 +234,26 @@ async def invite_to_workspace(
     if isinstance(inviter_app_user_data, list) and len(inviter_app_user_data) > 0:
         inviter_name = inviter_app_user_data[0].get("display_name", "Your team")
 
+    invite_id = generate_uuid()
     await async_directus.create_item("workspace_invite", {
-        "id": generate_uuid(),
+        "id": invite_id,
         "workspace_id": workspace_id,
         "email": email,
         "role": role,
         "invited_by": ctx.app_user_id,
-        "token": token,
         "expires_at": expires_at,
         "include_org_membership": body.is_org_member,
     })
 
-    # Send invite email — link to /invite/accept page which handles both
-    # logged-in and logged-out states. Context encoded so the banner renders
-    # immediately without an API call.
+    # Email URL: HMAC hash is the pointer to the invite (opaque, unforgeable),
+    # iss/ws/role are display-only context. Security = email ownership + HMAC.
     from urllib.parse import urlencode
+    invite_hash = compute_invite_hash(invite_id)
     ctx_params = urlencode({
-        "token": token,
-        "email": email,
         "iss": inviter_name,
         "ws": ctx.workspace.get("name", ""),
         "role": role,
+        "h": invite_hash,
     })
     invite_url = f"{settings.urls.admin_base_url}/invite/accept?{ctx_params}"
 
