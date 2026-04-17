@@ -93,6 +93,8 @@ export function useWorkspaceProvider(enabled: boolean): WorkspaceContextValue {
 
 	const setWorkspace = useCallback((id: string) => {
 		sessionStorage.setItem(SESSION_KEY, id);
+		// Also persist across sessions so login can route back to last-used
+		localStorage.setItem("dembrane_last_workspace_id", id);
 		setSelectedId(id); // triggers re-render
 	}, []);
 

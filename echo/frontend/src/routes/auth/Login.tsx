@@ -167,9 +167,22 @@ export const LoginRoute = () => {
 				return;
 			}
 
-			// Multi-workspace or team admin → workspace selector
-			// Solo user → straight to workspace-scoped projects
-			if (workspaceCount > 1 || isTeamAdmin) {
+			// Routing:
+			// - Solo user (1 workspace) → straight to projects
+			// - Returning multi-workspace user → last-used workspace (if still valid)
+			// - First-time multi-workspace user → selector
+			const lastUsedId = localStorage.getItem("dembrane_last_workspace_id");
+			const lastStillValid = lastUsedId && workspaceCount > 0 &&
+				(await fetch(`${API_BASE_URL}/v2/workspaces`, { credentials: "include" })
+					.then((r) => r.ok ? r.json() : null)
+					.then((d) => d?.workspaces?.some((w: { id: string }) => w.id === lastUsedId))
+					.catch(() => false));
+
+			if (workspaceCount === 1 && firstWorkspaceId) {
+				navigate(`/w/${firstWorkspaceId}/projects`);
+			} else if (lastStillValid) {
+				navigate(`/w/${lastUsedId}/projects`);
+			} else if (workspaceCount > 1 || isTeamAdmin) {
 				navigate("/workspaces");
 			} else if (firstWorkspaceId) {
 				navigate(`/w/${firstWorkspaceId}/projects`);
