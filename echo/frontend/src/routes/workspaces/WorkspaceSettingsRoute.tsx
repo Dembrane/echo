@@ -465,7 +465,12 @@ export const WorkspaceSettingsRoute = () => {
 												<Text size="sm">{inv.email}</Text>
 												<Text size="xs" c="dimmed">
 													<span style={{ textTransform: "capitalize" }}>{inv.role}</span>
-													{inv.invited_by_name && ` · invited by ${inv.invited_by_name}`}
+													{inv.invited_by_name && (
+														<>
+															{" · "}
+															<Trans>invited by {inv.invited_by_name}</Trans>
+														</>
+													)}
 												</Text>
 											</Box>
 											<Group gap={8}>

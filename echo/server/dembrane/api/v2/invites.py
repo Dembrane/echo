@@ -231,7 +231,7 @@ async def invite_to_workspace(
         {"query": {"filter": {"id": {"_eq": ctx.app_user_id}}, "fields": ["display_name"], "limit": 1}},
     )
     if isinstance(inviter_app_user_data, list) and len(inviter_app_user_data) > 0:
-        inviter_name = inviter_app_user_data[0].get("display_name", "Your team")
+        inviter_name = inviter_app_user_data[0].get("display_name") or "Your team"
 
     invite_id = generate_uuid()
     await async_directus.create_item("workspace_invite", {

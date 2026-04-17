@@ -390,5 +390,5 @@ async def create_workspace(
         id=ws_id,
         name=body.name.strip(),
         org_id=org_id,
-        tier=body.tier,
+        tier="pioneer",  # Matches what we actually stored
     )

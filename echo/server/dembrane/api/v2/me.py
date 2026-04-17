@@ -406,7 +406,7 @@ async def accept_invite_by_hash(
             raise HTTPException(
                 status_code=418,
                 detail=(
-                    "Nice try \u2014 we noticed the URL tampering. "
+                    "Nice try. We noticed the URL tampering. "
                     "If you enjoy finding edge cases, come work with us: "
                     "sameer@dembrane.com"
                 ),

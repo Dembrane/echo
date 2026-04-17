@@ -7,7 +7,7 @@ import { useRequestPasswordResetMutation } from "@/components/auth/hooks";
 import { testId } from "@/lib/testUtils";
 
 export const RequestPasswordResetRoute = () => {
-	useDocumentTitle(t`Request Password Reset | Dembrane`);
+	useDocumentTitle(t`Request Password Reset | dembrane`);
 	const { register, handleSubmit } = useForm<{ email: string }>();
 
 	const requestPasswordResetMutation = useRequestPasswordResetMutation();

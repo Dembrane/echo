@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field
 
 
 # ── /v2/me ──
@@ -103,20 +103,10 @@ class WorkspaceListResponse(BaseModel):
 # ── /v2/workspaces CRUD ──
 
 
-VALID_TIERS = ("pilot", "pioneer", "innovator", "changemaker", "guardian")
-
-
 class CreateWorkspaceRequest(BaseModel):
     name: str = Field(min_length=1, max_length=100)
-    tier: str = "pioneer"
     org_id: Optional[str] = None  # defaults to user's primary org
-
-    @field_validator("tier")
-    @classmethod
-    def validate_tier(cls, v: str) -> str:
-        if v not in VALID_TIERS:
-            raise ValueError(f"tier must be one of: {', '.join(VALID_TIERS)}")
-        return v
+    # tier is always "pioneer" on creation — upgrades happen via billing/admin
 
 
 class CreateWorkspaceResponse(BaseModel):

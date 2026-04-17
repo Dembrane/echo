@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from logging import getLogger
-from typing import Optional
 
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 
 from dembrane.policies import has_policy, meets_tier
 from dembrane.app_user import resolve_app_user

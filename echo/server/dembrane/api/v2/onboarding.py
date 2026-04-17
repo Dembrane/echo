@@ -69,7 +69,7 @@ async def complete_onboarding(
                 raise HTTPException(status_code=500, detail="Failed to create user profile")
 
     app_user_id = app_user["id"]
-    app_user_email = app_user.get("email", "")
+    app_user_email = (app_user.get("email") or "").lower()  # invites stored lowercased
 
     # ── Step 2: Auto-accept pending workspace invites ──
 

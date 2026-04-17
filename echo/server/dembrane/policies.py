@@ -17,6 +17,9 @@ from __future__ import annotations
 TIER_ORDER: list[str] = ["pilot", "pioneer", "innovator", "changemaker", "guardian"]
 
 # Policies that require a minimum workspace tier.
+# TODO: wire this into has_policy() so tier upgrade gates are enforced
+# automatically (not per-endpoint). Currently must call ctx.require_tier()
+# manually in endpoints that expose tier-gated features.
 TIER_REQUIRED_FOR_POLICY: dict[str, str] = {
     "workspace:export": "innovator",
     "project:share": "innovator",

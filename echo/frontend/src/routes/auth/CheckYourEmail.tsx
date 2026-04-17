@@ -4,7 +4,7 @@ import { useDocumentTitle } from "@mantine/hooks";
 import { testId } from "@/lib/testUtils";
 
 export const CheckYourEmailRoute = () => {
-	useDocumentTitle("Check your Email | Dembrane");
+	useDocumentTitle("Check your Email | dembrane");
 	return (
 		<Container size="sm">
 			<Stack>

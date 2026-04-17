@@ -8,7 +8,7 @@ import { useVerifyMutation } from "@/components/auth/hooks";
 import { toast } from "@/components/common/Toaster";
 
 export const VerifyEmailRoute = () => {
-	useDocumentTitle(t`Email Verification | Dembrane`);
+	useDocumentTitle(t`Email Verification | dembrane`);
 	const [search, _setSearch] = useSearchParams();
 
 	const verifyMutation = useVerifyMutation();

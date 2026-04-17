@@ -198,7 +198,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 													truncate
 													{...testId("header-user-name")}
 												>
-													{user.first_name ?? "User"}
+													{user.first_name ?? t`there`}
 												</Text>
 												<Text
 													size="xs"
