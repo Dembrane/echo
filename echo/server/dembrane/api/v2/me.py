@@ -366,6 +366,8 @@ async def accept_invite_by_hash(
         raise HTTPException(status_code=400, detail="User has no email")
 
     now_iso = datetime.now(timezone.utc).isoformat()
+
+    # First check pending invites for this email
     invites = await async_directus.get_items(
         "workspace_invite",
         {"query": {
@@ -378,19 +380,49 @@ async def accept_invite_by_hash(
             "limit": -1,
         }},
     )
-    if not isinstance(invites, list) or not invites:
-        raise HTTPException(status_code=404, detail="No pending invites for your email")
 
     # Constant-time comparison to prevent timing attacks
     target_invite = None
-    for inv in invites:
-        expected = compute_invite_hash(inv["id"])
-        if _hmac.compare_digest(expected, body.hash):
-            target_invite = inv
-            break
+    if isinstance(invites, list):
+        for inv in invites:
+            if _hmac.compare_digest(compute_invite_hash(inv["id"]), body.hash):
+                target_invite = inv
+                break
 
+    # Fallback: invite may have already been accepted (e.g. via onboarding
+    # auto-accept). Check all invites for this email, including accepted ones.
+    # If the hash matches AND the user is already a member, treat as success.
     if target_invite is None:
-        raise HTTPException(status_code=404, detail="Invite not found")
+        accepted = await async_directus.get_items(
+            "workspace_invite",
+            {"query": {
+                "filter": {"email": {"_eq": my_email}},
+                "fields": ["id", "workspace_id", "accepted_at"],
+                "limit": -1,
+            }},
+        )
+        if isinstance(accepted, list):
+            for inv in accepted:
+                if _hmac.compare_digest(compute_invite_hash(inv["id"]), body.hash):
+                    # Verify user is actually a member before returning success
+                    existing = await async_directus.get_items(
+                        "workspace_membership",
+                        {"query": {"filter": {
+                            "workspace_id": {"_eq": inv["workspace_id"]},
+                            "user_id": {"_eq": app_user_id},
+                            "deleted_at": {"_null": True},
+                        }, "fields": ["id"], "limit": 1}},
+                    )
+                    if isinstance(existing, list) and len(existing) > 0:
+                        ws = await async_directus.get_item("workspace", inv["workspace_id"])
+                        if ws and not ws.get("deleted_at"):
+                            return {
+                                "status": "already_member",
+                                "workspace_id": inv["workspace_id"],
+                                "workspace_name": ws.get("name", ""),
+                            }
+
+        raise HTTPException(status_code=404, detail="Invite not found or already handled")
 
     actual_role = target_invite.get("role", "member")
 

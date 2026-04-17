@@ -2,12 +2,9 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Alert,
-	Avatar,
 	Badge,
-	Box,
 	Button,
 	Container,
-	Group,
 	Loader,
 	Paper,
 	Stack,
@@ -84,29 +81,18 @@ export const AcceptInviteRoute = () => {
 			<Stack gap={24} mt="10vh">
 				<Paper p="xl" radius="md" withBorder>
 					<Stack gap={20}>
-						<Stack gap={4} align="center">
-							<Badge size="sm" variant="light" color="blue">
+						<Stack gap={6}>
+							<Badge size="sm" variant="light" color="blue" w="fit-content">
 								<Trans>Invitation</Trans>
 							</Badge>
-							<Title order={3} fw={400} ta="center">
+							<Title order={3} fw={400}>
 								<Trans>
 									{inviterName} invited you to join {workspaceName}
 								</Trans>
 							</Title>
 						</Stack>
 
-						<Box>
-							<Group gap={12} justify="center">
-								<Text size="sm" c="dimmed">
-									<Trans>Your role</Trans>
-								</Text>
-								<Badge size="sm" variant="light" color="gray" style={{ textTransform: "capitalize" }}>
-									{role}
-								</Badge>
-							</Group>
-						</Box>
-
-						<Text size="sm" c="dimmed" ta="center" lh={1.5}>
+						<Text size="sm" c="dimmed" lh={1.5}>
 							<Trans>
 								Join this workspace to collaborate on conversations, share
 								insights, and build reports together.
