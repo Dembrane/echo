@@ -1293,14 +1293,14 @@ wheels = [
 
 [[package]]
 name = "langchain"
-version = "0.1.20"
+version = "0.1.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "dataclasses-json" },
+    { name = "jsonpatch" },
     { name = "langchain-community" },
     { name = "langchain-core" },
-    { name = "langchain-text-splitters" },
     { name = "langsmith" },
     { name = "numpy" },
     { name = "pydantic" },
@@ -1309,9 +1309,9 @@ dependencies = [
     { name = "sqlalchemy" },
     { name = "tenacity" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/88/94/8d917da143b30c3088be9f51719634827ab19207cb290a51de3859747783/langchain-0.1.20.tar.gz", hash = "sha256:f35c95eed8c8375e02dce95a34f2fd4856a4c98269d6dc34547a23dba5beab7e", size = 420688, upload-time = "2024-05-10T21:59:40.736Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a1/ed/eae583bcddd5ae4371aac407164b708868e09c2823142d8319fe9990e028/langchain-0.1.9.tar.gz", hash = "sha256:da1f89aeaf5cbc225eb1d6523af0f273c062fdc40a76ec455486c3c184f741b1", size = 421065, upload-time = "2024-02-23T05:49:26.879Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4b/28/da40a6b12e7842a0c8b443f8cc5c6f59e49d7a9071cfad064b9639c6b044/langchain-0.1.20-py3-none-any.whl", hash = "sha256:09991999fbd6c3421a12db3c7d1f52d55601fc41d9b2a3ef51aab2e0e9c38da9", size = 1014619, upload-time = "2024-05-10T21:59:36.417Z" },
+    { url = "https://files.pythonhosted.org/packages/45/05/2d5c38c7fa1a091a61e018070b6878410d256be577e5154843d339e59b2c/langchain-0.1.9-py3-none-any.whl", hash = "sha256:1436a9f4e498bb9f8e01e0ab8d185771d49c0fc96b3d2da4d5bed5055015746f", size = 816978, upload-time = "2024-02-23T05:49:21.663Z" },
 ]
 
 [[package]]
@@ -1353,27 +1353,15 @@ wheels = [
 
 [[package]]
 name = "langchain-experimental"
-version = "0.0.58"
+version = "0.0.53"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "langchain" },
     { name = "langchain-core" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/df/8f/fb7dd61abbc016de4fe3860b80be9a1faa47ec1d33bab6d15ed20fd30df1/langchain_experimental-0.0.58.tar.gz", hash = "sha256:8ef10ff6b39f44ef468f8f21beb3749957d2262ec64d05db2719934936ca0285", size = 133442, upload-time = "2024-05-08T04:43:08.763Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bd/00/18f0d5aee4141d8774cf97d9a0015e6753921379131069e49503d26540ef/langchain_experimental-0.0.53.tar.gz", hash = "sha256:f8c1df800e70e7f8d7b969d2bf4c0188d183036a8707105ba469e25f44ec7b2f", size = 113733, upload-time = "2024-02-29T17:18:20.62Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/14/16/fe6aaa26273e21e20a5564fd10d638ac32ce184e113908d560956025e03f/langchain_experimental-0.0.58-py3-none-any.whl", hash = "sha256:106d3bc7df3dd20687378db7534c2fc21e2589201d43de42f832a1e3913dd55b", size = 199359, upload-time = "2024-05-08T04:43:07.208Z" },
-]
-
-[[package]]
-name = "langchain-text-splitters"
-version = "0.0.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "langchain-core" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/e8/fa/88d65b0f696d8d4f37037f1418f89bc1078cd74d20054623bb7fffcecaf1/langchain_text_splitters-0.0.2.tar.gz", hash = "sha256:ac8927dc0ba08eba702f6961c9ed7df7cead8de19a9f7101ab2b5ea34201b3c1", size = 18638, upload-time = "2024-05-16T03:16:36.815Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/68/6a/804fe5ca07129046a4cedc0697222ddde6156cd874c4c4ba29e4d271828a/langchain_text_splitters-0.0.2-py3-none-any.whl", hash = "sha256:13887f32705862c1e1454213cb7834a63aae57c26fcd80346703a1d09c46168d", size = 23539, upload-time = "2024-05-16T03:16:35.727Z" },
+    { url = "https://files.pythonhosted.org/packages/26/40/c4571740547ecff9776921c0f7bcecf18337d69ca01b0b625a65539207b1/langchain_experimental-0.0.53-py3-none-any.whl", hash = "sha256:0e086d163891c7781f61d01739e37a7230fd68dfd73a12e81aa4506f82338956", size = 173748, upload-time = "2024-02-29T17:18:19.235Z" },
 ]
 
 [[package]]
