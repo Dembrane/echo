@@ -1,0 +1,24 @@
+{% extends "_layout.html" %}
+{% block title %}Upgrade request: {{ org_name }} / {{ workspace_name }}{% endblock %}
+{% block preview %}{{ requester_name }} asked to upgrade {{ workspace_name }} from {{ current_tier }} to {{ target_tier }}.{% endblock %}
+{% block heading %}Upgrade request{% endblock %}
+{% block body %}
+<p style="margin: 0 0 16px;">
+  <b>Team:</b> {{ org_name }}<br>
+  <b>Workspace:</b> {{ workspace_name }}<br>
+  <b>Workspace ID:</b> <code style="font-family: monospace;">{{ workspace_id }}</code>
+</p>
+<p style="margin: 0 0 16px;">
+  <b>Current tier:</b> {{ current_tier }}<br>
+  <b>Requested tier:</b> {{ target_tier }}
+</p>
+<p style="margin: 0 0 16px;">
+  <b>Requested by:</b> {{ requester_name }}{% if requester_email %} ({{ requester_email }}){% endif %}
+</p>
+{% if message %}
+<div style="margin-top: 16px; padding: 12px 16px; background: #f6f4f1; border-left: 2px solid #4169e1; border-radius: 0 4px 4px 0;">
+  <div style="font-size: 13px; color: #8a8a8a; margin-bottom: 4px;">Message</div>
+  <div style="white-space: pre-wrap;">{{ message }}</div>
+</div>
+{% endif %}
+{% endblock %}

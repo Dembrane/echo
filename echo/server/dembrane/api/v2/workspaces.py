@@ -15,6 +15,7 @@ from dembrane.email import send_email
 from dembrane.policies import TIER_ORDER
 from dembrane.settings import get_settings
 from dembrane.tier_downgrade import preview_downgrade, apply_downgrade_effects
+from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
 from dembrane.api.v2.schemas import (
     CreateWorkspaceRequest,
@@ -28,6 +29,24 @@ from dembrane.api.v2.schemas import (
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
 settings = get_settings()
+
+# Keep upgrade requests from flooding the billing inbox if someone spams the
+# button (or if the UI misfires and retries on every click).
+_upgrade_request_rate_limiter = create_user_rate_limiter(
+    name="upgrade_request", capacity=5, window_seconds=3600
+)
+
+
+def _strip_header_unsafe(value: str) -> str:
+    """Remove CR/LF from strings that will appear inside an email Subject.
+
+    SendGrid's API is generally tolerant, but a well-formed newline in the
+    subject can still corrupt downstream delivery or inject headers on
+    SMTP relays we don't control.
+    """
+    if not value:
+        return ""
+    return value.replace("\r", " ").replace("\n", " ").strip()
 
 router = APIRouter()
 logger = getLogger("api.v2.workspaces")
@@ -562,8 +581,13 @@ async def request_upgrade(
     Member role doesn't see this CTA (Q3 / D9 — member-role path shows copy
     only, no button). Enforced here by require_policy(member:invite) which
     only admin/owner have — keeps the endpoint from being abused.
+
+    Rate-limited per-user (5/hr) to avoid flooding the billing inbox when
+    the UI misfires or a bored admin leans on the button.
     """
     ctx.require_policy("member:invite")
+
+    await _upgrade_request_rate_limiter.check(ctx.app_user_id)
 
     requester = await async_directus.get_item("app_user", ctx.app_user_id)
     requester_name = (requester or {}).get("display_name") or ""
@@ -575,21 +599,34 @@ async def request_upgrade(
     org_name = (org or {}).get("name", "")
 
     target = body.target_tier or "(not specified)"
-    body_html = (
-        f"<h2>Upgrade request</h2>"
-        f"<p><b>Team:</b> {org_name}<br>"
-        f"<b>Workspace:</b> {workspace_name} (<code>{ctx.workspace_id}</code>)<br>"
-        f"<b>Current tier:</b> {current_tier}<br>"
-        f"<b>Requested tier:</b> {target}</p>"
-        f"<p><b>Requested by:</b> {requester_name} &lt;{requester_email}&gt;</p>"
+
+    # Rendered via the autoescaping Jinja env — user-controlled fields
+    # (workspace_name, org_name, requester_name, message) are safe.
+    template_data = {
+        "org_name": org_name,
+        "workspace_name": workspace_name,
+        "workspace_id": ctx.workspace_id,
+        "current_tier": current_tier,
+        "target_tier": target,
+        "requester_name": requester_name,
+        "requester_email": requester_email,
+        "message": body.message or "",
+    }
+
+    # Subject is not templated — belt-and-braces strip of CR/LF from fields
+    # that end up there.
+    safe_org = _strip_header_unsafe(org_name)
+    safe_workspace = _strip_header_unsafe(workspace_name)
+    subject = (
+        f"Upgrade request: {safe_org} / {safe_workspace} "
+        f"({current_tier} → {target})"
     )
-    if body.message:
-        body_html += f"<p><b>Message:</b><br>{body.message}</p>"
 
     sent = await send_email(
         to=settings.email.upgrade_request_inbox,
-        subject=f"Upgrade request: {org_name} / {workspace_name} ({current_tier} → {target})",
-        html=body_html,
+        subject=subject,
+        template="upgrade_request",
+        template_data=template_data,
     )
     if not sent:
         # Don't silently drop — mirrors the pattern from 9021900.

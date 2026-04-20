@@ -1,0 +1,14 @@
+Upgrade request
+
+Team:            {{ org_name }}
+Workspace:       {{ workspace_name }} ({{ workspace_id }})
+Current tier:    {{ current_tier }}
+Requested tier:  {{ target_tier }}
+
+Requested by:    {{ requester_name }}{% if requester_email %} <{{ requester_email }}>{% endif %}
+
+{% if message %}Message:
+{{ message }}
+
+{% endif %}—
+dembrane · conversations that matter
