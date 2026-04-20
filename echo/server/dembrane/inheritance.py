@@ -128,8 +128,12 @@ async def user_can_access(
 
     Resolution order (priority):
         1. Direct workspace membership wins outright.
-        2. Team admin/owner → derived 'admin' role, unless private or sticky.
-        3. Team member → derived 'member' role, iff workspace opts in via
+        2. Team owner always derives 'admin' access, even on private
+           workspaces — prevents a rogue admin from locking the team
+           owner out of their own org's workspaces. Sticky-removal still
+           respected (an owner who was explicitly tombstoned stays out).
+        3. Team admin → derived 'admin' role, unless private or sticky.
+        4. Team member → derived 'member' role, iff workspace opts in via
            settings.inherit_team_members AND not sticky.
 
     Note: project-level shares for private projects are handled separately
@@ -144,10 +148,6 @@ async def user_can_access(
     if not workspace or workspace.get("deleted_at"):
         return None
 
-    # Private workspace never derives.
-    if not workspace_follows_team_admins(workspace):
-        return None
-
     if is_sticky_removed(workspace, user_id):
         return None
 
@@ -156,7 +156,20 @@ async def user_can_access(
         return None
 
     org_role = await _get_org_role(org_id, user_id)
-    if org_role in ("owner", "admin"):
+
+    # Team-owner carve-out: owners always derive admin access, regardless
+    # of workspace privacy. Otherwise, any workspace admin could set
+    # inherit_team_admins=false and lock the owner out of their own
+    # workspace — which breaks the "workspace lives in a team" contract.
+    if org_role == "owner":
+        return "admin", "inherited"
+
+    # Private workspace short-circuits team-admin and team-member
+    # derivation below.
+    if not workspace_follows_team_admins(workspace):
+        return None
+
+    if org_role == "admin":
         return "admin", "inherited"
 
     if org_role == "member" and workspace_follows_team_members(workspace):
@@ -225,18 +238,19 @@ async def get_effective_members(workspace_id: str) -> list[dict]:
             }
         )
 
-    # Skip derivation entirely for private workspaces.
-    if not workspace_follows_team_admins(workspace):
-        return out
-
     org_id = workspace.get("org_id")
     if not org_id:
         return out
 
-    # Fetch org memberships whose role contributes to inheritance.
-    roles_in_scope = ["owner", "admin"]
-    if workspace_follows_team_members(workspace):
-        roles_in_scope.append("member")
+    # Team owners always derive access (team-owner carve-out in
+    # user_can_access). Everyone else only derives on open workspaces.
+    follows_admins = workspace_follows_team_admins(workspace)
+    if not follows_admins:
+        roles_in_scope = ["owner"]
+    else:
+        roles_in_scope = ["owner", "admin"]
+        if workspace_follows_team_members(workspace):
+            roles_in_scope.append("member")
 
     org_rows = await async_directus.get_items(
         "org_membership",
