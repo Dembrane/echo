@@ -253,12 +253,16 @@ async def complete_onboarding(
                 "tier": "pioneer",
                 "created_by": app_user_id,
             })
+            # Creator is stored as source='direct' per the derived-model
+            # invariant (see docs/workspaces/inheritance-rules.md §5). Team
+            # admins never get materialized rows — their access is derived
+            # from org_membership + workspace.settings.
             await async_directus.create_item("workspace_membership", {
                 "id": generate_uuid(),
                 "workspace_id": personal_ws_id,
                 "user_id": app_user_id,
                 "role": "owner",
-                "source": "inherited",
+                "source": "direct",
             })
             logger.info(f"Created default workspace {personal_ws_id} for org {org_id}")
 
