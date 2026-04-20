@@ -157,7 +157,10 @@ async def update_me(
 
     payload = {}
     if body.display_name is not None:
-        payload["display_name"] = body.display_name.strip()
+        # Strip control chars — display_name lands in email subject lines
+        # (invite "{inviter_name} invited you...") so CR/LF must not pass.
+        cleaned = body.display_name.replace("\r", " ").replace("\n", " ").strip()
+        payload["display_name"] = cleaned
 
     if not payload:
         raise HTTPException(status_code=400, detail="Nothing to update")

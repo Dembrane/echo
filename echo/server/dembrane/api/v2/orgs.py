@@ -27,6 +27,26 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr, Field
 
+# Only http/https logos allowed — blocks javascript:/data: URIs. Shared
+# logic lives in workspace_settings; duplicated here to avoid a cross-router
+# import dependency. If a third place needs it, promote to a shared helper.
+_LOGO_URL_SCHEMES = ("http://", "https://")
+
+
+def _validate_logo_url(value: str) -> str:
+    if value is None:
+        return value
+    cleaned = value.strip()
+    if cleaned == "":
+        return ""
+    if len(cleaned) > 2048:
+        raise HTTPException(status_code=400, detail="Logo URL is too long")
+    if not cleaned.lower().startswith(_LOGO_URL_SCHEMES):
+        raise HTTPException(
+            status_code=400, detail="Logo URL must start with http:// or https://"
+        )
+    return cleaned
+
 from dembrane.utils import generate_uuid
 from dembrane.app_user import get_app_user_or_raise
 from dembrane.directus_async import async_directus
@@ -307,9 +327,16 @@ async def update_org(
 
     payload: dict = {}
     if body.name is not None:
-        payload["name"] = body.name.strip()
+        # Strip control chars — org name can land in email subject lines
+        # (upgrade_request, workspace_invite) via templating.
+        payload["name"] = body.name.replace("\r", " ").replace("\n", " ").strip()
     if body.logo_url is not None:
-        payload["logo_url"] = body.logo_url
+        # Org-level logo is legacy/optional — workspace-level whitelabel
+        # takes precedence per the release lock (workspace-scoped, not
+        # org-scoped). Validate scheme regardless so we don't land
+        # javascript:/data: URIs.
+        cleaned = _validate_logo_url(body.logo_url)
+        payload["logo_url"] = cleaned or None
     if not payload:
         raise HTTPException(status_code=400, detail="Nothing to update")
 

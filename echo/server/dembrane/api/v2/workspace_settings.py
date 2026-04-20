@@ -199,6 +199,32 @@ class UpdateWorkspaceRequest(BaseModel):
     inherit_team_members: Optional[bool] = None
 
 
+# Only http/https logos allowed — blocks javascript:/data:/file:// URIs
+# that would turn logo rendering into an XSS or SSRF vector downstream.
+_LOGO_URL_SCHEMES = ("http://", "https://")
+
+
+def _validate_logo_url(value: str) -> str:
+    """Normalise + validate a logo URL. Raises HTTPException(400) on reject.
+
+    Accepts absolute http(s) URLs only. Length-capped at 2048 to keep stored
+    strings reasonable.
+    """
+    if value is None:
+        return value  # caller should not pass None; noop-safe
+    cleaned = value.strip()
+    if cleaned == "":
+        return ""
+    if len(cleaned) > 2048:
+        raise HTTPException(status_code=400, detail="Logo URL is too long")
+    lower = cleaned.lower()
+    if not lower.startswith(_LOGO_URL_SCHEMES):
+        raise HTTPException(
+            status_code=400, detail="Logo URL must start with http:// or https://"
+        )
+    return cleaned
+
+
 @router.patch("/{workspace_id}/settings")
 async def update_workspace_settings(
     body: UpdateWorkspaceRequest,
@@ -213,25 +239,35 @@ async def update_workspace_settings(
 
     payload: dict = {}
     if body.name is not None:
-        payload["name"] = body.name.strip()
+        # Strip control chars — this value ends up in email subject lines
+        # (workspace_added / workspace_invite / upgrade_request).
+        payload["name"] = body.name.replace("\r", " ").replace("\n", " ").strip()
     if body.description is not None:
         payload["description"] = body.description.strip()
     if body.logo_url is not None:
-        payload["logo_url"] = body.logo_url
+        # Whitelabel branding is tier-gated (changemaker+). Changing the
+        # workspace logo is whitelabel — gate it here so the tier check
+        # happens before the DB write, not only on downgrade.
+        cleaned_logo = _validate_logo_url(body.logo_url)
+        current_logo = ctx.workspace.get("logo_url") or ""
+        if cleaned_logo != current_logo:
+            ctx.require_policy("workspace:whitelabel")
+        payload["logo_url"] = cleaned_logo or None
 
     # Privacy flags write into workspace.settings (existing JSON column).
     if body.inherit_team_admins is not None or body.inherit_team_members is not None:
+        # Normalise NULL settings (legacy rows) to {} before dict ops.
+        current_settings = ctx.workspace.get("settings") or {}
+        if not isinstance(current_settings, dict):
+            current_settings = {}
         # Setting inherit_team_admins=false makes the workspace private — gated.
         going_private = (
             body.inherit_team_admins is False
-            and ctx.workspace.get("settings", {}) .get("inherit_team_admins", True) is not False
+            and current_settings.get("inherit_team_admins", True) is not False
         )
         if going_private:
             ctx.require_policy("workspace:set_private")
 
-        current_settings = ctx.workspace.get("settings") or {}
-        if not isinstance(current_settings, dict):
-            current_settings = {}
         merged = dict(current_settings)
         if body.inherit_team_admins is not None:
             merged["inherit_team_admins"] = bool(body.inherit_team_admins)
@@ -280,6 +316,30 @@ async def remove_workspace_member(
         membership_id,
         {"deleted_at": datetime.now(timezone.utc).isoformat()},
     )
+
+    # Sticky-remove: if this user would otherwise re-derive admin/member
+    # access via their org role (rule-of-system inheritance), tombstone
+    # them so team-role changes don't silently re-grant access. Only
+    # applies when the removed user has an active org_membership.
+    from dembrane.inheritance import sticky_remove
+    removed_user_id = membership.get("user_id")
+    if removed_user_id and ctx.workspace.get("org_id"):
+        # Check if they'd re-derive via org role — only tombstone if yes.
+        org_rows = await async_directus.get_items(
+            "org_membership",
+            {"query": {"filter": {
+                "org_id": {"_eq": ctx.workspace["org_id"]},
+                "user_id": {"_eq": removed_user_id},
+                "deleted_at": {"_null": True},
+            }, "fields": ["role"], "limit": 1}},
+        )
+        if isinstance(org_rows, list) and org_rows:
+            await sticky_remove(
+                workspace_id=ctx.workspace_id,
+                user_id=removed_user_id,
+                by_user_id=ctx.app_user_id,
+            )
+
     return {"status": "success"}
 
 
