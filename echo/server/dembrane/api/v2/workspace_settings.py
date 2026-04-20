@@ -190,6 +190,13 @@ async def get_workspace_settings(
 class UpdateWorkspaceRequest(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
+    logo_url: Optional[str] = None
+    # Privacy flags — wizard step 2 equivalents. Flipping true→false makes
+    # the workspace private; derivation stops on next access check.
+    # Flipping false→true re-enables team-admin derivation (subject to the
+    # per-user sticky_removed tombstones).
+    inherit_team_admins: Optional[bool] = None
+    inherit_team_members: Optional[bool] = None
 
 
 @router.patch("/{workspace_id}/settings")
@@ -197,14 +204,40 @@ async def update_workspace_settings(
     body: UpdateWorkspaceRequest,
     ctx: WorkspaceContext = Depends(get_workspace_context),
 ) -> dict:
-    """Update workspace name/description. Requires settings:manage."""
+    """Update workspace name/description/logo/privacy flags.
+
+    Requires settings:manage. Making a workspace private is tier-gated at
+    innovator+ via has_policy's workspace:set_private rule.
+    """
     ctx.require_policy("settings:manage")
 
-    payload = {}
+    payload: dict = {}
     if body.name is not None:
         payload["name"] = body.name.strip()
     if body.description is not None:
         payload["description"] = body.description.strip()
+    if body.logo_url is not None:
+        payload["logo_url"] = body.logo_url
+
+    # Privacy flags write into workspace.settings (existing JSON column).
+    if body.inherit_team_admins is not None or body.inherit_team_members is not None:
+        # Setting inherit_team_admins=false makes the workspace private — gated.
+        going_private = (
+            body.inherit_team_admins is False
+            and ctx.workspace.get("settings", {}) .get("inherit_team_admins", True) is not False
+        )
+        if going_private:
+            ctx.require_policy("workspace:set_private")
+
+        current_settings = ctx.workspace.get("settings") or {}
+        if not isinstance(current_settings, dict):
+            current_settings = {}
+        merged = dict(current_settings)
+        if body.inherit_team_admins is not None:
+            merged["inherit_team_admins"] = bool(body.inherit_team_admins)
+        if body.inherit_team_members is not None:
+            merged["inherit_team_members"] = bool(body.inherit_team_members)
+        payload["settings"] = merged
 
     if not payload:
         raise HTTPException(status_code=400, detail="Nothing to update")

@@ -3,13 +3,19 @@
 import asyncio
 from datetime import datetime, timezone
 from logging import getLogger
-from typing import Optional
+from typing import Literal, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 
 from dembrane.utils import generate_uuid
 from dembrane.app_user import resolve_app_user, get_app_user_or_raise
 from dembrane.directus_async import async_directus
+from dembrane.email import send_email
+from dembrane.policies import TIER_ORDER
+from dembrane.settings import get_settings
+from dembrane.tier_downgrade import preview_downgrade, apply_downgrade_effects
+from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
 from dembrane.api.v2.schemas import (
     CreateWorkspaceRequest,
     CreateWorkspaceResponse,
@@ -20,6 +26,8 @@ from dembrane.api.v2.schemas import (
     WorkspaceUsage,
 )
 from dembrane.api.dependency_auth import DependencyDirectusSession
+
+settings = get_settings()
 
 router = APIRouter()
 logger = getLogger("api.v2.workspaces")
@@ -382,3 +390,219 @@ async def create_workspace(
         org_id=org_id,
         tier="pioneer",  # Matches what we actually stored
     )
+
+
+# ── DELETE workspace ────────────────────────────────────────────────────
+
+
+@router.delete("/{workspace_id}")
+async def delete_workspace(
+    ctx: WorkspaceContext = Depends(get_workspace_context),
+) -> dict:
+    """Soft-delete a workspace. Owner-only. Blocked if workspace has any
+    non-deleted project — decision A from the design log: partners wind
+    projects down via the team admin page's Projects view (Ask 1 D14).
+    """
+    if ctx.role != "owner":
+        raise HTTPException(
+            status_code=403, detail="Only the workspace owner can delete it"
+        )
+
+    projects = await async_directus.get_items(
+        "project",
+        {
+            "query": {
+                "filter": {
+                    "workspace_id": {"_eq": ctx.workspace_id},
+                    "deleted_at": {"_null": True},
+                },
+                "aggregate": {"count": "id"},
+            }
+        },
+    )
+    project_count = 0
+    if isinstance(projects, list) and projects:
+        project_count = int(projects[0].get("count", {}).get("id", 0) or 0)
+
+    if project_count > 0:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"This workspace has {project_count} project(s). "
+                "Delete or move them first — you can do this from the team's Projects view."
+            ),
+        )
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    await async_directus.update_item(
+        "workspace", ctx.workspace_id, {"deleted_at": now_iso}
+    )
+    logger.info(
+        f"Deleted workspace {ctx.workspace_id} by {ctx.app_user_id} "
+        f"(role={ctx.role})"
+    )
+    return {"status": "deleted"}
+
+
+# ── Tier management (staff-only per D1 / Ask 2s) ────────────────────────
+
+
+class SetTierRequest(BaseModel):
+    tier: Literal["pilot", "pioneer", "innovator", "changemaker", "guardian"]
+    reason: str = Field(
+        min_length=1,
+        max_length=500,
+        description="Internal note for the staff audit trail (D17).",
+    )
+
+
+class SetTierResponse(BaseModel):
+    workspace_id: str
+    previous_tier: str
+    new_tier: str
+    direction: Literal["upgrade", "downgrade", "no-change"]
+    effects_applied: list[dict] = []
+
+
+@router.patch("/{workspace_id}/tier", response_model=SetTierResponse)
+async def set_workspace_tier(
+    workspace_id: str,
+    body: SetTierRequest,
+    auth: DependencyDirectusSession,
+) -> SetTierResponse:
+    """Staff-only tier change. Applies DOWNGRADE_EFFECTS when going down.
+
+    Direction + reason are logged for the (future) staff audit surface.
+    The reason field is required (D17) so every change has a paper trail.
+    """
+    if not auth.is_admin:
+        raise HTTPException(status_code=403, detail="Staff-only action")
+
+    workspace = await async_directus.get_item("workspace", workspace_id)
+    if not workspace or workspace.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Workspace not found")
+
+    from_tier = workspace.get("tier", "pioneer")
+    to_tier = body.tier
+
+    try:
+        direction: Literal["upgrade", "downgrade", "no-change"]
+        from_idx = TIER_ORDER.index(from_tier)
+        to_idx = TIER_ORDER.index(to_tier)
+    except ValueError:
+        raise HTTPException(status_code=500, detail="Unknown tier value")
+
+    if from_idx == to_idx:
+        direction = "no-change"
+    elif to_idx > from_idx:
+        direction = "upgrade"
+    else:
+        direction = "downgrade"
+
+    effects: list[dict] = []
+    if direction == "downgrade":
+        # Order matters: compute effects on the pre-change state, apply
+        # revert mutations, then update the tier. If we updated tier first,
+        # has_policy would already be denying policies we need to read.
+        effects = await apply_downgrade_effects(workspace_id, from_tier, to_tier)
+
+    await async_directus.update_item("workspace", workspace_id, {"tier": to_tier})
+
+    logger.info(
+        f"STAFF tier change: workspace {workspace_id} {from_tier} → {to_tier} "
+        f"(direction={direction}, by={auth.user_id}, reason={body.reason!r}, "
+        f"effects={[e['policy'] for e in effects]})"
+    )
+    return SetTierResponse(
+        workspace_id=workspace_id,
+        previous_tier=from_tier,
+        new_tier=to_tier,
+        direction=direction,
+        effects_applied=effects,
+    )
+
+
+@router.get("/{workspace_id}/tier/preview-downgrade")
+async def preview_workspace_downgrade(
+    to_tier: Literal["pilot", "pioneer", "innovator", "changemaker", "guardian"],
+    ctx: WorkspaceContext = Depends(get_workspace_context),
+) -> dict:
+    """What would a downgrade to `to_tier` do? Read-only — powers the W5
+    confirmation dialog copy. Anyone with settings:manage can preview.
+    """
+    ctx.require_policy("settings:manage")
+    current = ctx.workspace.get("tier", "pioneer")
+    return {
+        "from_tier": current,
+        "to_tier": to_tier,
+        "effects": await preview_downgrade(ctx.workspace_id, current, to_tier),
+    }
+
+
+# ── Upgrade request (Ask 2 + 4C "Request upgrade" CTA, admin-role only) ─
+
+
+class UpgradeRequestBody(BaseModel):
+    target_tier: Optional[
+        Literal["pioneer", "innovator", "changemaker", "guardian"]
+    ] = None
+    message: Optional[str] = Field(default=None, max_length=1000)
+
+
+@router.post("/{workspace_id}/upgrade-request")
+async def request_upgrade(
+    body: UpgradeRequestBody,
+    ctx: WorkspaceContext = Depends(get_workspace_context),
+) -> dict:
+    """Admin clicks "Request upgrade" in the tier compare view. Sends an
+    email to settings.email.upgrade_request_inbox with context. Configurable
+    via UPGRADE_REQUEST_INBOX env var (defaults to sameer@dembrane.com during
+    this release).
+
+    Member role doesn't see this CTA (Q3 / D9 — member-role path shows copy
+    only, no button). Enforced here by require_policy(member:invite) which
+    only admin/owner have — keeps the endpoint from being abused.
+    """
+    ctx.require_policy("member:invite")
+
+    requester = await async_directus.get_item("app_user", ctx.app_user_id)
+    requester_name = (requester or {}).get("display_name") or ""
+    requester_email = (requester or {}).get("email") or ""
+
+    workspace_name = ctx.workspace.get("name", "")
+    current_tier = ctx.workspace.get("tier", "pioneer")
+    org = await async_directus.get_item("org", ctx.workspace.get("org_id"))
+    org_name = (org or {}).get("name", "")
+
+    target = body.target_tier or "(not specified)"
+    body_html = (
+        f"<h2>Upgrade request</h2>"
+        f"<p><b>Team:</b> {org_name}<br>"
+        f"<b>Workspace:</b> {workspace_name} (<code>{ctx.workspace_id}</code>)<br>"
+        f"<b>Current tier:</b> {current_tier}<br>"
+        f"<b>Requested tier:</b> {target}</p>"
+        f"<p><b>Requested by:</b> {requester_name} &lt;{requester_email}&gt;</p>"
+    )
+    if body.message:
+        body_html += f"<p><b>Message:</b><br>{body.message}</p>"
+
+    sent = await send_email(
+        to=settings.email.upgrade_request_inbox,
+        subject=f"Upgrade request: {org_name} / {workspace_name} ({current_tier} → {target})",
+        html=body_html,
+    )
+    if not sent:
+        # Don't silently drop — mirrors the pattern from 9021900.
+        logger.error(
+            f"Upgrade request email failed for workspace {ctx.workspace_id}"
+        )
+        raise HTTPException(
+            status_code=502,
+            detail="Couldn't send the request. Please try again or email us directly.",
+        )
+
+    logger.info(
+        f"Upgrade request: workspace {ctx.workspace_id} {current_tier} → {target} "
+        f"by {ctx.app_user_id}"
+    )
+    return {"status": "sent"}

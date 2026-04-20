@@ -333,6 +333,16 @@ class EmailSettings(BaseSettings):
         alias="EMAIL_FROM_NAME",
         validation_alias=AliasChoices("EMAIL_FROM_NAME", "EMAIL__FROM_NAME"),
     )
+    # Where "Request upgrade" CTAs route (Ask 2 + 4C in the designer spec).
+    # Defaults to sameer@dembrane.com during the workspaces release; switch
+    # to a shared billing inbox once the team decides one.
+    upgrade_request_inbox: str = Field(
+        default="sameer@dembrane.com",
+        alias="UPGRADE_REQUEST_INBOX",
+        validation_alias=AliasChoices(
+            "UPGRADE_REQUEST_INBOX", "EMAIL__UPGRADE_REQUEST_INBOX"
+        ),
+    )
 
 
 class DatabaseSettings(BaseSettings):
