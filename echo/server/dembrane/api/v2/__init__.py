@@ -14,6 +14,7 @@ from dembrane.api.v2.orgs import router as orgs_router
 from dembrane.api.v2.onboarding import router as onboarding_router
 from dembrane.api.v2.invites import router as invites_router
 from dembrane.api.v2.projects import router as projects_router
+from dembrane.api.v2.project_sharing import router as project_sharing_router
 from dembrane.api.v2.workspaces import router as workspaces_router
 from dembrane.api.v2.workspace_projects import router as workspace_projects_router
 from dembrane.api.v2.workspace_settings import router as workspace_settings_router
@@ -32,5 +33,8 @@ v2_router.include_router(invites_router, prefix="/workspaces", tags=["v2:invites
 v2_router.include_router(workspace_projects_router, prefix="/workspaces", tags=["v2:workspace-projects"])
 v2_router.include_router(workspace_settings_router, prefix="/workspaces", tags=["v2:workspace-settings"])
 
-# Project-level: /projects/{id}/move
+# Project-level: /projects/{id}/move + /projects/{id}/members (private sharing)
 v2_router.include_router(projects_router, prefix="/projects", tags=["v2:projects"])
+v2_router.include_router(
+    project_sharing_router, prefix="/projects", tags=["v2:project-sharing"]
+)
