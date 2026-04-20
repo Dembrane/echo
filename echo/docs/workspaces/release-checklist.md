@@ -320,3 +320,57 @@ Dependencies: S7 depends on S5; S8 depends on S6 tier PATCH; S9 depends on S6 ac
 ## Changelog for this doc
 
 - **2026-04-20**: initial master checklist; incorporated designer v2 directions; dropped migration script in favor of auto-onboarding + onboarding split; added internal tools / access-blocking track.
+
+## Session status — autonomous run 2026-04-20 (~2h)
+
+Commits landed on `workspaces` branch (not pushed):
+
+| # | Hash | Commit |
+|---|---|---|
+| 1 | 94cf40d | feat: derived inheritance module + tier auto-wire in has_policy |
+| 2 | 818c774 | feat: surface is_staff in /v2/me |
+| 3 | 9736a2c | feat: /v2/orgs endpoints for team management |
+| 4 | (docs) | docs: workspaces release sources of truth |
+| 5 | 4141262 | feat: tier mgmt, upgrade-request, delete workspace, downgrade effects |
+| 6 | e26d725 | refactor: shared email layout + auto plain-text fallbacks |
+| 7 | c51a7e0 | feat: private project sharing API — /v2/projects/:id/members CRUD |
+| 8 | e66c483 | feat: onboarding split — differentiate new vs legacy users |
+
+### What landed
+
+- **S5 Orgs + staff** `[██████████] 100%` — `dembrane/inheritance.py` (derived resolvers + helpers), `/v2/orgs` CRUD + members, `is_staff` in `/v2/me`, middleware delegates to `user_can_access`, workspace creation no longer fans out inherited rows.
+- **S6 Access rules + tier + delete + downgrade** `[█████████░] 95%` — `has_policy()` auto-enforces tier gates via `TIER_REQUIRED_FOR_POLICY`; `PATCH /v2/workspaces/:id/tier` (staff-only, reason required); `POST /v2/workspaces/:id/upgrade-request` (admin-only, configurable inbox via `UPGRADE_REQUEST_INBOX`); `DELETE /v2/workspaces/:id` (owner-only, blocked if projects); `dembrane/tier_downgrade.py` with `DOWNGRADE_EFFECTS` map + `preview_downgrade()` / `apply_downgrade_effects()`; privacy flags (`inherit_team_admins` / `_members`) accepted on create + patch.
+- **S10 Private project sharing API** `[████░░░░░░] 40%` — backend complete (`/v2/projects/:id/members` CRUD, innovator+ gated, no cross-workspace). Frontend UI (strip + modal) blocked on design wires.
+- **S13 Onboarding split** `[████████░░] 80%` — backend flag `has_legacy_projects` on `/v2/me`; `OnboardingRoute` copy splits three ways (invite / legacy / new). Hasn't been visually verified in a browser — the copy changes are additive and don't touch layout.
+- **S14 Emails** `[███████░░░] 70%` — shared `_layout.html` partial, brand-compliant; existing `workspace_invite` + `workspace_added` refactored to extend; plain-text `.txt` fallbacks auto-picked by `send_email`; multipart/alternative wiring correct (plain first, html second). New templates (welcome, role-changed, removed) deferred until their endpoints need them.
+
+### What I did NOT touch (needs design wires before I can start)
+
+- **S7 Teams admin page** (Ask 1 list ⇄ matrix ⇄ projects) — backend (`/v2/orgs/:id/members`) is ready, UI not.
+- **S8 Tier management UI** (Ask 2 compare matrix + Ask 2s staff inline block) — backend ready.
+- **S9 Creation wizards** (workspace + project, full multi-step with dry-run preview) — backend accepts the flags; UI blocked on wizard wires.
+- **S10 frontend** — the strip on project overview + the share modal.
+- **S11 Upgrade prompts** — backend gates fire correctly; UI component (hatched overlay + 4C modal, member-role = no CTA) blocked on wires.
+- **S12 Selector polish** — designer has wires; retargeting needs attention to Ask 5's team hero + per-row manage. Not touched here.
+
+### Judgment calls made while you were out
+
+Tracked as `# Note:` comments in code at the decision site. Summary:
+- Tier-gate auto-wire: added `workspace_tier` kwarg to `has_policy()` and resolve via `TIER_REQUIRED_FOR_POLICY`. Made `policies.py:24-25` include `workspace:set_private` + `project:set_private` so privacy is gated uniformly (matches designer's S1 assumption).
+- Team-invite endpoint (`POST /v2/orgs/:id/members`) deliberately not built — reused the existing workspace-invite flow with `include_org_membership=true` targeting the team's default workspace. Saves a collection + keeps the invite email template single-source.
+- `accessible_workspace_count` rollup in `/v2/orgs/:id/members` uses `user_can_access` per (user × workspace) pair — O(U × W) round-trips per list call. Fine at current scale; noted a TODO in-line to batch when a team grows past ~50 workspaces.
+- Downgrade-effect: `revert` currently only clears `logo_url`. Any new tier-gated feature marked `"revert"` must add its clear-on-downgrade branch to `apply_downgrade_effects()`.
+- Email multipart: SendGrid `.add_content()` requires plain-first, html-second order. Wired that way; `_build_message` verified via a unit-style sanity check.
+- Onboarding split terminology: used "team" in user-facing copy (`Welcome, {name} · Set up your team`). "Team admin" / "admins follow team access" phrasing is consistent with Q6's accepted rename, though the global sweep across older docs hasn't happened yet.
+
+### Things I want your eyes on
+
+1. **Run the local stack and hit the new endpoints** — I didn't start the devcontainer to curl them. The code compiles and imports cleanly; behavior-testing is yours.
+2. **Q6 terminology sweep** — I used "follow team access" phrasing in new code + comments. Older docs (`inheritance-rules.md`, `workspaces-prd-v3-final.md`) still say "inherit". Low-risk but inconsistent until swept.
+3. **Legacy inherited rows migration** — `inheritance-rules.md` specifies a cleanup pass for any `source='inherited'` rows that might exist from older code paths. I didn't run it because nothing today writes those rows anymore (the fan-out code in `POST /v2/workspaces` is gone). If any legacy rows linger they'll just be ignored by derivation. Easy to script later if you want them archived.
+4. **Frontend onboarding split** — browser-verify the three copy branches render correctly. Code compiles; visual verification is TODO.
+
+### Still blocked on you / workshop
+
+- 12 questions in "Questions for the team (workshop)" section above — all of them still open.
+- Design wires for S7/S8/S9/S10-frontend/S11/S12 — the designer's v5 is the dependency.
