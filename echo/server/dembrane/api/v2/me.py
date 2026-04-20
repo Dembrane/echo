@@ -37,6 +37,7 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
             email="",
             display_name="",
             onboarding_completed=False,
+            is_staff=bool(auth.is_admin),
         )
 
     email = directus_profile.get("email", "")
@@ -68,6 +69,7 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
             avatar=directus_profile.get("avatar"),
             onboarding_completed=False,
             has_pending_invites=has_pending_invites,
+            is_staff=bool(auth.is_admin),
         )
 
     # Fetch org memberships
@@ -116,6 +118,7 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
         onboarding_completed=True,
         orgs=orgs,
         has_pending_invites=has_pending_invites,
+        is_staff=bool(auth.is_admin),
     )
 
 
