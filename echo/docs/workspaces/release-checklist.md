@@ -374,3 +374,36 @@ Tracked as `# Note:` comments in code at the decision site. Summary:
 
 - 12 questions in "Questions for the team (workshop)" section above — all of them still open.
 - Design wires for S7/S8/S9/S10-frontend/S11/S12 — the designer's v5 is the dependency.
+
+## Red-team + security + reliability audit — 2026-04-20
+
+Five subagents (red-team, security, reliability, fidelity, deploy-safety) reviewed the 9 commits from the autonomous run. Findings and fixes:
+
+### Fixed this pass (commits `15c7d1a` → `0120a72`)
+
+| # | Commit | What | Source |
+|---|---|---|---|
+| F1 | 15c7d1a | `onboarding.py` now writes creator as `source='direct'` (was `inherited` — violated invariant #5) | Fidelity + Deploy |
+| F2 | 2f543ac | Upgrade-request uses Jinja autoescape template — kills stored-XSS-to-staff-inbox path | Red-team C1, Security 3 |
+| F5 | 2f543ac | Rate limit on upgrade-request (5/hr per user) | Red-team H2 |
+| F7 | 2f543ac, ff93e68 | `\r\n` strip on subject-bound fields (workspace/org name, inviter display_name) + `_strip_header_unsafe` at compose | Security 2, 11 |
+| F3 | ff93e68 | Whitelabel tier gate now fires on any `logo_url` change (was declared but unreachable) | Red-team C2 |
+| F9 | ff93e68 | `_validate_logo_url` with http/https allow-list + 2048 cap on both workspace + org logo writes (blocks `javascript:`, `data:`) | Red-team H1 |
+| F4 | ff93e68 | `workspace.settings=NULL` no longer 500s — normalise to `{}` before dict ops | Reliability C2 |
+| F8 | 0120a72 | Team-owner carve-out: owners always derive admin access on their team's workspaces, even when private — prevents rogue admin locking out the owner | Red-team M1 |
+| F10 | ff93e68 | `DELETE /workspaces/:id/members/:uid` now writes a `sticky_removed` tombstone when the removed user would re-derive via org role | Fidelity + Red-team M3 |
+
+### Remaining (deferred — flagged for your review)
+
+| # | Finding | Source | Disposition |
+|---|---|---|---|
+| D1 | Legacy `source='inherited'` rows in production silently regain access via derivation | Deploy B1 | **Pre-deploy migration.** Archive live inherited rows + convert soft-deleted inherited rows to sticky tombstones. Script sized but not run. |
+| D2 | `project:set_private` gate declared but no endpoint mutates `project.visibility` | Fidelity D6 | Deferred — gate lives for when the project-visibility toggle lands in S10 frontend. Harmless as-is (policy just can't fire). |
+| D3 | `_rollup_workspace_access` is O(U × W) | Reliability H4 | TODO already in code; revisit when a team grows past ~50 workspaces. |
+| D4 | Tier PATCH + concurrent feature use — 5-second window where a new-under-old-tier share slips in | Reliability H1 | Acceptable this release; requires transactional DB op to fix fully. |
+| D5 | `on_workspace_created` does two non-transactional writes | Reliability H2 | Acceptable — reorder if it becomes an issue. |
+| D6 | Admin-removes-admin with no self-guard | Red-team M2 | Cosmetic; file a UX polish note. |
+| D7 | `_enrich_member` in project_sharing is N+1 | Reliability L5 | Pre-UI launch — fine. |
+| D8 | `UPGRADE_REQUEST_INBOX` needs `.env.sample` entry | Deploy H10 | **Runbook item for deploy.** |
+
+All five agents agreed the core architecture is sound: no auth-bypass, no IDOR, no JWT-forgery path, no cross-tenant leakage. Fidelity score after fixes: 14.5/16 fully clean (remaining drift is D2 latent + the legacy-row migration).
