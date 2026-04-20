@@ -29,6 +29,9 @@ class MeResponse(BaseModel):
     onboarding_completed: bool
     orgs: list[OrgSummary] = []
     has_pending_invites: bool = False
+    # Derived from Directus JWT `admin_access` claim (i.e. Administrator role
+    # in Directus). Gates internal-only UI like workspace tier-set + audit.
+    is_staff: bool = False
 
 
 # ── /v2/onboarding ──
@@ -106,6 +109,11 @@ class WorkspaceListResponse(BaseModel):
 class CreateWorkspaceRequest(BaseModel):
     name: str = Field(min_length=1, max_length=100)
     org_id: Optional[str] = None  # defaults to user's primary org
+    # Wizard step 2 access choice: which org roles derive access to this
+    # workspace. Admins always follow team access (default true). Members
+    # are opt-in (default false). Both false = private workspace.
+    inherit_team_admins: bool = True
+    inherit_team_members: bool = False
     # tier is always "pioneer" on creation — upgrades happen via billing/admin
 
 

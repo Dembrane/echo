@@ -360,31 +360,21 @@ async def create_workspace(
         "created_by": app_user_id,
     })
 
-    # Add creator as owner
-    await async_directus.create_item("workspace_membership", {
-        "id": generate_uuid(),
-        "workspace_id": ws_id,
-        "user_id": app_user_id,
-        "role": "owner",
-        "source": "direct",
-    })
-
-    # Add all org admins/owners as inherited members
-    org_admins = await async_directus.get_items(
-        "org_membership",
-        {"query": {"filter": {"org_id": {"_eq": org_id}, "role": {"_in": ["owner", "admin"]}, "user_id": {"_neq": app_user_id}, "deleted_at": {"_null": True}}, "fields": ["user_id"], "limit": -1}},
+    # Seed settings + creator membership via the inheritance module. No
+    # fan-out of source='inherited' rows — derived model computes team
+    # admin/member access at query time from org_membership + these flags.
+    from dembrane.inheritance import on_workspace_created
+    await on_workspace_created(
+        workspace_id=ws_id,
+        creator_app_user_id=app_user_id,
+        inherit_team_admins=body.inherit_team_admins,
+        inherit_team_members=body.inherit_team_members,
     )
-    if isinstance(org_admins, list):
-        for admin in org_admins:
-            await async_directus.create_item("workspace_membership", {
-                "id": generate_uuid(),
-                "workspace_id": ws_id,
-                "user_id": admin["user_id"],
-                "role": "admin",
-                "source": "inherited",
-            })
 
-    logger.info(f"Created workspace {ws_id} '{body.name}' in org {org_id} by {app_user_id}")
+    logger.info(
+        f"Created workspace {ws_id} '{body.name}' in org {org_id} by {app_user_id} "
+        f"(admins_follow={body.inherit_team_admins}, members_follow={body.inherit_team_members})"
+    )
 
     return CreateWorkspaceResponse(
         id=ws_id,

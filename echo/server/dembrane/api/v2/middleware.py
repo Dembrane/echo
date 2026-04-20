@@ -10,6 +10,7 @@ from dembrane.policies import has_policy, meets_tier
 from dembrane.app_user import resolve_app_user
 from dembrane.api.dependency_auth import DependencyDirectusSession
 from dembrane.directus_async import async_directus
+from dembrane.inheritance import user_can_access
 
 logger = getLogger("api.v2.middleware")
 
@@ -40,7 +41,15 @@ class WorkspaceContext:
         self.is_external = is_external
 
     def has_policy(self, required: str) -> bool:
-        return has_policy(self.role, self.custom_policies, required)
+        # Note: tier auto-wiring lives in policies.has_policy (S6). Workspace
+        # tier is forwarded through so tier gates resolve without per-endpoint
+        # require_tier() calls once that wiring is in place.
+        return has_policy(
+            self.role,
+            self.custom_policies,
+            required,
+            workspace_tier=self.workspace.get("tier"),
+        )
 
     def require_policy(self, required: str) -> None:
         if not self.has_policy(required):
@@ -61,6 +70,11 @@ async def get_workspace_context(
 ) -> WorkspaceContext:
     """FastAPI dependency that validates workspace access.
 
+    Access resolution runs through dembrane.inheritance.user_can_access, which
+    is the single source of truth — a user may have access via a stored
+    direct membership OR via derivation from their org role + workspace
+    settings. See docs/workspaces/inheritance-rules.md.
+
     Usage:
         @router.get("/workspaces/{workspace_id}/projects")
         async def list_projects(ctx: WorkspaceContext = Depends(get_workspace_context)):
@@ -73,36 +87,45 @@ async def get_workspace_context(
 
     app_user_id = app_user["id"]
 
-    memberships = await async_directus.get_items(
-        "workspace_membership",
-        {
-            "query": {
-                "filter": {
-                    "workspace_id": {"_eq": workspace_id},
-                    "user_id": {"_eq": app_user_id},
-                    "deleted_at": {"_null": True},
-                },
-                "limit": 1,
-            }
-        },
-    )
-
-    if not isinstance(memberships, list) or len(memberships) == 0:
-        raise HTTPException(status_code=403, detail="No access to this workspace")
-
-    membership = memberships[0]
-
-    # Fetch workspace details
     workspace = await async_directus.get_item("workspace", workspace_id)
     if not workspace or workspace.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Workspace not found")
+
+    resolved = await user_can_access(workspace_id, app_user_id)
+    if resolved is None:
+        raise HTTPException(status_code=403, detail="No access to this workspace")
+
+    role, source = resolved
+
+    # Direct rows can carry custom_policies + is_external. Inherited rows
+    # derive from org role — they get the plain role preset, never external.
+    custom_policies: list[str] = []
+    is_external = False
+    if source == "direct":
+        rows = await async_directus.get_items(
+            "workspace_membership",
+            {
+                "query": {
+                    "filter": {
+                        "workspace_id": {"_eq": workspace_id},
+                        "user_id": {"_eq": app_user_id},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["custom_policies", "is_external"],
+                    "limit": 1,
+                }
+            },
+        )
+        if isinstance(rows, list) and rows:
+            custom_policies = rows[0].get("custom_policies") or []
+            is_external = bool(rows[0].get("is_external", False))
 
     return WorkspaceContext(
         workspace_id=workspace_id,
         workspace=workspace,
         app_user_id=app_user_id,
-        role=membership["role"],
-        custom_policies=membership.get("custom_policies") or [],
-        source=membership.get("source", "direct"),
-        is_external=membership.get("is_external", False),
+        role=role,
+        custom_policies=custom_policies,
+        source=source,
+        is_external=is_external,
     )

@@ -16,15 +16,16 @@ from __future__ import annotations
 
 TIER_ORDER: list[str] = ["pilot", "pioneer", "innovator", "changemaker", "guardian"]
 
-# Policies that require a minimum workspace tier.
-# TODO: wire this into has_policy() so tier upgrade gates are enforced
-# automatically (not per-endpoint). Currently must call ctx.require_tier()
-# manually in endpoints that expose tier-gated features.
+# Policies that require a minimum workspace tier. Enforced automatically by
+# has_policy() when the caller passes workspace_tier. See release-checklist.md
+# §"Tier + role gating matrix" for the canonical list.
 TIER_REQUIRED_FOR_POLICY: dict[str, str] = {
     "workspace:export": "innovator",
     "project:share": "innovator",
     "workspace:whitelabel": "changemaker",
     "workspace:api_access": "changemaker",
+    "workspace:set_private": "innovator",
+    "project:set_private": "innovator",
 }
 
 
@@ -125,10 +126,24 @@ def has_policy(
     custom_policies: list[str] | None,
     required: str,
     presets: dict[str, list[str]] = WORKSPACE_ROLE_PRESETS,
+    workspace_tier: str | None = None,
 ) -> bool:
-    """Check if a role + custom_policies grants a required policy."""
+    """Check if a role + custom_policies grants a required policy.
+
+    When `workspace_tier` is provided, the tier gate from
+    TIER_REQUIRED_FOR_POLICY is enforced automatically — so endpoints only
+    need to call require_policy() and the tier check rides along.
+    Callers in test contexts can omit workspace_tier to bypass the tier gate.
+    """
     effective = get_effective_policies(role, custom_policies, presets)
-    return "*" in effective or required in effective
+    role_allows = "*" in effective or required in effective
+    if not role_allows:
+        return False
+
+    required_tier = TIER_REQUIRED_FOR_POLICY.get(required)
+    if required_tier is None or workspace_tier is None:
+        return True
+    return meets_tier(workspace_tier, required_tier)
 
 
 def meets_tier(current_tier: str, minimum_tier: str) -> bool:
