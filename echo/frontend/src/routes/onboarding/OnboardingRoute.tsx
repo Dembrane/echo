@@ -62,6 +62,11 @@ export const OnboardingRoute = () => {
 
 	const displayName = (user.data as Record<string, string>)?.first_name || "";
 	const hasInvites = meV2?.has_pending_invites === true;
+	// The designer's onboarding split (docs/workspaces/designer-return.html):
+	// users with projects from before workspaces existed see the "migration"
+	// copy; users with no legacy projects see the fresh-setup copy. hasInvites
+	// takes precedence over both (they're here to join a team, not set one up).
+	const isLegacyUser = meV2?.has_legacy_projects === true;
 	const defaultOrgName = displayName ? `${displayName}'s Team` : "";
 
 	const [orgName, setOrgName] = useState(defaultOrgName);
@@ -352,12 +357,12 @@ export const OnboardingRoute = () => {
 									) : (
 										<Trans>Welcome to dembrane</Trans>
 									)
+								) : isLegacyUser && displayName ? (
+									<Trans>Welcome back, {displayName}</Trans>
 								) : displayName ? (
-									<Trans>
-										Welcome back, {displayName}
-									</Trans>
+									<Trans>Welcome, {displayName}</Trans>
 								) : (
-									<Trans>Set up your workspace</Trans>
+									<Trans>Set up your team</Trans>
 								)}
 							</Title>
 							<Text size="sm" c="dimmed" lh={1.6}>
@@ -365,10 +370,16 @@ export const OnboardingRoute = () => {
 									<Trans>
 										Your team is waiting for you. Just one quick step to get set up.
 									</Trans>
+								) : isLegacyUser ? (
+									<Trans>
+										We've added teams so you can organize projects and share them
+										with colleagues. Everything you had before is still here — we
+										just need a name for your team.
+									</Trans>
 								) : (
 									<Trans>
-										We added workspaces so you can organize projects and share
-										them with colleagues. Everything you had before is still here.
+										Give your team a name. You can invite teammates right after,
+										or later from settings.
 									</Trans>
 								)}
 							</Text>
@@ -419,11 +430,13 @@ export const OnboardingRoute = () => {
 									</Button>
 								</Group>
 
-								<Text size="xs" c="dimmed" mt={4}>
-									<Trans>
-										You'll find all your projects waiting for you.
-									</Trans>
-								</Text>
+								{isLegacyUser && (
+									<Text size="xs" c="dimmed" mt={4}>
+										<Trans>
+											You'll find all your projects waiting for you.
+										</Trans>
+									</Text>
+								)}
 							</Stack>
 						</form>
 					</Stack>

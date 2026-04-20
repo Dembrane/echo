@@ -61,6 +61,25 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
         )
         has_pending_invites = isinstance(pending, list) and len(pending) > 0
 
+    # Does this user have projects from before workspaces existed? Drives
+    # the onboarding split: new users get signup-time team name, legacy
+    # users get the "we've added teams" migration screen.
+    legacy_probe = await async_directus.get_items(
+        "project",
+        {
+            "query": {
+                "filter": {
+                    "directus_user_id": {"_eq": auth.user_id},
+                    "workspace_id": {"_null": True},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id"],
+                "limit": 1,
+            }
+        },
+    )
+    has_legacy_projects = isinstance(legacy_probe, list) and len(legacy_probe) > 0
+
     if not app_user:
         return MeResponse(
             directus_user_id=auth.user_id,
@@ -69,6 +88,7 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
             avatar=directus_profile.get("avatar"),
             onboarding_completed=False,
             has_pending_invites=has_pending_invites,
+            has_legacy_projects=has_legacy_projects,
             is_staff=bool(auth.is_admin),
         )
 
@@ -118,6 +138,7 @@ async def get_me(auth: DependencyDirectusSession) -> MeResponse:
         onboarding_completed=True,
         orgs=orgs,
         has_pending_invites=has_pending_invites,
+        has_legacy_projects=has_legacy_projects,
         is_staff=bool(auth.is_admin),
     )
 

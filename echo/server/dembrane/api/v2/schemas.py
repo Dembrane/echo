@@ -32,6 +32,11 @@ class MeResponse(BaseModel):
     # Derived from Directus JWT `admin_access` claim (i.e. Administrator role
     # in Directus). Gates internal-only UI like workspace tier-set + audit.
     is_staff: bool = False
+    # True if the user has projects that predate workspaces (no workspace_id).
+    # Drives the onboarding split: new users (false) get a signup-time
+    # team-name field; existing users (true) get the "Welcome back, we've
+    # added teams" migration screen. Independent of onboarding_completed.
+    has_legacy_projects: bool = False
 
 
 # ── /v2/onboarding ──

@@ -10,6 +10,13 @@ export interface V2MeData {
 	onboarding_completed: boolean;
 	orgs: Array<{ id: string; name: string; role: string }>;
 	has_pending_invites: boolean;
+	// Gates internal-only UI (workspace tier-set, future audit controls).
+	// Derived from Directus Administrator role / JWT admin_access claim.
+	is_staff: boolean;
+	// True if the user has projects from before workspaces existed. Drives
+	// the onboarding split: new users (false) see signup-time team name;
+	// legacy users (true) see the migration screen copy.
+	has_legacy_projects: boolean;
 }
 
 async function fetchV2Me(): Promise<V2MeData | null> {
