@@ -1,0 +1,742 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Workspaces & Teams — v2 chosen directions</title>
+<link rel="stylesheet" href="assets/colors_and_type.css" />
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2D2D2C; --ink-soft:#5a5a58;
+    --paper:#F6F4F1; --paper-2:#ECE8E0;
+    --accent:#4169E1; --hand:'Kalam',sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{background:var(--paper);color:var(--ink);margin:0}
+  body{font-family:var(--font-sans);font-weight:300;line-height:1.5}
+
+  .shell{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+  aside.toc{position:sticky;top:0;height:100vh;padding:28px 20px;border-right:1px dashed #c9c4b9;overflow:auto}
+  aside.toc h1{font-size:18px;margin-bottom:2px}
+  aside.toc .sub{font-size:11px;color:var(--ink-soft);margin-bottom:20px}
+  aside.toc .v{font-family:var(--hand);color:var(--accent);font-size:13px;margin-bottom:18px}
+  aside.toc nav a{display:block;padding:6px 8px;margin:1px -8px;border-radius:6px;text-decoration:none;color:var(--ink);font-size:13px}
+  aside.toc nav a:hover{background:var(--paper-2)}
+  aside.toc nav a .n{display:inline-block;width:18px;color:var(--accent);font-family:var(--hand)}
+  aside.toc .legend{margin-top:20px;font-size:11px;color:var(--ink-soft);line-height:1.7}
+  aside.toc .legend .k{font-family:var(--hand);color:var(--ink)}
+
+  main{padding:36px 48px 120px;max-width:1500px}
+  .intro{margin-bottom:40px;max-width:760px}
+  .intro .eyebrow{font-family:var(--hand);color:var(--accent);font-size:16px}
+  .intro h2{font-size:28px;margin:2px 0 12px;letter-spacing:-.01em}
+  .intro p{color:var(--ink-soft);font-size:14px;margin-bottom:10px}
+  .intro .note{border-left:2px solid var(--accent);padding:8px 14px;background:rgba(65,105,225,.05);font-size:13px;color:var(--ink);border-radius:0 6px 6px 0}
+
+  section.ask{margin:0 0 72px}
+  section.ask > header{display:flex;align-items:baseline;gap:16px;margin-bottom:4px}
+  section.ask > header .tag{font-family:var(--hand);font-size:20px;color:var(--accent)}
+  section.ask > header h3{font-size:22px;letter-spacing:-.005em}
+  section.ask .lede{color:var(--ink-soft);font-size:13px;margin:4px 0 18px;max-width:820px}
+  section.ask .changenote{
+    font-family:var(--hand);color:var(--accent);font-size:13px;
+    border:1px dashed var(--accent);border-radius:8px;padding:8px 14px;margin-bottom:20px;
+    max-width:820px;background:rgba(65,105,225,.04)
+  }
+  section.ask .changenote b{font-weight:700;color:var(--accent)}
+
+  .frame{
+    background:#fffdf7;border:1px solid #dad5c8;border-radius:10px;padding:16px;
+    box-shadow:0 1px 0 rgba(0,0,0,.02),2px 3px 0 rgba(0,0,0,.02);margin-bottom:16px;
+  }
+  .frame h4{font-family:var(--hand);font-weight:700;font-size:17px;margin:0 0 2px}
+  .frame h4 .num{color:var(--accent);margin-right:6px}
+  .frame .why{font-size:12px;color:var(--ink-soft);margin:0 0 12px}
+  .frame .mock{border:1.5px solid var(--ink);border-radius:8px;background:var(--paper);padding:12px 14px;min-height:280px;font-family:var(--hand);position:relative}
+  .frame .mock.wide{min-height:360px}
+  .mock.flush{padding:0}
+
+  /* two-up */
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+  /* sketch primitives */
+  .bar{border:1.2px solid var(--ink);border-radius:4px;padding:3px 8px;display:inline-flex;align-items:center;gap:6px;font-size:12px;background:#fff}
+  .bar.pri{background:var(--accent);color:#fff;border-color:var(--accent);border-radius:999px}
+  .bar.sec{background:#fff}
+  .bar.ghost{border-style:dashed;background:transparent}
+  .pill{display:inline-block;border:1px solid var(--ink);border-radius:999px;padding:1px 8px;font-size:11px;background:#fff;white-space:nowrap}
+  .pill.ext{background:#FFD16633;border-color:#b98c00;color:#4b3a00}
+  .pill.blue{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .pill.mute{background:#ece8e0;border-color:#c9c4b9;color:var(--ink-soft)}
+  .pill.soft-blue{background:rgba(65,105,225,.14);border-color:rgba(65,105,225,.4);color:var(--accent)}
+  .dot{width:18px;height:18px;border-radius:50%;background:#ddd6c5;display:inline-block;border:1px solid var(--ink);flex-shrink:0}
+  .dot.ext{background:#FFD166}
+  .dot.blue{background:var(--accent)}
+  .dot.sm{width:12px;height:12px}
+  .box{border:1.2px solid var(--ink);border-radius:6px;padding:8px}
+  .box.dashed{border-style:dashed}
+  .line{height:1px;background:var(--ink);opacity:.25;margin:8px 0}
+  .hz{display:flex;align-items:center;gap:8px}
+  .spread{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .topbar{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--ink);padding-bottom:6px;margin:-2px -2px 8px}
+  .crumb{font-size:11px;color:var(--ink-soft);font-family:var(--font-sans);font-weight:300}
+  .fake-text{display:inline-block;background:var(--ink);opacity:.75;height:7px;border-radius:2px;vertical-align:middle}
+  .fake-text.lg{height:11px;opacity:.85}
+  .fake-text.soft{opacity:.22}
+  h5.hdg{font-family:var(--hand);font-weight:700;font-size:15px;margin:6px 0 4px}
+  .row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed #d0c9b8;font-size:12px}
+  .row:last-child{border-bottom:0}
+  .tabs{display:flex;gap:10px;border-bottom:1px solid var(--ink);margin:4px -2px 8px;padding:0 2px 4px;font-size:12px}
+  .tabs .t{padding:3px 8px;border-radius:4px 4px 0 0;cursor:pointer}
+  .tabs .t.on{background:var(--ink);color:var(--paper)}
+  .tabs .t.on .mini{color:rgba(255,255,255,.7)}
+  .mini{font-size:10px;color:var(--ink-soft)}
+  .check{color:var(--accent)}
+  .strike{text-decoration:line-through;opacity:.5}
+  .cell{border:1px solid var(--ink);border-radius:4px;padding:6px;font-size:11px;background:#fff}
+  .hatched{background:repeating-linear-gradient(45deg,rgba(246,244,241,.7),rgba(246,244,241,.7) 6px,rgba(236,232,224,.85) 6px,rgba(236,232,224,.85) 12px)}
+  .annotation{font-family:var(--hand);color:var(--accent);font-size:12px;line-height:1.35;margin-top:6px}
+  .arrow-label{position:absolute;font-family:var(--hand);color:var(--accent);font-size:12px}
+
+  /* tab-switcher inside ask 1 */
+  .view-switch{display:inline-flex;border:1.5px solid var(--ink);border-radius:6px;overflow:hidden;margin-bottom:10px}
+  .view-switch button{background:#fff;border:0;padding:6px 14px;font-family:var(--hand);font-size:13px;cursor:pointer;border-right:1.5px solid var(--ink)}
+  .view-switch button:last-child{border-right:0}
+  .view-switch button.on{background:var(--accent);color:#fff}
+  .view-pane{display:none}
+  .view-pane.on{display:block}
+
+  /* mobile note */
+  .mobile-note{margin-top:12px;padding:10px 14px;background:#fdfbf4;border:1px dashed #c9c4b9;border-radius:8px;font-size:12px;line-height:1.5;display:flex;gap:10px}
+  .mobile-note .m{font-family:var(--hand);font-weight:700;color:var(--accent);font-size:14px;flex-shrink:0}
+
+  /* tweaks */
+  .tweaks{position:fixed;right:20px;bottom:20px;width:280px;z-index:50;background:#fffdf7;border:1.5px solid var(--ink);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.15),3px 4px 0 rgba(45,45,44,.06);font-size:12px}
+  .tweaks.collapsed{width:auto}
+  .tweaks .head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--ink)}
+  .tweaks.collapsed .head{border-bottom:0}
+  .tweaks .head .title{font-family:var(--hand);font-weight:700;font-size:16px}
+  .tweaks .head button{background:transparent;border:0;font-size:16px;cursor:pointer;font-family:var(--hand)}
+  .tweaks .body{padding:12px 14px;display:flex;flex-direction:column;gap:12px}
+  .tweaks.collapsed .body{display:none}
+  .tweaks .group label{display:block;font-family:var(--hand);font-size:13px;color:var(--accent);margin-bottom:4px}
+  .seg{display:flex;border:1px solid var(--ink);border-radius:6px;overflow:hidden}
+  .seg button{flex:1;background:transparent;border:0;padding:6px 4px;font-size:11px;cursor:pointer;font-family:var(--font-sans);font-weight:300;border-right:1px solid var(--ink)}
+  .seg button:last-child{border-right:0}
+  .seg button.on{background:var(--accent);color:#fff}
+  .tweaks .hint{font-size:11px;color:var(--ink-soft);line-height:1.4}
+
+  /* role/tier conditionals */
+  body[data-role="member"] .role-admin-only,body[data-role="member"] .role-staff-only{display:none}
+  body[data-role="admin"] .role-staff-only,body[data-role="owner"] .role-staff-only{display:none}
+  body:not([data-role="staff"]) .role-staff-only{display:none}
+
+  body[data-tier="pilot"] .if-gated, body[data-tier="pioneer"] .if-gated{display:block}
+  body[data-tier="innovator"] .if-gated, body[data-tier="changemaker"] .if-gated, body[data-tier="guardian"] .if-gated{display:none}
+  body[data-tier="pilot"] .if-unlocked, body[data-tier="pioneer"] .if-unlocked{display:none}
+
+  body[data-density="1"] .density-5, body[data-density="1"] .density-50{display:none}
+  body[data-density="5"] .density-1, body[data-density="5"] .density-50{display:none}
+  body[data-density="50"] .density-1, body[data-density="50"] .density-5{display:none}
+
+  @media print{.tweaks{display:none}}
+</style>
+</head>
+<template id="__bundler_thumbnail">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <rect width="200" height="200" fill="#F6F4F1"/>
+  <g transform="translate(60 60)" stroke="#2D2D2C" stroke-width="2" fill="none">
+    <rect x="0" y="0" width="80" height="12" fill="#4169E1" stroke="#4169E1"/>
+    <rect x="0" y="20" width="80" height="50"/>
+    <rect x="6" y="28" width="40" height="4" fill="#2D2D2C"/>
+    <rect x="6" y="38" width="60" height="4" fill="#2D2D2C" opacity=".4"/>
+    <rect x="6" y="46" width="50" height="4" fill="#2D2D2C" opacity=".4"/>
+    <rect x="0" y="78" width="38" height="14" fill="#4169E1" stroke="#4169E1" rx="7"/>
+  </g>
+  <text x="100" y="170" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#2D2D2C">wires</text>
+</svg>
+</template>
+<body data-role="admin" data-tier="innovator" data-density="5">
+<div class="shell">
+  <aside class="toc">
+    <h1>Workspaces &amp; Teams</h1>
+    <div class="sub">v2 · chosen directions</div>
+    <div class="v">← v1 wires linked below</div>
+    <nav>
+      <a href="#intro"><span class="n">·</span>Intro</a>
+      <a href="#ask1"><span class="n">1</span>Team admin · 1B ⇄ 1C</a>
+      <a href="#ask2"><span class="n">2</span>Tier management · 2B</a>
+      <a href="#ask3"><span class="n">3</span>Private sharing · 3B + strip</a>
+      <a href="#ask4"><span class="n">4</span>Upgrade prompts · 4B+4C</a>
+      <a href="#ask5"><span class="n">5</span>Selector + settings · 5B+</a>
+      <a href="#onboarding"><span class="n">+</span>Onboarding fix</a>
+      <a href="Workspaces Wireframes.html" style="color:var(--ink-soft);margin-top:14px"><span class="n">↩</span>v1 (all options)</a>
+    </nav>
+    <div class="legend">
+      <div><span class="k">Parchment boxes</span> = screens</div>
+      <div><span class="k">Blue</span> = CTAs, annotations</div>
+      <div><span class="k">Hatched</span> = locked / gated</div>
+      <div style="margin-top:10px"><span class="k">Tweaks ↓</span> role · tier · density</div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="intro" id="intro">
+      <div class="eyebrow">v2 · 2026-04-20</div>
+      <h2>Chosen directions, with your notes applied.</h2>
+      <p>
+        Each section below starts with a <em>change note</em> spelling out what moved from v1. Ask 1 combines 1B and 1C as
+        a view switcher. Ask 3 adds a persistent "Shared with" strip on the project overview. Ask 4 shows the
+        tier + role gate. Ask 5 surfaces per-workspace manage. Onboarding gets a real fix.
+      </p>
+      <div class="note">
+        Tweaks are preserved from v1 — flip <em>tier=pilot</em> to see gating (ask 4), <em>role=staff</em> for the set-tier
+        modal, <em>density</em> for scale.
+      </div>
+    </div>
+
+    <!-- ════════════════════ ASK 1 ════════════════════ -->
+    <section class="ask" id="ask1" data-screen-label="Ask 1 — Team admin">
+      <header><span class="tag">ask 01</span><h3>Team admin · list ⇄ matrix</h3></header>
+      <div class="lede">
+        Same page, two views. 1B (list) is the default — friendly, readable, search-forward. 1C (matrix) is a
+        one-click alternate for admins who want the full access grid.
+      </div>
+      <div class="changenote">
+        <b>v2:</b> combined 1B + 1C as a <em>view switcher</em> on the same URL. Shared filters/search.
+        Row actions &amp; invite flow identical across views. External members get the pill + their own row group.
+      </div>
+
+      <div class="frame">
+        <h4><span class="num">1.</span>Team admin page</h4>
+        <p class="why">/org/:orgId/members — owners &amp; admins. Toggle view with the switcher top-right.</p>
+        <div class="mock wide">
+          <div class="topbar">
+            <div class="crumb">human collective › team · members</div>
+            <div class="hz"><span class="bar sec">🔍 name, email</span><span class="bar pri">+ Invite to team</span></div>
+          </div>
+
+          <div class="spread" style="margin-bottom:6px">
+            <div>
+              <h5 class="hdg" style="margin:0">Everyone with access · 12</h5>
+              <div class="mini">9 on the team · 3 external · 3 workspaces</div>
+            </div>
+            <div class="view-switch">
+              <button class="on" onclick="setView('list')">List</button>
+              <button onclick="setView('matrix')">Matrix</button>
+            </div>
+          </div>
+
+          <!-- LIST VIEW (1B) -->
+          <div class="view-pane on" id="view-list">
+            <div class="hz" style="margin-bottom:6px;flex-wrap:wrap">
+              <span class="bar">All</span><span class="bar ghost">Team</span><span class="bar ghost">External</span>
+              <span class="mini" style="margin-left:auto">sort: recent · role ▾</span>
+            </div>
+
+            <h5 class="hdg" style="margin-top:4px">Team · <span class="mini" style="font-family:var(--font-sans)">inherited to all workspaces</span></h5>
+            <div class="density-1">
+              <div class="row"><span class="dot blue"></span><span class="fake-text" style="width:64px"></span>
+                <span class="pill mute" style="margin-left:auto">owner</span>
+                <span class="pill blue">Default</span><span class="pill blue">A'dam</span><span class="pill blue">Utr</span>
+                <span class="mini">⋯</span>
+              </div>
+            </div>
+            <div class="density-5">
+              <div class="row"><span class="dot blue"></span><span class="fake-text" style="width:64px"></span><span class="pill mute" style="margin-left:auto">owner</span><span class="pill blue">Def</span><span class="pill blue">A'dam</span><span class="pill blue">Utr</span><span class="mini">⋯</span></div>
+              <div class="row"><span class="dot blue"></span><span class="fake-text" style="width:58px"></span><span class="pill mute" style="margin-left:auto">admin</span><span class="pill blue">Def</span><span class="pill blue">A'dam</span><span class="pill blue">Utr</span><span class="mini">⋯</span></div>
+              <div class="row"><span class="dot blue"></span><span class="fake-text" style="width:76px"></span><span class="pill mute" style="margin-left:auto">admin</span><span class="pill blue">Def</span><span class="pill blue">A'dam</span><span class="pill blue">Utr</span><span class="mini">⋯</span></div>
+            </div>
+            <div class="density-50">
+              <div class="row"><span class="dot blue"></span><span class="fake-text" style="width:64px"></span><span class="pill mute" style="margin-left:auto">owner</span><span class="pill blue">+3</span></div>
+              <div class="row"><span class="dot blue"></span><span class="fake-text" style="width:58px"></span><span class="pill mute" style="margin-left:auto">admin</span><span class="pill blue">+3</span></div>
+              <div class="row"><span class="dot blue"></span><span class="fake-text" style="width:76px"></span><span class="pill mute" style="margin-left:auto">admin</span><span class="pill blue">+2</span></div>
+              <div class="row"><span class="dot blue"></span><span class="fake-text" style="width:62px"></span><span class="pill mute" style="margin-left:auto">member</span><span class="pill blue">+1</span></div>
+              <div class="row"><span class="dot blue"></span><span class="fake-text" style="width:54px"></span><span class="pill mute" style="margin-left:auto">member</span><span class="pill blue">+1</span></div>
+              <div class="mini" style="text-align:center;padding:4px 0">…44 more team members</div>
+            </div>
+
+            <h5 class="hdg" style="margin-top:10px">External <span class="pill ext" style="font-size:9px;font-family:var(--font-sans)">guest</span></h5>
+            <div class="row"><span class="dot ext"></span><span class="fake-text" style="width:60px"></span><span class="pill ext">external</span><span class="pill mute">viewer</span><span class="pill blue">A'dam</span><span class="mini">⋯</span></div>
+            <div class="row"><span class="dot ext"></span><span class="fake-text" style="width:68px"></span><span class="pill ext">external</span><span class="pill mute">editor</span><span class="pill blue">Utr</span><span class="mini">⋯</span></div>
+            <div class="annotation">⋯ row menu: change role · view workspaces · remove.</div>
+          </div>
+
+          <!-- MATRIX VIEW (1C) -->
+          <div class="view-pane" id="view-matrix">
+            <div class="hz" style="margin-bottom:6px"><span class="bar ghost">group: team</span><span class="mini" style="margin-left:auto">click a cell to change access</span></div>
+            <div style="display:grid;grid-template-columns:1.5fr repeat(3,.7fr);gap:3px;font-size:11px">
+              <div class="mini" style="padding:4px">&nbsp;</div>
+              <div class="cell" style="text-align:center;background:#ece8e0">Default</div>
+              <div class="cell" style="text-align:center;background:#ece8e0">A'dam</div>
+              <div class="cell" style="text-align:center;background:#ece8e0">Utrecht</div>
+
+              <div class="cell" style="padding:4px 6px"><span class="dot blue sm" style="vertical-align:middle"></span> <span class="fake-text" style="width:50px"></span> <span class="pill mute" style="font-size:9px">owner</span></div>
+              <div class="cell" style="text-align:center;background:var(--accent);color:#fff">admin</div>
+              <div class="cell" style="text-align:center;background:var(--accent);color:#fff">admin</div>
+              <div class="cell" style="text-align:center;background:var(--accent);color:#fff">admin</div>
+
+              <div class="cell" style="padding:4px 6px"><span class="dot blue sm" style="vertical-align:middle"></span> <span class="fake-text" style="width:46px"></span> <span class="pill mute" style="font-size:9px">admin</span></div>
+              <div class="cell" style="text-align:center;background:var(--accent);color:#fff">admin</div>
+              <div class="cell" style="text-align:center;background:var(--accent);color:#fff">admin</div>
+              <div class="cell" style="text-align:center;background:var(--accent);color:#fff">admin</div>
+
+              <div class="cell" style="padding:4px 6px"><span class="dot blue sm" style="vertical-align:middle"></span> <span class="fake-text" style="width:58px"></span> <span class="pill mute" style="font-size:9px">admin</span></div>
+              <div class="cell" style="text-align:center;background:var(--accent);color:#fff">admin</div>
+              <div class="cell" style="text-align:center;color:var(--ink-soft)">— removed</div>
+              <div class="cell" style="text-align:center;background:var(--accent);color:#fff">admin</div>
+
+              <div class="cell" style="padding:4px 6px"><span class="dot ext sm" style="vertical-align:middle"></span> <span class="fake-text" style="width:48px"></span> <span class="pill ext" style="font-size:9px">ext</span></div>
+              <div class="cell" style="text-align:center">—</div>
+              <div class="cell" style="text-align:center">viewer</div>
+              <div class="cell" style="text-align:center">—</div>
+
+              <div class="cell" style="padding:4px 6px"><span class="dot ext sm" style="vertical-align:middle"></span> <span class="fake-text" style="width:54px"></span> <span class="pill ext" style="font-size:9px">ext</span></div>
+              <div class="cell" style="text-align:center">—</div>
+              <div class="cell" style="text-align:center">—</div>
+              <div class="cell" style="text-align:center">editor</div>
+            </div>
+            <div class="annotation">blue row = inherited. "— removed" reflects the sticky-remove rule. empty cell on external rows = not invited.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mobile-note">
+        <span class="m">mobile</span>
+        <div>List view collapses to stacked cards. Matrix view is hidden ≤ 768px with a "switch to list on mobile" toast.</div>
+      </div>
+    </section>
+
+    <!-- ════════════════════ ASK 2 ════════════════════ -->
+    <section class="ask" id="ask2" data-screen-label="Ask 2 — Tier management">
+      <header><span class="tag">ask 02</span><h3>Tier management · 2B</h3></header>
+      <div class="lede">Feature matrix in the Billing tab. Current tier column highlighted. Staff see the extra set-tier control inline.</div>
+      <div class="changenote"><b>v2:</b> went with 2B per Notion doc + PRD. Staff controls live inline (no separate modal in the first pass — confirm dialog still fires on change).</div>
+
+      <div class="two">
+        <div class="frame">
+          <h4><span class="num">2.</span>Compare + current tier</h4>
+          <p class="why">/w/:id/settings?tab=billing — visible to everyone in the workspace.</p>
+          <div class="mock wide">
+            <div class="topbar"><div class="crumb">A'dam · settings › billing</div></div>
+            <div class="box" style="margin-bottom:10px">
+              <div class="spread">
+                <div><div style="font-size:13px">Current tier</div><div class="mini">Renews · contact to change</div></div>
+                <div><span class="pill soft-blue">innovator</span></div>
+              </div>
+            </div>
+            <h5 class="hdg">Compare</h5>
+            <div style="display:grid;grid-template-columns:1.3fr repeat(4,.7fr);gap:2px;font-size:11px">
+              <div></div>
+              <div class="cell" style="text-align:center">pioneer</div>
+              <div class="cell" style="text-align:center;background:var(--accent);color:#fff">innovator<br><span class="mini" style="color:rgba(255,255,255,.8)">you</span></div>
+              <div class="cell" style="text-align:center">changemaker</div>
+              <div class="cell" style="text-align:center">guardian</div>
+
+              <div class="cell">Projects + convs</div>
+              <div class="cell" style="text-align:center">✓</div><div class="cell" style="text-align:center">✓</div><div class="cell" style="text-align:center">✓</div><div class="cell" style="text-align:center">✓</div>
+
+              <div class="cell">Chats + reports</div>
+              <div class="cell" style="text-align:center">✓</div><div class="cell" style="text-align:center">✓</div><div class="cell" style="text-align:center">✓</div><div class="cell" style="text-align:center">✓</div>
+
+              <div class="cell">Data export</div>
+              <div class="cell" style="text-align:center" class="strike">—</div><div class="cell" style="text-align:center">✓</div><div class="cell" style="text-align:center">✓</div><div class="cell" style="text-align:center">✓</div>
+
+              <div class="cell">Private sharing</div>
+              <div class="cell" style="text-align:center">—</div><div class="cell" style="text-align:center">✓</div><div class="cell" style="text-align:center">✓</div><div class="cell" style="text-align:center">✓</div>
+
+              <div class="cell">Whitelabel</div>
+              <div class="cell" style="text-align:center">—</div><div class="cell" style="text-align:center">—</div><div class="cell" style="text-align:center">✓</div><div class="cell" style="text-align:center">✓</div>
+
+              <div class="cell">API access</div>
+              <div class="cell" style="text-align:center">—</div><div class="cell" style="text-align:center">—</div><div class="cell" style="text-align:center">✓</div><div class="cell" style="text-align:center">✓</div>
+            </div>
+            <div class="spread" style="margin-top:12px">
+              <span class="mini">Pricing discussed over email.</span>
+              <span class="bar pri">Request upgrade</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="frame role-staff-only">
+          <h4><span class="num">2s.</span>Staff · set tier inline</h4>
+          <p class="why">Shown only when role = dembrane staff. Same tab — no hidden route.</p>
+          <div class="mock">
+            <div class="topbar"><div class="crumb">A'dam · settings › billing</div><span class="pill soft-blue">staff</span></div>
+            <div class="box" style="border-color:var(--accent);margin-bottom:10px">
+              <h5 class="hdg" style="margin-top:0;color:var(--accent)">dembrane staff controls</h5>
+              <div class="spread" style="margin-top:4px">
+                <span class="mini">Set tier</span>
+                <span class="pill blue">innovator ▾</span>
+              </div>
+              <div class="spread" style="margin-top:4px">
+                <span class="mini">Reason (internal)</span>
+                <span class="fake-text soft" style="width:70%"></span>
+              </div>
+              <div class="annotation" style="margin-top:6px">confirm dialog fires on change: "Set A'dam to changemaker?"</div>
+            </div>
+            <div class="mini">All other content (compare, request upgrade) stays visible — no separate staff route.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mobile-note">
+        <span class="m">mobile</span>
+        <div>Matrix becomes horizontal scroll with sticky feature column on ≤ 640px.</div>
+      </div>
+    </section>
+
+    <!-- ════════════════════ ASK 3 ════════════════════ -->
+    <section class="ask" id="ask3" data-screen-label="Ask 3 — Private sharing">
+      <header><span class="tag">ask 03</span><h3>Private sharing · 3B modal + overview strip</h3></header>
+      <div class="lede">The modal from 3B, plus a quiet "Shared with" strip on the project overview so it's always visible without opening the modal.</div>
+      <div class="changenote"><b>v2:</b> added a persistent "Shared with" strip to the project overview page. The modal stays for editing; the strip is always-on presence. Gated at innovator+.</div>
+
+      <div class="two">
+        <!-- overview strip -->
+        <div class="frame">
+          <h4><span class="num">3.1</span>Project overview · persistent strip</h4>
+          <p class="why">Lives under the project header, above content. Click → opens the modal (3.2).</p>
+          <div class="mock">
+            <div class="topbar"><div class="crumb">project · Stakeholder interviews</div><span class="bar sec">Share</span></div>
+            <h5 class="hdg" style="margin:2px 0">Stakeholder interviews</h5>
+            <div class="mini" style="margin-bottom:10px">Last activity · 2 days ago</div>
+
+            <!-- the strip itself -->
+            <div class="box" style="background:#fffdf7;padding:8px 10px;margin-bottom:10px">
+              <div class="spread">
+                <div class="hz">
+                  <span class="pill soft-blue">Private</span>
+                  <span class="mini">Shared with</span>
+                  <span class="dot blue sm"></span><span class="dot blue sm"></span><span class="dot blue sm"></span>
+                  <span class="mini">+ 2 more</span>
+                </div>
+                <span class="arrow-label" style="position:relative">Manage →</span>
+              </div>
+            </div>
+
+            <div class="box dashed" style="min-height:100px">
+              <div class="mini">project body · conversations · reports…</div>
+              <div class="fake-text soft" style="width:70%;margin-top:6px"></div>
+              <div class="fake-text soft" style="width:90%;margin-top:4px"></div>
+              <div class="fake-text soft" style="width:60%;margin-top:4px"></div>
+            </div>
+            <div class="annotation">when public: strip reads "Visible to everyone in A'dam · Make private".</div>
+          </div>
+        </div>
+
+        <!-- modal -->
+        <div class="frame">
+          <h4><span class="num">3.2</span>"Who can see this?" modal</h4>
+          <p class="why">Opens from the strip or from project settings. Verb labels, not nouns.</p>
+          <div class="mock" style="min-height:340px">
+            <div class="spread"><h5 class="hdg" style="margin:0">Who can see this project?</h5><span class="mini">×</span></div>
+            <div class="mini" style="margin-bottom:10px">Stakeholder interviews · Private</div>
+            <div class="row"><span class="dot blue"></span><span class="fake-text" style="width:60px"></span><span class="mini" style="margin-left:auto">you · can edit</span></div>
+            <div class="row"><span class="dot blue"></span><span class="fake-text" style="width:54px"></span><span class="mini" style="margin-left:auto">can edit ▾</span></div>
+            <div class="row"><span class="dot blue"></span><span class="fake-text" style="width:68px"></span><span class="mini" style="margin-left:auto">can read ▾</span></div>
+            <div class="box dashed" style="margin-top:8px">
+              <div class="spread">
+                <span class="fake-text" style="width:150px"></span>
+                <span class="mini">can read ▾</span>
+              </div>
+              <div class="mini" style="margin-top:4px">Only people already in A'dam — no cross-workspace.</div>
+            </div>
+            <div class="line"></div>
+            <div class="spread" style="font-size:11px"><span>Everyone else in A'dam</span><span class="pill mute">no access</span></div>
+            <div class="spread" style="margin-top:14px"><span class="mini">Link sharing off</span><span class="bar pri">Done</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mobile-note"><span class="m">mobile</span><div>Strip collapses to a single line with the pill + "Manage". Modal becomes a full sheet.</div></div>
+    </section>
+
+    <!-- ════════════════════ ASK 4 ════════════════════ -->
+    <section class="ask" id="ask4" data-screen-label="Ask 4 — Upgrade prompts">
+      <header><span class="tag">ask 04</span><h3>Upgrade prompts · 4B (feature card) + 4C (modal)</h3></header>
+      <div class="lede">4B gates whole feature surfaces. 4C is the modal that opens from any gate. Both check tier <em>and</em> role — only team admins + owners see "Request upgrade" as primary; members get a softer "Ask an admin" CTA.</div>
+      <div class="changenote"><b>v2:</b> added the tier + role gate. Non-admins see "Ask an admin" instead of "Request upgrade". Try flipping role=member + tier=pilot in Tweaks.</div>
+
+      <div class="two">
+        <div class="frame">
+          <h4><span class="num">4.1</span>Feature card · hatched overlay (4B)</h4>
+          <p class="why">For whole feature surfaces: Whitelabel, API, Data export. CTA changes with role.</p>
+          <div class="mock">
+            <div class="topbar"><div class="crumb">settings · branding</div></div>
+            <div style="position:relative">
+              <div class="box" style="min-height:180px">
+                <h5 class="hdg" style="margin-top:0">Whitelabel branding</h5>
+                <div class="mini">Replace the dembrane logo with your own across the workspace.</div>
+                <div class="line"></div>
+                <div class="fake-text soft" style="width:80%"></div>
+                <div class="fake-text soft" style="width:65%;margin-top:6px"></div>
+                <div class="fake-text soft" style="width:70%;margin-top:6px"></div>
+              </div>
+              <div class="hatched" style="position:absolute;inset:0;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;padding:14px;text-align:center">
+                <span class="pill soft-blue">changemaker tier</span>
+                <div class="mini" style="max-width:220px">Bring your own brand once you're on changemaker.</div>
+                <span class="bar pri role-admin-only">Request upgrade</span>
+                <span class="bar sec" style="display:none" class="if-member">Ask an admin</span>
+                <!-- copy toggles by role -->
+                <div class="mini role-admin-only">only owners + admins see this CTA</div>
+              </div>
+            </div>
+          </div>
+          <div class="annotation">when role=member: the primary button swaps to "Ask an admin" (ghost style) — same modal opens.</div>
+        </div>
+
+        <div class="frame">
+          <h4><span class="num">4.2</span>Upgrade modal (4C)</h4>
+          <p class="why">Opens from any gate. One feature, one benefit, one tier, one CTA.</p>
+          <div class="mock" style="min-height:300px">
+            <div class="spread"><h5 class="hdg" style="margin:0">Private project sharing</h5><span class="mini">×</span></div>
+            <div class="mini" style="margin-bottom:14px">Keep sensitive projects visible to a hand-picked few.</div>
+            <div class="box" style="margin-bottom:12px">
+              <div class="spread"><span class="mini">Your tier</span><span class="pill mute">pioneer</span></div>
+              <div class="spread" style="margin-top:4px"><span class="mini">Needed</span><span class="pill soft-blue">innovator</span></div>
+            </div>
+            <div class="mini role-admin-only">We'll email you about pricing and next steps.</div>
+            <div class="mini" style="display:none" class="if-member">Ask a team admin to upgrade. We'll prefill the request for them.</div>
+            <div class="spread" style="margin-top:14px">
+              <span class="bar ghost">Not now</span>
+              <span class="bar pri role-admin-only">Request upgrade</span>
+            </div>
+            <div class="annotation">copy swaps on role: admin → "Request upgrade" · member → "Notify your admin".</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mobile-note"><span class="m">mobile</span><div>4B overlay stays the same; card becomes the tap target. 4C is a full sheet.</div></div>
+    </section>
+
+    <!-- ════════════════════ ASK 5 ════════════════════ -->
+    <section class="ask" id="ask5" data-screen-label="Ask 5 — Selector + settings">
+      <header><span class="tag">ask 05</span><h3>Selector + settings polish · 5B with per-workspace manage</h3></header>
+      <div class="lede">5B's team header on top, workspaces as a list — but with a per-row "manage" affordance so admins can jump straight into workspace settings without opening it first.</div>
+      <div class="changenote"><b>v2:</b> added a hover "⚙ manage" affordance on each workspace row, plus the team-level "manage team" as before. Externals stay in their own quieter section. Settings tabs view (5C) kept for reference.</div>
+
+      <div class="two">
+        <div class="frame">
+          <h4><span class="num">5.1</span>Workspace selector</h4>
+          <p class="why">/select-workspace — team hero on top, workspaces below, externals quieter.</p>
+          <div class="mock wide">
+            <div class="topbar"><div class="crumb">choose a workspace</div><span class="bar sec">🔍</span></div>
+
+            <div class="box" style="background:#fffdf7;margin-bottom:12px">
+              <div class="spread">
+                <div>
+                  <div style="font-size:14px">Human Collective</div>
+                  <div class="mini">3 workspaces · 12 people · pioneer tier (aggregated)</div>
+                </div>
+                <div class="hz">
+                  <span class="dot blue sm"></span><span class="dot blue sm"></span><span class="dot blue sm"></span>
+                  <span class="mini">+9</span>
+                  <span class="bar sec" style="margin-left:8px">Manage team</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="hz" style="margin-bottom:6px">
+              <span class="bar sec">🔍 name</span><span class="bar ghost">sort: recent</span>
+            </div>
+
+            <div class="row">
+              <span class="dot blue"></span>
+              <span>Default</span>
+              <span class="mini" style="margin-left:auto">pioneer · 4 projects</span>
+              <span class="bar ghost" style="font-size:10px;padding:1px 6px">⚙ manage</span>
+            </div>
+            <div class="row">
+              <span class="dot blue"></span>
+              <span>A'dam</span>
+              <span class="mini" style="margin-left:auto">innovator · 12 projects</span>
+              <span class="bar ghost" style="font-size:10px;padding:1px 6px">⚙ manage</span>
+            </div>
+            <div class="row">
+              <span class="dot blue"></span>
+              <span>Utrecht</span>
+              <span class="mini" style="margin-left:auto">pioneer · 6 projects</span>
+              <span class="bar ghost" style="font-size:10px;padding:1px 6px">⚙ manage</span>
+            </div>
+
+            <h5 class="hdg" style="margin:12px 0 4px">External</h5>
+            <div class="row">
+              <span class="dot ext"></span>
+              <span>Pilot 2026</span>
+              <span class="pill ext" style="margin-left:auto">guest of GreenLabs</span>
+              <span class="mini">viewer</span>
+            </div>
+            <div class="annotation">⚙ manage shows on row hover / keyboard focus — keeps selector calm.</div>
+          </div>
+        </div>
+
+        <div class="frame">
+          <h4><span class="num">5.2</span>Workspace settings · tabs (reference)</h4>
+          <p class="why">Already exists on the <em>workspaces</em> branch — just confirming labels + the inherited-pill.</p>
+          <div class="mock">
+            <div class="topbar"><div class="crumb">A'dam · settings</div></div>
+            <div class="tabs">
+              <span class="t">General</span>
+              <span class="t on">Members</span>
+              <span class="t">Branding</span>
+              <span class="t">Legal</span>
+              <span class="t">Billing</span>
+            </div>
+            <div class="spread" style="margin-bottom:6px">
+              <span class="mini">Workspace-scoped. Team admins are inherited.</span>
+              <span class="bar pri">+ Invite</span>
+            </div>
+            <div class="row"><span class="dot blue"></span><span class="fake-text" style="width:60px"></span><span class="pill soft-blue" style="margin-left:auto">admin · inherited</span></div>
+            <div class="row"><span class="dot blue"></span><span class="fake-text" style="width:48px"></span><span class="pill mute" style="margin-left:auto">editor</span></div>
+            <div class="row"><span class="dot ext"></span><span class="fake-text" style="width:66px"></span><span class="pill ext" style="margin-left:auto">external · viewer</span></div>
+            <div class="annotation">× on inherited row = sticky remove (matches the data-model rule).</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mobile-note"><span class="m">mobile</span><div>Team hero collapses to a single-row strip; ⚙ manage on each workspace moves to a row kebab menu.</div></div>
+    </section>
+
+    <!-- ════════════════════ ONBOARDING ════════════════════ -->
+    <section class="ask" id="onboarding" data-screen-label="Onboarding fix">
+      <header><span class="tag">fix</span><h3>Onboarding — new users shouldn't see the migration screen</h3></header>
+      <div class="lede">
+        The current <em>Welcome back, John</em> screen is a <strong><span style="color:var(--accent)">migration</span></strong> prompt — it assumes you already have projects from before workspaces existed.
+        A freshly-registered account has nothing to migrate, so this copy is confusing and the "Use default" / "Team name" step is jarring.
+      </div>
+      <div class="changenote"><b>v2:</b> split into two explicit paths. <em>New user → ask team name during registration, then land in their empty default workspace.</em> <em>Existing user (no team yet) → current screen, re-copied as a migration.</em></div>
+
+      <div class="two">
+        <div class="frame">
+          <h4><span class="num">A</span>New user · team name at signup</h4>
+          <p class="why">One extra field on the signup form. No separate onboarding route.</p>
+          <div class="mock">
+            <div class="topbar"><div class="crumb">sign up</div></div>
+            <h5 class="hdg" style="margin-top:4px">Create your account</h5>
+            <div class="mini" style="margin-bottom:10px">Takes 30 seconds.</div>
+            <div class="box dashed" style="margin-bottom:6px"><div class="mini">Email</div><div class="fake-text lg" style="width:70%"></div></div>
+            <div class="box dashed" style="margin-bottom:6px"><div class="mini">Password</div><div class="fake-text lg" style="width:60%"></div></div>
+            <div class="box dashed" style="margin-bottom:6px"><div class="mini">Your name</div><div class="fake-text lg" style="width:50%"></div></div>
+            <div class="box dashed" style="border-color:var(--accent);margin-bottom:10px">
+              <div class="mini" style="color:var(--accent)">Team name · optional</div>
+              <div class="fake-text lg" style="width:65%"></div>
+              <div class="mini" style="margin-top:4px">If you're joining teammates later, skip this — they'll invite you in.</div>
+            </div>
+            <div class="spread"><span class="mini">By signing up…</span><span class="bar pri">Create account</span></div>
+            <div class="annotation">on submit: auto-create team (fallback "John's team"), default workspace, land in /w/:id/projects empty state.</div>
+          </div>
+        </div>
+
+        <div class="frame">
+          <h4><span class="num">B</span>Existing user · migration only</h4>
+          <p class="why">The current screen, re-copied to be honest about what it is. Only shown when user has pre-workspaces projects.</p>
+          <div class="mock">
+            <div class="topbar"><div class="crumb">welcome back</div></div>
+            <h5 class="hdg" style="margin:4px 0">Welcome back, john</h5>
+            <div class="mini" style="margin-bottom:10px">We've added teams so you can organise projects and share them with colleagues. Everything you had before is still here — we just need a name for your team.</div>
+            <div class="box dashed" style="margin-bottom:8px">
+              <div class="mini">Team name</div>
+              <div class="fake-text lg" style="width:60%"></div>
+              <div class="mini" style="margin-top:4px">Change this anytime in settings.</div>
+            </div>
+            <div class="hz" style="margin-top:10px"><span class="bar ghost">Use default</span><span class="bar pri">Get started</span></div>
+            <div class="annotation">gate: only shown if user.createdAt &lt; workspaces-launch AND has no team yet. everyone else goes straight in.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="changenote" style="margin-top:20px">
+        <b>the rule:</b> the current screen is the <em>migration</em> screen. New accounts should never see it — they should land in an empty default workspace after signup, with team name already captured. Detection is trivial: <em>if the user has no team membership AND their account predates the launch timestamp, show B; otherwise skip.</em>
+      </div>
+
+      <div class="mobile-note"><span class="m">mobile</span><div>Both screens are identical on mobile — single column, CTAs stack full-width.</div></div>
+    </section>
+
+    <div class="intro" style="margin-top:24px">
+      <div class="eyebrow">next</div>
+      <p style="color:var(--ink)">
+        When you're happy with these, I'll push the team admin page (ask 1) to mid-fi using Mantine — that's the heaviest surface. Rest can follow in parallel.
+      </p>
+    </div>
+  </main>
+</div>
+
+<div class="tweaks" id="tweaks" style="display:none">
+  <div class="head"><span class="title">Tweaks</span><button id="tw-collapse">—</button></div>
+  <div class="body">
+    <div class="group"><label>Role</label>
+      <div class="seg" data-group="role">
+        <button data-val="member">member</button>
+        <button data-val="admin" class="on">admin</button>
+        <button data-val="owner">owner</button>
+        <button data-val="staff">staff</button>
+      </div></div>
+    <div class="group"><label>Tier</label>
+      <div class="seg" data-group="tier">
+        <button data-val="pilot">pilot</button>
+        <button data-val="pioneer">pioneer</button>
+        <button data-val="innovator" class="on">innov</button>
+        <button data-val="changemaker">change</button>
+        <button data-val="guardian">guard</button>
+      </div></div>
+    <div class="group"><label>Density</label>
+      <div class="seg" data-group="density">
+        <button data-val="1">1</button>
+        <button data-val="5" class="on">5</button>
+        <button data-val="50">50+</button>
+      </div></div>
+    <div class="hint">staff → set-tier block · pilot/pioneer → gates visible · role=member → copy swaps in 4.1/4.2</div>
+  </div>
+</div>
+
+<script>
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "role": "admin",
+    "tier": "innovator",
+    "density": "5"
+  }/*EDITMODE-END*/;
+  const state = {...TWEAK_DEFAULTS};
+  const panel = document.getElementById('tweaks');
+
+  function apply(){
+    document.body.dataset.role = state.role;
+    document.body.dataset.tier = state.tier;
+    document.body.dataset.density = state.density;
+    panel.querySelectorAll('.seg').forEach(seg=>{
+      const g=seg.dataset.group;
+      seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.val===state[g]));
+    });
+    // role=member specific: swap primary to ghost + show member hints
+    const isMember = state.role === 'member';
+    document.querySelectorAll('.if-member').forEach(el => el.style.display = isMember ? '' : 'none');
+    try{localStorage.setItem('ws-wires-v2',JSON.stringify(state));}catch(e){}
+  }
+  try{const s=JSON.parse(localStorage.getItem('ws-wires-v2')||'null');if(s)Object.assign(state,s);}catch(e){}
+  apply();
+
+  panel.addEventListener('click',(e)=>{
+    const btn=e.target.closest('.seg button');
+    if(btn){const g=btn.parentElement.dataset.group;state[g]=btn.dataset.val;apply();
+      try{window.parent.postMessage({type:'__edit_mode_set_keys',edits:{[g]:state[g]}},'*');}catch(_){}
+      return;}
+    if(e.target.id==='tw-collapse'){panel.classList.toggle('collapsed');e.target.textContent=panel.classList.contains('collapsed')?'+':'—';}
+  });
+
+  window.addEventListener('message',(e)=>{
+    const d=e.data||{};
+    if(d.type==='__activate_edit_mode') panel.style.display='';
+    if(d.type==='__deactivate_edit_mode') panel.style.display='none';
+  });
+  try{window.parent.postMessage({type:'__edit_mode_available'},'*');}catch(_){}
+
+  // view switcher in ask 1
+  function setView(v){
+    document.querySelectorAll('.view-pane').forEach(p=>p.classList.remove('on'));
+    document.getElementById('view-'+v).classList.add('on');
+    document.querySelectorAll('#ask1 .view-switch button').forEach(b=>b.classList.toggle('on', b.textContent.toLowerCase()===v));
+  }
+</script>
+</body>
+</html>
