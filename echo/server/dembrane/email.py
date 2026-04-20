@@ -77,6 +77,24 @@ def _render_template(template_name: str, data: dict) -> str:
         raise
 
 
+def _render_plain_text_template(template_name: str, data: dict) -> Optional[str]:
+    """Render a plain-text fallback for a named template.
+
+    Conventions: a template "foo" can have an adjacent "foo.txt" with the
+    same variables. Missing .txt is fine — we just skip the multipart
+    alternative in that case.
+    """
+    try:
+        env = _get_jinja_env()
+        template = env.get_template(f"{template_name}.txt")
+        return template.render(**data)
+    except jinja2.TemplateNotFound:
+        return None
+    except Exception:
+        logger.exception(f"Failed to render plain-text template: {template_name}")
+        return None
+
+
 def _build_message(
     to: str | list[str],
     subject: str,
@@ -100,17 +118,27 @@ def _build_message(
     # Resolve content
     if template:
         html = _render_template(template, template_data or {})
+        # Auto-pick up a plain-text fallback when one exists alongside the
+        # HTML template — better deliverability (reduces spam score) and
+        # works in mail clients that prefer text.
+        if plain_text is None:
+            plain_text = _render_plain_text_template(template, template_data or {})
 
     if not html and not plain_text:
         raise ValueError("Either html, plain_text, or template must be provided")
-
-    content = Content("text/html", html) if html else Content("text/plain", plain_text or "")
 
     message = Mail()
     message.from_email = sender
     message.subject = subject
     message.to = recipients
-    message.content = content
+
+    # SendGrid expects multipart/alternative as text/plain first, then html.
+    # Use add_content() (not direct .content assignment) so multiple parts
+    # are accepted.
+    if plain_text:
+        message.add_content(Content("text/plain", plain_text))
+    if html:
+        message.add_content(Content("text/html", html))
 
     return message
 
