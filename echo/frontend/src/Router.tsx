@@ -14,6 +14,7 @@ import { LanguageLayout } from "./components/layout/LanguageLayout";
 import { ParticipantLayout } from "./components/layout/ParticipantLayout";
 import { ProjectConversationLayout } from "./components/layout/ProjectConversationLayout";
 import { ProjectLayout } from "./components/layout/ProjectLayout";
+import { ProjectAccessGuard } from "./components/project/ProjectAccessGuard";
 import { ProjectLibraryLayout } from "./components/layout/ProjectLibraryLayout";
 import { ProjectOverviewLayout } from "./components/layout/ProjectOverviewLayout";
 import { ParticipantConversationAudioContent } from "./components/participant/ParticipantConversationAudioContent";
@@ -224,7 +225,11 @@ const projectRouteChildren = [
 						path: "debug",
 					},
 				],
-				element: <ProjectLayout />,
+				element: (
+					<ProjectAccessGuard>
+						<ProjectLayout />
+					</ProjectAccessGuard>
+				),
 			},
 		],
 		path: ":projectId",

@@ -73,7 +73,9 @@ export function ProjectSharingModal({
 	const handleMakePrivate = async () => {
 		try {
 			await setVisibility.mutateAsync("private");
-			toast.success(t`Project is now private`);
+			// Designer's Q3 recommendation: confirm the state + point at
+			// the next action without preaching.
+			toast.success(t`Private. Add people to share it.`);
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : t`Couldn't change visibility`;
 			toast.error(msg);

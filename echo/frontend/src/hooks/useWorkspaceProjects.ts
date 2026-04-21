@@ -11,6 +11,7 @@ interface V2ProjectSummary {
 	language: string | null;
 	pin_order: number | null;
 	conversations_count: number;
+	visibility?: "workspace" | "private";
 }
 
 interface V2ProjectsResponse {

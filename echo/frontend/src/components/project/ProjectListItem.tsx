@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Badge, Group, Paper, Stack, Text, Tooltip } from "@mantine/core";
-import { IconPin, IconPinFilled } from "@tabler/icons-react";
+import { IconLock, IconPin, IconPinFilled } from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
 import type { PropsWithChildren } from "react";
 import { Icons } from "@/icons";
@@ -58,6 +58,20 @@ export const ProjectListItem = ({
 							>
 								{project.name}
 							</Text>
+							{/* Designer Ask 3 / Q1: muted lock icon next to the name
+							    marks private projects on the list. Scannable, no
+							    horizontal bloat. Only renders when we got visibility
+							    back from the v2 list endpoint. */}
+							{(project as unknown as { visibility?: string })
+								.visibility === "private" && (
+								<Tooltip label={t`Private project`} withArrow>
+									<IconLock
+										size={14}
+										style={{ color: "var(--mantine-color-gray-6)" }}
+										aria-label={t`Private project`}
+									/>
+								</Tooltip>
+							)}
 							{languageLabel && (
 								<Badge size="xs" variant="light" color="gray">
 									{languageLabel}

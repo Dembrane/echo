@@ -388,6 +388,95 @@ async def on_team_member_removed(org_id: str, user_id: str) -> list[str]:
     return affected
 
 
+async def get_user_project_access(
+    project_id: str, user_id: str, *, directus_user_id: Optional[str] = None
+) -> Optional[tuple[str, str]]:
+    """Return (role, source) for this user on this project, or None.
+
+    Implements the PRD §"Permission Resolution" access ladder, extended
+    for the derived-inheritance model:
+
+      1. Legacy creator fallback — `project.directus_user_id` equals the
+         caller's Directus id. Treat as ('owner', 'legacy'). Only used for
+         projects created before workspaces existed. Requires the caller
+         to pass their directus_user_id (we don't resolve it here to
+         avoid circular imports).
+
+      2. Workspace access — if the project is visible to the whole
+         workspace (visibility='workspace'), inherit the caller's
+         workspace role (direct or derived via user_can_access).
+
+      3. Private projects — workspace admin/owner retain access; everyone
+         else requires a project_membership row. Source = 'workspace'
+         for admins/owners, 'project_share' for direct shares.
+
+    Returns None when the project is private and the caller has no
+    admin/owner role on the workspace and no project_membership row.
+    """
+    project = await async_directus.get_item("project", project_id)
+    if not project or project.get("deleted_at"):
+        return None
+
+    # Legacy creator — kept for backward compat only. New projects always
+    # have workspace_id set.
+    if (
+        directus_user_id
+        and project.get("directus_user_id")
+        and project["directus_user_id"] == directus_user_id
+    ):
+        return "owner", "legacy"
+
+    workspace_id = project.get("workspace_id")
+    if not workspace_id:
+        return None
+
+    visibility = project.get("visibility") or "workspace"
+
+    resolved_ws = await user_can_access(workspace_id, user_id)
+    if resolved_ws is None:
+        # No workspace access at all — project is unreachable regardless
+        # of visibility or any project_membership (we don't allow
+        # cross-workspace sharing).
+        if visibility == "private":
+            # Check project_membership anyway for the rare case where a
+            # workspace member lost direct access but still has a share
+            # row — policy: shares require workspace access, so this
+            # case is inaccessible. Return None.
+            return None
+        return None
+
+    ws_role, ws_source = resolved_ws
+
+    if visibility == "workspace":
+        # Inherit the workspace role verbatim. Source reflects where
+        # workspace access came from (direct vs inherited).
+        return ws_role, ws_source
+
+    # visibility == "private"
+    if ws_role in ("admin", "owner"):
+        return ws_role, "workspace"
+
+    # Not an admin — needs an explicit share row.
+    share_rows = await async_directus.get_items(
+        "project_membership",
+        {
+            "query": {
+                "filter": {
+                    "project_id": {"_eq": project_id},
+                    "user_id": {"_eq": user_id},
+                },
+                "fields": ["role"],
+                "limit": 1,
+            }
+        },
+    )
+    if isinstance(share_rows, list) and share_rows:
+        share_role = share_rows[0].get("role", "viewer")
+        return share_role, "project_share"
+
+    return None
+
+
 async def sticky_remove(
     workspace_id: str,
     user_id: str,

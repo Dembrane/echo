@@ -1,20 +1,75 @@
 """V2 project endpoints — non-workspace-scoped operations."""
 
 from logging import getLogger
-from typing import Literal
+from typing import Literal, Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from dembrane.app_user import get_app_user_or_raise
 from dembrane.directus_async import async_directus
-from dembrane.inheritance import user_can_access
+from dembrane.inheritance import get_user_project_access, user_can_access
 from dembrane.policies import has_policy
 from dembrane.api.v2.schemas import MoveProjectRequest, MoveProjectResponse
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
 router = APIRouter()
 logger = getLogger("api.v2.projects")
+
+
+class V2ProjectDetail(BaseModel):
+    id: str
+    name: Optional[str] = None
+    workspace_id: Optional[str] = None
+    visibility: str = "workspace"
+    role: str  # caller's effective role on this project
+    source: str  # direct | inherited | workspace | project_share | legacy
+    language: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+@router.get("/{project_id}", response_model=V2ProjectDetail)
+async def get_project_detail(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> V2ProjectDetail:
+    """Fetch a project's public-ish detail with read-time access enforced.
+
+    Returns 404 (not 403) when the caller can't access — matches the
+    design-subagent recommendation: don't confirm existence of private
+    projects to people outside the share list.
+
+    Use this instead of reading `project` via the Directus SDK from the
+    frontend — the SDK doesn't know about visibility gating.
+    """
+    app_user = await get_app_user_or_raise(auth.user_id)
+
+    access = await get_user_project_access(
+        project_id=project_id,
+        user_id=app_user["id"],
+        directus_user_id=auth.user_id,
+    )
+    if access is None:
+        # Intentional 404 — don't tell them whether the project exists.
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    role, source = access
+
+    project = await async_directus.get_item("project", project_id)
+    if not project or project.get("deleted_at"):
+        # Guard — get_user_project_access already checked, but race-safe.
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    return V2ProjectDetail(
+        id=project["id"],
+        name=project.get("name"),
+        workspace_id=project.get("workspace_id"),
+        visibility=project.get("visibility") or "workspace",
+        role=role,
+        source=source,
+        language=project.get("language"),
+        updated_at=project.get("updated_at"),
+    )
 
 
 @router.post("/{project_id}/move", response_model=MoveProjectResponse)
@@ -106,15 +161,22 @@ async def set_project_visibility(
     auth: DependencyDirectusSession,
 ) -> dict:
     """Flip a project between 'workspace' (visible to all workspace members)
-    and 'private' (only creator + explicit project_membership shares).
+    and 'private' (creator + workspace admins + explicit project_membership
+    shares only — enforced by inheritance.get_user_project_access on reads).
 
-    Going private is tier-gated at innovator+ via project:set_private.
-    Requires workspace admin role; caller's access resolved via the
-    derived-inheritance resolver (user_can_access).
+    Authorization (round-2 audit, R2-H2 follow-up — now uses the
+    middleware pattern for consistency):
+      - Caller must have workspace access via user_can_access.
+      - Caller must NOT be is_external (guests don't manage).
+      - Caller role must be admin or owner.
+      - Going private additionally requires project:set_private which
+        auto-enforces innovator+ via has_policy's tier wiring.
 
-    Existing project_membership rows are preserved across a flip — no
-    auto-cleanup. Admin can curate after via the share modal.
+    Existing project_membership rows are preserved across a flip — admin
+    curates via the share modal afterwards.
     """
+    from dembrane.api.v2.middleware import WorkspaceContext
+
     app_user = await get_app_user_or_raise(auth.user_id)
 
     project = await async_directus.get_item("project", project_id)
@@ -128,33 +190,64 @@ async def set_project_visibility(
             detail="Project is not attached to a workspace",
         )
 
+    # Resolve workspace context manually (can't use the Depends form
+    # because the path doesn't include workspace_id). Mirrors what
+    # get_workspace_context does.
     resolved = await user_can_access(workspace_id, app_user["id"])
     if resolved is None:
         raise HTTPException(status_code=403, detail="No access to this project")
-    role, _ = resolved
+    role, source = resolved
 
     workspace = await async_directus.get_item("workspace", workspace_id)
-    tier = (workspace or {}).get("tier", "pioneer")
+    if not workspace or workspace.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Workspace not found")
+
+    # If the caller's access is via a direct row, check is_external. Guests
+    # don't manage visibility on their host's workspace.
+    is_external = False
+    if source == "direct":
+        rows = await async_directus.get_items(
+            "workspace_membership",
+            {
+                "query": {
+                    "filter": {
+                        "workspace_id": {"_eq": workspace_id},
+                        "user_id": {"_eq": app_user["id"]},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["is_external"],
+                    "limit": 1,
+                }
+            },
+        )
+        if isinstance(rows, list) and rows:
+            is_external = bool(rows[0].get("is_external", False))
+    if is_external:
+        raise HTTPException(
+            status_code=403,
+            detail="Guests can't change project visibility",
+        )
+
+    if role not in ("admin", "owner"):
+        raise HTTPException(
+            status_code=403,
+            detail="Only workspace admins can change project visibility",
+        )
+
+    tier = workspace.get("tier", "pioneer")
 
     current = project.get("visibility") or "workspace"
     if current == body.visibility:
         return {"status": "unchanged", "visibility": current}
 
-    # Going private is tier-gated. Going public is free (you're downgrading
-    # your own privacy, not unlocking a paid feature).
+    # Going private is tier-gated. Going public is free (you're
+    # downgrading your own privacy, not unlocking a paid feature).
     if body.visibility == "private":
         if not has_policy(role, [], "project:set_private", workspace_tier=tier):
             raise HTTPException(
                 status_code=403,
                 detail="Private projects require innovator tier or above.",
             )
-
-    # Role check — admin+ only for any visibility change.
-    if role not in ("admin", "owner"):
-        raise HTTPException(
-            status_code=403,
-            detail="Only workspace admins can change project visibility",
-        )
 
     await async_directus.update_item(
         "project", project_id, {"visibility": body.visibility}
