@@ -158,12 +158,22 @@ export const VerifySelection = () => {
 	const singleTopicKey =
 		availableOptions.length === 1 ? availableOptions[0].key : null;
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: handleGenerationFlow is stable within render, auto-skip should only fire once
+	const [hasAutoTriedSingle, setHasAutoTriedSingle] = useState(false);
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: handleGenerationFlow is intentionally excluded; auto-skip should only react to data/route changes, not function-identity changes.
 	useEffect(() => {
+		if (hasAutoTriedSingle) return;
 		if (!isLoading && !showInstructions && singleTopicKey && conversationId) {
+			setHasAutoTriedSingle(true);
 			handleGenerationFlow(singleTopicKey);
 		}
-	}, [isLoading, singleTopicKey, conversationId, showInstructions]);
+	}, [
+		hasAutoTriedSingle,
+		isLoading,
+		singleTopicKey,
+		conversationId,
+		showInstructions,
+	]);
 
 	const handleNext = () => {
 		if (!selectedOption || !conversationId) return;
@@ -190,7 +200,10 @@ export const VerifySelection = () => {
 		);
 	};
 
-	if (isLoading || (singleTopicKey && !showInstructions)) {
+	if (
+		isLoading ||
+		(singleTopicKey && !showInstructions && !hasAutoTriedSingle)
+	) {
 		return (
 			<Stack align="center" justify="center" className="h-full">
 				<div className="animate-spin">
