@@ -10,6 +10,7 @@ Mounted at /api/v2/ in main.py.
 from fastapi import APIRouter
 
 from dembrane.api.v2.me import router as me_router
+from dembrane.api.v2.notifications import router as notifications_router
 from dembrane.api.v2.orgs import router as orgs_router
 from dembrane.api.v2.onboarding import router as onboarding_router
 from dembrane.api.v2.invites import router as invites_router
@@ -22,6 +23,9 @@ from dembrane.api.v2.workspace_settings import router as workspace_settings_rout
 v2_router = APIRouter()
 
 v2_router.include_router(me_router, prefix="/me", tags=["v2:me"])
+v2_router.include_router(
+    notifications_router, prefix="/me/notifications", tags=["v2:notifications"]
+)
 v2_router.include_router(onboarding_router, prefix="/onboarding", tags=["v2:onboarding"])
 
 # Team (org) management — user-facing word is "team", internal is "org" (see D1).

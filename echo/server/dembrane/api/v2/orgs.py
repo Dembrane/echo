@@ -733,6 +733,22 @@ async def change_member_role(
     )
     # Note: derived model means no membership fan-out needed — next access
     # check on any workspace re-derives from the new role.
+
+    # Notify the affected user (unless they changed their own role).
+    if user_id != app_user["id"]:
+        team_row = await async_directus.get_item("org", org_id)
+        team_name = (team_row or {}).get("name") or "your team"
+        from dembrane.notifications import emit
+        await emit(
+            audience_user_id=user_id,
+            actor_user_id=app_user["id"],
+            event_code="TEAM_ROLE_CHANGED",
+            title=f"Your role in {team_name} changed",
+            message=f"You're now a **{body.role}** in {team_name}.",
+            action="NAVIGATE_TEAM_SETTINGS",
+            ref_org_id=org_id,
+        )
+
     logger.info(
         f"Team {org_id} role change: user {user_id} "
         f"{target_role} → {body.role} by {app_user['id']}"
@@ -810,6 +826,26 @@ async def remove_team_member(
     )
 
     affected = await on_team_member_removed(org_id, user_id)
+
+    # Notify the removed user — they'll see workspaces drop from their
+    # selector; this gives them the honest explanation.
+    if user_id != app_user["id"]:
+        team_row = await async_directus.get_item("org", org_id)
+        team_name = (team_row or {}).get("name") or "the team"
+        from dembrane.notifications import emit
+        await emit(
+            audience_user_id=user_id,
+            actor_user_id=app_user["id"],
+            event_code="TEAM_REMOVED",
+            title=f"You were removed from {team_name}",
+            message=(
+                "Workspace access that depended on your team role has ended. "
+                "Reach out to a team admin if this was unexpected."
+            ),
+            action="NONE",
+            ref_org_id=org_id,
+        )
+
     logger.info(
         f"Removed user {user_id} from team {org_id} by {app_user['id']} — "
         f"soft-deleted direct memberships on {len(affected)} workspace(s)"

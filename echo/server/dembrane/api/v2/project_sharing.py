@@ -311,6 +311,26 @@ async def add_project_share(
             f"by {acting_user['id']}"
         )
 
+    # Notify the invitee — they now have access to a project they
+    # didn't before. Skip when they're re-granting themselves (shouldn't
+    # happen given the admin-only guard above, defense-in-depth).
+    if invitee_id != acting_user["id"]:
+        project_name = project.get("name") or "a project"
+        from dembrane.notifications import emit
+        await emit(
+            audience_user_id=invitee_id,
+            actor_user_id=acting_user["id"],
+            event_code="PROJECT_SHARE_ADDED",
+            title=f"{project_name} was shared with you",
+            message=(
+                f"You can **{body.role}** this project in "
+                f"{workspace.get('name', 'its workspace')}."
+            ),
+            action="NAVIGATE_PROJECT",
+            ref_project_id=project_id,
+            ref_workspace_id=workspace["id"],
+        )
+
     enriched = await _enrich_member(
         {
             "user_id": invitee_id,

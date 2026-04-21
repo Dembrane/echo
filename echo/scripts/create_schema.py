@@ -830,6 +830,187 @@ def step_8_remove_chat():
 
 
 # ---------------------------------------------------------------------------
+# Step 9: Notifications (inbox) — mirrors the announcement trio
+# ---------------------------------------------------------------------------
+
+def step_9_notifications():
+    """Per-user notifications. Follows the announcement pattern
+    (parent + translations + activity) and adds targeting fields
+    (audience_user_id, action enum, ref_* nullable FKs).
+
+    Note on channels: this is the canonical in-app store. A future
+    delivery layer can read from it to ship email or Slack; we don't
+    split the storage per channel. Inbox UI, email digests, and Slack
+    webhooks all flow through the same rows. (See the sibling comment
+    in dembrane/notifications.py service module.)
+    """
+    print("\n=== Step 9: notification + notification_translations + notification_activity ===")
+
+    notification_fields = [
+        pk_uuid(),
+        {
+            "field": "audience_user_id", "type": "uuid",
+            "schema": {"is_nullable": False},
+            "meta": {"interface": "input", "required": True,
+                     "note": "FK to app_user — the recipient."},
+        },
+        {
+            "field": "actor_user_id", "type": "uuid",
+            "schema": {"is_nullable": True},
+            "meta": {"interface": "input",
+                     "note": "FK to app_user — who triggered the event."},
+        },
+        {
+            "field": "event_code", "type": "string",
+            "schema": {"is_nullable": False},
+            "meta": {"interface": "input", "required": True,
+                     "note": "Machine enum. INVITE_CREATED, ROLE_CHANGED, SHARE_ADDED, REPORT_READY, etc."},
+        },
+        {
+            "field": "action", "type": "string",
+            "schema": {"is_nullable": False, "default_value": "NONE"},
+            "meta": {
+                "interface": "select-dropdown",
+                "options": {"choices": [
+                    {"text": "None", "value": "NONE"},
+                    {"text": "Navigate to workspace", "value": "NAVIGATE_WS"},
+                    {"text": "Navigate to project", "value": "NAVIGATE_PROJECT"},
+                    {"text": "Navigate to report", "value": "NAVIGATE_REPORT"},
+                    {"text": "Navigate to chat", "value": "NAVIGATE_CHAT"},
+                    {"text": "Navigate to invite", "value": "NAVIGATE_INVITE"},
+                    {"text": "Navigate to team settings", "value": "NAVIGATE_TEAM_SETTINGS"},
+                    {"text": "Navigate to workspace settings", "value": "NAVIGATE_WORKSPACE_SETTINGS"},
+                ]},
+                "note": "Codified nav target. UI resolves the URL from ref_* fields.",
+            },
+        },
+        {"field": "ref_org_id", "type": "uuid",
+         "schema": {"is_nullable": True},
+         "meta": {"interface": "input"}},
+        {"field": "ref_workspace_id", "type": "uuid",
+         "schema": {"is_nullable": True},
+         "meta": {"interface": "input"}},
+        {"field": "ref_project_id", "type": "uuid",
+         "schema": {"is_nullable": True},
+         "meta": {"interface": "input"}},
+        {"field": "ref_chat_id", "type": "uuid",
+         "schema": {"is_nullable": True},
+         "meta": {"interface": "input"}},
+        {"field": "ref_report_id", "type": "uuid",
+         "schema": {"is_nullable": True},
+         "meta": {"interface": "input"}},
+        {"field": "ref_conversation_id", "type": "uuid",
+         "schema": {"is_nullable": True},
+         "meta": {"interface": "input"}},
+        {"field": "ref_invite_id", "type": "uuid",
+         "schema": {"is_nullable": True},
+         "meta": {"interface": "input"}},
+        {
+            "field": "level", "type": "string",
+            "schema": {"is_nullable": False, "default_value": "info"},
+            "meta": {
+                "interface": "select-dropdown",
+                "options": {"choices": [
+                    {"text": "Info", "value": "info"},
+                    {"text": "Urgent", "value": "urgent"},
+                ]},
+            },
+        },
+        {"field": "expires_at", "type": "timestamp",
+         "schema": {"is_nullable": True},
+         "meta": {"interface": "datetime",
+                  "note": "Hide from inbox after this timestamp."}},
+        {"field": "translations", "type": "alias",
+         "meta": {"interface": "translations", "special": ["translations"]}},
+        {"field": "activity", "type": "alias",
+         "meta": {"interface": "list-o2m", "special": ["o2m"]}},
+        {"field": "created_at", **timestamp_created()},
+        {"field": "updated_at", **timestamp_updated()},
+    ]
+    if not create_collection("notification", notification_fields, {
+        "accountability": "all",
+        "display_template": "{{event_code}} → {{audience_user_id}}",
+    }):
+        return False
+
+    create_relation("notification", "audience_user_id", "app_user",
+                    schema={"on_delete": "CASCADE"})
+    create_relation("notification", "actor_user_id", "app_user",
+                    schema={"on_delete": "SET NULL"})
+    create_relation("notification", "ref_org_id", "org",
+                    schema={"on_delete": "SET NULL"})
+    create_relation("notification", "ref_workspace_id", "workspace",
+                    schema={"on_delete": "SET NULL"})
+    create_relation("notification", "ref_project_id", "project",
+                    schema={"on_delete": "SET NULL"})
+    create_relation("notification", "ref_chat_id", "project_chat",
+                    schema={"on_delete": "SET NULL"})
+    create_relation("notification", "ref_report_id", "project_report",
+                    schema={"on_delete": "SET NULL"})
+    create_relation("notification", "ref_conversation_id", "conversation",
+                    schema={"on_delete": "SET NULL"})
+    create_relation("notification", "ref_invite_id", "workspace_invite",
+                    schema={"on_delete": "SET NULL"})
+
+    # notification_translations
+    nt_fields = [
+        pk_uuid(),
+        {"field": "notification_id", "type": "uuid",
+         "schema": {"is_nullable": False},
+         "meta": {"interface": "input", "required": True}},
+        {"field": "languages_code", "type": "string",
+         "schema": {"is_nullable": False},
+         "meta": {"interface": "input", "required": True}},
+        {"field": "title", "type": "string",
+         "schema": {"is_nullable": False},
+         "meta": {"interface": "input", "required": True}},
+        {"field": "message", "type": "text",
+         "schema": {"is_nullable": True},
+         "meta": {"interface": "input-multiline",
+                  "note": "Markdown allowed."}},
+    ]
+    if not create_collection("notification_translations", nt_fields, {
+        "accountability": "all",
+    }):
+        return False
+    create_relation("notification_translations", "notification_id", "notification",
+                    meta={"one_field": "translations"},
+                    schema={"on_delete": "CASCADE"})
+    create_relation("notification_translations", "languages_code", "languages",
+                    schema={"on_delete": "NO ACTION"})
+
+    # notification_activity — per-user read state. Mirrors announcement_activity
+    # exactly so the inbox drawer can render both with one component. Rows
+    # are pre-created on emit (one per notification — audience is known) so
+    # unread counts are a simple aggregate.
+    na_fields = [
+        pk_uuid(),
+        {"field": "notification_id", "type": "uuid",
+         "schema": {"is_nullable": False},
+         "meta": {"interface": "input", "required": True}},
+        {"field": "user_id", "type": "uuid",
+         "schema": {"is_nullable": False},
+         "meta": {"interface": "input", "special": ["user-created"],
+                  "required": True,
+                  "note": "FK to directus_users (matches announcement_activity)."}},
+        {"field": "read", "type": "boolean",
+         "schema": {"is_nullable": False, "default_value": False},
+         "meta": {"interface": "boolean"}},
+        {"field": "created_at", **timestamp_created()},
+        {"field": "updated_at", **timestamp_updated()},
+    ]
+    if not create_collection("notification_activity", na_fields, {
+        "accountability": "all",
+    }):
+        return False
+    create_relation("notification_activity", "notification_id", "notification",
+                    meta={"one_field": "activity"},
+                    schema={"on_delete": "CASCADE"})
+
+    return True
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -842,6 +1023,7 @@ STEPS = {
     "6": ("project fields (workspace_id, visibility, deleted_at)", step_6_project_fields),
     "7": ("deleted_at on conversation, project_chat, project_report", step_7_deleted_at),
     "8": ("remove legacy chat", step_8_remove_chat),
+    "9": ("notifications trio (inbox)", step_9_notifications),
 }
 
 

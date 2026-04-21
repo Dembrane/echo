@@ -349,12 +349,24 @@ async def remove_workspace_member(
         {"deleted_at": datetime.now(timezone.utc).isoformat()},
     )
 
+    removed_user_id = membership.get("user_id")
+    if removed_user_id and removed_user_id != ctx.app_user_id:
+        from dembrane.notifications import emit
+        await emit(
+            audience_user_id=removed_user_id,
+            actor_user_id=ctx.app_user_id,
+            event_code="WORKSPACE_REMOVED",
+            title=f"You were removed from {ctx.workspace.get('name', 'a workspace')}",
+            message="Reach out to the workspace admin if this was unexpected.",
+            action="NONE",
+            ref_workspace_id=ctx.workspace_id,
+        )
+
     # Sticky-remove: if this user would otherwise re-derive admin/member
     # access via their org role (rule-of-system inheritance), tombstone
     # them so team-role changes don't silently re-grant access. Only
     # applies when the removed user has an active org_membership.
     from dembrane.inheritance import sticky_remove
-    removed_user_id = membership.get("user_id")
     if removed_user_id and ctx.workspace.get("org_id"):
         # Check if they'd re-derive via org role — only tombstone if yes.
         org_rows = await async_directus.get_items(
@@ -440,6 +452,20 @@ async def change_member_role(
         membership_id,
         {"role": body.role},
     )
+
+    # Notify the affected user (unless they're the one making the change).
+    if membership.get("user_id") and membership["user_id"] != ctx.app_user_id:
+        from dembrane.notifications import emit
+        await emit(
+            audience_user_id=membership["user_id"],
+            actor_user_id=ctx.app_user_id,
+            event_code="WORKSPACE_ROLE_CHANGED",
+            title=f"Your role changed in {ctx.workspace.get('name', 'a workspace')}",
+            message=f"You're now a **{body.role}** here.",
+            action="NAVIGATE_WS",
+            ref_workspace_id=ctx.workspace_id,
+        )
+
     return {"status": "success"}
 
 

@@ -174,6 +174,24 @@ async def invite_to_workspace(
                 f"(external: {is_external}) by {ctx.app_user_id}"
             )
 
+            # Notify the invitee in-app so they see the new workspace
+            # on their next page load without having to wait for the
+            # email to land.
+            from dembrane.notifications import emit
+            await emit(
+                audience_user_id=app_user["id"],
+                actor_user_id=ctx.app_user_id,
+                event_code="WORKSPACE_ADDED",
+                title=f"You're in {ctx.workspace.get('name', 'a workspace')}",
+                message=(
+                    f"You were added to **{ctx.workspace.get('name', '')}** "
+                    f"as {role}."
+                ),
+                action="NAVIGATE_WS",
+                ref_workspace_id=workspace_id,
+                ref_org_id=ws_org_id,
+            )
+
             # Send a notification email
             inviter_name = "Your team"
             try:
