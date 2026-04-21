@@ -447,7 +447,7 @@ def generate_pdf_report(
     if len(users) > 5:
         user_names += f" (+{len(users) - 5} more)"
 
-    story.append(Paragraph(f"Dembrane Usage Report for {user_names}", styles["ReportTitle"]))
+    story.append(Paragraph(f"dembrane Usage Report for {user_names}", styles["ReportTitle"]))
 
     if date_range:
         date_text = (
@@ -536,9 +536,7 @@ def generate_pdf_report(
         login_text = f"<b>Login Tier:</b> No login activity recorded · {legend}"
     else:
         tier = metrics.logins.usage_band.title() if metrics.logins.usage_band else "Unknown"
-        login_text = (
-            f"<b>Login Tier:</b> {tier} ({metrics.logins.avg_logins_per_week:.1f} logins/week) · {legend}"
-        )
+        login_text = f"<b>Login Tier:</b> {tier} ({metrics.logins.avg_logins_per_week:.1f} logins/week) · {legend}"
     story.append(Paragraph(login_text, styles["SmallText"]))
     story.append(Spacer(1, 12))
 

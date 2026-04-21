@@ -9,7 +9,7 @@ from jinja2 import Environment, FileSystemLoader
 
 TEMPLATE_DIR = Path(__file__).resolve().parent
 
-PLATFORM_SUMMARY = """Dembrane ECHO: Platform Context
+PLATFORM_SUMMARY = """dembrane: Platform Context
 
 What It Is
 ----------
