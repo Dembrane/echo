@@ -46,11 +46,14 @@ export const ProjectAccessGuard = ({ children }: { children: ReactNode }) => {
 	const { projectId } = useParams();
 	const navigate = useI18nNavigate();
 
-	const { data, isLoading } = useQuery({
+	const { data, isLoading, refetch } = useQuery({
 		queryKey: ["v2", "project-detail", projectId],
 		queryFn: () => fetchProjectDetail(projectId as string),
 		enabled: Boolean(projectId),
-		staleTime: 30_000,
+		// No stale window — visibility changes or share revocations need to
+		// propagate on next navigation, not up to 30s later. react-query
+		// still dedupes concurrent requests during a single mount.
+		staleTime: 0,
 		retry: false,
 	});
 
@@ -68,24 +71,44 @@ export const ProjectAccessGuard = ({ children }: { children: ReactNode }) => {
 		return <>{children}</>;
 	}
 
-	// 404 or other error — render the designer's copy. We don't distinguish
-	// "deleted" from "private-and-not-shared" here; the endpoint's 404 is
-	// deliberately ambiguous for security.
+	// Distinguish 404 ("you don't have access / not found") from other
+	// failure modes (500 / network error / expired session). The 404 path
+	// is deliberate ambiguous copy; every other error gets a retry affordance.
+	const status = data && !data.ok ? data.status : 0;
+	const is404 = status === 404;
+
 	return (
 		<Center style={{ height: "60vh" }}>
 			<Stack align="center" gap="md" maw={420} px="lg">
 				<Title order={3} fw={400} ta="center">
-					<Trans>This isn't available to you</Trans>
+					{is404 ? (
+						<Trans>This isn't available to you</Trans>
+					) : (
+						<Trans>Something went wrong</Trans>
+					)}
 				</Title>
 				<Text size="sm" c="dimmed" ta="center" lh={1.6}>
-					<Trans>
-						The link may be private, or it may have moved. Ask the person who
-						shared it to check.
-					</Trans>
+					{is404 ? (
+						<Trans>
+							The link may be private, or it may have moved. Ask the person who
+							shared it to check.
+						</Trans>
+					) : (
+						<Trans>
+							We couldn't load this project. Check your connection and try
+							again.
+						</Trans>
+					)}
 				</Text>
-				<Button variant="default" size="sm" onClick={() => navigate("/")}>
-					<Trans>Go home</Trans>
-				</Button>
+				{is404 ? (
+					<Button variant="default" size="sm" onClick={() => navigate("/")}>
+						<Trans>Go home</Trans>
+					</Button>
+				) : (
+					<Button variant="default" size="sm" onClick={() => refetch()}>
+						<Trans>Try again</Trans>
+					</Button>
+				)}
 			</Stack>
 		</Center>
 	);

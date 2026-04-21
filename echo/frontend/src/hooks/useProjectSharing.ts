@@ -51,6 +51,11 @@ export const useAddProjectShare = (projectId: string) => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "project-shares", projectId],
 			});
+			// Sharing changes can affect the guard's access decision
+			// (esp. on private projects) — bust the detail cache too.
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "project-detail", projectId],
+			});
 		},
 	});
 };
@@ -78,6 +83,11 @@ export const useChangeProjectShareRole = (projectId: string) => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "project-shares", projectId],
 			});
+			// Sharing changes can affect the guard's access decision
+			// (esp. on private projects) — bust the detail cache too.
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "project-detail", projectId],
+			});
 		},
 	});
 };
@@ -99,6 +109,11 @@ export const useRevokeProjectShare = (projectId: string) => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "project-shares", projectId],
+			});
+			// Sharing changes can affect the guard's access decision
+			// (esp. on private projects) — bust the detail cache too.
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "project-detail", projectId],
 			});
 		},
 	});
@@ -126,10 +141,13 @@ export const useSetProjectVisibility = (projectId: string) => {
 		onSuccess: () => {
 			// Project fetches live under ["projects", ...] (plural) —
 			// see frontend/src/components/project/hooks/index.ts:365.
-			// Invalidating the singular key was a silent no-op (round-2 audit).
 			queryClient.invalidateQueries({ queryKey: ["projects"] });
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "project-shares", projectId],
+			});
+			// Access guard keys off ["v2", "project-detail", projectId].
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "project-detail", projectId],
 			});
 		},
 	});

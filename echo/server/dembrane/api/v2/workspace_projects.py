@@ -34,43 +34,6 @@ async def _shared_private_project_ids(user_id: str) -> set[str]:
     return {row["project_id"] for row in shares if row.get("project_id")}
 
 
-def _filter_private_for_caller(
-    projects: list[dict],
-    *,
-    caller_role: str,
-    shared_ids: set[str],
-    creator_directus_id: Optional[str],
-) -> list[dict]:
-    """Drop private projects the caller can't see.
-
-    Visibility rules:
-      - visibility='workspace' (or missing): always visible to workspace members.
-      - visibility='private': visible only if caller is admin/owner of the
-        workspace, OR has a project_membership row for this project, OR is
-        the original creator (legacy `directus_user_id` match).
-    """
-    caller_is_admin = caller_role in ("admin", "owner")
-    if caller_is_admin:
-        return projects
-
-    kept: list[dict] = []
-    for project in projects:
-        if (project.get("visibility") or "workspace") != "private":
-            kept.append(project)
-            continue
-        if project["id"] in shared_ids:
-            kept.append(project)
-            continue
-        if (
-            creator_directus_id
-            and project.get("directus_user_id") == creator_directus_id
-        ):
-            kept.append(project)
-            continue
-        # Fall-through: private, no share, not creator → hide.
-    return kept
-
-
 class V2ProjectSummary(BaseModel):
     id: str
     name: Optional[str] = None
@@ -89,6 +52,34 @@ class V2ProjectsListResponse(BaseModel):
     is_admin: bool = False
 
 
+def _visibility_filter_for_caller(
+    caller_role: str,
+    shared_ids: set[str],
+    creator_directus_id: Optional[str],
+) -> Optional[dict]:
+    """Build a Directus filter clause that server-side restricts the
+    project query to visible rows for this caller.
+
+    Admins/owners see everything → returns None (no extra clause).
+    Non-admins see: workspace-visible OR shared-on OR legacy-creator.
+
+    Keeps pagination and total_count honest — no post-filter Python slicing.
+    """
+    if caller_role in ("admin", "owner"):
+        return None
+
+    or_clauses: list[dict] = [
+        {"visibility": {"_neq": "private"}},
+        {"visibility": {"_null": True}},  # legacy rows with null visibility
+    ]
+    if shared_ids:
+        or_clauses.append({"id": {"_in": list(shared_ids)}})
+    if creator_directus_id:
+        or_clauses.append({"directus_user_id": {"_eq": creator_directus_id}})
+
+    return {"_or": or_clauses}
+
+
 @router.get("/{workspace_id}/projects", response_model=V2ProjectsListResponse)
 async def list_workspace_projects(
     auth: DependencyDirectusSession,
@@ -99,20 +90,29 @@ async def list_workspace_projects(
 ) -> V2ProjectsListResponse:
     """List projects in a workspace. Requires project:read policy.
 
-    Private projects (visibility='private') are filtered out when the
-    caller is neither a workspace admin/owner nor shared on the project
-    via project_membership. See inheritance.get_user_project_access.
+    Private projects (visibility='private') are filtered at the Directus
+    query level (via `_or`) so pagination, has_more, and total_count
+    remain server-authoritative. See inheritance.get_user_project_access
+    for the access ladder this mirrors.
     """
     ctx.require_policy("project:read")
+
+    shared_ids = await _shared_private_project_ids(ctx.app_user_id)
+    visibility_clause = _visibility_filter_for_caller(
+        caller_role=ctx.role,
+        shared_ids=shared_ids,
+        creator_directus_id=auth.user_id,
+    )
+
     base_filter: dict = {
         "workspace_id": {"_eq": ctx.workspace_id},
         "deleted_at": {"_null": True},
     }
-
-    # Over-fetch slightly so the post-filter private trim doesn't
-    # consistently short-change paginated results. Pragmatic: fetch 2x
-    # requested + buffer, filter, then slice to `limit`.
-    over_fetch = (limit * 2) + 10
+    effective_filter = (
+        {**base_filter, **visibility_clause}
+        if visibility_clause is not None
+        else base_filter
+    )
 
     query: dict = {
         "fields": [
@@ -125,9 +125,9 @@ async def list_workspace_projects(
             "directus_user_id",
             "count(conversations)",
         ],
-        "filter": base_filter,
+        "filter": effective_filter,
         "sort": ["-updated_at"],
-        "limit": over_fetch,
+        "limit": limit + 1,
         "offset": offset,
     }
     if search:
@@ -137,15 +137,7 @@ async def list_workspace_projects(
     if not isinstance(projects_raw, list):
         projects_raw = []
 
-    shared_ids = await _shared_private_project_ids(ctx.app_user_id)
-    visible = _filter_private_for_caller(
-        projects_raw,
-        caller_role=ctx.role,
-        shared_ids=shared_ids,
-        creator_directus_id=auth.user_id,
-    )
-
-    has_more = len(visible) > limit
+    has_more = len(projects_raw) > limit
     projects = [
         V2ProjectSummary(
             id=p["id"],
@@ -156,28 +148,27 @@ async def list_workspace_projects(
             conversations_count=int(p.get("conversations_count", 0) or 0),
             visibility=p.get("visibility") or "workspace",
         )
-        for p in visible[:limit]
+        for p in projects_raw[:limit]
     ]
 
     total_count = 0
     if not search:
-        if ctx.role in ("admin", "owner"):
-            # Admins see every project — count is exact via Directus aggregate.
-            count_result = await async_directus.get_items(
-                "project",
-                {"query": {"aggregate": {"count": ["id"]}, "filter": base_filter}},
-            )
-            if isinstance(count_result, list) and len(count_result) > 0:
-                total_count = int(count_result[0].get("count", {}).get("id", 0))
-        else:
-            # Non-admin: we can't cheaply get the true count without a full
-            # scan. Report the size of the visible slice + has_more hint;
-            # UI can treat "total_count" as "at least N" here.
-            total_count = offset + len(projects) + (1 if has_more else 0)
+        count_result = await async_directus.get_items(
+            "project",
+            {
+                "query": {
+                    "aggregate": {"count": ["id"]},
+                    "filter": effective_filter,
+                }
+            },
+        )
+        if isinstance(count_result, list) and len(count_result) > 0:
+            total_count = int(count_result[0].get("count", {}).get("id", 0))
     else:
         total_count = offset + len(projects) + (1 if has_more else 0)
 
-    # Fetch pinned projects (separate query, always shown regardless of search)
+    # Pinned list uses the same visibility filter so members don't see a
+    # pinned private project they can't reach.
     pinned_raw = await async_directus.get_items("project", {"query": {
         "fields": [
             "id",
@@ -189,16 +180,10 @@ async def list_workspace_projects(
             "directus_user_id",
             "count(conversations)",
         ],
-        "filter": {**base_filter, "pin_order": {"_nnull": True}},
+        "filter": {**effective_filter, "pin_order": {"_nnull": True}},
         "sort": ["pin_order"],
         "limit": 3,
     }})
-    pinned_visible = _filter_private_for_caller(
-        pinned_raw if isinstance(pinned_raw, list) else [],
-        caller_role=ctx.role,
-        shared_ids=shared_ids,
-        creator_directus_id=auth.user_id,
-    )
     pinned = [
         V2ProjectSummary(
             id=p["id"],
@@ -209,7 +194,7 @@ async def list_workspace_projects(
             conversations_count=int(p.get("conversations_count", 0) or 0),
             visibility=p.get("visibility") or "workspace",
         )
-        for p in pinned_visible
+        for p in (pinned_raw if isinstance(pinned_raw, list) else [])
     ]
 
     return V2ProjectsListResponse(

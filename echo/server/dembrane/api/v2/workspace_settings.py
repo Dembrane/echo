@@ -59,8 +59,19 @@ class WorkspaceDetailResponse(BaseModel):
 async def get_workspace_settings(
     ctx: WorkspaceContext = Depends(get_workspace_context),
 ) -> WorkspaceDetailResponse:
-    """Get workspace details + full member list. Requires workspace membership."""
+    """Get workspace details + full member list.
+
+    Access tiers:
+      - Any workspace member can read the workspace info + see names/avatars.
+      - Only users with member:manage (admin/owner) see full emails + the
+        pending-invite list. External guests and viewers don't.
+
+    Closes the guest-data-leak finding from the 2026-04-21 walkthrough:
+    external guests previously saw every member's email and the pending
+    invites of their host workspace.
+    """
     ws = ctx.workspace
+    can_manage = ctx.has_policy("member:manage")
 
     # Org name
     org_name = ""
@@ -101,33 +112,42 @@ async def get_workspace_settings(
             user = user_map.get(m.get("user_id", ""))
             if not user:
                 continue
+            # Email is management-only (guest-data-leak fix). Self-row
+            # always shows own email — users already know their own.
+            is_self = m.get("user_id") == ctx.app_user_id
+            show_email = can_manage or is_self
             members.append(WorkspaceMember(
                 id=m["id"],
                 user_id=m["user_id"],
                 display_name=user.get("display_name", ""),
-                email=user.get("email", ""),
+                email=user.get("email", "") if show_email else "",
                 avatar=avatar_map.get(user.get("directus_user_id", "")),
                 role=m.get("role", ""),
                 source=m.get("source", ""),
                 is_external=m.get("is_external", False),
             ))
 
-    # Pending invites
-    pending_invites_raw = await async_directus.get_items(
-        "workspace_invite",
-        {"query": {
-            "filter": {
-                "workspace_id": {"_eq": ctx.workspace_id},
-                "accepted_at": {"_null": True},
-                "expires_at": {"_gt": datetime.now(timezone.utc).isoformat()},
-            },
-            "fields": ["id", "email", "role", "created_at", "invited_by", "expires_at"],
-            "sort": ["-created_at"],
-            "limit": 50,
-        }},
-    )
+    # Pending invites — management-only. Emails of not-yet-members aren't
+    # anyone else's business.
     pending_invites: list[PendingInvite] = []
-    if isinstance(pending_invites_raw, list) and len(pending_invites_raw) > 0:
+    pending_invites_raw: list = []
+    if can_manage:
+        pending_invites_raw_result = await async_directus.get_items(
+            "workspace_invite",
+            {"query": {
+                "filter": {
+                    "workspace_id": {"_eq": ctx.workspace_id},
+                    "accepted_at": {"_null": True},
+                    "expires_at": {"_gt": datetime.now(timezone.utc).isoformat()},
+                },
+                "fields": ["id", "email", "role", "created_at", "invited_by", "expires_at"],
+                "sort": ["-created_at"],
+                "limit": 50,
+            }},
+        )
+        if isinstance(pending_invites_raw_result, list):
+            pending_invites_raw = pending_invites_raw_result
+    if len(pending_invites_raw) > 0:
         # Resolve inviter names
         inviter_ids = list({inv.get("invited_by") for inv in pending_invites_raw if inv.get("invited_by")})
         inviter_name_map: dict[str, str] = {}
@@ -376,6 +396,19 @@ async def change_member_role(
         raise HTTPException(status_code=404, detail="Membership not found in this workspace")
     if membership.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Membership already removed")
+
+    # Hard rule: an external member can never be admin or owner. Externals
+    # are guests — promoting them into management roles mixes access layers
+    # that should stay separate. If you want them as admin, add them to the
+    # team first, then promote.
+    if membership.get("is_external") and body.role in ("admin", "owner"):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "External members can't be admins or owners. Add them to the "
+                "team first (via invite with is_org_member=true), then promote."
+            ),
+        )
 
     # Prevent demoting the last owner
     if membership.get("role") == "owner" and body.role != "owner":

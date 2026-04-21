@@ -417,16 +417,22 @@ async def get_user_project_access(
     if not project or project.get("deleted_at"):
         return None
 
-    # Legacy creator — kept for backward compat only. New projects always
-    # have workspace_id set.
+    workspace_id = project.get("workspace_id")
+
+    # Legacy creator — kept for backward compat only, ONLY for projects
+    # that never landed in a workspace (pre-workspaces data that onboarding
+    # hasn't moved yet). If a project is attached to a workspace, access
+    # must flow through the workspace regardless of who originally created
+    # it — otherwise a workspace-removed user could still read a project
+    # they once created.
     if (
-        directus_user_id
+        not workspace_id
+        and directus_user_id
         and project.get("directus_user_id")
         and project["directus_user_id"] == directus_user_id
     ):
         return "owner", "legacy"
 
-    workspace_id = project.get("workspace_id")
     if not workspace_id:
         return None
 

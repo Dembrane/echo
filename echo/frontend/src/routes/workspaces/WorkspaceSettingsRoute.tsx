@@ -29,6 +29,7 @@ import { useParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useV2Me } from "@/hooks/useV2Me";
 
 interface WorkspaceMember {
 	id: string;
@@ -153,6 +154,7 @@ export const WorkspaceSettingsRoute = () => {
 	const { workspaceId } = useParams<{ workspaceId: string }>();
 	const navigate = useI18nNavigate();
 	const queryClient = useQueryClient();
+	const { data: meV2 } = useV2Me();
 	const [inviteEmail, setInviteEmail] = useState("");
 	const [inviteRole, setInviteRole] = useState("member");
 	const [editingName, setEditingName] = useState<string | null>(null);
@@ -265,6 +267,8 @@ export const WorkspaceSettingsRoute = () => {
 	}
 
 	const canManage = settings.my_policies?.includes("member:manage") ?? false;
+	const myRole = settings.my_role;
+	const myAppUserId = meV2?.id ?? null;
 	const canEditSettings = settings.my_policies?.includes("settings:manage") ?? false;
 
 	return (
@@ -393,19 +397,73 @@ export const WorkspaceSettingsRoute = () => {
 									<Group gap={8}>
 										{canManage ? (
 											<Select
+												// Owner option shown only to an actual owner —
+												// backend blocks non-owner promotion to owner
+												// anyway, but hiding the option prevents the
+												// misleading "why did this fail?" click path.
+												// Externals can't be admin or owner (hard rule).
 												data={[
 													{ label: t`Viewer`, value: "viewer" },
 													{ label: t`Member`, value: "member" },
-													{ label: t`Admin`, value: "admin" },
-													{ label: t`Owner`, value: "owner" },
+													...(!member.is_external
+														? [{ label: t`Admin`, value: "admin" }]
+														: []),
+													...(myRole === "owner" && !member.is_external
+														? [{ label: t`Owner`, value: "owner" }]
+														: []),
 												]}
 												size="xs"
 												value={member.role}
 												w={100}
 												onChange={(v) => {
-													if (v && v !== member.role) {
-														changeRoleMutation.mutate({ membershipId: member.id, role: v });
+													if (!v || v === member.role) return;
+													// Footgun guard: demoting yourself out of
+													// admin/owner is a one-way street without a
+													// teammate's help. Confirm first.
+													const isSelf = member.user_id === myAppUserId;
+													const isDemotion =
+														(member.role === "owner" ||
+															member.role === "admin") &&
+														v !== "owner" &&
+														v !== "admin";
+													if (isSelf && isDemotion) {
+														modals.openConfirmModal({
+															title: t`Change your own role?`,
+															children: (
+																<Stack gap="xs">
+																	<Text size="sm">
+																		<Trans>
+																			You're about to change your own role to{" "}
+																			<em>{v}</em>. You'll immediately lose
+																			access to workspace settings, invites,
+																			and member management.
+																		</Trans>
+																	</Text>
+																	<Text size="sm" c="dimmed">
+																		<Trans>
+																			Another admin or owner will need to
+																			restore you.
+																		</Trans>
+																	</Text>
+																</Stack>
+															),
+															labels: {
+																confirm: t`Change anyway`,
+																cancel: t`Cancel`,
+															},
+															confirmProps: { color: "red" },
+															onConfirm: () =>
+																changeRoleMutation.mutate({
+																	membershipId: member.id,
+																	role: v,
+																}),
+														});
+														return;
 													}
+													changeRoleMutation.mutate({
+														membershipId: member.id,
+														role: v,
+													});
 												}}
 											/>
 										) : (

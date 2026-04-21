@@ -517,6 +517,85 @@ async def change_member_role(
             detail="Only an owner can promote to owner or demote another owner",
         )
 
+    # Last-admin guard: if the target currently has a management role
+    # (admin or owner) and the new role is neither, block when they're the
+    # only remaining person with management rights. Keeps teams from ending
+    # up leaderless through self-demotion or a well-meaning role change.
+    if target_role in ("admin", "owner") and body.role not in ("admin", "owner"):
+        other_admins = await async_directus.get_items(
+            "org_membership",
+            {
+                "query": {
+                    "filter": {
+                        "org_id": {"_eq": org_id},
+                        "role": {"_in": ["admin", "owner"]},
+                        "user_id": {"_neq": user_id},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id"],
+                    "limit": 1,
+                }
+            },
+        )
+        if not (isinstance(other_admins, list) and other_admins):
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Can't demote the last admin. Promote someone else to "
+                    "admin or owner first."
+                ),
+            )
+
+    # Hard rule: a user who is currently external on any of the team's
+    # workspaces can never be team admin or owner. External-of-a-team means
+    # "they're not really part of this team" — promoting them into the
+    # admin chair contradicts that. If they should be admin, un-external
+    # them first by removing those workspace rows and re-inviting as
+    # team members.
+    if body.role in ("admin", "owner"):
+        # Look across this team's workspaces for any active direct row
+        # marked is_external=True for this user.
+        workspaces = await async_directus.get_items(
+            "workspace",
+            {
+                "query": {
+                    "filter": {
+                        "org_id": {"_eq": org_id},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id"],
+                    "limit": -1,
+                }
+            },
+        ) or []
+        if isinstance(workspaces, list) and workspaces:
+            ws_ids = [w["id"] for w in workspaces if w.get("id")]
+            if ws_ids:
+                external_rows = await async_directus.get_items(
+                    "workspace_membership",
+                    {
+                        "query": {
+                            "filter": {
+                                "user_id": {"_eq": user_id},
+                                "workspace_id": {"_in": ws_ids},
+                                "is_external": {"_eq": True},
+                                "deleted_at": {"_null": True},
+                            },
+                            "fields": ["id"],
+                            "limit": 1,
+                        }
+                    },
+                )
+                if isinstance(external_rows, list) and external_rows:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=(
+                            "This person is an external guest on one of the "
+                            "team's workspaces. Clear that first — they can't "
+                            "hold team admin/owner while marked as a guest."
+                        ),
+                    )
+
     await async_directus.update_item(
         "org_membership", target["id"], {"role": body.role}
     )

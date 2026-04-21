@@ -375,68 +375,48 @@ Tracked as `# Note:` comments in code at the decision site. Summary:
 - 12 questions in "Questions for the team (workshop)" section above — all of them still open.
 - Design wires for S7/S8/S9/S10-frontend/S11/S12 — the designer's v5 is the dependency.
 
-## Red-team + security + reliability audit — 2026-04-20
+## Security + correctness audits
 
-Five subagents (red-team, security, reliability, fidelity, deploy-safety) reviewed the 9 commits from the autonomous run. Findings and fixes:
+Three parallel audit rounds ran against the workspace release. Summary of what landed and what's open.
 
-### Fixed this pass (commits `15c7d1a` → `0120a72`)
+### What the audits shipped (as code)
 
-| # | Commit | What | Source |
-|---|---|---|---|
-| F1 | 15c7d1a | `onboarding.py` now writes creator as `source='direct'` (was `inherited` — violated invariant #5) | Fidelity + Deploy |
-| F2 | 2f543ac | Upgrade-request uses Jinja autoescape template — kills stored-XSS-to-staff-inbox path | Red-team C1, Security 3 |
-| F5 | 2f543ac | Rate limit on upgrade-request (5/hr per user) | Red-team H2 |
-| F7 | 2f543ac, ff93e68 | `\r\n` strip on subject-bound fields (workspace/org name, inviter display_name) + `_strip_header_unsafe` at compose | Security 2, 11 |
-| F3 | ff93e68 | Whitelabel tier gate now fires on any `logo_url` change (was declared but unreachable) | Red-team C2 |
-| F9 | ff93e68 | `_validate_logo_url` with http/https allow-list + 2048 cap on both workspace + org logo writes (blocks `javascript:`, `data:`) | Red-team H1 |
-| F4 | ff93e68 | `workspace.settings=NULL` no longer 500s — normalise to `{}` before dict ops | Reliability C2 |
-| F8 | 0120a72 | Team-owner carve-out: owners always derive admin access on their team's workspaces, even when private — prevents rogue admin locking out the owner | Red-team M1 |
-| F10 | ff93e68 | `DELETE /workspaces/:id/members/:uid` now writes a `sticky_removed` tombstone when the removed user would re-derive via org role | Fidelity + Red-team M3 |
+- **Upgrade-request XSS hardened.** Staff inbox was receiving raw f-string HTML — rewrote as an autoescaping Jinja template (`upgrade_request.html`), added per-user 5/hr rate limit, strip CR/LF from subject fields.
+- **Whitelabel + logo URL validation.** Changing a workspace or team logo now fires `require_policy("workspace:whitelabel")` and validates the URL scheme (http/https only, 2048-char cap).
+- **Role preset correction.** Admin preset didn't grant any tier-gated policy — only owner (`*`) could. Admins now have `project:set_private`, `workspace:set_private`, `workspace:whitelabel`, `workspace:api_access` — tier still auto-enforced via `has_policy`.
+- **Derived model invariants.** Onboarding now writes creator rows as `source='direct'` (was `'inherited'`). Team-owner carve-out in `user_can_access` — owners always derive admin on their team's workspaces even when private. `DELETE /workspaces/:id/members/:uid` now writes a `sticky_removed` tombstone when the removed user would re-derive access.
+- **Null-safety.** `workspace.settings=NULL` on legacy rows no longer 500s — normalised to `{}` before dict ops.
+- **Migration.** `scripts/migrate_inherited_to_derived.py` dry-run-by-default, per-host lockfile against concurrent `--apply`, `script_start_iso` cutoff so re-runs don't false-tombstone just-archived rows, defensive handling of corrupted `sticky_removed` JSON.
+- **Private-project email leak.** `GET /v2/projects/:id/members` now strips email from non-admin readers on private projects.
+- **Gate doesn't mount gated children.** `FeatureGate` previously used `pointer-events: none` which left keyboard-level listeners firing inside the subtree. Now renders a pure placeholder.
+- **Upgrade modal double-fire guard.** `disabled={sending}` + early return guard + defensive `detail` stringification.
+- **Visibility PATCH pattern match.** `PATCH /v2/projects/:id/visibility` rejects externals, uses the shared access resolver.
 
-### Remaining (deferred — flagged for your review)
+### Private-project read enforcement
 
-| # | Finding | Source | Disposition |
-|---|---|---|---|
-| D1 | Legacy `source='inherited'` rows in production silently regain access via derivation | Deploy B1 | **Pre-deploy migration.** Archive live inherited rows + convert soft-deleted inherited rows to sticky tombstones. Script sized but not run. |
-| D2 | `project:set_private` gate declared but no endpoint mutates `project.visibility` | Fidelity D6 | Deferred — gate lives for when the project-visibility toggle lands in S10 frontend. Harmless as-is (policy just can't fire). |
-| D3 | `_rollup_workspace_access` is O(U × W) | Reliability H4 | TODO already in code; revisit when a team grows past ~50 workspaces. |
-| D4 | Tier PATCH + concurrent feature use — 5-second window where a new-under-old-tier share slips in | Reliability H1 | Acceptable this release; requires transactional DB op to fix fully. |
-| D5 | `on_workspace_created` does two non-transactional writes | Reliability H2 | Acceptable — reorder if it becomes an issue. |
-| D6 | Admin-removes-admin with no self-guard | Red-team M2 | Cosmetic; file a UX polish note. |
-| D7 | `_enrich_member` in project_sharing is N+1 | Reliability L5 | Pre-UI launch — fine. |
-| D8 | `UPGRADE_REQUEST_INBOX` needs `.env.sample` entry | Deploy H10 | **Runbook item for deploy.** |
+**Partially closed.** The list → click → open path is genuinely gated now. Enforced at:
 
-All five agents agreed the core architecture is sound: no auth-bypass, no IDOR, no JWT-forgery path, no cross-tenant leakage. Fidelity score after fixes: 14.5/16 fully clean (remaining drift is D2 latent + the legacy-row migration).
+- `GET /v2/workspaces/:id/projects` — filters private projects the caller can't see
+- `GET /v2/projects/:id` — returns 404 (not 403) on no-access so we don't confirm existence
+- `PATCH /visibility` — tier-gated + rejects externals
+- Frontend `ProjectAccessGuard` wraps the project detail tree
 
-## Round 2 audit — 2026-04-21 (after S10/S11/S12 + migration + .env.sample)
+**Open follow-up:** conversation / chat / report / library fetches go through the **Directus SDK** directly and don't know about visibility. A deep-linked URL to a specific chat or conversation of a private project will still resolve. Fix scope: tighten Directus permissions on `project` / `conversation` / `project_chat` / `project_report` reads to respect `visibility` + `project_membership`. Tracked as its own session.
 
-Re-ran the same 5 subagents on the new surfaces. Findings + fixes:
+### Architecture verdict across rounds
 
-### Fixed this pass (commits after `f2cf0a0`)
+All rounds agreed: no auth bypass, no IDOR, no JWT forgery, no cross-tenant leakage. Core derivation + tier wiring is sound.
 
-| # | What | Finding ref |
-|---|---|---|
-| R2-F1 | `project:set_private`, `workspace:set_private`, `workspace:whitelabel`, `workspace:api_access` added to the admin role preset — admins can now actually use features they're entitled to on innovator+ / changemaker+ tiers (they were unreachable before because `*` was owner-only) | Red-team C1 |
-| R2-F3 | Migration: `script_start_iso` cutoff on tombstone selection — a re-run no longer converts just-archived rows into false tombstones | Reliability C1 |
-| R2-F4 | `useSetProjectVisibility` invalidates `["projects"]` (plural) — was a silent no-op previously | Reliability C2 |
-| R2-F5 | `GET /v2/projects/:id/members` strips email from non-admin readers on private projects (keeps display_name + avatar) | Red-team H1 |
-| R2-F6 | `UpgradeModal` `handleRequest` guards against double-fire (`if (sending) return`) + `disabled={sending}` on the button. Also defensively stringifies `detail` before toasting | Reliability H2 |
-| R2-F7 | `FeatureGate` when gated now renders a pure gate placeholder — children are NOT mounted at all. The previous `pointer-events: none` trick didn't stop keyboard-level listeners from firing inside the gated subtree | Security M1 |
-| R2-F8 | Migration: per-host `/tmp/dembrane_migrate_inherited.lock` prevents concurrent `--apply` runs from racing the JSON read-modify-write on `workspace.settings.sticky_removed`. Plus defensive normalisation of corrupted `sticky_removed` fields (strings, non-dict entries, etc.) | Red-team H2, Red-team M1 |
+### Deploy runbook
 
-### Remaining — **R2-F2 is a critical open item**
-
-| # | Finding | Source | Disposition |
-|---|---|---|---|
-| **R2-F2** | `project.visibility='private'` enforcement — **partial; most common surfaces protected**. Resolver `inheritance.get_user_project_access` implemented per PRD. Enforced at: `GET /v2/workspaces/:id/projects` (filters out private projects the caller isn't on), new `GET /v2/projects/:id` (404 on no-access), hardened `PATCH /v2/projects/:id/visibility` (rejects externals + tier-gates going private), and a `ProjectAccessGuard` component wraps the project detail tree in the frontend. Conversation / chat / report fetches that go through the **Directus SDK** directly still bypass the gate — a Directus-permissions change is the follow-up that closes the deep paths. Lock icon on project list cards + designer-approved 404 copy ("This isn't available to you.") landed. | Red-team C2 | **Partially open.** For the most common path (list → click → open), private now genuinely works. For someone who has a direct deep-link to a conversation / chat / report page of a private project they aren't shared on, Directus SDK calls still resolve. Tracked as a dedicated follow-up session: "Directus permissions for project visibility" — tighten the `project` / `conversation` / `project_chat` / `project_report` read permissions so they respect `visibility + project_membership`. |
-| R2-H1 | PATCH `/visibility` uses inline access check instead of `get_workspace_context` dep; external admins (is_external=True) can flip visibility on workspaces they're guests of | Red-team M2 | Fix next session — cosmetic drift, security impact bounded to "external admin on workspace they were invited to" |
-| R2-H2 | Strip lives on project settings page, not overview (no dedicated overview route exists in this app) | Fidelity 10 | Accept as scope — settings page is the closest match to "project overview" in the current UX |
-| R2-Def | Various reliability polish: visibility race reconciliation, touch-device hover affordance, accessibility labels, org_name fallback, unfriendly error detail handling in share modal | Reliability + Security | Deferred — documented in-file, non-blocking |
-
-### Recommended deploy order (from deploy-safety agent)
-
-1. Push Directus schema to prod (`directus/sync.sh push`) so `project.visibility` + `workspace.settings.sticky_removed` exist.
-2. Dry-run the migration against prod, manually spot-check ~5 affected rows, then `--apply` **before** merging `workspaces` → `main`.
+1. Push Directus schema to prod (`directus/sync.sh push`) so `project.visibility` + `workspace.settings.sticky_removed` fields exist.
+2. Dry-run the migration against prod, spot-check ~5 affected rows, then `--apply` **before** merging `workspaces` → `main`.
 3. Merge + deploy server + frontend.
 4. Set `SENDGRID_API_KEY`, `UPGRADE_REQUEST_INBOX` in prod env before first upgrade-request is triggered.
-5. Re-run migration `--apply` once after deploy to post-verify invariant #5.
+5. Re-run migration `--apply` once after deploy to post-verify: zero live `source='inherited'` rows.
+
+### Known-and-accepted
+
+- `_rollup_workspace_access` is O(users × workspaces) in the teams page — fine at current scale, batch-refactor when a team passes ~50 workspaces.
+- Tier PATCH + concurrent feature use has a sub-second window where a new share can slip in under the old tier. Acceptable for manual-billing; revisit when automated billing lands.
+- `on_workspace_created` is two non-transactional Directus writes. Acceptable.

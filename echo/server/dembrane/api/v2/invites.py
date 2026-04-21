@@ -70,6 +70,20 @@ async def invite_to_workspace(
     if requested_level > inviter_level:
         raise HTTPException(status_code=403, detail="Cannot grant a role higher than your own")
 
+    # Hard rule: externals (non-team members on a workspace) can only ever be
+    # member or viewer. Owner/admin roles imply management responsibility,
+    # which doesn't make sense for a guest of another team. If the caller
+    # isn't inviting this person as a team member (is_org_member=false),
+    # clamp to member max.
+    if not body.is_org_member and role in ("admin", "owner"):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "External members can't be admins or owners. "
+                "Invite them as a team member first, or choose member/viewer."
+            ),
+        )
+
     # Prevent self-invite
     inviter_app_user = await async_directus.get_items(
         "app_user",
