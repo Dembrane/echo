@@ -17,7 +17,7 @@ import {
 } from "./hooks";
 import { VerifyInstructions } from "./VerifyInstructions";
 
-type LanguageCode = "de" | "en" | "es" | "fr" | "nl" | "it";
+type LanguageCode = "de" | "en" | "es" | "fr" | "nl" | "it" | "uk";
 
 const LANGUAGE_TO_LOCALE: Record<LanguageCode, string> = {
 	de: "de-DE",
@@ -26,6 +26,7 @@ const LANGUAGE_TO_LOCALE: Record<LanguageCode, string> = {
 	fr: "fr-FR",
 	it: "it-IT",
 	nl: "nl-NL",
+	uk: "uk-UA",
 };
 
 const localeFromLanguage = (language?: string) => {

@@ -139,6 +139,9 @@ async def list_webhooks(
         logger.error(f"Failed to list webhooks for project {project_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to list webhooks") from e
 
+    if not isinstance(webhooks, list):
+        webhooks = []
+
     return [
         WebhookResponseSchema(
             id=webhook.get("id"),
@@ -149,7 +152,7 @@ async def list_webhooks(
             date_created=webhook.get("date_created"),
             date_updated=webhook.get("date_updated"),
         )
-        for webhook in (webhooks or [])
+        for webhook in webhooks
     ]
 
 
@@ -197,8 +200,11 @@ async def list_copyable_webhooks(
         logger.error(f"Failed to list copyable webhooks: {e}")
         raise HTTPException(status_code=500, detail="Failed to list webhooks") from e
 
+    if not isinstance(webhooks, list):
+        webhooks = []
+
     result = []
-    for webhook in webhooks or []:
+    for webhook in webhooks:
         project_info = webhook.get("project_id", {})
         if isinstance(project_info, dict):
             result.append(

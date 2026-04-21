@@ -34,6 +34,7 @@ export const VerifiedArtefactsList = ({
 		fr: "fr-FR",
 		it: "it-IT",
 		nl: "nl-NL",
+		uk: "uk-UA",
 	};
 
 	const locale =

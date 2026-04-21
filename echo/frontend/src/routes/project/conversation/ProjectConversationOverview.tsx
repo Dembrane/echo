@@ -10,7 +10,7 @@ import {
 	Title,
 	Tooltip,
 } from "@mantine/core";
-import { useClipboard } from "@mantine/hooks";
+import { useClipboard, useDisclosure } from "@mantine/hooks";
 import { IconRefresh } from "@tabler/icons-react";
 import {
 	useMutation,
@@ -18,6 +18,7 @@ import {
 	useQueryClient,
 } from "@tanstack/react-query";
 import { useParams } from "react-router";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { CopyIconButton } from "@/components/common/CopyIconButton";
 import { Markdown } from "@/components/common/Markdown";
 import { toast } from "@/components/common/Toaster";
@@ -136,6 +137,10 @@ export const ProjectConversationOverviewRoute = () => {
 	const isMutationPending = pendingMutations.length > 0;
 
 	const clipboard = useClipboard();
+	const [
+		regenerateConfirmOpened,
+		{ open: openRegenerateConfirm, close: closeRegenerateConfirm },
+	] = useDisclosure(false);
 
 	return (
 		<Stack gap="3rem" className="relative" px="2rem" pt="2rem" pb="2rem">
@@ -164,11 +169,7 @@ export const ProjectConversationOverviewRoute = () => {
 										<ActionIcon
 											variant="transparent"
 											loading={isMutationPending}
-											onClick={() =>
-												window.confirm(
-													t`Are you sure you want to regenerate the summary? You will lose the current summary.`,
-												) && useHandleGenerateSummaryManually.mutate(true)
-											}
+											onClick={openRegenerateConfirm}
 											{...testId(
 												"conversation-overview-regenerate-summary-button",
 											)}
@@ -282,6 +283,19 @@ export const ProjectConversationOverviewRoute = () => {
 					</Stack>
 				</>
 			)}
+
+			<ConfirmModal
+				opened={regenerateConfirmOpened}
+				onClose={closeRegenerateConfirm}
+				title={t`Regenerate summary`}
+				data-testid="conversation-regenerate-summary-modal"
+				message={t`Are you sure you want to regenerate the summary? You will lose the current summary.`}
+				confirmLabel={<Trans>Regenerate</Trans>}
+				onConfirm={() => {
+					useHandleGenerateSummaryManually.mutate(true);
+					closeRegenerateConfirm();
+				}}
+			/>
 		</Stack>
 	);
 };

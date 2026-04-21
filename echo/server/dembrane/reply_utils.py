@@ -288,7 +288,7 @@ async def generate_reply_for_conversation(
             formatted_conv = format_conversation(c)
             tokens = token_counter(
                 messages=[{"role": "user", "content": formatted_conv}],
-                model=get_completion_kwargs(MODELS.TEXT_FAST)["model"],
+                model=get_completion_kwargs(MODELS.MULTI_MODAL_PRO)["model"],
             )
 
             candidate_conversations.append((formatted_conv, tokens))
@@ -311,7 +311,7 @@ async def generate_reply_for_conversation(
             formatted_conv = format_conversation(c)
             tokens = token_counter(
                 messages=[{"role": "user", "content": formatted_conv}],
-                model=get_completion_kwargs(MODELS.TEXT_FAST)["model"],
+                model=get_completion_kwargs(MODELS.MULTI_MODAL_PRO)["model"],
             )
 
             # If conversation is too large, truncate it
@@ -323,7 +323,7 @@ async def generate_reply_for_conversation(
                 formatted_conv = format_conversation(c)
                 tokens = token_counter(
                     messages=[{"role": "user", "content": formatted_conv}],
-                    model=get_completion_kwargs(MODELS.TEXT_FAST)["model"],
+                    model=get_completion_kwargs(MODELS.MULTI_MODAL_PRO)["model"],
                 )
 
             candidate_conversations.append((formatted_conv, tokens))
@@ -440,7 +440,7 @@ async def generate_reply_for_conversation(
                 {"role": "user", "content": message_content},
             ],
             stream=True,
-            thinking={"type": "enabled", "budget_tokens": 500},
+            thinking={"type": "enabled", "budget_tokens": 2048},
         )
     except ContentPolicyViolationError as e:
         logger.error(

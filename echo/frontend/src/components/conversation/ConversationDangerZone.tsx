@@ -1,8 +1,10 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Button, Group, Stack, Tooltip } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { IconDownload, IconTrash } from "@tabler/icons-react";
 import { useParams } from "react-router";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { MoveConversationButton } from "@/components/conversation/MoveConversationButton";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { analytics } from "@/lib/analytics";
@@ -21,22 +23,8 @@ export const ConversationDangerZone = ({
 	const deleteConversationByIdMutation = useDeleteConversationByIdMutation();
 	const navigate = useI18nNavigate();
 	const { projectId } = useParams();
-
-	const handleDelete = () => {
-		if (
-			window.confirm(
-				t`Are you sure you want to delete this conversation? This action cannot be undone.`,
-			)
-		) {
-			try {
-				analytics.trackEvent(events.DELETE_CONVERSATION);
-			} catch (error) {
-				console.warn("Analytics tracking failed:", error);
-			}
-			deleteConversationByIdMutation.mutate(conversation.id);
-			navigate(`/projects/${projectId}/overview`);
-		}
-	};
+	const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
+		useDisclosure(false);
 
 	const handleDownloadAudio = () => {
 		try {
@@ -78,7 +66,7 @@ export const ConversationDangerZone = ({
 						</Tooltip>
 
 						<Button
-							onClick={handleDelete}
+							onClick={openConfirm}
 							color="red"
 							variant="outline"
 							rightSection={<IconTrash size={16} />}
@@ -89,6 +77,26 @@ export const ConversationDangerZone = ({
 					</Stack>
 				</div>
 			</Stack>
+
+			<ConfirmModal
+				opened={confirmOpened}
+				onClose={closeConfirm}
+				title={t`Delete conversation`}
+				data-testid="conversation-delete-modal"
+				message={t`Are you sure you want to delete this conversation? This action cannot be undone.`}
+				confirmLabel={<Trans>Delete</Trans>}
+				confirmColor="red"
+				onConfirm={() => {
+					try {
+						analytics.trackEvent(events.DELETE_CONVERSATION);
+					} catch (error) {
+						console.warn("Analytics tracking failed:", error);
+					}
+					deleteConversationByIdMutation.mutate(conversation.id);
+					navigate(`/projects/${projectId}/overview`);
+					closeConfirm();
+				}}
+			/>
 		</Stack>
 	);
 };

@@ -12,6 +12,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconCopy, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { analytics } from "@/lib/analytics";
 import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
@@ -34,6 +35,11 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 	const [
 		isDeleteModalOpen,
 		{ open: openDeleteModal, close: closeDeleteModal },
+	] = useDisclosure(false);
+
+	const [
+		isFinalDeleteOpen,
+		{ open: openFinalDelete, close: closeFinalDelete },
 	] = useDisclosure(false);
 
 	const [cloneName, setCloneName] = useState(project.name ?? "");
@@ -63,19 +69,13 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 	};
 
 	const handleDelete = () => {
-		if (
-			window.confirm(
-				t`By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you ABSOLUTELY sure you want to delete this project?`,
-			)
-		) {
-			try {
-				analytics.trackEvent(events.DELETE_PROJECT);
-			} catch (error) {
-				console.warn("Analytics tracking failed:", error);
-			}
-			deleteProjectByIdMutation.mutate(project.id);
-			navigate("/projects");
+		try {
+			analytics.trackEvent(events.DELETE_PROJECT);
+		} catch (error) {
+			console.warn("Analytics tracking failed:", error);
 		}
+		deleteProjectByIdMutation.mutate(project.id);
+		navigate("/projects");
 	};
 
 	return (
@@ -165,37 +165,30 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 					</Group>
 				</Stack>
 			</Modal>
-			<Modal
+			<ConfirmModal
 				opened={isDeleteModalOpen}
 				onClose={closeDeleteModal}
-				title={<Trans>Delete Project</Trans>}
-				{...testId("project-delete-modal")}
-			>
-				<Stack gap="md">
-					<Text size="sm">
-						<Trans>
-							Are you sure you want to delete this project? This action cannot
-							be undone.
-						</Trans>
-					</Text>
-				</Stack>
-				<Group justify="flex-end">
-					<Button
-						variant="subtle"
-						onClick={closeDeleteModal}
-						{...testId("project-delete-cancel-button")}
-					>
-						<Trans>Cancel</Trans>
-					</Button>
-					<Button
-						onClick={handleDelete}
-						loading={deleteProjectByIdMutation.isPending}
-						{...testId("project-delete-confirm-button")}
-					>
-						<Trans>Delete Project</Trans>
-					</Button>
-				</Group>
-			</Modal>
+				title={t`Delete project`}
+				data-testid="project-delete-modal"
+				message={t`Are you sure you want to delete this project? This action cannot be undone.`}
+				confirmLabel={<Trans>Delete</Trans>}
+				confirmColor="red"
+				onConfirm={() => {
+					closeDeleteModal();
+					openFinalDelete();
+				}}
+			/>
+			<ConfirmModal
+				opened={isFinalDeleteOpen}
+				onClose={closeFinalDelete}
+				title={t`Delete project`}
+				data-testid="project-delete-final-modal"
+				message={t`By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you absolutely sure?`}
+				confirmLabel={<Trans>Delete project</Trans>}
+				confirmColor="red"
+				loading={deleteProjectByIdMutation.isPending}
+				onConfirm={handleDelete}
+			/>
 		</ProjectSettingsSection>
 	);
 };

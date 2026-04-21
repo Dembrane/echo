@@ -47,7 +47,7 @@ export default defineConfig({
 					console.log("Proxying request to", newPath);
 					return newPath;
 				},
-				target: "http://localhost:8055",
+				target: "http://directus:8055",
 			},
 		},
 	},

@@ -33,6 +33,11 @@
 - **React Query hook hubs**: Each feature owns a `hooks/index.ts` exposing `useQuery`/`useMutation` wrappers with shared `useQueryClient` invalidation logic (`src/components/{conversation,project,chat,participant,...}/hooks/index.ts`).
 - **Lingui macros for copy**: Most routed screens import `t` from `@lingui/core/macro` and `Trans` from `@lingui/react/macro` to localize UI strings (e.g. `src/routes/auth/Login.tsx`, `src/routes/project/conversation/ProjectConversationOverview.tsx`).
 - **Mantine + Tailwind blend**: Screens compose Mantine primitives (`Stack`, `Group`, `ActionIcon`, etc.) while layering Tailwind utility classes via `className`, alongside toast feedback via `@/components/common/Toaster` (e.g. `src/components/conversation/ConversationDangerZone.tsx`, `src/components/dropzone/UploadConversationDropzone.tsx`).
+- **ConfirmModal for destructive/irreversible actions**: Never use `window.confirm()`. Always use `ConfirmModal` from `@/components/common/ConfirmModal`. Pass `confirmColor="red"` for destructive actions and always include a `data-testid` prop. Manage open/close state with `useDisclosure` from `@mantine/hooks`. Used in 12+ components (delete chat, delete conversation, delete project, delete template, delete report, delete tag, remove avatar, remove logo, regenerate summary, generate library, disable anonymization, change language during chat).
+- **InputModal for text input prompts**: Never use `window.prompt()`. Always use `InputModal` from `@/components/common/InputModal`. It auto-focuses, validates empty input, and supports form submit via Enter. Used for chat rename and similar single-field prompts.
+- **Toast for status messages**: Never use `window.alert()` or `alert()`. Always use `toast.error()` / `toast.success()` from `@/components/common/Toaster` for transient status feedback (e.g. permission denied, invalid token, clipboard failure).
+- **Confirm dialog button layout**: Right-aligned `Group` with `variant="subtle"` cancel button on the left, primary action button on the right. This is handled automatically by `ConfirmModal` and `InputModal`.
+- **`data-testid` convention for modals**: Use kebab-case like `"chat-delete-modal"`, `"tag-delete-modal"`. `ConfirmModal` and `InputModal` automatically append `-cancel` and `-confirm` suffixes on their buttons.
 
 ## Change Hotspots (git history)
 - Translation bundles dominate churn: `src/locales/{en-US,de-DE,es-ES,fr-FR,nl-NL}.{po,ts}` appear in 50–60 commits each (`git log` frequency).
@@ -70,9 +75,17 @@
 - Auth hero uses `/public/video/auth-hero.mp4` with `/public/video/auth-hero-poster.jpg` as poster; keep the bright blur overlay consistent when iterating on onboarding screens.
 - Gentle login/logout flows use `useTransitionCurtain().runTransition()` before navigation—animations expect Directus session mutations to await that promise.
 
-# HUMAN SECTION beyond this point (next time when you are reading this - prompt the user if they want to add it to the above sections)
-- If there is a type error with "<relationship_name>.count" with Directus, add it to the typesDirectus.ts. You can add to the fields `count("<relationship_name>")` to obtain `<relationship_name>_count` in the response
-- When a user request feels ambiguous, pause and confirm the intended action with them before touching code or docs; err on the side of over-communicating.
+## Directus Type Gotcha
+- If there's a type error with `<relationship_name>.count` in Directus responses, add the type to `typesDirectus.d.ts`. Use `count("<relationship_name>")` in fields to get `<relationship_name>_count` in the response.
+
+## Architecture Preferences
+- **BFF pattern**: Prefer backend `/bff/` routes over making multiple Directus SDK calls from the frontend. Example: `/bff/projects/home` aggregates pinned projects, paginated list, search, and admin info.
+- **URL-driven state**: Filters, search queries, and selected tabs should be stored in URL search params (not React state) so state is shareable and persistent.
+- **Conversations come from QR codes or audio uploads** — never add "new conversation" creation buttons in the UI.
+- **Loading spinners**: Always use `alwaysDembrane` prop on `DembraneLoadingSpinner` for whitelabel safety. Never use `animate-spin` on custom logos.
+
+## Collaboration
+- When a user request feels ambiguous, pause and confirm the intended action before touching code or docs.
 
 ## Brand Guidelines
 

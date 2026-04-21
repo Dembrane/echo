@@ -81,7 +81,7 @@ async def is_followup_question(
 
     try:
         response = await arouter_completion(
-            MODELS.TEXT_FAST,
+            MODELS.MULTI_MODAL_FAST,
             messages=[{"role": "user", "content": prompt}],
             temperature=0,  # Deterministic
             timeout=60,  # 1 minute timeout for quick decision
@@ -1120,7 +1120,7 @@ async def post_chat(
 
             try:
                 response = await arouter_completion(
-                    MODELS.TEXT_FAST,
+                    MODELS.MULTI_MODAL_PRO,
                     messages=formatted,
                     stream=True,
                     timeout=300,

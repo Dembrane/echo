@@ -9,11 +9,11 @@ import {
 	useMantineTheme,
 } from "@mantine/core";
 import {
-	IconAlertTriangle,
-	IconChevronDown,
-	IconChevronUp,
-	IconInfoCircle,
-} from "@tabler/icons-react";
+	CaretDown,
+	CaretUp,
+	Info,
+	WarningCircle,
+} from "@phosphor-icons/react";
 import { forwardRef, useEffect, useRef, useState } from "react";
 import { Markdown } from "@/components/common/Markdown";
 import { testId } from "@/lib/testUtils";
@@ -21,6 +21,7 @@ import { useFormatDate } from "./utils/dateUtils";
 
 type Announcement = {
 	id: string;
+	activityIds: string[];
 	title: string;
 	message: string;
 	created_at: string | Date | null | undefined;
@@ -32,13 +33,14 @@ type Announcement = {
 interface AnnouncementItemProps {
 	announcement: Announcement;
 	onMarkAsRead: (id: string) => void;
+	onMarkAsUnread: (id: string, activityIds: string[]) => void;
 	index: number;
 }
 
 export const AnnouncementItem = forwardRef<
 	HTMLDivElement,
 	AnnouncementItemProps
->(({ announcement, onMarkAsRead, index }, ref) => {
+>(({ announcement, onMarkAsRead, onMarkAsUnread, index }, ref) => {
 	const theme = useMantineTheme();
 	const [showMore, setShowMore] = useState(false);
 	const [showReadMoreButton, setShowReadMoreButton] = useState(false);
@@ -53,36 +55,34 @@ export const AnnouncementItem = forwardRef<
 		}
 	}, []);
 
+	const isRead = !!announcement.read;
+
 	return (
 		<Box
 			ref={ref}
-			className={`group border-b border-gray-100 p-4 transition-all duration-200 hover:bg-blue-50 ${index === 0 ? "border-t-0" : ""} ${
-				!announcement.read
-					? "border-l-4 border-l-blue-500"
-					: "border-l-4 border-l-gray-50/50 bg-gray-50/50"
-			}`}
+			className={`group border-b border-gray-100 p-4 transition-all duration-200 ${!isRead ? "hover:bg-blue-50" : ""} ${index === 0 ? "border-t-0" : ""} border-l-4 ${isRead ? "border-l-gray-50/50 bg-gray-50/50" : "border-l-blue-500"}`}
 			{...testId(`announcement-item-${announcement.id}`)}
 		>
 			<Stack gap="xs">
 				<Group gap="sm" align="flex-start">
-					{
-						<ThemeIcon
-							size={25}
-							variant="light"
-							color={announcement.level === "urgent" ? "orange" : "blue"}
-							radius="xl"
-						>
-							{announcement.level === "urgent" ? (
-								<IconAlertTriangle size={17} />
-							) : (
-								<IconInfoCircle size={20} />
-							)}
-						</ThemeIcon>
-					}
+					<ThemeIcon
+						size={25}
+						variant="light"
+						color={announcement.level === "urgent" ? "orange" : "blue"}
+						radius="xl"
+					>
+						{announcement.level === "urgent" ? (
+							<WarningCircle size={17} weight="fill" />
+						) : (
+							<Info size={20} weight="fill" />
+						)}
+					</ThemeIcon>
 					<Stack gap="xs" style={{ flex: 1 }}>
 						<Group justify="space-between" align="center">
 							<div style={{ flex: 1 }}>
-								<Markdown content={announcement.title} />
+								<Text size="sm" fw={isRead ? 400 : 500} c={isRead ? "dimmed" : undefined}>
+									{announcement.title}
+								</Text>
 							</div>
 
 							<Group gap="sm" align="center">
@@ -90,8 +90,7 @@ export const AnnouncementItem = forwardRef<
 									{formatDate(announcement.created_at)}
 								</Text>
 
-								{/* this part needs a second look */}
-								{!announcement.read && (
+								{!isRead && (
 									<div
 										style={{
 											backgroundColor: theme.colors.blue[6],
@@ -102,7 +101,6 @@ export const AnnouncementItem = forwardRef<
 										{...testId("announcement-unread-indicator")}
 									/>
 								)}
-								{/* this part needs a second look */}
 							</Group>
 						</Group>
 
@@ -127,33 +125,42 @@ export const AnnouncementItem = forwardRef<
 									{showMore ? (
 										<Group gap="xs">
 											<Trans>Show less</Trans>
-											<IconChevronUp size={14} />
+											<CaretUp size={14} />
 										</Group>
 									) : (
 										<Group gap="xs">
 											<Trans>Show more</Trans>
-											<IconChevronDown size={14} />
+											<CaretDown size={14} />
 										</Group>
 									)}
 								</Button>
 							)}
 
-							<Box ml="auto">
-								{!announcement.read && (
-									<Button
-										variant="transparent"
-										size="xs"
-										color="gray"
-										className="hover:underline"
-										onClick={() => {
-											onMarkAsRead(announcement.id);
-										}}
-										{...testId("announcement-mark-as-read-button")}
-									>
-										<Trans>Mark as read</Trans>
-									</Button>
-								)}
-							</Box>
+							{isRead ? (
+								<Button
+									variant="transparent"
+									size="xs"
+									color="gray"
+									className="hover:underline"
+									ml="auto"
+									onClick={() => onMarkAsUnread(announcement.id, announcement.activityIds)}
+									{...testId("announcement-mark-as-unread-button")}
+								>
+									<Trans>Mark as unread</Trans>
+								</Button>
+							) : (
+								<Button
+									variant="transparent"
+									size="xs"
+									color="gray"
+									className="hover:underline"
+									ml="auto"
+									onClick={() => onMarkAsRead(announcement.id)}
+									{...testId("announcement-mark-as-read-button")}
+								>
+									<Trans>Mark as read</Trans>
+								</Button>
+							)}
 						</Group>
 					</Stack>
 				</Group>

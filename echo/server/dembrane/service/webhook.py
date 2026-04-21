@@ -27,6 +27,7 @@ WEBHOOK_EVENTS = [
     "conversation.started",
     "conversation.transcribed",
     "conversation.summarized",
+    "report.generated",
 ]
 
 # HTTP timeouts for webhook dispatch
@@ -101,6 +102,130 @@ class WebhookService:
             return filtered
 
         return webhooks
+
+    def build_report_payload(
+        self,
+        event: str,
+        report: Dict[str, Any],
+        project: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """
+        Build the webhook payload for a report event.
+
+        Args:
+            event: The event type (e.g. "report.generated")
+            report: The report data
+            project: The project data
+
+        Returns:
+            The webhook payload dictionary
+        """
+        project_id = project.get("id")
+        report_id = report.get("id")
+
+        report_data: Dict[str, Any] = {
+            "id": report_id,
+            "status": report.get("status"),
+            "language": report.get("language"),
+            "date_created": report.get("date_created"),
+        }
+
+        project_data: Dict[str, Any] = {
+            "id": project_id,
+            "name": project.get("name"),
+            "language": project.get("language"),
+        }
+
+        # Build dashboard URL
+        admin_base_url = self.settings.urls.admin_base_url.rstrip("/")
+        language_to_locale = {
+            "en": "en-US",
+            "nl": "nl-NL",
+            "de": "de-DE",
+            "fr": "fr-FR",
+            "es": "es-ES",
+            "it": "it-IT",
+        }
+        project_language = project.get("language") or "en"
+        locale = language_to_locale.get(project_language, "en-US")
+        dashboard_url = f"{admin_base_url}/{locale}/projects/{project_id}/report"
+
+        return {
+            "event": event,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "report": report_data,
+            "project": project_data,
+            "dashboardUrl": dashboard_url,
+        }
+
+    def enqueue_webhooks_for_report_event(
+        self,
+        project_id: str,
+        report_id: str,
+        event: str,
+    ) -> int:
+        """
+        Enqueue webhook dispatch tasks for a report event.
+
+        Args:
+            project_id: The project ID
+            report_id: The report ID (as string)
+            event: The event type (e.g. "report.generated")
+
+        Returns:
+            Number of webhooks enqueued
+        """
+        if not self.is_webhooks_enabled():
+            logger.debug("Webhooks are globally disabled, skipping dispatch")
+            return 0
+
+        if event not in WEBHOOK_EVENTS:
+            logger.warning(f"Invalid webhook event type: {event}")
+            return 0
+
+        # Fetch matching webhooks
+        webhooks = self.get_webhooks_for_project(project_id, event)
+        if not webhooks:
+            logger.debug(f"No webhooks configured for project {project_id} event {event}")
+            return 0
+
+        # Fetch report and project data
+        from dembrane.service.project import ProjectService
+
+        try:
+            with directus_client_context(self.directus_client) as client:
+                report = client.get_item("project_report", report_id)
+        except Exception as e:
+            logger.error(f"Failed to fetch report {report_id} for webhook: {e}")
+            return 0
+
+        project_service = ProjectService(directus_client=self.directus_client)
+        try:
+            project = project_service.get_by_id_or_raise(project_id)
+        except Exception as e:
+            logger.error(f"Failed to fetch project {project_id} for webhook: {e}")
+            return 0
+
+        # Build payload
+        payload = self.build_report_payload(event, report, project)
+
+        # Enqueue dispatch tasks
+        from dembrane.tasks import task_dispatch_webhook
+
+        enqueued = 0
+        for webhook in webhooks:
+            webhook_id = webhook.get("id")
+            if not webhook_id:
+                continue
+
+            try:
+                task_dispatch_webhook.send(webhook_id, payload)
+                enqueued += 1
+                logger.info(f"Enqueued webhook dispatch for {webhook_id} (event: {event})")
+            except Exception as e:
+                logger.error(f"Failed to enqueue webhook {webhook_id}: {e}")
+
+        return enqueued
 
     def build_payload(
         self,
@@ -452,3 +577,23 @@ def dispatch_webhooks_for_event(
     """
     service = get_webhook_service()
     return service.enqueue_webhooks_for_event(project_id, conversation_id, event)
+
+
+def dispatch_webhooks_for_report_event(
+    project_id: str,
+    report_id: str,
+    event: str,
+) -> int:
+    """
+    Convenience function to dispatch webhooks for a report event.
+
+    Args:
+        project_id: The project ID
+        report_id: The report ID (as string)
+        event: The event type (e.g. "report.generated")
+
+    Returns:
+        Number of webhooks enqueued
+    """
+    service = get_webhook_service()
+    return service.enqueue_webhooks_for_report_event(project_id, report_id, event)

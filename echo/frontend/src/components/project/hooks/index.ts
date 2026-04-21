@@ -30,6 +30,74 @@ import {
 } from "@/lib/api";
 import { directus } from "@/lib/directus";
 
+// ── BFF: Projects Home ──────────────────────────────────────────────────
+
+interface BffProjectSummary {
+	id: string;
+	name: string | null;
+	updated_at: string | null;
+	language: string | null;
+	pin_order: number | null;
+	conversations_count: number;
+	owner_name?: string;
+	owner_email?: string;
+}
+
+interface BffProjectsHomeResponse {
+	pinned: BffProjectSummary[];
+	projects: BffProjectSummary[];
+	total_count: number;
+	has_more: boolean;
+	is_admin: boolean;
+}
+
+export const useProjectsHome = ({
+	search,
+	limit = 15,
+}: {
+	search?: string;
+	limit?: number;
+}) => {
+	return useInfiniteQuery({
+		queryKey: ["projects", "home", search],
+		initialPageParam: 0,
+		getNextPageParam: (lastPage: BffProjectsHomeResponse, _allPages, lastPageParam) =>
+			lastPage.has_more ? lastPageParam + 1 : undefined,
+		queryFn: async ({ pageParam = 0 }) => {
+			const params = new URLSearchParams();
+			if (search) params.set("search", search);
+			params.set("offset", String(pageParam * limit));
+			params.set("limit", String(limit));
+			const resp = await api.get<unknown, BffProjectsHomeResponse>(
+				`/projects/home?${params.toString()}`,
+			);
+			return resp;
+		},
+	});
+};
+
+export const useTogglePinMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async ({
+			projectId,
+			pin_order,
+		}: {
+			projectId: string;
+			pin_order: number | null;
+		}) => {
+			return api.patch(`/projects/${projectId}/pin`, { pin_order });
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["projects"] });
+		},
+		onError: (error: any) => {
+			const detail = error?.response?.data?.detail;
+			toast.error(detail ?? t`Failed to update pin`);
+		},
+	});
+};
+
 export const useDeleteProjectByIdMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({

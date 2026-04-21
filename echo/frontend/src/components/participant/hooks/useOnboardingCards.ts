@@ -91,7 +91,7 @@ export const useOnboardingCards = () => {
 								"Sie erhalten die Fragen, sobald Sie im Aufnahmeportal sind.",
 							cta: "Verstanden",
 							extraHelp:
-								"Die Fragen variieren je nach den Bedürfnissen des Gastgebers. Sie können sich auf kommunale Themen, Arbeitserfahrungen oder Forschungsthemen beziehen. Wenn es keine spezifischen Fragen gibt, können Sie gerne alle Gedanken oder Anliegen teilen.",
+								"Die Fragen variieren je nach Bedürfnissen der Gastgeber*innen. Sie können sich auf kommunale Themen, Arbeitserfahrungen oder Forschungsthemen beziehen. Wenn es keine spezifischen Fragen gibt, können Sie gerne alle Gedanken oder Anliegen teilen.",
 							title: "Fragerunde",
 						},
 					],
@@ -101,7 +101,7 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Als Aufnehmer haben Sie die Kontrolle über das, was Sie teilen.",
+								"Als aufnehmende Person, haben Sie die Kontrolle über das, was Sie teilen.",
 							cta: "Mehr erfahren",
 							extraHelp:
 								"Vermeiden Sie die Weitergabe von Details, die Sie dem Gastgeber nicht mitteilen möchten. Seien Sie achtsam und nehmen Sie andere nicht ohne deren Zustimmung auf.",
@@ -426,6 +426,69 @@ export const useOnboardingCards = () => {
 					],
 				},
 			],
+			"uk-UA": [
+				{
+					section: "Ласкаво просимо",
+					slides: [
+						{
+							content:
+								"Запишіть свій голос, щоб відповісти на запитання та зробити свій внесок.",
+							cta: "Почнімо!",
+							extraHelp:
+								"Це міні-інструкція. Використовуйте кнопки «назад» і «далі» для навігації. Після завершення ви потрапите на портал запису.",
+							title: "Ласкаво просимо до Dembrane!",
+						},
+						{
+							content:
+								"Dembrane допомагає людям легко збирати думки великих груп.",
+							cta: "Розкажіть більше",
+							extraHelp:
+								"Чи то зворотний зв'язок для місцевої громади, чи думки в робочому середовищі, чи участь у дослідженні — ваш голос має значення!",
+							title: "Що таке Dembrane?",
+						},
+						{
+							content:
+								"Відповідайте на запитання у зручному темпі, говорячи або друкуючи.",
+							cta: "Далі",
+							extraHelp:
+								"Голосовий ввід — наш основний режим, який дозволяє давати більш природні та детальні відповіді. Друкування завжди доступне як альтернатива.",
+							title: "Просто скажіть, що думаєте",
+						},
+						{
+							content: "Dembrane цікавіше у групі!",
+							cta: "Далі",
+							extraHelp:
+								"Dembrane цікавіше, коли ви знаходите когось, щоб обговорити запитання разом і записати вашу розмову. Ми не можемо визначити, хто що сказав, лише які ідеї були висловлені.",
+							title: "Наодинці чи в групі",
+						},
+					],
+				},
+				{
+					section: "Як це працює",
+					slides: [
+						{
+							content:
+								"Ви отримаєте запитання, коли потрапите на портал запису.",
+							cta: "Зрозуміло",
+							extraHelp:
+								"Запитання залежать від потреб організатора. Вони можуть стосуватися громадських питань, робочого досвіду або дослідницьких тем. Якщо конкретних запитань немає, ви можете вільно поділитися будь-якими думками чи проблемами.",
+							title: "Час запитань",
+						},
+					],
+				},
+				{
+					section: "Конфіденційність",
+					slides: [
+						{
+							content: "Як записувач, ви контролюєте те, чим ділитесь.",
+							cta: "Розкажіть більше",
+							extraHelp:
+								"Уникайте обміну деталями, які ви не хочете повідомляти організатору. Будьте уважні та не записуйте інших без їхньої згоди.",
+							title: "Конфіденційність важлива",
+						},
+					],
+				},
+			],
 		};
 
 		// Fallback to English if language not found
@@ -483,7 +546,7 @@ export const useOnboardingCards = () => {
 								"Sie erhalten die Fragen, sobald Sie im Aufnahmeportal sind.",
 							cta: "Verstanden",
 							extraHelp:
-								"Die Fragen variieren je nach den Bedürfnissen des Gastgebers. Sie können sich auf kommunale Themen, Arbeitserfahrungen oder Forschungsthemen beziehen. Wenn es keine spezifischen Fragen gibt, können Sie gerne alle Gedanken oder Anliegen teilen.",
+								"Die Fragen variieren je nach Bedürfnissen der Gastgeber*innen. Sie können sich auf kommunale Themen, Arbeitserfahrungen oder Forschungsthemen beziehen. Wenn es keine spezifischen Fragen gibt, können Sie gerne alle Gedanken oder Anliegen teilen.",
 							title: "Fragerunde",
 						},
 					],
@@ -493,7 +556,7 @@ export const useOnboardingCards = () => {
 					slides: [
 						{
 							content:
-								"Als Aufnehmer haben Sie die Kontrolle über das, was Sie teilen.",
+								"Als aufnehmende Person, haben Sie die Kontrolle über das, was Sie teilen.",
 							cta: "Mehr erfahren",
 							extraHelp:
 								"Vermeiden Sie die Weitergabe von Details, die Sie dem Gastgeber nicht mitteilen möchten. Seien Sie achtsam und nehmen Sie andere nicht ohne deren Zustimmung auf.",
@@ -1003,6 +1066,100 @@ export const useOnboardingCards = () => {
 					],
 				},
 			],
+			"uk-UA": [
+				{
+					section: "Ласкаво просимо",
+					slides: [
+						{
+							content:
+								"Запишіть свій голос, щоб відповісти на запитання та зробити свій внесок.",
+							cta: "Почнімо!",
+							extraHelp:
+								"Це міні-інструкція. Використовуйте кнопки «назад» і «далі» для навігації. Після завершення ви потрапите на портал запису.",
+							title: "Ласкаво просимо до Dembrane!",
+						},
+						{
+							content:
+								"Dembrane допомагає людям легко збирати думки великих груп.",
+							cta: "Розкажіть більше",
+							extraHelp:
+								"Чи то зворотний зв'язок для місцевої громади, чи думки в робочому середовищі, чи участь у дослідженні — ваш голос має значення!",
+							title: "Що таке Dembrane?",
+						},
+						{
+							content:
+								"Відповідайте на запитання у зручному темпі, говорячи або друкуючи.",
+							cta: "Далі",
+							extraHelp:
+								"Голосовий ввід — наш основний режим, який дозволяє давати більш природні та детальні відповіді. Друкування завжди доступне як альтернатива.",
+							title: "Просто скажіть, що думаєте",
+						},
+						{
+							content: "Dembrane цікавіше у групі!",
+							cta: "Далі",
+							extraHelp:
+								"Dembrane цікавіше, коли ви знаходите когось, щоб обговорити запитання разом і записати вашу розмову. Ми не можемо визначити, хто що сказав, лише які ідеї були висловлені.",
+							title: "Наодинці чи в групі",
+						},
+					],
+				},
+				{
+					section: "Як це працює",
+					slides: [
+						{
+							content:
+								"Ви отримаєте запитання, коли потрапите на портал запису.",
+							cta: "Зрозуміло",
+							extraHelp:
+								"Запитання залежать від потреб організатора. Вони можуть стосуватися громадських питань, робочого досвіду або дослідницьких тем. Якщо конкретних запитань немає, ви можете вільно поділитися будь-якими думками чи проблемами.",
+							title: "Час запитань",
+						},
+					],
+				},
+				{
+					section: "Конфіденційність",
+					slides: [
+						{
+							content: "Як записувач, ви контролюєте те, чим ділитесь.",
+							cta: "Розкажіть більше",
+							extraHelp:
+								"Уникайте обміну деталями, які ви не хочете повідомляти організатору. Будьте уважні та не записуйте інших без їхньої згоди.",
+							title: "Конфіденційність важлива",
+						},
+						...(getPrivacyCard("uk-UA", legalBasis, privacyPolicyUrl)?.slides ||
+							[]),
+					],
+				},
+				{
+					section: "Корисні поради",
+					slides: [
+						{
+							content:
+								"Уявіть, що Dembrane на гучному зв'язку з вами. Якщо ви чуєте себе — все добре.",
+							cta: "Зрозуміло",
+							extraHelp:
+								"Невеликий фоновий шум — це нормально, головне, щоб було зрозуміло, хто говорить.",
+							title: "Зменшіть фоновий шум",
+						},
+						{
+							content:
+								"Забезпечте стабільне з'єднання для безперебійного запису.",
+							cta: "Готово!",
+							extraHelp:
+								"Wi-Fi або хороший мобільний інтернет працюють найкраще. Якщо з'єднання обірветься, не хвилюйтесь. Ви завжди можете продовжити з того місця, де зупинились.",
+							title: "Надійне інтернет-з'єднання",
+						},
+						{
+							content:
+								"Запобігайте перервам, тримаючи пристрій розблокованим. Якщо він заблокується, просто розблокуйте і продовжуйте.",
+							cta: "Добре",
+							extraHelp:
+								"Dembrane намагається тримати ваш пристрій активним, але іноді пристрої можуть це перевизначити. Ви можете налаштувати параметри пристрою, щоб він залишався розблокованим довше, якщо потрібно.",
+							title: "Не блокуйте пристрій!",
+						},
+					],
+				},
+			],
 		};
 
 		// Fallback to English if language not found
@@ -1032,11 +1189,11 @@ export const useOnboardingCards = () => {
 				slides: [
 					{
 						content:
-							"Der Organisator ist verantwortlich dafür, wie Ihre Daten in dieser Sitzung verwendet werden. dembrane verarbeitet Ihr Gespräch in seinem Auftrag.",
+							"Die Organisator*innen sind dafür verantwortlich, wie Ihre Daten in dieser Sitzung verwendet werden, dembrane verarbeitet Ihr Gespräch im Auftrag dieser.",
 						cta: "Ich verstehe.",
 						extraHelp:
 							"Aufnahmen werden transkribiert und für Erkenntnisse analysiert. Ihre Daten werden auf gesicherten Servern in Europa gespeichert, nicht zum Trainieren von KI-Modellen verwendet und innerhalb von 30 Tagen nach Projektende gelöscht.\n\nFragen zu Ihrer Privatsphäre? Wenden Sie sich direkt an den Organisator.",
-						title: "Verantwortlicher, Nutzung und Sicherheit.",
+						title: "Verantwortung, Nutzung und Sicherheit.",
 					},
 				],
 			},
@@ -1105,6 +1262,19 @@ export const useOnboardingCards = () => {
 					},
 				],
 			},
+			"uk-UA": {
+				section: "Конфіденційність",
+				slides: [
+					{
+						content:
+							"Організатор відповідає за те, як використовуються ваші дані в цій сесії. dembrane обробляє вашу розмову від його імені.",
+						cta: "Я розумію",
+						extraHelp:
+							"Записи транскрибуються та аналізуються для отримання висновків. Ваші дані зберігаються на захищених серверах у Європі, не використовуються для навчання моделей ШІ та видаляються протягом 30 днів після завершення проєкту.\n\nПитання щодо вашої конфіденційності? Зверніться безпосередньо до організатора.",
+						title: "Контролер даних, використання та безпека.",
+					},
+				],
+			},
 		};
 
 		return cards[lang] || cards["en-US"] || null;
@@ -1127,7 +1297,7 @@ export const useOnboardingCards = () => {
 							required: true,
 						},
 						content:
-							"Der Organisator ist verantwortlich dafür, wie Ihre Daten in dieser Sitzung verwendet werden. dembrane verarbeitet Ihr Gespräch in seinem Auftrag.",
+							"Die Organisator*innen sind dafür verantwortlich, wie Ihre Daten in dieser Sitzung verwendet werden, dembrane verarbeitet Ihr Gespräch im Auftrag dieser.",
 						cta: "Ich verstehe.",
 						extraHelp:
 							"Aufnahmen werden transkribiert und für Erkenntnisse analysiert. Ihre Daten werden auf gesicherten Servern in Europa gespeichert, nicht zum Trainieren von KI-Modellen verwendet und innerhalb von 30 Tagen nach Projektende gelöscht.\n\nFragen zu Ihrer Privatsphäre? Wenden Sie sich direkt an den Organisator.",
@@ -1139,7 +1309,7 @@ export const useOnboardingCards = () => {
 									},
 								}
 							: {}),
-						title: "Verantwortlicher, Nutzung und Sicherheit.",
+						title: "Verantwortung, Nutzung und Sicherheit.",
 					},
 				],
 			},
@@ -1275,6 +1445,32 @@ export const useOnboardingCards = () => {
 					},
 				],
 			},
+			"uk-UA": {
+				section: "Конфіденційність",
+				slides: [
+					{
+						checkbox: {
+							label: "Я даю згоду на запис і обробку моєї розмови.",
+							required: true,
+						},
+						content:
+							"Організатор відповідає за те, як використовуються ваші дані в цій сесії. dembrane обробляє вашу розмову від його імені.",
+						cta: "Я розумію",
+						extraHelp:
+							"Записи транскрибуються та аналізуються для отримання висновків. Ваші дані зберігаються на захищених серверах у Європі, не використовуються для навчання моделей ШІ та видаляються протягом 30 днів після завершення проєкту.\n\nПитання щодо вашої конфіденційності? Зверніться безпосередньо до організатора.",
+						...(policyUrl
+							? {
+									link: {
+										label:
+											"Ознайомтесь з політикою конфіденційності організатора",
+										url: policyUrl,
+									},
+								}
+							: {}),
+						title: "Контролер даних, використання та безпека.",
+					},
+				],
+			},
 		};
 
 		return cards[lang] || cards["en-US"] || null;
@@ -1386,6 +1582,23 @@ export const useOnboardingCards = () => {
 							url: dembranePrivacyUrl,
 						},
 						title: "Gegevensgebruik en beveiliging",
+					},
+				],
+			},
+			"uk-UA": {
+				section: "Конфіденційність",
+				slides: [
+					{
+						content:
+							"dembrane записує та аналізує цю розмову на основі нашого законного інтересу: точно фіксувати обговорення, надавати надійні висновки та розвивати нашу платформу.",
+						cta: "Я розумію",
+						extraHelp:
+							"Записи та транскрипції видаляються протягом 30 днів після закриття сесії. Дані зберігаються на захищених серверах у Європі та не використовуються для навчання моделей ШІ.\n\nПитання або бажаєте заперечити? Зв'яжіться з нами за адресою info@dembrane.com або ознайомтесь з нашою політикою конфіденційності.",
+						link: {
+							label: "Ознайомтесь з повною політикою конфіденційності",
+							url: dembranePrivacyUrl,
+						},
+						title: "Використання даних та безпека",
 					},
 				],
 			},

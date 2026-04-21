@@ -174,29 +174,6 @@ const ParticipantOnboardingCards = ({
 				],
 			},
 		],
-		"it-IT": [
-			...getSystemCards("it-IT", tutorialSlug, legalBasis, privacyPolicyUrl),
-			{
-				section: "Controllo Microfono",
-				slides: [
-					{
-						component: MicrophoneTestComponent,
-						content: "Assicuriamoci di poterti sentire.",
-						title: "Controllo Microfono",
-						type: "microphone",
-					},
-				],
-			},
-			{
-				section: "Pronti a iniziare?",
-				slides: [
-					{
-						component: InitiateFormComponent,
-						title: "Pronti a iniziare?",
-					},
-				],
-			},
-		],
 		"nl-NL": [
 			...getSystemCards("nl-NL", tutorialSlug, legalBasis, privacyPolicyUrl),
 			{
@@ -222,8 +199,7 @@ const ParticipantOnboardingCards = ({
 		],
 	};
 
-	// Add this check to ensure we have valid data
-	const languageCards = cards[language as keyof typeof cards] || [];
+	const languageCards = cards[language as keyof typeof cards] || cards["en-US"];
 
 	// Flatten the slides into a single array
 	const allSlides = languageCards.flatMap((section) => section.slides);
