@@ -1,0 +1,303 @@
+import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
+import {
+	Badge,
+	Box,
+	Button,
+	Modal,
+	Stack,
+	Text,
+	Textarea,
+} from "@mantine/core";
+import { IconLock } from "@tabler/icons-react";
+import { useState, type ReactNode } from "react";
+import { toast } from "@/components/common/Toaster";
+import { API_BASE_URL } from "@/config";
+
+/**
+ * Tier-gating UI primitives for the ECHO platform.
+ *
+ * Locks in the designer's Ask 4 decisions (D9, D20):
+ *   - Gate affordance = modal only, no hover tooltip (hover reads as
+ *     marketing pressure).
+ *   - Role-aware: admin/owner sees "Request upgrade" primary. Member
+ *     sees no primary CTA — only dismiss ("ask a team admin" is the
+ *     message, not a button).
+ *   - "dembrane" lowercase, no "AI", no "successfully" per brand rules.
+ *
+ * Exports:
+ *   - <FeatureGate /> — hatched overlay for whole feature surfaces (4B)
+ *   - <UpgradeModal />  — one-feature, one-CTA modal (4C), usable standalone
+ *   - requiredTierCopy  — shared "This feature requires X plan" text
+ */
+
+export type Tier =
+	| "pilot"
+	| "pioneer"
+	| "innovator"
+	| "changemaker"
+	| "guardian";
+
+const TIER_LABEL: Record<Tier, string> = {
+	pilot: "pilot",
+	pioneer: "pioneer",
+	innovator: "innovator",
+	changemaker: "changemaker",
+	guardian: "guardian",
+};
+
+interface FeatureGateProps {
+	/** Currently-resolved workspace tier. */
+	currentTier: Tier;
+	/** Minimum tier the wrapped feature requires. */
+	requiredTier: Tier;
+	/** "Whitelabel branding" / "Data export" / "API access" etc. */
+	featureName: string;
+	/** One-line benefit sentence. */
+	benefit: string;
+	/** `true` if the caller has admin/owner role in this workspace. */
+	canRequestUpgrade: boolean;
+	/** Workspace id so the modal can POST /v2/workspaces/:id/upgrade-request. */
+	workspaceId: string;
+	/** The gated feature's normal render — shown under the hatched overlay. */
+	children: ReactNode;
+}
+
+const TIER_ORDER: Tier[] = [
+	"pilot",
+	"pioneer",
+	"innovator",
+	"changemaker",
+	"guardian",
+];
+
+function meetsTier(current: Tier, required: Tier): boolean {
+	return TIER_ORDER.indexOf(current) >= TIER_ORDER.indexOf(required);
+}
+
+/**
+ * Wraps a feature card with a hatched overlay when the tier doesn't meet
+ * the minimum. The entire card becomes a click target that opens the
+ * upgrade modal. If the tier is already met, renders children as-is.
+ */
+export function FeatureGate({
+	currentTier,
+	requiredTier,
+	featureName,
+	benefit,
+	canRequestUpgrade,
+	workspaceId,
+	children,
+}: FeatureGateProps) {
+	const [modalOpen, setModalOpen] = useState(false);
+
+	if (meetsTier(currentTier, requiredTier)) {
+		return <>{children}</>;
+	}
+
+	return (
+		<>
+			<Box
+				pos="relative"
+				onClick={() => setModalOpen(true)}
+				style={{ cursor: "pointer" }}
+				role="button"
+				tabIndex={0}
+				onKeyDown={(e) => {
+					if (e.key === "Enter" || e.key === " ") setModalOpen(true);
+				}}
+			>
+				{/* Underlying feature card — visually dimmed, non-interactive */}
+				<Box style={{ opacity: 0.4, pointerEvents: "none" }} aria-hidden>
+					{children}
+				</Box>
+				{/* Hatched overlay with gate prompt */}
+				<Box
+					pos="absolute"
+					inset={0}
+					style={{
+						// Soft hatched background — subtle, not alarming.
+						background:
+							"repeating-linear-gradient(45deg, rgba(65,105,225,0.04) 0 8px, rgba(65,105,225,0.08) 8px 16px)",
+						borderRadius: 8,
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+					}}
+				>
+					<Stack gap={6} align="center" style={{ maxWidth: 280 }} p="md">
+						<Badge
+							color="blue"
+							variant="light"
+							leftSection={<IconLock size={12} />}
+						>
+							{TIER_LABEL[requiredTier]}
+						</Badge>
+						<Text size="sm" ta="center" c="dimmed" fw={400}>
+							{benefit}
+						</Text>
+					</Stack>
+				</Box>
+			</Box>
+			<UpgradeModal
+				opened={modalOpen}
+				onClose={() => setModalOpen(false)}
+				currentTier={currentTier}
+				requiredTier={requiredTier}
+				featureName={featureName}
+				benefit={benefit}
+				canRequestUpgrade={canRequestUpgrade}
+				workspaceId={workspaceId}
+			/>
+		</>
+	);
+}
+
+interface UpgradeModalProps {
+	opened: boolean;
+	onClose: () => void;
+	currentTier: Tier;
+	requiredTier: Tier;
+	featureName: string;
+	benefit: string;
+	/** Admin/owner sees Request Upgrade. Member sees message-only per D9. */
+	canRequestUpgrade: boolean;
+	workspaceId: string;
+}
+
+/**
+ * Ask 4C — one feature, one benefit, one tier, one CTA.
+ *
+ * Admin path: "Request upgrade" posts to /v2/workspaces/:id/upgrade-request.
+ * Member path: informational only; the copy says "ask a team admin" but
+ * there's no button — Q3 decision (D9). Keeping the message honest:
+ * there's nothing we can do for them, only their admin can.
+ */
+export function UpgradeModal({
+	opened,
+	onClose,
+	currentTier,
+	requiredTier,
+	featureName,
+	benefit,
+	canRequestUpgrade,
+	workspaceId,
+}: UpgradeModalProps) {
+	const [message, setMessage] = useState("");
+	const [sending, setSending] = useState(false);
+
+	const handleRequest = async () => {
+		setSending(true);
+		try {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/workspaces/${workspaceId}/upgrade-request`,
+				{
+					body: JSON.stringify({
+						target_tier: requiredTier,
+						message: message.trim() || undefined,
+					}),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "POST",
+				},
+			);
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.detail || t`Couldn't send the request`);
+			}
+			toast.success(t`Request sent — we'll be in touch.`);
+			onClose();
+			setMessage("");
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : t`Couldn't send`);
+		} finally {
+			setSending(false);
+		}
+	};
+
+	return (
+		<Modal
+			opened={opened}
+			onClose={onClose}
+			title={<Text fw={500}>{featureName}</Text>}
+			centered
+			size="md"
+		>
+			<Stack gap="md">
+				<Text size="sm" c="dimmed">
+					{benefit}
+				</Text>
+
+				<Stack gap={6}>
+					<Box
+						p="sm"
+						style={{
+							backgroundColor: "var(--mantine-color-gray-0)",
+							borderRadius: 6,
+						}}
+					>
+						<Text size="xs" c="dimmed">
+							<Trans>Your workspace is on</Trans>
+						</Text>
+						<Text size="sm" fw={500}>
+							{TIER_LABEL[currentTier]}
+						</Text>
+					</Box>
+					<Box
+						p="sm"
+						style={{
+							backgroundColor: "rgba(65,105,225,0.06)",
+							borderRadius: 6,
+						}}
+					>
+						<Text size="xs" c="dimmed">
+							<Trans>This feature needs</Trans>
+						</Text>
+						<Text size="sm" fw={500} c="blue">
+							{TIER_LABEL[requiredTier]}
+						</Text>
+					</Box>
+				</Stack>
+
+				{canRequestUpgrade ? (
+					<>
+						<Textarea
+							label={t`Anything to add?`}
+							placeholder={t`Optional — context for our team.`}
+							value={message}
+							onChange={(e) => setMessage(e.currentTarget.value)}
+							minRows={2}
+							maxRows={5}
+							autosize
+						/>
+						<Text size="xs" c="dimmed">
+							<Trans>
+								Pricing is still a conversation — we'll email you to work out
+								what fits.
+							</Trans>
+						</Text>
+					</>
+				) : (
+					<Text size="sm" c="dimmed">
+						<Trans>
+							A team admin can request this upgrade. You can find your admins
+							in the team members list.
+						</Trans>
+					</Text>
+				)}
+
+				{/* Role-aware footer: admin gets primary, member gets close-only (D9) */}
+				<Box style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+					<Button variant="default" onClick={onClose}>
+						<Trans>Close</Trans>
+					</Button>
+					{canRequestUpgrade && (
+						<Button loading={sending} onClick={handleRequest}>
+							<Trans>Request upgrade</Trans>
+						</Button>
+					)}
+				</Box>
+			</Stack>
+		</Modal>
+	);
+}
