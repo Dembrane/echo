@@ -165,17 +165,32 @@ async def list_project_shares(
 ) -> list[ProjectShareResponse]:
     """List everyone the project is explicitly shared with.
 
-    Anyone who can access the project can see its share list — matches how
-    people naturally understand "who else is in this room".
+    Access rules (round-2 audit, F5):
+      - Workspace admin/owner sees full email + display_name + avatar.
+      - Non-admin workspace members: email is hidden when project is
+        private (unless the reader is themselves on the share list).
+      - visibility='workspace' (public to the workspace): full detail
+        for any workspace member, since this isn't a sensitive list.
+
+    No workspace access at all → 403. Missing project_id → 400 at
+    _get_project.
     """
     app_user = await get_app_user_or_raise(auth.user_id)
     project = await _get_project(project_id)
 
-    # Anyone with workspace access can read.
     workspace_id = project.get("workspace_id")
-    if workspace_id:
-        if not await user_can_access(workspace_id, app_user["id"]):
-            raise HTTPException(status_code=403, detail="No access to this project")
+    if not workspace_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Project is not attached to a workspace",
+        )
+
+    resolved = await user_can_access(workspace_id, app_user["id"])
+    if resolved is None:
+        raise HTTPException(status_code=403, detail="No access to this project")
+    reader_role, _ = resolved
+    reader_is_admin = reader_role in ("admin", "owner")
+    is_private = project.get("visibility") == "private"
 
     rows = await async_directus.get_items(
         "project_membership",
@@ -193,8 +208,14 @@ async def list_project_shares(
     out: list[ProjectShareResponse] = []
     for row in rows:
         enriched = await _enrich_member(row)
-        if enriched:
-            out.append(enriched)
+        if not enriched:
+            continue
+        # Hide email from non-admin readers on private projects, unless
+        # the reader is themselves one of the shared users (they've
+        # already seen their own email in /v2/me).
+        if is_private and not reader_is_admin and enriched.user_id != app_user["id"]:
+            enriched.email = ""
+        out.append(enriched)
     return out
 
 

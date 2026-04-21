@@ -32,10 +32,40 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
 import requests
+
+# Simple filesystem lock to block concurrent --apply runs. `--apply`
+# against the same Directus instance from two shells would race the
+# read-modify-write of workspace.settings.sticky_removed (round-2 audit,
+# Red-team H2). This guard isn't distributed — it's per-host. Good
+# enough for single-operator migrations; if we ever run from a CI
+# runner + a human shell at the same moment, this breaks down and we'd
+# need a Directus-level flag.
+_LOCK_PATH = Path("/tmp/dembrane_migrate_inherited.lock")
+
+
+@contextmanager
+def _exclusive_lock():
+    if _LOCK_PATH.exists():
+        raise RuntimeError(
+            f"Another migration is already running (lock: {_LOCK_PATH}). "
+            "If this is stale, remove it manually after confirming no other "
+            "process is running."
+        )
+    _LOCK_PATH.write_text(
+        f"pid={os.getpid()} started={datetime.now(timezone.utc).isoformat()}"
+    )
+    try:
+        yield
+    finally:
+        try:
+            _LOCK_PATH.unlink()
+        except FileNotFoundError:
+            pass
 
 DIRECTUS_URL = os.environ.get("DIRECTUS_BASE_URL", "http://directus:8055")
 DIRECTUS_TOKEN = os.environ.get("DIRECTUS_TOKEN", "")
@@ -115,6 +145,14 @@ def main() -> int:
         return 2
     print(f"Health: {health.get('status', '?')}")
 
+    # Anchor timestamp. Any row soft-deleted AFTER this instant was archived
+    # by this run — we must not count those as "pre-existing soft-deletes"
+    # when building tombstones on a re-run. Fixes the round-2 audit finding
+    # where a second --apply run would tombstone users whose access should
+    # continue via derivation.
+    script_start_iso = datetime.now(timezone.utc).isoformat()
+    print(f"Cutoff: pre-existing soft-deletes must have deleted_at < {script_start_iso}")
+
     # 1. Live inherited rows → archive by soft-delete.
     live_inherited = fetch_all(
         "workspace_membership",
@@ -133,12 +171,16 @@ def main() -> int:
         print(f"  … and {len(live_inherited) - 10} more")
 
     # 2. Soft-deleted inherited rows → convert to sticky tombstones.
+    # ONLY rows soft-deleted BEFORE this run started — these are the
+    # pre-existing "workspace admin revoked this team admin" tombstones.
+    # Rows soft-deleted after script_start_iso are our own archive output
+    # and must NOT be converted (derivation should continue granting them).
     soft_inherited = fetch_all(
         "workspace_membership",
         {
             "filter": {
                 "source": {"_eq": "inherited"},
-                "deleted_at": {"_nnull": True},
+                "deleted_at": {"_nnull": True, "_lt": script_start_iso},
             },
             "fields": ["id", "workspace_id", "user_id", "deleted_at"],
         },
@@ -162,6 +204,15 @@ def main() -> int:
     if dry_run:
         print("\nDry-run — no changes written. Re-run with --apply to mutate.")
         return 0
+
+    # Acquire the per-host lock for the mutating portion only. Dry-run
+    # never writes; it's safe to run in parallel with --apply.
+    try:
+        lock_ctx = _exclusive_lock()
+        lock_ctx.__enter__()
+    except RuntimeError as exc:
+        print(f"ERROR: {exc}")
+        return 2
 
     now_iso = datetime.now(timezone.utc).isoformat()
 
@@ -193,7 +244,16 @@ def main() -> int:
             if not isinstance(settings, dict):
                 settings = {}
 
-            existing_tombstones = list(settings.get("sticky_removed") or [])
+            # Defensive: settings.sticky_removed should be a list of dicts.
+            # If it's been manually edited or corrupted (string, dict, etc)
+            # reset to [] rather than crashing the whole migration.
+            raw_tombs = settings.get("sticky_removed")
+            if not isinstance(raw_tombs, list):
+                existing_tombstones = []
+            else:
+                existing_tombstones = [
+                    t for t in raw_tombs if isinstance(t, dict)
+                ]
             existing_user_ids = {t.get("user_id") for t in existing_tombstones}
 
             added = 0
@@ -241,15 +301,18 @@ def main() -> int:
             "fields": ["id"],
         },
     )
-    if remaining:
-        print(
-            f"\n⚠️  Invariant violated: {len(remaining)} live source='inherited' rows "
-            "still exist. Re-run the script; if they persist investigate manually."
-        )
-        return 1
+    try:
+        if remaining:
+            print(
+                f"\n⚠️  Invariant violated: {len(remaining)} live source='inherited' rows "
+                "still exist. Re-run the script; if they persist investigate manually."
+            )
+            return 1
 
-    print("\n✓ Invariant #5 holds: no live source='inherited' rows remain.")
-    return 0
+        print("\n✓ Invariant #5 holds: no live source='inherited' rows remain.")
+        return 0
+    finally:
+        lock_ctx.__exit__(None, None, None)
 
 
 if __name__ == "__main__":

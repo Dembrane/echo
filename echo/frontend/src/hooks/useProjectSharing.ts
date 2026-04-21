@@ -124,8 +124,10 @@ export const useSetProjectVisibility = (projectId: string) => {
 			return res.json() as Promise<{ status: string; visibility: string }>;
 		},
 		onSuccess: () => {
-			// Project fetches live under various keys — invalidate broadly.
-			queryClient.invalidateQueries({ queryKey: ["project"] });
+			// Project fetches live under ["projects", ...] (plural) —
+			// see frontend/src/components/project/hooks/index.ts:365.
+			// Invalidating the singular key was a silent no-op (round-2 audit).
+			queryClient.invalidateQueries({ queryKey: ["projects"] });
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "project-shares", projectId],
 			});

@@ -72,6 +72,7 @@ WORKSPACE_ROLE_PRESETS: dict[str, list[str]] = {
         "project:update",
         "project:delete",
         "project:share",
+        "project:set_private",
         "project:move",
         "conversation:read",
         "conversation:delete",
@@ -84,6 +85,9 @@ WORKSPACE_ROLE_PRESETS: dict[str, list[str]] = {
         "settings:manage",
         "workspace:view_usage",
         "workspace:export",
+        "workspace:set_private",
+        "workspace:whitelabel",
+        "workspace:api_access",
     ],
     "owner": ["*"],
 }

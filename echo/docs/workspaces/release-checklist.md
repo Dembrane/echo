@@ -407,3 +407,36 @@ Five subagents (red-team, security, reliability, fidelity, deploy-safety) review
 | D8 | `UPGRADE_REQUEST_INBOX` needs `.env.sample` entry | Deploy H10 | **Runbook item for deploy.** |
 
 All five agents agreed the core architecture is sound: no auth-bypass, no IDOR, no JWT-forgery path, no cross-tenant leakage. Fidelity score after fixes: 14.5/16 fully clean (remaining drift is D2 latent + the legacy-row migration).
+
+## Round 2 audit — 2026-04-21 (after S10/S11/S12 + migration + .env.sample)
+
+Re-ran the same 5 subagents on the new surfaces. Findings + fixes:
+
+### Fixed this pass (commits after `f2cf0a0`)
+
+| # | What | Finding ref |
+|---|---|---|
+| R2-F1 | `project:set_private`, `workspace:set_private`, `workspace:whitelabel`, `workspace:api_access` added to the admin role preset — admins can now actually use features they're entitled to on innovator+ / changemaker+ tiers (they were unreachable before because `*` was owner-only) | Red-team C1 |
+| R2-F3 | Migration: `script_start_iso` cutoff on tombstone selection — a re-run no longer converts just-archived rows into false tombstones | Reliability C1 |
+| R2-F4 | `useSetProjectVisibility` invalidates `["projects"]` (plural) — was a silent no-op previously | Reliability C2 |
+| R2-F5 | `GET /v2/projects/:id/members` strips email from non-admin readers on private projects (keeps display_name + avatar) | Red-team H1 |
+| R2-F6 | `UpgradeModal` `handleRequest` guards against double-fire (`if (sending) return`) + `disabled={sending}` on the button. Also defensively stringifies `detail` before toasting | Reliability H2 |
+| R2-F7 | `FeatureGate` when gated now renders a pure gate placeholder — children are NOT mounted at all. The previous `pointer-events: none` trick didn't stop keyboard-level listeners from firing inside the gated subtree | Security M1 |
+| R2-F8 | Migration: per-host `/tmp/dembrane_migrate_inherited.lock` prevents concurrent `--apply` runs from racing the JSON read-modify-write on `workspace.settings.sticky_removed`. Plus defensive normalisation of corrupted `sticky_removed` fields (strings, non-dict entries, etc.) | Red-team H2, Red-team M1 |
+
+### Remaining — **R2-F2 is a critical open item**
+
+| # | Finding | Source | Disposition |
+|---|---|---|---|
+| **R2-F2** | **`project.visibility='private'` is advisory only** — no read-time enforcement on project/conversation/chat/report paths. Flipping a project to "private" hides it from **no one**. The designer's Ask 3 feature ships as a **visual + intent** layer; genuine privacy requires a follow-up session that implements PRD's `get_user_project_access(project_id, user_id)` resolver and wires it into every project read path (project GET, conversation list, chat, reports, export, analytics). | Red-team C2 | **Open critical.** UI ships this release marked "advisory". A separate session before any partner uses private projects for sensitive content must land the read-path enforcement. Flagged for the team workshop + release notes. |
+| R2-H1 | PATCH `/visibility` uses inline access check instead of `get_workspace_context` dep; external admins (is_external=True) can flip visibility on workspaces they're guests of | Red-team M2 | Fix next session — cosmetic drift, security impact bounded to "external admin on workspace they were invited to" |
+| R2-H2 | Strip lives on project settings page, not overview (no dedicated overview route exists in this app) | Fidelity 10 | Accept as scope — settings page is the closest match to "project overview" in the current UX |
+| R2-Def | Various reliability polish: visibility race reconciliation, touch-device hover affordance, accessibility labels, org_name fallback, unfriendly error detail handling in share modal | Reliability + Security | Deferred — documented in-file, non-blocking |
+
+### Recommended deploy order (from deploy-safety agent)
+
+1. Push Directus schema to prod (`directus/sync.sh push`) so `project.visibility` + `workspace.settings.sticky_removed` exist.
+2. Dry-run the migration against prod, manually spot-check ~5 affected rows, then `--apply` **before** merging `workspaces` → `main`.
+3. Merge + deploy server + frontend.
+4. Set `SENDGRID_API_KEY`, `UPGRADE_REQUEST_INBOX` in prod env before first upgrade-request is triggered.
+5. Re-run migration `--apply` once after deploy to post-verify invariant #5.

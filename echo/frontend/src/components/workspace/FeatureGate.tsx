@@ -95,49 +95,53 @@ export function FeatureGate({
 		return <>{children}</>;
 	}
 
+	// Deliberately do NOT render children when gated. `pointer-events: none`
+	// was a tempting dimming trick but doesn't stop keyboard-level event
+	// listeners, async code paths, or focus-trap components inside the
+	// gated subtree (round-2 audit, Security M1). The only safe boundary
+	// is "don't mount the feature at all when the tier doesn't meet" —
+	// render just the gate placeholder card.
 	return (
 		<>
 			<Box
 				pos="relative"
 				onClick={() => setModalOpen(true)}
-				style={{ cursor: "pointer" }}
+				style={{
+					cursor: "pointer",
+					minHeight: 160,
+					borderRadius: 8,
+					// Soft hatched background — subtle, not alarming.
+					background:
+						"repeating-linear-gradient(45deg, rgba(65,105,225,0.04) 0 8px, rgba(65,105,225,0.08) 8px 16px)",
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "center",
+				}}
 				role="button"
 				tabIndex={0}
+				aria-label={`${featureName} — requires ${TIER_LABEL[requiredTier]} plan`}
 				onKeyDown={(e) => {
-					if (e.key === "Enter" || e.key === " ") setModalOpen(true);
+					if (e.key === "Enter" || e.key === " ") {
+						e.preventDefault();
+						setModalOpen(true);
+					}
 				}}
 			>
-				{/* Underlying feature card — visually dimmed, non-interactive */}
-				<Box style={{ opacity: 0.4, pointerEvents: "none" }} aria-hidden>
-					{children}
-				</Box>
-				{/* Hatched overlay with gate prompt */}
-				<Box
-					pos="absolute"
-					inset={0}
-					style={{
-						// Soft hatched background — subtle, not alarming.
-						background:
-							"repeating-linear-gradient(45deg, rgba(65,105,225,0.04) 0 8px, rgba(65,105,225,0.08) 8px 16px)",
-						borderRadius: 8,
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-					}}
-				>
-					<Stack gap={6} align="center" style={{ maxWidth: 280 }} p="md">
-						<Badge
-							color="blue"
-							variant="light"
-							leftSection={<IconLock size={12} />}
-						>
-							{TIER_LABEL[requiredTier]}
-						</Badge>
-						<Text size="sm" ta="center" c="dimmed" fw={400}>
-							{benefit}
-						</Text>
-					</Stack>
-				</Box>
+				<Stack gap={6} align="center" style={{ maxWidth: 280 }} p="md">
+					<Badge
+						color="blue"
+						variant="light"
+						leftSection={<IconLock size={12} />}
+					>
+						{TIER_LABEL[requiredTier]}
+					</Badge>
+					<Text size="sm" ta="center" fw={500}>
+						{featureName}
+					</Text>
+					<Text size="sm" ta="center" c="dimmed" fw={400}>
+						{benefit}
+					</Text>
+				</Stack>
 			</Box>
 			<UpgradeModal
 				opened={modalOpen}
@@ -187,6 +191,10 @@ export function UpgradeModal({
 	const [sending, setSending] = useState(false);
 
 	const handleRequest = async () => {
+		// Guard against double-fire: Mantine's `loading` prop doesn't disable
+		// the button, so a fast double-click would fire two POSTs before the
+		// first setSending(true) paints (round-2 audit, Reliability H2).
+		if (sending) return;
 		setSending(true);
 		try {
 			const res = await fetch(
@@ -203,7 +211,10 @@ export function UpgradeModal({
 			);
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(data.detail || t`Couldn't send the request`);
+				const detail = typeof data.detail === "string"
+					? data.detail
+					: t`Couldn't send the request`;
+				throw new Error(detail);
 			}
 			toast.success(t`Request sent — we'll be in touch.`);
 			onClose();
@@ -292,7 +303,11 @@ export function UpgradeModal({
 						<Trans>Close</Trans>
 					</Button>
 					{canRequestUpgrade && (
-						<Button loading={sending} onClick={handleRequest}>
+						<Button
+							loading={sending}
+							disabled={sending}
+							onClick={handleRequest}
+						>
 							<Trans>Request upgrade</Trans>
 						</Button>
 					)}
