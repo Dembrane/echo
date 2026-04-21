@@ -141,7 +141,10 @@ async def invite_to_workspace(
             is_external = not body.is_org_member
             ws_org_id = ctx.workspace.get("org_id")
 
-            # If marked as org member, add them to the org too
+            # If marked as org member, add them to the org too. Track
+            # whether we freshly added them so the TEAM_MEMBER_ADDED
+            # notification only fires for genuinely new team joiners.
+            newly_joined_team = False
             if body.is_org_member and ws_org_id:
                 existing_org_mem = await async_directus.get_items(
                     "org_membership",
@@ -159,6 +162,7 @@ async def invite_to_workspace(
                         "role": "member",
                     })
                     logger.info(f"Added {email} to org {ws_org_id} as member")
+                    newly_joined_team = True
 
             await async_directus.create_item("workspace_membership", {
                 "id": generate_uuid(),
@@ -191,6 +195,30 @@ async def invite_to_workspace(
                 ref_workspace_id=workspace_id,
                 ref_org_id=ws_org_id,
             )
+
+            # TEAM_MEMBER_ADDED to team admins when the invitee is new
+            # to the team. Kept out of the workspace-only path (they're
+            # still a guest there, no team-roster change to announce).
+            if newly_joined_team and ws_org_id:
+                from dembrane.notifications import (
+                    audience_team_admins,
+                    emit_to_audience,
+                )
+                team_admin_ids = await audience_team_admins(ws_org_id)
+                team_row = await async_directus.get_item("org", ws_org_id)
+                team_name = (team_row or {}).get("name") or "the team"
+                new_member_name = (
+                    app_user.get("display_name") or email or "A new member"
+                )
+                await emit_to_audience(
+                    team_admin_ids,
+                    actor_user_id=ctx.app_user_id,
+                    event_code="TEAM_MEMBER_ADDED",
+                    title=f"{new_member_name} joined {team_name}",
+                    message="They're now a team member.",
+                    action="NAVIGATE_TEAM_SETTINGS",
+                    ref_org_id=ws_org_id,
+                )
 
             # Send a notification email
             inviter_name = "Your team"

@@ -161,6 +161,57 @@ async def complete_onboarding(
                 "accepted_at": now,
             })
 
+            # Notify the inviter (INVITE_ACCEPTED #3). Mirrors the
+            # notification fired by me.accept_my_invite — same event
+            # so the inviter sees a consistent inbox row regardless of
+            # how the invitee accepted.
+            inviter_id = invite.get("invited_by")
+            if inviter_id and inviter_id != app_user_id:
+                from dembrane.notifications import emit
+                display = (
+                    (await get_directus_user_profile(directus_user_id) or {})
+                    .get("display_name") or app_user_email or "Someone"
+                )
+                await emit(
+                    audience_user_id=inviter_id,
+                    actor_user_id=app_user_id,
+                    event_code="INVITE_ACCEPTED",
+                    title=f"{display} joined {ws.get('name', 'your workspace')}",
+                    message="They accepted your invite and can now collaborate.",
+                    action="NAVIGATE_WORKSPACE_SETTINGS",
+                    ref_workspace_id=ws_id,
+                    ref_org_id=ws.get("org_id"),
+                )
+
+            # Notify team admins when a new person joins the team
+            # (TEAM_MEMBER_ADDED #16). Only fires when the invite
+            # included an org_membership grant AND the user didn't
+            # already belong to the team.
+            if is_org_invite and ws.get("org_id") and not (
+                isinstance(existing_org_mem, list) and len(existing_org_mem) > 0
+            ):
+                from dembrane.notifications import (
+                    audience_team_admins,
+                    emit_to_audience,
+                )
+                team_admins = await audience_team_admins(ws["org_id"])
+                # Skip the actor (inviter) — they already know.
+                team_row = await async_directus.get_item("org", ws["org_id"])
+                team_name = (team_row or {}).get("name") or "the team"
+                new_member_name = (
+                    (await get_directus_user_profile(directus_user_id) or {})
+                    .get("display_name") or app_user_email or "A new member"
+                )
+                await emit_to_audience(
+                    team_admins,
+                    actor_user_id=inviter_id,
+                    event_code="TEAM_MEMBER_ADDED",
+                    title=f"{new_member_name} joined {team_name}",
+                    message="They're now a team member.",
+                    action="NAVIGATE_TEAM_SETTINGS",
+                    ref_org_id=ws["org_id"],
+                )
+
     # ── Step 3: Check if user has their own projects ──
 
     user_projects = await async_directus.get_items(

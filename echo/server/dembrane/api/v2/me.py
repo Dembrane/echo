@@ -296,7 +296,11 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
     if not ws or ws.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Workspace no longer exists")
 
-    # Add org membership if requested
+    # Add org membership if requested. Track whether we freshly created
+    # the row so the TEAM_MEMBER_ADDED notification only fires once per
+    # new team joiner (not every time an existing team member accepts
+    # a workspace invite).
+    newly_joined_team = False
     if invite.get("include_org_membership") and ws.get("org_id"):
         existing_org_mem = await async_directus.get_items(
             "org_membership",
@@ -313,6 +317,7 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
                 "user_id": app_user_id,
                 "role": "member",
             })
+            newly_joined_team = True
 
     # Create workspace membership (if not already)
     existing_ws_mem = await async_directus.get_items(
@@ -352,6 +357,29 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
             action="NAVIGATE_WORKSPACE_SETTINGS",
             ref_workspace_id=invite["workspace_id"],
             ref_org_id=ws.get("org_id"),
+        )
+
+    # TEAM_MEMBER_ADDED — fires once, when the invitee is new to the
+    # team. Announces the new teammate to team admins.
+    if newly_joined_team and ws.get("org_id"):
+        from dembrane.notifications import (
+            audience_team_admins,
+            emit_to_audience,
+        )
+        team_admin_ids = await audience_team_admins(ws["org_id"])
+        team_row = await async_directus.get_item("org", ws["org_id"])
+        team_name = (team_row or {}).get("name") or "the team"
+        new_member_name = (
+            app_user.get("display_name") or app_user.get("email") or "A new member"
+        )
+        await emit_to_audience(
+            team_admin_ids,
+            actor_user_id=inviter_id,
+            event_code="TEAM_MEMBER_ADDED",
+            title=f"{new_member_name} joined {team_name}",
+            message="They're now a team member.",
+            action="NAVIGATE_TEAM_SETTINGS",
+            ref_org_id=ws["org_id"],
         )
 
     return {"status": "success", "workspace_id": invite["workspace_id"]}
@@ -547,6 +575,50 @@ async def accept_invite_by_hash(
     await async_directus.update_item("workspace_invite", target_invite["id"], {
         "accepted_at": now_iso,
     })
+
+    # INVITE_ACCEPTED → the person who sent the invite. Mirrors the
+    # notification in accept_my_invite; same event regardless of
+    # whether the invitee came via the inbox page or the email link.
+    inviter_id = target_invite.get("invited_by")
+    if inviter_id and inviter_id != app_user_id:
+        from dembrane.notifications import emit
+        accepter_name = app_user.get("display_name") or my_email or "Someone"
+        await emit(
+            audience_user_id=inviter_id,
+            actor_user_id=app_user_id,
+            event_code="INVITE_ACCEPTED",
+            title=f"{accepter_name} joined {ws.get('name', 'your workspace')}",
+            message="They accepted your invite and can now collaborate.",
+            action="NAVIGATE_WORKSPACE_SETTINGS",
+            ref_workspace_id=target_invite["workspace_id"],
+            ref_org_id=ws.get("org_id"),
+        )
+
+    # TEAM_MEMBER_ADDED → team admins, but only when the invite granted
+    # org membership AND the invitee wasn't already on the team (i.e.
+    # we just created the org_membership row a few lines above).
+    if (
+        target_invite.get("include_org_membership")
+        and ws.get("org_id")
+        and not (isinstance(existing_org_mem, list) and len(existing_org_mem) > 0)
+    ):
+        from dembrane.notifications import (
+            audience_team_admins,
+            emit_to_audience,
+        )
+        team_admin_ids = await audience_team_admins(ws["org_id"])
+        team_row = await async_directus.get_item("org", ws["org_id"])
+        team_name = (team_row or {}).get("name") or "the team"
+        new_member_name = app_user.get("display_name") or my_email or "A new member"
+        await emit_to_audience(
+            team_admin_ids,
+            actor_user_id=inviter_id,
+            event_code="TEAM_MEMBER_ADDED",
+            title=f"{new_member_name} joined {team_name}",
+            message="They're now a team member.",
+            action="NAVIGATE_TEAM_SETTINGS",
+            ref_org_id=ws["org_id"],
+        )
 
     return {
         "status": "success",
