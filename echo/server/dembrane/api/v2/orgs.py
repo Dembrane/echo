@@ -472,6 +472,74 @@ async def _rollup_workspace_access(
     return counts
 
 
+class OrgWorkspaceSummary(BaseModel):
+    id: str
+    name: str
+    tier: str
+    is_default: bool
+    project_count: int = 0
+    member_count: int = 0
+    is_private: bool = False  # settings.inherit_team_admins == false
+
+
+@router.get("/{org_id}/workspaces", response_model=list[OrgWorkspaceSummary])
+async def list_team_workspaces(
+    org_id: str,
+    auth: DependencyDirectusSession,
+) -> list[OrgWorkspaceSummary]:
+    """Every workspace in the team, visible to any team member.
+
+    A team owner's "see all my workspaces" answer — the selector only
+    shows workspaces the caller is a member of (direct or derived), but
+    team owners may want a roster view including workspaces they haven't
+    joined directly. Anyone in the team can read this.
+    """
+    app_user = await get_app_user_or_raise(auth.user_id)
+    await _require_org_role(org_id, app_user["id"], minimum="member")
+
+    workspaces = await async_directus.get_items(
+        "workspace",
+        {
+            "query": {
+                "filter": {
+                    "org_id": {"_eq": org_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": [
+                    "id",
+                    "name",
+                    "tier",
+                    "is_default",
+                    "settings",
+                    "count(projects)",
+                    "count(members)",
+                ],
+                "sort": ["-is_default", "name"],
+                "limit": -1,
+            }
+        },
+    ) or []
+    if not isinstance(workspaces, list):
+        return []
+
+    out: list[OrgWorkspaceSummary] = []
+    for ws in workspaces:
+        settings = ws.get("settings") if isinstance(ws.get("settings"), dict) else {}
+        is_private = (settings or {}).get("inherit_team_admins") is False
+        out.append(
+            OrgWorkspaceSummary(
+                id=ws["id"],
+                name=ws.get("name", ""),
+                tier=ws.get("tier", "pioneer"),
+                is_default=bool(ws.get("is_default", False)),
+                project_count=int(ws.get("projects_count", 0) or 0),
+                member_count=int(ws.get("members_count", 0) or 0),
+                is_private=is_private,
+            )
+        )
+    return out
+
+
 @router.patch("/{org_id}/members/{user_id}")
 async def change_member_role(
     org_id: str,

@@ -151,7 +151,12 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 					px="md"
 				>
 					<Group gap="md">
-						<I18nLink to={workspaceId ? `/w/${workspaceId}/projects` : "/projects"}>
+						{/* Logo click: inside a workspace → that workspace's project
+						    list. Outside any workspace context → the workspace
+						    selector (/w). Previously fell back to /projects, which
+						    was the legacy dembrane home and confusing once teams
+						    existed. */}
+						<I18nLink to={workspaceId ? `/w/${workspaceId}/projects` : "/w"}>
 							<Group align="center">
 								<Logo hideTitle={false} />
 							</Group>

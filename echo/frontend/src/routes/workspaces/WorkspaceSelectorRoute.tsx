@@ -332,16 +332,7 @@ export const WorkspaceSelectorRoute = () => {
 								{team ? (
 									<TeamHeroCard
 										team={team}
-										onManage={() => {
-											// Team admin page lives at /team/:id per D1 — not
-											// built yet; temporarily deep-link into the first
-											// workspace's settings so admins have somewhere to go.
-											// TODO: change to navigate(`/team/${orgId}/members`)
-											// once the team admin page lands (S7).
-											const firstWs = group.workspaces[0];
-											if (firstWs)
-												navigate(`/workspaces/${firstWs.id}/settings`);
-										}}
+										onManage={() => navigate(`/team/${orgId}`)}
 									/>
 								) : (
 									<Text size="sm" fw={500}>

@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { ActionIcon, Badge, Group, Paper, Stack, Text, Tooltip } from "@mantine/core";
+import { ActionIcon, Avatar, Badge, Group, Paper, Stack, Text, Tooltip } from "@mantine/core";
 import { IconLock, IconPin, IconPinFilled } from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
 import type { PropsWithChildren } from "react";
@@ -77,6 +77,54 @@ export const ProjectListItem = ({
 									{languageLabel}
 								</Badge>
 							)}
+							{/* Access bubbles: first 3 people with access + overflow
+							    count. Renders only when the v2 list gave us a preview
+							    array (legacy callers don't pass it). */}
+							{(() => {
+								const preview = (
+									project as unknown as {
+										access_preview?: Array<{
+											display_name: string;
+											avatar: string | null;
+										}>;
+										access_count?: number;
+									}
+								).access_preview;
+								const count = (
+									project as unknown as { access_count?: number }
+								).access_count ?? preview?.length ?? 0;
+								if (!preview || preview.length === 0) return null;
+								return (
+									<Tooltip
+										label={
+											count === 1
+												? t`1 person has access`
+												: t`${count} people have access`
+										}
+										withArrow
+									>
+										<Avatar.Group spacing="xs">
+											{preview.slice(0, 3).map((p, i) => (
+												<Avatar
+													key={`${p.display_name}-${i}`}
+													size="sm"
+													radius="xl"
+													src={p.avatar ?? undefined}
+												>
+													{(p.display_name || "?")
+														.slice(0, 2)
+														.toUpperCase()}
+												</Avatar>
+											))}
+											{count > 3 && (
+												<Avatar size="sm" radius="xl">
+													+{count - 3}
+												</Avatar>
+											)}
+										</Avatar.Group>
+									</Tooltip>
+								);
+							})()}
 						</Group>
 						<Text size="sm" c="dimmed">
 							<Trans>

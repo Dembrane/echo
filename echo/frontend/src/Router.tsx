@@ -34,6 +34,7 @@ import { ProjectConversationTranscript } from "./routes/project/conversation/Pro
 import {
 	ProjectPortalSettingsRoute,
 	ProjectSettingsRoute,
+	ProjectSharingRoute,
 } from "./routes/project/ProjectRoutes";
 
 // Lazy-loaded route components
@@ -134,6 +135,10 @@ const MyInvitesRoute = createLazyNamedRoute(
 	() => import("./routes/invite/MyInvitesRoute"),
 	"MyInvitesRoute",
 );
+const TeamRoute = createLazyNamedRoute(
+	() => import("./routes/team/TeamRoute"),
+	"TeamRoute",
+);
 
 // Project route children — shared between /projects and /w/:workspaceId/projects
 const projectRouteChildren = [
@@ -158,6 +163,10 @@ const projectRouteChildren = [
 							{
 								element: <ProjectPortalSettingsRoute />,
 								path: "portal-editor",
+							},
+							{
+								element: <ProjectSharingRoute />,
+								path: "sharing",
 							},
 						],
 						element: <ProjectOverviewLayout />,
@@ -316,7 +325,9 @@ export const mainRouter = createBrowserRouter([
 				path: "invites",
 			},
 			{
-				// Workspace selector + create — with header
+				// Workspace selector + create — with header.
+				// Canonical path is /w. /workspaces is kept as a redirect for
+				// existing links and emails.
 				children: [
 					{
 						element: <WorkspaceSelectorRoute />,
@@ -340,7 +351,39 @@ export const mainRouter = createBrowserRouter([
 						<BaseLayout />
 					</Protected>
 				),
+				path: "w",
+			},
+			{
+				// Legacy /workspaces alias — any deep link redirects to /w/*.
+				element: <Navigate to="/w" replace />,
 				path: "workspaces",
+			},
+			{
+				element: <Navigate to="/w/new" replace />,
+				path: "workspaces/new",
+			},
+			{
+				element: <Navigate to="/w/:workspaceId" replace />,
+				path: "workspaces/:workspaceId",
+			},
+			{
+				element: <Navigate to="/w/:workspaceId/settings" replace />,
+				path: "workspaces/:workspaceId/settings",
+			},
+			{
+				// Team (org) admin surface.
+				children: [
+					{
+						element: <TeamRoute />,
+						path: ":teamId",
+					},
+				],
+				element: (
+					<Protected>
+						<BaseLayout />
+					</Protected>
+				),
+				path: "team",
 			},
 			{
 				// Host Guide - standalone page, protected but no header/layout

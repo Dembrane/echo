@@ -10,11 +10,12 @@ import ProjectBasicEdit from "@/components/project/ProjectBasicEdit";
 import { ProjectDangerZone } from "@/components/project/ProjectDangerZone";
 import { ProjectExportSection } from "@/components/project/ProjectExportSection";
 import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
-import { ProjectSharingStrip } from "@/components/project/ProjectSharingStrip";
 import { ProjectUploadSection } from "@/components/project/ProjectUploadSection";
 import { WebhookSection } from "@/components/project/webhooks/WebhookSettingsCard";
 import { ENABLE_WEBHOOKS } from "@/config";
 import { getProjectTranscriptsLink } from "@/lib/api";
+
+export { ProjectSharingRoute } from "./ProjectSharingRoute";
 
 export const ProjectSettingsRoute = () => {
 	const { projectId } = useParams();
@@ -54,20 +55,7 @@ export const ProjectSettingsRoute = () => {
 
 			{projectQuery.data && <ProjectBasicEdit project={projectQuery.data} />}
 
-			{projectQuery.data && projectId && (
-				<ProjectSharingStrip
-					projectId={projectId}
-					visibility={
-						// `visibility` was added to the project collection for workspaces
-						// but isn't on the generated Directus type yet. Safe cast via
-						// unknown until the type is regenerated.
-						((projectQuery.data as unknown) as { visibility?: string })
-							.visibility === "private"
-							? "private"
-							: "workspace"
-					}
-				/>
-			)}
+			{/* Sharing moved to its own /sharing tab — see ProjectSharingRoute. */}
 
 			{projectQuery.data && (
 				<>

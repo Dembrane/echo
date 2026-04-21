@@ -4,6 +4,11 @@ import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
+export interface ProjectAccessPreview {
+	display_name: string;
+	avatar: string | null;
+}
+
 interface V2ProjectSummary {
 	id: string;
 	name: string | null;
@@ -12,6 +17,8 @@ interface V2ProjectSummary {
 	pin_order: number | null;
 	conversations_count: number;
 	visibility?: "workspace" | "private";
+	access_preview?: ProjectAccessPreview[];
+	access_count?: number;
 }
 
 interface V2ProjectsResponse {
