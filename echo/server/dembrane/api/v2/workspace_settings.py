@@ -54,9 +54,9 @@ class WorkspaceDetailResponse(BaseModel):
     my_role: str = ""
     my_policies: list[str] = []
     # Privacy + settings context for the settings page controls.
+    # `description` lives above (shared with legacy consumers).
     inherit_team_admins: bool = True
     inherit_team_members: bool = False
-    description: Optional[str] = None
     logo_url: Optional[str] = None
 
 
@@ -548,6 +548,37 @@ async def cancel_workspace_invite(
         raise HTTPException(status_code=404, detail="Invite not found in this workspace")
     if invite.get("accepted_at"):
         raise HTTPException(status_code=400, detail="Invite has already been accepted")
+
+    # Notify the invitee if they already have an app_user account. New-
+    # email invites have no in-app target — email would be the only
+    # channel and we deliberately don't chase those.
+    from dembrane.app_user import resolve_app_user
+    invitee_directus = await async_directus.get_users(
+        {
+            "query": {
+                "filter": {"email": {"_eq": (invite.get("email") or "").lower()}},
+                "fields": ["id"],
+                "limit": 1,
+            }
+        }
+    )
+    if isinstance(invitee_directus, list) and invitee_directus:
+        invitee_app_user = await resolve_app_user(invitee_directus[0]["id"])
+        if invitee_app_user:
+            from dembrane.notifications import emit
+            await emit(
+                audience_user_id=invitee_app_user["id"],
+                actor_user_id=ctx.app_user_id,
+                event_code="INVITE_CANCELLED",
+                title=(
+                    f"An invite to {ctx.workspace.get('name', 'a workspace')} "
+                    "was cancelled"
+                ),
+                message="The admin withdrew your pending invite.",
+                action="NONE",
+                ref_workspace_id=ctx.workspace_id,
+                ref_invite_id=invite_id,
+            )
 
     # Hard delete — there's no reason to keep canceled invites around
     await async_directus.delete_item("workspace_invite", invite_id)

@@ -134,11 +134,11 @@ from __future__ import annotations
 
 # ── Helpers ───────────────────────────────────────────────────────────
 
-def workspace_inherits_team_admins(workspace: dict) -> bool:
+def workspace_follows_team_admins(workspace: dict) -> bool:
     return (workspace.get("settings") or {}).get("inherit_team_admins", True)
 
 
-def workspace_inherits_team_members(workspace: dict) -> bool:
+def workspace_follows_team_members(workspace: dict) -> bool:
     return (workspace.get("settings") or {}).get("inherit_team_members", False)
 
 

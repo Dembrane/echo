@@ -173,8 +173,6 @@ async def set_project_visibility(
     Existing project_membership rows are preserved across a flip — admin
     curates via the share modal afterwards.
     """
-    from dembrane.api.v2.middleware import WorkspaceContext
-
     app_user = await get_app_user_or_raise(auth.user_id)
 
     project = await async_directus.get_item("project", project_id)

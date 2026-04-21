@@ -227,3 +227,27 @@ async def emit_to_audience(
         if nid:
             created.append(nid)
     return created
+
+
+# ── Sync bridge for Dramatiq actors ──────────────────────────────────────
+
+
+def emit_sync(**emit_kwargs) -> Optional[str]:
+    """Blocking variant for Dramatiq actors that can't await.
+
+    Dramatiq workers run sync code; async frameworks can't be called
+    directly. CLAUDE.md's rule is to use `run_async_in_new_loop` rather
+    than nesting event loops. Catch-all on exceptions mirrors `emit` —
+    notifications are best-effort.
+    """
+    try:
+        from dembrane.async_helpers import run_async_in_new_loop
+        return run_async_in_new_loop(emit(**emit_kwargs))
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "emit_sync failed (event=%s audience=%s): %s",
+            emit_kwargs.get("event_code"),
+            emit_kwargs.get("audience_user_id"),
+            exc,
+        )
+        return None

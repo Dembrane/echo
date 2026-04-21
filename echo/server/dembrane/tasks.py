@@ -1340,6 +1340,36 @@ def task_create_report_continue(project_id: str, report_id: int, language: str, 
             publish_report_progress(report_id, "completed", "Report ready")
             logger.info(f"Report {report_id} generated for project {project_id}")
 
+            # Notify the report's creator. Keep the audience tight —
+            # fanning to every workspace member on every report would
+            # spam inboxes. If we want a wider broadcast later, derive
+            # audience via project visibility + project_membership.
+            try:
+                from dembrane.notifications import emit_sync
+                from dembrane.app_user import resolve_app_user
+                with directus_client_context() as client:
+                    report_row = client.get_item("project_report", report_id_str)
+                    project_row = client.get_item("project", project_id) if project_id else None
+                report_data = (report_row or {}).get("data") or report_row or {}
+                creator_directus_id = report_data.get("user_created")
+                if creator_directus_id:
+                    creator = run_async_in_new_loop(
+                        resolve_app_user(creator_directus_id)
+                    )
+                    if creator:
+                        project_name = (project_row or {}).get("name") or "your project"
+                        emit_sync(
+                            audience_user_id=creator["id"],
+                            event_code="REPORT_READY",
+                            title="Your report is ready",
+                            message=f"**{project_name}** — open to review.",
+                            action="NAVIGATE_REPORT",
+                            ref_project_id=project_id,
+                            ref_report_id=report_id_str,
+                        )
+            except Exception as e:
+                logger.warning(f"Failed to emit REPORT_READY notification: {e}")
+
             # Dispatch report.generated webhook
             try:
                 from dembrane.service.webhook import dispatch_webhooks_for_report_event
@@ -1360,7 +1390,29 @@ def task_create_report_continue(project_id: str, report_id: int, language: str, 
             except Exception as update_err:
                 logger.error(f"Failed to update report status to error: {update_err}")
             publish_report_progress(report_id, "failed", str(e))
-            # Non-retriable
+            # Non-retriable — tell the creator so they don't keep waiting.
+            try:
+                from dembrane.notifications import emit_sync
+                from dembrane.app_user import resolve_app_user
+                with directus_client_context() as client:
+                    report_row = client.get_item("project_report", report_id_str)
+                report_data = (report_row or {}).get("data") or report_row or {}
+                creator_directus_id = report_data.get("user_created")
+                if creator_directus_id:
+                    creator = run_async_in_new_loop(resolve_app_user(creator_directus_id))
+                    if creator:
+                        emit_sync(
+                            audience_user_id=creator["id"],
+                            event_code="REPORT_FAILED",
+                            title="Report generation ran into a problem",
+                            message="Open the report to retry or check details.",
+                            action="NAVIGATE_REPORT",
+                            level="urgent",
+                            ref_project_id=project_id,
+                            ref_report_id=report_id_str,
+                        )
+            except Exception as notif_err:
+                logger.warning(f"Failed to emit REPORT_FAILED: {notif_err}")
             return
 
         except Exception as e:

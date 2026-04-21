@@ -41,9 +41,9 @@ class WorkspaceContext:
         self.is_external = is_external
 
     def has_policy(self, required: str) -> bool:
-        # Note: tier auto-wiring lives in policies.has_policy (S6). Workspace
-        # tier is forwarded through so tier gates resolve without per-endpoint
-        # require_tier() calls once that wiring is in place.
+        # Tier auto-wiring is in policies.has_policy — workspace_tier is
+        # forwarded so tier gates fire without per-endpoint require_tier
+        # calls.
         return has_policy(
             self.role,
             self.custom_policies,

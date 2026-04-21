@@ -399,6 +399,28 @@ async def create_workspace(
         f"(admins_follow={body.inherit_team_admins}, members_follow={body.inherit_team_members})"
     )
 
+    # Tell the team's other admins/owners that a new workspace exists.
+    # Open workspaces grant them access via derivation; they'd otherwise
+    # find out by refreshing the selector.
+    from dembrane.notifications import emit_to_audience, audience_team_admins
+    creator_row = await async_directus.get_item("app_user", app_user_id)
+    creator_name = (creator_row or {}).get("display_name") or "A team admin"
+    team_admin_ids = await audience_team_admins(org_id)
+    await emit_to_audience(
+        team_admin_ids,
+        actor_user_id=app_user_id,
+        event_code="WORKSPACE_CREATED",
+        title=f"{creator_name} created {body.name.strip()}",
+        message=(
+            "The new workspace is open to the team — you have access."
+            if body.inherit_team_admins
+            else "The new workspace is private — only explicitly invited people have access."
+        ),
+        action="NAVIGATE_WS",
+        ref_workspace_id=ws_id,
+        ref_org_id=org_id,
+    )
+
     return CreateWorkspaceResponse(
         id=ws_id,
         name=body.name.strip(),
@@ -669,4 +691,23 @@ async def request_upgrade(
         f"Upgrade request: workspace {ctx.workspace_id} {current_tier} → {target} "
         f"by {ctx.app_user_id}"
     )
+
+    # Tell co-admins that a request is out so two of them don't both
+    # email the billing inbox with the same ask. Skips the requester.
+    from dembrane.notifications import emit_to_audience, audience_workspace_admins
+    audience = await audience_workspace_admins(ctx.workspace_id)
+    await emit_to_audience(
+        audience,
+        actor_user_id=ctx.app_user_id,
+        event_code="UPGRADE_REQUEST_SENT",
+        title=f"{requester_name or 'A team admin'} requested an upgrade",
+        message=(
+            f"**{workspace_name}** · {current_tier} → {target}. "
+            "We'll follow up over email."
+        ),
+        action="NAVIGATE_WS",
+        ref_workspace_id=ctx.workspace_id,
+        ref_org_id=ctx.workspace.get("org_id"),
+    )
+
     return {"status": "sent"}
