@@ -113,24 +113,20 @@ async def _get_workspace_usage(ws_id: str) -> WorkspaceUsage:
 
 
 async def _get_member_previews(ws_id: str) -> list[MemberPreview]:
-    """Get first 4 member avatars for a workspace."""
-    memberships = await async_directus.get_items(
-        "workspace_membership",
-        {
-            "query": {
-                "filter": {
-                    "workspace_id": {"_eq": ws_id},
-                    "deleted_at": {"_null": True},
-                },
-                "fields": ["user_id"],
-                "limit": 4,
-            }
-        },
-    )
-    if not isinstance(memberships, list) or len(memberships) == 0:
-        return []
+    """Get first 4 member avatars for a workspace.
 
-    user_ids = [m["user_id"] for m in memberships if m.get("user_id")]
+    Uses get_effective_members so derived team admins are represented.
+    Raw workspace_membership reads would show only direct rows and lie
+    about who's on open workspaces. (Audit round 2026-04-21, MEDIUM.)
+    """
+    from dembrane.inheritance import get_effective_members
+
+    members = await get_effective_members(ws_id)
+    if not members:
+        return []
+    # Direct rows bubble to the top of get_effective_members.sort() so
+    # previews are deterministic and prioritise explicit membership.
+    user_ids = [m["user_id"] for m in members[:4] if m.get("user_id")]
     if not user_ids:
         return []
 

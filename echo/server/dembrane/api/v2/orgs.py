@@ -352,9 +352,14 @@ async def list_org_members(
     """Team members list. Anyone in the team can read this (members need to
     see who their admins are, per Q3 decision: we don't build an "ask an
     admin" CTA, but members should still be able to find them).
+
+    Email redaction: mirrors the workspace-settings pattern — only team
+    admins/owners see the full email. Members see display_name only.
+    A member always sees their own email (self-row).
     """
     app_user = await get_app_user_or_raise(auth.user_id)
-    await _require_org_role(org_id, app_user["id"], minimum="member")
+    caller_role = await _require_org_role(org_id, app_user["id"], minimum="member")
+    can_manage = caller_role in ("admin", "owner")
 
     memberships = await async_directus.get_items(
         "org_membership",
@@ -420,11 +425,13 @@ async def list_org_members(
         uid = m["user_id"]
         app_row = app_user_map.get(uid) or {}
         du_id = app_row.get("directus_user_id") or ""
+        is_self = uid == app_user["id"]
+        show_email = can_manage or is_self
         out.append(
             OrgMemberResponse(
                 user_id=uid,
                 app_user_id=uid,
-                email=app_row.get("email") or "",
+                email=(app_row.get("email") or "") if show_email else "",
                 display_name=app_row.get("display_name") or "",
                 avatar=avatar_map.get(du_id) if du_id else None,
                 role=m.get("role", "member"),
@@ -495,7 +502,8 @@ async def list_team_workspaces(
     joined directly. Anyone in the team can read this.
     """
     app_user = await get_app_user_or_raise(auth.user_id)
-    await _require_org_role(org_id, app_user["id"], minimum="member")
+    caller_role = await _require_org_role(org_id, app_user["id"], minimum="member")
+    caller_is_manager = caller_role in ("admin", "owner")
 
     # Pull settings.inherit_team_admins explicitly (sub-field projection)
     # so we don't need to send the whole JSON (also avoids accidentally
@@ -572,10 +580,16 @@ async def list_team_workspaces(
                 if wid:
                     member_counts[wid] = cnt
 
+    # Hide private workspaces from non-admin team members — the whole
+    # point of a private workspace is that team admins can't see it,
+    # advertising its name + tier in a team-scoped list contradicts that.
+    # Admins/owners still see the full roster (they're the audience).
     out: list[OrgWorkspaceSummary] = []
     for ws in workspaces:
         settings = ws.get("settings") if isinstance(ws.get("settings"), dict) else {}
         is_private = (settings or {}).get("inherit_team_admins") is False
+        if is_private and not caller_is_manager:
+            continue
         out.append(
             OrgWorkspaceSummary(
                 id=ws["id"],

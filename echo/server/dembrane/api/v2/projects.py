@@ -99,34 +99,32 @@ async def move_project(
         if project.get("directus_user_id") != auth.user_id:
             raise HTTPException(status_code=403, detail="Not the owner of this project")
 
-    # Check source workspace access
+    # Source + target access must both resolve as admin/owner. Using
+    # user_can_access honors derived inheritance — a team owner who has
+    # no direct workspace row still legitimately administers the
+    # workspace. The previous raw workspace_membership lookup 403'd them
+    # incorrectly. (Audit round 2026-04-21, HIGH.)
     if source_workspace_id:
-        source_membership = await async_directus.get_items(
-            "workspace_membership",
-            {"query": {"filter": {
-                "workspace_id": {"_eq": source_workspace_id},
-                "user_id": {"_eq": app_user_id},
-                "deleted_at": {"_null": True},
-            }, "limit": 1}},
-        )
-        if not isinstance(source_membership, list) or len(source_membership) == 0:
-            raise HTTPException(status_code=403, detail="No access to source workspace")
-        if source_membership[0].get("role", "") not in ("admin", "owner"):
-            raise HTTPException(status_code=403, detail="Must be admin or owner of source workspace")
+        src = await user_can_access(source_workspace_id, app_user_id)
+        if src is None:
+            raise HTTPException(
+                status_code=403, detail="No access to source workspace"
+            )
+        if src[0] not in ("admin", "owner"):
+            raise HTTPException(
+                status_code=403,
+                detail="Must be admin or owner of source workspace",
+            )
 
-    # Check target workspace access
-    target_membership = await async_directus.get_items(
-        "workspace_membership",
-        {"query": {"filter": {
-            "workspace_id": {"_eq": target_workspace_id},
-            "user_id": {"_eq": app_user_id},
-            "deleted_at": {"_null": True},
-        }, "limit": 1}},
-    )
-    if not isinstance(target_membership, list) or len(target_membership) == 0:
-        raise HTTPException(status_code=403, detail="No access to target workspace")
-    if target_membership[0].get("role", "") not in ("admin", "owner"):
-        raise HTTPException(status_code=403, detail="Must be admin or owner of target workspace")
+    tgt = await user_can_access(target_workspace_id, app_user_id)
+    if tgt is None:
+        raise HTTPException(
+            status_code=403, detail="No access to target workspace"
+        )
+    if tgt[0] not in ("admin", "owner"):
+        raise HTTPException(
+            status_code=403, detail="Must be admin or owner of target workspace"
+        )
 
     target_workspace = await async_directus.get_item("workspace", target_workspace_id)
     if not target_workspace or target_workspace.get("deleted_at"):

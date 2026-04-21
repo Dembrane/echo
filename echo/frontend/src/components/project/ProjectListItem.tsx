@@ -166,6 +166,10 @@ export const ProjectListItem = ({
 							{(ownerName || ownerEmail) && (
 								<>
 									{" • "}
+									{/* Show name by default; email only on hover via tooltip.
+									    Matches the "don't display emails by default in lists"
+									    rule from CLAUDE.md + brand style guide. Falls back to
+									    email when the owner has no display_name (rare). */}
 									<Tooltip label={ownerEmail} disabled={!ownerEmail}>
 										<Text
 											size="sm"
@@ -178,7 +182,7 @@ export const ProjectListItem = ({
 												onSearchOwner?.(ownerEmail ?? ownerName ?? "");
 											}}
 										>
-											{ownerName ?? ownerEmail}
+											{ownerName || t`Unknown`}
 										</Text>
 									</Tooltip>
 								</>

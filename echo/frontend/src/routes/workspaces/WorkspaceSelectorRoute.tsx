@@ -188,6 +188,58 @@ function WorkspaceCard({
 	);
 }
 
+/**
+ * Dashed placeholder card that lives at the end of each team's workspace
+ * grid for admins/owners. Clicking it navigates to /w/new?teamId=<org>
+ * so the create form knows which team to create inside.
+ *
+ * Solves the "create workspace BUT WHERE?" ambiguity — the card sits
+ * physically under the team it belongs to, no confusion.
+ */
+function AddWorkspaceCard({ teamId }: { teamId: string }) {
+	const navigate = useI18nNavigate();
+	return (
+		<Paper
+			p="lg"
+			radius="md"
+			role="button"
+			tabIndex={0}
+			style={{
+				cursor: "pointer",
+				border: "1px dashed var(--mantine-color-gray-4)",
+				background: "transparent",
+				display: "flex",
+				alignItems: "center",
+				justifyContent: "center",
+				minHeight: 140,
+				transition: "border-color 0.15s ease, background 0.15s ease",
+			}}
+			onMouseEnter={(e) => {
+				e.currentTarget.style.borderColor = "var(--mantine-color-blue-5)";
+				e.currentTarget.style.background = "rgba(65,105,225,0.03)";
+			}}
+			onMouseLeave={(e) => {
+				e.currentTarget.style.borderColor = "var(--mantine-color-gray-4)";
+				e.currentTarget.style.background = "transparent";
+			}}
+			onClick={() => navigate(`/w/new?teamId=${teamId}`)}
+			onKeyDown={(e) => {
+				if (e.key === "Enter" || e.key === " ") {
+					e.preventDefault();
+					navigate(`/w/new?teamId=${teamId}`);
+				}
+			}}
+		>
+			<Stack gap={6} align="center">
+				<IconPlus size={20} style={{ color: "var(--mantine-color-gray-6)" }} />
+				<Text size="sm" c="dimmed">
+					<Trans>Add workspace</Trans>
+				</Text>
+			</Stack>
+		</Paper>
+	);
+}
+
 function TeamHeroCard({
 	team,
 	onManage,
@@ -297,19 +349,12 @@ export const WorkspaceSelectorRoute = () => {
 	return (
 		<Container size="md" py="xl" px="lg">
 				<Stack gap={32}>
-					{/* Header */}
-					<Group justify="space-between" align="flex-end">
-						<Title order={3} fw={400}>
-							<Trans>Workspaces</Trans>
-						</Title>
-						<Button
-							size="sm"
-							leftSection={<IconPlus size={16} />}
-							onClick={() => navigate("/w/new")}
-						>
-							<Trans>New workspace</Trans>
-						</Button>
-					</Group>
+					{/* Header — create-workspace is NOT up here. We put
+					    "Add workspace" dashed cards inside each team's grid
+					    so the placement answers "create where?" by itself. */}
+					<Title order={3} fw={400}>
+						<Trans>Workspaces</Trans>
+					</Title>
 
 					{/* Search (show when >3 workspaces) */}
 					{workspaces.length > 3 && (
@@ -346,9 +391,16 @@ export const WorkspaceSelectorRoute = () => {
 											key={ws.id}
 											workspace={ws}
 											onSelect={() => handleSelect(ws)}
-											onManage={() => navigate(`/workspaces/${ws.id}/settings`)}
+											onManage={() => navigate(`/w/${ws.id}/settings`)}
 										/>
 									))}
+									{/* Dashed "+ new workspace" placeholder — admin/
+									    owner only. Lives under the team it belongs
+									    to so create-where is answered by placement. */}
+									{(group.role === "owner" ||
+										group.role === "admin") && (
+										<AddWorkspaceCard teamId={orgId} />
+									)}
 								</SimpleGrid>
 							</Stack>
 						);
