@@ -105,16 +105,23 @@ function WorkspaceCard({
 	onManage,
 }: { workspace: Workspace; onSelect: () => void; onManage?: () => void }) {
 	const isAdminOrOwner = workspace.role === "admin" || workspace.role === "owner";
+	const [hovered, setHovered] = useState(false);
 
 	return (
 		<Paper
 			p="lg"
 			radius="md"
 			withBorder
-			style={{ cursor: "pointer", transition: "box-shadow 0.15s ease" }}
+			style={{
+				cursor: "pointer",
+				transition: "box-shadow 0.15s ease, transform 0.15s ease",
+				boxShadow: hovered ? "0 2px 12px rgba(0,0,0,0.08)" : undefined,
+			}}
 			onClick={onSelect}
-			onMouseOver={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(0,0,0,0.08)"; }}
-			onMouseOut={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
+			onMouseEnter={() => setHovered(true)}
+			onMouseLeave={() => setHovered(false)}
+			onFocus={() => setHovered(true)}
+			onBlur={() => setHovered(false)}
 		>
 			<Stack gap={12}>
 				<Group justify="space-between" align="flex-start">
@@ -123,9 +130,9 @@ function WorkspaceCard({
 							{workspace.name}
 						</Text>
 						{workspace.is_external && (
-							<Badge size="xs" variant="light" color="gray" mt={4}>
-								<Trans>External</Trans>
-							</Badge>
+							<Text size="xs" c="dimmed" mt={4}>
+								<Trans>guest of {workspace.org_name}</Trans>
+							</Text>
 						)}
 					</Box>
 					<Badge size="xs" variant="light" color="blue">
@@ -152,13 +159,20 @@ function WorkspaceCard({
 					/>
 					<Group gap={8}>
 						{isAdminOrOwner && onManage && (
+							// Manage affordance appears on hover/focus — keeps the resting
+							// state calm (designer Ask 5: "⚙ manage shows on row hover").
 							<Button
 								size="compact-xs"
 								variant="subtle"
 								color="gray"
+								leftSection={<IconSettings size={12} />}
 								onClick={(e) => {
 									e.stopPropagation();
 									onManage();
+								}}
+								style={{
+									opacity: hovered ? 1 : 0,
+									transition: "opacity 0.15s ease",
 								}}
 							>
 								<Trans>Manage</Trans>
@@ -170,6 +184,53 @@ function WorkspaceCard({
 					</Group>
 				</Group>
 			</Stack>
+		</Paper>
+	);
+}
+
+function TeamHeroCard({
+	team,
+	onManage,
+}: {
+	team: TeamRollup;
+	onManage: () => void;
+}) {
+	const isAdminOrOwner = team.role === "admin" || team.role === "owner";
+	return (
+		<Paper
+			p="lg"
+			radius="md"
+			style={{
+				background:
+					"linear-gradient(135deg, rgba(65,105,225,0.04) 0%, rgba(65,105,225,0.01) 100%)",
+				border: "1px solid rgba(65,105,225,0.15)",
+			}}
+		>
+			<Group justify="space-between" align="flex-start">
+				<Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
+					<Text fw={500} size="lg" lineClamp={1}>
+						{team.name}
+					</Text>
+					<Text size="xs" c="dimmed">
+						{team.workspace_count}{" "}
+						{team.workspace_count === 1 ? t`workspace` : t`workspaces`} ·{" "}
+						{team.total_members}{" "}
+						{team.total_members === 1 ? t`person` : t`people`} ·{" "}
+						{team.total_projects} {t`projects`}
+					</Text>
+				</Stack>
+				{isAdminOrOwner && (
+					<Button
+						variant="subtle"
+						size="xs"
+						color="blue"
+						leftSection={<IconSettings size={14} />}
+						onClick={onManage}
+					>
+						<Trans>Manage team</Trans>
+					</Button>
+				)}
+			</Group>
 		</Paper>
 	);
 }
@@ -260,38 +321,33 @@ export const WorkspaceSelectorRoute = () => {
 						/>
 					)}
 
-					{/* Team groups */}
+					{/* Team groups — team hero card tops each group when a rollup
+					    exists; falls back to a plain heading otherwise (designer
+					    Ask 5: team-level context at top). */}
 					{Array.from(orgGroups.entries()).map(([orgId, group]) => {
 						const team = teams.find((t) => t.id === orgId);
 
 						return (
 							<Stack key={orgId} gap={16}>
-								<Group justify="space-between" align="center">
-									<Group gap={8}>
-										<Text size="sm" fw={500}>
-											{group.name}
-										</Text>
-										{team && (
-											<Text size="xs" c="dimmed">
-												{team.total_projects} {t`projects`} · {team.total_members} {t`members`} · {team.total_audio_hours}h
-											</Text>
-										)}
-									</Group>
-									{(group.role === "owner" || group.role === "admin") && (
-										<Button
-											variant="subtle"
-											size="xs"
-											color="gray"
-											leftSection={<IconSettings size={14} />}
-											onClick={() => {
-												const firstWs = group.workspaces[0];
-												if (firstWs) navigate(`/workspaces/${firstWs.id}/settings`);
-											}}
-										>
-											<Trans>Manage</Trans>
-										</Button>
-									)}
-								</Group>
+								{team ? (
+									<TeamHeroCard
+										team={team}
+										onManage={() => {
+											// Team admin page lives at /team/:id per D1 — not
+											// built yet; temporarily deep-link into the first
+											// workspace's settings so admins have somewhere to go.
+											// TODO: change to navigate(`/team/${orgId}/members`)
+											// once the team admin page lands (S7).
+											const firstWs = group.workspaces[0];
+											if (firstWs)
+												navigate(`/workspaces/${firstWs.id}/settings`);
+										}}
+									/>
+								) : (
+									<Text size="sm" fw={500}>
+										{group.name}
+									</Text>
+								)}
 
 								<SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
 									{group.workspaces.map((ws) => (
@@ -307,11 +363,12 @@ export const WorkspaceSelectorRoute = () => {
 						);
 					})}
 
-					{/* External workspaces */}
+					{/* External workspaces — quieter section, individual "guest of"
+					    labels live on each card (designer Ask 5). */}
 					{externalWorkspaces.length > 0 && (
-						<Stack gap={16}>
-							<Text size="sm" fw={500} c="dimmed">
-								<Trans>External</Trans>
+						<Stack gap={12}>
+							<Text size="xs" fw={500} c="dimmed" tt="uppercase" lts={0.5}>
+								<Trans>As a guest</Trans>
 							</Text>
 							<SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
 								{externalWorkspaces.map((ws) => (
@@ -319,7 +376,9 @@ export const WorkspaceSelectorRoute = () => {
 										key={ws.id}
 										workspace={ws}
 										onSelect={() => handleSelect(ws)}
-										onManage={() => navigate(`/workspaces/${ws.id}/settings`)}
+										// External guests don't manage the workspace they visit
+										// — suppress the affordance.
+										onManage={undefined}
 									/>
 								))}
 							</SimpleGrid>
