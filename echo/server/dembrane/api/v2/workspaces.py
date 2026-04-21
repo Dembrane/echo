@@ -528,6 +528,37 @@ async def set_workspace_tier(
         f"(direction={direction}, by={auth.user_id}, reason={body.reason!r}, "
         f"effects={[e['policy'] for e in effects]})"
     )
+
+    # Notify workspace admins/owners so they know about the tier change.
+    # Staff changes bypass the usual admin flow — without this notification
+    # admins would see feature gates flip (or logo disappear) with no
+    # explanation. Skip the (staff) actor since they already know.
+    if direction != "no-change":
+        from dembrane.notifications import emit_to_audience, audience_workspace_admins
+        ws_name = workspace.get("name", "your workspace")
+        if direction == "upgrade":
+            title = f"{ws_name} upgraded to {to_tier}"
+            message = f"You now have {to_tier}-tier features unlocked."
+        else:
+            title = f"{ws_name} moved to {to_tier}"
+            effect_list = ", ".join(e.get("human", "") for e in effects if e.get("human"))
+            message = (
+                f"Some features are now limited: {effect_list}."
+                if effect_list
+                else "Some features are now limited."
+            )
+        audience = await audience_workspace_admins(workspace_id)
+        await emit_to_audience(
+            audience,
+            event_code=(
+                "TIER_UPGRADED" if direction == "upgrade" else "TIER_DOWNGRADED"
+            ),
+            title=title,
+            message=message,
+            action="NAVIGATE_WS",
+            ref_workspace_id=workspace_id,
+        )
+
     return SetTierResponse(
         workspace_id=workspace_id,
         previous_tier=from_tier,

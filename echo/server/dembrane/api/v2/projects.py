@@ -254,4 +254,40 @@ async def set_project_visibility(
         f"Project {project_id} visibility: {current} → {body.visibility} "
         f"by {app_user['id']}"
     )
+
+    # Notify workspace members so they understand why a project they
+    # could see yesterday is suddenly gone (or why a new one appeared).
+    # Skip the actor so they don't see "you changed the visibility".
+    from dembrane.notifications import emit_to_audience, audience_workspace_members
+    project_name = project.get("name") or "A project"
+    audience = await audience_workspace_members(workspace_id)
+    if body.visibility == "private":
+        await emit_to_audience(
+            audience,
+            actor_user_id=app_user["id"],
+            event_code="PROJECT_NOW_PRIVATE",
+            title=f"{project_name} is now private",
+            message=(
+                f"It's no longer visible to the whole workspace. "
+                "Only the people explicitly shared can see it."
+            ),
+            action="NONE",
+            ref_workspace_id=workspace_id,
+            ref_project_id=project_id,
+        )
+    else:
+        await emit_to_audience(
+            audience,
+            actor_user_id=app_user["id"],
+            event_code="PROJECT_NOW_WORKSPACE",
+            title=f"{project_name} is now shared with the workspace",
+            message=(
+                f"Everyone in {workspace.get('name', 'this workspace')} "
+                "can see it."
+            ),
+            action="NAVIGATE_PROJECT",
+            ref_workspace_id=workspace_id,
+            ref_project_id=project_id,
+        )
+
     return {"status": "updated", "visibility": body.visibility}

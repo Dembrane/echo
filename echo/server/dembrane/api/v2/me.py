@@ -338,6 +338,22 @@ async def accept_my_invite(invite_id: str, auth: DependencyDirectusSession) -> d
         "accepted_at": now_iso,
     })
 
+    # Notify the inviter that their invite was accepted.
+    inviter_id = invite.get("invited_by")
+    if inviter_id and inviter_id != app_user_id:
+        from dembrane.notifications import emit
+        accepter_name = app_user.get("display_name") or app_user.get("email") or "Someone"
+        await emit(
+            audience_user_id=inviter_id,
+            actor_user_id=app_user_id,
+            event_code="INVITE_ACCEPTED",
+            title=f"{accepter_name} joined {ws.get('name', 'your workspace')}",
+            message="They accepted your invite and can now collaborate.",
+            action="NAVIGATE_WORKSPACE_SETTINGS",
+            ref_workspace_id=invite["workspace_id"],
+            ref_org_id=ws.get("org_id"),
+        )
+
     return {"status": "success", "workspace_id": invite["workspace_id"]}
 
 
@@ -354,6 +370,22 @@ async def decline_my_invite(invite_id: str, auth: DependencyDirectusSession) -> 
         raise HTTPException(status_code=403, detail="This invite isn't for you")
     if invite.get("accepted_at"):
         raise HTTPException(status_code=400, detail="Invite already accepted")
+
+    # Notify the inviter before deletion (we still have the row).
+    inviter_id = invite.get("invited_by")
+    if inviter_id:
+        ws_for_notif = await async_directus.get_item("workspace", invite.get("workspace_id"))
+        ws_name = (ws_for_notif or {}).get("name") or "a workspace"
+        from dembrane.notifications import emit
+        await emit(
+            audience_user_id=inviter_id,
+            actor_user_id=app_user["id"],
+            event_code="INVITE_DECLINED",
+            title=f"{email} declined your invite",
+            message=f"They chose not to join **{ws_name}**.",
+            action="NAVIGATE_WORKSPACE_SETTINGS",
+            ref_workspace_id=invite.get("workspace_id"),
+        )
 
     await async_directus.delete_item("workspace_invite", invite_id)
     return {"status": "success"}

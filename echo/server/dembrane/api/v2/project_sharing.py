@@ -378,6 +378,20 @@ async def change_project_share_role(
         f"Project {project_id} share role changed: {user_id} → {body.role} "
         f"by {acting_user['id']}"
     )
+
+    if user_id != acting_user["id"]:
+        project_name = project.get("name") or "a project"
+        from dembrane.notifications import emit
+        await emit(
+            audience_user_id=user_id,
+            actor_user_id=acting_user["id"],
+            event_code="PROJECT_SHARE_ROLE_CHANGED",
+            title=f"Your access to {project_name} changed",
+            message=f"You're now a **{body.role}** on this project.",
+            action="NAVIGATE_PROJECT",
+            ref_project_id=project_id,
+        )
+
     return {"status": "updated", "role": body.role}
 
 
@@ -415,4 +429,19 @@ async def revoke_project_share(
     logger.info(
         f"Revoked project {project_id} share for {user_id} by {acting_user['id']}"
     )
+
+    if user_id != acting_user["id"]:
+        project_name = project.get("name") or "a project"
+        from dembrane.notifications import emit
+        await emit(
+            audience_user_id=user_id,
+            actor_user_id=acting_user["id"],
+            event_code="PROJECT_SHARE_REVOKED",
+            title=f"Your access to {project_name} was revoked",
+            message="Ask the project owner if you still need access.",
+            action="NONE",
+            ref_project_id=project_id,
+            ref_workspace_id=project.get("workspace_id"),
+        )
+
     return {"status": "revoked"}

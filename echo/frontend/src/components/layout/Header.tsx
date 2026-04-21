@@ -43,6 +43,7 @@ import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { testId } from "@/lib/testUtils";
 import { AnnouncementIcon } from "../announcement/AnnouncementIcon";
 import { Announcements } from "../announcement/Announcements";
+import { NotificationsDrawer } from "../notifications/NotificationsDrawer";
 import { TopAnnouncementBar } from "../announcement/TopAnnouncementBar";
 import { FeedbackPortalModal } from "../common/FeedbackPortalModal";
 import { Logo } from "../common/Logo";
@@ -179,6 +180,10 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 									<Announcements />
 								</>
 							)}
+							{/* Personal notifications — sibling of the announcement
+							    icon. Collapses into one consolidated "Inbox" icon
+							    when the designer's inbox pattern lands. */}
+							<NotificationsDrawer />
 							<Menu withArrow arrowPosition="center" width={240} keepMounted>
 								<Menu.Target>
 									<ActionIcon
