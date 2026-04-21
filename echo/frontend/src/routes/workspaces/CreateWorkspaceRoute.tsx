@@ -106,7 +106,7 @@ export const CreateWorkspaceRoute = () => {
 								<Button
 									size="sm"
 									variant="default"
-									onClick={() => navigate("/workspaces")}
+									onClick={() => navigate("/w")}
 								>
 									<Trans>Cancel</Trans>
 								</Button>

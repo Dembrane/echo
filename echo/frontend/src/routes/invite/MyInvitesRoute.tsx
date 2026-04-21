@@ -76,7 +76,7 @@ export const MyInvitesRoute = () => {
 					<Title order={4} fw={400} c="dimmed">
 						<Trans>No pending invites</Trans>
 					</Title>
-					<Button variant="default" size="sm" onClick={() => navigate("/workspaces")}>
+					<Button variant="default" size="sm" onClick={() => navigate("/w")}>
 						<Trans>Back to workspaces</Trans>
 					</Button>
 				</Stack>

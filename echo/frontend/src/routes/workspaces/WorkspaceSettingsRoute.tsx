@@ -60,6 +60,10 @@ interface WorkspaceDetail {
 	}>;
 	my_role: string;
 	my_policies: string[];
+	inherit_team_admins: boolean;
+	inherit_team_members: boolean;
+	description: string | null;
+	logo_url: string | null;
 }
 
 async function fetchSettings(workspaceId: string): Promise<WorkspaceDetail | null> {
@@ -111,7 +115,16 @@ async function changeRole(workspaceId: string, membershipId: string, role: strin
 	}
 }
 
-async function updateWorkspace(workspaceId: string, payload: { name?: string; description?: string }) {
+async function updateWorkspace(
+	workspaceId: string,
+	payload: {
+		name?: string;
+		description?: string;
+		logo_url?: string;
+		inherit_team_admins?: boolean;
+		inherit_team_members?: boolean;
+	},
+) {
 	const res = await fetch(
 		`${API_BASE_URL}/v2/workspaces/${workspaceId}/settings`,
 		{
@@ -322,11 +335,24 @@ export const WorkspaceSettingsRoute = () => {
 						variant="subtle"
 						size="xs"
 						color="gray"
-						onClick={() => navigate("/workspaces")}
+						onClick={() => navigate("/w")}
 					>
 						<Trans>Back to workspaces</Trans>
 					</Button>
 				</Group>
+
+				<Divider />
+
+				{/* Privacy + defaults — admin-only. Kept compact: name + logo
+				    + a single toggle for team-admin inheritance. Member
+				    inheritance is an advanced knob hidden unless the caller
+				    is an owner (exposing three sub-toggles to every admin
+				    clutters the surface). */}
+				<PrivacyAndDefaultsSection
+					settings={settings}
+					canEdit={canEditSettings}
+					workspaceId={workspaceId!}
+				/>
 
 				<Divider />
 
@@ -380,7 +406,7 @@ export const WorkspaceSettingsRoute = () => {
 										<Box>
 											<Group gap={6}>
 												<Text size="sm" lineClamp={1}>
-													{member.display_name}
+													{member.display_name || member.email || t`Unknown member`}
 												</Text>
 												{member.is_external && (
 													<Badge size="xs" variant="light" color="gray">
@@ -388,9 +414,27 @@ export const WorkspaceSettingsRoute = () => {
 													</Badge>
 												)}
 											</Group>
-											<Text size="xs" c="dimmed" style={{ textTransform: "capitalize" }}>
-												{member.source === "inherited" ? t`inherited from team` : member.source}
-											</Text>
+											{/* Two-line people pattern: name on top, email under it
+											    in muted-xs. Email is empty when server redacted it
+											    (non-manager reader); Stack ternary keeps the row
+											    balanced. Source label tucks into the tail. */}
+											{member.email && member.email !== member.display_name ? (
+												<Text size="xs" c="dimmed" lineClamp={1}>
+													{member.email}
+													{member.source === "inherited" && (
+														<>
+															{" · "}
+															<Text component="span" fs="italic">
+																<Trans>inherited from team</Trans>
+															</Text>
+														</>
+													)}
+												</Text>
+											) : (
+												<Text size="xs" c="dimmed" style={{ textTransform: "capitalize" }}>
+													{member.source === "inherited" ? t`inherited from team` : member.source}
+												</Text>
+											)}
 										</Box>
 									</Group>
 
@@ -698,3 +742,152 @@ export const WorkspaceSettingsRoute = () => {
 		</>
 	);
 };
+
+/**
+ * Privacy + defaults block on the workspace settings page.
+ *
+ * Three admin-editable things: logo URL (whitelabel — tier-gated
+ * changemaker+), description, privacy toggle (`inherit_team_admins`).
+ * Secondary `inherit_team_members` only appears when the workspace is
+ * open — opens access to every team member, not just admins.
+ */
+function PrivacyAndDefaultsSection({
+	settings,
+	canEdit,
+	workspaceId,
+}: {
+	settings: WorkspaceDetail;
+	canEdit: boolean;
+	workspaceId: string;
+}) {
+	const queryClient = useQueryClient();
+	const [logo, setLogo] = useState<string | null>(null);
+	const [description, setDescription] = useState<string | null>(null);
+	const [inheritAdmins, setInheritAdmins] = useState<boolean | null>(null);
+	const [inheritMembers, setInheritMembers] = useState<boolean | null>(null);
+
+	const effectiveLogo = logo ?? settings.logo_url ?? "";
+	const effectiveDesc = description ?? settings.description ?? "";
+	const effectiveInheritAdmins = inheritAdmins ?? settings.inherit_team_admins;
+	const effectiveInheritMembers = inheritMembers ?? settings.inherit_team_members;
+
+	const dirty =
+		(logo !== null && logo.trim() !== (settings.logo_url ?? "")) ||
+		(description !== null && description !== (settings.description ?? "")) ||
+		inheritAdmins !== null ||
+		inheritMembers !== null;
+
+	const saveMutation = useMutation({
+		mutationFn: async () => {
+			const payload: Record<string, unknown> = {};
+			if (logo !== null && logo.trim() !== (settings.logo_url ?? "")) {
+				payload.logo_url = logo.trim();
+			}
+			if (description !== null && description !== (settings.description ?? "")) {
+				payload.description = description;
+			}
+			if (inheritAdmins !== null) payload.inherit_team_admins = inheritAdmins;
+			if (inheritMembers !== null) payload.inherit_team_members = inheritMembers;
+			await updateWorkspace(workspaceId, payload);
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+			setLogo(null);
+			setDescription(null);
+			setInheritAdmins(null);
+			setInheritMembers(null);
+			toast.success(t`Saved`);
+		},
+		onError: (err: Error) => toast.error(err.message),
+	});
+
+	return (
+		<Stack gap={16}>
+			<Title order={5} fw={400}>
+				<Trans>Privacy &amp; defaults</Trans>
+			</Title>
+			<TextInput
+				label={t`Description`}
+				description={t`Optional — what this workspace is for.`}
+				value={effectiveDesc}
+				onChange={(e) => setDescription(e.currentTarget.value)}
+				disabled={!canEdit}
+				maxLength={500}
+			/>
+			<TextInput
+				label={t`Logo URL`}
+				description={t`Custom workspace logo. Requires changemaker tier or above.`}
+				placeholder="https://..."
+				value={effectiveLogo}
+				onChange={(e) => setLogo(e.currentTarget.value)}
+				disabled={!canEdit}
+				maxLength={2048}
+			/>
+			<Radio.Group
+				label={t`Access`}
+				value={effectiveInheritAdmins ? "open" : "private"}
+				onChange={(v) => setInheritAdmins(v === "open")}
+			>
+				<Stack gap={8} mt={4}>
+					<Radio
+						value="open"
+						label={t`Open to the team — team admins get access automatically`}
+						disabled={!canEdit}
+					/>
+					<Radio
+						value="private"
+						label={t`Private — only people you explicitly invite`}
+						disabled={!canEdit}
+					/>
+				</Stack>
+			</Radio.Group>
+			{effectiveInheritAdmins && (
+				<Group gap={8} align="flex-start" ml="md">
+					<input
+						type="checkbox"
+						checked={effectiveInheritMembers}
+						disabled={!canEdit}
+						onChange={(e) => setInheritMembers(e.currentTarget.checked)}
+						style={{ marginTop: 3 }}
+						id="inherit-members"
+					/>
+					<Stack gap={0}>
+						<Text component="label" htmlFor="inherit-members" size="sm">
+							<Trans>Team members also get access</Trans>
+						</Text>
+						<Text size="xs" c="dimmed">
+							<Trans>
+								By default only admins inherit. Check this to open the workspace
+								to everyone on the team.
+							</Trans>
+						</Text>
+					</Stack>
+				</Group>
+			)}
+			{canEdit && (
+				<Group justify="flex-end">
+					<Button
+						variant="default"
+						onClick={() => {
+							setLogo(null);
+							setDescription(null);
+							setInheritAdmins(null);
+							setInheritMembers(null);
+						}}
+						disabled={!dirty}
+					>
+						<Trans>Cancel</Trans>
+					</Button>
+					<Button
+						loading={saveMutation.isPending}
+						disabled={!dirty}
+						onClick={() => saveMutation.mutate()}
+					>
+						<Trans>Save</Trans>
+					</Button>
+				</Group>
+			)}
+		</Stack>
+	);
+}

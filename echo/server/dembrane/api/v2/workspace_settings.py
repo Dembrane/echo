@@ -53,6 +53,11 @@ class WorkspaceDetailResponse(BaseModel):
     # Current user's access
     my_role: str = ""
     my_policies: list[str] = []
+    # Privacy + settings context for the settings page controls.
+    inherit_team_admins: bool = True
+    inherit_team_members: bool = False
+    description: Optional[str] = None
+    logo_url: Optional[str] = None
 
 
 @router.get("/{workspace_id}/settings", response_model=WorkspaceDetailResponse)
@@ -201,6 +206,13 @@ async def get_workspace_settings(
         pending_invites=pending_invites,
         my_role=ctx.role,
         my_policies=effective,
+        inherit_team_admins=bool(
+            (ws.get("settings") or {}).get("inherit_team_admins", True)
+        ) if isinstance(ws.get("settings"), dict) else True,
+        inherit_team_members=bool(
+            (ws.get("settings") or {}).get("inherit_team_members", False)
+        ) if isinstance(ws.get("settings"), dict) else False,
+        logo_url=ws.get("logo_url"),
     )
 
 

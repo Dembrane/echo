@@ -183,7 +183,7 @@ export const LoginRoute = () => {
 			} else if (lastStillValid) {
 				navigate(`/w/${lastUsedId}/projects`);
 			} else if (workspaceCount > 1 || isTeamAdmin) {
-				navigate("/workspaces");
+				navigate("/w");
 			} else if (firstWorkspaceId) {
 				navigate(`/w/${firstWorkspaceId}/projects`);
 			} else {

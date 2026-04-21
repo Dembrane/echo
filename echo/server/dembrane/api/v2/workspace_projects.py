@@ -77,35 +77,37 @@ async def _build_access_previews(
 ) -> dict[str, tuple[list[ProjectAccessPreview], int]]:
     """Produce avatar bubbles + access count per project for the list view.
 
-    Workspace-visible project → uses the workspace's member previews (all
-    projects share the same bubbles — reduces round-trips).
-    Private project → uses the project's project_membership rows.
+    Access model mirrors inheritance.get_user_project_access:
+      - visibility='workspace' → every effective workspace member
+        (direct + derived team admins/owners/members) has access.
+      - visibility='private' → workspace admins/owners + users with a
+        project_membership row.
 
     Returns: { project_id: (previews[:3], total_count) }
     """
     if not project_ids:
         return {}
 
-    # Workspace-member IDs (reused by all workspace-visible projects).
-    ws_members = await async_directus.get_items(
-        "workspace_membership",
-        {
-            "query": {
-                "filter": {
-                    "workspace_id": {"_eq": workspace_id},
-                    "deleted_at": {"_null": True},
-                },
-                "fields": ["user_id"],
-                "limit": 50,
-            }
-        },
-    ) or []
-    ws_user_ids = (
-        [row["user_id"] for row in ws_members if row.get("user_id")]
-        if isinstance(ws_members, list)
-        else []
+    # Effective workspace members — includes derived team admins/owners.
+    # One source of truth, matches what user_can_access would return per
+    # user. This replaces the naive "only direct workspace_membership"
+    # read which undercounted teams with inheritance.
+    from dembrane.inheritance import get_effective_members
+
+    effective = await get_effective_members(workspace_id)
+    # Stable ordering so bubble preview is deterministic across requests:
+    # direct rows first (they have real created_at), then derived.
+    effective.sort(
+        key=lambda m: (0 if m.get("source") == "direct" else 1, m.get("user_id", ""))
     )
-    ws_member_count = len(ws_user_ids)
+    ws_user_ids_full = [m["user_id"] for m in effective if m.get("user_id")]
+    ws_member_count = len(ws_user_ids_full)
+    # Admins/owners subset — for the private-project fallback bubble set.
+    ws_admin_user_ids = [
+        m["user_id"]
+        for m in effective
+        if m.get("user_id") and m.get("role") in ("admin", "owner")
+    ]
 
     # Per-private-project share rows.
     private_ids = [
@@ -130,21 +132,35 @@ async def _build_access_previews(
                 if pid and uid:
                     private_shares.setdefault(pid, []).append(uid)
 
-    # One enrich pass for every user we'll show a bubble for.
-    bubble_uids: set[str] = set(ws_user_ids[:3])
-    for uids in private_shares.values():
-        bubble_uids.update(uids[:3])
+    # Per-private-project total count (admins union share rows, deduped).
+    def _private_access_ids(project_id: str) -> list[str]:
+        """Admins + shared users, deduped. Admins come first so they fill
+        the preview bubbles when a project has few explicit shares."""
+        shares = private_shares.get(project_id, [])
+        seen: set[str] = set()
+        ordered: list[str] = []
+        for uid in ws_admin_user_ids + shares:
+            if uid and uid not in seen:
+                seen.add(uid)
+                ordered.append(uid)
+        return ordered
+
+    # Collect the union of user_ids we'll need avatars for (capped at 3 per
+    # project since that's all the UI renders). One batched enrich call.
+    bubble_uids: set[str] = set(ws_user_ids_full[:3])
+    for pid in private_ids:
+        bubble_uids.update(_private_access_ids(pid)[:3])
     enriched = await _enrich_previews(list(bubble_uids))
 
-    ws_previews = [enriched[u] for u in ws_user_ids[:3] if u in enriched]
+    ws_previews = [enriched[u] for u in ws_user_ids_full[:3] if u in enriched]
 
     out: dict[str, tuple[list[ProjectAccessPreview], int]] = {}
     for pid in project_ids:
         if project_visibilities.get(pid) == "private":
-            uids = private_shares.get(pid, [])
+            ids = _private_access_ids(pid)
             out[pid] = (
-                [enriched[u] for u in uids[:3] if u in enriched],
-                len(uids),
+                [enriched[u] for u in ids[:3] if u in enriched],
+                len(ids),
             )
         else:
             out[pid] = (ws_previews, ws_member_count)

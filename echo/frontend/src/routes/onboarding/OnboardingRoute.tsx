@@ -80,7 +80,7 @@ export const OnboardingRoute = () => {
 		if (workspaceId) {
 			navigate(`/w/${workspaceId}/projects`);
 		} else {
-			navigate("/workspaces");
+			navigate("/w");
 		}
 	};
 

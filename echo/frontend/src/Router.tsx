@@ -139,6 +139,10 @@ const TeamRoute = createLazyNamedRoute(
 	() => import("./routes/team/TeamRoute"),
 	"TeamRoute",
 );
+const TeamSettingsRoute = createLazyNamedRoute(
+	() => import("./routes/team/TeamSettingsRoute"),
+	"TeamSettingsRoute",
+);
 
 // Project route children — shared between /projects and /w/:workspaceId/projects
 const projectRouteChildren = [
@@ -325,9 +329,7 @@ export const mainRouter = createBrowserRouter([
 				path: "invites",
 			},
 			{
-				// Workspace selector + create — with header.
-				// Canonical path is /w. /workspaces is kept as a redirect for
-				// existing links and emails.
+				// Workspace selector + create — canonical path is /w.
 				children: [
 					{
 						element: <WorkspaceSelectorRoute />,
@@ -354,28 +356,16 @@ export const mainRouter = createBrowserRouter([
 				path: "w",
 			},
 			{
-				// Legacy /workspaces alias — any deep link redirects to /w/*.
-				element: <Navigate to="/w" replace />,
-				path: "workspaces",
-			},
-			{
-				element: <Navigate to="/w/new" replace />,
-				path: "workspaces/new",
-			},
-			{
-				element: <Navigate to="/w/:workspaceId" replace />,
-				path: "workspaces/:workspaceId",
-			},
-			{
-				element: <Navigate to="/w/:workspaceId/settings" replace />,
-				path: "workspaces/:workspaceId/settings",
-			},
-			{
-				// Team (org) admin surface.
+				// Team (org) admin surface. Canonical path is /t/:teamId —
+				// matches the /w/:workspaceId pattern.
 				children: [
 					{
 						element: <TeamRoute />,
 						path: ":teamId",
+					},
+					{
+						element: <TeamSettingsRoute />,
+						path: ":teamId/settings",
 					},
 				],
 				element: (
@@ -383,7 +373,7 @@ export const mainRouter = createBrowserRouter([
 						<BaseLayout />
 					</Protected>
 				),
-				path: "team",
+				path: "t",
 			},
 			{
 				// Host Guide - standalone page, protected but no header/layout

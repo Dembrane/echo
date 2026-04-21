@@ -131,7 +131,7 @@ export const AcceptInviteRoute = () => {
 									size="md"
 									fullWidth
 									variant="default"
-									onClick={() => navigate("/workspaces")}
+									onClick={() => navigate("/w")}
 								>
 									<Trans>Not now</Trans>
 								</Button>

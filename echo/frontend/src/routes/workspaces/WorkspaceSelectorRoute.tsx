@@ -305,7 +305,7 @@ export const WorkspaceSelectorRoute = () => {
 						<Button
 							size="sm"
 							leftSection={<IconPlus size={16} />}
-							onClick={() => navigate("/workspaces/new")}
+							onClick={() => navigate("/w/new")}
 						>
 							<Trans>New workspace</Trans>
 						</Button>
@@ -332,7 +332,7 @@ export const WorkspaceSelectorRoute = () => {
 								{team ? (
 									<TeamHeroCard
 										team={team}
-										onManage={() => navigate(`/team/${orgId}`)}
+										onManage={() => navigate(`/t/${orgId}`)}
 									/>
 								) : (
 									<Text size="sm" fw={500}>

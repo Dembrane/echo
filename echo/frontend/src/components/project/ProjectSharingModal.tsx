@@ -170,12 +170,22 @@ export function ProjectSharingModal({
 					{shares?.map((share) => (
 						<Group key={share.user_id} gap="sm" wrap="nowrap">
 							<Avatar size="sm" radius="xl" src={share.avatar ?? undefined}>
-								{(share.display_name || share.email).slice(0, 2).toUpperCase()}
+								{(share.display_name || share.email || "?")
+									.slice(0, 2)
+									.toUpperCase()}
 							</Avatar>
 							<Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
 								<Text size="sm" truncate>
-									{share.display_name || share.email}
+									{share.display_name || share.email || t`Unknown`}
 								</Text>
+								{/* Email always shown next to the name when we got one
+								    back — the server already redacts for non-managers
+								    of private projects. */}
+								{share.email && share.email !== share.display_name && (
+									<Text size="xs" c="dimmed" truncate>
+										{share.email}
+									</Text>
+								)}
 							</Stack>
 							<Select
 								data={[

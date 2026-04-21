@@ -497,6 +497,12 @@ async def list_team_workspaces(
     app_user = await get_app_user_or_raise(auth.user_id)
     await _require_org_role(org_id, app_user["id"], minimum="member")
 
+    # Pull settings.inherit_team_admins explicitly (sub-field projection)
+    # so we don't need to send the whole JSON (also avoids accidentally
+    # exposing sticky_removed tombstones to the client — the response model
+    # drops them, but belt-and-braces). Counts come from separate aggregates
+    # because the workspace collection doesn't declare O2M aliases for
+    # projects/members.
     workspaces = await async_directus.get_items(
         "workspace",
         {
@@ -511,16 +517,60 @@ async def list_team_workspaces(
                     "tier",
                     "is_default",
                     "settings",
-                    "count(projects)",
-                    "count(members)",
                 ],
                 "sort": ["-is_default", "name"],
                 "limit": -1,
             }
         },
     ) or []
-    if not isinstance(workspaces, list):
+    if not isinstance(workspaces, list) or not workspaces:
         return []
+
+    ws_ids = [w["id"] for w in workspaces if w.get("id")]
+
+    # Batch per-workspace counts with group-by so one call covers the team.
+    project_counts: dict[str, int] = {}
+    member_counts: dict[str, int] = {}
+    if ws_ids:
+        project_agg = await async_directus.get_items(
+            "project",
+            {
+                "query": {
+                    "aggregate": {"count": "id"},
+                    "groupBy": ["workspace_id"],
+                    "filter": {
+                        "workspace_id": {"_in": ws_ids},
+                        "deleted_at": {"_null": True},
+                    },
+                }
+            },
+        )
+        if isinstance(project_agg, list):
+            for row in project_agg:
+                wid = row.get("workspace_id")
+                cnt = int((row.get("count") or {}).get("id", 0) or 0)
+                if wid:
+                    project_counts[wid] = cnt
+
+        member_agg = await async_directus.get_items(
+            "workspace_membership",
+            {
+                "query": {
+                    "aggregate": {"count": "id"},
+                    "groupBy": ["workspace_id"],
+                    "filter": {
+                        "workspace_id": {"_in": ws_ids},
+                        "deleted_at": {"_null": True},
+                    },
+                }
+            },
+        )
+        if isinstance(member_agg, list):
+            for row in member_agg:
+                wid = row.get("workspace_id")
+                cnt = int((row.get("count") or {}).get("id", 0) or 0)
+                if wid:
+                    member_counts[wid] = cnt
 
     out: list[OrgWorkspaceSummary] = []
     for ws in workspaces:
@@ -532,8 +582,8 @@ async def list_team_workspaces(
                 name=ws.get("name", ""),
                 tier=ws.get("tier", "pioneer"),
                 is_default=bool(ws.get("is_default", False)),
-                project_count=int(ws.get("projects_count", 0) or 0),
-                member_count=int(ws.get("members_count", 0) or 0),
+                project_count=project_counts.get(ws["id"], 0),
+                member_count=member_counts.get(ws["id"], 0),
                 is_private=is_private,
             )
         )

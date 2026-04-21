@@ -1,22 +1,33 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	ActionIcon,
+	Anchor,
 	Avatar,
 	Badge,
 	Box,
 	Button,
 	Center,
 	Container,
+	Drawer,
 	Group,
 	Loader,
 	Paper,
 	SegmentedControl,
 	Stack,
+	Table,
 	Text,
+	TextInput,
 	Title,
+	Tooltip,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { IconLock, IconPlus } from "@tabler/icons-react";
+import {
+	IconLock,
+	IconPlus,
+	IconSearch,
+	IconSettings,
+} from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
@@ -24,10 +35,13 @@ import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
 /**
- * Minimal team (org) page. The heaviest design surface in the
- * workspaces release — this is the deliberately-rough first pass so
- * "Manage team" has somewhere real to land. List + matrix view
- * switcher per designer Ask 1; polish pending.
+ * Team admin page — single-page matrix view.
+ *
+ * Design call (2026-04-21): collapse the previous 3-tab layout (Members /
+ * Matrix / Workspaces) into one canvas with the matrix as primary content.
+ * The matrix rows already ARE the member list; the columns are the
+ * workspaces. A secondary Drawer houses workspace management; everything
+ * else is inline.
  */
 
 interface TeamDetail {
@@ -85,12 +99,14 @@ async function fetchTeamWorkspaces(teamId: string): Promise<TeamWorkspace[]> {
 	return res.json();
 }
 
+type RoleFilter = "all" | "admins" | "members" | "guests";
+
 export const TeamRoute = () => {
 	const { teamId } = useParams();
 	const navigate = useI18nNavigate();
-	const [view, setView] = useState<"members" | "matrix" | "workspaces">(
-		"members",
-	);
+	const [search, setSearch] = useState("");
+	const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+	const [workspacesDrawer, setWorkspacesDrawer] = useState(false);
 
 	useDocumentTitle(t`Team | dembrane`);
 
@@ -113,14 +129,29 @@ export const TeamRoute = () => {
 
 	const isAdmin = team?.role === "owner" || team?.role === "admin";
 
-	const internal = useMemo(
-		() => members.filter((m) => m.role !== "external"),
-		[members],
-	);
-	const external = useMemo(
-		() => members.filter((m) => m.role === "external"),
-		[members],
-	);
+	const filteredMembers = useMemo(() => {
+		const q = search.trim().toLowerCase();
+		return members.filter((m) => {
+			// Role filter: team role doesn't have "guest" directly, but we
+			// approximate via backend's convention (members where role maps
+			// to a guest-adjacent state). For now filter owners+admins into
+			// "admins", "member" into "members", rest treated as guests.
+			if (roleFilter === "admins" && !(m.role === "owner" || m.role === "admin"))
+				return false;
+			if (roleFilter === "members" && m.role !== "member") return false;
+			if (
+				roleFilter === "guests" &&
+				m.role !== "external" &&
+				m.role !== "guest"
+			)
+				return false;
+			if (!q) return true;
+			return (
+				(m.display_name || "").toLowerCase().includes(q) ||
+				(m.email || "").toLowerCase().includes(q)
+			);
+		});
+	}, [members, search, roleFilter]);
 
 	if (teamLoading) {
 		return (
@@ -138,7 +169,7 @@ export const TeamRoute = () => {
 						<Trans>Team not found</Trans>
 					</Title>
 					<Button variant="default" onClick={() => navigate("/w")}>
-						<Trans>Back to workspaces</Trans>
+						<Trans>Back</Trans>
 					</Button>
 				</Stack>
 			</Center>
@@ -146,253 +177,355 @@ export const TeamRoute = () => {
 	}
 
 	return (
-		<Container size="lg" py="xl" px="lg">
+		<Container size="xl" py="xl" px="lg">
 			<Stack gap={24}>
-				<Group justify="space-between" align="flex-start">
-					<Stack gap={2}>
-						<Title order={3} fw={400}>
-							{team.name}
-						</Title>
-						<Text size="sm" c="dimmed">
-							{team.workspace_count}{" "}
-							{team.workspace_count === 1 ? t`workspace` : t`workspaces`} ·{" "}
-							{team.member_count}{" "}
-							{team.member_count === 1 ? t`person` : t`people`}
-							{team.external_count > 0 ? (
-								<> · {team.external_count} {t`guests`}</>
-							) : null}
-						</Text>
-					</Stack>
-					{isAdmin && (
-						<Button
-							size="sm"
-							leftSection={<IconPlus size={14} />}
-							onClick={() => navigate("/w/new")}
-						>
-							<Trans>New workspace</Trans>
-						</Button>
-					)}
+				{/* Header — minimal. Name + counts on the left, action cluster
+				    on the right. Tier is intentionally absent (it's a
+				    per-workspace concept, shown in the column headers). */}
+				<Group justify="space-between" align="flex-start" wrap="nowrap">
+					<Group gap="md" wrap="nowrap" style={{ minWidth: 0 }}>
+						{team.logo_url && (
+							<Avatar src={team.logo_url} size={40} radius="md" />
+						)}
+						<Stack gap={2} style={{ minWidth: 0 }}>
+							<Title order={3} fw={400}>
+								{team.name}
+							</Title>
+							<Text size="sm" c="dimmed">
+								{team.workspace_count}{" "}
+								{team.workspace_count === 1 ? t`workspace` : t`workspaces`} ·{" "}
+								{team.member_count}{" "}
+								{team.member_count === 1 ? t`person` : t`people`}
+								{team.external_count > 0 ? (
+									<>
+										{" "}· {team.external_count} {t`guests`}
+									</>
+								) : null}
+							</Text>
+						</Stack>
+					</Group>
+					<Group gap="xs" wrap="nowrap">
+						{isAdmin && (
+							<Tooltip label={t`Team settings`} withArrow>
+								<ActionIcon
+									variant="default"
+									size="lg"
+									onClick={() => navigate(`/t/${teamId}/settings`)}
+								>
+									<IconSettings size={16} />
+								</ActionIcon>
+							</Tooltip>
+						)}
+						{isAdmin && (
+							<Button
+								size="sm"
+								variant="default"
+								onClick={() => setWorkspacesDrawer(true)}
+							>
+								<Trans>Manage workspaces</Trans>
+							</Button>
+						)}
+						{isAdmin && (
+							<Button
+								size="sm"
+								leftSection={<IconPlus size={14} />}
+								onClick={() => navigate("/w/new")}
+							>
+								<Trans>New workspace</Trans>
+							</Button>
+						)}
+					</Group>
 				</Group>
 
-				<SegmentedControl
-					value={view}
-					onChange={(v) => setView(v as typeof view)}
-					data={[
-						{ value: "members", label: t`Members` },
-						{ value: "matrix", label: t`Access matrix` },
-						{ value: "workspaces", label: t`Workspaces` },
-					]}
-				/>
+				{/* Toolbar — search + role filter + count */}
+				<Group justify="space-between" align="center" wrap="wrap">
+					<Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 280 }}>
+						<TextInput
+							leftSection={<IconSearch size={14} />}
+							placeholder={t`Search name or email`}
+							size="sm"
+							value={search}
+							onChange={(e) => setSearch(e.currentTarget.value)}
+							style={{ flex: 1, maxWidth: 320 }}
+						/>
+						<SegmentedControl
+							size="xs"
+							value={roleFilter}
+							onChange={(v) => setRoleFilter(v as RoleFilter)}
+							data={[
+								{ value: "all", label: t`All` },
+								{ value: "admins", label: t`Admins` },
+								{ value: "members", label: t`Members` },
+								{ value: "guests", label: t`Guests` },
+							]}
+						/>
+					</Group>
+					<Text size="xs" c="dimmed">
+						<Trans>
+							Showing {filteredMembers.length} of {members.length}
+						</Trans>
+					</Text>
+				</Group>
 
-				{view === "members" && (
-					<Stack gap="md">
-						<Text size="sm" fw={500}>
-							<Trans>On the team</Trans>
-						</Text>
-						<Stack gap={8}>
-							{internal.map((m) => (
-								<Paper key={m.user_id} p="sm" withBorder radius="md">
-									<Group justify="space-between" wrap="nowrap">
-										<Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
-											<Avatar src={m.avatar ?? undefined} size="sm" radius="xl">
-												{(m.display_name || m.email).slice(0, 2).toUpperCase()}
+				{/* Matrix — the main content. Sticky first column (name+email)
+				    so it stays visible on horizontal scroll. Mantine Table
+				    with stickyHeader + custom sticky-left on the first cell. */}
+				<Paper withBorder radius="md" style={{ overflowX: "auto" }}>
+					<Table
+						stickyHeader
+						highlightOnHover
+						verticalSpacing="sm"
+						horizontalSpacing="sm"
+					>
+						<Table.Thead>
+							<Table.Tr>
+								<Table.Th
+									style={{
+										position: "sticky",
+										left: 0,
+										zIndex: 3,
+										background: "var(--mantine-color-body)",
+										minWidth: 260,
+									}}
+								>
+									<Trans>Person</Trans>
+								</Table.Th>
+								<Table.Th style={{ minWidth: 90 }}>
+									<Trans>Team role</Trans>
+								</Table.Th>
+								{workspaces.map((ws) => (
+									<Table.Th
+										key={ws.id}
+										style={{ minWidth: 120, textAlign: "center" }}
+									>
+										<Stack gap={2} align="center">
+											<Group gap={4} justify="center" wrap="nowrap">
+												{ws.is_private && (
+													<IconLock
+														size={12}
+														style={{
+															color: "var(--mantine-color-gray-6)",
+														}}
+														aria-label={t`Private workspace`}
+													/>
+												)}
+												<Tooltip label={ws.name} disabled={ws.name.length < 18}>
+													<Anchor
+														size="sm"
+														fw={500}
+														c="dark"
+														underline="hover"
+														onClick={(e) => {
+															e.preventDefault();
+															navigate(`/w/${ws.id}/projects`);
+														}}
+														style={{ cursor: "pointer" }}
+													>
+														<Text size="sm" truncate maw={140}>
+															{ws.name}
+														</Text>
+													</Anchor>
+												</Tooltip>
+											</Group>
+											<Text size="xs" c="dimmed">
+												{ws.project_count} {t`projects`}
+											</Text>
+										</Stack>
+									</Table.Th>
+								))}
+							</Table.Tr>
+						</Table.Thead>
+						<Table.Tbody>
+							{filteredMembers.map((m) => (
+								<Table.Tr key={m.user_id}>
+									<Table.Td
+										style={{
+											position: "sticky",
+											left: 0,
+											zIndex: 2,
+											background: "var(--mantine-color-body)",
+										}}
+									>
+										<Group gap="sm" wrap="nowrap">
+											<Avatar
+												src={m.avatar ?? undefined}
+												size="sm"
+												radius="xl"
+											>
+												{(m.display_name || m.email || "?")
+													.slice(0, 2)
+													.toUpperCase()}
 											</Avatar>
 											<Stack gap={0} style={{ minWidth: 0 }}>
 												<Text size="sm" truncate>
 													{m.display_name || m.email || t`Unknown member`}
 												</Text>
-												<Text size="xs" c="dimmed">
-													<Trans>
-														Access to {m.accessible_workspace_count} of{" "}
-														{team.workspace_count}{" "}
-														{team.workspace_count === 1 ? t`workspace` : t`workspaces`}
-													</Trans>
-												</Text>
+												{/* Email on its own line per design call —
+												    two-line pattern beats a hover tooltip. */}
+												{m.email && m.email !== m.display_name && (
+													<Text size="xs" c="dimmed" truncate>
+														{m.email}
+													</Text>
+												)}
 											</Stack>
 										</Group>
+									</Table.Td>
+									<Table.Td>
 										<Badge
 											size="sm"
 											variant="light"
-											color={m.role === "owner" ? "blue" : "gray"}
+											color={
+												m.role === "owner"
+													? "blue"
+													: m.role === "admin"
+														? "blue"
+														: "gray"
+											}
 											style={{ textTransform: "capitalize" }}
 										>
 											{m.role}
 										</Badge>
-									</Group>
-								</Paper>
-							))}
-						</Stack>
-						{external.length > 0 && (
-							<>
-								<Text size="sm" fw={500} c="dimmed" mt="md">
-									<Trans>Guests</Trans>
-								</Text>
-								<Stack gap={8}>
-									{external.map((m) => (
-										<Paper key={m.user_id} p="sm" withBorder radius="md">
-											<Group justify="space-between" wrap="nowrap">
-												<Group gap="sm" wrap="nowrap">
-													<Avatar src={m.avatar ?? undefined} size="sm" radius="xl">
-														{(m.display_name || m.email)
-															.slice(0, 2)
-															.toUpperCase()}
-													</Avatar>
-													<Text size="sm">
-														{m.display_name || m.email || t`Unknown guest`}
-													</Text>
-												</Group>
-												<Badge size="sm" variant="light" color="gray">
-													<Trans>guest</Trans>
-												</Badge>
-											</Group>
-										</Paper>
-									))}
-								</Stack>
-							</>
-						)}
-					</Stack>
-				)}
-
-				{view === "matrix" && (
-					<Box style={{ overflowX: "auto" }}>
-						<Box
-							style={{
-								display: "grid",
-								gridTemplateColumns: `minmax(200px, 2fr) repeat(${workspaces.length}, minmax(100px, 1fr))`,
-								gap: 4,
-								fontSize: 12,
-							}}
-						>
-							{/* Header row */}
-							<Box />
-							{workspaces.map((ws) => (
-								<Box
-									key={ws.id}
-									p={6}
-									style={{
-										textAlign: "center",
-										backgroundColor: "var(--mantine-color-gray-0)",
-										borderRadius: 4,
-										fontWeight: 500,
-									}}
-								>
-									<Group gap={4} justify="center">
-										{ws.is_private && <IconLock size={11} />}
-										<Text size="xs" truncate>
-											{ws.name}
-										</Text>
-									</Group>
-								</Box>
-							))}
-							{/* Member rows */}
-							{members.map((m) => (
-								<>
-									<Box
-										key={`${m.user_id}-name`}
-										p={6}
-										style={{
-											display: "flex",
-											alignItems: "center",
-											gap: 8,
-											borderRadius: 4,
-											backgroundColor: "var(--mantine-color-white)",
-											border: "1px solid var(--mantine-color-gray-2)",
-										}}
-									>
-										<Avatar size="xs" radius="xl" src={m.avatar ?? undefined}>
-											{(m.display_name || m.email).slice(0, 2).toUpperCase()}
-										</Avatar>
-										<Text size="xs" truncate style={{ flex: 1, minWidth: 0 }}>
-											{m.display_name || m.email}
-										</Text>
-										<Badge size="xs" variant="light" color="gray">
-											{m.role}
-										</Badge>
-									</Box>
+									</Table.Td>
 									{workspaces.map((ws) => {
-										// Minimal: we don't fetch the (member × workspace) cell
-										// role from this endpoint yet. Show a filled cell if the
-										// role is admin/owner (team-admin inherits everything
-										// non-private), else blank. Matrix precision lives in
-										// the workspace's own member list.
-										const canAccess =
+										// Derived access: team owner always has access
+										// everywhere (carve-out). Team admin has access to
+										// non-private workspaces. Precise per-cell role
+										// (direct vs inherited) would require an extra
+										// fetch — for this first-pass matrix we show
+										// coarse access only.
+										const derivedAdmin =
 											m.role === "owner" ||
 											(m.role === "admin" && !ws.is_private);
 										return (
-											<Box
+											<Table.Td
 												key={`${m.user_id}-${ws.id}`}
-												p={6}
-												style={{
-													textAlign: "center",
-													borderRadius: 4,
-													backgroundColor: canAccess
-														? "rgba(65,105,225,0.08)"
-														: "var(--mantine-color-gray-0)",
-													color: canAccess
-														? "var(--mantine-color-blue-7)"
-														: "var(--mantine-color-gray-5)",
-												}}
+												style={{ textAlign: "center" }}
 											>
-												{canAccess ? t`admin` : "—"}
-											</Box>
-										);
-									})}
-								</>
-							))}
-						</Box>
-						<Text size="xs" c="dimmed" mt="sm">
-							<Trans>
-								Access shown is derived from team role. Workspace-direct
-								invites are managed in each workspace's settings.
-							</Trans>
-						</Text>
-					</Box>
-				)}
-
-				{view === "workspaces" && (
-					<Stack gap={8}>
-						{workspaces.map((ws) => (
-							<Paper
-								key={ws.id}
-								p="sm"
-								withBorder
-								radius="md"
-								style={{ cursor: "pointer" }}
-								onClick={() => navigate(`/w/${ws.id}/projects`)}
-							>
-								<Group justify="space-between" wrap="nowrap">
-									<Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
-										{ws.is_private && (
-											<IconLock
-												size={14}
-												style={{ color: "var(--mantine-color-gray-6)" }}
-												aria-label={t`Private workspace`}
-											/>
-										)}
-										<Stack gap={0} style={{ minWidth: 0 }}>
-											<Text size="sm" fw={500} truncate>
-												{ws.name}
-												{ws.is_default && (
-													<Text component="span" size="xs" c="dimmed" ml={6}>
-														<Trans>(default)</Trans>
+												{derivedAdmin ? (
+													<Tooltip
+														label={t`Admin · inherited from team role`}
+														withArrow
+													>
+														<Badge size="xs" variant="light" color="blue">
+															<Trans>admin</Trans>
+														</Badge>
+													</Tooltip>
+												) : ws.is_private && m.role === "admin" ? (
+													<Tooltip
+														label={t`Private workspace — ask the workspace owner for an invite`}
+														withArrow
+													>
+														<Text size="xs" c="dimmed">
+															—
+														</Text>
+													</Tooltip>
+												) : (
+													<Text size="xs" c="dimmed">
+														—
 													</Text>
 												)}
-											</Text>
-											<Text size="xs" c="dimmed">
-												{ws.project_count} {t`projects`} · {ws.member_count}{" "}
-												{t`members`}
-											</Text>
-										</Stack>
-									</Group>
+											</Table.Td>
+										);
+									})}
+								</Table.Tr>
+							))}
+							{filteredMembers.length === 0 && (
+								<Table.Tr>
+									<Table.Td
+										colSpan={2 + workspaces.length}
+										style={{ textAlign: "center", padding: "24px 12px" }}
+									>
+										<Text size="sm" c="dimmed">
+											<Trans>No one matches that filter.</Trans>
+										</Text>
+									</Table.Td>
+								</Table.Tr>
+							)}
+						</Table.Tbody>
+					</Table>
+				</Paper>
+
+				<Text size="xs" c="dimmed">
+					<Trans>
+						Access shown is derived from team role. Workspace-direct invites
+						are managed in each workspace's settings.
+					</Trans>
+				</Text>
+			</Stack>
+
+			{/* Manage workspaces drawer — list of team workspaces with
+			    inline nav. Keeps the primary canvas clean. */}
+			<Drawer
+				opened={workspacesDrawer}
+				onClose={() => setWorkspacesDrawer(false)}
+				title={<Text fw={500}>{t`Workspaces`}</Text>}
+				position="right"
+				padding="lg"
+				size="sm"
+			>
+				<Stack gap="xs">
+					{workspaces.map((ws) => (
+						<Paper
+							key={ws.id}
+							p="sm"
+							withBorder
+							radius="md"
+							style={{ cursor: "pointer" }}
+							onClick={() => navigate(`/w/${ws.id}/projects`)}
+						>
+							<Group justify="space-between" wrap="nowrap">
+								<Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
+									{ws.is_private && (
+										<IconLock
+											size={14}
+											style={{ color: "var(--mantine-color-gray-6)" }}
+											aria-label={t`Private workspace`}
+										/>
+									)}
+									<Stack gap={0} style={{ minWidth: 0 }}>
+										<Text size="sm" fw={500} truncate>
+											{ws.name}
+											{ws.is_default && (
+												<Text component="span" size="xs" c="dimmed" ml={6}>
+													<Trans>(default)</Trans>
+												</Text>
+											)}
+										</Text>
+										<Text size="xs" c="dimmed">
+											{ws.project_count} {t`projects`} · {ws.member_count}{" "}
+											{t`members`}
+										</Text>
+									</Stack>
+								</Group>
+								<Group gap={4}>
 									<Badge size="sm" variant="light" color="blue">
 										{ws.tier}
 									</Badge>
+									{isAdmin && (
+										<Tooltip label={t`Workspace settings`} withArrow>
+											<ActionIcon
+												variant="subtle"
+												size="sm"
+												onClick={(e) => {
+													e.stopPropagation();
+													navigate(`/w/${ws.id}/settings`);
+												}}
+											>
+												<IconSettings size={14} />
+											</ActionIcon>
+										</Tooltip>
+									)}
 								</Group>
-							</Paper>
-						))}
-					</Stack>
-				)}
-			</Stack>
+							</Group>
+						</Paper>
+					))}
+					{workspaces.length === 0 && (
+						<Text size="sm" c="dimmed" ta="center" py="md">
+							<Trans>No workspaces yet.</Trans>
+						</Text>
+					)}
+				</Stack>
+			</Drawer>
 		</Container>
 	);
 };
