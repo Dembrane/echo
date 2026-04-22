@@ -33,7 +33,8 @@ export const CharsRemainingIndicator = ({
 	numberThresholdCap = DEFAULT_NUMBER_THRESHOLD_CAP,
 	align = "right",
 }: CharsRemainingIndicatorProps) => {
-	const remaining = max - value.length;
+	if (max <= 0) return null;
+	const remaining = Math.max(0, max - value.length);
 	if (remaining > Math.min(numberThresholdCap, max * numberThresholdRatio)) {
 		return null;
 	}
