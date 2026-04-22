@@ -132,11 +132,12 @@ export const VerifiedArtefactsSection = ({
 													{formattedDate}
 												</Text>
 											)}
-											<span
-												onClick={(e) => e.stopPropagation()}
-												onKeyDown={(e) => e.stopPropagation()}
-												role="presentation"
-											>
+										{/* biome-ignore lint/a11y/noStaticElementInteractions: wrapper only stops propagation so the accordion doesn't toggle when interacting with the nested copy button */}
+										<span
+											onClick={(e) => e.stopPropagation()}
+											onKeyDown={(e) => e.stopPropagation()}
+											role="presentation"
+										>
 												<CopyRichTextIconButton
 													markdown={artefact.content ?? ""}
 													size="sm"
