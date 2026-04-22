@@ -14,11 +14,12 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { CaretDownIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
+import { CharsRemainingIndicator } from "@/components/common/CharsRemainingIndicator";
 import type { VerificationTopicMetadata } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 
 const MAX_LABEL_LENGTH = 100;
-const MAX_PROMPT_LENGTH = 1000;
+const MAX_PROMPT_LENGTH = 10000;
 const MAX_ICON_LENGTH = 10;
 
 const EMOJI_REGEX = /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu;
@@ -142,18 +143,24 @@ export const CustomTopicModal = ({
 			{...testId("custom-topic-modal")}
 		>
 			<Stack gap="md">
-				<TextInput
-					label={t`Topic label`}
-					placeholder={t`Required`}
-					value={labels["en-US"] ?? ""}
-					onChange={(e) => {
-						const val = e.currentTarget.value;
-						setLabels((prev) => ({ ...prev, "en-US": val }));
-					}}
-					maxLength={MAX_LABEL_LENGTH}
-					required
-					{...testId("custom-topic-label-en-US")}
-				/>
+				<Stack gap={4}>
+					<TextInput
+						label={t`Topic label`}
+						placeholder={t`Required`}
+						value={labels["en-US"] ?? ""}
+						onChange={(e) => {
+							const val = e.currentTarget.value;
+							setLabels((prev) => ({ ...prev, "en-US": val }));
+						}}
+						maxLength={MAX_LABEL_LENGTH}
+						required
+						{...testId("custom-topic-label-en-US")}
+					/>
+					<CharsRemainingIndicator
+						value={labels["en-US"] ?? ""}
+						max={MAX_LABEL_LENGTH}
+					/>
+				</Stack>
 
 				<Stack gap={4}>
 					<UnstyledButton onClick={toggleTranslations}>
@@ -178,41 +185,51 @@ export const CustomTopicModal = ({
 						<Stack gap="xs" pt="xs" pl="md">
 							{SUPPORTED_LANGUAGES.filter((l) => l.code !== "en-US").map(
 								(lang) => (
-									<TextInput
-										key={lang.code}
-										label={lang.label}
-										placeholder={t`Optional (falls back to English)`}
-										value={labels[lang.code] ?? ""}
-										onChange={(e) => {
-											const val = e.currentTarget.value;
-											setLabels((prev) => ({
-												...prev,
-												[lang.code]: val,
-											}));
-										}}
-										maxLength={MAX_LABEL_LENGTH}
-										{...testId(`custom-topic-label-${lang.code}`)}
-									/>
+									<Stack key={lang.code} gap={4}>
+										<TextInput
+											label={lang.label}
+											placeholder={t`Optional (falls back to English)`}
+											value={labels[lang.code] ?? ""}
+											onChange={(e) => {
+												const val = e.currentTarget.value;
+												setLabels((prev) => ({
+													...prev,
+													[lang.code]: val,
+												}));
+											}}
+											maxLength={MAX_LABEL_LENGTH}
+											{...testId(`custom-topic-label-${lang.code}`)}
+										/>
+										<CharsRemainingIndicator
+											value={labels[lang.code] ?? ""}
+											max={MAX_LABEL_LENGTH}
+										/>
+									</Stack>
 								),
 							)}
 						</Stack>
 					</Collapse>
 				</Stack>
 
-				<Textarea
-					label={t`Prompt`}
-					description={
-						<Trans>Instructions for generating the verification outcome</Trans>
-					}
-					placeholder={t`Describe what the language model should extract or summarize from the conversation...`}
-					value={prompt}
-					onChange={(e) => setPrompt(e.currentTarget.value)}
-					maxLength={MAX_PROMPT_LENGTH}
-					autosize
-					minRows={4}
-					required
-					{...testId("custom-topic-prompt")}
-				/>
+				<Stack gap={4}>
+					<Textarea
+						label={t`Prompt`}
+						description={
+							<Trans>
+								Instructions for generating the verification outcome
+							</Trans>
+						}
+						placeholder={t`Describe what the language model should extract or summarize from the conversation...`}
+						value={prompt}
+						onChange={(e) => setPrompt(e.currentTarget.value)}
+						maxLength={MAX_PROMPT_LENGTH}
+						autosize
+						minRows={4}
+						required
+						{...testId("custom-topic-prompt")}
+					/>
+					<CharsRemainingIndicator value={prompt} max={MAX_PROMPT_LENGTH} />
+				</Stack>
 
 				<TextInput
 					label={t`Emoji`}
