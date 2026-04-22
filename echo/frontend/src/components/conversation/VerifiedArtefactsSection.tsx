@@ -12,6 +12,7 @@ import {
 import { IconRosetteDiscountCheck } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
 import { Markdown } from "@/components/common/Markdown";
 import { useVerificationTopics } from "@/components/participant/verify/hooks";
 import { getVerificationArtefacts } from "@/lib/api";
@@ -122,14 +123,27 @@ export const VerifiedArtefactsSection = ({
 												artefact.key ??
 												""}
 										</Text>
-										{formattedDate && (
-											<Text size="xs" c="dimmed">
-												<Trans id="conversation.verified.approved">
-													Approved
-												</Trans>{" "}
-												{formattedDate}
-											</Text>
-										)}
+										<Group gap="md" wrap="nowrap">
+											{formattedDate && (
+												<Text size="xs" c="dimmed">
+													<Trans id="conversation.verified.approved">
+														Approved
+													</Trans>{" "}
+													{formattedDate}
+												</Text>
+											)}
+											<span
+												onClick={(e) => e.stopPropagation()}
+												onKeyDown={(e) => e.stopPropagation()}
+												role="presentation"
+											>
+												<CopyRichTextIconButton
+													markdown={artefact.content ?? ""}
+													size="sm"
+													iconSize={16}
+												/>
+											</span>
+										</Group>
 									</Stack>
 								</Group>
 							</Accordion.Control>
