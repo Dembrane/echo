@@ -1565,3 +1565,95 @@ def task_check_scheduled_reports() -> None:
     except Exception as e:
         logger.error(f"Error checking scheduled reports: {e}")
         raise
+
+
+@dramatiq.actor(queue_name="network", priority=30)
+def task_send_downgrade_email(
+    audience_app_user_ids: list[str],
+    ws_name: str,
+    workspace_id: str,
+    from_tier: str,
+    to_tier: str,
+    effects: list[dict],
+    downgraded_at_iso: str,
+) -> None:
+    """Send the matrix §3 post-downgrade email to a list of app_user ids.
+
+    Runs in the network queue (SendGrid is network-bound). Silent on
+    missing addresses; SendGrid misconfig is logged but never raises.
+    """
+    from datetime import datetime
+
+    from dembrane.email import send_email_sync
+    from dembrane.settings import get_settings as _get_settings
+
+    logger = getLogger("dembrane.tasks.task_send_downgrade_email")
+
+    if not audience_app_user_ids:
+        return
+
+    settings = _get_settings()
+
+    with directus_client_context() as client:
+        rows = client.get_items(
+            "app_user",
+            {
+                "query": {
+                    "filter": {"id": {"_in": audience_app_user_ids}},
+                    "fields": ["email"],
+                    "limit": -1,
+                }
+            },
+        ) or []
+
+    emails = sorted({
+        (r.get("email") or "").strip()
+        for r in rows
+        if isinstance(r, dict) and r.get("email")
+    })
+    if not emails:
+        logger.info(
+            "downgrade_email_skipped workspace=%s — no recipient addresses",
+            workspace_id,
+        )
+        return
+
+    freeze_items = [
+        e["human"] for e in effects
+        if isinstance(e, dict) and e.get("effect") == "freeze" and e.get("human")
+    ]
+    revert_items = [
+        e["human"] for e in effects
+        if isinstance(e, dict) and e.get("effect") == "revert" and e.get("human")
+    ]
+
+    try:
+        when = datetime.fromisoformat(downgraded_at_iso.replace("Z", "+00:00"))
+        downgraded_at_human = when.strftime("%d %B %Y")
+    except Exception:
+        downgraded_at_human = "today"
+
+    base = (settings.urls.admin_base_url or "").rstrip("/")
+    workspace_url = f"{base}/w/{workspace_id}" if base else f"/w/{workspace_id}"
+
+    subject = f"{ws_name} moved to {to_tier}".replace("\r", " ").replace("\n", " ")
+
+    ok = send_email_sync(
+        to=emails,
+        subject=subject,
+        template="tier_downgraded",
+        template_data={
+            "workspace_name": ws_name,
+            "from_tier": from_tier,
+            "to_tier": to_tier,
+            "downgraded_at_human": downgraded_at_human,
+            "freeze_items": freeze_items,
+            "revert_items": revert_items,
+            "workspace_url": workspace_url,
+        },
+    )
+
+    logger.info(
+        "downgrade_email workspace=%s recipients=%d sent=%s",
+        workspace_id, len(emails), ok,
+    )

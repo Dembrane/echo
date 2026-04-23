@@ -37,83 +37,6 @@ _upgrade_request_rate_limiter = create_user_rate_limiter(
 )
 
 
-async def _send_downgrade_emails(
-    *,
-    audience_app_user_ids: list[str],
-    ws_name: str,
-    workspace_id: str,
-    from_tier: str,
-    to_tier: str,
-    effects: list[dict],
-    downgraded_at_iso: str,
-) -> None:
-    """Send the matrix §3 post-downgrade email to a list of app_user ids.
-
-    Groups effects into freeze + revert buckets for the template and
-    resolves email addresses via app_user.email. Silent on missing
-    addresses; SendGrid misconfig is logged but not raised.
-    """
-    if not audience_app_user_ids:
-        return
-
-    rows = await async_directus.get_items(
-        "app_user",
-        {
-            "query": {
-                "filter": {"id": {"_in": audience_app_user_ids}},
-                "fields": ["email"],
-                "limit": -1,
-            }
-        },
-    )
-    if not isinstance(rows, list):
-        return
-    emails = sorted({
-        (r.get("email") or "").strip()
-        for r in rows
-        if r.get("email")
-    })
-    if not emails:
-        return
-
-    freeze_items = [
-        e["human"] for e in effects if e.get("effect") == "freeze" and e.get("human")
-    ]
-    revert_items = [
-        e["human"] for e in effects if e.get("effect") == "revert" and e.get("human")
-    ]
-
-    # Human-readable stamp. Matches the banner in the UI — "on {date}."
-    try:
-        when = datetime.fromisoformat(downgraded_at_iso.replace("Z", "+00:00"))
-        downgraded_at_human = when.strftime("%d %B %Y")
-    except Exception:
-        downgraded_at_human = "today"
-
-    # Base URL for the workspace — matches how invite / added emails link in.
-    base = (settings.urls.admin_base_url or "").rstrip("/")
-    workspace_url = f"{base}/w/{workspace_id}" if base else f"/w/{workspace_id}"
-
-    subject = _strip_header_unsafe(
-        f"{ws_name} moved to {to_tier}"
-    )
-
-    await send_email(
-        to=emails,
-        subject=subject,
-        template="tier_downgraded",
-        template_data={
-            "workspace_name": ws_name,
-            "from_tier": from_tier,
-            "to_tier": to_tier,
-            "downgraded_at_human": downgraded_at_human,
-            "freeze_items": freeze_items,
-            "revert_items": revert_items,
-            "workspace_url": workspace_url,
-        },
-    )
-
-
 def _strip_header_unsafe(value: str) -> str:
     """Remove CR/LF from strings that will appear inside an email Subject.
 
@@ -683,18 +606,20 @@ async def set_workspace_tier(
         )
 
         # Matrix v1.1 §3 requires a post-downgrade email within 1 minute to
-        # every admin + billing user. We send synchronously inside the
-        # PATCH — volume is low (staff-only action) and the latency is
-        # acceptable. Failure to email does not block the tier change.
+        # every admin + billing user. Queue via Dramatiq network actor
+        # (task_send_downgrade_email) so the PATCH returns immediately;
+        # the worker picks it up on the next cycle. "Within 1 minute"
+        # holds comfortably under normal queue latency.
         if direction == "downgrade" and audience:
-            await _send_downgrade_emails(
-                audience_app_user_ids=audience,
-                ws_name=ws_name,
-                workspace_id=workspace_id,
-                from_tier=from_tier,
-                to_tier=to_tier,
-                effects=effects,
-                downgraded_at_iso=now_iso,
+            from dembrane.tasks import task_send_downgrade_email
+            task_send_downgrade_email.send(
+                audience,
+                ws_name,
+                workspace_id,
+                from_tier,
+                to_tier,
+                effects,
+                now_iso,
             )
 
     return SetTierResponse(
