@@ -444,13 +444,17 @@ async def create_workspace(
 async def delete_workspace(
     ctx: WorkspaceContext = Depends(get_workspace_context),
 ) -> dict:
-    """Soft-delete a workspace. Owner-only. Blocked if workspace has any
-    non-deleted project — decision A from the design log: partners wind
-    projects down via the team admin page's Projects view (Ask 1 D14).
+    """Soft-delete a workspace. Admin or owner. Blocked if workspace has
+    any non-deleted project — partners wind projects down via the team
+    admin page's Projects view (matrix §4 + S7).
+
+    Matrix §4 delete-workspace row is ✓ on Admin (with confirmation
+    footnote), so we accept admin here. Billing + member still 403.
     """
-    if ctx.role != "owner":
+    if ctx.role not in ("admin", "owner"):
         raise HTTPException(
-            status_code=403, detail="Only the workspace owner can delete it"
+            status_code=403,
+            detail="Only a workspace admin or owner can delete this workspace",
         )
 
     projects = await async_directus.get_items(

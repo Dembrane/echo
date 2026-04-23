@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
+	Alert,
 	Avatar,
 	Badge,
 	Box,
@@ -70,6 +71,20 @@ interface WorkspaceDetail {
 	inherit_team_members: boolean;
 	description: string | null;
 	logo_url: string | null;
+}
+
+async function deleteWorkspace(workspaceId: string) {
+	const res = await fetch(`${API_BASE_URL}/v2/workspaces/${workspaceId}`, {
+		method: "DELETE",
+		credentials: "include",
+	});
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(
+			typeof data.detail === "string" ? data.detail : "Couldn't delete workspace",
+		);
+	}
+	return res.json().catch(() => ({}));
 }
 
 async function fetchSettings(workspaceId: string): Promise<WorkspaceDetail | null> {
@@ -186,6 +201,7 @@ export const WorkspaceSettingsRoute = () => {
 	// team-level presence. Team members get a team row + workspace row.
 	// UI toggle drives both the payload (is_org_member) and role clamp.
 	const [inviteKind, setInviteKind] = useState<"team" | "guest">("team");
+	const [deleteConfirm, setDeleteConfirm] = useState("");
 	const [editingName, setEditingName] = useState<string | null>(null);
 	const [inviteModalOpened, { open: openInviteModal, close: closeInviteModal }] = useDisclosure(false);
 
@@ -296,6 +312,20 @@ export const WorkspaceSettingsRoute = () => {
 		onError: (err: Error) => toast.error(err.message),
 	});
 
+	const deleteWorkspaceMutation = useMutation({
+		mutationFn: () => {
+			if (!workspaceId) throw new Error("No workspace");
+			return deleteWorkspace(workspaceId);
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "team"] });
+			toast.success(t`Workspace deleted`);
+			navigate("/w");
+		},
+		onError: (err: Error) => toast.error(err.message),
+	});
+
 	// Self-leave. Same endpoint as removeMember but we surface different
 	// success copy + route the user out.
 	const leaveMutation = useMutation({
@@ -339,7 +369,7 @@ export const WorkspaceSettingsRoute = () => {
 	const tabParam = searchParams.get("tab");
 	const defaultTab =
 		myRole === "billing" && !canManage ? "billing" : "overview";
-	const allowedTabs = ["overview", "billing"] as const;
+	const allowedTabs = ["overview", "billing", "danger"] as const;
 	type TabValue = (typeof allowedTabs)[number];
 	const activeTab: TabValue =
 		tabParam && (allowedTabs as readonly string[]).includes(tabParam)
@@ -432,6 +462,13 @@ export const WorkspaceSettingsRoute = () => {
 							<Tabs.Tab value="billing">
 								<Trans>Billing</Trans>
 							</Tabs.Tab>
+							{/* Matrix §4: delete-workspace is admin + owner. Tab
+							    hidden for billing and member roles. */}
+							{canEditSettings && (
+								<Tabs.Tab value="danger" color="red">
+									<Trans>Danger</Trans>
+								</Tabs.Tab>
+							)}
 						</Tabs.List>
 
 						<Tabs.Panel value="billing" pt="md">
@@ -810,6 +847,106 @@ export const WorkspaceSettingsRoute = () => {
 				</Stack>
 							</Stack>
 						</Tabs.Panel>
+
+						{canEditSettings && (
+							<Tabs.Panel value="danger" pt="md">
+								<Paper
+									withBorder
+									p="lg"
+									radius="sm"
+									style={{
+										borderColor: "rgba(234, 88, 88, 0.4)",
+										background: "rgba(234, 88, 88, 0.02)",
+									}}
+								>
+									<Stack gap={12}>
+										<Stack gap={4}>
+											<Title order={5} fw={400} c="red.9">
+												<Trans>Delete this workspace</Trans>
+											</Title>
+											<Text size="sm" c="dimmed">
+												<Trans>
+													Soft-delete the workspace from your team. Members
+													lose access. Conversations stay in the database for
+													the retention window but vanish from every view.
+												</Trans>
+											</Text>
+										</Stack>
+
+										{(() => {
+											const projectCount = settings.members.length > 0
+												? (myWorkspaceSummary?.project_count ?? 0)
+												: 0;
+											// Use the workspace summary for project count
+											// (fresher than any in-settings field). If the
+											// summary isn't loaded yet, we fall through to
+											// showing the input — the endpoint itself will
+											// 409 if projects sneak in between frames.
+											const liveProjectCount =
+												myWorkspaceSummary?.project_count ?? projectCount;
+
+											if (liveProjectCount > 0) {
+												return (
+													<Alert color="yellow" variant="light">
+														<Stack gap={6}>
+															<Text size="sm">
+																<Trans>
+																	Clear the {liveProjectCount} project(s)
+																	first. You can delete all projects across
+																	your team from the team page.
+																</Trans>
+															</Text>
+															<Button
+																size="compact-xs"
+																variant="light"
+																onClick={() =>
+																	navigate(
+																		`/t/${settings.org_id}?view=projects`,
+																	)
+																}
+															>
+																<Trans>Go to team projects</Trans>
+															</Button>
+														</Stack>
+													</Alert>
+												);
+											}
+											return (
+												<Stack gap={8}>
+													<Text size="xs" c="dimmed">
+														<Trans>
+															Type <strong>{settings.name}</strong> to
+															confirm.
+														</Trans>
+													</Text>
+													<TextInput
+														placeholder={settings.name}
+														value={deleteConfirm}
+														onChange={(e) =>
+															setDeleteConfirm(e.currentTarget.value)
+														}
+														size="sm"
+													/>
+													<Group justify="flex-end">
+														<Button
+															size="sm"
+															color="red"
+															disabled={deleteConfirm !== settings.name}
+															loading={deleteWorkspaceMutation.isPending}
+															onClick={() =>
+																deleteWorkspaceMutation.mutate()
+															}
+														>
+															<Trans>Delete workspace</Trans>
+														</Button>
+													</Group>
+												</Stack>
+											);
+										})()}
+									</Stack>
+								</Paper>
+							</Tabs.Panel>
+						)}
 					</Tabs>
 				)}
 
