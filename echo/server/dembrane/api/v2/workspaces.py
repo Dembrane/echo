@@ -455,9 +455,9 @@ async def create_workspace(
         raise HTTPException(status_code=403, detail="Must be team admin or owner to create workspaces")
 
     # Tier is always "pioneer" on creation — plan changes happen via admin/billing
-    # Matrix v1.1 §6 visibility: derive from inherit_team_admins for now
-    # (the two booleans are the existing API surface; the enum becomes the
-    # source of truth once the derivation walkback runs in prod).
+    # Matrix v1.1 §6 visibility: stored on workspace.visibility. The enum
+    # is the sole source of truth on new workspaces; legacy settings flags
+    # are no longer written (resolver still reads them for pre-enum rows).
     visibility = "open_to_team" if body.inherit_team_admins else "private"
     ws_id = generate_uuid()
     await async_directus.create_item("workspace", {
@@ -470,25 +470,23 @@ async def create_workspace(
         "created_by": app_user_id,
     })
 
-    # Seed settings + creator membership via the inheritance module. No
-    # fan-out of source='inherited' rows — derived model computes team
-    # admin/member access at query time from org_membership + these flags.
+    # Insert the creator as source='direct', role='owner'. No settings
+    # flags (matrix v1.1 §6 — derivation is retired for new rows).
     from dembrane.inheritance import on_workspace_created
     await on_workspace_created(
         workspace_id=ws_id,
         creator_app_user_id=app_user_id,
-        inherit_team_admins=body.inherit_team_admins,
-        inherit_team_members=body.inherit_team_members,
     )
 
     logger.info(
         f"Created workspace {ws_id} '{body.name}' in org {org_id} by {app_user_id} "
-        f"(admins_follow={body.inherit_team_admins}, members_follow={body.inherit_team_members})"
+        f"(visibility={visibility})"
     )
 
     # Tell the team's other admins/owners that a new workspace exists.
-    # Open workspaces grant them access via derivation; they'd otherwise
-    # find out by refreshing the selector.
+    # Open workspaces are discoverable via the discovery endpoint so they
+    # can explicitly join; private workspaces are still discoverable to
+    # team admins per matrix §6.
     from dembrane.notifications import emit_to_audience, audience_team_admins
     creator_row = await async_directus.get_item("app_user", app_user_id)
     creator_name = (creator_row or {}).get("display_name") or "A team admin"
@@ -499,9 +497,9 @@ async def create_workspace(
         event_code="WORKSPACE_CREATED",
         title=f"{creator_name} created {body.name.strip()}",
         message=(
-            "The new workspace is open to the team — you have access."
-            if body.inherit_team_admins
-            else "The new workspace is private — only explicitly invited people have access."
+            "The new workspace is open to the team — discover it from your team page."
+            if visibility == "open_to_team"
+            else "The new workspace is private — only explicitly invited people and team admins have access."
         ),
         action="NAVIGATE_WS",
         ref_workspace_id=ws_id,

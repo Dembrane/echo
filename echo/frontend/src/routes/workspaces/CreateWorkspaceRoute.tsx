@@ -27,7 +27,6 @@ async function createWorkspace(payload: {
 	name: string;
 	org_id?: string;
 	inherit_team_admins?: boolean;
-	inherit_team_members?: boolean;
 }) {
 	const res = await fetch(`${API_BASE_URL}/v2/workspaces`, {
 		body: JSON.stringify(payload),
@@ -64,7 +63,6 @@ export const CreateWorkspaceRoute = () => {
 	const { data: meV2, isLoading: meLoading } = useV2Me();
 	const [name, setName] = useState("");
 	const [privacy, setPrivacy] = useState<"open" | "private">("open");
-	const [includeMembers, setIncludeMembers] = useState(false);
 
 	useDocumentTitle(t`New workspace | dembrane`);
 
@@ -94,7 +92,6 @@ export const CreateWorkspaceRoute = () => {
 				name: name.trim(),
 				org_id: targetTeamId ?? undefined,
 				inherit_team_admins: privacy === "open",
-				inherit_team_members: privacy === "open" ? includeMembers : false,
 			}),
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
@@ -239,25 +236,11 @@ export const CreateWorkspaceRoute = () => {
 						)}
 
 						{privacy === "open" && (
-							<Group gap="xs" align="flex-start" ml="xs">
-								<input
-									type="checkbox"
-									id="create-include-members"
-									checked={includeMembers}
-									onChange={(e) =>
-										setIncludeMembers(e.currentTarget.checked)
-									}
-									style={{ marginTop: 2 }}
-								/>
-								<Text
-									component="label"
-									htmlFor="create-include-members"
-									size="xs"
-									c="dimmed"
-								>
-									<Trans>Also give team members access (not just admins)</Trans>
-								</Text>
-							</Group>
+							<Text size="xs" c="dimmed" ml="xs">
+								<Trans>
+									Team members can find this workspace and request access.
+								</Trans>
+							</Text>
 						)}
 
 						<Group gap={12} mt={8}>

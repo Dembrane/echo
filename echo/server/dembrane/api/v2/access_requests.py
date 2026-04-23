@@ -29,7 +29,6 @@ from dembrane.app_user import get_app_user_or_raise
 from dembrane.directus_async import async_directus
 from dembrane.api.rate_limit import create_user_rate_limiter
 from dembrane.api.dependency_auth import DependencyDirectusSession
-from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
 from dembrane.utils import generate_uuid
 
 router = APIRouter()
@@ -115,6 +114,76 @@ async def _load_workspace_or_404(workspace_id: str) -> dict:
     if not ws or ws.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Workspace not found")
     return ws
+
+
+async def _require_can_action_requests(
+    workspace: dict, app_user_id: str
+) -> None:
+    """Guard for approve/reject endpoints.
+
+    Matrix v1.1 §6: either a workspace admin OR a team admin/owner can
+    action a pending request. We accept either — otherwise, post-walkback,
+    a team admin receiving MEMBERSHIP_REQUESTED would click Approve and
+    hit 403 because they don't have a direct workspace row yet.
+
+    Checks (short-circuit on first pass):
+      1. Direct workspace_membership with role in (admin, owner) or any
+         role whose preset grants `member:manage`.
+      2. Team admin/owner on the workspace's org.
+
+    Raises 403 otherwise.
+    """
+    from dembrane.policies import has_policy
+
+    workspace_id = workspace["id"]
+    org_id = workspace.get("org_id")
+
+    # Pass 1: direct workspace membership with member:manage.
+    direct_rows = await async_directus.get_items(
+        "workspace_membership",
+        {
+            "query": {
+                "filter": {
+                    "workspace_id": {"_eq": workspace_id},
+                    "user_id": {"_eq": app_user_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["role", "custom_policies"],
+                "limit": 1,
+            }
+        },
+    )
+    if isinstance(direct_rows, list) and direct_rows:
+        row = direct_rows[0]
+        if has_policy(
+            row.get("role") or "",
+            row.get("custom_policies") or [],
+            "member:manage",
+            workspace_tier=workspace.get("tier"),
+        ):
+            return
+
+    # Pass 2: team admin or owner in the workspace's org.
+    if org_id:
+        team_rows = await async_directus.get_items(
+            "org_membership",
+            {
+                "query": {
+                    "filter": {
+                        "org_id": {"_eq": org_id},
+                        "user_id": {"_eq": app_user_id},
+                        "role": {"_in": ["admin", "owner"]},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["role"],
+                    "limit": 1,
+                }
+            },
+        )
+        if isinstance(team_rows, list) and team_rows:
+            return
+
+    raise HTTPException(status_code=403, detail="Access denied")
 
 
 # ── Join (team admin, immediate) ───────────────────────────────────────
@@ -337,12 +406,18 @@ class ListAccessRequestsResponse(BaseModel):
 )
 async def list_access_requests(
     workspace_id: str,
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    auth: DependencyDirectusSession,
 ) -> ListAccessRequestsResponse:
-    """Pending access requests on this workspace. Workspace admin or team
-    admin gate via member:manage. Team admins already have member:manage
-    via the derivation today + (post-walkback) via their direct row."""
-    ctx.require_policy("member:manage")
+    """Pending access requests on this workspace.
+
+    Guard: workspace admin (via direct membership's `member:manage`) OR
+    team admin/owner on the workspace's org. The latter is what makes
+    the UX work post-walkback — team admins can approve without first
+    having to /join the workspace.
+    """
+    app_user = await get_app_user_or_raise(auth.user_id)
+    workspace = await _load_workspace_or_404(workspace_id)
+    await _require_can_action_requests(workspace, app_user["id"])
 
     rows = await async_directus.get_items(
         "access_request",
@@ -420,11 +495,18 @@ async def _load_pending_or_404(workspace_id: str, req_id: str) -> dict:
 async def approve_access_request(
     workspace_id: str,
     req_id: str,
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    auth: DependencyDirectusSession,
 ) -> ActionRequestResponse:
     """Approve: write a direct Member row + mark request approved + notify
-    the requester."""
-    ctx.require_policy("member:manage")
+    the requester.
+
+    Guard: workspace admin OR team admin/owner (see
+    `_require_can_action_requests`).
+    """
+    app_user = await get_app_user_or_raise(auth.user_id)
+    actor_id = app_user["id"]
+    workspace = await _load_workspace_or_404(workspace_id)
+    await _require_can_action_requests(workspace, actor_id)
 
     req = await _load_pending_or_404(workspace_id, req_id)
     requester_id = req["user_id"]
@@ -451,26 +533,26 @@ async def approve_access_request(
         {
             "status": "approved",
             "actioned_at": datetime.now(timezone.utc).isoformat(),
-            "actioned_by": ctx.app_user_id,
+            "actioned_by": actor_id,
         },
     )
 
     from dembrane.notifications import emit
-    ws_name = ctx.workspace.get("name") or "a workspace"
+    ws_name = workspace.get("name") or "a workspace"
     await emit(
         audience_user_id=requester_id,
-        actor_user_id=ctx.app_user_id,
+        actor_user_id=actor_id,
         event_code="MEMBERSHIP_REQUEST_APPROVED",
         title=f"You're in {ws_name}",
         message=f"Your request to join {ws_name} was approved.",
         action="NAVIGATE_WS",
         ref_workspace_id=workspace_id,
-        ref_org_id=ctx.workspace.get("org_id"),
+        ref_org_id=workspace.get("org_id"),
     )
 
     logger.info(
         "access_request_approved workspace=%s req=%s requester=%s by=%s",
-        workspace_id, req_id, requester_id, ctx.app_user_id,
+        workspace_id, req_id, requester_id, actor_id,
     )
     return ActionRequestResponse(status="approved")
 
@@ -482,12 +564,18 @@ async def approve_access_request(
 async def reject_access_request(
     workspace_id: str,
     req_id: str,
-    ctx: WorkspaceContext = Depends(get_workspace_context),
+    auth: DependencyDirectusSession,
 ) -> ActionRequestResponse:
     """Reject a pending request. **Silent per matrix §6** — the requester
     receives no notification. They learn of it only by noticing nothing
-    happened."""
-    ctx.require_policy("member:manage")
+    happened.
+
+    Guard: workspace admin OR team admin/owner.
+    """
+    app_user = await get_app_user_or_raise(auth.user_id)
+    actor_id = app_user["id"]
+    workspace = await _load_workspace_or_404(workspace_id)
+    await _require_can_action_requests(workspace, actor_id)
 
     req = await _load_pending_or_404(workspace_id, req_id)
 
@@ -497,13 +585,13 @@ async def reject_access_request(
         {
             "status": "rejected",
             "actioned_at": datetime.now(timezone.utc).isoformat(),
-            "actioned_by": ctx.app_user_id,
+            "actioned_by": actor_id,
         },
     )
 
     logger.info(
         "access_request_rejected workspace=%s req=%s by=%s",
-        workspace_id, req_id, ctx.app_user_id,
+        workspace_id, req_id, actor_id,
     )
     return ActionRequestResponse(status="rejected")
 

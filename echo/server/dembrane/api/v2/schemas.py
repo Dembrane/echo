@@ -120,10 +120,14 @@ class WorkspaceListResponse(BaseModel):
 class CreateWorkspaceRequest(BaseModel):
     name: str = Field(min_length=1, max_length=100)
     org_id: Optional[str] = None  # defaults to user's primary org
-    # Wizard step 2 access choice: which org roles derive access to this
-    # workspace. Admins always follow team access (default true). Members
-    # are opt-in (default false). Both false = private workspace.
+    # Visibility choice on the create form. Maps to workspace.visibility
+    # (matrix v1.1 §6). True → 'open_to_team', False → 'private'.
+    # Private requires innovator+ tier — solo users can still pick it but
+    # the set_private policy enforces at mutation time.
     inherit_team_admins: bool = True
+    # Accepted for backward compatibility; ignored on write. Team members
+    # no longer auto-inherit access (matrix §6 retires derivation). They
+    # use Request access.
     inherit_team_members: bool = False
     # tier is always "pioneer" on creation — upgrades happen via billing/admin
 

@@ -43,15 +43,32 @@ def _settings(workspace: dict) -> dict:
 def workspace_follows_team_admins(workspace: dict) -> bool:
     """True if team admins follow this workspace's access (inherit admin role).
 
-    Default True — opt-out is the "private workspace" choice in the wizard.
+    Resolution order (matrix v1.1 §6 transition):
+      1. workspace.visibility column, when present: 'open_to_team' → True,
+         'private' → False.
+      2. Legacy settings.inherit_team_admins flag on pre-enum rows.
+      3. Default True (open) — matches matrix §9 default.
     """
+    visibility = workspace.get("visibility")
+    if visibility == "open_to_team":
+        return True
+    if visibility == "private":
+        return False
+    # Legacy fallback until the walkback purges settings flags.
     return _settings(workspace).get("inherit_team_admins", True)
 
 
 def workspace_follows_team_members(workspace: dict) -> bool:
     """True if team members (org role 'member') also follow team access.
 
-    Default False — explicit opt-in via wizard step 2 checkbox.
+    Matrix v1.1 §6 retires team-member derivation — new workspaces DO NOT
+    fan members into derived access. They go through "Request access"
+    (access_request flow) and get a direct Member row on approval.
+
+    This helper keeps the legacy read so the resolver remains correct for
+    workspaces created before the matrix-§6 model landed (the flag persists
+    in their settings JSON until the walkback purge). After prod backfill
+    + settings purge, this helper always returns False.
     """
     return _settings(workspace).get("inherit_team_members", False)
 
@@ -298,25 +315,14 @@ async def get_effective_members(workspace_id: str) -> list[dict]:
 async def on_workspace_created(
     workspace_id: str,
     creator_app_user_id: str,
-    inherit_team_admins: bool,
-    inherit_team_members: bool,
 ) -> None:
-    """After POST /v2/workspaces creates the workspace row:
-    - set settings flags,
-    - insert the creator as source='direct', role='owner'.
+    """After POST /v2/workspaces creates the workspace row, insert the
+    creator as source='direct', role='owner'.
 
-    No fan-out of inherited rows — derivation handles that at read time.
+    No settings-flag writes anymore (matrix v1.1 §6). Visibility lives on
+    workspace.visibility (enum). The inherit_team_members concept retired
+    — team members request access explicitly via the access_request flow.
     """
-    settings_payload = {
-        "inherit_team_admins": bool(inherit_team_admins),
-        "inherit_team_members": bool(inherit_team_members),
-        "sticky_removed": [],
-    }
-    await async_directus.update_item(
-        "workspace",
-        workspace_id,
-        {"settings": settings_payload},
-    )
     await async_directus.create_item(
         "workspace_membership",
         {
