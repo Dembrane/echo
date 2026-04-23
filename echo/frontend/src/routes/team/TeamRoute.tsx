@@ -35,6 +35,7 @@ import {
 	IconSettings,
 	IconTrash,
 	IconUpload,
+	IconUserPlus,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -448,6 +449,17 @@ export const TeamRoute = () => {
 
 					<Tabs.Panel value="people" pt="md">
 						<Stack gap="md">
+				{/* Invite entry point — team-level invites happen through a
+				    specific workspace (no team-scope invite endpoint). The
+				    button opens a workspace picker so the admin can pick
+				    where the new person should land. Matches audit §3:
+				    "invite is the primary People-tab action." */}
+				{isAdmin && workspaces.length > 0 && (
+					<Group justify="flex-end">
+						<InviteWorkspacePicker workspaces={workspaces} />
+					</Group>
+				)}
+
 				{/* Toolbar — people view. */}
 				{true && (
 					<Group justify="space-between" align="center" wrap="wrap">
@@ -998,6 +1010,47 @@ function OverviewPanel({
 				</Stack>
 			)}
 		</Stack>
+	);
+}
+
+
+/**
+ * "Invite someone" on the team People tab. Invites are per-workspace
+ * (no team-wide invite endpoint), so the button opens a Menu that lets
+ * the admin pick which workspace the new person should land in; then
+ * navigates to that workspace's Members tab where the existing invite
+ * flow lives. Honest about the model instead of faking a team invite.
+ */
+function InviteWorkspacePicker({
+	workspaces,
+}: {
+	workspaces: TeamWorkspace[];
+}) {
+	const navigate = useI18nNavigate();
+	return (
+		<Menu shadow="md" width={260} position="bottom-end">
+			<Menu.Target>
+				<Button
+					size="compact-sm"
+					leftSection={<IconUserPlus size={14} />}
+				>
+					<Trans>Invite someone</Trans>
+				</Button>
+			</Menu.Target>
+			<Menu.Dropdown>
+				<Menu.Label>
+					<Trans>Which workspace?</Trans>
+				</Menu.Label>
+				{workspaces.map((ws) => (
+					<Menu.Item
+						key={ws.id}
+						onClick={() => navigate(`/w/${ws.id}/settings/members`)}
+					>
+						{ws.name}
+					</Menu.Item>
+				))}
+			</Menu.Dropdown>
+		</Menu>
 	);
 }
 

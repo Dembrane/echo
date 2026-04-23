@@ -539,6 +539,36 @@ export const WorkspaceSettingsRoute = () => {
 						<Tabs.Panel value="billing" pt="md">
 							<Stack gap={16}>
 								{workspaceId && <UsageCard workspaceId={workspaceId} />}
+
+								{/* Seats explainer — audit feedback: users need to
+								    know "how do seats work as a user" without
+								    reading the matrix row. Short, matches §7. */}
+								<Paper withBorder p="md" radius="sm">
+									<Stack gap={8}>
+										<Text size="sm" fw={500}>
+											<Trans>How seats work</Trans>
+										</Text>
+										<Text size="xs" c="dimmed">
+											<Trans>
+												Every teammate with <em>Admin</em>,{" "}
+												<em>Billing</em>, or <em>Member</em> role on
+												this workspace counts as one seat. Guests
+												(external participants) don't count toward
+												seats. One person never takes more than one
+												seat per workspace, even if they're on
+												multiple teams.
+											</Trans>
+										</Text>
+										<Text size="xs" c="dimmed">
+											<Trans>
+												Going over your tier's included seats bills
+												extra per month — see the matrix below for
+												the per-seat rate on each tier.
+											</Trans>
+										</Text>
+									</Stack>
+								</Paper>
+
 								{/* Matrix §1 full capacity matrix on the billing tab.
 								    Non-compact: price / duration / seats / overage /
 								    hours / guests / training. Highlights the current
