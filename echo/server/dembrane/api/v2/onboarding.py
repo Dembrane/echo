@@ -304,16 +304,10 @@ async def complete_onboarding(
                 "tier": "pioneer",
                 "created_by": app_user_id,
             })
-            # Delegate the settings seed + creator membership to the same
-            # helper POST /v2/workspaces uses. Keeps the two creation paths
-            # producing identical rows (previously drifted: onboarding left
-            # settings NULL and skipped the inherit_team_* flags).
             from dembrane.inheritance import on_workspace_created
             await on_workspace_created(
                 workspace_id=personal_ws_id,
                 creator_app_user_id=app_user_id,
-                inherit_team_admins=True,
-                inherit_team_members=False,
             )
             logger.info(f"Created default workspace {personal_ws_id} for org {org_id}")
 

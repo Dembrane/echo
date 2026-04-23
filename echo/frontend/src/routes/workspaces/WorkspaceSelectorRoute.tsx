@@ -420,17 +420,21 @@ export const WorkspaceSelectorRoute = () => {
 	const internalWorkspaces = filtered.filter((w) => !w.is_external);
 	const externalWorkspaces = filtered.filter((w) => w.is_external);
 
-	// Group internal by org
+	// Seed groups from `teams` first — that way a team with zero workspaces
+	// still renders a hero card + AddWorkspace affordance instead of getting
+	// swallowed by the "no workspaces yet" empty state.
 	const orgGroups = new Map<string, { name: string; role: string; workspaces: Workspace[] }>();
+	for (const team of teams) {
+		orgGroups.set(team.id, { name: team.name, role: team.role, workspaces: [] });
+	}
 	for (const w of internalWorkspaces) {
 		const existing = orgGroups.get(w.org_id);
 		if (existing) {
 			existing.workspaces.push(w);
 		} else {
-			const team = teams.find((t) => t.id === w.org_id);
 			orgGroups.set(w.org_id, {
 				name: w.org_name,
-				role: team?.role ?? w.role,
+				role: w.role,
 				workspaces: [w],
 			});
 		}
@@ -538,8 +542,10 @@ export const WorkspaceSelectorRoute = () => {
 						</Stack>
 					)}
 
-					{/* Empty state */}
-					{workspaces.length === 0 && !isLoading && (
+					{/* Empty state — only when the user has no teams AND no workspaces.
+					    If they have a team but no workspace, the orgGroups loop above
+					    already renders a team hero + AddWorkspace card. */}
+					{workspaces.length === 0 && teams.length === 0 && !isLoading && (
 						<Stack align="center" gap={16} mt="10vh">
 							<Text c="dimmed" size="sm">
 								<Trans>No workspaces yet. Create your first one to get started.</Trans>

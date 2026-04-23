@@ -188,35 +188,64 @@ async def list_workspaces(
         },
     )
 
-    if not isinstance(memberships, list) or len(memberships) == 0:
-        return WorkspaceListResponse(workspaces=[], teams=[])
+    if not isinstance(memberships, list):
+        memberships = []
 
-    workspace_ids = [m["workspace_id"] for m in memberships if m.get("workspace_id")]
-
-    # Fetch workspace details
-    workspaces = await async_directus.get_items(
-        "workspace",
+    # Org memberships are fetched up front so a user with team access but
+    # zero direct workspace memberships (e.g. joined the team but hasn't
+    # been granted any workspace yet) still gets their teams back. Without
+    # this the selector shows "no workspaces yet" and hides the team they
+    # can actually manage.
+    org_membership_data = await async_directus.get_items(
+        "org_membership",
         {
             "query": {
-                "filter": {
-                    "id": {"_in": workspace_ids},
-                    "deleted_at": {"_null": True},
-                },
-                "fields": [
-                    "id", "name", "org_id", "is_default", "tier",
-                    "downgraded_at", "downgraded_from_tier", "logo_url",
-                ],
+                "filter": {"user_id": {"_eq": app_user_id}, "deleted_at": {"_null": True}},
+                "fields": ["org_id", "role"],
                 "limit": -1,
             }
         },
     )
-    if not isinstance(workspaces, list):
-        workspaces = []
+    if not isinstance(org_membership_data, list):
+        org_membership_data = []
+
+    if len(memberships) == 0 and len(org_membership_data) == 0:
+        return WorkspaceListResponse(workspaces=[], teams=[])
+
+    workspace_ids = [m["workspace_id"] for m in memberships if m.get("workspace_id")]
+
+    # Fetch workspace details — guard against empty _in (some Directus
+    # adapters treat that as "no filter" and return every workspace).
+    workspaces: list[dict] = []
+    if workspace_ids:
+        fetched = await async_directus.get_items(
+            "workspace",
+            {
+                "query": {
+                    "filter": {
+                        "id": {"_in": workspace_ids},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": [
+                        "id", "name", "org_id", "is_default", "tier",
+                        "downgraded_at", "downgraded_from_tier", "logo_url",
+                    ],
+                    "limit": -1,
+                }
+            },
+        )
+        if isinstance(fetched, list):
+            workspaces = fetched
 
     ws_map = {ws["id"]: ws for ws in workspaces}
 
     # Fetch org names + logos (logo powers the TeamHeroCard on /w).
-    org_ids = list({ws.get("org_id") for ws in workspaces if ws.get("org_id")})
+    # Union the workspaces' orgs with the user's org_memberships so teams
+    # without any workspace yet still show up with a name + logo.
+    org_ids = list({
+        *(ws.get("org_id") for ws in workspaces if ws.get("org_id")),
+        *(om.get("org_id") for om in org_membership_data if om.get("org_id")),
+    })
     org_map: dict[str, str] = {}
     org_logo_map: dict[str, Optional[str]] = {}
     if org_ids:
@@ -307,19 +336,9 @@ async def list_workspaces(
             downgraded_from_tier=ws.get("downgraded_from_tier"),
         ))
 
-    # Build team rollups
+    # Build team rollups (org_membership_data was fetched up front).
     teams: list[TeamRollup] = []
-    org_membership_data = await async_directus.get_items(
-        "org_membership",
-        {
-            "query": {
-                "filter": {"user_id": {"_eq": app_user_id}, "deleted_at": {"_null": True}},
-                "fields": ["org_id", "role"],
-                "limit": -1,
-            }
-        },
-    )
-    if isinstance(org_membership_data, list):
+    if org_membership_data:
         # Build org-to-workspaces map and collect all workspace IDs for member queries
         org_team_workspaces: dict[str, list[WorkspaceSummary]] = {}
         all_team_ws_ids: list[str] = []
