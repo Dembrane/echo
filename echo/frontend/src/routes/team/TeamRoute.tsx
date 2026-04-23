@@ -24,6 +24,7 @@ import {
 	Title,
 	Tooltip,
 } from "@mantine/core";
+import { modals } from "@mantine/modals";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
 import { useDocumentTitle } from "@mantine/hooks";
@@ -581,12 +582,35 @@ export const TeamRoute = () => {
 											currentRole={m.role}
 											options={TEAM_ROLE_OPTIONS}
 											disabled={!isAdmin}
-											onChange={(next) =>
-												teamRoleMutation.mutate({
-													userId: m.user_id,
-													role: next,
-												})
-											}
+											onChange={(next) => {
+												// Matrix row role changes get a confirm step — the
+												// dense grid makes it too easy to misclick a
+												// person's role. Matches the workspace-settings
+												// self-demotion pattern.
+												const person =
+													m.display_name || m.email || t`this person`;
+												modals.openConfirmModal({
+													title: t`Change team role?`,
+													children: (
+														<Text size="sm">
+															<Trans>
+																Change {person}'s team role from{" "}
+																<em>{displayRole(m.role)}</em> to{" "}
+																<em>{displayRole(next)}</em>?
+															</Trans>
+														</Text>
+													),
+													labels: {
+														confirm: t`Change role`,
+														cancel: t`Cancel`,
+													},
+													onConfirm: () =>
+														teamRoleMutation.mutate({
+															userId: m.user_id,
+															role: next,
+														}),
+												});
+											}}
 										/>
 									</Table.Td>
 									{workspaces.map((ws) => {

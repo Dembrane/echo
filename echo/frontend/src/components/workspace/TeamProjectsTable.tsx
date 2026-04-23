@@ -4,16 +4,16 @@ import {
 	ActionIcon,
 	Badge,
 	Group,
+	Menu,
 	Paper,
 	Select,
 	Stack,
 	Table,
 	Text,
 	TextInput,
-	Tooltip,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { IconSearch, IconTrash } from "@tabler/icons-react";
+import { IconDots, IconSearch, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "@/components/common/Toaster";
@@ -251,21 +251,34 @@ export const TeamProjectsTable = ({ orgId }: { orgId: string }) => {
 										</Text>
 									</Table.Td>
 									<Table.Td>
-										<Tooltip label={t`Delete`}>
-											<ActionIcon
-												size="sm"
-												variant="subtle"
-												color="red"
-												loading={
-													deleteMutation.isPending &&
-													deleteMutation.variables === p.id
-												}
-												onClick={() => handleDelete(p)}
-												aria-label={t`Delete project`}
-											>
-												<IconTrash size={14} />
-											</ActionIcon>
-										</Tooltip>
+										{/* Destructive action hides behind a row menu
+										    so a dense table of rows doesn't offer
+										    click-to-delete as the easiest gesture. */}
+										<Menu shadow="md" width={160} position="bottom-end">
+											<Menu.Target>
+												<ActionIcon
+													size="sm"
+													variant="subtle"
+													color="gray"
+													loading={
+														deleteMutation.isPending &&
+														deleteMutation.variables === p.id
+													}
+													aria-label={t`Project actions`}
+												>
+													<IconDots size={14} />
+												</ActionIcon>
+											</Menu.Target>
+											<Menu.Dropdown>
+												<Menu.Item
+													color="red"
+													leftSection={<IconTrash size={14} />}
+													onClick={() => handleDelete(p)}
+												>
+													<Trans>Delete…</Trans>
+												</Menu.Item>
+											</Menu.Dropdown>
+										</Menu>
 									</Table.Td>
 								</Table.Tr>
 							))}
