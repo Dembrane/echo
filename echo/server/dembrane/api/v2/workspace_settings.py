@@ -322,14 +322,26 @@ async def remove_workspace_member(
     membership_id: str,
     ctx: WorkspaceContext = Depends(get_workspace_context),
 ) -> dict:
-    """Soft-delete a workspace membership. Requires member:manage."""
-    ctx.require_policy("member:manage")
+    """Soft-delete a workspace membership.
 
+    Two callers:
+      - Admin removing someone else (member:manage).
+      - User removing themselves (self-leave; no policy required — it's
+        always valid for a user to leave unless they're the last admin).
+
+    Last-admin protection applies to both paths.
+    """
     membership = await async_directus.get_item("workspace_membership", membership_id)
     if not membership or membership.get("workspace_id") != ctx.workspace_id:
         raise HTTPException(status_code=404, detail="Membership not found in this workspace")
     if membership.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Membership already removed")
+
+    # Authorization: self-leave always allowed (for members + guests — HCD
+    # audit 2026-04-23). Removing someone else requires member:manage.
+    is_self_leave = membership.get("user_id") == ctx.app_user_id
+    if not is_self_leave:
+        ctx.require_policy("member:manage")
 
     if membership.get("role") == "owner":
         owners = await async_directus.get_items(
@@ -342,6 +354,27 @@ async def remove_workspace_member(
         )
         if isinstance(owners, list) and len(owners) <= 1:
             raise HTTPException(status_code=400, detail="Cannot remove the last owner. Transfer ownership first.")
+
+    # Last-admin protection (matrix §4: last admin cannot be removed).
+    # Applies to both self-leave and admin-removes-admin.
+    if membership.get("role") == "admin":
+        admins = await async_directus.get_items(
+            "workspace_membership",
+            {"query": {"filter": {
+                "workspace_id": {"_eq": ctx.workspace_id},
+                "role": {"_in": ["admin", "owner"]},
+                "deleted_at": {"_null": True},
+            }, "fields": ["id"], "limit": 2}},
+        )
+        if isinstance(admins, list) and len(admins) <= 1:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "You're the only admin. Promote someone else before leaving."
+                    if is_self_leave
+                    else "Can't remove the last admin. Promote someone else first."
+                ),
+            )
 
     await async_directus.update_item(
         "workspace_membership",

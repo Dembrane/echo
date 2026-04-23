@@ -3,6 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Badge,
+	Button,
 	Divider,
 	Group,
 	Paper,
@@ -15,7 +16,10 @@ import {
 import { IconRefresh } from "@tabler/icons-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { UpgradeModal, type Tier } from "@/components/workspace/FeatureGate";
 import { API_BASE_URL } from "@/config";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { isTier } from "@/lib/tiers";
 
 interface ProjectUsage {
 	id: string;
@@ -85,7 +89,9 @@ function formatEur(value: number | null | undefined): string {
  */
 export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 	const queryClient = useQueryClient();
+	const { workspace } = useWorkspace();
 	const [refreshing, setRefreshing] = useState(false);
+	const [upgradeOpen, setUpgradeOpen] = useState(false);
 
 	const { data, isLoading } = useQuery({
 		queryKey: ["v2", "workspace-usage", workspaceId],
@@ -113,6 +119,12 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 
 	if (isLoading || !data) return null;
 
+	// Matrix §11: admin + billing + owner can request upgrades. Role comes
+	// from the workspace context (the selector response includes role).
+	const role = workspace?.role;
+	const canRequestUpgrade =
+		role === "admin" || role === "owner" || role === "billing";
+
 	const hoursPct =
 		data.audio_hours_included && data.audio_hours_included > 0
 			? Math.min(100, (data.audio_hours / data.audio_hours_included) * 100)
@@ -126,8 +138,25 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 	const pilotExhausted = data.pilot_hard_block_active;
 	const approachingCap = hoursPct !== null && hoursPct >= 80 && hoursPct < 100;
 
+	const nextTier = data.next_tier;
+	const currentTierName = isTier(data.tier) ? (data.tier as Tier) : "pioneer";
+	const nextTierName =
+		nextTier && isTier(nextTier.tier) ? (nextTier.tier as Tier) : null;
+
 	return (
 		<Paper p="lg" withBorder radius="sm">
+			{nextTierName && (
+				<UpgradeModal
+					opened={upgradeOpen}
+					onClose={() => setUpgradeOpen(false)}
+					currentTier={currentTierName}
+					requiredTier={nextTierName}
+					featureName={t`Upgrade to ${nextTier?.tier ?? ""}`}
+					benefit={nextTier?.tagline ?? ""}
+					canRequestUpgrade={canRequestUpgrade}
+					workspaceId={workspaceId}
+				/>
+			)}
 			<Stack gap={16}>
 				<Group justify="space-between" align="flex-start" wrap="nowrap">
 					<Stack gap={2} style={{ minWidth: 0 }}>
@@ -258,18 +287,29 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 								</Group>
 							)}
 							{data.next_tier && (
-								<Text size="xs" c="dimmed">
-									<Trans>
-										Next tier: {data.next_tier.tier} — {data.next_tier.tagline}
-									</Trans>
-									{data.next_tier.price_eur_monthly != null && (
-										<>
-											{" · "}
-											{formatEur(data.next_tier.price_eur_monthly)}
-											/mo
-										</>
+								<Group justify="space-between" align="center" wrap="nowrap">
+									<Text size="xs" c="dimmed">
+										<Trans>
+											Next tier: {data.next_tier.tier} — {data.next_tier.tagline}
+										</Trans>
+										{data.next_tier.price_eur_monthly != null && (
+											<>
+												{" · "}
+												{formatEur(data.next_tier.price_eur_monthly)}
+												/mo
+											</>
+										)}
+									</Text>
+									{canRequestUpgrade && (
+										<Button
+											size="compact-xs"
+											variant="light"
+											onClick={() => setUpgradeOpen(true)}
+										>
+											<Trans>Request upgrade</Trans>
+										</Button>
 									)}
-								</Text>
+								</Group>
 							)}
 						</Stack>
 					</>

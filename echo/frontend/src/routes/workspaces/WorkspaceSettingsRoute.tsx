@@ -33,6 +33,7 @@ import { UsageCard } from "@/components/workspace/UsageCard";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
 interface WorkspaceMember {
 	id: string;
@@ -171,6 +172,12 @@ export const WorkspaceSettingsRoute = () => {
 	const navigate = useI18nNavigate();
 	const queryClient = useQueryClient();
 	const { data: meV2 } = useV2Me();
+	const { workspace: myWorkspaceSummary } = useWorkspace();
+	// Guest = is_external on my direct row. Matrix §4: guest permissions
+	// mirror member inside their assigned workspace, but they don't see
+	// usage / privacy / pending invites (matrix §4 "View usage & overage"
+	// row is ✗ for Guest).
+	const iAmGuest = myWorkspaceSummary?.is_external === true;
 	const [inviteEmail, setInviteEmail] = useState("");
 	const [inviteRole, setInviteRole] = useState("member");
 	const [editingName, setEditingName] = useState<string | null>(null);
@@ -272,6 +279,22 @@ export const WorkspaceSettingsRoute = () => {
 		onError: (err: Error) => toast.error(err.message),
 	});
 
+	// Self-leave. Same endpoint as removeMember but we surface different
+	// success copy + route the user out.
+	const leaveMutation = useMutation({
+		mutationFn: (membershipId: string) => {
+			if (!workspaceId) throw new Error("No workspace");
+			return removeMember(workspaceId, membershipId);
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			toast.success(t`You left the workspace`);
+			navigate("/w");
+		},
+		onError: (err: Error) => toast.error(err.message),
+	});
+
 	if (isLoading || !settings) {
 		return (
 			<Container size="sm" py="xl">
@@ -326,10 +349,18 @@ export const WorkspaceSettingsRoute = () => {
 							</Title>
 						)}
 						<Group gap={8} wrap="nowrap">
-							<TierBadge tier={settings.tier} size="xs" showTagline />
-							<Text size="xs" c="dimmed">
-								{settings.org_name}
-							</Text>
+							{iAmGuest ? (
+								<Badge size="xs" variant="light" color="yellow">
+									<Trans>Guest of {settings.org_name}</Trans>
+								</Badge>
+							) : (
+								<TierBadge tier={settings.tier} size="xs" showTagline />
+							)}
+							{!iAmGuest && (
+								<Text size="xs" c="dimmed">
+									{settings.org_name}
+								</Text>
+							)}
 						</Group>
 					</Stack>
 					<Button
@@ -361,10 +392,11 @@ export const WorkspaceSettingsRoute = () => {
 
 				{/* Usage + financial rollup (matrix §8). Role-aware rendering
 				    lives inside the card — members see raw; admin/billing see
-				    overage forecast + next-tier recommendation. */}
-				{workspaceId && <UsageCard workspaceId={workspaceId} />}
+				    overage forecast + next-tier recommendation. Guests are
+				    excluded entirely (matrix §4 "View usage & overage" ✗). */}
+				{workspaceId && !iAmGuest && <UsageCard workspaceId={workspaceId} />}
 
-				<Divider />
+				{!iAmGuest && <Divider />}
 
 				{/* Members */}
 				<Stack gap={16}>
@@ -645,19 +677,56 @@ export const WorkspaceSettingsRoute = () => {
 					<AccessRequestsList workspaceId={workspaceId} />
 				)}
 
-				{/* Your access — role only. Raw policy strings removed after
-				    HCD audit (2026-04-23): "member:manage" reads as engineer-
-				    speak to a user. The role badge is sufficient for the
-				    "remind me what I can do" job. */}
+				{/* Your access — role + self-leave. Raw policy strings removed
+				    after HCD audit (2026-04-23). "Leave workspace" is new:
+				    members + guests always had no self-exit path. Admins must
+				    transfer first (backend enforces last-admin protection). */}
 				<Divider />
 				<Stack gap={12}>
 					<Title order={5} fw={400}>
 						<Trans>Your access</Trans>
 					</Title>
-					<Group gap={8}>
+					<Group justify="space-between" align="center">
 						<Badge size="sm" variant="light" color="blue" style={{ textTransform: "capitalize" }}>
 							{settings.my_role}
 						</Badge>
+						{(() => {
+							const myMembership = settings.members.find(
+								(m) => m.user_id === myAppUserId,
+							);
+							if (!myMembership) return null;
+							// Offer Leave for any role; backend returns 400 if you're
+							// the last admin/owner with a clear error we surface.
+							return (
+								<Button
+									size="compact-xs"
+									variant="subtle"
+									color="gray"
+									onClick={() => {
+										modals.openConfirmModal({
+											title: t`Leave workspace`,
+											children: (
+												<Text size="sm">
+													<Trans>
+														You'll lose access to this workspace. Projects
+														you created stay; your role here is removed.
+													</Trans>
+												</Text>
+											),
+											labels: {
+												confirm: t`Leave workspace`,
+												cancel: t`Cancel`,
+											},
+											confirmProps: { color: "red" },
+											onConfirm: () =>
+												leaveMutation.mutate(myMembership.id),
+										});
+									}}
+								>
+									<Trans>Leave workspace</Trans>
+								</Button>
+							);
+						})()}
 					</Group>
 				</Stack>
 			</Stack>
