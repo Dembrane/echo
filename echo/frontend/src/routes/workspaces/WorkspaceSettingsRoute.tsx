@@ -9,7 +9,9 @@ import {
 	Button,
 	Container,
 	Divider,
+	FileButton,
 	Group,
+	Image,
 	Loader,
 	Modal,
 	Paper,
@@ -24,9 +26,9 @@ import {
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
-import { IconPlus, IconRefresh, IconTrash, IconX } from "@tabler/icons-react";
+import { IconPlus, IconRefresh, IconTrash, IconUpload, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
@@ -35,6 +37,7 @@ import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { UsageCard } from "@/components/workspace/UsageCard";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { logoUrl } from "@/lib/avatar";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
@@ -133,6 +136,40 @@ async function changeRole(workspaceId: string, membershipId: string, role: strin
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
 		throw new Error(data.detail || "Failed to change role");
+	}
+}
+
+async function uploadWorkspaceLogo(
+	workspaceId: string,
+	file: Blob,
+	filename = "logo.png",
+): Promise<string> {
+	const body = new FormData();
+	body.append("file", file, filename);
+	const res = await fetch(
+		`${API_BASE_URL}/v2/workspaces/${workspaceId}/logo`,
+		{ method: "POST", credentials: "include", body },
+	);
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(
+			typeof data.detail === "string" ? data.detail : "Failed to upload logo",
+		);
+	}
+	const data = await res.json();
+	return data.file_id as string;
+}
+
+async function removeWorkspaceLogo(workspaceId: string): Promise<void> {
+	const res = await fetch(
+		`${API_BASE_URL}/v2/workspaces/${workspaceId}/logo`,
+		{ method: "DELETE", credentials: "include" },
+	);
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(
+			typeof data.detail === "string" ? data.detail : "Failed to remove logo",
+		);
 	}
 }
 
@@ -1166,7 +1203,6 @@ function PrivacyAndDefaultsSection({
 	workspaceId: string;
 }) {
 	const queryClient = useQueryClient();
-	const [logo, setLogo] = useState<string | null>(null);
 	const [description, setDescription] = useState<string | null>(null);
 	// Visibility control. Matrix §6 retired derivation — the old
 	// `inherit_team_admins` flag is now just the "Open vs Private" bit.
@@ -1174,21 +1210,16 @@ function PrivacyAndDefaultsSection({
 	// backward-compat, but new writes also set workspace.visibility.
 	const [isOpen, setIsOpen] = useState<boolean | null>(null);
 
-	const effectiveLogo = logo ?? settings.logo_url ?? "";
 	const effectiveDesc = description ?? settings.description ?? "";
 	const effectiveIsOpen = isOpen ?? settings.inherit_team_admins;
 
 	const dirty =
-		(logo !== null && logo.trim() !== (settings.logo_url ?? "")) ||
 		(description !== null && description !== (settings.description ?? "")) ||
 		isOpen !== null;
 
 	const saveMutation = useMutation({
 		mutationFn: async () => {
 			const payload: Record<string, unknown> = {};
-			if (logo !== null && logo.trim() !== (settings.logo_url ?? "")) {
-				payload.logo_url = logo.trim();
-			}
 			if (description !== null && description !== (settings.description ?? "")) {
 				payload.description = description;
 			}
@@ -1198,13 +1229,44 @@ function PrivacyAndDefaultsSection({
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
-			setLogo(null);
 			setDescription(null);
 			setIsOpen(null);
 			toast.success(t`Saved`);
 		},
 		onError: (err: Error) => toast.error(err.message),
 	});
+
+	// Logo upload lives on its own mutation so it commits immediately —
+	// mirrors the user-settings whitelabel flow. Save button doesn't need
+	// to wait on an image round-trip.
+	const logoResetRef = useRef<() => void>(null);
+	const uploadLogoMutation = useMutation({
+		mutationFn: (file: File) =>
+			uploadWorkspaceLogo(workspaceId, file, file.name || "logo.png"),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+			toast.success(t`Logo updated`);
+		},
+		onError: (err: Error) => toast.error(err.message),
+	});
+	const removeLogoMutation = useMutation({
+		mutationFn: () => removeWorkspaceLogo(workspaceId),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+			toast.success(t`Logo removed`);
+		},
+		onError: (err: Error) => toast.error(err.message),
+	});
+
+	const currentLogoUrl = logoUrl(settings.logo_url);
+
+	const handleLogoSelect = (file: File | null) => {
+		logoResetRef.current?.();
+		if (!file) return;
+		uploadLogoMutation.mutate(file);
+	};
 
 	return (
 		<Stack gap={16}>
@@ -1219,15 +1281,66 @@ function PrivacyAndDefaultsSection({
 				disabled={!canEdit}
 				maxLength={500}
 			/>
-			<TextInput
-				label={t`Logo URL`}
-				description={t`Custom workspace logo. Requires changemaker tier or above.`}
-				placeholder="https://..."
-				value={effectiveLogo}
-				onChange={(e) => setLogo(e.currentTarget.value)}
-				disabled={!canEdit}
-				maxLength={2048}
-			/>
+			<Stack gap={6}>
+				<Text size="sm" fw={500}>
+					<Trans>Logo</Trans>
+				</Text>
+				<Text size="xs" c="dimmed">
+					<Trans>
+						Custom workspace logo. Requires changemaker tier or above.
+					</Trans>
+				</Text>
+				{currentLogoUrl ? (
+					<Group gap="sm" align="center">
+						<Image
+							src={currentLogoUrl}
+							alt={t`Workspace logo`}
+							h={48}
+							w="auto"
+							fit="contain"
+							style={{ maxWidth: 200 }}
+						/>
+						<Button
+							variant="subtle"
+							color="red"
+							size="compact-sm"
+							leftSection={<IconTrash size={14} />}
+							loading={removeLogoMutation.isPending}
+							disabled={!canEdit}
+							onClick={() => removeLogoMutation.mutate()}
+						>
+							<Trans>Remove</Trans>
+						</Button>
+					</Group>
+				) : (
+					<Text size="xs" c="dimmed" fs="italic">
+						<Trans>No logo set — dembrane default will be used.</Trans>
+					</Text>
+				)}
+				<FileButton
+					resetRef={logoResetRef}
+					onChange={handleLogoSelect}
+					accept="image/png,image/jpeg,image/svg+xml,image/webp"
+					disabled={!canEdit}
+				>
+					{(props) => (
+						<Button
+							variant="light"
+							size="compact-sm"
+							leftSection={<IconUpload size={14} />}
+							loading={uploadLogoMutation.isPending}
+							style={{ alignSelf: "flex-start" }}
+							{...props}
+						>
+							{currentLogoUrl ? (
+								<Trans>Replace logo</Trans>
+							) : (
+								<Trans>Upload logo</Trans>
+							)}
+						</Button>
+					)}
+				</FileButton>
+			</Stack>
 			{(() => {
 				// Matrix §2: Private workspaces are innovator+. If the current
 				// tier can't go private, disable the radio + surface the
@@ -1284,7 +1397,6 @@ function PrivacyAndDefaultsSection({
 					<Button
 						variant="default"
 						onClick={() => {
-							setLogo(null);
 							setDescription(null);
 							setIsOpen(null);
 						}}

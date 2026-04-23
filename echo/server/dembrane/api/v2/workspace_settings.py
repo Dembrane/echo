@@ -4,10 +4,13 @@ from logging import getLogger
 from typing import Optional
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+import requests
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from pydantic import BaseModel
 
+from dembrane.directus import directus
 from dembrane.directus_async import async_directus
+from dembrane.async_helpers import run_in_thread_pool
 from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
@@ -312,6 +315,127 @@ async def update_workspace_settings(
 
     await async_directus.update_item("workspace", ctx.workspace_id, payload)
     return {"status": "success"}
+
+
+# ── Logo upload ──
+#
+# Mirrors the whitelabel-logo pattern on user-settings: file goes into the
+# shared `custom_logos` Directus folder; we store only the bare file_id in
+# `workspace.logo_url`. The frontend turns that into an /assets/{id} URL.
+# Legacy rows with external http(s) URLs keep working — the frontend's
+# logo-resolver returns those verbatim.
+
+
+_ALLOWED_LOGO_TYPES = {
+    "image/png",
+    "image/jpeg",
+    "image/jpg",
+    "image/svg+xml",
+    "image/webp",
+}
+# 5 MB — same practical cap participant uploads use. Logos are tiny; larger
+# than this is almost always a misfired upload.
+_MAX_LOGO_BYTES = 5 * 1024 * 1024
+
+
+def _get_or_create_custom_logos_folder_id() -> str | None:
+    """Look up the custom_logos folder id, creating it if missing."""
+    try:
+        folders = directus.get(
+            "/folders",
+            params={"filter[name][_eq]": "custom_logos", "limit": 1},
+        )
+        if folders and len(folders) > 0:
+            return folders[0]["id"]
+        result = directus.post("/folders", json={"name": "custom_logos"})
+        return result.get("data", {}).get("id")
+    except Exception as e:
+        logger.warning(f"Failed to get or create custom_logos folder: {e}")
+        return None
+
+
+@router.post("/{workspace_id}/logo")
+async def upload_workspace_logo(
+    file: UploadFile,
+    ctx: WorkspaceContext = Depends(get_workspace_context),
+) -> dict:
+    """Upload a workspace logo file.
+
+    Requires settings:manage + workspace:whitelabel (changemaker+).
+    Replaces any existing logo and deletes the previous file if it was one
+    we owned (bare file_id, not an external URL).
+    """
+    ctx.require_policy("settings:manage")
+    ctx.require_policy("workspace:whitelabel")
+
+    if file.content_type and file.content_type not in _ALLOWED_LOGO_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail="Logo must be PNG, JPEG, SVG, or WebP",
+        )
+
+    file_content = await file.read()
+    if len(file_content) > _MAX_LOGO_BYTES:
+        raise HTTPException(status_code=400, detail="Logo file is too large (max 5 MB)")
+    if len(file_content) == 0:
+        raise HTTPException(status_code=400, detail="Empty file")
+
+    folder_id = _get_or_create_custom_logos_folder_id()
+    if not folder_id:
+        raise HTTPException(status_code=500, detail="Failed to prepare logo folder")
+
+    url = f"{directus.url}/files"
+    headers = {"Authorization": f"Bearer {directus.get_token()}"}
+    files = {"file": (file.filename, file_content, file.content_type or "image/png")}
+    data = {"folder": folder_id}
+    try:
+        response = requests.post(
+            url, headers=headers, files=files, data=data, verify=directus.verify
+        )
+        if response.status_code != 200:
+            logger.error(f"Failed to upload workspace logo: {response.status_code} {response.text}")
+            raise HTTPException(status_code=500, detail="Failed to upload file") from None
+        file_id = response.json()["data"]["id"]
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to upload workspace logo: {e}")
+        raise HTTPException(status_code=500, detail="Failed to upload file") from None
+
+    # Track the previous value so we can GC the old file after the pointer moves.
+    prev_logo = ctx.workspace.get("logo_url") or ""
+    await async_directus.update_item("workspace", ctx.workspace_id, {"logo_url": file_id})
+
+    if prev_logo and not prev_logo.lower().startswith(("http://", "https://")):
+        try:
+            await run_in_thread_pool(directus.delete_file, prev_logo)
+        except Exception as e:
+            logger.warning(f"Failed to delete old workspace logo {prev_logo}: {e}")
+
+    return {"file_id": file_id}
+
+
+@router.delete("/{workspace_id}/logo")
+async def remove_workspace_logo(
+    ctx: WorkspaceContext = Depends(get_workspace_context),
+) -> dict:
+    """Clear the workspace logo and delete the underlying file if we own it."""
+    ctx.require_policy("settings:manage")
+
+    prev_logo = ctx.workspace.get("logo_url") or ""
+    if not prev_logo:
+        return {"status": "ok"}
+
+    await async_directus.update_item("workspace", ctx.workspace_id, {"logo_url": None})
+
+    # Only delete files we manage; never touch external URLs.
+    if not prev_logo.lower().startswith(("http://", "https://")):
+        try:
+            await run_in_thread_pool(directus.delete_file, prev_logo)
+        except Exception as e:
+            logger.warning(f"Failed to delete workspace logo {prev_logo}: {e}")
+
+    return {"status": "ok"}
 
 
 # ── Remove member ──
