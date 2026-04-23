@@ -5,14 +5,30 @@ import {
 	Badge,
 	Group,
 	Paper,
+	Progress,
 	Stack,
+	Table,
 	Text,
 	Tooltip,
+	UnstyledButton,
 } from "@mantine/core";
-import { IconRefresh } from "@tabler/icons-react";
+import { IconChevronDown, IconChevronRight, IconRefresh } from "@tabler/icons-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { API_BASE_URL } from "@/config";
+
+interface OrgUsageWorkspaceRow {
+	id: string;
+	name: string;
+	tier: string;
+	audio_hours: number;
+	hours_included: number | null;
+	hours_pct: number | null;
+	at_cap: boolean;
+	approaching_cap: boolean;
+	overage_forecast_eur: number | null;
+}
 
 interface OrgUsage {
 	cycle_start: string;
@@ -24,6 +40,7 @@ interface OrgUsage {
 	total_project_count: number;
 	workspaces_at_cap: number;
 	workspaces_approaching_cap: number;
+	workspaces: OrgUsageWorkspaceRow[];
 	total_overage_forecast_eur: number | null;
 }
 
@@ -60,7 +77,9 @@ function formatEur(value: number | null | undefined): string {
  */
 export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 	const queryClient = useQueryClient();
+	const navigate = useI18nNavigate();
 	const [refreshing, setRefreshing] = useState(false);
+	const [expanded, setExpanded] = useState(false);
 
 	const { data, isLoading } = useQuery({
 		queryKey: ["v2", "org-usage", orgId],
@@ -169,6 +188,129 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 							</Badge>
 						)}
 					</Group>
+				)}
+
+				{data.workspaces.length > 0 && (
+					<Stack gap={6} mt={4}>
+						<UnstyledButton
+							onClick={() => setExpanded((v) => !v)}
+							style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
+						>
+							{expanded ? (
+								<IconChevronDown size={12} />
+							) : (
+								<IconChevronRight size={12} />
+							)}
+							<Text size="xs" c="dimmed">
+								<Trans>Per-workspace breakdown</Trans>
+							</Text>
+						</UnstyledButton>
+						{expanded && (
+							<Table verticalSpacing="xs" striped highlightOnHover>
+								<Table.Thead>
+									<Table.Tr>
+										<Table.Th>
+											<Text size="xs" c="dimmed">
+												<Trans>Workspace</Trans>
+											</Text>
+										</Table.Th>
+										<Table.Th>
+											<Text size="xs" c="dimmed">
+												<Trans>Tier</Trans>
+											</Text>
+										</Table.Th>
+										<Table.Th style={{ width: 200 }}>
+											<Text size="xs" c="dimmed">
+												<Trans>Hours</Trans>
+											</Text>
+										</Table.Th>
+										{data.total_overage_forecast_eur != null && (
+											<Table.Th style={{ textAlign: "right" }}>
+												<Text size="xs" c="dimmed">
+													<Trans>Overage</Trans>
+												</Text>
+											</Table.Th>
+										)}
+									</Table.Tr>
+								</Table.Thead>
+								<Table.Tbody>
+									{data.workspaces.map((ws) => (
+										<Table.Tr
+											key={ws.id}
+											style={{ cursor: "pointer" }}
+											onClick={() =>
+												navigate(`/w/${ws.id}/settings?tab=billing`)
+											}
+										>
+											<Table.Td>
+												<Group gap={6} wrap="nowrap">
+													{ws.at_cap && (
+														<Tooltip label={t`At limit`}>
+															<Badge size="xs" color="red" variant="light">
+																!
+															</Badge>
+														</Tooltip>
+													)}
+													{!ws.at_cap && ws.approaching_cap && (
+														<Tooltip label={t`Approaching limit`}>
+															<Badge size="xs" color="yellow" variant="light">
+																·
+															</Badge>
+														</Tooltip>
+													)}
+													<Text size="sm" truncate>
+														{ws.name}
+													</Text>
+												</Group>
+											</Table.Td>
+											<Table.Td>
+												<Text
+													size="xs"
+													c="dimmed"
+													style={{ textTransform: "capitalize" }}
+												>
+													{ws.tier}
+												</Text>
+											</Table.Td>
+											<Table.Td>
+												<Stack gap={2}>
+													<Text size="xs">
+														{ws.audio_hours.toFixed(1)}
+														{ws.hours_included != null && (
+															<Text span c="dimmed" size="xs">
+																{" / "}
+																{ws.hours_included}
+															</Text>
+														)}
+													</Text>
+													{ws.hours_pct != null && (
+														<Progress
+															value={Math.min(100, ws.hours_pct * 100)}
+															size="xs"
+															color={
+																ws.at_cap
+																	? "red"
+																	: ws.approaching_cap
+																		? "yellow"
+																		: "blue"
+															}
+														/>
+													)}
+												</Stack>
+											</Table.Td>
+											{data.total_overage_forecast_eur != null && (
+												<Table.Td style={{ textAlign: "right" }}>
+													<Text size="xs">
+														{formatEur(ws.overage_forecast_eur)}
+													</Text>
+												</Table.Td>
+											)}
+										</Table.Tr>
+									))}
+								</Table.Tbody>
+							</Table>
+						)}
+					</Stack>
 				)}
 			</Stack>
 		</Paper>

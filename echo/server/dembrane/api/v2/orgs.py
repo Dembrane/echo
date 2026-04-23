@@ -942,6 +942,19 @@ async def remove_team_member(
 # ────────────────────────────────────────────────────────────────────
 
 
+class OrgUsageWorkspaceRow(BaseModel):
+    id: str
+    name: str
+    tier: str
+    audio_hours: float
+    hours_included: Optional[int]      # None = unlimited tier
+    hours_pct: Optional[float]         # 0..1 progress; None when unlimited
+    at_cap: bool                       # Pilot + at/over cap
+    approaching_cap: bool              # >=80% on capped tiers
+    # Admin / billing only:
+    overage_forecast_eur: Optional[float] = None
+
+
 class OrgUsageResponse(BaseModel):
     cycle_start: str
     cycle_end_exclusive: str
@@ -952,6 +965,7 @@ class OrgUsageResponse(BaseModel):
     total_project_count: int
     workspaces_at_cap: int            # Pilot + over cap (hard block active)
     workspaces_approaching_cap: int   # tier with cap, usage >= 80%
+    workspaces: list[OrgUsageWorkspaceRow] = []
     # Admin / billing only (null for plain members):
     total_overage_forecast_eur: Optional[float] = None
 
@@ -1024,7 +1038,7 @@ async def get_org_usage(
                     "org_id": {"_eq": org_id},
                     "deleted_at": {"_null": True},
                 },
-                "fields": ["id", "tier"],
+                "fields": ["id", "name", "tier"],
                 "limit": -1,
             }
         },
@@ -1138,25 +1152,59 @@ async def get_org_usage(
                 elif m.get("role") in seat_roles:
                     total_seat_count += 1
 
-    # Per-tier aggregation for cap counts + forecast.
+    # Per-workspace rows + aggregation. We build the rows even when the
+    # caller doesn't see financials — the €-field is stripped below.
     total_hours = 0.0
     at_cap = 0
     approaching = 0
     forecast = 0.0
+    ws_rows: list[dict] = []
     for w in workspaces:
-        wid = w.get("id")
+        wid = w.get("id") or ""
+        name = w.get("name") or ""
         tier = w.get("tier") or ""
         hours = per_ws_hours.get(wid, 0.0) if wid else 0.0
         total_hours += hours
+
         cap = get_capacity(tier)
-        if cap is None or cap.included_hours is None:
-            continue
-        pct = (hours / cap.included_hours) if cap.included_hours else 0.0
-        if cap.hard_block_on_hours and hours >= cap.included_hours:
-            at_cap += 1
-        elif pct >= 0.8:
-            approaching += 1
-        forecast += compute_hour_overage_eur(tier, hours)
+        hours_included: Optional[int] = cap.included_hours if cap else None
+        hours_pct: Optional[float] = None
+        ws_at_cap = False
+        ws_approaching = False
+        ws_forecast_eur = 0.0
+
+        if cap and cap.included_hours is not None:
+            pct = hours / cap.included_hours if cap.included_hours else 0.0
+            hours_pct = round(pct, 3)
+            if cap.hard_block_on_hours and hours >= cap.included_hours:
+                at_cap += 1
+                ws_at_cap = True
+            elif pct >= 0.8:
+                approaching += 1
+                ws_approaching = True
+            ws_forecast_eur = compute_hour_overage_eur(tier, hours)
+            forecast += ws_forecast_eur
+
+        ws_rows.append({
+            "id": wid,
+            "name": name,
+            "tier": tier,
+            "audio_hours": round(hours, 2),
+            "hours_included": hours_included,
+            "hours_pct": hours_pct,
+            "at_cap": ws_at_cap,
+            "approaching_cap": ws_approaching,
+            "overage_forecast_eur": round(ws_forecast_eur, 2),
+        })
+
+    # Sort: at-cap first, then approaching, then by hours desc — Team admins
+    # reading top-to-bottom hit the hot workspaces immediately.
+    ws_rows.sort(
+        key=lambda r: (
+            0 if r["at_cap"] else 1 if r["approaching_cap"] else 2,
+            -r["audio_hours"],
+        )
+    )
 
     payload = {
         "cycle_start": cycle_start,
@@ -1168,12 +1216,22 @@ async def get_org_usage(
         "total_project_count": project_count,
         "workspaces_at_cap": at_cap,
         "workspaces_approaching_cap": approaching,
+        "workspaces": ws_rows,
         "total_overage_forecast_eur": round(forecast, 2),
     }
 
     await cache_set_json(cache_key, payload, USAGE_TTL_SECONDS)
 
     if not sees_financials:
-        payload = {**payload, "total_overage_forecast_eur": None}
+        # Strip both the aggregate and each per-workspace € figure for
+        # plain members — matrix §8 says members see raw hours only.
+        stripped_rows = [
+            {**r, "overage_forecast_eur": None} for r in ws_rows
+        ]
+        payload = {
+            **payload,
+            "total_overage_forecast_eur": None,
+            "workspaces": stripped_rows,
+        }
 
     return OrgUsageResponse(**payload)
