@@ -7,11 +7,15 @@ import {
 	Group,
 	Menu,
 	Paper,
+	ScrollArea,
 	Text,
+	UnstyledButton,
 } from "@mantine/core";
 import * as Sentry from "@sentry/react";
 import {
 	IconBug,
+	IconCheck,
+	IconChevronDown,
 	IconExternalLink,
 	IconLogout,
 	IconMessageCircle,
@@ -85,7 +89,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 	const { data: meV2 } = useV2Me({ enabled: isAuthenticated });
 	const needsOnboarding = meV2?.onboarding_completed === false;
 	const hasPendingInvites = meV2?.has_pending_invites === true;
-	const { workspaceId, workspaceName } = useWorkspace();
+	const { workspaceId, workspaceName, workspaces, setWorkspace } = useWorkspace();
 	const location = useLocation();
 	// Workspace breadcrumb in the header is noise on pages that ARE the
 	// selector or team canvas — those pages own the workspace pick / team
@@ -176,12 +180,80 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 							</Group>
 						</I18nLink>
 						{workspaceName && isAuthenticated && !hideWorkspaceBreadcrumb && (
-							<Group gap={6} align="center" style={{ cursor: "pointer" }} onClick={() => navigate("/w")}>
-								<Text size="xs" c="dimmed" lh={1}>/</Text>
-								<Text size="sm" c="dimmed" lineClamp={1} maw={160} lh={1}>
-									{workspaceName}
-								</Text>
-							</Group>
+							<Menu
+								withArrow
+								arrowPosition="center"
+								width={260}
+								keepMounted
+								position="bottom-start"
+							>
+								<Menu.Target>
+									<UnstyledButton
+										aria-label={t`Switch workspace`}
+										style={{
+											display: "inline-flex",
+											alignItems: "center",
+											gap: 6,
+											padding: "4px 6px",
+											borderRadius: 6,
+										}}
+									>
+										<Text size="xs" c="dimmed" lh={1}>
+											/
+										</Text>
+										<Text
+											size="sm"
+											c="dimmed"
+											lineClamp={1}
+											maw={180}
+											lh={1}
+										>
+											{workspaceName}
+										</Text>
+										<IconChevronDown size={12} color="var(--mantine-color-gray-6)" />
+									</UnstyledButton>
+								</Menu.Target>
+								<Menu.Dropdown>
+									<Menu.Label>
+										<Trans>Switch workspace</Trans>
+									</Menu.Label>
+									<ScrollArea.Autosize mah={320}>
+										{workspaces.map((ws) => {
+											const isCurrent = ws.id === workspaceId;
+											return (
+												<Menu.Item
+													key={ws.id}
+													rightSection={
+														isCurrent ? (
+															<IconCheck size={14} color="var(--mantine-color-blue-6)" />
+														) : null
+													}
+													onClick={() => {
+														if (isCurrent) return;
+														setWorkspace(ws.id);
+														navigate(`/w/${ws.id}/projects`);
+													}}
+												>
+													<Box>
+														<Text size="sm" lineClamp={1}>
+															{ws.name}
+														</Text>
+														{ws.org_name && (
+															<Text size="xs" c="dimmed" lineClamp={1}>
+																{ws.org_name}
+															</Text>
+														)}
+													</Box>
+												</Menu.Item>
+											);
+										})}
+									</ScrollArea.Autosize>
+									<Menu.Divider />
+									<Menu.Item onClick={() => navigate("/w")}>
+										<Trans>All workspaces</Trans>
+									</Menu.Item>
+								</Menu.Dropdown>
+							</Menu>
 						)}
 					</Group>
 

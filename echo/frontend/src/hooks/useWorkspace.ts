@@ -61,11 +61,35 @@ async function fetchWorkspaces(): Promise<WorkspaceSummary[]> {
 
 const SESSION_KEY = "dembrane_ws_selected";
 
+// Pull a workspace UUID out of /w/:id/... paths so the provider can
+// resolve before WorkspaceLayout mounts and fires its sync effect.
+// Without this, a direct link to /w/<id>/projects renders the header
+// with no workspace name until the next tick — the 2026-04-23 bug
+// "don't see the workspace on the nav bar".
+const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+function readWorkspaceIdFromPath(): string | null {
+	if (typeof window === "undefined") return null;
+	const segments = window.location.pathname.split("/").filter(Boolean);
+	// Strip locale prefix (en-US, nl-NL, …)
+	if (segments[0] && /^[a-z]{2}(-[A-Z]{2})?$/.test(segments[0])) {
+		segments.shift();
+	}
+	if (segments[0] !== "w" || !segments[1]) return null;
+	return UUID_RE.test(segments[1]) ? segments[1] : null;
+}
+
 export function useWorkspaceProvider(enabled: boolean): WorkspaceContextValue {
-	// Selection state — drives re-renders when user switches
-	const [selectedId, setSelectedId] = useState<string | null>(
-		() => typeof window !== "undefined" ? sessionStorage.getItem(SESSION_KEY) : null,
-	);
+	// Selection state — drives re-renders when user switches. Seed with
+	// (1) current URL's workspace id if present, (2) session, or (3) null.
+	// URL wins over session so deep-linking into another workspace doesn't
+	// briefly flash the previously-selected one.
+	const [selectedId, setSelectedId] = useState<string | null>(() => {
+		const fromUrl = readWorkspaceIdFromPath();
+		if (fromUrl) return fromUrl;
+		return typeof window !== "undefined"
+			? sessionStorage.getItem(SESSION_KEY)
+			: null;
+	});
 
 	const { data: workspaces = [], isLoading } = useQuery({
 		queryKey: ["v2", "workspaces-context"],

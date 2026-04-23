@@ -801,6 +801,7 @@ msgid "All Templates"
 msgstr "Alle sjablonen"
 
 #: src/components/workspace/TeamProjectsTable.tsx:183
+#: src/components/layout/Header.tsx:253
 msgid "All workspaces"
 msgstr ""
 
@@ -2345,7 +2346,7 @@ msgstr "Wil je op de hoogte blijven?"
 #~ msgid "Document was deleted"
 #~ msgstr "Document is verwijderd"
 
-#: src/components/layout/Header.tsx:273
+#: src/components/layout/Header.tsx:345
 msgid "Documentation"
 msgstr "Documentatie"
 
@@ -3046,7 +3047,7 @@ msgstr "Fout bij het uploaden van het logo"
 msgid "participant.modal.echo.info.title"
 msgstr "Functie binnenkort beschikbaar"
 
-#: src/components/layout/Header.tsx:283
+#: src/components/layout/Header.tsx:355
 #: src/components/common/FeedbackPortalModal.tsx:43
 msgid "Feedback portal"
 msgstr "Feedbackportaal"
@@ -4012,7 +4013,7 @@ msgstr "Logo bijgewerkt"
 #~ msgid "Logo URL"
 #~ msgstr ""
 
-#: src/components/layout/Header.tsx:325
+#: src/components/layout/Header.tsx:397
 msgid "Logout"
 msgstr "Uitloggen"
 
@@ -5773,7 +5774,7 @@ msgstr "Rapport"
 msgid "Report already generating"
 msgstr "Rapport wordt al gegenereerd"
 
-#: src/components/layout/Header.tsx:73
+#: src/components/layout/Header.tsx:77
 msgid "Report an issue"
 msgstr "Rapporteer een probleem"
 
@@ -6182,7 +6183,7 @@ msgstr "Geheim gekopieerd"
 #~ msgid "See conversation status details"
 #~ msgstr "Gespreksstatusdetails bekijken"
 
-#: src/components/layout/Header.tsx:131
+#: src/components/layout/Header.tsx:135
 msgid "See you soon"
 msgstr "Tot snel"
 
@@ -6324,7 +6325,7 @@ msgstr "Stuur Slack/Teams notificaties wanneer nieuwe gesprekken zijn voltooid"
 msgid "Session Name"
 msgstr "Sessienaam"
 
-#: src/components/layout/Header.tsx:243
+#: src/components/layout/Header.tsx:315
 msgid "Set up workspace"
 msgstr ""
 
@@ -6348,7 +6349,7 @@ msgstr ""
 #: src/routes/settings/UserSettingsRoute.tsx:77
 #: src/components/layout/ParticipantHeader.tsx:112
 #: src/components/layout/ParticipantHeader.tsx:113
-#: src/components/layout/Header.tsx:260
+#: src/components/layout/Header.tsx:332
 msgid "Settings"
 msgstr "Instellingen"
 
@@ -6532,7 +6533,7 @@ msgstr "Overslaan"
 msgid "select.all.modal.context.limit.reached.description"
 msgstr "Overgeslagen omdat de selectie te groot was."
 
-#: src/components/layout/Header.tsx:309
+#: src/components/layout/Header.tsx:381
 msgid "Slack community"
 msgstr "Slack-community"
 
@@ -6780,6 +6781,11 @@ msgstr "Ondersteunde formaten: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 msgid "participant.link.switch.text"
 msgstr "Overschakelen naar tekstinvoer"
 
+#: src/components/layout/Header.tsx:192
+#: src/components/layout/Header.tsx:218
+msgid "Switch workspace"
+msgstr ""
+
 #: src/components/settings/AuditLogsCard.tsx:88
 msgid "System"
 msgstr "Systeem"
@@ -7002,7 +7008,7 @@ msgstr "De webhook URL en gebeurtenissen worden gekloond. Je moet de geheime sle
 msgid "Theme"
 msgstr "Thema"
 
-#: src/components/layout/Header.tsx:220
+#: src/components/layout/Header.tsx:292
 msgid "there"
 msgstr ""
 
@@ -8248,7 +8254,7 @@ msgstr ""
 msgid "You don't have permission to create workspaces in that team. Falling back to your primary team instead."
 msgstr ""
 
-#: src/components/layout/Header.tsx:252
+#: src/components/layout/Header.tsx:324
 msgid "You have a pending invite"
 msgstr ""
 

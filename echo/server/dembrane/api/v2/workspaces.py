@@ -1049,6 +1049,9 @@ async def get_workspace_usage(
 
     # Seat + guest count. Members + admin + billing count as seats; guest
     # (is_external=true) is its own bucket and is not billed (matrix §7).
+    # NOTE: `user_id` and `source` are required by the dedup loop below —
+    # dropping them from this fields list silently zeroes the seat count
+    # (the 2026-04-23 audit "0 of 3 seats used" bug).
     members = await async_directus.get_items(
         "workspace_membership",
         {
@@ -1057,7 +1060,7 @@ async def get_workspace_usage(
                     "workspace_id": {"_eq": ctx.workspace_id},
                     "deleted_at": {"_null": True},
                 },
-                "fields": ["role", "is_external"],
+                "fields": ["user_id", "role", "source", "is_external"],
                 "limit": -1,
             }
         },
