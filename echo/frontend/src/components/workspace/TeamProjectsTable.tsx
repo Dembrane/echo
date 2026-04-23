@@ -101,14 +101,21 @@ export const TeamProjectsTable = ({ orgId }: { orgId: string }) => {
 
 	const filtered = useMemo(() => {
 		const q = search.trim().toLowerCase();
-		return projects.filter((p) => {
-			if (workspaceFilter && p.workspace_id !== workspaceFilter) return false;
-			if (!q) return true;
-			return (
-				p.name.toLowerCase().includes(q) ||
-				p.workspace_name.toLowerCase().includes(q)
-			);
-		});
+		// Sort by conversation_count desc so busiest projects are on top
+		// — matches the demo feedback "sort it by the most highest
+		// conversations project."
+		return projects
+			.filter((p) => {
+				if (workspaceFilter && p.workspace_id !== workspaceFilter)
+					return false;
+				if (!q) return true;
+				return (
+					p.name.toLowerCase().includes(q) ||
+					p.workspace_name.toLowerCase().includes(q)
+				);
+			})
+			.slice()
+			.sort((a, b) => b.conversation_count - a.conversation_count);
 	}, [projects, search, workspaceFilter]);
 
 	const deleteMutation = useMutation({
