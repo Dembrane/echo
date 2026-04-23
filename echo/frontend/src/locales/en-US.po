@@ -420,6 +420,10 @@ msgstr "\"Explore\" available soon"
 msgid "participant.modal.echo.info.title.concrete"
 msgstr "\"Verify\" available soon"
 
+#: src/components/settings/MyAccessCard.tsx:158
+msgid "(direct workspace access)"
+msgstr "(direct workspace access)"
+
 #: src/components/conversation/ConversationAccordion.tsx:413
 #~ msgid "(for enhanced audio processing)"
 #~ msgstr "(for enhanced audio processing)"
@@ -465,6 +469,7 @@ msgstr "{0, plural, one {# person} other {# people}}"
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:356
 #: src/routes/team/TeamRoute.tsx:589
 #: src/components/workspace/UsageCard.tsx:266
+#: src/components/settings/MyAccessCard.tsx:213
 msgid "{0, plural, one {# project} other {# projects}}"
 msgstr "{0, plural, one {# project} other {# projects}}"
 
@@ -621,6 +626,14 @@ msgstr "{readingNow} reading now"
 msgid "{sent} invites sent"
 msgstr "{sent} invites sent"
 
+#: src/components/settings/MyAccessCard.tsx:114
+msgid "{totalTeams, plural, one {# team} other {# teams}}"
+msgstr "{totalTeams, plural, one {# team} other {# teams}}"
+
+#: src/components/settings/MyAccessCard.tsx:120
+msgid "{totalWorkspaces, plural, one {# workspace} other {# workspaces}}"
+msgstr "{totalWorkspaces, plural, one {# workspace} other {# workspaces}}"
+
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:230
 msgid "library.conversations.still.processing"
@@ -750,8 +763,8 @@ msgstr "Access requests"
 msgid "Account"
 msgstr "Account"
 
-#: src/routes/settings/UserSettingsRoute.tsx:45
-#: src/routes/settings/UserSettingsRoute.tsx:133
+#: src/routes/settings/UserSettingsRoute.tsx:51
+#: src/routes/settings/UserSettingsRoute.tsx:144
 msgid "Account & Security"
 msgstr "Account & Security"
 
@@ -1137,8 +1150,8 @@ msgstr "Anyone in your team can find this workspace. Team admins can join; team 
 msgid "Anything to add?"
 msgstr "Anything to add?"
 
-#: src/routes/settings/UserSettingsRoute.tsx:47
-#: src/routes/settings/UserSettingsRoute.tsx:154
+#: src/routes/settings/UserSettingsRoute.tsx:58
+#: src/routes/settings/UserSettingsRoute.tsx:174
 msgid "Appearance"
 msgstr "Appearance"
 
@@ -3569,7 +3582,7 @@ msgstr "Give me a list of 5-10 topics that are being discussed."
 msgid "Give your team a name. You can invite teammates right after, or later from settings."
 msgstr "Give your team a name. You can invite teammates right after, or later from settings."
 
-#: src/routes/settings/UserSettingsRoute.tsx:72
+#: src/routes/settings/UserSettingsRoute.tsx:83
 msgid "Go back"
 msgstr "Go back"
 
@@ -3616,6 +3629,7 @@ msgstr "Go to team projects"
 #~ msgstr "Grid view"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1079
+#: src/components/settings/MyAccessCard.tsx:208
 msgid "Guest"
 msgstr "Guest"
 
@@ -4456,6 +4470,11 @@ msgstr "Move to Project"
 msgid "Must be at least 10 minutes in the future"
 msgstr "Must be at least 10 minutes in the future"
 
+#: src/routes/settings/UserSettingsRoute.tsx:56
+#: src/routes/settings/UserSettingsRoute.tsx:165
+msgid "My access"
+msgstr "My access"
+
 #: src/components/chat/TemplatesModal.tsx:809
 msgid "My templates"
 msgstr "My templates"
@@ -4553,6 +4572,10 @@ msgstr "New Project"
 #: src/components/report/UpdateReportModalButton.tsx:159
 msgid "New Report"
 msgstr "New Report"
+
+#: src/components/settings/MyAccessCard.tsx:133
+msgid "New team workspace"
+msgstr "New team workspace"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:185
 msgid "New workspace"
@@ -4977,6 +5000,10 @@ msgstr "Open guide"
 #: src/components/project/HostGuideDownload.tsx:28
 msgid "Open Host Guide"
 msgstr "Open Host Guide"
+
+#: src/components/settings/MyAccessCard.tsx:177
+msgid "Open team"
+msgstr "Open team"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1472
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:265
@@ -5617,8 +5644,8 @@ msgstr "Project default: enabled. Personal information will be replaced with pla
 #~ msgid "Project default: enabled. This will replace personally identifiable information with <redacted>."
 #~ msgstr "Project default: enabled. This will replace personally identifiable information with <redacted>."
 
-#: src/routes/settings/UserSettingsRoute.tsx:51
-#: src/routes/settings/UserSettingsRoute.tsx:165
+#: src/routes/settings/UserSettingsRoute.tsx:62
+#: src/routes/settings/UserSettingsRoute.tsx:185
 msgid "Project Defaults"
 msgstr "Project Defaults"
 
@@ -6625,7 +6652,7 @@ msgstr "Setting things up for you"
 #~ msgid "Setting up your first project"
 #~ msgstr "Setting up your first project"
 
-#: src/routes/settings/UserSettingsRoute.tsx:77
+#: src/routes/settings/UserSettingsRoute.tsx:88
 #: src/components/layout/ParticipantHeader.tsx:112
 #: src/components/layout/ParticipantHeader.tsx:113
 #: src/components/layout/Header.tsx:332
@@ -6637,7 +6664,7 @@ msgstr "Settings"
 msgid "participant.settings.modal.title"
 msgstr "Settings"
 
-#: src/routes/settings/UserSettingsRoute.tsx:56
+#: src/routes/settings/UserSettingsRoute.tsx:67
 msgid "Settings | Dembrane"
 msgstr "Settings | Dembrane"
 
@@ -8435,6 +8462,10 @@ msgstr "What were the key moments in this conversation?"
 msgid "What would you like to explore?"
 msgstr "What would you like to explore?"
 
+#: src/components/settings/MyAccessCard.tsx:111
+msgid "What you can reach"
+msgstr "What you can reach"
+
 #: src/components/announcement/Announcements.tsx:216
 #~ msgid "What's new"
 #~ msgstr "What's new"
@@ -8693,6 +8724,10 @@ msgstr "You're all caught up."
 #: src/routes/invite/AcceptInviteRoute.tsx:58
 msgid "You're in"
 msgstr "You're in"
+
+#: src/components/settings/MyAccessCard.tsx:139
+msgid "You're not in any team yet. Create a workspace to start a team, or ask a teammate for an invite."
+msgstr "You're not in any team yet. Create a workspace to start a team, or ask a teammate for an invite."
 
 #: src/components/workspace/PilotBlockModal.tsx:40
 msgid "You've used all 10 hours of the pilot. Host-side tools (chat, reports, analysis, exports) are paused."

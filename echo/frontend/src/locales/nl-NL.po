@@ -245,6 +245,10 @@ msgstr "\"Verkennen\" binnenkort beschikbaar"
 msgid "participant.modal.echo.info.title.concrete"
 msgstr "\"Controleren\" binnenkort beschikbaar"
 
+#: src/components/settings/MyAccessCard.tsx:158
+msgid "(direct workspace access)"
+msgstr ""
+
 #~ msgid "(for enhanced audio processing)"
 #~ msgstr "(voor verbeterde audioverwerking)"
 
@@ -289,6 +293,7 @@ msgstr ""
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:356
 #: src/routes/team/TeamRoute.tsx:589
 #: src/components/workspace/UsageCard.tsx:266
+#: src/components/settings/MyAccessCard.tsx:213
 msgid "{0, plural, one {# project} other {# projects}}"
 msgstr ""
 
@@ -435,6 +440,14 @@ msgstr "{readingNow} leest nu"
 msgid "{sent} invites sent"
 msgstr ""
 
+#: src/components/settings/MyAccessCard.tsx:114
+msgid "{totalTeams, plural, one {# team} other {# teams}}"
+msgstr ""
+
+#: src/components/settings/MyAccessCard.tsx:120
+msgid "{totalWorkspaces, plural, one {# workspace} other {# workspaces}}"
+msgstr ""
+
 #. js-lingui-explicit-id
 #: src/routes/project/library/ProjectLibrary.tsx:230
 msgid "library.conversations.still.processing"
@@ -570,8 +583,8 @@ msgstr ""
 msgid "Account"
 msgstr "Account"
 
-#: src/routes/settings/UserSettingsRoute.tsx:45
-#: src/routes/settings/UserSettingsRoute.tsx:133
+#: src/routes/settings/UserSettingsRoute.tsx:51
+#: src/routes/settings/UserSettingsRoute.tsx:144
 msgid "Account & Security"
 msgstr "Account & Beveiliging"
 
@@ -964,8 +977,8 @@ msgstr ""
 msgid "Anything to add?"
 msgstr ""
 
-#: src/routes/settings/UserSettingsRoute.tsx:47
-#: src/routes/settings/UserSettingsRoute.tsx:154
+#: src/routes/settings/UserSettingsRoute.tsx:58
+#: src/routes/settings/UserSettingsRoute.tsx:174
 msgid "Appearance"
 msgstr "Weergave"
 
@@ -3403,7 +3416,7 @@ msgstr ""
 #~ msgid "Global Research Question"
 #~ msgstr "Algemene Onderzoeksvraag"
 
-#: src/routes/settings/UserSettingsRoute.tsx:72
+#: src/routes/settings/UserSettingsRoute.tsx:83
 msgid "Go back"
 msgstr "Ga terug"
 
@@ -3452,6 +3465,7 @@ msgstr ""
 #~ msgstr "Rasterweergave"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1079
+#: src/components/settings/MyAccessCard.tsx:208
 msgid "Guest"
 msgstr ""
 
@@ -4289,6 +4303,11 @@ msgstr "Verplaats naar project"
 msgid "Must be at least 10 minutes in the future"
 msgstr "Moet minstens 10 minuten in de toekomst zijn"
 
+#: src/routes/settings/UserSettingsRoute.tsx:56
+#: src/routes/settings/UserSettingsRoute.tsx:165
+msgid "My access"
+msgstr ""
+
 #: src/components/chat/TemplatesModal.tsx:809
 msgid "My templates"
 msgstr "Mijn sjablonen"
@@ -4385,6 +4404,10 @@ msgstr "Nieuw project"
 #: src/components/report/UpdateReportModalButton.tsx:159
 msgid "New Report"
 msgstr "Nieuw rapport"
+
+#: src/components/settings/MyAccessCard.tsx:133
+msgid "New team workspace"
+msgstr ""
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:185
 msgid "New workspace"
@@ -4803,6 +4826,10 @@ msgstr "Open gids"
 #: src/components/project/HostGuideDownload.tsx:28
 msgid "Open Host Guide"
 msgstr "Open host gids"
+
+#: src/components/settings/MyAccessCard.tsx:177
+msgid "Open team"
+msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1472
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:265
@@ -5538,8 +5565,8 @@ msgstr "Projectstandaard: ingeschakeld. Persoonlijke informatie wordt vervangen 
 #~ msgid "Project default: enabled. This will replace personally identifiable information with <redacted>."
 #~ msgstr "Project standaard: ingeschakeld. Dit zal persoonlijke identificeerbare informatie vervangen door <redacted>."
 
-#: src/routes/settings/UserSettingsRoute.tsx:51
-#: src/routes/settings/UserSettingsRoute.tsx:165
+#: src/routes/settings/UserSettingsRoute.tsx:62
+#: src/routes/settings/UserSettingsRoute.tsx:185
 msgid "Project Defaults"
 msgstr "Projectstandaarden"
 
@@ -6533,7 +6560,7 @@ msgstr ""
 #~ msgid "Setting up your first project"
 #~ msgstr "Installeer je eerste project"
 
-#: src/routes/settings/UserSettingsRoute.tsx:77
+#: src/routes/settings/UserSettingsRoute.tsx:88
 #: src/components/layout/ParticipantHeader.tsx:112
 #: src/components/layout/ParticipantHeader.tsx:113
 #: src/components/layout/Header.tsx:332
@@ -6545,7 +6572,7 @@ msgstr "Instellingen"
 msgid "participant.settings.modal.title"
 msgstr "Instellingen"
 
-#: src/routes/settings/UserSettingsRoute.tsx:56
+#: src/routes/settings/UserSettingsRoute.tsx:67
 msgid "Settings | Dembrane"
 msgstr "Instellingen | Dembrane"
 
@@ -8293,6 +8320,10 @@ msgstr "Wat waren de belangrijkste momenten in dit gesprek?"
 msgid "What would you like to explore?"
 msgstr "Wat wil je verkennen?"
 
+#: src/components/settings/MyAccessCard.tsx:111
+msgid "What you can reach"
+msgstr ""
+
 #: src/components/announcement/Announcements.tsx:216
 #~ msgid "What's new"
 #~ msgstr "Wat is nieuw"
@@ -8550,6 +8581,10 @@ msgstr ""
 
 #: src/routes/invite/AcceptInviteRoute.tsx:58
 msgid "You're in"
+msgstr ""
+
+#: src/components/settings/MyAccessCard.tsx:139
+msgid "You're not in any team yet. Create a workspace to start a team, or ask a teammate for an invite."
 msgstr ""
 
 #: src/components/workspace/PilotBlockModal.tsx:40
