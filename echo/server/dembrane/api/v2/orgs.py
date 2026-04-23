@@ -854,3 +854,219 @@ async def remove_team_member(
         "status": "removed",
         "workspace_memberships_deleted": len(affected),
     }
+
+
+# ────────────────────────────────────────────────────────────────────
+# Team-level usage rollup (matrix §8 team-scope)
+# ────────────────────────────────────────────────────────────────────
+
+
+class OrgUsageResponse(BaseModel):
+    cycle_start: str
+    cycle_end_exclusive: str
+    workspace_count: int
+    total_audio_hours: float
+    total_seat_count: int
+    total_guest_count: int
+    total_project_count: int
+    workspaces_at_cap: int            # Pilot + over cap (hard block active)
+    workspaces_approaching_cap: int   # tier with cap, usage >= 80%
+    # Admin / billing only (null for plain members):
+    total_overage_forecast_eur: Optional[float] = None
+
+
+@router.get("/{org_id}/usage", response_model=OrgUsageResponse)
+async def get_org_usage(
+    org_id: str,
+    auth: DependencyDirectusSession,
+    refresh: bool = False,
+) -> OrgUsageResponse:
+    """Team-wide usage rollup across all active workspaces in the org.
+
+    Matrix §8: "Team level — rollup across all workspaces in the team.
+    Shows which workspaces are over, which tier each is on, aggregate
+    spend." This endpoint returns the aggregate; the per-workspace list
+    is already available via `/orgs/:id/workspaces`.
+
+    Cached 30 min, keyed by org_id. Pass `?refresh=true` to bypass.
+    Cache busts are NOT wired for conversation create/delete (would mean
+    hooking every conversation write site) — the 30-min TTL is the
+    explicit freshness contract.
+
+    Access:
+      - Any team member can read raw numbers.
+      - Admin / billing (org:view_invoices) additionally receive
+        total_overage_forecast_eur.
+    """
+    from datetime import datetime, timezone
+
+    from dembrane.cache_utils import (
+        USAGE_TTL_SECONDS,
+        cache_get_json,
+        cache_set_json,
+    )
+    from dembrane.tier_capacity import (
+        compute_hour_overage_eur,
+        get_capacity,
+    )
+
+    app_user = await get_app_user_or_raise(auth.user_id)
+    caller_role = await _require_org_role(org_id, app_user["id"], minimum="member")
+    sees_financials = caller_role in ("admin", "owner", "billing")
+
+    cache_key = f"org_usage:{org_id}"
+    if not refresh:
+        cached = await cache_get_json(cache_key)
+        if isinstance(cached, dict):
+            if not sees_financials:
+                cached = {**cached, "total_overage_forecast_eur": None}
+            return OrgUsageResponse(**cached)
+
+    # Cycle bounds.
+    now = datetime.now(timezone.utc)
+    month_start = now.replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0
+    )
+    if now.month == 12:
+        next_start = month_start.replace(year=now.year + 1, month=1)
+    else:
+        next_start = month_start.replace(month=now.month + 1)
+    cycle_start = month_start.isoformat()
+    cycle_end_exclusive = next_start.isoformat()
+
+    # All active workspaces in this org.
+    workspaces = await async_directus.get_items(
+        "workspace",
+        {
+            "query": {
+                "filter": {
+                    "org_id": {"_eq": org_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id", "tier"],
+                "limit": -1,
+            }
+        },
+    ) or []
+    if not isinstance(workspaces, list):
+        workspaces = []
+
+    ws_ids = [w["id"] for w in workspaces if w.get("id")]
+
+    # Projects + conversations (this cycle) across all workspaces — batch.
+    project_count = 0
+    per_ws_hours: dict[str, float] = {w["id"]: 0.0 for w in workspaces if w.get("id")}
+    if ws_ids:
+        projects = await async_directus.get_items(
+            "project",
+            {
+                "query": {
+                    "filter": {
+                        "workspace_id": {"_in": ws_ids},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id", "workspace_id"],
+                    "limit": -1,
+                }
+            },
+        ) or []
+        if isinstance(projects, list):
+            project_count = len(projects)
+            ws_by_project = {
+                p["id"]: p["workspace_id"]
+                for p in projects
+                if p.get("id") and p.get("workspace_id")
+            }
+            pids = list(ws_by_project.keys())
+            if pids:
+                conversations = await async_directus.get_items(
+                    "conversation",
+                    {
+                        "query": {
+                            "filter": {
+                                "project_id": {"_in": pids},
+                                "deleted_at": {"_null": True},
+                                "created_at": {
+                                    "_gte": cycle_start,
+                                    "_lt": cycle_end_exclusive,
+                                },
+                            },
+                            "fields": ["project_id", "duration"],
+                            "limit": -1,
+                        }
+                    },
+                ) or []
+                if isinstance(conversations, list):
+                    for c in conversations:
+                        pid = c.get("project_id")
+                        ws_id = ws_by_project.get(pid) if pid else None
+                        if not ws_id:
+                            continue
+                        per_ws_hours[ws_id] = (
+                            per_ws_hours.get(ws_id, 0.0)
+                            + (int(c.get("duration") or 0) / 3600.0)
+                        )
+
+    # Memberships — one read, classify by is_external.
+    total_seat_count = 0
+    total_guest_count = 0
+    if ws_ids:
+        memberships = await async_directus.get_items(
+            "workspace_membership",
+            {
+                "query": {
+                    "filter": {
+                        "workspace_id": {"_in": ws_ids},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["role", "is_external"],
+                    "limit": -1,
+                }
+            },
+        ) or []
+        if isinstance(memberships, list):
+            for m in memberships:
+                if m.get("is_external"):
+                    total_guest_count += 1
+                elif m.get("role") in ("admin", "owner", "member", "billing"):
+                    total_seat_count += 1
+
+    # Per-tier aggregation for cap counts + forecast.
+    total_hours = 0.0
+    at_cap = 0
+    approaching = 0
+    forecast = 0.0
+    for w in workspaces:
+        wid = w.get("id")
+        tier = w.get("tier") or ""
+        hours = per_ws_hours.get(wid, 0.0) if wid else 0.0
+        total_hours += hours
+        cap = get_capacity(tier)
+        if cap is None or cap.included_hours is None:
+            continue
+        pct = (hours / cap.included_hours) if cap.included_hours else 0.0
+        if cap.hard_block_on_hours and hours >= cap.included_hours:
+            at_cap += 1
+        elif pct >= 0.8:
+            approaching += 1
+        forecast += compute_hour_overage_eur(tier, hours)
+
+    payload = {
+        "cycle_start": cycle_start,
+        "cycle_end_exclusive": cycle_end_exclusive,
+        "workspace_count": len(workspaces),
+        "total_audio_hours": round(total_hours, 2),
+        "total_seat_count": total_seat_count,
+        "total_guest_count": total_guest_count,
+        "total_project_count": project_count,
+        "workspaces_at_cap": at_cap,
+        "workspaces_approaching_cap": approaching,
+        "total_overage_forecast_eur": round(forecast, 2),
+    }
+
+    await cache_set_json(cache_key, payload, USAGE_TTL_SECONDS)
+
+    if not sees_financials:
+        payload = {**payload, "total_overage_forecast_eur": None}
+
+    return OrgUsageResponse(**payload)

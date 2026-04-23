@@ -567,11 +567,17 @@ async def set_workspace_tier(
     await async_directus.update_item("workspace", workspace_id, ws_update)
 
     # Bust the cached usage rollup so the UI reflects the new tier's
-    # caps + rates on the next read. Without this, overage_forecast_eur +
-    # next_tier would lag by up to USAGE_TTL_SECONDS.
+    # caps + rates on the next read. Both the workspace-scope cache and
+    # the org-scope aggregate depend on tier info, so bust both.
     if direction != "no-change":
-        from dembrane.cache_utils import invalidate_workspace_usage
+        from dembrane.cache_utils import (
+            invalidate_workspace_usage,
+            invalidate_org_usage,
+        )
         await invalidate_workspace_usage(workspace_id)
+        ws_org_id = workspace.get("org_id")
+        if ws_org_id:
+            await invalidate_org_usage(ws_org_id)
 
     logger.info(
         f"STAFF tier change: workspace {workspace_id} {from_tier} → {to_tier} "

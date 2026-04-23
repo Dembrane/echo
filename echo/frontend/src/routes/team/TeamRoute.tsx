@@ -31,6 +31,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
+import { TeamUsageRollup } from "@/components/workspace/TeamUsageRollup";
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -229,6 +230,12 @@ export const TeamRoute = () => {
 						)}
 					</Group>
 				</Group>
+
+				{/* Matrix §8 team-scope usage rollup — hours, seats, guests,
+				    projects aggregated across all team workspaces + count of
+				    workspaces at/approaching cap. Admin + billing see
+				    aggregate € forecast. Members see raw numbers only. */}
+				{teamId && <TeamUsageRollup orgId={teamId} />}
 
 				{/* Toolbar — search + role filter + count */}
 				<Group justify="space-between" align="center" wrap="wrap">

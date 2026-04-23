@@ -70,8 +70,19 @@ def usage_cache_key(workspace_id: str) -> str:
     return f"usage:{workspace_id}"
 
 
+def org_usage_cache_key(org_id: str) -> str:
+    return f"org_usage:{org_id}"
+
+
 async def invalidate_workspace_usage(workspace_id: str) -> None:
     """Bust the cached usage rollup for a workspace. Call on tier changes
     (upgrade/downgrade) so the next /usage read reflects new caps + rates
     immediately instead of waiting for TTL expiry."""
     await cache_delete(usage_cache_key(workspace_id))
+
+
+async def invalidate_org_usage(org_id: str) -> None:
+    """Bust the cached team-wide rollup. Call alongside
+    invalidate_workspace_usage on tier changes since the aggregate
+    depends on per-workspace caps."""
+    await cache_delete(org_usage_cache_key(org_id))
