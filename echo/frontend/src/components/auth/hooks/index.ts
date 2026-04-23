@@ -119,33 +119,37 @@ export const useVerifyMutation = (doRedirect = true) => {
 };
 
 export const useRegisterMutation = () => {
-	const navigate = useI18nNavigate();
 	return useMutation({
 		mutationFn: async (payload: Parameters<typeof registerUser>) => {
 			try {
-				const response = await directus.request(registerUser(...payload));
-				return response;
+				return await directus.request(registerUser(...payload));
 			} catch (e) {
+				// Map the raw Directus error to a user-facing message, then
+				// re-throw so react-query marks the mutation as failed and
+				// onError / the inline Alert both fire. Previously only the
+				// "no permission" case re-threw; every other failure fell
+				// through as undefined and looked like a success, which
+				// bounced users to the "Check your email" step even when
+				// registration actually failed (e.g. validation errors).
+				let mapped: Error = new Error("Registration failed");
 				try {
 					throwWithMessage(e);
 				} catch (inner) {
-					if (inner instanceof Error) {
-						if (inner.message === "You don't have permission to access this.") {
-							throw new Error(
-								"Oops! It seems your email is not eligible for registration at this time. Please consider joining our waitlist for future updates!",
-							);
-						}
-					}
+					if (inner instanceof Error) mapped = inner;
 				}
+				if (mapped.message === "You don't have permission to access this.") {
+					throw new Error(
+						"Oops! It seems your email is not eligible for registration at this time. Please consider joining our waitlist for future updates!",
+					);
+				}
+				throw mapped;
 			}
 		},
-		onError: (e) => {
-			toast.error(e.message);
-		},
-		onSuccess: () => {
-			toast.success("Please check your email to verify your account.");
-			navigate("/check-your-email");
-		},
+		// Success handling lives inline on the Register page — the
+		// stepper advances to step 2 ("Check your email"). No toast +
+		// no redirect, since the inline state already shows the user
+		// exactly what's next. Failures surface via the inline Alert
+		// that reads from `registerMutation.error`.
 	});
 };
 

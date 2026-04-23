@@ -4,18 +4,17 @@ import { useDocumentTitle } from "@mantine/hooks";
 import { testId } from "@/lib/testUtils";
 
 export const CheckYourEmailRoute = () => {
-	useDocumentTitle("Check your Email | dembrane");
+	useDocumentTitle("Check your email | dembrane");
 	return (
-		<Container size="sm">
-			<Stack>
-				<Title order={1} {...testId("auth-check-email-title")}>
+		<Container size="sm" py="xl">
+			<Stack gap="sm">
+				<Title order={2} fw={400} {...testId("auth-check-email-title")}>
 					<Trans>Check your email</Trans>
 				</Title>
-				<Text {...testId("auth-check-email-text")}>
+				<Text c="dimmed" {...testId("auth-check-email-text")}>
 					<Trans>
-						We have sent you an email with next steps. If you don't see it,
-						check your spam folder. If you still don't see it, please contact
-						evelien@dembrane.com
+						We sent you a verification link. Click the link to finish setting
+						up your account.
 					</Trans>
 				</Text>
 			</Stack>

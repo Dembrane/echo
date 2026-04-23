@@ -1407,7 +1407,6 @@ def task_create_report_continue(project_id: str, report_id: int, language: str, 
                             title="Report generation ran into a problem",
                             message="Open the report to retry or check details.",
                             action="NAVIGATE_REPORT",
-                            level="urgent",
                             ref_project_id=project_id,
                             ref_report_id=report_id_str,
                         )

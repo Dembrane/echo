@@ -24,7 +24,7 @@ import { testId } from "@/lib/testUtils";
 
 export const RegisterRoute = () => {
 	useDocumentTitle(t`Register | dembrane`);
-	const { register, handleSubmit, trigger, getValues } = useForm<{
+	const { register, handleSubmit, trigger, getValues, watch } = useForm<{
 		email: string;
 		password: string;
 		confirmPassword: string;
@@ -34,6 +34,7 @@ export const RegisterRoute = () => {
 
 	const [step, setStep] = useState(0);
 	const [error, setError] = useState("");
+	const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
 
 	const registerMutation = useRegisterMutation();
 	const posthog = usePostHog();
@@ -67,17 +68,28 @@ export const RegisterRoute = () => {
 			first_name: data.first_name,
 		});
 
-		registerMutation.mutate([
-			data.email,
-			data.password,
+		// Directus rejects empty string on last_name ("INVALID_PAYLOAD:
+		// last_name is not allowed to be empty"), so we only include the
+		// field when the user actually typed something.
+		const extras: Record<string, string> = {
+			first_name: data.first_name,
+			verification_url: `${ADMIN_BASE_URL}/verify-email`,
+		};
+		const lastName = data.last_name?.trim();
+		if (lastName) extras.last_name = lastName;
+
+		registerMutation.mutate(
+			[data.email, data.password, extras],
 			{
-				first_name: data.first_name,
-				// Directus allows empty last_name
-				last_name: data.last_name || "",
-				verification_url: `${ADMIN_BASE_URL}/verify-email`,
+				onSuccess: () => {
+					setSubmittedEmail(data.email);
+					setStep(2);
+				},
 			},
-		]);
+		);
 	});
+
+	const emailWatch = watch("email");
 
 	return (
 		<Container size="sm" className="!h-full" py="xl">
@@ -112,7 +124,7 @@ export const RegisterRoute = () => {
 									label={t`First name`}
 									{...register("first_name", { required: true })}
 									{...testId("auth-register-first-name-input")}
-									placeholder={t`Alex`}
+									placeholder={t`John`}
 								/>
 								<TextInput
 									size="md"
@@ -120,14 +132,14 @@ export const RegisterRoute = () => {
 									description={t`Optional`}
 									{...register("last_name")}
 									{...testId("auth-register-last-name-input")}
-									placeholder={t`Chen`}
+									placeholder={t`Doe`}
 								/>
 								<TextInput
 									size="md"
 									label={t`Email address`}
 									{...register("email", { required: true })}
 									{...testId("auth-register-email-input")}
-									placeholder={t`you@company.com`}
+									placeholder={t`john@doe.com`}
 									type="email"
 								/>
 								<Button size="md" onClick={handleNext}>
@@ -172,21 +184,46 @@ export const RegisterRoute = () => {
 								</Box>
 							</>
 						)}
+
+						{/* Step 2 = inline "check your email" state. Prior flow
+						    navigated to a dedicated /check-your-email page,
+						    which broke continuity with the stepper and
+						    exposed a hard-coded evelien@dembrane contact line. */}
+						{step === 2 && (
+							<Stack gap="sm" {...testId("auth-register-verify-step")}>
+								<Title order={3} fw={400}>
+									<Trans>Check your email</Trans>
+								</Title>
+								<Text c="dimmed">
+									<Trans>
+										We sent a verification link to{" "}
+										<Text span fw={500} c="dark">
+											{submittedEmail ?? emailWatch}
+										</Text>
+										. Click the link to finish setting up your account.
+									</Trans>
+								</Text>
+							</Stack>
+						)}
 					</Stack>
 				</form>
 
-				<Divider variant="dashed" label={t`or`} labelPosition="center" />
+				{step !== 2 && (
+					<>
+						<Divider variant="dashed" label={t`or`} labelPosition="center" />
 
-				<I18nLink to="/login">
-					<Button
-						size="md"
-						variant="outline"
-						fullWidth
-						{...testId("auth-register-switch-to-login-button")}
-					>
-						<Trans>Already have an account? Log in</Trans>
-					</Button>
-				</I18nLink>
+						<I18nLink to="/login">
+							<Button
+								size="md"
+								variant="outline"
+								fullWidth
+								{...testId("auth-register-switch-to-login-button")}
+							>
+								<Trans>Already have an account? Log in</Trans>
+							</Button>
+						</I18nLink>
+					</>
+				)}
 			</Stack>
 		</Container>
 	);

@@ -12,16 +12,24 @@ Usage:
 YAML config format:
 
     org:
-      name: "Dietz Consulting"
-      owner: petra@dietz.nl
+      name: "Fiets Consulting"
       admins:
-        - jan@dietz.nl
-        - lisa@dietz.nl
+        - foo@fiets.nl
+      member: 
+        - bar@fiets.nl
+        - bin@fiets.nl
 
     workspaces:
       - name: "Client Alpha"
         tier: pioneer
-        include_projects: true    # move owner+admin projects here
+        include_projects: true    # if true, then move admin+member projects here
+        admins:
+            - foo@fiets.nl
+        members:
+            - bin@fiets.nl
+        external_members:
+            - baz@leets.nl
+
 
       - name: "Client Beta"
         tier: pioneer

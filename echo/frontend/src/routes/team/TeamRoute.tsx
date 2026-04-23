@@ -33,6 +33,7 @@ import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { avatarUrl } from "@/lib/avatar";
 
 /**
  * Team admin page — single-page matrix view.
@@ -348,7 +349,7 @@ export const TeamRoute = () => {
 									>
 										<Group gap="sm" wrap="nowrap">
 											<Avatar
-												src={m.avatar ?? undefined}
+												src={avatarUrl(m.avatar, 48)}
 												size="sm"
 												radius="xl"
 											>

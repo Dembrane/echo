@@ -1,24 +1,18 @@
 {% extends "_layout.html" %}
 {% block title %}Upgrade request: {{ org_name }} / {{ workspace_name }}{% endblock %}
 {% block preview %}{{ requester_name }} asked to upgrade {{ workspace_name }} from {{ current_tier }} to {{ target_tier }}.{% endblock %}
-{% block heading %}Upgrade request{% endblock %}
+{% block heading %}Upgrade request.{% endblock %}
 {% block body %}
-<p style="margin: 0 0 16px;">
-  <b>Team:</b> {{ org_name }}<br>
-  <b>Workspace:</b> {{ workspace_name }}<br>
-  <b>Workspace ID:</b> <code style="font-family: monospace;">{{ workspace_id }}</code>
+<p style="font-size:17px; line-height:1.65; margin:0 0 16px; color:#2D2D2C; font-weight:300;">
+  <em style="color:#4169E1; font-style:normal;">{{ requester_name }}</em>{% if requester_email %} ({{ requester_email }}){% endif %} wants to move <em style="color:#4169E1; font-style:normal;">{{ workspace_name }}</em> from <em style="color:#4169E1; font-style:normal;">{{ current_tier }}</em> to <em style="color:#4169E1; font-style:normal;">{{ target_tier }}</em>.
 </p>
-<p style="margin: 0 0 16px;">
-  <b>Current tier:</b> {{ current_tier }}<br>
-  <b>Requested tier:</b> {{ target_tier }}
-</p>
-<p style="margin: 0 0 16px;">
-  <b>Requested by:</b> {{ requester_name }}{% if requester_email %} ({{ requester_email }}){% endif %}
+<p style="font-size:15px; line-height:1.65; margin:0 0 24px; color:#6B6B6A; font-weight:300;">
+  Team: {{ org_name }} &middot; Workspace ID: <span style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:13px; color:#2D2D2C;">{{ workspace_id }}</span>
 </p>
 {% if message %}
-<div style="margin-top: 16px; padding: 12px 16px; background: #f6f4f1; border-left: 2px solid #4169e1; border-radius: 0 4px 4px 0;">
-  <div style="font-size: 13px; color: #8a8a8a; margin-bottom: 4px;">Message</div>
-  <div style="white-space: pre-wrap;">{{ message }}</div>
+<div style="margin:0 0 28px; padding:14px 18px; background-color:#F6F4F1; border-left:2px solid #4169E1;">
+  <div style="font-size:13px; color:#6B6B6A; margin-bottom:6px; font-weight:300;">Message</div>
+  <div style="white-space:pre-wrap; font-size:15px; line-height:1.6; color:#2D2D2C; font-weight:300;">{{ message }}</div>
 </div>
 {% endif %}
 {% endblock %}

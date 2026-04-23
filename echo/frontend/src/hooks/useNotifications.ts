@@ -7,9 +7,11 @@ import { API_BASE_URL } from "@/config";
  * Backend lives at /v2/me/notifications. Row shape mirrors the response
  * from `server/dembrane/api/v2/notifications.py:NotificationRow`.
  *
- * Announcements share the drawer UI pattern but have their own hooks in
- * `@/components/announcement/hooks`. When the consolidated inbox design
- * lands, this file + that one can collapse into a single store.
+ * Rendered by `@/components/inbox/Inbox`, which also pulls the
+ * announcement collection through `@/components/announcement/hooks`
+ * for the sibling "Announcements" tab. Each store stays separate —
+ * they're different collections with different lifecycles — but the
+ * UI presents them as one inbox.
  */
 
 export interface NotificationRefs {
@@ -22,12 +24,6 @@ export interface NotificationRefs {
 	invite_id: string | null;
 }
 
-export interface NotificationTranslation {
-	languages_code: string;
-	title: string;
-	message: string | null;
-}
-
 export type NotificationAction =
 	| "NONE"
 	| "NAVIGATE_WS"
@@ -38,11 +34,17 @@ export type NotificationAction =
 	| "NAVIGATE_TEAM_SETTINGS"
 	| "NAVIGATE_WORKSPACE_SETTINGS";
 
+export type NotificationSeverity = "info" | "action_required" | "destructive";
+
 export interface NotificationRow {
 	id: string;
 	event_code: string;
+	severity: NotificationSeverity;
 	action: NotificationAction;
-	level: "info" | "urgent";
+	title: string;
+	message: string | null;
+	scope: string | null;
+	params: Record<string, unknown> | null;
 	created_at: string | null;
 	expires_at: string | null;
 	read: boolean;
@@ -50,7 +52,6 @@ export interface NotificationRow {
 	actor_name: string | null;
 	actor_avatar: string | null;
 	refs: NotificationRefs;
-	translation: NotificationTranslation | null;
 }
 
 async function fetchNotifications(): Promise<NotificationRow[]> {

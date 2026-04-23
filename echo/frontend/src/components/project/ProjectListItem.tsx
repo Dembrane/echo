@@ -5,6 +5,7 @@ import { IconLock, IconPin, IconPinFilled } from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
 import type { PropsWithChildren } from "react";
 import { Icons } from "@/icons";
+import { avatarUrl } from "@/lib/avatar";
 import { testId } from "@/lib/testUtils";
 import { I18nLink } from "../common/i18nLink";
 
@@ -64,7 +65,7 @@ function AccessBubbles({ project }: { project: Project }) {
 						key={`${p.display_name}-${i}`}
 						size="sm"
 						radius="xl"
-						src={p.avatar ?? undefined}
+						src={avatarUrl(p.avatar, 48)}
 						aria-label={p.display_name || t`Unknown`}
 					>
 						{(p.display_name || "?").slice(0, 2).toUpperCase()}

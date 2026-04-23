@@ -1,31 +1,29 @@
 """In-app notification service.
 
-One canonical store (`notification` + `notification_translations` +
-`notification_activity`) serves the inbox UI today. The module exposes a
-single `emit` function that action code paths call — everything else
-(list, mark-read, unread-count) runs through `/v2/me/notifications` BFF
-endpoints.
+One flat `notification` table, one row per `(event, recipient)`. The
+announcement-pattern split (parent + translations + activity) was
+rejected here because fan-out in this product is almost always 1–3
+people — shared-parent dedup buys less than the JOIN cost on every
+inbox read.
 
 ### Channels
 
-Notifications are stored here. Future delivery layers (email digest,
-Slack webhook) read from this store rather than having their own
-pipeline:
+Storage is channel-agnostic. Future delivery layers read the same
+rows rather than having their own pipeline:
 
-    emit(...) → notification row + activity row
+    emit(...) → notification row (one per recipient)
         └── inbox UI reads via /v2/me/notifications
         └── (future) digest worker groups by user + sends SendGrid
         └── (future) Slack bridge fans out urgent/mentioned rows
 
-This keeps the emission sites dumb — they describe *what happened*, not
-*where it goes*. Per-user channel preferences live in the delivery
-layer, not here. Don't add per-channel booleans to the notification row.
+Emission sites describe *what happened*, not *where it goes*. Per-
+user channel preferences live in the delivery layer, not here.
 """
 
 from __future__ import annotations
 
 from logging import getLogger
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from dembrane.utils import generate_uuid
 from dembrane.directus_async import async_directus
@@ -44,7 +42,61 @@ NotificationAction = Literal[
     "NAVIGATE_WORKSPACE_SETTINGS",
 ]
 
-NotificationLevel = Literal["info", "urgent"]
+NotificationSeverity = Literal["info", "action_required", "destructive"]
+
+
+# Event → severity map. Controls client-side row styling (background
+# tint, button style, unread-dot color). Anything not listed defaults
+# to "info". Keep in sync with the designer's spec in inbox.html.
+_SEVERITY_BY_EVENT: dict[str, NotificationSeverity] = {
+    # Access revoked / data lost / feature downgraded
+    "WORKSPACE_REMOVED": "destructive",
+    "TEAM_REMOVED": "destructive",
+    "PROJECT_NOW_PRIVATE": "destructive",
+    "PROJECT_SHARE_REVOKED": "destructive",
+    "TIER_DOWNGRADED": "destructive",
+    "INVITE_CANCELLED": "destructive",
+    "REPORT_FAILED": "destructive",
+    # Requires user action. None wired today — MEMBERSHIP_REQUEST etc.
+    # will slot in here when we ship those flows.
+}
+
+
+def severity_for(event_code: str) -> NotificationSeverity:
+    return _SEVERITY_BY_EVENT.get(event_code, "info")
+
+
+async def _compute_scope(
+    *,
+    ref_org_id: Optional[str],
+    ref_workspace_id: Optional[str],
+    ref_project_id: Optional[str],
+) -> Optional[str]:
+    """Build the 'Org › Workspace › Project' breadcrumb from refs.
+
+    Frozen at emit time so a later rename preserves the historical
+    breadcrumb on existing rows. Missing names are skipped (we don't
+    invent placeholders). Returns None when there's nothing to show.
+    """
+    parts: list[str] = []
+    try:
+        if ref_org_id:
+            org = await async_directus.get_item("org", ref_org_id)
+            if org and org.get("name"):
+                parts.append(org["name"])
+        if ref_workspace_id:
+            ws = await async_directus.get_item("workspace", ref_workspace_id)
+            if ws and ws.get("name"):
+                parts.append(ws["name"])
+        if ref_project_id:
+            proj = await async_directus.get_item("project", ref_project_id)
+            if proj and proj.get("name"):
+                parts.append(proj["name"])
+    except Exception as exc:  # noqa: BLE001 — scope is best-effort
+        logger.debug("scope computation failed: %s", exc)
+    if not parts:
+        return None
+    return " \u203a ".join(parts)
 
 
 async def emit(
@@ -52,9 +104,9 @@ async def emit(
     audience_user_id: str,
     event_code: str,
     title: str,
-    message: str,
+    message: Optional[str] = None,
     action: NotificationAction = "NONE",
-    level: NotificationLevel = "info",
+    severity: Optional[NotificationSeverity] = None,
     actor_user_id: Optional[str] = None,
     ref_org_id: Optional[str] = None,
     ref_workspace_id: Optional[str] = None,
@@ -63,37 +115,42 @@ async def emit(
     ref_report_id: Optional[str] = None,
     ref_conversation_id: Optional[str] = None,
     ref_invite_id: Optional[str] = None,
-    language: str = "en-US",
+    params: Optional[dict[str, Any]] = None,
+    scope: Optional[str] = None,
     expires_at: Optional[str] = None,
+    # Deprecated alias — old callers pass `level=`, we translate it on
+    # the way through until they migrate. Harmless.
+    level: Optional[str] = None,
 ) -> Optional[str]:
-    """Create a single notification row + its English translation +
-    one pre-filled activity row. Returns the notification id, or None
-    on failure (never raises — notifications are a best-effort side
-    effect, they must not fail the parent action).
+    """Create one notification row for the recipient. Returns the
+    notification id, or None on failure (never raises — notifications
+    are a best-effort side effect, they must not fail the parent
+    action).
 
-    Don't call this with a list of users — call once per user. The
-    activity row is created eagerly so unread counts can be a cheap
-    aggregate.
+    Don't call with a list of users — use `emit_to_audience`.
 
-    ### Translations
-
-    For the first pass we only write one translation row (caller's
-    language or en-US). The frontend drawer falls back to en-US when
-    the user's locale has no row. When we ship server-side message
-    templating (grouped into dembrane/notification_templates.py), we
-    can fan out every language in one call.
+    `severity` defaults from `severity_for(event_code)` when omitted.
+    `scope` is computed from refs when omitted.
+    `params` is forward-compat metadata for client-rendered i18n.
     """
     try:
+        resolved_severity: NotificationSeverity = (
+            severity or severity_for(event_code)
+        )
+        # Silently accept `level=` from legacy callers.
+        if level and not severity:
+            # Old "urgent" maps onto action_required in the new spec.
+            resolved_severity = "action_required" if level == "urgent" else "info"
+
+        resolved_scope = scope
+        if resolved_scope is None:
+            resolved_scope = await _compute_scope(
+                ref_org_id=ref_org_id,
+                ref_workspace_id=ref_workspace_id,
+                ref_project_id=ref_project_id,
+            )
+
         notification_id = generate_uuid()
-
-        # Resolve audience_user_id (app_user.id) → directus_user_id so
-        # activity rows match the announcement_activity convention
-        # (user_id on activity = directus_users.id).
-        directus_user_id: Optional[str] = None
-        audience_row = await async_directus.get_item("app_user", audience_user_id)
-        if audience_row:
-            directus_user_id = audience_row.get("directus_user_id")
-
         await async_directus.create_item(
             "notification",
             {
@@ -101,8 +158,12 @@ async def emit(
                 "audience_user_id": audience_user_id,
                 "actor_user_id": actor_user_id,
                 "event_code": event_code,
+                "severity": resolved_severity,
                 "action": action,
-                "level": level,
+                "title": title,
+                "message": message,
+                "scope": resolved_scope,
+                "params": params,
                 "ref_org_id": ref_org_id,
                 "ref_workspace_id": ref_workspace_id,
                 "ref_project_id": ref_project_id,
@@ -113,29 +174,6 @@ async def emit(
                 "expires_at": expires_at,
             },
         )
-
-        await async_directus.create_item(
-            "notification_translations",
-            {
-                "id": generate_uuid(),
-                "notification_id": notification_id,
-                "languages_code": language,
-                "title": title,
-                "message": message,
-            },
-        )
-
-        if directus_user_id:
-            await async_directus.create_item(
-                "notification_activity",
-                {
-                    "id": generate_uuid(),
-                    "notification_id": notification_id,
-                    "user_id": directus_user_id,
-                    "read": False,
-                },
-            )
-
         return notification_id
     except Exception as exc:  # noqa: BLE001 — notifications must never raise
         logger.warning(

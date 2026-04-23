@@ -1,19 +1,14 @@
-"""GET /v2/me/notifications + POST /v2/me/notifications/:id/read.
+"""GET /v2/me/notifications + mark-read endpoints.
 
-Inbox BFF. Wraps the `notification` collection so the frontend drawer
-can render both announcements and personal notifications with one
-component — same shape, same mark-read semantics.
-
-Lives under /v2/me because every row is user-scoped. The underlying
-notification table supports cross-team / system notifications; the BFF
-restricts reads to the caller's own rows (audience_user_id = me).
+Inbox BFF. Flat `notification` rows keyed to the caller — no parent
+or activity sidecars to join. Read state lives inline as `read_at`.
 """
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
 from logging import getLogger
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -24,12 +19,6 @@ from dembrane.api.dependency_auth import DependencyDirectusSession
 
 router = APIRouter()
 logger = getLogger("api.v2.notifications")
-
-
-class NotificationTranslation(BaseModel):
-    languages_code: str
-    title: str
-    message: Optional[str] = None
 
 
 class NotificationRefs(BaseModel):
@@ -45,8 +34,12 @@ class NotificationRefs(BaseModel):
 class NotificationRow(BaseModel):
     id: str
     event_code: str
-    action: str  # enum from NotificationAction
-    level: str   # info | urgent
+    severity: str  # info | action_required | destructive
+    action: str  # NotificationAction enum
+    title: str
+    message: Optional[str] = None
+    scope: Optional[str] = None
+    params: Optional[dict[str, Any]] = None
     created_at: Optional[str] = None
     expires_at: Optional[str] = None
     read: bool = False
@@ -54,7 +47,16 @@ class NotificationRow(BaseModel):
     actor_name: Optional[str] = None
     actor_avatar: Optional[str] = None
     refs: NotificationRefs = NotificationRefs()
-    translation: Optional[NotificationTranslation] = None
+
+
+def _row_filter(app_user_id: str, now_iso: str) -> dict:
+    return {
+        "audience_user_id": {"_eq": app_user_id},
+        "_or": [
+            {"expires_at": {"_null": True}},
+            {"expires_at": {"_gt": now_iso}},
+        ],
+    }
 
 
 @router.get("", response_model=list[NotificationRow])
@@ -71,13 +73,9 @@ async def list_notifications(
     app_user = await get_app_user_or_raise(auth.user_id)
     now_iso = datetime.now(timezone.utc).isoformat()
 
-    notif_filter: dict = {
-        "audience_user_id": {"_eq": app_user["id"]},
-        "_or": [
-            {"expires_at": {"_null": True}},
-            {"expires_at": {"_gt": now_iso}},
-        ],
-    }
+    notif_filter = _row_filter(app_user["id"], now_iso)
+    if unread_only:
+        notif_filter["read_at"] = {"_null": True}
 
     rows = await async_directus.get_items(
         "notification",
@@ -85,20 +83,13 @@ async def list_notifications(
             "query": {
                 "filter": notif_filter,
                 "fields": [
-                    "id",
-                    "event_code",
-                    "action",
-                    "level",
-                    "created_at",
-                    "expires_at",
+                    "id", "event_code", "severity", "action",
+                    "title", "message", "scope", "params",
+                    "created_at", "expires_at", "read_at",
                     "actor_user_id",
-                    "ref_org_id",
-                    "ref_workspace_id",
-                    "ref_project_id",
-                    "ref_chat_id",
-                    "ref_report_id",
-                    "ref_conversation_id",
-                    "ref_invite_id",
+                    "ref_org_id", "ref_workspace_id", "ref_project_id",
+                    "ref_chat_id", "ref_report_id",
+                    "ref_conversation_id", "ref_invite_id",
                 ],
                 "sort": ["-created_at"],
                 "limit": max(1, min(limit, 200)),
@@ -107,65 +98,6 @@ async def list_notifications(
     ) or []
     if not isinstance(rows, list) or not rows:
         return []
-
-    notif_ids = [r["id"] for r in rows if r.get("id")]
-
-    # Read state (activity rows) keyed by notification_id.
-    activity_rows = await async_directus.get_items(
-        "notification_activity",
-        {
-            "query": {
-                "filter": {
-                    "notification_id": {"_in": notif_ids},
-                    "user_id": {"_eq": auth.user_id},
-                },
-                "fields": ["notification_id", "read"],
-                "limit": -1,
-            }
-        },
-    ) or []
-    read_map: dict[str, bool] = {}
-    if isinstance(activity_rows, list):
-        for ar in activity_rows:
-            nid = ar.get("notification_id")
-            if nid:
-                read_map[nid] = bool(ar.get("read", False))
-
-    if unread_only:
-        rows = [r for r in rows if not read_map.get(r["id"], False)]
-        if not rows:
-            return []
-        notif_ids = [r["id"] for r in rows]
-
-    # Translations — pick the user's language with en-US fallback.
-    # Batch once; caller UX doesn't need every locale.
-    accept_lang = "en-US"  # TODO: thread Accept-Language through session
-    translation_rows = await async_directus.get_items(
-        "notification_translations",
-        {
-            "query": {
-                "filter": {"notification_id": {"_in": notif_ids}},
-                "fields": ["notification_id", "languages_code", "title", "message"],
-                "limit": -1,
-            }
-        },
-    ) or []
-    tl_by_notif: dict[str, dict] = {}
-    if isinstance(translation_rows, list):
-        for tr in translation_rows:
-            nid = tr.get("notification_id")
-            if not nid:
-                continue
-            # Prefer user's language; fall back to en-US; any other as
-            # final backstop.
-            existing = tl_by_notif.get(nid)
-            lang = tr.get("languages_code")
-            if (
-                existing is None
-                or lang == accept_lang
-                or (lang == "en-US" and existing.get("languages_code") != accept_lang)
-            ):
-                tl_by_notif[nid] = tr
 
     # Actor name + avatar in one batch.
     actor_ids = list({r.get("actor_user_id") for r in rows if r.get("actor_user_id")})
@@ -204,17 +136,20 @@ async def list_notifications(
 
     out: list[NotificationRow] = []
     for r in rows:
-        tl = tl_by_notif.get(r["id"])
         actor = actor_map.get(r.get("actor_user_id") or "") or {}
         out.append(
             NotificationRow(
                 id=r["id"],
                 event_code=r.get("event_code", ""),
+                severity=r.get("severity", "info"),
                 action=r.get("action", "NONE"),
-                level=r.get("level", "info"),
+                title=r.get("title", ""),
+                message=r.get("message"),
+                scope=r.get("scope"),
+                params=r.get("params"),
                 created_at=r.get("created_at"),
                 expires_at=r.get("expires_at"),
-                read=read_map.get(r["id"], False),
+                read=bool(r.get("read_at")),
                 actor_user_id=r.get("actor_user_id"),
                 actor_name=actor.get("display_name"),
                 actor_avatar=actor.get("avatar"),
@@ -227,15 +162,6 @@ async def list_notifications(
                     conversation_id=r.get("ref_conversation_id"),
                     invite_id=r.get("ref_invite_id"),
                 ),
-                translation=(
-                    NotificationTranslation(
-                        languages_code=tl.get("languages_code", ""),
-                        title=tl.get("title", ""),
-                        message=tl.get("message"),
-                    )
-                    if tl
-                    else None
-                ),
             )
         )
     return out
@@ -243,52 +169,25 @@ async def list_notifications(
 
 @router.get("/unread-count")
 async def unread_count(auth: DependencyDirectusSession) -> dict:
-    """Cheap count for the inbox badge.
-
-    Runs a single aggregate — don't call list_notifications just to
-    get `len(unread)`.
-    """
+    """Cheap count for the inbox badge."""
     app_user = await get_app_user_or_raise(auth.user_id)
     now_iso = datetime.now(timezone.utc).isoformat()
 
-    # Notifications this user owns that haven't expired yet.
-    notif_rows = await async_directus.get_items(
+    notif_filter = _row_filter(app_user["id"], now_iso)
+    notif_filter["read_at"] = {"_null": True}
+
+    rows = await async_directus.get_items(
         "notification",
         {
             "query": {
-                "filter": {
-                    "audience_user_id": {"_eq": app_user["id"]},
-                    "_or": [
-                        {"expires_at": {"_null": True}},
-                        {"expires_at": {"_gt": now_iso}},
-                    ],
-                },
+                "filter": notif_filter,
                 "fields": ["id"],
                 "limit": -1,
             }
         },
     ) or []
-    if not isinstance(notif_rows, list) or not notif_rows:
-        return {"unread": 0}
-    notif_ids = [r["id"] for r in notif_rows]
-
-    # Activity rows for the caller's read/unread state on those.
-    read_rows = await async_directus.get_items(
-        "notification_activity",
-        {
-            "query": {
-                "filter": {
-                    "notification_id": {"_in": notif_ids},
-                    "user_id": {"_eq": auth.user_id},
-                    "read": {"_eq": True},
-                },
-                "fields": ["id"],
-                "limit": -1,
-            }
-        },
-    ) or []
-    read_count = len(read_rows) if isinstance(read_rows, list) else 0
-    return {"unread": max(0, len(notif_ids) - read_count)}
+    count = len(rows) if isinstance(rows, list) else 0
+    return {"unread": count}
 
 
 @router.post("/{notification_id}/read")
@@ -296,7 +195,7 @@ async def mark_read(
     notification_id: str,
     auth: DependencyDirectusSession,
 ) -> dict:
-    """Flip the caller's activity row for this notification to read=true.
+    """Stamp `read_at` on the caller's notification row.
 
     Verifies audience — a user can only mark their own rows read, even
     if they guess another user's notification_id.
@@ -307,82 +206,46 @@ async def mark_read(
     if not notif or notif.get("audience_user_id") != app_user["id"]:
         raise HTTPException(status_code=404, detail="Notification not found")
 
-    rows = await async_directus.get_items(
-        "notification_activity",
-        {
-            "query": {
-                "filter": {
-                    "notification_id": {"_eq": notification_id},
-                    "user_id": {"_eq": auth.user_id},
-                },
-                "fields": ["id"],
-                "limit": 1,
-            }
-        },
+    if notif.get("read_at"):
+        return {"status": "read"}  # already read — idempotent no-op
+
+    await async_directus.update_item(
+        "notification",
+        notification_id,
+        {"read_at": datetime.now(timezone.utc).isoformat()},
     )
-    if isinstance(rows, list) and rows:
-        await async_directus.update_item(
-            "notification_activity", rows[0]["id"], {"read": True}
-        )
-    else:
-        # Emit normally pre-creates activity; defend in case a row is missing.
-        from dembrane.utils import generate_uuid
-        await async_directus.create_item(
-            "notification_activity",
-            {
-                "id": generate_uuid(),
-                "notification_id": notification_id,
-                "user_id": auth.user_id,
-                "read": True,
-            },
-        )
     return {"status": "read"}
 
 
 @router.post("/read-all")
 async def mark_all_read(auth: DependencyDirectusSession) -> dict:
-    """Flip every unread activity row for this user to read=true.
+    """Stamp `read_at` on every unread notification for this user.
 
-    Cap at the 500 most recent to keep the mutation bounded.
+    Capped at 500 to keep the mutation bounded. Anything older is
+    effectively read anyway — the drawer doesn't page back that far.
     """
-    from dembrane.utils import generate_uuid  # noqa: F401 (future use)
-
     app_user = await get_app_user_or_raise(auth.user_id)
+    now_iso = datetime.now(timezone.utc).isoformat()
 
-    notif_rows = await async_directus.get_items(
+    rows = await async_directus.get_items(
         "notification",
         {
             "query": {
-                "filter": {"audience_user_id": {"_eq": app_user["id"]}},
+                "filter": {
+                    "audience_user_id": {"_eq": app_user["id"]},
+                    "read_at": {"_null": True},
+                },
                 "fields": ["id"],
                 "sort": ["-created_at"],
                 "limit": 500,
             }
         },
     ) or []
-    if not isinstance(notif_rows, list) or not notif_rows:
-        return {"status": "noop", "marked": 0}
-    notif_ids = [r["id"] for r in notif_rows]
-
-    activity_rows = await async_directus.get_items(
-        "notification_activity",
-        {
-            "query": {
-                "filter": {
-                    "notification_id": {"_in": notif_ids},
-                    "user_id": {"_eq": auth.user_id},
-                    "read": {"_eq": False},
-                },
-                "fields": ["id"],
-                "limit": -1,
-            }
-        },
-    ) or []
     marked = 0
-    if isinstance(activity_rows, list):
-        for row in activity_rows:
+    if isinstance(rows, list):
+        for row in rows:
             await async_directus.update_item(
-                "notification_activity", row["id"], {"read": True}
+                "notification", row["id"], {"read_at": now_iso}
             )
             marked += 1
     return {"status": "read", "marked": marked}

@@ -10,6 +10,7 @@ import {
 import { IconLock, IconUsers } from "@tabler/icons-react";
 import { useState } from "react";
 import { useProjectShares } from "@/hooks/useProjectSharing";
+import { avatarUrl } from "@/lib/avatar";
 import { ProjectSharingModal } from "./ProjectSharingModal";
 
 interface ProjectSharingStripProps {
@@ -79,7 +80,7 @@ export function ProjectSharingStrip({
 											key={s.user_id}
 											size="sm"
 											radius="xl"
-											src={s.avatar ?? undefined}
+											src={avatarUrl(s.avatar, 48)}
 										>
 											{(s.display_name || s.email)
 												.slice(0, 2)

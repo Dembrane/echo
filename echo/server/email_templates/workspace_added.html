@@ -2,11 +2,10 @@
 {% from "_layout.html" import cta_button %}
 {% block title %}You've been added to {{ workspace_name }}{% endblock %}
 {% block preview %}{{ inviter_name }} added you to {{ workspace_name }} on dembrane.{% endblock %}
-{% block heading %}You've been added to a workspace{% endblock %}
+{% block heading %}You're in.{% endblock %}
 {% block body %}
-<p style="margin: 0 0 8px;">
-  {{ inviter_name }} added you to <em>{{ workspace_name }}</em> on dembrane.
-  You can start collaborating right away.
+<p style="font-size:17px; line-height:1.65; margin:0 0 28px; color:#2D2D2C; font-weight:300;">
+  {{ inviter_name }} added you to <em style="color:#4169E1; font-style:normal;">{{ workspace_name }}</em> on dembrane. You can start collaborating right away.
 </p>
 {% endblock %}
 {% block cta %}{{ cta_button("Open workspace", invite_url) }}{% endblock %}

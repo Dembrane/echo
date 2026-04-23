@@ -41,10 +41,8 @@ import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
 import { analytics } from "@/lib/analytics";
 import { AnalyticsEvents as events } from "@/lib/analyticsEvents";
 import { testId } from "@/lib/testUtils";
-import { AnnouncementIcon } from "../announcement/AnnouncementIcon";
-import { Announcements } from "../announcement/Announcements";
-import { NotificationsDrawer } from "../notifications/NotificationsDrawer";
 import { TopAnnouncementBar } from "../announcement/TopAnnouncementBar";
+import { Inbox } from "../inbox/Inbox";
 import { FeedbackPortalModal } from "../common/FeedbackPortalModal";
 import { Logo } from "../common/Logo";
 import { UserAvatar } from "../common/UserAvatar";
@@ -174,16 +172,12 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 
 					{!loading && isAuthenticated && user ? (
 						<Group align="center">
-							{ENABLE_ANNOUNCEMENTS && (
-								<>
-									<AnnouncementIcon />
-									<Announcements />
-								</>
-							)}
-							{/* Personal notifications — sibling of the announcement
-							    icon. Collapses into one consolidated "Inbox" icon
-							    when the designer's inbox pattern lands. */}
-							<NotificationsDrawer />
+							{/* Unified Inbox — one bell, two tabs (For you +
+							    Announcements). Replaces the prior split icons.
+							    ENABLE_ANNOUNCEMENTS still controls whether the
+							    broadcast channel is live, but the bell itself
+							    stays so personal notifications remain reachable. */}
+							<Inbox />
 							<Menu withArrow arrowPosition="center" width={240} keepMounted>
 								<Menu.Target>
 									<ActionIcon

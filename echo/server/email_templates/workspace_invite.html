@@ -1,16 +1,17 @@
 {% extends "_layout.html" %}
-{% from "_layout.html" import cta_button %}
+{% from "_layout.html" import cta_button, fallback_url %}
 {% block title %}You're invited to collaborate on dembrane{% endblock %}
 {% block preview %}{{ inviter_name }} invited you to join {{ workspace_name }} on dembrane.{% endblock %}
-{% block heading %}You've been invited to collaborate{% endblock %}
+{% block heading %}You've been invited to collaborate.{% endblock %}
 {% block body %}
-<p style="margin: 0 0 8px;">
-  {{ inviter_name }} invited you to join <em>{{ workspace_name }}</em> on dembrane.
+<p style="font-size:17px; line-height:1.65; margin:0 0 28px; color:#2D2D2C; font-weight:300;">
+  {{ inviter_name }} invited you to join <em style="color:#4169E1; font-style:normal;">{{ workspace_name }}</em> on dembrane. The invite expires in 7 days.
 </p>
 {% endblock %}
 {% block cta %}{{ cta_button("Accept invitation", invite_url) }}{% endblock %}
-{% block footer %}
-<p style="margin: 24px 0 0; font-size: 13px; line-height: 1.6; color: #8a8a8a;">
-  This invitation expires in 7 days. If you didn't expect this email, you can safely ignore it.
+{% block fallback %}{{ fallback_url(invite_url) }}{% endblock %}
+{% block disclaim %}
+<p style="font-size:15px; line-height:1.65; margin:0 0 28px; color:#2D2D2C; font-weight:300;">
+  Didn't expect this? You can ignore this email — nothing will happen.
 </p>
 {% endblock %}
