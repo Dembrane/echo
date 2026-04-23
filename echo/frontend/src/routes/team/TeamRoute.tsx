@@ -30,6 +30,7 @@ import { toast } from "@/components/common/Toaster";
 import { useDocumentTitle } from "@mantine/hooks";
 import {
 	IconChevronDown,
+	IconChevronRight,
 	IconLock,
 	IconSearch,
 	IconSettings,
@@ -46,6 +47,7 @@ import { TierBadge } from "@/components/workspace/TierBadge";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
+import { useV2Me } from "@/hooks/useV2Me";
 import { avatarUrl, logoUrl as resolveLogoUrl } from "@/lib/avatar";
 import { displayRole, roleColor } from "@/lib/roles";
 
@@ -80,6 +82,9 @@ interface TeamMember {
 	is_pending: boolean;
 	// workspace_id → role for direct memberships (not derived).
 	direct_workspace_roles?: Record<string, string>;
+	// workspace_id → membership_id for direct rows — enables in-row
+	// role changes without a second lookup.
+	direct_workspace_membership_ids?: Record<string, string>;
 }
 
 interface TeamWorkspace {
@@ -309,6 +314,61 @@ export const TeamRoute = () => {
 		onError: (e: Error) => toast.error(e.message),
 	});
 
+	// Per-workspace role change triggered from the team People tab's
+	// expanded card. Works on direct memberships (backend returns the
+	// membership id alongside the role). Invalidates both the team
+	// members query and the target workspace's settings query so any
+	// open surface reflects the new role.
+	const workspaceRoleMutation = useMutation({
+		mutationFn: ({
+			workspaceId,
+			membershipId,
+			role,
+		}: {
+			workspaceId: string;
+			membershipId: string;
+			role: string;
+		}) => changeWorkspaceMemberRole(workspaceId, membershipId, role),
+		onSuccess: (_data, variables) => {
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "team", teamId, "members"],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "workspace-settings", variables.workspaceId],
+			});
+			toast.success(t`Role changed`);
+		},
+		onError: (e: Error) => toast.error(e.message),
+	});
+
+	const removeTeamMemberMutation = useMutation({
+		mutationFn: async ({ userId }: { userId: string }) => {
+			if (!teamId) throw new Error("No team");
+			const res = await fetch(
+				`${API_BASE_URL}/v2/orgs/${teamId}/members/${userId}`,
+				{ method: "DELETE", credentials: "include" },
+			);
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(
+					typeof data.detail === "string"
+						? data.detail
+						: "Couldn't remove member",
+				);
+			}
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "team", teamId, "members"],
+			});
+			toast.success(t`Removed from team`);
+		},
+		onError: (e: Error) => toast.error(e.message),
+	});
+
+	const { data: meV2 } = useV2Me();
+	const myAppUserId = meV2?.id ?? null;
+
 	const filteredMembers = useMemo(() => {
 		const q = search.trim().toLowerCase();
 		return members.filter((m) => {
@@ -519,259 +579,49 @@ export const TeamRoute = () => {
 					</Stack>
 				)}
 
-				{/* Matrix — the main content. Sticky first column (name+email)
-				    so it stays visible on horizontal scroll. Mantine Table
-				    with stickyHeader + custom sticky-left on the first cell. */}
+				{/* People tab redesign (audit Option B, 2026-04-23): each
+				    person is a card with their team role, summary of
+				    per-workspace access, and an expand chevron. Expanded
+				    state reveals per-workspace role pickers + remove. */}
 				{!membersError && members.length > 0 && (
-				<Paper withBorder radius="md" style={{ overflowX: "auto" }}>
-					<Table
-						stickyHeader
-						highlightOnHover
-						verticalSpacing="sm"
-						horizontalSpacing="sm"
-					>
-						<Table.Thead>
-							<Table.Tr>
-								<Table.Th
-									style={{
-										position: "sticky",
-										left: 0,
-										zIndex: 3,
-										background: "var(--mantine-color-body)",
-										minWidth: 260,
-									}}
-								>
-									<Trans>Person</Trans>
-								</Table.Th>
-								<Table.Th style={{ minWidth: 90 }}>
-									<Trans>Team role</Trans>
-								</Table.Th>
-								{workspaces.map((ws) => (
-									<Table.Th
-										key={ws.id}
-										style={{ minWidth: 120, textAlign: "center" }}
-									>
-										<Stack gap={2} align="center">
-											<Group gap={4} justify="center" wrap="nowrap">
-												{ws.is_private && (
-													<IconLock
-														size={12}
-														style={{
-															color: "var(--mantine-color-gray-6)",
-														}}
-														aria-label={t`Private workspace`}
-													/>
-												)}
-												<Tooltip label={ws.name} disabled={ws.name.length < 18}>
-													{isAdmin ? (
-														<Anchor
-															size="sm"
-															fw={500}
-															c="dark"
-															underline="hover"
-															onClick={(e) => {
-																e.preventDefault();
-																navigate(`/w/${ws.id}/projects`);
-															}}
-															style={{ cursor: "pointer" }}
-														>
-															<Text size="sm" truncate maw={140}>
-																{ws.name}
-															</Text>
-														</Anchor>
-													) : (
-														/* Matrix §6: team members don't auto-have access
-														   to every team workspace. Linking non-admins to
-														   /w/:id/projects would 403 for most. Plain text
-														   instead; the discovery + Request-access path
-														   lives on the home selector. */
-														<Text
-															size="sm"
-															truncate
-															maw={140}
-															fw={500}
-															c="dimmed"
-														>
-															{ws.name}
-														</Text>
-													)}
-												</Tooltip>
-											</Group>
-											<Text size="xs" c="dimmed">
-												<Plural
-													value={ws.project_count}
-													one="# project"
-													other="# projects"
-												/>
-											</Text>
-										</Stack>
-									</Table.Th>
-								))}
-							</Table.Tr>
-						</Table.Thead>
-						<Table.Tbody>
-							{filteredMembers.map((m) => (
-								<Table.Tr key={m.user_id}>
-									<Table.Td
-										style={{
-											position: "sticky",
-											left: 0,
-											zIndex: 2,
-											background: "var(--mantine-color-body)",
-										}}
-									>
-										<Group gap="sm" wrap="nowrap">
-											<Avatar
-												src={avatarUrl(m.avatar, 48)}
-												size="sm"
-												radius="xl"
-											>
-												{(m.display_name || m.email || "?")
-													.slice(0, 2)
-													.toUpperCase()}
-											</Avatar>
-											<Stack gap={0} style={{ minWidth: 0 }}>
-												<Text size="sm" truncate>
-													{m.display_name || m.email || t`Unknown member`}
-												</Text>
-												{/* Email on its own line per design call —
-												    two-line pattern beats a hover tooltip. */}
-												{m.email && m.email !== m.display_name && (
-													<Text size="xs" c="dimmed" truncate>
-														{m.email}
-													</Text>
-												)}
-											</Stack>
-										</Group>
-									</Table.Td>
-									<Table.Td>
-										<RoleBadgeMenu
-											currentRole={m.role}
-											options={TEAM_ROLE_OPTIONS}
-											disabled={!isAdmin}
-											onChange={(next) => {
-												// Matrix row role changes get a confirm step — the
-												// dense grid makes it too easy to misclick a
-												// person's role. Matches the workspace-settings
-												// self-demotion pattern.
-												const person =
-													m.display_name || m.email || t`this person`;
-												modals.openConfirmModal({
-													title: t`Change team role?`,
-													children: (
-														<Text size="sm">
-															<Trans>
-																Change {person}'s team role from{" "}
-																<em>{displayRole(m.role)}</em> to{" "}
-																<em>{displayRole(next)}</em>?
-															</Trans>
-														</Text>
-													),
-													labels: {
-														confirm: t`Change role`,
-														cancel: t`Cancel`,
-													},
-													onConfirm: () =>
-														teamRoleMutation.mutate({
-															userId: m.user_id,
-															role: next,
-														}),
-												});
-											}}
-										/>
-									</Table.Td>
-									{workspaces.map((ws) => {
-										// Direct membership takes priority. Backend returns
-										// direct_workspace_roles = {workspace_id: role}
-										// dedup'd against legacy inherited rows.
-										const directRole =
-											m.direct_workspace_roles?.[ws.id];
-										// Derivation fallback: team owner has admin
-										// everywhere; team admin has admin on non-private
-										// workspaces. Post-walkback this derivation
-										// retires — direct rows will be the sole source.
-										const derivedAdmin =
-											!directRole &&
-											(m.role === "owner" ||
-												(m.role === "admin" && !ws.is_private));
-										const cellRole = directRole
-											? directRole
-											: derivedAdmin
-												? "admin"
-												: null;
-										return (
-											<Table.Td
-												key={`${m.user_id}-${ws.id}`}
-												style={{ textAlign: "center" }}
-											>
-												{cellRole ? (
-													<Tooltip
-														label={
-															directRole
-																? t`${displayRole(directRole)} on this workspace · change in workspace settings`
-																: t`Admin here (from team role)`
-														}
-														withArrow
-													>
-														<Badge
-															size="xs"
-															variant="light"
-															color={roleColor(cellRole)}
-															style={{
-																cursor: directRole ? "pointer" : undefined,
-															}}
-															onClick={
-																directRole
-																	? () =>
-																			navigate(
-																				`/w/${ws.id}/settings`,
-																			)
-																	: undefined
-															}
-														>
-															{displayRole(cellRole)}
-														</Badge>
-													</Tooltip>
-												) : ws.is_private && m.role === "admin" ? (
-													<Tooltip
-														label={t`Private workspace — ask a workspace admin for an invite`}
-														withArrow
-													>
-														<Text size="xs" c="dimmed">
-															—
-														</Text>
-													</Tooltip>
-												) : (
-													<Text size="xs" c="dimmed">
-														—
-													</Text>
-												)}
-											</Table.Td>
-										);
-									})}
-								</Table.Tr>
-							))}
-							{filteredMembers.length === 0 && (
-								<Table.Tr>
-									<Table.Td
-										colSpan={2 + workspaces.length}
-										style={{ textAlign: "center", padding: "24px 12px" }}
-									>
-										<Text size="sm" c="dimmed">
-											<Trans>No one matches that filter.</Trans>
-										</Text>
-									</Table.Td>
-								</Table.Tr>
-							)}
-						</Table.Tbody>
-					</Table>
-				</Paper>
+					<Stack gap="xs">
+						{filteredMembers.map((m) => (
+							<TeamPersonCard
+								key={m.user_id}
+								member={m}
+								workspaces={workspaces}
+								isAdmin={isAdmin}
+								isSelf={m.app_user_id === myAppUserId}
+								onTeamRoleChange={(next) =>
+									teamRoleMutation.mutate({
+										userId: m.user_id,
+										role: next,
+									})
+								}
+								onWorkspaceRoleChange={(ws, membershipId, next) =>
+									workspaceRoleMutation.mutate({
+										workspaceId: ws,
+										membershipId,
+										role: next,
+									})
+								}
+								onRemove={() =>
+									removeTeamMemberMutation.mutate({ userId: m.user_id })
+								}
+							/>
+						))}
+						{filteredMembers.length === 0 && (
+							<Text size="sm" c="dimmed" ta="center" py="md">
+								<Trans>No one matches that filter.</Trans>
+							</Text>
+						)}
+					</Stack>
 				)}
 
 				<Text size="xs" c="dimmed">
 					<Trans>
-						Team admins can join any workspace to get a direct admin seat.
-						Workspace invites live in each workspace's settings.
+						Team admins can discover and join any workspace — including
+						private ones. Team members see open workspaces only.
 					</Trans>
 				</Text>
 						</Stack>
@@ -1055,3 +905,283 @@ function InviteWorkspacePicker({
 }
 
 export default TeamRoute;
+
+/**
+ * One row on the team People tab. Summarizes a person's team role +
+ * their per-workspace access, expands to let an admin change
+ * per-workspace roles or remove the person from the team.
+ *
+ * Role changes go through a confirm modal (never silent). Uniform
+ * per-workspace role shows as a single "Admin across all" pill
+ * instead of listing each workspace — common case, less noise.
+ */
+function TeamPersonCard({
+	member,
+	workspaces,
+	isAdmin,
+	isSelf,
+	onTeamRoleChange,
+	onWorkspaceRoleChange,
+	onRemove,
+}: {
+	member: TeamMember;
+	workspaces: TeamWorkspace[];
+	isAdmin: boolean;
+	isSelf: boolean;
+	onTeamRoleChange: (next: string) => void;
+	onWorkspaceRoleChange: (
+		workspaceId: string,
+		membershipId: string,
+		next: string,
+	) => void;
+	onRemove: () => void;
+}) {
+	const [open, setOpen] = useState(false);
+
+	// Workspace access summary — direct role wins; derivation fills in
+	// for admin/owner rows on non-private workspaces. Matches the old
+	// matrix rules so the upgrade doesn't hide access state.
+	const perWorkspace = useMemo(() => {
+		return workspaces.map((ws) => {
+			const directRole = member.direct_workspace_roles?.[ws.id];
+			const membershipId = member.direct_workspace_membership_ids?.[ws.id];
+			const derivedAdmin =
+				!directRole &&
+				(member.role === "owner" ||
+					(member.role === "admin" && !ws.is_private));
+			const role: string | null = directRole
+				? directRole
+				: derivedAdmin
+					? "admin"
+					: null;
+			return {
+				ws,
+				role,
+				isDirect: Boolean(directRole),
+				membershipId: membershipId ?? null,
+			};
+		});
+	}, [workspaces, member.direct_workspace_roles, member.direct_workspace_membership_ids, member.role]);
+
+	// Summary line: "Admin across all" when uniform, otherwise a short
+	// breakdown. Ignore workspaces they don't appear on at all.
+	const reached = perWorkspace.filter((w) => w.role !== null);
+	const summary = useMemo(() => {
+		if (reached.length === 0) return t`No workspace access yet`;
+		const roleSet = new Set(reached.map((w) => w.role as string));
+		if (reached.length === workspaces.length && roleSet.size === 1) {
+			return t`${displayRole(reached[0].role as string)} across all`;
+		}
+		// Mixed state — "Admin on 3 · Member on 2"
+		const counts = new Map<string, number>();
+		for (const w of reached) {
+			const key = w.role as string;
+			counts.set(key, (counts.get(key) ?? 0) + 1);
+		}
+		return Array.from(counts.entries())
+			.map(([r, n]) => `${displayRole(r)} on ${n}`)
+			.join(" · ");
+	}, [reached, workspaces.length]);
+
+	const handleTeamRoleChange = (next: string) => {
+		const person = member.display_name || member.email || t`this person`;
+		modals.openConfirmModal({
+			title: t`Change team role?`,
+			children: (
+				<Text size="sm">
+					<Trans>
+						Change {person}'s team role from{" "}
+						<em>{displayRole(member.role)}</em> to{" "}
+						<em>{displayRole(next)}</em>?
+					</Trans>
+				</Text>
+			),
+			labels: { confirm: t`Change role`, cancel: t`Cancel` },
+			onConfirm: () => onTeamRoleChange(next),
+		});
+	};
+
+	const handleWorkspaceRoleChange = (
+		wsId: string,
+		wsName: string,
+		membershipId: string,
+		currentRole: string,
+		next: string,
+	) => {
+		const person = member.display_name || member.email || t`this person`;
+		modals.openConfirmModal({
+			title: t`Change workspace role?`,
+			children: (
+				<Text size="sm">
+					<Trans>
+						Change {person}'s role on {wsName} from{" "}
+						<em>{displayRole(currentRole)}</em> to{" "}
+						<em>{displayRole(next)}</em>?
+					</Trans>
+				</Text>
+			),
+			labels: { confirm: t`Change role`, cancel: t`Cancel` },
+			onConfirm: () => onWorkspaceRoleChange(wsId, membershipId, next),
+		});
+	};
+
+	const handleRemove = () => {
+		const person = member.display_name || member.email || t`this person`;
+		modals.openConfirmModal({
+			title: t`Remove from team?`,
+			children: (
+				<Stack gap={8}>
+					<Text size="sm">
+						<Trans>
+							{person} will lose access to every workspace in this
+							team. Direct-only workspace invites stay intact.
+						</Trans>
+					</Text>
+					<Text size="xs" c="dimmed">
+						<Trans>
+							You can re-invite them later from any workspace.
+						</Trans>
+					</Text>
+				</Stack>
+			),
+			labels: { confirm: t`Remove`, cancel: t`Cancel` },
+			confirmProps: { color: "red" },
+			onConfirm: onRemove,
+		});
+	};
+
+	return (
+		<Paper withBorder radius="md" p="md">
+			<Stack gap={open ? 12 : 0}>
+				<Group justify="space-between" wrap="nowrap" gap="md">
+					<Group gap="sm" wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
+						<Avatar src={avatarUrl(member.avatar, 64)} size="md" radius="xl">
+							{(member.display_name || member.email || "?")
+								.slice(0, 2)
+								.toUpperCase()}
+						</Avatar>
+						<Stack gap={0} style={{ minWidth: 0 }}>
+							<Text size="sm" fw={500} truncate>
+								{member.display_name || member.email || t`Unknown member`}
+							</Text>
+							{member.email &&
+								member.email !== member.display_name && (
+									<Text size="xs" c="dimmed" truncate>
+										{member.email}
+									</Text>
+								)}
+							<Text size="xs" c="dimmed" mt={4}>
+								{summary}
+							</Text>
+						</Stack>
+					</Group>
+					<Group gap="xs" wrap="nowrap">
+						<RoleBadgeMenu
+							currentRole={member.role}
+							options={TEAM_ROLE_OPTIONS}
+							disabled={!isAdmin || isSelf}
+							onChange={handleTeamRoleChange}
+						/>
+						<ActionIcon
+							variant="subtle"
+							color="gray"
+							size="sm"
+							onClick={() => setOpen((v) => !v)}
+							aria-label={open ? t`Hide detail` : t`Show detail`}
+						>
+							{open ? (
+								<IconChevronDown size={14} />
+							) : (
+								<IconChevronRight size={14} />
+							)}
+						</ActionIcon>
+					</Group>
+				</Group>
+
+				{open && (
+					<Stack gap={12} pl={56}>
+						<Text size="xs" fw={500} tt="uppercase" c="dimmed" lts={0.5}>
+							<Trans>Per-workspace access</Trans>
+						</Text>
+						<Stack gap={6}>
+							{perWorkspace.map(({ ws, role, isDirect, membershipId }) => (
+								<Group
+									key={ws.id}
+									justify="space-between"
+									wrap="nowrap"
+									gap="sm"
+								>
+									<Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
+										{ws.is_private && (
+											<IconLock
+												size={12}
+												color="var(--mantine-color-gray-6)"
+											/>
+										)}
+										<Text size="sm" truncate>
+											{ws.name}
+										</Text>
+									</Group>
+									{role ? (
+										isAdmin && isDirect && membershipId ? (
+											<RoleBadgeMenu
+												currentRole={role}
+												options={WS_ROLE_OPTIONS}
+												size="xs"
+												onChange={(next) =>
+													handleWorkspaceRoleChange(
+														ws.id,
+														ws.name,
+														membershipId,
+														role,
+														next,
+													)
+												}
+											/>
+										) : (
+											<Tooltip
+												label={
+													isDirect
+														? t`Change in workspace settings`
+														: t`Admin here via team role`
+												}
+											>
+												<Badge
+													size="xs"
+													variant="light"
+													color={roleColor(role)}
+												>
+													{displayRole(role)}
+												</Badge>
+											</Tooltip>
+										)
+									) : ws.is_private ? (
+										<Text size="xs" c="dimmed">
+											<Trans>No access</Trans>
+										</Text>
+									) : (
+										<Text size="xs" c="dimmed">
+											—
+										</Text>
+									)}
+								</Group>
+							))}
+						</Stack>
+						{isAdmin && !isSelf && (
+							<Group justify="flex-end" mt={4}>
+								<Button
+									size="compact-xs"
+									variant="subtle"
+									color="red"
+									onClick={handleRemove}
+								>
+									<Trans>Remove from team</Trans>
+								</Button>
+							</Group>
+						)}
+					</Stack>
+				)}
+			</Stack>
+		</Paper>
+	);
+}

@@ -91,6 +91,10 @@ class OrgMemberResponse(BaseModel):
     # on a specific workspace aren't hidden. Includes is_external=true
     # rows (guests) — frontend decides how to display.
     direct_workspace_roles: dict[str, str] = {}
+    # Membership id per workspace so the team people tab can mutate a
+    # row's role directly (PATCH /v2/workspaces/:ws/members/:membership).
+    # Parallel to direct_workspace_roles (same keys).
+    direct_workspace_membership_ids: dict[str, str] = {}
 
 
 class OrgDetailResponse(BaseModel):
@@ -543,7 +547,9 @@ async def list_org_members(
     # workspaces show correctly (they were hidden before when the
     # matrix relied on derivation alone). Dedup'd by (workspace_id,
     # user_id) with direct-over-inherited priority.
-    direct_roles = await _direct_workspace_roles_by_user(org_id, user_ids)
+    direct_roles, direct_membership_ids = await _direct_workspace_roles_by_user(
+        org_id, user_ids
+    )
 
     out: list[OrgMemberResponse] = []
     for m in memberships:
@@ -562,6 +568,9 @@ async def list_org_members(
                 role=m.get("role", "member"),
                 accessible_workspace_count=workspace_counts.get(uid, 0),
                 direct_workspace_roles=direct_roles.get(uid, {}),
+                direct_workspace_membership_ids=direct_membership_ids.get(
+                    uid, {}
+                ),
             )
         )
     return out
@@ -569,17 +578,18 @@ async def list_org_members(
 
 async def _direct_workspace_roles_by_user(
     org_id: str, user_ids: list[str]
-) -> dict[str, dict[str, str]]:
-    """Return {user_id: {workspace_id: role}} for direct memberships this
-    team's users hold on any workspace in this team.
+) -> tuple[dict[str, dict[str, str]], dict[str, dict[str, str]]]:
+    """Return two parallel maps:
+      roles: {user_id: {workspace_id: role}}
+      ids:   {user_id: {workspace_id: membership_id}}
 
     One DB call for the whole team page. Dedup'd (workspace_id, user_id)
     since pre-walkback data can carry inherited+direct rows for the
-    same pair (matrix §7 one seat per person per workspace — see
-    get_workspace_usage for the same dedup logic).
+    same pair (matrix §7 one seat per person per workspace). IDs power
+    the per-workspace role picker on the team People tab.
     """
     if not user_ids:
-        return {}
+        return {}, {}
 
     ws_rows = await async_directus.get_items(
         "workspace",
@@ -596,7 +606,7 @@ async def _direct_workspace_roles_by_user(
     ) or []
     ws_ids = [w["id"] for w in (ws_rows if isinstance(ws_rows, list) else []) if w.get("id")]
     if not ws_ids:
-        return {}
+        return {}, {}
 
     mem_rows = await async_directus.get_items(
         "workspace_membership",
@@ -607,13 +617,13 @@ async def _direct_workspace_roles_by_user(
                     "user_id": {"_in": user_ids},
                     "deleted_at": {"_null": True},
                 },
-                "fields": ["workspace_id", "user_id", "role", "source"],
+                "fields": ["id", "workspace_id", "user_id", "role", "source"],
                 "limit": -1,
             }
         },
     ) or []
     if not isinstance(mem_rows, list):
-        return {}
+        return {}, {}
 
     # Dedup (workspace_id, user_id): direct > inherited.
     by_pair: dict[tuple[str, str], dict] = {}
@@ -629,10 +639,14 @@ async def _direct_workspace_roles_by_user(
         ):
             by_pair[key] = m
 
-    out: dict[str, dict[str, str]] = {}
+    roles: dict[str, dict[str, str]] = {}
+    ids: dict[str, dict[str, str]] = {}
     for (wid, uid), row in by_pair.items():
-        out.setdefault(uid, {})[wid] = row.get("role", "member")
-    return out
+        roles.setdefault(uid, {})[wid] = row.get("role", "member")
+        membership_id = row.get("id")
+        if membership_id:
+            ids.setdefault(uid, {})[wid] = membership_id
+    return roles, ids
 
 
 async def _rollup_workspace_access(
@@ -1059,12 +1073,19 @@ class OrgUsageWorkspaceRow(BaseModel):
     id: str
     name: str
     tier: str
+    is_private: bool = False
     audio_hours: float
     hours_included: Optional[int]      # None = unlimited tier
     hours_pct: Optional[float]         # 0..1 progress; None when unlimited
     hours_over: float                  # max(0, audio_hours - hours_included)
+    seat_count: int = 0
+    seats_included: Optional[int] = None
+    seats_pct: Optional[float] = None  # 0..1 progress; None when unlimited
     at_cap: bool                       # Pilot + at/over cap
     approaching_cap: bool              # >=80% on capped tiers
+    approaching_seat_cap: bool = False # >=80% on capped seats
+    seat_cap_hit: bool = False         # seat_count >= seats_included
+    downgraded_at: Optional[str] = None
     # Admin / billing only:
     overage_forecast_eur: Optional[float] = None
 
@@ -1139,7 +1160,10 @@ async def get_org_usage(
     now = datetime.now(timezone.utc)
     cycle_start, cycle_end_exclusive = _calendar_month_bounds(now, month_offset)
 
-    # All active workspaces in this org.
+    # All active workspaces in this org. Fetch `settings` + `downgraded_at`
+    # so the per-workspace row can surface private-state and recent
+    # downgrades (powers the "Needs attention" panel on the team usage
+    # tab).
     workspaces = await async_directus.get_items(
         "workspace",
         {
@@ -1148,7 +1172,9 @@ async def get_org_usage(
                     "org_id": {"_eq": org_id},
                     "deleted_at": {"_null": True},
                 },
-                "fields": ["id", "name", "tier"],
+                "fields": [
+                    "id", "name", "tier", "settings", "downgraded_at",
+                ],
                 "limit": -1,
             }
         },
@@ -1218,6 +1244,7 @@ async def get_org_usage(
     # would double-bill the same human.
     total_seat_count = 0
     total_guest_count = 0
+    per_ws_seats: dict[str, int] = {wid: 0 for wid in ws_ids}
     if ws_ids:
         memberships = await async_directus.get_items(
             "workspace_membership",
@@ -1256,11 +1283,12 @@ async def get_org_usage(
                         and existing.get("role") not in seat_roles
                     ):
                         by_pair[key] = m
-            for m in by_pair.values():
+            for (wid, _uid), m in by_pair.items():
                 if m.get("is_external"):
                     total_guest_count += 1
                 elif m.get("role") in seat_roles:
                     total_seat_count += 1
+                    per_ws_seats[wid] = per_ws_seats.get(wid, 0) + 1
 
     # Per-workspace rows + aggregation. We build the rows even when the
     # caller doesn't see financials — the €-field is stripped below.
@@ -1273,12 +1301,31 @@ async def get_org_usage(
         wid = w.get("id") or ""
         name = w.get("name") or ""
         tier = w.get("tier") or ""
+        settings = w.get("settings") or {}
+        if not isinstance(settings, dict):
+            settings = {}
+        # Private = inherit_team_admins flipped off (matrix §6). Absence
+        # of the flag means "open" (legacy default).
+        is_private = settings.get("inherit_team_admins") is False
         hours = per_ws_hours.get(wid, 0.0) if wid else 0.0
         total_hours += hours
 
         cap = get_capacity(tier)
         hours_included: Optional[int] = cap.included_hours if cap else None
         hours_pct: Optional[float] = None
+        seats_included: Optional[int] = cap.included_seats if cap else None
+        seat_count = per_ws_seats.get(wid, 0)
+        seats_pct: Optional[float] = (
+            round(seat_count / seats_included, 3)
+            if seats_included is not None and seats_included > 0
+            else None
+        )
+        seat_cap_hit = (
+            seats_included is not None and seat_count >= seats_included
+        )
+        approaching_seat_cap = (
+            seats_pct is not None and seats_pct >= 0.8 and not seat_cap_hit
+        )
         ws_at_cap = False
         ws_approaching = False
         ws_forecast_eur = 0.0
@@ -1307,12 +1354,19 @@ async def get_org_usage(
             "id": wid,
             "name": name,
             "tier": tier,
+            "is_private": is_private,
             "audio_hours": round(hours, 2),
             "hours_included": hours_included,
             "hours_pct": hours_pct,
             "hours_over": hours_over,
+            "seat_count": seat_count,
+            "seats_included": seats_included,
+            "seats_pct": seats_pct,
+            "seat_cap_hit": seat_cap_hit,
+            "approaching_seat_cap": approaching_seat_cap,
             "at_cap": ws_at_cap,
             "approaching_cap": ws_approaching,
+            "downgraded_at": w.get("downgraded_at"),
             "overage_forecast_eur": (
                 round(ws_forecast_eur, 2) if is_current_month else None
             ),

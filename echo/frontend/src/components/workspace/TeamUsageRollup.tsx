@@ -2,7 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
-	Badge,
+	Button,
 	Group,
 	Paper,
 	Progress,
@@ -12,7 +12,13 @@ import {
 	Tooltip,
 	UnstyledButton,
 } from "@mantine/core";
-import { IconChevronDown, IconChevronRight, IconRefresh } from "@tabler/icons-react";
+import {
+	IconAlertTriangle,
+	IconChevronDown,
+	IconChevronRight,
+	IconLock,
+	IconRefresh,
+} from "@tabler/icons-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -23,10 +29,17 @@ interface OrgUsageWorkspaceRow {
 	id: string;
 	name: string;
 	tier: string;
+	is_private: boolean;
 	audio_hours: number;
 	hours_included: number | null;
 	hours_pct: number | null;
 	hours_over: number;
+	seat_count: number;
+	seats_included: number | null;
+	seats_pct: number | null;
+	seat_cap_hit: boolean;
+	approaching_seat_cap: boolean;
+	downgraded_at: string | null;
 	at_cap: boolean;
 	approaching_cap: boolean;
 	overage_forecast_eur: number | null;
@@ -108,11 +121,31 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 	// "Approaching" is a Pilot-only concept per feedback — other tiers
 	// just bill overage, there's no "limit" to approach. We only surface
 	// at-cap (Pilot hard-block) here.
-	const anyWarning = data.workspaces_at_cap > 0;
+	// Build the "Needs attention" items. Only surfaces when non-empty —
+	// per design note, no empty "all good" state.
+	const attention = buildAttention(data.workspaces);
+
+	// Sort by density desc. At-cap first, approaching next, then by
+	// combined pct (max of seat/hour). Workspaces with nothing going
+	// on sink to the bottom.
+	const sortedRows = [...data.workspaces].sort((a, b) => {
+		const bucket = (w: OrgUsageWorkspaceRow) =>
+			w.at_cap || w.seat_cap_hit
+				? 0
+				: w.approaching_cap || w.approaching_seat_cap
+					? 1
+					: 2;
+		const ba = bucket(a);
+		const bb = bucket(b);
+		if (ba !== bb) return ba - bb;
+		const densityOf = (w: OrgUsageWorkspaceRow) =>
+			Math.max(w.hours_pct ?? 0, w.seats_pct ?? 0);
+		return densityOf(b) - densityOf(a);
+	});
 
 	return (
 		<Paper p="md" withBorder radius="sm">
-			<Stack gap={10}>
+			<Stack gap={12}>
 				<Group justify="space-between" wrap="nowrap" gap="xs">
 					<Text size="xs" fw={500} tt="uppercase" c="dimmed" lts={0.5}>
 						<Trans>Team usage</Trans>
@@ -134,67 +167,21 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 					</Group>
 				</Group>
 
-				<Group gap="xl" wrap="wrap">
-					<Stack gap={0}>
-						<Text size="lg" fw={500}>
-							{data.total_audio_hours.toFixed(1)}
-							<Text span c="dimmed" size="sm">
-								{" "}{t`hours`}
-							</Text>
-						</Text>
-						<Text size="xs" c="dimmed">
-							<Trans>
-								in {formatCycleMonth(data.cycle_start)} · {data.workspace_count}{" "}
-								workspaces
-							</Trans>
-						</Text>
-					</Stack>
-
-					<Stack gap={0}>
-						<Text size="lg" fw={500}>{data.total_seat_count}</Text>
-						<Text size="xs" c="dimmed">
-							<Trans>seats</Trans>
-						</Text>
-					</Stack>
-
-					<Stack gap={0}>
-						<Text size="lg" fw={500}>{data.total_guest_count}</Text>
-						<Text size="xs" c="dimmed">
-							<Trans>guests</Trans>
-						</Text>
-					</Stack>
-
-					<Stack gap={0}>
-						<Text size="lg" fw={500}>{data.total_project_count}</Text>
-						<Text size="xs" c="dimmed">
-							<Trans>projects</Trans>
-						</Text>
-					</Stack>
-
-					{/* Overage forecast surface removed per demo feedback —
-					    backend still returns the field; UI hides it until we
-					    have a clearer "what happens at overage" story. */}
-				</Group>
-
-				{anyWarning && (
-					<Group gap="xs" mt={4} wrap="nowrap">
-						{/* At-limit only fires on Pilot (the only tier with a
-						    hard block). Other tiers bill overage and keep going;
-						    no warning badge. The per-workspace row below it is
-						    always visible now, so we're pointing at a row, not
-						    a disclosure. */}
-						<Badge size="sm" color="red" variant="light">
-							<Plural
-								value={data.workspaces_at_cap}
-								one="# workspace used up its included hours"
-								other="# workspaces used up their included hours"
-							/>
-						</Badge>
-					</Group>
+				{attention.length > 0 && (
+					<NeedsAttentionPanel items={attention} onOpen={(id) => navigate(`/w/${id}/settings/billing`)} />
 				)}
 
-				{data.workspaces.length > 0 && (
-					<Table verticalSpacing="xs" striped highlightOnHover mt={4}>
+				{/* Single-line team totals — informational, not a quota. */}
+				<Text size="sm" c="dimmed">
+					<Trans>
+						{data.workspace_count} workspaces · {data.total_seat_count} seats ·{" "}
+						{data.total_audio_hours.toFixed(1)} hours in{" "}
+						{formatCycleMonth(data.cycle_start)}
+					</Trans>
+				</Text>
+
+				{sortedRows.length > 0 && (
+					<Table verticalSpacing="xs" striped highlightOnHover>
 						<Table.Thead>
 							<Table.Tr>
 								<Table.Th style={{ width: 28 }} />
@@ -208,20 +195,20 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 										<Trans>Tier</Trans>
 									</Text>
 								</Table.Th>
-								<Table.Th style={{ width: 220 }}>
+								<Table.Th style={{ width: 140 }}>
 									<Text size="xs" c="dimmed">
-										<Trans>Used / Included</Trans>
+										<Trans>Seats</Trans>
 									</Text>
 								</Table.Th>
-								<Table.Th style={{ textAlign: "right", width: 100 }}>
+								<Table.Th style={{ width: 200 }}>
 									<Text size="xs" c="dimmed">
-										<Trans>Over</Trans>
+										<Trans>Hours</Trans>
 									</Text>
 								</Table.Th>
 							</Table.Tr>
 						</Table.Thead>
 						<Table.Tbody>
-							{data.workspaces.map((ws) => (
+							{sortedRows.map((ws) => (
 								<WorkspaceRollupRow
 									key={ws.id}
 									ws={ws}
@@ -306,18 +293,35 @@ function WorkspaceRollupRow({
 				</Table.Td>
 				<Table.Td>
 					<Group gap={6} wrap="nowrap">
-						{ws.at_cap && (
-							<Tooltip label={t`Included hours used up this month`}>
-								<Badge size="xs" color="red" variant="light">
-									!
-								</Badge>
+						{(ws.at_cap || ws.seat_cap_hit) && (
+							<Tooltip
+								label={
+									ws.at_cap
+										? t`Included hours used up this month`
+										: t`All seats taken`
+								}
+							>
+								<IconAlertTriangle
+									size={14}
+									color="var(--mantine-color-red-6)"
+								/>
 							</Tooltip>
 						)}
-						{!ws.at_cap && ws.approaching_cap && (
-							<Tooltip label={t`80%+ of included hours used this month`}>
-								<Badge size="xs" color="yellow" variant="light">
-									·
-								</Badge>
+						{!(ws.at_cap || ws.seat_cap_hit) &&
+							(ws.approaching_cap || ws.approaching_seat_cap) && (
+								<Tooltip label={t`Approaching a limit this month`}>
+									<IconAlertTriangle
+										size={14}
+										color="var(--mantine-color-yellow-7)"
+									/>
+								</Tooltip>
+							)}
+						{ws.is_private && (
+							<Tooltip label={t`Private workspace`}>
+								<IconLock
+									size={12}
+									color="var(--mantine-color-gray-6)"
+								/>
 							</Tooltip>
 						)}
 						<UnstyledButton
@@ -336,8 +340,25 @@ function WorkspaceRollupRow({
 					</Text>
 				</Table.Td>
 				<Table.Td>
+					<Text
+						size="xs"
+						c={ws.seat_cap_hit ? "red" : undefined}
+					>
+						{ws.seat_count}
+						{ws.seats_included != null && (
+							<Text span c="dimmed" size="xs">
+								{" / "}
+								{ws.seats_included}
+							</Text>
+						)}
+					</Text>
+				</Table.Td>
+				<Table.Td>
 					<Stack gap={2}>
-						<Text size="xs">
+						<Text
+							size="xs"
+							c={ws.at_cap ? "red" : undefined}
+						>
 							{ws.audio_hours.toFixed(1)}
 							{ws.hours_included != null && (
 								<Text span c="dimmed" size="xs">
@@ -360,11 +381,6 @@ function WorkspaceRollupRow({
 							/>
 						)}
 					</Stack>
-				</Table.Td>
-				<Table.Td style={{ textAlign: "right" }}>
-					<Text size="xs" c={ws.hours_over > 0 ? "red" : "dimmed"}>
-						{ws.hours_over > 0 ? `${ws.hours_over.toFixed(1)} h` : "—"}
-					</Text>
 				</Table.Td>
 			</Table.Tr>
 			{open && (
@@ -412,5 +428,157 @@ function WorkspaceRollupRow({
 				</Table.Tr>
 			)}
 		</>
+	);
+}
+
+// ── Needs attention panel ─────────────────────────────────────────────
+
+interface AttentionItem {
+	id: string; // workspace id
+	key: string; // uniq per (ws, reason) for dismissal
+	reason:
+		| "seats_full"
+		| "seats_near"
+		| "hours_full"
+		| "hours_near"
+		| "recently_downgraded";
+	message: string; // pre-formatted, ready to render
+	actionLabel: string;
+	workspaceId: string;
+}
+
+function formatSeatFraction(seat_count: number, seats_included: number | null): string {
+	return `${seat_count}/${seats_included ?? "∞"}`;
+}
+
+function formatHourFraction(hours: number, cap: number | null): string {
+	return cap != null ? `${hours.toFixed(1)}/${cap}h` : `${hours.toFixed(1)}h`;
+}
+
+function buildAttention(workspaces: OrgUsageWorkspaceRow[]): AttentionItem[] {
+	// One bullet per workspace per reason, severity-ordered. Capped at
+	// the caller; we return everything and let the panel decide what to
+	// visibly render.
+	const out: AttentionItem[] = [];
+	const SEVEN_DAYS_MS = 7 * 24 * 3600 * 1000;
+	const now = Date.now();
+
+	for (const ws of workspaces) {
+		if (ws.seat_cap_hit) {
+			out.push({
+				id: ws.id,
+				key: `${ws.id}:seats_full`,
+				reason: "seats_full",
+				message: `${ws.name} at seat cap (${formatSeatFraction(ws.seat_count, ws.seats_included)})`,
+				actionLabel: "Upgrade",
+				workspaceId: ws.id,
+			});
+		} else if (ws.approaching_seat_cap) {
+			out.push({
+				id: ws.id,
+				key: `${ws.id}:seats_near`,
+				reason: "seats_near",
+				message: `${ws.name} near seat cap (${formatSeatFraction(ws.seat_count, ws.seats_included)})`,
+				actionLabel: "Review",
+				workspaceId: ws.id,
+			});
+		}
+		if (ws.at_cap) {
+			out.push({
+				id: ws.id,
+				key: `${ws.id}:hours_full`,
+				reason: "hours_full",
+				message: `${ws.name} at ${ws.tier} hour limit (${formatHourFraction(ws.audio_hours, ws.hours_included)})`,
+				actionLabel: "Upgrade",
+				workspaceId: ws.id,
+			});
+		} else if (ws.approaching_cap) {
+			out.push({
+				id: ws.id,
+				key: `${ws.id}:hours_near`,
+				reason: "hours_near",
+				message: `${ws.name} near ${ws.tier} hour limit (${formatHourFraction(ws.audio_hours, ws.hours_included)})`,
+				actionLabel: "Review",
+				workspaceId: ws.id,
+			});
+		}
+		if (ws.downgraded_at) {
+			const dtMs = new Date(ws.downgraded_at).getTime();
+			if (!Number.isNaN(dtMs) && now - dtMs < SEVEN_DAYS_MS) {
+				out.push({
+					id: ws.id,
+					key: `${ws.id}:recently_downgraded`,
+					reason: "recently_downgraded",
+					message: `${ws.name} was downgraded recently — verify limits`,
+					actionLabel: "Review",
+					workspaceId: ws.id,
+				});
+			}
+		}
+	}
+	return out;
+}
+
+const MAX_ATTENTION_VISIBLE = 4;
+
+function NeedsAttentionPanel({
+	items,
+	onOpen,
+}: {
+	items: AttentionItem[];
+	onOpen: (workspaceId: string) => void;
+}) {
+	const [showAll, setShowAll] = useState(false);
+	const visible = showAll ? items : items.slice(0, MAX_ATTENTION_VISIBLE);
+	const hidden = items.length - visible.length;
+
+	return (
+		<Paper
+			withBorder
+			p="sm"
+			radius="sm"
+			style={{ borderColor: "var(--mantine-color-yellow-3)" }}
+		>
+			<Stack gap={6}>
+				<Group gap="xs" wrap="nowrap">
+					<IconAlertTriangle
+						size={14}
+						color="var(--mantine-color-yellow-7)"
+					/>
+					<Text size="xs" fw={500} tt="uppercase" lts={0.5}>
+						<Trans>Needs attention</Trans>
+					</Text>
+				</Group>
+				<Stack gap={4}>
+					{visible.map((item) => (
+						<Group
+							key={item.key}
+							gap="xs"
+							wrap="nowrap"
+							justify="space-between"
+						>
+							<Text size="sm" style={{ flex: 1 }} lineClamp={1}>
+								{item.message}
+							</Text>
+							<Button
+								size="compact-xs"
+								variant="light"
+								color="gray"
+								onClick={() => onOpen(item.workspaceId)}
+							>
+								{item.actionLabel}
+							</Button>
+						</Group>
+					))}
+				</Stack>
+				{hidden > 0 && !showAll && (
+					<UnstyledButton onClick={() => setShowAll(true)}>
+						<Text size="xs" c="dimmed">
+							<Trans>Show {hidden} more</Trans>
+						</Text>
+					</UnstyledButton>
+				)}
+			</Stack>
+		</Paper>
 	);
 }
