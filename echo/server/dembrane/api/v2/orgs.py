@@ -82,6 +82,11 @@ class OrgMemberResponse(BaseModel):
     # but we give the team-admin page a rolled-up count for the list view.
     accessible_workspace_count: int = 0
     is_pending: bool = False  # placeholder — will cover pending org invites later
+    # Direct workspace memberships: workspace_id → role. Powers the team
+    # admin matrix page so non-admin team members with a direct invite
+    # on a specific workspace aren't hidden. Includes is_external=true
+    # rows (guests) — frontend decides how to display.
+    direct_workspace_roles: dict[str, str] = {}
 
 
 class OrgDetailResponse(BaseModel):
@@ -420,6 +425,13 @@ async def list_org_members(
     # with inherit_team_members=true plus any direct memberships.
     workspace_counts = await _rollup_workspace_access(org_id, user_ids)
 
+    # Direct workspace roles per team user — keyed {user_id: {workspace_id: role}}.
+    # Powers the matrix page so direct-invited members on specific
+    # workspaces show correctly (they were hidden before when the
+    # matrix relied on derivation alone). Dedup'd by (workspace_id,
+    # user_id) with direct-over-inherited priority.
+    direct_roles = await _direct_workspace_roles_by_user(org_id, user_ids)
+
     out: list[OrgMemberResponse] = []
     for m in memberships:
         uid = m["user_id"]
@@ -436,8 +448,77 @@ async def list_org_members(
                 avatar=avatar_map.get(du_id) if du_id else None,
                 role=m.get("role", "member"),
                 accessible_workspace_count=workspace_counts.get(uid, 0),
+                direct_workspace_roles=direct_roles.get(uid, {}),
             )
         )
+    return out
+
+
+async def _direct_workspace_roles_by_user(
+    org_id: str, user_ids: list[str]
+) -> dict[str, dict[str, str]]:
+    """Return {user_id: {workspace_id: role}} for direct memberships this
+    team's users hold on any workspace in this team.
+
+    One DB call for the whole team page. Dedup'd (workspace_id, user_id)
+    since pre-walkback data can carry inherited+direct rows for the
+    same pair (matrix §7 one seat per person per workspace — see
+    get_workspace_usage for the same dedup logic).
+    """
+    if not user_ids:
+        return {}
+
+    ws_rows = await async_directus.get_items(
+        "workspace",
+        {
+            "query": {
+                "filter": {
+                    "org_id": {"_eq": org_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id"],
+                "limit": -1,
+            }
+        },
+    ) or []
+    ws_ids = [w["id"] for w in (ws_rows if isinstance(ws_rows, list) else []) if w.get("id")]
+    if not ws_ids:
+        return {}
+
+    mem_rows = await async_directus.get_items(
+        "workspace_membership",
+        {
+            "query": {
+                "filter": {
+                    "workspace_id": {"_in": ws_ids},
+                    "user_id": {"_in": user_ids},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["workspace_id", "user_id", "role", "source"],
+                "limit": -1,
+            }
+        },
+    ) or []
+    if not isinstance(mem_rows, list):
+        return {}
+
+    # Dedup (workspace_id, user_id): direct > inherited.
+    by_pair: dict[tuple[str, str], dict] = {}
+    for m in mem_rows:
+        wid = m.get("workspace_id")
+        uid = m.get("user_id")
+        if not wid or not uid:
+            continue
+        key = (wid, uid)
+        existing = by_pair.get(key)
+        if existing is None or (
+            m.get("source") == "direct" and existing.get("source") != "direct"
+        ):
+            by_pair[key] = m
+
+    out: dict[str, dict[str, str]] = {}
+    for (wid, uid), row in by_pair.items():
+        out.setdefault(uid, {})[wid] = row.get("role", "member")
     return out
 
 

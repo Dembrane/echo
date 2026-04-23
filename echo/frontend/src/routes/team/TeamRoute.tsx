@@ -66,6 +66,8 @@ interface TeamMember {
 	role: string;
 	accessible_workspace_count: number;
 	is_pending: boolean;
+	// workspace_id → role for direct memberships (not derived).
+	direct_workspace_roles?: Record<string, string>;
 }
 
 interface TeamWorkspace {
@@ -403,27 +405,51 @@ export const TeamRoute = () => {
 										</Badge>
 									</Table.Td>
 									{workspaces.map((ws) => {
-										// Derived access: team owner always has access
-										// everywhere (carve-out). Team admin has access to
-										// non-private workspaces. Precise per-cell role
-										// (direct vs inherited) would require an extra
-										// fetch — for this first-pass matrix we show
-										// coarse access only.
+										// Direct membership takes priority. Backend returns
+										// direct_workspace_roles = {workspace_id: role}
+										// dedup'd against legacy inherited rows.
+										const directRole =
+											m.direct_workspace_roles?.[ws.id];
+										// Derivation fallback: team owner has admin
+										// everywhere; team admin has admin on non-private
+										// workspaces. Post-walkback this derivation
+										// retires — direct rows will be the sole source.
 										const derivedAdmin =
-											m.role === "owner" ||
-											(m.role === "admin" && !ws.is_private);
+											!directRole &&
+											(m.role === "owner" ||
+												(m.role === "admin" && !ws.is_private));
+										const displayRole = directRole
+											? directRole
+											: derivedAdmin
+												? "admin"
+												: null;
 										return (
 											<Table.Td
 												key={`${m.user_id}-${ws.id}`}
 												style={{ textAlign: "center" }}
 											>
-												{derivedAdmin ? (
+												{displayRole ? (
 													<Tooltip
-														label={t`Admin · inherited from team role`}
+														label={
+															directRole
+																? t`Direct ${directRole} on this workspace`
+																: t`Admin · inherited from team role`
+														}
 														withArrow
 													>
-														<Badge size="xs" variant="light" color="blue">
-															<Trans>admin</Trans>
+														<Badge
+															size="xs"
+															variant="light"
+															color={
+																displayRole === "owner" ||
+																displayRole === "admin"
+																	? "blue"
+																	: displayRole === "billing"
+																		? "yellow"
+																		: "gray"
+															}
+														>
+															{displayRole}
 														</Badge>
 													</Tooltip>
 												) : ws.is_private && m.role === "admin" ? (
