@@ -217,17 +217,35 @@ async def require_no_pilot_block(
     verbatim per matrix — the UI's level-3 modal (screens/status-banner)
     lifts this text for the hard-block screen.
     """
+    await check_no_pilot_block_for(
+        ctx.workspace_id, tier=ctx.workspace.get("tier")
+    )
+
+
+async def check_no_pilot_block_for(
+    workspace_id: str, tier: str | None = None
+) -> None:
+    """workspace_id-only variant of require_no_pilot_block, for v1 routes
+    that don't build a WorkspaceContext. Accepts an optional tier arg to
+    skip the workspace read when the caller already has it.
+
+    Same 402 + copy as require_no_pilot_block. See that function's docstring.
+    """
     from dembrane.tier_capacity import is_hard_blocked
 
-    tier = ctx.workspace.get("tier")
+    if tier is None:
+        ws = await async_directus.get_item("workspace", workspace_id)
+        if not ws or ws.get("deleted_at"):
+            return  # workspace gone → caller will 404 on its own path
+        tier = ws.get("tier")
+
     if not tier:
         return  # legacy NULL tier — treat as unlimited (not Pilot)
 
-    # Only Pilot hard-blocks. Short-circuit before reaching the DB.
     if tier != "pilot":
         return
 
-    hours = await _current_cycle_hours(ctx.workspace_id)
+    hours = await _current_cycle_hours(workspace_id)
     if is_hard_blocked(tier, hours):
         raise HTTPException(
             status_code=402,
@@ -237,3 +255,15 @@ async def require_no_pilot_block(
                 "Upgrade to continue."
             ),
         )
+
+
+async def check_no_pilot_block_for_project(project_id: str) -> None:
+    """Look up the project's workspace and gate on the Pilot block. Safe
+    no-op when the project has no workspace (legacy pre-workspace data)."""
+    project = await async_directus.get_item("project", project_id)
+    if not project or project.get("deleted_at"):
+        return
+    workspace_id = project.get("workspace_id")
+    if not workspace_id:
+        return  # legacy pre-workspace project — never gated
+    await check_no_pilot_block_for(workspace_id)

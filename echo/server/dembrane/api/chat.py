@@ -938,6 +938,10 @@ async def post_chat(
     if not project_id:
         raise HTTPException(status_code=500, detail="Chat is missing a project reference")
 
+    # Matrix §8: chat is a host-side operation → Pilot hard-block.
+    from dembrane.api.v2.middleware import check_no_pilot_block_for_project
+    await check_no_pilot_block_for_project(str(project_id))
+
     user_message_content = body.messages[-1].content
     user_message_id = generate_uuid()
 
