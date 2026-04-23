@@ -206,9 +206,14 @@ export const CreateWorkspaceRoute = () => {
 							/>
 						)}
 
+						{/* Matrix §2: Private workspaces are innovator+. New
+						    workspaces always start on pioneer, so Private is
+						    gated on fresh creates. Disabled option + inline
+						    copy tells the user why, rather than letting them
+						    click it and hit a cryptic 403. */}
 						<Select
 							label={t`Access`}
-							description={t`Private workspaces require innovator tier or above.`}
+							description={t`Private workspaces are available on innovator and above. Start open, upgrade, and flip later.`}
 							data={[
 								{
 									value: "open",
@@ -216,7 +221,8 @@ export const CreateWorkspaceRoute = () => {
 								},
 								{
 									value: "private",
-									label: t`Private — only people you invite`,
+									label: t`Private — only people you invite (innovator+)`,
+									disabled: true,
 								},
 							]}
 							value={privacy}

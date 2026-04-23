@@ -1,20 +1,26 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	Avatar,
 	Badge,
 	Box,
 	Button,
+	Group,
 	Modal,
 	Stack,
 	Text,
 	Textarea,
+	Tooltip,
 } from "@mantine/core";
 import { IconLock } from "@tabler/icons-react";
+import { useQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { toast } from "@/components/common/Toaster";
 import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { API_BASE_URL } from "@/config";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
+import { avatarUrl } from "@/lib/avatar";
 
 /**
  * Tier-gating UI primitives for the ECHO platform.
@@ -188,6 +194,92 @@ interface UpgradeModalProps {
  * there's no button — Q3 decision (D9). Keeping the message honest:
  * there's nothing we can do for them, only their admin can.
  */
+interface TeamAdminRow {
+	user_id: string;
+	display_name: string | null;
+	avatar: string | null;
+	role: string;
+}
+
+/**
+ * Renders the matrix §11 member-path copy with actual admin faces +
+ * names so "ask a team admin" is concrete, not abstract.
+ *
+ * Silent fallback to the generic message if the org lookup fails — no
+ * broken state.
+ */
+function TeamAdminChips() {
+	const { workspace } = useWorkspace();
+	const orgId = workspace?.org_id;
+
+	const { data } = useQuery({
+		queryKey: ["v2", "team-admins", orgId],
+		queryFn: async (): Promise<TeamAdminRow[]> => {
+			if (!orgId) return [];
+			const res = await fetch(`${API_BASE_URL}/v2/orgs/${orgId}/members`, {
+				credentials: "include",
+			});
+			if (!res.ok) return [];
+			const rows = (await res.json()) as TeamAdminRow[];
+			return Array.isArray(rows)
+				? rows.filter((r) => r.role === "admin" || r.role === "owner")
+				: [];
+		},
+		enabled: Boolean(orgId),
+		staleTime: 5 * 60 * 1000,
+	});
+
+	const admins = data ?? [];
+	if (admins.length === 0) {
+		// Fallback — generic message when we can't resolve the admin list.
+		return (
+			<Text size="sm" c="dimmed">
+				<Trans>
+					A team admin can request this upgrade. Ask someone with the admin
+					role.
+				</Trans>
+			</Text>
+		);
+	}
+
+	const firstThree = admins.slice(0, 3);
+	const names = firstThree
+		.map((a) => a.display_name || t`a team admin`)
+		.join(", ");
+	const more =
+		admins.length > firstThree.length
+			? ` +${admins.length - firstThree.length}`
+			: "";
+
+	return (
+		<Stack gap={6}>
+			<Text size="sm" c="dimmed">
+				<Trans>Ask a team admin to request this upgrade.</Trans>
+			</Text>
+			<Group gap={6}>
+				<Avatar.Group spacing="sm">
+					{firstThree.map((a) => (
+						<Tooltip key={a.user_id} label={a.display_name || t`team admin`}>
+							<Avatar
+								src={avatarUrl(a.avatar)}
+								name={a.display_name || "?"}
+								color="blue"
+								size={28}
+								radius="xl"
+							/>
+						</Tooltip>
+					))}
+				</Avatar.Group>
+				<Text size="xs" c="dimmed">
+					{names}
+					{more}
+				</Text>
+			</Group>
+		</Stack>
+	);
+}
+
+
 export function UpgradeModal({
 	opened,
 	onClose,
@@ -279,12 +371,7 @@ export function UpgradeModal({
 						</Text>
 					</>
 				) : (
-					<Text size="sm" c="dimmed">
-						<Trans>
-							A team admin can request this upgrade. You can find your admins
-							in the team members list.
-						</Trans>
-					</Text>
+					<TeamAdminChips />
 				)}
 
 				{/* Role-aware footer: admin gets primary, member gets close-only (D9) */}

@@ -906,24 +906,53 @@ function PrivacyAndDefaultsSection({
 				disabled={!canEdit}
 				maxLength={2048}
 			/>
-			<Radio.Group
-				label={t`Access`}
-				value={effectiveInheritAdmins ? "open" : "private"}
-				onChange={(v) => setInheritAdmins(v === "open")}
-			>
-				<Stack gap={8} mt={4}>
-					<Radio
-						value="open"
-						label={t`Open to the team — team admins get access automatically`}
-						disabled={!canEdit}
-					/>
-					<Radio
-						value="private"
-						label={t`Private — only people you explicitly invite`}
-						disabled={!canEdit}
-					/>
-				</Stack>
-			</Radio.Group>
+			{(() => {
+				// Matrix §2: Private workspaces are innovator+. If the current
+				// tier can't go private, disable the radio + surface the
+				// reason inline. Avoid the footgun of clicking Private on
+				// Pioneer and getting a cryptic 403.
+				const privateGateTiers = [
+					"innovator",
+					"changemaker",
+					"guardian",
+				];
+				const canGoPrivate = privateGateTiers.includes(settings.tier);
+				const currentlyPrivate = !effectiveInheritAdmins;
+				return (
+					<Radio.Group
+						label={t`Access`}
+						value={effectiveInheritAdmins ? "open" : "private"}
+						onChange={(v) => setInheritAdmins(v === "open")}
+					>
+						<Stack gap={8} mt={4}>
+							<Radio
+								value="open"
+								label={t`Open to the team — team admins get access automatically`}
+								disabled={!canEdit}
+							/>
+							<Radio
+								value="private"
+								// Keep enabled if already private (matrix §3 freeze:
+								// existing stays private even after downgrade) — just
+								// block flipping-back-to-private on a lower tier.
+								disabled={!canEdit || (!canGoPrivate && !currentlyPrivate)}
+								label={
+									<Stack gap={0}>
+										<Text size="sm">
+											<Trans>Private — only people you explicitly invite</Trans>
+										</Text>
+										{!canGoPrivate && !currentlyPrivate && (
+											<Text size="xs" c="dimmed">
+												<Trans>Available on innovator and above.</Trans>
+											</Text>
+										)}
+									</Stack>
+								}
+							/>
+						</Stack>
+					</Radio.Group>
+				);
+			})()}
 			{effectiveInheritAdmins && (
 				<Group gap={8} align="flex-start" ml="md">
 					<input

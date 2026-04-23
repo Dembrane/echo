@@ -309,21 +309,38 @@ export const TeamRoute = () => {
 													/>
 												)}
 												<Tooltip label={ws.name} disabled={ws.name.length < 18}>
-													<Anchor
-														size="sm"
-														fw={500}
-														c="dark"
-														underline="hover"
-														onClick={(e) => {
-															e.preventDefault();
-															navigate(`/w/${ws.id}/projects`);
-														}}
-														style={{ cursor: "pointer" }}
-													>
-														<Text size="sm" truncate maw={140}>
+													{isAdmin ? (
+														<Anchor
+															size="sm"
+															fw={500}
+															c="dark"
+															underline="hover"
+															onClick={(e) => {
+																e.preventDefault();
+																navigate(`/w/${ws.id}/projects`);
+															}}
+															style={{ cursor: "pointer" }}
+														>
+															<Text size="sm" truncate maw={140}>
+																{ws.name}
+															</Text>
+														</Anchor>
+													) : (
+														/* Matrix §6: team members don't auto-have access
+														   to every team workspace. Linking non-admins to
+														   /w/:id/projects would 403 for most. Plain text
+														   instead; the discovery + Request-access path
+														   lives on the home selector. */
+														<Text
+															size="sm"
+															truncate
+															maw={140}
+															fw={500}
+															c="dimmed"
+														>
 															{ws.name}
 														</Text>
-													</Anchor>
+													)}
 												</Tooltip>
 											</Group>
 											<Text size="xs" c="dimmed">
