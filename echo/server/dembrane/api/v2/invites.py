@@ -60,27 +60,31 @@ async def invite_to_workspace(
     email = body.email.strip().lower()
     role = body.role
 
-    if role not in ("admin", "member", "viewer"):
-        raise HTTPException(status_code=400, detail="Role must be admin, member, or viewer")
+    if role not in ("admin", "member", "billing"):
+        raise HTTPException(
+            status_code=400, detail="Role must be admin, member, or billing"
+        )
 
-    # Prevent role escalation — can only grant roles at or below your own level
-    ROLE_HIERARCHY = {"viewer": 0, "member": 1, "admin": 2, "owner": 3}
+    # Prevent role escalation — can only grant roles at or below your own level.
+    # Billing sits between member and admin: it's more than a member (financial
+    # visibility) but less than an admin (no project or content control).
+    ROLE_HIERARCHY = {"member": 1, "billing": 2, "admin": 3, "owner": 4}
     inviter_level = ROLE_HIERARCHY.get(ctx.role, 0)
     requested_level = ROLE_HIERARCHY.get(role, 0)
     if requested_level > inviter_level:
         raise HTTPException(status_code=403, detail="Cannot grant a role higher than your own")
 
-    # Hard rule: externals (non-team members on a workspace) can only ever be
-    # member or viewer. Owner/admin roles imply management responsibility,
-    # which doesn't make sense for a guest of another team. If the caller
-    # isn't inviting this person as a team member (is_org_member=false),
-    # clamp to member max.
-    if not body.is_org_member and role in ("admin", "owner"):
+    # Hard rule: externals (guests — non-team members on a workspace) can
+    # only ever be member. Admin/owner/billing roles imply management or
+    # financial responsibility that doesn't make sense for a guest of
+    # another team. If the caller isn't inviting this person as a team
+    # member (is_org_member=false), clamp to member.
+    if not body.is_org_member and role in ("admin", "owner", "billing"):
         raise HTTPException(
             status_code=400,
             detail=(
-                "External members can't be admins or owners. "
-                "Invite them as a team member first, or choose member/viewer."
+                "Guests can't be admins, owners, or billing. "
+                "Invite them as a team member first, or choose member."
             ),
         )
 

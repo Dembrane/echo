@@ -445,12 +445,15 @@ export const WorkspaceSettingsRoute = () => {
 												// backend blocks non-owner promotion to owner
 												// anyway, but hiding the option prevents the
 												// misleading "why did this fail?" click path.
-												// Externals can't be admin or owner (hard rule).
+												// Guests (is_external=true) can't be admin,
+												// owner, or billing (hard rule).
 												data={[
-													{ label: t`Viewer`, value: "viewer" },
 													{ label: t`Member`, value: "member" },
 													...(!member.is_external
-														? [{ label: t`Admin`, value: "admin" }]
+														? [
+															{ label: t`Billing`, value: "billing" },
+															{ label: t`Admin`, value: "admin" },
+														]
 														: []),
 													...(myRole === "owner" && !member.is_external
 														? [{ label: t`Owner`, value: "owner" }]
@@ -689,17 +692,6 @@ export const WorkspaceSettingsRoute = () => {
 						>
 							<Stack gap={10} mt={8}>
 								<Radio
-									value="viewer"
-									label={
-										<Box>
-											<Text size="sm">{t`Viewer`}</Text>
-											<Text size="xs" c="dimmed">
-												<Trans>Can view projects and conversations. Cannot edit anything.</Trans>
-											</Text>
-										</Box>
-									}
-								/>
-								<Radio
 									value="member"
 									label={
 										<Box>
@@ -711,12 +703,23 @@ export const WorkspaceSettingsRoute = () => {
 									}
 								/>
 								<Radio
+									value="billing"
+									label={
+										<Box>
+											<Text size="sm">{t`Billing`}</Text>
+											<Text size="xs" c="dimmed">
+												<Trans>Sees usage, invoices, and payment. Doesn't touch projects.</Trans>
+											</Text>
+										</Box>
+									}
+								/>
+								<Radio
 									value="admin"
 									label={
 										<Box>
 											<Text size="sm">{t`Admin`}</Text>
 											<Text size="xs" c="dimmed">
-												<Trans>Everything a member can do, plus invite others and manage workspace settings.</Trans>
+												<Trans>Everything a member can do, plus invite others and manage the workspace.</Trans>
 											</Text>
 										</Box>
 									}

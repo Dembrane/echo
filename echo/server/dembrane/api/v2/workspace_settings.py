@@ -390,7 +390,7 @@ async def remove_workspace_member(
 # ── Change member role ──
 
 
-ROLE_HIERARCHY = {"viewer": 0, "member": 1, "admin": 2, "owner": 3}
+ROLE_HIERARCHY = {"member": 1, "billing": 2, "admin": 3, "owner": 4}
 
 
 class ChangeRoleRequest(BaseModel):
@@ -406,7 +406,7 @@ async def change_member_role(
     """Change a member's role. Requires member:manage."""
     ctx.require_policy("member:manage")
 
-    if body.role not in ("viewer", "member", "admin", "owner"):
+    if body.role not in ("member", "billing", "admin", "owner"):
         raise HTTPException(status_code=400, detail="Invalid role")
 
     # Prevent escalation — can only set roles at or below your own level
@@ -421,15 +421,16 @@ async def change_member_role(
     if membership.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Membership already removed")
 
-    # Hard rule: an external member can never be admin or owner. Externals
-    # are guests — promoting them into management roles mixes access layers
-    # that should stay separate. If you want them as admin, add them to the
-    # team first, then promote.
-    if membership.get("is_external") and body.role in ("admin", "owner"):
+    # Hard rule: a guest (is_external=true) can never be admin, owner, or
+    # billing. Guests live inside one workspace without team-level presence;
+    # promoting them into management or financial roles mixes access layers
+    # that should stay separate. To promote, add them to the team first, then
+    # change role.
+    if membership.get("is_external") and body.role in ("admin", "owner", "billing"):
         raise HTTPException(
             status_code=400,
             detail=(
-                "External members can't be admins or owners. Add them to the "
+                "Guests can't be admins, owners, or billing. Add them to the "
                 "team first (via invite with is_org_member=true), then promote."
             ),
         )

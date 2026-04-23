@@ -19,7 +19,7 @@ logger = getLogger("api.v2.me")
 
 _accept_rate_limiter = create_user_rate_limiter(name="invite_accept", capacity=30, window_seconds=3600)
 
-_ROLE_LEVEL = {"viewer": 0, "member": 1, "admin": 2, "owner": 3}
+_ROLE_LEVEL = {"member": 1, "billing": 2, "admin": 3, "owner": 4}
 
 
 @router.get("", response_model=MeResponse)

@@ -622,19 +622,19 @@ async def request_upgrade(
     body: UpgradeRequestBody,
     ctx: WorkspaceContext = Depends(get_workspace_context),
 ) -> dict:
-    """Admin clicks "Request upgrade" in the tier compare view. Sends an
-    email to settings.email.upgrade_request_inbox with context. Configurable
-    via UPGRADE_REQUEST_INBOX env var (defaults to upgrades@dembrane.com per
-    matrix v1.1 §11).
+    """Admin or billing clicks "Request upgrade" in the tier compare view.
+    Sends an email to settings.email.upgrade_request_inbox with context.
+    Configurable via UPGRADE_REQUEST_INBOX env var (defaults to
+    upgrades@dembrane.com per matrix v1.1 §11).
 
     Member role doesn't see this CTA (matrix §11 — member-role path shows
-    copy only, no button). Enforced here by require_policy(member:invite)
-    which only admin/owner have — keeps the endpoint from being abused.
+    copy only, no button). Enforced here by require_policy(upgrade:request)
+    which admin and billing have — members do not.
 
     Rate-limited per-user (5/hr) to avoid flooding the billing inbox when
     the UI misfires or a bored admin leans on the button.
     """
-    ctx.require_policy("member:invite")
+    ctx.require_policy("upgrade:request")
 
     await _upgrade_request_rate_limiter.check(ctx.app_user_id)
 

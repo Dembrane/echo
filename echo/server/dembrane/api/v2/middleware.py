@@ -120,11 +120,17 @@ async def get_workspace_context(
             custom_policies = rows[0].get("custom_policies") or []
             is_external = bool(rows[0].get("is_external", False))
 
+    # Normalize legacy role names at context build so every downstream
+    # check — has_policy, role-hierarchy compares, UI serialisation — sees
+    # the current role set. D11: viewer → member.
+    from dembrane.policies import _normalize_legacy_role
+    normalized_role = _normalize_legacy_role(role) or role
+
     return WorkspaceContext(
         workspace_id=workspace_id,
         workspace=workspace,
         app_user_id=app_user_id,
-        role=role,
+        role=normalized_role,
         custom_policies=custom_policies,
         source=source,
         is_external=is_external,
