@@ -4,6 +4,45 @@ Rolling status. Most recent entry on top. Update after every commit or at phase 
 
 ---
 
+## 2026-04-24 — overnight pass (Claude, while Sameer slept)
+
+**Directive:** "im going to bed so do everything…" — scoped to:
+1. Chat templates workspace-scoping (explicit ask earlier in the session)
+2. Route-by-route human pass for the four personas
+3. Specific pains Sameer flagged live — usage-strip too billing-y on project page, rename Billing → "Usage and Tier"
+
+**Commits landed (newest first):**
+- `aaf5641` — recovery affordances on check-your-email (spam tip, wrong-address, support mailto) on both Register step 2 and the standalone route. Closes `[rough]` pain entry from qa/pains.md.
+- `8872267` — project pin + create gated for guest/external workspace access. Guests no longer see the Create button or the interactive Pin/Unpin; pinned projects still render with a dimmed read-only pin icon so the signal still reads.
+- `52802e1` — three validation-log pains: onboarding partial-state retry (workspace existed but membership was missing), include_org_membership alias on invite payload, UserAvatar initials (Anna Bakker → AB, not AN).
+- `b6f6656` — chat templates workspace-scoping end-to-end: schema step 15 (workspace_id + scope on prompt_template), backend /templates/prompt-templates rewrite with membership + is_external gating, frontend hooks/menu/modal wired through, "Share with team" switch in the create form.
+- `aa971a4` — chore: ignore scripts/__pycache__ (stop leaking .pyc into commits).
+- `183e709` — killed the project-page usage strip entirely (Sameer: "thats the first thing i see? eek"), renamed Billing tab on /w settings and Usage tab on /t to "Usage and Tier" — friendlier for first real engagements.
+- `0ed35c5` — dropped duplicate project heading on overview (sidebar already owns it), fixed pin gating at the backend (permission now follows workspace membership, not project ownership).
+- `88b3d0b` — the big one: 500 on /api/v2/onboarding/complete (retired kwargs on on_workspace_created) + /w showing "No workspaces yet" when the user belongs to a team but has no workspace yet. Both surfaces now cleared.
+
+**Route-by-route audit outcome:**
+- `/projects/:id/*` — fixed (57). Duplicate heading removed, usage strip removed, pin + create guest-gated.
+- `/w/:id/settings/*` — reviewed (58). Role gating via policies is already consistent; no fixes needed beyond the Billing→"Usage and Tier" rename. Member / billing / admin / guest all see correct tab set.
+- `/w/:id/projects` — fixed (59). Gating in place.
+- `/t/:id/*` — reviewed (60). Already gated via `isAdmin`; no drift found.
+- `/w`, `/w/new`, `/onboarding`, `/invites`, `/settings` — reviewed (61). /invites empty + toast flow clean. /settings has its own section structure and looked sound. Auth flows got the recovery affordances.
+
+**Deferred decisions for Sameer:**
+- `[hurt?]` silent auto-add when inviting an existing user — needs a product call (send an invite vs. auto-add; Sameer flagged this in pains.md). No code change made.
+- Workspace cards surfacing "approaching cap" / "downgraded" visually — design-level call; not touched.
+- Chat templates UI: team-vs-personal row badge + gating edit/delete buttons when can_edit=false — backend delivers `can_edit` + `scope` but the modal rows don't yet visually distinguish personal from team. Deferred to keep commit scope contained; follow-up ticket.
+
+**Need to run before first local start:**
+```
+cd /workspaces/echo
+python scripts/create_schema.py --step 15
+cd directus && bash sync.sh -u http://directus:8055 -e admin@dembrane.com -p admin pull
+# then commit the directus/sync/snapshot/* diff
+```
+
+---
+
 ## 2026-04-23 — session start
 
 **Branch:** `workspaces` at `cfa758e`. Dirty working tree (see Q4).
