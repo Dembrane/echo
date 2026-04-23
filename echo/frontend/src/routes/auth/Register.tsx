@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Alert,
+	Anchor,
 	Box,
 	Button,
 	Container,
@@ -188,9 +189,12 @@ export const RegisterRoute = () => {
 						{/* Step 2 = inline "check your email" state. Prior flow
 						    navigated to a dedicated /check-your-email page,
 						    which broke continuity with the stepper and
-						    exposed a hard-coded evelien@dembrane contact line. */}
+						    exposed a hard-coded evelien@dembrane contact line.
+						    2026-04-23: added wrong-address + stuck affordances —
+						    the dead-end screen without recovery was logged as
+						    a `[rough]` pain during QA. */}
 						{step === 2 && (
-							<Stack gap="sm" {...testId("auth-register-verify-step")}>
+							<Stack gap="md" {...testId("auth-register-verify-step")}>
 								<Title order={3} fw={400}>
 									<Trans>Check your email</Trans>
 								</Title>
@@ -203,6 +207,35 @@ export const RegisterRoute = () => {
 										. Click the link to finish setting up your account.
 									</Trans>
 								</Text>
+								<Stack gap={6}>
+									<Text size="xs" c="dimmed">
+										<Trans>
+											Didn't get it? Check spam / junk — the message comes
+											from dembrane.com.
+										</Trans>
+									</Text>
+									<Anchor
+										size="xs"
+										onClick={() => {
+											// Back to step 1 so they can re-enter the
+											// email. The form values persist, so a typo
+											// fix is one keystroke.
+											setStep(1);
+										}}
+										style={{ cursor: "pointer" }}
+									>
+										<Trans>Wrong address? Change email</Trans>
+									</Anchor>
+									<Text size="xs" c="dimmed">
+										<Trans>
+											Still stuck? Email{" "}
+											<Anchor href="mailto:support@dembrane.com" size="xs">
+												support@dembrane.com
+											</Anchor>
+											.
+										</Trans>
+									</Text>
+								</Stack>
 							</Stack>
 						)}
 					</Stack>
