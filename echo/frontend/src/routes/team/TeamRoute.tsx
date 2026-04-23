@@ -31,6 +31,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
+import { TeamProjectsTable } from "@/components/workspace/TeamProjectsTable";
 import { TeamUsageRollup } from "@/components/workspace/TeamUsageRollup";
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { API_BASE_URL } from "@/config";
@@ -112,6 +113,7 @@ export const TeamRoute = () => {
 	const [search, setSearch] = useState("");
 	const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
 	const [workspacesDrawer, setWorkspacesDrawer] = useState(false);
+	const [view, setView] = useState<"matrix" | "projects">("matrix");
 
 	useDocumentTitle(t`Team | dembrane`);
 
@@ -239,38 +241,64 @@ export const TeamRoute = () => {
 				    aggregate € forecast. Members see raw numbers only. */}
 				{teamId && <TeamUsageRollup orgId={teamId} />}
 
-				{/* Toolbar — search + role filter + count */}
-				<Group justify="space-between" align="center" wrap="wrap">
-					<Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 280 }}>
-						<TextInput
-							leftSection={<IconSearch size={14} />}
-							placeholder={t`Search name or email`}
-							size="sm"
-							value={search}
-							onChange={(e) => setSearch(e.currentTarget.value)}
-							style={{ flex: 1, maxWidth: 320 }}
-						/>
-						<SegmentedControl
-							size="xs"
-							value={roleFilter}
-							onChange={(v) => setRoleFilter(v as RoleFilter)}
-							data={[
-								{ value: "all", label: t`All` },
-								{ value: "admins", label: t`Admins` },
-								{ value: "members", label: t`Members` },
-							]}
-						/>
+				{/* View switcher — admin-only Projects tab gives access to
+				    the matrix §4 delete-workspace workflow (wind down
+				    projects across workspaces from one surface). */}
+				{isAdmin && (
+					<SegmentedControl
+						size="xs"
+						value={view}
+						onChange={(v) => setView(v as "matrix" | "projects")}
+						data={[
+							{ value: "matrix", label: t`People` },
+							{ value: "projects", label: t`Projects` },
+						]}
+						style={{ alignSelf: "flex-start" }}
+					/>
+				)}
+
+				{/* Toolbar — only shown on People view. */}
+				{view === "matrix" && (
+					<Group justify="space-between" align="center" wrap="wrap">
+						<Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 280 }}>
+							<TextInput
+								leftSection={<IconSearch size={14} />}
+								placeholder={t`Search name or email`}
+								size="sm"
+								value={search}
+								onChange={(e) => setSearch(e.currentTarget.value)}
+								style={{ flex: 1, maxWidth: 320 }}
+							/>
+							<SegmentedControl
+								size="xs"
+								value={roleFilter}
+								onChange={(v) => setRoleFilter(v as RoleFilter)}
+								data={[
+									{ value: "all", label: t`All` },
+									{ value: "admins", label: t`Admins` },
+									{ value: "members", label: t`Members` },
+								]}
+							/>
+						</Group>
+						<Text size="xs" c="dimmed">
+							<Trans>
+								Showing {filteredMembers.length} of {members.length}
+							</Trans>
+						</Text>
 					</Group>
-					<Text size="xs" c="dimmed">
-						<Trans>
-							Showing {filteredMembers.length} of {members.length}
-						</Trans>
-					</Text>
-				</Group>
+				)}
+
+				{/* Projects view — admin-only. Matrix §4 delete-workspace
+				    workflow: wind down projects across all team workspaces
+				    from one surface. */}
+				{view === "projects" && isAdmin && teamId && (
+					<TeamProjectsTable orgId={teamId} />
+				)}
 
 				{/* Matrix — the main content. Sticky first column (name+email)
 				    so it stays visible on horizontal scroll. Mantine Table
 				    with stickyHeader + custom sticky-left on the first cell. */}
+				{view === "matrix" && (
 				<Paper withBorder radius="md" style={{ overflowX: "auto" }}>
 					<Table
 						stickyHeader
@@ -486,13 +514,16 @@ export const TeamRoute = () => {
 						</Table.Tbody>
 					</Table>
 				</Paper>
+				)}
 
-				<Text size="xs" c="dimmed">
-					<Trans>
-						Team admins can join any workspace to get a direct admin seat.
-						Workspace invites live in each workspace's settings.
-					</Trans>
-				</Text>
+				{view === "matrix" && (
+					<Text size="xs" c="dimmed">
+						<Trans>
+							Team admins can join any workspace to get a direct admin seat.
+							Workspace invites live in each workspace's settings.
+						</Trans>
+					</Text>
+				)}
 			</Stack>
 
 			{/* Manage workspaces drawer — list of team workspaces with

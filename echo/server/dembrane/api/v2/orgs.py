@@ -1235,3 +1235,124 @@ async def get_org_usage(
         }
 
     return OrgUsageResponse(**payload)
+
+
+# ────────────────────────────────────────────────────────────────────
+# Team-wide projects listing (for the team admin projects view)
+# ────────────────────────────────────────────────────────────────────
+
+
+class OrgProjectRow(BaseModel):
+    id: str
+    name: str
+    workspace_id: str
+    workspace_name: str
+    visibility: str
+    conversation_count: int = 0
+    created_at: Optional[str] = None
+
+
+@router.get("/{org_id}/projects", response_model=list[OrgProjectRow])
+async def list_team_projects(
+    org_id: str,
+    auth: DependencyDirectusSession,
+) -> list[OrgProjectRow]:
+    """Every project across every workspace in the team.
+
+    Matrix §4: delete-workspace requires empty. Without a cross-team
+    projects view, team admins have to walk into each workspace to clear
+    it before winding down. This endpoint powers the "Projects" view on
+    the team page where admins can scan + soft-delete at scale.
+
+    Team admin/owner only — members have no cross-workspace project
+    reach per matrix §5.
+    """
+    app_user = await get_app_user_or_raise(auth.user_id)
+    await _require_org_role(org_id, app_user["id"], minimum="admin")
+
+    # Workspaces in the team.
+    workspaces = await async_directus.get_items(
+        "workspace",
+        {
+            "query": {
+                "filter": {
+                    "org_id": {"_eq": org_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id", "name"],
+                "limit": -1,
+            }
+        },
+    ) or []
+    if not isinstance(workspaces, list) or not workspaces:
+        return []
+
+    ws_by_id: dict[str, str] = {
+        w["id"]: w.get("name") or "" for w in workspaces if w.get("id")
+    }
+    ws_ids = list(ws_by_id.keys())
+
+    projects = await async_directus.get_items(
+        "project",
+        {
+            "query": {
+                "filter": {
+                    "workspace_id": {"_in": ws_ids},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": [
+                    "id",
+                    "name",
+                    "workspace_id",
+                    "visibility",
+                    "created_at",
+                ],
+                "sort": ["-created_at"],
+                "limit": -1,
+            }
+        },
+    ) or []
+    if not isinstance(projects, list):
+        return []
+
+    # Batch conversation-count per project via group-by aggregate.
+    pid_list = [p["id"] for p in projects if p.get("id")]
+    conv_counts: dict[str, int] = {}
+    if pid_list:
+        agg = await async_directus.get_items(
+            "conversation",
+            {
+                "query": {
+                    "aggregate": {"count": "id"},
+                    "groupBy": ["project_id"],
+                    "filter": {
+                        "project_id": {"_in": pid_list},
+                        "deleted_at": {"_null": True},
+                    },
+                }
+            },
+        ) or []
+        if isinstance(agg, list):
+            for row in agg:
+                pid = row.get("project_id")
+                cnt = int((row.get("count") or {}).get("id", 0) or 0)
+                if pid:
+                    conv_counts[pid] = cnt
+
+    out: list[OrgProjectRow] = []
+    for p in projects:
+        wid = p.get("workspace_id")
+        if not wid or wid not in ws_by_id:
+            continue
+        out.append(
+            OrgProjectRow(
+                id=p["id"],
+                name=p.get("name") or "",
+                workspace_id=wid,
+                workspace_name=ws_by_id[wid],
+                visibility=p.get("visibility") or "workspace",
+                conversation_count=conv_counts.get(p["id"], 0),
+                created_at=p.get("created_at"),
+            )
+        )
+    return out
