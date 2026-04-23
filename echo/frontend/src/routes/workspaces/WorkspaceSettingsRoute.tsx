@@ -1310,6 +1310,7 @@ function PrivacyAndDefaultsSection({
 			<TextInput
 				label={t`Description`}
 				description={t`Optional — what this workspace is for.`}
+				placeholder={t`e.g. Client onboarding interviews, Q1 product research`}
 				value={description}
 				onChange={(e) => setDescription(e.currentTarget.value)}
 				onBlur={() => {

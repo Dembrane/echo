@@ -264,7 +264,14 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 					<Text size="sm" c="dimmed">
 						<Trans>Projects</Trans>
 					</Text>
-					<Text size="sm">{data.project_count}</Text>
+					{/* Uncapped metric — spell that out so it doesn't read as a
+					    missing "x / y" denominator like the metrics above. */}
+					<Text size="sm">
+						{data.project_count}
+						<Text span c="dimmed" size="sm">
+							{" / "}∞
+						</Text>
+					</Text>
 				</Group>
 
 				{/* Next-tier hint (admin / billing only). Overage forecast

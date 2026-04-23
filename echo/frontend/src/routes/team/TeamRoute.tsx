@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Anchor,
@@ -545,7 +545,11 @@ export const TeamRoute = () => {
 												</Tooltip>
 											</Group>
 											<Text size="xs" c="dimmed">
-												{ws.project_count} {t`projects`}
+												<Plural
+													value={ws.project_count}
+													one="# project"
+													other="# projects"
+												/>
 											</Text>
 										</Stack>
 									</Table.Th>
