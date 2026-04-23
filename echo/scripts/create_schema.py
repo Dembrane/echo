@@ -1062,6 +1062,50 @@ def step_10_workspace_visibility():
     return True
 
 
+def step_11_downgrade_tracking():
+    """Add workspace.downgraded_at + downgraded_from_tier for the 7-day
+    post-downgrade banner (matrix v1.1 §3).
+
+    Rules:
+      - Set both on tier downgrade; clear both on tier upgrade.
+      - Frontend renders the banner until
+            downgraded_at + 7 days < now()
+        OR until the admin dismisses it (dismissal state lives in a
+        per-user settings key, not on the workspace).
+
+    Idempotent.
+    """
+    print("\n=== Step 11: workspace downgrade tracking ===")
+
+    add_field("workspace", "downgraded_at", {
+        "type": "timestamp",
+        "schema": {"is_nullable": True},
+        "meta": {
+            "interface": "datetime",
+            "note": (
+                "Set when a staff tier change lowered this workspace's tier. "
+                "Frontend renders the post-downgrade banner for 7 days from "
+                "this timestamp (matrix v1.1 §3)."
+            ),
+        },
+    })
+
+    add_field("workspace", "downgraded_from_tier", {
+        "type": "string",
+        "schema": {"is_nullable": True},
+        "meta": {
+            "interface": "input",
+            "note": (
+                "The tier the workspace was on BEFORE the downgrade. Used "
+                "so the banner can say 'downgraded from X to Y' without "
+                "guessing. Cleared on next upgrade."
+            ),
+        },
+    })
+
+    return True
+
+
 STEPS = {
     "1": ("app_user", step_1_app_user),
     "2": ("org + org_membership", step_2_org),
@@ -1073,6 +1117,7 @@ STEPS = {
     "8": ("remove legacy chat", step_8_remove_chat),
     "9": ("notifications trio (inbox)", step_9_notifications),
     "10": ("workspace.visibility enum + backfill", step_10_workspace_visibility),
+    "11": ("workspace downgrade tracking", step_11_downgrade_tracking),
 }
 
 

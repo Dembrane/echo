@@ -1,0 +1,33 @@
+{% extends "_layout.html" %}
+{% from "_layout.html" import cta_button %}
+{% block title %}{{ workspace_name }} moved to {{ to_tier }}{% endblock %}
+{% block preview %}{{ workspace_name }} is now on {{ to_tier }}. Some features are limited.{% endblock %}
+{% block heading %}{{ workspace_name }} is on {{ to_tier }}.{% endblock %}
+{% block body %}
+<p style="font-size:17px; line-height:1.65; margin:0 0 20px; color:#2D2D2C; font-weight:300;">
+  As of {{ downgraded_at_human }}, <em style="color:#4169E1; font-style:normal;">{{ workspace_name }}</em> moved from {{ from_tier }} to {{ to_tier }}.
+</p>
+
+{% if freeze_items %}
+<p style="font-size:15px; line-height:1.65; margin:0 0 8px; color:#2D2D2C; font-weight:300;">
+  These features are frozen — existing state stays; no new use until upgrade:
+</p>
+<ul style="margin:0 0 20px; padding-left:20px; color:#2D2D2C; font-size:15px; line-height:1.7; font-weight:300;">
+  {% for item in freeze_items %}<li>{{ item }}</li>{% endfor %}
+</ul>
+{% endif %}
+
+{% if revert_items %}
+<p style="font-size:15px; line-height:1.65; margin:0 0 8px; color:#2D2D2C; font-weight:300;">
+  These features were reverted:
+</p>
+<ul style="margin:0 0 20px; padding-left:20px; color:#2D2D2C; font-size:15px; line-height:1.7; font-weight:300;">
+  {% for item in revert_items %}<li>{{ item }}</li>{% endfor %}
+</ul>
+{% endif %}
+
+<p style="font-size:15px; line-height:1.65; margin:0 0 24px; color:#2D2D2C; font-weight:300;">
+  Everything else keeps working as it did. Open the workspace to review your options or request a different tier.
+</p>
+{% endblock %}
+{% block cta %}{{ cta_button("Open workspace", workspace_url) }}{% endblock %}

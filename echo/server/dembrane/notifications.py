@@ -208,6 +208,22 @@ async def audience_workspace_members(workspace_id: str) -> list[str]:
     return [m["user_id"] for m in members if m.get("user_id")]
 
 
+async def audience_workspace_admins_and_billing(workspace_id: str) -> list[str]:
+    """Admin/owner + billing roles on the workspace.
+
+    Matrix v1.1 §3 downgrade audience: every admin + billing-role user on
+    the workspace. Matrix v1.1 §11 upgrade-request co-admin notify audience.
+    """
+    from dembrane.inheritance import get_effective_members
+
+    members = await get_effective_members(workspace_id)
+    return [
+        m["user_id"]
+        for m in members
+        if m.get("user_id") and m.get("role") in ("admin", "owner", "billing")
+    ]
+
+
 async def audience_team_admins(org_id: str) -> list[str]:
     rows = await async_directus.get_items(
         "org_membership",

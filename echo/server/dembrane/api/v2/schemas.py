@@ -85,6 +85,12 @@ class WorkspaceSummary(BaseModel):
     is_external: bool
     members_preview: list[MemberPreview] = []
     usage: WorkspaceUsage = WorkspaceUsage()
+    # Post-downgrade banner state (matrix v1.1 §3). Set on downgrade,
+    # cleared on next upgrade. Frontend renders the banner for 7 days
+    # past downgraded_at; auto-returns on dismiss if the admin attempts
+    # a frozen feature.
+    downgraded_at: Optional[str] = None
+    downgraded_from_tier: Optional[str] = None
 
 
 class TeamRollup(BaseModel):

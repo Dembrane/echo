@@ -37,6 +37,83 @@ _upgrade_request_rate_limiter = create_user_rate_limiter(
 )
 
 
+async def _send_downgrade_emails(
+    *,
+    audience_app_user_ids: list[str],
+    ws_name: str,
+    workspace_id: str,
+    from_tier: str,
+    to_tier: str,
+    effects: list[dict],
+    downgraded_at_iso: str,
+) -> None:
+    """Send the matrix §3 post-downgrade email to a list of app_user ids.
+
+    Groups effects into freeze + revert buckets for the template and
+    resolves email addresses via app_user.email. Silent on missing
+    addresses; SendGrid misconfig is logged but not raised.
+    """
+    if not audience_app_user_ids:
+        return
+
+    rows = await async_directus.get_items(
+        "app_user",
+        {
+            "query": {
+                "filter": {"id": {"_in": audience_app_user_ids}},
+                "fields": ["email"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(rows, list):
+        return
+    emails = sorted({
+        (r.get("email") or "").strip()
+        for r in rows
+        if r.get("email")
+    })
+    if not emails:
+        return
+
+    freeze_items = [
+        e["human"] for e in effects if e.get("effect") == "freeze" and e.get("human")
+    ]
+    revert_items = [
+        e["human"] for e in effects if e.get("effect") == "revert" and e.get("human")
+    ]
+
+    # Human-readable stamp. Matches the banner in the UI — "on {date}."
+    try:
+        when = datetime.fromisoformat(downgraded_at_iso.replace("Z", "+00:00"))
+        downgraded_at_human = when.strftime("%d %B %Y")
+    except Exception:
+        downgraded_at_human = "today"
+
+    # Base URL for the workspace — matches how invite / added emails link in.
+    base = (settings.urls.admin_base_url or "").rstrip("/")
+    workspace_url = f"{base}/w/{workspace_id}" if base else f"/w/{workspace_id}"
+
+    subject = _strip_header_unsafe(
+        f"{ws_name} moved to {to_tier}"
+    )
+
+    await send_email(
+        to=emails,
+        subject=subject,
+        template="tier_downgraded",
+        template_data={
+            "workspace_name": ws_name,
+            "from_tier": from_tier,
+            "to_tier": to_tier,
+            "downgraded_at_human": downgraded_at_human,
+            "freeze_items": freeze_items,
+            "revert_items": revert_items,
+            "workspace_url": workspace_url,
+        },
+    )
+
+
 def _strip_header_unsafe(value: str) -> str:
     """Remove CR/LF from strings that will appear inside an email Subject.
 
@@ -202,7 +279,10 @@ async def list_workspaces(
                     "id": {"_in": workspace_ids},
                     "deleted_at": {"_null": True},
                 },
-                "fields": ["id", "name", "org_id", "is_default", "tier"],
+                "fields": [
+                    "id", "name", "org_id", "is_default", "tier",
+                    "downgraded_at", "downgraded_from_tier",
+                ],
                 "limit": -1,
             }
         },
@@ -273,6 +353,8 @@ async def list_workspaces(
             is_external=membership.get("is_external", False),
             members_preview=previews,
             usage=usage,
+            downgraded_at=ws.get("downgraded_at"),
+            downgraded_from_tier=ws.get("downgraded_from_tier"),
         ))
 
     # Build team rollups
@@ -543,7 +625,20 @@ async def set_workspace_tier(
         # has_policy would already be denying policies we need to read.
         effects = await apply_downgrade_effects(workspace_id, from_tier, to_tier)
 
-    await async_directus.update_item("workspace", workspace_id, {"tier": to_tier})
+    # Tier change + downgrade-banner state. On downgrade we stamp
+    # downgraded_at + downgraded_from_tier so the frontend renders the
+    # 7-day banner (matrix v1.1 §3). On upgrade we clear those so the
+    # banner goes away immediately — an upgrade makes the old downgrade
+    # irrelevant. No-change: touch nothing.
+    now_iso = datetime.now(timezone.utc).isoformat()
+    ws_update: dict = {"tier": to_tier}
+    if direction == "downgrade":
+        ws_update["downgraded_at"] = now_iso
+        ws_update["downgraded_from_tier"] = from_tier
+    elif direction == "upgrade":
+        ws_update["downgraded_at"] = None
+        ws_update["downgraded_from_tier"] = None
+    await async_directus.update_item("workspace", workspace_id, ws_update)
 
     logger.info(
         f"STAFF tier change: workspace {workspace_id} {from_tier} → {to_tier} "
@@ -551,12 +646,15 @@ async def set_workspace_tier(
         f"effects={[e['policy'] for e in effects]})"
     )
 
-    # Notify workspace admins/owners so they know about the tier change.
-    # Staff changes bypass the usual admin flow — without this notification
-    # admins would see feature gates flip (or logo disappear) with no
-    # explanation. Skip the (staff) actor since they already know.
+    # Notify workspace admins/owners + billing so they know about the tier
+    # change. Staff changes bypass the usual admin flow — without this
+    # notification admins would see feature gates flip (or logo disappear)
+    # with no explanation. Matrix v1.1 §3 audience = admin + billing.
     if direction != "no-change":
-        from dembrane.notifications import emit_to_audience, audience_workspace_admins
+        from dembrane.notifications import (
+            emit_to_audience,
+            audience_workspace_admins_and_billing,
+        )
         ws_name = workspace.get("name", "your workspace")
         if direction == "upgrade":
             title = f"{ws_name} upgraded to {to_tier}"
@@ -569,7 +667,7 @@ async def set_workspace_tier(
                 if effect_list
                 else "Some features are now limited."
             )
-        audience = await audience_workspace_admins(workspace_id)
+        audience = await audience_workspace_admins_and_billing(workspace_id)
         await emit_to_audience(
             audience,
             event_code=(
@@ -580,6 +678,21 @@ async def set_workspace_tier(
             action="NAVIGATE_WS",
             ref_workspace_id=workspace_id,
         )
+
+        # Matrix v1.1 §3 requires a post-downgrade email within 1 minute to
+        # every admin + billing user. We send synchronously inside the
+        # PATCH — volume is low (staff-only action) and the latency is
+        # acceptable. Failure to email does not block the tier change.
+        if direction == "downgrade" and audience:
+            await _send_downgrade_emails(
+                audience_app_user_ids=audience,
+                ws_name=ws_name,
+                workspace_id=workspace_id,
+                from_tier=from_tier,
+                to_tier=to_tier,
+                effects=effects,
+                downgraded_at_iso=now_iso,
+            )
 
     return SetTierResponse(
         workspace_id=workspace_id,
