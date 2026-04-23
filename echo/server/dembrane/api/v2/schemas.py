@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import AliasChoices, BaseModel, EmailStr, Field
 
 
 # ── /v2/me ──
@@ -152,9 +152,24 @@ class CreateWorkspaceResponse(BaseModel):
 
 
 class WorkspaceInviteRequest(BaseModel):
+    """Invite payload.
+
+    is_org_member accepts two aliases because the value lives under two
+    names across the codebase: the API/UI uses is_org_member, while the
+    Directus workspace_invite column is include_org_membership. Rather
+    than force one convention (and silently accept the other as a
+    no-op, which was the root cause of the "Guests can't be …" error
+    when testing the billing role), we take either.
+    """
+
+    model_config = {"populate_by_name": True}
+
     email: EmailStr
     role: str = "member"
-    is_org_member: bool = False  # True = add to org, False = external
+    is_org_member: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("is_org_member", "include_org_membership"),
+    )
 
 
 class WorkspaceInviteResponse(BaseModel):

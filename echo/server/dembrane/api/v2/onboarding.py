@@ -304,12 +304,28 @@ async def complete_onboarding(
                 "tier": "pioneer",
                 "created_by": app_user_id,
             })
+            logger.info(f"Created default workspace {personal_ws_id} for org {org_id}")
+
+        # Make sure the creator has a workspace_membership — even when
+        # the workspace row already existed (e.g. an earlier onboarding
+        # attempt crashed after creating the workspace but before the
+        # membership row was written). This is the idempotent repair
+        # for partial-state users who otherwise see "No workspaces yet"
+        # on /w forever. Pains doc entry: [block] 2026-04-23.
+        existing_self_mem = await async_directus.get_items(
+            "workspace_membership",
+            {"query": {"filter": {
+                "workspace_id": {"_eq": personal_ws_id},
+                "user_id": {"_eq": app_user_id},
+                "deleted_at": {"_null": True},
+            }, "limit": 1}},
+        )
+        if not (isinstance(existing_self_mem, list) and len(existing_self_mem) > 0):
             from dembrane.inheritance import on_workspace_created
             await on_workspace_created(
                 workspace_id=personal_ws_id,
                 creator_app_user_id=app_user_id,
             )
-            logger.info(f"Created default workspace {personal_ws_id} for org {org_id}")
 
         # Move user's orphaned projects into the personal workspace
         if has_own_projects:
