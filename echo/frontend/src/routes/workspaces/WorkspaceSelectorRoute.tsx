@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	Avatar,
 	Badge,
@@ -182,15 +182,20 @@ function WorkspaceCard({
 							{workspace.usage.audio_hours}h {t`total`}
 						</Text>
 						<Text size="xs" c="dimmed">
-							{workspace.usage.conversation_count} {workspace.usage.conversation_count === 1 ? t`conversation` : t`conversations`}
+							<Plural
+								value={workspace.usage.conversation_count}
+								one="# conversation"
+								other="# conversations"
+							/>
 						</Text>
+						{/* Only at-cap (Pilot hard-block) surfaces. Other tiers
+						    bill overage — no alarm badge. Label names the metric
+						    so users don't have to open billing to find out why. */}
 						{workspace.usage.at_cap && (
 							<Badge size="xs" color="red" variant="light">
-								<Trans>At limit</Trans>
+								<Trans>Included hours used up</Trans>
 							</Badge>
 						)}
-						{/* Only at-cap (Pilot hard-block) surfaces. Other tiers
-						    bill overage — no alarm badge. */}
 					</Group>
 				</Stack>
 
@@ -329,11 +334,23 @@ function TeamHeroCard({
 						{team.name}
 					</Text>
 					<Text size="xs" c="dimmed">
-						{team.workspace_count}{" "}
-						{team.workspace_count === 1 ? t`workspace` : t`workspaces`} ·{" "}
-						{team.total_members}{" "}
-						{team.total_members === 1 ? t`person` : t`people`} ·{" "}
-						{team.total_projects} {t`projects`}
+						<Plural
+							value={team.workspace_count}
+							one="# workspace"
+							other="# workspaces"
+						/>
+						{" · "}
+						<Plural
+							value={team.total_members}
+							one="# person"
+							other="# people"
+						/>
+						{" · "}
+						<Plural
+							value={team.total_projects}
+							one="# project"
+							other="# projects"
+						/>
 						{usage && (
 							<>
 								{" · "}

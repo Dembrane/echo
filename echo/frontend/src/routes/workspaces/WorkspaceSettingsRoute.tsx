@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Alert,
@@ -536,8 +536,8 @@ export const WorkspaceSettingsRoute = () => {
 												style={{ color: "#4169e1" }}
 											>
 												upgrades@dembrane.com
-											</a>{" "}
-											for now.
+											</a>
+											.
 										</Trans>
 									</Text>
 								)}
@@ -933,11 +933,11 @@ export const WorkspaceSettingsRoute = () => {
 													<Alert color="yellow" variant="light">
 														<Stack gap={6}>
 															<Text size="sm">
-																<Trans>
-																	Clear the {liveProjectCount} project(s)
-																	first. You can delete all projects across
-																	your team from the team page.
-																</Trans>
+																<Plural
+																	value={liveProjectCount}
+																	one="Clear the # project first. You can delete all projects across your team from the team page."
+																	other="Clear the # projects first. You can delete all projects across your team from the team page."
+																/>
 															</Text>
 															<Button
 																size="compact-xs"
@@ -1203,33 +1203,43 @@ function PrivacyAndDefaultsSection({
 	workspaceId: string;
 }) {
 	const queryClient = useQueryClient();
-	const [description, setDescription] = useState<string | null>(null);
-	// Visibility control. Matrix §6 retired derivation — the old
-	// `inherit_team_admins` flag is now just the "Open vs Private" bit.
-	// We still read settings.inherit_team_admins from legacy rows for
-	// backward-compat, but new writes also set workspace.visibility.
+	// Description autosaves on blur (non-critical text). Privacy keeps
+	// explicit Save — flipping Open↔Private changes who can see the
+	// workspace's data and is the one thing in this form where "oops"
+	// is expensive.
+	const [description, setDescription] = useState<string>(
+		settings.description ?? "",
+	);
+	// Matrix §6 retired derivation — `inherit_team_admins` is now just
+	// "Open vs Private." Legacy rows still read through this flag.
 	const [isOpen, setIsOpen] = useState<boolean | null>(null);
 
-	const effectiveDesc = description ?? settings.description ?? "";
 	const effectiveIsOpen = isOpen ?? settings.inherit_team_admins;
+	const privacyDirty = isOpen !== null;
 
-	const dirty =
-		(description !== null && description !== (settings.description ?? "")) ||
-		isOpen !== null;
+	const descriptionMutation = useMutation({
+		mutationFn: (value: string) =>
+			updateWorkspace(workspaceId, { description: value }),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+			toast.success(t`Saved`);
+		},
+		onError: (err: Error) => {
+			// Roll back local state on failure.
+			setDescription(settings.description ?? "");
+			toast.error(err.message);
+		},
+	});
 
-	const saveMutation = useMutation({
+	const privacyMutation = useMutation({
 		mutationFn: async () => {
-			const payload: Record<string, unknown> = {};
-			if (description !== null && description !== (settings.description ?? "")) {
-				payload.description = description;
-			}
-			if (isOpen !== null) payload.inherit_team_admins = isOpen;
-			await updateWorkspace(workspaceId, payload);
+			if (isOpen === null) return;
+			await updateWorkspace(workspaceId, { inherit_team_admins: isOpen });
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
-			setDescription(null);
 			setIsOpen(null);
 			toast.success(t`Saved`);
 		},
@@ -1276,9 +1286,22 @@ function PrivacyAndDefaultsSection({
 			<TextInput
 				label={t`Description`}
 				description={t`Optional — what this workspace is for.`}
-				value={effectiveDesc}
+				value={description}
 				onChange={(e) => setDescription(e.currentTarget.value)}
-				disabled={!canEdit}
+				onBlur={() => {
+					const next = description;
+					if (next !== (settings.description ?? "")) {
+						descriptionMutation.mutate(next);
+					}
+				}}
+				onKeyDown={(e) => {
+					if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
+					if (e.key === "Escape") {
+						setDescription(settings.description ?? "");
+						(e.currentTarget as HTMLInputElement).blur();
+					}
+				}}
+				disabled={!canEdit || descriptionMutation.isPending}
 				maxLength={500}
 			/>
 			<Stack gap={6}>
@@ -1362,7 +1385,16 @@ function PrivacyAndDefaultsSection({
 						<Stack gap={8} mt={4}>
 							<Radio
 								value="open"
-								label={t`Open to the team — team admins get access automatically`}
+								label={
+									<Stack gap={0}>
+										<Text size="sm">
+											<Trans>Open to the team</Trans>
+										</Text>
+										<Text size="xs" c="dimmed">
+											<Trans>Team admins get access automatically.</Trans>
+										</Text>
+									</Stack>
+								}
 								disabled={!canEdit}
 							/>
 							<Radio
@@ -1374,7 +1406,10 @@ function PrivacyAndDefaultsSection({
 								label={
 									<Stack gap={0}>
 										<Text size="sm">
-											<Trans>Private — only people you explicitly invite</Trans>
+											<Trans>Private</Trans>
+										</Text>
+										<Text size="xs" c="dimmed">
+											<Trans>Only people you explicitly invite.</Trans>
 										</Text>
 										{!canGoPrivate && !currentlyPrivate && (
 											<Text size="xs" c="dimmed">
@@ -1392,24 +1427,20 @@ function PrivacyAndDefaultsSection({
 			    now go through the explicit Request-access flow; no automatic
 			    derivation. Backend still accepts the flag for legacy rows
 			    but we don't expose it. */}
-			{canEdit && (
+			{canEdit && privacyDirty && (
 				<Group justify="flex-end">
 					<Button
 						variant="default"
-						onClick={() => {
-							setDescription(null);
-							setIsOpen(null);
-						}}
-						disabled={!dirty}
+						onClick={() => setIsOpen(null)}
+						disabled={privacyMutation.isPending}
 					>
 						<Trans>Cancel</Trans>
 					</Button>
 					<Button
-						loading={saveMutation.isPending}
-						disabled={!dirty}
-						onClick={() => saveMutation.mutate()}
+						loading={privacyMutation.isPending}
+						onClick={() => privacyMutation.mutate()}
 					>
-						<Trans>Save</Trans>
+						<Trans>Confirm privacy change</Trans>
 					</Button>
 				</Group>
 			)}

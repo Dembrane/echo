@@ -9,7 +9,9 @@ import {
 	Button,
 	Center,
 	Container,
+	FileButton,
 	Group,
+	Image,
 	Loader,
 	Menu,
 	Paper,
@@ -30,9 +32,11 @@ import {
 	IconLock,
 	IconSearch,
 	IconSettings,
+	IconTrash,
+	IconUpload,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { TeamProjectsTable } from "@/components/workspace/TeamProjectsTable";
 import { TeamUsageRollup } from "@/components/workspace/TeamUsageRollup";
@@ -41,7 +45,7 @@ import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
 import { useSearchParams } from "react-router";
-import { avatarUrl } from "@/lib/avatar";
+import { avatarUrl, logoUrl as resolveLogoUrl } from "@/lib/avatar";
 
 /**
  * Team admin page — single-page matrix view.
@@ -344,7 +348,7 @@ export const TeamRoute = () => {
 				<Group justify="space-between" align="flex-start" wrap="nowrap">
 					<Group gap="md" wrap="nowrap" style={{ minWidth: 0 }}>
 						{team.logo_url && (
-							<Avatar src={team.logo_url} size={40} radius="md" />
+							<Avatar src={resolveLogoUrl(team.logo_url)} size={40} radius="md" />
 						)}
 						<Stack gap={2} style={{ minWidth: 0 }}>
 							<Title order={3} fw={400}>
@@ -700,7 +704,7 @@ export const TeamRoute = () => {
 
 async function updateTeamFromOverview(
 	teamId: string,
-	body: { name?: string; logo_url?: string | null },
+	body: { name?: string },
 ) {
 	const res = await fetch(`${API_BASE_URL}/v2/orgs/${teamId}`, {
 		body: JSON.stringify(body),
@@ -715,6 +719,37 @@ async function updateTeamFromOverview(
 		);
 	}
 	return res.json();
+}
+
+async function uploadTeamLogoInline(teamId: string, file: Blob, filename = "logo.png") {
+	const body = new FormData();
+	body.append("file", file, filename);
+	const res = await fetch(`${API_BASE_URL}/v2/orgs/${teamId}/logo`, {
+		method: "POST",
+		credentials: "include",
+		body,
+	});
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(
+			typeof data.detail === "string" ? data.detail : "Failed to upload logo",
+		);
+	}
+	const data = await res.json();
+	return data.file_id as string;
+}
+
+async function removeTeamLogoInline(teamId: string) {
+	const res = await fetch(`${API_BASE_URL}/v2/orgs/${teamId}/logo`, {
+		method: "DELETE",
+		credentials: "include",
+	});
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(
+			typeof data.detail === "string" ? data.detail : "Failed to remove logo",
+		);
+	}
 }
 
 function OverviewPanel({
@@ -732,26 +767,56 @@ function OverviewPanel({
 	memberCount: number;
 	queryClient: ReturnType<typeof useQueryClient>;
 }) {
-	const [name, setName] = useState<string | null>(null);
-	const [logoUrl, setLogoUrl] = useState<string | null>(null);
+	// Autosave on blur — matches the inline-edit pattern elsewhere in the
+	// app (HostGuide titles, project portal). Local state lets the user
+	// type without every keystroke round-tripping; blur commits.
+	const [name, setName] = useState(team.name);
+	const logoResetRef = useRef<() => void>(null);
 
-	const effectiveName = name ?? team.name;
-	const effectiveLogo = logoUrl ?? team.logo_url ?? "";
-	const dirty =
-		(name !== null && name.trim() !== team.name) ||
-		(logoUrl !== null && logoUrl.trim() !== (team.logo_url ?? ""));
+	const invalidate = () => {
+		queryClient.invalidateQueries({ queryKey: ["v2", "team", teamId] });
+		queryClient.invalidateQueries({ queryKey: ["v2", "orgs"] });
+		queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+	};
 
 	const saveMutation = useMutation({
-		mutationFn: (body: { name?: string; logo_url?: string | null }) =>
+		mutationFn: (body: { name?: string }) =>
 			updateTeamFromOverview(teamId, body),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["v2", "team", teamId] });
-			queryClient.invalidateQueries({ queryKey: ["v2", "orgs"] });
-			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+			invalidate();
 			toast.success(t`Saved`);
+		},
+		onError: (err: Error) => {
+			// Roll back local state on failure so what's shown matches
+			// what's actually stored.
+			setName(team.name);
+			toast.error(err.message);
+		},
+	});
+	const uploadLogoMutation = useMutation({
+		mutationFn: (file: File) =>
+			uploadTeamLogoInline(teamId, file, file.name || "logo.png"),
+		onSuccess: () => {
+			invalidate();
+			toast.success(t`Logo updated`);
 		},
 		onError: (err: Error) => toast.error(err.message),
 	});
+	const removeLogoMutation = useMutation({
+		mutationFn: () => removeTeamLogoInline(teamId),
+		onSuccess: () => {
+			invalidate();
+			toast.success(t`Logo removed`);
+		},
+		onError: (err: Error) => toast.error(err.message),
+	});
+	const currentTeamLogoUrl = resolveLogoUrl(team.logo_url);
+
+	const handleLogoSelect = (file: File | null) => {
+		logoResetRef.current?.();
+		if (!file) return;
+		uploadLogoMutation.mutate(file);
+	};
 
 	return (
 		<Stack gap="lg">
@@ -759,57 +824,85 @@ function OverviewPanel({
 			<Stack gap="md">
 				<TextInput
 					label={t`Team name`}
-					description={t`Shown on the workspace selector and in email subject lines.`}
-					value={effectiveName}
-					disabled={!canEdit}
+					description={t`Shown in the team header and in email subject lines.`}
+					value={name}
+					disabled={!canEdit || saveMutation.isPending}
 					onChange={(e) => setName(e.currentTarget.value)}
+					onBlur={() => {
+						const next = name.trim();
+						if (next && next !== team.name) {
+							saveMutation.mutate({ name: next });
+						} else if (!next) {
+							setName(team.name);
+						}
+					}}
+					onKeyDown={(e) => {
+						if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
+						if (e.key === "Escape") {
+							setName(team.name);
+							(e.currentTarget as HTMLInputElement).blur();
+						}
+					}}
 					maxLength={100}
 				/>
-				<TextInput
-					label={t`Logo URL`}
-					description={t`Absolute https URL. Workspace-level logo overrides when set.`}
-					placeholder="https://..."
-					value={effectiveLogo}
-					disabled={!canEdit}
-					onChange={(e) => setLogoUrl(e.currentTarget.value)}
-					maxLength={2048}
-				/>
-				{canEdit && (
-					<Group justify="flex-end">
-						<Button
-							variant="default"
-							onClick={() => {
-								setName(null);
-								setLogoUrl(null);
-							}}
-							disabled={!dirty}
-						>
-							<Trans>Cancel</Trans>
-						</Button>
-						<Button
-							loading={saveMutation.isPending}
-							disabled={!dirty}
-							onClick={() => {
-								const payload: {
-									name?: string;
-									logo_url?: string | null;
-								} = {};
-								if (name !== null && name.trim() !== team.name) {
-									payload.name = name.trim();
-								}
-								if (
-									logoUrl !== null &&
-									logoUrl.trim() !== (team.logo_url ?? "")
-								) {
-									payload.logo_url = logoUrl.trim() || null;
-								}
-								saveMutation.mutate(payload);
-							}}
-						>
-							<Trans>Save</Trans>
-						</Button>
-					</Group>
-				)}
+				<Stack gap={6}>
+					<Text size="sm" fw={500}>
+						<Trans>Logo</Trans>
+					</Text>
+					<Text size="xs" c="dimmed">
+						<Trans>Workspace-level logo overrides the team logo when set.</Trans>
+					</Text>
+					{currentTeamLogoUrl ? (
+						<Group gap="sm" align="center">
+							<Image
+								src={currentTeamLogoUrl}
+								alt={t`Team logo`}
+								h={48}
+								w="auto"
+								fit="contain"
+								style={{ maxWidth: 200 }}
+							/>
+							<Button
+								variant="subtle"
+								color="red"
+								size="compact-sm"
+								leftSection={<IconTrash size={14} />}
+								loading={removeLogoMutation.isPending}
+								disabled={!canEdit}
+								onClick={() => removeLogoMutation.mutate()}
+							>
+								<Trans>Remove</Trans>
+							</Button>
+						</Group>
+					) : (
+						<Text size="xs" c="dimmed" fs="italic">
+							<Trans>No logo set — dembrane default will be used.</Trans>
+						</Text>
+					)}
+					<FileButton
+						resetRef={logoResetRef}
+						onChange={handleLogoSelect}
+						accept="image/png,image/jpeg,image/svg+xml,image/webp"
+						disabled={!canEdit}
+					>
+						{(props) => (
+							<Button
+								variant="light"
+								size="compact-sm"
+								leftSection={<IconUpload size={14} />}
+								loading={uploadLogoMutation.isPending}
+								style={{ alignSelf: "flex-start" }}
+								{...props}
+							>
+								{currentTeamLogoUrl ? (
+									<Trans>Replace logo</Trans>
+								) : (
+									<Trans>Upload logo</Trans>
+								)}
+							</Button>
+						)}
+					</FileButton>
+				</Stack>
 			</Stack>
 
 			{/* At-a-glance counts. Keep light — the detailed views are one

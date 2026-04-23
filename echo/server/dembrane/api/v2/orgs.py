@@ -24,8 +24,12 @@ from datetime import datetime, timezone
 from logging import getLogger
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+import requests
+from fastapi import APIRouter, HTTPException, UploadFile
 from pydantic import BaseModel, EmailStr, Field
+
+from dembrane.directus import directus
+from dembrane.async_helpers import run_in_thread_pool
 
 # Only http/https logos allowed — blocks javascript:/data: URIs. Shared
 # logic lives in workspace_settings; duplicated here to avoid a cross-router
@@ -347,6 +351,113 @@ async def update_org(
 
     await async_directus.update_item("org", org_id, payload)
     return await get_org(org_id, auth)
+
+
+# ── Team logo upload ──
+# Mirrors the workspace-logo pattern: bare file_id stored in org.logo_url;
+# frontend resolves via logoUrl() helper. Legacy external URLs keep working.
+
+_ALLOWED_LOGO_TYPES = {
+    "image/png",
+    "image/jpeg",
+    "image/jpg",
+    "image/svg+xml",
+    "image/webp",
+}
+_MAX_LOGO_BYTES = 5 * 1024 * 1024
+
+
+def _get_or_create_custom_logos_folder_id() -> str | None:
+    try:
+        folders = directus.get(
+            "/folders",
+            params={"filter[name][_eq]": "custom_logos", "limit": 1},
+        )
+        if folders and len(folders) > 0:
+            return folders[0]["id"]
+        result = directus.post("/folders", json={"name": "custom_logos"})
+        return result.get("data", {}).get("id")
+    except Exception as e:
+        logger.warning(f"Failed to get or create custom_logos folder: {e}")
+        return None
+
+
+@router.post("/{org_id}/logo")
+async def upload_org_logo(
+    org_id: str,
+    file: UploadFile,
+    auth: DependencyDirectusSession,
+) -> dict:
+    """Upload a team logo. Admin/owner only."""
+    app_user = await get_app_user_or_raise(auth.user_id)
+    await _require_org_role(org_id, app_user["id"], minimum="admin")
+
+    if file.content_type and file.content_type not in _ALLOWED_LOGO_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail="Logo must be PNG, JPEG, SVG, or WebP",
+        )
+    file_content = await file.read()
+    if len(file_content) > _MAX_LOGO_BYTES:
+        raise HTTPException(status_code=400, detail="Logo file is too large (max 5 MB)")
+    if len(file_content) == 0:
+        raise HTTPException(status_code=400, detail="Empty file")
+
+    folder_id = _get_or_create_custom_logos_folder_id()
+    if not folder_id:
+        raise HTTPException(status_code=500, detail="Failed to prepare logo folder")
+
+    url = f"{directus.url}/files"
+    headers = {"Authorization": f"Bearer {directus.get_token()}"}
+    files = {"file": (file.filename, file_content, file.content_type or "image/png")}
+    data = {"folder": folder_id}
+    try:
+        response = requests.post(
+            url, headers=headers, files=files, data=data, verify=directus.verify
+        )
+        if response.status_code != 200:
+            logger.error(f"Failed to upload team logo: {response.status_code} {response.text}")
+            raise HTTPException(status_code=500, detail="Failed to upload file") from None
+        file_id = response.json()["data"]["id"]
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to upload team logo: {e}")
+        raise HTTPException(status_code=500, detail="Failed to upload file") from None
+
+    org = await async_directus.get_item("org", org_id)
+    prev_logo = (org or {}).get("logo_url") or ""
+    await async_directus.update_item("org", org_id, {"logo_url": file_id})
+
+    if prev_logo and not prev_logo.lower().startswith(("http://", "https://")):
+        try:
+            await run_in_thread_pool(directus.delete_file, prev_logo)
+        except Exception as e:
+            logger.warning(f"Failed to delete old team logo {prev_logo}: {e}")
+
+    return {"file_id": file_id}
+
+
+@router.delete("/{org_id}/logo")
+async def remove_org_logo(
+    org_id: str,
+    auth: DependencyDirectusSession,
+) -> dict:
+    app_user = await get_app_user_or_raise(auth.user_id)
+    await _require_org_role(org_id, app_user["id"], minimum="admin")
+
+    org = await async_directus.get_item("org", org_id)
+    prev_logo = (org or {}).get("logo_url") or ""
+    if not prev_logo:
+        return {"status": "ok"}
+
+    await async_directus.update_item("org", org_id, {"logo_url": None})
+    if not prev_logo.lower().startswith(("http://", "https://")):
+        try:
+            await run_in_thread_pool(directus.delete_file, prev_logo)
+        except Exception as e:
+            logger.warning(f"Failed to delete team logo {prev_logo}: {e}")
+    return {"status": "ok"}
 
 
 @router.get("/{org_id}/members", response_model=list[OrgMemberResponse])

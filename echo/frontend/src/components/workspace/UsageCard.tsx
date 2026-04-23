@@ -180,7 +180,7 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 					<Group gap={8} wrap="nowrap">
 						{pilotExhausted && (
 							<Badge size="sm" color="red" variant="light">
-								<Trans>At limit</Trans>
+								<Trans>Included hours used up</Trans>
 							</Badge>
 						)}
 						<PeriodSelect value={monthOffset} onChange={setMonthOffset} />

@@ -80,7 +80,7 @@ export const WorkspaceHomeSummary = ({
 					    overage and keep going; no alarm badge. */}
 					{data.pilot_hard_block_active && (
 						<Badge size="xs" color="red" variant="light">
-							<Trans>At limit</Trans>
+							<Trans>Included hours used up</Trans>
 						</Badge>
 					)}
 				</Group>

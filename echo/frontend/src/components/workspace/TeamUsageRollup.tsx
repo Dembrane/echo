@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Badge,
@@ -196,9 +196,11 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 								style={{ cursor: "pointer" }}
 								onClick={() => setExpanded(true)}
 							>
-								<Trans>
-									{data.workspaces_at_cap} at limit
-								</Trans>
+								<Plural
+									value={data.workspaces_at_cap}
+									one="# workspace used up its included hours"
+									other="# workspaces used up their included hours"
+								/>
 							</Badge>
 						</Tooltip>
 					</Group>
@@ -259,14 +261,14 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 											<Table.Td>
 												<Group gap={6} wrap="nowrap">
 													{ws.at_cap && (
-														<Tooltip label={t`At limit`}>
+														<Tooltip label={t`Included hours used up this month`}>
 															<Badge size="xs" color="red" variant="light">
 																!
 															</Badge>
 														</Tooltip>
 													)}
 													{!ws.at_cap && ws.approaching_cap && (
-														<Tooltip label={t`Approaching limit`}>
+														<Tooltip label={t`80%+ of included hours used this month`}>
 															<Badge size="xs" color="yellow" variant="light">
 																·
 															</Badge>

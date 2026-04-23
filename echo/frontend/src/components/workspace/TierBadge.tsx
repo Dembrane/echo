@@ -1,6 +1,6 @@
-import { Badge, Group, Text, Tooltip } from "@mantine/core";
+import { Badge, Group, Stack, Text, Tooltip } from "@mantine/core";
 import type { MantineSize } from "@mantine/core";
-import { taglineFor } from "@/lib/tiers";
+import { capacityShortFor, taglineFor } from "@/lib/tiers";
 
 interface TierBadgeProps {
 	tier: string;
@@ -28,6 +28,7 @@ export const TierBadge = ({
 	showTagline = false,
 }: TierBadgeProps) => {
 	const tagline = taglineFor(tier);
+	const capacity = capacityShortFor(tier);
 
 	const badge = (
 		<Badge
@@ -40,19 +41,35 @@ export const TierBadge = ({
 		</Badge>
 	);
 
+	// Tooltip always shows tagline + capacity so every surface answers
+	// "what does this tier get me?" without leaving the page.
+	const tooltipLabel =
+		tagline || capacity ? (
+			<Stack gap={2}>
+				{tagline && <Text size="xs">{tagline}</Text>}
+				{capacity && (
+					<Text size="xs" c="dimmed">
+						{capacity}
+					</Text>
+				)}
+			</Stack>
+		) : null;
+
 	if (showTagline && tagline) {
 		return (
-			<Group gap={6} wrap="nowrap">
-				{badge}
-				<Text size="xs" c="dimmed">
-					· {tagline}
-				</Text>
-			</Group>
+			<Tooltip label={tooltipLabel} disabled={!tooltipLabel}>
+				<Group gap={6} wrap="nowrap">
+					{badge}
+					<Text size="xs" c="dimmed">
+						· {tagline}
+					</Text>
+				</Group>
+			</Tooltip>
 		);
 	}
 
-	if (tagline) {
-		return <Tooltip label={tagline}>{badge}</Tooltip>;
+	if (tooltipLabel) {
+		return <Tooltip label={tooltipLabel}>{badge}</Tooltip>;
 	}
 
 	return badge;
