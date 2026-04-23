@@ -15,6 +15,9 @@ interface WorkspaceSummary {
 	project_count: number;
 	member_count: number;
 	is_external: boolean;
+	// Matrix v1.1 §3 downgrade banner fields.
+	downgraded_at?: string | null;
+	downgraded_from_tier?: string | null;
 }
 
 export interface WorkspaceContextValue {

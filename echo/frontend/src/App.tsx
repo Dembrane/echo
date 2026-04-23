@@ -7,7 +7,8 @@ import { MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
 import { DatesProvider } from "@mantine/dates";
 import { ModalsProvider } from "@mantine/modals";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { detectAndEmitPilotBlock } from "./lib/pilotBlock";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useEffect } from "react";
 import { RouterProvider } from "react-router/dom";
@@ -33,7 +34,22 @@ import { analytics } from "./lib/analytics";
 import { mainRouter, participantRouter } from "./Router";
 import { theme } from "./theme";
 
-const queryClient = new QueryClient();
+// Pilot hard-block (matrix §8): intercept 402 + copy-locked body from
+// host-side mutations and fan out a level-3 modal. Detection is
+// copy-substring since we control both the backend body and the frontend
+// match — see lib/pilotBlock.ts.
+const queryClient = new QueryClient({
+	mutationCache: new MutationCache({
+		onError: (error) => {
+			detectAndEmitPilotBlock(error);
+		},
+	}),
+	queryCache: new QueryCache({
+		onError: (error) => {
+			detectAndEmitPilotBlock(error);
+		},
+	}),
+});
 
 const router = USE_PARTICIPANT_ROUTER ? participantRouter : mainRouter;
 

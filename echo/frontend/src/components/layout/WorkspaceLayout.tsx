@@ -1,11 +1,15 @@
 import { useEffect } from "react";
 import { Outlet, useParams } from "react-router";
+import { DowngradeBanner } from "@/components/workspace/DowngradeBanner";
+import { PilotBlockModal } from "@/components/workspace/PilotBlockModal";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
 /**
  * Layout wrapper for /w/:workspaceId/* routes.
  * Reads workspaceId from URL and syncs it to workspace context.
- * Renders children via <Outlet />.
+ * Mounts the 7-day downgrade banner (matrix §3) and the Pilot-block
+ * modal (matrix §8) so they're available on every workspace-scoped route.
+ * Renders the route via <Outlet />.
  */
 export const WorkspaceLayout = () => {
 	const { workspaceId: urlWorkspaceId } = useParams<{ workspaceId: string }>();
@@ -18,5 +22,11 @@ export const WorkspaceLayout = () => {
 		}
 	}, [urlWorkspaceId, contextWorkspaceId, setWorkspace]);
 
-	return <Outlet />;
+	return (
+		<>
+			<DowngradeBanner />
+			<PilotBlockModal />
+			<Outlet />
+		</>
+	);
 };
