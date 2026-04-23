@@ -2,15 +2,11 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
-	Anchor,
 	Badge,
 	Box,
-	Button,
 	Group,
 	Menu,
-	Modal,
 	Paper,
-	Stack,
 	Text,
 } from "@mantine/core";
 import * as Sentry from "@sentry/react";
@@ -35,7 +31,6 @@ import {
 	COMMUNITY_SLACK_URL,
 	DIRECTUS_PUBLIC_URL,
 	ENABLE_ANNOUNCEMENTS,
-	getProductFeedbackUrl,
 } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
@@ -45,6 +40,7 @@ import { testId } from "@/lib/testUtils";
 import { AnnouncementIcon } from "../announcement/AnnouncementIcon";
 import { Announcements } from "../announcement/Announcements";
 import { TopAnnouncementBar } from "../announcement/TopAnnouncementBar";
+import { FeedbackPortalModal } from "../common/FeedbackPortalModal";
 import { Logo } from "../common/Logo";
 import { UserAvatar } from "../common/UserAvatar";
 import { LanguagePicker } from "../language/LanguagePicker";
@@ -286,97 +282,14 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 				</Group>
 			</Paper>
 
-			<Modal
-				opened={feedbackFallbackOpen}
-				onClose={() => setFeedbackFallbackOpen(false)}
-				title={t`Report an issue`}
-				centered
-			>
-				<Stack gap="md">
-					<Text size="sm">
-						<Trans>
-							The built-in issue reporter could not be loaded. You can still let
-							us know what went wrong through our feedback portal. It helps us
-							fix things faster than not submitting a report.
-						</Trans>
-					</Text>
-					<Group justify="flex-end">
-						<Button
-							variant="default"
-							onClick={() => setFeedbackFallbackOpen(false)}
-						>
-							<Trans>Cancel</Trans>
-						</Button>
-						<Button
-							component="a"
-							href={getProductFeedbackUrl(language)}
-							target="_blank"
-							onClick={() => setFeedbackFallbackOpen(false)}
-						>
-							<Trans>Go to feedback portal</Trans>
-						</Button>
-					</Group>
-				</Stack>
-			</Modal>
-
-			<Modal
-				opened={feedbackPortalOpen}
-				onClose={() => setFeedbackPortalOpen(false)}
-				title={t`Feedback portal`}
-				centered
-			>
-				<Stack gap="md">
-					<Text size="sm">
-						<Trans>
-							We'd love to hear from you. Whether you have an idea for something
-							new, you've hit a bug, spotted a translation that feels off, or
-							just want to share how things have been going.
-						</Trans>
-					</Text>
-					<Text size="sm">
-						<Trans>
-							To help us act on it, try to include where it happened and what
-							you were trying to do. For bugs, tell us what went wrong. For
-							ideas, tell us what need it would solve for you.
-						</Trans>
-					</Text>
-					<Text size="sm">
-						<Trans>
-							Just talk or type naturally. Your input goes directly to our
-							product team and genuinely helps us make dembrane better. We read
-							everything.
-						</Trans>
-					</Text>
-					<Text size="sm" c="dimmed">
-						<Trans>
-							Prefer to chat directly?{" "}
-							<Anchor
-								href="https://cal.com/sameer-dembrane"
-								target="_blank"
-								size="sm"
-							>
-								Book a call with me
-							</Anchor>
-						</Trans>
-					</Text>
-					<Group justify="flex-end">
-						<Button
-							variant="default"
-							onClick={() => setFeedbackPortalOpen(false)}
-						>
-							<Trans>Cancel</Trans>
-						</Button>
-						<Button
-							component="a"
-							href={getProductFeedbackUrl(language)}
-							target="_blank"
-							onClick={() => setFeedbackPortalOpen(false)}
-						>
-							<Trans>Open feedback portal</Trans>
-						</Button>
-					</Group>
-				</Stack>
-			</Modal>
+			<FeedbackPortalModal
+				opened={feedbackFallbackOpen || feedbackPortalOpen}
+				onClose={() => {
+					setFeedbackFallbackOpen(false);
+					setFeedbackPortalOpen(false);
+				}}
+				locale={language}
+			/>
 		</>
 	);
 };

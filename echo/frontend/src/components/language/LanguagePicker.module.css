@@ -1,0 +1,15 @@
+.option:hover,
+.option[data-combobox-selected] {
+	background-color: var(--mantine-color-primary-6);
+	color: var(--mantine-color-white);
+}
+
+.partial {
+	color: var(--mantine-color-dimmed);
+	font-size: var(--mantine-font-size-xs);
+}
+
+.option:hover .partial,
+.option[data-combobox-selected] .partial {
+	color: inherit;
+}

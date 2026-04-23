@@ -13,7 +13,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconTrash, IconUpload, IconUser } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { ImageCropModal } from "@/components/common/ImageCropModal";
@@ -35,6 +35,7 @@ export const AccountSettingsCard = () => {
 
 	const avatarFileId = user?.avatar as string | null;
 
+	const resetFileInputRef = useRef<() => void>(null);
 	const [cropSrc, setCropSrc] = useState<string | null>(null);
 	const [cropOpened, { open: openCrop, close: closeCrop }] =
 		useDisclosure(false);
@@ -102,6 +103,7 @@ export const AccountSettingsCard = () => {
 	});
 
 	const handleFileSelect = (file: File | null) => {
+		resetFileInputRef.current?.();
 		if (!file) return;
 		const reader = new FileReader();
 		reader.onload = () => {
@@ -133,6 +135,7 @@ export const AccountSettingsCard = () => {
 						<Stack gap={4}>
 							<Group gap="xs">
 								<FileButton
+									resetRef={resetFileInputRef}
 									onChange={handleFileSelect}
 									accept="image/png,image/jpeg,image/webp"
 								>

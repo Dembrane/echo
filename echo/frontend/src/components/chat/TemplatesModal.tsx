@@ -569,6 +569,18 @@ export const TemplatesModal = ({
 										<PencilSimpleIcon size={12} />
 									</ActionIcon>
 								</Tooltip>
+								<Tooltip label={t`Duplicate`}>
+									<ActionIcon
+										size="xs"
+										variant="subtle"
+										onClick={(e) => {
+											e.stopPropagation();
+											handleDuplicate(tmpl.title, tmpl.content);
+										}}
+									>
+										<CopyIcon size={12} />
+									</ActionIcon>
+								</Tooltip>
 								<Tooltip label={t`Delete`}>
 									<ActionIcon
 										size="xs"
@@ -785,7 +797,7 @@ export const TemplatesModal = ({
 									<Badge
 										size="sm"
 										variant={filterMine ? "filled" : "outline"}
-										color={userTemplates.length > 0 ? "blue" : "gray"}
+										color={userTemplates.length > 0 ? "primary" : "gray"}
 										style={{
 											cursor: userTemplates.length > 0 ? "pointer" : "default",
 											opacity: userTemplates.length > 0 ? 1 : 0.5,

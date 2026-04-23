@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { Button, Group, Paper, Skeleton, Stack, Text } from "@mantine/core";
+import { Group, Paper, Skeleton, Stack, Text } from "@mantine/core";
 import { testId } from "@/lib/testUtils";
 import { cn } from "@/lib/utils";
 import { Logo } from "../common/Logo";
@@ -21,32 +21,17 @@ const ContributeToReportCTA = ({
 			className={fullscreen ? "bg-white" : "bg-gray-100"}
 			{...testId("report-contribute-cta")}
 		>
-			<Stack className="text-center text-2xl font-semibold" align="center">
-				<Trans>Do you want to contribute to this project?</Trans>
+			<Stack className="text-center" align="center" gap="md">
+				<Text size="lg" fw={600}>
+					<Trans>Share your voice by scanning the QR code</Trans>
+				</Text>
 
-				<Button
-					component="a"
+				<QRCode
+					value={href}
 					href={href}
-					target="_blank"
-					className="rounded-3xl print:hidden"
-					{...testId("report-contribute-share-button")}
-				>
-					<Trans>Share your voice</Trans>
-				</Button>
-
-				<div className={fullscreen ? "block" : "hidden print:block"}>
-					<Trans>Share your voice by scanning the QR code below.</Trans>
-				</div>
-
-				<div
-					className={
-						fullscreen
-							? "block h-[200px] w-[200px]"
-							: "hidden h-[200px] w-[200px] print:block"
-					}
-				>
-					<QRCode value={href} />
-				</div>
+					style={{ height: 200, width: 200 }}
+					{...testId("report-contribute-qr")}
+				/>
 			</Stack>
 		</Paper>
 	);

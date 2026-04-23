@@ -1334,6 +1334,7 @@ def task_create_report_continue(project_id: str, report_id: int, language: str, 
                 client.update_item("project_report", report_id_str, {
                     "content": content,
                     "status": "archived",
+                    "date_created": get_utc_timestamp().isoformat(),
                 })
 
             publish_report_progress(report_id, "completed", "Report ready")

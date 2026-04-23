@@ -249,7 +249,7 @@ async def get_report_content_for_project(
 
     if not conversations:
         logger.warning(f"No conversations found on refetch for project {project_id}")
-        return "No conversations available for report"
+        raise ReportGenerationError("No conversations available yet. Add conversations to your project and try again.")
 
     # Build conversation data with token budget management
     conversation_data_dict: dict = {}

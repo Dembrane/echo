@@ -1,13 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import {
-	Box,
-	Group,
-	Stack,
-	Text,
-	Textarea,
-	UnstyledButton,
-} from "@mantine/core";
+import { Group, Stack, Text, Textarea, UnstyledButton } from "@mantine/core";
 import { IconCheck, IconPencil } from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
 import focusOptionsData from "@/data/reportFocusOptions.json";
@@ -20,10 +13,7 @@ interface ReportFocusSelectorProps {
 
 type LangKey = "en" | "nl" | "de" | "fr" | "it" | "es";
 
-function getLabel(
-	labels: Record<string, string>,
-	language: string,
-): string {
+function getLabel(labels: Record<string, string>, language: string): string {
 	return labels[language as LangKey] ?? labels.en ?? "";
 }
 
@@ -54,13 +44,13 @@ export const ReportFocusSelector = ({
 }: ReportFocusSelectorProps) => {
 	const options = focusOptionsData.options;
 
-	const [selectedIds, setSelectedIds] = useState<Set<string>>(
-		() => parseSelectedIds(value),
+	const [selectedIds, setSelectedIds] = useState<Set<string>>(() =>
+		parseSelectedIds(value),
 	);
-	const [customText, setCustomText] = useState(
-		() => extractCustomText(value),
+	const [customText, setCustomText] = useState(() => extractCustomText(value));
+	const [showCustom, setShowCustom] = useState(
+		() => !!extractCustomText(value),
 	);
-	const [showCustom, setShowCustom] = useState(() => !!extractCustomText(value));
 
 	// Build combined instruction string from selected IDs + custom text
 	const buildValue = useCallback(
@@ -85,6 +75,7 @@ export const ReportFocusSelector = ({
 			if (next.has(id)) {
 				next.delete(id);
 			} else {
+				if (next.size >= 2) return prev;
 				next.add(id);
 			}
 			onChange(buildValue(next, customText));
@@ -116,6 +107,8 @@ export const ReportFocusSelector = ({
 		setShowCustom(!!custom);
 	}, [value]);
 
+	const atLimit = selectedIds.size >= 2;
+
 	return (
 		<Stack gap="sm">
 			<Text size="sm" fw={500}>
@@ -124,6 +117,9 @@ export const ReportFocusSelector = ({
 					<Trans>(optional)</Trans>
 				</Text>
 			</Text>
+			<Text size="xs" c="dimmed">
+				<Trans>Select up to 2 focus areas for your report</Trans>
+			</Text>
 			<Group gap={8} wrap="wrap">
 				{options.map((option) => {
 					const isActive = selectedIds.has(option.id);
@@ -131,6 +127,7 @@ export const ReportFocusSelector = ({
 						<UnstyledButton
 							key={option.id}
 							onClick={() => handleTogglePreset(option.id)}
+							disabled={atLimit && !isActive}
 							px="xs"
 							py={4}
 							style={{
@@ -142,14 +139,13 @@ export const ReportFocusSelector = ({
 									? "var(--mantine-color-primary-0)"
 									: undefined,
 								transition: "all 0.15s ease",
+								opacity: atLimit && !isActive ? 0.5 : 1,
+								cursor: atLimit && !isActive ? "not-allowed" : "pointer",
 							}}
 						>
 							<Group gap={6} wrap="nowrap">
 								{isActive && (
-									<IconCheck
-										size={12}
-										color="var(--mantine-color-primary-6)"
-									/>
+									<IconCheck size={12} color="var(--mantine-color-primary-6)" />
 								)}
 								<Text
 									size="xs"

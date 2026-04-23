@@ -1,4 +1,4 @@
-import { createItems, type Query, readItems } from "@directus/sdk";
+import { createItems, type Query, readItems, updateItem } from "@directus/sdk";
 import { t } from "@lingui/core/macro";
 import * as Sentry from "@sentry/react";
 import {
@@ -271,6 +271,114 @@ export const useMarkAsReadMutation = () => {
 		},
 		onSettled: () => {
 			// refetch after error or success to ensure cache consistency
+			queryClient.invalidateQueries({ queryKey: ["announcements"] });
+		},
+	});
+};
+
+export const useMarkAsUnreadMutation = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({
+			activityIds,
+		}: {
+			announcementId: string;
+			activityIds: string[];
+		}) => {
+			try {
+				const updates = activityIds.map((id) =>
+					directus.request(
+						updateItem(
+							"announcement_activity",
+							id,
+							{ read: false } as any,
+						),
+					),
+				);
+				return await Promise.all(updates);
+			} catch (error) {
+				Sentry.captureException(error);
+				toast.error(t`Failed to mark announcement as unread`);
+				console.error("Error in markAsUnread mutationFn:", error);
+				throw error;
+			}
+		},
+		onError: (
+			err,
+			_variables,
+			context: { previousAnnouncements?: [any, any][] } = {},
+		) => {
+			if (context?.previousAnnouncements) {
+				context.previousAnnouncements.forEach(
+					([queryKey, data]: [any, any]) => {
+						queryClient.setQueriesData({ queryKey }, data);
+					},
+				);
+			}
+			console.error("Error marking announcement as unread:", err);
+			toast.error(t`Failed to mark announcement as unread`);
+		},
+		onMutate: async ({ announcementId }) => {
+			await queryClient.cancelQueries({ queryKey: ["announcements"] });
+
+			const previousAnnouncements = queryClient.getQueriesData({
+				queryKey: ["announcements"],
+			});
+
+			// Optimistically update infinite announcements - set read to false
+			queryClient.setQueriesData(
+				{ queryKey: ["announcements", "infinite"] },
+				(old: any) => {
+					if (!old) return old;
+					return {
+						...old,
+						pages: old.pages.map((page: any) => ({
+							...page,
+							announcements: page.announcements.map(
+								(announcement: any) => {
+									if (announcement.id === announcementId) {
+										return {
+											...announcement,
+											activity: announcement.activity?.map(
+												(a: any) => ({ ...a, read: false }),
+											) ?? [],
+										};
+									}
+									return announcement;
+								},
+							),
+						})),
+					};
+				},
+			);
+
+			// Optimistically update latest announcement
+			queryClient.setQueriesData(
+				{ queryKey: ["announcements", "latest"] },
+				(old: any) => {
+					if (!old || old.id !== announcementId) return old;
+					return {
+						...old,
+						activity: old.activity?.map(
+							(a: any) => ({ ...a, read: false }),
+						) ?? [],
+					};
+				},
+			);
+
+			// Optimistically increment unread count
+			queryClient.setQueriesData(
+				{ queryKey: ["announcements", "unread"] },
+				(old: number) => {
+					if (typeof old !== "number") return old;
+					return old + 1;
+				},
+			);
+
+			return { previousAnnouncements };
+		},
+		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["announcements"] });
 		},
 	});

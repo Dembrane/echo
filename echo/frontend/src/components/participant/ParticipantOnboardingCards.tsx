@@ -174,29 +174,6 @@ const ParticipantOnboardingCards = ({
 				],
 			},
 		],
-		"it-IT": [
-			...getSystemCards("it-IT", tutorialSlug, legalBasis, privacyPolicyUrl),
-			{
-				section: "Controllo Microfono",
-				slides: [
-					{
-						component: MicrophoneTestComponent,
-						content: "Assicuriamoci di poterti sentire.",
-						title: "Controllo Microfono",
-						type: "microphone",
-					},
-				],
-			},
-			{
-				section: "Pronti a iniziare?",
-				slides: [
-					{
-						component: InitiateFormComponent,
-						title: "Pronti a iniziare?",
-					},
-				],
-			},
-		],
 		"nl-NL": [
 			...getSystemCards("nl-NL", tutorialSlug, legalBasis, privacyPolicyUrl),
 			{
@@ -222,8 +199,7 @@ const ParticipantOnboardingCards = ({
 		],
 	};
 
-	// Add this check to ensure we have valid data
-	const languageCards = cards[language as keyof typeof cards] || [];
+	const languageCards = cards[language as keyof typeof cards] || cards["en-US"];
 
 	// Flatten the slides into a single array
 	const allSlides = languageCards.flatMap((section) => section.slides);
@@ -393,20 +369,22 @@ const ParticipantOnboardingCards = ({
 						<div className="mt-8 flex w-full items-center justify-between gap-4">
 							{currentCard?.type === "microphone" ? (
 								<>
-									<Button
-										onClick={prevSlide}
-										variant="outline"
-										size="lg"
-										className="basis-1/2"
-										{...testId("portal-onboarding-mic-back-button")}
-									>
-										<Trans id="participant.button.back.microphone">Back</Trans>
-									</Button>
+									{currentSlideIndex > 0 && (
+										<Button
+											onClick={prevSlide}
+											variant="outline"
+											size="lg"
+											className="basis-1/2"
+											{...testId("portal-onboarding-mic-back-button")}
+										>
+											<Trans id="participant.button.back.microphone">Back</Trans>
+										</Button>
+									)}
 									<Button
 										onClick={nextSlide}
 										size="lg"
 										disabled={!micTestSuccess}
-										className="basis-1/2"
+										className={currentSlideIndex > 0 ? "basis-1/2" : "w-full"}
 										{...testId("portal-onboarding-mic-continue-button")}
 									>
 										<Trans id="participant.button.continue">Continue</Trans>
@@ -414,16 +392,17 @@ const ParticipantOnboardingCards = ({
 								</>
 							) : (
 								<>
-									<Button
-										onClick={prevSlide}
-										variant="outline"
-										size="lg"
-										disabled={currentSlideIndex === 0}
-										className={!isLastSlide ? "basis-1/2" : "w-full"}
-										{...testId("portal-onboarding-back-button")}
-									>
-										<Trans id="participant.button.back">Back</Trans>
-									</Button>
+									{currentSlideIndex > 0 && (
+										<Button
+											onClick={prevSlide}
+											variant="outline"
+											size="lg"
+											className={!isLastSlide ? "basis-1/2" : "w-full"}
+											{...testId("portal-onboarding-back-button")}
+										>
+											<Trans id="participant.button.back">Back</Trans>
+										</Button>
+									)}
 									{!isLastSlide && (
 										<Button
 											onClick={nextSlide}
@@ -432,7 +411,7 @@ const ParticipantOnboardingCards = ({
 												currentCard.checkbox?.required &&
 												!checkboxStates[`${currentSlideIndex}`]
 											}
-											className="basis-1/2"
+											className={currentSlideIndex > 0 ? "basis-1/2" : "w-full"}
 											{...testId("portal-onboarding-next-button")}
 										>
 											{currentCard.cta ? (
