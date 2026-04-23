@@ -70,6 +70,13 @@ class WorkspaceUsage(BaseModel):
     # Current calendar month
     audio_hours_this_month: float = 0.0
     conversations_this_month: int = 0
+    # Matrix §8 cap signals for card-level rendering. Populated from
+    # tier_capacity at serialisation time so clients don't need to join
+    # tier → cap themselves.
+    hours_included: Optional[int] = None    # None = unlimited tier
+    hours_pct: Optional[float] = None       # 0..1; null when unlimited
+    at_cap: bool = False
+    approaching_cap: bool = False
 
 
 class WorkspaceSummary(BaseModel):

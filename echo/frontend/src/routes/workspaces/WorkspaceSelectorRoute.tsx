@@ -34,6 +34,10 @@ interface MemberPreview {
 interface WorkspaceUsage {
 	audio_hours: number;
 	conversation_count: number;
+	hours_included?: number | null;
+	hours_pct?: number | null;
+	at_cap?: boolean;
+	approaching_cap?: boolean;
 }
 
 interface Workspace {
@@ -168,17 +172,29 @@ function WorkspaceCard({
 					</Group>
 				</Group>
 
-				<Group gap="lg">
-					<Text size="xs" c="dimmed">
-						{workspace.project_count} {workspace.project_count === 1 ? t`project` : t`projects`}
-					</Text>
-					<Text size="xs" c="dimmed">
-						{workspace.usage.audio_hours}h audio
-					</Text>
-					<Text size="xs" c="dimmed">
-						{workspace.usage.conversation_count} {workspace.usage.conversation_count === 1 ? t`conversation` : t`conversations`}
-					</Text>
-				</Group>
+				<Stack gap={6}>
+					<Group gap="lg" wrap="wrap">
+						<Text size="xs" c="dimmed">
+							{workspace.project_count} {workspace.project_count === 1 ? t`project` : t`projects`}
+						</Text>
+						<Text size="xs" c="dimmed">
+							{workspace.usage.audio_hours}h {t`total`}
+						</Text>
+						<Text size="xs" c="dimmed">
+							{workspace.usage.conversation_count} {workspace.usage.conversation_count === 1 ? t`conversation` : t`conversations`}
+						</Text>
+						{workspace.usage.at_cap && (
+							<Badge size="xs" color="red" variant="light">
+								<Trans>At limit</Trans>
+							</Badge>
+						)}
+						{!workspace.usage.at_cap && workspace.usage.approaching_cap && (
+							<Badge size="xs" color="yellow" variant="light">
+								<Trans>Approaching</Trans>
+							</Badge>
+						)}
+					</Group>
+				</Stack>
 
 				<Group justify="space-between" align="center">
 					<AvatarBubbles

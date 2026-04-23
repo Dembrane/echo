@@ -262,7 +262,27 @@ async def list_workspaces(
     )
 
     results: list[WorkspaceSummary] = []
+    from dembrane.tier_capacity import get_capacity
     for (membership, ws), (project_count, member_count, usage, previews) in zip(valid_memberships, all_aggregates):
+        # Fill in matrix §8 cap signals on the usage object so card-level
+        # rendering doesn't need to join tier → cap client-side.
+        tier = ws.get("tier") or ""
+        cap = get_capacity(tier)
+        if cap and cap.included_hours is not None:
+            usage.hours_included = cap.included_hours
+            pct = (
+                usage.audio_hours_this_month / cap.included_hours
+                if cap.included_hours
+                else 0.0
+            )
+            usage.hours_pct = round(pct, 3)
+            if (
+                cap.hard_block_on_hours
+                and usage.audio_hours_this_month >= cap.included_hours
+            ):
+                usage.at_cap = True
+            elif pct >= 0.8:
+                usage.approaching_cap = True
         results.append(WorkspaceSummary(
             id=ws["id"],
             name=ws.get("name", ""),
