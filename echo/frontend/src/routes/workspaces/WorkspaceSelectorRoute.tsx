@@ -23,6 +23,7 @@ import { useState } from "react";
 import { DiscoverableWorkspaces } from "@/components/workspace/DiscoverableWorkspaces";
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { displayRole, roleColor } from "@/lib/roles";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
@@ -152,18 +153,12 @@ function WorkspaceCard({
 							size="xs"
 							variant="light"
 							color={
-								workspace.is_external
-									? "gray"
-									: workspace.role === "admin" ||
-											workspace.role === "owner"
-										? "blue"
-										: workspace.role === "billing"
-											? "yellow"
-											: "gray"
+								workspace.is_external ? "gray" : roleColor(workspace.role)
 							}
-							style={{ textTransform: "capitalize" }}
 						>
-							{workspace.is_external ? t`Guest` : workspace.role}
+							{workspace.is_external
+								? t`Guest`
+								: displayRole(workspace.role)}
 						</Badge>
 						{!workspace.is_external && (
 							<TierBadge tier={workspace.tier} size="xs" />

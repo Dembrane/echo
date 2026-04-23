@@ -38,6 +38,7 @@ import { UsageCard } from "@/components/workspace/UsageCard";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { logoUrl } from "@/lib/avatar";
+import { displayRole } from "@/lib/roles";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
@@ -640,14 +641,27 @@ export const WorkspaceSettingsRoute = () => {
 									</Group>
 
 									<Group gap={8}>
-										{canManage ? (
+										{canManage && member.role === "owner" ? (
+											// An owner row stays locked — the Select would
+											// silently downgrade on any click because "owner"
+											// isn't in its options. Ownership transfer is a
+											// support flow, matrix §5.
+											<Tooltip
+												label={t`Ownership is locked. Contact support to transfer.`}
+											>
+												<Badge size="sm" variant="light" color="blue">
+													<Trans>Admin</Trans>
+												</Badge>
+											</Tooltip>
+										) : canManage ? (
 											<Select
-												// Owner option shown only to an actual owner —
-												// backend blocks non-owner promotion to owner
-												// anyway, but hiding the option prevents the
-												// misleading "why did this fail?" click path.
-												// Guests (is_external=true) can't be admin,
-												// owner, or billing (hard rule).
+												// Matrix §5 retires "Owner" as a user-facing role
+												// — only Admin + Member (+ Billing on non-guest
+												// seats). A workspace with a DB-level "owner"
+												// row still renders as Admin via displayRole();
+												// ownership transfer is a separate support flow
+												// and is not exposed in this picker. Guests
+												// (is_external=true) can't hold Billing/Admin.
 												data={[
 													{ label: t`Member`, value: "member" },
 													...(!member.is_external
@@ -655,9 +669,6 @@ export const WorkspaceSettingsRoute = () => {
 															{ label: t`Billing`, value: "billing" },
 															{ label: t`Admin`, value: "admin" },
 														]
-														: []),
-													...(myRole === "owner" && !member.is_external
-														? [{ label: t`Owner`, value: "owner" }]
 														: []),
 												]}
 												size="xs"
@@ -682,7 +693,7 @@ export const WorkspaceSettingsRoute = () => {
 																	<Text size="sm">
 																		<Trans>
 																			You're about to change your own role to{" "}
-																			<em>{v}</em>. You'll immediately lose
+																			<em>{displayRole(v)}</em>. You'll immediately lose
 																			access to workspace settings, invites,
 																			and member management.
 																		</Trans>
@@ -715,8 +726,8 @@ export const WorkspaceSettingsRoute = () => {
 												}}
 											/>
 										) : (
-											<Badge size="sm" variant="light" color="gray" style={{ textTransform: "capitalize" }}>
-												{member.role}
+											<Badge size="sm" variant="light" color="gray">
+												{displayRole(member.role)}
 											</Badge>
 										)}
 										{canManage && (
@@ -770,7 +781,7 @@ export const WorkspaceSettingsRoute = () => {
 											<Box>
 												<Text size="sm">{inv.email}</Text>
 												<Text size="xs" c="dimmed">
-													<span style={{ textTransform: "capitalize" }}>{inv.role}</span>
+													<span>{displayRole(inv.role)}</span>
 													{inv.invited_by_name && (
 														<>
 															{" · "}
@@ -846,8 +857,8 @@ export const WorkspaceSettingsRoute = () => {
 						<Trans>Your access</Trans>
 					</Title>
 					<Group justify="space-between" align="center">
-						<Badge size="sm" variant="light" color="blue" style={{ textTransform: "capitalize" }}>
-							{settings.my_role}
+						<Badge size="sm" variant="light" color="blue">
+							{displayRole(settings.my_role)}
 						</Badge>
 						{(() => {
 							const myMembership = settings.members.find(
@@ -1391,7 +1402,10 @@ function PrivacyAndDefaultsSection({
 											<Trans>Open to the team</Trans>
 										</Text>
 										<Text size="xs" c="dimmed">
-											<Trans>Team admins get access automatically.</Trans>
+											<Trans>
+												Anyone in your team can find this workspace. Team
+												admins can join; team members can request access.
+											</Trans>
 										</Text>
 									</Stack>
 								}
@@ -1409,7 +1423,10 @@ function PrivacyAndDefaultsSection({
 											<Trans>Private</Trans>
 										</Text>
 										<Text size="xs" c="dimmed">
-											<Trans>Only people you explicitly invite.</Trans>
+											<Trans>
+												Only people you invite. Team admins can still
+												discover and join this workspace.
+											</Trans>
 										</Text>
 										{!canGoPrivate && !currentlyPrivate && (
 											<Text size="xs" c="dimmed">

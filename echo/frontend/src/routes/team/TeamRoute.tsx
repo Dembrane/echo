@@ -46,6 +46,7 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
 import { useSearchParams } from "react-router";
 import { avatarUrl, logoUrl as resolveLogoUrl } from "@/lib/avatar";
+import { displayRole, roleColor } from "@/lib/roles";
 
 /**
  * Team admin page — single-page matrix view.
@@ -127,20 +128,14 @@ async function fetchTeamWorkspaces(teamId: string): Promise<TeamWorkspace[]> {
 type RoleFilter = "all" | "admins" | "members";
 
 // Role options by scope + caller role. Team-level doesn't include
-// billing (matrix §5 has team Admin/Billing/Member but we only ship
-// Admin + Member team-level today; billing is workspace-scope in
-// this release). Owner is only offered when caller is themselves owner.
-const TEAM_ROLE_OPTIONS_ADMIN = ["member", "admin"] as const;
-const TEAM_ROLE_OPTIONS_OWNER = ["member", "admin", "owner"] as const;
-
-const WS_ROLE_OPTIONS_ADMIN = ["member", "billing", "admin"] as const;
-const WS_ROLE_OPTIONS_OWNER = ["member", "billing", "admin", "owner"] as const;
-
-function roleColor(role: string): string {
-	if (role === "owner" || role === "admin") return "blue";
-	if (role === "billing") return "yellow";
-	return "gray";
-}
+// Matrix §5 retires "owner" as a user-facing role — it's a backend-only
+// distinction kept for last-admin protection + ownership transfer
+// mechanics. The UI offers only Admin and Member (+ Billing on
+// workspaces), and any "owner" record displays as "Admin" through
+// displayRole(). Ownership transfer is a separate staff/support flow,
+// not a role picker.
+const TEAM_ROLE_OPTIONS = ["member", "admin"] as const;
+const WS_ROLE_OPTIONS = ["member", "billing", "admin"] as const;
 
 interface RoleBadgeMenuProps {
 	currentRole: string;
@@ -159,13 +154,8 @@ function RoleBadgeMenu({
 }: RoleBadgeMenuProps) {
 	if (disabled) {
 		return (
-			<Badge
-				size={size}
-				variant="light"
-				color={roleColor(currentRole)}
-				style={{ textTransform: "capitalize" }}
-			>
-				{currentRole}
+			<Badge size={size} variant="light" color={roleColor(currentRole)}>
+				{displayRole(currentRole)}
 			</Badge>
 		);
 	}
@@ -176,10 +166,10 @@ function RoleBadgeMenu({
 					size={size}
 					variant="light"
 					color={roleColor(currentRole)}
-					style={{ textTransform: "capitalize", cursor: "pointer" }}
+					style={{ cursor: "pointer" }}
 					rightSection={<IconChevronDown size={10} />}
 				>
-					{currentRole}
+					{displayRole(currentRole)}
 				</Badge>
 			</Menu.Target>
 			<Menu.Dropdown>
@@ -188,9 +178,8 @@ function RoleBadgeMenu({
 						key={role}
 						disabled={role === currentRole}
 						onClick={() => onChange(role)}
-						style={{ textTransform: "capitalize" }}
 					>
-						{role}
+						{displayRole(role)}
 					</Menu.Item>
 				))}
 			</Menu.Dropdown>
@@ -602,11 +591,7 @@ export const TeamRoute = () => {
 									<Table.Td>
 										<RoleBadgeMenu
 											currentRole={m.role}
-											options={
-												isOwner
-													? TEAM_ROLE_OPTIONS_OWNER
-													: TEAM_ROLE_OPTIONS_ADMIN
-											}
+											options={TEAM_ROLE_OPTIONS}
 											disabled={!isAdmin}
 											onChange={(next) =>
 												teamRoleMutation.mutate({
@@ -630,7 +615,7 @@ export const TeamRoute = () => {
 											!directRole &&
 											(m.role === "owner" ||
 												(m.role === "admin" && !ws.is_private));
-										const displayRole = directRole
+										const cellRole = directRole
 											? directRole
 											: derivedAdmin
 												? "admin"
@@ -640,11 +625,11 @@ export const TeamRoute = () => {
 												key={`${m.user_id}-${ws.id}`}
 												style={{ textAlign: "center" }}
 											>
-												{displayRole ? (
+												{cellRole ? (
 													<Tooltip
 														label={
 															directRole
-																? t`${directRole} on this workspace · change in workspace settings`
+																? t`${displayRole(directRole)} on this workspace · change in workspace settings`
 																: t`Admin here (from team role)`
 														}
 														withArrow
@@ -652,10 +637,9 @@ export const TeamRoute = () => {
 														<Badge
 															size="xs"
 															variant="light"
-															color={roleColor(displayRole)}
+															color={roleColor(cellRole)}
 															style={{
 																cursor: directRole ? "pointer" : undefined,
-																textTransform: "capitalize",
 															}}
 															onClick={
 																directRole
@@ -666,7 +650,7 @@ export const TeamRoute = () => {
 																	: undefined
 															}
 														>
-															{displayRole}
+															{displayRole(cellRole)}
 														</Badge>
 													</Tooltip>
 												) : ws.is_private && m.role === "admin" ? (

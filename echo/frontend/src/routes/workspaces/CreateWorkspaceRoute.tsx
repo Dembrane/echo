@@ -283,8 +283,9 @@ export const CreateWorkspaceRoute = () => {
 												</Text>
 												<Text size="xs" c="dimmed">
 													<Trans>
-														Only people you explicitly invite. Available on
-														innovator and above.
+														Only people you invite. Team admins can still
+														discover and join. Available on innovator and
+														above.
 													</Trans>
 												</Text>
 											</Stack>

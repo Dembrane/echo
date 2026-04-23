@@ -17,6 +17,7 @@ import { useDocumentTitle } from "@mantine/hooks";
 import { toast } from "@/components/common/Toaster";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useAcceptInvite, useDeclineInvite, useMyInvites } from "@/hooks/useMyInvites";
+import { displayRole } from "@/lib/roles";
 
 export const MyInvitesRoute = () => {
 	const navigate = useI18nNavigate();
@@ -111,8 +112,8 @@ export const MyInvitesRoute = () => {
 											{inv.org_name}
 										</Text>
 										<Group gap={6} mt={8}>
-											<Badge size="xs" variant="light" color="gray" style={{ textTransform: "capitalize" }}>
-												{inv.role}
+											<Badge size="xs" variant="light" color="gray">
+												{displayRole(inv.role)}
 											</Badge>
 											{inv.invited_by_name && (
 												<Text size="xs" c="dimmed">
