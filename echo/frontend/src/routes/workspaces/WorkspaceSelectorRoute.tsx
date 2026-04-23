@@ -265,6 +265,21 @@ function AddWorkspaceCard({ teamId }: { teamId: string }) {
 	);
 }
 
+interface OrgUsageLite {
+	total_audio_hours: number;
+	workspaces_at_cap: number;
+	workspaces_approaching_cap: number;
+	total_overage_forecast_eur: number | null;
+}
+
+async function fetchOrgUsageLite(orgId: string): Promise<OrgUsageLite | null> {
+	const res = await fetch(`${API_BASE_URL}/v2/orgs/${orgId}/usage`, {
+		credentials: "include",
+	});
+	if (!res.ok) return null;
+	return res.json();
+}
+
 function TeamHeroCard({
 	team,
 	onManage,
@@ -273,6 +288,17 @@ function TeamHeroCard({
 	onManage: () => void;
 }) {
 	const isAdminOrOwner = team.role === "admin" || team.role === "owner";
+
+	// Health hint — hours this cycle + at-cap count. Admin/billing get €
+	// (server-gated). Non-admins still see cap warnings: knowing "2
+	// workspaces are at limit" is actionable even for a plain member (they
+	// can ask an admin for a different workspace to work in).
+	const { data: usage } = useQuery({
+		queryKey: ["v2", "org-usage", team.id],
+		queryFn: () => fetchOrgUsageLite(team.id),
+		staleTime: 60_000,
+	});
+
 	return (
 		<Paper
 			p="lg"
@@ -294,7 +320,38 @@ function TeamHeroCard({
 						{team.total_members}{" "}
 						{team.total_members === 1 ? t`person` : t`people`} ·{" "}
 						{team.total_projects} {t`projects`}
+						{usage && (
+							<>
+								{" · "}
+								{usage.total_audio_hours.toFixed(1)} {t`h this cycle`}
+								{usage.total_overage_forecast_eur != null &&
+									usage.total_overage_forecast_eur > 0 && (
+										<>
+											{" · "}€{Math.round(usage.total_overage_forecast_eur)}{" "}
+											{t`overage`}
+										</>
+									)}
+							</>
+						)}
 					</Text>
+					{usage &&
+						(usage.workspaces_at_cap > 0 ||
+							usage.workspaces_approaching_cap > 0) && (
+							<Group gap={6} mt={4}>
+								{usage.workspaces_at_cap > 0 && (
+									<Badge size="xs" color="red" variant="light">
+										<Trans>{usage.workspaces_at_cap} at limit</Trans>
+									</Badge>
+								)}
+								{usage.workspaces_approaching_cap > 0 && (
+									<Badge size="xs" color="yellow" variant="light">
+										<Trans>
+											{usage.workspaces_approaching_cap} approaching
+										</Trans>
+									</Badge>
+								)}
+							</Group>
+						)}
 				</Stack>
 				{isAdminOrOwner && (
 					<Button
