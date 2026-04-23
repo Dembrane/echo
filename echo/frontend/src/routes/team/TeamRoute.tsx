@@ -31,6 +31,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
+import { TierBadge } from "@/components/workspace/TierBadge";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { avatarUrl } from "@/lib/avatar";
@@ -100,7 +101,7 @@ async function fetchTeamWorkspaces(teamId: string): Promise<TeamWorkspace[]> {
 	return res.json();
 }
 
-type RoleFilter = "all" | "admins" | "members" | "guests";
+type RoleFilter = "all" | "admins" | "members";
 
 export const TeamRoute = () => {
 	const { teamId } = useParams();
@@ -133,19 +134,12 @@ export const TeamRoute = () => {
 	const filteredMembers = useMemo(() => {
 		const q = search.trim().toLowerCase();
 		return members.filter((m) => {
-			// Role filter: team role doesn't have "guest" directly, but we
-			// approximate via backend's convention (members where role maps
-			// to a guest-adjacent state). For now filter owners+admins into
-			// "admins", "member" into "members", rest treated as guests.
+			// Matrix §5: team-level roles are Admin / Billing / Member.
+			// No team-level Guest — guests exist only at the workspace
+			// level. Filter collapses owner → admin for display.
 			if (roleFilter === "admins" && !(m.role === "owner" || m.role === "admin"))
 				return false;
 			if (roleFilter === "members" && m.role !== "member") return false;
-			if (
-				roleFilter === "guests" &&
-				m.role !== "external" &&
-				m.role !== "guest"
-			)
-				return false;
 			if (!q) return true;
 			return (
 				(m.display_name || "").toLowerCase().includes(q) ||
@@ -197,12 +191,10 @@ export const TeamRoute = () => {
 								{team.workspace_count === 1 ? t`workspace` : t`workspaces`} ·{" "}
 								{team.member_count}{" "}
 								{team.member_count === 1 ? t`person` : t`people`}
-								{team.external_count > 0 ? (
-									<>
-										{" "}· {team.external_count} {t`guests`}
-									</>
-								) : null}
 							</Text>
+							{/* Matrix §5: team-level role set is Admin / Billing /
+							    Member — no team-level Guest. Guest count intentionally
+							    dropped from the header summary (HCD audit). */}
 						</Stack>
 					</Group>
 					<Group gap="xs" wrap="nowrap">
@@ -257,7 +249,6 @@ export const TeamRoute = () => {
 								{ value: "all", label: t`All` },
 								{ value: "admins", label: t`Admins` },
 								{ value: "members", label: t`Members` },
-								{ value: "guests", label: t`Guests` },
 							]}
 						/>
 					</Group>
@@ -448,8 +439,8 @@ export const TeamRoute = () => {
 
 				<Text size="xs" c="dimmed">
 					<Trans>
-						Access shown is derived from team role. Workspace-direct invites
-						are managed in each workspace's settings.
+						Team admins can join any workspace to get a direct admin seat.
+						Workspace invites live in each workspace's settings.
 					</Trans>
 				</Text>
 			</Stack>
@@ -499,9 +490,7 @@ export const TeamRoute = () => {
 									</Stack>
 								</Group>
 								<Group gap={4}>
-									<Badge size="sm" variant="light" color="blue">
-										{ws.tier}
-									</Badge>
+									<TierBadge tier={ws.tier} size="sm" />
 									{isAdmin && (
 										<Tooltip label={t`Workspace settings`} withArrow>
 											<ActionIcon

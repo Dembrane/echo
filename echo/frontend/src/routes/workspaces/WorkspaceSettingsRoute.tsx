@@ -28,6 +28,7 @@ import { useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
+import { TierBadge } from "@/components/workspace/TierBadge";
 import { UsageCard } from "@/components/workspace/UsageCard";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -324,10 +325,8 @@ export const WorkspaceSettingsRoute = () => {
 								{settings.name}
 							</Title>
 						)}
-						<Group gap={8}>
-							<Badge size="xs" variant="light" color="blue">
-								{settings.tier}
-							</Badge>
+						<Group gap={8} wrap="nowrap">
+							<TierBadge tier={settings.tier} size="xs" showTagline />
 							<Text size="xs" c="dimmed">
 								{settings.org_name}
 							</Text>
@@ -345,18 +344,20 @@ export const WorkspaceSettingsRoute = () => {
 
 				<Divider />
 
-				{/* Privacy + defaults — admin-only. Kept compact: name + logo
-				    + a single toggle for team-admin inheritance. Member
-				    inheritance is an advanced knob hidden unless the caller
-				    is an owner (exposing three sub-toggles to every admin
-				    clutters the surface). */}
-				<PrivacyAndDefaultsSection
-					settings={settings}
-					canEdit={canEditSettings}
-					workspaceId={workspaceId!}
-				/>
-
-				<Divider />
+				{/* Privacy + defaults — admin-only. Hidden entirely for non-
+				    admin roles (HCD audit 2026-04-23): disabled fields read
+				    as "broken" to members / billing / guests who can't edit
+				    them. Show nothing rather than disabled state. */}
+				{canEditSettings && (
+					<>
+						<PrivacyAndDefaultsSection
+							settings={settings}
+							canEdit={canEditSettings}
+							workspaceId={workspaceId!}
+						/>
+						<Divider />
+					</>
+				)}
 
 				{/* Usage + financial rollup (matrix §8). Role-aware rendering
 				    lives inside the card — members see raw; admin/billing see
@@ -644,7 +645,10 @@ export const WorkspaceSettingsRoute = () => {
 					<AccessRequestsList workspaceId={workspaceId} />
 				)}
 
-				{/* Your access */}
+				{/* Your access — role only. Raw policy strings removed after
+				    HCD audit (2026-04-23): "member:manage" reads as engineer-
+				    speak to a user. The role badge is sufficient for the
+				    "remind me what I can do" job. */}
 				<Divider />
 				<Stack gap={12}>
 					<Title order={5} fw={400}>
@@ -655,15 +659,6 @@ export const WorkspaceSettingsRoute = () => {
 							{settings.my_role}
 						</Badge>
 					</Group>
-					{settings.my_policies && settings.my_policies.length > 0 && (
-						<Group gap={6}>
-							{settings.my_policies.map((policy) => (
-								<Badge key={policy} size="xs" variant="outline" color="gray">
-									{policy}
-								</Badge>
-							))}
-						</Group>
-					)}
 				</Stack>
 			</Stack>
 		</Container>

@@ -139,8 +139,7 @@ export const TeamSettingsRoute = () => {
 				{!canEdit && (
 					<Alert color="gray" variant="light">
 						<Trans>
-							Only team admins and owners can change team settings. You're a{" "}
-							{team.role}.
+							Only team admins can change team settings.
 						</Trans>
 					</Alert>
 				)}

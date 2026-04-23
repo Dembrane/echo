@@ -21,6 +21,7 @@ import { IconPlus, IconSettings } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { DiscoverableWorkspaces } from "@/components/workspace/DiscoverableWorkspaces";
+import { TierBadge } from "@/components/workspace/TierBadge";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
@@ -136,9 +137,9 @@ function WorkspaceCard({
 							</Text>
 						)}
 					</Box>
-					<Badge size="xs" variant="light" color="blue">
-						{workspace.tier}
-					</Badge>
+					<TierBadge tier={workspace.tier} size="xs" />
+					{/* Tagline via tooltip — cards are dense, inline tagline
+					    would crowd the single-line workspace name. */}
 				</Group>
 
 				<Group gap="lg">
