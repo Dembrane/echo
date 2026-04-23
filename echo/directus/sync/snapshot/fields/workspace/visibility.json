@@ -1,0 +1,55 @@
+{
+  "collection": "workspace",
+  "field": "visibility",
+  "type": "string",
+  "meta": {
+    "collection": "workspace",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "visibility",
+    "group": null,
+    "hidden": false,
+    "interface": "select-dropdown",
+    "note": "Matrix v1.1 §6. open_to_team = discoverable by team admins (join) and members (request access). private = visible only to team admins in discovery. Innovator+ tier to create.",
+    "options": {
+      "choices": [
+        {
+          "text": "Open to team",
+          "value": "open_to_team"
+        },
+        {
+          "text": "Private",
+          "value": "private"
+        }
+      ]
+    },
+    "readonly": false,
+    "required": false,
+    "searchable": true,
+    "sort": 16,
+    "special": null,
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  },
+  "schema": {
+    "name": "visibility",
+    "table": "workspace",
+    "data_type": "character varying",
+    "default_value": "open_to_team",
+    "max_length": 255,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": true,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}

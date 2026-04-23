@@ -986,6 +986,82 @@ def step_9_notifications():
 # Main
 # ---------------------------------------------------------------------------
 
+def step_10_workspace_visibility():
+    """Add workspace.visibility enum (open_to_team | private).
+
+    Matrix v1.1 §6 replaces the two-boolean inherit_team_admins /
+    inherit_team_members model with a single visibility enum. This step:
+
+      1. Adds the column (nullable for transition).
+      2. Backfills existing rows from settings.inherit_team_admins:
+             inherit_team_admins == True  → 'open_to_team'  (default)
+             inherit_team_admins == False → 'private'
+
+    What it does NOT do (those happen after the backfill_direct_memberships
+    script runs --apply in prod):
+      - Drop settings.inherit_team_admins / inherit_team_members flags.
+      - Drop settings.sticky_removed tombstones.
+      - Simplify inheritance.user_can_access to direct-only.
+
+    Idempotent — rerunning only backfills rows still NULL.
+    """
+    print("\n=== Step 10: workspace.visibility enum ===")
+
+    add_field("workspace", "visibility", {
+        "type": "string",
+        "schema": {"is_nullable": True, "default_value": "open_to_team"},
+        "meta": {
+            "interface": "select-dropdown",
+            "options": {"choices": [
+                {"text": "Open to team", "value": "open_to_team"},
+                {"text": "Private", "value": "private"},
+            ]},
+            "note": (
+                "Matrix v1.1 §6. open_to_team = discoverable by team admins "
+                "(join) and members (request access). private = visible only "
+                "to team admins in discovery. Innovator+ tier to create."
+            ),
+        },
+    })
+
+    # Backfill from existing settings flags for any workspace still NULL.
+    # Batched paging handled by fetch-all behavior.
+    resp = api(
+        "GET",
+        "/items/workspace"
+        "?fields=id,settings,visibility,deleted_at"
+        "&filter[visibility][_null]=true"
+        "&filter[deleted_at][_null]=true"
+        "&limit=-1",
+    )
+    if not resp:
+        print("  WARN: could not fetch workspaces to backfill")
+        return True
+    rows = resp.get("data") or []
+    print(f"  Backfilling {len(rows)} workspaces with NULL visibility")
+
+    fixed = 0
+    failed = 0
+    for row in rows:
+        settings = row.get("settings") or {}
+        if not isinstance(settings, dict):
+            settings = {}
+        follows_admins = settings.get("inherit_team_admins", True)
+        visibility = "open_to_team" if follows_admins else "private"
+        result = api(
+            "PATCH",
+            f"/items/workspace/{row['id']}",
+            {"visibility": visibility},
+        )
+        if result is not None:
+            fixed += 1
+        else:
+            failed += 1
+    print(f"  Backfilled {fixed}/{len(rows)} (errors: {failed})")
+
+    return True
+
+
 STEPS = {
     "1": ("app_user", step_1_app_user),
     "2": ("org + org_membership", step_2_org),
@@ -996,6 +1072,7 @@ STEPS = {
     "7": ("deleted_at on conversation, project_chat, project_report", step_7_deleted_at),
     "8": ("remove legacy chat", step_8_remove_chat),
     "9": ("notifications trio (inbox)", step_9_notifications),
+    "10": ("workspace.visibility enum + backfill", step_10_workspace_visibility),
 }
 
 
