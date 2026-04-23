@@ -332,7 +332,7 @@ msgstr "{0}"
 #~ msgstr "{0} {1} listo"
 
 #. placeholder {0}: displayRole(reached[0].role as string)
-#: src/routes/team/TeamRoute.tsx:973
+#: src/routes/team/TeamRoute.tsx:961
 msgid "{0} across all"
 msgstr ""
 
@@ -364,7 +364,7 @@ msgstr "{0} Conversaciones • Editado {1}"
 #. placeholder {0}: team.name
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:156
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:332
-#: src/routes/team/TeamRoute.tsx:423
+#: src/routes/team/TeamRoute.tsx:422
 msgid "{0} logo"
 msgstr ""
 
@@ -439,7 +439,7 @@ msgstr ""
 msgid "{overflow} more people"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:1035
+#: src/routes/team/TeamRoute.tsx:1023
 msgid "{person} will lose access to every workspace in this team. Direct-only workspace invites stay intact."
 msgstr ""
 
@@ -570,8 +570,8 @@ msgid "Accept and join"
 msgstr ""
 
 #: src/components/workspace/ReferralsPanel.tsx:125
-msgid "accepted"
-msgstr ""
+#~ msgid "accepted"
+#~ msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:524
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1492
@@ -779,11 +779,11 @@ msgstr ""
 #~ msgid "Admin here (from team role)"
 #~ msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:1146
+#: src/routes/team/TeamRoute.tsx:1134
 msgid "Admin here via team role"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:541
+#: src/routes/team/TeamRoute.tsx:529
 msgid "Admins"
 msgstr ""
 
@@ -816,7 +816,7 @@ msgstr "Agentic - Ejecución guiada por herramientas"
 msgid "Agentic Chat"
 msgstr "Chat Agentic"
 
-#: src/routes/team/TeamRoute.tsx:540
+#: src/routes/team/TeamRoute.tsx:528
 msgid "All"
 msgstr "Todo"
 
@@ -1269,7 +1269,7 @@ msgstr "Avatar actualizado"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:169
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:387
-#: src/routes/team/TeamRoute.tsx:405
+#: src/routes/team/TeamRoute.tsx:404
 #: src/routes/project/report/ProjectReportRoute.tsx:603
 #: src/routes/auth/Register.tsx:174
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:334
@@ -1297,7 +1297,7 @@ msgid "Back to templates"
 msgstr "Volver a plantillas"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:501
-#: src/routes/team/TeamRoute.tsx:454
+#: src/routes/team/TeamRoute.tsx:453
 #: src/routes/invite/MyInvitesRoute.tsx:81
 msgid "Back to workspaces"
 msgstr ""
@@ -1405,9 +1405,9 @@ msgstr ""
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1275
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1554
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:387
-#: src/routes/team/TeamRoute.tsx:999
-#: src/routes/team/TeamRoute.tsx:1023
-#: src/routes/team/TeamRoute.tsx:1047
+#: src/routes/team/TeamRoute.tsx:987
+#: src/routes/team/TeamRoute.tsx:1011
+#: src/routes/team/TeamRoute.tsx:1035
 #: src/routes/project/report/ProjectReportRoute.tsx:287
 #: src/routes/project/report/ProjectReportRoute.tsx:1443
 #: src/components/workspace/TeamProjectsTable.tsx:158
@@ -1482,13 +1482,13 @@ msgstr "Tarjeta"
 
 #. placeholder {0}: displayRole(currentRole)
 #. placeholder {1}: displayRole(next)
-#: src/routes/team/TeamRoute.tsx:1016
+#: src/routes/team/TeamRoute.tsx:1004
 msgid "Change {person}'s role on {wsName} from <0>{0}</0> to <1>{1}</1>?"
 msgstr ""
 
 #. placeholder {0}: displayRole(member.role)
 #. placeholder {1}: displayRole(next)
-#: src/routes/team/TeamRoute.tsx:992
+#: src/routes/team/TeamRoute.tsx:980
 msgid "Change {person}'s team role from <0>{0}</0> to <1>{1}</1>?"
 msgstr ""
 
@@ -1496,7 +1496,7 @@ msgstr ""
 msgid "Change anyway"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:1145
+#: src/routes/team/TeamRoute.tsx:1133
 msgid "Change in workspace settings"
 msgstr ""
 
@@ -1508,16 +1508,16 @@ msgstr "Cambiar idioma"
 msgid "Change password"
 msgstr "Cambiar contraseña"
 
-#: src/routes/team/TeamRoute.tsx:999
-#: src/routes/team/TeamRoute.tsx:1023
+#: src/routes/team/TeamRoute.tsx:987
+#: src/routes/team/TeamRoute.tsx:1011
 msgid "Change role"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:989
+#: src/routes/team/TeamRoute.tsx:977
 msgid "Change team role?"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:1013
+#: src/routes/team/TeamRoute.tsx:1001
 msgid "Change workspace role?"
 msgstr ""
 
@@ -1877,7 +1877,6 @@ msgstr "Conversaciones:"
 msgid "participant.refine.cooling.down"
 msgstr "Enfriándose. Disponible en {0}"
 
-#: src/components/workspace/ReferralsPanel.tsx:70
 #: src/components/settings/TwoFactorSettingsCard.tsx:431
 #: src/components/project/ProjectQRCode.tsx:167
 #: src/components/conversation/CopyConversationTranscript.tsx:48
@@ -1909,7 +1908,6 @@ msgid "Copy"
 msgstr "Copiar"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1156
-#: src/components/workspace/ReferralsPanel.tsx:70
 #: src/components/project/ProjectQRCode.tsx:167
 msgid "Copy link"
 msgstr "Copiar enlace"
@@ -1923,8 +1921,8 @@ msgstr "Copiar enlace al portapapeles"
 #~ msgstr "Copiar enlace para compartir este informe"
 
 #: src/components/workspace/ReferralsPanel.tsx:80
-msgid "Copy referral link"
-msgstr ""
+#~ msgid "Copy referral link"
+#~ msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1187
 msgid "Copy report content"
@@ -1975,7 +1973,7 @@ msgstr ""
 msgid "Couldn't change visibility"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:548
+#: src/routes/team/TeamRoute.tsx:536
 msgid "Couldn't load team members. Try refreshing — if it keeps failing, contact support."
 msgstr ""
 
@@ -2092,8 +2090,8 @@ msgid "Creating in <0>{0}</0>"
 msgstr ""
 
 #: src/components/workspace/ReferralsPanel.tsx:133
-msgid "credits earned"
-msgstr ""
+#~ msgid "credits earned"
+#~ msgstr ""
 
 #: src/components/settings/AccountSettingsCard.tsx:224
 msgid "Crop Avatar"
@@ -2145,7 +2143,7 @@ msgstr ""
 #~ msgstr "Personalice la estructura de su informe. Esta función estará disponible pronto."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:534
-#: src/routes/team/TeamRoute.tsx:848
+#: src/routes/team/TeamRoute.tsx:836
 msgid "Danger"
 msgstr ""
 
@@ -2304,7 +2302,7 @@ msgstr ""
 msgid "Deleted successfully"
 msgstr "Eliminado con éxito"
 
-#: src/routes/team/TeamRoute.tsx:851
+#: src/routes/team/TeamRoute.tsx:839
 msgid "Deleting a team is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
 msgstr ""
 
@@ -2622,8 +2620,8 @@ msgid "Email address"
 msgstr ""
 
 #: src/components/workspace/ReferralsPanel.tsx:100
-msgid "Email it"
-msgstr ""
+#~ msgid "Email it"
+#~ msgstr ""
 
 #: src/routes/auth/VerifyEmail.tsx:42
 msgid "Email Verification"
@@ -3500,7 +3498,7 @@ msgstr "Ocultar"
 msgid "Hide data"
 msgstr "Ocultar datos"
 
-#: src/routes/team/TeamRoute.tsx:1090
+#: src/routes/team/TeamRoute.tsx:1078
 msgid "Hide detail"
 msgstr ""
 
@@ -3693,8 +3691,8 @@ msgid "Invite a member"
 msgstr ""
 
 #: src/components/workspace/ReferralsPanel.tsx:48
-msgid "Invite another team, we both get credit"
-msgstr ""
+#~ msgid "Invite another team, we both get credit"
+#~ msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:353
 msgid "Invite canceled"
@@ -3721,7 +3719,7 @@ msgstr ""
 msgid "Invite sent"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:887
+#: src/routes/team/TeamRoute.tsx:875
 msgid "Invite someone"
 msgstr ""
 
@@ -3973,8 +3971,8 @@ msgid "Link"
 msgstr "Enlace"
 
 #: src/components/workspace/ReferralsPanel.tsx:78
-msgid "Link copied"
-msgstr ""
+#~ msgid "Link copied"
+#~ msgstr ""
 
 #: src/components/settings/LegalBasisSettingsCard.tsx:123
 msgid "Link to your organisation's privacy policy that will be shown to participants"
@@ -4082,18 +4080,18 @@ msgstr ""
 #~ msgstr "Iniciar sesión como usuario existente"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1414
-#: src/routes/team/TeamRoute.tsx:779
+#: src/routes/team/TeamRoute.tsx:767
 msgid "Logo"
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1375
-#: src/routes/team/TeamRoute.tsx:738
+#: src/routes/team/TeamRoute.tsx:726
 #: src/components/settings/WhitelabelLogoCard.tsx:90
 msgid "Logo removed"
 msgstr "Logo eliminado"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1366
-#: src/routes/team/TeamRoute.tsx:730
+#: src/routes/team/TeamRoute.tsx:718
 #: src/components/settings/WhitelabelLogoCard.tsx:67
 msgid "Logo updated"
 msgstr "Logo actualizado"
@@ -4182,7 +4180,7 @@ msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:520
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:635
-#: src/routes/team/TeamRoute.tsx:542
+#: src/routes/team/TeamRoute.tsx:530
 msgid "Members"
 msgstr ""
 
@@ -4414,7 +4412,7 @@ msgstr ""
 msgid "participant.button.finish.no.text.mode"
 msgstr "No"
 
-#: src/routes/team/TeamRoute.tsx:1160
+#: src/routes/team/TeamRoute.tsx:1148
 msgid "No access"
 msgstr ""
 
@@ -4498,7 +4496,7 @@ msgstr "Aun no hay conversaciones. Puede programar un informe ahora y las conver
 #~ msgstr "Aún no se han añadido términos clave o nombres propios. Añádelos usando el campo de entrada de arriba para mejorar la precisión de la transcripción."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1445
-#: src/routes/team/TeamRoute.tsx:808
+#: src/routes/team/TeamRoute.tsx:796
 msgid "No logo set — dembrane default will be used."
 msgstr ""
 
@@ -4510,11 +4508,11 @@ msgstr "No se han detectado nuevos comentarios aún. Por favor, continúa tu dis
 msgid "No one here yet."
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:615
+#: src/routes/team/TeamRoute.tsx:603
 msgid "No one matches that filter."
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:571
+#: src/routes/team/TeamRoute.tsx:559
 msgid "No one on the team yet."
 msgstr ""
 
@@ -4630,7 +4628,7 @@ msgstr "No hay webhooks configurados"
 msgid "No webhooks found"
 msgstr "No se encontraron webhooks"
 
-#: src/routes/team/TeamRoute.tsx:970
+#: src/routes/team/TeamRoute.tsx:958
 msgid "No workspace access yet"
 msgstr ""
 
@@ -4890,7 +4888,7 @@ msgstr "Resultados"
 #~ msgid "Overage"
 #~ msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:470
+#: src/routes/team/TeamRoute.tsx:469
 #: src/components/layout/ProjectConversationLayout.tsx:44
 #: src/components/chat/ChatModeSelector.tsx:300
 #: src/components/chat/ChatModeBanner.tsx:36
@@ -5104,11 +5102,11 @@ msgstr ""
 msgid "Pending invites | dembrane"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:438
+#: src/routes/team/TeamRoute.tsx:437
 msgid "people"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:478
+#: src/routes/team/TeamRoute.tsx:477
 msgid "People"
 msgstr ""
 
@@ -5116,7 +5114,7 @@ msgstr ""
 msgid "People with access"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:1104
+#: src/routes/team/TeamRoute.tsx:1092
 msgid "Per-workspace access"
 msgstr ""
 
@@ -5128,7 +5126,7 @@ msgstr ""
 msgid "Period"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:438
+#: src/routes/team/TeamRoute.tsx:437
 msgid "person"
 msgstr ""
 
@@ -5741,8 +5739,8 @@ msgid "References"
 msgstr "Referencias"
 
 #: src/routes/team/TeamRoute.tsx:482
-msgid "Referrals"
-msgstr ""
+#~ msgid "Referrals"
+#~ msgstr ""
 
 #: src/components/workspace/UsageCard.tsx:287
 #: src/components/workspace/TeamUsageRollup.tsx:155
@@ -5834,8 +5832,8 @@ msgstr "Recordar a los usuarios que verifiquen antes de finalizar"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:837
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1440
-#: src/routes/team/TeamRoute.tsx:803
-#: src/routes/team/TeamRoute.tsx:1047
+#: src/routes/team/TeamRoute.tsx:791
+#: src/routes/team/TeamRoute.tsx:1035
 #: src/components/settings/WhitelabelLogoCard.tsx:149
 #: src/components/settings/WhitelabelLogoCard.tsx:184
 #: src/components/settings/AccountSettingsCard.tsx:163
@@ -5870,11 +5868,11 @@ msgstr "Eliminar archivo"
 #~ msgid "Remove from quick access"
 #~ msgstr "Quitar de acceso rápido"
 
-#: src/routes/team/TeamRoute.tsx:1178
+#: src/routes/team/TeamRoute.tsx:1166
 msgid "Remove from team"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:1031
+#: src/routes/team/TeamRoute.tsx:1019
 msgid "Remove from team?"
 msgstr ""
 
@@ -5892,7 +5890,7 @@ msgstr "Eliminar logotipo"
 msgid "Remove member"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:364
+#: src/routes/team/TeamRoute.tsx:363
 msgid "Removed from team"
 msgstr ""
 
@@ -6163,8 +6161,8 @@ msgstr "Haga clic con el botón derecho para resaltar"
 msgid "Role"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:312
-#: src/routes/team/TeamRoute.tsx:339
+#: src/routes/team/TeamRoute.tsx:311
+#: src/routes/team/TeamRoute.tsx:338
 msgid "Role changed"
 msgstr ""
 
@@ -6220,7 +6218,7 @@ msgstr "Guardar plantilla"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1333
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1351
-#: src/routes/team/TeamRoute.tsx:716
+#: src/routes/team/TeamRoute.tsx:704
 msgid "Saved"
 msgstr ""
 
@@ -6271,7 +6269,7 @@ msgstr "Buscar"
 msgid "Search conversations"
 msgstr "Buscar conversaciones"
 
-#: src/routes/team/TeamRoute.tsx:529
+#: src/routes/team/TeamRoute.tsx:517
 msgid "Search name or email"
 msgstr ""
 
@@ -6471,8 +6469,8 @@ msgid "Send Slack/Teams notifications when new conversations are completed"
 msgstr "Enviar notificaciones de Slack/Teams cuando se completen nuevas conversaciones"
 
 #: src/components/workspace/ReferralsPanel.tsx:117
-msgid "sent"
-msgstr ""
+#~ msgid "sent"
+#~ msgstr ""
 
 #~ msgid "Sentiment"
 #~ msgstr "Sentimiento"
@@ -6548,8 +6546,8 @@ msgid "Share your ideas with our team"
 msgstr "Comparta sus ideas con nuestro equipo"
 
 #: src/components/workspace/ReferralsPanel.tsx:52
-msgid "Share your link with another team. When they upgrade to a paid tier, both of you get an hour of usage credit on us."
-msgstr ""
+#~ msgid "Share your link with another team. When they upgrade to a paid tier, both of you get an hour of usage credit on us."
+#~ msgstr ""
 
 #: src/components/report/ReportRenderer.tsx:34
 #~ msgid "Share your voice"
@@ -6612,7 +6610,7 @@ msgstr "Mostrar reproductor de audio"
 msgid "Show data"
 msgstr "Mostrar datos"
 
-#: src/routes/team/TeamRoute.tsx:1090
+#: src/routes/team/TeamRoute.tsx:1078
 msgid "Show detail"
 msgstr ""
 
@@ -6657,7 +6655,7 @@ msgstr "Mostrar datos de revisión"
 
 #. placeholder {0}: filteredMembers.length
 #. placeholder {1}: members.length
-#: src/routes/team/TeamRoute.tsx:555
+#: src/routes/team/TeamRoute.tsx:543
 msgid "Showing {0} of {1}"
 msgstr ""
 
@@ -6669,7 +6667,7 @@ msgstr "Mostrando {displayFrom}–{displayTo} de {totalItems} entradas"
 msgid "Showing your most recent completed report."
 msgstr "Mostrando su informe completado más reciente."
 
-#: src/routes/team/TeamRoute.tsx:756
+#: src/routes/team/TeamRoute.tsx:744
 msgid "Shown in the team header and in email subject lines."
 msgstr ""
 
@@ -6862,8 +6860,8 @@ msgstr "Empezar de nuevo"
 #~ msgstr "Iniciar Grabación"
 
 #: src/components/workspace/ReferralsPanel.tsx:138
-msgid "Stats light up once your first referral lands."
-msgstr ""
+#~ msgid "Stats light up once your first referral lands."
+#~ msgstr ""
 
 #: src/components/report/ConversationStatusTable.tsx:61
 msgid "Status"
@@ -7003,7 +7001,7 @@ msgstr "Tómate un tiempo para crear un resultado que haga tu contribución conc
 msgid "Team"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:274
+#: src/routes/team/TeamRoute.tsx:273
 msgid "Team | dembrane"
 msgstr ""
 
@@ -7015,7 +7013,7 @@ msgstr ""
 msgid "Team admins and members will find this workspace from their home page. Admins can Join directly; members ask to join — you approve."
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:622
+#: src/routes/team/TeamRoute.tsx:610
 msgid "Team admins can discover and join any workspace — including private ones. Team members see open workspaces only."
 msgstr ""
 
@@ -7027,7 +7025,7 @@ msgstr ""
 #~ msgid "Team admins get access automatically."
 #~ msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:788
+#: src/routes/team/TeamRoute.tsx:776
 msgid "Team logo"
 msgstr ""
 
@@ -7035,16 +7033,16 @@ msgstr ""
 msgid "Team member"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:574
+#: src/routes/team/TeamRoute.tsx:562
 msgid "Team members appear here once they join a workspace. Invites are sent from each workspace's Members tab."
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:755
+#: src/routes/team/TeamRoute.tsx:743
 #: src/routes/onboarding/OnboardingRoute.tsx:398
 msgid "Team name"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:402
+#: src/routes/team/TeamRoute.tsx:401
 msgid "Team not found"
 msgstr ""
 
@@ -7309,9 +7307,9 @@ msgstr "Esta página se muestra después de que el participante haya completado 
 msgid "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
 msgstr "Esta página se muestra a los participantes cuando inician una conversación después de completar correctamente el tutorial."
 
-#: src/routes/team/TeamRoute.tsx:987
-#: src/routes/team/TeamRoute.tsx:1011
-#: src/routes/team/TeamRoute.tsx:1029
+#: src/routes/team/TeamRoute.tsx:975
+#: src/routes/team/TeamRoute.tsx:999
+#: src/routes/team/TeamRoute.tsx:1017
 msgid "this person"
 msgstr ""
 
@@ -7690,7 +7688,7 @@ msgid "Unknown"
 msgstr "Desconocido"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:697
-#: src/routes/team/TeamRoute.tsx:1065
+#: src/routes/team/TeamRoute.tsx:1053
 msgid "Unknown member"
 msgstr ""
 
@@ -7836,7 +7834,7 @@ msgstr "Subir Archivos"
 #~ msgstr "Cargando..."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1466
-#: src/routes/team/TeamRoute.tsx:828
+#: src/routes/team/TeamRoute.tsx:816
 msgid "Upload logo"
 msgstr ""
 
@@ -7868,7 +7866,7 @@ msgstr "La URL es requerida"
 msgid "URL must start with http:// or https://"
 msgstr "La URL debe empezar con http:// o https://"
 
-#: src/routes/team/TeamRoute.tsx:474
+#: src/routes/team/TeamRoute.tsx:473
 msgid "Usage"
 msgstr ""
 
@@ -8296,7 +8294,7 @@ msgstr "Cuando el resumen esté listo (incluye tanto la transcripción como el r
 msgid "Which team does this workspace belong to?"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:892
+#: src/routes/team/TeamRoute.tsx:880
 msgid "Which workspace?"
 msgstr ""
 
@@ -8312,7 +8310,7 @@ msgstr ""
 msgid "will be included in your report"
 msgstr "se incluirá en tu informe"
 
-#: src/routes/team/TeamRoute.tsx:436
+#: src/routes/team/TeamRoute.tsx:435
 msgid "workspace"
 msgstr ""
 
@@ -8354,7 +8352,7 @@ msgstr ""
 msgid "Workspace settings | dembrane"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:782
+#: src/routes/team/TeamRoute.tsx:770
 msgid "Workspace-level logo overrides the team logo when set."
 msgstr ""
 
@@ -8362,7 +8360,7 @@ msgstr ""
 #~ msgid "Workspace-level logo takes precedence when set."
 #~ msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:436
+#: src/routes/team/TeamRoute.tsx:435
 msgid "workspaces"
 msgstr ""
 
@@ -8413,7 +8411,7 @@ msgstr "Puedes navegar a otra página y volver más tarde. Tu informe seguirá g
 msgid "You can only upload up to {MAX_FILES} files at a time. Only the first {0} files will be added."
 msgstr "Solo puedes subir hasta {MAX_FILES} archivos a la vez. Solo los primeros {0} archivos se agregarán."
 
-#: src/routes/team/TeamRoute.tsx:1041
+#: src/routes/team/TeamRoute.tsx:1029
 msgid "You can re-invite them later from any workspace."
 msgstr ""
 
@@ -8557,12 +8555,12 @@ msgid "Your name"
 msgstr "Su nombre"
 
 #: src/components/workspace/ReferralsPanel.tsx:65
-msgid "Your referral link"
-msgstr ""
+#~ msgid "Your referral link"
+#~ msgstr ""
 
 #: src/components/workspace/ReferralsPanel.tsx:109
-msgid "Your referrals"
-msgstr ""
+#~ msgid "Your referrals"
+#~ msgstr ""
 
 #: src/routes/participant/ParticipantPostConversation.tsx:125
 msgid "Your response has been recorded. You may now close this tab."

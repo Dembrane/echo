@@ -41,7 +41,6 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
-import { ReferralsPanel } from "@/components/workspace/ReferralsPanel";
 import { TeamUsageRollup } from "@/components/workspace/TeamUsageRollup";
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { API_BASE_URL } from "@/config";
@@ -250,7 +249,7 @@ export const TeamRoute = () => {
 	// URL-driven tab state. Tab lives in the path segment
 	// (`/t/:teamId/<tab>`) so browser back steps between tabs and URLs
 	// are shareable.
-	const allowedTabs = ["overview", "usage", "people", "referrals"] as const;
+	const allowedTabs = ["overview", "usage", "people"] as const;
 	type TabValue = (typeof allowedTabs)[number];
 	const segment = (splat ?? "").split("/")[0] || "";
 	const viewRaw: TabValue = (allowedTabs as readonly string[]).includes(segment)
@@ -477,11 +476,6 @@ export const TeamRoute = () => {
 						<Tabs.Tab value="people">
 							<Trans>People</Trans>
 						</Tabs.Tab>
-						{isAdmin && (
-							<Tabs.Tab value="referrals">
-								<Trans>Referrals</Trans>
-							</Tabs.Tab>
-						)}
 					</Tabs.List>
 
 					<Tabs.Panel value="overview" pt="md">
@@ -498,12 +492,6 @@ export const TeamRoute = () => {
 							<Stack gap="md">
 								{teamId && <TeamUsageRollup orgId={teamId} />}
 							</Stack>
-						</Tabs.Panel>
-					)}
-
-					{isAdmin && teamId && (
-						<Tabs.Panel value="referrals" pt="md">
-							<ReferralsPanel teamId={teamId} />
 						</Tabs.Panel>
 					)}
 
