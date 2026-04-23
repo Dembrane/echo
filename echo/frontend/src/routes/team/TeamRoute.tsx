@@ -9,7 +9,6 @@ import {
 	Button,
 	Center,
 	Container,
-	Drawer,
 	Group,
 	Loader,
 	Paper,
@@ -24,7 +23,6 @@ import {
 import { useDocumentTitle } from "@mantine/hooks";
 import {
 	IconLock,
-	IconPlus,
 	IconSearch,
 	IconSettings,
 } from "@tabler/icons-react";
@@ -112,8 +110,9 @@ export const TeamRoute = () => {
 	const navigate = useI18nNavigate();
 	const [search, setSearch] = useState("");
 	const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
-	const [workspacesDrawer, setWorkspacesDrawer] = useState(false);
-	const [view, setView] = useState<"matrix" | "projects">("matrix");
+	const [viewRaw, setView] = useState<
+		"usage" | "matrix" | "projects" | "workspaces"
+	>("usage");
 
 	useDocumentTitle(t`Team | dembrane`);
 
@@ -135,6 +134,12 @@ export const TeamRoute = () => {
 	});
 
 	const isAdmin = team?.role === "owner" || team?.role === "admin";
+	// Admin-only views fall back to People for other roles so landing state
+	// is never an empty panel for them.
+	const view: typeof viewRaw =
+		!isAdmin && (viewRaw === "usage" || viewRaw === "projects")
+			? "matrix"
+			: viewRaw;
 
 	const filteredMembers = useMemo(() => {
 		const q = search.trim().toLowerCase();
@@ -202,59 +207,107 @@ export const TeamRoute = () => {
 							    dropped from the header summary (HCD audit). */}
 						</Stack>
 					</Group>
-					<Group gap="xs" wrap="nowrap">
-						{isAdmin && (
-							<Tooltip label={t`Team settings`} withArrow>
-								<ActionIcon
-									variant="default"
-									size="lg"
-									onClick={() => navigate(`/t/${teamId}/settings`)}
-								>
-									<IconSettings size={16} />
-								</ActionIcon>
-							</Tooltip>
-						)}
-						{isAdmin && (
-							<Button
-								size="sm"
+					{/* Header is read-only now — actions live inside the view
+					    switcher below. "New workspace" button moved off this
+					    page (home selector owns that affordance). */}
+					{isAdmin && (
+						<Tooltip label={t`Team settings`} withArrow>
+							<ActionIcon
 								variant="default"
-								onClick={() => setWorkspacesDrawer(true)}
+								size="lg"
+								onClick={() => navigate(`/t/${teamId}/settings`)}
 							>
-								<Trans>Manage workspaces</Trans>
-							</Button>
-						)}
-						{isAdmin && (
-							<Button
-								size="sm"
-								leftSection={<IconPlus size={14} />}
-								onClick={() => navigate("/w/new")}
-							>
-								<Trans>New workspace</Trans>
-							</Button>
-						)}
-					</Group>
+								<IconSettings size={16} />
+							</ActionIcon>
+						</Tooltip>
+					)}
 				</Group>
 
-				{/* Matrix §8 team-scope usage rollup — hours, seats, guests,
-				    projects aggregated across all team workspaces + count of
-				    workspaces at/approaching cap. Admin + billing see
-				    aggregate € forecast. Members see raw numbers only. */}
-				{teamId && <TeamUsageRollup orgId={teamId} />}
+				{/* Unified view switcher. Every role sees People + Workspaces;
+				    admins also see Usage + Projects. Default lands on Usage
+				    when admin (the "is this team healthy?" answer) and
+				    People for non-admins (the directory answer). */}
+				<SegmentedControl
+					size="sm"
+					value={view}
+					onChange={(v) =>
+						setView(v as "usage" | "matrix" | "projects" | "workspaces")
+					}
+					data={[
+						...(isAdmin ? [{ value: "usage", label: t`Usage` }] : []),
+						{ value: "matrix", label: t`People` },
+						{ value: "workspaces", label: t`Workspaces` },
+						...(isAdmin ? [{ value: "projects", label: t`Projects` }] : []),
+					]}
+					style={{ alignSelf: "flex-start" }}
+				/>
 
-				{/* View switcher — admin-only Projects tab gives access to
-				    the matrix §4 delete-workspace workflow (wind down
-				    projects across workspaces from one surface). */}
-				{isAdmin && (
-					<SegmentedControl
-						size="xs"
-						value={view}
-						onChange={(v) => setView(v as "matrix" | "projects")}
-						data={[
-							{ value: "matrix", label: t`People` },
-							{ value: "projects", label: t`Projects` },
-						]}
-						style={{ alignSelf: "flex-start" }}
-					/>
+				{/* Usage view — admin only (via the switcher options above). */}
+				{view === "usage" && teamId && <TeamUsageRollup orgId={teamId} />}
+
+				{/* Workspaces list — replaces the old right-drawer. Visible to
+				    every role: team members see their discoverable list too. */}
+				{view === "workspaces" && (
+					<Stack gap="xs">
+						{workspaces.map((ws) => (
+							<Paper
+								key={ws.id}
+								p="sm"
+								withBorder
+								radius="md"
+								style={{ cursor: "pointer" }}
+								onClick={() => navigate(`/w/${ws.id}/projects`)}
+							>
+								<Group justify="space-between" wrap="nowrap">
+									<Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
+										{ws.is_private && (
+											<IconLock
+												size={14}
+												style={{ color: "var(--mantine-color-gray-6)" }}
+												aria-label={t`Private workspace`}
+											/>
+										)}
+										<Stack gap={0} style={{ minWidth: 0 }}>
+											<Text size="sm" fw={500} truncate>
+												{ws.name}
+												{ws.is_default && (
+													<Text component="span" size="xs" c="dimmed" ml={6}>
+														<Trans>(default)</Trans>
+													</Text>
+												)}
+											</Text>
+											<Text size="xs" c="dimmed">
+												{ws.project_count} {t`projects`} · {ws.member_count}{" "}
+												{t`members`}
+											</Text>
+										</Stack>
+									</Group>
+									<Group gap={4}>
+										<TierBadge tier={ws.tier} size="sm" />
+										{isAdmin && (
+											<Tooltip label={t`Workspace settings`} withArrow>
+												<ActionIcon
+													variant="subtle"
+													size="sm"
+													onClick={(e) => {
+														e.stopPropagation();
+														navigate(`/w/${ws.id}/settings`);
+													}}
+												>
+													<IconSettings size={14} />
+												</ActionIcon>
+											</Tooltip>
+										)}
+									</Group>
+								</Group>
+							</Paper>
+						))}
+						{workspaces.length === 0 && (
+							<Text size="sm" c="dimmed" ta="center" py="md">
+								<Trans>No workspaces yet.</Trans>
+							</Text>
+						)}
+					</Stack>
 				)}
 
 				{/* Toolbar — only shown on People view. */}
@@ -526,77 +579,6 @@ export const TeamRoute = () => {
 				)}
 			</Stack>
 
-			{/* Manage workspaces drawer — list of team workspaces with
-			    inline nav. Keeps the primary canvas clean. */}
-			<Drawer
-				opened={workspacesDrawer}
-				onClose={() => setWorkspacesDrawer(false)}
-				title={<Text fw={500}>{t`Workspaces`}</Text>}
-				position="right"
-				padding="lg"
-				size="sm"
-			>
-				<Stack gap="xs">
-					{workspaces.map((ws) => (
-						<Paper
-							key={ws.id}
-							p="sm"
-							withBorder
-							radius="md"
-							style={{ cursor: "pointer" }}
-							onClick={() => navigate(`/w/${ws.id}/projects`)}
-						>
-							<Group justify="space-between" wrap="nowrap">
-								<Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
-									{ws.is_private && (
-										<IconLock
-											size={14}
-											style={{ color: "var(--mantine-color-gray-6)" }}
-											aria-label={t`Private workspace`}
-										/>
-									)}
-									<Stack gap={0} style={{ minWidth: 0 }}>
-										<Text size="sm" fw={500} truncate>
-											{ws.name}
-											{ws.is_default && (
-												<Text component="span" size="xs" c="dimmed" ml={6}>
-													<Trans>(default)</Trans>
-												</Text>
-											)}
-										</Text>
-										<Text size="xs" c="dimmed">
-											{ws.project_count} {t`projects`} · {ws.member_count}{" "}
-											{t`members`}
-										</Text>
-									</Stack>
-								</Group>
-								<Group gap={4}>
-									<TierBadge tier={ws.tier} size="sm" />
-									{isAdmin && (
-										<Tooltip label={t`Workspace settings`} withArrow>
-											<ActionIcon
-												variant="subtle"
-												size="sm"
-												onClick={(e) => {
-													e.stopPropagation();
-													navigate(`/w/${ws.id}/settings`);
-												}}
-											>
-												<IconSettings size={14} />
-											</ActionIcon>
-										</Tooltip>
-									)}
-								</Group>
-							</Group>
-						</Paper>
-					))}
-					{workspaces.length === 0 && (
-						<Text size="sm" c="dimmed" ta="center" py="md">
-							<Trans>No workspaces yet.</Trans>
-						</Text>
-					)}
-				</Stack>
-			</Drawer>
 		</Container>
 	);
 };
