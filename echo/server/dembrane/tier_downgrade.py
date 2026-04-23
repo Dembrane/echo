@@ -33,6 +33,7 @@ Effect = Literal["revert", "freeze"]
 DOWNGRADE_EFFECTS: dict[str, Effect] = {
     "workspace:whitelabel": "revert",   # ↺ clear custom logo
     "workspace:api_access": "freeze",   # ❄ existing tokens stay, no new/rotate
+    "workspace:webhooks":   "freeze",   # ❄ existing webhooks fire, no new configs
     "workspace:export": "freeze",       # ❄ existing exports intact
     "project:share": "freeze",          # ❄ existing shares stay
     "workspace:set_private": "freeze",  # ❄ stays private
@@ -59,6 +60,7 @@ _startup_check()
 _HUMAN: dict[str, str] = {
     "workspace:whitelabel": "Remove your custom logo (revert to dembrane logo)",
     "workspace:api_access": "Freeze API access (existing tokens keep working; no new tokens)",
+    "workspace:webhooks": "Freeze webhooks (existing webhooks keep firing; no new configs)",
     "workspace:export": "Freeze data export (existing files stay; new exports blocked)",
     "project:share": "Freeze private project sharing (existing shares stay; no new shares)",
     "workspace:set_private": "Freeze ability to make new private workspaces",

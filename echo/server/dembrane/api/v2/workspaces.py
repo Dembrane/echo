@@ -711,3 +711,264 @@ async def request_upgrade(
     )
 
     return {"status": "sent"}
+
+
+# ────────────────────────────────────────────────────────────────────
+# Usage rollup (matrix §8)
+# ────────────────────────────────────────────────────────────────────
+
+
+def _calendar_month_bounds(now: datetime) -> tuple[str, str]:
+    """Return (iso_start, iso_end_of_next_month) for the calendar month
+    containing `now`. Month-end is exclusive (so < next_start is the
+    inclusive-of-this-month check)."""
+    month_start = now.replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0
+    )
+    if now.month == 12:
+        next_start = month_start.replace(year=now.year + 1, month=1)
+    else:
+        next_start = month_start.replace(month=now.month + 1)
+    return month_start.isoformat(), next_start.isoformat()
+
+
+class ProjectUsageItem(BaseModel):
+    id: str
+    name: str
+    audio_hours: float
+    conversation_count: int
+
+
+class NextTierRecommendation(BaseModel):
+    tier: str
+    tagline: str
+    price_eur_monthly: Optional[int]
+    price_note: str
+    included_hours: Optional[int]
+    included_seats: Optional[int]
+
+
+class WorkspaceUsageResponse(BaseModel):
+    # Everyone with workspace:view_usage sees these.
+    cycle_start: str
+    cycle_end_exclusive: str
+    tier: str
+    tier_tagline: str
+    audio_hours: float
+    audio_hours_included: Optional[int]          # None = unlimited
+    seat_count: int
+    seat_count_included: Optional[int]
+    guest_count: int
+    guest_cap: Optional[int]
+    project_count: int
+    projects: list[ProjectUsageItem]
+    pilot_hard_block_active: bool                 # informational for members too
+
+    # Admin + billing only — None for members.
+    overage_forecast_eur: Optional[float] = None
+    seat_overage_eur: Optional[float] = None
+    next_tier: Optional[NextTierRecommendation] = None
+
+
+@router.get(
+    "/{workspace_id}/usage",
+    response_model=WorkspaceUsageResponse,
+)
+async def get_workspace_usage(
+    ctx: WorkspaceContext = Depends(get_workspace_context),
+) -> WorkspaceUsageResponse:
+    """Workspace usage rollup for the current calendar month.
+
+    Members see raw numbers. Admin + billing additionally see overage
+    forecast and tier recommendation (matrix §8).
+
+    Implementation: hours derive from `conversation.duration` SUM where
+    `deleted_at IS NULL AND created_at >= month_start AND created_at <
+    next_month_start`. No separate `usage_event` table (D9).
+    """
+    from dembrane.tier_capacity import (
+        compute_hour_overage_eur,
+        compute_seat_overage_eur,
+        get_capacity,
+        next_tier as tier_next,
+    )
+
+    ctx.require_policy("workspace:view_usage")
+
+    # Guest exclusion. Matrix §4 "View usage & overage" row grants Admin /
+    # Billing / Member but not Guest. Our preset system gives guests the
+    # member preset (guest = is_external=true on a direct row), so we gate
+    # here explicitly rather than forking the preset.
+    if ctx.is_external:
+        raise HTTPException(status_code=403, detail="Guests don't see workspace usage")
+
+    now = datetime.now(timezone.utc)
+    cycle_start, cycle_end_exclusive = _calendar_month_bounds(now)
+
+    # Projects in workspace (also used for per-project breakdown).
+    projects = await async_directus.get_items(
+        "project",
+        {
+            "query": {
+                "filter": {
+                    "workspace_id": {"_eq": ctx.workspace_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id", "name"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(projects, list):
+        projects = []
+
+    project_ids = [p["id"] for p in projects if p.get("id")]
+
+    # Conversations in this workspace, this cycle.
+    if project_ids:
+        conversations = await async_directus.get_items(
+            "conversation",
+            {
+                "query": {
+                    "filter": {
+                        "project_id": {"_in": project_ids},
+                        "deleted_at": {"_null": True},
+                        "created_at": {
+                            "_gte": cycle_start,
+                            "_lt": cycle_end_exclusive,
+                        },
+                    },
+                    "fields": ["project_id", "duration"],
+                    "limit": -1,
+                }
+            },
+        )
+    else:
+        conversations = []
+    if not isinstance(conversations, list):
+        conversations = []
+
+    # Per-project and total aggregates.
+    per_project_seconds: dict[str, int] = {}
+    per_project_count: dict[str, int] = {}
+    total_seconds = 0
+    for c in conversations:
+        pid = c.get("project_id")
+        if not pid:
+            continue
+        sec = int(c.get("duration") or 0)
+        total_seconds += sec
+        per_project_seconds[pid] = per_project_seconds.get(pid, 0) + sec
+        per_project_count[pid] = per_project_count.get(pid, 0) + 1
+
+    per_project_items = [
+        ProjectUsageItem(
+            id=p["id"],
+            name=p.get("name", ""),
+            audio_hours=round(per_project_seconds.get(p["id"], 0) / 3600, 2),
+            conversation_count=per_project_count.get(p["id"], 0),
+        )
+        for p in projects
+    ]
+
+    audio_hours = round(total_seconds / 3600, 2)
+
+    # Seat + guest count. Members + admin + billing count as seats; guest
+    # (is_external=true) is its own bucket and is not billed (matrix §7).
+    members = await async_directus.get_items(
+        "workspace_membership",
+        {
+            "query": {
+                "filter": {
+                    "workspace_id": {"_eq": ctx.workspace_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["role", "is_external"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(members, list):
+        members = []
+
+    seat_count = 0
+    guest_count = 0
+    for m in members:
+        role = m.get("role")
+        if m.get("is_external"):
+            # Guest bucket. A guest with an elevated role (admin/billing/
+            # owner) shouldn't exist — blocked at invite + change-role — but
+            # log if we ever see one so ops can spot it.
+            if role in ("admin", "billing", "owner"):
+                logger.warning(
+                    "external_with_elevated_role workspace=%s role=%s",
+                    ctx.workspace_id, role,
+                )
+            guest_count += 1
+            continue
+        if role in ("owner", "admin", "member", "billing"):
+            seat_count += 1
+
+    # Tier capacity lookup. Legacy rows with NULL tier fall through to the
+    # unknown-tier path below (unlimited / no block) rather than silently
+    # adopting Pilot defaults — the Pilot hard-block is only fair when
+    # the workspace was explicitly set to Pilot.
+    tier = ctx.workspace.get("tier") or ""
+    cap = get_capacity(tier)
+    if cap is None:
+        # Unknown tier — treat as unlimited / no block. Safer default
+        # than crashing on a legacy row.
+        tagline = ""
+        included_hours: Optional[int] = None
+        included_seats: Optional[int] = None
+        guest_cap: Optional[int] = None
+        hard_block = False
+    else:
+        tagline = cap.tagline
+        included_hours = cap.included_hours
+        included_seats = cap.included_seats
+        guest_cap = cap.guest_cap
+        hard_block = (
+            cap.hard_block_on_hours
+            and cap.included_hours is not None
+            and audio_hours >= cap.included_hours
+        )
+
+    base = WorkspaceUsageResponse(
+        cycle_start=cycle_start,
+        cycle_end_exclusive=cycle_end_exclusive,
+        tier=tier,
+        tier_tagline=tagline,
+        audio_hours=audio_hours,
+        audio_hours_included=included_hours,
+        seat_count=seat_count,
+        seat_count_included=included_seats,
+        guest_count=guest_count,
+        guest_cap=guest_cap,
+        project_count=len(projects),
+        projects=per_project_items,
+        pilot_hard_block_active=hard_block,
+    )
+
+    # Admin + billing: add financial surface.
+    if ctx.has_policy("workspace:view_invoices"):
+        overage_forecast = compute_hour_overage_eur(tier, audio_hours)
+        seat_overage = compute_seat_overage_eur(tier, seat_count)
+        recommended = tier_next(tier)
+        next_rec: Optional[NextTierRecommendation] = None
+        if recommended:
+            rcap = get_capacity(recommended)
+            if rcap:
+                next_rec = NextTierRecommendation(
+                    tier=recommended,
+                    tagline=rcap.tagline,
+                    price_eur_monthly=rcap.price_eur_monthly,
+                    price_note=rcap.price_note,
+                    included_hours=rcap.included_hours,
+                    included_seats=rcap.included_seats,
+                )
+        base.overage_forecast_eur = overage_forecast
+        base.seat_overage_eur = seat_overage
+        base.next_tier = next_rec
+
+    return base

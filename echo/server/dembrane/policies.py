@@ -100,6 +100,7 @@ WORKSPACE_ROLE_PRESETS: dict[str, list[str]] = {
         "chat:use",
         "report:view",
         "report:generate",
+        "workspace:view_usage",  # matrix §4: members see usage (raw, no €).
     ],
     "admin": [
         "project:read",
