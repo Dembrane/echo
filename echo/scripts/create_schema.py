@@ -1365,6 +1365,80 @@ def step_13_partner_model():
     return True
 
 
+def step_14_kickback_extensions():
+    """Matrix §10 kickback: round out `referral_ledger` with the three
+    fields step 13 didn't carry.
+
+    - `from_org_id`: client org (owner of the workspace at the time the
+      agreement was written). Denormalized so the ledger doesn't need
+      to join back through workspace to answer "what are we earning
+      from Client X across all their workspaces?" Snapshotted at
+      creation; does not update if workspace ownership moves later —
+      a handoff would produce a new ledger row.
+    - `to_team_discount_percent`: optional parallel benefit — the
+      partner's own subscription gets N% off. Null = no discount.
+      Independent of `partner_kickback_percent`.
+    - `eur_cap_kickback`: optional cap on total lifetime kickback in
+      euros. Null = uncapped. Payout side checks this before cutting
+      a cheque; the product doesn't enforce it (invoicing is manual
+      at this stage).
+
+    Idempotent.
+    """
+    print("\n=== Step 14: kickback extensions on referral_ledger ===")
+
+    if not collection_exists("referral_ledger"):
+        print("  referral_ledger missing — run step 13 first")
+        return False
+
+    add_field("referral_ledger", "from_org_id", {
+        "type": "uuid",
+        "schema": {"is_nullable": True},
+        "meta": {
+            "interface": "input",
+            "note": (
+                "FK to org — the client whose workspace bill is being "
+                "shared. Denormalized from workspace.org_id at the time "
+                "the agreement was written; stays stable across handoffs."
+            ),
+        },
+    })
+    create_relation("referral_ledger", "from_org_id", "org",
+                    schema={"on_delete": "SET NULL"})
+
+    add_field("referral_ledger", "to_team_discount_percent", {
+        "type": "integer",
+        "schema": {"is_nullable": True},
+        "meta": {
+            "interface": "input",
+            "note": (
+                "Optional. Discount % applied to the partner team's own "
+                "subscription. Independent of the kickback percent. "
+                "Null = no discount."
+            ),
+        },
+    })
+
+    add_field("referral_ledger", "eur_cap_kickback", {
+        "type": "decimal",
+        "schema": {
+            "is_nullable": True,
+            "numeric_precision": 12,
+            "numeric_scale": 2,
+        },
+        "meta": {
+            "interface": "input",
+            "note": (
+                "Optional lifetime cap on kickback paid out under this "
+                "agreement, in euros. Null = uncapped. Enforced on the "
+                "payout side; not by the product."
+            ),
+        },
+    })
+
+    return True
+
+
 STEPS = {
     "1": ("app_user", step_1_app_user),
     "2": ("org + org_membership", step_2_org),
@@ -1379,6 +1453,7 @@ STEPS = {
     "11": ("workspace downgrade tracking", step_11_downgrade_tracking),
     "12": ("access_request collection", step_12_access_requests),
     "13": ("partner-client model (§10)", step_13_partner_model),
+    "14": ("kickback extensions on referral_ledger", step_14_kickback_extensions),
 }
 
 
