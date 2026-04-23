@@ -53,11 +53,11 @@ export const PilotBlockModal = () => {
 						onClick={() => {
 							clear();
 							if (targetId) {
-								navigate(`/w/${targetId}/settings`);
+								navigate(`/w/${targetId}/settings?tab=billing`);
 							}
 						}}
 					>
-						<Trans>Go to workspace settings</Trans>
+						<Trans>Go to billing</Trans>
 					</Button>
 				</Group>
 			</Stack>

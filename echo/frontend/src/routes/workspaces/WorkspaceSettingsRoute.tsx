@@ -15,6 +15,7 @@ import {
 	Radio,
 	Select,
 	Stack,
+	Tabs,
 	Text,
 	TextInput,
 	Title,
@@ -25,10 +26,11 @@ import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { IconPlus, IconRefresh, IconTrash, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
 import { TierBadge } from "@/components/workspace/TierBadge";
+import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { UsageCard } from "@/components/workspace/UsageCard";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -309,6 +311,31 @@ export const WorkspaceSettingsRoute = () => {
 	const myRole = settings.my_role;
 	const myAppUserId = meV2?.id ?? null;
 	const canEditSettings = settings.my_policies?.includes("settings:manage") ?? false;
+	const seesFinancials =
+		settings.my_policies?.includes("workspace:view_invoices") ?? false;
+
+	// Tab state — URL-driven for shareable + reload-stable links. Role-
+	// based default lands each role on the tab most useful to them:
+	//   - Billing role → billing (finance view is their whole job here).
+	//   - Member → overview (members list is their main read).
+	//   - Admin → overview (same; admin manages members here too).
+	//   - Guest → no tabs at all; bypass below.
+	const [searchParams, setSearchParams] = useSearchParams();
+	const tabParam = searchParams.get("tab");
+	const defaultTab =
+		myRole === "billing" && !canManage ? "billing" : "overview";
+	const allowedTabs = ["overview", "billing"] as const;
+	type TabValue = (typeof allowedTabs)[number];
+	const activeTab: TabValue =
+		tabParam && (allowedTabs as readonly string[]).includes(tabParam)
+			? (tabParam as TabValue)
+			: (defaultTab as TabValue);
+	const setActiveTab = (value: string | null) => {
+		if (!value) return;
+		const next = new URLSearchParams(searchParams);
+		next.set("tab", value);
+		setSearchParams(next, { replace: true });
+	};
 
 	return (
 		<>
@@ -375,30 +402,67 @@ export const WorkspaceSettingsRoute = () => {
 
 				<Divider />
 
-				{/* Privacy + defaults — admin-only. Hidden entirely for non-
-				    admin roles (HCD audit 2026-04-23): disabled fields read
-				    as "broken" to members / billing / guests who can't edit
-				    them. Show nothing rather than disabled state. */}
-				{canEditSettings && (
-					<>
-						<PrivacyAndDefaultsSection
-							settings={settings}
-							canEdit={canEditSettings}
-							workspaceId={workspaceId!}
-						/>
-						<Divider />
-					</>
-				)}
+				{/* Guests bypass the tab structure — they have one workspace
+				    and nothing to navigate. Tabs come next for everyone else. */}
+				{!iAmGuest && (
+					<Tabs
+						value={activeTab}
+						onChange={setActiveTab}
+						keepMounted={false}
+					>
+						<Tabs.List>
+							<Tabs.Tab value="overview">
+								<Trans>Overview</Trans>
+							</Tabs.Tab>
+							<Tabs.Tab value="billing">
+								<Trans>Billing</Trans>
+							</Tabs.Tab>
+						</Tabs.List>
 
-				{/* Usage + financial rollup (matrix §8). Role-aware rendering
-				    lives inside the card — members see raw; admin/billing see
-				    overage forecast + next-tier recommendation. Guests are
-				    excluded entirely (matrix §4 "View usage & overage" ✗). */}
-				{workspaceId && !iAmGuest && <UsageCard workspaceId={workspaceId} />}
+						<Tabs.Panel value="billing" pt="md">
+							<Stack gap={16}>
+								{workspaceId && <UsageCard workspaceId={workspaceId} />}
+								{/* Matrix §1 full capacity matrix on the billing tab.
+								    Non-compact: price / duration / seats / overage /
+								    hours / guests / training. Highlights the current
+								    tier so admins can see what they have vs what's
+								    next. */}
+								<TierCapacityMatrix
+									highlightTier={settings.tier}
+									compact={false}
+								/>
+								{seesFinancials && (
+									<Text size="xs" c="dimmed">
+										<Trans>
+											Invoices and payment method will land here in a
+											future release. Request an upgrade above or email{" "}
+											<a
+												href="mailto:upgrades@dembrane.com"
+												style={{ color: "#4169e1" }}
+											>
+												upgrades@dembrane.com
+											</a>{" "}
+											for now.
+										</Trans>
+									</Text>
+								)}
+							</Stack>
+						</Tabs.Panel>
 
-				{!iAmGuest && <Divider />}
-
-				{/* Members */}
+						<Tabs.Panel value="overview" pt="md">
+							<Stack gap={24}>
+								{/* Privacy + defaults — admin-only. Hidden entirely
+								    for non-admin roles (HCD audit 2026-04-23):
+								    disabled fields read as "broken" to members +
+								    billing. */}
+								{canEditSettings && (
+									<PrivacyAndDefaultsSection
+										settings={settings}
+										canEdit={canEditSettings}
+										workspaceId={workspaceId!}
+									/>
+								)}
+								{canEditSettings && <Divider />}
 				<Stack gap={16}>
 					<Group justify="space-between">
 						<Title order={5} fw={400}>
@@ -729,6 +793,59 @@ export const WorkspaceSettingsRoute = () => {
 						})()}
 					</Group>
 				</Stack>
+							</Stack>
+						</Tabs.Panel>
+					</Tabs>
+				)}
+
+				{/* Guest view — minimal, no tabs. They can see their own
+				    access block + leave affordance, nothing else. */}
+				{iAmGuest && (
+					<Stack gap={12}>
+						<Title order={5} fw={400}>
+							<Trans>Your access</Trans>
+						</Title>
+						<Group justify="space-between" align="center">
+							<Badge size="sm" variant="light" color="yellow">
+								<Trans>Guest</Trans>
+							</Badge>
+							{(() => {
+								const myMembership = settings.members.find(
+									(m) => m.user_id === myAppUserId,
+								);
+								if (!myMembership) return null;
+								return (
+									<Button
+										size="compact-xs"
+										variant="subtle"
+										color="gray"
+										onClick={() => {
+											modals.openConfirmModal({
+												title: t`Leave workspace`,
+												children: (
+													<Text size="sm">
+														<Trans>
+															You'll lose access to this workspace.
+														</Trans>
+													</Text>
+												),
+												labels: {
+													confirm: t`Leave workspace`,
+													cancel: t`Cancel`,
+												},
+												confirmProps: { color: "red" },
+												onConfirm: () =>
+													leaveMutation.mutate(myMembership.id),
+											});
+										}}
+									>
+										<Trans>Leave workspace</Trans>
+									</Button>
+								);
+							})()}
+						</Group>
+					</Stack>
+				)}
 			</Stack>
 		</Container>
 

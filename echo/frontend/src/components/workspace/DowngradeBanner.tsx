@@ -92,7 +92,7 @@ export const DowngradeBanner = () => {
 						component="button"
 						type="button"
 						size="sm"
-						onClick={() => navigate(`/w/${workspaceId}/settings`)}
+						onClick={() => navigate(`/w/${workspaceId}/settings?tab=billing`)}
 					>
 						<Trans>Learn more</Trans>
 					</Anchor>
