@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Badge,
@@ -139,17 +139,18 @@ export const TeamProjectsTable = ({ orgId }: { orgId: string }) => {
 				<Stack gap={8}>
 					<Text size="sm">
 						<Trans>
-							This soft-deletes the project in {p.workspace_name}.
-							Conversations are preserved in the database but hidden from
-							all views.
+							Delete this project in {p.workspace_name}? Conversations
+							and data stay recoverable for 30 days, then are permanently
+							removed.
 						</Trans>
 					</Text>
 					{p.conversation_count > 0 && (
 						<Text size="sm" c="dimmed">
-							<Trans>
-								{p.conversation_count} conversations will be hidden along
-								with it.
-							</Trans>
+							<Plural
+								value={p.conversation_count}
+								one="# conversation will be hidden along with it."
+								other="# conversations will be hidden along with it."
+							/>
 						</Text>
 					)}
 				</Stack>

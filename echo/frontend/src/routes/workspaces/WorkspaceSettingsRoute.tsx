@@ -464,18 +464,17 @@ export const WorkspaceSettingsRoute = () => {
 								{settings.name}
 							</Title>
 						)}
+						{/* Header stays minimal — tier pill only, tagline lives on
+						    the Billing tab where it's next to the price. Team name
+						    is already in the nav breadcrumb; duplicating it here
+						    was audit noise (2026-04-23). */}
 						<Group gap={8} wrap="nowrap">
 							{iAmGuest ? (
 								<Badge size="xs" variant="light" color="yellow">
 									<Trans>Guest of {settings.org_name}</Trans>
 								</Badge>
 							) : (
-								<TierBadge tier={settings.tier} size="xs" showTagline />
-							)}
-							{!iAmGuest && (
-								<Text size="xs" c="dimmed">
-									{settings.org_name}
-								</Text>
+								<TierBadge tier={settings.tier} size="xs" />
 							)}
 						</Group>
 					</Stack>
@@ -920,9 +919,10 @@ export const WorkspaceSettingsRoute = () => {
 											</Title>
 											<Text size="sm" c="dimmed">
 												<Trans>
-													Soft-delete the workspace from your team. Members
-													lose access. Conversations stay in the database for
-													the retention window but vanish from every view.
+													Delete this workspace. Members lose access
+													immediately. Conversations and data stay
+													recoverable for 30 days, then are permanently
+													removed.
 												</Trans>
 											</Text>
 										</Stack>

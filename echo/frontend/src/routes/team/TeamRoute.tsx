@@ -410,8 +410,6 @@ export const TeamRoute = () => {
 							team={team}
 							teamId={teamId!}
 							canEdit={isAdmin}
-							workspaceCount={workspaces.length}
-							memberCount={members.length}
 							queryClient={queryClient}
 						/>
 					</Tabs.Panel>
@@ -760,15 +758,11 @@ function OverviewPanel({
 	team,
 	teamId,
 	canEdit,
-	workspaceCount,
-	memberCount,
 	queryClient,
 }: {
 	team: TeamDetail;
 	teamId: string;
 	canEdit: boolean;
-	workspaceCount: number;
-	memberCount: number;
 	queryClient: ReturnType<typeof useQueryClient>;
 }) {
 	// Autosave on blur — matches the inline-edit pattern elsewhere in the
@@ -909,22 +903,10 @@ function OverviewPanel({
 				</Stack>
 			</Stack>
 
-			{/* At-a-glance counts. Keep light — the detailed views are one
-			    tab over. */}
-			<Group gap="xl">
-				<Stack gap={0}>
-					<Text size="lg" fw={500}>{workspaceCount}</Text>
-					<Text size="xs" c="dimmed">
-						<Trans>workspaces</Trans>
-					</Text>
-				</Stack>
-				<Stack gap={0}>
-					<Text size="lg" fw={500}>{memberCount}</Text>
-					<Text size="xs" c="dimmed">
-						<Trans>people</Trans>
-					</Text>
-				</Stack>
-			</Group>
+			{/* Count tiles dropped 2026-04-23: the team header subtitle
+			    already says "N workspaces · M people", and the Usage /
+			    People tabs hold the detailed views. Repeating the same
+			    numbers on Overview was just noise. */}
 		</Stack>
 	);
 }
