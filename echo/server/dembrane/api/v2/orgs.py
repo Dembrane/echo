@@ -1007,7 +1007,10 @@ async def get_org_usage(
                             + (int(c.get("duration") or 0) / 3600.0)
                         )
 
-    # Memberships — one read, classify by is_external.
+    # Memberships — dedupe by (workspace_id, user_id). Pre-walkback data
+    # can carry both a direct and an inherited row for the same pair
+    # (matrix §7: "one seat per person per workspace"). Row-count alone
+    # would double-bill the same human.
     total_seat_count = 0
     total_guest_count = 0
     if ws_ids:
@@ -1019,16 +1022,39 @@ async def get_org_usage(
                         "workspace_id": {"_in": ws_ids},
                         "deleted_at": {"_null": True},
                     },
-                    "fields": ["role", "is_external"],
+                    "fields": ["workspace_id", "user_id", "role", "source", "is_external"],
                     "limit": -1,
                 }
             },
         ) or []
         if isinstance(memberships, list):
+            # Dedupe: prefer direct over inherited, then seat-worthy over not.
+            by_pair: dict[tuple[str, str], dict] = {}
+            seat_roles = {"owner", "admin", "member", "billing"}
             for m in memberships:
+                wid = m.get("workspace_id")
+                uid = m.get("user_id")
+                if not wid or not uid:
+                    continue
+                key = (wid, uid)
+                existing = by_pair.get(key)
+                if existing is None:
+                    by_pair[key] = m
+                    continue
+                existing_direct = existing.get("source") == "direct"
+                this_direct = m.get("source") == "direct"
+                if this_direct and not existing_direct:
+                    by_pair[key] = m
+                elif this_direct == existing_direct:
+                    if (
+                        m.get("role") in seat_roles
+                        and existing.get("role") not in seat_roles
+                    ):
+                        by_pair[key] = m
+            for m in by_pair.values():
                 if m.get("is_external"):
                     total_guest_count += 1
-                elif m.get("role") in ("admin", "owner", "member", "billing"):
+                elif m.get("role") in seat_roles:
                     total_seat_count += 1
 
     # Per-tier aggregation for cap counts + forecast.

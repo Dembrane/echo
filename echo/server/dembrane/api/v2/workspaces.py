@@ -1022,9 +1022,44 @@ async def get_workspace_usage(
     if not isinstance(members, list):
         members = []
 
+    # Seat + guest count — deduplicated by user_id. Matrix §7 says "one
+    # seat per person per workspace", so we count distinct users, not
+    # distinct rows. Pre-walkback data can carry both a source='direct'
+    # row and a legacy source='inherited' row for the same (workspace,
+    # user) pair, and a naive row-count would double-bill the same
+    # human.
+    #
+    # Direct rows take priority over inherited (matches inheritance.py
+    # get_effective_members: a user's direct role supersedes their
+    # derived one). is_external is read from the winning row.
+    by_user: dict[str, dict] = {}
+    for m in members:
+        uid = m.get("user_id")
+        if not uid:
+            continue
+        # Skip rows with no role or with a retired role value that
+        # wouldn't count either way.
+        role = m.get("role")
+        existing = by_user.get(uid)
+        if existing is None:
+            by_user[uid] = m
+            continue
+        # Prefer direct over inherited. If both are direct (shouldn't
+        # happen, but guard), keep the one with a seat-worthy role over
+        # a non-seat one.
+        existing_direct = existing.get("source") == "direct"
+        this_direct = m.get("source") == "direct"
+        if this_direct and not existing_direct:
+            by_user[uid] = m
+        elif this_direct and existing_direct:
+            # Double-direct: prefer the seat-worthy role.
+            seat_roles = {"owner", "admin", "member", "billing"}
+            if role in seat_roles and existing.get("role") not in seat_roles:
+                by_user[uid] = m
+
     seat_count = 0
     guest_count = 0
-    for m in members:
+    for m in by_user.values():
         role = m.get("role")
         if m.get("is_external"):
             # Guest bucket. A guest with an elevated role (admin/billing/
