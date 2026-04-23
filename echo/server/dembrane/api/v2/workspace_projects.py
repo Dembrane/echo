@@ -8,7 +8,11 @@ from pydantic import BaseModel
 
 from dembrane.utils import generate_uuid
 from dembrane.directus_async import async_directus
-from dembrane.api.v2.middleware import WorkspaceContext, get_workspace_context
+from dembrane.api.v2.middleware import (
+    WorkspaceContext,
+    get_workspace_context,
+    require_no_pilot_block,
+)
 from dembrane.api.dependency_auth import DependencyDirectusSession
 
 router = APIRouter()
@@ -406,8 +410,14 @@ async def create_workspace_project(
     auth: DependencyDirectusSession,
     ctx: WorkspaceContext = Depends(get_workspace_context),
 ) -> V2CreateProjectResponse:
-    """Create a project in a workspace. Requires project:create policy."""
+    """Create a project in a workspace. Requires project:create policy.
+
+    Host-side operation — gated by the Pilot hard-block (matrix §8). A
+    Pilot workspace at the 10h cap cannot create new projects until the
+    admin upgrades; the participant portal continues to operate regardless.
+    """
     ctx.require_policy("project:create")
+    await require_no_pilot_block(ctx)
 
     project_id = generate_uuid()
     result = await async_directus.create_item("project", {

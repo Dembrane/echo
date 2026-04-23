@@ -148,3 +148,26 @@ def compute_seat_overage_eur(tier: str, seats_used: int) -> float:
         return 0.0
     over = max(0, seats_used - cap.included_seats)
     return round(over * cap.seat_overage_eur, 2)
+
+
+def is_hard_blocked(tier: str, hours_used: float) -> bool:
+    """Is this workspace hitting a hard block right now?
+
+    Matrix §8: Pilot is the only hard-block tier. Pioneer+ bill overage
+    and keep going; Guardian is unlimited. The hard block applies to
+    **host-side operations only** — participant recording + upload +
+    transcription are always allowed.
+
+    Returns False when:
+        - Tier is unknown (legacy NULL row) — treat as unlimited / safe.
+        - Tier is not Pilot — no hard-block tier.
+        - Tier is Pilot but hours_used < included_hours.
+    """
+    cap = get_capacity(tier)
+    if cap is None:
+        return False
+    if not cap.hard_block_on_hours:
+        return False
+    if cap.included_hours is None:
+        return False
+    return hours_used >= cap.included_hours

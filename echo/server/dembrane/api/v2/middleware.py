@@ -135,3 +135,105 @@ async def get_workspace_context(
         source=source,
         is_external=is_external,
     )
+
+
+# ────────────────────────────────────────────────────────────────────
+# Pilot hard-block — host-side operations only (matrix §8)
+# ────────────────────────────────────────────────────────────────────
+
+
+async def _current_cycle_hours(workspace_id: str) -> float:
+    """Sum of conversation.duration across this workspace's projects for
+    the current calendar month (UTC). Respects soft-delete on both
+    project and conversation."""
+    from datetime import datetime, timezone
+
+    now = datetime.now(timezone.utc)
+    month_start = now.replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0
+    )
+    if now.month == 12:
+        next_start = month_start.replace(year=now.year + 1, month=1)
+    else:
+        next_start = month_start.replace(month=now.month + 1)
+
+    projects = await async_directus.get_items(
+        "project",
+        {
+            "query": {
+                "filter": {
+                    "workspace_id": {"_eq": workspace_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(projects, list) or not projects:
+        return 0.0
+
+    ids = [p["id"] for p in projects if p.get("id")]
+    if not ids:
+        return 0.0
+
+    conversations = await async_directus.get_items(
+        "conversation",
+        {
+            "query": {
+                "filter": {
+                    "project_id": {"_in": ids},
+                    "deleted_at": {"_null": True},
+                    "created_at": {
+                        "_gte": month_start.isoformat(),
+                        "_lt": next_start.isoformat(),
+                    },
+                },
+                "fields": ["duration"],
+                "limit": -1,
+            }
+        },
+    )
+    if not isinstance(conversations, list):
+        return 0.0
+
+    total = sum(int(c.get("duration") or 0) for c in conversations)
+    return total / 3600.0
+
+
+async def require_no_pilot_block(
+    ctx: WorkspaceContext,
+) -> None:
+    """Raise 402 if this workspace is a Pilot workspace at or past its
+    10-hour cap. Matrix §8: **host-side** operations are blocked; the
+    participant portal (recording, upload, transcription) is never gated
+    on this.
+
+    Use this dep in addition to `get_workspace_context` on host-side
+    endpoints: project creation, chat / agentic analysis, transcript
+    view, report generate/update, data export.
+
+    Copy choice (response body) includes the participant-reassurance line
+    verbatim per matrix — the UI's level-3 modal (screens/status-banner)
+    lifts this text for the hard-block screen.
+    """
+    from dembrane.tier_capacity import is_hard_blocked
+
+    tier = ctx.workspace.get("tier")
+    if not tier:
+        return  # legacy NULL tier — treat as unlimited (not Pilot)
+
+    # Only Pilot hard-blocks. Short-circuit before reaching the DB.
+    if tier != "pilot":
+        return
+
+    hours = await _current_cycle_hours(ctx.workspace_id)
+    if is_hard_blocked(tier, hours):
+        raise HTTPException(
+            status_code=402,
+            detail=(
+                "Pilot limit reached. Host-side tools are paused. "
+                "Recording keeps working — your participants are unaffected. "
+                "Upgrade to continue."
+            ),
+        )
