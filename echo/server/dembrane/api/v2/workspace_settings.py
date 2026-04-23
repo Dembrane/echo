@@ -330,9 +330,13 @@ _ALLOWED_LOGO_TYPES = {
     "image/png",
     "image/jpeg",
     "image/jpg",
-    "image/svg+xml",
     "image/webp",
 }
+# SVG is intentionally excluded: SVG can carry inline <script>, and files
+# served from /assets/{id} are same-origin with the app. Until Directus
+# is configured to strip script content on SVG (or we add our own magic-
+# byte + script-tag sanitizer), PNG/JPEG/WebP only. Raster-only also
+# means we can rely on magic bytes if we ever harden this further.
 # 5 MB — same practical cap participant uploads use. Logos are tiny; larger
 # than this is almost always a misfired upload.
 _MAX_LOGO_BYTES = 5 * 1024 * 1024
@@ -371,7 +375,7 @@ async def upload_workspace_logo(
     if file.content_type and file.content_type not in _ALLOWED_LOGO_TYPES:
         raise HTTPException(
             status_code=400,
-            detail="Logo must be PNG, JPEG, SVG, or WebP",
+            detail="Logo must be PNG, JPEG, or WebP",
         )
 
     file_content = await file.read()

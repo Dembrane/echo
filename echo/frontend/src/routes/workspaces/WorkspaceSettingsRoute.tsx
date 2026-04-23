@@ -623,7 +623,23 @@ export const WorkspaceSettingsRoute = () => {
 						</Button>
 					)}
 
-					{/* Member list */}
+					{/* Member list. Empty state hero if no members (rare —
+					    creator is always a member — but guards against the
+					    migration-time corner where the caller-row is the
+					    only entry and got deduped upstream). */}
+					{settings.members.length === 0 && (
+						<Stack align="center" gap={6} py={32}>
+							<Text size="sm" fw={500}>
+								<Trans>No one here yet.</Trans>
+							</Text>
+							<Text size="xs" c="dimmed" ta="center" maw={360}>
+								<Trans>
+									Invite teammates to collaborate on projects and
+									conversations in this workspace.
+								</Trans>
+							</Text>
+						</Stack>
+					)}
 					<Stack gap={0}>
 						{settings.members.map((member, idx) => (
 							<Paper
@@ -1009,8 +1025,15 @@ export const WorkspaceSettingsRoute = () => {
 												<Stack gap={8}>
 													<Text size="xs" c="dimmed">
 														<Trans>
-															Type <strong>{settings.name}</strong> to
-															confirm.
+															Type{" "}
+															<Text
+																span
+																fs="italic"
+																style={{ color: "#4169e1" }}
+															>
+																{settings.name}
+															</Text>{" "}
+															to confirm.
 														</Trans>
 													</Text>
 													<TextInput
@@ -1395,7 +1418,7 @@ function PrivacyAndDefaultsSection({
 				<FileButton
 					resetRef={logoResetRef}
 					onChange={handleLogoSelect}
-					accept="image/png,image/jpeg,image/svg+xml,image/webp"
+					accept="image/png,image/jpeg,image/webp"
 					disabled={!canEdit}
 				>
 					{(props) => (
@@ -1471,8 +1494,8 @@ function PrivacyAndDefaultsSection({
 										</Text>
 										<Text size="xs" c="dimmed">
 											<Trans>
-												Only people you invite. Team admins can still
-												discover and join this workspace.
+												Only invited participants. Team admins can still
+												find and join.
 											</Trans>
 										</Text>
 										{!canGoPrivate && !currentlyPrivate && (

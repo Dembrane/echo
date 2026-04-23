@@ -361,9 +361,11 @@ _ALLOWED_LOGO_TYPES = {
     "image/png",
     "image/jpeg",
     "image/jpg",
-    "image/svg+xml",
     "image/webp",
 }
+# SVG excluded — see workspace_settings.py for rationale (stored XSS
+# via <script> in SVG; /assets/ is same-origin). Keep the two sets in
+# lockstep.
 _MAX_LOGO_BYTES = 5 * 1024 * 1024
 
 
@@ -395,7 +397,7 @@ async def upload_org_logo(
     if file.content_type and file.content_type not in _ALLOWED_LOGO_TYPES:
         raise HTTPException(
             status_code=400,
-            detail="Logo must be PNG, JPEG, SVG, or WebP",
+            detail="Logo must be PNG, JPEG, or WebP",
         )
     file_content = await file.read()
     if len(file_content) > _MAX_LOGO_BYTES:

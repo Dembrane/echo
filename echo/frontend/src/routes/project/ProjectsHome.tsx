@@ -353,6 +353,7 @@ export const ProjectsHomeRoute = () => {
 											disabled={isFetchingNextPage}
 											variant="transparent"
 											onClick={() => setSearch("")}
+											aria-label={t`Clear search`}
 											{...testId("project-search-clear-button")}
 										>
 											<IconX />

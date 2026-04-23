@@ -366,10 +366,17 @@ export const TeamRoute = () => {
 							    dropped from the header summary (HCD audit). */}
 						</Stack>
 					</Group>
-					{/* Header is read-only now — team-name + logo editing
-					    lives in the Overview tab, not behind a gear icon.
-					    Dropping the gear kills the duplicate settings page
-					    that used to live at /t/:id/settings. */}
+					{/* Back link top-right per the canonical header pattern
+					    (design review 2026-04-23). No gear icon — team-name
+					    + logo editing live inline in the Overview tab. */}
+					<Button
+						variant="subtle"
+						size="xs"
+						color="gray"
+						onClick={() => navigate("/w")}
+					>
+						<Trans>Back to workspaces</Trans>
+					</Button>
 				</Group>
 
 				{/* Tabbed canvas per demo feedback. Overview holds team name
@@ -466,10 +473,29 @@ export const TeamRoute = () => {
 					</Group>
 				)}
 
+				{/* Hero empty state — matches ProjectsHome pattern (audit §7).
+				    A team with zero members is vanishingly rare in practice
+				    (the team creator is always the first admin), but the
+				    matrix rendered silently when it happened; surface that
+				    instead so the state isn't "app looks broken." */}
+				{!membersError && members.length === 0 && (
+					<Stack align="center" gap={6} py={48}>
+						<Title order={4} fw={400}>
+							<Trans>No one on the team yet.</Trans>
+						</Title>
+						<Text size="sm" c="dimmed" ta="center" maw={400}>
+							<Trans>
+								Team members appear here once they join a workspace.
+								Invites are sent from each workspace's Members tab.
+							</Trans>
+						</Text>
+					</Stack>
+				)}
+
 				{/* Matrix — the main content. Sticky first column (name+email)
 				    so it stays visible on horizontal scroll. Mantine Table
 				    with stickyHeader + custom sticky-left on the first cell. */}
-				{true && (
+				{!membersError && members.length > 0 && (
 				<Paper withBorder radius="md" style={{ overflowX: "auto" }}>
 					<Table
 						stickyHeader
@@ -681,7 +707,7 @@ export const TeamRoute = () => {
 													</Tooltip>
 												) : ws.is_private && m.role === "admin" ? (
 													<Tooltip
-														label={t`Private workspace — ask the workspace owner for an invite`}
+														label={t`Private workspace — ask a workspace admin for an invite`}
 														withArrow
 													>
 														<Text size="xs" c="dimmed">
@@ -908,7 +934,7 @@ function OverviewPanel({
 					<FileButton
 						resetRef={logoResetRef}
 						onChange={handleLogoSelect}
-						accept="image/png,image/jpeg,image/svg+xml,image/webp"
+						accept="image/png,image/jpeg,image/webp"
 						disabled={!canEdit}
 					>
 						{(props) => (
