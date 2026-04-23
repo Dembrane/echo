@@ -1,29 +1,31 @@
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Alert,
+	Badge,
 	Box,
 	Button,
 	Container,
-	Divider,
 	Group,
 	SimpleGrid,
 	Stack,
 	Text,
 	TextInput,
 	Title,
+	Tooltip,
 } from "@mantine/core";
 import { useDebouncedValue, useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
-import { IconInfoCircle, IconSearch, IconX } from "@tabler/icons-react";
+import { IconSearch, IconSettings, IconX } from "@tabler/icons-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useSearchParams } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useCurrentUser } from "@/components/auth/hooks";
-import { CloseableAlert } from "@/components/common/ClosableAlert";
 import { toast } from "@/components/common/Toaster";
+import { API_BASE_URL } from "@/config";
 import {
 	useCreateProjectMutation,
 	useProjectsHome,
@@ -31,7 +33,6 @@ import {
 	useUpdateProjectByIdMutation,
 } from "@/components/project/hooks";
 import { PinnedProjectCard } from "@/components/project/PinnedProjectCard";
-import { WorkspaceHomeSummary } from "@/components/workspace/WorkspaceHomeSummary";
 import { ProjectListItem } from "@/components/project/ProjectListItem";
 import { ProjectListSkeleton } from "@/components/project/ProjectListSkeleton";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -59,11 +60,34 @@ export const ProjectsHomeRoute = () => {
 
 	const { ref: loadMoreRef, inView } = useInView();
 
-	const { workspaceId } = useWorkspace();
+	const { workspaceId, workspace } = useWorkspace();
+
+	// Pilot is the only tier with a hard hour cap, so we surface the
+	// hour count inline in the header. Other tiers hide usage by default
+	// per audit §1 — the projects page is about project selection, not
+	// quota monitoring.
+	const isPilot = workspace?.tier === "pilot";
+	const { data: pilotHours } = useQuery({
+		queryKey: ["v2", "workspace-usage", workspaceId, 0],
+		queryFn: async () => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/workspaces/${workspaceId}/usage`,
+				{ credentials: "include" },
+			);
+			if (!res.ok) return null;
+			return res.json() as Promise<{
+				audio_hours: number;
+				audio_hours_included: number | null;
+			}>;
+		},
+		enabled: Boolean(isPilot && workspaceId),
+		staleTime: 60_000,
+	});
 
 	// Use v2 (workspace-scoped) when workspace context exists, v1 otherwise
 	const v1Query = useProjectsHome({
 		search: debouncedSearchValue,
+		workspaceId,
 	});
 	const v2Query = useWorkspaceProjects({
 		search: debouncedSearchValue,
@@ -184,148 +208,255 @@ export const ProjectsHomeRoute = () => {
 		[pinnedIds, getNextPinOrder, togglePinMutation],
 	);
 
+	// Pinned rail shouldn't also appear in the "All projects" list —
+	// audit 2026-04-23 called the duplication out. One surface per project.
+	const nonPinnedProjects = useMemo(
+		() => allProjects.filter((p) => !pinnedIds.has(p.id)),
+		[allProjects, pinnedIds],
+	);
+
+	const canManageWorkspace =
+		workspace?.role === "owner" || workspace?.role === "admin";
+	const totallyEmpty =
+		allProjects.length === 0 &&
+		debouncedSearchValue === "" &&
+		status === "success";
+
 	return (
 		<Container>
-			<Stack>
-				{/* Workspace summary tile — role-aware usage snapshot. Lives
-				    above Projects so users see "is this workspace healthy?"
-				    before scrolling. Component self-hides when data isn't
-				    ready or the workspace context is missing. */}
-				{workspaceId && <WorkspaceHomeSummary workspaceId={workspaceId} />}
-
-				{/* Projects header row — title + Create in one line.
-				    Create button moved here from the page-top chrome so the
-				    action is right next to the thing it creates. */}
-				<Group justify="space-between" align="center" className="relative">
-					<Title order={3}>
-						<Trans>Projects</Trans>
-					</Title>
-					{!user.data?.disable_create_project && (
-						<Button
-							size="sm"
-							rightSection={<Icons.Plus stroke="white" fill="white" />}
-							loading={createProjectMutation.isPending}
-							onClick={handleCreateProject}
-							{...testId("project-home-create-button")}
-						>
-							<Trans>Create</Trans>
-						</Button>
-					)}
-				</Group>
-
-				{allProjects.length === 0 &&
-					debouncedSearchValue === "" &&
-					status === "success" && (
-						<CloseableAlert icon={<IconInfoCircle />}>
-							<Trans>
-								No projects in this workspace yet. Create your first one to get started.
-							</Trans>
-						</CloseableAlert>
-					)}
-
-				{!(allProjects.length === 0 && debouncedSearchValue === "") && (
-					<TextInput
-						leftSection={<IconSearch {...testId("project-search-icon")} />}
-						rightSection={
-							!!search && (
-								<ActionIcon
-									disabled={isFetchingNextPage}
-									variant="transparent"
-									onClick={() => {
-										setSearch("");
-									}}
-									{...testId("project-search-clear-button")}
-								>
-									<IconX />
-								</ActionIcon>
-							)
-						}
-						placeholder={t`Search projects`}
-						value={search}
-						size="md"
-						onChange={(e) => setSearch(e.currentTarget.value)}
-						className="w-full"
-						{...testId("project-search-input")}
-					/>
-				)}
-
-				{allProjects.length === 0 &&
-					debouncedSearchValue !== "" &&
-					status === "success" && (
-						<Text>
-							<Trans>No projects found for search term</Trans>{" "}
-							<i>{debouncedSearchValue}</i>
+			<Stack gap="lg">
+				{/* Quiet workspace identity — replaces the old tier-card hero.
+				    Per audit §1: the user is deciding WHICH project to open;
+				    the workspace name is context, not content. */}
+				{workspace && (
+					<Stack gap={4}>
+						<Group justify="space-between" align="flex-start" wrap="nowrap">
+							<Title order={2} fw={500} lineClamp={1}>
+								{workspace.name}
+							</Title>
+							{canManageWorkspace && (
+								<Tooltip label={t`Workspace settings`}>
+									<ActionIcon
+										variant="subtle"
+										color="gray"
+										size="lg"
+										onClick={() =>
+											navigate(`/w/${workspace.id}/settings`)
+										}
+										aria-label={t`Workspace settings`}
+									>
+										<IconSettings size={16} />
+									</ActionIcon>
+								</Tooltip>
+							)}
+						</Group>
+						<Text size="sm" c="dimmed">
+							<Plural
+								value={workspace.member_count}
+								one="# member"
+								other="# members"
+							/>
+							{" · "}
+							<span style={{ textTransform: "capitalize" }}>
+								{workspace.tier}
+							</span>
+							{/* Pilot is the only tier with a hard hour block,
+							    so spell out the hour count inline — audit §1. */}
+							{isPilot && pilotHours && (
+								<>
+									{" · "}
+									<PilotHoursInline usage={pilotHours} />
+								</>
+							)}
 						</Text>
-					)}
-
-				{isError && (
-					<Alert color="red" title="Error">
-						{getDirectusErrorString(error)}
-					</Alert>
+					</Stack>
 				)}
 
-				{status === "pending" && (
-					<ProjectListSkeleton searchValue={debouncedSearchValue} />
-				)}
+				{/* Hero empty state — skip everything else when the workspace
+				    has zero projects and no search. */}
+				{totallyEmpty ? (
+					<Stack align="center" gap={12} py={48}>
+						<Title order={3} fw={400}>
+							<Trans>Your workspace is ready.</Trans>
+						</Title>
+						<Text size="sm" c="dimmed" ta="center" maw={420}>
+							<Trans>
+								Projects are where conversations happen — create your
+								first one to get started.
+							</Trans>
+						</Text>
+						{!user.data?.disable_create_project && (
+							<Button
+								size="sm"
+								rightSection={<Icons.Plus stroke="white" fill="white" />}
+								loading={createProjectMutation.isPending}
+								onClick={handleCreateProject}
+								{...testId("project-home-create-button")}
+							>
+								<Trans>Create project</Trans>
+							</Button>
+						)}
+					</Stack>
+				) : (
+					<>
+						{/* Pinned section — cards at the top, hidden when empty. */}
+						{showPinnedSection && (
+							<Stack gap="sm">
+								<Title order={5} fw={400} c="dimmed">
+									<Trans>Pinned</Trans>
+								</Title>
+								<SimpleGrid cols={{ base: 1, md: 3, sm: 2 }} spacing="md">
+									{pinnedProjects.map((project) => (
+										<PinnedProjectCard
+											key={project.id}
+											project={project as Project}
+											onUnpin={handleTogglePin}
+											isUnpinning={togglePinMutation.isPending}
+											onSearchOwner={
+												isAdmin ? handleSearchOwner : undefined
+											}
+										/>
+									))}
+								</SimpleGrid>
+							</Stack>
+						)}
 
-				{allProjects.length > 0 && (
-					<Box className="relative">
-						<Stack ref={listParent} gap="sm">
-							{allProjects.map((project) => (
-								<Box
-									key={project.id}
-									ref={
-										allProjects[allProjects.length - 1].id === project.id
-											? loadMoreRef
-											: undefined
-									}
-								>
-									<ProjectListItem
-										project={project as Project}
-										onTogglePin={handleTogglePin}
-										isPinned={pinnedIds.has(project.id)}
-										canPin={canPin}
-										onSearchOwner={isAdmin ? handleSearchOwner : undefined}
-									/>
+						{/* All projects section — search lives inside this section
+						    (audit §1), Create button on the header row. */}
+						<Stack gap="sm">
+							<Group justify="space-between" align="center">
+								<Title order={5} fw={400}>
+									<Trans>All projects</Trans>
+								</Title>
+								{!user.data?.disable_create_project && (
+									<Button
+										size="sm"
+										rightSection={
+											<Icons.Plus stroke="white" fill="white" />
+										}
+										loading={createProjectMutation.isPending}
+										onClick={handleCreateProject}
+										{...testId("project-home-create-button")}
+									>
+										<Trans>Create</Trans>
+									</Button>
+								)}
+							</Group>
+
+							<TextInput
+								leftSection={
+									<IconSearch {...testId("project-search-icon")} />
+								}
+								rightSection={
+									!!search && (
+										<ActionIcon
+											disabled={isFetchingNextPage}
+											variant="transparent"
+											onClick={() => setSearch("")}
+											{...testId("project-search-clear-button")}
+										>
+											<IconX />
+										</ActionIcon>
+									)
+								}
+								placeholder={t`Search projects`}
+								value={search}
+								size="md"
+								onChange={(e) => setSearch(e.currentTarget.value)}
+								className="w-full"
+								{...testId("project-search-input")}
+							/>
+
+							{nonPinnedProjects.length === 0 &&
+								debouncedSearchValue !== "" &&
+								status === "success" && (
+									<Text c="dimmed">
+										<Trans>No projects found for search term</Trans>{" "}
+										<i>{debouncedSearchValue}</i>
+									</Text>
+								)}
+
+							{nonPinnedProjects.length === 0 &&
+								debouncedSearchValue === "" &&
+								status === "success" &&
+								showPinnedSection && (
+									<Text size="sm" c="dimmed">
+										<Trans>
+											Everything is pinned. Unpin a project to see it
+											in this list.
+										</Trans>
+									</Text>
+								)}
+
+							{isError && (
+								<Alert color="red" title="Error">
+									{getDirectusErrorString(error)}
+								</Alert>
+							)}
+
+							{status === "pending" && (
+								<ProjectListSkeleton searchValue={debouncedSearchValue} />
+							)}
+
+							{nonPinnedProjects.length > 0 && (
+								<Box className="relative">
+									<Stack ref={listParent} gap="sm">
+										{nonPinnedProjects.map((project) => (
+											<Box
+												key={project.id}
+												ref={
+													nonPinnedProjects[nonPinnedProjects.length - 1]
+														.id === project.id
+														? loadMoreRef
+														: undefined
+												}
+											>
+												<ProjectListItem
+													project={project as Project}
+													onTogglePin={handleTogglePin}
+													isPinned={pinnedIds.has(project.id)}
+													canPin={canPin}
+													onSearchOwner={
+														isAdmin ? handleSearchOwner : undefined
+													}
+												/>
+											</Box>
+										))}
+
+										{isFetchingNextPage && (
+											<ProjectListSkeleton
+												searchValue={"none"}
+												count={3}
+												wrapper={false}
+											/>
+										)}
+									</Stack>
 								</Box>
-							))}
-
-							{isFetchingNextPage && (
-								<ProjectListSkeleton
-									searchValue={"none"}
-									count={3}
-									wrapper={false}
-								/>
 							)}
 						</Stack>
-					</Box>
-				)}
-
-				{/* Pinned projects at the bottom of the page — still
-				    accessible but no longer dominates the hero. Moved
-				    below per demo feedback. */}
-				{showPinnedSection && (
-					<>
-						<Divider mt="lg" />
-						<Group gap="xs" align="center">
-							<Title order={5} fw={400} c="dimmed">
-								<Trans>Pinned</Trans>
-							</Title>
-						</Group>
-						<SimpleGrid cols={{ base: 1, md: 3, sm: 2 }} spacing="md">
-							{pinnedProjects.map((project) => (
-								<PinnedProjectCard
-									key={project.id}
-									project={project as Project}
-									onUnpin={handleTogglePin}
-									isUnpinning={togglePinMutation.isPending}
-									onSearchOwner={isAdmin ? handleSearchOwner : undefined}
-								/>
-							))}
-						</SimpleGrid>
 					</>
 				)}
 			</Stack>
 		</Container>
 	);
 };
+
+// Fetches just enough for the Pilot inline hour indicator. Uses the
+// same /usage query key the Billing card uses so they share cache.
+function PilotHoursInline({ usage }: { usage: { audio_hours: number; audio_hours_included: number | null } }) {
+	const used = usage.audio_hours;
+	const cap = usage.audio_hours_included;
+	if (cap == null) return null;
+	const pct = cap > 0 ? used / cap : 0;
+	const color =
+		pct >= 1 ? "red" : pct >= 0.95 ? "red" : pct >= 0.8 ? "yellow" : "dimmed";
+	return (
+		<Badge
+			size="xs"
+			variant={color === "dimmed" ? "transparent" : "light"}
+			color={color === "dimmed" ? "gray" : color}
+		>
+			{used.toFixed(1)} of {cap} hours
+		</Badge>
+	);
+}

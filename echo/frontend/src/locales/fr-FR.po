@@ -285,6 +285,11 @@ msgstr ""
 msgid "{0, plural, one {# conversation} other {# conversations}}"
 msgstr ""
 
+#. placeholder {0}: workspace.member_count
+#: src/routes/project/ProjectsHome.tsx:254
+msgid "{0, plural, one {# member} other {# members}}"
+msgstr ""
+
 #. placeholder {0}: team.total_members
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:338
 msgid "{0, plural, one {# person} other {# people}}"
@@ -801,6 +806,10 @@ msgstr "Tous les fichiers ont été téléchargés avec succès."
 
 #~ msgid "All Insights"
 #~ msgstr "Toutes les perspectives"
+
+#: src/routes/project/ProjectsHome.tsx:329
+msgid "All projects"
+msgstr ""
 
 #: src/components/chat/TemplatesModal.tsx:827
 #~ msgid "All templates"
@@ -1907,7 +1916,7 @@ msgstr ""
 msgid "Couldn't send the request"
 msgstr ""
 
-#: src/routes/project/ProjectsHome.tsx:211
+#: src/routes/project/ProjectsHome.tsx:341
 #: src/components/project/CustomTopicModal.tsx:242
 msgid "Create"
 msgstr "Créer"
@@ -1959,6 +1968,10 @@ msgstr "Créer une nouvelle vue"
 
 #: src/routes/auth/Register.tsx:108
 msgid "Create password"
+msgstr ""
+
+#: src/routes/project/ProjectsHome.tsx:296
+msgid "Create project"
 msgstr ""
 
 #: src/components/report/ReportModalNavigationButton.tsx:45
@@ -2772,6 +2785,10 @@ msgstr ""
 msgid "Everything a member can do, plus invite others and manage the workspace."
 msgstr ""
 
+#: src/routes/project/ProjectsHome.tsx:384
+msgid "Everything is pinned. Unpin a project to see it in this list."
+msgstr ""
+
 #. js-lingui-explicit-id
 #: src/components/participant/MicrophoneTest.tsx:379
 msgid "participant.alert.microphone.access.success"
@@ -3411,8 +3428,8 @@ msgid "Hours"
 msgstr ""
 
 #: src/components/workspace/WorkspaceHomeSummary.tsx:139
-msgid "hours this month"
-msgstr ""
+#~ msgid "hours this month"
+#~ msgstr ""
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:755
 msgid "How it works:"
@@ -3507,7 +3524,6 @@ msgstr "Inclure le lien du portail"
 #~ msgstr "Inclure les horodatages"
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:191
-#: src/components/workspace/WorkspaceHomeSummary.tsx:105
 #: src/components/workspace/UsageCard.tsx:190
 msgid "Included hours used up"
 msgstr ""
@@ -4201,8 +4217,8 @@ msgstr "Nouveau mot de passe"
 msgid "New Password"
 msgstr "Nouveau mot de passe"
 
-#: src/routes/project/ProjectsHome.tsx:116
-#: src/routes/project/ProjectsHome.tsx:124
+#: src/routes/project/ProjectsHome.tsx:140
+#: src/routes/project/ProjectsHome.tsx:148
 msgid "New Project"
 msgstr "Nouveau projet"
 
@@ -4367,13 +4383,13 @@ msgstr ""
 msgid "No projects found {0}"
 msgstr "Aucun projet trouvé {0}"
 
-#: src/routes/project/ProjectsHome.tsx:256
+#: src/routes/project/ProjectsHome.tsx:374
 msgid "No projects found for search term"
 msgstr "Aucun projet trouvé pour ce terme de recherche"
 
 #: src/routes/project/ProjectsHome.tsx:220
-msgid "No projects in this workspace yet. Create your first one to get started."
-msgstr ""
+#~ msgid "No projects in this workspace yet. Create your first one to get started."
+#~ msgstr ""
 
 #: src/components/workspace/TeamProjectsTable.tsx:196
 msgid "No projects match."
@@ -4997,7 +5013,7 @@ msgstr "Épinglez des modèles ici pour un accès rapide."
 #~ msgid "pinned"
 #~ msgstr "épinglé"
 
-#: src/routes/project/ProjectsHome.tsx:312
+#: src/routes/project/ProjectsHome.tsx:306
 msgid "Pinned"
 msgstr ""
 
@@ -5377,12 +5393,11 @@ msgid "projects"
 msgstr ""
 
 #: src/routes/team/TeamRoute.tsx:399
-#: src/routes/project/ProjectsHome.tsx:201
 #: src/components/workspace/UsageCard.tsx:260
 msgid "Projects"
 msgstr "Projets"
 
-#: src/routes/project/ProjectsHome.tsx:51
+#: src/routes/project/ProjectsHome.tsx:52
 msgid "Projects | dembrane"
 msgstr ""
 
@@ -5393,6 +5408,10 @@ msgstr ""
 #. placeholder {0}: projects.length
 #: src/components/workspace/TeamProjectsTable.tsx:171
 msgid "Projects across team · {0}"
+msgstr ""
+
+#: src/routes/project/ProjectsHome.tsx:283
+msgid "Projects are where conversations happen — create your first one to get started."
 msgstr ""
 
 #: src/components/project/ProjectSidebar.tsx:93
@@ -5563,8 +5582,8 @@ msgstr ""
 
 #: src/components/workspace/WorkspaceHomeSummary.tsx:108
 #: src/components/workspace/WorkspaceHomeSummary.tsx:115
-msgid "Refresh usage"
-msgstr ""
+#~ msgid "Refresh usage"
+#~ msgstr ""
 
 #: src/components/workspace/UsageCard.tsx:287
 msgid "Refreshing…"
@@ -6068,7 +6087,7 @@ msgstr ""
 msgid "Search project or workspace"
 msgstr ""
 
-#: src/routes/project/ProjectsHome.tsx:243
+#: src/routes/project/ProjectsHome.tsx:362
 msgid "Search projects"
 msgstr "Rechercher des projets"
 
@@ -6110,7 +6129,6 @@ msgstr "Recherché parmi les sources les plus pertinentes"
 msgid "Searching through the most relevant sources"
 msgstr "Recherche parmi les sources les plus pertinentes"
 
-#: src/components/workspace/WorkspaceHomeSummary.tsx:163
 #: src/components/workspace/TeamUsageRollup.tsx:165
 msgid "seats"
 msgstr ""
@@ -7457,7 +7475,7 @@ msgstr "Raison inconnue"
 msgid "Unpin"
 msgstr "Détacher"
 
-#: src/routes/project/ProjectsHome.tsx:178
+#: src/routes/project/ProjectsHome.tsx:202
 msgid "Unpin a project first (max {MAX_PINNED})"
 msgstr "Désépinglez d'abord un projet (max {MAX_PINNED})"
 
@@ -7633,8 +7651,8 @@ msgid "Usage · {0}"
 msgstr ""
 
 #: src/components/workspace/WorkspaceHomeSummary.tsx:136
-msgid "Usage resets at the start of each calendar month."
-msgstr ""
+#~ msgid "Usage resets at the start of each calendar month."
+#~ msgstr ""
 
 #: src/components/chat/TemplatesModal.tsx:338
 #: src/components/chat/TemplatesModal.tsx:674
@@ -8092,6 +8110,11 @@ msgstr ""
 msgid "Workspace role"
 msgstr ""
 
+#: src/routes/project/ProjectsHome.tsx:238
+#: src/routes/project/ProjectsHome.tsx:246
+msgid "Workspace settings"
+msgstr ""
+
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:253
 msgid "Workspace settings | dembrane"
 msgstr ""
@@ -8317,6 +8340,10 @@ msgstr "Vos vues"
 
 #~ msgid "Your Views"
 #~ msgstr "Vos vues"
+
+#: src/routes/project/ProjectsHome.tsx:280
+msgid "Your workspace is ready."
+msgstr ""
 
 #: src/components/chat/CommunityTemplateCard.tsx:128
 #~ msgid "Yours"
