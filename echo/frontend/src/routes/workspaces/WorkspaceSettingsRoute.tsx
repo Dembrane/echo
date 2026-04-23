@@ -28,6 +28,7 @@ import { useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
+import { UsageCard } from "@/components/workspace/UsageCard";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
@@ -354,6 +355,13 @@ export const WorkspaceSettingsRoute = () => {
 					canEdit={canEditSettings}
 					workspaceId={workspaceId!}
 				/>
+
+				<Divider />
+
+				{/* Usage + financial rollup (matrix §8). Role-aware rendering
+				    lives inside the card — members see raw; admin/billing see
+				    overage forecast + next-tier recommendation. */}
+				{workspaceId && <UsageCard workspaceId={workspaceId} />}
 
 				<Divider />
 
