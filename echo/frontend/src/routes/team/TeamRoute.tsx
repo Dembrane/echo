@@ -11,6 +11,7 @@ import {
 	Container,
 	Group,
 	Loader,
+	Menu,
 	Paper,
 	SegmentedControl,
 	Stack,
@@ -22,8 +23,10 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "@/components/common/Toaster";
 import { useDocumentTitle } from "@mantine/hooks";
 import {
+	IconChevronDown,
 	IconLock,
 	IconSearch,
 	IconSettings,
@@ -109,6 +112,123 @@ async function fetchTeamWorkspaces(teamId: string): Promise<TeamWorkspace[]> {
 
 type RoleFilter = "all" | "admins" | "members";
 
+// Role options by scope + caller role. Team-level doesn't include
+// billing (matrix §5 has team Admin/Billing/Member but we only ship
+// Admin + Member team-level today; billing is workspace-scope in
+// this release). Owner is only offered when caller is themselves owner.
+const TEAM_ROLE_OPTIONS_ADMIN = ["member", "admin"] as const;
+const TEAM_ROLE_OPTIONS_OWNER = ["member", "admin", "owner"] as const;
+
+const WS_ROLE_OPTIONS_ADMIN = ["member", "billing", "admin"] as const;
+const WS_ROLE_OPTIONS_OWNER = ["member", "billing", "admin", "owner"] as const;
+
+function roleColor(role: string): string {
+	if (role === "owner" || role === "admin") return "blue";
+	if (role === "billing") return "yellow";
+	return "gray";
+}
+
+interface RoleBadgeMenuProps {
+	currentRole: string;
+	options: readonly string[];
+	onChange: (next: string) => void;
+	disabled?: boolean;
+	size?: "xs" | "sm" | "md";
+}
+
+function RoleBadgeMenu({
+	currentRole,
+	options,
+	onChange,
+	disabled,
+	size = "sm",
+}: RoleBadgeMenuProps) {
+	if (disabled) {
+		return (
+			<Badge
+				size={size}
+				variant="light"
+				color={roleColor(currentRole)}
+				style={{ textTransform: "capitalize" }}
+			>
+				{currentRole}
+			</Badge>
+		);
+	}
+	return (
+		<Menu shadow="md" width={140} position="bottom-start">
+			<Menu.Target>
+				<Badge
+					size={size}
+					variant="light"
+					color={roleColor(currentRole)}
+					style={{ textTransform: "capitalize", cursor: "pointer" }}
+					rightSection={<IconChevronDown size={10} />}
+				>
+					{currentRole}
+				</Badge>
+			</Menu.Target>
+			<Menu.Dropdown>
+				{options.map((role) => (
+					<Menu.Item
+						key={role}
+						disabled={role === currentRole}
+						onClick={() => onChange(role)}
+						style={{ textTransform: "capitalize" }}
+					>
+						{role}
+					</Menu.Item>
+				))}
+			</Menu.Dropdown>
+		</Menu>
+	);
+}
+
+async function changeTeamRole(
+	orgId: string,
+	userId: string,
+	role: string,
+): Promise<void> {
+	const res = await fetch(
+		`${API_BASE_URL}/v2/orgs/${orgId}/members/${userId}`,
+		{
+			body: JSON.stringify({ role }),
+			credentials: "include",
+			headers: { "Content-Type": "application/json" },
+			method: "PATCH",
+		},
+	);
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(
+			typeof data.detail === "string" ? data.detail : "Couldn't change role",
+		);
+	}
+}
+
+async function changeWorkspaceMemberRole(
+	workspaceId: string,
+	membershipId: string,
+	role: string,
+): Promise<void> {
+	const res = await fetch(
+		`${API_BASE_URL}/v2/workspaces/${workspaceId}/members/${membershipId}`,
+		{
+			body: JSON.stringify({ role }),
+			credentials: "include",
+			headers: { "Content-Type": "application/json" },
+			method: "PATCH",
+		},
+	);
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(
+			typeof data.detail === "string" ? data.detail : "Couldn't change role",
+		);
+	}
+}
+
+
 export const TeamRoute = () => {
 	const { teamId } = useParams();
 	const navigate = useI18nNavigate();
@@ -153,10 +273,27 @@ export const TeamRoute = () => {
 	});
 
 	const isAdmin = team?.role === "owner" || team?.role === "admin";
+	const isOwner = team?.role === "owner";
 	// Admin-only views fall back to People for other roles so landing
 	// state is never an empty panel for them.
 	const view: TabValue =
 		!isAdmin && viewRaw === "usage" ? "people" : viewRaw;
+
+	// Team-level role change — admin + owner can edit; owner-only offers
+	// the "owner" option (only owners can grant owner).
+	const teamRoleMutation = useMutation({
+		mutationFn: ({ userId, role }: { userId: string; role: string }) => {
+			if (!teamId) throw new Error("No team");
+			return changeTeamRole(teamId, userId, role);
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "team", teamId, "members"],
+			});
+			toast.success(t`Role changed`);
+		},
+		onError: (e: Error) => toast.error(e.message),
+	});
 
 	const filteredMembers = useMemo(() => {
 		const q = search.trim().toLowerCase();
@@ -439,20 +576,21 @@ export const TeamRoute = () => {
 										</Group>
 									</Table.Td>
 									<Table.Td>
-										<Badge
-											size="sm"
-											variant="light"
-											color={
-												m.role === "owner"
-													? "blue"
-													: m.role === "admin"
-														? "blue"
-														: "gray"
+										<RoleBadgeMenu
+											currentRole={m.role}
+											options={
+												isOwner
+													? TEAM_ROLE_OPTIONS_OWNER
+													: TEAM_ROLE_OPTIONS_ADMIN
 											}
-											style={{ textTransform: "capitalize" }}
-										>
-											{m.role}
-										</Badge>
+											disabled={!isAdmin}
+											onChange={(next) =>
+												teamRoleMutation.mutate({
+													userId: m.user_id,
+													role: next,
+												})
+											}
+										/>
 									</Table.Td>
 									{workspaces.map((ws) => {
 										// Direct membership takes priority. Backend returns
@@ -482,21 +620,26 @@ export const TeamRoute = () => {
 													<Tooltip
 														label={
 															directRole
-																? t`Direct ${directRole} on this workspace`
-																: t`Admin · inherited from team role`
+																? t`${directRole} on this workspace · change in workspace settings`
+																: t`Admin here (from team role)`
 														}
 														withArrow
 													>
 														<Badge
 															size="xs"
 															variant="light"
-															color={
-																displayRole === "owner" ||
-																displayRole === "admin"
-																	? "blue"
-																	: displayRole === "billing"
-																		? "yellow"
-																		: "gray"
+															color={roleColor(displayRole)}
+															style={{
+																cursor: directRole ? "pointer" : undefined,
+																textTransform: "capitalize",
+															}}
+															onClick={
+																directRole
+																	? () =>
+																			navigate(
+																				`/w/${ws.id}/settings`,
+																			)
+																	: undefined
 															}
 														>
 															{displayRole}
