@@ -34,6 +34,7 @@ import { TeamUsageRollup } from "@/components/workspace/TeamUsageRollup";
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useUrlSearch } from "@/hooks/useUrlSearch";
 import { avatarUrl } from "@/lib/avatar";
 
 /**
@@ -108,7 +109,7 @@ type RoleFilter = "all" | "admins" | "members";
 export const TeamRoute = () => {
 	const { teamId } = useParams();
 	const navigate = useI18nNavigate();
-	const [search, setSearch] = useState("");
+	const [search, setSearch] = useUrlSearch();
 	const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
 	const [viewRaw, setView] = useState<
 		"usage" | "matrix" | "projects" | "workspaces"

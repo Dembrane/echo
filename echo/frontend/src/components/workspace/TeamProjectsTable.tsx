@@ -18,6 +18,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
+import { useUrlSearch } from "@/hooks/useUrlSearch";
 
 interface OrgProject {
 	id: string;
@@ -76,7 +77,7 @@ function formatDate(iso: string | null): string {
  */
 export const TeamProjectsTable = ({ orgId }: { orgId: string }) => {
 	const queryClient = useQueryClient();
-	const [search, setSearch] = useState("");
+	const [search, setSearch] = useUrlSearch();
 	const [workspaceFilter, setWorkspaceFilter] = useState<string | null>(null);
 
 	const { data: projects = [], isLoading } = useQuery({

@@ -23,6 +23,7 @@ import { useState } from "react";
 import { DiscoverableWorkspaces } from "@/components/workspace/DiscoverableWorkspaces";
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useUrlSearch } from "@/hooks/useUrlSearch";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 
@@ -388,7 +389,7 @@ function TeamHeroCard({
 export const WorkspaceSelectorRoute = () => {
 	const navigate = useI18nNavigate();
 	const { setWorkspace } = useWorkspace();
-	const [search, setSearch] = useState("");
+	const [search, setSearch] = useUrlSearch();
 
 	useDocumentTitle(t`Workspaces | dembrane`);
 
