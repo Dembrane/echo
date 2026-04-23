@@ -45,7 +45,6 @@ import { TierBadge } from "@/components/workspace/TierBadge";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
-import { useSearchParams } from "react-router";
 import { avatarUrl, logoUrl as resolveLogoUrl } from "@/lib/avatar";
 import { displayRole, roleColor } from "@/lib/roles";
 
@@ -244,32 +243,22 @@ export const TeamRoute = () => {
 	const queryClient = useQueryClient();
 	// URL-driven tab state. Tab lives in the path segment
 	// (`/t/:teamId/<tab>`) so browser back steps between tabs and URLs
-	// are shareable. Legacy ?tab=X query param is still honored as a
-	// one-time bounce for bookmarks.
-	const [searchParams] = useSearchParams();
-	const legacyTab = searchParams.get("tab");
+	// are shareable.
 	const allowedTabs = ["overview", "usage", "people", "projects"] as const;
 	type TabValue = (typeof allowedTabs)[number];
 	const segment = (splat ?? "").split("/")[0] || "";
-	const viewRaw: TabValue =
-		(allowedTabs as readonly string[]).includes(segment)
-			? (segment as TabValue)
-			: (legacyTab &&
-						(allowedTabs as readonly string[]).includes(legacyTab)
-					? (legacyTab as TabValue)
-					: "overview");
+	const viewRaw: TabValue = (allowedTabs as readonly string[]).includes(segment)
+		? (segment as TabValue)
+		: "overview";
 
 	useEffect(() => {
+		// Bounce bare /t/:id to /t/:id/overview so the URL always
+		// matches the active tab.
 		if (!teamId) return;
-		// Bounce legacy ?tab=X URLs and bare /t/:id to the canonical
-		// /t/:id/<tab> form so back/forward + copy-paste always show
-		// the same URL for the same view.
-		const currentSegment = segment;
-		const canonical = currentSegment === viewRaw && !legacyTab;
-		if (!canonical) {
+		if (segment !== viewRaw) {
 			navigate(`/t/${teamId}/${viewRaw}`, { replace: true });
 		}
-	}, [legacyTab, teamId, viewRaw, segment]);
+	}, [teamId, viewRaw, segment, navigate]);
 
 	const setView = (value: string | null) => {
 		if (!value || !teamId) return;

@@ -29,7 +29,7 @@ import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { IconPlus, IconRefresh, IconTrash, IconUpload, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { useParams, useSearchParams } from "react-router";
+import { useParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
 import { TierBadge } from "@/components/workspace/TierBadge";
@@ -246,12 +246,19 @@ export const WorkspaceSettingsRoute = () => {
 	const [editingName, setEditingName] = useState<string | null>(null);
 	const [inviteModalOpened, { open: openInviteModal, close: closeInviteModal }] = useDisclosure(false);
 
-	// URL-driven tab state. Declared BEFORE the loading early-return
-	// below — calling a hook conditionally (only once settings loads)
-	// would change the hook count between renders and crash React
-	// (rules-of-hooks). Re-encoded this once already after a demo bug
-	// — don't move it back down.
-	const [searchParams] = useSearchParams();
+	// Tab state — path-driven (/w/:id/settings/<tab>). Declared BEFORE
+	// the loading early-return below; moving any hook below the early
+	// return changes hook count between renders and crashes React.
+	const allowedTabs = [
+		"general",
+		"members",
+		"access",
+		"billing",
+		"danger",
+	] as const;
+	type TabValue = (typeof allowedTabs)[number];
+	const segment = (splat ?? "").split("/")[0] || "";
+	const segmentIsValid = (allowedTabs as readonly string[]).includes(segment);
 
 	useDocumentTitle(t`Workspace settings | dembrane`);
 
@@ -390,6 +397,32 @@ export const WorkspaceSettingsRoute = () => {
 		onError: (err: Error) => toast.error(err.message),
 	});
 
+	// Tab resolution lives above the loading early-return to keep hook
+	// order stable. Default depends on caller role, so until settings
+	// loads we fall back to "general"; once loaded, the effect may fire
+	// a second time with the role-correct default if the URL is bare.
+	const callerCanManage =
+		settings?.my_policies?.includes("member:manage") ?? false;
+	const defaultTab: TabValue =
+		settings?.my_role === "billing" && !callerCanManage
+			? "billing"
+			: "general";
+	const activeTab: TabValue = segmentIsValid
+		? (segment as TabValue)
+		: defaultTab;
+	const setActiveTab = (value: string | null) => {
+		if (!value || !workspaceId) return;
+		navigate(`/w/${workspaceId}/settings/${value}`, { replace: true });
+	};
+	useEffect(() => {
+		if (!workspaceId) return;
+		if (segment !== activeTab) {
+			navigate(`/w/${workspaceId}/settings/${activeTab}`, {
+				replace: true,
+			});
+		}
+	}, [workspaceId, segment, activeTab, navigate]);
+
 	if (isLoading || !settings) {
 		return (
 			<Container size="sm" py="xl">
@@ -400,63 +433,12 @@ export const WorkspaceSettingsRoute = () => {
 		);
 	}
 
-	const canManage = settings.my_policies?.includes("member:manage") ?? false;
+	const canManage = callerCanManage;
 	const myRole = settings.my_role;
 	const myAppUserId = meV2?.id ?? null;
 	const canEditSettings = settings.my_policies?.includes("settings:manage") ?? false;
 	const seesFinancials =
 		settings.my_policies?.includes("workspace:view_invoices") ?? false;
-
-	// Tab state — URL-driven for shareable + reload-stable links. Role-
-	// based default lands each role on the tab most useful to them:
-	//   - Billing role → billing (finance view is their whole job here).
-	//   - Member → overview (members list is their main read).
-	//   - Admin → overview (same; admin manages members here too).
-	//   - Guest → no tabs at all; bypass below.
-	// Tab lives in the path segment (/w/:id/settings/<tab>) — matches
-	// the project-tab pattern and makes every tab its own URL. The
-	// legacy ?tab=X form is honored once, then bounced to the path
-	// equivalent so subsequent back/forward + copy-paste are clean.
-	const tabParam = searchParams.get("tab");
-	const defaultTab =
-		myRole === "billing" && !canManage ? "billing" : "general";
-	const allowedTabs = [
-		"general",
-		"overview",
-		"members",
-		"access",
-		"billing",
-		"danger",
-	] as const;
-	type TabValue = (typeof allowedTabs)[number];
-	const segment = (splat ?? "").split("/")[0] || "";
-	const rawTab =
-		(allowedTabs as readonly string[]).includes(segment)
-			? segment
-			: tabParam && (allowedTabs as readonly string[]).includes(tabParam)
-				? tabParam
-				: defaultTab;
-	// "overview" is retained as a legacy alias — rewrite to "general".
-	const activeTab: TabValue = (
-		rawTab === "overview" ? "general" : rawTab
-	) as TabValue;
-	const setActiveTab = (value: string | null) => {
-		if (!value || !workspaceId) return;
-		navigate(`/w/${workspaceId}/settings/${value}`, { replace: true });
-	};
-
-	useEffect(() => {
-		if (!workspaceId) return;
-		// Bounce legacy ?tab=X and bare /w/:id/settings to the canonical
-		// /w/:id/settings/<tab> form so back/forward and copy-paste
-		// always show one URL per view.
-		const canonical = segment === activeTab && !tabParam;
-		if (!canonical) {
-			navigate(`/w/${workspaceId}/settings/${activeTab}`, {
-				replace: true,
-			});
-		}
-	}, [tabParam, workspaceId, activeTab, segment, navigate]);
 
 	return (
 		<>
