@@ -2115,6 +2115,7 @@ msgstr ""
 #~ msgstr "Pas de structuur van uw rapport aan. Deze functie komt binnenkort."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:534
+#: src/routes/team/TeamRoute.tsx:946
 msgid "Danger"
 msgstr ""
 
@@ -2275,6 +2276,10 @@ msgstr ""
 #: src/components/participant/UserChunkMessage.tsx:68
 msgid "Deleted successfully"
 msgstr "Verwijderd succesvol"
+
+#: src/routes/team/TeamRoute.tsx:949
+msgid "Deleting a team is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
+msgstr ""
 
 #~ msgid "Dembrane Echo"
 #~ msgstr "Echo"

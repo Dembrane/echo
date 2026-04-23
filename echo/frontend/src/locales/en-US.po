@@ -2278,6 +2278,7 @@ msgstr "Custom workspace logo. Requires changemaker tier or above."
 #~ msgstr "Customize how your report is structured. This feature is coming soon."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:534
+#: src/routes/team/TeamRoute.tsx:946
 msgid "Danger"
 msgstr "Danger"
 
@@ -2424,6 +2425,10 @@ msgstr "Delete…"
 #: src/components/participant/UserChunkMessage.tsx:68
 msgid "Deleted successfully"
 msgstr "Deleted successfully"
+
+#: src/routes/team/TeamRoute.tsx:949
+msgid "Deleting a team is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
+msgstr "Deleting a team is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
 
 #: src/components/project/ProjectPortalEditor.tsx:386
 #~ msgid "Dembrane Echo"

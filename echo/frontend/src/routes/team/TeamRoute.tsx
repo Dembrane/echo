@@ -935,6 +935,28 @@ function OverviewPanel({
 			    already says "N workspaces · M people", and the Usage /
 			    People tabs hold the detailed views. Repeating the same
 			    numbers on Overview was just noise. */}
+
+			{/* Danger section — not wired to a self-serve delete yet
+			    (no backend endpoint; ownership transfer + team delete
+			    are support flows for now). Primes the audit §3 pattern
+			    without offering a fake affordance. Admin only. */}
+			{canEdit && (
+				<Stack gap={4} mt="xl">
+					<Text size="xs" fw={500} tt="uppercase" c="red.9" lts={0.5}>
+						<Trans>Danger</Trans>
+					</Text>
+					<Text size="sm" c="dimmed">
+						<Trans>
+							Deleting a team is a support-assisted operation. Email{" "}
+							<Anchor href="mailto:support@dembrane.com">
+								support@dembrane.com
+							</Anchor>{" "}
+							and we'll walk through it with you — all workspaces must
+							be empty and deleted first.
+						</Trans>
+					</Text>
+				</Stack>
+			)}
 		</Stack>
 	);
 }
