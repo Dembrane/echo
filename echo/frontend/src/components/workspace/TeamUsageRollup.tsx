@@ -258,7 +258,7 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 											key={ws.id}
 											style={{ cursor: "pointer" }}
 											onClick={() =>
-												navigate(`/w/${ws.id}/settings?tab=billing`)
+												navigate(`/w/${ws.id}/settings/billing`)
 											}
 										>
 											<Table.Td>

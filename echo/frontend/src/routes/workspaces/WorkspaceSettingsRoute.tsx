@@ -28,7 +28,7 @@ import { modals } from "@mantine/modals";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { IconPlus, IconRefresh, IconTrash, IconUpload, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
@@ -223,7 +223,10 @@ async function cancelInvite(workspaceId: string, inviteId: string) {
 }
 
 export const WorkspaceSettingsRoute = () => {
-	const { workspaceId } = useParams<{ workspaceId: string }>();
+	const { workspaceId, "*": splat } = useParams<{
+		workspaceId: string;
+		"*": string;
+	}>();
 	const navigate = useI18nNavigate();
 	const queryClient = useQueryClient();
 	const { data: meV2 } = useV2Me();
@@ -248,7 +251,7 @@ export const WorkspaceSettingsRoute = () => {
 	// would change the hook count between renders and crash React
 	// (rules-of-hooks). Re-encoded this once already after a demo bug
 	// — don't move it back down.
-	const [searchParams, setSearchParams] = useSearchParams();
+	const [searchParams] = useSearchParams();
 
 	useDocumentTitle(t`Workspace settings | dembrane`);
 
@@ -410,12 +413,13 @@ export const WorkspaceSettingsRoute = () => {
 	//   - Member → overview (members list is their main read).
 	//   - Admin → overview (same; admin manages members here too).
 	//   - Guest → no tabs at all; bypass below.
+	// Tab lives in the path segment (/w/:id/settings/<tab>) — matches
+	// the project-tab pattern and makes every tab its own URL. The
+	// legacy ?tab=X form is honored once, then bounced to the path
+	// equivalent so subsequent back/forward + copy-paste are clean.
 	const tabParam = searchParams.get("tab");
 	const defaultTab =
 		myRole === "billing" && !canManage ? "billing" : "general";
-	// Audit 2026-04-23 §4 asked for a 5-tab split: General / Members /
-	// Access / Billing / Danger. "overview" kept as a URL alias for
-	// deep-links landing on /w/:id/settings?tab=overview.
 	const allowedTabs = [
 		"general",
 		"overview",
@@ -425,20 +429,34 @@ export const WorkspaceSettingsRoute = () => {
 		"danger",
 	] as const;
 	type TabValue = (typeof allowedTabs)[number];
-	// "overview" is retained as a bookmark alias — rewrite to "general".
+	const segment = (splat ?? "").split("/")[0] || "";
 	const rawTab =
-		tabParam && (allowedTabs as readonly string[]).includes(tabParam)
-			? tabParam
-			: defaultTab;
+		(allowedTabs as readonly string[]).includes(segment)
+			? segment
+			: tabParam && (allowedTabs as readonly string[]).includes(tabParam)
+				? tabParam
+				: defaultTab;
+	// "overview" is retained as a legacy alias — rewrite to "general".
 	const activeTab: TabValue = (
 		rawTab === "overview" ? "general" : rawTab
 	) as TabValue;
 	const setActiveTab = (value: string | null) => {
-		if (!value) return;
-		const next = new URLSearchParams(searchParams);
-		next.set("tab", value);
-		setSearchParams(next, { replace: true });
+		if (!value || !workspaceId) return;
+		navigate(`/w/${workspaceId}/settings/${value}`, { replace: true });
 	};
+
+	useEffect(() => {
+		if (!workspaceId) return;
+		// Bounce legacy ?tab=X and bare /w/:id/settings to the canonical
+		// /w/:id/settings/<tab> form so back/forward and copy-paste
+		// always show one URL per view.
+		const canonical = segment === activeTab && !tabParam;
+		if (!canonical) {
+			navigate(`/w/${workspaceId}/settings/${activeTab}`, {
+				replace: true,
+			});
+		}
+	}, [tabParam, workspaceId, activeTab, segment, navigate]);
 
 	return (
 		<>
@@ -1011,7 +1029,7 @@ export const WorkspaceSettingsRoute = () => {
 																variant="light"
 																onClick={() =>
 																	navigate(
-																		`/t/${settings.org_id}?view=projects`,
+																		`/t/${settings.org_id}/projects`,
 																	)
 																}
 															>

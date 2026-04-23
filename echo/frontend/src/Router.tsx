@@ -341,8 +341,11 @@ export const mainRouter = createBrowserRouter([
 						path: ":workspaceId",
 					},
 					{
+						// Splat so the tab lives in the path
+						// (/w/:workspaceId/settings/:tab). The component parses
+						// the trailing segment.
 						element: <WorkspaceSettingsRoute />,
-						path: ":workspaceId/settings",
+						path: ":workspaceId/settings/*",
 					},
 				],
 				element: (
@@ -357,14 +360,11 @@ export const mainRouter = createBrowserRouter([
 				// matches the /w/:workspaceId pattern.
 				children: [
 					{
+						// Splat so tab state lives in the path
+						// (/t/:teamId/:tab) — matches the project-tab pattern.
+						// The component parses the trailing segment itself.
 						element: <TeamRoute />,
-						path: ":teamId",
-					},
-					{
-						// Legacy /t/:teamId/settings → bounce to the Team page
-						// Overview tab, which now owns name + logo editing.
-						element: <Navigate to=".." relative="path" replace />,
-						path: ":teamId/settings",
+						path: ":teamId/*",
 					},
 				],
 				element: (

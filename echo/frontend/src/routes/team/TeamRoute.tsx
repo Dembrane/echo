@@ -37,7 +37,7 @@ import {
 	IconUpload,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { TeamProjectsTable } from "@/components/workspace/TeamProjectsTable";
 import { TeamUsageRollup } from "@/components/workspace/TeamUsageRollup";
@@ -234,27 +234,46 @@ async function changeWorkspaceMemberRole(
 
 
 export const TeamRoute = () => {
-	const { teamId } = useParams();
+	const { teamId, "*": splat } = useParams<{
+		teamId: string;
+		"*": string;
+	}>();
 	const navigate = useI18nNavigate();
 	const [search, setSearch] = useUrlSearch();
 	const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
 	const queryClient = useQueryClient();
-	const [searchParams, setSearchParams] = useSearchParams();
-	// URL-driven tab state. Admin-only tabs fall back to people for
-	// everyone else (guard below). Default lands on overview — the
-	// "what is this team" answer.
-	const tabParam = searchParams.get("tab");
+	// URL-driven tab state. Tab lives in the path segment
+	// (`/t/:teamId/<tab>`) so browser back steps between tabs and URLs
+	// are shareable. Legacy ?tab=X query param is still honored as a
+	// one-time bounce for bookmarks.
+	const [searchParams] = useSearchParams();
+	const legacyTab = searchParams.get("tab");
 	const allowedTabs = ["overview", "usage", "people", "projects"] as const;
 	type TabValue = (typeof allowedTabs)[number];
+	const segment = (splat ?? "").split("/")[0] || "";
 	const viewRaw: TabValue =
-		tabParam && (allowedTabs as readonly string[]).includes(tabParam)
-			? (tabParam as TabValue)
-			: "overview";
+		(allowedTabs as readonly string[]).includes(segment)
+			? (segment as TabValue)
+			: (legacyTab &&
+						(allowedTabs as readonly string[]).includes(legacyTab)
+					? (legacyTab as TabValue)
+					: "overview");
+
+	useEffect(() => {
+		if (!teamId) return;
+		// Bounce legacy ?tab=X URLs and bare /t/:id to the canonical
+		// /t/:id/<tab> form so back/forward + copy-paste always show
+		// the same URL for the same view.
+		const currentSegment = segment;
+		const canonical = currentSegment === viewRaw && !legacyTab;
+		if (!canonical) {
+			navigate(`/t/${teamId}/${viewRaw}`, { replace: true });
+		}
+	}, [legacyTab, teamId, viewRaw, segment]);
+
 	const setView = (value: string | null) => {
-		if (!value) return;
-		const next = new URLSearchParams(searchParams);
-		next.set("tab", value);
-		setSearchParams(next, { replace: true });
+		if (!value || !teamId) return;
+		navigate(`/t/${teamId}/${value}`, { replace: true });
 	};
 
 	useDocumentTitle(t`Team | dembrane`);
