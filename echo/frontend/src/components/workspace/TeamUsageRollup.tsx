@@ -101,8 +101,10 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 
 	if (isLoading || !data) return null;
 
-	const anyWarning =
-		data.workspaces_at_cap > 0 || data.workspaces_approaching_cap > 0;
+	// "Approaching" is a Pilot-only concept per feedback — other tiers
+	// just bill overage, there's no "limit" to approach. We only surface
+	// at-cap (Pilot hard-block) here.
+	const anyWarning = data.workspaces_at_cap > 0;
 
 	return (
 		<Paper p="md" withBorder radius="sm">
@@ -163,52 +165,30 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 						</Text>
 					</Stack>
 
-					{data.total_overage_forecast_eur != null && (
-						<Stack gap={0}>
-							<Text size="lg" fw={500}>
-								{formatEur(data.total_overage_forecast_eur)}
-							</Text>
-							<Text size="xs" c="dimmed">
-								<Trans>overage forecast</Trans>
-							</Text>
-						</Stack>
-					)}
+					{/* Overage forecast surface removed per demo feedback —
+					    backend still returns the field; UI hides it until we
+					    have a clearer "what happens at overage" story. */}
 				</Group>
 
 				{anyWarning && (
 					<Group gap="xs" mt={4} wrap="nowrap">
-						{/* Clickable — expands the per-workspace table so admins
-						    can see exactly which workspaces are hot. */}
-						{data.workspaces_at_cap > 0 && (
-							<Tooltip label={t`Click to see which`}>
-								<Badge
-									size="sm"
-									color="red"
-									variant="light"
-									style={{ cursor: "pointer" }}
-									onClick={() => setExpanded(true)}
-								>
-									<Trans>
-										{data.workspaces_at_cap} at limit
-									</Trans>
-								</Badge>
-							</Tooltip>
-						)}
-						{data.workspaces_approaching_cap > 0 && (
-							<Tooltip label={t`Click to see which`}>
-								<Badge
-									size="sm"
-									color="yellow"
-									variant="light"
-									style={{ cursor: "pointer" }}
-									onClick={() => setExpanded(true)}
-								>
-									<Trans>
-										{data.workspaces_approaching_cap} approaching limit
-									</Trans>
-								</Badge>
-							</Tooltip>
-						)}
+						{/* At-limit only fires on Pilot (the only tier with a
+						    hard block). Other tiers bill overage and keep going;
+						    no warning badge. Click expands the per-workspace
+						    breakdown so admins see which pilot is stuck. */}
+						<Tooltip label={t`Click to see which`}>
+							<Badge
+								size="sm"
+								color="red"
+								variant="light"
+								style={{ cursor: "pointer" }}
+								onClick={() => setExpanded(true)}
+							>
+								<Trans>
+									{data.workspaces_at_cap} at limit
+								</Trans>
+							</Badge>
+						</Tooltip>
 					</Group>
 				)}
 

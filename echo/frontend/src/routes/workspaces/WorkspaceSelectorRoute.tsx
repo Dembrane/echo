@@ -189,11 +189,8 @@ function WorkspaceCard({
 								<Trans>At limit</Trans>
 							</Badge>
 						)}
-						{!workspace.usage.at_cap && workspace.usage.approaching_cap && (
-							<Badge size="xs" color="yellow" variant="light">
-								<Trans>Approaching</Trans>
-							</Badge>
-						)}
+						{/* Only at-cap (Pilot hard-block) surfaces. Other tiers
+						    bill overage — no alarm badge. */}
 					</Group>
 				</Stack>
 
@@ -340,35 +337,19 @@ function TeamHeroCard({
 						{usage && (
 							<>
 								{" · "}
-								{usage.total_audio_hours.toFixed(1)} {t`h this cycle`}
-								{usage.total_overage_forecast_eur != null &&
-									usage.total_overage_forecast_eur > 0 && (
-										<>
-											{" · "}€{Math.round(usage.total_overage_forecast_eur)}{" "}
-											{t`overage`}
-										</>
-									)}
+								{usage.total_audio_hours.toFixed(1)} {t`h this month`}
 							</>
 						)}
 					</Text>
-					{usage &&
-						(usage.workspaces_at_cap > 0 ||
-							usage.workspaces_approaching_cap > 0) && (
-							<Group gap={6} mt={4}>
-								{usage.workspaces_at_cap > 0 && (
-									<Badge size="xs" color="red" variant="light">
-										<Trans>{usage.workspaces_at_cap} at limit</Trans>
-									</Badge>
-								)}
-								{usage.workspaces_approaching_cap > 0 && (
-									<Badge size="xs" color="yellow" variant="light">
-										<Trans>
-											{usage.workspaces_approaching_cap} approaching
-										</Trans>
-									</Badge>
-								)}
-							</Group>
-						)}
+					{/* Only at-cap Pilot blocks surface as a warning; the rest
+					    is billed overage, not a hard limit. */}
+					{usage && usage.workspaces_at_cap > 0 && (
+						<Group gap={6} mt={4}>
+							<Badge size="xs" color="red" variant="light">
+								<Trans>{usage.workspaces_at_cap} at limit</Trans>
+							</Badge>
+						</Group>
+					)}
 				</Stack>
 				{isAdminOrOwner && (
 					<Button

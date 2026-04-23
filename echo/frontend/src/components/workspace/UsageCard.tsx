@@ -136,7 +136,6 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 			: null;
 
 	const pilotExhausted = data.pilot_hard_block_active;
-	const approachingCap = hoursPct !== null && hoursPct >= 80 && hoursPct < 100;
 
 	const nextTier = data.next_tier;
 	const currentTierName = isTier(data.tier) ? (data.tier as Tier) : "pioneer";
@@ -177,11 +176,6 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 								<Trans>At limit</Trans>
 							</Badge>
 						)}
-						{!pilotExhausted && approachingCap && (
-							<Badge size="sm" color="yellow" variant="light">
-								<Trans>Approaching limit</Trans>
-							</Badge>
-						)}
 						<Tooltip label={t`Refresh`}>
 							<ActionIcon
 								variant="subtle"
@@ -217,7 +211,7 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 						<Progress
 							value={hoursPct}
 							size="xs"
-							color={pilotExhausted ? "red" : approachingCap ? "yellow" : "blue"}
+							color={pilotExhausted ? "red" : "blue"}
 						/>
 					)}
 				</Stack>
@@ -265,53 +259,35 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 					<Text size="sm">{data.project_count}</Text>
 				</Group>
 
-				{/* Admin / billing: financial forecast */}
-				{(data.overage_forecast_eur != null || data.next_tier) && (
+				{/* Next-tier hint (admin / billing only). Overage forecast
+				    removed per demo feedback; we'll put it back with a
+				    clearer "what happens at overage" explanation later. */}
+				{data.next_tier && (
 					<>
 						<Divider />
-						<Stack gap={8}>
-							{data.overage_forecast_eur != null && (
-								<Group justify="space-between">
-									<Text size="sm" c="dimmed">
-										<Trans>Overage forecast this month</Trans>
-									</Text>
-									<Text size="sm">{formatEur(data.overage_forecast_eur)}</Text>
-								</Group>
+						<Group justify="space-between" align="center" wrap="nowrap">
+							<Text size="xs" c="dimmed">
+								<Trans>
+									Next tier: {data.next_tier.tier} · {data.next_tier.tagline}
+								</Trans>
+								{data.next_tier.price_eur_monthly != null && (
+									<>
+										{" · "}
+										{formatEur(data.next_tier.price_eur_monthly)}
+										/mo
+									</>
+								)}
+							</Text>
+							{canRequestUpgrade && (
+								<Button
+									size="compact-xs"
+									variant="light"
+									onClick={() => setUpgradeOpen(true)}
+								>
+									<Trans>Request upgrade</Trans>
+								</Button>
 							)}
-							{data.seat_overage_eur != null && data.seat_overage_eur > 0 && (
-								<Group justify="space-between">
-									<Text size="sm" c="dimmed">
-										<Trans>Extra-seat cost</Trans>
-									</Text>
-									<Text size="sm">{formatEur(data.seat_overage_eur)}</Text>
-								</Group>
-							)}
-							{data.next_tier && (
-								<Group justify="space-between" align="center" wrap="nowrap">
-									<Text size="xs" c="dimmed">
-										<Trans>
-											Next tier: {data.next_tier.tier} · {data.next_tier.tagline}
-										</Trans>
-										{data.next_tier.price_eur_monthly != null && (
-											<>
-												{" · "}
-												{formatEur(data.next_tier.price_eur_monthly)}
-												/mo
-											</>
-										)}
-									</Text>
-									{canRequestUpgrade && (
-										<Button
-											size="compact-xs"
-											variant="light"
-											onClick={() => setUpgradeOpen(true)}
-										>
-											<Trans>Request upgrade</Trans>
-										</Button>
-									)}
-								</Group>
-							)}
-						</Stack>
+						</Group>
 					</>
 				)}
 			</Stack>

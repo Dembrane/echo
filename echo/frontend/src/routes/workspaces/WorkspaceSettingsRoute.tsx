@@ -1041,13 +1041,13 @@ export const WorkspaceSettingsRoute = () => {
 							onChange={(e) => setInviteEmail(e.currentTarget.value)}
 						/>
 
-						{/* Matrix §4 role model: team member vs guest is an
-						    orthogonal choice to workspace role. Team members
-						    get a team-level presence + one workspace seat. Guests
-						    are workspace-only, no team scope, clamped to
-						    member-equivalent permissions. */}
+						{/* Member vs External framing (demo feedback): using the
+						    user's mental model. Member joins your team + counts
+						    as a team seat. External has workspace-only access,
+						    no team presence, clamped to member-equivalent
+						    permissions (matrix §4 hard-rule). */}
 						<Radio.Group
-							label={t`Invite as`}
+							label={t`This person is`}
 							value={inviteKind}
 							onChange={(v) => setInviteKind(v as "team" | "guest")}
 						>
@@ -1056,9 +1056,12 @@ export const WorkspaceSettingsRoute = () => {
 									value="team"
 									label={
 										<Box>
-											<Text size="sm"><Trans>Team member</Trans></Text>
+											<Text size="sm"><Trans>Member</Trans></Text>
 											<Text size="xs" c="dimmed">
-												<Trans>Joins your team. Gets a row on the team page.</Trans>
+												<Trans>
+													On your team. Gets a team seat (counts toward
+													your plan) + access to this workspace.
+												</Trans>
 											</Text>
 										</Box>
 									}
@@ -1067,11 +1070,11 @@ export const WorkspaceSettingsRoute = () => {
 									value="guest"
 									label={
 										<Box>
-											<Text size="sm"><Trans>Guest</Trans></Text>
+											<Text size="sm"><Trans>External</Trans></Text>
 											<Text size="xs" c="dimmed">
 												<Trans>
-													Workspace access only. No team-level presence.
-													Clamped to member-equivalent permissions.
+													Not on your team. Workspace-only access,
+													doesn't count as a seat.
 												</Trans>
 											</Text>
 										</Box>
@@ -1165,19 +1168,20 @@ function PrivacyAndDefaultsSection({
 	const queryClient = useQueryClient();
 	const [logo, setLogo] = useState<string | null>(null);
 	const [description, setDescription] = useState<string | null>(null);
-	const [inheritAdmins, setInheritAdmins] = useState<boolean | null>(null);
-	const [inheritMembers, setInheritMembers] = useState<boolean | null>(null);
+	// Visibility control. Matrix §6 retired derivation — the old
+	// `inherit_team_admins` flag is now just the "Open vs Private" bit.
+	// We still read settings.inherit_team_admins from legacy rows for
+	// backward-compat, but new writes also set workspace.visibility.
+	const [isOpen, setIsOpen] = useState<boolean | null>(null);
 
 	const effectiveLogo = logo ?? settings.logo_url ?? "";
 	const effectiveDesc = description ?? settings.description ?? "";
-	const effectiveInheritAdmins = inheritAdmins ?? settings.inherit_team_admins;
-	const effectiveInheritMembers = inheritMembers ?? settings.inherit_team_members;
+	const effectiveIsOpen = isOpen ?? settings.inherit_team_admins;
 
 	const dirty =
 		(logo !== null && logo.trim() !== (settings.logo_url ?? "")) ||
 		(description !== null && description !== (settings.description ?? "")) ||
-		inheritAdmins !== null ||
-		inheritMembers !== null;
+		isOpen !== null;
 
 	const saveMutation = useMutation({
 		mutationFn: async () => {
@@ -1188,8 +1192,7 @@ function PrivacyAndDefaultsSection({
 			if (description !== null && description !== (settings.description ?? "")) {
 				payload.description = description;
 			}
-			if (inheritAdmins !== null) payload.inherit_team_admins = inheritAdmins;
-			if (inheritMembers !== null) payload.inherit_team_members = inheritMembers;
+			if (isOpen !== null) payload.inherit_team_admins = isOpen;
 			await updateWorkspace(workspaceId, payload);
 		},
 		onSuccess: () => {
@@ -1197,8 +1200,7 @@ function PrivacyAndDefaultsSection({
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
 			setLogo(null);
 			setDescription(null);
-			setInheritAdmins(null);
-			setInheritMembers(null);
+			setIsOpen(null);
 			toast.success(t`Saved`);
 		},
 		onError: (err: Error) => toast.error(err.message),
@@ -1237,12 +1239,12 @@ function PrivacyAndDefaultsSection({
 					"guardian",
 				];
 				const canGoPrivate = privateGateTiers.includes(settings.tier);
-				const currentlyPrivate = !effectiveInheritAdmins;
+				const currentlyPrivate = !effectiveIsOpen;
 				return (
 					<Radio.Group
 						label={t`Access`}
-						value={effectiveInheritAdmins ? "open" : "private"}
-						onChange={(v) => setInheritAdmins(v === "open")}
+						value={effectiveIsOpen ? "open" : "private"}
+						onChange={(v) => setIsOpen(v === "open")}
 					>
 						<Stack gap={8} mt={4}>
 							<Radio
@@ -1273,29 +1275,10 @@ function PrivacyAndDefaultsSection({
 					</Radio.Group>
 				);
 			})()}
-			{effectiveInheritAdmins && (
-				<Group gap={8} align="flex-start" ml="md">
-					<input
-						type="checkbox"
-						checked={effectiveInheritMembers}
-						disabled={!canEdit}
-						onChange={(e) => setInheritMembers(e.currentTarget.checked)}
-						style={{ marginTop: 3 }}
-						id="inherit-members"
-					/>
-					<Stack gap={0}>
-						<Text component="label" htmlFor="inherit-members" size="sm">
-							<Trans>Team members also get access</Trans>
-						</Text>
-						<Text size="xs" c="dimmed">
-							<Trans>
-								By default only admins inherit. Check this to open the workspace
-								to everyone on the team.
-							</Trans>
-						</Text>
-					</Stack>
-				</Group>
-			)}
+			{/* inherit_team_members toggle removed per matrix §6 — team members
+			    now go through the explicit Request-access flow; no automatic
+			    derivation. Backend still accepts the flag for legacy rows
+			    but we don't expose it. */}
 			{canEdit && (
 				<Group justify="flex-end">
 					<Button
@@ -1303,8 +1286,7 @@ function PrivacyAndDefaultsSection({
 						onClick={() => {
 							setLogo(null);
 							setDescription(null);
-							setInheritAdmins(null);
-							setInheritMembers(null);
+							setIsOpen(null);
 						}}
 						disabled={!dirty}
 					>

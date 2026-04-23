@@ -76,6 +76,8 @@ export const WorkspaceHomeSummary = ({
 			<Stack gap={10}>
 				<Group justify="space-between" wrap="nowrap">
 					<TierBadge tier={data.tier} size="xs" showTagline />
+					{/* At-limit only on Pilot hard-block. Other tiers bill
+					    overage and keep going; no alarm badge. */}
 					{data.pilot_hard_block_active && (
 						<Badge size="xs" color="red" variant="light">
 							<Trans>At limit</Trans>
@@ -107,13 +109,7 @@ export const WorkspaceHomeSummary = ({
 							<Progress
 								value={pct}
 								size="xs"
-								color={
-									data.pilot_hard_block_active
-										? "red"
-										: pct >= 80
-											? "yellow"
-											: "blue"
-								}
+								color={data.pilot_hard_block_active ? "red" : "blue"}
 							/>
 						)}
 					</Stack>
@@ -133,16 +129,7 @@ export const WorkspaceHomeSummary = ({
 						</Text>
 					</Stack>
 
-					{data.overage_forecast_eur != null && data.overage_forecast_eur > 0 && (
-						<Stack gap={2}>
-							<Text size="sm" fw={500}>
-								{formatEur(data.overage_forecast_eur)}
-							</Text>
-							<Text size="xs" c="dimmed">
-								<Trans>overage forecast</Trans>
-							</Text>
-						</Stack>
-					)}
+					{/* Overage forecast surface removed per demo feedback. */}
 				</Group>
 			</Stack>
 		</Paper>
