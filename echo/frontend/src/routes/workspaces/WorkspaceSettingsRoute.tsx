@@ -205,6 +205,13 @@ export const WorkspaceSettingsRoute = () => {
 	const [editingName, setEditingName] = useState<string | null>(null);
 	const [inviteModalOpened, { open: openInviteModal, close: closeInviteModal }] = useDisclosure(false);
 
+	// URL-driven tab state. Declared BEFORE the loading early-return
+	// below — calling a hook conditionally (only once settings loads)
+	// would change the hook count between renders and crash React
+	// (rules-of-hooks). Re-encoded this once already after a demo bug
+	// — don't move it back down.
+	const [searchParams, setSearchParams] = useSearchParams();
+
 	useDocumentTitle(t`Workspace settings | dembrane`);
 
 	const { data: settings, isLoading } = useQuery({
@@ -365,7 +372,6 @@ export const WorkspaceSettingsRoute = () => {
 	//   - Member → overview (members list is their main read).
 	//   - Admin → overview (same; admin manages members here too).
 	//   - Guest → no tabs at all; bypass below.
-	const [searchParams, setSearchParams] = useSearchParams();
 	const tabParam = searchParams.get("tab");
 	const defaultTab =
 		myRole === "billing" && !canManage ? "billing" : "overview";
