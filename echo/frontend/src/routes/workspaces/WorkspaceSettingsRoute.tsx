@@ -530,7 +530,7 @@ export const WorkspaceSettingsRoute = () => {
 									<Text size="xs" c="dimmed">
 										<Trans>
 											Invoices and payment method will land here in a
-											future release. Request an upgrade above or email{" "}
+											future release. To upgrade, email{" "}
 											<a
 												href="mailto:upgrades@dembrane.com"
 												style={{ color: "#4169e1" }}

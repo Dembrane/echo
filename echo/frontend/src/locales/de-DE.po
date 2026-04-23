@@ -367,7 +367,7 @@ msgstr "{conversationCount} ausgewählt"
 #~ msgid "{diffInHours}h ago"
 #~ msgstr "{diffInHours} Stunden zuvor"
 
-#: src/routes/team/TeamRoute.tsx:627
+#: src/routes/team/TeamRoute.tsx:647
 msgid "{directRole} on this workspace · change in workspace settings"
 msgstr ""
 
@@ -536,7 +536,7 @@ msgstr "Konto-Passwort"
 msgid "Action By"
 msgstr "Aktion von"
 
-#: src/components/inbox/Inbox.tsx:398
+#: src/components/inbox/Inbox.tsx:402
 msgid "Action needed"
 msgstr ""
 
@@ -708,11 +708,11 @@ msgstr "Die Basis-Schriftgröße für die Oberfläche anpassen"
 msgid "Admin"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:628
+#: src/routes/team/TeamRoute.tsx:648
 msgid "Admin here (from team role)"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:448
+#: src/routes/team/TeamRoute.tsx:459
 msgid "Admins"
 msgstr ""
 
@@ -745,7 +745,7 @@ msgstr "Agentisch - Werkzeuggetriebene Ausführung"
 msgid "Agentic Chat"
 msgstr "Agentischer Chat"
 
-#: src/routes/team/TeamRoute.tsx:447
+#: src/routes/team/TeamRoute.tsx:458
 msgid "All"
 msgstr "Alle"
 
@@ -796,7 +796,7 @@ msgid "Already added to this chat"
 msgstr "Bereits zu diesem Chat hinzugefügt"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:114
-#: src/routes/auth/Register.tsx:222
+#: src/routes/auth/Register.tsx:232
 msgid "Already have an account? Log in"
 msgstr ""
 
@@ -858,7 +858,7 @@ msgstr ""
 "\n"
 "Hinweis: Wenn die Ähnlichkeiten/Unterschiede zu oberflächlich sind, lassen Sie es mich wissen, wir brauchen komplexeres Material zu analysieren."
 
-#: src/components/inbox/Inbox.tsx:216
+#: src/components/inbox/Inbox.tsx:220
 msgid "Announcements"
 msgstr "Ankündigungen"
 
@@ -1111,7 +1111,7 @@ msgstr "Audit-Protokolle als CSV exportiert"
 msgid "Audit logs exported to JSON"
 msgstr "Audit-Protokolle als JSON exportiert"
 
-#: src/routes/auth/Login.tsx:279
+#: src/routes/auth/Login.tsx:287
 #: src/components/settings/TwoFactorSettingsCard.tsx:231
 #: src/components/settings/TwoFactorSettingsCard.tsx:381
 msgid "Authenticator code"
@@ -1179,7 +1179,7 @@ msgstr "Avatar aktualisiert"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:169
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:386
 #: src/routes/team/TeamSettingsRoute.tsx:175
-#: src/routes/team/TeamRoute.tsx:335
+#: src/routes/team/TeamRoute.tsx:346
 #: src/routes/project/report/ProjectReportRoute.tsx:603
 #: src/routes/auth/Register.tsx:174
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:334
@@ -1841,6 +1841,10 @@ msgstr ""
 msgid "Couldn't change visibility"
 msgstr ""
 
+#: src/routes/team/TeamRoute.tsx:466
+msgid "Couldn't load team members. Try refreshing — if it keeps failing, contact support."
+msgstr ""
+
 #: src/components/workspace/FeatureGate.tsx:326
 msgid "Couldn't send"
 msgstr ""
@@ -1867,7 +1871,7 @@ msgid "Create account"
 msgstr ""
 
 #: src/routes/auth/Register.tsx:99
-#: src/routes/auth/Login.tsx:374
+#: src/routes/auth/Login.tsx:391
 msgid "Create an account"
 msgstr ""
 
@@ -2443,8 +2447,8 @@ msgstr "Webhook bearbeiten"
 #~ msgid "Editing mode"
 #~ msgstr "Bearbeitungsmodus"
 
-#: src/routes/auth/Login.tsx:320
-#: src/routes/auth/Login.tsx:324
+#: src/routes/auth/Login.tsx:328
+#: src/routes/auth/Login.tsx:332
 #: src/components/settings/AccountSettingsCard.tsx:182
 #: src/components/common/RedactedText.tsx:38
 msgid "Email"
@@ -2619,7 +2623,7 @@ msgstr "Dateiname eingeben (ohne Erweiterung)"
 msgid "Enter new password"
 msgstr "Neues Passwort eingeben"
 
-#: src/routes/auth/Login.tsx:99
+#: src/routes/auth/Login.tsx:107
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "Geben Sie den 6-stelligen Code aus Ihrer Authentifizierungs-App ein."
 
@@ -3072,7 +3076,7 @@ msgstr "Schriftgröße"
 msgid "For advanced users: A secret key to verify webhook authenticity. Only needed if your receiving service requires signature verification."
 msgstr "Für erfahrene Benutzer: Ein Geheimnis-Schlüssel, um die Authentizität des Webhooks zu verifizieren. Nur erforderlich, wenn Ihr Empfangs-Dienst Signatur-Verifizierung benötigt."
 
-#: src/components/inbox/Inbox.tsx:204
+#: src/components/inbox/Inbox.tsx:208
 msgid "For you"
 msgstr ""
 
@@ -3080,7 +3084,7 @@ msgstr ""
 msgid "for your first real engagements."
 msgstr ""
 
-#: src/routes/auth/Login.tsx:345
+#: src/routes/auth/Login.tsx:362
 msgid "Forgot your password?"
 msgstr "Passwort vergessen?"
 
@@ -3413,8 +3417,8 @@ msgstr ""
 #~ msgid "In the meantime, if you want to analyze the conversations that are still processing, you can use the Chat feature"
 #~ msgstr "Währenddessen können Sie die Chat-Funktion verwenden, um die Gespräche zu analysieren, die noch verarbeitet werden."
 
-#: src/components/inbox/Inbox.tsx:156
-#: src/components/inbox/Inbox.tsx:171
+#: src/components/inbox/Inbox.tsx:160
+#: src/components/inbox/Inbox.tsx:175
 msgid "Inbox"
 msgstr ""
 
@@ -3472,7 +3476,7 @@ msgstr "Anweisungen für die Generierung des Verifizierungsergebnisses"
 msgid "Invalid code. Please request a new one."
 msgstr "Ungültiger Code. Bitte fordern Sie einen neuen an."
 
-#: src/routes/auth/Login.tsx:237
+#: src/routes/auth/Login.tsx:245
 msgid "Invalid credentials."
 msgstr "Ungültige Anmeldedaten."
 
@@ -3536,7 +3540,11 @@ msgstr ""
 #~ msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:531
-msgid "Invoices and payment method will land here in a future release. Request an upgrade above or email <0>upgrades@dembrane.com</0>."
+#~ msgid "Invoices and payment method will land here in a future release. Request an upgrade above or email <0>upgrades@dembrane.com</0>."
+#~ msgstr ""
+
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:531
+msgid "Invoices and payment method will land here in a future release. To upgrade, email <0>upgrades@dembrane.com</0>."
 msgstr ""
 
 #: src/components/settings/AuditLogsCard.tsx:289
@@ -3845,7 +3853,7 @@ msgstr "Laden..."
 msgid "Loading…"
 msgstr "Laden…"
 
-#: src/routes/auth/Login.tsx:359
+#: src/routes/auth/Login.tsx:376
 msgid "Login"
 msgstr "Anmelden"
 
@@ -3863,20 +3871,20 @@ msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1309
 #: src/routes/team/TeamSettingsRoute.tsx:239
-#: src/routes/team/TeamRoute.tsx:850
+#: src/routes/team/TeamRoute.tsx:870
 msgid "Logo"
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1268
 #: src/routes/team/TeamSettingsRoute.tsx:154
-#: src/routes/team/TeamRoute.tsx:809
+#: src/routes/team/TeamRoute.tsx:829
 #: src/components/settings/WhitelabelLogoCard.tsx:90
 msgid "Logo removed"
 msgstr "Logo entfernt"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1259
 #: src/routes/team/TeamSettingsRoute.tsx:146
-#: src/routes/team/TeamRoute.tsx:801
+#: src/routes/team/TeamRoute.tsx:821
 #: src/components/settings/WhitelabelLogoCard.tsx:67
 msgid "Logo updated"
 msgstr "Logo aktualisiert"
@@ -3924,7 +3932,7 @@ msgstr ""
 msgid "Manage templates"
 msgstr "Vorlagen verwalten"
 
-#: src/components/inbox/Inbox.tsx:180
+#: src/components/inbox/Inbox.tsx:184
 msgid "Mark all read"
 msgstr "Alle als gelesen markieren"
 
@@ -3963,7 +3971,7 @@ msgid "members"
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:564
-#: src/routes/team/TeamRoute.tsx:449
+#: src/routes/team/TeamRoute.tsx:460
 msgid "Members"
 msgstr ""
 
@@ -4263,7 +4271,7 @@ msgstr "Noch keine Gesprache. Sie konnen jetzt einen Bericht planen und Gesprach
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1340
 #: src/routes/team/TeamSettingsRoute.tsx:270
-#: src/routes/team/TeamRoute.tsx:879
+#: src/routes/team/TeamRoute.tsx:899
 msgid "No logo set — dembrane default will be used."
 msgstr ""
 
@@ -4271,7 +4279,7 @@ msgstr ""
 msgid "No new feedback detected yet. Please continue your discussion and try again soon."
 msgstr "Noch kein neues Feedback erkannt. Bitte fahren Sie mit Ihrer Diskussion fort und versuchen Sie es später erneut."
 
-#: src/routes/team/TeamRoute.tsx:678
+#: src/routes/team/TeamRoute.tsx:698
 msgid "No one matches that filter."
 msgstr ""
 
@@ -4404,7 +4412,7 @@ msgstr ""
 msgid "Not on your team. Workspace-only access, doesn't count as a seat."
 msgstr ""
 
-#: src/components/inbox/Inbox.tsx:258
+#: src/components/inbox/Inbox.tsx:262
 msgid "Nothing from dembrane right now."
 msgstr ""
 
@@ -4531,7 +4539,7 @@ msgstr "Fehlerbehebungsleitfaden öffnen"
 #~ msgid "Open troubleshooting guide"
 #~ msgstr "Fehlerbehebungsleitfaden öffnen"
 
-#: src/routes/auth/Login.tsx:311
+#: src/routes/auth/Login.tsx:319
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Öffnen Sie Ihre Authentifizierungs-App und geben Sie den aktuellen 6-stelligen Code ein."
 
@@ -4567,7 +4575,7 @@ msgid "Options"
 msgstr "Optionen"
 
 #: src/routes/auth/Register.tsx:213
-#: src/routes/auth/Login.tsx:365
+#: src/routes/auth/Login.tsx:382
 msgid "or"
 msgstr "oder"
 
@@ -4616,7 +4624,7 @@ msgid "Overage"
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:503
-#: src/routes/team/TeamRoute.tsx:396
+#: src/routes/team/TeamRoute.tsx:407
 #: src/components/layout/ProjectConversationLayout.tsx:44
 #: src/components/chat/ChatModeSelector.tsx:300
 #: src/components/chat/ChatModeBanner.tsx:36
@@ -4777,8 +4785,8 @@ msgid "Participants will be able to select tags when creating conversations"
 msgstr "Teilnehmer können beim Erstellen von Gesprächen Tags auswählen"
 
 #: src/routes/auth/Register.tsx:156
-#: src/routes/auth/Login.tsx:329
-#: src/routes/auth/Login.tsx:333
+#: src/routes/auth/Login.tsx:342
+#: src/routes/auth/Login.tsx:346
 msgid "Password"
 msgstr "Passwort"
 
@@ -4826,12 +4834,12 @@ msgstr ""
 msgid "Pending invites | dembrane"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:361
-#: src/routes/team/TeamRoute.tsx:920
+#: src/routes/team/TeamRoute.tsx:372
+#: src/routes/team/TeamRoute.tsx:940
 msgid "people"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:404
+#: src/routes/team/TeamRoute.tsx:415
 msgid "People"
 msgstr ""
 
@@ -4847,11 +4855,11 @@ msgstr ""
 msgid "Period"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:361
+#: src/routes/team/TeamRoute.tsx:372
 msgid "person"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:483
+#: src/routes/team/TeamRoute.tsx:503
 msgid "Person"
 msgstr ""
 
@@ -4951,7 +4959,7 @@ msgstr "Bitte aktivieren Sie die Teilnahme, um das Teilen zu ermöglichen"
 msgid "Please enter a valid email."
 msgstr "Bitte geben Sie eine gültige E-Mail-Adresse ein."
 
-#: src/routes/auth/Login.tsx:267
+#: src/routes/auth/Login.tsx:275
 msgid "Please login to continue."
 msgstr "Bitte melden Sie sich an, um fortzufahren."
 
@@ -5144,11 +5152,11 @@ msgstr ""
 msgid "Private project"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:501
+#: src/routes/team/TeamRoute.tsx:521
 msgid "Private workspace"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:654
+#: src/routes/team/TeamRoute.tsx:674
 msgid "Private workspace — ask the workspace owner for an invite"
 msgstr ""
 
@@ -5268,7 +5276,7 @@ msgstr "Projekt Einstellungen"
 #~ msgstr "Ende der Liste • Alle {0} Gespräche geladen"
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:179
-#: src/routes/team/TeamRoute.tsx:540
+#: src/routes/team/TeamRoute.tsx:560
 #: src/components/workspace/TeamUsageRollup.tsx:176
 msgid "projects"
 msgstr ""
@@ -5529,7 +5537,7 @@ msgstr "Benutzer daran erinnern, vor dem Abschließen zu überprüfen"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:740
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1335
 #: src/routes/team/TeamSettingsRoute.tsx:265
-#: src/routes/team/TeamRoute.tsx:874
+#: src/routes/team/TeamRoute.tsx:894
 #: src/components/settings/WhitelabelLogoCard.tsx:149
 #: src/components/settings/WhitelabelLogoCard.tsx:184
 #: src/components/settings/AccountSettingsCard.tsx:163
@@ -5592,7 +5600,7 @@ msgstr "Chat umbenennen"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1359
 #: src/routes/team/TeamSettingsRoute.tsx:289
-#: src/routes/team/TeamRoute.tsx:898
+#: src/routes/team/TeamRoute.tsx:918
 msgid "Replace logo"
 msgstr ""
 
@@ -5846,7 +5854,7 @@ msgstr "Rechtsklick, um hervorzuheben"
 msgid "Role"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:297
+#: src/routes/team/TeamRoute.tsx:308
 msgid "Role changed"
 msgstr ""
 
@@ -5903,7 +5911,7 @@ msgstr "Vorlage speichern"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1226
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1244
 #: src/routes/team/TeamSettingsRoute.tsx:133
-#: src/routes/team/TeamRoute.tsx:787
+#: src/routes/team/TeamRoute.tsx:807
 msgid "Saved"
 msgstr ""
 
@@ -5954,7 +5962,7 @@ msgstr "Suchen"
 msgid "Search conversations"
 msgstr "Gespräche suchen"
 
-#: src/routes/team/TeamRoute.tsx:436
+#: src/routes/team/TeamRoute.tsx:447
 msgid "Search name or email"
 msgstr ""
 
@@ -6320,7 +6328,7 @@ msgstr "Revisionsdaten anzeigen"
 
 #. placeholder {0}: filteredMembers.length
 #. placeholder {1}: members.length
-#: src/routes/team/TeamRoute.tsx:454
+#: src/routes/team/TeamRoute.tsx:473
 msgid "Showing {0} of {1}"
 msgstr ""
 
@@ -6333,7 +6341,7 @@ msgid "Showing your most recent completed report."
 msgstr "Ihr zuletzt fertiggestellter Bericht wird angezeigt."
 
 #: src/routes/team/TeamSettingsRoute.tsx:215
-#: src/routes/team/TeamRoute.tsx:827
+#: src/routes/team/TeamRoute.tsx:847
 msgid "Shown in the team header and in email subject lines."
 msgstr ""
 
@@ -6405,7 +6413,7 @@ msgstr "Etwas blockiert Ihre Verbindung. Ihr Audio wird nicht gespeichert, solan
 #: src/routes/project/report/ProjectReportRoute.tsx:932
 #: src/routes/project/report/ProjectReportRoute.tsx:1388
 #: src/routes/onboarding/OnboardingRoute.tsx:108
-#: src/routes/auth/Login.tsx:228
+#: src/routes/auth/Login.tsx:236
 #: src/components/project/ProjectAccessGuard.tsx:87
 #: src/components/participant/ParticipantInitiateForm.tsx:93
 #: src/components/conversation/ConversationEdit.tsx:252
@@ -6658,7 +6666,7 @@ msgstr "Nimm dir Zeit, ein konkretes Ergebnis zu erstellen, das deinen Beitrag f
 msgid "Team"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:260
+#: src/routes/team/TeamRoute.tsx:270
 msgid "Team | dembrane"
 msgstr ""
 
@@ -6670,7 +6678,7 @@ msgstr ""
 msgid "Team admins and members will find this workspace from their home page. Admins can Join directly; members ask to join — you approve."
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:689
+#: src/routes/team/TeamRoute.tsx:709
 msgid "Team admins can join any workspace to get a direct admin seat. Workspace invites live in each workspace's settings."
 msgstr ""
 
@@ -6679,7 +6687,7 @@ msgid "Team admins get access automatically."
 msgstr ""
 
 #: src/routes/team/TeamSettingsRoute.tsx:250
-#: src/routes/team/TeamRoute.tsx:859
+#: src/routes/team/TeamRoute.tsx:879
 msgid "Team logo"
 msgstr ""
 
@@ -6688,22 +6696,22 @@ msgid "Team member"
 msgstr ""
 
 #: src/routes/team/TeamSettingsRoute.tsx:214
-#: src/routes/team/TeamRoute.tsx:826
+#: src/routes/team/TeamRoute.tsx:846
 #: src/routes/onboarding/OnboardingRoute.tsx:398
 msgid "Team name"
 msgstr ""
 
 #: src/routes/team/TeamSettingsRoute.tsx:172
-#: src/routes/team/TeamRoute.tsx:332
+#: src/routes/team/TeamRoute.tsx:343
 msgid "Team not found"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:486
+#: src/routes/team/TeamRoute.tsx:506
 msgid "Team role"
 msgstr ""
 
 #: src/routes/team/TeamSettingsRoute.tsx:196
-#: src/routes/team/TeamRoute.tsx:372
+#: src/routes/team/TeamRoute.tsx:383
 msgid "Team settings"
 msgstr ""
 
@@ -6752,7 +6760,7 @@ msgstr "Danke-Seite Inhalt"
 msgid "Thank you!"
 msgstr "Vielen Dank!"
 
-#: src/routes/auth/Login.tsx:211
+#: src/routes/auth/Login.tsx:219
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
 msgstr "Der Code hat nicht funktioniert. Versuchen Sie es erneut mit einem neuen Code aus Ihrer Authentifizierungs-App."
 
@@ -7337,7 +7345,7 @@ msgid "Unknown"
 msgstr "Unbekannt"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:610
-#: src/routes/team/TeamRoute.tsx:570
+#: src/routes/team/TeamRoute.tsx:590
 msgid "Unknown member"
 msgstr ""
 
@@ -7370,7 +7378,7 @@ msgstr "Projekt lösen"
 #~ msgid "Unpublish from community"
 #~ msgstr "Aus Community entfernen"
 
-#: src/components/inbox/Inbox.tsx:393
+#: src/components/inbox/Inbox.tsx:397
 msgid "Unread"
 msgstr ""
 
@@ -7478,7 +7486,7 @@ msgstr "Dateien hochladen"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1361
 #: src/routes/team/TeamSettingsRoute.tsx:291
-#: src/routes/team/TeamRoute.tsx:900
+#: src/routes/team/TeamRoute.tsx:920
 msgid "Upload logo"
 msgstr ""
 
@@ -7510,7 +7518,7 @@ msgstr "URL ist erforderlich"
 msgid "URL must start with http:// or https://"
 msgstr "URL muss mit http:// oder https:// beginnen"
 
-#: src/routes/team/TeamRoute.tsx:400
+#: src/routes/team/TeamRoute.tsx:411
 msgid "Usage"
 msgstr ""
 
@@ -7612,7 +7620,7 @@ msgstr "Verifizieren"
 msgid "participant.echo.verify"
 msgstr "Verifizieren"
 
-#: src/routes/auth/Login.tsx:357
+#: src/routes/auth/Login.tsx:374
 msgid "Verify code"
 msgstr "Code verifizieren"
 
@@ -7795,7 +7803,7 @@ msgstr "Webhooks sind automatisierte Nachrichten, die von einer App zu einer and
 msgid "Welcome"
 msgstr "Willkommen"
 
-#: src/routes/auth/Login.tsx:117
+#: src/routes/auth/Login.tsx:125
 msgid "Welcome back"
 msgstr "Welcome back"
 
@@ -7811,7 +7819,7 @@ msgstr ""
 #~ msgstr "Willkommen im Big Picture Modus! Ich hab Zusammenfassungen von all deinen Gesprächen geladen. Frag mich nach Mustern, Themen und Insights in deinen Daten. Für genaue Zitate, starte einen neuen Chat im Modus „Genauer Kontext“."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:358
-#: src/routes/auth/Login.tsx:117
+#: src/routes/auth/Login.tsx:125
 msgid "Welcome to dembrane"
 msgstr ""
 
@@ -7843,7 +7851,7 @@ msgstr "Willkommen im Übersichtmodus! Ich hab Zusammenfassungen von all deinen 
 msgid "Welcome, {displayName}"
 msgstr ""
 
-#: src/routes/auth/Login.tsx:261
+#: src/routes/auth/Login.tsx:269
 msgid "Welcome!"
 msgstr "Willkommen!"
 
@@ -7942,7 +7950,7 @@ msgstr ""
 msgid "will be included in your report"
 msgstr "wird in Ihrem Bericht enthalten sein"
 
-#: src/routes/team/TeamRoute.tsx:359
+#: src/routes/team/TeamRoute.tsx:370
 msgid "workspace"
 msgstr ""
 
@@ -7979,7 +7987,7 @@ msgstr ""
 msgid "Workspace settings | dembrane"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:853
+#: src/routes/team/TeamRoute.tsx:873
 msgid "Workspace-level logo overrides the team logo when set."
 msgstr ""
 
@@ -7987,8 +7995,8 @@ msgstr ""
 msgid "Workspace-level logo takes precedence when set."
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:359
-#: src/routes/team/TeamRoute.tsx:914
+#: src/routes/team/TeamRoute.tsx:370
+#: src/routes/team/TeamRoute.tsx:934
 msgid "workspaces"
 msgstr ""
 
@@ -8089,7 +8097,7 @@ msgstr ""
 msgid "You may also choose to record another conversation."
 msgstr "Sie können auch wählen, ein weiteres Gespräch aufzunehmen."
 
-#: src/routes/auth/Login.tsx:242
+#: src/routes/auth/Login.tsx:250
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "Sie müssen sich mit demselben Anbieter anmelden, mit dem Sie sich registriert haben. Wenn Sie auf Probleme stoßen, wenden Sie sich bitte an den Support."
 
@@ -8118,7 +8126,7 @@ msgstr "Sie erhalten bald {objectLabel} zur Verifizierung."
 msgid "You're about to change your own role to <0>{v}</0>. You'll immediately lose access to workspace settings, invites, and member management."
 msgstr ""
 
-#: src/components/inbox/Inbox.tsx:231
+#: src/components/inbox/Inbox.tsx:235
 msgid "You're all caught up."
 msgstr ""
 

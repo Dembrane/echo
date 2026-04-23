@@ -212,7 +212,17 @@ export const RegisterRoute = () => {
 					<>
 						<Divider variant="dashed" label={t`or`} labelPosition="center" />
 
-						<I18nLink to="/login">
+						{/* Pass the just-registered email through so Login.tsx
+						    can pre-fill + lock the email field, blocking Chrome's
+						    autofill from quietly swapping in a different saved
+						    account on submit. */}
+						<I18nLink
+							to={
+								submittedEmail
+									? `/login?email=${encodeURIComponent(submittedEmail)}`
+									: "/login"
+							}
+						>
 							<Button
 								size="md"
 								variant="outline"

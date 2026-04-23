@@ -20,7 +20,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconBell, IconCheck } from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import {
 	useInfiniteAnnouncements,
@@ -109,10 +109,14 @@ export const Inbox = () => {
 		[processedAnnouncements],
 	);
 
-	// Infinite-scroll sentinel
-	if (inView && hasNextPage && !isFetchingNextPage) {
-		fetchNextPage();
-	}
+	// Infinite-scroll sentinel. Fire-and-forget inside useEffect so the
+	// fetch doesn't run during render (which caused max-depth churn on
+	// the Announcements tab in the 2026-04-23 audit).
+	useEffect(() => {
+		if (inView && hasNextPage && !isFetchingNextPage) {
+			fetchNextPage();
+		}
+	}, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
 	const totalUnread = unreadNotifs + unreadAnnouncements;
 

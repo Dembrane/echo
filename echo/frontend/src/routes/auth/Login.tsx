@@ -58,18 +58,26 @@ import { testId } from "@/lib/testUtils";
 
 export const LoginRoute = () => {
 	useDocumentTitle(t`Login | dembrane`);
+	const [searchParams, _setSearchParams] = useSearchParams();
+
+	// When we arrive from /register with ?email=..., pre-seed the email
+	// and lock the input. Prevents Chrome's password manager from quietly
+	// swapping in a saved account on submit — the scenario reported in
+	// 2026-04-23 QA audit where a fresh signup ended up logged in as a
+	// different seeded user.
+	const lockedEmail = searchParams.get("email");
+
 	const { register, handleSubmit, setValue, getValues } = useForm<{
 		email: string;
 		password: string;
 		otp: string;
 	}>({
 		defaultValues: {
+			email: lockedEmail ?? "",
 			otp: "",
 		},
 		shouldUnregister: false,
 	});
-
-	const [searchParams, _setSearchParams] = useSearchParams();
 
 	const navigate = useI18nNavigate();
 	const createProjectMutation = useCreateProjectMutation();
@@ -324,6 +332,11 @@ export const LoginRoute = () => {
 										placeholder={t`Email`}
 										required
 										type="email"
+										// When arriving from /register, the email is
+										// locked. Defends against password-manager
+										// autofill swapping in a different account.
+										readOnly={Boolean(lockedEmail)}
+										autoComplete={lockedEmail ? "off" : "email"}
 									/>
 									<PasswordInput
 										label={<Trans>Password</Trans>}
@@ -332,6 +345,10 @@ export const LoginRoute = () => {
 										{...testId("auth-login-password-input")}
 										placeholder={t`Password`}
 										required
+										// new-password is the standard escape hatch to
+										// stop Chrome/Firefox auto-filling a saved
+										// password into this form.
+										autoComplete={lockedEmail ? "new-password" : "current-password"}
 									/>
 								</>
 							)}

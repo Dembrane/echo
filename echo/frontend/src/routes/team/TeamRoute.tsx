@@ -102,7 +102,17 @@ async function fetchTeamMembers(teamId: string): Promise<TeamMember[]> {
 	const res = await fetch(`${API_BASE_URL}/v2/orgs/${teamId}/members`, {
 		credentials: "include",
 	});
-	if (!res.ok) return [];
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		// Bubble up the error instead of silently falling through to an
+		// empty list — the "0 of 0" symptom in the 2026-04-23 audit was
+		// a swallowed 500 masquerading as an empty team.
+		throw new Error(
+			typeof data.detail === "string"
+				? data.detail
+				: `Members request failed (${res.status})`,
+		);
+	}
 	return res.json();
 }
 
@@ -265,10 +275,11 @@ export const TeamRoute = () => {
 		enabled: Boolean(teamId),
 		staleTime: 30_000,
 	});
-	const { data: members = [] } = useQuery({
+	const { data: members = [], error: membersError } = useQuery({
 		queryKey: ["v2", "team", teamId, "members"],
 		queryFn: () => fetchTeamMembers(teamId as string),
 		enabled: Boolean(teamId),
+		retry: 1,
 	});
 	const { data: workspaces = [] } = useQuery({
 		queryKey: ["v2", "team", teamId, "workspaces"],
@@ -450,11 +461,20 @@ export const TeamRoute = () => {
 								]}
 							/>
 						</Group>
-						<Text size="xs" c="dimmed">
-							<Trans>
-								Showing {filteredMembers.length} of {members.length}
-							</Trans>
-						</Text>
+						{membersError ? (
+							<Text size="xs" c="red">
+								<Trans>
+									Couldn't load team members. Try refreshing — if it keeps
+									failing, contact support.
+								</Trans>
+							</Text>
+						) : (
+							<Text size="xs" c="dimmed">
+								<Trans>
+									Showing {filteredMembers.length} of {members.length}
+								</Trans>
+							</Text>
+						)}
 					</Group>
 				)}
 

@@ -115,19 +115,24 @@ export const App = () => {
 		<QueryClientProvider client={queryClient}>
 			{/* <ReactQueryDevtools initialIsOpen={false} /> */}
 			<MantineProvider theme={theme}>
-				<ModalsProvider>
 				<DatesProvider settings={{ consistentWeeks: true }}>
 					<AppPreferencesProvider>
 						<WhitelabelLogoProvider>
 							<WorkspaceProvider>
+								{/* I18nProvider must wrap ModalsProvider: Mantine's
+								    modal portal re-enters the tree outside any
+								    non-context-aware ancestor, so <Trans> inside
+								    modals.openConfirmModal children needs Lingui
+								    context available from this level down. */}
 								<I18nProvider>
-									<RouterProvider router={router} />
+									<ModalsProvider>
+										<RouterProvider router={router} />
+									</ModalsProvider>
 								</I18nProvider>
 							</WorkspaceProvider>
 						</WhitelabelLogoProvider>
 					</AppPreferencesProvider>
 				</DatesProvider>
-				</ModalsProvider>
 			</MantineProvider>
 		</QueryClientProvider>
 	);
