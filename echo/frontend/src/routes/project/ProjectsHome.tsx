@@ -22,7 +22,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useSearchParams } from "react-router";
 import { useCurrentUser } from "@/components/auth/hooks";
-import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { CloseableAlert } from "@/components/common/ClosableAlert";
 import { toast } from "@/components/common/Toaster";
 import {
@@ -32,6 +31,7 @@ import {
 	useUpdateProjectByIdMutation,
 } from "@/components/project/hooks";
 import { PinnedProjectCard } from "@/components/project/PinnedProjectCard";
+import { WorkspaceHomeSummary } from "@/components/workspace/WorkspaceHomeSummary";
 import { ProjectListItem } from "@/components/project/ProjectListItem";
 import { ProjectListSkeleton } from "@/components/project/ProjectListSkeleton";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -187,26 +187,22 @@ export const ProjectsHomeRoute = () => {
 	return (
 		<Container>
 			<Stack>
-				<Group justify="space-between">
-					<Group align="center">
-						<Breadcrumbs
-							items={[
-								{
-									label: (
-										<Group>
-											<Icons.Home />
-											<Title order={2}>
-												<Trans>Home</Trans>
-											</Title>
-										</Group>
-									),
-								},
-							]}
-						/>
-					</Group>
+				{/* Workspace summary tile — role-aware usage snapshot. Lives
+				    above Projects so users see "is this workspace healthy?"
+				    before scrolling. Component self-hides when data isn't
+				    ready or the workspace context is missing. */}
+				{workspaceId && <WorkspaceHomeSummary workspaceId={workspaceId} />}
+
+				{/* Projects header row — title + Create in one line.
+				    Create button moved here from the page-top chrome so the
+				    action is right next to the thing it creates. */}
+				<Group justify="space-between" align="center" className="relative">
+					<Title order={3}>
+						<Trans>Projects</Trans>
+					</Title>
 					{!user.data?.disable_create_project && (
 						<Button
-							size="md"
+							size="sm"
 							rightSection={<Icons.Plus stroke="white" fill="white" />}
 							loading={createProjectMutation.isPending}
 							onClick={handleCreateProject}
@@ -215,31 +211,6 @@ export const ProjectsHomeRoute = () => {
 							<Trans>Create</Trans>
 						</Button>
 					)}
-				</Group>
-				<Divider />
-
-				{/* Pinned Projects Section */}
-				{showPinnedSection && (
-					<>
-						<SimpleGrid cols={{ base: 1, md: 3, sm: 2 }} spacing="md">
-							{pinnedProjects.map((project) => (
-								<PinnedProjectCard
-									key={project.id}
-									project={project as Project}
-									onUnpin={handleTogglePin}
-									isUnpinning={togglePinMutation.isPending}
-									onSearchOwner={isAdmin ? handleSearchOwner : undefined}
-								/>
-							))}
-						</SimpleGrid>
-						<Divider />
-					</>
-				)}
-
-				<Group justify="space-between" className="relative">
-					<Title order={3}>
-						<Trans>Projects</Trans>
-					</Title>
 				</Group>
 
 				{allProjects.length === 0 &&
@@ -328,6 +299,31 @@ export const ProjectsHomeRoute = () => {
 							)}
 						</Stack>
 					</Box>
+				)}
+
+				{/* Pinned projects at the bottom of the page — still
+				    accessible but no longer dominates the hero. Moved
+				    below per demo feedback. */}
+				{showPinnedSection && (
+					<>
+						<Divider mt="lg" />
+						<Group gap="xs" align="center">
+							<Title order={5} fw={400} c="dimmed">
+								<Trans>Pinned</Trans>
+							</Title>
+						</Group>
+						<SimpleGrid cols={{ base: 1, md: 3, sm: 2 }} spacing="md">
+							{pinnedProjects.map((project) => (
+								<PinnedProjectCard
+									key={project.id}
+									project={project as Project}
+									onUnpin={handleTogglePin}
+									isUnpinning={togglePinMutation.isPending}
+									onSearchOwner={isAdmin ? handleSearchOwner : undefined}
+								/>
+							))}
+						</SimpleGrid>
+					</>
 				)}
 			</Stack>
 		</Container>
