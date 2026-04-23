@@ -1813,6 +1813,14 @@ export type PromptTemplateResponse = {
 	copied_from: string | null;
 	date_created: string | null;
 	date_updated: string | null;
+	// Workspace-scope (matrix v1.1). scope='user' = private template
+	// (legacy). scope='workspace' = shared with every workspace member.
+	scope: "user" | "workspace";
+	workspace_id: string | null;
+	// Derived server-side: true if the caller is allowed to edit this
+	// template (creator for scope='user', or non-external workspace
+	// member for scope='workspace').
+	can_edit: boolean;
 };
 
 // -- Quick-Access Preferences --
@@ -1822,11 +1830,12 @@ export type QuickAccessPreference = {
 	id: string;
 };
 
-export const getPromptTemplates = async (): Promise<
-	PromptTemplateResponse[]
-> => {
+export const getPromptTemplates = async (
+	workspaceId?: string | null,
+): Promise<PromptTemplateResponse[]> => {
+	const qs = workspaceId ? `?workspace_id=${encodeURIComponent(workspaceId)}` : "";
 	return api.get<unknown, PromptTemplateResponse[]>(
-		"/templates/prompt-templates",
+		`/templates/prompt-templates${qs}`,
 	);
 };
 
@@ -1834,6 +1843,10 @@ export const createPromptTemplate = async (payload: {
 	title: string;
 	content: string;
 	icon?: string | null;
+	// Default scope is 'user' — pass 'workspace' + workspace_id to
+	// create a shared team template.
+	scope?: "user" | "workspace";
+	workspace_id?: string | null;
 }): Promise<PromptTemplateResponse> => {
 	return api.post<unknown, PromptTemplateResponse>(
 		"/templates/prompt-templates",

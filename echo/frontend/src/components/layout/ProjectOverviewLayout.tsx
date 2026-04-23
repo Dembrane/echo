@@ -29,7 +29,6 @@ export const ProjectOverviewLayout = () => {
 				"name",
 				"language",
 				"visibility",
-				"workspace_id",
 				"is_conversation_allowed",
 				"default_conversation_title",
 			],

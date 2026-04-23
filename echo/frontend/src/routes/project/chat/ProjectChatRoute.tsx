@@ -62,6 +62,7 @@ import {
 	useUserTemplates,
 } from "@/components/chat/hooks/useUserTemplates";
 import SourcesSearch from "@/components/chat/SourcesSearch";
+import { useProjectById } from "@/components/project/hooks";
 import type { QuickAccessItem } from "@/components/chat/templateKey";
 import { Templates } from "@/components/chat/templates";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
@@ -350,12 +351,21 @@ export const ProjectChatRoute = () => {
 		projectId ?? "",
 	);
 
-	// User templates & preferences
+	// User templates & preferences. Fetch the project's workspace_id so
+	// the templates hook can return BOTH personal (scope='user') and
+	// team-shared (scope='workspace') templates for this workspace.
+	const projectForWorkspace = useProjectById({
+		projectId: projectId ?? "",
+		query: { fields: ["id", "workspace_id"] },
+	});
+	const workspaceId =
+		(projectForWorkspace.data as { workspace_id?: string | null } | undefined)
+			?.workspace_id ?? null;
 	const currentUserQuery = useCurrentUser();
-	const userTemplatesQuery = useUserTemplates();
-	const createUserTemplateMutation = useCreateUserTemplate();
-	const updateUserTemplateMutation = useUpdateUserTemplate();
-	const deleteUserTemplateMutation = useDeleteUserTemplate();
+	const userTemplatesQuery = useUserTemplates(workspaceId);
+	const createUserTemplateMutation = useCreateUserTemplate(workspaceId);
+	const updateUserTemplateMutation = useUpdateUserTemplate(workspaceId);
+	const deleteUserTemplateMutation = useDeleteUserTemplate(workspaceId);
 	const quickAccessQuery = useQuickAccessPreferences();
 	const saveQuickAccessMutation = useSaveQuickAccessPreferences();
 	const toggleAiSuggestionsMutation = useToggleAiSuggestions();
@@ -788,6 +798,7 @@ export const ProjectChatRoute = () => {
 						}
 						chatMode={chatMode}
 						userTemplates={userTemplatesQuery.data ?? []}
+						canCreateWorkspaceTemplate={Boolean(workspaceId)}
 						onCreateUserTemplate={(payload) =>
 							createUserTemplateMutation.mutateAsync(payload)
 						}
