@@ -525,7 +525,7 @@ export const WorkspaceSettingsRoute = () => {
 								</Tabs.Tab>
 							)}
 							<Tabs.Tab value="billing">
-								<Trans>Billing</Trans>
+								<Trans>Usage and Tier</Trans>
 							</Tabs.Tab>
 							{/* Matrix §4: delete-workspace is admin + owner. Tab
 							    hidden for billing and member roles. */}

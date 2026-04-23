@@ -1439,6 +1439,69 @@ def step_14_kickback_extensions():
     return True
 
 
+def step_15_prompt_template_workspace_scope():
+    """Scope prompt_template to workspaces.
+
+    Pre-matrix, prompt_template was a per-user collection: every row was
+    keyed by user_created, and there was no concept of a shared library.
+    Matrix v1.1 §4 says members of a workspace collaborate on the chat
+    surface — so a template written by one member should be reusable by
+    another. To get there without breaking existing rows:
+
+      - Add workspace_id (nullable UUID FK) so a template can live in a
+        workspace instead of being tied only to a user.
+      - Add scope (string, default 'user') so the backend filter is
+        explicit: 'user' rows are private to user_created, 'workspace'
+        rows are shared with anyone in workspace_id.
+      - Leave existing rows untouched — they'll stay scope='user' and
+        keep behaving exactly as before.
+
+    Role gating is enforced at the endpoint layer (template.py):
+      admin/owner/member can create/update scope='workspace' templates;
+      is_external guests cannot (they can still read + create
+      scope='user' templates).
+    """
+    if not collection_exists("prompt_template"):
+        print("  prompt_template missing — nothing to migrate")
+        return False
+
+    add_field("prompt_template", "workspace_id", {
+        "type": "uuid",
+        "schema": {"is_nullable": True},
+        "meta": {
+            "interface": "input",
+            "note": (
+                "Optional FK to workspace. When set alongside "
+                "scope='workspace', the template is visible to every "
+                "workspace member. NULL = user-private template."
+            ),
+        },
+    })
+    create_relation("prompt_template", "workspace_id", "workspace",
+                    schema={"on_delete": "CASCADE"})
+
+    add_field("prompt_template", "scope", {
+        "type": "string",
+        "schema": {"is_nullable": False, "default_value": "user"},
+        "meta": {
+            "interface": "select-dropdown",
+            "options": {
+                "choices": [
+                    {"text": "User (private)", "value": "user"},
+                    {"text": "Workspace (shared)", "value": "workspace"},
+                ],
+            },
+            "note": (
+                "Controls visibility. 'user' = private to user_created "
+                "(legacy behavior). 'workspace' = shared with everyone "
+                "in workspace_id."
+            ),
+        },
+    })
+
+    return True
+
+
 STEPS = {
     "1": ("app_user", step_1_app_user),
     "2": ("org + org_membership", step_2_org),
@@ -1454,6 +1517,7 @@ STEPS = {
     "12": ("access_request collection", step_12_access_requests),
     "13": ("partner-client model (§10)", step_13_partner_model),
     "14": ("kickback extensions on referral_ledger", step_14_kickback_extensions),
+    "15": ("prompt_template workspace scope", step_15_prompt_template_workspace_scope),
 }
 
 

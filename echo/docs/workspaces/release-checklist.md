@@ -104,6 +104,59 @@ Feature total    [██████░░░░]  ~65%
 - [ ] Visibility toggle (workspace ↔ private)
 - [ ] Tier-gated empty states with upgrade CTAs
 
+## Queued design directions (2026-04-21)
+
+Handed over by Sameer with the inbox spec. Each lives as its own
+session — rewires below land where they map to an existing section.
+
+### Home (per team) `[░░░░░░░░░░] 0%`
+
+Team-scoped landing page (one per team the viewer belongs to):
+- Thin team strip: avatars + viewer role chip + "Manage team" link
+- Admin-only notice bar: pending access requests
+- Workspace cards grid — every workspace in the team
+- Discoverable list — admin sees `Join`, member sees `Request access`
+- Pending requests section (member-only, own requests in flight)
+- `+ New workspace` button — admin-only
+
+Replaces the current single-list selector as the per-team default. Global
+selector survives for cross-team switching.
+
+### Workspace settings — tabbed `[░░░░░░░░░░] 0%`
+
+Current single-page → tabbed layout:
+- **General** — name, description, logo
+- **Members** — list with source pills (`inherited` / `direct` / `external`);
+  destructive actions in `⋯` menu; raw permissions behind a disclosure
+- **Access** — two-state radio `Shared / Private`; privacy defaults
+- **Billing** — tier compare matrix + upgrade-request + staff inline block
+  (folds in Ask 2 + 2s)
+- **Danger zone** — delete workspace
+
+### Workspace create — multi-step `[░░░░░░░░░░] 0%`
+
+Replaces the one-step form with `Details → Visibility → Invite → Review`.
+One primary action per step.
+- `Visibility=Shared` shows a dry-run preview: "team members auto-inherit."
+- `Invite` step picks from team roster OR enters email for externals.
+- Review step shows everything before create.
+
+Supersedes the earlier "full multi-step flow" bullet — this is the concrete
+step list.
+
+### Project sharing — list view `[░░░░░░░░░░] 0%`
+
+Replaces matrix with a list:
+- Inherited-from-workspace rows shown read-only
+- Direct grants editable
+- Source pills: `workspace member` / `team member (project-only)` / `external`
+- Soft warning at 10+ collaborators ("consider opening the project to the
+  whole workspace")
+
+Supersedes Ask 3.2's modal-as-matrix direction.
+
+---
+
 ## Onboarding split (designer fix)  `[░░░░░░░░░░] 0%`
 
 Current `OnboardingRoute` is a **migration prompt** that new users shouldn't see. Split into two paths:

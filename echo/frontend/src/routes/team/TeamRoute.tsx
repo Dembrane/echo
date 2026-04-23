@@ -470,7 +470,7 @@ export const TeamRoute = () => {
 						</Tabs.Tab>
 						{isAdmin && (
 							<Tabs.Tab value="usage">
-								<Trans>Usage</Trans>
+								<Trans>Usage and Tier</Trans>
 							</Tabs.Tab>
 						)}
 						<Tabs.Tab value="people">

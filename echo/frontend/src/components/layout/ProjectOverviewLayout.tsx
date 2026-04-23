@@ -17,7 +17,6 @@ import { testId } from "@/lib/testUtils";
 import { OngoingConversationsSummaryCard } from "../conversation/OngoingConversationsSummaryCard";
 import { OpenForParticipationSummaryCard } from "../conversation/OpenForParticipationSummaryCard";
 import { ProjectQRCode } from "../project/ProjectQRCode";
-import { ProjectWorkspaceUsageStrip } from "../project/ProjectWorkspaceUsageStrip";
 import { TabsWithRouter } from "./TabsWithRouter";
 
 export const ProjectOverviewLayout = () => {
@@ -41,10 +40,9 @@ export const ProjectOverviewLayout = () => {
 	const project = projectQuery.data;
 	const isPrivate = project?.visibility === "private";
 	// The project name already lives in the sidebar title (ProjectSidebar).
-	// This strip keeps the two status signals users actually look at here —
-	// private-lock + language badge — without a second H3 of the same name.
-	const workspaceId = (project as { workspace_id?: string | null } | undefined)
-		?.workspace_id;
+	// Usage / tier info deliberately absent — project pages are where
+	// participants work, not where billing happens. Usage lives on the
+	// workspace settings surface.
 
 	return (
 		<Stack
@@ -65,9 +63,6 @@ export const ProjectOverviewLayout = () => {
 						</Badge>
 					)}
 				</Group>
-			)}
-			{workspaceId && (
-				<ProjectWorkspaceUsageStrip workspaceId={workspaceId} />
 			)}
 			<div className="grid grid-cols-12 place-content-stretch gap-3">
 				<Box visibleFrom="lg" className="col-span-6 h-full">
