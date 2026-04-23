@@ -227,6 +227,17 @@ export const CreateWorkspaceRoute = () => {
 							size="sm"
 						/>
 
+						{/* Matrix §6 honesty disclosure. Private protects from team
+						    members, not team admins. Surface it so the creator isn't
+						    surprised later. */}
+						{privacy === "private" && (
+							<Text size="xs" c="dimmed" ml="xs">
+								<Trans>
+									Team admins can still discover and join this workspace.
+								</Trans>
+							</Text>
+						)}
+
 						{privacy === "open" && (
 							<Group gap="xs" align="flex-start" ml="xs">
 								<input

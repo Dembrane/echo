@@ -455,12 +455,17 @@ async def create_workspace(
         raise HTTPException(status_code=403, detail="Must be team admin or owner to create workspaces")
 
     # Tier is always "pioneer" on creation — plan changes happen via admin/billing
+    # Matrix v1.1 §6 visibility: derive from inherit_team_admins for now
+    # (the two booleans are the existing API surface; the enum becomes the
+    # source of truth once the derivation walkback runs in prod).
+    visibility = "open_to_team" if body.inherit_team_admins else "private"
     ws_id = generate_uuid()
     await async_directus.create_item("workspace", {
         "id": ws_id,
         "org_id": org_id,
         "name": body.name.strip(),
         "tier": "pioneer",
+        "visibility": visibility,
         "is_default": False,
         "created_by": app_user_id,
     })
