@@ -15,11 +15,13 @@ import {
 	SegmentedControl,
 	Stack,
 	Table,
+	Tabs,
 	Text,
 	TextInput,
 	Title,
 	Tooltip,
 } from "@mantine/core";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDocumentTitle } from "@mantine/hooks";
 import {
 	IconLock,
@@ -35,6 +37,7 @@ import { TierBadge } from "@/components/workspace/TierBadge";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
+import { useSearchParams } from "react-router";
 import { avatarUrl } from "@/lib/avatar";
 
 /**
@@ -111,9 +114,24 @@ export const TeamRoute = () => {
 	const navigate = useI18nNavigate();
 	const [search, setSearch] = useUrlSearch();
 	const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
-	const [viewRaw, setView] = useState<
-		"usage" | "matrix" | "projects" | "workspaces"
-	>("usage");
+	const queryClient = useQueryClient();
+	const [searchParams, setSearchParams] = useSearchParams();
+	// URL-driven tab state. Admin-only tabs fall back to people for
+	// everyone else (guard below). Default lands on overview — the
+	// "what is this team" answer.
+	const tabParam = searchParams.get("tab");
+	const allowedTabs = ["overview", "usage", "people"] as const;
+	type TabValue = (typeof allowedTabs)[number];
+	const viewRaw: TabValue =
+		tabParam && (allowedTabs as readonly string[]).includes(tabParam)
+			? (tabParam as TabValue)
+			: "overview";
+	const setView = (value: string | null) => {
+		if (!value) return;
+		const next = new URLSearchParams(searchParams);
+		next.set("tab", value);
+		setSearchParams(next, { replace: true });
+	};
 
 	useDocumentTitle(t`Team | dembrane`);
 
@@ -135,12 +153,10 @@ export const TeamRoute = () => {
 	});
 
 	const isAdmin = team?.role === "owner" || team?.role === "admin";
-	// Admin-only views fall back to People for other roles so landing state
-	// is never an empty panel for them.
-	const view: typeof viewRaw =
-		!isAdmin && (viewRaw === "usage" || viewRaw === "projects")
-			? "matrix"
-			: viewRaw;
+	// Admin-only views fall back to People for other roles so landing
+	// state is never an empty panel for them.
+	const view: TabValue =
+		!isAdmin && viewRaw === "usage" ? "people" : viewRaw;
 
 	const filteredMembers = useMemo(() => {
 		const q = search.trim().toLowerCase();
@@ -224,95 +240,54 @@ export const TeamRoute = () => {
 					)}
 				</Group>
 
-				{/* Unified view switcher. Every role sees People + Workspaces;
-				    admins also see Usage + Projects. Default lands on Usage
-				    when admin (the "is this team healthy?" answer) and
-				    People for non-admins (the directory answer). */}
-				<SegmentedControl
-					size="sm"
+				{/* Tabbed canvas per demo feedback. Overview holds team name
+				    + logo (no more hunting for /t/:id/settings). Usage pulls
+				    up the rollup + per-project table. People is the matrix.
+				    Workspaces and Projects tabs retired — projects fold into
+				    Usage; workspaces are reachable via the home selector. */}
+				<Tabs
 					value={view}
-					onChange={(v) =>
-						setView(v as "usage" | "matrix" | "projects" | "workspaces")
-					}
-					data={[
-						...(isAdmin ? [{ value: "usage", label: t`Usage` }] : []),
-						{ value: "matrix", label: t`People` },
-						{ value: "workspaces", label: t`Workspaces` },
-						...(isAdmin ? [{ value: "projects", label: t`Projects` }] : []),
-					]}
-					style={{ alignSelf: "flex-start" }}
-				/>
-
-				{/* Usage view — admin only (via the switcher options above). */}
-				{view === "usage" && teamId && <TeamUsageRollup orgId={teamId} />}
-
-				{/* Workspaces list — replaces the old right-drawer. Visible to
-				    every role: team members see their discoverable list too. */}
-				{view === "workspaces" && (
-					<Stack gap="xs">
-						{workspaces.map((ws) => (
-							<Paper
-								key={ws.id}
-								p="sm"
-								withBorder
-								radius="md"
-								style={{ cursor: "pointer" }}
-								onClick={() => navigate(`/w/${ws.id}/projects`)}
-							>
-								<Group justify="space-between" wrap="nowrap">
-									<Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
-										{ws.is_private && (
-											<IconLock
-												size={14}
-												style={{ color: "var(--mantine-color-gray-6)" }}
-												aria-label={t`Private workspace`}
-											/>
-										)}
-										<Stack gap={0} style={{ minWidth: 0 }}>
-											<Text size="sm" fw={500} truncate>
-												{ws.name}
-												{ws.is_default && (
-													<Text component="span" size="xs" c="dimmed" ml={6}>
-														<Trans>(default)</Trans>
-													</Text>
-												)}
-											</Text>
-											<Text size="xs" c="dimmed">
-												{ws.project_count} {t`projects`} · {ws.member_count}{" "}
-												{t`members`}
-											</Text>
-										</Stack>
-									</Group>
-									<Group gap={4}>
-										<TierBadge tier={ws.tier} size="sm" />
-										{isAdmin && (
-											<Tooltip label={t`Workspace settings`} withArrow>
-												<ActionIcon
-													variant="subtle"
-													size="sm"
-													onClick={(e) => {
-														e.stopPropagation();
-														navigate(`/w/${ws.id}/settings`);
-													}}
-												>
-													<IconSettings size={14} />
-												</ActionIcon>
-											</Tooltip>
-										)}
-									</Group>
-								</Group>
-							</Paper>
-						))}
-						{workspaces.length === 0 && (
-							<Text size="sm" c="dimmed" ta="center" py="md">
-								<Trans>No workspaces yet.</Trans>
-							</Text>
+					onChange={setView}
+					keepMounted={false}
+				>
+					<Tabs.List>
+						<Tabs.Tab value="overview">
+							<Trans>Overview</Trans>
+						</Tabs.Tab>
+						{isAdmin && (
+							<Tabs.Tab value="usage">
+								<Trans>Usage</Trans>
+							</Tabs.Tab>
 						)}
-					</Stack>
-				)}
+						<Tabs.Tab value="people">
+							<Trans>People</Trans>
+						</Tabs.Tab>
+					</Tabs.List>
 
-				{/* Toolbar — only shown on People view. */}
-				{view === "matrix" && (
+					<Tabs.Panel value="overview" pt="md">
+						<OverviewPanel
+							team={team}
+							teamId={teamId!}
+							canEdit={isAdmin}
+							workspaceCount={workspaces.length}
+							memberCount={members.length}
+							queryClient={queryClient}
+						/>
+					</Tabs.Panel>
+
+					{isAdmin && (
+						<Tabs.Panel value="usage" pt="md">
+							<Stack gap="md">
+								{teamId && <TeamUsageRollup orgId={teamId} />}
+								{teamId && <TeamProjectsTable orgId={teamId} />}
+							</Stack>
+						</Tabs.Panel>
+					)}
+
+					<Tabs.Panel value="people" pt="md">
+						<Stack gap="md">
+				{/* Toolbar — people view. */}
+				{true && (
 					<Group justify="space-between" align="center" wrap="wrap">
 						<Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 280 }}>
 							<TextInput
@@ -342,17 +317,10 @@ export const TeamRoute = () => {
 					</Group>
 				)}
 
-				{/* Projects view — admin-only. Matrix §4 delete-workspace
-				    workflow: wind down projects across all team workspaces
-				    from one surface. */}
-				{view === "projects" && isAdmin && teamId && (
-					<TeamProjectsTable orgId={teamId} />
-				)}
-
 				{/* Matrix — the main content. Sticky first column (name+email)
 				    so it stays visible on horizontal scroll. Mantine Table
 				    with stickyHeader + custom sticky-left on the first cell. */}
-				{view === "matrix" && (
+				{true && (
 				<Paper withBorder radius="md" style={{ overflowX: "auto" }}>
 					<Table
 						stickyHeader
@@ -570,18 +538,155 @@ export const TeamRoute = () => {
 				</Paper>
 				)}
 
-				{view === "matrix" && (
-					<Text size="xs" c="dimmed">
-						<Trans>
-							Team admins can join any workspace to get a direct admin seat.
-							Workspace invites live in each workspace's settings.
-						</Trans>
-					</Text>
-				)}
+				<Text size="xs" c="dimmed">
+					<Trans>
+						Team admins can join any workspace to get a direct admin seat.
+						Workspace invites live in each workspace's settings.
+					</Trans>
+				</Text>
+						</Stack>
+					</Tabs.Panel>
+				</Tabs>
 			</Stack>
 
 		</Container>
 	);
 };
+
+// ── Overview panel — team name + logo edit + counts ─────────────────
+
+async function updateTeamFromOverview(
+	teamId: string,
+	body: { name?: string; logo_url?: string | null },
+) {
+	const res = await fetch(`${API_BASE_URL}/v2/orgs/${teamId}`, {
+		body: JSON.stringify(body),
+		credentials: "include",
+		headers: { "Content-Type": "application/json" },
+		method: "PATCH",
+	});
+	if (!res.ok) {
+		const data = await res.json().catch(() => ({}));
+		throw new Error(
+			typeof data.detail === "string" ? data.detail : "Couldn't save",
+		);
+	}
+	return res.json();
+}
+
+function OverviewPanel({
+	team,
+	teamId,
+	canEdit,
+	workspaceCount,
+	memberCount,
+	queryClient,
+}: {
+	team: TeamDetail;
+	teamId: string;
+	canEdit: boolean;
+	workspaceCount: number;
+	memberCount: number;
+	queryClient: ReturnType<typeof useQueryClient>;
+}) {
+	const [name, setName] = useState<string | null>(null);
+	const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+	const effectiveName = name ?? team.name;
+	const effectiveLogo = logoUrl ?? team.logo_url ?? "";
+	const dirty =
+		(name !== null && name.trim() !== team.name) ||
+		(logoUrl !== null && logoUrl.trim() !== (team.logo_url ?? ""));
+
+	const saveMutation = useMutation({
+		mutationFn: (body: { name?: string; logo_url?: string | null }) =>
+			updateTeamFromOverview(teamId, body),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["v2", "team", teamId] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "orgs"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+			toast.success(t`Saved`);
+		},
+		onError: (err: Error) => toast.error(err.message),
+	});
+
+	return (
+		<Stack gap="lg">
+			{/* Team identity — name + logo. Admins edit inline; others read. */}
+			<Stack gap="md">
+				<TextInput
+					label={t`Team name`}
+					description={t`Shown on the workspace selector and in email subject lines.`}
+					value={effectiveName}
+					disabled={!canEdit}
+					onChange={(e) => setName(e.currentTarget.value)}
+					maxLength={100}
+				/>
+				<TextInput
+					label={t`Logo URL`}
+					description={t`Absolute https URL. Workspace-level logo overrides when set.`}
+					placeholder="https://..."
+					value={effectiveLogo}
+					disabled={!canEdit}
+					onChange={(e) => setLogoUrl(e.currentTarget.value)}
+					maxLength={2048}
+				/>
+				{canEdit && (
+					<Group justify="flex-end">
+						<Button
+							variant="default"
+							onClick={() => {
+								setName(null);
+								setLogoUrl(null);
+							}}
+							disabled={!dirty}
+						>
+							<Trans>Cancel</Trans>
+						</Button>
+						<Button
+							loading={saveMutation.isPending}
+							disabled={!dirty}
+							onClick={() => {
+								const payload: {
+									name?: string;
+									logo_url?: string | null;
+								} = {};
+								if (name !== null && name.trim() !== team.name) {
+									payload.name = name.trim();
+								}
+								if (
+									logoUrl !== null &&
+									logoUrl.trim() !== (team.logo_url ?? "")
+								) {
+									payload.logo_url = logoUrl.trim() || null;
+								}
+								saveMutation.mutate(payload);
+							}}
+						>
+							<Trans>Save</Trans>
+						</Button>
+					</Group>
+				)}
+			</Stack>
+
+			{/* At-a-glance counts. Keep light — the detailed views are one
+			    tab over. */}
+			<Group gap="xl">
+				<Stack gap={0}>
+					<Text size="lg" fw={500}>{workspaceCount}</Text>
+					<Text size="xs" c="dimmed">
+						<Trans>workspaces</Trans>
+					</Text>
+				</Stack>
+				<Stack gap={0}>
+					<Text size="lg" fw={500}>{memberCount}</Text>
+					<Text size="xs" c="dimmed">
+						<Trans>people</Trans>
+					</Text>
+				</Stack>
+			</Group>
+		</Stack>
+	);
+}
 
 export default TeamRoute;
