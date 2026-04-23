@@ -624,12 +624,12 @@ async def request_upgrade(
 ) -> dict:
     """Admin clicks "Request upgrade" in the tier compare view. Sends an
     email to settings.email.upgrade_request_inbox with context. Configurable
-    via UPGRADE_REQUEST_INBOX env var (defaults to sameer@dembrane.com during
-    this release).
+    via UPGRADE_REQUEST_INBOX env var (defaults to upgrades@dembrane.com per
+    matrix v1.1 §11).
 
-    Member role doesn't see this CTA (Q3 / D9 — member-role path shows copy
-    only, no button). Enforced here by require_policy(member:invite) which
-    only admin/owner have — keeps the endpoint from being abused.
+    Member role doesn't see this CTA (matrix §11 — member-role path shows
+    copy only, no button). Enforced here by require_policy(member:invite)
+    which only admin/owner have — keeps the endpoint from being abused.
 
     Rate-limited per-user (5/hr) to avoid flooding the billing inbox when
     the UI misfires or a bored admin leans on the button.
