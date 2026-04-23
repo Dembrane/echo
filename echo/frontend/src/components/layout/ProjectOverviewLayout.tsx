@@ -7,8 +7,6 @@ import {
 	Group,
 	LoadingOverlay,
 	Stack,
-	Text,
-	Title,
 	Tooltip,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
@@ -19,6 +17,7 @@ import { testId } from "@/lib/testUtils";
 import { OngoingConversationsSummaryCard } from "../conversation/OngoingConversationsSummaryCard";
 import { OpenForParticipationSummaryCard } from "../conversation/OpenForParticipationSummaryCard";
 import { ProjectQRCode } from "../project/ProjectQRCode";
+import { ProjectWorkspaceUsageStrip } from "../project/ProjectWorkspaceUsageStrip";
 import { TabsWithRouter } from "./TabsWithRouter";
 
 export const ProjectOverviewLayout = () => {
@@ -31,6 +30,7 @@ export const ProjectOverviewLayout = () => {
 				"name",
 				"language",
 				"visibility",
+				"workspace_id",
 				"is_conversation_allowed",
 				"default_conversation_title",
 			],
@@ -40,6 +40,11 @@ export const ProjectOverviewLayout = () => {
 	useDocumentTitle(t`Project Overview | Dembrane`);
 	const project = projectQuery.data;
 	const isPrivate = project?.visibility === "private";
+	// The project name already lives in the sidebar title (ProjectSidebar).
+	// This strip keeps the two status signals users actually look at here —
+	// private-lock + language badge — without a second H3 of the same name.
+	const workspaceId = (project as { workspace_id?: string | null } | undefined)
+		?.workspace_id;
 
 	return (
 		<Stack
@@ -47,25 +52,22 @@ export const ProjectOverviewLayout = () => {
 			style={{ backgroundColor: "var(--app-background)" }}
 		>
 			<LoadingOverlay visible={projectQuery.isLoading} />
-			{/* Project header — lock icon when private (audit 2026-04-23 §2).
-			    Clicking the lock opens the Sharing section lower on this
-			    page via the hash fragment, so the affordance leads somewhere. */}
-			{project && (
+			{project && (isPrivate || project.language) && (
 				<Group gap={8} align="center" wrap="nowrap" px="xs">
 					{isPrivate && (
 						<Tooltip label={t`Private · only invited people can see this`}>
-							<IconLock size={18} color="var(--mantine-color-gray-6)" />
+							<IconLock size={16} color="var(--mantine-color-gray-6)" />
 						</Tooltip>
 					)}
-					<Title order={3} fw={500} lineClamp={1}>
-						{project.name || <Trans>Untitled</Trans>}
-					</Title>
 					{project.language && (
 						<Badge size="xs" variant="light" color="gray">
 							{String(project.language).toUpperCase()}
 						</Badge>
 					)}
 				</Group>
+			)}
+			{workspaceId && (
+				<ProjectWorkspaceUsageStrip workspaceId={workspaceId} />
 			)}
 			<div className="grid grid-cols-12 place-content-stretch gap-3">
 				<Box visibleFrom="lg" className="col-span-6 h-full">

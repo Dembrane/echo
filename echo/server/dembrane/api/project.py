@@ -217,25 +217,58 @@ async def toggle_project_pin(
     body: PinProjectRequest,
     auth: DependencyDirectusSession,
 ) -> dict:
-    """Pin or unpin a project. Admins can only pin projects they own."""
+    """Pin or unpin a project.
+
+    Pinning is a workspace-level signal — it changes what every member sees
+    on the workspace home, so permission follows workspace membership:
+      - workspace admin / owner / member: allowed
+      - external guest (is_external=true): blocked (403) — guests see the
+        project they were invited to, they don't curate the team view.
+      - legacy projects without a workspace_id: fall back to the pre-matrix
+        "project owner" check so unmigrated projects still pin for the owner.
+    """
     if body.pin_order is not None and body.pin_order not in (1, 2, 3):
         raise HTTPException(status_code=400, detail="pin_order must be 1, 2, or 3")
 
     client = auth.client
 
-    # Ownership check: admins can only pin/unpin projects they own
-    if auth.is_admin:
-        project_service = ProjectService(directus_client=client)
-        try:
-            project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
-        except ProjectNotFoundException as e:
-            raise HTTPException(status_code=404, detail="Project not found") from e
+    project_service = ProjectService(directus_client=client)
+    try:
+        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
+    except ProjectNotFoundException as e:
+        raise HTTPException(status_code=404, detail="Project not found") from e
 
-        if project.get("directus_user_id") != auth.user_id:
+    workspace_id = project.get("workspace_id")
+
+    if workspace_id:
+        from dembrane.app_user import resolve_app_user
+        from dembrane.directus_async import async_directus
+
+        app_user = await resolve_app_user(auth.user_id)
+        if not app_user:
+            raise HTTPException(status_code=403, detail="Not a member of this workspace")
+
+        mems = await async_directus.get_items(
+            "workspace_membership",
+            {"query": {"filter": {
+                "workspace_id": {"_eq": workspace_id},
+                "user_id": {"_eq": app_user["id"]},
+                "deleted_at": {"_null": True},
+            }, "fields": ["role", "is_external"], "limit": 1}},
+        )
+        if not isinstance(mems, list) or len(mems) == 0:
+            raise HTTPException(status_code=403, detail="Not a member of this workspace")
+        if mems[0].get("is_external"):
             raise HTTPException(
                 status_code=403,
-                detail="Admins can only pin projects they own",
+                detail="Guests cannot pin projects",
             )
+    else:
+        # Legacy path: project not yet attached to a workspace. Fall back to
+        # "the user who created it" so a fresh upload still pins for its
+        # author before onboarding moves it into a workspace.
+        if project.get("directus_user_id") != auth.user_id:
+            raise HTTPException(status_code=403, detail="Not the project owner")
 
     await run_in_thread_pool(
         client.update_item,
