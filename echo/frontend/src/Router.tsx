@@ -34,7 +34,6 @@ import { ProjectConversationTranscript } from "./routes/project/conversation/Pro
 import {
 	ProjectPortalSettingsRoute,
 	ProjectSettingsRoute,
-	ProjectSharingRoute,
 } from "./routes/project/ProjectRoutes";
 
 // Lazy-loaded route components
@@ -164,7 +163,10 @@ const projectRouteChildren = [
 								path: "portal-editor",
 							},
 							{
-								element: <ProjectSharingRoute />,
+								// /sharing tab retired 2026-04-23 — Sharing is now
+								// a section inside Project Settings. Bookmark
+								// redirect keeps existing links working.
+								element: <Navigate to="../overview" replace />,
 								path: "sharing",
 							},
 						],

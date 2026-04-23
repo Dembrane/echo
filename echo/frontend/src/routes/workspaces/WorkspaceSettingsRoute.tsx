@@ -412,13 +412,27 @@ export const WorkspaceSettingsRoute = () => {
 	//   - Guest → no tabs at all; bypass below.
 	const tabParam = searchParams.get("tab");
 	const defaultTab =
-		myRole === "billing" && !canManage ? "billing" : "overview";
-	const allowedTabs = ["overview", "members", "billing", "danger"] as const;
+		myRole === "billing" && !canManage ? "billing" : "general";
+	// Audit 2026-04-23 §4 asked for a 5-tab split: General / Members /
+	// Access / Billing / Danger. "overview" kept as a URL alias for
+	// deep-links landing on /w/:id/settings?tab=overview.
+	const allowedTabs = [
+		"general",
+		"overview",
+		"members",
+		"access",
+		"billing",
+		"danger",
+	] as const;
 	type TabValue = (typeof allowedTabs)[number];
-	const activeTab: TabValue =
+	// "overview" is retained as a bookmark alias — rewrite to "general".
+	const rawTab =
 		tabParam && (allowedTabs as readonly string[]).includes(tabParam)
-			? (tabParam as TabValue)
-			: (defaultTab as TabValue);
+			? tabParam
+			: defaultTab;
+	const activeTab: TabValue = (
+		rawTab === "overview" ? "general" : rawTab
+	) as TabValue;
 	const setActiveTab = (value: string | null) => {
 		if (!value) return;
 		const next = new URLSearchParams(searchParams);
@@ -499,12 +513,17 @@ export const WorkspaceSettingsRoute = () => {
 						keepMounted={false}
 					>
 						<Tabs.List>
-							<Tabs.Tab value="overview">
-								<Trans>Overview</Trans>
+							<Tabs.Tab value="general">
+								<Trans>General</Trans>
 							</Tabs.Tab>
 							<Tabs.Tab value="members">
 								<Trans>Members</Trans>
 							</Tabs.Tab>
+							{canEditSettings && (
+								<Tabs.Tab value="access">
+									<Trans>Access</Trans>
+								</Tabs.Tab>
+							)}
 							<Tabs.Tab value="billing">
 								<Trans>Billing</Trans>
 							</Tabs.Tab>
@@ -547,17 +566,14 @@ export const WorkspaceSettingsRoute = () => {
 							</Stack>
 						</Tabs.Panel>
 
-						<Tabs.Panel value="overview" pt="md">
+						<Tabs.Panel value="general" pt="md">
 							<Stack gap={24}>
-								{/* Privacy + defaults — admin-only. Hidden entirely
-								    for non-admin roles (HCD audit 2026-04-23):
-								    disabled fields read as "broken" to members +
-								    billing. */}
 								{canEditSettings && (
 									<PrivacyAndDefaultsSection
 										settings={settings}
 										canEdit={canEditSettings}
 										workspaceId={workspaceId!}
+										section="general"
 									/>
 								)}
 								{!canEditSettings && (
@@ -570,6 +586,17 @@ export const WorkspaceSettingsRoute = () => {
 								)}
 							</Stack>
 						</Tabs.Panel>
+
+						{canEditSettings && (
+							<Tabs.Panel value="access" pt="md">
+								<PrivacyAndDefaultsSection
+									settings={settings}
+									canEdit={canEditSettings}
+									workspaceId={workspaceId!}
+									section="access"
+								/>
+							</Tabs.Panel>
+						)}
 
 						<Tabs.Panel value="members" pt="md">
 				<Stack gap={16}>
@@ -1210,21 +1237,24 @@ export const WorkspaceSettingsRoute = () => {
 };
 
 /**
- * Privacy + defaults block on the workspace settings page.
+ * Workspace settings form — split across two tabs per 2026-04-23 audit.
  *
- * Three admin-editable things: logo URL (whitelabel — tier-gated
- * changemaker+), description, privacy toggle (`inherit_team_admins`).
- * Secondary `inherit_team_members` only appears when the workspace is
- * open — opens access to every team member, not just admins.
+ * `section="general"` renders description + logo.
+ * `section="access"` renders the Open/Private radio + its upgrade gate.
+ *
+ * State lives in this component and is shared between the two instances
+ * so both tabs hit the same mutations and query cache.
  */
 function PrivacyAndDefaultsSection({
 	settings,
 	canEdit,
 	workspaceId,
+	section = "general",
 }: {
 	settings: WorkspaceDetail;
 	canEdit: boolean;
 	workspaceId: string;
+	section?: "general" | "access";
 }) {
 	const queryClient = useQueryClient();
 	// Description autosaves on blur (non-critical text). Privacy keeps
@@ -1302,11 +1332,8 @@ function PrivacyAndDefaultsSection({
 		uploadLogoMutation.mutate(file);
 	};
 
-	return (
+	if (section === "general") return (
 		<Stack gap={16}>
-			<Title order={5} fw={400}>
-				<Trans>Privacy &amp; defaults</Trans>
-			</Title>
 			<TextInput
 				label={t`Description`}
 				description={t`Optional — what this workspace is for.`}
@@ -1389,6 +1416,12 @@ function PrivacyAndDefaultsSection({
 					)}
 				</FileButton>
 			</Stack>
+		</Stack>
+	);
+
+	// section === "access"
+	return (
+		<Stack gap={16}>
 			{(() => {
 				// Matrix §2: Private workspaces are innovator+. If the current
 				// tier can't go private, disable the radio + surface the

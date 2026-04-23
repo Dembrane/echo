@@ -278,6 +278,9 @@ interface Project {
 	language: "en" | "nl" | "multi" | null;
 	name: string | null;
 	updated_at: string | null;
+	// Workspace-level privacy toggle — one of two legal values,
+	// matches server/dembrane/api/v2/workspace_projects.py.
+	visibility: "workspace" | "private" | null;
 	is_verify_enabled: boolean | null;
 	is_verify_on_finish_enabled: boolean | null;
 	selected_verification_key_list: string | null;

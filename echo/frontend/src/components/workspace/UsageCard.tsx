@@ -1,7 +1,6 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
-	ActionIcon,
 	Badge,
 	Button,
 	Divider,
@@ -11,9 +10,7 @@ import {
 	Stack,
 	Text,
 	Title,
-	Tooltip,
 } from "@mantine/core";
-import { IconRefresh } from "@tabler/icons-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { UpgradeModal, type Tier } from "@/components/workspace/FeatureGate";
@@ -82,6 +79,16 @@ function formatEur(value: number | null | undefined): string {
 	return `€${Math.round(value)}`;
 }
 
+function formatRelativeAgo(ms: number | undefined): string {
+	if (!ms) return "";
+	const diff = Date.now() - ms;
+	if (diff < 30_000) return "just now";
+	if (diff < 60_000) return `${Math.round(diff / 1000)}s ago`;
+	if (diff < 3_600_000) return `${Math.round(diff / 60_000)} min ago`;
+	if (diff < 86_400_000) return `${Math.round(diff / 3_600_000)} h ago`;
+	return `${Math.round(diff / 86_400_000)} d ago`;
+}
+
 /**
  * Workspace usage card (matrix v1.1 §8).
  *
@@ -100,7 +107,7 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 	const [upgradeOpen, setUpgradeOpen] = useState(false);
 	const [monthOffset, setMonthOffset] = useState(0);
 
-	const { data, isLoading } = useQuery({
+	const { data, isLoading, dataUpdatedAt } = useQuery({
 		queryKey: ["v2", "workspace-usage", workspaceId, monthOffset],
 		queryFn: () => fetchUsage(workspaceId, monthOffset),
 		staleTime: 60_000,
@@ -184,18 +191,6 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 							</Badge>
 						)}
 						<PeriodSelect value={monthOffset} onChange={setMonthOffset} />
-						<Tooltip label={t`Refresh`}>
-							<ActionIcon
-								variant="subtle"
-								color="gray"
-								size="sm"
-								loading={refreshing}
-								onClick={handleRefresh}
-								aria-label={t`Refresh usage`}
-							>
-								<IconRefresh size={14} />
-							</ActionIcon>
-						</Tooltip>
 					</Group>
 				</Group>
 
@@ -264,15 +259,34 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 					<Text size="sm" c="dimmed">
 						<Trans>Projects</Trans>
 					</Text>
-					{/* Uncapped metric — spell that out so it doesn't read as a
-					    missing "x / y" denominator like the metrics above. */}
+					{/* Uncapped metric — audit 2026-04-23 §4 Billing: render
+					    as an info line, not quota. "1 project" / "2 projects",
+					    no denominator, no progress bar. */}
 					<Text size="sm">
-						{data.project_count}
-						<Text span c="dimmed" size="sm">
-							{" / "}∞
-						</Text>
+						<Plural
+							value={data.project_count}
+							one="# project"
+							other="# projects"
+						/>
 					</Text>
 				</Group>
+
+				{/* Freshness — passive signal + on-click refresh. Replaces
+				    the loud IconRefresh button per 2026-04-23 audit §5
+				    (Workspace Settings Billing). Usage has a 30-min
+				    server-side cache; making staleness visible is more
+				    useful than a "Refresh" CTA most visits won't need. */}
+				<Text size="xs" c="dimmed">
+					<Trans>Updated {formatRelativeAgo(dataUpdatedAt)}</Trans>
+					{" · "}
+					<Text
+						span
+						style={{ cursor: "pointer", textDecoration: "underline" }}
+						onClick={handleRefresh}
+					>
+						{refreshing ? <Trans>Refreshing…</Trans> : <Trans>Refresh</Trans>}
+					</Text>
+				</Text>
 
 				{/* Next-tier hint (admin / billing only). Overage forecast
 				    removed per demo feedback; we'll put it back with a

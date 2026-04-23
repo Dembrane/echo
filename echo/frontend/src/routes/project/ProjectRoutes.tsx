@@ -10,12 +10,12 @@ import ProjectBasicEdit from "@/components/project/ProjectBasicEdit";
 import { ProjectDangerZone } from "@/components/project/ProjectDangerZone";
 import { ProjectExportSection } from "@/components/project/ProjectExportSection";
 import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
+import { ProjectSharingStrip } from "@/components/project/ProjectSharingStrip";
 import { ProjectUploadSection } from "@/components/project/ProjectUploadSection";
 import { WebhookSection } from "@/components/project/webhooks/WebhookSettingsCard";
 import { ENABLE_WEBHOOKS } from "@/config";
 import { getProjectTranscriptsLink } from "@/lib/api";
 
-export { ProjectSharingRoute } from "./ProjectSharingRoute";
 
 export const ProjectSettingsRoute = () => {
 	const { projectId } = useParams();
@@ -55,7 +55,22 @@ export const ProjectSettingsRoute = () => {
 
 			{projectQuery.data && <ProjectBasicEdit project={projectQuery.data} />}
 
-			{/* Sharing moved to its own /sharing tab — see ProjectSharingRoute. */}
+			{/* Sharing — inlined here per 2026-04-23 audit §2. Was a full
+			    tab of its own; most of the time it's a one-toggle setting,
+			    so the dedicated tab was empty real estate. Lock icon in
+			    the project title now hints at private state. */}
+			{projectQuery.data && projectId && (
+				<>
+					<Divider />
+					<ProjectSharingStrip
+						projectId={projectId}
+						visibility={
+							(projectQuery.data.visibility as "workspace" | "private") ??
+							"workspace"
+						}
+					/>
+				</>
+			)}
 
 			{projectQuery.data && (
 				<>
