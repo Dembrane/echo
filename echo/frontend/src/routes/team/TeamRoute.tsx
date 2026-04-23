@@ -365,20 +365,10 @@ export const TeamRoute = () => {
 							    dropped from the header summary (HCD audit). */}
 						</Stack>
 					</Group>
-					{/* Header is read-only now — actions live inside the view
-					    switcher below. "New workspace" button moved off this
-					    page (home selector owns that affordance). */}
-					{isAdmin && (
-						<Tooltip label={t`Team settings`} withArrow>
-							<ActionIcon
-								variant="default"
-								size="lg"
-								onClick={() => navigate(`/t/${teamId}/settings`)}
-							>
-								<IconSettings size={16} />
-							</ActionIcon>
-						</Tooltip>
-					)}
+					{/* Header is read-only now — team-name + logo editing
+					    lives in the Overview tab, not behind a gear icon.
+					    Dropping the gear kills the duplicate settings page
+					    that used to live at /t/:id/settings. */}
 				</Group>
 
 				{/* Tabbed canvas per demo feedback. Overview holds team name

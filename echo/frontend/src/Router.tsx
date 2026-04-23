@@ -139,11 +139,6 @@ const TeamRoute = createLazyNamedRoute(
 	() => import("./routes/team/TeamRoute"),
 	"TeamRoute",
 );
-const TeamSettingsRoute = createLazyNamedRoute(
-	() => import("./routes/team/TeamSettingsRoute"),
-	"TeamSettingsRoute",
-);
-
 // Project route children — shared between /projects and /w/:workspaceId/projects
 const projectRouteChildren = [
 	{
@@ -364,7 +359,9 @@ export const mainRouter = createBrowserRouter([
 						path: ":teamId",
 					},
 					{
-						element: <TeamSettingsRoute />,
+						// Legacy /t/:teamId/settings → bounce to the Team page
+						// Overview tab, which now owns name + logo editing.
+						element: <Navigate to=".." relative="path" replace />,
 						path: ":teamId/settings",
 					},
 				],
