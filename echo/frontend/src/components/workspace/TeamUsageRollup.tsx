@@ -85,7 +85,10 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 	const queryClient = useQueryClient();
 	const navigate = useI18nNavigate();
 	const [refreshing, setRefreshing] = useState(false);
-	const [expanded, setExpanded] = useState(false);
+	// Default-expanded: team admins come to this page specifically for
+	// the per-workspace breakdown (audit 2026-04-23). Collapse is a
+	// disclosure option, not the resting state.
+	const [expanded, setExpanded] = useState(true);
 	const [monthOffset, setMonthOffset] = useState(0);
 
 	const { data, isLoading } = useQuery({

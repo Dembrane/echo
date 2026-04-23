@@ -244,7 +244,7 @@ export const TeamRoute = () => {
 	// everyone else (guard below). Default lands on overview — the
 	// "what is this team" answer.
 	const tabParam = searchParams.get("tab");
-	const allowedTabs = ["overview", "usage", "people"] as const;
+	const allowedTabs = ["overview", "usage", "people", "projects"] as const;
 	type TabValue = (typeof allowedTabs)[number];
 	const viewRaw: TabValue =
 		tabParam && (allowedTabs as readonly string[]).includes(tabParam)
@@ -394,6 +394,11 @@ export const TeamRoute = () => {
 						<Tabs.Tab value="people">
 							<Trans>People</Trans>
 						</Tabs.Tab>
+						{isAdmin && (
+							<Tabs.Tab value="projects">
+								<Trans>Projects</Trans>
+							</Tabs.Tab>
+						)}
 					</Tabs.List>
 
 					<Tabs.Panel value="overview" pt="md">
@@ -409,8 +414,13 @@ export const TeamRoute = () => {
 						<Tabs.Panel value="usage" pt="md">
 							<Stack gap="md">
 								{teamId && <TeamUsageRollup orgId={teamId} />}
-								{teamId && <TeamProjectsTable orgId={teamId} />}
 							</Stack>
+						</Tabs.Panel>
+					)}
+
+					{isAdmin && (
+						<Tabs.Panel value="projects" pt="md">
+							{teamId && <TeamProjectsTable orgId={teamId} />}
 						</Tabs.Panel>
 					)}
 

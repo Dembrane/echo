@@ -413,7 +413,7 @@ export const WorkspaceSettingsRoute = () => {
 	const tabParam = searchParams.get("tab");
 	const defaultTab =
 		myRole === "billing" && !canManage ? "billing" : "overview";
-	const allowedTabs = ["overview", "billing", "danger"] as const;
+	const allowedTabs = ["overview", "members", "billing", "danger"] as const;
 	type TabValue = (typeof allowedTabs)[number];
 	const activeTab: TabValue =
 		tabParam && (allowedTabs as readonly string[]).includes(tabParam)
@@ -502,6 +502,9 @@ export const WorkspaceSettingsRoute = () => {
 							<Tabs.Tab value="overview">
 								<Trans>Overview</Trans>
 							</Tabs.Tab>
+							<Tabs.Tab value="members">
+								<Trans>Members</Trans>
+							</Tabs.Tab>
 							<Tabs.Tab value="billing">
 								<Trans>Billing</Trans>
 							</Tabs.Tab>
@@ -557,7 +560,18 @@ export const WorkspaceSettingsRoute = () => {
 										workspaceId={workspaceId!}
 									/>
 								)}
-								{canEditSettings && <Divider />}
+								{!canEditSettings && (
+									<Text size="sm" c="dimmed">
+										<Trans>
+											Only workspace admins can change these settings.
+											Ask an admin if something needs updating.
+										</Trans>
+									</Text>
+								)}
+							</Stack>
+						</Tabs.Panel>
+
+						<Tabs.Panel value="members" pt="md">
 				<Stack gap={16}>
 					<Group justify="space-between">
 						<Title order={5} fw={400}>
@@ -898,7 +912,6 @@ export const WorkspaceSettingsRoute = () => {
 						})()}
 					</Group>
 				</Stack>
-							</Stack>
 						</Tabs.Panel>
 
 						{canEditSettings && (
