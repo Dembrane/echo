@@ -50,26 +50,14 @@ export const PilotBlockModal = () => {
 				<Group gap={12} mt={8} justify="flex-end">
 					<Button
 						size="sm"
-						variant="default"
 						onClick={() => {
 							clear();
 							if (targetId) {
-								navigate(`/w/${targetId}/settings?tab=billing`);
+								navigate(`/w/${targetId}/settings`);
 							}
 						}}
 					>
-						<Trans>Go to usage</Trans>
-					</Button>
-					<Button
-						size="sm"
-						onClick={() => {
-							clear();
-							if (targetId) {
-								navigate(`/w/${targetId}/settings?tab=billing#request-upgrade`);
-							}
-						}}
-					>
-						<Trans>Request upgrade</Trans>
+						<Trans>Go to workspace settings</Trans>
 					</Button>
 				</Group>
 			</Stack>

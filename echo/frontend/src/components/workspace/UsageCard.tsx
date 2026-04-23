@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	Anchor,
+	ActionIcon,
 	Badge,
 	Divider,
 	Group,
@@ -10,8 +10,11 @@ import {
 	Stack,
 	Text,
 	Title,
+	Tooltip,
 } from "@mantine/core";
-import { useQuery } from "@tanstack/react-query";
+import { IconRefresh } from "@tabler/icons-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { API_BASE_URL } from "@/config";
 
 interface ProjectUsage {
@@ -47,11 +50,12 @@ interface UsageResponse {
 	} | null;
 }
 
-async function fetchUsage(workspaceId: string): Promise<UsageResponse | null> {
-	const res = await fetch(
-		`${API_BASE_URL}/v2/workspaces/${workspaceId}/usage`,
-		{ credentials: "include" },
-	);
+async function fetchUsage(
+	workspaceId: string,
+	refresh = false,
+): Promise<UsageResponse | null> {
+	const url = `${API_BASE_URL}/v2/workspaces/${workspaceId}/usage${refresh ? "?refresh=true" : ""}`;
+	const res = await fetch(url, { credentials: "include" });
 	if (!res.ok) return null;
 	return res.json();
 }
@@ -80,11 +84,32 @@ function formatEur(value: number | null | undefined): string {
  * gates them server-side).
  */
 export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
+	const queryClient = useQueryClient();
+	const [refreshing, setRefreshing] = useState(false);
+
 	const { data, isLoading } = useQuery({
 		queryKey: ["v2", "workspace-usage", workspaceId],
 		queryFn: () => fetchUsage(workspaceId),
 		staleTime: 60_000,
 	});
+
+	const handleRefresh = async () => {
+		// Manual force-recompute. Bypasses the server's 30-min cache via
+		// ?refresh=true, then writes the fresh payload into the React
+		// Query cache so the card updates without a second fetch.
+		setRefreshing(true);
+		try {
+			const fresh = await fetchUsage(workspaceId, true);
+			if (fresh) {
+				queryClient.setQueryData(
+					["v2", "workspace-usage", workspaceId],
+					fresh,
+				);
+			}
+		} finally {
+			setRefreshing(false);
+		}
+	};
 
 	if (isLoading || !data) return null;
 
@@ -104,8 +129,8 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 	return (
 		<Paper p="lg" withBorder radius="sm">
 			<Stack gap={16}>
-				<Group justify="space-between" align="flex-start">
-					<Stack gap={2}>
+				<Group justify="space-between" align="flex-start" wrap="nowrap">
+					<Stack gap={2} style={{ minWidth: 0 }}>
 						<Title order={5} fw={400}>
 							<Trans>Usage · {formatCycleMonth(data.cycle_start)}</Trans>
 						</Title>
@@ -117,16 +142,30 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 							</Text>
 						)}
 					</Stack>
-					{pilotExhausted && (
-						<Badge size="sm" color="red" variant="light">
-							<Trans>At limit</Trans>
-						</Badge>
-					)}
-					{!pilotExhausted && approachingCap && (
-						<Badge size="sm" color="yellow" variant="light">
-							<Trans>Approaching limit</Trans>
-						</Badge>
-					)}
+					<Group gap={8} wrap="nowrap">
+						{pilotExhausted && (
+							<Badge size="sm" color="red" variant="light">
+								<Trans>At limit</Trans>
+							</Badge>
+						)}
+						{!pilotExhausted && approachingCap && (
+							<Badge size="sm" color="yellow" variant="light">
+								<Trans>Approaching limit</Trans>
+							</Badge>
+						)}
+						<Tooltip label={t`Refresh`}>
+							<ActionIcon
+								variant="subtle"
+								color="gray"
+								size="sm"
+								loading={refreshing}
+								onClick={handleRefresh}
+								aria-label={t`Refresh usage`}
+							>
+								<IconRefresh size={14} />
+							</ActionIcon>
+						</Tooltip>
+					</Group>
 				</Group>
 
 				{/* Audio hours */}
@@ -225,17 +264,9 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 									</Trans>
 									{data.next_tier.price_eur_monthly != null && (
 										<>
-											{" "}
-											<Anchor
-												component="a"
-												href="?tab=billing#request-upgrade"
-												size="xs"
-											>
-												<Trans>
-													{formatEur(data.next_tier.price_eur_monthly)}
-													/mo · see what's included
-												</Trans>
-											</Anchor>
+											{" · "}
+											{formatEur(data.next_tier.price_eur_monthly)}
+											/mo
 										</>
 									)}
 								</Text>

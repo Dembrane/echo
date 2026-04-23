@@ -566,6 +566,13 @@ async def set_workspace_tier(
         ws_update["downgraded_from_tier"] = None
     await async_directus.update_item("workspace", workspace_id, ws_update)
 
+    # Bust the cached usage rollup so the UI reflects the new tier's
+    # caps + rates on the next read. Without this, overage_forecast_eur +
+    # next_tier would lag by up to USAGE_TTL_SECONDS.
+    if direction != "no-change":
+        from dembrane.cache_utils import invalidate_workspace_usage
+        await invalidate_workspace_usage(workspace_id)
+
     logger.info(
         f"STAFF tier change: workspace {workspace_id} {from_tier} → {to_tier} "
         f"(direction={direction}, by={auth.user_id}, reason={body.reason!r}, "
@@ -817,6 +824,7 @@ class WorkspaceUsageResponse(BaseModel):
 )
 async def get_workspace_usage(
     ctx: WorkspaceContext = Depends(get_workspace_context),
+    refresh: bool = False,
 ) -> WorkspaceUsageResponse:
     """Workspace usage rollup for the current calendar month.
 
@@ -826,7 +834,19 @@ async def get_workspace_usage(
     Implementation: hours derive from `conversation.duration` SUM where
     `deleted_at IS NULL AND created_at >= month_start AND created_at <
     next_month_start`. No separate `usage_event` table (D9).
+
+    Caching: 30-minute Redis cache of the full (admin-view) response,
+    keyed by workspace. Member responses are derived from the cached
+    admin response by zeroing the financial fields. Cache is busted on
+    tier change (see set_workspace_tier). Pass `?refresh=true` to
+    force a recompute + cache overwrite.
     """
+    from dembrane.cache_utils import (
+        USAGE_TTL_SECONDS,
+        cache_get_json,
+        cache_set_json,
+        usage_cache_key,
+    )
     from dembrane.tier_capacity import (
         compute_hour_overage_eur,
         compute_seat_overage_eur,
@@ -842,6 +862,24 @@ async def get_workspace_usage(
     # here explicitly rather than forking the preset.
     if ctx.is_external:
         raise HTTPException(status_code=403, detail="Guests don't see workspace usage")
+
+    # Role-class decides whether financial fields are returned. We always
+    # compute + cache the full-admin response; member response nulls the
+    # financial fields at serialisation time.
+    sees_financials = ctx.has_policy("workspace:view_invoices")
+
+    cache_key = usage_cache_key(ctx.workspace_id)
+    if not refresh:
+        cached = await cache_get_json(cache_key)
+        if isinstance(cached, dict):
+            if not sees_financials:
+                cached = {
+                    **cached,
+                    "overage_forecast_eur": None,
+                    "seat_overage_eur": None,
+                    "next_tier": None,
+                }
+            return WorkspaceUsageResponse(**cached)
 
     now = datetime.now(timezone.utc)
     cycle_start, cycle_end_exclusive = _calendar_month_bounds(now)
@@ -975,7 +1013,25 @@ async def get_workspace_usage(
             and audio_hours >= cap.included_hours
         )
 
-    base = WorkspaceUsageResponse(
+    # Always compute the full admin-view payload so the cache holds one
+    # variant; members get a filtered copy at serialisation time.
+    overage_forecast = compute_hour_overage_eur(tier, audio_hours)
+    seat_overage = compute_seat_overage_eur(tier, seat_count)
+    recommended = tier_next(tier)
+    next_rec: Optional[NextTierRecommendation] = None
+    if recommended:
+        rcap = get_capacity(recommended)
+        if rcap:
+            next_rec = NextTierRecommendation(
+                tier=recommended,
+                tagline=rcap.tagline,
+                price_eur_monthly=rcap.price_eur_monthly,
+                price_note=rcap.price_note,
+                included_hours=rcap.included_hours,
+                included_seats=rcap.included_seats,
+            )
+
+    full = WorkspaceUsageResponse(
         cycle_start=cycle_start,
         cycle_end_exclusive=cycle_end_exclusive,
         tier=tier,
@@ -989,27 +1045,21 @@ async def get_workspace_usage(
         project_count=len(projects),
         projects=per_project_items,
         pilot_hard_block_active=hard_block,
+        overage_forecast_eur=overage_forecast,
+        seat_overage_eur=seat_overage,
+        next_tier=next_rec,
     )
 
-    # Admin + billing: add financial surface.
-    if ctx.has_policy("workspace:view_invoices"):
-        overage_forecast = compute_hour_overage_eur(tier, audio_hours)
-        seat_overage = compute_seat_overage_eur(tier, seat_count)
-        recommended = tier_next(tier)
-        next_rec: Optional[NextTierRecommendation] = None
-        if recommended:
-            rcap = get_capacity(recommended)
-            if rcap:
-                next_rec = NextTierRecommendation(
-                    tier=recommended,
-                    tagline=rcap.tagline,
-                    price_eur_monthly=rcap.price_eur_monthly,
-                    price_note=rcap.price_note,
-                    included_hours=rcap.included_hours,
-                    included_seats=rcap.included_seats,
-                )
-        base.overage_forecast_eur = overage_forecast
-        base.seat_overage_eur = seat_overage
-        base.next_tier = next_rec
+    # Cache the full payload (admin view). Best-effort — failure to cache
+    # never breaks the read.
+    await cache_set_json(cache_key, full.model_dump(), USAGE_TTL_SECONDS)
 
-    return base
+    if not sees_financials:
+        return WorkspaceUsageResponse(**{
+            **full.model_dump(),
+            "overage_forecast_eur": None,
+            "seat_overage_eur": None,
+            "next_tier": None,
+        })
+
+    return full
