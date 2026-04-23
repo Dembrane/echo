@@ -975,18 +975,15 @@ async def get_org_usage(
     org_id: str,
     auth: DependencyDirectusSession,
     refresh: bool = False,
+    month_offset: int = 0,
 ) -> OrgUsageResponse:
     """Team-wide usage rollup across all active workspaces in the org.
 
-    Matrix §8: "Team level — rollup across all workspaces in the team.
-    Shows which workspaces are over, which tier each is on, aggregate
-    spend." This endpoint returns the aggregate; the per-workspace list
-    is already available via `/orgs/:id/workspaces`.
+    `month_offset` (0 = current, 1 = last month, capped at 12) lets admins
+    audit prior cycles. Forecast is null for historical months.
 
-    Cached 30 min, keyed by org_id. Pass `?refresh=true` to bypass.
-    Cache busts are NOT wired for conversation create/delete (would mean
-    hooking every conversation write site) — the 30-min TTL is the
-    explicit freshness contract.
+    Cached 30 min, keyed by (org_id, month_offset). Pass `?refresh=true`
+    to bypass.
 
     Access:
       - Any team member can read raw numbers.
@@ -1004,12 +1001,19 @@ async def get_org_usage(
         compute_hour_overage_eur,
         get_capacity,
     )
+    from dembrane.api.v2.workspaces import _calendar_month_bounds
 
     app_user = await get_app_user_or_raise(auth.user_id)
     caller_role = await _require_org_role(org_id, app_user["id"], minimum="member")
     sees_financials = caller_role in ("admin", "owner", "billing")
 
+    if month_offset < 0 or month_offset > 12:
+        raise HTTPException(status_code=400, detail="month_offset must be 0–12")
+    is_current_month = month_offset == 0
+
     cache_key = f"org_usage:{org_id}"
+    if not is_current_month:
+        cache_key = f"{cache_key}:m{month_offset}"
     if not refresh:
         cached = await cache_get_json(cache_key)
         if isinstance(cached, dict):
@@ -1019,15 +1023,7 @@ async def get_org_usage(
 
     # Cycle bounds.
     now = datetime.now(timezone.utc)
-    month_start = now.replace(
-        day=1, hour=0, minute=0, second=0, microsecond=0
-    )
-    if now.month == 12:
-        next_start = month_start.replace(year=now.year + 1, month=1)
-    else:
-        next_start = month_start.replace(month=now.month + 1)
-    cycle_start = month_start.isoformat()
-    cycle_end_exclusive = next_start.isoformat()
+    cycle_start, cycle_end_exclusive = _calendar_month_bounds(now, month_offset)
 
     # All active workspaces in this org.
     workspaces = await async_directus.get_items(
@@ -1182,7 +1178,10 @@ async def get_org_usage(
             elif pct >= 0.8:
                 approaching += 1
                 ws_approaching = True
-            ws_forecast_eur = compute_hour_overage_eur(tier, hours)
+            # Forecast is end-of-cycle; nonsensical for closed months.
+            ws_forecast_eur = (
+                compute_hour_overage_eur(tier, hours) if is_current_month else 0.0
+            )
             forecast += ws_forecast_eur
 
         ws_rows.append({
@@ -1194,7 +1193,9 @@ async def get_org_usage(
             "hours_pct": hours_pct,
             "at_cap": ws_at_cap,
             "approaching_cap": ws_approaching,
-            "overage_forecast_eur": round(ws_forecast_eur, 2),
+            "overage_forecast_eur": (
+                round(ws_forecast_eur, 2) if is_current_month else None
+            ),
         })
 
     # Sort: at-cap first, then approaching, then by hours desc — Team admins
@@ -1217,7 +1218,9 @@ async def get_org_usage(
         "workspaces_at_cap": at_cap,
         "workspaces_approaching_cap": approaching,
         "workspaces": ws_rows,
-        "total_overage_forecast_eur": round(forecast, 2),
+        "total_overage_forecast_eur": (
+            round(forecast, 2) if is_current_month else None
+        ),
     }
 
     await cache_set_json(cache_key, payload, USAGE_TTL_SECONDS)

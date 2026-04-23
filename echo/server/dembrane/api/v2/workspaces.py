@@ -796,17 +796,29 @@ async def request_upgrade(
 # ────────────────────────────────────────────────────────────────────
 
 
-def _calendar_month_bounds(now: datetime) -> tuple[str, str]:
+def _calendar_month_bounds(now: datetime, month_offset: int = 0) -> tuple[str, str]:
     """Return (iso_start, iso_end_of_next_month) for the calendar month
-    containing `now`. Month-end is exclusive (so < next_start is the
-    inclusive-of-this-month check)."""
+    `month_offset` months earlier than the month containing `now`.
+    `month_offset=0` is the current month, `1` is last month, etc.
+    Month-end is exclusive."""
+    # Normalise to the first of this month, then back up N months.
     month_start = now.replace(
         day=1, hour=0, minute=0, second=0, microsecond=0
     )
-    if now.month == 12:
-        next_start = month_start.replace(year=now.year + 1, month=1)
+    year, month = month_start.year, month_start.month
+    remaining = month_offset
+    while remaining > 0:
+        if month == 1:
+            year -= 1
+            month = 12
+        else:
+            month -= 1
+        remaining -= 1
+    month_start = month_start.replace(year=year, month=month)
+    if month == 12:
+        next_start = month_start.replace(year=year + 1, month=1)
     else:
-        next_start = month_start.replace(month=now.month + 1)
+        next_start = month_start.replace(month=month + 1)
     return month_start.isoformat(), next_start.isoformat()
 
 
@@ -901,21 +913,22 @@ async def list_tier_capacities() -> list[TierCapacityItem]:
 async def get_workspace_usage(
     ctx: WorkspaceContext = Depends(get_workspace_context),
     refresh: bool = False,
+    month_offset: int = 0,
 ) -> WorkspaceUsageResponse:
-    """Workspace usage rollup for the current calendar month.
+    """Workspace usage rollup.
+
+    `month_offset` lets admins inspect prior months: 0 = current, 1 = last
+    month, etc. Capped at 12 months back to keep cache keys bounded.
+    Financial fields (forecast, next-tier) only populate for the current
+    month — they describe end-of-cycle behaviour, which is nonsensical
+    for a completed month.
 
     Members see raw numbers. Admin + billing additionally see overage
     forecast and tier recommendation (matrix §8).
 
-    Implementation: hours derive from `conversation.duration` SUM where
-    `deleted_at IS NULL AND created_at >= month_start AND created_at <
-    next_month_start`. No separate `usage_event` table (D9).
-
-    Caching: 30-minute Redis cache of the full (admin-view) response,
-    keyed by workspace. Member responses are derived from the cached
-    admin response by zeroing the financial fields. Cache is busted on
-    tier change (see set_workspace_tier). Pass `?refresh=true` to
-    force a recompute + cache overwrite.
+    Caching: per-(workspace, month_offset) Redis cache. Current-month
+    cache busts on tier change (see set_workspace_tier). Pass
+    `?refresh=true` to force a recompute.
     """
     from dembrane.cache_utils import (
         USAGE_TTL_SECONDS,
@@ -939,12 +952,18 @@ async def get_workspace_usage(
     if ctx.is_external:
         raise HTTPException(status_code=403, detail="Guests don't see workspace usage")
 
+    if month_offset < 0 or month_offset > 12:
+        raise HTTPException(status_code=400, detail="month_offset must be 0–12")
+    is_current_month = month_offset == 0
+
     # Role-class decides whether financial fields are returned. We always
     # compute + cache the full-admin response; member response nulls the
     # financial fields at serialisation time.
     sees_financials = ctx.has_policy("workspace:view_invoices")
 
     cache_key = usage_cache_key(ctx.workspace_id)
+    if not is_current_month:
+        cache_key = f"{cache_key}:m{month_offset}"
     if not refresh:
         cached = await cache_get_json(cache_key)
         if isinstance(cached, dict):
@@ -958,7 +977,7 @@ async def get_workspace_usage(
             return WorkspaceUsageResponse(**cached)
 
     now = datetime.now(timezone.utc)
-    cycle_start, cycle_end_exclusive = _calendar_month_bounds(now)
+    cycle_start, cycle_end_exclusive = _calendar_month_bounds(now, month_offset)
 
     # Projects in workspace (also used for per-project breakdown).
     projects = await async_directus.get_items(
@@ -1126,9 +1145,16 @@ async def get_workspace_usage(
 
     # Always compute the full admin-view payload so the cache holds one
     # variant; members get a filtered copy at serialisation time.
-    overage_forecast = compute_hour_overage_eur(tier, audio_hours)
-    seat_overage = compute_seat_overage_eur(tier, seat_count)
-    recommended = tier_next(tier)
+    # Forecast + next-tier describe the current cycle's end state; they're
+    # null for historical months (where the cycle already closed).
+    if is_current_month:
+        overage_forecast = compute_hour_overage_eur(tier, audio_hours)
+        seat_overage = compute_seat_overage_eur(tier, seat_count)
+        recommended = tier_next(tier)
+    else:
+        overage_forecast = None
+        seat_overage = None
+        recommended = None
     next_rec: Optional[NextTierRecommendation] = None
     if recommended:
         rcap = get_capacity(recommended)

@@ -17,6 +17,7 @@ import { IconRefresh } from "@tabler/icons-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { UpgradeModal, type Tier } from "@/components/workspace/FeatureGate";
+import { PeriodSelect } from "@/components/workspace/PeriodSelect";
 import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isTier } from "@/lib/tiers";
@@ -56,9 +57,14 @@ interface UsageResponse {
 
 async function fetchUsage(
 	workspaceId: string,
+	monthOffset = 0,
 	refresh = false,
 ): Promise<UsageResponse | null> {
-	const url = `${API_BASE_URL}/v2/workspaces/${workspaceId}/usage${refresh ? "?refresh=true" : ""}`;
+	const params = new URLSearchParams();
+	if (monthOffset > 0) params.set("month_offset", String(monthOffset));
+	if (refresh) params.set("refresh", "true");
+	const qs = params.toString();
+	const url = `${API_BASE_URL}/v2/workspaces/${workspaceId}/usage${qs ? `?${qs}` : ""}`;
 	const res = await fetch(url, { credentials: "include" });
 	if (!res.ok) return null;
 	return res.json();
@@ -92,10 +98,11 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 	const { workspace } = useWorkspace();
 	const [refreshing, setRefreshing] = useState(false);
 	const [upgradeOpen, setUpgradeOpen] = useState(false);
+	const [monthOffset, setMonthOffset] = useState(0);
 
 	const { data, isLoading } = useQuery({
-		queryKey: ["v2", "workspace-usage", workspaceId],
-		queryFn: () => fetchUsage(workspaceId),
+		queryKey: ["v2", "workspace-usage", workspaceId, monthOffset],
+		queryFn: () => fetchUsage(workspaceId, monthOffset),
 		staleTime: 60_000,
 	});
 
@@ -105,10 +112,10 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 		// Query cache so the card updates without a second fetch.
 		setRefreshing(true);
 		try {
-			const fresh = await fetchUsage(workspaceId, true);
+			const fresh = await fetchUsage(workspaceId, monthOffset, true);
 			if (fresh) {
 				queryClient.setQueryData(
-					["v2", "workspace-usage", workspaceId],
+					["v2", "workspace-usage", workspaceId, monthOffset],
 					fresh,
 				);
 			}
@@ -176,6 +183,7 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 								<Trans>At limit</Trans>
 							</Badge>
 						)}
+						<PeriodSelect value={monthOffset} onChange={setMonthOffset} />
 						<Tooltip label={t`Refresh`}>
 							<ActionIcon
 								variant="subtle"

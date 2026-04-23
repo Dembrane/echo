@@ -17,6 +17,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { API_BASE_URL } from "@/config";
+import { PeriodSelect } from "@/components/workspace/PeriodSelect";
 
 interface OrgUsageWorkspaceRow {
 	id: string;
@@ -46,9 +47,14 @@ interface OrgUsage {
 
 async function fetchOrgUsage(
 	orgId: string,
+	monthOffset = 0,
 	refresh = false,
 ): Promise<OrgUsage | null> {
-	const url = `${API_BASE_URL}/v2/orgs/${orgId}/usage${refresh ? "?refresh=true" : ""}`;
+	const params = new URLSearchParams();
+	if (monthOffset > 0) params.set("month_offset", String(monthOffset));
+	if (refresh) params.set("refresh", "true");
+	const qs = params.toString();
+	const url = `${API_BASE_URL}/v2/orgs/${orgId}/usage${qs ? `?${qs}` : ""}`;
 	const res = await fetch(url, { credentials: "include" });
 	if (!res.ok) return null;
 	return res.json();
@@ -80,19 +86,23 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 	const navigate = useI18nNavigate();
 	const [refreshing, setRefreshing] = useState(false);
 	const [expanded, setExpanded] = useState(false);
+	const [monthOffset, setMonthOffset] = useState(0);
 
 	const { data, isLoading } = useQuery({
-		queryKey: ["v2", "org-usage", orgId],
-		queryFn: () => fetchOrgUsage(orgId),
+		queryKey: ["v2", "org-usage", orgId, monthOffset],
+		queryFn: () => fetchOrgUsage(orgId, monthOffset),
 		staleTime: 60_000,
 	});
 
 	const handleRefresh = async () => {
 		setRefreshing(true);
 		try {
-			const fresh = await fetchOrgUsage(orgId, true);
+			const fresh = await fetchOrgUsage(orgId, monthOffset, true);
 			if (fresh) {
-				queryClient.setQueryData(["v2", "org-usage", orgId], fresh);
+				queryClient.setQueryData(
+					["v2", "org-usage", orgId, monthOffset],
+					fresh,
+				);
 			}
 		} finally {
 			setRefreshing(false);
@@ -109,26 +119,25 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 	return (
 		<Paper p="md" withBorder radius="sm">
 			<Stack gap={10}>
-				<Group justify="space-between" wrap="nowrap">
-					<Tooltip
-						label={t`Usage resets at the start of each calendar month.`}
-					>
-						<Text size="xs" fw={500} tt="uppercase" c="dimmed" lts={0.5}>
-							<Trans>Team usage · {formatCycleMonth(data.cycle_start)}</Trans>
-						</Text>
-					</Tooltip>
-					<Tooltip label={t`Refresh`}>
-						<ActionIcon
-							variant="subtle"
-							color="gray"
-							size="sm"
-							loading={refreshing}
-							onClick={handleRefresh}
-							aria-label={t`Refresh team usage`}
-						>
-							<IconRefresh size={14} />
-						</ActionIcon>
-					</Tooltip>
+				<Group justify="space-between" wrap="nowrap" gap="xs">
+					<Text size="xs" fw={500} tt="uppercase" c="dimmed" lts={0.5}>
+						<Trans>Team usage</Trans>
+					</Text>
+					<Group gap={6} wrap="nowrap">
+						<PeriodSelect value={monthOffset} onChange={setMonthOffset} />
+						<Tooltip label={t`Refresh`}>
+							<ActionIcon
+								variant="subtle"
+								color="gray"
+								size="sm"
+								loading={refreshing}
+								onClick={handleRefresh}
+								aria-label={t`Refresh team usage`}
+							>
+								<IconRefresh size={14} />
+							</ActionIcon>
+						</Tooltip>
+					</Group>
 				</Group>
 
 				<Group gap="xl" wrap="wrap">
@@ -136,11 +145,14 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 						<Text size="lg" fw={500}>
 							{data.total_audio_hours.toFixed(1)}
 							<Text span c="dimmed" size="sm">
-								{" "}{t`hours this month`}
+								{" "}{t`hours`}
 							</Text>
 						</Text>
 						<Text size="xs" c="dimmed">
-							<Trans>across {data.workspace_count} workspaces</Trans>
+							<Trans>
+								in {formatCycleMonth(data.cycle_start)} · {data.workspace_count}{" "}
+								workspaces
+							</Trans>
 						</Text>
 					</Stack>
 
