@@ -1174,3 +1174,249 @@ async def get_workspace_usage(
         })
 
     return full
+
+
+# ────────────────────────────────────────────────────────────────────
+# Partner handoff (matrix §10)
+# ────────────────────────────────────────────────────────────────────
+
+
+class HandoffInitiateBody(BaseModel):
+    target_team_id: str
+    message: Optional[str] = Field(default=None, max_length=1000)
+
+
+class HandoffResponse(BaseModel):
+    status: Literal["pending", "completed", "cancelled"]
+    workspace_id: str
+    handoff_target_team_id: Optional[str] = None
+
+
+async def _caller_admins_team(org_id: str, app_user_id: str) -> bool:
+    """Helper — is the caller admin/owner on a specific org?"""
+    rows = await async_directus.get_items(
+        "org_membership",
+        {
+            "query": {
+                "filter": {
+                    "org_id": {"_eq": org_id},
+                    "user_id": {"_eq": app_user_id},
+                    "role": {"_in": ["admin", "owner"]},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["role"],
+                "limit": 1,
+            }
+        },
+    )
+    return isinstance(rows, list) and bool(rows)
+
+
+@router.post(
+    "/{workspace_id}/handoff/initiate",
+    response_model=HandoffResponse,
+)
+async def initiate_handoff(
+    body: HandoffInitiateBody,
+    ctx: WorkspaceContext = Depends(get_workspace_context),
+) -> HandoffResponse:
+    """Partner admin initiates a handoff to a client team.
+
+    Matrix §10: "Partner initiates → client accepts → billing attribution
+    flips." This sets the pending state; the target team's admins get a
+    PARTNER_HANDOFF_PENDING notification and can accept via /handoff/accept.
+
+    Guards: caller must be an admin/owner of the team that currently bills
+    the workspace (billed_to_team_id if set, else org_id). Workspace
+    admin/owner role is not sufficient — handoff is a billing action.
+    """
+    ws = ctx.workspace
+    billing_team_id = ws.get("billed_to_team_id") or ws.get("org_id")
+    if not billing_team_id:
+        raise HTTPException(
+            status_code=500, detail="Workspace has no billing team set"
+        )
+
+    # Caller authority: admin/owner on the billing team.
+    if not await _caller_admins_team(billing_team_id, ctx.app_user_id):
+        raise HTTPException(
+            status_code=403,
+            detail="Only the billing team's admins can initiate handoff",
+        )
+
+    if body.target_team_id == billing_team_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Target team is already the billing team",
+        )
+
+    # Target team must exist (not soft-deleted).
+    target = await async_directus.get_item("org", body.target_team_id)
+    if not target or target.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Target team not found")
+
+    if ws.get("handoff_status") == "pending":
+        raise HTTPException(
+            status_code=409,
+            detail="A handoff is already pending on this workspace",
+        )
+
+    await async_directus.update_item(
+        "workspace",
+        ctx.workspace_id,
+        {
+            "handoff_status": "pending",
+            "handoff_target_team_id": body.target_team_id,
+        },
+    )
+
+    # Notify target team admins — they're the ones who action it.
+    from dembrane.notifications import emit_to_audience, audience_team_admins
+    ws_name = ws.get("name") or "a workspace"
+    target_admins = await audience_team_admins(body.target_team_id)
+    await emit_to_audience(
+        target_admins,
+        actor_user_id=ctx.app_user_id,
+        event_code="PARTNER_HANDOFF_PENDING",
+        title=f"{ws_name} is being handed to your team",
+        message=(
+            f"A partner wants to hand {ws_name} over. "
+            "Review the workspace and accept the handoff to start billing."
+        ),
+        action="NAVIGATE_WS",
+        ref_workspace_id=ctx.workspace_id,
+        ref_org_id=body.target_team_id,
+    )
+
+    logger.info(
+        "handoff_initiated workspace=%s from=%s to=%s by=%s",
+        ctx.workspace_id, billing_team_id, body.target_team_id, ctx.app_user_id,
+    )
+
+    return HandoffResponse(
+        status="pending",
+        workspace_id=ctx.workspace_id,
+        handoff_target_team_id=body.target_team_id,
+    )
+
+
+@router.post(
+    "/{workspace_id}/handoff/accept",
+    response_model=HandoffResponse,
+)
+async def accept_handoff(
+    ctx: WorkspaceContext = Depends(get_workspace_context),
+) -> HandoffResponse:
+    """Client team admin accepts a pending handoff. Flips the billing
+    attribution and clears the pending state."""
+    ws = ctx.workspace
+    if ws.get("handoff_status") != "pending":
+        raise HTTPException(
+            status_code=409, detail="No pending handoff on this workspace"
+        )
+
+    target_team_id = ws.get("handoff_target_team_id")
+    if not target_team_id:
+        raise HTTPException(
+            status_code=500,
+            detail="Pending handoff has no target team — inconsistent state",
+        )
+
+    if not await _caller_admins_team(target_team_id, ctx.app_user_id):
+        raise HTTPException(
+            status_code=403,
+            detail="Only the target team's admins can accept this handoff",
+        )
+
+    prior_billing_team = ws.get("billed_to_team_id") or ws.get("org_id")
+
+    await async_directus.update_item(
+        "workspace",
+        ctx.workspace_id,
+        {
+            "billed_to_team_id": target_team_id,
+            "effective_client_team_id": target_team_id,
+            "handoff_status": "completed",
+            "handoff_target_team_id": None,
+        },
+    )
+
+    # Notify both sides: partner loses billing, client gains ownership.
+    from dembrane.notifications import emit_to_audience, audience_team_admins
+    ws_name = ws.get("name") or "a workspace"
+
+    if prior_billing_team:
+        partner_admins = await audience_team_admins(prior_billing_team)
+        await emit_to_audience(
+            partner_admins,
+            actor_user_id=ctx.app_user_id,
+            event_code="PARTNER_HANDOFF_ACCEPTED",
+            title=f"{ws_name} handoff completed",
+            message=(
+                "The client accepted. Billing has flipped; your team no "
+                "longer pays this workspace's subscription."
+            ),
+            action="NAVIGATE_WS",
+            ref_workspace_id=ctx.workspace_id,
+            ref_org_id=prior_billing_team,
+        )
+
+    target_admins = await audience_team_admins(target_team_id)
+    await emit_to_audience(
+        [uid for uid in target_admins if uid != ctx.app_user_id],
+        actor_user_id=ctx.app_user_id,
+        event_code="PARTNER_HANDOFF_ACCEPTED",
+        title=f"{ws_name} is now yours",
+        message="Your team now owns this workspace's subscription.",
+        action="NAVIGATE_WS",
+        ref_workspace_id=ctx.workspace_id,
+        ref_org_id=target_team_id,
+    )
+
+    logger.info(
+        "handoff_accepted workspace=%s from=%s to=%s by=%s",
+        ctx.workspace_id, prior_billing_team, target_team_id, ctx.app_user_id,
+    )
+
+    return HandoffResponse(
+        status="completed", workspace_id=ctx.workspace_id
+    )
+
+
+@router.post(
+    "/{workspace_id}/handoff/cancel",
+    response_model=HandoffResponse,
+)
+async def cancel_handoff(
+    ctx: WorkspaceContext = Depends(get_workspace_context),
+) -> HandoffResponse:
+    """Initiating team (current billing team) can cancel a pending handoff."""
+    ws = ctx.workspace
+    if ws.get("handoff_status") != "pending":
+        raise HTTPException(
+            status_code=409, detail="No pending handoff to cancel"
+        )
+
+    billing_team_id = ws.get("billed_to_team_id") or ws.get("org_id")
+    if not billing_team_id or not await _caller_admins_team(
+        billing_team_id, ctx.app_user_id
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Only the initiating team's admins can cancel",
+        )
+
+    await async_directus.update_item(
+        "workspace",
+        ctx.workspace_id,
+        {"handoff_status": None, "handoff_target_team_id": None},
+    )
+
+    logger.info(
+        "handoff_cancelled workspace=%s by=%s",
+        ctx.workspace_id, ctx.app_user_id,
+    )
+
+    return HandoffResponse(
+        status="cancelled", workspace_id=ctx.workspace_id
+    )

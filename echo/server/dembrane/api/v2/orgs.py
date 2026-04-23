@@ -1356,3 +1356,101 @@ async def list_team_projects(
             )
         )
     return out
+
+
+# ────────────────────────────────────────────────────────────────────
+# Referral ledger (matrix §10, partner read view)
+# ────────────────────────────────────────────────────────────────────
+
+
+class ReferralLedgerRow(BaseModel):
+    id: str
+    workspace_id: str
+    workspace_name: str
+    partner_team_id: str
+    partner_kickback_percent: int
+    starts_at: str
+    expires_at: Optional[str] = None
+    notes: Optional[str] = None
+
+
+@router.get(
+    "/{org_id}/referral-ledger",
+    response_model=list[ReferralLedgerRow],
+)
+async def list_org_referral_ledger(
+    org_id: str,
+    auth: DependencyDirectusSession,
+) -> list[ReferralLedgerRow]:
+    """Matrix §10: a partner team reads its own referral ledger here to
+    see which workspaces they earn a kickback on + terms.
+
+    Staff edit the ledger elsewhere (post-release staff console). This
+    endpoint is read-only and returns entries where partner_team_id
+    equals the requested org. Team admin/owner/billing only — regular
+    members don't see financial terms per matrix §7.
+    """
+    app_user = await get_app_user_or_raise(auth.user_id)
+    caller_role = await _require_org_role(org_id, app_user["id"], minimum="member")
+    if caller_role not in ("admin", "owner", "billing"):
+        raise HTTPException(
+            status_code=403, detail="Team admin or billing role only"
+        )
+
+    rows = await async_directus.get_items(
+        "referral_ledger",
+        {
+            "query": {
+                "filter": {
+                    "partner_team_id": {"_eq": org_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": [
+                    "id",
+                    "workspace_id",
+                    "partner_team_id",
+                    "partner_kickback_percent",
+                    "starts_at",
+                    "expires_at",
+                    "notes",
+                ],
+                "sort": ["-starts_at"],
+                "limit": -1,
+            }
+        },
+    ) or []
+    if not isinstance(rows, list) or not rows:
+        return []
+
+    # Join workspace names — batched.
+    ws_ids = sorted({r["workspace_id"] for r in rows if r.get("workspace_id")})
+    ws_name_map: dict[str, str] = {}
+    if ws_ids:
+        ws_rows = await async_directus.get_items(
+            "workspace",
+            {
+                "query": {
+                    "filter": {"id": {"_in": ws_ids}},
+                    "fields": ["id", "name"],
+                    "limit": -1,
+                }
+            },
+        ) or []
+        if isinstance(ws_rows, list):
+            ws_name_map = {w["id"]: w.get("name") or "" for w in ws_rows}
+
+    out: list[ReferralLedgerRow] = []
+    for r in rows:
+        out.append(
+            ReferralLedgerRow(
+                id=r["id"],
+                workspace_id=r["workspace_id"],
+                workspace_name=ws_name_map.get(r["workspace_id"], ""),
+                partner_team_id=r["partner_team_id"],
+                partner_kickback_percent=int(r.get("partner_kickback_percent", 20) or 20),
+                starts_at=r.get("starts_at") or "",
+                expires_at=r.get("expires_at"),
+                notes=r.get("notes"),
+            )
+        )
+    return out

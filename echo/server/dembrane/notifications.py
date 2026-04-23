@@ -61,6 +61,9 @@ _SEVERITY_BY_EVENT: dict[str, NotificationSeverity] = {
     "MEMBERSHIP_REQUESTED": "action_required",
     # NB: MEMBERSHIP_REQUEST_REJECTED is deliberately absent — matrix §6
     # specifies silent rejection, and emit() is never called for that code.
+    # Matrix §10 partner handoff.
+    "PARTNER_HANDOFF_PENDING": "action_required",
+    # PARTNER_HANDOFF_ACCEPTED defaults to 'info' — no action needed.
 }
 
 

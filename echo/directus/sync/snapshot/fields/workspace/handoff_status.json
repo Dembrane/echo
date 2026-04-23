@@ -1,0 +1,55 @@
+{
+  "collection": "workspace",
+  "field": "handoff_status",
+  "type": "string",
+  "meta": {
+    "collection": "workspace",
+    "conditions": null,
+    "display": null,
+    "display_options": null,
+    "field": "handoff_status",
+    "group": null,
+    "hidden": false,
+    "interface": "select-dropdown",
+    "note": "Matrix §10. Set 'pending' when partner initiates; cleared on client accept (and effective_client_team_id flips).",
+    "options": {
+      "choices": [
+        {
+          "text": "Pending (client accept)",
+          "value": "pending"
+        },
+        {
+          "text": "Completed",
+          "value": "completed"
+        }
+      ]
+    },
+    "readonly": false,
+    "required": false,
+    "searchable": true,
+    "sort": 21,
+    "special": null,
+    "translations": null,
+    "validation": null,
+    "validation_message": null,
+    "width": "full"
+  },
+  "schema": {
+    "name": "handoff_status",
+    "table": "workspace",
+    "data_type": "character varying",
+    "default_value": null,
+    "max_length": 255,
+    "numeric_precision": null,
+    "numeric_scale": null,
+    "is_nullable": true,
+    "is_unique": false,
+    "is_indexed": false,
+    "is_primary_key": false,
+    "is_generated": false,
+    "generation_expression": null,
+    "has_auto_increment": false,
+    "foreign_key_table": null,
+    "foreign_key_column": null
+  }
+}

@@ -1203,6 +1203,168 @@ def step_12_access_requests():
     return True
 
 
+def step_13_partner_model():
+    """Matrix §10 partner-client model.
+
+    Adds two nullable FKs on workspace + a referral_ledger collection.
+    billed_to_team_id tracks which team pays the subscription (partner
+    pre-handoff, client post-handoff). effective_client_team_id is
+    set when there's a client distinct from the paying team.
+
+    The referral ledger records partner kickback agreements (20%
+    default, per-workspace, optional expiry).
+
+    Idempotent.
+    """
+    print("\n=== Step 13: partner-client model ===")
+
+    # Workspace fields.
+    add_field("workspace", "billed_to_team_id", {
+        "type": "uuid",
+        "schema": {"is_nullable": True},
+        "meta": {
+            "interface": "input",
+            "note": (
+                "FK to org. Which team pays the subscription. NULL for "
+                "pre-migration workspaces. Partner-owned workspaces point "
+                "here pre-handoff."
+            ),
+        },
+    })
+    create_relation("workspace", "billed_to_team_id", "org",
+                    schema={"on_delete": "SET NULL"})
+
+    add_field("workspace", "effective_client_team_id", {
+        "type": "uuid",
+        "schema": {"is_nullable": True},
+        "meta": {
+            "interface": "input",
+            "note": (
+                "FK to org. The client the workspace is for, when "
+                "different from billed_to_team_id (partner-client "
+                "arrangement). Set on handoff completion."
+            ),
+        },
+    })
+    create_relation("workspace", "effective_client_team_id", "org",
+                    schema={"on_delete": "SET NULL"})
+
+    # Handoff state on workspace — one workspace in handoff at a time.
+    add_field("workspace", "handoff_status", {
+        "type": "string",
+        "schema": {"is_nullable": True},
+        "meta": {
+            "interface": "select-dropdown",
+            "options": {"choices": [
+                {"text": "Pending (client accept)", "value": "pending"},
+                {"text": "Completed", "value": "completed"},
+            ]},
+            "note": (
+                "Matrix §10. Set 'pending' when partner initiates; "
+                "cleared on client accept (and effective_client_team_id "
+                "flips)."
+            ),
+        },
+    })
+
+    add_field("workspace", "handoff_target_team_id", {
+        "type": "uuid",
+        "schema": {"is_nullable": True},
+        "meta": {
+            "interface": "input",
+            "note": (
+                "Target client team during a pending handoff. Cleared on "
+                "accept."
+            ),
+        },
+    })
+    create_relation("workspace", "handoff_target_team_id", "org",
+                    schema={"on_delete": "SET NULL"})
+
+    # Referral ledger collection.
+    if not collection_exists("referral_ledger"):
+        print("  Creating referral_ledger collection...")
+        api("POST", "/collections", {
+            "collection": "referral_ledger",
+            "meta": {
+                "icon": "account_balance",
+                "note": (
+                    "Matrix §10. Partner kickback agreements per workspace. "
+                    "Staff edits; partners read via GET /v2/orgs/:id/"
+                    "referral-ledger."
+                ),
+                "display_template":
+                    "{{partner_team_id}} → {{workspace_id}} ({{partner_kickback_percent}}%)",
+                "sort_field": "starts_at",
+            },
+            "schema": {},
+        })
+        print("  OK referral_ledger collection created")
+
+    add_field("referral_ledger", "id", {
+        "type": "uuid",
+        "schema": {"is_primary_key": True, "has_auto_increment": False, "is_nullable": False},
+        "meta": {"hidden": True, "readonly": True, "interface": "input", "special": ["uuid"]},
+    })
+
+    add_field("referral_ledger", "workspace_id", {
+        "type": "uuid",
+        "schema": {"is_nullable": False},
+        "meta": {"interface": "input"},
+    })
+    create_relation("referral_ledger", "workspace_id", "workspace",
+                    schema={"on_delete": "CASCADE"})
+
+    add_field("referral_ledger", "partner_team_id", {
+        "type": "uuid",
+        "schema": {"is_nullable": False},
+        "meta": {"interface": "input", "note": "The team receiving the kickback."},
+    })
+    create_relation("referral_ledger", "partner_team_id", "org",
+                    schema={"on_delete": "CASCADE"})
+
+    add_field("referral_ledger", "partner_kickback_percent", {
+        "type": "integer",
+        "schema": {"is_nullable": False, "default_value": 20},
+        "meta": {"interface": "input", "note": "Default 20% per matrix §10."},
+    })
+
+    add_field("referral_ledger", "starts_at", {
+        "type": "timestamp",
+        "schema": {"is_nullable": False, "default_value": "now()"},
+        "meta": {"interface": "datetime"},
+    })
+
+    add_field("referral_ledger", "expires_at", {
+        "type": "timestamp",
+        "schema": {"is_nullable": True},
+        "meta": {
+            "interface": "datetime",
+            "note": "Optional. NULL = no expiry; set per deal or globally later.",
+        },
+    })
+
+    add_field("referral_ledger", "notes", {
+        "type": "text",
+        "schema": {"is_nullable": True},
+        "meta": {"interface": "input-multiline"},
+    })
+
+    add_field("referral_ledger", "created_by_staff_id", {
+        "type": "uuid",
+        "schema": {"is_nullable": True},
+        "meta": {"interface": "input", "note": "app_user.id of the staff creator"},
+    })
+    create_relation("referral_ledger", "created_by_staff_id", "app_user",
+                    schema={"on_delete": "SET NULL"})
+
+    add_field("referral_ledger", "deleted_at", {
+        **deleted_at_field(),
+    })
+
+    return True
+
+
 STEPS = {
     "1": ("app_user", step_1_app_user),
     "2": ("org + org_membership", step_2_org),
@@ -1216,6 +1378,7 @@ STEPS = {
     "10": ("workspace.visibility enum + backfill", step_10_workspace_visibility),
     "11": ("workspace downgrade tracking", step_11_downgrade_tracking),
     "12": ("access_request collection", step_12_access_requests),
+    "13": ("partner-client model (§10)", step_13_partner_model),
 }
 
 
