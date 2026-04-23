@@ -182,6 +182,10 @@ export const WorkspaceSettingsRoute = () => {
 	const iAmGuest = myWorkspaceSummary?.is_external === true;
 	const [inviteEmail, setInviteEmail] = useState("");
 	const [inviteRole, setInviteRole] = useState("member");
+	// Matrix §4: guests have workspace access only (is_external=true); no
+	// team-level presence. Team members get a team row + workspace row.
+	// UI toggle drives both the payload (is_org_member) and role clamp.
+	const [inviteKind, setInviteKind] = useState<"team" | "guest">("team");
 	const [editingName, setEditingName] = useState<string | null>(null);
 	const [inviteModalOpened, { open: openInviteModal, close: closeInviteModal }] = useDisclosure(false);
 
@@ -196,12 +200,23 @@ export const WorkspaceSettingsRoute = () => {
 	const inviteMutation = useMutation({
 		mutationFn: () => {
 			if (!workspaceId) throw new Error("No workspace");
-			return sendInvite(workspaceId, inviteEmail.trim(), inviteRole, true);
+			// Guests are clamped to 'member' on the backend regardless of
+			// what the UI sends (matrix §4 hard-rule). Reflect that here
+			// so we never even send a wrong role.
+			const effectiveRole = inviteKind === "guest" ? "member" : inviteRole;
+			const isOrgMember = inviteKind === "team";
+			return sendInvite(
+				workspaceId,
+				inviteEmail.trim(),
+				effectiveRole,
+				isOrgMember,
+			);
 		},
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			setInviteEmail("");
 			setInviteRole("member");
+			setInviteKind("team");
 			closeInviteModal();
 			if (!data.email_sent) {
 				toast.error(t`Invite created, but the email could not be sent. Share the link directly.`);
@@ -852,7 +867,9 @@ export const WorkspaceSettingsRoute = () => {
 			<Modal
 				opened={inviteModalOpened}
 				onClose={closeInviteModal}
-				title={t`Invite a member`}
+				title={
+					inviteKind === "guest" ? t`Invite a guest` : t`Invite a member`
+				}
 				centered
 				size="md"
 			>
@@ -881,47 +898,90 @@ export const WorkspaceSettingsRoute = () => {
 							onChange={(e) => setInviteEmail(e.currentTarget.value)}
 						/>
 
+						{/* Matrix §4 role model: team member vs guest is an
+						    orthogonal choice to workspace role. Team members
+						    get a team-level presence + one workspace seat. Guests
+						    are workspace-only, no team scope, clamped to
+						    member-equivalent permissions. */}
 						<Radio.Group
-							label={t`Role`}
-							value={inviteRole}
-							onChange={setInviteRole}
+							label={t`Invite as`}
+							value={inviteKind}
+							onChange={(v) => setInviteKind(v as "team" | "guest")}
 						>
 							<Stack gap={10} mt={8}>
 								<Radio
-									value="member"
+									value="team"
 									label={
 										<Box>
-											<Text size="sm">{t`Member`}</Text>
+											<Text size="sm"><Trans>Team member</Trans></Text>
 											<Text size="xs" c="dimmed">
-												<Trans>Can create projects, run conversations, and generate reports.</Trans>
+												<Trans>Joins your team. Gets a row on the team page.</Trans>
 											</Text>
 										</Box>
 									}
 								/>
 								<Radio
-									value="billing"
+									value="guest"
 									label={
 										<Box>
-											<Text size="sm">{t`Billing`}</Text>
+											<Text size="sm"><Trans>Guest</Trans></Text>
 											<Text size="xs" c="dimmed">
-												<Trans>Sees usage, invoices, and payment. Doesn't touch projects.</Trans>
-											</Text>
-										</Box>
-									}
-								/>
-								<Radio
-									value="admin"
-									label={
-										<Box>
-											<Text size="sm">{t`Admin`}</Text>
-											<Text size="xs" c="dimmed">
-												<Trans>Everything a member can do, plus invite others and manage the workspace.</Trans>
+												<Trans>
+													Workspace access only. No team-level presence.
+													Clamped to member-equivalent permissions.
+												</Trans>
 											</Text>
 										</Box>
 									}
 								/>
 							</Stack>
 						</Radio.Group>
+
+						{/* Role radio — only for team-member invites. Guests are
+						    member-equivalent by hard rule (matrix §4); no choice. */}
+						{inviteKind === "team" && (
+							<Radio.Group
+								label={t`Workspace role`}
+								value={inviteRole}
+								onChange={setInviteRole}
+							>
+								<Stack gap={10} mt={8}>
+									<Radio
+										value="member"
+										label={
+											<Box>
+												<Text size="sm">{t`Member`}</Text>
+												<Text size="xs" c="dimmed">
+													<Trans>Can create projects, run conversations, and generate reports.</Trans>
+												</Text>
+											</Box>
+										}
+									/>
+									<Radio
+										value="billing"
+										label={
+											<Box>
+												<Text size="sm">{t`Billing`}</Text>
+												<Text size="xs" c="dimmed">
+													<Trans>Sees usage, invoices, and payment. Doesn't touch projects.</Trans>
+												</Text>
+											</Box>
+										}
+									/>
+									<Radio
+										value="admin"
+										label={
+											<Box>
+												<Text size="sm">{t`Admin`}</Text>
+												<Text size="xs" c="dimmed">
+													<Trans>Everything a member can do, plus invite others and manage the workspace.</Trans>
+												</Text>
+											</Box>
+										}
+									/>
+								</Stack>
+							</Radio.Group>
+						)}
 
 						<Group justify="flex-end" gap={8} mt={8}>
 							<Button variant="default" size="sm" onClick={closeInviteModal}>
