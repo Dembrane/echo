@@ -19,6 +19,10 @@ from dembrane.api.v2.project_sharing import router as project_sharing_router
 from dembrane.api.v2.workspaces import router as workspaces_router
 from dembrane.api.v2.workspace_projects import router as workspace_projects_router
 from dembrane.api.v2.workspace_settings import router as workspace_settings_router
+from dembrane.api.v2.access_requests import (
+    router as access_requests_router,
+    discover_router as access_requests_discover_router,
+)
 
 v2_router = APIRouter()
 
@@ -30,12 +34,18 @@ v2_router.include_router(onboarding_router, prefix="/onboarding", tags=["v2:onbo
 
 # Team (org) management — user-facing word is "team", internal is "org" (see D1).
 v2_router.include_router(orgs_router, prefix="/orgs", tags=["v2:orgs"])
+v2_router.include_router(
+    access_requests_discover_router, prefix="/orgs", tags=["v2:discover"]
+)
 
 # Workspace-scoped: /workspaces, /workspaces/{id}/invite, /workspaces/{id}/projects
 v2_router.include_router(workspaces_router, prefix="/workspaces", tags=["v2:workspaces"])
 v2_router.include_router(invites_router, prefix="/workspaces", tags=["v2:invites"])
 v2_router.include_router(workspace_projects_router, prefix="/workspaces", tags=["v2:workspace-projects"])
 v2_router.include_router(workspace_settings_router, prefix="/workspaces", tags=["v2:workspace-settings"])
+v2_router.include_router(
+    access_requests_router, prefix="/workspaces", tags=["v2:access-requests"]
+)
 
 # Project-level: /projects/{id}/move + /projects/{id}/members (private sharing)
 v2_router.include_router(projects_router, prefix="/projects", tags=["v2:projects"])

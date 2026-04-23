@@ -1106,6 +1106,103 @@ def step_11_downgrade_tracking():
     return True
 
 
+def step_12_access_requests():
+    """Create the access_request collection for Slack-style discovery
+    (matrix v1.1 §6).
+
+    Flow: a team member clicks "Request access" on an open workspace →
+    writes a pending row here → audience (workspace admins + team admins)
+    is notified → admin approves (writes a workspace_membership direct
+    row + marks request approved) or rejects (marks request rejected;
+    no notification to requester per matrix §6 "silent rejection").
+
+    Fields are deliberately lean: the workshop question about adding a
+    user-provided "reason" text is deferred — add post-release if abuse
+    patterns demand it.
+
+    Idempotent.
+    """
+    print("\n=== Step 12: access_request collection ===")
+
+    if not collection_exists("access_request"):
+        print("  Creating access_request collection...")
+        api("POST", "/collections", {
+            "collection": "access_request",
+            "meta": {
+                "icon": "meeting_room",
+                "note": (
+                    "Pending join requests from team members on open-to-team "
+                    "workspaces. Matrix v1.1 §6 Slack-style discovery."
+                ),
+                "display_template": "{{user_id}} → {{workspace_id}} ({{status}})",
+                "sort_field": "requested_at",
+            },
+            "schema": {},
+        })
+        print("  OK access_request collection created")
+
+    add_field("access_request", "id", {
+        "type": "uuid",
+        "schema": {"is_primary_key": True, "has_auto_increment": False, "is_nullable": False},
+        "meta": {"hidden": True, "readonly": True, "interface": "input", "special": ["uuid"]},
+    })
+
+    add_field("access_request", "workspace_id", {
+        "type": "uuid",
+        "schema": {"is_nullable": False},
+        "meta": {"interface": "input"},
+    })
+    create_relation("access_request", "workspace_id", "workspace",
+                    schema={"on_delete": "CASCADE"})
+
+    add_field("access_request", "user_id", {
+        "type": "uuid",
+        "schema": {"is_nullable": False},
+        "meta": {"interface": "input"},
+    })
+    create_relation("access_request", "user_id", "app_user",
+                    schema={"on_delete": "CASCADE"})
+
+    add_field("access_request", "status", {
+        "type": "string",
+        "schema": {"is_nullable": False, "default_value": "pending"},
+        "meta": {
+            "interface": "select-dropdown",
+            "options": {"choices": [
+                {"text": "Pending", "value": "pending"},
+                {"text": "Approved", "value": "approved"},
+                {"text": "Rejected", "value": "rejected"},
+            ]},
+        },
+    })
+
+    add_field("access_request", "requested_at", {
+        "type": "timestamp",
+        "schema": {"is_nullable": False, "default_value": "now()"},
+        "meta": {"interface": "datetime", "readonly": True},
+    })
+
+    add_field("access_request", "actioned_at", {
+        "type": "timestamp",
+        "schema": {"is_nullable": True},
+        "meta": {"interface": "datetime"},
+    })
+
+    add_field("access_request", "actioned_by", {
+        "type": "uuid",
+        "schema": {"is_nullable": True},
+        "meta": {"interface": "input", "note": "app_user.id of the approver/rejecter"},
+    })
+    create_relation("access_request", "actioned_by", "app_user",
+                    schema={"on_delete": "SET NULL"})
+
+    add_field("access_request", "deleted_at", {
+        **deleted_at_field(),
+    })
+
+    return True
+
+
 STEPS = {
     "1": ("app_user", step_1_app_user),
     "2": ("org + org_membership", step_2_org),
@@ -1118,6 +1215,7 @@ STEPS = {
     "9": ("notifications trio (inbox)", step_9_notifications),
     "10": ("workspace.visibility enum + backfill", step_10_workspace_visibility),
     "11": ("workspace downgrade tracking", step_11_downgrade_tracking),
+    "12": ("access_request collection", step_12_access_requests),
 }
 
 

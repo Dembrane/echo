@@ -57,8 +57,10 @@ _SEVERITY_BY_EVENT: dict[str, NotificationSeverity] = {
     "TIER_DOWNGRADED": "destructive",
     "INVITE_CANCELLED": "destructive",
     "REPORT_FAILED": "destructive",
-    # Requires user action. None wired today — MEMBERSHIP_REQUEST etc.
-    # will slot in here when we ship those flows.
+    # Requires user action.
+    "MEMBERSHIP_REQUESTED": "action_required",
+    # NB: MEMBERSHIP_REQUEST_REJECTED is deliberately absent — matrix §6
+    # specifies silent rejection, and emit() is never called for that code.
 }
 
 
