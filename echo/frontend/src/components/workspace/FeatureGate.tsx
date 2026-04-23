@@ -13,6 +13,7 @@ import { IconLock } from "@tabler/icons-react";
 import { useState, type ReactNode } from "react";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
+import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
 
 /**
  * Tier-gating UI primitives for the ECHO platform.
@@ -101,11 +102,20 @@ export function FeatureGate({
 	// gated subtree (round-2 audit, Security M1). The only safe boundary
 	// is "don't mount the feature at all when the tier doesn't meet" —
 	// render just the gate placeholder card.
+	// Matrix §3: attempting a frozen feature re-shows the post-downgrade
+	// banner if it was dismissed. We fire on every gate-open; DowngradeBanner
+	// only reacts when the current workspace has an active downgrade, so this
+	// is a cheap no-op on never-downgraded workspaces.
+	const openModal = () => {
+		emitFrozenFeatureAttempt();
+		setModalOpen(true);
+	};
+
 	return (
 		<>
 			<Box
 				pos="relative"
-				onClick={() => setModalOpen(true)}
+				onClick={openModal}
 				style={{
 					cursor: "pointer",
 					minHeight: 160,
@@ -123,7 +133,7 @@ export function FeatureGate({
 				onKeyDown={(e) => {
 					if (e.key === "Enter" || e.key === " ") {
 						e.preventDefault();
-						setModalOpen(true);
+						openModal();
 					}
 				}}
 			>

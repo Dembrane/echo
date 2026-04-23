@@ -4,6 +4,7 @@ import { IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { onFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
 
 /**
  * 7-day post-downgrade banner (matrix v1.1 §3).
@@ -33,6 +34,20 @@ export const DowngradeBanner = () => {
 			`${DISMISS_KEY_PREFIX}${workspaceId}:${downgradedAt}`,
 		);
 		setDismissed(stored === "1");
+	}, [workspaceId, downgradedAt]);
+
+	// Matrix §3: auto-return on frozen-feature-attempt. When FeatureGate
+	// opens its tier modal, clear the dismissal so this banner comes back.
+	// No-op for workspaces without an active downgrade — the outer early-
+	// returns guard that path.
+	useEffect(() => {
+		if (!workspaceId || !downgradedAt) return;
+		return onFrozenFeatureAttempt(() => {
+			sessionStorage.removeItem(
+				`${DISMISS_KEY_PREFIX}${workspaceId}:${downgradedAt}`,
+			);
+			setDismissed(false);
+		});
 	}, [workspaceId, downgradedAt]);
 
 	if (!workspace || !downgradedAt || !tier || !workspaceId) return null;
