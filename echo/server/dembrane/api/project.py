@@ -94,10 +94,15 @@ async def get_projects_home(
     search: Optional[str] = Query(None, description="Search term, supports owner:<email> prefix"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
     limit: int = Query(15, ge=1, le=100, description="Page size"),
+    workspace_id: Optional[str] = Query(None, description="Scope to a single workspace"),
 ) -> BffProjectsHomeResponse:
     """
     Aggregated endpoint for the projects home page.
     Returns pinned projects and a paginated project list in one call.
+
+    `workspace_id` scopes both lists when present. Without it, the response
+    spans every project the caller can see (used on the legacy /projects
+    landing, not on /w/:id/projects).
     """
     client = auth.client
 
@@ -111,6 +116,8 @@ async def get_projects_home(
     pin_filter: dict[str, Any] = {"pin_order": {"_nnull": True}, "deleted_at": {"_null": True}}
     if auth.is_admin:
         pin_filter["directus_user_id"] = {"_eq": auth.user_id}
+    if workspace_id:
+        pin_filter["workspace_id"] = {"_eq": workspace_id}
 
     pinned_raw = await run_in_thread_pool(
         client.get_items,
@@ -151,6 +158,8 @@ async def get_projects_home(
 
     # Build query for paginated project list
     base_filter: dict[str, Any] = {"deleted_at": {"_null": True}}
+    if workspace_id:
+        base_filter["workspace_id"] = {"_eq": workspace_id}
     if owner_filter:
         base_filter.update(owner_filter)
 

@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	ActionIcon,
 	Badge,
 	Group,
 	Paper,
@@ -9,7 +10,9 @@ import {
 	Text,
 	Tooltip,
 } from "@mantine/core";
-import { useQuery } from "@tanstack/react-query";
+import { IconRefresh } from "@tabler/icons-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { API_BASE_URL } from "@/config";
 import { TierBadge } from "./TierBadge";
 
@@ -29,11 +32,12 @@ interface UsageLite {
 	} | null;
 }
 
-async function fetchUsage(workspaceId: string): Promise<UsageLite | null> {
-	const res = await fetch(
-		`${API_BASE_URL}/v2/workspaces/${workspaceId}/usage`,
-		{ credentials: "include" },
-	);
+async function fetchUsage(
+	workspaceId: string,
+	refresh = false,
+): Promise<UsageLite | null> {
+	const url = `${API_BASE_URL}/v2/workspaces/${workspaceId}/usage${refresh ? "?refresh=true" : ""}`;
+	const res = await fetch(url, { credentials: "include" });
 	if (!res.ok) return null;
 	return res.json();
 }
@@ -58,11 +62,28 @@ export const WorkspaceHomeSummary = ({
 }: {
 	workspaceId: string;
 }) => {
+	const queryClient = useQueryClient();
+	const [refreshing, setRefreshing] = useState(false);
 	const { data, isLoading } = useQuery({
-		queryKey: ["v2", "workspace-usage", workspaceId],
+		queryKey: ["v2", "workspace-usage", workspaceId, 0],
 		queryFn: () => fetchUsage(workspaceId),
 		staleTime: 60_000,
 	});
+
+	const handleRefresh = async () => {
+		setRefreshing(true);
+		try {
+			const fresh = await fetchUsage(workspaceId, true);
+			if (fresh) {
+				queryClient.setQueryData(
+					["v2", "workspace-usage", workspaceId, 0],
+					fresh,
+				);
+			}
+		} finally {
+			setRefreshing(false);
+		}
+	};
 
 	if (isLoading || !data) return null;
 
@@ -76,13 +97,27 @@ export const WorkspaceHomeSummary = ({
 			<Stack gap={10}>
 				<Group justify="space-between" wrap="nowrap">
 					<TierBadge tier={data.tier} size="xs" showTagline />
-					{/* At-limit only on Pilot hard-block. Other tiers bill
-					    overage and keep going; no alarm badge. */}
-					{data.pilot_hard_block_active && (
-						<Badge size="xs" color="red" variant="light">
-							<Trans>Included hours used up</Trans>
-						</Badge>
-					)}
+					<Group gap={6} wrap="nowrap">
+						{/* At-limit only on Pilot hard-block. Other tiers bill
+						    overage and keep going; no alarm badge. */}
+						{data.pilot_hard_block_active && (
+							<Badge size="xs" color="red" variant="light">
+								<Trans>Included hours used up</Trans>
+							</Badge>
+						)}
+						<Tooltip label={t`Refresh usage`}>
+							<ActionIcon
+								size="sm"
+								variant="subtle"
+								color="gray"
+								loading={refreshing}
+								onClick={handleRefresh}
+								aria-label={t`Refresh usage`}
+							>
+								<IconRefresh size={14} />
+							</ActionIcon>
+						</Tooltip>
+					</Group>
 				</Group>
 
 				<Group gap="xl" wrap="wrap">

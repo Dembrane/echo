@@ -56,18 +56,21 @@ interface BffProjectsHomeResponse {
 export const useProjectsHome = ({
 	search,
 	limit = 15,
+	workspaceId,
 }: {
 	search?: string;
 	limit?: number;
+	workspaceId?: string | null;
 }) => {
 	return useInfiniteQuery({
-		queryKey: ["projects", "home", search],
+		queryKey: ["projects", "home", workspaceId ?? null, search],
 		initialPageParam: 0,
 		getNextPageParam: (lastPage: BffProjectsHomeResponse, _allPages, lastPageParam) =>
 			lastPage.has_more ? lastPageParam + 1 : undefined,
 		queryFn: async ({ pageParam = 0 }) => {
 			const params = new URLSearchParams();
 			if (search) params.set("search", search);
+			if (workspaceId) params.set("workspace_id", workspaceId);
 			params.set("offset", String(pageParam * limit));
 			params.set("limit", String(limit));
 			const resp = await api.get<unknown, BffProjectsHomeResponse>(
@@ -90,12 +93,92 @@ export const useTogglePinMutation = () => {
 		}) => {
 			return api.patch(`/projects/${projectId}/pin`, { pin_order });
 		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["projects"] });
+		// Optimistic update: move the project between pinned / list
+		// immediately so the UI responds to the click. Without this the
+		// user waits on the full refetch before the card jumps — on a
+		// slow connection it looks like nothing happened. Rolls back
+		// on error. Applies to BOTH the v1 (/projects/home) cache and
+		// the v2 workspace-projects cache — pre-fix the mutation only
+		// invalidated v1, so pinning on /w/:id/projects looked broken.
+		onMutate: async ({ projectId, pin_order }) => {
+			await queryClient.cancelQueries({ queryKey: ["projects", "home"] });
+			await queryClient.cancelQueries({ queryKey: ["v2", "workspace-projects"] });
+
+			type PageShape = {
+				pinned: Array<{ id: string; pin_order: number | null } & Record<string, unknown>>;
+				projects: Array<{ id: string; pin_order: number | null } & Record<string, unknown>>;
+			};
+			type CacheShape = { pages: PageShape[]; pageParams: unknown[] };
+
+			const applyOptimistic = (data: CacheShape | undefined): CacheShape | undefined => {
+				if (!data?.pages?.length) return data;
+				const firstPage = data.pages[0];
+				const moving =
+					firstPage.pinned.find((p) => p.id === projectId) ??
+					data.pages.flatMap((p) => p.projects).find((p) => p.id === projectId);
+				if (!moving) return data;
+
+				const nextFirst: PageShape = {
+					...firstPage,
+					pinned:
+						pin_order == null
+							? firstPage.pinned.filter((p) => p.id !== projectId)
+							: [
+									...firstPage.pinned.filter((p) => p.id !== projectId),
+									{ ...moving, pin_order },
+								].sort(
+									(a, b) => (a.pin_order ?? 0) - (b.pin_order ?? 0),
+								),
+					projects: firstPage.projects.map((p) =>
+						p.id === projectId ? { ...p, pin_order } : p,
+					),
+				};
+				const nextPages = [nextFirst, ...data.pages.slice(1)].map((page, i) =>
+					i === 0
+						? page
+						: {
+								...page,
+								projects: page.projects.map((p) =>
+									p.id === projectId ? { ...p, pin_order } : p,
+								),
+							},
+				);
+				return { ...data, pages: nextPages };
+			};
+
+			const snapshots: Array<[readonly unknown[], CacheShape | undefined]> = [];
+			for (const [key, data] of queryClient.getQueriesData<CacheShape>({
+				queryKey: ["projects", "home"],
+			})) {
+				snapshots.push([key, data]);
+				queryClient.setQueryData(key, applyOptimistic(data));
+			}
+			for (const [key, data] of queryClient.getQueriesData<CacheShape>({
+				queryKey: ["v2", "workspace-projects"],
+			})) {
+				snapshots.push([key, data]);
+				queryClient.setQueryData(key, applyOptimistic(data));
+			}
+			return { snapshots };
 		},
-		onError: (error: any) => {
+		onError: (error: any, _vars, ctx) => {
+			if (ctx?.snapshots) {
+				for (const [key, data] of ctx.snapshots) {
+					queryClient.setQueryData(key, data);
+				}
+			}
 			const detail = error?.response?.data?.detail;
 			toast.error(detail ?? t`Failed to update pin`);
+		},
+		onSettled: () => {
+			// Reconcile with the server regardless — optimistic state is a
+			// guess; this is the ground truth. Both caches must be busted;
+			// the v1 invalidate-alone version pre-fix missed the v2 key
+			// and was the reported "pinned projects doesn't work without
+			// refresh" bug.
+			queryClient.invalidateQueries({ queryKey: ["projects", "home"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-projects"] });
+			queryClient.invalidateQueries({ queryKey: ["projects"] });
 		},
 	});
 };
