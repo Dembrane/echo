@@ -824,6 +824,52 @@ class WorkspaceUsageResponse(BaseModel):
     next_tier: Optional[NextTierRecommendation] = None
 
 
+class TierCapacityItem(BaseModel):
+    tier: str
+    tagline: str
+    price_eur_monthly: Optional[int]
+    price_note: str
+    duration: str
+    included_seats: Optional[int]
+    seat_overage_eur: Optional[int]
+    included_hours: Optional[int]
+    hour_overage_eur: Optional[int]
+    hard_block_on_hours: bool
+    guest_cap: Optional[int]
+    training_included: str
+
+
+@router.get("/tier-capacities", response_model=list[TierCapacityItem])
+async def list_tier_capacities() -> list[TierCapacityItem]:
+    """The canonical tier × capacity matrix (matrix §1).
+
+    Static per deployment — clients can cache indefinitely. Authentication
+    is not required: this data is public pricing info + lives on the
+    product's own pricing page anyway. Served here so every in-product
+    surface (upgrade modal, billing tab, pricing comparison) reads from
+    a single source.
+    """
+    from dembrane.tier_capacity import TIER_CAPACITIES
+
+    return [
+        TierCapacityItem(
+            tier=cap.tier,
+            tagline=cap.tagline,
+            price_eur_monthly=cap.price_eur_monthly,
+            price_note=cap.price_note,
+            duration=cap.duration,
+            included_seats=cap.included_seats,
+            seat_overage_eur=cap.seat_overage_eur,
+            included_hours=cap.included_hours,
+            hour_overage_eur=cap.hour_overage_eur,
+            hard_block_on_hours=cap.hard_block_on_hours,
+            guest_cap=cap.guest_cap,
+            training_included=cap.training_included,
+        )
+        for cap in TIER_CAPACITIES.values()
+    ]
+
+
 @router.get(
     "/{workspace_id}/usage",
     response_model=WorkspaceUsageResponse,

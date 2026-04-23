@@ -12,6 +12,7 @@ import {
 import { IconLock } from "@tabler/icons-react";
 import { useState, type ReactNode } from "react";
 import { toast } from "@/components/common/Toaster";
+import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { API_BASE_URL } from "@/config";
 import { emitFrozenFeatureAttempt } from "@/lib/frozenFeatureAttempt";
 
@@ -249,36 +250,15 @@ export function UpgradeModal({
 					{benefit}
 				</Text>
 
-				<Stack gap={6}>
-					<Box
-						p="sm"
-						style={{
-							backgroundColor: "var(--mantine-color-gray-0)",
-							borderRadius: 6,
-						}}
-					>
-						<Text size="xs" c="dimmed">
-							<Trans>Your workspace is on</Trans>
-						</Text>
-						<Text size="sm" fw={500}>
-							{TIER_LABEL[currentTier]}
-						</Text>
-					</Box>
-					<Box
-						p="sm"
-						style={{
-							backgroundColor: "rgba(65,105,225,0.06)",
-							borderRadius: 6,
-						}}
-					>
-						<Text size="xs" c="dimmed">
-							<Trans>This feature needs</Trans>
-						</Text>
-						<Text size="sm" fw={500} c="blue">
-							{TIER_LABEL[requiredTier]}
-						</Text>
-					</Box>
-				</Stack>
+				{/* Matrix §1 requires the full capacity matrix visible in-
+				    product on the upgrade-request modal. fromTier clips the
+				    table to tiers strictly above the current; highlightTier
+				    calls out the minimum tier the gate needs. */}
+				<TierCapacityMatrix
+					fromTier={currentTier}
+					highlightTier={requiredTier}
+					compact
+				/>
 
 				{canRequestUpgrade ? (
 					<>
