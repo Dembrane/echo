@@ -266,7 +266,7 @@ msgid "{0, plural, one {# conversation will be hidden along with it.} other {# c
 msgstr ""
 
 #. placeholder {0}: workspace.usage.conversation_count
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:180
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:198
 msgid "{0, plural, one {# conversation} other {# conversations}}"
 msgstr ""
 
@@ -276,15 +276,16 @@ msgid "{0, plural, one {# member} other {# members}}"
 msgstr ""
 
 #. placeholder {0}: team.total_members
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:338
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:350
 msgid "{0, plural, one {# person} other {# people}}"
 msgstr ""
 
+#. placeholder {0}: workspace.project_count
 #. placeholder {0}: team.total_projects
 #. placeholder {0}: ws.project_count
-#. placeholder {0}: data.project_count
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:344
-#: src/routes/team/TeamRoute.tsx:582
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:188
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:356
+#: src/routes/team/TeamRoute.tsx:589
 #: src/components/workspace/UsageCard.tsx:266
 msgid "{0, plural, one {# project} other {# projects}}"
 msgstr ""
@@ -300,7 +301,7 @@ msgid "{0, plural, one {# workspace used up its included hours} other {# workspa
 msgstr ""
 
 #. placeholder {0}: team.workspace_count
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:332
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:344
 msgid "{0, plural, one {# workspace} other {# workspaces}}"
 msgstr ""
 
@@ -332,7 +333,7 @@ msgid "select.all.modal.added.count"
 msgstr "{0} añadidas"
 
 #. placeholder {0}: usage.workspaces_at_cap
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:361
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:373
 msgid "{0} at limit"
 msgstr ""
 
@@ -349,6 +350,14 @@ msgstr "{0} Conversaciones • Editado {1}"
 #~ msgid "{0} conversations will be hidden along with it."
 #~ msgstr ""
 
+#. placeholder {0}: workspace.name
+#. placeholder {0}: team.name
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:156
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:332
+#: src/routes/team/TeamRoute.tsx:362
+msgid "{0} logo"
+msgstr ""
+
 #. js-lingui-explicit-id
 #. placeholder {0}: reallySkipped.length
 #: src/components/conversation/SelectAllConfirmationModal.tsx:478
@@ -356,7 +365,7 @@ msgid "select.all.modal.not.added.count"
 msgstr "{0} no añadidas"
 
 #. placeholder {0}: displayRole(directRole)
-#: src/routes/team/TeamRoute.tsx:692
+#: src/routes/team/TeamRoute.tsx:699
 msgid "{0} on this workspace · change in workspace settings"
 msgstr ""
 
@@ -364,6 +373,10 @@ msgstr ""
 #: src/routes/project/report/ProjectReportRoute.tsx:1254
 msgid "{0} views"
 msgstr "{0} vistas"
+
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:169
+msgid "{capitalizedTier} — tap to see what's included"
+msgstr ""
 
 #. placeholder {0}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
 #: src/components/project/PinnedProjectCard.tsx:100
@@ -660,7 +673,7 @@ msgstr "Añadir traducciones"
 msgid "Add Webhook"
 msgstr "Añadir Webhook"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:275
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:282
 msgid "Add workspace"
 msgstr ""
 
@@ -729,11 +742,11 @@ msgstr "Ajustar el tamaño de la fuente base para la interfaz"
 msgid "Admin"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:693
+#: src/routes/team/TeamRoute.tsx:700
 msgid "Admin here (from team role)"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:462
+#: src/routes/team/TeamRoute.tsx:469
 msgid "Admins"
 msgstr ""
 
@@ -766,7 +779,7 @@ msgstr "Agentic - Ejecución guiada por herramientas"
 msgid "Agentic Chat"
 msgstr "Chat Agentic"
 
-#: src/routes/team/TeamRoute.tsx:461
+#: src/routes/team/TeamRoute.tsx:468
 msgid "All"
 msgstr "Todo"
 
@@ -1044,7 +1057,7 @@ msgstr "¿Está seguro de que desea eliminar su logotipo personalizado? Se utili
 #~ msgid "Artefacts"
 #~ msgstr "Artefactos"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:511
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:524
 msgid "As a guest"
 msgstr ""
 
@@ -1239,7 +1252,7 @@ msgid "Back to templates"
 msgstr "Volver a plantillas"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:501
-#: src/routes/team/TeamRoute.tsx:386
+#: src/routes/team/TeamRoute.tsx:393
 #: src/routes/invite/MyInvitesRoute.tsx:81
 msgid "Back to workspaces"
 msgstr ""
@@ -1347,7 +1360,7 @@ msgstr ""
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1245
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1524
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:387
-#: src/routes/team/TeamRoute.tsx:653
+#: src/routes/team/TeamRoute.tsx:660
 #: src/routes/project/report/ProjectReportRoute.tsx:287
 #: src/routes/project/report/ProjectReportRoute.tsx:1443
 #: src/components/workspace/TeamProjectsTable.tsx:158
@@ -1422,7 +1435,7 @@ msgstr "Tarjeta"
 
 #. placeholder {0}: displayRole(m.role)
 #. placeholder {1}: displayRole(next)
-#: src/routes/team/TeamRoute.tsx:644
+#: src/routes/team/TeamRoute.tsx:651
 msgid "Change {person}'s team role from <0>{0}</0> to <1>{1}</1>?"
 msgstr ""
 
@@ -1438,11 +1451,11 @@ msgstr "Cambiar idioma"
 msgid "Change password"
 msgstr "Cambiar contraseña"
 
-#: src/routes/team/TeamRoute.tsx:652
+#: src/routes/team/TeamRoute.tsx:659
 msgid "Change role"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:641
+#: src/routes/team/TeamRoute.tsx:648
 msgid "Change team role?"
 msgstr ""
 
@@ -1894,7 +1907,7 @@ msgstr ""
 msgid "Couldn't change visibility"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:469
+#: src/routes/team/TeamRoute.tsx:476
 msgid "Couldn't load team members. Try refreshing — if it keeps failing, contact support."
 msgstr ""
 
@@ -2060,7 +2073,7 @@ msgstr ""
 #~ msgstr "Personalice la estructura de su informe. Esta función estará disponible pronto."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:534
-#: src/routes/team/TeamRoute.tsx:980
+#: src/routes/team/TeamRoute.tsx:987
 msgid "Danger"
 msgstr ""
 
@@ -2219,7 +2232,7 @@ msgstr ""
 msgid "Deleted successfully"
 msgstr "Eliminado con éxito"
 
-#: src/routes/team/TeamRoute.tsx:983
+#: src/routes/team/TeamRoute.tsx:990
 msgid "Deleting a team is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
 msgstr ""
 
@@ -3323,17 +3336,17 @@ msgstr ""
 #~ msgstr "Vista de cuadrícula"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1079
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:160
 msgid "Guest"
 msgstr ""
 
-#. placeholder {0}: workspace.org_name
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:142
-msgid "guest of {0}"
-msgstr ""
+#~ msgid "guest of {0}"
+#~ msgstr ""
 
 #. placeholder {0}: settings.org_name
+#. placeholder {0}: workspace.org_name
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:488
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:129
 msgid "Guest of {0}"
 msgstr ""
 
@@ -3358,7 +3371,7 @@ msgstr "Guiar el informe"
 msgid "Guided"
 msgstr "Guiado"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:352
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:364
 msgid "h this month"
 msgstr ""
 
@@ -3518,7 +3531,7 @@ msgstr "Incluir enlace del portal"
 #~ msgid "Include timestamps"
 #~ msgstr "Incluir marcas de tiempo"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:191
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:181
 #: src/components/workspace/UsageCard.tsx:190
 msgid "Included hours used up"
 msgstr ""
@@ -3958,18 +3971,18 @@ msgstr ""
 #~ msgstr "Iniciar sesión como usuario existente"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1384
-#: src/routes/team/TeamRoute.tsx:910
+#: src/routes/team/TeamRoute.tsx:917
 msgid "Logo"
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1345
-#: src/routes/team/TeamRoute.tsx:869
+#: src/routes/team/TeamRoute.tsx:876
 #: src/components/settings/WhitelabelLogoCard.tsx:90
 msgid "Logo removed"
 msgstr "Logo eliminado"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1336
-#: src/routes/team/TeamRoute.tsx:861
+#: src/routes/team/TeamRoute.tsx:868
 #: src/components/settings/WhitelabelLogoCard.tsx:67
 msgid "Logo updated"
 msgstr "Logo actualizado"
@@ -4004,12 +4017,12 @@ msgstr ""
 msgid "Make visible to the whole workspace"
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:220
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:227
 #: src/components/project/ProjectSharingStrip.tsx:104
 msgid "Manage"
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:374
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:387
 msgid "Manage team"
 msgstr ""
 
@@ -4058,7 +4071,7 @@ msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:520
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:605
-#: src/routes/team/TeamRoute.tsx:463
+#: src/routes/team/TeamRoute.tsx:470
 msgid "Members"
 msgstr ""
 
@@ -4357,7 +4370,7 @@ msgstr "Aun no hay conversaciones. Puede programar un informe ahora y las conver
 #~ msgstr "Aún no se han añadido términos clave o nombres propios. Añádelos usando el campo de entrada de arriba para mejorar la precisión de la transcripción."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1415
-#: src/routes/team/TeamRoute.tsx:939
+#: src/routes/team/TeamRoute.tsx:946
 msgid "No logo set — dembrane default will be used."
 msgstr ""
 
@@ -4369,11 +4382,11 @@ msgstr "No se han detectado nuevos comentarios aún. Por favor, continúa tu dis
 msgid "No one here yet."
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:742
+#: src/routes/team/TeamRoute.tsx:749
 msgid "No one matches that filter."
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:492
+#: src/routes/team/TeamRoute.tsx:499
 msgid "No one on the team yet."
 msgstr ""
 
@@ -4485,7 +4498,7 @@ msgstr "No hay webhooks configurados"
 msgid "No webhooks found"
 msgstr "No se encontraron webhooks"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:532
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:545
 msgid "No workspaces yet. Create your first one to get started."
 msgstr ""
 
@@ -4733,7 +4746,7 @@ msgstr "Resultados"
 msgid "Overage"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:402
+#: src/routes/team/TeamRoute.tsx:409
 #: src/components/layout/ProjectConversationLayout.tsx:44
 #: src/components/chat/ChatModeSelector.tsx:300
 #: src/components/chat/ChatModeBanner.tsx:36
@@ -4947,11 +4960,11 @@ msgstr ""
 msgid "Pending invites | dembrane"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:370
+#: src/routes/team/TeamRoute.tsx:377
 msgid "people"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:410
+#: src/routes/team/TeamRoute.tsx:417
 msgid "People"
 msgstr ""
 
@@ -4967,11 +4980,11 @@ msgstr ""
 msgid "Period"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:370
+#: src/routes/team/TeamRoute.tsx:377
 msgid "person"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:525
+#: src/routes/team/TeamRoute.tsx:532
 msgid "Person"
 msgstr ""
 
@@ -5271,11 +5284,11 @@ msgstr ""
 msgid "Private project"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:543
+#: src/routes/team/TeamRoute.tsx:550
 msgid "Private workspace"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:718
+#: src/routes/team/TeamRoute.tsx:725
 msgid "Private workspace — ask a workspace admin for an invite"
 msgstr ""
 
@@ -5326,8 +5339,8 @@ msgid "Processing your retranscription request..."
 msgstr "Procesando tu solicitud de retranscripción..."
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:174
-msgid "project"
-msgstr ""
+#~ msgid "project"
+#~ msgstr ""
 
 #: src/components/workspace/TeamProjectsTable.tsx:204
 msgid "Project"
@@ -5402,12 +5415,11 @@ msgstr "Configuración del Proyecto"
 #~ msgid "project.sidebar.chat.end.description"
 #~ msgstr "Fin de la lista • Todas las {0} conversaciones cargadas"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:174
 #: src/components/workspace/TeamUsageRollup.tsx:179
 msgid "projects"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:414
+#: src/routes/team/TeamRoute.tsx:421
 #: src/components/workspace/UsageCard.tsx:260
 msgid "Projects"
 msgstr "Proyectos"
@@ -5671,7 +5683,7 @@ msgstr "Recordar a los usuarios que verifiquen antes de finalizar"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:807
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1410
-#: src/routes/team/TeamRoute.tsx:934
+#: src/routes/team/TeamRoute.tsx:941
 #: src/components/settings/WhitelabelLogoCard.tsx:149
 #: src/components/settings/WhitelabelLogoCard.tsx:184
 #: src/components/settings/AccountSettingsCard.tsx:163
@@ -5733,7 +5745,7 @@ msgid "Rename chat"
 msgstr "Renombrar chat"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1434
-#: src/routes/team/TeamRoute.tsx:958
+#: src/routes/team/TeamRoute.tsx:965
 msgid "Replace logo"
 msgstr ""
 
@@ -6043,7 +6055,7 @@ msgstr "Guardar plantilla"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1303
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1321
-#: src/routes/team/TeamRoute.tsx:847
+#: src/routes/team/TeamRoute.tsx:854
 msgid "Saved"
 msgstr ""
 
@@ -6094,7 +6106,7 @@ msgstr "Buscar"
 msgid "Search conversations"
 msgstr "Buscar conversaciones"
 
-#: src/routes/team/TeamRoute.tsx:450
+#: src/routes/team/TeamRoute.tsx:457
 msgid "Search name or email"
 msgstr ""
 
@@ -6132,7 +6144,7 @@ msgstr "Texto de búsqueda:"
 msgid "Search webhooks..."
 msgstr "Buscar webhooks..."
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:454
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:467
 msgid "Search workspaces..."
 msgstr ""
 
@@ -6459,7 +6471,7 @@ msgstr "Mostrar datos de revisión"
 
 #. placeholder {0}: filteredMembers.length
 #. placeholder {1}: members.length
-#: src/routes/team/TeamRoute.tsx:476
+#: src/routes/team/TeamRoute.tsx:483
 msgid "Showing {0} of {1}"
 msgstr ""
 
@@ -6471,7 +6483,7 @@ msgstr "Mostrando {displayFrom}–{displayTo} de {totalItems} entradas"
 msgid "Showing your most recent completed report."
 msgstr "Mostrando su informe completado más reciente."
 
-#: src/routes/team/TeamRoute.tsx:887
+#: src/routes/team/TeamRoute.tsx:894
 msgid "Shown in the team header and in email subject lines."
 msgstr ""
 
@@ -6813,7 +6825,7 @@ msgstr ""
 msgid "Team admins and members will find this workspace from their home page. Admins can Join directly; members ask to join — you approve."
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:753
+#: src/routes/team/TeamRoute.tsx:760
 msgid "Team admins can join any workspace to get a direct admin seat. Workspace invites live in each workspace's settings."
 msgstr ""
 
@@ -6821,7 +6833,7 @@ msgstr ""
 #~ msgid "Team admins get access automatically."
 #~ msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:919
+#: src/routes/team/TeamRoute.tsx:926
 msgid "Team logo"
 msgstr ""
 
@@ -6829,11 +6841,11 @@ msgstr ""
 msgid "Team member"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:495
+#: src/routes/team/TeamRoute.tsx:502
 msgid "Team members appear here once they join a workspace. Invites are sent from each workspace's Members tab."
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:886
+#: src/routes/team/TeamRoute.tsx:893
 #: src/routes/onboarding/OnboardingRoute.tsx:398
 msgid "Team name"
 msgstr ""
@@ -6842,7 +6854,7 @@ msgstr ""
 msgid "Team not found"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:528
+#: src/routes/team/TeamRoute.tsx:535
 msgid "Team role"
 msgstr ""
 
@@ -7103,7 +7115,7 @@ msgstr "Esta página se muestra después de que el participante haya completado 
 msgid "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
 msgstr "Esta página se muestra a los participantes cuando inician una conversación después de completar correctamente el tutorial."
 
-#: src/routes/team/TeamRoute.tsx:639
+#: src/routes/team/TeamRoute.tsx:646
 msgid "this person"
 msgstr ""
 
@@ -7270,7 +7282,7 @@ msgstr "Título basado en temas que describe lo que se discutió"
 msgid "Topics"
 msgstr "Temas"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:177
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:195
 msgid "total"
 msgstr "total"
 
@@ -7482,7 +7494,7 @@ msgid "Unknown"
 msgstr "Desconocido"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:667
-#: src/routes/team/TeamRoute.tsx:616
+#: src/routes/team/TeamRoute.tsx:623
 msgid "Unknown member"
 msgstr ""
 
@@ -7628,7 +7640,7 @@ msgstr "Subir Archivos"
 #~ msgstr "Cargando..."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1436
-#: src/routes/team/TeamRoute.tsx:960
+#: src/routes/team/TeamRoute.tsx:967
 msgid "Upload logo"
 msgstr ""
 
@@ -7660,7 +7672,7 @@ msgstr "La URL es requerida"
 msgid "URL must start with http:// or https://"
 msgstr "La URL debe empezar con http:// o https://"
 
-#: src/routes/team/TeamRoute.tsx:406
+#: src/routes/team/TeamRoute.tsx:413
 msgid "Usage"
 msgstr ""
 
@@ -8092,7 +8104,7 @@ msgstr ""
 msgid "will be included in your report"
 msgstr "se incluirá en tu informe"
 
-#: src/routes/team/TeamRoute.tsx:368
+#: src/routes/team/TeamRoute.tsx:375
 msgid "workspace"
 msgstr ""
 
@@ -8134,7 +8146,7 @@ msgstr ""
 msgid "Workspace settings | dembrane"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:913
+#: src/routes/team/TeamRoute.tsx:920
 msgid "Workspace-level logo overrides the team logo when set."
 msgstr ""
 
@@ -8142,15 +8154,15 @@ msgstr ""
 #~ msgid "Workspace-level logo takes precedence when set."
 #~ msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:368
+#: src/routes/team/TeamRoute.tsx:375
 msgid "workspaces"
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:448
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:461
 msgid "Workspaces"
 msgstr ""
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:387
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:400
 msgid "Workspaces | dembrane"
 msgstr ""
 

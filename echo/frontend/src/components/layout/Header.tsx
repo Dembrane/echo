@@ -174,7 +174,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 						    selector (/w). Previously fell back to /projects, which
 						    was the legacy dembrane home and confusing once teams
 						    existed. */}
-						<I18nLink to={workspaceId ? `/w/${workspaceId}/projects` : "/w"}>
+						<I18nLink to="/w">
 							<Group align="center">
 								<Logo hideTitle={false} />
 							</Group>

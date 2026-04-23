@@ -87,6 +87,7 @@ class WorkspaceSummary(BaseModel):
     role: str
     is_default: bool
     tier: str
+    logo_url: Optional[str] = None
     project_count: int
     member_count: int
     is_external: bool
@@ -106,6 +107,7 @@ class TeamRollup(BaseModel):
     id: str
     name: str
     role: str
+    logo_url: Optional[str] = None
     total_projects: int = 0
     total_members: int = 0  # unique across workspaces
     total_audio_hours: float = 0.0

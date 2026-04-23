@@ -355,9 +355,16 @@ export const TeamRoute = () => {
 				    on the right. Tier is intentionally absent (it's a
 				    per-workspace concept, shown in the column headers). */}
 				<Group justify="space-between" align="flex-start" wrap="nowrap">
-					<Group gap="md" wrap="nowrap" style={{ minWidth: 0 }}>
+					<Group gap="md" wrap="nowrap" align="center" style={{ minWidth: 0 }}>
 						{team.logo_url && (
-							<Avatar src={resolveLogoUrl(team.logo_url)} size={40} radius="md" />
+							<Image
+								src={resolveLogoUrl(team.logo_url)}
+								alt={t`${team.name} logo`}
+								h={48}
+								w="auto"
+								fit="contain"
+								style={{ maxWidth: 160, flexShrink: 0 }}
+							/>
 						)}
 						<Stack gap={2} style={{ minWidth: 0 }}>
 							<Title order={3} fw={400}>
@@ -917,10 +924,10 @@ function OverviewPanel({
 							<Image
 								src={currentTeamLogoUrl}
 								alt={t`Team logo`}
-								h={48}
+								h={72}
 								w="auto"
 								fit="contain"
-								style={{ maxWidth: 200 }}
+								style={{ maxWidth: 320 }}
 							/>
 							<Button
 								variant="subtle"

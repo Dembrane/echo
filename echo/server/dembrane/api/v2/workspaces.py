@@ -204,7 +204,7 @@ async def list_workspaces(
                 },
                 "fields": [
                     "id", "name", "org_id", "is_default", "tier",
-                    "downgraded_at", "downgraded_from_tier",
+                    "downgraded_at", "downgraded_from_tier", "logo_url",
                 ],
                 "limit": -1,
             }
@@ -215,16 +215,22 @@ async def list_workspaces(
 
     ws_map = {ws["id"]: ws for ws in workspaces}
 
-    # Fetch org names
+    # Fetch org names + logos (logo powers the TeamHeroCard on /w).
     org_ids = list({ws.get("org_id") for ws in workspaces if ws.get("org_id")})
     org_map: dict[str, str] = {}
+    org_logo_map: dict[str, Optional[str]] = {}
     if org_ids:
         orgs = await async_directus.get_items(
             "org",
-            {"query": {"filter": {"id": {"_in": org_ids}}, "fields": ["id", "name"], "limit": -1}},
+            {"query": {
+                "filter": {"id": {"_in": org_ids}},
+                "fields": ["id", "name", "logo_url"],
+                "limit": -1,
+            }},
         )
         if isinstance(orgs, list):
             org_map = {o["id"]: o.get("name", "") for o in orgs}
+            org_logo_map = {o["id"]: o.get("logo_url") for o in orgs}
 
     # Build workspace summaries with usage — parallelize per-workspace queries
     # Filter to valid memberships first
@@ -291,6 +297,7 @@ async def list_workspaces(
             role=membership.get("role", ""),
             is_default=ws.get("is_default", False),
             tier=ws.get("tier", "pioneer"),
+            logo_url=ws.get("logo_url"),
             project_count=project_count,
             member_count=member_count,
             is_external=membership.get("is_external", False),
@@ -356,6 +363,7 @@ async def list_workspaces(
                 id=oid,
                 name=org_map.get(oid, ""),
                 role=om.get("role", ""),
+                logo_url=org_logo_map.get(oid),
                 total_projects=sum(w.project_count for w in team_workspaces),
                 total_members=len(all_member_ids),
                 total_audio_hours=round(sum(w.usage.audio_hours for w in team_workspaces), 1),

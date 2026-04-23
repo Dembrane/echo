@@ -7,6 +7,7 @@ import {
 	Button,
 	Container,
 	Group,
+	Image,
 	Loader,
 	Paper,
 	SimpleGrid,
@@ -24,6 +25,7 @@ import { DiscoverableWorkspaces } from "@/components/workspace/DiscoverableWorks
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { displayRole, roleColor } from "@/lib/roles";
+import { logoUrl as resolveLogoUrl } from "@/lib/avatar";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
@@ -50,6 +52,7 @@ interface Workspace {
 	role: string;
 	is_default: boolean;
 	tier: string;
+	logo_url: string | null;
 	project_count: number;
 	member_count: number;
 	is_external: boolean;
@@ -61,6 +64,7 @@ interface TeamRollup {
 	id: string;
 	name: string;
 	role: string;
+	logo_url: string | null;
 	total_projects: number;
 	total_members: number;
 	total_audio_hours: number;
@@ -114,6 +118,16 @@ function WorkspaceCard({
 }: { workspace: Workspace; onSelect: () => void; onManage?: () => void }) {
 	const isAdminOrOwner = workspace.role === "admin" || workspace.role === "owner";
 	const [hovered, setHovered] = useState(false);
+	const wsLogo = resolveLogoUrl(workspace.logo_url);
+	// Calmer meta-line: role + tier as a single dimmed string, no
+	// colored badges. The old design stacked two blue pills which made
+	// every card shout "admin! pioneer!" at once. Only the at-limit
+	// warning keeps color — it's the one actionable exception.
+	const capitalizedTier =
+		workspace.tier.charAt(0).toUpperCase() + workspace.tier.slice(1);
+	const metaParts = workspace.is_external
+		? [t`Guest of ${workspace.org_name}`]
+		: [displayRole(workspace.role), capitalizedTier];
 
 	return (
 		<Paper
@@ -132,67 +146,62 @@ function WorkspaceCard({
 			onBlur={() => setHovered(false)}
 		>
 			<Stack gap={12}>
-				<Group justify="space-between" align="flex-start" wrap="nowrap">
+				<Group gap="sm" wrap="nowrap" align="flex-start">
+					{wsLogo && (
+						<Tooltip
+							label={`${capitalizedTier} · ${displayRole(workspace.role)}`}
+						>
+							<Image
+								src={wsLogo}
+								alt={t`${workspace.name} logo`}
+								h={36}
+								w="auto"
+								fit="contain"
+								style={{ maxWidth: 80, flexShrink: 0 }}
+							/>
+						</Tooltip>
+					)}
 					<Box flex={1} style={{ minWidth: 0 }}>
 						<Text fw={500} size="md" lineClamp={1}>
 							{workspace.name}
 						</Text>
-						{workspace.is_external && (
-							<Text size="xs" c="dimmed" mt={4}>
-								<Trans>guest of {workspace.org_name}</Trans>
-							</Text>
-						)}
-					</Box>
-					<Group gap={6} wrap="nowrap">
-						{/* Matrix §2 HCD decision: role + tier visible on every
-						    workspace card. User should know their standing without
-						    clicking in. Role color-coded: admin/owner blue,
-						    billing yellow, guest gray (guests hide tier too —
-						    matrix §4 guests don't own the tier relationship). */}
-						<Badge
-							size="xs"
-							variant="light"
-							color={
-								workspace.is_external ? "gray" : roleColor(workspace.role)
-							}
+						<Tooltip
+							label={t`${capitalizedTier} — tap to see what's included`}
+							position="bottom-start"
+							withArrow
+							disabled={workspace.is_external}
 						>
-							{workspace.is_external
-								? t`Guest`
-								: displayRole(workspace.role)}
+							<Text size="xs" c="dimmed" lineClamp={1}>
+								{metaParts.join(" · ")}
+							</Text>
+						</Tooltip>
+					</Box>
+					{workspace.usage.at_cap && (
+						<Badge size="xs" color="red" variant="light">
+							<Trans>Included hours used up</Trans>
 						</Badge>
-						{!workspace.is_external && (
-							<TierBadge tier={workspace.tier} size="xs" />
-						)}
-						{/* Tagline via tooltip — cards are dense, inline tagline
-						    would crowd the single-line workspace name. */}
-					</Group>
+					)}
 				</Group>
 
-				<Stack gap={6}>
-					<Group gap="lg" wrap="wrap">
-						<Text size="xs" c="dimmed">
-							{workspace.project_count} {workspace.project_count === 1 ? t`project` : t`projects`}
-						</Text>
-						<Text size="xs" c="dimmed">
-							{workspace.usage.audio_hours}h {t`total`}
-						</Text>
-						<Text size="xs" c="dimmed">
-							<Plural
-								value={workspace.usage.conversation_count}
-								one="# conversation"
-								other="# conversations"
-							/>
-						</Text>
-						{/* Only at-cap (Pilot hard-block) surfaces. Other tiers
-						    bill overage — no alarm badge. Label names the metric
-						    so users don't have to open billing to find out why. */}
-						{workspace.usage.at_cap && (
-							<Badge size="xs" color="red" variant="light">
-								<Trans>Included hours used up</Trans>
-							</Badge>
-						)}
-					</Group>
-				</Stack>
+				<Group gap="lg" wrap="wrap">
+					<Text size="xs" c="dimmed">
+						<Plural
+							value={workspace.project_count}
+							one="# project"
+							other="# projects"
+						/>
+					</Text>
+					<Text size="xs" c="dimmed">
+						{workspace.usage.audio_hours}h {t`total`}
+					</Text>
+					<Text size="xs" c="dimmed">
+						<Plural
+							value={workspace.usage.conversation_count}
+							one="# conversation"
+							other="# conversations"
+						/>
+					</Text>
+				</Group>
 
 				<Group justify="space-between" align="center">
 					<AvatarBubbles
@@ -201,8 +210,6 @@ function WorkspaceCard({
 					/>
 					<Group gap={8}>
 						{isAdminOrOwner && onManage && (
-							// Manage affordance appears on hover/focus — keeps the resting
-							// state calm (designer Ask 5: "⚙ manage shows on row hover").
 							<Button
 								size="compact-xs"
 								variant="subtle"
@@ -313,21 +320,26 @@ function TeamHeroCard({
 		staleTime: 60_000,
 	});
 
+	const teamLogo = resolveLogoUrl(team.logo_url);
+
 	return (
-		<Paper
-			p="lg"
-			radius="md"
-			style={{
-				background:
-					"linear-gradient(135deg, rgba(65,105,225,0.04) 0%, rgba(65,105,225,0.01) 100%)",
-				border: "1px solid rgba(65,105,225,0.15)",
-			}}
-		>
-			<Group justify="space-between" align="flex-start">
-				<Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
-					<Text fw={500} size="lg" lineClamp={1}>
-						{team.name}
-					</Text>
+		<Paper p="lg" radius="md" withBorder>
+			<Group justify="space-between" align="flex-start" wrap="nowrap">
+				<Group gap="md" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+					{teamLogo && (
+						<Image
+							src={teamLogo}
+							alt={t`${team.name} logo`}
+							h={40}
+							w="auto"
+							fit="contain"
+							style={{ maxWidth: 120, flexShrink: 0 }}
+						/>
+					)}
+					<Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
+						<Text fw={500} size="lg" lineClamp={1}>
+							{team.name}
+						</Text>
 					<Text size="xs" c="dimmed">
 						<Plural
 							value={team.workspace_count}
@@ -362,7 +374,8 @@ function TeamHeroCard({
 							</Badge>
 						</Group>
 					)}
-				</Stack>
+					</Stack>
+				</Group>
 				{isAdminOrOwner && (
 					<Button
 						variant="subtle"
