@@ -33,7 +33,9 @@ export const PinnedProjectCard = ({
 	onSearchOwner,
 }: {
 	project: Project;
-	onUnpin: (projectId: string) => void;
+	// Omitted for guests/externals — the card renders the pin badge
+	// as a visual cue but without the unpin affordance.
+	onUnpin?: (projectId: string) => void;
 	isUnpinning?: boolean;
 	onSearchOwner?: (term: string) => void;
 }) => {
@@ -78,21 +80,30 @@ export const PinnedProjectCard = ({
 									{languageLabel}
 								</Badge>
 							)}
-							<Tooltip label={t`Unpin project`}>
-								<ActionIcon
-									variant="subtle"
-									color="primary"
-									size="sm"
-									loading={isUnpinning}
-									onClick={(e) => {
-										e.preventDefault();
-										e.stopPropagation();
-										onUnpin(project.id);
-									}}
-								>
-									<IconPinFilled size={16} />
-								</ActionIcon>
-							</Tooltip>
+							{onUnpin ? (
+								<Tooltip label={t`Unpin project`}>
+									<ActionIcon
+										variant="subtle"
+										color="primary"
+										size="sm"
+										loading={isUnpinning}
+										onClick={(e) => {
+											e.preventDefault();
+											e.stopPropagation();
+											onUnpin(project.id);
+										}}
+									>
+										<IconPinFilled size={16} />
+									</ActionIcon>
+								</Tooltip>
+							) : (
+								// Read-only pin indicator for viewers without write
+								// permission (guest workspaces).
+								<IconPinFilled
+									size={14}
+									color="var(--mantine-color-gray-5)"
+								/>
+							)}
 						</Group>
 					</Group>
 

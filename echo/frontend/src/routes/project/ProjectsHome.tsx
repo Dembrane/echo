@@ -217,6 +217,13 @@ export const ProjectsHomeRoute = () => {
 
 	const canManageWorkspace =
 		workspace?.role === "owner" || workspace?.role === "admin";
+	// Guests (external workspace access) cannot create projects or pin —
+	// their surface is view-only on the workspace level. Gate the CTAs
+	// up front so we don't lure them into a click that 403s.
+	const isExternalGuest = workspace?.is_external === true;
+	const canCreateProject =
+		!isExternalGuest && !user.data?.disable_create_project;
+	const canPinOnThisWorkspace = !isExternalGuest;
 	const totallyEmpty =
 		allProjects.length === 0 &&
 		debouncedSearchValue === "" &&
@@ -285,7 +292,7 @@ export const ProjectsHomeRoute = () => {
 								first one to get started.
 							</Trans>
 						</Text>
-						{!user.data?.disable_create_project && (
+						{canCreateProject && (
 							<Button
 								size="sm"
 								rightSection={<Icons.Plus stroke="white" fill="white" />}
@@ -310,7 +317,9 @@ export const ProjectsHomeRoute = () => {
 										<PinnedProjectCard
 											key={project.id}
 											project={project as Project}
-											onUnpin={handleTogglePin}
+											onUnpin={
+												canPinOnThisWorkspace ? handleTogglePin : undefined
+											}
 											isUnpinning={togglePinMutation.isPending}
 											onSearchOwner={
 												isAdmin ? handleSearchOwner : undefined
@@ -328,7 +337,7 @@ export const ProjectsHomeRoute = () => {
 								<Title order={5} fw={400}>
 									<Trans>All projects</Trans>
 								</Title>
-								{!user.data?.disable_create_project && (
+								{canCreateProject && (
 									<Button
 										size="sm"
 										rightSection={
@@ -414,9 +423,13 @@ export const ProjectsHomeRoute = () => {
 											>
 												<ProjectListItem
 													project={project as Project}
-													onTogglePin={handleTogglePin}
+													onTogglePin={
+														canPinOnThisWorkspace
+															? handleTogglePin
+															: undefined
+													}
 													isPinned={pinnedIds.has(project.id)}
-													canPin={canPin}
+													canPin={canPin && canPinOnThisWorkspace}
 													onSearchOwner={
 														isAdmin ? handleSearchOwner : undefined
 													}
