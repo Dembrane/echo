@@ -126,8 +126,8 @@ function WorkspaceCard({
 			onBlur={() => setHovered(false)}
 		>
 			<Stack gap={12}>
-				<Group justify="space-between" align="flex-start">
-					<Box flex={1}>
+				<Group justify="space-between" align="flex-start" wrap="nowrap">
+					<Box flex={1} style={{ minWidth: 0 }}>
 						<Text fw={500} size="md" lineClamp={1}>
 							{workspace.name}
 						</Text>
@@ -137,9 +137,35 @@ function WorkspaceCard({
 							</Text>
 						)}
 					</Box>
-					<TierBadge tier={workspace.tier} size="xs" />
-					{/* Tagline via tooltip — cards are dense, inline tagline
-					    would crowd the single-line workspace name. */}
+					<Group gap={6} wrap="nowrap">
+						{/* Matrix §2 HCD decision: role + tier visible on every
+						    workspace card. User should know their standing without
+						    clicking in. Role color-coded: admin/owner blue,
+						    billing yellow, guest gray (guests hide tier too —
+						    matrix §4 guests don't own the tier relationship). */}
+						<Badge
+							size="xs"
+							variant="light"
+							color={
+								workspace.is_external
+									? "gray"
+									: workspace.role === "admin" ||
+											workspace.role === "owner"
+										? "blue"
+										: workspace.role === "billing"
+											? "yellow"
+											: "gray"
+							}
+							style={{ textTransform: "capitalize" }}
+						>
+							{workspace.is_external ? t`Guest` : workspace.role}
+						</Badge>
+						{!workspace.is_external && (
+							<TierBadge tier={workspace.tier} size="xs" />
+						)}
+						{/* Tagline via tooltip — cards are dense, inline tagline
+						    would crowd the single-line workspace name. */}
+					</Group>
 				</Group>
 
 				<Group gap="lg">
@@ -180,9 +206,6 @@ function WorkspaceCard({
 								<Trans>Manage</Trans>
 							</Button>
 						)}
-						<Text size="xs" c="dimmed" style={{ textTransform: "capitalize" }}>
-							{workspace.role}
-						</Text>
 					</Group>
 				</Group>
 			</Stack>
