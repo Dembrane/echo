@@ -266,7 +266,9 @@ msgid "{0, plural, one {# conversation will be hidden along with it.} other {# c
 msgstr ""
 
 #. placeholder {0}: workspace.usage.conversation_count
+#. placeholder {0}: p.conversation_count
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:198
+#: src/components/workspace/TeamUsageRollup.tsx:395
 msgid "{0, plural, one {# conversation} other {# conversations}}"
 msgstr ""
 
@@ -296,7 +298,7 @@ msgid "{0, plural, one {# tag} other {# tags}}"
 msgstr "{0, plural, one {# tag} other {# tags}}"
 
 #. placeholder {0}: data.workspaces_at_cap
-#: src/components/workspace/TeamUsageRollup.tsx:202
+#: src/components/workspace/TeamUsageRollup.tsx:187
 msgid "{0, plural, one {# workspace used up its included hours} other {# workspaces used up their included hours}}"
 msgstr ""
 
@@ -507,7 +509,7 @@ msgstr "2. Wanneer een gesprek of rapport plaatsvindt, sturen we de data automat
 msgid "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
 msgstr "3. Uw systeem ontvangt de gegevens en kan erop reageren (bijvoorbeeld opslaan in een database, e-mail verzenden, spreadsheet bijwerken)"
 
-#: src/components/workspace/TeamUsageRollup.tsx:274
+#: src/components/workspace/TeamUsageRollup.tsx:317
 msgid "80%+ of included hours used this month"
 msgstr ""
 
@@ -547,6 +549,10 @@ msgstr ""
 #: src/routes/invite/MyInvitesRoute.tsx:141
 #: src/routes/invite/AcceptInviteRoute.tsx:128
 msgid "Accept and join"
+msgstr ""
+
+#: src/components/workspace/ReferralsPanel.tsx:125
+msgid "accepted"
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:524
@@ -1615,8 +1621,8 @@ msgid "Click to see all {totalCount} conversations"
 msgstr "Klik om alle {totalCount} gesprekken te zien"
 
 #: src/components/workspace/TeamUsageRollup.tsx:194
-msgid "Click to see which"
-msgstr ""
+#~ msgid "Click to see which"
+#~ msgstr ""
 
 #: src/components/settings/LegalBasisSettingsCard.tsx:112
 msgid "Client-managed"
@@ -1869,6 +1875,7 @@ msgstr "Gesprekken:"
 msgid "participant.refine.cooling.down"
 msgstr "Even afkoelen. Beschikbaar over {0}"
 
+#: src/components/workspace/ReferralsPanel.tsx:70
 #: src/components/settings/TwoFactorSettingsCard.tsx:431
 #: src/components/project/ProjectQRCode.tsx:167
 #: src/components/conversation/CopyConversationTranscript.tsx:48
@@ -1900,6 +1907,7 @@ msgid "Copy"
 msgstr "Kopieer"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1156
+#: src/components/workspace/ReferralsPanel.tsx:70
 #: src/components/project/ProjectQRCode.tsx:167
 msgid "Copy link"
 msgstr "Kopieer link"
@@ -1911,6 +1919,10 @@ msgstr "Link naar klembord kopiëren"
 #: src/routes/project/report/ProjectReportRoute.tsx:203
 #~ msgid "Copy link to share this report"
 #~ msgstr "Kopieer link om dit rapport te delen"
+
+#: src/components/workspace/ReferralsPanel.tsx:80
+msgid "Copy referral link"
+msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1187
 msgid "Copy report content"
@@ -2083,6 +2095,10 @@ msgstr "Gemaakt op"
 msgid "Creating in <0>{0}</0>"
 msgstr ""
 
+#: src/components/workspace/ReferralsPanel.tsx:133
+msgid "credits earned"
+msgstr ""
+
 #: src/components/settings/AccountSettingsCard.tsx:224
 msgid "Crop Avatar"
 msgstr "Avatar bijsnijden"
@@ -2133,7 +2149,7 @@ msgstr ""
 #~ msgstr "Pas de structuur van uw rapport aan. Deze functie komt binnenkort."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:534
-#: src/routes/team/TeamRoute.tsx:987
+#: src/routes/team/TeamRoute.tsx:986
 msgid "Danger"
 msgstr ""
 
@@ -2295,7 +2311,7 @@ msgstr ""
 msgid "Deleted successfully"
 msgstr "Verwijderd succesvol"
 
-#: src/routes/team/TeamRoute.tsx:990
+#: src/routes/team/TeamRoute.tsx:989
 msgid "Deleting a team is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
 msgstr ""
 
@@ -2628,6 +2644,10 @@ msgstr "E-mail"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1148
 #: src/routes/auth/Register.tsx:139
 msgid "Email address"
+msgstr ""
+
+#: src/components/workspace/ReferralsPanel.tsx:100
+msgid "Email it"
 msgstr ""
 
 #: src/routes/auth/VerifyEmail.tsx:42
@@ -3446,7 +3466,7 @@ msgstr ""
 msgid "Guest of {0}"
 msgstr ""
 
-#: src/components/workspace/TeamUsageRollup.tsx:172
+#: src/components/workspace/TeamUsageRollup.tsx:163
 msgid "guests"
 msgstr ""
 
@@ -3517,6 +3537,10 @@ msgstr "Verbergen"
 msgid "Hide data"
 msgstr "Gegevens verbergen"
 
+#: src/components/workspace/TeamUsageRollup.tsx:298
+msgid "Hide projects"
+msgstr ""
+
 #: src/components/settings/AuditLogsCard.tsx:245
 msgid "Hide revision data"
 msgstr "Revisiegegevens verbergen"
@@ -3529,13 +3553,13 @@ msgstr "Specifiek Concept markeren"
 #~ msgid "Home"
 #~ msgstr "Home"
 
-#: src/components/workspace/TeamUsageRollup.tsx:151
+#: src/components/workspace/TeamUsageRollup.tsx:142
 msgid "hours"
 msgstr ""
 
 #: src/components/workspace/TeamUsageRollup.tsx:243
-msgid "Hours"
-msgstr ""
+#~ msgid "Hours"
+#~ msgstr ""
 
 #: src/components/workspace/WorkspaceHomeSummary.tsx:139
 #~ msgid "hours this month"
@@ -3607,7 +3631,7 @@ msgstr "Als je webhook-integraties instelt, zouden we graag weten wat je voor ge
 
 #. placeholder {0}: formatCycleMonth(data.cycle_start)
 #. placeholder {1}: data.workspace_count
-#: src/components/workspace/TeamUsageRollup.tsx:155
+#: src/components/workspace/TeamUsageRollup.tsx:146
 msgid "in {0} · {1} workspaces"
 msgstr ""
 
@@ -3641,7 +3665,7 @@ msgstr "Portallink opnemen"
 msgid "Included hours used up"
 msgstr ""
 
-#: src/components/workspace/TeamUsageRollup.tsx:267
+#: src/components/workspace/TeamUsageRollup.tsx:310
 msgid "Included hours used up this month"
 msgstr ""
 
@@ -3703,6 +3727,10 @@ msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1125
 msgid "Invite a member"
+msgstr ""
+
+#: src/components/workspace/ReferralsPanel.tsx:48
+msgid "Invite another team, we both get credit"
 msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:353
@@ -3980,6 +4008,10 @@ msgstr "Kenteken"
 msgid "Link"
 msgstr "Link"
 
+#: src/components/workspace/ReferralsPanel.tsx:78
+msgid "Link copied"
+msgstr ""
+
 #: src/components/settings/LegalBasisSettingsCard.tsx:123
 msgid "Link to your organisation's privacy policy that will be shown to participants"
 msgstr "Link naar de privacyverklaring van uw organisatie die aan deelnemers wordt getoond"
@@ -4039,6 +4071,10 @@ msgstr "Collecties worden geladen..."
 #: src/components/participant/MicrophoneTest.tsx:314
 msgid "Loading microphones..."
 msgstr "Microfoons laden..."
+
+#: src/components/workspace/TeamUsageRollup.tsx:376
+msgid "Loading projects…"
+msgstr ""
 
 #: src/components/conversation/CopyConversationTranscript.tsx:27
 #: src/components/conversation/CopyConversationTranscript.tsx:46
@@ -4512,6 +4548,10 @@ msgstr ""
 msgid "No pending invites"
 msgstr ""
 
+#: src/components/workspace/TeamUsageRollup.tsx:380
+msgid "No project activity this period."
+msgstr ""
+
 #. placeholder {0}: search && `with "${search}"`
 #: src/components/conversation/MoveConversationButton.tsx:184
 msgid "No projects found {0}"
@@ -4865,9 +4905,13 @@ msgstr "resultaten"
 msgid "Outcomes"
 msgstr "Resultaten"
 
-#: src/components/workspace/TeamUsageRollup.tsx:249
-msgid "Overage"
+#: src/components/workspace/TeamUsageRollup.tsx:218
+msgid "Over"
 msgstr ""
+
+#: src/components/workspace/TeamUsageRollup.tsx:249
+#~ msgid "Overage"
+#~ msgstr ""
 
 #: src/routes/team/TeamRoute.tsx:409
 #: src/components/layout/ProjectConversationLayout.tsx:44
@@ -5102,8 +5146,8 @@ msgid "People with access"
 msgstr ""
 
 #: src/components/workspace/TeamUsageRollup.tsx:224
-msgid "Per-workspace breakdown"
-msgstr ""
+#~ msgid "Per-workspace breakdown"
+#~ msgstr ""
 
 #: src/components/workspace/PeriodSelect.tsx:50
 msgid "Period"
@@ -5553,11 +5597,10 @@ msgstr "Project Instellingen"
 #~ msgid "project.sidebar.chat.end.description"
 #~ msgstr "Einde van de lijst • Alle {0} gesprekken geladen"
 
-#: src/components/workspace/TeamUsageRollup.tsx:179
+#: src/components/workspace/TeamUsageRollup.tsx:170
 msgid "projects"
 msgstr ""
 
-#: src/routes/team/TeamRoute.tsx:421
 #: src/components/workspace/UsageCard.tsx:260
 msgid "Projects"
 msgstr "Projecten"
@@ -5737,8 +5780,12 @@ msgstr "Terugkerende thema's"
 msgid "References"
 msgstr "Referenties"
 
+#: src/routes/team/TeamRoute.tsx:421
+msgid "Referrals"
+msgstr ""
+
 #: src/components/workspace/UsageCard.tsx:287
-#: src/components/workspace/TeamUsageRollup.tsx:131
+#: src/components/workspace/TeamUsageRollup.tsx:122
 #: src/components/project/ProjectPortalEditor.tsx:1697
 msgid "Refresh"
 msgstr "Vernieuwen"
@@ -5747,7 +5794,7 @@ msgstr "Vernieuwen"
 msgid "Refresh audit logs"
 msgstr "Auditlogboeken vernieuwen"
 
-#: src/components/workspace/TeamUsageRollup.tsx:138
+#: src/components/workspace/TeamUsageRollup.tsx:129
 msgid "Refresh team usage"
 msgstr ""
 
@@ -5890,8 +5937,8 @@ msgstr "Chat hernoemen"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1434
 #: src/routes/team/TeamRoute.tsx:965
-msgid "Replace logo"
-msgstr ""
+#~ msgid "Replace logo"
+#~ msgstr ""
 
 #: src/components/project/ProjectPortalEditor.tsx:972
 msgid "Reply Prompt"
@@ -6300,7 +6347,7 @@ msgstr "Doorzocht de meest relevante bronnen"
 msgid "Searching through the most relevant sources"
 msgstr "Zoeken door de meest relevante bronnen"
 
-#: src/components/workspace/TeamUsageRollup.tsx:165
+#: src/components/workspace/TeamUsageRollup.tsx:156
 msgid "seats"
 msgstr ""
 
@@ -6454,6 +6501,10 @@ msgstr ""
 msgid "Send Slack/Teams notifications when new conversations are completed"
 msgstr "Stuur Slack/Teams notificaties wanneer nieuwe gesprekken zijn voltooid"
 
+#: src/components/workspace/ReferralsPanel.tsx:117
+msgid "sent"
+msgstr ""
+
 #~ msgid "Sentiment"
 #~ msgstr "Gevoel"
 
@@ -6526,6 +6577,10 @@ msgstr "Deel je gegevens hier"
 #: src/components/report/CreateReportForm.tsx:332
 msgid "Share your ideas with our team"
 msgstr "Deel uw ideeën met ons team"
+
+#: src/components/workspace/ReferralsPanel.tsx:52
+msgid "Share your link with another team. When they upgrade to a paid tier, both of you get an hour of usage credit on us."
+msgstr ""
 
 #: src/components/report/ReportRenderer.tsx:34
 #~ msgid "Share your voice"
@@ -6602,6 +6657,10 @@ msgstr "Minder tonen"
 #: src/components/announcement/AnnouncementItem.tsx:132
 msgid "Show more"
 msgstr "Meer tonen"
+
+#: src/components/workspace/TeamUsageRollup.tsx:298
+msgid "Show projects"
+msgstr ""
 
 #: src/components/common/ReferencesIconButton.tsx:15
 #: src/components/common/ReferencesIconButton.tsx:22
@@ -6821,6 +6880,10 @@ msgstr "Opnieuw beginnen"
 #~ msgid "Start Recording"
 #~ msgstr "Opname starten"
 
+#: src/components/workspace/ReferralsPanel.tsx:138
+msgid "Stats light up once your first referral lands."
+msgstr ""
+
 #: src/components/report/ConversationStatusTable.tsx:61
 msgid "Status"
 msgstr "Status"
@@ -7013,7 +7076,7 @@ msgstr ""
 #~ msgid "Team settings | dembrane"
 #~ msgstr ""
 
-#: src/components/workspace/TeamUsageRollup.tsx:127
+#: src/components/workspace/TeamUsageRollup.tsx:118
 msgid "Team usage"
 msgstr ""
 
@@ -7362,7 +7425,7 @@ msgid "Three quick steps and you're in."
 msgstr ""
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:346
-#: src/components/workspace/TeamUsageRollup.tsx:238
+#: src/components/workspace/TeamUsageRollup.tsx:208
 msgid "Tier"
 msgstr ""
 
@@ -7816,7 +7879,7 @@ msgstr "Bestanden uploaden"
 #~ msgstr "Upload bezig"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1436
-#: src/routes/team/TeamRoute.tsx:967
+#: src/routes/team/TeamRoute.tsx:966
 msgid "Upload logo"
 msgstr ""
 
@@ -7881,6 +7944,10 @@ msgstr ""
 #: src/routes/project/chat/ProjectChatRoute.tsx:932
 msgid "Use Shift + Enter to add a new line"
 msgstr "Gebruik Shift + Enter om een nieuwe regel toe te voegen"
+
+#: src/components/workspace/TeamUsageRollup.tsx:213
+msgid "Used / Included"
+msgstr ""
 
 #: src/components/common/RedactedText.tsx:44
 msgid "Username"
@@ -8287,7 +8354,7 @@ msgstr "wordt in je rapport opgenomen"
 msgid "workspace"
 msgstr ""
 
-#: src/components/workspace/TeamUsageRollup.tsx:233
+#: src/components/workspace/TeamUsageRollup.tsx:203
 #: src/components/workspace/TeamProjectsTable.tsx:209
 msgid "Workspace"
 msgstr ""
@@ -8527,6 +8594,14 @@ msgstr "De generatie van je laatste rapport is geannuleerd. Je meest recente vol
 #: src/components/settings/AccountSettingsCard.tsx:178
 msgid "Your name"
 msgstr "Uw naam"
+
+#: src/components/workspace/ReferralsPanel.tsx:65
+msgid "Your referral link"
+msgstr ""
+
+#: src/components/workspace/ReferralsPanel.tsx:109
+msgid "Your referrals"
+msgstr ""
 
 #: src/routes/participant/ParticipantPostConversation.tsx:125
 msgid "Your response has been recorded. You may now close this tab."

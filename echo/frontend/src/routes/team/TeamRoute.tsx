@@ -39,7 +39,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
-import { TeamProjectsTable } from "@/components/workspace/TeamProjectsTable";
+import { ReferralsPanel } from "@/components/workspace/ReferralsPanel";
 import { TeamUsageRollup } from "@/components/workspace/TeamUsageRollup";
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { API_BASE_URL } from "@/config";
@@ -244,7 +244,7 @@ export const TeamRoute = () => {
 	// URL-driven tab state. Tab lives in the path segment
 	// (`/t/:teamId/<tab>`) so browser back steps between tabs and URLs
 	// are shareable.
-	const allowedTabs = ["overview", "usage", "people", "projects"] as const;
+	const allowedTabs = ["overview", "usage", "people", "referrals"] as const;
 	type TabValue = (typeof allowedTabs)[number];
 	const segment = (splat ?? "").split("/")[0] || "";
 	const viewRaw: TabValue = (allowedTabs as readonly string[]).includes(segment)
@@ -417,8 +417,8 @@ export const TeamRoute = () => {
 							<Trans>People</Trans>
 						</Tabs.Tab>
 						{isAdmin && (
-							<Tabs.Tab value="projects">
-								<Trans>Projects</Trans>
+							<Tabs.Tab value="referrals">
+								<Trans>Referrals</Trans>
 							</Tabs.Tab>
 						)}
 					</Tabs.List>
@@ -440,9 +440,9 @@ export const TeamRoute = () => {
 						</Tabs.Panel>
 					)}
 
-					{isAdmin && (
-						<Tabs.Panel value="projects" pt="md">
-							{teamId && <TeamProjectsTable orgId={teamId} />}
+					{isAdmin && teamId && (
+						<Tabs.Panel value="referrals" pt="md">
+							<ReferralsPanel teamId={teamId} />
 						</Tabs.Panel>
 					)}
 
@@ -946,29 +946,28 @@ function OverviewPanel({
 							<Trans>No logo set — dembrane default will be used.</Trans>
 						</Text>
 					)}
-					<FileButton
-						resetRef={logoResetRef}
-						onChange={handleLogoSelect}
-						accept="image/png,image/jpeg,image/webp"
-						disabled={!canEdit}
-					>
-						{(props) => (
-							<Button
-								variant="light"
-								size="compact-sm"
-								leftSection={<IconUpload size={14} />}
-								loading={uploadLogoMutation.isPending}
-								style={{ alignSelf: "flex-start" }}
-								{...props}
-							>
-								{currentTeamLogoUrl ? (
-									<Trans>Replace logo</Trans>
-								) : (
+					{/* No single-click "Replace" — destructive step is explicit. */}
+					{!currentTeamLogoUrl && (
+						<FileButton
+							resetRef={logoResetRef}
+							onChange={handleLogoSelect}
+							accept="image/png,image/jpeg,image/webp"
+							disabled={!canEdit}
+						>
+							{(props) => (
+								<Button
+									variant="light"
+									size="compact-sm"
+									leftSection={<IconUpload size={14} />}
+									loading={uploadLogoMutation.isPending}
+									style={{ alignSelf: "flex-start" }}
+									{...props}
+								>
 									<Trans>Upload logo</Trans>
-								)}
-							</Button>
-						)}
-					</FileButton>
+								</Button>
+							)}
+						</FileButton>
+					)}
 				</Stack>
 			</Stack>
 

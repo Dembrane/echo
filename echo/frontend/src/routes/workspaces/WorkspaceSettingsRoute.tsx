@@ -1415,29 +1415,29 @@ function PrivacyAndDefaultsSection({
 						<Trans>No logo set — dembrane default will be used.</Trans>
 					</Text>
 				)}
-				<FileButton
-					resetRef={logoResetRef}
-					onChange={handleLogoSelect}
-					accept="image/png,image/jpeg,image/webp"
-					disabled={!canEdit}
-				>
-					{(props) => (
-						<Button
-							variant="light"
-							size="compact-sm"
-							leftSection={<IconUpload size={14} />}
-							loading={uploadLogoMutation.isPending}
-							style={{ alignSelf: "flex-start" }}
-							{...props}
-						>
-							{currentLogoUrl ? (
-								<Trans>Replace logo</Trans>
-							) : (
+				{/* No single-click "Replace" — destructive step is explicit.
+				    Remove, then the slot re-opens to upload again. */}
+				{!currentLogoUrl && (
+					<FileButton
+						resetRef={logoResetRef}
+						onChange={handleLogoSelect}
+						accept="image/png,image/jpeg,image/webp"
+						disabled={!canEdit}
+					>
+						{(props) => (
+							<Button
+								variant="light"
+								size="compact-sm"
+								leftSection={<IconUpload size={14} />}
+								loading={uploadLogoMutation.isPending}
+								style={{ alignSelf: "flex-start" }}
+								{...props}
+							>
 								<Trans>Upload logo</Trans>
-							)}
-						</Button>
-					)}
-				</FileButton>
+							</Button>
+						)}
+					</FileButton>
+				)}
 			</Stack>
 		</Stack>
 	);

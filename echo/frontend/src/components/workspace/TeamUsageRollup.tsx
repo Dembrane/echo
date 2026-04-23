@@ -26,6 +26,7 @@ interface OrgUsageWorkspaceRow {
 	audio_hours: number;
 	hours_included: number | null;
 	hours_pct: number | null;
+	hours_over: number;
 	at_cap: boolean;
 	approaching_cap: boolean;
 	overage_forecast_eur: number | null;
@@ -66,12 +67,6 @@ function formatCycleMonth(iso: string): string {
 	return d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 }
 
-function formatEur(value: number | null | undefined): string {
-	if (value == null) return "—";
-	if (value === 0) return "€0";
-	return `€${Math.round(value)}`;
-}
-
 /**
  * Team-level usage rollup strip (matrix §8 team scope).
  *
@@ -85,10 +80,6 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 	const queryClient = useQueryClient();
 	const navigate = useI18nNavigate();
 	const [refreshing, setRefreshing] = useState(false);
-	// Default-expanded: team admins come to this page specifically for
-	// the per-workspace breakdown (audit 2026-04-23). Collapse is a
-	// disclosure option, not the resting state.
-	const [expanded, setExpanded] = useState(true);
 	const [monthOffset, setMonthOffset] = useState(0);
 
 	const { data, isLoading } = useQuery({
@@ -189,149 +180,237 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 					<Group gap="xs" mt={4} wrap="nowrap">
 						{/* At-limit only fires on Pilot (the only tier with a
 						    hard block). Other tiers bill overage and keep going;
-						    no warning badge. Click expands the per-workspace
-						    breakdown so admins see which pilot is stuck. */}
-						<Tooltip label={t`Click to see which`}>
-							<Badge
-								size="sm"
-								color="red"
-								variant="light"
-								style={{ cursor: "pointer" }}
-								onClick={() => setExpanded(true)}
-							>
-								<Plural
-									value={data.workspaces_at_cap}
-									one="# workspace used up its included hours"
-									other="# workspaces used up their included hours"
-								/>
-							</Badge>
-						</Tooltip>
+						    no warning badge. The per-workspace row below it is
+						    always visible now, so we're pointing at a row, not
+						    a disclosure. */}
+						<Badge size="sm" color="red" variant="light">
+							<Plural
+								value={data.workspaces_at_cap}
+								one="# workspace used up its included hours"
+								other="# workspaces used up their included hours"
+							/>
+						</Badge>
 					</Group>
 				)}
 
 				{data.workspaces.length > 0 && (
-					<Stack gap={6} mt={4}>
-						<UnstyledButton
-							onClick={() => setExpanded((v) => !v)}
-							style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
-						>
-							{expanded ? (
-								<IconChevronDown size={12} />
-							) : (
-								<IconChevronRight size={12} />
-							)}
-							<Text size="xs" c="dimmed">
-								<Trans>Per-workspace breakdown</Trans>
-							</Text>
-						</UnstyledButton>
-						{expanded && (
-							<Table verticalSpacing="xs" striped highlightOnHover>
-								<Table.Thead>
-									<Table.Tr>
-										<Table.Th>
-											<Text size="xs" c="dimmed">
-												<Trans>Workspace</Trans>
-											</Text>
-										</Table.Th>
-										<Table.Th>
-											<Text size="xs" c="dimmed">
-												<Trans>Tier</Trans>
-											</Text>
-										</Table.Th>
-										<Table.Th style={{ width: 200 }}>
-											<Text size="xs" c="dimmed">
-												<Trans>Hours</Trans>
-											</Text>
-										</Table.Th>
-										{data.total_overage_forecast_eur != null && (
-											<Table.Th style={{ textAlign: "right" }}>
-												<Text size="xs" c="dimmed">
-													<Trans>Overage</Trans>
-												</Text>
-											</Table.Th>
-										)}
-									</Table.Tr>
-								</Table.Thead>
-								<Table.Tbody>
-									{data.workspaces.map((ws) => (
-										<Table.Tr
-											key={ws.id}
-											style={{ cursor: "pointer" }}
-											onClick={() =>
-												navigate(`/w/${ws.id}/settings/billing`)
-											}
-										>
-											<Table.Td>
-												<Group gap={6} wrap="nowrap">
-													{ws.at_cap && (
-														<Tooltip label={t`Included hours used up this month`}>
-															<Badge size="xs" color="red" variant="light">
-																!
-															</Badge>
-														</Tooltip>
-													)}
-													{!ws.at_cap && ws.approaching_cap && (
-														<Tooltip label={t`80%+ of included hours used this month`}>
-															<Badge size="xs" color="yellow" variant="light">
-																·
-															</Badge>
-														</Tooltip>
-													)}
-													<Text size="sm" truncate>
-														{ws.name}
-													</Text>
-												</Group>
-											</Table.Td>
-											<Table.Td>
-												<Text
-													size="xs"
-													c="dimmed"
-													style={{ textTransform: "capitalize" }}
-												>
-													{ws.tier}
-												</Text>
-											</Table.Td>
-											<Table.Td>
-												<Stack gap={2}>
-													<Text size="xs">
-														{ws.audio_hours.toFixed(1)}
-														{ws.hours_included != null && (
-															<Text span c="dimmed" size="xs">
-																{" / "}
-																{ws.hours_included}
-															</Text>
-														)}
-													</Text>
-													{ws.hours_pct != null && (
-														<Progress
-															value={Math.min(100, ws.hours_pct * 100)}
-															size="xs"
-															color={
-																ws.at_cap
-																	? "red"
-																	: ws.approaching_cap
-																		? "yellow"
-																		: "blue"
-															}
-														/>
-													)}
-												</Stack>
-											</Table.Td>
-											{data.total_overage_forecast_eur != null && (
-												<Table.Td style={{ textAlign: "right" }}>
-													<Text size="xs">
-														{formatEur(ws.overage_forecast_eur)}
-													</Text>
-												</Table.Td>
-											)}
-										</Table.Tr>
-									))}
-								</Table.Tbody>
-							</Table>
-						)}
-					</Stack>
+					<Table verticalSpacing="xs" striped highlightOnHover mt={4}>
+						<Table.Thead>
+							<Table.Tr>
+								<Table.Th style={{ width: 28 }} />
+								<Table.Th>
+									<Text size="xs" c="dimmed">
+										<Trans>Workspace</Trans>
+									</Text>
+								</Table.Th>
+								<Table.Th>
+									<Text size="xs" c="dimmed">
+										<Trans>Tier</Trans>
+									</Text>
+								</Table.Th>
+								<Table.Th style={{ width: 220 }}>
+									<Text size="xs" c="dimmed">
+										<Trans>Used / Included</Trans>
+									</Text>
+								</Table.Th>
+								<Table.Th style={{ textAlign: "right", width: 100 }}>
+									<Text size="xs" c="dimmed">
+										<Trans>Over</Trans>
+									</Text>
+								</Table.Th>
+							</Table.Tr>
+						</Table.Thead>
+						<Table.Tbody>
+							{data.workspaces.map((ws) => (
+								<WorkspaceRollupRow
+									key={ws.id}
+									ws={ws}
+									monthOffset={monthOffset}
+									onOpenBilling={() =>
+										navigate(`/w/${ws.id}/settings/billing`)
+									}
+								/>
+							))}
+						</Table.Tbody>
+					</Table>
 				)}
 			</Stack>
 		</Paper>
 	);
 };
+
+interface ProjectUsage {
+	id: string;
+	name: string;
+	audio_hours: number;
+	conversation_count: number;
+}
+
+async function fetchWorkspaceUsage(
+	workspaceId: string,
+	monthOffset: number,
+): Promise<{ projects: ProjectUsage[] } | null> {
+	const params = new URLSearchParams();
+	if (monthOffset > 0) params.set("month_offset", String(monthOffset));
+	const qs = params.toString();
+	const url = `${API_BASE_URL}/v2/workspaces/${workspaceId}/usage${qs ? `?${qs}` : ""}`;
+	const res = await fetch(url, { credentials: "include" });
+	if (!res.ok) return null;
+	return res.json();
+}
+
+/**
+ * Row inside the team-usage table. Chevron reveals the workspace's
+ * per-project breakdown. The workspace name itself is a click target
+ * into that workspace's billing tab.
+ *
+ * Project data loads lazily on first expand and shares the same
+ * React Query cache key the per-workspace UsageCard uses, so later
+ * navigation hits a warm cache.
+ */
+function WorkspaceRollupRow({
+	ws,
+	monthOffset,
+	onOpenBilling,
+}: {
+	ws: OrgUsageWorkspaceRow;
+	monthOffset: number;
+	onOpenBilling: () => void;
+}) {
+	const [open, setOpen] = useState(false);
+	const { data: wsUsage, isLoading } = useQuery({
+		queryKey: ["v2", "workspace-usage", ws.id, monthOffset],
+		queryFn: () => fetchWorkspaceUsage(ws.id, monthOffset),
+		enabled: open,
+		staleTime: 60_000,
+	});
+	const projects = wsUsage?.projects ?? [];
+
+	return (
+		<>
+			<Table.Tr>
+				<Table.Td>
+					<ActionIcon
+						size="xs"
+						variant="subtle"
+						color="gray"
+						onClick={() => setOpen((v) => !v)}
+						aria-label={open ? t`Hide projects` : t`Show projects`}
+					>
+						{open ? (
+							<IconChevronDown size={12} />
+						) : (
+							<IconChevronRight size={12} />
+						)}
+					</ActionIcon>
+				</Table.Td>
+				<Table.Td>
+					<Group gap={6} wrap="nowrap">
+						{ws.at_cap && (
+							<Tooltip label={t`Included hours used up this month`}>
+								<Badge size="xs" color="red" variant="light">
+									!
+								</Badge>
+							</Tooltip>
+						)}
+						{!ws.at_cap && ws.approaching_cap && (
+							<Tooltip label={t`80%+ of included hours used this month`}>
+								<Badge size="xs" color="yellow" variant="light">
+									·
+								</Badge>
+							</Tooltip>
+						)}
+						<UnstyledButton
+							onClick={onOpenBilling}
+							style={{ cursor: "pointer" }}
+						>
+							<Text size="sm" truncate>
+								{ws.name}
+							</Text>
+						</UnstyledButton>
+					</Group>
+				</Table.Td>
+				<Table.Td>
+					<Text size="xs" c="dimmed" style={{ textTransform: "capitalize" }}>
+						{ws.tier}
+					</Text>
+				</Table.Td>
+				<Table.Td>
+					<Stack gap={2}>
+						<Text size="xs">
+							{ws.audio_hours.toFixed(1)}
+							{ws.hours_included != null && (
+								<Text span c="dimmed" size="xs">
+									{" / "}
+									{ws.hours_included}
+								</Text>
+							)}
+						</Text>
+						{ws.hours_pct != null && (
+							<Progress
+								value={Math.min(100, ws.hours_pct * 100)}
+								size="xs"
+								color={
+									ws.at_cap
+										? "red"
+										: ws.approaching_cap
+											? "yellow"
+											: "blue"
+								}
+							/>
+						)}
+					</Stack>
+				</Table.Td>
+				<Table.Td style={{ textAlign: "right" }}>
+					<Text size="xs" c={ws.hours_over > 0 ? "red" : "dimmed"}>
+						{ws.hours_over > 0 ? `${ws.hours_over.toFixed(1)} h` : "—"}
+					</Text>
+				</Table.Td>
+			</Table.Tr>
+			{open && (
+				<Table.Tr>
+					<Table.Td />
+					<Table.Td colSpan={4}>
+						{isLoading ? (
+							<Text size="xs" c="dimmed" py={4}>
+								<Trans>Loading projects…</Trans>
+							</Text>
+						) : projects.length === 0 ? (
+							<Text size="xs" c="dimmed" py={4}>
+								<Trans>No project activity this period.</Trans>
+							</Text>
+						) : (
+							<Stack gap={4} py={4}>
+								{projects.map((p) => (
+									<Group
+										key={p.id}
+										gap="sm"
+										wrap="nowrap"
+										justify="space-between"
+									>
+										<Text size="xs" truncate style={{ flex: 1 }}>
+											{p.name || "Untitled"}
+										</Text>
+										<Text size="xs" c="dimmed">
+											<Plural
+												value={p.conversation_count}
+												one="# conversation"
+												other="# conversations"
+											/>
+										</Text>
+										<Text
+											size="xs"
+											style={{ minWidth: 50, textAlign: "right" }}
+										>
+											{p.audio_hours.toFixed(1)} h
+										</Text>
+									</Group>
+								))}
+							</Stack>
+						)}
+					</Table.Td>
+				</Table.Tr>
+			)}
+		</>
+	);
+}

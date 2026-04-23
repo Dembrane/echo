@@ -1062,6 +1062,7 @@ class OrgUsageWorkspaceRow(BaseModel):
     audio_hours: float
     hours_included: Optional[int]      # None = unlimited tier
     hours_pct: Optional[float]         # 0..1 progress; None when unlimited
+    hours_over: float                  # max(0, audio_hours - hours_included)
     at_cap: bool                       # Pilot + at/over cap
     approaching_cap: bool              # >=80% on capped tiers
     # Admin / billing only:
@@ -1297,6 +1298,11 @@ async def get_org_usage(
             )
             forecast += ws_forecast_eur
 
+        hours_over = (
+            round(max(0.0, hours - hours_included), 2)
+            if hours_included is not None
+            else 0.0
+        )
         ws_rows.append({
             "id": wid,
             "name": name,
@@ -1304,6 +1310,7 @@ async def get_org_usage(
             "audio_hours": round(hours, 2),
             "hours_included": hours_included,
             "hours_pct": hours_pct,
+            "hours_over": hours_over,
             "at_cap": ws_at_cap,
             "approaching_cap": ws_approaching,
             "overage_forecast_eur": (
