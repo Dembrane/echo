@@ -45,7 +45,7 @@ export const TierBadge = ({
 			<Group gap={6} wrap="nowrap">
 				{badge}
 				<Text size="xs" c="dimmed">
-					— {tagline}
+					· {tagline}
 				</Text>
 			</Group>
 		);

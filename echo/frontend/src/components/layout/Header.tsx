@@ -22,7 +22,7 @@ import {
 	IconUsers,
 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 import {
 	useAuthenticated,
 	useCurrentUser,
@@ -86,6 +86,21 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 	const needsOnboarding = meV2?.onboarding_completed === false;
 	const hasPendingInvites = meV2?.has_pending_invites === true;
 	const { workspaceId, workspaceName } = useWorkspace();
+	const location = useLocation();
+	// Workspace breadcrumb in the header is noise on pages that ARE the
+	// selector or team canvas — those pages own the workspace pick / team
+	// context directly. Hide it on /w (selector), /w/new (create wizard),
+	// and /t/:teamId (team surfaces). Path-match is locale-aware (prefix
+	// may include /en or similar).
+	const pathNoLocale = location.pathname.replace(
+		/^\/[a-z]{2}(-[A-Z]{2})?(?=\/)/,
+		"",
+	);
+	const hideWorkspaceBreadcrumb =
+		pathNoLocale === "/w" ||
+		pathNoLocale === "/w/" ||
+		pathNoLocale.startsWith("/w/new") ||
+		pathNoLocale.startsWith("/t/");
 	const navigate = useI18nNavigate();
 	const { runTransition } = useTransitionCurtain();
 	const { setLogoUrl } = useWhitelabelLogo();
@@ -160,7 +175,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 								<Logo hideTitle={false} />
 							</Group>
 						</I18nLink>
-						{workspaceName && isAuthenticated && (
+						{workspaceName && isAuthenticated && !hideWorkspaceBreadcrumb && (
 							<Group gap={6} align="center" style={{ cursor: "pointer" }} onClick={() => navigate("/w")}>
 								<Text size="xs" c="dimmed" lh={1}>/</Text>
 								<Text size="sm" c="dimmed" lineClamp={1} maw={160} lh={1}>

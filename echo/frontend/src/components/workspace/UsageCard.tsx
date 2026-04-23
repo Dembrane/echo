@@ -166,7 +166,7 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 						{data.tier_tagline && (
 							<Text size="xs" c="dimmed">
 								<span style={{ textTransform: "capitalize" }}>{data.tier}</span>
-								{" — "}
+								{" · "}
 								{data.tier_tagline}
 							</Text>
 						)}
@@ -290,7 +290,7 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 								<Group justify="space-between" align="center" wrap="nowrap">
 									<Text size="xs" c="dimmed">
 										<Trans>
-											Next tier: {data.next_tier.tier} — {data.next_tier.tagline}
+											Next tier: {data.next_tier.tier} · {data.next_tier.tagline}
 										</Trans>
 										{data.next_tier.price_eur_monthly != null && (
 											<>

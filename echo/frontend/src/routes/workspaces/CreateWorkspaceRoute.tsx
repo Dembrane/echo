@@ -251,7 +251,7 @@ export const CreateWorkspaceRoute = () => {
 					<Stepper.Step label={t`Access`}>
 						<Stack gap={14} mt="md">
 							<Radio.Group
-								label={t`Who can find this workspace?`}
+								label={t`Who can see this workspace?`}
 								description={t`You can change this later in workspace settings.`}
 								value={privacy}
 								onChange={(v) => setPrivacy(v as Privacy)}
@@ -266,8 +266,8 @@ export const CreateWorkspaceRoute = () => {
 												</Text>
 												<Text size="xs" c="dimmed">
 													<Trans>
-														Team admins can join. Team members can see it
-														and request access.
+														Everyone on your team can find it. Admins
+														can join directly; members can ask to join.
 													</Trans>
 												</Text>
 											</Stack>
@@ -279,14 +279,12 @@ export const CreateWorkspaceRoute = () => {
 										label={
 											<Stack gap={2}>
 												<Text size="sm">
-													<Trans>
-														Private — only people you invite (innovator+)
-													</Trans>
+													<Trans>Private</Trans>
 												</Text>
 												<Text size="xs" c="dimmed">
 													<Trans>
-														Available on innovator and above. Start open,
-														upgrade, and flip later.
+														Only people you explicitly invite. Available on
+														innovator and above.
 													</Trans>
 												</Text>
 											</Stack>
@@ -295,16 +293,18 @@ export const CreateWorkspaceRoute = () => {
 								</Stack>
 							</Radio.Group>
 
-							{privacy === "private" && (
-								<Alert color="gray" variant="light">
-									<Text size="xs">
-										<Trans>
-											Team admins can still discover and join this workspace.
-											Private protects from team members, not team admins.
-										</Trans>
-									</Text>
-								</Alert>
-							)}
+							{/* Upgrade path when Private is what you want. Wizard
+							    doesn't try to handle billing mid-flow — finish this
+							    open workspace, then upgrade + flip from settings. */}
+							<Alert color="gray" variant="light">
+								<Text size="xs">
+									<Trans>
+										Need a private workspace? Start open, upgrade to
+										innovator, and switch to private from the workspace's
+										billing tab.
+									</Trans>
+								</Text>
+							</Alert>
 						</Stack>
 					</Stepper.Step>
 
@@ -347,64 +347,32 @@ export const CreateWorkspaceRoute = () => {
 										<Text size="sm">
 											<Trans>Pioneer</Trans>
 											<Text span c="dimmed" size="xs">
-												{" "}
-												— <Trans>for your first real engagements.</Trans>
+												{" · "}
+												<Trans>for your first real engagements.</Trans>
 											</Text>
 										</Text>
 									</Group>
 								</Stack>
 							</Paper>
 
-							<Stack gap={4}>
-								<Text size="xs" fw={500} c="dimmed" tt="uppercase" lts={0.5}>
-									<Trans>What each role will experience</Trans>
-								</Text>
-								<List size="xs" spacing={4} c="dimmed">
-									<List.Item>
-										<Trans>
-											<em>You</em>: owner. Full control + invite + billing.
-										</Trans>
-									</List.Item>
-									{privacy === "open" ? (
-										<>
-											<List.Item>
-												<Trans>
-													<em>Other team admins</em>: discover on the team
-													page; can Join to get admin access directly.
-												</Trans>
-											</List.Item>
-											<List.Item>
-												<Trans>
-													<em>Team members</em>: discover on their home
-													page; can Request access. You approve per request.
-												</Trans>
-											</List.Item>
-										</>
-									) : (
-										<>
-											<List.Item>
-												<Trans>
-													<em>Other team admins</em>: discover on the team
-													page (private workspaces aren't hidden from
-													admins); can Join to get admin access.
-												</Trans>
-											</List.Item>
-											<List.Item>
-												<Trans>
-													<em>Team members</em>: don't see it at all unless
-													you explicitly invite them.
-												</Trans>
-											</List.Item>
-										</>
-									)}
-									<List.Item>
-										<Trans>
-											<em>Guests</em>: only people you explicitly invite as
-											external. Not team-level visible.
-										</Trans>
-									</List.Item>
-								</List>
-							</Stack>
+							{/* Lighter "who else will see this" note — spells out the
+							    matrix §6 discovery model without the heavy per-role
+							    breakdown the earlier draft had. */}
+							<Text size="xs" c="dimmed">
+								{privacy === "open" ? (
+									<Trans>
+										Team admins and members will find this workspace from
+										their home page. Admins can Join directly; members ask
+										to join — you approve.
+									</Trans>
+								) : (
+									<Trans>
+										Only people you invite will see this workspace. Team
+										admins can still discover and join; team members can't
+										see it at all.
+									</Trans>
+								)}
+							</Text>
 						</Stack>
 					</Stepper.Step>
 				</Stepper>

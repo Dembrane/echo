@@ -151,6 +151,7 @@ export const Inbox = () => {
 			>
 				<ActionIcon
 					variant="transparent"
+					color="gray"
 					onClick={open}
 					aria-label={t`Inbox`}
 				>

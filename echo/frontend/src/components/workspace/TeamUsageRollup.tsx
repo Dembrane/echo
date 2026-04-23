@@ -108,9 +108,13 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 		<Paper p="md" withBorder radius="sm">
 			<Stack gap={10}>
 				<Group justify="space-between" wrap="nowrap">
-					<Text size="xs" fw={500} tt="uppercase" c="dimmed" lts={0.5}>
-						<Trans>Team usage · {formatCycleMonth(data.cycle_start)}</Trans>
-					</Text>
+					<Tooltip
+						label={t`Usage resets at the start of each calendar month.`}
+					>
+						<Text size="xs" fw={500} tt="uppercase" c="dimmed" lts={0.5}>
+							<Trans>Team usage · {formatCycleMonth(data.cycle_start)}</Trans>
+						</Text>
+					</Tooltip>
 					<Tooltip label={t`Refresh`}>
 						<ActionIcon
 							variant="subtle"
@@ -130,7 +134,7 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 						<Text size="lg" fw={500}>
 							{data.total_audio_hours.toFixed(1)}
 							<Text span c="dimmed" size="sm">
-								{" "}{t`hours`}
+								{" "}{t`hours this month`}
 							</Text>
 						</Text>
 						<Text size="xs" c="dimmed">
@@ -172,20 +176,38 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 				</Group>
 
 				{anyWarning && (
-					<Group gap="xs" mt={4}>
+					<Group gap="xs" mt={4} wrap="nowrap">
+						{/* Clickable — expands the per-workspace table so admins
+						    can see exactly which workspaces are hot. */}
 						{data.workspaces_at_cap > 0 && (
-							<Badge size="sm" color="red" variant="light">
-								<Trans>
-									{data.workspaces_at_cap} at limit
-								</Trans>
-							</Badge>
+							<Tooltip label={t`Click to see which`}>
+								<Badge
+									size="sm"
+									color="red"
+									variant="light"
+									style={{ cursor: "pointer" }}
+									onClick={() => setExpanded(true)}
+								>
+									<Trans>
+										{data.workspaces_at_cap} at limit
+									</Trans>
+								</Badge>
+							</Tooltip>
 						)}
 						{data.workspaces_approaching_cap > 0 && (
-							<Badge size="sm" color="yellow" variant="light">
-								<Trans>
-									{data.workspaces_approaching_cap} approaching limit
-								</Trans>
-							</Badge>
+							<Tooltip label={t`Click to see which`}>
+								<Badge
+									size="sm"
+									color="yellow"
+									variant="light"
+									style={{ cursor: "pointer" }}
+									onClick={() => setExpanded(true)}
+								>
+									<Trans>
+										{data.workspaces_approaching_cap} approaching limit
+									</Trans>
+								</Badge>
+							</Tooltip>
 						)}
 					</Group>
 				)}
