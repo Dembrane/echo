@@ -27,6 +27,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
+import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
@@ -627,6 +628,12 @@ export const WorkspaceSettingsRoute = () => {
 							</Stack>
 						</Stack>
 					</>
+				)}
+
+				{/* Matrix §6 access requests from team members. Hides itself
+				    when nothing is pending. */}
+				{canManage && workspaceId && (
+					<AccessRequestsList workspaceId={workspaceId} />
 				)}
 
 				{/* Your access */}

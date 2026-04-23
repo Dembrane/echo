@@ -20,6 +20,7 @@ import { useDocumentTitle } from "@mantine/hooks";
 import { IconPlus, IconSettings } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { DiscoverableWorkspaces } from "@/components/workspace/DiscoverableWorkspaces";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
@@ -402,6 +403,11 @@ export const WorkspaceSelectorRoute = () => {
 										<AddWorkspaceCard teamId={orgId} />
 									)}
 								</SimpleGrid>
+
+								{/* Matrix §6: Slack-style discovery. Renders only
+								    when there's something joinable/requestable and
+								    hides itself otherwise. */}
+								<DiscoverableWorkspaces orgId={orgId} />
 							</Stack>
 						);
 					})}
