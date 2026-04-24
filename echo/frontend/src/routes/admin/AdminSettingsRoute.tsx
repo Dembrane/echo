@@ -31,6 +31,7 @@ import {
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import {
 	IconAdjustments,
+	IconArrowsSort,
 	IconChevronDown,
 	IconChevronRight,
 	IconDots,
@@ -215,6 +216,12 @@ function PeriodSelector({
 	);
 }
 
+/**
+ * Header cell for a sortable column. Renders a faint sort handle by
+ * default so the column advertises that it's sortable — otherwise
+ * staff had no way to tell except clicking blindly. Active sort
+ * replaces the handle with a darker asc/desc icon.
+ */
 function SortableHeader({
 	label,
 	sorted,
@@ -230,14 +237,25 @@ function SortableHeader({
 			wrap="nowrap"
 			justify={align === "right" ? "flex-end" : "flex-start"}
 		>
-			<Text size="xs" fw={500} c="dimmed" tt="uppercase" lts={0.3}>
+			<Text
+				size="xs"
+				fw={sorted ? 600 : 500}
+				c={sorted ? "dark" : "dimmed"}
+				tt="uppercase"
+				lts={0.3}
+			>
 				{label}
 			</Text>
-			{sorted === "asc" && (
-				<IconSortAscending size={12} color="var(--mantine-color-gray-6)" />
-			)}
-			{sorted === "desc" && (
-				<IconSortDescending size={12} color="var(--mantine-color-gray-6)" />
+			{sorted === "asc" ? (
+				<IconSortAscending size={12} color="var(--mantine-color-dark-6)" />
+			) : sorted === "desc" ? (
+				<IconSortDescending size={12} color="var(--mantine-color-dark-6)" />
+			) : (
+				<IconArrowsSort
+					size={12}
+					color="var(--mantine-color-gray-4)"
+					aria-hidden
+				/>
 			)}
 		</Group>
 	);
@@ -489,11 +507,30 @@ function BillingTable({
 											| undefined
 									)?.align ?? "left";
 								return (
-									<Table.Th key={header.id} ta={align}>
+									<Table.Th
+										key={header.id}
+										ta={align}
+										style={{ padding: 0 }}
+									>
 										{canSort ? (
 											<UnstyledButton
 												onClick={header.column.getToggleSortingHandler()}
-												style={{ width: "100%" }}
+												title={t`Click to sort`}
+												style={{
+													width: "100%",
+													display: "block",
+													padding: "8px 12px",
+													cursor: "pointer",
+													transition: "background 0.1s ease",
+												}}
+												onMouseEnter={(e) => {
+													e.currentTarget.style.background =
+														"var(--mantine-color-gray-1)";
+												}}
+												onMouseLeave={(e) => {
+													e.currentTarget.style.background =
+														"transparent";
+												}}
 											>
 												<SortableHeader
 													label={
@@ -506,18 +543,20 @@ function BillingTable({
 												/>
 											</UnstyledButton>
 										) : (
-											<Text
-												size="xs"
-												fw={500}
-												c="dimmed"
-												tt="uppercase"
-												lts={0.3}
-											>
-												{flexRender(
-													header.column.columnDef.header,
-													header.getContext(),
-												)}
-											</Text>
+											<Box px={12} py={8}>
+												<Text
+													size="xs"
+													fw={500}
+													c="dimmed"
+													tt="uppercase"
+													lts={0.3}
+												>
+													{flexRender(
+														header.column.columnDef.header,
+														header.getContext(),
+													)}
+												</Text>
+											</Box>
 										)}
 									</Table.Th>
 								);
@@ -1350,11 +1389,29 @@ function SimpleDataTable<T extends object>({
 									(h.column.columnDef.meta as { align?: "left" | "right" } | undefined)
 										?.align ?? "left";
 								return (
-									<Table.Th key={h.id} ta={align}>
+									<Table.Th
+										key={h.id}
+										ta={align}
+										style={{ padding: 0 }}
+									>
 										{canSort ? (
 											<UnstyledButton
 												onClick={h.column.getToggleSortingHandler()}
-												style={{ width: "100%" }}
+												title={t`Click to sort`}
+												style={{
+													width: "100%",
+													display: "block",
+													padding: "8px 12px",
+													cursor: "pointer",
+													transition: "background 0.1s ease",
+												}}
+												onMouseEnter={(e) => {
+													e.currentTarget.style.background =
+														"var(--mantine-color-gray-1)";
+												}}
+												onMouseLeave={(e) => {
+													e.currentTarget.style.background = "transparent";
+												}}
 											>
 												<SortableHeader
 													label={
@@ -1367,9 +1424,11 @@ function SimpleDataTable<T extends object>({
 												/>
 											</UnstyledButton>
 										) : (
-											<Text size="xs" fw={500} c="dimmed" tt="uppercase" lts={0.3}>
-												{flexRender(h.column.columnDef.header, h.getContext())}
-											</Text>
+											<Box px={12} py={8}>
+												<Text size="xs" fw={500} c="dimmed" tt="uppercase" lts={0.3}>
+													{flexRender(h.column.columnDef.header, h.getContext())}
+												</Text>
+											</Box>
 										)}
 									</Table.Th>
 								);

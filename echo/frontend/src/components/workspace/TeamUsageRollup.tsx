@@ -21,6 +21,7 @@ import {
 import {
 	IconAdjustments,
 	IconAlertTriangle,
+	IconArrowsSort,
 	IconChevronDown,
 	IconChevronRight,
 	IconLock,
@@ -178,14 +179,21 @@ function SortableHeader({
 			wrap="nowrap"
 			justify={align === "right" ? "flex-end" : "flex-start"}
 		>
-			<Text size="xs" fw={500} c="dimmed" tt="uppercase" lts={0.3}>
+			<Text
+				size="xs"
+				fw={sorted ? 600 : 500}
+				c={sorted ? "dark" : "dimmed"}
+				tt="uppercase"
+				lts={0.3}
+			>
 				{label}
 			</Text>
-			{sorted === "asc" && (
-				<IconSortAscending size={12} color="var(--mantine-color-gray-6)" />
-			)}
-			{sorted === "desc" && (
-				<IconSortDescending size={12} color="var(--mantine-color-gray-6)" />
+			{sorted === "asc" ? (
+				<IconSortAscending size={12} color="var(--mantine-color-dark-6)" />
+			) : sorted === "desc" ? (
+				<IconSortDescending size={12} color="var(--mantine-color-dark-6)" />
+			) : (
+				<IconArrowsSort size={12} color="var(--mantine-color-gray-4)" aria-hidden />
 			)}
 		</Group>
 	);
@@ -622,11 +630,30 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 													| { align?: "left" | "right" }
 													| undefined)?.align ?? "left";
 											return (
-												<Table.Th key={h.id} ta={align}>
+												<Table.Th
+													key={h.id}
+													ta={align}
+													style={{ padding: 0 }}
+												>
 													{canSort ? (
 														<UnstyledButton
 															onClick={h.column.getToggleSortingHandler()}
-															style={{ width: "100%" }}
+															title={t`Click to sort`}
+															style={{
+																width: "100%",
+																display: "block",
+																padding: "8px 12px",
+																cursor: "pointer",
+																transition: "background 0.1s ease",
+															}}
+															onMouseEnter={(e) => {
+																e.currentTarget.style.background =
+																	"var(--mantine-color-gray-1)";
+															}}
+															onMouseLeave={(e) => {
+																e.currentTarget.style.background =
+																	"transparent";
+															}}
 														>
 															<SortableHeader
 																label={
@@ -639,15 +666,17 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 															/>
 														</UnstyledButton>
 													) : (
-														<Text
-															size="xs"
-															fw={500}
-															c="dimmed"
-															tt="uppercase"
-															lts={0.3}
-														>
-															{flexRender(h.column.columnDef.header, h.getContext())}
-														</Text>
+														<Box px={12} py={8}>
+															<Text
+																size="xs"
+																fw={500}
+																c="dimmed"
+																tt="uppercase"
+																lts={0.3}
+															>
+																{flexRender(h.column.columnDef.header, h.getContext())}
+															</Text>
+														</Box>
 													)}
 												</Table.Th>
 											);
