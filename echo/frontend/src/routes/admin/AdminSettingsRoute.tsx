@@ -619,48 +619,84 @@ function BillingTable({
 				</Table.Tbody>
 				{rows.length > 0 && (
 					<Table.Tfoot>
-						<Table.Tr style={{ background: "var(--mantine-color-gray-0)" }}>
+						<Table.Tr
+							style={{
+								// Visibly distinct: graphite-tinted row, thicker
+								// top border, bold text. Reads as a summary bar
+								// not "another data row".
+								background: "var(--mantine-color-dark-0, #f1f3f5)",
+								borderTop: "2px solid var(--mantine-color-gray-5)",
+							}}
+						>
 							{leafColumns.map((col, i) => {
 								const key = col.id;
-								let content: React.ReactNode = null;
-								if (i === 0) content = <Text size="xs" fw={500}><Trans>Total</Trans></Text>;
-								else if (key === "audio_hours")
-									content = (
-										<Text size="xs" ta="right">
+								// Render "Total" label under the first visible
+								// column (works with / without grouping which
+								// moves team to leaf[0]).
+								if (i === 0) {
+									return (
+										<Table.Td key={col.id}>
+											<Text size="xs" fw={700} tt="uppercase" lts={0.3}>
+												<Trans>Total</Trans>
+											</Text>
+										</Table.Td>
+									);
+								}
+								// Lookup table keyed by column id — immune to
+								// column-visibility or reorder churn.
+								const footerById: Record<string, React.ReactNode> = {
+									audio_hours: (
+										<Text size="xs" fw={600} ta="right">
 											{footerTotals.audio_hours.toFixed(1)} h
 										</Text>
-									);
-								else if (key === "seat_count")
-									content = (
-										<Text size="xs" ta="right">
+									),
+									seat_count: (
+										<Text size="xs" fw={600} ta="right">
 											{footerTotals.seat_count}
 										</Text>
-									);
-								else if (key === "base_price_eur")
-									content = (
-										<Text size="xs" ta="right">
+									),
+									base_price_eur: (
+										<Text size="xs" fw={600} ta="right">
 											{formatEur(footerTotals.base_price_eur)}
 										</Text>
-									);
-								else if (key === "hour_overage_eur")
-									content = (
-										<Text size="xs" ta="right">
+									),
+									hour_overage_eur: (
+										<Text
+											size="xs"
+											fw={600}
+											ta="right"
+											c={
+												footerTotals.hour_overage_eur > 0
+													? "orange"
+													: undefined
+											}
+										>
 											{formatEur(footerTotals.hour_overage_eur)}
 										</Text>
-									);
-								else if (key === "seat_overage_eur")
-									content = (
-										<Text size="xs" ta="right">
+									),
+									seat_overage_eur: (
+										<Text
+											size="xs"
+											fw={600}
+											ta="right"
+											c={
+												footerTotals.seat_overage_eur > 0
+													? "orange"
+													: undefined
+											}
+										>
 											{formatEur(footerTotals.seat_overage_eur)}
 										</Text>
-									);
-								else if (key === "total_forecast_eur")
-									content = (
-										<Text size="xs" ta="right" fw={500}>
+									),
+									total_forecast_eur: (
+										<Text size="xs" fw={700} ta="right">
 											{formatEur(footerTotals.total_forecast_eur)}
 										</Text>
-									);
-								return <Table.Td key={col.id}>{content}</Table.Td>;
+									),
+								};
+								return (
+									<Table.Td key={col.id}>{footerById[key] ?? null}</Table.Td>
+								);
 							})}
 						</Table.Tr>
 					</Table.Tfoot>
@@ -798,6 +834,11 @@ function UsageAndBillingPanel() {
 				id: "workspace_name",
 				accessorKey: "workspace_name",
 				header: t`Workspace`,
+				// Workspace name anchors the whole row — if the user hides
+				// it, the total row + every other column becomes unreadable.
+				// The menu already filters it out; this belts-and-braces
+				// prevents it via a stray columnVisibility write too.
+				enableHiding: false,
 				cell: ({ row }) => {
 					const admins = row.original.workspace_admins;
 					const adminEmail = admins[0]?.email ?? null;
@@ -899,16 +940,14 @@ function UsageAndBillingPanel() {
 				cell: ({ row }) => {
 					const v = row.original.hour_overage_eur;
 					const over = row.original.over_hours;
-					if (v === 0 && over === 0) {
-						return (
-							<Text size="xs" c="dimmed">
-								—
-							</Text>
-						);
-					}
+					const hasOverage = v > 0 || over > 0;
 					return (
 						<Stack gap={0} align="flex-end">
-							<Text size="xs" c="orange" fw={500}>
+							<Text
+								size="xs"
+								c={hasOverage ? "orange" : "dimmed"}
+								fw={hasOverage ? 500 : 400}
+							>
 								{formatEur(v)}
 							</Text>
 							<Text size="xs" c="dimmed">
@@ -938,16 +977,14 @@ function UsageAndBillingPanel() {
 				cell: ({ row }) => {
 					const v = row.original.seat_overage_eur;
 					const over = row.original.over_seats;
-					if (v === 0 && over === 0) {
-						return (
-							<Text size="xs" c="dimmed">
-								—
-							</Text>
-						);
-					}
+					const hasOverage = v > 0 || over > 0;
 					return (
 						<Stack gap={0} align="flex-end">
-							<Text size="xs" c="orange" fw={500}>
+							<Text
+								size="xs"
+								c={hasOverage ? "orange" : "dimmed"}
+								fw={hasOverage ? 500 : 400}
+							>
 								{formatEur(v)}
 							</Text>
 							<Text size="xs" c="dimmed">
@@ -988,6 +1025,7 @@ function UsageAndBillingPanel() {
 				header: "",
 				enableSorting: false,
 				enableGrouping: false,
+				enableHiding: false,
 				cell: ({ row }) => (
 					<ActionIcon
 						size="sm"

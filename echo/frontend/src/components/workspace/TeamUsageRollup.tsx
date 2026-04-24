@@ -263,6 +263,7 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 				id: "expander",
 				header: "",
 				enableSorting: false,
+				enableHiding: false,
 				cell: ({ row }) => (
 					<ActionIcon
 						size="xs"
@@ -285,6 +286,7 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 				id: "workspace_name",
 				accessorKey: "name",
 				header: t`Workspace`,
+				enableHiding: false,
 				cell: ({ row }) => (
 					<Group gap={6} wrap="nowrap">
 						{(row.original.at_cap || row.original.seat_cap_hit) && (
@@ -364,15 +366,8 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 				meta: { align: "right" },
 				cell: ({ row }) => {
 					const v = row.original.hours_over;
-					if (!v) {
-						return (
-							<Text size="xs" c="dimmed">
-								—
-							</Text>
-						);
-					}
 					return (
-						<Text size="xs" c="orange">
+						<Text size="xs" c={v > 0 ? "orange" : "dimmed"}>
 							{v.toFixed(1)} h
 						</Text>
 					);
@@ -403,15 +398,8 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 					const cap = row.original.seats_included;
 					const over =
 						cap == null ? 0 : Math.max(0, row.original.seat_count - cap);
-					if (!over) {
-						return (
-							<Text size="xs" c="dimmed">
-								—
-							</Text>
-						);
-					}
 					return (
-						<Text size="xs" c="orange">
+						<Text size="xs" c={over > 0 ? "orange" : "dimmed"}>
 							{over}
 						</Text>
 					);
@@ -680,45 +668,65 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 							</Table.Tbody>
 							{rows.length > 0 && (
 								<Table.Tfoot>
-									<Table.Tr style={{ background: "var(--mantine-color-gray-0)" }}>
+									<Table.Tr
+										style={{
+											background: "var(--mantine-color-dark-0, #f1f3f5)",
+											borderTop: "2px solid var(--mantine-color-gray-5)",
+										}}
+									>
 										{leafColumns.map((col, i) => {
 											const key = col.id;
-											let content: React.ReactNode = null;
-											if (i === 0)
-												content = null; // expander
-											else if (key === "workspace_name")
-												content = (
-													<Text size="xs" fw={500}>
-														<Trans>Total</Trans>
-													</Text>
+											// Put "Total" under the first NON-expander visible
+											// column. With workspace_name always visible + pinned
+											// via enableHiding=false, this lands consistently.
+											const isFirstData = i === 1 && key === "workspace_name";
+											if (key === "expander" || (i === 0 && key !== "workspace_name")) {
+												return <Table.Td key={col.id} />;
+											}
+											if (isFirstData) {
+												return (
+													<Table.Td key={col.id}>
+														<Text size="xs" fw={700} tt="uppercase" lts={0.3}>
+															<Trans>Total</Trans>
+														</Text>
+													</Table.Td>
 												);
-											else if (key === "audio_hours")
-												content = (
-													<Text size="xs" ta="right">
+											}
+											const footerById: Record<string, React.ReactNode> = {
+												audio_hours: (
+													<Text size="xs" fw={600} ta="right">
 														{totalsHours.toFixed(1)} h
 													</Text>
-												);
-											else if (key === "hours_over")
-												content = (
-													<Text size="xs" ta="right">
-														{totalsHoursOver > 0
-															? `${totalsHoursOver.toFixed(1)} h`
-															: "—"}
+												),
+												hours_over: (
+													<Text
+														size="xs"
+														fw={600}
+														ta="right"
+														c={totalsHoursOver > 0 ? "orange" : "dimmed"}
+													>
+														{totalsHoursOver.toFixed(1)} h
 													</Text>
-												);
-											else if (key === "seat_count")
-												content = (
-													<Text size="xs" ta="right">
+												),
+												seat_count: (
+													<Text size="xs" fw={600} ta="right">
 														{totalsSeats}
 													</Text>
-												);
-											else if (key === "seats_over")
-												content = (
-													<Text size="xs" ta="right">
-														{totalsSeatsOver > 0 ? String(totalsSeatsOver) : "—"}
+												),
+												seats_over: (
+													<Text
+														size="xs"
+														fw={600}
+														ta="right"
+														c={totalsSeatsOver > 0 ? "orange" : "dimmed"}
+													>
+														{totalsSeatsOver}
 													</Text>
-												);
-											return <Table.Td key={col.id}>{content}</Table.Td>;
+												),
+											};
+											return (
+												<Table.Td key={col.id}>{footerById[key] ?? null}</Table.Td>
+											);
 										})}
 									</Table.Tr>
 								</Table.Tfoot>
