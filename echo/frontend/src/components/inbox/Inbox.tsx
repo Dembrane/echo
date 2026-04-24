@@ -129,6 +129,10 @@ export const Inbox = () => {
 		}
 	};
 
+	const handleMarkRead = (row: NotificationRow) => {
+		if (!row.read) markNotifRead.mutate(row.id);
+	};
+
 	const handleMarkAllReadForActiveTab = () => {
 		if (activeTab === "for-you") {
 			markAllNotifsRead.mutate();
@@ -243,6 +247,7 @@ export const Inbox = () => {
 											key={row.id}
 											row={row}
 											onClick={() => handleNotificationClick(row)}
+											onMarkRead={() => handleMarkRead(row)}
 										/>
 									))}
 								</Stack>
@@ -315,9 +320,11 @@ export const Inbox = () => {
 function NotificationRowItem({
 	row,
 	onClick,
+	onMarkRead,
 }: {
 	row: NotificationRow;
 	onClick: () => void;
+	onMarkRead: () => void;
 }) {
 	const hasAction = resolveNotificationHref(row) !== null;
 	const createdLabel = row.created_at
@@ -331,19 +338,52 @@ function NotificationRowItem({
 			? "rgba(65,105,225,0.04)"
 			: "rgba(65,105,225,0.03)";
 
+	// Clicking the row fires `onClick` (mark-read + navigate when there's
+	// an action). Notifications without a navigation target (matrix §6
+	// "silent rejection", e.g. status info) used to render as a disabled
+	// button — impossible to mark read. Now the row is always clickable
+	// and falls back to a plain mark-read when there's no action.
 	return (
 		<UnstyledButton
 			onClick={onClick}
-			disabled={!hasAction}
 			style={{
 				display: "block",
 				padding: "12px 4px",
 				borderBottom: "1px solid var(--mantine-color-gray-2)",
-				cursor: hasAction ? "pointer" : "default",
+				cursor: "pointer",
 				background: row.read ? "transparent" : unreadBg,
 			}}
 		>
-			<Group gap="sm" wrap="nowrap" align="flex-start">
+			<Group
+				gap="sm"
+				wrap="nowrap"
+				align="flex-start"
+				style={{ position: "relative" }}
+			>
+				{/* Explicit mark-read on unread rows. Clicking the row already
+				    fires onClick which marks read + (optionally) navigates,
+				    but this gives a keyboard/touch target that means "just
+				    clear it, don't take me anywhere" — matters when the row
+				    has a navigation target the user doesn't want to follow. */}
+				{!row.read && (
+					<ActionIcon
+						size="xs"
+						variant="subtle"
+						color="gray"
+						aria-label={t`Mark as read`}
+						onClick={(e) => {
+							e.stopPropagation();
+							onMarkRead();
+						}}
+						style={{
+							position: "absolute",
+							top: 0,
+							right: 0,
+						}}
+					>
+						<IconCheck size={12} />
+					</ActionIcon>
+				)}
 				{row.actor_user_id ? (
 					<Avatar
 						src={avatarUrl(row.actor_avatar, 48)}
