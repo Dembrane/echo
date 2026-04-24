@@ -16,11 +16,11 @@ don't need Directus admin access to do the job.
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from logging import getLogger
 from typing import Any, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from dembrane.directus_async import async_directus
@@ -83,9 +83,18 @@ class BillingRollupResponse(BaseModel):
     cycle_start: str
     cycle_end_exclusive: str
     workspace_count: int
+    active_workspace_count: int
     total_base_eur: float
     total_overage_eur: float
     total_forecast_eur: float
+    # MRR = sum of (active workspace base prices) for non-pilot tiers.
+    # Pilot is one-time so its base doesn't recur; excluded from MRR
+    # but included in total_forecast_eur as this-month revenue.
+    mrr_eur: float
+    # Count of workspace admins (non-external, admin+owner) who logged
+    # in in the last 30 days. Proxy for "active accounts you can
+    # reach" since we don't have a full DAU pipeline.
+    logins_last_30d: int
     rows: list[BillingRow]
 
 
@@ -111,14 +120,63 @@ TIER_BASE_PRICE_EUR: dict[str, Optional[float]] = {
 }
 
 
-def _month_window(now: datetime) -> tuple[str, str]:
-    """First of this month → first of next, both UTC ISO."""
-    start = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
-    if now.month == 12:
-        end = datetime(now.year + 1, 1, 1, tzinfo=timezone.utc)
+def _month_window(now: datetime, offset: int = 0) -> tuple[str, str]:
+    """First of (this month + offset) to first of the following month.
+
+    offset=0 means the current calendar month. offset=-1 means the
+    previous month. Staff flips between them from the period selector.
+    """
+    # Walk the month one at a time so we correctly handle year rollovers
+    # in both directions.
+    year, month = now.year, now.month
+    month += offset
+    while month < 1:
+        month += 12
+        year -= 1
+    while month > 12:
+        month -= 12
+        year += 1
+    start = datetime(year, month, 1, tzinfo=timezone.utc)
+    if month == 12:
+        end = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
     else:
-        end = datetime(now.year, now.month + 1, 1, tzinfo=timezone.utc)
+        end = datetime(year, month + 1, 1, tzinfo=timezone.utc)
     return start.isoformat(), end.isoformat()
+
+
+async def _recent_login_count(since_iso: str) -> int:
+    """Admins/owners (non-external) with a Directus users.last_access
+    newer than `since_iso`. Returns 0 on any error so the headline
+    doesn't blow up if the join fails."""
+    try:
+        rows = await async_directus.get_items(
+            "app_user",
+            {"query": {
+                "fields": ["id", "directus_user_id"],
+                "filter": {"directus_user_id": {"_nnull": True}},
+                "limit": -1,
+            }},
+        )
+        if not isinstance(rows, list):
+            return 0
+        directus_ids = [r["directus_user_id"] for r in rows if r.get("directus_user_id")]
+        if not directus_ids:
+            return 0
+        # Directus users.last_access filter. Only admins have read on
+        # directus_users via the admin token.
+        resp = await async_directus.get(
+            "/users",
+            params={
+                "filter[id][_in]": ",".join(directus_ids[:500]),
+                "filter[last_access][_gte]": since_iso,
+                "limit": -1,
+                "fields": "id",
+            },
+        )
+        data = resp.get("data") if isinstance(resp, dict) else None
+        return len(data) if isinstance(data, list) else 0
+    except Exception:  # noqa: BLE001 — best-effort headline metric
+        return 0
 
 
 async def _all_active_workspaces() -> list[dict]:
@@ -265,17 +323,27 @@ async def _workspace_admins(ws_id: str) -> list[BillingContact]:
 @router.get("/billing-rollup", response_model=BillingRollupResponse)
 async def billing_rollup(
     auth: DependencyDirectusSession,
+    month_offset: int = Query(
+        default=0,
+        ge=-12,
+        le=0,
+        description=(
+            "0 = current month, -1 = previous month, ..., -12 = one year "
+            "ago. Positive values rejected because future months don't bill."
+        ),
+    ),
 ) -> BillingRollupResponse:
     """Monthly invoicing rollup across every workspace.
 
-    One row per workspace — current cycle hours + seats, overage euros,
-    tier sticker price, billing contacts, at-risk flags. Staff uses this
-    to generate invoices and spot the workspaces that need a call.
+    One row per workspace for the selected calendar month: hours +
+    seats used, overage euros, tier sticker price, workspace admins,
+    at-risk flags. Headline totals + MRR + logins also returned for
+    the KPI row on the admin surface.
     """
     if not auth.is_admin:
         raise HTTPException(status_code=403, detail="Staff-only")
 
-    cycle_start, cycle_end = _month_window(datetime.now(timezone.utc))
+    cycle_start, cycle_end = _month_window(datetime.now(timezone.utc), month_offset)
     workspaces = await _all_active_workspaces()
     org_ids = [w["org_id"] for w in workspaces if w.get("org_id")]
     org_name_by_id = await _org_name_map(org_ids)
@@ -380,13 +448,29 @@ async def billing_rollup(
         return 3
     rows.sort(key=lambda r: (_risk(r), -(r.total_forecast_eur or 0.0)))
 
+    # MRR: sum of recurring (non-pilot) base prices of ACTIVE workspaces.
+    # Pilot is one-time so it's pure revenue-this-month, not ARR-like.
+    mrr = 0.0
+    for r in rows:
+        if r.is_active and r.tier != "pilot" and r.base_price_eur:
+            mrr += r.base_price_eur
+
+    active_count = sum(1 for r in rows if r.is_active)
+
+    # Last 30 days of calendar time, not the selected period.
+    since = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    logins_30d = await _recent_login_count(since)
+
     return BillingRollupResponse(
         cycle_start=cycle_start,
         cycle_end_exclusive=cycle_end,
         workspace_count=len(rows),
+        active_workspace_count=active_count,
         total_base_eur=round(total_base, 2),
         total_overage_eur=round(total_overage, 2),
         total_forecast_eur=round(total_base + total_overage, 2),
+        mrr_eur=round(mrr, 2),
+        logins_last_30d=logins_30d,
         rows=rows,
     )
 

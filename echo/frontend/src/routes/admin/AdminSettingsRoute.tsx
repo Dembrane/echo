@@ -1,16 +1,23 @@
 import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
+	ActionIcon,
 	Anchor,
 	Badge,
 	Box,
 	Button,
 	Center,
+	Checkbox,
 	Collapse,
 	Container,
+	Divider,
 	Group,
 	Loader,
+	Menu,
+	Modal,
+	MultiSelect,
 	Paper,
+	Progress,
 	SimpleGrid,
 	Stack,
 	Table,
@@ -23,32 +30,40 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import {
+	IconAdjustments,
 	IconChevronDown,
 	IconChevronRight,
+	IconDots,
 	IconDownload,
 	IconSearch,
 	IconSortAscending,
 	IconSortDescending,
+	IconUsersGroup,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import {
 	type ColumnDef,
-	type SortingState,
 	type ColumnFiltersState,
+	type GroupingState,
+	type Row,
+	type SortingState,
+	type VisibilityState,
 	flexRender,
 	getCoreRowModel,
+	getExpandedRowModel,
 	getFilteredRowModel,
+	getGroupedRowModel,
 	getSortedRowModel,
 	useReactTable,
-	type Row,
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
+import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { API_BASE_URL } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
 
-// Ordered tier list for custom sorting. Matrix v1.1 §1 order from low to high.
+// Ordered tier list for custom sorting. matrix v1.1 §1 order from low to high.
 const TIER_ORDER = ["pilot", "pioneer", "innovator", "changemaker", "guardian"] as const;
 type Tier = (typeof TIER_ORDER)[number];
 const tierRank = (tier: string): number => TIER_ORDER.indexOf(tier as Tier);
@@ -100,9 +115,12 @@ type BillingRollup = {
 	cycle_start: string;
 	cycle_end_exclusive: string;
 	workspace_count: number;
+	active_workspace_count: number;
 	total_base_eur: number;
 	total_overage_eur: number;
 	total_forecast_eur: number;
+	mrr_eur: number;
+	logins_last_30d: number;
 	rows: BillingRow[];
 };
 
@@ -162,33 +180,39 @@ const formatDate = (iso: string | null | undefined): string => {
 };
 
 /**
- * Download a CSV of whatever rows are currently visible (after filters
- * and sort). Takes the table's filtered + sorted rows so "Export CSV"
- * matches what staff is looking at.
+ * Period selector. Current month, previous month, 2 months back, 3
+ * months back. Negative offsets only (no future). Matches the staff
+ * mental model of "this month's invoice run" and "oh wait, what did
+ * we bill last month again?".
  */
-function downloadRowsAsCsv<T extends Record<string, unknown>>(
-	filename: string,
-	rows: Row<T>[],
-	columns: { id: string; header: string; accessor: (row: T) => unknown }[],
-) {
-	const headerLine = columns.map((c) => c.header).join(",");
-	const lines = rows.map((r) =>
-		columns
-			.map((c) => {
-				const v = c.accessor(r.original);
-				const s = v == null ? "" : String(v);
-				return `"${s.replace(/"/g, '""')}"`;
-			})
-			.join(","),
+function PeriodSelector({
+	value,
+	onChange,
+}: {
+	value: number;
+	onChange: (offset: number) => void;
+}) {
+	const options: { offset: number; label: string }[] = [
+		{ offset: 0, label: t`This month` },
+		{ offset: -1, label: t`Last month` },
+		{ offset: -2, label: t`2 months ago` },
+		{ offset: -3, label: t`3 months ago` },
+	];
+	return (
+		<Button.Group>
+			{options.map((opt) => (
+				<Button
+					key={opt.offset}
+					size="xs"
+					variant={value === opt.offset ? "filled" : "default"}
+					color={value === opt.offset ? "blue" : "gray"}
+					onClick={() => onChange(opt.offset)}
+				>
+					{opt.label}
+				</Button>
+			))}
+		</Button.Group>
 	);
-	const csv = [headerLine, ...lines].join("\n");
-	const blob = new Blob([csv], { type: "text/csv" });
-	const url = URL.createObjectURL(blob);
-	const link = document.createElement("a");
-	link.href = url;
-	link.download = filename;
-	link.click();
-	URL.revokeObjectURL(url);
 }
 
 function SortableHeader({
@@ -201,67 +225,253 @@ function SortableHeader({
 	align?: "left" | "right";
 }) {
 	return (
-		<Group gap={4} wrap="nowrap" justify={align === "right" ? "flex-end" : "flex-start"}>
+		<Group
+			gap={4}
+			wrap="nowrap"
+			justify={align === "right" ? "flex-end" : "flex-start"}
+		>
 			<Text size="xs" fw={500} c="dimmed" tt="uppercase" lts={0.3}>
 				{label}
 			</Text>
-			{sorted === "asc" && <IconSortAscending size={12} color="var(--mantine-color-gray-6)" />}
-			{sorted === "desc" && <IconSortDescending size={12} color="var(--mantine-color-gray-6)" />}
+			{sorted === "asc" && (
+				<IconSortAscending size={12} color="var(--mantine-color-gray-6)" />
+			)}
+			{sorted === "desc" && (
+				<IconSortDescending size={12} color="var(--mantine-color-gray-6)" />
+			)}
 		</Group>
 	);
 }
 
 /**
- * Thin wrapper that wires a TanStack Table into a Mantine table shell.
- * Keeps sort, filter, and global-search state per instance. Rendering
- * uses flexRender so column defs can return anything.
+ * Inline usage bar. Green under 60 percent, yellow 60 to 90, red over
+ * 90. Shows N / cap next to the bar. When cap is null (guardian, pilot
+ * with no ceiling) we render the raw count with a dash.
  */
-function DataTable<T extends object>({
+function UsageBar({
+	used,
+	cap,
+	unit = "",
+	block,
+}: {
+	used: number;
+	cap: number | null;
+	unit?: string;
+	block?: boolean;
+}) {
+	if (cap == null) {
+		return (
+			<Text size="xs" c="dimmed">
+				{used.toFixed(unit === "h" ? 1 : 0)}
+				{unit ? ` ${unit}` : ""}
+			</Text>
+		);
+	}
+	const pct = cap > 0 ? Math.min(100, (used / cap) * 100) : 0;
+	const color = block
+		? "red"
+		: pct >= 100
+			? "red"
+			: pct >= 90
+				? "red"
+				: pct >= 60
+					? "yellow"
+					: "green";
+	return (
+		<Stack gap={2}>
+			<Text size="xs" c={color === "red" ? "red" : undefined}>
+				{used.toFixed(unit === "h" ? 1 : 0)} / {cap}
+				{unit ? ` ${unit}` : ""}
+			</Text>
+			<Progress value={pct} color={color} size="xs" radius="xs" />
+		</Stack>
+	);
+}
+
+/**
+ * Mocked actions modal. The buttons are disabled on purpose; they
+ * communicate the action shape staff will eventually have without
+ * letting anyone run them. Copy reads natural (no "coming soon"
+ * language); only the disabled state signals state.
+ */
+function WorkspaceActionsModal({
+	row,
+	opened,
+	onClose,
+}: {
+	row: BillingRow | null;
+	opened: boolean;
+	onClose: () => void;
+}) {
+	if (!row) return null;
+	const actions: { label: string; hint: string; color?: string }[] = [
+		{
+			label: t`Change tier`,
+			hint: t`Pick a new tier and apply downgrade effects per matrix.`,
+		},
+		{
+			label: t`Change workspace admin`,
+			hint: t`Transfer the primary admin role to another member.`,
+		},
+		{
+			label: t`Reset monthly usage`,
+			hint: t`Back out this cycle's hour count after a support incident.`,
+		},
+		{
+			label: t`Transfer workspace to another team`,
+			hint: t`Partner handoff. Writes billed_to_team_id and notifies both teams.`,
+		},
+		{
+			label: t`Delete workspace`,
+			hint: t`Soft-delete. Data stays recoverable for 30 days.`,
+			color: "red",
+		},
+	];
+	return (
+		<Modal
+			opened={opened}
+			onClose={onClose}
+			title={
+				<Group gap="xs">
+					<Text fw={500}>{row.workspace_name}</Text>
+					<Badge
+						size="xs"
+						color={tierColors[row.tier] ?? "gray"}
+						variant="light"
+						tt="capitalize"
+					>
+						{row.tier}
+					</Badge>
+				</Group>
+			}
+			size="md"
+		>
+			<Stack gap="xs">
+				<Text size="xs" c="dimmed">
+					<Trans>
+						{row.org_name}, workspace id {row.workspace_id.slice(0, 8)}
+					</Trans>
+				</Text>
+				<Divider my={4} />
+				{actions.map((a) => (
+					<Paper key={a.label} withBorder radius="sm" p="sm">
+						<Group justify="space-between" wrap="nowrap" align="center">
+							<Stack gap={0} style={{ minWidth: 0 }}>
+								<Text size="sm" fw={500}>
+									{a.label}
+								</Text>
+								<Text size="xs" c="dimmed">
+									{a.hint}
+								</Text>
+							</Stack>
+							<Button
+								size="xs"
+								variant="default"
+								color={a.color ?? "gray"}
+								disabled
+							>
+								<Trans>Run</Trans>
+							</Button>
+						</Group>
+					</Paper>
+				))}
+			</Stack>
+		</Modal>
+	);
+}
+
+/**
+ * TanStack Table wrapper with extra features: column visibility menu,
+ * grouping, footer totals row, per-column sort. The Billing panel
+ * drives all of its state from outside so it can wire filter chips,
+ * KPI rollups, and the actions modal.
+ */
+function BillingTable({
 	columns,
 	data,
 	globalFilter,
 	onGlobalFilterChange,
-	initialSorting,
-	emptyLabel,
 	columnFilters,
 	onColumnFiltersChange,
+	columnVisibility,
+	onColumnVisibilityChange,
+	grouping,
+	onGroupingChange,
+	initialSorting,
+	footerTotals,
 }: {
-	columns: ColumnDef<T, unknown>[];
-	data: T[];
+	columns: ColumnDef<BillingRow, unknown>[];
+	data: BillingRow[];
 	globalFilter: string;
 	onGlobalFilterChange: (v: string) => void;
+	columnFilters: ColumnFiltersState;
+	onColumnFiltersChange: (v: ColumnFiltersState) => void;
+	columnVisibility: VisibilityState;
+	onColumnVisibilityChange: (v: VisibilityState) => void;
+	grouping: GroupingState;
+	onGroupingChange: (v: GroupingState) => void;
 	initialSorting?: SortingState;
-	emptyLabel: string;
-	columnFilters?: ColumnFiltersState;
-	onColumnFiltersChange?: (u: ColumnFiltersState) => void;
+	footerTotals: {
+		audio_hours: number;
+		seat_count: number;
+		base_price_eur: number;
+		hour_overage_eur: number;
+		seat_overage_eur: number;
+		total_forecast_eur: number;
+	};
 }) {
 	const [sorting, setSorting] = useState<SortingState>(initialSorting ?? []);
+	// TanStack's ExpandedState is Record<string, boolean> | true, but the
+	// 'true' shorthand isn't useful to us — we always track per-row
+	// expansion. Hold local state and let the table pass full updates.
+	const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
-	const table = useReactTable<T>({
+	const table = useReactTable<BillingRow>({
 		columns,
 		data,
 		state: {
 			sorting,
 			globalFilter,
-			columnFilters: columnFilters ?? [],
+			columnFilters,
+			columnVisibility,
+			grouping,
+			expanded,
 		},
 		onSortingChange: setSorting,
 		onGlobalFilterChange,
-		onColumnFiltersChange: onColumnFiltersChange
-			? (updater) => {
-					const next =
-						typeof updater === "function"
-							? updater(columnFilters ?? [])
-							: updater;
-					onColumnFiltersChange(next);
-				}
-			: undefined,
+		onColumnFiltersChange: (updater) =>
+			onColumnFiltersChange(
+				typeof updater === "function" ? updater(columnFilters) : updater,
+			),
+		onColumnVisibilityChange: (updater) =>
+			onColumnVisibilityChange(
+				typeof updater === "function" ? updater(columnVisibility) : updater,
+			),
+		onGroupingChange: (updater) =>
+			onGroupingChange(
+				typeof updater === "function" ? updater(grouping) : updater,
+			),
+		onExpandedChange: (updater) => {
+			const next =
+				typeof updater === "function" ? updater(expanded) : updater;
+			// Reject the 'true' shorthand; we never set that state.
+			if (next === true) return;
+			setExpanded(next as Record<string, boolean>);
+		},
 		getCoreRowModel: getCoreRowModel(),
 		getSortedRowModel: getSortedRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
+		getGroupedRowModel: getGroupedRowModel(),
+		getExpandedRowModel: getExpandedRowModel(),
+		// 'reorder' (default) moves grouped columns to the front so team
+		// renders first when group-by-team is active; being explicit here
+		// makes that contract impossible to miss during future edits.
+		groupedColumnMode: "reorder",
+		autoResetExpanded: false,
 	});
 
 	const rows = table.getRowModel().rows;
+	const leafColumns = table.getVisibleLeafColumns();
 
 	return (
 		<Paper withBorder radius="sm" style={{ overflowX: "auto" }}>
@@ -272,7 +482,12 @@ function DataTable<T extends object>({
 							{headerGroup.headers.map((header) => {
 								const canSort = header.column.getCanSort();
 								const sorted = header.column.getIsSorted();
-								const align = (header.column.columnDef.meta as { align?: "left" | "right" } | undefined)?.align ?? "left";
+								const align =
+									(
+										header.column.columnDef.meta as
+											| { align?: "left" | "right" }
+											| undefined
+									)?.align ?? "left";
 								return (
 									<Table.Th key={header.id} ta={align}>
 										{canSort ? (
@@ -291,8 +506,17 @@ function DataTable<T extends object>({
 												/>
 											</UnstyledButton>
 										) : (
-											<Text size="xs" fw={500} c="dimmed" tt="uppercase" lts={0.3}>
-												{flexRender(header.column.columnDef.header, header.getContext())}
+											<Text
+												size="xs"
+												fw={500}
+												c="dimmed"
+												tt="uppercase"
+												lts={0.3}
+											>
+												{flexRender(
+													header.column.columnDef.header,
+													header.getContext(),
+												)}
 											</Text>
 										)}
 									</Table.Th>
@@ -304,39 +528,158 @@ function DataTable<T extends object>({
 				<Table.Tbody>
 					{rows.length === 0 ? (
 						<Table.Tr>
-							<Table.Td colSpan={columns.length}>
+							<Table.Td colSpan={leafColumns.length}>
 								<Text size="xs" c="dimmed" ta="center" py="md">
-									{emptyLabel}
+									<Trans>Nothing matches the filter.</Trans>
 								</Text>
 							</Table.Td>
 						</Table.Tr>
 					) : (
-						rows.map((row) => (
-							<Table.Tr key={row.id}>
-								{row.getVisibleCells().map((cell) => {
-									const align = (cell.column.columnDef.meta as { align?: "left" | "right" } | undefined)?.align ?? "left";
-									return (
-										<Table.Td key={cell.id} ta={align}>
-											{flexRender(cell.column.columnDef.cell, cell.getContext())}
+						rows.map((row) => {
+							// Grouping renders header rows with a single merged cell.
+							if (row.getIsGrouped()) {
+								const groupValue = String(row.getValue(row.groupingColumnId ?? ""));
+								const descendants = row.getLeafRows();
+								const teamBase = descendants.reduce(
+									(s, r) => s + (r.original.base_price_eur ?? 0),
+									0,
+								);
+								const teamOverage = descendants.reduce(
+									(s, r) =>
+										s + r.original.hour_overage_eur + r.original.seat_overage_eur,
+									0,
+								);
+								const teamTotal = descendants.reduce(
+									(s, r) => s + (r.original.total_forecast_eur ?? 0),
+									0,
+								);
+								return (
+									<Table.Tr
+										key={row.id}
+										style={{ background: "var(--mantine-color-gray-0)" }}
+									>
+										<Table.Td colSpan={leafColumns.length}>
+											<UnstyledButton
+												onClick={row.getToggleExpandedHandler()}
+												style={{ width: "100%" }}
+											>
+												<Group justify="space-between" wrap="nowrap">
+													<Group gap="xs">
+														{row.getIsExpanded() ? (
+															<IconChevronDown size={14} />
+														) : (
+															<IconChevronRight size={14} />
+														)}
+														<Text size="sm" fw={500}>
+															{groupValue || t`Unassigned team`}
+														</Text>
+														<Text size="xs" c="dimmed">
+															{descendants.length}{" "}
+															{descendants.length === 1
+																? t`workspace`
+																: t`workspaces`}
+														</Text>
+													</Group>
+													<Group gap="md">
+														<Text size="xs" c="dimmed">
+															<Trans>Base</Trans> {formatEur(teamBase)}
+														</Text>
+														<Text size="xs" c="dimmed">
+															<Trans>Overage</Trans> {formatEur(teamOverage)}
+														</Text>
+														<Text size="xs" fw={500}>
+															<Trans>Total</Trans> {formatEur(teamTotal)}
+														</Text>
+													</Group>
+												</Group>
+											</UnstyledButton>
 										</Table.Td>
-									);
-								})}
-							</Table.Tr>
-						))
+									</Table.Tr>
+								);
+							}
+							return (
+								<Table.Tr key={row.id}>
+									{row.getVisibleCells().map((cell) => {
+										const align =
+											(
+												cell.column.columnDef.meta as
+													| { align?: "left" | "right" }
+													| undefined
+											)?.align ?? "left";
+										return (
+											<Table.Td key={cell.id} ta={align}>
+												{flexRender(cell.column.columnDef.cell, cell.getContext())}
+											</Table.Td>
+										);
+									})}
+								</Table.Tr>
+							);
+						})
 					)}
 				</Table.Tbody>
+				{rows.length > 0 && (
+					<Table.Tfoot>
+						<Table.Tr style={{ background: "var(--mantine-color-gray-0)" }}>
+							{leafColumns.map((col, i) => {
+								const key = col.id;
+								let content: React.ReactNode = null;
+								if (i === 0) content = <Text size="xs" fw={500}><Trans>Total</Trans></Text>;
+								else if (key === "audio_hours")
+									content = (
+										<Text size="xs" ta="right">
+											{footerTotals.audio_hours.toFixed(1)} h
+										</Text>
+									);
+								else if (key === "seat_count")
+									content = (
+										<Text size="xs" ta="right">
+											{footerTotals.seat_count}
+										</Text>
+									);
+								else if (key === "base_price_eur")
+									content = (
+										<Text size="xs" ta="right">
+											{formatEur(footerTotals.base_price_eur)}
+										</Text>
+									);
+								else if (key === "hour_overage_eur")
+									content = (
+										<Text size="xs" ta="right">
+											{formatEur(footerTotals.hour_overage_eur)}
+										</Text>
+									);
+								else if (key === "seat_overage_eur")
+									content = (
+										<Text size="xs" ta="right">
+											{formatEur(footerTotals.seat_overage_eur)}
+										</Text>
+									);
+								else if (key === "total_forecast_eur")
+									content = (
+										<Text size="xs" ta="right" fw={500}>
+											{formatEur(footerTotals.total_forecast_eur)}
+										</Text>
+									);
+								return <Table.Td key={col.id}>{content}</Table.Td>;
+							})}
+						</Table.Tr>
+					</Table.Tfoot>
+				)}
 			</Table>
 		</Paper>
 	);
 }
 
 function TierBreakdownPanel({ rows }: { rows: BillingRow[] }) {
-	const [opened, { toggle }] = useDisclosure(false);
+	const [opened, { toggle }] = useDisclosure(true);
 
 	const byTier = useMemo(() => {
-		const groups = new Map<string, { count: number; base: number; overage: number; active: number }>();
-		for (const t of TIER_ORDER) {
-			groups.set(t, { count: 0, base: 0, overage: 0, active: 0 });
+		const groups = new Map<
+			string,
+			{ count: number; base: number; overage: number; active: number }
+		>();
+		for (const tier of TIER_ORDER) {
+			groups.set(tier, { count: 0, base: 0, overage: 0, active: 0 });
 		}
 		for (const r of rows) {
 			const g = groups.get(r.tier) ?? { count: 0, base: 0, overage: 0, active: 0 };
@@ -346,7 +689,10 @@ function TierBreakdownPanel({ rows }: { rows: BillingRow[] }) {
 			if (r.is_active) g.active += 1;
 			groups.set(r.tier, g);
 		}
-		return TIER_ORDER.map((tier) => ({ tier, ...(groups.get(tier) ?? { count: 0, base: 0, overage: 0, active: 0 }) }));
+		return TIER_ORDER.map((tier) => ({
+			tier,
+			...(groups.get(tier) ?? { count: 0, base: 0, overage: 0, active: 0 }),
+		}));
 	}, [rows]);
 
 	return (
@@ -354,7 +700,11 @@ function TierBreakdownPanel({ rows }: { rows: BillingRow[] }) {
 			<UnstyledButton onClick={toggle} style={{ width: "100%" }}>
 				<Group justify="space-between" wrap="nowrap">
 					<Group gap="xs">
-						{opened ? <IconChevronDown size={14} /> : <IconChevronRight size={14} />}
+						{opened ? (
+							<IconChevronDown size={14} />
+						) : (
+							<IconChevronRight size={14} />
+						)}
 						<Text size="sm" fw={500}>
 							<Trans>Breakdown by tier</Trans>
 						</Text>
@@ -370,7 +720,12 @@ function TierBreakdownPanel({ rows }: { rows: BillingRow[] }) {
 						{byTier.map((b) => (
 							<Paper key={b.tier} withBorder radius="sm" p="sm">
 								<Stack gap={2}>
-									<Badge size="xs" color={tierColors[b.tier] ?? "gray"} variant="light" tt="capitalize">
+									<Badge
+										size="xs"
+										color={tierColors[b.tier] ?? "gray"}
+										variant="light"
+										tt="capitalize"
+									>
 										{b.tier}
 									</Badge>
 									<Text size="lg" fw={500}>
@@ -402,20 +757,29 @@ function TierBreakdownPanel({ rows }: { rows: BillingRow[] }) {
 }
 
 function UsageAndBillingPanel() {
+	const [periodOffset, setPeriodOffset] = useState(0);
 	const { data, isLoading } = useQuery({
-		queryKey: ["v2", "admin", "billing-rollup"],
-		queryFn: () => fetchJson<BillingRollup>("/v2/admin/billing-rollup"),
+		queryKey: ["v2", "admin", "billing-rollup", periodOffset],
+		queryFn: () =>
+			fetchJson<BillingRollup>(
+				`/v2/admin/billing-rollup?month_offset=${periodOffset}`,
+			),
 		staleTime: 60_000,
 	});
 
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+	const [grouping, setGrouping] = useState<GroupingState>([]);
 	const [onlyOver, setOnlyOver] = useState(false);
-	const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+	const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
+		"all",
+	);
+	const [tierFilter, setTierFilter] = useState<string[]>([]);
+	const [actionsRow, setActionsRow] = useState<BillingRow | null>(null);
 
-	// Pre-filter: over-cap + status happen outside TanStack so the table
-	// only sees rows the staff actually wants. Column-level filters (per-
-	// tier) still go through the table state.
+	// Pre-filter handles the fast chip-toggles; column filters inside
+	// TanStack handle per-column multiselects (currently tier).
 	const prefiltered = useMemo(() => {
 		const rows = data?.rows ?? [];
 		return rows.filter((r) => {
@@ -423,31 +787,54 @@ function UsageAndBillingPanel() {
 				return false;
 			if (statusFilter === "active" && !r.is_active) return false;
 			if (statusFilter === "inactive" && r.is_active) return false;
+			if (tierFilter.length > 0 && !tierFilter.includes(r.tier)) return false;
 			return true;
 		});
-	}, [data, onlyOver, statusFilter]);
+	}, [data, onlyOver, statusFilter, tierFilter]);
 
-	const columns = useMemo<ColumnDef<BillingRow, unknown>[]>(() => {
-		return [
+	const columns = useMemo<ColumnDef<BillingRow, unknown>[]>(
+		() => [
 			{
 				id: "workspace_name",
 				accessorKey: "workspace_name",
 				header: t`Workspace`,
-				cell: ({ row }) => (
-					<Anchor
-						component={I18nLink}
-						to={`/w/${row.original.workspace_id}/settings/billing`}
-						size="xs"
-						fw={500}
-					>
-						{row.original.workspace_name}
-					</Anchor>
-				),
+				cell: ({ row }) => {
+					const admins = row.original.workspace_admins;
+					const adminEmail = admins[0]?.email ?? null;
+					return (
+						<Stack gap={0} style={{ minWidth: 0 }}>
+							<Anchor
+								component={I18nLink}
+								to={`/w/${row.original.workspace_id}/settings/billing`}
+								size="xs"
+								fw={500}
+							>
+								{row.original.workspace_name}
+							</Anchor>
+							{adminEmail && (
+								<Tooltip
+									label={admins
+										.map((a) => `${a.display_name ?? "?"} ${a.email ?? ""}`)
+										.join(" / ")}
+									withArrow
+									disabled={admins.length <= 1}
+								>
+									<Text size="xs" c="dimmed" truncate maw={220}>
+										{adminEmail}
+									</Text>
+								</Tooltip>
+							)}
+						</Stack>
+					);
+				},
 			},
 			{
-				id: "billed_to",
+				id: "team",
 				accessorFn: (r) => r.billed_to_team_name ?? r.org_name,
 				header: t`Team`,
+				// Used for grouping; the grouped-row renderer in BillingTable
+				// reads this to label the header.
+				getGroupingValue: (r) => r.billed_to_team_name ?? r.org_name,
 				cell: ({ row }) => (
 					<Group gap={4} wrap="nowrap">
 						<Anchor
@@ -468,9 +855,9 @@ function UsageAndBillingPanel() {
 			},
 			{
 				id: "tier",
-				// Sort by the canonical tier order, not alphabetic. matrix v1.1 §1.
 				accessorFn: (r) => r.tier,
-				sortingFn: (a, b) => tierRank(a.original.tier) - tierRank(b.original.tier),
+				sortingFn: (a, b) =>
+					tierRank(a.original.tier) - tierRank(b.original.tier),
 				header: t`Tier`,
 				cell: ({ row }) => (
 					<Badge
@@ -484,19 +871,50 @@ function UsageAndBillingPanel() {
 				),
 			},
 			{
+				id: "base_price_eur",
+				accessorKey: "base_price_eur",
+				header: t`Base`,
+				meta: { align: "right" },
+				cell: ({ row }) => formatEur(row.original.base_price_eur),
+			},
+			{
 				id: "audio_hours",
 				accessorKey: "audio_hours",
 				header: t`Hours`,
 				meta: { align: "right" },
+				cell: ({ row }) => (
+					<UsageBar
+						used={row.original.audio_hours}
+						cap={row.original.audio_hours_included}
+						unit="h"
+						block={row.original.pilot_hard_block}
+					/>
+				),
+			},
+			{
+				id: "hour_overage_eur",
+				accessorKey: "hour_overage_eur",
+				header: t`Overage hrs`,
+				meta: { align: "right" },
 				cell: ({ row }) => {
-					const r = row.original;
-					const txt = r.audio_hours_included
-						? `${r.audio_hours.toFixed(1)} / ${r.audio_hours_included}`
-						: r.audio_hours.toFixed(1);
+					const v = row.original.hour_overage_eur;
+					const over = row.original.over_hours;
+					if (v === 0 && over === 0) {
+						return (
+							<Text size="xs" c="dimmed">
+								—
+							</Text>
+						);
+					}
 					return (
-						<Text size="xs" c={r.at_cap || r.pilot_hard_block ? "red" : undefined}>
-							{txt}
-						</Text>
+						<Stack gap={0} align="flex-end">
+							<Text size="xs" c="orange" fw={500}>
+								{formatEur(v)}
+							</Text>
+							<Text size="xs" c="dimmed">
+								{over.toFixed(1)} h over
+							</Text>
+						</Stack>
 					);
 				},
 			},
@@ -505,68 +923,37 @@ function UsageAndBillingPanel() {
 				accessorKey: "seat_count",
 				header: t`Seats`,
 				meta: { align: "right" },
-				cell: ({ row }) => {
-					const r = row.original;
-					return r.seats_included
-						? `${r.seat_count} / ${r.seats_included}`
-						: `${r.seat_count}`;
-				},
-			},
-			{
-				id: "base_price_eur",
-				accessorKey: "base_price_eur",
-				header: t`Base`,
-				meta: { align: "right" },
-				cell: ({ row }) => formatEur(row.original.base_price_eur),
-			},
-			{
-				id: "overage_total",
-				accessorFn: (r) => r.hour_overage_eur + r.seat_overage_eur,
-				header: t`Overage`,
-				meta: { align: "right" },
-				cell: ({ row }) => {
-					const v = row.original.hour_overage_eur + row.original.seat_overage_eur;
-					return (
-						<Text size="xs" c={v > 0 ? "orange" : "dimmed"}>
-							{formatEur(v)}
-						</Text>
-					);
-				},
-			},
-			{
-				id: "total_forecast_eur",
-				accessorKey: "total_forecast_eur",
-				header: t`Total`,
-				meta: { align: "right" },
 				cell: ({ row }) => (
-					<Text size="xs" fw={500}>
-						{formatEur(row.original.total_forecast_eur)}
-					</Text>
+					<UsageBar
+						used={row.original.seat_count}
+						cap={row.original.seats_included}
+					/>
 				),
 			},
 			{
-				id: "workspace_admin",
-				accessorFn: (r) => r.workspace_admins[0]?.email ?? "",
-				header: t`Workspace admin`,
+				id: "seat_overage_eur",
+				accessorKey: "seat_overage_eur",
+				header: t`Overage seats`,
+				meta: { align: "right" },
 				cell: ({ row }) => {
-					const admins = row.original.workspace_admins;
-					if (admins.length === 0) {
+					const v = row.original.seat_overage_eur;
+					const over = row.original.over_seats;
+					if (v === 0 && over === 0) {
 						return (
 							<Text size="xs" c="dimmed">
-								.
+								—
 							</Text>
 						);
 					}
-					const first = admins[0];
-					const others = admins
-						.map((a) => `${a.display_name ?? "?"} ${a.email ?? ""}`)
-						.join(" / ");
 					return (
-						<Tooltip label={others} withArrow>
-							<Text size="xs" c="dimmed" truncate maw={160}>
-								{first.email ?? first.display_name ?? ""}
+						<Stack gap={0} align="flex-end">
+							<Text size="xs" c="orange" fw={500}>
+								{formatEur(v)}
 							</Text>
-						</Tooltip>
+							<Text size="xs" c="dimmed">
+								{over} over
+							</Text>
+						</Stack>
 					);
 				},
 			},
@@ -585,8 +972,61 @@ function UsageAndBillingPanel() {
 						</Badge>
 					),
 			},
-		];
-	}, []);
+			{
+				id: "total_forecast_eur",
+				accessorKey: "total_forecast_eur",
+				header: t`Total`,
+				meta: { align: "right" },
+				cell: ({ row }) => (
+					<Text size="xs" fw={500}>
+						{formatEur(row.original.total_forecast_eur)}
+					</Text>
+				),
+			},
+			{
+				id: "actions",
+				header: "",
+				enableSorting: false,
+				enableGrouping: false,
+				cell: ({ row }) => (
+					<ActionIcon
+						size="sm"
+						variant="subtle"
+						color="gray"
+						onClick={() => setActionsRow(row.original)}
+						aria-label={t`Open actions`}
+					>
+						<IconDots size={14} />
+					</ActionIcon>
+				),
+			},
+		],
+		[],
+	);
+
+	const footerTotals = useMemo(
+		() => ({
+			audio_hours: prefiltered.reduce((s, r) => s + r.audio_hours, 0),
+			seat_count: prefiltered.reduce((s, r) => s + r.seat_count, 0),
+			base_price_eur: prefiltered.reduce(
+				(s, r) => s + (r.base_price_eur ?? 0),
+				0,
+			),
+			hour_overage_eur: prefiltered.reduce(
+				(s, r) => s + r.hour_overage_eur,
+				0,
+			),
+			seat_overage_eur: prefiltered.reduce(
+				(s, r) => s + r.seat_overage_eur,
+				0,
+			),
+			total_forecast_eur: prefiltered.reduce(
+				(s, r) => s + (r.total_forecast_eur ?? 0),
+				0,
+			),
+		}),
+		[prefiltered],
+	);
 
 	if (isLoading) {
 		return (
@@ -609,73 +1049,101 @@ function UsageAndBillingPanel() {
 	});
 
 	const handleExport = () => {
-		// Rebuild a simplified row set for CSV to keep it invoice-ready.
-		const exportColumns = [
-			{ id: "workspace_id", header: "workspace_id", accessor: (r: BillingRow) => r.workspace_id },
-			{ id: "workspace_name", header: "workspace_name", accessor: (r: BillingRow) => r.workspace_name },
-			{ id: "team", header: "team", accessor: (r: BillingRow) => r.billed_to_team_name ?? r.org_name },
-			{ id: "tier", header: "tier", accessor: (r: BillingRow) => r.tier },
-			{ id: "audio_hours", header: "audio_hours", accessor: (r: BillingRow) => r.audio_hours.toFixed(2) },
-			{ id: "audio_hours_included", header: "audio_hours_included", accessor: (r: BillingRow) => r.audio_hours_included ?? "" },
-			{ id: "hour_overage_eur", header: "hour_overage_eur", accessor: (r: BillingRow) => r.hour_overage_eur.toFixed(2) },
-			{ id: "seat_count", header: "seat_count", accessor: (r: BillingRow) => r.seat_count },
-			{ id: "seats_included", header: "seats_included", accessor: (r: BillingRow) => r.seats_included ?? "" },
-			{ id: "seat_overage_eur", header: "seat_overage_eur", accessor: (r: BillingRow) => r.seat_overage_eur.toFixed(2) },
-			{ id: "base_price_eur", header: "base_price_eur", accessor: (r: BillingRow) => r.base_price_eur ?? "" },
-			{ id: "total_forecast_eur", header: "total_forecast_eur", accessor: (r: BillingRow) => r.total_forecast_eur ?? "" },
-			{ id: "workspace_admin_email", header: "workspace_admin_email", accessor: (r: BillingRow) => r.workspace_admins[0]?.email ?? "" },
-			{ id: "is_active", header: "is_active", accessor: (r: BillingRow) => (r.is_active ? "yes" : "no") },
+		const headers = [
+			"workspace_id",
+			"workspace_name",
+			"team",
+			"tier",
+			"audio_hours",
+			"audio_hours_included",
+			"hour_overage_eur",
+			"seat_count",
+			"seats_included",
+			"seat_overage_eur",
+			"base_price_eur",
+			"total_forecast_eur",
+			"workspace_admin_email",
+			"is_active",
 		];
-		const fakeRows = prefiltered.map((r, i) => ({ id: String(i), original: r } as Row<BillingRow>));
-		downloadRowsAsCsv(
-			`usage-and-billing-${data.cycle_start.slice(0, 7)}.csv`,
-			fakeRows,
-			exportColumns,
+		const lines = prefiltered.map((r) =>
+			[
+				r.workspace_id,
+				r.workspace_name,
+				r.billed_to_team_name ?? r.org_name,
+				r.tier,
+				r.audio_hours.toFixed(2),
+				r.audio_hours_included ?? "",
+				r.hour_overage_eur.toFixed(2),
+				r.seat_count,
+				r.seats_included ?? "",
+				r.seat_overage_eur.toFixed(2),
+				r.base_price_eur ?? "",
+				r.total_forecast_eur ?? "",
+				r.workspace_admins[0]?.email ?? "",
+				r.is_active ? "yes" : "no",
+			]
+				.map((v) => `"${String(v).replace(/"/g, '""')}"`)
+				.join(","),
 		);
+		const csv = [headers.join(","), ...lines].join("\n");
+		const blob = new Blob([csv], { type: "text/csv" });
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement("a");
+		link.href = url;
+		link.download = `usage-and-billing-${data.cycle_start.slice(0, 7)}.csv`;
+		link.click();
+		URL.revokeObjectURL(url);
 	};
+
+	const tierOptions = TIER_ORDER.map((t) => ({
+		value: t,
+		label: t.charAt(0).toUpperCase() + t.slice(1),
+	}));
+
+	// Column visibility menu: let staff hide noisy columns.
+	const columnMenuItems = columns
+		.filter((c) => c.id && c.id !== "actions" && c.id !== "workspace_name")
+		.map((c) => ({
+			id: c.id ?? "",
+			label: typeof c.header === "string" ? (c.header as string) : (c.id ?? ""),
+		}));
+
+	const isGrouped = grouping.includes("team");
 
 	return (
 		<Stack gap="md">
-			<Group justify="space-between" align="center" wrap="wrap">
+			<Group justify="space-between" align="flex-end" wrap="wrap">
 				<Stack gap={2}>
 					<Text size="sm" c="dimmed">
+						<Trans>Usage and billing, {cycleLabel}</Trans>
+					</Text>
+					<Text size="xs" c="dimmed">
 						<Trans>
-							Usage and billing, {cycleLabel}, {" "}
-							<Plural value={data.workspace_count} one="# workspace" other="# workspaces" />
+							{data.workspace_count} workspaces, {data.active_workspace_count}{" "}
+							active
 						</Trans>
 					</Text>
-					<Group gap="md">
-						<Text size="xs" c="dimmed">
-							<Trans>Base</Trans> {formatEur(data.total_base_eur)}
-						</Text>
-						<Text size="xs" c="dimmed">
-							<Trans>Overage</Trans> {formatEur(data.total_overage_eur)}
-						</Text>
-						<Text size="sm" fw={500}>
-							<Trans>Total forecast</Trans> {formatEur(data.total_forecast_eur)}
-						</Text>
-					</Group>
 				</Stack>
-				<Group gap="xs">
-					<Button
-						size="xs"
-						variant="default"
-						leftSection={<IconDownload size={14} />}
-						onClick={handleExport}
-					>
-						<Trans>Export CSV</Trans>
-					</Button>
-				</Group>
+				<PeriodSelector value={periodOffset} onChange={setPeriodOffset} />
 			</Group>
 
-			<Group gap="sm" wrap="wrap">
+			<Group gap="sm" wrap="wrap" align="center">
 				<TextInput
 					leftSection={<IconSearch size={14} />}
 					placeholder={t`Search workspace, team, email, tier`}
 					value={globalFilter}
 					onChange={(e) => setGlobalFilter(e.currentTarget.value)}
 					size="sm"
-					style={{ flex: 1, maxWidth: 360 }}
+					style={{ flex: 1, minWidth: 220, maxWidth: 360 }}
+				/>
+				<MultiSelect
+					data={tierOptions}
+					value={tierFilter}
+					onChange={setTierFilter}
+					placeholder={t`All tiers`}
+					size="xs"
+					clearable
+					style={{ minWidth: 180 }}
 				/>
 				<Button.Group>
 					<Button
@@ -697,7 +1165,7 @@ function UsageAndBillingPanel() {
 					<Button
 						size="xs"
 						variant={statusFilter === "inactive" ? "filled" : "default"}
-						color={statusFilter === "inactive" ? "gray" : "gray"}
+						color="gray"
 						onClick={() => setStatusFilter("inactive")}
 					>
 						<Trans>Inactive</Trans>
@@ -711,21 +1179,194 @@ function UsageAndBillingPanel() {
 				>
 					<Trans>Over cap only</Trans>
 				</Button>
+				<Button
+					size="xs"
+					variant={isGrouped ? "filled" : "default"}
+					color={isGrouped ? "blue" : "gray"}
+					leftSection={<IconUsersGroup size={14} />}
+					onClick={() => setGrouping(isGrouped ? [] : ["team"])}
+				>
+					<Trans>Group by team</Trans>
+				</Button>
+				<Menu shadow="md" width={220} position="bottom-end">
+					<Menu.Target>
+						<Button
+							size="xs"
+							variant="default"
+							leftSection={<IconAdjustments size={14} />}
+						>
+							<Trans>Columns</Trans>
+						</Button>
+					</Menu.Target>
+					<Menu.Dropdown>
+						<Menu.Label>
+							<Trans>Visible columns</Trans>
+						</Menu.Label>
+						{columnMenuItems.map((c) => (
+							<Menu.Item
+								key={c.id}
+								onClick={(e) => e.preventDefault()}
+								closeMenuOnClick={false}
+							>
+								<Checkbox
+									size="xs"
+									label={c.label}
+									checked={columnVisibility[c.id] !== false}
+									onChange={(e) =>
+										setColumnVisibility((v) => ({
+											...v,
+											[c.id]: e.currentTarget.checked,
+										}))
+									}
+								/>
+							</Menu.Item>
+						))}
+					</Menu.Dropdown>
+				</Menu>
+				<Button
+					size="xs"
+					variant="default"
+					leftSection={<IconDownload size={14} />}
+					onClick={handleExport}
+				>
+					<Trans>Export CSV</Trans>
+				</Button>
 			</Group>
 
-			<DataTable<BillingRow>
+			<BillingTable
 				columns={columns}
 				data={prefiltered}
 				globalFilter={globalFilter}
 				onGlobalFilterChange={setGlobalFilter}
 				columnFilters={columnFilters}
 				onColumnFiltersChange={setColumnFilters}
+				columnVisibility={columnVisibility}
+				onColumnVisibilityChange={setColumnVisibility}
+				grouping={grouping}
+				onGroupingChange={setGrouping}
 				initialSorting={[{ id: "total_forecast_eur", desc: true }]}
-				emptyLabel={t`Nothing matches the filter.`}
+				footerTotals={footerTotals}
 			/>
 
 			<TierBreakdownPanel rows={prefiltered} />
+			<Paper withBorder radius="sm" p="sm">
+				<Stack gap={4}>
+					<Text size="sm" fw={500}>
+						<Trans>Pricing matrix</Trans>
+					</Text>
+					<Text size="xs" c="dimmed">
+						<Trans>Every tier at a glance. Same table customers see on the workspace billing tab.</Trans>
+					</Text>
+					<Box mt="xs">
+						<TierCapacityMatrix />
+					</Box>
+				</Stack>
+			</Paper>
+
+			<WorkspaceActionsModal
+				row={actionsRow}
+				opened={actionsRow !== null}
+				onClose={() => setActionsRow(null)}
+			/>
 		</Stack>
+	);
+}
+
+function SimpleDataTable<T extends object>({
+	columns,
+	data,
+	globalFilter,
+	onGlobalFilterChange,
+	initialSorting,
+	emptyLabel,
+}: {
+	columns: ColumnDef<T, unknown>[];
+	data: T[];
+	globalFilter: string;
+	onGlobalFilterChange: (v: string) => void;
+	initialSorting?: SortingState;
+	emptyLabel: string;
+}) {
+	const [sorting, setSorting] = useState<SortingState>(initialSorting ?? []);
+	const table = useReactTable<T>({
+		columns,
+		data,
+		state: { sorting, globalFilter },
+		onSortingChange: setSorting,
+		onGlobalFilterChange,
+		getCoreRowModel: getCoreRowModel(),
+		getSortedRowModel: getSortedRowModel(),
+		getFilteredRowModel: getFilteredRowModel(),
+	});
+	const rows = table.getRowModel().rows;
+	return (
+		<Paper withBorder radius="sm" style={{ overflowX: "auto" }}>
+			<Table striped highlightOnHover verticalSpacing="xs" fz="xs">
+				<Table.Thead>
+					{table.getHeaderGroups().map((hg) => (
+						<Table.Tr key={hg.id}>
+							{hg.headers.map((h) => {
+								const canSort = h.column.getCanSort();
+								const sorted = h.column.getIsSorted();
+								const align =
+									(h.column.columnDef.meta as { align?: "left" | "right" } | undefined)
+										?.align ?? "left";
+								return (
+									<Table.Th key={h.id} ta={align}>
+										{canSort ? (
+											<UnstyledButton
+												onClick={h.column.getToggleSortingHandler()}
+												style={{ width: "100%" }}
+											>
+												<SortableHeader
+													label={
+														typeof h.column.columnDef.header === "string"
+															? (h.column.columnDef.header as string)
+															: ""
+													}
+													sorted={sorted}
+													align={align}
+												/>
+											</UnstyledButton>
+										) : (
+											<Text size="xs" fw={500} c="dimmed" tt="uppercase" lts={0.3}>
+												{flexRender(h.column.columnDef.header, h.getContext())}
+											</Text>
+										)}
+									</Table.Th>
+								);
+							})}
+						</Table.Tr>
+					))}
+				</Table.Thead>
+				<Table.Tbody>
+					{rows.length === 0 ? (
+						<Table.Tr>
+							<Table.Td colSpan={columns.length}>
+								<Text size="xs" c="dimmed" ta="center" py="md">
+									{emptyLabel}
+								</Text>
+							</Table.Td>
+						</Table.Tr>
+					) : (
+						rows.map((row) => (
+							<Table.Tr key={row.id}>
+								{row.getVisibleCells().map((cell) => {
+									const align =
+										(cell.column.columnDef.meta as { align?: "left" | "right" } | undefined)
+											?.align ?? "left";
+									return (
+										<Table.Td key={cell.id} ta={align}>
+											{flexRender(cell.column.columnDef.cell, cell.getContext())}
+										</Table.Td>
+									);
+								})}
+							</Table.Tr>
+						))
+					)}
+				</Table.Tbody>
+			</Table>
+		</Paper>
 	);
 }
 
@@ -735,9 +1376,7 @@ function PartnersPanel() {
 		queryFn: () => fetchJson<ReferralLedgerRow[]>("/v2/admin/referral-ledger"),
 		staleTime: 60_000,
 	});
-
 	const [globalFilter, setGlobalFilter] = useState("");
-
 	const columns = useMemo<ColumnDef<ReferralLedgerRow, unknown>[]>(
 		() => [
 			{
@@ -850,7 +1489,6 @@ function PartnersPanel() {
 		],
 		[],
 	);
-
 	if (isLoading) {
 		return (
 			<Center py="xl">
@@ -859,7 +1497,6 @@ function PartnersPanel() {
 		);
 	}
 	const rows = data ?? [];
-
 	return (
 		<Stack gap="sm">
 			<Group justify="space-between" align="center" wrap="wrap">
@@ -875,7 +1512,7 @@ function PartnersPanel() {
 					style={{ maxWidth: 320 }}
 				/>
 			</Group>
-			<DataTable<ReferralLedgerRow>
+			<SimpleDataTable<ReferralLedgerRow>
 				columns={columns}
 				data={rows}
 				globalFilter={globalFilter}
@@ -892,9 +1529,7 @@ function UpgradesPanel() {
 		queryFn: () => fetchJson<UpgradeRequestRow[]>("/v2/admin/upgrade-requests"),
 		staleTime: 60_000,
 	});
-
 	const [globalFilter, setGlobalFilter] = useState("");
-
 	const columns = useMemo<ColumnDef<UpgradeRequestRow, unknown>[]>(
 		() => [
 			{
@@ -925,7 +1560,8 @@ function UpgradesPanel() {
 			{
 				id: "current_tier",
 				accessorFn: (r) => r.current_tier,
-				sortingFn: (a, b) => tierRank(a.original.current_tier) - tierRank(b.original.current_tier),
+				sortingFn: (a, b) =>
+					tierRank(a.original.current_tier) - tierRank(b.original.current_tier),
 				header: t`Current tier`,
 				cell: ({ row }) => (
 					<Badge
@@ -941,7 +1577,8 @@ function UpgradesPanel() {
 			{
 				id: "target_tier",
 				accessorFn: (r) => r.target_tier,
-				sortingFn: (a, b) => tierRank(a.original.target_tier) - tierRank(b.original.target_tier),
+				sortingFn: (a, b) =>
+					tierRank(a.original.target_tier) - tierRank(b.original.target_tier),
 				header: t`Target tier`,
 				cell: ({ row }) => (
 					<Badge
@@ -959,24 +1596,25 @@ function UpgradesPanel() {
 				accessorKey: "audio_hours_current",
 				header: t`Current hours`,
 				meta: { align: "right" },
-				cell: ({ row }) => {
-					const r = row.original;
-					return r.audio_hours_included
-						? `${r.audio_hours_current.toFixed(1)} / ${r.audio_hours_included}`
-						: r.audio_hours_current.toFixed(1);
-				},
+				cell: ({ row }) => (
+					<UsageBar
+						used={row.original.audio_hours_current}
+						cap={row.original.audio_hours_included}
+						unit="h"
+					/>
+				),
 			},
 			{
 				id: "seat_count",
 				accessorKey: "seat_count",
 				header: t`Seats`,
 				meta: { align: "right" },
-				cell: ({ row }) => {
-					const r = row.original;
-					return r.seats_included
-						? `${r.seat_count} / ${r.seats_included}`
-						: `${r.seat_count}`;
-				},
+				cell: ({ row }) => (
+					<UsageBar
+						used={row.original.seat_count}
+						cap={row.original.seats_included}
+					/>
+				),
 			},
 			{
 				id: "requested_at",
@@ -987,7 +1625,6 @@ function UpgradesPanel() {
 		],
 		[],
 	);
-
 	if (isLoading) {
 		return (
 			<Center py="xl">
@@ -996,7 +1633,6 @@ function UpgradesPanel() {
 		);
 	}
 	const rows = data ?? [];
-
 	return (
 		<Stack gap="sm">
 			<Group justify="space-between" align="center" wrap="wrap">
@@ -1012,12 +1648,12 @@ function UpgradesPanel() {
 					style={{ maxWidth: 320 }}
 				/>
 			</Group>
-			<DataTable<UpgradeRequestRow>
+			<SimpleDataTable<UpgradeRequestRow>
 				columns={columns}
 				data={rows}
 				globalFilter={globalFilter}
 				onGlobalFilterChange={setGlobalFilter}
-				emptyLabel={t`No pending upgrade requests. Requests currently email the upgrade inbox and are not yet persisted.`}
+				emptyLabel={t`No pending upgrade requests.`}
 			/>
 		</Stack>
 	);
@@ -1065,8 +1701,7 @@ export const AdminSettingsRoute = () => {
 						<Text size="xs" c="dimmed">
 							<Trans>
 								Usage and billing, partner ledger, upgrade triage. Any Directus
-								admin has access. Staff policy wiring (matrix section 11) lands
-								in a follow-up.
+								admin has access.
 							</Trans>
 						</Text>
 					</Stack>
