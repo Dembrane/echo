@@ -70,8 +70,13 @@ class BillingRow(BaseModel):
     at_cap: bool = False
     downgraded_at: Optional[str] = None
     downgraded_from_tier: Optional[str] = None
-    # Billing contact (admin role preferred, billing role if no admin)
-    billing_contacts: list[BillingContact] = []
+    # Activity gate. Active = has audio this cycle OR has at least one
+    # non-external member. Inactive workspaces are seats that never
+    # converted — worth calling staff's attention but not billing risk.
+    is_active: bool = True
+    # Workspace admins (max 3), preferred over billing-role users so
+    # staff has someone to talk to about project issues, not just money.
+    workspace_admins: list[BillingContact] = []
 
 
 class BillingRollupResponse(BaseModel):
@@ -203,27 +208,28 @@ async def _workspace_hours_this_cycle(
     return round(total_seconds / 3600.0, 2)
 
 
-async def _billing_contacts(ws_id: str, org_id: str) -> list[BillingContact]:
-    """Admins first, then billing role. Max 3 shown."""
+async def _workspace_admins(ws_id: str) -> list[BillingContact]:
+    """Workspace admins + owners, max 3. No billing-role fallback.
+
+    Staff wants "who do I call about this workspace" which is the
+    admin, not the billing person. Billing-only users are surfaced
+    elsewhere if needed.
+    """
     mems = await async_directus.get_items(
         "workspace_membership",
         {"query": {
             "filter": {
                 "workspace_id": {"_eq": ws_id},
                 "deleted_at": {"_null": True},
-                "role": {"_in": ["admin", "owner", "billing"]},
+                "role": {"_in": ["admin", "owner"]},
+                "is_external": {"_eq": False},
             },
-            "fields": ["user_id", "role"],
-            "limit": -1,
+            "fields": ["user_id"],
+            "limit": 3,
         }},
     )
     if not isinstance(mems, list) or not mems:
         return []
-    # Prefer admin/owner, then billing
-    def _sort_key(m: dict) -> int:
-        role = m.get("role")
-        return 0 if role in ("owner", "admin") else 1
-    mems = sorted(mems, key=_sort_key)[:3]
     user_ids = [m["user_id"] for m in mems if m.get("user_id")]
     if not user_ids:
         return []
@@ -239,14 +245,15 @@ async def _billing_contacts(ws_id: str, org_id: str) -> list[BillingContact]:
         return []
     by_id = {u["id"]: u for u in users}
     out: list[BillingContact] = []
-    for m in mems:
-        uid = m.get("user_id")
-        u = by_id.get(uid) if uid else None
+    for uid in user_ids:
+        u = by_id.get(uid)
+        if not u:
+            continue
         out.append(
             BillingContact(
                 user_id=uid,
-                display_name=(u or {}).get("display_name"),
-                email=(u or {}).get("email"),
+                display_name=u.get("display_name"),
+                email=u.get("email"),
             )
         )
     return out
@@ -324,7 +331,10 @@ async def billing_rollup(
         )
         billed_to_name = org_name_by_id.get(billed_to) if billed_to else None
 
-        contacts = await _billing_contacts(ws_id, ws.get("org_id") or "")
+        admins = await _workspace_admins(ws_id)
+        # Active when there's usage this cycle OR real members. Everything
+        # else is a shell that never turned into an engagement.
+        is_active = hours > 0 or seat_count > 0
 
         row = BillingRow(
             workspace_id=ws_id,
@@ -351,7 +361,8 @@ async def billing_rollup(
             at_cap=at_cap,
             downgraded_at=ws.get("downgraded_at"),
             downgraded_from_tier=ws.get("downgraded_from_tier"),
-            billing_contacts=contacts,
+            is_active=is_active,
+            workspace_admins=admins,
         )
         rows.append(row)
         if base_price is not None:
@@ -378,6 +389,137 @@ async def billing_rollup(
         total_forecast_eur=round(total_base + total_overage, 2),
         rows=rows,
     )
+
+
+class ReferralLedgerRow(BaseModel):
+    """Flattened referral_ledger row with workspace + team names enriched."""
+    id: str
+    workspace_id: Optional[str] = None
+    workspace_name: Optional[str] = None
+    partner_team_id: Optional[str] = None
+    partner_team_name: Optional[str] = None
+    from_org_id: Optional[str] = None
+    from_org_name: Optional[str] = None
+    partner_kickback_percent: Optional[int] = None
+    to_team_discount_percent: Optional[int] = None
+    eur_cap_kickback: Optional[float] = None
+    starts_at: Optional[str] = None
+    expires_at: Optional[str] = None
+    notes: Optional[str] = None
+
+
+@router.get("/referral-ledger", response_model=list[ReferralLedgerRow])
+async def list_referral_ledger(
+    auth: DependencyDirectusSession,
+) -> list[ReferralLedgerRow]:
+    """Every row in referral_ledger, enriched with workspace + team names
+    so staff can read the table without cross-referencing ids."""
+    if not auth.is_admin:
+        raise HTTPException(status_code=403, detail="Staff-only")
+
+    rows = await async_directus.get_items(
+        "referral_ledger",
+        {"query": {
+            "fields": [
+                "id", "workspace_id", "partner_team_id", "from_org_id",
+                "partner_kickback_percent", "to_team_discount_percent",
+                "eur_cap_kickback", "starts_at", "expires_at", "notes",
+            ],
+            "sort": ["-starts_at"],
+            "limit": -1,
+        }},
+    )
+    if not isinstance(rows, list):
+        return []
+
+    ws_ids = list({r["workspace_id"] for r in rows if r.get("workspace_id")})
+    org_ids = list({
+        *(r["partner_team_id"] for r in rows if r.get("partner_team_id")),
+        *(r["from_org_id"] for r in rows if r.get("from_org_id")),
+    })
+
+    ws_names: dict[str, str] = {}
+    if ws_ids:
+        ws_rows = await async_directus.get_items(
+            "workspace",
+            {"query": {
+                "filter": {"id": {"_in": ws_ids}},
+                "fields": ["id", "name"],
+                "limit": -1,
+            }},
+        )
+        if isinstance(ws_rows, list):
+            ws_names = {w["id"]: w.get("name", "") for w in ws_rows}
+
+    org_names: dict[str, str] = {}
+    if org_ids:
+        o_rows = await async_directus.get_items(
+            "org",
+            {"query": {
+                "filter": {"id": {"_in": org_ids}},
+                "fields": ["id", "name"],
+                "limit": -1,
+            }},
+        )
+        if isinstance(o_rows, list):
+            org_names = {o["id"]: o.get("name", "") for o in o_rows}
+
+    out: list[ReferralLedgerRow] = []
+    for r in rows:
+        out.append(ReferralLedgerRow(
+            id=str(r.get("id")),
+            workspace_id=r.get("workspace_id"),
+            workspace_name=ws_names.get(r.get("workspace_id") or ""),
+            partner_team_id=r.get("partner_team_id"),
+            partner_team_name=org_names.get(r.get("partner_team_id") or ""),
+            from_org_id=r.get("from_org_id"),
+            from_org_name=org_names.get(r.get("from_org_id") or ""),
+            partner_kickback_percent=r.get("partner_kickback_percent"),
+            to_team_discount_percent=r.get("to_team_discount_percent"),
+            eur_cap_kickback=r.get("eur_cap_kickback"),
+            starts_at=r.get("starts_at"),
+            expires_at=r.get("expires_at"),
+            notes=r.get("notes"),
+        ))
+    return out
+
+
+class UpgradeRequestRow(BaseModel):
+    """One pending upgrade request.
+
+    Upgrade requests currently email upgrades@dembrane.com and are not
+    persisted. This model is the shape the UI expects once a storage
+    collection lands. For now list_upgrade_requests always returns [].
+    """
+    id: str
+    workspace_id: str
+    workspace_name: str
+    org_id: str
+    org_name: str
+    current_tier: str
+    target_tier: str
+    audio_hours_current: float
+    audio_hours_included: Optional[int]
+    seat_count: int
+    seats_included: Optional[int]
+    requested_at: str
+    requested_by: Optional[str] = None
+
+
+@router.get("/upgrade-requests", response_model=list[UpgradeRequestRow])
+async def list_upgrade_requests(
+    auth: DependencyDirectusSession,
+) -> list[UpgradeRequestRow]:
+    """Pending upgrade requests.
+
+    Today upgrade requests are mailed to upgrades@dembrane.com and never
+    persisted; this endpoint returns [] so the UI table renders its
+    columns and empty state. Once a persistent upgrade_request collection
+    lands (follow-up) we populate from there.
+    """
+    if not auth.is_admin:
+        raise HTTPException(status_code=403, detail="Staff-only")
+    return []
 
 
 @router.get("/at-risk", response_model=list[AtRiskRow])
