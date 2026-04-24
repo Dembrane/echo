@@ -972,8 +972,13 @@ def step_9_notifications():
                     schema={"on_delete": "SET NULL"})
     create_relation("notification", "ref_chat_id", "project_chat",
                     schema={"on_delete": "SET NULL"})
-    create_relation("notification", "ref_report_id", "project_report",
-                    schema={"on_delete": "SET NULL"})
+    # Skipped: project_report.id is bigInteger but ref_report_id is uuid.
+    # Directus rejects the FK outright (column-type mismatch). We store
+    # the report id as an opaque string at the application layer and
+    # accept the absence of referential-integrity for this one link.
+    # If project_report is ever re-keyed to uuid, uncomment this.
+    # create_relation("notification", "ref_report_id", "project_report",
+    #                 schema={"on_delete": "SET NULL"})
     create_relation("notification", "ref_conversation_id", "conversation",
                     schema={"on_delete": "SET NULL"})
     create_relation("notification", "ref_invite_id", "workspace_invite",
