@@ -1,5 +1,101 @@
 [
   {
+    "collection": "referral_ledger",
+    "action": "create",
+    "permissions": {},
+    "validation": {},
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "_sync_default_admin_policy",
+    "_syncId": "29475e72-f6fd-4ad0-b36f-bb1a4c032cc4"
+  },
+  {
+    "collection": "referral_ledger",
+    "action": "delete",
+    "permissions": {},
+    "validation": {},
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "_sync_default_admin_policy",
+    "_syncId": "3ccd189d-4811-4c3d-b02e-0429ad22f9bc"
+  },
+  {
+    "collection": "referral_ledger",
+    "action": "read",
+    "permissions": {},
+    "validation": {},
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "_sync_default_admin_policy",
+    "_syncId": "945d431c-ca21-4a66-ac07-6f9be5e7d632"
+  },
+  {
+    "collection": "referral_ledger",
+    "action": "update",
+    "permissions": {},
+    "validation": {},
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "_sync_default_admin_policy",
+    "_syncId": "e01bf233-5751-4be9-810a-76f2d983f03e"
+  },
+  {
+    "collection": "workspace_invite",
+    "action": "create",
+    "permissions": {},
+    "validation": {},
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "_sync_default_admin_policy",
+    "_syncId": "1b816f75-991d-4f0d-9ad7-8c2adf111b2d"
+  },
+  {
+    "collection": "workspace_invite",
+    "action": "delete",
+    "permissions": {},
+    "validation": {},
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "_sync_default_admin_policy",
+    "_syncId": "af65d560-728d-463d-91bd-2b5bf177a15e"
+  },
+  {
+    "collection": "workspace_invite",
+    "action": "read",
+    "permissions": {},
+    "validation": {},
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "_sync_default_admin_policy",
+    "_syncId": "dcc72bad-6556-4aeb-8951-cb6f0a703e8d"
+  },
+  {
+    "collection": "workspace_invite",
+    "action": "update",
+    "permissions": {},
+    "validation": {},
+    "presets": null,
+    "fields": [
+      "*"
+    ],
+    "policy": "_sync_default_admin_policy",
+    "_syncId": "3486ad7e-1f93-4f53-9484-943020a49f76"
+  },
+  {
     "collection": "aspect_segment",
     "action": "create",
     "permissions": null,

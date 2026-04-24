@@ -1,7 +1,7 @@
 {
   "collection": "access_request",
   "field": "id",
-  "type": "integer",
+  "type": "uuid",
   "meta": {
     "collection": "access_request",
     "conditions": null,
@@ -10,14 +10,16 @@
     "field": "id",
     "group": null,
     "hidden": true,
-    "interface": "numeric",
+    "interface": "input",
     "note": null,
     "options": null,
     "readonly": true,
     "required": false,
     "searchable": true,
     "sort": 1,
-    "special": null,
+    "special": [
+      "uuid"
+    ],
     "translations": null,
     "validation": null,
     "validation_message": null,
@@ -26,18 +28,18 @@
   "schema": {
     "name": "id",
     "table": "access_request",
-    "data_type": "integer",
-    "default_value": "nextval('access_request_id_seq'::regclass)",
+    "data_type": "uuid",
+    "default_value": null,
     "max_length": null,
-    "numeric_precision": 32,
-    "numeric_scale": 0,
+    "numeric_precision": null,
+    "numeric_scale": null,
     "is_nullable": false,
     "is_unique": true,
     "is_indexed": false,
     "is_primary_key": true,
     "is_generated": false,
     "generation_expression": null,
-    "has_auto_increment": true,
+    "has_auto_increment": false,
     "foreign_key_table": null,
     "foreign_key_column": null
   }

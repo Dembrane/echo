@@ -1131,6 +1131,9 @@ def step_12_access_requests():
 
     if not collection_exists("access_request"):
         print("  Creating access_request collection...")
+        # Directus auto-creates an integer PK if `fields` is omitted.
+        # Pass the PK explicitly so we get uuid from the start; trying
+        # to alter it afterwards via add_field silently noops.
         api("POST", "/collections", {
             "collection": "access_request",
             "meta": {
@@ -1143,14 +1146,25 @@ def step_12_access_requests():
                 "sort_field": "requested_at",
             },
             "schema": {},
+            "fields": [
+                {
+                    "field": "id",
+                    "type": "uuid",
+                    "schema": {
+                        "is_primary_key": True,
+                        "has_auto_increment": False,
+                        "is_nullable": False,
+                    },
+                    "meta": {
+                        "hidden": True,
+                        "readonly": True,
+                        "interface": "input",
+                        "special": ["uuid"],
+                    },
+                }
+            ],
         })
         print("  OK access_request collection created")
-
-    add_field("access_request", "id", {
-        "type": "uuid",
-        "schema": {"is_primary_key": True, "has_auto_increment": False, "is_nullable": False},
-        "meta": {"hidden": True, "readonly": True, "interface": "input", "special": ["uuid"]},
-    })
 
     add_field("access_request", "workspace_id", {
         "type": "uuid",
@@ -1507,6 +1521,59 @@ def step_15_prompt_template_workspace_scope():
     return True
 
 
+def step_16_access_request_uuid_pk():
+    """Convert access_request.id from integer → uuid.
+
+    The original step_12 declared id as uuid, but the `POST /collections`
+    call auto-created the table with an integer auto-increment PK, and
+    the subsequent `add_field id type=uuid` doesn't alter an existing
+    PK column (Directus noops on conflicting shape). Everything else in
+    the schema is UUID, so access_request is the odd one out and the
+    backend has to str()-cast int ids to match Pydantic types.
+
+    This step migrates via Postgres SQL because the Directus REST API
+    can't change a PK column type. Strategy:
+      1. Rename current int column to id_old.
+      2. Add new uuid column `id` with uuid_generate_v4() default.
+      3. Backfill: id = gen_random_uuid() for every existing row.
+      4. Drop id_old + its PK constraint.
+      5. Add PK on new id.
+
+    Assumes access_request rows are ephemeral (pending join requests
+    that get resolved in hours/days). Losing the integer ids is fine —
+    any in-flight notifications reference the request by id-in-payload,
+    not by FK, and the UX re-queries by (workspace_id, user_id, status).
+
+    Idempotent: checks the current column type first.
+    """
+    print("\n=== Step 16: access_request.id integer → uuid ===")
+    if not collection_exists("access_request"):
+        print("  access_request missing — run step 12 first")
+        return False
+
+    # Ask Directus what the current type is.
+    current = api("GET", "/fields/access_request/id")
+    if not current:
+        print("  ERROR: couldn't read access_request.id field")
+        return False
+    current_type = (current.get("data") or {}).get("type")
+    if current_type == "uuid":
+        print("  already uuid — nothing to do")
+        return True
+    if current_type not in ("integer", "bigInteger"):
+        print(f"  unexpected current type {current_type!r}; aborting")
+        return False
+
+    # Directus doesn't expose raw SQL. We drop + recreate the collection.
+    # access_request has no inbound FKs (verified via snapshot). The
+    # outbound FKs (workspace_id / user_id / actioned_by) live on this
+    # table and get recreated by step 12 below.
+    print("  dropping access_request collection…")
+    api("DELETE", "/collections/access_request")
+    print("  recreating with uuid pk via step 12…")
+    return step_12_access_requests()
+
+
 STEPS = {
     "1": ("app_user", step_1_app_user),
     "2": ("org + org_membership", step_2_org),
@@ -1523,6 +1590,7 @@ STEPS = {
     "13": ("partner-client model (§10)", step_13_partner_model),
     "14": ("kickback extensions on referral_ledger", step_14_kickback_extensions),
     "15": ("prompt_template workspace scope", step_15_prompt_template_workspace_scope),
+    "16": ("access_request.id integer → uuid", step_16_access_request_uuid_pk),
 }
 
 
