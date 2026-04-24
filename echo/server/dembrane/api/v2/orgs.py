@@ -1086,6 +1086,12 @@ class OrgUsageWorkspaceRow(BaseModel):
     approaching_seat_cap: bool = False # >=80% on capped seats
     seat_cap_hit: bool = False         # seat_count >= seats_included
     downgraded_at: Optional[str] = None
+    # Guests live alongside seats (matrix §7). They don't bill but
+    # they're tier-capped (§1 Guest cap column), so staff wants to
+    # see the count + cap on the same rollup row.
+    guest_count: int = 0
+    guest_cap: Optional[int] = None
+    guest_cap_hit: bool = False
     # Admin / billing only:
     overage_forecast_eur: Optional[float] = None
 
@@ -1245,6 +1251,7 @@ async def get_org_usage(
     total_seat_count = 0
     total_guest_count = 0
     per_ws_seats: dict[str, int] = {wid: 0 for wid in ws_ids}
+    per_ws_guests: dict[str, int] = {wid: 0 for wid in ws_ids}
     if ws_ids:
         memberships = await async_directus.get_items(
             "workspace_membership",
@@ -1286,6 +1293,7 @@ async def get_org_usage(
             for (wid, _uid), m in by_pair.items():
                 if m.get("is_external"):
                     total_guest_count += 1
+                    per_ws_guests[wid] = per_ws_guests.get(wid, 0) + 1
                 elif m.get("role") in seat_roles:
                     total_seat_count += 1
                     per_ws_seats[wid] = per_ws_seats.get(wid, 0) + 1
@@ -1326,6 +1334,9 @@ async def get_org_usage(
         approaching_seat_cap = (
             seats_pct is not None and seats_pct >= 0.8 and not seat_cap_hit
         )
+        guest_count = per_ws_guests.get(wid, 0)
+        guest_cap: Optional[int] = cap.guest_cap if cap else None
+        guest_cap_hit = guest_cap is not None and guest_count >= guest_cap
         ws_at_cap = False
         ws_approaching = False
         ws_forecast_eur = 0.0
@@ -1364,6 +1375,9 @@ async def get_org_usage(
             "seats_pct": seats_pct,
             "seat_cap_hit": seat_cap_hit,
             "approaching_seat_cap": approaching_seat_cap,
+            "guest_count": guest_count,
+            "guest_cap": guest_cap,
+            "guest_cap_hit": guest_cap_hit,
             "at_cap": ws_at_cap,
             "approaching_cap": ws_approaching,
             "downgraded_at": w.get("downgraded_at"),

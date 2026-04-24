@@ -78,6 +78,9 @@ interface OrgUsageWorkspaceRow {
 	seats_pct: number | null;
 	seat_cap_hit: boolean;
 	approaching_seat_cap: boolean;
+	guest_count: number;
+	guest_cap: number | null;
+	guest_cap_hit: boolean;
 	downgraded_at: string | null;
 	at_cap: boolean;
 	approaching_cap: boolean;
@@ -414,6 +417,22 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 				},
 			},
 			{
+				id: "guest_count",
+				accessorKey: "guest_count",
+				// Matrix §1: guest caps live per-tier. Surfacing them here
+				// lets team admins see when their workspaces are close to
+				// hitting the external-collaborator ceiling.
+				header: t`Guests`,
+				meta: { align: "right" },
+				cell: ({ row }) => (
+					<UsageBar
+						used={row.original.guest_count}
+						cap={row.original.guest_cap}
+						block={row.original.guest_cap_hit}
+					/>
+				),
+			},
+			{
 				id: "is_active",
 				accessorFn: (r) => (isActive(r) ? "active" : "inactive"),
 				header: t`Status`,
@@ -482,6 +501,7 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 		const cap = r.original.seats_included;
 		return s + (cap == null ? 0 : Math.max(0, r.original.seat_count - cap));
 	}, 0);
+	const totalsGuests = rows.reduce((s, r) => s + r.original.guest_count, 0);
 
 	if (isLoading || !data) return null;
 
@@ -750,6 +770,11 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 														c={totalsSeatsOver > 0 ? "orange" : "dimmed"}
 													>
 														{totalsSeatsOver}
+													</Text>
+												),
+												guest_count: (
+													<Text size="xs" fw={600} ta="right">
+														{totalsGuests}
 													</Text>
 												),
 											};

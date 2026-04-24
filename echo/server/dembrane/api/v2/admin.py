@@ -61,6 +61,12 @@ class BillingRow(BaseModel):
     seats_included: Optional[int] = None
     over_seats: int = 0
     seat_overage_eur: float = 0.0
+    # Guests (matrix §7). Tier-capped, not billed, so no overage €.
+    # Surfaced on the rollup so staff can spot workspaces leaning
+    # hard on external collaborators before hitting the hard cap.
+    guest_count: int = 0
+    guest_cap: Optional[int] = None
+    guest_cap_hit: bool = False
     # Base monthly price (tier sticker). Pilot shows its one-time fee.
     base_price_eur: Optional[float] = None
     total_forecast_eur: Optional[float] = None
@@ -230,6 +236,27 @@ async def _workspace_seat_count(ws_id: str) -> int:
     return len({m["user_id"] for m in mems if m.get("user_id")})
 
 
+async def _workspace_guest_count(ws_id: str) -> int:
+    """Guests only. Dedup by user_id so a user with both a direct and
+    legacy inherited guest row counts once (matrix §7 dedupe rule
+    applies to guests too)."""
+    mems = await async_directus.get_items(
+        "workspace_membership",
+        {"query": {
+            "filter": {
+                "workspace_id": {"_eq": ws_id},
+                "deleted_at": {"_null": True},
+                "is_external": {"_eq": True},
+            },
+            "fields": ["user_id"],
+            "limit": -1,
+        }},
+    )
+    if not isinstance(mems, list):
+        return 0
+    return len({m["user_id"] for m in mems if m.get("user_id")})
+
+
 async def _workspace_hours_this_cycle(
     ws_id: str, cycle_start: str, cycle_end: str
 ) -> float:
@@ -358,9 +385,12 @@ async def billing_rollup(
         cap = get_capacity(tier)
         hours = await _workspace_hours_this_cycle(ws_id, cycle_start, cycle_end)
         seat_count = await _workspace_seat_count(ws_id)
+        guest_count = await _workspace_guest_count(ws_id)
 
         included_hours = cap.included_hours if cap else None
         included_seats = cap.included_seats if cap else None
+        guest_cap = cap.guest_cap if cap else None
+        guest_cap_hit = guest_cap is not None and guest_count >= guest_cap
         over_hours = max(0.0, hours - included_hours) if included_hours is not None else 0.0
         over_seats = max(0, seat_count - included_seats) if included_seats is not None else 0
         hour_rate = cap.hour_overage_eur if cap else None
@@ -422,6 +452,9 @@ async def billing_rollup(
             seats_included=included_seats,
             over_seats=over_seats,
             seat_overage_eur=seat_overage_eur,
+            guest_count=guest_count,
+            guest_cap=guest_cap,
+            guest_cap_hit=guest_cap_hit,
             base_price_eur=base_price,
             total_forecast_eur=total,
             pilot_hard_block=pilot_block,

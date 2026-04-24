@@ -101,6 +101,9 @@ type BillingRow = {
 	seats_included: number | null;
 	over_seats: number;
 	seat_overage_eur: number;
+	guest_count: number;
+	guest_cap: number | null;
+	guest_cap_hit: boolean;
 	base_price_eur: number | null;
 	total_forecast_eur: number | null;
 	pilot_hard_block: boolean;
@@ -432,6 +435,7 @@ function BillingTable({
 	footerTotals: {
 		audio_hours: number;
 		seat_count: number;
+		guest_count: number;
 		base_price_eur: number;
 		hour_overage_eur: number;
 		seat_overage_eur: number;
@@ -692,6 +696,11 @@ function BillingTable({
 									seat_count: (
 										<Text size="xs" fw={600} ta="right">
 											{footerTotals.seat_count}
+										</Text>
+									),
+									guest_count: (
+										<Text size="xs" fw={600} ta="right">
+											{footerTotals.guest_count}
 										</Text>
 									),
 									base_price_eur: (
@@ -1034,6 +1043,22 @@ function UsageAndBillingPanel() {
 				},
 			},
 			{
+				id: "guest_count",
+				accessorKey: "guest_count",
+				// Matrix §1: guests are tier-capped, not billed. Column
+				// here lets staff spot workspaces that are leaning on
+				// external collaborators before they hit the hard cap.
+				header: t`Guests`,
+				meta: { align: "right" },
+				cell: ({ row }) => (
+					<UsageBar
+						used={row.original.guest_count}
+						cap={row.original.guest_cap}
+						block={row.original.guest_cap_hit}
+					/>
+				),
+			},
+			{
 				id: "is_active",
 				accessorFn: (r) => (r.is_active ? "active" : "inactive"),
 				header: t`Status`,
@@ -1085,6 +1110,7 @@ function UsageAndBillingPanel() {
 		() => ({
 			audio_hours: prefiltered.reduce((s, r) => s + r.audio_hours, 0),
 			seat_count: prefiltered.reduce((s, r) => s + r.seat_count, 0),
+			guest_count: prefiltered.reduce((s, r) => s + r.guest_count, 0),
 			base_price_eur: prefiltered.reduce(
 				(s, r) => s + (r.base_price_eur ?? 0),
 				0,
@@ -1137,6 +1163,8 @@ function UsageAndBillingPanel() {
 			"seat_count",
 			"seats_included",
 			"seat_overage_eur",
+			"guest_count",
+			"guest_cap",
 			"base_price_eur",
 			"total_forecast_eur",
 			"workspace_admin_email",
@@ -1154,6 +1182,8 @@ function UsageAndBillingPanel() {
 				r.seat_count,
 				r.seats_included ?? "",
 				r.seat_overage_eur.toFixed(2),
+				r.guest_count,
+				r.guest_cap ?? "",
 				r.base_price_eur ?? "",
 				r.total_forecast_eur ?? "",
 				r.workspace_admins[0]?.email ?? "",
