@@ -334,6 +334,7 @@ If cutover goes sideways:
 - [ ] Self-serve billing (v2 — staff-executed upgrades are fine for v1).
 - [ ] Decision on whether Guardian's "unlimited" has soft internal caps for capacity planning.
 - [ ] Library / analysis views — stays invite-gated for now; revisit once usage patterns are clearer.
+- [ ] **v3**: team + workspace admins can mandate MFA for their members. Setting stored on `org` / `workspace` with a grace window; members without MFA get a forced-setup screen on next login and can't use the workspace until it's configured. Enterprise ask — not for cutover.
 
 ## Locked decisions reference
 

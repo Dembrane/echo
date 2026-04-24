@@ -23,6 +23,7 @@ from dembrane.api.v2.access_requests import (
     router as access_requests_router,
     discover_router as access_requests_discover_router,
 )
+from dembrane.api.v2.admin import router as admin_router
 
 v2_router = APIRouter()
 
@@ -52,3 +53,8 @@ v2_router.include_router(projects_router, prefix="/projects", tags=["v2:projects
 v2_router.include_router(
     project_sharing_router, prefix="/projects", tags=["v2:project-sharing"]
 )
+
+# Staff-only admin tools (billing rollup, at-risk, tier change, partner ledger).
+# is_admin JWT claim is the gate for now; storage-backed staff policies
+# (staff:can_set_tier etc.) are declared in policies.py but not wired.
+v2_router.include_router(admin_router, prefix="/admin", tags=["v2:admin"])

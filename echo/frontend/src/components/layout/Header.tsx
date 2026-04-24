@@ -4,6 +4,7 @@ import {
 	ActionIcon,
 	Badge,
 	Box,
+	Button,
 	Group,
 	Menu,
 	Paper,
@@ -14,6 +15,7 @@ import {
 import * as Sentry from "@sentry/react";
 import {
 	IconBug,
+	IconShieldLock,
 	IconCheck,
 	IconChevronDown,
 	IconExternalLink,
@@ -89,6 +91,7 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 	const { data: meV2 } = useV2Me({ enabled: isAuthenticated });
 	const needsOnboarding = meV2?.onboarding_completed === false;
 	const hasPendingInvites = meV2?.has_pending_invites === true;
+	const isStaff = meV2?.is_staff === true;
 	const { workspaceId, workspaceName, workspaces, setWorkspace } = useWorkspace();
 	const location = useLocation();
 	// Workspace breadcrumb in the header is noise on pages that ARE the
@@ -104,7 +107,8 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 		pathNoLocale === "/w" ||
 		pathNoLocale === "/w/" ||
 		pathNoLocale.startsWith("/w/new") ||
-		pathNoLocale.startsWith("/t/");
+		pathNoLocale.startsWith("/t/") ||
+		pathNoLocale.startsWith("/admin");
 	const navigate = useI18nNavigate();
 	const { runTransition } = useTransitionCurtain();
 	const { setLogoUrl } = useWhitelabelLogo();
@@ -258,7 +262,23 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 					</Group>
 
 					{!loading && isAuthenticated && user ? (
-						<Group align="center">
+						<Group align="center" gap="xs">
+							{/* Staff shortcut — only visible when meV2.is_staff is
+							    true. Purple so it reads as "out-of-model" vs. the
+							    blue primary. Routes to /admin (billing rollup,
+							    at-risk, partners, upgrades). */}
+							{isStaff && (
+								<Button
+									component={I18nLink}
+									to="/admin"
+									size="xs"
+									variant="light"
+									color="violet"
+									leftSection={<IconShieldLock size={12} />}
+								>
+									<Trans>Staff</Trans>
+								</Button>
+							)}
 							{/* Unified Inbox — one bell, two tabs (For you +
 							    Announcements). Replaces the prior split icons.
 							    ENABLE_ANNOUNCEMENTS still controls whether the

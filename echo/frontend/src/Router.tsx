@@ -138,6 +138,10 @@ const TeamRoute = createLazyNamedRoute(
 	() => import("./routes/team/TeamRoute"),
 	"TeamRoute",
 );
+const AdminSettingsRoute = createLazyNamedRoute(
+	() => import("./routes/admin/AdminSettingsRoute"),
+	"AdminSettingsRoute",
+);
 // Project route children — shared between /projects and /w/:workspaceId/projects
 const projectRouteChildren = [
 	{
@@ -431,6 +435,21 @@ export const mainRouter = createBrowserRouter([
 					</Protected>
 				),
 				path: "settings",
+			},
+			{
+				// Staff-only — billing rollup, at-risk watch, partners, upgrades.
+				// Client-side guard lives inside AdminSettingsRoute (reads
+				// meV2.is_staff); backend /v2/admin/* also gates on is_admin.
+				children: [
+					{ element: <AdminSettingsRoute />, index: true },
+					{ element: <AdminSettingsRoute />, path: ":tab" },
+				],
+				element: (
+					<Protected>
+						<BaseLayout />
+					</Protected>
+				),
+				path: "admin",
 			},
 			{
 				element: <ErrorPage />,
