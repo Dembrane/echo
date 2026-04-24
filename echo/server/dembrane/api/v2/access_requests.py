@@ -334,19 +334,23 @@ async def request_workspace_access(
     existing = await _pending_request(workspace_id, app_user_id)
     if existing:
         return RequestAccessResponse(
-            status="already_pending", request_id=existing["id"]
+            status="already_pending", request_id=str(existing["id"])
         )
 
-    req_id = generate_uuid()
-    await async_directus.create_item(
+    # The committed schema has access_request.id as an integer
+    # auto-increment PK (snapshot: fields/access_request/id.json) — the
+    # create_schema.py step that declared it as UUID didn't take on the
+    # already-created table. Passing a UUID in 'id' trips Directus's
+    # write-validation and surfaces as FORBIDDEN. Let Postgres own the PK.
+    created = await async_directus.create_item(
         "access_request",
         {
-            "id": req_id,
             "workspace_id": workspace_id,
             "user_id": app_user_id,
             "status": "pending",
         },
     )
+    req_id = str(created["data"]["id"]) if isinstance(created, dict) else None
 
     # Audience: workspace admins + team admins. Either can approve.
     from dembrane.notifications import (
@@ -701,7 +705,11 @@ async def list_discoverable_workspaces(
             },
         )
         if isinstance(reqs, list):
-            pending_map = {r["workspace_id"]: r["id"] for r in reqs}
+            # Cast id to str: access_request.id is an integer autoincrement
+            # on the committed schema (see fields/access_request/id.json),
+            # but DiscoverableWorkspace.pending_request_id is Optional[str]
+            # — Pydantic rejects the int outright.
+            pending_map = {r["workspace_id"]: str(r["id"]) for r in reqs}
 
     out: list[DiscoverableWorkspace] = []
     for w in workspaces:

@@ -158,14 +158,43 @@ class AsyncDirectusClient:
             raise DirectusBadRequest(exc) from exc
 
     async def search(self, path: str, query: dict[str, Any] | None = None, **kwargs: Any) -> Any:
-        """SEARCH request. Returns response.json()["data"] (list)."""
+        """SEARCH request. Returns response.json()["data"] (list).
+
+        Failure modes the caller cares about:
+          - permission denied / collection missing: Directus responds
+            200/4xx with `{"errors": [...]}` and no `data` key. We log
+            at warning level and return the error envelope so callers
+            can tell "empty" from "broken" by `isinstance(..., list)`.
+          - connection refused: raise DirectusServerError.
+        """
         try:
             response = await self._request("SEARCH", path, json=query, **kwargs)
             try:
-                return response.json()["data"]
+                body = response.json()
             except Exception:
-                logger.exception("Failed to parse SEARCH response JSON")
-                return {"error": "No data found for this request"}
+                logger.warning(
+                    "SEARCH %s returned non-JSON body (status=%s)",
+                    path, response.status_code,
+                )
+                return {"error": "non-json response"}
+            if isinstance(body, dict) and "data" in body:
+                return body["data"]
+            # No 'data' key — surface Directus's error envelope if present,
+            # at warning level. Previously crashed with KeyError 'data'
+            # which masked the underlying permission / schema issue.
+            if isinstance(body, dict) and "errors" in body:
+                first = (body["errors"] or [{}])[0]
+                msg = first.get("message") or "unknown error"
+                logger.warning(
+                    "SEARCH %s (status=%s) errored: %s",
+                    path, response.status_code, msg,
+                )
+                return {"error": msg}
+            logger.warning(
+                "SEARCH %s returned unexpected shape (status=%s)",
+                path, response.status_code,
+            )
+            return {"error": "unexpected response shape"}
         except httpx.ConnectError as exc:
             raise DirectusServerError(exc) from exc
         except AssertionError as exc:
