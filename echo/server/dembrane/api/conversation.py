@@ -16,7 +16,6 @@ from dembrane.utils import CacheWithExpiration, generate_uuid, get_utc_timestamp
 from dembrane.service import project_service, conversation_service, build_conversation_service
 from dembrane.directus import directus
 from dembrane.audio_utils import (
-    get_duration_from_s3,
     sanitize_filename_component,
     merge_multiple_audio_files_and_save_to_s3,
 )
@@ -303,20 +302,14 @@ async def get_conversation_content(
     try:
         uuid = generate_uuid()
 
-        merged_path = await run_in_thread_pool(
+        merged_path, duration = await run_in_thread_pool(
             merge_multiple_audio_files_and_save_to_s3,
             file_paths,
             f"audio-conversations/merged-{sanitize_filename_component(conversation_id)}-{uuid}.mp3",
             "mp3",
         )
 
-        logger.debug(f"Successfully merged audio to: {merged_path}")
-
-        duration = -1.0
-        try:
-            duration = await run_in_thread_pool(get_duration_from_s3, merged_path)
-        except Exception as e:
-            logger.error(f"Error getting duration from s3: {str(e)}")
+        logger.debug(f"Successfully merged audio to: {merged_path}, duration: {duration}s")
 
         await run_in_thread_pool(
             active_client.update_item,
@@ -805,11 +798,18 @@ async def retranscribe_conversation(
         # because return_url is True
         assert isinstance(merged_audio_path, str)
 
-        duration = None
-        try:
-            duration = await run_in_thread_pool(get_duration_from_s3, merged_audio_path)
-        except Exception as e:
-            logger.error(f"Error getting duration from s3: {str(e)}")
+        # Duration was already computed and saved by get_conversation_content above
+        updated_conversation = await run_in_thread_pool(
+            active_client.get_items,
+            "conversation",
+            {
+                "query": {
+                    "filter": {"id": {"_eq": conversation_id}},
+                    "fields": ["duration"],
+                }
+            },
+        )
+        duration = updated_conversation[0].get("duration") if updated_conversation else None
 
         # Create a new conversation
         new_conversation_id = generate_uuid()

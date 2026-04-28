@@ -81,14 +81,14 @@ class UpdateVerificationTopicsRequest(BaseModel):
 
 class CreateCustomTopicRequest(BaseModel):
     label: str = Field(..., max_length=100)
-    prompt: str = Field(..., max_length=1000)
+    prompt: str = Field(..., max_length=10000)
     icon: Optional[str] = Field(None, max_length=10)
     translations: Dict[str, str] = Field(default_factory=dict)
 
 
 class UpdateCustomTopicRequest(BaseModel):
     label: Optional[str] = Field(None, max_length=100)
-    prompt: Optional[str] = Field(None, max_length=1000)
+    prompt: Optional[str] = Field(None, max_length=10000)
     icon: Optional[str] = Field(None, max_length=10)
     translations: Optional[Dict[str, str]] = None
 
