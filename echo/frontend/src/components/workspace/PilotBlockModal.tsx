@@ -44,7 +44,7 @@ export const PilotBlockModal = () => {
 				</Text>
 				<Text size="sm">
 					<Trans>
-						Recording keeps working — your participants are unaffected.
+						Recording keeps working, so your participants are unaffected.
 					</Trans>
 				</Text>
 				<Group gap={12} mt={8} justify="flex-end">

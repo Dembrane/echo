@@ -6,6 +6,7 @@ import {
 	Box,
 	Button,
 	Container,
+	Divider,
 	Group,
 	Image,
 	Loader,
@@ -26,6 +27,7 @@ import { TierBadge } from "@/components/workspace/TierBadge";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { displayRole, roleColor } from "@/lib/roles";
 import { logoUrl as resolveLogoUrl } from "@/lib/avatar";
+import { formatDurationFromHours } from "@/lib/time";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
@@ -53,6 +55,7 @@ interface Workspace {
 	is_default: boolean;
 	tier: string;
 	logo_url: string | null;
+	org_logo_url: string | null;
 	project_count: number;
 	member_count: number;
 	is_external: boolean;
@@ -119,6 +122,19 @@ function WorkspaceCard({
 	const isAdminOrOwner = workspace.role === "admin" || workspace.role === "owner";
 	const [hovered, setHovered] = useState(false);
 	const wsLogo = resolveLogoUrl(workspace.logo_url);
+	const teamLogo = resolveLogoUrl(workspace.org_logo_url);
+	// Logo rules (2026-04-24 ask, refined):
+	//   - Guest workspace: ws logo if set, else team logo. A guest's
+	//     anchor is the team that invited them — always show something
+	//     so the card has a visual hook.
+	//   - Internal workspace: only show the ws logo. No ws logo → no
+	//     logo at all. The selector grid is already grouped under the
+	//     team, so repeating the team logo on every internal card is
+	//     just visual noise ("see here there is no special workspace
+	//     icon so no need to show").
+	const headerLogo = workspace.is_external
+		? wsLogo || teamLogo
+		: wsLogo;
 	// Calmer meta-line: role + tier as a single dimmed string, no
 	// colored badges. The old design stacked two blue pills which made
 	// every card shout "admin! pioneer!" at once. Only the at-limit
@@ -147,12 +163,12 @@ function WorkspaceCard({
 		>
 			<Stack gap={12}>
 				<Group gap="sm" wrap="nowrap" align="flex-start">
-					{wsLogo && (
+					{headerLogo && (
 						<Tooltip
 							label={`${capitalizedTier} · ${displayRole(workspace.role)}`}
 						>
 							<Image
-								src={wsLogo}
+								src={headerLogo}
 								alt={t`${workspace.name} logo`}
 								h={36}
 								w="auto"
@@ -166,7 +182,7 @@ function WorkspaceCard({
 							{workspace.name}
 						</Text>
 						<Tooltip
-							label={t`${capitalizedTier} — tap to see what's included`}
+							label={t`${capitalizedTier} · tap to see what's included`}
 							position="bottom-start"
 							withArrow
 							disabled={workspace.is_external}
@@ -361,7 +377,7 @@ function TeamHeroCard({
 						{usage && (
 							<>
 								{" · "}
-								{usage.total_audio_hours.toFixed(1)} {t`h this month`}
+								{formatDurationFromHours(usage.total_audio_hours)} {t`this month`}
 							</>
 						)}
 					</Text>
@@ -477,12 +493,15 @@ export const WorkspaceSelectorRoute = () => {
 
 					{/* Team groups — team hero card tops each group when a rollup
 					    exists; falls back to a plain heading otherwise (designer
-					    Ask 5: team-level context at top). */}
-					{Array.from(orgGroups.entries()).map(([orgId, group]) => {
+					    Ask 5: team-level context at top). Dividers between groups
+					    (2026-04-24 ask) so each team/guest section reads as a
+					    distinct block instead of one big stream. */}
+					{Array.from(orgGroups.entries()).map(([orgId, group], idx) => {
 						const team = teams.find((t) => t.id === orgId);
 
 						return (
 							<Stack key={orgId} gap={16}>
+								{idx > 0 && <Divider />}
 								{team ? (
 									<TeamHeroCard
 										team={team}
@@ -524,6 +543,7 @@ export const WorkspaceSelectorRoute = () => {
 					    labels live on each card (designer Ask 5). */}
 					{externalWorkspaces.length > 0 && (
 						<Stack gap={12}>
+							{orgGroups.size > 0 && <Divider />}
 							<Text size="xs" fw={500} c="dimmed" tt="uppercase" lts={0.5}>
 								<Trans>As a guest</Trans>
 							</Text>

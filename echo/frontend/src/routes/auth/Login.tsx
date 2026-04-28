@@ -269,10 +269,18 @@ export const LoginRoute = () => {
 						<Trans>Welcome!</Trans>
 					</Title>
 
+					{searchParams.get("verified") === "1" && (
+						<Alert color="green" variant="light">
+							<Trans>
+								Your email is verified. Log in to continue.
+							</Trans>
+						</Alert>
+					)}
+
 					{(searchParams.get("new") === "true" ||
 						!!searchParams.get("next")) && (
 						<Text>
-							<Trans>Please login to continue.</Trans>
+							<Trans>Please log in to continue.</Trans>
 						</Text>
 					)}
 

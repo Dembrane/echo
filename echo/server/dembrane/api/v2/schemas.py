@@ -88,6 +88,9 @@ class WorkspaceSummary(BaseModel):
     is_default: bool
     tier: str
     logo_url: Optional[str] = None
+    # Parent team's logo — handy for card rendering so the client doesn't
+    # need a second lookup. Nullable because teams without a logo exist.
+    org_logo_url: Optional[str] = None
     project_count: int
     member_count: int
     is_external: bool

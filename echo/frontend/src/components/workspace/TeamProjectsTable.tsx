@@ -19,6 +19,7 @@ import { useMemo, useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
+import { formatDurationFromHours } from "@/lib/time";
 
 interface OrgProject {
 	id: string;
@@ -27,6 +28,7 @@ interface OrgProject {
 	workspace_name: string;
 	visibility: string;
 	conversation_count: number;
+	audio_hours: number;
 	created_at: string | null;
 }
 
@@ -139,9 +141,8 @@ export const TeamProjectsTable = ({ orgId }: { orgId: string }) => {
 				<Stack gap={8}>
 					<Text size="sm">
 						<Trans>
-							Delete this project in {p.workspace_name}? Conversations
-							and data stay recoverable for 30 days, then are permanently
-							removed.
+							Delete this project in {p.workspace_name}? All conversations
+							and data are permanently removed.
 						</Trans>
 					</Text>
 					{p.conversation_count > 0 && (
@@ -211,6 +212,11 @@ export const TeamProjectsTable = ({ orgId }: { orgId: string }) => {
 								</Table.Th>
 								<Table.Th>
 									<Text size="xs" c="dimmed">
+										<Trans>Hours</Trans>
+									</Text>
+								</Table.Th>
+								<Table.Th>
+									<Text size="xs" c="dimmed">
 										<Trans>Conversations</Trans>
 									</Text>
 								</Table.Th>
@@ -241,6 +247,9 @@ export const TeamProjectsTable = ({ orgId }: { orgId: string }) => {
 										<Text size="xs" c="dimmed" truncate>
 											{p.workspace_name}
 										</Text>
+									</Table.Td>
+									<Table.Td>
+										<Text size="xs">{formatDurationFromHours(p.audio_hours)}</Text>
 									</Table.Td>
 									<Table.Td>
 										<Text size="xs">{p.conversation_count}</Text>

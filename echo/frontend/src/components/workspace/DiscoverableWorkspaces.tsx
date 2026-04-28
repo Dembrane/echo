@@ -1,8 +1,17 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
-import { Button, Group, Paper, Stack, Text } from "@mantine/core";
-import { IconLock, IconPlus } from "@tabler/icons-react";
+import { Plural, Trans } from "@lingui/react/macro";
+import {
+	Button,
+	Collapse,
+	Group,
+	Paper,
+	Stack,
+	Text,
+	UnstyledButton,
+} from "@mantine/core";
+import { IconChevronDown, IconLock, IconPlus } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 
@@ -58,6 +67,10 @@ async function postRequestAccess(workspaceId: string) {
  */
 export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 	const queryClient = useQueryClient();
+	// Collapsed by default (2026-04-24 ask). The list can be long on
+	// bigger teams and most of the time the user isn't here to discover
+	// new workspaces — they're here to enter one they already belong to.
+	const [open, setOpen] = useState(false);
 
 	const { data, isLoading } = useQuery({
 		queryKey: ["v2", "discoverable-workspaces", orgId],
@@ -96,9 +109,36 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 
 	return (
 		<Stack gap={8}>
-			<Text size="xs" fw={500} c="dimmed" tt="uppercase" lts={0.5}>
-				<Trans>Discoverable in this team</Trans>
-			</Text>
+			<UnstyledButton
+				onClick={() => setOpen((v) => !v)}
+				aria-expanded={open}
+				style={{
+					display: "inline-flex",
+					alignItems: "center",
+					gap: 6,
+					padding: "2px 0",
+				}}
+			>
+				<IconChevronDown
+					size={14}
+					style={{
+						color: "var(--mantine-color-gray-6)",
+						transform: open ? "rotate(0deg)" : "rotate(-90deg)",
+						transition: "transform 0.15s ease",
+					}}
+				/>
+				<Text size="xs" fw={500} c="dimmed" tt="uppercase" lts={0.5}>
+					<Trans>Discoverable in this team</Trans>
+				</Text>
+				<Text size="xs" c="dimmed">
+					<Plural
+						value={joinable.length}
+						one="(# workspace)"
+						other="(# workspaces)"
+					/>
+				</Text>
+			</UnstyledButton>
+			<Collapse in={open}>
 			<Stack gap={6}>
 				{joinable.map((ws) => (
 					<Paper
@@ -161,6 +201,7 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 					</Paper>
 				))}
 			</Stack>
+			</Collapse>
 		</Stack>
 	);
 };

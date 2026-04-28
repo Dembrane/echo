@@ -1,11 +1,4 @@
-import {
-	createItem,
-	deleteItem,
-	type Query,
-	readItem,
-	readItems,
-	updateItem,
-} from "@directus/sdk";
+import type { Query } from "@directus/sdk";
 import { t } from "@lingui/core/macro";
 import {
 	useInfiniteQuery,
@@ -15,6 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
 import { useAddChatContextMutation } from "@/components/conversation/hooks";
+import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
 	api,
@@ -30,7 +24,6 @@ import {
 	updateCustomVerificationTopic,
 	type VerificationTopicsResponse,
 } from "@/lib/api";
-import { directus } from "@/lib/directus";
 
 // ── BFF: Projects Home ──────────────────────────────────────────────────
 
@@ -236,14 +229,33 @@ export const useCloneProjectByIdMutation = () => {
 export const useCreateProjectTagMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (payload: {
+		mutationFn: async (payload: {
 			project_id: {
 				id: string;
 				directus_user_id: string;
 			};
 			text: string;
 			sort?: number;
-		}) => directus.request(createItem("project_tag", payload as any)),
+		}) => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/bff/tags`,
+				{
+					body: JSON.stringify({
+						project_id: payload.project_id.id,
+						text: payload.text,
+						sort: payload.sort,
+					}),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "POST",
+				},
+			);
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.detail || "Failed to create tag");
+			}
+			return res.json();
+		},
 		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects", variables.project_id.id],
@@ -256,14 +268,26 @@ export const useCreateProjectTagMutation = () => {
 export const useUpdateProjectTagByIdMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: ({
+		mutationFn: async ({
 			id,
 			payload,
 		}: {
 			id: string;
 			project_id: string;
 			payload: Partial<ProjectTag>;
-		}) => directus.request<ProjectTag>(updateItem("project_tag", id, payload)),
+		}) => {
+			const res = await fetch(`${API_BASE_URL}/v2/bff/tags/${id}`, {
+				body: JSON.stringify(payload),
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				method: "PATCH",
+			});
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.detail || "Failed to update tag");
+			}
+			return (await res.json()) as ProjectTag;
+		},
 		onSuccess: (_values, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects", variables.project_id],
@@ -302,25 +326,25 @@ export const useCreateChatMutation = () => {
 				id: string;
 			};
 		}) => {
-			const project = await directus.request(
-				readItem("project", payload.project_id.id, {
-					fields: ["is_enhanced_audio_processing_enabled"],
+			// BFF picks up auto_select default from the project's enhanced
+			// audio flag when we don't force a value. Only override when a
+			// specific conversation was passed — same rule as before.
+			const res = await fetch(`${API_BASE_URL}/v2/bff/chats`, {
+				body: JSON.stringify({
+					project_id: payload.project_id.id,
+					auto_select: payload.conversationId ? false : undefined,
 				}),
-			);
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				method: "POST",
+			});
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.detail || "Failed to create chat");
+			}
+			const chat = (await res.json()) as { id: string };
 
-			const chat = await directus.request(
-				createItem("project_chat", {
-					// Don't set chat_mode here - use initialize-mode endpoint instead
-					auto_select:
-						payload.conversationId &&
-						project.is_enhanced_audio_processing_enabled
-							? false
-							: !!project.is_enhanced_audio_processing_enabled,
-					project_id: payload.project_id,
-				}),
-			);
-
-			if (payload.navigateToNewChat && chat && chat.id) {
+			if (payload.navigateToNewChat && chat?.id) {
 				navigate(`/projects/${payload.project_id.id}/chats/${chat.id}`);
 			}
 
@@ -353,8 +377,25 @@ export const useLatestProjectAnalysisRunByProjectId = (projectId: string) => {
 export const useUpdateProjectByIdMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: ({ id, payload }: { id: string; payload: Partial<Project> }) =>
-			directus.request<Project>(updateItem("project", id, payload)),
+		mutationFn: async ({
+			id,
+			payload,
+		}: {
+			id: string;
+			payload: Partial<Project>;
+		}) => {
+			const res = await fetch(`${API_BASE_URL}/v2/bff/projects/${id}`, {
+				body: JSON.stringify(payload),
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				method: "PATCH",
+			});
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.detail || "Failed to update project");
+			}
+			return (await res.json()) as Project;
+		},
 		onSuccess: (_values, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects", variables.id],
@@ -399,24 +440,18 @@ export const useInfiniteProjects = ({
 			lastPage.nextOffset,
 		initialPageParam: 0,
 		queryFn: async ({ pageParam = 0 }) => {
-			const response = await directus.request(
-				readItems("project", {
-					...query,
-					filter: {
-						...((query as any)?.filter ?? {}),
-						deleted_at: { _null: true },
-					},
-					limit: initialLimit,
-					offset: pageParam * initialLimit,
-				}),
+			void query; // advanced filter shapes not forwarded to BFF
+			const response = await fetch(
+				`${API_BASE_URL}/v2/bff/projects?limit=${initialLimit}&offset=${pageParam * initialLimit}`,
+				{ credentials: "include" },
 			);
-
+			if (!response.ok) {
+				return { nextOffset: undefined, projects: [] as Project[] };
+			}
+			const data = (await response.json()) as Project[];
 			return {
-				nextOffset:
-					response.length === initialLimit ? pageParam + 1 : undefined,
-				projects: response.map((r) => ({
-					...r,
-				})),
+				nextOffset: data.length === initialLimit ? pageParam + 1 : undefined,
+				projects: data,
 			};
 		},
 		queryKey: ["projects", query],
@@ -443,8 +478,44 @@ export const useProjectById = ({
 	query?: Partial<Query<CustomDirectusTypes, Project>>;
 }) => {
 	return useQuery({
-		queryFn: () =>
-			directus.request<Project>(readItem("project", projectId, query)),
+		// BFF migration (2026-04-24): the frontend used to call Directus
+		// directly via readItem("project", ...), but Directus row-level
+		// ACL doesn't know about our v2 inheritance/sharing model — a
+		// workspace member reaching a project through a derived team
+		// admin row was 403'ing on the Directus read. The /bff endpoint
+		// runs the access check through get_user_project_access and
+		// returns the full project row (with sorted tags) under the
+		// admin client. Keeps the same return shape so callers don't
+		// change.
+		queryFn: async () => {
+			const rawFields = Array.isArray(query?.fields) ? query.fields : [];
+			const includeTags = rawFields.some(
+				(f) =>
+					(typeof f === "string" && f === "tags") ||
+					(typeof f === "object" && f !== null && "tags" in f),
+			);
+			// Collect scalar field names (ignore wildcard `*` and tag
+			// relation entries). When a caller passes a narrow list we
+			// forward it to the BFF so the response stays small — used
+			// by summary-card callers who just need one boolean. Empty
+			// or `*` means "give me everything".
+			const scalarFields = rawFields
+				.filter((f): f is string => typeof f === "string" && f !== "*" && f !== "tags");
+			const url = new URL(
+				`${API_BASE_URL}/v2/projects/${projectId}/bff`,
+				window.location.origin,
+			);
+			if (!includeTags) url.searchParams.set("include_tags", "false");
+			if (scalarFields.length > 0) {
+				url.searchParams.set("fields", scalarFields.join(","));
+			}
+			const res = await fetch(url.toString(), { credentials: "include" });
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.detail || `Failed to load project`);
+			}
+			return (await res.json()) as Project;
+		},
 		queryKey: ["projects", projectId, query],
 	});
 };

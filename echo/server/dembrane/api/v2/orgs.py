@@ -86,6 +86,10 @@ class OrgMemberResponse(BaseModel):
     # but we give the team-admin page a rolled-up count for the list view.
     accessible_workspace_count: int = 0
     is_pending: bool = False  # placeholder — will cover pending org invites later
+    # True when the user is only reachable through external workspace
+    # memberships (no org_membership in this team). Frontend renders a
+    # "Guest" badge and scopes team-level actions accordingly.
+    is_external: bool = False
     # Direct workspace memberships: workspace_id → role. Powers the team
     # admin matrix page so non-admin team members with a direct invite
     # on a specific workspace aren't hidden. Includes is_external=true
@@ -496,10 +500,61 @@ async def list_org_members(
             }
         },
     ) or []
-    if not isinstance(memberships, list) or not memberships:
-        return []
+    if not isinstance(memberships, list):
+        memberships = []
 
-    user_ids = [m["user_id"] for m in memberships if m.get("user_id")]
+    internal_ids = [m["user_id"] for m in memberships if m.get("user_id")]
+    internal_set = set(internal_ids)
+
+    # External (guest) users: workspace_membership(is_external=True) on any
+    # workspace in this team, minus anyone already in internal_set. These
+    # users have no org_membership but need to appear in the team Members
+    # list so admins can see every person reaching their data.
+    ws_rows = await async_directus.get_items(
+        "workspace",
+        {
+            "query": {
+                "filter": {
+                    "org_id": {"_eq": org_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id"],
+                "limit": -1,
+            }
+        },
+    ) or []
+    team_ws_ids = [
+        w["id"]
+        for w in (ws_rows if isinstance(ws_rows, list) else [])
+        if w.get("id")
+    ]
+
+    external_ids: list[str] = []
+    if team_ws_ids:
+        ext_rows = await async_directus.get_items(
+            "workspace_membership",
+            {
+                "query": {
+                    "filter": {
+                        "workspace_id": {"_in": team_ws_ids},
+                        "is_external": {"_eq": True},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["user_id"],
+                    "limit": -1,
+                }
+            },
+        ) or []
+        if isinstance(ext_rows, list):
+            seen = set()
+            for r in ext_rows:
+                uid = r.get("user_id")
+                if not uid or uid in internal_set or uid in seen:
+                    continue
+                seen.add(uid)
+                external_ids.append(uid)
+
+    user_ids = internal_ids + external_ids
     if not user_ids:
         return []
 
@@ -537,16 +592,17 @@ async def list_org_members(
         if isinstance(du_rows, list):
             avatar_map = {u["id"]: u.get("avatar") for u in du_rows}
 
-    # Count workspaces each user can access. For admins/owners this is every
-    # workspace in the team (derived). For members it's only workspaces
-    # with inherit_team_members=true plus any direct memberships.
-    workspace_counts = await _rollup_workspace_access(org_id, user_ids)
+    # Count workspaces each user can access. Internals: _rollup covers
+    # both direct + derived. Externals: no derivation possible (D5), so
+    # it's just the count of their external direct memberships.
+    workspace_counts = await _rollup_workspace_access(org_id, internal_ids)
 
     # Direct workspace roles per team user — keyed {user_id: {workspace_id: role}}.
     # Powers the matrix page so direct-invited members on specific
     # workspaces show correctly (they were hidden before when the
     # matrix relied on derivation alone). Dedup'd by (workspace_id,
-    # user_id) with direct-over-inherited priority.
+    # user_id) with direct-over-inherited priority. Includes externals
+    # since their workspace_membership rows match the same query.
     direct_roles, direct_membership_ids = await _direct_workspace_roles_by_user(
         org_id, user_ids
     )
@@ -567,6 +623,37 @@ async def list_org_members(
                 avatar=avatar_map.get(du_id) if du_id else None,
                 role=m.get("role", "member"),
                 accessible_workspace_count=workspace_counts.get(uid, 0),
+                is_external=False,
+                direct_workspace_roles=direct_roles.get(uid, {}),
+                direct_workspace_membership_ids=direct_membership_ids.get(
+                    uid, {}
+                ),
+            )
+        )
+
+    # Externals: no org role to show, so role=="guest" is a sentinel the
+    # frontend recognizes (displayRole falls back to "Guest"). Team-level
+    # actions (change team role) aren't offered for these rows — only
+    # per-workspace role edits and "Remove from team" (cascades all
+    # external rows in this org).
+    for uid in external_ids:
+        app_row = app_user_map.get(uid) or {}
+        du_id = app_row.get("directus_user_id") or ""
+        ext_workspace_count = len(direct_roles.get(uid, {}))
+        out.append(
+            OrgMemberResponse(
+                user_id=uid,
+                app_user_id=uid,
+                # Externals' emails always show to managers — admins need
+                # to see who a guest actually is (otherwise "External"
+                # rows would be anonymous strings). Non-managers can't
+                # reach this endpoint as admin anyway (can_manage gate).
+                email=(app_row.get("email") or "") if can_manage else "",
+                display_name=app_row.get("display_name") or "",
+                avatar=avatar_map.get(du_id) if du_id else None,
+                role="guest",
+                accessible_workspace_count=ext_workspace_count,
+                is_external=True,
                 direct_workspace_roles=direct_roles.get(uid, {}),
                 direct_workspace_membership_ids=direct_membership_ids.get(
                     uid, {}
@@ -994,7 +1081,66 @@ async def remove_team_member(
         },
     )
     if not isinstance(rows, list) or not rows:
-        raise HTTPException(status_code=404, detail="Member not found")
+        # No internal org_membership — the target may still be a guest
+        # (external on one or more workspaces in this team). Treat
+        # DELETE as "remove all their external access here" so the Team
+        # Members list has one consistent "Remove from team" action for
+        # both internals and guests.
+        ws_rows_for_ext = await async_directus.get_items(
+            "workspace",
+            {
+                "query": {
+                    "filter": {
+                        "org_id": {"_eq": org_id},
+                        "deleted_at": {"_null": True},
+                    },
+                    "fields": ["id"],
+                    "limit": -1,
+                }
+            },
+        ) or []
+        ext_ws_ids = [
+            w["id"]
+            for w in (ws_rows_for_ext if isinstance(ws_rows_for_ext, list) else [])
+            if w.get("id")
+        ]
+        ext_rows: list[dict] = []
+        if ext_ws_ids:
+            found = await async_directus.get_items(
+                "workspace_membership",
+                {
+                    "query": {
+                        "filter": {
+                            "workspace_id": {"_in": ext_ws_ids},
+                            "user_id": {"_eq": user_id},
+                            "is_external": {"_eq": True},
+                            "deleted_at": {"_null": True},
+                        },
+                        "fields": ["id", "workspace_id"],
+                        "limit": -1,
+                    }
+                },
+            ) or []
+            if isinstance(found, list):
+                ext_rows = found
+        if not ext_rows:
+            raise HTTPException(status_code=404, detail="Member not found")
+
+        now_iso = datetime.now(timezone.utc).isoformat()
+        for r in ext_rows:
+            mid = r.get("id")
+            if mid:
+                await async_directus.update_item(
+                    "workspace_membership", mid, {"deleted_at": now_iso}
+                )
+        logger.info(
+            f"Removed guest {user_id} from team {org_id} by {app_user['id']} — "
+            f"soft-deleted {len(ext_rows)} external workspace_membership row(s)"
+        )
+        return {
+            "status": "removed",
+            "workspace_memberships_deleted": len(ext_rows),
+        }
     target = rows[0]
 
     # Owners can only be removed by owners. Extra guard: don't allow
@@ -1440,6 +1586,9 @@ class OrgProjectRow(BaseModel):
     workspace_name: str
     visibility: str
     conversation_count: int = 0
+    # All-time audio hours across this project's conversations. Matches
+    # the workspace usage calc (sum(duration seconds) / 3600).
+    audio_hours: float = 0.0
     created_at: Optional[str] = None
 
 
@@ -1506,43 +1655,51 @@ async def list_team_projects(
     if not isinstance(projects, list):
         return []
 
-    # Batch conversation-count per project via group-by aggregate.
+    # Per-project conversation-count + duration sum. One fetch with the
+    # two fields we need; aggregate on the client so we don't need two
+    # separate Directus group-by calls (the current SDK doesn't return
+    # both count + sum from a single aggregate cleanly).
     pid_list = [p["id"] for p in projects if p.get("id")]
     conv_counts: dict[str, int] = {}
+    conv_seconds: dict[str, float] = {}
     if pid_list:
-        agg = await async_directus.get_items(
+        convs = await async_directus.get_items(
             "conversation",
             {
                 "query": {
-                    "aggregate": {"count": "id"},
-                    "groupBy": ["project_id"],
                     "filter": {
                         "project_id": {"_in": pid_list},
                         "deleted_at": {"_null": True},
                     },
+                    "fields": ["project_id", "duration"],
+                    "limit": -1,
                 }
             },
         ) or []
-        if isinstance(agg, list):
-            for row in agg:
+        if isinstance(convs, list):
+            for row in convs:
                 pid = row.get("project_id")
-                cnt = int((row.get("count") or {}).get("id", 0) or 0)
-                if pid:
-                    conv_counts[pid] = cnt
+                if not pid:
+                    continue
+                conv_counts[pid] = conv_counts.get(pid, 0) + 1
+                dur = row.get("duration") or 0
+                conv_seconds[pid] = conv_seconds.get(pid, 0.0) + float(dur)
 
     out: list[OrgProjectRow] = []
     for p in projects:
         wid = p.get("workspace_id")
         if not wid or wid not in ws_by_id:
             continue
+        pid = p["id"]
         out.append(
             OrgProjectRow(
-                id=p["id"],
+                id=pid,
                 name=p.get("name") or "",
                 workspace_id=wid,
                 workspace_name=ws_by_id[wid],
                 visibility=p.get("visibility") or "workspace",
-                conversation_count=conv_counts.get(p["id"], 0),
+                conversation_count=conv_counts.get(pid, 0),
+                audio_hours=round(conv_seconds.get(pid, 0.0) / 3600, 1),
                 created_at=p.get("created_at"),
             )
         )

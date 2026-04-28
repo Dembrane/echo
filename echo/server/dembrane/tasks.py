@@ -1657,3 +1657,48 @@ def task_send_downgrade_email(
         "downgrade_email workspace=%s recipients=%d sent=%s",
         workspace_id, len(emails), ok,
     )
+
+
+@dramatiq.actor(queue_name="network", priority=10, max_retries=3)
+def task_send_invite_email(
+    to: str,
+    subject: str,
+    template: str,
+    template_data: dict,
+    failure_context: str,
+) -> None:
+    """Send a workspace invite / workspace-added email.
+
+    Called via invites.py's _enqueue_invite_email so the HTTP response
+    returns before SendGrid round-trips. Runs on the network queue
+    (SendGrid is a network I/O call). Retries with dramatiq defaults on
+    failure — we raise from here when SendGrid returns non-2xx so the
+    retry logic actually triggers (send_email_sync swallows exceptions
+    and returns False, which wouldn't retry on its own).
+    """
+    from dembrane.email import send_email_sync
+
+    task_logger = getLogger("dembrane.tasks.task_send_invite_email")
+
+    ok = send_email_sync(
+        to=to,
+        subject=subject,
+        template=template,
+        template_data=template_data,
+    )
+    if not ok:
+        task_logger.error(
+            "invite_email_failed to=%s context=%s — will retry",
+            to, failure_context,
+        )
+        try:
+            import sentry_sdk
+            sentry_sdk.capture_message(
+                f"Invite email failed: {to} / {failure_context}",
+                level="error",
+            )
+        except Exception:
+            pass
+        # Raise so dramatiq retries. The worker's retry middleware
+        # applies exponential backoff (default 15s → minutes).
+        raise RuntimeError(f"invite email send failed: {to}")

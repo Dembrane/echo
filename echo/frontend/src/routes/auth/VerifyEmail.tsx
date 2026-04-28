@@ -1,68 +1,95 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Container, Group, Loader, Stack, Text, Title } from "@mantine/core";
+import {
+	Anchor,
+	Container,
+	Group,
+	Loader,
+	Stack,
+	Text,
+	Title,
+} from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { useEffect, useRef } from "react";
 import { useSearchParams } from "react-router";
 import { useVerifyMutation } from "@/components/auth/hooks";
-import { toast } from "@/components/common/Toaster";
+import { I18nLink } from "@/components/common/i18nLink";
 
 export const VerifyEmailRoute = () => {
-	useDocumentTitle(t`Email Verification | dembrane`);
-	const [search, _setSearch] = useSearchParams();
+	useDocumentTitle(t`Email verification | dembrane`);
+	const [search] = useSearchParams();
+	const token = search.get("token");
 
 	const verifyMutation = useVerifyMutation();
-
-	const handleVerify = () => {
-		const token = search.get("token");
-		if (!token) {
-			toast.error(t`Invalid token. Please try again.`);
-			return;
-		}
-
-		verifyMutation.mutate({ token });
-	};
 
 	const runOnlyOnce = useRef(true);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be fixed
 	useEffect(() => {
-		if (runOnlyOnce.current) {
+		if (runOnlyOnce.current && token) {
 			runOnlyOnce.current = false;
-			handleVerify();
+			verifyMutation.mutate({ token });
 		}
-	}, []);
+	}, [token]);
+
+	// Three explicit states. No toasts — the page is the state.
+	// missing-token: user arrived without the ?token= param
+	// pending: verifying
+	// success: redirecting to /login?verified=1
+	// error: broken / expired link
+	const missingToken = !token;
 
 	return (
-		<Container size="sm" className="!h-full">
+		<Container size="sm" className="!h-full" py="xl">
 			<Stack className="h-full">
-				<Stack className="flex-grow">
-					<Group>
-						<Title order={1}>
-							<Trans>Email Verification</Trans>
-						</Title>
-						{verifyMutation.isPending && <Loader />}
-					</Group>
-					{verifyMutation.isPending && (
-						<Text>
-							<Trans>Please wait while we verify your email address.</Trans>
-						</Text>
-					)}
-					{verifyMutation.isSuccess && (
-						<Text>
+				<Stack className="flex-grow" gap="md">
+					<Title order={2} fw={400}>
+						<Trans>Email verification</Trans>
+					</Title>
+
+					{missingToken && (
+						<Text size="sm" c="dimmed">
 							<Trans>
-								Email verified successfully. You will be redirected to the login
-								page in 5 seconds. If you are not redirected, please click{" "}
-								<a href="/login?new=true">here</a>.
+								This link is missing the verification token. Open the
+								link from your email again, or{" "}
+								<Anchor component={I18nLink} to="/register">
+									start over
+								</Anchor>
+								.
 							</Trans>
 						</Text>
 					)}
-					{verifyMutation.isError && (
-						<Text>
+
+					{!missingToken && verifyMutation.isPending && (
+						<Group gap="sm">
+							<Loader size="sm" />
+							<Text size="sm" c="dimmed">
+								<Trans>Verifying your email address.</Trans>
+							</Text>
+						</Group>
+					)}
+
+					{!missingToken && verifyMutation.isSuccess && (
+						<Text size="sm" c="dimmed">
 							<Trans>
-								There was an error verifying your email. Please try again.
+								Your email is verified. Taking you to the login page.
 							</Trans>
 						</Text>
+					)}
+
+					{!missingToken && verifyMutation.isError && (
+						<Stack gap={6}>
+							<Text size="sm">
+								<Trans>
+									That link isn't working. It may have expired.
+								</Trans>
+							</Text>
+							<Text size="xs" c="dimmed">
+								<Anchor component={I18nLink} to="/register" size="xs">
+									<Trans>Request a new verification email</Trans>
+								</Anchor>
+							</Text>
+						</Stack>
 					)}
 				</Stack>
 			</Stack>

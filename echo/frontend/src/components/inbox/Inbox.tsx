@@ -20,6 +20,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconBell, IconCheck } from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
+import type React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import {
@@ -317,6 +318,28 @@ export const Inbox = () => {
 	);
 };
 
+/**
+ * Render inline **bold** markers as <strong>. Notifications come from
+ * the server with markdown-style emphasis (e.g. "Added to **Workspace
+ * X**"); before this helper the raw asterisks were showing through.
+ * Kept tiny on purpose — a full markdown parser is overkill for one
+ * line of text, and inline pasting of arbitrary HTML is a no-go.
+ */
+function renderInlineMarkdown(text: string): React.ReactNode {
+	if (!text) return null;
+	const parts = text.split(/(\*\*[^*]+\*\*)/g);
+	return parts.map((part, i) => {
+		if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+			return (
+				<strong key={i} style={{ fontWeight: 600 }}>
+					{part.slice(2, -2)}
+				</strong>
+			);
+		}
+		return <span key={i}>{part}</span>;
+	});
+}
+
 function NotificationRowItem({
 	row,
 	onClick,
@@ -421,7 +444,7 @@ function NotificationRowItem({
 				<Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
 					<Group gap="xs" align="center" wrap="nowrap">
 						<Text size="sm" fw={row.read ? 400 : 500} lineClamp={1}>
-							{row.title}
+							{renderInlineMarkdown(row.title)}
 						</Text>
 						{!row.read && (
 							<Box
@@ -450,7 +473,7 @@ function NotificationRowItem({
 					)}
 					{row.message && (
 						<Text size="xs" c="dimmed" lineClamp={2}>
-							{row.message}
+							{renderInlineMarkdown(row.message)}
 						</Text>
 					)}
 					{createdLabel && (

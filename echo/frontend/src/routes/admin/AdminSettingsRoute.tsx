@@ -60,9 +60,11 @@ import {
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
+import { UsageFreshness } from "@/components/common/UsageFreshness";
 import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { API_BASE_URL } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
+import { formatDurationFromHours } from "@/lib/time";
 
 // Ordered tier list for custom sorting. matrix v1.1 §1 order from low to high.
 const TIER_ORDER = ["pilot", "pioneer", "innovator", "changemaker", "guardian"] as const;
@@ -344,7 +346,7 @@ function WorkspaceActionsModal({
 		},
 		{
 			label: t`Delete workspace`,
-			hint: t`Soft-delete. Data stays recoverable for 30 days.`,
+			hint: t`Permanent. Removes all conversations and data.`,
 			color: "red",
 		},
 	];
@@ -690,7 +692,7 @@ function BillingTable({
 								const footerById: Record<string, React.ReactNode> = {
 									audio_hours: (
 										<Text size="xs" fw={600} ta="right">
-											{footerTotals.audio_hours.toFixed(1)} h
+											{formatDurationFromHours(footerTotals.audio_hours)}
 										</Text>
 									),
 									seat_count: (
@@ -842,7 +844,8 @@ function TierBreakdownPanel({ rows }: { rows: BillingRow[] }) {
 
 function UsageAndBillingPanel() {
 	const [periodOffset, setPeriodOffset] = useState(0);
-	const { data, isLoading } = useQuery({
+	const [refreshing, setRefreshing] = useState(false);
+	const { data, isLoading, dataUpdatedAt, refetch } = useQuery({
 		queryKey: ["v2", "admin", "billing-rollup", periodOffset],
 		queryFn: () =>
 			fetchJson<BillingRollup>(
@@ -850,6 +853,14 @@ function UsageAndBillingPanel() {
 			),
 		staleTime: 60_000,
 	});
+	const handleRefresh = async () => {
+		setRefreshing(true);
+		try {
+			await refetch();
+		} finally {
+			setRefreshing(false);
+		}
+	};
 
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -999,7 +1010,7 @@ function UsageAndBillingPanel() {
 								{formatEur(v)}
 							</Text>
 							<Text size="xs" c="dimmed">
-								{over.toFixed(1)} h over
+								{formatDurationFromHours(over)} over
 							</Text>
 						</Stack>
 					);
@@ -1369,6 +1380,12 @@ function UsageAndBillingPanel() {
 					</Box>
 				</Stack>
 			</Paper>
+
+			<UsageFreshness
+				dataUpdatedAt={dataUpdatedAt}
+				refreshing={refreshing}
+				onRefresh={handleRefresh}
+			/>
 
 			<WorkspaceActionsModal
 				row={actionsRow}

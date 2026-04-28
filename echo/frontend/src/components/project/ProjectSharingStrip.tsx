@@ -5,12 +5,13 @@ import {
 	Button,
 	Group,
 	Loader,
+	Paper,
 	Text,
 } from "@mantine/core";
 import { IconLock, IconUsers } from "@tabler/icons-react";
 import { useState } from "react";
 import { useProjectShares } from "@/hooks/useProjectSharing";
-import { avatarUrl } from "@/lib/avatar";
+import { avatarUrl, memberInitials } from "@/lib/avatar";
 import { ProjectSharingModal } from "./ProjectSharingModal";
 
 interface ProjectSharingStripProps {
@@ -43,17 +44,8 @@ export function ProjectSharingStrip({
 
 	return (
 		<>
-			<Group
-				gap="sm"
-				wrap="nowrap"
-				px="md"
-				py="sm"
-				style={{
-					backgroundColor: "var(--mantine-color-gray-0)",
-					border: "1px solid var(--mantine-color-gray-2)",
-					borderRadius: 6,
-				}}
-			>
+			<Paper withBorder p="md" radius="md">
+			<Group gap="sm" wrap="nowrap">
 				{isPrivate ? (
 					<>
 						<Badge
@@ -82,9 +74,7 @@ export function ProjectSharingStrip({
 											radius="xl"
 											src={avatarUrl(s.avatar, 48)}
 										>
-											{(s.display_name || s.email)
-												.slice(0, 2)
-												.toUpperCase()}
+											{memberInitials(s.display_name, s.email)}
 										</Avatar>
 									))}
 								</Avatar.Group>
@@ -128,6 +118,7 @@ export function ProjectSharingStrip({
 					</>
 				)}
 			</Group>
+			</Paper>
 
 			<ProjectSharingModal
 				projectId={projectId}

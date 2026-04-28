@@ -24,6 +24,24 @@ from dembrane.api.v2.access_requests import (
     discover_router as access_requests_discover_router,
 )
 from dembrane.api.v2.admin import router as admin_router
+from dembrane.api.v2.bff.conversations import (
+    chunk_router as bff_chunk_router,
+    junction_router as bff_conv_tag_router,
+    router as bff_conversations_router,
+)
+from dembrane.api.v2.bff.chats import (
+    message_router as bff_chat_message_router,
+    router as bff_chats_router,
+)
+from dembrane.api.v2.bff.reports import (
+    metric_router as bff_report_metric_router,
+    router as bff_reports_router,
+)
+from dembrane.api.v2.bff.tags import (
+    project_router as bff_projects_write_router,
+    router as bff_tags_router,
+    run_router as bff_analysis_runs_router,
+)
 
 v2_router = APIRouter()
 
@@ -52,6 +70,49 @@ v2_router.include_router(
 v2_router.include_router(projects_router, prefix="/projects", tags=["v2:projects"])
 v2_router.include_router(
     project_sharing_router, prefix="/projects", tags=["v2:project-sharing"]
+)
+
+# BFF endpoints — funnel the old direct-Directus frontend calls through
+# an access-aware layer (see api/v2/bff/_access.py). Everything under
+# /v2/bff/* enforces the v2 inheritance/sharing model before touching
+# Directus with admin privileges. Once every frontend call has
+# migrated, Directus collection ACLs for these tables can be locked to
+# admin-only (see scripts/lock_directus_permissions.py).
+v2_router.include_router(
+    bff_conversations_router, prefix="/bff/conversations", tags=["v2:bff:conv"]
+)
+v2_router.include_router(
+    bff_chunk_router, prefix="/bff/conversation-chunks", tags=["v2:bff:chunks"]
+)
+v2_router.include_router(
+    bff_conv_tag_router,
+    prefix="/bff/conversation-project-tags",
+    tags=["v2:bff:conv-tags"],
+)
+v2_router.include_router(bff_chats_router, prefix="/bff/chats", tags=["v2:bff:chats"])
+v2_router.include_router(
+    bff_chat_message_router,
+    prefix="/bff/chat-messages",
+    tags=["v2:bff:chat-messages"],
+)
+v2_router.include_router(
+    bff_reports_router, prefix="/bff/reports", tags=["v2:bff:reports"]
+)
+v2_router.include_router(
+    bff_report_metric_router,
+    prefix="/bff/report-metrics",
+    tags=["v2:bff:report-metrics"],
+)
+v2_router.include_router(bff_tags_router, prefix="/bff/tags", tags=["v2:bff:tags"])
+v2_router.include_router(
+    bff_analysis_runs_router,
+    prefix="/bff/analysis-runs",
+    tags=["v2:bff:analysis-runs"],
+)
+v2_router.include_router(
+    bff_projects_write_router,
+    prefix="/bff/projects",
+    tags=["v2:bff:projects-write"],
 )
 
 # Staff-only admin tools (billing rollup, at-risk, tier change, partner ledger).

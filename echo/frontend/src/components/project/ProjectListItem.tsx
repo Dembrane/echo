@@ -7,6 +7,7 @@ import type { PropsWithChildren } from "react";
 import { Icons } from "@/icons";
 import { avatarUrl } from "@/lib/avatar";
 import { testId } from "@/lib/testUtils";
+import { formatDurationFromHours } from "@/lib/time";
 import { I18nLink } from "../common/i18nLink";
 
 /**
@@ -154,6 +155,14 @@ export const ProjectListItem = ({
 							)}
 						</Group>
 						<Text size="sm" c="dimmed">
+							{((project as unknown as { audio_hours?: number }).audio_hours ?? 0) > 0 && (
+								<>
+									{formatDurationFromHours(
+										(project as unknown as { audio_hours?: number }).audio_hours ?? 0,
+									)}
+									{" • "}
+								</>
+							)}
 							<Trans>
 								{project.conversations_count ??
 									project?.conversations?.length ??

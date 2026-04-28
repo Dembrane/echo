@@ -210,7 +210,7 @@ export const RegisterRoute = () => {
 								<Stack gap={6}>
 									<Text size="xs" c="dimmed">
 										<Trans>
-											Didn't get it? Check spam / junk — the message comes
+											Didn't get it? Check spam or junk. The message comes
 											from dembrane.com.
 										</Trans>
 									</Text>
@@ -226,15 +226,8 @@ export const RegisterRoute = () => {
 									>
 										<Trans>Wrong address? Change email</Trans>
 									</Anchor>
-									<Text size="xs" c="dimmed">
-										<Trans>
-											Still stuck? Email{" "}
-											<Anchor href="mailto:support@dembrane.com" size="xs">
-												support@dembrane.com
-											</Anchor>
-											.
-										</Trans>
-									</Text>
+									{/* Support line removed 2026-04-24: we don't want
+									    to advertise support inboxes during demo prep. */}
 								</Stack>
 							</Stack>
 						)}

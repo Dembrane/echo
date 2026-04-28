@@ -137,26 +137,38 @@ async def raise_if_conversation_not_found_or_not_authorized(
     conversation_id: str,
     auth: DependencyDirectusSession,
 ) -> None:
-    active_client = auth.client or directus
+    # v2 access gate — replaces the old legacy-creator check on
+    # conversation.project_id.directus_user_id, which excluded every
+    # workspace member who didn't originally create the project.
+    from dembrane.app_user import get_app_user_or_raise
+    from dembrane.directus_async import async_directus
+    from dembrane.inheritance import get_user_project_access
 
-    conversation = await run_in_thread_pool(
-        active_client.get_items,
-        "conversation",
-        {
-            "query": {
-                "filter": {"id": {"_eq": conversation_id}},
-                "fields": ["project_id.directus_user_id"],
-            }
-        },
-    )
-
-    if conversation is None or len(conversation) == 0:
+    conversation = await async_directus.get_item("conversation", conversation_id)
+    if not conversation or conversation.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    if not auth.is_admin and conversation[0]["project_id"]["directus_user_id"] != auth.user_id:
-        raise HTTPException(
-            status_code=403, detail="You are not authorized to access this conversation"
-        )
+    if auth.is_admin:
+        return
+
+    project_id = conversation.get("project_id")
+    if isinstance(project_id, dict):
+        project_id = project_id.get("id")
+    if not project_id:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    try:
+        app_user = await get_app_user_or_raise(auth.user_id)
+    except HTTPException:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    access = await get_user_project_access(
+        project_id=project_id,
+        user_id=app_user["id"],
+        directus_user_id=auth.user_id,
+    )
+    if access is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
 
 
 def return_url_or_redirect(

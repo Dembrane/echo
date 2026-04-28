@@ -190,6 +190,39 @@ async def _shared_private_project_ids(user_id: str) -> set[str]:
     return {row["project_id"] for row in shares if row.get("project_id")}
 
 
+async def _project_audio_hours(project_ids: list[str]) -> dict[str, float]:
+    """Sum conversation.duration (seconds) per project, return hours.
+
+    Single batched fetch for all `project_ids`. Used by the projects
+    list so card rows can show "Xh · N conversations" without a second
+    request per row. Returns an empty map when given no ids.
+    """
+    if not project_ids:
+        return {}
+    convs = await async_directus.get_items(
+        "conversation",
+        {
+            "query": {
+                "filter": {
+                    "project_id": {"_in": project_ids},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["project_id", "duration"],
+                "limit": -1,
+            }
+        },
+    ) or []
+    if not isinstance(convs, list):
+        return {}
+    seconds: dict[str, float] = {}
+    for row in convs:
+        pid = row.get("project_id")
+        if not pid:
+            continue
+        seconds[pid] = seconds.get(pid, 0.0) + float(row.get("duration") or 0)
+    return {pid: round(s / 3600, 1) for pid, s in seconds.items()}
+
+
 class V2ProjectSummary(BaseModel):
     id: str
     name: Optional[str] = None
@@ -197,6 +230,10 @@ class V2ProjectSummary(BaseModel):
     language: Optional[str] = None
     pin_order: Optional[int] = None
     conversations_count: int = 0
+    # Sum of conversation durations (hours, 1-decimal). Lives alongside
+    # conversations_count so project list cells can render "Xh · N convs"
+    # without a second request.
+    audio_hours: float = 0.0
     visibility: str = "workspace"
     # Up to 3 previews + total access count. For workspace-visible projects
     # this is the first 3 workspace members. For private projects it's the
@@ -310,6 +347,7 @@ async def list_workspace_projects(
         project_ids=page_ids,
         project_visibilities=page_visibilities,
     )
+    hours_map = await _project_audio_hours(page_ids)
 
     projects = [
         V2ProjectSummary(
@@ -319,6 +357,7 @@ async def list_workspace_projects(
             language=p.get("language"),
             pin_order=p.get("pin_order"),
             conversations_count=int(p.get("conversations_count", 0) or 0),
+            audio_hours=hours_map.get(p["id"], 0.0),
             visibility=p.get("visibility") or "workspace",
             access_preview=preview_map.get(p["id"], ([], 0))[0],
             access_count=preview_map.get(p["id"], ([], 0))[1],
@@ -369,6 +408,7 @@ async def list_workspace_projects(
         project_ids=pinned_ids,
         project_visibilities=pinned_visibilities,
     )
+    pinned_hours_map = await _project_audio_hours(pinned_ids)
     pinned = [
         V2ProjectSummary(
             id=p["id"],
@@ -377,6 +417,7 @@ async def list_workspace_projects(
             language=p.get("language"),
             pin_order=p.get("pin_order"),
             conversations_count=int(p.get("conversations_count", 0) or 0),
+            audio_hours=pinned_hours_map.get(p["id"], 0.0),
             visibility=p.get("visibility") or "workspace",
             access_preview=pinned_preview_map.get(p["id"], ([], 0))[0],
             access_count=pinned_preview_map.get(p["id"], ([], 0))[1],

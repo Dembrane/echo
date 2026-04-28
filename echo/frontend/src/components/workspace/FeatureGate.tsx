@@ -136,7 +136,7 @@ export function FeatureGate({
 				}}
 				role="button"
 				tabIndex={0}
-				aria-label={`${featureName} — requires ${TIER_LABEL[requiredTier]} plan`}
+				aria-label={`${featureName} · requires ${TIER_LABEL[requiredTier]} plan`}
 				onKeyDown={(e) => {
 					if (e.key === "Enter" || e.key === " ") {
 						e.preventDefault();
@@ -319,7 +319,7 @@ export function UpgradeModal({
 					: t`Couldn't send the request`;
 				throw new Error(detail);
 			}
-			toast.success(t`Request sent — we'll be in touch.`);
+			toast.success(t`Request sent. We'll be in touch.`);
 			onClose();
 			setMessage("");
 		} catch (err) {
@@ -356,7 +356,7 @@ export function UpgradeModal({
 					<>
 						<Textarea
 							label={t`Anything to add?`}
-							placeholder={t`Optional — context for our team.`}
+							placeholder={t`Optional. Context for our team.`}
 							value={message}
 							onChange={(e) => setMessage(e.currentTarget.value)}
 							minRows={2}
@@ -365,7 +365,7 @@ export function UpgradeModal({
 						/>
 						<Text size="xs" c="dimmed">
 							<Trans>
-								Pricing is still a conversation — we'll email you to work out
+								Pricing is still a conversation. We'll email you to work out
 								what fits.
 							</Trans>
 						</Text>

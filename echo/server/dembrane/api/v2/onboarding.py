@@ -301,7 +301,7 @@ async def complete_onboarding(
                 "org_id": org_id,
                 "name": "Default",
                 "is_default": True,
-                "tier": "pioneer",
+                "tier": "pilot",
                 "created_by": app_user_id,
             })
             logger.info(f"Created default workspace {personal_ws_id} for org {org_id}")

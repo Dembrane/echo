@@ -14,6 +14,7 @@ import { IconExternalLink, IconPinFilled } from "@tabler/icons-react";
 import { formatRelative } from "date-fns";
 import { Icons } from "@/icons";
 import { testId } from "@/lib/testUtils";
+import { formatDurationFromHours } from "@/lib/time";
 import { I18nLink } from "../common/i18nLink";
 
 const LANGUAGE_LABELS: Record<string, string> = {
@@ -42,6 +43,8 @@ export const PinnedProjectCard = ({
 	const link = `/projects/${project.id}/overview`;
 	const conversationCount =
 		project.conversations_count ?? project?.conversations?.length ?? 0;
+	const audioHours =
+		(project as unknown as { audio_hours?: number }).audio_hours ?? 0;
 	const languageLabel = project.language
 		? (LANGUAGE_LABELS[project.language] ?? project.language.toUpperCase())
 		: null;
@@ -108,6 +111,12 @@ export const PinnedProjectCard = ({
 					</Group>
 
 					<Text size="xs" c="dimmed">
+						{audioHours > 0 && (
+							<>
+								{formatDurationFromHours(audioHours)}
+								{" • "}
+							</>
+						)}
 						<Trans>
 							{conversationCount} Conversations • Edited{" "}
 							{formatRelative(

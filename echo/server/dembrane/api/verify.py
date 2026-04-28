@@ -148,10 +148,32 @@ async def _get_project(project_id: str, client: DirectusClient) -> dict:
     return project
 
 
-def _assert_project_owner(project: dict, auth: DependencyDirectusSession) -> None:
+async def _assert_project_owner(project: dict, auth: DependencyDirectusSession) -> None:
+    """v2 access gate over a pre-fetched project dict.
+
+    Name kept for backwards compat, but this is no longer "owner" —
+    any role with `get_user_project_access() is not None` passes
+    (member/admin/billing/guest/shared). Stricter per-action checks
+    should use `has_policy()`; this one just answers reachability.
+    """
     if auth.is_admin:
         return
-    if project.get("directus_user_id", "") != auth.user_id:
+
+    from dembrane.app_user import get_app_user_or_raise
+    from dembrane.inheritance import get_user_project_access
+
+    try:
+        app_user = await get_app_user_or_raise(auth.user_id)
+    except HTTPException:
+        raise HTTPException(status_code=403, detail="Not authorized for this project")
+
+    access = await get_user_project_access(
+        project_id=project["id"],
+        user_id=app_user["id"],
+        directus_user_id=auth.user_id,
+        project=project,
+    )
+    if access is None:
         raise HTTPException(status_code=403, detail="Not authorized for this project")
 
 
@@ -303,7 +325,7 @@ async def create_custom_topic(
 ) -> GetVerificationTopicsResponse:
     client = directus
     project = await _get_project(project_id, client)
-    _assert_project_owner(project, auth)
+    await _assert_project_owner(project, auth)
 
     slug = _slugify(body.label)
     short_id = generate_uuid()[:8]
@@ -357,7 +379,7 @@ async def update_custom_topic(
 ) -> GetVerificationTopicsResponse:
     client = directus
     project = await _get_project(project_id, client)
-    _assert_project_owner(project, auth)
+    await _assert_project_owner(project, auth)
 
     topic_rows = await run_in_thread_pool(
         client.get_items,
@@ -452,7 +474,7 @@ async def delete_custom_topic(
 ) -> GetVerificationTopicsResponse:
     client = directus
     project_check = await _get_project(project_id, client)
-    _assert_project_owner(project_check, auth)
+    await _assert_project_owner(project_check, auth)
 
     topic_rows = await run_in_thread_pool(
         client.get_items,

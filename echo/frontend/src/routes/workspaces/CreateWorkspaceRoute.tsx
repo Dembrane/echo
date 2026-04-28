@@ -51,9 +51,17 @@ type Privacy = "open" | "private";
 /**
  * Workspace creation wizard — matrix §6 Slack-style model.
  *
- * Three steps with back + cancel on each. The review step spells out
- * what EVERY role (team admin, team member, guest) will experience in
- * the new workspace so the creator isn't surprised later.
+ * Four steps: Name → Tier → Access → Review. Back + cancel on each.
+ *
+ * Tier step is a pilot-only holding pattern today: every new workspace
+ * starts on Pilot and upgrades happen via a sales conversation. The
+ * step exists so the user sees "this starts on Pilot" as an explicit
+ * acknowledgment rather than a surprise in billing later, and so the
+ * step structure is ready for in-app tier selection once self-serve
+ * upgrade lands.
+ *
+ * Access step gates Private on tier — Pilot can only create open
+ * workspaces. The copy + disabled state explain the upgrade path.
  *
  * Multi-role lens:
  *   - Creator is always a team admin/owner (route-gated). Wizard
@@ -79,6 +87,10 @@ export const CreateWorkspaceRoute = () => {
 	const teamIdFromQuery = searchParams.get("teamId") ?? null;
 	const { data: meV2, isLoading: meLoading } = useV2Me();
 
+	// Steps: 0 Name · 1 Tier · 2 Access · 3 Review. The Tier step is an
+	// acknowledgment today (Pilot for everyone, upgrades route through
+	// sales), so there's no tier state — when self-serve upgrade lands
+	// this becomes a real select.
 	const [step, setStep] = useState(0);
 	const [name, setName] = useState("");
 	const [privacy, setPrivacy] = useState<Privacy>("open");
@@ -248,6 +260,32 @@ export const CreateWorkspaceRoute = () => {
 						</Stack>
 					</Stepper.Step>
 
+					<Stepper.Step label={t`Tier`}>
+						<Stack gap={14} mt="md">
+							<Text size="sm">
+								<Trans>
+									For now, new workspaces are created on <strong>Pilot</strong>.
+									It's a one-month trial so you can see the product in action
+									with your team.
+								</Trans>
+							</Text>
+							<Alert color="gray" variant="light">
+								<Stack gap={6}>
+									<Text size="xs" fw={500}>
+										<Trans>Need a higher tier?</Trans>
+									</Text>
+									<Text size="xs" c="dimmed">
+										<Trans>
+											Upgrades (Pioneer, Innovator, and beyond) are still a
+											conversation. Reach out to dembrane and we'll set it up
+											for your team.
+										</Trans>
+									</Text>
+								</Stack>
+							</Alert>
+						</Stack>
+					</Stepper.Step>
+
 					<Stepper.Step label={t`Access`}>
 						<Stack gap={14} mt="md">
 							<Radio.Group
@@ -278,14 +316,17 @@ export const CreateWorkspaceRoute = () => {
 										disabled
 										label={
 											<Stack gap={2}>
-												<Text size="sm">
-													<Trans>Private</Trans>
+												<Text size="sm" c="dimmed">
+													<Trans>Private</Trans>{" "}
+													<Text span size="xs" c="dimmed">
+														(<Trans>not available on Pilot</Trans>)
+													</Text>
 												</Text>
 												<Text size="xs" c="dimmed">
 													<Trans>
-														Only people you invite. Team admins can still
-														discover and join. Available on innovator and
-														above.
+														Only people you invite can see this workspace.
+														Private workspaces unlock once you're on
+														Innovator or higher.
 													</Trans>
 												</Text>
 											</Stack>
@@ -294,15 +335,14 @@ export const CreateWorkspaceRoute = () => {
 								</Stack>
 							</Radio.Group>
 
-							{/* Upgrade path when Private is what you want. Wizard
-							    doesn't try to handle billing mid-flow — finish this
-							    open workspace, then upgrade + flip from settings. */}
+							{/* Pilot → Open only. The disabled Radio above explains why;
+							    this Alert tells the creator what to do about it without
+							    pulling them out of the wizard. */}
 							<Alert color="gray" variant="light">
 								<Text size="xs">
 									<Trans>
-										Need a private workspace? Start open, upgrade to
-										innovator, and switch to private from the workspace's
-										billing tab.
+										Start open for now. Once your team upgrades, you can
+										switch this workspace to private from its settings.
 									</Trans>
 								</Text>
 							</Alert>
@@ -346,10 +386,10 @@ export const CreateWorkspaceRoute = () => {
 											<Trans>Tier</Trans>
 										</Text>
 										<Text size="sm">
-											<Trans>Pioneer</Trans>
+											<Trans>Pilot</Trans>
 											<Text span c="dimmed" size="xs">
 												{" · "}
-												<Trans>for your first real engagements.</Trans>
+												<Trans>one-month trial.</Trans>
 											</Text>
 										</Text>
 									</Group>
@@ -363,8 +403,8 @@ export const CreateWorkspaceRoute = () => {
 								{privacy === "open" ? (
 									<Trans>
 										Team admins and members will find this workspace from
-										their home page. Admins can Join directly; members ask
-										to join — you approve.
+										their home page. Admins can join directly; members ask
+										to join, and you approve.
 									</Trans>
 								) : (
 									<Trans>
@@ -386,7 +426,7 @@ export const CreateWorkspaceRoute = () => {
 					>
 						{step === 0 ? <Trans>Cancel</Trans> : <Trans>Back</Trans>}
 					</Button>
-					{step < 2 ? (
+					{step < 3 ? (
 						<Button
 							size="sm"
 							disabled={step === 0 && !canAdvanceFromName}

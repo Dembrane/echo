@@ -103,16 +103,18 @@ export const useVerifyMutation = (doRedirect = true) => {
 				throwWithMessage(e);
 			}
 		},
-		onError: (e) => {
-			toast.error(e.message);
-		},
+		// No toast here — the verify page shows the status inline, so a
+		// parallel toast is double-signalling. Errors surface via the
+		// verifyMutation.isError branch on the page.
 		onSuccess: () => {
-			toast.success("Email verified.");
 			if (doRedirect) {
+				// Redirect with a "?verified=1" hint so /login can show
+				// "Your email is verified. Log in to continue." Shorter
+				// delay than before — 1.5s is enough to read the page
+				// state before we move the user along.
 				setTimeout(() => {
-					// window.location.href = `/login?new=true`;
-					navigate("/login?new=true");
-				}, 4500);
+					navigate("/login?verified=1");
+				}, 1500);
 			}
 		},
 	});

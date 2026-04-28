@@ -16,6 +16,7 @@ interface V2ProjectSummary {
 	language: string | null;
 	pin_order: number | null;
 	conversations_count: number;
+	audio_hours?: number;
 	visibility?: "workspace" | "private";
 	access_preview?: ProjectAccessPreview[];
 	access_count?: number;

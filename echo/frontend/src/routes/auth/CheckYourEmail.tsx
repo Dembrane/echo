@@ -34,7 +34,7 @@ export const CheckYourEmailRoute = () => {
 				<Stack gap={6}>
 					<Text size="xs" c="dimmed">
 						<Trans>
-							Didn't get it? Check spam / junk first — the message comes
+							Didn't get it? Check spam or junk first. The message comes
 							from dembrane.com.
 						</Trans>
 					</Text>

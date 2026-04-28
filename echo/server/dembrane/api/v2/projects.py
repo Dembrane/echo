@@ -72,6 +72,73 @@ async def get_project_detail(
     )
 
 
+@router.get("/{project_id}/bff")
+async def get_project_bff(
+    project_id: str,
+    auth: DependencyDirectusSession,
+    include_tags: bool = True,
+    fields: Optional[str] = None,
+) -> dict:
+    """BFF project fetch — project row for the frontend detail page.
+
+    Access is resolved via get_user_project_access so the v2
+    inheritance + sharing + tier model decides (the Directus row ACL
+    is now admin-only and doesn't know about those rules).
+
+    `fields` accepts a comma-separated allowlist — the response carries
+    only those keys plus `_role` and `_source`. Defaults to the whole
+    row so callers that want everything don't have to enumerate.
+    Per-field trimming matters for the summary-card callers that only
+    need one boolean.
+    """
+    app_user = await get_app_user_or_raise(auth.user_id)
+
+    # Single project fetch, passed into the access resolver so we don't
+    # round-trip the same row twice.
+    project = await async_directus.get_item("project", project_id)
+    if not project or project.get("deleted_at"):
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    access = await get_user_project_access(
+        project_id=project_id,
+        user_id=app_user["id"],
+        directus_user_id=auth.user_id,
+        project=project,
+    )
+    if access is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    role, source = access
+
+    # Apply the fields allowlist before enriching so `_role`/`_source`
+    # can't be filtered out — they're cheap metadata the UI uses.
+    if fields:
+        requested = {f.strip() for f in fields.split(",") if f.strip()}
+        # Always return `id` so response is identifiable; other fields
+        # come from the allowlist only.
+        requested.add("id")
+        project = {k: v for k, v in project.items() if k in requested}
+
+    project["_role"] = role
+    project["_source"] = source
+
+    if include_tags:
+        tags = await async_directus.get_items(
+            "project_tag",
+            {
+                "query": {
+                    "filter": {"project_id": {"_eq": project_id}},
+                    "fields": ["id", "created_at", "text", "sort"],
+                    "sort": ["sort"],
+                    "limit": -1,
+                }
+            },
+        ) or []
+        project["tags"] = tags if isinstance(tags, list) else []
+
+    return project
+
+
 @router.post("/{project_id}/move", response_model=MoveProjectResponse)
 async def move_project(
     project_id: str,
@@ -289,3 +356,81 @@ async def set_project_visibility(
         )
 
     return {"status": "updated", "visibility": body.visibility}
+
+
+class ConversationUsageRow(BaseModel):
+    id: str
+    title: Optional[str] = None
+    hours: float  # round to 2 decimals
+    is_deleted: bool
+
+
+class ConversationUsageResponse(BaseModel):
+    active: list[ConversationUsageRow]
+    deleted: list[ConversationUsageRow]
+    total_hours: float
+    active_hours: float
+    deleted_hours: float
+
+
+@router.get(
+    "/{project_id}/conversation-usage",
+    response_model=ConversationUsageResponse,
+)
+async def get_project_conversation_usage(
+    project_id: str,
+    auth: DependencyDirectusSession,
+) -> ConversationUsageResponse:
+    """Breakdown of per-conversation audio usage for the Access & usage
+    tab (2026-04-24). Splits active from soft-deleted conversations so
+    the UI can show a deleted-bucket segment with hover tooltips.
+    """
+    app_user = await get_app_user_or_raise(auth.user_id)
+    access = await get_user_project_access(
+        project_id=project_id,
+        user_id=app_user["id"],
+        directus_user_id=auth.user_id,
+    )
+    if access is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    # No deleted_at filter — we want both buckets in one fetch.
+    convs = await async_directus.get_items(
+        "conversation",
+        {
+            "query": {
+                "filter": {"project_id": {"_eq": project_id}},
+                "fields": ["id", "title", "duration", "deleted_at"],
+                "limit": -1,
+            }
+        },
+    ) or []
+    if not isinstance(convs, list):
+        convs = []
+
+    active: list[ConversationUsageRow] = []
+    deleted: list[ConversationUsageRow] = []
+    for c in convs:
+        hours = round(float(c.get("duration") or 0) / 3600, 2)
+        row = ConversationUsageRow(
+            id=c["id"],
+            title=c.get("title"),
+            hours=hours,
+            is_deleted=bool(c.get("deleted_at")),
+        )
+        (deleted if row.is_deleted else active).append(row)
+
+    # Longest conversations first — easier to scan the hover tooltips.
+    active.sort(key=lambda r: r.hours, reverse=True)
+    deleted.sort(key=lambda r: r.hours, reverse=True)
+
+    active_hours = round(sum(r.hours for r in active), 2)
+    deleted_hours = round(sum(r.hours for r in deleted), 2)
+
+    return ConversationUsageResponse(
+        active=active,
+        deleted=deleted,
+        total_hours=round(active_hours + deleted_hours, 2),
+        active_hours=active_hours,
+        deleted_hours=deleted_hours,
+    )

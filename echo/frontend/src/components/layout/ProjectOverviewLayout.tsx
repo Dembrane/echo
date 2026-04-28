@@ -78,6 +78,7 @@ export const ProjectOverviewLayout = () => {
 				tabs={[
 					{ label: t`Portal Editor`, value: "portal-editor" },
 					{ label: t`Project Settings`, value: "overview" },
+					{ label: t`Access & usage`, value: "access" },
 				]}
 				loading={projectQuery.isLoading}
 				{...testId("project-overview-tabs")}

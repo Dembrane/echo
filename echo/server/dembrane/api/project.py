@@ -487,17 +487,11 @@ async def get_project_transcripts(
     auth: DependencyDirectusSession,
     background_tasks: BackgroundTasks,
 ) -> StreamingResponse:
-    from dembrane.service.project import ProjectNotFoundException
-
-    project_service = ProjectService(directus_client=auth.client)
-
-    try:
-        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
-    except ProjectNotFoundException as exc:
-        raise HTTPException(status_code=404, detail="Project not found") from exc
-
-    if not auth.is_admin and project.get("directus_user_id", "") != auth.user_id:
-        raise HTTPException(status_code=403, detail="User does not have access to this project")
+    # Single v2-aware access gate — replaces the previous pattern of
+    # (1) ProjectService loading through auth.client (broken post
+    # Directus lockdown) + (2) legacy directus_user_id equality (broken
+    # for every non-creator workspace member).
+    project = await _verify_project_access(auth, project_id)
 
     conversation_service_auth = build_conversation_service(auth.client)
 
@@ -573,15 +567,7 @@ async def post_create_project_library(
     project_id: str,
     body: CreateLibraryRequestBodySchema,
 ) -> None:
-    project_service = ProjectService(directus_client=auth.client)
-
-    try:
-        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
-    except ProjectServiceException as e:
-        raise HTTPException(status_code=404, detail="Project not found") from e
-
-    if not auth.is_admin and project.get("directus_user_id", "") != auth.user_id:
-        raise HTTPException(status_code=403, detail="User does not have access to this project")
+    project = await _verify_project_access(auth, project_id)
 
     # analysis_run = get_latest_project_analysis_run(project.id)
 
@@ -615,6 +601,10 @@ async def post_create_view(
     body: CreateViewRequestBodySchema,
     auth: DependencyDirectusSession,
 ) -> None:
+    # Access gate first — lets callers without reach bail early before
+    # we even look at the analysis run.
+    await _verify_project_access(auth, project_id)
+
     project_service = ProjectService(directus_client=auth.client)
     project_analysis_run = await run_in_thread_pool(
         project_service.get_latest_analysis_run, project_id
@@ -622,14 +612,6 @@ async def post_create_view(
 
     if not project_analysis_run:
         raise HTTPException(status_code=404, detail="No analysis found for this project")
-
-    try:
-        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
-    except ProjectNotFoundException as e:
-        raise HTTPException(status_code=404, detail="Project not found") from e
-
-    if not auth.is_admin and project.get("directus_user_id", "") != auth.user_id:
-        raise HTTPException(status_code=403, detail="User does not have access to this project")
 
     task_create_view.send(
         project_analysis_run["id"],
@@ -655,16 +637,12 @@ async def create_report(
     body: CreateReportRequestBodySchema,
     auth: DependencyDirectusSession,
 ) -> dict:
-    project_service = ProjectService(directus_client=auth.client)
+    # v2-aware access gate (inheritance + sharing + tier). Replaces the
+    # old double-check (ProjectService.get_by_id_or_raise through the
+    # user's Directus client + legacy-creator equality) that was
+    # blocking the "Generate report" button for every teammate.
+    project = await _verify_project_access(auth, project_id)
     language = body.language or "en"
-
-    try:
-        project = await run_in_thread_pool(project_service.get_by_id_or_raise, project_id)
-    except ProjectNotFoundException as e:
-        raise HTTPException(status_code=404, detail="Project not found") from e
-
-    if not auth.is_admin and project.get("directus_user_id", "") != auth.user_id:
-        raise HTTPException(status_code=403, detail="User does not have access to this project")
 
     from dembrane.directus import directus
 
@@ -761,29 +739,41 @@ async def create_report(
 
 
 async def _verify_project_access(auth: DependencyDirectusSession, project_id: str) -> dict:
-    """Verify the authenticated user has access to the given project. Returns the project dict."""
-    try:
-        projects = await run_in_thread_pool(
-            auth.client.get_items,
-            "project",
-            {
-                "query": {
-                    "filter": {"id": {"_eq": project_id}},
-                    "fields": ["id", "directus_user_id"],
-                    "limit": 1,
-                }
-            },
-        )
-    except Exception as err:
-        logger.warning("Failed to fetch project %s: %s", project_id, err)
-        raise HTTPException(status_code=404, detail="Project not found") from err
+    """Verify the caller can reach this project. Returns the project dict.
 
-    if not isinstance(projects, list) or not projects:
+    Uses the v2 access ladder (get_user_project_access) so the full
+    inheritance + sharing + tier model decides — previously this gate
+    was a legacy-creator equality check (directus_user_id == auth.user_id),
+    which excluded every workspace member who didn't originally create
+    the project. Compounded by the Directus lockdown, that made the
+    whole v1 report surface return 403 for non-admin teammates.
+    """
+    from dembrane.app_user import get_app_user_or_raise
+    from dembrane.directus_async import async_directus
+    from dembrane.inheritance import get_user_project_access
+
+    project = await async_directus.get_item("project", project_id)
+    if not project or project.get("deleted_at"):
         raise HTTPException(status_code=404, detail="Project not found")
 
-    project = projects[0]
-    if not auth.is_admin and project.get("directus_user_id", "") != auth.user_id:
-        raise HTTPException(status_code=403, detail="User does not have access to this project")
+    # Staff short-circuit — existing contract.
+    if auth.is_admin:
+        return project
+
+    try:
+        app_user = await get_app_user_or_raise(auth.user_id)
+    except HTTPException:
+        # Not onboarded → no way to express project access. Treat as 404
+        # so we don't confirm the project's existence to an anon caller.
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    access = await get_user_project_access(
+        project_id=project_id,
+        user_id=app_user["id"],
+        directus_user_id=auth.user_id,
+    )
+    if access is None:
+        raise HTTPException(status_code=404, detail="Project not found")
     return project
 
 

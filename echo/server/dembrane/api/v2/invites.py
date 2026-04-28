@@ -11,7 +11,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from dembrane.api.rate_limit import create_user_rate_limiter
 
 from dembrane.utils import generate_uuid
-from dembrane.email import send_email
 from dembrane.app_user import resolve_app_user
 from dembrane.directus_async import async_directus
 from dembrane.api.v2.schemas import WorkspaceInviteRequest, WorkspaceInviteResponse
@@ -35,6 +34,33 @@ def compute_invite_hash(invite_id: str) -> str:
     secret = settings.directus.secret.encode()
     full = hmac.new(secret, invite_id.encode(), hashlib.sha256).hexdigest()
     return full[:32]
+
+
+def _enqueue_invite_email(
+    *,
+    to: str,
+    subject: str,
+    template: str,
+    template_data: dict,
+    failure_context: str,
+) -> None:
+    """Queue an invite email on the Dramatiq network queue.
+
+    Lives here (not in tasks.py) only for the one-line enqueue wrapper —
+    the actor itself is `task_send_invite_email` in tasks.py. Keeping the
+    caller-side import lazy avoids pulling Dramatiq into the request path
+    at module load (the broker connects on first .send()).
+    """
+    from dembrane.tasks import task_send_invite_email
+
+    try:
+        task_send_invite_email.send(to, subject, template, template_data, failure_context)
+    except Exception:
+        # If Redis / the broker is down, log and move on — the membership
+        # / invite row is already written, so the admin can resend later.
+        logger.exception(
+            f"Couldn't enqueue invite email for {to} ({failure_context})"
+        )
 
 
 @router.post("/{workspace_id}/invite", response_model=WorkspaceInviteResponse)
@@ -233,7 +259,7 @@ async def invite_to_workspace(
             except Exception:
                 pass
 
-            email_sent = await send_email(
+            _enqueue_invite_email(
                 to=email,
                 subject=f"You've been added to {ctx.workspace.get('name', 'a workspace')}",
                 template="workspace_added",
@@ -242,25 +268,16 @@ async def invite_to_workspace(
                     "workspace_name": ctx.workspace.get("name", "a workspace"),
                     "invite_url": f"{settings.urls.admin_base_url}/workspaces",
                 },
+                failure_context=f"workspace_added / workspace {workspace_id}",
             )
-            if not email_sent:
-                logger.error(
-                    f"Failed to send workspace_added email to {email} for workspace {workspace_id}"
-                )
-                try:
-                    import sentry_sdk
-                    sentry_sdk.capture_message(
-                        f"Workspace add email failed: {email} / workspace {workspace_id}",
-                        level="error",
-                    )
-                except Exception:
-                    pass
 
             return WorkspaceInviteResponse(
                 status="added",
                 email=email,
                 user_existed=True,
-                email_sent=email_sent,
+                # email_sent here means "queued for send" — the actor
+                # reports its own success/failure via logs + Sentry.
+                email_sent=True,
             )
 
     # User doesn't exist or doesn't have app_user — create an invite.
@@ -320,7 +337,7 @@ async def invite_to_workspace(
     })
     invite_url = f"{settings.urls.admin_base_url}/invite/accept?{ctx_params}"
 
-    email_sent = await send_email(
+    _enqueue_invite_email(
         to=email,
         subject=f"{inviter_name} invited you to collaborate on dembrane",
         template="workspace_invite",
@@ -329,28 +346,19 @@ async def invite_to_workspace(
             "workspace_name": ctx.workspace.get("name", "a workspace"),
             "invite_url": invite_url,
         },
+        failure_context=f"workspace_invite / workspace {workspace_id}",
     )
-    if not email_sent:
-        logger.error(
-            f"Failed to send workspace_invite email to {email} for workspace {workspace_id}"
-        )
-        try:
-            import sentry_sdk
-            sentry_sdk.capture_message(
-                f"Workspace invite email failed: {email} / workspace {workspace_id}",
-                level="error",
-            )
-        except Exception:
-            pass
 
     logger.info(
         f"Invited {email} to workspace {workspace_id} as {role} by {ctx.app_user_id} "
-        f"(user_existed: {user_existed}, email_sent: {email_sent})"
+        f"(user_existed: {user_existed}, email_queued: True)"
     )
 
     return WorkspaceInviteResponse(
         status="invited",
         email=email,
         user_existed=user_existed,
-        email_sent=email_sent,
+        # email_sent=True means "queued"; actor logs + Sentry cover the
+        # actual SendGrid outcome.
+        email_sent=True,
     )

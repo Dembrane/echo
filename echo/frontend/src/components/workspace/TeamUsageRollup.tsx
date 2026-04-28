@@ -25,7 +25,6 @@ import {
 	IconChevronDown,
 	IconChevronRight,
 	IconLock,
-	IconRefresh,
 	IconSearch,
 	IconSortAscending,
 	IconSortDescending,
@@ -44,7 +43,9 @@ import {
 import { useMemo, useState } from "react";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { API_BASE_URL } from "@/config";
+import { UsageFreshness } from "@/components/common/UsageFreshness";
 import { PeriodSelect } from "@/components/workspace/PeriodSelect";
+import { formatDurationFromHours } from "@/lib/time";
 
 const TIER_ORDER = [
 	"pilot",
@@ -228,7 +229,7 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 	const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
-	const { data, isLoading } = useQuery({
+	const { data, isLoading, dataUpdatedAt } = useQuery({
 		queryKey: ["v2", "org-usage", orgId, monthOffset],
 		queryFn: () => fetchOrgUsage(orgId, monthOffset),
 		staleTime: 60_000,
@@ -379,7 +380,7 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 					const v = row.original.hours_over;
 					return (
 						<Text size="xs" c={v > 0 ? "orange" : "dimmed"}>
-							{v.toFixed(1)} h
+							{v > 0 ? formatDurationFromHours(v) : "—"}
 						</Text>
 					);
 				},
@@ -523,21 +524,7 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 					<Text size="xs" fw={500} tt="uppercase" c="dimmed" lts={0.5}>
 						<Trans>Team usage</Trans>
 					</Text>
-					<Group gap={6} wrap="nowrap">
-						<PeriodSelect value={monthOffset} onChange={setMonthOffset} />
-						<Tooltip label={t`Refresh`}>
-							<ActionIcon
-								variant="subtle"
-								color="gray"
-								size="sm"
-								loading={refreshing}
-								onClick={handleRefresh}
-								aria-label={t`Refresh team usage`}
-							>
-								<IconRefresh size={14} />
-							</ActionIcon>
-						</Tooltip>
-					</Group>
+					<PeriodSelect value={monthOffset} onChange={setMonthOffset} />
 				</Group>
 
 				{attention.length > 0 && (
@@ -550,7 +537,7 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 				<Text size="sm" c="dimmed">
 					<Trans>
 						{data.workspace_count} workspaces · {data.total_seat_count} seats ·{" "}
-						{data.total_audio_hours.toFixed(1)} hours in{" "}
+						{formatDurationFromHours(data.total_audio_hours)} in{" "}
 						{formatCycleMonth(data.cycle_start)}
 					</Trans>
 				</Text>
@@ -744,7 +731,7 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 											const footerById: Record<string, React.ReactNode> = {
 												audio_hours: (
 													<Text size="xs" fw={600} ta="right">
-														{totalsHours.toFixed(1)} h
+														{formatDurationFromHours(totalsHours)}
 													</Text>
 												),
 												hours_over: (
@@ -754,7 +741,9 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 														ta="right"
 														c={totalsHoursOver > 0 ? "orange" : "dimmed"}
 													>
-														{totalsHoursOver.toFixed(1)} h
+														{totalsHoursOver > 0
+															? formatDurationFromHours(totalsHoursOver)
+															: "—"}
 													</Text>
 												),
 												seat_count: (
@@ -794,6 +783,12 @@ export const TeamUsageRollup = ({ orgId }: { orgId: string }) => {
 						<Trans>Nothing matches the filter.</Trans>
 					</Text>
 				)}
+
+				<UsageFreshness
+					dataUpdatedAt={dataUpdatedAt}
+					refreshing={refreshing}
+					onRefresh={handleRefresh}
+				/>
 			</Stack>
 		</Paper>
 	);
@@ -899,9 +894,9 @@ function WorkspaceRow({
 										</Text>
 										<Text
 											size="xs"
-											style={{ minWidth: 50, textAlign: "right" }}
+											style={{ minWidth: 60, textAlign: "right" }}
 										>
-											{p.audio_hours.toFixed(1)} h
+											{formatDurationFromHours(p.audio_hours)}
 										</Text>
 									</Group>
 								))}

@@ -38,3 +38,36 @@ export function logoUrl(
 	}
 	return `${DIRECTUS_PUBLIC_URL}/assets/${trimmed}`;
 }
+
+/**
+ * Canonical initials used inside <Avatar> circles on Members surfaces.
+ *
+ * One rule everywhere: first letter of the first name + first letter of
+ * the last name. A single-token name yields one letter. No display name?
+ * Fall back to the first two letters of the email. No email either?
+ * "?".
+ *
+ * Prior code split every call site: some took `.slice(0, 2)` (gave "SA"
+ * for "Sameer"), some took `.charAt(0)` (gave just "S"). The mix made
+ * avatars look inconsistent row-to-row.
+ */
+export function memberInitials(
+	displayName: string | null | undefined,
+	email?: string | null,
+): string {
+	const name = (displayName || "").trim();
+	if (name) {
+		const tokens = name.split(/\s+/).filter(Boolean);
+		if (tokens.length >= 2) {
+			return (tokens[0][0] + tokens[tokens.length - 1][0]).toUpperCase();
+		}
+		if (tokens.length === 1) {
+			return tokens[0][0].toUpperCase();
+		}
+	}
+	const mail = (email || "").trim();
+	if (mail) {
+		return mail.slice(0, 2).toUpperCase();
+	}
+	return "?";
+}

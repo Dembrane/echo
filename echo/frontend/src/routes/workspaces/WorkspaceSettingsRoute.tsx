@@ -13,7 +13,6 @@ import {
 	Group,
 	Image,
 	Loader,
-	Modal,
 	Paper,
 	Radio,
 	Select,
@@ -26,18 +25,21 @@ import {
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
-import { IconPlus, IconRefresh, IconTrash, IconUpload, IconX } from "@tabler/icons-react";
+import { IconRefresh, IconTrash, IconUpload, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { AccessRequestsList } from "@/components/workspace/AccessRequestsList";
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { TierCapacityMatrix } from "@/components/workspace/TierCapacityMatrix";
 import { UsageCard } from "@/components/workspace/UsageCard";
+import { WorkspaceInviteWizard } from "@/components/workspace/WorkspaceInviteWizard";
+import { InviteMemberCard, MembersToolbar } from "@/components/members";
 import { API_BASE_URL, DIRECTUS_PUBLIC_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { logoUrl } from "@/lib/avatar";
+import { useUrlSearch } from "@/hooks/useUrlSearch";
+import { logoUrl, memberInitials } from "@/lib/avatar";
 import { displayRole } from "@/lib/roles";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -96,20 +98,6 @@ async function fetchSettings(workspaceId: string): Promise<WorkspaceDetail | nul
 		credentials: "include",
 	});
 	if (!res.ok) return null;
-	return res.json();
-}
-
-async function sendInvite(workspaceId: string, email: string, role: string, isOrgMember: boolean) {
-	const res = await fetch(`${API_BASE_URL}/v2/workspaces/${workspaceId}/invite`, {
-		body: JSON.stringify({ email, is_org_member: isOrgMember, role }),
-		credentials: "include",
-		headers: { "Content-Type": "application/json" },
-		method: "POST",
-	});
-	if (!res.ok) {
-		const data = await res.json().catch(() => ({}));
-		throw new Error(data.detail || "Failed to send invite");
-	}
 	return res.json();
 }
 
@@ -236,15 +224,19 @@ export const WorkspaceSettingsRoute = () => {
 	// usage / privacy / pending invites (matrix §4 "View usage & overage"
 	// row is ✗ for Guest).
 	const iAmGuest = myWorkspaceSummary?.is_external === true;
-	const [inviteEmail, setInviteEmail] = useState("");
-	const [inviteRole, setInviteRole] = useState("member");
-	// Matrix §4: guests have workspace access only (is_external=true); no
-	// team-level presence. Team members get a team row + workspace row.
-	// UI toggle drives both the payload (is_org_member) and role clamp.
-	const [inviteKind, setInviteKind] = useState<"team" | "guest">("team");
+	// Externals don't have a manage surface at all (2026-04-24). Bounce
+	// them back to the project list of the workspace they came in on.
+	// Keep the effect above the loading gate so hook order is stable.
+	useEffect(() => {
+		if (iAmGuest && workspaceId) {
+			navigate(`/w/${workspaceId}/projects`, { replace: true });
+		}
+	}, [iAmGuest, workspaceId, navigate]);
 	const [deleteConfirm, setDeleteConfirm] = useState("");
-	const [editingName, setEditingName] = useState<string | null>(null);
 	const [inviteModalOpened, { open: openInviteModal, close: closeInviteModal }] = useDisclosure(false);
+	const [memberSearch, setMemberSearch] = useUrlSearch();
+	type WsRoleFilter = "all" | "admins" | "members" | "guests";
+	const [memberRoleFilter, setMemberRoleFilter] = useState<WsRoleFilter>("all");
 
 	// Tab state — path-driven (/w/:id/settings/<tab>). Declared BEFORE
 	// the loading early-return below; moving any hook below the early
@@ -252,7 +244,6 @@ export const WorkspaceSettingsRoute = () => {
 	const allowedTabs = [
 		"general",
 		"members",
-		"access",
 		"billing",
 		"danger",
 	] as const;
@@ -268,37 +259,9 @@ export const WorkspaceSettingsRoute = () => {
 		enabled: !!workspaceId,
 	});
 
-	const inviteMutation = useMutation({
-		mutationFn: () => {
-			if (!workspaceId) throw new Error("No workspace");
-			// Guests are clamped to 'member' on the backend regardless of
-			// what the UI sends (matrix §4 hard-rule). Reflect that here
-			// so we never even send a wrong role.
-			const effectiveRole = inviteKind === "guest" ? "member" : inviteRole;
-			const isOrgMember = inviteKind === "team";
-			return sendInvite(
-				workspaceId,
-				inviteEmail.trim(),
-				effectiveRole,
-				isOrgMember,
-			);
-		},
-		onSuccess: (data) => {
-			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
-			setInviteEmail("");
-			setInviteRole("member");
-			setInviteKind("team");
-			closeInviteModal();
-			if (!data.email_sent) {
-				toast.error(t`Invite created, but the email could not be sent. Share the link directly.`);
-			} else if (data.status === "added") {
-				toast.success(t`Member added`);
-			} else {
-				toast.success(t`Invite sent`);
-			}
-		},
-		onError: (err: Error) => toast.error(err.message),
-	});
+	// The bulk-invite wizard handles its own POSTs + success toasts, so
+	// there's no top-level inviteMutation anymore. Pending invites are
+	// invalidated via the ["v2", "workspace-settings"] key it targets.
 
 	const resendInviteMutation = useMutation({
 		mutationFn: (inviteId: string) => {
@@ -324,21 +287,6 @@ export const WorkspaceSettingsRoute = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
 			toast.success(t`Role updated`);
-		},
-		onError: (err: Error) => toast.error(err.message),
-	});
-
-	const renameMutation = useMutation({
-		mutationFn: (name: string) => {
-			if (!workspaceId) throw new Error("No workspace");
-			return updateWorkspace(workspaceId, { name });
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
-			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
-			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
-			setEditingName(null);
-			toast.success(t`Workspace renamed`);
 		},
 		onError: (err: Error) => toast.error(err.message),
 	});
@@ -423,6 +371,55 @@ export const WorkspaceSettingsRoute = () => {
 		}
 	}, [workspaceId, segment, activeTab, navigate]);
 
+	// Members list order (2026-04-24): internals first — sorted by role
+	// (owner → admin → billing → member) — then externals at the bottom.
+	// Matches the mental model "who's in your team, then your guests."
+	// Stable within each tier by display_name so the list doesn't shuffle
+	// when roles change.
+	const MEMBERS_ROLE_WEIGHT: Record<string, number> = {
+		owner: 0,
+		admin: 1,
+		billing: 2,
+		member: 3,
+	};
+	const sortedMembers = useMemo(() => {
+		if (!settings) return [];
+		return [...settings.members].sort((a, b) => {
+			if (a.is_external !== b.is_external) return a.is_external ? 1 : -1;
+			const ar = MEMBERS_ROLE_WEIGHT[a.role] ?? 99;
+			const br = MEMBERS_ROLE_WEIGHT[b.role] ?? 99;
+			if (ar !== br) return ar - br;
+			return (a.display_name || a.email || "").localeCompare(
+				b.display_name || b.email || "",
+			);
+		});
+	}, [settings]);
+
+	const filteredMembers = useMemo(() => {
+		const q = memberSearch.trim().toLowerCase();
+		return sortedMembers.filter((m) => {
+			if (memberRoleFilter === "admins") {
+				if (m.is_external) return false;
+				if (!(m.role === "owner" || m.role === "admin")) return false;
+			}
+			if (memberRoleFilter === "members") {
+				if (m.is_external) return false;
+				if (m.role !== "member") return false;
+			}
+			if (memberRoleFilter === "guests" && !m.is_external) return false;
+			if (!q) return true;
+			return (
+				(m.display_name || "").toLowerCase().includes(q) ||
+				(m.email || "").toLowerCase().includes(q)
+			);
+		});
+	}, [sortedMembers, memberSearch, memberRoleFilter]);
+
+	const hasGuestMembers = useMemo(
+		() => sortedMembers.some((m) => m.is_external),
+		[sortedMembers],
+	);
+
 	if (isLoading || !settings) {
 		return (
 			<Container size="sm" py="xl">
@@ -442,42 +439,23 @@ export const WorkspaceSettingsRoute = () => {
 
 	return (
 		<>
-		<Container size="sm" py="xl" px="lg" pb={80}>
+		{/* Container size matches TeamRoute (size="xl") so the two settings
+		    pages feel like siblings — they used to diverge (workspace "sm"
+		    = 720px; team "xl" = 1320px) which made workspace settings
+		    feel cramped on desktop. */}
+		<Container size="xl" py="xl" px="lg" pb={80}>
 			<Stack gap={32}>
 				{/* Header */}
 				<Group justify="space-between" align="flex-start">
 					<Stack gap={4} flex={1} maw={400}>
-						{editingName !== null ? (
-							<TextInput
-								autoFocus
-								size="md"
-								value={editingName}
-								onChange={(e) => setEditingName(e.currentTarget.value)}
-								onBlur={() => {
-									const trimmed = editingName.trim();
-									if (trimmed && trimmed !== settings.name) {
-										renameMutation.mutate(trimmed);
-									} else {
-										setEditingName(null);
-									}
-								}}
-								onKeyDown={(e) => {
-									if (e.key === "Enter") e.currentTarget.blur();
-									if (e.key === "Escape") setEditingName(null);
-								}}
-								disabled={renameMutation.isPending}
-								styles={{ input: { fontSize: 20, fontWeight: 400 } }}
-							/>
-						) : (
-							<Title
-								order={3}
-								fw={400}
-								style={{ cursor: canEditSettings ? "pointer" : "default" }}
-								onClick={() => canEditSettings && setEditingName(settings.name)}
-							>
-								{settings.name}
-							</Title>
-						)}
+						{/* Header is display-only (2026-04-24). Renaming lives in
+						    the General tab so all editable settings are in one
+						    place. Keeping click-to-edit in the title was cute
+						    but hid the permission: members saw the affordance
+						    and got nothing on click. */}
+						<Title order={3} fw={400}>
+							{settings.name}
+						</Title>
 						{/* Header stays minimal — tier pill only, tagline lives on
 						    the Billing tab where it's next to the price. Team name
 						    is already in the nav breadcrumb; duplicating it here
@@ -519,11 +497,6 @@ export const WorkspaceSettingsRoute = () => {
 							<Tabs.Tab value="members">
 								<Trans>Members</Trans>
 							</Tabs.Tab>
-							{canEditSettings && (
-								<Tabs.Tab value="access">
-									<Trans>Access</Trans>
-								</Tabs.Tab>
-							)}
 							<Tabs.Tab value="billing">
 								<Trans>Usage and Tier</Trans>
 							</Tabs.Tab>
@@ -552,17 +525,23 @@ export const WorkspaceSettingsRoute = () => {
 											<Trans>
 												Every teammate with <em>Admin</em>,{" "}
 												<em>Billing</em>, or <em>Member</em> role on
-												this workspace counts as one seat. Guests
-												(external participants) don't count toward
-												seats. One person never takes more than one
-												seat per workspace, even if they're on
-												multiple teams.
+												this workspace counts as one seat. One person
+												never takes more than one seat per workspace,
+												even if they're on multiple teams.
+											</Trans>
+										</Text>
+										<Text size="xs" c="dimmed">
+											<Trans>
+												Guests don't take a seat. They can view and
+												chat with projects you share with them, but
+												can't create projects, invite others, see
+												usage, or change workspace settings.
 											</Trans>
 										</Text>
 										<Text size="xs" c="dimmed">
 											<Trans>
 												Going over your tier's included seats bills
-												extra per month — see the matrix below for
+												extra per month. See the matrix below for
 												the per-seat rate on each tier.
 											</Trans>
 										</Text>
@@ -599,12 +578,20 @@ export const WorkspaceSettingsRoute = () => {
 						<Tabs.Panel value="general" pt="md">
 							<Stack gap={24}>
 								{canEditSettings && (
-									<PrivacyAndDefaultsSection
-										settings={settings}
-										canEdit={canEditSettings}
-										workspaceId={workspaceId!}
-										section="general"
-									/>
+									<>
+										<PrivacyAndDefaultsSection
+											settings={settings}
+											canEdit={canEditSettings}
+											workspaceId={workspaceId!}
+											section="general"
+										/>
+										<PrivacyAndDefaultsSection
+											settings={settings}
+											canEdit={canEditSettings}
+											workspaceId={workspaceId!}
+											section="access"
+										/>
+									</>
 								)}
 								{!canEditSettings && (
 									<Text size="sm" c="dimmed">
@@ -616,17 +603,6 @@ export const WorkspaceSettingsRoute = () => {
 								)}
 							</Stack>
 						</Tabs.Panel>
-
-						{canEditSettings && (
-							<Tabs.Panel value="access" pt="md">
-								<PrivacyAndDefaultsSection
-									settings={settings}
-									canEdit={canEditSettings}
-									workspaceId={workspaceId!}
-									section="access"
-								/>
-							</Tabs.Panel>
-						)}
 
 						<Tabs.Panel value="members" pt="md">
 				<Stack gap={16}>
@@ -641,64 +617,76 @@ export const WorkspaceSettingsRoute = () => {
 						</Text>
 					</Group>
 
-					{/* Invite button */}
-					{canManage && (
-						<Button
-							size="sm"
-							leftSection={<IconPlus size={14} />}
-							variant="default"
-							onClick={openInviteModal}
-						>
-							<Trans>Invite member</Trans>
-						</Button>
-					)}
+					<MembersToolbar
+						search={memberSearch}
+						onSearchChange={setMemberSearch}
+						filter={{
+							value: memberRoleFilter,
+							onChange: (v) => setMemberRoleFilter(v as WsRoleFilter),
+							options: [
+								{ value: "all", label: t`All` },
+								{ value: "admins", label: t`Admins` },
+								{ value: "members", label: t`Members` },
+								...(hasGuestMembers
+									? [{ value: "guests", label: t`Guests` }]
+									: []),
+							],
+						}}
+						count={{
+							shown: filteredMembers.length,
+							total: settings.members.length,
+						}}
+					/>
 
-					{/* Member list. Empty state hero if no members (rare —
-					    creator is always a member — but guards against the
-					    migration-time corner where the caller-row is the
-					    only entry and got deduped upstream). */}
-					{settings.members.length === 0 && (
-						<Stack align="center" gap={6} py={32}>
-							<Text size="sm" fw={500}>
-								<Trans>No one here yet.</Trans>
-							</Text>
-							<Text size="xs" c="dimmed" ta="center" maw={360}>
-								<Trans>
-									Invite teammates to collaborate on projects and
-									conversations in this workspace.
-								</Trans>
-							</Text>
-						</Stack>
-					)}
-					<Stack gap={0}>
-						{settings.members.map((member, idx) => (
-							<Paper
-								key={member.id}
-								p="sm"
-								withBorder
-								radius={0}
-								style={{
-									marginTop: idx > 0 ? -1 : 0,
-								}}
-							>
+					<Stack gap="xs">
+						{canManage && (
+							<InviteMemberCard
+								label={<Trans>Invite member</Trans>}
+								helperText={
+									<Trans>Add teammates or a guest to this workspace.</Trans>
+								}
+								onClick={openInviteModal}
+							/>
+						)}
+						{settings.members.length === 0 && (
+							<Stack align="center" gap={6} py={32}>
+								<Text size="sm" fw={500}>
+									<Trans>No one here yet.</Trans>
+								</Text>
+								<Text size="xs" c="dimmed" ta="center" maw={360}>
+									<Trans>
+										Invite teammates to collaborate on projects and
+										conversations in this workspace.
+									</Trans>
+								</Text>
+							</Stack>
+						)}
+						{filteredMembers.map((member) => (
+							<Paper key={member.id} p="md" withBorder radius="md">
 								<Group justify="space-between" wrap="nowrap">
-									<Group gap={12} wrap="nowrap">
+									<Group gap={12} wrap="nowrap" style={{ minWidth: 0 }}>
 										<Avatar
 											size={32}
 											radius="xl"
 											src={member.avatar ? `${DIRECTUS_PUBLIC_URL}/assets/${member.avatar}` : null}
 											color="blue"
 										>
-											{member.display_name?.charAt(0)?.toUpperCase()}
+											{memberInitials(member.display_name, member.email)}
 										</Avatar>
-										<Box>
+										<Box style={{ minWidth: 0 }}>
 											<Group gap={6}>
-												<Text size="sm" lineClamp={1}>
+												<Text size="sm" lineClamp={1} fw={500}>
 													{member.display_name || member.email || t`Unknown member`}
+													{member.user_id === myAppUserId && (
+														<Text component="span" c="dimmed" fw={400}>
+															{" "}
+															<Trans>(You)</Trans>
+														</Text>
+													)}
 												</Text>
 												{member.is_external && (
 													<Badge size="xs" variant="light" color="gray">
-														<Trans>External</Trans>
+														<Trans>Guest</Trans>
 													</Badge>
 												)}
 											</Group>
@@ -816,39 +804,86 @@ export const WorkspaceSettingsRoute = () => {
 												{displayRole(member.role)}
 											</Badge>
 										)}
-										{canManage && (
-											<Tooltip label={t`Remove member`}>
+										{member.user_id === myAppUserId ? (
+											// Self row uses the same trash icon as
+											// other rows — the action is "leave" but
+											// the visual language matches "remove" so
+											// the column reads consistently. Backend
+											// enforces last-admin protection; errors
+											// bubble through the mutation toast.
+											<Tooltip label={t`Leave workspace`}>
 												<ActionIcon
 													color="red"
 													size="sm"
 													variant="subtle"
-													loading={removeMutation.isPending}
+													loading={leaveMutation.isPending}
 													onClick={() => {
 														modals.openConfirmModal({
-															title: t`Remove member`,
+															title: t`Leave workspace`,
 															children: (
 																<Text size="sm">
 																	<Trans>
-																		Remove {member.display_name} from this workspace?
-																		They'll lose access to all projects inside it.
+																		You'll lose access to this workspace.
+																		Projects you created stay; your role
+																		here is removed.
 																	</Trans>
 																</Text>
 															),
-															labels: { confirm: t`Remove`, cancel: t`Cancel` },
+															labels: {
+																confirm: t`Leave workspace`,
+																cancel: t`Cancel`,
+															},
 															confirmProps: { color: "red" },
-															onConfirm: () => removeMutation.mutate(member.id),
+															onConfirm: () =>
+																leaveMutation.mutate(member.id),
 														});
 													}}
-													aria-label={t`Remove member`}
+													aria-label={t`Leave workspace`}
 												>
 													<IconTrash size={14} />
 												</ActionIcon>
 											</Tooltip>
+										) : (
+											canManage && (
+												<Tooltip label={t`Remove member`}>
+													<ActionIcon
+														color="red"
+														size="sm"
+														variant="subtle"
+														loading={removeMutation.isPending}
+														onClick={() => {
+															modals.openConfirmModal({
+																title: t`Remove member`,
+																children: (
+																	<Text size="sm">
+																		<Trans>
+																			Remove {member.display_name} from this workspace?
+																			They'll lose access to all projects inside it.
+																		</Trans>
+																	</Text>
+																),
+																labels: { confirm: t`Remove`, cancel: t`Cancel` },
+																confirmProps: { color: "red" },
+																onConfirm: () => removeMutation.mutate(member.id),
+															});
+														}}
+														aria-label={t`Remove member`}
+													>
+														<IconTrash size={14} />
+													</ActionIcon>
+												</Tooltip>
+											)
 										)}
 									</Group>
 								</Group>
 							</Paper>
 						))}
+						{settings.members.length > 0 &&
+							filteredMembers.length === 0 && (
+								<Text size="sm" c="dimmed" ta="center" py="md">
+									<Trans>No one matches that filter.</Trans>
+								</Text>
+							)}
 					</Stack>
 				</Stack>
 
@@ -860,9 +895,9 @@ export const WorkspaceSettingsRoute = () => {
 							<Title order={5} fw={400}>
 								<Trans>Pending invites</Trans>
 							</Title>
-							<Stack gap={0}>
+							<Stack gap="xs">
 								{settings.pending_invites.map((inv) => (
-									<Paper key={inv.id} p="sm" withBorder radius={0}>
+									<Paper key={inv.id} p="md" withBorder radius="md">
 										<Group justify="space-between">
 											<Box>
 												<Text size="sm">{inv.email}</Text>
@@ -933,58 +968,6 @@ export const WorkspaceSettingsRoute = () => {
 					<AccessRequestsList workspaceId={workspaceId} />
 				)}
 
-				{/* Your access — role + self-leave. Raw policy strings removed
-				    after HCD audit (2026-04-23). "Leave workspace" is new:
-				    members + guests always had no self-exit path. Admins must
-				    transfer first (backend enforces last-admin protection). */}
-				<Divider />
-				<Stack gap={12}>
-					<Title order={5} fw={400}>
-						<Trans>Your access</Trans>
-					</Title>
-					<Group justify="space-between" align="center">
-						<Badge size="sm" variant="light" color="blue">
-							{displayRole(settings.my_role)}
-						</Badge>
-						{(() => {
-							const myMembership = settings.members.find(
-								(m) => m.user_id === myAppUserId,
-							);
-							if (!myMembership) return null;
-							// Offer Leave for any role; backend returns 400 if you're
-							// the last admin/owner with a clear error we surface.
-							return (
-								<Button
-									size="compact-xs"
-									variant="subtle"
-									color="gray"
-									onClick={() => {
-										modals.openConfirmModal({
-											title: t`Leave workspace`,
-											children: (
-												<Text size="sm">
-													<Trans>
-														You'll lose access to this workspace. Projects
-														you created stay; your role here is removed.
-													</Trans>
-												</Text>
-											),
-											labels: {
-												confirm: t`Leave workspace`,
-												cancel: t`Cancel`,
-											},
-											confirmProps: { color: "red" },
-											onConfirm: () =>
-												leaveMutation.mutate(myMembership.id),
-										});
-									}}
-								>
-									<Trans>Leave workspace</Trans>
-								</Button>
-							);
-						})()}
-					</Group>
-				</Stack>
 						</Tabs.Panel>
 
 						{canEditSettings && (
@@ -1006,9 +989,8 @@ export const WorkspaceSettingsRoute = () => {
 											<Text size="sm" c="dimmed">
 												<Trans>
 													Delete this workspace. Members lose access
-													immediately. Conversations and data stay
-													recoverable for 30 days, then are permanently
-													removed.
+													immediately and all conversations and data are
+													permanently removed.
 												</Trans>
 											</Text>
 										</Stack>
@@ -1028,26 +1010,13 @@ export const WorkspaceSettingsRoute = () => {
 											if (liveProjectCount > 0) {
 												return (
 													<Alert color="yellow" variant="light">
-														<Stack gap={6}>
-															<Text size="sm">
-																<Plural
-																	value={liveProjectCount}
-																	one="Clear the # project first. You can delete all projects across your team from the team page."
-																	other="Clear the # projects first. You can delete all projects across your team from the team page."
-																/>
-															</Text>
-															<Button
-																size="compact-xs"
-																variant="light"
-																onClick={() =>
-																	navigate(
-																		`/t/${settings.org_id}/projects`,
-																	)
-																}
-															>
-																<Trans>Go to team projects</Trans>
-															</Button>
-														</Stack>
+														<Text size="sm">
+															<Plural
+																value={liveProjectCount}
+																one="Delete the # project in this workspace before deleting the workspace itself."
+																other="Delete the # projects in this workspace before deleting the workspace itself."
+															/>
+														</Text>
 													</Alert>
 												);
 											}
@@ -1148,143 +1117,17 @@ export const WorkspaceSettingsRoute = () => {
 			</Stack>
 		</Container>
 
-			<Modal
-				opened={inviteModalOpened}
-				onClose={closeInviteModal}
-				title={
-					inviteKind === "guest" ? t`Invite a guest` : t`Invite a member`
-				}
-				centered
-				size="md"
-			>
-				<form
-					onSubmit={(e) => {
-						e.preventDefault();
-						const trimmed = inviteEmail.trim();
-						if (!trimmed) {
-							toast.error(t`Enter an email address`);
-							return;
-						}
-						if (!trimmed.includes("@")) {
-							toast.error(t`Enter a valid email address`);
-							return;
-						}
-						inviteMutation.mutate();
-					}}
-				>
-					<Stack gap={16}>
-						<TextInput
-							autoFocus
-							label={t`Email address`}
-							placeholder={t`name@example.com`}
-							size="sm"
-							value={inviteEmail}
-							onChange={(e) => setInviteEmail(e.currentTarget.value)}
-						/>
-
-						{/* Member vs External framing (demo feedback): using the
-						    user's mental model. Member joins your team + counts
-						    as a team seat. External has workspace-only access,
-						    no team presence, clamped to member-equivalent
-						    permissions (matrix §4 hard-rule). */}
-						<Radio.Group
-							label={t`This person is`}
-							value={inviteKind}
-							onChange={(v) => setInviteKind(v as "team" | "guest")}
-						>
-							<Stack gap={10} mt={8}>
-								<Radio
-									value="team"
-									label={
-										<Box>
-											<Text size="sm"><Trans>Member</Trans></Text>
-											<Text size="xs" c="dimmed">
-												<Trans>
-													On your team. Gets a team seat (counts toward
-													your plan) + access to this workspace.
-												</Trans>
-											</Text>
-										</Box>
-									}
-								/>
-								<Radio
-									value="guest"
-									label={
-										<Box>
-											<Text size="sm"><Trans>External</Trans></Text>
-											<Text size="xs" c="dimmed">
-												<Trans>
-													Not on your team. Workspace-only access,
-													doesn't count as a seat.
-												</Trans>
-											</Text>
-										</Box>
-									}
-								/>
-							</Stack>
-						</Radio.Group>
-
-						{/* Role radio — only for team-member invites. Guests are
-						    member-equivalent by hard rule (matrix §4); no choice. */}
-						{inviteKind === "team" && (
-							<Radio.Group
-								label={t`Workspace role`}
-								value={inviteRole}
-								onChange={setInviteRole}
-							>
-								<Stack gap={10} mt={8}>
-									<Radio
-										value="member"
-										label={
-											<Box>
-												<Text size="sm">{t`Member`}</Text>
-												<Text size="xs" c="dimmed">
-													<Trans>Can create projects, run conversations, and generate reports.</Trans>
-												</Text>
-											</Box>
-										}
-									/>
-									<Radio
-										value="billing"
-										label={
-											<Box>
-												<Text size="sm">{t`Billing`}</Text>
-												<Text size="xs" c="dimmed">
-													<Trans>Sees usage, invoices, and payment. Doesn't touch projects.</Trans>
-												</Text>
-											</Box>
-										}
-									/>
-									<Radio
-										value="admin"
-										label={
-											<Box>
-												<Text size="sm">{t`Admin`}</Text>
-												<Text size="xs" c="dimmed">
-													<Trans>Everything a member can do, plus invite others and manage the workspace.</Trans>
-												</Text>
-											</Box>
-										}
-									/>
-								</Stack>
-							</Radio.Group>
-						)}
-
-						<Group justify="flex-end" gap={8} mt={8}>
-							<Button variant="default" size="sm" onClick={closeInviteModal}>
-								<Trans>Cancel</Trans>
-							</Button>
-							<Button
-								size="sm"
-								type="submit"
-								loading={inviteMutation.isPending}
-							>
-								<Trans>Send invite</Trans>
-							</Button>
-						</Group>
-					</Stack>
-				</form>
-			</Modal>
+			{workspaceId && settings && (
+				<WorkspaceInviteWizard
+					opened={inviteModalOpened}
+					onClose={closeInviteModal}
+					workspaceId={workspaceId}
+					orgId={settings.org_id}
+					existingMemberAppUserIds={
+						new Set(settings.members.map((m) => m.user_id))
+					}
+				/>
+			)}
 		</>
 	);
 };
@@ -1317,6 +1160,7 @@ function PrivacyAndDefaultsSection({
 	const [description, setDescription] = useState<string>(
 		settings.description ?? "",
 	);
+	const [name, setName] = useState<string>(settings.name ?? "");
 	// Matrix §6 retired derivation — `inherit_team_admins` is now just
 	// "Open vs Private." Legacy rows still read through this flag.
 	const [isOpen, setIsOpen] = useState<boolean | null>(null);
@@ -1335,6 +1179,23 @@ function PrivacyAndDefaultsSection({
 		onError: (err: Error) => {
 			// Roll back local state on failure.
 			setDescription(settings.description ?? "");
+			toast.error(err.message);
+		},
+	});
+
+	// Name edit moved into the General tab (2026-04-24). Autosaves on
+	// blur like description — the header still shows the name but is no
+	// longer the edit surface. Read-only for members (canEdit=false).
+	const nameMutation = useMutation({
+		mutationFn: (value: string) => updateWorkspace(workspaceId, { name: value }),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
+			toast.success(t`Workspace renamed`);
+		},
+		onError: (err: Error) => {
+			setName(settings.name ?? "");
 			toast.error(err.message);
 		},
 	});
@@ -1388,8 +1249,34 @@ function PrivacyAndDefaultsSection({
 	if (section === "general") return (
 		<Stack gap={16}>
 			<TextInput
+				label={t`Name`}
+				description={t`Workspace name. Autosaves on blur.`}
+				placeholder={t`e.g. Client Alpha`}
+				value={name}
+				onChange={(e) => setName(e.currentTarget.value)}
+				onBlur={() => {
+					const trimmed = name.trim();
+					if (!trimmed) {
+						setName(settings.name ?? "");
+						return;
+					}
+					if (trimmed !== (settings.name ?? "")) {
+						nameMutation.mutate(trimmed);
+					}
+				}}
+				onKeyDown={(e) => {
+					if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
+					if (e.key === "Escape") {
+						setName(settings.name ?? "");
+						(e.currentTarget as HTMLInputElement).blur();
+					}
+				}}
+				disabled={!canEdit || nameMutation.isPending}
+				maxLength={100}
+			/>
+			<TextInput
 				label={t`Description`}
-				description={t`Optional — what this workspace is for.`}
+				description={t`Optional. What this workspace is for.`}
 				placeholder={t`e.g. Client onboarding interviews, Q1 product research`}
 				value={description}
 				onChange={(e) => setDescription(e.currentTarget.value)}
@@ -1442,7 +1329,7 @@ function PrivacyAndDefaultsSection({
 					</Group>
 				) : (
 					<Text size="xs" c="dimmed" fs="italic">
-						<Trans>No logo set — dembrane default will be used.</Trans>
+						<Trans>No logo set. dembrane default will be used.</Trans>
 					</Text>
 				)}
 				{/* No single-click "Replace" — destructive step is explicit.

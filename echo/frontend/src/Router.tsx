@@ -32,6 +32,7 @@ import { ProjectConversationOverviewRoute } from "./routes/project/conversation/
 import { ProjectConversationTranscript } from "./routes/project/conversation/ProjectConversationTranscript";
 // Tab-based routes - import directly for now to debug
 import {
+	ProjectAccessRoute,
 	ProjectPortalSettingsRoute,
 	ProjectSettingsRoute,
 } from "./routes/project/ProjectRoutes";
@@ -122,6 +123,10 @@ const CreateWorkspaceRoute = createLazyNamedRoute(
 	() => import("./routes/workspaces/CreateWorkspaceRoute"),
 	"CreateWorkspaceRoute",
 );
+const CreateProjectRoute = createLazyNamedRoute(
+	() => import("./routes/project/CreateProjectRoute"),
+	"CreateProjectRoute",
+);
 const WorkspaceSettingsRoute = createLazyNamedRoute(
 	() => import("./routes/workspaces/WorkspaceSettingsRoute"),
 	"WorkspaceSettingsRoute",
@@ -149,6 +154,10 @@ const projectRouteChildren = [
 		index: true,
 	},
 	{
+		element: <CreateProjectRoute />,
+		path: "new",
+	},
+	{
 		children: [
 			{
 				children: [
@@ -167,10 +176,16 @@ const projectRouteChildren = [
 								path: "portal-editor",
 							},
 							{
-								// /sharing tab retired 2026-04-23 — Sharing is now
-								// a section inside Project Settings. Bookmark
-								// redirect keeps existing links working.
-								element: <Navigate to="../overview" replace />,
+								// "Access & usage" tab (2026-04-24) — dedicated
+								// surface for per-project usage, sharing, and the
+								// list of who can actually see the project.
+								element: <ProjectAccessRoute />,
+								path: "access",
+							},
+							{
+								// /sharing tab retired 2026-04-23 — bookmark redirect
+								// now points at the new /access tab.
+								element: <Navigate to="../access" replace />,
 								path: "sharing",
 							},
 						],

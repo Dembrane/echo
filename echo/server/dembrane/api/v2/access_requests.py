@@ -626,9 +626,11 @@ async def list_discoverable_workspaces(
 
     - Team admin / owner: sees every workspace (open + private). Action
       is 'join' (unless already a direct member).
-    - Team member: sees only open_to_team workspaces. Action is
-      'request-access' (unless already a member, or a pending request
-      exists).
+    - Team member: sees every workspace in the team (open + private).
+      For open ones the action is 'request-access'; for private ones
+      the action is also 'request-access' so members can flag interest
+      even on restricted workspaces. An admin still has to approve the
+      request — the privacy model protects content, not names.
     - Not a team member: 403.
     """
     app_user = await get_app_user_or_raise(auth.user_id)
@@ -640,12 +642,14 @@ async def list_discoverable_workspaces(
 
     can_see_private = org_role in ("admin", "owner")
 
+    # Matrix change 2026-04-24: members now see private workspaces too,
+    # so the visibility filter is gone. Admin and member both get every
+    # workspace in the team back; the per-role difference is the action
+    # assigned below (admins Join directly, members Request access).
     filters: dict = {
         "org_id": {"_eq": org_id},
         "deleted_at": {"_null": True},
     }
-    if not can_see_private:
-        filters["visibility"] = {"_eq": "open_to_team"}
 
     workspaces = await async_directus.get_items(
         "workspace",

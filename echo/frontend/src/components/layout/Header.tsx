@@ -222,35 +222,47 @@ const HeaderView = ({ isAuthenticated, loading }: HeaderViewProps) => {
 										<Trans>Switch workspace</Trans>
 									</Menu.Label>
 									<ScrollArea.Autosize mah={320}>
-										{workspaces.map((ws) => {
-											const isCurrent = ws.id === workspaceId;
-											return (
-												<Menu.Item
-													key={ws.id}
-													rightSection={
-														isCurrent ? (
-															<IconCheck size={14} color="var(--mantine-color-blue-6)" />
-														) : null
-													}
-													onClick={() => {
-														if (isCurrent) return;
-														setWorkspace(ws.id);
-														navigate(`/w/${ws.id}/projects`);
-													}}
-												>
-													<Box>
-														<Text size="sm" lineClamp={1}>
-															{ws.name}
-														</Text>
-														{ws.org_name && (
-															<Text size="xs" c="dimmed" lineClamp={1}>
-																{ws.org_name}
+										{/* Sort by team, then workspace name (2026-04-24).
+										    Before: API order, which made the list feel
+										    random. Now: predictable alphabetical grouping
+										    so users can find "the X workspace on team Y". */}
+										{[...workspaces]
+											.sort((a, b) => {
+												const t = (a.org_name || "").localeCompare(
+													b.org_name || "",
+												);
+												if (t !== 0) return t;
+												return (a.name || "").localeCompare(b.name || "");
+											})
+											.map((ws) => {
+												const isCurrent = ws.id === workspaceId;
+												return (
+													<Menu.Item
+														key={ws.id}
+														rightSection={
+															isCurrent ? (
+																<IconCheck size={14} color="var(--mantine-color-blue-6)" />
+															) : null
+														}
+														onClick={() => {
+															if (isCurrent) return;
+															setWorkspace(ws.id);
+															navigate(`/w/${ws.id}/projects`);
+														}}
+													>
+														<Box>
+															<Text size="sm" lineClamp={1}>
+																{ws.name}
 															</Text>
-														)}
-													</Box>
-												</Menu.Item>
-											);
-										})}
+															{ws.org_name && (
+																<Text size="xs" c="dimmed" lineClamp={1}>
+																	{ws.org_name}
+																</Text>
+															)}
+														</Box>
+													</Menu.Item>
+												);
+											})}
 									</ScrollArea.Autosize>
 									<Menu.Divider />
 									<Menu.Item onClick={() => navigate("/w")}>

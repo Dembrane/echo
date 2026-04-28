@@ -395,7 +395,11 @@ async def on_team_member_removed(org_id: str, user_id: str) -> list[str]:
 
 
 async def get_user_project_access(
-    project_id: str, user_id: str, *, directus_user_id: Optional[str] = None
+    project_id: str,
+    user_id: str,
+    *,
+    directus_user_id: Optional[str] = None,
+    project: Optional[dict] = None,
 ) -> Optional[tuple[str, str]]:
     """Return (role, source) for this user on this project, or None.
 
@@ -418,8 +422,13 @@ async def get_user_project_access(
 
     Returns None when the project is private and the caller has no
     admin/owner role on the workspace and no project_membership row.
+
+    `project` may be passed in by callers who already fetched the row
+    (e.g. bff/_access.resolve_project_access) to avoid a second read.
+    Passing `None` means we fetch it here.
     """
-    project = await async_directus.get_item("project", project_id)
+    if project is None:
+        project = await async_directus.get_item("project", project_id)
     if not project or project.get("deleted_at"):
         return None
 

@@ -14,7 +14,6 @@ import {
 	Text,
 	TextInput,
 	Title,
-	Tooltip,
 } from "@mantine/core";
 import { useDebouncedValue, useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
@@ -27,24 +26,19 @@ import { useCurrentUser } from "@/components/auth/hooks";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import {
-	useCreateProjectMutation,
 	useProjectsHome,
 	useTogglePinMutation,
-	useUpdateProjectByIdMutation,
 } from "@/components/project/hooks";
 import { PinnedProjectCard } from "@/components/project/PinnedProjectCard";
 import { ProjectListItem } from "@/components/project/ProjectListItem";
 import { ProjectListSkeleton } from "@/components/project/ProjectListSkeleton";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import {
-	useWorkspaceProjects,
-	useCreateWorkspaceProject,
-} from "@/hooks/useWorkspaceProjects";
+import { useWorkspaceProjects } from "@/hooks/useWorkspaceProjects";
 import { Icons } from "@/icons";
 import { getDirectusErrorString } from "@/lib/directus";
 import { testId } from "@/lib/testUtils";
+import { formatDurationFromHours } from "@/lib/time";
 
 const MAX_PINNED = 3;
 
@@ -121,46 +115,19 @@ export const ProjectsHomeRoute = () => {
 	}, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
 	const navigate = useI18nNavigate();
-	const createProjectMutation = useCreateProjectMutation();
-	const createWorkspaceProjectMutation = useCreateWorkspaceProject();
-	const updateProjectMutation = useUpdateProjectByIdMutation();
 	const user = useCurrentUser();
 	const posthog = usePostHog();
 
-	const { language } = useLanguage();
-
-	const handleCreateProject = async () => {
-		const lang = language === "en-US" ? "en" : language === "nl-NL" ? "nl" : "en";
-
-		let projectId: string;
-
-		if (workspaceId) {
-			// v2: creates with workspace_id already set
-			const project = await createWorkspaceProjectMutation.mutateAsync({
-				name: t`New Project`,
-				language: lang,
-			});
-			projectId = project.id;
-		} else {
-			// v1 fallback: legacy create
-			const project = await createProjectMutation.mutateAsync({
-				language: lang,
-				name: t`New Project`,
-			});
-			projectId = project.id;
-		}
-
-		await updateProjectMutation.mutateAsync({
-			id: projectId,
-			payload: {
-				default_conversation_ask_for_participant_name: true,
-				default_conversation_tutorial_slug: "None",
-				image_generation_model: "MODEST",
-			},
-		});
-
-		posthog?.capture("project_created", { project_id: projectId });
-		navigate(`/projects/${projectId}/overview`);
+	const handleCreateProject = () => {
+		// Route to the creation wizard (name → access → review). Matches the
+		// workspace creation flow — a few deliberate steps instead of an
+		// instant POST that leaves the new project with a "New Project"
+		// placeholder name. See CreateProjectRoute.tsx.
+		posthog?.capture("project_create_started");
+		const path = workspaceId
+			? `/w/${workspaceId}/projects/new`
+			: "/projects/new";
+		navigate(path);
 	};
 
 	// First page has pinned + total_count; all pages have projects
@@ -242,19 +209,17 @@ export const ProjectsHomeRoute = () => {
 								{workspace.name}
 							</Title>
 							{canManageWorkspace && (
-								<Tooltip label={t`Workspace settings`}>
-									<ActionIcon
-										variant="subtle"
-										color="gray"
-										size="lg"
-										onClick={() =>
-											navigate(`/w/${workspace.id}/settings`)
-										}
-										aria-label={t`Workspace settings`}
-									>
-										<IconSettings size={16} />
-									</ActionIcon>
-								</Tooltip>
+								<Button
+									variant="subtle"
+									size="xs"
+									color="gray"
+									leftSection={<IconSettings size={14} />}
+									onClick={() =>
+										navigate(`/w/${workspace.id}/settings`)
+									}
+								>
+									<Trans>Manage</Trans>
+								</Button>
 							)}
 						</Group>
 						<Text size="sm" c="dimmed">
@@ -280,23 +245,37 @@ export const ProjectsHomeRoute = () => {
 				)}
 
 				{/* Hero empty state — skip everything else when the workspace
-				    has zero projects and no search. */}
+				    has zero projects and no search. Guests (externals) see a
+				    different copy since they can't create: the current state
+				    for them isn't "empty, go make something" — it's "nothing
+				    has been shared with you yet." */}
 				{totallyEmpty ? (
 					<Stack align="center" gap={12} py={48}>
 						<Title order={3} fw={400}>
-							<Trans>Your workspace is ready.</Trans>
+							{isExternalGuest ? (
+								<Trans>Nothing here for you yet.</Trans>
+							) : (
+								<Trans>Let's hear your first conversation.</Trans>
+							)}
 						</Title>
-						<Text size="sm" c="dimmed" ta="center" maw={420}>
-							<Trans>
-								Projects are where conversations happen — create your
-								first one to get started.
-							</Trans>
+						<Text size="sm" c="dimmed" ta="center" maw={440}>
+							{isExternalGuest ? (
+								<Trans>
+									You're a guest in this workspace. Projects will show up
+									here once someone on the team shares one with you.
+								</Trans>
+							) : (
+								<Trans>
+									A project holds everything for one topic. Share its link
+									with participants, gather voices, then let dembrane turn
+									them into insights.
+								</Trans>
+							)}
 						</Text>
 						{canCreateProject && (
 							<Button
 								size="sm"
 								rightSection={<Icons.Plus stroke="white" fill="white" />}
-								loading={createProjectMutation.isPending}
 								onClick={handleCreateProject}
 								{...testId("project-home-create-button")}
 							>
@@ -343,7 +322,6 @@ export const ProjectsHomeRoute = () => {
 										rightSection={
 											<Icons.Plus stroke="white" fill="white" />
 										}
-										loading={createProjectMutation.isPending}
 										onClick={handleCreateProject}
 										{...testId("project-home-create-button")}
 									>
@@ -470,7 +448,7 @@ function PilotHoursInline({ usage }: { usage: { audio_hours: number; audio_hours
 			variant={color === "dimmed" ? "transparent" : "light"}
 			color={color === "dimmed" ? "gray" : color}
 		>
-			{used.toFixed(1)} of {cap} hours
+			{formatDurationFromHours(used)} of {cap}h
 		</Badge>
 	);
 }

@@ -24,6 +24,9 @@ export function displayRole(role: string | null | undefined): string {
 			return t`Member`;
 		case "billing":
 			return t`Billing`;
+		case "guest":
+		case "external":
+			return t`Guest`;
 		default:
 			// Unknown role — fall back to capitalized raw value so new
 			// roles added later don't silently render as an empty string.

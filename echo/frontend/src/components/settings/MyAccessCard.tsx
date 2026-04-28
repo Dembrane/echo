@@ -2,7 +2,6 @@ import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
 	Badge,
-	Box,
 	Button,
 	Card,
 	Group,
@@ -144,14 +143,10 @@ export const MyAccessCard = () => {
 				) : (
 					<Stack gap="md">
 						{Array.from(byTeam.values()).map(({ team, workspaces }) => (
-							<Box
-								key={team?.id ?? "orphan"}
-								style={{
-									borderLeft:
-										"2px solid var(--mantine-color-gray-3)",
-									paddingLeft: 12,
-								}}
-							>
+							<Stack key={team?.id ?? "orphan"} gap={8}>
+								{/* Team header sits flush-left so the eye reads
+								    "team → workspaces" as a hierarchy. Only the
+								    workspace rows are indented + rule'd. */}
 								<Group gap="xs" justify="space-between" align="center">
 									<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
 										<Text fw={500} size="sm" lineClamp={1}>
@@ -179,7 +174,15 @@ export const MyAccessCard = () => {
 									)}
 								</Group>
 
-								<Stack gap={4} mt={8}>
+								<Stack
+									gap={4}
+									ml={12}
+									style={{
+										borderLeft:
+											"2px solid var(--mantine-color-gray-3)",
+										paddingLeft: 12,
+									}}
+								>
 									{workspaces.map((ws) => (
 										<Group
 											key={ws.id}
@@ -223,7 +226,7 @@ export const MyAccessCard = () => {
 										</Group>
 									))}
 								</Stack>
-							</Box>
+							</Stack>
 						))}
 					</Stack>
 				)}

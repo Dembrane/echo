@@ -15,7 +15,6 @@ import {
 	Loader,
 	Menu,
 	Paper,
-	SegmentedControl,
 	Stack,
 	Table,
 	Tabs,
@@ -32,22 +31,23 @@ import {
 	IconChevronDown,
 	IconChevronRight,
 	IconLock,
-	IconSearch,
+	IconPlus,
 	IconSettings,
 	IconTrash,
 	IconUpload,
-	IconUserPlus,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
+import { InviteMemberCard, MembersToolbar } from "@/components/members";
+import { TeamInviteWizard } from "@/components/team/TeamInviteWizard";
 import { TeamUsageRollup } from "@/components/workspace/TeamUsageRollup";
 import { TierBadge } from "@/components/workspace/TierBadge";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
 import { useV2Me } from "@/hooks/useV2Me";
-import { avatarUrl, logoUrl as resolveLogoUrl } from "@/lib/avatar";
+import { avatarUrl, logoUrl as resolveLogoUrl, memberInitials } from "@/lib/avatar";
 import { displayRole, roleColor } from "@/lib/roles";
 
 /**
@@ -79,6 +79,10 @@ interface TeamMember {
 	role: string;
 	accessible_workspace_count: number;
 	is_pending: boolean;
+	// True when the person is only reachable via external workspace
+	// memberships — no org_membership. Admins see them in the team
+	// Members list with a Guest badge; no team-role picker is shown.
+	is_external?: boolean;
 	// workspace_id → role for direct memberships (not derived).
 	direct_workspace_roles?: Record<string, string>;
 	// workspace_id → membership_id for direct rows — enables in-row
@@ -130,7 +134,7 @@ async function fetchTeamWorkspaces(teamId: string): Promise<TeamWorkspace[]> {
 	return res.json();
 }
 
-type RoleFilter = "all" | "admins" | "members";
+type RoleFilter = "all" | "admins" | "members" | "guests";
 
 // Role options by scope + caller role. Team-level doesn't include
 // Matrix §5 retires "owner" as a user-facing role — it's a backend-only
@@ -245,6 +249,7 @@ export const TeamRoute = () => {
 	const navigate = useI18nNavigate();
 	const [search, setSearch] = useUrlSearch();
 	const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+	const [inviteOpen, setInviteOpen] = useState(false);
 	const queryClient = useQueryClient();
 	// URL-driven tab state. Tab lives in the path segment
 	// (`/t/:teamId/<tab>`) so browser back steps between tabs and URLs
@@ -365,18 +370,76 @@ export const TeamRoute = () => {
 		onError: (e: Error) => toast.error(e.message),
 	});
 
+	// Add-to-workspace from the Team Members tab. Reuses the workspace
+	// invite endpoint — the target is an existing team member, so the
+	// server treats it as a direct workspace grant rather than an email
+	// invite (is_org_member=true).
+	const addToWorkspaceMutation = useMutation({
+		mutationFn: async ({
+			workspaceId,
+			email,
+			role,
+		}: {
+			workspaceId: string;
+			email: string;
+			role: string;
+		}) => {
+			const res = await fetch(
+				`${API_BASE_URL}/v2/workspaces/${workspaceId}/invite`,
+				{
+					body: JSON.stringify({ email, role, is_org_member: true }),
+					credentials: "include",
+					headers: { "Content-Type": "application/json" },
+					method: "POST",
+				},
+			);
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(
+					typeof data.detail === "string"
+						? data.detail
+						: "Couldn't add to workspace",
+				);
+			}
+			return res.json();
+		},
+		onSuccess: (_data, variables) => {
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "team", teamId, "members"],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["v2", "workspace-settings", variables.workspaceId],
+			});
+			toast.success(t`Added to workspace`);
+		},
+		onError: (e: Error) => toast.error(e.message),
+	});
+
 	const { data: meV2 } = useV2Me();
 	const myAppUserId = meV2?.id ?? null;
+
+	const hasGuests = useMemo(
+		() => members.some((m) => m.is_external),
+		[members],
+	);
 
 	const filteredMembers = useMemo(() => {
 		const q = search.trim().toLowerCase();
 		return members.filter((m) => {
-			// Matrix §5: team-level roles are Admin / Billing / Member.
-			// No team-level Guest — guests exist only at the workspace
-			// level. Filter collapses owner → admin for display.
-			if (roleFilter === "admins" && !(m.role === "owner" || m.role === "admin"))
-				return false;
-			if (roleFilter === "members" && m.role !== "member") return false;
+			// Matrix §5: internal team roles are Admin / Billing / Member.
+			// Externals show up as a fourth bucket ("guests") — they have
+			// no org_membership, only per-workspace external rows. The
+			// admins/members filters exclude externals; "guests" isolates
+			// them. Filter collapses owner → admin for display.
+			if (roleFilter === "admins") {
+				if (m.is_external) return false;
+				if (!(m.role === "owner" || m.role === "admin")) return false;
+			}
+			if (roleFilter === "members") {
+				if (m.is_external) return false;
+				if (m.role !== "member") return false;
+			}
+			if (roleFilter === "guests" && !m.is_external) return false;
 			if (!q) return true;
 			return (
 				(m.display_name || "").toLowerCase().includes(q) ||
@@ -474,7 +537,7 @@ export const TeamRoute = () => {
 							</Tabs.Tab>
 						)}
 						<Tabs.Tab value="people">
-							<Trans>People</Trans>
+							<Trans>Members</Trans>
 						</Tabs.Tab>
 					</Tabs.List>
 
@@ -497,56 +560,28 @@ export const TeamRoute = () => {
 
 					<Tabs.Panel value="people" pt="md">
 						<Stack gap="md">
-				{/* Invite entry point — team-level invites happen through a
-				    specific workspace (no team-scope invite endpoint). The
-				    button opens a workspace picker so the admin can pick
-				    where the new person should land. Matches audit §3:
-				    "invite is the primary People-tab action." */}
-				{isAdmin && workspaces.length > 0 && (
-					<Group justify="flex-end">
-						<InviteWorkspacePicker workspaces={workspaces} />
-					</Group>
-				)}
-
-				{/* Toolbar — people view. */}
-				{true && (
-					<Group justify="space-between" align="center" wrap="wrap">
-						<Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 280 }}>
-							<TextInput
-								leftSection={<IconSearch size={14} />}
-								placeholder={t`Search name or email`}
-								size="sm"
-								value={search}
-								onChange={(e) => setSearch(e.currentTarget.value)}
-								style={{ flex: 1, maxWidth: 320 }}
-							/>
-							<SegmentedControl
-								size="xs"
-								value={roleFilter}
-								onChange={(v) => setRoleFilter(v as RoleFilter)}
-								data={[
-									{ value: "all", label: t`All` },
-									{ value: "admins", label: t`Admins` },
-									{ value: "members", label: t`Members` },
-								]}
-							/>
-						</Group>
-						{membersError ? (
-							<Text size="xs" c="red">
-								<Trans>
-									Couldn't load team members. Try refreshing — if it keeps
-									failing, contact support.
-								</Trans>
-							</Text>
-						) : (
-							<Text size="xs" c="dimmed">
-								<Trans>
-									Showing {filteredMembers.length} of {members.length}
-								</Trans>
-							</Text>
-						)}
-					</Group>
-				)}
+				<MembersToolbar
+					search={search}
+					onSearchChange={setSearch}
+					filter={{
+						value: roleFilter,
+						onChange: (v) => setRoleFilter(v as RoleFilter),
+						options: [
+							{ value: "all", label: t`All` },
+							{ value: "admins", label: t`Admins` },
+							{ value: "members", label: t`Members` },
+							...(hasGuests
+								? [{ value: "guests", label: t`Guests` }]
+								: []),
+						],
+					}}
+					count={{ shown: filteredMembers.length, total: members.length }}
+					error={
+						membersError
+							? t`Couldn't load team members. Try refreshing, and if it keeps failing, contact support.`
+							: null
+					}
+				/>
 
 				{/* Hero empty state — matches ProjectsHome pattern (audit §7).
 				    A team with zero members is vanishingly rare in practice
@@ -567,12 +602,33 @@ export const TeamRoute = () => {
 					</Stack>
 				)}
 
-				{/* People tab redesign (audit Option B, 2026-04-23): each
-				    person is a card with their team role, summary of
-				    per-workspace access, and an expand chevron. Expanded
-				    state reveals per-workspace role pickers + remove. */}
-				{!membersError && members.length > 0 && (
+				{/* Members list: dotted invite card as the first row (same
+				    shape as any other member), then one TeamPersonCard per
+				    person. Externals render inline with a Guest badge so
+				    admins see everyone reaching their data in one list. */}
+				{!membersError && (
 					<Stack gap="xs">
+						{isAdmin && workspaces.length > 0 && (
+							<InviteMemberCard
+								label={<Trans>Invite someone</Trans>}
+								helperText={
+									<Trans>Pick one or more workspaces and we'll send the email.</Trans>
+								}
+								onClick={() => setInviteOpen(true)}
+							/>
+						)}
+						{members.length === 0 && (
+							<Stack align="center" gap={6} py={48}>
+								<Title order={4} fw={400}>
+									<Trans>No one on the team yet.</Trans>
+								</Title>
+								<Text size="sm" c="dimmed" ta="center" maw={400}>
+									<Trans>
+										Team members appear here once they join a workspace.
+									</Trans>
+								</Text>
+							</Stack>
+						)}
 						{filteredMembers.map((m) => (
 							<TeamPersonCard
 								key={m.user_id}
@@ -593,23 +649,38 @@ export const TeamRoute = () => {
 										role: next,
 									})
 								}
+								onAddToWorkspace={(ws, role) =>
+									addToWorkspaceMutation.mutate({
+										workspaceId: ws,
+										email: m.email,
+										role,
+									})
+								}
 								onRemove={() =>
 									removeTeamMemberMutation.mutate({ userId: m.user_id })
 								}
 							/>
 						))}
-						{filteredMembers.length === 0 && (
+						{members.length > 0 && filteredMembers.length === 0 && (
 							<Text size="sm" c="dimmed" ta="center" py="md">
 								<Trans>No one matches that filter.</Trans>
 							</Text>
 						)}
 					</Stack>
 				)}
+				{teamId && (
+					<TeamInviteWizard
+						opened={inviteOpen}
+						onClose={() => setInviteOpen(false)}
+						workspaces={workspaces}
+						members={members}
+					/>
+				)}
 
 				<Text size="xs" c="dimmed">
 					<Trans>
-						Team admins can discover and join any workspace — including
-						private ones. Team members see open workspaces only.
+						Admins can reach every workspace in this team. Members and
+						guests only see the workspaces they've been given access to.
 					</Trans>
 				</Text>
 						</Stack>
@@ -793,7 +864,7 @@ function OverviewPanel({
 						</Group>
 					) : (
 						<Text size="xs" c="dimmed" fs="italic">
-							<Trans>No logo set — dembrane default will be used.</Trans>
+							<Trans>No logo set. dembrane default will be used.</Trans>
 						</Text>
 					)}
 					{/* No single-click "Replace" — destructive step is explicit. */}
@@ -852,46 +923,6 @@ function OverviewPanel({
 }
 
 
-/**
- * "Invite someone" on the team People tab. Invites are per-workspace
- * (no team-wide invite endpoint), so the button opens a Menu that lets
- * the admin pick which workspace the new person should land in; then
- * navigates to that workspace's Members tab where the existing invite
- * flow lives. Honest about the model instead of faking a team invite.
- */
-function InviteWorkspacePicker({
-	workspaces,
-}: {
-	workspaces: TeamWorkspace[];
-}) {
-	const navigate = useI18nNavigate();
-	return (
-		<Menu shadow="md" width={260} position="bottom-end">
-			<Menu.Target>
-				<Button
-					size="compact-sm"
-					leftSection={<IconUserPlus size={14} />}
-				>
-					<Trans>Invite someone</Trans>
-				</Button>
-			</Menu.Target>
-			<Menu.Dropdown>
-				<Menu.Label>
-					<Trans>Which workspace?</Trans>
-				</Menu.Label>
-				{workspaces.map((ws) => (
-					<Menu.Item
-						key={ws.id}
-						onClick={() => navigate(`/w/${ws.id}/settings/members`)}
-					>
-						{ws.name}
-					</Menu.Item>
-				))}
-			</Menu.Dropdown>
-		</Menu>
-	);
-}
-
 export default TeamRoute;
 
 /**
@@ -910,6 +941,7 @@ function TeamPersonCard({
 	isSelf,
 	onTeamRoleChange,
 	onWorkspaceRoleChange,
+	onAddToWorkspace,
 	onRemove,
 }: {
 	member: TeamMember;
@@ -922,6 +954,7 @@ function TeamPersonCard({
 		membershipId: string,
 		next: string,
 	) => void;
+	onAddToWorkspace: (workspaceId: string, role: string) => void;
 	onRemove: () => void;
 }) {
 	const [open, setOpen] = useState(false);
@@ -1044,9 +1077,7 @@ function TeamPersonCard({
 				<Group justify="space-between" wrap="nowrap" gap="md">
 					<Group gap="sm" wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
 						<Avatar src={avatarUrl(member.avatar, 64)} size="md" radius="xl">
-							{(member.display_name || member.email || "?")
-								.slice(0, 2)
-								.toUpperCase()}
+							{memberInitials(member.display_name, member.email)}
 						</Avatar>
 						<Stack gap={0} style={{ minWidth: 0 }}>
 							<Text size="sm" fw={500} truncate>
@@ -1064,12 +1095,20 @@ function TeamPersonCard({
 						</Stack>
 					</Group>
 					<Group gap="xs" wrap="nowrap">
-						<RoleBadgeMenu
-							currentRole={member.role}
-							options={TEAM_ROLE_OPTIONS}
-							disabled={!isAdmin || isSelf}
-							onChange={handleTeamRoleChange}
-						/>
+						{member.is_external ? (
+							<Tooltip label={t`No team role. Access via workspace invites.`}>
+								<Badge size="sm" variant="light" color="gray">
+									<Trans>Guest</Trans>
+								</Badge>
+							</Tooltip>
+						) : (
+							<RoleBadgeMenu
+								currentRole={member.role}
+								options={TEAM_ROLE_OPTIONS}
+								disabled={!isAdmin || isSelf}
+								onChange={handleTeamRoleChange}
+							/>
+						)}
 						<ActionIcon
 							variant="subtle"
 							color="gray"
@@ -1143,6 +1182,45 @@ function TeamPersonCard({
 												</Badge>
 											</Tooltip>
 										)
+									) : isAdmin && member.email ? (
+										// Admin can add this person to a workspace they
+										// don't currently have a role on. Reuses the
+										// workspace invite endpoint (is_org_member=true)
+										// so the server sees this as a direct grant,
+										// not a fresh invitation.
+										<Button
+											size="compact-xs"
+											variant="subtle"
+											leftSection={<IconPlus size={12} />}
+											onClick={() => {
+												const nextRole = member.is_external
+													? "guest"
+													: "member";
+												modals.openConfirmModal({
+													title: t`Add to ${ws.name}?`,
+													children: (
+														<Text size="sm">
+															<Trans>
+																Add{" "}
+																{member.display_name ||
+																	member.email ||
+																	t`this person`}{" "}
+																to {ws.name} as{" "}
+																<em>{displayRole(nextRole)}</em>?
+															</Trans>
+														</Text>
+													),
+													labels: {
+														confirm: t`Add`,
+														cancel: t`Cancel`,
+													},
+													onConfirm: () =>
+														onAddToWorkspace(ws.id, nextRole),
+												});
+											}}
+										>
+											<Trans>Add</Trans>
+										</Button>
 									) : ws.is_private ? (
 										<Text size="xs" c="dimmed">
 											<Trans>No access</Trans>

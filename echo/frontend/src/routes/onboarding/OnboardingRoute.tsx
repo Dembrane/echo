@@ -19,6 +19,7 @@ import { useCurrentUser } from "@/components/auth/hooks";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useMyInvites } from "@/hooks/useMyInvites";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
@@ -60,8 +61,17 @@ export const OnboardingRoute = () => {
 	const { data: meV2, isLoading: meLoading } = useV2Me();
 	const { setWorkspace } = useWorkspace();
 
+	// Invited users see a different flow — they're not creating a team,
+	// they're joining one (or several). Pull the invite list so we can
+	// show them which workspaces they're about to land in.
+	const { data: pendingInvites } = useMyInvites({
+		enabled: meV2?.has_pending_invites === true,
+	});
 	const displayName = (user.data as Record<string, string>)?.first_name || "";
 	const hasInvites = meV2?.has_pending_invites === true;
+	const inviteTeams = Array.from(
+		new Set((pendingInvites ?? []).map((i) => i.org_name).filter(Boolean)),
+	);
 	// The designer's onboarding split (docs/workspaces/designer-return.html):
 	// users with projects from before workspaces existed see the "migration"
 	// copy; users with no legacy projects see the fresh-setup copy. hasInvites
@@ -87,6 +97,12 @@ export const OnboardingRoute = () => {
 	useDocumentTitle(t`Set up your workspace | dembrane`);
 
 	useEffect(() => {
+		// Only run the "already onboarded → bounce" check while the page
+		// is still in the loading gate. Otherwise this effect re-fires
+		// after submit (when we invalidate ["v2","me"] in onSuccess) and
+		// the freshly-true onboarding_completed flag punts the user
+		// straight to projects, silently skipping the invite step.
+		if (step !== "loading") return;
 		if (meLoading) return;
 
 		if (meV2?.onboarding_completed === true) {
@@ -100,7 +116,7 @@ export const OnboardingRoute = () => {
 		}, 1200);
 
 		return () => clearTimeout(timer);
-	}, [meV2, meLoading, navigate]);
+	}, [meV2, meLoading, navigate, step]);
 
 	const onboardingMutation = useMutation({
 		mutationFn: () => completeOnboarding(orgName.trim() || defaultOrgName),
@@ -301,41 +317,18 @@ export const OnboardingRoute = () => {
 		>
 			<GradientBlurs />
 
-			{/* Top: illustration as atmospheric hero */}
-			<div
-				style={{
-					alignItems: "flex-end",
-					display: "flex",
-					flex: "0 0 auto",
-					justifyContent: "center",
-						opacity: ready ? 1 : 0,
-					overflow: "hidden",
-					paddingTop: 0,
-					position: "relative",
-					transform: ready ? "translateY(0)" : "translateY(-8px)",
-					transition: "opacity 0.8s ease, transform 0.8s ease",
-				}}
-			>
-				<img
-					alt=""
-					src="/illustrations/onboarding-banner.png"
-					style={{
-						height: "auto",
-						pointerEvents: "none",
-						userSelect: "none",
-						width: "min(520px, 85vw)",
-					}}
-				/>
-			</div>
-
-			{/* Bottom: form, centered */}
+			{/* Compact layout (2026-04-24): illustration removed, form
+			    centered like /login. The previous full-bleed banner pushed
+			    the form to the bottom of the viewport with a large dead
+			    space between — users read it as "wait, is the form below
+			    the fold?" */}
 			<div
 				style={{
 					alignItems: "center",
 					display: "flex",
 					flex: "1 1 auto",
 					justifyContent: "center",
-					padding: "0 24px 48px",
+					padding: "24px",
 					position: "relative",
 				}}
 			>
@@ -367,78 +360,91 @@ export const OnboardingRoute = () => {
 							</Title>
 							<Text size="sm" c="dimmed" lh={1.6}>
 								{hasInvites ? (
-									<Trans>
-										Your team is waiting for you. Just one quick step to get set up.
-									</Trans>
+									inviteTeams.length === 1 ? (
+										<Trans>
+											You've been invited to join <em>{inviteTeams[0]}</em>.
+											We'll take you there in a moment.
+										</Trans>
+									) : inviteTeams.length > 1 ? (
+										<Trans>
+											You've been invited to join {inviteTeams.length}
+											{" "}
+											teams. We'll take you in once you continue.
+										</Trans>
+									) : (
+										<Trans>
+											Your team is waiting for you. Click continue to join.
+										</Trans>
+									)
 								) : isLegacyUser ? (
 									<Trans>
-										We've added teams so you can organize projects and share them
-										with colleagues. Everything you had before is still here — we
-										just need a name for your team.
+										We've added teams so you can organize projects and share
+										them with colleagues. Everything you had before is still
+										here. We just need a name for your team.
 									</Trans>
 								) : (
 									<Trans>
-										Give your team a name. You can invite teammates right after,
-										or later from settings.
+										Name your team to get started. You can invite teammates
+										right after, or join other teams later from settings.
 									</Trans>
 								)}
 							</Text>
 						</Stack>
 
-						<form
-							onSubmit={(e) => {
-								e.preventDefault();
-								onboardingMutation.mutate();
-							}}
-						>
-							<Stack gap={16}>
-								<TextInput
-									autoFocus
-									description={t`You can change this anytime in settings.`}
-									label={t`Team name`}
-									placeholder={defaultOrgName || t`Your team or company`}
+						{/* Invited users don't create a team — they're joining
+						    existing ones. Swap the "Team name" form for a single
+						    Continue button so the copy ("Your team is waiting")
+						    matches the action. The backend /onboarding/complete
+						    call still runs; it just skips the personal-org
+						    branch when has_pending_invites is true. */}
+						{hasInvites ? (
+							<Stack gap={12}>
+								<Button
+									fullWidth
+									loading={onboardingMutation.isPending}
 									size="sm"
-									value={orgName}
-									onChange={(e) => setOrgName(e.currentTarget.value)}
-								/>
-
-								<Group gap={12}>
-									<Button
+									onClick={() => onboardingMutation.mutate()}
+								>
+									<Trans>Continue</Trans>
+								</Button>
+							</Stack>
+						) : (
+							<form
+								onSubmit={(e) => {
+									e.preventDefault();
+									onboardingMutation.mutate();
+								}}
+							>
+								<Stack gap={16}>
+									<TextInput
+										autoFocus
+										description={t`You can change this anytime in settings.`}
+										label={t`Team name`}
+										placeholder={defaultOrgName || t`Your team or company`}
 										size="sm"
-										variant="default"
-										onClick={() => {
-											completeOnboarding(defaultOrgName || "My Team")
-												.then((data) => {
-													queryClient.invalidateQueries({
-														queryKey: ["v2", "me"],
-													});
-													setWorkspace(data.workspace_id);
-													goToProjects();
-												})
-												.catch(() => goToProjects());
-										}}
-									>
-										<Trans>Use default</Trans>
-									</Button>
+										value={orgName}
+										onChange={(e) => setOrgName(e.currentTarget.value)}
+									/>
+
 									<Button
-										flex={1}
+										fullWidth
 										loading={onboardingMutation.isPending}
 										size="sm"
 										type="submit"
 									>
 										<Trans>Get started</Trans>
 									</Button>
-								</Group>
 
-								{isLegacyUser && (
-									<Text size="xs" c="dimmed" mt={4}>
-										<Trans>
-											You'll find all your projects waiting for you.
-										</Trans>
-									</Text>
-								)}
-							</Stack>
-						</form>
+									{isLegacyUser && (
+										<Text size="xs" c="dimmed" mt={4}>
+											<Trans>
+												You'll find all your projects waiting for you.
+											</Trans>
+										</Text>
+									)}
+								</Stack>
+							</form>
+						)}
 					</Stack>
 				</div>
 			</div>

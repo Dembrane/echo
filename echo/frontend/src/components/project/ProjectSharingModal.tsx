@@ -22,7 +22,7 @@ import {
 	useRevokeProjectShare,
 	useSetProjectVisibility,
 } from "@/hooks/useProjectSharing";
-import { avatarUrl } from "@/lib/avatar";
+import { avatarUrl, memberInitials } from "@/lib/avatar";
 
 interface ProjectSharingModalProps {
 	projectId: string;
@@ -171,9 +171,7 @@ export function ProjectSharingModal({
 					{shares?.map((share) => (
 						<Group key={share.user_id} gap="sm" wrap="nowrap">
 							<Avatar size="sm" radius="xl" src={avatarUrl(share.avatar, 48)}>
-								{(share.display_name || share.email || "?")
-									.slice(0, 2)
-									.toUpperCase()}
+								{memberInitials(share.display_name, share.email)}
 							</Avatar>
 							<Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
 								<Text size="sm" truncate>

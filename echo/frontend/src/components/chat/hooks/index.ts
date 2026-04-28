@@ -1,12 +1,4 @@
-import {
-	aggregate,
-	createItem,
-	deleteItem,
-	type Query,
-	readItem,
-	readItems,
-	updateItem,
-} from "@directus/sdk";
+import type { Query } from "@directus/sdk";
 import { t } from "@lingui/core/macro";
 import {
 	useMutation,
@@ -25,7 +17,7 @@ import {
 	initializeChatMode,
 	lockConversations,
 } from "@/lib/api";
-import { directus } from "@/lib/directus";
+import { bff } from "@/lib/bff";
 
 export const useChatHistory = (chatId: string) => {
 	return useQuery({
@@ -39,7 +31,7 @@ export const useAddChatMessageMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: (payload: Partial<ProjectChatMessage>) =>
-			directus.request(createItem("project_chat_message", payload as any)),
+			bff.post("/chat-messages", payload),
 		onSuccess: (_, vars) => {
 			queryClient.invalidateQueries({
 				queryKey: ["chats", "context", vars.project_chat_id],
@@ -95,15 +87,18 @@ export const useUpdateChatMutation = () => {
 			// for invalidating the chat query
 			projectId: string;
 			payload: Partial<ProjectChat>;
-		}) =>
-			directus.request(
-				updateItem("project_chat", payload.chatId, {
-					project_id: {
-						id: payload.projectId,
-					},
-					...payload.payload,
-				}),
-			),
+		}) => {
+			// project_id is a side-channel for cache invalidation; the
+			// BFF PATCH accepts only name/chat_mode, not project_id.
+			const body: Record<string, unknown> = {};
+			if (typeof payload.payload?.name === "string") {
+				body.name = payload.payload.name;
+			}
+			if (typeof payload.payload?.chat_mode === "string") {
+				body.chat_mode = payload.payload.chat_mode;
+			}
+			return bff.patch(`/chats/${payload.chatId}`, body);
+		},
 		onSuccess: (_, vars) => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects", vars.projectId, "chats"],
@@ -151,13 +146,7 @@ export const useInitializeChatModeMutation = () => {
 
 export const useChat = (chatId: string) => {
 	return useQuery({
-		queryFn: () =>
-			directus.request(
-				readItem("project_chat", chatId, {
-					// Only fetch fields used in chat UI: id, name, project_id
-					fields: ["id", "name", "project_id"],
-				}),
-			),
+		queryFn: () => bff.get<ProjectChat>(`/chats/${chatId}`),
 		queryKey: ["chats", chatId],
 	});
 };
@@ -167,29 +156,14 @@ export const useProjectChats = (
 	query?: Partial<Query<CustomDirectusTypes, ProjectChat>>,
 ) => {
 	return useSuspenseQuery({
-		queryFn: () =>
-			directus.request(
-				readItems("project_chat", {
-					fields: [
-						"id",
-						"project_id",
-						"date_created",
-						"date_updated",
-						"name",
-						"chat_mode",
-					],
-					filter: {
-						project_id: {
-							_eq: projectId,
-						},
-						deleted_at: {
-							_null: true,
-						},
-					},
-					sort: "-date_created",
-					...query,
-				}),
-			),
+		queryFn: async () => {
+			void query; // advanced query filter not forwarded to BFF
+			const { chats } = await bff.get<{ chats: ProjectChat[]; total: number }>(
+				"/chats",
+				{ project_id: projectId, limit: 200 },
+			);
+			return chats;
+		},
 		queryKey: ["projects", projectId, "chats", query],
 	});
 };
@@ -208,36 +182,20 @@ export const useInfiniteProjectChats = (
 			lastPage?.nextOffset,
 		initialPageParam: 0,
 		queryFn: async ({ pageParam = 0 }) => {
-			const response = await directus.request(
-				readItems("project_chat", {
-					fields: [
-						"id",
-						"project_id",
-						"date_created",
-						"date_updated",
-						"name",
-						"chat_mode",
-					],
-					filter: {
-						project_id: {
-							_eq: projectId,
-						},
-						deleted_at: {
-							_null: true,
-						},
-						...(query?.filter && query.filter),
-					},
+			void query;
+			const { chats } = await bff.get<{ chats: ProjectChat[]; total: number }>(
+				"/chats",
+				{
+					project_id: projectId,
 					limit: initialLimit,
 					offset: pageParam * initialLimit,
-					sort: "-date_created",
-					...query,
-				}),
+				},
 			);
 
 			return {
-				chats: response,
+				chats,
 				nextOffset:
-					response.length === initialLimit ? pageParam + 1 : undefined,
+					chats.length === initialLimit ? pageParam + 1 : undefined,
 			};
 		},
 		queryKey: ["projects", projectId, "chats", "infinite", query],
@@ -251,22 +209,12 @@ export const useProjectChatsCount = (
 ) => {
 	return useSuspenseQuery({
 		queryFn: async () => {
-			const response = await directus.request(
-				aggregate("project_chat", {
-					aggregate: {
-						count: "*",
-					},
-					query: {
-						filter: {
-							project_id: {
-								_eq: projectId,
-							},
-							...(query?.filter && query.filter),
-						},
-					},
-				}),
+			void query;
+			const { total } = await bff.get<{ chats: ProjectChat[]; total: number }>(
+				"/chats",
+				{ project_id: projectId, limit: 1 },
 			);
-			return response[0].count;
+			return total;
 		},
 		queryKey: ["projects", projectId, "chats", "count", query],
 	});

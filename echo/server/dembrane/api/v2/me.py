@@ -476,38 +476,100 @@ async def accept_invite_by_hash(
                 target_invite = inv
                 break
 
-    # Fallback: invite may have already been accepted (e.g. via onboarding
-    # auto-accept). Check all invites for this email, including accepted ones.
-    # If the hash matches AND the user is already a member, treat as success.
+    # Fallback: invite may have already been marked accepted (e.g. via
+    # onboarding auto-accept) but the workspace_membership row might be
+    # missing — a prior accept that created the accepted_at row but
+    # failed to create the membership (partial-write, race, or a Directus
+    # error retried by the client) used to dead-end here with "Invite
+    # not found or already handled". Now we self-heal: the email match +
+    # unforgeable hash is strong enough proof of ownership to create the
+    # missing membership and let the user in.
     if target_invite is None:
         accepted = await async_directus.get_items(
             "workspace_invite",
             {"query": {
                 "filter": {"email": {"_eq": my_email}},
-                "fields": ["id", "workspace_id", "accepted_at"],
+                "fields": [
+                    "id",
+                    "workspace_id",
+                    "accepted_at",
+                    "role",
+                    "include_org_membership",
+                ],
                 "limit": -1,
             }},
         )
         if isinstance(accepted, list):
             for inv in accepted:
-                if _hmac.compare_digest(compute_invite_hash(inv["id"]), body.hash):
-                    # Verify user is actually a member before returning success
-                    existing = await async_directus.get_items(
-                        "workspace_membership",
+                if not _hmac.compare_digest(compute_invite_hash(inv["id"]), body.hash):
+                    continue
+                ws = await async_directus.get_item("workspace", inv["workspace_id"])
+                if not ws or ws.get("deleted_at"):
+                    raise HTTPException(
+                        status_code=404, detail="Workspace no longer exists"
+                    )
+
+                existing = await async_directus.get_items(
+                    "workspace_membership",
+                    {"query": {"filter": {
+                        "workspace_id": {"_eq": inv["workspace_id"]},
+                        "user_id": {"_eq": app_user_id},
+                        "deleted_at": {"_null": True},
+                    }, "fields": ["id"], "limit": 1}},
+                )
+                already_member = (
+                    isinstance(existing, list) and len(existing) > 0
+                )
+                if already_member:
+                    return {
+                        "status": "already_member",
+                        "workspace_id": inv["workspace_id"],
+                        "workspace_name": ws.get("name", ""),
+                    }
+
+                # Heal the missing membership. Role + external flag come
+                # from the invite row itself — we don't trust any
+                # client-provided role here.
+                invite_role = inv.get("role", "member")
+                include_org = bool(inv.get("include_org_membership"))
+                logger.warning(
+                    "accept-by-hash fallback healed missing workspace_membership "
+                    f"for user={app_user_id} invite={inv['id']} ws={inv['workspace_id']}"
+                )
+
+                if include_org and ws.get("org_id"):
+                    existing_org_mem = await async_directus.get_items(
+                        "org_membership",
                         {"query": {"filter": {
-                            "workspace_id": {"_eq": inv["workspace_id"]},
+                            "org_id": {"_eq": ws["org_id"]},
                             "user_id": {"_eq": app_user_id},
                             "deleted_at": {"_null": True},
-                        }, "fields": ["id"], "limit": 1}},
+                        }, "limit": 1}},
                     )
-                    if isinstance(existing, list) and len(existing) > 0:
-                        ws = await async_directus.get_item("workspace", inv["workspace_id"])
-                        if ws and not ws.get("deleted_at"):
-                            return {
-                                "status": "already_member",
-                                "workspace_id": inv["workspace_id"],
-                                "workspace_name": ws.get("name", ""),
-                            }
+                    if not (isinstance(existing_org_mem, list) and len(existing_org_mem) > 0):
+                        await async_directus.create_item("org_membership", {
+                            "id": generate_uuid(),
+                            "org_id": ws["org_id"],
+                            "user_id": app_user_id,
+                            "role": "member",
+                        })
+
+                await async_directus.create_item("workspace_membership", {
+                    "id": generate_uuid(),
+                    "workspace_id": inv["workspace_id"],
+                    "user_id": app_user_id,
+                    "role": invite_role,
+                    "source": "direct",
+                    "is_external": not include_org,
+                })
+
+                # accepted_at is already set (that's why we're in the
+                # fallback); no need to touch it again.
+                return {
+                    "status": "success",
+                    "workspace_id": inv["workspace_id"],
+                    "workspace_name": ws.get("name", ""),
+                }
 
         raise HTTPException(status_code=404, detail="Invite not found or already handled")
 
